@@ -57,7 +57,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int (<see cref="AExtString.ToInt"/>).
+		/// Gets attribute value converted to int number.
 		/// If the attribute does not exist, returns defaultValue.
 		/// If the attribute value is empty or does not begin with a valid number, returns 0.
 		/// </summary>
@@ -68,7 +68,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to int (<see cref="AExtString.ToInt"/>).
+		/// Gets attribute value converted to int number.
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
@@ -81,7 +81,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to long (<see cref="AExtString.ToInt64"/>).
+		/// Gets attribute value converted to long number.
 		/// If the attribute does not exist, sets value=0 and returns false.
 		/// If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
 		/// </summary>
@@ -89,20 +89,20 @@ namespace Au
 		{
 			var x = t.Attribute(name);
 			if(x == null) { value = 0; return false; }
-			value = x.Value.ToInt64();
+			x.Value.ToInt(out value);
 			return true;
 		}
 
 		/// <summary>
-		/// Gets attribute value converted to float (<see cref="AExtString.ToFloat"/>).
-		/// If the attribute does not exist, sets value=0F and returns false.
-		/// If the attribute value is empty or is not a valid number, sets value=0F and returns true.
+		/// Gets attribute value converted to float number.
+		/// If the attribute does not exist, sets value=0 and returns false.
+		/// If the attribute value is empty or is not a valid number, sets value=0 and returns true.
 		/// </summary>
 		public static bool Attr(this XElement t, out float value, XName name)
 		{
 			var x = t.Attribute(name);
 			if(x == null) { value = 0F; return false; }
-			value = x.Value.ToFloat();
+			x.Value.ToNumber(out value);
 			return true;
 		}
 

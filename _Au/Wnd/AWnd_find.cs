@@ -957,10 +957,9 @@ namespace Au.Types
 			program = null; pid = 0; tid = 0; owner = default;
 			switch(_o) {
 			case string s:
-				//LibThrowIfInvalid(s);
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
 				if(!s.Starts("**")) { //can be regex
-					if(s.FindChars(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
+					if(s.FindAny(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
 					if(APath.FindExtension(s) < 0 && !AWildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
 				}
 				program = s;
@@ -980,14 +979,6 @@ namespace Au.Types
 				break;
 			}
 		}
-
-		///// <exception cref="ArgumentException">The value is "" or 0 or contains \ or /.</exception>
-		//internal static void LibThrowIfInvalid(string s)
-		//{
-		//	if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
-		//	if(s.IndexOfAny(AExtString.Lib.pathSep) >= 0) throw new ArgumentException("Program name contains \\ or /.");
-		//	if(APath.FindExtension(s) < 0) PrintWarning("Program name without .exe.");
-		//}
 
 		/// <summary>
 		/// Returns true if nothing was assigned to this variable.

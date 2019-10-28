@@ -801,18 +801,6 @@ namespace Au.Controls
 			return -1;
 		}
 
-		/// <summary>
-		/// Finds row by row key and returns row index.
-		/// Returns -1 if not found.
-		/// </summary>
-		public int ZFindRow(in AStringSegment rowKey)
-		{
-			for(int r = 0, n = this.RowsCount; r < n; r++) {
-				if(this.Rows[r].Tag as string == rowKey) return r;
-			}
-			return -1;
-		}
-
 		void _ThrowIfRowInvalid(int row)
 		{
 			if((uint)row >= this.RowsCount) throw new ArgumentException("invalid row");
@@ -919,9 +907,10 @@ namespace Au.Controls
 			bool madeVisible = false;
 			g1:
 			int prevRow = -1;
-			foreach(var s in rows.Segments(" -", SegFlags.NoEmpty)) {
-				int row = ZFindRow(s); if(row < 0) throw new ArgumentException("invalid row " + s.ToString());
-				if(s.Offset > 0 && rows[s.Offset - 1] == '-') _ShowRange(row);
+			foreach(var v in rows.Segments(" -", SegFlags.NoEmpty)) {
+				string rowKey = rows[v.start..v.end];
+				int row = ZFindRow(rowKey); if(row < 0) throw new ArgumentException("invalid row " + rowKey);
+				if(v.start > 0 && rows[v.start - 1] == '-') _ShowRange(row);
 				Rows.ShowRow(row, visible);
 				prevRow = row;
 				madeVisible |= visible;

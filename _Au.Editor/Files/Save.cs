@@ -207,8 +207,8 @@ partial class FilesModel
 			//expanded folders
 			if(DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !Empty(s)) {
 				_control.BeginUpdate();
-				foreach(var seg in s.Segments(" ")) {
-					var fn = FindById(seg.Value);
+				foreach(var v in s.Segments(" ")) {
+					var fn = FindById(s[v.start..v.end]);
 					fn?.TreeNodeAdv.Expand();
 				}
 				_control.EndUpdate();
@@ -220,9 +220,9 @@ partial class FilesModel
 				int i = -2, iActive = s.ToInt();
 				FileNode fnActive = null;
 				//APerf.First();
-				foreach(var seg in s.Segments(" ")) {
+				foreach(var v in s.Segments(" ")) {
 					i++; if(i < 0) continue;
-					var fn = FindById(seg.Value); if(fn == null) continue;
+					var fn = FindById(s[v.start..v.end]); if(fn == null) continue;
 					OpenFiles.Add(fn);
 					if(i == iActive) fnActive = fn;
 				}

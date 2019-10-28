@@ -720,7 +720,7 @@ class CiAutocorrect
 				break;
 			case SyntaxKind.SingleLineDocumentationCommentTrivia:
 				suffix = "/// ";
-				newlineLast = cd.code.Regex(@"[ \t]*///", RXFlags.ANCHORED, pos..);
+				newlineLast = cd.code.RegexIsMatch(@"[ \t]*///", RXFlags.ANCHORED, pos..);
 				break;
 			default: return false;
 			}
@@ -759,7 +759,7 @@ class CiAutocorrect
 			suffix = "\"";
 			//indent more, unless line starts with "
 			int i = cd.sciDoc.Z.LineStartFromPos(true, pos);
-			if(!cd.code.Regex(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
+			if(!cd.code.RegexIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
 		}
 
 		var doc = cd.sciDoc;

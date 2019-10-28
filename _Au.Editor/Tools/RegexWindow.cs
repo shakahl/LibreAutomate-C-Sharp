@@ -37,7 +37,7 @@ namespace Au.Tools
 		string _GetContentText()
 		{
 			var s = ContentText ?? Au.Editor.Resources.Resources.Regex;
-			if(!s.Has('\n')) s = File.ReadAllText(s);
+			if(!s.Contains('\n')) s = File.ReadAllText(s);
 			return s;
 		}
 
@@ -95,7 +95,7 @@ namespace Au.Tools
 			Task.Run(() => {
 				int i = rx.IndexOf('%');
 				if(i >= 0) {
-					Debug.Assert(!rx.Has('\r'));
+					Debug.Assert(!rx.Contains('\r'));
 					rx = rx.Remove(i, 1);
 					i = rx.Length - i;
 				}

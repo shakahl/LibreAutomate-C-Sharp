@@ -104,7 +104,6 @@ namespace Au
 		/// <seealso cref="Print(object)"/>
 		/// <seealso cref="Print{T}(IEnumerable{T})"/>
 		/// <seealso cref="Print(object, object, object[])"/>
-		/// <seealso cref="PrintListEx{T}(IEnumerable{T}, string, int)"/>
 		public static void Write(string value)
 		{
 			Writer.WriteLine(value);

@@ -442,9 +442,9 @@ namespace Au.Types
 			c.color = 0;
 			if(s == null || s.Length < 2) return false;
 			if(s[0] == '0' && s[1] == 'x') {
-				c.color = s.ToInt(0, out int len);
-				if(len < 3) return false;
-				if(len <= 8) c.color |= unchecked((int)0xFF000000);
+				c.color = s.ToInt(0, out int end);
+				if(end < 3) return false;
+				if(end <= 8) c.color |= unchecked((int)0xFF000000);
 			} else if(s[0] == '#') {
 				c.color = s.ToInt(1, out int end, STIFlags.IsHexWithout0x);
 				if(end < 2) return false;

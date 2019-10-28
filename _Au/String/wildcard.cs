@@ -66,6 +66,7 @@ namespace Au
 				return Cpp.Cpp_StringLike(pt, t.Length, pw, pattern.Length, ignoreCase);
 		}
 #else
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static bool Like(this string t, string pattern, bool ignoreCase = false)
 		{
 			if(t == null) return false;
@@ -83,6 +84,7 @@ namespace Au
 			//	supports more wildcard characters etc, depends on current culture, is 6-250 times slower, has bugs.
 		}
 
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		static bool _WildcardCmp(char* s, char* w, int lenS, int lenW, char* table)
 		{
 			char* se = s + lenS, we = w + lenW;
@@ -370,7 +372,7 @@ namespace Au
 		/// Returns true if string contains wildcard characters: '*', '?'.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		public static bool HasWildcardChars(string s) //CONSIDER: IsWildcard
+		public static bool HasWildcardChars(string s)
 		{
 			if(s == null) return false;
 			for(int i = 0; i < s.Length; i++) {
@@ -394,7 +396,6 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Simple text (option t, or no *? characters and no t r R options).
-		/// <b>Match</b> calls <see cref="AExtString.Eq"/>.
 		/// </summary>
 		Text,
 

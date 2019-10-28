@@ -56,7 +56,7 @@ class PanelOutput : AuUserControlBase
 						if(f == null) return x[0].Value;
 						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
 					});
-				} else if((i = s.IndexOf("\n   at ") + 1) > 0 && s.IndexOf(":line ", i) > 0) { //stack trace with source file info
+				} else if((i = s.Find("\n   at ") + 1) > 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
 					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
 					var b = _sb;
 					//AOutput.QM2.Write("'" + s + "'");
@@ -70,27 +70,27 @@ class PanelOutput : AuUserControlBase
 					var rx = s_rx2; if(rx == null) s_rx2 = rx = new ARegex(@" in (.+?):line (?=\d+$)");
 					bool replaced = false, isMain = false;
 					int stackEnd = s.Length/*, stackEnd2 = 0*/;
-					foreach(var k in s.Segments(i, s.Length - i, SegSep.Line)) {
+					foreach(var k in s.Segments(SegSep.Line, range: i..)) {
 						//AOutput.QM2.Write("'"+k+"'");
-						if(k.Starts("   at ")) {
+						if(s.Eq(k.start, "   at ")) {
 							if(isMain) {
-								//if(stackEnd2 == 0 && k.Starts("   at Script.Main(String[] args) in ")) stackEnd2 = k.Offset; //rejected. In some cases may cut something important.
+								//if(stackEnd2 == 0 && s.Eq(k.start, "   at Script.Main(String[] args) in ")) stackEnd2 = k.start; //rejected. In some cases may cut something important.
 								continue;
 							}
-							if(!rx.MatchG(s, out var g, 1, (k.Offset + 6)..k.EndOffset)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
+							if(!rx.MatchG(s, out var g, 1, (k.start + 6)..k.end)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
 							var f = Program.Model.FindByFilePath(g.Value); if(f == null) continue;
-							int i1 = g.EndIndex + 6, len1 = k.EndOffset - i1;
+							int i1 = g.EndIndex + 6, len1 = k.end - i1;
 							b.Append("   at ")
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
-							isMain = k.Starts("   at Script..ctor(String[] args) in ");
-							if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.Offset + 6, g.Index - k.Offset - 10).Append("</\a>");
+							isMain = s.Eq(k.start, "   at Script..ctor(String[] args) in ");
+							if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Index - k.start - 10).Append("</\a>");
 							b.AppendLine();
 
 							replaced = true;
-						} else if(!(k.Starts("   ---") || k.Starts("---"))) {
-							stackEnd = k.Offset;
+						} else if(!(s.Eq(k.start, "   ---") || s.Eq(k.start, "---"))) {
+							stackEnd = k.start;
 							break;
 						}
 					}

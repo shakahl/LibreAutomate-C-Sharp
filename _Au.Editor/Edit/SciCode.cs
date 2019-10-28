@@ -574,8 +574,7 @@ class SciCode : AuScintilla
 			s = d.GetData("UnicodeText", false) as string;
 			break;
 		case _DD_DataType.Files:
-			var paths = d.GetData("FileDrop", false) as string[];
-			if(paths != null) {
+			if(d.GetData("FileDrop", false) is string[] paths) {
 				foreach(var path in paths) {
 					bool isLnk = path.Ends(".lnk", true);
 					if(isLnk) t.Append("//");
@@ -586,8 +585,8 @@ class SciCode : AuScintilla
 							var g = AShortcutFile.Open(path);
 							string target = g.TargetAnyType, args = null;
 							if(target.Starts("::")) {
-								using(var pidl = APidl.FromString(target))
-									name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
+								using var pidl = APidl.FromString(target);
+								name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
 							} else {
 								args = g.Arguments;
 								if(!target.Ends(".exe", true) || name.Find("Shortcut") >= 0)
@@ -767,7 +766,7 @@ class SciCode : AuScintilla
 		if(isFragment) {
 			b.Append(s);
 		} else {
-			var name = ZFile.Name; if(name.Regex(@"(?i)^(Script|Class)\d*\.cs")) name = null;
+			var name = ZFile.Name; if(name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 			var sType = isScript ? "script" : "class";
 			//APerf.First();
 			if(isScript && _RxScriptHeader.Match(s, out var m) && s.Find("\n// using //", m.Index) < 0 && s.Find("\n// main //", m.Index) < 0) {
@@ -975,7 +974,7 @@ class SciCode : AuScintilla
 		if(s.Length == 0) return;
 		bool wasSelection = x.selEnd > x.selStart;
 		bool caretAtEnd = wasSelection && Z.CurrentPos8 == x.linesEnd;
-		bool com = comment ?? !s.Regex("^[ \t]*//(?!/[^/])");
+		bool com = comment ?? !s.RegexIsMatch("^[ \t]*//(?!/[^/])");
 		s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
 		Z.ReplaceRange(false, x.linesStart, x.linesEnd, s);
 		if(wasSelection) {

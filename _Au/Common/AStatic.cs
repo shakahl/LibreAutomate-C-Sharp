@@ -83,94 +83,30 @@ namespace Au
 			return s;
 		}
 
-		///// <summary>
-		///// Writes Span to the output.
-		///// </summary>
-		//public static void Print<T>(T value) where T : struct //does not support ref struct
-		//{
-		//	AOutput.Write(value.ToString());
-		//}
-
-		//rejected. For ref struct use ToString.
-		///// <summary>
-		///// Writes Span to the output.
-		///// </summary>
-		//public static void Print<T>(Span<T> value)
-		//{
-		//	AOutput.Write(value.ToString());
-		//}
-
-		///// <summary>
-		///// Writes ReadOnlySpan to the output.
-		///// </summary>
-		//public static void Print<T>(ReadOnlySpan<T> value)
-		//{
-		//	AOutput.Write(value.ToString());
-		//}
+		internal static void LibPrintObjectToString(StringBuilder b, object value)
+		{
+			switch(value) {
+			case null: b.Append("null"); break;
+			case string s: b.Append(s); break;
+			case uint u: b.Append("0x").Append(u.ToString("X")); break;
+			case ulong u: b.Append("0x").Append(u.ToString("X")); break;
+			case ushort u: b.Append("0x").Append(u.ToString("X")); break;
+			case byte u: b.Append("0x").Append(u.ToString("X")); break;
+			case System.Collections.IEnumerable e: b.Append("{ ").AppendJoin(", ", System.Linq.Enumerable.Cast<object>(e)).Append(" }"); break;
+			default: b.Append(value); break;
+			}
+		}
 
 		/// <summary>
 		/// Writes array, List, Dictionary or other generic collection to the output, as a list of items separated by "\r\n".
 		/// </summary>
 		/// <param name="value">Array or generic collection of any type. Can be null.</param>
 		/// <remarks>
-		/// Calls <see cref="PrintListEx"/>, which calls <see cref="AOutput.Write"/>.
+		/// Calls <see cref="AOutput.Write"/>.
 		/// </remarks>
 		public static void Print<T>(IEnumerable<T> value)
 		{
-			PrintListEx(value);
-		}
-
-		//TODO: rarely used
-		/// <summary>
-		/// Writes array, List, Dictionary or other generic collection to the output, as a list of items.
-		/// </summary>
-		/// <param name="value">Array or generic collection of any type. Can be null.</param>
-		/// <param name="format">
-		/// Item format string.
-		/// 
-		/// These special substrings are replaced with:
-		/// {s} - <c>item.ToString</c>, or "null" if null.
-		/// {0} - item index, starting from 0.
-		/// {1} - item index, starting from 1.
-		/// 
-		/// Default "{s}\r\n". It works like <see cref="Print{T}(IEnumerable{T})"/>.
-		/// </param>
-		/// <param name="trimEnd">
-		/// How many characters to remove from the end of the result string.
-		/// Default 2 (removes the default "\r\n" separator from the last item).
-		/// </param>
-		/// <remarks>
-		/// Calls <see cref="object.ToString"/> and <see cref="AOutput.Write"/>.
-		/// </remarks>
-		public static void PrintListEx<T>(IEnumerable<T> value, string format = "{s}\r\n", int trimEnd = 2)
-		{
-			string s = null;
-			if(value != null) {
-				using(new Util.LibStringBuilder(out var b)) {
-					string[] a = null;
-					if(format != "{s}\r\n") format.RegexFindAll(@"(?s)(\{[s01]\})|.+?(?=(?1)|$)", 0, out a);
-					int i = 0;
-					foreach(T v in value) {
-						i++;
-						string t = v == null ? "null" : v.ToString();
-						if(a == null) {
-							b.AppendLine(t);
-						} else {
-							foreach(string m in a) {
-								switch(m) {
-								case "{s}": b.Append(t); break;
-								case "{0}": b.Append(i - 1); break;
-								case "{1}": b.Append(i); break;
-								default: b.Append(m); break;
-								}
-							}
-						}
-					}
-					if(trimEnd > 0 && i > 0) b.Length -= trimEnd;
-					s = b.ToString();
-				}
-			}
-			AOutput.Write(s);
+			AOutput.Write(value == null ? "null" : string.Join("\r\n", value));
 		}
 
 		/// <summary>
@@ -187,16 +123,7 @@ namespace Au
 			using(new Util.LibStringBuilder(out var b)) {
 				for(int i = 0, n = 2 + more.Length; i < n; i++) {
 					if(i > 0) b.Append(", ");
-					object v = i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]);
-					switch(v) {
-					case string s: b.Append(s); break;
-					case null: b.Append("null"); break;
-					case uint u: b.Append("0x").Append(u.ToString("X")); break;
-					case ulong u: b.Append("0x").Append(u.ToString("X")); break;
-					case ushort u: b.Append("0x").Append(u.ToString("X")); break;
-					case byte u: b.Append("0x").Append(u.ToString("X")); break;
-					default: b.Append(v); break;
-					}
+					LibPrintObjectToString(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]));
 				}
 				AOutput.Write(b.ToString());
 

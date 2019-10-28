@@ -702,7 +702,7 @@ class CiCompletion
 		int positionBack = 0, bracesFrom = 0, bracesLen = 0;
 		bool isEnter = key == Keys.Enter;
 		//ci.DebugPrint();
-		if(ch == default && s.FindChars("({[<") < 0) {
+		if(ch == default && s.FindAny("({[<") < 0) {
 			string s2 = null;
 			switch(item.kind) {
 			case CiItemKind.Method:

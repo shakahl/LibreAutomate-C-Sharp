@@ -460,7 +460,7 @@ class PanelFind : AuUserControlBase
 			}
 		} else {
 			for(int i = 0; i < text.Length; i += f.findText.Length) {
-				i = f.wholeWord ? text.FindWord(f.findText, i, !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
+				i = f.wholeWord ? text.FindWord(f.findText, i.., !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
 				if(i < 0) break;
 				a.Add((i, f.findText.Length));
 				if(one) break;
@@ -502,7 +502,7 @@ class PanelFind : AuUserControlBase
 				if(len == 0) doc.Focus();
 			} else i = -1;
 		} else {
-			i = f.wholeWord ? text.FindWord(f.findText, from, !f.matchCase, "_") : text.Find(f.findText, from, !f.matchCase);
+			i = f.wholeWord ? text.FindWord(f.findText, from.., !f.matchCase, "_") : text.Find(f.findText, from, !f.matchCase);
 			len = f.findText.Length;
 		}
 		//Print(from, i, len);
@@ -671,7 +671,7 @@ class PanelFind : AuUserControlBase
 				var sw = _SkipWildcards; if(sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
 				text = v.GetText();
 				if(text.Length == 0) continue;
-				if(text.Has('\0')) continue;
+				if(text.Contains('\0')) continue;
 				//APerf.NW();
 			}
 

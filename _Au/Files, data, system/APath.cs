@@ -345,7 +345,7 @@ namespace Au
 				int i = s.Length - 1;
 				if(i > 0) {
 					if(LibIsSepChar(s[i]) && s[i - 1] != ':') {
-						var s2 = s.TrimChars(@"\/");
+						var s2 = s.Trim(@"\/");
 						if(s2.Length != 0) s = s2;
 					}
 					if(_EndsWithDriveWithoutSep(s)) s += "\\";
@@ -598,7 +598,7 @@ namespace Au
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return "-";
 			name = name.RegexReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if(name.Regex(_rxInvalidFN2)) name = "@" + name;
+			if(name.RegexIsMatch(_rxInvalidFN2)) name = "@" + name;
 			return name;
 		}
 
@@ -613,7 +613,7 @@ namespace Au
 		public static bool IsInvalidFileName(string name)
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return true;
-			return name.Regex(_rxInvalidFN1) || name.Regex(_rxInvalidFN2);
+			return name.RegexIsMatch(_rxInvalidFN1) || name.RegexIsMatch(_rxInvalidFN2);
 		}
 
 		/// <summary>

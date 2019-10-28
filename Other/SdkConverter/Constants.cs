@@ -175,7 +175,7 @@ namespace SdkConverter
 					//remove this W version if non-W version exists
 					string s2;
 					if(_defineConst.TryGetValue(k, out s2) && s2.Length == s.Length - 1) {
-						int i = s.IndexOf("W = ");
+						int i = s.Find("W = ");
 						if(s2 == s.Remove(i, 1)) {
 							//Print($"removed W version because non-W exists: {v.Key} = {s}");
 							continue;

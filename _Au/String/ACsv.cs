@@ -81,6 +81,7 @@ namespace Au
 		/// <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
 		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static unsafe ACsv Parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true)
 		{
 			if(Empty(csv)) return new ACsv();
@@ -561,7 +562,8 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public double GetDouble(int row, int column)
 		{
-			return this[row, column].ToDouble();
+			this[row, column].ToNumber(out double R);
+			return R;
 		}
 
 		//rejected: ToXml, ToHtml. Could be pasted in Excel, but need special format, difficult to make fully compatible. OpenOffice supports only HTML.

@@ -660,7 +660,7 @@ namespace Au.Triggers
 			int pc = HasPostfixChar ? 1 : 0;
 			int len = t.Length - pc;
 
-			int caret = r.IndexOf("[[|]]");
+			int caret = r.Find("[[|]]");
 			if(caret >= 0) r = r.Remove(caret, 5);
 
 			if(0 == (flags & TAFlags.ReplaceRaw)) {
@@ -672,7 +672,7 @@ namespace Au.Triggers
 						if(uc == UnicodeCategory.LowercaseLetter) { allUpper = false; break; }
 						if(uc == UnicodeCategory.UppercaseLetter) allUpper = true;
 					}
-					r = r.Upper(!allUpper);
+					r = r.Upper(allUpper ? SUpper.AllChars : SUpper.FirstChar);
 				}
 			}
 

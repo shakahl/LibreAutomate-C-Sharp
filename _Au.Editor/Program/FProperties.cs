@@ -572,7 +572,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			for(int i = 0; i < 2; i++) {
 				var bits = AVersion.Is64BitProcess == (i == 0) ? "64" : "32";
 				using var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits);
-				if(hk?.GetValue("") is string path) return path.TrimChars("\"");
+				if(hk?.GetValue("") is string path) return path.Trim('\"');
 			}
 			return null;
 		}

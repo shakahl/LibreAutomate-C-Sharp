@@ -75,8 +75,8 @@ namespace Au
 	/// var s = "one two22, three333,four"; //subject string
 	/// var rx = @"\b(\w+?)(\d+)\b"; //regular expression
 	///  
-	///  Print("//Regex:");
-	/// Print(s.Regex(rx));
+	///  Print("//RegexIsMatch:");
+	/// Print(s.RegexIsMatch(rx));
 	///  
 	///  Print("//RegexMatch:");
 	/// if(s.RegexMatch(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
@@ -412,13 +412,7 @@ namespace Au
 		static bool _GetStartEnd(string s, Range? range, out int start, out int end)
 		{
 			if(s == null) { start = end = 0; return false; }
-			if(range == null) {
-				start = 0;
-				end = s.Length;
-			} else {
-				(start, end) = range.GetValueOrDefault().GetOffsetAndLength(s.Length);
-				end += start;
-			}
+			(start, end) = range?.GetStartEnd(s.Length) ?? (0, s.Length);
 			return true;
 		}
 
@@ -866,6 +860,7 @@ namespace Au
 
 		//Used by _ReplaceAll and RXMatch.ExpandReplacement.
 		//Fully supports .NET regular expression substitution syntax. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="AddReplaceFunc"/>.
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		internal static void LibExpandReplacement(RXMatch m, string repl, StringBuilder b)
 		{
 			fixed(char* s0 = repl) {
@@ -1129,7 +1124,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid regular expression.</exception>
 		/// <exception cref="AuException">Failed (unlikely).</exception>
-		public static bool Regex(this string t, string rx, RXFlags flags = 0, Range? range = null)
+		public static bool RegexIsMatch(this string t, string rx, RXFlags flags = 0, Range? range = null)
 		{
 			var x = _cache.AddOrGet(rx, flags);
 			return x.IsMatch(t, range);

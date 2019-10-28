@@ -625,7 +625,7 @@ namespace Au
 				return false;
 			}
 
-			//[MethodImpl(MethodImplOptions.AggressiveOptimization)] //does nothing
+			[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 			bool _FindImage(_Image image, out WIAlso alsoAction, ref AWinImage alsoResult)
 			{
 				alsoAction = WIAlso.FindOtherOfList;
@@ -798,7 +798,7 @@ namespace Au
 				return ip < 0xff000000; //transparent?
 			}
 
-			[MethodImpl(MethodImplOptions.NoInlining)]
+			[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 			static bool _MatchPixelDiff(uint ap, uint ip, uint colorDiff)
 			{
 				//info: optimized. Don't modify.

@@ -101,10 +101,6 @@ class PanelInfo : AuUserControlBase
 		var s = e.Link;
 		if(s=="?") {
 			ZSetText(c_aboutHtml);
-			//} else if(s.Starts('|')) { //open symbol source file and go to
-			//	CiUtil.OpenSymbolSourceFile(s, _w);
-			//} else if(s.Has("/a.html#")) { //open symbol source web page
-			//	CiUtil.OpenSymbolSourceUrl(s);
 		} else if(s.Starts('#')) { //anchor
 			e.Handled = false;
 		} else {

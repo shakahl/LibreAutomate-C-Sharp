@@ -4783,8 +4783,28 @@
         </member>
         <member name="F:Au.Types.STIFlags.DontSkipSpaces">
             <summary>
-            If string starts with a space, return 0.
-            For example, if string is " 5" return 0, not 5. 
+            Fail if string starts with a whitespace character.
+            </summary>
+        </member>
+        <member name="T:Au.Types.SUpper">
+            <summary>
+            Used with <see cref="M:Au.AExtString.Upper(System.String,Au.Types.SUpper,System.Globalization.CultureInfo)"/>
+            </summary>
+        </member>
+        <member name="F:Au.Types.SUpper.AllChars">
+            <summary>
+            Convert all characters to upper case.
+            </summary>
+        </member>
+        <member name="F:Au.Types.SUpper.FirstChar">
+            <summary>
+            Convert only the first character to upper case.
+            </summary>
+        </member>
+        <member name="F:Au.Types.SUpper.TitleCase">
+            <summary>
+            Convert the first character of each word to upper case and other characters to lower case.
+            Calls <see cref="M:System.Globalization.TextInfo.ToTitleCase(System.String)"/>.
             </summary>
         </member>
         <member name="T:Au.Types.RXMatch">
@@ -5165,7 +5185,7 @@
         </member>
         <member name="T:Au.Types.SegFlags">
             <summary>
-            Flags for <see cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags)"/> and some other functions.
+            Flags for <see cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/> and some other functions.
             </summary>
         </member>
         <member name="F:Au.Types.SegFlags.NoEmpty">
@@ -5176,28 +5196,21 @@
         </member>
         <member name="T:Au.Types.SegParser">
             <summary>
-            Splits a string or <b>AStringSegment</b> into substrings as <see cref="T:Au.AStringSegment"/> variables.
+            Splits a string into substrings as start/end offsets or strings.
             </summary>
             <remarks>
-            Used with foreach. Also used internally by some functions of this library, for example <see cref="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags)"/> and <see cref="M:Au.AExtString.SegLines(System.String,System.Int32,System.Boolean)"/>.
-            Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags)"/> or <see cref="M:Au.AStringSegment.Split(System.String,Au.Types.SegFlags)"/> with foreach.
+            Can be used with foreach. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/> with foreach.
+            Also used by <see cref="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags,System.Int32,System.Nullable{System.Range})"/> and <see cref="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})"/>.
             </remarks>
         </member>
-        <member name="M:Au.Types.SegParser.#ctor(System.String,System.String,Au.Types.SegFlags)">
+        <member name="M:Au.Types.SegParser.#ctor(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})">
             <summary>
             Initializes this instance to split a string.
             </summary>
             <param name="s">The string.</param>
             <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
             <param name="flags"></param>
-        </member>
-        <member name="M:Au.Types.SegParser.#ctor(Au.AStringSegment@,System.String,Au.Types.SegFlags)">
-            <summary>
-            Initializes this instance to split a <see cref="T:Au.AStringSegment"/>.
-            </summary>
-            <param name="seg">The AStringSegment.</param>
-            <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
-            <param name="flags"></param>
+            <param name="range">Part of the string to split.</param>
         </member>
         <member name="M:Au.Types.SegParser.ToStringArray(System.Int32)">
             <summary>
@@ -5213,7 +5226,6 @@
         <member name="F:Au.Types.WXType.Text">
             <summary>
             Simple text (option t, or no *? characters and no t r R options).
-            <b>Match</b> calls <see cref="M:Au.AExtString.Eq(System.String,System.String,System.Boolean)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.WXType.Wildcard">
@@ -5863,30 +5875,7 @@
             </summary>
             <param name="value">Array or generic collection of any type. Can be null.</param>
             <remarks>
-            Calls <see cref="M:Au.AStatic.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)"/>, which calls <see cref="M:Au.AOutput.Write(System.String)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AStatic.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)">
-            <summary>
-            Writes array, List, Dictionary or other generic collection to the output, as a list of items.
-            </summary>
-            <param name="value">Array or generic collection of any type. Can be null.</param>
-            <param name="format">
-            Item format string.
-            
-            These special substrings are replaced with:
-            {s} - <c>item.ToString</c>, or "null" if null.
-            {0} - item index, starting from 0.
-            {1} - item index, starting from 1.
-            
-            Default "{s}\r\n". It works like <see cref="M:Au.AStatic.Print``1(System.Collections.Generic.IEnumerable{``0})"/>.
-            </param>
-            <param name="trimEnd">
-            How many characters to remove from the end of the result string.
-            Default 2 (removes the default "\r\n" separator from the last item).
-            </param>
-            <remarks>
-            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.AOutput.Write(System.String)"/>.
+            Calls <see cref="M:Au.AOutput.Write(System.String)"/>.
             </remarks>
         </member>
         <member name="M:Au.AStatic.Print(System.Object,System.Object,System.Object[])">
@@ -6096,6 +6085,14 @@
             This extension method has been added because Rectangle.IsEmpty returns true only when all fields are 0, which is not very useful.
             </summary>
         </member>
+        <member name="M:Au.AExtensions.GetStartEnd(System.Range,System.Int32)">
+            <summary>
+            Calls <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> and returns start and end instead of start and length.
+            </summary>
+            <param name="t"></param>
+            <param name="length"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
         <member name="M:Au.AExtensions.Has``1(``0,``0)">
             <summary>
             Returns true if this enum variable has all flag bits specified in <i>flag</i>.
@@ -6103,7 +6100,7 @@
             <param name="t"></param>
             <param name="flag">One or more flags.</param>
             <remarks>
-            The same as <b>Enum.HasFlag</b>, but about 20 times faster. About 8 times slower than code with operators.
+            The same as code <c>(t &amp; flag) == flag</c> or <b>Enum.HasFlag</b>.
             </remarks>
         </member>
         <member name="M:Au.AExtensions.HasAny``1(``0,``0)">
@@ -6112,9 +6109,6 @@
             </summary>
             <param name="t"></param>
             <param name="flags">One or more flags.</param>
-            <remarks>
-            About 8 times slower than code with operators.
-            </remarks>
         </member>
         <member name="M:Au.AExtensions.SetFlag``1(``0@,``0,System.Boolean)">
             <summary>
@@ -7399,30 +7393,30 @@
         </member>
         <member name="M:Au.AExtXml.Attr(System.Xml.Linq.XElement,System.Xml.Linq.XName,System.Int32)">
             <summary>
-            Gets attribute value converted to int (<see cref="M:Au.AExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>).
+            Gets attribute value converted to int number.
             If the attribute does not exist, returns defaultValue.
             If the attribute value is empty or does not begin with a valid number, returns 0.
             </summary>
         </member>
         <member name="M:Au.AExtXml.Attr(System.Xml.Linq.XElement,System.Int32@,System.Xml.Linq.XName)">
             <summary>
-            Gets attribute value converted to int (<see cref="M:Au.AExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>).
+            Gets attribute value converted to int number.
             If the attribute does not exist, sets value=0 and returns false.
             If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
             </summary>
         </member>
         <member name="M:Au.AExtXml.Attr(System.Xml.Linq.XElement,System.Int64@,System.Xml.Linq.XName)">
             <summary>
-            Gets attribute value converted to long (<see cref="M:Au.AExtString.ToInt64(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)"/>).
+            Gets attribute value converted to long number.
             If the attribute does not exist, sets value=0 and returns false.
             If the attribute value is empty or does not begin with a valid number, sets value=0 and returns true.
             </summary>
         </member>
         <member name="M:Au.AExtXml.Attr(System.Xml.Linq.XElement,System.Single@,System.Xml.Linq.XName)">
             <summary>
-            Gets attribute value converted to float (<see cref="M:Au.AExtString.ToFloat(System.String,System.Boolean)"/>).
-            If the attribute does not exist, sets value=0F and returns false.
-            If the attribute value is empty or is not a valid number, sets value=0F and returns true.
+            Gets attribute value converted to float number.
+            If the attribute does not exist, sets value=0 and returns false.
+            If the attribute value is empty or is not a valid number, sets value=0 and returns true.
             </summary>
         </member>
         <member name="M:Au.AExtXml.HasAttr(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
@@ -13812,7 +13806,6 @@
             <seealso cref="M:Au.AStatic.Print(System.Object)"/>
             <seealso cref="M:Au.AStatic.Print``1(System.Collections.Generic.IEnumerable{``0})"/>
             <seealso cref="M:Au.AStatic.Print(System.Object,System.Object,System.Object[])"/>
-            <seealso cref="M:Au.AStatic.PrintListEx``1(System.Collections.Generic.IEnumerable{``0},System.String,System.Int32)"/>
         </member>
         <member name="P:Au.AOutput.Writer">
             <summary>
@@ -14777,11 +14770,9 @@
             <remarks>
             Some .NET <see cref="T:System.String"/> methods use <see cref="F:System.StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
             Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
-            This class adds their versions that use <b>StringComparison.Ordinal[IgnoreCase]</b>. Same or similar name, usually a shorter version.
-            For example, <b>EndsWith</b> (of .NET) uses <b>StringComparison.CurrentCulture</b>, and <b>Ends</b> (of this class) uses <b>StringComparison.Ordinal</b>.
-            
+            This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
             This class also adds more methods.
-            You also can find string functions in other classes of this library, including <see cref="T:Au.Util.AStringUtil"/>, <see cref="T:Au.ARegex"/>, <see cref="T:Au.AChar"/>, <see cref="T:Au.APath"/>, <see cref="T:Au.AStringSegment"/>, <see cref="T:Au.ACsv"/>, <see cref="T:Au.AKeys.More"/>, <see cref="T:Au.Util.AConvert"/>, <see cref="T:Au.Util.AHash"/>.
+            You also can find string functions in other classes of this library, including <see cref="T:Au.Util.AStringUtil"/>, <see cref="T:Au.ARegex"/>, <see cref="T:Au.AChar"/>, <see cref="T:Au.APath"/>, <see cref="T:Au.ACsv"/>, <see cref="T:Au.AKeys.More"/>, <see cref="T:Au.Util.AConvert"/>, <see cref="T:Au.Util.AHash"/>.
             </remarks>
         </member>
         <member name="M:Au.AExtString.Eq(System.String,System.String,System.Boolean)">
@@ -14813,7 +14804,7 @@
             <summary>
             Compares part of this string with other string. Returns true if equal.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="startIndex">Offset in this string. If invalid, returns false.</param>
             <param name="s">Other string.</param>
             <param name="ignoreCase">Case-insensitive.</param>
@@ -14829,7 +14820,7 @@
             Compares part of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="startIndex">Offset in this string. If invalid, returns false.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <param name="strings">Other strings.</param>
@@ -14845,7 +14836,6 @@
             <param name="t">This string. Can be null.</param>
             <param name="s">Other string. Can be null.</param>
             <remarks>
-            Calls <see cref="M:Au.AExtString.Eq(System.String,System.String,System.Boolean)"/> with <i>ignoreCase</i> true.
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
@@ -14853,7 +14843,7 @@
             <summary>
             Compares the end of this string with other string. Returns true if equal.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="s">Other string.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
@@ -14866,7 +14856,7 @@
             Compares the end of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <param name="strings">Other strings.</param>
             <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
@@ -14878,14 +14868,14 @@
             <summary>
             Returns true if this string ends with the specified character.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="c">The character.</param>
         </member>
         <member name="M:Au.AExtString.Starts(System.String,System.String,System.Boolean)">
             <summary>
             Compares the beginning of this string with other string. Returns true if equal.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="s">Other string.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
@@ -14898,7 +14888,7 @@
             Compares the beginning of this string with multiple strings.
             Returns 1-based index of matching string, or 0 if none.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <param name="strings">Other strings.</param>
             <exception cref="T:System.ArgumentNullException">A string in <i>strings</i> is null.</exception>
@@ -14910,19 +14900,18 @@
             <summary>
             Returns true if this string starts with the specified character.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
+            <param name="t">This string.</param>
             <param name="c">The character.</param>
         </member>
         <member name="M:Au.AExtString.Find(System.String,System.String,System.Boolean)">
             <summary>
             Finds substring in this string. Returns its 0-based index, or -1 if not found.
             </summary>
-            <param name="t">This string. If null, returns -1.</param>
+            <param name="t">This string.</param>
             <param name="s">Subtring to find.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
             <remarks>
-            Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>.
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
@@ -14930,95 +14919,128 @@
             <summary>
             Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
             </summary>
-            <param name="t">This string. If null, returns -1.</param>
+            <param name="t">This string.</param>
             <param name="s">Subtring to find.</param>
-            <param name="startIndex">The search starting position.</param>
+            <param name="startIndex">The search start index.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
             <remarks>
-            Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.StringComparison)"/>.
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
-        <member name="M:Au.AExtString.Find(System.String,System.String,System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.AExtString.Find(System.String,System.String,System.Range,System.Boolean)">
             <summary>
             Finds substring in part of this string. Returns its 0-based index, or -1 if not found.
             </summary>
-            <param name="t">This string. If null, returns -1.</param>
+            <param name="t">This string.</param>
             <param name="s">Subtring to find.</param>
-            <param name="startIndex">The search starting position.</param>
-            <param name="count">The number of characters to examine.</param>
+            <param name="range">The search range.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <remarks>
-            Calls <see cref="M:System.String.IndexOf(System.String,System.Int32,System.Int32,System.StringComparison)"/>.
             Uses ordinal comparison (does not depend on current culture/locale).
             </remarks>
         </member>
-        <member name="M:Au.AExtString.Has(System.String,System.String,System.Boolean)">
+        <member name="M:Au.AExtString.FindAny(System.String,System.String,System.Int32,System.Int32)">
             <summary>
-            Returns true if this string contains the specified substring.
+            Finds the first character specified in <i>chars</i>. Returns its index, or -1 if not found.
             </summary>
-            <param name="t">This string. If null, returns false.</param>
-            <param name="s">Subtring to find.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-            <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <remarks>
-            Calls <see cref="M:System.String.IndexOf(System.String,System.StringComparison)"/>.
-            Uses ordinal comparison (does not depend on current culture/locale).
-            </remarks>
-        </member>
-        <member name="M:Au.AExtString.Has(System.String,System.Char)">
-            <summary>
-            Returns true if this string contains the specified character.
-            </summary>
-            <param name="t">This string. If null, returns false.</param>
-            <param name="c">Character to find.</param>
-        </member>
-        <member name="M:Au.AExtString.FindChars(System.String,System.String,System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Finds the first occurence in this string of any character in (or not in) a character set. Returns its 0-based index, or -1 if not found.
-            </summary>
-            <param name="t">This string. If null, returns -1.</param>
-            <param name="chars">Characters to find.</param>
-            <param name="startIndex">The search starting position. Default 0.</param>
-            <param name="count">The number of characters to examine. If -1 (default), until the end of string.</param>
-            <param name="not">Find character not specified in <i>chars</i>.</param>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
             <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
         </member>
-        <member name="M:Au.AExtString.FindLastChars(System.String,System.String,System.Boolean)">
+        <member name="M:Au.AExtString.FindNot(System.String,System.String,System.Int32,System.Int32)">
             <summary>
-            Finds the last occurence in this string of any character in (or not in) a character set. Returns its 0-based index, or -1 if not found.
+            Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
             </summary>
-            <param name="t">This string. If null, returns -1.</param>
-            <param name="chars">Characters to find.</param>
-            <param name="not">Find character not specified in <i>chars</i>.</param>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+        </member>
+        <member name="M:Au.AExtString.IndexOfNot(System.ReadOnlySpan{System.Char},System.String)">
+            <summary>
+            Finds the first character not specified in <i>chars</i>. Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
             <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
         </member>
-        <member name="M:Au.AExtString.TrimChars(System.String,System.String,System.Boolean,System.Boolean)">
+        <member name="M:Au.AExtString.LastIndexOfNot(System.ReadOnlySpan{System.Char},System.String)">
             <summary>
-            Removes specified characters for the start and/or end of this string. Returns the result string.
+            Finds the last character not specified in <i>chars</i>. Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.AExtString.FindLastAny(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Finds the last character specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+        </member>
+        <member name="M:Au.AExtString.FindLastNot(System.String,System.String,System.Int32,System.Int32)">
+            <summary>
+            Finds the last character not specified in <i>chars</i> (searches right to left). Returns its index, or -1 if not found.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters.</param>
+            <param name="startOfRange">The start index of the search range. Default 0.</param>
+            <param name="endOfRange">The end index of the search range. If -1 (default), the length of this string.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
+        </member>
+        <member name="M:Au.AExtString.Trim(System.String,System.String)">
+            <summary>
+            Removes specified characters from the start and end of this string.
+            Returns the result string.
             </summary>
             <param name="t">This string.</param>
             <param name="chars">Characters to remove.</param>
-            <param name="start">Remove from start. Default true.</param>
-            <param name="end">Remove from end. Default true.</param>
             <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
         </member>
-        <member name="M:Au.AExtString.FindWord(System.String,System.String,System.Int32,System.Boolean,System.String)">
+        <member name="M:Au.AExtString.TrimStart(System.String,System.String)">
+            <summary>
+            Removes specified characters from the start of this string.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters to remove.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.AExtString.TrimEnd(System.String,System.String)">
+            <summary>
+            Removes specified characters from the end of this string.
+            Returns the result string.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="chars">Characters to remove.</param>
+            <exception cref="T:System.ArgumentNullException"><i>chars</i> is null.</exception>
+        </member>
+        <member name="M:Au.AExtString.FindWord(System.String,System.String,System.Nullable{System.Range},System.Boolean,System.String)">
             <summary>
             Finds whole word. Returns its 0-based index, or -1 if not found.
             </summary>
-            <param name="t">This string. If null, returns -1.</param>
+            <param name="t">This string.</param>
             <param name="s">Subtring to find.</param>
-            <param name="startIndex">The search starting position.</param>
+            <param name="range">The search range.</param>
             <param name="ignoreCase">Case-insensitive.</param>
             <param name="otherWordChars">Additional word characters, for which <see cref="M:System.Char.IsLetterOrDigit(System.Char)"/> returns false. For example "_".</param>
             <exception cref="T:System.ArgumentNullException"><i>s</i> is null.</exception>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i>.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
             <remarks>
             If <i>s</i> starts with a word character finds substring that is not preceded by a word character.
             If <i>s</i> ends with a word character, finds substring that is not followed by a word character.
@@ -15032,7 +15054,32 @@
             </summary>
             <param name="t">This string.</param>
         </member>
-        <member name="M:Au.AExtString.SegSplit(System.String,System.String,System.Int32,Au.Types.SegFlags)">
+        <member name="M:Au.AExtString.AsSpan(System.String,System.ValueTuple{System.Int32,System.Int32})">
+            <summary>
+            Creates a new read-only span of this string using tuple (int start, int end).
+            </summary>
+            <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
+        </member>
+        <member name="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})">
+            <summary>
+            This function can be used with foreach to split this string into substrings as start/end offsets.
+            </summary>
+            <param name="t">This string.</param>
+            <param name="separators">Characters that delimit the substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
+            <param name="flags"></param>
+            <param name="range">Part of this string to split.</param>
+            <example>
+            <code><![CDATA[
+            string s = "one * two three ";
+            foreach(var t in s.Segments(" ")) Print(t);
+            foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) Print(t);
+            ]]></code>
+            </example>
+            <seealso cref="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags,System.Int32,System.Nullable{System.Range})"/>
+            <seealso cref="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})"/>
+            <seealso cref="M:Au.AExtString.AsSpan(System.String,System.ValueTuple{System.Int32,System.Int32})"/>
+        </member>
+        <member name="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags,System.Int32,System.Nullable{System.Range})">
             <summary>
             Splits this string into substrings using the specified separators.
             </summary>
@@ -15040,42 +15087,23 @@
             <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
             <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="M:System.String.Split(System.Char,System.Int32,System.StringSplitOptions)"/>.</param>
             <param name="flags"></param>
-            <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags)"/>
-            <seealso cref="M:Au.AExtString.SegLines(System.String,System.Int32,System.Boolean)"/>
+            <param name="range">Part of this string to split.</param>
+            <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
+            <seealso cref="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})"/>
             <seealso cref="T:Au.Types.SegParser"/>
             <seealso cref="M:System.String.Split(System.Char,System.Int32,System.StringSplitOptions)"/>
             <seealso cref="M:System.String.Join(System.Char,System.Object[])"/>
         </member>
-        <member name="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags)">
-            <summary>
-            Splits this string into substrings using the specified separators.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
-            <param name="flags"></param>
-        </member>
-        <member name="M:Au.AExtString.SegLines(System.String,System.Int32,System.Boolean)">
+        <member name="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})">
             <summary>
             Splits this string into lines using separators "\r\n", "\n", "\r".
             </summary>
             <param name="t">This string.</param>
+            <param name="noEmptyLines">Don't need empty lines.</param>
             <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more lines, the last element will contain single line, unlike with <see cref="M:System.String.Split(System.Char,System.Int32,System.StringSplitOptions)"/></param>
-            <param name="noEmptyLines">Don't need empty lines.</param>
-            <remarks>
-            Uses this code: <c>return t.SegSplit(SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
-            See <see cref="M:Au.AExtString.SegSplit(System.String,System.String,System.Int32,Au.Types.SegFlags)"/>, <see cref="F:Au.Types.SegSep.Line"/>, <see cref="F:Au.Types.SegFlags.NoEmpty"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AExtString.SegLines(System.String,System.Boolean)">
-            <summary>
-            Splits this string into lines using separators "\r\n", "\n", "\r".
-            </summary>
-            <param name="t">This string.</param>
-            <param name="noEmptyLines">Don't need empty lines.</param>
-            <remarks>
-            Uses this code: <c>return t.SegSplit(SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0);</c>.
-            See <see cref="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags)"/>, <see cref="F:Au.Types.SegSep.Line"/>, <see cref="F:Au.Types.SegFlags.NoEmpty"/>.
-            </remarks>
+            <param name="range">Part of this string to split.</param>
+            <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
+            <seealso cref="F:Au.Types.SegSep.Line"/>
         </member>
         <member name="M:Au.AExtString.LineCount(System.String,System.Boolean)">
             <summary>
@@ -15088,7 +15116,8 @@
         </member>
         <member name="M:Au.AExtString.Lower(System.String)">
             <summary>
-            Converts this string to lower case. Returns the result string.
+            Converts this string to lower case.
+            Returns the result string.
             </summary>
             <param name="t">This string.</param>
             <remarks>
@@ -15097,32 +15126,33 @@
         </member>
         <member name="M:Au.AExtString.Upper(System.String)">
             <summary>
-            Converts this string to upper case. Returns the result string.
+            Converts this string to upper case.
+            Returns the result string.
             </summary>
             <param name="t">This string.</param>
             <remarks>
             Calls <see cref="M:System.String.ToUpperInvariant"/>.
             </remarks>
         </member>
-        <member name="M:Au.AExtString.Upper(System.String,System.Boolean)">
+        <member name="M:Au.AExtString.Upper(System.String,Au.Types.SUpper,System.Globalization.CultureInfo)">
             <summary>
-            Converts this string or only the first character to upper case. Returns the result string.
+            Converts this string or only the first character to upper case or all words to title case.
+            Returns the result string.
             </summary>
             <param name="t">This string.</param>
-            <param name="firstCharOnly">Convert only the first character.</param>
-            <remarks>
-            Calls <see cref="M:System.String.ToUpperInvariant"/>.
-            </remarks>
+            <param name="how"></param>
+            <param name="culture">Culture, for example <c>CultureInfo.CurrentCulture</c>. If null (default) uses invariant culture.</param>
         </member>
         <member name="M:Au.AExtString.ToInt(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)">
             <summary>
-            Converts part of this string to int.
-            Returns the int value, or 0 if fails to convert.
+            Converts part of this string to int number and gets the number end index.
+            Returns the number, or 0 if fails to convert.
             </summary>
             <param name="t">This string.</param>
             <param name="startIndex">Offset in this string where to start parsing.</param>
-            <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
+            <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
             <param name="flags"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
             <remarks>
             Fails to convert when string is null, "", does not begin with a number or the number is too big.
             
@@ -15131,101 +15161,200 @@
             	Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
             	Gets the end of the number part.
             	No exception when cannot convert.
-            	Supports hexadecimal format, like <c>"0x1A"</c>, case-insensitive.
-            	Much faster.
+            	The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
+            	Faster.
             
-            The number in string can begin with ASCII spaces, tabs or newlines, like <c>" 5"</c>.
+            The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
             The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
             Fails if the number is greater than +- <b>uint.MaxValue</b> (0xffffffff).
             The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to uint (need cast).
             Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
             </remarks>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
         </member>
         <member name="M:Au.AExtString.ToInt(System.String,System.Int32,Au.Types.STIFlags)">
             <summary>
-            Converts part of this string to int.
-            Returns the int value, or 0 if fails to convert.
+            Converts part of this string to int number.
+            Returns the number, or 0 if fails to convert.
             </summary>
-        </member>
-        <member name="M:Au.AExtString.ToInt(System.String,Au.Types.STIFlags)">
-            <summary>
-            Converts the start of this string to int.
-            Returns the int value, or 0 if fails to convert.
-            </summary>
-        </member>
-        <member name="M:Au.AExtString.ToInt64(System.String,System.Int32,System.Int32@,Au.Types.STIFlags)">
-            <summary>
-            Converts part of this string to long.
-            Returns the long value, or 0 if fails to convert.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="startIndex">Offset in this string where to start parsing.</param>
-            <param name="numberEndIndex">Receives offset in string where the number part ends. If fails to convert, receives 0.</param>
-            <param name="flags"></param>
-            <remarks>
-            Fails to convert when string is null, "", does not begin with a number or the number is too big.
-            
-            Unlike <b>long.Parse</b> and <b>Convert.ToInt64</b>:
-            	The number in string can be followed by more text, like <c>"123text"</c>.
-            	Has <i>startIndex</i> parameter that allows to get number from middle, like <c>"text123text"</c>.
-            	Gets the end of the number part.
-            	No exception when cannot convert.
-            	Supports hexadecimal format, like <c>"0x1A"</c>, case-insensitive.
-            	Much faster.
-            
-            The number in string can begin with ASCII spaces, tabs or newlines, like <c>" 5"</c>.
-            The number in string can be with <c>"-"</c> or <c>"+"</c>, like <c>"-5"</c>, but not like <c>"- 5"</c>.
-            Fails if the number is greater than +- <b>ulong.MaxValue</b> (0xffffffffffffffff).
-            The return value becomes negative if the number is greater than <b>long.MaxValue</b>, for example <c>"0xffffffffffffffff"</c> is -1, but it becomes correct if assigned to ulong (need cast).
-            Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
-            </remarks>
             <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
         </member>
-        <member name="M:Au.AExtString.ToInt64(System.String,System.Int32,Au.Types.STIFlags)">
+        <member name="M:Au.AExtString.ToInt(System.String,System.Int32@,System.Int32,System.Int32@,Au.Types.STIFlags)">
             <summary>
-            Converts part of this string to long.
-            Returns the long value, or 0 if fails to convert.
+            Converts part of this string to int number and gets the number end index.
+            Returns false if fails.
             </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="startIndex">Offset in this string where to start parsing.</param>
+            <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
+            <param name="flags"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
         </member>
-        <member name="M:Au.AExtString.ToInt64(System.String,Au.Types.STIFlags)">
+        <member name="M:Au.AExtString.ToInt(System.String,System.Int32@,System.Int32,Au.Types.STIFlags)">
             <summary>
-            Converts the start of this string to long.
-            Returns the long value, or 0 if fails to convert.
+            Converts part of this string to int number.
+            Returns false if fails.
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
         </member>
-        <member name="M:Au.AExtString.ToDouble(System.String,System.Boolean)">
+        <member name="M:Au.AExtString.ToInt(System.String,System.UInt32@,System.Int32,System.Int32@,Au.Types.STIFlags)">
             <summary>
-            Converts this string to double.
+            Converts part of this string to uint number and gets the number end index.
+            Returns false if fails.
             </summary>
-            <param name="t">This string.</param>
-            <param name="canThrow">If true, exception if the string is not a valid number or is null. If false (default), then returns 0.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.AExtString.ToInt(System.String,System.UInt32@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to uint number.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.AExtString.ToInt(System.String,System.Int64@,System.Int32,System.Int32@,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to long number and gets the number end index.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.AExtString.ToInt(System.String,System.Int64@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to long number.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.AExtString.ToInt(System.String,System.UInt64@,System.Int32,System.Int32@,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to ulong number and gets the number end index.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.AExtString.ToInt(System.String,System.UInt64@,System.Int32,Au.Types.STIFlags)">
+            <summary>
+            Converts part of this string to ulong number.
+            Returns false if fails.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
+        </member>
+        <member name="M:Au.AExtString.ToNumber(System.String,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to double number.
+            Returns the number, or 0 if fails to convert.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
             <remarks>
-            Calls <see cref="M:System.Double.Parse(System.String,System.Globalization.NumberStyles,System.IFormatProvider)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b> and <see cref="T:System.Globalization.NumberStyles"/> <b>Float</b> and <b>AllowThousands</b>.
+            Calls <see cref="M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Double@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            Fails if the string is null or "" or isn't a valid floating-point number.
+            Examples of valid numbers: "12", " -12.3 ", ".12", "12.", "12E3", "12.3e-45", "1,234.5" (with style <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like "2text" is invalid, unless range is <c>0..1</c>.
             </remarks>
         </member>
-        <member name="M:Au.AExtString.ToFloat(System.String,System.Boolean)">
+        <member name="M:Au.AExtString.ToNumber(System.String,System.Double@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
             <summary>
-            Converts this string to float.
+            Converts this string or its part to double number.
+            Returns false if fails.
             </summary>
-            <param name="t">This string.</param>
-            <param name="canThrow">If true, exception if the string is not a valid number or is null. If false (default), then returns 0.</param>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
             <remarks>
-            Calls <see cref="M:System.Single.Parse(System.String,System.Globalization.NumberStyles,System.IFormatProvider)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b> and <see cref="T:System.Globalization.NumberStyles"/> <b>Float</b> and <b>AllowThousands</b>.
+            Calls <see cref="M:System.Double.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Double@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.AExtString.ToNumber(System.String,System.Single@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to float number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Single.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Single@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.AExtString.ToNumber(System.String,System.Int32@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to int number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Int32.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Int32@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.AExtString.ToNumber(System.String,System.UInt32@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to uint number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.UInt32.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.UInt32@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.AExtString.ToNumber(System.String,System.Int64@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to long number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.Int64.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.Int64@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.AExtString.ToNumber(System.String,System.UInt64@,System.Nullable{System.Range},System.Globalization.NumberStyles)">
+            <summary>
+            Converts this string or its part to ulong number.
+            Returns false if fails.
+            </summary>
+            <param name="t">This string. Can be null.</param>
+            <param name="result">Receives the result number.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <param name="style">The permitted number format in the string.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid <i>style</i>.</exception>
+            <remarks>
+            Calls <see cref="M:System.UInt64.TryParse(System.ReadOnlySpan{System.Char},System.Globalization.NumberStyles,System.IFormatProvider,System.UInt64@)"/> with <see cref="T:System.Globalization.CultureInfo"/> <b>InvariantCulture</b>.
             </remarks>
         </member>
         <member name="M:Au.AExtString.ReplaceAt(System.String,System.Int32,System.Int32,System.String)">
             <summary>
-            Replaces part of this string with other string. Returns the result string.
+            Replaces part of this string with other string.
+            Returns the result string.
             </summary>
             <param name="t">This string.</param>
             <param name="startIndex">Offset in this string.</param>
             <param name="count">Count of characters to replace.</param>
             <param name="s">The replacement string.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
-            <remarks>
-            More info: <see cref="M:System.String.Remove(System.Int32,System.Int32)"/>, <see cref="M:System.String.Insert(System.Int32,System.String)"/>.
-            </remarks>
         </member>
         <member name="M:Au.AExtString.RemoveSuffix(System.String,System.Int32)">
             <summary>
@@ -15288,7 +15417,7 @@
             Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
             </remarks>
         </member>
-        <member name="M:Au.AExtString.Regex(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
+        <member name="M:Au.AExtString.RegexIsMatch(System.String,System.String,Au.Types.RXFlags,System.Nullable{System.Range})">
             <summary>
             Returns true if this string matches PCRE regular expression <i>rx</i>.
             Parameters etc are of <see cref="M:Au.ARegex.#ctor(System.String,Au.Types.RXFlags)"/> and <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>.
@@ -15510,31 +15639,6 @@
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Invalid regular expression. Or failed to compile it for some other reason.</exception>
         </member>
-        <member name="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags)">
-            <summary>
-            This function can be used with foreach to split this string into substrings as <see cref="T:Au.AStringSegment"/> variables.
-            </summary>
-            <param name="t"></param>
-            <param name="separators">Characters that delimit the substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
-            <param name="flags"></param>
-            <example>
-            <code><![CDATA[
-            string s = "one * two three ";
-            foreach(var t in s.Segments(" ")) Print(t);
-            foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) Print(t);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AExtString.Segments(System.String,System.Int32,System.Int32,System.String,Au.Types.SegFlags)">
-            <summary>
-            This function can be used with foreach to split the specified part of this string into substrings as <see cref="T:Au.AStringSegment"/> variables.
-            </summary>
-            <param name="t"></param>
-            <param name="startIndex">The start of the part of this string.</param>
-            <param name="length">The length of the part of this string.</param>
-            <param name="separators">Characters that delimit the substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
-            <param name="flags"></param>
-        </member>
         <member name="M:Au.AExtString.Like(System.String,System.String,System.Boolean)">
             <summary>
             Compares this string with a string that possibly contains wildcard characters.
@@ -15636,8 +15740,8 @@
             var s = "one two22, three333,four"; //subject string
             var rx = @"\b(\w+?)(\d+)\b"; //regular expression
              
-             Print("//Regex:");
-            Print(s.Regex(rx));
+             Print("//RegexIsMatch:");
+            Print(s.RegexIsMatch(rx));
              
              Print("//RegexMatch:");
             if(s.RegexMatch(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
@@ -16243,310 +16347,6 @@
             Such enclosed substring in a regular expression is interpreted as a literal string.
             This function also escapes \E, so that it does not end the literal string.
             </remarks>
-        </member>
-        <member name="T:Au.AStringSegment">
-            <summary>
-            An optimized representation of a substring (any part of a string).
-            </summary>
-            <remarks>
-            The main properties are: <see cref="P:Au.AStringSegment.Buffer"/> - the string containing the substring; <see cref="P:Au.AStringSegment.Offset"/> - the start index of the substring in the string; <see cref="P:Au.AStringSegment.Length"/> substring length. There is no string object for the substring itself; however <see cref="P:Au.AStringSegment.Value"/> and some other functions allocate and return a new string object.
-            
-            One of ways to create <b>AStringSegment</b> instances is to split a string with <see cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags)"/>.
-            
-            Don't use the default constructor (parameterless). Then <b>Buffer</b> is null and the behavior of functions is undefined. Other constructors throw exception if the string is null.
-            
-            Functions throw <b>ArgumentOutOfRangeException</b>, <b>ArgumentNullException</b>, <b>NullReferenceException</b> or <b>IndexOutOfRangeException</b> exception when an argument is invalid.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.#ctor(System.String)">
-            <summary>
-            Sets the substring = whole <i>buffer</i>.
-            </summary>
-            <param name="buffer">The string that contains this substring. Cannot be null.</param>
-        </member>
-        <member name="M:Au.AStringSegment.#ctor(System.String,System.Int32,System.Int32)">
-            <summary>
-            Sets the substring = part of <i>buffer</i> that starts at index <i>offset</i> and has length <i>length</i>.
-            </summary>
-            <param name="buffer">The string that contains this substring. Cannot be null.</param>
-            <param name="offset">The offset of the substring in <i>buffer</i>.</param>
-            <param name="length">The length of the substring.</param>
-        </member>
-        <member name="M:Au.AStringSegment.#ctor(System.String,System.Int32)">
-            <summary>
-            Sets the substring = part of <i>buffer</i> that starts at index <i>offset</i>.
-            </summary>
-            <param name="buffer">The string that contains this substring. Cannot be null.</param>
-            <param name="offset">The offset of the substring in <i>buffer</i>.</param>
-        </member>
-        <member name="P:Au.AStringSegment.Buffer">
-            <summary>
-            Gets the string that contains this substring.
-            </summary>
-        </member>
-        <member name="P:Au.AStringSegment.Offset">
-            <summary>
-            Gets or sets the start index of this substring within <see cref="P:Au.AStringSegment.Buffer"/>.
-            The setter also changes <see cref="P:Au.AStringSegment.Length"/>, but not <see cref="P:Au.AStringSegment.EndOffset"/>.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">The setter throws if value is less than 0 or greater than <see cref="P:Au.AStringSegment.EndOffset"/>.</exception>
-        </member>
-        <member name="M:Au.AStringSegment.OffsetAdd(System.Int32)">
-            <summary>
-            Increments <see cref="P:Au.AStringSegment.Offset"/>.
-            Also changes <see cref="P:Au.AStringSegment.Length"/>, but not <see cref="P:Au.AStringSegment.EndOffset"/>.
-            </summary>
-            <param name="n">How much to increment. Can be negative.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">New <see cref="P:Au.AStringSegment.Offset"/> would be less than 0 or greater than <see cref="P:Au.AStringSegment.EndOffset"/>.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.Offset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.OffsetSub(System.Int32)">
-            <summary>
-            Decrements <see cref="P:Au.AStringSegment.Offset"/>.
-            Also changes <see cref="P:Au.AStringSegment.Length"/>, but not <see cref="P:Au.AStringSegment.EndOffset"/>.
-            </summary>
-            <param name="n">How much to decrement. Can be negative.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">New <see cref="P:Au.AStringSegment.Offset"/> would be less than 0 or greater than <see cref="P:Au.AStringSegment.EndOffset"/>.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.Offset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.OffsetSet(System.Int32)">
-            <summary>
-            Changes <see cref="P:Au.AStringSegment.Offset"/>.
-            Also changes <see cref="P:Au.AStringSegment.Length"/>, but not <see cref="P:Au.AStringSegment.EndOffset"/>.
-            </summary>
-            <param name="n">New value.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">n is less than 0 or greater than <see cref="P:Au.AStringSegment.EndOffset"/>.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.Offset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="P:Au.AStringSegment.Length">
-            <summary>
-            Gets or sets the length of the substring.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">The setter throws if value is less than 0 or new <see cref="P:Au.AStringSegment.EndOffset"/> would be greater than buffer length.</exception>
-        </member>
-        <member name="M:Au.AStringSegment.LengthAdd(System.Int32)">
-            <summary>
-            Increments <see cref="P:Au.AStringSegment.Length"/>.
-            </summary>
-            <param name="n">How much to increment. Can be negative.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">New <see cref="P:Au.AStringSegment.Length"/> would be less than 0 or new <see cref="P:Au.AStringSegment.EndOffset"/> would be greater than buffer length.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.Length"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.LengthSub(System.Int32)">
-            <summary>
-            Decrements <see cref="P:Au.AStringSegment.Length"/>.
-            </summary>
-            <param name="n">How much to decrement. Can be negative.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">New <see cref="P:Au.AStringSegment.Length"/> would be less than 0 or new <see cref="P:Au.AStringSegment.EndOffset"/> would be greater than buffer length.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.Length"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.LengthSet(System.Int32)">
-            <summary>
-            Changes <see cref="P:Au.AStringSegment.Length"/>.
-            </summary>
-            <param name="n">New value.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">n is less than 0 or new <see cref="P:Au.AStringSegment.EndOffset"/> would be greater than buffer length.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.Length"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="P:Au.AStringSegment.EndOffset">
-            <summary>
-            Gets or sets the end index of this substring within <see cref="P:Au.AStringSegment.Buffer"/>. It's <see cref="P:Au.AStringSegment.Offset"/> + <see cref="P:Au.AStringSegment.Length"/>.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">The setter throws if value is less than <see cref="P:Au.AStringSegment.Offset"/> or greater than buffer length.</exception>
-        </member>
-        <member name="M:Au.AStringSegment.EndAdd(System.Int32)">
-            <summary>
-            Increments <see cref="P:Au.AStringSegment.EndOffset"/>.
-            </summary>
-            <param name="n">How much to increment. Can be negative.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">New <see cref="P:Au.AStringSegment.EndOffset"/> would be less than <see cref="P:Au.AStringSegment.Offset"/> or greater than buffer length.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.EndOffset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.EndSub(System.Int32)">
-            <summary>
-            Decrements <see cref="P:Au.AStringSegment.EndOffset"/>.
-            </summary>
-            <param name="n">How much to decrement. Can be negative.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">New <see cref="P:Au.AStringSegment.EndOffset"/> would be less than <see cref="P:Au.AStringSegment.Offset"/> or greater than buffer length.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.EndOffset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.EndSet(System.Int32)">
-            <summary>
-            Changes <see cref="P:Au.AStringSegment.EndOffset"/>.
-            </summary>
-            <param name="n">New value.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">n is less than <see cref="P:Au.AStringSegment.Offset"/> or greater than buffer length.</exception>
-            <remarks>
-            This method can be used instead of the <see cref="P:Au.AStringSegment.EndOffset"/> setter when C# does not allow to call a property setter, for example with foreach variables.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.IsEmpty">
-            <summary>
-            Returns true if <b>Length</b> == 0.
-            </summary>
-        </member>
-        <member name="P:Au.AStringSegment.Value">
-            <summary>
-            Gets the value of this substring as a new string.
-            </summary>
-            <remarks>
-            <note>Always creates new string object (substring of <see cref="P:Au.AStringSegment.Buffer"/>). See also <see cref="P:Au.AStringSegment.ValueCached"/>.</note>
-            </remarks>
-        </member>
-        <member name="P:Au.AStringSegment.ValueCached">
-            <summary>
-            Gets the value of this substring as a cached string.
-            </summary>
-            <remarks>
-            Can be used instead of <see cref="P:Au.AStringSegment.Value"/> to avoid much garbage when identical substring values are frequent.
-            Uses a <see cref="T:Au.Util.AStringCache"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AStringSegment.ToString">
-            <summary>
-            Returns <see cref="P:Au.AStringSegment.Value"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AStringSegment.GetHashCode">
-            
-        </member>
-        <member name="P:Au.AStringSegment.Item(System.Int32)">
-            <summary>
-            Gets the character at a specified position in this substring.
-            </summary>
-            <param name="index">Character index in this substring.</param>
-            <exception cref="T:System.IndexOutOfRangeException">index is not in this substring, even if it is in <see cref="P:Au.AStringSegment.Buffer"/>.</exception>
-        </member>
-        <member name="M:Au.AStringSegment.Equals(System.Object)">
-            <summary>
-            Returns true if <i>obj</i> is <b>AStringSegment</b> and its value is equal to that of this variable.
-            Compares only substrigs, not offsets.
-            </summary>
-        </member>
-        <member name="M:Au.AStringSegment.Equals(Au.AStringSegment)">
-            <summary>
-            Returns true if values of this and other variable are equal.
-            Compares only substrigs, not offsets.
-            </summary>
-            <param name="other">A variable to compare with this variable.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Eqi(Au.AStringSegment)">
-            <summary>
-            Returns true if values of this and other variable are equal, case insensitive.
-            Compares only substrigs, not offsets.
-            </summary>
-            <param name="other">A variable to compare with this variable.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Equals(System.String)">
-            <summary>
-            Returns true if the specified string is equal to this substring.
-            </summary>
-            <param name="text">The string. Cannot be null.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Eqi(System.String)">
-            <summary>
-            Returns true if the specified string is equal to this substring, case-insensitive.
-            </summary>
-            <param name="text">The string. Cannot be null.</param>
-        </member>
-        <member name="M:Au.AStringSegment.op_Equality(Au.AStringSegment,Au.AStringSegment)">
-            <summary>
-            Compares two substrings and returns true if their values are equal.
-            Compares only substrigs, not offsets.
-            </summary>
-        </member>
-        <member name="M:Au.AStringSegment.op_Inequality(Au.AStringSegment,Au.AStringSegment)">
-            <summary>
-            Compares two substrings and returns true if their values are not equal.
-            Compares only substrigs, not offsets.
-            </summary>
-        </member>
-        <member name="M:Au.AStringSegment.op_Implicit(System.String)~Au.AStringSegment">
-            <summary>
-            Creates a new <b>AStringSegment</b> from the given string.
-            </summary>
-            <param name="value">The string. Cannot be null.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Starts(System.String,System.Boolean)">
-            <summary>
-            Returns true if the beginning of this substring matches the specified string.
-            </summary>
-            <param name="text">The string. Cannot be null.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Ends(System.String,System.Boolean)">
-            <summary>
-            Returns true if the end of this substring matches the specified string.
-            </summary>
-            <param name="text">The string. Cannot be null.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Substring(System.Int32,System.Boolean)">
-            <summary>
-            Gets a substring of this substring, as string.
-            </summary>
-            <param name="offset">The start index in this substring.</param>
-            <param name="cached">Use a <see cref="T:Au.Util.AStringCache"/>, to avoid much garbage when identical substring values are frequent.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Substring(System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            Gets a substring of this substring, as string.
-            </summary>
-            <param name="offset">The start index in this substring.</param>
-            <param name="length">The number of characters.</param>
-            <param name="cached">Use a <see cref="T:Au.Util.AStringCache"/>, to avoid much garbage when identical substring values are frequent.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Subsegment(System.Int32)">
-            <summary>
-            Gets a substring of this substring, as <b>AStringSegment</b>.
-            </summary>
-            <param name="offset">The start index in this substring.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Subsegment(System.Int32,System.Int32)">
-            <summary>
-            Gets a substring of this substring, as <b>AStringSegment</b>.
-            </summary>
-            <param name="offset">The start index in this substring.</param>
-            <param name="length">The number of characters.</param>
-        </member>
-        <member name="M:Au.AStringSegment.Trim">
-            <summary>
-            Removes all leading and trailing whitespaces (see <see cref="M:System.Char.IsWhiteSpace(System.Char)"/>).
-            </summary>
-        </member>
-        <member name="M:Au.AStringSegment.TrimStart">
-            <summary>
-            Removes all leading whitespaces (see <see cref="M:System.Char.IsWhiteSpace(System.Char)"/>).
-            </summary>
-        </member>
-        <member name="M:Au.AStringSegment.TrimEnd">
-            <summary>
-            Removes all trailing whitespaces (see <see cref="M:System.Char.IsWhiteSpace(System.Char)"/>).
-            </summary>
-        </member>
-        <member name="M:Au.AStringSegment.Split(System.String,Au.Types.SegFlags)">
-            <summary>
-            Returns a <see cref="T:Au.Types.SegParser"/> that will split this substring into substrings as <b>AStringSegment</b> variables when used with foreach.
-            </summary>
-            <param name="separators">Characters that delimit the substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
-            <param name="flags"></param>
-            <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags)"/>
         </member>
         <member name="T:Au.Util.AStringUtil">
             <summary>
@@ -17625,87 +17425,6 @@
             <param name="privilegeName"></param>
             <param name="enable"></param>
         </member>
-        <member name="T:Au.Util.AStringCache">
-            <summary>
-            Caches managed strings created from unmanaged char* buffers.
-            </summary>
-            <remarks>
-            Can be used in possibly very frequently called functions to avoid much string garbage and frequent garbage collections.
-            For example, <b>AWnd.ClassName</b> and <b>AWnd.Name</b> use this. They are called by <b>AWnd.Wait</b> for each window (can be hundreds of them) repeatedly. It could create megabytes of garbage (window classname and name strings) in a few seconds. Every loop creates almost the same set of strings, therefore it makes sense to cache them.
-            To allow GC free the cached strings, use a WeakReferenc&lt;AStringCache&gt; object. See example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            internal static unsafe string GetCachedString(char* p, int len)
-            {
-            	if(_cacheWR == null) _cacheWR = new WeakReference<AStringCache>(null);
-            	if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new AStringCache());
-            	return cache.Add(p, len);
-            }
-            [ThreadStatic] static WeakReference<AStringCache> _cacheWR = new WeakReference<AStringCache>(null);
-            
-            //When char[] is used as text buffer.
-            internal static unsafe string GetCachedString(char[] a, int len)
-            {
-            	Debug.Assert(len < a.Length);
-            	fixed (char* p = a) return GetCachedString(p, len);
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.Util.AStringCache.Count">
-            <summary>
-            Number of elements in this cache.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AStringCache.Add(System.Char*,System.Int32)">
-            <summary>
-            Searches in the cache for a managed string that matches unmanaged string p of length len.
-            If finds, returns it. Else adds <c>new string(p, 0, len)</c> to the cache and returns it.
-            </summary>
-            <param name="p">Unmanaged string.</param>
-            <param name="len">p length.</param>
-            <remarks>
-            speed when found in cache: similar to <c>new string(p, 0, len)</c>.
-            </remarks>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char*,System.Int32,System.Boolean)">
-            <summary>
-            Gets string cached in a weak-referenced internal static LibStringCache object.
-            Locks and calls <see cref="M:Au.Util.AStringCache.Add(System.Char*,System.Int32)"/>.
-            </summary>
-            <param name="p">Unmanaged string.</param>
-            <param name="len">p length.</param>
-            <param name="lenIsMaxLen">Call <c>len = LibCharPtr.Length(p, len)</c>.</param>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char[],System.Int32)">
-            <summary>
-            Gets string cached in a weak-referenced internal thread-static LibStringCache object.
-            Locks and calls <see cref="M:Au.Util.AStringCache.Add(System.Char*,System.Int32)"/>.
-            </summary>
-            <param name="a">Text buffer.</param>
-            <param name="len">Length of valid text in a.</param>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char*)">
-            <summary>
-            This overload calls LibCharPtr.Length.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char[])">
-            <summary>
-            This overload calls LibCharPtr.Length.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.String,System.Int32,System.Int32)">
-            <summary>
-            Gets substring of string s as a string cached in a weak-referenced internal thread-static LibStringCache object.
-            Locks and calls <see cref="M:Au.Util.AStringCache.Add(System.Char*,System.Int32)"/>.
-            </summary>
-            <param name="s">The string containing the substring. Can be null/"" if other parameters are 0.</param>
-            <param name="startIndex">Start of substring in s.</param>
-            <param name="count">Length of substring.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
         <member name="T:Au.Util.ATreeBase`1">
             <summary>
             Base class for tree classes.
@@ -18074,6 +17793,71 @@
             <param name="c">The control. Can be top-level window too.</param>
             <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create an AWinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
         </member>
+        <member name="T:Au.Util.AStringCache">
+            <summary>
+            Caches managed strings created from unmanaged char* buffers.
+            </summary>
+            <remarks>
+            Can be used in possibly very frequently called functions to avoid much string garbage and frequent garbage collections.
+            For example, <b>AWnd.ClassName</b> and <b>AWnd.Name</b> use this. They are called by <b>AWnd.Wait</b> for each window (can be hundreds of them) repeatedly. It could create megabytes of garbage (window classname and name strings) in a few seconds. Every loop creates almost the same set of strings, therefore it makes sense to cache them.
+            To allow GC free the cached strings, use a WeakReferenc&lt;AStringCache&gt; object. See example.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            internal static unsafe string GetCachedString(char* p, int len)
+            {
+            	if(_cacheWR == null) _cacheWR = new WeakReference<AStringCache>(null);
+            	if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new AStringCache());
+            	return cache.Add(p, len);
+            }
+            [ThreadStatic] static WeakReference<AStringCache> _cacheWR = new WeakReference<AStringCache>(null);
+            
+            //When char[] is used as text buffer.
+            internal static unsafe string GetCachedString(char[] a, int len)
+            {
+            	Debug.Assert(len < a.Length);
+            	fixed (char* p = a) return GetCachedString(p, len);
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Util.AStringCache.LibAdd(System.Char*,System.Int32,System.Boolean)">
+            <summary>
+            Gets string cached in a weak-referenced internal static LibStringCache object.
+            Locks and calls <see cref="!:Add"/>.
+            </summary>
+            <param name="p">Unmanaged string.</param>
+            <param name="len">p length.</param>
+            <param name="lenIsMaxLen">Call <c>len = LibCharPtr.Length(p, len)</c>.</param>
+        </member>
+        <member name="M:Au.Util.AStringCache.LibAdd(System.Char[],System.Int32)">
+            <summary>
+            Gets string cached in a weak-referenced internal thread-static LibStringCache object.
+            Locks and calls <see cref="!:Add"/>.
+            </summary>
+            <param name="a">Text buffer.</param>
+            <param name="len">Length of valid text in a.</param>
+        </member>
+        <member name="M:Au.Util.AStringCache.LibAdd(System.Char*)">
+            <summary>
+            This overload calls LibCharPtr.Length.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AStringCache.LibAdd(System.Char[])">
+            <summary>
+            This overload calls LibCharPtr.Length.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AStringCache.LibAdd(System.String,System.Int32,System.Int32)">
+            <summary>
+            Gets substring of string s as a string cached in a weak-referenced internal thread-static LibStringCache object.
+            Locks and calls <see cref="!:Add"/>.
+            </summary>
+            <param name="s">The string containing the substring. Can be null/"" if other parameters are 0.</param>
+            <param name="startIndex">Start of substring in s.</param>
+            <param name="count">Length of substring.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
         <member name="T:Au.Util.LibScreenDC">
             <summary>
             Helps to get and release screen DC with the 'using(...){...}' pattern.
@@ -18243,14 +18027,6 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
-        </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>

@@ -301,10 +301,10 @@ namespace Au
 			int isb = -1, ieb = -1, isf = -1, ief = -1; //start/end of inner body and fragment
 			if(html.RegexMatch(@"<body\b.*?>", 0, out RXGroup body) && (ieb = html.Find("</body>", body.EndIndex)) >= 0) {
 				isb = body.EndIndex;
-				isf = html.Find(c_startFragment, isb, ieb - isb, true);
+				isf = html.Find(c_startFragment, isb..ieb, true);
 				if(isf >= 0) {
 					isf += c_startFragment.Length;
-					ief = html.Find(c_endFragment, isf, ieb - isf, true);
+					ief = html.Find(c_endFragment, isf..ieb, true);
 				}
 			}
 			//Print($"{isb} {ieb}  {isf} {ief}");
@@ -536,7 +536,7 @@ EndFragment:0000000000
 			//Print(ish, ieh, isf, ief);
 
 			int isu = s.Find("SourceURL:", true), ieu;
-			if(isu >= 0 && (ieu = s.FindChars("\r\n", isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
+			if(isu >= 0 && (ieu = s.FindAny("\r\n", isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
 
 			fragmentStart = isf - ish; fragmentLength = ief - isf;
 			return s.Substring(ish, ieh - ish);

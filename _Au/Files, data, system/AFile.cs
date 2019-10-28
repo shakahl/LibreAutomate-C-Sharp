@@ -295,11 +295,11 @@ namespace Au
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
 
-			if(path.Ends(".exe", true) && path.FindChars(@"\/") < 0) {
+			if(path.Ends(".exe", true) && path.FindAny(@"\/") < 0) {
 				try {
 					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
 					if(ARegistry.GetString(out path, "", rk) || ARegistry.GetString(out path, "", rk, Registry.LocalMachine)) {
-						path = APath.Normalize(path.TrimChars("\""));
+						path = APath.Normalize(path.Trim('\"'));
 						if(ExistsAsAny(path, true)) return path;
 					}
 				}
@@ -1070,7 +1070,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><c>'\\'</c> not found or is at the end. If noException, instead returns -1.</exception>
 		static int _FindFilename(string path, bool noException = false)
 		{
-			int R = path.FindLastChars(@"\/");
+			int R = path.FindLastAny(@"\/");
 			if(R < 0 || R == path.Length - 1) {
 				if(noException) return -1;
 				throw new ArgumentException($"No filename in path: '{path}'.");

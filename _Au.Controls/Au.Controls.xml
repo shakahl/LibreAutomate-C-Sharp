@@ -822,12 +822,6 @@
             Returns -1 if not found.
             </summary>
         </member>
-        <member name="M:Au.Controls.ParamGrid.ZFindRow(Au.AStringSegment@)">
-            <summary>
-            Finds row by row key and returns row index.
-            Returns -1 if not found.
-            </summary>
-        </member>
         <member name="M:Au.Controls.ParamGrid.ZGetRowKey(System.Int32)">
             <summary>
             Gets row key.

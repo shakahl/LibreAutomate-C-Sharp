@@ -200,7 +200,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public FileNode Find(string name, bool? folder)
 	{
 		if(Empty(name)) return null;
-		if(name[0] == '<') return FindById(name.ToInt64(1));
+		if(name[0] == '<') { name.ToInt(out long id, 1); return FindById(id); }
 		return Root.FindDescendant(name, folder);
 		//rejected: support name without extension.
 	}
@@ -276,7 +276,11 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	/// Finds file or folder by its <see cref="FileNode.IdString"/>.
 	/// Note: it must not be as returned by <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// </summary>
-	public FileNode FindById(string id) => FindById(id.ToInt64());
+	public FileNode FindById(string id)
+	{
+		id.ToInt(out long n);
+		return FindById(n);
+	}
 
 	/// <summary>
 	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).

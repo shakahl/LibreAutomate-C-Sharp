@@ -18,7 +18,7 @@ using static Au.AStatic;
 
 namespace Au.Types
 {
-#if false //rejected. More convenient to use, but makes code less clear. With Range everything is clear: null means "whole string"; for just start index use 'i..'; many users know Range, and would have to learn about ARange.
+#if false //rejected. More convenient to use, but makes code less clear. With Range everything is clear: null means "all"; for just start index use 'i..'; many users know Range, and would have to learn about ARange.
 	/// <summary>
 	/// Represents a range that has start and end indexes.
 	/// </summary>
@@ -74,6 +74,7 @@ namespace Au.Types
 		/// <exception cref="ArgumentOutOfRangeException">The result range is invalid: start is less than 0 or greater than <i>length</i>, or end is less than start or greater than length.</exception>
 		public (int start, int end) GetRealRange(int length)
 		{
+			//if(_start == 0 && _endPlus1 == 0) return (0, length); //does not make faster
 			int start = _start >= 0 ? _start : length + _start + 1;
 			int end = _endPlus1 > 0 ? _endPlus1 - 1 : length + _endPlus1;
 			if((uint)end > (uint)length || (uint)start > (uint)end) throw new ArgumentOutOfRangeException();

@@ -384,8 +384,8 @@ namespace Au
 
 					var s = new string(c, 0, nc);
 					if(needLines) {
-						if(s.FindChars("\r\n") < 0) outAction(s);
-						else foreach(var k in new SegParser(s, SegSep.Line)) outAction(k.Value);
+						if(s.FindAny("\r\n") < 0) outAction(s);
+						else foreach(var k in s.Segments(SegSep.Line)) outAction(s[k.start..k.end]);
 					} else {
 						outStr.Append(s);
 					}

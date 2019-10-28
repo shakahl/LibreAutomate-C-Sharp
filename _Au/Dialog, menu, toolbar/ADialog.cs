@@ -408,7 +408,7 @@ namespace Au
 			static string _ParseSingleString(string s, ref int id, bool dontSplit)
 			{
 				if(!dontSplit && AStringUtil.ParseIntAndString(s, out var i, out string r)) id = i; else { r = s; id++; }
-				r = r.TrimChars("\r\n"); //API does not like newline at start, etc
+				r = r.Trim("\r\n"); //API does not like newline at start, etc
 				if(r.Length == 0) r = " "; //else API exception
 				else r = r.Replace("\r\n", "\n"); //API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
 				return r;
@@ -546,7 +546,7 @@ namespace Au
 		{
 			string text = null; bool check = false;
 			if(!Empty(checkBox)) {
-				string[] a = checkBox.SegSplit("|", 2);
+				string[] a = checkBox.SegSplit("|", maxCount: 2);
 				text = a[0];
 				if(a.Length == 2) switch(a[1]) { case "true": case "check": case "checked": check = true; break; }
 			}
@@ -1234,7 +1234,7 @@ namespace Au
 			if(!_IsEdit) return;
 			FlagShowMarqueeProgressBar = true;
 			FlagShowProgressBar = false;
-			if(_c.pszContent == null) _c.pszContent = "";
+			_c.pszContent ??= "";
 			if(_c.pszExpandedInformation != null && _editType == DEdit.Multiline) _SetFlag(TDF_.EXPAND_FOOTER_AREA, true);
 
 			//create or get cached font and calculate control height

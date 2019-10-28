@@ -1,3 +1,5 @@
+#define USE_CACHE
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -44,8 +46,9 @@ namespace Au.Util
 	/// }
 	/// ]]></code>
 	/// </example>
-	public unsafe class AStringCache
+	unsafe class AStringCache
 	{
+#if USE_CACHE
 		//Most of this code is from HashSet<T> source code.
 
 		int[] _buckets;
@@ -221,6 +224,7 @@ namespace Au.Util
 			// This is the maximum prime smaller than Array.MaxArrayLength
 			public const int MaxPrimeArrayLength = 0x7FEFFFFD;
 		}
+#endif
 
 		/// <summary>
 		/// Gets string cached in a weak-referenced internal static LibStringCache object.
@@ -232,14 +236,20 @@ namespace Au.Util
 		internal static string LibAdd(char* p, int len, bool lenIsMaxLen = false)
 		{
 			if(lenIsMaxLen) len = LibCharPtr.Length(p, len);
+#if USE_CACHE
 			if(_cacheWR == null) _cacheWR = new WeakReference<AStringCache>(null);
 			if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new AStringCache());
 			return cache.Add(p, len);
+#else
+			return new string(p, 0, len);
+#endif
 		}
+#if USE_CACHE
 		[ThreadStatic] static WeakReference<AStringCache> _cacheWR;
 		//note: don't use static/lock. In STA thread it dispatches messages. See comments in MyWindow._Create. Same speed. Try SpinLock?
 
 		//[ThreadStatic] internal static int LibDebugStringCount => t_cacheWR.TryGetTarget(out var v) ? v.Count : 0;
+#endif
 
 		/// <summary>
 		/// Gets string cached in a weak-referenced internal thread-static LibStringCache object.
@@ -250,7 +260,11 @@ namespace Au.Util
 		internal static string LibAdd(char[] a, int len)
 		{
 			Debug.Assert(len < a.Length);
-			fixed (char* p = a) return LibAdd(p, len);
+#if USE_CACHE
+			fixed(char* p = a) return LibAdd(p, len);
+#else
+			return new string(a, 0, len);
+#endif
 		}
 
 		/// <summary>
@@ -258,7 +272,11 @@ namespace Au.Util
 		/// </summary>
 		internal static string LibAdd(char* p)
 		{
+#if USE_CACHE
 			return LibAdd(p, LibCharPtr.Length(p));
+#else
+			return new string(p, 0, LibCharPtr.Length(p));
+#endif
 		}
 
 		/// <summary>
@@ -266,11 +284,16 @@ namespace Au.Util
 		/// </summary>
 		internal static string LibAdd(char[] a)
 		{
+#if USE_CACHE
 			fixed (char* p = a) {
 				int len = LibCharPtr.Length(p, a.Length);
 				Debug.Assert(len < a.Length); //one char for '\0'
 				return LibAdd(p, len);
 			}
+#else
+			int len = 0; while(len < a.Length && a[len] != '\0') len++;
+			return new string(a, 0, len);
+#endif
 		}
 
 		/// <summary>
@@ -283,10 +306,14 @@ namespace Au.Util
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		internal static string LibAdd(string s, int startIndex, int count)
 		{
+#if USE_CACHE
 			int len = s?.Length ?? 0;
 			if((uint)startIndex > len || (uint)count > len - startIndex) throw new ArgumentOutOfRangeException();
 			if(len == 0) return s;
 			fixed (char* p = s) return LibAdd(p + startIndex, count);
+#else
+			return s.Substring(startIndex, count);
+#endif
 		}
 	}
 }

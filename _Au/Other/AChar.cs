@@ -30,32 +30,32 @@ namespace Au
 		/// <summary>
 		/// Returns true if character is '0' to '9'.
 		/// </summary>
-		public static bool IsAsciiDigit(char c) { return c <= '9' && c >= '0'; }
+		public static bool IsAsciiDigit(char c) => c <= '9' && c >= '0';
 
 		/// <summary>
 		/// Returns true if character is '0' to '9'.
 		/// </summary>
-		public static bool IsAsciiDigit(byte c) { return c <= '9' && c >= '0'; }
+		public static bool IsAsciiDigit(byte c) => c <= '9' && c >= '0';
 
 		/// <summary>
 		/// Returns true if character is 'A' to 'Z' or 'a' to 'z'.
 		/// </summary>
-		public static bool IsAsciiAlpha(char c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
+		public static bool IsAsciiAlpha(char c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 
 		/// <summary>
 		/// Returns true if character is 'A' to 'Z' or 'a' to 'z'.
 		/// </summary>
-		public static bool IsAsciiAlpha(byte c) { return (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z'); }
+		public static bool IsAsciiAlpha(byte c) => (c >= 'A' && c <= 'Z') || (c >= 'a' && c <= 'z');
 
 		/// <summary>
 		/// Returns true if character is 'A' to 'Z' or 'a' to 'z' or '0' to '9'.
 		/// </summary>
-		public static bool IsAsciiAlphaDigit(char c) { return IsAsciiAlpha(c) || IsAsciiDigit(c); }
+		public static bool IsAsciiAlphaDigit(char c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
 
 		/// <summary>
 		/// Returns true if character is 'A' to 'Z' or 'a' to 'z' or '0' to '9'.
 		/// </summary>
-		public static bool IsAsciiAlphaDigit(byte c) { return IsAsciiAlpha(c) || IsAsciiDigit(c); }
+		public static bool IsAsciiAlphaDigit(byte c) => IsAsciiAlpha(c) || IsAsciiDigit(c);
 
 	}
 }

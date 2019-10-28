@@ -118,25 +118,27 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		_model = model;
 		if(parent == null) { //the root node
 			if(x.Name != "files") throw new ArgumentException("XML root element name must be 'files'");
-			_model.MaxId = (uint)x["max-i"].ToInt64();
+			x["max-i"].ToInt(out uint u);
+			_model.MaxId = u;
 		} else {
-			switch(x.Name) {
-			case "d": _type = EFileType.Folder; break;
-			case "s": _type = EFileType.Script; break;
-			case "c": _type = EFileType.Class; break;
-			case "n": _type = EFileType.NotCodeFile; break;
-			default: throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'");
-			}
+			_type = x.Name switch
+			{
+				"d" => EFileType.Folder,
+				"s" => EFileType.Script,
+				"c" => EFileType.Class,
+				"n" => EFileType.NotCodeFile,
+				_ => throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'"),
+			};
 			uint id = 0, testScriptId = 0; string linkTarget = null, icon = null;
 			while(x.MoveToNextAttribute()) {
 				var v = x.Value;
 				switch(x.Name) {
 				case "n": _name = v; break;
-				case "i": id = (uint)v.ToInt64(); break;
+				case "i": v.ToInt(out id); break;
 				case "f": _flags = (_Flags)v.ToInt(); break;
 				case "path": linkTarget = v; break;
 				case "icon": icon = v; break;
-				case "run": testScriptId = (uint)v.ToInt64(); break;
+				case "run": v.ToInt(out testScriptId); break;
 				}
 			}
 			if(Empty(_name)) throw new ArgumentException("no 'n' attribute in XML");
@@ -473,12 +475,13 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	{
 		if(name.Starts(@"\\")) return null;
 		var f = this; int lastSegEnd = -1;
-		foreach(var seg in name.Segments(@"\", SegFlags.NoEmpty)) {
+		foreach(var v in name.Segments(@"\", SegFlags.NoEmpty)) {
 			var e = f.Children();
-			if((lastSegEnd = seg.EndOffset) == name.Length) {
-				f = _FindIn(e, seg.Value, folder, false);
+			var s = name[v.start..v.end];
+			if((lastSegEnd = v.end) == name.Length) {
+				f = _FindIn(e, s, folder, false);
 			} else {
-				f = _FindIn(e, seg.Value, true);
+				f = _FindIn(e, s, true);
 			}
 			if(f == null) return null;
 		}
@@ -771,7 +774,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
 		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
 			var rx = @"(?m)^namespace [\w\.]+";
-			if(!s.Regex(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
+			if(!s.RegexIsMatch(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
 				s = s.RegexReplace(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
 			}
 		}
@@ -958,7 +961,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		var type = EFileType.NotCodeFile;
 		if(path.Ends(".cs", true)) {
 			type = EFileType.Class;
-			try { if(AFile.LoadText(path).Regex(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }
+			try { if(AFile.LoadText(path).RegexIsMatch(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }
 			catch(Exception ex) { ADebug.Print(ex); }
 		}
 		return type;

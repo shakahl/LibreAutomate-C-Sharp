@@ -89,10 +89,10 @@ namespace Au.Compiler
 				bool isMultiFileProject = false;
 				if(value != null && iPipe < value.Length) {
 					iPipe++;
-					foreach(var s in value.Segments(iPipe, value.Length - iPipe, "|", SegFlags.NoEmpty)) {
-						//Print(s);
-						int offs = s.Offset + 1;
-						switch(s[0]) {
+					foreach(var v in value.Segments("|", SegFlags.NoEmpty, iPipe..)) {
+						int offs = v.start + 1;
+						char ch = value[v.start];
+						switch(ch) {
 						case 't':
 							r.role = (ERole)value.ToInt(offs);
 							break;
@@ -120,7 +120,7 @@ namespace Au.Compiler
 						case 'p':
 							isMultiFileProject = true;
 							if(projFolder != null) {
-								if(!Util.AHash.MD5Result.FromString(value, offs, s.EndOffset - offs, out var md5)) return false;
+								if(!Util.AHash.MD5Result.FromString(value, offs, v.end - offs, out var md5)) return false;
 								Util.AHash.MD5 md = default;
 								foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) {
 									if(_IsFileModified(f1)) return false;
@@ -130,7 +130,7 @@ namespace Au.Compiler
 							}
 							break;
 						case '*':
-							var dll = value.Substring(offs, s.EndOffset - offs);
+							var dll = value[offs..v.end];
 							if(!APath.IsFullPath(dll)) dll = AFolders.ThisApp + dll;
 							if(_IsFileModified2(dll)) return false;
 							r.AddToFullPathRefsIfNeed(dll);
@@ -143,9 +143,10 @@ namespace Au.Compiler
 						case 'y':
 						case 's':
 							//case 'o':
-							var f2 = _coll.IwfFindById((uint)value.ToInt64(offs));
+							value.ToInt(out uint u1, offs);
+							var f2 = _coll.IwfFindById(u1);
 							if(f2 == null) return false;
-							if(s[0] == 'l') {
+							if(ch == 'l') {
 								if(f2.IwfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
 								if(f2 == f) return false; //will be compiler error "circular reference"
 														  //Print(f2, projFolder2);
@@ -153,7 +154,7 @@ namespace Au.Compiler
 								//Print("library is compiled");
 							} else {
 								if(_IsFileModified(f2)) return false;
-								//switch(s[0]) {
+								//switch(ch) {
 								//case 'o': //f2 is the source config file
 								//	r.hasConfig = true;
 								//	break;
@@ -296,10 +297,10 @@ namespace Au.Compiler
 				if(_data != null) return true;
 				if(!AFile.ExistsAsFile(_file)) return false;
 				string sData = AFile.LoadText(_file);
-				foreach(var s in sData.Segments("\n\r", SegFlags.NoEmpty)) {
+				foreach(var v in sData.Segments("\r\n", SegFlags.NoEmpty)) {
 					if(_data == null) {
 						//first line contains .NET framework version and Au.dll version, like 12345|1.2.3.4
-						var versions = s.Value.SegSplit("|"); if(versions.Length != 2) goto g1;
+						var versions = sData.SegSplit("|", range: v.start..v.end); if(versions.Length != 2) goto g1;
 						int frameworkVersion = versions[0].ToInt(); string auVersion = versions[1];
 						if(frameworkVersion != s_frameworkVersion || auVersion != s_auVersion) { //the s_ are inited by the static ctor
 																								 //Print(frameworkVersion, s_frameworkVersion, auVersion, s_auVersion);
@@ -308,9 +309,9 @@ namespace Au.Compiler
 						_data = new Dictionary<uint, string>(sData.LineCount());
 						continue;
 					}
-					uint id = (uint)sData.ToInt64(s.Offset, out int idEnd);
+					sData.ToInt(out uint id, v.start, out int idEnd);
 					Debug.Assert(null != _coll.IwfFindById(id));
-					_data[id] = s.EndOffset > idEnd ? sData.Substring(idEnd, s.EndOffset - idEnd) : null;
+					_data[id] = v.end > idEnd ? sData[idEnd..v.end] : null;
 				}
 				if(_data == null) return false; //empty file
 				return true;

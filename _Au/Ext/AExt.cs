@@ -74,6 +74,18 @@ namespace Au
 			return t.Width <= 0 || t.Height <= 0;
 		}
 
+		/// <summary>
+		/// Calls <see cref="Range.GetOffsetAndLength"/> and returns start and end instead of start and length.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="length"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static (int start, int end) GetStartEnd(this Range t, int length)
+		{
+			var v = t.GetOffsetAndLength(length);
+			return (v.Offset, v.Offset + v.Length);
+		}
+
 		//rejected: too simple. We have Print(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 		///// <summary>
 		///// Converts int to hexadecimal string like "0x3A".
@@ -143,50 +155,69 @@ namespace Au
 		/// <param name="t"></param>
 		/// <param name="flag">One or more flags.</param>
 		/// <remarks>
-		/// The same as <b>Enum.HasFlag</b>, but about 20 times faster. About 8 times slower than code with operators.
+		/// The same as code <c>(t &amp; flag) == flag</c> or <b>Enum.HasFlag</b>.
 		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+#if true //Enum.HasFlag used to be slow, but now compiler for it creates the same code as with operator
+		public static unsafe bool Has<T>(this T t, T flag) where T : unmanaged, Enum => t.HasFlag(flag);
+#else //the same speed, although compiler may create more code
 		public static unsafe bool Has<T>(this T t, T flag) where T : unmanaged, Enum
 		{
-			//return (t & flag) == flag; //error, although C# 7.3 supports Enum constraint.
-			//return ((int)t & (int)flag) == (int)flag; //error too
 			switch(sizeof(T)) {
-			case 4:
-				int t4 = *(int*)&t, f4 = *(int*)&flag;
-				return (t4 & f4) == f4;
-			case 8:
-				long t8 = *(long*)&t, f8 = *(long*)&flag;
-				return (t8 & f8) == f8;
-			case 2:
-				int t2 = *(ushort*)&t, f2 = *(ushort*)&flag;
-				return (t2 & f2) == f2;
-			default:
-				Debug.Assert(sizeof(T) == 1);
-				int t1 = *(byte*)&t, f1 = *(byte*)&flag;
-				return (t1 & f1) == f1;
+			case 4: {
+				var a = Unsafe.As<T, uint>(ref t);
+				var b = Unsafe.As<T, uint>(ref flag);
+				return (a & b) == b;
 			}
-			//This is not so nicely optimized as with Unsafe.dll, but the switch is optimized away. Native code contains only the case for T size. In other funcs too.
+			case 8: {
+				var a = Unsafe.As<T, ulong>(ref t);
+				var b = Unsafe.As<T, ulong>(ref flag);
+				return (a & b) == b;
+			}
+			case 2: {
+				var a = Unsafe.As<T, ushort>(ref t);
+				var b = Unsafe.As<T, ushort>(ref flag);
+				return (a & b) == b;
+			}
+			default: {
+				var a = Unsafe.As<T, byte>(ref t);
+				var b = Unsafe.As<T, byte>(ref flag);
+				return (a & b) == b;
+			}
+			}
+			//compiler removes the switch/case, because sizeof(T) is const
 		}
+#endif
 
 		/// <summary>
 		/// Returns true if this enum variable has one or more flag bits specified in <i>flags</i>.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="flags">One or more flags.</param>
-		/// <remarks>
-		/// About 8 times slower than code with operators.
-		/// </remarks>
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static unsafe bool HasAny<T>(this T t, T flags) where T : unmanaged, Enum
 		{
 			switch(sizeof(T)) {
-			case 4:
-				return (*(int*)&t & *(int*)&flags) != 0;
-			case 8:
-				return (*(long*)&t & *(long*)&flags) != 0;
-			case 2:
-				return (*(ushort*)&t & *(ushort*)&flags) != 0;
-			default:
-				Debug.Assert(sizeof(T) == 1);
-				return (*(byte*)&t & *(byte*)&flags) != 0;
+			case 4: {
+				var a = Unsafe.As<T, uint>(ref t);
+				var b = Unsafe.As<T, uint>(ref flags);
+				return (a & b) != 0;
+			}
+			case 8: {
+				var a = Unsafe.As<T, ulong>(ref t);
+				var b = Unsafe.As<T, ulong>(ref flags);
+				return (a & b) != 0;
+			}
+			case 2: {
+				var a = Unsafe.As<T, ushort>(ref t);
+				var b = Unsafe.As<T, ushort>(ref flags);
+				return (a & b) != 0;
+			}
+			default: {
+				var a = Unsafe.As<T, byte>(ref t);
+				var b = Unsafe.As<T, byte>(ref flags);
+				return (a & b) != 0;
+			}
 			}
 		}
 
@@ -198,6 +229,8 @@ namespace Au
 		/// <param name="add">If true, adds flag, else removes flag.</param>
 		public static unsafe void SetFlag<T>(ref this T t, T flag, bool add) where T : unmanaged, Enum
 		{
+			//FUTURE: use Unsafe.
+
 			T tt = t;
 			switch(sizeof(T)) {
 			case 4: {
@@ -292,13 +325,13 @@ namespace Au
 		internal static unsafe void WriteInt(this byte[] t, int x, int index)
 		{
 			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
-			fixed (byte* p = t) *(int*)(p + index) = x;
+			fixed(byte* p = t) *(int*)(p + index) = x;
 		}
 
 		internal static unsafe int ReadInt(this byte[] t, int index)
 		{
 			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
-			fixed (byte* p = t) return *(int*)(p + index);
+			fixed(byte* p = t) return *(int*)(p + index);
 		}
 
 		#endregion
