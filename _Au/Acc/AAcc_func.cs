@@ -841,7 +841,7 @@ namespace Au
 			for(int i = 0; i < len; i++) {
 				var c = p[i];
 				if(c == '\0' && iv > ik) {
-					string sk = Util.AStringCache.LibAdd(p + ik, iv - ik - 1);
+					string sk = new string(p, ik, iv - ik - 1);
 					string sv = new string(p, iv, i - iv);
 					d[sk] = sv;
 					ik = i + 1;

@@ -35,7 +35,7 @@ namespace Au
 		/// Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="APidl.ToHexString"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+		/// Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="APidl.ToBase64String"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
 		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
 		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="AWnd.More.GetWindowsStoreAppId"/> or Google.
 		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.ExpandEnvVar"/>.
@@ -100,7 +100,7 @@ namespace Au
 
 			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
 			APidl pidl = null;
-			if(isShellPath) { //":: HexEncodedITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
+			if(isShellPath) { //":: Base64ITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
 				pidl = APidl.FromString(file); //does not throw
 				if(pidl != null) {
 					x.lpIDList = pidl.UnsafePtr;
@@ -411,7 +411,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
-		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="APidl.ToHexString"/>).
+		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="APidl.ToBase64String"/>).
 		/// </param>
 		public static bool SelectInExplorer(string path)
 		{

@@ -446,13 +446,13 @@ namespace Au.Types
 		/// The callout string, eg "xyz" for "(?C'xyz')".
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public string callout_string => _p->callout_string == null ? null : Util.AStringCache.LibAdd(_p->callout_string, (int)_p->callout_string_length);
+		public string callout_string => _p->callout_string == null ? null : new string(_p->callout_string, 0, (int)_p->callout_string_length);
 
 		/// <summary>
 		/// The most recently passed (*MARK), (*PRUNE), or (*THEN) item in the match, or null if no such items have been passed.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
 		/// </summary>
-		public string mark => _p->mark == null ? null : Util.AStringCache.LibAdd(_p->mark);
+		public string mark => _p->mark == null ? null : new string(_p->mark);
 
 		/// <summary>
 		/// Gets the start index and length of the specified group in the subject string.

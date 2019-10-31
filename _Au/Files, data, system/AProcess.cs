@@ -123,7 +123,7 @@ namespace Au
 				var b = AMemoryArray.LibChar(ref na);
 				if(Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
 					if(getFilename) s = _GetFileName(b, na);
-					else s = b.LibToStringCached(na);
+					else s = new string(b, 0, na);
 					return true;
 				}
 				if(ALastError.Code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
@@ -231,7 +231,7 @@ namespace Au
 					if(processID == 0) return "Idle";
 					return null;
 				}
-				string R = AStringCache.LibAdd(namePtr, nameLen);
+				string R = new string(namePtr, 0, nameLen);
 				if(!cannotOpen && APath.LibIsPossiblyDos(R)) {
 					using var ph = LibHandle.OpenProcess(processID);
 					if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
@@ -331,7 +331,7 @@ namespace Au
 			if(s == null) return null;
 			char* ss = s + len;
 			for(; ss > s; ss--) if(ss[-1] == '\\' || ss[-1] == '/') break;
-			return AStringCache.LibAdd(ss, len - (int)(ss - s));
+			return new string(ss, 0, len - (int)(ss - s));
 		}
 
 		static string _GetFileName(string s)

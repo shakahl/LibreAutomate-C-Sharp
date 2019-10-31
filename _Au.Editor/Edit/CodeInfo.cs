@@ -45,7 +45,7 @@ static class CodeInfo
 	public static void UiLoaded()
 	{
 		//warm up
-		Task.Delay(500).ContinueWith(_1 => {
+		Task.Delay(100).ContinueWith(_1 => {
 			var p1 = APerf.Create();
 			//_isWarm = true;
 			//return;
@@ -79,14 +79,15 @@ Print(1);
 				.AddDocument(documentId, "f.cs", code);
 			var document = sol.GetDocument(documentId);
 			p1.Next();
-			Task.Run(() => { Compiler.Warmup(document); /*p1.NW('c');*/ }); //if no ProfileOptimization (PO), makes GetCompletionsAsync faster, eg 3 -> 2.5 s, and total faster eg 4 -> 3.4. If with PO, same speed or slower.
+			Task.Run(() => { Compiler.Warmup(document); /*p1.NW('c');*/ });
 			var completionService = CompletionService.GetService(document);
 			var cr = completionService.GetCompletionsAsync(document, position).Result;
 			//MetaReferences.CompactCache();
 			_isWarm = true;
-			//p1.Next(); //600-1000 ms when ngened, 2.1 s with ProfileOptimization, else 3 s (2.5 s with Compiler.Warmup above)
+			//p1.Next();
 			//Compiler.Warmup(document);
 			p1.NW('w');
+			//APerf.NW();
 			if(cr == null) ADebug.Print("null"); //else Print(cr.Items.Length);
 
 			//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
@@ -183,6 +184,8 @@ Print(1);
 		if(!_CanWork(doc)) return false;
 
 		if(_correct.SciBeforeCharAdded(doc, ch, out var b)) {
+			if(b == null) return true;
+
 			if(_compl.IsVisibleUI) {
 				int diff = b.newPosUtf8 - b.oldPosUtf8;
 				_compl.SciCharAdding_Commit(doc, ch);

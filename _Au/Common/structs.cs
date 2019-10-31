@@ -32,7 +32,7 @@ namespace Au.Types
 	/// </remarks>
 	[DebuggerStepThrough]
 	//[Serializable]
-	public unsafe struct LPARAM :IEquatable<LPARAM>, IComparable<LPARAM>
+	public unsafe struct LPARAM : IEquatable<LPARAM>, IComparable<LPARAM>
 	{
 #pragma warning disable 1591 //XML doc
 		//[NonSerialized]
@@ -57,7 +57,7 @@ namespace Au.Types
 		//also would be good to have LPARAM(Enum x), but C# does not allow generic operators.
 
 		//int etc = LPARAM
-		public static implicit operator void* (LPARAM x) => x._v;
+		public static implicit operator void*(LPARAM x) => x._v;
 		public static implicit operator IntPtr(LPARAM x) => (IntPtr)x._v;
 		public static explicit operator UIntPtr(LPARAM x) => (UIntPtr)x._v;
 		public static explicit operator int(LPARAM x) => (int)x._v;
@@ -389,7 +389,7 @@ namespace Au.Types
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
-	public struct ColorInt :IEquatable<ColorInt>
+	public struct ColorInt : IEquatable<ColorInt>
 	{
 		/// <summary>
 		/// Color value in 0xAARRGGBB format.
@@ -546,7 +546,7 @@ namespace Au.Types
 	}
 
 	[DebuggerStepThrough]
-	internal unsafe struct VARIANT :IDisposable
+	internal unsafe struct VARIANT : IDisposable
 	{
 		public Api.VARENUM vt; //ushort
 		ushort _u1;
@@ -580,14 +580,13 @@ namespace Au.Types
 
 		/// <summary>
 		/// Converts to string.
-		/// Does not cache.
 		/// </summary>
 		public override string ToString()
 		{
-			return _ToString(noCache: true);
+			return _ToString();
 		}
 
-		string _ToString(bool noCache)
+		string _ToString()
 		{
 			switch(vt) {
 			case Api.VARENUM.VT_BSTR: return value == default ? null : ValueBstr.ToString();
@@ -598,35 +597,27 @@ namespace Au.Types
 			uint lcid = 0x409; //invariant
 			switch(vt & (Api.VARENUM)0xff) { case Api.VARENUM.VT_DATE: case Api.VARENUM.VT_DISPATCH: lcid = 0x400; break; } //LOCALE_USER_DEFAULT
 			if(0 != Api.VariantChangeTypeEx(ref v2, this, lcid, 2, Api.VARENUM.VT_BSTR)) return null; //2 VARIANT_ALPHABOOL
-			return v2.value == default ? null : v2.ValueBstr.ToStringAndDispose(noCache);
+			return v2.value == default ? null : v2.ValueBstr.ToStringAndDispose();
 		}
 
 		/// <summary>
 		/// Converts to string.
-		/// By default adds to our string cache.
 		/// Disposes this VARIANT.
 		/// </summary>
-		public string ToStringAndDispose(bool noCache = false)
+		public string ToStringAndDispose()
 		{
-			var r = _ToString(noCache);
+			var r = _ToString();
 			Dispose();
 			return r;
 		}
 	}
 
 	[DebuggerStepThrough]
-	internal unsafe struct BSTR :IDisposable
+	internal unsafe struct BSTR : IDisposable
 	{
 		char* _p;
 
 		BSTR(char* p) => _p = p;
-
-		//rejected: too easy to forget to dispose
-		//public static implicit operator string(BSTR b)
-		//{
-		//	var p = b._p; if(p == null) return null;
-		//	return Util.AStringCache.LibAdd(p, SysStringLen(p));
-		//}
 
 		public static explicit operator BSTR(string s) => new BSTR((char*)Marshal.StringToBSTR(s));
 		public static explicit operator LPARAM(BSTR b) => b._p;
@@ -653,7 +644,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Converts to string.
-		/// Does not dispose. Doen not cache.
+		/// Does not dispose.
 		/// </summary>
 		public override string ToString()
 		{
@@ -662,19 +653,18 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Converts to string and frees the BSTR (calls Dispose()).
-		/// By default adds to our string cache.
+		/// Converts to string and disposes.
 		/// </summary>
-		public string ToStringAndDispose(bool noCache = false)
+		public string ToStringAndDispose()
 		{
 			var p = _p; if(p == null) return null;
-			int len = Api.SysStringLen(p); if(len == 0) return "";
+			int len = Api.SysStringLen(p);
 
 			//rejected:
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
 			//int len2 = Util.LibCharPtr.Length(p, len); ADebug.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 
-			string r = noCache ? new string(p, 0, len) : Util.AStringCache.LibAdd(p, len);
+			string r = len == 0 ? "" : new string(p, 0, len);
 			Dispose();
 			return r;
 		}

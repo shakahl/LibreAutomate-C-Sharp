@@ -117,6 +117,143 @@ class Script : AScript
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
 
+
+		//Print(Encoding.UTF8.EncoderFallback);
+
+		//var chars = "as".AsSpan();
+		//var enc = Encoding.UTF8;
+		//int n = enc.GetByteCount(chars);
+		//var r = new byte[100];
+		//int nn = Encoding.UTF8.GetBytes(chars, r);
+
+
+		//var s = "aą";
+		////s = null;
+		//Print(Au.Util.AConvert.ToUtf8(s, "\r\n\0"));
+		//Print(Au.Util.AConvert.ToUtf8_2(s));
+
+		//var s = "twgbjsfjhfkljdklfjkl djf ljdlsjf;  jgkjgif fijgdifg (fdkjfkdj)f jkjk jdkjkjkj hhgfdhgfdgfgduhfudhuhfud sidiosutoiusioutiosuiru utrisutirtiusiuuisuriut ouosuituis ";
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 10; i1++) {
+		//	int n2 = 1000;
+		//	APerf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { Au.Util.AConvert.ToUtf8(s); }
+		//	//for(int i2 = 0; i2 < n2; i2++) { Au.Util.AConvert.Utf8FromString(s); }
+		//	APerf.NW();
+		//	Thread.Sleep(200);
+		//}
+
+		//Encoding.UTF8.GetByteCount()
+		//Encoding.UTF8.GetBytes()
+
+		//byte[] a = { 1, 10, 255, 220, 4, 0, 255, 170, 120, 7 };
+		//var s = Au.Util.AConvert.HexEncode(a, true);
+		//Print(s, Au.Util.AConvert.HexDecode(s));
+
+		//POINT p = (10, 200);
+		//var s = Au.Util.AConvert.HexEncode(p);
+		//Print(s, Au.Util.AConvert.HexDecode(s, out POINT pp), pp);
+
+		//using(var ms=new MemoryStream()) {
+		//	ms.WriteByte(5);
+		//	var a = ms.GetBuffer();
+		//	Print(a);
+		//}
+
+		//var a = new byte[100];
+		//Print(Au.Util.AConvert.Base64UrlDecode((string)null, new Span<byte>(a), out int len), len);
+
+		//byte[] a = { 1, 10, 255, 220, 4, 0, 255, 170, 120, 7 };
+		//var s = Au.Util.AConvert.Base64UrlEncode(a);
+		//var b = Au.Util.AConvert.Base64UrlDecode(s);
+		//Print(s, b);
+
+		//POINT p = (100, 200);
+		////RECT p = (100, 200, 300, 400);
+		//var s = Au.Util.AConvert.Base64UrlEncode(p);
+		////s = s.RemoveSuffix(4);
+		//Print(s);
+		//if(!Au.Util.AConvert.Base64UrlDecode(s, out POINT pp)) { Print("failed"); return; }
+		//Print(pp);
+
+		//unsafe {
+		//	POINT p = (100, 200);
+		//	var s = Au.Util.AConvert.Base64UrlEncode(&p, sizeof(POINT));
+		//	Print(s);
+		//	POINT pp;
+		//	//if(!Au.Util.AConvert.Base64UrlDecode(s, &pp, sizeof(POINT), out int n)) { Print("failed"); return; }
+		//	if(!Au.Util.AConvert.Base64UrlDecode(s, new Span<byte>(&pp, sizeof(POINT)), out int n)) { Print("failed"); return; }
+		//	Print(pp, n);
+		//}
+
+		//unsafe {
+		//	for(int i = 1; i < 10; i++) {
+		//		var a = new byte[i];
+		//		for(int j = 0; j < i; j++) a[j] = (byte)(j+220);
+		//		var s = Convert.ToBase64String(a);
+		//		//Print(s.Length, (i+2)/3*4, s);
+		//		Print(i);
+		//		Print(s);
+		//		fixed(byte* p = a) {
+		//			s= Au.Util.AConvert.Base64UrlEncode(p, a.Length);
+		//		}
+		//		Print(s);
+		//	}
+		//}
+
+		//byte[] a = { 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, };
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 10; i1++) {
+		//	int n2 = 1000;
+		//	APerf.First();
+		//	//for(int i2 = 0; i2 < n2; i2++) { Convert.ToBase64String(a); }
+		//	for(int i2 = 0; i2 < n2; i2++) { Convert.ToBase64String(a); }
+		//	APerf.NW();
+		//	Thread.Sleep(200);
+		//}
+
+
+
+		//ReadOnlySpan<char> k = default;
+		//Print(k.IsEmpty, k.Length);
+		//k = "".AsSpan();
+		//Print(k.IsEmpty, k.Length);
+
+		//for(int i = 0; i < 12; i++) {
+		//	var a = new byte[i];
+		//	for(int j = 0; j < i; j++) a[j] = (byte)(j + 220);
+		//	var s = Convert.ToBase64String(a);
+		//	Print(a.Length, s.Length, Au.Util.AConvert.Base64UrlEncodeLength(a.Length), Au.Util.AConvert.Base64UrlDecodeLength(s));
+		//}
+
+		//byte[] a = { 1 };
+		//var s = Convert.ToBase64String(a);
+		////s = s.Replace('/', '_');
+		////s = s.TrimEnd("=");
+		//Print(s);
+		//a = Convert.FromBase64String(s);
+
+		//var b = new byte[s.Length * 3 / 4];
+		//Print(Convert.TryFromBase64String(s, b, out int n), n, b);
+
+
+		////byte[] a = { 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, 1, 10, 255, };
+		//byte[] a = { 1, 10, 255 };
+		//string s = Au.Util.AConvert.HexEncode(a);
+		//Print(s);
+		////return;
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 10; i1++) {
+		//	int n2 = 1000;
+		//	APerf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { Au.Util.AConvert.HexEncode(a); }
+		//	APerf.NW();
+		//	Thread.Sleep(200);
+		//}
+
 		//_MonitorGC();
 
 		//AWnd.Wait(0, false, null, "notepad", flags: WFFlags.HiddenToo);

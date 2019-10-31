@@ -303,10 +303,23 @@ namespace Au.Controls
 				return;
 			}
 
-			int len = AConvert.Utf8LengthFromString(text);
+			//int len = AConvert.Utf8LengthFromString(text);
+			//byte* buffer = (byte*)AMemory.Alloc(len * 2 + 4), s = buffer;
+			//try {
+			//	AConvert.Utf8FromString(text, s, len + 1);
+			//	if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
+			//	if(skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
+			//	s[len] = s[len + 1] = 0;
+			//	_AddText(s, len, appendLine);
+			//}
+			//finally {
+			//	AMemory.Free(buffer);
+			//}
+
+			int len = Encoding.UTF8.GetByteCount(text);
 			byte* buffer = (byte*)AMemory.Alloc(len * 2 + 4), s = buffer;
 			try {
-				AConvert.Utf8FromString(text, s, len + 1);
+				Encoding.UTF8.GetBytes(text, new Span<byte>(buffer, len));
 				if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
 				if(skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
 				s[len] = s[len + 1] = 0;
@@ -361,7 +374,7 @@ namespace Au.Controls
 						currentStyle = (byte)i;
 					} else { //currently can be only <fold>
 						i &= 0x7fffffff;
-						if(!(s - tag == 6 && LibCharPtr.AsciiStarts(tag + 1, "fold"))) goto ge;
+						if(!(s - tag == 6 && LibBytePtr.AsciiStarts(tag + 1, "fold"))) goto ge;
 						(folds ??= new List<POINT>()).Add((i, (int)(t - s0)));
 						//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
 					}
@@ -394,7 +407,7 @@ namespace Au.Controls
 					var quot = *s;
 					if(quot == '\'' || quot == '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
 					int n = (int)(sEnd - s);
-					int i = (quot == '>') ? LibCharPtr.AsciiFindChar(s, n, quot) : LibCharPtr.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
+					int i = (quot == '>') ? LibBytePtr.AsciiFindChar(s, n, quot) : LibBytePtr.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
 					if(i < 0) goto ge;
 					attr = s; s += i + 1; attrLen = i;
 					if(quot != '>') s++;
@@ -442,11 +455,11 @@ namespace Au.Controls
 					break;
 				case 4 << 16 | 's':
 					if(attr == null) goto ge;
-					if(LibCharPtr.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
+					if(LibBytePtr.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
 					else goto ge;
 					break;
 				case 4 << 16 | 'm':
-					if(LibCharPtr.AsciiStarts(tag + 1, "ono")) style.Mono = true;
+					if(LibBytePtr.AsciiStarts(tag + 1, "ono")) style.Mono = true;
 					else goto ge;
 					break;
 				//case 6 << 16 | 'h': //rejected. Not useful; does not hide newlines.
@@ -455,19 +468,19 @@ namespace Au.Controls
 				//	break;
 				case 5 << 16 | 'i':
 					if(attr == null) goto ge;
-					if(!LibCharPtr.AsciiStarts(tag + 1, "mage")) goto ge;
+					if(!LibBytePtr.AsciiStarts(tag + 1, "mage")) goto ge;
 					hideTag = noEndTag = true;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
 				case 1 << 16 | '\a': //<\a>text where tags are ignored</\a>
-					i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if(i2 < 0) goto ge;
+					i2 = LibBytePtr.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if(i2 < 0) goto ge;
 					while(i2-- > 0) _Write(*s++, currentStyle);
 					s += 4;
 					//hasTags = true;
 					continue;
 				case 4 << 16 | 'c': //<code>code</code>
-					if(!LibCharPtr.AsciiStarts(tag + 1, "ode")) goto ge;
-					i2 = LibCharPtr.AsciiFindString(s, (int)(sEnd - s), "</code>"); if(i2 < 0) goto ge;
+					if(!LibBytePtr.AsciiStarts(tag + 1, "ode")) goto ge;
+					i2 = LibBytePtr.AsciiFindString(s, (int)(sEnd - s), "</code>"); if(i2 < 0) goto ge;
 					if(codes == null) codes = new List<POINT>();
 					int iStartCode = (int)(t - s0);
 					codes.Add((iStartCode, iStartCode + i2));
@@ -476,7 +489,7 @@ namespace Au.Controls
 					hasTags = true;
 					continue;
 				case 4 << 16 | 'f': //<fold>text</fold>
-					if(!LibCharPtr.AsciiStarts(tag + 1, "old")) goto ge;
+					if(!LibBytePtr.AsciiStarts(tag + 1, "old")) goto ge;
 					stackInt = (int)(t - s0);
 					//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
 					_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
@@ -519,7 +532,7 @@ namespace Au.Controls
 				}
 
 				if(linkTag != null) {
-					if(!userLinkTag && !LibCharPtr.AsciiStarts(tag, linkTag)) goto ge;
+					if(!userLinkTag && !LibBytePtr.AsciiStarts(tag, linkTag)) goto ge;
 					//if(attr == null) goto ge; //no, use text as attribute
 					if(_linkStyle != null) style = new _TagStyle(_linkStyle);
 					else {

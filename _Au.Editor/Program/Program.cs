@@ -13,9 +13,8 @@ using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
-using System.Drawing;
-using System.Linq;
-using System.Runtime;
+//using System.Drawing;
+//using System.Linq;
 
 using Au;
 using Au.Types;
@@ -28,6 +27,8 @@ static class Program
 		APerf.First();
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
+		//AOutput.LogFile = @"q:\Test\log.txt";
+		//AOutput.LogFileTimestamp = true;
 	}
 
 	/// <summary>
@@ -65,24 +66,13 @@ static class Program
 
 		if(CommandLine.OnProgramStarted(args)) return;
 
-//#if !DEBUG //TODO: does not work if stars invisible. Also then for several s uses < 1% CPU. Try to run this before showing window.
-//		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
-//		AFile.CreateDirectory(fProfile);
-//		ProfileOptimization.SetProfileRoot(fProfile);
-//		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
-//		APerf.Next();
-//#endif
-
 		OutputServer.NoNewline = true;
 		OutputServer.Start();
-		//TODO: now output is blocked when using AExec.RunConsole(o=>Print(o), ...). Maybe should run OutputServer in other thread.
-
-		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
-		//Application.EnableVisualStyles(); //we have manifest
+		//Application.EnableVisualStyles(); //no, we have manifest
 		Application.SetCompatibleTextRenderingDefault(false);
 
 		Settings = new ProgramSettings();

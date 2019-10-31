@@ -328,20 +328,20 @@ namespace Au
 			public bool WriteLine(string s)
 			{
 				bool ok;
-				int n = AConvert.Utf8LengthFromString(s) + 1;
-				fixed (byte* b = AMemoryArray.LibByte(n + 35)) {
+				int n = Encoding.UTF8.GetByteCount(s ??= "") + 1;
+				fixed(byte* b = AMemoryArray.LibByte(n + 35)) {
 					if(LogFileTimestamp) {
 						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-						int nn = LibCharPtr.Length(b);
-						AConvert.Utf8FromString(s, b + nn, n);
+						int nn = LibBytePtr.Length(b);
+						Encoding.UTF8.GetBytes(s, new Span<byte>(b + nn, n));
 						n += nn;
 						if(s.Starts("<>")) {
 							Api.memmove(b + 2, b, nn);
 							b[0] = (byte)'<'; b[1] = (byte)'>';
 						}
 					} else {
-						AConvert.Utf8FromString(s, b, n);
+						Encoding.UTF8.GetBytes(s, new Span<byte>(b, n));
 					}
 					b[n - 1] = 13; b[n++] = 10;
 

@@ -284,7 +284,7 @@ namespace Au.Util
 			public static bool operator ==(MD5Result h1, MD5Result h2) => h1.r1 == h2.r1 && h1.r2 == h2.r2;
 			public static bool operator !=(MD5Result h1, MD5Result h2) => !(h1 == h2);
 
-			//rejected: not much shorter than hex.
+			//rejected. Not much shorter than hex.
 			//public string ToBase64() => Convert.ToBase64String(ToArray());
 
 			public override int GetHashCode() => r1.GetHashCode() ^ r2.GetHashCode();
@@ -295,11 +295,7 @@ namespace Au.Util
 			/// <summary>
 			/// Converts this to hex string of Length = 32.
 			/// </summary>
-			public override unsafe string ToString()
-			{
-				var t = this;
-				return AConvert.HexEncode(&t, sizeof(MD5Result));
-			}
+			public override string ToString() => AConvert.HexEncode(this);
 
 			/// <summary>
 			/// Converts this to byte[16].
@@ -316,16 +312,9 @@ namespace Au.Util
 
 			/// <summary>
 			/// Creates <b>MD5Result</b> from hex string returned by <see cref="ToString"/>.
-			/// Returns false if some parameter is invalid. Does not throw exception.
+			/// Returns false if <i>encoded</i> is invalid.
 			/// </summary>
-			public static bool FromString(string s, int startIndex, int length, out MD5Result r)
-			{
-				if(s == null || length != 32 || (uint)startIndex > s.Length - 32) { r = default; return false; }
-				MD5Result rr;
-				AConvert.HexDecode(s, &rr, 16, startIndex);
-				r = rr;
-				return true;
-			}
+			public static bool FromString(ReadOnlySpan<char> encoded, out MD5Result r) => AConvert.HexDecode(encoded, out r);
 		}
 
 		#endregion

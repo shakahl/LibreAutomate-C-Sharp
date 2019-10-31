@@ -172,12 +172,12 @@ namespace Au
 		/// Returns null if failed. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
-		public unsafe string SavePositionSizeState(bool canBeMinimized = false)
+		public string SavePositionSizeState(bool canBeMinimized = false)
 		{
 			if(!LibGetWindowPlacement(out var p)) return null;
 			//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
-			return AConvert.HexEncode(&p, sizeof(Api.WINDOWPLACEMENT), true);
+			return AConvert.Base64UrlEncode(p);
 		}
 
 		/// <summary>
@@ -189,8 +189,7 @@ namespace Au
 		/// <exception cref="AuWndException"/>
 		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{
-			Api.WINDOWPLACEMENT p; int siz = sizeof(Api.WINDOWPLACEMENT);
-			if(siz == AConvert.HexDecode(s, &p, siz)) {
+			if(AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
 				//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 				if(!showActivate && !this.IsVisible) {
 					var style = this.Style;

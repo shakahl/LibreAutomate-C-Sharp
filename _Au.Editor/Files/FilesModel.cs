@@ -1181,22 +1181,25 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	public void RunStartupScripts()
 	{
 		var csv = StartupScriptsCsv; if(csv == null) return;
-		var x = ACsv.Parse(csv);
-		foreach(var row in x.Data) {
-			var f = FindScript(row[0]);
-			if(f == null) { Print("Startup script not found: " + row[0] + ". Please edit name in Options."); continue; }
-			int delay = 10;
-			if(x.ColumnCount > 1) {
-				var sd = row[1];
-				delay = sd.ToInt(0, out int end);
-				if(end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
-				if(delay < 10) delay = 10;
+		try {
+			var x = ACsv.Parse(csv);
+			foreach(var row in x.Data) {
+				var f = FindScript(row[0]);
+				if(f == null) { Print("Startup script not found: " + row[0] + ". Please edit name in Options."); continue; }
+				int delay = 10;
+				if(x.ColumnCount > 1) {
+					var sd = row[1];
+					delay = sd.ToInt(0, out int end);
+					if(end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
+					if(delay < 10) delay = 10;
+				}
+				ATimer.After(delay, () => {
+					_ = Au.Triggers.HooksServer.Instance.MsgWnd; //waits until started
+					Run.CompileAndRun(true, f);
+				});
 			}
-			ATimer.After(delay, () => {
-				_ = Au.Triggers.HooksServer.Instance.MsgWnd; //waits until started
-				Run.CompileAndRun(true, f);
-			});
 		}
+		catch(FormatException) { }
 	}
 
 	#endregion

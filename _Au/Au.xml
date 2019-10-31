@@ -2658,13 +2658,11 @@
         <member name="M:Au.Types.VARIANT.ToString">
             <summary>
             Converts to string.
-            Does not cache.
             </summary>
         </member>
-        <member name="M:Au.Types.VARIANT.ToStringAndDispose(System.Boolean)">
+        <member name="M:Au.Types.VARIANT.ToStringAndDispose">
             <summary>
             Converts to string.
-            By default adds to our string cache.
             Disposes this VARIANT.
             </summary>
         </member>
@@ -2681,13 +2679,12 @@
         <member name="M:Au.Types.BSTR.ToString">
             <summary>
             Converts to string.
-            Does not dispose. Doen not cache.
+            Does not dispose.
             </summary>
         </member>
-        <member name="M:Au.Types.BSTR.ToStringAndDispose(System.Boolean)">
+        <member name="M:Au.Types.BSTR.ToStringAndDispose">
             <summary>
-            Converts to string and frees the BSTR (calls Dispose()).
-            By default adds to our string cache.
+            Converts to string and disposes.
             </summary>
         </member>
         <member name="T:Au.Types.DIcon">
@@ -7556,7 +7553,7 @@
             Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
             URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
             Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-            Shell object's ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. See <see cref="M:Au.APidl.ToHexString"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+            Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.APidl.ToBase64String"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
             Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, <see cref="T:Au.AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
             To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/> or Google.
             Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
@@ -7676,7 +7673,7 @@
             </summary>
             <param name="path">
             Full path of a file or directory or other shell object.
-            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.APidl.ToHexString"/>).
+            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.APidl.ToBase64String"/>).
             </param>
         </member>
         <member name="T:Au.AFile">
@@ -8222,7 +8219,7 @@
              Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
              Some known folders, although supported and registerd, may be still not created.
              
-             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.APidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AExec</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
+             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.APidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AExec</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
             
              Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
              The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -8470,8 +8467,8 @@
             </summary>
             <param name="folderName">
             A property name of this class. Examples: <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>.
-            Or a property name of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: HexEncodedITEMIDLIST"</c>.
-            Or known folder canonical name. See <see cref="M:Au.AFolders.GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: HexEncodedITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
+            Or a property name of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
+            Or known folder canonical name. See <see cref="M:Au.AFolders.GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
             </param>
         </member>
         <member name="T:Au.AIcon">
@@ -8489,7 +8486,7 @@
             Can be:
             - Path of any file or folder.
             - URL, like <c>"http://..."</c> or <c>"mailto:a@b.c"</c> or <c>"file:///path"</c>.
-            - ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="M:Au.APidl.ToHexString"/>.
+            - ITEMIDLIST like <c>":: ITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="M:Au.APidl.ToBase64String"/>.
             - Shell object parsing name, like <c>@"::{CLSID-1}\::{CLSID-2}"</c> or <c>@"shell:AppsFolder\WinStoreAppId"</c>.
             - File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
             
@@ -8731,7 +8728,7 @@
              <remarks>
              Supports known folder names. See <see cref="T:Au.AFolders"/>.
              Example: <c>@"%AFolders.Documents%\file.txt"</c>.
-             Example: <c>@"%AFolders.Virtual.ControlPanel%" //gets ":: HexEncodedITEMIDLIST"</c>.
+             Example: <c>@"%AFolders.Virtual.ControlPanel%" //gets ":: ITEMIDLIST"</c>.
              Usually known folders are used like <c>string path = AFolders.Documents + "file.txt"</c>. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
              To get known folder path, this function calls <see cref="M:Au.AFolders.GetFolder(System.String)"/>.
             
@@ -9144,7 +9141,7 @@
             Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST. In C# it is IntPtr.
             When calling native shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
             
-            The ITEMIDLIST structure is in unmanaged memory. You should always dispose APidl variables.
+            The ITEMIDLIST structure is in unmanaged memory. You can dispose APidl variables, or GC will do it later.
             
             This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
             </remarks>
@@ -9176,8 +9173,7 @@
             </summary>
             <param name="pidl">
             ITEMIDLIST* (PIDL).
-            It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc.
-            This variable will finally free it with Marshal.FreeCoTaskMem.
+            It can be created by any API that creates ITEMIDLIST. They allocate the memory with API CoTaskMemAlloc. This variable will finally free it with Marshal.FreeCoTaskMem which calls API CoTaskMemFree.
             </param>
         </member>
         <member name="M:Au.APidl.#ctor(System.IntPtr,System.IntPtr)">
@@ -9207,19 +9203,19 @@
             <summary>
             Converts string to ITEMIDLIST and creates new APidl variable that holds it.
             Returns null if failed.
-            Note: APidl is disposable.
             </summary>
-            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>) or ":: HexEncodedITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>). Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
-            <param name="throwIfFailed">If failed, throw AuException.</param>
+            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>) or ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToBase64String"/>). Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
+            <param name="throwIfFailed">Throw exception if failed.</param>
             <exception cref="T:Au.Types.AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
             <remarks>
-            Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: HexEncodedITEMIDLIST".
-            Never fails if s is ":: HexEncodedITEMIDLIST", even if it creates an invalid ITEMIDLIST.
+            Calls <msdn>SHParseDisplayName</msdn>, except when string is ":: ITEMIDLIST".
+            When ":: ITEMIDLIST", does not check whether the shell object exists.
+            Note: APidl is disposable.
             </remarks>
         </member>
         <member name="M:Au.APidl.LibFromString(System.String,System.Boolean)">
             <summary>
-            The same as <see cref="M:Au.APidl.FromString(System.String,System.Boolean)"/>, but returns unmanaged ITEMIDLIST* (PIDL).
+            The same as <see cref="M:Au.APidl.FromString(System.String,System.Boolean)"/>, but returns unmanaged ITEMIDLIST*.
             Later need to free it with Marshal.FreeCoTaskMem.
             </summary>
             <param name="s"></param>
@@ -9259,7 +9255,7 @@
         <member name="M:Au.APidl.ToString">
             <summary>
             Converts the ITEMIDLIST to string.
-            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: HexEncodedITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>).
+            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToBase64String"/>).
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
         </member>
@@ -9268,16 +9264,16 @@
             This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
             </summary>
         </member>
-        <member name="M:Au.APidl.ToHexString">
+        <member name="M:Au.APidl.ToBase64String">
             <summary>
-            Returns string ":: HexEncodedITEMIDLIST".
+            Returns string ":: ITEMIDLIST".
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
             <remarks>
             The string can be used with some functions of this library, mostly of classes <b>AExec</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
             </remarks>
         </member>
-        <member name="M:Au.APidl.ToHexString(System.IntPtr)">
+        <member name="M:Au.APidl.ToBase64String(System.IntPtr)">
             <summary>
             This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
             </summary>
@@ -9504,11 +9500,6 @@
             <param name="nChars">Number of characters to copy. In both processes a character is 2 bytes.</param>
             <param name="offsetBytes">Offset in the memory allocated by the constructor.</param>
             <param name="findLength">Find true string length by searching for '\0' character in nChars range. If false, the returned string is of nChars length even if contains '\0' characters.</param>
-        </member>
-        <member name="M:Au.AProcessMemory.LibReadUnicodeStringCached(System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            The same as <see cref="M:Au.AProcessMemory.ReadUnicodeString(System.Int32,System.Int32,System.Boolean)"/> but uses our AStringCache.
-            </summary>
         </member>
         <member name="M:Au.AProcessMemory.ReadAnsiString(System.Int32,System.Int32,System.Boolean,System.Text.Encoding)">
             <summary>
@@ -12576,6 +12567,7 @@
             </summary>
             <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="M:Au.Util.ARecording.MouseToString(System.Collections.Generic.IEnumerable{System.UInt32},System.Boolean)"/>.</param>
             <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
+            <exception cref="T:System.FormatException">Invalid Base64 string.</exception>
             <exception cref="T:System.ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
             <exception cref="T:System.ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
@@ -14258,8 +14250,8 @@
             </summary>
             <param name="image">See <see cref="M:Au.AWinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.AWinImage,Au.Types.WIAlso})"/>.</param>
             <exception cref="T:System.IO.FileNotFoundException">The specified file does not exist.</exception>
+            <exception cref="T:System.ArgumentException">Bad image format (the image cannot be loaded as Bitmap). Or Invalid Base64 string.</exception>
             <exception cref="T:System.Exception">Depending on <i>image</i> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, <see cref="M:Au.Util.AConvert.Decompress(System.Byte[],System.Int32,System.Int32)"/>.</exception>
-            <exception cref="T:System.ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
             <remarks>
             <see cref="M:Au.AWinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.AWinImage,Au.Types.WIAlso})"/> uses this function when <i>image</i> argument type is string. More info there.
             </remarks>
@@ -14582,7 +14574,7 @@
             <param name="separator">Field separator character used in CSV text. Default ','.</param>
             <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
             <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
-            <exception cref="T:Au.Types.AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+            <exception cref="T:System.FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
         </member>
         <member name="M:Au.ACsv.ToString">
             <summary>
@@ -14666,7 +14658,7 @@
             <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.IO.File.ReadAllText(System.String)"/>.</exception>
-            <exception cref="T:Au.Types.AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+            <exception cref="T:System.FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
             <remarks>
             Calls <see cref="M:System.IO.File.ReadAllText(System.String)"/> and <see cref="M:Au.ACsv.Parse(System.String,System.Char,System.Char,System.Boolean)"/>. Also uses <see cref="M:Au.AFile.WaitIfLocked(System.Action,System.Int32)"/>.
             </remarks>
@@ -16452,103 +16444,134 @@
             <seealso cref="T:Au.Util.AHash"/>
             <seealso cref="T:Au.Util.AHash.MD5"/>
         </member>
+        <member name="M:Au.Util.AConvert.HexEncode(System.Void*,System.Int32,System.Boolean)">
+            <summary>
+            Converts binary data stored in any memory to hex-encoded string.
+            </summary>
+            <param name="data">The data. Can be any valid memory of specified size, for example a struct address.</param>
+            <param name="size">data memory size (bytes).</param>
+            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+        </member>
         <member name="M:Au.Util.AConvert.HexEncode(System.Byte[],System.Boolean)">
             <summary>
-            Converts binary data stored in byte[] to hex-encoded string.
+            Converts byte[] to hex-encoded string.
             </summary>
-            <param name="a">The data. Can be null, then returns null.</param>
+            <param name="a">The data.</param>
             <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
             <remarks>
             The result string length is 2 * array length.
             In most cases it's better to use <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>, then result is 4/3 of array length. Both functions are fast.
             </remarks>
         </member>
-        <member name="M:Au.Util.AConvert.HexEncode(System.Void*,System.Int32,System.Boolean)">
+        <member name="M:Au.Util.AConvert.HexEncode``1(``0,System.Boolean)">
             <summary>
-            Converts binary data stored in any memory to hex-encoded string.
+            Converts a struct variable to hex-encoded string.
             </summary>
-            <param name="data">The data. Can be any valid memory of specified size, for example a struct address. Can be null, then returns null.</param>
-            <param name="size">data memory size (bytes).</param>
+            <param name="x">Variable.</param>
             <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
         </member>
-        <member name="M:Au.Util.AConvert.HexDecode(System.String)">
+        <member name="M:Au.Util.AConvert.HexDecode(System.ReadOnlySpan{System.Char})">
             <summary>
-            Converts hex-encoded string to binary data. Stores it in byte[].
+            Converts hex-encoded string to binary data as byte[].
             </summary>
-            <param name="s">Hex-encoded string. Can be null, then returns null.</param>
+            <param name="encoded">String or char[] or span of string/array/memory containing Hex-encoded data.</param>
             <remarks>
             Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
             The number of hex-digit characters should be divisible by 2, else the last character is ignored.
             </remarks>
-            <seealso cref="M:Au.Util.AConvert.Base64Decode(System.String)"/>
         </member>
-        <member name="M:Au.Util.AConvert.HexDecode(System.String,System.Void*,System.Int32,System.Int32)">
+        <member name="M:Au.Util.AConvert.HexDecode(System.ReadOnlySpan{System.Char},System.Void*,System.Int32)">
             <summary>
             Converts hex-encoded string to binary data. Stores it in caller's memory buffer.
-            Returns the number of bytes stored in resultBuffer memory. It is equal or less than Math.Min(bufferSize, (s.Length - stringStartIndex) / 2).
+            Returns the number of bytes stored in <i>decoded</i> memory. It is equal or less than <c>Math.Min(bufferSize, encoded.Length/2)</c>.
             </summary>
-            <param name="s">Hex-encoded string. Can be null.</param>
-            <param name="resultBuffer">Where to write the data. Can be any valid memory of specified size, for example a struct address.</param>
-            <param name="bufferSize">resultBuffer memory size. Note: this function will damage process memory if using bad resultBuffer or bufferSize.</param>
-            <param name="stringStartIndex">0 or index of first character of hex-encoded substring in s.</param>
+            <param name="encoded">String or char[] or span of string/array/memory containing Hex-encoded data.</param>
+            <param name="decoded">Memory buffer for the result.</param>
+            <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
             <remarks>
             Skips spaces and other non-hex-digit characters. Example: "01 23 46 67" is the same as "01234667".
             The number of hex-digit characters should be divisible by 2, else the last character is ignored.
             </remarks>
         </member>
-        <member name="M:Au.Util.AConvert.HexDecode(System.Char*,System.Int32,System.Void*,System.Int32)">
+        <member name="M:Au.Util.AConvert.HexDecode``1(System.ReadOnlySpan{System.Char},``0@)">
             <summary>
-            The same as <see cref="M:Au.Util.AConvert.HexDecode(System.String,System.Void*,System.Int32,System.Int32)"/> but the string can be an unmanaged UTF-16 string.
+            Converts hex-encoded string to a struct variable.
+            Returns false if decoded size != <c>sizeof(T)</c>.
             </summary>
-            <param name="s">UTF-16 string.</param>
-            <param name="length">s length (characters).</param>
-            <param name="resultBuffer"></param>
-            <param name="bufferSize"></param>
+            <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
+            <param name="decoded">The result variable.</param>
         </member>
-        <member name="M:Au.Util.AConvert.GuidToHex(System.Guid,System.Boolean)">
+        <member name="M:Au.Util.AConvert.Base64UrlEncode(System.Byte[])">
             <summary>
-            Converts Guid struct to hex string without {}-.
+            Converts byte[] to Base64-encoded string that can be used in URLs and file names.
             </summary>
-            <param name="guid"></param>
-            <param name="upperCase">Let the hex string contain A-F, not a-f.</param>
+            <param name="bytes">Data to encode.</param>
+            <remarks>Like <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>, but instead of '/' and '+' uses '_' and '-'.</remarks>
         </member>
-        <member name="M:Au.Util.AConvert.GuidFromHex(System.String,System.Guid@)">
+        <member name="M:Au.Util.AConvert.Base64UrlEncode(System.Void*,System.Int32)">
             <summary>
-            Converts hex GUID string to Guid struct.
-            Returns false if s is null or not a hex string of 32 length.
+            Converts binary data stored in any memory to Base64-encoded string that can be used in URLs and file names.
+            </summary>
+            <param name="bytes">Data to encode.</param>
+            <param name="length">Number of bytes to encode.</param>
+            <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
+        </member>
+        <member name="M:Au.Util.AConvert.Base64UrlEncode``1(``0)">
+            <summary>
+            Converts a struct variable to Base64-encoded string that can be used in URLs and file names.
+            </summary>
+            <param name="x">Variable.</param>
+            <remarks>Instead of '/' and '+' uses '_' and '-'.</remarks>
+        </member>
+        <member name="M:Au.Util.AConvert.Base64UrlEncodeLength(System.Int32)">
+            <summary>
+            Gets Base64-encoded string length for non-encoded length.
+            It is <c>(length + 2) / 3 * 4</c>.
             </summary>
         </member>
-        <member name="M:Au.Util.AConvert.GuidFromHex(System.String)">
+        <member name="M:Au.Util.AConvert.Base64UrlDecodeLength(System.ReadOnlySpan{System.Char})">
             <summary>
-            Converts hex GUID string to Guid struct.
+            Gets decoded data length from Base64-encoded string length.
+            It is <c>(int)(len * 3L / 4)</c> minus the number of padding '=' characters (max 2).
             </summary>
-            <exception cref="T:System.ArgumentException">guid is null or not hex string of 32 length.</exception>
         </member>
-        <member name="M:Au.Util.AConvert.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)">
+        <member name="M:Au.Util.AConvert.Base64UrlDecode(System.ReadOnlySpan{System.Char})">
             <summary>
-            Converts Base64 UTF-16 string to binary data (bytes). Stores it in caller's memory buffer.
-            Returns the number of bytes stored in resultBuffer.
+            Converts string containing Base64-encoded data to byte[]. Supports standard encoding and URL-safe encoding.
             </summary>
-            <param name="s">Base64 string. Can be null if len is 0.</param>
-            <param name="len">s length (characters).</param>
-            <param name="resultBuffer">A memory buffer for the result bytes. Must be of at least bufferSize size, else this function will damage process memory.</param>
-            <param name="bufferSize">resultBuffer buffer size (bytes). Must be at least (int)(len * 3L / 4), else exception.</param>
-            <exception cref="T:System.ArgumentException">bufferSize too small.</exception>
+            <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
+            <remarks>Like <see cref="M:System.Convert.FromBase64String(System.String)"/>, but the string can optionally contain '_' and '-' instead of '/' and '+'.</remarks>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Convert.FromBase64CharArray(System.Char[],System.Int32,System.Int32)"/>.</exception>
         </member>
-        <member name="M:Au.Util.AConvert.Base64Decode(System.String)">
+        <member name="M:Au.Util.AConvert.Base64UrlDecode(System.ReadOnlySpan{System.Char},System.Span{System.Byte},System.Int32@)">
             <summary>
-            Converts Base64 string to binary data (bytes).
-            Returns byte[] containing the data.
+            Converts string containing Base64-encoded data to bytes and stores in memory of a Span variable. Supports standard encoding and URL-safe encoding.
+            Returns false if the encoded string is invalid or the buffer is too small.
             </summary>
-            <param name="s">Base64 string. Can be null, then returns null.</param>
-            <remarks>
-            How this function differs from <see cref="M:System.Convert.FromBase64String(System.String)"/>:
-            1. Allows (discards) non-base64 characters.
-            2. Supports URL-safe characters: '-' for '+' and '_' for '/'.
-            3. No exception when string length is not multiple of 4, eg if does not contain '=' characters for padding. 
-            
-            This library does not have Base64-encode functions. Use <see cref="M:System.Convert.ToBase64String(System.Byte[])"/>.
-            </remarks>
+            <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
+            <param name="decoded">Memory buffer for the result.</param>
+            <param name="decodedLength"></param>
+            <remarks>The string can optionally contain '_' and '-' instead of '/' and '+'.</remarks>
+        </member>
+        <member name="M:Au.Util.AConvert.Base64UrlDecode(System.ReadOnlySpan{System.Char},System.Void*,System.Int32,System.Int32@)">
+            <summary>
+            Converts string containing Base64-encoded data to bytes and stores in any memory. Supports standard encoding and URL-safe encoding.
+            Returns false if the encoded string is invalid or the buffer is too small.
+            </summary>
+            <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
+            <param name="decoded">Memory buffer for the result.</param>
+            <param name="bufferSize">The max number of bytes that can be written to the <i>decoded</i> memory buffer.</param>
+            <param name="decodedLength">Receives the number of bytes written to the <i>decoded</i> memory buffer.</param>
+            <remarks>The string can optionally contain '_' and '-' instead of '/' and '+'.</remarks>
+        </member>
+        <member name="M:Au.Util.AConvert.Base64UrlDecode``1(System.ReadOnlySpan{System.Char},``0@)">
+            <summary>
+            Converts string containing Base64-encoded data to a struct variable. Supports standard encoding and URL-safe encoding.
+            Returns false if the encoded string is invalid or decoded size != <c>sizeof(T)</c>.
+            </summary>
+            <param name="encoded">String or char[] or span of string/array/memory containing Base64-encoded data.</param>
+            <param name="decoded">The result variable.</param>
+            <remarks>The string can optionally contain '_' and '-' instead of '/' and '+'.</remarks>
         </member>
         <member name="M:Au.Util.AConvert.Compress(System.Byte[])">
             <summary>
@@ -16586,70 +16609,21 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Util.AConvert.Utf8LengthFromString(System.String)">
+        <member name="M:Au.Util.AConvert.ToUtf8(System.ReadOnlySpan{System.Char},System.String)">
             <summary>
-            Returns the number of bytes that would by produced by converting C# string to UTF8, not including the terminating '\0' character.
+            Converts string to UTF-8 byte[]. Appends "\0" or some other string.
             </summary>
-            <param name="s">C# string (UTF16). Can be null.</param>
+            <param name="chars">String or char[] or span of string/array/memory.</param>
+            <param name="append">An optional ASCII string to append. For example "\0" (default) or "\r\n" or null.</param>
+            <exception cref="T:System.ArgumentException"><i>append</i> contains non-ASCII characters.</exception>
         </member>
-        <member name="M:Au.Util.AConvert.Utf8FromString(System.String)">
-            <summary>
-            Converts C# string to '\0'-terminated UTF8 string.
-            </summary>
-            <param name="s">C# string. If null, returns null.</param>
-            <remarks>
-            How this is different from .NET Encoding class functions: 1. Uses <msdn>WideCharToMultiByte</msdn>. 2. Faster with big strings. 3. The returned string is '\0'-terminated. 4. No exceptions (unless the string is so large that fails to allocate so much memory).
-            </remarks>
-        </member>
-        <member name="M:Au.Util.AConvert.Utf8FromString(System.String,System.Byte*,System.Int32)">
-            <summary>
-            Converts C# string to '\0'-terminated UTF8 string. Stores the UTF8 string in caller's buffer.
-            Returns UTF8 string length in bytes, not including the terminating '\0' character.
-            If fails (unlikely if passed correct arguments), returns 0 and sets buffer="".
-            </summary>
-            <param name="s">C# string. Can be null.</param>
-            <param name="buffer">Caller-allocated memory of bufLen length.</param>
-            <param name="bufLen">buffer length in bytes. Should be at least <see cref="M:Au.Util.AConvert.Utf8LengthFromString(System.String)"/>+1, else converts only part of string. The maximal possible required buffer length for whole string can be s.Length*3+1.</param>
-            <remarks>
-            Calls API <msdn>WideCharToMultiByte</msdn>.
-            This is the most low-level and therefore fastest overload. Does not allocate any memory. With big strings much faster than .NET Encoding class functions.
-            Use buffer/bufLen carefully. If bufLen is greater that the memory buffer length, other memory will be overwritten/damaged.
-            </remarks>
-        </member>
-        <member name="M:Au.Util.AConvert.Utf8ToStringLength(System.Byte*,System.Int32)">
-            <summary>
-            Returns the number of characters that would by produced by converting UTF8 to C# string.
-            The terminating '\0' character is not included in the return value.
-            </summary>
-            <param name="utf8">UTF8 string. Can be null.</param>
-            <param name="lengthBytes">Length of utf8 or part of it. If negative, the function finds utf8 length; then utf8 must be '\0'-terminated.</param>
-            <remarks>
-            Uses API <msdn>MultiByteToWideChar</msdn>.
-            There is no overload that takes byte[], because for it can be used .NET Encoding class functions.
-            </remarks>
-        </member>
-        <member name="M:Au.Util.AConvert.Utf8ToString(System.Byte*,System.Int32)">
+        <member name="M:Au.Util.AConvert.FromUtf8(System.Byte*,System.Int32)">
             <summary>
             Converts UTF8 string to C# string (which is UTF16).
             The terminating '\0' character is not included in the returned string.
             </summary>
             <param name="utf8">UTF8 string. If null, returns null.</param>
-            <param name="lengthBytes">Length of utf8 or part of it. If negative, the function finds utf8 length; then utf8 must be '\0'-terminated.</param>
-            <remarks>
-            Uses API <msdn>MultiByteToWideChar</msdn>.
-            Can be used instead of the .NET <b>Encoding</b> class. The speed is similar; this is slower with short strings but faster with long strings.
-            </remarks>
-        </member>
-        <member name="M:Au.Util.AConvert.Utf8ToString(System.Byte[])">
-            <summary>
-            Converts UTF8 string to C# string (which is UTF16).
-            The terminating '\0' character is not included in the returned string.
-            </summary>
-            <param name="utf8">UTF8 string. If null, returns null.</param>
-            <remarks>
-            Uses API <msdn>MultiByteToWideChar</msdn>.
-            Can be used instead of the .NET <b>Encoding</b> class. The speed is similar; this is slower with short strings but faster with long strings.
-            </remarks>
+            <param name="length">Length of <i>utf8</i>. If negative, the function finds length; then <i>utf8</i> must be '\0'-terminated.</param>
         </member>
         <member name="T:Au.Util.ACursor">
             <summary>
@@ -16997,10 +16971,10 @@
             Converts this to byte[16].
             </summary>
         </member>
-        <member name="M:Au.Util.AHash.MD5Result.FromString(System.String,System.Int32,System.Int32,Au.Util.AHash.MD5Result@)">
+        <member name="M:Au.Util.AHash.MD5Result.FromString(System.ReadOnlySpan{System.Char},Au.Util.AHash.MD5Result@)">
             <summary>
             Creates <b>MD5Result</b> from hex string returned by <see cref="M:Au.Util.AHash.MD5Result.ToString"/>.
-            Returns false if some parameter is invalid. Does not throw exception.
+            Returns false if <i>encoded</i> is invalid.
             </summary>
         </member>
         <member name="M:Au.Util.AHash.Crypto(System.Byte[],System.String)">
@@ -17196,17 +17170,6 @@
             <summary>
             Converts the array, which contains native UTF-16 string of n length, to String.
             Uses <c>new string(A, 0, n)</c>, which throws exception if the array is null or n is invalid.
-            </summary>
-            <param name="n">String length.</param>
-        </member>
-        <member name="M:Au.Util.AMemoryArray.CharBuffer.LibToStringCached">
-            <summary>
-            The same as <see cref="M:Au.Util.AMemoryArray.CharBuffer.ToString"/>, but uses our AStringCache.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AMemoryArray.CharBuffer.LibToStringCached(System.Int32)">
-            <summary>
-            The same as <see cref="M:Au.Util.AMemoryArray.CharBuffer.ToString(System.Int32)"/>, but uses our AStringCache.
             </summary>
             <param name="n">String length.</param>
         </member>
@@ -17793,71 +17756,6 @@
             <param name="c">The control. Can be top-level window too.</param>
             <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create an AWinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
         </member>
-        <member name="T:Au.Util.AStringCache">
-            <summary>
-            Caches managed strings created from unmanaged char* buffers.
-            </summary>
-            <remarks>
-            Can be used in possibly very frequently called functions to avoid much string garbage and frequent garbage collections.
-            For example, <b>AWnd.ClassName</b> and <b>AWnd.Name</b> use this. They are called by <b>AWnd.Wait</b> for each window (can be hundreds of them) repeatedly. It could create megabytes of garbage (window classname and name strings) in a few seconds. Every loop creates almost the same set of strings, therefore it makes sense to cache them.
-            To allow GC free the cached strings, use a WeakReferenc&lt;AStringCache&gt; object. See example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            internal static unsafe string GetCachedString(char* p, int len)
-            {
-            	if(_cacheWR == null) _cacheWR = new WeakReference<AStringCache>(null);
-            	if(!_cacheWR.TryGetTarget(out var cache)) _cacheWR.SetTarget(cache = new AStringCache());
-            	return cache.Add(p, len);
-            }
-            [ThreadStatic] static WeakReference<AStringCache> _cacheWR = new WeakReference<AStringCache>(null);
-            
-            //When char[] is used as text buffer.
-            internal static unsafe string GetCachedString(char[] a, int len)
-            {
-            	Debug.Assert(len < a.Length);
-            	fixed (char* p = a) return GetCachedString(p, len);
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char*,System.Int32,System.Boolean)">
-            <summary>
-            Gets string cached in a weak-referenced internal static LibStringCache object.
-            Locks and calls <see cref="!:Add"/>.
-            </summary>
-            <param name="p">Unmanaged string.</param>
-            <param name="len">p length.</param>
-            <param name="lenIsMaxLen">Call <c>len = LibCharPtr.Length(p, len)</c>.</param>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char[],System.Int32)">
-            <summary>
-            Gets string cached in a weak-referenced internal thread-static LibStringCache object.
-            Locks and calls <see cref="!:Add"/>.
-            </summary>
-            <param name="a">Text buffer.</param>
-            <param name="len">Length of valid text in a.</param>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char*)">
-            <summary>
-            This overload calls LibCharPtr.Length.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.Char[])">
-            <summary>
-            This overload calls LibCharPtr.Length.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AStringCache.LibAdd(System.String,System.Int32,System.Int32)">
-            <summary>
-            Gets substring of string s as a string cached in a weak-referenced internal thread-static LibStringCache object.
-            Locks and calls <see cref="!:Add"/>.
-            </summary>
-            <param name="s">The string containing the substring. Can be null/"" if other parameters are 0.</param>
-            <param name="startIndex">Start of substring in s.</param>
-            <param name="count">Length of substring.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
         <member name="T:Au.Util.LibScreenDC">
             <summary>
             Helps to get and release screen DC with the 'using(...){...}' pattern.
@@ -18027,6 +17925,14 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
+        </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>
@@ -18232,107 +18138,101 @@
         </member>
         <member name="T:Au.Util.LibCharPtr">
             <summary>
-            String functions that work with char* and ANSI byte* strings.
+            String functions that work with unmanaged char* strings.
+            See also <see cref="T:Au.Util.LibBytePtr"/>, it works with byte* strings.
             </summary>
         </member>
         <member name="M:Au.Util.LibCharPtr.Length(System.Char*)">
             <summary>
-            Finds unmanaged UTF-16 string length (number of characters).
-            Scans the string until '\0' character found.
+            Gets the number of characters in p until '\0'.
             </summary>
-            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
+            <param name="p">'\0'-terminated string. Can be null.</param>
         </member>
         <member name="M:Au.Util.LibCharPtr.Length(System.Char*,System.Int32)">
             <summary>
-            Finds unmanaged UTF-16 string length (number of characters).
-            Scans the string until '\0' character found, but not exceeding the specified length.
+            Gets the number of characters in p until '\0' or <i>max</i>.
             </summary>
-            <param name="p">'\0'-terminated UTF-16 string. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.Length(System.Byte*)">
-            <summary>
-            Finds unmanaged ANSI string length (number of bytes).
-            Scans the string until '\0' character found.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be any ANSI encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.Length(System.Byte*,System.Int32)">
-            <summary>
-            Finds unmanaged ANSI string length (number of bytes).
-            Scans the string until '\0' character found, but not exceeding the specified length.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be any encoding, for example UTF8; this function counts bytes, not multi-byte characters. Can be null.</param>
-            <param name="nMax">Max allowed string length. The function returns nMax if does not find '\0' character within first nMax characters.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.Ends(System.Char*,System.Int32,System.String,System.Boolean)">
-            <summary>
-            Returns true if unmanaged UTF-16 string p ends with string s.
-            </summary>
-            <param name="p">UTF-16 string. Can be null.</param>
-            <param name="len">p length.</param>
-            <param name="s">Cannot be null.</param>
-            <param name="ignoreCase">Case-insensitive.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.AsciiStarts(System.Byte*,System.String)">
-            <summary>
-            Returns true if unmanaged ANSI string p starts with string s. Case-sensitive.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
-            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.AsciiStartsi(System.Byte*,System.String)">
-            <summary>
-            Returns true if unmanaged ANSI string p starts with string s. Case-insensitive.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
-            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.AsciiEq(System.Byte*,System.String)">
-            <summary>
-            Returns true if unmanaged ANSI string p and string s are equal. Case-sensitive.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
-            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.AsciiEqi(System.Byte*,System.String)">
-            <summary>
-            Returns true if unmanaged ANSI string p and string s are equal. Case-insensitive.
-            </summary>
-            <param name="p">'\0'-terminated ANSI string. Can be null.</param>
-            <param name="s">Must contain only ASCII characters. Cannot be null.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.AsciiFindChar(System.Byte*,System.Int32,System.Byte)">
-            <summary>
-            Finds character in unmanaged ANSI string which can be binary.
-            </summary>
-            <param name="p">ANSI string. Can be null.</param>
-            <param name="len">Length of p to search in.</param>
-            <param name="ch">ASCII character.</param>
-        </member>
-        <member name="M:Au.Util.LibCharPtr.AsciiFindString(System.Byte*,System.Int32,System.String)">
-            <summary>
-            Finds substring in unmanaged ANSI string which can be binary.
-            Returns -1 if not found or if s is null/"" or s2 is "".
-            </summary>
-            <param name="p">ANSI string. Can be null.</param>
-            <param name="len">Length of p to search in.</param>
-            <param name="s">Substring to find. Must contain only ASCII characters. Cannot be null.</param>
+            <param name="p">'\0'-terminated string. Can be null.</param>
+            <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
         </member>
         <member name="M:Au.Util.LibCharPtr.Eq(System.Char*,System.Int32,System.String)">
             <summary>
-            Case-sensitive compares native string with managed string and returns true if they are equal.
+            Case-sensitive compares string with managed string and returns true if they are equal.
             </summary>
-            <param name="p">Native string.</param>
+            <param name="p">Unmanaged string.</param>
             <param name="len">p length. Returns false if it is != s.Length.</param>
             <param name="s">Managed string.</param>
         </member>
-        <member name="M:Au.Util.LibCharPtr.Eq(System.Byte*,System.Byte[])">
+        <member name="T:Au.Util.LibBytePtr">
             <summary>
-            Case-sensitive compares native ANSI string with managed ANSI string and returns true if they are equal.
+            String functions that work with unmanaged byte* strings.
+            See also <see cref="T:Au.Util.LibCharPtr"/>, it works with char* strings.
             </summary>
-            <param name="p">Native string.</param>
-            <param name="s">Managed string.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.Length(System.Byte*)">
+            <summary>
+            Gets the number of bytes in p until '\0'.
+            </summary>
+            <param name="p">'\0'-terminated string. Can be null.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.Length(System.Byte*,System.Int32)">
+            <summary>
+            Gets the number of bytes in p until '\0' or <i>max</i>.
+            </summary>
+            <param name="p">'\0'-terminated string. Can be null.</param>
+            <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.AsciiStarts(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged string p starts with string s. Case-sensitive.
+            </summary>
+            <param name="p">'\0'-terminated string.</param>
+            <param name="s">Must contain only ASCII characters.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.AsciiStartsi(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged string p starts with string s. Case-insensitive.
+            </summary>
+            <param name="p">'\0'-terminated string.</param>
+            <param name="s">Must contain only ASCII characters.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.AsciiEq(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged string p and string s are equal. Case-sensitive.
+            </summary>
+            <param name="p">'\0'-terminated string.</param>
+            <param name="s">Managed string. Must contain only ASCII characters.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.AsciiEqi(System.Byte*,System.String)">
+            <summary>
+            Returns true if unmanaged string p and string s are equal. Case-insensitive.
+            </summary>
+            <param name="p">'\0'-terminated string.</param>
+            <param name="s">Must contain only ASCII characters.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.Eq(System.Byte*,System.Byte[])">
+            <summary>
+            Case-sensitive compares unmanaged string p with byte[] s and returns true if they are equal.
+            </summary>
+            <param name="p">'\0'-terminated string.</param>
+            <param name="s">Managed string. Must contain only ASCII characters.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.AsciiFindChar(System.Byte*,System.Int32,System.Byte)">
+            <summary>
+            Finds character in string which can be binary.
+            </summary>
+            <param name="p"></param>
+            <param name="len">Length of p to search in.</param>
+            <param name="ch">ASCII character.</param>
+        </member>
+        <member name="M:Au.Util.LibBytePtr.AsciiFindString(System.Byte*,System.Int32,System.String)">
+            <summary>
+            Finds substring in string which can be binary.
+            Returns -1 if not found.
+            </summary>
+            <param name="p"></param>
+            <param name="len">Length of p to search in.</param>
+            <param name="s">Substring to find. Must contain only ASCII characters.</param>
         </member>
         <member name="T:Au.Util.LibEnsureWindowsFormsSynchronizationContext">
             <summary>
@@ -18579,14 +18479,9 @@
             Lookup tables for various functions of this library.
             </summary>
         </member>
-        <member name="F:Au.Util.LibTables.Base64">
-            <summary>
-            Table for <see cref="M:Au.Util.AConvert.Base64Decode(System.Char*,System.Int32,System.Void*,System.Int32)"/> and co.
-            </summary>
-        </member>
         <member name="F:Au.Util.LibTables.Hex">
             <summary>
-            Table for <see cref="M:Au.Util.AConvert.HexDecode(System.String,System.Void*,System.Int32,System.Int32)"/> and co.
+            Table for <see cref="M:Au.Util.AConvert.HexDecode(System.ReadOnlySpan{System.Char})"/> and co.
             </summary>
         </member>
         <member name="P:Au.Util.LibTables.LowerCase">

@@ -41,6 +41,7 @@ class CiAutocorrect
 	{
 		var r = doc.ZTempRanges_Add(this, innerFrom, innerTo);
 		if(operation == EBraces.NewExpression) r.OwnerData = "new";
+		else r.OwnerData = "ac";
 	}
 
 	public enum EBraces
@@ -104,16 +105,14 @@ class CiAutocorrect
 		case ';': return _OnEnterOrSemicolon(anywhere: false, onSemicolon: true, out c);
 		case '\"': case '\'': case ')': case ']': case '}': case '>': case (char)Keys.Tab: break; //skip auto-added char
 		case (char)Keys.Back: isBackspace = true; break; //delete auto-added char too
-		case '[': case '{': isOpenBrac = true; break; //replace auto-added '()' when completing 'new Type' with '[]' or '{}'
+		case '[': case '{': case '(': case '<': isOpenBrac = true; break; //replace auto-added '()' when completing 'new Type' with '[]' or '{}'. Also ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion.
 		default: return false;
 		}
-
-		//TODO: ignore user-typed '(' the first 1 s after auto-adding '()' by autocompletion.
 
 		int pos = doc.Z.CurrentPos8;
 		var r = doc.ZTempRanges_Enum(pos, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
 		if(r == null) return false;
-		if(isOpenBrac && r.OwnerData != (object)"new") return false;
+		if(isOpenBrac && !(r.OwnerData == (object)"ac" || r.OwnerData == (object)"new")) return false;
 		r.GetCurrentFromTo(out int from, out int to, utf8: true);
 
 		if(isBackspace || isOpenBrac) {
@@ -122,6 +121,13 @@ class CiAutocorrect
 			if(ch != (char)Keys.Tab && ch != (char)doc.Call(Sci.SCI_GETCHARAT, to)) return false; //info: '\0' if posUtf8 invalid
 		}
 		for(int i = pos; i < to; i++) switch((char)doc.Call(Sci.SCI_GETCHARAT, i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
+
+		//ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion
+		if(isOpenBrac && (ch == '(' || ch == '<') && ch == (char)doc.Call(Sci.SCI_GETCHARAT, pos - 1)) {
+			r.OwnerData = null;
+			return true;
+		}
+		if(isOpenBrac && r.OwnerData != (object)"new") return false;
 
 		r.Remove();
 

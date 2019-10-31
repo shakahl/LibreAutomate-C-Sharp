@@ -34,7 +34,7 @@ namespace Au
 		/// Can be:
 		/// - Path of any file or folder.
 		/// - URL, like <c>"http://..."</c> or <c>"mailto:a@b.c"</c> or <c>"file:///path"</c>.
-		/// - ITEMIDLIST like <c>":: HexEncodedITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="APidl.ToHexString"/>.
+		/// - ITEMIDLIST like <c>":: ITEMIDLIST"</c>. It can be of any file, folder, URL or virtual object like Control Panel. See <see cref="APidl.ToBase64String"/>.
 		/// - Shell object parsing name, like <c>@"::{CLSID-1}\::{CLSID-2}"</c> or <c>@"shell:AppsFolder\WinStoreAppId"</c>.
 		/// - File type like <c>".txt"</c> or URL protocol like <c>"http:"</c>.
 		/// 

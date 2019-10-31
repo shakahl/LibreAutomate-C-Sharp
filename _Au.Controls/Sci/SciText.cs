@@ -102,7 +102,7 @@ namespace Au.Controls
 		public int SetStringString(int sciMessage, string wParam0lParam)
 		{
 			fixed(byte* s = _ToUtf8(wParam0lParam, out var len)) {
-				int i = LibCharPtr.Length(s);
+				int i = LibBytePtr.Length(s);
 				Debug.Assert(i < len);
 				return C.Call(sciMessage, s, s + i + 1);
 			}
@@ -129,7 +129,7 @@ namespace Au.Controls
 				b[bufferSize] = 0;
 				Call(sciMessage, wParam, b);
 				Debug.Assert(b[bufferSize] == 0);
-				int len = LibCharPtr.Length(b, bufferSize);
+				int len = LibBytePtr.Length(b, bufferSize);
 				return _FromUtf8(b, len);
 			}
 		}
@@ -158,20 +158,14 @@ namespace Au.Controls
 			}
 		}
 
-		string _FromUtf8(byte* b, int n = -1)
-		{
-			return AConvert.Utf8ToString(b, n);
-		}
+		static string _FromUtf8(byte* b, int n = -1) => AConvert.FromUtf8(b, n);
 
-		byte[] _ToUtf8(string s)
-		{
-			return AConvert.Utf8FromString(s);
-		}
+		static byte[] _ToUtf8(string s) => AConvert.ToUtf8(s);
 
-		byte[] _ToUtf8(string s, out int utf8Length)
+		static byte[] _ToUtf8(string s, out int utf8Length)
 		{
-			var r = AConvert.Utf8FromString(s);
-			utf8Length = r == null ? 0 : r.Length - 1;
+			var r = AConvert.ToUtf8(s);
+			utf8Length = r.Length - 1;
 			return r;
 		}
 
@@ -372,13 +366,12 @@ namespace Au.Controls
 		bool _CanParseTags(string s)
 		{
 			if(Empty(s)) return false;
-			switch(C.ZInitTagsStyle) {
-			case AuScintilla.ZTagsStyle.AutoAlways:
-				return s.IndexOf('<') >= 0;
-			case AuScintilla.ZTagsStyle.AutoWithPrefix:
-				return s.Starts("<>");
-			}
-			return false;
+			return C.ZInitTagsStyle switch
+			{
+				AuScintilla.ZTagsStyle.AutoAlways => s.IndexOf('<') >= 0,
+				AuScintilla.ZTagsStyle.AutoWithPrefix => s.Starts("<>"),
+				_ => false,
+			};
 		}
 
 		///// <summary>
@@ -427,19 +420,25 @@ namespace Au.Controls
 		/// <param name="ignoreTags">Don't parse tags, regardless of C.TagsStyle.</param>
 		public void AppendText(string s, bool andRN, bool scroll, bool ignoreTags = false)
 		{
+			s ??= "";
 			if(!ignoreTags && _CanParseTags(s)) {
 				C.ZTags.AddText(s, true, C.ZInitTagsStyle == AuScintilla.ZTagsStyle.AutoWithPrefix);
 				return;
 			}
 
-			int n = AConvert.Utf8LengthFromString(s);
-			fixed(byte* b = LibByte(n + 2)) {
-				AConvert.Utf8FromString(s, b, n + 1);
-				if(andRN) { b[n++] = (byte)'\r'; b[n++] = (byte)'\n'; }
+			//int n = AConvert.Utf8LengthFromString(s);
+			//fixed(byte* b = LibByte(n + 2)) {
+			//	AConvert.Utf8FromString(s, b, n + 1);
+			//	if(andRN) { b[n++] = (byte)'\r'; b[n++] = (byte)'\n'; }
 
-				using(new _NoReadonly(this))
-					Call(SCI_APPENDTEXT, n, b);
-			}
+			//	using(new _NoReadonly(this))
+			//		Call(SCI_APPENDTEXT, n, b);
+			//}
+
+			var a = AConvert.ToUtf8(s, andRN ? "\r\n" : "");
+			using(new _NoReadonly(this))
+				fixed(byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
+
 			if(scroll) Call(SCI_GOTOPOS, TextLength8);
 		}
 
@@ -944,7 +943,7 @@ namespace Au.Controls
 				}
 				if(s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
 				if(len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
-				int zeroAt = LibCharPtr.Length(s, len);
+				int zeroAt = LibBytePtr.Length(s, len);
 				if(zeroAt == len - 1) len--; //WordPad saves .rtf files with '\0' at the end
 				if(zeroAt == len) { //no '\0'
 					byte* p = s, pe = s + len; for(; p < pe; p++) if(*p >= 128) break; //is ASCII?

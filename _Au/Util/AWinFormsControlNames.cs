@@ -62,7 +62,7 @@ namespace Au.Util
 			if(!c.SendTimeout(5000, out var R, WM_GETCONTROLNAME, 4096, _pm.Mem) || (int)R < 1) return null;
 			int len = (int)R - 1;
 			if(len == 0) return "";
-			return _pm.LibReadUnicodeStringCached(len);
+			return _pm.ReadUnicodeString(len);
 		}
 
 		/// <summary>

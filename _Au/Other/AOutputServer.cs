@@ -269,7 +269,7 @@ namespace Au
 											int lenCaller = *b++;
 											if(lenCaller > 0) {
 												if(10 + lenCaller * 2 > nextSize) { ok = false; break; }
-												caller = Util.AStringCache.LibAdd((char*)b, lenCaller);
+												caller = new string((char*)b, 0, lenCaller);
 												b += lenCaller * 2;
 											}
 											int len = (nextSize - (int)(b - b0)) / 2;

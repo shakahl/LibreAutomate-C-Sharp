@@ -179,28 +179,28 @@ namespace Au.Controls
 		/// <param name="length">If -1, calls LibCharPtr.Length(s).</param>
 		internal static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1)
 		{
-			if(length < 0) length = LibCharPtr.Length(s);
+			if(length < 0) length = LibBytePtr.Length(s);
 			if(length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
 
 			//special strings
 			switch(c1) {
 			case '~': return (c2 == ':') ? ImageType.Base64CompressedBmp : ImageType.None;
-			case 'i': if(LibCharPtr.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
-			case 'r': if(LibCharPtr.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
+			case 'i': if(LibBytePtr.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
+			case 'r': if(LibBytePtr.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
 			}
 
 			//file path
 			if(length >= 8 && (c1 == '%' || (c2 == ':' && AChar.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
 				if(ext[-1] == '.') {
-					if(LibCharPtr.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
-					if(LibCharPtr.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
-					if(LibCharPtr.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
-					if(LibCharPtr.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
-					if(LibCharPtr.AsciiStartsi(ext, "ico")) return ImageType.Ico;
-					if(LibCharPtr.AsciiStartsi(ext, "cur")) return ImageType.Cur;
-					if(LibCharPtr.AsciiStartsi(ext, "ani")) return ImageType.Cur;
+					if(LibBytePtr.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
+					if(LibBytePtr.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
+					if(LibBytePtr.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
+					if(LibBytePtr.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
+					if(LibBytePtr.AsciiStartsi(ext, "ico")) return ImageType.Ico;
+					if(LibBytePtr.AsciiStartsi(ext, "cur")) return ImageType.Cur;
+					if(LibBytePtr.AsciiStartsi(ext, "ani")) return ImageType.Cur;
 				} else if(AChar.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
 					for(; k > k2; k--) if(!AChar.IsAsciiDigit(*k)) break;
@@ -220,12 +220,13 @@ namespace Au.Controls
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		public static ImageType ImageTypeFromString(bool anyFile, string s)
 		{
-			var b = AConvert.Utf8FromString(s);
+			var b = AConvert.ToUtf8(s);
 			fixed (byte* p = b) return ImageTypeFromString(true, p, b.Length - 1);
 		}
 
 		/// <summary>
 		/// Loads image and returns its data in .bmp file format.
+		/// Returns null if fails, for example file not found or invalid Base64 string.
 		/// </summary>
 		/// <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
 		/// <param name="t">Image type and string format.</param>
@@ -252,9 +253,9 @@ namespace Au.Controls
 
 				switch(t) {
 				case ImageType.Base64CompressedBmp:
-					return AConvert.Decompress(AConvert.Base64Decode(s));
+					return AConvert.Decompress(Convert.FromBase64String(s));
 				case ImageType.Base64PngGifJpg:
-					using(var stream = new MemoryStream(AConvert.Base64Decode(s), false)) {
+					using(var stream = new MemoryStream(Convert.FromBase64String(s), false)) {
 						return _ImageToBytes(Image.FromStream(stream));
 					}
 				case ImageType.Resource:

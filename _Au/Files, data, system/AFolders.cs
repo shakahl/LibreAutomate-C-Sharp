@@ -30,7 +30,7 @@ namespace Au
 	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registerd, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="APidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: HexEncodedITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AExec</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="APidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AExec</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -532,11 +532,11 @@ namespace Au
 		}
 
 		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
-		//Returns string ":: HexEncodedITEMIDLIST".
+		//Returns string ":: ITEMIDLIST".
 		static FolderPath _GetV(uint a, uint b, uint c, uint d)
 		{
 			using var pidl = _GetVI(a, b, c, d);
-			return pidl?.ToHexString();
+			return pidl?.ToBase64String();
 		}
 
 		#endregion
@@ -709,8 +709,8 @@ namespace Au
 		/// </summary>
 		/// <param name="folderName">
 		/// A property name of this class. Examples: <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>.
-		/// Or a property name of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: HexEncodedITEMIDLIST"</c>.
-		/// Or known folder canonical name. See <see cref="GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: HexEncodedITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
+		/// Or a property name of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
+		/// Or known folder canonical name. See <see cref="GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>
 		public static FolderPath GetFolder(string folderName)
 		{
@@ -736,7 +736,7 @@ namespace Au
 				if(man.GetFolderByName(folderName, out kf) != 0) return null;
 				if(isVirtual) {
 					if(0 != kf.GetIDList(0, out IntPtr pidl)) return null;
-					R = APidl.ToHexString(pidl);
+					R = APidl.ToBase64String(pidl);
 					Marshal.FreeCoTaskMem(pidl);
 				} else {
 					if(0 != kf.GetPath(0, out R)) return null;

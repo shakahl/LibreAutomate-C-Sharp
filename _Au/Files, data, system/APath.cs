@@ -31,7 +31,7 @@ namespace Au
 		/// <remarks>
 		/// Supports known folder names. See <see cref="AFolders"/>.
 		/// Example: <c>@"%AFolders.Documents%\file.txt"</c>.
-		/// Example: <c>@"%AFolders.Virtual.ControlPanel%" //gets ":: HexEncodedITEMIDLIST"</c>.
+		/// Example: <c>@"%AFolders.Virtual.ControlPanel%" //gets ":: ITEMIDLIST"</c>.
 		/// Usually known folders are used like <c>string path = AFolders.Documents + "file.txt"</c>. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="AFolders.GetFolder"/>.
 		///

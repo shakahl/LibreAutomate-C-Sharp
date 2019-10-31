@@ -2259,6 +2259,7 @@
         <member name="M:Au.Controls.ImageUtil.BmpFileDataFromString(System.String,Au.Controls.ImageUtil.ImageType,System.Boolean)">
             <summary>
             Loads image and returns its data in .bmp file format.
+            Returns null if fails, for example file not found or invalid Base64 string.
             </summary>
             <param name="s">Depends on t. File path or resource name without prefix or Base64 image data without prefix.</param>
             <param name="t">Image type and string format.</param>

@@ -163,7 +163,7 @@ namespace Au
 			}
 		}
 
-		string _ReadString(bool ansiString, int nChars, int offsetBytes, bool findLength, Encoding enc = null, bool cache = false)
+		string _ReadString(bool ansiString, int nChars, int offsetBytes, bool findLength, Encoding enc = null)
 		{
 			if(Mem == default) return null;
 			int na = nChars; if(!ansiString) na *= 2;
@@ -171,12 +171,11 @@ namespace Au
 			fixed (char* p = b.A) {
 				if(!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, p, na, null)) return null;
 				if(findLength) {
-					if(ansiString) nChars = Util.LibCharPtr.Length((byte*)p, nChars);
+					if(ansiString) nChars = Util.LibBytePtr.Length((byte*)p, nChars);
 					else nChars = Util.LibCharPtr.Length(p, nChars);
 				}
 			}
 			if(ansiString) return b.LibToStringFromAnsi(nChars, enc);
-			if(cache) return b.LibToStringCached(nChars);
 			return b.ToString(nChars);
 		}
 
@@ -191,14 +190,6 @@ namespace Au
 		public string ReadUnicodeString(int nChars, int offsetBytes = 0, bool findLength = false)
 		{
 			return _ReadString(false, nChars, offsetBytes, findLength);
-		}
-
-		/// <summary>
-		/// The same as <see cref="ReadUnicodeString"/> but uses our AStringCache.
-		/// </summary>
-		internal string LibReadUnicodeStringCached(int nChars, int offsetBytes = 0, bool findLength = false)
-		{
-			return _ReadString(false, nChars, offsetBytes, findLength, cache: true);
 		}
 
 		/// <summary>

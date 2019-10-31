@@ -287,7 +287,8 @@ namespace Au.Controls
 							b[--imageLen] = 0; //remove "\nPrevText"
 						} else {
 							if(imageLen == n) b[imageLen++] = (byte)'\n'; //no "\nPrevText"
-							AConvert.Utf8FromString(s, b + imageLen, lens * 3);
+							//AConvert.Utf8FromString(s, b + imageLen, lens * 3);
+							Encoding.UTF8.GetBytes(s, new Span<byte>(b + imageLen, lens * 3));
 						}
 						_c.Call(SCI_ANNOTATIONSETTEXT, line, b);
 						return;
@@ -311,7 +312,7 @@ namespace Au.Controls
 					//info: now len<=n
 					if(imageLen < n) {
 						if(imageLen != 0) { b += imageLen; n -= imageLen; }
-						return AConvert.Utf8ToString(b, n);
+						return AConvert.FromUtf8(b, n);
 					}
 				}
 			}
@@ -336,12 +337,12 @@ namespace Au.Controls
 			//if not editor, skip if not <image "..."
 			if(!isMulti) {
 				if(_isEditor) imageStringStartPos = i - 1;
-				else if(i >= 8 && LibCharPtr.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				else if(i >= 8 && LibBytePtr.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
 				else goto g1;
 			}
 
 			//support "image1|image2|..."
-			int i3 = LibCharPtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
+			int i3 = LibBytePtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
 			if(i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
@@ -562,7 +563,7 @@ namespace Au.Controls
 				textPos = from2;
 			}
 
-			int r = _isEditor ? LibCharPtr.AsciiFindChar(s, len, (byte)'\"') : LibCharPtr.AsciiFindString(s, len, "<image \"");
+			int r = _isEditor ? LibBytePtr.AsciiFindChar(s, len, (byte)'\"') : LibBytePtr.AsciiFindString(s, len, "<image \"");
 			if(r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 

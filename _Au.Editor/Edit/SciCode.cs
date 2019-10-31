@@ -630,7 +630,7 @@ class SciCode : AuScintilla
 
 		if(!Empty(s)) {
 			var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
-			var b = AConvert.Utf8FromString(s);
+			var b = AConvert.ToUtf8(s);
 			fixed(byte* bp = b) {
 				z.text = bp;
 				z.len = b.Length - 1;

@@ -80,7 +80,7 @@ namespace Au
 		/// <param name="separator">Field separator character used in CSV text. Default ','.</param>
 		/// <param name="quote">Character used in CSV text to enclose some fields. Default '"'.</param>
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
-		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		/// <exception cref="FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static unsafe ACsv Parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true)
 		{
@@ -111,14 +111,14 @@ namespace Au
 								else { hasClosingQuote = true; break; }
 							}
 						}
-						if(!hasClosingQuote) throw new AuException($"Invalid CSV format. Cells that start with {quote} must end with {quote}.");
+						if(!hasClosingQuote) throw new FormatException($"Invalid CSV format. Cells that start with {quote} must end with {quote}.");
 						e = s - 1; //before quote
 						if(trimSpaces) { //rtrim
 							while(s < se && (*s == ' ' || *s == '\t')) s++;
 						}
 						if(s < se && !(*s == separator || *s == '\n')) {
 							if(*s == '\r' && s < se + 1 && s[1] == '\n') s++;
-							else throw new AuException($"Invalid CSV format. For {quote} in enclosed cells use {quote}{quote}.");
+							else throw new FormatException($"Invalid CSV format. For {quote} in enclosed cells use {quote}{quote}.");
 						}
 					} else {
 						f = s; //field start
@@ -382,7 +382,7 @@ namespace Au
 		/// <param name="trimSpaces">Ignore ASCII space and tab characters surrounding fields in CSV text. Default true.</param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
-		/// <exception cref="AuException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
+		/// <exception cref="FormatException">Invalid CSV, eg contains incorrectly enclosed fields.</exception>
 		/// <remarks>
 		/// Calls <see cref="File.ReadAllText(string)"/> and <see cref="Parse"/>. Also uses <see cref="AFile.WaitIfLocked"/>.
 		/// </remarks>

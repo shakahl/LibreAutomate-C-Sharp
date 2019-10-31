@@ -157,7 +157,7 @@ namespace Au
 						if(_x != null) {
 							var x = _x.Elem("i", "name", file, true);
 							if(x != null) {
-								using var ms = new MemoryStream(AConvert.Base64Decode(x.Value), false);
+								using var ms = new MemoryStream(Convert.FromBase64String(x.Value), false);
 								R = new Bitmap(ms);
 							}
 						}
@@ -198,7 +198,7 @@ namespace Au
 		{
 			using(var ms = new MemoryStream()) {
 				b.Save(ms, ImageFormat.Png);
-				var s = Convert.ToBase64String(ms.ToArray());
+				var s = Convert.ToBase64String(ms.ToArray()); //SHOULDDO: GetBuffer
 				XElement d = null;
 				if(replace) {
 					d = _x?.Elem("i", "name", file, true);

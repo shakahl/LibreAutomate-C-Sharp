@@ -75,12 +75,12 @@ partial class FOptions : AuForm
 				if(Program.Model.FindScript(script) == null) { err = "Script not found: " + script; break; }
 				var delay = v.Length == 1 ? null : v[1];
 				if(!Empty(delay)) {
-					if(_rxDelay == null) _rxDelay = new ARegex(@"(?i)^\d+ *m?s$");
+					_rxDelay ??= new ARegex(@"(?i)^\d+ *m?s$");
 					if(!_rxDelay.IsMatch(delay)) { err = "Delay must be like 2 s or 500 ms"; break; }
 				}
 			}
 		}
-		catch(AuException ex) { err = ex.Message; }
+		catch(FormatException ex) { err = ex.Message; }
 		ge:
 		if(err != null) {
 			_errorProvider.SetIconAlignment(_startupScripts, ErrorIconAlignment.TopLeft);

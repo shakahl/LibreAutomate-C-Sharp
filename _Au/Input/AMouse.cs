@@ -276,6 +276,7 @@ namespace Au
 		/// </summary>
 		/// <param name="recordedString">String containing mouse movement data recorded by a recorder tool that uses <see cref="ARecording.MouseToString"/>.</param>
 		/// <param name="speedFactor">Speed factor. For example, 0.5 makes 2 times faster.</param>
+		/// <exception cref="FormatException">Invalid Base64 string.</exception>
 		/// <exception cref="ArgumentException">The string is not compatible with this library version (recorded with a newer version and has additional options).</exception>
 		/// <exception cref="ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
@@ -286,7 +287,7 @@ namespace Au
 		{
 			LibWaitForNoButtonsPressed();
 
-			var a = AConvert.Base64Decode(recordedString);
+			var a = Convert.FromBase64String(recordedString);
 
 			byte flags = a[0];
 			const int knownFlags = 1; if((flags & knownFlags) != flags) throw new ArgumentException("Unknown string version");

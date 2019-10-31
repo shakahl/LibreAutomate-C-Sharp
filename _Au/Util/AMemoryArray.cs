@@ -140,23 +140,6 @@ namespace Au.Util
 				return new string(A, 0, n);
 			}
 
-			/// <summary>
-			/// The same as <see cref="ToString()"/>, but uses our AStringCache.
-			/// </summary>
-			internal string LibToStringCached()
-			{
-				return AStringCache.LibAdd(A);
-			}
-
-			/// <summary>
-			/// The same as <see cref="ToString(int)"/>, but uses our AStringCache.
-			/// </summary>
-			/// <param name="n">String length.</param>
-			internal string LibToStringCached(int n)
-			{
-				return AStringCache.LibAdd(A, n);
-			}
-
 			//currently not used
 			///// <summary>
 			///// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.

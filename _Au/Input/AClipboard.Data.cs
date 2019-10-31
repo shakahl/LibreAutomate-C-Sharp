@@ -402,7 +402,7 @@ EndFragment:0000000000
 
 				Encoding enc = ClipFormats.LibGetTextEncoding(format, out bool unknown);
 				if(unknown) {
-					if((len & 1) != 0 || Util.LibCharPtr.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect
+					if((len & 1) != 0 || Util.LibBytePtr.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect
 				}
 
 				if(enc == null) {

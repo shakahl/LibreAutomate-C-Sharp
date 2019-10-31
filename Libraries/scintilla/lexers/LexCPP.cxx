@@ -1512,6 +1512,10 @@ void SCI_METHOD LexerCPP::Fold(Sci_PositionU startPos, Sci_Position length, int 
 		if (!IsASpace(ch))
 			visibleChars++;
 		if (atEOL || (i == endPos-1)) {
+			//au
+			//Platform::DebugPrintf("%i %i", levelCurrent, levelNext);
+			if(levelNext < SC_FOLDLEVELBASE) levelNext = SC_FOLDLEVELBASE;
+
 			int levelUse = levelCurrent;
 			if ((options.foldSyntaxBased && options.foldAtElse) ||
 				(options.foldPreprocessor && options.foldPreprocessorAtElse)

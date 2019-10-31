@@ -2477,7 +2477,7 @@ namespace Au
 				var b = stackalloc char[stackSize]; //tested: same speed with AMemoryArray
 				int n = Api.GetClassName(this, b, stackSize);
 				if(n == 0) return null;
-				return AStringCache.LibAdd(b, n);
+				return new string(b, 0, n);
 			}
 		}
 
@@ -2586,7 +2586,7 @@ namespace Au
 				ALastError.Clear();
 				int nr = Api.InternalGetWindowText(this, b, na);
 				if(nr < na - 1) {
-					if(nr > 0) return AStringCache.LibAdd(b, nr);
+					if(nr > 0) return new string(b, 0, nr);
 					if(ALastError.Code != 0) return null;
 					if(useSlowIfEmpty && HasStyle(WS.CHILD)) return _GetTextSlow();
 					return "";
@@ -2611,7 +2611,7 @@ namespace Au
 				if(ln < 1) return "";
 				b.A[n] = '\0';
 				n = LibCharPtr.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
-				return AStringCache.LibAdd(b, n);
+				return new string(b, 0, n);
 			}
 
 			//note: cannot do this optimization:

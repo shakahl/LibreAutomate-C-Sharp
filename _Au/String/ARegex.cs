@@ -149,7 +149,7 @@ namespace Au
 			if(rx == null) throw new ArgumentNullException();
 			_matchFlags = (byte)((ulong)flags >> 56); flags = (RXFlags)((ulong)flags & 0xffffff_ffffffff);
 			_codeUnsafe = Cpp.Cpp_RegexCompile(rx, rx.Length, flags, out int codeSize, out BSTR errStr);
-			if(_codeUnsafe == default) throw new ArgumentException(errStr.ToStringAndDispose(noCache: true));
+			if(_codeUnsafe == default) throw new ArgumentException(errStr.ToStringAndDispose());
 			GC.AddMemoryPressure(codeSize);
 		}
 
@@ -287,7 +287,7 @@ namespace Au
 			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, null, out BSTR errStr);
 			//Print(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
-			if(rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
+			if(rc < -1) throw new AuException(errStr.ToStringAndDispose());
 			return rc >= 0;
 		}
 
@@ -438,7 +438,7 @@ namespace Au
 			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, out m, out BSTR errStr);
 			//Print(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
-			if(rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
+			if(rc < -1) throw new AuException(errStr.ToStringAndDispose());
 			if(group != 0 && rc >= 0 && (uint)group >= m.vecCount) throw new ArgumentOutOfRangeException(nameof(group));
 			return rc;
 		}
@@ -474,7 +474,7 @@ namespace Au
 				//Print(_rc);
 				//info: 0 cannot be (partial match), -1 is no match, <-1 is error
 				if(_rc < 0) {
-					if(_rc < -1) throw new AuException(errStr.ToStringAndDispose(noCache: true));
+					if(_rc < -1) throw new AuException(errStr.ToStringAndDispose());
 					return false;
 				}
 				if(_group != 0 && (uint)_group >= _m.vecCount) throw new ArgumentOutOfRangeException("group");

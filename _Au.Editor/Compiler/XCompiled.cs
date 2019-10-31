@@ -120,7 +120,7 @@ namespace Au.Compiler
 						case 'p':
 							isMultiFileProject = true;
 							if(projFolder != null) {
-								if(!Util.AHash.MD5Result.FromString(value, offs, v.end - offs, out var md5)) return false;
+								if(!Util.AHash.MD5Result.FromString(value.AsSpan(offs, v.end - offs), out var md5)) return false;
 								Util.AHash.MD5 md = default;
 								foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) {
 									if(_IsFileModified(f1)) return false;

@@ -83,7 +83,7 @@ namespace Au.Util
 					}
 					b.A[j++] = s[i];
 				}
-				s = b.LibToStringCached(j);
+				s = new string(b, 0, j);
 			}
 			return s;
 		}

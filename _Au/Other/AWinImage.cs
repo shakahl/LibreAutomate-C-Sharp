@@ -43,8 +43,8 @@ namespace Au
 		/// </summary>
 		/// <param name="image">See <see cref="Find"/>.</param>
 		/// <exception cref="FileNotFoundException">The specified file does not exist.</exception>
+		/// <exception cref="ArgumentException">Bad image format (the image cannot be loaded as Bitmap). Or Invalid Base64 string.</exception>
 		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, <see cref="AConvert.Decompress"/>.</exception>
-		/// <exception cref="ArgumentException">Bad image format (the image cannot be loaded as Bitmap).</exception>
 		/// <remarks>
 		/// <see cref="Find"/> uses this function when <i>image</i> argument type is string. More info there.
 		/// </remarks>
@@ -54,11 +54,9 @@ namespace Au
 			object o = null;
 			if(image.Starts("image:") || image.Starts("~:")) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
 				bool compressed = image[0] == '~';
-				int start = compressed ? 2 : 6, len = image.Length - start, n = (int)(len * 3L / 4);
+				int start = compressed ? 2 : 6, n = (int)((image.Length - start) * 3L / 4);
 				var b = new byte[n];
-				fixed (byte* pb = b) {
-					fixed (char* ps = image) n = AConvert.Base64Decode(ps + start, len, pb, n);
-				}
+				if(!Convert.TryFromBase64Chars(image.AsSpan(start), b, out n)) throw new ArgumentException("Invalid Base64 string");
 				using var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false);
 				if(compressed) AConvert.Decompress(stream, b, 0, n);
 				R = new Bitmap(stream);

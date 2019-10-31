@@ -375,7 +375,7 @@ unsafe class Program
 			) throw new FileNotFoundException("user or password not found in registry");
 
 		//upload
-		pass = Encoding.UTF8.GetString(Au.Util.AConvert.Base64Decode(pass));
+		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass));
 		var name = @"\_site.tar.bz2";
 		var path = docDir + name;
 		using(var client = new WebClient()) {

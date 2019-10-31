@@ -4,6 +4,7 @@ using Au.Types;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Runtime;
 using System.Threading;
 using System.Windows.Forms;
 using static Au.AStatic;
@@ -16,7 +17,7 @@ partial class FMain : Form
 	public static void ZRunApplication()
 	{
 		var f = new FMain();
-		ATimer.After(1, () => APerf.NW()); //235 ms, ngen 115 ms //TODO
+		ATimer.After(1, () => APerf.NW()); //TODO
 		if(CommandLine.StartVisible || Program.Settings.GetBool("_alwaysVisible")) Application.Run(f);
 		else Application.Run();
 	}
@@ -36,8 +37,7 @@ partial class FMain : Form
 		this.Icon = EdStock.IconAppNormal;
 		this.StartPosition = FormStartPosition.Manual;
 		unsafe {
-			Api.WINDOWPLACEMENT p; int siz = sizeof(Api.WINDOWPLACEMENT);
-			if(Program.Settings.GetString("wndPos", out string s) && siz == Au.Util.AConvert.HexDecode(s, &p, siz)) {
+			if(Program.Settings.GetString("wndPos", out string s) && Au.Util.AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
 				p.rcNormalPosition.EnsureInScreen();
 				this.Bounds = p.rcNormalPosition;
 				if(p.showCmd == Api.SW_SHOWMAXIMIZED) this.WindowState = FormWindowState.Maximized;
@@ -84,6 +84,8 @@ partial class FMain : Form
 
 		//note: we don't use OnLoad. It's unreliable, sometimes not called, eg when made visible from outside.
 		if(visible && Program.Loaded == EProgramState.LoadedWorkspace) {
+
+			_StartProfileOptimization();
 
 			Panels.PanelManager.ZGetPanel(Panels.Output).Visible = true; //else Print etc would not auto set visible until the user makes it visible, because handle not created if invisible
 
@@ -259,6 +261,17 @@ partial class FMain : Form
 			}
 			return false;
 		}
+	}
+
+	static void _StartProfileOptimization()
+	{
+#if !DEBUG
+		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
+		AFile.CreateDirectory(fProfile);
+		ProfileOptimization.SetProfileRoot(fProfile);
+		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
+		APerf.Next();
+#endif
 	}
 
 	public void ZSetTitle()
