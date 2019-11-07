@@ -3309,7 +3309,7 @@ unsigned int Platform::DoubleClickTime() {
 
 void Platform::DebugDisplay(const char *s) {
 	::OutputDebugStringA(s);
-	//au:
+	//Au:
 	SendMessageA(FindWindowA("QM_Editor", nullptr), WM_SETTEXT, (WPARAM)(-1), (LPARAM)s);
 }
 
@@ -3352,7 +3352,7 @@ void Platform::Assert(const char *c, const char *file, int line) {
 		}
 	} else {
 		Platform::DebugDisplay(buffer);
-		//au: ignore, don't break/abort
+		//Au: ignore, don't break/abort
 		//::DebugBreak();
 		//abort();
 	}

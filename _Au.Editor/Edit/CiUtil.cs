@@ -86,11 +86,15 @@ static class CiUtil
 		return "http://www.google.com/search?q=" + query;
 	}
 
-	public static Rectangle GetCaretRectFromPos(SciCode doc, int position = -1)
+	/// <summary>
+	/// Gets rectangle of caret if it was at the specified UTF-16 position.
+	/// If <i>pos16</i> less than 0, uses current caret position.
+	/// </summary>
+	public static Rectangle GetCaretRectFromPos(SciCode doc, int pos16 = -1)
 	{
-		if(position < 0) position = doc.Z.CurrentPos8; else position = doc.Z.CountBytesFromChars(position);
-		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, position), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, position);
-		return new Rectangle(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.Z.LineIndexFromPos(false, position)) + 4);
+		if(pos16 < 0) pos16 = doc.Z.CurrentPos8; else pos16 = doc.Pos8(pos16);
+		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, pos16), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, pos16);
+		return new Rectangle(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.Z.LineFromPos(false, pos16)) + 4);
 	}
 
 #if DEBUG

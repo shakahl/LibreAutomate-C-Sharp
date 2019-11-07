@@ -39,10 +39,10 @@ namespace Au.Controls
 	/// </summary>
 	public partial class AuScintilla : Control
 	{
-		static SciFnDirect s_fnDirect;
-		SciFnDirect _fnDirect;
-		LPARAM _ptrDirect;
+		LPARAM _sciPtr;
 		Sci_NotifyCallback _notifyCallback;
+
+		internal LPARAM LibSciPtr => _sciPtr;
 
 		[Browsable(false)]
 		public SciImages ZImages { get; private set; }
@@ -54,6 +54,12 @@ namespace Au.Controls
 		/// Gets the SciText object that contains most Scintilla-related functions.
 		/// </summary>
 		public readonly SciText Z;
+
+		static AuScintilla()
+		{
+			var path = ZDllPath;
+			if(default == Api.LoadLibrary(path)) throw new AuException(0, $"*load '{path}'");
+		}
 
 		///
 		public AuScintilla()
@@ -75,12 +81,6 @@ namespace Au.Controls
 
 		protected override CreateParams CreateParams {
 			get {
-				if(s_fnDirect == null) {
-					var path = ZDllPath;
-					if(!Api.GetDelegate(out s_fnDirect, path, "Scintilla_DirectFunction")) throw new AuException(0, $"*load '{path}'");
-				}
-				_fnDirect = s_fnDirect;
-
 				var cp = base.CreateParams;
 				cp.ClassName = "Scintilla";
 
@@ -99,7 +99,7 @@ namespace Au.Controls
 		protected override unsafe void OnHandleCreated(EventArgs e)
 		{
 			var hwnd = (AWnd)Handle;
-			_ptrDirect = hwnd.Send(SCI_GETDIRECTPOINTER);
+			_sciPtr = hwnd.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
 			bool hasImages = ZInitImagesStyle != ZImagesStyle.NoImages;
@@ -188,18 +188,6 @@ namespace Au.Controls
 			}
 		}
 
-		/// <summary>
-		/// Don't set focus on mouse left button down.
-		/// </summary>
-		[DefaultValue(false)]
-		public bool ZNoMouseLeftSetFocus { get; set; }
-
-		/// <summary>
-		/// Don't set focus on mouse right button down.
-		/// </summary>
-		[DefaultValue(false)]
-		public bool ZNoMouseRightSetFocus { get; set; }
-
 		void _DefWndProc(ref Message m)
 		{
 			m.Result = CallRetPtr(m.Msg, m.WParam, m.LParam);
@@ -213,7 +201,7 @@ namespace Au.Controls
 			//if(code != NOTIF.SCN_PAINTED) AOutput.QM2.Write(code.ToString());
 			switch(code) {
 			case NOTIF.SCN_MODIFIED:
-				_NotifyModified(ref n);
+				_NotifyModified(n);
 				if(ZDisableModifiedNotifications) return;
 				break;
 			case NOTIF.SCN_HOTSPOTRELEASECLICK:
@@ -229,16 +217,19 @@ namespace Au.Controls
 		//	if(Name != "Status_text") AOutput.QM2.Write($"{t}: {text}");
 		//}
 
-		unsafe void _NotifyModified(ref SCNotification n)
+		unsafe void _NotifyModified(in SCNotification n)
 		{
-			_text = null;
 			var code = n.modificationType;
 			if((code & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
-			//Print(code, n.position);
+			//if(this.Name!= "Output_text") Print(code, n.position);
 			if(0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
+				_text = null;
+				_posState = default;
+				_aPos.Clear();
+
 				bool ins = 0 != (code & MOD.SC_MOD_INSERTTEXT);
-				ZImages?.LibOnTextChanged(ins, ref n);
-				ZTags?.LibOnTextChanged(ins, ref n);
+				ZImages?.LibOnTextChanged(ins, n);
+				ZTags?.LibOnTextChanged(ins, n);
 			}
 			//if(0!=(code& MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 		}
@@ -246,8 +237,8 @@ namespace Au.Controls
 		/// <summary>
 		/// Raises the <see cref="ZNotify"/> event.
 		/// </summary>
-		/// <param name="n"></param>
-		protected virtual void ZOnSciNotify(ref SCNotification n) {
+		protected virtual void ZOnSciNotify(ref SCNotification n)
+		{
 			ZNotify?.Invoke(this, ref n);
 			var e = ZTextChanged;
 			if(e != null && n.nmhdr.code == NOTIF.SCN_MODIFIED && 0 != (n.modificationType & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) e(this, EventArgs.Empty);
@@ -266,13 +257,6 @@ namespace Au.Controls
 		public event EventHandler ZTextChanged;
 
 		/// <summary>
-		/// On SCN_MODIFIED notifications suppress <see cref="ZOnSciNotify"/>, <see cref="ZNotify"/> and <see cref="ZTextChanged"/>.
-		/// Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
-		/// </summary>
-		[DefaultValue(false)]
-		public bool ZDisableModifiedNotifications { get; set; }
-
-		/// <summary>
 		/// Sends a Scintilla message to the control and returns int.
 		/// Don't call this function from another thread.
 		/// </summary>
@@ -284,7 +268,7 @@ namespace Au.Controls
 		/// Don't call this function from another thread.
 		/// </summary>
 		[DebuggerStepThrough]
-		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam, LPARAM lParam)
+		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam = default, LPARAM lParam = default)
 		{
 #if DEBUG
 			if(ZDebugPrintMessages) _DebugPrintMessage(sciMessage);
@@ -299,7 +283,312 @@ namespace Au.Controls
 			//	1. May create parked control. Not good for performance.
 			//	2. Can be dangerous, eg if passing a reusable buffer that also is used by OnHandleCreated.
 
-			return _fnDirect(_ptrDirect, sciMessage, wParam, lParam);
+			return Sci_Call(_sciPtr, sciMessage, wParam, lParam);
+		}
+
+		/// <summary>
+		/// Gets or sets text.
+		/// Uses caching, therefore the 'get' function is fast and garbage-free when calling multiple times.
+		/// </summary>
+		/// <remarks>
+		/// The 'get' function gets cached text if called not the first time after setting or modifying control text.
+		/// The 'set' function calls <see cref="SciText.SetText"/> when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
+		/// Unlike the above methods, this property can be used before creating handle.
+		/// </remarks>
+		public override string Text {
+			get {
+				//AOutput.QM2.Write($"Text: cached={_text != null}");
+				if(_text == null && IsHandleCreated) _text = Z.LibGetText(); //_NotifyModified sets _text=null
+				return _text;
+			}
+			set {
+				if(IsHandleCreated) Z.SetText(value); //_NotifyModified sets _text=null. Control text can be != value, eg when tags parsed.
+				else _text = value; //will set control text on WM_CREATE
+			}
+		}
+		string _text;
+
+		/// <summary>
+		/// UTF-8 text length.
+		/// </summary>
+		public int Len8 => _posState == _PosState.Ok ? _len8 : Call(SCI_GETTEXTLENGTH);
+
+		/// <summary>
+		/// UTF-16 text length.
+		/// </summary>
+		public int Len16 {
+			get {
+				if(_text != null) return _text.Length;
+				if(_posState == default) _CreatePosMap();
+				if(_posState == _PosState.Ok) return _len16;
+				return Pos16(Call(SCI_GETTEXTLENGTH));
+			}
+		}
+
+#if true
+		/// <summary>
+		/// Converts UTF-16 position to UTF-8 position. Fast.
+		/// </summary>
+		public int Pos8(int pos16)
+		{
+			Debug.Assert((uint)pos16 <= Len16);
+			if(_posState == default) _CreatePosMap();
+			if(_posState == _PosState.Ok) {
+				//using binary search find max _aPos[r].i16 that is < pos16
+				int r = -1, from = 0, to = _aPos.Count;
+				while(to > from) {
+					int m = (from + to) / 2;
+					if(_aPos[m].i16 < pos16) from = (r = m) + 1; else to = m;
+				}
+				if(r < 0) return pos16; //_aPos is empty (ASCII text) or pos16 <= _aPos[0].i16 (before first non-ASCII character)
+				var p = _aPos[r];
+				return p.i8 + Math.Min(pos16 - p.i16, p.len16) * p.charLen + Math.Max(pos16 - (p.i16 + p.len16), 0); //p.i8 + utf + ascii
+			} else {
+				var s = Text;
+				return Encoding.UTF8.GetByteCount(s, 0, pos16);
+				//note: don't use SCI_POSITIONRELATIVECODEUNITS, it is very slow.
+			}
+		}
+
+		/// <summary>
+		/// Converts UTF-8 position to UTF-16 position. Fast.
+		/// </summary>
+		public unsafe int Pos16(int pos8)
+		{
+			Debug.Assert((uint)pos8 <= Len8);
+			if(_posState == default) _CreatePosMap();
+			if(_posState == _PosState.Ok) {
+				//using binary search find max _aPos[r].i8 that is < pos8
+				int r = -1, from = 0, to = _aPos.Count;
+				while(to > from) {
+					int m = (from + to) / 2;
+					if(_aPos[m].i8 < pos8) from = (r = m) + 1; else to = m;
+				}
+				if(r < 0) return pos8; //_aPos is empty (ASCII text) or pos8 <= _aPos[0].i8 (before first non-ASCII character)
+				var p = _aPos[r];
+				int len8 = p.len16 * p.charLen;
+				return p.i16 + Math.Min(pos8 - p.i8, len8) / p.charLen + Math.Max(pos8 - (p.i8 + len8), 0); //p.i16 + utf + ascii
+			} else {
+				int gap = Sci_Range(_sciPtr, 0, pos8, out var p1, out var p2);
+				int R = Encoding.UTF8.GetCharCount(p1, p2 == null ? pos8 : gap);
+				if(p2 != null) R += Encoding.UTF8.GetCharCount(p2, pos8 - gap);
+				return R;
+				//note: don't use SCI_COUNTCODEUNITS, it is very slow.
+			}
+		}
+
+		public void TestCreatePosMap()//TODO
+		{
+			_CreatePosMap();
+			//foreach(var v in _aPos) Print(v.i8, v.i16);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		unsafe void _CreatePosMap()
+		{
+			//This func is fast and garbageless. For code edit controls don't need to optimize to avoid calling it frequently, eg for each added character.
+			//Should not be used for output/log controls if called on each "append text". Or then need to optimize.
+			//AOutput.QM2.Write(this.Name);
+
+			_aPos.Clear();
+
+			int textLen;
+			int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
+			int to8 = p2 == null ? textLen : gap;
+			int i8 = 0, i16 = 0;
+			g1:
+			int asciiStart8 = i8;
+			i8 = _SkipAscii(p, i8, to8);
+			i16 += i8 - asciiStart8;
+			if(i8 < to8) {
+				int utfStart8 = i8, utfStart16 = i16, c = p[i8];
+				if(c < 0xE0) { //2-byte UTF-8 chars
+					for(; i8 < to8 && (c = p[i8]) >= 0xC2 && c < 0xE0; i8 += 2) i16++;
+				} else if(c < 0xF0) { //3-byte UTF-8 chars
+					for(; i8 < to8 && (c = p[i8]) >= 0xE0 && c < 0xF0; i8 += 3) i16++;
+				} else { //4-byte UTF-8 chars
+					for(; i8 < to8 && (c = p[i8]) >= 0xF0 && c < 0xF8; i8 += 4) i16 += 2;
+				}
+				int len16 = i16 - utfStart16;
+				if(len16 > 0) _aPos.Add(new _PosUtfRange(utfStart8, utfStart16, len16, (i8 - utfStart8) / len16));
+				if(i8 < to8) {
+					if(c >= 0x80) { if(c < 0xC2 || c > 0xF8) goto ge; }
+					goto g1;
+				}
+				if(i8 > to8) goto ge;
+			}
+
+			if(p2 != null) {
+				p = p2 - i8;
+				p2 = null;
+				to8 = textLen;
+				goto g1;
+			}
+
+			_posState = _PosState.Ok;
+			_len8 = textLen;
+			_len16 = i16;
+			return;
+			ge:
+			_posState = _PosState.Error;
+			_aPos.Clear();
+			ADebug.Print("Invalid UTF-8 text");
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		static unsafe int _SkipAscii(byte* bp, int i, int len)
+		{
+			for(; i < len && (i & 7) != 0; i++) if(bp[i] >= 0x80) return i;
+			var up = (ulong*)(bp + i);
+			int j = 0;
+			for(int n = (len - i) / 8; j < n; j++) if((up[j] & 0x8080808080808080) != 0) break;
+			for(i += j * 8; i < len; i++) if(bp[i] >= 0x80) break;
+			return i;
+		}
+
+		struct _PosUtfRange
+		{
+			public int i8, i16, len16, charLen; //note: len16 is UTF-16 code units; if surrogate pairs, charLen is 2 (2 bytes for each UTF-16 code unit)
+			public _PosUtfRange(int i8, int i16, int len16, int charLen)
+			{
+				this.i8 = i8; this.i16 = i16; this.len16 = len16; this.charLen = charLen;
+			}
+		}
+		List<_PosUtfRange> _aPos = new List<_PosUtfRange>();
+#else //this code is slightly simpler, but may need big array (1 element for 1 non-ASCII char vs 1 element for 1 non-ASCII range). Speed similar.
+		/// <summary>
+		/// Converts UTF-16 position to UTF-8 position. Fast.
+		/// </summary>
+		public int Pos8(int pos16)
+		{
+			Debug.Assert((uint)pos16 <= Len16);
+			if(_posState == default) _CreatePosMap();
+			if(_posState == _PosState.Ok) {
+				//using binary search find max _aPos[r].i16 that is <= pos16
+				int r = -1, from = 0, to = _aPos.Count;
+				while(to > from) {
+					int m = (from + to) / 2;
+					if(_aPos[m].i16 > pos16) to = m; else from = (r = m) + 1;
+				}
+				if(r < 0) return pos16; //_aPos is empty or pos16 < _aPos[0].i16
+				return _aPos[r].i8 + (pos16 - _aPos[r].i16);
+			} else {
+				var s = Text;
+				return Encoding.UTF8.GetByteCount(s, 0, pos16);
+				//note: don't use SCI_POSITIONRELATIVECODEUNITS, it is very slow.
+			}
+		}
+
+		/// <summary>
+		/// Converts UTF-8 position to UTF-16 position. Fast.
+		/// </summary>
+		public unsafe int Pos16(int pos8)
+		{
+			Debug.Assert((uint)pos8 <= Len8);
+			if(_posState == default) _CreatePosMap();
+			if(_posState == _PosState.Ok) {
+				//using binary search find max _aPos[r].i8 that is <= pos8
+				int r = -1, from = 0, to = _aPos.Count;
+				while(to > from) {
+					int m = (from + to) / 2;
+					if(_aPos[m].i8 > pos8) to = m; else from = (r = m) + 1;
+				}
+				if(r < 0) return pos8; //_aPos is empty or pos8 < _aPos[0].i8
+				return _aPos[r].i16 + (pos8 - _aPos[r].i8);
+			} else {
+				int gap = Sci_Range(_sciPtr, 0, pos8, out var p1, out var p2);
+				int R = Encoding.UTF8.GetCharCount(p1, p2 == null ? pos8 : gap);
+				if(p2 != null) R += Encoding.UTF8.GetCharCount(p2, pos8 - gap);
+				return R;
+				//note: don't use SCI_COUNTCODEUNITS, it is very slow.
+			}
+		}
+
+		public void TestCreatePosMap()//TODO
+		{
+			_CreatePosMap();
+			//foreach(var v in _aPos) Print(v.i8, v.i16);
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		unsafe void _CreatePosMap()
+		{
+			_aPos.Clear();
+
+			int textLen;
+			int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
+			//Print(textLen);
+			int to8 = p2 == null ? textLen : gap;
+			int i8 = 0, i16 = 0;
+			g1:
+			int asciiStart8 = i8;
+			i8 = _SkipAscii(p, i8, to8);
+			i16 += i8 - asciiStart8;
+			if(i8 < to8) {
+				while(i8 < to8) {
+					byte c = p[i8];
+					if(c < 0x80) break;
+					if(c < 0xC2) goto ge;
+					if(c < 0xE0) i8++;
+					else if(c < 0xF0) i8 += 2;
+					else if(c < 0xF8) { i8 += 3; i16++; } //UTF-16 surrogate pair
+					else goto ge;
+					_aPos.Add(new _Pos8_16(++i8, ++i16));
+				}
+				if(i8 < to8) goto g1;
+				if(i8 > to8) goto ge;
+			}
+
+			if(p2 != null) {
+				p = p2 - i8;
+				p2 = null;
+				to8 = textLen;
+				goto g1;
+			}
+
+			_posState = _PosState.Ok;
+			_len8 = textLen;
+			_len16 = i16;
+			return;
+			ge:
+			_posState = _PosState.Error;
+			_aPos.Clear();
+			ADebug.Print("Invalid UTF-8 text");
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
+		static unsafe int _SkipAscii(byte* bp, int i, int len)
+		{
+			for(; i < len && (i & 7) != 0; i++) if(bp[i] >= 0x80) return i;
+			var up = (ulong*)(bp + i);
+			int j = 0;
+			for(int n = (len - i) / 8; j < n; j++) if((up[j] & 0x8080808080808080) != 0) break;
+			for(i += j * 8; i < len; i++) if(bp[i] >= 0x80) break;
+			return i;
+		}
+
+		struct _Pos8_16
+		{
+			public int i8, i16;
+			public _Pos8_16(int eith, int sixteen) { i8 = eith; i16 = sixteen; }
+		}
+		List<_Pos8_16> _aPos = new List<_Pos8_16>();
+#endif
+
+		enum _PosState { Default, Ok, Error }
+		_PosState _posState;
+
+		int _len8, _len16;
+
+		//Enables tabstopping when ZInitReadOnlyAlways (scintilla would eat Tab). Implements AcceptsReturn.
+		protected override bool IsInputKey(Keys keyData)
+		{
+			switch(keyData & Keys.KeyCode) {
+			case Keys.Left: case Keys.Right: case Keys.Up: case Keys.Down: return true;
+			case Keys.Enter when ZAcceptsReturn != null: return ZAcceptsReturn.GetValueOrDefault();
+			}
+			return !ZInitReadOnlyAlways;
+			//don't call base. It sends WM_GETDLGCODE, and scintilla always returns DLGC_WANTALLKEYS.
 		}
 
 #if DEBUG
@@ -313,7 +602,7 @@ namespace Au.Controls
 			case SCI_CANREDO:
 			case SCI_GETREADONLY:
 			case SCI_GETSELECTIONEMPTY:
-			//case SCI_GETTEXTLENGTH:
+				//case SCI_GETTEXTLENGTH:
 				return;
 			}
 			if(s_debugPM == null) {
@@ -334,6 +623,8 @@ namespace Au.Controls
 		[Browsable(false)]
 		public bool ZDebugPrintMessages { get; set; }
 #endif
+
+		#region properties
 
 		/// <summary>
 		/// Scintilla dll path.
@@ -452,33 +743,28 @@ namespace Au.Controls
 		[DefaultValue(null)]
 		public bool? ZAcceptsReturn { get; set; }
 
-		//Enables tabstopping when ZInitReadOnlyAlways (scintilla would eat Tab). Implements AcceptsReturn.
-		protected override bool IsInputKey(Keys keyData)
-		{
-			switch(keyData & Keys.KeyCode) {
-			case Keys.Left: case Keys.Right: case Keys.Up: case Keys.Down: return true;
-			case Keys.Enter when ZAcceptsReturn != null: return ZAcceptsReturn.GetValueOrDefault();
-			}
-			return !ZInitReadOnlyAlways;
-			//don't call base. It sends WM_GETDLGCODE, and scintilla always returns DLGC_WANTALLKEYS.
-		}
+		/// <summary>
+		/// On SCN_MODIFIED notifications suppress <see cref="ZOnSciNotify"/>, <see cref="ZNotify"/> and <see cref="ZTextChanged"/>.
+		/// Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
+		/// </summary>
+		[DefaultValue(false)]
+		public bool ZDisableModifiedNotifications { get; set; }
 
 		/// <summary>
-		/// The 'get' function calls <see cref="SciText.AllText"/> (Z.AllText) when need.
-		/// The 'set' function calls <see cref="SciText.SetText"/> (Z.SetText) when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
-		/// Unlike the above methods, this property can be used before creating handle.
+		/// Don't set focus on mouse left button down.
 		/// </summary>
-		public override string Text {
-			get {
-				if(_text == null && IsHandleCreated) _text = Z.AllText(); //_NotifyModified sets _text=null
-				return _text;
-			}
-			set {
-				if(IsHandleCreated) Z.SetText(value); //_NotifyModified sets _text=null. Control text can be != value, eg when tags parsed.
-				else _text = value; //will set control text on WM_CREATE
-			}
-		}
-		string _text;
+		[DefaultValue(false)]
+		public bool ZNoMouseLeftSetFocus { get; set; }
+
+		/// <summary>
+		/// Don't set focus on mouse right button down.
+		/// </summary>
+		[DefaultValue(false)]
+		public bool ZNoMouseRightSetFocus { get; set; }
+
+		#endregion
+
+		#region acc
 
 		protected override AccessibleObject CreateAccessibilityInstance()
 		{
@@ -494,5 +780,7 @@ namespace Au.Controls
 
 			public override AccessibleStates State => base.State | (_control.Z.IsReadonly ? AccessibleStates.ReadOnly : 0);
 		}
+
+		#endregion
 	}
 }

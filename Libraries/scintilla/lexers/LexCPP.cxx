@@ -35,8 +35,6 @@
 #include "SparseState.h"
 #include "SubStyles.h"
 
-#include "Platform.h" //au: added for Platform::DebugPrintf
-
 using namespace Scintilla;
 
 namespace {
@@ -1512,10 +1510,6 @@ void SCI_METHOD LexerCPP::Fold(Sci_PositionU startPos, Sci_Position length, int 
 		if (!IsASpace(ch))
 			visibleChars++;
 		if (atEOL || (i == endPos-1)) {
-			//au
-			//Platform::DebugPrintf("%i %i", levelCurrent, levelNext);
-			if(levelNext < SC_FOLDLEVELBASE) levelNext = SC_FOLDLEVELBASE;
-
 			int levelUse = levelCurrent;
 			if ((options.foldSyntaxBased && options.foldAtElse) ||
 				(options.foldPreprocessor && options.foldPreprocessorAtElse)
@@ -1534,7 +1528,6 @@ void SCI_METHOD LexerCPP::Fold(Sci_PositionU startPos, Sci_Position length, int 
 			lineStartNext = styler.LineStart(lineCurrent+1);
 			levelCurrent = levelNext;
 			levelMinCurrent = levelCurrent;
-			if(options.foldCompact) //Au
 			if (atEOL && (i == static_cast<Sci_PositionU>(styler.Length()-1))) {
 				// There is an empty line at end of file so give it same level and empty
 				styler.SetLevel(lineCurrent, (levelCurrent | levelCurrent << 16) | SC_FOLDLEVELWHITEFLAG);

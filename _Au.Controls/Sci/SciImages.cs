@@ -527,7 +527,7 @@ namespace Au.Controls
 		[DllImport("gdi32.dll")]
 		internal static extern bool LineTo(IntPtr hdc, int x, int y);
 
-		internal void LibOnTextChanged(bool inserted, ref SCNotification n)
+		internal void LibOnTextChanged(bool inserted, in SCNotification n)
 		{
 			if(_visible == AnnotationsVisible.ANNOTATION_HIDDEN) return;
 
@@ -539,7 +539,7 @@ namespace Au.Controls
 			int from = n.position, to = from + (inserted ? n.length : 0), len = 0, firstLine = 0, textPos = 0;
 			bool allText = false;
 			if(from == 0) {
-				len = _t.TextLength8;
+				len = _c.Len8;
 				if(len < 10) return; //eg 0 when deleted all text
 				if(inserted && len == n.length) { //added all text
 					allText = true;
@@ -547,7 +547,7 @@ namespace Au.Controls
 				}
 			}
 			if(s == null) {
-				firstLine = _t.LineIndexFromPos(false, from);
+				firstLine = _t.LineFromPos(false, from);
 				int from2 = _t.LineStart(false, firstLine);
 				if(!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
 				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPos(false, to);

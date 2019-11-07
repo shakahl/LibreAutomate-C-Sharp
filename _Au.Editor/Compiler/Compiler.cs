@@ -168,27 +168,10 @@ namespace Au.Compiler
 			var po = m.CreateParseOptions();
 
 			foreach(var f1 in m.CodeFiles) {
-				string code = f1.code;
-				bool addedBraces = f1.f == f && f.IsScript; if(addedBraces) code += "\r\n}}"; //assume it is script without the closing }}
-
-				var tree = CSharpSyntaxTree.ParseText(code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
+				var tree = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
+				trees.Add(tree);
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
 				//	Our AOutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
-
-				if(addedBraces) { //if the script has the closing } or }}, remove the added } or }}
-					int nErr = 0;
-					foreach(var v in tree.GetDiagnostics()) {
-						if(v.Severity == DiagnosticSeverity.Error && v.Id == "CS1022") nErr++; //"Type or namespace definition, or end-of-file expected"
-					}
-					if(nErr > 0) {
-						code = f1.code;
-						if(nErr == 1) code += "\r\n}";
-						tree = tree.WithChangedText(Microsoft.CodeAnalysis.Text.SourceText.From(code, Encoding.UTF8)) as CSharpSyntaxTree;
-						//fast, <50% of the first parsing time, <0.5% of total compilation time
-					}
-				}
-
-				trees.Add(tree);
 			}
 			//APerf.Next('t');
 

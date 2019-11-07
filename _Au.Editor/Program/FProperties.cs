@@ -424,17 +424,17 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
 
-		string append = null; if(endOf == 0) append = (_f.IsScript && code.Starts("//{{\r")) ? " " : "\r\n";
+		string append = null; if(endOf == 0) append = (_f.IsScript && code.Starts("//-{\r")) ? " " : "\r\n";
 		var s = _meta.Format(append);
 
 		if(s.Length == 0) {
 			if(endOf == 0) return;
 			while(endOf < code.Length && code[endOf] <= ' ') endOf++;
 		} else if(s.Length == endOf) {
-			if(s == t.RangeText(true, 0, endOf, false)) return; //did not change
+			if(s == t.RangeText(true, 0, endOf)) return; //did not change
 		}
 
-		t.ReplaceRange(true, 0, endOf, s, false);
+		t.ReplaceRange(true, 0, endOf, s);
 	}
 
 	private void _bAddNet_Click(object button, EventArgs e)

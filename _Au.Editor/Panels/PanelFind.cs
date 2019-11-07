@@ -482,9 +482,9 @@ class PanelFind : AuUserControlBase
 	void _FindNextInEditor(in _TextToFind f, bool replace)
 	{
 		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
-		var t = doc.Z;
+		var z = doc.Z;
 		var text = doc.Text; if(text.Length == 0) return;
-		int i, len = 0, from8 = replace ? t.SelectionStart8 : t.SelectionEnd8, from = t.CountBytesToChars(from8);
+		int i, len = 0, from8 = replace ? z.SelectionStart8 : z.SelectionEnd8, from = doc.Pos16(from8);
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
 		g1:
@@ -510,16 +510,16 @@ class PanelFind : AuUserControlBase
 			if(retryFromStart || from8 == 0) return;
 			from = 0; retryFromStart = true; replace = false; goto g1;
 		}
-		i = t.CountBytesFromChars(i);
-		int to = t.CountBytesFromChars(i, len);
-		if(replace && i == from8 && to == t.SelectionEnd8) {
+		int to = doc.Pos8(i + len);
+		i = doc.Pos8(i);
+		if(replace && i == from8 && to == z.SelectionEnd8) {
 			var repl = f.replaceText;
 			if(rm != null) repl = rm.ExpandReplacement(repl);
-			//t.ReplaceRange(i, to, repl); //also would need to set caret pos = to
-			t.ReplaceSel(repl);
+			//z.ReplaceRange(i, to, repl); //also would need to set caret pos = to
+			z.ReplaceSel(repl);
 			_FindNextInEditor(f, false);
 		} else {
-			t.SelectAndMakeVisible(false, i, to);
+			z.Select(false, i, to, true);
 		}
 	}
 
@@ -540,7 +540,7 @@ class PanelFind : AuUserControlBase
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for(int i = ma.Length - 1; i >= 0; i--) {
 				var m = ma[i];
-				doc.Z.ReplaceRange(true, m.Index, m.Length, m.ExpandReplacement(repl), true);
+				doc.Z.ReplaceRange(true, m.Index, m.EndIndex, m.ExpandReplacement(repl));
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		} else {
@@ -550,7 +550,7 @@ class PanelFind : AuUserControlBase
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for(int i = a.Count - 1; i >= 0; i--) {
 				var v = a[i];
-				doc.Z.ReplaceRange(true, v.x, v.y, repl, true);
+				doc.Z.ReplaceRange(true, v.x, v.x + v.y, repl);
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		}
@@ -602,6 +602,7 @@ class PanelFind : AuUserControlBase
 	string[] _aSkipWildcards;
 	string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
 	bool _init1;
+	const int c_indic = 0;
 
 	void _FindAllInFiles(bool names/*, bool forReplace*/)
 	{
@@ -612,23 +613,25 @@ class PanelFind : AuUserControlBase
 
 		if(!_init1) {
 			_init1 = true;
-			Panels.Found.ZControl.CreateHandleNow();
+			var c = Panels.Found.ZControl;
+			c.CreateHandleNow();
 			Panels.Files.ZWorkspaceLoadedAndDocumentsOpened += () => Panels.Found.ZControl.Z.ClearText();
 
-			Panels.Found.ZControl.ZTags.AddLinkTag("+open", s => {
+			c.ZTags.AddLinkTag("+open", s => {
 				_OpenLinkClicked(s);
 			});
-			Panels.Found.ZControl.ZTags.AddLinkTag("+ra", s => {
+			c.ZTags.AddLinkTag("+ra", s => {
 				if(!_OpenLinkClicked(s)) return;
 				ATimer.After(10, () => _bReplaceAll_Click(null, null));
 				//info: without timer sometimes does not set cursor pos correctly
 			});
-			Panels.Found.ZControl.ZTags.AddLinkTag("+f", s => {
+			c.ZTags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
 				if(!_OpenLinkClicked(a[0])) return;
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
-				ATimer.After(10, () => doc.Z.SelectAndMakeVisible(true, a[1].ToInt(), a[2].ToInt(), true));
+				int from = a[1].ToInt(), to = from + a[2].ToInt();
+				ATimer.After(10, () => doc.Z.Select(true, from, to, true));
 				//info: scrolling works better with async when now opened the file
 			});
 			bool _OpenLinkClicked(string file)
@@ -637,12 +640,15 @@ class PanelFind : AuUserControlBase
 				if(f == null) return false;
 				if(f.IsFolder) f.SelectSingle();
 				else if(!Program.Model.SetCurrentFile(f)) return false;
-				//select the link line in the Found pane, to make it easier to find later
-				var t = Panels.Found.ZControl.Z;
-				int i = t.CurrentPos8, i1 = t.LineStartFromPos(false, i), i2 = t.LineEndFromPos(false, i, withRN: true);
-				t.Call(Sci.SCI_SETSEL, i1, i2);
+				//add indicator to make it easier to find later
+				var z = Panels.Found.ZControl.Z;
+				z.IndicatorClear(c_indic);
+				var v = z.LineStartEndFromPos(false, z.CurrentPos8);
+				z.IndicatorAdd(false, c_indic, v.start, v.end);
 				return true;
 			}
+			c.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
+			c.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
 		}
 
 		var b = new StringBuilder();

@@ -82,17 +82,17 @@ partial class FMain
 
 	void TestDiffMatchPatch()
 	{
-		var s1 = @"//{{
+		var s1 = @"//-{
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}
 	
 	var s=""one"";
 ";
-		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //{{
+		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //-{
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 using My.NS1; //ąčę îôû
 using My.NS2;
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}
 	var i=2;
 ";
 
@@ -140,18 +140,17 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 
 	void _MonitorGC()
 	{
-		return;
-		if(!s_debug2) {
-			s_debug2 = true;
-			new TestGC();
+		//if(!s_debug2) {
+		//	s_debug2 = true;
+		//	new TestGC();
 
-			//ATimer.Every(50, () => {
-			//	if(!s_debug) {
-			//		s_debug = true;
-			//		ATimer.After(100, () => new TestGC());
-			//	}
-			//});
-		}
+		//	//ATimer.Every(50, () => {
+		//	//	if(!s_debug) {
+		//	//		s_debug = true;
+		//	//		ATimer.After(100, () => new TestGC());
+		//	//	}
+		//	//});
+		//}
 	}
 
 	//static ushort atom = AWnd.More.RegisterWindowClass("uuuuuuu", (w, m, wp, lp) => {
@@ -159,104 +158,44 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 	//	return Api.DefWindowProc(w, m, wp, lp);
 	//});
 
-	static bool classRegistered;
+	//static bool classRegistered;
 
-	static LPARAM _Wndproc(AWnd w, int m, LPARAM wp, LPARAM lp)
-	{
-		AWnd.More.PrintMsg(w, m, wp, lp);
-		return Api.DefWindowProc(w, m, wp, lp);
-	}
+	//static LPARAM _Wndproc(AWnd w, int m, LPARAM wp, LPARAM lp)
+	//{
+	//	AWnd.More.PrintMsg(w, m, wp, lp);
+	//	return Api.DefWindowProc(w, m, wp, lp);
+	//}
+
 
 	public unsafe void TestEditor()
 	{
-		//NetCoreDB.Create();
-
-
-		//var p1 = APerf.Create();
-		//var d = new Dictionary<string, string>(300);
-		//foreach(var v in MetaReferences.NetDirs) {
-		//	//Print("-----");
-		//	foreach(var f in AFile.EnumDirectory(v, FEFlags.UseRawPath)) {
-		//		if(f.IsDirectory || !f.Name.Ends(".dll", true)) continue;
-		//		if(f.Name.IndexOf('-') >= 0 || f.Name.IndexOf('_') >= 0) continue;
-		//		var name = f.Name.RemoveSuffix(4);
-		//		if(d.ContainsKey(name)) continue; //System.Drawing, WindowsBase. Those in desktop are bigger.
-
-		//		using var h = Api.CreateFile(f.FullPath, Api.GENERIC_READ, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING);
-		//		if(h.Is0) Print("failed");
-
-		//		//using var stream = AFile.WaitIfLocked(() => File.OpenRead(f.FullPath));
-		//		//using var pr = new System.Reflection.PortableExecutable.PEReader(stream, System.Reflection.PortableExecutable.PEStreamOptions.Default);
-		//		////Print($"<><c {(pr.HasMetadata?"0":"red")}>{name}, {f.FullPath}<>");
-		//		//if(!pr.HasMetadata) continue;
-		//		d[name] = f.FullPath;
-		//	}
-		//}
-		//p1.NW('a');
-
-		//ATask.Run("Script90.cs", ATime.PerfMilliseconds.ToString());
-		return;
-
-
-		//if(!classRegistered) {
-		//	AWnd.More.RegisterWindowClass("uuuuuuu", _Wndproc);
-		//	//classRegistered = true;
-		//}
-		////Print(atom);
-		//var w = AWnd.More.CreateWindow("uuuuuuu", "Test window", WS.VISIBLE | WS.CAPTION | WS.SYSMENU, 0, 200, 200, 200, 200);
-		//Print(w);
-		//return;
-
-
 		//AOutput.Clear();
 
 		var doc = Panels.Editor.ZActiveDoc;
+		var z = doc.Z;
 		var s = doc.Text;
 
-		//int i = s.IndexOf("?");
-		//doc.Z.ReplaceRange(true, i, i + 0, "-");
+		Print(z.CurrentPos16);return;
 
-		//doc.Call(SCI_SETLINEINDENTATION, 4, 8);
+		int pos8 = z.CurrentPos8, pos16= Encoding.UTF8.GetCharCount(Encoding.UTF8.GetBytes(s), 0, pos8);
+		Print(pos8, pos16, doc.Pos8(pos16), doc.Pos16(pos8));
+		return;
 
-		//_testOvertype ^= true;
-		//doc.Call(Sci.SCI_SETOVERTYPE, _testOvertype);
-
-		//int k = 20;
-		//doc.Z.StyleClearRange(k, k + 1);
-		////doc.Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL);
-		//doc.Z.StyleBackColor(k, 0xf0f0f0);
-		//doc.Z.StyleEolFilled(k, true);
-		//doc.Z.StyleForeColor(k, 0xffffff);
-		//doc.Z.StyleHotspot(k, true);
-
-		//int i = s.Find("\n}")+1;
-		//Print(i);
-		//doc.Call(SCI_STARTSTYLING, i);
-		//doc.Call(SCI_SETSTYLING, s.Length-i, k);
-		//doc.Invalidate();
-
-		//doc.Z.ReplaceRange(2, 3, "-", 0, SciFinalCurrentPos.AtEnd);
-
-		//if(_tr == null) {
-		//	_tr = doc.ZAddTempRange(doc.Z.SelectionStartChars, doc.Z.SelectionEndChars, () => {
-		//		_tr = null;
-		//		Print("leave");
-		//	});
-		//} else {
-		//	int i = _tr.GetPos(false);
-		//	Print(doc.Z.CurrentPosChars, i, _tr.GetPos(true));
-		//	if(i < 0) _tr = null;
-		//}
-
-		//if(!CodeInfo.GetContextAndDocument(out var cd)) return;
-		//var root = cd.document.GetSyntaxRootAsync().Result;
-		//var node = root.FindToken(cd.position).Parent;
-		//var ty = node.GetType();
-		//Print($"<><c brown>{cd.position}, {node.Span}, {node.Kind()}, {ty.Name},<> '<c green>{node}<>'");
-
+		APerf.SpeedUpCpu();
+		for(int i1 = 0; i1 < 7; i1++) {
+			int n2 = 1000;
+			APerf.First();
+			for(int i2 = 0; i2 < n2; i2++) { doc.Pos8(pos16); }
+			APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { doc.Pos16(pos8); }
+			APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { doc.TestCreatePosMap(); }
+			APerf.NW();
+			Thread.Sleep(100);
+		}
 
 	}
-	SciCode.ITempRange _tr;
+	//SciCode.ITempRange _tr;
 	//bool _testOvertype;
 
 	unsafe void SetHookToMonitorCreatedWindowsOfThisThread()

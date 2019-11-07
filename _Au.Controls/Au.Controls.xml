@@ -1130,21 +1130,10 @@
         <member name="M:Au.Controls.AuScintilla.#ctor">
             
         </member>
-        <member name="P:Au.Controls.AuScintilla.ZNoMouseLeftSetFocus">
-            <summary>
-            Don't set focus on mouse left button down.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.AuScintilla.ZNoMouseRightSetFocus">
-            <summary>
-            Don't set focus on mouse right button down.
-            </summary>
-        </member>
         <member name="M:Au.Controls.AuScintilla.ZOnSciNotify(Au.Controls.Sci.SCNotification@)">
             <summary>
             Raises the <see cref="E:Au.Controls.AuScintilla.ZNotify"/> event.
             </summary>
-            <param name="n"></param>
         </member>
         <member name="E:Au.Controls.AuScintilla.ZNotify">
             <summary>
@@ -1154,12 +1143,6 @@
         <member name="E:Au.Controls.AuScintilla.ZTextChanged">
             <summary>
             Occurs when text changed.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.AuScintilla.ZDisableModifiedNotifications">
-            <summary>
-            On SCN_MODIFIED notifications suppress <see cref="M:Au.Controls.AuScintilla.ZOnSciNotify(Au.Controls.Sci.SCNotification@)"/>, <see cref="E:Au.Controls.AuScintilla.ZNotify"/> and <see cref="E:Au.Controls.AuScintilla.ZTextChanged"/>.
-            Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
             </summary>
         </member>
         <member name="M:Au.Controls.AuScintilla.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
@@ -1172,6 +1155,37 @@
             <summary>
             Sends a Scintilla message to the control and returns LPARAM.
             Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuScintilla.Text">
+            <summary>
+            Gets or sets text.
+            Uses caching, therefore the 'get' function is fast and garbage-free when calling multiple times.
+            </summary>
+            <remarks>
+            The 'get' function gets cached text if called not the first time after setting or modifying control text.
+            The 'set' function calls <see cref="M:Au.Controls.SciText.SetText(System.String,Au.Controls.SciSetTextFlags,System.Boolean)"/> when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
+            Unlike the above methods, this property can be used before creating handle.
+            </remarks>
+        </member>
+        <member name="P:Au.Controls.AuScintilla.Len8">
+            <summary>
+            UTF-8 text length.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuScintilla.Len16">
+            <summary>
+            UTF-16 text length.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuScintilla.Pos8(System.Int32)">
+            <summary>
+            Converts UTF-16 position to UTF-8 position. Fast.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuScintilla.Pos16(System.Int32)">
+            <summary>
+            Converts UTF-8 position to UTF-16 position. Fast.
             </summary>
         </member>
         <member name="P:Au.Controls.AuScintilla.ZDllPath">
@@ -1258,11 +1272,20 @@
             If null (default), does not accept if <see cref="P:Au.Controls.AuScintilla.ZInitReadOnlyAlways"/> is true.
             </summary>
         </member>
-        <member name="P:Au.Controls.AuScintilla.Text">
+        <member name="P:Au.Controls.AuScintilla.ZDisableModifiedNotifications">
             <summary>
-            The 'get' function calls <see cref="M:Au.Controls.SciText.AllText"/> (Z.AllText) when need.
-            The 'set' function calls <see cref="M:Au.Controls.SciText.SetText(System.String,Au.Controls.SciSetTextFlags,System.Boolean)"/> (Z.SetText) when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
-            Unlike the above methods, this property can be used before creating handle.
+            On SCN_MODIFIED notifications suppress <see cref="M:Au.Controls.AuScintilla.ZOnSciNotify(Au.Controls.Sci.SCNotification@)"/>, <see cref="E:Au.Controls.AuScintilla.ZNotify"/> and <see cref="E:Au.Controls.AuScintilla.ZTextChanged"/>.
+            Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuScintilla.ZNoMouseLeftSetFocus">
+            <summary>
+            Don't set focus on mouse left button down.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuScintilla.ZNoMouseRightSetFocus">
+            <summary>
+            Don't set focus on mouse right button down.
             </summary>
         </member>
         <member name="T:Au.Controls.InfoBox">
@@ -1588,52 +1611,34 @@
             This function can get binary string (with '\0' characters).
             </remarks>
         </member>
-        <member name="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Int32@,System.Int32@,System.Boolean)">
+        <member name="M:Au.Controls.SciText._RangeText(System.Int32,System.Int32)">
+            <summary>
+            Optimized 'get text' function.
+            </summary>
+            <param name="start8">Start index, UTF-8.</param>
+            <param name="end8">End index, UTF-8.</param>
+            <remarks>
+            Does not create an intermediate byte[].
+            Gets big text 5 times faster than GetStringOfLength. Tested with text 31K length, 1K lines.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Int32@,System.Int32@)">
             <summary>
             Converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes and/or <i>to</i> from length to absolute position.
             </summary>
             <param name="utf16">Input parameters are UTF-16.</param>
             <param name="from"></param>
-            <param name="to">If -1, and !<i>toIsLength</i>, uses <see cref="P:Au.Controls.SciText.TextLength8"/>.</param>
-            <param name="toIsLength">to is length (position relative to from). Converts to absolute position.</param>
+            <param name="to">If -1, uses <see cref="P:Au.Controls.AuScintilla.Len8"/>.</param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
-        </member>
-        <member name="M:Au.Controls.SciText._NormalizeFromLen(System.Int32@,System.Int32@)">
-            <summary>
-            Converts position and length from UTF-16 to UTF-8.
-            </summary>
-            <param name="from"></param>
-            <param name="len"></param>
         </member>
         <member name="M:Au.Controls.SciText._ParamPos(System.Boolean,System.Int32)">
             <summary>
-            => utf16 ? CountBytesFromChars(pos) : pos;
+            => utf16 ? C.Pos8(pos) : pos;
             </summary>
         </member>
         <member name="M:Au.Controls.SciText._ReturnPos(System.Boolean,System.Int32)">
             <summary>
-            => utf16 ? CountBytesToChars(pos) : pos;
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.CountBytesFromChars(System.Int32)">
-            <summary>
-            Converts UTF-16 position to UTF-8 position.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.CountBytesFromChars(System.Int32,System.Int32)">
-            <summary>
-            Counts a number of UTF-16 characters before or after the UTF-8 position and return that UTF-8 position.
-            charsRelative can be negative.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.CountBytesToChars(System.Int32)">
-            <summary>
-            Converts UTF-8 position to UTF-16 position.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.CountBytesToChars(System.Int32,System.Int32)">
-            <summary>
-            Returns the number of UTF-16 characters between two UTF-8 positions.
+            => utf16 ? C.Pos16(pos) : pos;
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.ClearText(Au.Controls.SciSetTextFlags)">
@@ -1679,19 +1684,10 @@
             Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.AllText">
+        <member name="M:Au.Controls.SciText.LibGetText">
             <summary>
-            Gets all text.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.TextLength8">
-            <summary>
-            Gets text length (SCI_GETTEXTLENGTH) in UTF-8 bytes.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.TextLength16">
-            <summary>
-            Gets text length (SCI_GETTEXTLENGTH) in UTF-16 bytes.
+            Gets all text directly from Scintilla.
+            Does not use caching like AuScintilla.Text.
             </summary>
         </member>
         <member name="P:Au.Controls.SciText.CurrentPos8">
@@ -1733,7 +1729,7 @@
             true if there is selected text.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.LineIndexFromPos(System.Boolean,System.Int32)">
+        <member name="M:Au.Controls.SciText.LineFromPos(System.Boolean,System.Int32)">
             <summary>
             Gets line index from character position.
             </summary>
@@ -1798,7 +1794,7 @@
         <member name="M:Au.Controls.SciText.LineHeight(System.Int32)">
             <summary>
             Gets line height.
-            Currently all lines are the same height.
+            Currently all lines are of the same height.
             </summary>
         </member>
         <member name="P:Au.Controls.SciText.LineCount">
@@ -1876,18 +1872,17 @@
             <param name="pos">Start index. If -1, uses current position.</param>
             <param name="s">Text to insert. Can be null.</param>
         </member>
-        <member name="M:Au.Controls.SciText.DeleteRange(System.Boolean,System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.Controls.SciText.DeleteRange(System.Boolean,System.Int32,System.Int32)">
             <summary>
             SCI_DELETERANGE.
             Does not parse tags.
-            Does not change current selection, unless it is in the from-to range (including to); for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean,Au.Controls.SciFinalCurrentPos)"/> with empty string and <i>finalCurrentPos</i>.
+            Does not change current selection, unless it is in the from-to range (including to); for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,Au.Controls.SciFinalCurrentPos)"/> with empty string and <i>finalCurrentPos</i>.
             </summary>
             <param name="utf16"></param>
             <param name="from">Start index.</param>
             <param name="to">End index. If -1, uses control text length.</param>
-            <param name="toIsLength"></param>
         </member>
-        <member name="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean,Au.Controls.SciFinalCurrentPos)">
+        <member name="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,Au.Controls.SciFinalCurrentPos)">
             <summary>
             Replaces text range.
             Does not parse tags.
@@ -1897,7 +1892,6 @@
             <param name="from">Start index.</param>
             <param name="to">End index. If -1, uses control text length.</param>
             <param name="s">Replacement text. Can be null.</param>
-            <param name="toIsLength"></param>
             <param name="finalCurrentPos">
             If AtStart or AtEnd, after replacing sets curent position at the start or end of the replacement.
             Else if current position was in the from-to range (including to), sets at from.
@@ -1905,14 +1899,13 @@
             Alternatively use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/>; it sets current position at the end of the replacement.
             </param>
         </member>
-        <member name="M:Au.Controls.SciText.RangeText(System.Boolean,System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.Controls.SciText.RangeText(System.Boolean,System.Int32,System.Int32)">
             <summary>
             Gets range text.
             </summary>
             <param name="utf16"></param>
             <param name="from">Start index.</param>
             <param name="to">End index. If -1, uses control text length.</param>
-            <param name="toIsLength"></param>
         </member>
         <member name="M:Au.Controls.SciText.ReplaceSel(System.String)">
             <summary>
@@ -1932,7 +1925,7 @@
             <param name="s">Replacement text. Can be null.</param>
             <param name="pos">Start index.</param>
         </member>
-        <member name="M:Au.Controls.SciText.SetAndReplaceSel(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)">
+        <member name="M:Au.Controls.SciText.SetAndReplaceSel(System.Boolean,System.Int32,System.Int32,System.String)">
             <summary>
             Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
             Does not parse tags.
@@ -1942,7 +1935,6 @@
             <param name="from">Start index.</param>
             <param name="to">End index. If -1, uses control text length.</param>
             <param name="s">Replacement text. Can be null.</param>
-            <param name="toIsLength"></param>
         </member>
         <member name="M:Au.Controls.SciText.GoToPos(System.Boolean,System.Int32)">
             <summary>
@@ -1954,9 +1946,10 @@
             SCI_GOTOLINE and ensures visible.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.SelectAndMakeVisible(System.Boolean,System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.Controls.SciText.Select(System.Boolean,System.Int32,System.Int32,System.Boolean)">
             <summary>
-            SCI_SETSEL and ensures visible.
+            SCI_SETSEL and optionally ensures visible.
+            If <c>to==-1</c>, use text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.
             </summary>
         </member>
         <member name="P:Au.Controls.SciText.IsReadonly">

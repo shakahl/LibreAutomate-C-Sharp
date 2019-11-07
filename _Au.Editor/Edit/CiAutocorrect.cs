@@ -243,7 +243,7 @@ class CiAutocorrect
 			}
 		}
 
-		c.doc.Z.ReplaceRange(true, cd.position, replaceLength, replaceText, true, ch == ';' ? SciFinalCurrentPos.AtEnd : default);
+		c.doc.Z.ReplaceRange(true, cd.position, cd.position + replaceLength, replaceText, ch == ';' ? SciFinalCurrentPos.AtEnd : default);
 		if(newPos > 0) c.doc.Z.CurrentPos16 = newPos;
 
 		if(tempRangeFrom > 0) c.doc.ZTempRanges_Add(this, tempRangeFrom, tempRangeTo);
@@ -506,7 +506,7 @@ class CiAutocorrect
 					doc.Z.GoToPos(true, (needSemicolon || endOfSpan > pos) ? endOfSpan : endOfFullSpan);
 					if(needSemicolon) doc.Z.ReplaceSel(";");
 				} else {
-					bcc = new BeforeCharContext { oldPosUtf8 = pos, newPosUtf8 = endOfSpan, dontSuppress = needSemicolon };
+					bcc = new BeforeCharContext { oldPosUtf8 = doc.Pos8(pos), newPosUtf8 = doc.Pos8(endOfSpan), dontSuppress = needSemicolon };
 				}
 			} else {
 				int indent = doc.Z.LineIndentationFromPos(true, (indentNode ?? node).SpanStart);
@@ -551,7 +551,7 @@ class CiAutocorrect
 
 				var s = b.ToString();
 				//Print($"'{s}'");
-				doc.Z.ReplaceRange(true, endOfSpan, replaceLen, s, true);
+				doc.Z.ReplaceRange(true, endOfSpan, endOfSpan + replaceLen, s);
 				doc.Z.GoToPos(true, finalPos);
 			}
 		} else { //autoindent
@@ -605,6 +605,7 @@ class CiAutocorrect
 					case ElseClauseSyntax _:
 					case CatchClauseSyntax _:
 					case FinallyClauseSyntax _:
+					case LabeledStatementSyntax _:
 					case NamespaceDeclarationSyntax _: //don't indent namespaces
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
 						//Print("-" + v.GetType().Name, v.Span, pos);
@@ -616,7 +617,7 @@ class CiAutocorrect
 					case VariableDeclaratorSyntax _:
 					case VariableDeclarationSyntax _:
 						//Print("--" + v.GetType().Name, v.Span, pos);
-						continue; //these can be if we are in a lambda block. And probably more, nevermind.
+						continue; //these can be if we are in a lambda block. And maybe more, nevermind.
 					case CompilationUnitSyntax _:
 					case ClassDeclarationSyntax k1 when k1.Identifier.Text == "Script": //don't indent script class content
 					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text == "Script": //don't indent script constructor content
@@ -677,7 +678,7 @@ class CiAutocorrect
 
 			//append newlines and tabs
 			if(canExitBlock) {
-				if(!dontIndent && indent>0) indent--;
+				if(!dontIndent && indent > 0) indent--;
 				b.Append('\t', indent).AppendLine("}");
 			} else {
 				if(addBreak) {
@@ -696,7 +697,7 @@ class CiAutocorrect
 			//replace text and set caret position
 			var s = b.ToString();
 			//Print($"'{s}'");
-			doc.Z.ReplaceRange(true, replaceFrom, replaceTo - replaceFrom, s, true);
+			doc.Z.ReplaceRange(true, replaceFrom, replaceTo, s);
 			pos = replaceFrom + s.Length;
 			if(expandBraces) pos -= indent + 2; else if(isBraceLine && code.Eq(replaceFrom - 1, "\n")) pos -= indent;
 			doc.Z.GoToPos(true, pos);
@@ -779,7 +780,7 @@ class CiAutocorrect
 		if(newlineLast) b.AppendLine();
 
 		var s = b.ToString();
-		doc.Z.ReplaceRange(true, pos, pos, s, finalCurrentPos: SciFinalCurrentPos.AtEnd);
+		doc.Z.ReplaceRange(true, pos, pos, s, SciFinalCurrentPos.AtEnd);
 
 		return suppress = true;
 	}
@@ -790,14 +791,14 @@ class CiAutocorrect
 		if(z.IsSelection) return false;
 		int i = z.CurrentPos8, j = back ? z.LineStartFromPos(false, i) : z.LineEndFromPos(false, i);
 		if(j != i) return false;
-		i = z.CountBytesToChars(i);
+		i = doc.Pos16(i);
 		var code = doc.Text;
 		if(back) {
 			if(i > 0 && code[i - 1] == '\n') i--;
 			if(i > 0 && code[i - 1] == '\r') i--;
 		}
 		if(!code.RegexMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, i..)) return false;
-		z.DeleteRange(true, g.Index, g.Length, true);
+		z.DeleteRange(true, g.Index, g.EndIndex);
 		return true;
 	}
 

@@ -22,6 +22,8 @@ using Au.Util;
 //rejected: throw exception if invalid position. Often difficult to detect it. And this library is not public.
 //	Only few methods throw. They are used for long time and never threw.
 
+//TODO: now VS does not copy the correct SciLexer.dll to the ouput dir when changed Debug/Release config, unless we recompile a Scintilla source file.
+
 namespace Au.Controls
 {
 	using static Sci;
@@ -170,123 +172,62 @@ namespace Au.Controls
 		}
 
 		/// <summary>
+		/// Optimized 'get text' function.
+		/// </summary>
+		/// <param name="start8">Start index, UTF-8.</param>
+		/// <param name="end8">End index, UTF-8.</param>
+		/// <remarks>
+		/// Does not create an intermediate byte[].
+		/// Gets big text 5 times faster than GetStringOfLength. Tested with text 31K length, 1K lines.
+		/// </remarks>
+		string _RangeText(int start8, int end8)
+		{
+			Debug.Assert(end8 >= start8);
+			Debug.Assert((uint)end8 <= C.Len8);
+			if(end8 == start8) return "";
+			int gap = Sci_Range(C.LibSciPtr, start8, end8, out var p1, out var p2);
+			if(p2 != null) {
+				int n1 = gap - start8, n2 = end8 - gap;
+				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
+				int len2 = Encoding.UTF8.GetCharCount(p2, n2);
+				LPARAM k1 = p1, k2 = p2;
+				return string.Create(len1 + len2, (k1, k2, n1, n2), (span, a) => {
+					int len1 = Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(a.k1, a.n1), span);
+					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(a.k2, a.n2), span.Slice(len1));
+				});
+			} else {
+				int n1 = end8 - start8;
+				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
+				LPARAM k1 = p1;
+				return string.Create(len1, (k1, n1), (span, a) => {
+					Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(a.k1, a.n1), span);
+				});
+			}
+		}
+
+		/// <summary>
 		/// Converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes and/or <i>to</i> from length to absolute position.
 		/// </summary>
 		/// <param name="utf16">Input parameters are UTF-16.</param>
 		/// <param name="from"></param>
-		/// <param name="to">If -1, and !<i>toIsLength</i>, uses <see cref="TextLength8"/>.</param>
-		/// <param name="toIsLength">to is length (position relative to from). Converts to absolute position.</param>
+		/// <param name="to">If -1, uses <see cref="AuScintilla.Len8"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public void NormalizeRange(bool utf16, ref int from, ref int to, bool toIsLength = false)
+		public void NormalizeRange(bool utf16, ref int from, ref int to)
 		{
-			if(from < 0 || to < (toIsLength ? 0 : -1) || (!toIsLength && to < from)) throw new ArgumentOutOfRangeException();
-			if(utf16) from = CountBytesFromChars(from);
-			if(to < 0) {
-				to = TextLength8;
-			} else if(utf16) {
-				if(toIsLength) to = CountBytesFromChars(from, to);
-				else to = CountBytesFromChars(to);
-			} else {
-				if(toIsLength) to += from;
-			}
+			if(from < 0 || (to < from && to != -1)) throw new ArgumentOutOfRangeException();
+			if(utf16) from = C.Pos8(from);
+			if(to < 0) to = C.Len8; else if(utf16) to = C.Pos8(to);
 		}
 
 		/// <summary>
-		/// Converts position and length from UTF-16 to UTF-8.
+		/// => utf16 ? C.Pos8(pos) : pos;
 		/// </summary>
-		/// <param name="from"></param>
-		/// <param name="len"></param>
-		void _NormalizeFromLen(ref int from, ref int len)
-		{
-			from = CountBytesFromChars(from);
-			len = CountBytesFromChars(from, len) - from;
-		}
+		int _ParamPos(bool utf16, int pos) => utf16 ? C.Pos8(pos) : pos;
 
 		/// <summary>
-		/// => utf16 ? CountBytesFromChars(pos) : pos;
+		/// => utf16 ? C.Pos16(pos) : pos;
 		/// </summary>
-		int _ParamPos(bool utf16, int pos) => utf16 ? CountBytesFromChars(pos) : pos;
-
-		/// <summary>
-		/// => utf16 ? CountBytesToChars(pos) : pos;
-		/// </summary>
-		int _ReturnPos(bool utf16, int pos) => utf16 ? CountBytesToChars(pos) : pos;
-
-#if true
-		/// <summary>
-		/// Converts UTF-16 position to UTF-8 position.
-		/// </summary>
-		public int CountBytesFromChars(int charsPos) => charsPos > 0 ? Call(SCI_POSITIONRELATIVECODEUNITS, 0, charsPos) : 0;
-
-		/// <summary>
-		/// Counts a number of UTF-16 characters before or after the UTF-8 position and return that UTF-8 position.
-		/// charsRelative can be negative.
-		/// </summary>
-		public int CountBytesFromChars(int bytesPos, int charsRelative) => Call(SCI_POSITIONRELATIVECODEUNITS, bytesPos, charsRelative);
-
-		/// <summary>
-		/// Converts UTF-8 position to UTF-16 position.
-		/// </summary>
-		public int CountBytesToChars(int bytesPos) => Call(SCI_COUNTCODEUNITS, 0, bytesPos);
-
-		/// <summary>
-		/// Returns the number of UTF-16 characters between two UTF-8 positions.
-		/// </summary>
-		public int CountBytesToChars(int bytesStart, int bytesEnd) => Call(SCI_COUNTCODEUNITS, bytesStart, bytesEnd);
-#else //rejected: throw exception if invalid parameters. In many cases cannot know it because Scintilla does not return eg -1. And this library is not public.
-		/// <summary>
-		/// Converts UTF-16 position to UTF-8 position.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int CountBytesFromChars(int charsPos)
-		{
-			int r = charsPos;
-			if(charsPos > 0) {
-				r = Call(SCI_POSITIONRELATIVECODEUNITS, 0, charsPos);
-				if(r == 0) r = -1; //> text length
-			}
-			return r >= 0 ? r : throw new ArgumentOutOfRangeException();
-		}
-
-		/// <summary>
-		/// Counts the number of UTF-16 characters before or after the UTF-8 position and return that UTF-8 position.
-		/// charsRelative can be negative.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int CountBytesFromChars(int bytesPos, int charsRelative)
-		{
-			int r = -1;
-			if(bytesPos >= 0) {
-				r = Call(SCI_POSITIONRELATIVECODEUNITS, bytesPos, charsRelative);
-				if(r == 0 && charsRelative > 0) r = -1; //> text length. If charsRelative<0, we don't know if failed. Returns 0 if fails.
-			}
-			return r >= 0 ? r : throw new ArgumentOutOfRangeException();
-		}
-
-		/// <summary>
-		/// Converts UTF-8 position to UTF-16 position.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int CountBytesToChars(int bytesPos)
-		{
-			if(bytesPos < 0) throw new ArgumentOutOfRangeException();
-			return Call(SCI_COUNTCODEUNITS, 0, bytesPos); //if invalid, returns text length
-		}
-
-		/// <summary>
-		/// Returns the number of UTF-16 characters between two UTF-8 positions.
-		/// </summary>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public int CountBytesToChars(int bytesStart, int bytesEnd)
-		{
-			int r = -1;
-			if(bytesStart >= 0 && bytesEnd >= bytesStart) { //SCI_COUNTCODEUNITS returns 0 if bytesEnd<bytesStart
-				r = Call(SCI_COUNTCODEUNITS, bytesStart, bytesEnd);
-				if(r == 0 && bytesEnd > bytesStart) r = -1;
-			}
-			return r >= 0 ? r : throw new ArgumentOutOfRangeException();
-		}
-#endif
+		int _ReturnPos(bool utf16, int pos) => utf16 ? C.Pos16(pos) : pos;
 
 		struct _NoReadonly : IDisposable
 		{
@@ -395,7 +336,7 @@ namespace Au.Controls
 		/// </summary>
 		internal void LibSetText(byte[] s, int startIndex)
 		{
-			Debug.Assert(s.Length > 0 && s[s.Length - 1] == 0);
+			Debug.Assert(s.Length > 0 && s[^1] == 0);
 			Debug.Assert((uint)startIndex < s.Length);
 			fixed(byte* p = s) LibSetText(p + startIndex);
 		}
@@ -426,20 +367,11 @@ namespace Au.Controls
 				return;
 			}
 
-			//int n = AConvert.Utf8LengthFromString(s);
-			//fixed(byte* b = LibByte(n + 2)) {
-			//	AConvert.Utf8FromString(s, b, n + 1);
-			//	if(andRN) { b[n++] = (byte)'\r'; b[n++] = (byte)'\n'; }
-
-			//	using(new _NoReadonly(this))
-			//		Call(SCI_APPENDTEXT, n, b);
-			//}
-
 			var a = AConvert.ToUtf8(s, andRN ? "\r\n" : "");
 			using(new _NoReadonly(this))
 				fixed(byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
 
-			if(scroll) Call(SCI_GOTOPOS, TextLength8);
+			if(scroll) Call(SCI_GOTOPOS, C.Len8);
 		}
 
 		/// <summary>
@@ -452,7 +384,7 @@ namespace Au.Controls
 				if(append) Call(SCI_APPENDTEXT, lenToAppend, s);
 				else Call(SCI_SETTEXT, 0, s);
 
-			if(append) Call(SCI_GOTOPOS, TextLength8);
+			if(append) Call(SCI_GOTOPOS, C.Len8);
 		}
 
 		//not used now
@@ -474,23 +406,10 @@ namespace Au.Controls
 		//}
 
 		/// <summary>
-		/// Gets all text.
+		/// Gets all text directly from Scintilla.
+		/// Does not use caching like AuScintilla.Text.
 		/// </summary>
-		public string AllText()
-		{
-			int n = TextLength8;
-			return GetStringOfLength(SCI_GETTEXT, n + 1, n);
-		}
-
-		/// <summary>
-		/// Gets text length (SCI_GETTEXTLENGTH) in UTF-8 bytes.
-		/// </summary>
-		public int TextLength8 => Call(SCI_GETTEXTLENGTH);
-
-		/// <summary>
-		/// Gets text length (SCI_GETTEXTLENGTH) in UTF-16 bytes.
-		/// </summary>
-		public int TextLength16 => CountBytesToChars(TextLength8);
+		internal string LibGetText() => _RangeText(0, C.Len8);
 
 		/// <summary>
 		/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
@@ -502,7 +421,7 @@ namespace Au.Controls
 		/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-16 chars.
 		/// The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
 		/// </summary>
-		public int CurrentPos16 { get => CountBytesToChars(CurrentPos8); set => Call(SCI_SETEMPTYSELECTION, CountBytesFromChars(value)); }
+		public int CurrentPos16 { get => C.Pos16(CurrentPos8); set => Call(SCI_SETEMPTYSELECTION, C.Pos8(value)); }
 
 		/// <summary>
 		/// SCI_GETSELECTIONSTART UTF-8.
@@ -512,7 +431,7 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_GETSELECTIONSTART UTF-16.
 		/// </summary>
-		public int SelectionStar16 => CountBytesToChars(SelectionStart8);
+		public int SelectionStar16 => C.Pos16(SelectionStart8);
 
 		/// <summary>
 		/// SCI_GETSELECTIONEND UTF-8.
@@ -524,7 +443,7 @@ namespace Au.Controls
 		/// SCI_GETSELECTIONEND UTF-16.
 		/// Always greater or equal than SelectionStartChars.
 		/// </summary>
-		public int SelectionEnd16 => CountBytesToChars(SelectionEnd8);
+		public int SelectionEnd16 => C.Pos16(SelectionEnd8);
 
 		/// <summary>
 		/// true if there is selected text.
@@ -536,7 +455,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="utf16"></param>
 		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
-		public int LineIndexFromPos(bool utf16, int pos)
+		public int LineFromPos(bool utf16, int pos)
 			=> Call(SCI_LINEFROMPOSITION, _ParamPos(utf16, pos));
 
 		/// <summary>
@@ -562,7 +481,7 @@ namespace Au.Controls
 		/// <param name="utf16">pos is UTF-16. Return UTF-16.</param>
 		/// <param name="pos">A position in document text.</param>
 		public int LineStartFromPos(bool utf16, int pos)
-			=> LineStart(utf16, LineIndexFromPos(utf16, pos));
+			=> LineStart(utf16, LineFromPos(utf16, pos));
 
 		/// <summary>
 		/// Gets line start position from any position and gets line index.
@@ -588,7 +507,7 @@ namespace Au.Controls
 			if(lineStartIsLineEnd) {
 				if(pos == 0 || Call(SCI_GETCHARAT, pos - 1) == '\n') return pos0;
 			}
-			return LineEnd(utf16, LineIndexFromPos(false, pos), withRN);
+			return LineEnd(utf16, LineFromPos(false, pos), withRN);
 		}
 
 		/// <summary>
@@ -609,19 +528,13 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="line">0-based line index. If invalid, returns "".</param>
 		/// <param name="withRN">Include \r\n.</param>
-		public string LineText(int line, bool withRN = false)
-		{
-			return RangeText(false, LineStart(false, line), LineEnd(false, line, withRN));
-		}
+		public string LineText(int line, bool withRN = false) => _RangeText(LineStart(false, line), LineEnd(false, line, withRN));
 
 		/// <summary>
 		/// Gets line height.
-		/// Currently all lines are the same height.
+		/// Currently all lines are of the same height.
 		/// </summary>
-		public int LineHeight(int line = 0)
-		{
-			return Call(SCI_TEXTHEIGHT, line);
-		}
+		public int LineHeight(int line = 0) => Call(SCI_TEXTHEIGHT, line);
 
 		/// <summary>
 		/// Gets the number of lines.
@@ -636,7 +549,7 @@ namespace Au.Controls
 		/// <param name="extraSpaces">Receives the number of extra spaces, 0 to 3.</param>
 		public int LineIndentationFromPos(bool utf16, int pos, out int extraSpaces)
 		{
-			int line = LineIndexFromPos(utf16, pos);
+			int line = LineFromPos(utf16, pos);
 			int i = Call(SCI_GETLINEINDENTATION, line), r = i / 4;
 			extraSpaces = i - r;
 			return r;
@@ -737,11 +650,10 @@ namespace Au.Controls
 		/// <param name="utf16"></param>
 		/// <param name="from">Start index.</param>
 		/// <param name="to">End index. If -1, uses control text length.</param>
-		/// <param name="toIsLength"></param>
-		public void DeleteRange(bool utf16, int from, int to, bool toIsLength = false)
+		public void DeleteRange(bool utf16, int from, int to)
 		{
 			using(new _NoReadonly(this)) {
-				NormalizeRange(utf16, ref from, ref to, toIsLength);
+				NormalizeRange(utf16, ref from, ref to);
 				Call(SCI_DELETERANGE, from, to - from);
 			}
 		}
@@ -755,21 +667,22 @@ namespace Au.Controls
 		/// <param name="from">Start index.</param>
 		/// <param name="to">End index. If -1, uses control text length.</param>
 		/// <param name="s">Replacement text. Can be null.</param>
-		/// <param name="toIsLength"></param>
 		/// <param name="finalCurrentPos">
 		/// If AtStart or AtEnd, after replacing sets curent position at the start or end of the replacement.
 		/// Else if current position was in the from-to range (including to), sets at from.
 		/// Else does not change current position and selection.
 		/// Alternatively use <see cref="ReplaceSel"/>; it sets current position at the end of the replacement.
 		/// </param>
-		public void ReplaceRange(bool utf16, int from, int to, string s, bool toIsLength = false, SciFinalCurrentPos finalCurrentPos = 0)
+		public void ReplaceRange(bool utf16, int from, int to, string s, SciFinalCurrentPos finalCurrentPos = 0)
 		{
 			using(new _NoReadonly(this)) {
-				NormalizeRange(utf16, ref from, ref to, toIsLength);
+				NormalizeRange(utf16, ref from, ref to);
+				int fromEnd = C.Len8 - to;
 				Call(SCI_SETTARGETRANGE, from, to);
 				SetString(SCI_REPLACETARGET, 0, s ??= "", true);
 				if(finalCurrentPos != default) {
-					CurrentPos8 = finalCurrentPos == SciFinalCurrentPos.AtStart ? from : CountBytesFromChars(from, s.Length);
+					if(finalCurrentPos == SciFinalCurrentPos.AtEnd) from = C.Len8 - fromEnd;
+					CurrentPos8 = from;
 				}
 			}
 		}
@@ -780,17 +693,10 @@ namespace Au.Controls
 		/// <param name="utf16"></param>
 		/// <param name="from">Start index.</param>
 		/// <param name="to">End index. If -1, uses control text length.</param>
-		/// <param name="toIsLength"></param>
-		public string RangeText(bool utf16, int from, int to, bool toIsLength = false)
+		public string RangeText(bool utf16, int from, int to)
 		{
-			NormalizeRange(utf16, ref from, ref to, toIsLength);
-			int n = to - from; if(n == 0) return "";
-			fixed(byte* b = LibByte(n)) {
-				var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = b };
-				int r = Call(SCI_GETTEXTRANGE, 0, &tr);
-				Debug.Assert(r == n);
-				return _FromUtf8(b, r);
-			}
+			NormalizeRange(utf16, ref from, ref to);
+			return _RangeText(from, to);
 		}
 
 		/// <summary>
@@ -829,12 +735,10 @@ namespace Au.Controls
 		/// <param name="from">Start index.</param>
 		/// <param name="to">End index. If -1, uses control text length.</param>
 		/// <param name="s">Replacement text. Can be null.</param>
-		/// <param name="toIsLength"></param>
-		public void SetAndReplaceSel(bool utf16, int from, int to, string s, bool toIsLength = false)
+		public void SetAndReplaceSel(bool utf16, int from, int to, string s)
 		{
 			Debug.Assert(!IsReadonly);
-			NormalizeRange(utf16, ref from, ref to, toIsLength);
-			Call(SCI_SETSEL, from, to);
+			Select(utf16, from, to);
 			SetString(SCI_REPLACESEL, 0, s ?? "");
 		}
 
@@ -859,12 +763,16 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// SCI_SETSEL and ensures visible.
+		/// SCI_SETSEL and optionally ensures visible.
+		/// If <c>to==-1</c>, use text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.
 		/// </summary>
-		public void SelectAndMakeVisible(bool utf16, int from, int to, bool toIsLength = false)
+		public void Select(bool utf16, int from, int to, bool makeVisible = false)
 		{
-			NormalizeRange(utf16, ref from, ref to, toIsLength);
-			GoToPos(false, from); //ensures line visible and selection visible (without it in some cases selection to the left of the caret may be invisible)
+			bool reverse = to >= 0 && to < from;
+			if(reverse) AMath.Swap(ref from, ref to);
+			NormalizeRange(utf16, ref from, ref to);
+			if(reverse) AMath.Swap(ref from, ref to);
+			if(makeVisible) GoToPos(false, from); //ensures line visible and selection visible (without it in some cases selection to the left of the caret may be invisible)
 			Call(SCI_SETSEL, from, to);
 		}
 
@@ -1021,7 +929,7 @@ namespace Au.Controls
 
 				//_enc = _Encoding.Utf32BOM; //test
 
-				int len = z.TextLength8;
+				int len = z.C.Len8;
 				int bom = (int)_enc >> 4;
 				if(bom == 2 || bom == 4) bom = 1; //1 UTF16 or UTF32 character
 				var b = LibByte(len + bom);
@@ -1082,7 +990,7 @@ namespace Au.Controls
 			}
 
 			x.linesEnd = end;
-			x.text = this.RangeText(false, x.linesStart, end);
+			x.text = _RangeText(x.linesStart, end);
 			return true;
 		}
 
@@ -1092,34 +1000,30 @@ namespace Au.Controls
 			public string text;
 		}
 
-		public string SelectedText()
-		{
-			int i = SelectionStart8, j = SelectionEnd8;
-			return j > i ? RangeText(false, i, j) : "";
-		}
+		public string SelectedText() => _RangeText(SelectionStart8, SelectionEnd8);
 
-		public void IndicatorClear(int indic) => IndicatorClear(false, indic, 0, TextLength8);
+		public void IndicatorClear(int indic) => IndicatorClear(false, indic, 0, -1);
 
-		public void IndicatorClear(bool utf16, int indic, int from, int length)
+		public void IndicatorClear(bool utf16, int indic, int from, int to)
 		{
-			if(utf16) _NormalizeFromLen(ref from, ref length);
+			NormalizeRange(utf16, ref from, ref to);
 			Call(SCI_SETINDICATORCURRENT, indic);
-			Call(SCI_INDICATORCLEARRANGE, from, length);
+			Call(SCI_INDICATORCLEARRANGE, from, to - from);
 		}
 
-		public void IndicatorAdd(bool utf16, int indic, int from, int length)
+		public void IndicatorAdd(bool utf16, int indic, int from, int to)
 		{
-			if(utf16) _NormalizeFromLen(ref from, ref length);
+			NormalizeRange(utf16, ref from, ref to);
 			Call(SCI_SETINDICATORCURRENT, indic);
-			Call(SCI_INDICATORFILLRANGE, from, length);
+			Call(SCI_INDICATORFILLRANGE, from, to - from);
 		}
 
-		public void IndicatorAdd(bool utf16, int indic, int from, int length, int _value)
+		public void IndicatorAdd(bool utf16, int indic, int from, int to, int _value)
 		{
-			if(utf16) _NormalizeFromLen(ref from, ref length);
+			NormalizeRange(utf16, ref from, ref to);
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_SETINDICATORVALUE, _value);
-			Call(SCI_INDICATORFILLRANGE, from, length);
+			Call(SCI_INDICATORFILLRANGE, from, to - from);
 		}
 
 	}

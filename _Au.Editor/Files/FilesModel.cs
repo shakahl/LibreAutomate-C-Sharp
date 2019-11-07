@@ -532,14 +532,14 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		var doc = Panels.Editor.ZActiveDoc;
 		doc.Focus();
 		if(line >= 0 || columnOrPos >= 0) {
-			var t = doc.Z;
+			var z = doc.Z;
 			if(line >= 0) {
-				int i = t.LineStart(false, line);
-				if(columnOrPos > 0) i = t.CountBytesFromChars(i, columnOrPos); //not SCI_FINDCOLUMN, it calculates tabs
+				int i = z.LineStart(false, line);
+				if(columnOrPos > 0) i = doc.Pos8(doc.Pos16(i) + columnOrPos); //not SCI_FINDCOLUMN, it calculates tabs
 				columnOrPos = i;
 			}
-			if(wasOpen) t.GoToPos(false, columnOrPos);
-			else ATimer.After(10, () => t.GoToPos(false, columnOrPos));
+			if(wasOpen) z.GoToPos(false, columnOrPos);
+			else ATimer.After(10, () => z.GoToPos(false, columnOrPos));
 			//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
 		}
 		return true;

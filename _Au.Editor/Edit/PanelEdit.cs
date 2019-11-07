@@ -76,8 +76,8 @@ class PanelEdit : UserControl
 			if(_activeDoc != null) _activeDoc.Visible = false;
 			_activeDoc = doc;
 			_activeDoc.Visible = true;
-			ZActiveDocChanged?.Invoke();
 			ZUpdateUI_Cmd();
+			ZActiveDocChanged?.Invoke();
 		} else {
 			var path = f.FilePath;
 			byte[] text = null;
@@ -88,13 +88,13 @@ class PanelEdit : UserControl
 
 			if(_activeDoc != null) _activeDoc.Visible = false;
 			doc = new SciCode(f, fls);
+			doc.AccessibleName = f.Name;
+			doc.AccessibleDescription = path;
 			_docs.Add(doc);
 			_activeDoc = doc;
 			this.Controls.Add(doc);
 			doc.ZInit(text, newFile);
-			doc.AccessibleName = f.Name;
-			doc.AccessibleDescription = path;
-
+			ZUpdateUI_Cmd();
 			ZActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}

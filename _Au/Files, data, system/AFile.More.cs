@@ -96,7 +96,7 @@ namespace Au
 				if(h.Is0) return false;
 				if(!Api.GetFileInformationByHandle(h, out var k)) return false;
 				fileId.VolumeSerialNumber = (int)k.dwVolumeSerialNumber;
-				fileId.FileIndex = (long)((ulong)k.nFileIndexHigh << 32 | k.nFileIndexLow);
+				fileId.FileIndex = k.FileIndex;
 				return true;
 			}
 

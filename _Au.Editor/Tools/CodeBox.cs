@@ -88,7 +88,7 @@ namespace Au.Tools
 			Z.Call(Sci.SCI_SETREADONLY, false);
 			Z.SetText(s, SciSetTextFlags.NoUndoNoNotify);
 			if(readonlyFrom > 0) {
-				_readonlyLenUtf8 = _LenUtf8 - Z.CountBytesFromChars(readonlyFrom);
+				_readonlyLenUtf8 = _LenUtf8 - Pos8(readonlyFrom);
 			} else {
 				Z.Call(Sci.SCI_SETREADONLY, true);
 				_readonlyLenUtf8 = -1;
@@ -96,7 +96,7 @@ namespace Au.Tools
 		}
 
 		[Browsable(false), DesignerSerializationVisibility(DesignerSerializationVisibility.Hidden)]
-		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : Z.CountBytesToChars(_ReadonlyStartUtf8); //currently not used
+		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : Pos16(_ReadonlyStartUtf8); //currently not used
 
 		int _readonlyLenUtf8;
 

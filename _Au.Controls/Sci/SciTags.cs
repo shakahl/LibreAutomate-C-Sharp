@@ -202,10 +202,10 @@ namespace Au.Controls
 			//QM2 also cleared the image cache, but now it is shared by all controls of this thread.
 		}
 
-		internal void LibOnTextChanged(bool inserted, ref SCNotification n)
+		internal void LibOnTextChanged(bool inserted, in SCNotification n)
 		{
 			//if deleted or replaced all text, clear user styles
-			if(!inserted && n.position == 0 && _t.TextLength8 == 0) {
+			if(!inserted && n.position == 0 && _c.Len8 == 0) {
 				_ClearUserStyles();
 				//_linkDelegates.Clear(); //no
 			}
@@ -275,7 +275,7 @@ namespace Au.Controls
 			//_c.Z.AppendText(s, true, true, true); return;
 
 			//limit
-			int len = _c.Z.TextLength8;
+			int len = _c.Len8;
 			if(len > 4 * 1024 * 1024) {
 				len = _c.Z.LineStartFromPos(false, len / 2);
 				if(len > 0) _c.Z.ReplaceRange(false, 0, len, "...\r\n");
@@ -580,7 +580,7 @@ namespace Au.Controls
 			_t.LibAddText(append, s0, len);
 			if(!hasTags) return;
 
-			int endStyled = 0, prevLen = append ? _t.TextLength8 - len : 0;
+			int endStyled = 0, prevLen = append ? _c.Len8 - len : 0;
 
 			if(folds != null) {
 				for(int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds

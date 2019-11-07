@@ -33,6 +33,12 @@ namespace Au.Controls
 		public const int SCI_ISXINMARGIN = 9506;
 		public const int SCI_DRAGDROP = 9507;
 
+		[DllImport("SciLexer", EntryPoint = "Scintilla_DirectFunction")]
+		public static extern LPARAM Sci_Call(LPARAM sci, int message, LPARAM wParam = default, LPARAM lParam = default);
+
+		[DllImport("SciLexer")]
+		public static extern int Sci_Range(LPARAM sci, int start8, int end8, out byte* p1, out byte* p2, int* length = null);
+
 #pragma warning disable 649
 		public unsafe struct Sci_AnnotationDrawCallbackData
 		{
@@ -57,8 +63,6 @@ namespace Au.Controls
 		public const int STYLE_HIDDEN = 31; //DEFAULT-1
 
 		#endregion
-
-		public delegate LPARAM SciFnDirect(LPARAM ptr, int iMessage, LPARAM wParam = default, LPARAM lParam = default);
 
 		public const int INVALID_POSITION = -1;
 		public const int SCI_START = 2000;
@@ -783,7 +787,7 @@ namespace Au.Controls
 		public const int SCI_POSITIONBEFORE = 2417;
 		public const int SCI_POSITIONAFTER = 2418;
 		public const int SCI_POSITIONRELATIVE = 2670;
-		public const int SCI_POSITIONRELATIVECODEUNITS = 2716; //TODO: SCI_POSITIONRELATIVE and SCI_COUNTCHARACTERS use UTF-32. Replace with SCI_POSITIONRELATIVECODEUNITS and SCI_COUNTCODEUNITS.
+		public const int SCI_POSITIONRELATIVECODEUNITS = 2716;
 		public const int SCI_COPYRANGE = 2419;
 		public const int SCI_COPYTEXT = 2420;
 		public const int SC_SEL_STREAM = 0;

@@ -1,14 +1,14 @@
-/*/ ifRunning restart; /*/ //{{
+/*/ ifRunning restart; /*/ //-{
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}
+class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}
 
 /*
 This file is an example of an automation script.
 
-The programming language is C#. This program uses C# 8 and .NET framework 4.7.2.
+The programming language is C#. This program uses C# 8 and .NET Core 3.0.
 
 In scripts you can use classes/functions of the automation library provided by
-this program, as well as the .NET framework and everything that can be used in C#.
+this program, as well as of .NET Core and everything that can be used in C#.
 Also you can create and use new functions, classes, .NET libraries, .exe programs.
 
 This program saves script properties in meta comments /*/ /*/, at the very start
@@ -19,9 +19,10 @@ and function Main (from it starts program execution). Click the small [+] box at
 the top-left to show and edit that code when need (add more 'using' etc).
 
 To avoid 'static' everywhere, function Main creates a class instance. Your script
-code is in the constructor function Script(string[] args).
+code is in the constructor function Script(string[] args). Finally the function
+and the class end with } and }.
 
-The //{{ and //}} are used to fold (hide) code lines. Like #region and #endregion.
+The //-{ and //-} are used to fold (hide) code lines. Like #region and #endregion.
 
 To run a script, you can click the Run button on the toolbar, or use command line,
 or launch from a script like ATask.Run("script5.cs"). There are no script triggers
@@ -49,7 +50,7 @@ if(!w2.Is0) {
 	500.ms();
 }
 
-//Examples of .NET framework functions.
+//Examples of .NET functions.
 
 string s = "Example";
 var b = new System.Text.StringBuilder();
@@ -64,8 +65,7 @@ _sharedVariable = 1;
 FunctionExample("Example");
 Print(_sharedVariable);
 
-//{{
-} //end of main function. Optional if you don't need more functions etc. The comment line above is recommended to balance folding.
+} //end of main function
 
 //Here you can add functions, shared variables (class fields), nested classes, struct, enum, [DllImport], etc.
 
@@ -76,5 +76,4 @@ void FunctionExample(string s) {
 
 int _sharedVariable;
 
-//{{
-} //end of class. Optional if you don't need more classes here. If one or both } } are missing, the program adds them when compiling.
+} //end of class

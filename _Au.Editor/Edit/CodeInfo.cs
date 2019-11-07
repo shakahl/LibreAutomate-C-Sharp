@@ -32,13 +32,14 @@ static class CodeInfo
 	static CiSignature _signature = new CiSignature();
 	static CiAutocorrect _correct = new CiAutocorrect();
 	static CiQuickInfo _quickInfo = new CiQuickInfo();
-	//static MetaComments _meta;
+	static CiStyling _styling = new CiStyling();
 	static string _metaText;
 	static Solution _solution;
 	static ProjectId _projectId;
 	static DocumentId _documentId;
 	static Document _document;
 	static bool _isWarm;
+	static bool _isWarmForStyling;
 	static bool _isUI;
 	static RECT _sciRect;
 
@@ -63,11 +64,12 @@ static class CodeInfo
 	{
 		p1.Next();
 		try {
-			var code = @"//{{
+			var code = @"//-{
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
-Print(1);
-} }";
+Print(""t"" + 'c' + 1);
+}}";
+
 			var refs = new MetaReferences().Refs;
 			int position = code.IndexOf('}');
 			ProjectId projectId = ProjectId.CreateNewId();
@@ -78,6 +80,14 @@ Print(1);
 				.AddMetadataReferences(projectId, refs)
 				.AddDocument(documentId, "f.cs", code);
 			var document = sol.GetDocument(documentId);
+			//p1.Next();
+			_ = document.GetSemanticModelAsync().Result;
+			p1.Next();
+			CiStyling.Warmup(document, code.Length);
+			Program.MainForm.BeginInvoke(new Action(() => {
+				_isWarmForStyling = true;
+				ReadyForStyling?.Invoke();
+			}));
 			p1.Next();
 			Task.Run(() => { Compiler.Warmup(document); /*p1.NW('c');*/ });
 			var completionService = CompletionService.GetService(document);
@@ -101,9 +111,21 @@ Print(1);
 		}
 	}
 
-	static bool _CanWork(SciCode doc)
+	/// <summary>
+	/// Code styling and folding already can work after program starts.
+	/// </summary>
+	public static bool IsReadyForStyling => _isWarmForStyling;
+
+	/// <summary>
+	/// When code styling and folding already can work after program starts.
+	/// Runs in main thread.
+	/// </summary>
+	public static event Action ReadyForStyling;
+
+	static bool _CanWork(SciCode doc) => _isWarm && _CanWork2(doc);
+
+	static bool _CanWork2(SciCode doc)
 	{
-		if(!_isWarm) return false;
 		if(doc == null) return false;
 		if(!doc.ZFile.IsCodeFile) return false;
 		if(doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //TODO: what if isn't open?
@@ -118,7 +140,6 @@ Print(1);
 		_projectId = null;
 		_documentId = null;
 		_document = null;
-		//_meta = null;
 		_metaText = null;
 	}
 
@@ -209,6 +230,7 @@ Print(1);
 
 	public static void SciCharAdded(SciCode doc, char ch)
 	{
+		//return;
 		if(!_CanWork(doc)) return;
 
 		using var c = new CharContext(doc, ch);
@@ -286,6 +308,12 @@ Print(1);
 	//could join the above 2
 	//}
 
+	public static void SciStyleNeeded(SciCode doc, int endUtf8)
+	{
+		if(!_CanWork2(doc)) return;
+		_styling.SciStyleNeeded(doc, endUtf8);
+	}
+
 	public struct Context
 	{
 		public Document document;
@@ -304,10 +332,22 @@ Print(1);
 
 			document = null;
 			sciDoc = Panels.Editor.ZActiveDoc;
+			code = sciDoc.Text;
 			if(pos == -1) pos = sciDoc.Z.CurrentPos16; else if(pos == -2) pos = sciDoc.Z.SelectionStar16;
 			position = pos;
-			code = sciDoc.Text;
 			metaEnd = MetaComments.FindMetaComments(code);
+		}
+
+		public Context(SciCode doc)
+		{
+			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
+
+			document = null;
+			sciDoc = doc;
+			code = sciDoc.Text;
+			position = 0;
+			//metaEnd = MetaComments.FindMetaComments(code);
+			metaEnd = 0;
 		}
 
 		/// <summary>

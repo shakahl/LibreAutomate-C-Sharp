@@ -678,7 +678,7 @@ class CiCompletion
 
 		var s = change.TextChange.NewText;
 		var span = change.TextChange.Span;
-		int i = span.Start, len = span.Length + (doc.Z.TextLength16 - _data.codeLength);
+		int i = span.Start, len = span.Length + (doc.Len16 - _data.codeLength);
 		//Print($"{change.NewPosition.HasValue}, cp={doc.Z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
 		//Print($"'{s}'");
 		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && !item.IsRegex, $"{_data.tempRange.CurrentFrom}, {i}");
@@ -691,7 +691,7 @@ class CiCompletion
 				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && Empty(s1))) newPos++;
 				s += "></" + tag + ">";
 			}
-			doc.Z.ReplaceRange(true, i, len, s, true);
+			doc.Z.ReplaceRange(true, i, i + len, s);
 			doc.Z.GoToPos(true, newPos);
 			return CiComplResult.Complex;
 		}
@@ -807,7 +807,7 @@ class CiCompletion
 
 		if(!isComplex && s == _data.filterText) return CiComplResult.None;
 
-		doc.Z.SetAndReplaceSel(true, i, len, s, true);
+		doc.Z.SetAndReplaceSel(true, i, i + len, s);
 		if(isComplex) {
 			if(positionBack > 0) doc.Z.CurrentPos16 = i + s.Length - positionBack;
 			if(bracesFrom > 0) CodeInfo.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen, bracesOperation);

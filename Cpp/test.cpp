@@ -8,6 +8,43 @@
 #if _DEBUG
 //#if 1
 
+__interface __declspec(uuid("3AB5235E-2768-47A2-909A-B5852A9D1868"))
+	IInterface : IUnknown
+{
+	int Add(int a, int b);
+};
+
+class Inter :public IInterface
+{
+public:
+	int __stdcall Add(int a, int b) {
+		return a + b;
+	}
+
+	// Inherited via IInterface
+	virtual HRESULT __stdcall QueryInterface(REFIID riid, void** ppvObject) override
+	{
+		if(riid == __uuidof(IInterface) || riid == __uuidof(IUnknown)) {
+			*ppvObject = this;
+			return 0;
+		}
+		*ppvObject = nullptr;
+		return E_NOINTERFACE;
+	}
+	virtual ULONG __stdcall AddRef(void) override
+	{
+		return 1;
+	}
+	virtual ULONG __stdcall Release(void) override
+	{
+		return 1;
+	}
+};
+
+EXPORT IInterface* Cpp_GetInterface() { return new Inter(); }
+
+
+
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 inline HMODULE GetCurrentModuleHandle()

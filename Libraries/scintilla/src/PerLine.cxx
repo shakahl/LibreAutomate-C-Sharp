@@ -97,11 +97,11 @@ void LineMarkers::InsertLine(Sci::Line line) {
 void LineMarkers::RemoveLine(Sci::Line line) {
 	// Retain the markers from the deleted line by oring them into the previous line
 	if (markers.Length()) {
-		//Au: remove this feature
+		//Au: remove this feature. Note: somehow line here is 1-based, but markers.Delete etc accept 0-based, that is why line-1 below.
 		//if (line > 0) {
 		//	MergeMarkers(line - 1);
 		//}
-		markers.Delete(line);
+		markers.Delete(line-1);
 	}
 }
 

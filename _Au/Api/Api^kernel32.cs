@@ -382,11 +382,15 @@ namespace Au.Types
 			public long ftLastAccessTime;
 			public long ftLastWriteTime;
 			public uint dwVolumeSerialNumber;
-			public uint nFileSizeHigh;
-			public uint nFileSizeLow;
+			uint _nFileSizeHigh;
+			uint _nFileSizeLow;
 			public uint nNumberOfLinks;
-			public uint nFileIndexHigh;
-			public uint nFileIndexLow;
+			uint _nFileIndexHigh;
+			uint _nFileIndexLow;
+
+			public long FileSize => (long)((ulong)_nFileSizeHigh << 32 | _nFileSizeLow);
+
+			public long FileIndex => (long)((ulong)_nFileIndexHigh << 32 | _nFileIndexLow);
 		}
 
 		[DllImport("kernel32.dll", SetLastError = true)]

@@ -23,18 +23,26 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
-using Au.Util;
 using DiffMatchPatch;
 
-class SciCode : AuScintilla
+partial class SciCode : AuScintilla
 {
 	public readonly FileNode ZFile;
 	SciText.FileLoaderSaver _fls;
-	//public DocCodeInfo CI;
 
+	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
 	const int c_marginFold = 0;
 	const int c_marginLineNumbers = 1;
 	const int c_marginMarkers = 2; //breakpoints etc
+
+	//markers. We can use 0-24. Folding 25-31.
+	const int c_markerBookmark = 0;
+	const int c_markerBreakpoint = 1;
+	const int c_markerStepNext = 2;
+	public const int c_markerUnderline = 24;
+
+	//indicators. We can use 8-31. Lexers use 0-7.
+	const int c_indicFind = 8;
 
 	internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
 	{
@@ -55,21 +63,20 @@ class SciCode : AuScintilla
 	{
 		base.OnHandleCreated(e);
 
-		int dpi = ADpi.BaseDPI;
+		int dpi = Au.Util.ADpi.BaseDPI;
 
-		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT | MOD.SC_MOD_INSERTCHECK)); //TODO
+		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/));
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 		Z.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
 		//Call(SCI_SETMARGINTYPEN, c_marginMarkers, SC_MARGIN_SYMBOL);
 		//Z.MarginWidth(c_marginMarkers, 0);
 
-		Z.StyleFont(STYLE_DEFAULT, "Courier New", 8);
+		Z.StyleFont(STYLE_DEFAULT, "Consolas", 9); //like default in VS
+												   //Z.StyleFont(STYLE_DEFAULT, "Courier New", 8); //good too, except bold font
+												   //Z.StyleFont(STYLE_DEFAULT, "Liberation Mono", 9); //the best, but not shipped with Windows
 		Z.StyleClearAll();
 
 		if(ZFile.IsCodeFile) {
-			//_SetLexer(LexLanguage.SCLEX_CPP);
-			Z.SetLexerCpp();
-
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
 			//	Scintilla and C++ lexer support it, but by default it is disabled.
 			//	If disabled, line numbers in errors/warnings/stacktraces may be incorrect.
@@ -82,6 +89,11 @@ class SciCode : AuScintilla
 
 			Call(SCI_SETMOUSEDWELLTIME, 500);
 
+#if false
+			Z.SetLexerCpp();
+#else
+			CiStyling.InitSciDoc(this);
+#endif
 			_FoldingInit();
 
 			//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
@@ -89,7 +101,14 @@ class SciCode : AuScintilla
 
 		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
 
-		Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc); //TODO
+		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
+	}
+
+	internal void ZInit(byte[] text, bool newFile)
+	{
+		if(!IsHandleCreated) CreateHandle();
+		_fls.SetText(Z, text);
+		if(newFile) _openState = 1;
 	}
 
 	//protected override void Dispose(bool disposing)
@@ -124,6 +143,9 @@ class SciCode : AuScintilla
 		case NOTIF.SCN_SAVEPOINTREACHED:
 			//never mind: we should cancel the 'save text later'
 			break;
+		case NOTIF.SCN_STYLENEEDED:
+			CodeInfo.SciStyleNeeded(this, n.position);
+			break;
 		case NOTIF.SCN_MODIFIED:
 			//Print("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, Z.CurrentPos, n.Text);
 			//Print(n.modificationType);
@@ -138,12 +160,12 @@ class SciCode : AuScintilla
 				_TempRangeOnModifiedOrPosChanged(n.modificationType, n.position, n.length);
 				CodeInfo.SciModified(this, n);
 				Panels.Find.ZUpdateQuickResults(true);
-			} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
-				//Print(n.Text);
-				//if(n.length==1 && n.textUTF8[0] == ')') {
-				//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
+				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
+				//	//Print(n.Text);
+				//	//if(n.length==1 && n.textUTF8[0] == ')') {
+				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
-				//}
+				//	//}
 			}
 			break;
 		case NOTIF.SCN_CHARADDED:
@@ -156,7 +178,6 @@ class SciCode : AuScintilla
 			}
 			break;
 		case NOTIF.SCN_UPDATEUI:
-			if(_initDeferred != null) { var f = _initDeferred; _initDeferred = null; f(); }
 			//Print((uint)n.updated, _modified);
 			if(0 != (n.updated & 1)) {
 				if(_modified) _modified = false; else n.updated &= ~1; //ignore duplicate notification after adding or removing ()[]{}. Also the first after opening.
@@ -311,185 +332,6 @@ class SciCode : AuScintilla
 	//	Call(SCI_SETSAVEPOINT);
 	//}
 
-	internal void ZInit(byte[] text, bool newFile)
-	{
-		if(!IsHandleCreated) CreateHandle();
-		_fls.SetText(Z, text);
-
-		//The first place where folding works well is SCN_UPDATEUI. Call _initDeferred there and set = null.
-		_initDeferred = () => {
-			var db = Program.Model.DB; if(db == null) return;
-			try {
-				using var p = db.Statement("SELECT lines FROM _editor WHERE id=?", ZFile.Id);
-				if(p.Step()) {
-					var a = p.GetList<int>(0);
-					if(a != null) {
-						_savedMD5 = _Hash(a);
-						for(int i = a.Count - 1; i >= 0; i--) { //must be in reverse order, else does not work
-							int v = a[i];
-							int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
-							if(marker == 31) _FoldingFoldLine(line);
-							else Call(SCI_MARKERADDSET, line, 1 << marker);
-						}
-					}
-				} else if(newFile) {
-					//fold boilerplate code
-					int i = this.Text.Find("//{{\r\nusing Au;");
-					if(i >= 0) {
-						i = Z.LineIndexFromPos(true, i);
-						if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
-					}
-				}
-			}
-			catch(SLException ex) { ADebug.Print(ex); }
-		};
-	}
-
-	#region editor data
-
-	AHash.MD5Result _savedMD5;
-	Action _initDeferred;
-
-	static AHash.MD5Result _Hash(List<int> a)
-	{
-		if(a.Count == 0) return default;
-		AHash.MD5 md5 = default;
-		foreach(var v in a) md5.Add(v);
-		return md5.Hash;
-	}
-
-	internal void ZSaveEditorData()
-	{
-		var db = Program.Model.DB; if(db == null) return;
-		var a = new List<int>();
-		_GetLineDataToSave(0, a);
-		_GetLineDataToSave(1, a);
-		_GetLineDataToSave(31, a);
-		var hash = _Hash(a);
-		if(hash != _savedMD5) {
-			//Print("changed");
-			try {
-				if(a.Count == 0) {
-					db.Execute("DELETE FROM _editor WHERE id=?", ZFile.Id);
-				} else {
-					using var p = db.Statement("REPLACE INTO _editor (id,lines) VALUES (?,?)");
-					p.Bind(1, ZFile.Id).Bind(2, a).Step();
-				}
-				_savedMD5 = hash;
-			}
-			catch(SLException ex) { ADebug.Print(ex); }
-		}
-	}
-
-	/// <summary>
-	/// Gets indices of lines containing markers or contracted folding points.
-	/// </summary>
-	/// <param name="marker">If 31, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; must be 0...24 (markers 25-31 are used for folding).</param>
-	/// <param name="saved">Receives line indices | marker in high-order 5 bits.</param>
-	void _GetLineDataToSave(int marker, List<int> a)
-	{
-		Debug.Assert((uint)marker < 32); //we have 5 bits for marker
-		for(int i = 0; ; i++) {
-			if(marker == 31) i = Call(SCI_CONTRACTEDFOLDNEXT, i);
-			else i = Call(SCI_MARKERNEXT, 1 << i, marker);
-			if((uint)i > 0x7FFFFFF) break; //-1 if no more; ensure we have 5 high-order bits for marker; max 134 M lines.
-			a.Add(i | (marker << 27));
-		}
-	}
-
-	#endregion
-
-	#region folding
-
-	void _FoldingInit()
-	{
-		Z.SetStringString(SCI_SETPROPERTY, "fold\0" + "1");
-		Z.SetStringString(SCI_SETPROPERTY, "fold.comment\0" + "1");
-		Z.SetStringString(SCI_SETPROPERTY, "fold.preprocessor\0" + "1");
-		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.preprocessor.at.else\0" + "1");
-#if false
-			Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.syntax.based\0" + "0");
-#else
-		//Z.SetStringString(SCI_SETPROPERTY, "fold.at.else\0" + "1");
-#endif
-		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.start\0" + "//{{"); //default is //{
-		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.end\0" + "//}}");
-
-		Call(SCI_SETMARGINTYPEN, c_marginFold, SC_MARGIN_SYMBOL);
-		Call(SCI_SETMARGINMASKN, c_marginFold, SC_MASK_FOLDERS);
-		Call(SCI_SETMARGINSENSITIVEN, c_marginFold, 1);
-
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
-		for(int i = 25; i < 32; i++) {
-			Call(SCI_MARKERSETFORE, i, 0xffffff);
-			Call(SCI_MARKERSETBACK, i, 0x808080);
-			//Call(SCI_MARKERSETBACKSELECTED, i, i == SC_MARKNUM_FOLDER ? 0xFF0000 : 0x808080); //why dos not work?
-		}
-		//Call(SCI_MARKERENABLEHIGHLIGHT, 1); //why dos not work?
-
-		Call(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW //show hidden lines when header line deleted
-			| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'
-		Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
-		Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
-		Z.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
-
-		Call(SCI_SETMARGINCURSORN, c_marginFold, SC_CURSORARROW);
-
-		int wid = Call(SCI_TEXTHEIGHT) - 4;
-		Z.MarginWidth(c_marginFold, Math.Max(wid, 12));
-	}
-
-	bool _FoldingOnMarginClick(bool? fold, int startPos)
-	{
-		int line = Call(SCI_LINEFROMPOSITION, startPos);
-		if(0 == (Call(SCI_GETFOLDLEVEL, line) & SC_FOLDLEVELHEADERFLAG)) return false;
-		bool isExpanded = 0 != Call(SCI_GETFOLDEXPANDED, line);
-		if(fold.HasValue && fold.GetValueOrDefault() != isExpanded) return false;
-		if(isExpanded) {
-			_FoldingFoldLine(line);
-			//move caret out of contracted region
-			int pos = Z.CurrentPos8;
-			if(pos > startPos) {
-				int i = Z.LineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
-				if(pos <= i) Z.CurrentPos8 = startPos;
-			}
-		} else {
-			Call(SCI_FOLDLINE, line, 1);
-		}
-		return true;
-	}
-
-	void _FoldingFoldLine(int line)
-	{
-#if false
-			Call(SCI_FOLDLINE, line);
-#else
-		string s = Z.LineText(line), s2 = "";
-		for(int i = 0; i < s.Length; i++) {
-			char c = s[i];
-			if(c == '{') { s2 = "... }"; break; }
-			if(c == '/' && i < s.Length - 1) {
-				c = s[i + 1];
-				if(c == '*') break;
-				if(i < s.Length - 3 && c == '/' && s[i + 2] == '{' && s[i + 3] == '{') break;
-				//if(c == '*') { s2 = "... */"; break; }
-				//if(i < s.Length - 3 && c == '/' && s[i + 2] == '{' && s[i + 3] == '{') { s2 = "... }}"; break; }
-			}
-		}
-		//problem: quite slow. At startup ~250 mcs. The above code is fast.
-		if(s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
-		else Z.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
-#endif
-	}
-
-	#endregion
-
 	#region drag drop
 
 	enum _DD_DataType { None, Text, Files, Shell, Link, Script };
@@ -630,7 +472,7 @@ class SciCode : AuScintilla
 
 		if(!Empty(s)) {
 			var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
-			var b = AConvert.ToUtf8(s);
+			var b = Au.Util.AConvert.ToUtf8(s);
 			fixed(byte* bp = b) {
 				z.text = bp;
 				z.len = b.Length - 1;
@@ -750,7 +592,7 @@ class SciCode : AuScintilla
 
 	public void ZCopyModified(bool onlyInfo = false)
 	{
-		int i1 = Z.SelectionStart8, i2 = Z.SelectionEnd8, textLen = Z.TextLength8;
+		int i1 = Z.SelectionStart8, i2 = Z.SelectionEnd8, textLen = Len8;
 		if(textLen == 0) return;
 		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !ZFile.IsCodeFile;
 		if(onlyInfo) {
@@ -779,7 +621,7 @@ class SciCode : AuScintilla
 					//Start with prefix '//- type "name"'.
 					b.AppendFormat("//- {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n")
 						.Append(s, 0, m.Index);
-					b.Append("//{{");
+					b.Append("//-{");
 					if(hasM12) { //If there is something above or below standard usings, replace standard codes with '// using //' and '// main //'.
 						b.Append(s, m[1].Index, m[1].Length).Append("\r\n// using //")
 							.Append(s, m[2].Index, m[2].Length).Append("\r\n// main //");
@@ -818,7 +660,7 @@ class SciCode : AuScintilla
 			s = s.Substring(i);
 		} else {
 			Debug.Assert(!isClass);
-			if(!s.RegexMatch(@"[ \n]//{{", 0, out RXGroup m1)) return false;
+			if(!s.RegexMatch(@"[ \n]//-\{", 0, out RXGroup m1)) return false;
 			int j = m1.EndIndex;
 			var b = new StringBuilder();
 			b.Append(s, i, j - i);
@@ -871,17 +713,17 @@ class SciCode : AuScintilla
 	#region script header
 
 	const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
-	const string c_scriptMain = "class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //}}//}}//}}";
+	const string c_scriptMain = "class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}";
 
-	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//{{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
+	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//-\{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
 	static ARegex s_rxScript;
 
 	///// <summary>
-	///// Finds script header //{{...//}} using regular expression.
+	///// Finds script header //-{...//-} using regular expression.
 	///// </summary>
 	///// <param name="s">Script text.</param>
 	///// <param name="m">
-	///// Group 1 is "" or text between //{{ and c_usings. Includes the starting newline but not the ending newline.
+	///// Group 1 is "" or text between //-{ and c_usings. Includes the starting newline but not the ending newline.
 	///// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
 	///// </param>
 	//public static bool FindScriptHeader(string s, out RXMatch m) => _RxScript.Match(s, out m);
@@ -899,7 +741,6 @@ class SciCode : AuScintilla
 
 	#region indicators
 
-	const int c_indicFind = 8; //can be used 8 - 31. 0-7 used by lexers.
 	bool _indicFindInited;
 	bool _findHilited;
 
@@ -919,15 +760,7 @@ class SciCode : AuScintilla
 			Call(SCI_INDICSETUNDER, c_indicFind, 1); //draw before text
 		}
 
-		int i8 = 0, i16 = 0;
-		foreach(var v in a) {
-			int i = Z.CountBytesFromChars(i8, v.x - i16);
-			i16 = v.x + v.y;
-			i8 = Z.CountBytesFromChars(i, v.y);
-			int len = i8 - i;
-			//Print(v.x, i, v.y, len);
-			Z.IndicatorAdd(false, c_indicFind, i, len);
-		}
+		foreach(var v in a) Z.IndicatorAdd(true, c_indicFind, v.x, v.x + v.y);
 	}
 
 	#endregion
@@ -953,7 +786,7 @@ class SciCode : AuScintilla
 				Z.InsertText(true, j, d.text);
 			} else {
 				j -= d.text.Length;
-				if(d.operation == Operation.DELETE) Z.DeleteRange(true, j, d.text.Length, true);
+				if(d.operation == Operation.DELETE) Z.DeleteRange(true, j, j + d.text.Length);
 			}
 		}
 		Call(SCI_ENDUNDOACTION);
@@ -974,11 +807,12 @@ class SciCode : AuScintilla
 		if(s.Length == 0) return;
 		bool wasSelection = x.selEnd > x.selStart;
 		bool caretAtEnd = wasSelection && Z.CurrentPos8 == x.linesEnd;
+		int fromEnd = Len8 - x.linesEnd;
 		bool com = comment ?? !s.RegexIsMatch("^[ \t]*//(?!/[^/])");
 		s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
 		Z.ReplaceRange(false, x.linesStart, x.linesEnd, s);
 		if(wasSelection) {
-			int i = x.linesStart, j = Z.CountBytesFromChars(x.linesStart, s.Length);
+			int i = x.linesStart, j = Len8 - fromEnd;
 			Call(SCI_SETSEL, caretAtEnd ? i : j, caretAtEnd ? j : i);
 		}
 	}
@@ -1088,7 +922,7 @@ class SciCode : AuScintilla
 
 		public int CurrentFrom => _doc != null ? _fromUtf16 : -1;
 
-		public int CurrentTo => _doc != null ? (_fromUtf16 + _doc.Z.CountBytesToChars(from, to)) : -1;
+		public int CurrentTo => _doc?.Pos16(to) ?? -1;
 
 		public object Owner => _owner;
 
@@ -1164,7 +998,7 @@ class SciCode : AuScintilla
 	/// <param name="utf8"></param>
 	public IEnumerable<ITempRange> ZTempRanges_Enum(int position, object owner = null, bool endPosition = false, bool utf8 = false)
 	{
-		if(!utf8) position = Z.CountBytesFromChars(position);
+		if(!utf8) position = Pos8(position);
 		for(int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
 			if(r.Contains(position, owner, endPosition)) yield return r;

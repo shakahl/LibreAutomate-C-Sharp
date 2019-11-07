@@ -25,6 +25,8 @@ using System.Runtime.InteropServices.ComTypes;
 using System.Numerics;
 using System.Globalization;
 //using AutoItX3Lib;
+using System.Runtime.Intrinsics;
+using System.Runtime.Intrinsics.X86;
 
 public static class AStrEx
 {
@@ -111,12 +113,214 @@ class Script : AScript
 		}
 	}
 
+	//[ComImport, Guid("3AB5235E-2768-47A2-909A-B5852A9D1868"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+	//interface IInterface
+	//{
+	//	[PreserveSig] int Add(int a, int b);
+	//}
+
+	//[DllImport("AuCpp.dll")]
+	//static extern IInterface Cpp_GetInterface();
+
+
+	//static byte[] ReadFile(string file)
+	//{
+	//	var h = Api.CreateFile(file, Api.GENERIC_READ, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING);
+	//	if(h.Is0) throw new AuException(0);
+	//	using var fs = new FileStream(h, FileAccess.Read, true);
+	//	var r = new byte[fs.Length];
+	//	fs.Read(r, 0, r.Length);
+	//	return r;
+	//}
+
+
+	//static unsafe byte[] ReadFile2(string file)
+	//{
+	//	using var h = Api.CreateFile(file, Api.GENERIC_READ, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING);
+	//	if(h.Is0) throw new AuException(0);
+	//	Api.GetFileInformationByHandle(h, out var k);
+	//	var r = new byte[k.FileSize];
+	//	Api.ReadFileArr(h, r, out var nr);
+	//	return r;
+	//}
+
+	//static unsafe string ReadCodeFile(string file)
+	//{
+	//	using var h = Api.CreateFile(file, Api.GENERIC_READ, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING);
+	//	if(h.Is0) throw new AuException(0);
+	//	Api.GetFileInformationByHandle(h, out var k);
+	//	int len8 = (int)k.FileSize;
+	//	var b = (byte*)Au.Util.AMemory.Alloc(len8);
+	//	try {
+	//		Api.ReadFile(h, b, len8, out int nr);
+	//		var len16 = Encoding.UTF8.GetCharCount(b, len8);
+	//		LPARAM t = b;
+	//		return string.Create(len16, (t, len8), (span, a) => Encoding.UTF8.GetChars(new ReadOnlySpan<byte>(a.t, a.len8), span));
+	//	}
+	//	finally { Au.Util.AMemory.Free(b); }
+	//}
+
+	//static void _ArrMove(int)
+
+	unsafe class MapArray
+	{
+		public int[] _a;
+		public Vector128<int>[] _v;
+
+		public MapArray(int n)
+		{
+			_a = new int[n];
+			for(int i = 0; i < _a.Length; i++) _a[i] = i;
+
+			_v = new Vector128<int>[n];
+		}
+
+		public void Move(int i)
+		{
+			int n = _a.Length - i - 1;
+			Array.Copy(_a, i, _a, i+1, n);
+
+			//fixed(int* p = _a) Api.memmove(p + i + 1, p + 1, n * 4); //same speed
+		}
+
+		[MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.NoInlining)]
+		public void Inc(int i, int add)
+		{
+			//for(; i < _a.Length; i++) _a[i]+=add;
+
+			long add2 = add; add2= add2 << 32 | add2;
+			fixed(int* ip = _a) {
+				var p = (long*)ip;
+				for(int n=_a.Length / 2; i < n; i++) {
+					//var v = p[i];
+					p[i] += add2;
+				}
+
+			}
+
+			//var va = Vector128.Create(add);
+			//for(;  i < _v.Length; i++) {
+			//	_v[i]=Sse2.Add(_v[i], va);
+			//}
+		}
+
+		//public void Insert(int i, int add)
+		//{
+		//	for(; i < _a.Length; i++) _a[i]+=add;
+		//}
+
+		public void PrintVector()
+		{
+			Print(_a);
+
+			//for(int i=0; i < _v.Length; i++) {
+			//	Print(_v[i].GetElement(0), _v[i].GetElement(1), _v[i].GetElement(2), _v[i].GetElement(3));
+			//}
+		}
+	}
+
+	static unsafe int _SkipAscii(byte* bp, int i, int len)
+	{
+#if true
+		for(; i < len && (i & 7) != 0; i++) if(bp[i] >= 0x80) return i;
+		var up = (ulong*)(bp + i);
+		int j = 0;
+		for(int n = (len - i) / 8; j < n; j++) if((up[j] & 0x8080808080808080) != 0) break;
+		for(i += j * 8; i < len; i++) if(bp[i] >= 0x80) break;
+#else
+			for(; i < len; i++) if(bp[i] >= 0x80) break;
+#endif
+		return i;
+	}
+
+	unsafe void _Main()
+	{
+		var s = "123456789 123456789ččč123456789 123456789ččč";
+		var b = Encoding.UTF8.GetBytes(s);
+		fixed(byte* p = b) {
+			Print(_SkipAscii(p, 25, b.Length));
+		}
+
+
+
+
+		//var a = new int[1_000_000];
+
+		//var k = new MapArray(6);
+		//k.PrintVector();
+		//Print("---");
+		//k.Move(1);
+		//k.PrintVector();
+		//Print("---");
+		//k.Inc(1, 10);
+		//k.PrintVector();
+
+
+		////return;
+
+		//k = new MapArray(1_000_000);
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 5; i1++) {
+		//	int n2 = 1;
+		//	APerf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { k.Move(1); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { k.Inc(1, 10); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { }
+		//	APerf.NW();
+		//	Thread.Sleep(200);
+		//}
+
+		//var file = @"Q:\Test\ok\files\util\AAll.cs";
+
+		//var b = File.ReadAllBytes(file);
+		//var s = File.ReadAllText(file);
+		//var r = ReadFile(file);
+		//var r2 = ReadFile2(file);
+		//var s2 = ReadCodeFile(file);
+		////Print(s2); return;
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 20; i1++) {
+		//	int n2 = 1;
+		//	APerf.First();
+		//	//for(int i2 = 0; i2 < n2; i2++) { File.ReadAllBytes(file); }
+		//	//APerf.Next();
+		//	//for(int i2 = 0; i2 < n2; i2++) { File.ReadAllText(file); }
+		//	//APerf.Next();
+		//	//for(int i2 = 0; i2 < n2; i2++) { ReadFile(file); }
+		//	//APerf.Next();
+		//	//for(int i2 = 0; i2 < n2; i2++) { ReadFile2(file); }
+		//	//APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { ReadCodeFile(file); }
+		//	//APerf.Next();
+		//	//for(int i2 = 0; i2 < n2; i2++) { File.ReadAllBytes(file); }
+		//	APerf.NW();
+		//	Thread.Sleep(200);
+		//}
+	}
+
 	[STAThread] static void Main(string[] args) { new Script(args); }
 	Script(string[] args)
 	{
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
 
+		try {
+			_Main();
+		}catch(Exception ex) { Print(ex); }
+
+		return;
+
+//#if true
+//		System.Console.Write("d", 200, FAFlags.UseRawPath);
+
+		//		Paste("str\r\ning");
+		//#endif
 
 		//Print(Encoding.UTF8.EncoderFallback);
 
@@ -837,6 +1041,10 @@ class Script : AScript
 			AOutput.QM2.Write("dtor");
 
 		}
+
+		void Goo() { }
+
+		int Goo2() => 4;
 
 		public void Dispose()
 		{

@@ -32,7 +32,7 @@ class CiQuickInfo
 		if(positionUtf8 <= 0) { pi.ZSetAboutInfo(); return; }
 
 		//APerf.First();
-		int position = doc.Z.CountBytesToChars(positionUtf8);
+		int position = doc.Pos16(positionUtf8);
 		if(!CodeInfo.GetContextAndDocument(out var cd, position)) { pi.ZSetAboutInfo(cd.metaEnd > 0); return; }
 
 		//APerf.Next();
