@@ -184,7 +184,7 @@ static unsafe class Program
 					//Print(w);
 					//Print(w.ExStyle);
 					//Api.SetForegroundWindow(w); //does not work
-					ATimer.After(1, () => {
+					ATimer.After(1, _ => {
 						if(s_hook == null) return;
 						//Print(AWnd.Active);
 						//Print(AWnd.ThisThread.Active);

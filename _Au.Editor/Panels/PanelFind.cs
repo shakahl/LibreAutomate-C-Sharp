@@ -335,7 +335,7 @@ class PanelFind : AuUserControlBase
 		if(!_cRegex.Checked) return;
 		if(got) {
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window
-			ATimer.After(70, () => { if(tb.Focused) _ShowRegexInfo(tb, false); });
+			ATimer.After(70, _ => { if(tb.Focused) _ShowRegexInfo(tb, false); });
 		} else {
 			if(_regexWindow.Window.Visible) {
 				var c = AWnd.ThisThread.FocusedControl;
@@ -365,7 +365,7 @@ class PanelFind : AuUserControlBase
 		Panels.Found.ZControl.Z.ClearText();
 		if(_cName.Checked) {
 			_aEditor.Clear();
-			Panels.Editor.ZActiveDoc?.ZHiliteFind(null);
+			Panels.Editor.ZActiveDoc?._HiliteFind(null);
 		}
 		ZUpdateQuickResults(false);
 	}
@@ -403,16 +403,16 @@ class PanelFind : AuUserControlBase
 		if(onlyEditor && _cName.Checked) return;
 		//Print("UpdateQuickResults", Visible);
 
-		if(_timerUE == null) _timerUE = new ATimer(() => {
+		_timerUE ??= new ATimer(_ => {
 			if(_cName.Checked) {
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
-				Panels.Editor.ZActiveDoc?.ZHiliteFind(_aEditor);
+				Panels.Editor.ZActiveDoc?._HiliteFind(_aEditor);
 			}
 		});
 
-		_timerUE.Start(150, true);
+		_timerUE.After(150);
 	}
 	ATimer _timerUE;
 
@@ -455,7 +455,7 @@ class PanelFind : AuUserControlBase
 		a.Clear();
 		if(f.rx != null) {
 			foreach(var g in f.rx.FindAllG(text)) {
-				a.Add((g.Index, g.Length));
+				a.Add((g.Start, g.Length));
 				if(one) break;
 			}
 		} else {
@@ -490,7 +490,7 @@ class PanelFind : AuUserControlBase
 		g1:
 		if(f.rx != null) {
 			if(f.rx.Match(text, out rm, from..)) {
-				i = rm.Index;
+				i = rm.Start;
 				len = rm.Length;
 				if(i == from && len == 0 && !(replace | retryRx | retryFromStart)) {
 					if(++i > text.Length) i = -1;
@@ -540,7 +540,7 @@ class PanelFind : AuUserControlBase
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for(int i = ma.Length - 1; i >= 0; i--) {
 				var m = ma[i];
-				doc.Z.ReplaceRange(true, m.Index, m.EndIndex, m.ExpandReplacement(repl));
+				doc.Z.ReplaceRange(true, m.Start, m.End, m.ExpandReplacement(repl));
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		} else {
@@ -570,7 +570,7 @@ class PanelFind : AuUserControlBase
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		base.OnVisibleChanged(e);
-		if(!_cName.Checked) Panels.Editor.ZActiveDoc?.ZHiliteFind(Visible ? _aEditor : null);
+		if(!_cName.Checked) Panels.Editor.ZActiveDoc?._HiliteFind(Visible ? _aEditor : null);
 	}
 
 	public void ZCtrlF()
@@ -622,7 +622,7 @@ class PanelFind : AuUserControlBase
 			});
 			c.ZTags.AddLinkTag("+ra", s => {
 				if(!_OpenLinkClicked(s)) return;
-				ATimer.After(10, () => _bReplaceAll_Click(null, null));
+				ATimer.After(10, _ => _bReplaceAll_Click(null, null));
 				//info: without timer sometimes does not set cursor pos correctly
 			});
 			c.ZTags.AddLinkTag("+f", s => {
@@ -631,7 +631,7 @@ class PanelFind : AuUserControlBase
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = from + a[2].ToInt();
-				ATimer.After(10, () => doc.Z.Select(true, from, to, true));
+				ATimer.After(10, _ => doc.Z.Select(true, from, to, true));
 				//info: scrolling works better with async when now opened the file
 			});
 			bool _OpenLinkClicked(string file)
@@ -768,7 +768,7 @@ class PanelFind : AuUserControlBase
 		public void Dispose()
 		{
 			if(_enableAfter == 0) _w.Enable(true);
-			else { var w = _w; ATimer.After(_enableAfter, () => w.Enable(true)); }
+			else { var w = _w; ATimer.After(_enableAfter, _ => w.Enable(true)); }
 		}
 	}
 

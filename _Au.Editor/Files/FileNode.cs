@@ -388,7 +388,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	{
 		//Print("UnCacheText", Name, _text != null);
 		_text = null;
-		if(fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?.ZFileModifiedExternally();
+		if(fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?._FileModifiedExternally();
 	}
 
 	public Bitmap GetIcon(bool expandedFolder = false)

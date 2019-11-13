@@ -19,11 +19,6 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Util;
 
-//rejected: throw exception if invalid position. Often difficult to detect it. And this library is not public.
-//	Only few methods throw. They are used for long time and never threw.
-
-//TODO: now VS does not copy the correct SciLexer.dll to the ouput dir when changed Debug/Release config, unless we recompile a Scintilla source file.
-
 namespace Au.Controls
 {
 	using static Sci;
@@ -32,6 +27,12 @@ namespace Au.Controls
 	/// Functions to work with Scintilla control text, code, etc.
 	/// A SciText object is created by AuScintilla which is the C property.
 	/// </summary>
+	/// <remarks>
+	/// Most functions throw ArgumentOutOfRangeException when: 1. A position or line index argument is negative. 2. Scintilla returned a negative position or line index.
+	/// If a position or line index argument is greater than text length or the number of lines, some functions return the text length or the last line, and it is documented; for other functions the behaviour is undefined, eg ArgumentOutOfRangeException or Scintilla's return value or like of the documented methods.
+	/// 
+	/// Some frequently used functions are in <see cref="AuScintilla"/>, not here, eg to get/set all text or to get/convert UTF-8/16 text length/position.
+	/// </remarks>
 	public unsafe partial class SciText
 	{
 		/// <summary>
@@ -144,7 +145,6 @@ namespace Au.Controls
 		/// <param name="utf8Length">
 		/// Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
 		/// If 0, returns "" and does not call the message.
-		/// Cannot be negative.
 		/// </param>
 		/// <remarks>
 		/// This function can get binary string (with '\0' characters).
@@ -185,7 +185,7 @@ namespace Au.Controls
 			Debug.Assert(end8 >= start8);
 			Debug.Assert((uint)end8 <= C.Len8);
 			if(end8 == start8) return "";
-			int gap = Sci_Range(C.LibSciPtr, start8, end8, out var p1, out var p2);
+			int gap = Sci_Range(C.SciPtr, start8, end8, out var p1, out var p2);
 			if(p2 != null) {
 				int n1 = gap - start8, n2 = end8 - gap;
 				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
@@ -211,7 +211,7 @@ namespace Au.Controls
 		/// <param name="utf16">Input parameters are UTF-16.</param>
 		/// <param name="from"></param>
 		/// <param name="to">If -1, uses <see cref="AuScintilla.Len8"/>.</param>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		/// <exception cref="ArgumentOutOfRangeException">An argument is negative or <i>to</i> less than <i>from</i>, except when <i>to</i> is -1.</exception>
 		public void NormalizeRange(bool utf16, ref int from, ref int to)
 		{
 			if(from < 0 || (to < from && to != -1)) throw new ArgumentOutOfRangeException();
@@ -222,12 +222,25 @@ namespace Au.Controls
 		/// <summary>
 		/// => utf16 ? C.Pos8(pos) : pos;
 		/// </summary>
-		int _ParamPos(bool utf16, int pos) => utf16 ? C.Pos8(pos) : pos;
+		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
+		int _ParamPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? C.Pos8(pos) : pos) : throw new ArgumentOutOfRangeException();
 
 		/// <summary>
 		/// => utf16 ? C.Pos16(pos) : pos;
 		/// </summary>
-		int _ReturnPos(bool utf16, int pos) => utf16 ? C.Pos16(pos) : pos;
+		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
+		int _ReturnPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : throw new ArgumentOutOfRangeException();
+
+		/// <summary>
+		/// pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : pos;
+		/// </summary>
+		int _ReturnPosCanBeNegative(bool utf16, int pos) => pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : pos;
+
+		/// <summary>
+		/// => line;
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
+		int _ParamLine(int line) => line >= 0 ? line : throw new ArgumentOutOfRangeException();
 
 		struct _NoReadonly : IDisposable
 		{
@@ -454,7 +467,7 @@ namespace Au.Controls
 		/// Gets line index from character position.
 		/// </summary>
 		/// <param name="utf16"></param>
-		/// <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
+		/// <param name="pos">A position in document text. Returns the last line if too big.</param>
 		public int LineFromPos(bool utf16, int pos)
 			=> Call(SCI_LINEFROMPOSITION, _ParamPos(utf16, pos));
 
@@ -462,24 +475,35 @@ namespace Au.Controls
 		/// Gets line start position from line index.
 		/// </summary>
 		/// <param name="utf16">Return UTF-16.</param>
-		/// <param name="line">0-based line index.</param>
-		public int LineStart(bool utf16, int line)
-			=> _ReturnPos(utf16, Call(SCI_POSITIONFROMLINE, line));
+		/// <param name="line">0-based line index. Returns text length if too big.</param>
+		public int LineStart(bool utf16, int line) => _ReturnPos(utf16, _LineStart(line));
+
+		int _LineStart(int line)
+		{
+			if(line < 0) throw new ArgumentOutOfRangeException();
+			int R = Call(SCI_POSITIONFROMLINE, _ParamLine(line));
+			return R >= 0 ? R : C.Len8;
+			//If line < 0, Scintilla returns line start from selection start.
+			//If line > number of lines, Scintilla returns -1.
+		}
 
 		/// <summary>
 		/// Gets line end position from line index.
 		/// </summary>
 		/// <param name="utf16">Return UTF-16.</param>
-		/// <param name="line">0-based line index.</param>
+		/// <param name="line">0-based line index. Returns text length if too big.</param>
 		/// <param name="withRN">Include \r\n.</param>
 		public int LineEnd(bool utf16, int line, bool withRN = false)
-			=> _ReturnPos(utf16, withRN ? Call(SCI_POSITIONFROMLINE, line) + Call(SCI_LINELENGTH, line) : Call(SCI_GETLINEENDPOSITION, line));
+		{
+			line = _ParamLine(line);
+			return _ReturnPos(utf16, withRN ? _LineStart(line + 1) : Call(SCI_GETLINEENDPOSITION, line));
+		}
 
 		/// <summary>
 		/// Gets line start position from any position.
 		/// </summary>
 		/// <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-		/// <param name="pos">A position in document text.</param>
+		/// <param name="pos">A position in document text. Returns text length if too big.</param>
 		public int LineStartFromPos(bool utf16, int pos)
 			=> LineStart(utf16, LineFromPos(utf16, pos));
 
@@ -488,16 +512,16 @@ namespace Au.Controls
 		/// Returns start position.
 		/// </summary>
 		/// <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-		/// <param name="pos">A position in document text.</param>
+		/// <param name="pos">A position in document text. Returns text length if too big.</param>
 		/// <param name="line">Receives line index.</param>
 		public int LineStartFromPos(bool utf16, int pos, out int line)
-			=> Call(SCI_POSITIONFROMLINE, line = Call(SCI_LINEFROMPOSITION, _ParamPos(utf16, pos)));
+			=> LineStart(utf16, line = LineFromPos(utf16, pos));
 
 		/// <summary>
 		/// Gets line end position from any position.
 		/// </summary>
 		/// <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-		/// <param name="pos">A position in document text.</param>
+		/// <param name="pos">A position in document text. Returns text length if too big.</param>
 		/// <param name="withRN">Include \r\n.</param>
 		/// <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
 		public int LineEndFromPos(bool utf16, int pos, bool withRN = false, bool lineStartIsLineEnd = false)
@@ -514,12 +538,12 @@ namespace Au.Controls
 		/// Gets line index, start and end positions from position.
 		/// </summary>
 		/// <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-		/// <param name="pos">A position in document text.</param>
+		/// <param name="pos">A position in document text. Uses the last line if too big.</param>
 		/// <param name="withRN">Include \r\n.</param>
 		public (int line, int start, int end) LineStartEndFromPos(bool utf16, int pos, bool withRN = false)
 		{
 			int startPos = LineStartFromPos(false, _ParamPos(utf16, pos), out int line);
-			int endPos = withRN ? startPos + Call(SCI_LINELENGTH, line) : Call(SCI_GETLINEENDPOSITION, line);
+			int endPos = LineEnd(false, line, withRN);
 			return (line, _ReturnPos(utf16, startPos), _ReturnPos(utf16, endPos));
 		}
 
@@ -534,7 +558,7 @@ namespace Au.Controls
 		/// Gets line height.
 		/// Currently all lines are of the same height.
 		/// </summary>
-		public int LineHeight(int line = 0) => Call(SCI_TEXTHEIGHT, line);
+		public int LineHeight() => Call(SCI_TEXTHEIGHT, 0);
 
 		/// <summary>
 		/// Gets the number of lines.
@@ -569,7 +593,7 @@ namespace Au.Controls
 		/// <param name="p">Point in client area.</param>
 		/// <param name="minusOneIfFar">Return -1 if p is not in text characters.</param>
 		public int PosFromXY(bool utf16, POINT p, bool minusOneIfFar)
-			=> _ReturnPos(utf16, Call(minusOneIfFar ? SCI_POSITIONFROMPOINTCLOSE : SCI_POSITIONFROMPOINT, p.x, p.y));
+			=> _ReturnPosCanBeNegative(utf16, Call(minusOneIfFar ? SCI_POSITIONFROMPOINTCLOSE : SCI_POSITIONFROMPOINT, p.x, p.y));
 
 		/// <summary>
 		/// Gets annotation text of line.
@@ -634,13 +658,25 @@ namespace Au.Controls
 		/// Does not change current selection; for it use <see cref="ReplaceSel"/>.
 		/// </summary>
 		/// <param name="utf16"></param>
-		/// <param name="pos">Start index. If -1, uses current position.</param>
+		/// <param name="pos">Start index. Cannot be negative.</param>
 		/// <param name="s">Text to insert. Can be null.</param>
 		public void InsertText(bool utf16, int pos, string s)
 		{
 			using(new _NoReadonly(this))
 				SetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
 		}
+
+		///// <summary>
+		///// Inserts text at current position.
+		///// Does not parse tags.
+		///// Does not change current selection; for it use <see cref="ReplaceSel"/>.
+		///// </summary>
+		///// <param name="s">Text to insert. Can be null.</param>
+		//public void InsertText(string s)
+		//{
+		//	using(new _NoReadonly(this))
+		//		SetString(SCI_INSERTTEXT, -1, s ?? "");
+		//}
 
 		/// <summary>
 		/// SCI_DELETERANGE.
@@ -652,10 +688,9 @@ namespace Au.Controls
 		/// <param name="to">End index. If -1, uses control text length.</param>
 		public void DeleteRange(bool utf16, int from, int to)
 		{
-			using(new _NoReadonly(this)) {
-				NormalizeRange(utf16, ref from, ref to);
+			NormalizeRange(utf16, ref from, ref to);
+			using(new _NoReadonly(this))
 				Call(SCI_DELETERANGE, from, to - from);
-			}
 		}
 
 		/// <summary>
@@ -675,8 +710,8 @@ namespace Au.Controls
 		/// </param>
 		public void ReplaceRange(bool utf16, int from, int to, string s, SciFinalCurrentPos finalCurrentPos = 0)
 		{
+			NormalizeRange(utf16, ref from, ref to);
 			using(new _NoReadonly(this)) {
-				NormalizeRange(utf16, ref from, ref to);
 				int fromEnd = C.Len8 - to;
 				Call(SCI_SETTARGETRANGE, from, to);
 				SetString(SCI_REPLACETARGET, 0, s ??= "", true);
@@ -1001,6 +1036,23 @@ namespace Au.Controls
 		}
 
 		public string SelectedText() => _RangeText(SelectionStart8, SelectionEnd8);
+
+		/// <summary>
+		/// SCI_FINDTEXT.
+		/// </summary>
+		/// <param name="utf16">pos is UTF-16. Return UTF-16.</param>
+		/// <param name="s"></param>
+		/// <param name="start"></param>
+		/// <param name="end">If -1, text length.</param>
+		public unsafe int FindText(bool utf16, string s, int start = 0, int end = -1)
+		{
+			NormalizeRange(utf16, ref start, ref end);
+			fixed(byte* b = _ToUtf8(s)) {
+				var k = new Sci_TextToFind { cpMin = start, cpMax = end, lpstrText = b, chrgText = default };
+				return _ReturnPosCanBeNegative(utf16, Call(SCI_FINDTEXT, SCFIND_MATCHCASE, &k));
+			}
+			//tested: with SCI_SEARCHINTARGET slightly slower
+		}
 
 		public void IndicatorClear(int indic) => IndicatorClear(false, indic, 0, -1);
 

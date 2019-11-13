@@ -11,7 +11,7 @@ using static Au.AStatic;
 
 namespace Aga.Controls.Tree.NodeControls
 {
-	public abstract class EditableControl :InteractiveControl
+	public abstract class EditableControl : InteractiveControl
 	{
 		private ATimer _timer;
 		private bool _editFlag;
@@ -20,8 +20,7 @@ namespace Aga.Controls.Tree.NodeControls
 
 		private bool _editOnClick = false;
 		[DefaultValue(false)]
-		public bool EditOnClick
-		{
+		public bool EditOnClick {
 			get { return _editOnClick; }
 			set { _editOnClick = value; }
 		}
@@ -134,13 +133,11 @@ namespace Aga.Controls.Tree.NodeControls
 
 		void _StartTimer()
 		{
-			if(_timer == null)
-				_timer = new ATimer(t =>
-				{
-					if(_editFlag) BeginEdit();
-					_editFlag = false;
-				});
-			_timer.Start(500, true);
+			_timer ??= new ATimer(t => {
+				if(_editFlag) BeginEdit();
+				_editFlag = false;
+			});
+			_timer.After(500);
 		}
 
 		public override void MouseDoubleClick(TreeNodeAdvMouseEventArgs args)
@@ -152,8 +149,7 @@ namespace Aga.Controls.Tree.NodeControls
 		protected override void Dispose(bool disposing)
 		{
 			base.Dispose(disposing);
-			if(disposing)
-				_timer?.Stop();
+			if(disposing) _timer?.Stop();
 		}
 
 		#region Events

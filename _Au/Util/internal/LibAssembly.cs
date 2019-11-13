@@ -36,12 +36,13 @@ namespace Au.Util
 		internal static bool LibIsAuNgened => s_auNgened ??= IsNgened(typeof(LibAssembly).Assembly);
 		static bool? s_auNgened;
 		//tested: Module.GetPEKind always gets ILOnly.
+		//TODO: remove or replace (no ngen in Core)
+		//TEST: new StackFrame().HasNativeImage()
 
 		/// <summary>
 		/// Returns true if assembly asm is compiled to native code using ngen.exe.
 		/// It means - no JIT-compiling delay when its functions are called first time in process.
 		/// </summary>
-		[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		public static bool IsNgened(Assembly asm)
 		{
 			var s = asm.CodeBase;
@@ -52,7 +53,6 @@ namespace Au.Util
 		}
 
 		//much slower first time when ngened. Also it is undocumented that GetModuleFileName returns 0 if non-ngened (LOAD_LIBRARY_AS_DATAFILE?).
-		//[MethodImpl(MethodImplOptions.NoOptimization | MethodImplOptions.NoInlining)]
 		//public static unsafe bool IsAssemblyNgened2(Assembly asm)
 		//{
 		//	var module =asm.GetLoadedModules()[0];

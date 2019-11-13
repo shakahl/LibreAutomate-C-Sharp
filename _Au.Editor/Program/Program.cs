@@ -24,6 +24,7 @@ static class Program
 {
 	static Program()//TODO
 	{
+		Au.Util.LibAssertListener.Setup();
 		APerf.First();
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
@@ -108,6 +109,11 @@ static class Program
 	public static event Action Timer1sOr025s;
 
 	/// <summary>
+	/// Timer with 0.25 s period, only when main window visible.
+	/// </summary>
+	public static event Action Timer025sWhenVisible;
+
+	/// <summary>
 	/// True if Timer1sOr025s period is 0.25 s (when main window visible), false if 1 s (when hidden).
 	/// </summary>
 	public static bool IsTimer025 => s_timerCounter > 0;
@@ -115,10 +121,11 @@ static class Program
 
 	static void _TimerProc(ATimer t)
 	{
+		Timer1sOr025s?.Invoke();
 		bool needFast = MainForm.Visible;
-		if(needFast != (s_timerCounter > 0)) t.Start(needFast ? 250 : 1000, false);
+		if(needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
 		if(needFast) {
-			Timer1sOr025s?.Invoke();
+			Timer025sWhenVisible?.Invoke();
 			s_timerCounter++;
 			if(MousePosChangedWhenProgramVisible != null) {
 				var p = AMouse.XY;

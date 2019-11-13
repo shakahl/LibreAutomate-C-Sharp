@@ -442,6 +442,36 @@ private:
 	int sysCaretWidth;
 	int sysCaretHeight;
 	bool styleIdleInQueue;
+
+	//Au:
+public:
+	void Sci_SetFoldLevels(int line, int lastLine, int len, int* a) {
+		if(pdoc->Sci_SetFoldLevels(line, lastLine, len, a))
+			RedrawSelMargin();
+	}
+
+	struct Sci_StylingInfo {
+		int endStyled, endStyledLine, endStyledLineStart, visibleFrom, visibleFromLine, visibleTo, visibleToLine;
+	};
+	//flags: 1 endStyled, 2 endStyledLine, endStyledLineStart, 4 visibleFrom, visibleFromLine, 8 visibleTo, visibleToLine
+	void Sci_GetStylingInfo(int flags, Sci_StylingInfo& r) {
+		if(0 != (flags & 3)) {
+			r.endStyled = pdoc->GetEndStyled();
+			if(0 != (flags & 2)) r.endStyledLineStart = pdoc->LineStart(r.endStyledLine = pdoc->LineFromPosition(r.endStyled));
+		}
+		if(0 != (flags & 4)) r.visibleFrom = (int)pdoc->LineStart(r.visibleFromLine = (int)topLine);
+		if(0 != (flags & 8)) {
+			auto lineTo = pcs->DocFromDisplay(topLine + LinesOnScreen()) + 1;
+			auto n = pdoc->LinesTotal();
+			if(lineTo < n) {
+				r.visibleToLine = (int)lineTo;
+				r.visibleTo = (int)pdoc->LineStart(lineTo);
+			} else {
+				r.visibleToLine = (int)n;
+				r.visibleTo = (int)pdoc->Length();
+			}
+		}
+	}
 };
 
 HINSTANCE ScintillaWin::hInstance{};
@@ -3564,6 +3594,14 @@ EXPORT int __stdcall Sci_Range(ScintillaWin* sci, int start8, int end8, const ch
 	}
 	if(length != nullptr) *length = pdoc->Length();
 	return (int)gap;
+}
+
+EXPORT void __stdcall Sci_SetFoldLevels(ScintillaWin* sci, int line, int lastLine, int len, int* a) {
+	sci->Sci_SetFoldLevels(line, lastLine, len, a);
+}
+
+EXPORT void __stdcall Sci_GetStylingInfo(ScintillaWin* sci, int flags, struct ScintillaWin::Sci_StylingInfo& r) {
+	sci->Sci_GetStylingInfo(flags, r);
 }
 
 }

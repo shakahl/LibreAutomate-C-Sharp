@@ -37,11 +37,11 @@ namespace Au.Types
 	/// if(s.RegexMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
 	/// 	Print(
 	/// 		m.GroupCountPlusOne, //3 (whole match and 2 groups)
-	/// 		m.Index, //3, same as m[0].Index
+	/// 		m.Start, //3, same as m[0].Index
 	/// 		m.Value, //"cd-45-ef", same as m[0].Value
-	/// 		m[1].Index, //3
+	/// 		m[1].Start, //3
 	/// 		m[1].Value, //"cd"
-	/// 		m[2].Index, //6
+	/// 		m[2].Start, //6
 	/// 		m[2].Value //"45"
 	/// 		);
 	/// ]]></code>
@@ -52,7 +52,7 @@ namespace Au.Types
 	/// 	Print(
 	/// 		m.GroupCountPlusOne, //4 (whole match and 3 groups)
 	/// 		m[2].Exists, //false
-	/// 		m[2].Index, //-1
+	/// 		m[2].Start, //-1
 	/// 		m[2].Length, //0
 	/// 		m[2].Value //null
 	/// 		);
@@ -66,7 +66,7 @@ namespace Au.Types
 			if(rc < 0) return;
 			Exists = true;
 			IsPartial = rc == 0;
-			IndexNoK = k.indexNoK;
+			StartNoK = k.indexNoK;
 			_regex = regex;
 			//_subject = subject;
 
@@ -89,12 +89,12 @@ namespace Au.Types
 		/// <summary>
 		/// Start offset of the match in the subject string. The same as that of group 0.
 		/// </summary>
-		public int Index => _groups[0].Index;
+		public int Start => _groups[0].Start;
 
 		/// <summary>
-		/// <see cref="Index"/> + <see cref="Length"/>. The same as that of group 0.
+		/// <see cref="Start"/> + <see cref="Length"/>. The same as that of group 0.
 		/// </summary>
-		public int EndIndex => _groups[0].EndIndex;
+		public int End => _groups[0].End;
 
 		/// <summary>
 		/// Length of the match in the subject string. The same as that of group 0.
@@ -118,9 +118,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// Start offset of whole match regardless of \K.
-		/// When the regular expression contains \K, this is different (less) than <see cref="Index"/>.
+		/// When the regular expression contains \K, this is less than <see cref="Start"/>.
 		/// </summary>
-		public int IndexNoK { get; private set; }
+		public int StartNoK { get; private set; }
 
 		/// <summary>
 		/// The name of a found mark, or null.
@@ -225,7 +225,7 @@ namespace Au.Types
 			notUnique = last > first;
 			for(; first <= last; first += step) {
 				int r = *first;
-				if(_groups[r].Index >= 0) return r; //return the first that is set
+				if(_groups[r].Start >= 0) return r; //return the first that is set
 				if(R == 0) R = r; //if none is set, return the first
 			}
 			return R;
@@ -260,7 +260,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Groups are regular expression parts enclosed in (). Except non-capturing parts, like (?:...) and (?options). A RXGroup variable contains info about a group found in the subject string: index, length, substring.
 	/// 
-	/// Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression "A(\d+)?B" matches string "AB", but group (\d+) does not exist. Then <see cref="Exists"/> is false, <see cref="Index"/> -1, <see cref="Length"/> 0, <see cref="Value"/> null.
+	/// Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression "A(\d+)?B" matches string "AB", but group (\d+) does not exist. Then <see cref="Exists"/> is false, <see cref="Start"/> -1, <see cref="Length"/> 0, <see cref="Value"/> null.
 	/// 
 	/// When a group matches multiple times, the RXGroup variable contains only the last instance. For example, if subject is <c>"begin 12 345 67 end"</c> and regular expression is <c>(\d+ )+</c>, value of group 1 is <c>"67"</c>. If you need all instances (<c>"12"</c>, <c>"345"</c>, <c>"67"</c>), instead use .NET <see cref="Regex"/> and <see cref="Group.Captures"/>. Also you can get all instances with <see cref="ARegex.Callout"/>.
 	/// 
@@ -289,12 +289,12 @@ namespace Au.Types
 		/// <summary>
 		/// Start offset of the group match in the subject string.
 		/// </summary>
-		public int Index => _index;
+		public int Start => _index;
 
 		/// <summary>
-		/// <see cref="Index"/> + <see cref="Length"/>.
+		/// <see cref="Start"/> + <see cref="Length"/>.
 		/// </summary>
-		public int EndIndex => _index + _len;
+		public int End => _index + _len;
 
 		/// <summary>
 		/// Length of the group match in the subject string.

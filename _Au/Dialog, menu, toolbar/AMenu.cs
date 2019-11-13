@@ -881,7 +881,7 @@ namespace Au
 				//Close menu windows. Else they are just hidden and prevent GC until process ends.
 				foreach(var k in _windows) ((AWnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
 
-				if(!MultiShow && !_isModal) ATimer.After(10, () => Dispose()); //cannot dispose now, exception
+				if(!MultiShow && !_isModal) ATimer.After(10, _ => Dispose()); //cannot dispose now, exception
 
 				if(_isModal) _msgLoop.Stop();
 			}

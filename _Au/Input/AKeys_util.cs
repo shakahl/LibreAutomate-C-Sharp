@@ -204,7 +204,7 @@ namespace Au
 		//SHOULDDO: don't use ARegex.
 
 		static System.Collections.Hashtable s_htEnum; //with Dictionary much slower JIT
-		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.NoOptimization)]
+		[MethodImpl(MethodImplOptions.NoInlining)]
 		static KKey _FindKeyInEnums(string key)
 		{
 			if(s_htEnum == null) {

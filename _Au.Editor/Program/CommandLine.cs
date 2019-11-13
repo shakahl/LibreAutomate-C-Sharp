@@ -112,7 +112,7 @@ static class CommandLine
 		_msgWnd = AWnd.More.CreateMessageOnlyWindow("Au.Editor.Msg");
 
 		if(_importWorkspace != null || _importFiles != null) {
-			ATimer.After(10, () => {
+			ATimer.After(10, _ => {
 				try {
 					Program.MainForm.Show();
 					if(_importWorkspace != null) Program.Model.ImportWorkspace(_importWorkspace);

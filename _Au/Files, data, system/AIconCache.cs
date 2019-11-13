@@ -232,7 +232,7 @@ namespace Au
 				t_auList = new Queue<_AUData>();
 			}
 			t_auList.Enqueue(d);
-			t_auTimer.Start(50, false);
+			t_auTimer.Every(50);
 		}
 
 		static void _AutoUpdateTimer()

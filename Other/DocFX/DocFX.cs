@@ -249,7 +249,7 @@ unsafe class Program
 				int jPrev = 0;
 				for(int i = 0; i < a.Length; i++) {
 					bool first = i == 0, last = i == a.Length - 1;
-					int j = first ? s.Find("</h1>") : a[i].EndIndex;
+					int j = first ? s.Find("</h1>") : a[i].End;
 					b.Append(s, jPrev, j - jPrev);
 					jPrev = j;
 					b.Append("<span style='font-size:14px; font-weight: 400; margin-left:20px;'>(");

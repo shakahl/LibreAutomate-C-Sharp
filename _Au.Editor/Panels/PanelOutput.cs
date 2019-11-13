@@ -79,13 +79,13 @@ class PanelOutput : AuUserControlBase
 							}
 							if(!rx.MatchG(s, out var g, 1, (k.start + 6)..k.end)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
 							var f = Program.Model.FindByFilePath(g.Value); if(f == null) continue;
-							int i1 = g.EndIndex + 6, len1 = k.end - i1;
+							int i1 = g.End + 6, len1 = k.end - i1;
 							b.Append("   at ")
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
 							isMain = s.Eq(k.start, "   at Script..ctor(String[] args) in ");
-							if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Index - k.start - 10).Append("</\a>");
+							if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
 							b.AppendLine();
 
 							replaced = true;
@@ -196,7 +196,7 @@ class PanelOutput : AuUserControlBase
 
 	protected override void OnParentChanged(EventArgs e)
 	{
-		if(Parent is Form && ZTopmost) ATimer.After(1, () => _SetTopmost(true));
+		if(Parent is Form && ZTopmost) ATimer.After(1, _ => _SetTopmost(true));
 
 		base.OnParentChanged(e);
 	}

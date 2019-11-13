@@ -60,7 +60,7 @@ class PanelInfo : AuUserControlBase
 		_mouseInfo.Call(Sci.SCI_SETVSCROLLBAR);
 
 		Program.MousePosChangedWhenProgramVisible += _MouseInfo;
-		ATimer.After(50, () => { ZSetAboutInfo(); _html.Show(); });
+		ATimer.After(50, _ => { ZSetAboutInfo(); _html.Show(); });
 
 		base.OnLoad(e);
 	}

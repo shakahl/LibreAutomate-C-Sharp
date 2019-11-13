@@ -145,17 +145,16 @@ This option is ignored when the task runs as .exe program started not from edito
 		g.ZAddHeaderRow("Compile");
 		_AddCombo("optimize", "false|true", _meta.optimize,
 @"<b>optimize</b> - whether to make the compiled code as fast as possible.
- • <i>false</i> (default) - don't optimize. Define DEBUG symbol. This is known as ""Debug configuration"".
- • <i>true</i> - optimize. Don't define DEBUG symbol. This is known as ""Release configuration"".
+ • <i>false</i> (default) - don't optimize. Define DEBUG and TRACE. This is known as ""Debug configuration"".
+ • <i>true</i> - optimize. This is known as ""Release configuration"".
 
-When true, low-level processing code is faster, but startup (JIT) is slower. Can be difficult to debug.
-This option is also applied to class files compiled together. Use true if they contain code that must be as fast as possible. This option is not applied to used dlls.
+When true, low-level processing code is faster, but can be difficult to debug.
+This option is also applied to class files compiled together. Use true if they contain code that must be as fast as possible. Not applied to used dlls.
 ");
 		_AddEdit("define", _meta.define,
 @"<b>define</b> - symbols that can be used with #if.
-List separated by comma, semicolon or space. Example: ONE,TWO,THREE
-
-Added implicitly: TRACE - always; DEBUG - if no optimize true.
+List separated by comma, semicolon or space. Example: TRACE,ETC
+If no optimize true, DEBUG and TRACE are added implicitly.
 These symbols also are visible in class files compiled together, but not in used dlls.
 See also <google C# #define>#define<>.
 ");
@@ -534,7 +533,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				foreach(var sVer in guidKey.GetSubKeyNames()) {
 					using var verKey = guidKey.OpenSubKey(sVer);
 					if(verKey.GetValue("") is string description) {
-						if(rx.MatchG(description, out var g)) description = description.Remove(g.Index);
+						if(rx.MatchG(description, out var g)) description = description.Remove(g.Start);
 						if(sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
 						a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
 					} //else Print(sGuid); //some Microsoft typelibs. VS does not show these too.
@@ -864,7 +863,7 @@ Examples of loading resources at run time:
 		void _Add(Control c, string s) => _infoDict.Add(c.Name, s);
 
 		_infoRow = -1;
-		_infoTimer = new ATimer(() => _SetInfoText(_infoText));
+		_infoTimer = new ATimer(_ => _SetInfoText(_infoText));
 		_grid.ZShowEditInfo += (cc, rowInfo) => { _SetInfoText(rowInfo); _gridEditMode = rowInfo != null; };
 
 		void _SetInfoText(string infoText)
@@ -906,7 +905,7 @@ Examples of loading resources at run time:
 		{
 			//Print(name);
 			if(Empty(name) || !_infoDict.TryGetValue(name, out _infoText)) return;
-			_infoTimer.Start(700, true);
+			_infoTimer.After(700);
 		}
 	}
 	AWnd _infoWnd;

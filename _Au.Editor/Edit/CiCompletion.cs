@@ -32,6 +32,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
+//TODO: list for keys in Key("keys")
+
 class CiCompletion
 {
 	CiPopupList _popupList;
@@ -83,24 +85,13 @@ class CiCompletion
 		if(!popupListHidden) _popupList.Hide();
 	}
 
-	public void SciUpdateUI(SciCode doc, bool modified) //position changed, clicked, etc
+	public void SciUpdateUI(SciCode doc) //modified, position changed, clicked
 	{
 		//int pos = doc.Z.CurrentPosChars;
 		//var node = CiTools.NodeAt(pos);
 		//Print(CiTools.IsInString(ref node, pos));
 
 		_tools.RegexWindowHideIfNotInString(doc); //TODO
-
-		//rejected: show list when clicked after dot. More annoying than useful. Also this code shows list in .. range.
-		//if(_data == null && !modified) { //else we use SciCharAdded and SciCharDeletedBack
-		//	int position = doc.Z.CurrentPos8;
-		//	if(doc.Call(Sci.SCI_GETANCHOR) == position) { //if no selection
-		//		position = doc.Z.CountBytesToChars(position);
-		//		if(_IsAfterDot(doc.Text, position)) {
-		//			_ShowList(_ShowReason.clickedDot, position);
-		//		}
-		//	}
-		//}
 	}
 
 	/// <summary>
@@ -174,6 +165,7 @@ class CiCompletion
 
 	//long _debugTime;
 
+	//TODO: delay everything, eg 50 ms timer
 	async void _ShowList(_ShowReason showReason, int position = -1, char ch = default)
 	{
 		//long time = ATime.PerfMilliseconds;
@@ -234,7 +226,7 @@ class CiCompletion
 				//p1.Next('s');
 
 				if(showReason == _ShowReason.charAdded && ch == '[') { //attribute?
-					var node = cd.document.GetSyntaxRootAsync().Result.FindToken(position - 1).Parent;
+					var node = cd.document.GetSyntaxRootAsync(cancelToken).Result.FindToken(position - 1).Parent;
 					//Print(node.Kind());
 					if(node.IsKind(SyntaxKind.AttributeList)) ch = default; //else GetCompletionsAsync does not work
 				}
@@ -810,8 +802,8 @@ class CiCompletion
 		doc.Z.SetAndReplaceSel(true, i, i + len, s);
 		if(isComplex) {
 			if(positionBack > 0) doc.Z.CurrentPos16 = i + s.Length - positionBack;
-			if(bracesFrom > 0) CodeInfo.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen, bracesOperation);
-			if(ch == '(' || ch == '<') CodeInfo.CompletionSignatureCharAdded(doc, ch);
+			if(bracesFrom > 0) CodeInfo._correct.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen, bracesOperation);
+			if(ch == '(' || ch == '<') CodeInfo._signature.SciCharAdded(doc, ch);
 			return CiComplResult.Complex;
 		}
 

@@ -129,7 +129,7 @@ namespace Au.Tools
 						bool isConCode = m[3].Exists;
 						if(con == _con && !con.Is0 == isConCode) return (sCode, m[isConCode ? 3 : 1].Value);
 						wndVar = m[1].Value;
-						if(isConCode) sCode = sCode.Remove(m[3].Index - 6);
+						if(isConCode) sCode = sCode.Remove(m[3].Start - 6);
 						if(con.Is0) { _con = default; return (sCode, wndVar); }
 						if(isConCode) conVar = m[3].Value;
 					} else sCode = null;

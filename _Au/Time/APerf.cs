@@ -265,7 +265,6 @@ namespace Au
 			///// <summary>
 			///// Converts this variable to string that can be used to create a copy of this variable with <see cref="Inst(string)"/>.
 			///// </summary>
-			//[MethodImpl(MethodImplOptions.NoOptimization)]
 			//public string Serialize()
 			//{
 			//	var si = sizeof(Inst);
@@ -276,7 +275,6 @@ namespace Au
 			///// <summary>
 			///// Initializes this variable as a copy of another variable that has been converted to string with <see cref="Serialize"/>.
 			///// </summary>
-			//[MethodImpl(MethodImplOptions.NoOptimization)]
 			//public Inst(string serialized) : this()
 			//{
 			//	var si = sizeof(Inst);

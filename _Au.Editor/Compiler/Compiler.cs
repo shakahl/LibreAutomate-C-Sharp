@@ -297,6 +297,7 @@ namespace Au.Compiler
 			return true;
 		}
 
+		//FUTURE: delete if unused
 		public static void Warmup(Document document)
 		{
 			var compilation = document.Project.GetCompilationAsync().Result;

@@ -565,7 +565,7 @@ class CiAutocorrect
 			while(to < code.Length && _IsSpace(code[to])) to++;
 			int replaceFrom = from, replaceTo = to;
 
-			if(canExitBlock && (canExitBlock = code.RegexMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, from..))) replaceTo = g.EndIndex;
+			if(canExitBlock && (canExitBlock = code.RegexMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, from..))) replaceTo = g.End;
 
 			if(!canExitBlock) {
 				//if we are not inside node span, find the first ancestor node where we are inside
@@ -798,7 +798,7 @@ class CiAutocorrect
 			if(i > 0 && code[i - 1] == '\r') i--;
 		}
 		if(!code.RegexMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, i..)) return false;
-		z.DeleteRange(true, g.Index, g.EndIndex);
+		z.DeleteRange(true, g.Start, g.End);
 		return true;
 	}
 

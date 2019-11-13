@@ -277,7 +277,7 @@ namespace Au.Controls
 								m.LastMenuItem.DropDown.Opened += (unu, sed) => {
 									var osd = new AOsdRect { Rect = _manager.RectangleToScreen(gs.Bounds), Color = 0x00c000 };
 									osd.Show();
-									ATimer.After(1000, () => osd.Dispose());
+									ATimer.After(1000, _ => osd.Dispose());
 								};
 								_AddFixedSize(gs2, gs);
 							}
@@ -594,7 +594,7 @@ namespace Au.Controls
 						eh = (object sender, PaintEventArgs e) => {
 							_manager.Paint -= eh;
 							//SetDockState(_DockState.Floating);
-							ATimer.After(200, () => SetDockState(_DockState.Floating));
+							ATimer.After(200, _ => SetDockState(_DockState.Floating));
 						};
 						_manager.Paint += eh;
 					}

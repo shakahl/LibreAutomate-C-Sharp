@@ -4820,11 +4820,11 @@
             if(s.RegexMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
             	Print(
             		m.GroupCountPlusOne, //3 (whole match and 2 groups)
-            		m.Index, //3, same as m[0].Index
+            		m.Start, //3, same as m[0].Index
             		m.Value, //"cd-45-ef", same as m[0].Value
-            		m[1].Index, //3
+            		m[1].Start, //3
             		m[1].Value, //"cd"
-            		m[2].Index, //6
+            		m[2].Start, //6
             		m[2].Value //"45"
             		);
             ]]></code>
@@ -4835,7 +4835,7 @@
             	Print(
             		m.GroupCountPlusOne, //4 (whole match and 3 groups)
             		m[2].Exists, //false
-            		m[2].Index, //-1
+            		m[2].Start, //-1
             		m[2].Length, //0
             		m[2].Value //null
             		);
@@ -4847,14 +4847,14 @@
             The number of groups in the regular expression, + 1 for the whole match.
             </summary>
         </member>
-        <member name="P:Au.Types.RXMatch.Index">
+        <member name="P:Au.Types.RXMatch.Start">
             <summary>
             Start offset of the match in the subject string. The same as that of group 0.
             </summary>
         </member>
-        <member name="P:Au.Types.RXMatch.EndIndex">
+        <member name="P:Au.Types.RXMatch.End">
             <summary>
-            <see cref="P:Au.Types.RXMatch.Index"/> + <see cref="P:Au.Types.RXMatch.Length"/>. The same as that of group 0.
+            <see cref="P:Au.Types.RXMatch.Start"/> + <see cref="P:Au.Types.RXMatch.Length"/>. The same as that of group 0.
             </summary>
         </member>
         <member name="P:Au.Types.RXMatch.Length">
@@ -4877,10 +4877,10 @@
             Returns <see cref="P:Au.Types.RXMatch.Value"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.RXMatch.IndexNoK">
+        <member name="P:Au.Types.RXMatch.StartNoK">
             <summary>
             Start offset of whole match regardless of \K.
-            When the regular expression contains \K, this is different (less) than <see cref="P:Au.Types.RXMatch.Index"/>.
+            When the regular expression contains \K, this is less than <see cref="P:Au.Types.RXMatch.Start"/>.
             </summary>
         </member>
         <member name="P:Au.Types.RXMatch.Mark">
@@ -4976,21 +4976,21 @@
             <remarks>
             Groups are regular expression parts enclosed in (). Except non-capturing parts, like (?:...) and (?options). A RXGroup variable contains info about a group found in the subject string: index, length, substring.
             
-            Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression "A(\d+)?B" matches string "AB", but group (\d+) does not exist. Then <see cref="P:Au.Types.RXGroup.Exists"/> is false, <see cref="P:Au.Types.RXGroup.Index"/> -1, <see cref="P:Au.Types.RXGroup.Length"/> 0, <see cref="P:Au.Types.RXGroup.Value"/> null.
+            Some groups specified in regular expression may not exist in the subject string even if it matches the regular expression. For example, regular expression "A(\d+)?B" matches string "AB", but group (\d+) does not exist. Then <see cref="P:Au.Types.RXGroup.Exists"/> is false, <see cref="P:Au.Types.RXGroup.Start"/> -1, <see cref="P:Au.Types.RXGroup.Length"/> 0, <see cref="P:Au.Types.RXGroup.Value"/> null.
             
             When a group matches multiple times, the RXGroup variable contains only the last instance. For example, if subject is <c>"begin 12 345 67 end"</c> and regular expression is <c>(\d+ )+</c>, value of group 1 is <c>"67"</c>. If you need all instances (<c>"12"</c>, <c>"345"</c>, <c>"67"</c>), instead use .NET <see cref="T:System.Text.RegularExpressions.Regex"/> and <see cref="P:System.Text.RegularExpressions.Group.Captures"/>. Also you can get all instances with <see cref="P:Au.ARegex.Callout"/>.
             
             Examples and more info: <see cref="T:Au.Types.RXMatch"/>, <see cref="T:Au.ARegex"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.RXGroup.Index">
+        <member name="P:Au.Types.RXGroup.Start">
             <summary>
             Start offset of the group match in the subject string.
             </summary>
         </member>
-        <member name="P:Au.Types.RXGroup.EndIndex">
+        <member name="P:Au.Types.RXGroup.End">
             <summary>
-            <see cref="P:Au.Types.RXGroup.Index"/> + <see cref="P:Au.Types.RXGroup.Length"/>.
+            <see cref="P:Au.Types.RXGroup.Start"/> + <see cref="P:Au.Types.RXGroup.Length"/>.
             </summary>
         </member>
         <member name="P:Au.Types.RXGroup.Length">
@@ -15952,7 +15952,7 @@
             <code><![CDATA[
             var s = "one two22 three333 four";
             var x = new ARegex(@"\b(\w+?)(\d+)\b");
-            if(x.MatchG(s, out var g)) Print(g.Value, g.Index);
+            if(x.MatchG(s, out var g)) Print(g.Value, g.Start);
             ]]></code>
             </example>
         </member>
@@ -16056,7 +16056,7 @@
             <code><![CDATA[
             var s = "one two three";
             var x = new ARegex(@"\b\w+\b");
-            foreach(var g in x.FindAllG(s)) Print(g.Index, g.Value);
+            foreach(var g in x.FindAllG(s)) Print(g.Start, g.Value);
             ]]></code>
             </example>
         </member>
@@ -16082,7 +16082,7 @@
             var s = "one two three";
             var x = new ARegex(@"\b\w+\b");
             if(!x.FindAllG(s, out var a)) { Print("not found"); return; }
-            foreach(var g in a) Print(g.Index, g.Value);
+            foreach(var g in a) Print(g.Start, g.Value);
             ]]></code>
             </example>
         </member>
@@ -16325,7 +16325,7 @@
             var s = "one, two,three , four";
             var x = new ARegex(@" *, *");
             var a = x.SplitG(s);
-            foreach(var v in a) Print(v.Index, v.Value);
+            foreach(var v in a) Print(v.Start, v.Value);
             ]]></code>
             </example>
         </member>
@@ -17926,14 +17926,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -18113,6 +18105,13 @@
         <member name="M:Au.Util.LibAssembly.LibIsLoadedFormsWpf">
             <summary>
             Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
+            </summary>
+        </member>
+        <member name="T:Au.Util.LibAssertListener">
+            <summary>
+            .NET Core does not show the classic Debug.Assert message box. This class shows it. Call <see cref="M:Au.Util.LibAssertListener.Setup"/> once.
+            The Write[Line] and Fail methods write line to QM2.
+            If debugger attached, breaks and does not show message box.
             </summary>
         </member>
         <member name="T:Au.Util.LibAttachThreadInput">
@@ -19192,36 +19191,54 @@
             Use in UI threads. Does not work if this thread does not retrieve/dispatch posted messages (<msdn>WM_TIMER</msdn>).
             </remarks>
             <example>
+            This example sets 3 timers.
             <code><![CDATA[
-            //this example sets 3 timers
-            ATimer.After(500, () => Print("after 500 ms"));
-            ATimer.Every(1000, () => Print("every 1000 ms"));
-            var t3 = new ATimer(() => Print("after 3000 ms")); t3.Start(3000, true); //the same as ATimer.After
+            ATimer.After(500, _ => Print("after 500 ms"));
+            ATimer.Every(1000, _ => Print("every 1000 ms"));
+            var t3 = new ATimer(_ => Print("after 3000 ms")); t3.After(3000); //the same as ATimer.After
             MessageBox.Show("");
             ]]></code>
             </example>
         </member>
+        <member name="M:Au.ATimer.#ctor(System.Action{Au.ATimer})">
+            
+        </member>
         <member name="P:Au.ATimer.Tag">
             <summary>
-            Some object or value attached to this ATimer variable.
+            Something to attach to this ATimer variable.
             </summary>
         </member>
-        <member name="M:Au.ATimer.#ctor(System.Action{Au.ATimer},System.Object)">
-            
-        </member>
-        <member name="M:Au.ATimer.#ctor(System.Action,System.Object)">
-            
-        </member>
-        <member name="M:Au.ATimer.Start(System.Int32,System.Boolean)">
+        <member name="P:Au.ATimer.IsRunning">
             <summary>
-            Starts timer. If already started, resets and changes its period.
+            true if the timer is started and not stopped.
+            Note: single-period timer is automatically stopped before calling the callback function.
             </summary>
-            <param name="periodMilliseconds">Time interval (period) of calling the callback function (constructor's parameter <i>timerAction</i>), milliseconds. The minimal time is 10-20, even if this parameter is less than that.</param>
-            <param name="singlePeriod">Call the callback function once (stop the timer before calling the callback function).</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
+        </member>
+        <member name="M:Au.ATimer.After(System.Int32,System.Object)">
+            <summary>
+            Starts one-time timer. If already started, resets and changes its period.
+            </summary>
+            <param name="milliseconds">Time interval after which will be called the callback function, milliseconds. The actual minimal interval is 10-20 ms.</param>
+            <param name="tag">Something to pass to the callback function as <see cref="P:Au.ATimer.Tag"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
             <exception cref="T:System.InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
             <remarks>
+            The timer will be stopped before calling the callback function. The callback function can start it again.
+            If already started, this function must be called in the same thread as when started.
+            </remarks>
+        </member>
+        <member name="M:Au.ATimer.Every(System.Int32,System.Object)">
+            <summary>
+            Starts periodic timer. If already started, resets and changes its period.
+            </summary>
+            <param name="milliseconds">Time interval (period) of calling the callback function, milliseconds. The actual minimal period is 10-20 ms.</param>
+            <param name="tag">Something to pass to the callback function as <see cref="P:Au.ATimer.Tag"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
+            <exception cref="T:System.InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
+            <exception cref="T:System.ComponentModel.Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+            <remarks>
+            The callback function can stop the timer or restart with different period.
             If already started, this function must be called in the same thread as when started.
             </remarks>
         </member>
@@ -19232,46 +19249,42 @@
             <exception cref="T:System.InvalidOperationException">Called not in the same thread as <b>Start</b>.</exception>
             <remarks>
             The callback function will not be called after this.
-            Later you can start the timer again (call <see cref="M:Au.ATimer.Start(System.Int32,System.Boolean)"/>).
+            Later you can start the timer again (call <see cref="M:Au.ATimer.After(System.Int32,System.Object)"/> or <see cref="M:Au.ATimer.Every(System.Int32,System.Object)"/>).
             Don't need to call this function for single-period timers. For periodic timers it is optional; the timer stops when the thread ends.
             This function must be called in the same thread as <b>Start</b>.
             </remarks>
         </member>
-        <member name="M:Au.ATimer.After(System.Int32,System.Action,System.Object)">
+        <member name="M:Au.ATimer.After(System.Int32,System.Action{Au.ATimer},System.Object)">
             <summary>
-            Sets new one-time timer.
+            Creates and starts new one-time timer.
             Returns new <see cref="T:Au.ATimer"/> object. Usually you don't need it.
             </summary>
-            <param name="timeMilliseconds">Time after which will be called the callback function, milliseconds. The minimal time is 10-20, even if this parameter is less than that.</param>
+            <param name="milliseconds">Time interval after which will be called the callback function, milliseconds. The actual minimal interval is 10-20 ms.</param>
             <param name="timerAction">Callback function.</param>
             <param name="tag">Something to pass to the callback function as <see cref="P:Au.ATimer.Tag"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
             <remarks>
-            The callback function will be called in this thread.
-            This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or ADialog.Show(). The callback function is not called while this thread does not do it.
-            </remarks>
-        </member>
-        <member name="M:Au.ATimer.After(System.Int32,System.Action{Au.ATimer},System.Object)">
-            
-        </member>
-        <member name="M:Au.ATimer.Every(System.Int32,System.Action,System.Object)">
-            <summary>
-            Sets new periodic timer.
-            Returns new <see cref="T:Au.ATimer"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
-            </summary>
-            <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if specified smaller.</param>
-            <param name="timerAction">Callback function.</param>
-            <param name="tag">Something to pass to the callback function as <see cref="P:Au.ATimer.Tag"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
-            <exception cref="T:System.ComponentModel.Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
-            <remarks>
+            The timer will be stopped before calling the callback function. The callback function can start it again.
             The callback function will be called in this thread.
             This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or ADialog.Show(). The callback function is not called while this thread does not do it.
             </remarks>
         </member>
         <member name="M:Au.ATimer.Every(System.Int32,System.Action{Au.ATimer},System.Object)">
-            
+            <summary>
+            Creates and starts new periodic timer.
+            Returns new <see cref="T:Au.ATimer"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
+            </summary>
+            <param name="milliseconds">Time interval (period) of calling the callback function, milliseconds. The actual minimal period is 10-20 ms.</param>
+            <param name="timerAction">Callback function.</param>
+            <param name="tag">Something to pass to the callback function as <see cref="P:Au.ATimer.Tag"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
+            <exception cref="T:System.ComponentModel.Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+            <remarks>
+            The callback function can stop the timer or restart with different period.
+            The callback function will be called in this thread.
+            This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or ADialog.Show(). The callback function is not called while this thread does not do it.
+            </remarks>
         </member>
         <member name="T:Au.AWaitFor">
             <summary>

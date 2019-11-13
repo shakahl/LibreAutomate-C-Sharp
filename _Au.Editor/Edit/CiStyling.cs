@@ -1,6 +1,6 @@
 //Code colors and folding.
 
-#define CLASSIFIER
+//#define PRINT
 
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
-using System.Linq;
+//using System.Linq;
 
 using Au;
 using Au.Types;
@@ -33,7 +33,10 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 class CiStyling
 {
-	enum EStyle
+	/// <summary>
+	/// Scintilla style indices of token types.
+	/// </summary>
+	enum _Style
 	{
 		None,
 		Comment,
@@ -47,193 +50,300 @@ class CiStyling
 		Type,
 		Function,
 		Variable,
+		Parameter,
+		Field,
 		Constant,
+		EnumMember,
 		Label,
 		Preprocessor,
 		Excluded,
-		XmlDoc, //tags, CDATA, ///, etc. For simple text we use Comment.
+		XmlDoc, //tags, CDATA, ///, etc
+		XmlDocText,
 
-		EndOfFunctionOrType = 30,
+		//EndOfFunctionOrType = 30,
 
 		//STYLE_HIDDEN=31,
 		//STYLE_DEFAULT=32,
 	}
 
-	public static void InitSciDoc(SciCode doc)
+	/// <summary>
+	/// Called when opening a document, when handle created but text still not loaded.
+	/// </summary>
+	public static void DocHandleCreated(SciCode doc)
 	{
-		var s = "acdefg\r\nhijklmn" + @"t" + $"t{10}t";
 		var z = doc.Z;
-#if true
-		z.StyleForeColor((int)EStyle.Comment, 0x60a000);
-		z.StyleForeColor((int)EStyle.String, 0xA07040);
-		z.StyleForeColor((int)EStyle.StringEscape, 0xc0c0c0);
-		//z.StyleForeColor((int)EStyle.StringEscape, 0xB776FB); //pink-purple like in VS
-		//z.StyleForeColor((int)EStyle.StringEscape, 0xc0e000); //light yellow-green. Too vivid.
-		z.StyleForeColor((int)EStyle.Number, 0x804000);
-		//z.StyleForeColor((int)EStyle.Punct, 0x0);
-		z.StyleForeColor((int)EStyle.Operator, 0x0000ff);
-		z.StyleForeColor((int)EStyle.Keyword, 0x0000ff);
-		z.StyleForeColor((int)EStyle.Namespace, 0x808000);
-		z.StyleForeColor((int)EStyle.Type, 0x0080c0);
-		z.StyleBold((int)EStyle.Function, true); //z.StyleForeColor((int)EStyle.Function, 0x0);
-		z.StyleForeColor((int)EStyle.Variable, 0x204020);
-		z.StyleForeColor((int)EStyle.Constant, 0x204020);
-		z.StyleForeColor((int)EStyle.Label, 0xff00ff);
-		z.StyleForeColor((int)EStyle.Preprocessor, 0xff8000);
-#else
-		z.StyleForeColor((int)EStyle.Comment, 0x008000);
-		z.StyleForeColor((int)EStyle.String, 0xA07040);
-		z.StyleForeColor((int)EStyle.StringEscape, 0xC0C0C0);
-		z.StyleForeColor((int)EStyle.Number, 0xA04000);
-		z.StyleForeColor((int)EStyle.Punct, 0xff0000);
-		z.StyleForeColor((int)EStyle.Operator, 0x0000ff);
-		z.StyleForeColor((int)EStyle.Keyword, 0x0000ff);
-		z.StyleForeColor((int)EStyle.Namespace, 0x808000);
-		z.StyleForeColor((int)EStyle.Type, 0x008080);
-		z.StyleForeColor((int)EStyle.Function, 0x8000ff);
-		z.StyleForeColor((int)EStyle.Variable, 0x404040);
-		z.StyleForeColor((int)EStyle.Constant, 0x404040);
-		z.StyleForeColor((int)EStyle.Preprocessor, 0xff8000);
-#endif
-		z.StyleForeColor((int)EStyle.Excluded, 0x808080);
-		z.StyleForeColor((int)EStyle.XmlDoc, 0x808080);
 
-		z.StyleHotspot((int)EStyle.EndOfFunctionOrType, true);
+		z.StyleForeColor((int)_Style.Comment, 0x408000); //green like in VS but towards yellow
+		z.StyleForeColor((int)_Style.String, 0xA07040); //brown, more green
+														//z.StyleForeColor((int)_Style.StringEscape, 0xc0c0c0); //good contrast with 0xA07040, but maybe not with white background
+														//z.StyleForeColor((int)_Style.StringEscape, 0xc0e000); //light yellow-green. Too vivid.
+		z.StyleForeColor((int)_Style.StringEscape, 0xB776FB); //pink-purple like in VS
+		z.StyleForeColor((int)_Style.Number, 0x804000); //brown, more red
+														//z.StyleForeColor((int)_Style.Punct, 0x0); //black
+		z.StyleForeColor((int)_Style.Operator, 0x0000ff); //blue like keyword
+		z.StyleForeColor((int)_Style.Keyword, 0x0000ff); //blue like in VS
+		z.StyleForeColor((int)_Style.Namespace, 0x808000); //dark yellow
+		z.StyleForeColor((int)_Style.Type, 0x0080c0); //like in VS but more blue
+		z.StyleBold((int)_Style.Function, true); //z.StyleForeColor((int)_Style.Function, 0x0);
+		z.StyleForeColor((int)_Style.Variable, 0x204020); //dark green gray
+		z.StyleForeColor((int)_Style.Parameter, 0x204020); //like variable
+		z.StyleForeColor((int)_Style.Field, 0x204020); //like variable
+		z.StyleForeColor((int)_Style.Constant, 0x204020); //like variable
+		z.StyleForeColor((int)_Style.EnumMember, 0x204020); //like variable
+		z.StyleForeColor((int)_Style.Label, 0xff00ff); //magenta
+		z.StyleForeColor((int)_Style.Preprocessor, 0xff8000); //orange
+		z.StyleForeColor((int)_Style.Excluded, 0x808080); //gray
+		z.StyleForeColor((int)_Style.XmlDoc, 0x808080); //gray
+		z.StyleForeColor((int)_Style.XmlDocText, 0x408000); //green like comment
 
-		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE); //SC_MARK_BACKGROUND
+		//CONSIDER: at the end of a function/class/etc definition add a link or dwell-popup to add new function or class etc below. Or better in context menu.
+		//z.StyleHotspot((int)_Style.EndOfFunctionOrType, true);
+
+		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE);
 		doc.Call(SCI_MARKERSETBACK, SciCode.c_markerUnderline, 0xe0e0e0);
 
 		z.StyleForeColor(STYLE_LINENUMBER, 0x808080);
 
-		doc.Call(SCI_SETIDLESTYLING, SC_IDLESTYLING_TOVISIBLE); //TODO: test more
-		doc.Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_CONTAINER);
+		_InitFolding(doc);
 	}
 
-	public static void Warmup(Document document, int codeLength)
+	/// <summary>
+	/// Called after setting editor control text when a document opened (not just switched active document).
+	/// </summary>
+	public static void DocTextAdded(SciCode doc) => CodeInfo._styling._DocTextAdded(doc);
+	void _DocTextAdded(SciCode doc)
 	{
-#if CLASSIFIER
-		Classifier.GetClassifiedSpansAsync(document, TextSpan.FromBounds(0, codeLength));
-#endif
-	}
+		_FoldScriptHeader(doc);
 
-	public void SciStyleNeeded(SciCode doc, int end8)
-	{
-		if(end8 == 0) return;
-		var z = doc.Z;
-		int start8 = z.LineStartFromPos(false, doc.Call(SCI_GETENDSTYLED));
-		//Print(start8, end8);
-
-		if(!CodeInfo.IsReadyForStyling) {
-			CodeInfo.ReadyForStyling += () => {
-				if(doc.IsHandleCreated) doc.Call(SCI_COLOURISE);
-				//we'll receive 2 notifications. First 0,0, then visible lines. Not (SCI_COLOURISE,0,-1), because then Scintilla wants styling of offscreen lines too.
-			};
-			_StyleBlack();
-			return;
+		if(CodeInfo.IsReadyForStyling) {
+			doc.BeginInvoke(new Action(() => _DocChanged(doc, true)));
+		} else { //at program startup
+			CodeInfo.ReadyForStyling += () => { if(doc.IsHandleCreated) _DocChanged(doc, true); };
 		}
+	}
 
+	/// <summary>
+	/// Sets timer to updates styling and folding from 0 to the end of the visible area.
+	/// </summary>
+	public void Update() => _update = true;
+
+	SciCode _doc; //to detect when the active document changed
+	bool _update;
+	Range _visibleLines;
+	ATimer _modTimer;
+	int _modFromEnd; //like _endStyling (SCI_GETENDSTYLED), but from end
+	CancellationTokenSource _cancelTS;
+
+	void _DocChanged(SciCode doc, bool opened)
+	{
+		_doc = doc;
+		_update = false;
+		_visibleLines = default;
+		_modTimer?.Stop();
+		_modFromEnd = int.MaxValue;
+		if(opened) _StylingAndFoldingVisibleFrom0(doc, firstTime: true);
+	}
+
+	/// <summary>
+	/// Called every 250 ms while editor is visible.
+	/// </summary>
+	public void Timer250msWhenVisibleAndWarm(SciCode doc)
+	{
+		//We use SCLEX_NULL. If SCLEX_CONTANER, Scintilla sends too many notifications, particularly if folding used too.
+		//To detect when need styling and folding we use 'opened' and 'modified' events and 250 ms timer.
+		//When modified, we do styling for the modified line(s). It is faster but unreliable, eg does not update new/deleted identifiers.
+		//The timer does styling and folding for all visible lines. It is slower but updates everything after modified, scrolled, resized, folded, etc.
+		//When opened, we do styling for all visible lines; folding for all lines, because may need to restore saved contracted fold points.
+
+		if(_cancelTS != null || (_modTimer?.IsRunning ?? false)) return;
+		if(doc != _doc || _update) {
+			if(doc != _doc) _DocChanged(doc, false); else _update = false;
+			_StylingAndFoldingVisibleFrom0(doc);
+		} else {
+			Sci_GetStylingInfo(doc.SciPtr, 8 | 4, out var si); //fast
+			if(si.visibleFromLine < _visibleLines.Start.Value || si.visibleToLine > _visibleLines.End.Value) {
+				_StylingAndFolding(doc); //all visible
+			}
+		}
+	}
+
+	/// <summary>
+	/// Called when editor text modified.
+	/// </summary>
+	public void SciModified(SciCode doc, in SCNotification n)
+	{
+		//Delay to avoid multiple styling/folding/canceling on multistep actions (replace text range, find/replace all, autocorrection) and fast automated text input.
+		_cancelTS?.Cancel(); _cancelTS = null;
+		_modFromEnd = Math.Min(_modFromEnd, doc.Len8 - n.FinalPosition);
+		_modTimer ??= new ATimer(_Modified);
+		if(!_modTimer.IsRunning) _modTimer.After(25, doc);
+	}
+
+	void _Modified(ATimer t)
+	{
+		//var p1=APerf.Create();
+		var doc = t.Tag as SciCode;
+		if(doc != Panels.Editor.ZActiveDoc) return;
+		if(_cancelTS != null) return;
+		_StylingAndFolding(doc, false, doc.Z.LineEndFromPos(false, doc.Len8 - _modFromEnd, withRN: true));
+		//p1.NW('a'); //we return without waiting for the async task to complete
+	}
+
+	void _StylingAndFoldingVisibleFrom0(SciCode doc, bool firstTime = false)
+	{
+		_cancelTS?.Cancel(); _cancelTS = null;
+		if(!firstTime) doc.Call(SCI_STARTSTYLING); //set the Scintilla's SCI_GETENDSTYLED field = 0
+		_StylingAndFolding(doc, true, -1, firstTime);
+	}
+
+	async void _StylingAndFolding(SciCode doc, bool fromStart = false, int end8 = -1, bool firstTime = false)
+	{
+#if PRINT
 		var p1 = APerf.Create();
-		var cd = new CodeInfo.Context(doc);
-		if(!cd.GetDocument()) {
-			_StyleBlack();
-			return;
+#endif
+		Sci_GetStylingInfo(doc.SciPtr, 2 | 4 | 8, out var si);
+
+		int start8;
+		bool minimal = end8 >= 0 && !fromStart;
+		if(minimal) {
+			start8 = si.endStyledLineStart;
+			end8 = Math.Min(end8, si.visibleTo);
+		} else {
+			start8 = fromStart ? 0 : Math.Min(si.visibleFrom, si.endStyledLineStart);
+			end8 = si.visibleTo;
 		}
+		if(end8 == si.visibleTo) _modFromEnd = doc.Len8 - end8;
+		if(end8 <= start8) return;
+
+		var cd = new CodeInfo.Context(0);
+		if(!cd.GetDocument()) return;
+#if PRINT
 		p1.Next('d');
-
-		var semo = cd.document.GetSemanticModelAsync().Result;
-		p1.Next();
-
-		//never mind: if in arglist, we should start at the start of the invocation expression, which may be in some previous line.
-
+		Print($"<><c green>style needed: {start8}-{end8}, lines {doc.Z.LineFromPos(false, start8) + 1}-{doc.Z.LineFromPos(false, end8)}<>");
+#endif
 		int start16 = doc.Pos16(start8), end16 = doc.Pos16(end8);
 
-#if CLASSIFIER
-		var a = Classifier.GetClassifiedSpans(semo, TextSpan.FromBounds(start16, end16), cd.document.Project.Solution.Workspace);
-		p1.Next('c');
-		//info: GetClassifiedSpansAsync calls GetSemanticModelAsync and GetClassifiedSpans, like here.
-		//GetSemanticModelAsync+GetClassifiedSpans are slow, about 30+60 % of total time. Cannot use async, because Scintilla then sends multiple notifications.
-		//Tried to implement own "GetClassifiedSpans", but slow too, often slower, because GetSymbolInfo is slow.
+		Debug.Assert(_cancelTS == null);
+		_cancelTS = new CancellationTokenSource();
+		var cancelTS = _cancelTS;
+		var cancelToken = cancelTS.Token;
 
-		//some spans are outside start16..end16, eg when in /**/ or in unclosed @" or #if
-		int startMin = start16, endMax = end16;
-		foreach(var v in a) {
-			var ss = v.TextSpan.Start;
-			if((object)v.ClassificationType == ClassificationTypeNames.ExcludedCode) ss -= 2; //move to the #if etc line
-			startMin = Math.Min(startMin, ss);
-			endMax = Math.Max(endMax, v.TextSpan.End);
+		var document = cd.document;
+		SemanticModel semo = null;
+		IEnumerable<ClassifiedSpan> a = null;
+		try {
+			await Task.Run(async () => {
+				semo = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
+#if PRINT
+				p1.Next('m');
+#endif
+				a = Classifier.GetClassifiedSpans(semo, TextSpan.FromBounds(start16, end16), document.Project.Solution.Workspace, cancelToken);
+				//info: GetClassifiedSpansAsync calls GetSemanticModelAsync and GetClassifiedSpans, like here.
+				//GetSemanticModelAsync+GetClassifiedSpans are slow, about 90% of total time.
+				//Tried to implement own "GetClassifiedSpans", but slow too, often slower, because GetSymbolInfo is slow.
+			});
 		}
-		if(startMin < start16) start8 = doc.Pos8(start16 = startMin);
-		if(endMax > end16) end8 = doc.Pos8(end16 = endMax);
-		//Print(start8, end8, start16, end16);
+		catch(OperationCanceledException) { }
+		finally {
+			cancelTS.Dispose();
+			if(cancelTS == _cancelTS) _cancelTS = null;
+		}
+		if(cancelToken.IsCancellationRequested) {
+#if PRINT
+			p1.Next();
+			Print($"<><c orange>canceled.  {p1.ToString()}<>");
+#endif
+			return;
+		}
+		if(doc != Panels.Editor.ZActiveDoc) {
+#if PRINT
+			Print("<><c red>switched doc<>");
+#endif
+			return;
+		}
+#if PRINT
+		p1.Next('c');
+#endif
+
+		//rejected. The 250 ms timer will fix it.
+		//some spans are outside start16..end16, eg when in /**/ or in unclosed @" or #if
+		//int startMin = start16, endMax = end16;
+		//foreach(var v in a) {
+		//	var ss = v.TextSpan.Start;
+		//	if((object)v.ClassificationType == ClassificationTypeNames.ExcludedCode) ss -= 2; //move to the #if etc line
+		//	startMin = Math.Min(startMin, ss);
+		//	endMax = Math.Max(endMax, v.TextSpan.End);
+		//}
+		//if(startMin < start16) start16 = doc.Pos16(start8 = doc.Z.LineStartFromPos(false, doc.Pos8(startMin)));
+		//if(endMax > end16) end16 = doc.Pos16(end8 = doc.Z.LineEndFromPos(false, doc.Pos8(endMax), withRN: true));
+		////Print(start8, end8, start16, end16);
 
 		var b = new byte[end8 - start8];
-		int underlinedLine = z.LineFromPos(false, start8);
-		List<_FoldPoint> f = null;
 
 		foreach(var v in a) {
 			//Print(v.ClassificationType, v.TextSpan);
-			EStyle style = v.ClassificationType switch
+			_Style style = v.ClassificationType switch
 			{
 				#region
-				ClassificationTypeNames.ClassName => EStyle.Type,
-				ClassificationTypeNames.Comment => EStyle.Comment,
-				ClassificationTypeNames.ConstantName => EStyle.Constant,
-				ClassificationTypeNames.ControlKeyword => EStyle.Keyword,
-				ClassificationTypeNames.DelegateName => EStyle.Type,
-				ClassificationTypeNames.EnumMemberName => EStyle.Constant,
-				ClassificationTypeNames.EnumName => EStyle.Type,
-				ClassificationTypeNames.EventName => EStyle.Function,
-				ClassificationTypeNames.ExcludedCode => EStyle.Excluded,
-				ClassificationTypeNames.ExtensionMethodName => EStyle.Function,
-				ClassificationTypeNames.FieldName => EStyle.Variable,
+				ClassificationTypeNames.ClassName => _Style.Type,
+				ClassificationTypeNames.Comment => _Style.Comment,
+				ClassificationTypeNames.ConstantName => _Style.Constant,
+				ClassificationTypeNames.ControlKeyword => _Style.Keyword,
+				ClassificationTypeNames.DelegateName => _Style.Type,
+				ClassificationTypeNames.EnumMemberName => _Style.EnumMember,
+				ClassificationTypeNames.EnumName => _Style.Type,
+				ClassificationTypeNames.EventName => _Style.Function,
+				ClassificationTypeNames.ExcludedCode => _Style.Excluded,
+				ClassificationTypeNames.ExtensionMethodName => _Style.Function,
+				ClassificationTypeNames.FieldName => _Style.Field,
 				ClassificationTypeNames.Identifier => _TryResolveMethod(),
-				ClassificationTypeNames.InterfaceName => EStyle.Type,
-				ClassificationTypeNames.Keyword => EStyle.Keyword,
-				ClassificationTypeNames.LabelName => EStyle.Label,
-				ClassificationTypeNames.LocalName => EStyle.Variable,
-				ClassificationTypeNames.MethodName => EStyle.Function,
-				ClassificationTypeNames.NamespaceName => EStyle.Namespace,
-				ClassificationTypeNames.NumericLiteral => EStyle.Number,
-				ClassificationTypeNames.Operator => EStyle.Operator,
-				ClassificationTypeNames.OperatorOverloaded => EStyle.Function,
-				ClassificationTypeNames.ParameterName => EStyle.Variable,
-				ClassificationTypeNames.PreprocessorKeyword => EStyle.Preprocessor,
-				//ClassificationTypeNames.PreprocessorText => EStyle.None,
-				ClassificationTypeNames.PropertyName => EStyle.Function,
-				ClassificationTypeNames.Punctuation => EStyle.Punct,
-				ClassificationTypeNames.StringEscapeCharacter => EStyle.StringEscape,
-				ClassificationTypeNames.StringLiteral => EStyle.String,
-				ClassificationTypeNames.StructName => EStyle.Type,
-				//ClassificationTypeNames.Text => EStyle.None,
-				ClassificationTypeNames.VerbatimStringLiteral => EStyle.String,
-				ClassificationTypeNames.TypeParameterName => EStyle.Type,
-				//ClassificationTypeNames.WhiteSpace => EStyle.None,
+				ClassificationTypeNames.InterfaceName => _Style.Type,
+				ClassificationTypeNames.Keyword => _Style.Keyword,
+				ClassificationTypeNames.LabelName => _Style.Label,
+				ClassificationTypeNames.LocalName => _Style.Variable,
+				ClassificationTypeNames.MethodName => _Style.Function,
+				ClassificationTypeNames.NamespaceName => _Style.Namespace,
+				ClassificationTypeNames.NumericLiteral => _Style.Number,
+				ClassificationTypeNames.Operator => _Style.Operator,
+				ClassificationTypeNames.OperatorOverloaded => _Style.Function,
+				ClassificationTypeNames.ParameterName => _Style.Parameter,
+				ClassificationTypeNames.PreprocessorKeyword => _Style.Preprocessor,
+				//ClassificationTypeNames.PreprocessorText => _Style.None,
+				ClassificationTypeNames.PropertyName => _Style.Function,
+				ClassificationTypeNames.Punctuation => _Style.Punct,
+				ClassificationTypeNames.StringEscapeCharacter => _Style.StringEscape,
+				ClassificationTypeNames.StringLiteral => _Style.String,
+				ClassificationTypeNames.StructName => _Style.Type,
+				//ClassificationTypeNames.Text => _Style.None,
+				ClassificationTypeNames.VerbatimStringLiteral => _Style.String,
+				ClassificationTypeNames.TypeParameterName => _Style.Type,
+				//ClassificationTypeNames.WhiteSpace => _Style.None,
 
-				ClassificationTypeNames.XmlDocCommentAttributeName => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentAttributeQuotes => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentAttributeValue => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentCDataSection => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentComment => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentDelimiter => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentEntityReference => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentName => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentProcessingInstruction => EStyle.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentText => EStyle.Comment,
+				ClassificationTypeNames.XmlDocCommentAttributeName => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentAttributeQuotes => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentAttributeValue => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentCDataSection => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentComment => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentDelimiter => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentEntityReference => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentName => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentProcessingInstruction => _Style.XmlDoc,
+				ClassificationTypeNames.XmlDocCommentText => _Style.XmlDocText,
 
 				//FUTURE: Regex. But how to apply it to ARegex?
-				//ClassificationTypeNames. => EStyle.,
-				_ => EStyle.None
+				//ClassificationTypeNames. => _Style.,
+				_ => _Style.None
 				#endregion
 			};
 
-			EStyle _TryResolveMethod()
+			_Style _TryResolveMethod()
 			{ //ClassificationTypeNames.Identifier. Possibly method name when there are errors in arguments.
 				var node = semo.Root.FindNode(v.TextSpan);
-				if(node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return EStyle.Function; //not too slow
-				return EStyle.None;
+				if(node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return _Style.Function; //not too slow
+				return _Style.None;
 			}
 
-			if(style == EStyle.None) {
+			if(style == _Style.None) {
 #if DEBUG
 				switch(v.ClassificationType) {
 				case ClassificationTypeNames.Identifier: break;
@@ -246,294 +356,217 @@ class CiStyling
 				continue;
 			}
 
-			int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
+			//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
+			int spanStart16 = Math.Max(v.TextSpan.Start, start16), spanEnd16 = Math.Min(v.TextSpan.End, end16);
 			int spanStart8 = doc.Pos8(spanStart16), spanEnd8 = doc.Pos8(spanEnd16);
-
-			var code = cd.code;
-			int foldLevel = 0; //relative
-			if(style == EStyle.Punct && v.TextSpan.Length == 1) {
-				char ch = code[spanStart16];
-				if(ch == '{' || ch == '}') {
-					var node = semo.Root.FindToken(spanStart16).Parent; //fast
-					switch(node) {
-					case BaseTypeDeclarationSyntax sy1: //class, struct, interface, enum
-														//if(ch == '}') { style = EStyle.EndOfClass; foldLevel--; } else foldLevel++;
-														//break;
-					case AccessorListSyntax sy2: //property, event
-					case BlockSyntax sy3 when node.Parent is BaseMethodDeclarationSyntax: //method
-						if(ch == '}') {
-							foldLevel--;
-							style = EStyle.EndOfFunctionOrType;
-
-							int line = z.LineFromPos(false, spanStart8);
-							_DeleteUnderlinedLineMarkers(line);
-							if(underlinedLine != line) doc.Call(SCI_MARKERADD, line, SciCode.c_markerUnderline);
-							else underlinedLine++;
-						} else foldLevel++;
-						break;
-					}
-				}
-			} else if(style == EStyle.Preprocessor) {
-				//Print(code[spanStart16..spanEnd16]);
-				if(code.Eq(spanStart16, "region")) foldLevel++;
-				else if(code.Eq(spanStart16, "endregion")) foldLevel--;
-			} else if(style == EStyle.Excluded) {
-				//Print($"'{code[spanStart16..spanEnd16]}'");
-				_AddFoldPoint(spanStart8 - 2, 1); //-2 moves to the #if etc line
-				_AddFoldPoint(spanEnd8 - 2, -1); //-2 moves out of the #endif etc line
-			} else if(style == EStyle.Comment) {
-				//Print($"'{code[spanStart16..spanEnd16]}'");
-				if(code.Eq(spanStart16, "//-{")) {
-					foldLevel++;
-				} else if(code.Eq(spanStart16, "//-}")) {
-					for(int j = spanStart16 + 3; j < code.Length && code[j] == '}'; j++) foldLevel--;
-				} else if(code.Eq(spanStart16, "/*") && code.Eq(spanEnd16 - 2, "*/") && code.AsSpan((spanStart16, spanEnd16)).Contains('\n')) {
-					_AddFoldPoint(spanStart8, 1);
-					_AddFoldPoint(spanEnd8, -1);
-				}
-			}
-
-			if(foldLevel != 0) _AddFoldPoint(spanStart8, foldLevel);
-
-			void _AddFoldPoint(int pos, int level) => (f ??= new List<_FoldPoint>()).Add(new _FoldPoint { pos = pos, level = level });
-
 			for(int i = spanStart8; i < spanEnd8; i++) b[i - start8] = (byte)style;
 		}
+
+#if PRINT
+		p1.Next();
+#endif
+		doc.Call(SCI_STARTSTYLING, start8);
+		unsafe { fixed(byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
+		_modFromEnd = int.MaxValue;
+		_visibleLines = minimal ? default : si.visibleFromLine..si.visibleToLine;
+#if PRINT
+		p1.Next('S');
+#endif
+		if(!minimal) _Fold(firstTime, cd, start8, end8);
+#if PRINT
+		p1.NW('F');
+#endif
+	}
+
+	void _Fold(bool firstTime, in CodeInfo.Context cd, int start8, int end8)
+	{
+		//var p1 = APerf.Create();
+		ADebug.PrintIf(!cd.document.TryGetSyntaxRoot(out _), "recreating syntax tree");
+		var root = cd.document.GetSyntaxRootAsync().Result;
+		//p1.Next('r');
+
+		List<int> a = null;
+		var doc = cd.sciDoc;
+		var z = doc.Z;
+		var code = cd.code;
+		if(firstTime) { start8 = 0; end8 = doc.Len8; } //may need to restore saved folding
+		int start16 = doc.Pos16(start8), end16 = doc.Pos16(end8), commentEnd = -1;
+
+		//if start16 is in eg multiple //comments, need to start at the start of all the trivia block. Else may damage folding when editing.
+		if(start16 > 0) {
+			var span = root.FindToken(start16).LeadingTrivia.Span;
+			if(start16 > span.Start && start16 < span.End) start16 = doc.Pos16(start8 = z.LineStartFromPos(false, doc.Pos8(span.Start)));
+			//p1.Next('j');
+		}
+
+		//speed: the slowest is DescendantTrivia, then DescendantNodes. GetSyntaxRootAsync fast because the syntax tree is already created by the styling code.
+		//rejected: async.
+		//	Fast when eg typing. The syntax tree is already created, and folds only the visible part.
+		//	Not too slow when folds all when opening large file. Eg 30 ms for 100K.
+
+		foreach(var v in root.DescendantTrivia()) {
+			var span = v.Span;
+			if(span.End <= start16) continue;
+			int pos = span.Start; if(pos >= end16) break;
+			var kind = v.Kind();
+			if(kind == SyntaxKind.WhitespaceTrivia || kind == SyntaxKind.EndOfLineTrivia) continue;
+			//CiUtil.PrintNode(v);
+			switch(kind) {
+			case SyntaxKind.SingleLineCommentTrivia:
+				if(code.Eq(pos, "//-{")) {
+					_AddFoldPoint(pos, 1);
+				} else if(code.Eq(pos, "//-}")) {
+					for(int j = pos + 3; j < code.Length && code[j] == '}'; j++) _AddFoldPoint(pos, -1);
+				} else if(pos > commentEnd) {
+					var k = v.Token.LeadingTrivia.Span;
+					commentEnd = k.End;
+					foreach(var g in s_rxComments.FindAllG(code, 0, k.Start..k.End)) {
+						//Print($"'{g}'");
+						_AddFoldPoint(g.Start, 1);
+						_AddFoldPoint(g.End, -1);
+					}
+					if(k.End > end16) end8 = doc.Pos8(end16 = k.End);
+				}
+				break;
+			case SyntaxKind.SingleLineDocumentationCommentTrivia:
+			case SyntaxKind.MultiLineDocumentationCommentTrivia:
+			case SyntaxKind.MultiLineCommentTrivia:
+				if(pos >= start16) _AddFoldPoint(pos, 1);
+				_AddFoldPoint(span.End - 1, -1);
+				break;
+			case SyntaxKind.RegionDirectiveTrivia:
+				_AddFoldPoint(pos, 1);
+				break;
+			case SyntaxKind.EndRegionDirectiveTrivia:
+				_AddFoldPoint(pos, -1);
+				break;
+			case SyntaxKind.DisabledTextTrivia:
+				if(pos > start16) _AddFoldPoint(pos - 1, 1);
+				_AddFoldPoint(span.End - 1, -1);
+				break;
+			}
+		}
+		//p1.Next('t');
+
+		void _AddFoldPoint(int pos16, int level)
+		{
+			//Print(z.LineFromPos(true, pos16)+1, level);
+			(a ??= new List<int>()).Add(doc.Pos8(pos16) | (level > 0 ? 0 : unchecked((int)0x80000000)));
+		}
+
+		int line = z.LineFromPos(false, start8), underlinedLine = line;
+
+		foreach(var v in root.DescendantNodes()) {
+			var span = v.Span;
+			if(span.End <= start16) continue;
+			int pos = span.Start; if(pos >= end16) break;
+			//CiUtil.PrintNode(v);
+			switch(v) {
+			case BaseMethodDeclarationSyntax _: //method, ctor, etc
+			case BasePropertyDeclarationSyntax _: //property, event
+			case BaseTypeDeclarationSyntax _: //class, struct, interface, enum
+				if(pos >= start16) _AddFoldPoint(pos, 1);
+				_AddFoldPoint(span.End, -1);
+
+				//add separator below
+				int li = z.LineFromPos(true, span.End);
+				_DeleteUnderlinedLineMarkers(li);
+				//if(underlinedLine != li) Print("add", li + 1);
+				if(underlinedLine != li) doc.Call(SCI_MARKERADD, li, SciCode.c_markerUnderline);
+				else underlinedLine++;
+				break;
+			}
+		}
+		//p1.Next('n');
 
 		_DeleteUnderlinedLineMarkers(z.LineFromPos(false, end8));
 
 		void _DeleteUnderlinedLineMarkers(int beforeLine)
 		{
 			if((uint)underlinedLine > beforeLine) return;
-			for(; ; ) {
-				underlinedLine = doc.Call(SCI_MARKERNEXT, underlinedLine, 1 << SciCode.c_markerUnderline);
+			const int marker = 1 << SciCode.c_markerUnderline;
+			for(; ; underlinedLine++) {
+				underlinedLine = doc.Call(SCI_MARKERNEXT, underlinedLine, marker);
 				if((uint)underlinedLine >= beforeLine) break;
-				doc.Call(SCI_MARKERDELETE, underlinedLine++, SciCode.c_markerUnderline);
+				//Print("delete", underlinedLine + 1);
+				do doc.Call(SCI_MARKERDELETE, underlinedLine, SciCode.c_markerUnderline);
+				while(0 != (marker & doc.Call(SCI_MARKERGET, underlinedLine)));
 			}
 		}
+		//p1.Next('u');
 
-#else
+		a?.Sort((p1, p2) => (p1 & 0x7fffffff) - (p2 & 0x7fffffff));
+		//p1.Next('s');
 
-		doc.Call(SCI_STARTSTYLING, start8);
-		var b = new byte[end8 - start8];
-
-		//foreach(var d in semo.GetDiagnostics()) { //very slow too
-		//	if(d.Severity != DiagnosticSeverity.Error) continue;
-		//	Print(d);
-		//}
-		//p1.Next('D');
-
-		//var root = semo.SyntaxTree.GetRoot();
-		var root = semo.SyntaxTree.GetCompilationUnitRoot();
-		string code = cd.code;
-
-		foreach(var t in root.DescendantTokens()) {
-			var span = t.Span;
-			if(span.Start < start16) continue;
-			if(span.End > end16) break;
-			if(span.IsEmpty) continue;
-
-			//string color = "green";
-
-			EStyle style = (EStyle)~0;
-			var tkind = t.Kind();
-			char ch = code[span.Start];
-			bool isIdent = SyntaxFacts.IsIdentifierStartCharacter(ch);
-			if(isIdent) {
-				if(tkind == SyntaxKind.IdentifierToken) {
-					var node = t.Parent;
-					//Print(node.Kind());
-					switch(node.Kind()) {
-					case SyntaxKind.IdentifierName:
-						var p2 = APerf.Create();
-						var sym = semo.GetSymbolInfo(node).Symbol; //very slow
-						p2.Next();
-						if(sym == null && node.Parent is InvocationExpressionSyntax ies) {
-							sym = semo.GetMemberGroup(node).FirstOrDefault(); //fast
-							p2.Next('M');
-						}
-						Print(p2.ToString(), sym?.Kind, sym);
-						if(sym != null) {
-							//Print(sym, sym.Kind);
-							switch(sym.Kind) {
-							case SymbolKind.Namespace: style = EStyle.Namespace; break;
-							case SymbolKind.NamedType: case SymbolKind.TypeParameter: style = EStyle.Type; break;
-							case SymbolKind.Method: case SymbolKind.Property: case SymbolKind.Event: style = EStyle.Function; break;
-							case SymbolKind.Local: case SymbolKind.Parameter: case SymbolKind.Field: case SymbolKind.RangeVariable: style = EStyle.Variable; break;
-							}
-						} else if(ch >= 'a' && ch <= 'z' && span.Length >= 2) {
-							//SyntaxFacts.GetContextualKeywordKind(code[span.Start..span.End]) //no: need Substring, not full list, etc
-
-						}
-						break;
-					case SyntaxKind.ClassDeclaration:
-					case SyntaxKind.DelegateDeclaration:
-					case SyntaxKind.EnumDeclaration:
-					case SyntaxKind.InterfaceDeclaration:
-					case SyntaxKind.StructDeclaration:
-						style = EStyle.Type;
-						break;
-					case SyntaxKind.MethodDeclaration:
-					case SyntaxKind.PropertyDeclaration:
-					case SyntaxKind.ConstructorDeclaration:
-						style = EStyle.Function;
-						break;
-					case SyntaxKind.VariableDeclarator:
-					case SyntaxKind.Parameter:
-						style = EStyle.Variable;
-						break;
-					}
-				} else if(SyntaxFacts.IsReservedKeyword(tkind)) {
-					style = EStyle.Keyword; //not IsKeywordKind because for contextual keywords we get SyntaxKind.IdentifierToken
-				} else {
-					switch(tkind) {
-					//case :
-					//	break;
-					}
-				}
-
-				//if(style == (EStyle)~0) {
-				//	style = EStyle.None;
-				//	color = "#c08000";
-				//}
-				//Print($"<><c {color}>{t.Kind()}<>, {t.ValueText}");
-			} else {
-				//Print(SyntaxFacts.IsPunctuation(tkind)); //includes operators
-
-				switch(tkind) {
-				case SyntaxKind.StringLiteralToken:
-				case SyntaxKind.CharacterLiteralToken:
-					style = EStyle.String;
-					break;
-				case SyntaxKind.NumericLiteralToken:
-					style = EStyle.Number;
-					break;
-				case SyntaxKind.OpenParenToken:
-				case SyntaxKind.OpenBraceToken:
-				case SyntaxKind.OpenBracketToken:
-				case SyntaxKind.CloseParenToken:
-				case SyntaxKind.CloseBraceToken:
-				case SyntaxKind.CloseBracketToken:
-				case SyntaxKind.CommaToken:
-				case SyntaxKind.ColonToken:
-				case SyntaxKind.SemicolonToken:
-					style = EStyle.Punct;
-					break;
-				}
-
-				if(style == (EStyle)~0) {
-					style = EStyle.None;
-					//color = "#c08000";
-				}
-				//Print($"<><c {color}>{t.Kind()}<>, {t.ValueText}");
-			}
-
-			if(style == (EStyle)~0) {
-				style = EStyle.None;
-				//color = "#c08000";
-			}
-			//Print($"<><c {color}>{t.Kind()}<>, {SyntaxFacts.IsPunctuation(tkind)}, {t.ValueText}");
-
-			for(int i = span.Start; i < span.End; i++) b[i - start8] = (byte)style;
-		}
-
-#endif
-
-		p1.Next();
-		doc.Call(SCI_STARTSTYLING, start8);
-		unsafe { fixed(byte* bp = b) doc.Call(SCI_SETSTYLINGEX, b.Length, bp); }
-		p1.Next();
-
-		_Fold(doc, start8, end8, f);
-
-		//p1.NW('s');
-
-		void _StyleBlack()
-		{
-			doc.Call(SCI_STARTSTYLING, start8);
-			doc.Call(SCI_SETSTYLING, end8 - start8, (int)EStyle.None);
-		}
-	}
-
-	void _Fold(SciCode doc, int start8, int end8, List<_FoldPoint> a)
-	{
-		var z = doc.Z;
-		int line = z.LineFromPos(false, start8);
 		int lineTo = z.LineFromPos(false, end8); if(end8 > z.LineStart(false, lineTo)) lineTo++;
-		//Print(line, lineTo, z.LineFromPos(false, end8));
-		int levelCurrent = line == 0 ? SC_FOLDLEVELBASE : doc.Call(SCI_GETFOLDLEVEL, line - 1) >> 16, levelNext = levelCurrent; //like in LexCPP.cxx
-		for(int i = 0; line < lineTo; line++) {
-			int eol = z.LineEnd(false, line, withRN: true);
-			if(a != null) for(; i < a.Count && a[i].pos < eol; i++) levelNext += a[i].level;
-			levelNext = Math.Max(levelNext, SC_FOLDLEVELBASE);
-			int lev = levelCurrent | levelNext << 16;
-			if(levelNext > levelCurrent) lev |= SC_FOLDLEVELHEADERFLAG;
-			//Print(line+1, (uint)lev, (uint)doc.Call(SCI_GETFOLDLEVEL, line));
-			if(lev != doc.Call(SCI_GETFOLDLEVEL, line)) doc.Call(SCI_SETFOLDLEVEL, line, lev);
-			levelCurrent = levelNext;
+		//Print(line + 1, lineTo + 1);
+		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
+			fixed(int* ip = a?.ToArray()) Sci_SetFoldLevels(doc.SciPtr, line, lineTo, a?.Count ?? 0, ip);
 		}
-		doc.ZFoldingDone();
+		//p1.Next('f');
+		doc._RestoreEditorData();
+		//p1.NW('F');
+	}
+	static ARegex s_rxComments = new ARegex(@"(?m)^[ \t]*//(?!-[{}]|/[^/]).*(\R\s*//(?!-[{}]|/[^/]).*)+");
+
+	static void _InitFolding(SciCode doc)
+	{
+		const int foldMrgin = SciCode.c_marginFold;
+		doc.Call(SCI_SETMARGINTYPEN, foldMrgin, SC_MARGIN_SYMBOL);
+		doc.Call(SCI_SETMARGINMASKN, foldMrgin, SC_MASK_FOLDERS);
+		doc.Call(SCI_SETMARGINSENSITIVEN, foldMrgin, 1);
+
+		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
+		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
+		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
+		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER);
+		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED);
+		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
+		doc.Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
+		for(int i = 25; i < 32; i++) {
+			doc.Call(SCI_MARKERSETFORE, i, 0xffffff);
+			doc.Call(SCI_MARKERSETBACK, i, 0x808080);
+			doc.Call(SCI_MARKERSETBACKSELECTED, i, i == SC_MARKNUM_FOLDER ? 0xFF : 0x808080);
+		}
+		doc.Call(SCI_MARKERENABLEHIGHLIGHT, 1);
+
+		doc.Call(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW //show hidden lines when header line deleted
+									| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'
+		doc.Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
+		doc.Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
+		doc.Z.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
+
+		doc.Call(SCI_SETMARGINCURSORN, foldMrgin, SC_CURSORARROW);
+
+		int wid = doc.Call(SCI_TEXTHEIGHT) - 4;
+		doc.Z.MarginWidth(foldMrgin, Math.Max(wid, 12));
 	}
 
-	struct _FoldPoint { public int pos, level; }
+	static unsafe void _FoldScriptHeader(SciCode doc)
+	{
+		//fold boilerplate code
+		if(!doc.ZFindScriptHeader(out var k)) return;
+		var a = stackalloc int[2] { k.start, (k.end - 2) | unchecked((int)0x80000000) };
+		Sci_SetFoldLevels(doc.SciPtr, 0, k.endLine, 2, a);
+		doc.Call(SCI_FOLDCHILDREN, k.startLine);
+
+		//set caret below boilerplate
+		int i = k.end;
+		if((char)doc.Call(SCI_GETCHARAT, i + 1) == '\n') i += 2;
+		doc.Z.CurrentPos16 = i;
+	}
 }
 
 partial class SciCode
 {
-	void _FoldingInit()
-	{
-#if false
-		Z.SetStringString(SCI_SETPROPERTY, "fold\0" + "1");
-		Z.SetStringString(SCI_SETPROPERTY, "fold.comment\0" + "1");
-		Z.SetStringString(SCI_SETPROPERTY, "fold.preprocessor\0" + "1");
-		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.preprocessor.at.else\0" + "1");
-#if false
-			Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.syntax.based\0" + "0");
-#else
-		//Z.SetStringString(SCI_SETPROPERTY, "fold.at.else\0" + "1");
-#endif
-		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.start\0" + "//-{"); //default is //{
-		Z.SetStringString(SCI_SETPROPERTY, "fold.cpp.explicit.end\0" + "//-}");
-#endif
-
-		Call(SCI_SETMARGINTYPEN, c_marginFold, SC_MARGIN_SYMBOL);
-		Call(SCI_SETMARGINMASKN, c_marginFold, SC_MASK_FOLDERS);
-		Call(SCI_SETMARGINSENSITIVEN, c_marginFold, 1);
-
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPEN, SC_MARK_BOXMINUS);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDER, SC_MARK_BOXPLUS);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERSUB, SC_MARK_VLINE);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERTAIL, SC_MARK_LCORNER);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEREND, SC_MARK_BOXPLUSCONNECTED);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDEROPENMID, SC_MARK_BOXMINUSCONNECTED);
-		Call(SCI_MARKERDEFINE, SC_MARKNUM_FOLDERMIDTAIL, SC_MARK_TCORNER);
-		for(int i = 25; i < 32; i++) {
-			Call(SCI_MARKERSETFORE, i, 0xffffff);
-			Call(SCI_MARKERSETBACK, i, 0x808080);
-			Call(SCI_MARKERSETBACKSELECTED, i, i == SC_MARKNUM_FOLDER ? 0xFF : 0x808080);
-		}
-		Call(SCI_MARKERENABLEHIGHLIGHT, 1);
-
-		Call(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW //show hidden lines when header line deleted
-			| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'
-		Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
-		Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
-		Z.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
-
-		Call(SCI_SETMARGINCURSORN, c_marginFold, SC_CURSORARROW);
-
-		int wid = Call(SCI_TEXTHEIGHT) - 4;
-		Z.MarginWidth(c_marginFold, Math.Max(wid, 12));
-	}
-
-	bool _FoldingOnMarginClick(bool? fold, int startPos)
+	bool _FoldOnMarginClick(bool? fold, int startPos)
 	{
 		int line = Call(SCI_LINEFROMPOSITION, startPos);
 		if(0 == (Call(SCI_GETFOLDLEVEL, line) & SC_FOLDLEVELHEADERFLAG)) return false;
 		bool isExpanded = 0 != Call(SCI_GETFOLDEXPANDED, line);
 		if(fold.HasValue && fold.GetValueOrDefault() != isExpanded) return false;
 		if(isExpanded) {
-			_FoldingFoldLine(line);
+			_FoldLine(line);
 			//move caret out of contracted region
 			int pos = Z.CurrentPos8;
 			if(pos > startPos) {
@@ -546,7 +579,7 @@ partial class SciCode
 		return true;
 	}
 
-	void _FoldingFoldLine(int line)
+	void _FoldLine(int line)
 	{
 #if false
 		Call(SCI_FOLDLINE, line);
@@ -567,89 +600,125 @@ partial class SciCode
 #endif
 	}
 
-	public void ZFoldingDone()
+	internal void _RestoreEditorData()
 	{
 		if(_openState == 2) return;
 		bool newFile = _openState == 1;
 		_openState = 2;
 		if(newFile) {
-			//fold boilerplate code
-			var code = Text;
-			int i = code.Find("//-{\r\nusing Au;");
-			if(i >= 0) {
-				i = Z.LineFromPos(true, i);
-				if(0 != (SC_FOLDLEVELHEADERFLAG & Call(SCI_GETFOLDLEVEL, i))) Call(SCI_FOLDCHILDREN, i);
-			}
-			//set caret below boilerplate
-			var s1 = "//-}}}\r\n\r\n";
-			i = code.Find(s1);
-			if(i >= 0) Z.CurrentPos16 = i + s1.Length;
 		} else {
-			//restore saved folding and markers
+			//restore saved folding, markers, scroll position and caret position
 			var db = Program.Model.DB; if(db == null) return;
 			try {
-				using var p = db.Statement("SELECT lines FROM _editor WHERE id=?", ZFile.Id);
+				using var p = db.Statement("SELECT top,pos,lines FROM _editor WHERE id=?", _fn.Id);
 				if(p.Step()) {
-					var a = p.GetList<int>(0);
+					int top = p.GetInt(0), pos = p.GetInt(1);
+					var a = p.GetList<int>(2);
 					if(a != null) {
-						_savedMD5 = _Hash(a);
-						for(int i = a.Count - 1; i >= 0; i--) { //must be in reverse order, else does not work
+						_savedLinesMD5 = _Hash(a);
+						for(int i = a.Count - 1; i >= 0; i--) {
 							int v = a[i];
 							int line = v & 0x7FFFFFF, marker = v >> 27 & 31;
-							if(marker == 31) _FoldingFoldLine(line);
+							if(marker == 31) _FoldLine(line);
 							else Call(SCI_MARKERADDSET, line, 1 << marker);
 						}
 					}
+					if(top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
+					if(pos > 0 && pos <= Len8) Z.CurrentPos8 = _savedPos = pos;
 				}
 			}
 			catch(SLException ex) { ADebug.Print(ex); }
 		}
 	}
-	byte _openState; //0 old file, 1 new file, 2 folding done
+	byte _openState; //0 opened old file, 1 opened new file, 2 folding done
 
 	/// <summary>
 	/// Saves folding, markers etc in database.
 	/// </summary>
-	internal void ZSaveEditorData()
+	internal void _SaveEditorData()
 	{
+		//CONSIDER: save styling and fold levels of the visible part of current doc. Then at startup can restore everything fast, without waiting for warmup etc.
+		//_TestSaveFolding();
+		//return;
+
+		//never mind: should update folding if edited and did not fold until end. Too slow. Not important.
+
+		if(_openState < 2) return; //if did not have time to open editor data, better keep old data than delete. Also < 2 if not a code file.
 		var db = Program.Model.DB; if(db == null) return;
+		//var p1 = APerf.Create();
 		var a = new List<int>();
-		_GetLineDataToSave(c_markerBookmark, a);
-		_GetLineDataToSave(c_markerBreakpoint, a);
-		_GetLineDataToSave(31, a);
+		_GetLines(c_markerBookmark, a);
+		_GetLines(c_markerBreakpoint, a);
+		//p1.Next();
+		_GetLines(31, a);
+		//p1.Next();
 		var hash = _Hash(a);
-		if(hash != _savedMD5) {
-			//Print("changed");
+		//p1.Next();
+		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = Z.CurrentPos8;
+		if(top != _savedTop || pos != _savedPos || hash != _savedLinesMD5) {
+			//Print("changed", a.Count);
 			try {
-				if(a.Count == 0) {
-					db.Execute("DELETE FROM _editor WHERE id=?", ZFile.Id);
-				} else {
-					using var p = db.Statement("REPLACE INTO _editor (id,lines) VALUES (?,?)");
-					p.Bind(1, ZFile.Id).Bind(2, a).Step();
-				}
-				_savedMD5 = hash;
+				using var p = db.Statement("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,?,?,?)");
+				p.Bind(1, _fn.Id).Bind(2, top).Bind(3, pos).Bind(4, a).Step();
+				_savedTop = top;
+				_savedPos = pos;
+				_savedLinesMD5 = hash;
 			}
 			catch(SLException ex) { ADebug.Print(ex); }
 		}
+		//p1.NW('D');
 
 		/// <summary>
 		/// Gets indices of lines containing markers or contracted folding points.
 		/// </summary>
 		/// <param name="marker">If 31, uses SCI_CONTRACTEDFOLDNEXT. Else uses SCI_MARKERNEXT; must be 0...24 (markers 25-31 are used for folding).</param>
 		/// <param name="saved">Receives line indices | marker in high-order 5 bits.</param>
-		void _GetLineDataToSave(int marker, List<int> a)
+		void _GetLines(int marker, List<int> a/*, int skipLineFrom = 0, int skipLineTo = 0*/)
 		{
 			Debug.Assert((uint)marker < 32); //we have 5 bits for marker
 			for(int i = 0; ; i++) {
 				if(marker == 31) i = Call(SCI_CONTRACTEDFOLDNEXT, i);
 				else i = Call(SCI_MARKERNEXT, i, 1 << marker);
 				if((uint)i > 0x7FFFFFF) break; //-1 if no more; ensure we have 5 high-order bits for marker; max 134 M lines.
+											   //if(i < skipLineTo && i >= skipLineFrom) continue;
 				a.Add(i | (marker << 27));
 			}
 		}
 	}
 
-	Au.Util.AHash.MD5Result _savedMD5;
+	//unsafe void _TestSaveFolding()
+	//{
+	//	//int n = Z.LineCount;
+	//	//for(int i = 0; i < n; i++) Print(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
+
+	//	var a = new List<POINT>();
+	//	for(int i = 0; ; i++) {
+	//		i = Call(SCI_CONTRACTEDFOLDNEXT, i);
+	//		if(i < 0) break;
+	//		int j = Call(SCI_GETLASTCHILD, i, -1);
+	//		//Print(i, j);
+	//		a.Add((i, j));
+	//	}
+
+	//	Call(SCI_FOLDALL, SC_FOLDACTION_EXPAND);
+	//	Sci_SetFoldLevels(SciPtr, 0, Z.LineCount - 1, 0, null);
+	//	ATimer.After(1000, _ => _TestRestoreFolding(a));
+	//}
+
+	//unsafe void _TestRestoreFolding(List<POINT> lines)
+	//{
+	//	var a = new int[lines.Count * 2];
+	//	for(int i = 0; i < lines.Count; i++) {
+	//		var p = lines[i];
+	//		a[i * 2] = Z.LineStart(false, p.x);
+	//		a[i * 2 + 1] = Z.LineStart(false, p.y) | unchecked((int)0x80000000);
+	//	}
+	//	Array.Sort(a, (e1, e2) => (e1 & 0x7fffffff) - (e2 & 0x7fffffff));
+	//	fixed(int* ip = a) Sci_SetFoldLevels(SciPtr, 0, Z.LineCount - 1, a.Length, ip);
+	//}
+
+	int _savedTop, _savedPos;
+	Au.Util.AHash.MD5Result _savedLinesMD5;
 
 	static Au.Util.AHash.MD5Result _Hash(List<int> a)
 	{

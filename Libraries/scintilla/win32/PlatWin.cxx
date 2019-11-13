@@ -3316,6 +3316,7 @@ void Platform::DebugDisplay(const char *s) {
 //#define TRACE
 
 #ifdef TRACE
+//#if true
 void Platform::DebugPrintf(const char *format, ...) {
 	char buffer[2000];
 	va_list pArguments;

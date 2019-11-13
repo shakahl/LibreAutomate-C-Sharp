@@ -487,7 +487,7 @@ class CmdHandlers : IGStripManagerCallbacks
 					Print(s);
 				} else {
 					d.Focus();
-					int start = t.LineStartFromPos(false, t.CurrentPos8, out int line);
+					int start = t.LineStartFromPos(false, t.CurrentPos8);
 					int indent = t.LineIndentationFromPos(false, start);
 					if(indent == 0) {
 						s += "\r\n";

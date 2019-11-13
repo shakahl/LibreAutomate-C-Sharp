@@ -311,7 +311,7 @@ namespace Au.Controls
 							int delay = _toolTipTabButton == null ? _toolTip.InitialDelay : _toolTip.ReshowDelay;
 							_HideTooltip();
 							_toolTipTabButton = ht.gp;
-							ATimer.After(delay, () => {
+							ATimer.After(delay, _ => {
 								var gp = _toolTipTabButton; if(gp == null) return;
 								var p2 = gp.ParentControl.MouseClientXY();
 								_toolTip.Show(gp.ToolTipText, gp.ParentControl, p2.x, p2.y + 20, _toolTip.AutoPopDelay);

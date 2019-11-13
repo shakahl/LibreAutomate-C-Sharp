@@ -1182,11 +1182,13 @@
             <summary>
             Converts UTF-16 position to UTF-8 position. Fast.
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative or greater than <see cref="P:Au.Controls.AuScintilla.Len16"/>.</exception>
         </member>
         <member name="M:Au.Controls.AuScintilla.Pos16(System.Int32)">
             <summary>
             Converts UTF-8 position to UTF-16 position. Fast.
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative or greater than <see cref="P:Au.Controls.AuScintilla.Len8"/>.</exception>
         </member>
         <member name="P:Au.Controls.AuScintilla.ZDllPath">
             <summary>
@@ -1405,6 +1407,11 @@
             InfoWindow.OnLoad does nothing. This function is just for overriding.
             </summary>
         </member>
+        <member name="M:Au.Controls.Sci.Sci_GetStylingInfo(Au.Types.LPARAM,System.Int32,Au.Controls.Sci.Sci_StylingInfo@)">
+            <summary>
+            flags: 1 endStyled, 2 endStyledLine, endStyledLineStart, 4 visibleFrom, visibleFromLine, 8 visibleTo, visibleToLine
+            </summary>
+        </member>
         <member name="P:Au.Controls.Sci.SCNotification.Text">
             <summary>
             Converts textUTF8 to C# string.
@@ -1512,6 +1519,12 @@
             Functions to work with Scintilla control text, code, etc.
             A SciText object is created by AuScintilla which is the C property.
             </summary>
+            <remarks>
+            Most functions throw ArgumentOutOfRangeException when: 1. A position or line index argument is negative. 2. Scintilla returned a negative position or line index.
+            If a position or line index argument is greater than text length or the number of lines, some functions return the text length or the last line, and it is documented; for other functions the behaviour is undefined, eg ArgumentOutOfRangeException or Scintilla's return value or like of the documented methods.
+            
+            Some frequently used functions are in <see cref="T:Au.Controls.AuScintilla"/>, not here, eg to get/set all text or to get/convert UTF-8/16 text length/position.
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.StyleFont(System.Int32,System.Drawing.Font)">
             <remarks>Uses only font name and size. Not style etc.</remarks>
@@ -1605,7 +1618,6 @@
             <param name="utf8Length">
             Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
             If 0, returns "" and does not call the message.
-            Cannot be negative.
             </param>
             <remarks>
             This function can get binary string (with '\0' characters).
@@ -1629,17 +1641,30 @@
             <param name="utf16">Input parameters are UTF-16.</param>
             <param name="from"></param>
             <param name="to">If -1, uses <see cref="P:Au.Controls.AuScintilla.Len8"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">An argument is negative or <i>to</i> less than <i>from</i>, except when <i>to</i> is -1.</exception>
         </member>
         <member name="M:Au.Controls.SciText._ParamPos(System.Boolean,System.Int32)">
             <summary>
             => utf16 ? C.Pos8(pos) : pos;
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
         </member>
         <member name="M:Au.Controls.SciText._ReturnPos(System.Boolean,System.Int32)">
             <summary>
             => utf16 ? C.Pos16(pos) : pos;
             </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
+        </member>
+        <member name="M:Au.Controls.SciText._ReturnPosCanBeNegative(System.Boolean,System.Int32)">
+            <summary>
+            pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : pos;
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciText._ParamLine(System.Int32)">
+            <summary>
+            => line;
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
         </member>
         <member name="M:Au.Controls.SciText.ClearText(Au.Controls.SciSetTextFlags)">
             <summary>
@@ -1734,21 +1759,21 @@
             Gets line index from character position.
             </summary>
             <param name="utf16"></param>
-            <param name="pos">A position in document text. If negative, returns 0. If greater than text length, returns the last line.</param>
+            <param name="pos">A position in document text. Returns the last line if too big.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineStart(System.Boolean,System.Int32)">
             <summary>
             Gets line start position from line index.
             </summary>
             <param name="utf16">Return UTF-16.</param>
-            <param name="line">0-based line index.</param>
+            <param name="line">0-based line index. Returns text length if too big.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineEnd(System.Boolean,System.Int32,System.Boolean)">
             <summary>
             Gets line end position from line index.
             </summary>
             <param name="utf16">Return UTF-16.</param>
-            <param name="line">0-based line index.</param>
+            <param name="line">0-based line index. Returns text length if too big.</param>
             <param name="withRN">Include \r\n.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineStartFromPos(System.Boolean,System.Int32)">
@@ -1756,7 +1781,7 @@
             Gets line start position from any position.
             </summary>
             <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text.</param>
+            <param name="pos">A position in document text. Returns text length if too big.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineStartFromPos(System.Boolean,System.Int32,System.Int32@)">
             <summary>
@@ -1764,7 +1789,7 @@
             Returns start position.
             </summary>
             <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text.</param>
+            <param name="pos">A position in document text. Returns text length if too big.</param>
             <param name="line">Receives line index.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineEndFromPos(System.Boolean,System.Int32,System.Boolean,System.Boolean)">
@@ -1772,7 +1797,7 @@
             Gets line end position from any position.
             </summary>
             <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text.</param>
+            <param name="pos">A position in document text. Returns text length if too big.</param>
             <param name="withRN">Include \r\n.</param>
             <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
         </member>
@@ -1781,7 +1806,7 @@
             Gets line index, start and end positions from position.
             </summary>
             <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text.</param>
+            <param name="pos">A position in document text. Uses the last line if too big.</param>
             <param name="withRN">Include \r\n.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineText(System.Int32,System.Boolean)">
@@ -1791,7 +1816,7 @@
             <param name="line">0-based line index. If invalid, returns "".</param>
             <param name="withRN">Include \r\n.</param>
         </member>
-        <member name="M:Au.Controls.SciText.LineHeight(System.Int32)">
+        <member name="M:Au.Controls.SciText.LineHeight">
             <summary>
             Gets line height.
             Currently all lines are of the same height.
@@ -1869,7 +1894,7 @@
             Does not change current selection; for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/>.
             </summary>
             <param name="utf16"></param>
-            <param name="pos">Start index. If -1, uses current position.</param>
+            <param name="pos">Start index. Cannot be negative.</param>
             <param name="s">Text to insert. Can be null.</param>
         </member>
         <member name="M:Au.Controls.SciText.DeleteRange(System.Boolean,System.Int32,System.Int32)">
@@ -2024,6 +2049,15 @@
             <param name="x">Receives results. The positions are UTF-8.</param>
             <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
             <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.FindText(System.Boolean,System.String,System.Int32,System.Int32)">
+            <summary>
+            SCI_FINDTEXT.
+            </summary>
+            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
+            <param name="s"></param>
+            <param name="start"></param>
+            <param name="end">If -1, text length.</param>
         </member>
         <member name="T:Au.Controls.SciTags">
             <summary>

@@ -1372,5 +1372,9 @@ namespace Au.Types
 		internal const uint STATE_SYSTEM_PRESSED = 0x8;
 		internal const uint STATE_SYSTEM_UNAVAILABLE = 0x1;
 
+		[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
+		internal static extern int MessageBox(AWnd hWnd, string lpText, string lpCaption, uint uType);
+
 	}
+
 }

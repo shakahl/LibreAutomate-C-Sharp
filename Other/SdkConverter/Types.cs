@@ -981,14 +981,14 @@ namespace SdkConverter
 				}
 				if(R.RegexMatch(rx, out var m)) {
 					//find attributes (regex with attributes would be very slow)
-					int i = m.Index - 3;
+					int i = m.Start - 3;
 					while(0 == string.Compare(R, i, "]\r\n", 0, 3)) {
 						//Print("attr");
 						i = R.LastIndexOf('\n', i) - 2;
 					}
 					i += 3;
 
-					R = R.Remove(i, m.Index - i + m.Length);
+					R = R.Remove(i, m.Start - i + m.Length);
 					//OutList(what, name, R.RegexIs_($"\b{name}\b")); //all False
 				} else { //2 in SDK have TYPE/TYPEW instead of TYPEA/TYPEW
 						 //OutList(what, name);

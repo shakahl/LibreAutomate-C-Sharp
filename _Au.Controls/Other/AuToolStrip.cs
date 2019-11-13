@@ -84,7 +84,7 @@ namespace Au.Controls
 				//	See ToolTip.Show source code.
 				//	Could instaed use native tooltip control directly, but much more work.
 			});
-			_ttTimer.Start(delay, true);
+			_ttTimer.After(delay);
 			return true;
 		}
 

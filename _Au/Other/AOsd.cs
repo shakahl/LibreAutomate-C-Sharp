@@ -592,7 +592,7 @@ namespace Au
 				if(!AWaitFor.MessagesAndCondition(t, () => !IsHandleCreated)) Close();
 			} else if(t > 0) {
 				t = Math.Min(t, int.MaxValue / 1000) * 1000; //s -> ms
-				ATimer.After(t, () => Close());
+				ATimer.After(t, _ => Close());
 			}
 		}
 

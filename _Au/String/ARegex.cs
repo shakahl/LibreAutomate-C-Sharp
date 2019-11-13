@@ -355,7 +355,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// if(x.MatchG(s, out var g)) Print(g.Value, g.Index);
+		/// if(x.MatchG(s, out var g)) Print(g.Value, g.Start);
 		/// ]]></code>
 		/// </example>
 		public bool MatchG(string s, out RXGroup result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -587,7 +587,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two three";
 		/// var x = new ARegex(@"\b\w+\b");
-		/// foreach(var g in x.FindAllG(s)) Print(g.Index, g.Value);
+		/// foreach(var g in x.FindAllG(s)) Print(g.Start, g.Value);
 		/// ]]></code>
 		/// </example>
 		public IEnumerable<RXGroup> FindAllG(string s, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -617,7 +617,7 @@ namespace Au
 		/// var s = "one two three";
 		/// var x = new ARegex(@"\b\w+\b");
 		/// if(!x.FindAllG(s, out var a)) { Print("not found"); return; }
-		/// foreach(var g in a) Print(g.Index, g.Value);
+		/// foreach(var g in a) Print(g.Start, g.Value);
 		/// ]]></code>
 		/// </example>
 		public bool FindAllG(string s, out RXGroup[] result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -900,11 +900,11 @@ namespace Au
 						} else {
 							s++;
 							if(ch == '`') { //part before match
-								int i = m.Index;
+								int i = m.Start;
 								if(i > 0) b.Append(m.Subject, 0, i);
 							} else if(ch == '\'') { //part after match
 								var subject = m.Subject;
-								int i = m.EndIndex, len = subject.Length - i;
+								int i = m.End, len = subject.Length - i;
 								if(len > 0) b.Append(subject, i, len);
 							} else if(ch == '&') { //whole match
 								group = 0;
@@ -920,7 +920,7 @@ namespace Au
 						if(group >= 0) {
 							if(group >= m.GroupCountPlusOne) continue;
 							var g = m[group];
-							if(g.Length > 0) b.Append(g.LibSubject, g.Index, g.Length);
+							if(g.Length > 0) b.Append(g.LibSubject, g.Start, g.Length);
 						}
 
 						e = s;
@@ -1024,7 +1024,7 @@ namespace Au
 		/// var s = "one, two,three , four";
 		/// var x = new ARegex(@" *, *");
 		/// var a = x.SplitG(s);
-		/// foreach(var v in a) Print(v.Index, v.Value);
+		/// foreach(var v in a) Print(v.Start, v.Value);
 		/// ]]></code>
 		/// </example>
 		public RXGroup[] SplitG(string s, int maxCount = 0, Range? range = null, RXMatchFlags matchFlags = 0)

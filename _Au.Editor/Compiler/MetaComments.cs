@@ -85,8 +85,8 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Settings used when compiling</h3>
 	/// <code><![CDATA[
-	/// optimize false|true //if false (default), don't optimize code; also define DEBUG constant; this is known as "Debug configuration". If true, optimizes code; then low-level code is faster, but startup (JIT) is slower; can be difficult to debug; this is known as "Release configuration".
-	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. These are added implicitly: TRACE - always; DEBUG - if not used option 'optimize' true.
+	/// optimize false|true //if false (default), don't optimize code; this is known as "Debug configuration". If true, optimizes code; then low-level code is faster, but can be difficult to debug; this is known as "Release configuration".
+	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. If no 'optimize' true, DEBUG and TRACE are added implicitly.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// noWarnings 3009,162 //don't show these compiler warnings
 	/// preBuild file /arguments //run this script before compiling. More info below.
@@ -180,14 +180,8 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Meta option 'define'.
-		/// Default: <see cref="DefaultDefines"/> (default { "TRACE" }).
 		/// </summary>
 		public List<string> Defines { get; private set; }
-
-		/// <summary>
-		/// Gets or sets default meta option 'define' value. Initially { "TRACE" }.
-		/// </summary>
-		public static List<string> DefaultDefines { get; set; } = new List<string> { "TRACE" };
 
 		/// <summary>
 		/// Meta option 'warningLevel'.
@@ -380,7 +374,10 @@ namespace Au.Compiler
 				return false;
 			}
 
-			if(!Optimize && !Defines.Contains("DEBUG")) Defines.Add("DEBUG");
+			if(!Optimize) {
+				if(!Defines.Contains("DEBUG")) Defines.Add("DEBUG");
+				if(!Defines.Contains("TRACE")) Defines.Add("TRACE");
+			}
 			//if(Role == ERole.exeProgram && !Defines.Contains("EXE")) Defines.Add("EXE"); //rejected
 
 			return true;
@@ -405,7 +402,7 @@ namespace Au.Compiler
 				Optimize = DefaultOptimize;
 				WarningLevel = DefaultWarningLevel;
 				NoWarnings = DefaultNoWarnings != null ? new List<string>(DefaultNoWarnings) : new List<string>();
-				Defines = DefaultDefines != null ? new List<string>(DefaultDefines) : new List<string>();
+				Defines = new List<string>();
 				Role = DefaultRole(isScript);
 
 				CodeFiles = new List<MetaCodeFile>();

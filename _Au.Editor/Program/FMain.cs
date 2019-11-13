@@ -17,7 +17,7 @@ partial class FMain : Form
 	public static void ZRunApplication()
 	{
 		var f = new FMain();
-		ATimer.After(1, () => APerf.NW()); //TODO
+		ATimer.After(1, _ => APerf.NW()); //TODO
 		if(CommandLine.StartVisible || Program.Settings.GetBool("_alwaysVisible")) Application.Run(f);
 		else Application.Run();
 	}
@@ -85,7 +85,9 @@ partial class FMain : Form
 		//note: we don't use OnLoad. It's unreliable, sometimes not called, eg when made visible from outside.
 		if(visible && Program.Loaded == EProgramState.LoadedWorkspace) {
 
-			_StartProfileOptimization();
+			//APerf.Next();
+			_StartProfileOptimization(); //fast
+			APerf.Next('v');
 
 			Panels.PanelManager.ZGetPanel(Panels.Output).Visible = true; //else Print etc would not auto set visible until the user makes it visible, because handle not created if invisible
 
@@ -99,10 +101,11 @@ partial class FMain : Form
 			Program.Loaded = EProgramState.LoadedUI;
 			Load?.Invoke(this, EventArgs.Empty);
 
+			APerf.Next('o');
 			CodeInfo.UiLoaded();
 
 #if TEST
-			ATimer.After(1, () => {
+			ATimer.After(1, _ => {
 				var s = CommandLine.TestArg;
 				if(s != null) {
 					Print(ATime.PerfMicroseconds - Convert.ToInt64(s));
@@ -270,7 +273,6 @@ partial class FMain : Form
 		AFile.CreateDirectory(fProfile);
 		ProfileOptimization.SetProfileRoot(fProfile);
 		ProfileOptimization.StartProfile("Editor.speed"); //makes startup faster eg 680 -> 560 ms. Makes compiler startup faster 4000 -> 2500 (ngen 670).
-		APerf.Next();
 #endif
 	}
 

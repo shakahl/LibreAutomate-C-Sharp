@@ -413,6 +413,7 @@ public:
 	Sci::Position IndexLineStart(Sci::Line line, int lineCharacterIndex) const;
 	Sci::Line LineFromPositionIndex(Sci::Position pos, int lineCharacterIndex) const;
 
+	bool SCI_METHOD Sci_SetFoldLevels(int line, int lastLine, int len, int* a); //Au
 	int SCI_METHOD SetLevel(Sci_Position line, int level) override;
 	int SCI_METHOD GetLevel(Sci_Position line) const override;
 	void ClearLevels();

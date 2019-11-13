@@ -26,17 +26,17 @@ namespace Au
 	/// Use in UI threads. Does not work if this thread does not retrieve/dispatch posted messages (<msdn>WM_TIMER</msdn>).
 	/// </remarks>
 	/// <example>
+	/// This example sets 3 timers.
 	/// <code><![CDATA[
-	/// //this example sets 3 timers
-	/// ATimer.After(500, () => Print("after 500 ms"));
-	/// ATimer.Every(1000, () => Print("every 1000 ms"));
-	/// var t3 = new ATimer(() => Print("after 3000 ms")); t3.Start(3000, true); //the same as ATimer.After
+	/// ATimer.After(500, _ => Print("after 500 ms"));
+	/// ATimer.Every(1000, _ => Print("every 1000 ms"));
+	/// var t3 = new ATimer(_ => Print("after 3000 ms")); t3.After(3000); //the same as ATimer.After
 	/// MessageBox.Show("");
 	/// ]]></code>
 	/// </example>
 	public class ATimer
 	{
-		Delegate _action; //Action<ATimer> or Action
+		Action<ATimer> _action;
 		LPARAM _id;
 		int _threadId;
 		bool _singlePeriod;
@@ -46,50 +46,65 @@ namespace Au
 		//Calling KillTimer when thread ends is optional. Need just to re-enable garbage collection for this object.
 		[ThreadStatic] static Dictionary<LPARAM, ATimer> t_timers;
 
-		/// <summary>
-		/// Some object or value attached to this ATimer variable.
-		/// </summary>
-		public object Tag { get; set; }
-
 		///
-		public ATimer(Action<ATimer> timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
-
-		///
-		public ATimer(Action timerAction, object tag = null) : this((Delegate)timerAction, tag) { }
-
-		ATimer(Delegate timerAction, object tag)
+		public ATimer(Action<ATimer> timerAction)
 		{
 			_action = timerAction;
-			Tag = tag;
 		}
 
 		/// <summary>
-		/// Starts timer. If already started, resets and changes its period.
+		/// Something to attach to this ATimer variable.
 		/// </summary>
-		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function (constructor's parameter <i>timerAction</i>), milliseconds. The minimal time is 10-20, even if this parameter is less than that.</param>
-		/// <param name="singlePeriod">Call the callback function once (stop the timer before calling the callback function).</param>
-		/// <exception cref="ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
+		public object Tag { get; set; }
+
+		/// <summary>
+		/// true if the timer is started and not stopped.
+		/// Note: single-period timer is automatically stopped before calling the callback function.
+		/// </summary>
+		public bool IsRunning => _id != default;
+
+		/// <summary>
+		/// Starts one-time timer. If already started, resets and changes its period.
+		/// </summary>
+		/// <param name="milliseconds">Time interval after which will be called the callback function, milliseconds. The actual minimal interval is 10-20 ms.</param>
+		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 		/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
 		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
+		/// The timer will be stopped before calling the callback function. The callback function can start it again.
 		/// If already started, this function must be called in the same thread as when started.
 		/// </remarks>
-		public void Start(int periodMilliseconds, bool singlePeriod)
+		public void After(int milliseconds, object tag = null) => _Start(true, milliseconds, tag);
+
+		/// <summary>
+		/// Starts periodic timer. If already started, resets and changes its period.
+		/// </summary>
+		/// <param name="milliseconds">Time interval (period) of calling the callback function, milliseconds. The actual minimal period is 10-20 ms.</param>
+		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
+		/// <exception cref="InvalidOperationException">Called not in the same thread as previous <b>Start</b>.</exception>
+		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
+		/// <remarks>
+		/// The callback function can stop the timer or restart with different period.
+		/// If already started, this function must be called in the same thread as when started.
+		/// </remarks>
+		public void Every(int milliseconds, object tag = null) => _Start(false, milliseconds, tag);
+
+		void _Start(bool singlePeriod, int milliseconds, object tag)
 		{
-			if(periodMilliseconds < 0) throw new ArgumentOutOfRangeException();
+			if(milliseconds < 0) throw new ArgumentOutOfRangeException();
 			bool isNew = _id == 0;
-			if(!isNew) {
-				_CheckThread();
-			}
-			LPARAM r = Api.SetTimer(default, _id, periodMilliseconds, _timerProc);
+			if(!isNew) _CheckThread();
+			LPARAM r = Api.SetTimer(default, _id, milliseconds, _timerProc);
 			if(r == 0) throw new Win32Exception();
 			Debug.Assert(isNew || r == _id);
 			_id = r;
 			_singlePeriod = singlePeriod;
+			Tag = tag;
 			if(isNew) {
 				_threadId = Thread.CurrentThread.ManagedThreadId;
-				if(t_timers == null) t_timers = new Dictionary<LPARAM, ATimer>();
-				t_timers.Add(_id, this);
+				(t_timers ??= new Dictionary<LPARAM, ATimer>()).Add(_id, this);
 			}
 			//Print($"Start: {_id}  isNew={isNew}  singlePeriod={singlePeriod}  _threadId={_threadId}");
 		}
@@ -108,12 +123,7 @@ namespace Au
 			}
 			if(t._singlePeriod) t.Stop();
 
-			try {
-				switch(t._action) {
-				case Action<ATimer> f: f(t); break;
-				case Action f: f(); break;
-				}
-			}
+			try { t._action(t); }
 			catch(ThreadAbortException) { t.Stop(); }
 			catch(Exception ex) { PrintWarning(ex.ToString(), -1); }
 			//info: OS handles exceptions in timer procedure.
@@ -125,7 +135,7 @@ namespace Au
 		/// <exception cref="InvalidOperationException">Called not in the same thread as <b>Start</b>.</exception>
 		/// <remarks>
 		/// The callback function will not be called after this.
-		/// Later you can start the timer again (call <see cref="Start"/>).
+		/// Later you can start the timer again (call <see cref="After(int, object)"/> or <see cref="Every(int, object)"/>).
 		/// Don't need to call this function for single-period timers. For periodic timers it is optional; the timer stops when the thread ends.
 		/// This function must be called in the same thread as <b>Start</b>.
 		/// </remarks>
@@ -145,65 +155,51 @@ namespace Au
 		{
 			bool isSameThread = _threadId == Thread.CurrentThread.ManagedThreadId;
 			Debug.Assert(isSameThread);
-			if(!isSameThread) throw new InvalidOperationException(nameof(ATimer) + " used by multiple threads.");
+			if(!isSameThread) throw new InvalidOperationException(nameof(ATimer) + " used in multiple threads.");
 			//FUTURE: somehow allow other thread. It is often useful.
 		}
 
 		//~ATimer() { Print("dtor"); } //don't call Stop() here, we are in other thread
 
-		static ATimer _Set(int time, bool singlePeriod, Delegate timerAction, object tag = null)
+		static ATimer _StartNew(bool singlePeriod, int milliseconds, Action<ATimer> timerAction, object tag = null)
 		{
-			var t = new ATimer(timerAction, tag);
-			t.Start(time, singlePeriod);
+			var t = new ATimer(timerAction);
+			t._Start(singlePeriod, milliseconds, tag);
 			return t;
 		}
 
 		/// <summary>
-		/// Sets new one-time timer.
+		/// Creates and starts new one-time timer.
 		/// Returns new <see cref="ATimer"/> object. Usually you don't need it.
 		/// </summary>
-		/// <param name="timeMilliseconds">Time after which will be called the callback function, milliseconds. The minimal time is 10-20, even if this parameter is less than that.</param>
+		/// <param name="milliseconds">Time interval after which will be called the callback function, milliseconds. The actual minimal interval is 10-20 ms.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
+		/// The timer will be stopped before calling the callback function. The callback function can start it again.
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or ADialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
-		public static ATimer After(int timeMilliseconds, Action timerAction, object tag = null)
-		{
-			return _Set(timeMilliseconds, true, timerAction, tag);
-		}
-
-		///
-		public static ATimer After(int timeMilliseconds, Action<ATimer> timerAction, object tag = null)
-		{
-			return _Set(timeMilliseconds, true, timerAction, tag);
-		}
+		public static ATimer After(int milliseconds, Action<ATimer> timerAction, object tag = null)
+			=> _StartNew(true, milliseconds, timerAction, tag);
 
 		/// <summary>
-		/// Sets new periodic timer.
+		/// Creates and starts new periodic timer.
 		/// Returns new <see cref="ATimer"/> object that can be used to modify timer properties if you want to do it not in the callback function; usually don't need it.
 		/// </summary>
-		/// <param name="periodMilliseconds">Time interval (period) of calling the callback function, milliseconds. The minimal period is 10-20, even if specified smaller.</param>
+		/// <param name="milliseconds">Time interval (period) of calling the callback function, milliseconds. The actual minimal period is 10-20 ms.</param>
 		/// <param name="timerAction">Callback function.</param>
 		/// <param name="tag">Something to pass to the callback function as <see cref="Tag"/>.</param>
-		/// <exception cref="ArgumentOutOfRangeException">Negative periodMilliseconds.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
 		/// <exception cref="Win32Exception">API <msdn>SetTimer</msdn> returned 0. Unlikely.</exception>
 		/// <remarks>
+		/// The callback function can stop the timer or restart with different period.
 		/// The callback function will be called in this thread.
 		/// This thread must must get/dispatch posted messages, eg call Application.Run() or Form.ShowModal() or ADialog.Show(). The callback function is not called while this thread does not do it.
 		/// </remarks>
-		public static ATimer Every(int periodMilliseconds, Action timerAction, object tag = null)
-		{
-			return _Set(periodMilliseconds, false, timerAction, tag);
-		}
-
-		///
-		public static ATimer Every(int periodMilliseconds, Action<ATimer> timerAction, object tag = null)
-		{
-			return _Set(periodMilliseconds, false, timerAction, tag);
-		}
+		public static ATimer Every(int milliseconds, Action<ATimer> timerAction, object tag = null)
+			=> _StartNew(false, milliseconds, timerAction, tag);
 	}
 }

@@ -169,7 +169,7 @@ namespace Au
 			int i = 0, len = 0;
 			foreach(var g in _SplitKeysString(keys)) {
 				//Print($"<><c 0xC000>{g.Value}</c>"); //continue;
-				i = g.Index; len = g.Length;
+				i = g.Start; len = g.Length;
 				char c = keys[i]; _KEvent e;
 				switch(c) {
 				case '*':

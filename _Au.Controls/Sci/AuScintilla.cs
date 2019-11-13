@@ -42,7 +42,7 @@ namespace Au.Controls
 		LPARAM _sciPtr;
 		Sci_NotifyCallback _notifyCallback;
 
-		internal LPARAM LibSciPtr => _sciPtr;
+		public LPARAM SciPtr => _sciPtr;
 
 		[Browsable(false)]
 		public SciImages ZImages { get; private set; }
@@ -201,6 +201,7 @@ namespace Au.Controls
 			//if(code != NOTIF.SCN_PAINTED) AOutput.QM2.Write(code.ToString());
 			switch(code) {
 			case NOTIF.SCN_MODIFIED:
+				if((n.modificationType & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
 				_NotifyModified(n);
 				if(ZDisableModifiedNotifications) return;
 				break;
@@ -220,7 +221,6 @@ namespace Au.Controls
 		unsafe void _NotifyModified(in SCNotification n)
 		{
 			var code = n.modificationType;
-			if((code & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
 			//if(this.Name!= "Output_text") Print(code, n.position);
 			if(0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
 				_text = null;
@@ -329,11 +329,14 @@ namespace Au.Controls
 		/// <summary>
 		/// Converts UTF-16 position to UTF-8 position. Fast.
 		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">Negative or greater than <see cref="Len16"/>.</exception>
 		public int Pos8(int pos16)
 		{
 			Debug.Assert((uint)pos16 <= Len16);
+			if(pos16 < 0) throw new ArgumentOutOfRangeException();
 			if(_posState == default) _CreatePosMap();
 			if(_posState == _PosState.Ok) {
+				if(pos16 > _len16) throw new ArgumentOutOfRangeException();
 				//using binary search find max _aPos[r].i16 that is < pos16
 				int r = -1, from = 0, to = _aPos.Count;
 				while(to > from) {
@@ -353,11 +356,14 @@ namespace Au.Controls
 		/// <summary>
 		/// Converts UTF-8 position to UTF-16 position. Fast.
 		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">Negative or greater than <see cref="Len8"/>.</exception>
 		public unsafe int Pos16(int pos8)
 		{
 			Debug.Assert((uint)pos8 <= Len8);
+			if(pos8 < 0) throw new ArgumentOutOfRangeException();
 			if(_posState == default) _CreatePosMap();
 			if(_posState == _PosState.Ok) {
+				if(pos8 > _len8) throw new ArgumentOutOfRangeException();
 				//using binary search find max _aPos[r].i8 that is < pos8
 				int r = -1, from = 0, to = _aPos.Count;
 				while(to > from) {

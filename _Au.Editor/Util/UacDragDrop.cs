@@ -48,7 +48,7 @@ class UacDragDrop
 
 		AdminProcess()
 		{
-			_timer = new ATimer(() => _Timer());
+			_timer = new ATimer(_ => _Timer());
 
 			//use hook to detect when drag-drop started
 			_hook = new AHookAcc(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
@@ -78,7 +78,7 @@ class UacDragDrop
 			_wWindow = default;
 			_wTargetControl = default;
 			_data = null;
-			_timer.Start(30, false);
+			_timer.Every(30);
 		}
 
 		void _EndedDragMode()

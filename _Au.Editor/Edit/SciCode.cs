@@ -27,11 +27,13 @@ using DiffMatchPatch;
 
 partial class SciCode : AuScintilla
 {
-	public readonly FileNode ZFile;
-	SciText.FileLoaderSaver _fls;
+	readonly SciText.FileLoaderSaver _fls;
+	readonly FileNode _fn;
+
+	public FileNode ZFile => _fn;
 
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
-	const int c_marginFold = 0;
+	public const int c_marginFold = 0;
 	const int c_marginLineNumbers = 1;
 	const int c_marginMarkers = 2; //breakpoints etc
 
@@ -47,7 +49,7 @@ partial class SciCode : AuScintilla
 	internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
 	{
 		//_edit = edit;
-		ZFile = file;
+		_fn = file;
 		_fls = fls;
 
 		this.Dock = DockStyle.Fill;
@@ -64,19 +66,14 @@ partial class SciCode : AuScintilla
 		base.OnHandleCreated(e);
 
 		int dpi = Au.Util.ADpi.BaseDPI;
-
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/));
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 		Z.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
-		//Call(SCI_SETMARGINTYPEN, c_marginMarkers, SC_MARGIN_SYMBOL);
-		//Z.MarginWidth(c_marginMarkers, 0);
-
+		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
 		Z.StyleFont(STYLE_DEFAULT, "Consolas", 9); //like default in VS
-												   //Z.StyleFont(STYLE_DEFAULT, "Courier New", 8); //good too, except bold font
-												   //Z.StyleFont(STYLE_DEFAULT, "Liberation Mono", 9); //the best, but not shipped with Windows
 		Z.StyleClearAll();
 
-		if(ZFile.IsCodeFile) {
+		if(_fn.IsCodeFile) {
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
 			//	Scintilla and C++ lexer support it, but by default it is disabled.
 			//	If disabled, line numbers in errors/warnings/stacktraces may be incorrect.
@@ -89,14 +86,10 @@ partial class SciCode : AuScintilla
 
 			Call(SCI_SETMOUSEDWELLTIME, 500);
 
-#if false
-			Z.SetLexerCpp();
-#else
-			CiStyling.InitSciDoc(this);
-#endif
-			_FoldingInit();
+			CiStyling.DocHandleCreated(this);
 
 			//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
+		} else {
 		}
 
 		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
@@ -104,11 +97,13 @@ partial class SciCode : AuScintilla
 		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
 	}
 
-	internal void ZInit(byte[] text, bool newFile)
+	//Called by PanelEdit.ZOpen.
+	internal void _Init(byte[] text, bool newFile)
 	{
 		if(!IsHandleCreated) CreateHandle();
 		_fls.SetText(Z, text);
 		if(newFile) _openState = 1;
+		if(_fn.IsCodeFile) CiStyling.DocTextAdded(this);
 	}
 
 	//protected override void Dispose(bool disposing)
@@ -143,11 +138,8 @@ partial class SciCode : AuScintilla
 		case NOTIF.SCN_SAVEPOINTREACHED:
 			//never mind: we should cancel the 'save text later'
 			break;
-		case NOTIF.SCN_STYLENEEDED:
-			CodeInfo.SciStyleNeeded(this, n.position);
-			break;
 		case NOTIF.SCN_MODIFIED:
-			//Print("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, Z.CurrentPos, n.Text);
+			//Print("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, Z.CurrentPos8, n.Text);
 			//Print(n.modificationType);
 			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
 			//	Print($"'{n.Text}'");
@@ -180,15 +172,14 @@ partial class SciCode : AuScintilla
 		case NOTIF.SCN_UPDATEUI:
 			//Print((uint)n.updated, _modified);
 			if(0 != (n.updated & 1)) {
-				if(_modified) _modified = false; else n.updated &= ~1; //ignore duplicate notification after adding or removing ()[]{}. Also the first after opening.
+				if(_modified) _modified = false; else n.updated &= ~1; //ignore notifications when changed styling or markers
 			}
-			if(0 != (n.updated & 3)) { //text/styling (1), selection/click (2)
+			if(0 == (n.updated & 15)) break;
+			if(0 != (n.updated & 3)) { //text (1), selection/click (2)
 				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
 				Panels.Editor.ZUpdateUI_Cmd();
-				CodeInfo.SciUpdateUI(this, modified: 0 != (n.updated & 1));
-			} else if(0 != (n.updated & 12)) { //scrolled
-				CodeInfo.Cancel();
 			}
+			CodeInfo.SciUpdateUI(this, n.updated);
 			break;
 		case NOTIF.SCN_DWELLSTART:
 			CodeInfo.SciMouseDwellStarted(this, n.position);
@@ -197,12 +188,14 @@ partial class SciCode : AuScintilla
 		//	CodeInfo.SciMouseDwellEnded(this);
 		//	break;
 		case NOTIF.SCN_MARGINCLICK:
-			CodeInfo.Cancel();
-			if(n.margin == c_marginFold) {
-				_FoldingOnMarginClick(null, n.position);
-			}
+			if(_fn.IsCodeFile) {
+				CodeInfo.Cancel();
+				if(n.margin == c_marginFold) {
+					_FoldOnMarginClick(null, n.position);
+				}
 
-			//SHOULDDO: when clicked selbar to select a fold header line, should select all hidden lines. Like in VS.
+				//SHOULDDO: when clicked selbar to select a fold header line, should select all hidden lines. Like in VS.
+			}
 			break;
 		}
 
@@ -212,6 +205,13 @@ partial class SciCode : AuScintilla
 
 	protected override void WndProc(ref Message m)
 	{
+		//if(m.Msg== Api.WM_PAINT) {
+		//	var p1 = APerf.Create();
+		//	base.WndProc(ref m);
+		//	p1.NW('P');
+		//	return;
+		//}
+
 		//var w = (AWnd)m.HWnd;
 		//Print(m);
 		switch(m.Msg) {
@@ -233,9 +233,9 @@ partial class SciCode : AuScintilla
 			//prevent changing selection when right-clicked margin if selection start is in that line
 			POINT p = (AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 			if(Z.MarginFromPoint(p, false) >= 0) {
-				var k = Z.LineStartEndFromPos(false, Z.PosFromXY(false, p, false));
 				var cp = Z.SelectionStart8;
-				if(cp >= k.start && cp <= k.end) return;
+				var (_, start, end) = Z.LineStartEndFromPos(false, Z.PosFromXY(false, p, false));
+				if(cp >= start && cp <= end) return;
 			}
 			break;
 		case Api.WM_CONTEXTMENU:
@@ -262,7 +262,7 @@ partial class SciCode : AuScintilla
 		//	CodeInfo.SciMouseMoved(this, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 		//	break;
 		case Api.WM_KILLFOCUS:
-			CodeInfo.SciKillFocus();
+			CodeInfo.SciKillFocus(this);
 			break;
 		case Api.WM_LBUTTONUP:
 			if(ModifierKeys == Keys.Control) CiGoTo.GoToSymbolFromPos(onCtrlClick: true);
@@ -292,7 +292,7 @@ partial class SciCode : AuScintilla
 		return base.ProcessCmdKey(ref msg, keyData);
 	}
 
-	public bool ZIsUnsaved {
+	bool _IsUnsaved {
 		get => _isUnsaved || 0 != Call(SCI_GETMODIFY);
 		set {
 			if(_isUnsaved = value) Program.Model.Save.TextLater(1);
@@ -300,12 +300,13 @@ partial class SciCode : AuScintilla
 	}
 	bool _isUnsaved;
 
-	internal bool ZSaveText()
+	//Called by PanelEdit.ZSaveText.
+	internal bool _SaveText()
 	{
-		if(ZIsUnsaved) {
+		if(_IsUnsaved) {
 			//AOutput.QM2.Write("saving");
-			ZFile.UnCacheText();
-			if(!Program.Model.TryFileOperation(() => _fls.Save(Z, ZFile.FilePath, tempDirectory: ZFile.IsLink ? null : ZFile.Model.TempDirectory))) return false;
+			_fn.UnCacheText();
+			if(!Program.Model.TryFileOperation(() => _fls.Save(Z, _fn.FilePath, tempDirectory: _fn.IsLink ? null : _fn.Model.TempDirectory))) return false;
 			//info: with tempDirectory less noise for FileSystemWatcher
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
@@ -313,14 +314,15 @@ partial class SciCode : AuScintilla
 		return true;
 	}
 
-	public void ZFileModifiedExternally()
+	//Called by FileNode.UnCacheText.
+	internal void _FileModifiedExternally()
 	{
-		var text = ZFile.GetText(saved: true); if(text == this.Text) return;
+		var text = _fn.GetText(saved: true); if(text == this.Text) return;
 		ZReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-		if(this == Panels.Editor.ZActiveDoc) Print($"<>Info: file {ZFile.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
+		if(this == Panels.Editor.ZActiveDoc) Print($"<>Info: file {_fn.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
 	}
-	//public void ZFileModifiedExternally()
+	//internal void _FileModifiedExternally()
 	//{
 	//	var text = ZFile.GetText(saved: true); if(text == this.Text) return;
 	//	if(this == Panels.Editor.ActiveDoc && AWnd.Active.IsOfThisProcess) {
@@ -402,7 +404,7 @@ partial class SciCode : AuScintilla
 
 		if(_drag != _DD_DataType.Text) {
 			t = new StringBuilder();
-			if(ZFile.IsCodeFile) {
+			if(_fn.IsCodeFile) {
 				var text = this.Text;
 				endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
 				if(pos < endOfMeta) inMeta = true;
@@ -490,7 +492,7 @@ partial class SciCode : AuScintilla
 
 		void _AppendFile(string path, string name, string args = null, FileNode fn = null)
 		{
-			if(!ZFile.IsCodeFile) {
+			if(!_fn.IsCodeFile) {
 				t.Append(path);
 			} else if(inMeta) {
 				string opt = null;
@@ -510,7 +512,7 @@ partial class SciCode : AuScintilla
 				}
 				if(opt == null) return;
 				//make relative path
-				var p2 = ZFile.ItemPath; int i = p2.LastIndexOf('\\') + 1;
+				var p2 = _fn.ItemPath; int i = p2.LastIndexOf('\\') + 1;
 				if(0 == string.CompareOrdinal(path, 0, p2, 0, i)) path = path.Substring(i);
 
 				t.Append(opt).Append(path).Append(';');
@@ -594,7 +596,7 @@ partial class SciCode : AuScintilla
 	{
 		int i1 = Z.SelectionStart8, i2 = Z.SelectionEnd8, textLen = Len8;
 		if(textLen == 0) return;
-		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !ZFile.IsCodeFile;
+		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !_fn.IsCodeFile;
 		if(onlyInfo) {
 			if(isFragment || s_infoCopy) return; s_infoCopy = true;
 			Print("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
@@ -603,28 +605,28 @@ partial class SciCode : AuScintilla
 
 		if(!isFragment) { i1 = 0; i2 = textLen; }
 		string s = Z.RangeText(false, i1, i2);
-		bool isScript = ZFile.IsScript;
+		bool isScript = _fn.IsScript;
 		var b = new StringBuilder("[code2]");
 		if(isFragment) {
 			b.Append(s);
 		} else {
-			var name = ZFile.Name; if(name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
+			var name = _fn.Name; if(name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 			var sType = isScript ? "script" : "class";
 			//APerf.First();
-			if(isScript && _RxScriptHeader.Match(s, out var m) && s.Find("\n// using //", m.Index) < 0 && s.Find("\n// main //", m.Index) < 0) {
+			if(isScript && _RxScriptHeader.Match(s, out var m) && s.Find("\n// using //", m.Start) < 0 && s.Find("\n// main //", m.Start) < 0) {
 				//APerf.NW();
 				bool hasM12 = m[1].Length > 0 || m[2].Length > 0;
-				int i = m.EndIndex;
-				if(name == null && m.Index == 0 && !hasM12) { //if standard script named like "ScriptN.cs", copy as fragment
+				int i = m.End;
+				if(name == null && m.Start == 0 && !hasM12) { //if standard script named like "ScriptN.cs", copy as fragment
 					while(i < s.Length && (s[i] == '\r' || s[i] == '\n')) i++;
 				} else {
 					//Start with prefix '//- type "name"'.
 					b.AppendFormat("//- {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n")
-						.Append(s, 0, m.Index);
+						.Append(s, 0, m.Start);
 					b.Append("//-{");
 					if(hasM12) { //If there is something above or below standard usings, replace standard codes with '// using //' and '// main //'.
-						b.Append(s, m[1].Index, m[1].Length).Append("\r\n// using //")
-							.Append(s, m[2].Index, m[2].Length).Append("\r\n// main //");
+						b.Append(s, m[1].Start, m[1].Length).Append("\r\n// using //")
+							.Append(s, m[2].Start, m[2].Length).Append("\r\n// main //");
 					}
 				}
 				b.Append(s, i, s.Length - i);
@@ -655,18 +657,18 @@ partial class SciCode : AuScintilla
 
 		if(!s.RegexMatch(@"^//[\-~] (script|class) ""(.*?)""( |\R)", out var m)) return false;
 		bool isClass = s[4] == 'c';
-		int i = m.EndIndex;
+		int i = m.End;
 		if(s[2] == '~') { //raw
 			s = s.Substring(i);
 		} else {
 			Debug.Assert(!isClass);
 			if(!s.RegexMatch(@"[ \n]//-\{", 0, out RXGroup m1)) return false;
-			int j = m1.EndIndex;
+			int j = m1.End;
 			var b = new StringBuilder();
 			b.Append(s, i, j - i);
 			if(s.RegexMatch(@"(?ms)(.*?)^// using //\R(.*?)^// main //$", out var k, range: j..)) {
-				b.Append(s, j, k[1].Length).AppendLine(c_usings).Append(s, k[2].Index, k[2].Length);
-				i = k.EndIndex;
+				b.Append(s, j, k[1].Length).AppendLine(c_usings).Append(s, k[2].Start, k[2].Length);
+				i = k.End;
 			} else {
 				b.AppendLine().AppendLine(c_usings);
 				i = j;
@@ -679,7 +681,7 @@ partial class SciCode : AuScintilla
 #endif
 		var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
 
-		string buttons = ZFile.FileType != (isClass ? EFileType.Class : EFileType.Script)
+		string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
 			? "1 Create new file|Cancel"
 			: "1 Create new file|2 Replace all text|3 Paste|Cancel";
 		switch(ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
@@ -718,22 +720,41 @@ partial class SciCode : AuScintilla
 	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//-\{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
 	static ARegex s_rxScript;
 
+	/// <summary>
+	/// Finds script header "//-{...//-}}}\r\n".
+	/// The results are UTF-8.
+	/// Does not get control text for searching; uses SCI_FINDTEXT.
+	/// Returns false if not script or not found.
+	/// </summary>
+	public bool ZFindScriptHeader(out (int start, int end, int startLine, int endLine) found)
+	{
+		//TODO: can be text between "//-{\r\n" and "using Au;". Use regex when available.
+		found = default;
+		if(!_fn.IsScript) return false;
+		const string s1 = "//-{\r\nusing Au;", s2 = "//-}}}\r\n";
+		int start = Z.FindText(false, s1); if(start < 0) return false;
+		int end = Z.FindText(false, s2, start); if(end < 0) return false;
+		end += s2.Length;
+		found = (start, end, Z.LineFromPos(false, start), Z.LineFromPos(false, end));
+		return true;
+	}
+
 	///// <summary>
-	///// Finds script header //-{...//-} using regular expression.
+	///// Finds script header "//-{...//-}}}\r\n" using regular expression.
 	///// </summary>
 	///// <param name="s">Script text.</param>
 	///// <param name="m">
 	///// Group 1 is "" or text between //-{ and c_usings. Includes the starting newline but not the ending newline.
 	///// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
 	///// </param>
-	//public static bool FindScriptHeader(string s, out RXMatch m) => _RxScript.Match(s, out m);
+	//public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScript.Match(s, out m);
 
 	//bool _IsScriptHeaderFolded()
 	//{
 	//	if(!ZFile.IsScript) return false;
 	//	string s = Text;
 	//	if(!_RxScriptHeader.Match(s, out var m)) return false;
-	//	int line = Z.LineIndexFromPos(m.Index, utf16: true);
+	//	int line = Z.LineIndexFromPos(m.Start, utf16: true);
 	//	return 0 == Call(SCI_GETFOLDEXPANDED, line);
 	//}
 
@@ -744,7 +765,7 @@ partial class SciCode : AuScintilla
 	bool _indicFindInited;
 	bool _findHilited;
 
-	public void ZHiliteFind(List<POINT> a)
+	internal void _HiliteFind(List<POINT> a)
 	{
 		if(_findHilited) {
 			_findHilited = false;

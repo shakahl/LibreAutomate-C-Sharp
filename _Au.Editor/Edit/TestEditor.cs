@@ -130,7 +130,7 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 			if(Environment.HasShutdownStarted) return;
 			if(AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
 			Print("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
-			//ATimer.After(1, () => new TestGC());
+			//ATimer.After(1, _ => new TestGC());
 			//var f = Program.MainForm; if(!f.IsHandleCreated) return;
 			//f.BeginInvoke(new Action(() => new TestGC()));
 			new TestGC();
@@ -144,10 +144,10 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 		//	s_debug2 = true;
 		//	new TestGC();
 
-		//	//ATimer.Every(50, () => {
+		//	//ATimer.Every(50, _ => {
 		//	//	if(!s_debug) {
 		//	//		s_debug = true;
-		//	//		ATimer.After(100, () => new TestGC());
+		//	//		ATimer.After(100, _ => new TestGC());
 		//	//	}
 		//	//});
 		//}
@@ -175,24 +175,45 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 		var z = doc.Z;
 		var s = doc.Text;
 
-		Print(z.CurrentPos16);return;
+		//Debug.Assert(false);
 
-		int pos8 = z.CurrentPos8, pos16= Encoding.UTF8.GetCharCount(Encoding.UTF8.GetBytes(s), 0, pos8);
-		Print(pos8, pos16, doc.Pos8(pos16), doc.Pos16(pos8));
-		return;
+		//CodeInfo.Stop();
 
-		APerf.SpeedUpCpu();
-		for(int i1 = 0; i1 < 7; i1++) {
-			int n2 = 1000;
-			APerf.First();
-			for(int i2 = 0; i2 < n2; i2++) { doc.Pos8(pos16); }
-			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { doc.Pos16(pos8); }
-			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { doc.TestCreatePosMap(); }
-			APerf.NW();
-			Thread.Sleep(100);
-		}
+		//Print(z.CurrentPos8);
+
+		//int i = z.LineFromPos(false, z.CurrentPos8);
+		//Print(i + 1, (uint)doc.Call(SCI_GETFOLDLEVEL, i));
+		Print(AWnd.ThisThread.FocusedControl);
+
+		//int line = doc.Call(SCI_GETLINECOUNT);
+		////Print(doc.Len8, doc.Call(SCI_POSITIONFROMLINE, line), doc.Call(SCI_POSITIONFROMLINE, line+1), doc.Call(SCI_POSITIONFROMLINE, -1));
+		//int len = doc.Len8;
+		////Print(len);
+		////Print(z.LineStart(false, -1));
+		////Print(doc.Call(SCI_GETLINECOUNT), doc.Call(SCI_LINEFROMPOSITION, len), doc.Call(SCI_LINEFROMPOSITION, len + 100));
+		////Print(len, z.LineEnd(false, line + 1), z.LineEnd(false, line + 1, true));
+		////Print(len, z.LineStart(false, line + 1), z.LineStartFromPos(false, len+1));
+		////Print(len, z.LineEndFromPos(false, len+1), z.LineEndFromPos(false, len+1, true));
+		//Print(len, doc.Pos8(len), doc.Pos16(len));
+		////Print(doc.Pos8(len+100000));
+		//Print(doc.Pos16(len+1));
+
+		//int pos8 = z.CurrentPos8, pos16= Encoding.UTF8.GetCharCount(Encoding.UTF8.GetBytes(s), 0, pos8);
+		//Print(pos8, pos16, doc.Pos8(pos16), doc.Pos16(pos8));
+		//return;
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 7; i1++) {
+		//	int n2 = 1000;
+		//	APerf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { doc.Pos8(pos16); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { doc.Pos16(pos8); }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { doc.TestCreatePosMap(); }
+		//	APerf.NW();
+		//	Thread.Sleep(100);
+		//}
 
 	}
 	//SciCode.ITempRange _tr;

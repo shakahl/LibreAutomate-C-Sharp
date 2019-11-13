@@ -145,10 +145,8 @@ class CiPopupList
 	private void _list_SelectedIndexChanged(int index)
 	{
 		if((uint)index < _VisibleCount) {
-			var ci = _VisibleItem(index);
 			_popupTimer ??= new ATimer(_ShowPopupHtml);
-			_popupTimer.Tag = ci;
-			_popupTimer.Start(300, true);
+			_popupTimer.After(300, _VisibleItem(index));
 			_popupHtml?.SetHtml(null);
 		} else {
 			_popupHtml?.Hide();

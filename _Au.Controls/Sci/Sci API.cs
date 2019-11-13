@@ -39,6 +39,20 @@ namespace Au.Controls
 		[DllImport("SciLexer")]
 		public static extern int Sci_Range(LPARAM sci, int start8, int end8, out byte* p1, out byte* p2, int* length = null);
 
+		[DllImport("SciLexer")]
+		public static extern void Sci_SetFoldLevels(LPARAM sci, int line, int lastLine, int len, int* a);
+
+		public struct Sci_StylingInfo
+		{
+			public int endStyled, endStyledLine, endStyledLineStart, visibleFrom, visibleFromLine, visibleTo, visibleToLine;
+		}
+
+		/// <summary>
+		/// flags: 1 endStyled, 2 endStyledLine, endStyledLineStart, 4 visibleFrom, visibleFromLine, 8 visibleTo, visibleToLine
+		/// </summary>
+		[DllImport("SciLexer")]
+		public static extern void Sci_GetStylingInfo(LPARAM sci, int flags, out Sci_StylingInfo r);
+
 #pragma warning disable 649
 		public unsafe struct Sci_AnnotationDrawCallbackData
 		{
@@ -1176,13 +1190,15 @@ namespace Au.Controls
 
 		public struct Sci_TextRange
 		{
-			public Sci_CharacterRange chrg;
+			public int cpMin;
+			public int cpMax;
 			public byte* lpstrText;
 		}
 
 		public struct Sci_TextToFind
 		{
-			public Sci_CharacterRange chrg;
+			public int cpMin;
+			public int cpMax;
 			public byte* lpstrText;
 			public Sci_CharacterRange chrgText;
 		}

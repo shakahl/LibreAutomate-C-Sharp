@@ -184,7 +184,7 @@ namespace Au.Triggers
 		//	get {
 		//		if(_test == false){
 		//			ADebug.LibMemorySetAnchor();
-		//			ATimer.After(500, () => ADebug.LibMemoryPrint());
+		//			ATimer.After(500, _ => ADebug.LibMemoryPrint());
 		//		}
 
 		//		var k=new StackFrame(1, true);

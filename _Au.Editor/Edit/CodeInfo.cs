@@ -1,3 +1,5 @@
+//#define NO_COMPL_CORR_SIGN
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -24,97 +26,78 @@ using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using Microsoft.CodeAnalysis.Completion;
 
 static class CodeInfo
 {
-	static CiCompletion _compl = new CiCompletion();
-	static CiSignature _signature = new CiSignature();
-	static CiAutocorrect _correct = new CiAutocorrect();
-	static CiQuickInfo _quickInfo = new CiQuickInfo();
-	static CiStyling _styling = new CiStyling();
+	internal static readonly CiCompletion _compl = new CiCompletion();
+	internal static readonly CiSignature _signature = new CiSignature();
+	internal static readonly CiAutocorrect _correct = new CiAutocorrect();
+	internal static readonly CiQuickInfo _quickInfo = new CiQuickInfo();
+	internal static readonly CiStyling _styling = new CiStyling();
+
 	static string _metaText;
 	static Solution _solution;
 	static ProjectId _projectId;
 	static DocumentId _documentId;
 	static Document _document;
 	static bool _isWarm;
-	static bool _isWarmForStyling;
 	static bool _isUI;
 	static RECT _sciRect;
 
 	public static void UiLoaded()
 	{
 		//warm up
-		Task.Delay(100).ContinueWith(_1 => {
+		//Task.Delay(100).ContinueWith(_1 => {
+		Task.Run(() => {
 			var p1 = APerf.Create();
-			//_isWarm = true;
-			//return;
-			//#if DEBUG
-			//			if(Debugger.IsAttached) { _isWarm = true; return; }
-			//#endif
-			_Warmup(ref p1);
-		});
-
-		Panels.Editor.ZActiveDocChanged += Stop;
-		Program.Timer1sOr025s += _Program_Timer1sOr025s;
-	}
-
-	static void _Warmup(ref APerf.Inst p1)
-	{
-		p1.Next();
-		try {
-			var code = @"//-{
+			p1.Next();
+			try {
+				var code = @"//-{
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
 Print(""t"" + 'c' + 1);
 }}";
 
-			var refs = new MetaReferences().Refs;
-			int position = code.IndexOf('}');
-			ProjectId projectId = ProjectId.CreateNewId();
-			DocumentId documentId = DocumentId.CreateNewId(projectId);
-			using var ws = new AdhocWorkspace();
-			var sol = ws.CurrentSolution
-				.AddProject(projectId, "p", "p", LanguageNames.CSharp)
-				.AddMetadataReferences(projectId, refs)
-				.AddDocument(documentId, "f.cs", code);
-			var document = sol.GetDocument(documentId);
-			//p1.Next();
-			_ = document.GetSemanticModelAsync().Result;
-			p1.Next();
-			CiStyling.Warmup(document, code.Length);
-			Program.MainForm.BeginInvoke(new Action(() => {
-				_isWarmForStyling = true;
-				ReadyForStyling?.Invoke();
-			}));
-			p1.Next();
-			Task.Run(() => { Compiler.Warmup(document); /*p1.NW('c');*/ });
-			var completionService = CompletionService.GetService(document);
-			var cr = completionService.GetCompletionsAsync(document, position).Result;
-			//MetaReferences.CompactCache();
-			_isWarm = true;
-			//p1.Next();
-			//Compiler.Warmup(document);
-			p1.NW('w');
-			//APerf.NW();
-			if(cr == null) ADebug.Print("null"); //else Print(cr.Items.Length);
+				var refs = new MetaReferences().Refs;
+				int position = code.IndexOf('}');
+				ProjectId projectId = ProjectId.CreateNewId();
+				DocumentId documentId = DocumentId.CreateNewId(projectId);
+				using var ws = new AdhocWorkspace();
+				var sol = ws.CurrentSolution
+					.AddProject(projectId, "p", "p", LanguageNames.CSharp)
+					.AddMetadataReferences(projectId, refs)
+					.AddDocument(documentId, "f.cs", code);
+				var document = sol.GetDocument(documentId);
+				//p1.Next();
+				//_ = document.GetSemanticModelAsync().Result;
+				p1.Next();
+				Program.MainForm.BeginInvoke(new Action(() => {
+					APerf.Next('w');
+					_isWarm = true;
+					ReadyForStyling?.Invoke();
+				}));
+				//p1.Next();
+				//1000.ms();
+				//p1.Next();
+				//Compiler.Warmup(document); //don't need. Later fast enough. Now just uses more memory and CPU at startup.
+				//p1.NW('w');
+				//APerf.NW();
 
-			//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
-		}
-		//catch(ReflectionTypeLoadException ex) {
-		//	ADebug.Print(ex.LoaderExceptions);
-		//	ADebug.Print(ex);
-		//}
-		catch(Exception ex) {
-			ADebug.Print(ex);
-		}
+				//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
+			}
+			catch(Exception ex) {
+				ADebug.Print(ex);
+			}
+		});
+
+		Panels.Editor.ZActiveDocChanged += Stop;
+		Program.Timer025sWhenVisible += _Timer025sWhenVisible;
 	}
 
 	/// <summary>
 	/// Code styling and folding already can work after program starts.
 	/// </summary>
-	public static bool IsReadyForStyling => _isWarmForStyling;
+	public static bool IsReadyForStyling => _isWarm;
 
 	/// <summary>
 	/// When code styling and folding already can work after program starts.
@@ -122,10 +105,9 @@ Print(""t"" + 'c' + 1);
 	/// </summary>
 	public static event Action ReadyForStyling;
 
-	static bool _CanWork(SciCode doc) => _isWarm && _CanWork2(doc);
-
-	static bool _CanWork2(SciCode doc)
+	static bool _CanWork(SciCode doc)
 	{
+		if(!_isWarm) return false;
 		if(doc == null) return false;
 		if(!doc.ZFile.IsCodeFile) return false;
 		if(doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //TODO: what if isn't open?
@@ -156,8 +138,9 @@ Print(""t"" + 'c' + 1);
 		_signature.Cancel();
 	}
 
-	public static void SciKillFocus()
+	public static void SciKillFocus(SciCode doc)
 	{
+		if(!_CanWork(doc)) return;
 #if DEBUG
 		if(Debugger.IsAttached) return;
 #endif
@@ -168,6 +151,9 @@ Print(""t"" + 'c' + 1);
 
 	public static bool SciCmdKey(SciCode doc, Keys keyData)
 	{
+#if NO_COMPL_CORR_SIGN
+		return false;
+#endif
 		if(!_CanWork(doc)) return false;
 		switch(keyData) {
 		case Keys.Control | Keys.Space:
@@ -202,6 +188,9 @@ Print(""t"" + 'c' + 1);
 
 	public static bool SciBeforeCharAdded(SciCode doc, char ch)
 	{
+#if NO_COMPL_CORR_SIGN
+		return false;
+#endif
 		if(!_CanWork(doc)) return false;
 
 		if(_correct.SciBeforeCharAdded(doc, ch, out var b)) {
@@ -226,11 +215,14 @@ Print(""t"" + 'c' + 1);
 		if(!_CanWork(doc)) return;
 		_document = null;
 		_compl.SciModified(doc, in n);
+		_styling.SciModified(doc, in n);
 	}
 
 	public static void SciCharAdded(SciCode doc, char ch)
 	{
-		//return;
+#if NO_COMPL_CORR_SIGN
+		return;
+#endif
 		if(!_CanWork(doc)) return;
 
 		using var c = new CharContext(doc, ch);
@@ -256,12 +248,23 @@ Print(""t"" + 'c' + 1);
 		//		_correct on ';' moves caret after ')', and finally we have 'Print(true);', and caret after ';'.
 	}
 
-	public static void SciUpdateUI(SciCode doc, bool modified)
+	public static void SciUpdateUI(SciCode doc, int updated)
 	{
+#if NO_COMPL_CORR_SIGN
+		return;
+#endif
 		//Print("SciUpdateUI", modified, _tempNoAutoComplete);
 		if(!_CanWork(doc)) return;
-		_compl.SciUpdateUI(doc, modified);
-		_signature.SciPositionChanged(doc);
+
+		if(0 != (updated & 3)) { //text (1), selection/click (2)
+			_compl.SciUpdateUI(doc);
+			_signature.SciPositionChanged(doc);
+		} else if(0 != (updated & 12)) { //scrolled
+			Cancel();
+			if(0 != (updated & 4)) { //vertically
+									 //_styling.Timer250msWhenVisibleAndWarm(doc); //rejected. Uses much CPU. The 250 ms timer is OK.
+			}
+		}
 	}
 
 	public static void ShowCompletionList(SciCode doc)
@@ -294,26 +297,6 @@ Print(""t"" + 'c' + 1);
 	//	_quickInfo.SciMouseMoved(x, y);
 	//}
 
-	/// <summary>
-	/// Called to show signature help after committing a completion item with mouse, Tab, Enter or ' ', when added '(' after method etc.
-	/// </summary>
-	public static void CompletionSignatureCharAdded(SciCode doc, char ch) => _signature.SciCharAdded(doc, ch);
-
-	/// <summary>
-	/// Called when added text containing { } etc and want the same behavior like when the user types { etc and it is corrected to { } etc.
-	/// </summary>
-	public static void BracesAdded(SciCode doc, int innerFrom, int innerTo, CiAutocorrect.EBraces operation) => _correct.BracesAdded(doc, innerFrom, innerTo, operation);
-
-	//public static void CharSuppressedByCompletion(SciCode doc, char signatureChar, int bracesFromInner, int bracesToInner){
-	//could join the above 2
-	//}
-
-	public static void SciStyleNeeded(SciCode doc, int endUtf8)
-	{
-		if(!_CanWork2(doc)) return;
-		_styling.SciStyleNeeded(doc, endUtf8);
-	}
-
 	public struct Context
 	{
 		public Document document;
@@ -324,8 +307,8 @@ Print(""t"" + 'c' + 1);
 
 		/// <summary>
 		/// Initializes all fields except document.
+		/// For sciDoc uses Panels.Editor.ZActiveDoc.
 		/// </summary>
-		/// <param name="pos"></param>
 		public Context(int pos)
 		{
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
@@ -336,18 +319,6 @@ Print(""t"" + 'c' + 1);
 			if(pos == -1) pos = sciDoc.Z.CurrentPos16; else if(pos == -2) pos = sciDoc.Z.SelectionStar16;
 			position = pos;
 			metaEnd = MetaComments.FindMetaComments(code);
-		}
-
-		public Context(SciCode doc)
-		{
-			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
-
-			document = null;
-			sciDoc = doc;
-			code = sciDoc.Text;
-			position = 0;
-			//metaEnd = MetaComments.FindMetaComments(code);
-			metaEnd = 0;
 		}
 
 		/// <summary>
@@ -362,8 +333,11 @@ Print(""t"" + 'c' + 1);
 				return true;
 			}
 
-			if(_solution != null && !code.Starts(_metaText)) _Uncache();
-			if(_solution == null) _metaText = code.Remove(metaEnd);
+			if(_solution != null && !(metaEnd == _metaText.Length && code.Starts(_metaText))) {
+				_Uncache();
+				_styling.Update();
+			}
+			if(_solution == null) _metaText = metaEnd > 0 ? code.Remove(metaEnd) : "";
 
 			try {
 				if(_solution == null) {
@@ -468,8 +442,11 @@ Print(""t"" + 'c' + 1);
 
 	public static Workspace CurrentWorkspace { get; private set; }
 
-	private static void _Program_Timer1sOr025s()
+	private static void _Timer025sWhenVisible()
 	{
+		var doc = Panels.Editor.ZActiveDoc;
+		if(doc == null) return;
+
 		//cancel if changed the screen rectangle of the document window
 		if(_compl.IsVisibleUI || _signature.IsVisibleUI) {
 			var r = ((AWnd)Panels.Editor.ZActiveDoc).Rect;
@@ -483,6 +460,8 @@ Print(""t"" + 'c' + 1);
 		} else if(_isUI) {
 			_isUI = false;
 		}
+
+		if(_isWarm) _styling.Timer250msWhenVisibleAndWarm(doc);
 	}
 
 	public class CharContext : IDisposable

@@ -70,7 +70,8 @@ class PanelEdit : UserControl
 		Debug.Assert(!Program.Model.IsAlien(f));
 
 		if(f == _activeDoc?.ZFile) return true;
-		bool focus = _activeDoc != null ? _activeDoc.Focused : false;
+		bool focus = _activeDoc?.Focused ?? false;
+
 		var doc = ZGetOpenDocOf(f);
 		if(doc != null) {
 			if(_activeDoc != null) _activeDoc.Visible = false;
@@ -93,17 +94,28 @@ class PanelEdit : UserControl
 			_docs.Add(doc);
 			_activeDoc = doc;
 			this.Controls.Add(doc);
-			doc.ZInit(text, newFile);
+			doc._Init(text, newFile);
 			ZUpdateUI_Cmd();
 			ZActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}
-		if(focus) _activeDoc.Focus();
+		
+		if(focus && !newFile) {
+			_activeDoc.Focus();
+		} else { //don't focus now, or then cannot select treeview items
+			_activeDoc_MouseEnter ??= (object sender, EventArgs e) => {
+				var c = sender as Control;
+				c.MouseEnter -= _activeDoc_MouseEnter;
+				c.Focus();
+			};
+			_activeDoc.MouseEnter += _activeDoc_MouseEnter;
+		}
 
 		_UpdateUI_IsOpen();
 		Panels.Find.ZUpdateQuickResults(true);
 		return true;
 	}
+	EventHandler _activeDoc_MouseEnter;
 
 	/// <summary>
 	/// If f is open, closes its document and destroys its control.
@@ -146,12 +158,12 @@ class PanelEdit : UserControl
 
 	public bool ZSaveText()
 	{
-		return _activeDoc?.ZSaveText() ?? true;
+		return _activeDoc?._SaveText() ?? true;
 	}
 
 	public void ZSaveEditorData()
 	{
-		_activeDoc?.ZSaveEditorData();
+		_activeDoc?._SaveEditorData();
 	}
 
 	//public bool ZIsModified => _activeDoc?.IsModified ?? false;

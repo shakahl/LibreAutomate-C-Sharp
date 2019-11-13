@@ -77,7 +77,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				DB = new ASqlite(_dbFile, sql:
 					//"PRAGMA journal_mode=WAL;" + //no, it does more bad than good
 					"CREATE TABLE IF NOT EXISTS _misc (key TEXT PRIMARY KEY, data TEXT);" +
-					"CREATE TABLE IF NOT EXISTS _editor (id INTEGER PRIMARY KEY, lines BLOB);"
+					"CREATE TABLE IF NOT EXISTS _editor (id INTEGER PRIMARY KEY, top INTEGER, pos INTEGER, lines BLOB);"
 					);
 			}
 			catch(Exception ex) {
@@ -539,7 +539,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 				columnOrPos = i;
 			}
 			if(wasOpen) z.GoToPos(false, columnOrPos);
-			else ATimer.After(10, () => z.GoToPos(false, columnOrPos));
+			else ATimer.After(10, _ => z.GoToPos(false, columnOrPos));
 			//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
 		}
 		return true;
@@ -840,7 +840,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 		} else {
 			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
 				switch(ADialog.ShowEx("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
-				case 1: ATimer.After(1, () => Panels.Files.ZLoadWorkspace(files[0])); break;
+				case 1: ATimer.After(1, _ => Panels.Files.ZLoadWorkspace(files[0])); break;
 				case 2: ImportWorkspace(files[0], target, pos); break;
 				}
 				return;
@@ -1193,7 +1193,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 					if(end > 0 && !sd.Ends("ms", true)) delay = (int)Math.Min(delay * 1000L, int.MaxValue);
 					if(delay < 10) delay = 10;
 				}
-				ATimer.After(delay, () => {
+				ATimer.After(delay, t => {
 					_ = Au.Triggers.HooksServer.Instance.MsgWnd; //waits until started
 					Run.CompileAndRun(true, f);
 				});

@@ -505,8 +505,8 @@ namespace Au
 			{
 				var a = new List<KKey>();
 				foreach(var g in _SplitKeysString(keys ?? "")) {
-					KKey k = _KeynameToKey(keys, g.Index, g.Length);
-					if(k == 0) throw _ArgumentException_ErrorInKeysString(keys, g.Index, g.Length);
+					KKey k = _KeynameToKey(keys, g.Start, g.Length);
+					if(k == 0) throw _ArgumentException_ErrorInKeysString(keys, g.Start, g.Length);
 					a.Add(k);
 				}
 				return a.ToArray();
@@ -531,14 +531,14 @@ namespace Au
 				foreach(var g in _SplitKeysString(s)) {
 					if(key != 0) return false;
 					if((i++ & 1) == 0) {
-						KKey k = _KeynameToKey(s, g.Index, g.Length);
+						KKey k = _KeynameToKey(s, g.Start, g.Length);
 						if(k == 0) return false;
 						var m = Lib.KeyToMod(k);
 						if(m != 0) {
 							if((m & mod) != 0) return false;
 							mod |= m;
 						} else key = k;
-					} else if(g.Length != 1 || s[g.Index] != '+') return false;
+					} else if(g.Length != 1 || s[g.Start] != '+') return false;
 				}
 				return key != 0;
 			}
@@ -569,18 +569,18 @@ namespace Au
 					if(ignore) { ignore = false; continue; }
 					if(key != 0) return false;
 					if((i++ & 1) == 0) {
-						KKey k = _KeynameToKey(s, g.Index, g.Length);
+						KKey k = _KeynameToKey(s, g.Start, g.Length);
 						if(k == 0) return false;
 						var m = Lib.KeyToMod(k);
 						if(m != 0) {
 							if((m & (mod | modAny)) != 0) return false;
-							if(ignore = g.EndIndex < s.Length && s[g.EndIndex] == '?') modAny |= m; //eg "Shift?+K"
+							if(ignore = g.End < s.Length && s[g.End] == '?') modAny |= m; //eg "Shift?+K"
 							else mod |= m;
 						} else {
-							if(i == 1 && g.Length == 1 && s[g.Index] == '?') modAny = (KMod)15; //eg "?+K"
+							if(i == 1 && g.Length == 1 && s[g.Start] == '?') modAny = (KMod)15; //eg "?+K"
 							else key = k;
 						}
-					} else if(g.Length != 1 || s[g.Index] != '+') return false;
+					} else if(g.Length != 1 || s[g.Start] != '+') return false;
 				}
 				if(noKey) return (mod | modAny) != 0 && key == 0;
 				return key != 0;

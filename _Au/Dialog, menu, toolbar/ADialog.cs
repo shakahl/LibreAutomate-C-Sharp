@@ -983,7 +983,7 @@ namespace Au
 				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002);
 
 				//fix API bug: dialog window is hidden if process STARTUPINFO specifies hidden window
-				ATimer.After(1, () => _dlg.ShowLL(true)); //use timer because at this time still invisible always
+				ATimer.After(1, _ => _dlg.ShowLL(true)); //use timer because at this time still invisible always
 
 				e = Created;
 				break;

@@ -316,7 +316,7 @@ namespace Au.Tools
 							}
 						});
 					}
-					_timer.Start(250, false);
+					_timer.Every(250);
 				} else {
 					Capturing = false;
 					Api.UnregisterHotKey(wForm, 1);
@@ -464,7 +464,7 @@ namespace Au.Tools
 				//ADialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				lSpeed.ForeColor = Color.Red;
 				lSpeed.Text = "Not found,";
-				ATimer.After(700, () => lSpeed.Text = sTime);
+				ATimer.After(700, _ => lSpeed.Text = sTime);
 			}
 
 			((AWnd)form).ActivateLL();

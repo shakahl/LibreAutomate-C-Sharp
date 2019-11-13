@@ -182,7 +182,7 @@ namespace Au.Controls
 				int annotLen = _c.Call(SCI_ANNOTATIONGETTEXT, iLine); //we'll need old annotation text later, and we'll get it into the same buffer after the new image info
 
 				//calculate n annotation lines from image height
-				int lineHeight = _t.LineHeight(iLine); if(lineHeight <= 0) continue;
+				int lineHeight = _t.LineHeight(); if(lineHeight <= 0) continue;
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
 				//Print(lineHeight, maxHeight, nAnnotLines);
 
@@ -582,7 +582,7 @@ namespace Au.Controls
 			int len = to - from;
 			fixed (byte* s = AMemoryArray.Get(len, ref t_data.BufferForText)) {
 				if(len > 0) {
-					var tr = new Sci_TextRange() { chrg = new Sci_CharacterRange() { cpMin = from, cpMax = to }, lpstrText = s };
+					var tr = new Sci_TextRange() { cpMin = from, cpMax = to, lpstrText = s };
 					var r = _c.Call(SCI_GETTEXTRANGE, 0, &tr);
 					Debug.Assert(r == len);
 					if(r != len) return null;
@@ -662,7 +662,7 @@ namespace Au.Controls
 		//		APerf.NW();
 		//		_timerTasks = 0;
 		//	});
-		//	if(_timerTasks == 0) _timer10.Start(10, true);
+		//	if(_timerTasks == 0) _timer10.After(10);
 		//	_timerTasks |= task;
 		//}
 		//ATimer _timer10;
