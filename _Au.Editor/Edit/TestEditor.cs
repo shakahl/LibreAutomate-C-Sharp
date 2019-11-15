@@ -82,17 +82,17 @@ partial class FMain
 
 	void TestDiffMatchPatch()
 	{
-		var s1 = @"//-{
+		var s1 = @"//.
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}
+class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 	
 	var s=""one"";
 ";
-		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //-{
+		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //.
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 using My.NS1; //ąčę îôû
 using My.NS2;
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}
+class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 	var i=2;
 ";
 
@@ -181,9 +181,13 @@ class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a
 
 		//Print(z.CurrentPos8);
 
+		//int i = z.SelectionStart8, j = z.SelectionEnd8;
+		//doc.Call(SCI_STARTSTYLING, i);
+		//doc.Call(SCI_SETSTYLING, j - i, 31);
+
 		//int i = z.LineFromPos(false, z.CurrentPos8);
 		//Print(i + 1, (uint)doc.Call(SCI_GETFOLDLEVEL, i));
-		Print(AWnd.ThisThread.FocusedControl);
+		//Print(AWnd.ThisThread.FocusedControl);
 
 		//int line = doc.Call(SCI_GETLINECOUNT);
 		////Print(doc.Len8, doc.Call(SCI_POSITIONFROMLINE, line), doc.Call(SCI_POSITIONFROMLINE, line+1), doc.Call(SCI_POSITIONFROMLINE, -1));

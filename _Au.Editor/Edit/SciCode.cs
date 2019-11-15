@@ -596,7 +596,8 @@ partial class SciCode : AuScintilla
 	{
 		int i1 = Z.SelectionStart8, i2 = Z.SelectionEnd8, textLen = Len8;
 		if(textLen == 0) return;
-		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !_fn.IsCodeFile;
+		bool isCS = _fn.IsCodeFile;
+		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !isCS;
 		if(onlyInfo) {
 			if(isFragment || s_infoCopy) return; s_infoCopy = true;
 			Print("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
@@ -606,46 +607,16 @@ partial class SciCode : AuScintilla
 		if(!isFragment) { i1 = 0; i2 = textLen; }
 		string s = Z.RangeText(false, i1, i2);
 		bool isScript = _fn.IsScript;
-		var b = new StringBuilder("[code2]");
+		var b = new StringBuilder(isCS ? "[cs]" : "[code]");
 		if(isFragment) {
 			b.Append(s);
 		} else {
 			var name = _fn.Name; if(name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
-			var sType = isScript ? "script" : "class";
-			//APerf.First();
-			if(isScript && _RxScriptHeader.Match(s, out var m) && s.Find("\n// using //", m.Start) < 0 && s.Find("\n// main //", m.Start) < 0) {
-				//APerf.NW();
-				bool hasM12 = m[1].Length > 0 || m[2].Length > 0;
-				int i = m.End;
-				if(name == null && m.Start == 0 && !hasM12) { //if standard script named like "ScriptN.cs", copy as fragment
-					while(i < s.Length && (s[i] == '\r' || s[i] == '\n')) i++;
-				} else {
-					//Start with prefix '//- type "name"'.
-					b.AppendFormat("//- {0} \"{1}\"{2}", sType, name, s[0] == '/' ? " " : "\r\n")
-						.Append(s, 0, m.Start);
-					b.Append("//-{");
-					if(hasM12) { //If there is something above or below standard usings, replace standard codes with '// using //' and '// main //'.
-						b.Append(s, m[1].Start, m[1].Length).Append("\r\n// using //")
-							.Append(s, m[2].Start, m[2].Length).Append("\r\n// main //");
-					}
-				}
-				b.Append(s, i, s.Length - i);
-			} else { //raw. Start with prefix '//~ type "name"'.
-				b.AppendFormat("//~ {0} \"{1}\"\r\n{2}", sType, name, s);
-			}
+			b.AppendFormat("// {0} \"{1}\"{2}{3}", isScript ? "script" : "class", name, s[0] == '/' ? " " : "\r\n", s);
 		}
-		b.AppendLine("[/code2]");
-#if TEST_COPYPASTE
-			_Print(s, true);
-#endif
+		b.AppendLine(isCS ? "[/cs]" : "[/code]");
 		s = b.ToString();
-#if TEST_COPYPASTE
-			_Print(s);
-#endif
 		new AClipboardData().AddText(s).SetClipboard();
-#if TEST_COPYPASTE
-			PasteModified();
-#endif
 	}
 	static bool s_infoCopy;
 
@@ -653,32 +624,11 @@ partial class SciCode : AuScintilla
 	{
 		var s = AClipboardData.GetText();
 		if(s == null) return false;
-		if(s.Like("[code2]*[/code2]\r\n")) s = s[7..^10];
+		if(s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
 
-		if(!s.RegexMatch(@"^//[\-~] (script|class) ""(.*?)""( |\R)", out var m)) return false;
-		bool isClass = s[4] == 'c';
-		int i = m.End;
-		if(s[2] == '~') { //raw
-			s = s.Substring(i);
-		} else {
-			Debug.Assert(!isClass);
-			if(!s.RegexMatch(@"[ \n]//-\{", 0, out RXGroup m1)) return false;
-			int j = m1.End;
-			var b = new StringBuilder();
-			b.Append(s, i, j - i);
-			if(s.RegexMatch(@"(?ms)(.*?)^// using //\R(.*?)^// main //$", out var k, range: j..)) {
-				b.Append(s, j, k[1].Length).AppendLine(c_usings).Append(s, k[2].Start, k[2].Length);
-				i = k.End;
-			} else {
-				b.AppendLine().AppendLine(c_usings);
-				i = j;
-			}
-			b.Append(c_scriptMain).Append(s, i, s.Length - i);
-			s = b.ToString();
-		}
-#if TEST_COPYPASTE
-			_Print(s); return false;
-#endif
+		if(!s.RegexMatch(@"^// (script|class) ""(.*?)""( |\R)", out var m)) return false;
+		bool isClass = s[3] == 'c';
+		s = s[m.End..];
 		var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
 
 		string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
@@ -700,38 +650,28 @@ partial class SciCode : AuScintilla
 		return true;
 	}
 
-#if DEBUG && TEST_COPYPASTE
-		void _Print(string s, bool first = false)
-		{
-			if(first) AOutput.Clear();
-			//Print("<><code>" + s + "</code>\r\n<Z 0xc0e0c0><>");
-			Print("<><code>" + s + "</code>");
-			Print("<><Z 0xc0e0c0><>");
-		}
-#endif
-
 	#endregion
 
 	#region script header
 
-	const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
-	const string c_scriptMain = "class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}";
+	//const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
+	//const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
 
-	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//-\{(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
-	static ARegex s_rxScript;
+	//static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
+	//static ARegex s_rxScript;
 
 	/// <summary>
-	/// Finds script header "//-{...//-}}}\r\n".
+	/// Finds script header "//.\r\nusing Au; ... //;;;\r\n".
 	/// The results are UTF-8.
-	/// Does not get control text for searching; uses SCI_FINDTEXT.
+	/// Uses SCI_FINDTEXT.
 	/// Returns false if not script or not found.
 	/// </summary>
 	public bool ZFindScriptHeader(out (int start, int end, int startLine, int endLine) found)
 	{
-		//TODO: can be text between "//-{\r\n" and "using Au;". Use regex when available.
+		//never mind: can be text between "//.\r\n" and "using Au;". Could use regex, but then need to get UTF-16 text; better avoid it.
 		found = default;
 		if(!_fn.IsScript) return false;
-		const string s1 = "//-{\r\nusing Au;", s2 = "//-}}}\r\n";
+		const string s1 = "//.\r\nusing Au;", s2 = "//;;;\r\n";
 		int start = Z.FindText(false, s1); if(start < 0) return false;
 		int end = Z.FindText(false, s2, start); if(end < 0) return false;
 		end += s2.Length;
@@ -740,14 +680,14 @@ partial class SciCode : AuScintilla
 	}
 
 	///// <summary>
-	///// Finds script header "//-{...//-}}}\r\n" using regular expression.
+	///// Finds script header "//. ... //;;;\r\n" using regular expression.
 	///// </summary>
 	///// <param name="s">Script text.</param>
 	///// <param name="m">
-	///// Group 1 is "" or text between //-{ and c_usings. Includes the starting newline but not the ending newline.
+	///// Group 1 is "" or text between //. and c_usings. Includes the starting newline but not the ending newline.
 	///// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
 	///// </param>
-	//public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScript.Match(s, out m);
+	//public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScriptHeader.Match(s, out m);
 
 	//bool _IsScriptHeaderFolded()
 	//{

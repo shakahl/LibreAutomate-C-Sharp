@@ -1,6 +1,6 @@
-/*/ ifRunning restart; /*/ //-{
+/*/ ifRunning restart; /*/ //.
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}
+class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 
 /*
 This file is an example of an automation script.
@@ -22,7 +22,7 @@ To avoid 'static' everywhere, function Main creates a class instance. Your scrip
 code is in the constructor function Script(string[] args). Finally the function
 and the class end with } and }.
 
-The //-{ and //-} are used to fold (hide) code lines. Like #region and #endregion.
+The //. and //; are used to fold (hide) code lines like #region and #endregion.
 
 To run a script, you can click the Run button on the toolbar, or use command line,
 or launch from a script like ATask.Run("script5.cs"). There are no script triggers

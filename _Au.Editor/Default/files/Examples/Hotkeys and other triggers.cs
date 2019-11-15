@@ -1,9 +1,9 @@
-/*/ runMode blue; ifRunning restart; /*/ //-{
+/*/ runMode blue; ifRunning restart; /*/ //.
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 using Au.Triggers; //need this for triggers
 using System.Windows.Forms; //need this for some examples in this script
 
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //-}}}
+class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 
 //Triggers are used to execute parts of a running script. Not to launch scripts.
 //This script contains examples of all trigger types. The code is copied from the ActionTriggers class help topic.
@@ -110,5 +110,4 @@ Print("called Triggers.Stop");
 //The first property allows other scripts to start while this script is running.
 //The second property makes easy to restart the script after editing: just click the Run button.
 
-}
-}
+}}

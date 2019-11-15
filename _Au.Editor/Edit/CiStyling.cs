@@ -60,6 +60,9 @@ class CiStyling
 		XmlDoc, //tags, CDATA, ///, etc
 		XmlDocText,
 
+		//TODO
+		Boilerplate = 29,
+
 		//EndOfFunctionOrType = 30,
 
 		//STYLE_HIDDEN=31,
@@ -95,6 +98,9 @@ class CiStyling
 		z.StyleForeColor((int)_Style.Excluded, 0x808080); //gray
 		z.StyleForeColor((int)_Style.XmlDoc, 0x808080); //gray
 		z.StyleForeColor((int)_Style.XmlDocText, 0x408000); //green like comment
+
+		//TODO
+		z.StyleFontSize((int)_Style.Boilerplate, 1);
 
 		//CONSIDER: at the end of a function/class/etc definition add a link or dwell-popup to add new function or class etc below. Or better in context menu.
 		//z.StyleHotspot((int)_Style.EndOfFunctionOrType, true);
@@ -413,10 +419,10 @@ class CiStyling
 			//CiUtil.PrintNode(v);
 			switch(kind) {
 			case SyntaxKind.SingleLineCommentTrivia:
-				if(code.Eq(pos, "//-{")) {
-					_AddFoldPoint(pos, 1);
-				} else if(code.Eq(pos, "//-}")) {
-					for(int j = pos + 3; j < code.Length && code[j] == '}'; j++) _AddFoldPoint(pos, -1);
+				if(code.Eq(pos, "//.")) {
+					if(code.Length > pos + 3 && char.IsWhiteSpace(code[pos + 3])) _AddFoldPoint(pos, 1);
+				} else if(code.Eq(pos, "//;")) {
+					for(int j = pos + 2; j < code.Length && code[j] == ';'; j++) _AddFoldPoint(pos, -1);
 				} else if(pos > commentEnd) {
 					var k = v.Token.LeadingTrivia.Span;
 					commentEnd = k.End;

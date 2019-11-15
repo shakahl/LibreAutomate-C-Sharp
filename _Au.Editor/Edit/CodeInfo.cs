@@ -52,9 +52,9 @@ static class CodeInfo
 			var p1 = APerf.Create();
 			p1.Next();
 			try {
-				var code = @"//-{
+				var code = @"//.
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
-class Script :AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
+class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
 Print(""t"" + 'c' + 1);
 }}";
 
