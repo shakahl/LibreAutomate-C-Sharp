@@ -206,17 +206,53 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes and/or <i>to</i> from length to absolute position.
+		/// If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
 		/// </summary>
-		/// <param name="utf16">Input parameters are UTF-16.</param>
+		/// <param name="utf16">Input values are UTF-16.</param>
 		/// <param name="from"></param>
 		/// <param name="to">If -1, uses <see cref="AuScintilla.Len8"/>.</param>
-		/// <exception cref="ArgumentOutOfRangeException">An argument is negative or <i>to</i> less than <i>from</i>, except when <i>to</i> is -1.</exception>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg greater than text length or <i>to</i> less than <i>from</i>.</exception>
 		public void NormalizeRange(bool utf16, ref int from, ref int to)
 		{
 			if(from < 0 || (to < from && to != -1)) throw new ArgumentOutOfRangeException();
 			if(utf16) from = C.Pos8(from);
 			if(to < 0) to = C.Len8; else if(utf16) to = C.Pos8(to);
+		}
+
+		/// <summary>
+		/// If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
+		/// </summary>
+		/// <param name="utf16">Input values are UTF-16.</param>
+		/// <param name="r">Range. Can be spacified from start or/and from end.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg <i>to</i> less than <i>from</i>.</exception>
+		public (int from, int to) NormalizeRange(bool utf16, Range r)
+		{
+			int from, to;
+			if(r.Start.IsFromEnd || r.End.IsFromEnd) {
+				(from, to) = r.GetStartEnd(utf16 ? C.Len16 : C.Len8);
+				if(utf16) {
+					from = C.Pos8(from);
+					to = C.Pos8(to);
+				}
+			} else {
+				from = r.Start.Value;
+				to = r.End.Value;
+				NormalizeRange(utf16, ref from, ref to);
+			}
+			return (from, to);
+		}
+
+		/// <summary>
+		/// Same as <see cref="NormalizeRange(bool, ref int, ref int)"/>, but can be <i>to</i> less than <i>from</i>. If so, returns true.
+		/// </summary>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg greater than text length.</exception>
+		public bool NormalizeRangeCanBeReverse(bool utf16, ref int from, ref int to, bool swapFromTo)
+		{
+			bool reverse = to >= 0 && to < from;
+			if(reverse) AMath.Swap(ref from, ref to);
+			NormalizeRange(utf16, ref from, ref to);
+			if(reverse && !swapFromTo) AMath.Swap(ref from, ref to);
+			return reverse;
 		}
 
 		/// <summary>
@@ -300,6 +336,7 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Replaces all text.
+		/// Parses tags if need.
 		/// </summary>
 		/// <param name="s">Text.</param>
 		/// <param name="flags"></param>
@@ -344,9 +381,11 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Sets UTF-8 text.
+		/// </summary>
+		/// <remarks>
 		/// Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 		/// s must end with 0. Asserts.
-		/// </summary>
+		/// </remarks>
 		internal void LibSetText(byte[] s, int startIndex)
 		{
 			Debug.Assert(s.Length > 0 && s[^1] == 0);
@@ -366,12 +405,12 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Appends text and optionally "\r\n".
-		/// Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
+		/// Parses tags if need. Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
 		/// <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
-		/// <param name="ignoreTags">Don't parse tags, regardless of C.TagsStyle.</param>
+		/// <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
 		public void AppendText(string s, bool andRN, bool scroll, bool ignoreTags = false)
 		{
 			s ??= "";
@@ -388,8 +427,8 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Appends UTF-8 text of specified length.
-		/// Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
+		/// Sets or appends UTF-8 text of specified length.
+		/// Does not parse tags. Moves current position and scrolls to the end.
 		/// </summary>
 		internal void LibAddText(bool append, byte* s, int lenToAppend)
 		{
@@ -402,7 +441,7 @@ namespace Au.Controls
 
 		//not used now
 		///// <summary>
-		///// Appends styled UTF-8 text of specified length.
+		///// Sets or appends styled UTF-8 text of specified length.
 		///// Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
 		///// Uses SCI_ADDSTYLEDTEXT. Caller does not have to move cursor to the end.
 		///// lenToAppend is length in bytes, not in cells.
@@ -540,10 +579,12 @@ namespace Au.Controls
 		/// <param name="utf16">pos is UTF-16. Return UTF-16.</param>
 		/// <param name="pos">A position in document text. Uses the last line if too big.</param>
 		/// <param name="withRN">Include \r\n.</param>
-		public (int line, int start, int end) LineStartEndFromPos(bool utf16, int pos, bool withRN = false)
+		/// <param name="utf16Return">If not null, overrides <i>utf16</i> for return values.</param>
+		public (int line, int start, int end) LineStartEndFromPos(bool utf16, int pos, bool withRN = false, bool? utf16Return = null)
 		{
 			int startPos = LineStartFromPos(false, _ParamPos(utf16, pos), out int line);
 			int endPos = LineEnd(false, line, withRN);
+			utf16 = utf16Return ?? utf16;
 			return (line, _ReturnPos(utf16, startPos), _ReturnPos(utf16, endPos));
 		}
 
@@ -638,8 +679,8 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Moves 'from' to the start of its line, and 'to' to the end of its line.
-		/// Does not change 'to' if it is at a line start.
+		/// Moves <i>from</i> to the start of its line, and <i>to</i> to the end of its line.
+		/// Does not change <i>to</i> if it is at a line start.
 		/// </summary>
 		/// <param name="utf16"></param>
 		/// <param name="from">Start index.</param>
@@ -654,12 +695,14 @@ namespace Au.Controls
 
 		/// <summary>
 		/// SCI_INSERTTEXT.
-		/// Does not parse tags.
-		/// Does not change current selection; for it use <see cref="ReplaceSel"/>.
 		/// </summary>
 		/// <param name="utf16"></param>
 		/// <param name="pos">Start index. Cannot be negative.</param>
 		/// <param name="s">Text to insert. Can be null.</param>
+		/// <remarks>
+		/// Does not parse tags.
+		/// Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="ReplaceSel"/> or <see cref="ReplaceRange"/>.
+		/// </remarks>
 		public void InsertText(bool utf16, int pos, string s)
 		{
 			using(new _NoReadonly(this))
@@ -680,12 +723,14 @@ namespace Au.Controls
 
 		/// <summary>
 		/// SCI_DELETERANGE.
-		/// Does not parse tags.
-		/// Does not change current selection, unless it is in the from-to range (including to); for it use <see cref="ReplaceSel"/> or <see cref="ReplaceRange"/> with empty string and <i>finalCurrentPos</i>.
 		/// </summary>
 		/// <param name="utf16"></param>
 		/// <param name="from">Start index.</param>
 		/// <param name="to">End index. If -1, uses control text length.</param>
+		/// <remarks>
+		/// Does not parse tags.
+		/// Does not change current selection, unless it is in the range (including <i>to</i>); for it use <see cref="ReplaceSel"/> or <see cref="ReplaceRange"/>.
+		/// </remarks>
 		public void DeleteRange(bool utf16, int from, int to)
 		{
 			NormalizeRange(utf16, ref from, ref to);
@@ -695,30 +740,28 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Replaces text range.
-		/// Does not parse tags.
-		/// By default does not change current selection, unless it is in the from-to range (including to).
 		/// </summary>
 		/// <param name="utf16"></param>
 		/// <param name="from">Start index.</param>
-		/// <param name="to">End index. If -1, uses control text length.</param>
+		/// <param name="to">End index. If -1, uses control text length. Can be less than <i>from</i>.</param>
 		/// <param name="s">Replacement text. Can be null.</param>
-		/// <param name="finalCurrentPos">
-		/// If AtStart or AtEnd, after replacing sets curent position at the start or end of the replacement.
-		/// Else if current position was in the from-to range (including to), sets at from.
+		/// <param name="moveCurrentPos">
+		/// After replacing set curent position at the end of the replacement. If <i>from</i> less than to - at <i>from</i>.
+		/// Else if current position was in the range (including <i>to</i>), Scintilla sets at <i>from</i>.
 		/// Else does not change current position and selection.
-		/// Alternatively use <see cref="ReplaceSel"/>; it sets current position at the end of the replacement.
 		/// </param>
-		public void ReplaceRange(bool utf16, int from, int to, string s, SciFinalCurrentPos finalCurrentPos = 0)
+		/// <remarks>
+		/// Does not parse tags.
+		/// By default does not change current selection, unless it is in the range (including <i>to</i>).
+		/// </remarks>
+		public void ReplaceRange(bool utf16, int from, int to, string s, bool moveCurrentPos = false)
 		{
-			NormalizeRange(utf16, ref from, ref to);
+			bool reverse = NormalizeRangeCanBeReverse(utf16, ref from, ref to, swapFromTo: true);
 			using(new _NoReadonly(this)) {
-				int fromEnd = C.Len8 - to;
+				int fromEnd = !moveCurrentPos || reverse ? 0 : C.Len8 - to;
 				Call(SCI_SETTARGETRANGE, from, to);
 				SetString(SCI_REPLACETARGET, 0, s ??= "", true);
-				if(finalCurrentPos != default) {
-					if(finalCurrentPos == SciFinalCurrentPos.AtEnd) from = C.Len8 - fromEnd;
-					CurrentPos8 = from;
-				}
+				if(moveCurrentPos) CurrentPos8 = reverse ? from : C.Len8 - fromEnd;
 			}
 		}
 
@@ -736,10 +779,12 @@ namespace Au.Controls
 
 		/// <summary>
 		/// SCI_REPLACESEL.
-		/// Does not parse tags.
-		/// If read-only, asserts and fails (unlike most other functions that change text).
 		/// </summary>
 		/// <param name="s">Replacement text. Can be null.</param>
+		/// <remarks>
+		/// Does not parse tags.
+		/// If read-only, asserts and fails (unlike most other functions that change text).
+		/// </remarks>
 		public void ReplaceSel(string s)
 		{
 			Debug.Assert(!IsReadonly);
@@ -748,12 +793,14 @@ namespace Au.Controls
 
 		/// <summary>
 		/// GoToPos and SCI_REPLACESEL.
-		/// Does not parse tags.
-		/// If read-only, asserts and fails (unlike most other functions that change text).
 		/// </summary>
 		/// <param name="utf16"></param>
 		/// <param name="s">Replacement text. Can be null.</param>
 		/// <param name="pos">Start index.</param>
+		/// <remarks>
+		/// Does not parse tags.
+		/// If read-only, asserts and fails (unlike most other functions that change text).
+		/// </remarks>
 		public void ReplaceSel(bool utf16, int pos, string s)
 		{
 			Debug.Assert(!IsReadonly);
@@ -763,13 +810,15 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
-		/// Does not parse tags.
-		/// If read-only, asserts and fails (unlike most other functions that change text).
 		/// </summary>
 		/// <param name="utf16"></param>
 		/// <param name="from">Start index.</param>
-		/// <param name="to">End index. If -1, uses control text length.</param>
+		/// <param name="to">End index. If -1, uses control text length. Can be less than from.</param>
 		/// <param name="s">Replacement text. Can be null.</param>
+		/// <remarks>
+		/// Does not parse tags.
+		/// If read-only, asserts and fails (unlike most other functions that change text).
+		/// </remarks>
 		public void SetAndReplaceSel(bool utf16, int from, int to, string s)
 		{
 			Debug.Assert(!IsReadonly);
@@ -799,15 +848,15 @@ namespace Au.Controls
 
 		/// <summary>
 		/// SCI_SETSEL and optionally ensures visible.
-		/// If <c>to==-1</c>, use text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.
 		/// </summary>
+		/// <param name="utf16"></param>
+		/// <param name="from"></param>
+		/// <param name="to">If -1, uses text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.</param>
+		/// <param name="makeVisible">Ensure line visible and selection visible. Without it in some cases selection to the left of the caret may be invisible.</param>
 		public void Select(bool utf16, int from, int to, bool makeVisible = false)
 		{
-			bool reverse = to >= 0 && to < from;
-			if(reverse) AMath.Swap(ref from, ref to);
-			NormalizeRange(utf16, ref from, ref to);
-			if(reverse) AMath.Swap(ref from, ref to);
-			if(makeVisible) GoToPos(false, from); //ensures line visible and selection visible (without it in some cases selection to the left of the caret may be invisible)
+			NormalizeRangeCanBeReverse(utf16, ref from, ref to, swapFromTo: false);
+			if(makeVisible) GoToPos(false, from);
 			Call(SCI_SETSEL, from, to);
 		}
 
@@ -1054,37 +1103,29 @@ namespace Au.Controls
 			//tested: with SCI_SEARCHINTARGET slightly slower
 		}
 
-		public void IndicatorClear(int indic) => IndicatorClear(false, indic, 0, -1);
+		public void IndicatorClear(int indic) => IndicatorClear(false, indic, ..);
 
-		public void IndicatorClear(bool utf16, int indic, int from, int to)
+		public void IndicatorClear(bool utf16, int indic, Range r)
 		{
-			NormalizeRange(utf16, ref from, ref to);
+			var (from, to) = NormalizeRange(utf16, r);
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_INDICATORCLEARRANGE, from, to - from);
 		}
 
-		public void IndicatorAdd(bool utf16, int indic, int from, int to)
+		public void IndicatorAdd(bool utf16, int indic, Range r)
 		{
-			NormalizeRange(utf16, ref from, ref to);
+			var (from, to) = NormalizeRange(utf16, r);
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_INDICATORFILLRANGE, from, to - from);
 		}
 
-		public void IndicatorAdd(bool utf16, int indic, int from, int to, int _value)
+		public void IndicatorAdd(bool utf16, int indic, Range r, int _value)
 		{
-			NormalizeRange(utf16, ref from, ref to);
+			var (from, to) = NormalizeRange(utf16, r);
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_SETINDICATORVALUE, _value);
 			Call(SCI_INDICATORFILLRANGE, from, to - from);
 		}
-
-	}
-
-	[Flags]
-	public enum SciFinalCurrentPos
-	{
-		AtStart = 1,
-		AtEnd = 2,
 	}
 
 	/// <summary>

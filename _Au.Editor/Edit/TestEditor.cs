@@ -175,11 +175,18 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		var z = doc.Z;
 		var s = doc.Text;
 
+		//z.Select(false, 300, 295);
+		//z.ReplaceRange(false, 295, 300, "RE");
+		//z.ReplaceRange(false, 300, 295, "RE");
+		//z.ReplaceRange(false, 295, 300, "RE", true);
+		//z.ReplaceRange(false, 300, 295, "RE", true);
+		//z.InsertText(false, 300, "INS");
+
 		//Debug.Assert(false);
 
 		//CodeInfo.Stop();
 
-		//Print(z.CurrentPos8);
+		//Print(z.CurrentPos16);
 
 		//int i = z.SelectionStart8, j = z.SelectionEnd8;
 		//doc.Call(SCI_STARTSTYLING, i);

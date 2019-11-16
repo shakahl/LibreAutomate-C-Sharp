@@ -243,7 +243,7 @@ class CiAutocorrect
 			}
 		}
 
-		c.doc.Z.ReplaceRange(true, cd.position, cd.position + replaceLength, replaceText, ch == ';' ? SciFinalCurrentPos.AtEnd : default);
+		c.doc.Z.ReplaceRange(true, cd.position, cd.position + replaceLength, replaceText, moveCurrentPos: ch == ';');
 		if(newPos > 0) c.doc.Z.CurrentPos16 = newPos;
 
 		if(tempRangeFrom > 0) c.doc.ZTempRanges_Add(this, tempRangeFrom, tempRangeTo);
@@ -780,7 +780,7 @@ class CiAutocorrect
 		if(newlineLast) b.AppendLine();
 
 		var s = b.ToString();
-		doc.Z.ReplaceRange(true, pos, pos, s, SciFinalCurrentPos.AtEnd);
+		doc.Z.ReplaceRange(true, pos, pos, s, moveCurrentPos: true);
 
 		return suppress = true;
 	}

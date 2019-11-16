@@ -1,6 +1,6 @@
-//Code colors and folding.
+//Code colors, folding and error/warning indicators.
 
-//#define PRINT
+#define PRINT
 
 using System;
 using System.Collections.Generic;
@@ -60,9 +60,6 @@ class CiStyling
 		XmlDoc, //tags, CDATA, ///, etc
 		XmlDocText,
 
-		//TODO
-		Boilerplate = 29,
-
 		//EndOfFunctionOrType = 30,
 
 		//STYLE_HIDDEN=31,
@@ -98,9 +95,6 @@ class CiStyling
 		z.StyleForeColor((int)_Style.Excluded, 0x808080); //gray
 		z.StyleForeColor((int)_Style.XmlDoc, 0x808080); //gray
 		z.StyleForeColor((int)_Style.XmlDocText, 0x408000); //green like comment
-
-		//TODO
-		z.StyleFontSize((int)_Style.Boilerplate, 1);
 
 		//CONSIDER: at the end of a function/class/etc definition add a link or dwell-popup to add new function or class etc below. Or better in context menu.
 		//z.StyleHotspot((int)_Style.EndOfFunctionOrType, true);
@@ -138,6 +132,7 @@ class CiStyling
 	Range _visibleLines;
 	ATimer _modTimer;
 	int _modFromEnd; //like _endStyling (SCI_GETENDSTYLED), but from end
+	int _diagCounter;
 	CancellationTokenSource _cancelTS;
 
 	void _DocChanged(SciCode doc, bool opened)
@@ -147,6 +142,8 @@ class CiStyling
 		_visibleLines = default;
 		_modTimer?.Stop();
 		_modFromEnd = int.MaxValue;
+		_diagCounter = 0;
+		_cancelTS?.Cancel(); _cancelTS = null;
 		if(opened) _StylingAndFoldingVisibleFrom0(doc, firstTime: true);
 	}
 
@@ -169,6 +166,16 @@ class CiStyling
 			Sci_GetStylingInfo(doc.SciPtr, 8 | 4, out var si); //fast
 			if(si.visibleFromLine < _visibleLines.Start.Value || si.visibleToLine > _visibleLines.End.Value) {
 				_StylingAndFolding(doc); //all visible
+			} else if(_diagCounter > 0 && ++_diagCounter > 10) {
+				_diagCounter = 0;
+				var p1 = APerf.Create();
+				var cd = new CodeInfo.Context(0);
+				if(cd.GetDocument()) {
+					var semo = cd.document.GetSemanticModelAsync().Result;
+					p1.Next('m');
+					_Diagnostics(semo, cd, doc.Pos16(si.visibleFrom), doc.Pos16(si.visibleTo));
+					p1.NW('e');
+				}
 			}
 		}
 	}
@@ -382,6 +389,37 @@ class CiStyling
 #if PRINT
 		p1.NW('F');
 #endif
+		if(!minimal) {
+			_diagCounter = 1; //update diagnostics after ~2.5 s
+		} else { //erase diagnostic indicators of current line
+			var li = doc.Z.LineStartEndFromPos(false, doc.Z.CurrentPos8, withRN: true);
+			doc.Z.IndicatorClear(false, SciCode.c_indicWarning, li.start..li.end);
+			doc.Z.IndicatorClear(false, SciCode.c_indicError, li.start..li.end);
+		}
+	}
+
+	void _Diagnostics(SemanticModel semo, in CodeInfo.Context cd, int start16, int end16)
+	{
+		var doc = cd.sciDoc;
+		List<Range> ae = null, aw = null;
+		//var comp = semo.Compilation;
+		foreach(var d in semo.GetDiagnostics(TextSpan.FromBounds(start16, end16))) {
+			if(d.IsSuppressed) continue;
+			var sev = d.Severity; if(sev != DiagnosticSeverity.Error && sev != DiagnosticSeverity.Warning) continue;
+			var loc = d.Location; if(!loc.IsInSource) continue;
+			var span = loc.SourceSpan;
+			//Print(sev, span);
+			int start = span.Start, end = span.End;
+			if(end == start) {
+				var code = cd.code;
+				if(end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
+				else if(start > 0) start--;
+			}
+			if(sev == DiagnosticSeverity.Error) (ae ??= new List<Range>()).Add(start..end);
+			else (aw ??= new List<Range>()).Add(start..end);
+		}
+		doc._SetInicatorsWarning(aw);
+		doc._SetInicatorsError(ae);
 	}
 
 	void _Fold(bool firstTime, in CodeInfo.Context cd, int start8, int end8)

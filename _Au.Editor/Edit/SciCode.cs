@@ -34,17 +34,15 @@ partial class SciCode : AuScintilla
 
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
 	public const int c_marginFold = 0;
-	const int c_marginLineNumbers = 1;
-	const int c_marginMarkers = 2; //breakpoints etc
+	public const int c_marginLineNumbers = 1;
+	public const int c_marginMarkers = 2; //breakpoints etc
 
 	//markers. We can use 0-24. Folding 25-31.
-	const int c_markerBookmark = 0;
-	const int c_markerBreakpoint = 1;
-	const int c_markerStepNext = 2;
-	public const int c_markerUnderline = 24;
+	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBreakpoint = 2;
+	//public const int c_markerStepNext = 3;
 
 	//indicators. We can use 8-31. Lexers use 0-7.
-	const int c_indicFind = 8;
+	public const int c_indicFind = 8, c_indicWarning = 9, c_indicError = 10; //info: draws indicators from smaller to bigger, eg error on warning.
 
 	internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
 	{
@@ -70,7 +68,7 @@ partial class SciCode : AuScintilla
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 		Z.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
-		Z.StyleFont(STYLE_DEFAULT, "Consolas", 9); //like default in VS
+		Z.StyleFont(STYLE_DEFAULT, "Consolas", 10); //somehow Scintilla actually uses 9 if 10, and 8 if 9
 		Z.StyleClearAll();
 
 		if(_fn.IsCodeFile) {
@@ -702,26 +700,64 @@ partial class SciCode : AuScintilla
 
 	#region indicators
 
-	bool _indicFindInited;
-	bool _findHilited;
+	bool _indicFindInited, _indicFindSet;
+	bool _indicErrorInited, _indicErrorSet;
+	bool _indicWarningInited, _indicWarningSet;
 
-	internal void _HiliteFind(List<POINT> a)
+	internal void _SetInicatorsFind(List<Range> a)
 	{
-		if(_findHilited) {
-			_findHilited = false;
+		if(_indicFindSet) {
+			_indicFindSet = false;
 			Z.IndicatorClear(c_indicFind);
 		}
 		if(a == null || a.Count == 0) return;
-		_findHilited = true;
+		_indicFindSet = true;
 
 		if(!_indicFindInited) {
 			_indicFindInited = true;
-			Call(SCI_INDICSETSTYLE, c_indicFind, INDIC_STRAIGHTBOX);
-			Call(SCI_INDICSETFORE, c_indicFind, 0x00ffff); Call(SCI_INDICSETALPHA, c_indicFind, 95); //0xa0ffff if white background
+			Call(SCI_INDICSETSTYLE, c_indicFind, INDIC_FULLBOX);
+			Call(SCI_INDICSETFORE, c_indicFind, 0x00ffff); Call(SCI_INDICSETALPHA, c_indicFind, 160); //yellow
+			//Call(SCI_INDICSETFORE, c_indicFind, 0x00a0f0); Call(SCI_INDICSETALPHA, c_indicFind, 160); //orange-brown, almost like in VS
 			Call(SCI_INDICSETUNDER, c_indicFind, 1); //draw before text
 		}
 
-		foreach(var v in a) Z.IndicatorAdd(true, c_indicFind, v.x, v.x + v.y);
+		foreach(var v in a) Z.IndicatorAdd(true, c_indicFind, v);
+	}
+
+	internal void _SetInicatorsError(List<Range> a)
+	{
+		if(_indicErrorSet) {
+			_indicErrorSet = false;
+			Z.IndicatorClear(c_indicError);
+		}
+		if(a == null || a.Count == 0) return;
+		_indicErrorSet = true;
+
+		if(!_indicErrorInited) {
+			_indicErrorInited = true;
+			Call(SCI_INDICSETSTYLE, c_indicError, INDIC_SQUIGGLE); //INDIC_SQUIGGLEPIXMAP thicker
+			Call(SCI_INDICSETFORE, c_indicError, 0xff); //red
+		}
+
+		foreach(var v in a) Z.IndicatorAdd(true, c_indicError, v);
+	}
+
+	internal void _SetInicatorsWarning(List<Range> a)
+	{
+		if(_indicWarningSet) {
+			_indicWarningSet = false;
+			Z.IndicatorClear(c_indicWarning);
+		}
+		if(a == null || a.Count == 0) return;
+		_indicWarningSet = true;
+
+		if(!_indicWarningInited) {
+			_indicWarningInited = true;
+			Call(SCI_INDICSETSTYLE, c_indicWarning, INDIC_SQUIGGLE);
+			Call(SCI_INDICSETFORE, c_indicWarning, 0x008000); //dark green
+		}
+
+		foreach(var v in a) Z.IndicatorAdd(true, c_indicWarning, v);
 	}
 
 	#endregion

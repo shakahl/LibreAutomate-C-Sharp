@@ -1636,12 +1636,26 @@
         </member>
         <member name="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Int32@,System.Int32@)">
             <summary>
-            Converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes and/or <i>to</i> from length to absolute position.
+            If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
             </summary>
-            <param name="utf16">Input parameters are UTF-16.</param>
+            <param name="utf16">Input values are UTF-16.</param>
             <param name="from"></param>
             <param name="to">If -1, uses <see cref="P:Au.Controls.AuScintilla.Len8"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">An argument is negative or <i>to</i> less than <i>from</i>, except when <i>to</i> is -1.</exception>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg greater than text length or <i>to</i> less than <i>from</i>.</exception>
+        </member>
+        <member name="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Range)">
+            <summary>
+            If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
+            </summary>
+            <param name="utf16">Input values are UTF-16.</param>
+            <param name="r">Range. Can be spacified from start or/and from end.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg <i>to</i> less than <i>from</i>.</exception>
+        </member>
+        <member name="M:Au.Controls.SciText.NormalizeRangeCanBeReverse(System.Boolean,System.Int32@,System.Int32@,System.Boolean)">
+            <summary>
+            Same as <see cref="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Int32@,System.Int32@)"/>, but can be <i>to</i> less than <i>from</i>. If so, returns true.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg greater than text length.</exception>
         </member>
         <member name="M:Au.Controls.SciText._ParamPos(System.Boolean,System.Int32)">
             <summary>
@@ -1675,6 +1689,7 @@
         <member name="M:Au.Controls.SciText.SetText(System.String,Au.Controls.SciSetTextFlags,System.Boolean)">
             <summary>
             Replaces all text.
+            Parses tags if need.
             </summary>
             <param name="s">Text.</param>
             <param name="flags"></param>
@@ -1683,9 +1698,11 @@
         <member name="M:Au.Controls.SciText.LibSetText(System.Byte[],System.Int32)">
             <summary>
             Sets UTF-8 text.
+            </summary>
+            <remarks>
             Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
             s must end with 0. Asserts.
-            </summary>
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.LibSetText(System.Byte*)">
             <summary>
@@ -1696,17 +1713,17 @@
         <member name="M:Au.Controls.SciText.AppendText(System.String,System.Boolean,System.Boolean,System.Boolean)">
             <summary>
             Appends text and optionally "\r\n".
-            Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
+            Parses tags if need. Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
             </summary>
             <param name="s"></param>
             <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
             <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
-            <param name="ignoreTags">Don't parse tags, regardless of C.TagsStyle.</param>
+            <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
         </member>
         <member name="M:Au.Controls.SciText.LibAddText(System.Boolean,System.Byte*,System.Int32)">
             <summary>
-            Appends UTF-8 text of specified length.
-            Does not append newline (s should contain it). Does not parse tags. Moves current position and scrolls to the end.
+            Sets or appends UTF-8 text of specified length.
+            Does not parse tags. Moves current position and scrolls to the end.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.LibGetText">
@@ -1801,13 +1818,14 @@
             <param name="withRN">Include \r\n.</param>
             <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
         </member>
-        <member name="M:Au.Controls.SciText.LineStartEndFromPos(System.Boolean,System.Int32,System.Boolean)">
+        <member name="M:Au.Controls.SciText.LineStartEndFromPos(System.Boolean,System.Int32,System.Boolean,System.Nullable{System.Boolean})">
             <summary>
             Gets line index, start and end positions from position.
             </summary>
             <param name="utf16">pos is UTF-16. Return UTF-16.</param>
             <param name="pos">A position in document text. Uses the last line if too big.</param>
             <param name="withRN">Include \r\n.</param>
+            <param name="utf16Return">If not null, overrides <i>utf16</i> for return values.</param>
         </member>
         <member name="M:Au.Controls.SciText.LineText(System.Int32,System.Boolean)">
             <summary>
@@ -1879,8 +1897,8 @@
         </member>
         <member name="M:Au.Controls.SciText.RangeToFullLines(System.Boolean,System.Int32@,System.Int32@,System.Boolean)">
             <summary>
-            Moves 'from' to the start of its line, and 'to' to the end of its line.
-            Does not change 'to' if it is at a line start.
+            Moves <i>from</i> to the start of its line, and <i>to</i> to the end of its line.
+            Does not change <i>to</i> if it is at a line start.
             </summary>
             <param name="utf16"></param>
             <param name="from">Start index.</param>
@@ -1890,39 +1908,44 @@
         <member name="M:Au.Controls.SciText.InsertText(System.Boolean,System.Int32,System.String)">
             <summary>
             SCI_INSERTTEXT.
-            Does not parse tags.
-            Does not change current selection; for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/>.
             </summary>
             <param name="utf16"></param>
             <param name="pos">Start index. Cannot be negative.</param>
             <param name="s">Text to insert. Can be null.</param>
+            <remarks>
+            Does not parse tags.
+            Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.DeleteRange(System.Boolean,System.Int32,System.Int32)">
             <summary>
             SCI_DELETERANGE.
-            Does not parse tags.
-            Does not change current selection, unless it is in the from-to range (including to); for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,Au.Controls.SciFinalCurrentPos)"/> with empty string and <i>finalCurrentPos</i>.
             </summary>
             <param name="utf16"></param>
             <param name="from">Start index.</param>
             <param name="to">End index. If -1, uses control text length.</param>
+            <remarks>
+            Does not parse tags.
+            Does not change current selection, unless it is in the range (including <i>to</i>); for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
+            </remarks>
         </member>
-        <member name="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,Au.Controls.SciFinalCurrentPos)">
+        <member name="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)">
             <summary>
             Replaces text range.
-            Does not parse tags.
-            By default does not change current selection, unless it is in the from-to range (including to).
             </summary>
             <param name="utf16"></param>
             <param name="from">Start index.</param>
-            <param name="to">End index. If -1, uses control text length.</param>
+            <param name="to">End index. If -1, uses control text length. Can be less than <i>from</i>.</param>
             <param name="s">Replacement text. Can be null.</param>
-            <param name="finalCurrentPos">
-            If AtStart or AtEnd, after replacing sets curent position at the start or end of the replacement.
-            Else if current position was in the from-to range (including to), sets at from.
+            <param name="moveCurrentPos">
+            After replacing set curent position at the end of the replacement. If <i>from</i> less than to - at <i>from</i>.
+            Else if current position was in the range (including <i>to</i>), Scintilla sets at <i>from</i>.
             Else does not change current position and selection.
-            Alternatively use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/>; it sets current position at the end of the replacement.
             </param>
+            <remarks>
+            Does not parse tags.
+            By default does not change current selection, unless it is in the range (including <i>to</i>).
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.RangeText(System.Boolean,System.Int32,System.Int32)">
             <summary>
@@ -1935,31 +1958,37 @@
         <member name="M:Au.Controls.SciText.ReplaceSel(System.String)">
             <summary>
             SCI_REPLACESEL.
-            Does not parse tags.
-            If read-only, asserts and fails (unlike most other functions that change text).
             </summary>
             <param name="s">Replacement text. Can be null.</param>
+            <remarks>
+            Does not parse tags.
+            If read-only, asserts and fails (unlike most other functions that change text).
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.ReplaceSel(System.Boolean,System.Int32,System.String)">
             <summary>
             GoToPos and SCI_REPLACESEL.
-            Does not parse tags.
-            If read-only, asserts and fails (unlike most other functions that change text).
             </summary>
             <param name="utf16"></param>
             <param name="s">Replacement text. Can be null.</param>
             <param name="pos">Start index.</param>
+            <remarks>
+            Does not parse tags.
+            If read-only, asserts and fails (unlike most other functions that change text).
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.SetAndReplaceSel(System.Boolean,System.Int32,System.Int32,System.String)">
             <summary>
             Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
-            Does not parse tags.
-            If read-only, asserts and fails (unlike most other functions that change text).
             </summary>
             <param name="utf16"></param>
             <param name="from">Start index.</param>
-            <param name="to">End index. If -1, uses control text length.</param>
+            <param name="to">End index. If -1, uses control text length. Can be less than from.</param>
             <param name="s">Replacement text. Can be null.</param>
+            <remarks>
+            Does not parse tags.
+            If read-only, asserts and fails (unlike most other functions that change text).
+            </remarks>
         </member>
         <member name="M:Au.Controls.SciText.GoToPos(System.Boolean,System.Int32)">
             <summary>
@@ -1974,8 +2003,11 @@
         <member name="M:Au.Controls.SciText.Select(System.Boolean,System.Int32,System.Int32,System.Boolean)">
             <summary>
             SCI_SETSEL and optionally ensures visible.
-            If <c>to==-1</c>, use text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.
             </summary>
+            <param name="utf16"></param>
+            <param name="from"></param>
+            <param name="to">If -1, uses text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.</param>
+            <param name="makeVisible">Ensure line visible and selection visible. Without it in some cases selection to the left of the caret may be invisible.</param>
         </member>
         <member name="P:Au.Controls.SciText.IsReadonly">
             <summary>

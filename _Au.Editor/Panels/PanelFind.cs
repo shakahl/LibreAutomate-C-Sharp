@@ -365,7 +365,7 @@ class PanelFind : AuUserControlBase
 		Panels.Found.ZControl.Z.ClearText();
 		if(_cName.Checked) {
 			_aEditor.Clear();
-			Panels.Editor.ZActiveDoc?._HiliteFind(null);
+			Panels.Editor.ZActiveDoc?._SetInicatorsFind(null);
 		}
 		ZUpdateQuickResults(false);
 	}
@@ -408,7 +408,7 @@ class PanelFind : AuUserControlBase
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
-				Panels.Editor.ZActiveDoc?._HiliteFind(_aEditor);
+				Panels.Editor.ZActiveDoc?._SetInicatorsFind(_aEditor);
 			}
 		});
 
@@ -450,19 +450,19 @@ class PanelFind : AuUserControlBase
 		return true;
 	}
 
-	void _FindAllInString(string text, in _TextToFind f, List<POINT> a, bool one = false)
+	void _FindAllInString(string text, in _TextToFind f, List<Range> a, bool one = false)
 	{
 		a.Clear();
 		if(f.rx != null) {
 			foreach(var g in f.rx.FindAllG(text)) {
-				a.Add((g.Start, g.Length));
+				a.Add(g.Start..g.End);
 				if(one) break;
 			}
 		} else {
 			for(int i = 0; i < text.Length; i += f.findText.Length) {
 				i = f.wholeWord ? text.FindWord(f.findText, i.., !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
 				if(i < 0) break;
-				a.Add((i, f.findText.Length));
+				a.Add(i..(i + f.findText.Length));
 				if(one) break;
 			}
 		}
@@ -550,14 +550,14 @@ class PanelFind : AuUserControlBase
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for(int i = a.Count - 1; i >= 0; i--) {
 				var v = a[i];
-				doc.Z.ReplaceRange(true, v.x, v.x + v.y, repl);
+				doc.Z.ReplaceRange(true, v.Start.Value, v.End.Value, repl);
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		}
 		//Easier/faster would be to create new text and call Z.SetText. But then all non-text data is lost: markers, folds, caret position...
 	}
 
-	List<POINT> _aEditor = new List<POINT>(); //index/length of all found instances in editor text
+	List<Range> _aEditor = new List<Range>(); //all found in editor text
 
 	void _FindAllInEditor()
 	{
@@ -570,7 +570,7 @@ class PanelFind : AuUserControlBase
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		base.OnVisibleChanged(e);
-		if(!_cName.Checked) Panels.Editor.ZActiveDoc?._HiliteFind(Visible ? _aEditor : null);
+		if(!_cName.Checked) Panels.Editor.ZActiveDoc?._SetInicatorsFind(Visible ? _aEditor : null);
 	}
 
 	public void ZCtrlF()
@@ -630,7 +630,7 @@ class PanelFind : AuUserControlBase
 				if(!_OpenLinkClicked(a[0])) return;
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
-				int from = a[1].ToInt(), to = from + a[2].ToInt();
+				int from = a[1].ToInt(), to = a[2].ToInt();
 				ATimer.After(10, _ => doc.Z.Select(true, from, to, true));
 				//info: scrolling works better with async when now opened the file
 			});
@@ -644,7 +644,7 @@ class PanelFind : AuUserControlBase
 				var z = Panels.Found.ZControl.Z;
 				z.IndicatorClear(c_indic);
 				var v = z.LineStartEndFromPos(false, z.CurrentPos8);
-				z.IndicatorAdd(false, c_indic, v.start, v.end);
+				z.IndicatorAdd(false, c_indic, v.start..v.end);
 				return true;
 			}
 			c.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
@@ -652,7 +652,7 @@ class PanelFind : AuUserControlBase
 		}
 
 		var b = new StringBuilder();
-		var a = new List<POINT>();
+		var a = new List<Range>();
 		var bSlow = !names && f.rx != null ? new StringBuilder() : null;
 		bool jited = false;
 		int searchIn = names ? 0 : _SearchIn;
@@ -710,17 +710,17 @@ class PanelFind : AuUserControlBase
 					if(b.Length < 10_000_000) {
 						for(int i = 0; i < a.Count; i++) {
 							var p = a[i];
-							int lineStart = p.x, lineEnd = p.x + p.y;
+							int start = p.Start.Value, end = p.End.Value, lineStart = start, lineEnd = end;
 							int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
 							for(; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if(c == '\n' || c == '\r') break; }
 							bool limitStart = lineStart == lsMax && lineStart > 0;
 							for(; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if(c == '\r' || c == '\n') break; }
 							bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
-							Au.Util.AStringUtil.LineAndColumn(text, p.x, out int lineIndex, out _);
-							b.AppendFormat("<+f \"{0} {1} {2}\">", link, p.x.ToString(), p.y.ToString()).Append((lineIndex + 1).ToString("D3")).Append(":<> ")
-								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, p.x - lineStart).Append("</\a>")
-								.Append("<z 0xffffa0><\a>").Append(text, p.x, p.y).Append("</\a><>")
-								.Append("<\a>").Append(text, p.x + p.y, lineEnd - p.x - p.y).AppendLine(limitEnd ? "</\a>…" : "</\a>");
+							Au.Util.AStringUtil.LineAndColumn(text, start, out int lineIndex, out _);
+							b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString()).Append((lineIndex + 1).ToString("D3")).Append(":<> ")
+								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
+								.Append("<z 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
+								.Append("<\a>").Append(text, end, lineEnd - end).AppendLine(limitEnd ? "</\a>…" : "</\a>");
 						}
 					}
 				}
