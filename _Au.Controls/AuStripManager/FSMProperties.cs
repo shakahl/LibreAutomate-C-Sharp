@@ -402,7 +402,7 @@ namespace Au.Controls
 			this.comboUsedHotkeys.CausesValidation = false;
 			this.comboUsedHotkeys.DropDownHeight = 400;
 			this.comboUsedHotkeys.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-			this.comboUsedHotkeys.Font = new System.Drawing.Font("Courier New", 8F);
+			this.comboUsedHotkeys.Font = new System.Drawing.Font("Consolas", 8F);
 			this.comboUsedHotkeys.IntegralHeight = false;
 			this.comboUsedHotkeys.Location = new System.Drawing.Point(96, 56);
 			this.comboUsedHotkeys.MaxDropDownItems = 20;

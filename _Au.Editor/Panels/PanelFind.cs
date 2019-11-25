@@ -365,7 +365,7 @@ class PanelFind : AuUserControlBase
 		Panels.Found.ZControl.Z.ClearText();
 		if(_cName.Checked) {
 			_aEditor.Clear();
-			Panels.Editor.ZActiveDoc?._SetInicatorsFind(null);
+			Panels.Editor.ZActiveDoc?._InicatorsFind(null);
 		}
 		ZUpdateQuickResults(false);
 	}
@@ -408,7 +408,7 @@ class PanelFind : AuUserControlBase
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
-				Panels.Editor.ZActiveDoc?._SetInicatorsFind(_aEditor);
+				Panels.Editor.ZActiveDoc?._InicatorsFind(_aEditor);
 			}
 		});
 
@@ -570,7 +570,7 @@ class PanelFind : AuUserControlBase
 	protected override void OnVisibleChanged(EventArgs e)
 	{
 		base.OnVisibleChanged(e);
-		if(!_cName.Checked) Panels.Editor.ZActiveDoc?._SetInicatorsFind(Visible ? _aEditor : null);
+		if(!_cName.Checked) Panels.Editor.ZActiveDoc?._InicatorsFind(Visible ? _aEditor : null);
 	}
 
 	public void ZCtrlF()

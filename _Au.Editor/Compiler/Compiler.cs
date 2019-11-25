@@ -19,17 +19,15 @@ using static Au.AStatic;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
-using System.Collections.Immutable;
 
 namespace Au.Compiler
 {
 	/// <summary>
 	/// Compiles C# files.
 	/// </summary>
-	public static partial class Compiler
+	static partial class Compiler
 	{
 		/// <summary>
 		/// Compiles C# file or project if need.
@@ -48,11 +46,11 @@ namespace Au.Compiler
 		///		If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
 		///		Else compiles but does not create output files.
 		/// </remarks>
-		public static bool Compile(ECompReason reason, out CompResults r, IWorkspaceFile f, IWorkspaceFile projFolder = null)
+		public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null)
 		{
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 			r = null;
-			var cache = XCompiled.OfCollection(f.IwfWorkspace);
+			var cache = XCompiled.OfCollection(f.Model);
 			bool isCompiled = reason != ECompReason.CompileAlways && cache.IsCompiled(f, out r, projFolder);
 
 			//Print("isCompiled=" + isCompiled);
@@ -129,7 +127,7 @@ namespace Au.Compiler
 			}
 		}
 
-		static bool _Compile(bool forRun, IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
+		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder)
 		{
 			APerf.First();
 			r = new CompResults();
@@ -147,13 +145,12 @@ namespace Au.Compiler
 				return false;
 			}
 
-			XCompiled cache = XCompiled.OfCollection(f.IwfWorkspace);
-			string outPath = null, outFile = null;
+			XCompiled cache = XCompiled.OfCollection(f.Model);
+			string outPath = null, outFile = null, fileName = null;
 			if(needOutputFiles) {
-				string fileName;
 				if(m.OutputPath != null) {
-					outPath = m.OutputPath; //info: the directory is already created
-					fileName = m.Name + (m.Role == ERole.classLibrary ? ".dll" : ".exe");
+					outPath = m.OutputPath;
+					fileName = m.Name + ".dll";
 				} else {
 					outPath = cache.CacheDirectory;
 					fileName = f.IdString;
@@ -164,12 +161,11 @@ namespace Au.Compiler
 
 			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
-			var trees = new List<CSharpSyntaxTree>(m.CodeFiles.Count + 1);
 			var po = m.CreateParseOptions();
-
-			foreach(var f1 in m.CodeFiles) {
-				var tree = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
-				trees.Add(tree);
+			var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
+			for(int i = 0; i < trees.Length; i++) {
+				var f1 = m.CodeFiles[i];
+				trees[i] = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
 				//	Our AOutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
 			}
@@ -178,9 +174,13 @@ namespace Au.Compiler
 			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, m.CreateCompilationOptions());
 			//APerf.Next('c');
 
-			string pdbFile = null, xdFile = null;
+#if PDB
+			string pdbFile = null;
+#endif
 			MemoryStream pdbStream = null;
-			Stream xdStream = null, resNat = null;
+			string xdFile = null;
+			Stream xdStream = null;
+			Stream resNat = null;
 			ResourceDescription[] resMan = null;
 			EmitOptions eOpt = null;
 
@@ -188,6 +188,7 @@ namespace Au.Compiler
 				_AddAttributes(ref compilation, needVersionEtc: m.Role == ERole.miniProgram || m.Role == ERole.exeProgram);
 
 				//create debug info always. It is used for run-time error links.
+#if PDB
 				pdbStream = new MemoryStream();
 				if(m.OutputPath != null) {
 					pdbFile = Path.ChangeExtension(outFile, "pdb");
@@ -198,13 +199,25 @@ namespace Au.Compiler
 					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
 					//adds < 1 KB; almost the same compiling speed. Separate pdb file is 14 KB; 2 times slower compiling, slower loading.
 				}
+#else
+				if(m.OutputPath != null) {
+					//we don't use classic pdb file becouse of this error after switching to .NET Core:
+					//	Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''
+					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
+				} else {
+					pdbStream = new MemoryStream();
+					//eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded); //no, it is difficult to extract, because we load assembly from byte[] to avoid locking. We instead append portable PDB stream to the assembly stream.
+					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
+					//adds < 1 KB; almost the same compiling speed. Separate pdb file is 14 KB; 2 times slower compiling, slower loading.
+				}
+#endif
 
 				if(m.XmlDocFile != null) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = APath.Normalize(m.XmlDocFile, outPath)));
 
 				resMan = _CreateManagedResources(m);
 				if(err.ErrorCount != 0) { err.PrintAll(); return false; }
 
-				resNat = _CreateNativeResources(m, compilation);
+				if(m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) resNat = _CreateNativeResources(m, compilation);
 				if(err.ErrorCount != 0) { err.PrintAll(); return false; }
 
 				//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
@@ -227,12 +240,14 @@ namespace Au.Compiler
 					err.AddErrorOrWarning(d, f);
 					if(d.Severity == DiagnosticSeverity.Error && d.Id == "CS0009") MetaReferences.RemoveBadReference(d.GetMessage());
 				}
-				if(!err.IsEmpty) err.PrintAll();
+				err.PrintAll();
 			}
 			if(!emitResult.Success) {
 				if(needOutputFiles) {
 					AFile.Delete(outFile);
+#if PDB
 					if(pdbFile != null) AFile.Delete(pdbFile);
+#endif
 					if(xdFile != null) AFile.Delete(xdFile);
 				}
 				return false;
@@ -250,30 +265,36 @@ namespace Au.Compiler
 				using(var fileStream = AFile.WaitIfLocked(() => File.Create(outFile, (int)asmStream.Length))) {
 					asmStream.CopyTo(fileStream);
 
-					pdbStream.Position = 0;
 					if(m.OutputPath == null) {
+						pdbStream.Position = 0;
 						pdbStream.CopyTo(fileStream);
 						r.pdbOffset = (int)asmStream.Length;
 					} else {
+#if PDB
+						pdbStream.Position = 0;
 						using(var v = AFile.WaitIfLocked(() => File.Create(pdbFile))) pdbStream.CopyTo(v);
+#endif
 					}
 				}
 				r.file = outFile;
 
-				//copy non-.NET references to the output directory
 				if(m.Role == ERole.exeProgram) {
-					//APerf.Next();
-					_CopyReferenceFiles(m);
-				}
+					//copy Core app host template exe, add native resources, set console flag if need
+					string exeFile = _AppHost(outFile, m);
 
-				//copy config file to the output directory
-				//var configFile = outFile + ".config";
-				//if(m.ConfigFile != null) {
-				//	r.hasConfig = true;
-				//	_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
-				//} else if(AFile.ExistsAsFile(configFile, true)) {
-				//	AFile.Delete(configFile);
-				//}
+					//APerf.Next();
+					//copy non-.NET references to the output directory
+					_CopyReferenceFiles(m);
+
+					//copy config file to the output directory
+					//var configFile = exeFile + ".config";
+					//if(m.ConfigFile != null) {
+					//	r.hasConfig = true;
+					//	_CopyFileIfNeed(m.ConfigFile.FilePath, configFile);
+					//} else if(AFile.ExistsAsFile(configFile, true)) {
+					//	AFile.Delete(configFile);
+					//}
+				}
 			}
 
 			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
@@ -297,17 +318,16 @@ namespace Au.Compiler
 			return true;
 		}
 
-		//FUTURE: delete if unused
-		public static void Warmup(Document document)
-		{
-			var compilation = document.Project.GetCompilationAsync().Result;
-			//var pdbStream = new MemoryStream();
-			//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
-			var asmStream = new MemoryStream(4096);
-			compilation.Emit(asmStream);
-			//compilation.Emit(asmStream, pdbStream, options: eOpt); //somehow makes slower later
-			//compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
-		}
+		//public static void Warmup(Document document)
+		//{
+		//	var compilation = document.Project.GetCompilationAsync().Result;
+		//	//var pdbStream = new MemoryStream();
+		//	//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
+		//	var asmStream = new MemoryStream(4096);
+		//	compilation.Emit(asmStream);
+		//	//compilation.Emit(asmStream, pdbStream, options: eOpt); //somehow makes slower later
+		//	//compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
+		//}
 
 		/// <summary>
 		/// Adds some attributes if not specified in code.
@@ -357,7 +377,7 @@ namespace Au.Compiler
 			if(a == null || a.Count == 0) return null;
 			var stream = new MemoryStream();
 			var rw = new ResourceWriter(stream);
-			IWorkspaceFile curFile = null;
+			FileNode curFile = null;
 			try {
 				foreach(var v in a) {
 					curFile = v.f;
@@ -427,7 +447,7 @@ namespace Au.Compiler
 
 			if(m.IconFile == null && manifestPath == null && m.ResFile == null && m.OutputPath == null) return null;
 			Stream manStream = null, icoStream = null;
-			IWorkspaceFile curFile = null;
+			FileNode curFile = null;
 			try {
 				if(m.ResFile != null) return File.OpenRead((curFile = m.ResFile).FilePath);
 				if(manifestPath != null) { curFile = manifest; manStream = File.OpenRead(manifestPath); }
@@ -443,13 +463,48 @@ namespace Au.Compiler
 			}
 		}
 
-		static void _ResourceException(Exception e, MetaComments m, IWorkspaceFile curFile)
+		static void _ResourceException(Exception e, MetaComments m, FileNode curFile)
 		{
 			var em = e.ToStringWithoutStack();
 			var err = m.Errors;
 			var f = m.CodeFiles[0].f;
 			if(curFile == null) err.AddError(f, "Failed to add resources. " + em);
 			else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
+		}
+
+		static string _AppHost(string outFile, MetaComments m)
+		{
+			//A .NET Core exe actually is a managed dll hosted by a native exe file known as apphost.
+			//When creating an exe, VS copies template apphost from eg "C:\Program Files\dotnet\sdk\3.0.100\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
+			//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
+
+			string exeFile = outFile.ReplaceAt(outFile.Length - 3, 3, "exe"); //assembly dll -> native host exe
+			var appHost = AFolders.ThisAppBS + (m.Prefer32Bit ? "32" : "64") + @"\Au.AppHost.exe";
+#if true
+			AFile.Copy(appHost, exeFile, IfExists.Delete);
+			bool done = false;
+			try {
+				//set console flag in file headers
+				if(m.Console) {
+					using var fs = File.OpenWrite(exeFile);
+					fs.Position = 0x14c;
+					fs.WriteByte(3); //IMAGE_SUBSYSTEM_WINDOWS_CUI
+				}
+				//copy native resources from assembly dll. Don't need native resources in it, but this is how VS does, so we too.
+				using(var ru = new Microsoft.NET.HostModel.ResourceUpdater(exeFile)) {
+					ru.AddResourcesFromPEImage(outFile).Update();
+				}
+				File.SetLastWriteTimeUtc(exeFile, DateTime.UtcNow);
+				done = true;
+			}
+			finally { if(!done) AFile.Delete(exeFile); }
+#else
+			//works, but: 1. Need nuget Microsoft.NET.HostModel, or copy more code from its source. 2. Apphost exe must be console; not good because used not only here. 3. Apphost exe must have a string placeholder; it is the easiest part.
+			//	Most of the above code is like HostWriter.CreateAppHost does.
+			Microsoft.NET.HostModel.AppHost.HostWriter.CreateAppHost(appHost, exeFile, fileName, !m.Console, outFile); //nuget Microsoft.NET.HostModel
+#endif
+
+			return exeFile;
 		}
 
 		static void _CopyReferenceFiles(MetaComments m)

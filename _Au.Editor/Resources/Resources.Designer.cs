@@ -1441,24 +1441,6 @@ namespace Au.Editor.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to &lt;+p help&gt;Help&lt;&gt;
-        ///&lt;+p options&gt;Options&lt;&gt; &lt;.r&gt;(?imsnxUJ)&lt;&gt; and &lt;.r&gt;(*...)&lt;&gt;
-        ///&lt;+p meta&gt;Metacharacters&lt;&gt; &lt;.r&gt;^ $ . [ | ( ) * + ? { \&lt;&gt;
-        ///&lt;+p escape&gt;Escaped chars&lt;&gt; &lt;.r&gt;\^ \n&lt;&gt; etc and text &lt;.r&gt;\Q...\E&lt;&gt;
-        ///&lt;+p charTypes&gt;Any char, digit, word, space&lt;&gt; &lt;.r&gt;. \d \w \s \R&lt;&gt;
-        ///&lt;+p charClasses&gt;Character classes&lt;&gt; &lt;.r&gt;[abc]&lt;&gt; and &lt;.r&gt;[:posix:]&lt;&gt;
-        ///&lt;+p repetition&gt;Repetition quantifiers&lt;&gt; &lt;.r&gt;* + ? {n} {n,m}&lt;&gt;
-        ///&lt;+p startEnd&gt;Start/end of string/line/word&lt;&gt; &lt;.r&gt;^ $ \b&lt;&gt; etc
-        ///&lt;+p or&gt;OR operator&lt;&gt; &lt;.r&gt;A|B|C&lt;&gt;
-        ///&lt;+p groups&gt;Groups&lt;&gt; [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string Regex {
-            get {
-                return ResourceManager.GetString("Regex", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
         internal static System.Drawing.Bitmap resources {

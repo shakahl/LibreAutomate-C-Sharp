@@ -57,20 +57,20 @@ class CiQuickInfo
 			b.AppendFormat("<img src='@k{0}' style='padding-top: 2px' />", (int)kind);
 		}
 
-		bool hasDocComm = false;
-		QuickInfoSection descr = null;
+		//bool hasDocComm = false;
+		//QuickInfoSection descr = null;
 		var a = r.Sections;
 		for(int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//Print(se.Kind, se.Text);
 			int excFrom = 0;
 			switch(se.Kind) {
-			case QuickInfoSectionKinds.Description:
-				descr = se;
-				break;
-			case QuickInfoSectionKinds.DocumentationComments:
-				hasDocComm = true;
-				break;
+			//case QuickInfoSectionKinds.Description:
+			//	descr = se;
+			//	break;
+			//case QuickInfoSectionKinds.DocumentationComments:
+			//	hasDocComm = true;
+			//	break;
 			case QuickInfoSectionKinds.Exception:
 				excFrom = b.Length + 12;
 				break;
@@ -80,18 +80,6 @@ class CiQuickInfo
 			b.Append(i > 0 ? "</p>" : "</div>");
 
 			if(excFrom > 0) b.Replace(":<br>", ": ", excFrom, b.Length - excFrom).Replace("><br>", ">, ", excFrom, b.Length - excFrom); //exceptions make single line
-		}
-
-		//get namespace XML doc
-		if(!hasDocComm && !r.Tags.IsDefaultOrEmpty && r.Tags[0] == "Namespace" && descr != null && descr.Text.RegexMatch(@"^namespace ([\w\.]+)", 1, out string ns)) {
-			string xml = MetaReferences.GetNamespaceDocXml(ns);
-			if(xml != null) {
-				b.Append("<p>");
-				var model = await cd.document.GetSemanticModelAsync(); //fast. Usually TryGetSemanticModel succeeds.
-				var tt = CiHtml.GetTaggedTextForXml(xml, model, position);
-				CiHtml.TaggedPartsToHtml(b, tt);
-				b.Append("</p>");
-			}
 		}
 
 		b.Append("</body>");

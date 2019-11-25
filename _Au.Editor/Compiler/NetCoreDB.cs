@@ -20,19 +20,19 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 
-class NetCoreDB
+static class NetCoreDB
 {
 	/// <summary>
 	/// Creates SQLite databases containing design-time assemblies and XML documentation files of all .NET Core runtimes of installed .NET Core SDKs.
 	/// Creates with names ref.version.db (eg ref.3.0.0.db) and doc.version.db.
 	/// We ship and at run time load databases of single version, named ref.db and doc.db. In the future should allow to download and use multiple versions.
 	/// Also this function allows users to create databases from SDKs installed on their PC, but currently this feature is not exposed. Would need to add UI and exception handling.
-	/// ref.db contains dlls from 'dotnet\packs' folder. They contain only metadata of public API, not all code like dlls in the 'dotnet\shared' folder. Also it contains Au.dll.
+	/// ref.db contains dlls from 'dotnet\packs' folder. They contain only metadata of public API, not all code like dlls in the 'dotnet\shared' folder.
 	///		Why need it when we can load PortableExecutableReference from 'dotnet\shared' folder? Because:
 	///			1. They are big and may add 100 MB of process memory. We need to load all, because cannot know which are actually used in various stages of compilation.
 	///			2. When loading from dll files, Windows Defender makes it as slow as 2.5 s or more, unless the files already are in OS file buffers.
 	///			3. Better compatibility. See https://github.com/dotnet/standard/blob/master/docs/history/evolution-of-design-time-assemblies.md
-	///	doc.db contains XML documentation files of .NET Core assemblies and of Au.dll. From the same 'dotnet\packs' folder.
+	///	doc.db contains XML documentation files of .NET Core assemblies. From the same 'dotnet\packs' folder.
 	///		Why need it:
 	///			1. Else users would have to download whole .NET Core SDK. Now need only runtimes.
 	///			2. Parsed XML files can use eg 200 MB of process memory. Now we get doc of a single type/method/etc from database only when need; all other data is not in memory.
@@ -42,7 +42,7 @@ class NetCoreDB
 		Cursor.Current = Cursors.WaitCursor;
 		if(0 == AFolders.NetRuntimeBS.RegexReplace(@"(?i)\\shared\\(Microsoft\.NETCore\.App)\\.+", @"\packs\$1.Ref", out var refDir, 1)) throw new AuException();
 		//Print(refDir);
-		foreach(var f in AFile.EnumDirectory(refDir, FEFlags.UseRawPath)) {
+		foreach(var f in AFile.EnumDirectory(refDir, FEFlags.UseRawPath)) { //for each version
 			if(!f.IsDirectory) continue;
 			_Create(refDir, f.Name);
 		}
@@ -71,7 +71,6 @@ class NetCoreDB
 		d.Execute("CREATE TABLE ref (name TEXT PRIMARY KEY, data BLOB)");
 		using var statInsert = d.Statement("INSERT OR REPLACE INTO ref VALUES (?, ?)");
 
-		_AddFile("Au", AFolders.ThisAppBS + "Au.dll"); //FUTURE: try to remove code, like the .NET Core design-time assemblies. Not important, just saves ~1 MB of memory and maybe 10 ms of startup time.
 		_AddDir(dir1, "WindowsBase", "System.Drawing");
 		_AddDir(dir2);
 
@@ -114,7 +113,6 @@ class NetCoreDB
 		var haveRefs = new List<string>();
 		var uniq = new Dictionary<string, string>(); //name -> asmName
 
-		_AddFile("Au", AFolders.ThisAppBS + "Au.xml");
 		_AddDir(dir1, "WindowsBase");
 		_AddDir(dir2);
 
@@ -136,12 +134,12 @@ class NetCoreDB
 					Print("<><c 0x808080>" + f.Name + "</c>");
 					continue;
 				}
-				_AddFile(asmName, f.FullPath, isNET: true);
+				_AddFile(asmName, f.FullPath);
 				//break;
 			}
 		}
 
-		void _AddFile(string asmName, string xmlPath, bool isNET = false)
+		void _AddFile(string asmName, string xmlPath)
 		{
 			//Print(asmName);
 			haveRefs.Add(asmName);
@@ -171,4 +169,8 @@ class NetCoreDB
 			}
 		}
 	}
+
+	//public static void UpdateIfNeed()
+	//{
+	//}
 }

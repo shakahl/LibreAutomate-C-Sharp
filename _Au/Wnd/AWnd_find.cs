@@ -109,7 +109,9 @@ namespace Au
 			/// </summary>
 			/// <exception cref="ArgumentException">See <see cref="AWnd.Find"/>.</exception>
 			public Finder(
-				string name = null, string cn = null, WF3 program = default,
+				[ParamString(PSFormat.AWildex)] string name = null,
+				[ParamString(PSFormat.AWildex)] string cn = null,
+				[ParamString(PSFormat.AWildex)] WF3 program = default,
 				WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 			{
 				_name = name;
@@ -481,7 +483,9 @@ namespace Au
 		/// </example>
 		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
 		public static AWnd Find(
-			string name = null, string cn = null, WF3 program = default,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WF3 program = default,
 			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 		{
 			var f = new Finder(name, cn, program, flags, also, contains);
@@ -520,7 +524,9 @@ namespace Au
 		/// <seealso cref="GetWnd.MainWindows"/>
 		/// <seealso cref="GetWnd.ThreadWindows"/>
 		public static AWnd[] FindAll(
-			string name = null, string cn = null, WF3 program = default,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WF3 program = default,
 			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 		{
 			var f = new Finder(name, cn, program, flags, also, contains);
@@ -617,7 +623,9 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static AWnd FindOrRun(
-			string name = null, string cn = null, WF3 program = default,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WF3 program = default,
 			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null,
 			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
@@ -936,7 +944,7 @@ namespace Au.Types
 		WF3(object o) => _o = o;
 
 		/// <summary>Program name like "notepad.exe", or null.</summary>
-		public static implicit operator WF3(string program) => new WF3(program);
+		public static implicit operator WF3([ParamString(PSFormat.AWildex)] string program) => new WF3(program);
 
 		/// <summary>Process id.</summary>
 		public static WF3 Process(int processId) => new WF3(processId);

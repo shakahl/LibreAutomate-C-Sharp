@@ -258,7 +258,10 @@ namespace Au.Triggers
 		/// <exception cref="ArgumentException">See <see cref="AWnd.Find"/>.</exception>
 		/// <seealso cref="Last"/>
 		public Action<WindowTriggerArgs> this[TWEvent winEvent,
-				string name = null, string cn = null, WF3 program = default, Func<AWnd, bool> also = null, object contains = null,
+				[ParamString(PSFormat.AWildex)] string name = null,
+				[ParamString(PSFormat.AWildex)] string cn = null,
+				[ParamString(PSFormat.AWildex)] WF3 program = default,
+				Func<AWnd, bool> also = null, object contains = null,
 				TWFlags flags = 0, TWLater later = 0
 				] {
 			set {

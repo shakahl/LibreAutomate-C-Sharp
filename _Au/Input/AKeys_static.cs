@@ -611,10 +611,9 @@ namespace Au
 		/// - string - keys. One or more key names separated by spaces or operators. More info in Remarks.
 		/// <br/>Example: <c>Key("Enter A Ctrl+A");</c>
 		/// <br/>See <see cref="AddKeys"/>.
-		/// - string after a "keys" string - literal text. When there are several strings in sequence, they are interpreted as keys, text, keys, text...
-		/// <br/>Example: <c>Key("keys", "text", "keys", "text", 500, "keys", "text", "keys", KKey.Back, "keys", "text");</c>
-		/// <br/>Function <see cref="Text"/> is the same as this function, but the first parameter is text.
-		/// <br/>To send text can be used keys or clipboard, depending on <see cref="AOpt.Key"/> and text.
+		/// - <see cref="KText"/> - literal text, like function <see cref="Text"/>.
+		/// <br/>Example: <c>Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
+		/// <br/>Uses virtual keystrokes or the clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// <br/>See <see cref="AddText"/>.
 		/// - <see cref="KKey"/> - a single key.
 		/// <br/>Example: <c>Key("Shift+", KKey.Left, "*3");</c> is the same as <c>Key("Shift+Left*3");</c>.
@@ -624,14 +623,13 @@ namespace Au
 		/// <br/>See <see cref="AddSleep"/>.
 		/// - <see cref="Action"/> - callback function.
 		/// <br/>Example: <c>Action click = () => AMouse.Click(); Key("Shift+", click);</c>
-		/// <br/>See <see cref="AddCallback"/>.
+		/// <br/>See <see cref="AddAction"/>.
 		/// - null or "" - nothing.
-		/// <br/>Example: <c>Key("keys", 500, "", "text");</c>
 		/// - (int, bool) - a single key, specified using scan code and extended-key flag.
-		/// <br/>Example: <c>Key("", "key F1:", (0x3B, false));</c>
+		/// <br/>Example: <c>Key((0x3B, false)); //key F1</c>
 		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
 		/// - (KKey, int, bool) - a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
-		/// <br/>Example: <c>Key("", "numpad Enter:", (KKey.Enter, 0, true));</c>
+		/// <br/>Example: <c>Key((KKey.Enter, 0, true)); //numpad Enter</c>
 		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
@@ -652,29 +650,28 @@ namespace Au
 		/// <tr>
 		/// <td>Named keys</td>
 		/// <td>
-		/// <b>Modifier:</b> Alt, Ctrl, Shift, Win
-		/// <br/><b>Right side:</b> RAlt, RCtrl, RShift, RWin
-		/// <br/><b>Lock:</b> CapsLock, NumLock, ScrollLock
-		/// <br/><b>Function:</b> F1-F24
-		/// <br/><b>Arrow:</b> Down, Left, Right, Up
-		/// <br/><b>Other:</b> Back, Del, End, Enter, Esc, Home, Ins, Menu, PgDown, PgUp, PrtSc, Space, Tab
+		/// <b>Modifier:</b> <c>Alt</c>, <c>Ctrl</c>, <c>Shift</c>, <c>Win</c>, <c>RAlt</c>, <c>RCtrl</c>, <c>RShift</c>, <c>RWin</c>
+		/// <br/><b>Navigate:</b> <c>Esc</c>, <c>End</c>, <c>Home</c>, <c>PgDn</c>, <c>PgUp</c>, <c>Down</c>, <c>Left</c>, <c>Right</c>, <c>Up</c>
+		/// <br/><b>Other:</b> <c>Back</c>, <c>Del</c>, <c>Enter</c>, <c>Menu</c>, <c>Pause</c>, <c>PrtSc</c>, <c>Space</c>, <c>Tab</c>
+		/// <br/><b>Function:</b> <c>F1</c>-<c>F24</c>
+		/// <br/><b>Lock:</b> <c>CapsLock</c>, <c>NumLock</c>, <c>ScrollLock</c>, <c>Ins</c>
 		/// </td>
 		/// <td>Start with an uppercase character. Only the first 3 characters are significant; others can be any ASCII letters. For example, can be <c>"Back"</c>, <c>"Bac"</c>, <c>"Backspace"</c> or <c>"BACK"</c>, but not <c>"back"</c> or <c>"Ba"</c> or <c>"Back5"</c>.
 		/// <br/>
-		/// <br/>Alias: AltGr (RAlt), App (Menu), PageDown or PD (PgDn), PageUp or PU (PgUp), PrintScreen or PS (PrtSc), BS (Back), PB (Pause/Break), CL (CapsLock), NL (NumLock), SL (ScrollLock), HM (Home).
+		/// <br/>Alias: <c>AltGr</c> (RAlt), <c>App</c> (Menu), <c>PageDown</c> or <c>PD</c> (PgDn), <c>PageUp</c> or <c>PU</c> (PgUp), <c>PrintScreen</c> or <c>PS</c> (PrtSc), <c>BS</c> (Back), <c>PB</c> (Pause/Break), <c>CL</c> (CapsLock), <c>NL</c> (NumLock), <c>SL</c> (ScrollLock), <c>HM</c> (Home).
 		/// </td>
 		/// </tr>
 		/// <tr>
 		/// <td>Text keys</td>
 		/// <td>
-		/// <b>Alphabetic:</b> A-Z (or a-z)
-		/// <br/><b>Number:</b> 0-9
-		/// <br/><b>Numeric keypad:</b> #/ #* #- #+ #. #0-#9
-		/// <br/><b>Other:</b> =, ` - [ ] \ ; ' , . /
+		/// <b>Alphabetic:</b> <c>A</c>-<c>Z</c> (or <c>a</c>-<c>z</c>)
+		/// <br/><b>Number:</b> <c>0</c>-<c>9</c>
+		/// <br/><b>Numeric keypad:</b> <c>#/</c> <c>#*</c> <c>#-</c> <c>#+</c> <c>#.</c> <c>#0</c>-<c>#9</c>
+		/// <br/><b>Other:</b> <c>`</c> <c>-</c> <c>=</c> <c>[</c> <c>]</c> <c>\</c> <c>;</c> <c>'</c> <c>,</c> <c>.</c> <c>/</c>
 		/// </td>
 		/// <td>Spaces between keys are optional, except for uppercase A-Z. For example, can be <c>"A B"</c>, <c>"a b"</c>, <c>"A b"</c> or <c>"ab"</c>, but not <c>"AB"</c> or <c>"Ab"</c>.
 		/// <br/>
-		/// <br/>For ` - [ ] \ ; ' , . / can be used ~ _ { } | : " &lt; &gt; ?.
+		/// <br/>For <c>`</c> <c>-</c> <c>[</c> <c>]</c> <c>\</c> <c>;</c> <c>'</c> <c>,</c> <c>.</c> <c>/</c> also can be used <c>~</c> <c>_</c> <c>{</c> <c>}</c> <c>|</c> <c>:</c> <c>"</c> <c>&lt;</c> <c>&gt;</c> <c>?</c>.
 		/// </td>
 		/// </tr>
 		/// <tr>
@@ -715,36 +712,36 @@ namespace Au
 		/// <th>Description</th>
 		/// </tr>
 		/// <tr>
-		/// <td>+</td>
+		/// <td><c>*n</c></td>
+		/// <td><c>"Left*3"</c></td>
+		/// <td>Press key n times, like <c>"Left Left Left"</c>.
+		/// <br/>See <see cref="AddRepeat"/>.
+		/// </td>
+		/// <tr>
+		/// <td><c>*down</c></td>
+		/// <td><c>"Ctrl*down"</c></td>
+		/// <td>Press key and don't release.</td>
+		/// </tr>
+		/// <tr>
+		/// <td><c>*up</c></td>
+		/// <td><c>"Ctrl*up"</c></td>
+		/// <td>Release key.</td>
+		/// </tr>
+		/// </tr>
+		/// <tr>
+		/// <td><c>+</c></td>
 		/// <td><c>"Ctrl+Shift+A"</c><br/><c>"Alt+E+P"</c></td>
 		/// <td>The same as <c>"Ctrl*down Shift*down A Shift*up Ctrl*up"</c> and <c>"Alt*down E*down P E*up Alt*up"</c>.</td>
 		/// </tr>
 		/// <tr>
-		/// <td>+()</td>
+		/// <td><c>+()</c></td>
 		/// <td><c>"Alt+(E P)"</c></td>
 		/// <td>The same as <c>"Alt*down E P Alt*up"</c>.
 		/// <br/>Inside () cannot be used + and +().
 		/// </td>
 		/// </tr>
 		/// <tr>
-		/// <td>*down</td>
-		/// <td><c>"Ctrl*down"</c></td>
-		/// <td>Press key and don't release.</td>
-		/// </tr>
-		/// <tr>
-		/// <td>*up</td>
-		/// <td><c>"Ctrl*up"</c></td>
-		/// <td>Release key.</td>
-		/// </tr>
-		/// <tr>
-		/// <td>*number</td>
-		/// <td><c>"Left*3"</c></td>
-		/// <td>Press key repeatedly, like <c>"Left Left Left"</c>.
-		/// <br/>See <see cref="AddRepeat"/>.
-		/// </td>
-		/// </tr>
-		/// <tr>
-		/// <td>$</td>
+		/// <td><c>$</c></td>
 		/// <td><c>"$text"</c></td>
 		/// <td>$ is the same as Shift+.</td>
 		/// </tr>
@@ -840,7 +837,7 @@ namespace Au
 		/// </tr>
 		/// </table>
 		/// 
-		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use a <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", "text").Send();</c>. More examples in <see cref="AKeys(OptKey)"/> topic.
+		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use a <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", (KText)"text").Send();</c>. More examples in <see cref="AKeys(OptKey)"/> topic.
 		/// 
 		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
@@ -871,23 +868,17 @@ namespace Au
 		/// Key("Alt*down E P Alt*up");
 		/// 
 		/// //Press key End, key Backspace 3 times, send text "Text".
-		/// Key("End Back*3", "Text");
+		/// Key("End Back*3", (KText)"Text");
 		/// 
 		/// //Press Tab n times, send text "user", press Tab, send text "password", press Enter.
 		/// int n = 5;
-		/// Key($"Tab*{n}", "user", "Tab", "password", "Enter");
+		/// Key($"Tab*{n}", (KText)"user", "Tab", (KText)"password", "Enter");
 		/// 
 		/// //Send text "Text".
 		/// Text("Text");
 		/// 
-		/// //Send text "user", press Tab, send text "password", press Enter.
-		/// Text("user", "Tab", "password", "Enter");
-		/// 
 		/// //Press Ctrl+V, wait 500 ms, press Enter.
 		/// Key("Ctrl+V", 500, "Enter");
-		/// 
-		/// //Press Ctrl+V, wait 500 ms, send text "Text".
-		/// Key("Ctrl+V", 500, "", "Text");
 		/// 
 		/// //F2, Ctrl+K, Left 3 times, Space, A, comma, 5, numpad 5, Shift+A, B, C, BrowserBack.
 		/// Key("F2 Ctrl+K Left*3 Space a , 5 #5 $abc", KKey.BrowserBack);
@@ -903,7 +894,7 @@ namespace Au
 		/// 
 		/// //Send keys and text slowly.
 		/// AOpt.Key.KeySpeed = AOpt.Key.TextSpeed = 50;
-		/// Key("keys$:Space 123456789 Space 123456789 ,Space", "text: 123456789 123456789\n");
+		/// Key("keys$:Space 123456789 Space 123456789 ,Space", (KText)"text: 123456789 123456789\n");
 		/// 
 		/// //Ctrl+click
 		/// Action click = () => AMouse.Click();
@@ -930,40 +921,37 @@ namespace Au
 		/// 
 		/// b.Click += async (unu, sed) =>
 		/// {
-		/// 	//Key("Tab", "text", 2000, "Esc"); //no
-		/// 	await Task.Run(() => { Key("Tab", "text", 2000, "Esc"); }); //use other thread
+		/// 	//Key("Tab", (KText)"text", 2000, "Esc"); //no
+		/// 	await Task.Run(() => { Key("Tab", (KText)"text", 2000, "Esc"); }); //use other thread
 		/// };
 		/// 
 		/// f.ShowDialog();
 		/// ]]></code>
 		/// </example>
-		public static void Key(params object[] keysEtc)
+		public static void Key([ParamString(PSFormat.AKeys)] params object[] keysEtc)
 		{
 			new AKeys(AOpt.Key).Add(keysEtc).Send();
 		}
 
 		/// <summary>
-		/// Sends text to the active window, using virtual keystrokes or the clipboard. Also can send non-text keystrokes.
+		/// Sends text to the active window, using virtual keystrokes or the clipboard.
 		/// </summary>
 		/// <param name="text">Text to send.</param>
-		/// <param name="keysEtc">Optional more parameters. The same as with <see cref="Key"/>. Can be used for example to press non-text keys, wait, send more text.</param>
-		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
-		/// This function is identical to <see cref="Key"/>, except: the first parameter is literal text (not keys). This example shows the difference: <c>Key("keys", "text", "keys", "text"); Text("text", "keys", "text", "keys");</c>.
-		/// To send text can be used keys or clipboard, depending on <see cref="AOpt.Key"/> and text.
-		/// More info in <see cref="Key"/> topic.
+		/// Uses virtual keystrokes or the clipboard, depending on <see cref="AOpt.Key"/> and text.
+		/// To send text and keys use function <see cref="Key"/>.
 		/// </remarks>
 		/// <seealso cref="AClipboard.PasteText"/>
 		/// <example>
 		/// <code><![CDATA[
-		/// AKeys.Text("Text where key names like Enter are interpreted as text.\r\n");
-		/// AKeys.Text("Send this text, press key", "Enter", "and wait", 500, "milliseconds. Enter");
+		/// AKeys.Text("Text.\r\n");
+		/// AKeys.Key((KText)"Send this text and press key", "Enter");
 		/// Text("Can be used without the \"AKeys.\" prefix.\n");
 		/// ]]></code>
 		/// </example>
-		public static void Text(string text, params object[] keysEtc)
+		public static void Text(string text)
 		{
-			new AKeys(AOpt.Key).AddText(text).Add(keysEtc).Send();
+			new AKeys(AOpt.Key).AddText(text).Send();
 		}
 	}
 
@@ -974,16 +962,15 @@ namespace Au
 		/// Calls <see cref="AKeys.Key"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
-		public static void Key(params object[] keysEtc) => AKeys.Key(keysEtc);
+		public static void Key([ParamString(PSFormat.AKeys)] params object[] keysEtc) => AKeys.Key(keysEtc);
 
 		/// <summary>
-		/// Sends text to the active window, using virtual keystrokes or the clipboard. Then also can send non-text keystrokes.
+		/// Sends text to the active window, using virtual keystrokes or the clipboard.
 		/// Calls <see cref="AKeys.Text"/>.
 		/// </summary>
-		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
-		public static void Text(string text, params object[] keysEtc) => AKeys.Text(text, keysEtc);
+		public static void Text(string text) => AKeys.Text(text);
 	}
 }
 
-//FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); Text(password, "Tab", user, "Enter");
+//FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); Key((KText)password, "Tab", (KText)user, "Enter");
 //public static void FocusPasswordField()

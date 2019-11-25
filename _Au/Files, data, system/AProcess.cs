@@ -282,7 +282,7 @@ namespace Au
 		/// - <i>processName</i> is "" or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
-		public static int[] GetProcessIds(string processName, bool fullPath = false, bool ofThisSession = false)
+		public static int[] GetProcessIds([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
 			List<int> a = null;
@@ -296,7 +296,7 @@ namespace Au
 		/// More info: <see cref="GetProcessIds"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException"/>
-		public static int GetProcessId(string processName, bool fullPath = false, bool ofThisSession = false)
+		public static int GetProcessId([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
 		{
 			if(Empty(processName)) throw new ArgumentException();
 			List<int> a = null;

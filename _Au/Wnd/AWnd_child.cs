@@ -54,7 +54,10 @@ namespace Au
 			/// See <see cref="AWnd.Child"/>.
 			/// </summary>
 			/// <exception cref="ArgumentException">See <see cref="Child"/>.</exception>
-			public ChildFinder(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
+			public ChildFinder(
+				[ParamString(PSFormat.AWildex)] string name = null,
+				[ParamString(PSFormat.AWildex)] string cn = null,
+				WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 			{
 				if(cn != null) {
 					if(cn.Length == 0) throw new ArgumentException("Class name cannot be \"\". Use null.");
@@ -302,7 +305,10 @@ namespace Au
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
 		/// </remarks>
-		public AWnd Child(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
+		public AWnd Child(
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, cn, flags, also, skip);
@@ -328,7 +334,10 @@ namespace Au
 		/// Print(f.Result);
 		/// ]]></code>
 		/// </example>
-		public bool HasChild(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
+		public bool HasChild(
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			WCFlags flags = 0, Func<AWnd, bool> also = null, int skip = 0)
 		{
 			return default != Child(name, cn, flags, also, skip);
 		}
@@ -420,7 +429,10 @@ namespace Au
 		/// In the returned list, hidden controls (when using WCFlags.HiddenToo) are always after visible controls.
 		/// </remarks>
 		/// <seealso cref="GetWnd.Children"/>
-		public AWnd[] ChildAll(string name = null, string cn = null, WCFlags flags = 0, Func<AWnd, bool> also = null)
+		public AWnd[] ChildAll(
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			WCFlags flags = 0, Func<AWnd, bool> also = null)
 		{
 			//ThrowIfInvalid(); //will be called later
 			var f = new ChildFinder(name, cn, flags, also);
@@ -750,7 +762,10 @@ namespace Au
 		/// AWnd.Find("Options").ButtonClick("Cancel");
 		/// ]]></code>
 		/// </example>
-		public void ButtonClick(string buttonName, string cn = null, bool useAcc = false)
+		public void ButtonClick(
+			[ParamString(PSFormat.AWildex)] string buttonName,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			bool useAcc = false)
 		{
 			var c = Child(buttonName, cn);
 			if(c.Is0) throw new NotFoundException(); //CONSIDER: try to find accessible object. Eg toolbar button.
@@ -789,7 +804,7 @@ namespace Au
 		///// String format: [](xref:wildcard_expression).
 		///// </param>
 		///// <param name="systemMenu">The menu item is in the title bar's context menu, not in the menu bar.</param>
-		//public void Click(string itemName, bool systemMenu = false)
+		//public void Click([ParamString(PSFormat.AWildex)] string itemName, bool systemMenu = false)
 		//{
 		//	
 		//}

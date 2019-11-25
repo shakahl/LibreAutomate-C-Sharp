@@ -178,7 +178,7 @@ namespace Au.Controls
 				if(st.Bold) _t.StyleBold(j, true);
 				if(st.Italic) _t.StyleItalic(j, true);
 				if(st.Underline) _t.StyleUnderline(j, true);
-				if(st.Mono) _t.StyleFont(j, "Courier New");
+				if(st.Mono) _t.StyleFont(j, "Consolas");
 				if(st.Hotspot) _t.StyleHotspot(j, true);
 				int size = st.Size;
 				if(size > 0) {

@@ -27,7 +27,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 
-//TODO: show for lambda parameters
+//FUTURE: show for lambda parameters. Currently VS does not show too.
 
 class CiSignature
 {
@@ -113,7 +113,7 @@ class CiSignature
 		SignatureHelpItems r = null;
 		foreach(var p in providers) {
 			//APerf.First();
-			var r2 = p.GetItemsAsync(cd.document, cd.position, trigger, default).Result;
+			var r2 = p.GetItemsAsync(cd.document, cd.pos16, trigger, default).Result;
 			//APerf.NW(); //quite fast, don't need async. But in the future can try to wrap this foreach+SignatureHelpProviders in async Task. Need to test with large files.
 			if(r2 == null) continue;
 			if(r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) r = r2;
@@ -160,7 +160,7 @@ class CiSignature
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 
 		var rect1 = CiUtil.GetCaretRectFromPos(doc, r.ApplicableSpan.Start);
-		var rect2 = CiUtil.GetCaretRectFromPos(doc, cd.position);
+		var rect2 = CiUtil.GetCaretRectFromPos(doc, cd.pos16);
 		var rect = doc.RectangleToScreen(Rectangle.Union(rect1, rect2));
 		rect.Width += Au.Util.ADpi.ScaleInt(200);
 		rect.X -= 6;

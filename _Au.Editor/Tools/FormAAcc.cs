@@ -30,7 +30,7 @@ using Aga.Controls.Tree.NodeControls;
 
 namespace Au.Tools
 {
-	public partial class FormAAcc : ToolForm
+	partial class FormAAcc : ToolForm
 	{
 		AAcc _acc;
 		AWnd _wnd, _con;

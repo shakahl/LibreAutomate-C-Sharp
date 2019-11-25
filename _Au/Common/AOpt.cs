@@ -513,7 +513,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each character key of 'text' parameters of <see cref="AKeys.Text"/>, <see cref="AKeys.Key"/> and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="AKeys.Text"/>, <see cref="AKeys.Key"/> (arguments of type <see cref="KText"/>) and similar functions.
 		/// Default: 0. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -527,7 +527,7 @@ namespace Au.Types
 		int _textSpeed;
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each key of 'keys' parameters of <see cref="AKeys.Key"/> and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="AKeys.Key"/> (string arguments) and similar functions.
 		/// Default: 1. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -750,7 +750,7 @@ namespace Au.Types
 		/// <summary>
 		/// Send text keys, with Shift or other modifiers where need, depending on the keyboard layout of the active window. The numpad keys are not used.
 		/// All apps support it.
-		/// Cannot send characters that cannot be easily typed using the keyboard. For example most Unicode characters. For these characters uses the <b>Characters</b> option.
+		/// Some characters cannot be easily typed using the keyboard. For example most non-ASCII characters. Sends these characters like with the <b>Characters</b> option.
 		/// </summary>
 		Keys,
 

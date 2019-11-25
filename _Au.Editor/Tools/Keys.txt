@@ -1,0 +1,13 @@
+﻿<b>Modifier:<><mono>  {Alt}  {Ctrl}  {Shift}  {Win}  {RAlt}  {RCtrl}  {RShift}  {RWin}<>
+<b>Navigate:<><mono>   {Esc}  {End}  {Home}  {PgDn}  {PgUp}  {Down}  {Left}  {Right}  {Up}<>
+<b>Other:<><mono>   {Back}  {Del}  {Enter}  {Menu}  {Pause}  {PrtSc}  {Space}  {Tab}<>
+<b>Function:<><mono>   {F1}  {F2}  {F3}  {F4}  {F5}  {F6}  {F7}  {F8}  {F9}  {F10}  {F11}  {F12}<>
+<b>Lock:<><mono>   {CapsLock}  {NumLock}  {ScrollLock}  {Ins}<>
+<b>Letter:<><mono>   {A} {B} {C} {D} {E} {F} {G} {H} {I} {J} {K} {L} {M} {N} {O} {P} {Q} {R} {S} {T} {U} {V} {W} {X} {Y} {Z}<>
+<b>Number:<><mono>   {1!}  {2@}  {3#}  {4$}  {5%}  {6^}  {7&}  {8*}  {9(}  {0)}<>
+<b>Other character:<><mono>   {`~}  {-_}  {=+}  {[{}  {]}}  {\|}  {;:}  {'"}  {,<}  {.>}  {/?}<>
+<b>Numpad:<><mono>   {#1} {#2} {#3} {#4} {#5} {#6} {#7} {#8} {#9} {#0} {#/} {#*} {#-} {#+} {#.}<>
+<b>Virtual-key:<><mono>   <+a VK>code<>  {name}<>
+<b>Operator:<><mono>  <+a *>*nTimes<>  {*down}  {*up}  <+a +>+key<>  <+a +(%)>+(keys)<>  <+a $>Shift+<><>
+
+<help AKeys.Key>Help<>

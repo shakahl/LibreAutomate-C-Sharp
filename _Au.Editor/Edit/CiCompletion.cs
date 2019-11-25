@@ -39,7 +39,7 @@ class CiCompletion
 	CiPopupList _popupList;
 	_Data _data; //not null while the popup list window is visible
 	CancellationTokenSource _cancelTS;
-	CiTools _tools = new CiTools();
+	internal CiTools _tools = new CiTools();
 
 	class _Data
 	{
@@ -74,6 +74,7 @@ class CiCompletion
 	public void HideTools()
 	{
 		_tools.RegexWindowHide();
+		_tools.KeysWindowHide();
 	}
 
 	void _CancelList(bool popupListHidden = false, bool tempRangeRemoved = false)
@@ -91,7 +92,6 @@ class CiCompletion
 		//var node = CiTools.NodeAt(pos);
 		//Print(CiTools.IsInString(ref node, pos));
 
-		_tools.RegexWindowHideIfNotInString(doc); //TODO
 	}
 
 	/// <summary>
@@ -165,7 +165,7 @@ class CiCompletion
 
 	//long _debugTime;
 
-	//TODO: delay everything, eg 50 ms timer
+	//SHOULDDO: delay everything, eg 50 ms timer
 	async void _ShowList(_ShowReason showReason, int position = -1, char ch = default)
 	{
 		//long time = ATime.PerfMilliseconds;
@@ -181,7 +181,7 @@ class CiCompletion
 
 		if(!CodeInfo.GetContextWithoutDocument(out var cd, position)) return; //returns false if position is in meta comments
 		SciCode doc = cd.sciDoc;
-		position = cd.position; //changed if -1 or -2
+		position = cd.pos16; //changed if -1 or -2
 		string code = cd.code;
 
 		if(showReason == _ShowReason.charAdded) {
@@ -203,7 +203,8 @@ class CiCompletion
 		Debug.Assert(code == document.GetTextAsync().Result.ToString());
 		p1.Next('d');
 
-		bool isDot = false, canGroup = false; int isRegex = 0;
+		bool isDot = false, canGroup = false;
+		PSFormat stringFormat = PSFormat.None; TextSpan stringSpan = default;
 		CompletionService completionService = null;
 		SemanticModel model = null;
 		//INamedTypeSymbol typeSymbol = null;
@@ -287,25 +288,43 @@ class CiCompletion
 					}
 					//p1.Next('M');
 				} else if(showReason == _ShowReason.command) {
-					var model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
-					var root = model.SyntaxTree.GetRoot();
-					var node = root.FindToken(position).Parent;
+					var semo = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
+					var node = semo.Root.FindToken(position).Parent;
 					if(CiTools.IsInString(ref node, position)) {
-						isRegex = CiTools.IsInRegexString(model, node, code, position);
-
+						stringSpan = node.Span;
+						stringFormat = CiUtil.GetParameterStringFormat(node, semo, true);
+						if(stringFormat == PSFormat.AWildex) { //is regex in wildex?
+							if(code.RegexMatch(@"[\$@]*""(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, RXFlags.ANCHORED, stringSpan.Start..stringSpan.End)
+								&& position >= stringSpan.Start + rg.Length) stringFormat = PSFormat.ARegex;
+						} else if(stringFormat == PSFormat.None) stringFormat = (PSFormat)100;
 					}
 				}
 				return r1;
 			});
 
-			if(isRegex != 0) {
-				_tools.RegexWindowShow(doc, position, replace: isRegex == 2);
+			if(cancelToken.IsCancellationRequested) return;
+
+			if(r == null) {
+				if(stringFormat == (PSFormat)100) {
+					var m = new AMenu { ModalAlways = true };
+					m["Regex"] = o => stringFormat = PSFormat.ARegex;
+					m["Keys"] = o => stringFormat = PSFormat.AKeys;
+					m.Show(doc);
+				}
+				switch(stringFormat) {
+				case PSFormat.ARegex:
+				case PSFormat.ARegexReplacement:
+					_tools.RegexWindowShow(doc, code, position, stringSpan, replace: stringFormat == PSFormat.ARegexReplacement);
+					break;
+				case PSFormat.AKeys:
+					_tools.KeysWindowShow(doc, code, position, stringSpan);
+					break;
+				}
 				return;
 			}
 
-			if(r == null || cancelToken.IsCancellationRequested) return;
 			Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-			if(doc != Panels.Editor.ZActiveDoc || position != doc.Z.CurrentPos16 || code != doc.Text) return; //we are async, so these changes are possible
+			if(doc != Panels.Editor.ZActiveDoc || position != doc.Z.CurrentPos16 || (object)code != doc.Text) return; //we are async, so these changes are possible
 			p1.Next('T');
 
 			var provider = CiComplItem.Provider(r.Items[0]);

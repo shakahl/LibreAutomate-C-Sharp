@@ -26,7 +26,7 @@ namespace Au.Tools
 	/// <summary>
 	/// Scintilla-based control that shows colored C# code created by its parent form (a code tool dialog).
 	/// </summary>
-	public class CodeBox : AuScintilla
+	class CodeBox : AuScintilla
 	{
 		public CodeBox()
 		{

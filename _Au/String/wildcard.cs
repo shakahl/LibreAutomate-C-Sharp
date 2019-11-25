@@ -206,7 +206,7 @@ namespace Au
 		/// </param>
 		/// <exception cref="ArgumentNullException"></exception>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public AWildex(string wildcardExpression)
+		public AWildex([ParamString(PSFormat.AWildex)] string wildcardExpression)
 		{
 			var w = wildcardExpression;
 			if(w == null) throw new ArgumentNullException();
@@ -265,7 +265,7 @@ namespace Au
 		/// </summary>
 		/// <param name="wildcardExpression">[Wildcard expression](xref:wildcard_expression). </param>
 		/// <exception cref="ArgumentException">Invalid <c>"**options "</c> or regular expression.</exception>
-		public static implicit operator AWildex(string wildcardExpression)
+		public static implicit operator AWildex([ParamString(PSFormat.AWildex)] string wildcardExpression)
 		{
 			if(wildcardExpression == null) return null;
 

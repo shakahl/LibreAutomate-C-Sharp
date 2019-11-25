@@ -155,7 +155,7 @@ namespace Au.Compiler
 	/// For scripts it is STA, and cannot be changed.
 	/// For apps it is STA if the Main function has [STAThread] attribute; or if role editorExtension. Else it is MTA.
 	/// </example>
-	public class MetaComments
+	class MetaComments
 	{
 		/// <summary>
 		/// Name of the main C# file, without ".cs".
@@ -208,7 +208,7 @@ namespace Au.Compiler
 		///// <summary>
 		///// Meta option 'config'.
 		///// </summary>
-		//public IWorkspaceFile ConfigFile { get; private set; }
+		//public FileNode ConfigFile { get; private set; }
 
 		/// <summary>
 		/// All meta errors of all files. Includes meta syntax errors, file 'not found' errors, exceptions.
@@ -222,10 +222,10 @@ namespace Au.Compiler
 		public MetaReferences References { get; private set; }
 
 		/// <summary>
-		/// Project main files added through meta option 'pr'. Used by XCompiled.
+		/// Project main files added through meta option 'pr'.
 		/// null if none.
 		/// </summary>
-		public List<IWorkspaceFile> ProjectReferences { get; private set; }
+		public List<FileNode> ProjectReferences { get; private set; }
 
 		/// <summary>
 		/// All C# files of this compilation.
@@ -233,7 +233,7 @@ namespace Au.Compiler
 		/// </summary>
 		public List<MetaCodeFile> CodeFiles { get; private set; }
 
-		List<IWorkspaceFile> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
+		List<FileNode> _filesC; //files added through meta option 'c'. Finally parsed and added to Files.
 
 		/// <summary>
 		/// Count of files added through meta option 'c'. They are at the end of <see cref="CodeFiles"/>.
@@ -289,17 +289,17 @@ namespace Au.Compiler
 		/// <summary>
 		/// Meta option 'icon'.
 		/// </summary>
-		public IWorkspaceFile IconFile { get; private set; }
+		public FileNode IconFile { get; private set; }
 
 		/// <summary>
 		/// Meta option 'manifest'.
 		/// </summary>
-		public IWorkspaceFile ManifestFile { get; private set; }
+		public FileNode ManifestFile { get; private set; }
 
 		/// <summary>
 		/// Meta option 'res'.
 		/// </summary>
-		public IWorkspaceFile ResFile { get; private set; }
+		public FileNode ResFile { get; private set; }
 
 		/// <summary>
 		/// Meta option 'outputPath'.
@@ -321,7 +321,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// Meta option 'sign'.
 		/// </summary>
-		public IWorkspaceFile SignFile { get; private set; }
+		public FileNode SignFile { get; private set; }
 
 		/// <summary>
 		/// Meta 'xmlDoc'.
@@ -343,12 +343,12 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Extracts meta comments from all C# files of this compilation, including project files and files added through meta option 'c'.
-		/// Returns false if there are errors. Then use <see cref="Errors"/>.
+		/// Returns false if there are errors, except with flag ForCodeInfo. Then use <see cref="Errors"/>.
 		/// </summary>
 		/// <param name="f">Main C# file. If projFolder not null, must be the main file of the project.</param>
 		/// <param name="projFolder">Project folder of the main file, or null if it is not in a project.</param>
 		/// <param name="flags"></param>
-		public bool Parse(IWorkspaceFile f, IWorkspaceFile projFolder, EMPFlags flags)
+		public bool Parse(FileNode f, FileNode projFolder, EMPFlags flags)
 		{
 			Debug.Assert(Errors == null); //cannot be called multiple times
 			Errors = new ErrBuilder();
@@ -357,7 +357,7 @@ namespace Au.Compiler
 			_ParseFile(f, true);
 
 			if(projFolder != null) {
-				foreach(var ff in projFolder.IwfEnumProjectClassFiles(f)) _ParseFile(ff, false);
+				foreach(var ff in projFolder.EnumProjectClassFiles(f)) _ParseFile(ff, false);
 			}
 
 			if(_filesC != null) {
@@ -367,19 +367,18 @@ namespace Au.Compiler
 				}
 			}
 
-			_FinalCheckOptions();
-
-			if(!Errors.IsEmpty) {
-				if(flags.Has(EMPFlags.PrintErrors)) Errors.PrintAll();
-				return false;
-			}
-
 			if(!Optimize) {
 				if(!Defines.Contains("DEBUG")) Defines.Add("DEBUG");
 				if(!Defines.Contains("TRACE")) Defines.Add("TRACE");
 			}
 			//if(Role == ERole.exeProgram && !Defines.Contains("EXE")) Defines.Add("EXE"); //rejected
 
+			_FinalCheckOptions();
+
+			if(Errors.ErrorCount > 0) {
+				if(flags.Has(EMPFlags.PrintErrors)) Errors.PrintAll();
+				return false;
+			}
 			return true;
 		}
 
@@ -388,10 +387,10 @@ namespace Au.Compiler
 		/// </summary>
 		/// <param name="f"></param>
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
-		void _ParseFile(IWorkspaceFile f, bool isMain)
+		void _ParseFile(FileNode f, bool isMain)
 		{
 			//var p1 = APerf.Create();
-			string code = f.IfwText;
+			string code = f.GetText(cache: true);
 			//p1.Next();
 			bool isScript = f.IsScript;
 
@@ -428,14 +427,17 @@ namespace Au.Compiler
 		}
 
 		bool _isMain;
-		IWorkspaceFile _fn;
+		FileNode _fn;
 		string _code;
 
 		void _ParseOption(string name, string value, int iName, int iValue)
 		{
 			//Print(name, value);
-			if(value.Length == 0) { _Error(iValue, "value cannot be empty"); return; }
-			bool forCodeInfo = 0 != (_flags & EMPFlags.ForCodeInfo);
+			_nameFrom = iName; _nameTo = iName + name.Length;
+			_valueFrom = iValue; _valueTo = iValue + value.Length;
+
+			if(value.Length == 0) { _ErrorV("value cannot be empty"); return; }
+			bool forCodeInfo = _flags.Has(EMPFlags.ForCodeInfo);
 
 			switch(name) {
 			case "r":
@@ -443,30 +445,30 @@ namespace Au.Compiler
 			case "pr" when _isMain:
 				if(name[0] == 'p') {
 					Specified |= EMSpecified.pr;
-					if(!_PR(ref value, iValue)) return;
+					if(!_PR(ref value) || forCodeInfo) return;
 				}
 
 				try {
 					//var p1 = APerf.Create();
 					if(!References.Resolve(value, name[0] == 'c')) {
-						_Error(iValue, "reference assembly not found: " + value); //FUTURE: need more info, or link to Help
+						_ErrorV("reference assembly not found: " + value); //FUTURE: need more info, or link to Help
 					}
 					//p1.NW('r');
 				}
 				catch(Exception e) {
-					_Error(iValue, "exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
+					_ErrorV("exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
 				}
 				return;
 			case "c":
-				var ff = _GetFile(value, iValue); if(ff == null) return;
-				if(!ff.IsClass) { _Error(iValue, "must be a class file"); return; }
-				if(_filesC == null) _filesC = new List<IWorkspaceFile>();
+				var ff = _GetFile(value); if(ff == null) return;
+				if(!ff.IsClass) { _ErrorV("must be a class file"); return; }
+				if(_filesC == null) _filesC = new List<FileNode>();
 				else if(_filesC.Contains(ff)) return;
 				_filesC.Add(ff);
 				return;
 			case "resource":
-				if(!forCodeInfo) {
-					var fs1 = _GetFileAndString(value, iValue); if(fs1.f == null) return;
+				var fs1 = _GetFileAndString(value);
+				if(!forCodeInfo && fs1.f != null) {
 					if(Resources == null) Resources = new List<MetaFileAndString>();
 					else if(Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
 					Resources.Add(fs1);
@@ -478,148 +480,153 @@ namespace Au.Compiler
 				//Support folder (add all in folder).
 			}
 			if(!_isMain) {
-				_Error(iName, $"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {CodeFiles[0].f.Name}.");
+				_ErrorN($"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {CodeFiles[0].f.Name}.");
 				return;
 			}
 
 			switch(name) {
 			case "optimize":
-				_Specified(EMSpecified.optimize, iName);
-				if(_TrueFalse(out bool optim, value, iValue)) Optimize = optim;
+				_Specified(EMSpecified.optimize);
+				if(_TrueFalse(out bool optim, value)) Optimize = optim;
 				break;
 			case "define":
 				Specified |= EMSpecified.define;
 				Defines.AddRange(value.SegSplit(", ", SegFlags.NoEmpty));
 				break;
 			case "warningLevel":
-				_Specified(EMSpecified.warningLevel, iName);
+				_Specified(EMSpecified.warningLevel);
 				int wl = value.ToInt();
 				if(wl >= 0 && wl <= 4) WarningLevel = wl;
-				else _Error(iValue, "must be 0 - 4");
+				else _ErrorV("must be 0 - 4");
 				break;
 			case "noWarnings":
 				Specified |= EMSpecified.noWarnings;
 				NoWarnings.AddRange(value.SegSplit(", ", SegFlags.NoEmpty));
 				break;
 			case "role":
-				_Specified(EMSpecified.role, iName);
-				if(_Enum(out ERole ro, value, iValue)) {
+				_Specified(EMSpecified.role);
+				if(_Enum(out ERole ro, value)) {
 					Role = ro;
-					if(IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _Error(iValue, "role classFile and classLibrary can be only in class files");
+					if(IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _ErrorV("role classFile and classLibrary can be only in class files");
 				}
 				break;
+			case "preBuild":
+				_Specified(EMSpecified.preBuild);
+				PreBuild = _GetFileAndString(value);
+				break;
+			case "postBuild":
+				_Specified(EMSpecified.postBuild);
+				PostBuild = _GetFileAndString(value);
+				break;
+			case "outputPath":
+				_Specified(EMSpecified.outputPath);
+				if(!forCodeInfo) OutputPath = _GetOutPath(value);
+				break;
+			case "runMode":
+				_Specified(EMSpecified.runMode);
+				if(_Enum(out ERunMode rm, value)) RunMode = rm;
+				break;
+			case "ifRunning":
+				_Specified(EMSpecified.ifRunning);
+				if(_Enum(out EIfRunning ifR, value)) IfRunning = ifR;
+				break;
+			case "uac":
+				_Specified(EMSpecified.uac);
+				if(_Enum(out EUac uac, value)) Uac = uac;
+				break;
+			case "prefer32bit":
+				_Specified(EMSpecified.prefer32bit);
+				if(_TrueFalse(out bool is32, value)) Prefer32Bit = is32;
+				break;
+			case "console":
+				_Specified(EMSpecified.console);
+				if(_TrueFalse(out bool con, value)) Console = con;
+				break;
+			//case "config":
+			//	_Specified(EMSpecified.config);
+			//	ConfigFile = _GetFile(value);
+			//	break;
+			case "manifest":
+				_Specified(EMSpecified.manifest);
+				ManifestFile = _GetFile(value);
+				break;
+			case "icon":
+				_Specified(EMSpecified.icon);
+				IconFile = _GetFile(value);
+				break;
+			case "resFile":
+				_Specified(EMSpecified.resFile);
+				ResFile = _GetFile(value);
+				break;
+			case "sign":
+				_Specified(EMSpecified.sign);
+				SignFile = _GetFile(value);
+				break;
+			case "xmlDoc":
+				_Specified(EMSpecified.xmlDoc);
+				XmlDocFile = value;
+				break;
+			//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
+			//	break;
 			default:
-				if(forCodeInfo) break;
-				switch(name) {
-				case "preBuild":
-					_Specified(EMSpecified.preBuild, iName);
-					PreBuild = _GetFileAndString(value, iValue);
-					break;
-				case "postBuild":
-					_Specified(EMSpecified.postBuild, iName);
-					PostBuild = _GetFileAndString(value, iValue);
-					break;
-				case "outputPath":
-					_Specified(EMSpecified.outputPath, iName);
-					OutputPath = _GetOutPath(value, iValue); //and creates directory if need
-					break;
-				case "runMode":
-					_Specified(EMSpecified.runMode, iName);
-					if(_Enum(out ERunMode rm, value, iValue)) RunMode = rm;
-					break;
-				case "ifRunning":
-					_Specified(EMSpecified.ifRunning, iName);
-					if(_Enum(out EIfRunning ifR, value, iValue)) IfRunning = ifR;
-					break;
-				case "uac":
-					_Specified(EMSpecified.uac, iName);
-					if(_Enum(out EUac uac, value, iValue)) Uac = uac;
-					break;
-				case "prefer32bit":
-					_Specified(EMSpecified.prefer32bit, iName);
-					if(_TrueFalse(out bool is32, value, iValue)) Prefer32Bit = is32;
-					break;
-				case "console":
-					_Specified(EMSpecified.console, iName);
-					if(_TrueFalse(out bool con, value, iValue)) Console = con;
-					break;
-				//case "config":
-				//	_Specified(EMSpecified.config, iName);
-				//	ConfigFile = _GetFile(value, iValue);
-				//	break;
-				case "manifest":
-					_Specified(EMSpecified.manifest, iName);
-					ManifestFile = _GetFile(value, iValue);
-					break;
-				case "icon":
-					_Specified(EMSpecified.icon, iName);
-					IconFile = _GetFile(value, iValue);
-					break;
-				case "resFile":
-					_Specified(EMSpecified.resFile, iName);
-					ResFile = _GetFile(value, iValue);
-					break;
-				case "sign":
-					_Specified(EMSpecified.sign, iName);
-					SignFile = _GetFile(value, iValue);
-					break;
-				case "xmlDoc":
-					_Specified(EMSpecified.xmlDoc, iName);
-					XmlDocFile = value;
-					break;
-				//case "targetFramework": //need to use references of that framework? Where to get them at run time? Or just add [assembly: TargetFramework(...)]?
-				//	break;
-				//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
-				//	break;
-				default:
-					_Error(iName, "unknown meta option");
-					break;
-				}
+				_ErrorN("unknown meta comment option");
 				break;
 			}
 		}
 
-		bool _Error(int pos, string s)
+		int _nameFrom, _nameTo, _valueFrom, _valueTo;
+
+		bool _Error(string s, int from, int to)
 		{
-			Errors.AddError(_fn, _code, pos, "error in meta: " + s);
+			if(!_flags.Has(EMPFlags.ForCodeInfo)) {
+				Errors.AddError(_fn, _code, from, "error in meta: " + s);
+			} else if(_fn == Panels.Editor.ZActiveDoc.ZFile) {
+				CodeInfo._styling.AddMetaError(from, to, s);
+			}
 			return false;
 		}
 
-		void _Specified(EMSpecified what, int errPos)
+		bool _ErrorN(string s) => _Error(s, _nameFrom, _nameTo);
+
+		bool _ErrorV(string s) => _Error(s, _valueFrom, _valueTo);
+
+		bool _ErrorM(string s) => _Error(s, 0, 3);
+
+		void _Specified(EMSpecified what)
 		{
-			if(Specified.Has(what)) _Error(errPos, "this meta option is already specified");
+			if(Specified.Has(what)) _ErrorN("this meta comment option is already specified");
 			Specified |= what;
 		}
 
-		bool _TrueFalse(out bool b, string s, int errPos)
+		bool _TrueFalse(out bool b, string s)
 		{
 			b = false;
 			switch(s) {
 			case "true": b = true; break;
 			case "false": break;
-			default: return _Error(errPos, "must be true or false");
+			default: return _ErrorV("must be true or false");
 			}
 			return true;
 		}
 
-		bool _Enum<T>(out T result, string s, int errPos) where T : Enum
+		bool _Enum<T>(out T result, string s) where T : Enum
 		{
 			result = default;
 			var ty = typeof(T); var a = ty.GetFields();
 			foreach(var v in a) if(v.Name == s) { result = (T)v.GetRawConstantValue(); return true; }
-			_Error(errPos, "must be one of: " + string.Join(", ", Enum.GetNames(ty)));
+			_ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(ty)));
 			return false;
 		}
 
-		IWorkspaceFile _GetFile(string s, int errPos)
+		FileNode _GetFile(string s)
 		{
-			var f = _fn.IwfFindRelative(s, false);
-			if(f == null) { _Error(errPos, $"file '{s}' does not exist in this workspace"); return null; }
-			if(!AFile.ExistsAsFile(s = f.FilePath, true)) { _Error(errPos, "file does not exist: " + s); return null; }
+			var f = _fn.FindRelative(s, false);
+			if(f == null) { _ErrorV($"file '{s}' does not exist in this workspace"); return null; }
+			if(!AFile.ExistsAsFile(s = f.FilePath, true)) { _ErrorV("file does not exist: " + s); return null; }
 			return f;
 		}
 
-		MetaFileAndString _GetFileAndString(string s, int errPos)
+		MetaFileAndString _GetFileAndString(string s)
 		{
 			string s2 = null;
 			int i = s.Find(" /");
@@ -627,29 +634,31 @@ namespace Au.Compiler
 				s2 = s.Substring(i + 2);
 				s = s.Remove(i);
 			}
-			return new MetaFileAndString(_GetFile(s, errPos), s2);
+			return new MetaFileAndString(_GetFile(s), s2);
 		}
 
-		string _GetOutPath(string s, int errPos)
+		string _GetOutPath(string s)
 		{
 			s = s.TrimEnd('\\');
 			if(!APath.IsFullPathExpandEnvVar(ref s)) {
-				if(s.Starts('\\')) s = _fn.IwfWorkspace.IwfFilesDirectory + s;
+				if(s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
 				else s = APath.GetDirectoryPath(_fn.FilePath, true) + s;
 			}
 			return APath.LibNormalize(s, noExpandEV: true);
 		}
 
-		bool _PR(ref string value, int iValue)
+		bool _PR(ref string value)
 		{
-			var f = _GetFile(value, iValue); if(f == null) return false;
-			if(f.IwfFindProject(out var projFolder, out var projMain)) f = projMain;
-			foreach(var v in CodeFiles) if(v.f == f) return _Error(iValue, "circular reference");
-			if(!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _Error(iValue, "failed to compile library");
-			//Print(r.role, r.file);
-			if(r.role != ERole.classLibrary) return _Error(iValue, "it is not a class library (no meta role classLibrary)");
-			value = r.file;
-			(ProjectReferences ??= new List<IWorkspaceFile>()).Add(f); //for XCompiled
+			var f = _GetFile(value); if(f == null) return false;
+			if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
+			foreach(var v in CodeFiles) if(v.f == f) return _ErrorV("circular reference");
+			if(!_flags.Has(EMPFlags.ForCodeInfo)) {
+				if(!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
+				//Print(r.role, r.file);
+				if(r.role != ERole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
+				value = r.file;
+			}
+			(ProjectReferences ??= new List<FileNode>()).Add(f);
 			return true;
 		}
 
@@ -658,7 +667,7 @@ namespace Au.Compiler
 			switch(Role) {
 			case ERole.miniProgram:
 				if(Specified.HasAny(EMSpecified.outputPath))
-					return _Error(0, "with role miniProgram (default role of script files) cannot use outputPath");
+					return _ErrorM("with role miniProgram (default role of script files) cannot use outputPath");
 				break;
 			case ERole.exeProgram:
 				if(OutputPath == null) OutputPath = AFolders.Workspace + "bin";
@@ -666,24 +675,24 @@ namespace Au.Compiler
 			case ERole.editorExtension:
 				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
 					/*| EMSpecified.config*/ | EMSpecified.manifest | EMSpecified.console | EMSpecified.outputPath))
-					return _Error(0, "with role editorExtension cannot use runMode, ifRunning, uac, prefer32bit, manifest, console, outputPath");
+					return _ErrorM("with role editorExtension cannot use runMode, ifRunning, uac, prefer32bit, manifest, console, outputPath");
 				break;
 			case ERole.classLibrary:
 				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
 					/*| EMSpecified.config*/ | EMSpecified.manifest | EMSpecified.console))
-					return _Error(0, "with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, manifest, console");
+					return _ErrorM("with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, manifest, console");
 				if(OutputPath == null) OutputPath = AFolders.ThisApp + "Libraries";
 				break;
 			case ERole.classFile:
-				if(Specified != 0) return _Error(0, "with role classFile (default role of class files) can be used only c, r, resource, com");
+				if(Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, r, resource, com");
 				break;
 			}
 
-			if(RunMode == ERunMode.blue && IfRunning == EIfRunning.restartOrWait) return _Error(0, "with runMode blue cannot use ifRunning restartOrWait");
+			if(RunMode == ERunMode.blue && IfRunning == EIfRunning.restartOrWait) return _ErrorM("with runMode blue cannot use ifRunning restartOrWait");
 
 			if(ResFile != null) {
-				if(IconFile != null) return _Error(0, "cannot add both res file and icon");
-				if(ManifestFile != null) return _Error(0, "cannot add both res file and manifest");
+				if(IconFile != null) return _ErrorM("cannot add both res file and icon");
+				if(ManifestFile != null) return _ErrorM("cannot add both res file and manifest");
 			}
 
 			return true;
@@ -765,36 +774,36 @@ namespace Au.Compiler
 		}
 	}
 
-	public struct MetaCodeFile
+	struct MetaCodeFile
 	{
-		public IWorkspaceFile f;
+		public FileNode f;
 		public string code;
 
-		public MetaCodeFile(IWorkspaceFile f, string code) { this.f = f; this.code = code; }
+		public MetaCodeFile(FileNode f, string code) { this.f = f; this.code = code; }
 	}
 
-	public struct MetaFileAndString
+	struct MetaFileAndString
 	{
-		public IWorkspaceFile f;
+		public FileNode f;
 		public string s;
 
-		public MetaFileAndString(IWorkspaceFile f, string s) { this.f = f; this.s = s; }
+		public MetaFileAndString(FileNode f, string s) { this.f = f; this.s = s; }
 	}
 
-	public enum ERole { miniProgram, exeProgram, editorExtension, classLibrary, classFile }
+	enum ERole { miniProgram, exeProgram, editorExtension, classLibrary, classFile }
 
-	public enum EUac { inherit, user, admin }
+	enum EUac { inherit, user, admin }
 
-	public enum ERunMode { green, blue }
+	enum ERunMode { green, blue }
 
-	public enum EIfRunning { runIfBlue, dontRun, wait, restart, restartOrWait }
+	enum EIfRunning { runIfBlue, dontRun, wait, restart, restartOrWait }
 	//CONSIDER: default restart. For green and blue.
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>
 	/// </summary>
 	[Flags]
-	public enum EMPFlags
+	enum EMPFlags
 	{
 		/// <summary>
 		/// Call <see cref="ErrBuilder.PrintAll"/>.
@@ -814,7 +823,7 @@ namespace Au.Compiler
 	}
 
 	[Flags]
-	public enum EMSpecified
+	enum EMSpecified
 	{
 		runMode = 1,
 		ifRunning = 2,

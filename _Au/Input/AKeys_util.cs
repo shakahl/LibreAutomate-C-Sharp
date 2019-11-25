@@ -54,7 +54,7 @@ namespace Au
 
 				//special
 				//+ //eg Ctrl+A
-				//* //*repeatCount, *down, *up
+				//* //*nTimes, *down, *up
 				//( //eg Alt+(A F)
 				//)
 				//# //numpad keys, eg #5, #*

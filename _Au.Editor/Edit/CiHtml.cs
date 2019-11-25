@@ -424,12 +424,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 
 	public static IEnumerable<TaggedText> GetSymbolDescription(ISymbol sym, SemanticModel model, int position)
 	{
-		if(sym.Kind == SymbolKind.Namespace) { //INamespaceSymbol does not give XML doc
-			string xml = Au.Compiler.MetaReferences.GetNamespaceDocXml(sym.QualifiedName());
-			return GetTaggedTextForXml(xml, model, position);
-		} else {
-			return sym.GetDocumentationParts(model, position, _Formatter, default);
-		}
+		return sym.GetDocumentationParts(model, position, _Formatter, default);
 	}
 
 	public static IEnumerable<TaggedText> GetTaggedTextForXml(string xml, SemanticModel model, int position)

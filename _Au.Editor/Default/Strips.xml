@@ -126,6 +126,9 @@
       <Code_Wnd/>
       <Code_Acc/>
       <Code_WinImage t="WinImage"/>
+			<sep/>
+      <Code_Regex hkText="Ctrl+Space in string"/>
+      <Code_Keys hkText="Ctrl+Space in string"/>
     </Menu_Code>
     <Menu_Run>
 			<Run_Run i="run"/>

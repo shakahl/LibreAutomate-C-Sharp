@@ -260,6 +260,24 @@ namespace Au.Types
 #pragma warning restore 1591
 
 	/// <summary>
+	/// Used as an argument type with <see cref="AKeys.Key(object[])"/> and <see cref="AStatic.Key(object[])"/> to send text instead of keys. See example.
+	/// </summary>
+	/// <example>
+	/// <code><![CDATA[
+	/// Key((KText)"user", "Tab", (KText)"password", "Enter");
+	/// ]]></code>
+	/// </example>
+	public struct KText
+	{
+		string _text;
+		KText(string s) => _text = s;
+		///
+		public static implicit operator KText(string s) => new KText(s);
+		///
+		public static implicit operator string(KText s) => s._text;
+	}
+
+	/// <summary>
 	/// Defines a hotkey as <see cref="KMod"/> and <see cref="KKey"/>.
 	/// Has implicit conversion operators from string like "Ctrl+Shift+K", tuple (KMod, KKey), enum KKey, enum Keys.
 	/// </summary>

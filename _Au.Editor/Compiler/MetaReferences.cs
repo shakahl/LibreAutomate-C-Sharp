@@ -37,7 +37,7 @@ namespace Au.Compiler
 	///		CodeAnalysis Project etc objects also have references, therefore need to manage their lifetimes too.
 	/// MetaReferences variables can be created in different threads, but a variable must be used in a single thread.
 	/// </remarks>
-	public class MetaReferences
+	class MetaReferences
 	{
 		/// <summary>
 		/// Contains info used to load a PortableExecutableReference. Loads when need. Supports XML documentation.
@@ -64,9 +64,7 @@ namespace Au.Compiler
 					if(!_wr.TryGetTarget(out var r)) {
 						//for(int i=0;i<10;i++) //tested: process memory does not grow when loading same file several times
 						//APerf.First();
-						var xmlPath = Path.ChangeExtension(path, "xml");
-						var docProv = AFile.ExistsAsFile(xmlPath, true) ? XmlDocumentationProvider.CreateFromFile(xmlPath) : null;
-						r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default, docProv);
+						r = MetadataReference.CreateFromFile(path, (this as _MR2)?.Prop ?? default, _DocumentationProvider.Create(path));
 						//APerf.NW();
 
 						_wr.SetTarget(r);
@@ -147,7 +145,7 @@ namespace Au.Compiler
 		static MetaReferences()
 		{
 			//var p1 = APerf.Create();
-			s_docDB = new _DocumentationDatabase();
+			s_netDocProvider = new _NetDocumentationProvider();
 			//p1.Next('d');
 
 			DefaultReferences = new Dictionary<string, PortableExecutableReference>(300, StringComparer.OrdinalIgnoreCase);
@@ -156,11 +154,15 @@ namespace Au.Compiler
 			using var stat = db.Statement("SELECT * FROM ref");
 			while(stat.Step()) {
 				var asmName = stat.GetText(0);
-				var doc = s_docDB.HaveRef(asmName) ? s_docDB : null;
-				var r = MetadataReference.CreateFromImage(stat.GetArray<byte>(1), documentation: s_docDB, filePath: asmName);
+				var doc = s_netDocProvider.HaveRef(asmName) ? s_netDocProvider : null;
+				var r = MetadataReference.CreateFromImage(stat.GetArray<byte>(1), documentation: s_netDocProvider, filePath: asmName);
 				DefaultReferences.Add(asmName, r);
 			}
-			//p1.NW('c');
+			//p1.Next('c');
+
+			var auPath = AFolders.ThisAppBS + "Au.dll";
+			DefaultReferences.Add("Au", MetadataReference.CreateFromFile(auPath, documentation: _DocumentationProvider.Create(auPath)));
+			//p1.NW('a');
 		}
 
 		public MetaReferences()
@@ -269,32 +271,72 @@ namespace Au.Compiler
 #endif
 
 		/// <summary>
-		/// Gets XML documentation for .NET Core assemblies and Au.dll.
-		/// Uses a 2-column SQLite database created from XML files by <see cref="NetCoreDB.Create"/>.
-		/// Not XML files directly because it uses many MB of process memory, eg 210 MB instead of 70 MB.
+		/// Gets XML documentation for an assembly.
+		/// Uses a 2-column SQLite database auto-created from XML file by <see cref="Create"/>.
+		/// Not XML file directly because it uses much memory.
 		/// </summary>
-		class _DocumentationDatabase : DocumentationProvider
+		class _DocumentationProvider : DocumentationProvider
 		{
-			ASqlite _db;
+			protected ASqlite _db;
 			ASqliteStatement _stat;
-			HashSet<string> _refs;
-
-			public _DocumentationDatabase()
-			{
-				try {
-					_db = new ASqlite(AFolders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
-					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.SegSplit("\n"));
-				}
-				catch(SLException ex) { ADebug.Print(ex.Message); }
-			}
 
 			/// <summary>
-			/// Returns true if the database contains XML doc of the reference assembly.
+			/// Creates documentation provider for assembly <i>asmPath</i>.
+			/// Returns null if its xml file does not exist.
+			/// Returns _DocumentationProvider if xml file size is quite big and found or successfully created and successfully loaded database for it.
+			/// Else returns XmlDocumentationProvider.
 			/// </summary>
-			/// <param name="refName">Like "mscorlib" or "System.Core" or "Au".</param>
-			public bool HaveRef(string refName) => _refs?.Contains(refName) ?? false;
+			public static DocumentationProvider Create(string asmPath)
+			{
+				if(s_d.TryGetValue(asmPath, out var dp)) return dp;
 
-			protected internal override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture = null, CancellationToken cancellationToken = default)
+				var xmlPath = Path.ChangeExtension(asmPath, "xml");
+				if(!AFile.GetProperties(xmlPath, out var px)) return null;
+
+				if(px.Size >= 10_000) {
+					var md5 = new Au.Util.AHash.MD5(); md5.Add(xmlPath.Lower());
+					var dbPath = AFolders.ThisAppTemp + md5.Hash.ToString() + ".db";
+					try {
+						if(!AFile.GetProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
+							ADebug.Print($"creating db: {asmPath}  ->  {dbPath}");
+							AFile.Delete(dbPath);
+							using(var d = new ASqlite(dbPath)) {
+								using var trans = d.Transaction();
+								d.Execute("CREATE TABLE doc (name TEXT PRIMARY KEY, xml TEXT)");
+								using var statInsert = d.Statement("INSERT INTO doc VALUES (?, ?)");
+
+								var xr = AExtXml.LoadElem(xmlPath);
+								foreach(var e in xr.Descendants("member")) {
+									var name = e.Attr("name");
+
+									//remove <remarks> and <example>.
+									foreach(var v in e.Descendants("remarks").ToArray()) v.Remove();
+									foreach(var v in e.Descendants("example").ToArray()) v.Remove();
+
+									using var reader = e.CreateReader();
+									reader.MoveToContent();
+									var xml = reader.ReadInnerXml();
+									//Print(name, xml);
+
+									statInsert.BindAll(name, xml).Step();
+									statInsert.Reset();
+								}
+								trans.Commit();
+								d.Execute("VACUUM");
+							}
+							File.SetLastWriteTimeUtc(dbPath, px.LastWriteTimeUtc);
+						}
+						var db = new ASqlite(dbPath, SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
+						s_d[asmPath] = dp = new _DocumentationProvider { _db = db };
+						return dp;
+					}
+					catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); }
+				}
+				return XmlDocumentationProvider.CreateFromFile(xmlPath);
+			}
+			static ConcurrentDictionary<string, _DocumentationProvider> s_d = new ConcurrentDictionary<string, _DocumentationProvider>(StringComparer.OrdinalIgnoreCase);
+
+			protected internal override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture, CancellationToken cancellationToken = default)
 			{
 				if(_db != null) {
 					lock(_db) { //sometimes not in main thread
@@ -321,13 +363,32 @@ namespace Au.Compiler
 				ADebug.Print("GetHashCode");
 				return 1;
 			}
-
-			public string GetNamespaceDoc(string namespaceName)
-				=> GetDocumentationForSymbol("N:" + namespaceName) //currently we don't have Core namespace doc. With Framework it used to be namespaces.xml. Never mind.
-				?? GetDocumentationForSymbol("T:" + namespaceName + ".NamespaceDoc");
 		}
-		static _DocumentationDatabase s_docDB;
 
-		public static string GetNamespaceDocXml(string namespaceName) => s_docDB.GetNamespaceDoc(namespaceName);
+		/// <summary>
+		/// Gets XML documentation for .NET Core assemblies.
+		/// Uses a 2-column SQLite database created from XML files by <see cref="NetCoreDB.Create"/>.
+		/// Not XML files directly because it uses about 150 MB of memory.
+		/// </summary>
+		class _NetDocumentationProvider : _DocumentationProvider
+		{
+			HashSet<string> _refs;
+
+			public _NetDocumentationProvider()
+			{
+				try {
+					_db = new ASqlite(AFolders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
+					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.SegSplit("\n"));
+				}
+				catch(SLException ex) { ADebug.Print(ex.Message); }
+			}
+
+			/// <summary>
+			/// Returns true if the database contains XML doc of the reference assembly.
+			/// </summary>
+			/// <param name="refName">Like "mscorlib" or "System.Core" or "Au".</param>
+			public bool HaveRef(string refName) => _refs?.Contains(refName) ?? false;
+		}
+		static _NetDocumentationProvider s_netDocProvider;
 	}
 }

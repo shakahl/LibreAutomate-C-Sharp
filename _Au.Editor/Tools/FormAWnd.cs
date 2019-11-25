@@ -31,7 +31,7 @@ using Aga.Controls.Tree.NodeControls;
 
 namespace Au.Tools
 {
-	public partial class FormAWnd : ToolForm
+	partial class FormAWnd : ToolForm
 	{
 		AWnd _wnd, _con;
 		TUtil.CaptureWindowEtcWithHotkey _capt;

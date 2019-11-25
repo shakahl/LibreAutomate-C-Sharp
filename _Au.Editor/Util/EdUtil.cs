@@ -174,6 +174,26 @@ static class EdResources
 		if(dpi >= 120) name += dpi < 144 ? "_20" : (dpi < 192 ? "_24" : "_32");
 		return name;
 	}
+
+	/// <summary>
+	/// Gets text of an embedded text resource.
+	/// </summary>
+	/// <param name="file">Filename.ext with prefix "Au.Editor.Folder.", like "Au.Editor.Tools.Keys.txt".</param>
+	/// <remarks>
+	/// To add a text file to resources, in file properties set Build Action "Embedded Resource".
+	/// Why to use such embedded resources and not add text file in resource editor? Because Visual Studio then usually does not update the resource after editing the file.
+	/// </remarks>
+	public static string GetEmbeddedResourceString(string file)
+	{
+		var asm = Assembly.GetEntryAssembly();
+		//Print(asm.GetManifestResourceNames());
+		using var stream = asm.GetManifestResourceStream(file);
+		var b = new byte[stream.Length];
+		stream.Read(b, 0, b.Length);
+		//Print(b);
+		int bom = b[0] == 239 ? 3 : 0;
+		return Encoding.UTF8.GetString(b, bom, b.Length - bom);
+	}
 }
 
 /// <summary>

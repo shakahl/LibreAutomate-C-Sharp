@@ -265,7 +265,11 @@ namespace Au.Triggers
 		/// Example in class help.
 		/// </remarks>
 		/// <exception cref="ArgumentException">Exceptions of <see cref="AWnd.Finder"/> constructor.</exception>
-		public TriggerScope Window(string name = null, string cn = null, WF3 program = default, Func<AWnd, bool> also = null, object contains = null)
+		public TriggerScope Window(
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WF3 program = default,
+			Func<AWnd, bool> also = null, object contains = null)
 			=> _Window(false, name, cn, program, also, contains);
 
 		/// <summary>
@@ -277,7 +281,11 @@ namespace Au.Triggers
 		/// Example in class help.
 		/// </remarks>
 		/// <exception cref="ArgumentException">Exceptions of <see cref="AWnd.Finder"/> constructor.</exception>
-		public TriggerScope NotWindow(string name = null, string cn = null, WF3 program = default, Func<AWnd, bool> also = null, object contains = null)
+		public TriggerScope NotWindow(
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WF3 program = default,
+			Func<AWnd, bool> also = null, object contains = null)
 			=> _Window(true, name, cn, program, also, contains);
 
 		TriggerScope _Window(bool not, string name, string cn, WF3 program, Func<AWnd, bool> also, object contains)

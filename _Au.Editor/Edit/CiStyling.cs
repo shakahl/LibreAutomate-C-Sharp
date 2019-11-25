@@ -1,6 +1,6 @@
 //Code colors, folding and error/warning indicators.
 
-#define PRINT
+//#define PRINT
 
 using System;
 using System.Collections.Generic;
@@ -18,7 +18,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
-//using System.Linq;
+using System.Linq;
 
 using Au;
 using Au.Types;
@@ -30,6 +30,7 @@ using Microsoft.CodeAnalysis.Classification;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using System.Text.RegularExpressions;
 
 class CiStyling
 {
@@ -99,10 +100,10 @@ class CiStyling
 		//CONSIDER: at the end of a function/class/etc definition add a link or dwell-popup to add new function or class etc below. Or better in context menu.
 		//z.StyleHotspot((int)_Style.EndOfFunctionOrType, true);
 
+		z.StyleForeColor(STYLE_LINENUMBER, 0x808080);
+
 		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE);
 		doc.Call(SCI_MARKERSETBACK, SciCode.c_markerUnderline, 0xe0e0e0);
-
-		z.StyleForeColor(STYLE_LINENUMBER, 0x808080);
 
 		_InitFolding(doc);
 	}
@@ -166,15 +167,14 @@ class CiStyling
 			Sci_GetStylingInfo(doc.SciPtr, 8 | 4, out var si); //fast
 			if(si.visibleFromLine < _visibleLines.Start.Value || si.visibleToLine > _visibleLines.End.Value) {
 				_StylingAndFolding(doc); //all visible
-			} else if(_diagCounter > 0 && ++_diagCounter > 10) {
-				_diagCounter = 0;
-				var p1 = APerf.Create();
+			} else if(_diagCounter > 0 && --_diagCounter == 0) {
+				//var p1 = APerf.Create();
 				var cd = new CodeInfo.Context(0);
 				if(cd.GetDocument()) {
 					var semo = cd.document.GetSemanticModelAsync().Result;
-					p1.Next('m');
+					//p1.Next('m');
 					_Diagnostics(semo, cd, doc.Pos16(si.visibleFrom), doc.Pos16(si.visibleTo));
-					p1.NW('e');
+					//p1.NW('e');
 				}
 			}
 		}
@@ -390,37 +390,156 @@ class CiStyling
 		p1.NW('F');
 #endif
 		if(!minimal) {
-			_diagCounter = 1; //update diagnostics after ~2.5 s
+			_diagCounter = 8; //update diagnostics after 2 s
 		} else { //erase diagnostic indicators of current line
 			var li = doc.Z.LineStartEndFromPos(false, doc.Z.CurrentPos8, withRN: true);
+			doc.Z.IndicatorClear(false, SciCode.c_indicDiagHidden, li.start..li.end);
+			doc.Z.IndicatorClear(false, SciCode.c_indicInfo, li.start..li.end);
 			doc.Z.IndicatorClear(false, SciCode.c_indicWarning, li.start..li.end);
 			doc.Z.IndicatorClear(false, SciCode.c_indicError, li.start..li.end);
 		}
 	}
 
+	#region diagnostics
+
 	void _Diagnostics(SemanticModel semo, in CodeInfo.Context cd, int start16, int end16)
 	{
 		var doc = cd.sciDoc;
-		List<Range> ae = null, aw = null;
+		var code = cd.code;
+		bool has = false;
 		//var comp = semo.Compilation;
-		foreach(var d in semo.GetDiagnostics(TextSpan.FromBounds(start16, end16))) {
-			if(d.IsSuppressed) continue;
-			var sev = d.Severity; if(sev != DiagnosticSeverity.Error && sev != DiagnosticSeverity.Warning) continue;
-			var loc = d.Location; if(!loc.IsInSource) continue;
-			var span = loc.SourceSpan;
-			//Print(sev, span);
-			int start = span.Start, end = span.End;
-			if(end == start) {
-				var code = cd.code;
-				if(end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
-				else if(start > 0) start--;
+		var a = semo.GetDiagnostics(TextSpan.FromBounds(start16, end16));
+		if(!a.IsDefaultOrEmpty) {
+			_aDiag = new List<(Diagnostic d, int start, int end)>(a.Length);
+			foreach(var d in a) {
+				if(d.IsSuppressed) continue;
+				var loc = d.Location; if(!loc.IsInSource) continue;
+				var span = loc.SourceSpan;
+				//Print(d.Severity, span);
+				int start = span.Start, end = span.End;
+				if(end == start) {
+					if(end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
+					else if(start > 0) start--;
+				}
+				if(d.Severity == DiagnosticSeverity.Hidden && d.Id == "CS8019") { //unnecessary using directive
+					if(0 != code.Eq(start + 6, false, "Au;", "Au.Types;", "static Au.AStatic;", "System;", "System.Collections.Generic;")) continue; //default usings
+				}
+				if(!has) doc._InicatorsDiag(has = true);
+				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
+				doc.Z.IndicatorAdd(true, indic, start..end);
+				_aDiag.Add((d, start, end));
 			}
-			if(sev == DiagnosticSeverity.Error) (ae ??= new List<Range>()).Add(start..end);
-			else (aw ??= new List<Range>()).Add(start..end);
 		}
-		doc._SetInicatorsWarning(aw);
-		doc._SetInicatorsError(ae);
+		if(_metaErrors.Count > 0) {
+			foreach(var v in _metaErrors) {
+				if(v.to <= start16 || v.from >= end16) continue;
+				if(!has) doc._InicatorsDiag(has = true);
+				doc.Z.IndicatorAdd(true, SciCode.c_indicError, v.from..v.to);
+			}
+		}
+		_StringErrors(semo, cd, start16, end16);
+		if(_stringErrors.Count > 0) {
+			if(!has) doc._InicatorsDiag(has = true);
+			foreach(var v in _stringErrors) {
+				doc.Z.IndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
+			}
+		}
+		if(!has) {
+			doc._InicatorsDiag(false);
+			_aDiag = null;
+		}
 	}
+
+	List<(Diagnostic d, int start, int end)> _aDiag;
+	readonly List<(int from, int to, string s)> _metaErrors = new List<(int, int, string)>();
+	readonly List<(int from, int to, string s)> _stringErrors = new List<(int, int, string)>();
+
+	public void AddMetaError(int from, int to, string s) => _metaErrors.Add((from, to > from ? to : from + 1, s));
+
+	public void ClearMetaErrors() => _metaErrors.Clear();
+
+	public void SciMouseDwellStarted(SciCode doc, int pos8)
+	{
+		if(_aDiag == null && _metaErrors.Count == 0) return;
+		if(pos8 < 0) return;
+		int all = doc.Call(SCI_INDICATORALLONFOR, pos8);
+		//Print(all);
+		if(0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return;
+		int pos16 = doc.Pos16(pos8);
+		var b = new StringBuilder();
+		if(_aDiag != null) {
+			foreach(var v in _aDiag) {
+				if(pos16 < v.start || pos16 > v.end) continue;
+				var d = v.d;
+				//var p1 = APerf.Create();
+				//var s1 = d.ToString(); //includes location
+				var s1 = d.GetMessage();
+				//p1.NW();
+				if(b.Length > 0) b.Append('\n');
+				var s2 = d.Severity switch { DiagnosticSeverity.Error => "Error: ", DiagnosticSeverity.Warning => "Warning: ", DiagnosticSeverity.Info => "Info: ", _ => null };
+				b.Append(s2).Append(s1);
+			}
+		}
+
+		_Also(_metaErrors, "Error: ");
+		_Also(_stringErrors, null);
+		void _Also(List<(int from, int to, string s)> a, string prefix)
+		{
+			foreach(var v in a) {
+				if(pos16 < v.from || pos16 > v.to) continue;
+				if(b.Length > 0) b.Append('\n');
+				b.Append(prefix).Append(v.s);
+			}
+		}
+
+		var s = b.ToString();
+		doc.Z.SetString(SCI_CALLTIPSHOW, pos8, s); //bad: no word wrap
+	}
+
+	public void SciMouseDwellEnded(SciCode doc)
+	{
+		doc.Call(SCI_CALLTIPCANCEL);
+	}
+
+	void _StringErrors(SemanticModel semo, in CodeInfo.Context cd, int start16, int end16)
+	{
+		//using var p1 = APerf.Create();
+		_stringErrors.Clear();
+		var code = cd.code;
+		foreach(var node in semo.Root.DescendantNodes(TextSpan.FromBounds(start16, end16))) {
+			var format = CiUtil.GetParameterStringFormat(node, semo, false);
+			if(format == PSFormat.None || format == PSFormat.ARegexReplacement) continue;
+			var s = node.GetFirstToken().ValueText; //replaced escape sequences
+			//Print(format, s);
+			string es = null;
+			try {
+				switch(format) {
+				case PSFormat.Regex:
+					new Regex(s); //never mind: may have 'options' argument, eg ECMAScript or Compiled
+					break;
+				case PSFormat.ARegex:
+					new ARegex(s);
+					break;
+				case PSFormat.AWildex:
+					if(s.Starts("***")) s = s[(s.IndexOf(' ') + 1)..]; //eg AWnd.Child("***accName ...")
+					new AWildex(s);
+					break;
+				case PSFormat.AKeys:
+					new AKeys(null).AddKeys(s);
+					break;
+				}
+			}
+			catch(ArgumentException ex) { es = ex.Message; }
+			if(es != null) {
+				var span = node.Span;
+				_stringErrors.Add((span.Start, span.End, es));
+			}
+		}
+	}
+
+	#endregion
+
+	#region folding
 
 	void _Fold(bool firstTime, in CodeInfo.Context cd, int start8, int end8)
 	{
@@ -599,6 +718,8 @@ class CiStyling
 		if((char)doc.Call(SCI_GETCHARAT, i + 1) == '\n') i += 2;
 		doc.Z.CurrentPos16 = i;
 	}
+
+	#endregion
 }
 
 partial class SciCode
@@ -656,6 +777,7 @@ partial class SciCode
 			try {
 				using var p = db.Statement("SELECT top,pos,lines FROM _editor WHERE id=?", _fn.Id);
 				if(p.Step()) {
+					int cp = Z.CurrentPos8;
 					int top = p.GetInt(0), pos = p.GetInt(1);
 					var a = p.GetList<int>(2);
 					if(a != null) {
@@ -666,9 +788,12 @@ partial class SciCode
 							if(marker == 31) _FoldLine(line);
 							else Call(SCI_MARKERADDSET, line, 1 << marker);
 						}
+						if(cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, Z.LineFromPos(false, cp));
 					}
-					if(top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
-					if(pos > 0 && pos <= Len8) Z.CurrentPos8 = _savedPos = pos;
+					if(top + pos > 0 && cp == 0) {
+						if(top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
+						if(pos > 0 && pos <= Len8) Z.CurrentPos8 = _savedPos = pos;
+					}
 				}
 			}
 			catch(SLException ex) { ADebug.Print(ex); }

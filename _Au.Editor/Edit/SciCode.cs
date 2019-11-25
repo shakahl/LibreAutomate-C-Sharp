@@ -42,7 +42,7 @@ partial class SciCode : AuScintilla
 	//public const int c_markerStepNext = 3;
 
 	//indicators. We can use 8-31. Lexers use 0-7.
-	public const int c_indicFind = 8, c_indicWarning = 9, c_indicError = 10; //info: draws indicators from smaller to bigger, eg error on warning.
+	public const int c_indicFind = 8, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20; //info: draws indicators from smaller to bigger, eg error on warning.
 
 	internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
 	{
@@ -63,13 +63,22 @@ partial class SciCode : AuScintilla
 	{
 		base.OnHandleCreated(e);
 
-		int dpi = Au.Util.ADpi.BaseDPI;
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/));
-		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
-		Z.MarginWidth(c_marginLineNumbers, 40 * dpi / 96);
+
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
+
+		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
+		Z.MarginWidth(c_marginLineNumbers, 40 * Au.Util.ADpi.BaseDPI / 96);
+
 		Z.StyleFont(STYLE_DEFAULT, "Consolas", 10); //somehow Scintilla actually uses 9 if 10, and 8 if 9
 		Z.StyleClearAll();
+
+		Z.StyleFont(STYLE_CALLTIP, "Calibri");
+		Z.StyleBackColor(STYLE_CALLTIP, 0xf8fff0);
+		Z.StyleForeColor(STYLE_CALLTIP, 0);
+		Call(SCI_CALLTIPUSESTYLE);
+
+		_InicatorsInit();
 
 		if(_fn.IsCodeFile) {
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
@@ -182,9 +191,9 @@ partial class SciCode : AuScintilla
 		case NOTIF.SCN_DWELLSTART:
 			CodeInfo.SciMouseDwellStarted(this, n.position);
 			break;
-		//case NOTIF.SCN_DWELLEND:
-		//	CodeInfo.SciMouseDwellEnded(this);
-		//	break;
+		case NOTIF.SCN_DWELLEND:
+			CodeInfo.SciMouseDwellEnded(this);
+			break;
 		case NOTIF.SCN_MARGINCLICK:
 			if(_fn.IsCodeFile) {
 				CodeInfo.Cancel();
@@ -700,64 +709,48 @@ partial class SciCode : AuScintilla
 
 	#region indicators
 
-	bool _indicFindInited, _indicFindSet;
-	bool _indicErrorInited, _indicErrorSet;
-	bool _indicWarningInited, _indicWarningSet;
-
-	internal void _SetInicatorsFind(List<Range> a)
+	void _InicatorsInit()
 	{
-		if(_indicFindSet) {
-			_indicFindSet = false;
+		Call(SCI_INDICSETSTYLE, c_indicFind, INDIC_FULLBOX);
+		//Call(SCI_INDICSETFORE, c_indicFind, 0x00a0f0); Call(SCI_INDICSETALPHA, c_indicFind, 160); //orange-brown, almost like in VS
+		Call(SCI_INDICSETFORE, c_indicFind, 0x00ffff); Call(SCI_INDICSETALPHA, c_indicFind, 160); //yellow
+		Call(SCI_INDICSETUNDER, c_indicFind, 1); //draw before text
+
+		Call(SCI_INDICSETSTYLE, c_indicError, INDIC_SQUIGGLE); //INDIC_SQUIGGLEPIXMAP thicker
+		Call(SCI_INDICSETFORE, c_indicError, 0xff); //red
+		Call(SCI_INDICSETSTYLE, c_indicWarning, INDIC_SQUIGGLE);
+		Call(SCI_INDICSETFORE, c_indicWarning, 0x008000); //dark green
+		Call(SCI_INDICSETSTYLE, c_indicInfo, INDIC_DIAGONAL);
+		Call(SCI_INDICSETFORE, c_indicInfo, 0xc0c0c0);
+		Call(SCI_INDICSETSTYLE, c_indicDiagHidden, INDIC_DOTS);
+		Call(SCI_INDICSETFORE, c_indicDiagHidden, 0xc0c0c0);
+	}
+
+	bool _indicHaveFind, _indicHaveDiag;
+
+	internal void _InicatorsFind(List<Range> a)
+	{
+		if(_indicHaveFind) {
+			_indicHaveFind = false;
 			Z.IndicatorClear(c_indicFind);
 		}
 		if(a == null || a.Count == 0) return;
-		_indicFindSet = true;
-
-		if(!_indicFindInited) {
-			_indicFindInited = true;
-			Call(SCI_INDICSETSTYLE, c_indicFind, INDIC_FULLBOX);
-			Call(SCI_INDICSETFORE, c_indicFind, 0x00ffff); Call(SCI_INDICSETALPHA, c_indicFind, 160); //yellow
-			//Call(SCI_INDICSETFORE, c_indicFind, 0x00a0f0); Call(SCI_INDICSETALPHA, c_indicFind, 160); //orange-brown, almost like in VS
-			Call(SCI_INDICSETUNDER, c_indicFind, 1); //draw before text
-		}
+		_indicHaveFind = true;
 
 		foreach(var v in a) Z.IndicatorAdd(true, c_indicFind, v);
 	}
 
-	internal void _SetInicatorsError(List<Range> a)
+	internal void _InicatorsDiag(bool has)
 	{
-		if(_indicErrorSet) {
-			_indicErrorSet = false;
+		if(_indicHaveDiag) {
+			_indicHaveDiag = false;
+			Z.IndicatorClear(c_indicDiagHidden);
+			Z.IndicatorClear(c_indicInfo);
+			Z.IndicatorClear(c_indicWarning);
 			Z.IndicatorClear(c_indicError);
 		}
-		if(a == null || a.Count == 0) return;
-		_indicErrorSet = true;
-
-		if(!_indicErrorInited) {
-			_indicErrorInited = true;
-			Call(SCI_INDICSETSTYLE, c_indicError, INDIC_SQUIGGLE); //INDIC_SQUIGGLEPIXMAP thicker
-			Call(SCI_INDICSETFORE, c_indicError, 0xff); //red
-		}
-
-		foreach(var v in a) Z.IndicatorAdd(true, c_indicError, v);
-	}
-
-	internal void _SetInicatorsWarning(List<Range> a)
-	{
-		if(_indicWarningSet) {
-			_indicWarningSet = false;
-			Z.IndicatorClear(c_indicWarning);
-		}
-		if(a == null || a.Count == 0) return;
-		_indicWarningSet = true;
-
-		if(!_indicWarningInited) {
-			_indicWarningInited = true;
-			Call(SCI_INDICSETSTYLE, c_indicWarning, INDIC_SQUIGGLE);
-			Call(SCI_INDICSETFORE, c_indicWarning, 0x008000); //dark green
-		}
-
-		foreach(var v in a) Z.IndicatorAdd(true, c_indicWarning, v);
+		if(!has) return;
+		_indicHaveDiag = true;
 	}
 
 	#endregion

@@ -99,7 +99,7 @@ unsafe class Program
 		//Key("F5");
 
 		1.s();
-		//if(1 == ADialog.ShowEx("Upload?", null, "1 Yes|2 No", secondsTimeout: 5)) CompressAndUpload(docDir);
+		if(1 == ADialog.ShowEx("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
 		if(AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { Print("Deleting obj folder."); AFile.Delete(objDir); }

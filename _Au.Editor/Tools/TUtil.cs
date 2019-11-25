@@ -25,7 +25,7 @@ namespace Au.Tools
 {
 	internal static class TUtil
 	{
-#region text
+		#region text
 
 		/// <summary>
 		/// Appends ', ' and string argument to this StringBuilder.
@@ -183,9 +183,36 @@ namespace Au.Tools
 			return s;
 		}
 
-#endregion
+		internal static void InsertTextInControl(Control c, string s)
+		{
+			if(c == null) {
+				c = AWnd.ThisThread.FocusedControl;
+				if(c == null) return;
+			} else c.Focus();
 
-#region misc
+			int i = s.IndexOf('%');
+			if(i >= 0) {
+				Debug.Assert(!s.Contains('\r'));
+				s = s.Remove(i, 1);
+				i = s.Length - i;
+			}
+
+			if(c is AuScintilla sci) {
+				sci.Z.ReplaceSel(s);
+				while(i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
+			} else {
+				Task.Run(() => {
+					var k = new AKeys(null);
+					k.AddText(s);
+					if(i > 0) k.AddKey(KKey.Left).AddRepeat(i);
+					k.Send();
+				});
+			}
+		}
+
+		#endregion
+
+		#region misc
 
 		/// <summary>
 		/// Gets control id. Returns true if it can be used to identify the control in window wWindow.
@@ -203,9 +230,9 @@ namespace Au.Tools
 			return true;
 		}
 
-#endregion
+		#endregion
 
-#region OnScreenRect
+		#region OnScreenRect
 
 		/// <summary>
 		/// Creates standard <see cref="AOsdRect"/>.
@@ -227,8 +254,7 @@ namespace Au.Tools
 			osr.Show();
 
 			int i = 0;
-			ATimer.Every(250, t =>
-			{
+			ATimer.Every(250, t => {
 				if(i++ < 5) {
 					osr.Color = (i & 1) != 0 ? 0xFFFFFF00 : 0xFF8A2BE2;
 				} else {
@@ -238,9 +264,9 @@ namespace Au.Tools
 			});
 		}
 
-#endregion
+		#endregion
 
-#region capture
+		#region capture
 
 		/// <summary>
 		/// Common code for tools that capture UI objects with F3.
@@ -279,8 +305,7 @@ namespace Au.Tools
 				if(start) {
 					//let other forms stop capturing
 					wForm.Prop.Set(c_propName, 1);
-					AWnd.Find(null, "WindowsForms*", also: o =>
-					{
+					AWnd.Find(null, "WindowsForms*", also: o => {
 						if(o != wForm && o.Prop[c_propName] == 1) o.Send(c_stopMessage);
 						return false;
 					});
@@ -294,8 +319,7 @@ namespace Au.Tools
 					//set timer that shows AO rect
 					if(_timer == null) {
 						_osr = TUtil.CreateOsdRect();
-						_timer = new ATimer(t =>
-						{
+						_timer = new ATimer(t => {
 							//Don't capture too frequently.
 							//	Eg if the callback is very slow. Or if multiple timer messages are received without time interval (possible in some conditions).
 							long t1 = ATime.PerfMilliseconds, t2 = t1 - _prevTime; _prevTime = t1; if(t2 < 100) return;
@@ -415,7 +439,7 @@ namespace Au.Tools
 					ADebug.Print("---- CODE ----\r\n" + code + "--------------");
 					ADialog.ShowError("Errors in code", c.errors, owner: form, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
 				} else {
-					var rr=(object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
+					var rr = (object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
 					r = ((long[])rr[0], rr[1], (AWnd)rr[2]);
 					ok = true;
 				}
@@ -485,7 +509,7 @@ namespace Au.Tools
 			public long speed;
 		}
 
-#endregion
+		#endregion
 	}
 
 	//public static class Test
@@ -501,7 +525,7 @@ namespace Au.Tools
 	/// <summary>
 	/// All tool forms of this library should inherit from this class and override its virtual functions.
 	/// </summary>
-	public class ToolForm :AuForm
+	class ToolForm : AuForm
 	{
 		public virtual string ZResultCode { get; protected set; }
 

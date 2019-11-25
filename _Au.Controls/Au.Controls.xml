@@ -1293,7 +1293,7 @@
         <member name="T:Au.Controls.InfoBox">
             <summary>
             Scintilla-based control to show formatted information text.
-            To set text use the <see cref="M:Au.AStatic.Text(System.String,System.Object[])"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTags"/>.
+            To set text use the <see cref="M:Au.AStatic.Text(System.String)"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTags"/>.
             </summary>
         </member>
         <member name="P:Au.Controls.InfoBox.ZInitUseControlFont">

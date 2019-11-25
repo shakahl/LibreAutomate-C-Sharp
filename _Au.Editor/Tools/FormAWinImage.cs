@@ -23,7 +23,7 @@ using SG = SourceGrid;
 
 namespace Au.Tools
 {
-	public partial class FormAWinImage : ToolForm
+	partial class FormAWinImage : ToolForm
 	{
 		AWnd _wnd, _con;
 		bool _useCon;

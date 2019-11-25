@@ -153,18 +153,18 @@ class CiAutocorrect
 
 		if(!CodeInfo.GetContextAndDocument(out var cd)) return;
 		string code = cd.code;
-		int pos = cd.position - 1; if(pos < 0) return;
+		int pos = cd.pos16 - 1; if(pos < 0) return;
 
 		Debug.Assert(code[pos] == ch);
 		if(code[pos] != ch) return;
 
-		bool isBeforeWord = cd.position < code.Length && char.IsLetterOrDigit(code[cd.position]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
+		bool isBeforeWord = cd.pos16 < code.Length && char.IsLetterOrDigit(code[cd.pos16]); //usually user wants to enclose the word manually, unless typed '{' in interpolated string
 		if(isBeforeWord && ch != '{') return;
 
 		var root = cd.document.GetSyntaxRootAsync().Result;
 		//if(!root.ContainsDiagnostics) return; //no. Don't use errors. It can do more bad than good. Tested.
 
-		int replaceLength = 0, tempRangeFrom = cd.position, tempRangeTo = cd.position, newPos = 0;
+		int replaceLength = 0, tempRangeFrom = cd.pos16, tempRangeTo = cd.pos16, newPos = 0;
 
 		if(ch == '*') { /**/
 			var trivia = root.FindTrivia(pos);
@@ -206,7 +206,7 @@ class CiAutocorrect
 				if(span.Start != pos - (isVerbatim ? 1 : 0) - (isInterpolated ? 1 : 0)) {
 					if(!isVerbatim) return;
 					//inside verbatim string replace " with ""
-					cd.position--; //insert " before ", and let caret be after ""
+					cd.pos16--; //insert " before ", and let caret be after ""
 					tempRangeFrom = 0;
 				}
 			} else {
@@ -219,7 +219,7 @@ class CiAutocorrect
 					return;
 				case SyntaxKind.InterpolatedStringExpression:
 					//after next typed { in interpolated string remove } added after first {
-					if(ch == '{' && code.Eq(pos - 1, "{{}") && c.doc.ZTempRanges_Enum(cd.position, this, endPosition: true).Any()) {
+					if(ch == '{' && code.Eq(pos - 1, "{{}") && c.doc.ZTempRanges_Enum(cd.pos16, this, endPosition: true).Any()) {
 						replaceLength = 1;
 						replaceText = null;
 						tempRangeFrom = 0;
@@ -233,7 +233,7 @@ class CiAutocorrect
 						if(pos > 0 && !char.IsWhiteSpace(code[pos - 1])) {
 							replaceText = " {  }";
 							tempRangeFrom++;
-							cd.position--; replaceLength = 1; //replace the '{' too
+							cd.pos16--; replaceLength = 1; //replace the '{' too
 						}
 						tempRangeTo = tempRangeFrom + 2;
 						newPos = tempRangeFrom + 1;
@@ -243,7 +243,7 @@ class CiAutocorrect
 			}
 		}
 
-		c.doc.Z.ReplaceRange(true, cd.position, cd.position + replaceLength, replaceText, moveCurrentPos: ch == ';');
+		c.doc.Z.ReplaceRange(true, cd.pos16, cd.pos16 + replaceLength, replaceText, moveCurrentPos: ch == ';');
 		if(newPos > 0) c.doc.Z.CurrentPos16 = newPos;
 
 		if(tempRangeFrom > 0) c.doc.ZTempRanges_Add(this, tempRangeFrom, tempRangeTo);
@@ -258,7 +258,7 @@ class CiAutocorrect
 		if(!CodeInfo.GetContextWithoutDocument(out var cd)) return false;
 		var doc = cd.sciDoc;
 		var code = cd.code;
-		int pos = cd.position;
+		int pos = cd.pos16;
 		//if(pos < 1 || pos == code.Length) return false;
 		if(pos < 1) return false;
 		if(!anywhere && doc.Z.IsSelection) return false;
@@ -711,7 +711,7 @@ class CiAutocorrect
 
 		string prefix = null, suffix = null; bool newlineLast = false;
 		int indent = 0;
-		int pos = cd.position;
+		int pos = cd.pos16;
 		var span = token.Span;
 		if(pos < span.Start || pos > span.End) {
 			var trivia = token.Parent.FindTrivia(pos);

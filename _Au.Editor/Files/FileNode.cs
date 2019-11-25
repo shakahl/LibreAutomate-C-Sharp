@@ -22,7 +22,7 @@ using static Au.AStatic;
 using Aga.Controls.Tree;
 using Au.Compiler;
 
-partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
+partial class FileNode : Au.Util.ATreeBase<FileNode>
 {
 	#region types
 
@@ -39,7 +39,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	[Flags]
 	enum _Flags : byte
 	{
-		HasTriggers = 1,//TODO
+		//HasTriggers = 1,
 	}
 
 	#endregion
@@ -356,12 +356,12 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 	/// </summary>
 	/// <param name="saved">Always get text from file. If false (default), gets editor text if this is current file.</param>
 	/// <param name="warningIfNotFound">Print warning if file not found. If false, prints only other exceptions.</param>
-	/// <param name="cache">Remember text. Next time return that text. Not used if gets text from editor.</param>
+	/// <param name="cache">Cache text. Next time return that text. Not used if gets text from editor.</param>
 	public string GetText(bool saved = false, bool warningIfNotFound = false, bool cache = false)
 	{
 		if(IsFolder) return "";
 		if(!saved && this == _model.CurrentFile) {
-			return Panels.Editor.ZActiveDoc.Text; //TODO: can be 'null reference' exception when deleting (ActiveDoc null), eg when called by CodeAssist.
+			return Panels.Editor.ZActiveDoc.Text;
 		}
 		//if(cache) Print("GetText", Name, _text != null);
 		if(_text != null) return _text;
@@ -413,19 +413,19 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 
 	public static AIconCache IconCache = new AIconCache(AFolders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
 
-	/// <summary>
-	/// Gets or sets 'has triggers' flag.
-	/// The setter will save workspace.
-	/// </summary>
-	public bool HasTriggers {
-		get => 0 != (_flags & _Flags.HasTriggers);
-		set {
-			if(value != HasTriggers) {
-				_flags.SetFlag(_Flags.HasTriggers, value);
-				_model.Save.WorkspaceLater();
-			}
-		}
-	}
+	///// <summary>
+	///// Gets or sets 'has triggers' flag.
+	///// The setter will save workspace.
+	///// </summary>
+	//public bool HasTriggers {
+	//	get => 0 != (_flags & _Flags.HasTriggers);
+	//	set {
+	//		if(value != HasTriggers) {
+	//			_flags.SetFlag(_Flags.HasTriggers, value);
+	//			_model.Save.WorkspaceLater();
+	//		}
+	//	}
+	//}
 
 	/// <summary>
 	/// Returns Name.
@@ -563,6 +563,13 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		return false;
 	}
 
+	public IEnumerable<FileNode> EnumProjectClassFiles(FileNode fSkip = null)
+	{
+		foreach(var f in Descendants()) {
+			if(f._type == EFileType.Class && f != fSkip) yield return f;
+		}
+	}
+
 	/// <summary>
 	/// Gets class file role from metacomments.
 	/// Note: can be slow, because loads file text if this is a class file.
@@ -592,30 +599,6 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>, IWorkspaceFile
 		Library,
 		/// <summary>Has meta role classFile, or no meta role.</summary>
 		Class,
-	}
-
-	#endregion
-
-	#region Au.Compiler.IWorkspaceFile
-
-	public string IfwText => GetText(cache: true);
-
-	public IWorkspaceFiles IwfWorkspace => _model;
-
-	public IWorkspaceFile IwfFindRelative(string relativePath, bool? folder) => FindRelative(relativePath, folder);
-
-	public IEnumerable<IWorkspaceFile> IwfEnumProjectClassFiles(IWorkspaceFile fSkip = null)
-	{
-		foreach(var f in Descendants()) {
-			if(f._type == EFileType.Class && f != fSkip) yield return f;
-		}
-	}
-
-	public bool IwfFindProject(out IWorkspaceFile folder, out IWorkspaceFile main)
-	{
-		if(!FindProject(out var fo, out var ma)) { folder = main = null; return false; }
-		folder = fo; main = ma;
-		return true;
 	}
 
 	#endregion

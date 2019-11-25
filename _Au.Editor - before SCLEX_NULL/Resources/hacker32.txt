@@ -1,7 +1,0 @@
-﻿[FILENAMES]
-Exe=    32\Au.AppHost.exe
-SaveAs= Au.Editor32.exe
-Log= CONSOLE
-[COMMANDS]
--add ..\_Au.Editor\Resources\ico\app_native.ico, ICONGROUP,32512,0
--add ..\_Au.Editor\Resources\Au.manifest, MANIFEST,1,0

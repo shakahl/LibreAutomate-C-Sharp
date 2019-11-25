@@ -84,7 +84,9 @@ namespace Au
 			/// Stores the specified accessible object properties in this object. Reference: <see cref="AAcc.Find"/>.
 			/// Does not search now. For it call <b>Find</b> or <b>Wait</b>.
 			/// </summary>
-			public Finder(string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null, int skip = 0, string navig = null)
+			public Finder(string role = null,
+				[ParamString(PSFormat.AWildex)] string name = null,
+				string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 			{
 				_role = role;
 				_name = name;
@@ -435,7 +437,9 @@ namespace Au
 		/// a.DoAction();
 		/// ]]></code>
 		/// </example>
-		public static AAcc Find(AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
+		public static AAcc Find(AWnd w, string role = null,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null, AWnd.ChildFinder controls = null)
 		{
 			var f = new Finder(role, name, prop, flags, also, skip, navig);
@@ -453,7 +457,9 @@ namespace Au
 		/// - <see cref="SimpleElementId"/> is not 0.
 		/// </exception>
 		/// <exception cref="AuException">Failed.</exception>
-		public AAcc Find(string role = null, string name = null, string prop = null, AFFlags flags = 0,
+		public AAcc Find(string role = null,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
 			//info: f.Find will throw if this AAcc is invalid etc.
@@ -474,7 +480,9 @@ namespace Au
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="AuWndException"/>
 		/// <exception cref="AuException"/>
-		public static AAcc Wait(double secondsTimeout, AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0,
+		public static AAcc Wait(double secondsTimeout, AWnd w, string role = null,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
 			var f = new Finder(role, name, prop, flags, also, skip, navig);
@@ -491,7 +499,9 @@ namespace Au
 		/// <exception cref="TimeoutException"/>
 		/// <exception cref="ArgumentException"/>
 		/// <exception cref="AuException"/>
-		public AAcc Wait(double secondsTimeout, string role = null, string name = null, string prop = null, AFFlags flags = 0,
+		public AAcc Wait(double secondsTimeout, string role = null,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			string prop = null, AFFlags flags = 0,
 			Func<AAcc, bool> also = null, int skip = 0, string navig = null)
 		{
 			//info: f.Find will throw if this AAcc is invalid etc.
@@ -517,7 +527,9 @@ namespace Au
 		/// foreach(var a in AAcc.FindAll(w, "BUTTON", prop: "level=7")) Print(a);
 		/// ]]></code>
 		/// </example>
-		public static AAcc[] FindAll(AWnd w, string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null)
+		public static AAcc[] FindAll(AWnd w, string role = null,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null)
 		{
 			var a = new List<AAcc>();
 			Find(w, role, name, prop, flags, o =>
@@ -543,7 +555,9 @@ namespace Au
 		/// foreach(var a in atb.FindAll("BUTTON", prop: "level=0")) Print(a);
 		/// ]]></code>
 		/// </example>
-		public AAcc[] FindAll(string role = null, string name = null, string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null)
+		public AAcc[] FindAll(string role = null,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			string prop = null, AFFlags flags = 0, Func<AAcc, bool> also = null)
 		{
 			var a = new List<AAcc>();
 			Find(role, name, prop, flags, o =>

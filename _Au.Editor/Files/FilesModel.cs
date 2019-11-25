@@ -23,7 +23,7 @@ using static Au.AStatic;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
+partial class FilesModel : ITreeModel
 {
 	TreeViewFiles _control;
 	public TreeViewFiles TreeControl => _control;
@@ -45,6 +45,7 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	//readonly TriggersUI _triggers;
 	readonly bool _importing;
 	readonly bool _initedFully;
+	public object CompilerContext;
 
 	/// <summary>
 	/// 
@@ -168,18 +169,6 @@ partial class FilesModel : ITreeModel, Au.Compiler.IWorkspaceFiles
 	{
 		return new TreeModelEventArgs(node.Parent.TreePath, new int[] { node.Index }, new object[] { node });
 	}
-
-	#endregion
-
-	#region Au.Compiler.IWorkspaceFiles
-
-	public object IwfCompilerContext { get; set; }
-
-	public string IwfFilesDirectory => FilesDirectory;
-
-	public string IwfWorkspaceDirectory => WorkspaceDirectory;
-
-	public Au.Compiler.IWorkspaceFile IwfFindById(uint id) => FindById(id);
 
 	#endregion
 

@@ -224,7 +224,8 @@ class PanelOutput : AuUserControlBase
 			_p._c_HandleCreated();
 			Z.MarginWidth(1, 3);
 			Z.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
-			Z.StyleFont(STYLE_DEFAULT, "Courier New", 8);
+			//Z.StyleFont(STYLE_DEFAULT, "Courier New", 8); //maybe better, except <b>
+			Z.StyleFont(STYLE_DEFAULT, "Consolas", 9);
 			Z.StyleClearAll();
 
 			ZTags.AddLinkTag("+properties", fid => {

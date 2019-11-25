@@ -16,7 +16,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
-//using System.Linq;
+using System.Linq;
 
 using Au;
 using Au.Types;
@@ -35,11 +35,11 @@ static class CodeInfo
 	internal static readonly CiQuickInfo _quickInfo = new CiQuickInfo();
 	internal static readonly CiStyling _styling = new CiStyling();
 
-	static string _metaText;
 	static Solution _solution;
 	static ProjectId _projectId;
 	static DocumentId _documentId;
 	static Document _document;
+	static string _metaText;
 	static bool _isWarm;
 	static bool _isUI;
 	static RECT _sciRect;
@@ -75,6 +75,8 @@ Print(""t"" + 'c' + 1);
 					APerf.Next('w');
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
+					Panels.Editor.ZActiveDocChanged += Stop;
+					Program.Timer025sWhenVisible += _Timer025sWhenVisible;
 				}));
 				//p1.Next();
 				//1000.ms();
@@ -89,9 +91,6 @@ Print(""t"" + 'c' + 1);
 				ADebug.Print(ex);
 			}
 		});
-
-		Panels.Editor.ZActiveDocChanged += Stop;
-		Program.Timer025sWhenVisible += _Timer025sWhenVisible;
 	}
 
 	/// <summary>
@@ -110,7 +109,7 @@ Print(""t"" + 'c' + 1);
 		if(!_isWarm) return false;
 		if(doc == null) return false;
 		if(!doc.ZFile.IsCodeFile) return false;
-		if(doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //TODO: what if isn't open?
+		if(doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
 		return true;
 	}
 
@@ -283,13 +282,14 @@ Print(""t"" + 'c' + 1);
 	{
 		if(!_CanWork(doc)) return;
 		_quickInfo.SciMouseDwellStarted(doc, positionUtf8);
+		_styling.SciMouseDwellStarted(doc, positionUtf8);
 	}
 
-	//public static void SciMouseDwellEnded(SciCode doc)
-	//{
-	//	if(!_CanWork(doc)) return;
-	//	_quickInfo.SciMouseDwellEnded();
-	//}
+	public static void SciMouseDwellEnded(SciCode doc)
+	{
+		if(!_CanWork(doc)) return;
+		_styling.SciMouseDwellEnded(doc);
+	}
 
 	//public static void SciMouseMoved(SciCode doc, int x, int y)
 	//{
@@ -303,7 +303,7 @@ Print(""t"" + 'c' + 1);
 		public SciCode sciDoc;
 		public string code;
 		public int metaEnd;
-		public int position;
+		public int pos16;
 
 		/// <summary>
 		/// Initializes all fields except document.
@@ -317,7 +317,7 @@ Print(""t"" + 'c' + 1);
 			sciDoc = Panels.Editor.ZActiveDoc;
 			code = sciDoc.Text;
 			if(pos == -1) pos = sciDoc.Z.CurrentPos16; else if(pos == -2) pos = sciDoc.Z.SelectionStar16;
-			position = pos;
+			pos16 = pos;
 			metaEnd = MetaComments.FindMetaComments(code);
 		}
 
@@ -391,7 +391,7 @@ Print(""t"" + 'c' + 1);
 	public static bool GetContextWithoutDocument(out Context r, int position = -1)
 	{
 		r = new Context(position);
-		return r.position >= r.metaEnd;
+		return r.pos16 >= r.metaEnd;
 	}
 
 	/// <summary>
@@ -400,52 +400,56 @@ Print(""t"" + 'c' + 1);
 	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1)
 	{
 		if(!GetContextAndDocument(out r, position)) { node = null; return false; }
-		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.position).Parent;
+		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16).Parent;
 		return true;
-	}
-
-	static void _CreateSolution(FileNode f)
-	{
-		//var p1 = APerf.Create();
-		var f0 = f;
-		if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
-
-		var m = new MetaComments();
-		if(!m.Parse(f, projFolder, EMPFlags.ForCodeInfo)) {
-			var err = m.Errors;
-			err.PrintAll();
-		}
-		//p1.Next('m');
-
-		_projectId = ProjectId.CreateNewId();
-		var adi = new List<DocumentInfo>();
-		foreach(var f1 in m.CodeFiles) {
-			var docId = DocumentId.CreateNewId(_projectId);
-			var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
-			adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
-			if(f1.f == f0) {
-				_documentId = docId;
-			}
-		}
-		var pi = ProjectInfo.Create(_projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
-			m.CreateCompilationOptions(),
-			m.CreateParseOptions(),
-			adi,
-			projectReferences: null, //TODO: create from m.ProjectReferences?
-			m.References.Refs); //TODO: set outputRefFilePath if library?
-								//p1.Next('p');
-
-		CurrentWorkspace = new AdhocWorkspace();
-		_solution = CurrentWorkspace.CurrentSolution.AddProject(pi);
-		//p1.NW('s');
 	}
 
 	public static Workspace CurrentWorkspace { get; private set; }
 
+	static void _CreateSolution(FileNode f)
+	{
+		_styling.ClearMetaErrors();
+		CurrentWorkspace = new AdhocWorkspace();
+		_solution = CurrentWorkspace.CurrentSolution;
+		_projectId = _AddProject(f, true);
+
+		static ProjectId _AddProject(FileNode f, bool isMain)
+		{
+			var f0 = f;
+			if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
+
+			var m = new MetaComments();
+			m.Parse(f, projFolder, EMPFlags.ForCodeInfo);
+
+			var projectId = ProjectId.CreateNewId();
+			var adi = new List<DocumentInfo>();
+			foreach(var f1 in m.CodeFiles) {
+				var docId = DocumentId.CreateNewId(projectId);
+				var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
+				adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
+				if(f1.f == f0 && isMain) {
+					_documentId = docId;
+				}
+			}
+
+			var pi = ProjectInfo.Create(projectId, VersionStamp.Default, f.Name, f.Name, LanguageNames.CSharp, null, null,
+				m.CreateCompilationOptions(),
+				m.CreateParseOptions(),
+				adi,
+				m.ProjectReferences?.Select(f1 => new ProjectReference(_AddProject(f1, false))),
+				m.References.Refs);
+
+			_solution = _solution.AddProject(pi);
+			//info: does not add to CurrentWorkspace.CurrentSolution. Now _solution != CurrentWorkspace.CurrentSolution. Even after Workspace.ApplyChanges.
+
+			return projectId;
+		}
+	}
+
 	private static void _Timer025sWhenVisible()
 	{
 		var doc = Panels.Editor.ZActiveDoc;
-		if(doc == null) return;
+		if(doc == null || !doc.ZFile.IsCodeFile) return;
 
 		//cancel if changed the screen rectangle of the document window
 		if(_compl.IsVisibleUI || _signature.IsVisibleUI) {
@@ -461,7 +465,7 @@ Print(""t"" + 'c' + 1);
 			_isUI = false;
 		}
 
-		if(_isWarm) _styling.Timer250msWhenVisibleAndWarm(doc);
+		_styling.Timer250msWhenVisibleAndWarm(doc);
 	}
 
 	public class CharContext : IDisposable

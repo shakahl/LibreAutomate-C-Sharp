@@ -126,6 +126,26 @@ class ProgramSettings
 	}
 
 	/// <summary>
+	/// Gets a setting of type long.
+	/// If exists, returns true. Else sets value=defaultValue and returns false.
+	/// </summary>
+	public bool GetLong(string name, out long value, long defaultValue = 0)
+	{
+		if(_Get(name, out var s)) { s.ToInt(out value); return true; }
+		value = defaultValue; return false;
+	}
+
+	/// <summary>
+	/// Gets a setting of type long.
+	/// If does not exist, returns defaultValue.
+	/// </summary>
+	public long GetLong(string name, long defaultValue = 0)
+	{
+		GetLong(name, out long value, defaultValue);
+		return value;
+	}
+
+	/// <summary>
 	/// Gets a setting of type bool.
 	/// If exists, returns true. Else sets value=defaultValue and returns false.
 	/// </summary>
@@ -168,6 +188,15 @@ class ProgramSettings
 	/// Does nothing if the setting is the same.
 	/// </summary>
 	public bool Set(string name, int value)
+	{
+		return Set(name, value.ToString());
+	}
+
+	/// <summary>
+	/// Sets a setting of type long.
+	/// Does nothing if the setting is the same.
+	/// </summary>
+	public bool Set(string name, long value)
 	{
 		return Set(name, value.ToString());
 	}

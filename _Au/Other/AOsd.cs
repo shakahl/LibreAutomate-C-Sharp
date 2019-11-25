@@ -256,7 +256,7 @@ namespace Au
 		/// Closes all OSD windows of this process.
 		/// </summary>
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
-		public static void CloseAll(string name = null)
+		public static void CloseAll([ParamString(PSFormat.AWildex)] string name = null)
 		{
 			foreach(var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(AProcess.ProcessId))) w.Close(noWait: true);
 		}

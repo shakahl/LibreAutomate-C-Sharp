@@ -110,7 +110,7 @@
 		this._bAddNet.Name = "_bAddNet";
 		this._bAddNet.Size = new System.Drawing.Size(110, 24);
 		this._bAddNet.TabIndex = 1;
-		this._bAddNet.Text = ".NET assembly...";
+		this._bAddNet.Text = "Assembly...";
 		this._bAddNet.Click += new System.EventHandler(this._bAddNet_Click);
 		// 
 		// _bAddComRegistry

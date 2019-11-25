@@ -35,6 +35,11 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Tools\Keys.txt" />
+    <None Remove="Tools\Regex.txt" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="Default\files\Examples\Hotkeys and other triggers.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -82,6 +87,7 @@
     <Content Include="Default\Templates\New File\TextFile.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <EmbeddedResource Include="Tools\Keys.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -111,6 +117,10 @@
     <Reference Include="Microsoft.CodeAnalysis.Workspaces">
       <HintPath>..\..\..\Downloads\roslyn-master\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
     </Reference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Tools\Regex.txt" />
   </ItemGroup>
 
   <ItemGroup>

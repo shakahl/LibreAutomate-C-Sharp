@@ -5,12 +5,10 @@ using System.Windows.Forms;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
-using System.Threading.Tasks;
-using System.Diagnostics;
 
 namespace Au.Tools
 {
-	public class RegexWindow : InfoWindow
+	class RegexWindow : InfoWindow
 	{
 		public RegexWindow() : base(Util.ADpi.ScaleInt(250))
 		{
@@ -28,7 +26,7 @@ namespace Au.Tools
 				c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
 			}
 			this.Control2.ZTags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
-			this.Control2.ZTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a regex token
+			this.Control2.ZTags.AddLinkTag("+a", o => TUtil.InsertTextInControl(InsertInControl, o)); //link that inserts a regex token
 
 			_SetTocText();
 			CurrentTopic = "help";
@@ -36,7 +34,7 @@ namespace Au.Tools
 
 		string _GetContentText()
 		{
-			var s = ContentText ?? Au.Editor.Resources.Resources.Regex;
+			var s = ContentText ?? EdResources.GetEmbeddedResourceString("Au.Editor.Tools.Regex.txt");
 			if(!s.Contains('\n')) s = File.ReadAllText(s);
 			return s;
 		}
@@ -83,27 +81,5 @@ namespace Au.Tools
 		/// If null, uses the focused control.
 		/// </summary>
 		public Control InsertInControl { get; set; }
-
-		void _Insert(string rx)
-		{
-			var c = InsertInControl;
-			if(c == null) {
-				c = AWnd.ThisThread.FocusedControl;
-				if(c == null) return;
-			} else c.Focus();
-
-			Task.Run(() => {
-				int i = rx.IndexOf('%');
-				if(i >= 0) {
-					Debug.Assert(!rx.Contains('\r'));
-					rx = rx.Remove(i, 1);
-					i = rx.Length - i;
-				}
-				var k = new AKeys(null);
-				k.AddText(rx);
-				if(i > 0) k.AddKey(KKey.Left).AddRepeat(i);
-				k.Send();
-			});
-		}
 	}
 }

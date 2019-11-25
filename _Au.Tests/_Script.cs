@@ -124,7 +124,13 @@ class Script : AScript
 
 	unsafe void _Main()
 	{
-		
+		var w = AWnd.Find("Quick Macros - ok - [Macro193]", "QM_Editor").OrThrow();
+
+		//AppDomain.CurrentDomain.AssemblyLoad += (se, da) => Print(1);
+		var a = new RegexCompilationInfo[] { new RegexCompilationInfo("", RegexOptions.None, "na", "ns", true) };
+		Regex.CompileToAssembly(a, "as");
+		new Regex("", RegexOptions.ECMAScript);
+		Regex.Match("", "");
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

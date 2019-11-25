@@ -29,10 +29,9 @@ namespace Au
 	/// AKeys.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
 	/// 
 	/// AOpt.Key.KeySpeed = 300; //set options for static functions
-	/// AKeys.Key("Ctrl+A Del Tab*3", "text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
+	/// AKeys.Key("Ctrl+A Del Tab*3", (KText)"text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
 	/// 
 	/// AKeys.Text("text\r\n"); //send text that ends with newline
-	/// AKeys.Text("text", "Enter", 300); //send text, press Enter, wait 300 ms
 	/// 
 	/// Text("Key and Text can be used without the \"AKeys.\" prefix.");
 	/// Key("Enter");
@@ -47,7 +46,7 @@ namespace Au
 		/// k.Options.KeySpeed = 50;
 		/// k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(KKey.Enter).AddSleep(500);
 		/// k.Send(); //sends and clears the variable
-		/// k.Add("Tab // Space*3", "text", KKey.Enter, 500); //does the same as the above k.Add... line
+		/// k.Add("Tab // Space*3", (KText)"text", KKey.Enter, 500); //the same as the above k.AddKeys... line
 		/// for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
 		/// ]]></code>
 		/// </example>
@@ -162,7 +161,7 @@ namespace Au
 		/// </summary>
 		/// <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="Key"/>. Can be null or "".</param>
 		/// <exception cref="ArgumentException">Error in <i>keys</i> string, for example an unknown key name.</exception>
-		public AKeys AddKeys(string keys)
+		public AKeys AddKeys([ParamString(PSFormat.AKeys)] string keys)
 		{
 			_ThrowIfSending();
 			if(Empty(keys)) return this;
@@ -327,7 +326,7 @@ namespace Au
 			}
 			_a.Clear();
 			if(n == 0) return;
-			fixed (Api.INPUTK* p = a) Api.SendInput(p, n);
+			fixed(Api.INPUTK* p = a) Api.SendInput(p, n);
 			//ATime.DoEvents(); //sometimes catches one more event, but not necessary
 			if(_a.Count > 0) goto g1; //the hook proc is called while in SendInput. If we don't retry, new blocked keys are lost.
 		}
@@ -375,15 +374,15 @@ namespace Au
 		/// Adds a callback function.
 		/// Returns self.
 		/// </summary>
-		/// <param name="callback"></param>
+		/// <param name="a"></param>
 		/// <remarks>
 		/// The callback function will be called by <see cref="Send"/> and can do anything except sending keys and copy/paste.
 		/// </remarks>
-		public AKeys AddCallback(Action callback)
+		public AKeys AddAction(Action a)
 		{
 			_ThrowIfSending();
-			if(callback == null) throw new ArgumentNullException();
-			return _AddKey(new _KEvent(_KType.Callback, _SetData(callback)));
+			if(a == null) throw new ArgumentNullException();
+			return _AddKey(new _KEvent(_KType.Callback, _SetData(a)));
 		}
 
 		/// <summary>
@@ -422,20 +421,17 @@ namespace Au
 		/// </summary>
 		/// <param name="keysEtc">Arguments. The same as with <see cref="Key"/>.</param>
 		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example unknown key name.</exception>
-		public AKeys Add(params object[] keysEtc)
+		public AKeys Add([ParamString(PSFormat.AKeys)] params object[] keysEtc)
 		{
 			_ThrowIfSending();
 			if(keysEtc != null) {
-				bool wasKeysString = false;
 				for(int i = 0; i < keysEtc.Length; i++) {
 					var o = keysEtc[i] ?? "";
 					switch(o) {
 					case string s:
-						if(!wasKeysString) {
-							wasKeysString = true;
-							AddKeys(s);
-							continue;
-						}
+						AddKeys(s);
+						break;
+					case KText s:
 						AddText(s);
 						break;
 					case KKey k:
@@ -444,21 +440,17 @@ namespace Au
 					case int ms:
 						AddSleep(ms);
 						break;
-					//case double sec: //rejected
-					//	AddSleep(checked((int)(sec * 1000d)));
-					//	break;
 					case Action g:
-						AddCallback(g);
-						break;
-					case ValueTuple<KKey, int, bool> t:
-						AddKey(t.Item1, t.Item2, t.Item3);
+						AddAction(g);
 						break;
 					case ValueTuple<int, bool> t:
 						AddKey(0, t.Item1, t.Item2);
 						break;
-					default: throw new ArgumentException("Unsupported object type. Expected string, KKey, int, double, Action, (KKey, int, bool) or (int, bool).");
+					case ValueTuple<KKey, int, bool> t:
+						AddKey(t.Item1, t.Item2, t.Item3);
+						break;
+					default: throw new ArgumentException("Unsupported object type. Expected string, KText, KKey, int, Action, (int, bool) or (KKey, int, bool).");
 					}
-					wasKeysString = false;
 				}
 			}
 			return this;

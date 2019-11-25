@@ -54,7 +54,9 @@ namespace Au
 		/// </example>
 		public static AWnd Wait(double secondsTimeout, bool active,
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string cn = null, WF3 program = default,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WF3 program = default,
 			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
@@ -127,7 +129,9 @@ namespace Au
 		/// </remarks>
 		public static bool WaitNot(double secondsTimeout,
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			string name = null, string cn = null, WF3 program = default,
+			[ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WF3 program = default,
 			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
@@ -232,7 +236,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <exception cref="AuWndException">The window handle is invalid or the window was closed while waiting.</exception>
 		/// <exception cref="ArgumentException">Invalid wildcard expression.</exception>
-		public bool WaitForName(double secondsTimeout, string name)
+		public bool WaitForName(double secondsTimeout, [ParamString(PSFormat.AWildex)] string name)
 		{
 			AWildex x = name; //ArgumentNullException
 			return WaitForCondition(secondsTimeout, t => x.Match(t.Name));

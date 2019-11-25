@@ -19,6 +19,7 @@ using System.Windows.Forms;
 using Au;
 using Au.Types;
 using static Au.AStatic;
+using System.Resources;
 
 static class Program
 {
@@ -151,7 +152,7 @@ static class Program
 
 	static bool _RestartAsAdmin(string[] args)
 	{
-		return false; //TODO
+		//return false;
 		if(Debugger.IsAttached) return false;
 		try {
 			//int pid = 

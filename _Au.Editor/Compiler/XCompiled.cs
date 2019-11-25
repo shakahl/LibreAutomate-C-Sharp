@@ -19,30 +19,30 @@ using static Au.AStatic;
 
 namespace Au.Compiler
 {
-	public static partial class Compiler
+	static partial class Compiler
 	{
 		/// <summary>
 		/// Resolves whether need to [re]compile or can run previously compiled assembly.
 		/// </summary>
 		unsafe class XCompiled
 		{
-			IWorkspaceFiles _coll;
+			FilesModel _coll;
 			string _file;
 			Dictionary<uint, string> _data;
 
 			public string CacheDirectory { get; }
 
-			public static XCompiled OfCollection(IWorkspaceFiles coll)
+			public static XCompiled OfCollection(FilesModel coll)
 			{
-				var cc = coll.IwfCompilerContext;
-				if(cc == null) coll.IwfCompilerContext = cc = new XCompiled(coll);
+				var cc = coll.CompilerContext;
+				if(cc == null) coll.CompilerContext = cc = new XCompiled(coll);
 				return cc as XCompiled;
 			}
 
-			public XCompiled(IWorkspaceFiles coll)
+			public XCompiled(FilesModel coll)
 			{
 				_coll = coll;
-				CacheDirectory = _coll.IwfWorkspaceDirectory + @"\.compiled";
+				CacheDirectory = _coll.WorkspaceDirectory + @"\.compiled";
 				_file = CacheDirectory + @"\compiled.log";
 			}
 
@@ -61,7 +61,7 @@ namespace Au.Compiler
 			/// <param name="f"></param>
 			/// <param name="r">Receives file path and execution options.</param>
 			/// <param name="projFolder">Project folder or null. If not null, f must be its main file.</param>
-			public bool IsCompiled(IWorkspaceFile f, out CompResults r, IWorkspaceFile projFolder)
+			public bool IsCompiled(FileNode f, out CompResults r, FileNode projFolder)
 			{
 				r = new CompResults();
 
@@ -122,7 +122,7 @@ namespace Au.Compiler
 							if(projFolder != null) {
 								if(!Util.AHash.MD5Result.FromString(value.AsSpan(offs, v.end - offs), out var md5)) return false;
 								Util.AHash.MD5 md = default;
-								foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) {
+								foreach(var f1 in projFolder.EnumProjectClassFiles(f)) {
 									if(_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
 								}
@@ -144,10 +144,10 @@ namespace Au.Compiler
 						case 's':
 							//case 'o':
 							value.ToInt(out uint u1, offs);
-							var f2 = _coll.IwfFindById(u1);
+							var f2 = _coll.FindById(u1);
 							if(f2 == null) return false;
 							if(ch == 'l') {
-								if(f2.IwfFindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
+								if(f2.FindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
 								if(f2 == f) return false; //will be compiler error "circular reference"
 														  //Print(f2, projFolder2);
 								if(!IsCompiled(f2, out _, projFolder2)) return false;
@@ -167,7 +167,7 @@ namespace Au.Compiler
 				}
 				if(isMultiFileProject != (projFolder != null)) {
 					if(projFolder == null) return false;
-					foreach(var f1 in projFolder.IwfEnumProjectClassFiles(f)) return false; //project with single file?
+					foreach(var f1 in projFolder.EnumProjectClassFiles(f)) return false; //project with single file?
 				}
 				//ADebug.Print("compiled");
 
@@ -175,7 +175,7 @@ namespace Au.Compiler
 				r.name = APath.GetFileName(f.Name, true);
 				return true;
 
-				bool _IsFileModified(IWorkspaceFile f_) => _IsFileModified2(f_.FilePath);
+				bool _IsFileModified(FileNode f_) => _IsFileModified2(f_.FilePath);
 
 				bool _IsFileModified2(string path_)
 				{
@@ -194,7 +194,7 @@ namespace Au.Compiler
 			/// <param name="m"></param>
 			/// <param name="pdbOffset"></param>
 			/// <param name="mtaThread">No [STAThread].</param>
-			public void AddCompiled(IWorkspaceFile f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
+			public void AddCompiled(FileNode f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
 			{
 				if(_data == null) {
 					_data = new Dictionary<uint, string>();
@@ -264,7 +264,7 @@ namespace Au.Compiler
 
 					if(b.Length != 0) value = b.ToString();
 
-					void _AppendFile(string opt, IWorkspaceFile f_)
+					void _AppendFile(string opt, FileNode f_)
 					{
 						if(f_ != null) b.Append(opt).Append(f_.IdString);
 					}
@@ -280,7 +280,7 @@ namespace Au.Compiler
 			/// <summary>
 			/// Removes saved f data, so that next time <see cref="IsCompiled"/> will return false.
 			/// </summary>
-			public void Remove(IWorkspaceFile f, bool deleteAsmFile)
+			public void Remove(FileNode f, bool deleteAsmFile)
 			{
 				if(_data == null && !_Open()) return;
 				if(_data.Remove(f.Id)) {
@@ -310,7 +310,7 @@ namespace Au.Compiler
 						continue;
 					}
 					sData.ToInt(out uint id, v.start, out int idEnd);
-					Debug.Assert(null != _coll.IwfFindById(id));
+					Debug.Assert(null != _coll.FindById(id));
 					_data[id] = v.end > idEnd ? sData[idEnd..v.end] : null;
 				}
 				if(_data == null) return false; //empty file
@@ -340,7 +340,7 @@ namespace Au.Compiler
 			}
 		}
 
-		public static void OnFileDeleted(IWorkspaceFiles coll, IWorkspaceFile f)
+		public static void OnFileDeleted(FilesModel coll, FileNode f)
 		{
 			XCompiled.OfCollection(coll).Remove(f, true);
 		}

@@ -633,7 +633,7 @@ namespace Au.Triggers
 		/// Replaces the user-typed text with the specified text.
 		/// </summary>
 		/// <param name="text">The replacement text.</param>
-		/// <param name="keysEtc">Optionally more parameters that can generate keys etc. The same as with <see cref="AKeys.Text"/>.</param>
+		/// <param name="keysEtc">Optional arguments to send keys etc. The same as with <see cref="AKeys.Key"/>.</param>
 		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. Uses these flags: <see cref="TAFlags.DontErase"/> <see cref="TAFlags.RemovePostfix"/> <see cref="TAFlags.ReplaceRaw"/> <see cref="TAFlags.Confirm"/>.
@@ -648,7 +648,7 @@ namespace Au.Triggers
 		/// ]]></code>
 		/// More examples: <see cref="ActionTriggers"/>.
 		/// </example>
-		public void Replace(string text, params object[] keysEtc)
+		public void Replace(string text, [ParamString(PSFormat.AKeys)] params object[] keysEtc)
 		{
 			var flags = Trigger.flags;
 

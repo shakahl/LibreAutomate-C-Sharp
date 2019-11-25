@@ -484,7 +484,7 @@ class RunningTasks
 				//break;
 				case UacIL.System:
 				case UacIL.Protected:
-					Print($"<>Cannot run {f.SciLink}. Meta option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					Print($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
 					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
@@ -495,7 +495,7 @@ class RunningTasks
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskParams = null;
 		if(r.notInCache) { //meta role exeProgram
-			exeFile = r.file;
+			exeFile = r.file.ReplaceAt(r.file.Length - 3, 3, "exe"); //assembly dll -> native host exe
 			argsString = args == null ? null : Au.Util.AStringUtil.CommandLineFromArray(args);
 		} else {
 			exeFile = AFolders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");

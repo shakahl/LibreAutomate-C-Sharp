@@ -87,7 +87,7 @@ partial class FProperties : AuForm, IMessageFilter
  • <i>exeProgram</i> - create/execute .exe file. It can run on any computer, without editor installed.
  • <i>editorExtension</i> - execute in the editor's UI thread. Dangerous, unstoppable. Rarely used.
  • <i>classLibrary</i> - create .dll file. It can be used as a reference assembly anywhere.
- • <i>classFile</i> - don't create/execute. Compile together with other C# code files in the project or using meta c. Inherits meta options of the main file of the compilation.
+ • <i>classFile</i> - don't create/execute. Compile together with other C# code files in the project or using meta c. Inherits meta comment options of the main file of the compilation.
 
 Default role for scripts is miniProgram; cannot be the last two. Default for class files is classFile.
 ",
@@ -98,7 +98,7 @@ Default role for scripts is miniProgram; cannot be the last two. Default for cla
 @"<b>testScript</b> - a script to run when you click the Run button.
 Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
 
-Usually it is used to test this class file or class library. It can contain meta option <c green>c this file<> that adds this file to the compilation, or meta option <c green>pr this file<> that adds the output dll file as a reference assembly. The recommended way to add this option correctly and easily is to try to run this file and click a link that is then printed in the output.
+Usually it is used to test this class file or class library. It can contain meta comment option <c green>c this file<> that adds this file to the compilation, or <c green>pr this file<> that adds the output dll file as a reference assembly. The recommended way to add this option correctly and easily is to try to run this file and click a link that is then printed in the output.
 
 Unlike most other options, this option is saved not in meta comments. It is saved in file files.xml.
 ");
@@ -183,9 +183,9 @@ The script must have role editorExtension. It runs synchronously in compiler's t
 By default it receives full path of the assembly file in args[0]. If need more info, specify command line arguments, like in this example: Script5.cs /$(outputPath) $(optimize). The script will receive real values in args[0], args[1] and so on. You can use these variables:
  • $(source) - path of this C# code file in the workspace.
  • $(outputFile) - full path of the assembly file.
- • $(outputPath) - meta option 'outputPath'.
- • $(optimize) - meta option 'optimize'.
- • $(role) - meta option 'role'.
+ • $(outputPath) - meta comment option 'outputPath'.
+ • $(optimize) - meta comment option 'optimize'.
+ • $(role) - meta comment option 'role'.
 ");
 		_AddEdit("postBuild", _meta.postBuild,
 @"<b>postBuild</b> - a script to run after compiling this code file successfully.
@@ -194,8 +194,8 @@ Everything else is like with preBuild.
 
 		g.ZAddHeaderRow("Assembly");
 		_AddEdit("outputPath", _meta.outputPath,
-@"<b>outputPath</b> - directory for the output assembly file (.exe or .dll) and related files (used dlls, etc).
-Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Also can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
+@"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
+Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
 ", noCheckbox: true, buttonAction: (sender, sed) => {
 	var m = new AMenu();
 	m[_role == ERole.classLibrary ? @"%AFolders.ThisApp%\Libraries" : @"%AFolders.Workspace%\bin"] = o => _SetEditCellText(o.ToString());
@@ -780,9 +780,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	void _InfoInit()
 	{
-		const string c_script = @"This file is a C# automation script.
-
-There are several ways to run a script:
+		const string c_script = @"This file is a C# script. There are several ways to run a script:
 1. Click the Run button or menu item.
 2. Add script name in Options -> General -> Run scripts when this workspace loaded.
 3. Call <help>ATask.Run<> from another script. Example: <code>ATask.Run(""Script8.cs"");</code>
@@ -793,15 +791,13 @@ In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey e
 ";
 		const string c_class = "This file is a C# class file.";
 		_info.Z.SetText(
-@"Most file properties are saved in <c green>/*/ meta comments /*/<> at the very start of code. You can change them here or in the code editor.
-
-Use Google when you don't know some words in help text or don't understand some options. Most such words and options are used in C#/.NET programming in Visual Studio etc.
+@"C# file properties here are similar to C# project properties in Visual Studio. This program does not use project files. A C# file is like a project. Its properties are saved in <c green>/*/ meta comments /*/<> at the very start of code. Can be changed here or in the code editor.
 
 " + (_isClass ? c_class : c_script));
 
 		_infoDict = new Dictionary<string, string>(32);
 		_Add(_bAddNet,
-@"<b>.NET assembly<> - add one or more .NET assemblies (.dll files) as references.
+@"<b>Assembly<> - add one or more .NET assemblies (.dll files) as references.
 Adds meta <c green>r FileName<>.
 
 Don't need to add Au.dll and .NET Core runtime dlls.

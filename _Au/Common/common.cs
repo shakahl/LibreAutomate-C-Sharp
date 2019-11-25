@@ -26,6 +26,54 @@ namespace Au.Types
 	}
 
 	/// <summary>
+	/// Used with <see cref="ParamStringAttribute"/> to specify string parameter format.
+	/// </summary>
+	public enum PSFormat
+	{
+		///
+		None,
+
+		/// <summary>
+		/// Keys. See <see cref="AKeys.Key(object[])"/>.
+		/// </summary>
+		AKeys,
+
+		/// <summary>
+		/// [Wildcard expression](xref:wildcard_expression).
+		/// </summary>
+		AWildex,
+
+		/// <summary>
+		/// PCRE regular expression.
+		/// </summary>
+		ARegex,
+
+		/// <summary>
+		/// PCRE regular expression replacement string.
+		/// </summary>
+		ARegexReplacement,
+
+		/// <summary>
+		/// .NET regular expression.
+		/// </summary>
+		Regex,
+	}
+
+	/// <summary>
+	/// Specifies that the function parameter that has this attribute is a string of the specified format, for example regular expression.
+	/// Code editors should help to create correct string arguments: provide tools or reference, show errors.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Parameter /*| AttributeTargets.Field | AttributeTargets.Property*/, AllowMultiple = false)]
+	public class ParamStringAttribute : Attribute
+	{
+		///
+		public ParamStringAttribute(PSFormat format) => Format = format;
+
+		///
+		public PSFormat Format { get; set; }
+	}
+
+	/// <summary>
 	/// Specifies whether to set, add or remove flags.
 	/// </summary>
 	public enum SetAddRemove

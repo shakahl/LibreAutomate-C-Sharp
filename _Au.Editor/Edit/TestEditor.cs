@@ -171,6 +171,9 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 	{
 		//AOutput.Clear();
 
+		//NetCoreDB.Create();
+		//NetCoreDB.UpdateIfNeed();
+
 		var doc = Panels.Editor.ZActiveDoc;
 		var z = doc.Z;
 		var s = doc.Text;

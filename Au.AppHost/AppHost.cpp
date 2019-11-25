@@ -159,12 +159,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 
 	_PATHS p = {};
 	if(!GetPaths(p)) { //fast
-		std::string s = R"(Please install or update .NET Core Runtime.
+		std::string s1 = R"(Please install or update .NET Core Runtime.
 Download from https://dotnet.microsoft.com/download.
 Need both: .NET Core Runtime, .NET Core Desktop Runtime.
 Need x)";
-		s+=is32bit ? "86 only." : "64 only.";
-		MessageBoxA(0, s.c_str(), nullptr, MB_ICONERROR);
+		s1+=is32bit ? "86 only." : "64 only.";
+		MessageBoxA(0, s1.c_str(), nullptr, MB_ICONERROR);
 		return -1;
 	}
 
