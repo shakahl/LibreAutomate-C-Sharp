@@ -79,7 +79,7 @@ class CiPopupList
 		for(int i = 0; i < kindNames.Length; i++) _AddButton(kindNames[i], CiUtil.GetKindImage((CiItemKind)i));
 		_tb.Items.Add(new ToolStripSeparator());
 		_groupButton = _AddButton("Group by namespace or inheritance", EdResources.GetImageNoCacheDpi(nameof(Au.Editor.Resources.Resources.ciGroupBy)));
-		if(Program.Settings.GetBool("ciGroup", true)) _groupButton.Checked = true;
+		if(Program.Settings.ci_complGroup) _groupButton.Checked = true;
 
 		ToolStripButton _AddButton(string text, Image image)
 		{
@@ -402,7 +402,7 @@ class CiPopupList
 			//AWnd.More.PrintMsg(m, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_NCMOUSEMOVE);
 			switch(m.Msg) {
 			case Api.WM_DESTROY:
-				Program.Settings.Set("ciGroup", _p._groupButton.Checked);
+				Program.Settings.ci_complGroup = _p._groupButton.Checked;
 				break;
 			}
 

@@ -640,21 +640,14 @@ namespace Au.Controls
 		/// Gets annotation text of line.
 		/// Returns "" if the line does not contain annotation or is invalid line index.
 		/// </summary>
-		public string AnnotationText(int line)
-		{
-			if(C.ZImages != null) return C.ZImages.LibAnnotationText(line);
-			return LibAnnotationText(line);
-		}
+		public string AnnotationText(int line) => C.ZImages?.LibAnnotationText(line) ?? LibAnnotationText(line);
 
 		/// <summary>
 		/// Gets raw annotation text which can contain image info.
 		/// AnnotationText gets text without image info.
 		/// Returns "" if the line does not contain annotation or is invalid line index.
 		/// </summary>
-		public string LibAnnotationText(int line)
-		{
-			return GetString(SCI_ANNOTATIONGETTEXT, line);
-		}
+		public string LibAnnotationText(int line) => GetString(SCI_ANNOTATIONGETTEXT, line);
 
 		/// <summary>
 		/// Sets annotation text of line.

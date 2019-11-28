@@ -41,7 +41,7 @@ partial class FilesModel : ITreeModel
 	readonly string _dbFile;
 	public readonly ASqlite DB;
 	public readonly string SettingsFile;
-	public readonly XElement SettingsXml;
+	public readonly WorkspaceSettings WSSett;
 	//readonly TriggersUI _triggers;
 	readonly bool _importing;
 	readonly bool _initedFully;
@@ -73,6 +73,8 @@ partial class FilesModel : ITreeModel
 		Root = FileNode.Load(WorkspaceFile, this); //recursively creates whole model tree; caller handles exceptions
 
 		if(!_importing) {
+			WSSett = WorkspaceSettings.Load(SettingsFile = WorkspaceDirectory + @"\settings.json");
+
 			_dbFile = WorkspaceDirectory + @"\state.db";
 			try {
 				DB = new ASqlite(_dbFile, sql:
@@ -83,15 +85,6 @@ partial class FilesModel : ITreeModel
 			}
 			catch(Exception ex) {
 				Print($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack()}");
-			}
-
-			SettingsFile = WorkspaceDirectory + @"\settings.xml";
-			try {
-				if(!AFile.ExistsAsFile(SettingsFile)) AFile.SaveText(SettingsFile, "<settings/>");
-				SettingsXml = AExtXml.LoadElem(SettingsFile);
-			}
-			catch(Exception ex) {
-				Print($"Failed to open file '{SettingsFile}'. Will not load/save workspace settings: startup scripts, etc.\r\n\t{ex.ToStringWithoutStack()}");
 			}
 
 			OpenFiles = new List<FileNode>();
@@ -118,6 +111,7 @@ partial class FilesModel : ITreeModel
 			_UninitClickSelect();
 			DB?.Dispose();
 		}
+		WSSett?.Dispose();
 		_control = null;
 	}
 
@@ -687,6 +681,7 @@ partial class FilesModel : ITreeModel
 		//FUTURE: call event to update other controls.
 
 		Save.WorkspaceLater();
+		CodeInfo.FilesChanged();
 		return true;
 	}
 
@@ -999,6 +994,7 @@ partial class FilesModel : ITreeModel
 		catch(Exception ex) { Print(ex.Message); }
 		finally { _control.EndUpdate(); }
 		Save.WorkspaceLater();
+		CodeInfo.FilesChanged();
 
 		void _AddDir(string path, FileNode parent)
 		{
@@ -1144,26 +1140,27 @@ partial class FilesModel : ITreeModel
 
 	#region other
 
-	/// <summary>
-	/// Saves <see cref="SettingsXml"/> to <see cref="SettingsFile"/>.
-	/// If fails, prints error and returns false.
-	/// </summary>
-	public bool SaveWorkspaceSettings()
+	public class UserData
 	{
-		if(SettingsXml != null) {
-			try { SettingsXml.SaveElem(SettingsFile); return true; }
-			catch(Exception ex) { Print("Failed to save workspace settings. " + ex.ToStringWithoutStack()); }
-		}
-		return false;
+		public string guid { get; set; }
+		public string startupScripts { get; set; }
 	}
 
+	public UserData CurrentUser => WSSett?.users?.FirstOrDefault(o => o.guid == Program.UserGuid);
+
 	public string StartupScriptsCsv {
-		get => SettingsXml?.Element("users")?.Elem("user", "guid", Program.UserGuid, true)?.Element("startupScripts")?.Value;
+		get => CurrentUser?.startupScripts;
 		set {
-			if(SettingsXml == null) return;
-			var x = SettingsXml.ElemOrAdd("users").ElemOrAdd("user", "guid", Program.UserGuid, true).ElemOrAdd("startupScripts");
-			x.Value = value;
-			SaveWorkspaceSettings();
+			if(WSSett == null) return;
+			var u = CurrentUser;
+			if(u == null) {
+				u = new UserData { guid = Program.UserGuid };
+				var a = WSSett.users ?? Array.Empty<UserData>();
+				a = a.InsertAt(0, u);
+				WSSett.users = a;
+			}
+			u.startupScripts = value;
+			WSSett.SaveLater();
 		}
 	}
 

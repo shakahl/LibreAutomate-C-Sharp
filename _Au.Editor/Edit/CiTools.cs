@@ -1,3 +1,5 @@
+//Show/hide code info tool windows such as Regex and Keys.
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -12,17 +14,14 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 //using System.Drawing;
-using System.Linq;
+//using System.Linq;
 
 using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Tools;
-using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Au.Controls;
 using Microsoft.CodeAnalysis.Text;
 
@@ -35,58 +34,6 @@ class CiTools
 	//		Print(IsInString(ref node, position));
 	//	}
 	//#endif
-
-	//FUTURE: remove if unused
-	/// <summary>
-	/// Gets syntax node at position.
-	/// If document==null, calls CodeInfo.GetDocument().
-	/// </summary>
-	public static SyntaxNode NodeAt(int position, Document document = null)
-	{
-		if(document == null) {
-			if(!CodeInfo.GetContextAndDocument(out var cd, position)) return null; //returns false if position is in meta comments
-			document = cd.document;
-			position = cd.pos16;
-		}
-		var root = document.GetSyntaxRootAsync().Result;
-		return root.FindToken(position).Parent;
-	}
-
-	/// <summary>
-	/// Returns true if node is in a "string literal" between "" or in a text part of an $"interpolated string".
-	/// </summary>
-	/// <param name="node">Any node. If returns true, finally its kind is StringLiteralExpression or InterpolatedStringExpression.</param>
-	/// <param name="position"></param>
-	public static bool IsInString(ref SyntaxNode node, int position)
-	{
-		if(node == null) return false;
-		var nk = node.Kind();
-		//Print(nk, position, node.Span, node.GetType(), node);
-		switch(nk) {
-		case SyntaxKind.StringLiteralExpression:
-			//return true only if position is in the string value.
-			//false if <= the first " or >= the last ".
-			//true if position is at the end of span and the last " is missing (error CS1010).
-			var span = node.Span;
-			int i = position - span.Start;
-			if(i <= 0 || (i == 1 && node.ToString().Starts('@'))) return false;
-			i = position - span.End;
-			if(i > 0 || (i == 0 && !_NoClosingQuote(node))) return false;
-			return true;
-		case SyntaxKind.InterpolatedStringExpression:
-			int j = node.Span.End - position;
-			if(j != 1 && !(j == 0 && _NoClosingQuote(node))) return false;
-			return true;
-		case SyntaxKind.InterpolatedStringText:
-		case SyntaxKind.Interpolation when position == node.SpanStart:
-			node = node.Parent;
-			nk = node.Kind();
-			return nk == SyntaxKind.InterpolatedStringExpression;
-		}
-		return false;
-
-		static bool _NoClosingQuote(SyntaxNode n) => n.ContainsDiagnostics && n.GetDiagnostics().Any(o => o.Id == "CS1010"); //Newline in constant
-	}
 
 	#region regex
 
@@ -162,7 +109,7 @@ class CiTools
 	{
 		if(!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		var pos16 = cd.pos16;
-		if(!IsInString(ref node, pos16)) { ADialog.ShowInfo("Text cursor must be in string."); return; }
+		if(!CiUtil.IsInString(ref node, pos16)) { ADialog.ShowInfo("Text cursor must be in string."); return; }
 		var doc = cd.sciDoc;
 		var stringSpan = node.Span;
 

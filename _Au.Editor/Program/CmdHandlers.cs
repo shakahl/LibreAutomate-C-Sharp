@@ -67,7 +67,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(File_NewClass), File_NewClass);
 		_dict.Add(nameof(File_NewFolder), File_NewFolder);
 		_dict.Add(nameof(File_Import), File_Import);
-		_dict.Add(nameof(File_Disable), File_Disable);
+		//_dict.Add(nameof(File_Disable), File_Disable);
 		_dict.Add(nameof(File_Rename), File_Rename);
 		_dict.Add(nameof(File_Delete), File_Delete);
 		_dict.Add(nameof(File_Properties), File_Properties);
@@ -102,22 +102,20 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Edit_Paste), Edit_Paste);
 		_dict.Add(nameof(Edit_ForumCopy), Edit_ForumCopy);
 		_dict.Add(nameof(Edit_Find), Edit_Find);
-		_dict.Add(nameof(Edit_MembersList), Edit_MembersList);
+		_dict.Add(nameof(Edit_FindReferences), Edit_FindReferences);
+		_dict.Add(nameof(Edit_AutocompletionList), Edit_AutocompletionList);
 		_dict.Add(nameof(Edit_ParameterInfo), Edit_ParameterInfo);
 		_dict.Add(nameof(Edit_GoToDefinition), Edit_GoToDefinition);
-		_dict.Add(nameof(Edit_PeekDefinition), Edit_PeekDefinition);
-		_dict.Add(nameof(Edit_FindReferences), Edit_FindReferences);
-		_dict.Add(nameof(Edit_Indent), Edit_Indent);
-		_dict.Add(nameof(Edit_Unindent), Edit_Unindent);
+		//_dict.Add(nameof(Edit_PeekDefinition), Edit_PeekDefinition);
 		_dict.Add(nameof(Edit_Comment), Edit_Comment);
 		_dict.Add(nameof(Edit_Uncomment), Edit_Uncomment);
-		_dict.Add(nameof(Edit_HideRegion), Edit_HideRegion);
+		_dict.Add(nameof(Edit_Indent), Edit_Indent);
+		_dict.Add(nameof(Edit_Unindent), Edit_Unindent);
 		_dict.Add(nameof(Edit_SelectAll), Edit_SelectAll);
-		_dict.Add(nameof(Edit_Output), Edit_Output);
-		_dict.Add(nameof(Edit_ImagesInCode), Edit_ImagesInCode);
+		//_dict.Add(nameof(Edit_HideRegion), Edit_HideRegion);
+		//_dict.Add(nameof(Edit_Output), Edit_Output);
 		_dict.Add(nameof(Edit_WrapLines), Edit_WrapLines);
-		_dict.Add(nameof(Edit_LineNumbers), Edit_LineNumbers);
-		_dict.Add(nameof(Edit_IndentationGuides), Edit_IndentationGuides);
+		_dict.Add(nameof(Edit_ImagesInCode), Edit_ImagesInCode);
 		_dict.Add(nameof(Code_Wnd), Code_Wnd);
 		_dict.Add(nameof(Code_Acc), Code_Acc);
 		_dict.Add(nameof(Code_WinImage), Code_WinImage);
@@ -135,7 +133,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Debug_StepOver), Debug_StepOver);
 		_dict.Add(nameof(Debug_StepOut), Debug_StepOut);
 		_dict.Add(nameof(Debug_ToggleBreakpoint), Debug_ToggleBreakpoint);
-		_dict.Add(nameof(Debug_PersistentBreakpoint), Debug_PersistentBreakpoint);
+		_dict.Add(nameof(Debug_AddDebuggerBreakCode), Debug_AddDebuggerBreakCode);
 		_dict.Add(nameof(Debug_ClearLocalBreakpoints), Debug_ClearLocalBreakpoints);
 		_dict.Add(nameof(Debug_ClearAllBreakpoints), Debug_ClearAllBreakpoints);
 		_dict.Add(nameof(Debug_DebugOptions), Debug_DebugOptions);
@@ -150,10 +148,8 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Tools_Resources), Tools_Resources);
 		_dict.Add(nameof(Tools_Icons), Tools_Icons);
 		_dict.Add(nameof(Tools_HelpEditor), Tools_HelpEditor);
-		_dict.Add(nameof(Tools_RegularExpressions), Tools_RegularExpressions);
 		_dict.Add(nameof(Tools_ExploreWindows), Tools_ExploreWindows);
 		_dict.Add(nameof(Tools_RemapKeys), Tools_RemapKeys);
-		_dict.Add(nameof(Tools_Components), Tools_Components);
 		_dict.Add(nameof(Tools_Portable), Tools_Portable);
 		_dict.Add(nameof(Tools_Options), Tools_Options);
 		_dict.Add(nameof(Tools_Output_Clear), Tools_Output_Clear);
@@ -165,19 +161,15 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Tools_Output_WrapLines), Tools_Output_WrapLines);
 		_dict.Add(nameof(Tools_Output_WhiteSpace), Tools_Output_WhiteSpace);
 		_dict.Add(nameof(Tools_Output_Topmost), Tools_Output_Topmost);
-		//_dict.Add(nameof(Tools_Statusbar_Floating), Tools_Statusbar_Floating);
-		//_dict.Add(nameof(Tools_Statusbar_MouseInfo), Tools_Statusbar_MouseInfo);
-		//_dict.Add(nameof(Tools_Statusbar_AutoHeight), Tools_Statusbar_AutoHeight);
-		//_dict.Add(nameof(Tools_Statusbar_SendToOutput), Tools_Statusbar_SendToOutput);
 		_dict.Add(nameof(Help_QuickStart), Help_QuickStart);
 		_dict.Add(nameof(Help_Reference), Help_Reference);
 		_dict.Add(nameof(Help_ContextHelp), Help_ContextHelp);
 		_dict.Add(nameof(Help_Download), Help_Download);
 		_dict.Add(nameof(Help_Forum), Help_Forum);
 		_dict.Add(nameof(Help_Email), Help_Email);
-		_dict.Add(nameof(Help_Donate), Help_Donate);
+		//_dict.Add(nameof(Help_Donate), Help_Donate);
 		_dict.Add(nameof(Help_About), Help_About);
-
+		
 		#endregion add
 
 	}
@@ -353,34 +345,34 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_Undo()
 	{
-		Panels.Editor.ZActiveDoc?.Call(Sci.SCI_UNDO);
+		Panels.Editor.ZActiveDoc.Call(Sci.SCI_UNDO);
 	}
 
 	public void Edit_Redo()
 	{
-		Panels.Editor.ZActiveDoc?.Call(Sci.SCI_REDO);
+		Panels.Editor.ZActiveDoc.Call(Sci.SCI_REDO);
 	}
 
 	public void Edit_Cut()
 	{
-		Panels.Editor.ZActiveDoc?.Call(Sci.SCI_CUT);
+		Panels.Editor.ZActiveDoc.Call(Sci.SCI_CUT);
 	}
 
 	public void Edit_Copy()
 	{
-		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
+		var doc = Panels.Editor.ZActiveDoc;
 		doc.ZCopyModified(onlyInfo: true);
 		doc.Call(Sci.SCI_COPY);
 	}
 
 	public void Edit_ForumCopy()
 	{
-		Panels.Editor.ZActiveDoc?.ZCopyModified();
+		Panels.Editor.ZActiveDoc.ZCopyModified();
 	}
 
 	public void Edit_Paste()
 	{
-		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
+		var doc = Panels.Editor.ZActiveDoc;
 		if(!doc.ZPasteModified()) doc.Call(Sci.SCI_PASTE);
 	}
 
@@ -389,7 +381,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		Panels.Find.ZCtrlF();
 	}
 
-	public void Edit_MembersList()
+	public void Edit_AutocompletionList()
 	{
 		CodeInfo.ShowCompletionList(Panels.Editor.ZActiveDoc);
 	}
@@ -414,32 +406,32 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	}
 
-	public void Edit_Indent()
-	{
-
-	}
-
-	public void Edit_Unindent()
-	{
-
-	}
-
 	public void Edit_Comment()
 	{
-		Panels.Editor.ZActiveDoc?.ZCommentLines(true);
+		Panels.Editor.ZActiveDoc.ZCommentLines(true);
 	}
 
 	public void Edit_Uncomment()
 	{
-		Panels.Editor.ZActiveDoc?.ZCommentLines(false);
+		Panels.Editor.ZActiveDoc.ZCommentLines(false);
 	}
 
-	public void Edit_HideRegion()
+	public void Edit_Indent()
 	{
+		Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB);
+	}
 
+	public void Edit_Unindent()
+	{
+		Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB);
 	}
 
 	public void Edit_SelectAll()
+	{
+		Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL);
+	}
+
+	public void Edit_HideRegion()
 	{
 
 	}
@@ -450,74 +442,33 @@ class CmdHandlers : IGStripManagerCallbacks
 		//It can be used to copy/paste text to another place in the document, instead of split-view.
 	}
 
-	public void Edit_ImagesInCode()
-	{
-
-	}
-
 	public void Edit_WrapLines()
 	{
-
+		Panels.Editor.ZActiveDoc.ZToggleView(SciCode.EView.Wrap);
 	}
 
-	public void Edit_LineNumbers()
+	public void Edit_ImagesInCode()
 	{
-
-	}
-
-	public void Edit_IndentationGuides()
-	{
-
+		Panels.Editor.ZActiveDoc.ZToggleView(SciCode.EView.Images);
 	}
 
 	#endregion
 
 	#region menu Code
 
-	/// <summary>
-	/// Shows non-modal tool form and on OK inserts its result code in the active document. If readonly - prints in the output.
-	/// </summary>
-	/// <param name="f"></param>
-	static void _ShowTool(ToolForm f)
-	{
-		f.FormClosed += (unu, e) => {
-			if(e.CloseReason == CloseReason.UserClosing && f.DialogResult == DialogResult.OK) {
-				var s = f.ZResultCode;
-				var d = Panels.Editor.ZActiveDoc; if(d == null) return;
-				var t = d.Z;
-				if(t.IsReadonly) {
-					Print(s);
-				} else {
-					d.Focus();
-					int start = t.LineStartFromPos(false, t.CurrentPos8);
-					int indent = t.LineIndentationFromPos(false, start);
-					if(indent == 0) {
-						s += "\r\n";
-					} else {
-						var b = new StringBuilder();
-						foreach(var v in s.SegLines()) b.Append('\t', indent).AppendLine(v);
-						s = b.ToString();
-					}
-					t.ReplaceSel(false, start, s);
-				}
-			}
-		};
-		f.Show(Program.MainForm);
-	}
-
 	public void Code_Wnd()
 	{
-		_ShowTool(new FormAWnd());
+		new FormAWnd().ZShow();
 	}
 
 	public void Code_Acc()
 	{
-		_ShowTool(new FormAAcc());
+		new FormAAcc().ZShow();
 	}
 
 	public void Code_WinImage()
 	{
-		_ShowTool(new FormAWinImage());
+		new FormAWinImage().ZShow();
 	}
 
 	public void Code_Regex()
@@ -573,12 +524,13 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	#region menu Debug
 
-	public void Debug_ToggleBreakpoint()
+	public void Debug_AddDebuggerBreakCode()
 	{
-
+		TUtil.InsertUsingDirectiveInEditor("System.Diagnostics");
+		TUtil.InsertStatementInEditor("if(Debugger.IsAttached) Debugger.Break(); else Debugger.Launch();");
 	}
 
-	public void Debug_PersistentBreakpoint()
+	public void Debug_ToggleBreakpoint()
 	{
 
 	}
@@ -682,22 +634,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	}
 
-	public void Tools_RegularExpressions()
-	{
-
-	}
-
 	public void Tools_ExploreWindows()
 	{
 
 	}
 
 	public void Tools_RemapKeys()
-	{
-
-	}
-
-	public void Tools_Components()
 	{
 
 	}
@@ -728,7 +670,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Tools_Output_FindSelectedText()
 	{
-
+		Panels.Output.ZFind();
 	}
 
 	public void Tools_Output_History()
@@ -763,30 +705,6 @@ class CmdHandlers : IGStripManagerCallbacks
 		var v = Panels.Output;
 		v.ZTopmost ^= true;
 	}
-
-	#endregion
-
-	#region menu_Statusbar
-
-	//public void Tools_Statusbar_Floating()
-	//{
-
-	//}
-
-	//public void Tools_Statusbar_MouseInfo()
-	//{
-
-	//}
-
-	//public void Tools_Statusbar_AutoHeight()
-	//{
-
-	//}
-
-	//public void Tools_Statusbar_SendToOutput()
-	//{
-
-	//}
 
 	#endregion
 

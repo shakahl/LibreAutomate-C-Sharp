@@ -129,6 +129,8 @@ class PanelOutput : AuUserControlBase
 
 	public void ZCopy() { _c.Call(SCI_COPY); }
 
+	public void ZFind() { Panels.Find.ZCtrlF(_c); }
+
 	public void ZHistory()
 	{
 		var dd = new PopupList { Items = _history.ToArray() };
@@ -147,10 +149,10 @@ class PanelOutput : AuUserControlBase
 	bool _inInitSettings;
 
 	public bool ZWrapLines {
-		get => Program.Settings.GetBool("Tools_Output_WrapLines");
+		get => Program.Settings.output_wrap;
 		set {
 			Debug.Assert(!_inInitSettings || value);
-			if(!_inInitSettings) Program.Settings.Set("Tools_Output_WrapLines", value);
+			if(!_inInitSettings) Program.Settings.output_wrap = value;
 			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in SciControl.OnHandleCreated
 			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in SciControl.OnHandleCreated
 			_c.Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
@@ -159,10 +161,10 @@ class PanelOutput : AuUserControlBase
 	}
 
 	public bool ZWhiteSpace {
-		get => Program.Settings.GetBool("Tools_Output_WhiteSpace");
+		get => Program.Settings.output_white;
 		set {
 			Debug.Assert(!_inInitSettings || value);
-			if(!_inInitSettings) Program.Settings.Set("Tools_Output_WhiteSpace", value);
+			if(!_inInitSettings) Program.Settings.output_white = value;
 			_c.Call(SCI_SETWHITESPACEFORE, 1, 0xFF0080);
 			_c.Call(SCI_SETVIEWWS, value);
 			Strips.CheckCmd("Tools_Output_WhiteSpace", value);
@@ -170,12 +172,12 @@ class PanelOutput : AuUserControlBase
 	}
 
 	public bool ZTopmost {
-		get => Program.Settings.GetBool("Tools_Output_Topmost");
+		get => Program.Settings.output_topmost;
 		set {
 			var p = Panels.PanelManager.ZGetPanel(this);
 			//if(value) p.Floating = true;
 			if(p.Floating) _SetTopmost(value);
-			Program.Settings.Set("Tools_Output_Topmost", value);
+			Program.Settings.output_topmost = value;
 			Strips.CheckCmd("Tools_Output_Topmost", value);
 		}
 	}

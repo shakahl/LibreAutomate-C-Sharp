@@ -226,16 +226,11 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "lstrcpynW")]
 		internal static extern char* lstrcpyn(char* sTo, string sFrom, int sToBufferLength);
 
-		internal struct FILETIME
-		{
-			public uint dwLowDateTime;
-			public uint dwHighDateTime;
-
-			public static implicit operator long(FILETIME ft) { return (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); } //in Release faster than *(long*)&ft
-		}
-
 		[DllImport("kernel32.dll")]
 		internal static extern void GetSystemTimeAsFileTime(out long lpSystemTimeAsFileTime);
+
+		[DllImport("kernel32.dll")]
+		internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool Wow64DisableWow64FsRedirection(out IntPtr OldValue);
@@ -490,12 +485,20 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern int GetProcessId(IntPtr Process);
 
+		internal struct FILETIME
+		{
+			public uint dwLowDateTime;
+			public uint dwHighDateTime;
+
+			public static implicit operator long(FILETIME ft) { return (long)((ulong)ft.dwHighDateTime << 32 | ft.dwLowDateTime); } //in Release faster than *(long*)&ft
+		}
+
 		internal struct WIN32_FIND_DATA
 		{
 			public System.IO.FileAttributes dwFileAttributes;
-			public Api.FILETIME ftCreationTime;
-			public Api.FILETIME ftLastAccessTime;
-			public Api.FILETIME ftLastWriteTime;
+			public FILETIME ftCreationTime;
+			public FILETIME ftLastAccessTime;
+			public FILETIME ftLastWriteTime;
 			public uint nFileSizeHigh;
 			public uint nFileSizeLow;
 			public uint dwReserved0;

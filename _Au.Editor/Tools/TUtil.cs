@@ -20,10 +20,11 @@ using Au;
 using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Au.Tools
 {
-	internal static class TUtil
+	static class TUtil
 	{
 		#region text
 
@@ -34,7 +35,7 @@ namespace Au.Tools
 		/// <param name="s">Argument value. If null, appends 'null'. If verbatim (like '@"text"'), appends 's'. Else appends '"escaped s"'.</param>
 		/// <param name="param">If not null, appends 'param: s'. By default appends only 's'. If "null", appends 'null, s'.</param>
 		/// <param name="noComma">Don't append ', '. Use for the first parameter. If false, does not append only if b.Length is less than 2.</param>
-		internal static StringBuilder AppendStringArg(this StringBuilder t, string s, string param = null, bool noComma = false)
+		public static StringBuilder AppendStringArg(this StringBuilder t, string s, string param = null, bool noComma = false)
 		{
 			_AppendArgPrefix(t, param, noComma);
 			if(s == null) t.Append("null");
@@ -50,7 +51,7 @@ namespace Au.Tools
 		/// <param name="s">Argument value. Must not be empty.</param>
 		/// <param name="param">If not null, appends 'param: s'. By default appends only 's'. If "null", appends 'null, s'.</param>
 		/// <param name="noComma">Don't append ', '. Use for the first parameter. If false, does not append only if b.Length is less than 2.</param>
-		internal static StringBuilder AppendOtherArg(this StringBuilder t, string s, string param = null, bool noComma = false)
+		public static StringBuilder AppendOtherArg(this StringBuilder t, string s, string param = null, bool noComma = false)
 		{
 			Debug.Assert(!Empty(s));
 			_AppendArgPrefix(t, param, noComma);
@@ -74,7 +75,7 @@ namespace Au.Tools
 		/// <param name="grid"></param>
 		/// <param name="param">If not null, appends 'param: flags'. By default appends only 'flags'. If "null", appends 'null, s'.</param>
 		/// <param name="prefix">Row keys of these flags in grid have this prefix. Use when the grid contains flags of another enum with same member names.</param>
-		internal static bool AppendFlagsFromGrid(this StringBuilder t, Type flagsEnum, Controls.ParamGrid grid, string param = null, string prefix = null)
+		public static bool AppendFlagsFromGrid(this StringBuilder t, Type flagsEnum, Controls.ParamGrid grid, string param = null, string prefix = null)
 		{
 			bool isFlags = false;
 			string[] flagNames = flagsEnum.GetEnumNames();
@@ -97,7 +98,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Appends waitTime. If !orThrow, appends "-" if need.
 		/// </summary>
-		internal static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow)
+		public static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow)
 		{
 			if(Empty(waitTime)) waitTime = "0"; else if(!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
 			t.Append(waitTime);
@@ -108,10 +109,10 @@ namespace Au.Tools
 		/// Returns true if s is like '@"*"' or '$"*"' or '$@"*"'.
 		/// s can be null.
 		/// </summary>
-		internal static bool IsVerbatim(string s, out int prefixLength)
+		public static bool IsVerbatim(string s, out int prefixLength)
 		{
 			prefixLength = 0;
-			if(s != null && s.Length >= 3 && s[s.Length - 1] == '\"') {
+			if(s != null && s.Length >= 3 && s[^1] == '\"') {
 				if(s[0] == '$') prefixLength = 1;
 				if(s[prefixLength] == '@') prefixLength++;
 				if(s[prefixLength] == '\"' && prefixLength != s.Length - 1) return true;
@@ -124,7 +125,7 @@ namespace Au.Tools
 		/// If s has *? characters, prepends "**t ".
 		/// s can be null.
 		/// </summary>
-		internal static string EscapeWildex(string s)
+		public static string EscapeWildex(string s)
 		{
 			if(AWildex.HasWildcardChars(s)) s = "**t " + s;
 			return s;
@@ -136,7 +137,7 @@ namespace Au.Tools
 		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines/controlchars, prepends @" and appends " and replaces all " with "".
 		/// s can be null.
 		/// </summary>
-		internal static string EscapeWindowName(string s, bool canMakeVerbatim)
+		public static string EscapeWindowName(string s, bool canMakeVerbatim)
 		{
 			if(s == null) return s;
 			if(AWildex.HasWildcardChars(s)) {
@@ -156,7 +157,7 @@ namespace Au.Tools
 		/// </summary>
 		/// <param name="gridValue">A wildex string, usually from a ParamGrid control cell. Can be raw or verbatim. Can be null.</param>
 		/// <param name="newRawValue">New raw string, not wildex. Can be null.</param>
-		internal static bool ShouldChangeGridWildex(string gridValue, string newRawValue)
+		public static bool ShouldChangeGridWildex(string gridValue, string newRawValue)
 		{
 			if(gridValue == null) gridValue = "";
 			if(newRawValue == null) newRawValue = "";
@@ -173,7 +174,7 @@ namespace Au.Tools
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		/// <param name="escapeWildex">If didn't replace, call <see cref="EscapeWildex"/>.</param>
-		internal static string StripWndClassName(string s, bool escapeWildex)
+		public static string StripWndClassName(string s, bool escapeWildex)
 		{
 			if(!Empty(s)) {
 				int n = s.RegexReplace(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
@@ -183,7 +184,103 @@ namespace Au.Tools
 			return s;
 		}
 
-		internal static void InsertTextInControl(Control c, string s)
+		/// <summary>
+		/// Inserts one or more statements in Panels.Editor.ZActiveDoc with correct indentation. If null or readonly, prints in output.
+		/// </summary>
+		/// <param name="s">Text without "\r\n" at the end.</param>
+		public static void InsertStatementInEditor(string s)
+		{
+			var d = Panels.Editor.ZActiveDoc;
+			if(d == null || d.Z.IsReadonly) {
+				Print(s);
+			} else {
+				var z = d.Z;
+				d.Focus();
+				int start = z.LineStartFromPos(false, z.CurrentPos8);
+				int indent = z.LineIndentationFromPos(false, start);
+				if(indent == 0) {
+					s += "\r\n";
+				} else {
+					var b = new StringBuilder();
+					foreach(var v in s.SegLines()) b.Append('\t', indent).AppendLine(v);
+					s = b.ToString();
+				}
+				z.ReplaceSel(false, start, s);
+			}
+		}
+
+		/// <summary>
+		/// Finds start and end of using directives. Returns start.
+		/// If no usings, sets start = end = where new using directives can be inserted: 0 or end of meta or extern aliases or preprocessor directives.
+		/// Sets end = the start of next line if possible.
+		/// If ifNoNamespace!=null, returns -1 if 'using ifNoNamespace;' exists.
+		/// </summary>
+		static int _FindUsings(in CodeInfo.Context k, out int end, string ifNoNamespace = null)
+		{
+			end = -1;
+			int start = -1, end2 = -1;
+			var root = k.document.GetSyntaxRootAsync().Result;
+			foreach(var v in root.ChildNodes()) {
+				switch(v) {
+				case UsingDirectiveSyntax u:
+					if(ifNoNamespace != null && ifNoNamespace == u.Name.ToString()) return -1;
+					if(start < 0) start = v.SpanStart;
+					end = v.FullSpan.End;
+					break;
+				case ExternAliasDirectiveSyntax _:
+					end2 = v.FullSpan.End;
+					break;
+				default: goto gr;
+				}
+				//CiUtil.PrintNode(v);
+			}
+			gr:
+			if(start < 0) {
+				if(end2 < 0) foreach(var v in root.GetLeadingTrivia()) if(v.IsDirective) end2 = v.FullSpan.End;
+				if(end2 < 0) {
+					end2 = k.metaEnd;
+					if(k.code.RegexMatch(@"\s*//.+\R", 0, out RXGroup g, RXFlags.ANCHORED, end2..)) end2 = g.End;
+				}
+				start = end = end2;
+			}
+			return start;
+		}
+
+		/// <summary>
+		/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
+		/// </summary>
+		/// <param name="ns">Namespace, eg "System.Diagnostics".</param>
+		public static void InsertUsingDirectiveInEditor(string ns)
+		{
+			if(!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return;
+			if(_FindUsings(k, out int end, ns) < 0) return;
+			//k.sciDoc.Z.Select(true, start, end);
+			var b = new StringBuilder();
+			if(end > 0 && k.code[end - 1] != '\n') b.AppendLine();
+			b.Append("using ").Append(ns).AppendLine(";");
+			k.sciDoc.Z.InsertText(true, end, b.ToString());
+			k.sciDoc.ZFoldScriptHeader();
+		}
+
+		/// <summary>
+		/// Inserts text in Panels.Editor.ZActiveDoc if not null/readonly.
+		/// At current position, not as new line, replaces selection.
+		/// </summary>
+		/// <param name="s">If contains '%', removes it and moves caret there.</param>
+		public static void InsertTextInEditor(string s)
+		{
+			var d = Panels.Editor.ZActiveDoc;
+			if(d == null || d.Z.IsReadonly) return;
+			InsertTextInControl(d, s);
+		}
+
+		/// <summary>
+		/// Inserts text in specified or focused control.
+		/// At current position, not as new line, replaces selection.
+		/// </summary>
+		/// <param name="c">If null, uses the focused control, else sets focus.</param>
+		/// <param name="s">If contains '%', removes it and moves caret there.</param>
+		public static void InsertTextInControl(Control c, string s)
 		{
 			if(c == null) {
 				c = AWnd.ThisThread.FocusedControl;
@@ -198,6 +295,7 @@ namespace Au.Tools
 			}
 
 			if(c is AuScintilla sci) {
+				if(sci.Z.IsReadonly) return;
 				sci.Z.ReplaceSel(s);
 				while(i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
 			} else {
@@ -217,7 +315,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Gets control id. Returns true if it can be used to identify the control in window wWindow.
 		/// </summary>
-		internal static bool GetUsefulControlId(AWnd wControl, AWnd wWindow, out int id)
+		public static bool GetUsefulControlId(AWnd wControl, AWnd wWindow, out int id)
 		{
 			id = wControl.ControlId;
 			if(id == 0 || id == -1 || id > 0xffff || id < -0xffff) return false;
@@ -237,12 +335,12 @@ namespace Au.Tools
 		/// <summary>
 		/// Creates standard <see cref="AOsdRect"/>.
 		/// </summary>
-		internal static AOsdRect CreateOsdRect(int thickness = 4) => new AOsdRect() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
+		public static AOsdRect CreateOsdRect(int thickness = 4) => new AOsdRect() { Color = 0xFF8A2BE2, Thickness = thickness }; //Color.BlueViolet
 
 		/// <summary>
 		/// Briefly shows standard blinking on-screen rectangle.
 		/// </summary>
-		internal static void ShowOsdRect(RECT r, bool limitToScreen = false)
+		public static void ShowOsdRect(RECT r, bool limitToScreen = false)
 		{
 			var osr = CreateOsdRect();
 			r.Inflate(2, 2); //2 pixels inside, 2 outside
@@ -271,7 +369,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Common code for tools that capture UI objects with F3.
 		/// </summary>
-		internal class CaptureWindowEtcWithHotkey
+		public class CaptureWindowEtcWithHotkey
 		{
 			ATimer _timer;
 			long _prevTime;
@@ -407,7 +505,7 @@ namespace Au.Tools
 		/// var r = await TUtil.RunTestFindObject(code, _wndVar, _wnd, _bTest, _lSpeed, o => (o as AAcc).Rect);
 		/// ]]></code>
 		/// </example>
-		internal static TestFindObjectResults RunTestFindObject(
+		public static TestFindObjectResults RunTestFindObject(
 			string code, string wndVar, AWnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false)
 		{
 			if(Empty(code)) return default;
@@ -503,7 +601,7 @@ namespace Au.Tools
 			return new TestFindObjectResults() { obj = r.obj, speed = r.speed[1] };
 		}
 
-		internal struct TestFindObjectResults
+		public struct TestFindObjectResults
 		{
 			public object obj;
 			public long speed;
@@ -529,5 +627,17 @@ namespace Au.Tools
 	{
 		public virtual string ZResultCode { get; protected set; }
 
+		/// <summary>
+		/// Shows non-modal tool form and on OK inserts its result code in the active document. If readonly - prints in the output.
+		/// </summary>
+		public void ZShow()
+		{
+			FormClosed += (unu, e) => {
+				if(e.CloseReason == CloseReason.UserClosing && DialogResult == DialogResult.OK) {
+					TUtil.InsertStatementInEditor(ZResultCode);
+				}
+			};
+			Show(Program.MainForm);
+		}
 	}
 }

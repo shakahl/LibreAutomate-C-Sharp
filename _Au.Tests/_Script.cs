@@ -27,6 +27,9 @@ using System.Globalization;
 //using AutoItX3Lib;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
+using System.Text.Json;
+using System.Text.Json.Serialization;
+using System.Text.Encodings.Web;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
@@ -121,20 +124,71 @@ class Script : AScript
 	//	}
 	//}
 
+	class JSettings
+	{
+		public string OneTwo { get; set; }
+		public int ThreeFour { get; set; }
+		public int Five { get; set; }
+		public bool Six { get; set; }
+		public string Seven { get; set; }
+		public string Eight { get; set; } = "def";
+	}
 
 	unsafe void _Main()
 	{
-		var w = AWnd.Find("Quick Macros - ok - [Macro193]", "QM_Editor").OrThrow();
+		var file = @"Q:\test\sett.json";
+		var file2 = @"Q:\test\sett.xml";
 
-		//AppDomain.CurrentDomain.AssemblyLoad += (se, da) => Print(1);
-		var a = new RegexCompilationInfo[] { new RegexCompilationInfo("", RegexOptions.None, "na", "ns", true) };
-		Regex.CompileToAssembly(a, "as");
-		new Regex("", RegexOptions.ECMAScript);
-		Regex.Match("", "");
+		var v = new JSettings { OneTwo = "text ąčę", ThreeFour = 100 };
+
+		for(int i = 0; i < 5; i++) {
+			//100.ms();
+			//APerf.First();
+			//var k1 = new JsonSerializerOptions { IgnoreNullValues = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true };
+			//var b1 = JsonSerializer.SerializeToUtf8Bytes(v, k1);
+			//APerf.Next();
+			//File.WriteAllBytes(file, b1);
+			//APerf.NW();
+
+			100.ms();
+			APerf.First();
+			var b2 = File.ReadAllBytes(file);
+			APerf.Next();
+			var k2 = new JsonSerializerOptions { IgnoreNullValues = true };
+			APerf.Next();
+			v = JsonSerializer.Deserialize<JSettings>(b2, k2);
+			APerf.NW('J');
+		}
+
+		for(int i = 0; i < 5; i++) {
+			//100.ms();
+			//APerf.First();
+			//var r1 = new XElement("r");
+			//r1.Add(new XElement("OneTwo", v.OneTwo));
+			//r1.Add(new XElement("ThreeFour", v.ThreeFour.ToString()));
+			//APerf.Next();
+			//r1.Save(file2);
+			//APerf.NW();
+
+			100.ms();
+			APerf.First();
+			var r2=XElement.Load(file2);
+			APerf.Next();
+			v = new JSettings();
+			v.OneTwo = r2.Element("OneTwo").Value;
+			var s2 = r2.Element("ThreeFour").Value;
+			APerf.NW('X');
+			v.ThreeFour = s2.ToInt();
+		}
+
+		Print(v.OneTwo, v.ThreeFour, v.Five, v.Six, v.Seven, v.Eight);
+
+		//JsonDocument d; d.RootElement.
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }
-	Script(string[] args) {
+	Script(string[] args)
+	{
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
 		Au.Util.LibAssertListener.Setup();

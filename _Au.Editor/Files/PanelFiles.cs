@@ -44,8 +44,8 @@ partial class PanelFiles : AuUserControlBase
 	/// </param>
 	public FilesModel ZLoadWorkspace(string wsDir = null)
 	{
-		if(wsDir == null) wsDir = Program.Settings.GetString("workspace");
-		if(Empty(wsDir)) wsDir = AFolders.ThisAppDocuments + @"Main";
+		wsDir ??= Program.Settings.workspace;
+		if(Empty(wsDir)) wsDir = AFolders.ThisAppDocuments + "Main";
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = _model;
 		FilesModel m = null;
@@ -86,14 +86,13 @@ partial class PanelFiles : AuUserControlBase
 		Program.Model = _model = m;
 
 		//CONSIDER: unexpand path
-		if(Program.Settings.Set("workspace", wsDir)) {
-			//add to recent
-			lock(Program.Settings) {
-				var x1 = Program.Settings.XmlOf("recent", true);
-				var x2 = x1.Elem(XN.f, XN.n, wsDir, true);
-				if(x2 != null && x2 != x1.FirstNode) { x2.Remove(); x2 = null; }
-				if(x2 == null) x1.AddFirst(new XElement(XN.f, new XAttribute(XN.n, wsDir)));
+		if(wsDir != Program.Settings.workspace) {
+			if(Program.Settings.workspace != null) {
+				var ar = Program.Settings.recentWS ?? Array.Empty<string>();
+				int i = Array.IndexOf(ar, wsDir); if(i >= 0) ar = ar.RemoveAt(i);
+				Program.Settings.recentWS = ar.InsertAt(0, Program.Settings.workspace);
 			}
+			Program.Settings.workspace = wsDir;
 		}
 
 		Program.MainForm.ZSetTitle();
@@ -160,31 +159,30 @@ partial class PanelFiles : AuUserControlBase
 	/// </summary>
 	public void ZFillMenuRecentWorkspaces(ToolStripDropDownMenu dd)
 	{
-		lock(Program.Settings) {
-			var x1 = Program.Settings.XmlOf("recent");
-			if(x1 == null) return;
-			var current = Program.Settings.GetString("workspace");
-			dd.SuspendLayout();
-			dd.Items.Clear();
-			bool currentOK = false;
-			var aRem = new List<XElement>();
-			foreach(var x2 in x1.Elements(XN.f)) {
-				var path = x2.Attr(XN.n);
-				if(dd.Items.Count == 20 || !AFile.ExistsAsDirectory(path)) {
-					aRem.Add(x2);
-					continue;
-				}
-				var mi = dd.Items.Add(path, null, (o, u) => ZLoadWorkspace(o.ToString()));
-				if(!currentOK && (path == current)) {
-					currentOK = true;
-					mi.Font = EdStock.FontBold;
-				}
-			}
-			dd.ResumeLayout();
-			if(aRem.Count > 0) {
-				foreach(var v in aRem) v.Remove();
-			}
+		void _Add(string path, bool bold)
+		{
+			var mi = dd.Items.Add(path, null, (o, u) => ZLoadWorkspace(o.ToString()));
+			if(bold) mi.Font = EdStock.FontBold;
 		}
+
+		dd.SuspendLayout();
+		dd.Items.Clear();
+		_Add(Program.Settings.workspace, true);
+		var ar = Program.Settings.recentWS;
+		int nRemoved = 0;
+		for(int i = 0, n = ar?.Length ?? 0; i < n; i++) {
+			var path = ar[i];
+			if(dd.Items.Count >= 20 || !AFile.ExistsAsDirectory(path)) {
+				ar[i] = null;
+				nRemoved++;
+			} else _Add(path, false);
+		}
+		if(nRemoved > 0) {
+			var an = new string[ar.Length - nRemoved];
+			for(int i = 0, j = 0; i < ar.Length; i++) if(ar[i] != null) an[j++] = ar[i];
+			Program.Settings.recentWS = an;
+		}
+		dd.ResumeLayout();
 	}
 
 	/// <summary>

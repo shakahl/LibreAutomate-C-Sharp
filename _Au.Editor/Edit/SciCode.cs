@@ -41,8 +41,8 @@ partial class SciCode : AuScintilla
 	public const int c_markerUnderline = 0, c_markerBookmark = 1, c_markerBreakpoint = 2;
 	//public const int c_markerStepNext = 3;
 
-	//indicators. We can use 8-31. Lexers use 0-7.
-	public const int c_indicFind = 8, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20; //info: draws indicators from smaller to bigger, eg error on warning.
+	//indicators. We can use 8-31. Lexers use 0-7. Draws indicators from smaller to bigger, eg error on warning.
+	public const int c_indicFind = 8, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20;
 
 	internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
 	{
@@ -79,6 +79,9 @@ partial class SciCode : AuScintilla
 		Call(SCI_CALLTIPUSESTYLE);
 
 		_InicatorsInit();
+
+		Z.StyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
+		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 
 		if(_fn.IsCodeFile) {
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
@@ -184,7 +187,7 @@ partial class SciCode : AuScintilla
 			if(0 == (n.updated & 15)) break;
 			if(0 != (n.updated & 3)) { //text (1), selection/click (2)
 				_TempRangeOnModifiedOrPosChanged(0, 0, 0);
-				Panels.Editor.ZUpdateUI_Cmd();
+				Panels.Editor._UpdateUI_EditEnabled();
 			}
 			CodeInfo.SciUpdateUI(this, n.updated);
 			break;
@@ -287,6 +290,12 @@ partial class SciCode : AuScintilla
 		case Keys.Control | Keys.V:
 			if(ZPasteModified()) return true;
 			break;
+		case Keys.Control | Keys.W:
+			Strips.Cmd.Edit_WrapLines();
+			return true;
+		case Keys.F12:
+			Strips.Cmd.Edit_GoToDefinition();
+			return true;
 		default:
 			if(CodeInfo.SciCmdKey(this, keyData)) return true;
 			switch(keyData) {
@@ -661,16 +670,26 @@ partial class SciCode : AuScintilla
 
 	#region script header
 
-	//const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
-	//const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
+	const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
+	const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
 
-	//static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
-	//static ARegex s_rxScript;
+	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
+	static ARegex s_rxScript;
+
+	/// <summary>
+	/// Finds script header "//. ... //;;;\r\n" using regular expression.
+	/// </summary>
+	/// <param name="s">Script text.</param>
+	/// <param name="m">
+	/// Group 1 is "" or text between //. and c_usings. Includes the starting newline but not the ending newline.
+	/// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
+	/// </param>
+	public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScriptHeader.Match(s, out m);
 
 	/// <summary>
 	/// Finds script header "//.\r\nusing Au; ... //;;;\r\n".
 	/// The results are UTF-8.
-	/// Uses SCI_FINDTEXT.
+	/// Does not get whole text; instead uses SCI_FINDTEXT.
 	/// Returns false if not script or not found.
 	/// </summary>
 	public bool ZFindScriptHeader(out (int start, int end, int startLine, int endLine) found)
@@ -686,15 +705,26 @@ partial class SciCode : AuScintilla
 		return true;
 	}
 
-	///// <summary>
-	///// Finds script header "//. ... //;;;\r\n" using regular expression.
-	///// </summary>
-	///// <param name="s">Script text.</param>
-	///// <param name="m">
-	///// Group 1 is "" or text between //. and c_usings. Includes the starting newline but not the ending newline.
-	///// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
-	///// </param>
-	//public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScriptHeader.Match(s, out m);
+	/// <summary>
+	/// Folds script header "//.\r\nusing Au; ... //;;;\r\n" if found.
+	/// Does not get whole text; instead uses SCI_FINDTEXT.
+	/// </summary>
+	/// <param name="setCaret">Set caret position below header.</param>
+	public unsafe void ZFoldScriptHeader(bool setCaret = false)
+	{
+		//fold boilerplate code
+		if(!ZFindScriptHeader(out var k)) return;
+		var a = stackalloc int[2] { k.start, (k.end - 2) | unchecked((int)0x80000000) };
+		Sci_SetFoldLevels(SciPtr, 0, k.endLine, 2, a);
+		Call(SCI_FOLDCHILDREN, k.startLine);
+
+		//set caret b
+		if(setCaret) {
+			int i = k.end;
+			if((char)Call(SCI_GETCHARAT, i + 1) == '\n') i += 2;
+			Z.CurrentPos16 = i;
+		}
+	}
 
 	//bool _IsScriptHeaderFolded()
 	//{
@@ -805,6 +835,28 @@ partial class SciCode : AuScintilla
 			int i = x.linesStart, j = Len8 - fromEnd;
 			Call(SCI_SETSEL, caretAtEnd ? i : j, caretAtEnd ? j : i);
 		}
+	}
+
+	#endregion
+
+	#region view
+
+	[Flags]
+	public enum EView { Wrap = 1, Images = 2 }
+
+	public void ZToggleView(EView what)
+	{
+		if(what.Has(EView.Wrap)) {
+			bool on = !Program.Settings.edit_wrap;
+			Program.Settings.edit_wrap = on;
+			Call(SCI_SETWRAPMODE, on);
+		}
+		if(what.Has(EView.Images)) {
+			bool on = Program.Settings.edit_noImages;
+			Program.Settings.edit_noImages = !on;
+			ZImages.Visible = on ? AnnotationsVisible.ANNOTATION_STANDARD : AnnotationsVisible.ANNOTATION_HIDDEN;
+		}
+		Panels.Editor._UpdateUI_EditView();
 	}
 
 	#endregion

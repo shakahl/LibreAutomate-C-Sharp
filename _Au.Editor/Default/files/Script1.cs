@@ -7,13 +7,4 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 
 
-
-
-
-
-
-
-
-
-}
-}
+}}

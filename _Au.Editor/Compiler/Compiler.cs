@@ -129,13 +129,13 @@ namespace Au.Compiler
 
 		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder)
 		{
-			APerf.First();
+			var p1 = APerf.Create();
 			r = new CompResults();
 
 			var m = new MetaComments();
 			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
 			var err = m.Errors;
-			APerf.Next('m');
+			p1.Next('m');
 
 			bool needOutputFiles = m.Role != ERole.classFile;
 
@@ -169,10 +169,10 @@ namespace Au.Compiler
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
 				//	Our AOutputServer.SetNotifications callback will convert file/line info to links. It supports compilation errors and run time stack traces.
 			}
-			//APerf.Next('t');
+			//p1.Next('t');
 
 			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, m.CreateCompilationOptions());
-			//APerf.Next('c');
+			//p1.Next('c');
 
 #if PDB
 			string pdbFile = null;
@@ -223,7 +223,7 @@ namespace Au.Compiler
 				//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
 			}
 
-			//APerf.Next();
+			//p1.Next();
 			var asmStream = new MemoryStream(4096);
 			var emitResult = compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
 
@@ -231,7 +231,7 @@ namespace Au.Compiler
 				xdStream?.Dispose();
 				resNat?.Dispose(); //info: compiler disposes resMan
 			}
-			//APerf.Next('e');
+			//p1.Next('e');
 
 			var diag = emitResult.Diagnostics;
 			if(!diag.IsEmpty) {
@@ -282,7 +282,7 @@ namespace Au.Compiler
 					//copy Core app host template exe, add native resources, set console flag if need
 					string exeFile = _AppHost(outFile, m);
 
-					//APerf.Next();
+					//p1.Next();
 					//copy non-.NET references to the output directory
 					_CopyReferenceFiles(m);
 
@@ -314,7 +314,7 @@ namespace Au.Compiler
 			var refs = m.References.Refs;
 			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
 
-			APerf.NW('C');
+			p1.NW('C');
 			return true;
 		}
 

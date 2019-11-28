@@ -52,15 +52,13 @@ namespace Au.Tools
 			_acc = acc; //will be processed in OnLoad
 		}
 
-		const string c_registryKey = @"\Tools\AAcc";
-
 		protected override void OnLoad(EventArgs e)
 		{
 			base.OnLoad(e);
 
 			AWnd w = (AWnd)this;
-			if(ARegistry.GetString(out var wndPos, "wndPos", c_registryKey))
-				try { w.RestorePositionSizeState(wndPos, true); } catch { }
+			var wp = Program.Settings.tools_AAcc_wndPos;
+			if(wp != null) try { w.RestorePositionSizeState(wp, true); } catch { }
 
 			if(_acc != null) _SetAcc(false);
 
@@ -75,7 +73,7 @@ namespace Au.Tools
 			_capt?.Dispose();
 
 			AWnd w = (AWnd)this;
-			ARegistry.SetString(w.SavePositionSizeState(), "wndPos", c_registryKey);
+			Program.Settings.tools_AAcc_wndPos = w.SavePositionSizeState();
 
 			base.OnFormClosing(e);
 		}

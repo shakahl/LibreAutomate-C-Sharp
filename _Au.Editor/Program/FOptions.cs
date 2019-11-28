@@ -49,16 +49,16 @@ partial class FOptions : AuForm
 	{
 		base.OnLoad(e);
 
+		_alwaysVisible.Checked = Program.Settings.alwaysVisible;
 		_startupScripts.Text = Program.Model.StartupScriptsCsv;
 
-		_alwaysVisible.Checked = Program.Settings.GetBool("_alwaysVisible");
 	}
 
 	private void _bOK_Click(object sender, EventArgs e)
 	{
 		if(_startupScripts.Modified) Program.Model.StartupScriptsCsv = _startupScripts.Text;
 
-		Program.Settings.Set("_alwaysVisible", _alwaysVisible.Checked);
+		Program.Settings.alwaysVisible = _alwaysVisible.Checked;
 	}
 
 	private void _startupScripts_Validating(object sender, CancelEventArgs e)

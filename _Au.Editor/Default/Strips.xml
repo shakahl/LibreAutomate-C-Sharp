@@ -45,7 +45,7 @@
 &#xA;Another way: drag and drop from a folder window."/>
 			</File_New>
 			<sep/>
-			<File_Disable/>
+			<!--<File_Disable/>-->
 			<File_Rename hkText="F2"/>
 			<File_Delete i="delete" hkText="Delete"/>
 			<File_Properties t="Properties..." i="properties" hk="Ctrl+P"/>
@@ -69,8 +69,8 @@
 				<File_CopyRelativePath/>
 				<File_CopyFullPath/>
 				<sep/>
-				<File_PrintSetup t="Print Page Setup..."/>
-				<File_Print t="Print..."/>
+				<File_PrintSetup t="Print Page Setup..." color="white"/>
+				<File_Print t="Print..." color="white"/>
 				<sep/>
 				<File_SaveNow i="save" hk="Ctrl+S"/>
 			</File_More>
@@ -82,8 +82,8 @@
 				<File_ExportWorkspace t="Export Selected as Workspace..."/>
 				<File_ImportWorkspace t="Import Workspace..."/>
 				<sep/>
-				<File_FindInWorkspaces t="Find in Other Workspaces..."/>
-				<File_WorkspaceProperties t="Workspace Properties..."/>
+				<File_FindInWorkspaces t="Find in Other Workspaces..." color="white"/>
+				<File_WorkspaceProperties t="Workspace Properties..." color="white"/>
 			</File_Workspace>
 			<sep/>
 			<File_CloseWindow hkText="Alt+F4"/>
@@ -99,27 +99,25 @@
 			<Edit_ForumCopy/>
 			<sep/>
 			<Edit_Find i="find" hk="Ctrl+F"/>
-			<Edit_FindReferences/>
+			<Edit_FindReferences color="white"/>
 			<sep/>
-			<Edit_GoToDefinition hk="F12" hkText="Ctrl+click"/>
-			<Edit_PeekDefinition/>
-			<Edit_MembersList hkText="Ctrl+Space"/>
+			<Edit_AutocompletionList hkText="Ctrl+Space"/>
 			<Edit_ParameterInfo hkText="Ctrl+Shift+Space"/>
+			<Edit_GoToDefinition hkText="F12, Ctrl+click"/>
+			<!--<Edit_PeekDefinition/>-->
 			<sep/>
 			<Edit_Lines>
-				<Edit_Indent/>
-				<Edit_Unindent/>
 				<Edit_Comment hkText="r-click sel. bar"/>
 				<Edit_Uncomment hkText="r-click sel. bar"/>
-				<Edit_HideRegion/>
-				<Edit_SelectAll/>
-				<Edit_Output/>
+        <Edit_Indent hkText="Tab"/>
+        <Edit_Unindent hkText="Shift+Tab"/>
+				<Edit_SelectAll hkText="Ctrl+A"/>
+				<!--<Edit_HideRegion/>-->
+				<!--<Edit_Output/>-->
 			</Edit_Lines>
 			<Edit_View>
+				<Edit_WrapLines i="wrap" hkText="Ctrl+W"/>
 				<Edit_ImagesInCode i="images"/>
-				<Edit_WrapLines i="annotations"/>
-				<Edit_LineNumbers/>
-				<Edit_IndentationGuides/>
 			</Edit_View>
 		</Menu_Edit>
     <Menu_Code>
@@ -133,49 +131,47 @@
     <Menu_Run>
 			<Run_Run i="run"/>
 			<Run_End i="deb_end"/>
-			<Run_Pause i="back2"/>
+			<Run_Pause i="pause" color="white"/>
 			<Run_Compile i="compile"/>
 			<Run_Recent t="Recent..."/>
 			<sep/>
 			<Run_DisableTriggers/>
 			<sep/>
-			<Debug_Breakpoints>
+			<Debug_AddDebuggerBreakCode/>
+			<Debug_Breakpoints color="white">
 				<Debug_ToggleBreakpoint/>
-				<Debug_PersistentBreakpoint/>
 				<Debug_ClearLocalBreakpoints/>
 				<Debug_ClearAllBreakpoints/>
 			</Debug_Breakpoints>
-			<Run_Debug>
+      <Run_Debug color="white">
 				<Debug_RunToBreakpoint i="deb_run"/>
 				<Debug_RunToCursor i="deb_cursor"/>
 				<Debug_StepInto i="deb_into"/>
 				<Debug_StepOver i="deb_next"/>
 				<Debug_StepOut i="deb_out"/>
 			</Run_Debug>
-			<Debug_DebugOptions/>
+      <Debug_DebugOptions color="white"/>
 		</Menu_Run>
 		<Menu_Tools>
-			<Tools_Record i="record"/>
-			<Tools_RecordOther>
+			<Tools_Record i="record" color="white"/>
+      <Tools_RecordOther color="white">
 				<Tools_RecordMenu/>
 				<Tools_RecordSingleAction/>
 			</Tools_RecordOther>
 			<sep/>
 			<Tools_Panels dd=""/>
 			<Tools_Toolbars dd=""/>
-			<Tools_FilesAndTriggers i="mm"/>
-			<Tools_DialogEditor i="dialog"/>
-			<Tools_ToolbarEditor/>
-			<Tools_MenuEditor/>
-			<Tools_ImagelistEditor/>
-			<Tools_HelpEditor i="tip"/>
-			<Tools_Resources i="resources"/>
-			<Tools_Icons i="icons"/>
-			<Tools_RegularExpressions/>
-			<Tools_ExploreWindows/>
-			<Tools_RemapKeys/>
-			<Tools_Components/>
-			<Tools_Portable/>
+			<Tools_FilesAndTriggers i="mm" color="white"/>
+			<Tools_DialogEditor i="dialog" color="white"/>
+      <Tools_ToolbarEditor color="white"/>
+      <Tools_MenuEditor color="white"/>
+      <Tools_ImagelistEditor color="white"/>
+			<Tools_HelpEditor i="tip" color="white"/>
+			<Tools_Resources i="resources" color="white"/>
+			<Tools_Icons i="icons" color="white"/>
+      <Tools_ExploreWindows color="white"/>
+      <Tools_RemapKeys color="white"/>
+      <Tools_Portable color="white"/>
 			<sep/>
 			<Tools_Output>
 				<Tools_Output_Clear hkText="M-click"/>
@@ -183,20 +179,14 @@
 				<Tools_Output_FindSelectedText hkText="Ctrl+F"/>
 				<Tools_Output_History/>
 				<sep/>
-				<Tools_Output_LogWindowEvents/>
-				<Tools_Output_LogAccEvents/>
+        <Tools_Output_LogWindowEvents color="white"/>
+        <Tools_Output_LogAccEvents color="white"/>
 				<sep/>
 				<Tools_Output_WrapLines/>
 				<Tools_Output_WhiteSpace/>
 				<sep/>
 				<Tools_Output_Topmost t="Topmost When Floating"/>
 			</Tools_Output>
-			<!--<Tools_StatusBar>
-				<Tools_Statusbar_Floating/>
-				<Tools_Statusbar_MouseInfo/>
-				<Tools_Statusbar_AutoHeight/>
-				<Tools_Statusbar_SendToOutput/>
-			</Tools_StatusBar>-->
 			<sep/>
 			<Tools_Options i="options"/>
 		</Menu_Tools>
@@ -205,14 +195,14 @@
 			<Help_Reference i="help"/>
 			<Help_ContextHelp hk="F1"/>
 			<sep/>
-			<Help_Web>
+      <Help_Web color="white">
 				<Help_Download/>
 				<Help_Forum/>
 				<Help_Email/>
 			</Help_Web>
 			<sep/>
-			<Help_Donate/>
-			<Help_About/>
+			<!--<Help_Donate/>-->
+      <Help_About color="white"/>
 		</Menu_Help>
 	</Menu>
 	<!--
@@ -237,27 +227,27 @@
 		<Edit_Copy i="copy"/>
 		<Edit_Paste i="paste"/>
 		<sep/>
+		<Edit_WrapLines i="wrap"/>
 		<Edit_ImagesInCode i="images"/>
-		<Edit_WrapLines i="annotations"/>
 	</Edit>
 	<Run>
 		<Run_Compile i="compile"/>
 		<Run_Run i="run"/>
 		<Run_End i="deb_end"/>
-		<Run_Pause i="back2"/>
+		<!--<Run_Pause i="pause"/>
 		<sep/>
 		<Debug_RunToBreakpoint i="deb_run"/>
 		<Debug_RunToCursor i="deb_cursor"/>
 		<Debug_StepInto i="deb_into"/>
 		<Debug_StepOver i="deb_next"/>
-		<Debug_StepOut i="deb_out"/>
+		<Debug_StepOut i="deb_out"/>-->
 	</Run>
 	<Tools>
-		<Tools_Record i="record"/>
+		<!--<Tools_Record i="record"/>
 		<Tools_FilesAndTriggers i="mm"/>
 		<Tools_DialogEditor i="dialog"/>
 		<Tools_Resources i="resources"/>
-		<Tools_Icons i="icons"/>
+		<Tools_Icons i="icons"/>-->
 		<Tools_Options i="options"/>
 	</Tools>
 	<Help>

@@ -25,8 +25,13 @@ static class Program
 {
 	static Program()//TODO
 	{
-		Au.Util.LibAssertListener.Setup();
+		//Api.GetProcessTimes(Api.GetCurrentProcess(), out long c, out _, out long k, out long u);
+		//Api.GetSystemTimeAsFileTime(out long t);
+		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
+		//Print(k/10000, u / 10000, (t - c) / 10000); //60 ms
+
 		APerf.First();
+		Au.Util.LibAssertListener.Setup();
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
 		//AOutput.LogFile = @"q:\Test\log.txt";
@@ -77,9 +82,9 @@ static class Program
 		//Application.EnableVisualStyles(); //no, we have manifest
 		Application.SetCompatibleTextRenderingDefault(false);
 
-		Settings = new ProgramSettings();
+		Settings = AppSettings.Load();
 
-		if(!Settings.GetString("user", out UserGuid)) Settings.Set("user", Guid.NewGuid().ToString());
+		UserGuid = Settings.user; if(UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
 		ATimer.Every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, 0 of 1000.
@@ -92,7 +97,7 @@ static class Program
 	}
 
 	internal static AOutputServer OutputServer = new AOutputServer(true);
-	public static ProgramSettings Settings;
+	public static AppSettings Settings;
 	public static FMain MainForm;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;

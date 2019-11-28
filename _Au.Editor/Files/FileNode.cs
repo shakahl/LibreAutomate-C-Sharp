@@ -542,6 +542,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		for(FileNode r = Root, f = IsFolder ? this : Parent; f != r && f != null; f = f.Parent) {
 			if(!f.IsProjectFolder(out main)) continue;
 			if(main == null) break;
+			if(this.IsScript && this != main) { main = null; break; } //script is not part of project if not main
 			folder = f;
 			return true;
 		}
@@ -820,6 +821,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		_model.Save.WorkspaceLater();
 		if(!userEdited) UpdateControlRow();
 		if(this == _model.CurrentFile) Program.MainForm.ZSetTitle();
+		CodeInfo.FilesChanged();
 		return true;
 	}
 
@@ -877,6 +879,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	void _Common_MoveCopyNew(FileNode target, NodePosition pos)
 	{
 		target.AddChildOrSibling(this, pos, true);
+		CodeInfo.FilesChanged();
 	}
 
 	/// <summary>

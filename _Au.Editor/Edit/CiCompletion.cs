@@ -32,8 +32,6 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
-//TODO: list for keys in Key("keys")
-
 class CiCompletion
 {
 	CiPopupList _popupList;
@@ -290,7 +288,7 @@ class CiCompletion
 				} else if(showReason == _ShowReason.command) {
 					var semo = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
 					var node = semo.Root.FindToken(position).Parent;
-					if(CiTools.IsInString(ref node, position)) {
+					if(CiUtil.IsInString(ref node, position)) {
 						stringSpan = node.Span;
 						stringFormat = CiUtil.GetParameterStringFormat(node, semo, true);
 						if(stringFormat == PSFormat.AWildex) { //is regex in wildex?

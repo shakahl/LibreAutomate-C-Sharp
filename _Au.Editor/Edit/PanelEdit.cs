@@ -45,6 +45,7 @@ class PanelEdit : UserControl
 	{
 		base.OnHandleCreated(e);
 		_UpdateUI_IsOpen();
+		_UpdateUI_EditView();
 	}
 
 	//protected override void OnGotFocus(EventArgs e) { _activeDoc?.Focus(); }
@@ -77,7 +78,7 @@ class PanelEdit : UserControl
 			if(_activeDoc != null) _activeDoc.Visible = false;
 			_activeDoc = doc;
 			_activeDoc.Visible = true;
-			ZUpdateUI_Cmd();
+			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
 		} else {
 			var path = f.FilePath;
@@ -95,7 +96,7 @@ class PanelEdit : UserControl
 			_activeDoc = doc;
 			this.Controls.Add(doc);
 			doc._Init(text, newFile);
-			ZUpdateUI_Cmd();
+			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}
@@ -105,11 +106,15 @@ class PanelEdit : UserControl
 		} else { //don't focus now, or then cannot select treeview items
 			_activeDoc_MouseEnter ??= (object sender, EventArgs e) => {
 				var c = sender as Control;
+				if(!((AWnd)c.FindForm()).IsActive) return;
 				c.MouseEnter -= _activeDoc_MouseEnter;
 				c.Focus();
 			};
 			_activeDoc.MouseEnter += _activeDoc_MouseEnter;
 		}
+
+		_activeDoc.Call(SCI_SETWRAPMODE, Program.Settings.edit_wrap); //fast and does nothing if already is in that wrap state
+		_activeDoc.ZImages.Visible = Program.Settings.edit_noImages ? AnnotationsVisible.ANNOTATION_HIDDEN : AnnotationsVisible.ANNOTATION_STANDARD;
 
 		_UpdateUI_IsOpen();
 		Panels.Find.ZUpdateQuickResults(true);
@@ -205,33 +210,39 @@ class PanelEdit : UserControl
 	/// Enables/disables commands (toolbar buttons, menu items) depending on document state such as "can undo".
 	/// Called on SCN_UPDATEUI.
 	/// </summary>
-	internal void ZUpdateUI_Cmd()
+	internal void _UpdateUI_EditEnabled()
 	{
-		EUpdateUI disable = 0;
+		_EUpdateUI disable = 0;
 		var d = _activeDoc;
 		if(d == null) return; //we disable the toolbar and menu
-		if(0 == d.Call(SCI_CANUNDO)) disable |= EUpdateUI.Undo;
-		if(0 == d.Call(SCI_CANREDO)) disable |= EUpdateUI.Redo;
-		if(0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= EUpdateUI.Copy;
-		if(disable.Has(EUpdateUI.Copy) || d.Z.IsReadonly) disable |= EUpdateUI.Cut;
+		if(0 == d.Call(SCI_CANUNDO)) disable |= _EUpdateUI.Undo;
+		if(0 == d.Call(SCI_CANREDO)) disable |= _EUpdateUI.Redo;
+		if(0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= _EUpdateUI.Copy;
+		if(disable.Has(_EUpdateUI.Copy) || d.Z.IsReadonly) disable |= _EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
-		var dif = disable ^ _cmdDisabled; if(dif == 0) return;
+		var dif = disable ^ _editDisabled; if(dif == 0) return;
 
 		//Print(dif);
-		_cmdDisabled = disable;
-		if(dif.Has(EUpdateUI.Undo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Undo), !disable.Has(EUpdateUI.Undo));
-		if(dif.Has(EUpdateUI.Redo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Redo), !disable.Has(EUpdateUI.Redo));
-		if(dif.Has(EUpdateUI.Cut)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Cut), !disable.Has(EUpdateUI.Cut));
-		if(dif.Has(EUpdateUI.Copy)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Copy), !disable.Has(EUpdateUI.Copy));
+		_editDisabled = disable;
+		if(dif.Has(_EUpdateUI.Undo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Undo), !disable.Has(_EUpdateUI.Undo));
+		if(dif.Has(_EUpdateUI.Redo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Redo), !disable.Has(_EUpdateUI.Redo));
+		if(dif.Has(_EUpdateUI.Cut)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Cut), !disable.Has(_EUpdateUI.Cut));
+		if(dif.Has(_EUpdateUI.Copy)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Copy), !disable.Has(_EUpdateUI.Copy));
 		//if(dif.Has(EUpdateUI.Paste)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Paste), !disable.Has_(EUpdateUI.Paste));
 
 	}
 
-	EUpdateUI _cmdDisabled;
+	_EUpdateUI _editDisabled;
+
+	internal void _UpdateUI_EditView()
+	{
+		Strips.CheckCmd(nameof(CmdHandlers.Edit_WrapLines), Program.Settings.edit_wrap);
+		Strips.CheckCmd(nameof(CmdHandlers.Edit_ImagesInCode), !Program.Settings.edit_noImages);
+	}
 
 	[Flags]
-	enum EUpdateUI
+	enum _EUpdateUI
 	{
 		Undo = 1,
 		Redo = 2,

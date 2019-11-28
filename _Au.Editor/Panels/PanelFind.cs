@@ -385,8 +385,8 @@ class PanelFind : AuUserControlBase
 
 		if(f.ShowDialog(this) != DialogResult.OK) return;
 
-		Program.Settings.Set("Find.Skip", f._tSkip.Text); _searchIn = -1;
-		Program.Settings.Set("Find.SearchIn", f._cbSearchIn.SelectedIndex); _aSkipWildcards = null;
+		Program.Settings.find_skip = f._tSkip.Text; _searchIn = -1;
+		Program.Settings.find_searchIn = f._cbSearchIn.SelectedIndex; _aSkipWildcards = null;
 	}
 
 	#endregion
@@ -573,16 +573,19 @@ class PanelFind : AuUserControlBase
 		if(!_cName.Checked) Panels.Editor.ZActiveDoc?._InicatorsFind(Visible ? _aEditor : null);
 	}
 
-	public void ZCtrlF()
+	/// <summary>
+	/// Makes visible and sets find text = selected text of c (can be null).
+	/// </summary>
+	public void ZCtrlF(Control c)
 	{
 		if(!Visible) Panels.PanelManager.ZGetPanel(this).Visible = true;
 		string s = "";
-		switch(AWnd.ThisThread.FocusedControl) {
-		case AuScintilla c:
-			s = c.Z.SelectedText();
+		switch(c) {
+		case AuScintilla k:
+			s = k.Z.SelectedText();
 			break;
-		case TextBox c:
-			s = c.SelectedText;
+		case TextBox k:
+			s = k.SelectedText;
 			break;
 		}
 		_tFind.Focus();
@@ -591,14 +594,19 @@ class PanelFind : AuUserControlBase
 		_tFind.Call(Sci.SCI_SELECTALL);
 	}
 
+	/// <summary>
+	/// Makes visible and sets find text = selected text of focused control.
+	/// </summary>
+	public void ZCtrlF() => ZCtrlF(AWnd.ThisThread.FocusedControl);
+
 	#endregion
 
 	#region in files
 
-	int _SearchIn => _searchIn >= 0 ? _searchIn : (_searchIn = Program.Settings.GetInt("Find.SearchIn"));
+	int _SearchIn => _searchIn >= 0 ? _searchIn : (_searchIn = Program.Settings.find_searchIn);
 	int _searchIn = -1;
 
-	string[] _SkipWildcards => _aSkipWildcards ??= Program.Settings.GetString("Find.Skip", "").SegSplit("\r\n", SegFlags.NoEmpty);
+	string[] _SkipWildcards => _aSkipWildcards ??= (Program.Settings.find_skip ?? "").SegSplit("\r\n", SegFlags.NoEmpty);
 	string[] _aSkipWildcards;
 	string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
 	bool _init1;
@@ -776,6 +784,14 @@ class PanelFind : AuUserControlBase
 
 	#region recent
 
+	public class RecentItem //not struct because used with PopupList
+	{
+		public string t { get; set; } //not fields because used with JsonSerializer
+		public int o { get; set; }
+
+		public override string ToString() => t.Limit(100); //PopupList item display text
+	}
+
 	string _recentPrevFind, _recentPrevReplace;
 	int _recentPrevOptions;
 
@@ -785,70 +801,43 @@ class PanelFind : AuUserControlBase
 		if(temp) return; //not implemented. Was implemented, but was not perfect and probably not useful. Adds too many intermediate garbage, although filtered.
 
 		int k = f.matchCase ? 1 : 0; if(f.wholeWord) k |= 2; else if(f.rx != null) k |= 4;
-		bool saveFind = f.findText != _recentPrevFind || k != _recentPrevOptions;
-		bool saveReplace = !Empty(f.replaceText) && f.replaceText != _recentPrevReplace;
-		if(!(saveFind | saveReplace)) return;
 
-		lock(Program.Settings) {
-			if(saveFind) _XmlAdd(false, "recentFind", _recentPrevFind = f.findText, _recentPrevOptions = k);
-			if(saveReplace) _XmlAdd(true, "recentReplace", _recentPrevReplace = f.replaceText, 0);
+		if(f.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = f.findText, _recentPrevOptions = k);
+		if(!Empty(f.replaceText) && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
 
-			static void _XmlAdd(bool repl, string xName, string text, int options)
-			{
-				if(text.Length > 1000) {
-					//if(0 != (options & 4)) PrintWarning("The find text of length > 1000 will not be saved to 'recent'.", -1);
-					return;
-				}
-				var xParent = Program.Settings.XmlOf(xName, true);
-				var en = xParent.Elements("t");
-				en.FirstOrDefault(o => o.Value == text)?.Remove(); //avoid duplicates
-				if(en.Count() >= 20) en.Last().Remove(); //limit count
-				var x = new XElement("t", text);
-				if(options != 0) x.SetAttributeValue("f", options.ToString());
-				xParent.AddFirst(x);
+		static void _Add(bool replace, string text, int options)
+		{
+			if(text.Length > 1000) {
+				//if(0 != (options & 4)) PrintWarning("The find text of length > 1000 will not be saved to 'recent'.", -1);
+				return;
 			}
+			var a = (replace ? Program.Settings.find_recentReplace : Program.Settings.find_recent) ?? new RecentItem[0];
+			for(int i = a.Length - 1; i >= 0; i--) if(a[i].t == text) a = a.RemoveAt(i); //avoid duplicates
+			if(a.Length >= 20) a = a[0..19]; //limit count
+			a = a.InsertAt(0, new RecentItem { t = text, o = options });
+			if(replace) Program.Settings.find_recentReplace = a; else Program.Settings.find_recent = a;
 		}
 	}
 
 	private void _comboFindReplace_ArrowButtonPressed(object sender, EventArgs e)
 	{
 		bool replace = sender == _comboReplace;
-		object[] a = null;
-		lock(Program.Settings) {
-			var xParent = Program.Settings.XmlOf(replace ? "recentReplace" : "recentFind");
-			if(xParent == null) return;
-			var en = xParent.Elements("t");
-			if(replace) a = en.Select(o => (object)o.Value).ToArray();
-			else a = en.Select(o => (object)new _RecentItem { text = o.Value, options = o.Attr("f", 0) }).ToArray();
-		}
+		var a = (replace ? Program.Settings.find_recentReplace : Program.Settings.find_recent) ?? new RecentItem[0];
+		if(a == null) return;
 		var c = replace ? _tReplace : _tFind;
 		var m = new PopupList { IsModal = true, ComboBoxAnimation = true };
 		m.Items = a;
 		m.SelectedAction = o => {
-			string s = null;
-			switch(o.ResultItem) {
-			case string repl:
-				s = repl;
-				break;
-			case _RecentItem find:
-				s = find.text;
-				int k = find.options;
+			var r = o.ResultItem as RecentItem;
+			c.Text = r.t;
+			if(!replace) {
+				int k = r.o;
 				_cCase.Checked = 0 != (k & 1);
 				_cWord.Checked = 0 != (k & 2);
 				_cRegex.Checked = 0 != (k & 4);
-				break;
 			}
-			c.Text = s;
 		};
 		m.Show(c);
-	}
-
-	class _RecentItem
-	{
-		public string text;
-		public int options;
-
-		public override string ToString() => text.Limit(100);
 	}
 
 	#endregion

@@ -72,7 +72,7 @@ Print(""t"" + 'c' + 1);
 				//_ = document.GetSemanticModelAsync().Result;
 				p1.Next();
 				Program.MainForm.BeginInvoke(new Action(() => {
-					APerf.Next('w');
+					//APerf.Next('w');
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
 					Panels.Editor.ZActiveDocChanged += Stop;
@@ -135,6 +135,16 @@ Print(""t"" + 'c' + 1);
 		_compl.Cancel();
 		_compl.HideTools();
 		_signature.Cancel();
+	}
+
+	/// <summary>
+	/// Called when files added, deleted, moved, copied, imported.
+	/// Eg need to update styling when a meta c file became [un]available or when project folder structure changed.
+	/// </summary>
+	public static void FilesChanged()
+	{
+		Stop();
+		_styling.Update();
 	}
 
 	public static void SciKillFocus(SciCode doc)
@@ -346,7 +356,7 @@ Print(""t"" + 'c' + 1);
 					_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
 				}
 			}
-			catch(Exception ex) { //never seen
+			catch(Exception ex) {
 				ADebug.Print(ex);
 				return false;
 			}
@@ -371,35 +381,38 @@ Print(""t"" + 'c' + 1);
 	}
 
 	/// <summary>
-	/// Creates new Context. Calls its GetContextAndDocument, unless position is in meta comments.
-	/// Returns false if position is in meta comments or if fails to create/update Solution (unlikely). Then r.document is null.
+	/// Creates new Context and calls its GetDocument.
+	/// Returns false if position is in meta comments (unless metaToo==true) or if fails to create/update Solution (unlikely). Then r.document is null.
 	/// Else returns true. Then r.document is Document for Panels.Editor.ActiveDoc. If need, parses meta, creates Project, Solution, etc.
 	/// Always sets other r fields.
-	/// If position -1, gets current position. If position -2, gets selection start.
 	/// </summary>
-	public static bool GetContextAndDocument(out Context r, int position = -1)
+	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
+	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
+	public static bool GetContextAndDocument(out Context r, int position = -1, bool metaToo = false)
 	{
-		if(!GetContextWithoutDocument(out r, position)) return false;
+		if(!GetContextWithoutDocument(out r, position, metaToo)) return false;
 		return r.GetDocument();
 	}
 
 	/// <summary>
 	/// Creates new Context with document=null.
-	/// Returns false if position is in meta comments.
-	/// If position -1, gets current position. If position -2, gets selection start.
 	/// </summary>
-	public static bool GetContextWithoutDocument(out Context r, int position = -1)
+	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
+	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
+	public static bool GetContextWithoutDocument(out Context r, int position = -1, bool metaToo = false)
 	{
 		r = new Context(position);
-		return r.pos16 >= r.metaEnd;
+		return r.pos16 >= r.metaEnd || metaToo;
 	}
 
 	/// <summary>
 	/// Calls <see cref="GetContextAndDocument"/>, gets its syntax root and finds node.
 	/// </summary>
-	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1)
+	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
+	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
+	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1, bool metaToo = false)
 	{
-		if(!GetContextAndDocument(out r, position)) { node = null; return false; }
+		if(!GetContextAndDocument(out r, position, metaToo)) { node = null; return false; }
 		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16).Parent;
 		return true;
 	}

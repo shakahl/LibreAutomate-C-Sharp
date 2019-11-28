@@ -114,7 +114,7 @@ class CiStyling
 	public static void DocTextAdded(SciCode doc) => CodeInfo._styling._DocTextAdded(doc);
 	void _DocTextAdded(SciCode doc)
 	{
-		_FoldScriptHeader(doc);
+		doc.ZFoldScriptHeader();
 
 		if(CodeInfo.IsReadyForStyling) {
 			doc.BeginInvoke(new Action(() => _DocChanged(doc, true)));
@@ -703,20 +703,6 @@ class CiStyling
 
 		int wid = doc.Call(SCI_TEXTHEIGHT) - 4;
 		doc.Z.MarginWidth(foldMrgin, Math.Max(wid, 12));
-	}
-
-	static unsafe void _FoldScriptHeader(SciCode doc)
-	{
-		//fold boilerplate code
-		if(!doc.ZFindScriptHeader(out var k)) return;
-		var a = stackalloc int[2] { k.start, (k.end - 2) | unchecked((int)0x80000000) };
-		Sci_SetFoldLevels(doc.SciPtr, 0, k.endLine, 2, a);
-		doc.Call(SCI_FOLDCHILDREN, k.startLine);
-
-		//set caret below boilerplate
-		int i = k.end;
-		if((char)doc.Call(SCI_GETCHARAT, i + 1) == '\n') i += 2;
-		doc.Z.CurrentPos16 = i;
 	}
 
 	#endregion

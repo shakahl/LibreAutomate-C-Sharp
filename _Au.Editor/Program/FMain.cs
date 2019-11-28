@@ -17,8 +17,8 @@ partial class FMain : Form
 	public static void ZRunApplication()
 	{
 		var f = new FMain();
-		ATimer.After(1, _ => APerf.NW()); //TODO
-		if(CommandLine.StartVisible || Program.Settings.GetBool("_alwaysVisible")) Application.Run(f);
+		ATimer.After(1, _ => APerf.NW('P')); //TODO
+		if(Program.Settings.alwaysVisible || CommandLine.StartVisible) Application.Run(f);
 		else Application.Run();
 	}
 
@@ -37,7 +37,8 @@ partial class FMain : Form
 		this.Icon = EdStock.IconAppNormal;
 		this.StartPosition = FormStartPosition.Manual;
 		unsafe {
-			if(Program.Settings.GetString("wndPos", out string s) && Au.Util.AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
+			var s = Program.Settings.wndPos;
+			if(s!=null && Au.Util.AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
 				p.rcNormalPosition.EnsureInScreen();
 				this.Bounds = p.rcNormalPosition;
 				if(p.showCmd == Api.SW_SHOWMAXIMIZED) this.WindowState = FormWindowState.Maximized;
@@ -132,7 +133,7 @@ partial class FMain : Form
 	protected override void OnFormClosed(FormClosedEventArgs e)
 	{
 		if(Program.Loaded >= EProgramState.LoadedUI) {
-			Program.Settings.Set("wndPos", _Hwnd.SavePositionSizeState());
+			Program.Settings.wndPos = _Hwnd.SavePositionSizeState();
 			UacDragDrop.AdminProcess.Enable(false);
 		}
 		Program.Loaded = EProgramState.Unloading;
@@ -179,7 +180,7 @@ partial class FMain : Form
 			int sc = (int)wParam;
 			if(sc >= 0xf000) { //system
 				sc &= 0xfff0;
-				if(sc == Api.SC_CLOSE && Visible && !Program.Settings.GetBool("_alwaysVisible")) {
+				if(sc == Api.SC_CLOSE && Visible && !Program.Settings.alwaysVisible) {
 					this.WindowState = FormWindowState.Minimized;
 					this.Visible = false;
 					EdUtil.MinimizeProcessPhysicalMemory(500);
@@ -345,8 +346,8 @@ static class Panels
 		m.ZGetPanel(Running).Init("Running tasks");
 		m.ZGetPanel(Output).Init("Output: errors and other information", EdResources.GetImageUseCache("output"));
 		m.ZGetPanel(Info).Init("Info: code quick info and mouse/window/control info", EdResources.GetImageUseCache("info"));
-		m.ZGetPanel(Found).Init("Find results", EdResources.GetImageUseCache("found"));
-		m.ZGetPanel(Find).Init("Find files, text, triggers"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
+		m.ZGetPanel(Found).Init("Results of 'Find in files'", EdResources.GetImageUseCache("found"));
+		m.ZGetPanel(Find).Init("Find text, files"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
 		m.ZFocusControlOnUndockEtc = Editor;
 		//#if TEST
 		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));

@@ -234,16 +234,6 @@ static class EdStock
 	//public static Image ImageNamespace => _imageNamespace ??= Au.Editor.Resources.Resources.Namespace_16x;
 }
 
-/// <summary>
-/// Static XName instances for XML tag/attribute names used in this app.
-/// XML functions much faster with XName than with string. When with string, .NET looks for it in its static hashtable.
-/// The variable names match the strings.
-/// </summary>
-class XN
-{
-	public static readonly XName f = "f", n = "n";
-}
-
 #if DEBUG
 
 static class EdDebug

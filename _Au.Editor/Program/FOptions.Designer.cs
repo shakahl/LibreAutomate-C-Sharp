@@ -130,6 +130,7 @@
 			this._versionCheck.TabIndex = 2;
 			this._versionCheck.Text = "Check for program updates";
 			this._versionCheck.UseVisualStyleBackColor = false;
+			this._versionCheck.Visible = false;
 			// 
 			// _runAtStartup
 			// 

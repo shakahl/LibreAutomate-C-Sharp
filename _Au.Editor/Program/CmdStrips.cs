@@ -69,8 +69,9 @@ static class Strips
 
 		//get controls
 		cHelpFind = tbHelp.Items["Help_Find"] as ToolStripSpringTextBox;
-		var cw1 = new ComboWrapper(cHelpFind.Control);
-		cw1.ArrowButtonPressed += (unu, sed) => Print("not implemented");
+		//var cw1 = new ComboWrapper(cHelpFind.Control);
+		//cw1.ArrowButtonPressed += (unu, sed) => Print("not implemented");
+		cHelpFind.Visible = false; //FUTURE
 
 		//p.NW();
 

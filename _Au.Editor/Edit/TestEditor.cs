@@ -44,31 +44,31 @@ partial class ThisIsNotAFormFile { }
 partial class FMain
 {
 
-	void _TestGetItemText()
-	{
-		int n = 0;
-		APerf.First();
-		foreach(var f in Program.Model.Root.Descendants()) {
-			if(!f.IsCodeFile) continue;
-			if(f.Name == "5 M lines.cs") continue;
-			n++;
-			//Print(f.Name);
-			//var s = f.GetText();
-			AFile.GetProperties(f.FilePath, out var p, FAFlags.UseRawPath);
-		}
-		APerf.NW();
-		Print(n);
-	}
+	//void _TestGetItemText()
+	//{
+	//	int n = 0;
+	//	APerf.First();
+	//	foreach(var f in Program.Model.Root.Descendants()) {
+	//		if(!f.IsCodeFile) continue;
+	//		if(f.Name == "5 M lines.cs") continue;
+	//		n++;
+	//		//Print(f.Name);
+	//		//var s = f.GetText();
+	//		AFile.GetProperties(f.FilePath, out var p, FAFlags.UseRawPath);
+	//	}
+	//	APerf.NW();
+	//	Print(n);
+	//}
 
-	void TestFileNodeTextCache()
-	{
-		AOutput.Clear();
-		var f = Program.Model.CurrentFile;
-		APerf.First();
-		var s = f.GetText(saved: true, cache: true);
-		APerf.NW();
-		Print(s);
-	}
+	//void TestFileNodeTextCache()
+	//{
+	//	AOutput.Clear();
+	//	var f = Program.Model.CurrentFile;
+	//	APerf.First();
+	//	var s = f.GetText(saved: true, cache: true);
+	//	APerf.NW();
+	//	Print(s);
+	//}
 
 	void TestReplaceTextGently()
 	{
@@ -169,6 +169,9 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+		Au.Tools.TUtil.InsertUsingDirectiveInEditor("System.Threading");
+		return;
+
 		//AOutput.Clear();
 
 		//NetCoreDB.Create();
