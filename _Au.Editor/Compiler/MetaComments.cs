@@ -581,7 +581,7 @@ namespace Au.Compiler
 			if(!_flags.Has(EMPFlags.ForCodeInfo)) {
 				Errors.AddError(_fn, _code, from, "error in meta: " + s);
 			} else if(_fn == Panels.Editor.ZActiveDoc.ZFile) {
-				CodeInfo._styling.AddMetaError(from, to, s);
+				CodeInfo._diag.AddMetaError(from, to, s);
 			}
 			return false;
 		}

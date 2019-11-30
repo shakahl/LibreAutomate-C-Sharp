@@ -159,7 +159,7 @@ class CiPopupList
 		var ci = t.Tag as CiComplItem;
 		var html = _compl.GetDescriptionHtml(ci, 0);
 		if(html == null) return;
-		_popupHtml ??= new CiPopupHtml(false);
+		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.PopupList);
 		_popupHtml.Show(Panels.Editor.ZActiveDoc, _w.Bounds);
 		_popupHtml.SetHtml(html, iSel => _compl.GetDescriptionHtml(ci, iSel));
 	}

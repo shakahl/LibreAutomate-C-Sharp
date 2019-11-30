@@ -86,7 +86,7 @@ class JSettings
 				var b = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), opt);
 				AFile.SaveBytes(_file, b);
 				_save = false;
-				AOutput.QM2.Write(GetType().Name + " saved");
+				//AOutput.QM2.Write(GetType().Name + " saved");
 			}
 			catch(Exception ex) {
 				Print($"Failed to save settings to '{_file}'. {ex.ToStringWithoutStack()}");
@@ -136,9 +136,9 @@ class JSettings
 /// Program settings.
 /// AFolders.ThisAppDocuments + @"!Settings\Settings.json"
 /// </summary>
-class AppSettings : JSettings
+class ProgramSettings : JSettings
 {
-	public static AppSettings Load() => _Load<AppSettings>(AFolders.ThisAppDocuments + @"!Settings\Settings.json");
+	public static ProgramSettings Load() => _Load<ProgramSettings>(AFolders.ThisAppDocuments + @"!Settings\Settings.json");
 
 	public string user { get => _user; set => _Set(ref _user, value); }
 	string _user;

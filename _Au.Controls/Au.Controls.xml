@@ -1905,13 +1905,14 @@
             <param name="to">End index.</param>
             <param name="withRN">Include "\r\n".</param>
         </member>
-        <member name="M:Au.Controls.SciText.InsertText(System.Boolean,System.Int32,System.String)">
+        <member name="M:Au.Controls.SciText.InsertText(System.Boolean,System.Int32,System.String,System.Boolean)">
             <summary>
             SCI_INSERTTEXT.
             </summary>
             <param name="utf16"></param>
             <param name="pos">Start index. Cannot be negative.</param>
             <param name="s">Text to insert. Can be null.</param>
+            <param name="addUndoPoint">Call <see cref="M:Au.Controls.SciText.AddUndoPoint"/>.</param>
             <remarks>
             Does not parse tags.
             Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
@@ -2090,6 +2091,11 @@
             <param name="s"></param>
             <param name="start"></param>
             <param name="end">If -1, text length.</param>
+        </member>
+        <member name="M:Au.Controls.SciText.AddUndoPoint">
+            <summary>
+            SCI_BEGINUNDOACTION, SCI_ENDUNDOACTION.
+            </summary>
         </member>
         <member name="T:Au.Controls.SciTags">
             <summary>

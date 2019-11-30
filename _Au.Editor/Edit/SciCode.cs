@@ -73,10 +73,10 @@ partial class SciCode : AuScintilla
 		Z.StyleFont(STYLE_DEFAULT, "Consolas", 10); //somehow Scintilla actually uses 9 if 10, and 8 if 9
 		Z.StyleClearAll();
 
-		Z.StyleFont(STYLE_CALLTIP, "Calibri");
-		Z.StyleBackColor(STYLE_CALLTIP, 0xf8fff0);
-		Z.StyleForeColor(STYLE_CALLTIP, 0);
-		Call(SCI_CALLTIPUSESTYLE);
+		//Z.StyleFont(STYLE_CALLTIP, "Calibri");
+		//Z.StyleBackColor(STYLE_CALLTIP, 0xf8fff0);
+		//Z.StyleForeColor(STYLE_CALLTIP, 0);
+		//Call(SCI_CALLTIPUSESTYLE);
 
 		_InicatorsInit();
 
@@ -113,7 +113,7 @@ partial class SciCode : AuScintilla
 		if(!IsHandleCreated) CreateHandle();
 		_fls.SetText(Z, text);
 		if(newFile) _openState = 1;
-		if(_fn.IsCodeFile) CiStyling.DocTextAdded(this);
+		if(_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
 	}
 
 	//protected override void Dispose(bool disposing)
@@ -173,7 +173,7 @@ partial class SciCode : AuScintilla
 		case NOTIF.SCN_CHARADDED:
 			//Print($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
 			if(n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
-				Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
+				Z.AddUndoPoint();
 			}
 			if(n.ch != '\r' && n.ch <= 0xffff) { //on Enter we receive notifications for '\r' and '\n'
 				CodeInfo.SciCharAdded(this, (char)n.ch);
@@ -300,7 +300,7 @@ partial class SciCode : AuScintilla
 			if(CodeInfo.SciCmdKey(this, keyData)) return true;
 			switch(keyData) {
 			case Keys.Enter:
-				Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
+				Z.AddUndoPoint();
 				break;
 			}
 			break;
@@ -712,13 +712,11 @@ partial class SciCode : AuScintilla
 	/// <param name="setCaret">Set caret position below header.</param>
 	public unsafe void ZFoldScriptHeader(bool setCaret = false)
 	{
-		//fold boilerplate code
 		if(!ZFindScriptHeader(out var k)) return;
 		var a = stackalloc int[2] { k.start, (k.end - 2) | unchecked((int)0x80000000) };
 		Sci_SetFoldLevels(SciPtr, 0, k.endLine, 2, a);
 		Call(SCI_FOLDCHILDREN, k.startLine);
 
-		//set caret b
 		if(setCaret) {
 			int i = k.end;
 			if((char)Call(SCI_GETCHARAT, i + 1) == '\n') i += 2;

@@ -254,12 +254,16 @@ namespace Au.Tools
 		{
 			if(!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return;
 			if(_FindUsings(k, out int end, ns) < 0) return;
-			//k.sciDoc.Z.Select(true, start, end);
+			var doc = k.sciDoc;
+			//doc.Z.Select(true, start, end);
+
 			var b = new StringBuilder();
 			if(end > 0 && k.code[end - 1] != '\n') b.AppendLine();
 			b.Append("using ").Append(ns).AppendLine(";");
-			k.sciDoc.Z.InsertText(true, end, b.ToString());
-			k.sciDoc.ZFoldScriptHeader();
+
+			int line = doc.Z.LineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
+			doc.Z.InsertText(true, end, b.ToString(), addUndoPoint: true);
+			if(foldLine >= 0) doc.Call(Sci.SCI_FOLDLINE, foldLine); //InsertText expands folding
 		}
 
 		/// <summary>

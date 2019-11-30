@@ -17973,14 +17973,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -18854,8 +18846,7 @@
             <summary>See <see cref="P:Au.APerf.Incremental"/>.</summary>
             <example>
             <code><![CDATA[
-            var perf = new APerf.Inst();
-            perf.Incremental = true;
+            var perf = new APerf.Inst { Incremental = true };
             for(int i = 0; i < 5; i++) {
             	Thread.Sleep(100); //not included in the measurement
             	perf.First();

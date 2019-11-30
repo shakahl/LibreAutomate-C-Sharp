@@ -169,17 +169,14 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
-		Au.Tools.TUtil.InsertUsingDirectiveInEditor("System.Threading");
-		return;
-
 		//AOutput.Clear();
 
 		//NetCoreDB.Create();
 		//NetCoreDB.UpdateIfNeed();
 
-		var doc = Panels.Editor.ZActiveDoc;
-		var z = doc.Z;
-		var s = doc.Text;
+		//var doc = Panels.Editor.ZActiveDoc;
+		//var z = doc.Z;
+		//var s = doc.Text;
 
 		//z.Select(false, 300, 295);
 		//z.ReplaceRange(false, 295, 300, "RE");

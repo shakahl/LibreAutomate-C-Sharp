@@ -692,14 +692,16 @@ namespace Au.Controls
 		/// <param name="utf16"></param>
 		/// <param name="pos">Start index. Cannot be negative.</param>
 		/// <param name="s">Text to insert. Can be null.</param>
+		/// <param name="addUndoPoint">Call <see cref="AddUndoPoint"/>.</param>
 		/// <remarks>
 		/// Does not parse tags.
 		/// Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="ReplaceSel"/> or <see cref="ReplaceRange"/>.
 		/// </remarks>
-		public void InsertText(bool utf16, int pos, string s)
+		public void InsertText(bool utf16, int pos, string s, bool addUndoPoint = false)
 		{
 			using(new _NoReadonly(this))
 				SetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
+			if(addUndoPoint) AddUndoPoint();
 		}
 
 		///// <summary>
@@ -1118,6 +1120,15 @@ namespace Au.Controls
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_SETINDICATORVALUE, _value);
 			Call(SCI_INDICATORFILLRANGE, from, to - from);
+		}
+
+		/// <summary>
+		/// SCI_BEGINUNDOACTION, SCI_ENDUNDOACTION.
+		/// </summary>
+		public void AddUndoPoint()
+		{
+			Call(SCI_BEGINUNDOACTION);
+			Call(SCI_ENDUNDOACTION);
 		}
 	}
 

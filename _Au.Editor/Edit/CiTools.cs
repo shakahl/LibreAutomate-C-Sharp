@@ -35,6 +35,12 @@ class CiTools
 	//	}
 	//#endif
 
+	public void HideTempWindows()
+	{
+		_regexWindow?.Hide();
+		_keysWindow?.Hide();
+	}
+
 	#region regex
 
 	RegexWindow _regexWindow;
@@ -68,8 +74,6 @@ class CiTools
 		doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _regexWindow.Hide());
 	}
 
-	public void RegexWindowHide() => _regexWindow?.Hide();
-
 	//public bool RegexWindowIsVisible => _regexWindow?.Window.Visible ?? false;
 
 	#endregion
@@ -101,8 +105,6 @@ class CiTools
 		doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _keysWindow.Hide());
 	}
 
-	public void KeysWindowHide() => _keysWindow?.Hide();
-
 	#endregion
 
 	public static void CmdShowRegexOrKeysWindow(bool regex)
@@ -113,7 +115,7 @@ class CiTools
 		var doc = cd.sciDoc;
 		var stringSpan = node.Span;
 
-		var t = CodeInfo._compl._tools;
+		var t = CodeInfo._tools;
 		if(regex) t.RegexWindowShow(doc, cd.code, pos16, stringSpan, replace: false);
 		else t.KeysWindowShow(doc, cd.code, pos16, stringSpan);
 	}

@@ -82,7 +82,7 @@ static class Program
 		//Application.EnableVisualStyles(); //no, we have manifest
 		Application.SetCompatibleTextRenderingDefault(false);
 
-		Settings = AppSettings.Load();
+		Settings = ProgramSettings.Load();
 
 		UserGuid = Settings.user; if(UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
@@ -97,7 +97,7 @@ static class Program
 	}
 
 	internal static AOutputServer OutputServer = new AOutputServer(true);
-	public static AppSettings Settings;
+	public static ProgramSettings Settings;
 	public static FMain MainForm;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;

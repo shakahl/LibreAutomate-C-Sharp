@@ -74,8 +74,7 @@ namespace Au
 			/// <summary>See <see cref="APerf.Incremental"/>.</summary>
 			/// <example>
 			/// <code><![CDATA[
-			/// var perf = new APerf.Inst();
-			/// perf.Incremental = true;
+			/// var perf = new APerf.Inst { Incremental = true };
 			/// for(int i = 0; i < 5; i++) {
 			/// 	Thread.Sleep(100); //not included in the measurement
 			/// 	perf.First();

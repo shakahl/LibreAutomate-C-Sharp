@@ -40,20 +40,22 @@ using TheArtOfDev.HtmlRenderer.Core.Entities;
 
 class CiPopupHtml
 {
+	public enum UsedBy { PopupList, Signature, Info }
+
 	InactiveWindow _w;
 	_HtmlPanel _html;
 	Action<bool> _onHiddenOrDestroyed;
 	Func<int, string> _itemLinkHtml;
-	bool _signature;
+	UsedBy _usedBy;
 
 	/// <summary>
 	/// The top-level popup window.
 	/// </summary>
 	public InactiveWindow PopupWindow => _CreateOrGet();
 
-	public CiPopupHtml(bool signature, Action<bool> onHiddenOrDestroyed = null)
+	public CiPopupHtml(UsedBy usedy, Action<bool> onHiddenOrDestroyed = null)
 	{
-		_signature = signature;
+		_usedBy = usedy;
 		_onHiddenOrDestroyed = onHiddenOrDestroyed;
 	}
 
@@ -63,8 +65,11 @@ class CiPopupHtml
 			_w = new InactiveWindow();
 			_w.SuspendLayout();
 			_w.Name = _w.Text = "Ci.PopupHtml";
-			_w.MinimumSize = Au.Util.ADpi.ScaleSize((150, 150));
-			_w.Size = new Size(Screen.FromControl(Program.MainForm).WorkingArea.Width / (_signature ? 2 : 3), Au.Util.ADpi.ScaleInt(_signature ? 300 : 360));
+			_w.MinimumSize = Au.Util.ADpi.ScaleSize((150, _usedBy == UsedBy.Info ? 50 : 150));
+			_w.Size = new Size(
+				Screen.FromControl(Program.MainForm).WorkingArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
+				Au.Util.ADpi.ScaleInt(_usedBy switch { UsedBy.PopupList => 360, UsedBy.Signature => 300, _ => 100 })
+				);
 
 			_html = new _HtmlPanel();
 			_html.SuspendLayout();
@@ -98,25 +103,46 @@ class CiPopupHtml
 		_html.Text = html;
 	}
 
-	public void Show(SciCode doc, Rectangle anchorRect, PopupAlignment align = 0)
+	/// <summary>
+	/// Shows by anchorRect, owned by ownerControl.
+	/// </summary>
+	/// <param name="ownerControl"></param>
+	/// <param name="anchorRect">Rectangle in screen coord. The popup window will be by it but not in it.</param>
+	/// <param name="align"></param>
+	/// <param name="hideIfOutside">Hide when mouse moved outside anchorRect unless is in the popup window.</param>
+	public void Show(SciCode ownerControl, Rectangle anchorRect, PopupAlignment align = 0, bool hideIfOutside = false)
 	{
 		_CreateOrGet();
 		_w.ZCalculateAndSetPosition(anchorRect, align);
-		_w.ZShow(doc);
+		_w.ZShow(ownerControl);
+
+		if(hideIfOutside) {
+			ATimer.Every(100, t => {
+				if(IsVisible) {
+					Point p = AMouse.XY;
+					if(anchorRect.Contains(p) || _w.Bounds.Contains(p) || _w.Capture) return;
+					Hide();
+				}
+				t.Stop();
+			});
+		}
 	}
 
-	public void Show(SciCode doc, int position) //FUTURE: remove if unused
+	public void Show(SciCode ownerControl, int position) //FUTURE: remove if unused
 	{
-		var r = CiUtil.GetCaretRectFromPos(doc, position);
+		var r = CiUtil.GetCaretRectFromPos(ownerControl, position);
 		r.Inflate(100, 10);
-		Show(doc, r, PopupAlignment.TPM_VERTICAL);
+		Show(ownerControl, r, PopupAlignment.TPM_VERTICAL);
 	}
 
 	public void Hide()
 	{
-		PopupWindow.Hide();
+		if(!IsVisible) return;
+		_w.Hide();
 		SetHtml(null);
 	}
+
+	public bool IsVisible => _w?.Visible ?? false;
 
 	private void _html_LinkClicked(object sender, HtmlLinkClickedEventArgs e)
 	{
@@ -127,6 +153,8 @@ class CiPopupHtml
 			UpdateHtml(_itemLinkHtml(i));
 		} else if(s.Starts('|')) { //go to symbol source file/position or web page
 			CiGoTo.GoTo(s, _w);
+		} else if(s.Starts('!')) { //eg insert using directive
+			CodeInfo._diag.LinkClicked(s);
 		} else if(s.Starts('#')) { //anchor
 			e.Handled = false;
 		} else {

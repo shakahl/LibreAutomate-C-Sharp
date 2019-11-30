@@ -34,11 +34,14 @@ static class CodeInfo
 	internal static readonly CiAutocorrect _correct = new CiAutocorrect();
 	internal static readonly CiQuickInfo _quickInfo = new CiQuickInfo();
 	internal static readonly CiStyling _styling = new CiStyling();
+	internal static readonly CiErrors _diag = new CiErrors();
+	internal static readonly CiTools _tools = new CiTools();
 
 	static Solution _solution;
 	static ProjectId _projectId;
 	static DocumentId _documentId;
 	static Document _document;
+	static MetaComments _meta;
 	static string _metaText;
 	static bool _isWarm;
 	static bool _isUI;
@@ -121,6 +124,7 @@ Print(""t"" + 'c' + 1);
 		_projectId = null;
 		_documentId = null;
 		_document = null;
+		_meta = null;
 		_metaText = null;
 	}
 
@@ -133,8 +137,9 @@ Print(""t"" + 'c' + 1);
 	public static void Cancel()
 	{
 		_compl.Cancel();
-		_compl.HideTools();
 		_signature.Cancel();
+		_tools.HideTempWindows();
+		_diag.HideTempWindows();
 	}
 
 	/// <summary>
@@ -225,6 +230,7 @@ Print(""t"" + 'c' + 1);
 		_document = null;
 		_compl.SciModified(doc, in n);
 		_styling.SciModified(doc, in n);
+		_diag.SciModified();
 	}
 
 	public static void SciCharAdded(SciCode doc, char ch)
@@ -288,17 +294,17 @@ Print(""t"" + 'c' + 1);
 		_signature.ShowSignature(doc);
 	}
 
-	public static void SciMouseDwellStarted(SciCode doc, int positionUtf8)
+	public static void SciMouseDwellStarted(SciCode doc, int pos8)
 	{
 		if(!_CanWork(doc)) return;
-		_quickInfo.SciMouseDwellStarted(doc, positionUtf8);
-		_styling.SciMouseDwellStarted(doc, positionUtf8);
+		_quickInfo.SciMouseDwellStarted(doc, pos8);
+		_diag.SciMouseDwellStarted(doc, pos8);
 	}
 
 	public static void SciMouseDwellEnded(SciCode doc)
 	{
 		if(!_CanWork(doc)) return;
-		_styling.SciMouseDwellEnded(doc);
+		//_diag.SciMouseDwellEnded(doc);
 	}
 
 	//public static void SciMouseMoved(SciCode doc, int x, int y)
@@ -419,9 +425,11 @@ Print(""t"" + 'c' + 1);
 
 	public static Workspace CurrentWorkspace { get; private set; }
 
+	public static MetaComments Meta => _meta;
+
 	static void _CreateSolution(FileNode f)
 	{
-		_styling.ClearMetaErrors();
+		_diag.ClearMetaErrors();
 		CurrentWorkspace = new AdhocWorkspace();
 		_solution = CurrentWorkspace.CurrentSolution;
 		_projectId = _AddProject(f, true);
@@ -433,6 +441,7 @@ Print(""t"" + 'c' + 1);
 
 			var m = new MetaComments();
 			m.Parse(f, projFolder, EMPFlags.ForCodeInfo);
+			if(isMain) _meta = m;
 
 			var projectId = ProjectId.CreateNewId();
 			var adi = new List<DocumentInfo>();
@@ -465,7 +474,7 @@ Print(""t"" + 'c' + 1);
 		if(doc == null || !doc.ZFile.IsCodeFile) return;
 
 		//cancel if changed the screen rectangle of the document window
-		if(_compl.IsVisibleUI || _signature.IsVisibleUI) {
+		if(_compl.IsVisibleUI || _signature.IsVisibleUI || _diag.IsVisibleUI) {
 			var r = ((AWnd)Panels.Editor.ZActiveDoc).Rect;
 			if(!_isUI) {
 				_isUI = true;

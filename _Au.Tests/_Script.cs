@@ -134,7 +134,7 @@ class Script : AScript
 		public string Eight { get; set; } = "def";
 	}
 
-	unsafe void _Main()
+	void TestJson()
 	{
 		var file = @"Q:\test\sett.json";
 		var file2 = @"Q:\test\sett.xml";
@@ -172,7 +172,7 @@ class Script : AScript
 
 			100.ms();
 			APerf.First();
-			var r2=XElement.Load(file2);
+			var r2 = XElement.Load(file2);
 			APerf.Next();
 			v = new JSettings();
 			v.OneTwo = r2.Element("OneTwo").Value;
@@ -184,6 +184,11 @@ class Script : AScript
 		Print(v.OneTwo, v.ThreeFour, v.Five, v.Six, v.Seven, v.Eight);
 
 		//JsonDocument d; d.RootElement.
+	}
+
+	unsafe void _Main()
+	{
+		
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

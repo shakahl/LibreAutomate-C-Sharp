@@ -165,7 +165,7 @@ class CiSignature
 		rect.Width += Au.Util.ADpi.ScaleInt(200);
 		rect.X -= 6;
 
-		_popupHtml ??= new CiPopupHtml(true, _ => _data = null);
+		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Signature, _ => _data = null);
 		_popupHtml.Show(Panels.Editor.ZActiveDoc, rect, PopupAlignment.TPM_VERTICAL);
 		_popupHtml.SetHtml(html, i => _FormatHtml(i, userSelected: true));
 		//APerf.NW();

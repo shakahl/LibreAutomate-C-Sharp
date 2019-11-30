@@ -37,7 +37,6 @@ class CiCompletion
 	CiPopupList _popupList;
 	_Data _data; //not null while the popup list window is visible
 	CancellationTokenSource _cancelTS;
-	internal CiTools _tools = new CiTools();
 
 	class _Data
 	{
@@ -67,12 +66,6 @@ class CiCompletion
 	{
 		_cancelTS?.Cancel(); _cancelTS = null;
 		_CancelList();
-	}
-
-	public void HideTools()
-	{
-		_tools.RegexWindowHide();
-		_tools.KeysWindowHide();
 	}
 
 	void _CancelList(bool popupListHidden = false, bool tempRangeRemoved = false)
@@ -312,10 +305,10 @@ class CiCompletion
 				switch(stringFormat) {
 				case PSFormat.ARegex:
 				case PSFormat.ARegexReplacement:
-					_tools.RegexWindowShow(doc, code, position, stringSpan, replace: stringFormat == PSFormat.ARegexReplacement);
+					CodeInfo._tools.RegexWindowShow(doc, code, position, stringSpan, replace: stringFormat == PSFormat.ARegexReplacement);
 					break;
 				case PSFormat.AKeys:
-					_tools.KeysWindowShow(doc, code, position, stringSpan);
+					CodeInfo._tools.KeysWindowShow(doc, code, position, stringSpan);
 					break;
 				}
 				return;
