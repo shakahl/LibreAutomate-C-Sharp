@@ -186,9 +186,16 @@ class Script : AScript
 		//JsonDocument d; d.RootElement.
 	}
 
+	[DllImport("CppE")]
+	static extern int Cpp_Install(int step, string dir);
+
+	[DllImport("CppE")]
+	static extern int Cpp_Uninstall();
+
 	unsafe void _Main()
 	{
-		
+		//Print((uint)Cpp_Install(2, AFolders.ThisAppBS));
+		//Print((uint)Cpp_Uninstall());
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

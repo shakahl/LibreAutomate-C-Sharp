@@ -50,6 +50,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{2C03BC9E-C857-44FF-8585-08DF42C687A3}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		LICENSE.txt = LICENSE.txt
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SciLexer", "Libraries\scintilla\win32\SciLexer.vcxproj", "{FBE04237-9C7B-4973-9C60-505975998B39}"
@@ -91,6 +92,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Au.Net45", "Other\Au.Net45\Au.Net45.csproj", "{2157BC47-A5E1-405C-A003-F44970DC3718}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_Au.Editor", "_Au.Editor\_Au.Editor.csproj", "{69065F68-192D-4487-AEB4-7286C1CF2FED}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Setup32", "Other\Setup32\Setup32.vcxproj", "{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -363,8 +366,8 @@ Global
 		{1A8A8590-2D47-44E1-820E-28ED976688DD}.Release|x86.Build.0 = Release|Any CPU
 		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|Any CPU.ActiveCfg = Release|x64
 		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|Any CPU.Build.0 = Release|x64
-		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|x64.ActiveCfg = Debug|x64
-		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|x64.Build.0 = Debug|x64
+		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|x64.ActiveCfg = Release|x64
+		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|x64.Build.0 = Release|x64
 		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|x86.ActiveCfg = Release|Win32
 		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Debug|x86.Build.0 = Release|Win32
 		{5DCF20C5-9BBD-44E2-96BE-323A845B99F4}.Release|Any CPU.ActiveCfg = Release|x64
@@ -445,6 +448,17 @@ Global
 		{69065F68-192D-4487-AEB4-7286C1CF2FED}.Release|x64.Build.0 = Release|Any CPU
 		{69065F68-192D-4487-AEB4-7286C1CF2FED}.Release|x86.ActiveCfg = Release|Any CPU
 		{69065F68-192D-4487-AEB4-7286C1CF2FED}.Release|x86.Build.0 = Release|Any CPU
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Debug|Any CPU.ActiveCfg = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Debug|Any CPU.Build.0 = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Debug|x64.ActiveCfg = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Debug|x64.Build.0 = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Debug|x86.ActiveCfg = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Debug|x86.Build.0 = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Release|Any CPU.ActiveCfg = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Release|Any CPU.Build.0 = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Release|x64.ActiveCfg = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Release|x86.ActiveCfg = Release|Win32
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -484,6 +498,7 @@ Global
 		{99763C5A-4F8A-455E-80A4-8760CB149290} = {A237D0C7-1BDE-4828-AAF9-E4B2579DAA92}
 		{2157BC47-A5E1-405C-A003-F44970DC3718} = {4B65F34E-129D-46F9-9464-25737BC43029}
 		{69065F68-192D-4487-AEB4-7286C1CF2FED} = {82D5A236-3610-446D-95BA-3888BF6E8F25}
+		{AD66B0A1-725E-4833-8AB9-DE1B5D4C8505} = {4B65F34E-129D-46F9-9464-25737BC43029}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {F4DC626A-22DF-4C8A-9686-8A694050B23E}

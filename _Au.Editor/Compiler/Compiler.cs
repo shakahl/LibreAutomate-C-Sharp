@@ -314,7 +314,7 @@ namespace Au.Compiler
 			var refs = m.References.Refs;
 			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
 
-			p1.NW('C');
+			//p1.NW('C');
 			return true;
 		}
 

@@ -22,7 +22,7 @@ using static Au.AStatic;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
-#if TEST
+#if TRACE
 partial class ThisIsNotAFormFile { }
 
 partial class PanelFiles

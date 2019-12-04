@@ -149,8 +149,8 @@ class ProgramSettings : JSettings
 	public string[] recentWS { get => _recent; set => _SetNoCmp(ref _recent, value); }
 	string[] _recent;
 
-	public bool alwaysVisible { get => _alwaysVisible; set => _Set(ref _alwaysVisible, value); }
-	bool _alwaysVisible;
+	public bool runHidden { get => _runHidden; set => _Set(ref _runHidden, value); }
+	bool _runHidden;
 
 	public string wndPos { get => _wndpos; set => _Set(ref _wndpos, value); }
 	string _wndpos;

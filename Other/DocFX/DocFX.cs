@@ -380,17 +380,17 @@ unsafe class Program
 		var path = docDir + name;
 		using(var client = new WebClient()) {
 			client.Credentials = new NetworkCredential(user, pass);
-			client.UploadFile("ftp://ftp.quickmacros.com/public_html/3" + name, WebRequestMethods.Ftp.UploadFile, path);
+			client.UploadFile("ftp://ftp.quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 		}
 		AFile.Delete(path);
 		Print("Uploaded");
 
 		//extract
 		using(var client = new WebClient()) {
-			string r1 = client.DownloadString($"http://www.quickmacros.com/3/extract_help.php?kaip={pass2}");
+			string r1 = client.DownloadString($"http://www.quickmacros.com/au/extract_help.php?kaip={pass2}");
 			if(r1 != "done") { Print(r1); return; }
 		}
-		Print("<>Extracted to <link>http://3.quickmacros.com/help/</link>");
+		Print("<>Extracted to <link>http://www.quickmacros.com/au/help/</link>");
 	}
 
 }

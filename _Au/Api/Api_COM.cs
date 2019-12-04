@@ -308,7 +308,7 @@ namespace Au.Types
 			IRegisteredTask GetTask(string path);
 			//[PreserveSig] int GetTasks(int flags, out IRegisteredTaskCollection ppTasks);
 			[PreserveSig] int _7();
-			[PreserveSig] int DeleteTask(string name, int flags);
+			int DeleteTask(string name, int flags);
 			IRegisteredTask RegisterTask(string path, string xmlText, TASK_CREATION flags, object userId, object password, TASK_LOGON_TYPE logonType, object sddl);
 			//[PreserveSig] int RegisterTaskDefinition(string path, ITaskDefinition pDefinition, int flags, object userId, object password, TASK_LOGON_TYPE logonType, object sddl, out IRegisteredTask ppTask);
 			//[PreserveSig] int GetSecurityDescriptor(int securityInformation, char** pSddl);

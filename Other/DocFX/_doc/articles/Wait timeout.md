@@ -1,6 +1,5 @@
 ﻿---
 uid: wait_timeout
-title: Wait timeout
 ---
 
 # Wait timeout

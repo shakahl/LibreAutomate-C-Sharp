@@ -55,16 +55,20 @@
     <LinkIncremental>false</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <OutDir>$(SolutionDir)_\32\</OutDir>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <OutDir>$(SolutionDir)_\32\</OutDir>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)_\64\</OutDir>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <OutDir>$(SolutionDir)_\64\</OutDir>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup>
     <ClCompile>
@@ -92,6 +96,9 @@
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
       <ModuleDefinitionFile>Scintilla.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -102,6 +109,9 @@
     <Link>
       <LinkTimeCodeGeneration>Default</LinkTimeCodeGeneration>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -116,6 +126,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <ModuleDefinitionFile>Scintilla.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -129,6 +142,9 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="..\lexers\*.cxx" />

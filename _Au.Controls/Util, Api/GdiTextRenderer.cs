@@ -28,7 +28,7 @@ namespace Au.Controls
 	/// Faster than TextRenderer.
 	/// Must be disposed.
 	/// </summary>
-	public struct GdiTextRenderer : IDisposable //TODO: use everywhere
+	public struct GdiTextRenderer : IDisposable //SHOULDDO: use everywhere
 	{
 		Graphics _g;
 		IntPtr _hdc, _oldFont;

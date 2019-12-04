@@ -72,26 +72,30 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <OutDir>$(SolutionDir)_\32\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <OutDir>$(SolutionDir)_\64\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)_\32\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <OutDir>$(SolutionDir)_\64\</OutDir>
     <TargetName>AuCpp</TargetName>
     <GenerateManifest>false</GenerateManifest>
+    <OutDir>bin\$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>obj\$(Configuration)\$(Platform)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -107,6 +111,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -122,6 +129,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -143,6 +153,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -164,6 +177,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <ModuleDefinitionFile>Cpp.def</ModuleDefinitionFile>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="acc bridge.cpp" />

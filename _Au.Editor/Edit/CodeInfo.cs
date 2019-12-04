@@ -52,8 +52,7 @@ static class CodeInfo
 		//warm up
 		//Task.Delay(100).ContinueWith(_1 => {
 		Task.Run(() => {
-			var p1 = APerf.Create();
-			p1.Next();
+			//var p1 = APerf.Create();
 			try {
 				var code = @"//.
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
@@ -73,7 +72,7 @@ Print(""t"" + 'c' + 1);
 				var document = sol.GetDocument(documentId);
 				//p1.Next();
 				//_ = document.GetSemanticModelAsync().Result;
-				p1.Next();
+				//p1.Next();
 				Program.MainForm.BeginInvoke(new Action(() => {
 					//APerf.Next('w');
 					_isWarm = true;

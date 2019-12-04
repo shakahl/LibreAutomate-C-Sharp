@@ -1,6 +1,5 @@
 ﻿---
 uid: print_tags
-title: Print tags
 ---
 
 # Print tags

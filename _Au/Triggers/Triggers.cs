@@ -387,26 +387,22 @@ namespace Au.Triggers
 			//APerf.Next();
 
 			//prevent big delay later on first LL hook event while hook proc waits
-			bool ngened = Util.LibAssembly.LibIsAuNgened;
-			bool scopeUsed = scopes.Used || funcs.Used;
-			if(!ngened || scopeUsed) { //never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
-				ThreadPool.QueueUserWorkItem(_ => {
-					try {
-						if(scopeUsed) Util.LibAssembly.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing
-						if(!ngened) {
-							if(scopeUsed) new AWnd.Finder("*a").IsMatch(AWnd.Active);
-							_ = ATime.PerfMicroseconds;
-							Util.AJit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
-							Util.AJit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
-							Util.AJit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
-							if(this[TriggerType.Hotkey] is HotkeyTriggers tk) Util.AJit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
-							if(this[TriggerType.Autotext] is AutotextTriggers ta) AutotextTriggers.JitCompile();
-							if(this[TriggerType.Mouse] is MouseTriggers tm) MouseTriggers.JitCompile();
-						}
-					}
-					catch(Exception ex) { ADebug.Print(ex); }
-				});
-			}
+			//never mind: should do it once. Several Triggers.Run in task is rare. Fast next time.
+			ThreadPool.QueueUserWorkItem(_ => {
+				try {
+					bool scopeUsed = scopes.Used || funcs.Used;
+					if(scopeUsed) Util.LibAssembly.LibEnsureLoaded(true, true); //System.Core, System, System.Windows.Forms, System.Drawing //SHOULDDO: test how it is changed with Core
+					if(scopeUsed) new AWnd.Finder("*a").IsMatch(AWnd.Active);
+					_ = ATime.PerfMicroseconds;
+					Util.AJit.Compile(typeof(Api), "WriteFile", "GetOverlappedResult");
+					Util.AJit.Compile(typeof(TriggerHookContext), "InitContext", "PerfEnd", "PerfWarn");
+					Util.AJit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
+					if(this[TriggerType.Hotkey] is HotkeyTriggers tk) Util.AJit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
+					if(this[TriggerType.Autotext] is AutotextTriggers ta) AutotextTriggers.JitCompile();
+					if(this[TriggerType.Mouse] is MouseTriggers tm) MouseTriggers.JitCompile();
+				}
+				catch(Exception ex) { ADebug.Print(ex); }
+			});
 			//APerf.Next();
 
 			AWnd wMsg = default;

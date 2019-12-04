@@ -17,8 +17,10 @@ partial class FMain : Form
 	public static void ZRunApplication()
 	{
 		var f = new FMain();
-		ATimer.After(1, _ => APerf.NW('P')); //TODO
-		if(Program.Settings.alwaysVisible || CommandLine.StartVisible) Application.Run(f);
+#if TRACE
+		ATimer.After(1, _ => APerf.NW('P'));
+#endif
+		if(!Program.Settings.runHidden || CommandLine.StartVisible) Application.Run(f);
 		else Application.Run();
 	}
 
@@ -73,7 +75,9 @@ partial class FMain : Form
 		//		ADebug.Print("Ending form ctor. Must be no parked controls created; use SetHookToMonitorCreatedWindowsOfThisThread.");
 		//#endif
 
-		_MonitorGC();//TODO
+#if TRACE
+		_MonitorGC();
+#endif
 	}
 
 	AWnd _Hwnd => (AWnd)Handle;
@@ -105,7 +109,7 @@ partial class FMain : Form
 			APerf.Next('o');
 			CodeInfo.UiLoaded();
 
-#if TEST
+#if TRACE
 			ATimer.After(1, _ => {
 				var s = CommandLine.TestArg;
 				if(s != null) {
@@ -180,7 +184,7 @@ partial class FMain : Form
 			int sc = (int)wParam;
 			if(sc >= 0xf000) { //system
 				sc &= 0xfff0;
-				if(sc == Api.SC_CLOSE && Visible && !Program.Settings.alwaysVisible) {
+				if(sc == Api.SC_CLOSE && Visible && Program.Settings.runHidden) {
 					this.WindowState = FormWindowState.Minimized;
 					this.Visible = false;
 					EdUtil.MinimizeProcessPhysicalMemory(500);
@@ -326,7 +330,7 @@ static class Panels
 		Info = new PanelInfo();
 		//p1.Next('i');
 		//p1.Write();
-		//#if TEST
+		//#if TRACE
 		//		var c = new RichTextBox();
 		//		c.Name = "Test";
 		//#endif
@@ -335,7 +339,7 @@ static class Panels
 		m.Name = "Panels";
 		m.ZCreate(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @"!Settings\Panels.xml",
 			Editor, Files, Find, Found, Output, Open, Running, Info,
-			//#if TEST
+			//#if TRACE
 			//			c,
 			//#endif
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
@@ -349,7 +353,7 @@ static class Panels
 		m.ZGetPanel(Found).Init("Results of 'Find in files'", EdResources.GetImageUseCache("found"));
 		m.ZGetPanel(Find).Init("Find text, files"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
 		m.ZFocusControlOnUndockEtc = Editor;
-		//#if TEST
+		//#if TRACE
 		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));
 		//#endif
 	}

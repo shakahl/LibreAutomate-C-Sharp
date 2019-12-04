@@ -23,6 +23,9 @@ using Au.Controls;
 
 partial class FOptions : AuForm
 {
+	const string c_rkRun = @"Software\Microsoft\Windows\CurrentVersion\Run";
+	bool _initRunAtStartup;
+
 	public FOptions()
 	{
 		InitializeComponent();
@@ -49,16 +52,25 @@ partial class FOptions : AuForm
 	{
 		base.OnLoad(e);
 
-		_alwaysVisible.Checked = Program.Settings.alwaysVisible;
+		_runAtStartup.Checked = _initRunAtStartup = ARegistry.GetString(out _, "Au.Editor", c_rkRun, ARegistry.HKEY_CURRENT_USER);
+		_runHidden.Checked = Program.Settings.runHidden;
 		_startupScripts.Text = Program.Model.StartupScriptsCsv;
 
 	}
 
 	private void _bOK_Click(object sender, EventArgs e)
 	{
-		if(_startupScripts.Modified) Program.Model.StartupScriptsCsv = _startupScripts.Text;
+		if(_runAtStartup.Checked != _initRunAtStartup) {
+			try {
+				using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
+				if(_initRunAtStartup) rk.DeleteValue("Au.Editor");
+				else rk.SetValue("Au.Editor", "\"" + AFolders.ThisAppBS + "Au.CL.exe\" /e");
+			}
+			catch(Exception ex) { Print("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
+		}
+		Program.Settings.runHidden = _runHidden.Checked;
 
-		Program.Settings.alwaysVisible = _alwaysVisible.Checked;
+		if(_startupScripts.Modified) Program.Model.StartupScriptsCsv = _startupScripts.Text;
 	}
 
 	private void _startupScripts_Validating(object sender, CancelEventArgs e)

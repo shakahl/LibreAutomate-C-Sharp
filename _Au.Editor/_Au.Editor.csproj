@@ -17,11 +17,11 @@
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;TEST</DefineConstants>
+    <DefineConstants>TRACE;DEBUG</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;TEST</DefineConstants>
+    <DefineConstants></DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -231,7 +231,7 @@
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe&quot; -script ..\_Au.Editor\Resources\hacker.txt&#xD;&#xA;&quot;C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe&quot; -script ..\_Au.Editor\Resources\hacker32.txt&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
+    <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe&quot; -script ..\_Au.Editor\Resources\hacker.txt&#xD;&#xA;::&quot;C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe&quot; -script ..\_Au.Editor\Resources\hacker32.txt&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
   </Target>
 
 </Project>

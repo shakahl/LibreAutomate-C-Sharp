@@ -127,11 +127,11 @@ static unsafe class Program
 
 		//JIT slowest-to-JIT methods
 		//APerf.First();
-		if(!Au.Util.LibAssembly.LibIsAuNgened) {
+		//if(!Au.Util.LibAssembly.LibIsAuNgened) {
 			Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
 			Au.Util.AJit.Compile(typeof(Au.Util.LibSerializer), "Deserialize");
 			AFile.WaitIfLocked(() => (FileStream)null);
-		}
+		//}
 		//APerf.NW(); //Core ~15 ms
 
 		//Core assembly loading is fast, but let's save several ms anyway

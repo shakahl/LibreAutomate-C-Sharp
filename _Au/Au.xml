@@ -15931,8 +15931,6 @@
             If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
             
             This function is similar to <see cref="M:System.Text.RegularExpressions.Regex.IsMatch(System.String)"/>.
-            
-            //TODO: Let other func doc link here. Review examples.
             </remarks>
             <example>
             <code><![CDATA[
@@ -18137,18 +18135,6 @@
             Assembly functions.
             </summary>
         </member>
-        <member name="P:Au.Util.LibAssembly.LibIsAuNgened">
-            <summary>
-            Returns true if Au.dll is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process.
-            </summary>
-        </member>
-        <member name="M:Au.Util.LibAssembly.IsNgened(System.Reflection.Assembly)">
-            <summary>
-            Returns true if assembly asm is compiled to native code using ngen.exe.
-            It means - no JIT-compiling delay when its functions are called first time in process.
-            </summary>
-        </member>
         <member name="M:Au.Util.LibAssembly.LibIsLoadedFormsWpf">
             <summary>
             Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
@@ -18469,41 +18455,6 @@
             <summary>
             Releases the StringBuilder to the cache.
             </summary>
-        </member>
-        <member name="M:Au.Util.LibTaskScheduler.CreateTaskToRunProgramOnDemand(System.String,System.String,Au.Types.UacIL,System.String,System.String)">
-            <summary>
-            Creates or updates a trigerless task that executes a program as system, admin or user.
-            This process must be admin.
-            You can use <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/> to run the task.
-            </summary>
-            <param name="taskFolder">
-            This function creates the folder (and ancestors) if does not exist.
-            </param>
-            <param name="taskName">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <param name="programFile">Full path of an exe file. This function does not normalize it.</param>
-            <param name="IL">Can be System, High or Medium. If System, runs in SYSTEM account. Else in creator's account.</param>
-            <param name="args">Command line arguments. Can contain literal substrings $(Arg0), $(Arg1), ..., $(Arg32) that will be replaced by <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <exception cref="T:System.UnauthorizedAccessException">Probably because this process is not admin.</exception>
-            <exception cref="T:System.Exception"></exception>
-        </member>
-        <member name="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])">
-            <summary>
-            Runs a task. Does not wait.
-            Returns process id.
-            </summary>
-            <param name="taskFolder">Can be like <c>@"\Folder"</c> or <c>"Folder"</c> or <c>@"\"</c> or <c>""</c> or null.</param>
-            <param name="taskName">Can be like <c>"Name"</c> or <c>@"\Folder\Name"</c> or <c>@"Folder\Name"</c>.</param>
-            <param name="joinArgs">Join args into single arg for $(Arg0).</param>
-            <param name="args">Replacement values for substrings $(Arg0), $(Arg1), ..., $(Arg32) in 'create task' args. See <msdn>IRegisteredTask.Run</msdn>.</param>
-            <exception cref="T:System.Exception">Failed. Probably the task does not exist.</exception>
-        </member>
-        <member name="M:Au.Util.LibTaskScheduler.TaskExists(System.String,System.String)">
-            <summary>
-            Returns true if the task exists.
-            </summary>
-            <param name="taskFolder">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <param name="taskName">See <see cref="M:Au.Util.LibTaskScheduler.RunTask(System.String,System.String,System.Boolean,System.String[])"/>.</param>
-            <exception cref="T:System.Exception">Failed.</exception>
         </member>
         <member name="M:Au.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
             <summary>

@@ -29,28 +29,28 @@ namespace Au.Util
 		///// </summary>
 		//internal static bool LibIsAuInGAC => typeof(LibAssembly).Assembly.GlobalAssemblyCache;
 
-		/// <summary>
-		/// Returns true if Au.dll is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process.
-		/// </summary>
-		internal static bool LibIsAuNgened => s_auNgened ??= IsNgened(typeof(LibAssembly).Assembly);
-		static bool? s_auNgened;
-		//tested: Module.GetPEKind always gets ILOnly.
-		//TODO: remove or replace (no ngen in Core)
-		//TEST: new StackFrame().HasNativeImage()
+		//no ngen in Core.
+		///// <summary>
+		///// Returns true if Au.dll is compiled to native code using ngen.exe.
+		///// It means - no JIT-compiling delay when its functions are called first time in process.
+		///// </summary>
+		//internal static bool LibIsAuNgened => s_auNgened ??= IsNgened(typeof(LibAssembly).Assembly);
+		//static bool? s_auNgened;
+		////tested: Module.GetPEKind always gets ILOnly.
+		////test: new StackFrame().HasNativeImage()
 
-		/// <summary>
-		/// Returns true if assembly asm is compiled to native code using ngen.exe.
-		/// It means - no JIT-compiling delay when its functions are called first time in process.
-		/// </summary>
-		public static bool IsNgened(Assembly asm)
-		{
-			var s = asm.CodeBase;
-			//if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
-			s = s.Substring(s.LastIndexOf('/') + 1);
-			s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
-			return default != Api.GetModuleHandle(s);
-		}
+		///// <summary>
+		///// Returns true if assembly asm is compiled to native code using ngen.exe.
+		///// It means - no JIT-compiling delay when its functions are called first time in process.
+		///// </summary>
+		//public static bool IsNgened(Assembly asm)
+		//{
+		//	var s = asm.CodeBase;
+		//	//if(asm.GlobalAssemblyCache) return s.Contains("/GAC_MSIL/"); //faster and maybe more reliable, but works only with GAC assemblies
+		//	s = s.Substring(s.LastIndexOf('/') + 1);
+		//	s = s.Insert(s.LastIndexOf('.') + 1, "ni.");
+		//	return default != Api.GetModuleHandle(s);
+		//}
 
 		//much slower first time when ngened. Also it is undocumented that GetModuleFileName returns 0 if non-ngened (LOAD_LIBRARY_AS_DATAFILE?).
 		//public static unsafe bool IsAssemblyNgened2(Assembly asm)

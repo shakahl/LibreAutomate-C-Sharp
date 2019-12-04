@@ -383,11 +383,11 @@ namespace Au.Controls
 			}
 		}
 
-		public void TestCreatePosMap()//TODO
-		{
-			_CreatePosMap();
-			//foreach(var v in _aPos) Print(v.i8, v.i16);
-		}
+		//public void TestCreatePosMap()
+		//{
+		//	_CreatePosMap();
+		//	//foreach(var v in _aPos) Print(v.i8, v.i16);
+		//}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		unsafe void _CreatePosMap()

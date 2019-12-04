@@ -88,7 +88,7 @@ static class Strips
 		//for vice versa, AuStripManager takes care
 #endif
 
-#if TEST
+#if TRACE
 		//tbCustom2.Items.Add("Test", null, TestCompiler.Test);
 		tbCustom2.Items.Add("Test", null, (unu, sed) => {
 			Program.MainForm.TestEditor();

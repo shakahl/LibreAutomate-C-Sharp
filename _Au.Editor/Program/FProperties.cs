@@ -784,8 +784,8 @@ The file must be in this workspace. Can be path relative to this file (examples:
 1. Click the Run button or menu item.
 2. Add script name in Options -> General -> Run scripts when this workspace loaded.
 3. Call <help>ATask.Run<> from another script. Example: <code>ATask.Run(""Script8.cs"");</code>
-4. Command line. Example: ""PathOfProgramFolder\Au.CL.exe"" ""Script8.cs"". More info in Help.
-5. Click a link in the output pane. Example: <code>Print(""<>Click to run <script>Script8.cs<>."");</code>
+4. <help editor/Command line>Command line<>. Example: <code>Au.CL.exe ""Script8.cs""</code>
+5. An output link. Example: <code>Print(""<>Click to run <script>Script8.cs<>."");</code>
 
 In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey etc) to execute parts of script code when it is running. There are no such triggers to launch scripts.
 ";

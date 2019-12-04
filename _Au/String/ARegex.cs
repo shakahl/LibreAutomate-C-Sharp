@@ -271,8 +271,6 @@ namespace Au
 		/// If partial match, returns true too. Partial match is possible if used a PARTIAL_ flag.
 		/// 
 		/// This function is similar to <see cref="Regex.IsMatch(string)"/>.
-		/// 
-		/// //TODO: Let other func doc link here. Review examples.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

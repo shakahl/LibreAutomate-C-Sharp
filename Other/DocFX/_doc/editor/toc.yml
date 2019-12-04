@@ -1,4 +1,6 @@
 - name: Au editor
   href: Au editor.md
+- name: Code editor
+  href: Code editor.md
 - name: Command line
   href: Command line.md

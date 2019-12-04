@@ -4,7 +4,7 @@
 #define ZEROTHIS memset(this, 0, sizeof(*this))
 #define ZEROTHISFROM(member) memset((LPBYTE)this+((LPBYTE)&member-(LPBYTE)this), 0, sizeof(*this)-((LPBYTE)&member-(LPBYTE)this))
 
-#define TRACE 1 //TODO
+//#define TRACE 1 //TODO
 #if TRACE
 
 void Print(STR s);

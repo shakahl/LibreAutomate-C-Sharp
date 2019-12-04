@@ -1,6 +1,8 @@
 //Code colors and folding.
 
+//#if TRACE
 //#define PRINT
+//#endif
 
 using System;
 using System.Collections.Generic;
@@ -390,7 +392,13 @@ class CiStyling
 		} else {
 			CodeInfo._diag.EraseIndicatorsInLine(doc, doc.Z.CurrentPos8);
 		}
+#if TRACE
+		if(!s_debugPerf) { s_debugPerf = true; APerf.NW('s'); }
+#endif
 	}
+#if TRACE
+	static bool s_debugPerf;
+#endif
 
 	#region folding
 

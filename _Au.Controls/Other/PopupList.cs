@@ -360,7 +360,7 @@ namespace Au.Controls
 			}
 		}
 
-		class _Window : Form //TODO: try inherit from InactiveWindow
+		class _Window : Form //SHOULDDO: try base InactiveWindow
 		{
 			PopupList _p;
 			Control _owner;

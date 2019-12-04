@@ -23,14 +23,16 @@ using System.Resources;
 
 static class Program
 {
-	static Program()//TODO
+	static Program()
 	{
 		//Api.GetProcessTimes(Api.GetCurrentProcess(), out long c, out _, out long k, out long u);
 		//Api.GetSystemTimeAsFileTime(out long t);
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//Print(k/10000, u / 10000, (t - c) / 10000); //60 ms
 
+#if TRACE
 		APerf.First();
+#endif
 		Au.Util.LibAssertListener.Setup();
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
@@ -44,19 +46,27 @@ static class Program
 	[STAThread]
 	static void Main(string[] args)
 	{
-		//AOutput.QM2.Write("ok");
-		//return;
-
-		if(args.Length > 0 && args[0] == "/d") {
-			UacDragDrop.NonAdminProcess.MainDD(args);
-			return;
+		if(args.Length > 0) {
+			switch(args[0]) {
+			case "/dd":
+				UacDragDrop.NonAdminProcess.MainDD(args);
+				return;
+				//case "/si":
+				//	SetupHelpers.Install();
+				//	return;
+				//case "/su":
+				//	SetupHelpers.Uninstall();
+				//	return;
+			}
 		}
 
 		//restart as admin if started as non-admin on admin user account
 		if(args.Length > 0 && args[0] == "/n") {
 			args = args.RemoveAt(0);
 		} else if(AUac.OfThisProcess.Elevation == UacElevation.Limited) {
+#if !DEBUG
 			if(_RestartAsAdmin(args)) return;
+#endif
 		}
 		//speed with restarting is the same as when runs as non-admin. The fastest is when started as admin. Because faster when runs as admin.
 
@@ -157,36 +167,37 @@ static class Program
 
 	static bool _RestartAsAdmin(string[] args)
 	{
-		//return false;
-		if(Debugger.IsAttached) return false;
+		if(Debugger.IsAttached) return false; //very fast
 		try {
 			//int pid = 
-			Au.Util.LibTaskScheduler.RunTask(@"Au", "Au.Editor", true, args);
+			WinTaskScheduler.RunTask("Au",
+				AFolders.ThisAppBS.Eqi(@"Q:\app\Au\_\") ? "_Au.Editor" : "Au.Editor", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
+				true, args);
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
 		}
 		catch(Exception ex) { //probably this program is not installed (no scheduled task)
-			ADebug.Dialog(ex);
+			AOutput.QM2.Write(ex);
 			return false;
 		}
 		return true;
 	}
 
-	public static void Test()
-	{
-		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
-		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
-		//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
+	//public static void Test()
+	//{
+	//	//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
+	//	//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
+	//	//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
 
-		//RunUac.Test();
+	//	//RunUac.Test();
 
-		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
-		//using(var h = AHookWin.Keyboard(k => {
-		//	Print($"{k.Key}, {!k.IsUp}");
-		//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();
+	//	//AOutput.QM2.UseQM2 = true; AOutput.Clear();
+	//	//using(var h = AHookWin.Keyboard(k => {
+	//	//	Print($"{k.Key}, {!k.IsUp}");
+	//	//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();
 
-		//	return false;
-		//})) ADialog.Show("hook");
-	}
+	//	//	return false;
+	//	//})) ADialog.Show("hook");
+	//}
 }
 
 enum EProgramState

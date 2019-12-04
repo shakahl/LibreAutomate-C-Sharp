@@ -116,7 +116,7 @@ This pane displays some info for a function, class or other symbol from mouse in
 <ul style='margin-top: 0'>
 <li>Show online help for a symbol or C# keyword: click it in the code editor and press F1.</li>
 <li>Go to symbol source code if available: click it in the code editor and press F12.</li>
-<li>List of symbols etc with info and autocompletion, function parameters info, auto <code>)]}>""'</code> and <code>;</code>, autoindent. <a href='http://3.quickmacros.com/help/editor/Code%20editor.html'>Read more</a>.</li>
+<li>List of symbols etc with info and autocompletion, function parameters info, auto <code>)]}>""'</code> and <code>;</code>, autoindent. <a href='http://www.quickmacros.com/au/help/editor/Code%20editor.html'>Read more</a>.</li>
 <li>Get window/control/object info and create code: use dialogs 'Find window or control' and 'Find accessible object' (menu Code).</li>
 </ul>
 </body>";

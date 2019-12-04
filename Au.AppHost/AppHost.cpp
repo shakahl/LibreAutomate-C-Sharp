@@ -8,6 +8,7 @@
 #include "coreclrhost.h"
 
 #if _DEBUG
+//#if true
 void Print(LPCWSTR frm, ...)
 {
 	if(frm == nullptr) frm = L"";
@@ -31,19 +32,28 @@ int toUtf16(LPCSTR utf8, int lenUtf8, LPWSTR utf16, int lenUtf16) {
 	return MultiByteToWideChar(CP_UTF8, 0, utf8, lenUtf8, utf16, lenUtf16);
 }
 
-bool regGetUtf8(HKEY hkey, LPCWSTR subkey, LPCWSTR name, LPSTR value, DWORD& size, HKEY* hkOutNoClose = nullptr) {
-	bool R = 0 == ::RegOpenKeyExW(hkey, subkey, 0, KEY_READ | (is32bit ? 0 : KEY_WOW64_32KEY), &hkey);
+bool regOpenKey(HKEY hkey, LPCWSTR subkey, HKEY& hkRet) {
+	return 0 == ::RegOpenKeyExW(hkey, subkey, 0, KEY_READ | (is32bit ? 0 : KEY_WOW64_32KEY), &hkRet);
+}
+
+bool regGetUtf8(HKEY hkey, LPCWSTR name, LPSTR value, DWORD& size) {
+	auto w = (LPWSTR)_alloca(size);
+	DWORD size2 = size;
+	bool R = 0 == RegQueryValueExW(hkey, name, nullptr, nullptr, (LPBYTE)w, &size2);
 	if(R) {
-		auto w = (LPWSTR)_alloca(size);
-		DWORD size2 = size;
-		R = 0 == RegQueryValueExW(hkey, name, nullptr, nullptr, (LPBYTE)w, &size2);
-		if(R) {
-			int n = toUtf8(w, size2 / 2, value, size) - 1;
-			if(n > 0) size = n; else R = false;
-		}
-		if(R && hkOutNoClose != nullptr) *hkOutNoClose = hkey; else RegCloseKey(hkey);
+		int n = toUtf8(w, size2 / 2, value, size) - 1;
+		if(n > 0) size = n; else R = false;
 	}
 	if(!R) size = 0;
+	return R;
+}
+
+bool regGetUtf8(HKEY hkey, LPCWSTR subkey, LPCWSTR name, LPSTR value, DWORD& size) {
+	bool R = regOpenKey(hkey, subkey, hkey);
+	if(R) {
+		R = regGetUtf8(hkey, name, value, size);
+		RegCloseKey(hkey);
+	} else size = 0;
 	return R;
 }
 
@@ -66,7 +76,7 @@ bool GetPaths(_PATHS& p) {
 	//get asmDll
 	bool asmNo32 = is32bit && w[len - 6] == '3' && w[len - 5] == '2'; //if exe is "name32.exe", assume dll is "name.dll", not "name32.dll"
 	strcpy(p.asmDll, p.appDir); strcpy(p.asmDll + len - (asmNo32 ? 6 : 4), ".dll");
-	
+
 	//get appDir
 	while(p.appDir[len - 1] != '\\') len--;
 	p.appDir[len] = 0;
@@ -83,7 +93,11 @@ bool GetPaths(_PATHS& p) {
 	//get Core root path, like "C:\Program Files\dotnet"
 	wchar_t key[] = LR"(SOFTWARE\dotnet\Setup\InstalledVersions\x64)"; if(is32bit) { key[41] = '8'; key[42] = '6'; }
 	HKEY hk1;
-	if(!regGetUtf8(HKEY_LOCAL_MACHINE, key, L"InstallLocation", p.netCore, len = sizeof(p.netCore) - 150, &hk1)) return false;
+	if(!regOpenKey(HKEY_LOCAL_MACHINE, key, hk1)) return false;
+	if(!regGetUtf8(hk1, L"InstallLocation", p.netCore, len = sizeof(p.netCore) - 150)) { //Core 3.0.1 does not set InstallLocation; assume default location.
+		int len1 = ExpandEnvironmentStringsW(L"%ProgramFiles%\\dotnet", w, lenof(w)); //info: if is32bit, expands to "C:\Program Files (x86)"
+		toUtf8(w, len1, p.netCore, sizeof(p.netCore) - 150);
+	}
 
 	//get latest installed Core runtime version, like "3.0.0\"
 	bool ok = regGetUtf8(hk1, L"hostfxr", L"Version", version, len = sizeof(version) - 2);
@@ -120,9 +134,11 @@ void BuildTpaList(LPCSTR dir, std::string& tpaList)
 	HANDLE h = FindFirstFileA(wild.c_str(), &findData);
 	if(h != INVALID_HANDLE_VALUE) {
 		do {
-			//TODO: skip ., .., api-ms-
+			char* s = findData.cFileName;
+			if(*(int*)s == '-ipa') continue; //api-ms-
+			//Print(L"%S", s);
 			tpaList += dir;
-			tpaList += findData.cFileName;
+			tpaList += s;
 			tpaList += ";";
 		} while(FindNextFileA(h, &findData));
 		FindClose(h);
@@ -143,7 +159,7 @@ const char** ArgsUtf8(int& nArgs) {
 		r[i] = p;
 		p += k;
 		size -= k;
-}
+	}
 	nArgs = na;
 	return r;
 }
@@ -163,7 +179,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 Download from https://dotnet.microsoft.com/download.
 Need both: .NET Core Runtime, .NET Core Desktop Runtime.
 Need x)";
-		s1+=is32bit ? "86 only." : "64 only.";
+		s1 += is32bit ? "86 only." : "64 only.";
 		MessageBoxA(0, s1.c_str(), nullptr, MB_ICONERROR);
 		return -1;
 	}

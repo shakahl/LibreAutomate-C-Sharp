@@ -113,8 +113,8 @@ class UacDragDrop
 				//Print("drag");
 				_isProcess2 = true;
 				_wWindow = w;
-				new Au.Util.LibProcessStarter("Au.Editor.exe", "/d " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
-				//new Au.Util.LibProcessStarter("Au.Editor.exe", $"/d {CommandLine.MsgWnd.Handle.ToString()} {ATime.PerfMilliseconds}").StartUserIL(); //test process startup speed
+				new Au.Util.LibProcessStarter("Au.Editor.exe", "/dd " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
+				//new Au.Util.LibProcessStarter("Au.Editor.exe", $"/dd {CommandLine.MsgWnd.Handle.ToString()} {ATime.PerfMilliseconds}").StartUserIL(); //test process startup speed
 			} else if(w != _wTransparent) {
 				_wWindow = w;
 				_SetTransparentSizeZorder();
@@ -248,7 +248,7 @@ class UacDragDrop
 	//Covers our admin window. Almost transparent.
 	public class NonAdminProcess : Form
 	{
-		//Called from Main() in non-admin process when command line starts with /d.
+		//Called from Main() in non-admin process when command line starts with /dd.
 		public static void MainDD(string[] args)
 		{
 			//Print("NonAdminProcess");

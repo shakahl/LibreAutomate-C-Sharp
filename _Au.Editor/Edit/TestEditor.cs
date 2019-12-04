@@ -35,7 +35,7 @@ using DiffMatchPatch;
 using System.Runtime;
 using System.Globalization;
 
-#if TEST
+#if TRACE
 
 #pragma warning disable 169
 
@@ -169,6 +169,13 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+		//var task = "_Au.Editor";
+		//bool exists = WinTaskScheduler.TaskExists("Au", task);
+		//Print(exists);
+		//if(exists) WinTaskScheduler.DeleteTask("Au", task);
+		//else WinTaskScheduler.CreateTaskToRunProgramOnDemand("Au", task, UacIL.System, AFolders.ThisAppBS + "Au.CL.exe", "/s $(Arg0)");
+		//Print("ok");
+
 		//AOutput.Clear();
 
 		//NetCoreDB.Create();

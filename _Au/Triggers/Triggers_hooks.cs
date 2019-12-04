@@ -108,11 +108,11 @@ namespace Au.Triggers
 			Api.SetEvent(_event);
 			if(_inTaskProcess) AProcess.Exit += (unu, sed) => _msgWnd.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
 
-			if(!Util.LibAssembly.LibIsAuNgened) {
+			//if(!Util.LibAssembly.LibIsAuNgened) {
 				Util.AJit.Compile(typeof(HooksServer), "_Send", "_KeyboardHookProc", "_MouseHookProc");
 				Util.AJit.Compile(typeof(Api), "WriteFile", "ReadFile", "WaitForMultipleObjectsEx");
 				_ = ATime.PerfMilliseconds;
-			}
+			//}
 
 			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 		}
