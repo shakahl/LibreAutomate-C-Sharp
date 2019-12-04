@@ -6,4 +6,4 @@ This code consists of two parts that can be used together or separately:
 
 More info and download the setup program: https://www.quickmacros.com/au/help/
 
-![alt text](window.png "Editor window")
+![alt](window.png "Editor window")
