@@ -5,3 +5,5 @@ This code consists of two parts that can be used together or separately:
 - Au editor program is an integrated scripting environment for creating and executing automation scripts using the Au library and C#. And creating .NET programs and libraries for any purpose. Like a mini Visual Studio.
 
 More info and download the setup program: https://www.quickmacros.com/au/help/
+
+![Alt text](window.png?raw=true "Editor window")
