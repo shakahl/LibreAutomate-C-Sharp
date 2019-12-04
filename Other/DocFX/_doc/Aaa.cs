@@ -127,7 +127,7 @@ namespace Au
 		/// 
 		/// API <msdn>GetTickCount</msdn>
 		/// 
-		/// link <see href="http://www.quickmacros.com">QM</see>
+		/// link <see href="https://www.quickmacros.com">QM</see>
 		/// 
 		/// conceptual md [concept](xref:wildcard_expression)
 		/// 

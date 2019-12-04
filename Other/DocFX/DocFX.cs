@@ -387,10 +387,10 @@ unsafe class Program
 
 		//extract
 		using(var client = new WebClient()) {
-			string r1 = client.DownloadString($"http://www.quickmacros.com/au/extract_help.php?kaip={pass2}");
+			string r1 = client.DownloadString($"https://www.quickmacros.com/au/extract_help.php?kaip={pass2}");
 			if(r1 != "done") { Print(r1); return; }
 		}
-		Print("<>Extracted to <link>http://www.quickmacros.com/au/help/</link>");
+		Print("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
 	}
 
 }

@@ -161,9 +161,9 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Tools_Output_WrapLines), Tools_Output_WrapLines);
 		_dict.Add(nameof(Tools_Output_WhiteSpace), Tools_Output_WhiteSpace);
 		_dict.Add(nameof(Tools_Output_Topmost), Tools_Output_Topmost);
-		_dict.Add(nameof(Help_QuickStart), Help_QuickStart);
-		_dict.Add(nameof(Help_Reference), Help_Reference);
-		_dict.Add(nameof(Help_ContextHelp), Help_ContextHelp);
+		_dict.Add(nameof(Help_Program), Help_Program);
+		_dict.Add(nameof(Help_Library), Help_Library);
+		_dict.Add(nameof(Help_Context), Help_Context);
 		_dict.Add(nameof(Help_Download), Help_Download);
 		_dict.Add(nameof(Help_Forum), Help_Forum);
 		_dict.Add(nameof(Help_Email), Help_Email);
@@ -710,17 +710,17 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	#region menu Help
 
-	public void Help_QuickStart()
+	public void Help_Program()
 	{
 		Au.Util.AHelp.AuHelp("");
 	}
 
-	public void Help_Reference()
+	public void Help_Library()
 	{
 		Au.Util.AHelp.AuHelp("api/");
 	}
 
-	public void Help_ContextHelp()
+	public void Help_Context()
 	{
 		var c = AWnd.ThisThread.FocusedControl;
 		if(c == null) return;

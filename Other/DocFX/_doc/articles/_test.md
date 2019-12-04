@@ -68,9 +68,9 @@ a <p>a `"code"` b</p>
 | one     |         |
 | column  |         | 
 
-http://www.quickmacros.com
+https://www.quickmacros.com
 
-a http://www.quickmacros.com b
+a https://www.quickmacros.com b
 
 <!-- ![Video1](https://www.youtube.com/watch?v=mswPy5bt3TQ) -->
 

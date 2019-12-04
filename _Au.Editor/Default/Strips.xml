@@ -191,9 +191,9 @@
 			<Tools_Options i="options"/>
 		</Menu_Tools>
 		<Menu_Help>
-			<Help_QuickStart/>
-			<Help_Reference i="help"/>
-			<Help_ContextHelp hk="F1"/>
+      <Help_Program/>
+      <Help_Library i="help"/>
+			<Help_Context hk="F1"/>
 			<sep/>
       <Help_Web color="white">
 				<Help_Download/>
@@ -251,7 +251,7 @@
 		<Tools_Options i="options"/>
 	</Tools>
 	<Help>
-		<Help_Reference i="help"/>
+    <Help_Library i="help"/>
 		<!-- note: don't use combo, it adds ~12 ms of startup time -->
 		<Help_Find type="edit" cue="Find help, functions, tools" tt="Enter - search.
 &#xA;Esc - focus the code editor.

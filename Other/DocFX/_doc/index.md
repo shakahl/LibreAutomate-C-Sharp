@@ -4,25 +4,37 @@ uid: index
 
 # Au automation library and editor
 
-Au library contains functions to automate various tasks on Windows. User interface automation, web page automation, launching programs, text processing, hotkeys, autotext, auto-close windows, etc.
+#### Library
+Au library contains functions to automate various tasks on Windows computers.
 
-Au editor is an integrated scripting environment (ISE) for creating and executing automation scripts using the Au automation library which is installed together.
+Some features: Send keys and text to windows. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
 
-Both library and editor are free and open-source.
+Written mostly in C#, it is a .NET library.
 
-The programming language is C#. Both library and editor use .NET Core 3.0 or later.
+Free, open-source, MIT license.
 
-Au editor can be used to create C# programs and libraries for any purpose. Like a mini Visual Studio. You can use the Au library or not.
+#### Editor
+Au editor program is an integrated scripting environment for creating and executing automation scripts that use the Au automation library which is installed together.
 
-Au library is a .NET library and can be used in any program that uses .NET Core 3. Can be used with Visual Studio, which supports more programming languages, debugging, etc.
+The programming language for writing scripts is C#. To use the library with VB.NET and other .NET languages you need Visual Studio.
 
-Both editor and library can run on Windows 7 and later. Also must be installed .NET Core 3.0 or later (Core Runtime x64 and Core Desktop Runtime x64). Editor can run only on 64-bit Windows (32-bit is almost extinct), but can create 32-bit .exe and .dll files.
+Can be used to create C# scripts, programs (.exe) and libraries (.dll) for any purpose, with or without the Au library. Like a mini Visual Studio.
 
-Currently both editor and library are unfinished. Can be used, but many things later can be changed, which can break your scripts, clear settings, etc. Currently the editor program does not have a real name and can be called "Au editor" or "QM3" (version 3 of Quick Macros).
+Free, open-source.
+
+#### Where can run
+Editor and library can run on Windows 7, 8, 8.1, 10. Currently editor is 64-bit only.
+
+Also need .NET Core 3.0 or later. It is a collection of libraries from Microsoft. Install both Core Runtime x64 and Core Desktop Runtime x64. The download and setup is fast and easy.
+
+#### Unfinished
+Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes and functions can be changed in the future, which can break your scripts, clear settings, etc.
+
+Currently the editor program does not have a real name and can be called "Au editor" or "QM3" (version 3 of Quick Macros).
 
 #### Links
-- [Download](http://www.quickmacros.com/au/qm3setup.exe)
+- [Download](https://www.quickmacros.com/au/qm3setup.exe)
 - [Source code at github](https://github.com/qmgindi/Au)
 - [Download .NET Core Runtime x64 and .NET Core Desktop Runtime x64](https://dotnet.microsoft.com/download)
-- [Quick Macros 2 forum](http://www.quickmacros.com/forum). When posting or searching about Au editor or library, use name "QM3" as program name.
+- [Quick Macros 2 forum](https://www.quickmacros.com/forum). When posting or searching about Au editor or library, use name "QM3" as program name.
 - [Email](mailto:support@quickmacros.com)

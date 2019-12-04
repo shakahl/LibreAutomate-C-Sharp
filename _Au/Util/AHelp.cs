@@ -39,7 +39,7 @@ namespace Au.Util
 		/// <param name="topic">Topic file name, like "Au.AAcc.Find" or "AAcc.Find" or "articles/Wildcard expression".</param>
 		public static string AuHelpUrl(string topic)
 		{
-			var url = "http://www.quickmacros.com/au/help/";
+			var url = "https://www.quickmacros.com/au/help/";
 			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
 			return url;
 		}
