@@ -195,11 +195,9 @@
       <Help_Library i="help"/>
 			<Help_Context hk="F1"/>
 			<sep/>
-      <Help_Web color="white">
-				<Help_Download/>
-				<Help_Forum/>
+      <!--<Help_Download/>-->
+      <Help_Forum color="white"/>
 				<Help_Email/>
-			</Help_Web>
 			<sep/>
 			<!--<Help_Donate/>-->
       <Help_About color="white"/>

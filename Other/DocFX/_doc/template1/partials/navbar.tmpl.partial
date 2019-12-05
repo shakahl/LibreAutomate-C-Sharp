@@ -12,7 +12,7 @@
       {{>partials/logo}}
     </div>
     <div class="collapse navbar-collapse" id="navbar">
-  <form class="navbar-form navbar-right" role="search" id="searchbox_011387565783683565298:shm38zddibq" action="http://www.google.com/cse">
+  <form class="navbar-form navbar-right" role="search" id="searchbox_011387565783683565298:shm38zddibq" action="https://www.google.com/cse">
     <input type="hidden" name="cx" value="011387565783683565298:shm38zddibq" >
     <input type="hidden" name="cof" value="FORID:0" >
     <input name="q" type="text" class="googleEdit">

@@ -164,7 +164,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Help_Program), Help_Program);
 		_dict.Add(nameof(Help_Library), Help_Library);
 		_dict.Add(nameof(Help_Context), Help_Context);
-		_dict.Add(nameof(Help_Download), Help_Download);
+		//_dict.Add(nameof(Help_Download), Help_Download);
 		_dict.Add(nameof(Help_Forum), Help_Forum);
 		_dict.Add(nameof(Help_Email), Help_Email);
 		//_dict.Add(nameof(Help_Donate), Help_Donate);
@@ -729,10 +729,10 @@ class CmdHandlers : IGStripManagerCallbacks
 		}
 	}
 
-	public void Help_Download()
-	{
+	//public void Help_Download()
+	//{
 
-	}
+	//}
 
 	public void Help_Forum()
 	{
@@ -741,13 +741,13 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Help_Email()
 	{
-
+		AExec.TryRun("mailto:support@quickmacros.com?subject=" + Program.AppName);
 	}
 
-	public void Help_Donate()
-	{
+	//public void Help_Donate()
+	//{
 
-	}
+	//}
 
 	public void Help_About()
 	{
