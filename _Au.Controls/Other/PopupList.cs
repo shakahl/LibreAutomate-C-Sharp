@@ -379,7 +379,6 @@ namespace Au.Controls
 				this.AutoScaleMode = AutoScaleMode.None;
 				this.StartPosition = FormStartPosition.Manual;
 				this.FormBorderStyle = FormBorderStyle.None;
-				this.Font = Util.AFonts.Regular;
 				this.Text = "Au.PopupList";
 				this.ResumeLayout();
 			}

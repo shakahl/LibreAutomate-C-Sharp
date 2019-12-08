@@ -214,7 +214,6 @@ namespace Au.Controls
 			{
 				_t = t;
 
-				this.Font = Util.AFonts.Regular;
 				this.Text = "Au.InfoWindow";
 			}
 

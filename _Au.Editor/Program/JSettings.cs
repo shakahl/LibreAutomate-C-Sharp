@@ -194,6 +194,8 @@ class ProgramSettings : JSettings
 	public bool output_topmost { get => _output_topmost; set => _Set(ref _output_topmost, value); }
 	bool _output_topmost;
 
+	public CiStyling.TStyles edit_styles { get => _edit_styles ??= new CiStyling.TStyles(); set => _SetNoCmp(ref _edit_styles, value); }
+	CiStyling.TStyles _edit_styles;
 }
 
 /// <summary>

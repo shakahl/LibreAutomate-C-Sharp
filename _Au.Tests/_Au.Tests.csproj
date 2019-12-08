@@ -34,7 +34,7 @@
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe&quot; -script ..\_Au.Tests\Resources\hacker.txt&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
+    <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
   </Target>
 
 </Project>

@@ -21,12 +21,12 @@ using static Au.AStatic;
 namespace Au.Controls
 {
 	/// <summary>
-	/// Can be used as base class for forms when you want to use standard Windows font and correct auto-scaling when high DPI.
+	/// Can be used as base class for forms. Adds some features, eg WS_POPUP style and correct auto-scaling when high DPI.
 	/// </summary>
 	/// <remarks>
 	/// Sets these properties:
-	/// Font = SystemFonts.MessageBoxFont; //usually Segoe UI, 9pt //default font of Form is MS Sans Serif, 8.25pt
 	/// AutoScaleMode = AutoScaleMode.Font;
+	/// ZIsPopup = true;
 	/// 
 	/// The Visual Studio form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', it's OK.
 	/// <note>Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font). Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.</note>
@@ -36,14 +36,15 @@ namespace Au.Controls
 		///
 		public AuForm()
 		{
-			this.Font = Util.AFonts.Regular; //must be before 'AutoScaleMode = ...'
 			this.AutoScaleMode = AutoScaleMode.Font;
+			this.ZIsPopup = true;
 		}
 
 		/// <summary>
 		/// Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
 		/// Set it before creating; later does nothing.
 		/// </summary>
+		[DefaultValue(true)]
 		public bool ZIsPopup { get; set; }
 
 		///

@@ -491,6 +491,17 @@ namespace Au.Types
 			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
 		}
 
+#pragma warning disable 1591 //XML doc
+		public static bool operator ==(ColorInt a, ColorInt b) => a.color == b.color;
+		public static bool operator !=(ColorInt a, ColorInt b) => a.color != b.color;
+
+		public bool Equals(ColorInt other) => other.color == color;
+
+		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
+		public override int GetHashCode() => color;
+		public override string ToString() => "#" + color.ToString("X8");
+#pragma warning restore 1591 //XML doc
+
 		/// <summary>
 		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
 		/// ARGB is used in .NET, GDI+ and HTML/CSS.
@@ -509,7 +520,7 @@ namespace Au.Types
 		/// Unlike Color.GetBrightness, this function gives different weights for red, green and blue components.
 		/// Does not use alpha.
 		/// </remarks>
-		public float Brightness0to255()
+		internal float GetPerceivedBrightness() //FUTURE: make public if really useful
 		{
 			uint u = (uint)color;
 			uint R = u >> 16 & 0xff, G = u >> 8 & 0xff, B = u & 0xff;
@@ -526,23 +537,17 @@ namespace Au.Types
 		/// Calls API <msdn>ColorAdjustLuma</msdn>.
 		/// Does not change hue and saturation. Does not use alpha.
 		/// </remarks>
-		public ColorInt AdjustLuminance(int n, bool totalRange = false)
+		internal ColorInt AdjustLuminance(int n, bool totalRange = false)
 		{
 			uint u = (uint)color;
-			return new ColorInt((int)(Api.ColorAdjustLuma(u & 0xffffff, n, !totalRange) | (u & 0xFF000000)), false);
+			u = Api.ColorAdjustLuma(u & 0xffffff, n, !totalRange) | (u & 0xFF000000);
+			return new ColorInt((int)u, false);
 			//tested: with SwapRB the same.
 		}
-
-#pragma warning disable 1591 //XML doc
-		public static bool operator ==(ColorInt a, ColorInt b) => a.color == b.color;
-		public static bool operator !=(ColorInt a, ColorInt b) => a.color != b.color;
-
-		public bool Equals(ColorInt other) => other.color == color;
-
-		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
-		public override int GetHashCode() => color;
-		public override string ToString() => "#" + color.ToString("X8");
-#pragma warning restore 1591 //XML doc
+		//FUTURE: make public if really useful.
+		//	Or remove.
+		//	Or also add ColorRGBToHLS and ColorHLSToRGB.
+		//	It seems incompatible with Color.GetBrightness etc.
 	}
 
 	[DebuggerStepThrough]

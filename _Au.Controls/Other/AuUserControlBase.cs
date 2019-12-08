@@ -21,17 +21,14 @@ using static Au.AStatic;
 namespace Au.Controls
 {
 	/// <summary>
-	/// Can be used as base class for user controls instead of UserControl when you want to use standard Windows font and correct auto-scaling when high DPI.
+	/// Can be used as base class for user controls instead of UserControl when you want correct auto-scaling when high DPI (AutoScaleMode.Font).
 	/// </summary>
-	/// <remarks>
-	/// More info: <see cref="AuForm"/>.
-	/// </remarks>
+	/// <seealso cref="AuForm"/>
 	public class AuUserControlBase : UserControl
 	{
 		///
 		public AuUserControlBase()
 		{
-			this.Font = Util.AFonts.Regular; //must be before 'AutoScaleMode = ...'
 			this.AutoScaleMode = AutoScaleMode.Font;
 
 			//this.TabStop = false; //no, breaks tabstopping

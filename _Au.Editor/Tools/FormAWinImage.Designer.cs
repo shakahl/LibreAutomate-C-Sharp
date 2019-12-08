@@ -189,7 +189,6 @@
 			this.Controls.Add(this._bCapture);
 			this.Controls.Add(this._bTest);
 			this.Controls.Add(this._bOK);
-			this.ZIsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
 			this.Name = "FormAWinImage";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;

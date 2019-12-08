@@ -52,6 +52,8 @@ class PanelEdit : UserControl
 
 	//public SciControl SC => _activeDoc;
 
+	public IReadOnlyList<SciCode> ZOpenDocs => _docs;
+
 	/// <summary>
 	/// If f is open (active or not), returns its SciCode, else null.
 	/// </summary>

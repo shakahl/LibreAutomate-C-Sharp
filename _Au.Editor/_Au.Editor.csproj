@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants></DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>
@@ -97,22 +97,22 @@
 
   <ItemGroup>
     <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>..\..\..\Downloads\roslyn-master\Microsoft.CodeAnalysis.dll</HintPath>
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>..\..\..\Downloads\roslyn-master\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
-      <HintPath>..\..\..\Downloads\roslyn-master\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
-      <HintPath>..\..\..\Downloads\roslyn-master\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Features">
-      <HintPath>..\..\..\Downloads\roslyn-master\Microsoft.CodeAnalysis.Features.dll</HintPath>
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Features.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.CodeAnalysis.Workspaces">
-      <HintPath>..\..\..\Downloads\roslyn-master\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
     </Reference>
   </ItemGroup>
 
@@ -231,7 +231,7 @@
   </Target>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe&quot; -script ..\_Au.Editor\Resources\hacker.txt&#xD;&#xA;::&quot;C:\Program Files (x86)\Resource Hacker\ResourceHacker.exe&quot; -script ..\_Au.Editor\Resources\hacker32.txt&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
+    <Exec Command="cd $(TargetDir)&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;::&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker32.txt&quot;&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
   </Target>
 
 </Project>

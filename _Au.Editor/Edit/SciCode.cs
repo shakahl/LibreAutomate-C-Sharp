@@ -70,18 +70,7 @@ partial class SciCode : AuScintilla
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
 		Z.MarginWidth(c_marginLineNumbers, 40 * Au.Util.ADpi.BaseDPI / 96);
 
-		Z.StyleFont(STYLE_DEFAULT, "Consolas", 10); //somehow Scintilla actually uses 9 if 10, and 8 if 9
-		Z.StyleClearAll();
-
-		//Z.StyleFont(STYLE_CALLTIP, "Calibri");
-		//Z.StyleBackColor(STYLE_CALLTIP, 0xf8fff0);
-		//Z.StyleForeColor(STYLE_CALLTIP, 0);
-		//Call(SCI_CALLTIPUSESTYLE);
-
 		_InicatorsInit();
-
-		Z.StyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
-		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 
 		if(_fn.IsCodeFile) {
 			//C# interprets Unicode newline characters NEL, LS and PS as newlines. Visual Studio too.
@@ -99,8 +88,18 @@ partial class SciCode : AuScintilla
 			CiStyling.DocHandleCreated(this);
 
 			//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
+
+			//Z.StyleFont(STYLE_CALLTIP, "Calibri");
+			//Z.StyleBackColor(STYLE_CALLTIP, 0xf8fff0);
+			//Z.StyleForeColor(STYLE_CALLTIP, 0);
+			//Call(SCI_CALLTIPUSESTYLE);
 		} else {
+			Z.StyleFont(STYLE_DEFAULT, "Consolas", 9);
+			Z.StyleClearAll();
 		}
+
+		Z.StyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
+		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 
 		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
 

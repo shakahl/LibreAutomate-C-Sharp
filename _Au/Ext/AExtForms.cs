@@ -99,20 +99,22 @@ namespace Au
 		/// Sends API <msdn>EM_SETCUEBANNER</msdn>.
 		/// Does nothing if Multiline.
 		/// </summary>
-		public static void SetCueBanner(this TextBox t, string text, bool showWhenFocused = false)
+		internal static void SetCueBanner(this TextBox t, string text, bool showWhenFocused = false)
 		{
 			Debug.Assert(!t.Multiline);
 			_SetCueBanner(t, Api.EM_SETCUEBANNER, showWhenFocused, text);
 		}
+		//internal because Core added TextBox.PlaceholderText property and possibly will add it to other controls too in the future.
 
 		/// <summary>
 		/// Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
 		/// Sends API <msdn>CB_SETCUEBANNER</msdn>.
 		/// </summary>
-		public static void SetCueBanner(this ComboBox t, string text)
+		internal static void SetCueBanner(this ComboBox t, string text)
 		{
 			_SetCueBanner(t, Api.CB_SETCUEBANNER, false, text);
 		}
+		//internal because Core added TextBox.PlaceholderText property and possibly will add it to other controls too in the future.
 
 		static void _SetCueBanner(Control c, int message, bool showWhenFocused, string text)
 		{

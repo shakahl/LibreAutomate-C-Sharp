@@ -201,17 +201,6 @@ static class EdResources
 /// </summary>
 static class EdStock
 {
-	/// <summary>
-	/// Cached standard font used by most windows and controls.
-	/// On Windows 10 it is "Segoe UI" 9 by default.
-	/// </summary>
-	public static readonly Font FontRegular = Au.Util.AFonts.Regular;
-
-	/// <summary>
-	/// Bold version of <see cref="Regular"/> font.
-	/// </summary>
-	public static readonly Font FontBold = Au.Util.AFonts.OfStyle(FontStyle.Bold);
-
 	static Icon _iconAppNormal, _iconTrayNormal, _iconTrayDisabled, _iconTrayRunning;
 
 	public static Icon IconAppNormal => _iconAppNormal ??= Au.Editor.Resources.Resources.app_normal; //contains icons of multiple sizes

@@ -198,7 +198,6 @@
 		this.Controls.Add(this._bCancel);
 		this.Controls.Add(this._info);
 		this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedDialog;
-		this.ZIsPopup = true;
 		this.MaximizeBox = false;
 		this.MinimizeBox = false;
 		this.ShowIcon = false;

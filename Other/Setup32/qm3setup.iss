@@ -23,7 +23,6 @@ DefaultDirName={pf}\{#MyAppName}
 DefaultGroupName={#MyAppName}
 OutputDir=..\..\_
 OutputBaseFilename=qm3setup
-;SetupIconFile=Q:\app\Au\_Au.Editor\Resources\ico\app_native.ico
 Compression=lzma/normal
 SolidCompression=yes
 ArchitecturesInstallIn64BitMode=x64

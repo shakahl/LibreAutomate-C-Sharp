@@ -181,9 +181,14 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		//NetCoreDB.Create();
 		//NetCoreDB.UpdateIfNeed();
 
-		//var doc = Panels.Editor.ZActiveDoc;
-		//var z = doc.Z;
-		//var s = doc.Text;
+		var doc = Panels.Editor.ZActiveDoc;
+		var Z = doc.Z;
+		var s = doc.Text;
+
+		//Z.StyleFont(STYLE_DEFAULT, "Consolas", s.ToInt()); //somehow Scintilla actually uses 9 if 10, 8 if 9 (but sometimes 9), 11 if 11 (then how to set 10?)
+		//Z.StyleClearAll();
+
+		Program.Settings.edit_styles = Program.Settings.edit_styles;
 
 		//z.Select(false, 300, 295);
 		//z.ReplaceRange(false, 295, 300, "RE");

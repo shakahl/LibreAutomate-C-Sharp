@@ -25,7 +25,7 @@ using static Au.AStatic;
 
 namespace Au.Controls
 {
-	public class ToolStripSpringTextBox :ToolStripTextBox
+	public class ToolStripSpringTextBox : ToolStripTextBox
 	{
 		public ToolStripSpringTextBox()
 		{
@@ -33,18 +33,13 @@ namespace Au.Controls
 		}
 
 		public override Size GetPreferredSize(Size constrainingSize)
-		{
-			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
-		}
+			=> ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
 
-		public void ZSetCueBanner(string text, bool showWhenFocused = false)
-		{
-			var c = this.Control as TextBox;
-			c.SetCueBanner(text, showWhenFocused);
-		}
+		internal void ZSetCueBanner(string text, bool showWhenFocused = false) => (this.Control as TextBox).SetCueBanner(text, showWhenFocused);
+		//internal because Core added TextBox.PlaceholderText property and possibly will add it to other controls too in the future.
 	}
 
-	public class ToolStripSpringComboBox :ToolStripComboBox
+	public class ToolStripSpringComboBox : ToolStripComboBox
 	{
 		public ToolStripSpringComboBox()
 		{
@@ -52,15 +47,10 @@ namespace Au.Controls
 		}
 
 		public override Size GetPreferredSize(Size constrainingSize)
-		{
-			return ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
-		}
+			=> ToolStripSpringBox.CalcPreferredWidth(this, base.GetPreferredSize(constrainingSize));
 
-		public void ZSetCueBanner(string text)
-		{
-			var c = this.Control as ComboBox;
-			c.SetCueBanner(text);
-		}
+		internal void ZSetCueBanner(string text) => (this.Control as ComboBox).SetCueBanner(text);
+		//internal because Core added TextBox.PlaceholderText property and possibly will add it to other controls too in the future.
 	}
 
 	//Contains static function used by ToolStripSpringTextBox, ToolStripSpringComboBox and possibly with other classes derived from ToolStripControlHost.

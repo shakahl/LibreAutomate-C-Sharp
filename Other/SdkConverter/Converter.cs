@@ -30,11 +30,11 @@ namespace SdkConverter
 			x.Convert(
 				//@"Q:\app\Au\Other\SdkConverter\Data\Header.h",
 				@"Q:\app\Au\Other\SdkPreprocess\Cpp.cpp",
-				@"Q:\app\Au\Api\Api.cs", false);
+				@"Q:\app\Au\Other\Api\Api.cs", false);
 #else
-			x.Convert(@"Q:\app\Au\Api\Api-preprocessed-64.cpp", @"Q:\app\Au\Api\Api-64.cs", false);
+			x.Convert(@"Q:\app\Au\Other\Api\Api-preprocessed-64.cpp", @"Q:\app\Au\Other\Api\Api-64.cs", false);
 			x = new Converter();
-			x.Convert(@"Q:\app\Au\Api\Api-preprocessed-32.cpp", @"Q:\app\Au\Api\Api-32.cs", true);
+			x.Convert(@"Q:\app\Au\Other\Api\Api-preprocessed-32.cpp", @"Q:\app\Au\Other\Api\Api-32.cs", true);
 #endif
 		}
 	}
@@ -507,7 +507,7 @@ internal static unsafe class API
 		{
 			//get dll function names extracted from SDK lib files and system dlls
 			_funcDllMap = new Dictionary<string, string>();
-			string[] a = File.ReadAllLines(@"Q:\app\Au\Api\DllMap.txt");
+			string[] a = File.ReadAllLines(@"Q:\app\Au\Other\Api\DllMap.txt");
 			foreach(var s in a) {
 				int i = s.IndexOf(' ');
 				_funcDllMap.Add(s.Substring(0, i), s.Substring(i + 1));
@@ -515,7 +515,7 @@ internal static unsafe class API
 
 			//get GUIDs extracted from SDK lib files
 			_guids = new Dictionary<string, string>();
-			foreach(var s in File.ReadAllLines(@"Q:\app\Au\Api\GuidMap.txt")) {
+			foreach(var s in File.ReadAllLines(@"Q:\app\Au\Other\Api\GuidMap.txt")) {
 				//Print(s);
 				int i = s.IndexOf(' ');
 				string sn = s.Substring(0, i), sd = s.Substring(i + 1), sOld;

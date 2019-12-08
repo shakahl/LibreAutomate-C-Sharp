@@ -34,7 +34,6 @@ partial class FMain : Form
 		Program.MainForm = this;
 
 		this.SuspendLayout();
-		this.Font = EdStock.FontRegular;
 		this.AutoScaleMode = AutoScaleMode.None;
 		this.Icon = EdStock.IconAppNormal;
 		this.StartPosition = FormStartPosition.Manual;

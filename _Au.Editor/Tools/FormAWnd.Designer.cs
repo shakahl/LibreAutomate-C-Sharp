@@ -294,7 +294,6 @@
 			this.Controls.Add(this._bOK);
 			this.Controls.Add(this._cCapture);
 			this.Controls.Add(this.splitContainer1);
-			this.ZIsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 398);
 			this.Name = "FormAWnd";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;

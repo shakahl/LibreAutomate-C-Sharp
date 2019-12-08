@@ -35,75 +35,14 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
-class CiStyling
+partial class CiStyling
 {
-	/// <summary>
-	/// Scintilla style indices of token types.
-	/// </summary>
-	enum _Style
-	{
-		None,
-		Comment,
-		String,
-		StringEscape,
-		Number,
-		Punct,
-		Operator,
-		Keyword,
-		Namespace,
-		Type,
-		Function,
-		Variable,
-		Parameter,
-		Field,
-		Constant,
-		EnumMember,
-		Label,
-		Preprocessor,
-		Excluded,
-		XmlDoc, //tags, CDATA, ///, etc
-		XmlDocText,
-
-		//EndOfFunctionOrType = 30,
-
-		//STYLE_HIDDEN=31,
-		//STYLE_DEFAULT=32,
-	}
-
 	/// <summary>
 	/// Called when opening a document, when handle created but text still not loaded.
 	/// </summary>
 	public static void DocHandleCreated(SciCode doc)
 	{
-		var z = doc.Z;
-
-		z.StyleForeColor((int)_Style.Comment, 0x408000); //green like in VS but towards yellow
-		z.StyleForeColor((int)_Style.String, 0xA07040); //brown, more green
-														//z.StyleForeColor((int)_Style.StringEscape, 0xc0c0c0); //good contrast with 0xA07040, but maybe not with white background
-														//z.StyleForeColor((int)_Style.StringEscape, 0xc0e000); //light yellow-green. Too vivid.
-		z.StyleForeColor((int)_Style.StringEscape, 0xB776FB); //pink-purple like in VS
-		z.StyleForeColor((int)_Style.Number, 0x804000); //brown, more red
-														//z.StyleForeColor((int)_Style.Punct, 0x0); //black
-		z.StyleForeColor((int)_Style.Operator, 0x0000ff); //blue like keyword
-		z.StyleForeColor((int)_Style.Keyword, 0x0000ff); //blue like in VS
-		z.StyleForeColor((int)_Style.Namespace, 0x808000); //dark yellow
-		z.StyleForeColor((int)_Style.Type, 0x0080c0); //like in VS but more blue
-		z.StyleBold((int)_Style.Function, true); //z.StyleForeColor((int)_Style.Function, 0x0);
-		z.StyleForeColor((int)_Style.Variable, 0x204020); //dark green gray
-		z.StyleForeColor((int)_Style.Parameter, 0x204020); //like variable
-		z.StyleForeColor((int)_Style.Field, 0x204020); //like variable
-		z.StyleForeColor((int)_Style.Constant, 0x204020); //like variable
-		z.StyleForeColor((int)_Style.EnumMember, 0x204020); //like variable
-		z.StyleForeColor((int)_Style.Label, 0xff00ff); //magenta
-		z.StyleForeColor((int)_Style.Preprocessor, 0xff8000); //orange
-		z.StyleForeColor((int)_Style.Excluded, 0x808080); //gray
-		z.StyleForeColor((int)_Style.XmlDoc, 0x808080); //gray
-		z.StyleForeColor((int)_Style.XmlDocText, 0x408000); //green like comment
-
-		//CONSIDER: at the end of a function/class/etc definition add a link or dwell-popup to add new function or class etc below. Or better in context menu.
-		//z.StyleHotspot((int)_Style.EndOfFunctionOrType, true);
-
-		z.StyleForeColor(STYLE_LINENUMBER, 0x808080);
+		Program.Settings.edit_styles.ToScintilla(doc);
 
 		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE);
 		doc.Call(SCI_MARKERSETBACK, SciCode.c_markerUnderline, 0xe0e0e0);
@@ -293,68 +232,68 @@ class CiStyling
 
 		foreach(var v in a) {
 			//Print(v.ClassificationType, v.TextSpan);
-			_Style style = v.ClassificationType switch
+			EToken style = v.ClassificationType switch
 			{
 				#region
-				ClassificationTypeNames.ClassName => _Style.Type,
-				ClassificationTypeNames.Comment => _Style.Comment,
-				ClassificationTypeNames.ConstantName => _Style.Constant,
-				ClassificationTypeNames.ControlKeyword => _Style.Keyword,
-				ClassificationTypeNames.DelegateName => _Style.Type,
-				ClassificationTypeNames.EnumMemberName => _Style.EnumMember,
-				ClassificationTypeNames.EnumName => _Style.Type,
-				ClassificationTypeNames.EventName => _Style.Function,
-				ClassificationTypeNames.ExcludedCode => _Style.Excluded,
-				ClassificationTypeNames.ExtensionMethodName => _Style.Function,
-				ClassificationTypeNames.FieldName => _Style.Field,
+				ClassificationTypeNames.ClassName => EToken.Type,
+				ClassificationTypeNames.Comment => EToken.Comment,
+				ClassificationTypeNames.ConstantName => EToken.Constant,
+				ClassificationTypeNames.ControlKeyword => EToken.Keyword,
+				ClassificationTypeNames.DelegateName => EToken.Type,
+				ClassificationTypeNames.EnumMemberName => EToken.EnumMember,
+				ClassificationTypeNames.EnumName => EToken.Type,
+				ClassificationTypeNames.EventName => EToken.Function,
+				ClassificationTypeNames.ExcludedCode => EToken.Excluded,
+				ClassificationTypeNames.ExtensionMethodName => EToken.Function,
+				ClassificationTypeNames.FieldName => EToken.Field,
 				ClassificationTypeNames.Identifier => _TryResolveMethod(),
-				ClassificationTypeNames.InterfaceName => _Style.Type,
-				ClassificationTypeNames.Keyword => _Style.Keyword,
-				ClassificationTypeNames.LabelName => _Style.Label,
-				ClassificationTypeNames.LocalName => _Style.Variable,
-				ClassificationTypeNames.MethodName => _Style.Function,
-				ClassificationTypeNames.NamespaceName => _Style.Namespace,
-				ClassificationTypeNames.NumericLiteral => _Style.Number,
-				ClassificationTypeNames.Operator => _Style.Operator,
-				ClassificationTypeNames.OperatorOverloaded => _Style.Function,
-				ClassificationTypeNames.ParameterName => _Style.Parameter,
-				ClassificationTypeNames.PreprocessorKeyword => _Style.Preprocessor,
-				//ClassificationTypeNames.PreprocessorText => _Style.None,
-				ClassificationTypeNames.PropertyName => _Style.Function,
-				ClassificationTypeNames.Punctuation => _Style.Punct,
-				ClassificationTypeNames.StringEscapeCharacter => _Style.StringEscape,
-				ClassificationTypeNames.StringLiteral => _Style.String,
-				ClassificationTypeNames.StructName => _Style.Type,
-				//ClassificationTypeNames.Text => _Style.None,
-				ClassificationTypeNames.VerbatimStringLiteral => _Style.String,
-				ClassificationTypeNames.TypeParameterName => _Style.Type,
-				//ClassificationTypeNames.WhiteSpace => _Style.None,
+				ClassificationTypeNames.InterfaceName => EToken.Type,
+				ClassificationTypeNames.Keyword => EToken.Keyword,
+				ClassificationTypeNames.LabelName => EToken.Label,
+				ClassificationTypeNames.LocalName => EToken.LocalVar,
+				ClassificationTypeNames.MethodName => EToken.Function,
+				ClassificationTypeNames.NamespaceName => EToken.Namespace,
+				ClassificationTypeNames.NumericLiteral => EToken.Number,
+				ClassificationTypeNames.Operator => EToken.Operator,
+				ClassificationTypeNames.OperatorOverloaded => EToken.Function,
+				ClassificationTypeNames.ParameterName => EToken.Parameter,
+				ClassificationTypeNames.PreprocessorKeyword => EToken.Preprocessor,
+				//ClassificationTypeNames.PreprocessorText => EStyle.None,
+				ClassificationTypeNames.PropertyName => EToken.Function,
+				ClassificationTypeNames.Punctuation => EToken.Punctuation,
+				ClassificationTypeNames.StringEscapeCharacter => EToken.StringEscape,
+				ClassificationTypeNames.StringLiteral => EToken.String,
+				ClassificationTypeNames.StructName => EToken.Type,
+				//ClassificationTypeNames.Text => EStyle.None,
+				ClassificationTypeNames.VerbatimStringLiteral => EToken.String,
+				ClassificationTypeNames.TypeParameterName => EToken.Type,
+				//ClassificationTypeNames.WhiteSpace => EStyle.None,
 
-				ClassificationTypeNames.XmlDocCommentAttributeName => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentAttributeQuotes => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentAttributeValue => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentCDataSection => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentComment => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentDelimiter => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentEntityReference => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentName => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentProcessingInstruction => _Style.XmlDoc,
-				ClassificationTypeNames.XmlDocCommentText => _Style.XmlDocText,
+				ClassificationTypeNames.XmlDocCommentText => EToken.XmlDocText,
+				ClassificationTypeNames.XmlDocCommentAttributeName => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentAttributeQuotes => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentAttributeValue => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentCDataSection => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentComment => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentDelimiter => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentEntityReference => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentName => EToken.XmlDocTag,
+				ClassificationTypeNames.XmlDocCommentProcessingInstruction => EToken.XmlDocTag,
 
 				//FUTURE: Regex. But how to apply it to ARegex?
-				//ClassificationTypeNames. => _Style.,
-				_ => _Style.None
+				//ClassificationTypeNames. => EStyle.,
+				_ => EToken.None
 				#endregion
 			};
 
-			_Style _TryResolveMethod()
+			EToken _TryResolveMethod()
 			{ //ClassificationTypeNames.Identifier. Possibly method name when there are errors in arguments.
 				var node = semo.Root.FindNode(v.TextSpan);
-				if(node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return _Style.Function; //not too slow
-				return _Style.None;
+				if(node?.Parent is InvocationExpressionSyntax && !semo.GetMemberGroup(node).IsDefaultOrEmpty) return EToken.Function; //not too slow
+				return EToken.None;
 			}
 
-			if(style == _Style.None) {
+			if(style == EToken.None) {
 #if DEBUG
 				switch(v.ClassificationType) {
 				case ClassificationTypeNames.Identifier: break;

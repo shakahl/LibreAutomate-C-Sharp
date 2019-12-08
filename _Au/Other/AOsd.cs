@@ -793,8 +793,9 @@ namespace Au
 
 		/// <summary>Default font for <see cref="ShowText"/> and <b>AOsd</b>. Default: <b>SystemFonts.MessageBoxFont</b> of size 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
+		/// <remarks>The font object is cached, don't dispose.</remarks>
 		public static Font DefaultFont { get => s_defaultFont; set => s_defaultFont = value ?? throw new ArgumentNullException(); }
-		static Font s_defaultFont = new Font(Util.AFonts.LibRegularCached.FontFamily, 12);
+		static Font s_defaultFont = Util.AFonts.OfSize(12);
 
 		/// <summary>Default text color for <see cref="ShowText"/> and <b>AOsd</b>. Default: 0xFF404040 (dark gray).</summary>
 		public static ColorInt DefaultTextColor { get; set; } = 0xFF404040;

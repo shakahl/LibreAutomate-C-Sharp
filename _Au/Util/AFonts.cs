@@ -34,24 +34,44 @@ namespace Au.Util
 
 		//static AFonts()
 		//{
-		//	SystemEvents.UserPreferenceChanged += (unu, sed) => LibRegularCached = SystemFonts.MessageBoxFont; //never mind
+		//	SystemEvents.UserPreferenceChanged += (unu, sed) => _regularCached = SystemFonts.MessageBoxFont; //never mind
 		//}
 
 		/// <summary>
 		/// The cached font from which are cloned other fonts.
-		/// Use carefully, to avoid accidental disposing; don't use for Font objects that can be accessed by any code.
+		/// Use carefully, to avoid accidental disposing.
 		/// </summary>
-		internal static Font LibRegularCached = SystemFonts.MessageBoxFont; //>200 mcs
+		static Font _regularCached = SystemFonts.MessageBoxFont; //>200 mcs
 
 		/// <summary>
 		/// Standard font used by most windows and controls.
 		/// On Windows 10 it is "Segoe UI" 9 by default.
+		/// Gets new object each time.
 		/// </summary>
-		public static Font Regular => LibRegularCached.Clone() as Font; //5-22 mcs
+		public static Font Regular => _regularCached.Clone() as Font; //5-22 mcs
 
 		/// <summary>
-		/// Bold, italic, etc version of <see cref="Regular"/> font.
+		/// Bold version of <see cref="Regular"/> font.
+		/// Gets new object each time.
 		/// </summary>
-		public static Font OfStyle(FontStyle style) => new Font(LibRegularCached, style);
+		public static Font Bold => new Font(_regularCached, FontStyle.Bold);
+
+		/// <summary>
+		/// Different size version of <see cref="Regular"/> font.
+		/// Gets new object each time.
+		/// </summary>
+		public static Font OfSize(int size) => new Font(_regularCached.FontFamily, size);
+
+		/// <summary>
+		/// Different style version of <see cref="Regular"/> font.
+		/// Gets new object each time.
+		/// </summary>
+		public static Font OfStyle(FontStyle style) => new Font(_regularCached, style);
+
+		/// <summary>
+		/// Different style and size version of <see cref="Regular"/> font.
+		/// Gets new object each time.
+		/// </summary>
+		public static Font OfSizeStyle(int size, FontStyle style) => new Font(_regularCached.FontFamily, size, style);
 	}
 }

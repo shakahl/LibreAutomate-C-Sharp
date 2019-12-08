@@ -273,7 +273,6 @@ namespace Au.Tools
 			this.Controls.Add(this._bOK);
 			this.Controls.Add(this._cCapture);
 			this.Controls.Add(this.splitContainer1);
-			this.ZIsPopup = true;
 			this.MinimumSize = new System.Drawing.Size(500, 400);
 			this.Name = "FormAAcc";
 			this.StartPosition = System.Windows.Forms.FormStartPosition.Manual;

@@ -10,13 +10,13 @@ using System.IO;
 //Download Roslyn solution to Q:\Downloads\roslyn-master.
 //Run this project. It modifies Roslyn solution files.
 //	Currently does not add the InternalsVisible.cs files; will need to add them manually or edit this project.
-//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles other 5. Copies the 6 dlls to Q:\Downloads\roslyn-master.
-//In _Au.Editor: Add references to the 6 dlls in Q:\Downloads\roslyn-master folder. On build will copy to _.
+//In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles other 5. Copies the 6 dlls to Q:\app\Au\Other\CompilerDlls.
+//In _Au.Editor: Add references to the 6 dlls that are in folder Q:\app\Au\Other\CompilerDlls. On build will copy to _.
 //	VS will detect when the dlls modified when building Roslyn.
 //To get other dlls:
 //	Install or update Microsoft.CodeAnalysis.Features from NuGet in this project.
 //	Optionally remove the main 6 references, to reduce noise in Object Browser etc.
-//	Copy these dlls from C:\Users\G\.nuget\packages to _ (don't remember, maybe to Q:\Downloads\roslyn-master):
+//	Copy these dlls from C:\Users\G\.nuget\packages to _ (don't remember, maybe to Q:\app\Au\Other\CompilerDlls):
 //		Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll
 //		Microsoft.DiaSymReader.dll
 //		System.Composition.AttributedModel.dll
@@ -83,7 +83,7 @@ namespace CompilerDlls
 
 			var project = @"</Project>";
 			var copy = @"  <Target Name=""PostBuild"" AfterTargets=""PostBuildEvent"">
-    <Exec Command=""copy &quot;$(TargetPath)&quot; &quot;Q:\Downloads\roslyn-master\$(TargetFileName)&quot; /y"" />
+    <Exec Command=""copy &quot;$(TargetPath)&quot; &quot;Q:\app\Au\Other\CompilerDlls\$(TargetFileName)&quot; /y"" />
   </Target>
 ";
 			_Mod(@"Features\CSharp\Portable\Microsoft.CodeAnalysis.CSharp.Features.csproj", (project, copy, -1));
@@ -141,17 +141,5 @@ namespace CompilerDlls
 	Please compile project Microsoft.CodeAnalysis.CSharp.Features in Roslyn solution.
 	It will compile 6 projects.");
 		}
-
-		//static void CopyDlls()
-		//{
-		//	string d1 = @"Q:\Downloads\roslyn-master\";
-		//	string d2 = Path.GetFullPath(@"Q:\app\Au\_\");
-
-		//	foreach(var f in new DirectoryInfo(d1).EnumerateFiles("*.dll")) {
-		//		var s = f.Name;
-		//		Console.WriteLine(s);
-		//		File.Copy(d1 + s, d2 + s, true);
-		//	}
-		//}
 	}
 }

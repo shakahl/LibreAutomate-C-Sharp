@@ -626,7 +626,7 @@ namespace Au.Controls
 		}
 		static Dictionary<int, string> s_debugPM;
 
-		[Browsable(false)]
+		[Browsable(false), DefaultValue(false)]
 		public bool ZDebugPrintMessages { get; set; }
 #endif
 

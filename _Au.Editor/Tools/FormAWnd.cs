@@ -29,6 +29,8 @@ using Aga.Controls.Tree.NodeControls;
 //FUTURE: init from code string. Cannot use Roslyn because of its slowness.
 //SHOULDDO: try to find and select control in current tree when captured from same window. Like in acc tool.
 
+//TODO: Wait(t, true|false, ...)
+
 namespace Au.Tools
 {
 	partial class FormAWnd : ToolForm
