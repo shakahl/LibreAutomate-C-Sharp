@@ -21,4 +21,14 @@
     <DocumentationFile></DocumentationFile>
   </PropertyGroup>
 
+  <ItemGroup>
+    <None Remove="HtmlRenderer.xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="HtmlRenderer.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
 </Project>

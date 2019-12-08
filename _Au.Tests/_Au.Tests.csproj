@@ -29,10 +29,6 @@
     <ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
   </ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="$(TargetDir)kill_Au.Tests.exe" />
-  </Target>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="cd &quot;$(TargetDir)&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
   </Target>

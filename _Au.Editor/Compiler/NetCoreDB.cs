@@ -23,8 +23,10 @@ using static Au.AStatic;
 static class NetCoreDB
 {
 	/// <summary>
-	/// Creates SQLite databases containing design-time assemblies and XML documentation files of all .NET Core runtimes of installed .NET Core SDKs.
-	/// Creates with names ref.version.db (eg ref.3.0.0.db) and doc.version.db.
+	/// Creates SQLite databases containing design-time assemblies and XML documentation files of a .NET Core runtime. The SDK must be installed.
+	/// Shows a list dialog.
+	///		If selected All, creates for all runtime versions, with names ref.version.db (eg ref.3.0.0.db) and doc.version.db, in AFolders.ThisAppBS.
+	///		Else creates only for the selected runtime version, with names ref.db and doc.db, in Q:\app\Au\_Au.Editor. VS will copy them when building editor project.
 	/// We ship and at run time load databases of single version, named ref.db and doc.db. In the future should allow to download and use multiple versions.
 	/// Also this function allows users to create databases from SDKs installed on their PC, but currently this feature is not exposed. Would need to add UI and exception handling.
 	/// ref.db contains dlls from 'dotnet\packs' folder. They contain only metadata of public API, not all code like dlls in the 'dotnet\shared' folder.
@@ -42,14 +44,24 @@ static class NetCoreDB
 		Cursor.Current = Cursors.WaitCursor;
 		if(0 == AFolders.NetRuntimeBS.RegexReplace(@"(?i)\\shared\\(Microsoft\.NETCore\.App)\\.+", @"\packs\$1.Ref", out var refDir, 1)) throw new AuException();
 		//Print(refDir);
+		var a = new List<string>();
 		foreach(var f in AFile.EnumDirectory(refDir, FEFlags.UseRawPath)) { //for each version
 			if(!f.IsDirectory) continue;
-			_Create(refDir, f.Name);
+			a.Add(f.Name);
+		}
+		a.Add("All");
+		int i = ADialog.ShowList(a, "Create database", "For runtime") - 1;
+		if(i < 0) return;
+		int n = a.Count - 1;
+		if(i < n) {
+			_Create(refDir, a[i], false);
+		} else {
+			for(i = 0; i < n; i++) _Create(refDir, a[i], true);
 		}
 		Print("Done.");
 	}
 
-	static void _Create(string refDir, string version)
+	static void _Create(string refDir, string version, bool all)
 	{
 		var dir1 = refDir + @"\" + version + @"\ref\netcoreapp" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1);
 		//Print(dir1, AFile.ExistsAsDirectory(dir1));
@@ -58,13 +70,14 @@ static class NetCoreDB
 		//Print(dir2, AFile.ExistsAsDirectory(dir2));
 		if(!AFile.ExistsAsDirectory(dir2, true)) throw new DirectoryNotFoundException("Not found: " + dir2);
 
+		if(!all) version = null;
 		_CreateRef(version, dir1, dir2);
 		_CreateDoc(version, dir1, dir2);
 	}
 
 	static void _CreateRef(string version, string dir1, string dir2)
 	{
-		var dbPath = AFolders.ThisAppBS + "ref." + version + ".db";
+		var dbPath = version != null ? AFolders.ThisAppBS + "ref." + version + ".db" : @"Q:\app\Au\_Au.Editor\ref.db";
 		AFile.Delete(dbPath);
 		using var d = new ASqlite(dbPath);
 		using var trans = d.Transaction();
@@ -103,7 +116,7 @@ static class NetCoreDB
 
 	static void _CreateDoc(string version, string dir1, string dir2)
 	{
-		var dbPath = AFolders.ThisAppBS + "doc." + version + ".db";
+		var dbPath = version != null ? AFolders.ThisAppBS + "doc." + version + ".db" : @"Q:\app\Au\_Au.Editor\doc.db";
 		AFile.Delete(dbPath);
 		using var d = new ASqlite(dbPath, sql: "PRAGMA page_size = 8192;"); //8192 makes file smaller by 2-3 MB.
 		using var trans = d.Transaction();

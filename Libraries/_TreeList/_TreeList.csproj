@@ -28,6 +28,7 @@
     <None Remove="Resources\plus.bmp" />
     <None Remove="Resources\uncheck.bmp" />
     <None Remove="Resources\unknown.bmp" />
+    <None Remove="TreeList.xml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -40,6 +41,9 @@
     <Content Include="Resources\plus.bmp" />
     <Content Include="Resources\uncheck.bmp" />
     <Content Include="Resources\unknown.bmp" />
+    <Content Include="TreeList.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
 
   <ItemGroup>

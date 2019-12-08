@@ -475,7 +475,6 @@
 			this._sciStyles.Name = "_sciStyles";
 			this._sciStyles.Size = new System.Drawing.Size(160, 252);
 			this._sciStyles.TabIndex = 4;
-			this._sciStyles.ZDebugPrintMessages = false;
 			this._sciStyles.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this._sciStyles.ZInitReadOnlyAlways = true;
 			// 
