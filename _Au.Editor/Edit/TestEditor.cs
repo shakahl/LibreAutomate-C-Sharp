@@ -178,8 +178,8 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 		//AOutput.Clear();
 
-		NetCoreDB.Create();
-		//NetCoreDB.UpdateIfNeed();
+		//EdDatabases.CreateRefAndDoc();
+		//EdDatabases.CreateWinapi();
 
 		var doc = Panels.Editor.ZActiveDoc;
 		var Z = doc.Z;

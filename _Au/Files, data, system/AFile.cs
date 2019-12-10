@@ -929,13 +929,12 @@ namespace Au
 					ec = ALastError.Code;
 				}
 			}
-			if(ec == Api.ERROR_DIR_NOT_EMPTY /*&& Api.PathIsDirectoryEmpty(path)*/) {
-				//see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
-				for(int i = 0; i < 50; i++) {
-					ADebug.PrintIf(i > 0, "ERROR_DIR_NOT_EMPTY when empty. Retry " + (i + 1));
-					Thread.Sleep(15);
-					if(Api.RemoveDirectory(path)) return 0;
-				}
+			for(int i = 1; (ec == Api.ERROR_SHARING_VIOLATION || ec == Api.ERROR_LOCK_VIOLATION || ec == Api.ERROR_DIR_NOT_EMPTY) && i <= 50; i++) {
+				//ERROR_DIR_NOT_EMPTY: see comments above about Explorer. Also fails in other cases, eg when a file was opened in a web browser.
+				string es = ec == Api.ERROR_DIR_NOT_EMPTY ? "ERROR_DIR_NOT_EMPTY when empty. Retry " : "ERROR_SHARING_VIOLATION. Retry ";
+				ADebug.PrintIf(i > 1, es + i.ToString());
+				Thread.Sleep(15);
+				if(dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 				ec = ALastError.Code;
 			}
 			if(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;

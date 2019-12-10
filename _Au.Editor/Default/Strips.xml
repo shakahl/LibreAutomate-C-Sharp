@@ -127,6 +127,8 @@
 			<sep/>
       <Code_Regex hkText="Ctrl+Space in string"/>
       <Code_Keys hkText="Ctrl+Space in string"/>
+			<sep/>
+      <Code_WindowsAPI/>
     </Menu_Code>
     <Menu_Run>
 			<Run_Run i="run"/>

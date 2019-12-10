@@ -20,7 +20,7 @@ using Au.Types;
 using static Au.AStatic;
 using Au.Controls;
 
-class FFindOptions : AuForm
+class FFindOptions : DialogForm
 {
 	public FFindOptions()
 	{

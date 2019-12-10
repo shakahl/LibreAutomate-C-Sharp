@@ -100,13 +100,28 @@ class JSettings
 	public void SaveLater() => _save = true;
 
 	/// <summary>
-	/// Sets a property value and will save later if need.
-	/// If !_loaded, sets prop = value. Else if !value.Equals(prop), sets prop = value and _save = true.
-	/// Use for simple IEquatable types, eg string, int, bool.
+	/// Sets a string property value and will save later if need.
+	/// If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
 	/// </summary>
 	/// <param name="prop">Property.</param>
 	/// <param name="value">New value.</param>
-	protected void _Set<T>(ref T prop, T value) where T : IEquatable<T>
+	protected void _Set(ref string prop, string value)
+	{
+		if(!_loaded) {
+			prop = value;
+		} else if(value != prop) {
+			prop = value;
+			_save = true;
+		}
+	}
+
+	/// <summary>
+	/// Sets an int/bool/etc/struct property value and will save later if need.
+	/// If !_loaded, sets prop = value. Else if !value.Equals(prop), sets prop = value and _save = true.
+	/// </summary>
+	/// <param name="prop">Property.</param>
+	/// <param name="value">New value.</param>
+	protected void _Set<T>(ref T prop, T value) where T : struct, IEquatable<T>
 	{
 		if(!_loaded) {
 			prop = value;
@@ -118,7 +133,7 @@ class JSettings
 
 	/// <summary>
 	/// Sets a property value and will save later if need.
-	/// Unlike <see cref="_Set"/>, always sets _save = true if _loaded.
+	/// Unlike <b>_Set</b>, always sets _save = true if _loaded.
 	/// Use for non-IEquatable types, eg arrays.
 	/// </summary>
 	/// <param name="prop">Property.</param>
@@ -196,6 +211,15 @@ class ProgramSettings : JSettings
 
 	public CiStyling.TStyles edit_styles { get => _edit_styles ??= new CiStyling.TStyles(); set => _SetNoCmp(ref _edit_styles, value); }
 	CiStyling.TStyles _edit_styles;
+
+	public string db_copy_ref { get => _db_copy_ref; set => _Set(ref _db_copy_ref, value); }
+	string _db_copy_ref;
+
+	public string db_copy_doc { get => _db_copy_doc; set => _Set(ref _db_copy_doc, value); }
+	string _db_copy_doc;
+
+	public string db_copy_winapi { get => _db_winapi; set => _Set(ref _db_winapi, value); }
+	string _db_winapi;
 }
 
 /// <summary>

@@ -181,23 +181,6 @@ static class Program
 		}
 		return true;
 	}
-
-	//public static void Test()
-	//{
-	//	//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tv();
-	//	//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb();
-	//	//ETest.DevTools.CreatePngImagelistFileFromIconFiles_il_tb_big();
-
-	//	//RunUac.Test();
-
-	//	//AOutput.QM2.UseQM2 = true; AOutput.Clear();
-	//	//using(var h = AHookWin.Keyboard(k => {
-	//	//	Print($"{k.Key}, {!k.IsUp}");
-	//	//	if(k.Key == KKey.Up && !k.IsUp) 400.ms();
-
-	//	//	return false;
-	//	//})) ADialog.Show("hook");
-	//}
 }
 
 enum EProgramState

@@ -27,7 +27,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
-//using Microsoft.CodeAnalysis.Shared.Extensions;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 
 class CiErrors
 {
@@ -53,14 +53,14 @@ class CiErrors
 				if(d.IsSuppressed) continue;
 				var loc = d.Location; if(!loc.IsInSource) continue;
 				var span = loc.SourceSpan;
-				//Print(d.Severity, span);
+				//Print(d.Severity, span, d.Id);
 				int start = span.Start, end = span.End;
 				if(end == start) {
 					if(end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
 					else if(start > 0) start--;
 				}
-				if(d.Severity == DiagnosticSeverity.Hidden && d.Id == "CS8019") { //unnecessary using directive
-					if(0 != code.Eq(start + 6, false, "Au;", "Au.Types;", "static Au.AStatic;", "System;", "System.Collections.Generic;")) continue; //default usings
+				if(d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019) { //unnecessary using directive
+					if(0 != code.Eq(start + 6, false, s_defaultUsings)) continue;
 				}
 				if(!has) doc._InicatorsDiag(has = true);
 				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
@@ -69,6 +69,7 @@ class CiErrors
 
 				if(d.Severity == DiagnosticSeverity.Error) {
 					switch((ErrorCode)d.Code) {
+					case ErrorCode.ERR_NameNotInContext:
 					case ErrorCode.ERR_SingleTypeNameNotFound:
 					case ErrorCode.ERR_NoSuchMemberOrExtension:
 					case ErrorCode.ERR_NoSuchMemberOrExtensionNeedUsing: //all these end with (are you missing a using directive...
@@ -97,6 +98,8 @@ class CiErrors
 			_codeDiag = null;
 		}
 	}
+
+	static readonly string[] s_defaultUsings = new string[] { "Au;", "Au.Types;", "static Au.AStatic;", "System;", "System.Collections.Generic;" };
 
 	void _Strings(SemanticModel semo, in CodeInfo.Context cd, int start16, int end16)
 	{
@@ -175,14 +178,18 @@ class CiErrors
 
 			if(_semo != null && d.Severity == DiagnosticSeverity.Error) {
 				//Print(d.Code, d.Id);
+				bool extMethod = false;
 				var ec = (ErrorCode)d.Code;
 				switch(ec) {
-				case ErrorCode.ERR_SingleTypeNameNotFound:
 				case ErrorCode.ERR_NoSuchMemberOrExtension:
 				case ErrorCode.ERR_NoSuchMemberOrExtensionNeedUsing: //all these end with (are you missing a using directive...
+					extMethod = true;
+					goto case ErrorCode.ERR_NameNotInContext;
+				case ErrorCode.ERR_NameNotInContext:
+				case ErrorCode.ERR_SingleTypeNameNotFound:
 					if(ec == ecPrev) continue; //probably "not found 'AbcAttribute'" followed by "not found 'Abc'"
 					ecPrev = ec;
-					_Usings(b, v, doc);
+					_UsingsEtc(b, v, doc, extMethod);
 					break;
 				}
 			}
@@ -212,10 +219,9 @@ class CiErrors
 	//	//_popupHtml?.Hide(doc);
 	//}
 
-	void _Usings(StringBuilder b, in (Diagnostic d, int start, int end) v, SciCode doc)
+	void _UsingsEtc(StringBuilder b, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod)
 	{
 		string code = doc.Text;
-		bool extMethod = v.d.Code != (int)ErrorCode.ERR_SingleTypeNameNotFound;
 		bool isGeneric = false;
 		int end2 = code.IndexOf('<', v.start, v.end - v.start);
 		if(end2 < 0) end2 = v.end; else isGeneric = true;
@@ -232,26 +238,6 @@ class CiErrors
 		//p1.Write();
 		//p1.NW();
 
-		if(usings.Count > 0) {
-			var sstart = doc.Pos8(v.start).ToString();
-			b.Append("\r\n<div>Add using ");
-			for(int i = 0; i < usings.Count; i++) {
-				var u = usings[i];
-				if(i > 0) b.Append(" or ");
-				b.AppendFormat("<a href='! {0}{1}'>{1}</a>", sstart, u);
-			}
-			b.Append("</div>");
-			if(!extMethod) {
-				b.Append("\r\n<div>Or prefix ");
-				for(int i = 0; i < usings.Count; i++) {
-					var u = usings[i];
-					if(i > 0) b.Append(" or ");
-					b.AppendFormat("<a href='!!{0}{1}'>{1}</a>", sstart, u);
-				}
-				b.Append("</div>");
-			}
-		}
-
 		//shoulddo: async, because quite slow. Or use AssemblyMetadata.CachedSymbols (internal), it's faster except first time.
 		void _EnumNamespace(INamespaceSymbol ns)
 		{
@@ -265,12 +251,13 @@ class CiErrors
 					_EnumNamespace(ins);
 					stack.RemoveAt(stack.Count - 1);
 				} else if(!found) { //if found, continue to search in nested namespaces
+					ISymbol sym = nt;
 					if(extMethod) {
 						var its = nt as INamedTypeSymbol;
 						//p1.First();
 						if(its.IsStatic && its.MightContainExtensionMethods) { //fast, but without IsStatic slow first time
 							foreach(var v in nt.GetMembers()) { //fast; slightly slower than nt.MemberNames.Contains(errName) which gets member types etc too
-								if(v is IMethodSymbol && (found = v.Name == errName)) break;
+								if(v is IMethodSymbol && (found = v.Name == errName)) { sym = v; break; }
 							}
 						}
 						//p1.Next();
@@ -281,24 +268,55 @@ class CiErrors
 						var its = nt as INamedTypeSymbol;
 						found = its.IsGenericType == isGeneric;
 					}
+					if(found) found = sym.IsAccessibleWithin(comp.Assembly);
 					if(found) usings.Add(string.Join('.', stack));
 				}
 			}
+		}
+
+		if(usings.Count > 0) {
+			var sstart = doc.Pos8(v.start).ToString();
+			b.Append("\r\n<div>Add using ");
+			for(int i = 0; i < usings.Count; i++) {
+				var u = usings[i];
+				if(i > 0) b.Append(" or ");
+				b.AppendFormat("<a href='!u{0}{1}'>{1}</a>", sstart, u);
+			}
+			b.Append("</div>");
+			if(!extMethod) {
+				b.Append("\r\n<div>Or prefix ");
+				for(int i = 0; i < usings.Count; i++) {
+					var u = usings[i];
+					if(i > 0) b.Append(" or ");
+					b.AppendFormat("<a href='!p{0}{1}'>{1}</a>", sstart, u);
+				}
+				b.Append("</div>");
+			}
+		} else {
+			b.Append("\r\n<div><a href='!r'>Add assembly reference...</a></div>");
+			if(!(extMethod | isGeneric | isAttribute)) b.AppendFormat("\r\n<div><a href='!w{0}'>Find Windows API...</a></div>", errName);
 		}
 	}
 
 	public void LinkClicked(string s)
 	{
 		_popupHtml.Hide();
-		bool prefix = s[1] == '!';
-		int pos8 = s.ToInt(2, out int i);
-		s = s[i..];
-		var doc = Panels.Editor.ZActiveDoc;
-		EraseIndicatorsInLine(doc, pos8);
-		if(prefix) { //prefix namespace
-			doc.Z.InsertText(false, pos8, s + ".", addUndoPoint: true);
-		} else {
-			Au.Tools.TUtil.InsertUsingDirectiveInEditor(s);
+		char action = s[1];
+		if(action == 'u' || action == 'p') { //add 'using', prefix namespace
+			int pos8 = s.ToInt(2, out int i);
+			s = s[i..];
+			var doc = Panels.Editor.ZActiveDoc;
+			EraseIndicatorsInLine(doc, pos8);
+			if(action == 'p') {
+				doc.Z.InsertText(false, pos8, s + ".", addUndoPoint: true);
+			} else {
+				Au.Tools.TUtil.InsertUsingDirectiveInEditor(s);
+			}
+		} else if(action == 'w') { //Windows API
+			s = s[2..];
+			FormWinapi.ZShowDialog(s);
+		} else if(action == 'r') { //Add reference
+			Strips.Cmd.File_Properties();
 		}
 	}
 

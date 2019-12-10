@@ -517,34 +517,6 @@
             the contents of this method with the code editor.
             </summary>
         </member>
-        <member name="T:Au.Controls.AuForm">
-            <summary>
-            Can be used as base class for forms. Adds some features, eg WS_POPUP style and correct auto-scaling when high DPI.
-            </summary>
-            <remarks>
-            Sets these properties:
-            AutoScaleMode = AutoScaleMode.Font;
-            ZIsPopup = true;
-            
-            The Visual Studio form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', it's OK.
-            <note>Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font). Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.</note>
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.AuForm.#ctor">
-            
-        </member>
-        <member name="P:Au.Controls.AuForm.ZIsPopup">
-            <summary>
-            Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
-            Set it before creating; later does nothing.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.AuForm.CreateParams">
-            
-        </member>
-        <member name="M:Au.Controls.AuForm.OnFormClosed(System.Windows.Forms.FormClosedEventArgs)">
-            
-        </member>
         <member name="T:Au.Controls.AuToolStrip">
             <summary>
             Adds to ToolStrip:
@@ -565,9 +537,37 @@
             <summary>
             Can be used as base class for user controls instead of UserControl when you want correct auto-scaling when high DPI (AutoScaleMode.Font).
             </summary>
-            <seealso cref="T:Au.Controls.AuForm"/>
+            <seealso cref="T:Au.Controls.DialogForm"/>
         </member>
         <member name="M:Au.Controls.AuUserControlBase.#ctor">
+            
+        </member>
+        <member name="T:Au.Controls.DialogForm">
+            <summary>
+            Can be used as base class for forms used as dialogs. Adds WS_POPUP style and correct auto-scaling when high DPI.
+            </summary>
+            <remarks>
+            Sets these properties:
+            ZIsPopup = true;
+            AutoScaleMode = AutoScaleMode.Font;
+            
+            The Visual Studio form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', it's OK.
+            <note>Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font). Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.</note>
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.DialogForm.#ctor">
+            
+        </member>
+        <member name="P:Au.Controls.DialogForm.ZIsPopup">
+            <summary>
+            Adds WS_POPUP style. Also prevents activating an unrelated window when closing this active owned nonmodal form.
+            Set it before creating; later does nothing.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.DialogForm.CreateParams">
+            
+        </member>
+        <member name="M:Au.Controls.DialogForm.OnFormClosed(System.Windows.Forms.FormClosedEventArgs)">
             
         </member>
         <member name="T:Au.Controls.InactiveWindow">

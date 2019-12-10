@@ -35,11 +35,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Remove="Tools\Keys.txt" />
-    <None Remove="Tools\Regex.txt" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Include="Default\files\Examples\Hotkeys and other triggers.cs">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -224,15 +219,6 @@
     <EmbeddedResource Update="Tools\FormAWnd.resx">
       <DependentUpon>FormAWnd.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Update="doc.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="ref.db">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

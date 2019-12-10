@@ -23,7 +23,7 @@ namespace Au.Controls
 	/// <summary>
 	/// Can be used as base class for user controls instead of UserControl when you want correct auto-scaling when high DPI (AutoScaleMode.Font).
 	/// </summary>
-	/// <seealso cref="AuForm"/>
+	/// <seealso cref="DialogForm"/>
 	public class AuUserControlBase : UserControl
 	{
 		///

@@ -121,6 +121,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Code_WinImage), Code_WinImage);
 		_dict.Add(nameof(Code_Regex), Code_Regex);
 		_dict.Add(nameof(Code_Keys), Code_Keys);
+		_dict.Add(nameof(Code_WindowsAPI), Code_WindowsAPI);
 		_dict.Add(nameof(Run_Run), Run_Run);
 		_dict.Add(nameof(Run_End), Run_End);
 		_dict.Add(nameof(Run_Pause), Run_Pause);
@@ -479,6 +480,11 @@ class CmdHandlers : IGStripManagerCallbacks
 	public void Code_Keys()
 	{
 		CiTools.CmdShowRegexOrKeysWindow(false);
+	}
+
+	public void Code_WindowsAPI()
+	{
+		FormWinapi.ZShowDialog();
 	}
 
 	#endregion

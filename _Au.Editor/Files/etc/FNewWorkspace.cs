@@ -26,7 +26,7 @@ using Au.Controls;
 partial class FilesModel
 {
 #endif
-	class FNewWorkspace :AuForm
+	class FNewWorkspace :DialogForm
 	{
 		public FNewWorkspace()
 		{

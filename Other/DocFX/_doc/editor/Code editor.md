@@ -4,7 +4,7 @@ uid: code_editor
 
 # Code editor
 
-In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, brace completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions/types, images in code, comment/uncomment/indent/unindent lines, drop files, find/replace, code creation tools.
+In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, brace completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions/types, images in code, comment/uncomment/indent/unindent lines, drop files, find/replace text, find namespace, find Windows API, code creation tools.
 
 C# code may look like this:
 ```csharp
@@ -70,7 +70,7 @@ Ctrl+click a symbol or press F12. Or click the "source code" link in the autocom
 If the symbol is defined in your code, it opens that file and moves the text cursor. If the symbol is from .NET Core, it opens the source code web page.
 
 #### Error info
-Errors are detected in editor, as well as when compiling the code. Code parts with errors have red squiggly underlines, warnings green. A tooltip shows error/warning description. Also can contain links to fix the error, for example add missing `using namespace`.
+Errors are detected in editor, as well as when compiling the code. Code parts with errors have red squiggly underlines, warnings green. A tooltip shows error/warning description. Also can contain links to fix the error: add missing `using namespace` or Windows API declaration.
 
 #### Code coloring
 Different kinds of code parts have different colors. Comments, strings, keywords, types, functions, etc.

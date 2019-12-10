@@ -150,12 +150,12 @@ namespace Au.Compiler
 
 			DefaultReferences = new Dictionary<string, PortableExecutableReference>(300, StringComparer.OrdinalIgnoreCase);
 
-			using var db = new ASqlite(AFolders.ThisAppBS + "ref.db", SLFlags.SQLITE_OPEN_READONLY);
+			using var db = EdDatabases.OpenRef();
 			using var stat = db.Statement("SELECT * FROM ref");
 			while(stat.Step()) {
 				var asmName = stat.GetText(0);
 				var doc = s_netDocProvider.HaveRef(asmName) ? s_netDocProvider : null;
-				var r = MetadataReference.CreateFromImage(stat.GetArray<byte>(1), documentation: s_netDocProvider, filePath: asmName);
+				var r = MetadataReference.CreateFromImage(stat.GetArray<byte>(1), documentation: doc, filePath: asmName);
 				DefaultReferences.Add(asmName, r);
 			}
 			//p1.Next('c');
@@ -367,7 +367,7 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Gets XML documentation for .NET Core assemblies.
-		/// Uses a 2-column SQLite database created from XML files by <see cref="NetCoreDB.Create"/>.
+		/// Uses a 2-column SQLite database created from XML files by <see cref="EdDatabases.CreateRefAndDoc"/>.
 		/// Not XML files directly because it uses about 150 MB of memory.
 		/// </summary>
 		class _NetDocumentationProvider : _DocumentationProvider
@@ -377,7 +377,7 @@ namespace Au.Compiler
 			public _NetDocumentationProvider()
 			{
 				try {
-					_db = new ASqlite(AFolders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY); //never mind: we don't dispose it on process exit
+					_db = EdDatabases.OpenDoc(); //never mind: we don't dispose it on process exit
 					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.SegSplit("\n"));
 				}
 				catch(SLException ex) { ADebug.Print(ex.Message); }

@@ -627,7 +627,7 @@ namespace Au.Tools
 	/// <summary>
 	/// All tool forms of this library should inherit from this class and override its virtual functions.
 	/// </summary>
-	class ToolForm : AuForm
+	class ToolForm : DialogForm
 	{
 		public virtual string ZResultCode { get; protected set; }
 

@@ -197,8 +197,9 @@ class Script : AScript
 		//Print((uint)Cpp_Install(2, AFolders.ThisAppBS));
 		//Print((uint)Cpp_Uninstall());
 
-		ADialog.Show("script");
+		//ADialog.Show("script");
 		
+
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

@@ -23,7 +23,7 @@ using Au.Controls;
 
 //TODO: change forum antispam question, because now second tab in Options is not Triggers.
 
-partial class FOptions : AuForm
+partial class FOptions : DialogForm
 {
 	public FOptions()
 	{

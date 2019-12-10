@@ -31,7 +31,7 @@ namespace Au.Controls
 	public partial class AuStripManager
 	{
 #endif
-	class FSMProperties : AuForm
+	class FSMProperties : DialogForm
 	{
 		AuStripManager _man;
 		XElement _x;

@@ -51,7 +51,7 @@
     <Compile Update="AuStripManager\FSMProperties.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Update="Other\AuForm.cs">
+    <Compile Update="Other\DialogForm.cs">
       <SubType>Form</SubType>
     </Compile>
     <Compile Update="Other\AuToolStrip.cs">

@@ -50,7 +50,6 @@ Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task32.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\doc.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\HtmlRenderer.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.Features.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -60,7 +59,6 @@ Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Features.dll"; DestDir: "{app}"; Fla
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Workspaces.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.DiaSymReader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\ref.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.AttributedModel.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.Hosting.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -82,6 +80,9 @@ Source: "Q:\app\Au\_\32\Au.AppHost.exe"; DestDir: "{app}\32"; Flags: ignoreversi
 Source: "Q:\app\Au\_\32\AuCpp.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 ;Source: "Q:\app\Au\_\32\SciLexer.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\_\32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
+Source: "Q:\app\Au\Other\Data\doc.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\Other\Data\ref.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\Other\Data\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 [Icons]

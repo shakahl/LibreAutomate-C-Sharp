@@ -25,7 +25,7 @@ using Au.Compiler;
 using System.Runtime.InteropServices.ComTypes;
 using System.Globalization;
 
-partial class FProperties : AuForm, IMessageFilter
+partial class FProperties : DialogForm, IMessageFilter
 {
 	FileNode _f;
 	//FileNode _fProjectFolder;
