@@ -510,27 +510,29 @@ partial class SciCode : AuScintilla
 			if(!_fn.IsCodeFile) {
 				t.Append(path);
 			} else if(inMeta) {
-				string opt = null;
-				switch(_drag) {
-				case _DD_DataType.Files:
-					opt = AFile.ExistsAsDirectory(path) ? "outputPath " : "r ";
-					break;
-				case _DD_DataType.Script:
-					if(fn.IsFolder) {
-						if(fn.IsProjectFolder(out fn)) { opt = "pr "; path = fn.ItemPath; }
-					} else if(!fn.IsScript) {
-						if(!fn.IsCodeFile) opt = "resource ";
-						else if(fn.FindProject(out _, out var fMain) && fn == fMain) opt = "pr ";
-						else opt = "c ";
-					}
-					break;
-				}
-				if(opt == null) return;
-				//make relative path
-				var p2 = _fn.ItemPath; int i = p2.LastIndexOf('\\') + 1;
-				if(0 == string.CompareOrdinal(path, 0, p2, 0, i)) path = path.Substring(i);
+				//rejected. Better use the Properties dialog. This code is older than the dialog.
+				return;
+				//string opt = null;
+				//switch(_drag) {
+				//case _DD_DataType.Files:
+				//	opt = AFile.ExistsAsDirectory(path) ? "outputPath " : "r ";
+				//	break;
+				//case _DD_DataType.Script:
+				//	if(fn.IsFolder) {
+				//		if(fn.IsProjectFolder(out fn)) { opt = "pr "; path = fn.ItemPath; }
+				//	} else if(!fn.IsScript) {
+				//		if(!fn.IsCodeFile) opt = "resource ";
+				//		else if(fn.FindProject(out _, out var fMain) && fn == fMain) opt = "pr ";
+				//		else opt = "c ";
+				//	}
+				//	break;
+				//}
+				//if(opt == null) return;
+				////make relative path
+				//var p2 = _fn.ItemPath; int i = p2.LastIndexOf('\\') + 1;
+				//if(0 == string.CompareOrdinal(path, 0, p2, 0, i)) path = path.Substring(i);
 
-				t.Append(opt).Append(path).Append(';');
+				//t.Append(opt).Append(path).Append(';');
 			} else {
 				name = name.Escape();
 				if(menuVar != null) t.Append(menuVar).Append("[\"").Append(name).Append("\"] =o=> ");

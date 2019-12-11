@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>SourceGrid</AssemblyName>
@@ -17,6 +17,14 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="DevAge.Windows.Forms\Windows\Forms\ButtonMultiSelection.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Remove="DevAge.Windows.Forms\Windows\Forms\ButtonMultiSelection.resx" />
+  </ItemGroup>
 
   <ItemGroup>
     <None Remove="SourceGrid.Extensions\Res\Add.ico" />
@@ -42,9 +50,15 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ButtonMultiSelection.cs">
+    <None Include="DevAge.Windows.Forms\Windows\Forms\ButtonMultiSelection.cs">
       <SubType>UserControl</SubType>
-    </Compile>
+    </None>
+    <None Include="DevAge.Windows.Forms\Windows\Forms\ButtonMultiSelection.resx">
+      <DependentUpon>ButtonMultiSelection.cs</DependentUpon>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="DevAge.Windows.Forms\Windows\Forms\ColorPicker.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -134,9 +148,6 @@
   <ItemGroup>
     <EmbeddedResource Update="DevAge.Windows.Forms\Properties\Resources.resx">
       <DependentUpon>Resources.Designer.cs</DependentUpon>
-    </EmbeddedResource>
-    <EmbeddedResource Update="DevAge.Windows.Forms\Windows\Forms\ButtonMultiSelection.resx">
-      <DependentUpon>ButtonMultiSelection.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Update="DevAge.Windows.Forms\Windows\Forms\ColorPicker.resx">
       <DependentUpon>ColorPicker.cs</DependentUpon>

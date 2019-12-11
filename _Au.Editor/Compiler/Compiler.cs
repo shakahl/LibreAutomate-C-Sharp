@@ -475,7 +475,7 @@ namespace Au.Compiler
 		static string _AppHost(string outFile, MetaComments m)
 		{
 			//A .NET Core exe actually is a managed dll hosted by a native exe file known as apphost.
-			//When creating an exe, VS copies template apphost from eg "C:\Program Files\dotnet\sdk\3.0.100\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
+			//When creating an exe, VS copies template apphost from eg "C:\Program Files\dotnet\sdk\3.1.100\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
 			//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
 
 			string exeFile = outFile.ReplaceAt(outFile.Length - 3, 3, "exe"); //assembly dll -> native host exe

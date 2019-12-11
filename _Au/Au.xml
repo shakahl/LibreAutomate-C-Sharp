@@ -7129,7 +7129,7 @@
             <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
             <remarks>
             Submenus inherit these properties of the main menu, set before adding submenus (see example):
-            <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>ContextMenu</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
+            <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -7301,7 +7301,6 @@
         <member name="M:Au.AMenu.Close">
             <summary>
             Closes the menu and its submenus.
-            Also closes its context menu (CMS.ContextMenu).
             </summary>
         </member>
         <member name="T:Au.AToolbar">
@@ -8457,22 +8456,22 @@
         </member>
         <member name="P:Au.AFolders.NetRuntime">
             <summary>
-            Gets .NET Core runtime folder, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.0.0</c>.
+            Gets .NET Core runtime folder, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0</c>.
             </summary>
         </member>
         <member name="P:Au.AFolders.NetRuntimeBS">
             <summary>
-            Gets .NET Core runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.0.0\</c>.
+            Gets .NET Core runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0\</c>.
             </summary>
         </member>
         <member name="P:Au.AFolders.NetRuntimeDesktop">
             <summary>
-            Gets .NET Core runtime desktop folder, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.0.0</c>.
+            Gets .NET Core runtime desktop folder, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0</c>.
             </summary>
         </member>
         <member name="P:Au.AFolders.NetRuntimeDesktopBS">
             <summary>
-            Gets .NET Core runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.0.0\</c>.
+            Gets .NET Core runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
             </summary>
         </member>
         <member name="P:Au.AFolders.CdDvdDrive">

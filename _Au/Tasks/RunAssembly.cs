@@ -60,7 +60,7 @@ namespace Au
 						stream.Read(b, 0, b.Length);
 						using var msDeb = new MemoryStream(b);
 						//p1.Next('f');
-						asm = alc.LoadFromStream(msAsm, msDeb);
+						asm = alc.LoadFromStream(msAsm, msDeb); //TODO: cannot load multiple versions of an editorExtension assembly
 						//p1.Next();
 					} else {
 						asm = alc.LoadFromStream(stream);

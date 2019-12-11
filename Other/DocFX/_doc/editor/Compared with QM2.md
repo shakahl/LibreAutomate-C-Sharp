@@ -11,7 +11,7 @@ QM3 cannot execute or convert QM scripts. If you have many active QM scripts, pr
 
 QM3 is free and open-source. Its open-source automation library can be used in other programs too.
 
-QM3 can run on Windows 7-10 with .NET Core runtime 3.0 or later. More info [here](xref:index).
+QM3 can run on Windows 7-10 with .NET Core runtime 3.1 or later. More info [here](xref:index).
 
 QM3 and its library are still unfinished. The most important parts are finished and can be used, but some classes and functions can be changed in the future, which can break your scripts, clear settings, etc.
 

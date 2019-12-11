@@ -60,7 +60,7 @@ static class EdDatabases
 	/// <summary>
 	/// Creates SQLite databases containing design-time assemblies and XML documentation files of a .NET Core runtime. The SDK must be installed.
 	/// Shows a list dialog.
-	///		If selected All, creates for all runtime versions, with names ref.version.db (eg ref.3.0.0.db) and doc.version.db, in AFolders.ThisAppBS.
+	///		If selected All, creates for all runtime versions starting from 3.1, with names ref.version.db (eg ref.3.1.0.db) and doc.version.db, in AFolders.ThisAppBS.
 	///		Else creates only for the selected runtime version, with names ref.db and doc.db, in dataDir, and sets to copy to AFolders.ThisAppBS when opening next time after process restarts.
 	/// We ship and at run time load databases of single version, named ref.db and doc.db. In the future should allow to download and use multiple versions.
 	/// Also this function allows users to create databases from SDKs installed on their PC, but currently this feature is not exposed. Would need to add UI and exception handling.
@@ -82,7 +82,9 @@ static class EdDatabases
 		var a = new List<string>();
 		foreach(var f in AFile.EnumDirectory(refDir, FEFlags.UseRawPath)) { //for each version
 			if(!f.IsDirectory) continue;
-			a.Add(f.Name);
+			var s = f.Name;
+			int v1 = s.ToInt(0, out int ne), v2 = s.ToInt(ne + 1); if(v1 < 3 || v2 < 1) continue; //must be 3.1 or later
+			a.Add(s);
 		}
 		a.Add("All");
 		int i = ADialog.ShowList(a, "Create database", "For runtime") - 1;

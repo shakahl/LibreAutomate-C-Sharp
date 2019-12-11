@@ -240,7 +240,7 @@ namespace Au
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
-		/// <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>ContextMenu</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
+		/// <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -285,7 +285,6 @@ namespace Au
 			if(_cm._changedBackColor) dd.BackColor = _cm.BackColor; //because by default gives 0xf0f0f0, although actually white, and then submenus would be gray
 			dd.BackgroundImage = _cm.BackgroundImage;
 			dd.BackgroundImageLayout = _cm.BackgroundImageLayout;
-			dd.ContextMenu = _cm.ContextMenu;
 			dd.Cursor = _cm.Cursor;
 			dd.Font = _cm.Font;
 			if(_cm._changedForeColor) dd.ForeColor = _cm.ForeColor;
@@ -981,10 +980,12 @@ namespace Au
 		{
 			Debug.Assert(!IsDisposed); if(IsDisposed) return;
 
+			//This code can be removed, because ContextMenu removed in .NET Core 3.1. But maybe some code shows such menu using winapi.
 			if(AWnd.More.GetGUIThreadInfo(out var g, Api.GetCurrentThreadId()) && !g.hwndMenuOwner.Is0) {
 				Api.EndMenu();
 				if(onEsc) return;
 			}
+
 			if(onEsc && _visibleSubmenus.Count > 0) {
 				_visibleSubmenus[_visibleSubmenus.Count - 1].Close();
 				return;
@@ -994,7 +995,6 @@ namespace Au
 
 		/// <summary>
 		/// Closes the menu and its submenus.
-		/// Also closes its context menu (CMS.ContextMenu).
 		/// </summary>
 		public void Close()
 		{
@@ -1108,16 +1108,6 @@ namespace Au.Types
 		/// For example, the event handler can set item properties common to all items, or set item properties encoded in item text.
 		/// </summary>
 		public event Action<ToolStripItem> ItemAdded;
-
-		///// <summary>
-		///// ContextMenu to show when right-clicked.
-		///// //_TODO: how to know which item clicked? Maybe add a common default context menu. Currently not used.
-		///// </summary>
-		//public ContextMenu ContextMenu
-		//{
-		//	get => MainToolStrip.ContextMenu;
-		//	set { MainToolStrip.ContextMenu = value; }
-		//}
 
 		/// <summary>
 		/// Flags to pass to <see cref="AIcon.GetFileIcon"/>. See <see cref="GIFlags"/>.

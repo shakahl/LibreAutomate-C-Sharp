@@ -94,7 +94,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			case TextTags.Punctuation:
 			case TextTags.Method: //eg operator <
 			case TextTags.Operator:
-				if(s.Length > 0 || s[0] == '<' || s[0] == '>' || s[0] == '&') s = WebUtility.HtmlEncode(s); //eg < in X<T>
+				if(s.Length > 0 && (s[0] == '<' || s[0] == '>' || s[0] == '&')) s = WebUtility.HtmlEncode(s); //eg < in X<T>
 				break;
 #if DEBUG
 			case TextTags.Space:

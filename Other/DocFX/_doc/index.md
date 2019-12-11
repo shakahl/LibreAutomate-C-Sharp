@@ -7,7 +7,7 @@ uid: index
 #### Library
 Au library contains functions to automate various tasks on Windows computers.
 
-Some features: Send keys and text to windows. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
+Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
 
 Written mostly in C#, it is a .NET library.
 
@@ -25,16 +25,16 @@ Free, open-source.
 #### Where can run
 Editor and library can run on Windows 7, 8, 8.1, 10. Currently editor is 64-bit only.
 
-Also need .NET Core 3.0 or later. It is a collection of libraries from Microsoft. Install both Core Runtime x64 and Core Desktop Runtime x64. The download and setup is fast and easy.
+Also need .NET Core runtime 3.1 or later. It is a collection of libraries from Microsoft. Install both Core Runtime x64 and Core Desktop Runtime x64. The download and setup is fast and easy.
 
 #### Unfinished
-Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes and functions can be changed in the future, which can break your scripts, clear settings, etc.
+Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes/functions/etc will be changed in the future, which can break your scripts, clear settings, etc.
 
-Currently the editor program does not have a real name and can be called "Au editor" or "QM3" (version 3 of Quick Macros).
+Currently the editor program still does not have a real name and can be called "Au editor" or "QM3" (version 3 of Quick Macros).
 
 #### Links
 - [Download](https://www.quickmacros.com/au/qm3setup.exe)
-- [Source code at github](https://github.com/qmgindi/Au)
-- [Download .NET Core Runtime x64 and .NET Core Desktop Runtime x64](https://dotnet.microsoft.com/download)
-- [Quick Macros 2 forum](https://www.quickmacros.com/forum). When posting or searching about Au editor or library, use name "QM3" as program name.
+- [.NET Core Runtimes](https://dotnet.microsoft.com/download)
+- [Source code](https://github.com/qmgindi/Au)
+- [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)
 - [Email](mailto:support@quickmacros.com)

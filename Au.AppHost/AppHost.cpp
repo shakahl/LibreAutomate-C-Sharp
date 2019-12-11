@@ -94,15 +94,15 @@ bool GetPaths(_PATHS& p) {
 	wchar_t key[] = LR"(SOFTWARE\dotnet\Setup\InstalledVersions\x64)"; if(is32bit) { key[41] = '8'; key[42] = '6'; }
 	HKEY hk1;
 	if(!regOpenKey(HKEY_LOCAL_MACHINE, key, hk1)) return false;
-	if(!regGetUtf8(hk1, L"InstallLocation", p.netCore, len = sizeof(p.netCore) - 150)) { //Core 3.0.1 does not set InstallLocation; assume default location.
+	if(!regGetUtf8(hk1, L"InstallLocation", p.netCore, len = sizeof(p.netCore) - 150)) { //Core 3.0.1+ does not set InstallLocation; assume default location.
 		int len1 = ExpandEnvironmentStringsW(L"%ProgramFiles%\\dotnet", w, lenof(w)); //info: if is32bit, expands to "C:\Program Files (x86)"
 		toUtf8(w, len1, p.netCore, sizeof(p.netCore) - 150);
 	}
 
-	//get latest installed Core runtime version, like "3.0.0\"
+	//get latest installed Core runtime version, like "3.1.0\"
 	bool ok = regGetUtf8(hk1, L"hostfxr", L"Version", version, len = sizeof(version) - 2);
 	if(ok) {
-		LPSTR v = version; if(strtol(v, &v, 10) < 3 || strtol(++v, &v, 10) < 0 || strtol(++v, &v, 10) < 0) return false; //3.0.0
+		LPSTR v = version; if(strtol(v, &v, 10) < 3 || strtol(++v, &v, 10) < 0 || strtol(++v, &v, 10) < 0) return false;
 		version[len] = '\\'; version[len + 1] = 0;
 	}
 	RegCloseKey(hk1);

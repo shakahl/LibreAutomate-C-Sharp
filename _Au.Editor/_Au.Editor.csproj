@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>netcoreapp3.0</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>Au.Editor</AssemblyName>
@@ -79,7 +79,11 @@
     <Content Include="Default\Templates\New File\TextFile.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <EmbeddedResource Include="Tools\Keys.txt" />
+    <EmbeddedResource Include="Tools\Regex.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -109,10 +113,6 @@
     <Reference Include="Microsoft.CodeAnalysis.Workspaces">
       <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
     </Reference>
-  </ItemGroup>
-
-  <ItemGroup>
-    <EmbeddedResource Include="Tools\Regex.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -219,6 +219,10 @@
     <EmbeddedResource Update="Tools\FormAWnd.resx">
       <DependentUpon>FormAWnd.cs</DependentUpon>
     </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

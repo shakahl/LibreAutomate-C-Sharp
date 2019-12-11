@@ -264,6 +264,8 @@ namespace Au.Tools
 			int line = doc.Z.LineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
 			doc.Z.InsertText(true, end, b.ToString(), addUndoPoint: true);
 			if(foldLine >= 0) doc.Call(Sci.SCI_FOLDLINE, foldLine); //InsertText expands folding
+
+			//CONSIDER: option to auto-add usings above the folded header.
 		}
 
 		/// <summary>

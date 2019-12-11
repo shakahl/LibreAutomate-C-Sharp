@@ -1,17 +1,17 @@
 # Au automation library and editor
 
-This code consists of two parts that can be used together or separately:
-- Au library is a .NET library for automating of various tasks on Windows computers. Send keys to windows, find/click UI objects, execute programs, process text, use hotkeys, autotext.
-- Au editor program is an integrated scripting environment for creating and executing automation scripts using the Au library and C#. And creating .NET programs and libraries for any purpose. Like a mini Visual Studio.
+Au library contains functions to automate various tasks on Windows computers. Written mostly in C#, it is a .NET library. Some features: Send keys and text to the active window. Find and click buttons, links, images and other UI objects. Launch programs and auto-close windows. Process text and other data. Auto-replace text when typing. Hotkeys and other triggers.
 
-More info and download the setup program: https://www.quickmacros.com/au/help/
+Au editor program is an integrated scripting environment for creating and executing automation scripts using the Au library and C#.
+
+More info and download the setup file: https://www.quickmacros.com/au/help/
 
 Editor window
 
 ![window](https://www.quickmacros.com/au/help/images/window.png "Editor window")
 
 ### How to build
-Need Visual Studio 2019 with C# 8, .NET Core 3.0, C++ and Windows 10 SDK.
+Need Visual Studio 2019 with C# 8, C++, .NET Core 3.1 and Windows 10 SDK.
 
 1. Open Au.sln in Visual Studio. Ignore "failed to load project" errors.
 2. Build solution (not just the startup project).

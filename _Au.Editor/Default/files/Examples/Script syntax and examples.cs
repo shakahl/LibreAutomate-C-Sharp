@@ -5,7 +5,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 /*
 This file is an example of an automation script.
 
-The programming language is C#. This program uses C# 8 and .NET Core 3.0.
+The programming language is C#.
 
 In scripts you can use classes/functions of the automation library provided by
 this program, as well as of .NET Core and everything that can be used in C#.
