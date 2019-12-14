@@ -368,10 +368,10 @@ namespace Au
 		/// 3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
 		/// 4. If path is not full path, throws exception.
 		/// 5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
-		/// 6. If no flag DoNotExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
-		/// 7. If no flag DoNotRemoveEndSeparator, removes <c>'\\'</c> character at the end, unless it is like <c>@"C:\"</c>.
+		/// 6. If no flag DontExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
+		/// 7. If no flag DontRemoveEndSeparator, removes <c>'\\'</c> character at the end, unless it is like <c>@"C:\"</c>.
 		/// 8. Appends <c>'\\'</c> character if ends with a drive name (eg <c>"C:"</c> -> <c>@"C:\"</c>).
-		/// 9. If no flag DoNotPrefixLongPath, calls <see cref="PrefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
+		/// 9. If no flag DontPrefixLongPath, calls <see cref="PrefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
 		/// 
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, supports <c>@"\\?\very long path"</c>, trims <c>'\\'</c> at the end if need, does not throw exceptions when it thinks that path is invalid (except when path is not full).
 		/// </remarks>

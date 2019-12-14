@@ -199,7 +199,6 @@ class Script : AScript
 
 		//ADialog.Show("script");
 		
-
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

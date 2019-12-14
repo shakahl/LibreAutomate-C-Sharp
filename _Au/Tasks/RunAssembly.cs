@@ -49,6 +49,28 @@ namespace Au
 #if true
 				//var p1 = APerf.Create();
 				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
+				//SHOULDDO: try to unload. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
+				//p1.Next();
+				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
+					//p1.Next();
+					if(pdbOffset > 0) {
+						var b = new byte[pdbOffset];
+						stream.Read(b, 0, b.Length);
+						using var msAsm = new MemoryStream(b);
+						b = new byte[stream.Length - pdbOffset];
+						stream.Read(b, 0, b.Length);
+						using var msDeb = new MemoryStream(b);
+						//p1.Next('f');
+						asm = alc.LoadFromStream(msAsm, msDeb);
+						//p1.Next();
+					} else {
+						asm = alc.LoadFromStream(stream);
+					}
+				}
+				//p1.NW();
+#else
+				//var p1 = APerf.Create();
+				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
 				//p1.Next();
 				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
 					//p1.Next();
@@ -67,33 +89,6 @@ namespace Au
 					}
 				}
 				//p1.NW();
-#else
-				byte[] bAsm, bPdb = null;
-				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
-					bAsm = new byte[pdbOffset > 0 ? pdbOffset : stream.Length];
-					stream.Read(bAsm, 0, bAsm.Length);
-					try {
-						if(pdbOffset > 0) {
-							bPdb = new byte[stream.Length - pdbOffset];
-							stream.Read(bPdb, 0, bPdb.Length);
-						} else {
-							var s1 = Path.ChangeExtension(asmFile, "pdb");
-							if(AFile.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
-						}
-					}
-					catch(Exception ex) { bPdb = null; ADebug.Print(ex); } //not very important
-				}
-
-				//APerf.Next('f');
-
-				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
-				var msAsm = new MemoryStream(bAsm);
-				if(bPdb != null) {
-					var msPdb = new MemoryStream(bPdb);
-					asm = alc.LoadFromStream(msAsm, msPdb);
-				} else {
-					asm = alc.LoadFromStream(msAsm);
-				}
 #endif
 				//APerf.Next('a');
 

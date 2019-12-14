@@ -58,7 +58,7 @@ namespace Au
 		/// <param name="properties">Receives properties.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-		/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DoNotThrow.</exception>
+		/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DontThrow.</exception>
 		/// <remarks>
 		/// For symbolic links etc, gets properties of the link, not of its target.
 		/// You can also get most of these properties with <see cref="EnumDirectory"/>.
@@ -88,7 +88,7 @@ namespace Au
 		/// <param name="attributes">Receives attributes, or 0 if failed.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-		/// <exception cref="AuException">Failed. Not thrown if used flag DoNotThrow.</exception>
+		/// <exception cref="AuException">Failed. Not thrown if used flag DontThrow.</exception>
 		/// <remarks>
 		/// For symbolic links etc, gets properties of the link, not of its target.
 		/// </remarks>

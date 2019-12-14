@@ -75,6 +75,9 @@ static class Strips
 
 		//p.NW();
 
+		//make some buttons wider
+		var rr = tbRun.Items["Run_Run"]; rr.AutoSize = false; rr.Width = rr.Width * 3 / 2;
+
 		//tbHelp.Padding = new Padding(); //removes 1-pixel right margin that causes a visual artifact because of gradient, but then not good when no margin when the edit is at the very right edge of the form
 
 #if DEBUG

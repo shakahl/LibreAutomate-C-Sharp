@@ -53,6 +53,7 @@ static class CommandLine
 						ADialog.ShowError("Unknown command line parameter", s);
 						return true;
 					}
+					//rejected: /h start hidden. Not useful.
 				}
 			} else { //one or more files
 				if(a.Length == 1 && FilesModel.IsWorkspaceDirectory(s)) {

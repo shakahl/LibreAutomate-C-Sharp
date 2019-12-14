@@ -14,7 +14,7 @@ There are several ways to include class files in a C# file X:
 - create a project and add class files to the project folder. Used when the classes are used only in that project.
 
 #### Projects
-A folder named like *@Project* is a project folder. To create: menu -> File -> New -> New project.
+A folder named like <i>@Project</i> is a project folder. To create: menu -> File -> New -> New project.
 
 Projects are used to compile multiple C# files together. The compilation creates a single assembly file that can be executed as a script or .exe program or used as a .dll library.
 

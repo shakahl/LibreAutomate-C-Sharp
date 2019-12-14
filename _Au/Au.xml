@@ -6253,7 +6253,7 @@
             This example creates a class instance, sets properties, shows dialog, uses events, uses result.
             <code><![CDATA[
             var d = new ADialog(); //info: another constructor has the same parameters as ShowEx
-            d.SetText("Main text.", "More text.\nSupports &lt;A HREF=\"link data\"&gt;links&lt;/A&gt; if you subscribe to HyperlinkClicked event.");
+            d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClicked event.");
             d.SetButtons("1 OK|2 Cancel|3 Custom|4 Custom2");
             d.SetIcon(DIcon.Warning);
             d.SetExpandedText("Expanded info\nand more info.", true);
@@ -6261,9 +6261,9 @@
             d.SetRadioButtons("1 r1|2 r2");
             d.SetCheckbox("Check");
             d.SetTimeout(30, "OK");
-            d.HyperlinkClicked += e =&gt; { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
-            d.ButtonClicked += e =&gt; { Print(e.Button); if(e.Button == 4) e.DoNotCloseDialog = true; };
-            d.FlagShowProgressBar = true; d.Timer += e =&gt; { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
+            d.HyperlinkClicked += e => { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
+            d.ButtonClicked += e => { Print(e.Button); if(e.Button == 4) e.DontCloseDialog = true; };
+            d.FlagShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
             var r = d.ShowDialog();
             Print(r);
             switch(r.Button) { case 1: Print("OK"); break; case DResult.Timeout: Print("timeout"); break; }
@@ -6800,14 +6800,14 @@
             Examples:
             <code><![CDATA[
             ADialog.ShowTextInputEx("Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Browse\nSets edit control text.",
-            	onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DoNotCloseDialog = true; } });
+            	onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; } });
             
             ADialog.ShowTextInputEx("Example", "Try to click OK while text is empty.", onButtonClick: e =>
             {
             	if(e.Button == 1 && Empty(e.EditText)) {
             		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
-            		e.dialog.EditControl.FocusControlOfThisThread();
-            		e.DoNotCloseDialog = true;
+            		e.dialog.EditControl.Focus();
+            		e.DontCloseDialog = true;
             	}
             });
             ]]></code>
@@ -6948,7 +6948,7 @@
             for(int i = 1; i <= 100; i++) {
             	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
             	pd.Send.Progress(i); //don't need this if marquee
-            	Thread.Sleep(50); //do something in the loop
+            	50.ms(); //do something in the loop
             }
             pd.Send.Close();
             ]]></code>
@@ -6972,7 +6972,7 @@
             for(int i = 1; i <= 100; i++) {
             	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
             	pd.Send.Progress(i); //don't need this if marquee
-            	Thread.Sleep(50); //do something in the loop
+            	50.ms(); //do something in the loop
             }
             pd.Send.Close();
             ]]></code>
@@ -6997,7 +6997,7 @@
             2.s(); //do something while the dialog is open
             d.Send.ChangeText2("new text", false);
             2.s(); //do something while the dialog is open
-            d.ThreadWaitClosed(); Print(d.Result); //wait until the dialog is closed and get result. Optional, just an example.
+            d.ThreadWaitForClosed(); Print(d.Result); //wait until the dialog is closed and get result. Optional, just an example.
             ]]></code>
             </example>
             <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
@@ -7763,7 +7763,7 @@
             <param name="properties">Receives properties.</param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-            <exception cref="T:Au.Types.AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DoNotThrow.</exception>
+            <exception cref="T:Au.Types.AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DontThrow.</exception>
             <remarks>
             For symbolic links etc, gets properties of the link, not of its target.
             You can also get most of these properties with <see cref="M:Au.AFile.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
@@ -7779,7 +7779,7 @@
             <param name="attributes">Receives attributes, or 0 if failed.</param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Not full path (when not used flag UseRawPath).</exception>
-            <exception cref="T:Au.Types.AuException">Failed. Not thrown if used flag DoNotThrow.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. Not thrown if used flag DontThrow.</exception>
             <remarks>
             For symbolic links etc, gets properties of the link, not of its target.
             </remarks>
@@ -8936,10 +8936,10 @@
             3. If path is not full path, and defaultParentDirectory is not null/"", combines path with ExpandEnvVar(defaultParentDirectory).
             4. If path is not full path, throws exception.
             5. Calls API <msdn>GetFullPathName</msdn>. It replaces <c>'/'</c> with <c>'\\'</c>, replaces multiple <c>'\\'</c> with single (where need), processes <c>@"\.."</c> etc, trims spaces, etc.
-            6. If no flag DoNotExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
-            7. If no flag DoNotRemoveEndSeparator, removes <c>'\\'</c> character at the end, unless it is like <c>@"C:\"</c>.
+            6. If no flag DontExpandDosPath, if path looks like a short DOS path version (contains <c>'~'</c> etc), calls API <msdn>GetLongPathName</msdn>. It converts short DOS path to normal path, if possible, for example <c>@"c:\progra~1"</c> to <c>@"c:\program files"</c>. It is slow. It converts path only if the file exists.
+            7. If no flag DontRemoveEndSeparator, removes <c>'\\'</c> character at the end, unless it is like <c>@"C:\"</c>.
             8. Appends <c>'\\'</c> character if ends with a drive name (eg <c>"C:"</c> -> <c>@"C:\"</c>).
-            9. If no flag DoNotPrefixLongPath, calls <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
+            9. If no flag DontPrefixLongPath, calls <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
             
             Similar to <see cref="M:System.IO.Path.GetFullPath(System.String)"/>. Main differences: this function expands environment variables, does not support relative paths, supports <c>@"\\?\very long path"</c>, trims <c>'\\'</c> at the end if need, does not throw exceptions when it thinks that path is invalid (except when path is not full).
             </remarks>
@@ -9282,7 +9282,7 @@
         </member>
         <member name="M:Au.APidl._Normalize(System.String)">
             <summary>
-            The same as <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
+            The same as <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>(CanBeUrlOrShell|DontPrefixLongPath), but ignores non-full path (returns s).
             </summary>
             <param name="s">File-system path or URL or "::...".</param>
         </member>
@@ -17990,6 +17990,14 @@
             Gets the length of the instructions and operands.
             </summary>
             <value>The length.</value>
+        </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
         </member>
         <member name="T:Au.Util.ILReader">
             <summary>

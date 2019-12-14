@@ -153,7 +153,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// The same as <see cref="APath.Normalize"/>(CanBeUrlOrShell|DoNotPrefixLongPath), but ignores non-full path (returns s).
+		/// The same as <see cref="APath.Normalize"/>(CanBeUrlOrShell|DontPrefixLongPath), but ignores non-full path (returns s).
 		/// </summary>
 		/// <param name="s">File-system path or URL or "::...".</param>
 		static string _Normalize(string s)

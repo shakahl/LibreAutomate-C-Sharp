@@ -53,7 +53,7 @@ namespace Au.Util
 			{
 				AWnd w = Api.CreateWindowEx(WS_EX.NOACTIVATE, "#32770", null, WS.POPUP, 0, 0, 0, 0, Native.HWND_MESSAGE, 0, default, 0);
 				//info: HWND_MESSAGE makes much faster; WS_EX_NOACTIVATE makes 20% faster; empty class same speed.
-				//w.FocusControlOfThisThread();
+				//w.Focus();
 				Api.SetActiveWindow(w); //sets foreground only if a window of this thread is the foreground window. SetFocus too, but slightly slower.
 				//Print(AWnd.Active);
 				//APerf.NW();

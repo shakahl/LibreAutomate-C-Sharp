@@ -7,6 +7,12 @@
 #include <Windows.h>
 #include "coreclrhost.h"
 
+//min supported Core version.
+//SHOULDDO: somehow auto-update, else will forget this when updating Core version of C# projects (<TargetFramework>netcoreapp3.1</TargetFramework>).
+#define COREVER1 3
+#define COREVER2 1
+#define COREVER3 0
+
 #if _DEBUG
 //#if true
 void Print(LPCWSTR frm, ...)
@@ -102,7 +108,7 @@ bool GetPaths(_PATHS& p) {
 	//get latest installed Core runtime version, like "3.1.0\"
 	bool ok = regGetUtf8(hk1, L"hostfxr", L"Version", version, len = sizeof(version) - 2);
 	if(ok) {
-		LPSTR v = version; if(strtol(v, &v, 10) < 3 || strtol(++v, &v, 10) < 0 || strtol(++v, &v, 10) < 0) return false;
+		LPSTR v = version; if(strtol(v, &v, 10) < COREVER1 || strtol(++v, &v, 10) < COREVER2 || strtol(++v, &v, 10) < COREVER3) return false;
 		version[len] = '\\'; version[len + 1] = 0;
 	}
 	RegCloseKey(hk1);
@@ -175,11 +181,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 
 	_PATHS p = {};
 	if(!GetPaths(p)) { //fast
-		std::string s1 = R"(Please install or update .NET Core Runtime.
-Download from https://dotnet.microsoft.com/download.
-Need both: .NET Core Runtime, .NET Core Desktop Runtime.
-Need x)";
-		s1 += is32bit ? "86 only." : "64 only.";
+		std::string s1 = "Please install or update .NET Core Desktop Runtime x";
+		s1 += is32bit ? "86" : "64";
+		s1 += ".\r\n\r\nhttps://dotnet.microsoft.com/download";
 		MessageBoxA(0, s1.c_str(), nullptr, MB_ICONERROR);
 		return -1;
 	}

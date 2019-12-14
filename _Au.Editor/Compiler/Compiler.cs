@@ -171,7 +171,9 @@ namespace Au.Compiler
 			}
 			//p1.Next('t');
 
-			var compilation = CSharpCompilation.Create(m.Name, trees, m.References.Refs, m.CreateCompilationOptions());
+			string asmName = m.Name;
+			if(m.Role == ERole.editorExtension) asmName = asmName + "|" + (++c_versionCounter).ToString(); //AssemblyLoadContext.Default cannot load multiple assemblies with same name
+			var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, m.CreateCompilationOptions());
 			//p1.Next('c');
 
 #if PDB
@@ -317,6 +319,8 @@ namespace Au.Compiler
 			//p1.NW('C');
 			return true;
 		}
+
+		static int c_versionCounter;
 
 		//public static void Warmup(Document document)
 		//{

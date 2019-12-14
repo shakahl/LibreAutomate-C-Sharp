@@ -132,7 +132,7 @@
     </Menu_Code>
     <Menu_Run>
 			<Run_Run i="run"/>
-			<Run_End i="deb_end"/>
+			<Run_EndTask i="stop"/>
 			<Run_Pause i="pause" color="white"/>
 			<Run_Compile i="compile"/>
 			<Run_Recent t="Recent..."/>
@@ -233,7 +233,7 @@
 	<Run>
 		<Run_Compile i="compile"/>
 		<Run_Run i="run"/>
-		<Run_End i="deb_end"/>
+    <Run_EndTask i="stop"/>
 		<!--<Run_Pause i="pause"/>
 		<sep/>
 		<Debug_RunToBreakpoint i="deb_run"/>

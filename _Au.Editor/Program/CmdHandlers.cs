@@ -123,7 +123,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Code_Keys), Code_Keys);
 		_dict.Add(nameof(Code_WindowsAPI), Code_WindowsAPI);
 		_dict.Add(nameof(Run_Run), Run_Run);
-		_dict.Add(nameof(Run_End), Run_End);
+		_dict.Add(nameof(Run_EndTask), Run_EndTask);
 		_dict.Add(nameof(Run_Pause), Run_Pause);
 		_dict.Add(nameof(Run_Compile), Run_Compile);
 		_dict.Add(nameof(Run_Recent), Run_Recent);
@@ -501,7 +501,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		Run.CompileAndRun(true, Program.Model.CurrentFile);
 	}
 
-	public void Run_End()
+	public void Run_EndTask()
 	{
 		if(Program.Tasks.EndTasksOf(Program.Model.CurrentFile)) return;
 		var t = Program.Tasks.GetGreenTask(); if(t == null) return;

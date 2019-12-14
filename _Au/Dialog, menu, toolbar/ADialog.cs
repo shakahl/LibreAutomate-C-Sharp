@@ -39,7 +39,7 @@ namespace Au
 	/// This example creates a class instance, sets properties, shows dialog, uses events, uses result.
 	/// <code><![CDATA[
 	/// var d = new ADialog(); //info: another constructor has the same parameters as ShowEx
-	/// d.SetText("Main text.", "More text.\nSupports &lt;A HREF=\"link data\"&gt;links&lt;/A&gt; if you subscribe to HyperlinkClicked event.");
+	/// d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClicked event.");
 	/// d.SetButtons("1 OK|2 Cancel|3 Custom|4 Custom2");
 	/// d.SetIcon(DIcon.Warning);
 	/// d.SetExpandedText("Expanded info\nand more info.", true);
@@ -47,9 +47,9 @@ namespace Au
 	/// d.SetRadioButtons("1 r1|2 r2");
 	/// d.SetCheckbox("Check");
 	/// d.SetTimeout(30, "OK");
-	/// d.HyperlinkClicked += e =&gt; { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
-	/// d.ButtonClicked += e =&gt; { Print(e.Button); if(e.Button == 4) e.DoNotCloseDialog = true; };
-	/// d.FlagShowProgressBar = true; d.Timer += e =&gt; { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
+	/// d.HyperlinkClicked += e => { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
+	/// d.ButtonClicked += e => { Print(e.Button); if(e.Button == 4) e.DontCloseDialog = true; };
+	/// d.FlagShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
 	/// var r = d.ShowDialog();
 	/// Print(r);
 	/// switch(r.Button) { case 1: Print("OK"); break; case DResult.Timeout: Print("timeout"); break; }
@@ -1573,14 +1573,14 @@ namespace Au
 		/// Examples:
 		/// <code><![CDATA[
 		/// ADialog.ShowTextInputEx("Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Browse\nSets edit control text.",
-		///		onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DoNotCloseDialog = true; } });
+		///		onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; } });
 		/// 
 		/// ADialog.ShowTextInputEx("Example", "Try to click OK while text is empty.", onButtonClick: e =>
 		/// {
 		/// 	if(e.Button == 1 && Empty(e.EditText)) {
 		/// 		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
-		/// 		e.dialog.EditControl.FocusControlOfThisThread();
-		/// 		e.DoNotCloseDialog = true;
+		/// 		e.dialog.EditControl.Focus();
+		/// 		e.DontCloseDialog = true;
 		/// 	}
 		/// });
 		/// ]]></code>
@@ -1790,7 +1790,7 @@ namespace Au
 		/// for(int i = 1; i <= 100; i++) {
 		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
 		/// 	pd.Send.Progress(i); //don't need this if marquee
-		/// 	Thread.Sleep(50); //do something in the loop
+		/// 	50.ms(); //do something in the loop
 		/// }
 		/// pd.Send.Close();
 		/// ]]></code>
@@ -1833,7 +1833,7 @@ namespace Au
 		/// for(int i = 1; i <= 100; i++) {
 		/// 	if(!pd.IsOpen) { Print(pd.Result); break; } //if the user closed the dialog
 		/// 	pd.Send.Progress(i); //don't need this if marquee
-		/// 	Thread.Sleep(50); //do something in the loop
+		/// 	50.ms(); //do something in the loop
 		/// }
 		/// pd.Send.Close();
 		/// ]]></code>
@@ -1869,7 +1869,7 @@ namespace Au
 		/// 2.s(); //do something while the dialog is open
 		/// d.Send.ChangeText2("new text", false);
 		/// 2.s(); //do something while the dialog is open
-		/// d.ThreadWaitClosed(); Print(d.Result); //wait until the dialog is closed and get result. Optional, just an example.
+		/// d.ThreadWaitForClosed(); Print(d.Result); //wait until the dialog is closed and get result. Optional, just an example.
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>

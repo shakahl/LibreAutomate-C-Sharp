@@ -138,7 +138,7 @@ Print(""t"" + 'c' + 1);
 		_compl.Cancel();
 		_signature.Cancel();
 		_tools.HideTempWindows();
-		_diag.HideTempWindows();
+		HideHtmlPopup();
 	}
 
 	/// <summary>
@@ -473,7 +473,7 @@ Print(""t"" + 'c' + 1);
 		if(doc == null || !doc.ZFile.IsCodeFile) return;
 
 		//cancel if changed the screen rectangle of the document window
-		if(_compl.IsVisibleUI || _signature.IsVisibleUI || _diag.IsVisibleUI) {
+		if(_compl.IsVisibleUI || _signature.IsVisibleUI || _phVisible) {
 			var r = ((AWnd)Panels.Editor.ZActiveDoc).Rect;
 			if(!_isUI) {
 				_isUI = true;
@@ -487,6 +487,37 @@ Print(""t"" + 'c' + 1);
 		}
 
 		_styling.Timer250msWhenVisibleAndWarm(doc);
+	}
+
+	static CiPopupHtml _popupHtml;
+	static bool _phVisible;
+
+	internal static void ShowHtmlPopup(SciCode doc, int pos16, string html, Action<CiPopupHtml, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs> onLinkClick = null)
+	{
+		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Info, onHiddenOrDestroyed: _ => _phVisible = false) {
+			OnLoadImage = OnHtmlImageLoad,
+		};
+		_popupHtml.Html = html;
+		_popupHtml.OnLinkClick = onLinkClick;
+		_popupHtml.Show(doc, pos16, hideIfOutside: true);
+		_phVisible = true;
+	}
+
+	internal static void HideHtmlPopup()
+	{
+		if(_phVisible) _popupHtml.Hide();
+	}
+
+	internal static void OnHtmlImageLoad(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlImageLoadEventArgs e)
+	{
+		var s = e.Src;
+		//Print(s);
+		if(s.Starts("@")) {
+			e.Handled = true;
+			int i = s.ToInt(2);
+			var b = s[1] switch { 'k' => CiUtil.GetKindImage((CiItemKind)i), 'a' => CiUtil.GetAccessImage((CiItemAccess)i), _ => null };
+			e.Callback(b);
+		}
 	}
 
 	public class CharContext : IDisposable

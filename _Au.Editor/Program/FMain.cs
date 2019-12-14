@@ -9,6 +9,8 @@ using System.Threading;
 using System.Windows.Forms;
 using static Au.AStatic;
 
+//TODO: change toolbar buttons: Run, Stop
+
 partial class FMain : Form
 {
 	AWnd _wFocus;
@@ -344,13 +346,13 @@ static class Panels
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
 		//info: would be easier to specify these in default XML, but then cannot change in new app versions.
-		m.ZGetPanel(Files).Init("All files of this workspace", focusable: true);
-		m.ZGetPanel(Open).Init("Currently open files"/*, EdResources.GetImageUseCache("open")*/);
-		m.ZGetPanel(Running).Init("Running tasks");
-		m.ZGetPanel(Output).Init("Output: errors and other information", EdResources.GetImageUseCache("output"));
-		m.ZGetPanel(Info).Init("Info: code quick info and mouse/window/control info", EdResources.GetImageUseCache("info"));
-		m.ZGetPanel(Found).Init("Results of 'Find in files'", EdResources.GetImageUseCache("found"));
-		m.ZGetPanel(Find).Init("Find text, files"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
+		m.ZGetPanel(Files).Init("Files - all files of this workspace", focusable: true);
+		m.ZGetPanel(Open).Init("Open - currently open files"/*, EdResources.GetImageUseCache("open")*/);
+		m.ZGetPanel(Running).Init("Running - running script tasks");
+		m.ZGetPanel(Find).Init("Find - find text, files"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
+		m.ZGetPanel(Output).Init("Output - errors and other information", EdResources.GetImageUseCache("output"));
+		m.ZGetPanel(Info).Init("Info - quick info about object from mouse", EdResources.GetImageUseCache("info"));
+		m.ZGetPanel(Found).Init("Found - results of 'Find in files'", EdResources.GetImageUseCache("found"));
 		m.ZFocusControlOnUndockEtc = Editor;
 		//#if TRACE
 		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));

@@ -104,6 +104,9 @@ class CiPopupList
 
 		_imgStatic = EdResources.GetImageNoCacheDpi(nameof(Au.Editor.Resources.Resources.ciOverlayStatic));
 		_imgAbstract = EdResources.GetImageNoCacheDpi(nameof(Au.Editor.Resources.Resources.ciOverlayAbstract));
+
+		_popupHtml = new CiPopupHtml(CiPopupHtml.UsedBy.PopupList);
+		_popupTimer = new ATimer(_ShowPopupHtml);
 	}
 
 	private void _tb_ItemClicked(object sender, ToolStripItemClickedEventArgs e)
@@ -145,12 +148,11 @@ class CiPopupList
 	private void _list_SelectedIndexChanged(int index)
 	{
 		if((uint)index < _VisibleCount) {
-			_popupTimer ??= new ATimer(_ShowPopupHtml);
 			_popupTimer.After(300, _VisibleItem(index));
-			_popupHtml?.SetHtml(null);
+			_popupHtml.Html = null;
 		} else {
-			_popupHtml?.Hide();
-			_popupTimer?.Stop();
+			_popupHtml.Hide();
+			_popupTimer.Stop();
 		}
 	}
 
@@ -159,9 +161,9 @@ class CiPopupList
 		var ci = t.Tag as CiComplItem;
 		var html = _compl.GetDescriptionHtml(ci, 0);
 		if(html == null) return;
-		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.PopupList);
+		_popupHtml.Html = html;
+		_popupHtml.OnLinkClick = (ph, e) => ph.Html = _compl.GetDescriptionHtml(ci, e.Link.ToInt(1));
 		_popupHtml.Show(Panels.Editor.ZActiveDoc, _w.Bounds);
-		_popupHtml.SetHtml(html, iSel => _compl.GetDescriptionHtml(ci, iSel));
 	}
 
 	int _VisibleCount => _aVisible.Count;
@@ -223,8 +225,8 @@ class CiPopupList
 		_groups = null;
 		_list.ZAddItems(0, null, null, null);
 		_w.Hide();
-		_popupHtml?.Hide();
-		_popupTimer?.Stop();
+		_popupHtml.Hide();
+		_popupTimer.Stop();
 	}
 
 	public CiComplItem SelectedItem {
@@ -393,7 +395,8 @@ class CiPopupList
 		{
 			_p = p;
 
-			this.Name = this.Text = "Ci.PopupList";
+			this.Name = "Ci.PopupList";
+			this.Text = "Au autocompletion list";
 			this.MinimumSize = Au.Util.ADpi.ScaleSize((150, 150));
 		}
 

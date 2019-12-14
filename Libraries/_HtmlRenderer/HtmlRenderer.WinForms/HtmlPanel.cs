@@ -308,6 +308,10 @@ namespace TheArtOfDev.HtmlRenderer.WinForms
             }
         }
 
+        //Au
+        [Browsable(false)]
+        public CssData BaseCssData => _baseCssData;
+
         /// <summary>
         /// Gets or sets a value indicating whether the container enables the user to scroll to any controls placed outside of its visible boundaries. 
         /// </summary>

@@ -59,6 +59,8 @@ static class EdDatabases
 
 	/// <summary>
 	/// Creates SQLite databases containing design-time assemblies and XML documentation files of a .NET Core runtime. The SDK must be installed.
+	/// </summary>
+	/// <remarks>
 	/// Shows a list dialog.
 	///		If selected All, creates for all runtime versions starting from 3.1, with names ref.version.db (eg ref.3.1.0.db) and doc.version.db, in AFolders.ThisAppBS.
 	///		Else creates only for the selected runtime version, with names ref.db and doc.db, in dataDir, and sets to copy to AFolders.ThisAppBS when opening next time after process restarts.
@@ -73,7 +75,9 @@ static class EdDatabases
 	///		Why need it:
 	///			1. Else users would have to download whole .NET Core SDK. Now need only runtimes.
 	///			2. Parsed XML files can use eg 200 MB of process memory. Now we get doc of a single type/method/etc from database only when need; all other data is not in memory.
-	/// </summary>
+	///			
+	/// Need to run this after changing Core version of C# projects (<TargetFramework>netcoreapp3.1</TargetFramework>). Also update COREVER2 etc in AppHost.cpp.
+	/// </remarks>
 	public static void CreateRefAndDoc(string dataDir = @"Q:\app\Au\Other\Data")
 	{
 		Cursor.Current = Cursors.WaitCursor;

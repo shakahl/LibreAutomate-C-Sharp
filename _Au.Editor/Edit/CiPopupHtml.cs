@@ -43,15 +43,10 @@ class CiPopupHtml
 	public enum UsedBy { PopupList, Signature, Info }
 
 	InactiveWindow _w;
-	_HtmlPanel _html;
+	_HtmlPanel _c;
 	Action<bool> _onHiddenOrDestroyed;
-	Func<int, string> _itemLinkHtml;
+	string _html;
 	UsedBy _usedBy;
-
-	/// <summary>
-	/// The top-level popup window.
-	/// </summary>
-	public InactiveWindow PopupWindow => _CreateOrGet();
 
 	public CiPopupHtml(UsedBy usedy, Action<bool> onHiddenOrDestroyed = null)
 	{
@@ -59,48 +54,109 @@ class CiPopupHtml
 		_onHiddenOrDestroyed = onHiddenOrDestroyed;
 	}
 
+	/// <summary>
+	/// The top-level popup window.
+	/// </summary>
+	public InactiveWindow PopupWindow => _CreateOrGet();
+
+	///// <summary>
+	///// The HTML control.
+	///// </summary>
+	//public HtmlPanel HtmlControl {
+	//	get {
+	//		_CreateOrGet();
+	//		return _c;
+	//	}
+	//}
+
+	/// <summary>
+	/// Called when clicked a link with href prefix "^".
+	/// </summary>
+	public Action<CiPopupHtml, HtmlLinkClickedEventArgs> OnLinkClick { get; set; }
+
+	/// <summary>
+	/// Called to get an image before displaying the HTML or calculating its rectangle.
+	/// </summary>
+	public EventHandler<HtmlImageLoadEventArgs> OnLoadImage { get; set; }
+
+	/// <summary>
+	/// HTML text to show. Set before calling Show.
+	/// </summary>
+	public string Html {
+		get => _html;
+		set {
+			ADebug.PrintIf(!(Empty(value) || value.Starts("<body", true) || value.Starts("<html", true)), "no <body>");
+			if(value != _html) {
+				_html = value;
+				if(IsVisible) {
+					if(_usedBy == UsedBy.Info) _w.Size = _MeasureHtml(_html);
+					_c.Text = _html;
+				}
+			}
+		}
+	}
+
 	InactiveWindow _CreateOrGet()
 	{
 		if(_w == null || _w.IsDisposed) {
-			_w = new InactiveWindow();
+			_w = new InactiveWindow(_usedBy == UsedBy.Info ? WS.POPUP | WS.BORDER : WS.POPUP | WS.THICKFRAME, shadow: _usedBy == UsedBy.Info);
 			_w.SuspendLayout();
-			_w.Name = _w.Text = "Ci.PopupHtml";
-			_w.MinimumSize = Au.Util.ADpi.ScaleSize((150, _usedBy == UsedBy.Info ? 50 : 150));
-			_w.Size = new Size(
-				Screen.FromControl(Program.MainForm).WorkingArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
-				Au.Util.ADpi.ScaleInt(_usedBy switch { UsedBy.PopupList => 360, UsedBy.Signature => 300, _ => 100 })
-				);
+			_w.Name = "Ci.Info";
+			_w.Text = _usedBy switch { UsedBy.PopupList => "Au list item info", UsedBy.Signature => "Au parameters info", _ => "Au quick info" };
+			if(_usedBy == UsedBy.Info) {
 
-			_html = new _HtmlPanel();
-			_html.SuspendLayout();
-			_html.AccessibleName = _html.Name = "Codein_info";
-			_html.Dock = DockStyle.Fill;
-			_html.BackColor = Color.LightYellow;
-			_w.BackColor = Color.LightYellow; //until the control loaded
-			_html.UseSystemCursors = true;
-			_html.BaseStylesheet = CiHtml.s_CSS;
-			_html.LinkClicked += _html_LinkClicked;
+			} else {
+				_w.MinimumSize = Au.Util.ADpi.ScaleSize((150, 150));
+				_w.Size = new Size(
+					Screen.FromControl(Program.MainForm).WorkingArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
+					Au.Util.ADpi.ScaleInt(_usedBy switch { UsedBy.PopupList => 360, UsedBy.Signature => 300, _ => 100 })
+					);
+			}
 
-			_w.Controls.Add(_html);
-			_html.ResumeLayout();
+			_c = new _HtmlPanel();
+			_c.SuspendLayout();
+			_c.Dock = DockStyle.Fill;
+			var color = Color.FromArgb(0xff, 0xff, 0xf0);
+			_c.BackColor = color;
+			_w.BackColor = color; //until the control loaded
+			_c.UseSystemCursors = true;
+			_c.BaseStylesheet = CiHtml.s_CSS;
+
+			_w.Controls.Add(_c);
+			_c.ResumeLayout();
 			_w.ResumeLayout(true);
 
 			if(_onHiddenOrDestroyed != null) _w.ZHiddenOrDestroyed += _onHiddenOrDestroyed;
+			_c.ImageLoad += (sender, e) => OnLoadImage?.Invoke(sender, e);
+			_c.LinkClicked += (sender, e) => {
+				var s = e.Link;
+				if(s.Starts('#')) return; //anchor
+				e.Handled = true;
+				if(s.Starts('^')) {
+					OnLinkClick?.Invoke(this, e);
+				} else if(s.Starts('|')) { //go to symbol source file/position or web page
+					CiGoTo.GoTo(s, _w);
+				} else {
+					AExec.TryRun(s);
+				}
+			};
 		}
 		return _w;
 	}
 
-	public void SetHtml(string html, Func<int, string> itemLinkHtml = null)
+	Size _MeasureHtml(string html)
 	{
-		_itemLinkHtml = itemLinkHtml;
-		UpdateHtml(html);
-	}
-
-	public void UpdateHtml(string html)
-	{
-		ADebug.PrintIf(!(Empty(html) || html.Starts("<body", true) || html.Starts("<html", true)), "no <body>");
-		_CreateOrGet();
-		_html.Text = html;
+		if(Empty(html)) return default;
+		int sbWid = SystemInformation.VerticalScrollBarWidth;
+		using var g = _c.CreateGraphics();
+		var zf = HtmlRender.Measure(g, html, 0, _c.BaseCssData, imageLoad: OnLoadImage);
+		int wid = (int)zf.Width;
+		int waWid = Screen.FromControl(Program.MainForm).WorkingArea.Width * 2 / 3 - sbWid;
+		if(wid > waWid) { //remeasure, because HtmlRender.Measure returns maxWidth parameter if it is > text width
+			zf = HtmlRender.Measure(g, html, waWid, _c.BaseCssData, imageLoad: OnLoadImage);
+			wid = (int)zf.Width;
+		}
+		return new Size(wid + sbWid, (int)zf.Height + 3);
 	}
 
 	/// <summary>
@@ -113,14 +169,15 @@ class CiPopupHtml
 	public void Show(SciCode ownerControl, Rectangle anchorRect, PopupAlignment align = 0, bool hideIfOutside = false)
 	{
 		_CreateOrGet();
-		_w.ZCalculateAndSetPosition(anchorRect, align);
+		_w.ZCalculateAndSetPosition(anchorRect, align, _usedBy == UsedBy.Info ? _MeasureHtml(_html) : default(Size?));
+		_c.Text = _html;
 		_w.ZShow(ownerControl);
 
 		if(hideIfOutside) {
 			ATimer.Every(100, t => {
 				if(IsVisible) {
 					Point p = AMouse.XY;
-					if(anchorRect.Contains(p) || _w.Bounds.Contains(p) || _w.Capture) return;
+					if(anchorRect.Contains(p) || _w.Bounds.Contains(p) || _w.Capture || _c.Capture) return;
 					Hide();
 				}
 				t.Stop();
@@ -128,39 +185,21 @@ class CiPopupHtml
 		}
 	}
 
-	public void Show(SciCode ownerControl, int position) //FUTURE: remove if unused
+	public void Show(SciCode ownerControl, int pos16, bool hideIfOutside = false)
 	{
-		var r = CiUtil.GetCaretRectFromPos(ownerControl, position);
-		r.Inflate(100, 10);
-		Show(ownerControl, r, PopupAlignment.TPM_VERTICAL);
+		var r = CiUtil.GetCaretRectFromPos(ownerControl, pos16);
+		r.X -= 50; r.Width += 100;
+		Show(ownerControl, ownerControl.RectangleToScreen(r), PopupAlignment.TPM_VERTICAL, hideIfOutside);
 	}
 
 	public void Hide()
 	{
 		if(!IsVisible) return;
 		_w.Hide();
-		SetHtml(null);
+		_c.Text = _html = null;
 	}
 
 	public bool IsVisible => _w?.Visible ?? false;
-
-	private void _html_LinkClicked(object sender, HtmlLinkClickedEventArgs e)
-	{
-		e.Handled = true;
-		var s = e.Link;
-		if(s.Starts('^')) { //select another symbol (usually overload) in the list of symbols
-			int i = s.ToInt(1);
-			UpdateHtml(_itemLinkHtml(i));
-		} else if(s.Starts('|')) { //go to symbol source file/position or web page
-			CiGoTo.GoTo(s, _w);
-		} else if(s.Starts('!')) { //eg insert using directive
-			CodeInfo._diag.LinkClicked(s);
-		} else if(s.Starts('#')) { //anchor
-			e.Handled = false;
-		} else {
-			AExec.TryRun(s);
-		}
-	}
 
 	class _HtmlPanel : HtmlPanel
 	{
@@ -179,7 +218,7 @@ class CiPopupHtml
 
 		protected override void OnMouseUp(MouseEventArgs e)
 		{
-			if(!Empty(this.SelectedText)) Focus(); //the user may want Ctrl+C
+			if(Visible && !Empty(this.SelectedText)) Focus(); //the user may want Ctrl+C
 			base.OnMouseUp(e);
 		}
 	}

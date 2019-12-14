@@ -42,7 +42,7 @@ Files are of these types:
 
 Folders are of these types:
 - simple folders.
-- folders named like *@Project* are [project](xref:class_project) folders.
+- folders named like <i>@Project</i> are [project](xref:class_project) folders.
 
 The collection of files and folders is a *workspace*. It is a folder on disk. In the folder:
 - the **files** folder contains all files and folders of the workspace.
@@ -75,9 +75,7 @@ The program and [Print]() prints various info here. For example script compilati
 Right-click to show context menu. Middle-click to clear.
 
 #### Info
-Quick info about a function, class etc from mouse in the code editor.
-
-Below: mouse x y in window client area, window info, mouse x y in screen, program, control info.
+Quick info about object from mouse. In code editor - function, class etc. In other windows - mouse x y, window name/class/program, control id/class, menu item id.
 
 ### Menus
 Currently many menu commands are not implemented. These menu items have white invisible text.

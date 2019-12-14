@@ -165,9 +165,11 @@ class CiSignature
 		rect.Width += Au.Util.ADpi.ScaleInt(200);
 		rect.X -= 6;
 
-		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Signature, _ => _data = null);
+		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Signature, onHiddenOrDestroyed: _ => _data = null) {
+			OnLinkClick = (ph, e) => ph.Html = _FormatHtml(e.Link.ToInt(1), userSelected: true)
+		};
+		_popupHtml.Html = html;
 		_popupHtml.Show(Panels.Editor.ZActiveDoc, rect, PopupAlignment.TPM_VERTICAL);
-		_popupHtml.SetHtml(html, i => _FormatHtml(i, userSelected: true));
 		//APerf.NW();
 	}
 
@@ -259,7 +261,7 @@ class CiSignature
 				} else {
 					if(--i < 0) i = n - 1;
 				}
-				if(i != _data.iSelected) _popupHtml.UpdateHtml(_FormatHtml(i, userSelected: true));
+				if(i != _data.iSelected) _popupHtml.Html = _FormatHtml(i, userSelected: true);
 				return true;
 			}
 		}

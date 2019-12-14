@@ -25,7 +25,7 @@ Free, open-source.
 #### Where can run
 Editor and library can run on Windows 7, 8, 8.1, 10. Currently editor is 64-bit only.
 
-Also need .NET Core runtime 3.1 or later. It is a collection of libraries from Microsoft. Install both Core Runtime x64 and Core Desktop Runtime x64. The download and setup is fast and easy.
+Also need .NET Core Desktop Runtime 3.1 or later. Download x64. It is a collection of libraries from Microsoft.
 
 #### Unfinished
 Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes/functions/etc will be changed in the future, which can break your scripts, clear settings, etc.
@@ -34,7 +34,7 @@ Currently the editor program still does not have a real name and can be called "
 
 #### Links
 - [Download](https://www.quickmacros.com/au/qm3setup.exe)
-- [.NET Core Runtimes](https://dotnet.microsoft.com/download)
+- [.NET Core Runtime](https://dotnet.microsoft.com/download)
 - [Source code](https://github.com/qmgindi/Au)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)
 - [Email](mailto:support@quickmacros.com)

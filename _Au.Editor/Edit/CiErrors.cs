@@ -35,7 +35,6 @@ class CiErrors
 	List<(Diagnostic d, int start, int end)> _codeDiag;
 	readonly List<(int from, int to, string s)> _metaErrors = new List<(int, int, string)>();
 	readonly List<(int from, int to, string s)> _stringErrors = new List<(int, int, string)>();
-	CiPopupHtml _popupHtml;
 
 	public void Inicators(int start16, int end16)
 	{
@@ -206,18 +205,11 @@ class CiErrors
 			}
 		}
 
-		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Info, onHiddenOrDestroyed: _ => IsVisibleUI = false);
-		var rect = CiUtil.GetCaretRectFromPos(doc, pos16);
-		rect.X -= 40; rect.Width += 200;
-		_popupHtml.Show(doc, doc.RectangleToScreen(rect), PopupAlignment.TPM_VERTICAL, hideIfOutside: true);
-		_popupHtml.SetHtml(b.Append("</body>").ToString());
-		IsVisibleUI = true;
-	}
+		b.Append("</body>");
+		var html = b.ToString();
 
-	//public void SciMouseDwellEnded(SciCode doc)
-	//{
-	//	//_popupHtml?.Hide(doc);
-	//}
+		CodeInfo.ShowHtmlPopup(doc, pos16, html, onLinkClick: (ph, e) => _LinkClicked(e.Link));
+	}
 
 	void _UsingsEtc(StringBuilder b, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod)
 	{
@@ -280,7 +272,7 @@ class CiErrors
 			for(int i = 0; i < usings.Count; i++) {
 				var u = usings[i];
 				if(i > 0) b.Append(" or ");
-				b.AppendFormat("<a href='!u{0}{1}'>{1}</a>", sstart, u);
+				b.AppendFormat("<a href='^u{0}{1}'>{1}</a>", sstart, u);
 			}
 			b.Append("</div>");
 			if(!extMethod) {
@@ -288,19 +280,19 @@ class CiErrors
 				for(int i = 0; i < usings.Count; i++) {
 					var u = usings[i];
 					if(i > 0) b.Append(" or ");
-					b.AppendFormat("<a href='!p{0}{1}'>{1}</a>", sstart, u);
+					b.AppendFormat("<a href='^p{0}{1}'>{1}</a>", sstart, u);
 				}
 				b.Append("</div>");
 			}
 		} else {
-			b.Append("\r\n<div><a href='!r'>Add assembly reference...</a></div>");
-			if(!(extMethod | isGeneric | isAttribute)) b.AppendFormat("\r\n<div><a href='!w{0}'>Find Windows API...</a></div>", errName);
+			b.Append("\r\n<div><a href='^r'>Add assembly reference...</a></div>");
+			if(!(extMethod | isGeneric | isAttribute)) b.AppendFormat("\r\n<div><a href='^w{0}'>Find Windows API...</a></div>", errName);
 		}
 	}
 
-	public void LinkClicked(string s)
+	void _LinkClicked(string s)
 	{
-		_popupHtml.Hide();
+		CodeInfo.HideHtmlPopup();
 		char action = s[1];
 		if(action == 'u' || action == 'p') { //add 'using', prefix namespace
 			int pos8 = s.ToInt(2, out int i);
@@ -319,11 +311,4 @@ class CiErrors
 			Strips.Cmd.File_Properties();
 		}
 	}
-
-	public void HideTempWindows()
-	{
-		_popupHtml?.Hide();
-	}
-
-	public bool IsVisibleUI { get; private set; }
 }

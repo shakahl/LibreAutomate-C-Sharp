@@ -32,7 +32,6 @@ class PanelFound : AuUserControlBase
 		_c = new AuScintilla();
 		_c.AccessibleName = _c.Name = "Found_list";
 		_c.Dock = DockStyle.Fill;
-
 		_c.ZInitReadOnlyAlways = true;
 		_c.ZInitTagsStyle = AuScintilla.ZTagsStyle.AutoAlways;
 		_c.ZAcceptsReturn = true;

@@ -1153,16 +1153,6 @@ namespace Au.Editor.Resources {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap deb_end {
-            get {
-                object obj = ResourceManager.GetObject("deb_end", resourceCulture);
-                return ((System.Drawing.Bitmap)(obj));
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized resource of type System.Drawing.Bitmap.
-        /// </summary>
         internal static System.Drawing.Bitmap deb_into {
             get {
                 object obj = ResourceManager.GetObject("deb_into", resourceCulture);
@@ -1483,9 +1473,9 @@ namespace Au.Editor.Resources {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap tags {
+        internal static System.Drawing.Bitmap stop {
             get {
-                object obj = ResourceManager.GetObject("tags", resourceCulture);
+                object obj = ResourceManager.GetObject("stop", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }
@@ -1493,9 +1483,9 @@ namespace Au.Editor.Resources {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Bitmap.
         /// </summary>
-        internal static System.Drawing.Bitmap tip_book {
+        internal static System.Drawing.Bitmap tags {
             get {
-                object obj = ResourceManager.GetObject("tip_book", resourceCulture);
+                object obj = ResourceManager.GetObject("tags", resourceCulture);
                 return ((System.Drawing.Bitmap)(obj));
             }
         }

@@ -21,29 +21,30 @@ using Au.Compiler;
 
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.CSharp.QuickInfo;
+using Au.Controls;
 
 class CiQuickInfo
 {
-	public async void SciMouseDwellStarted(SciCode doc, int positionUtf8)
+	public async void SciMouseDwellStarted(SciCode doc, int pos8)
 	{
 		var pi = Panels.Info;
-		if(!pi.Visible) return;
+		if(!pi.Visible) pi=null;
 
-		if(positionUtf8 <= 0) { pi.ZSetAboutInfo(); return; }
+		if(pos8 <= 0) { pi?.ZSetAboutInfo(); return; }
 
 		//APerf.First();
-		int position = doc.Pos16(positionUtf8);
-		if(!CodeInfo.GetContextAndDocument(out var cd, position)) { pi.ZSetAboutInfo(cd.metaEnd > 0); return; }
+		int pos16 = doc.Pos16(pos8);
+		if(!CodeInfo.GetContextAndDocument(out var cd, pos16)) { pi?.ZSetAboutInfo(cd.metaEnd > 0); return; }
 
 		//APerf.Next();
-		var context = new QuickInfoContext(cd.document, position, default);
+		var context = new QuickInfoContext(cd.document, pos16, default);
 
 		//APerf.Next();
 		var provider = new CSharpSemanticQuickInfoProvider();
 		//var r = await provider.GetQuickInfoAsync(context); //not async
 		var r = await Task.Run(async () => await provider.GetQuickInfoAsync(context));
 		//APerf.Next();
-		if(r == null) { pi.ZSetAboutInfo(); return; }
+		if(r == null) { pi?.ZSetAboutInfo(); return; }
 
 		//Print(r.Span, r.RelatedSpans);
 		//Print(r.Tags);
@@ -88,7 +89,11 @@ class CiQuickInfo
 		html = html.Replace("<p><br>", "<p>");
 		html = html.Replace("><br>", ">&nbsp;<br>"); //workaround for HtmlRenderer bug: adds 2 lines.
 													 //APerf.Next();
-		pi.ZSetText(html);
+		if(pi != null) {
+			pi.ZSetText(html);
+		} else {
+			CodeInfo.ShowHtmlPopup(doc, pos16, html);
+		}
 		//APerf.NW();
 	}
 }
