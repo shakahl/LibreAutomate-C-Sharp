@@ -21,6 +21,8 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
+using System.Reflection.Metadata;
+using System.Reflection.PortableExecutable;
 
 namespace Au.Compiler
 {
@@ -61,7 +63,8 @@ namespace Au.Compiler
 					ok = _Compile(reason == ECompReason.Run, f, out r, projFolder);
 				}
 				catch(Exception ex) {
-					Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
+					//Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
+					Print($"Failed to compile '{f.Name}'. {ex}");
 				}
 
 				if(!ok) {
@@ -226,7 +229,7 @@ namespace Au.Compiler
 			}
 
 			//p1.Next();
-			var asmStream = new MemoryStream(4096);
+			var asmStream = new MemoryStream(8000);
 			var emitResult = compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
 
 			if(needOutputFiles) {
@@ -281,12 +284,21 @@ namespace Au.Compiler
 				r.file = outFile;
 
 				if(m.Role == ERole.exeProgram) {
-					//copy Core app host template exe, add native resources, set console flag if need
-					string exeFile = _AppHost(outFile, m);
+					bool need32 = m.Prefer32Bit || AVersion.Is32BitOS;
+					bool need64 = !need32 || m.Optimize;
+					need32 |= m.Optimize;
+
+					//copy Core app host template exe, add native resources, set assembly name, set console flag if need
+					p1.Next();
+					if(need64) _AppHost(outFile, fileName, m, bit32: false);
+					p1.Next('6');
+					if(need32) _AppHost(outFile, fileName, m, bit32: true);
+					p1.Next('3');
 
 					//p1.Next();
-					//copy non-.NET references to the output directory
-					_CopyReferenceFiles(m);
+					//copy dlls to the output directory
+					_CopyDlls(m, asmStream, need64: need64, need32: need32);
+					p1.Next('d');
 
 					//copy config file to the output directory
 					//var configFile = exeFile + ".config";
@@ -316,7 +328,9 @@ namespace Au.Compiler
 			var refs = m.References.Refs;
 			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
 
-			//p1.NW('C');
+#if TRACE
+			p1.NW('C');
+#endif
 			return true;
 		}
 
@@ -476,71 +490,117 @@ namespace Au.Compiler
 			else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
 		}
 
-		static string _AppHost(string outFile, MetaComments m)
+		static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32)
 		{
 			//A .NET Core exe actually is a managed dll hosted by a native exe file known as apphost.
 			//When creating an exe, VS copies template apphost from eg "C:\Program Files\dotnet\sdk\3.1.100\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
 			//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
 
-			string exeFile = outFile.ReplaceAt(outFile.Length - 3, 3, "exe"); //assembly dll -> native host exe
-			var appHost = AFolders.ThisAppBS + (m.Prefer32Bit ? "32" : "64") + @"\Au.AppHost.exe";
+			string exeFile = DllNameToAppHostExeName(outFile, bit32);
+			var appHost = AFolders.ThisAppBS + (bit32 ? "32" : "64") + @"\Au.AppHost.exe";
 #if true
-			AFile.Copy(appHost, exeFile, IfExists.Delete);
+			//var p1 = APerf.Create();
 			bool done = false;
 			try {
-				//set console flag in file headers
-				if(m.Console) {
-					using var fs = File.OpenWrite(exeFile);
-					fs.Position = 0x14c;
-					fs.WriteByte(3); //IMAGE_SUBSYSTEM_WINDOWS_CUI
+				var b = File.ReadAllBytes(appHost);
+				//p1.Next();
+				//write assembly name in placeholder memory. In AppHost.cpp: char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
+				fixed(byte* p = b) {
+					int i = Util.LibBytePtr.AsciiFindString(p, b.Length, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
+					i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
+					b[i] = 0;
 				}
-				//copy native resources from assembly dll. Don't need native resources in it, but this is how VS does, so we too.
-				using(var ru = new Microsoft.NET.HostModel.ResourceUpdater(exeFile)) {
-					ru.AddResourcesFromPEImage(outFile).Update();
+				//if console, write IMAGE_SUBSYSTEM_WINDOWS_CUI
+				if(m.Console) b[0x14c] = 3;
+
+				for(int i = 5; ; i += Math.Min(i, 200)) { //retry, because sometimes access violation, maybe is open by AV
+					try {
+						File.WriteAllBytes(exeFile, b);
+						//p1.Next('c');
+						//copy native resources from assembly dll. Don't need native resources in dll (only version), but this is how VS does.
+						using var u = new Microsoft.NET.HostModel.ResourceUpdater(exeFile);
+						u.AddResourcesFromPEImage(outFile).Update();
+					}
+					catch when(i < 2_000) { //WriteAllBytes usually throws IOException; ResourceUpdater undocumented.
+						Thread.Sleep(i);
+						continue;
+					}
+					break;
 				}
-				File.SetLastWriteTimeUtc(exeFile, DateTime.UtcNow);
+				//p1.NW();
 				done = true;
 			}
-			finally { if(!done) AFile.Delete(exeFile); }
+			finally { if(!done) Api.DeleteFile(exeFile); }
 #else
-			//works, but: 1. Need nuget Microsoft.NET.HostModel, or copy more code from its source. 2. Apphost exe must be console; not good because used not only here. 3. Apphost exe must have a string placeholder; it is the easiest part.
-			//	Most of the above code is like HostWriter.CreateAppHost does.
 			Microsoft.NET.HostModel.AppHost.HostWriter.CreateAppHost(appHost, exeFile, fileName, !m.Console, outFile); //nuget Microsoft.NET.HostModel
+			//works, but: 1. Need nuget Microsoft.NET.HostModel, or copy more code from its source. 2. Apphost exe must be console; can't because used not only here.
+			//	Most of the above code is like in HostWriter.CreateAppHost.
 #endif
 
 			return exeFile;
+
+			//speed: Windows Defender makes this the slowest part of the compilation.
+			//	2-3 times slower if this is used only for 64bit, and 3-5 times slower if for 32bit too.
+			//	Workaround: add the output folder to AV exclusions.
+			//	FUTURE: try to replace ResourceUpdater.AddResourcesFromPEImage with code that would be faster with AV.
+			//		Now opens/saves 2 times. Each 25-30 ms with AV. Would be single 25-30 ms.
+			//		Also don't write native resources to the dll.
+			//			But wait, maybe in the future .NET Core can run managed exe without native apphost, like the old good .NET Framework.
 		}
 
-		static void _CopyReferenceFiles(MetaComments m)
+		static void _CopyDlls(MetaComments m, MemoryStream asmStream, bool need64, bool need32)
 		{
-			//info: tried to get all used references, unsuccessfully.
-			//	And don't need it. We'll copy Au.dll and all non-default references that are not in runtime folders.
-			//	Can try: now can unload assemblies... Or use System.Runtime.Metadata.
-			//	Never mind. If explicitly specified, copy even if not used.
+			asmStream.Position = 0;
+			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
+			var mr = pr.GetMetadataReader();
+			var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToList();
+			//Print(usedRefs); Print("---");
 
-			_CopyFileIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll");
+			bool _CopyRefIfNeed(string sFrom, string sTo)
+			{
+				if(!usedRefs.Contains(APath.GetFileName(sFrom, withoutExtension: true), StringComparer.OrdinalIgnoreCase)) return false;
+				_CopyFileIfNeed(sFrom, sTo);
+				return true;
+			}
+
+			if(_CopyRefIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll")) {
+				if(need64) _CopyFileIfNeed(AFolders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
+				if(need32) _CopyFileIfNeed(AFolders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
+			}
 
 			var refs = m.References.Refs;
 			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
 				var s1 = refs[i].FilePath;
 				var s2 = m.OutputPath + "\\" + APath.GetFileName(s1);
 				//Print(s1, s2);
-				_CopyFileIfNeed(s1, s2);
+				_CopyRefIfNeed(s1, s2);
 			}
 
-			//also copy C++ dlls
-			_CopyFileIfNeed(AFolders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
-			_CopyFileIfNeed(AFolders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
-			//SHOULDDO: copy sqlite3.dll, if used class ASqlite. Or add a 'copyFile' meta.
+			//copy unmanaged dlls
+			bool usesSqlite = false;
+			foreach(var handle in mr.TypeReferences) {
+				var tr = mr.GetTypeReference(handle);
+				//Print(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
+				string type = mr.GetString(tr.Name);
+				if((type.Starts("ASqlite") && mr.GetString(tr.Namespace) == "Au") || (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) {
+					usesSqlite = true;
+					break;
+				}
+			}
+			//Print(usesSqlite);
+			if(usesSqlite) {
+				if(need64) _CopyFileIfNeed(AFolders.ThisAppBS + @"64\sqlite3.dll", m.OutputPath + @"\64\sqlite3.dll");
+				if(need32) _CopyFileIfNeed(AFolders.ThisAppBS + @"32\sqlite3.dll", m.OutputPath + @"\32\sqlite3.dll");
+			}
 		}
 
 		static void _CopyFileIfNeed(string sFrom, string sTo)
 		{
+			//Print(sFrom);
 			if(AFile.GetProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
 				&& AFile.GetProperties(sFrom, out var p1, FAFlags.UseRawPath)
 				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
 				&& p2.Size == p1.Size) return;
-			//ADebug.Print("copy");
 			AFile.Copy(sFrom, sTo, IfExists.Delete);
 		}
 
@@ -549,7 +609,7 @@ namespace Au.Compiler
 			var x = post ? m.PostBuild : m.PreBuild;
 			string[] args;
 			if(x.s == null) {
-				args = new string[] { outFile };
+				args = new string[] { _OutputFile() };
 			} else {
 				args = Util.AStringUtil.CommandLineToArray(x.s);
 
@@ -559,16 +619,19 @@ namespace Au.Compiler
 				string _ReplFunc(RXMatch k)
 				{
 					switch(k[1].Value) {
-					case "source": return f.ItemPath;
-					case "outputFile": return outFile;
+					case "outputFile": return _OutputFile();
 					case "outputPath": return m.OutputPath;
-					case "optimize": return m.Optimize ? "true" : "false";
+					case "source": return f.ItemPath;
 					case "role": return m.Role.ToString();
+					case "optimize": return m.Optimize ? "true" : "false";
+					case "prefer32bit": return m.Prefer32Bit ? "true" : "false";
 					default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
 					}
 				}
 				for(int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
 			}
+
+			string _OutputFile() => m.Role == ERole.exeProgram ? DllNameToAppHostExeName(outFile, m.Prefer32Bit || AVersion.Is32BitOS) : outFile;
 
 			bool ok = Compile(ECompReason.Run, out var r, x.f);
 			if(r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
@@ -578,6 +641,12 @@ namespace Au.Compiler
 			return true;
 		}
 		static ARegex s_rx1;
+
+		/// <summary>
+		/// Replaces ".dll" with "-32.exe" if bit32, else with ".exe".
+		/// </summary>
+		public static string DllNameToAppHostExeName(string dll, bool bit32)
+			=> dll.ReplaceAt(dll.Length - 4, 4, bit32 ? "-32.exe" : ".exe");
 	}
 
 	public enum ECompReason { Run, CompileAlways, CompileIfNeed }

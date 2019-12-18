@@ -494,11 +494,12 @@ class RunningTasks
 
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskParams = null;
+		bool bit32 = r.prefer32bit || AVersion.Is32BitOS;
 		if(r.notInCache) { //meta role exeProgram
-			exeFile = r.file.ReplaceAt(r.file.Length - 3, 3, "exe"); //assembly dll -> native host exe
+			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
 			argsString = args == null ? null : Au.Util.AStringUtil.CommandLineFromArray(args);
 		} else {
-			exeFile = AFolders.ThisAppBS + (r.prefer32bit ? "Au.Task32.exe" : "Au.Task.exe");
+			exeFile = AFolders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 
 			//int iFlags = r.hasConfig ? 1 : 0;
 			int iFlags = 0;
@@ -507,8 +508,8 @@ class RunningTasks
 			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, r.fullPathRefs, wrPipeName);
 			wrPipeName = null;
 
-			if(r.prefer32bit && AVersion.Is64BitOS) preIndex += 3;
-			pre = s_preloaded[preIndex] ?? (s_preloaded[preIndex] = new _Preloaded(preIndex));
+			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;
+			pre = s_preloaded[preIndex] ??= new _Preloaded(preIndex);
 			argsString = pre.pipeName;
 		}
 

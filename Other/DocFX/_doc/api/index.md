@@ -13,10 +13,10 @@
 ##### Other dll files
 - 64\AuCpp.dll - used by Au.dll in 64-bit processes.
 - 32\AuCpp.dll - used by Au.dll in 32-bit processes.
-- 64\sqlite3.dll - used by the SQLite wrapper class in 64-bit processes.
-- 32\sqlite3.dll - used by the SQLite wrapper class in 32-bit processes.
+- 64\sqlite3.dll - used by the ASqlite class in 64-bit processes.
+- 32\sqlite3.dll - used by the ASqlite class in 32-bit processes.
 
-These files are in the editor folder. When creating an .exe file from a script, they are copied to the .exe folder, except sqlite3.dll.
+These files are in the editor folder. The .exe compiler copies them to the .exe folder if need.
 
 Other dll files in the editor folder are not part of the library. They are undocumented.
 

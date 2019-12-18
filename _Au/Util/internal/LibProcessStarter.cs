@@ -122,7 +122,7 @@ namespace Au.Util
 
 				//APerf.First();
 #if false //works, but slow, eg 60 ms, even if we don't create task everytime
-				var s = $"\"{AFolders.ThisAppBS}{(AVersion.Is64BitProcess ? "64" : "32")}\\AuCpp.dll\",Cpp_RunDll";
+				var s = $"\"{AFolders.ThisAppBS}{(AVersion.Is32BitProcess ? "32" : "64")}\\AuCpp.dll\",Cpp_RunDll";
 				WinTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, AFolders.System + "rundll32.exe", s);
 				//WinTaskScheduler.CreateTaskToRunProgramOnDemand("Au", "rundll32", false, AFolders.System + "notepad.exe"); //slow too
 				//APerf.Next();

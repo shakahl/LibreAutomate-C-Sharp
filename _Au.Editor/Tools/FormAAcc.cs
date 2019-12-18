@@ -126,7 +126,7 @@ namespace Au.Tools
 			if(!sameTree) _FillTree(p);
 			_UpdateCodeBox();
 
-			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has(AccMiscFlags.Java) && AVersion.Is64BitOS)
+			if(captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has(AccMiscFlags.Java) && !AVersion.Is32BitOS)
 				_SetFormInfo(c_infoJava);
 
 			//APerf.NW();
@@ -855,7 +855,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 				}
 				bool en = enable.GetValueOrDefault();
 
-				if(!GetJavaPath(out var dir)) return (false, "Cannot find Java" + (AVersion.Is64BitProcess ? "64" : "") + "-bit. Make sure it is installed.");
+				if(!GetJavaPath(out var dir)) return (false, "Cannot find Java " + (AVersion.Is32BitProcess ? "32" : "64") + "-bit. Make sure it is installed.");
 
 				//if(!allUsers) {
 				string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;

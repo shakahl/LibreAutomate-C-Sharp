@@ -187,7 +187,7 @@ class CiCompletion
 		ADebug.LibMemorySetAnchor();
 		//Print(GCSettings.LatencyMode);
 		bool noGC = false;
-		if(AVersion.Is64BitProcess) try { noGC = GC.TryStartNoGCRegion(50_000_000); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
+		if(!AVersion.Is32BitProcess) try { noGC = GC.TryStartNoGCRegion(50_000_000); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
 #endif
 		if(!cd.GetDocument()) return; //returns false if fails (unlikely)
 		Document document = cd.document;

@@ -730,7 +730,7 @@ namespace Au.Types
 					get
 					{
 						if(_fAnyOperationsAborted_common != 0) return true;
-						var v = AVersion.Is64BitProcess ? _fAnyOperationsAborted_64 : _fAnyOperationsAborted_32;
+						var v = AVersion.Is32BitProcess ? _fAnyOperationsAborted_32 : _fAnyOperationsAborted_64;
 						return v != 0;
 					}
 				}

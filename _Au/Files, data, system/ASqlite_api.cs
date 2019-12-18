@@ -593,9 +593,7 @@ namespace Au.Types
 
 		static SLApi()
 		{
-			if(default == Api.GetModuleHandle(SQLITE_DLL)
-				&& default == Api.LoadLibrary(AFolders.ThisAppBS + (IntPtr.Size == 8 ? @"64\" : @"32\") + SQLITE_DLL))
-				throw new DllNotFoundException(SQLITE_DLL);
+			AFile.More.LoadDll64or32Bit(SQLITE_DLL);
 		}
 
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]

@@ -57,8 +57,7 @@ namespace Au.Controls
 
 		static AuScintilla()
 		{
-			var path = ZDllPath;
-			if(default == Api.LoadLibrary(path)) throw new AuException(0, $"*load '{path}'");
+			AFile.More.LoadDll64or32Bit("SciLexer.dll");
 		}
 
 		///
@@ -76,7 +75,6 @@ namespace Au.Controls
 					 false);
 
 			this.Size = new Size(200, 100);
-			this.AccessibleRole = AccessibleRole.Text;
 		}
 
 		protected override CreateParams CreateParams {
@@ -128,7 +126,7 @@ namespace Au.Controls
 			if(hasImages) ZImages = new SciImages(this, ZInitImagesStyle == ZImagesStyle.AnyString);
 			if(hasTags) ZTags = new SciTags(this);
 
-			if(AccessibleName == null) AccessibleName = Name;
+			this.AccessibleRole = ZInitReadOnlyAlways ? AccessibleRole.StaticText : AccessibleRole.Text;
 
 			if(this.AllowDrop) Api.RevokeDragDrop(hwnd);
 
@@ -633,26 +631,6 @@ namespace Au.Controls
 		#region properties
 
 		/// <summary>
-		/// Scintilla dll path.
-		/// Default is <c>AFolders.ThisAppBS + (AVersion.Is64BitProcess ? "64" : "32") + @"\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
-		/// </summary>
-		public static string ZDllPath {
-			get {
-				if(s_dllPath == null) {
-					s_dllPath = AFolders.ThisAppBS + (AVersion.Is64BitProcess ? "64" : "32") + @"\SciLexer.dll";
-					if(!AFile.ExistsAsFile(s_dllPath, true)) { //in designer?
-						s_dllPath = @"Q:\app\Au\_\" + (AVersion.Is64BitProcess ? "64" : "32") + @"\SciLexer.dll";
-					}
-				}
-				return s_dllPath;
-			}
-			set {
-				s_dllPath = APath.Normalize(value);
-			}
-		}
-		static string s_dllPath;
-
-		/// <summary>
 		/// Border style.
 		/// Must be set before creating control handle.
 		/// </summary>
@@ -783,6 +761,8 @@ namespace Au.Controls
 			AuScintilla _control;
 
 			public _Acc(AuScintilla ownerControl) : base(ownerControl) => _control = ownerControl;
+
+			public override string Name => _control.ZInitReadOnlyAlways ? _control.Text?.Limit(0xffff) : _control.Name;
 
 			public override AccessibleStates State => base.State | (_control.Z.IsReadonly ? AccessibleStates.ReadOnly : 0);
 		}

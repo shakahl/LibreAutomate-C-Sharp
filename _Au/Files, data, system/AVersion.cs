@@ -43,13 +43,12 @@ namespace Au
 			_minWin8_1 = _winver >= Win8_1;
 			_minWin10 = _winver >= Win10;
 
-			_is64BitOS = Environment.Is64BitProcess; //fast
-			if(!_is64BitOS) _is64BitOS = Api.IsWow64Process(Api.GetCurrentProcess(), out _isWow64) && _isWow64;
+			_is32BitOS = sizeof(IntPtr) == 4 && !(Api.IsWow64Process(Api.GetCurrentProcess(), out _isWow64) && _isWow64);
 		}
 
 		static readonly int _winver;
 		static readonly bool _minWin8, _minWin8_1, _minWin10;
-		static readonly bool _is64BitOS, _isWow64;
+		static readonly bool _is32BitOS, _isWow64;
 
 		/// <summary>
 		/// Gets classic Windows major+minor version value:
@@ -80,17 +79,15 @@ namespace Au
 		public static bool MinWin10 => _minWin10;
 
 		/// <summary>
-		/// true if this process is 64-bit, false if 32-bit.
-		/// The same as <see cref="Environment.Is64BitProcess"/>.
+		/// true if this process is 32-bit, false if 64-bit.
+		/// The same as <c>sizeof(IntPtr) == 4</c>.
 		/// </summary>
-		public static bool Is64BitProcess => Environment.Is64BitProcess;
-		//Environment.Is64BitProcess is fast, just returns true or false depending on #if
+		public static bool Is32BitProcess => sizeof(IntPtr) == 4;
 
 		/// <summary>
-		/// true if Windows is 64-bit, false if 32-bit.
-		/// The same as <see cref="Environment.Is64BitOperatingSystem"/>, but fast. The .NET function is slow in 32-bit process; they forgot to optimize it.
+		/// true if Windows is 32-bit, false if 64-bit.
 		/// </summary>
-		public static bool Is64BitOS => _is64BitOS;
+		public static bool Is32BitOS => _is32BitOS;
 
 		/// <summary>
 		/// Returns true if this process is a 32-bit process running on 64-bit Windows. Also known as WOW64 process.

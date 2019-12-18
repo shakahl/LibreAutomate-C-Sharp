@@ -8267,6 +8267,20 @@
             Don't use this function for files (throws exception) and drives (instead use <see cref="T:System.IO.DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
             </remarks>
         </member>
+        <member name="M:Au.AFile.More.LoadDll64or32Bit(System.String)">
+            <summary>
+            Loads an unmanaged dll from subfolder "64" or "32" depending on whether this process is 64-bit or 32-bit.
+            </summary>
+            <param name="fileName">Dll file name like "name.dll".</param>
+            <exception cref="T:System.DllNotFoundException"></exception>
+            <remarks>
+            If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. Let they live in subfolders "64" and "32" of your program folder. They must have same name. This function loads correct dll version. Then [DllImport("dll")] will use the loaded dll. Don't need two different DllImport for functions ([DllImport("dll64")] and [DllImport("dll32")]).
+            
+            If the dll does not exist in these folders, this function also looks in:
+            - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then AFolders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
+            - subfolder "64" or "32" of <see cref="P:Au.AFolders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
+            </remarks>
+        </member>
         <member name="T:Au.AFolders">
              <summary>
              Gets known/special folder paths (Desktop, Temp, etc).
@@ -10575,16 +10589,15 @@
             true if Windows 10 or later.
             </summary>
         </member>
-        <member name="P:Au.AVersion.Is64BitProcess">
+        <member name="P:Au.AVersion.Is32BitProcess">
             <summary>
-            true if this process is 64-bit, false if 32-bit.
-            The same as <see cref="P:System.Environment.Is64BitProcess"/>.
+            true if this process is 32-bit, false if 64-bit.
+            The same as <c>sizeof(IntPtr) == 4</c>.
             </summary>
         </member>
-        <member name="P:Au.AVersion.Is64BitOS">
+        <member name="P:Au.AVersion.Is32BitOS">
             <summary>
-            true if Windows is 64-bit, false if 32-bit.
-            The same as <see cref="P:System.Environment.Is64BitOperatingSystem"/>, but fast. The .NET function is slow in 32-bit process; they forgot to optimize it.
+            true if Windows is 32-bit, false if 64-bit.
             </summary>
         </member>
         <member name="P:Au.AVersion.Is32BitProcessAnd64BitOS">
@@ -17991,14 +18004,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -22771,13 +22776,14 @@
             Calls API <msdn>IsWindowUnicode</msdn>.
             </summary>
         </member>
-        <member name="P:Au.AWnd.Is64Bit">
+        <member name="P:Au.AWnd.Is32Bit">
             <summary>
-            Returns true if the window is of a 64-bit process, false if of a 32-bit process.
+            Returns true if the window is of a 32-bit process, false if of a 64-bit process.
             Also returns false if fails. Supports <see cref="T:Au.ALastError"/>.
-            If <see cref="P:Au.AVersion.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
-            <note>If you know that the window belongs to current process, instead use <see cref="P:System.Environment.Is64BitProcess"/> or <c>IntPtr.Size==8</c>. This function is much slower.</note>
             </summary>
+            <remarks>
+            <note>If you know that the window belongs to current process, instead use <c>IntPtr.Size==4</c>. This function is much slower.</note>
+            </remarks>
         </member>
         <member name="P:Au.AWnd.IsHung">
             <summary>
@@ -24230,30 +24236,6 @@
             Print(i, w);
             ]]></code>
             </example>
-        </member>
-        <member name="M:Au.AWnd.WaitNot(System.Double,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)">
-            <summary>
-            Waits until window does not exist.
-            Parameters etc are the same as <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>.
-            </summary>
-            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>.</exception>
-            <remarks>
-            By default ignores invisible and cloaked windows. Use flags if need.
-            If you have a window's AWnd variable, to wait until it is closed use <see cref="M:Au.AWnd.WaitForClosed(System.Double,System.Boolean)"/> instead.
-            Examples: <see cref="M:Au.AWnd.Wait(System.Double,System.Boolean,System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AWnd.WaitNot(System.Double,Au.AWnd@,Au.AWnd.Finder)">
-            <summary>
-            Waits until window does not exist.
-            </summary>
-            <param name="secondsTimeout"></param>
-            <param name="wFound">On timeout receives the first found matching window that exists.</param>
-            <param name="f">Window properties etc. Can be string, see <see cref="M:Au.AWnd.Finder.op_Implicit(System.String)~Au.AWnd.Finder"/>.</param>
-            <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
         <member name="M:Au.AWnd.WaitForCondition(System.Double,System.Func{Au.AWnd,System.Boolean},System.Boolean)">
             <summary>

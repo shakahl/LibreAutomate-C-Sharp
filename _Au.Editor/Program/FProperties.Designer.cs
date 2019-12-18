@@ -60,8 +60,6 @@
 		// 
 		// _info
 		// 
-		this._info.AccessibleName = "_info";
-		this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 		this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)
 		| System.Windows.Forms.AnchorStyles.Right)));
 		this._info.Location = new System.Drawing.Point(8, 8);

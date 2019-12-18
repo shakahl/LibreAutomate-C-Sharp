@@ -199,7 +199,7 @@ namespace Au
 		public LPARAM SendS(int message, LPARAM wParam, string lParam)
 		{
 			Debug.Assert(!Is0);
-			fixed (char* p = lParam)
+			fixed(char* p = lParam)
 				return Api.SendMessage(this, message, wParam, p);
 			//info: don't use overload, then eg ambiguous if null.
 		}
@@ -211,7 +211,7 @@ namespace Au
 		public LPARAM SendS(int message, LPARAM wParam, char[] lParam)
 		{
 			Debug.Assert(!Is0);
-			fixed (char* p = lParam)
+			fixed(char* p = lParam)
 				return Api.SendMessage(this, message, wParam, p);
 		}
 
@@ -244,7 +244,7 @@ namespace Au
 		{
 			Debug.Assert(!Is0);
 			result = 0;
-			fixed (char* p = lParam)
+			fixed(char* p = lParam)
 				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
 		}
 
@@ -256,7 +256,7 @@ namespace Au
 		{
 			Debug.Assert(!Is0);
 			result = 0;
-			fixed (char* p = lParam)
+			fixed(char* p = lParam)
 				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
 		}
 
@@ -1490,7 +1490,7 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool MapClientToClientOf(AWnd w, ref RECT r)
 		{
-			fixed (void* t = &r) { return _MapWindowPoints(this, w, t, 2); }
+			fixed(void* t = &r) { return _MapWindowPoints(this, w, t, 2); }
 		}
 
 		/// <summary>
@@ -1499,7 +1499,7 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool MapClientToClientOf(AWnd w, ref POINT p)
 		{
-			fixed (void* t = &p) { return _MapWindowPoints(this, w, t, 1); }
+			fixed(void* t = &p) { return _MapWindowPoints(this, w, t, 1); }
 		}
 
 		/// <summary>
@@ -1526,7 +1526,7 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool MapScreenToClient(ref RECT r)
 		{
-			fixed (void* t = &r) { return _MapWindowPoints(default, this, t, 2); }
+			fixed(void* t = &r) { return _MapWindowPoints(default, this, t, 2); }
 		}
 
 		/// <summary>
@@ -2377,20 +2377,21 @@ namespace Au
 		public bool IsUnicode => Api.IsWindowUnicode(this);
 
 		/// <summary>
-		/// Returns true if the window is of a 64-bit process, false if of a 32-bit process.
+		/// Returns true if the window is of a 32-bit process, false if of a 64-bit process.
 		/// Also returns false if fails. Supports <see cref="ALastError"/>.
-		/// If <see cref="AVersion.Is64BitOS"/> is true, calls API <msdn>GetWindowThreadProcessId</msdn>, <msdn>OpenProcess</msdn> and <msdn>IsWow64Process</msdn>.
-		/// <note>If you know that the window belongs to current process, instead use <see cref="Environment.Is64BitProcess"/> or <c>IntPtr.Size==8</c>. This function is much slower.</note>
 		/// </summary>
-		public bool Is64Bit {
+		/// <remarks>
+		/// <note>If you know that the window belongs to current process, instead use <c>IntPtr.Size==4</c>. This function is much slower.</note>
+		/// </remarks>
+		public bool Is32Bit {
 			get {
-				if(AVersion.Is64BitOS) {
+				bool is32bit = AVersion.Is32BitOS;
+				if(!is32bit) {
 					using var ph = LibHandle.OpenProcess(this);
-					if(ph.Is0 || !Api.IsWow64Process(ph, out var is32bit)) return false;
-					if(!is32bit) return true;
+					if(ph.Is0 || !Api.IsWow64Process(ph, out is32bit)) return false;
 				}
 				ALastError.Clear();
-				return false;
+				return is32bit;
 
 				//info: don't use Process.GetProcessById, it does not have an desiredAccess parameter and fails with higher IL processes.
 			}
@@ -2606,7 +2607,7 @@ namespace Au
 			int n = (int)ln; if(n < 1) return "";
 
 			var b = AMemoryArray.LibChar(n);
-			fixed (char* p = b.A) {
+			fixed(char* p = b.A) {
 				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
 				if(ln < 1) return "";
 				b.A[n] = '\0';

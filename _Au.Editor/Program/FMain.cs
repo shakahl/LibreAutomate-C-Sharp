@@ -9,8 +9,6 @@ using System.Threading;
 using System.Windows.Forms;
 using static Au.AStatic;
 
-//TODO: change toolbar buttons: Run, Stop
-
 partial class FMain : Form
 {
 	AWnd _wFocus;

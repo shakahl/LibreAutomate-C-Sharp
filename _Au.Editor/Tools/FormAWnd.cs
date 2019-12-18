@@ -26,10 +26,8 @@ using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
 //FUTURE: add UI to format code 'w = w.Get.Right();' etc.
-//FUTURE: init from code string. Cannot use Roslyn because of its slowness.
+//FUTURE: init from code string.
 //SHOULDDO: try to find and select control in current tree when captured from same window. Like in acc tool.
-
-//TODO: Wait(t, true|false, ...)
 
 namespace Au.Tools
 {
@@ -227,7 +225,7 @@ namespace Au.Tools
 					case "id": if(on) g.ZCheck("nameC", false); break;
 					case "Control":
 						g.ZShowRows(on, pos.Row + 1, -1);
-						_grid2.ZShowRows(on, _grid2.ZFindRow("Control"), -1);
+						_grid2.ZShowRows(on, _grid2.ZFindRow("Control"), 4);
 						break;
 					}
 				}
@@ -256,6 +254,7 @@ namespace Au.Tools
 			bool isWait = !forTest && _grid2.ZGetValue("wait", out waitTime, false);
 			if(isWait) {
 				b.Append("Wait(").AppendWaitTime(waitTime, orThrow || isCon);
+				b.Append(", active: true");
 			} else {
 				b.Append("Find(");
 			}
@@ -337,7 +336,7 @@ namespace Au.Tools
 
 			if(g.RowsCount != 0) {
 				int i = g.ZFindRow("Control");
-				if(g.Rows[i].Visible == noCon) g.ZShowRows(!noCon, i, -1);
+				if(g.Rows[i].Visible == noCon) g.ZShowRows(!noCon, i, 4);
 				return;
 			}
 
@@ -352,8 +351,8 @@ namespace Au.Tools
 			//_AddFlag("C." + nameof(WCFlags.DirectChild), "Direct child of the window", tt: "Don't find indirect descendant controls (children of children and so on).\r\nFlag WCFlags.DirectChild."); //rejected: almost not useful here
 			_AddProp("alsoC", "also", "o => false", tt: "Lambda that returns true if AWnd o is the wanted control.", info: c_infoAlsoC);
 			_AddProp(null, "skip", "1", tt: "0-based index of matching control.\nFor example, if 1, gets the second matching control.");
-			_AddFlag("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return default(AWnd).");
 			g.ZAddHidden = false;
+			_AddFlag("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return default(AWnd).");
 
 			g.ZAutoSize();
 
@@ -674,7 +673,7 @@ namespace Au.Tools
 					int pid = w.ProcessId, tid = w.ThreadId;
 					b.Append("<i>ProcessId<>:    ").AppendLine(pid.ToString());
 					b.Append("<i>ThreadId<>:    ").AppendLine(tid.ToString());
-					b.Append("<i>Is64Bit<>:    ").AppendLine(w.Is64Bit.ToString());
+					b.Append("<i>Is32Bit<>:    ").AppendLine(w.Is32Bit ? "true" : "false");
 					using(var uac = AUac.OfProcess(pid)) {
 						b.Append("<i><help articles/UAC>UAC<> IL, elevation<>:    ")
 							.Append(uac.IntegrityLevel.ToString())

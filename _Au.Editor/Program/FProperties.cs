@@ -148,7 +148,7 @@ This option is ignored when the task runs as .exe program started not from edito
  • <i>false</i> (default) - don't optimize. Define DEBUG and TRACE. This is known as ""Debug configuration"".
  • <i>true</i> - optimize. This is known as ""Release configuration"".
 
-When true, low-level processing code is faster, but can be difficult to debug.
+If true, low-level processing code is faster, but can be difficult to debug.
 This option is also applied to class files compiled together. Use true if they contain code that must be as fast as possible. Not applied to used dlls.
 ");
 		_AddEdit("define", _meta.define,
@@ -180,12 +180,13 @@ See also <google C# #pragma warning>#pragma warning<>.
 Can be path relative to this file (examples: Script5.cs, Folder\Script5.cs, ..\Folder\Script5.cs) or path in the workspace (examples: \Script5.cs, \Folder\Script5.cs).
 
 The script must have role editorExtension. It runs synchronously in compiler's thread. To stop compilation, let it throw an exception.
-By default it receives full path of the assembly file in args[0]. If need more info, specify command line arguments, like in this example: Script5.cs /$(outputPath) $(optimize). The script will receive real values in args[0], args[1] and so on. You can use these variables:
- • $(source) - path of this C# code file in the workspace.
- • $(outputFile) - full path of the assembly file.
+By default it receives full path of the output exe or dll file in args[0]. If need more info, specify command line arguments, like in this example: Script5.cs /$(outputPath) $(optimize). The script will receive real values in args[0], args[1] and so on. Variables:
+ • $(outputFile) - full path of the output exe or dll file.
  • $(outputPath) - meta comment option 'outputPath'.
- • $(optimize) - meta comment option 'optimize'.
+ • $(source) - path of this C# code file in the workspace.
  • $(role) - meta comment option 'role'.
+ • $(optimize) - meta comment option 'optimize'.
+ • $(prefer32bit) - meta comment option 'prefer32bit'.
 ");
 		_AddEdit("postBuild", _meta.postBuild,
 @"<b>postBuild</b> - a script to run after compiling this code file successfully.
@@ -196,6 +197,9 @@ Everything else is like with preBuild.
 		_AddEdit("outputPath", _meta.outputPath,
 @"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
 Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
+
+If role exeProgram, the exe file is named like the script. The 32-bit version has suffix ""-32"". If optimize true, creates both 64-bit and 32-bit versions. Else creates only 32-bit if prefer32bit true or 32-bit OS, else only 64-bit.
+If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
 ", noCheckbox: true, buttonAction: (sender, sed) => {
 	var m = new AMenu();
 	m[_role == ERole.classLibrary ? @"%AFolders.ThisApp%\Libraries" : @"%AFolders.Workspace%\bin"] = o => _SetEditCellText(o.ToString());
@@ -557,7 +561,6 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	//	3. My PC somehow has MS Office PIA installed and there is no uninstaller. After deleting the GAC files tlbimp.exe created all files, but it took several minutes.
 	//Tested: impossible to convert .NET Framework TypeLibConverter code. Part of it is in extern methods.
 	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core assemblies, and they don't have the class. Need exe.
-#if true
 
 	class _RegTypelib
 	{
@@ -565,11 +568,11 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		public override string ToString() => text;
 
-		public string GePath(string locale)
+		public string GetPath(string locale)
 		{
 			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
 			for(int i = 0; i < 2; i++) {
-				var bits = AVersion.Is64BitProcess == (i == 0) ? "64" : "32";
+				var bits = AVersion.Is32BitProcess == (i == 1) ? "32" : "64";
 				using var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits);
 				if(hk?.GetValue("") is string path) return path.Trim('\"');
 			}
@@ -607,7 +610,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				if(i == 0) return;
 				locale = aloc[i - 1];
 			}
-			comDll = r.GePath(locale);
+			comDll = r.GetPath(locale);
 			if(comDll == null || !AFile.ExistsAsFile(comDll)) {
 				ADialog.ShowError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: this);
 				return;
@@ -642,135 +645,6 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			this.Enabled = true;
 		});
 	}
-
-#else //old code used with .NET Framework
-
-	class _RegTypelib
-	{
-		public string text, guid, version;
-
-		public override string ToString() => text;
-
-		//Returns 0 if OK, or HRESULT of LoadTypeLibEx, or 1 if failed elsewhere.
-		public int Load(out ITypeLib tl, string locale)
-		{
-			tl = null; string path = null; int hr = 1;
-			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
-			for(int i = 0; i < 2; i++) {
-				var bits = AVersion.Is64BitProcess == (i == 0) ? "64" : "32";
-				using(var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits)) {
-					path = hk?.GetValue("") as string;
-					if(path == null) continue;
-					path = path.TrimChars("\"");
-				}
-				hr = LoadTypeLibEx(path, 2, out tl);
-				if(hr == 0 && tl == null) hr = 1;
-				if(hr == 0) break;
-			}
-			return hr;
-		}
-	}
-
-	void _ConvertTypeLibrary(object tlDef)
-	{
-		//Load type library and get ITypeLib tl.
-		ITypeLib tl = null; int hr = 1;
-		switch(tlDef) {
-		case string path:
-			hr = LoadTypeLibEx(path, 2, out tl);
-			break;
-		case _RegTypelib r:
-			//can be several locales
-			var aloc = new List<string>(); //registry keys like "0" or "409"
-			var aloc2 = new List<string>(); //locale names for display in the list dialog
-			using(var verKey = Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
-				foreach(var s1 in verKey.GetSubKeyNames()) {
-					int lcid = s1.ToInt(0, out int iEnd, STIFlags.IsHexWithout0x);
-					if(iEnd != s1.Length) continue; //"FLAGS" etc; must be hex number without 0x
-					aloc.Add(s1);
-					var s2 = "Neutral";
-					if(lcid > 0) {
-						try { s2 = new CultureInfo(lcid).DisplayName; } catch { s2 = s1; }
-					}
-					aloc2.Add(s2);
-				}
-			}
-			string locale;
-			if(aloc.Count == 1) locale = aloc[0];
-			else {
-				int i = ADialog.ShowList(aloc2, "Locale", owner: this);
-				if(i == 0) return;
-				locale = aloc[i - 1];
-			}
-			hr = r.Load(out tl, locale);
-			break;
-		}
-		if(hr != 0) {
-			ADialog.ShowError("Failed to load type library", ALastError.MessageFor(hr), owner: this);
-			return;
-		}
-
-		//Convert type library tl to .NET assembly.
-		Cursor.Current = Cursors.WaitCursor;
-		Print($"Converting COM type library to .NET assembly.");
-		try {
-			if(_convertedDir == null) {
-				_convertedDir = AFolders.Workspace + @".interop\";
-				AFile.CreateDirectory(_convertedDir);
-			}
-			var x = new _TypelibConverter();
-			x.Convert(tl);
-			_meta.com.AddRange(x.converted);
-			Print(@"<>Converted. Saved in <link>%AFolders.Workspace%\.interop<>.");
-		}
-		catch(Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
-		Marshal.ReleaseComObject(tl);
-		Cursor.Current = Cursors.Arrow;
-	}
-
-	[DllImport("oleaut32.dll", EntryPoint = "#183", PreserveSig = true)]
-	static extern int LoadTypeLibEx(string szFile, int regkind, out ITypeLib pptlib);
-
-	class _TypelibConverter : ITypeLibImporterNotifySink
-	{
-		public List<string> converted = new List<string>();
-
-		static Dictionary<string, AssemblyBuilder> s_converted = new Dictionary<string, AssemblyBuilder>();
-
-		public Assembly Convert(ITypeLib tl)
-		{
-			tl.GetLibAttr(out IntPtr ipta);
-			var ta = Marshal.PtrToStructure<System.Runtime.InteropServices.ComTypes.TYPELIBATTR>(ipta);
-			tl.ReleaseTLibAttr(ipta);
-			var hash = Au.Util.AHash.Fnv1(ta).ToString("x");
-
-			tl.GetDocumentation(-1, out var tlName, out var tlDescription, out var _, out var _);
-			var fileName = $"{tlName} {ta.wMajorVerNum}.{ta.wMinorVerNum} #{hash}.dll";
-			var netPath = _convertedDir + fileName;
-
-			if(!s_converted.TryGetValue(fileName, out var asm) || !AFile.ExistsAsFile(netPath)) {
-				Print($"{tlName} ({tlDescription}) to '{fileName}'.");
-
-				var converter = new TypeLibConverter();
-				asm = converter.ConvertTypeLibToAssembly(tl, netPath,
-					TypeLibImporterFlags.ReflectionOnlyLoading | TypeLibImporterFlags.UnsafeInterfaces,
-					this, null, null, tlName, null);
-				asm.Save(fileName);
-				s_converted[fileName] = asm;
-			}
-			if(!converted.Contains(fileName)) converted.Add(fileName);
-			return asm;
-		}
-
-		void ITypeLibImporterNotifySink.ReportEvent(ImporterEventKind eventKind, int eventCode, string eventMsg)
-		{
-			if(eventKind != ImporterEventKind.NOTIF_TYPECONVERTED) Print("Warning", eventMsg);
-		}
-
-		Assembly ITypeLibImporterNotifySink.ResolveRef(object typeLib) => Convert(typeLib as ITypeLib);
-	}
-
-#endif
 
 	#endregion
 

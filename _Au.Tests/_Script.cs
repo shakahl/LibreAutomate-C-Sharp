@@ -7,7 +7,7 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
+//using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 using System.Xml;
@@ -198,7 +198,12 @@ class Script : AScript
 		//Print((uint)Cpp_Uninstall());
 
 		//ADialog.Show("script");
-		
+		//Print("script");
+		System.Windows.MessageBox.Show("wpf");
+
+		//var w = new System.Windows.Window();
+		//w.ShowDialog();
+		//ADialog.Show("ad");
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

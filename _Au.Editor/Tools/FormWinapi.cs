@@ -158,8 +158,6 @@ public class FormWinapi : DialogForm
 		// 
 		// _code
 		// 
-		this._code.AccessibleName = "";
-		this._code.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 		this._code.Location = new System.Drawing.Point(8, 40);
 		this._code.Name = "_code";
 		this._code.Size = new System.Drawing.Size(736, 380);

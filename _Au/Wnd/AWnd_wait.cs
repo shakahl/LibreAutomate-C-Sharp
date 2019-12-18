@@ -114,51 +114,52 @@ namespace Au
 			}
 		}
 
-		/// <summary>
-		/// Waits until window does not exist.
-		/// Parameters etc are the same as <see cref="Find"/>.
-		/// </summary>
-		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
-		/// <remarks>
-		/// By default ignores invisible and cloaked windows. Use flags if need.
-		/// If you have a window's AWnd variable, to wait until it is closed use <see cref="WaitForClosed"/> instead.
-		/// Examples: <see cref="Wait"/>.
-		/// </remarks>
-		public static bool WaitNot(double secondsTimeout,
-#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-			[ParamString(PSFormat.AWildex)] string name = null,
-			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WF3 program = default,
-			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
-#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
-		{
-			var f = new Finder(name, cn, program, flags, also, contains);
-			return WaitNot(secondsTimeout, out _, f);
-		}
+		//rejected. Not useful. Use the non-static WaitForClosed.
+		//		/// <summary>
+		//		/// Waits until window does not exist.
+		//		/// Parameters etc are the same as <see cref="Find"/>.
+		//		/// </summary>
+		//		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		//		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
+		//		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		//		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
+		//		/// <remarks>
+		//		/// By default ignores invisible and cloaked windows. Use flags if need.
+		//		/// If you have a window's AWnd variable, to wait until it is closed use <see cref="WaitForClosed"/> instead.
+		//		/// Examples: <see cref="Wait"/>.
+		//		/// </remarks>
+		//		public static bool WaitNot(double secondsTimeout,
+		//#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		//			[ParamString(PSFormat.AWildex)] string name = null,
+		//			[ParamString(PSFormat.AWildex)] string cn = null,
+		//			[ParamString(PSFormat.AWildex)] WF3 program = default,
+		//			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
+		//#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
+		//		{
+		//			var f = new Finder(name, cn, program, flags, also, contains);
+		//			return WaitNot(secondsTimeout, out _, f);
+		//		}
 
-		/// <summary>
-		/// Waits until window does not exist.
-		/// </summary>
-		/// <param name="secondsTimeout"></param>
-		/// <param name="wFound">On timeout receives the first found matching window that exists.</param>
-		/// <param name="f">Window properties etc. Can be string, see <see cref="Finder.op_Implicit(string)"/>.</param>
-		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
-		public static bool WaitNot(double secondsTimeout, out AWnd wFound, Finder f)
-		{
-			wFound = default;
-			var to = new AWaitFor.Loop(secondsTimeout);
-			AWnd w = default;
-			for(; ; ) {
-				if(!w.IsAlive || !f.IsMatch(w)) { //if first time, or closed (!IsAlive), or changed properties (!IsMatch)
-					if(!f.Find()) { wFound = default; return true; }
-					wFound = w = f.Result;
-				}
-				if(!to.Sleep()) return false;
-			}
-		}
+		//		/// <summary>
+		//		/// Waits until window does not exist.
+		//		/// </summary>
+		//		/// <param name="secondsTimeout"></param>
+		//		/// <param name="wFound">On timeout receives the first found matching window that exists.</param>
+		//		/// <param name="f">Window properties etc. Can be string, see <see cref="Finder.op_Implicit(string)"/>.</param>
+		//		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
+		//		public static bool WaitNot(double secondsTimeout, out AWnd wFound, Finder f)
+		//		{
+		//			wFound = default;
+		//			var to = new AWaitFor.Loop(secondsTimeout);
+		//			AWnd w = default;
+		//			for(; ; ) {
+		//				if(!w.IsAlive || !f.IsMatch(w)) { //if first time, or closed (!IsAlive), or changed properties (!IsMatch)
+		//					if(!f.Find()) { wFound = default; return true; }
+		//					wFound = w = f.Result;
+		//				}
+		//				if(!to.Sleep()) return false;
+		//			}
+		//		}
 
 		//rejected. Cannot use implicit conversion string to Finder.
 		//public static bool WaitNot(double secondsTimeout, Finder f)

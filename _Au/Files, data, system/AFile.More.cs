@@ -309,6 +309,34 @@ namespace Au
 			//	//	In MSDN it is documented incorrectly: "should be freed with the operator delete function".
 			//	//	To discover it, call HeapSize(GetProcessHeap) before and after CoTaskMemFree. It returns -1 when called after.
 			//}
+
+			/// <summary>
+			/// Loads an unmanaged dll from subfolder "64" or "32" depending on whether this process is 64-bit or 32-bit.
+			/// </summary>
+			/// <param name="fileName">Dll file name like "name.dll".</param>
+			/// <exception cref="DllNotFoundException"></exception>
+			/// <remarks>
+			/// If your program uses an unmanaged dll and can run as either 64-bit or 32-bit process, you need 2 versions of the dll - 64-bit and 32-bit. Let they live in subfolders "64" and "32" of your program folder. They must have same name. This function loads correct dll version. Then [DllImport("dll")] will use the loaded dll. Don't need two different DllImport for functions ([DllImport("dll64")] and [DllImport("dll32")]).
+			/// 
+			/// If the dll does not exist in these folders, this function also looks in:
+			/// - subfolder "64" or "32" of folder specified in environment variable "Au.Path". For example the dll is unavailable if used in an assembly (managed dll) loaded in a nonstandard environment, eg VS forms designer or VS C# Interactive (then AFolders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\..."). Workaround: set %Au.Path% = the main Au directory and restart Windows.
+			/// - subfolder "64" or "32" of <see cref="AFolders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
+			/// </remarks>
+			public static void LoadDll64or32Bit(string fileName)
+			{
+				Debug.Assert(default == Api.GetModuleHandle(fileName));
+
+				string s = (AVersion.Is32BitProcess ? @"32\" : @"64\") + fileName;
+				if(default != Api.LoadLibrary(AFolders.ThisAppBS + s)) return; //normal
+				var p = Environment.GetEnvironmentVariable("Au.Path"); if(p != null && default != Api.LoadLibrary(APath.Combine(p, s))) return; //%Au.Path%
+				if(default != Api.LoadLibrary(AFolders.ThisAppTemp + s)) return; //extracted from resources
+
+				//if(default != Api.LoadLibrary(fileName)) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
+
+				throw new DllNotFoundException(fileName);
+
+				//or can try to set NATIVE_DLL_SEARCH_DIRECTORIES in apphost. But then this library cannot be use without our apphost.
+			}
 		}
 	}
 }

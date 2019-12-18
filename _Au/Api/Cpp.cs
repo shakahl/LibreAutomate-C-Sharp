@@ -22,18 +22,7 @@ namespace Au.Types
 	{
 		static Cpp()
 		{
-			Debug.Assert(default == Api.GetModuleHandle("AuCpp.dll"));
-
-			string s = AVersion.Is64BitProcess ? @"64\AuCpp.dll" : @"32\AuCpp.dll";
-			if(default != Api.LoadLibrary(AFolders.ThisAppBS + s)) return; //normal
-			var p = Environment.GetEnvironmentVariable("Au.Path"); if(p != null && default != Api.LoadLibrary(APath.Combine(p, s))) return; //%Au.Path%
-			if(default != Api.LoadLibrary(AFolders.ThisAppTemp + s)) return; //extracted from resources
-			if(default != Api.LoadLibrary("AuCpp.dll")) return; //exe directory, system 32 or 64 bit directory, %PATH%, current directory
-
-			throw new AuException(0, "*load AuCpp.dll");
-
-			//note: the dll is unavailable if running in a nonstandard environment, eg VS C# Interactive (then AFolders.ThisApp is "C:\Program Files (x86)\Microsoft Visual Studio\2017\Community\Common7\IDE\CommonExtensions\Microsoft\ManagedLanguages\VBCSharp\InteractiveComponents").
-			//	Workaround: set %Au.Path% = the main Au directory and restart Windows.
+			AFile.More.LoadDll64or32Bit("AuCpp.dll");
 		}
 
 		//speed:

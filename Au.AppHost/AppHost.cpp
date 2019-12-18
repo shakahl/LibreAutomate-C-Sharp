@@ -13,8 +13,8 @@
 #define COREVER2 1
 #define COREVER3 0
 
-#if _DEBUG
-//#if true
+//#define PRINT
+#if PRINT
 void Print(LPCWSTR frm, ...)
 {
 	if(frm == nullptr) frm = L"";
@@ -69,6 +69,9 @@ struct _PATHS {
 	bool isPrivate;
 };
 
+//HINSTANCE s_hInstance;
+char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
+
 bool GetPaths(_PATHS& p) {
 	//https://github.com/dotnet/designs/blob/master/accepted/install-locations.md
 
@@ -79,13 +82,21 @@ bool GetPaths(_PATHS& p) {
 	DWORD len = ::GetModuleFileNameW(GetModuleHandle(0), w, lenof(w));
 	len = toUtf8(w, len + 1, p.appDir, lenof(w) - 100) - 1; if(len < 7 || p.appDir[len - 4] != '.') return false;
 
-	//get asmDll
-	bool asmNo32 = is32bit && w[len - 6] == '3' && w[len - 5] == '2'; //if exe is "name32.exe", assume dll is "name.dll", not "name32.dll"
-	strcpy(p.asmDll, p.appDir); strcpy(p.asmDll + len - (asmNo32 ? 6 : 4), ".dll");
+	//get asmDll if it is not exe created from script
+	if(s_asmName[0] == 0) {
+		bool asmSuffixed = is32bit && w[len - 6] == '3' && w[len - 5] == '2'; //if exe is "name32.exe", dll is "name.dll"
+		strcpy(p.asmDll, p.appDir); strcpy(p.asmDll + len - (asmSuffixed ? 6 : 4), ".dll");
+	}
 
 	//get appDir
 	while(p.appDir[len - 1] != '\\') len--;
 	p.appDir[len] = 0;
+
+	//get asmDll if it is exe created from script. See code in Compiler.cs, function _AppHost.
+	if(s_asmName[0] != 0) {
+		strncpy(p.asmDll, p.appDir, len);
+		strcpy(p.asmDll + len, s_asmName);
+	}
 
 	//is coreclr.dll in app dir?
 	wcscpy(w + len, L"coreclr.dll");
@@ -141,7 +152,8 @@ void BuildTpaList(LPCSTR dir, std::string& tpaList)
 	if(h != INVALID_HANDLE_VALUE) {
 		do {
 			char* s = findData.cFileName;
-			if(*(int*)s == '-ipa') continue; //api-ms-
+			int four = *(int*)s;
+			if(four == '-ipa') continue; //api-ms-
 			//Print(L"%S", s);
 			tpaList += dir;
 			tpaList += s;
@@ -179,6 +191,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 
 #else
 
+	//s_hInstance = hInstance;
+
 	_PATHS p = {};
 	if(!GetPaths(p)) { //fast
 		std::string s1 = "Please install or update .NET Core Desktop Runtime x";
@@ -207,16 +221,25 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 
 	std::string tpaList; //~2 ms total
 	if(!p.isPrivate) {
+		BuildTpaList(p.netDesktop, tpaList); //note: must be first, else eg WPF does not work because netCore dir contains WindowsBase too, and it is invalid
 		BuildTpaList(p.netCore, tpaList);
-		BuildTpaList(p.netDesktop, tpaList);
 	}
+#if false
 	BuildTpaList(p.appDir, tpaList);
-
-	//QueryPerformanceCounter(&t2);
-	//Print(L"%i", (t2.LowPart - t1.LowPart) / 10);
 
 	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS" };
 	const char* propertyValues[] = { tpaList.c_str(), strcat(p.appDir, "Libraries") };
+#else
+	else BuildTpaList(p.appDir, tpaList);
+
+	std::string ap(p.appDir);
+	ap[ap.length() - 1] = ';'; ap += p.appDir; ap += "Libraries";
+
+	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS" };
+	const char* propertyValues[] = { tpaList.c_str(), ap.c_str() };
+#endif
+	//QueryPerformanceCounter(&t2);
+	//Print(L"%i", (t2.LowPart - t1.LowPart) / 10);
 
 	void* hostHandle;
 	unsigned int domainId;

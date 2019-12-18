@@ -64,8 +64,6 @@
 			// 
 			// _info
 			// 
-			this._info.AccessibleName = "_info";
-			this._info.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._info.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
 			this._info.Location = new System.Drawing.Point(8, 8);
@@ -227,8 +225,6 @@
 			// 
 			// _code
 			// 
-			this._code.AccessibleName = "_code";
-			this._code.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._code.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._code.Location = new System.Drawing.Point(0, 0);
 			this._code.Name = "_code";
@@ -271,8 +267,6 @@
 			// 
 			// _winInfo
 			// 
-			this._winInfo.AccessibleName = "_winInfo";
-			this._winInfo.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._winInfo.Dock = System.Windows.Forms.DockStyle.Fill;
 			this._winInfo.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this._winInfo.Location = new System.Drawing.Point(0, 0);

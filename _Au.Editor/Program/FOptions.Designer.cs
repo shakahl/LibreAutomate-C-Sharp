@@ -469,8 +469,6 @@
 			// 
 			// _sciStyles
 			// 
-			this._sciStyles.AccessibleName = "_sciStyles";
-			this._sciStyles.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._sciStyles.Location = new System.Drawing.Point(8, 8);
 			this._sciStyles.Name = "_sciStyles";
 			this._sciStyles.Size = new System.Drawing.Size(160, 252);

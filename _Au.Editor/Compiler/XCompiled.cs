@@ -46,15 +46,6 @@ namespace Au.Compiler
 				_file = CacheDirectory + @"\compiled.log";
 			}
 
-			static XCompiled()
-			{
-				bool ok = ARegistry.GetInt(out s_frameworkVersion, "Release", @"HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\NET Framework Setup\NDP\v4\Full");
-				Debug.Assert(ok);
-				s_auVersion = typeof(AWnd).Assembly.GetName().Version.ToString();
-			}
-			static int s_frameworkVersion;
-			static string s_auVersion;
-
 			/// <summary>
 			/// Called before executing script f. If returns true, don't need to compile.
 			/// </summary>
@@ -297,15 +288,10 @@ namespace Au.Compiler
 				if(_data != null) return true;
 				if(!AFile.ExistsAsFile(_file)) return false;
 				string sData = AFile.LoadText(_file);
-				foreach(var v in sData.Segments("\r\n", SegFlags.NoEmpty)) {
+				foreach(var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
 					if(_data == null) {
-						//first line contains .NET framework version and Au.dll version, like 12345|1.2.3.4
-						var versions = sData.SegSplit("|", range: v.start..v.end); if(versions.Length != 2) goto g1;
-						int frameworkVersion = versions[0].ToInt(); string auVersion = versions[1];
-						if(frameworkVersion != s_frameworkVersion || auVersion != s_auVersion) { //the s_ are inited by the static ctor
-																								 //Print(frameworkVersion, s_frameworkVersion, auVersion, s_auVersion);
-							goto g1;
-						}
+						//first line contains .NET Core version and Au.dll version, like 3.1.0|1.2.3.4
+						if(sData[v.start..v.end] != s_coreAuVersions) goto g1;
 						_data = new Dictionary<uint, string>(sData.LineCount());
 						continue;
 					}
@@ -320,11 +306,13 @@ namespace Au.Compiler
 				return false;
 			}
 
+			static string s_coreAuVersions = Environment.Version.ToString() + "|" + typeof(AWnd).Assembly.GetName().Version.ToString();
+
 			void _Save()
 			{
 				AFile.CreateDirectory(CacheDirectory);
 				using(var b = AFile.WaitIfLocked(() => File.CreateText(_file))) {
-					b.WriteLine(s_frameworkVersion + "|" + s_auVersion);
+					b.WriteLine(s_coreAuVersions);
 					foreach(var v in _data) {
 						if(v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
 					}

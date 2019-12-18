@@ -33,8 +33,13 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
-[assembly: AssemblyFileVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.0.*")]
+//FUTURE: consider to switch to manual incrementing.
+//	Or automatic but less frequent etc, eg when creating setup file.
+//	Now VS adds 20-300 to the revision at each build. Why not 1? Now is 22000. What happens when it becomes the max possible 0xffff?
+//	VS does not auto-increment the build number when "1.0.*". Now 7288. Where it gets these values? And does not reset them when I change eg minor.
+
+//[assembly: AssemblyFileVersion("1.0.0.0")]
 
 //This can be used eg to find public/protected _Identifier.
 //However most warnings are about uint. We disable them in project Properties: 3001,3002,3003,3009.

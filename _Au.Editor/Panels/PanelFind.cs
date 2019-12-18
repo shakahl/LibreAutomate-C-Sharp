@@ -77,8 +77,6 @@ class PanelFind : AuUserControlBase
 		// 
 		// _tFind
 		// 
-		this._tFind.AccessibleName = "_tFind";
-		this._tFind.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 		this.tableLayoutPanel1.SetColumnSpan(this._tFind, 3);
 		this._tFind.Dock = System.Windows.Forms.DockStyle.Fill;
 		this._tFind.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -166,8 +164,6 @@ class PanelFind : AuUserControlBase
 		// 
 		// _tReplace
 		// 
-		this._tReplace.AccessibleName = "_tReplace";
-		this._tReplace.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 		this.tableLayoutPanel1.SetColumnSpan(this._tReplace, 3);
 		this._tReplace.Dock = System.Windows.Forms.DockStyle.Fill;
 		this._tReplace.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;

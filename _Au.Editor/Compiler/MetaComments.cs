@@ -203,8 +203,8 @@ namespace Au.Compiler
 		/// <summary>
 		/// Gets or sets default meta option 'noWarnings' value. Initially null.
 		/// </summary>
-		public static List<string> DefaultNoWarnings { get; set; } = new List<string> { "CS1702" };
-		//CS1702: eg Core 3.1 System.Drawing.Common references System.Runtime version of Core 3.0; VS does not show this warning.
+		public static List<string> DefaultNoWarnings { get; set; } = new List<string> { "CS1701", "CS1702" };
+		//CS1702: eg Core 3.1 System.Drawing.Common references System.Runtime version of Core 3.0; VS does not show this warning; VS adds 1701,1702 to default project properties.
 
 		///// <summary>
 		///// Meta option 'config'.

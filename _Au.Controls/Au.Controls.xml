@@ -1188,12 +1188,6 @@
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException">Negative or greater than <see cref="P:Au.Controls.AuScintilla.Len8"/>.</exception>
         </member>
-        <member name="P:Au.Controls.AuScintilla.ZDllPath">
-            <summary>
-            Scintilla dll path.
-            Default is <c>AFolders.ThisAppBS + (AVersion.Is64BitProcess ? "64" : "32") + @"\SciLexer.dll"</c>. If you want to change it, call this before creating first control.
-            </summary>
-        </member>
         <member name="P:Au.Controls.AuScintilla.ZInitBorderStyle">
             <summary>
             Border style.
