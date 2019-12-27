@@ -72,7 +72,7 @@ static class CommandLine
 		s_mutex = new Mutex(true, "Au.Mutex.1", out bool createdNew);
 		if(createdNew) return false;
 
-		var w = AWnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
+		var w = AWnd.FindFast(null, "Au.Editor.Msg", true);
 		if(!w.Is0) {
 			if(activateWnd) {
 				AWnd wMain = (AWnd)w.Send(Api.WM_USER);
@@ -115,7 +115,7 @@ static class CommandLine
 		if(_importWorkspace != null || _importFiles != null) {
 			ATimer.After(10, _ => {
 				try {
-					Program.MainForm.Show();
+					Program.MainForm.ZShowAndActivate();
 					if(_importWorkspace != null) Program.Model.ImportWorkspace(_importWorkspace);
 					else Program.Model.ImportFiles(_importFiles);
 				}
@@ -186,6 +186,10 @@ static class CommandLine
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
 			Program.Model.ImportFiles(s.SegSplit("\0"));
 			break;
+		case 4:
+			var f1 = Program.Model.FindByFilePath(s);
+			if(f1 != null) Program.Model.OpenAndGoTo(f1, (int)wParam - 1);
+			break;
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (ATask.Run/RunWait)
 			int mode = (int)wParam; //1 - wait, 3 - wait and get ATask.WriteResult output
@@ -208,6 +212,9 @@ static class CommandLine
 			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		case 110: //received from our non-admin drop-target process on OnDragEnter
 			return (int)UacDragDrop.AdminProcess.OnDragEvent(0, 0, b);
+		//case 120: //go to edit user-defined menu or toolbar source code
+		//	CiGoTo.EditMenuOrToolbar(b);
+		//	break;
 		default:
 			Debug.Assert(false);
 			return 0;

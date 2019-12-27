@@ -92,6 +92,7 @@ static unsafe class Program
 			ATask.LibInit(ATRole.MiniProgram, a[0]);
 			asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4]; fullPathRefs = a[5];
 			string wrp = a[6]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
+			AFolders.Workspace = (string)a[7];
 		}
 #endif
 		//APerf.Next();

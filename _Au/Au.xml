@@ -2967,6 +2967,12 @@
             Base class of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
             </summary>
         </member>
+        <member name="M:Au.Types.AMTBase.OnClick_(System.Object,System.EventArgs)">
+            <summary>
+            Common Click even handler of all items.
+            Calls the true item's onClick callback if need. Calls it in correct thread.
+            </summary>
+        </member>
         <member name="P:Au.Types.AMTBase.ItemThread">
             <summary>
             In what thread to execute item callback functions.
@@ -3039,6 +3045,17 @@
         </member>
         <member name="M:Au.Types.AMTBase.Finalize">
             
+        </member>
+        <member name="M:Au.Types.AMTBase.GetItemSourceLine_(System.Windows.Forms.ToolStripItem)">
+            <summary>
+            If item not null, gets its 1-based source line. Else gets that of ctor.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AMTBase.GoToEdit_(System.Windows.Forms.ToolStripItem)">
+            <summary>
+            If item not null, goes to its source line in editor. Else goes to that of ctor.
+            Does nothing if editor process not found.
+            </summary>
         </member>
         <member name="T:Au.Types.MTClickArgs">
             <summary>
@@ -3121,6 +3138,59 @@
             <summary>
             Calls <see cref="M:Au.AMenu.EndSubmenu"/>.
             </summary>
+        </member>
+        <member name="T:Au.Types.TBBorder">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Border"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.None">
+            <summary>No border. User cannot resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Fixed1">
+            <summary>1 pixel border. User cannot resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Fixed2">
+            <summary>1 pixel border + 1 pixel padding. User cannot resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Fixed3">
+            <summary>1 pixel border + 2 pixels padding. User cannot resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Fixed4">
+            <summary>1 pixel border + 3 pixels padding. User cannot resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Sizable1">
+            <summary>1 pixel border. User can resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Sizable2">
+            <summary>1 pixel border + 1 pixel padding. User can resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Sizable3">
+            <summary>1 pixel border + 2 pixels padding. User can resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Sizable4">
+            <summary>1 pixel border + 3 pixels padding. User can resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Fixed3D">
+            <summary>3D border. User cannot resize.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Sizable3D">
+            <summary>3D border. User can resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Sizable">
+            <summary>Standard sizing border.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.FixedWithCaption">
+            <summary>Title bar. User cannot resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.SizableWithCaption">
+            <summary>Title bar and standard sizing border.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.FixedWithCaptionX">
+            <summary>Title bar and [x] button to close. User cannot resize the toolbar.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.SizableWithCaptionX">
+            <summary>Title bar, [x] button and standard sizing border.</summary>
         </member>
         <member name="T:Au.Types.RFlags">
             <summary>
@@ -7034,16 +7104,16 @@
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.AMenu.CMS">
+        <member name="P:Au.AMenu.Control">
             <summary>
-            Gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/> that is used to show the main drop-down menu.
+            Gets the main drop-down menu <see cref="T:System.Windows.Forms.ContextMenuStrip"/> control.
             You can use all its properties, methods and events. You can assign it to a control or toolstrip's drop-down button etc.
             </summary>
         </member>
-        <member name="P:Au.AMenu.MainToolStrip">
-            <summary>Infrastructure.</summary>
-        </member>
         <member name="M:Au.AMenu.#ctor">
+            
+        </member>
+        <member name="M:Au.AMenu.#ctor(System.String,System.String,System.Int32)">
             
         </member>
         <member name="M:Au.AMenu.Dispose">
@@ -7052,10 +7122,10 @@
         <member name="P:Au.AMenu.IsDisposed">
             
         </member>
-        <member name="P:Au.AMenu.Item(System.String,System.Object)">
+        <member name="P:Au.AMenu.Item(System.String,System.Object,System.Int32)">
             <summary>
             Adds new item.
-            The same as <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>.
+            The same as <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.
             </summary>
             <example>
             <code><![CDATA[
@@ -7071,7 +7141,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)">
+        <member name="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)">
             <summary>
             Adds new item as <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>.
             </summary>
@@ -7085,10 +7155,11 @@
             - null (default) - no icon. If <see cref="P:Au.Types.AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
             - "" - no icon.
             </param>
+            <param name="l"></param>
             <remarks>
             Sets menu item text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
             
-            Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c>. See <see cref="P:Au.AMenu.Item(System.String,System.Object)"/>.
+            Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c>. See <see cref="P:Au.AMenu.Item(System.String,System.Object,System.Int32)"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -7102,21 +7173,22 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AMenu.Add(System.Windows.Forms.ToolStripItem,System.Object,System.Action{Au.Types.MTClickArgs})">
+        <member name="M:Au.AMenu.Add(System.Windows.Forms.ToolStripItem,System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
             Adds item of any supported type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar, ToolStripButton.
             Supports types derived from ToolStripItem.
             </summary>
             <param name="item">An already created item of any supported type.</param>
             <param name="icon"></param>
-            <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
+            <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
+            <param name="l"></param>
         </member>
         <member name="M:Au.AMenu.Separator">
             <summary>
             Adds separator.
             </summary>
         </member>
-        <member name="M:Au.AMenu.Submenu(System.String,System.Object,System.Action{Au.Types.MTClickArgs})">
+        <member name="M:Au.AMenu.Submenu(System.String,System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
             Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
             Then the add-item functions will add items to the submenu.
@@ -7125,8 +7197,9 @@
             2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="M:Au.AMenu.EndSubmenu"/>.
             </summary>
             <param name="text">Text.</param>
-            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>.</param>
+            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
+            <param name="l"></param>
             <remarks>
             Submenus inherit these properties of the main menu, set before adding submenus (see example):
             <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
@@ -7134,7 +7207,7 @@
             <example>
             <code><![CDATA[
             var m = new AMenu();
-            m.CMS.BackColor = Color.PaleGoldenrod;
+            m.Control.BackColor = Color.PaleGoldenrod;
             m["One"] = o => Print(o);
             m["Two"] = o => Print(o);
             using(m.Submenu("Submenu")) {
@@ -7153,7 +7226,7 @@
         </member>
         <member name="M:Au.AMenu.EndSubmenu">
             <summary>
-            Call this to end adding items to the current submenu if <see cref="M:Au.AMenu.Submenu(System.String,System.Object,System.Action{Au.Types.MTClickArgs})"/> was called without 'using' and without a callback function that adds submenu items.
+            Call this to end adding items to the current submenu if <see cref="M:Au.AMenu.Submenu(System.String,System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)"/> was called without 'using' and without a callback function that adds submenu items.
             </summary>
             <example>
             <code><![CDATA[
@@ -7169,27 +7242,26 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AMenu.Submenu(System.String,System.Action{Au.AMenu},System.Object,System.Action{Au.Types.MTClickArgs})">
+        <member name="M:Au.AMenu.Submenu(System.String,System.Action{Au.AMenu},System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
             Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
             When showing the submenu first time, your callback function will be called and can add submenu items.
             </summary>
             <param name="text">Text.</param>
             <param name="onOpening">Callback function that should add submenu items.</param>
-            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>.</param>
+            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
+            <param name="l"></param>
             <example>
             <code><![CDATA[
             var m = new AMenu();
             m["One"] = o => Print(o);
             m["Two"] = o => Print(o);
-            m.Submenu("Submenu 1", m1 =>
-            {
+            m.Submenu("Submenu 1", _ => {
             	Print("adding items of " + m.CurrentAddMenu.OwnerItem);
             	m["Three"] = o => Print(o);
             	m["Four"] = o => Print(o);
-            	m.Submenu("Submenu 2", m2 =>
-            	{
+            	m.Submenu("Submenu 2", _ => {
             		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
             		m["Five"] = o => Print(o);
             		m["Six"] = o => Print(o);
@@ -7203,16 +7275,16 @@
         </member>
         <member name="P:Au.AMenu.CurrentAddMenu">
             <summary>
-            Gets <see cref="T:System.Windows.Forms.ToolStripDropDownMenu"/> of the main menu or submenu where new items currently are added.
+            Gets <see cref="T:System.Windows.Forms.ToolStripDropDownMenu"/> of the main menu or submenu where new items currently would be added.
             </summary>
         </member>
         <member name="P:Au.AMenu.LastMenuItem">
             <summary>
             Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>.
-            Returns null if it is not a <b>ToolStripMenuItem</b>, for example a button or separator.
+            Returns null if it is not a <b>ToolStripMenuItem</b>.
             </summary>
             <remarks>
-            You can instead use <see cref="P:Au.Types.AMTBase.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, which is the base class of all supported item types.
+            You can instead use <see cref="P:Au.Types.AMTBase.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
             </remarks>
         </member>
         <member name="M:Au.AMenu.Show(System.Boolean)">
@@ -7238,7 +7310,7 @@
             <param name="y">Y position in control's client area.</param>
             <param name="direction">Menu drop direction.</param>
             <remarks>
-            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AMenu.CMS"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
+            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AMenu.Control"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
             </remarks>
         </member>
         <member name="M:Au.AMenu.Show(System.Windows.Forms.Control,System.Windows.Forms.ToolStripDropDownDirection)">
@@ -7248,7 +7320,7 @@
             <param name="owner">A control or form that will own the menu.</param>
             <param name="direction">Menu drop direction.</param>
             <remarks>
-            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AMenu.CMS"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
+            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AMenu.Control"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
             </remarks>
         </member>
         <member name="P:Au.AMenu.MultiShow">
@@ -7308,77 +7380,99 @@
             TODO
             </summary>
         </member>
-        <member name="P:Au.AToolbar.Ex">
+        <member name="P:Au.AToolbar.Control">
             <summary>
-            Gets ToolStrip.
+            Gets the toolbar window as <see cref="T:System.Windows.Forms.ToolStrip"/>.
+            You can use its properties, methods and events.
             </summary>
         </member>
-        <member name="P:Au.AToolbar.MainToolStrip">
-            <summary>Infrastructure.</summary>
-        </member>
-        <member name="P:Au.AToolbar.Item(System.String,System.Object)">
+        <member name="P:Au.AToolbar.Item(System.String,System.Object,System.String,System.Int32)">
             <summary>
-            Adds new button.
-            The same as <see cref="M:Au.AToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>.
+            Adds new button as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
+            The same as <see cref="M:Au.AToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.String,System.Int32)"/>.
             </summary>
-            <example>
-            <code><![CDATA[
-            var t = new AToolbar();
-            t["One"] = o => Print(o);
-            t["Two", @"icon file path"] = o => { Print(o); ADialog.Show(o.ToString()); };
-            t.LastItem.ToolTipText = "tooltip";
-            ]]></code>
-            </example>
         </member>
-        <member name="M:Au.AToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)">
+        <member name="M:Au.AToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.String,System.Int32)">
             <summary>
             Adds new button as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
             </summary>
             <param name="text">Text.</param>
             <param name="onClick">Callback function. Called when the button clicked.</param>
-            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object)"/>.</param>
+            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
+            <param name="tooltip">Tooltip text.</param>
+            <param name="l"></param>
             <remarks>
             Sets button text, icon and Click event handler. Other properties can be specified later. See example.
             
-            Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>. See <see cref="P:Au.AToolbar.Item(System.String,System.Object)"/>.
+            Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>. See <see cref="P:Au.AToolbar.Item(System.String,System.Object,System.String,System.Int32)"/>.
             </remarks>
-            <example>
-            <code><![CDATA[
-            var m = new AToolbar();
-            t.Add("One", o => Print(o), @"icon file path");
-            t.LastItem.ToolTipText = "tooltip";
-            t.Add("Two", o => { Print(o.MenuItem.Checked); });
-            ]]></code>
-            </example>
         </member>
-        <member name="M:Au.AToolbar.Add(System.Windows.Forms.ToolStripItem,System.Object,System.Action{Au.Types.MTClickArgs})">
+        <member name="M:Au.AToolbar.Add(System.Windows.Forms.ToolStripItem,System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
-            Adds item of any supported type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar.
-            Supports types derived from ToolStripItem.
+            Adds item of any ToolStripItem type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar.
             </summary>
-            <param name="item">An already created item of any supported type.</param>
-            <param name="icon"></param>
-            <param name="onClick">Callback function. Called when the item clicked. Not useful for most item types.</param>
+            <param name="item"></param>
+            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
+            <param name="tooltip">Tooltip text.</param>
+            <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
+            <param name="l"></param>
         </member>
-        <member name="M:Au.AToolbar.Separator">
+        <member name="M:Au.AToolbar.Separator(System.String)">
             <summary>
             Adds separator.
+            By default it's vertical. Horizontal if layout is vertical or <i>groupName</i> not null.
             </summary>
+            <param name="groupName">If not null, the separator is horizontal. If not "", this text will be displayed.</param>
+        </member>
+        <member name="M:Au.AToolbar.MenuButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Int32)">
+            <summary>
+            Adds new button as <see cref="T:System.Windows.Forms.ToolStripDropDownButton"/> with a drop-down menu.
+            </summary>
+            <param name="text">Text.</param>
+            <param name="menu">Callback function that adds menu items. Called when opening the menu first time. If sets <see cref="P:Au.AMenu.MultiShow"/> = false, called each time.</param>
+            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
+            <param name="tooltip">Tooltip text.</param>
+            <param name="l"></param>
+        </member>
+        <member name="M:Au.AToolbar.SplitButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
+            <summary>
+            Adds new button as <see cref="T:System.Windows.Forms.ToolStripSplitButton"/> with a drop-down menu.
+            </summary>
+            <param name="text">Text.</param>
+            <param name="menu">Callback function that adds menu items. Called when need the menu first time (when opening it, or when clicked the button if <i>onClick</i> null). If sets <see cref="P:Au.AMenu.MultiShow"/> = false, called each time.</param>
+            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
+            <param name="tooltip">Tooltip text.</param>
+            <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
+            <param name="l"></param>
         </member>
         <member name="P:Au.AToolbar.LastButton">
             <summary>
-            Gets the last added item as ToolStripButton.
-            Returns null if it is not a ToolStripButton.
-            The item can be added with m.Add(...) and m[...]=.
+            Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
+            Returns null if it is not a <b>ToolStripButton</b>.
             </summary>
             <remarks>
-            You can instead use LastItem, which gets ToolStripItem, which is the base class of all supported item types; cast it to a derived type if need.
+            You can instead use <see cref="P:Au.Types.AMTBase.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
             </remarks>
         </member>
-        <member name="P:Au.AToolbar.MainWnd">
+        <member name="P:Au.AToolbar.NoText">
             <summary>
-            Gets the main toolbar window.
+            When adding items with images, set to not display item text. If tooltip not specified, use item text for it.
             </summary>
+            <remarks>
+            This property is applied to items added afterwards. If true and the item has an image, sets item <b>DisplayStyle</b> property = Image. Else sets item <b>AutoToolTip</b> property = false.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            var t = new AToolbar();
+            t.NoText = true;
+            t["Find", @"Q:\images\find.ico"] = o => Print(o);
+            t["Copy", @"Q:\images\copy.ico"] = o => Print(o);
+            t.NoText = false;
+            t["Delete", @"Q:\images\delete.ico"] = o => Print(o);
+            t.NoText = true;
+            t["Run", @"Q:\images\run.ico"] = o => Print(o);
+            ]]></code>
+            </example>
         </member>
         <member name="T:Au.AExtForms">
             <summary>
@@ -8448,7 +8542,7 @@
         <member name="P:Au.AFolders.Workspace">
             <summary>
             Gets folder of current workspace.
-            Available only in the Au editor process. Elsewhere null.
+            Available in the Au editor process. In script process available if role is miniProgram or editorExtension. Elsewhere null.
             </summary>
         </member>
         <member name="P:Au.AFolders.SystemX64">
@@ -17466,6 +17560,22 @@
             <param name="privilegeName"></param>
             <param name="enable"></param>
         </member>
+        <member name="T:Au.Util.AToolStrip">
+            <summary>
+            Adds to ToolStrip:
+            1. A click works when the window is not the active window.
+            2. A click does not activate the window if it has WS_EX_NOACTIVATE style.
+            3. Show tooltips when the window is not the active window if it has WS_EX_NOACTIVATE style.
+            </summary>
+        </member>
+        <member name="T:Au.Util.AMenuStrip">
+            <summary>
+            Adds to MenuStrip:
+            1. User can click an item when the parent form is not the active window.
+            2. A click does not activate the parent form if it has WS_EX_NOACTIVATE style.
+            3. Fixes some MenuStrip bugs.
+            </summary>
+        </member>
         <member name="T:Au.Util.ATreeBase`1">
             <summary>
             Base class for tree classes.
@@ -18004,6 +18114,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -18065,6 +18183,74 @@
             </summary>
             <param name="operandType">Defines the type of operand.</param>
             <returns>The size in bytes of the operand type.</returns>
+        </member>
+        <member name="T:Au.Util.JSettings">
+            <summary>
+            Base of classes that load/save various settings from/to a JSON file.
+            </summary>
+            <remarks>
+            Derived classes must provide public get/set properties.
+            Getters usually just return a field.
+            Setters must call a <b>SetX</b> method. Then changes will be automatically lazily saved.
+            Most functions should be called from the same UI thread. The 'get' properties for string and atomic types (int/bool/etc) can be called from any thread.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.JSettings._Load``1(System.String)">
+            <summary>
+            Loads JSON file and deserializes to new object of type T.
+            Sets to save automatically whenever a property changed.
+            Returns new empty object if file does not exist or failed to load or parse (invalid JSON). If failed, prints error.
+            </summary>
+        </member>
+        <member name="M:Au.Util.JSettings.Dispose">
+            <summary>
+            Call this when finished using the settings. Saves now if need, and stops autosaving.
+            Don't need to call if the settings are used until process exit.
+            </summary>
+        </member>
+        <member name="M:Au.Util.JSettings.SaveIfNeed">
+            <summary>
+            Saves now if need.
+            Don't need to call explicitly. In UI thread called automatically every 5 s. Also automatically called on process exit and by <b>Dispose</b>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.JSettings.SaveLater">
+            <summary>
+            Call this when changed an array element etc directly without assigning the array etc to a property. Else changes may be not saved.
+            </summary>
+        </member>
+        <member name="M:Au.Util.JSettings.Set(System.String@,System.String)">
+            <summary>
+            Sets a string property value and will save later if need.
+            If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
+            </summary>
+            <param name="prop">Property.</param>
+            <param name="value">New value.</param>
+        </member>
+        <member name="M:Au.Util.JSettings.Set``1(``0@,``0)">
+            <summary>
+            Sets an int, bool or other IEquatable type property value and will save later if need.
+            If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
+            </summary>
+            <param name="prop">Property.</param>
+            <param name="value">New value.</param>
+        </member>
+        <member name="M:Au.Util.JSettings.Set2``1(``0@,``0)">
+            <summary>
+            Sets an enum or other unmanaged type property value and will save later if need.
+            If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
+            </summary>
+            <param name="prop">Property.</param>
+            <param name="value">New value.</param>
+        </member>
+        <member name="M:Au.Util.JSettings.SetNoCmp``1(``0@,``0)">
+            <summary>
+            Sets a property value and will save later if need.
+            Unlike <b>Set</b>, always sets _save = true if _loaded.
+            Use for non-umanaged non-IEquatable types, eg arrays.
+            </summary>
+            <param name="prop">Property.</param>
+            <param name="value">New value.</param>
         </member>
         <member name="T:Au.Util.LibActCtx">
             <summary>
@@ -19415,7 +19601,7 @@
         </member>
         <member name="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)">
             <summary>
-            Waits for an user-defined condition.
+            Waits for a user-defined condition.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true. The calling period depends on <i>options</i>.</param>
@@ -21328,29 +21514,6 @@
             Don't need to call this function before calling <see cref="M:Au.AWnd.Activate"/> and other functions of this library that activate windows.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.FindMessageOnlyWindow(System.String,System.String,Au.AWnd)">
-            <summary>
-            Finds a message-only window and returns its handle as <b>AWnd</b>.
-            Returns <c>default(AWnd)</c> if not found.
-            </summary>
-            <param name="name">
-            Name.
-            Full, case-insensitive. Wildcard etc not supported.
-            null means 'can be any'. "" means 'no name'.
-            </param>
-            <param name="cn">
-            Class name.
-            Full, case-insensitive. Wildcard etc not supported.
-            null means 'can be any'. Cannot be "".
-            </param>
-            <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
-            <remarks>
-            Calls API <msdn>FindWindowEx</msdn>.
-            Faster than <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>, which does not find message-only windows.
-            Finds hidden windows too.
-            Supports <see cref="T:Au.ALastError"/>.
-            </remarks>
-        </member>
         <member name="M:Au.AWnd.More.WindowRectFromClientRect(Au.Types.RECT@,Au.Types.WS,Au.Types.WS_EX,System.Boolean)">
             <summary>
             Calculates window rectangle from client area rectangle and style.
@@ -21477,6 +21640,9 @@
             <summary>
             Returns true if the window is a <msdn>message-only window</msdn>.
             </summary>
+            <remarks>
+            To find message-only windows use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)">
             <summary>
@@ -23281,8 +23447,8 @@
             <remarks>
             Calls API <msdn>EnumWindows</msdn>.
             <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="M:Au.AWnd.GetWnd.MainWindows(System.Boolean)"/>.</note>
-            Does not get message-only windows. Use <see cref="M:Au.AWnd.More.FindMessageOnlyWindow(System.String,System.String,Au.AWnd)"/> if need.
-            On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has [](xref:uac) integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="M:Au.AWnd.FindFast(System.String,System.String,Au.AWnd)"/>.
+            Does not get message-only windows; use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/> if need.
+            On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has [](xref:uac) integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/>.
             Tip: To get top-level and child windows in single array: <c>var a = AWnd.GetWnd.Root.Get.Children();</c>.
             </remarks>
             <seealso cref="M:Au.AWnd.GetWnd.Children(System.Boolean,System.Boolean,System.Boolean)"/>
@@ -23879,9 +24045,9 @@
             
             If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
             
-            On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to find such windows you can use <see cref="M:Au.AWnd.FindFast(System.String,System.String,Au.AWnd)"/>.
+            On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to find such windows you can use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/>.
             
-            To find message-only windows use <see cref="M:Au.AWnd.More.FindMessageOnlyWindow(System.String,System.String,Au.AWnd)"/> instead.
+            To find message-only windows use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/> instead.
             </remarks>
             <exception cref="T:System.ArgumentException">
             - <i>cn</i> is "". To match any, use null.
@@ -23915,7 +24081,7 @@
             <seealso cref="M:Au.AWnd.GetWnd.MainWindows(System.Boolean)"/>
             <seealso cref="M:Au.AWnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Au.AWnd.FindFast(System.String,System.String,Au.AWnd)">
+        <member name="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)">
             <summary>
             Finds a top-level window and returns its handle as <b>AWnd</b>.
             Returns <c>default(AWnd)</c> if not found. See also: <see cref="P:Au.AWnd.Is0"/>, <see cref="M:Au.AExtAu.OrThrow(Au.AWnd)"/>.
@@ -23930,12 +24096,12 @@
             Full, case-insensitive. Wildcard etc not supported.
             null means 'can be any'. Cannot be "".
             </param>
+            <param name="messageOnly">Search only message-only windows.</param>
             <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
             <remarks>
             Calls API <msdn>FindWindowEx</msdn>.
             Faster than <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>, which uses API <msdn>EnumWindows</msdn>.
             Finds hidden windows too.
-            To find message-only windows use <see cref="M:Au.AWnd.More.FindMessageOnlyWindow(System.String,System.String,Au.AWnd)"/> instead.
             Supports <see cref="T:Au.ALastError"/>.
             It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
             </remarks>
@@ -24239,7 +24405,7 @@
         </member>
         <member name="M:Au.AWnd.WaitForCondition(System.Double,System.Func{Au.AWnd,System.Boolean},System.Boolean)">
             <summary>
-            Waits for an user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
+            Waits for a user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>

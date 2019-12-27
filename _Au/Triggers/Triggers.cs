@@ -408,7 +408,7 @@ namespace Au.Triggers
 			AWnd wMsg = default;
 			bool hooksInEditor = ATask.Role != ATRole.ExeProgram;
 			if(hooksInEditor) {
-				wMsg = AWnd.More.FindMessageOnlyWindow(null, "Au.Hooks.Server");
+				wMsg = AWnd.FindFast(null, "Au.Hooks.Server", true);
 				if(wMsg.Is0) {
 					ADebug.Print("Au.Hooks.Server");
 					hooksInEditor = false;

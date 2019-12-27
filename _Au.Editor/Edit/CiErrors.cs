@@ -156,13 +156,13 @@ class CiErrors
 		_stringErrors.Clear();
 	}
 
-	public void SciMouseDwellStarted(SciCode doc, int pos8)
+	public bool SciMouseDwellStarted(SciCode doc, int pos8)
 	{
-		if(_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return;
-		if(pos8 < 0) return;
+		if(_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return false;
+		if(pos8 < 0) return false;
 		int all = doc.Call(SCI_INDICATORALLONFOR, pos8);
 		//Print(all);
-		if(0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return;
+		if(0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return false;
 		int pos16 = doc.Pos16(pos8);
 		var b = new StringBuilder("<body>");
 
@@ -208,7 +208,8 @@ class CiErrors
 		b.Append("</body>");
 		var html = b.ToString();
 
-		CodeInfo.ShowHtmlPopup(doc, pos16, html, onLinkClick: (ph, e) => _LinkClicked(e.Link));
+		CodeInfo.ShowHtmlPopup(doc, pos16, html, onLinkClick: (ph, e) => _LinkClicked(e.Link), above: true);
+		return true;
 	}
 
 	void _UsingsEtc(StringBuilder b, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod)

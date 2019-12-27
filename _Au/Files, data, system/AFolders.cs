@@ -393,7 +393,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets folder of current workspace.
-		/// Available only in the Au editor process. Elsewhere null.
+		/// Available in the Au editor process. In script process available if role is miniProgram or editorExtension. Elsewhere null.
 		/// </summary>
 		public static FolderPath Workspace {
 			get => __workspace;

@@ -2236,7 +2236,7 @@ namespace Au
 			_SetStyle((int)style, how, true, updateNC, updateClient);
 		}
 
-		void _SetStyle(int style, SetAddRemove how, bool exStyle = false, bool updateNC = false, bool updateClient = false)
+		void _SetStyle(int style, SetAddRemove how, bool exStyle, bool updateNC, bool updateClient)
 		{
 			var gwl = exStyle ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
 			if(how != SetAddRemove.Set) {

@@ -208,8 +208,8 @@ namespace Au
 		/// </summary>
 		internal static AWnd WndMsg {
 			get {
-				if(!s_wndMsg.IsAlive) {
-					s_wndMsg = AWnd.More.FindMessageOnlyWindow(null, "Au.Editor.Msg");
+				if(!s_wndMsg.IsAlive) { //TODO: timeout
+					s_wndMsg = AWnd.FindFast(null, "Au.Editor.Msg", true);
 				}
 				return s_wndMsg;
 			}

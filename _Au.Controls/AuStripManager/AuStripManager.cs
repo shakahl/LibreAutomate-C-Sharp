@@ -54,7 +54,7 @@ namespace Au.Controls
 	{
 		string _xmlFileDefault, _xmlFileCustom;
 		XElement _xStrips; //XML root element, contains menubar and toolbars
-		AuToolStrip _tsCustom1, _tsCustom2; //custom toolbars
+		Util.AToolStrip _tsCustom1, _tsCustom2; //custom toolbars
 		Form _form;
 		IGStripManagerCallbacks _callbacks;
 		bool _inBuildAll; //true while we are in BuildAll()
@@ -67,7 +67,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Toolbars.
 		/// </summary>
-		public Dictionary<string, AuToolStrip> Toolbars { get; }
+		public Dictionary<string, Util.AToolStrip> Toolbars { get; }
 
 		/// <summary>
 		/// Submenus.
@@ -83,7 +83,7 @@ namespace Au.Controls
 		{
 			_form = form;
 			_callbacks = callbacks;
-			Toolbars = new Dictionary<string, AuToolStrip>();
+			Toolbars = new Dictionary<string, Util.AToolStrip>();
 			Submenus = new Dictionary<string, ToolStripDropDownMenu>();
 		}
 
@@ -119,9 +119,9 @@ namespace Au.Controls
 
 				ToolStrip t;
 				if(isMenu) {
-					t = MenuBar = new AuMenuStrip();
+					t = MenuBar = new Util.AMenuStrip();
 				} else {
-					var cts = new AuToolStrip();
+					var cts = new Util.AToolStrip();
 					Toolbars.Add(name, cts);
 					t = cts;
 					switch(name) {

@@ -254,11 +254,14 @@ namespace Au
 			/// <summary>
 			/// Returns true if the window is a <msdn>message-only window</msdn>.
 			/// </summary>
+			/// <remarks>
+			/// To find message-only windows use <see cref="FindFast"/>.
+			/// </remarks>
 			public static bool IsMessageOnlyWindow(AWnd w)
 			{
 				var v = w.LibParentGWL;
 				if(v != default) {
-					if(s_messageOnlyParent.Is0) s_messageOnlyParent = FindMessageOnlyWindow(null, null).LibParentGWL;
+					if(s_messageOnlyParent.Is0) s_messageOnlyParent = FindFast(null, null, true).LibParentGWL;
 					return v == s_messageOnlyParent;
 				}
 				return false;

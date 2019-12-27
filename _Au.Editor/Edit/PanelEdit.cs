@@ -231,7 +231,7 @@ class PanelEdit : UserControl
 		if(dif.Has(_EUpdateUI.Redo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Redo), !disable.Has(_EUpdateUI.Redo));
 		if(dif.Has(_EUpdateUI.Cut)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Cut), !disable.Has(_EUpdateUI.Cut));
 		if(dif.Has(_EUpdateUI.Copy)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Copy), !disable.Has(_EUpdateUI.Copy));
-		//if(dif.Has(EUpdateUI.Paste)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Paste), !disable.Has_(EUpdateUI.Paste));
+		//if(dif.Has(EUpdateUI.Paste)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Paste), !disable.Has(EUpdateUI.Paste));
 
 	}
 

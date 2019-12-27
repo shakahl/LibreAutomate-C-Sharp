@@ -280,6 +280,14 @@ partial class FMain : Form
 #endif
 	}
 
+	public void ZShowAndActivate()
+	{
+		Show();
+		var w = (AWnd)Program.MainForm;
+		w.ShowNotMinimized(true);
+		w.ActivateLL();
+	}
+
 	public void ZSetTitle()
 	{
 		string title, app = Program.AppName;

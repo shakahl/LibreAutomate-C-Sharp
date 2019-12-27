@@ -110,7 +110,7 @@ namespace Au.Controls
 			_c = c;
 			_t = c.Z;
 			_isEditor = isEditor;
-			_sci_AnnotationDrawCallback = _AnnotationDrawCallback_;
+			_sci_AnnotationDrawCallback = _AnnotationDrawCallback;
 			_callbackPtr = Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback);
 			_c.Call(SCI_SETANNOTATIONDRAWCALLBACK, 0, _callbackPtr);
 			_visible = AnnotationsVisible.ANNOTATION_STANDARD;
@@ -404,7 +404,7 @@ namespace Au.Controls
 		}
 
 		Sci_AnnotationDrawCallback _sci_AnnotationDrawCallback;
-		unsafe int _AnnotationDrawCallback_(void* cbParam, ref Sci_AnnotationDrawCallbackData c)
+		unsafe int _AnnotationDrawCallback(void* cbParam, ref Sci_AnnotationDrawCallbackData c)
 		{
 			//Function info:
 			//Called for all annotations, not just for images.

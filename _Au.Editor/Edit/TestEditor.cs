@@ -255,7 +255,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 				var s = c?.ToString() ?? "";
 				Print($"<><c 0xcc00>{w} ({s}), {p.Handle}</c>");
 
-				//if(c is Au.Controls.AuToolStrip) { //never mind: .NET bug: if toolstrip Custom1 has overflow and window is maximized, creates parked handle
+				//if(c is Au.Controls.AToolStrip) { //never mind: .NET bug: if toolstrip Custom1 has overflow and window is maximized, creates parked handle
 				//	int stop = 0;
 				//}
 			}

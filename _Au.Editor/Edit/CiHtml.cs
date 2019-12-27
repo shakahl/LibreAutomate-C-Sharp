@@ -96,9 +96,12 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			case TextTags.Operator:
 				if(s.Length > 0 && (s[0] == '<' || s[0] == '>' || s[0] == '&')) s = WebUtility.HtmlEncode(s); //eg < in X<T>
 				break;
+			case TextTags.Text:
+				s = WebUtility.HtmlEncode(s);
+				//TODO: parse [][xref:topic_id]
+				break;
 #if DEBUG
 			case TextTags.Space:
-			case TextTags.Text:
 			case TextTags.Constant:
 			case TextTags.EnumMember:
 			case TextTags.Event:

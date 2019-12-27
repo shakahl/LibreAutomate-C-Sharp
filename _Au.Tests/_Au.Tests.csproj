@@ -24,6 +24,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Libraries\_HtmlRenderer\_HtmlRenderer.csproj" />
     <ProjectReference Include="..\_Au\_Au.csproj" />
     <ProjectReference Include="..\_Au.Controls\_Au.Controls.csproj" />
     <ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />

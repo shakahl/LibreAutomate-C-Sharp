@@ -25,7 +25,7 @@ class CiPopupList
 {
 	_Window _w;
 	_FastListBox _list;
-	AuToolStrip _tb;
+	Au.Util.AToolStrip _tb;
 	int _nKindButtons;
 	int _height;
 
@@ -66,7 +66,7 @@ class CiPopupList
 		_list.ZItemClick += _list_ItemClick;
 		_list.ZSelectedIndexChanged += _list_SelectedIndexChanged;
 
-		_tb = new AuToolStrip();
+		_tb = new Au.Util.AToolStrip();
 		_tb.SuspendLayout();
 		_tb.AccessibleName = _tb.Name = "Codein_listFilter";
 		_tb.Renderer = new AuDockPanel.ZDockedToolStripRenderer();

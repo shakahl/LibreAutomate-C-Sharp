@@ -90,7 +90,7 @@ namespace Au
 		///// <summary>
 		///// Converts int to hexadecimal string like "0x3A".
 		///// </summary>
-		//public static string ToHex_(this int t)
+		//public static string ToHex(this int t)
 		//{
 		//	return "0x" + t.ToString("X");
 		//}

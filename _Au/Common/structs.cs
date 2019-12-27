@@ -15,6 +15,7 @@ using System.Drawing;
 //using System.Linq;
 
 using static Au.AStatic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Au.Types
 {
@@ -112,9 +113,9 @@ namespace Au.Types
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
-	public struct POINT
+	public struct POINT : IEquatable<POINT>
 	{
-#pragma warning disable 1591 //XML doc
+#pragma warning disable 1591, 3008 //XML doc, CLS-compliant
 		public int x, y;
 
 		public POINT(int x, int y) { this.x = x; this.y = y; }
@@ -136,12 +137,22 @@ namespace Au.Types
 		public static bool operator ==(POINT p1, POINT p2) => p1.x == p2.x && p1.y == p2.y;
 		public static bool operator !=(POINT p1, POINT p2) => !(p1 == p2);
 
+		public bool Equals(POINT other) => this == other; //IEquatable
+
 		/// <summary>Adds x and y to this.x and this.y.</summary>
 		public void Offset(int x, int y) { this.x += x; this.y += y; }
 		/// <summary>Returns <c>new POINT(p.x + d.x, p.y + d.y)</c>.</summary>
 		public static POINT operator +(POINT p, (int x, int y) d) => new POINT(p.x + d.x, p.y + d.y);
 
+		public void Deconstruct(out int x, out int y) { x = this.x; y = this.y; }
+
 		public override string ToString() => $"{{x={x} y={y}}}";
+
+		//properties for JSON serialization
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public int _X { get => x; set { x = value; } }
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public int _Y { get => y; set { y = value; } }
 #pragma warning restore 1591 //XML doc
 
 		static POINT _Coord(Coord x, Coord y, bool workArea, AScreen screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
@@ -152,9 +163,9 @@ namespace Au.Types
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
-	public struct SIZE
+	public struct SIZE : IEquatable<SIZE>
 	{
-#pragma warning disable 1591 //XML doc
+#pragma warning disable 1591, 3008 //XML doc, CLS-compliant
 		public int width, height;
 
 		public SIZE(int cx, int cy) { this.width = cx; this.height = cy; }
@@ -170,10 +181,20 @@ namespace Au.Types
 		public static bool operator ==(SIZE s1, SIZE s2) => s1.width == s2.width && s1.height == s2.height;
 		public static bool operator !=(SIZE s1, SIZE s2) => !(s1 == s2);
 
+		public bool Equals(SIZE other) => this == other; //IEquatable
+
 		/// <summary>Returns <c>new SIZE(z.width + d.x, z.height + d.y)</c>.</summary>
 		public static SIZE operator +(SIZE z, (int x, int y) d) => new SIZE(z.width + d.x, z.height + d.y);
 
+		public void Deconstruct(out int width, out int height) { width = this.width; height = this.height; }
+
 		public override string ToString() => $"{{cx={width} cy={height}}}";
+
+		//properties for JSON serialization
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public int _W { get => width; set { width = value; } }
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public int _H { get => height; set { height = value; } }
 #pragma warning restore 1591 //XML doc
 	}
 
@@ -186,9 +207,9 @@ namespace Au.Types
 	/// </remarks>
 	[DebuggerStepThrough]
 	[Serializable]
-	public struct RECT
+	public struct RECT : IEquatable<RECT>
 	{
-#pragma warning disable 1591 //XML doc
+#pragma warning disable 1591, 3008 //XML doc, CLS-compliant
 		public int left, top, right, bottom;
 
 		/// <summary>
@@ -218,6 +239,8 @@ namespace Au.Types
 		public static bool operator ==(RECT r1, RECT r2) => r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom;
 		public static bool operator !=(RECT r1, RECT r2) => !(r1 == r2);
 
+		public bool Equals(RECT other) => this == other; //IEquatable
+
 		/// <summary>
 		/// Sets fields like the constructor <see cref="RECT(int,int,int,int,bool)"/>.
 		/// </summary>
@@ -237,6 +260,12 @@ namespace Au.Types
 		/// Returns true if the rectangle is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
 		/// </summary>
 		public bool IsEmpty => right <= left || bottom <= top;
+
+		//properties for JSON serialization. Must be before Width and Height, else would be set after them.
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public int _X { get => left; set { left = value; } }
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public int _Y { get => top; set { top = value; } }
 
 		/// <summary>
 		/// Gets or sets width.

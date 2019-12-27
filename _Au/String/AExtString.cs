@@ -1278,7 +1278,7 @@ namespace Au
 		///// <summary>
 		///// Replaces all "'" with "''".
 		///// </summary>
-		//public static string SqlEscape_(this string t) => t.Replace("'", "''");
+		//public static string SqlEscape(this string t) => t.Replace("'", "''");
 
 		//rejected. Rarely used.
 		///// <summary>

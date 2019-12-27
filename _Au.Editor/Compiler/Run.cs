@@ -505,7 +505,7 @@ class RunningTasks
 			int iFlags = 0;
 			if(r.mtaThread) iFlags |= 2;
 			if(r.console) iFlags |= 4;
-			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, r.fullPathRefs, wrPipeName);
+			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
 			wrPipeName = null;
 
 			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;

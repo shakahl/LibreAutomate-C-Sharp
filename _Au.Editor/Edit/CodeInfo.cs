@@ -296,8 +296,8 @@ Print(""t"" + 'c' + 1);
 	public static void SciMouseDwellStarted(SciCode doc, int pos8)
 	{
 		if(!_CanWork(doc)) return;
-		_quickInfo.SciMouseDwellStarted(doc, pos8);
-		_diag.SciMouseDwellStarted(doc, pos8);
+		bool isDiag = _diag.SciMouseDwellStarted(doc, pos8);
+		_quickInfo.SciMouseDwellStarted(doc, pos8, isDiag);
 	}
 
 	public static void SciMouseDwellEnded(SciCode doc)
@@ -492,14 +492,14 @@ Print(""t"" + 'c' + 1);
 	static CiPopupHtml _popupHtml;
 	static bool _phVisible;
 
-	internal static void ShowHtmlPopup(SciCode doc, int pos16, string html, Action<CiPopupHtml, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs> onLinkClick = null)
+	internal static void ShowHtmlPopup(SciCode doc, int pos16, string html, Action<CiPopupHtml, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs> onLinkClick = null, bool above = false)
 	{
 		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Info, onHiddenOrDestroyed: _ => _phVisible = false) {
 			OnLoadImage = OnHtmlImageLoad,
 		};
 		_popupHtml.Html = html;
 		_popupHtml.OnLinkClick = onLinkClick;
-		_popupHtml.Show(doc, pos16, hideIfOutside: true);
+		_popupHtml.Show(doc, pos16, hideIfOutside: true, above: above);
 		_phVisible = true;
 	}
 

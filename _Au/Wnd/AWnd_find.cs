@@ -462,7 +462,7 @@ namespace Au
 		/// 
 		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to find such windows you can use <see cref="FindFast"/>.
 		/// 
-		/// To find message-only windows use <see cref="More.FindMessageOnlyWindow"/> instead.
+		/// To find message-only windows use <see cref="FindFast"/> instead.
 		/// </remarks>
 		/// <exception cref="ArgumentException">
 		/// - <i>cn</i> is "". To match any, use null.
@@ -549,47 +549,18 @@ namespace Au
 		/// Full, case-insensitive. Wildcard etc not supported.
 		/// null means 'can be any'. Cannot be "".
 		/// </param>
+		/// <param name="messageOnly">Search only message-only windows.</param>
 		/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
 		/// <remarks>
 		/// Calls API <msdn>FindWindowEx</msdn>.
 		/// Faster than <see cref="Find"/>, which uses API <msdn>EnumWindows</msdn>.
 		/// Finds hidden windows too.
-		/// To find message-only windows use <see cref="More.FindMessageOnlyWindow"/> instead.
 		/// Supports <see cref="ALastError"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
-		public static AWnd FindFast(string name, string cn, AWnd wAfter = default)
+		public static AWnd FindFast(string name, string cn, bool messageOnly = false, AWnd wAfter = default)
 		{
-			return Api.FindWindowEx(default, wAfter, cn, name);
-		}
-
-		public static partial class More
-		{
-			/// <summary>
-			/// Finds a message-only window and returns its handle as <b>AWnd</b>.
-			/// Returns <c>default(AWnd)</c> if not found.
-			/// </summary>
-			/// <param name="name">
-			/// Name.
-			/// Full, case-insensitive. Wildcard etc not supported.
-			/// null means 'can be any'. "" means 'no name'.
-			/// </param>
-			/// <param name="cn">
-			/// Class name.
-			/// Full, case-insensitive. Wildcard etc not supported.
-			/// null means 'can be any'. Cannot be "".
-			/// </param>
-			/// <param name="wAfter">If used, starts searching from the next window in the Z order.</param>
-			/// <remarks>
-			/// Calls API <msdn>FindWindowEx</msdn>.
-			/// Faster than <see cref="Find"/>, which does not find message-only windows.
-			/// Finds hidden windows too.
-			/// Supports <see cref="ALastError"/>.
-			/// </remarks>
-			public static AWnd FindMessageOnlyWindow(string name, string cn, AWnd wAfter = default)
-			{
-				return Api.FindWindowEx(Native.HWND.MESSAGE, wAfter, cn, name);
-			}
+			return Api.FindWindowEx(messageOnly? Native.HWND.MESSAGE : default, wAfter, cn, name);
 		}
 
 		/// <summary>
@@ -657,7 +628,7 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
-			/// Does not get message-only windows. Use <see cref="More.FindMessageOnlyWindow"/> if need.
+			/// Does not get message-only windows; use <see cref="FindFast"/> if need.
 			/// On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has [](xref:uac) integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="FindFast"/>.
 			/// Tip: To get top-level and child windows in single array: <c>var a = AWnd.GetWnd.Root.Get.Children();</c>.
 			/// </remarks>

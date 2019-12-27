@@ -33,10 +33,11 @@ using System.Runtime.InteropServices;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("1.0.0.*")]
-//FUTURE: consider to switch to manual incrementing.
-//	Or automatic but less frequent etc, eg when creating setup file.
-//	Now VS adds 20-300 to the revision at each build. Why not 1? Now is 22000. What happens when it becomes the max possible 0xffff?
+//[assembly: AssemblyVersion("1.0.0.*")]
+[assembly: AssemblyVersion("1.0.0.0")]
+//rejected: auto increment.
+//	Creates more problems and work than is useful. Eg after modifying this project always need to rebuild all exe projects, else fails to load this dll.
+//	VS adds 20-300 to the revision at each build. Why not 1? Now ~ 23000. What happens when it becomes the max possible 0xffff?
 //	VS does not auto-increment the build number when "1.0.*". Now 7288. Where it gets these values? And does not reset them when I change eg minor.
 
 //[assembly: AssemblyFileVersion("1.0.0.0")]

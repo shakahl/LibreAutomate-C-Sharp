@@ -42,7 +42,7 @@ namespace Au.Controls
 				var gp = _gc as _Panel;
 
 				//we'll use this to prevent window activation on click, for toolbar and menubar classes that support it
-				_hasToolbar = (gp != null && gp.HasToolbar && (gp.Content is AuToolStrip || gp.Content is AuMenuStrip));
+				_hasToolbar = (gp != null && gp.HasToolbar && (gp.Content is Util.AToolStrip || gp.Content is Util.AMenuStrip));
 
 				this.SuspendLayout();
 				this.Font = _manager.Font;

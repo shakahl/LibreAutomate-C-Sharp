@@ -24,6 +24,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "solution", "solution", "{2C
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_Au.Editor", "_Au.Editor\_Au.Editor.csproj", "{69065F68-192D-4487-AEB4-7286C1CF2FED}"
+	ProjectSection(ProjectDependencies) = postProject
+		{12BD5B1F-8293-4633-9A70-2D2847F79F72} = {12BD5B1F-8293-4633-9A70-2D2847F79F72}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "_Au.Tests", "_Au.Tests\_Au.Tests.csproj", "{4AD4FBAB-3A07-4736-A7C1-742F059F611D}"
 EndProject

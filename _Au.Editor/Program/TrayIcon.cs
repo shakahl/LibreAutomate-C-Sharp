@@ -43,10 +43,10 @@ static class EdTrayIcon
 		var m = new AMenu { MultiShow = true, ActivateMenuWindow = true };
 		m["End green task\tSleep"] = o => Program.Tasks.EndTask();
 		m["Disable triggers\tM-click"] = o => Run.DisableTriggers(null); var dt = m.LastMenuItem;
-		m.CMS.Opening += (unu, sed) => { dt.Checked = _disabled; };
+		m.Control.Opening += (unu, sed) => { dt.Checked = _disabled; };
 		m.Separator();
 		m["Exit"] = o => Strips.Cmd.File_Exit();
-		_trayIcon.ContextMenuStrip = m.CMS;
+		_trayIcon.ContextMenuStrip = m.Control;
 	}
 
 	static void _trayIcon_MouseClick(object sender, MouseEventArgs e)
@@ -54,10 +54,7 @@ static class EdTrayIcon
 		//Print(e.Button);
 		switch(e.Button) {
 		case MouseButtons.Left:
-			Program.MainForm.Show();
-			var w = (AWnd)Program.MainForm;
-			w.ShowNotMinimized(true);
-			w.ActivateLL();
+			Program.MainForm.ZShowAndActivate();
 			break;
 		case MouseButtons.Middle:
 			Run.DisableTriggers(null);

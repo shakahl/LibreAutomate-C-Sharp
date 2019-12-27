@@ -135,7 +135,7 @@ class CiPopupHtml
 				if(s.Starts('^')) {
 					OnLinkClick?.Invoke(this, e);
 				} else if(s.Starts('|')) { //go to symbol source file/position or web page
-					CiGoTo.GoTo(s, _w);
+					CiGoTo.LinkGoTo(s, _w);
 				} else {
 					AExec.TryRun(s);
 				}
@@ -185,11 +185,12 @@ class CiPopupHtml
 		}
 	}
 
-	public void Show(SciCode ownerControl, int pos16, bool hideIfOutside = false)
+	public void Show(SciCode ownerControl, int pos16, bool hideIfOutside = false, bool above = false)
 	{
 		var r = CiUtil.GetCaretRectFromPos(ownerControl, pos16);
 		r.X -= 50; r.Width += 100;
-		Show(ownerControl, ownerControl.RectangleToScreen(r), PopupAlignment.TPM_VERTICAL, hideIfOutside);
+		PopupAlignment pa = PopupAlignment.TPM_VERTICAL; if(above) pa |= PopupAlignment.TPM_BOTTOMALIGN;
+		Show(ownerControl, ownerControl.RectangleToScreen(r), pa, hideIfOutside);
 	}
 
 	public void Hide()

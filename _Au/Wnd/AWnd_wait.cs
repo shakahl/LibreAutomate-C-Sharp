@@ -172,7 +172,7 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Waits for an user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
+		/// Waits for a user-defined state/condition of this window. For example active, visible, enabled, closed, contains control.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>

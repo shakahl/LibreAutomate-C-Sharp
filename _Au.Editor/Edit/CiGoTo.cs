@@ -132,7 +132,7 @@ class CiGoTo
 	}
 
 	/// <summary>
-	/// Gets link data string for <see cref="GoTo(string, Control)"/>. Returns null if unavailable.
+	/// Gets link data string for <see cref="LinkGoTo(string, Control)"/>. Returns null if unavailable.
 	/// This function is fast. The slow or async code is in the <b>GoTo</b> function.
 	/// </summary>
 	public static string GetLinkData(ISymbol sym) => new CiGoTo(sym)._GetLinkData();
@@ -143,7 +143,7 @@ class CiGoTo
 	/// </summary>
 	/// <param name="linkData">String returned by <see cref="GetLinkData"/>.</param>
 	/// <param name="menuOwner">Owner for context menu. Need it when there are multiple locations.</param>
-	public static void GoTo(string linkData, Control menuOwner)
+	public static void LinkGoTo(string linkData, Control menuOwner)
 	{
 		if(linkData == null) return;
 		bool inSource = !linkData.Starts("||");
@@ -218,7 +218,6 @@ class CiGoTo
 		finally { alc.Unload(); }
 	}
 
-
 	public static void GoToSymbolFromPos(bool onCtrlClick = false)
 	{
 		if(!CiUtil.GetSymbolFromPos(out var sym, out var cd)) return;
@@ -226,4 +225,30 @@ class CiGoTo
 		var g = new CiGoTo(sym, onlyIfInSource: onCtrlClick);
 		if(g.CanGoTo) g.GoTo(cd.sciDoc);
 	}
+
+	//public static void EditMenuOrToolbar(string sourceFile, int line)
+	//{
+	//	var f1 = Program.Model.FindByFilePath(sourceFile);
+	//	if(f1 != null) Program.Model.OpenAndGoTo(f1, line);
+	//}
+
+	//public static void EditMenuOrToolbar(byte[] data)
+	//{
+	//	var a = Au.Util.LibSerializer.Deserialize(data);
+	//	bool isTB = a[0] != 0;
+	//	string sourceFile = a[1];
+	//	int line = a[2]; //ctor line
+	//	string itemText = a[3];
+	//	Print(isTB, sourceFile, line, itemText);
+	//	var f1 = Program.Model.FindByFilePath(sourceFile); if(f1 == null) return;
+	//	if(!Program.Model.OpenAndGoTo(f1, line)) return;
+	//	if(itemText != null) { //go to item
+	//		var doc = Panels.Editor.ZActiveDoc;
+	//		string code = doc.Text;
+	//		int i = doc.Z.LineStart(true, line);
+	//		string tn = isTB ? "AToolbar" : "AMenu";
+	//		if(!code.RegexMatch($@"\b([a-zA-Z_]\w*)\s*=\s*new\s+{tn}\s*\(", 1, out string v, RXFlags.FIRSTLINE, i..)) return; //get variable name
+	//		Print(v);
+	//	}
+	//}
 }

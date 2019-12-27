@@ -25,10 +25,11 @@ using Au.Controls;
 
 class CiQuickInfo
 {
-	public async void SciMouseDwellStarted(SciCode doc, int pos8)
+	public async void SciMouseDwellStarted(SciCode doc, int pos8, bool isDiag)
 	{
 		var pi = Panels.Info;
-		if(!pi.Visible) pi=null;
+		if(!pi.Visible) pi = null;
+		if(isDiag && pi == null) return;
 
 		if(pos8 <= 0) { pi?.ZSetAboutInfo(); return; }
 

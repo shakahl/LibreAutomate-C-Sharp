@@ -510,6 +510,7 @@ partial class FilesModel : ITreeModel
 	/// <param name="columnOrPos">If not negative, goes to this 0-based position in text (if line negative) or to this 0-based column in line.</param>
 	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1)
 	{
+		Program.MainForm.ZShowAndActivate();
 		bool wasOpen = _currentFile == f;
 		if(!SetCurrentFile(f)) return false;
 		var doc = Panels.Editor.ZActiveDoc;

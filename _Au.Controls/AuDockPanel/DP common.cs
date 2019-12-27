@@ -241,7 +241,7 @@ namespace Au.Controls
 				bool isTab = this is _Tab gt;
 				var state = this.DockState;
 				var m = new AMenu();
-				m.CMS.Text = "Menu";
+				m.Control.Text = "Menu";
 
 				//dock state
 				m.Add("Float\tD-click, drag", o => this.SetDockState(_DockState.Floating)).Enabled = state != _DockState.Floating;
@@ -303,7 +303,7 @@ namespace Au.Controls
 			//	bool isTab = this is _Tab gt;
 			//	var state = this.DockState;
 			//	var m = new AMenu();
-			//	m.CMS.Text = "Menu";
+			//	m.Control.Text = "Menu";
 
 			//	//dock state
 			//	m.Add("Float\tD-click, drag", o => this.SetDockState(_DockState.Floating)).Enabled = state != _DockState.Floating;

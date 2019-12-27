@@ -51,7 +51,14 @@ static class CiUtil
 		}
 
 		var model = cd.document.GetSemanticModelAsync().Result;
-		sym = model.GetSymbolInfo(token.Parent).Symbol;
+		var node = token.Parent;
+		sym = model.GetSymbolInfo(node).Symbol ?? model.GetSpeculativeSymbolInfo(position, node, SpeculativeBindingOption.BindAsExpression).Symbol;
+		if(sym == null) {
+			var mg = model.GetMemberGroup(node);
+			if(!mg.IsDefaultOrEmpty) sym = mg[0];
+		}
+		//Print(sym, sym?.Kind ?? default);
+		//return false;
 		return sym != null && sym.Kind != SymbolKind.ErrorType;
 	}
 
