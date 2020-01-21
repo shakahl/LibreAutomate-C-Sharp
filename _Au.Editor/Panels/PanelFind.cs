@@ -618,7 +618,7 @@ class PanelFind : AuUserControlBase
 		if(!_init1) {
 			_init1 = true;
 			var c = Panels.Found.ZControl;
-			c.CreateHandleNow();
+			c.Hwnd(create: true);
 			Panels.Files.ZWorkspaceLoadedAndDocumentsOpened += () => Panels.Found.ZControl.Z.ClearText();
 
 			c.ZTags.AddLinkTag("+open", s => {

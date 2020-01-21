@@ -28,11 +28,13 @@
 		<!--panels-->
 		<split w1="200">
 			<split hor="" w2="150">
-        <tab captionAt="Top">
-			    <panel name="Files" />
-					<panel name="Open" />
-					<panel name="Running" />
-        </tab>
+				<split hor="" f="0.8">
+					<panel name="Files" captionAt="Top" />
+					<tab captionAt="Top" active="1">
+						<panel name="Open" />
+						<panel name="Running" />
+					</tab>
+				</split>
         <panel name="Find" rectFloating="469 222" captionAt="Top" />
       </split>
 			<split hor="" w2="150">

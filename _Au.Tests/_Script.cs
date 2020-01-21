@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+#if false
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -9,14 +10,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
-using Au;
-using Au.Types;
-using static Au.AStatic;
-using Au.Triggers;
-using Au.Controls;
 using System.Runtime.CompilerServices;
 using System.Reflection;
 using System.Runtime;
@@ -35,7 +31,15 @@ using System.Windows.Forms.VisualStyles;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using TheArtOfDev.HtmlRenderer.Core.Entities;
 
-[module: DefaultCharSet(CharSet.Unicode)]
+using Au.Triggers;
+using Au.Controls;
+#endif
+
+using Au;
+using Au.Types;
+using static Au.AStatic;
+
+[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
 class Script : AScript
 {
@@ -138,63 +142,63 @@ class Script : AScript
 		public string Eight { get; set; } = "def";
 	}
 
-	void TestJson()
-	{
-		var file = @"Q:\test\sett.json";
-		var file2 = @"Q:\test\sett.xml";
+	//void TestJson()
+	//{
+	//	var file = @"Q:\test\sett.json";
+	//	var file2 = @"Q:\test\sett.xml";
 
-		var v = new JSettings { OneTwo = "text ąčę", ThreeFour = 100 };
+	//	var v = new JSettings { OneTwo = "text ąčę", ThreeFour = 100 };
 
-		for(int i = 0; i < 5; i++) {
-			//100.ms();
-			//APerf.First();
-			//var k1 = new JsonSerializerOptions { IgnoreNullValues = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true };
-			//var b1 = JsonSerializer.SerializeToUtf8Bytes(v, k1);
-			//APerf.Next();
-			//File.WriteAllBytes(file, b1);
-			//APerf.NW();
+	//	for(int i = 0; i < 5; i++) {
+	//		//100.ms();
+	//		//APerf.First();
+	//		//var k1 = new JsonSerializerOptions { IgnoreNullValues = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping, WriteIndented = true };
+	//		//var b1 = JsonSerializer.SerializeToUtf8Bytes(v, k1);
+	//		//APerf.Next();
+	//		//File.WriteAllBytes(file, b1);
+	//		//APerf.NW();
 
-			100.ms();
-			APerf.First();
-			var b2 = File.ReadAllBytes(file);
-			APerf.Next();
-			var k2 = new JsonSerializerOptions { IgnoreNullValues = true };
-			APerf.Next();
-			v = JsonSerializer.Deserialize<JSettings>(b2, k2);
-			APerf.NW('J');
-		}
+	//		100.ms();
+	//		APerf.First();
+	//		var b2 = File.ReadAllBytes(file);
+	//		APerf.Next();
+	//		var k2 = new JsonSerializerOptions { IgnoreNullValues = true };
+	//		APerf.Next();
+	//		v = JsonSerializer.Deserialize<JSettings>(b2, k2);
+	//		APerf.NW('J');
+	//	}
 
-		for(int i = 0; i < 5; i++) {
-			//100.ms();
-			//APerf.First();
-			//var r1 = new XElement("r");
-			//r1.Add(new XElement("OneTwo", v.OneTwo));
-			//r1.Add(new XElement("ThreeFour", v.ThreeFour.ToString()));
-			//APerf.Next();
-			//r1.Save(file2);
-			//APerf.NW();
+	//	for(int i = 0; i < 5; i++) {
+	//		//100.ms();
+	//		//APerf.First();
+	//		//var r1 = new XElement("r");
+	//		//r1.Add(new XElement("OneTwo", v.OneTwo));
+	//		//r1.Add(new XElement("ThreeFour", v.ThreeFour.ToString()));
+	//		//APerf.Next();
+	//		//r1.Save(file2);
+	//		//APerf.NW();
 
-			100.ms();
-			APerf.First();
-			var r2 = XElement.Load(file2);
-			APerf.Next();
-			v = new JSettings();
-			v.OneTwo = r2.Element("OneTwo").Value;
-			var s2 = r2.Element("ThreeFour").Value;
-			APerf.NW('X');
-			v.ThreeFour = s2.ToInt();
-		}
+	//		100.ms();
+	//		APerf.First();
+	//		var r2 = XElement.Load(file2);
+	//		APerf.Next();
+	//		v = new JSettings();
+	//		v.OneTwo = r2.Element("OneTwo").Value;
+	//		var s2 = r2.Element("ThreeFour").Value;
+	//		APerf.NW('X');
+	//		v.ThreeFour = s2.ToInt();
+	//	}
 
-		Print(v.OneTwo, v.ThreeFour, v.Five, v.Six, v.Seven, v.Eight);
+	//	Print(v.OneTwo, v.ThreeFour, v.Five, v.Six, v.Seven, v.Eight);
 
-		//JsonDocument d; d.RootElement.
-	}
+	//	//JsonDocument d; d.RootElement.
+	//}
 
-	[DllImport("CppE")]
-	static extern int Cpp_Install(int step, string dir);
+	//[DllImport("CppE")]
+	//static extern int Cpp_Install(int step, string dir);
 
-	[DllImport("CppE")]
-	static extern int Cpp_Uninstall();
+	//[DllImport("CppE")]
+	//static extern int Cpp_Uninstall();
 
 
 	void TestMenu()
@@ -452,16 +456,96 @@ class Script : AScript
 		//Application.Run();
 	}
 #endif
-	[MethodImpl(MethodImplOptions.NoInlining)]
-	void TestCallerArgumentExpression(string so, [CallerArgumentExpression("so")] string ca = null) //does not work
+
+	//[MethodImpl(MethodImplOptions.NoInlining)]
+	//void TestCallerArgumentExpression(string so, [CallerArgumentExpression("so")] string ca = null) //does not work
+	//{
+	//	Print(so, ca);
+	//}
+
+	//internal static bool ClientToScreen4(AWnd w, ref POINT p)
+	//{
+	//	int x0=p.x;
+	//	if(!Api.MapWindowPoints(w, default, ref p, out int k)) return false;
+	//	Print(p.x-x0, AMath.LoShort(k));
+	//	//p.Offset(r.left, r.top);
+	//	return true;
+	//}
+
+	//void TestClientToScreenRtlAware()
+	//{
+
+	//	ATimer.After(500, _ => {
+	//		var w = AWnd.Find(null, "#32770").OrThrow();
+	//		//RECT r;
+	//		//Print(w.GetClientRect(out r), r);
+	//		//Print(w.GetClientRect2(out r), r);
+	//		//Print(w.GetClientRect(out r, true), r);
+	//		//Print(w.GetClientRect2(out r, true), r);
+
+	//		//POINT p = (1, 1);
+	//		//Api.ClientToScreen(w, ref p);
+	//		//Print(p);
+
+
+	//		//p = (1, 1);
+	//		//Print(Api.ClientToScreen2(w, ref p));
+	//		//Print(p);
+
+	//		//p = (1, 1);
+	//		//Print(Api.ClientToScreen3(w, ref p));
+	//		//Print(p);
+
+	//		////p = (1, 1);
+	//		////Print(ClientToScreen4(w, ref p));
+	//		////Print(p);
+	//		////return;
+
+	//		var a = AWnd.GetWnd.AllWindows(true); Print(a.Length);
+	//		//int ir = Array.FindIndex(a, o => o.HasExStyle(WS_EX.LAYOUTRTL)); //Print(ir);
+	//		APerf.SpeedUpCpu();
+	//		for(int i1 = 0; i1 < 7; i1++) {
+	//			//p = (1, 1); Api.ClientToScreen(w, ref p);
+	//			//p = (1, 1); Api.ClientToScreen2(w, ref p);
+	//			//p = (1, 1); Api.ClientToScreen3(w, ref p);
+	//			//foreach(var k in a) { p = (1, 1); Api.ClientToScreen(k, ref p); }
+	//			foreach(var k in a) k.GetClientRect(out r, false);
+	//			APerf.First();
+	//			//foreach(var k in a) { p = (1, 1); Api.ClientToScreen(k, ref p); }
+	//			//APerf.Next();
+	//			//foreach(var k in a) { p = (1, 1); Api.ClientToScreen2(k, ref p); }
+	//			//APerf.Next();
+	//			//foreach(var k in a) { p = (1, 1); Api.ClientToScreen3(k, ref p); }
+	//			//foreach(var k in a) k.GetClientRect(out r, false);
+	//			//APerf.Next();
+	//			//foreach(var k in a) k.GetClientRect2(out r, false);
+	//			//APerf.Next();
+	//			//foreach(var k in a) k.GetClientRect(out r, true);
+	//			//APerf.Next();
+	//			//foreach(var k in a) k.GetClientRect2(out r, true);
+	//			APerf.NW();
+	//			Thread.Sleep(100);
+	//		}
+
+
+	//	});
+
+
+	//	ADialog.Options.TopmostIfNoOwnerWindow = true;
+	//	ADialog.Options.RtlLayout = true;
+	//	ADialog.Show("text");
+
+	//}
+
+	void TestAny()
 	{
-		Print(so, ca);
 	}
 
 	unsafe void _Main()
 	{
-		Application.SetCompatibleTextRenderingDefault(false);
+		//Application.SetCompatibleTextRenderingDefault(false);
 
+		//TestClientToScreenRtlAware();
 		//TestToolbar();
 		//TestMenu();
 		//TestCallerArgumentExpression("FF" + 5); var v = "gg"; TestCallerArgumentExpression(v);

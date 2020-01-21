@@ -544,12 +544,12 @@ namespace Au
 		/// <summary>
 		/// Gets or sets the owner window of this top-level window.
 		/// </summary>
-		/// <exception cref="AuWndException">Failed (only the 'set' function).</exception>
+		/// <exception cref="AuWndException">The 'set' function failed.</exception>
 		/// <remarks>
 		/// A window that has an owner window is always on top of it.
 		/// Don't call this for controls, they don't have an owner window.
 		/// The 'get' function returns default(AWnd) if this window isn't owned or is invalid. Supports <see cref="ALastError"/>.
-		/// The 'set' function can fail, eg if the owner's process has higher [](xref:uac) integrity level.
+		/// The 'set' function can fail, eg if the owner's process has higher [](xref:uac) integrity level or is a Store app.
 		/// </remarks>
 		public AWnd Owner {
 			get => Api.GetWindow(this, Api.GW_OWNER);

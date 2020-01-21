@@ -18,7 +18,7 @@ using static Au.AStatic;
 
 namespace Au.Util
 {
-	static partial class LibWorkarounds
+	static partial class Workarounds_
 	{
 		static bool s_workaroundWaitCursor;
 

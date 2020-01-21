@@ -31,7 +31,7 @@ namespace Au
 	/// 
 	/// <note type="warning">Avoid many hooks. Each low-level keyboard or mouse hook makes the computer slower, even if the hook procedure is fast. On each input event (key down, key up, mouse move, click, wheel) Windows sends a message to your thread.</note>
 	/// 
-	/// To handle hooked events is used a callback functions, aka hook procedure. Hook procedures of some hook types can block some events. Blocked events are not sent to apps and older hooks.
+	/// To handle hook events is used a callback functions, aka hook procedure. Hook procedures of some hook types can block some events. Blocked events are not sent to apps and older hooks.
 	/// 
 	/// Accessible object functions may fail in hook procedures of low-level keyboard and mouse hooks. Workarounds exist.
 	/// 
@@ -122,7 +122,7 @@ namespace Au
 		/// Hook procedure (function that handles hook events).
 		/// Must return as soon as possible.
 		/// If returns true, the event is cancelled. For some events you can modify some fields of event data.
-		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
+		/// <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not the variable.</note>
 		/// </param>
 		/// <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
 		/// <param name="setNow">Set hook now. Default true.</param>
@@ -338,7 +338,7 @@ namespace Au
 		{
 			if(_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if(!ok) PrintWarning($"Failed to unhook AHookWin ({_hookTypeString}). {ALastError.Message}");
+				if(!ok) PrintWarning($"AHookWin.Unhook failed ({_hookTypeString}). {ALastError.Message}");
 				_hh = default;
 			}
 		}
@@ -511,14 +511,15 @@ namespace Au
 		/// <param name="hook">On ThreadAbortException calls hook.Dispose.</param>
 		internal static bool LibOnException(Exception e, IDisposable hook)
 		{
-			if(e is ThreadAbortException eta) {
-				Thread.ResetAbort();
-				hook.Dispose();
-				ADebug.Print("ThreadAbortException");
-				var t = Thread.CurrentThread;
-				Task.Run(() => { Thread.Sleep(50); t.Abort(eta.ExceptionState); });
-				return true;
-			}
+			//Thread.Abort and ResetAbort not supported in Core
+			//if(e is ThreadAbortException eta) {
+			//	Thread.ResetAbort();
+			//	hook.Dispose();
+			//	ADebug.Print("ThreadAbortException");
+			//	var t = Thread.CurrentThread;
+			//	Task.Run(() => { Thread.Sleep(50); t.Abort(eta.ExceptionState); });
+			//	return true;
+			//}
 
 			PrintWarning("Unhandled exception in hook procedure. " + e.ToString());
 			return false;

@@ -97,7 +97,7 @@ static class Program
 		UserGuid = Settings.user; if(UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
 		ATimer.Every(1000, t => _TimerProc(t));
-		//note: timer can make Process Hacker show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, 0 of 1000.
+		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => Print("1 s");
 		//Timer1sOr025s += () => Print("0.25 s");
 

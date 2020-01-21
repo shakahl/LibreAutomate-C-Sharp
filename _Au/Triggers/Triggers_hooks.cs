@@ -103,8 +103,8 @@ namespace Au.Triggers
 		void _Thread()
 		{
 			string cn = _inTaskProcess ? "Au.Hooks.Exe" : "Au.Hooks.Server";
-			AWnd.More.RegisterWindowClass(cn);
-			_msgWnd = AWnd.More.CreateMessageOnlyWindow(_WndProc, cn);
+			AWnd.More.RegisterWindowClass(cn, _WndProc);
+			_msgWnd = AWnd.More.CreateMessageOnlyWindow(cn);
 			Api.SetEvent(_event);
 			if(_inTaskProcess) AProcess.Exit += (unu, sed) => _msgWnd.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
 

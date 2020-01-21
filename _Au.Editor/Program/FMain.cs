@@ -58,7 +58,7 @@ partial class FMain : Form
 
 		this.ResumeLayout(false);
 
-		this.CreateHandleNow(); //this does not create child control handles. We need only of the main form.
+		this.Hwnd(create: true); //this does not create child control handles. We need only of the main form.
 
 		Program.Tasks = new RunningTasks();
 		Panels.Files.ZLoadWorkspace(CommandLine.WorkspaceDirectory);
@@ -201,7 +201,7 @@ partial class FMain : Form
 			break;
 		case Api.WM_WINDOWPOSCHANGING:
 			var p = (Api.WINDOWPOS*)lParam;
-			//Print(p->flags & Native.LibSwpPublicMask);
+			//Print(p->flags);
 			//workaround: if started maximized, does not receive WM_SHOWWINDOW. Then .NET at first makes visible, then creates controls and calls OnLoad.
 			if(p->flags.Has(Native.SWP.SHOWWINDOW) && Program.Loaded == EProgramState.LoadedWorkspace) {
 				//p->flags &= ~Native.SWP.SHOWWINDOW; //no, adds 5 duplicate messages

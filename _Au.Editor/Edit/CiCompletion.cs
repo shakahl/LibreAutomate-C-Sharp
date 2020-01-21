@@ -47,6 +47,7 @@ class CiCompletion
 		public int codeLength;
 		public string filterText;
 		public SciCode.ITempRange tempRange;
+		public bool noAutoSelect;
 		Dictionary<CompletionItem, CiComplItem> _map;
 
 		public Dictionary<CompletionItem, CiComplItem> Map {
@@ -152,7 +153,7 @@ class CiCompletion
 		_ShowList(_ShowReason.command);
 	}
 
-	enum _ShowReason { charAdded, charAdded2, clickedDot, command }
+	enum _ShowReason { charAdded, charAdded2, command }
 
 	//long _debugTime;
 
@@ -330,7 +331,9 @@ class CiCompletion
 				codeLength = code.Length,
 				filterText = code.Substring(span.Start, span.Length),
 				items = new List<CiComplItem>(r.Items.Length),
+				noAutoSelect = r.SuggestionModeItem != null,
 			};
+			ADebug.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>", r.SuggestionModeItem);
 
 			var groups = canGroup ? new Dictionary<INamespaceOrTypeSymbol, List<int>>() : null;
 			List<int> keywordsGroup = null, etcGroup = null;
@@ -628,26 +631,27 @@ class CiCompletion
 
 	public void SelectBestMatch(IEnumerable<CompletionItem> listItems)
 	{
-		var filterText = _data.filterText;
 		CiComplItem ci = null;
+		var filterText = _data.filterText;
+		if(!(_data.noAutoSelect || filterText == "_")) {
+			//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
+			//if(Empty(filterText)) {
+			//	_popupList.SelectFirstVisible();
+			//	return;
+			//}
 
-		//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
-		//if(Empty(filterText)) {
-		//	_popupList.SelectFirstVisible();
-		//	return;
-		//}
-
-		//APerf.First();
-		var visible = listItems.ToImmutableArray();
-		if(!visible.IsEmpty) {
-			//APerf.Next();
-			var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
-			//APerf.Next();
-			//Print(fi);
-			//Print(visible.Length, fi.Length);
-			if(!fi.IsDefaultOrEmpty) if(fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) ci = _data.Map[fi[0]];
+			//APerf.First();
+			var visible = listItems.ToImmutableArray();
+			if(!visible.IsEmpty) {
+				//APerf.Next();
+				var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
+				//APerf.Next();
+				//Print(fi);
+				//Print(visible.Length, fi.Length);
+				if(!fi.IsDefaultOrEmpty) if(fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) ci = _data.Map[fi[0]];
+			}
+			//APerf.NW('b');
 		}
-		//APerf.NW('b');
 		_popupList.SelectedItem = ci;
 	}
 
@@ -727,7 +731,7 @@ class CiCompletion
 				case "if" when !_IsDirective():
 				case "fixed" when _IsInFunction(): //else probably a fixed array field
 				case "using" when isEnter && _IsInFunction(): //else directive or without ()
-				case "when" when _IsInAncestorNodeOfType<CatchClauseSyntax>(i): //else switch case when
+				case "when" when _IsInAncestorNode(i, n => (n is CatchClauseSyntax, n is SwitchSectionSyntax)): //catch(...) when
 					ch = '(';
 					s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
 					break;
@@ -777,7 +781,9 @@ class CiCompletion
 			//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
 			void _NewExpression()
 			{
-				if(_IsInAncestorNodeOfType<ObjectCreationExpressionSyntax>(i)) {
+				if(!CodeInfo.GetDocumentAndFindNode(out _, out var node, i)) return;
+				var p1 = node.Parent; if(p1 is QualifiedNameSyntax) p1 = p1.Parent;
+				if(p1 is ObjectCreationExpressionSyntax) {
 					ch = '(';
 					bracesOperation = CiAutocorrect.EBraces.NewExpression;
 				}
@@ -822,6 +828,18 @@ class CiCompletion
 
 	bool _IsInAncestorNodeOfType<T>(int pos) where T : SyntaxNode
 		=> CodeInfo.GetDocumentAndFindNode(out _, out var node, pos) && null != node.GetAncestor<T>();
+
+	bool _IsInAncestorNode(int pos, Func<SyntaxNode, (bool yes, bool no)> f)
+	{
+		if(!CodeInfo.GetDocumentAndFindNode(out _, out var node, pos)) return false;
+		while((node = node.Parent) != null) {
+			//CiUtil.PrintNode(node);
+			var (yes, no) = f(node);
+			if(yes) return true;
+			if(no) return false;
+		}
+		return false;
+	}
 
 	static string[] s_kwType = { "string", "object", "int", "uint", "long", "ulong", "byte", "sbyte", "short", "ushort", "char", "bool", "double", "float", "decimal" };
 

@@ -17,7 +17,6 @@ using System.Drawing;
 
 using Au.Types;
 using static Au.AStatic;
-using Au.Util;
 
 namespace Au
 {
@@ -39,7 +38,7 @@ namespace Au
 	/// m.Show();
 	/// ]]></code>
 	/// </example>
-	public class AMenu : AMTBase, IDisposable
+	public partial class AMenu : AMTBase, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		_ContextMenuStrip _c;
@@ -53,19 +52,28 @@ namespace Au
 
 		private protected override ToolStrip MainToolStrip => _c; //used by AMTBase
 
-		///
+		/// <summary>
+		/// Initializes this object.
+		/// Use this overload with non-user-editable menus.
+		/// </summary>
 		public AMenu() : base(null, 0)
 		{
-			_c = new _ContextMenuStrip(this);
+			_c = new _ContextMenuStrip(this, isMain: true);
 		}
 
-		///
+		/// <summary>
+		/// Initializes this object.
+		/// Use this overload with user-editable menus.
+		/// </summary>
+		/// <param name="name">Menu name. Must be valid filename. Currently used only as the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>.</param>
+		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		public AMenu(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(f, l)
 		{
 			if(Empty(name)) throw new ArgumentException("Empty name");
 			_name = name;
 
-			_c = new _ContextMenuStrip(this);
+			_c = new _ContextMenuStrip(this, isMain: true);
 		}
 
 		//~AMenu() { Print("main dtor"); }
@@ -154,7 +162,7 @@ namespace Au
 		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
 		/// - "" - no icon.
 		/// </param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
 		/// Sets menu item text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
 		/// 
@@ -183,44 +191,25 @@ namespace Au
 
 			if(sk != null) item.ShortcutKeyDisplayString = sk;
 
-			_Add(item, onClick, icon, l);
+			Add(item, icon, onClick, l);
 			return item;
 		}
 
-		void _Add(ToolStripItem item, Action<MTClickArgs> onClick, object icon, int sourceLine)
-		{
-			var dd = CurrentAddMenu;
-			dd.SuspendLayout(); //makes adding items much faster. It's OK to suspend/resume when already suspended; .NET uses a layoutSuspendCount.
-			dd.Items.Add(item);
-			_SetItemProp(false, item, onClick, icon, sourceLine);
-			dd.ResumeLayout(false);
-		}
-
 		/// <summary>
-		/// Adds item of any supported type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar, ToolStripButton.
-		/// Supports types derived from ToolStripItem.
+		/// Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
 		/// </summary>
 		/// <param name="item">An already created item of any supported type.</param>
 		/// <param name="icon"></param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
-			_Add(item, onClick, icon, l);
-
-			//Activate window when a child control clicked, or something may not work, eg cannot enter text in Edit control.
-			if(item is ToolStripControlHost cb) //combo, edit, progress
-				cb.GotFocus += (sender, e) => { //info: before MouseDown, which does not work well with combo box
-					if(!(_isOwned || ActivateMenuWindow)) {
-						var t = sender as ToolStripItem;
-
-						//Activate the clicked menu or submenu window to allow eg to enter text in text box.
-						var w = (AWnd)t.Owner.Handle;
-						Api.SetForegroundWindow(w); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
-
-						//see also: both OnClosing
-					}
-				};
+			var dd = CurrentAddMenu;
+			dd.SuspendLayout(); //makes adding items much faster. It's OK to suspend/resume when already suspended; .NET uses a layoutSuspendCount.
+			dd.Items.Add(item);
+			_SetItemProp(false, item, onClick, icon, l);
+			_OnItemAdded(item);
+			dd.ResumeLayout(false);
 		}
 
 		/// <summary>
@@ -229,7 +218,7 @@ namespace Au
 		public ToolStripSeparator Separator()
 		{
 			var item = new ToolStripSeparator();
-			_Add(item, null, null, 0);
+			Add(item, null, null, 0);
 			return item;
 		}
 
@@ -243,7 +232,7 @@ namespace Au
 		/// <param name="text">Text.</param>
 		/// <param name="icon">See <see cref="Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
 		/// <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
@@ -274,12 +263,12 @@ namespace Au
 			return new MUsingSubmenu(this, item);
 		}
 
-		ToolStripMenuItem _Submenu(out ToolStripDropDownMenu_ dd, string text, Action<MTClickArgs> onClick, object icon, int sourceLine)
+		ToolStripMenuItem _Submenu(out _ContextMenuStrip dd, string text, Action<MTClickArgs> onClick, object icon, int sourceLine)
 		{
 			var item = new ToolStripMenuItem(text);
-			_Add(item, onClick, icon, sourceLine);
+			Add(item, icon, onClick, sourceLine);
 
-			dd = new ToolStripDropDownMenu_(this);
+			dd = new _ContextMenuStrip(this, isMain: false);
 			item.DropDown = dd;
 			//SHOULDDO: should be 'dd=item.DropDown' (auto-created).
 			//	Because now eg hotkeys don't work.
@@ -314,13 +303,13 @@ namespace Au
 				//If they are different, it is not important, because don't need and we don't use this workaround for direct submenus. Indirect submenus are rarely used.
 			};
 
-			_submenusToDispose ??= new List<ToolStripDropDownMenu_>();
+			_submenusToDispose ??= new List<_ContextMenuStrip>();
 			_submenusToDispose.Add(dd);
 
 			return item;
 		}
 
-		List<ToolStripDropDownMenu_> _submenusToDispose;
+		List<_ContextMenuStrip> _submenusToDispose;
 
 		/// <summary>
 		/// Call this to end adding items to the current submenu if <see cref="Submenu"/> was called without 'using' and without a callback function that adds submenu items.
@@ -348,7 +337,7 @@ namespace Au
 		/// <param name="onOpening">Callback function that should add submenu items.</param>
 		/// <param name="icon">See <see cref="Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu();
@@ -372,7 +361,7 @@ namespace Au
 		public ToolStripMenuItem Submenu(string text, Action<AMenu> onOpening, object icon = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon, l);
-			dd._lazySubmenuDelegate = onOpening;
+			dd._submenu_lazyDelegate = onOpening;
 
 			//add one item, or it will not work like a submenu parent item
 			dd.SuspendLayout();
@@ -466,11 +455,10 @@ namespace Au
 
 			if(!_showedOnce) {
 				//_showedOnce = true; //OnOpening() sets it
-				if(!ActivateMenuWindow) LibWorkarounds.WaitCursorWhenShowingMenuEtc();
+				if(!ActivateMenuWindow) Util.Workarounds_.WaitCursorWhenShowingMenuEtc();
 			}
 			//APerf.Next();
 
-			_isOwned = control != null;
 			_isModal = ModalAlways ? true : !AThread.HasMessageLoop();
 
 			_inOurShow = true;
@@ -492,352 +480,10 @@ namespace Au
 			}
 		}
 
-		bool _showedOnce;
-		bool _inOurShow; //to detect when ContextMenuStrip.Show called not through AMenu.Show
-		bool _isOwned; //control==0
-		bool _isModal; //depends on ModalAlways or Application.MessageLoop
-		AMessageLoop _msgLoop = new AMessageLoop();
-
-		/// <summary>
-		/// If false, disposes the menu when it is closed.
-		/// If true, does not dispose. Then you can call <b>Show</b> again and again.
-		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
-		/// </summary>
-		/// <seealso cref="DefaultMultiShow"/>
-		public bool MultiShow { get; set; } = DefaultMultiShow;
-		//FUTURE: try, even if false, maybe it is possible to just destroy menu window and not fully dispose, so that the menu can be reshown.
-
-		/// <summary>
-		/// Default <see cref="MultiShow"/> value for new <b>AMenu</b> instances.
-		/// </summary>
-		public static bool DefaultMultiShow { get; set; }
-
-		/// <summary>
-		/// If true, <b>Show</b> always waits until the menu is closed.
-		/// If false, does not wait if the thread has a .NET message loop (<see cref="AThread.HasMessageLoop"/>).
-		/// </summary>
-		public bool ModalAlways { get; set; }
-		//note: don't allow to make non-modal when there is no message loop, because it can crash Windows if the programmer does not create a loop then, and it is not useful.
-
-		/// <summary>
-		/// Activate the menu window.
-		/// It enables selecting menu items with the keyboard (arrows, Tab, Enter, etc).
-		/// If false, only Esc works, it closes the menu.
-		/// If the menu is owned by a control or toolbar button, keyboard navigation works in any case, don't need this property to enable it.
-		/// </summary>
-		/// <seealso cref="DefaultActivateMenuWindow"/>
-		public bool ActivateMenuWindow { get; set; } = DefaultActivateMenuWindow;
-
-		/// <summary>
-		/// Default <see cref="ActivateMenuWindow"/> value for new <b>AMenu</b> instances.
-		/// </summary>
-		public static bool DefaultActivateMenuWindow { get; set; }
-
-		WS_EX _ExStyle => ActivateMenuWindow ? WS_EX.TOOLWINDOW | WS_EX.TOPMOST : WS_EX.TOOLWINDOW | WS_EX.TOPMOST | WS_EX.NOACTIVATE;
-		//WS_EX.NOACTIVATE is a workaround for 2 .NET bugs:
-		//1. In inactive thread the menu window may have a taskbar button.
-		//2. In inactive thread, when clicked a menu item, temporarily activates some window of this thread.
-
-		#endregion
-
-		//Extends ContextMenuStrip of the main menu to change its behavior as we need.
-		class _ContextMenuStrip : ContextMenuStrip, _IAuToolStrip
-		{
-			AMenu _am;
-
-			internal _ContextMenuStrip(AMenu am)
-			{
-				_am = am;
-			}
-
-			protected override CreateParams CreateParams {
-				get {
-					//note: this func is called several times, first time before ctor
-					//Print("CreateParams", _cat, IsHandleCreated, p.ExStyle.ToString("X"));
-					var p = base.CreateParams;
-					if(_am != null) p.ExStyle |= (int)_am._ExStyle;
-					return p;
-				}
-			}
-
-			protected override void WndProc(ref Message m)
-			{
-				//AWnd.More.PrintMsg(m, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_ERASEBKGND, Api.WM_CTLCOLOREDIT);
-
-				if(_am._WndProc_Before(true, this, ref m)) return;
-				//var t = APerf.Create();
-				base.WndProc(ref m);
-				//t.Next(); if(t.TimeTotal >= 100) { Print(t.ToString(), m); }
-				_am._WndProc_After(true, this, ref m);
-			}
-
-			protected override void OnOpening(CancelEventArgs e)
-			{
-				if(!e.Cancel) _am._OnOpeningMain();
-				base.OnOpening(e);
-
-				//info: e.Cancel true if layout suspended. Then does not show, unless we set it false.
-			}
-
-			protected override void OnOpened(EventArgs e)
-			{
-				base.OnOpened(e);
-				_am._OnOpenedAny(false, this);
-			}
-
-			protected override void OnClosing(ToolStripDropDownClosingEventArgs e)
-			{
-				_am._OnClosingAny(false, this, e);
-				base.OnClosing(e);
-			}
-
-			protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
-			{
-				base.OnClosed(e);
-				_am._OnClosedAny(false, this);
-			}
-
-			protected override void OnHandleCreated(EventArgs e)
-			{
-				base.OnHandleCreated(e);
-				_am._OnHandleCreatedDestroyed(true, this);
-			}
-
-			protected override void OnHandleDestroyed(EventArgs e)
-			{
-				base.OnHandleDestroyed(e);
-				_am._OnHandleCreatedDestroyed(false, this);
-			}
-
-			protected override void Dispose(bool disposing)
-			{
-				if(disposing && Visible) Close(); //else OnClosed not called etc
-				base.Dispose(disposing);
-			}
-
-			//~_ContextMenuStrip() => Print("dtor");
-
-			protected override void OnPaint(PaintEventArgs e)
-			{
-				//var perf = APerf.Create();
-
-				//ADebug.PrintFunc();
-				base.OnPaint(e);
-
-				//perf.Next(); Print("------------------ paint", perf.ToString());
-
-				_paintedOnce = true;
-			}
-
-			//ToolStrip _IAuToolStrip.ToolStrip => this;
-
-			bool _paintedOnce;
-			bool _IAuToolStrip.PaintedOnce => _paintedOnce;
-
-			protected override void OnBackColorChanged(EventArgs e)
-			{
-				_changedBackColor = true;
-				base.OnBackColorChanged(e);
-			}
-
-			internal bool _changedBackColor, _changedForeColor;
-
-			protected override void OnForeColorChanged(EventArgs e)
-			{
-				_changedForeColor = true;
-				base.OnBackColorChanged(e);
-			}
-		}
-
-		//Extends ToolStripDropDownMenu of a submenu to change its behavior as we need.
-		internal class ToolStripDropDownMenu_ : ToolStripDropDownMenu, _IAuToolStrip
-		{
-			AMenu _am;
-			bool _openedOnce;
-			internal Action<AMenu> _lazySubmenuDelegate;
-
-			internal ToolStripDropDownMenu_(AMenu am)
-			{
-				_am = am;
-			}
-
-			protected override CreateParams CreateParams {
-				get {
-					//note: this prop is called several times, first time before ctor
-					//Print("CreateParams");
-					var p = base.CreateParams;
-					if(_am != null) p.ExStyle |= (int)_am._ExStyle;
-					return p;
-				}
-			}
-
-			protected override void WndProc(ref Message m)
-			{
-				if(_am._WndProc_Before(false, this, ref m)) return;
-				base.WndProc(ref m);
-				_am._WndProc_After(false, this, ref m);
-			}
-
-			protected override void OnOpening(CancelEventArgs e)
-			{
-				if(!_openedOnce && !e.Cancel) {
-					_openedOnce = true;
-
-					//call the caller-provided callback function that should add submenu items on demand
-					if(_lazySubmenuDelegate != null) {
-						Items.Clear(); //remove the placeholder separator
-						_am._submenuStack.Push(this);
-						_lazySubmenuDelegate(_am);
-						_am._submenuStack.Pop();
-						_lazySubmenuDelegate = null;
-					}
-
-					PerformLayout();
-				}
-
-				if(AsyncIcons != null) {
-					_am.GetIconsAsync_(this, AsyncIcons);
-					AsyncIcons = null;
-				}
-
-				base.OnOpening(e);
-			}
-
-			//AMTBase creates this. We call GetAllAsync.
-			internal List<IconsAsync.Item> AsyncIcons { get; set; }
-
-			protected override void OnOpened(EventArgs e)
-			{
-				base.OnOpened(e);
-				_am._OnOpenedAny(true, this);
-			}
-
-			protected override void OnClosing(ToolStripDropDownClosingEventArgs e)
-			{
-				_am._OnClosingAny(true, this, e);
-				base.OnClosing(e);
-			}
-
-			protected override void OnClosed(ToolStripDropDownClosedEventArgs e)
-			{
-				base.OnClosed(e);
-				_am._OnClosedAny(true, this);
-			}
-
-			protected override void OnHandleCreated(EventArgs e)
-			{
-				base.OnHandleCreated(e);
-				_am._OnHandleCreatedDestroyed(true, this);
-			}
-
-			protected override void OnHandleDestroyed(EventArgs e)
-			{
-				_am._OnHandleCreatedDestroyed(false, this);
-				base.OnHandleDestroyed(e);
-			}
-
-			//protected override void Dispose(bool disposing)
-			//{
-			//	base.Dispose(disposing);
-			//	Print("submenu disposed", disposing);
-			//}
-
-			protected override void OnPaint(PaintEventArgs e)
-			{
-				//ADebug.PrintFunc();
-				base.OnPaint(e);
-				_paintedOnce = true;
-			}
-
-			//ToolStrip _IAuToolStrip.ToolStrip => this;
-
-			bool _paintedOnce;
-			bool _IAuToolStrip.PaintedOnce => _paintedOnce;
-		}
-
-		#region wndproc
-
-		//Called in WndProc before calling base.WndProc, for main and context menu.
-		//If returns true, return without calling base.WndProc and _WndProc_After.
-		unsafe bool _WndProc_Before(bool isMainMenu, ToolStripDropDownMenu dd, ref Message m)
-		{
-			if(isMainMenu) {
-				switch(m.Msg) {
-				case Api.WM_HOTKEY:
-					if(_OnHotkey((int)m.WParam)) return true;
-					break;
-				}
-			}
-
-			switch(m.Msg) {
-			case Api.WM_CLOSE:
-				//Print("WM_CLOSE", dd.Visible);
-				if((int)m.WParam != _wmCloseWparam && dd.Visible) { Close(); return true; } //something tried to close from outside
-				break;
-			case Api.WM_SHOWWINDOW when m.WParam != default:
-				//workaround for .NET bug: When showing context menu in inactive thread after showing in active, immediately closes it.
-				//	Workaround: temporarily set AutoClose=false.
-				_TempDisableAutoClose(dd);
-				//workaround for .NET bug: makes a randowm window of this thread the owner window of the context menu.
-				//	Then AutoClose=true tries to make both non-topmost. The below SWP_NOOWNERZORDER does not help.
-				AWnd w = (AWnd)dd, ow = w.Owner; if(!ow.Is0) w.Owner = default;
-				break;
-			case Api.WM_RBUTTONUP:
-				_inRightClick = true;
-				//workaround for .NET bug: closes the context menu on right click.
-				_TempDisableAutoClose(dd);
-				break;
-			case Api.WM_WINDOWPOSCHANGING when _disableZorder:
-				var wp = (Api.WINDOWPOS*)m.LParam;
-				wp->flags |= Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER;
-				break;
-			case Api.WM_CONTEXTMENU:
-				_ContextMenu();
-				return true;
-			}
-
-			return false;
-		}
-
-		//Called in WndProc after calling base.WndProc, for main and context menu.
-		void _WndProc_After(bool isMainMenu, ToolStripDropDownMenu dd, ref Message m)
-		{
-			if(isMainMenu) {
-				switch(m.Msg) {
-				case Api.WM_CREATE:
-					//Prevent 'wait' cursor appearing briefly when mouse enters a thread window first time.
-					//It happens because initial thread cursor when creating the first thread window is 'wait', and the first mouse message is WM_NCHITTEST, followed by WM_SETCURSOR which sets correct cursor, and Windows briefly shows 'wait' cursor before sending WM_NCHITTEST.
-					//Tested: it does not solve the 'wait' cursor problem when creating a context menu or submenu (when another workaround not applied); then on all messages Cursor.Current says 'Default'.
-					//if(Cursor.Current==Cursors.WaitCursor) Cursor.Current = Cursors.Arrow; //I also have seen some other cursor briefly
-					if(Cursor.Current != Cursors.Arrow) Cursor.Current = Cursors.Arrow;
-
-					//This would solve the 'wait' cursor problem like WaitCursorWhenShowingMenuEtc.
-					//Also need to eat WM_IME_SETCONTEXT, which creates a second hidden IME window and makes slower.
-					//Faster by 1-2 ms.
-					//Api.SetActiveWindow((AWnd)Handle);
-
-					break;
-				}
-			}
-
-			switch(m.Msg) {
-			//case Api.WM_DESTROY:
-			//	Print("WM_DESTROY", isMainMenu, m.HWnd);
-			//	break;
-			case Api.WM_RBUTTONUP:
-				_inRightClick = false;
-				break;
-			}
-		}
-
-		//dd used for submenus, else null
 		void _OnOpeningMain()
 		{
 			//Support showing not through our Show, for example when assigned to a control or toolstrip's drop-down button.
 			if(!_inOurShow) {
-
-				//Print(_c.OwnerItem, _c.SourceControl);
-				_isOwned = _c.SourceControl != null || _c.OwnerItem != null;
 				_isModal = false;
 				MultiShow = true; //programmers would forget it
 			}
@@ -850,45 +496,102 @@ namespace Au
 			GetIconsAsync_(_c);
 		}
 
-		//Prevents closing when working with focusable child controls and windows created by child controls or event handlers.
-		void _OnClosingAny(bool isSubmenu, ToolStripDropDownMenu dd, ToolStripDropDownClosingEventArgs e)
+		bool _showedOnce;
+		bool _inOurShow; //to detect when ContextMenuStrip.Show called not through AMenu.Show
+		bool _isModal; //depends on ModalAlways or Application.MessageLoop
+		Util.AMessageLoop _msgLoop = new Util.AMessageLoop();
+
+		/// <summary>
+		/// If false, disposes the menu when it is closed.
+		/// If true, does not dispose. Then you can call <b>Show</b> again and again.
+		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
+		/// </summary>
+		/// <seealso cref="DefaultMultiShow"/>
+		public bool MultiShow { get; set; } = DefaultMultiShow;
+
+		/// <summary>
+		/// Default <see cref="MultiShow"/> value for new <b>AMenu</b> instances.
+		/// </summary>
+		public static bool DefaultMultiShow { get; set; }
+
+		/// <summary>
+		/// If true, <b>Show</b> always waits until the menu is closed.
+		/// If false, does not wait if the thread has a .NET message loop (<see cref="AThread.HasMessageLoop"/>).
+		/// </summary>
+		public bool ModalAlways { get; set; }
+		//note: don't allow to make non-modal when there is no message loop. It can crash Windows if the programmer does not create a loop then, and it is not useful.
+
+		/// <summary>
+		/// Activate the menu window.
+		/// It enables selecting menu items with the keyboard (arrows, Tab, Enter, etc).
+		/// If false, only Esc works, it closes the menu.
+		/// If the menu is owned by a control or toolbar button, keyboard navigation works in any case, don't need this property to enable it.
+		/// </summary>
+		public bool ActivateMenuWindow { get; set; }// = DefaultActivateMenuWindow;
+
+		//rejected
+		///// <summary>
+		///// Default <see cref="ActivateMenuWindow"/> value for new <b>AMenu</b> instances.
+		///// </summary>
+		//public static bool DefaultActivateMenuWindow { get; set; }
+		///// <seealso cref="DefaultActivateMenuWindow"/>
+
+		WS_EX _ExStyle => ActivateMenuWindow ? WS_EX.TOOLWINDOW | WS_EX.TOPMOST : WS_EX.TOOLWINDOW | WS_EX.TOPMOST | WS_EX.NOACTIVATE;
+		//WS_EX.NOACTIVATE is a workaround for 2 .NET bugs:
+		//1. In inactive thread the menu window may have a taskbar button.
+		//2. In inactive thread, when clicked a menu item, temporarily activates some window of this thread.
+
+		#endregion
+
+		#region close
+
+		/// <summary>
+		/// Close the menu when the mouse cursor moves away from it to this distance, pixels. Only if the toolbar's thread is not the active UI thread.
+		/// </summary>
+		/// <remarks>
+		/// At first the mouse must be or move at less than half of the distance.
+		/// Default is <see cref="DefaultMouseClosingDistance"/>, default <c>Au.Util.ADpi.ScaleInt(200)</c>.
+		/// </remarks>
+		/// <seealso cref="DefaultMouseClosingDistance"/>
+		public int MouseClosingDistance { get; set; } = DefaultMouseClosingDistance;
+
+		/// <summary>
+		/// Default <see cref="MouseClosingDistance"/> value of <b>AMenu</b> instances.
+		/// </summary>
+		public static int DefaultMouseClosingDistance { get; set; } = Util.ADpi.ScaleInt(200);
+
+		const int c_wmCloseWparam = 827549482;
+		List<ToolStripDropDown> _closing_allMenus = new List<ToolStripDropDown>(); //all menu windows, including hidden submenus
+		ToolStripDropDown _closing_lastVisibleMenu;
+		ATimer _closing_timer;
+		bool _closing_escKey;
+		byte _closing_mouseState;
+		bool _closing_mouseWasIn;
+		bool _closing_classicMenu;
+		bool _closing;
+
+		void _OnOpened(ToolStripDropDown m, bool isMain)
 		{
-			if(!_isOwned && !e.Cancel) {
-				//Print(e.CloseReason, dd.Focused, dd.ContainsFocus, AWnd.Active, AWnd.Active.Get.RootOwnerOrThis());
-				switch(e.CloseReason) {
-				case ToolStripDropDownCloseReason.AppClicked: //eg clicked a context menu item of a child textbox. Note: the AppClicked documentation lies; actually we receive this when clicked a window of this thread (or maybe this process, not tested).
-					if(AWnd.Active.Handle == dd.Handle) e.Cancel = true;
-					break;
-				case ToolStripDropDownCloseReason.AppFocusChange: //eg showed a dialog owned by this menu window
-					var wa = AWnd.Active;
-					if(wa.Handle == dd.Handle) { //eg when closing this activated submenu because mouse moved to the parent menu
-						if(isSubmenu) Api.SetForegroundWindow((AWnd)dd.OwnerItem.Owner.Handle); //prevent closing the parent menu
-					} else if(wa.Get.RootOwnerOrThis().Handle == dd.Handle) e.Cancel = true;
-					break;
+			if(isMain) {
+				if(Api.GetFocus() == default) {
+					_closing_timer = ATimer.Every(100, _ClosingTimer);
+					_closing_escKey = AKeys.UI.IsToggled(KKey.Escape);
+					_closing_mouseState = _GetMouseState();
+					_closing_mouseWasIn = _closing_classicMenu = false;
 				}
-				//Print(e.Cancel);
 			}
+			_closing_lastVisibleMenu = m;
+			if(isMain && ActivateMenuWindow) m.Hwnd().ActivateLL();
 		}
 
-		void _OnOpenedAny(bool isSubmenu, ToolStripDropDownMenu dd)
+		void _OnClosed(ToolStripDropDown m, bool isMain)
 		{
-			if(isSubmenu) {
-				_visibleSubmenus.Add(dd);
-			} else {
-				_InitUninitClosing(true);
-				if(ActivateMenuWindow) ((AWnd)dd.Handle).ActivateLL();
-			}
-		}
-
-		void _OnClosedAny(bool isSubmenu, ToolStripDropDownMenu dd)
-		{
-			if(isSubmenu) {
-				int n = _visibleSubmenus.Count; if(n > 0) _visibleSubmenus.RemoveAt(n - 1);
-			} else {
-				_InitUninitClosing(false);
+			_closing_lastVisibleMenu = m.OwnerItem?.Owner as ToolStripDropDown;
+			if(isMain) {
+				_closing_timer?.Stop(); _closing_timer = null;
 
 				//Close menu windows. Else they are just hidden and prevent GC until process ends.
-				foreach(var k in _windows) ((AWnd)k.Handle).Post(Api.WM_CLOSE, _wmCloseWparam);
+				foreach(var k in _closing_allMenus) ((AWnd)k.Handle).Post(Api.WM_CLOSE, c_wmCloseWparam);
 
 				if(!MultiShow && !_isModal) ATimer.After(10, _ => Dispose()); //cannot dispose now, exception
 
@@ -896,131 +599,94 @@ namespace Au
 			}
 		}
 
-		void _OnHandleCreatedDestroyed(bool created, ToolStripDropDownMenu dd)
-		{
-			//Print("_OnHandleCreatedDestroyed", created);
-			if(created) {
-				_windows.Add(dd);
-			} else {
-				_windows.Remove(dd);
-			}
-		}
-
-		List<ToolStripDropDownMenu> _windows = new List<ToolStripDropDownMenu>(); //all menu windows, including hidden submenus
-		const int _wmCloseWparam = 827549482;
-
-		void _TempDisableAutoClose(ToolStripDropDownMenu dd)
-		{
-			if(!dd.AutoClose) return;
-			_disableZorder = true; //workaround for .NET bug: AutoClose makes topmost
-			dd.AutoClose = false;
-			_disableZorder = false;
-			ATimer.After(1, _ => {
-				_disableZorder = true; //workaround for .NET bug: AutoClose makes non-topmost
-				dd.AutoClose = true;
-				_disableZorder = false;
-			});
-		}
-		bool _disableZorder;
-
-		void _ContextMenu()
-		{
-			if(_name == null) return;
-			var m = new AMenu();
-			var wmsg = ATask.WndMsg;
-			if(!wmsg.Is0) {
-				var contextItem = _c.GetItemAt(_c.MouseClientXY());
-				m["Edit"] = o => GoToEdit_(contextItem);
-			} else return; //FUTURE: maybe add more items. Could save menu options like AToolbar does.
-			m.Show(_c);
-		}
-
-		#endregion
-
-		#region close
-
-		/// <summary>
-		/// Close the menu when the mouse cursor moves away from it to this distance, pixels.
-		/// At first the mouse must be or move at less than half of the distance.
-		/// Default is equal to AMenu.DefaultMouseClosingDistance, default 200.
-		/// </summary>
-		/// <seealso cref="DefaultMouseClosingDistance"/>
-		public int MouseClosingDistance { get; set; } = DefaultMouseClosingDistance;
-
-		/// <summary>
-		/// Default MouseClosingDistance value of AMenu instances.
-		/// A AMenu instance inherits this at the moment it is created.
-		/// </summary>
-		public static int DefaultMouseClosingDistance { get; set; } = 200;
-
-		List<ToolStripDropDownMenu> _visibleSubmenus = new List<ToolStripDropDownMenu>();
-		ATimer _timer;
-		bool _mouseWasIn;
-		bool _hotkeyRegistered;
-		const int _hotkeyEsc = 8405;
-
-		//Called from OnOpened and OnClosed of main menu. Does nothing if already is in that state.
-		void _InitUninitClosing(bool init)
-		{
-			if(init == (_timer != null)) return;
-			//Print(init);
-			_visibleSubmenus.Clear();
-			_mouseWasIn = false;
-			if(init) {
-				_timer = ATimer.Every(100, _OnTimer);
-				if(!(_isOwned || ActivateMenuWindow)) _hotkeyRegistered = Api.RegisterHotKey((AWnd)_c.Handle, _hotkeyEsc, 0, KKey.Escape);
-			} else {
-				if(_timer != null) { _timer.Stop(); _timer = null; }
-				if(_hotkeyRegistered) _hotkeyRegistered = !Api.UnregisterHotKey((AWnd)_c.Handle, _hotkeyEsc);
-			}
-		}
-
 		//100 ms
-		void _OnTimer(ATimer t)
+		void _ClosingTimer(ATimer timer)
 		{
-			Debug.Assert(!IsDisposed); if(IsDisposed) return;
+			Debug.Assert(!IsDisposed);
+			if(IsDisposed) { timer.Stop(); return; }
 
-			_CloseIfMouseIsFar();
-		}
+			bool escState = AKeys.UI.IsToggled(KKey.Escape);
+			byte mouseState = _GetMouseState();
+			bool escPressed = escState != _closing_escKey, mouseClicked = mouseState != _closing_mouseState;
+			_closing_escKey = escState;
+			_closing_mouseState = mouseState;
 
-		void _CloseIfMouseIsFar()
-		{
+			if(Api.GetFocus() != default) return;
+			var closeReason = ToolStripDropDownCloseReason.AppClicked;
+
+			//is/was classic context menu active?
+			bool wasClassicMenu = _closing_classicMenu;
+			_closing_classicMenu = AWnd.More.GetGUIThreadInfo(out var g, AThread.NativeId) && !g.hwndMenuOwner.Is0;
+			if(wasClassicMenu && !_closing_classicMenu) return;
+
+			//close if Esc key
+			if(escPressed) {
+				closeReason = ToolStripDropDownCloseReason.Keyboard;
+				goto g1;
+			}
+
+			//close if mouse clicked an alien window
+			if(mouseClicked) {
+				//Print(_IsMenuWindow());
+				if(!AWnd.FromMouse(WXYFlags.NeedWindow).IsOfThisThread) {
+					goto g1;
+				}
+			}
+
+			//close if mouse is far
+			if(_closing_classicMenu) return;
 			int dist = MouseClosingDistance;
 			POINT p = AMouse.XY;
-			for(int i = -1; i < _visibleSubmenus.Count; i++) {
-				var k = i >= 0 ? _visibleSubmenus[i] : _c as ToolStripDropDown;
-				RECT r = k.Bounds;
-				if(!_mouseWasIn) {
+			for(var v = _closing_lastVisibleMenu; v != null; v = v.OwnerItem?.Owner as ToolStripDropDown) {
+				RECT r = v.Bounds;
+				if(!_closing_mouseWasIn) {
 					int half = dist / 2;
 					r.Inflate(half, half);
-					_mouseWasIn = r.Contains(p);
+					_closing_mouseWasIn = r.Contains(p);
 					r.Inflate(-half, -half);
 				}
 				r.Inflate(dist, dist);
 				if(r.Contains(p)) return;
 			}
 
-			if(_mouseWasIn) Close();
+			if(!_closing_mouseWasIn) return;
+			g1:
+			if(_closing_classicMenu) {
+				Api.EndMenu();
+				if(closeReason == ToolStripDropDownCloseReason.Keyboard) return;
+			}
+			_Close(closeReason);
 		}
 
-		bool _OnHotkey(int hkId)
-		{
-			if(hkId == _hotkeyEsc) {
-				_Close(true);
-				return true;
-			}
-			return false;
-		}
+		byte _GetMouseState() => (byte)(
+			(AKeys.UI.GetKeyState(KKey.MouseLeft) & 1)
+			| ((AKeys.UI.GetKeyState(KKey.MouseRight) & 1) << 1)
+			| ((AKeys.UI.GetKeyState(KKey.MouseMiddle) & 1) << 2)
+			);
 
-		void _Close(bool onEsc)
-		{
-			Debug.Assert(!IsDisposed); if(IsDisposed) return;
+		//bool _IsMenuWindow()
+		//{
+		//	var w = AWnd.FromMouse(WXYFlags.NeedWindow);
+		//	if(w.IsOfThisThread) {
+		//		if(w == _c.Hwnd()) return true;
+		//		foreach(var v in _visibleSubmenus) if(w == v.Hwnd()) return true;
+		//		//if()
+		//	}
+		//	return false;
+		//}
 
-			if(onEsc && _visibleSubmenus.Count > 0) {
-				_visibleSubmenus[_visibleSubmenus.Count - 1].Close();
-				return;
+		void _Close(ToolStripDropDownCloseReason reason = ToolStripDropDownCloseReason.CloseCalled)
+		{
+			if(IsDisposed) return;
+
+			for(var v = _closing_lastVisibleMenu; v != null; ) {
+				var v2 = v.OwnerItem?.Owner as ToolStripDropDown;
+				_closing = true;
+				v.Close(reason);
+				_closing = false;
+				if(reason == ToolStripDropDownCloseReason.Keyboard) break;
+				v = v2;
 			}
-			_c.Close();
 		}
 
 		/// <summary>
@@ -1028,7 +694,7 @@ namespace Au
 		/// </summary>
 		public void Close()
 		{
-			_Close(false);
+			_Close();
 		}
 
 		#endregion

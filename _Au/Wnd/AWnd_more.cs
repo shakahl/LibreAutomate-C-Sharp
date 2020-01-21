@@ -61,10 +61,10 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Calls API <msdn>GetGUIThreadInfo</msdn>, which can get some GUI info, eg mouse capturing, menu mode, move/size mode, focus, caret.
+			/// Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
 			/// </summary>
 			/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
-			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>.</param>
+			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>.</param>
 			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0)
 			{
 				g = new Native.GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
@@ -85,34 +85,35 @@ namespace Au
 			/// </summary>
 			/// <param name="className">Class name.</param>
 			/// <param name="wndProc">
-			/// Window procedure. See <msdn>Window Procedures</msdn>.
-			/// I null, sets API <msdn>DefWindowProc</msdn> as window procedure; then you can create windows with <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS_EX, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
-			/// If not null, it must be a static method; then you can create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
+			/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
+			/// 
+			/// I null, sets API <msdn>DefWindowProc</msdn> as window procedure. It is useful when you need a different delegate (method or target object) for each window instance. Create windows with <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS_EX, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
+			/// If not null, you can create windows with any other function, including API <msdn>CreateWindowEx</msdn>. Then <b>Target</b> of the delegate should be null (static method) or a singleton object.
 			/// </param>
 			/// <param name="ex">
 			/// Can be used to specify more fields of <msdn>WNDCLASSEX</msdn> that is passed to API <msdn>RegisterClassEx</msdn>.
 			/// Defaults: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; style = CS_GLOBALCLASS; others = 0/null/default.
 			/// This function also adds CS_GLOBALCLASS style.
 			/// </param>
-			/// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null.</exception>
-			/// <exception cref="InvalidOperationException">The class already registered with this function and different <i>wndProc</i> method.</exception>
+			/// <exception cref="InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
 			/// <exception cref="Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
 			/// <remarks>
 			/// Calls API <msdn>RegisterClassEx</msdn>.
 			/// The window class is registered until this process ends. Don't need to unregister.
-			/// If called next time for the same class, does nothing if <i>wndProc</i> is the same method (or both null); then ignores <i>ex</i>. Throws exception if another method.
+			/// If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous. Then ignores <i>ex</i>. Throws exception if different.
 			/// Thread-safe.
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// </remarks>
 			public static unsafe void RegisterWindowClass(string className, Native.WNDPROC wndProc = null, WndClassEx ex = null)
 			{
-				var isInstance = wndProc?.Target != null;
-				Debug.Assert(!isInstance);
-				if(isInstance) throw new ArgumentException("wndProc must be static method or null");
+				//var isInstance = wndProc?.Target != null;
+				//Debug.Assert(!isInstance);
+				//if(isInstance) throw new ArgumentException("wndProc must be static method or null");
+				///// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null.</exception>
 
 				lock(s_classes) {
 					if(s_classes.TryGetValue(className, out var wpPrev)) {
-						if(wpPrev != wndProc) throw new InvalidOperationException("Window class already registered");
+						if(wpPrev != wndProc) throw new InvalidOperationException("Window class already registered"); //another method or another target object
 						return;
 					}
 					var x = new Api.WNDCLASSEX(ex);
@@ -193,21 +194,6 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Creates native/unmanaged window like <see cref="CreateWindow"/> and sets font.
-			/// </summary>
-			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
-			/// <remarks>
-			/// If <i>customFontHandle</i> not specified, sets the system UI font, usually it is Segoe UI, 9.
-			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
-			/// </remarks>
-			public static AWnd CreateWindowAndSetFont(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default, IntPtr customFontHandle = default)
-			{
-				var w = CreateWindow(className, name, style, exStyle, x, y, width, height, parent, controlId, hInstance, param);
-				w.Send(Api.WM_SETFONT, (customFontHandle == default) ? Util.LibNativeFont.RegularCached : customFontHandle);
-				return w;
-			}
-
-			/// <summary>
 			/// Creates native/unmanaged <msdn>message-only window</msdn>.
 			/// </summary>
 			/// <param name="className">Window class name. Can be any existing class.</param>
@@ -267,6 +253,19 @@ namespace Au
 				return false;
 			}
 			static AWnd s_messageOnlyParent;
+
+			/// <summary>
+			/// Sets font.
+			/// </summary>
+			/// <param name="w"></param>
+			/// <param name="font">Native font handle. If default(IntPtr), sets font that is used by most windows and controls on this computer. Usually it is Segoe UI, 9.</param>
+			/// <remarks>
+			/// Sends <msdn>WM_SETFONT</msdn> message.
+			/// </remarks>
+			public static void SetFont(AWnd w, IntPtr font = default)
+			{
+				w.Send(Api.WM_SETFONT, font != default ? font : Util.LibNativeFont.RegularCached.Handle);
+			}
 
 			/// <summary>
 			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
@@ -379,69 +378,77 @@ namespace Au
 
 			/// <summary>
 			/// Writes a Windows message to a string.
-			/// If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, in System.Windows.Forms.Message m, params int[] ignore)
+			public static bool PrintMsg(out string s, in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
 			{
-				if(ignore != null && ignore.Contains(m.Msg)) { s = null; return false; }
+				if(options?.Skip?.Contains(m.Msg) ?? false) { s = null; return false; }
 
-				AWnd w = (AWnd)m.HWnd;
-				uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
-				s = counter.ToString() + ", " + m.ToString();
+				var sm = m.ToString();
+
+				int i = 0;
+				if(options?.Indent ?? true) { //makes 5-10 times slower, but not too slow
+					MethodBase m0 = null;
+					foreach(var f in new StackTrace(1).GetFrames()) {
+						var m1 = f.GetMethod();
+						if(m1.Name != caller) continue;
+						if(m0 == null) m0 = m1; else if((object)m1 == m0) i++;
+					}
+				}
+				string si = i == 0 ? null : new string('\t', i);
+
+				if(options?.Number ?? true) {
+					AWnd w = (AWnd)m.HWnd;
+					uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
+					s = si + counter.ToString() + ", " + sm;
+				} else {
+					s = si + sm;
+				}
 				return true;
 			}
 
 			/// <summary>
 			/// Writes a Windows message to a string.
-			/// If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, params int[] ignore)
+			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
 			{
 				var m = System.Windows.Forms.Message.Create(w.Handle, msg, wParam, lParam);
-				return PrintMsg(out s, in m, ignore);
+				return PrintMsg(out s, in m, options, caller);
 			}
 
 			/// <summary>
 			/// Writes a Windows message to a string.
-			/// If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, in Native.MSG m, params int[] ignore)
+			public static bool PrintMsg(out string s, in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
 			{
-				return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, ignore);
+				return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, options, caller);
 			}
 
 			/// <summary>
 			/// Writes a Windows message to the output.
 			/// </summary>
-			/// <param name="m"></param>
-			/// <param name="ignore">Messages to skip. Can be null.</param>
-			public static void PrintMsg(in System.Windows.Forms.Message m, params int[] ignore)
+			public static void PrintMsg(in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
 			{
-				if(PrintMsg(out var s, in m, ignore)) Print(s);
+				if(PrintMsg(out var s, in m, options, caller)) Print(s);
 			}
 
 			/// <summary>
 			/// Writes a Windows message to the output.
 			/// </summary>
-			/// <param name="w"></param>
-			/// <param name="msg"></param>
-			/// <param name="wParam"></param>
-			/// <param name="lParam"></param>
-			/// <param name="ignore">Messages to skip. Can be null.</param>
-			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, params int[] ignore)
+			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
 			{
 				var m = System.Windows.Forms.Message.Create(w.Handle, msg, wParam, lParam);
-				PrintMsg(in m, ignore);
+				PrintMsg(in m, options, caller);
 			}
 
 			/// <summary>
-			/// Writes a Windows message to the output.
+			/// Writes a Windows message as API <msdn>MSG</msdn> to the output.
 			/// </summary>
-			/// <param name="m">API <msdn>MSG</msdn>.</param>
-			/// <param name="ignore">Messages to skip. Can be null.</param>
-			public static void PrintMsg(in Native.MSG m, params int[] ignore)
+			public static void PrintMsg(in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
 			{
-				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, ignore);
+				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, options, caller);
 			}
 
 			/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
@@ -480,5 +487,36 @@ namespace Au.Types
 		public IntPtr? hbrBackground;
 		public IntPtr hIconSm;
 #pragma warning restore 1591 //XML doc
+	}
+
+	/// <summary>
+	/// Options for <see cref="AWnd.More.PrintMsg"/>.
+	/// </summary>
+	public class PrintMsgOptions
+	{
+		///
+		public PrintMsgOptions() { }
+
+		/// <summary>
+		/// Sets the <see cref="Skip"/> PrintMsgSettings.
+		/// </summary>
+		public PrintMsgOptions(params int[] skip) { Skip = skip; }
+
+		/// <summary>
+		/// Prepend 1, 2, 3...
+		/// Default is true. As well as if <i>options</i> is null.
+		/// </summary>
+		public bool Number { get; set; } = true;
+
+		/// <summary>
+		/// Prepend one or more tabs if the caller function (usually WndProc) is called recursively.
+		/// Default is true. As well as if <i>options</i> is null.
+		/// </summary>
+		public bool Indent { get; set; } = true;
+
+		/// <summary>
+		/// Don't print these messages.
+		/// </summary>
+		public int[] Skip { get; set; }
 	}
 }

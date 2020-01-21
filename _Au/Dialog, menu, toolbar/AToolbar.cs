@@ -18,19 +18,70 @@ using System.Linq;
 using Au.Types;
 using static Au.AStatic;
 
-#pragma warning disable 1591 //XML doc //TODO
-
 namespace Au
 {
 	/// <summary>
-	/// TODO
+	/// Floating toolbar based on <see cref="ToolStrip"/>.
+	/// Can be attached to windows and other UI objects of other programs.
 	/// </summary>
 	public partial class AToolbar : AMTBase
 	{
 		_ToolStrip _c;
-		_Settings _sett;
-		bool _constructed;
-		string _name;
+		readonly _Settings _sett;
+		readonly bool _constructed; //ctor finished setting default properties
+		bool _loaded; //Show() called
+		bool _topmost; //no owner or topmost owner
+		readonly string _name;
+
+		static int s_treadId;
+
+		/// <summary>
+		/// Initializes this object.
+		/// Reads the settings file. Creates the <b>ToolStrip</b> object (<see cref="Control"/>) but not its window handle.
+		/// </summary>
+		/// <param name="name">Toolbar name. Must be valid filename. Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>.</param>
+		/// <param name="resetSettings">Reset toolbar settings to default values. It deletes the settings file of this toolbar.</param>
+		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <example>
+		/// <code><![CDATA[
+		/// var t = new AToolbar("example");
+		/// t["button 1"] = o => Print(o);
+		/// t[false, "menu"] = m => {
+		/// 	m["item 1"] = o => Print(o);
+		/// 	m["item 2"] = o => Print(o);
+		/// };
+		/// t["button 2"] = o => Print(o);
+		/// t.Show();
+		/// ADialog.Show();
+		/// ]]></code>
+		/// </example>
+		public AToolbar(string name, bool resetSettings = false, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
+			: base(f, l)
+		{
+			APerf.First();
+
+			int tid = Thread.CurrentThread.ManagedThreadId;
+			if(s_treadId == 0) s_treadId = tid; else if(tid != s_treadId) PrintWarning("All toolbars should be in single thread. Multiple threads use more CPU.");
+
+			if(Empty(name)) throw new ArgumentException("Empty name");
+			_name = name;
+
+			string s = AFolders.Workspace; if(s == null) s = AFolders.ThisAppDocuments;
+			_sett = _Settings.Load(s + @"\toolbars\" + name + ".json", resetSettings);
+
+			_c = new _ToolStrip(this) {
+				Name = _name,
+				Text = _name,
+				Size = _sett.size,
+			};
+
+			_anchor = _sett.anchor;
+			_xy = _sett.location;
+			Border = _sett.border; //default Sizable2
+
+			_constructed = true;
+		}
 
 		/// <summary>
 		/// Gets the toolbar window as <see cref="ToolStrip"/>.
@@ -40,28 +91,18 @@ namespace Au
 
 		private protected override ToolStrip MainToolStrip => _c; //used by AMTBase
 
+		/// <summary>
+		/// Toolbar name.
+		/// </summary>
 		public string Name => _name;
 
-		public AToolbar(string name, AWnd owner = default, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
-			: base(f, l)
-		{
-			APerf.First();
-
-			if(Empty(name)) throw new ArgumentException("Empty name");
-			_name = name;
-
-			string s = AFolders.Workspace; if(s == null) s = AFolders.ThisAppDocuments;
-			_sett = _Settings.Load(s + @"\toolbars\" + name + ".json");
-
-			_c = new _ToolStrip(this) {
-				Text = "Toolbar " + name,
-				Bounds = _sett.bounds,
-				Border = _sett.border, //default Sizable2
-				BorderColor = _sett.borderColor,
-			};
-
-			_constructed = true;
-		}
+		/// <summary>
+		/// True if properties of this toolbar were modified now or in the past (the settings JSON file exists).
+		/// </summary>
+		/// <remarks>
+		/// To delete the settings JSON file you can use the constructor's parameter <i>resetSettings</i>.
+		/// </remarks>
+		public bool SettingsModified => _sett.Modified;
 
 		#region add item
 
@@ -69,6 +110,11 @@ namespace Au
 		/// Adds new button as <see cref="ToolStripButton"/>.
 		/// The same as <see cref="Add(string, Action{MTClickArgs}, object, string, int)"/>.
 		/// </summary>
+		/// <example>
+		/// <code><![CDATA[
+		/// tb["Example"] = o => Print(o);
+		/// ]]></code>
+		/// </example>
 		public Action<MTClickArgs> this[string text, object icon = null, string tooltip = null, [CallerLineNumber] int l = 0] {
 			set { Add(text, value, icon, tooltip, l); }
 		}
@@ -80,7 +126,7 @@ namespace Au
 		/// <param name="onClick">Callback function. Called when the button clicked.</param>
 		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="tooltip">Tooltip text.</param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
 		/// Sets button text, icon and Click event handler. Other properties can be specified later. See example.
 		/// 
@@ -94,13 +140,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Adds item of any ToolStripItem type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar.
+		/// Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
 		/// </summary>
 		/// <param name="item"></param>
 		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		public void Add(ToolStripItem item, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			_Add(item, onClick, icon, tooltip, l, true);
@@ -121,7 +167,14 @@ namespace Au
 		{
 			if(!custom) {
 				item.Margin = default; //default top 1, bottom 2
-				item.Padding = new Padding(1); //default 0
+
+				//rejected: make min button height like of native toolbars
+				//item.Padding = new Padding(1); //default 0
+				//because of this ToolStripSplitButton bug: ignores vertical padding. Then split buttons are smaller.
+				if(item is ToolStripSplitButton sb) {
+					//sb.AutoSize = false;
+					sb.DropDownButtonWidth += 4;
+				}
 			}
 			if(tooltip != null) item.ToolTipText = tooltip;
 
@@ -132,23 +185,35 @@ namespace Au
 			bool onlyImage = NoText && (item.Image != null || item.ImageIndex >= 0 || !Empty(item.ImageKey));
 			if(onlyImage) item.DisplayStyle = ToolStripItemDisplayStyle.Image; //default ImageAndText
 			else item.AutoToolTip = false; //default true
+
+			_OnItemAdded(item);
 		}
 
 		/// <summary>
-		/// Adds separator.
-		/// By default it's vertical. Horizontal if layout is vertical or <i>groupName</i> not null.
+		/// Adds new vertical separator. Horizontal if layout is vertical.
 		/// </summary>
-		/// <param name="groupName">If not null, the separator is horizontal. If not "", this text will be displayed.</param>
-		public ToolStripSeparator Separator(string groupName = null)
+		public ToolStripSeparator Separator()
 		{
 			var item = new ToolStripSeparator();
-			if(groupName != null) {
-				item.AccessibleName = item.Name = groupName;
-				item.AutoSize = false;
-				item.Height = groupName.Length == 0 ? 3 : TextRenderer.MeasureText("A", _c.Font).Height + 3;
-				item.Width = 70000;
-			}
 			_c.Items.Add(item);
+			LastItem = item;
+			return item;
+		}
+
+		/// <summary>
+		/// Adds new horizontal separator, optionally with text.
+		/// </summary>
+		/// <param name="name">If not null, this text will be displayed.</param>
+		/// <exception cref="InvalidOperationException">Unsupported <b>LayoutStyle</b> (must be flow or vertical) or <b>FlowDirection</b> (must be horizontal).</exception>
+		/// <example>
+		/// Add separator and set color.
+		/// <code><![CDATA[
+		/// t.Group("Group").ForeColor = Color.MediumPurple;
+		/// ]]></code>
+		/// </example>
+		public TBGroupSeparator Group(string name = null)
+		{
+			var item = new TBGroupSeparator(_c, name);
 			LastItem = item;
 			return item;
 		}
@@ -160,7 +225,7 @@ namespace Au
 		/// <param name="menu">Callback function that adds menu items. Called when opening the menu first time. If sets <see cref="AMenu.MultiShow"/> = false, called each time.</param>
 		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="tooltip">Tooltip text.</param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		public ToolStripDropDownButton MenuButton(string text, Action<AMenu> menu, object icon = null, string tooltip = null, [CallerLineNumber] int l = 0)
 		{
 			var item = new _MenuButton(this, text, menu);
@@ -176,7 +241,7 @@ namespace Au
 		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
-		/// <param name="l"></param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		public ToolStripSplitButton SplitButton(string text, Action<AMenu> menu, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = new _SplitButton(this, text, menu, onClick);
@@ -266,6 +331,29 @@ namespace Au
 			}
 		}
 
+		/// <summary>
+		/// Adds new button with a drop-down menu.
+		/// </summary>
+		/// <param name="splitButton">If true, calls <see cref="SplitButton"/>, else <see cref="MenuButton"/>.</param>
+		/// <param name="text">Text.</param>
+		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		/// <param name="tooltip">Tooltip text.</param>
+		/// <param name="onClick">Callback function. Called when the button part of the split button clicked. If null, will execute the first menu item. Not used if it is not split button.</param>
+		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <returns>The value is a callback function that adds drop-down menu items. Te same as parameter <i>menu</i> of <see cref="MenuButton"/> or <see cref="SplitButton"/>.</returns>
+		/// <example>
+		/// <code><![CDATA[
+		/// var t = new AToolbar("example");
+		/// t["button 1"] = o => Print(o);
+		/// t[false, "menu"] = m => {
+		/// 	m["item 1"] = o => Print(o);
+		/// 	m["item 2"] = o => Print(o);
+		/// };
+		/// t["button 2"] = o => Print(o);
+		/// t.Show();
+		/// ADialog.Show();
+		/// ]]></code>
+		/// </example>
 		public Action<AMenu> this[bool splitButton, string text, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0] {
 			set {
 				if(splitButton) SplitButton(text, value, icon, tooltip, onClick, l);
@@ -284,32 +372,104 @@ namespace Au
 
 		#endregion
 
-		public Rectangle Bounds {
-			get => _c.Bounds;
-			set {
-				_c.Bounds = value;
-			}
-		}
+		#region show, close, owner
 
-		public void Show()
+		/// <summary>
+		/// Shows the toolbar and attaches to a screen.
+		/// </summary>
+		/// <param name="screen">Can be used to define the screen. For example a screen index (0 is the primary, 1 is the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
+		/// <remarks>
+		/// The toolbar will be moved when the screen moved or resized.
+		/// </remarks>
+		public void Show(AScreen screen = default) => _Show(false, default, null, screen);
+
+		/// <summary>
+		/// Shows the toolbar and attaches to a window.
+		/// </summary>
+		/// <param name="ownerWindow">Window or control. Can belong to any process.</param>
+		/// <param name="clientArea">Let the toolbar position be relative to the client area of the window.</param>
+		/// <remarks>
+		/// The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
+		/// </remarks>
+		public void Show(AWnd ownerWindow, bool clientArea = false)
 		{
-			if(!_c.Created) {
-				GetIconsAsync_(_c);
-				_c.Create();
-				APerf.Next();
-			}
-			_c.Show();
+			_followClientArea = clientArea;
+			_Show(true, ownerWindow, null, default);
 		}
 
+		/// <summary>
+		/// Shows the toolbar and attaches to an object in a window.
+		/// </summary>
+		/// <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
+		/// <param name="oo">A variable of a user-defined class that implements <see cref="ITBOwnerObject"/> interface. It provides object location, visibility, etc.</param>
+		/// <remarks>
+		/// The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
+		/// </remarks>
+		public void Show(AWnd ownerWindow, ITBOwnerObject oo) => _Show(true, ownerWindow, oo, default);
+
+		void _Show(bool owned, AWnd owner, ITBOwnerObject oo, AScreen screen)
+		{
+			//if(_c.IsDisposed) throw new ObjectDisposedException("AToolbar");
+			if(_loaded) throw new InvalidOperationException();
+
+			AWnd c = default;
+			if(owned) {
+				if(owner.Is0) throw new ArgumentException();
+				var w = owner.Window; if(w.Is0) return;
+				if(w != owner) { c = owner; owner = w; }
+			}
+
+			_CreateControl(owned, owner, screen);
+			_Manager.Add(this, owner, c, oo);
+		}
+
+		void _CreateControl(bool owned, AWnd owner, AScreen screen = default)
+		{
+			_topmost = !owned || owner.IsTopmost;
+			if(!owned || _anchor == TBAnchor.None) _os = new _OwnerScreen(this, screen);
+
+			//if(!_loaded) {
+			GetIconsAsync_(_c);
+			_c.ResumeLayout();
+			_AutoSize();
+			APerf.Next();
+			//}
+			_c.Hwnd(create: true);
+			_loaded = true;
+		}
+
+		/// <summary>
+		/// Closes and disposes the toolbar.
+		/// </summary>
 		public void Close()
 		{
 			_c.Dispose();
+			_SatClose();
 		}
 
-		public bool Owned => false;
+		/// <summary>
+		/// Returns true if the toolbar is attached to a window or an object in a window.
+		/// </summary>
+		public bool IsOwned => _ow != null;
 
 		/// <summary>
-		/// When adding items with images, set to not display item text. If tooltip not specified, use item text for it.
+		/// Returns the owner top-level window.
+		/// Returns default(AWnd) if the toolbar is not owned by a window or an object in a window.
+		/// </summary>
+		public AWnd OwnerWindow => _ow?.w ?? default;
+
+		/// <summary>
+		/// Returns the owner control.
+		/// Returns default(AWnd) if not owned by a control or an object in a control.
+		/// </summary>
+		public AWnd OwnerControl => _oc?.c ?? default;
+
+		#endregion
+
+		#region properties
+
+		/// <summary>
+		/// If true, buttons added afterwards will have image without text displayed (unless there is no image). Text will be displayed as tooltip, unless tooltip is specified.
 		/// </summary>
 		/// <remarks>
 		/// This property is applied to items added afterwards. If true and the item has an image, sets item <b>DisplayStyle</b> property = Image. Else sets item <b>AutoToolTip</b> property = false.
@@ -328,72 +488,340 @@ namespace Au
 		/// </example>
 		public bool NoText { get; set; }
 
+		/// <summary>
+		/// Border style.
+		/// </summary>
 		public TBBorder Border {
-			get => _c.Border;
-			set => _c.Border = value;
+			get => _border;
+			set {
+				if(value == _border) return;
+				_c.SetBorder(value);
+				_border = value;
+				if(_constructed) _sett.border = value;
+			}
 		}
+		TBBorder _border;
 
+		/// <summary>
+		/// Border color.
+		/// </summary>
 		public ColorInt BorderColor {
-			get => _c.BorderColor;
-			set => _c.BorderColor = value;
+			get => _sett.borderColor;
+			set {
+				if(value == _sett.borderColor) return;
+				_sett.borderColor = (int)value;
+				var w = _c.Hwnd();
+				if(!w.Is0) unsafe { Api.RedrawWindow(w, flags: Api.RDW_FRAME | Api.RDW_INVALIDATE); }
+			}
 		}
-	}
-}
 
-namespace Au.Types
-{
-	/// <summary>
-	/// Used with <see cref="AToolbar.Border"/>.
-	/// </summary>
-	public enum TBBorder
-	{
-		/// <summary>No border. User cannot resize the toolbar.</summary>
-		None,
-		//note: don't reorder.
+		/// <summary>
+		/// Specifies to which owner window's edges the toolbar keeps constant distance when moving or resizing the owner.
+		/// </summary>
+		/// <remarks>
+		/// The owner also can be a screen, control or other object. It is specified when calling <see cref="Show"/>.
+		/// </remarks>
+		/// <seealso cref="Location"/>
+		public TBAnchor Anchor {
+			get => _anchor;
+			set {
+				if(value == _anchor) return;
+				var prev = _anchor;
+				_sett.anchor = _anchor = value;
+				if(IsOwned) {
+					_os = _anchor == TBAnchor.None ? new _OwnerScreen(this, default) : null; //follow toolbar's screen
+					if(prev == TBAnchor.None && _followedOnce) {
+						if(_oc != null) _oc.UpdateRect(out _); else _ow.UpdateRect(out _);
+					}
+				}
+				if(_followedOnce) {
+					var b = _c.Bounds;
+					_UpdateXY(b.X, b.Y, b.Width, b.Height);
+				}
+			}
+		}
+		TBAnchor _anchor;
 
-		/// <summary>1 pixel border. User cannot resize the toolbar.</summary>
-		Fixed1,
+		/// <summary>
+		/// Specifies distances between edges of the toolbar and edges of its owner, depending on <see cref="Anchor"/>.
+		/// </summary>
+		/// <remarks>
+		/// The owner also can be a screen, control or other object. It is specified when calling <see cref="Show"/>.
+		/// This property is updated when moving or resizing the toolbar.
+		/// </remarks>
+		public TBLocation Location {
+			get => _xy;
+			set {
+				_preferSize = false;
+				if(value.Equals(_xy)) return;
+				_sett.location = _xy = value;
+				if(_followedOnce) _FollowRect();
+				//CONSIDER: add ScreenIndex property or something. Now if screen is auto-selected, this sets xy in that screen, but caller may want in primary screen.
+			}
+		}
+		TBLocation _xy;
 
-		/// <summary>1 pixel border + 1 pixel padding. User cannot resize the toolbar.</summary>
-		Fixed2,
+		/// <summary>
+		/// Whether the border can be used to resize the toolbar.
+		/// </summary>
+		public bool Sizable {
+			get => _sett.sizable;
+			set => _sett.sizable = value;
+		}
 
-		/// <summary>1 pixel border + 2 pixels padding. User cannot resize the toolbar.</summary>
-		Fixed3,
+		/// <summary>
+		/// Toolbar width and height.
+		/// </summary>
+		/// <remarks>
+		/// This property is updated when resizing the toolbar.
+		/// </remarks>
+		public SIZE Size {
+			get => _c.Size;
+			set {
+				if((Size)value != _c.Size) {
+					_sett.size = value;
+					_c.Size = value;
+				}
+				if(!_followedOnce) _preferSize = true;
+			}
+		}
 
-		/// <summary>1 pixel border + 3 pixels padding. User cannot resize the toolbar.</summary>
-		Fixed4,
+		/// <summary>
+		/// Automatically resize the toolbar to make all buttons visible.
+		/// </summary>
+		/// <remarks>
+		/// Autosizing occurs in these cases:
+		/// - When showing the toolbar.
+		/// - When the user resizes the toolbar. It also sets the wrap width.
+		/// - When setting this property = true (in code or in the context menu) or changing <see cref="AutoSizeWrapWidth"/> wile it is true.
+		/// </remarks>
+		public bool AutoSize {
+			get => _sett.autoSize;
+			set {
+				if(!value.Equals(_sett.autoSize)) {
+					_sett.autoSize = value;
+					if(_loaded) _AutoSize();
+				}
+			}
+		}
 
-		/// <summary>1 pixel border. User can resize the toolbar.</summary>
-		Sizable1,
+		/// <summary>
+		/// When <see cref="AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
+		/// </summary>
+		/// <remarks>
+		/// This property is updated when the user resizes the toolbar while <see cref="AutoSize"/> is true.
+		/// If flow direction is vertical, this is the preferred height at which buttons are moved to the next column.
+		/// </remarks>
+		public int AutoSizeWrapWidth {
+			get => _sett.wrapWidth;
+			set {
+				if(value != _sett.wrapWidth) {
+					_sett.wrapWidth = value;
+					if(_loaded) _AutoSize();
+				}
+			}
+		}
 
-		/// <summary>1 pixel border + 1 pixel padding. User can resize the toolbar.</summary>
-		Sizable2,
+		void _AutoSize()
+		{
+			if(!_sett.autoSize) return;
+			int wrap = _sett.wrapWidth; if(wrap <= 0) wrap = 1000000;
+			bool verticalWrap = _IsVerticalFlow;
+			var ps = _c.GetPreferredSize(new Size(verticalWrap ? 1000000 : wrap, verticalWrap ? wrap : 1000000));
+			_c.ClientSize = ps;
+			if(!_followedOnce) {
+				_preferSize = true;
+				_sett.size = _c.Size;
+			}
+		}
 
-		/// <summary>1 pixel border + 2 pixels padding. User can resize the toolbar.</summary>
-		Sizable3,
+		bool _IsVerticalFlow => _c.LayoutSettings is FlowLayoutSettings f && (f.FlowDirection == FlowDirection.TopDown || f.FlowDirection == FlowDirection.BottomUp);
 
-		/// <summary>1 pixel border + 3 pixels padding. User can resize the toolbar.</summary>
-		Sizable4,
+		public TBFlags MiscFlags {
+			get => _sett.miscFlags;
+			set {
+				_sett.miscFlags = value;
+			}
+		}
 
-		/// <summary>3D border. User cannot resize.</summary>
-		Fixed3D,
+		/// <summary>
+		/// Opacity and transparent color.
+		/// </summary>
+		/// <seealso cref="AWnd.SetTransparency(bool, int?, ColorInt?)"/>
+		/// <example>
+		/// <code><![CDATA[
+		/// tb.Transparency = (64, null);
+		/// ]]></code>
+		/// </example>
+		public (int? opacity, ColorInt? colorRGB) Transparency {
+			get => _transparency;
+			set {
+				if(value != _transparency) {
+					_transparency = value;
+					if(_loaded) _c.Hwnd().SetTransparency(value != default, value.opacity, value.colorRGB);
+				}
+			}
+		}
+		(int? opacity, ColorInt? colorRGB) _transparency;
 
-		/// <summary>3D border. User can resize the toolbar.</summary>
-		Sizable3D,
+		#endregion
 
-		/// <summary>Standard sizing border.</summary>
-		Sizable,
+		#region satellites
 
-		/// <summary>Title bar. User cannot resize the toolbar.</summary>
-		FixedWithCaption,
+		public void AddSatellite(AToolbar tb)
+		{
+			_satList ??= new List<AToolbar>();
+			_satList.Add(tb);
+		}
 
-		/// <summary>Title bar and standard sizing border.</summary>
-		SizableWithCaption,
+		List<AToolbar> _satList;
+		_OwnerWindow _satOW;
+		bool _satVisible;
+		ATimer _satTimer;
+		AToolbar _satPlanet;
 
-		/// <summary>Title bar and [x] button to close. User cannot resize the toolbar.</summary>
-		FixedWithCaptionX,
+		void _SatMouse()
+		{
+			if(_satList == null || _satVisible) return;
+			_satVisible = true;
 
-		/// <summary>Title bar, [x] button and standard sizing border.</summary>
-		SizableWithCaptionX,
+			//Print("show");
+			foreach(var tb in _satList) {
+				if(!tb._loaded) {
+					var owner = _c.Hwnd();
+					tb._CreateControl(true, owner);
+					tb._satPlanet = this;
+					tb._ow = _satOW ??= new _OwnerWindow(owner);
+					tb._ow.a.Add(tb);
+					var w1 = tb._c.Hwnd(); w1.Owner = owner; //let OS keep Z order and close/hide when owner toolbar closed/minimized
+				}
+			}
+			_SatFollow();
+			foreach(var tb in _satList) {
+				//if(!tb._c.IsDisposed) {
+				tb._c.Hwnd().ShowLL(true);
+				//}
+			}
+
+			_satTimer ??= new ATimer(_SatTimer);
+			_satTimer.Every(100);
+		}
+
+		void _SatTimer(ATimer _)
+		{
+			if(_c.IsDisposed) {
+				_SatClose();
+				return;
+			}
+
+			POINT p = AMouse.XY;
+			int dist = Util.ADpi.ScaleInt(30);
+			//var r = _c.Hwnd().Rect;
+			//r.Inflate(dist, dist);
+			//if(r.Contains(p.x, p.y)) return;
+			var wa = AWnd.Active;
+
+			RECT ru = default;
+			foreach(var w in AWnd.GetWnd.ThreadWindows(AThread.NativeId, onlyVisible: true)) {
+				if(ToolStrip.FromHandle(w.Handle) is ToolStrip ts) {
+					if(w == wa) return;
+					if(ts is ContextMenuStrip) return;
+					var r = w.Rect;
+					r.Inflate(dist, dist);
+					if(r.Contains(p.x, p.y)) return;
+					ru.Union(r);
+				}
+			}
+			if(ru.Contains(p.x, p.y)) return;
+
+			Print("hide (timer)");
+			_SatHide();
+		}
+		//void _SatTimer(ATimer _)
+		//{
+		//	if(_c.IsDisposed) {
+		//		_SatClose();
+		//		return;
+		//	}
+
+		//	POINT xy = AMouse.XY;
+		//	int dist = Util.ADpi.ScaleInt(30);
+		//	var rp = _c.Hwnd().Rect;
+		//	rp.Inflate(dist, dist);
+		//	if(rp.Contains(xy.x, xy.y)) return;
+
+		//	int nVisible = 0;
+		//	foreach(var v in _satList) {
+		//		var w = v._c.Hwnd();
+		//		if(!w.IsActive) {
+		//			if(!w.GetRect(out var r)) continue;
+		//			r.Inflate(dist, dist);
+		//			if(!r.Contains(xy.x, xy.y)) {
+		//				Print("hide");
+		//				w.ShowLL(false);
+		//				continue;
+		//			}
+		//		}
+		//		nVisible++;
+		//	}
+		//	if(nVisible == 0) {
+		//		_satVisible = false;
+		//		_satTimer.Stop();
+		//	}
+		//}
+		//void _SatTimer(ATimer t)
+		//{
+		//	int nVisible = 0;
+		//	POINT xy = AMouse.XY;
+		//	foreach(var v in _satList) {
+		//		var w = v._c.Hwnd();
+		//		if(!w.IsActive) {
+		//			if(!w.GetRect(out var r)) continue;
+		//			int dist = Util.ADpi.ScaleInt(30);
+		//			r.Inflate(dist, dist);
+		//			if(!r.Contains(xy.x, xy.y)) {
+		//				Print("hide");
+		//				w.ShowLL(false);
+		//				continue;
+		//			}
+		//		}
+		//		nVisible++;
+		//	}
+		//	if(nVisible == 0) {
+		//		_satVisible = false;
+		//		t.Stop();
+		//	}
+		//}
+
+		void _SatFollow()
+		{
+			if(!_satVisible) return;
+			if(!_satOW.UpdateRect(out bool changed) || !changed) return;
+			foreach(var tb in _satList) {
+				tb._FollowRect(onFollowOwner: true);
+			}
+		}
+
+		void _SatHide()
+		{
+			if(!_satVisible) return;
+			foreach(var tb in _satList) {
+				tb._c.Hwnd().ShowLL(false);
+			}
+			_satVisible = false;
+			_satTimer.Stop();
+		}
+
+		void _SatClose()
+		{
+			if(_satList == null) return;
+			if(_satVisible) {
+				_satVisible = false;
+				_satTimer.Stop();
+			}
+			foreach(var tb in _satList) tb.Close();
+		}
+
+		#endregion
 	}
 }

@@ -45,16 +45,14 @@ namespace Au
 	/// </example>
 	public class AHookAcc : IDisposable
 	{
-		IntPtr _hh; //HHOOK
-		IntPtr[] _ahh; //multiple HHOOK
+		IntPtr[] _a;
 		Api.WINEVENTPROC _proc1; //our intermediate hook proc that calls _proc2
 		Action<HookData.AccHookData> _proc2; //caller's hook proc
 
 		/// <summary>
 		/// Sets a hook for an event or a range of events.
-		/// Calls API <msdn>SetWinEventHook</msdn>.
 		/// </summary>
-		/// <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
+		/// <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>. Value 0 is ignored.</param>
 		/// <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
 		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
@@ -64,15 +62,13 @@ namespace Au
 		/// <example>See <see cref="AHookAcc"/>.</example>
 		public AHookAcc(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
-			if(eventMax == 0) eventMax = eventMin;
 			_proc1 = _HookProc;
 			Hook(eventMin, eventMax, idProcess, idThread, flags);
 			_proc2 = hookProc;
 		}
 
 		/// <summary>
-		/// Sets a hook for multiple events.
-		/// Calls API <msdn>SetWinEventHook</msdn>.
+		/// Sets multiple hooks.
 		/// </summary>
 		/// <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
 		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
@@ -89,44 +85,93 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets hooks again after <see cref="Unhook"/>.
+		/// Sets a hook for an event or a range of events.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">Hooks are already set and <see cref="Unhook"/> not called.</exception>
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
 		/// </remarks>
-		public void Hook(AccEVENT eventMin, AccEVENT eventMax, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
+		public void Hook(AccEVENT eventMin, AccEVENT eventMax = 0, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
 			_Throw1();
-			_hh = Api.SetWinEventHook(eventMin, eventMax, default, _proc1, idProcess, idThread, flags);
-			if(_hh == default) throw new AuException(0, "*set hook");
+			_a = new IntPtr[1];
+			_SetHook(0, eventMin, eventMax, idProcess, idThread, flags);
 		}
 
 		/// <summary>
-		/// Sets hooks again after <see cref="Unhook"/>.
+		/// Sets multiple hooks.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">Hooks are already set and <see cref="Unhook"/> not called.</exception>
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
 		/// </remarks>
 		public void Hook(AccEVENT[] events, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
 		{
 			_Throw1();
-			_ahh = new IntPtr[events.Length];
-			for(int i = 0; i < events.Length; i++) {
-				var e = events[i]; if(e == 0) continue;
-				var hh = Api.SetWinEventHook(e, e, default, _proc1, idProcess, idThread, flags);
-				if(hh == default) { var ec = ALastError.Code; Unhook(); throw new AuException(ec, "*set hook for " + e.ToString()); }
-				_ahh[i] = hh;
-			}
+			_a = new IntPtr[events.Length];
+			for(int i = 0; i < events.Length; i++) _SetHook(i, events[i], 0, idProcess, idThread, flags);
+		}
+
+		void _SetHook(int i, AccEVENT eMin, AccEVENT eMax, int idProcess, int idThread, AccHookFlags flags)
+		{
+			if(eMin == 0) return;
+			if(eMax == 0) eMax = eMin;
+			var hh = Api.SetWinEventHook(eMin, eMax, default, _proc1, idProcess, idThread, flags);
+			if(hh == default) { var ec = ALastError.Code; Unhook(); throw new AuException(ec, "*set hook for " + eMin.ToString()); }
+			_a[i] = hh;
 		}
 
 		void _Throw1()
 		{
-			if(_hh != default || _ahh != null) throw new InvalidOperationException();
+			if(_a != null) throw new InvalidOperationException();
 			if(_proc1 == null) throw new ObjectDisposedException(nameof(AHookAcc));
 		}
 
 		/// <summary>
-		/// Removes the hook.
+		/// Adds a hook for an event or a range of events.
+		/// Returns an int value greater than 0 that can be used with <see cref="Remove"/>.
+		/// </summary>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// Parameters are the same as of the constructor, but values can be different.
+		/// 
+		/// This function together with <see cref="Remove"/> can be used to temporarily add/remove one or more hooks while using the same <b>AHookAcc</b> variable and hook procedure. Don't need to call <b>Unhook</b> before.
+		/// </remarks>
+		public int Add(AccEVENT eventMin, AccEVENT eventMax = 0, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
+		{
+			if(_proc1 == null) throw new ObjectDisposedException(nameof(AHookAcc));
+			int i = 0;
+			if(_a == null) {
+				_a = new IntPtr[1];
+			} else {
+				for(; i < _a.Length; i++) if(_a[i] == default) goto g1;
+				Array.Resize(ref _a, i + 1);
+			}
+			g1:
+			_SetHook(i, eventMin, eventMax, idProcess, idThread, flags);
+			return i + 1;
+		}
+
+		/// <summary>
+		/// Removes a hook added by <see cref="Add"/>.
+		/// </summary>
+		/// <param name="addedId">A return value of <see cref="Add"/>.</param>
+		/// <exception cref="ArgumentException"></exception>
+		public void Remove(int addedId)
+		{
+			addedId--;
+			if(_a == null || (uint)addedId >= _a.Length || _a[addedId] == default) throw new ArgumentException();
+			if(!Api.UnhookWinEvent(_a[addedId])) PrintWarning("Failed to unhook AHookAcc.");
+			_a[addedId] = default;
+		}
+
+		///// <summary>
+		///// True if hooks are set.
+		///// </summary>
+		//public bool Installed => _a != null;
+
+		/// <summary>
+		/// Removes all hooks.
 		/// </summary>
 		/// <remarks>
 		/// Does nothing if already removed or wasn't set.
@@ -134,15 +179,12 @@ namespace Au
 		/// </remarks>
 		public void Unhook()
 		{
-			if(_hh != default) {
-				if(!Api.UnhookWinEvent(_hh)) PrintWarning("Failed to unhook AHookAcc.");
-				_hh = default;
-			} else if(_ahh != null) {
-				foreach(var hh in _ahh) {
+			if(_a != null) {
+				foreach(var hh in _a) {
 					if(hh == default) continue;
-					if(!Api.UnhookWinEvent(hh)) PrintWarning("Failed to unhook AHookAcc.");
+					if(!Api.UnhookWinEvent(hh)) PrintWarning("AHookAcc.Unhook failed.");
 				}
-				_ahh = null;
+				_a = null;
 			}
 		}
 

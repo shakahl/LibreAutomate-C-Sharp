@@ -1411,6 +1411,7 @@
         </member>
         <member name="T:Au.Types.Native.SWP">
             <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
+            <remarks>The _X flags are undocumented.</remarks>
         </member>
         <member name="T:Au.Types.Native.HWND">
             <summary>
@@ -2760,12 +2761,6 @@
             More info about custom buttons: <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
             </summary>
         </member>
-        <member name="F:Au.Types.DFlags.EndThread">
-            <summary>
-            Call <see cref="M:System.Threading.Thread.Abort"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
-            The same as <see cref="P:Au.ADialog.FlagEndThread"/>.
-            </summary>
-        </member>
         <member name="F:Au.Types.DFlags.ExpandDown">
             <summary>
             Show expanded text in footer.
@@ -3004,10 +2999,12 @@
         </member>
         <member name="E:Au.Types.AMTBase.ItemAdded">
             <summary>
-            Occurs when an item is added.
-            Allows to set item properties in single place instead of after each 'add item' code line.
-            For example, the event handler can set item properties common to all items, or set item properties encoded in item text.
+            Occurs when added a non-separator item.
             </summary>
+            <remarks>
+            Allows to set item properties in single place instead of after each 'add item' code line.
+            For example, the event handler can set item properties common to all items.
+            </remarks>
         </member>
         <member name="P:Au.Types.AMTBase.IconFlags">
             <summary>
@@ -3027,6 +3024,16 @@
             This property is applied to all items, and can be set only before adding items (else exception).
             To set different icon size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
             </remarks>
+        </member>
+        <member name="M:Au.Types.AMTBase._SetItemProp(System.Boolean,System.Windows.Forms.ToolStripItem,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)">
+            <summary>
+            Sets onClick delegate, image and some properties.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AMTBase._OnItemAdded(System.Windows.Forms.ToolStripItem)">
+            <summary>
+            Sets LastItem and calls ItemAdded event handlers.
+            </summary>
         </member>
         <member name="P:Au.Types.AMTBase.ExtractIconPathFromCode">
             <summary>
@@ -3139,58 +3146,209 @@
             Calls <see cref="M:Au.AMenu.EndSubmenu"/>.
             </summary>
         </member>
+        <member name="T:Au.Types.TBFlags">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.MiscFlags"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBFlags.DontActivateOwner">
+            <summary>
+            Don't activate the owner window when the toolbar clicked.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBFlags.HideIfFullScreen">
+            <summary>
+            Hide the toolbar if a full-screen window is active.
+            </summary>
+        </member>
         <member name="T:Au.Types.TBBorder">
             <summary>
             Used with <see cref="P:Au.AToolbar.Border"/>.
             </summary>
         </member>
         <member name="F:Au.Types.TBBorder.None">
-            <summary>No border. User cannot resize the toolbar.</summary>
+            <summary>No border.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Fixed1">
-            <summary>1 pixel border. User cannot resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.Width1">
+            <summary>1 pixel border.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Fixed2">
-            <summary>1 pixel border + 1 pixel padding. User cannot resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.Width2">
+            <summary>1 pixel border + 1 pixel padding.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Fixed3">
-            <summary>1 pixel border + 2 pixels padding. User cannot resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.Width3">
+            <summary>1 pixel border + 2 pixels padding.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Fixed4">
-            <summary>1 pixel border + 3 pixels padding. User cannot resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.Width4">
+            <summary>1 pixel border + 3 pixels padding.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Sizable1">
-            <summary>1 pixel border. User can resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.ThreeD">
+            <summary>3D border.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Sizable2">
-            <summary>1 pixel border + 1 pixel padding. User can resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.Thick">
+            <summary>Standard window border.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Sizable3">
-            <summary>1 pixel border + 2 pixels padding. User can resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.Caption">
+            <summary>Title bar and standard window border.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Sizable4">
-            <summary>1 pixel border + 3 pixels padding. User can resize the toolbar.</summary>
+        <member name="F:Au.Types.TBBorder.CaptionX">
+            <summary>Title bar, [x] button and standard window border.</summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Fixed3D">
-            <summary>3D border. User cannot resize.</summary>
+        <member name="T:Au.Types.TBAnchor">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Anchor"/>.
+            </summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Sizable3D">
-            <summary>3D border. User can resize the toolbar.</summary>
+        <member name="F:Au.Types.TBAnchor.None">
+            <summary>
+            Don't move the toolbar together with the owner.
+            </summary>
         </member>
-        <member name="F:Au.Types.TBBorder.Sizable">
-            <summary>Standard sizing border.</summary>
+        <member name="F:Au.Types.TBAnchor.Top">
+            <summary>
+            Anchor is the owner's top edge. Also left and right edges, therefore the toolbar is resized when resizing its owner.
+            </summary>
         </member>
-        <member name="F:Au.Types.TBBorder.FixedWithCaption">
-            <summary>Title bar. User cannot resize the toolbar.</summary>
+        <member name="F:Au.Types.TBAnchor.Bottom">
+            <summary>
+            Anchor is the owner's bottom edge. Also left and right edges, therefore the toolbar is resized when resizing its owner.
+            </summary>
         </member>
-        <member name="F:Au.Types.TBBorder.SizableWithCaption">
-            <summary>Title bar and standard sizing border.</summary>
+        <member name="F:Au.Types.TBAnchor.Left">
+            <summary>
+            Anchor is the owner's left edge. Also top and bottom edges, therefore the toolbar is resized when resizing its owner.
+            </summary>
         </member>
-        <member name="F:Au.Types.TBBorder.FixedWithCaptionX">
-            <summary>Title bar and [x] button to close. User cannot resize the toolbar.</summary>
+        <member name="F:Au.Types.TBAnchor.Right">
+            <summary>
+            Anchor is the owner's right edge. Also top and bottom edges, therefore the toolbar is resized when resizing its owner.
+            </summary>
         </member>
-        <member name="F:Au.Types.TBBorder.SizableWithCaptionX">
-            <summary>Title bar, [x] button and standard sizing border.</summary>
+        <member name="F:Au.Types.TBAnchor.TopLeft">
+            <summary>
+            Anchors are owner's top and left edges. Default.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.TopRight">
+            <summary>
+            Anchors are owner's top and right edges.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.BottomLeft">
+            <summary>
+            Anchors are owner's bottom and left edges.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.BottomRight">
+            <summary>
+            Anchors are owner's bottom and right edges.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.All">
+            <summary>
+            Anchors are all owner's edges, therefore the toolbar is resized when resizing its owner.
+            </summary>
+        </member>
+        <member name="T:Au.Types.TBLocation">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Location"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBLocation.Left">
+            <summary>
+            Horizontal distance from the owner's left edge to the toolbar's left edge.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBLocation.Top">
+            <summary>
+            Vertical distance from the owner's top edge to the toolbar's top edge.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBLocation.Right">
+            <summary>
+            Horizontal distance from the toolbar's right edge to the owner's right edge.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBLocation.Bottom">
+            <summary>
+            Vertical distance from the toolbar's bottom edge to the owner's bottom edge.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBLocation.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Sets all properties.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBLocation.Equals(Au.Types.TBLocation)">
+            
+        </member>
+        <member name="M:Au.Types.TBLocation.ToString">
+            
+        </member>
+        <member name="T:Au.Types.TBGroupSeparator">
+            <summary>
+            Horizontal separator for <b>ToolStrip</b> controls. With or without a text label. See <see cref="M:Au.AToolbar.Group(System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBGroupSeparator.#ctor(System.Windows.Forms.ToolStrip,System.String)">
+            <summary>
+            Adds horizontal separator to the toolstrip.
+            </summary>
+            <param name="ts">Parent control.</param>
+            <param name="name">Optional label.</param>
+        </member>
+        <member name="T:Au.Types.ITBOwnerObject">
+            <summary>
+            Used with <see cref="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)"/>.
+            </summary>
+            <remarks>
+            Allows a toolbar to follow an object in the owner window, for example an accessible object or image. Or to hide in certain conditions.
+            Define a class that implements this interface. Create a variable of that class and pass it to <see cref="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)"/>.
+            The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.ITBOwnerObject.IsAlive">
+            <summary>
+            Returns false to close the toolbar.
+            </summary>
+            <remarks>
+            Not called if the owner window is invisible or cloaked or minimized.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.ITBOwnerObject.IsVisible">
+            <summary>
+            Returns false to hide the toolbar temporarily.
+            </summary>
+            <remarks>
+            Not called if the owner window is invisible or cloaked or minimized.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ITBOwnerObject.GetRect(Au.Types.RECT@)">
+            <summary>
+            Gets object rectangle.
+            Returns false if failed.
+            </summary>
+            <param name="r">Rectangle in screen coordinates.</param>
+            <remarks>
+            Not called if the owner window is invisible or cloaked or minimized or if <see cref="P:Au.Types.ITBOwnerObject.IsVisible"/> returned false.
+            </remarks>
+        </member>
+        <member name="T:Au.Types.TBRenderer">
+            <summary>
+            Renderer used by <see cref="T:Au.AToolbar"/>. Based on <see cref="T:System.Windows.Forms.ToolStripSystemRenderer"/>. Draws groups etc.
+            If you want to replace a toolbar's renderer with a custom renderer, use this class as the base class of your renderer class.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBRenderer.#ctor">
+            
+        </member>
+        <member name="M:Au.Types.TBRenderer.OnRenderToolStripBorder(System.Windows.Forms.ToolStripRenderEventArgs)">
+            
+        </member>
+        <member name="M:Au.Types.TBRenderer.OnRenderToolStripBackground(System.Windows.Forms.ToolStripRenderEventArgs)">
+            
+        </member>
+        <member name="M:Au.Types.TBRenderer.OnRenderSeparator(System.Windows.Forms.ToolStripSeparatorRenderEventArgs)">
+            
         </member>
         <member name="T:Au.Types.RFlags">
             <summary>
@@ -3960,6 +4118,38 @@
             Contains types of hook data for hook procedures set by <see cref="T:Au.AHookWin"/> and <see cref="T:Au.AHookAcc"/>.
             </summary>
         </member>
+        <member name="T:Au.Types.HookData.AccHookData">
+            <summary>
+            Hook data for the hook procedure set by <see cref="T:Au.AHookAcc"/>.
+            More info: API <msdn>WinEventProc</msdn>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.hook">
+            <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.wnd">
+            <summary>API <msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.ev">
+            <summary>API <msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.idObject">
+            <summary>API <msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.idChild">
+            <summary>API <msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.idThread">
+            <summary>API <msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="F:Au.Types.HookData.AccHookData.eventTime">
+            <summary>API <msdn>WinEventProc</msdn></summary>
+        </member>
+        <member name="M:Au.Types.HookData.AccHookData.GetAcc">
+            <summary>
+            Calls <see cref="M:Au.AAcc.FromEvent(Au.AWnd,Au.Types.AccOBJID,System.Int32)"/>.
+            </summary>
+        </member>
         <member name="T:Au.Types.HookData.Keyboard">
             <summary>
             Event data for the hook procedure set by <see cref="M:Au.AHookWin.Keyboard(System.Action{Au.Types.HookData.Keyboard},System.Boolean,System.Boolean)"/>.
@@ -4319,38 +4509,6 @@
             <remarks>
             It can be used as a workaround for this problem: in low-level hook procedure some functions don't work with some windows. For example cannot get an accessible object or use a COM object. Error/exception "An outgoing call cannot be made since the application is dispatching an input-synchronous call (0x8001010D)".
             </remarks>
-        </member>
-        <member name="T:Au.Types.HookData.AccHookData">
-            <summary>
-            Hook data for the hook procedure set by <see cref="T:Au.AHookAcc"/>.
-            More info: API <msdn>WinEventProc</msdn>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.hook">
-            <summary>The caller object of your hook procedure. For example can be used to unhook.</summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.wnd">
-            <summary>API <msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.ev">
-            <summary>API <msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.idObject">
-            <summary>API <msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.idChild">
-            <summary>API <msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.idThread">
-            <summary>API <msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="F:Au.Types.HookData.AccHookData.eventTime">
-            <summary>API <msdn>WinEventProc</msdn></summary>
-        </member>
-        <member name="M:Au.Types.HookData.AccHookData.GetAcc">
-            <summary>
-            Calls <see cref="M:Au.AAcc.FromEvent(Au.AWnd,Au.Types.AccOBJID,System.Int32)"/>.
-            </summary>
         </member>
         <member name="T:Au.Types.BIEvents">
             <summary>
@@ -5653,6 +5811,9 @@
         <member name="M:Au.Types.WF3.Thread(System.Int32)">
             <summary>Thread id.</summary>
         </member>
+        <member name="P:Au.Types.WF3.ThisThread">
+            <summary>Thread id of this thread.</summary>
+        </member>
         <member name="M:Au.Types.WF3.Owner(Au.Types.AnyWnd)">
             <summary>Owner window.</summary>
         </member>
@@ -5730,6 +5891,36 @@
         <member name="T:Au.Types.WndClassEx">
             <summary>
             Used with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Types.PrintMsgOptions">
+            <summary>
+            Options for <see cref="M:Au.AWnd.More.PrintMsg(System.String@,System.Windows.Forms.Message@,Au.Types.PrintMsgOptions,System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.PrintMsgOptions.#ctor">
+            
+        </member>
+        <member name="M:Au.Types.PrintMsgOptions.#ctor(System.Int32[])">
+            <summary>
+            Sets the <see cref="P:Au.Types.PrintMsgOptions.Skip"/> PrintMsgSettings.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PrintMsgOptions.Number">
+            <summary>
+            Prepend 1, 2, 3...
+            Default is true. As well as if <i>options</i> is null.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PrintMsgOptions.Indent">
+            <summary>
+            Prepend one or more tabs if the caller function (usually WndProc) is called recursively.
+            Default is true. As well as if <i>options</i> is null.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PrintMsgOptions.Skip">
+            <summary>
+            Don't print these messages.
             </summary>
         </member>
         <member name="T:Au.Types.TBProgressState">
@@ -6590,11 +6781,6 @@
             If null (default), the dialog will be topmost if both these are true: no owner window, ADialog.Options.TopmostIfNoOwnerWindow is true.
             </summary>
         </member>
-        <member name="P:Au.ADialog.FlagEndThread">
-            <summary>
-            Call <see cref="M:System.Threading.Thread.Abort"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
-            </summary>
-        </member>
         <member name="M:Au.ADialog.ShowDialog">
             <summary>
             Shows the dialog.
@@ -7111,10 +7297,19 @@
             </summary>
         </member>
         <member name="M:Au.AMenu.#ctor">
-            
+            <summary>
+            Initializes this object.
+            Use this overload with non-user-editable menus.
+            </summary>
         </member>
         <member name="M:Au.AMenu.#ctor(System.String,System.String,System.Int32)">
-            
+            <summary>
+            Initializes this object.
+            Use this overload with user-editable menus.
+            </summary>
+            <param name="name">Menu name. Must be valid filename. Currently used only as the initial <b>Name</b> and <b>Text</b> of <see cref="P:Au.AMenu.Control"/>.</param>
+            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
         </member>
         <member name="M:Au.AMenu.Dispose">
             
@@ -7155,7 +7350,7 @@
             - null (default) - no icon. If <see cref="P:Au.Types.AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
             - "" - no icon.
             </param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <remarks>
             Sets menu item text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
             
@@ -7175,13 +7370,12 @@
         </member>
         <member name="M:Au.AMenu.Add(System.Windows.Forms.ToolStripItem,System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
-            Adds item of any supported type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar, ToolStripButton.
-            Supports types derived from ToolStripItem.
+            Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
             </summary>
             <param name="item">An already created item of any supported type.</param>
             <param name="icon"></param>
             <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
         </member>
         <member name="M:Au.AMenu.Separator">
             <summary>
@@ -7199,7 +7393,7 @@
             <param name="text">Text.</param>
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <remarks>
             Submenus inherit these properties of the main menu, set before adding submenus (see example):
             <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
@@ -7251,7 +7445,7 @@
             <param name="onOpening">Callback function that should add submenu items.</param>
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <example>
             <code><![CDATA[
             var m = new AMenu();
@@ -7349,25 +7543,20 @@
             If false, only Esc works, it closes the menu.
             If the menu is owned by a control or toolbar button, keyboard navigation works in any case, don't need this property to enable it.
             </summary>
-            <seealso cref="P:Au.AMenu.DefaultActivateMenuWindow"/>
-        </member>
-        <member name="P:Au.AMenu.DefaultActivateMenuWindow">
-            <summary>
-            Default <see cref="P:Au.AMenu.ActivateMenuWindow"/> value for new <b>AMenu</b> instances.
-            </summary>
         </member>
         <member name="P:Au.AMenu.MouseClosingDistance">
             <summary>
-            Close the menu when the mouse cursor moves away from it to this distance, pixels.
-            At first the mouse must be or move at less than half of the distance.
-            Default is equal to AMenu.DefaultMouseClosingDistance, default 200.
+            Close the menu when the mouse cursor moves away from it to this distance, pixels. Only if the toolbar's thread is not the active UI thread.
             </summary>
+            <remarks>
+            At first the mouse must be or move at less than half of the distance.
+            Default is <see cref="P:Au.AMenu.DefaultMouseClosingDistance"/>, default <c>Au.Util.ADpi.ScaleInt(200)</c>.
+            </remarks>
             <seealso cref="P:Au.AMenu.DefaultMouseClosingDistance"/>
         </member>
         <member name="P:Au.AMenu.DefaultMouseClosingDistance">
             <summary>
-            Default MouseClosingDistance value of AMenu instances.
-            A AMenu instance inherits this at the moment it is created.
+            Default <see cref="P:Au.AMenu.MouseClosingDistance"/> value of <b>AMenu</b> instances.
             </summary>
         </member>
         <member name="M:Au.AMenu.Close">
@@ -7377,8 +7566,32 @@
         </member>
         <member name="T:Au.AToolbar">
             <summary>
-            TODO
+            Floating toolbar based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
+            Can be attached to windows and other UI objects of other programs.
             </summary>
+        </member>
+        <member name="M:Au.AToolbar.#ctor(System.String,System.Boolean,System.String,System.Int32)">
+            <summary>
+            Initializes this object.
+            Reads the settings file. Creates the <b>ToolStrip</b> object (<see cref="P:Au.AToolbar.Control"/>) but not its window handle.
+            </summary>
+            <param name="name">Toolbar name. Must be valid filename. Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="P:Au.AToolbar.Control"/>.</param>
+            <param name="resetSettings">Reset toolbar settings to default values. It deletes the settings file of this toolbar.</param>
+            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <example>
+            <code><![CDATA[
+            var t = new AToolbar("example");
+            t["button 1"] = o => Print(o);
+            t[false, "menu"] = m => {
+            	m["item 1"] = o => Print(o);
+            	m["item 2"] = o => Print(o);
+            };
+            t["button 2"] = o => Print(o);
+            t.Show();
+            ADialog.Show();
+            ]]></code>
+            </example>
         </member>
         <member name="P:Au.AToolbar.Control">
             <summary>
@@ -7386,11 +7599,29 @@
             You can use its properties, methods and events.
             </summary>
         </member>
+        <member name="P:Au.AToolbar.Name">
+            <summary>
+            Toolbar name.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.SettingsModified">
+            <summary>
+            True if properties of this toolbar were modified now or in the past (the settings JSON file exists).
+            </summary>
+            <remarks>
+            To delete the settings JSON file you can use the constructor's parameter <i>resetSettings</i>.
+            </remarks>
+        </member>
         <member name="P:Au.AToolbar.Item(System.String,System.Object,System.String,System.Int32)">
             <summary>
             Adds new button as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
             The same as <see cref="M:Au.AToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.String,System.Int32)"/>.
             </summary>
+            <example>
+            <code><![CDATA[
+            tb["Example"] = o => Print(o);
+            ]]></code>
+            </example>
         </member>
         <member name="M:Au.AToolbar.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.String,System.Int32)">
             <summary>
@@ -7400,7 +7631,7 @@
             <param name="onClick">Callback function. Called when the button clicked.</param>
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="tooltip">Tooltip text.</param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <remarks>
             Sets button text, icon and Click event handler. Other properties can be specified later. See example.
             
@@ -7409,20 +7640,31 @@
         </member>
         <member name="M:Au.AToolbar.Add(System.Windows.Forms.ToolStripItem,System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
-            Adds item of any ToolStripItem type, for example ToolStripLabel, ToolStripTextBox, ToolStripComboBox, ToolStripProgressBar.
+            Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
             </summary>
             <param name="item"></param>
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="tooltip">Tooltip text.</param>
             <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
         </member>
-        <member name="M:Au.AToolbar.Separator(System.String)">
+        <member name="M:Au.AToolbar.Separator">
             <summary>
-            Adds separator.
-            By default it's vertical. Horizontal if layout is vertical or <i>groupName</i> not null.
+            Adds new vertical separator. Horizontal if layout is vertical.
             </summary>
-            <param name="groupName">If not null, the separator is horizontal. If not "", this text will be displayed.</param>
+        </member>
+        <member name="M:Au.AToolbar.Group(System.String)">
+            <summary>
+            Adds new horizontal separator, optionally with text.
+            </summary>
+            <param name="name">If not null, this text will be displayed.</param>
+            <exception cref="T:System.InvalidOperationException">Unsupported <b>LayoutStyle</b> (must be flow or vertical) or <b>FlowDirection</b> (must be horizontal).</exception>
+            <example>
+            Add separator and set color.
+            <code><![CDATA[
+            t.Group("Group").ForeColor = Color.MediumPurple;
+            ]]></code>
+            </example>
         </member>
         <member name="M:Au.AToolbar.MenuButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Int32)">
             <summary>
@@ -7432,7 +7674,7 @@
             <param name="menu">Callback function that adds menu items. Called when opening the menu first time. If sets <see cref="P:Au.AMenu.MultiShow"/> = false, called each time.</param>
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="tooltip">Tooltip text.</param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
         </member>
         <member name="M:Au.AToolbar.SplitButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
@@ -7443,7 +7685,32 @@
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="tooltip">Tooltip text.</param>
             <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
-            <param name="l"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+        </member>
+        <member name="P:Au.AToolbar.Item(System.Boolean,System.String,System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
+            <summary>
+            Adds new button with a drop-down menu.
+            </summary>
+            <param name="splitButton">If true, calls <see cref="M:Au.AToolbar.SplitButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)"/>, else <see cref="M:Au.AToolbar.MenuButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Int32)"/>.</param>
+            <param name="text">Text.</param>
+            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
+            <param name="tooltip">Tooltip text.</param>
+            <param name="onClick">Callback function. Called when the button part of the split button clicked. If null, will execute the first menu item. Not used if it is not split button.</param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <returns>The value is a callback function that adds drop-down menu items. Te same as parameter <i>menu</i> of <see cref="M:Au.AToolbar.MenuButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Int32)"/> or <see cref="M:Au.AToolbar.SplitButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)"/>.</returns>
+            <example>
+            <code><![CDATA[
+            var t = new AToolbar("example");
+            t["button 1"] = o => Print(o);
+            t[false, "menu"] = m => {
+            	m["item 1"] = o => Print(o);
+            	m["item 2"] = o => Print(o);
+            };
+            t["button 2"] = o => Print(o);
+            t.Show();
+            ADialog.Show();
+            ]]></code>
+            </example>
         </member>
         <member name="P:Au.AToolbar.LastButton">
             <summary>
@@ -7454,9 +7721,60 @@
             You can instead use <see cref="P:Au.Types.AMTBase.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
             </remarks>
         </member>
+        <member name="M:Au.AToolbar.Show(Au.AScreen)">
+            <summary>
+            Shows the toolbar and attaches to a screen.
+            </summary>
+            <param name="screen">Can be used to define the screen. For example a screen index (0 is the primary, 1 is the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
+            <remarks>
+            The toolbar will be moved when the screen moved or resized.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Show(Au.AWnd,System.Boolean)">
+            <summary>
+            Shows the toolbar and attaches to a window.
+            </summary>
+            <param name="ownerWindow">Window or control. Can belong to any process.</param>
+            <param name="clientArea">Let the toolbar position be relative to the client area of the window.</param>
+            <remarks>
+            The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)">
+            <summary>
+            Shows the toolbar and attaches to an object in a window.
+            </summary>
+            <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
+            <param name="oo">A variable of a user-defined class that implements <see cref="T:Au.Types.ITBOwnerObject"/> interface. It provides object location, visibility, etc.</param>
+            <remarks>
+            The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Close">
+            <summary>
+            Closes and disposes the toolbar.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.IsOwned">
+            <summary>
+            Returns true if the toolbar is attached to a window or an object in a window.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.OwnerWindow">
+            <summary>
+            Returns the owner top-level window.
+            Returns default(AWnd) if the toolbar is not owned by a window or an object in a window.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.OwnerControl">
+            <summary>
+            Returns the owner control.
+            Returns default(AWnd) if not owned by a control or an object in a control.
+            </summary>
+        </member>
         <member name="P:Au.AToolbar.NoText">
             <summary>
-            When adding items with images, set to not display item text. If tooltip not specified, use item text for it.
+            If true, buttons added afterwards will have image without text displayed (unless there is no image). Text will be displayed as tooltip, unless tooltip is specified.
             </summary>
             <remarks>
             This property is applied to items added afterwards. If true and the item has an image, sets item <b>DisplayStyle</b> property = Image. Else sets item <b>AutoToolTip</b> property = false.
@@ -7474,17 +7792,103 @@
             ]]></code>
             </example>
         </member>
+        <member name="P:Au.AToolbar.Border">
+            <summary>
+            Border style.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.BorderColor">
+            <summary>
+            Border color.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.Anchor">
+            <summary>
+            Specifies to which owner window's edges the toolbar keeps constant distance when moving or resizing the owner.
+            </summary>
+            <remarks>
+            The owner also can be a screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
+            </remarks>
+            <seealso cref="P:Au.AToolbar.Location"/>
+        </member>
+        <member name="P:Au.AToolbar.Location">
+            <summary>
+            Specifies distances between edges of the toolbar and edges of its owner, depending on <see cref="P:Au.AToolbar.Anchor"/>.
+            </summary>
+            <remarks>
+            The owner also can be a screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
+            This property is updated when moving or resizing the toolbar.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Sizable">
+            <summary>
+            Whether the border can be used to resize the toolbar.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.Size">
+            <summary>
+            Toolbar width and height.
+            </summary>
+            <remarks>
+            This property is updated when resizing the toolbar.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.AutoSize">
+            <summary>
+            Automatically resize the toolbar to make all buttons visible.
+            </summary>
+            <remarks>
+            Autosizing occurs in these cases:
+            - When showing the toolbar.
+            - When the user resizes the toolbar. It also sets the wrap width.
+            - When setting this property = true (in code or in the context menu) or changing <see cref="P:Au.AToolbar.AutoSizeWrapWidth"/> wile it is true.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.AutoSizeWrapWidth">
+            <summary>
+            When <see cref="P:Au.AToolbar.AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
+            </summary>
+            <remarks>
+            This property is updated when the user resizes the toolbar while <see cref="P:Au.AToolbar.AutoSize"/> is true.
+            If flow direction is vertical, this is the preferred height at which buttons are moved to the next column.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Transparency">
+            <summary>
+            Opacity and transparent color.
+            </summary>
+            <seealso cref="M:Au.AWnd.SetTransparency(System.Boolean,System.Nullable{System.Int32},System.Nullable{Au.Types.ColorInt})"/>
+            <example>
+            <code><![CDATA[
+            tb.Transparency = (64, null);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AToolbar._GetCachedOwnerRect">
+            <summary>
+            Gets the cached rectangle of the owner window, screen, control, etc.
+            If is owned and anchor is None, the rectangle is of toolbar's screen.
+            Also gets previous size.
+            The values are cached by <b>UpdateRect</b> of <b>_OwnerWindow</b> etc.
+            </summary>
+        </member>
         <member name="T:Au.AExtForms">
             <summary>
             Adds extension methods for some System.Windows.Forms classes.
             </summary>
         </member>
-        <member name="M:Au.AExtForms.CreateHandleNow(System.Windows.Forms.Control)">
+        <member name="M:Au.AExtForms.Hwnd(System.Windows.Forms.Control,System.Boolean)">
             <summary>
-            If control handle still not created, creates. Does not create child control handles.
-            Like <see cref="M:System.Windows.Forms.Control.CreateHandle"/>, which is protected.
-            Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible.
+            Gets the window handle as <see cref="T:Au.AWnd"/>.
             </summary>
+            <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be null.</param>
+            <param name="create">
+            Create handle if still not created. Default false (return default(AWnd)).
+            Unlike <see cref="M:System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible. Does not create child control handles.
+            </param>
+            <remarks>
+            Should be called in control's thread. Calls <see cref="P:System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="P:System.Windows.Forms.Control.Handle"/>.
+            </remarks>
         </member>
         <member name="M:Au.AExtForms.CreateControlNow(System.Windows.Forms.Control)">
             <summary>
@@ -11107,6 +11511,111 @@
             <param name="formats">Clipboard format ids. See <see cref="T:Au.Types.ClipFormats"/>.</param>
             <remarks>Calls API <msdn>GetPriorityClipboardFormat</msdn>.</remarks>
         </member>
+        <member name="T:Au.AHookAcc">
+            <summary>
+            Helps with accessible object event hooks. See API <msdn>SetWinEventHook</msdn>.
+            </summary>
+            <remarks>
+            The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="P:Au.AOpt.WaitFor"/>).
+            The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b>) or with the 'using' pattern.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            bool stop = false;
+            using(new AHookAcc(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
+            {
+            	Print(x.wnd);
+            	var a = x.GetAcc();
+            	Print(a);
+            	if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
+            })) {
+            	MessageBox.Show("hook");
+            	//or
+            	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
+            	//Print("the end");
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AHookAcc.#ctor(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Sets a hook for an event or a range of events.
+            </summary>
+            <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>. Value 0 is ignored.</param>
+            <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
+            <param name="hookProc">The hook procedure (function that handles hook events).</param>
+            <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
+            <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
+            <param name="flags"></param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <example>See <see cref="T:Au.AHookAcc"/>.</example>
+        </member>
+        <member name="M:Au.AHookAcc.#ctor(Au.Types.AccEVENT[],System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Sets multiple hooks.
+            </summary>
+            <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
+            <param name="hookProc">The hook procedure (function that handles hook events).</param>
+            <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
+            <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
+            <param name="flags"></param>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <example>See <see cref="T:Au.AHookAcc"/>.</example>
+        </member>
+        <member name="M:Au.AHookAcc.Hook(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Sets a hook for an event or a range of events.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Hooks are already set and <see cref="M:Au.AHookAcc.Unhook"/> not called.</exception>
+            <remarks>
+            Parameters are the same as of the constructor, but values can be different.
+            </remarks>
+        </member>
+        <member name="M:Au.AHookAcc.Hook(Au.Types.AccEVENT[],System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Sets multiple hooks.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Hooks are already set and <see cref="M:Au.AHookAcc.Unhook"/> not called.</exception>
+            <remarks>
+            Parameters are the same as of the constructor, but values can be different.
+            </remarks>
+        </member>
+        <member name="M:Au.AHookAcc.Add(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Int32,System.Int32,Au.Types.AccHookFlags)">
+            <summary>
+            Adds a hook for an event or a range of events.
+            Returns an int value greater than 0 that can be used with <see cref="M:Au.AHookAcc.Remove(System.Int32)"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Parameters are the same as of the constructor, but values can be different.
+            
+            This function together with <see cref="M:Au.AHookAcc.Remove(System.Int32)"/> can be used to temporarily add/remove one or more hooks while using the same <b>AHookAcc</b> variable and hook procedure. Don't need to call <b>Unhook</b> before.
+            </remarks>
+        </member>
+        <member name="M:Au.AHookAcc.Remove(System.Int32)">
+            <summary>
+            Removes a hook added by <see cref="M:Au.AHookAcc.Add(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Int32,System.Int32,Au.Types.AccHookFlags)"/>.
+            </summary>
+            <param name="addedId">A return value of <see cref="M:Au.AHookAcc.Add(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Int32,System.Int32,Au.Types.AccHookFlags)"/>.</param>
+            <exception cref="T:System.ArgumentException"></exception>
+        </member>
+        <member name="M:Au.AHookAcc.Unhook">
+            <summary>
+            Removes all hooks.
+            </summary>
+            <remarks>
+            Does nothing if already removed or wasn't set.
+            Must be called from the same thread that sets the hook.
+            </remarks>
+        </member>
+        <member name="M:Au.AHookAcc.Dispose">
+            <summary>
+            Calls <see cref="M:Au.AHookAcc.Unhook"/>.
+            </summary>
+        </member>
+        <member name="M:Au.AHookAcc.Finalize">
+            
+        </member>
         <member name="T:Au.AHookWin">
             <summary>
             Wraps API <msdn>SetWindowsHookEx</msdn>.
@@ -11120,7 +11629,7 @@
             
             <note type="warning">Avoid many hooks. Each low-level keyboard or mouse hook makes the computer slower, even if the hook procedure is fast. On each input event (key down, key up, mouse move, click, wheel) Windows sends a message to your thread.</note>
             
-            To handle hooked events is used a callback functions, aka hook procedure. Hook procedures of some hook types can block some events. Blocked events are not sent to apps and older hooks.
+            To handle hook events is used a callback functions, aka hook procedure. Hook procedures of some hook types can block some events. Blocked events are not sent to apps and older hooks.
             
             Accessible object functions may fail in hook procedures of low-level keyboard and mouse hooks. Workarounds exist.
             
@@ -11199,7 +11708,7 @@
             Hook procedure (function that handles hook events).
             Must return as soon as possible.
             If returns true, the event is cancelled. For some events you can modify some fields of event data.
-            <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not whole variable.</note>
+            <note>When the hook procedure returns, the parameter variable becomes invalid and unsafe to use. If you need the data for later use, copy its properties and not the variable.</note>
             </param>
             <param name="threadId">Native thread id, or 0 for this thread. The thread must belong to this process.</param>
             <param name="setNow">Set hook now. Default true.</param>
@@ -11431,92 +11940,6 @@
             Returns the timeout time (ATime.WinMilliseconds + timeMS) or 0.
             Used when turning off CapsLock with Shift.
             </summary>
-        </member>
-        <member name="T:Au.AHookAcc">
-            <summary>
-            Helps with accessible object event hooks. See API <msdn>SetWinEventHook</msdn>.
-            </summary>
-            <remarks>
-            The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="P:Au.AOpt.WaitFor"/>).
-            The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b>) or with the 'using' pattern.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            bool stop = false;
-            using(new AHookAcc(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
-            {
-            	Print(x.wnd);
-            	var a = x.GetAcc();
-            	Print(a);
-            	if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
-            })) {
-            	MessageBox.Show("hook");
-            	//or
-            	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
-            	//Print("the end");
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AHookAcc.#ctor(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
-            <summary>
-            Sets a hook for an event or a range of events.
-            Calls API <msdn>SetWinEventHook</msdn>.
-            </summary>
-            <param name="eventMin">The lowest event constant value in the range of events. Can be AccEVENT.MIN to indicate the lowest possible event value. Events reference: <msdn>SetWinEventHook</msdn>.</param>
-            <param name="eventMax">The highest event constant value in the range of events. Can be AccEVENT.MAX to indicate the highest possible event value. If 0, uses <i>eventMin</i>.</param>
-            <param name="hookProc">The hook procedure (function that handles hook events).</param>
-            <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-            <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
-            <param name="flags"></param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-            <example>See <see cref="T:Au.AHookAcc"/>.</example>
-        </member>
-        <member name="M:Au.AHookAcc.#ctor(Au.Types.AccEVENT[],System.Action{Au.Types.HookData.AccHookData},System.Int32,System.Int32,Au.Types.AccHookFlags)">
-            <summary>
-            Sets a hook for multiple events.
-            Calls API <msdn>SetWinEventHook</msdn>.
-            </summary>
-            <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
-            <param name="hookProc">The hook procedure (function that handles hook events).</param>
-            <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
-            <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
-            <param name="flags"></param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-            <example>See <see cref="T:Au.AHookAcc"/>.</example>
-        </member>
-        <member name="M:Au.AHookAcc.Hook(Au.Types.AccEVENT,Au.Types.AccEVENT,System.Int32,System.Int32,Au.Types.AccHookFlags)">
-            <summary>
-            Sets hooks again after <see cref="M:Au.AHookAcc.Unhook"/>.
-            </summary>
-            <remarks>
-            Parameters are the same as of the constructor, but values can be different.
-            </remarks>
-        </member>
-        <member name="M:Au.AHookAcc.Hook(Au.Types.AccEVENT[],System.Int32,System.Int32,Au.Types.AccHookFlags)">
-            <summary>
-            Sets hooks again after <see cref="M:Au.AHookAcc.Unhook"/>.
-            </summary>
-            <remarks>
-            Parameters are the same as of the constructor, but values can be different.
-            </remarks>
-        </member>
-        <member name="M:Au.AHookAcc.Unhook">
-            <summary>
-            Removes the hook.
-            </summary>
-            <remarks>
-            Does nothing if already removed or wasn't set.
-            Must be called from the same thread that sets the hook.
-            </remarks>
-        </member>
-        <member name="M:Au.AHookAcc.Dispose">
-            <summary>
-            Calls <see cref="M:Au.AHookAcc.Unhook"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AHookAcc.Finalize">
-            
         </member>
         <member name="T:Au.AInputBlocker">
             <summary>
@@ -11776,6 +12199,14 @@
             </summary>
             <remarks>
             Can be used for mouse buttons too, for example <c>AKeys.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+            </remarks>
+        </member>
+        <member name="M:Au.AKeys.UI.IsToggled(Au.Types.KKey)">
+            <summary>
+            Returns true if the specified key or mouse button is toggled.
+            </summary>
+            <remarks>
+            Works only with CapsLock, NumLock, ScrollLock and several other keys, as well as mouse buttons.
             </remarks>
         </member>
         <member name="P:Au.AKeys.UI.IsAlt">
@@ -18195,12 +18626,14 @@
             Most functions should be called from the same UI thread. The 'get' properties for string and atomic types (int/bool/etc) can be called from any thread.
             </remarks>
         </member>
-        <member name="M:Au.Util.JSettings._Load``1(System.String)">
+        <member name="M:Au.Util.JSettings._Load``1(System.String,System.Boolean)">
             <summary>
             Loads JSON file and deserializes to new object of type T.
             Sets to save automatically whenever a property changed.
-            Returns new empty object if file does not exist or failed to load or parse (invalid JSON). If failed, prints error.
+            Returns new empty object if file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, prints error.
             </summary>
+            <param name="file">Full path of .json file.</param>
+            <param name="useDefault">Use default settings, don't load from file. Delete file if exists.</param>
         </member>
         <member name="M:Au.Util.JSettings.Dispose">
             <summary>
@@ -18208,10 +18641,15 @@
             Don't need to call if the settings are used until process exit.
             </summary>
         </member>
+        <member name="P:Au.Util.JSettings.Modified">
+            <summary>
+            <c>_save || AFile.ExistsAsAny(_file)</c>
+            </summary>
+        </member>
         <member name="M:Au.Util.JSettings.SaveIfNeed">
             <summary>
             Saves now if need.
-            Don't need to call explicitly. In UI thread called automatically every 5 s. Also automatically called on process exit and by <b>Dispose</b>.
+            Don't need to call explicitly. In UI thread called automatically every 3 s. Also automatically called on process exit and by <b>Dispose</b>.
             </summary>
         </member>
         <member name="M:Au.Util.JSettings.SaveLater">
@@ -18675,16 +19113,6 @@
             Releases the StringBuilder to the cache.
             </summary>
         </member>
-        <member name="M:Au.Util.LibWorkarounds.WaitCursorWhenShowingMenuEtc">
-            <summary>
-            A workaround for:
-            	When showing a ContextMenuStrip menu or a submenu, something briefly sets the AppStarting cursor.
-            	Only if this process does/did not have active windows.
-            	Only if current cursor is arrow. Works well if eg I or hand.
-            	Starts before first WM_NCPAINT (after WM_SHOWWINDOW+WM_WINDOWPOSCHANGING) and stops before WM_PAINT.
-            Call this before showing a menu. Possibly also will need for some other windows.
-            </summary>
-        </member>
         <member name="T:Au.Util.NamespaceDoc">
             <summary>
             Rarely used classes of the automation library.
@@ -18705,24 +19133,24 @@
             Native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
             </summary>
         </member>
-        <member name="T:Au.Util.ThreadPoolSTA">
+        <member name="T:Au.Util.ThreadPoolSTA_">
             <summary>
             Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
             </summary>
         </member>
-        <member name="T:Au.Util.ThreadPoolSTA.WorkCallbackData">
+        <member name="T:Au.Util.ThreadPoolSTA_.WorkCallbackData">
             <summary>
             Work callback function parameter type.
-            More info: <see cref="T:Au.Util.ThreadPoolSTA.WorkCallback"/>.
+            More info: <see cref="T:Au.Util.ThreadPoolSTA_.WorkCallback"/>.
             </summary>
         </member>
-        <member name="F:Au.Util.ThreadPoolSTA.WorkCallbackData.state">
+        <member name="F:Au.Util.ThreadPoolSTA_.WorkCallbackData.state">
             
         </member>
-        <member name="F:Au.Util.ThreadPoolSTA.WorkCallbackData.completionCallback">
+        <member name="F:Au.Util.ThreadPoolSTA_.WorkCallbackData.completionCallback">
             
         </member>
-        <member name="T:Au.Util.ThreadPoolSTA.WorkCallback">
+        <member name="T:Au.Util.ThreadPoolSTA_.WorkCallback">
             <summary>
             Work callback function type.
             </summary>
@@ -18732,7 +19160,7 @@
             Note that the completion function is never called if initially it was null.
             </param>
         </member>
-        <member name="M:Au.Util.ThreadPoolSTA.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">
+        <member name="M:Au.Util.ThreadPoolSTA_.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)">
             <summary>
             Requests that a thread pool thread call the callback function.
             </summary>
@@ -18742,9 +19170,9 @@
             <exception cref="T:System.ComponentModel.Win32Exception"/>
             <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
         </member>
-        <member name="M:Au.Util.ThreadPoolSTA.CreateWork(System.Object,Au.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)">
+        <member name="M:Au.Util.ThreadPoolSTA_.CreateWork(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)">
             <summary>
-            Creates a <see cref="T:Au.Util.ThreadPoolSTA.Work"/> object that can be used when need more options than <see cref="M:Au.Util.ThreadPoolSTA.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)"/> has.
+            Creates a <see cref="T:Au.Util.ThreadPoolSTA_.Work"/> object that can be used when need more options than <see cref="M:Au.Util.ThreadPoolSTA_.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)"/> has.
             </summary>
             <param name="state">Something to pass to the callback functions.</param>
             <param name="workCallback">Callback function to call in a thread pool thread.</param>
@@ -18755,46 +19183,56 @@
             <exception cref="T:System.ComponentModel.Win32Exception"/>
             <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
         </member>
-        <member name="T:Au.Util.ThreadPoolSTA.Work">
+        <member name="T:Au.Util.ThreadPoolSTA_.Work">
             <summary>
             Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
-            Can be used when need more options than <see cref="M:Au.Util.ThreadPoolSTA.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback)"/> has.
+            Can be used when need more options than <see cref="M:Au.Util.ThreadPoolSTA_.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)"/> has.
             </summary>
             <example>
             <code><![CDATA[
-            using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
+            using(var work = Util.ThreadPoolSTA_.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
             	work.Submit();
             	work.Wait();
             }
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Util.ThreadPoolSTA.Work.#ctor(System.Object,Au.Util.ThreadPoolSTA.WorkCallback,System.Threading.SendOrPostCallback,System.Boolean)">
+        <member name="M:Au.Util.ThreadPoolSTA_.Work.#ctor(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback,System.Boolean)">
             <exception cref="T:System.ComponentModel.Win32Exception"/>
             <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
         </member>
-        <member name="M:Au.Util.ThreadPoolSTA.Work.Submit">
+        <member name="M:Au.Util.ThreadPoolSTA_.Work.Submit">
             <summary>
             Requests that a thread pool thread call the callback function.
             This function can be called multiple times.
             </summary>
         </member>
-        <member name="M:Au.Util.ThreadPoolSTA.Work.Wait">
+        <member name="M:Au.Util.ThreadPoolSTA_.Work.Wait">
             <summary>
             Waits until all submitted instances of the callback function finish their work.
             While waiting, this thread cannot dispatch events and Windows messages.
             </summary>
         </member>
-        <member name="M:Au.Util.ThreadPoolSTA.Work.Cancel">
+        <member name="M:Au.Util.ThreadPoolSTA_.Work.Cancel">
             <summary>
             Waits until all running instances of the callback function finish their work, and cancels pending (still not running) instances.
             While waiting, this thread cannot dispatch events and Windows messages.
             </summary>
         </member>
-        <member name="M:Au.Util.ThreadPoolSTA.Work.Dispose">
+        <member name="M:Au.Util.ThreadPoolSTA_.Work.Dispose">
             <summary>
-            Calls <see cref="M:Au.Util.ThreadPoolSTA.Work.Cancel"/>, releases all resources used by this object and allows this object to be garbage-collected.
+            Calls <see cref="M:Au.Util.ThreadPoolSTA_.Work.Cancel"/>, releases all resources used by this object and allows this object to be garbage-collected.
             Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this process ends.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Workarounds_.WaitCursorWhenShowingMenuEtc">
+            <summary>
+            A workaround for:
+            	When showing a ContextMenuStrip menu or a submenu, something briefly sets the AppStarting cursor.
+            	Only if this process does/did not have active windows.
+            	Only if current cursor is arrow. Works well if eg I or hand.
+            	Starts before first WM_NCPAINT (after WM_SHOWWINDOW+WM_WINDOWPOSCHANGING) and stops before WM_PAINT.
+            Call this before showing a menu. Possibly also will need for some other windows.
             </summary>
         </member>
         <member name="T:Au.AWildex">
@@ -21372,8 +21810,11 @@
             <summary>
             Gets the window handle as AWnd from a System.Windows.Forms.Control (or Form etc) variable.
             Returns default(AWnd) if w is null or the handle is still not created.
-            Should be called in c thread. Calls <see cref="P:System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="P:System.Windows.Forms.Control.Handle"/>.
             </summary>
+            <remarks>
+            Like <see cref="M:Au.AExtForms.Hwnd(System.Windows.Forms.Control,System.Boolean)"/>, but does not throw exception if null.
+            Should be called in control's thread. Calls <see cref="P:System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="P:System.Windows.Forms.Control.Handle"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.op_Explicit(System.Windows.Window)~Au.AWnd">
             <summary>
@@ -21475,25 +21916,18 @@
             Calls API <msdn>PostMessage</msdn>.
             Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
             </summary>
-            <seealso cref="M:Au.AWnd.More.PostThreadMessage(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>
+            <seealso cref="M:Au.AWnd.More.PostThreadMessage(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)"/>
         </member>
         <member name="T:Au.AWnd.More">
             <summary>
             Miscellaneous window-related functions and classes. Rarely used, or useful only for programmers.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PostThreadMessage(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>
-            Posts a message to the message queue of this thread.
-            Calls API <msdn>PostMessage</msdn> with default(AWnd). 
-            Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
-            </summary>
-        </member>
         <member name="M:Au.AWnd.More.PostThreadMessage(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
             <summary>
-            Posts a message to the message queue of the specified thread.
+            Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
             Calls API <msdn>PostThreadMessage</msdn>. 
-            Returns its return value (false if failed). Supports <see cref="T:Au.ALastError"/>.
+            Returns false if failed. Supports <see cref="T:Au.ALastError"/>.
             </summary>
         </member>
         <member name="M:Au.AWnd.More.WaitForAnActiveWindow">
@@ -21539,10 +21973,10 @@
         </member>
         <member name="M:Au.AWnd.More.GetGUIThreadInfo(Au.Types.Native.GUITHREADINFO@,System.Int32)">
             <summary>
-            Calls API <msdn>GetGUIThreadInfo</msdn>, which can get some GUI info, eg mouse capturing, menu mode, move/size mode, focus, caret.
+            Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
             </summary>
             <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
-            <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AWnd.ThreadId"/>.</param>
+            <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.NativeId"/>.</param>
         </member>
         <member name="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)">
             <summary>
@@ -21550,22 +21984,22 @@
             </summary>
             <param name="className">Class name.</param>
             <param name="wndProc">
-            Window procedure. See <msdn>Window Procedures</msdn>.
-            I null, sets API <msdn>DefWindowProc</msdn> as window procedure; then you can create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
-            If not null, it must be a static method; then you can create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
+            Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
+            
+            I null, sets API <msdn>DefWindowProc</msdn> as window procedure. It is useful when you need a different delegate (method or target object) for each window instance. Create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
+            If not null, you can create windows with any other function, including API <msdn>CreateWindowEx</msdn>. Then <b>Target</b> of the delegate should be null (static method) or a singleton object.
             </param>
             <param name="ex">
             Can be used to specify more fields of <msdn>WNDCLASSEX</msdn> that is passed to API <msdn>RegisterClassEx</msdn>.
             Defaults: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; style = CS_GLOBALCLASS; others = 0/null/default.
             This function also adds CS_GLOBALCLASS style.
             </param>
-            <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null.</exception>
-            <exception cref="T:System.InvalidOperationException">The class already registered with this function and different <i>wndProc</i> method.</exception>
+            <exception cref="T:System.InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
             <remarks>
             Calls API <msdn>RegisterClassEx</msdn>.
             The window class is registered until this process ends. Don't need to unregister.
-            If called next time for the same class, does nothing if <i>wndProc</i> is the same method (or both null); then ignores <i>ex</i>. Throws exception if another method.
+            If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous. Then ignores <i>ex</i>. Throws exception if different.
             Thread-safe.
             Protects the <i>wndProc</i> delegate from GC.
             </remarks>
@@ -21592,16 +22026,6 @@
             Later call <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/> or <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>.
             </remarks>
             <seealso cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/>
-        </member>
-        <member name="M:Au.AWnd.More.CreateWindowAndSetFont(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM,System.IntPtr)">
-            <summary>
-            Creates native/unmanaged window like <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> and sets font.
-            </summary>
-            <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
-            <remarks>
-            If <i>customFontHandle</i> not specified, sets the system UI font, usually it is Segoe UI, 9.
-            Later call <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/> or <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>.
-            </remarks>
         </member>
         <member name="M:Au.AWnd.More.CreateMessageOnlyWindow(System.String)">
             <summary>
@@ -21644,6 +22068,16 @@
             To find message-only windows use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/>.
             </remarks>
         </member>
+        <member name="M:Au.AWnd.More.SetFont(Au.AWnd,System.IntPtr)">
+            <summary>
+            Sets font.
+            </summary>
+            <param name="w"></param>
+            <param name="font">Native font handle. If default(IntPtr), sets font that is used by most windows and controls on this computer. Usually it is Segoe UI, 9.</param>
+            <remarks>
+            Sends <msdn>WM_SETFONT</msdn> message.
+            </remarks>
+        </member>
         <member name="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)">
             <summary>
             Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
@@ -21679,47 +22113,38 @@
             It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.String@,System.Windows.Forms.Message@,System.Int32[])">
+        <member name="M:Au.AWnd.More.PrintMsg(System.String@,System.Windows.Forms.Message@,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to a string.
-            If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,System.Int32[])">
+        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to a string.
-            If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.Types.Native.MSG@,System.Int32[])">
+        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.Types.Native.MSG@,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to a string.
-            If the message is one of specified in <i>ignore</i> (which can be null), sets <c>s=null</c> and returns false.
+            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.Windows.Forms.Message@,System.Int32[])">
+        <member name="M:Au.AWnd.More.PrintMsg(System.Windows.Forms.Message@,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to the output.
             </summary>
-            <param name="m"></param>
-            <param name="ignore">Messages to skip. Can be null.</param>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,System.Int32[])">
+        <member name="M:Au.AWnd.More.PrintMsg(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to the output.
             </summary>
-            <param name="w"></param>
-            <param name="msg"></param>
-            <param name="wParam"></param>
-            <param name="lParam"></param>
-            <param name="ignore">Messages to skip. Can be null.</param>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(Au.Types.Native.MSG@,System.Int32[])">
+        <member name="M:Au.AWnd.More.PrintMsg(Au.Types.Native.MSG@,Au.Types.PrintMsgOptions,System.String)">
             <summary>
-            Writes a Windows message to the output.
+            Writes a Windows message as API <msdn>MSG</msdn> to the output.
             </summary>
-            <param name="m">API <msdn>MSG</msdn>.</param>
-            <param name="ignore">Messages to skip. Can be null.</param>
         </member>
         <member name="M:Au.AWnd.More.SetWindowSubclass(Au.AWnd,Au.Types.Native.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr)">
             <summary>API <msdn>SetWindowSubclass</msdn></summary>
@@ -22363,7 +22788,7 @@
             </summary>
             <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
             <param name="inScreen">
-            Get rectangle in screen coordinates; the same as <see cref="M:Au.AWnd.GetWindowAndClientRectInScreen(Au.Types.RECT@,Au.Types.RECT@)"/>.
+            Get rectangle in screen coordinates; like <see cref="M:Au.AWnd.GetWindowAndClientRectInScreen(Au.Types.RECT@,Au.Types.RECT@)"/> but faster.
             If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="P:Au.AWnd.ClientRect"/> or <see cref="M:Au.AWnd.GetClientSize(Au.Types.SIZE@)"/>.</param>
             <remarks>
             Supports <see cref="T:Au.ALastError"/>.
@@ -22767,7 +23192,7 @@
             If this window has an owner window, makes the owner window non-topmost too.
             This cannot be a control.
             </summary>
-            <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>
+            <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is its owner.</param>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
         <member name="P:Au.AWnd.IsTopmost">
@@ -22775,7 +23200,7 @@
             Returns true if this is a topmost (always-on-top) window.
             </summary>
         </member>
-        <member name="M:Au.AWnd.ZorderIsBefore(Au.AWnd)">
+        <member name="M:Au.AWnd.ZorderIsAbove(Au.AWnd)">
             <summary>
             Returns true if this window is above window w in the Z order.
             </summary>
@@ -22870,19 +23295,27 @@
         <member name="M:Au.AWnd.SetWindowLong(System.Int32,Au.Types.LPARAM)">
             <summary>
             Calls API <msdn>SetWindowLongPtr</msdn>.
+            Returns previous value. Throws exception if fails.
             </summary>
-            <remarks>
-            For index can be used constants from <see cref="T:Au.Types.Native.GWL"/>.
-            In 32-bit process actually calls <b>SetWindowLong</b>, because <b>SetWindowLongPtr</b> is unavailable.
-            </remarks>
+            <param name="index">A constant from <see cref="T:Au.Types.Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
+            <param name="newValue">New value.</param>
             <exception cref="T:Au.Types.AuWndException"/>
+        </member>
+        <member name="M:Au.AWnd.SetWindowLong(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM@)">
+            <summary>
+            Calls API <msdn>SetWindowLongPtr</msdn>.
+            Returns false if fails. Supports <see cref="T:Au.ALastError"/>.
+            </summary>
+            <param name="index">A constant from <see cref="T:Au.Types.Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
+            <param name="newValue">New value.</param>
+            <param name="oldValue">Receives previous value.</param>
         </member>
         <member name="P:Au.AWnd.ControlId">
             <summary>
             Gets or sets id of this control.
             The 'get' function supports <see cref="T:Au.ALastError"/>.
             </summary>
-            <exception cref="T:Au.Types.AuWndException">Failed (only 'set' function).</exception>
+            <exception cref="T:Au.Types.AuWndException">The 'set' function failed.</exception>
         </member>
         <member name="P:Au.AWnd.Prop">
             <summary>
@@ -22893,7 +23326,7 @@
             var w = AWnd.Find("* Explorer");
             w.Prop.Set("example", 5);
             Print(w.Prop["example"]);
-            Print(w.Prop); //shows all w properties
+            Print(w.Prop); //all w properties
             w.Prop.Remove("example"); //you should always remove window properties if don't want to see unrelated applications crashing after some time. And don't use many unique property names.
             ]]></code>
             </example>
@@ -24221,12 +24654,12 @@
             <summary>
             Gets or sets the owner window of this top-level window.
             </summary>
-            <exception cref="T:Au.Types.AuWndException">Failed (only the 'set' function).</exception>
+            <exception cref="T:Au.Types.AuWndException">The 'set' function failed.</exception>
             <remarks>
             A window that has an owner window is always on top of it.
             Don't call this for controls, they don't have an owner window.
             The 'get' function returns default(AWnd) if this window isn't owned or is invalid. Supports <see cref="T:Au.ALastError"/>.
-            The 'set' function can fail, eg if the owner's process has higher [](xref:uac) integrity level.
+            The 'set' function can fail, eg if the owner's process has higher [](xref:uac) integrity level or is a Store app.
             </remarks>
         </member>
         <member name="P:Au.AWnd.Window">
@@ -24278,16 +24711,18 @@
             If this is <see cref="P:Au.AWnd.GetWnd.Root"/>, returns true if there is no active window.
             </summary>
         </member>
-        <member name="M:Au.AWnd.SetTransparency(System.Boolean,System.Nullable{System.Double},System.Nullable{Au.Types.ColorInt})">
+        <member name="M:Au.AWnd.SetTransparency(System.Boolean,System.Nullable{System.Int32},System.Nullable{Au.Types.ColorInt})">
             <summary>
-            Sets transparency.
-            On Windows 7 works only with top-level windows, on newer OS also with controls.
+            Sets opacity and/or transparent color.
             </summary>
             <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
-            <param name="opacity">Opacity from 0.0 (completely transparent) to 1.0 (opaque). If null, sets default value (opaque).</param>
-            <param name="colorRGB">Make pixels painted with this color completely transparent. If null, sets default value (no transparent color). The alpha byte is not used.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">opacity is less than 0.0 or greater than 1.0.</exception>
+            <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if null. If less than 0 or greater than 255, makes 0 or 255.</param>
+            <param name="colorRGB">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
             <exception cref="T:Au.Types.AuWndException"/>
+            <remarks>
+            Uses API <msdn>SetLayeredWindowAttributes</msdn>.
+            On Windows 7 works only with top-level windows, on newer OS also with controls.
+            </remarks>
         </member>
         <member name="P:Au.AWnd.IsFullScreen">
             <summary>

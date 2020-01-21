@@ -263,8 +263,7 @@ namespace Au
 		{
 			while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
 				//AWnd.More.PrintMsg(m);
-				//if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return; }
-				if(m.message == Api.WM_QUIT) Thread.CurrentThread.Abort();
+				if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); break; }
 				Api.TranslateMessage(m);
 				Api.DispatchMessage(m);
 			}

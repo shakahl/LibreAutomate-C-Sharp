@@ -25,7 +25,7 @@ namespace Au.Util
 	/// <summary>
 	/// Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
 	/// </summary>
-	internal static unsafe class ThreadPoolSTA
+	internal static unsafe class ThreadPoolSTA_
 	{
 		/// <summary>
 		/// Work callback function parameter type.
@@ -84,7 +84,7 @@ namespace Au.Util
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(var work = Util.ThreadPoolSTA.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
+		/// using(var work = Util.ThreadPoolSTA_.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
 		/// 	work.Submit();
 		/// 	work.Wait();
 		/// }
@@ -160,7 +160,7 @@ namespace Au.Util
 			/// </summary>
 			public void Dispose()
 			{
-				if(_work == default) return; //this is a simple callback (ThreadPoolSTA.SubmitCallback()) or already disposed
+				if(_work == default) return; //this is a simple callback (ThreadPoolSTA_.SubmitCallback()) or already disposed
 				Cancel();
 				CloseThreadpoolWork(_work);
 				_work = default;
@@ -207,7 +207,7 @@ namespace Au.Util
 				}
 				catch(Exception e) { ADebug.Print(e); }
 				finally {
-					if(_work == default) _gc.Free(); //free now if this is a simple callback (ThreadPoolSTA.SubmitCallback()). Else Dispose() frees.
+					if(_work == default) _gc.Free(); //free now if this is a simple callback (ThreadPoolSTA_.SubmitCallback()). Else Dispose() frees.
 				}
 			}
 
@@ -217,7 +217,7 @@ namespace Au.Util
 			//}
 		}
 
-		static ThreadPoolSTA()
+		static ThreadPoolSTA_()
 		{
 			var pool = CreateThreadpool(default);
 			//SetThreadpoolThreadMinimum(pool, 2); //don't need this

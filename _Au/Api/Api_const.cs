@@ -333,32 +333,32 @@ namespace Au.Types
 
 		#region HT (hit-test)
 
-		internal const int HTVSCROLL = 7;
-		internal const int HTTRANSPARENT = -1;
-		internal const int HTTOPRIGHT = 14;
-		internal const int HTTOPLEFT = 13;
-		internal const int HTTOP = 12;
-		internal const int HTSYSMENU = 3;
-		internal const int HTSIZELAST = HTBOTTOMRIGHT;
-		internal const int HTSIZEFIRST = HTLEFT;
-		internal const int HTSIZE = 4;
-		internal const int HTRIGHT = 11;
-		internal const int HTOBJECT = 19;
-		internal const int HTNOWHERE = 0;
-		internal const int HTMINBUTTON = 8;
-		internal const int HTMENU = 5;
-		internal const int HTMAXBUTTON = 9;
-		internal const int HTLEFT = 10;
-		internal const int HTHSCROLL = 6;
-		internal const int HTHELP = 21;
 		internal const int HTERROR = -2;
-		internal const int HTCLOSE = 20;
+		internal const int HTTRANSPARENT = -1;
+		internal const int HTNOWHERE = 0;
 		internal const int HTCLIENT = 1;
 		internal const int HTCAPTION = 2;
-		internal const int HTBOTTOMRIGHT = 17;
-		internal const int HTBOTTOMLEFT = 16;
+		internal const int HTSYSMENU = 3;
+		internal const int HTSIZE = 4;
+		internal const int HTMENU = 5;
+		internal const int HTHSCROLL = 6;
+		internal const int HTVSCROLL = 7;
+		internal const int HTMINBUTTON = 8;
+		internal const int HTMAXBUTTON = 9;
+		internal const int HTLEFT = 10;
+		internal const int HTRIGHT = 11;
+		internal const int HTTOP = 12;
+		internal const int HTTOPLEFT = 13;
+		internal const int HTTOPRIGHT = 14;
 		internal const int HTBOTTOM = 15;
+		internal const int HTBOTTOMLEFT = 16;
+		internal const int HTBOTTOMRIGHT = 17;
 		internal const int HTBORDER = 18;
+		internal const int HTOBJECT = 19;
+		internal const int HTCLOSE = 20;
+		internal const int HTHELP = 21;
+		internal const int HTSIZEFIRST = HTLEFT;
+		internal const int HTSIZELAST = HTBOTTOMRIGHT;
 
 		#endregion
 

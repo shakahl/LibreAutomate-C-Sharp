@@ -500,9 +500,19 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 		case IPropertySymbol sy: //indexer
 			ap = sy.Parameters;
 			break;
-		case INamedTypeSymbol sy: //generic
-			for(int j = 0; j < sy.TypeParameters.Length; j++) {
-				_Param(sy.TypeParameters[j], j);
+		case INamedTypeSymbol sy:
+			if(sy.IsGenericType) {
+				var tp = sy.TypeParameters;
+				for(int j = 0; j < tp.Length; j++) {
+					_Param(sy.TypeParameters[j], j);
+				}
+			} else if(sy.IsTupleType) {
+				var te = sy.TupleElements;
+				for(int j = 0; j < te.Length; j++) {
+					_Param(te[j], j, true);
+				}
+			} else {
+				ADebug.Print(sy);
 			}
 			return;
 		default:
@@ -513,11 +523,12 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			_Param(ap[j], j);
 		}
 
-		void _Param(ISymbol p, int i)
+		void _Param(ISymbol p, int i, bool isField = false)
 		{
 			if(i > 0) b.Append(", ");
 			if(i == iSel) b.Append("<b>");
-			TaggedPartsToHtml(b, p.ToDisplayParts(s_parameterFormat));
+			TaggedPartsToHtml(b, p.ToDisplayParts(isField ? s_symbolWithoutParametersFormat : s_parameterFormat));
+			//info: s_symbolWithoutParametersFormat here probably is not the best, but it worked well with all tested tuple parameter types.
 			if(i == iSel) b.Append("</b>");
 		}
 	}

@@ -3,6 +3,8 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 
+using static Au.AStatic;
+
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 namespace Au.Types
@@ -716,14 +718,33 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ClientToScreen(AWnd hWnd, ref POINT lpPoint);
 
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(AWnd hWndFrom, AWnd hWndTo, ref POINT lpPoints, int cPoints = 1);
+		//internal static bool ClientToScreenIgnoreRtl(AWnd w, ref POINT p)
+		//{
+		//	if(!w.HasExStyle(WS_EX.LAYOUTRTL)) return ClientToScreen(w, ref p);
+		//	if(!GetClientRect(w, out var r) || !MapWindowPoints(w, default, ref r, out _)) return false;
+		//	p.Offset(r.left, r.top);
+		//	return true;
+		//}
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(AWnd hWndFrom, AWnd hWndTo, ref RECT lpPoints, int cPoints = 2);
+		static extern int MapWindowPoints(AWnd hWndFrom, AWnd hWndTo, void* lpPoints, int cPoints);
 
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int MapWindowPoints(AWnd hWndFrom, AWnd hWndTo, void* lpPoints, int cPoints);
+		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, void* points, int cPoints, out int ret)
+		{
+			ALastError.Clear();
+			ret = MapWindowPoints(wFrom, wTo, points, cPoints);
+			return ret != 0 ? true : ALastError.Code == 0;
+		}
+
+		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, ref RECT r, out int ret)
+		{
+			fixed(void* u = &r) return MapWindowPoints(wFrom, wTo, u, 2, out ret);
+		}
+
+		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, ref POINT p, out int ret)
+		{
+			fixed(void* u = &p) return MapWindowPoints(wFrom, wTo, u, 1, out ret);
+		}
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetGUIThreadInfo(int idThread, ref Native.GUITHREADINFO pgui);
@@ -1326,6 +1347,17 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern IntPtr GetSystemMenu(AWnd hWnd, bool bRevert);
 
+		[DllImport("user32.dll")]
+		internal static extern IntPtr CreatePopupMenu();
+
+		[DllImport("user32.dll")]
+		internal static extern bool DestroyMenu(IntPtr hMenu);
+
+		internal const uint TPM_RETURNCMD = 0x100;
+
+		[DllImport("user32.dll")]
+		internal static extern int TrackPopupMenuEx(IntPtr hMenu, uint uFlags, int x, int y, AWnd hwnd, IntPtr lptpm = default);
+
 		internal const uint MF_SEPARATOR = 0x800;
 
 		[DllImport("user32.dll", EntryPoint = "AppendMenuW")]
@@ -1374,6 +1406,15 @@ namespace Au.Types
 
 		[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
 		internal static extern int MessageBox(AWnd hWnd, string lpText, string lpCaption, uint uType);
+
+		internal struct LASTINPUTINFO
+		{
+			public int cbSize;
+			public int dwTime;
+		}
+
+		[DllImport("user32.dll")]
+		internal static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
 
 	}
 

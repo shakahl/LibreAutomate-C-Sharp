@@ -174,7 +174,7 @@ namespace Au
 			if(screenXY && !Api.ScreenToClient(w, ref p)) return default;
 
 			for(AWnd R = default; ;) {
-				AWnd t = _RealChildWindowFromPoint_RtlAware(w, p);
+				AWnd t = _RealChildWindowFromPoint(w, p);
 				if(directChild) return t;
 				if(t.Is0 || !w.MapClientToClientOf(t, ref p)) return R;
 				R = w = t;
@@ -182,7 +182,7 @@ namespace Au
 		}
 
 		//Returns direct child or default(AWnd).
-		static AWnd _RealChildWindowFromPoint_RtlAware(AWnd w, POINT p)
+		static AWnd _RealChildWindowFromPoint(AWnd w, POINT p)
 		{
 			if(w.HasExStyle(WS_EX.LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
 			AWnd R = Api.RealChildWindowFromPoint(w, p);

@@ -203,6 +203,7 @@ namespace Au.Types
 		public delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
 
 		/// <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
+		/// <remarks>The _X flags are undocumented.</remarks>
 		[Flags]
 		public enum SWP : uint
 		{
@@ -217,10 +218,14 @@ namespace Au.Types
 			NOCOPYBITS = 0x100,
 			NOOWNERZORDER = 0x200,
 			NOSENDCHANGING = 0x400,
+			_NOCLIENTSIZE = 0x800,
+			_NOCLIENTMOVE = 0x1000,
 			DEFERERASE = 0x2000,
 			ASYNCWINDOWPOS = 0x4000,
+			_STATECHANGED = 0x8000,
+
+			//the undocumented flags would break ToString() if not defined
 		}
-		internal const SWP LibSwpPublicMask = (SWP)0x67ff; //public flags. WM_WINDOWPOSCHANGING etc may also receive eg 0x8000, which breaks ToString. Used for Print(p->flags&Native.LibSwpPublicMask);
 
 		/// <summary>
 		/// Special window handle values.
@@ -251,18 +256,12 @@ namespace Au.Types
 			public const int EXSTYLE = -20;
 			//info: also there are GWLP_, but their values are the same.
 
-			//#define DWLP_MSGRESULT  0
-			//#define DWLP_DLGPROC    DWLP_MSGRESULT + sizeof(LRESULT)
-			//#define DWLP_USER       DWLP_DLGPROC + sizeof(DLGPROC)
-
-			public const int DWL_MSGRESULT = 0;
-			public const int DWL_DLGPROC_32 = 4;
-			public const int DWL_DLGPROC_64 = 8;
-			public const int DWL_USER_32 = 8;
-			public const int DWL_USER_64 = 16;
-
-			public static int DWLP_DLGPROC => IntPtr.Size;
-			public static int DWLP_USER => IntPtr.Size * 2;
+			public static class DWL
+			{
+				public static readonly int MSGRESULT = 0;
+				public static readonly int DLGPROC = IntPtr.Size;
+				public static readonly int USER = IntPtr.Size * 2;
+			}
 		}
 
 		/// <summary>

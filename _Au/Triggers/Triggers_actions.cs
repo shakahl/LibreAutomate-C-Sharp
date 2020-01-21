@@ -215,8 +215,7 @@ namespace Au.Triggers
 					opt.after?.Invoke(baArgs);
 				}
 				catch(Exception e2) {
-					if(e2 is ThreadAbortException) Thread.ResetAbort(); //FUTURE: don't reset if eg thrown to end task process softly
-					else Print(e2);
+					Print(e2);
 				}
 				finally {
 					if(opt.thread < 0 && opt.ifRunning == 0) _d.TryRemove(trigger, out _);

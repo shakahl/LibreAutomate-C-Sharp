@@ -25,6 +25,7 @@ namespace Au.Types
 	{
 		//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
 		bool PaintedOnce { get; }
+		List<Util.IconsAsync.Item> SubmenuAsyncIcons => null;
 	}
 
 	/// <summary>
@@ -60,7 +61,7 @@ namespace Au.Types
 		/// </summary>
 		internal void OnClick_(object sender, EventArgs args = null)
 		{
-			if(_inRightClick) return; //disable this item while showing a context menu for this item
+			if(_inRightClick) return;
 			var x = _itemData[sender];
 
 			switch(x.threadOpt) {
@@ -125,10 +126,12 @@ namespace Au.Types
 		public ToolStripItem LastItem { get; protected set; }
 
 		/// <summary>
-		/// Occurs when an item is added.
-		/// Allows to set item properties in single place instead of after each 'add item' code line.
-		/// For example, the event handler can set item properties common to all items, or set item properties encoded in item text.
+		/// Occurs when added a non-separator item.
 		/// </summary>
+		/// <remarks>
+		/// Allows to set item properties in single place instead of after each 'add item' code line.
+		/// For example, the event handler can set item properties common to all items.
+		/// </remarks>
 		public event Action<ToolStripItem> ItemAdded;
 
 		/// <summary>
@@ -156,9 +159,9 @@ namespace Au.Types
 			}
 		}
 
-		//Sets icon and onClick delegate.
-		//Sets LastItem.
-		//Calls ItemAdded event handlers.
+		/// <summary>
+		/// Sets onClick delegate, image and some properties.
+		/// </summary>
 		private protected void _SetItemProp(bool isTB, ToolStripItem item, Action<MTClickArgs> onClick, object icon, int sourceLine)
 		{
 			_itemData[item] = new _ItemData {
@@ -191,9 +194,15 @@ namespace Au.Types
 				catch(Exception e) { ADebug.Print(e.Message); } //ToBitmap() may throw
 			}
 #endif
-			LastItem = item;
+		}
 
-			ItemAdded?.Invoke(item);
+		/// <summary>
+		/// Sets LastItem and calls ItemAdded event handlers.
+		/// </summary>
+		private protected void _OnItemAdded(ToolStripItem item)
+		{
+			LastItem = item;
+			var e = ItemAdded; if(e != null && !(item is ToolStripSeparator)) e(item);
 		}
 
 		/// <summary>
@@ -216,18 +225,15 @@ namespace Au.Types
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
 				if(_AsyncIcons == null) _AsyncIcons = new Util.IconsAsync(); //used by submenus too
-				var submenu = !isTB ? (owner as AMenu.ToolStripDropDownMenu_) : null;
-				bool isFirstImage = false;
+				var submenuIcons = (owner as _IAuToolStrip).SubmenuAsyncIcons;
+				bool isFirstImage;
 
-				if(submenu == null) {
-					if(_AsyncIcons.Count == 0) isFirstImage = true;
+				if(submenuIcons == null) {
+					isFirstImage = _AsyncIcons.Count == 0;
 					_AsyncIcons.Add(s, item);
 				} else {
-					if(submenu.AsyncIcons == null) {
-						submenu.AsyncIcons = new List<Util.IconsAsync.Item>();
-						isFirstImage = true;
-					}
-					submenu.AsyncIcons.Add(new Util.IconsAsync.Item(s, item));
+					isFirstImage = submenuIcons.Count == 0;
+					submenuIcons.Add(new Util.IconsAsync.Item(s, item));
 				}
 
 				//Reserve space for image.
@@ -418,6 +424,8 @@ namespace Au.Types
 			Api.AllowSetForegroundWindow(wmsg.ProcessId);
 			AWnd.More.CopyDataStruct.SendString(wmsg, 4, _sourceFile, GetItemSourceLine_(item));
 		}
+
+		internal static bool CanGoToEdit_ => !ATask.WndMsg.Is0;
 
 		//internal void GoToEdit_(bool isTB, ToolStripItem tsi)
 		//{

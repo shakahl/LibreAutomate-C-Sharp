@@ -127,7 +127,7 @@ namespace Au.Util
 #if true
 			void _GetIconAsync(Result state)
 			{
-				Util.ThreadPoolSTA.SubmitCallback(state, d =>
+				Util.ThreadPoolSTA_.SubmitCallback(state, d =>
 				{ //this code runs in a thread pool thread
 						if(_canceled) {
 						d.completionCallback = null;

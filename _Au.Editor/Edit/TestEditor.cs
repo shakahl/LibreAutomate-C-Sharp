@@ -169,6 +169,24 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+		if(AKeys.IsShift) {
+			AWnd.Find("*Notepad").Activate();
+			ATime.SleepDoEvents(100);
+		}
+
+		var m = new AMenu("name");
+		m["A"] = o => Print(o);
+		m.Add(new ToolStripTextBox());
+		var cb = new ToolStripComboBox();
+		for(int i=0;i<60;i++) cb.Items.Add("aaa");
+		m.Add(cb);
+		m["B"] = o => Print(o);
+		using(m.Submenu("sub")) {
+			m["C"] = o => Print(o);
+			m.Add(new ToolStripTextBox());
+		}
+		m.Show(Program.MainForm);
+
 		//var task = "_Au.Editor";
 		//bool exists = WinTaskScheduler.TaskExists("Au", task);
 		//Print(exists);
@@ -184,9 +202,6 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		var doc = Panels.Editor.ZActiveDoc;
 		var Z = doc.Z;
 		var s = doc.Text;
-
-		//Z.StyleFont(STYLE_DEFAULT, "Consolas", s.ToInt()); //somehow Scintilla actually uses 9 if 10, 8 if 9 (but sometimes 9), 11 if 11 (then how to set 10?)
-		//Z.StyleClearAll();
 
 
 		//z.Select(false, 300, 295);

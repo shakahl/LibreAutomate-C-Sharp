@@ -15,7 +15,6 @@ using System.Drawing;
 //using System.Linq;
 
 using static Au.AStatic;
-using System.Diagnostics.CodeAnalysis;
 
 namespace Au.Types
 {
@@ -529,6 +528,10 @@ namespace Au.Types
 		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
 		public override int GetHashCode() => color;
 		public override string ToString() => "#" + color.ToString("X8");
+
+		//property for JSON serialization
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public int _C { get => color; set { color = value; } }
 #pragma warning restore 1591 //XML doc
 
 		/// <summary>

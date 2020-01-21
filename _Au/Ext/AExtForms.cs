@@ -32,16 +32,19 @@ namespace Au
 		#region Control
 
 		/// <summary>
-		/// If control handle still not created, creates. Does not create child control handles.
-		/// Like <see cref="Control.CreateHandle"/>, which is protected.
-		/// Unlike <see cref="Control.CreateControl"/>, creates handle even if invisible.
+		/// Gets the window handle as <see cref="AWnd"/>.
 		/// </summary>
-		public static void CreateHandleNow(this Control t)
-		{
-			if(!t.IsHandleCreated) {
-				_ = t.Handle;
-			}
-		}
+		/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be null.</param>
+		/// <param name="create">
+		/// Create handle if still not created. Default false (return default(AWnd)).
+		/// Unlike <see cref="Control.CreateControl"/>, creates handle even if invisible. Does not create child control handles.
+		/// </param>
+		/// <remarks>
+		/// Should be called in control's thread. Calls <see cref="Control.IsHandleCreated"/> and <see cref="Control.Handle"/>.
+		/// </remarks>
+		public static AWnd Hwnd(this Control t, bool create = false)
+			=> create || t.IsHandleCreated ? new AWnd(t.Handle) : default;
+		//TODO: use in most places instead of the (AWnd) cast. Except where null allowed.
 
 		/// <summary>
 		/// Creates handle of this control/form and descendant controls.
@@ -65,7 +68,7 @@ namespace Au
 		//{
 		//	//Print(new string(' ', level) + t.ToString());
 		//	Debug.Assert(!t.IsHandleCreated); if(t.IsHandleCreated) throw new InvalidOperationException("Control handle already created: " + t);
-		//	t.CreateHandleNow();
+		//	t.Hwnd(create: true);
 		//	if(t.HasChildren) {
 		//		var cc = t.Controls;
 		//		var a = new Control[cc.Count]; cc.CopyTo(a, 0);

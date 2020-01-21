@@ -389,7 +389,7 @@ namespace Au.Controls
 					  if(!canDock && ModifierKeys.HasFlag(Keys.Alt)) {
 						  canDock = true;
 						  //this.AllowTransparency = true; this.Opacity = 0.5; //exception
-						  ((AWnd)this).SetTransparency(true, 0.5);
+						  ((AWnd)this).SetTransparency(true, 128);
 						  _dockIndic = new _DockIndicator(_manager, this);
 						  _dockIndic.Show(this);
 					  }

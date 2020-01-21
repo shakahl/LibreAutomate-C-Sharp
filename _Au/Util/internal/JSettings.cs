@@ -1,3 +1,5 @@
+#define TRACE_JS
+
 using System;
 using System.Collections.Generic;
 using System.Collections.Concurrent;
@@ -42,28 +44,39 @@ namespace Au.Util
 		protected bool _loaded;
 		protected bool _save;
 		EventHandler _onExit;
-		[ThreadStatic] static List<JSettings> t_list;
+		[ThreadStatic] static List<JSettings> t_list; //TODO: try not ThreadStatic, and use the SystemEvents thread to save.
 
 		/// <summary>
 		/// Loads JSON file and deserializes to new object of type T.
 		/// Sets to save automatically whenever a property changed.
-		/// Returns new empty object if file does not exist or failed to load or parse (invalid JSON). If failed, prints error.
+		/// Returns new empty object if file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, prints error.
 		/// </summary>
-		protected static T _Load<T>(string file) where T : JSettings => (T)_Load(file, typeof(T));
+		/// <param name="file">Full path of .json file.</param>
+		/// <param name="useDefault">Use default settings, don't load from file. Delete file if exists.</param>
+		protected static T _Load<T>(string file, bool useDefault = false) where T : JSettings => (T)_Load(file, typeof(T), useDefault);
 
-		static JSettings _Load(string file, Type type)
+		static JSettings _Load(string file, Type type, bool useDefault)
 		{
 			JSettings R = null;
 			if(AFile.ExistsAsAny(file)) {
 				try {
-					var b = AFile.LoadBytes(file);
-					var opt = new JsonSerializerOptions { IgnoreNullValues = true, AllowTrailingCommas = true };
-					R = JsonSerializer.Deserialize(b, type, opt) as JSettings;
+					if(useDefault) {
+						AFile.Delete(file);
+					} else {
+						var b = AFile.LoadBytes(file);
+						var opt = new JsonSerializerOptions { IgnoreNullValues = true, AllowTrailingCommas = true };
+						R = JsonSerializer.Deserialize(b, type, opt) as JSettings;
+					}
 				}
 				catch(Exception ex) {
-					//ADialog.ShowWarning("Failed to load settings", $"Will backup '{file}' and use default settings.", expandedText: ex.ToStringWithoutStack());
-					Print($"Failed to load settings from '{file}'. Will use default settings. {ex.ToStringWithoutStack()}");
-					try { AFile.Rename(file, file + ".backup", IfExists.Delete); } catch { }
+					string es = ex.ToStringWithoutStack();
+					if(useDefault) {
+						Print($"Failed to delete settings file '{file}'. {es}");
+					} else {
+						//ADialog.ShowWarning("Failed to load settings", $"Will backup '{file}' and use default settings.", expandedText: ex.ToStringWithoutStack());
+						Print($"Failed to load settings from '{file}'. Will use default settings. {es}");
+						try { AFile.Rename(file, file + ".backup", IfExists.Delete); } catch { }
+					}
 				}
 			}
 			R ??= Activator.CreateInstance(type) as JSettings;
@@ -73,7 +86,7 @@ namespace Au.Util
 			//autosave
 			if(t_list == null) {
 				t_list = new List<JSettings>();
-				ATimer.Every(5000, _ => {
+				ATimer.Every(3000, _ => {
 					foreach(var v in t_list) v.SaveIfNeed();
 				});
 			}
@@ -95,8 +108,14 @@ namespace Au.Util
 		}
 
 		/// <summary>
+		/// <c>_save || AFile.ExistsAsAny(_file)</c>
+		/// </summary>
+		[JsonIgnore]
+		public bool Modified  => _save || AFile.ExistsAsAny(_file);
+
+		/// <summary>
 		/// Saves now if need.
-		/// Don't need to call explicitly. In UI thread called automatically every 5 s. Also automatically called on process exit and by <b>Dispose</b>.
+		/// Don't need to call explicitly. In UI thread called automatically every 3 s. Also automatically called on process exit and by <b>Dispose</b>.
 		/// </summary>
 		public void SaveIfNeed()
 		{
@@ -118,7 +137,14 @@ namespace Au.Util
 		/// <summary>
 		/// Call this when changed an array element etc directly without assigning the array etc to a property. Else changes may be not saved.
 		/// </summary>
-		public void SaveLater() => _save = true;
+		public void SaveLater()
+		{
+#if TRACE_JS
+			//if(!_save)
+				PrintWarning("JSettings.SaveLater", 1, "<>Trace: ");
+#endif
+			_save = true;
+		}
 
 		/// <summary>
 		/// Sets a string property value and will save later if need.
@@ -132,7 +158,7 @@ namespace Au.Util
 				prop = value;
 			} else if(value != prop) {
 				prop = value;
-				_save = true;
+				SaveLater();
 			}
 		}
 
@@ -148,7 +174,7 @@ namespace Au.Util
 				prop = value;
 			} else if(!value.Equals(prop)) { //speed: usually same or faster than Set2
 				prop = value;
-				_save = true;
+				SaveLater();
 			}
 		}
 
@@ -175,7 +201,7 @@ namespace Au.Util
 				return;
 				g1:
 				prop = value;
-				_save = true;
+				SaveLater();
 			}
 		}
 
@@ -189,9 +215,7 @@ namespace Au.Util
 		protected void SetNoCmp<T>(ref T prop, T value)
 		{
 			prop = value;
-			_save = _loaded;
+			if(_loaded) SaveLater();
 		}
-
-		//string _Get(ref string prop, Func<string> defValue) { if(prop == null) { prop = defValue(); _save = true; } return prop; }
 	}
 }

@@ -456,6 +456,7 @@ namespace Au.Triggers
 						int ec = ALastError.Code;
 						if(ec == Api.ERROR_IO_PENDING) {
 							//note: while waiting here, can be called acc hook proc, timer etc (any posted and sent messages).
+							//TODO: flawed. Eg hook timeout on Shift+drag a toolbar.
 							if(0 != _Wait(ha, 2)) {
 								Api.CancelIo(pipe);
 								break;

@@ -271,7 +271,8 @@ namespace Au
 				for(long timePrev = 0; ;) {
 					if(stopVar != null && stopVar.waitVar) return nHandles + 1;
 
-					int timeSlice = (all && doEvents) ? 15 : 300; //support Thread.Abort: call API in loop with small timeout. //TODO: test
+					int timeSlice = (all && doEvents) ? 15 : 300; //support Thread.Abort: call API in loop with small timeout.
+					//TODO: test
 					if(timeMS > 0) {
 						long timeNow = ATime.WinMillisecondsWithoutSleep;
 						if(timePrev > 0) timeMS -= timeNow - timePrev;
@@ -306,8 +307,7 @@ namespace Au
 					if(callback1(ref m)) { msgCallback = null; R = true; }
 					if(m.message == 0) continue;
 				}
-				//if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return false; }
-				if(m.message == Api.WM_QUIT) Thread.CurrentThread.Abort();
+				if(m.message == Api.WM_QUIT) { Api.PostQuitMessage((int)m.wParam); return false; }
 				Api.TranslateMessage(m);
 				Api.DispatchMessage(m);
 			}

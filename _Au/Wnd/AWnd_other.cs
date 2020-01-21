@@ -22,35 +22,28 @@ namespace Au
 	public partial struct AWnd
 	{
 		/// <summary>
-		/// Sets transparency.
-		/// On Windows 7 works only with top-level windows, on newer OS also with controls.
+		/// Sets opacity and/or transparent color.
 		/// </summary>
 		/// <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
-		/// <param name="opacity">Opacity from 0.0 (completely transparent) to 1.0 (opaque). If null, sets default value (opaque).</param>
-		/// <param name="colorRGB">Make pixels painted with this color completely transparent. If null, sets default value (no transparent color). The alpha byte is not used.</param>
-		/// <exception cref="ArgumentOutOfRangeException">opacity is less than 0.0 or greater than 1.0.</exception>
+		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if null. If less than 0 or greater than 255, makes 0 or 255.</param>
+		/// <param name="colorRGB">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
 		/// <exception cref="AuWndException"/>
-		public void SetTransparency(bool allowTransparency, double? opacity = null, ColorInt? colorRGB = null)
+		/// <remarks>
+		/// Uses API <msdn>SetLayeredWindowAttributes</msdn>.
+		/// On Windows 7 works only with top-level windows, on newer OS also with controls.
+		/// </remarks>
+		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorRGB = null)
 		{
 			var est = ExStyle;
 			bool layered = (est & WS_EX.LAYERED) != 0;
 
 			if(allowTransparency) {
+				uint col = 0, f = 0; byte op = 0;
+				if(colorRGB != null) { f |= 1; col = (uint)colorRGB.GetValueOrDefault().ToBGR(); }
+				if(opacity != null) { f |= 2; op = (byte)AMath.MinMax(opacity.GetValueOrDefault(), 0, 255); }
+
 				if(!layered) SetExStyle(est | WS_EX.LAYERED);
-
-				uint col = 0, op = 0, f = 0;
-				if(colorRGB != null) {
-					f |= 1;
-					col = (uint)colorRGB.GetValueOrDefault().ToBGR();
-				}
-				if(opacity != null) {
-					f |= 2;
-					var d = opacity.GetValueOrDefault();
-					if(d < 0.0 || d > 1.0) throw new ArgumentOutOfRangeException(nameof(opacity));
-					op = (uint)(d * 255);
-				}
-
-				if(!Api.SetLayeredWindowAttributes(this, col, (byte)op, f)) ThrowUseNative();
+				if(!Api.SetLayeredWindowAttributes(this, col, op, f)) ThrowUseNative();
 			} else if(layered) {
 				//if(!Api.SetLayeredWindowAttributes(this, 0, 0, 0)) ThrowUseNative();
 				SetExStyle(est & ~WS_EX.LAYERED);
@@ -60,10 +53,8 @@ namespace Au
 		/// <summary>
 		/// Returns true if this is a full-screen window and not desktop.
 		/// </summary>
-		public bool IsFullScreen
-		{
-			get
-			{
+		public bool IsFullScreen {
+			get {
 				if(Is0) return false;
 
 				//is client rect equal to window rect (no border)?
@@ -97,16 +88,14 @@ namespace Au
 		/// <summary>
 		/// Returns true if this belongs to GetShellWindow's thread (usually it is the desktop window).
 		/// </summary>
-		internal bool LibIsOfShellThread
-		{
+		internal bool LibIsOfShellThread {
 			get => 1 == __isShellWindow.IsShellWindow(this);
 		}
 
 		/// <summary>
 		/// Returns true if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
 		/// </summary>
-		internal bool LibIsOfShellProcess
-		{
+		internal bool LibIsOfShellProcess {
 			get => 0 != __isShellWindow.IsShellWindow(this);
 		}
 
@@ -139,10 +128,8 @@ namespace Au
 		/// On Windows 7 there are no Metro style windows.
 		/// </summary>
 		/// <seealso cref="More.GetWindowsStoreAppId"/>
-		public bool IsWindows8MetroStyle
-		{
-			get
-			{
+		public bool IsWindows8MetroStyle {
+			get {
 				if(!AVersion.MinWin8) return false;
 				if(!HasExStyle(WS_EX.TOPMOST | WS_EX.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
 				if(ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
@@ -156,10 +143,8 @@ namespace Au
 		/// Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
 		/// </summary>
 		/// <seealso cref="More.GetWindowsStoreAppId"/>
-		public int IsWindows10StoreApp
-		{
-			get
-			{
+		public int IsWindows10StoreApp {
+			get {
 				if(!AVersion.MinWin10) return 0;
 				if(!HasExStyle(WS_EX.NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");

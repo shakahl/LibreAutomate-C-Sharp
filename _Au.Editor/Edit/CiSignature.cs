@@ -189,9 +189,12 @@ class CiSignature
 				var sym = kk.Symbol;
 				using var li = new CiHtml.HtmlListItem(b, i == iSel);
 				if(i != iSel) b.AppendFormat("<a href='^{0}'>", i); else currentItem = sym;
-				CiHtml.SymbolWithoutParametersToHtml(b, sym);
+				if(!Empty(sym.Name)) CiHtml.SymbolWithoutParametersToHtml(b, sym); //empty name if tuple
 				string b1 = "(", b2 = ")";
-				switch(sym.Kind) { case SymbolKind.Property: b1 = "["; b2 = "]"; break; case SymbolKind.NamedType: b1 = "&lt;"; b2 = "&gt;"; break; }
+				switch(sym) {
+				case IPropertySymbol _: b1 = "["; b2 = "]"; break;
+				case INamedTypeSymbol ints when ints.IsGenericType: b1 = "&lt;"; b2 = "&gt;"; break;
+				}
 				b.Append(b1);
 				int iArg = r.ArgumentIndex, lastParam = k.Parameters.Length - 1;
 				int selParam = iArg <= lastParam ? iArg : (k.IsVariadic ? lastParam : -1);
@@ -221,7 +224,7 @@ class CiSignature
 			}
 		}
 
-		if(currentParameter != null) {
+		if(currentParameter != null && !Empty(currentParameter.Name)) { //if tuple, Name is "" and then would be exception
 			b.Append("<p class='parameter'><b>").Append(currentParameter.Name).Append(":</b> &nbsp;");
 			CiHtml.TaggedPartsToHtml(b, currentParameter.DocumentationFactory?.Invoke(default));
 			b.Append("</p>");

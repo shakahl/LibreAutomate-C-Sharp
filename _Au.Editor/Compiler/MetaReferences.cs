@@ -128,7 +128,7 @@ namespace Au.Compiler
 		}
 
 		static List<_MR> s_cache = new List<_MR>();
-		static Timer s_timer;
+		static Timer s_timer; //SHOULDDO: ATimer. Previously Timer used less CPU, but now several times more. Maybe in Core.
 		static bool s_isTimer;
 
 		/// <summary>

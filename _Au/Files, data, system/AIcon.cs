@@ -265,7 +265,7 @@ namespace Au
 					R = _GetShellIcon2(usePidl, pidl2, size);
 				} else {
 					//tested: switching thread does not make slower. The speed depends mostly on locking, because then thread pool threads must wait.
-					using var work = ThreadPoolSTA.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); });
+					using var work = ThreadPoolSTA_.CreateWork(null, o => { R = _GetShellIcon2(usePidl, pidl2, size); });
 					work.Submit();
 					work.Wait();
 				}

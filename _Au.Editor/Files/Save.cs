@@ -198,7 +198,7 @@ partial class FilesModel
 		//Call LoadState when control handles created but form still invisible. Because:
 		//	1. _control does not update scrollbars if folders expanded before creating handle.
 		//	2. SciControl handle must be created because _SetCurrentFile sets its text etc.
-		_control.CreateHandleNow(); //not created if the panel is invisible
+		_control.Hwnd(create: true); //not created if the panel is invisible
 
 		if(DB == null) return;
 		try {

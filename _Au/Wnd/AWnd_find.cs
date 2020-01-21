@@ -923,6 +923,9 @@ namespace Au.Types
 		/// <summary>Thread id.</summary>
 		public static WF3 Thread(int threadId) => new WF3((uint)threadId);
 
+		/// <summary>Thread id of this thread.</summary>
+		public static WF3 ThisThread => new WF3((uint)AThread.NativeId);
+
 		/// <summary>Owner window.</summary>
 		public static WF3 Owner(AnyWnd ownerWindow) => new WF3(ownerWindow);
 

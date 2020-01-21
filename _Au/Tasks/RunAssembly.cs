@@ -46,7 +46,6 @@ namespace Au
 			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
 			if(asm == null) {
 #if true
-#if true
 				//var p1 = APerf.Create();
 				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
 				//SHOULDDO: try to unload. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
@@ -68,28 +67,6 @@ namespace Au
 					}
 				}
 				//p1.NW();
-#else
-				//var p1 = APerf.Create();
-				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
-				//p1.Next();
-				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
-					//p1.Next();
-					if(pdbOffset > 0) {
-						var b = new byte[pdbOffset];
-						stream.Read(b, 0, b.Length);
-						using var msAsm = new MemoryStream(b);
-						b = new byte[stream.Length - pdbOffset];
-						stream.Read(b, 0, b.Length);
-						using var msDeb = new MemoryStream(b);
-						//p1.Next('f');
-						asm = alc.LoadFromStream(msAsm, msDeb); //TODO: cannot load multiple versions of an editorExtension assembly
-						//p1.Next();
-					} else {
-						asm = alc.LoadFromStream(stream);
-					}
-				}
-				//p1.NW();
-#endif
 				//APerf.Next('a');
 
 				if(fullPathRefs != null) {

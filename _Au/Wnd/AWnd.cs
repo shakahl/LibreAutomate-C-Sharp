@@ -79,7 +79,7 @@ namespace Au
 
 #pragma warning disable 1591 //XML doc
 		AWnd(void* hwnd) { _h = hwnd; }
-		AWnd(IntPtr hwnd) { _h = (void*)hwnd; }
+		internal AWnd(IntPtr hwnd) { _h = (void*)hwnd; }
 
 		//note: don't need implicit conversions. It creates more problems than is useful.
 
@@ -98,9 +98,12 @@ namespace Au
 		/// <summary>
 		/// Gets the window handle as AWnd from a System.Windows.Forms.Control (or Form etc) variable.
 		/// Returns default(AWnd) if w is null or the handle is still not created.
-		/// Should be called in c thread. Calls <see cref="System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="System.Windows.Forms.Control.Handle"/>.
 		/// </summary>
-		public static explicit operator AWnd(System.Windows.Forms.Control c) => new AWnd(c == null || !c.IsHandleCreated ? default : c.Handle);
+		/// <remarks>
+		/// Like <see cref="AExtForms.Hwnd"/>, but does not throw exception if null.
+		/// Should be called in control's thread. Calls <see cref="System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="System.Windows.Forms.Control.Handle"/>.
+		/// </remarks>
+		public static explicit operator AWnd(System.Windows.Forms.Control c) => c == null || !c.IsHandleCreated ? default : new AWnd(c.Handle);
 
 		/// <summary>
 		/// Gets the window handle as AWnd from a System.Windows.Window variable (WPF window).
@@ -274,7 +277,7 @@ namespace Au
 		/// Calls API <msdn>PostMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <seealso cref="More.PostThreadMessage(int, LPARAM, LPARAM)"/>
+		/// <seealso cref="More.PostThreadMessage(int, int, LPARAM, LPARAM)"/>
 		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default)
 		{
 			Debug.Assert(!Is0);
@@ -284,19 +287,9 @@ namespace Au
 		public static partial class More
 		{
 			/// <summary>
-			/// Posts a message to the message queue of this thread.
-			/// Calls API <msdn>PostMessage</msdn> with default(AWnd). 
-			/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
-			/// </summary>
-			public static bool PostThreadMessage(int message, LPARAM wParam = default, LPARAM lParam = default)
-			{
-				return Api.PostMessage(default, message, wParam, lParam);
-			}
-
-			/// <summary>
-			/// Posts a message to the message queue of the specified thread.
+			/// Posts a message to the message queue of the specified thread. Of this thread if <i>threadId</i> is 0.
 			/// Calls API <msdn>PostThreadMessage</msdn>. 
-			/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
+			/// Returns false if failed. Supports <see cref="ALastError"/>.
 			/// </summary>
 			public static bool PostThreadMessage(int threadId, int message, LPARAM wParam = default, LPARAM lParam = default)
 			{
@@ -1039,10 +1032,10 @@ namespace Au
 			/// </summary>
 			public static bool WaitForAnActiveWindow()
 			{
-				for(int i = 0; i < 32; i++) {
+				for(int i = 1; i < 32; i++) {
 					ATime.DoEvents();
 					if(!Active.Is0) return true;
-					Thread.Sleep(15); //SHOULDDO: SleepDoEvents, or WaitForCallback
+					ATime.Sleep(i);
 				}
 				return false;
 				//Call this after showing a dialog API.
@@ -1330,17 +1323,22 @@ namespace Au
 		/// </summary>
 		/// <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
 		/// <param name="inScreen">
-		/// Get rectangle in screen coordinates; the same as <see cref="GetWindowAndClientRectInScreen"/>.
+		/// Get rectangle in screen coordinates; like <see cref="GetWindowAndClientRectInScreen"/> but faster.
 		/// If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="ClientRect"/> or <see cref="GetClientSize"/>.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
 		public bool GetClientRect(out RECT r, bool inScreen = false)
 		{
+#if true
+			if(Api.GetClientRect(this, out r) && (!inScreen || Api.MapWindowPoints(this, default, ref r, out _))) return true;
+			r = default; return false;
+#else //>= 2 times slower
 			if(inScreen) return GetWindowAndClientRectInScreen(out _, out r);
 			if(Api.GetClientRect(this, out r)) return true;
 			r = default;
 			return false;
+#endif
 		}
 
 		/// <summary>
@@ -1488,62 +1486,37 @@ namespace Au
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapClientToClientOf(AWnd w, ref RECT r)
-		{
-			fixed(void* t = &r) { return _MapWindowPoints(this, w, t, 2); }
-		}
+		public bool MapClientToClientOf(AWnd w, ref RECT r) => Api.MapWindowPoints(this, w, ref r, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the client area of window w.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapClientToClientOf(AWnd w, ref POINT p)
-		{
-			fixed(void* t = &p) { return _MapWindowPoints(this, w, t, 1); }
-		}
+		public bool MapClientToClientOf(AWnd w, ref POINT p) => Api.MapWindowPoints(this, w, ref p, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapClientToScreen(ref RECT r)
-		{
-			return MapClientToClientOf(default, ref r);
-		}
+		public bool MapClientToScreen(ref RECT r) => MapClientToClientOf(default, ref r);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapClientToScreen(ref POINT p)
-		{
-			return Api.ClientToScreen(this, ref p);
-		}
+		public bool MapClientToScreen(ref POINT p) => Api.ClientToScreen(this, ref p);
 
 		/// <summary>
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapScreenToClient(ref RECT r)
-		{
-			fixed(void* t = &r) { return _MapWindowPoints(default, this, t, 2); }
-		}
+		public bool MapScreenToClient(ref RECT r) => Api.MapWindowPoints(default, this, ref r, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the screen to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapScreenToClient(ref POINT p)
-		{
-			return Api.ScreenToClient(this, ref p);
-		}
-
-		static bool _MapWindowPoints(AWnd wFrom, AWnd wTo, void* t, int cPoints)
-		{
-			ALastError.Clear();
-			if(Api.MapWindowPoints(wFrom, wTo, t, cPoints) != 0) return true;
-			return ALastError.Code == 0;
-		}
+		public bool MapScreenToClient(ref POINT p) => Api.ScreenToClient(this, ref p);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
@@ -2102,7 +2075,7 @@ namespace Au
 		/// If this window has an owner window, makes the owner window non-topmost too.
 		/// This cannot be a control.
 		/// </summary>
-		/// <param name="afterActiveWindow">Also place this window after the active nontopmost window in the Z order, unless the active window is its owner.</param>
+		/// <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is its owner.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool ZorderNoTopmost(bool afterActiveWindow = false)
 		{
@@ -2146,7 +2119,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this window is above window w in the Z order.
 		/// </summary>
-		public bool ZorderIsBefore(AWnd w)
+		public bool ZorderIsAbove(AWnd w)
 		{
 			if(w.Is0) return false;
 			for(AWnd t = this; !t.Is0;) {
@@ -2286,25 +2259,36 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>SetWindowLongPtr</msdn>.
+		/// Returns previous value. Throws exception if fails.
 		/// </summary>
-		/// <remarks>
-		/// For index can be used constants from <see cref="Native.GWL"/>.
-		/// In 32-bit process actually calls <b>SetWindowLong</b>, because <b>SetWindowLongPtr</b> is unavailable.
-		/// </remarks>
+		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
+		/// <param name="newValue">New value.</param>
 		/// <exception cref="AuWndException"/>
 		public LPARAM SetWindowLong(int index, LPARAM newValue)
 		{
+			if(!SetWindowLong(index, newValue, out var oldValue)) ThrowUseNative();
+			return oldValue;
+		}
+
+		/// <summary>
+		/// Calls API <msdn>SetWindowLongPtr</msdn>.
+		/// Returns false if fails. Supports <see cref="ALastError"/>.
+		/// </summary>
+		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
+		/// <param name="newValue">New value.</param>
+		/// <param name="oldValue">Receives previous value.</param>
+		public bool SetWindowLong(int index, LPARAM newValue, out LPARAM oldValue)
+		{
 			ALastError.Clear();
-			LPARAM R = Api.SetWindowLongPtr(this, index, newValue);
-			if(R == 0 && ALastError.Code != 0) ThrowUseNative();
-			return R;
+			oldValue = Api.SetWindowLongPtr(this, index, newValue);
+			return oldValue != 0 || ALastError.Code == 0;
 		}
 
 		/// <summary>
 		/// Gets or sets id of this control.
 		/// The 'get' function supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <exception cref="AuWndException">Failed (only 'set' function).</exception>
+		/// <exception cref="AuWndException">The 'set' function failed.</exception>
 		public int ControlId {
 			get => Api.GetDlgCtrlID(this);
 			set { SetWindowLong(Native.GWL.ID, value); }
@@ -2318,7 +2302,7 @@ namespace Au
 		/// var w = AWnd.Find("* Explorer");
 		/// w.Prop.Set("example", 5);
 		/// Print(w.Prop["example"]);
-		/// Print(w.Prop); //shows all w properties
+		/// Print(w.Prop); //all w properties
 		/// w.Prop.Remove("example"); //you should always remove window properties if don't want to see unrelated applications crashing after some time. And don't use many unique property names.
 		/// ]]></code>
 		/// </example>

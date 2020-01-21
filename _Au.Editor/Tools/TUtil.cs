@@ -570,7 +570,7 @@ namespace Au.Tools
 			double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
 			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of AWnd.Find and Object.Find
 			string sTime;
-			if(lastLine == 1 && lines[0].Length == 6) sTime = t1.ToStringInvariant() + " ms"; //only AWnd.Find: "AWnd w;\r\nw = AWnd.Find(...);"
+			if(lastLine == 1 && lines[0].Length == 7) sTime = t1.ToStringInvariant() + " ms"; //only AWnd.Find: "AWnd w;\r\nw = AWnd.Find(...);"
 			else sTime = t0.ToStringInvariant() + " + " + t1.ToStringInvariant() + " ms";
 
 			if(r.obj is AWnd w1 && w1.Is0) r.obj = null;

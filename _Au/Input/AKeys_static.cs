@@ -62,6 +62,14 @@ namespace Au
 			public static bool IsPressed(KKey key) => GetKeyState(key) < 0;
 
 			/// <summary>
+			/// Returns true if the specified key or mouse button is toggled.
+			/// </summary>
+			/// <remarks>
+			/// Works only with CapsLock, NumLock, ScrollLock and several other keys, as well as mouse buttons.
+			/// </remarks>
+			public static bool IsToggled(KKey key) => 0 != (GetKeyState(key) & 1);
+
+			/// <summary>
 			/// Returns true if the Alt key is down (pressed).
 			/// </summary>
 			public static bool IsAlt => IsPressed(KKey.Alt);
@@ -120,7 +128,7 @@ namespace Au
 			/// <remarks>
 			/// The same as <see cref="AKeys.IsCapsLock"/>.
 			/// </remarks>
-			public static bool IsCapsLock => (GetKeyState(KKey.CapsLock) & 1) != 0;
+			public static bool IsCapsLock => IsToggled(KKey.CapsLock);
 
 			/// <summary>
 			/// Returns true if the Num Lock key is toggled.
@@ -128,7 +136,7 @@ namespace Au
 			/// <remarks>
 			/// The same as <see cref="AKeys.IsNumLock"/>.
 			/// </remarks>
-			public static bool IsNumLock => (GetKeyState(KKey.NumLock) & 1) != 0;
+			public static bool IsNumLock => IsToggled(KKey.NumLock);
 
 			/// <summary>
 			/// Returns true if the Scroll Lock key is toggled.
@@ -136,7 +144,7 @@ namespace Au
 			/// <remarks>
 			/// The same as <see cref="AKeys.IsScrollLock"/>.
 			/// </remarks>
-			public static bool IsScrollLock => (GetKeyState(KKey.ScrollLock) & 1) != 0;
+			public static bool IsScrollLock => IsToggled(KKey.ScrollLock);
 		}
 
 		/// <summary>

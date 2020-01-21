@@ -218,7 +218,7 @@ namespace Au
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) : this()
 		{
-			FlagEndThread = 0 != (flags & DFlags.EndThread);
+			//FlagEndThread = 0 != (flags & DFlags.EndThread);
 			if(0 != (flags & DFlags.Topmost)) FlagTopmost = true; //else use Options.TopmostIfNoOwnerWindow if no owner
 			FlagXCancel = 0 != (flags & DFlags.XCancel);
 			if(0 != (flags & DFlags.Wider)) Width = 700;
@@ -736,10 +736,11 @@ namespace Au
 		/// </summary>
 		public bool? FlagTopmost { set; private get; }
 
-		/// <summary>
-		/// Call <see cref="Thread.Abort()"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
-		/// </summary>
-		public bool FlagEndThread { set; private get; }
+		//Thread.Abort not supported in Core
+		///// <summary>
+		///// Call <see cref="Thread.Abort()"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
+		///// </summary>
+		//public bool FlagEndThread { set; private get; }
 
 		///// <summary>
 		///// Show keyboard shortcuts (underlined characters), like when you press the Alt key.
@@ -808,7 +809,7 @@ namespace Au
 			_c.pfCallback = _CallbackProc;
 
 			int rNativeButton = 0, rRadioButton = 0, rIsChecked = 0, hr = 0;
-			bool hasCustomButtons = false;
+			//bool hasCustomButtons = false;
 			AHookWin hook = null;
 
 			try {
@@ -816,7 +817,7 @@ namespace Au
 
 				_buttons.MarshalButtons(ref _c);
 				if(_c.pButtons == null) _SetFlag(TDF_.USE_COMMAND_LINKS | TDF_.USE_COMMAND_LINKS_NO_ICON, false); //to avoid exception
-				else hasCustomButtons = true;
+				//else hasCustomButtons = true;
 
 				if(_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
 					hook = AHookWin.ThreadGetMessage(_HookProc);
@@ -872,17 +873,19 @@ namespace Au
 				_isProcessEnding = false;
 				//Thread.CurrentThread.Abort();
 				Thread.Sleep(Timeout.Infinite); //CLR will throw ThreadAbortException
+				//	TODO: now in Core maybe not
 			}
 
-			if(FlagEndThread) {
-				bool endThread = false;
-				switch(rNativeButton) {
-				case _idCancel: case _idNo: case DResult.Timeout: endThread = true; break;
-				case _idOK: endThread = (_c.dwCommonButtons == 0 || _c.dwCommonButtons == TDCBF_.OK) && !hasCustomButtons; break;
-				}
+			//Thread.Abort not supported in Core
+			//if(FlagEndThread) {
+			//	bool endThread = false;
+			//	switch(rNativeButton) {
+			//	case _idCancel: case _idNo: case DResult.Timeout: endThread = true; break;
+			//	case _idOK: endThread = (_c.dwCommonButtons == 0 || _c.dwCommonButtons == TDCBF_.OK) && !hasCustomButtons; break;
+			//	}
 
-				if(endThread) Thread.CurrentThread.Abort();
-			}
+			//	if(endThread) Thread.CurrentThread.Abort();
+			//}
 
 			return _result;
 		}
@@ -1297,7 +1300,7 @@ namespace Au
 			var pExStyle = WS_EX.NOPARENTNOTIFY; //not WS_EX.CONTROLPARENT
 			_editParent = AWnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
 			_editControlParentProcHolder = _EditControlParentProc;
-			_editParent.SetWindowLong(Native.GWL.DWLP_DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
+			_editParent.SetWindowLong(Native.GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
 
 			//Create Edit or ComboBox control.
 			string cn = "Edit";
@@ -1309,7 +1312,8 @@ namespace Au
 			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
 			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = AWnd.More.CreateWindowAndSetFont(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent, customFontHandle: _editFont);
+			_editWnd = AWnd.More.CreateWindow(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
+			AWnd.More.SetFont(_editWnd, _editFont);
 
 			//Init the control.
 			if(_editType == DEdit.Combo) {
@@ -1954,37 +1958,31 @@ namespace Au.Types
 		CommandLinks = 1,
 
 		/// <summary>
-		/// Call <see cref="Thread.Abort()"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
-		/// The same as <see cref="ADialog.FlagEndThread"/>.
-		/// </summary>
-		EndThread = 2,
-
-		/// <summary>
 		/// Show expanded text in footer.
 		/// </summary>
-		ExpandDown = 4,
+		ExpandDown = 2,
 
 		/// <summary>
 		/// Show the dialog in the center of the owner window.
 		/// </summary>
-		OwnerCenter = 8,
+		OwnerCenter = 4,
 
 		/// <summary>
 		/// x y are relative to the primary screen (ignore <see cref="ADialog.Screen"/> etc). Don't ensure thet entire window is in screen.
 		/// More info: <see cref="ADialog.SetXY"/>. 
 		/// </summary>
-		RawXY = 16,
+		RawXY = 8,
 
 		/// <summary>
 		/// Make the dialog a topmost window (always on top of other windows), regardless of ADialog.Options.TopmostIfNoOwnerWindow etc.
 		/// More info: <see cref="ADialog.FlagTopmost"/>. 
 		/// </summary>
-		Topmost = 32,
+		Topmost = 16,
 
 		/// <summary>
 		/// Set <see cref="ADialog.Width"/> = 700.
 		/// </summary>
-		Wider = 64,
+		Wider = 32,
 
 		/// <summary>
 		/// Allow to cancel even if there is no Cancel button.
@@ -1992,7 +1990,14 @@ namespace Au.Types
 		/// When the dialog is closed with the X button or Esc, the returned result button id is 0 if there is no Cancel button; else the same as when clicked the Cancel button.
 		/// The same as <see cref="ADialog.FlagXCancel"/>.
 		/// </summary>
-		XCancel = 128,
+		XCancel = 64,
+
+		//Thread.Abort not supported in Core
+		///// <summary>
+		///// Call <see cref="Thread.Abort()"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
+		///// The same as <see cref="ADialog.FlagEndThread"/>.
+		///// </summary>
+		//EndThread = 128,
 
 		//This was implemented, it's easy, but then I changed my mind, don't need too many features.
 		///// <summary>
