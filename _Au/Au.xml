@@ -1397,11 +1397,32 @@
             Windows API types and constants used with public functions (parameters etc) of this library.
             </summary>
         </member>
+        <member name="T:Au.Types.Native.MSG">
+            <summary>API <msdn>MSG</msdn></summary>
+        </member>
         <member name="T:Au.Types.Native.GUI">
             <summary><see cref="T:Au.Types.Native.GUITHREADINFO"/> flags.</summary>
         </member>
+        <member name="T:Au.Types.Native.GUITHREADINFO">
+            <summary>API <msdn>GUITHREADINFO</msdn></summary>
+        </member>
+        <member name="T:Au.Types.Native.CREATESTRUCT">
+            <summary>API <msdn>CREATESTRUCT</msdn></summary>
+        </member>
         <member name="F:Au.Types.Native.CREATESTRUCT.lpszClass">
             <summary>Can be string or atom (ushort).</summary>
+        </member>
+        <member name="T:Au.Types.Native.MOUSEHOOKSTRUCT">
+            <summary>API <msdn>MOUSEHOOKSTRUCT</msdn></summary>
+        </member>
+        <member name="T:Au.Types.Native.CWPSTRUCT">
+            <summary>API <msdn>CWPSTRUCT</msdn></summary>
+        </member>
+        <member name="T:Au.Types.Native.CWPRETSTRUCT">
+            <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
+        </member>
+        <member name="T:Au.Types.Native.SIGDN">
+            <summary>API <msdn>SIGDN</msdn></summary>
         </member>
         <member name="T:Au.Types.Native.WNDPROC">
             <summary>API <msdn>WNDPROC</msdn></summary>
@@ -1410,29 +1431,29 @@
             <summary>API <msdn>SUBCLASSPROC</msdn></summary>
         </member>
         <member name="T:Au.Types.Native.SWP">
-            <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
+            <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="M:Au.AWnd.SetWindowPos(Au.Types.Native.SWP,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd)"/>.</summary>
             <remarks>The _X flags are undocumented.</remarks>
         </member>
         <member name="T:Au.Types.Native.HWND">
             <summary>
-            Special window handle values.
+            Special window handle values. Can be used with <see cref="M:Au.AWnd.SetWindowPos(Au.Types.Native.SWP,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd)"/>.
             See API <msdn>SetWindowPos</msdn>.
             </summary>
         </member>
         <member name="T:Au.Types.Native.GWL">
             <summary>
-            Window long constants.
+            Window long constants. Used with <see cref="M:Au.AWnd.GetWindowLong(System.Int32)"/> and <see cref="M:Au.AWnd.SetWindowLong(System.Int32,Au.Types.LPARAM)"/>.
             See API <msdn>GetWindowLong</msdn>.
             </summary>
         </member>
         <member name="T:Au.Types.Native.GCL">
             <summary>
-            Window class long constants.
-            See API <msdn>WNDCLASSEX</msdn>, API <msdn>GetClassLong</msdn>.
+            Window class long constants. Used with <see cref="M:Au.AWnd.More.GetClassLong(Au.AWnd,System.Int32)"/>.
+            See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
             </summary>
         </member>
         <member name="T:Au.Types.Native.SMTO">
-            <summary>API <msdn>SendMessageTimeout</msdn> flags.</summary>
+            <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="M:Au.AWnd.SendTimeout(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)"/>.</summary>
         </member>
         <member name="T:Au.Types.Native.TDM">
             <summary>
@@ -1458,14 +1479,20 @@
         <member name="T:Au.Types.WS">
             <summary>
             Window styles.
-            See API <msdn>CreateWindowEx</msdn>.
             </summary>
+            <remarks>
+            Reference: <msdn>Window Styles</msdn>.
+            Here names are without prefix WS_. For example, instead of WS_BORDER use WS.BORDER. Not included constants that are 0 (eg WS_TILED) or are duplicate (eg WS_SIZEBOX is same as WS_THICKFRAME) or consist of multiple other constants (eg WS_TILEDWINDOW).
+            </remarks>
         </member>
-        <member name="T:Au.Types.WS_EX">
+        <member name="T:Au.Types.WS2">
             <summary>
             Window extended styles.
-            See API <msdn>CreateWindowEx</msdn>.
             </summary>
+            <remarks>
+            Reference: <msdn>Extended Window Styles</msdn>.
+            Here names are without prefix WS_EX_. For example, instead of WS_EX_TOOLWINDOW use WS2.TOOLWINDOW. Not included constants that are 0 (eg WS_EX_LEFT).
+            </remarks>
         </member>
         <member name="M:Au.Types.Cpp.Cpp_AccFromWindow(System.Int32,Au.AWnd,Au.Types.AccOBJID,Au.Types.Cpp.Cpp_Acc@,Au.Types.BSTR@)">
             <summary>
@@ -1895,16 +1922,6 @@
             Resets all options.
             </summary>
         </member>
-        <member name="M:Au.Types.OptWaitFor.op_Implicit(System.Int32)~Au.Types.OptWaitFor">
-            <summary>
-            Implicit conversion from int. Sets <see cref="P:Au.Types.OptWaitFor.Period"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.OptWaitFor.op_Implicit(System.Boolean)~Au.Types.OptWaitFor">
-            <summary>
-            Implicit conversion from bool. Sets <see cref="P:Au.Types.OptWaitFor.DoEvents"/>.
-            </summary>
-        </member>
         <member name="T:Au.Types.OTRestoreMouse">
             <summary>Used by <see cref="P:Au.AOpt.Temp.Mouse"/>.</summary>
         </member>
@@ -1957,7 +1974,7 @@
         </member>
         <member name="T:Au.Types.ParamStringAttribute">
             <summary>
-            Specifies that the function parameter that has this attribute is a string of the specified format, for example regular expression.
+            A function parameter with this attribute is a string of the specified format, for example regular expression.
             Code editors should help to create correct string arguments: provide tools or reference, show errors.
             </summary>
         </member>
@@ -1966,23 +1983,6 @@
         </member>
         <member name="P:Au.Types.ParamStringAttribute.Format">
             
-        </member>
-        <member name="T:Au.Types.SetAddRemove">
-            <summary>
-            Specifies whether to set, add or remove flags.
-            </summary>
-        </member>
-        <member name="F:Au.Types.SetAddRemove.Set">
-            <summary>Set flags = the specified value.</summary>
-        </member>
-        <member name="F:Au.Types.SetAddRemove.Add">
-            <summary>Add the specified flags, don't change others.</summary>
-        </member>
-        <member name="F:Au.Types.SetAddRemove.Remove">
-            <summary>Remove the specified flags, don't change others.</summary>
-        </member>
-        <member name="F:Au.Types.SetAddRemove.Xor">
-            <summary>Toggle the specified flags, don't change others.</summary>
         </member>
         <member name="T:Au.Types.AuException">
             <summary>
@@ -2148,10 +2148,13 @@
         </member>
         <member name="T:Au.Types.Coord">
             <summary>
-            Contains x or y coordinate. Used for parameters of functions like AMouse.Move, AWnd.Move.
-            Allows to easily specify coordinates of these types: normal, reverse (from right or bottom of a rectangle), fractional (fraction of width or height of a rectangle), null.
-            Also has functions to convert to normal coodinates.
+            Contains x or y coordinate in screen or some other rectangle that can be specified in various ways (normal, reverse, fraction, center, max).
+            Used for parameters of functions like <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.AWnd.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.AScreen)"/>.
             </summary>
+            <remarks>
+            To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b>, <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
+            Also there are functions to convert <b>Coord</b> to normal coodinates.
+            </remarks>
         </member>
         <member name="P:Au.Types.Coord.Type">
             <summary>
@@ -2271,53 +2274,36 @@
         </member>
         <member name="T:Au.Types.PopupXY">
             <summary>
-            Can be used to specify coordinates for various popup windows and other UI objects.
+            Can be used to specify coordinates for various popup windows, like <c>new PopupXY(x, y)</c>, <c>(x, y)</c>, <c>PopupXY.In(rectangle)</c>, <c>PopupXY.Mouse</c>.
             </summary>
         </member>
+        <member name="M:Au.Types.PopupXY.#ctor(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.AScreen)">
+            <summary>
+            Sets position and/or screen.
+            </summary>
+            <param name="x">X relative to the screen or work area. Default - center.</param>
+            <param name="y">X relative to the screen or work area. Default - center.</param>
+            <param name="workArea">x y are relative to the work area of the screen.</param>
+            <param name="screen">Can be used to specify a screen. Default - primary.</param>
+            <remarks>
+            Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
+            </remarks>
+        </member>
+        <member name="M:Au.Types.PopupXY.In(Au.Types.RECT,Au.Types.Coord,Au.Types.Coord)">
+            <summary>
+            Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window, like <c>PopupXY.In(myForm.Bounds)</c>.
+            </summary>
+            <param name="r">Rectangle relative to the primary screen.</param>
+            <param name="x">X relative to the rectangle. Default - center.</param>
+            <param name="y">Y relative to the rectangle. Default - center.</param>
+        </member>
         <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord})~Au.Types.PopupXY">
-            <summary>Specifies position relative to the work area of the primary screen.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord,System.Boolean})~Au.Types.PopupXY">
-            <summary>Specifies position relative to the primary screen or its work area.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord,Au.AScreen})~Au.Types.PopupXY">
-            <summary>Specifies position relative to the work area of the specified screen.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.AScreen})~Au.Types.PopupXY">
-            <summary>Specifies position relative to the specified screen or its work area.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord,Au.AScreen,System.Boolean})~Au.Types.PopupXY">
-            <summary>Specifies position relative to the specified screen or its work area.</summary>
+            <summary>
+            Creates new <b>PopupXY</b> that specifies position relative to the work area of the primary screen.
+            </summary>
         </member>
         <member name="M:Au.Types.PopupXY.op_Implicit(Au.Types.POINT)~Au.Types.PopupXY">
-            <summary>Specifies position relative to the primary screen.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(Au.AScreen)~Au.Types.PopupXY">
-            <summary>Specifies the center of the work area of the specified screen.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.AScreen,System.Boolean})~Au.Types.PopupXY">
-            <summary>Specifies the center of the specified screen or its work area.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{System.Boolean,Au.AScreen})~Au.Types.PopupXY">
-            <summary>Specifies the center of the specified screen or its work area.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.Types.RECT,Au.Types.Coord,Au.Types.Coord})~Au.Types.PopupXY">
-            <summary>Specifies position in the specified rectangle which is relative to the primary screen.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(Au.Types.RECT)~Au.Types.PopupXY">
-            <summary>Specifies the center of the specified rectangle which is relative to the primary screen.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{Au.AWnd,Au.Types.Coord,Au.Types.Coord})~Au.Types.PopupXY">
-            <summary>Specifies position in the specified window.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(Au.AWnd)~Au.Types.PopupXY">
-            <summary>Specifies the center of the specified window.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.Windows.Forms.Control)~Au.Types.PopupXY">
-            <summary>Specifies the center of the specified control or form.</summary>
-        </member>
-        <member name="M:Au.Types.PopupXY.op_Implicit(System.ValueTuple{System.Windows.Forms.Control,Au.Types.Coord,Au.Types.Coord})~Au.Types.PopupXY">
-            <summary>Specifies position in the specified control or form.</summary>
+            <summary>Creates new <b>PopupXY</b> that specifies position relative to the primary screen (not to the work area).</summary>
         </member>
         <member name="P:Au.Types.PopupXY.Mouse">
             <summary>
@@ -2326,7 +2312,7 @@
         </member>
         <member name="M:Au.Types.PopupXY.GetScreen">
             <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> specified in <see cref="F:Au.Types.PopupXY.screen"/>. If not specified, gets that of the screen that contains the specified point.
+            Gets <see cref="T:Au.AScreen.Device"/> specified in <see cref="F:Au.Types.PopupXY.screen"/>. If not specified, gets that of the screen that contains the specified point.
             </summary>
         </member>
         <member name="T:Au.Types.AnyWnd">
@@ -2339,7 +2325,7 @@
             <summary> Assignment of a value of type AWnd. </summary>
         </member>
         <member name="M:Au.Types.AnyWnd.op_Implicit(System.IntPtr)~Au.Types.AnyWnd">
-            <summary> Assignment of a value of type AWnd. </summary>
+            <summary> Assignment of a window handle as IntPtr. </summary>
         </member>
         <member name="M:Au.Types.AnyWnd.op_Implicit(System.Windows.Forms.Control)~Au.Types.AnyWnd">
             <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
@@ -2389,12 +2375,13 @@
         </member>
         <member name="T:Au.Types.LPARAM">
             <summary>
-            Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg wParam/lParam of SendMessage.
-            Unlike IntPtr:
-            	Has implicit casts from most integral types. And explicit casts to.
-            	Does not check overflow when casting from uint etc. IntPtr throws exception on overflow, which can create bugs.
+            Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg WPARAM/LPARAM/LRESULT of API SendMessage.
             </summary>
             <remarks>
+            Unlike IntPtr:
+            - Has implicit casts from most integral types. And explicit casts to.
+            - Does not check overflow when casting from uint etc. IntPtr throws exception on overflow, which can create bugs.
+            
             There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
             There is no cast operators for enum. When need, cast through int or uint. For AWnd cast through IntPtr.
             </remarks>
@@ -2414,15 +2401,6 @@
             <summary>
             Point coordinates x y.
             </summary>
-        </member>
-        <member name="M:Au.Types.POINT.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord,System.Boolean})~Au.Types.POINT">
-            <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.AScreen,System.Boolean,System.Boolean)"/>.</summary>
-        </member>
-        <member name="M:Au.Types.POINT.op_Implicit(System.ValueTuple{Au.Types.Coord,Au.Types.Coord,Au.AScreen,System.Boolean})~Au.Types.POINT">
-            <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="M:Au.Types.Coord.Normalize(Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.AScreen,System.Boolean,System.Boolean)"/>.</summary>
-        </member>
-        <member name="M:Au.Types.POINT.op_Implicit(System.ValueTuple{Au.Types.RECT,Au.Types.Coord,Au.Types.Coord})~Au.Types.POINT">
-            <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="M:Au.Types.Coord.NormalizeInRect(Au.Types.Coord,Au.Types.Coord,Au.Types.RECT,System.Boolean,System.Boolean)"/>.</summary>
         </member>
         <member name="M:Au.Types.POINT.Offset(System.Int32,System.Int32)">
             <summary>Adds x and y to this.x and this.y.</summary>
@@ -2565,7 +2543,7 @@
             </summary>
             <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
             <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
-            <param name="screen">Use this screen (see <see cref="T:Au.AScreen"/>). If null (default), uses the primary screen.</param>
+            <param name="screen">Use this screen (see <see cref="T:Au.AScreen"/>). If default, uses the primary screen.</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
             <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
             <remarks>
@@ -2586,7 +2564,7 @@
             Adjusts this rectangle to ensure that whole rectangle is in screen.
             Initial and final rectangle coordinates are relative to the primary screen.
             </summary>
-            <param name="screen">Use this screen (see <see cref="T:Au.AScreen"/>). If null (default), uses screen of the rectangle (or nearest).</param>
+            <param name="screen">Use this screen (see <see cref="T:Au.AScreen"/>). If default, uses screen of the rectangle (or nearest).</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
             <remarks>
             This function can be used to calculate new window location before creating it. If window already exists, use <see cref="M:Au.AWnd.EnsureInScreen(Au.AScreen,System.Boolean)"/>.
@@ -2671,7 +2649,7 @@
             <summary>
             Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
             ARGB is used in .NET, GDI+ and HTML/CSS.
-            ABGR is used by most Windows native API.
+            ABGR is used by most Windows API.
             </summary>
         </member>
         <member name="M:Au.Types.ColorInt.GetPerceivedBrightness">
@@ -2986,6 +2964,7 @@
             <remarks>
             This property is applied to items added afterwards.
             </remarks>
+            <seealso cref="E:System.Windows.Forms.Application.ThreadException"/>
         </member>
         <member name="P:Au.Types.AMTBase.MainToolStrip">
             <summary>
@@ -3122,6 +3101,7 @@
             <summary>
             Don't handle exceptions. This is default.
             However if <see cref="P:Au.Types.AMTBase.ItemThread"/> is not <see cref="F:Au.Types.MTThread.Current"/>, handles exceptions and shows warning.
+            On unhandled exception .NET probably will show an unhandled exception dialog with exception info and "Continue" button, unless your app uses <see cref="E:System.Windows.Forms.Application.ThreadException"/> event.
             </summary>
         </member>
         <member name="F:Au.Types.MTExcept.Warning">
@@ -3352,13 +3332,13 @@
         </member>
         <member name="T:Au.Types.RFlags">
             <summary>
-            Flags for <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Flags for <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.ShowErrorUI">
             <summary>
             Show error message box if fails, for example if file not found.
-            Note: this does not disable exceptions. Still need exception handling. Or call <see cref="M:Au.AExec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Note: this does not disable exceptions. Still need exception handling. Or call <see cref="M:Au.AExec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.WaitForExit">
@@ -3377,17 +3357,20 @@
             Uses verb "runas", therefore other verb cannot be specified.
             </summary>
         </member>
-        <member name="T:Au.Types.RMore">
+        <member name="T:Au.Types.ROptions">
             <summary>
-            More parameters for <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            More parameters for <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            </summary>
+            <remarks>
+            Implicit conversion from <b>string</b> sets <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ROptions.op_Implicit(System.String)~Au.Types.ROptions">
+            <summary>
+            Sets <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
             </summary>
         </member>
-        <member name="M:Au.Types.RMore.op_Implicit(System.String)~Au.Types.RMore">
-            <summary>
-            Sets <see cref="F:Au.Types.RMore.CurrentDirectory"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.RMore.CurrentDirectory">
+        <member name="F:Au.Types.ROptions.CurrentDirectory">
             <summary>
             Initial current directory for the new process.
             If null (default), the new process will inherit the curent directory of this process.
@@ -3395,19 +3378,19 @@
             <note>Some programs look for their files in current directory and fail to start if it is not the program's directory.</note>
             </summary>
         </member>
-        <member name="F:Au.Types.RMore.Verb">
+        <member name="F:Au.Types.ROptions.Verb">
             <summary>
             File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
             Not all menu items will work. Some may have different name than in the menu.
             </summary>
         </member>
-        <member name="F:Au.Types.RMore.OwnerWindow">
+        <member name="F:Au.Types.ROptions.OwnerWindow">
             <summary>
             Owner window for error message boxes.
             Also, new window should be opened on the same screen. However many programs ignore it.
             </summary>
         </member>
-        <member name="F:Au.Types.RMore.WindowState">
+        <member name="F:Au.Types.ROptions.WindowState">
             <summary>
             Preferred window state.
             Many programs ignore it.
@@ -3415,7 +3398,7 @@
         </member>
         <member name="T:Au.Types.RResult">
             <summary>
-            Results of <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Results of <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
         </member>
         <member name="P:Au.Types.RResult.ProcessExitCode">
@@ -3684,12 +3667,6 @@
         </member>
         <member name="F:Au.Types.FileId.FileIndex">
             <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
-        </member>
-        <member name="M:Au.Types.FileId.op_Equality(Au.Types.FileId,Au.Types.FileId)">
-            
-        </member>
-        <member name="M:Au.Types.FileId.op_Inequality(Au.Types.FileId,Au.Types.FileId)">
-            
         </member>
         <member name="T:Au.Types.FolderPath">
             <summary>
@@ -4907,6 +4884,20 @@
         <member name="M:Au.Types.OutServMessage.ToString">
             
         </member>
+        <member name="T:Au.Types.SDefault">
+            <summary>
+            Used with <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)"/> to specify what screen to use if the function fails, for example if the window/point/etc is not in a screen or if the window handle is invalid.
+            </summary>
+        </member>
+        <member name="F:Au.Types.SDefault.Zero">
+            <summary>0 (<see cref="P:Au.AScreen.Device.Is0"/> will return true).</summary>
+        </member>
+        <member name="F:Au.Types.SDefault.Primary">
+            <summary>The primary screen.</summary>
+        </member>
+        <member name="F:Au.Types.SDefault.Nearest">
+            <summary>The nearest screen. If window handle is invalid - the primary screen.</summary>
+        </member>
         <member name="T:Au.Types.WIArea">
             <summary>
             Defines the search area for <see cref="M:Au.AWinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.AWinImage,Au.Types.WIAlso})"/> and similar functions.
@@ -5767,6 +5758,23 @@
             Calls <see cref="M:Au.Types.WProp.GetList"/> and converts to string.
             </summary>
         </member>
+        <member name="T:Au.Types.WSSFlags">
+            <summary>
+            Flags for <see cref="M:Au.AWnd.SetStyle(Au.Types.WS,Au.Types.WSSFlags)"/> and <see cref="M:Au.AWnd.SetExStyle(Au.Types.WS2,Au.Types.WSSFlags)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WSSFlags.Add">
+            <summary>Add the specified styles and don't change others.</summary>
+        </member>
+        <member name="F:Au.Types.WSSFlags.Remove">
+            <summary>Remove the specified styles and don't change others.</summary>
+        </member>
+        <member name="F:Au.Types.WSSFlags.UpdateNonclient">
+            <summary>Update non-client area (frame, title bar).</summary>
+        </member>
+        <member name="F:Au.Types.WSSFlags.UpdateClient">
+            <summary>Update client area.</summary>
+        </member>
         <member name="T:Au.Types.WCFlags">
             <summary>
             Flags for <see cref="M:Au.AWnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.AWnd,System.Boolean},System.Int32)"/>.
@@ -6246,10 +6254,20 @@
         </member>
         <member name="M:Au.AStatic.Key(System.Object[])">
             <summary>
-            Sends virtual keystrokes to the active window. Also can send text, wait, etc.
+            Generates virtual keystrokes (keys, text). Also can wait, etc.
             Calls <see cref="M:Au.AKeys.Key(System.Object[])"/>.
             </summary>
+            <param name="keysEtc">
+            Keys, text, etc.
+            Example: <c>Key("Down Tab*2 Ctrl+X", (KText)"text", "Enter");</c>
+            Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
+            </param>
             <exception cref="T:System.ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+            <example>
+            <code><![CDATA[
+            Key("Down Tab*2 Ctrl+X", (KText)"text", "Enter");
+            ]]></code>
+            </example>
         </member>
         <member name="M:Au.AStatic.Text(System.String)">
             <summary>
@@ -6490,14 +6508,6 @@
             Appends '.' if s does not end with '.', ';', ':', ',', '!' or '?'.
             </remarks>
         </member>
-        <member name="M:Au.AExtensions.GetIndex(System.Windows.Forms.Screen)">
-            <summary>
-            Gets screen index that can be used with <see cref="T:Au.AScreen"/> and functions that use it.
-            Primary screen is 0. Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            </summary>
-            <param name="t"></param>
-            <exception cref="T:Au.Types.AuException">Failed (probably the Screen object is invalid).</exception>
-        </member>
         <member name="T:Au.ADialog">
             <summary>
             Standard dialogs to show information or get user input.
@@ -6557,7 +6567,6 @@
         <member name="P:Au.ADialog.Options.DefaultScreen">
             <summary>
             Show dialogs on this screen when screen is not explicitly specified (<see cref="P:Au.ADialog.Screen"/>) and there is no owner window.
-            If screen index is invalid, the 'show' method shows warning, no exception.
             </summary>
         </member>
         <member name="P:Au.ADialog.Options.UseAppIcon">
@@ -6699,7 +6708,7 @@
             <param name="editType">Control type/style.</param>
             <param name="editText">Initial text. If editType is DEdit.Combo, it can be a string array, List or IEnumerable; the first item sets combo-box editable text, other items - combo box drop-down list items.</param>
             <remarks>
-            The API TaskDialogIndirect does not have an option to add an edit control. This class itself creates it.
+            API TaskDialogIndirect does not have an option to add an edit control. This class itself creates it.
             Does not support progress bar.
             </remarks>
         </member>
@@ -6734,7 +6743,6 @@
             <summary>
             Sets the screen (display monitor) where to show the dialog in multi-screen environment.
             If null or not set, will be used owner window's screen or <see cref="P:Au.ADialog.Options.DefaultScreen"/>.
-            If screen index is invalid, the 'show' method shows warning, no exception.
             More info: <see cref="T:Au.AScreen"/>, <see cref="M:Au.AWnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.AScreen,System.Boolean,System.Boolean)"/>.
             </summary>
         </member>
@@ -7521,7 +7529,7 @@
             <summary>
             If false, disposes the menu when it is closed.
             If true, does not dispose. Then you can call <b>Show</b> again and again.
-            Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
+            Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control's <b>ContextMenuStrip</b>.
             </summary>
             <seealso cref="P:Au.AMenu.DefaultMultiShow"/>
         </member>
@@ -7530,11 +7538,14 @@
             Default <see cref="P:Au.AMenu.MultiShow"/> value for new <b>AMenu</b> instances.
             </summary>
         </member>
-        <member name="P:Au.AMenu.ModalAlways">
+        <member name="P:Au.AMenu.Modal">
             <summary>
-            If true, <b>Show</b> always waits until the menu is closed.
-            If false, does not wait if the thread has a .NET message loop (<see cref="M:Au.AThread.HasMessageLoop(System.Boolean@)"/>).
+            If true, <b>Show</b> waits until the menu is closed. If false, does not wait (this thread must have a message loop).
+            If null (default), does not wait if the thread has a .NET message loop (<see cref="M:Au.AThread.HasMessageLoop(System.Boolean@)"/>).
             </summary>
+            <remarks>
+            <note>If false, this thread must have a message loop, either already running or started soon after showing the menu. Without it the menu will not work.</note>
+            </remarks>
         </member>
         <member name="P:Au.AMenu.ActivateMenuWindow">
             <summary>
@@ -7725,7 +7736,7 @@
             <summary>
             Shows the toolbar and attaches to a screen.
             </summary>
-            <param name="screen">Can be used to define the screen. For example a screen index (0 is the primary, 1 is the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
+            <param name="screen">Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
             <remarks>
             The toolbar will be moved when the screen moved or resized.
             </remarks>
@@ -7863,6 +7874,21 @@
             tb.Transparency = (64, null);
             ]]></code>
             </example>
+        </member>
+        <member name="P:Au.AToolbar.Satellite">
+            <summary>
+            A toolbar attached to this toolbar. Can be null.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">The 'set' function throws if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
+            <remarks>
+            The satellite toolbar is shown when mouse enters its owner and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
+            A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.SatellitePlanet">
+            <summary>
+            If this is a sattellite toolbar (<see cref="P:Au.AToolbar.Satellite"/>), gets its owner toolbar. Else null.
+            </summary>
         </member>
         <member name="M:Au.AToolbar._GetCachedOwnerRect">
             <summary>
@@ -8098,7 +8124,7 @@
             This class contains static functions to execute or open programs, other files, folders, web pages, etc.
             </summary>
         </member>
-        <member name="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)">
+        <member name="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
             <summary>
             Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
             The returned <see cref="T:Au.Types.RResult"/> variable contains some process info - process id etc.
@@ -8120,11 +8146,11 @@
             This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
             </param>
             <param name="flags"></param>
-            <param name="more">
+            <param name="curDirEtc">
             Allows to specify more parameters: current directory, verb, window state, etc.
-            If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="F:Au.Types.RMore.CurrentDirectory"/>.
+            If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
             </param>
-            <exception cref="T:System.ArgumentException">Used more.Verb and flag Admin.</exception>
+            <exception cref="T:System.ArgumentException">Used both ROptions.Verb and RFlags.Admin.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
             <remarks>
             It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -8144,9 +8170,9 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AExec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)">
+        <member name="M:Au.AExec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
             <summary>
-            Calls <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/> and handles exceptions. All parameters are the same.
+            Calls <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> and handles exceptions. All parameters are the same.
             If <b>Run</b> throws exception, prints it as warning and returns null.
             </summary>
             <remarks>
@@ -10395,7 +10421,7 @@
         <member name="P:Au.AShortcutFile.TargetAnyType">
             <summary>
             Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="T:Au.APidl"/>).
-            The string can be used with <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            The string can be used with <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
             <exception cref="T:Au.Types.AuException">The 'set' function failed.</exception>
         </member>
@@ -11919,14 +11945,6 @@
             More info: <msdn>registry LowLevelHooksTimeout</msdn>.
             </remarks>
         </member>
-        <member name="M:Au.AHookWin.LibOnException(System.Exception,System.IDisposable)">
-            <summary>
-            Called on any catched exception in a hook procedure.
-            Returns true if it is ThreadAbortException.
-            </summary>
-            <param name="e"></param>
-            <param name="hook">On ThreadAbortException calls hook.Dispose.</param>
-        </member>
         <member name="M:Au.AHookWin.LibIgnoreModInOtherHooks(System.Int64)">
             <summary>
             Let other hooks (in all processes) ignore modifier keys for timeMS milliseconds. If 0 - restore.
@@ -12557,12 +12575,13 @@
         </member>
         <member name="M:Au.AKeys.Key(System.Object[])">
             <summary>
-            Sends virtual keystrokes to the active window. Also can send text, wait, etc.
+            Generates virtual keystrokes (keys, text). Also can wait, etc.
             </summary>
             <param name="keysEtc">
             Any number of arguments of these types:
             - string - keys. One or more key names separated by spaces or operators. More info in Remarks.
             <br/>Example: <c>Key("Enter A Ctrl+A");</c>
+            Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
             <br/>See <see cref="M:Au.AKeys.AddKeys(System.String)"/>.
             - <see cref="T:Au.Types.KText"/> - literal text, like function <see cref="M:Au.AKeys.Text(System.String)"/>.
             <br/>Example: <c>Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
@@ -14071,7 +14090,7 @@
         <member name="P:Au.AOsd.XY">
             <summary>
             Coordinates.
-            Default: null - screen center.
+            Default: null. Screen center.
             </summary>
             <remarks>
             Not used if <see cref="P:Au.AOsd.Rect"/> is set.
@@ -14079,8 +14098,8 @@
             </remarks>
             <example>
             <code><![CDATA[
-            var m = new AOsd { Text = "Text", ShowMode = OsdShowMode.StrongThread };
-            m.XY = (Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
+            var m = new AOsd { Text = "Text" };
+            m.XY = new PopupXY(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
             m.Show();
             ]]></code>
             </example>
@@ -14322,7 +14341,6 @@
         <member name="P:Au.AOsd.DefaultScreen">
             <summary>
             Default screen when <see cref="P:Au.AOsd.XY"/> is not set.
-            Each thread has its own instance of this property.
             </summary>
         </member>
         <member name="T:Au.AOutput">
@@ -14663,109 +14681,25 @@
         </member>
         <member name="T:Au.AScreen">
             <summary>
-            Used to specify a screen (aka display, monitor) using index, window, control, <see cref="T:Au.AAcc"/>, point, rectangle, <see cref="T:System.Windows.Forms.Screen"/>, <see cref="F:Au.AScreen.OfActiveWindow"/> or <see cref="F:Au.AScreen.OfMouse"/>.
+            Gets screens from index/window/point/etc and their properties such as bounds.
             </summary>
             <remarks>
-            Used mostly for function parameters. The caller can specify screen index (int), window (AWnd etc), <see cref="T:System.Windows.Forms.Screen"/> object, etc. There are implicit conversion operators from these types. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="M:Au.AScreen.GetScreen"/> to get <see cref="T:System.Windows.Forms.Screen"/> object corresponding that value at that time.
-            </remarks>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(System.Windows.Forms.Screen)~Au.AScreen">
-            <summary>
-            Creates variable that holds <see cref="T:System.Windows.Forms.Screen"/> object. If invalid, will be used the primary screen.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(System.Int32)~Au.AScreen">
-            <summary>
-            Creates variable that holds screen index. Later will be called <see cref="M:Au.AScreen.ScreenFromIndex(System.Int32)"/>.
-            </summary>
-            <param name="screenIndex">See <see cref="M:Au.AScreen.ScreenFromIndex(System.Int32)"/>.</param>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(Au.AWnd)~Au.AScreen">
-            <summary>
-            Creates variable that holds window handle. Later will be called <see cref="M:Au.AScreen.ScreenFromWindow(Au.AWnd)"/>. If invalid, will be used the primary screen.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(System.Windows.Forms.Control)~Au.AScreen">
-            <summary>
-            Creates variable that holds <see cref="T:System.Windows.Forms.Control"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromControl(System.Windows.Forms.Control)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(System.Windows.Window)~Au.AScreen">
-            <summary>
-            Creates variable that holds <see cref="T:System.Windows.Window"/>. Later will be called <see cref="M:Au.AScreen.ScreenFromWindow(Au.AWnd)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(Au.Types.POINT)~Au.AScreen">
-            <summary>
-            Creates variable that holds <see cref="T:Au.Types.POINT"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromPoint(System.Drawing.Point)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(Au.Types.RECT)~Au.AScreen">
-            <summary>
-            Creates variable that holds <see cref="T:Au.Types.RECT"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(Au.AAcc)~Au.AScreen">
-            <summary>
-            Creates variable that holds <see cref="T:Au.AAcc"/>. Later will be called <see cref="M:System.Windows.Forms.Screen.FromRectangle(System.Drawing.Rectangle)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.AScreen.Primary">
-            <summary>
-            Screen index of the primary screen. Value 0.
-            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            </summary>
-        </member>
-        <member name="F:Au.AScreen.OfMouse">
-            <summary>
-            Special screen index to specify the screen of the mouse pointer. Value -1.
-            </summary>
-        </member>
-        <member name="F:Au.AScreen.OfActiveWindow">
-            <summary>
-            Special screen index to specify the screen of the active window. Value -2.
-            </summary>
-        </member>
-        <member name="F:Au.AScreen.NonPrimary1">
-            <summary>
-            Screen index of the first non-primary screen. Value 1.
-            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            </summary>
-        </member>
-        <member name="F:Au.AScreen.NonPrimary2">
-            <summary>
-            Screen index of the second non-primary screen. Value 2.
-            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.ScreenFromIndex(System.Int32)">
-            <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> object from screen index.
-            </summary>
-            <param name="screenIndex">
-            Values greater than 0 are used for non-primary screens: 1 - first non-primary, 2 second...
-            Also can be <see cref="F:Au.AScreen.Primary"/> (0), <see cref="F:Au.AScreen.OfMouse"/> (-1), <see cref="F:Au.AScreen.OfActiveWindow"/> (-2).
-            If invalid, prints warning and gets the primary screen.
-            </param>
-            <remarks>
-            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
-            </remarks>
-        </member>
-        <member name="M:Au.AScreen.ScreenFromWindow(Au.AWnd)">
-            <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> object of the screen that contains the specified window (the biggest part of it) or is nearest to it.
-            </summary>
-            <remarks>
-            If the window handle is 0 or invalid, gets the primary screen. <see cref="M:System.Windows.Forms.Screen.FromHandle(System.IntPtr)"/> would return an invalid object.
-            </remarks>
-        </member>
-        <member name="M:Au.AScreen.GetScreen">
-            <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> object from the value stored in this variable (screen index, window handle, etc).
-            If the value is null or invalid or fails, gets the primary screen.
-            </summary>
-            <remarks>
-            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
+            A computer can have one or more screens (aka display devices, monitors) attached that extend desktop space. One of them is the <i>primary</i> screen; its top-left coordinate is 0 0.
+            To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique int identifier, known as screen handle or HMONITOR. But it is a random variable value and therefore cannot be specified directly in script. In script instead is used screen index or some object on that screen (window, point, rectangle).
+            
+            There are two types (both are struct):
+            - an <b>AScreen.Device</b> variable contains a screen handle. Its functions are used to quickly get properties of that screen, eg bounds.
+            - an <b>AScreen</b> variable contains a value that is used to get screen handle. It can be screen index, window, point, etc, and even a callback function.
+            
+            <b>AScreen</b> is used mostly in two ways:
+            - the static functions are used to get a screen handle as <see cref="T:Au.AScreen.Device"/> using screen index, window, point, etc. Then the <b>Device</b> gets screen properties. Example: <c>RECT r = AScreen.Of(AWnd.Active).Bounds; //get rectangle of screen that contains the active window</c>
+            - if a function parameter or some property etc is of <b>AScreen</b> type, callers can specify screen index, window, point, etc. Index can be passed directly; for other types use code like <c>new AScreen(window)</c>. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="M:Au.AScreen.ToDevice"/> to get <see cref="T:Au.AScreen.Device"/> corresponding that value at that time.
+            
+            Why need two types? Why <b>AScreen</b> doesn't just get and store screen handle immediately when the variable is created. Because a handle cannot be reliably used for a long time. Reasons:
+            - screen handles may change when changing the configuration of multiple screens.
+            - the window etc that identifies the screen later may move to another screen.
+            
+            Similar to the .NET class <see cref="T:System.Windows.Forms.Screen"/>. This library does not use it mostly because some functions are too slow.
             </remarks>
         </member>
         <member name="P:Au.AScreen.Value">
@@ -14778,32 +14712,124 @@
             true if this variable does not have a value.
             </summary>
         </member>
-        <member name="P:Au.AScreen.PrimaryWidth">
+        <member name="M:Au.AScreen.#ctor(System.Int32)">
             <summary>
-            Gets primary screen width.
+            Creates variable that holds screen index. Later will be called <see cref="M:Au.AScreen.Index(System.Int32)"/>.
+            Alternatively use implicit conversion from int, for example <c>1</c> instead of <c>new AScreen(1)</c>.
+            </summary>
+            <param name="screenIndex">0 primary screen, 1 first nonprimary, and so on. Does not match those in Windows Settings.</param>
+        </member>
+        <member name="M:Au.AScreen.op_Implicit(System.Int32)~Au.AScreen">
+            <summary>
+            Creates variable that holds screen index. Later will be called <see cref="M:Au.AScreen.Index(System.Int32)"/>.
+            </summary>
+            <param name="screenIndex">0 primary screen, 1 first nonprimary, and so on. Does not match those in Windows Settings.</param>
+        </member>
+        <member name="M:Au.AScreen.#ctor(Au.Types.POINT)">
+            <summary>
+            Creates variable that holds <see cref="T:Au.Types.POINT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SDefault)"/>.
             </summary>
         </member>
-        <member name="P:Au.AScreen.PrimaryHeight">
+        <member name="M:Au.AScreen.#ctor(Au.Types.RECT)">
             <summary>
-            Gets primary screen height.
+            Creates variable that holds <see cref="T:Au.Types.RECT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SDefault)"/>.
             </summary>
         </member>
-        <member name="P:Au.AScreen.PrimaryRect">
+        <member name="M:Au.AScreen.#ctor(Au.AWnd)">
             <summary>
-            Gets primary screen rectangle.
+            Creates variable that holds window handle. Later will be called <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)"/>.
             </summary>
         </member>
-        <member name="M:Au.AScreen.GetRect(Au.AScreen,System.Boolean)">
+        <member name="M:Au.AScreen.#ctor(System.Windows.Forms.Control)">
             <summary>
-            Gets screen rectangle.
+            Creates variable that holds <see cref="T:System.Windows.Forms.Control"/>. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SDefault)"/>.
             </summary>
-            <param name="screen">Screen index etc. If default - primary screen.</param>
-            <param name="workArea">Get work area rectangle.</param>
         </member>
-        <member name="P:Au.AScreen.PrimaryWorkArea">
+        <member name="M:Au.AScreen.#ctor(System.Windows.Window)">
             <summary>
-            Gets primary screen work area.
+            Creates variable that holds <see cref="T:System.Windows.Window"/>. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SDefault)"/>.
             </summary>
+        </member>
+        <member name="M:Au.AScreen.#ctor(System.Func{Au.AScreen.Device})">
+            <summary>
+            Creates variable that calls your function to get screen when need.
+            </summary>
+            <example>
+            <code><![CDATA[
+            new AScreen(() => AScreen.Of(AMouse.XY));
+            new AScreen(() => AScreen.Of(AWnd.Active));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AScreen.#ctor(Au.AScreen.Device)">
+            <summary>
+            Creates variable that holds <see cref="T:Au.AScreen.Device"/>.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.Primary">
+            <summary>
+            Gets the primary screen.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.OfMouse">
+            <summary>
+            Gets <b>AScreen</b> variable that later will get the screen from the mouse cursor position at that time.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.OfActiveWindow">
+            <summary>
+            Gets <b>AScreen</b> variable that later will get the screen of the active window at that time.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.AllScreens">
+            <summary>
+            Gets all screens.
+            </summary>
+            <remarks>
+            The order of array elements may be different than in Windows Settings (Control Panel). The primary screen is always at index 0.
+            The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.AScreen.Index(System.Int32)">
+            <summary>
+            Gets screen at the specified index of the <see cref="P:Au.AScreen.AllScreens"/> array.
+            </summary>
+            <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
+        </member>
+        <member name="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)">
+            <summary>
+            Gets screen containing the biggest part of the specified window or nearest to it.
+            </summary>
+            <param name="w">Window or control. Can be default(AWnd) or invalid.</param>
+            <param name="defaultScreen"></param>
+        </member>
+        <member name="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SDefault)">
+            <summary>
+            Gets screen containing the biggest part of the specified control or form or nearest to it.
+            </summary>
+            <param name="c">Control or form. Cannot be null. The handle can be created or not.</param>
+            <param name="defaultScreen"></param>
+        </member>
+        <member name="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SDefault)">
+            <summary>
+            Gets screen containing the biggest part of the specified WPF window or nearest to it.
+            </summary>
+            <param name="w">WPF window.</param>
+            <param name="defaultScreen"></param>
+        </member>
+        <member name="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SDefault)">
+            <summary>
+            Gets screen containing the specified coordinate or nearest to it.
+            </summary>
+            <param name="p"></param>
+            <param name="defaultScreen"></param>
+        </member>
+        <member name="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SDefault)">
+            <summary>
+            Gets screen containing the biggest part of the specified rectangle or nearest to it.
+            </summary>
+            <param name="r"></param>
+            <param name="defaultScreen"></param>
         </member>
         <member name="M:Au.AScreen.IsInAnyScreen(Au.Types.POINT)">
             <summary>
@@ -14819,6 +14845,86 @@
             <summary>
             Returns true if rectangle of window w intersects with some screen.
             </summary>
+        </member>
+        <member name="M:Au.AScreen.ToDevice">
+            <summary>
+            Gets <see cref="T:Au.AScreen.Device"/> from the value stored in this variable (screen index, window, etc).
+            If the value is null, gets the primary screen.
+            </summary>
+        </member>
+        <member name="T:Au.AScreen.Device">
+            <summary>
+            Represents a screen device. Gets its rectangle etc.
+            </summary>
+        </member>
+        <member name="M:Au.AScreen.Device.#ctor(System.IntPtr)">
+            <param name="handle">A screen handle (HMONITOR).</param>
+        </member>
+        <member name="P:Au.AScreen.Device.Handle">
+            <summary>
+            The screen handle (HMONITOR).
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.Device.Is0">
+            <summary>
+            True if the screen handle is 0.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.Device.Index">
+            <summary>
+            Gets index of this screen in the <see cref="P:Au.AScreen.AllScreens"/> array.
+            </summary>
+            <remarks>
+            Returns -1 if this screen is not in the array. It can happen after changing display settings, but is rare. Also if the screen handle is 0.
+            </remarks>
+        </member>
+        <member name="M:Au.AScreen.Device.GetInfo">
+            <summary>
+            Gets screen rectangle and other info.
+            </summary>
+            <returns>
+            Tuple containing:
+            - bounds - rectangle of the screen.
+            - workArea - rectangle of the work area of the screen.
+            - isPrimary - true if the info is of the primary screen.
+            - isAlive - true if the screen handle is valid. If invalid (eg 0), the function gets info of the primary screen.
+            </returns>
+        </member>
+        <member name="M:Au.AScreen.Device.GetRect(System.Boolean)">
+            <summary>
+            Calls <see cref="M:Au.AScreen.Device.GetInfo"/> and returns rectangle of the screen or its work area.
+            </summary>
+            <param name="workArea">Get work area rectangle.</param>
+        </member>
+        <member name="P:Au.AScreen.Device.Bounds">
+            <summary>
+            Calls <see cref="M:Au.AScreen.Device.GetInfo"/> and returns rectangle of the screen.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.Device.WorkArea">
+            <summary>
+            Calls <see cref="M:Au.AScreen.Device.GetInfo"/> and returns rectangle of the screen work area.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.Device.IsAlive">
+            <summary>
+            True if the screen handle is valid.
+            </summary>
+        </member>
+        <member name="M:Au.AScreen.Device.ToString">
+            
+        </member>
+        <member name="M:Au.AScreen.Device.GetHashCode">
+            
+        </member>
+        <member name="M:Au.AScreen.Device.Equals(Au.AScreen.Device)">
+            
+        </member>
+        <member name="M:Au.AScreen.Device.op_Equality(Au.AScreen.Device,Au.AScreen.Device)">
+            
+        </member>
+        <member name="M:Au.AScreen.Device.op_Inequality(Au.AScreen.Device,Au.AScreen.Device)">
+            
         </member>
         <member name="T:Au.AWinImage">
             <summary>
@@ -16957,7 +17063,7 @@
         </member>
         <member name="M:Au.Util.AStringUtil.CommandLineFromArray(System.String[])">
             <summary>
-            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
+            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
             Returns null if a is null or has 0 elements.
             </summary>
             <param name="a"></param>
@@ -17252,13 +17358,20 @@
         </member>
         <member name="M:Au.Util.ACursor.GetCurrentCursor(System.IntPtr@)">
             <summary>
-            Gets the native handle of the current mouse cursor.
-            Returns false if the cursor is currently invisible.
+            Gets the native handle of the current global mouse cursor.
+            Returns false if cursor is hidden.
             </summary>
             <remarks>
-            It is the system cursor, not the cursor of this thread.
+            It is not the cursor of this thread (<see cref="P:System.Windows.Forms.Cursor.Current"/>).
             Don't destroy the cursor.
             </remarks>
+        </member>
+        <member name="M:Au.Util.ACursor.SetArrowCursor_">
+            <summary>
+            Workaround for brief 'wait' cursor when mouse enters a window of current thread first time.
+            Reason: default thread's cursor is 'wait'. OS shows it before the first WM_SETCURSOR sets correct cursor.
+            Call eg on WM_CREATE.
+            </summary>
         </member>
         <member name="T:Au.Util.ADisableFsRedirection">
             <summary>
@@ -19225,16 +19338,6 @@
             Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this process ends.
             </summary>
         </member>
-        <member name="M:Au.Util.Workarounds_.WaitCursorWhenShowingMenuEtc">
-            <summary>
-            A workaround for:
-            	When showing a ContextMenuStrip menu or a submenu, something briefly sets the AppStarting cursor.
-            	Only if this process does/did not have active windows.
-            	Only if current cursor is arrow. Works well if eg I or hand.
-            	Starts before first WM_NCPAINT (after WM_SHOWWINDOW+WM_WINDOWPOSCHANGING) and stops before WM_PAINT.
-            Call this before showing a menu. Possibly also will need for some other windows.
-            </summary>
-        </member>
         <member name="T:Au.AWildex">
             <summary>
             Parses and compares [](xref:wildcard_expression).
@@ -19838,10 +19941,10 @@
         </member>
         <member name="T:Au.ATimer">
             <summary>
-            Timer that uses API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
+            Timer that uses API <msdn>SetTimer</msdn>.
             </summary>
             <remarks>
-            Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
+            Similar to <b>System.Windows.Forms.Timer</b>, but more lightweight, for example does not create a hidden window.
             Use in UI threads. Does not work if this thread does not retrieve/dispatch posted messages (<msdn>WM_TIMER</msdn>).
             </remarks>
             <example>
@@ -19859,7 +19962,7 @@
         </member>
         <member name="P:Au.ATimer.Tag">
             <summary>
-            Something to attach to this ATimer variable.
+            Something to attach to this variable.
             </summary>
         </member>
         <member name="P:Au.ATimer.IsRunning">
@@ -19906,6 +20009,14 @@
             Later you can start the timer again (call <see cref="M:Au.ATimer.After(System.Int32,System.Object)"/> or <see cref="M:Au.ATimer.Every(System.Int32,System.Object)"/>).
             Don't need to call this function for single-period timers. For periodic timers it is optional; the timer stops when the thread ends.
             This function must be called in the same thread as <b>Start</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.ATimer.Now">
+            <summary>
+            Execute the timer action now.
+            </summary>
+            <remarks>
+            Does not change any properties. Just calls the callback function. Does not handle exceptions.
             </remarks>
         </member>
         <member name="M:Au.ATimer.After(System.Int32,System.Action{Au.ATimer},System.Object)">
@@ -21331,7 +21442,7 @@
             <param name="screen">
             Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
             Default: <b>Primary</b>.
-            Uses <see cref="P:System.Windows.Forms.Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
+            Uses <see cref="P:Au.AScreen.AllScreens"/> to get screen indices. They are different than in Windows Settings.
             </param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
@@ -21948,7 +22059,7 @@
             Don't need to call this function before calling <see cref="M:Au.AWnd.Activate"/> and other functions of this library that activate windows.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.WindowRectFromClientRect(Au.Types.RECT@,Au.Types.WS,Au.Types.WS_EX,System.Boolean)">
+        <member name="M:Au.AWnd.More.WindowRectFromClientRect(Au.Types.RECT@,Au.Types.WS,Au.Types.WS2,System.Boolean)">
             <summary>
             Calculates window rectangle from client area rectangle and style.
             Calls API <msdn>AdjustWindowRectEx</msdn>.
@@ -21961,7 +22072,7 @@
             Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.More.BorderWidth(Au.Types.WS,Au.Types.WS_EX)">
+        <member name="M:Au.AWnd.More.BorderWidth(Au.Types.WS,Au.Types.WS2)">
             <summary>
             Calculates window border width from style.
             </summary>
@@ -21986,7 +22097,7 @@
             <param name="wndProc">
             Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
             
-            I null, sets API <msdn>DefWindowProc</msdn> as window procedure. It is useful when you need a different delegate (method or target object) for each window instance. Create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
+            I null, sets API <msdn>DefWindowProc</msdn> as window procedure. It is useful when you need a different delegate (method or target object) for each window instance. Create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
             If not null, you can create windows with any other function, including API <msdn>CreateWindowEx</msdn>. Then <b>Target</b> of the delegate should be null (static method) or a singleton object.
             </param>
             <param name="ex">
@@ -22004,7 +22115,7 @@
             Protects the <i>wndProc</i> delegate from GC.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
             <summary>
             Creates native/unmanaged window of a class registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/> with null <i>wndProc</i>, and sets its window procedure.
             </summary>
@@ -22016,7 +22127,7 @@
             Later call <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/> or <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.More.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WS_EX,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
             <summary>
             Creates native/unmanaged window.
             </summary>
@@ -22596,6 +22707,13 @@
             Note: <b>Native.HWND.TOP</b> is 0.
             </summary>
         </member>
+        <member name="M:Au.AWnd.Lib.FromObject(System.Object)">
+            <summary>
+            Converts object to AWnd.
+            Object can contain null, AWnd, Control, or System.Windows.Window (must be in element 0 of object[]).
+            Avoids loading Forms and WPF dlls when not used.
+            </summary>
+        </member>
         <member name="M:Au.AWnd.LibActivate(Au.AWnd.Lib.ActivateFlags)">
             <summary>
             Activates this window (brings to the foreground).
@@ -23136,9 +23254,9 @@
         </member>
         <member name="P:Au.AWnd.Screen">
             <summary>
-            Gets <see cref="T:System.Windows.Forms.Screen"/> object of the screen that contains this window (the biggest part of it) or is nearest to it.
+            Gets <see cref="T:Au.AScreen.Device"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
             If this window handle is default(AWnd) or invalid, gets the primary screen.
-            Calls <see cref="M:Au.AScreen.ScreenFromWindow(Au.AWnd)"/>.
+            Calls <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)"/>.
             </summary>
         </member>
         <member name="M:Au.AWnd.ZorderAbove(Au.AWnd)">
@@ -23212,16 +23330,16 @@
             <value>One or more <see cref="T:Au.Types.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</value>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
             <seealso cref="M:Au.AWnd.HasStyle(Au.Types.WS,System.Boolean)"/>
-            <seealso cref="M:Au.AWnd.SetStyle(Au.Types.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.AWnd.SetStyle(Au.Types.WS,Au.Types.WSSFlags)"/>
         </member>
         <member name="P:Au.AWnd.ExStyle">
             <summary>
             Gets window extended style.
             </summary>
-            <value>One or more <see cref="T:Au.Types.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
+            <value>One or more <see cref="T:Au.Types.WS2"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
-            <seealso cref="M:Au.AWnd.HasExStyle(Au.Types.WS_EX,System.Boolean)"/>
-            <seealso cref="M:Au.AWnd.SetExStyle(Au.Types.WS_EX,Au.Types.SetAddRemove,System.Boolean,System.Boolean)"/>
+            <seealso cref="M:Au.AWnd.HasExStyle(Au.Types.WS2,System.Boolean)"/>
+            <seealso cref="M:Au.AWnd.SetExStyle(Au.Types.WS2,Au.Types.WSSFlags)"/>
         </member>
         <member name="M:Au.AWnd.HasStyle(Au.Types.WS,System.Boolean)">
             <summary>
@@ -23234,7 +23352,7 @@
             </param>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
-        <member name="M:Au.AWnd.HasExStyle(Au.Types.WS_EX,System.Boolean)">
+        <member name="M:Au.AWnd.HasExStyle(Au.Types.WS2,System.Boolean)">
             <summary>
             Returns true if the window has all specified extended style flags (see <see cref="P:Au.AWnd.ExStyle"/>).
             </summary>
@@ -23242,25 +23360,21 @@
             <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
-        <member name="M:Au.AWnd.SetStyle(Au.Types.WS,Au.Types.SetAddRemove,System.Boolean,System.Boolean)">
+        <member name="M:Au.AWnd.SetStyle(Au.Types.WS,Au.Types.WSSFlags)">
             <summary>
             Changes window style.
             </summary>
             <param name="style">One or more <see cref="T:Au.Types.WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</param>
-            <param name="how"></param>
-            <param name="updateNC">Update non-client area (frame, title bar).</param>
-            <param name="updateClient">Update client area.</param>
+            <param name="flags"></param>
             <exception cref="T:Au.Types.AuWndException"/>
             <seealso cref="P:Au.AWnd.Style"/>
         </member>
-        <member name="M:Au.AWnd.SetExStyle(Au.Types.WS_EX,Au.Types.SetAddRemove,System.Boolean,System.Boolean)">
+        <member name="M:Au.AWnd.SetExStyle(Au.Types.WS2,Au.Types.WSSFlags)">
             <summary>
             Changes window extended style.
             </summary>
-            <param name="style">One or more <see cref="T:Au.Types.WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
-            <param name="how"></param>
-            <param name="updateNC">Update non-client area (frame, title bar).</param>
-            <param name="updateClient">Update client area.</param>
+            <param name="style">One or more <see cref="T:Au.Types.WS2"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
+            <param name="flags"></param>
             <exception cref="T:Au.Types.AuWndException"/>
             <seealso cref="P:Au.AWnd.ExStyle"/>
         </member>
@@ -23272,7 +23386,7 @@
         </member>
         <member name="P:Au.AWnd.IsToolWindow">
             <summary>
-            Returns true if has WS_EX.TOOLWINDOW style.
+            Returns true if has WS2.TOOLWINDOW style.
             </summary>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
@@ -23295,20 +23409,10 @@
         <member name="M:Au.AWnd.SetWindowLong(System.Int32,Au.Types.LPARAM)">
             <summary>
             Calls API <msdn>SetWindowLongPtr</msdn>.
-            Returns previous value. Throws exception if fails.
             </summary>
             <param name="index">A constant from <see cref="T:Au.Types.Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
             <param name="newValue">New value.</param>
             <exception cref="T:Au.Types.AuWndException"/>
-        </member>
-        <member name="M:Au.AWnd.SetWindowLong(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM@)">
-            <summary>
-            Calls API <msdn>SetWindowLongPtr</msdn>.
-            Returns false if fails. Supports <see cref="T:Au.ALastError"/>.
-            </summary>
-            <param name="index">A constant from <see cref="T:Au.Types.Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
-            <param name="newValue">New value.</param>
-            <param name="oldValue">Receives previous value.</param>
         </member>
         <member name="P:Au.AWnd.ControlId">
             <summary>
@@ -24541,7 +24645,7 @@
         </member>
         <member name="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object,System.Action,System.Double,System.Boolean)">
             <summary>
-            Finds a top-level window (calls <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.RMore)"/>.
+            Finds a top-level window (calls <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             Returns window handle as <b>AWnd</b>. Returns <c>default(AWnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
             </summary>
             <param name="name">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WF3,Au.Types.WFFlags,System.Func{Au.AWnd,System.Boolean},System.Object)"/>.</param>
@@ -24717,7 +24821,7 @@
             </summary>
             <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
             <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if null. If less than 0 or greater than 255, makes 0 or 255.</param>
-            <param name="colorRGB">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
+            <param name="colorKey">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
             <exception cref="T:Au.Types.AuWndException"/>
             <remarks>
             Uses API <msdn>SetLayeredWindowAttributes</msdn>.

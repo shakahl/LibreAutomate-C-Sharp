@@ -505,14 +505,18 @@ The file must be in this workspace. Can be path relative to this file (examples:
 	{
 		var s = "The list is empty";
 		if(sFind.Length > 0) s = "The list contains 0 items containing " + sFind;
-		var c = button as Control;
-		AOsd.ShowText(s, 3, (c, c.Width, 0));
+		AOsd.ShowText(s, 3, _OsdXY(button));
 	}
 
 	void _Added(object button, List<string> metaList)
 	{
+		AOsd.ShowText(string.Join("\r\n", metaList) + "\r\n\r\nFinally click OK to save.", 5, _OsdXY(button));
+	}
+
+	static PopupXY _OsdXY(object button)
+	{
 		var c = button as Control;
-		AOsd.ShowText(string.Join("\r\n", metaList) + "\r\n\r\nFinally click OK to save.", 5, (c, c.Width, 0));
+		return PopupXY.In(c.Hwnd().Rect, c.Width, 0);
 	}
 
 	#region COM

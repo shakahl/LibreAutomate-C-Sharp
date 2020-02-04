@@ -12,11 +12,8 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
 
-using Au;
 using Au.Types;
 using static Au.AStatic;
 
@@ -206,7 +203,7 @@ namespace Au.Triggers
 
 						if(sTrigger != null) Util.LibLog.Run.Write($"Trigger action ended. Trigger: {sTrigger}");
 					}
-					catch(Exception ex) when(!(ex is ThreadAbortException)) {
+					catch(Exception ex) {
 						if(sTrigger != null) Util.LibLog.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {ex.ToStringWithoutStack()}");
 
 						baArgs.Exception = ex;

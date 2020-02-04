@@ -60,7 +60,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Specifies that the function parameter that has this attribute is a string of the specified format, for example regular expression.
+	/// A function parameter with this attribute is a string of the specified format, for example regular expression.
 	/// Code editors should help to create correct string arguments: provide tools or reference, show errors.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Parameter /*| AttributeTargets.Field | AttributeTargets.Property*/, AllowMultiple = false)]
@@ -73,18 +73,18 @@ namespace Au.Types
 		public PSFormat Format { get; set; }
 	}
 
-	/// <summary>
-	/// Specifies whether to set, add or remove flags.
-	/// </summary>
-	public enum SetAddRemove
-	{
-		/// <summary>Set flags = the specified value.</summary>
-		Set = 0,
-		/// <summary>Add the specified flags, don't change others.</summary>
-		Add = 1,
-		/// <summary>Remove the specified flags, don't change others.</summary>
-		Remove = 2,
-		/// <summary>Toggle the specified flags, don't change others.</summary>
-		Xor = 3,
-	}
+	///// <summary>
+	///// Specifies whether to set, add or remove flags.
+	///// </summary>
+	//public enum SetAddRemove
+	//{
+	//	/// <summary>Set flags = the specified value.</summary>
+	//	Set = 0,
+	//	/// <summary>Add the specified flags, don't change others.</summary>
+	//	Add = 1,
+	//	/// <summary>Remove the specified flags, don't change others.</summary>
+	//	Remove = 2,
+	//	/// <summary>Toggle the specified flags, don't change others.</summary>
+	//	Xor = 3,
+	//}
 }

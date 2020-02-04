@@ -113,10 +113,13 @@ namespace Au.Types
 #endif
 
 	/// <summary>
-	/// Contains x or y coordinate. Used for parameters of functions like AMouse.Move, AWnd.Move.
-	/// Allows to easily specify coordinates of these types: normal, reverse (from right or bottom of a rectangle), fractional (fraction of width or height of a rectangle), null.
-	/// Also has functions to convert to normal coodinates.
+	/// Contains x or y coordinate in screen or some other rectangle that can be specified in various ways (normal, reverse, fraction, center, max).
+	/// Used for parameters of functions like <see cref="AMouse.Move"/>, <see cref="AWnd.Move"/>.
 	/// </summary>
+	/// <remarks>
+	/// To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b>, <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
+	/// Also there are functions to convert <b>Coord</b> to normal coodinates.
+	/// </remarks>
 	[DebuggerStepThrough]
 	public struct Coord
 	{
@@ -285,7 +288,7 @@ namespace Au.Types
 			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
 				if(workArea || !screen.IsNull || _NeedRect(x, y)) {
-					r = AScreen.GetRect(screen, workArea);
+					r = screen.ToDevice().GetRect(workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
 				p.x = x._Normalize(r.left, r.right);
@@ -333,7 +336,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Can be used to specify coordinates for various popup windows and other UI objects.
+	/// Can be used to specify coordinates for various popup windows, like <c>new PopupXY(x, y)</c>, <c>(x, y)</c>, <c>PopupXY.In(rectangle)</c>, <c>PopupXY.Mouse</c>.
 	/// </summary>
 	public class PopupXY
 	{
@@ -341,54 +344,43 @@ namespace Au.Types
 		public Coord x, y;
 		public AScreen screen;
 		public bool workArea;
-		//public bool rawXY;
-		public RECT? rect;
+		public bool inRect;
+		public RECT rect;
+#pragma warning restore 1591 //XML doc
 
-		public PopupXY() { }
-
-		public PopupXY(Coord x, Coord y, bool workArea = true, AScreen screen = default)
+		/// <summary>
+		/// Sets position and/or screen.
+		/// </summary>
+		/// <param name="x">X relative to the screen or work area. Default - center.</param>
+		/// <param name="y">X relative to the screen or work area. Default - center.</param>
+		/// <param name="workArea">x y are relative to the work area of the screen.</param>
+		/// <param name="screen">Can be used to specify a screen. Default - primary.</param>
+		/// <remarks>
+		/// Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
+		/// </remarks>
+		public PopupXY(Coord x = default, Coord y = default, bool workArea = true, AScreen screen = default)
 		{
 			this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 		}
 
-		public PopupXY(RECT r, Coord x, Coord y)
-		{
-			this.x = x; this.y = y; this.rect = r;
-		}
-#pragma warning restore 1591 //XML doc
+		/// <summary>
+		/// Creates new <b>PopupXY</b> that specifies position in a rectangle. For example of the owner window, like <c>PopupXY.In(myForm.Bounds)</c>.
+		/// </summary>
+		/// <param name="r">Rectangle relative to the primary screen.</param>
+		/// <param name="x">X relative to the rectangle. Default - center.</param>
+		/// <param name="y">Y relative to the rectangle. Default - center.</param>
+		public static PopupXY In(RECT r, Coord x = default, Coord y = default) => new PopupXY(x, y) { inRect = true, rect = r };
 
-		/// <summary>Specifies position relative to the work area of the primary screen.</summary>
+		/// <summary>
+		/// Creates new <b>PopupXY</b> that specifies position relative to the work area of the primary screen.
+		/// </summary>
 		public static implicit operator PopupXY((Coord x, Coord y) p) => new PopupXY(p.x, p.y, true);
-		/// <summary>Specifies position relative to the primary screen or its work area.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea);
-		/// <summary>Specifies position relative to the work area of the specified screen.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, AScreen screen) p) => new PopupXY(p.x, p.y, true, p.screen);
-		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, bool workArea, AScreen screen) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
-		/// <summary>Specifies position relative to the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((Coord x, Coord y, AScreen screen, bool workArea) p) => new PopupXY(p.x, p.y, p.workArea, p.screen);
-		/// <summary>Specifies position relative to the primary screen.</summary>
-		public static implicit operator PopupXY(POINT p) => new PopupXY(p.x, p.y, false);
-		/// <summary>Specifies the center of the work area of the specified screen.</summary>
-		public static implicit operator PopupXY(AScreen screen) => new PopupXY(default, default, true, screen);
-		/// <summary>Specifies the center of the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((AScreen screen, bool workArea) t) => new PopupXY(default, default, t.workArea, t.screen);
-		/// <summary>Specifies the center of the specified screen or its work area.</summary>
-		public static implicit operator PopupXY((bool workArea, AScreen screen) t) => new PopupXY(default, default, t.workArea, t.screen);
-		/// <summary>Specifies position in the specified rectangle which is relative to the primary screen.</summary>
-		public static implicit operator PopupXY((RECT r, Coord x, Coord y) t) => new PopupXY(t.r, t.x, t.y);
-		/// <summary>Specifies the center of the specified rectangle which is relative to the primary screen.</summary>
-		public static implicit operator PopupXY(RECT r) => new PopupXY { rect = r };
-		/// <summary>Specifies position in the specified window.</summary>
-		public static implicit operator PopupXY((AWnd w, Coord x, Coord y) t) => new PopupXY(t.w.Rect, t.x, t.y);
-		/// <summary>Specifies the center of the specified window.</summary>
-		public static implicit operator PopupXY(AWnd w) => new PopupXY { rect = w.Rect };
-		/// <summary>Specifies the center of the specified control or form.</summary>
-		public static implicit operator PopupXY(Control c) => new PopupXY { rect = c.Hwnd().Rect };
-		/// <summary>Specifies position in the specified control or form.</summary>
-		public static implicit operator PopupXY((Control c, Coord x, Coord y) t) => new PopupXY(t.c.Hwnd().Rect, t.x, t.y);
 
-		//public bool IsRawXY => screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
+		/// <summary>Creates new <b>PopupXY</b> that specifies position relative to the primary screen (not to the work area).</summary>
+		public static implicit operator PopupXY(POINT p) => new PopupXY(p.x, p.y, false);
+		//info: this conversion can be used with PopupXY.Mouse.
+
+		//public bool IsRawXY => !inRect && screen.IsNull && workArea == false && x.Type == Coord.CoordType.Normal && y.Type == Coord.CoordType.Normal;
 
 		/// <summary>
 		/// Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
@@ -398,7 +390,7 @@ namespace Au.Types
 			get
 			{
 				int cy = Api.GetSystemMetrics(Api.SM_CYCURSOR);
-				var p = Au.AMouse.XY;
+				var p = AMouse.XY;
 				if(Util.ACursor.GetCurrentCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
 					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
@@ -412,29 +404,15 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets <see cref="Screen"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
+		/// Gets <see cref="AScreen.Device"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
 		/// </summary>
-		public Screen GetScreen()
+		public AScreen.Device GetScreen()
 		{
-			if(!screen.IsNull) return screen.GetScreen();
-			POINT p;
-			if(rect.HasValue) p = Coord.NormalizeInRect(x, y, rect.GetValueOrDefault(), centerIfEmpty: true);
-			else p = Coord.Normalize(x, y, workArea);
-			return Screen.FromPoint(p);
+			if(!screen.IsNull) return screen.ToDevice();
+			POINT p = inRect ? Coord.NormalizeInRect(x, y, rect, centerIfEmpty: true) : Coord.Normalize(x, y, workArea);
+			return AScreen.Of(p);
 		}
 	}
-
-	//FUTURE
-	//[Flags]
-	//public enum PopupAlignment
-	//{
-	//	XAtLeft = 0,
-	//	XAtRight = 1,
-	//	XAtCenter = 2,
-	//	YAtTop = 0,
-	//	YAtBottom = 1,
-	//	YAtCenter = 2,
-	//}
 
 	/// <summary>
 	/// Window handle.
@@ -448,31 +426,18 @@ namespace Au.Types
 
 		/// <summary> Assignment of a value of type AWnd. </summary>
 		public static implicit operator AnyWnd(AWnd w) => new AnyWnd(w);
-		/// <summary> Assignment of a value of type AWnd. </summary>
+		/// <summary> Assignment of a window handle as IntPtr. </summary>
 		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((AWnd)hwnd);
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
 		public static implicit operator AnyWnd(Control c) => new AnyWnd(c);
 		/// <summary> Assignment of a value of type System.Windows.Window (WPF window). </summary>
-		public static implicit operator AnyWnd(System.Windows.Window w) => new AnyWnd(w);
+		public static implicit operator AnyWnd(System.Windows.Window w) => new AnyWnd(new object[] { w });
 
 		/// <summary>
 		/// Gets the window or control handle as AWnd.
 		/// Returns default(AWnd) if not assigned.
 		/// </summary>
-		public AWnd Wnd
-		{
-			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading Forms dll when don't need
-			get
-			{
-				if(_o == null) return default;
-				if(_o is AWnd) return (AWnd)_o;
-				if(_o is Control c) return (AWnd)c;
-				return _Wpf();
-			}
-		}
-
-		[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
-		AWnd _Wpf() => (AWnd)(System.Windows.Window)_o;
+		public AWnd Wnd => AWnd.Lib.FromObject(_o);
 
 		/// <summary>
 		/// true if this is default(AnyWnd).

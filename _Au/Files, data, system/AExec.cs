@@ -45,11 +45,11 @@ namespace Au
 		/// This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <param name="more">
+		/// <param name="curDirEtc">
 		/// Allows to specify more parameters: current directory, verb, window state, etc.
-		/// If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="RMore.CurrentDirectory"/>.
+		/// If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
 		/// </param>
-		/// <exception cref="ArgumentException">Used more.Verb and flag Admin.</exception>
+		/// <exception cref="ArgumentException">Used both ROptions.Verb and RFlags.Admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -68,9 +68,9 @@ namespace Au
 		/// AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AExec.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
-		public static RResult Run(string file, string args = null, RFlags flags = 0, RMore more = null)
+		public static RResult Run(string file, string args = null, RFlags flags = 0, ROptions curDirEtc = null)
 		{
-			//SHOULDDO: from UAC IL admin run as user by default. Add property UacInherit.
+			//SHOULDDO: from UAC IL admin run as user by default. Add flag UacInherit.
 
 			Api.SHELLEXECUTEINFO x = default;
 			x.cbSize = Api.SizeOf(x);
@@ -78,6 +78,7 @@ namespace Au
 			x.nShow = Api.SW_SHOWNORMAL;
 
 			bool curDirFromFile = false;
+			var more = curDirEtc;
 			if(more != null) {
 				x.lpVerb = more.Verb;
 				var cd = more.CurrentDirectory; if(cd != null) { if(cd.Length == 0) curDirFromFile = true; else cd = APath.ExpandEnvVar(cd); }
@@ -173,10 +174,10 @@ namespace Au
 		/// <seealso cref="OptDebug.DisableWarnings"/>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static RResult TryRun(string s, string args = null, RFlags flags = 0, RMore more = null)
+		public static RResult TryRun(string s, string args = null, RFlags flags = 0, ROptions curDirEtc = null)
 		{
 			try {
-				return Run(s, args, flags, more);
+				return Run(s, args, flags, curDirEtc);
 			}
 			catch(AuException e) {
 				PrintWarning(e.Message, 1);
@@ -456,12 +457,15 @@ namespace Au.Types
 	/// <summary>
 	/// More parameters for <see cref="AExec.Run"/>.
 	/// </summary>
-	public class RMore
+	/// <remarks>
+	/// Implicit conversion from <b>string</b> sets <see cref="CurrentDirectory"/>.
+	/// </remarks>
+	public class ROptions
 	{
 		/// <summary>
 		/// Sets <see cref="CurrentDirectory"/>.
 		/// </summary>
-		public static implicit operator RMore(string curDir) => new RMore() { CurrentDirectory = curDir };
+		public static implicit operator ROptions(string curDir) => new ROptions { CurrentDirectory = curDir };
 
 		/// <summary>
 		/// Initial current directory for the new process.
@@ -490,10 +494,9 @@ namespace Au.Types
 		public ProcessWindowStyle WindowState;
 
 		//no. If need, caller can get window and call EnsureInScreen etc.
-		//public Screen Screen;
+		//public AScreen Screen;
 		//this either does not work or I could not find a program that uses default window position (does not save/restore)
-		//if(more.Screen != null) { x._14.hMonitor = (IntPtr)more.Screen.GetHashCode(); x.fMask |= Api.SEE_MASK_HMONITOR; } //GetHashCode gets HMONITOR
-
+		//if(!more.Screen.IsNull) { x._14.hMonitor = more.Screen.ToDevice().Handle; x.fMask |= Api.SEE_MASK_HMONITOR; }
 	}
 
 	/// <summary>

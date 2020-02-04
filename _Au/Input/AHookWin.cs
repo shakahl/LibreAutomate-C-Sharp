@@ -471,8 +471,8 @@ namespace Au
 					if(R) return 1;
 				}
 			}
-			catch(Exception ex) { if(LibOnException(ex, this)) return 0; }
-			//info: on any exception .NET would terminate process, even on ThreadAbortException.
+			catch(Exception ex) { LibOnException(ex); }
+			//info: on any exception .NET would terminate process.
 			//	This prevents it when using eg ADialog. But not when eg MessageBox.Show; I don't know how to prevent it.
 			gr:
 			return Api.CallNextHookEx(default, code, wParam, lParam);
@@ -503,26 +503,9 @@ namespace Au
 		}
 		static int s_lowLevelHooksTimeout;
 
-		/// <summary>
-		/// Called on any catched exception in a hook procedure.
-		/// Returns true if it is ThreadAbortException.
-		/// </summary>
-		/// <param name="e"></param>
-		/// <param name="hook">On ThreadAbortException calls hook.Dispose.</param>
-		internal static bool LibOnException(Exception e, IDisposable hook)
+		internal static void LibOnException(Exception e)
 		{
-			//Thread.Abort and ResetAbort not supported in Core
-			//if(e is ThreadAbortException eta) {
-			//	Thread.ResetAbort();
-			//	hook.Dispose();
-			//	ADebug.Print("ThreadAbortException");
-			//	var t = Thread.CurrentThread;
-			//	Task.Run(() => { Thread.Sleep(50); t.Abort(eta.ExceptionState); });
-			//	return true;
-			//}
-
 			PrintWarning("Unhandled exception in hook procedure. " + e.ToString());
-			return false;
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.

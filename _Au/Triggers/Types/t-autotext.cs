@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
 using System.Globalization;
 
@@ -727,7 +725,7 @@ namespace Au.Triggers
 		public bool Confirm(string text) //can be static, but, because it is public, would be not so easy to use.
 		{
 			bool ok = false;
-			var m = new AMenu { ModalAlways = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
+			var m = new AMenu { Modal = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
 			m[text.Escape(limit: 60)] = u => ok = true;
 			using(AHookWin.Keyboard(x => {
 				if(x.IsUp) return;

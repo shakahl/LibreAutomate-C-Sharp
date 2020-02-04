@@ -111,6 +111,7 @@ partial class FOptions : DialogForm
 			if(t.ColumnCount > 2) { err = "Too many commas in a line. If script name contains comma, enclose in \"\"."; goto ge; }
 			foreach(var v in t.Data) {
 				var script = v[0];
+				if(script.Starts("//")) continue;
 				if(Program.Model.FindScript(script) == null) { err = "Script not found: " + script; break; }
 				var delay = v.Length == 1 ? null : v[1];
 				if(!Empty(delay)) {

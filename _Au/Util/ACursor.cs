@@ -55,12 +55,7 @@ namespace Au.Util
 		{
 			if(hCursor == default) return null;
 			var R = new Forms.Cursor(hCursor);
-			if(destroyCursor) {
-				var fi = typeof(Forms.Cursor).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
-				Debug.Assert(fi != null);
-				fi?.SetValue(R, true);
-				AGC.AddObjectMemoryPressure(R, 1000); //see comments in AIcon.HandleToIcon
-			}
+			if(destroyCursor) AIcon.LetObjectDestroyIconOrCursor_(R);
 			return R;
 		}
 
@@ -105,11 +100,11 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Gets the native handle of the current mouse cursor.
-		/// Returns false if the cursor is currently invisible.
+		/// Gets the native handle of the current global mouse cursor.
+		/// Returns false if cursor is hidden.
 		/// </summary>
 		/// <remarks>
-		/// It is the system cursor, not the cursor of this thread.
+		/// It is not the cursor of this thread (<see cref="Forms.Cursor.Current"/>).
 		/// Don't destroy the cursor.
 		/// </remarks>
 		public static bool GetCurrentCursor(out IntPtr hcursor)
@@ -117,6 +112,17 @@ namespace Au.Util
 			Api.CURSORINFO ci = default; ci.cbSize = Api.SizeOf(ci);
 			if(Api.GetCursorInfo(ref ci) && ci.hCursor != default && 0 != (ci.flags & Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
 			hcursor = default; return false;
+		}
+
+		/// <summary>
+		/// Workaround for brief 'wait' cursor when mouse enters a window of current thread first time.
+		/// Reason: default thread's cursor is 'wait'. OS shows it before the first WM_SETCURSOR sets correct cursor.
+		/// Call eg on WM_CREATE.
+		/// </summary>
+		internal static void SetArrowCursor_()
+		{
+			var h = Forms.Cursors.Arrow.Handle;
+			if(Api.GetCursor() != h) Api.SetCursor(h);
 		}
 	}
 }

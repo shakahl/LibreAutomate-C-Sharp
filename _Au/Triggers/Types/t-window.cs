@@ -12,11 +12,8 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
 
-using Au;
 using Au.Types;
 using static Au.AStatic;
 using System.Collections;
@@ -350,7 +347,7 @@ namespace Au.Triggers
 					if(w.IsVisible) {
 						if(_usesVisibleArray) _aVisible.Add(w);
 						//skip empty winstore hosts that later probably will be used as new windows. Speed: ~100 mcs, first time ~10 ms.
-						if(_win10 && w.HasExStyle(WS_EX.NOREDIRECTIONBITMAP) && w.IsCloaked && w.ClassNameIs("ApplicationFrameWindow")) {
+						if(_win10 && w.HasExStyle(WS2.NOREDIRECTIONBITMAP) && w.IsCloaked && w.ClassNameIs("ApplicationFrameWindow")) {
 							//is it a window in an inactive virtual desktop? In both cases it does not have a child Windows.UI.Core.CoreWindow.
 							if(dm == null) dm = new Api.VirtualDesktopManager() as Api.IVirtualDesktopManager;
 							if(0 == dm.GetWindowDesktopId(w.Get.RootOwnerOrThis(), out var guid) && guid == default) {
@@ -734,7 +731,7 @@ namespace Au.Triggers
 						//	Now such triggers sometimes don't work because need more time to show the image.
 						//	Rare and too difficult. Cannot wait now. Would need to use timer or threadpool.
 					}
-					catch(Exception ex) when(!(ex is ThreadAbortException)) {
+					catch(Exception ex) {
 						Print(ex);
 						continue;
 					}

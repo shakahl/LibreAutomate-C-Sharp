@@ -535,7 +535,7 @@ namespace Au
 					failedGetRect = !(inScreen ? _area.A.GetRect(out r) : _area.A.GetRect(out r, _area.W));
 					break;
 				case WIArea.AreaType.Bitmap:
-					r = (0, 0, _area.B.Width, _area.B.Height, false);
+					r = new RECT(0, 0, _area.B.Width, _area.B.Height, false);
 					break;
 				default: //Screen
 					r = _area.R;
@@ -749,7 +749,7 @@ namespace Au
 
 				if(_action != _Action.WaitChanged) {
 					int iFound = (int)(f.p - o_pos0 - areaPixels);
-					RECT r = (iFound % _ad.width, iFound / _ad.width, imageWidth, imageHeight);
+					var r = new RECT(iFound % _ad.width, iFound / _ad.width, imageWidth, imageHeight);
 					r.Offset(_resultOffset.x, _resultOffset.y);
 					Result.Rect = r;
 

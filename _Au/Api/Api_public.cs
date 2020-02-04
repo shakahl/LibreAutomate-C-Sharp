@@ -100,6 +100,7 @@ namespace Au.Types
 	[CLSCompliant(false)]
 	public static unsafe partial class Native
 	{
+		/// <summary>API <msdn>MSG</msdn></summary>
 		public struct MSG
 		{
 			public AWnd hwnd;
@@ -123,6 +124,7 @@ namespace Au.Types
 			POPUPMENUMODE = 0x10,
 		}
 
+		/// <summary>API <msdn>GUITHREADINFO</msdn></summary>
 		public struct GUITHREADINFO
 		{
 			public int cbSize;
@@ -136,6 +138,7 @@ namespace Au.Types
 			public RECT rcCaret;
 		}
 
+		/// <summary>API <msdn>CREATESTRUCT</msdn></summary>
 		public struct CREATESTRUCT
 		{
 			public IntPtr lpCreateParams;
@@ -150,13 +153,14 @@ namespace Au.Types
 			LPARAM _lpszName;
 			/// <summary>Can be string or atom (ushort).</summary>
 			public LPARAM lpszClass;
-			public WS_EX dwExStyle;
+			public WS2 dwExStyle;
 
 			public unsafe string lpszName => _lpszName == default ? null : new string((char*)_lpszName);
 
 			//tested and documented: hook can change only x y cx cy.
 		}
 
+		/// <summary>API <msdn>MOUSEHOOKSTRUCT</msdn></summary>
 		public struct MOUSEHOOKSTRUCT
 		{
 			public POINT pt;
@@ -165,6 +169,7 @@ namespace Au.Types
 			public LPARAM dwExtraInfo;
 		}
 
+		/// <summary>API <msdn>CWPSTRUCT</msdn></summary>
 		public struct CWPSTRUCT
 		{
 			public LPARAM lParam;
@@ -173,6 +178,7 @@ namespace Au.Types
 			public AWnd hwnd;
 		}
 
+		/// <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
 		public struct CWPRETSTRUCT
 		{
 			public LPARAM lResult;
@@ -182,6 +188,7 @@ namespace Au.Types
 			public AWnd hwnd;
 		}
 
+		/// <summary>API <msdn>SIGDN</msdn></summary>
 		public enum SIGDN : uint
 		{
 			NORMALDISPLAY,
@@ -202,7 +209,7 @@ namespace Au.Types
 		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
 		public delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
 
-		/// <summary>API <msdn>SetWindowPos</msdn> flags.</summary>
+		/// <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="AWnd.SetWindowPos"/>.</summary>
 		/// <remarks>The _X flags are undocumented.</remarks>
 		[Flags]
 		public enum SWP : uint
@@ -228,7 +235,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Special window handle values.
+		/// Special window handle values. Can be used with <see cref="AWnd.SetWindowPos"/>.
 		/// See API <msdn>SetWindowPos</msdn>.
 		/// </summary>
 		public enum HWND
@@ -242,7 +249,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Window long constants.
+		/// Window long constants. Used with <see cref="AWnd.GetWindowLong"/> and <see cref="AWnd.SetWindowLong"/>.
 		/// See API <msdn>GetWindowLong</msdn>.
 		/// </summary>
 		public static class GWL
@@ -265,8 +272,8 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Window class long constants.
-		/// See API <msdn>WNDCLASSEX</msdn>, API <msdn>GetClassLong</msdn>.
+		/// Window class long constants. Used with <see cref="AWnd.More.GetClassLong"/>.
+		/// See API <msdn>WNDCLASSEX</msdn>, <msdn>GetClassLong</msdn>.
 		/// </summary>
 		public static class GCL
 		{
@@ -284,7 +291,7 @@ namespace Au.Types
 			//info: also there are GCLP_, but their values are the same.
 		}
 
-		/// <summary>API <msdn>SendMessageTimeout</msdn> flags.</summary>
+		/// <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="AWnd.SendTimeout"/>.</summary>
 		[Flags]
 		public enum SMTO : uint
 		{
@@ -299,8 +306,11 @@ namespace Au.Types
 
 	/// <summary>
 	/// Window styles.
-	/// See API <msdn>CreateWindowEx</msdn>.
 	/// </summary>
+	/// <remarks>
+	/// Reference: <msdn>Window Styles</msdn>.
+	/// Here names are without prefix WS_. For example, instead of WS_BORDER use WS.BORDER. Not included constants that are 0 (eg WS_TILED) or are duplicate (eg WS_SIZEBOX is same as WS_THICKFRAME) or consist of multiple other constants (eg WS_TILEDWINDOW).
+	/// </remarks>
 	[Flags]
 	public enum WS : uint
 	{
@@ -330,10 +340,13 @@ namespace Au.Types
 
 	/// <summary>
 	/// Window extended styles.
-	/// See API <msdn>CreateWindowEx</msdn>.
 	/// </summary>
+	/// <remarks>
+	/// Reference: <msdn>Extended Window Styles</msdn>.
+	/// Here names are without prefix WS_EX_. For example, instead of WS_EX_TOOLWINDOW use WS2.TOOLWINDOW. Not included constants that are 0 (eg WS_EX_LEFT).
+	/// </remarks>
 	[Flags]
-	public enum WS_EX : uint
+	public enum WS2 : uint
 	{
 		DLGMODALFRAME = 0x00000001,
 		NOPARENTNOTIFY = 0x00000004,

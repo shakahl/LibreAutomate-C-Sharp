@@ -12,7 +12,7 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms; //SHOULDDO: avoid loading Forms dll. Now from it uses TextRenderer and Screen.
+using System.Windows.Forms; //SHOULDDO: avoid loading Forms dll. Now from it uses TextRenderer.
 using System.Drawing;
 //using System.Linq;
 
@@ -173,8 +173,8 @@ namespace Au
 				s_isWinClassRegistered |= regMask;
 			}
 
-			var es = WS_EX.TOOLWINDOW | WS_EX.TOPMOST | WS_EX.LAYERED | WS_EX.TRANSPARENT | WS_EX.NOACTIVATE;
-			if(ClickToClose) es &= ~WS_EX.TRANSPARENT;
+			var es = WS2.TOOLWINDOW | WS2.TOPMOST | WS2.LAYERED | WS2.TRANSPARENT | WS2.NOACTIVATE;
+			if(ClickToClose) es &= ~WS2.TRANSPARENT;
 			_w = AWnd.More.CreateWindow(WndProc, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
 			_SetOpacity();
 			if(!_r.Is0) _w.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
@@ -347,7 +347,7 @@ namespace Au
 	{
 		/// <summary>
 		/// Coordinates.
-		/// Default: null - screen center.
+		/// Default: null. Screen center.
 		/// </summary>
 		/// <remarks>
 		/// Not used if <see cref="Rect"/> is set.
@@ -355,8 +355,8 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var m = new AOsd { Text = "Text", ShowMode = OsdShowMode.StrongThread };
-		/// m.XY = (Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
+		/// var m = new AOsd { Text = "Text" };
+		/// m.XY = new PopupXY(Coord.Center, Coord.Max); //bottom-center of the work area of the primary screen
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -653,8 +653,8 @@ namespace Au
 				}
 
 				if(!Empty(Text)) {
-					Screen screen = XY?.GetScreen() ?? DefaultScreen.GetScreen();
-					var rs = screen.WorkingArea; z = new Size(rs.Width - zi.Width - 10, rs.Height - 14);
+					var screen = XY?.GetScreen() ?? DefaultScreen.ToDevice();
+					var rs = screen.WorkArea; z = new Size(rs.Width - zi.Width - 10, rs.Height - 14);
 					var tff = TextFormatFlags;
 					int ww = WrapWidth; if(ww > 0) { tff |= TextFormatFlags.WordBreak; if(ww < z.Width) z.Width = ww; }
 					var font = Font ?? DefaultFont;
@@ -672,15 +672,15 @@ namespace Au
 				z.Width += 2; z.Height += 2;
 			}
 
-			RECT r = (0, 0, z.Width, z.Height);
+			var r = new RECT(0, 0, z.Width, z.Height);
 			//Print(r);
 
 			if(XY != null) {
-				if(XY.rect.HasValue) r.MoveInRect(XY.rect.GetValueOrDefault(), XY.x, XY.y, false);
-				else r.MoveInScreen(XY.x, XY.y, XY.screen.GetScreen(), XY.workArea, false);
+				if(XY.inRect) r.MoveInRect(XY.rect, XY.x, XY.y, false);
+				else r.MoveInScreen(XY.x, XY.y, XY.screen, XY.workArea, ensureInScreen: false);
 				r.EnsureInScreen(workArea: true);
 			} else {
-				r.MoveInScreen(Coord.Center, Coord.Center, DefaultScreen, true, true);
+				r.MoveInScreen(Coord.Center, Coord.Center, DefaultScreen, workArea: true, ensureInScreen: true);
 			}
 
 			return r;
@@ -816,9 +816,7 @@ namespace Au
 
 		/// <summary>
 		/// Default screen when <see cref="XY"/> is not set.
-		/// Each thread has its own instance of this property.
 		/// </summary>
-		[field: ThreadStatic]
 		public static AScreen DefaultScreen { get; set; }
 	}
 }

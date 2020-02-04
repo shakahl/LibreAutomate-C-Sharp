@@ -39,12 +39,13 @@ partial class FMain : Form
 		this.StartPosition = FormStartPosition.Manual;
 		unsafe {
 			var s = Program.Settings.wndPos;
-			if(s!=null && Au.Util.AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
+			if(s != null && Au.Util.AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
 				p.rcNormalPosition.EnsureInScreen();
 				this.Bounds = p.rcNormalPosition;
 				if(p.showCmd == Api.SW_SHOWMAXIMIZED) this.WindowState = FormWindowState.Maximized;
 			} else {
-				this.Bounds = new Rectangle(100, 50, (AScreen.PrimaryWidth - 100) * 3 / 4, (AScreen.PrimaryHeight - 50) * 4 / 5);
+				var wa = AScreen.Primary.WorkArea;
+				this.Bounds = new Rectangle(wa.left + 10, wa.top + 10, wa.Width * 3 / 4, wa.Height - 20);
 			}
 		}
 
@@ -228,7 +229,7 @@ partial class FMain : Form
 	{
 		if(base.ProcessCmdKey(ref msg, keyData)) return true;
 		//let Esc focus the code editor. If editor focused - previously focused control or the Files treeview. Because the code editor is excluded from tabstopping.
-		if(keyData == Keys.Escape || keyData == (Keys.Escape| Keys.Shift)) {
+		if(keyData == Keys.Escape || keyData == (Keys.Escape | Keys.Shift)) {
 			var doc = Panels.Editor.ZActiveDoc;
 			if(doc != null) {
 				if(doc.Focused) {

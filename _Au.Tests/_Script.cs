@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-#if false
+#if true
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -38,6 +38,8 @@ using Au.Controls;
 using Au;
 using Au.Types;
 using static Au.AStatic;
+using System.Diagnostics.CodeAnalysis;
+using System.Windows;
 
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
@@ -241,29 +243,29 @@ class Script : AScript
 	//	m["Eight"] = o => Print(o);
 	//	m.Show();
 
-//}
+	//}
 
-//void TestMenu2()
-//{
-//	var m = new AMenu();
-//	m["One"] = o => Print(o);
-//	m["Two"] = o => Print(o);
-//	m.LazySubmenu("Submenu 1");
-//	m.LazyFill = _ => {
-//		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
-//		m["Three"] = o => Print(o);
-//		m["Four"] = o => Print(o);
-//		m.Submenu("Submenu 2", _ => {
-//			Print("adding items of " + m.CurrentAddMenu.OwnerItem);
-//			m["Five"] = o => Print(o);
-//			m["Six"] = o => Print(o);
-//		});
-//		m["Seven"] = o => Print(o);
-//	};
-//	m["Eight"] = o => Print(o);
-//	m.Show();
+	//void TestMenu2()
+	//{
+	//	var m = new AMenu();
+	//	m["One"] = o => Print(o);
+	//	m["Two"] = o => Print(o);
+	//	m.LazySubmenu("Submenu 1");
+	//	m.LazyFill = _ => {
+	//		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
+	//		m["Three"] = o => Print(o);
+	//		m["Four"] = o => Print(o);
+	//		m.Submenu("Submenu 2", _ => {
+	//			Print("adding items of " + m.CurrentAddMenu.OwnerItem);
+	//			m["Five"] = o => Print(o);
+	//			m["Six"] = o => Print(o);
+	//		});
+	//		m["Seven"] = o => Print(o);
+	//	};
+	//	m["Eight"] = o => Print(o);
+	//	m.Show();
 
-//}
+	//}
 
 #if false
 	void TestToolbar()
@@ -502,7 +504,7 @@ class Script : AScript
 	//		////return;
 
 	//		var a = AWnd.GetWnd.AllWindows(true); Print(a.Length);
-	//		//int ir = Array.FindIndex(a, o => o.HasExStyle(WS_EX.LAYOUTRTL)); //Print(ir);
+	//		//int ir = Array.FindIndex(a, o => o.HasExStyle(WS2.LAYOUTRTL)); //Print(ir);
 	//		APerf.SpeedUpCpu();
 	//		for(int i1 = 0; i1 < 7; i1++) {
 	//			//p = (1, 1); Api.ClientToScreen(w, ref p);
@@ -537,14 +539,127 @@ class Script : AScript
 
 	//}
 
-	void TestAny()
+	static void Bug1(string s=null, Func<Screen, bool> f = null) { }
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	void TestAScreen()
 	{
+		var w = AWnd.Active;
+		var s = new AScreen(w);
+		var d = s.ToDevice();
+		Print(d);
+
+		//var w = AWnd.Find("*Notepad", also: o => o.Screen.Index == 1);
+		//Bug1("", f: o=>o.)
+		//Bug1(f: o=>o.)
+
+		//ThreadPool.QueueUserWorkItem(_ => Print(1));
+		//500.ms();
+		//APerf.First();
+		//var a = AScreen.AllScreens;
+		//APerf.NW();
+		//Print(a);
+		//500.ms();
+		////while(!AKeys.IsCtrl) 100.ms();
+
+		////AScreen.Of(w).
+
+		//var w = AWnd.Active;
+		//AWnd.Active.Move(0, 0, 0, 0, false, screen: 1);
+		////AWnd.Active.Move(0, 0, 0, 0, false, screen: w);
+		////AWnd.Active.Move(0, 0, 0, 0, false, (AScreen)w);
+		//AWnd.Active.Move(0, 0, 0, 0, false, new AScreen(w));
+		//AWnd.Active.Move(0, 0, 0, 0, false, AScreen.Of(w));
+
+		//new AScreen(() => AScreen.Of(AMouse.XY));
+		//new AScreen(() => AScreen.Of(AWnd.Active));
+
+		//Screen sco = null; new AScreen(sco);
+		//AWnd.Active.Move(0, 0, 0, 0, false, screen: sco);
+
+		//RECT r = AScreen.Of(AWnd.Active).Bounds;
+
+		//Print(HScreen.AllScreens);
+		////Print(Screen.AllScreens);
+		//Print(HScreen.FromIndex(0), HScreen.FromIndex(1), HScreen.FromIndex(2), HScreen.FromIndex(3));
+		//foreach(var v in Screen.AllScreens) Print(v.GetIndex(), (HScreen)v);
+		//foreach(var v in HScreen.AllScreens) Print(v.Index, (Screen)v);
+		//bool two = AKeys.IsScrollLock;
+
+		//var screenFromMouse = new HScreen(() => HScreen.FromPoint(AMouse.XY));
+		//var screenFromActiveWindow = new HScreen(() => HScreen.FromWindow(AWnd.Active));
+		//Print(screenFromMouse, screenFromActiveWindow);
+
+		//while(ADialog.ShowOKCancel("test")) {
+		//	two = AKeys.IsScrollLock;
+		//	200.ms();
+		//	//APerf.SpeedUpCpu();
+		//	APerf.First();
+		//	if(two) { _ = HScreen.AllScreens; APerf.Next(); _ = HScreen.AllScreens; }
+		//	else { _ = Screen.AllScreens; APerf.Next(); _ = Screen.AllScreens; }
+		//	APerf.NW();
+		//}
+
+		//APerf.SpeedUpCpu();
+		//for(int i1 = 0; i1 < 7; i1++) {
+		//	int n2 = 1;
+		//	APerf.First();
+		//	for(int i2 = 0; i2 < n2; i2++) { _ = HScreen.AllScreens; }
+		//	APerf.Next();
+		//	for(int i2 = 0; i2 < n2; i2++) { _ = two ? HScreen.Primary.Info.bounds : AScreen2.PrimaryRect; }
+		//	APerf.NW();
+		//	Thread.Sleep(100);
+		//}
+
+		//var h = HScreen.Primary;
+		////h = default;
+		////h = new HScreen((IntPtr)12345678);
+		//h = HScreen.FromWindow(AWnd.Active, SDefault.Nearest);
+		//var v = h.GetInfo();
+		//Print(v, h.IsAlive);
+		//Print(h == HScreen.Primary);
 	}
+
+	//[DllImport("kernel32.dll", EntryPoint = "LoadLibraryExW", SetLastError =true)]
+	//internal static extern IntPtr LoadLibraryEx(string lpLibFileName, IntPtr hFile, uint dwFlags);
+	//void TestFailsWpf()
+	//{
+	//	//if(default==Api.LoadLibrary(@"C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\wpfgfx_cor3.dll"))
+	//	//	Print(ALastError.Message);
+	//	//if(default==LoadLibraryEx(@"C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\wpfgfx_cor3.dll", default,
+	//	//	0x1100))
+	//	//	Print(ALastError.Message);
+
+	//	var f = new Window { Left = 500, Top = 1500 };
+	//	f.Show();
+
+	//	//Print(Api.LoadLibrary(@"C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\wpfgfx_cor3.dll"));
+
+	//	ADialog.ShowEx(secondsTimeout: 2);
+	//}
+
+	//void TestAWndFromObject()
+	//{
+	//	//var f = new Form { StartPosition = FormStartPosition.Manual, Left = 500, Top = 1500 };
+	//	var f = new Window { Left = 500, Top = 1500 };
+	//	f.Show();
+
+	//	var v = new AScreen(f);
+	//	Print(v.ToDevice());
+
+	//	//ADialog.ShowEx(secondsTimeout: 2);
+	//	ADialog.ShowEx(owner: f);
+	//}
 
 	unsafe void _Main()
 	{
 		//Application.SetCompatibleTextRenderingDefault(false);
+		//Print("before");
+		//ADebug.PrintLoadedAssemblies(true, true, true);
 
+		
+
+		//TestAScreen();
 		//TestClientToScreenRtlAware();
 		//TestToolbar();
 		//TestMenu();

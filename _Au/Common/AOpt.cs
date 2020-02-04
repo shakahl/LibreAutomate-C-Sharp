@@ -821,15 +821,16 @@ namespace Au.Types
 			Period = 10; DoEvents = false;
 		}
 
-		/// <summary>
-		/// Implicit conversion from int. Sets <see cref="Period"/>.
-		/// </summary>
-		public static implicit operator OptWaitFor(int period) => new OptWaitFor(period, false);
+		//no
+		///// <summary>
+		///// Implicit conversion from int. Sets <see cref="Period"/>.
+		///// </summary>
+		//public static implicit operator OptWaitFor(int period) => new OptWaitFor(period, false);
 
-		/// <summary>
-		/// Implicit conversion from bool. Sets <see cref="DoEvents"/>.
-		/// </summary>
-		public static implicit operator OptWaitFor(bool doEvents) => new OptWaitFor(10, doEvents);
+		///// <summary>
+		///// Implicit conversion from bool. Sets <see cref="DoEvents"/>.
+		///// </summary>
+		//public static implicit operator OptWaitFor(bool doEvents) => new OptWaitFor(10, doEvents);
 	}
 
 	/// <summary>Used by <see cref="AOpt.Temp.Mouse"/>.</summary>

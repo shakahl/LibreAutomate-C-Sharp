@@ -131,7 +131,7 @@
 			this._startupScripts.Size = new System.Drawing.Size(248, 52);
 			this._startupScripts.TabIndex = 3;
 			this._toolTip.SetToolTip(this._startupScripts, "Script name or path, and delay ms or s.\r\nExample:\r\nscript4.cs, 500 ms\r\n\\folder\\sc" +
-        "ript5.cs, 2 s");
+        "ript5.cs, 2 s\r\n//disabled, 100 ms");
 			this._startupScripts.WordWrap = false;
 			this._startupScripts.Validating += new System.ComponentModel.CancelEventHandler(this._startupScripts_Validating);
 			// 

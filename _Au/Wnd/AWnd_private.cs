@@ -146,16 +146,11 @@ namespace Au
 				static readonly ushort s_atom = Api.GlobalAddAtom("Au.WFlags"); //atom is much faster than string
 																				//note: cannot delete atom, eg in static dtor. Deletes even if currently used by a window prop, making the prop useless.
 
-				internal static bool Set(AWnd w, WFlags flags, SetAddRemove setAddRem = SetAddRemove.Set)
+				internal static bool Set(AWnd w, WFlags flags, bool? setAddRem = null)
 				{
-					if(setAddRem != SetAddRemove.Set) {
-						var f = Get(w);
-						switch(setAddRem) {
-						case SetAddRemove.Add: f |= flags; break;
-						case SetAddRemove.Remove: f &= ~flags; break;
-						case SetAddRemove.Xor: f ^= flags; break;
-						}
-						flags = f;
+					switch(setAddRem) {
+					case true: flags = Get(w) | flags; break;
+					case false: flags = Get(w) & ~flags; break;
 					}
 					return w.Prop.Set(s_atom, (int)flags);
 				}
@@ -225,6 +220,25 @@ namespace Au
 				int i = (int)w;
 				return (i <= 1 && i >= -3) || i == 0xffff;
 			}
+
+			/// <summary>
+			/// Converts object to AWnd.
+			/// Object can contain null, AWnd, Control, or System.Windows.Window (must be in element 0 of object[]).
+			/// Avoids loading Forms and WPF dlls when not used.
+			/// </summary>
+			public static AWnd FromObject(object o) => o switch
+			{
+				null => default,
+				AWnd w => w,
+				object[] a => _Wpf(a[0]),
+				_ => _Control(o)
+			};
+
+			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading Forms dlls when don't need
+			static AWnd _Control(object o) => (o as System.Windows.Forms.Control).Hwnd();
+
+			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
+			static AWnd _Wpf(object o) => (AWnd)(o as System.Windows.Window);
 		}
 	}
 }

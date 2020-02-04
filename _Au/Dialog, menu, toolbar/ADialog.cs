@@ -180,10 +180,8 @@ namespace Au
 
 			/// <summary>
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
-			/// If screen index is invalid, the 'show' method shows warning, no exception.
 			/// </summary>
 			public static AScreen DefaultScreen { get; set; }
-			//SHOULDDO: check invalid index now
 
 			/// <summary>
 			/// If icon not specified, use <see cref="DIcon.App"/>.
@@ -629,7 +627,7 @@ namespace Au
 		/// <param name="editType">Control type/style.</param>
 		/// <param name="editText">Initial text. If editType is DEdit.Combo, it can be a string array, List or IEnumerable; the first item sets combo-box editable text, other items - combo box drop-down list items.</param>
 		/// <remarks>
-		/// The API TaskDialogIndirect does not have an option to add an edit control. This class itself creates it.
+		/// API TaskDialogIndirect does not have an option to add an edit control. This class itself creates it.
 		/// Does not support progress bar.
 		/// </remarks>
 		public void SetEditControl(DEdit editType, object editText = null)
@@ -682,7 +680,6 @@ namespace Au
 		/// <summary>
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
 		/// If null or not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
-		/// If screen index is invalid, the 'show' method shows warning, no exception.
 		/// More info: <see cref="AScreen"/>, <see cref="AWnd.MoveInScreen"/>.
 		/// </summary>
 		public AScreen Screen { set; private get; }
@@ -736,12 +733,6 @@ namespace Au
 		/// </summary>
 		public bool? FlagTopmost { set; private get; }
 
-		//Thread.Abort not supported in Core
-		///// <summary>
-		///// Call <see cref="Thread.Abort()"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
-		///// </summary>
-		//public bool FlagEndThread { set; private get; }
-
 		///// <summary>
 		///// Show keyboard shortcuts (underlined characters), like when you press the Alt key.
 		///// Tip: to create keyboard shortcuts for custom buttons, use &amp; character, like "&amp;One|&amp;Two|T&amp;hree".
@@ -767,7 +758,6 @@ namespace Au
 
 			_result = null;
 			_isClosed = false;
-			_isProcessEnding = false;
 
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
@@ -825,12 +815,12 @@ namespace Au
 
 				AWnd.Lib.EnableActivate(true);
 
-				for(int i = 0; i < 10; i++) { //see the API bug-workaround comment below
-					_LockUnlock(true); //see the API bug-workaround comment below
+				for(int i = 0; i < 10; i++) { //see the API bug workaround comment below
+					_LockUnlock(true); //see the API bug workaround comment below
 
 					hr = _CallTDI(out rNativeButton, out rRadioButton, out rIsChecked);
 
-					//ADialog[Indirect] API bug:
+					//TaskDialog[Indirect] API bug:
 					//	If called simultaneously by 2 threads, often fails and returns an unknown error code 0x800403E9.
 					//Known workarounds:
 					//	1. Lock. Unlock on first callback message. Now used.
@@ -855,10 +845,9 @@ namespace Au
 				_LockUnlock(false);
 
 				//Normally the dialog now is destroyed and _dlg now is 0, because _SetClosed called on the destroy message.
-				//But on Thread.Abort or other exception it is not called and the dialog is still alive and visible.
-				//Therefore Windows shows its annoying "stopped working" UI.
+				//But on exception it is not called and the dialog is still alive and visible.
+				//Therefore Windows shows its annoying "stopped working" UI (cannot reproduce it now with Core).
 				//To avoid it, destroy the dialog now. Also to avoid possible memory leaks etc.
-				//However still bad if we use a timer (of ADialog API or own). We also use AProcess.Exit event for this.
 				if(!_dlg.Is0) Api.DestroyWindow(_dlg);
 
 				_SetClosed();
@@ -868,24 +857,6 @@ namespace Au
 			}
 
 			if(hr != 0) throw new Win32Exception(hr);
-			if(_isProcessEnding) {
-				//Print("closed");
-				_isProcessEnding = false;
-				//Thread.CurrentThread.Abort();
-				Thread.Sleep(Timeout.Infinite); //CLR will throw ThreadAbortException
-				//	TODO: now in Core maybe not
-			}
-
-			//Thread.Abort not supported in Core
-			//if(FlagEndThread) {
-			//	bool endThread = false;
-			//	switch(rNativeButton) {
-			//	case _idCancel: case _idNo: case DResult.Timeout: endThread = true; break;
-			//	case _idOK: endThread = (_c.dwCommonButtons == 0 || _c.dwCommonButtons == TDCBF_.OK) && !hasCustomButtons; break;
-			//	}
-
-			//	if(endThread) Thread.CurrentThread.Abort();
-			//}
 
 			return _result;
 		}
@@ -900,7 +871,7 @@ namespace Au
 				return TaskDialogIndirect(in _c, out pnButton, out pnRadioButton, out pChecked);
 #if DEBUG
 			}
-			catch(Exception e) when(!(e is ThreadAbortException)) {
+			catch(Exception e) {
 				throw new Win32Exception("_CallTDI: " + e.Message); //note: not just throw;, and don't add inner exception
 			}
 
@@ -930,7 +901,7 @@ namespace Au
 		}
 
 		//Need to call this twice:
-		//	1. Before showing dialog, to get AScreen. Later cannot apply AScreen.OfActiveWindow, because the dialog is the active window.
+		//	1. Before showing dialog, to get AScreen while the dialog still isn't the active window.
 		//	2. On TDN.CREATED, to move dialog if need.
 		void _SetPos(bool before)
 		{
@@ -939,17 +910,15 @@ namespace Au
 			bool isXY = !_x.IsEmpty || !_y.IsEmpty;
 			if(!_rawXY) {
 				if(before) {
-					_screen = Screen;
-					if(_screen.IsNull && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
-					if(!_screen.IsNull) _SP_SetScreen();
-				} else if(isXY || !_screen.IsNull) _dlg.MoveInScreen(_x, _y, _screen);
-			} else if(isXY && !before) _dlg.Move(_x, _y);
+					_screen = Screen; if(_screen.IsNull && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
+					if(_screen.Value is Delegate) _screen = new AScreen(_screen.ToDevice());
+				} else if(isXY || !_screen.IsNull) {
+					_dlg.MoveInScreen(_x, _y, _screen);
+				}
+			} else if(isXY && !before) {
+				_dlg.Move(_x, _y);
+			}
 		}
-
-		//Use this function to avoid loading Forms assembly when don't need (in most cases). GetScreen returns Screen, which is in Forms assembly.
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		void _SP_SetScreen() { _screen = _screen.GetScreen(); }
-
 		AScreen _screen;
 
 		int _CallbackProc(AWnd w, Native.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
@@ -963,8 +932,6 @@ namespace Au
 				_LockUnlock(false);
 				Send = new DSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
 				_dlg = w;
-
-				AProcess.Exit += _AProcess_Exit; //closes dialog, to avoid the annoying "stopped working" UI
 				break;
 			case Native.TDN.DESTROYED:
 				//Print(w.IsAlive); //valid
@@ -1030,19 +997,6 @@ namespace Au
 
 			return R;
 		}
-
-		private void _AProcess_Exit(object sender, EventArgs e)
-		{
-			if(IsOpen) {
-				//Print("closing");
-				_isProcessEnding = true; //let ShowDialog not return. It will set this = false.
-				Send.Close();
-				if(!_dlg.IsOfThisThread) {
-					while(_isProcessEnding) Thread.Sleep(15); //to avoid terminating this process, wait until the API modal loop ends, only then let CLR abort the dialog thread
-				}
-			}
-		}
-		bool _isProcessEnding;
 
 		/// <summary>
 		/// ADialog events.
@@ -1137,7 +1091,6 @@ namespace Au
 			if(_dlg.Is0) return;
 			_dlg = default;
 			Send.LibClear();
-			AProcess.Exit -= _AProcess_Exit;
 		}
 		bool _isClosed;
 
@@ -1297,7 +1250,7 @@ namespace Au
 			//Create an intermediate "#32770" to be direct parent of the Edit control.
 			//It is safer (the dialog will not receive Edit notifications) and helps to solve Tab/Esc problems.
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
-			var pExStyle = WS_EX.NOPARENTNOTIFY; //not WS_EX.CONTROLPARENT
+			var pExStyle = WS2.NOPARENTNOTIFY; //not WS2.CONTROLPARENT
 			_editParent = AWnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
 			_editControlParentProcHolder = _EditControlParentProc;
 			_editParent.SetWindowLong(Native.GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
@@ -1312,7 +1265,7 @@ namespace Au
 			case DEdit.Multiline: style |= (WS)(Api.ES_MULTILINE | Api.ES_AUTOVSCROLL | Api.ES_WANTRETURN) | WS.VSCROLL; break;
 			case DEdit.Combo: style |= (WS)(Api.CBS_DROPDOWN | Api.CBS_AUTOHSCROLL) | WS.VSCROLL; cn = "ComboBox"; break;
 			}
-			_editWnd = AWnd.More.CreateWindow(cn, null, style, WS_EX.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
+			_editWnd = AWnd.More.CreateWindow(cn, null, style, WS2.CLIENTEDGE, 0, 0, r.Width, r.Height, _editParent);
 			AWnd.More.SetFont(_editWnd, _editFont);
 
 			//Init the control.
@@ -1991,13 +1944,6 @@ namespace Au.Types
 		/// The same as <see cref="ADialog.FlagXCancel"/>.
 		/// </summary>
 		XCancel = 64,
-
-		//Thread.Abort not supported in Core
-		///// <summary>
-		///// Call <see cref="Thread.Abort()"/> if selected OK button when there are no other buttons. Also when selected Cancel, No, and on timeout.
-		///// The same as <see cref="ADialog.FlagEndThread"/>.
-		///// </summary>
-		//EndThread = 128,
 
 		//This was implemented, it's easy, but then I changed my mind, don't need too many features.
 		///// <summary>

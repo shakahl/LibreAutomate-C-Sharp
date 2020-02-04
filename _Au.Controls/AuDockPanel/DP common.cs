@@ -405,15 +405,15 @@ namespace Au.Controls
 					if(!onStartDrag && !SavedFloatingBounds.IsEmptyRect()) {
 						if(SavedFloatingBounds.X == int.MinValue) { //specified only width and height
 							var mp = AMouse.XY;
-							rect = (mp.x - 15, mp.y - 15, SavedFloatingBounds.Width, SavedFloatingBounds.Height);
+							rect = new RECT(mp.x - 15, mp.y - 15, SavedFloatingBounds.Width, SavedFloatingBounds.Height);
 						} else rect = SavedFloatingBounds;
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
-						AWnd.More.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS_EX.TOOLWINDOW);
+						AWnd.More.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS2.TOOLWINDOW);
 					} else { //new panel, empty bounds
 						var mp = AMouse.XY;
-						rect = (mp.x - 15, mp.y - 15, 300, 150);
+						rect = new RECT(mp.x - 15, mp.y - 15, 300, 150);
 						rect.EnsureInScreen();
 					}
 				}

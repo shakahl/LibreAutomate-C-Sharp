@@ -278,7 +278,7 @@ class UacDragDrop
 		protected override CreateParams CreateParams {
 			get {
 				CreateParams k = base.CreateParams;
-				k.ExStyle = (int)(WS_EX.LAYERED | WS_EX.NOACTIVATE | WS_EX.TOOLWINDOW | WS_EX.TOPMOST);
+				k.ExStyle = (int)(WS2.LAYERED | WS2.NOACTIVATE | WS2.TOOLWINDOW | WS2.TOPMOST);
 				k.Style = unchecked((int)(WS.POPUP | WS.DISABLED));
 				return k;
 			}

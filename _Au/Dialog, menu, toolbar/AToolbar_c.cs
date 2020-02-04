@@ -54,9 +54,9 @@ namespace Au
 				get {
 					var p = base.CreateParams;
 					if(_tb != null) { //this prop is called 3 times, first time before ctor
-						var es = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE;
-						if(_tb._topmost) es |= WS_EX.TOPMOST;
-						if(_tb._transparency != default) es |= WS_EX.LAYERED;
+						var es = WS2.TOOLWINDOW | WS2.NOACTIVATE;
+						if(_tb._topmost) es |= WS2.TOPMOST;
+						if(_tb._transparency != default) es |= WS2.LAYERED;
 						p.ExStyle = (int)es;
 
 						var style = ((WS)p.Style & ~(WS.CHILD | WS.CLIPSIBLINGS | WS.VISIBLE)) | WS.POPUP | _BorderStyle(_sett.border);
@@ -89,7 +89,7 @@ namespace Au
 					WS s1 = w.Style, s2 = _BorderStyle(value);
 					if(s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2);
 					//preserve client size and position
-					Api.AdjustWindowRectEx(ref r, _BorderStyle(value), false, WS_EX.TOOLWINDOW);
+					Api.AdjustWindowRectEx(ref r, _BorderStyle(value), false, WS2.TOOLWINDOW);
 					w.MoveLL(r.left, r.top, r.Width, r.Height, Native.SWP.FRAMECHANGED);
 				}
 #else //this simpler code does not preserve client size and position
@@ -156,9 +156,6 @@ namespace Au
 				case Api.WM_WINDOWPOSCHANGING:
 					_tb._OnWindowPosChanging(ref *(Api.WINDOWPOS*)m.LParam);
 					break;
-				case Api.WM_CONTEXTMENU:
-					_ContextMenu(this);
-					break;
 				}
 
 				base.WndProc(ref m);
@@ -174,18 +171,24 @@ namespace Au
 					_paintedOnce = true;
 					//APerf.NW();
 					break;
+				case Api.WM_RBUTTONUP:
+				case Api.WM_NCRBUTTONUP:
+					_ContextMenu(this);
+					break;
 				}
 			}
 
 			void _WmCreate()
 			{
+				Util.ACursor.SetArrowCursor_();
 				var tr = _tb._transparency;
-				if(tr != default) this.Hwnd().SetTransparency(true, tr.opacity, tr.colorRGB);
+				if(tr != default) this.Hwnd().SetTransparency(true, tr.opacity, tr.colorKey);
 			}
 
 			void _WmDestroy()
 			{
-				Print("destroy", _tb._satList != null);
+				//Print("destroy", _tb._satellite != null);
+				_tb._SatDestroying();
 				_sett.Dispose();
 				//PROBLEM: not called if thread ends without closing the toolbar window.
 				//	Then will save settings only on process exit. Will not save if process terminated, eg by the 'end task' command.
@@ -216,18 +219,20 @@ namespace Au
 				if(ModifierKeys == Keys.Shift) { //move
 					h = Api.HTCAPTION;
 				} else { //resize?
+					if(_tb._border == TBBorder.None || (!_tb.Sizable && _tb._border < TBBorder.Thick)) return false;
+					var w = this.Hwnd();
 					LPARAM xy = m.LParam;
 					int x = AMath.LoShort(xy), y = AMath.HiShort(xy);
 					if(_tb.Sizable) {
-						int b;
-						switch(_tb._border) {
-						case TBBorder.Width1: b = 1; break;
-						case TBBorder.Width2: b = 2; break;
-						case TBBorder.Width3: case TBBorder.ThreeD: b = 3; break;
-						case TBBorder.Width4: b = 4; break;
-						default: return false;
+						RECT r; int b;
+						if(_tb._border < TBBorder.ThreeD) {
+							b = (int)_tb._border;
+							r = w.Rect;
+						} else {
+							w.LibGetWindowInfo(out var k);
+							r = k.rcWindow;
+							b = k.cxWindowBorders;
 						}
-						var r = ((AWnd)this).Rect;
 						int bx = Math.Min(b, r.Width / 2), by = Math.Min(b, r.Height / 2);
 						int x1 = r.left + bx, x2 = r.right - bx - 1, y1 = r.top + by, y2 = r.bottom - by - 1;
 						if(x < x1) {
@@ -239,9 +244,9 @@ namespace Au
 						} else if(y > y2) {
 							h = Api.HTBOTTOM;
 						} else return false;
-					} else {
+					} else { //disable resizing if border is natively sizable
 						if(_tb._border < TBBorder.Thick) return false;
-						this.Hwnd().LibGetWindowInfo(out var k);
+						w.LibGetWindowInfo(out var k);
 						k.rcWindow.Inflate(-k.cxWindowBorders, -k.cyWindowBorders);
 						if(k.rcWindow.Contains(x, y)) return false;
 						h = Api.HTBORDER;
@@ -261,24 +266,17 @@ namespace Au
 				return true;
 			}
 
-			//protected override void OnSizeChanged(EventArgs e)
-			//{
-			//	base.OnSizeChanged(e);
-			//}
-
 			bool _IAuToolStrip.PaintedOnce => _paintedOnce;
 			bool _paintedOnce;
 
 			void _ContextMenu(ToolStrip ts) //ts is either this or the overflow dropdown
 			{
-				if(this.ContextMenuStrip == null) {
-					var m = new AMenu { MultiShow = true };
+				if(_contextMenu == null) {
+					var m = new AMenu { MultiShow = true, Modal = false };
 					m.Control.RenderMode = ToolStripRenderMode.System;
 
-					if(CanGoToEdit_) {
-						m["Edit"] = o => _tb.GoToEdit_(_cmItem);
-						m.Separator();
-					}
+					m["Edit"] = o => _tb.GoToEdit_(_cmItem);
+					m.Separator();
 					using(var sub = m.Submenu("Anchor")) {
 						_AddAnchor(TBAnchor.None);
 						_AddAnchor(TBAnchor.TopLeft);
@@ -349,13 +347,18 @@ namespace Au
 					//});
 
 					m.Separator();
-					m["Close"] = o => _tb.Close();
+					m["Close"] = o => (_tb._satPlanet ?? _tb).Close();
 
-					this.ContextMenuStrip = m.Control;
+					_contextMenu = m;
 				}
-				this.ContextMenuStrip.Items[0].Visible = !ATask.WndMsg.Is0;
+				var items = _contextMenu.Control.Items;
+				bool canEdit = CanGoToEdit_;
+				items[0].Visible = canEdit;
+				items[1].Visible = canEdit;
 				_cmItem = ts.GetItemAt(ts.MouseClientXY());
+				_contextMenu.Show(ts);
 			}
+			AMenu _contextMenu;
 			ToolStripItem _cmItem;
 
 			#region overflow
@@ -384,7 +387,7 @@ namespace Au
 				protected override CreateParams CreateParams {
 					get {
 						var p = base.CreateParams;
-						p.ExStyle |= (int)(WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE);
+						p.ExStyle |= (int)(WS2.TOOLWINDOW | WS2.NOACTIVATE);
 						return p;
 					}
 				}
@@ -397,7 +400,6 @@ namespace Au
 						return;
 					case Api.WM_CONTEXTMENU:
 						_ts._ContextMenu(this);
-						this.ContextMenuStrip = _ts.ContextMenuStrip;
 						break;
 					}
 

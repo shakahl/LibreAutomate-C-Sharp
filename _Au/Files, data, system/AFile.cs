@@ -567,7 +567,6 @@ namespace Au
 						}
 						catch(Exception ex) when(opType != _FileOpType.Copy) {
 							throw new AuException($"*{opName} '{path1}' to '{path2}'", ex);
-							//FUTURE: test when it is ThreadAbortException
 						}
 					} else {
 						if(type1 == FileDir2.SymLinkDirectory)

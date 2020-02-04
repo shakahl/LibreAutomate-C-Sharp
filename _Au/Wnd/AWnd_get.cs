@@ -417,8 +417,8 @@ namespace Au
 				if(!w.IsVisible) return false;
 
 				var exStyle = w.ExStyle;
-				if((exStyle & WS_EX.APPWINDOW) == 0) {
-					if((exStyle & (WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE)) != 0) return false;
+				if((exStyle & WS2.APPWINDOW) == 0) {
+					if((exStyle & (WS2.TOOLWINDOW | WS2.NOACTIVATE)) != 0) return false;
 					if(!w.Owner.Is0) return false;
 				}
 
@@ -427,7 +427,7 @@ namespace Au
 				if(AVersion.MinWin10) {
 					if(w.IsCloaked) {
 						if(!allDesktops) return false;
-						if((exStyle & WS_EX.NOREDIRECTIONBITMAP) != 0) { //probably a store app
+						if((exStyle & WS2.NOREDIRECTIONBITMAP) != 0) { //probably a store app
 							switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 							case 1: return false; //Windows search, experience host, etc. Also app windows that normally would sit on ApplicationFrameWindow windows.
 							case 2: if(_WindowsStoreAppFrameChild(w).Is0) return false; break; //skip hosts
@@ -435,8 +435,8 @@ namespace Au
 						}
 					}
 				} else if(AVersion.MinWin8) {
-					if((exStyle & WS_EX.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
-						if(!allDesktops && (exStyle & WS_EX.TOPMOST) != 0) return false; //skip store apps
+					if((exStyle & WS2.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
+						if(!allDesktops && (exStyle & WS2.TOPMOST) != 0) return false; //skip store apps
 						if(Shell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
 					}
 					//On Win8 impossible to get next window like Alt+Tab.

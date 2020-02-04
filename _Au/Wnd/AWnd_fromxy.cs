@@ -48,7 +48,7 @@ namespace Au
 
 			if(needW) {
 				w = Api.RealChildWindowFromPoint(Api.GetDesktopWindow(), p); //much faster than WindowFromPoint
-				if(!w.HasExStyle(WS_EX.TRANSPARENT | WS_EX.LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
+				if(!w.HasExStyle(WS2.TRANSPARENT | WS2.LAYERED)) return w; //fast. Windows that have both these styles are mouse-transparent.
 				return Api.WindowFromPoint(p).Window; //ChildWindowFromPointEx would be faster, but less reliable
 
 				//info:
@@ -133,7 +133,7 @@ namespace Au
 			//Test whether it is a transparent control, like tab, covering other controls.
 			//RealChildWindowFromPoint does it only for group button.
 
-			if(R.HasExStyle(WS_EX.MDICHILD)) return R;
+			if(R.HasExStyle(WS2.MDICHILD)) return R;
 
 			if(!screenXY) Api.ClientToScreen(this, ref p);
 			g1:
@@ -184,7 +184,7 @@ namespace Au
 		//Returns direct child or default(AWnd).
 		static AWnd _RealChildWindowFromPoint(AWnd w, POINT p)
 		{
-			if(w.HasExStyle(WS_EX.LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
+			if(w.HasExStyle(WS2.LAYOUTRTL) && Api.GetClientRect(w, out var rc)) { p.x = rc.right - p.x; }
 			AWnd R = Api.RealChildWindowFromPoint(w, p);
 			return R == w ? default : R;
 		}

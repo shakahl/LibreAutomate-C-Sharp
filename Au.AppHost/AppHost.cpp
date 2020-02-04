@@ -14,14 +14,25 @@
 #define COREVER3 0
 
 //#define PRINT
-#if PRINT
-void Print(LPCWSTR frm, ...)
+#ifdef PRINT
+template<typename ... Args>
+void Print(LPCSTR frm, Args ... args)
 {
-	if(frm == nullptr) frm = L"";
-	wchar_t s[1028];
-	wvsprintfW(s, frm, (va_list)(&frm + 1));
-	HWND w = FindWindowW(L"QM_Editor", nullptr);
-	SendMessageW(w, WM_SETTEXT, -1, (LPARAM)s);
+	HWND w = FindWindowW(L"QM_Editor", nullptr); if(w == 0) return;
+	size_t size = sizeof...(Args) > 0 ? snprintf(nullptr, 0, frm, args ...) : 0;
+	char* buf = size > 0 ? (char*)malloc(++size) : nullptr;
+	if(buf != nullptr) {
+		snprintf(buf, size, frm, args ...);
+		frm = (LPCSTR)buf;
+	} else {
+		if(frm == nullptr) frm = "";
+		size = strlen(frm) + 1;
+	}
+	auto u = (wchar_t*)malloc(size * 2);
+	MultiByteToWideChar(CP_UTF8, 0, frm, (int)size, u, (int)size);
+	SendMessage(w, WM_SETTEXT, -1, (LPARAM)u);
+	free(u);
+	if(buf != nullptr) free(buf);
 }
 #else
 #define Print __noop
@@ -154,7 +165,7 @@ void BuildTpaList(LPCSTR dir, std::string& tpaList)
 			char* s = findData.cFileName;
 			int four = *(int*)s;
 			if(four == '-ipa') continue; //api-ms-
-			//Print(L"%S", s);
+			//Print("%s", s);
 			tpaList += dir;
 			tpaList += s;
 			tpaList += ";";
@@ -202,11 +213,11 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 		return -1;
 	}
 
-	//Print(L"appDir=%S", p.appDir);
-	//Print(L"netCore=%S", p.netCore);
-	//Print(L"netDesktop=%S", p.netDesktop);
-	//Print(L"coreclrDll=%s", p.coreclrDll);
-	//Print(L"asmDll=%S", p.asmDll);
+	//Print("appDir=%s", p.appDir);
+	//Print("netCore=%s", p.netCore);
+	//Print("netDesktop=%s", p.netDesktop);
+	//Print("coreclrDll=%S", p.coreclrDll);
+	//Print("asmDll=%s", p.asmDll);
 	//return 0;
 
 	HMODULE hm = LoadLibraryW(p.coreclrDll); //~3 ms
@@ -234,9 +245,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 
 	std::string ap(p.appDir);
 	ap[ap.length() - 1] = ';'; ap += p.appDir; ap += "Libraries";
+	std::string nd(p.netCore);
+	nd[nd.length() - 1] = ';'; nd += p.netDesktop; nd[nd.length() - 1] = 0;
 
-	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS" };
-	const char* propertyValues[] = { tpaList.c_str(), ap.c_str() };
+	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS", "NATIVE_DLL_SEARCH_DIRECTORIES" };
+	const char* propertyValues[] = { tpaList.c_str(), ap.c_str(), nd.c_str() };
+	//Print("TPA:"); Print("%s", propertyValues[0]);
+	//Print("APP:"); Print("%s", propertyValues[1]);
+	//Print("ND:"); Print("%s", propertyValues[2]);
 #endif
 	//QueryPerformanceCounter(&t2);
 	//Print(L"%i", (t2.LowPart - t1.LowPart) / 10);

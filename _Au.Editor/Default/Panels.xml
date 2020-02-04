@@ -1,50 +1,50 @@
 ﻿<panels>
-	<split hor="" w1="20" splitter="1">
-		<!--toolbars-->
-		<split hor="" w1="10" splitter="1">
-			<!--row1-->
-			<split f="0.4">
-				<panel name="Menu" />
-				<split f="0.5">
-					<panel name="Help" />
-					<split f="0.99">
-						<panel name="Tools" />
-						<panel name="Custom1" />
-					</split>
-				</split>
-			</split>
-			<!--row2-->
-			<split w1="200">
-				<panel name="File" />
-				<split w1="120">
-					<panel name="Run" />
-					<split w1="300">
-						<panel name="Edit" />
-						<panel name="Custom2" />
-					</split>
-				</split>
-			</split>
-		</split>
-		<!--panels-->
-		<split w1="200">
-			<split hor="" w2="150">
-				<split hor="" f="0.8">
-					<panel name="Files" captionAt="Top" />
-					<tab captionAt="Top" active="1">
-						<panel name="Open" />
-						<panel name="Running" />
-					</tab>
-				</split>
+  <split hor="" w1="20" splitter="1">
+    <!--toolbars-->
+    <split hor="" w1="10" splitter="1">
+      <!--row1-->
+      <split f="0.4">
+        <panel name="Menu" />
+        <split f="0.5">
+          <panel name="Help" />
+          <split f="0.99">
+            <panel name="Tools" />
+            <panel name="Custom1" />
+          </split>
+        </split>
+      </split>
+      <!--row2-->
+      <split w1="200">
+        <panel name="File" />
+        <split w1="120">
+          <panel name="Run" />
+          <split w1="300">
+            <panel name="Edit" />
+            <panel name="Custom2" />
+          </split>
+        </split>
+      </split>
+    </split>
+    <!--panels-->
+    <split w1="200">
+      <split hor="" w2="150">
+        <split hor="" f="0.6">
+          <panel name="Files" captionAt="Top" />
+          <split hor="" f="0.6">
+            <panel name="Open" />
+            <panel name="Running" />
+          </split>
+        </split>
         <panel name="Find" rectFloating="469 222" captionAt="Top" />
       </split>
-			<split hor="" w2="150">
-				<panel name="Code" doc="" />
-				<tab>
-					<panel name="Output" />
-					<panel name="Info" />
-					<panel name="Found" />
-				</tab>
-			</split>
-		</split>
-	</split>
+      <split hor="" w2="150">
+        <panel name="Code" doc="" />
+        <tab>
+          <panel name="Output" />
+          <panel name="Info" />
+          <panel name="Found" />
+        </tab>
+      </split>
+    </split>
+  </split>
 </panels>

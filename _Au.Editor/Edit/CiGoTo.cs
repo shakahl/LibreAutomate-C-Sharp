@@ -114,8 +114,8 @@ class CiGoTo
 	}
 
 	static readonly (string site, string data)[] s_sources = {
-		//("https://referencesource.microsoft.com", null), //Framework
 		("https://source.dot.net", null), //Core
+		("https://referencesource.microsoft.com", null), //Framework (in source.dot.net many classes are missing)
 		("http://source.roslyn.io", null) //Roslyn
 	};
 

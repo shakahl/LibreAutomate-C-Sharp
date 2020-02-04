@@ -384,11 +384,12 @@ namespace Au
 		{
 			if(0 != (flags & Api.IMFlags.Move)) {
 				flags |= Api.IMFlags.Absolute;
-				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= AScreen.PrimaryWidth;
-				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= AScreen.PrimaryHeight;
+				var psr = AScreen.Primary.Bounds;
+				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= psr.Width;
+				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= psr.Height;
 			}
 
-			int mouseData = 0;
+			int mouseData;
 			if(0 != (flags & (Api.IMFlags.XDown | Api.IMFlags.XUp))) {
 				mouseData = (int)((uint)flags >> 24);
 				flags &= (Api.IMFlags)0xffffff;

@@ -271,8 +271,7 @@ namespace Au
 				for(long timePrev = 0; ;) {
 					if(stopVar != null && stopVar.waitVar) return nHandles + 1;
 
-					int timeSlice = (all && doEvents) ? 15 : 300; //support Thread.Abort: call API in loop with small timeout.
-					//TODO: test
+					int timeSlice = (all && doEvents) ? 15 : 300; //previously timeout was used to support Thread.Abort. It is disabled in Core, but maybe still safer with a timeout.
 					if(timeMS > 0) {
 						long timeNow = ATime.WinMillisecondsWithoutSleep;
 						if(timePrev > 0) timeMS -= timeNow - timePrev;

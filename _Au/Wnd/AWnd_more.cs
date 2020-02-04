@@ -36,7 +36,7 @@ namespace Au
 			/// <remarks>
 			/// Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
 			/// </remarks>
-			public static bool WindowRectFromClientRect(ref RECT r, WS style, WS_EX exStyle, bool hasMenu = false)
+			public static bool WindowRectFromClientRect(ref RECT r, WS style, WS2 exStyle, bool hasMenu = false)
 			{
 				return Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
 			}
@@ -44,7 +44,7 @@ namespace Au
 			/// <summary>
 			/// Calculates window border width from style.
 			/// </summary>
-			public static int BorderWidth(WS style, WS_EX exStyle)
+			public static int BorderWidth(WS style, WS2 exStyle)
 			{
 				RECT r = default;
 				Api.AdjustWindowRectEx(ref r, style, false, exStyle);
@@ -87,7 +87,7 @@ namespace Au
 			/// <param name="wndProc">
 			/// Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
 			/// 
-			/// I null, sets API <msdn>DefWindowProc</msdn> as window procedure. It is useful when you need a different delegate (method or target object) for each window instance. Create windows with <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS_EX, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
+			/// I null, sets API <msdn>DefWindowProc</msdn> as window procedure. It is useful when you need a different delegate (method or target object) for each window instance. Create windows with <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
 			/// If not null, you can create windows with any other function, including API <msdn>CreateWindowEx</msdn>. Then <b>Target</b> of the delegate should be null (static method) or a singleton object.
 			/// </param>
 			/// <param name="ex">
@@ -145,7 +145,7 @@ namespace Au
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </remarks>
-			public static AWnd CreateWindow(Native.WNDPROC wndProc, string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
+			public static AWnd CreateWindow(Native.WNDPROC wndProc, string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
 			{
 				var a = t_windows ??= new List<(AWnd w, Native.WNDPROC p)>();
 				for(int i = a.Count - 1; i >= 0; i--) if(!a[i].w.IsAlive) a.RemoveAt(i);
@@ -186,7 +186,7 @@ namespace Au
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </remarks>
 			/// <seealso cref="RegisterWindowClass"/>
-			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS_EX exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
+			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
 			{
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
 				if(w.Is0) throw new AuException(0);
@@ -204,7 +204,7 @@ namespace Au
 			/// </remarks>
 			public static AWnd CreateMessageOnlyWindow(string className)
 			{
-				return CreateWindow(className, null, WS.POPUP, WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
+				return CreateWindow(className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 
@@ -222,7 +222,7 @@ namespace Au
 			/// </remarks>
 			public static AWnd CreateMessageOnlyWindow(Native.WNDPROC wndProc, string className)
 			{
-				return CreateWindow(wndProc, className, null, WS.POPUP, WS_EX.NOACTIVATE, parent: Native.HWND.MESSAGE);
+				return CreateWindow(wndProc, className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
 

@@ -26,63 +26,66 @@ namespace Au
 		/// </summary>
 		/// <param name="allowTransparency">Set or remove WS_EX_LAYERED style that is required for transparency. If false, other parameters are not used.</param>
 		/// <param name="opacity">Opacity from 0 (completely transparent) to 255 (opaque). Does not change if null. If less than 0 or greater than 255, makes 0 or 255.</param>
-		/// <param name="colorRGB">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
+		/// <param name="colorKey">Make pixels of this color completely transparent. Does not change if null. The alpha byte is not used.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Uses API <msdn>SetLayeredWindowAttributes</msdn>.
 		/// On Windows 7 works only with top-level windows, on newer OS also with controls.
 		/// </remarks>
-		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorRGB = null)
+		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorKey = null)
 		{
 			var est = ExStyle;
-			bool layered = (est & WS_EX.LAYERED) != 0;
+			bool layered = (est & WS2.LAYERED) != 0;
 
 			if(allowTransparency) {
 				uint col = 0, f = 0; byte op = 0;
-				if(colorRGB != null) { f |= 1; col = (uint)colorRGB.GetValueOrDefault().ToBGR(); }
+				if(colorKey != null) { f |= 1; col = (uint)colorKey.GetValueOrDefault().ToBGR(); }
 				if(opacity != null) { f |= 2; op = (byte)AMath.MinMax(opacity.GetValueOrDefault(), 0, 255); }
 
-				if(!layered) SetExStyle(est | WS_EX.LAYERED);
+				if(!layered) SetExStyle(est | WS2.LAYERED);
 				if(!Api.SetLayeredWindowAttributes(this, col, op, f)) ThrowUseNative();
 			} else if(layered) {
-				//if(!Api.SetLayeredWindowAttributes(this, 0, 0, 0)) ThrowUseNative();
-				SetExStyle(est & ~WS_EX.LAYERED);
+				SetExStyle(est & ~WS2.LAYERED); //tested: resets attributes, ie after adding WS2.LAYERED the window will be normal
 			}
 		}
 
 		/// <summary>
 		/// Returns true if this is a full-screen window and not desktop.
 		/// </summary>
-		public bool IsFullScreen {
-			get {
-				if(Is0) return false;
+		public bool IsFullScreen => IsFullScreen_(out _);
 
-				//is client rect equal to window rect (no border)?
-				RECT r, rc, rm;
-				r = Rect; //fast
-				int cx = r.right - r.left, cy = r.bottom - r.top;
-				if(cx < 400 || cy < 300) return false; //too small
-				rc = ClientRect; //fast
-				if(rc.right != cx || rc.bottom != cy) {
-					if(cx - rc.right > 2 || cy - rc.bottom > 2) return false; //some windows have 1-pixel border
-				}
+		internal unsafe bool IsFullScreen_(out AScreen.Device screen)
+		{
+			screen = default;
+			if(Is0) return false;
 
-				//covers whole monitor rect?
-				rm = System.Windows.Forms.Screen.FromHandle(Handle).Bounds; //fast except first time, because uses caching //SHOULDDO: avoid loading Forms dll
-				if(r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
-
-				//is it desktop?
-				if(LibIsOfShellThread) return false;
-				if(this == GetWnd.Root) return false;
-
-				return true;
-
-				//This is the best way to test for fullscreen (FS) window. Fast.
-				//Window and client rect was equal of almost all my tested FS windows. Except Winamp visualization.
-				//Most FS windows are same size as screen, but some slightly bigger.
-				//Don't look at window styles. For some FS windows they are not as should be.
-				//Returns false if the active window is owned by a fullscreen window. This is different than appbar API interprets it. It's OK for our purposes.
+			//is client rect equal to window rect (no border)?
+			RECT r, rc, rm;
+			r = Rect; //fast
+			int cx = r.right - r.left, cy = r.bottom - r.top;
+			if(cx < 400 || cy < 300) return false; //too small
+			rc = ClientRect; //fast
+			if(rc.right != cx || rc.bottom != cy) {
+				if(cx - rc.right > 2 || cy - rc.bottom > 2) return false; //some windows have 1-pixel border
 			}
+
+			//covers whole monitor rect?
+			screen = AScreen.Of(this, SDefault.Zero); if(screen.Is0) return false;
+			rm = screen.Bounds;
+
+			if(r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
+
+			//is it desktop?
+			if(LibIsOfShellThread) return false;
+			if(this == GetWnd.Root) return false;
+
+			return true;
+
+			//This is the best way to test for fullscreen (FS) window. Fast.
+			//Window and client rect was equal of almost all my tested FS windows. Except Winamp visualization.
+			//Most FS windows are same size as screen, but some slightly bigger.
+			//Don't look at window styles. For some FS windows they are not as should be.
+			//Returns false if the active window is owned by a fullscreen window. This is different than appbar API interprets it. It's OK for our purposes.
 		}
 
 		/// <summary>
@@ -131,7 +134,7 @@ namespace Au
 		public bool IsWindows8MetroStyle {
 			get {
 				if(!AVersion.MinWin8) return false;
-				if(!HasExStyle(WS_EX.TOPMOST | WS_EX.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
+				if(!HasExStyle(WS2.TOPMOST | WS2.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
 				if(ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
 				if(!AVersion.MinWin10 && LibIsOfShellProcess) return true;
 				return false;
@@ -146,7 +149,7 @@ namespace Au
 		public int IsWindows10StoreApp {
 			get {
 				if(!AVersion.MinWin10) return 0;
-				if(!HasExStyle(WS_EX.NOREDIRECTIONBITMAP)) return 0;
+				if(!HasExStyle(WS2.NOREDIRECTIONBITMAP)) return 0;
 				return ClassNameIs("ApplicationFrameWindow", "Windows.UI.Core.CoreWindow");
 				//could use IsImmersiveProcess, but this is better
 			}

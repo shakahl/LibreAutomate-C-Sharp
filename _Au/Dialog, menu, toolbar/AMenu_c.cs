@@ -77,12 +77,7 @@ namespace Au
 				switch(m.Msg) {
 				case Api.WM_CREATE:
 					_m._closing_allMenus.Add(this);
-					if(_isMain) {
-						//Prevent 'wait' cursor appearing briefly when mouse enters a thread window first time. Sometimes some other non-arrow cursor.
-						//It happens because initial thread cursor when creating the first thread window is 'wait', and the first mouse message is WM_NCHITTEST, followed by WM_SETCURSOR which sets correct cursor, and Windows briefly shows 'wait' cursor before sending WM_NCHITTEST.
-						//Tested: it does not solve the 'wait' cursor problem when creating a context menu or submenu (when another workaround not applied); then on all messages Cursor.Current says 'Default'.
-						if(Cursor.Current != Cursors.Arrow) Cursor.Current = Cursors.Arrow;
-					}
+					if(_isMain) Util.ACursor.SetArrowCursor_();
 					break;
 				case Api.WM_DESTROY:
 					_m._closing_allMenus.Remove(this);

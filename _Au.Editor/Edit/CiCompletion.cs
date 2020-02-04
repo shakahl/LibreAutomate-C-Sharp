@@ -298,7 +298,7 @@ class CiCompletion
 
 			if(r == null) {
 				if(stringFormat == (PSFormat)100) {
-					var m = new AMenu { ModalAlways = true };
+					var m = new AMenu { Modal = true };
 					m["Regex"] = o => stringFormat = PSFormat.ARegex;
 					m["Keys"] = o => stringFormat = PSFormat.AKeys;
 					m.Show(doc);

@@ -15,6 +15,7 @@ using System.Linq;
 
 using Au.Types;
 using static Au.AStatic;
+using System.Diagnostics.CodeAnalysis;
 
 namespace Au
 {
@@ -343,7 +344,6 @@ namespace Au
 
 namespace Au.Types
 {
-#pragma warning disable 660, 661 //no Equals()
 	/// <summary>
 	/// Contains file properties that can be used to uniquely identify the file on a single computer.
 	/// </summary>
@@ -352,21 +352,22 @@ namespace Au.Types
 	/// To get it, use <see cref="AFile.More.GetFileId"/>.
 	/// There are many different ways to specify path to the same file or directory. To determine whether two paths represent the same file, get and compare their <b>FileId</b>.
 	/// </remarks>
-	public struct FileId
+	public struct FileId :IEquatable<FileId>
 	{
 		/// <summary>The serial number of the volume (aka disk drive) that contains the file.</summary>
 		public int VolumeSerialNumber;
 		/// <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
 		public long FileIndex;
 
-		///
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		public static bool operator ==(FileId a, FileId b)
-		{
-			return a.FileIndex == b.FileIndex && a.VolumeSerialNumber == b.VolumeSerialNumber;
-		}
+			=> a.FileIndex == b.FileIndex && a.VolumeSerialNumber == b.VolumeSerialNumber;
 
-		///
 		public static bool operator !=(FileId a, FileId b) { return !(a == b); }
+
+		public override int GetHashCode() => HashCode.Combine(VolumeSerialNumber, FileIndex);
+
+		public bool Equals(FileId other) => other == this;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 	}
-#pragma warning restore 660, 661
 }

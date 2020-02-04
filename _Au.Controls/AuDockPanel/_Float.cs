@@ -80,8 +80,8 @@ namespace Au.Controls
 					//note: this func is called several times, first time before ctor
 					var p = base.CreateParams;
 					p.Style = unchecked((int)(WS.POPUP | WS.THICKFRAME | WS.CLIPCHILDREN));
-					var ex = WS_EX.TOOLWINDOW;
-					if(_hasToolbar) ex |= WS_EX.NOACTIVATE;
+					var ex = WS2.TOOLWINDOW;
+					if(_hasToolbar) ex |= WS2.NOACTIVATE;
 					p.ExStyle = (int)ex;
 					return p;
 				}
@@ -207,7 +207,7 @@ namespace Au.Controls
 					get
 					{
 						CreateParams k = base.CreateParams;
-						k.ExStyle = (int)(WS_EX.LAYERED | WS_EX.NOACTIVATE | WS_EX.TOOLWINDOW);
+						k.ExStyle = (int)(WS2.LAYERED | WS2.NOACTIVATE | WS2.TOOLWINDOW);
 						k.Style = unchecked((int)(WS.POPUP));
 						return k;
 					}

@@ -447,7 +447,7 @@ namespace Au.Tools
 				var w = (AWnd)o;
 				var r = w.Rect;
 				if(w.IsMaximized && !w.IsChild) {
-					var k = Screen.FromHandle(w.Handle).Bounds; k.Inflate(-2, -2);
+					var k = w.Screen.Bounds; k.Inflate(-2, -2);
 					r.Intersect(k);
 				}
 				return r;

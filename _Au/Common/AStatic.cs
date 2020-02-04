@@ -76,11 +76,17 @@ namespace Au
 			case ushort u: s = "0x" + u.ToString("X"); break;
 			case byte u: s = "0x" + u.ToString("X"); break;
 			case char[] t: s = new string(t); break;
-			case System.Collections.IEnumerable e: s = string.Join("\r\n", System.Linq.Enumerable.Cast<object>(e)); break;
+			case System.Collections.IEnumerable e: s = string.Join("\r\n", _Cast1(e)); break;
 			default: s = value.ToString(); break;
 			}
 			//if(s.IndexOf('\0') >= 0) s = s.Escape(quote: true); //no
 			return s;
+		}
+
+		//replaces System.Linq.Enumerable.Cast<object>(e) to avoid loading System.Linq.dll
+		static IEnumerable<object> _Cast1(System.Collections.IEnumerable e)
+		{
+			foreach(var v in e) yield return v; //bad: if array or generic of struct, boxes all elements
 		}
 
 		internal static void LibPrintObjectToString(StringBuilder b, object value)
@@ -92,7 +98,8 @@ namespace Au
 			case ulong u: b.Append("0x").Append(u.ToString("X")); break;
 			case ushort u: b.Append("0x").Append(u.ToString("X")); break;
 			case byte u: b.Append("0x").Append(u.ToString("X")); break;
-			case System.Collections.IEnumerable e: b.Append("{ ").AppendJoin(", ", System.Linq.Enumerable.Cast<object>(e)).Append(" }"); break;
+			case char[] t: b.Append(new string(t)); break;
+			case System.Collections.IEnumerable e: b.Append("{ ").AppendJoin(", ", _Cast1(e)).Append(" }"); break;
 			default: b.Append(value); break;
 			}
 		}
@@ -106,7 +113,7 @@ namespace Au
 		/// </remarks>
 		public static void Print<T>(IEnumerable<T> value)
 		{
-			AOutput.Write(value == null ? "null" : string.Join("\r\n", value));
+			AOutput.Write(value switch { null => "null", char[] a => new string(a), _ => string.Join("\r\n", value) });
 		}
 
 		/// <summary>

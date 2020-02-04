@@ -242,7 +242,6 @@ namespace Au.Types
 
 		internal static void OnHostHandledException(UnhandledExceptionEventArgs e)
 		{
-			if(e.ExceptionObject is ThreadAbortException) return;
 			var k = s_instance;
 			if(k != null) k.OnUnhandledException(e);
 			else Print(e.ExceptionObject);

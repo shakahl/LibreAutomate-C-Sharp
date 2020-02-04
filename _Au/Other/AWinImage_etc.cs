@@ -155,13 +155,13 @@ namespace Au
 		{
 			int n = outline?.Count ?? 0;
 			if(n == 0) throw new ArgumentException();
-			if(n == 1) return _Capture((outline[0].x, outline[0].y, 1, 1));
+			if(n == 1) return _Capture(new RECT(outline[0].x, outline[0].y, 1, 1));
 
 			using var path = _CreatePath(outline);
-			RECT r = path.GetBounds();
+			RECT r = (RECT)path.GetBounds();
 			if(r.IsEmpty) {
 				path.Widen(Pens.Black); //will be transparent, but no exception. Difficult to make non-transparent line.
-				r = path.GetBounds();
+				r = (RECT)path.GetBounds();
 			}
 			return _Capture(r, w, usePrintWindow, path);
 		}
@@ -265,7 +265,7 @@ namespace Au
 
 				g1:
 				RECT rs = SystemInformation.VirtualScreen;
-				//RECT rs = Screen.PrimaryScreen.Bounds; //for testing, to see Print output in other screen
+				//RECT rs = AScreen.Primary.Bounds; //for testing, to see Print output in other screen
 				Bitmap bs;
 				bool windowPixels = flags.HasAny(WICFlags.WindowDC | WICFlags.PrintWindow);
 				if(windowPixels) {
@@ -363,7 +363,7 @@ namespace Au
 				get {
 					var p = base.CreateParams;
 					p.Style = unchecked((int)(WS.POPUP));
-					p.ExStyle = (int)(WS_EX.TOOLWINDOW | WS_EX.TOPMOST);
+					p.ExStyle = (int)(WS2.TOOLWINDOW | WS2.TOPMOST);
 					return p;
 				}
 			}
@@ -484,9 +484,9 @@ namespace Au
 				POINT p0 = e.Location;
 				if(isColor) {
 					Result.color = _img.GetPixel(p0.x, p0.y).ToArgb();
-					Result.rect = (p0.x, p0.y, 1, 1);
+					Result.rect = new RECT(p0.x, p0.y, 1, 1);
 				} else {
-					RECT r = (p0.x, p0.y, 0, 0);
+					var r = new RECT(p0.x, p0.y, 0, 0);
 					var a = isAnyShape ? new List<POINT>() { p0 } : null;
 					var pen = Pens.Red;
 					bool notFirstMove = false;
@@ -507,7 +507,7 @@ namespace Au
 									g.DrawImage(_img, r, r, GraphicsUnit.Pixel);
 									//FUTURE: prevent flickering. Also don't draw under magnifier.
 								} else notFirstMove = true;
-								r = (p0.x, p0.y, p.x, p.y, false);
+								r = new RECT(p0.x, p0.y, p.x, p.y, false);
 								r.Normalize(true);
 								g.DrawRectangle(pen, r);
 							}
@@ -521,7 +521,7 @@ namespace Au
 					GraphicsPath path = null;
 					if(isAnyShape && a.Count > 1) {
 						path = _CreatePath(a);
-						r = path.GetBounds();
+						r = (RECT)path.GetBounds();
 					} else {
 						r.right++; r.bottom++;
 					}

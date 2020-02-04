@@ -158,7 +158,7 @@ namespace Au.Types
 		internal static extern bool UnregisterClass(uint classAtom, IntPtr hInstance);
 
 		[DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
-		internal static extern AWnd CreateWindowEx(WS_EX dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
+		internal static extern AWnd CreateWindowEx(WS2 dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
 
 		[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
 		internal static extern LPARAM DefWindowProc(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
@@ -720,7 +720,7 @@ namespace Au.Types
 
 		//internal static bool ClientToScreenIgnoreRtl(AWnd w, ref POINT p)
 		//{
-		//	if(!w.HasExStyle(WS_EX.LAYOUTRTL)) return ClientToScreen(w, ref p);
+		//	if(!w.HasExStyle(WS2.LAYOUTRTL)) return ClientToScreen(w, ref p);
 		//	if(!GetClientRect(w, out var r) || !MapWindowPoints(w, default, ref r, out _)) return false;
 		//	p.Offset(r.left, r.top);
 		//	return true;
@@ -874,7 +874,7 @@ namespace Au.Types
 		internal static extern AWnd SetParent(AWnd hWndChild, AWnd hWndNewParent);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, WS dwStyle, bool bMenu, WS_EX dwExStyle);
+		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, WS dwStyle, bool bMenu, WS2 dwExStyle);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ChangeWindowMessageFilter(int message, uint dwFlag);
@@ -937,6 +937,9 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool DragDetect(AWnd hwnd, POINT pt);
 
+		[DllImport("user32.dll")]
+		internal static extern IntPtr GetCursor();
+
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern IntPtr SetCursor(IntPtr hCursor);
 
@@ -967,30 +970,6 @@ namespace Au.Types
 
 		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
 		internal static extern int wsprintfA(byte* lpOut1024, string lpFmt, __arglist);
-
-		internal const uint MONITOR_DEFAULTTONULL = 0x0;
-		internal const uint MONITOR_DEFAULTTOPRIMARY = 0x1;
-		internal const uint MONITOR_DEFAULTTONEAREST = 0x2;
-
-		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromPoint(POINT pt, uint dwFlags);
-
-		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromRect(in RECT lprc, uint dwFlags);
-
-		[DllImport("user32.dll")]
-		internal static extern IntPtr MonitorFromWindow(AWnd hwnd, uint dwFlags);
-
-		internal struct MONITORINFO
-		{
-			public int cbSize;
-			public RECT rcMonitor;
-			public RECT rcWork;
-			public uint dwFlags;
-		}
-
-		[DllImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
-		internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
 		internal struct PAINTSTRUCT
 		{

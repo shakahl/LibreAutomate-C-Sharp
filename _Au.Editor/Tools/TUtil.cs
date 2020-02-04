@@ -351,7 +351,7 @@ namespace Au.Tools
 			var osr = CreateOsdRect();
 			r.Inflate(2, 2); //2 pixels inside, 2 outside
 			if(limitToScreen) {
-				var k = Screen.FromRectangle(r).Bounds;
+				var k = AScreen.Of(r).Bounds;
 				r.Intersect(k);
 			}
 			osr.Rect = r;

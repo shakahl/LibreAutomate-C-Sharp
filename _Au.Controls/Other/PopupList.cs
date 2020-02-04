@@ -185,11 +185,11 @@ namespace Au.Controls
 				}
 			}
 
-			var screen = Screen.FromRectangle(ra);
-			var rs = screen.WorkingArea; if(ra.Width > 0 && (ra.Right <= rs.Left || ra.Left >= rs.Right)) rs = screen.Bounds;
+			var si = AScreen.Of(ra).GetInfo();
+			var rs = si.workArea; if(ra.Width > 0 && (ra.Right <= rs.left || ra.Left >= rs.right)) rs = si.bounds;
 			rs.Inflate(-1, -5);
 			int heiSB = SystemInformation.HorizontalScrollBarHeight;
-			int heiAbove = ra.Top - rs.Top - heiSB, heiBelow = rs.Bottom - ra.Bottom - heiSB;
+			int heiAbove = ra.Top - rs.top - heiSB, heiBelow = rs.bottom - ra.Bottom - heiSB;
 			int maxHeight = Math.Max(heiAbove, heiBelow), maxWidth = FixedWidth ? ra.Width : rs.Width - 100;
 			if(maxHeight < 200) maxHeight = 200;
 			bool hasVertSB = false;
@@ -222,7 +222,7 @@ namespace Au.Controls
 			var r = new Rectangle(0, 0, width, height);
 			_c.Bounds = r;
 
-			r.X = ra.Left + width <= rs.Right ? ra.Left : rs.Right - width; r.X = Math.Max(r.X, rs.Left);
+			r.X = ra.Left + width <= rs.right ? ra.Left : rs.right - width; r.X = Math.Max(r.X, rs.left);
 			bool down = height <= heiBelow || heiAbove <= heiBelow;
 			r.Y = down ? ra.Bottom : ra.Top - height;
 			_w.Bounds = r;
@@ -387,8 +387,8 @@ namespace Au.Controls
 				get {
 					var p = base.CreateParams;
 					p.Style = unchecked((int)(WS.POPUP));
-					var es = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE;
-					if(_p != null && _owner == null) es |= WS_EX.TOPMOST;
+					var es = WS2.TOOLWINDOW | WS2.NOACTIVATE;
+					if(_p != null && _owner == null) es |= WS2.TOPMOST;
 					p.ExStyle = (int)es;
 					p.ClassStyle |= (int)Api.CS_DROPSHADOW;
 					return p;

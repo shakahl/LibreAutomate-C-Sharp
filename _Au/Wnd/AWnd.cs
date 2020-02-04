@@ -430,7 +430,7 @@ namespace Au
 		//			if((style & WS.CAPTION) != WS.CAPTION) return !IsCloaked;
 
 		//			//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
-		//			if(AVersion.MinWin10 && HasExStyle(WS_EX.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
+		//			if(AVersion.MinWin10 && HasExStyle(WS2.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
 		//				var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
 		//				//Print(isGhost, this);
 		//				return !isGhost;
@@ -798,7 +798,7 @@ namespace Au
 			{
 				ADebug.Print("EnableActivate: need min/res");
 
-				AWnd t = More.CreateWindow("#32770", null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS_EX.TOOLWINDOW);
+				AWnd t = More.CreateWindow("#32770", null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS2.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
@@ -910,8 +910,8 @@ namespace Au
 			if(!R) {
 				if(0 != (flags & Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					var est = ExStyle;
-					if((est & WS_EX.NOACTIVATE) != 0) noAct = true;
-					else if((est & (WS_EX.TOOLWINDOW | WS_EX.APPWINDOW)) == WS_EX.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
+					if((est & WS2.NOACTIVATE) != 0) noAct = true;
+					else if((est & (WS2.TOOLWINDOW | WS2.APPWINDOW)) == WS2.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
 					if(noAct && !IsCloaked) {
 						ZorderTop(); //in most cases does not work, but try anyway, it just calls the API. It seems works if the window is topmost.
 						return false; //if cloaked, need to activate to uncloak
@@ -1843,22 +1843,22 @@ namespace Au
 			/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen. With inRect used by RECT.MoveInRect.
 			/// </summary>
 			internal static void MoveInScreen(bool bEnsureMethod,
-			Coord left, Coord top, bool useWindow, AWnd w, ref RECT r,
-			AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
+				Coord left, Coord top, bool useWindow, AWnd w, ref RECT r,
+				AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
 			{
 				RECT rs;
-				System.Windows.Forms.Screen scr;
+				AScreen.Device scr;
 				if(inRect.HasValue) {
 					Debug.Assert(!useWindow);
 					rs = inRect.GetValueOrDefault();
-					scr = null;
+					scr = default;
 				} else {
-					if(!screen.IsNull) scr = screen.GetScreen();
-					else if(useWindow) scr = AScreen.ScreenFromWindow(w);
-					else if(bEnsureMethod) scr = System.Windows.Forms.Screen.FromRectangle(r);
-					else scr = System.Windows.Forms.Screen.PrimaryScreen;
+					if(!screen.IsNull) scr = screen.ToDevice();
+					else if(useWindow) scr = AScreen.Of(w);
+					else if(bEnsureMethod) scr = AScreen.Of(r);
+					else scr = AScreen.Primary;
 
-					rs = bWorkArea ? scr.WorkingArea : scr.Bounds;
+					rs = scr.GetRect(bWorkArea);
 
 					if(useWindow) {
 						if(!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
@@ -1890,7 +1890,7 @@ namespace Au
 
 				if(useWindow) { //move window
 					w.LibGetWindowPlacement(out var wp, "*move*");
-					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(AScreen.ScreenFromWindow(w));
+					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(AScreen.Of(w));
 					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
 
 					AWnd hto = default; bool visible = w.IsVisible;
@@ -1911,7 +1911,7 @@ namespace Au
 							//When moved to screen's coordinates and sized to screen's work area size, OS adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
 							//Must call SetWindowPos twice, or it may refuse to move at all.
 							//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
-							rs = scr.WorkingArea;
+							rs = scr.WorkArea;
 							if(!w.MoveLL(rs.left, rs.top) || !w.ResizeLL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
 						}
 					}
@@ -1973,13 +1973,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets <see cref="System.Windows.Forms.Screen"/> object of the screen that contains this window (the biggest part of it) or is nearest to it.
+		/// Gets <see cref="AScreen.Device"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(AWnd) or invalid, gets the primary screen.
-		/// Calls <see cref="AScreen.ScreenFromWindow"/>.
+		/// Calls <see cref="AScreen.Of(AWnd, SDefault)"/>.
 		/// </summary>
-		public System.Windows.Forms.Screen Screen {
-			get => AScreen.ScreenFromWindow(this);
-		}
+		public AScreen.Device Screen => AScreen.Of(this);
 
 		#endregion
 
@@ -2114,7 +2112,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if this is a topmost (always-on-top) window.
 		/// </summary>
-		public bool IsTopmost => HasExStyle(WS_EX.TOPMOST);
+		public bool IsTopmost => HasExStyle(WS2.TOPMOST);
 
 		/// <summary>
 		/// Returns true if this window is above window w in the Z order.
@@ -2146,12 +2144,12 @@ namespace Au
 		/// <summary>
 		/// Gets window extended style.
 		/// </summary>
-		/// <value>One or more <see cref="WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
+		/// <value>One or more <see cref="WS2"/> flags. Reference: <msdn>extended window styles</msdn>.</value>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		/// <seealso cref="HasExStyle"/>
 		/// <seealso cref="SetExStyle"/>
-		public WS_EX ExStyle {
-			get => (WS_EX)(uint)GetWindowLong(Native.GWL.EXSTYLE);
+		public WS2 ExStyle {
+			get => (WS2)(uint)GetWindowLong(Native.GWL.EXSTYLE);
 		}
 
 		/// <summary>
@@ -2175,7 +2173,7 @@ namespace Au
 		/// <param name="exStyle">One or more extended styles.</param>
 		/// <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool HasExStyle(WS_EX exStyle, bool any = false)
+		public bool HasExStyle(WS2 exStyle, bool any = false)
 		{
 			var k = ExStyle & exStyle;
 			return any ? k != 0 : k == exStyle;
@@ -2185,44 +2183,33 @@ namespace Au
 		/// Changes window style.
 		/// </summary>
 		/// <param name="style">One or more <see cref="WS"/> flags and/or class-specific style flags. Reference: <msdn>window styles</msdn>.</param>
-		/// <param name="how"></param>
-		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
-		/// <param name="updateClient">Update client area.</param>
+		/// <param name="flags"></param>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="Style"/>
-		public void SetStyle(WS style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
-		{
-			_SetStyle((int)style, how, false, updateNC, updateClient);
-		}
+		public void SetStyle(WS style, WSSFlags flags = 0)
+			=> _SetStyle(false, (int)style, flags);
 
 		/// <summary>
 		/// Changes window extended style.
 		/// </summary>
-		/// <param name="style">One or more <see cref="WS_EX"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
-		/// <param name="how"></param>
-		/// <param name="updateNC">Update non-client area (frame, title bar).</param>
-		/// <param name="updateClient">Update client area.</param>
+		/// <param name="style">One or more <see cref="WS2"/> flags. Reference: <msdn>extended window styles</msdn>.</param>
+		/// <param name="flags"></param>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="ExStyle"/>
-		public void SetExStyle(WS_EX style, SetAddRemove how = SetAddRemove.Set, bool updateNC = false, bool updateClient = false)
-		{
-			_SetStyle((int)style, how, true, updateNC, updateClient);
-		}
+		public void SetExStyle(WS2 style, WSSFlags flags = 0)
+			=> _SetStyle(true, (int)style, flags);
 
-		void _SetStyle(int style, SetAddRemove how, bool exStyle, bool updateNC, bool updateClient)
+		void _SetStyle(bool ex, int style, WSSFlags flags)
 		{
-			var gwl = exStyle ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
-			if(how != SetAddRemove.Set) {
-				int pstyle = (int)GetWindowLong(gwl);
-				if(how == SetAddRemove.Add) style |= pstyle;
-				else if(how == SetAddRemove.Remove) style = pstyle & ~style;
-				else if(how == SetAddRemove.Xor) style = pstyle ^ style;
+			var gwl = ex ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
+			switch(flags & (WSSFlags.Add | WSSFlags.Remove)) {
+			case WSSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
+			case WSSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
 			}
-
 			SetWindowLong(gwl, style);
 
-			if(updateNC) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
-			if(updateClient) Api.InvalidateRect(this, default, true);
+			if(flags.Has(WSSFlags.UpdateNonclient)) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
+			if(flags.Has(WSSFlags.UpdateClient)) Api.InvalidateRect(this, default, true);
 		}
 
 		/// <summary>
@@ -2232,10 +2219,10 @@ namespace Au
 		public bool IsPopupWindow => HasStyle(WS.POPUP);
 
 		/// <summary>
-		/// Returns true if has WS_EX.TOOLWINDOW style.
+		/// Returns true if has WS2.TOOLWINDOW style.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool IsToolWindow => HasExStyle(WS_EX.TOOLWINDOW);
+		public bool IsToolWindow => HasExStyle(WS2.TOOLWINDOW);
 
 		/// <summary>
 		/// Returns true if has WS.THICKFRAME style.
@@ -2259,29 +2246,16 @@ namespace Au
 
 		/// <summary>
 		/// Calls API <msdn>SetWindowLongPtr</msdn>.
-		/// Returns previous value. Throws exception if fails.
 		/// </summary>
 		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <param name="newValue">New value.</param>
 		/// <exception cref="AuWndException"/>
 		public LPARAM SetWindowLong(int index, LPARAM newValue)
 		{
-			if(!SetWindowLong(index, newValue, out var oldValue)) ThrowUseNative();
-			return oldValue;
-		}
-
-		/// <summary>
-		/// Calls API <msdn>SetWindowLongPtr</msdn>.
-		/// Returns false if fails. Supports <see cref="ALastError"/>.
-		/// </summary>
-		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
-		/// <param name="newValue">New value.</param>
-		/// <param name="oldValue">Receives previous value.</param>
-		public bool SetWindowLong(int index, LPARAM newValue, out LPARAM oldValue)
-		{
 			ALastError.Clear();
-			oldValue = Api.SetWindowLongPtr(this, index, newValue);
-			return oldValue != 0 || ALastError.Code == 0;
+			var prev = Api.SetWindowLongPtr(this, index, newValue);
+			if(prev == 0 && ALastError.Code != 0) ThrowUseNative();
+			return prev;
 		}
 
 		/// <summary>
@@ -2939,5 +2913,24 @@ namespace Au.Types
 		{
 			return string.Join("\r\n", GetList());
 		}
+	}
+
+	/// <summary>
+	/// Flags for <see cref="AWnd.SetStyle"/> and <see cref="AWnd.SetExStyle"/>.
+	/// </summary>
+	[Flags]
+	public enum WSSFlags
+	{
+		/// <summary>Add the specified styles and don't change others.</summary>
+		Add = 1,
+
+		/// <summary>Remove the specified styles and don't change others.</summary>
+		Remove = 2,
+
+		/// <summary>Update non-client area (frame, title bar).</summary>
+		UpdateNonclient = 4,
+
+		/// <summary>Update client area.</summary>
+		UpdateClient = 8,
 	}
 }

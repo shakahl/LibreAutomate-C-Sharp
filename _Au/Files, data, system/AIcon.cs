@@ -563,19 +563,24 @@ namespace Au
 		{
 			if(hIcon == default) return null;
 			var R = Icon.FromHandle(hIcon);
-			if(destroyIcon) {
-				var fi = typeof(Icon).GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance);
-				Debug.Assert(fi != null);
-				fi?.SetValue(R, true);
-
-				//Don't allow to exceed the process handle limit when the program does not dispose them.
-				//Default limit for USER and GDI objects is 10000, min 200.
-				//Icons are USER objects. Most icons also create 3 GDI objects, some 2. So a process can have max 3333 icons.
-				//If GC starts working when pressure is 100 KB, then the number of icons is ~50 and GDI handles ~150.
-				//We don't care about icon memory size.
-				AGC.AddObjectMemoryPressure(R, 2000);
-			}
+			if(destroyIcon) LetObjectDestroyIconOrCursor_(R);
 			return R;
+		}
+
+		internal static void LetObjectDestroyIconOrCursor_(object o)
+		{
+			var ty = o.GetType(); //Icon or Cursor
+			var fi = ty.GetField("_ownHandle", BindingFlags.NonPublic | BindingFlags.Instance); //new Icon code
+			if(fi == null) fi = ty.GetField("ownHandle", BindingFlags.NonPublic | BindingFlags.Instance); //Cursor, old Icon code
+			Debug.Assert(fi != null);
+			fi?.SetValue(o, true);
+
+			//Don't allow to exceed the process handle limit when the program does not dispose them.
+			//Default limit for USER and GDI objects is 10000, min 200.
+			//Icons are USER objects. Most icons also create 3 GDI objects, some 2. So a process can have max 3333 icons.
+			//If GC starts working when pressure is 100 KB, then the number of icons is ~50 and GDI handles ~150.
+			//We don't care about icon memory size.
+			AGC.AddObjectMemoryPressure(o, 2000);
 		}
 
 		/// <summary>

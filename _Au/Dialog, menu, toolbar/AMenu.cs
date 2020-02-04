@@ -453,13 +453,7 @@ namespace Au
 			_CheckDisposed();
 			if(_c.Items.Count == 0) return;
 
-			if(!_showedOnce) {
-				//_showedOnce = true; //OnOpening() sets it
-				if(!ActivateMenuWindow) Util.Workarounds_.WaitCursorWhenShowingMenuEtc();
-			}
-			//APerf.Next();
-
-			_isModal = ModalAlways ? true : !AThread.HasMessageLoop();
+			_isModal = Modal ?? !AThread.HasMessageLoop();
 
 			_inOurShow = true;
 			switch(overload) {
@@ -472,7 +466,6 @@ namespace Au
 				break;
 			}
 			_inOurShow = false;
-			//APerf.Next();
 
 			if(_isModal) {
 				_msgLoop.Loop();
@@ -504,7 +497,7 @@ namespace Au
 		/// <summary>
 		/// If false, disposes the menu when it is closed.
 		/// If true, does not dispose. Then you can call <b>Show</b> again and again.
-		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control.
+		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control's <b>ContextMenuStrip</b>.
 		/// </summary>
 		/// <seealso cref="DefaultMultiShow"/>
 		public bool MultiShow { get; set; } = DefaultMultiShow;
@@ -515,11 +508,13 @@ namespace Au
 		public static bool DefaultMultiShow { get; set; }
 
 		/// <summary>
-		/// If true, <b>Show</b> always waits until the menu is closed.
-		/// If false, does not wait if the thread has a .NET message loop (<see cref="AThread.HasMessageLoop"/>).
+		/// If true, <b>Show</b> waits until the menu is closed. If false, does not wait (this thread must have a message loop).
+		/// If null (default), does not wait if the thread has a .NET message loop (<see cref="AThread.HasMessageLoop"/>).
 		/// </summary>
-		public bool ModalAlways { get; set; }
-		//note: don't allow to make non-modal when there is no message loop. It can crash Windows if the programmer does not create a loop then, and it is not useful.
+		/// <remarks>
+		/// <note>If false, this thread must have a message loop, either already running or started soon after showing the menu. Without it the menu will not work.</note>
+		/// </remarks>
+		public bool? Modal { get; set; }
 
 		/// <summary>
 		/// Activate the menu window.
@@ -536,8 +531,8 @@ namespace Au
 		//public static bool DefaultActivateMenuWindow { get; set; }
 		///// <seealso cref="DefaultActivateMenuWindow"/>
 
-		WS_EX _ExStyle => ActivateMenuWindow ? WS_EX.TOOLWINDOW | WS_EX.TOPMOST : WS_EX.TOOLWINDOW | WS_EX.TOPMOST | WS_EX.NOACTIVATE;
-		//WS_EX.NOACTIVATE is a workaround for 2 .NET bugs:
+		WS2 _ExStyle => ActivateMenuWindow ? WS2.TOOLWINDOW | WS2.TOPMOST : WS2.TOOLWINDOW | WS2.TOPMOST | WS2.NOACTIVATE;
+		//WS2.NOACTIVATE is a workaround for 2 .NET bugs:
 		//1. In inactive thread the menu window may have a taskbar button.
 		//2. In inactive thread, when clicked a menu item, temporarily activates some window of this thread.
 
@@ -679,7 +674,7 @@ namespace Au
 		{
 			if(IsDisposed) return;
 
-			for(var v = _closing_lastVisibleMenu; v != null; ) {
+			for(var v = _closing_lastVisibleMenu; v != null;) {
 				var v2 = v.OwnerItem?.Owner as ToolStripDropDown;
 				_closing = true;
 				v.Close(reason);

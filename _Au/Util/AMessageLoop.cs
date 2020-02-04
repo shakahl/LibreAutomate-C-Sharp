@@ -39,8 +39,8 @@ namespace Au.Util
 
 					for(; ; ) {
 						IntPtr ev = _loopEndEvent;
-						int k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 100, Api.QS_ALLINPUT, Api.MWMO_INPUTAVAILABLE);
-						if(k == Api.WAIT_TIMEOUT) continue; //we don't use INFINITE, because then does not respond to Thread.Abort
+						int k = Api.MsgWaitForMultipleObjectsEx(1, &ev, 1000, Api.QS_ALLINPUT, Api.MWMO_INPUTAVAILABLE);
+						if(k == Api.WAIT_TIMEOUT) continue; //previously timeout was used to support Thread.Abort. It is disabled in Core, but maybe still safer with a timeout.
 
 						_DoEvents();
 						if(k == Api.WAIT_OBJECT_0 || k == Api.WAIT_FAILED) break; //note: this is after DoEvents because may be posted messages when stopping loop. Although it seems that MsgWaitForMultipleObjects returns events after all messages.

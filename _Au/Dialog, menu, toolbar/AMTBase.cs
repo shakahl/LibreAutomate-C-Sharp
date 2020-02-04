@@ -87,9 +87,8 @@ namespace Au.Types
 				try {
 					x.action(ca);
 				}
-				catch(Exception e) when(!(e is ThreadAbortException)) {
+				catch(Exception e) {
 					if(x.exceptOpt != MTExcept.Silent) PrintWarning(e.ToString(), -1);
-					//TODO: show line
 				}
 			}
 		}
@@ -111,6 +110,7 @@ namespace Au.Types
 		/// <remarks>
 		/// This property is applied to items added afterwards.
 		/// </remarks>
+		/// <seealso cref="Application.ThreadException"/>
 		public MTExcept ExceptionHandling { get; set; }
 		//FUTURE: public Type[] ExceptionTypes { get; set; }
 		//	Or bool ExceptionHandling and Func<Exception, bool> ExceptionFilter.
@@ -497,6 +497,7 @@ namespace Au.Types
 		/// <summary>
 		/// Don't handle exceptions. This is default.
 		/// However if <see cref="AMTBase.ItemThread"/> is not <see cref="MTThread.Current"/>, handles exceptions and shows warning.
+		/// On unhandled exception .NET probably will show an unhandled exception dialog with exception info and "Continue" button, unless your app uses <see cref="Application.ThreadException"/> event.
 		/// </summary>
 		Exception,
 

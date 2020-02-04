@@ -377,7 +377,7 @@ namespace Au
 		/// <summary>
 		/// Shows the toolbar and attaches to a screen.
 		/// </summary>
-		/// <param name="screen">Can be used to define the screen. For example a screen index (0 is the primary, 1 is the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
+		/// <param name="screen">Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
 		/// <remarks>
 		/// The toolbar will be moved when the screen moved or resized.
 		/// </remarks>
@@ -444,7 +444,6 @@ namespace Au
 		public void Close()
 		{
 			_c.Dispose();
-			_SatClose();
 		}
 
 		/// <summary>
@@ -653,55 +652,74 @@ namespace Au
 		/// tb.Transparency = (64, null);
 		/// ]]></code>
 		/// </example>
-		public (int? opacity, ColorInt? colorRGB) Transparency {
+		public (int? opacity, ColorInt? colorKey) Transparency {
 			get => _transparency;
 			set {
 				if(value != _transparency) {
 					_transparency = value;
-					if(_loaded) _c.Hwnd().SetTransparency(value != default, value.opacity, value.colorRGB);
+					if(_loaded) _c.Hwnd().SetTransparency(value != default, value.opacity, value.colorKey);
 				}
 			}
 		}
-		(int? opacity, ColorInt? colorRGB) _transparency;
+		(int? opacity, ColorInt? colorKey) _transparency;
 
 		#endregion
 
-		#region satellites
+		#region satellite
 
-		public void AddSatellite(AToolbar tb)
-		{
-			_satList ??= new List<AToolbar>();
-			_satList.Add(tb);
+		/// <summary>
+		/// A toolbar attached to this toolbar. Can be null.
+		/// </summary>
+		/// <exception cref="InvalidOperationException">The 'set' function throws if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
+		/// <remarks>
+		/// The satellite toolbar is shown when mouse enters its owner and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
+		/// A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
+		/// </remarks>
+		public AToolbar Satellite {
+			get => _satellite;
+			set {
+				if(value != _satellite) {
+					if(value == null) {
+						_SatHide();
+						_satellite = null;
+						//and don't clear _satPlanet etc
+					} else {
+						if((_c?.IsDisposed ?? false) || (value._c?.IsDisposed ?? false)) throw new ObjectDisposedException("AToolbar");
+						var p = value._satPlanet; if(p != this) { if(p != null || value._loaded) throw new InvalidOperationException(); }
+						_satellite = value;
+						_satellite._satPlanet = this;
+					}
+				}
+			}
 		}
 
-		List<AToolbar> _satList;
-		_OwnerWindow _satOW;
-		bool _satVisible;
-		ATimer _satTimer;
+		/// <summary>
+		/// If this is a sattellite toolbar (<see cref="Satellite"/>), gets its owner toolbar. Else null.
+		/// </summary>
+		public AToolbar SatellitePlanet => _satPlanet;
+
+		AToolbar _satellite;
 		AToolbar _satPlanet;
+		bool _satVisible;
+		int _satAnimation;
+		ATimer _satTimer;
+		ATimer _satAnimationTimer;
 
 		void _SatMouse()
 		{
-			if(_satList == null || _satVisible) return;
+			if(_satellite == null || _satVisible) return;
 			_satVisible = true;
 
 			//Print("show");
-			foreach(var tb in _satList) {
-				if(!tb._loaded) {
-					var owner = _c.Hwnd();
-					tb._CreateControl(true, owner);
-					tb._satPlanet = this;
-					tb._ow = _satOW ??= new _OwnerWindow(owner);
-					tb._ow.a.Add(tb);
-					var w1 = tb._c.Hwnd(); w1.Owner = owner; //let OS keep Z order and close/hide when owner toolbar closed/minimized
-				}
+			if(!_satellite._loaded) {
+				var owner = _c.Hwnd();
+				_satellite._CreateControl(true, owner);
+				_satellite._ow = new _OwnerWindow(owner);
+				_satellite._ow.a.Add(_satellite);
+				var w1 = _satellite._c.Hwnd(); w1.Owner = owner; //let OS keep Z order and close/hide when owner toolbar closed/minimized
 			}
 			_SatFollow();
-			foreach(var tb in _satList) {
-				//if(!tb._c.IsDisposed) {
-				tb._c.Hwnd().ShowLL(true);
-				//}
-			}
+			_SatShowHide(true, animate: true);
 
 			_satTimer ??= new ATimer(_SatTimer);
 			_satTimer.Every(100);
@@ -709,10 +727,7 @@ namespace Au
 
 		void _SatTimer(ATimer _)
 		{
-			if(_c.IsDisposed) {
-				_SatClose();
-				return;
-			}
+			Debug.Assert(!_c.IsDisposed);
 
 			POINT p = AMouse.XY;
 			int dist = Util.ADpi.ScaleInt(30);
@@ -722,7 +737,7 @@ namespace Au
 			var wa = AWnd.Active;
 
 			RECT ru = default;
-			foreach(var w in AWnd.GetWnd.ThreadWindows(AThread.NativeId, onlyVisible: true)) {
+			foreach(var w in AWnd.GetWnd.ThreadWindows(AThread.NativeId, onlyVisible: true)) { //TODO
 				if(ToolStrip.FromHandle(w.Handle) is ToolStrip ts) {
 					if(w == wa) return;
 					if(ts is ContextMenuStrip) return;
@@ -734,8 +749,7 @@ namespace Au
 			}
 			if(ru.Contains(p.x, p.y)) return;
 
-			Print("hide (timer)");
-			_SatHide();
+			_SatHide(animate: true);
 		}
 		//void _SatTimer(ATimer _)
 		//{
@@ -793,33 +807,60 @@ namespace Au
 		//	}
 		//}
 
-		void _SatFollow()
+		void _SatDestroying()
 		{
-			if(!_satVisible) return;
-			if(!_satOW.UpdateRect(out bool changed) || !changed) return;
-			foreach(var tb in _satList) {
-				tb._FollowRect(onFollowOwner: true);
-			}
+			if(_satPlanet != null) _satPlanet.Satellite = null;
+			ADebug.PrintIf(_satellite != null, "_satellite");
+			//When destroying planet, OS at first destroys satellites (owned windows).
 		}
 
-		void _SatHide()
+		//Hides _satellite and stops _satTimer.
+		void _SatHide(bool animate = false/*, [CallerMemberName] string cmn=null*/)
 		{
-			if(!_satVisible) return;
-			foreach(var tb in _satList) {
-				tb._c.Hwnd().ShowLL(false);
-			}
-			_satVisible = false;
-			_satTimer.Stop();
-		}
-
-		void _SatClose()
-		{
-			if(_satList == null) return;
+			if(_satellite == null) return;
+			//Print("hide", cmn, _satVisible);
 			if(_satVisible) {
 				_satVisible = false;
 				_satTimer.Stop();
+				_SatShowHide(false, animate);
+			} else if(!animate && (_satAnimationTimer?.IsRunning ?? false)) {
+				_SatShowHide(false, false);
 			}
-			foreach(var tb in _satList) tb.Close();
+		}
+
+		//Shows or hides _satellite and manages animation.
+		void _SatShowHide(bool show, bool animate)
+		{
+			if(!animate || _satellite._transparency != default) {
+				var w = _satellite._c.Hwnd();
+				if(show != w.IsVisible) w.ShowLL(show);
+				if(_satellite._transparency == default) w.SetTransparency(false);
+				_satAnimationTimer?.Stop();
+				_satAnimation = 0;
+				return;
+			}
+
+			_satAnimationTimer ??= new ATimer(_ => {
+				var w = _satellite._c.Hwnd();
+				_satAnimation += _satVisible ? 64 : -32;
+				bool stop; if(_satVisible) { if(stop = _satAnimation >= 255) _satAnimation = 255; } else { if(stop = _satAnimation <= 0) _satAnimation = 0; }
+				if(stop) {
+					_satAnimationTimer.Stop();
+					if(_satAnimation == 0) w.ShowLL(false);
+				}
+				if(_satellite._transparency == default) w.SetTransparency(!stop, _satAnimation);
+			});
+			_satAnimationTimer.Now();
+			_satAnimationTimer.Every(30);
+
+			if(show) _satellite._c.Hwnd().ShowLL(true);
+		}
+
+		void _SatFollow()
+		{
+			if(!_satVisible) return;
+			if(!_satellite._ow.UpdateRect(out bool changed) || !changed) return;
+			_satellite._FollowRect(onFollowOwner: true);
 		}
 
 		#endregion

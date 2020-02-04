@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -118,7 +116,7 @@ namespace Au.Triggers
 					}
 				}
 			}
-			catch(Exception ex) when(!(ex is ThreadAbortException)) {
+			catch(Exception ex) {
 				Print(ex);
 				return false;
 			}
@@ -141,7 +139,7 @@ namespace Au.Triggers
 						if(!ok) return false;
 					}
 				}
-				catch(Exception ex) when(!(ex is ThreadAbortException)) {
+				catch(Exception ex) {
 					Print(ex);
 					return false;
 				}

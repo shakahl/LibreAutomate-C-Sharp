@@ -207,7 +207,7 @@ namespace Au
 			try {
 				_proc2(new HookData.AccHookData(this, ev, wnd, idObject, idChild, idThread, eventTime));
 			}
-			catch(Exception ex) { AHookWin.LibOnException(ex, this); }
+			catch(Exception ex) { AHookWin.LibOnException(ex); }
 		}
 	}
 }

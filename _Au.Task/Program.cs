@@ -111,7 +111,7 @@ static unsafe class Program
 
 		//APerf.Next();
 		try { RunAssembly.Run(asmFile, args, pdbOffset, fullPathRefs: fullPathRefs); }
-		catch(Exception ex) when(!(ex is ThreadAbortException)) { Print(ex); }
+		catch(Exception ex) { Print(ex); }
 		finally { s_hook?.Dispose(); }
 	}
 
@@ -181,7 +181,7 @@ static unsafe class Program
 			//}
 			if(m.code == HookData.CbtEvent.ACTIVATE) {
 				var w = (AWnd)m.wParam;
-				if(!w.HasExStyle(WS_EX.NOACTIVATE)) {
+				if(!w.HasExStyle(WS2.NOACTIVATE)) {
 					//Print(w);
 					//Print(w.ExStyle);
 					//Api.SetForegroundWindow(w); //does not work

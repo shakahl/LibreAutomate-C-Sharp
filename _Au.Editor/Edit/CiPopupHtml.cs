@@ -108,7 +108,7 @@ class CiPopupHtml
 			} else {
 				_w.MinimumSize = Au.Util.ADpi.ScaleSize((150, 150));
 				_w.Size = new Size(
-					Screen.FromControl(Program.MainForm).WorkingArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
+					AScreen.Of(Program.MainForm).WorkArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
 					Au.Util.ADpi.ScaleInt(_usedBy switch { UsedBy.PopupList => 360, UsedBy.Signature => 300, _ => 100 })
 					);
 			}
@@ -151,7 +151,7 @@ class CiPopupHtml
 		using var g = _c.CreateGraphics();
 		var zf = HtmlRender.Measure(g, html, 0, _c.BaseCssData, imageLoad: OnLoadImage);
 		int wid = (int)zf.Width;
-		int waWid = Screen.FromControl(Program.MainForm).WorkingArea.Width * 2 / 3 - sbWid;
+		int waWid = AScreen.Of(Program.MainForm).WorkArea.Width * 2 / 3 - sbWid;
 		if(wid > waWid) { //remeasure, because HtmlRender.Measure returns maxWidth parameter if it is > text width
 			zf = HtmlRender.Measure(g, html, waWid, _c.BaseCssData, imageLoad: OnLoadImage);
 			wid = (int)zf.Width;

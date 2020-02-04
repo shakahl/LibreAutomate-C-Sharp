@@ -83,10 +83,10 @@ namespace Au.Controls
 				cp.ClassName = "Scintilla";
 
 				//this is like TextBoxBase does
-				cp.ExStyle &= ~(int)WS_EX.CLIENTEDGE;
+				cp.ExStyle &= ~(int)WS2.CLIENTEDGE;
 				cp.Style &= ~(int)WS.BORDER;
 				switch(ZInitBorderStyle) {
-				case BorderStyle.Fixed3D: cp.ExStyle |= (int)WS_EX.CLIENTEDGE; break;
+				case BorderStyle.Fixed3D: cp.ExStyle |= (int)WS2.CLIENTEDGE; break;
 				case BorderStyle.FixedSingle: cp.Style |= (int)WS.BORDER; break;
 				}
 

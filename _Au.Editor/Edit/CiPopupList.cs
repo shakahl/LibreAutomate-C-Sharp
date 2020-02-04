@@ -267,9 +267,9 @@ class CiPopupList
 	void _SetRect(RECT anchor)
 	{
 		var ra = _doc.RectangleToScreen(anchor);
-		var rs = Screen.FromRectangle(ra).WorkingArea;
+		var rs = AScreen.Of(ra).WorkArea;
 		rs.Inflate(-1, -5);
-		int heiAbove = ra.Top - rs.Top, heiBelow = rs.Bottom - ra.Bottom;
+		int heiAbove = ra.Top - rs.top, heiBelow = rs.bottom - ra.Bottom;
 		int maxHeight = Math.Max(heiAbove, heiBelow); if(maxHeight < 200) maxHeight = 200;
 
 		var r = _w.Bounds;
@@ -277,7 +277,7 @@ class CiPopupList
 		if(height > maxHeight) { _height = height; height = maxHeight; } else if(_height > 0 && _height <= maxHeight) { height = _height; _height = 0; }
 		r.Height = height;
 
-		r.X = ra.Left + width <= rs.Right ? ra.Left : rs.Right - width; r.X = Math.Max(r.X, rs.Left);
+		r.X = ra.Left + width <= rs.right ? ra.Left : rs.right - width; r.X = Math.Max(r.X, rs.left);
 		bool down = height <= heiBelow || heiAbove <= heiBelow;
 		r.Y = down ? ra.Bottom : ra.Top - height;
 		_w.Bounds = r;

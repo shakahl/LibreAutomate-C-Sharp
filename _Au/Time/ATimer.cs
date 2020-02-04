@@ -19,10 +19,10 @@ using static Au.AStatic;
 namespace Au
 {
 	/// <summary>
-	/// Timer that uses API <msdn>SetTimer</msdn> and API <msdn>KillTimer</msdn>.
+	/// Timer that uses API <msdn>SetTimer</msdn>.
 	/// </summary>
 	/// <remarks>
-	/// Similar to System.Windows.Forms.Timer, but more lightweight, for example does not create a hidden window.
+	/// Similar to <b>System.Windows.Forms.Timer</b>, but more lightweight, for example does not create a hidden window.
 	/// Use in UI threads. Does not work if this thread does not retrieve/dispatch posted messages (<msdn>WM_TIMER</msdn>).
 	/// </remarks>
 	/// <example>
@@ -53,7 +53,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Something to attach to this ATimer variable.
+		/// Something to attach to this variable.
 		/// </summary>
 		public object Tag { get; set; }
 
@@ -124,7 +124,6 @@ namespace Au
 			if(t._singlePeriod) t.Stop();
 
 			try { t._action(t); }
-			catch(ThreadAbortException) { t.Stop(); }
 			catch(Exception ex) { PrintWarning(ex.ToString(), -1); }
 			//info: OS handles exceptions in timer procedure.
 		}
@@ -150,6 +149,14 @@ namespace Au
 				_id = 0;
 			}
 		}
+
+		/// <summary>
+		/// Execute the timer action now.
+		/// </summary>
+		/// <remarks>
+		/// Does not change any properties. Just calls the callback function. Does not handle exceptions.
+		/// </remarks>
+		public void Now() => _action(this);
 
 		void _CheckThread()
 		{

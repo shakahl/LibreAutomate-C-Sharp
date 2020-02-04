@@ -188,7 +188,7 @@ class PanelOutput : AuUserControlBase
 		if(on) {
 			w.Owner = default;
 			w.ZorderTopmost();
-			//w.SetExStyle(WS_EX.APPWINDOW, SetAddRemove.Add);
+			//w.SetExStyle(WS2.APPWINDOW, SetAddRemove.Add);
 			//AWnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();

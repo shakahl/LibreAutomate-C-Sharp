@@ -525,7 +525,7 @@ namespace Au
 			public bool Reopen(bool noThrow = false)
 			{
 				Debug.Assert(!_isOpen);
-				var to = new AWaitFor.Loop(noThrow ? -1 : -10, 1);
+				var to = new AWaitFor.Loop(noThrow ? -1 : -10, new OptWaitFor(period: 1));
 				while(!Api.OpenClipboard(_w)) {
 					int ec = ALastError.Code;
 					if(!to.Sleep()) {

@@ -1171,8 +1171,10 @@ partial class FilesModel : ITreeModel
 		try {
 			var x = ACsv.Parse(csv);
 			foreach(var row in x.Data) {
-				var f = FindScript(row[0]);
-				if(f == null) { Print("Startup script not found: " + row[0] + ". Please edit name in Options."); continue; }
+				string script = row[0];
+				if(script.Starts("//")) continue;
+				var f = FindScript(script);
+				if(f == null) { Print("Startup script not found: " + script + ". Please edit name in Options."); continue; }
 				int delay = 10;
 				if(x.ColumnCount > 1) {
 					var sd = row[1];

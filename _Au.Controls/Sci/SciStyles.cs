@@ -99,14 +99,14 @@ namespace Au.Controls
 			return 0 != Call(SCI_STYLEGETHOTSPOT, style);
 		}
 
-		public void StyleForeColor(int style, ColorInt colorRGB)
+		public void StyleForeColor(int style, ColorInt color)
 		{
-			Call(SCI_STYLESETFORE, style, colorRGB.ToBGR());
+			Call(SCI_STYLESETFORE, style, color.ToBGR());
 		}
 
-		public void StyleBackColor(int style, ColorInt colorRGB)
+		public void StyleBackColor(int style, ColorInt color)
 		{
-			Call(SCI_STYLESETBACK, style, colorRGB.ToBGR());
+			Call(SCI_STYLESETBACK, style, color.ToBGR());
 		}
 
 		/// <summary>
@@ -155,20 +155,20 @@ namespace Au.Controls
 
 		#region spec styles
 
-		public void SelectionForeColor(bool use, ColorInt colorRGB)
+		public void SelectionForeColor(bool use, ColorInt color)
 		{
-			Call(SCI_SETSELFORE, use, colorRGB.ToBGR());
+			Call(SCI_SETSELFORE, use, color.ToBGR());
 		}
 
-		public void SelectionBackColor(bool use, ColorInt colorRGB, int alpha = 256)
+		public void SelectionBackColor(bool use, ColorInt color, int alpha = 256)
 		{
-			Call(SCI_SETSELBACK, use, colorRGB.ToBGR());
+			Call(SCI_SETSELBACK, use, color.ToBGR());
 			Call(SCI_SETSELALPHA, alpha);
 		}
 
-		public void CaretLineColor(bool use, ColorInt colorRGB, int alpha = 256)
+		public void CaretLineColor(bool use, ColorInt color, int alpha = 256)
 		{
-			Call(SCI_SETCARETLINEBACK, colorRGB.ToBGR());
+			Call(SCI_SETCARETLINEBACK, color.ToBGR());
 			Call(SCI_SETCARETLINEBACKALPHA, alpha);
 			Call(SCI_SETCARETLINEVISIBLE, use);
 		}

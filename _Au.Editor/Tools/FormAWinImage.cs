@@ -91,7 +91,7 @@ namespace Au.Tools
 			} else { //on Open
 				_color = 0;
 				_image = image;
-				_rect = (0, 0, image.Width, image.Height);
+				_rect = new RECT(0, 0, image.Width, image.Height);
 			}
 
 			//set _pict
@@ -370,7 +370,7 @@ namespace Au.Tools
 		void _OpenFile(bool embed)
 		{
 			if(_wnd.Is0) {
-				AOsd.ShowText("At first please select a window with button 'Capture' or 'Edit...'.", xy: this, icon: SystemIcons.Error);
+				AOsd.ShowText("At first please select a window with button 'Capture' or 'Edit window/control'.", xy: PopupXY.In(this.Bounds), icon: SystemIcons.Error);
 				return;
 			}
 

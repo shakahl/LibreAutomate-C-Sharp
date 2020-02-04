@@ -260,7 +260,7 @@ namespace Au
 		/// <seealso cref="AMouse.WaitForNoButtonsPressed"/>
 		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
-			var to = new AWaitFor.Loop(secondsTimeout, 2);
+			var to = new AWaitFor.Loop(secondsTimeout, new OptWaitFor(period: 2));
 			for(; ; ) {
 				if(!IsMod(mod) && !AMouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
@@ -285,7 +285,7 @@ namespace Au
 			return AWaitFor.Condition(secondsTimeout, () => {
 				foreach(var k in keys) if(IsPressed(k)) return false;
 				return true;
-			}, 2);
+			}, new OptWaitFor(period: 2));
 		}
 
 		/// <summary>
@@ -458,7 +458,7 @@ namespace Au
 				}
 				if(orMouse) {
 					Api.GetCursorPos(out var p);
-					r = (p.x, p.y, 0, 16);
+					r = new RECT(p.x, p.y, 0, 16);
 				} else r = default;
 				w = default;
 				return false;
@@ -612,12 +612,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sends virtual keystrokes to the active window. Also can send text, wait, etc.
+		/// Generates virtual keystrokes (keys, text). Also can wait, etc.
 		/// </summary>
 		/// <param name="keysEtc">
 		/// Any number of arguments of these types:
 		/// - string - keys. One or more key names separated by spaces or operators. More info in Remarks.
 		/// <br/>Example: <c>Key("Enter A Ctrl+A");</c>
+		/// Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
 		/// <br/>See <see cref="AddKeys"/>.
 		/// - <see cref="KText"/> - literal text, like function <see cref="Text"/>.
 		/// <br/>Example: <c>Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
@@ -966,10 +967,20 @@ namespace Au
 	public static partial class AStatic
 	{
 		/// <summary>
-		/// Sends virtual keystrokes to the active window. Also can send text, wait, etc.
+		/// Generates virtual keystrokes (keys, text). Also can wait, etc.
 		/// Calls <see cref="AKeys.Key"/>.
 		/// </summary>
+		/// <param name="keysEtc">
+		/// Keys, text, etc.
+		/// Example: <c>Key("Down Tab*2 Ctrl+X", (KText)"text", "Enter");</c>
+		/// Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
+		/// </param>
 		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// Key("Down Tab*2 Ctrl+X", (KText)"text", "Enter");
+		/// ]]></code>
+		/// </example>
 		public static void Key([ParamString(PSFormat.AKeys)] params object[] keysEtc) => AKeys.Key(keysEtc);
 
 		/// <summary>

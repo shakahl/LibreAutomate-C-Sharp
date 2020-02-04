@@ -32,12 +32,12 @@ namespace Au.Controls
 	public class InactiveWindow : Form
 	{
 		WS _style;
-		WS_EX _exStyle;
+		WS2 _exStyle;
 		bool _shadow;
 		Control _owner;
 		bool _wasCtor, _wasShow;
 
-		public InactiveWindow(WS style = WS.POPUP | WS.THICKFRAME, WS_EX exStyle = WS_EX.TOOLWINDOW | WS_EX.NOACTIVATE, bool shadow = false)
+		public InactiveWindow(WS style = WS.POPUP | WS.THICKFRAME, WS2 exStyle = WS2.TOOLWINDOW | WS2.NOACTIVATE, bool shadow = false)
 		{
 			_style = style;
 			_exStyle = exStyle;
@@ -57,10 +57,10 @@ namespace Au.Controls
 			get {
 				var p = base.CreateParams;
 				if(_wasCtor) {
-					//Print((WS)p.Style, (WS_EX)p.ExStyle);
+					//Print((WS)p.Style, (WS2)p.ExStyle);
 					p.Style = (int)_style;
 					var es = _exStyle;
-					if(_owner == null) es |= WS_EX.TOPMOST;
+					if(_owner == null) es |= WS2.TOPMOST;
 					p.ExStyle = (int)es;
 					if(_shadow && !_style.Has(WS.THICKFRAME)) p.ClassStyle |= (int)Api.CS_DROPSHADOW;
 				}

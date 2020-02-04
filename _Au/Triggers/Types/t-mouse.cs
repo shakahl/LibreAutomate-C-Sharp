@@ -12,14 +12,11 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
-using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
+using System.Collections;
 
-using Au;
 using Au.Types;
 using static Au.AStatic;
-using System.Collections;
 
 namespace Au.Triggers
 {
@@ -155,7 +152,7 @@ namespace Au.Triggers
 		/// <param name="screen">
 		/// Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
 		/// Default: <b>Primary</b>.
-		/// Uses <see cref="Screen.AllScreens"/> to get screen indices. They may not match the indices that you can see in Windows Settings.
+		/// Uses <see cref="AScreen.AllScreens"/> to get screen indices. They are different than in Windows Settings.
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
@@ -327,7 +324,9 @@ namespace Au.Triggers
 					}
 
 					if(isEdgeMove && x.screenIndex != TMScreen.Any) {
-						var screen = AScreen.ScreenFromIndex((int)x.screenIndex);
+						var screen = x.screenIndex == TMScreen.OfActiveWindow
+							? AScreen.Of(AWnd.Active)
+							: AScreen.Index((int)x.screenIndex);
 						if(!screen.Bounds.Contains(pt)) continue;
 					}
 
@@ -494,13 +493,9 @@ namespace Au.Triggers
 			public bool Detect(POINT pt)
 			{
 				//get normal x y. In pt can be outside screen when cursor moved fast and was stopped by a screen edge. Tested: never for click/wheel events.
-				//var r = Screen.GetBounds(pt); //creates much garbage. Calls API MonitorFromPoint and creates new Screen object.
 				//Print(pt, AMouse.XY);
-				//var hmon = Api.MonitorFromPoint(pt, Api.MONITOR_DEFAULTTONEAREST); //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
-				var hmon = Api.MonitorFromPoint(AMouse.XY, Api.MONITOR_DEFAULTTONEAREST); //smaller problem: AMouse.XY gets previous coordinates
-				Api.MONITORINFO mi = default; mi.cbSize = Api.SizeOf<Api.MONITORINFO>();
-				Api.GetMonitorInfo(hmon, ref mi);
-				var r = mi.rcMonitor;
+				//var r = AScreen.Of(pt).Bounds; //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
+				var r = AScreen.Of(AMouse.XY).Bounds; //smaller problem: AMouse.XY gets previous coordinates
 				_xmin = r.left; _ymin = r.top; _xmax = r.right - 1; _ymax = r.bottom - 1;
 				_x = AMath.MinMax(pt.x, _xmin, _xmax);
 				_y = AMath.MinMax(pt.y, _ymin, _ymax);

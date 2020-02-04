@@ -381,7 +381,7 @@ namespace Au
 							default: found = null != AWinImage.Find(w, _contains, WIFlags.WindowDC); break; //FUTURE: optimize. //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
 							}
 						}
-						catch(Exception ex) when(!(ex is ThreadAbortException)) {
+						catch(Exception ex) {
 							if(!(ex is AuWndException)) PrintWarning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
 						}
 						if(!found) { _stopProp = EProps.contains; continue; }

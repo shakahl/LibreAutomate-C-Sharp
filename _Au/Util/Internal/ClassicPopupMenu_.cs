@@ -46,7 +46,7 @@ namespace Au.Util
 			if(Api.GetFocus() == default) { //prevent activating the menu window on click
 				ATimer.After(1, _ => {
 					var w = AWnd.Find("", "#32768", WF3.ThisThread); //find visible classic menu window of this thread
-					if(!w.Is0) w.SetExStyle(WS_EX.NOACTIVATE, SetAddRemove.Add);
+					if(!w.Is0) w.SetExStyle(WS2.NOACTIVATE, WSSFlags.Add);
 				});
 			}
 			var p = AMouse.XY;

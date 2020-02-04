@@ -141,7 +141,7 @@ namespace Au
 
 			public bool UpdateRect(out bool changed)
 			{
-				RECT r = _screen.GetScreen().Bounds;
+				RECT r = _screen.ToDevice().Bounds;
 				if(changed = r != cachedRect) {
 					prevSize = (cachedRect.Width, cachedRect.Height);
 					cachedRect = r;
@@ -152,8 +152,8 @@ namespace Au
 			public void UpdateIfAutoScreen()
 			{
 				if(!_isAuto) return;
-				Screen k = AScreen.ScreenFromWindow(_tb.Control.Hwnd());
-				int i = k.GetIndex();
+				var k = AScreen.Of(_tb.Control);
+				int i = k.Index;
 				//Print(_tb._sett.screen, i);
 				if(i != _tb._sett.screen) {
 					_screen = i;
@@ -210,6 +210,7 @@ namespace Au
 				if(isOwned) {
 					_SetTimer(150);
 				} else {
+					if(!_timer.IsRunning) _SetTimer(250);
 					tb._FollowRect();
 					//tb.Control.Show(); //no, tries to activate
 					tb.Control.Hwnd().ShowLL(true);
@@ -250,6 +251,8 @@ namespace Au
 						_aow.RemoveAt(i);
 					}
 				}
+
+				_ManageFullScreen();
 			}
 
 			void _Hook(HookData.AccHookData d)
@@ -380,7 +383,41 @@ namespace Au
 
 				return true;
 			}
+
+			void _ManageFullScreen(AToolbar tb = null)
+			{
+				APerf.First();
+				if(tb?.MiscFlags.Has(TBFlags.HideIfFullScreen) ?? _atb.Any(o => o.MiscFlags.Has(TBFlags.HideIfFullScreen))) {
+					var w = AWnd.Active;
+					w.IsFullScreen_(out var screen);
+					APerf.Next();
+					if(tb != null) tb._ManageFullScreen(w, screen);
+					else foreach(var v in _atb) if(v.MiscFlags.Has(TBFlags.HideIfFullScreen)) v._ManageFullScreen(w, screen);
+				}
+				APerf.NW();
+			}
 		}
+
+		void _ManageFullScreen(AWnd wFore, AScreen.Device screen)
+		{
+			bool hide;
+			if(screen.Is0) hide = false;
+			else if(IsOwned) hide = OwnerWindow == wFore;
+			else hide = AScreen.Of(_c, SDefault.Zero) == screen;
+			//Print(hide, screen);
+
+			if(hide == _hide.Has(_EHide.FullScreen)) return;
+			_hide ^= _EHide.FullScreen;
+			_c.Hwnd().ShowLL(!hide);
+			//TODO: finish. Eg don't show if is hidden for other reasons.
+		}
+
+		[Flags]
+		enum _EHide : byte
+		{
+			FullScreen = 4,
+		}
+		_EHide _hide;
 
 		void _Zorder()
 		{
@@ -470,11 +507,18 @@ namespace Au
 
 			SIZE _GetMinSize()
 			{
-				int k = _border < TBBorder.ThreeD ? (int)_border : AWnd.More.BorderWidth(_c.Hwnd());
-				k = k * 2 + 1; //two borders and 1 pixel of client area
+				int k = _border < TBBorder.ThreeD ? 1 : AWnd.More.BorderWidth(_c.Hwnd());
+				k = k * 2;
 				var ms = _c.MinimumSize;
 				return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
 			}
+			//SIZE _GetMinSize()
+			//{
+			//	int k = _border < TBBorder.ThreeD ? (int)_border : AWnd.More.BorderWidth(_c.Hwnd());
+			//	k = k * 2 + 1; //two borders and 1 pixel of client area
+			//	var ms = _c.MinimumSize;
+			//	return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
+			//}
 		}
 
 		void _OnWindowPosChanged(in Api.WINDOWPOS wp)
@@ -490,7 +534,6 @@ namespace Au
 				_SatFollow();
 			}
 			if(wp.flags.Has(Native.SWP.HIDEWINDOW)) {
-				if(_satList != null) Print("hide (poschanged)");
 				_SatHide();
 			}
 		}
@@ -529,7 +572,7 @@ namespace Au
 		void _OnDisplayChanged()
 		{
 			if(_os == null) return;
-			ATimer.After(200, _ => { //why timer: let Screen receive WM_DISPLAYCHANGE and clear its cache
+			ATimer.After(200, _ => {
 				_os.UpdateRect(out bool changed);
 				if(changed) _FollowRect();
 			});

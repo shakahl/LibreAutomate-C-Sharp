@@ -189,6 +189,7 @@ static class CommandLine
 		case 4:
 			var f1 = Program.Model.FindByFilePath(s);
 			if(f1 != null) Program.Model.OpenAndGoTo(f1, (int)wParam - 1);
+			else PrintWarning($"Script '{s}' not found. If renamed, please recompile it, then run again.", -1);
 			break;
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (ATask.Run/RunWait)

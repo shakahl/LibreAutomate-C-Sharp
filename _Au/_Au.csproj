@@ -13,7 +13,7 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
     <DocumentationFile>Au.xml</DocumentationFile>
     <Deterministic>false</Deterministic>
-    <NoWarn>1701;1702;3001,3002,3003,3009,419</NoWarn>
+    <NoWarn>1701;1702;3001,3002,3003,3009,419,660</NoWarn>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

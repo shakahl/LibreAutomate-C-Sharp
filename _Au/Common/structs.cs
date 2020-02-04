@@ -18,15 +18,14 @@ using static Au.AStatic;
 
 namespace Au.Types
 {
-#pragma warning disable 660, 661 //no Equals()
-
 	/// <summary>
-	/// Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg wParam/lParam of SendMessage.
-	/// Unlike IntPtr:
-	///		Has implicit casts from most integral types. And explicit casts to.
-	///		Does not check overflow when casting from uint etc. IntPtr throws exception on overflow, which can create bugs.
+	/// Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg WPARAM/LPARAM/LRESULT of API SendMessage.
 	/// </summary>
 	/// <remarks>
+	/// Unlike IntPtr:
+	/// - Has implicit casts from most integral types. And explicit casts to.
+	///	- Does not check overflow when casting from uint etc. IntPtr throws exception on overflow, which can create bugs.
+	///	
 	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
 	///	There is no cast operators for enum. When need, cast through int or uint. For AWnd cast through IntPtr.
 	/// </remarks>
@@ -119,27 +118,46 @@ namespace Au.Types
 
 		public POINT(int x, int y) { this.x = x; this.y = y; }
 
-		public static implicit operator POINT(Point p) => new POINT(p.X, p.Y);
-		public static implicit operator Point(POINT p) => new Point(p.x, p.y);
-		public static implicit operator POINT(PointF p) => new POINT(checked((int)p.X), checked((int)p.Y));
-		public static implicit operator PointF(POINT p) => new PointF(p.x, p.y);
-		public static implicit operator POINT(System.Windows.Point p) => new POINT(checked((int)p.X), checked((int)p.Y));
-		public static implicit operator System.Windows.Point(POINT p) => new System.Windows.Point(p.x, p.y);
 		public static implicit operator POINT((int x, int y) t) => new POINT(t.x, t.y);
-		/// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/>.</summary>
-		public static implicit operator POINT((Coord x, Coord y, bool workArea) t) => _Coord(t.x, t.y, t.workArea, default);
-		/// <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="Coord.Normalize"/>.</summary>
-		public static implicit operator POINT((Coord x, Coord y, AScreen screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
-		/// <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="Coord.NormalizeInRect"/>.</summary>
-		public static implicit operator POINT((RECT r, Coord x, Coord y) t) => Coord.NormalizeInRect(t.x, t.y, t.r, centerIfEmpty: true);
+
+		public static implicit operator POINT(Point p) => new POINT(p.X, p.Y);
+		public static explicit operator POINT(PointF p) => new POINT(checked((int)p.X), checked((int)p.Y));
+		public static explicit operator POINT(System.Windows.Point p) => new POINT(checked((int)p.X), checked((int)p.Y));
+
+		public static implicit operator Point(POINT p) => new Point(p.x, p.y);
+		public static implicit operator PointF(POINT p) => new PointF(p.x, p.y);
+		public static implicit operator System.Windows.Point(POINT p) => new System.Windows.Point(p.x, p.y);
+
+		//rejected
+		///// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.</summary>
+		//public static implicit operator POINT((Coord x, Coord y, bool workArea) t) => _Coord(t.x, t.y, t.workArea, default);
+		///// <summary>Specifies position relative to the specified screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.</summary>
+		//public static implicit operator POINT((Coord x, Coord y, AScreen screen, bool workArea) t) => _Coord(t.x, t.y, t.workArea, t.screen);
+		///// <summary>Specifies position in the specified rectangle which is relative to the primary screen. Calls <see cref="Coord.NormalizeInRect"/> with <i>centerIfEmpty</i> true.</summary>
+		//public static implicit operator POINT((RECT r, Coord x, Coord y) t) => Coord.NormalizeInRect(t.x, t.y, t.r, centerIfEmpty: true);
+		//static POINT _Coord(Coord x, Coord y, bool workArea, AScreen screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
+
+		//maybe in the future
+		///// <summary>
+		///// Converts <see cref="Coord"/> coordinates into real coodinates.
+		///// Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.
+		///// </summary>
+		//public static POINT Normalize(Coord x, Coord y, bool workArea = false, AScreen screen = default)
+		//	=> Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
+
+		//public static POINT NormalizeIn(RECT r, Coord x = default, Coord y = default)
+		//	=> Coord.NormalizeInRect(x, y, r, centerIfEmpty: true);
 
 		public static bool operator ==(POINT p1, POINT p2) => p1.x == p2.x && p1.y == p2.y;
 		public static bool operator !=(POINT p1, POINT p2) => !(p1 == p2);
+
+		public override int GetHashCode() => HashCode.Combine(x, y);
 
 		public bool Equals(POINT other) => this == other; //IEquatable
 
 		/// <summary>Adds x and y to this.x and this.y.</summary>
 		public void Offset(int x, int y) { this.x += x; this.y += y; }
+
 		/// <summary>Returns <c>new POINT(p.x + d.x, p.y + d.y)</c>.</summary>
 		public static POINT operator +(POINT p, (int x, int y) d) => new POINT(p.x + d.x, p.y + d.y);
 
@@ -153,8 +171,6 @@ namespace Au.Types
 		[EditorBrowsable(EditorBrowsableState.Never)]
 		public int _Y { get => y; set { y = value; } }
 #pragma warning restore 1591 //XML doc
-
-		static POINT _Coord(Coord x, Coord y, bool workArea, AScreen screen) => Coord.Normalize(x, y, workArea, screen, centerIfEmpty: true);
 	}
 
 	/// <summary>
@@ -167,18 +183,22 @@ namespace Au.Types
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
 		public int width, height;
 
-		public SIZE(int cx, int cy) { this.width = cx; this.height = cy; }
+		public SIZE(int width, int height) { this.width = width; this.height = height; }
+
+		public static implicit operator SIZE((int width, int height) t) => new SIZE(t.width, t.height);
 
 		public static implicit operator SIZE(Size z) => new SIZE(z.Width, z.Height);
+		public static explicit operator SIZE(SizeF z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
+		public static explicit operator SIZE(System.Windows.Size z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
+
 		public static implicit operator Size(SIZE z) => new Size(z.width, z.height);
-		public static implicit operator SIZE(SizeF z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
 		public static implicit operator SizeF(SIZE z) => new SizeF(z.width, z.height);
-		public static implicit operator SIZE(System.Windows.Size z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
 		public static implicit operator System.Windows.Size(SIZE z) => new System.Windows.Size(z.width, z.height);
-		public static implicit operator SIZE((int width, int height) t) => new SIZE(t.width, t.height);
 
 		public static bool operator ==(SIZE s1, SIZE s2) => s1.width == s2.width && s1.height == s2.height;
 		public static bool operator !=(SIZE s1, SIZE s2) => !(s1 == s2);
+
+		public override int GetHashCode() => HashCode.Combine(width, height);
 
 		public bool Equals(SIZE other) => this == other; //IEquatable
 
@@ -226,17 +246,22 @@ namespace Au.Types
 			if(useWidthHeight) { right += left; bottom += top; }
 		}
 
+		//no
+		//public static implicit operator RECT((int L, int T, int R, int B) t) => new RECT(t.L, t.T, t.R, t.B, true);
+		//public static implicit operator RECT((int L, int T, int R, int B, bool wh) t) => new RECT(t.L, t.T, t.R, t.B, t.wh);
+
 		public static implicit operator RECT(Rectangle r) => new RECT(r.Left, r.Top, r.Width, r.Height, true);
+		public static explicit operator RECT(RectangleF r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
+		public static explicit operator RECT(System.Windows.Rect r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
+
 		public static implicit operator Rectangle(RECT r) => new Rectangle(r.left, r.top, r.Width, r.Height);
-		public static implicit operator RECT(RectangleF r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
 		public static implicit operator RectangleF(RECT r) => new RectangleF(r.left, r.top, r.Width, r.Height);
-		public static implicit operator RECT(System.Windows.Rect r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
 		public static implicit operator System.Windows.Rect(RECT r) => new System.Windows.Rect(r.left, r.top, r.Width, r.Height);
-		public static implicit operator RECT((int, int, int, int, bool) t) => new RECT(t.Item1, t.Item2, t.Item3, t.Item4, t.Item5);
-		public static implicit operator RECT((int, int, int, int) t) => new RECT(t.Item1, t.Item2, t.Item3, t.Item4, true);
 
 		public static bool operator ==(RECT r1, RECT r2) => r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom;
 		public static bool operator !=(RECT r1, RECT r2) => !(r1 == r2);
+
+		public override int GetHashCode() => HashCode.Combine(left, top, right, bottom);
 
 		public bool Equals(RECT other) => this == other; //IEquatable
 
@@ -362,7 +387,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. Can be Coord.Reverse etc.</param>
-		/// <param name="screen">Use this screen (see <see cref="AScreen"/>). If null (default), uses the primary screen.</param>
+		/// <param name="screen">Use this screen (see <see cref="AScreen"/>). If default, uses the primary screen.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
 		/// <remarks>
@@ -389,7 +414,7 @@ namespace Au.Types
 		/// Adjusts this rectangle to ensure that whole rectangle is in screen.
 		/// Initial and final rectangle coordinates are relative to the primary screen.
 		/// </summary>
-		/// <param name="screen">Use this screen (see <see cref="AScreen"/>). If null (default), uses screen of the rectangle (or nearest).</param>
+		/// <param name="screen">Use this screen (see <see cref="AScreen"/>). If default, uses screen of the rectangle (or nearest).</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="AWnd.EnsureInScreen"/>.
@@ -409,7 +434,6 @@ namespace Au.Types
 		}
 #pragma warning restore 1591 //XML doc
 	}
-#pragma warning restore 660, 661
 
 	/// <summary>
 	/// Color, as int in 0xAARRGGBB format.
@@ -537,7 +561,7 @@ namespace Au.Types
 		/// <summary>
 		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
 		/// ARGB is used in .NET, GDI+ and HTML/CSS.
-		/// ABGR is used by most Windows native API.
+		/// ABGR is used by most Windows API.
 		/// </summary>
 		public static int SwapRB(int color)
 		{
