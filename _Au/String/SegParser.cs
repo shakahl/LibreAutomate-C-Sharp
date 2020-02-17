@@ -183,7 +183,7 @@ namespace Au.Types
 				if(n < c_a1Size) {
 					a1[n] = s;
 				} else {
-					if(a2 == null) a2 = new List<string>(c_a1Size);
+					a2 ??= new List<string>(c_a1Size);
 					a2.Add(s);
 				}
 			}

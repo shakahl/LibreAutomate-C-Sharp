@@ -39,6 +39,12 @@ namespace Au
 				a = new List<AToolbar>();
 			}
 
+			public void AddTB(AToolbar tb)
+			{
+				a.Add(tb);
+				tb._ow = this;
+			}
+
 			public (bool visible, bool dead) IsVisible()
 			{
 				ALastError.Clear();
@@ -87,10 +93,9 @@ namespace Au
 		{
 			public readonly AWnd c;
 			public readonly ITBOwnerObject oo;
-			public bool visible, visible2;
-			bool _updatedOnce;
 			public RECT cachedRect;
 			public SIZE prevSize;
+			bool _updatedOnce;
 
 			public _OwnerControl(AWnd control, ITBOwnerObject ioo)
 			{
@@ -141,7 +146,7 @@ namespace Au
 
 			public bool UpdateRect(out bool changed)
 			{
-				RECT r = _screen.ToDevice().Bounds;
+				RECT r = _screen.GetScreenHandle().Bounds;
 				if(changed = r != cachedRect) {
 					prevSize = (cachedRect.Width, cachedRect.Height);
 					cachedRect = r;
@@ -169,13 +174,13 @@ namespace Au
 		bool _followClientArea;
 
 		[ThreadStatic] static _TBManager t_man;
-		_TBManager _Manager => t_man ??= new _TBManager();
+		static _TBManager _Manager => t_man ??= new _TBManager();
 		//static readonly _TBManager _Manager = new _TBManager();
 
 		class _TBManager
 		{
-			List<AToolbar> _atb = new List<AToolbar>();
-			List<_OwnerWindow> _aow = new List<_OwnerWindow>();
+			internal readonly List<AToolbar> _atb = new List<AToolbar>();
+			readonly List<_OwnerWindow> _aow = new List<_OwnerWindow>();
 			ATimer _timer;
 			int _timerPeriod;
 			AHookAcc _hook;
@@ -187,8 +192,7 @@ namespace Au
 				bool isOwned = !w.Is0;
 				if(isOwned) {
 					if(!_FindOW(w, out var ow)) _aow.Add(ow = new _OwnerWindow(w));
-					ow.a.Add(tb);
-					tb._ow = ow;
+					ow.AddTB(tb);
 					if(!c.Is0 || ioo != null) tb._oc = new _OwnerControl(c, ioo);
 				}
 
@@ -207,14 +211,14 @@ namespace Au
 					_timer = new ATimer(_Timer);
 				}
 
+				tb._hide = TBHide.Owner;
 				if(isOwned) {
-					_SetTimer(150);
+					_SetTimer(250);
 				} else {
 					if(!_timer.IsRunning) _SetTimer(250);
 					tb._FollowRect();
-					//tb.Control.Show(); //no, tries to activate
-					tb.Control.Hwnd().ShowLL(true);
 					//tb._Zorder();
+					tb._SetVisible(true, TBHide.Owner);
 				}
 			}
 
@@ -263,7 +267,7 @@ namespace Au
 				switch(d.ev) {
 				case AccEVENT.OBJECT_REORDER when d.wnd == AWnd.GetWnd.Root: //the hook does not give the window, only its thread id
 #if true
-					foreach(var tb in _atb) tb._Zorder();
+					for(int i = _atb.Count; --i >= 0;) _atb[i]._Zorder();
 #else
 					//This version is faster but unreliable.
 					//	1. For console windows getwindowthreadprocessid gives wrong thread id. Hook receives the correct id.
@@ -328,56 +332,34 @@ namespace Au
 
 			bool _FollowOwner(_OwnerWindow ow)
 			{
-				var (visible, dead) = ow.IsVisible();
+				var (visibleW, dead) = ow.IsVisible();
 				if(dead) return false;
 
-				int nControls = 0;
-				for(int i = ow.a.Count - 1; i >= 0; i--) {
-					var oc = ow.a[i]._oc; if(oc == null) continue;
-					(oc.visible2, dead) = oc.IsVisible(visible);
-					if(dead) {
-						ow.a[i].Close();
-						ow.a.RemoveAt(i);
-						continue;
-					}
-					nControls++;
-				}
-				if(ow.a.Count == 0) return false;
+				bool changedRectW = false;
+				if(visibleW) visibleW = ow.UpdateRect(out changedRectW);
+				ow.visible = visibleW;
 
-				if(visible) {
-					if(!ow.UpdateRect(out bool changed)) visible = false;
-					else if(changed) {
-						foreach(var tb in ow.a) {
-							if(tb._oc == null) tb._FollowRect(true);
+				for(int i = ow.a.Count; --i >= 0;) {
+					bool visible, changedRect;
+					var tb = ow.a[i];
+					var oc = tb._oc;
+					if(oc == null) {
+						visible = visibleW;
+						changedRect = changedRectW;
+					} else {
+						(visible, dead) = oc.IsVisible(visibleW);
+						if(dead) {
+							tb.Close();
+							ow.a.RemoveAt(i);
+							continue;
 						}
+						if(visible) visible = oc.UpdateRect(out changedRect); else changedRect = false;
 					}
-					if(nControls > 0) {
-						foreach(var tb in ow.a) {
-							var oc = tb._oc; if(oc == null) continue;
-							if(!visible) oc.visible2 = false;
-							if(!oc.visible2) continue;
-							if(!oc.UpdateRect(out changed)) oc.visible2 = false;
-							else if(changed) tb._FollowRect(true);
-						}
-					}
-				}
-
-				if(visible != ow.visible) {
-					ow.visible = visible;
-					foreach(var tb in ow.a) {
-						if(tb._oc != null) continue;
-						tb.Control.Hwnd().ShowLL(visible);
+					bool changedVisible = visible == tb._hide.Has(TBHide.Owner);
+					if(visible && (changedRect || changedVisible)) tb._FollowRect(true); // || changedVisible is for new toolbars, but it's ok to call for old too
+					if(changedVisible) {
+						tb._SetVisible(visible, TBHide.Owner);
 						if(visible) tb._Zorder();
-					}
-				}
-				if(nControls > 0) {
-					foreach(var tb in ow.a) {
-						var oc = tb._oc; if(oc == null) continue;
-						if(oc.visible2 != oc.visible) {
-							oc.visible = oc.visible2;
-							tb.Control.Hwnd().ShowLL(oc.visible);
-							if(oc.visible) tb._Zorder();
-						}
 					}
 				}
 
@@ -386,38 +368,25 @@ namespace Au
 
 			void _ManageFullScreen(AToolbar tb = null)
 			{
-				APerf.First();
 				if(tb?.MiscFlags.Has(TBFlags.HideIfFullScreen) ?? _atb.Any(o => o.MiscFlags.Has(TBFlags.HideIfFullScreen))) {
 					var w = AWnd.Active;
 					w.IsFullScreen_(out var screen);
-					APerf.Next();
 					if(tb != null) tb._ManageFullScreen(w, screen);
 					else foreach(var v in _atb) if(v.MiscFlags.Has(TBFlags.HideIfFullScreen)) v._ManageFullScreen(w, screen);
 				}
-				APerf.NW();
 			}
 		}
 
-		void _ManageFullScreen(AWnd wFore, AScreen.Device screen)
+		void _ManageFullScreen(AWnd wFore, AScreen.ScreenHandle screen)
 		{
+			if(_inMoveSize) return;
 			bool hide;
 			if(screen.Is0) hide = false;
 			else if(IsOwned) hide = OwnerWindow == wFore;
 			else hide = AScreen.Of(_c, SDefault.Zero) == screen;
-			//Print(hide, screen);
 
-			if(hide == _hide.Has(_EHide.FullScreen)) return;
-			_hide ^= _EHide.FullScreen;
-			_c.Hwnd().ShowLL(!hide);
-			//TODO: finish. Eg don't show if is hidden for other reasons.
+			_SetVisible(!hide, TBHide.FullScreen);
 		}
-
-		[Flags]
-		enum _EHide : byte
-		{
-			FullScreen = 4,
-		}
-		_EHide _hide;
 
 		void _Zorder()
 		{
@@ -426,7 +395,7 @@ namespace Au
 			} else if(_ow.visible) {
 				var wt = _c.Hwnd();
 				if(!_zorderedOnce || !wt.ZorderIsAbove(_ow.w)) {
-					//Print("ZorderAbove", _ow.w);
+					//Print("ZorderAbove", this, _ow.w);
 					wt.ZorderAbove(_ow.w);
 					_zorderedOnce = true;
 					//never mind: when clicked owner's caption, we receive 2 hook events and need to ZorderAbove 2 times. Speed is OK, but flickers more often.
@@ -496,6 +465,7 @@ namespace Au
 		void _OnWindowPosChanging(ref Api.WINDOWPOS wp)
 		{
 			if(!_loaded) return;
+			//Print(this, wp.flags);
 			if(!wp.flags.Has(Native.SWP.NOSIZE)) {
 				SIZE min = _GetMinSize();
 				if(wp.cx < min.width) wp.cx = min.width;
@@ -508,17 +478,10 @@ namespace Au
 			SIZE _GetMinSize()
 			{
 				int k = _border < TBBorder.ThreeD ? 1 : AWnd.More.BorderWidth(_c.Hwnd());
-				k = k * 2;
+				k *= 2;
 				var ms = _c.MinimumSize;
 				return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
 			}
-			//SIZE _GetMinSize()
-			//{
-			//	int k = _border < TBBorder.ThreeD ? (int)_border : AWnd.More.BorderWidth(_c.Hwnd());
-			//	k = k * 2 + 1; //two borders and 1 pixel of client area
-			//	var ms = _c.MinimumSize;
-			//	return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
-			//}
 		}
 
 		void _OnWindowPosChanged(in Api.WINDOWPOS wp)

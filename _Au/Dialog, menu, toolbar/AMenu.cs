@@ -156,6 +156,7 @@ namespace Au
 		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
 		/// <param name="icon">Can be:
 		/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>. If not full path, searches in <see cref="AFolders.ThisAppImages"/>; see also <see cref="AMTBase.IconFlags"/>.
+		/// - string - Base-64 encoded png file with prefix "image:". Can be created with the "Find image..." dialog.
 		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
 		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
 		/// - Icon, Image, FolderPath.
@@ -225,18 +226,20 @@ namespace Au
 		/// <summary>
 		/// Adds new item (<see cref="ToolStripMenuItem"/>) that will open a submenu.
 		/// Then the add-item functions will add items to the submenu.
-		/// Can be used in 2 ways:
-		/// 1. <c>using(m.Submenu(...)) { add items; }</c>. See example.
-		/// 2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon">See <see cref="Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
+		/// Can be used in 2 ways:
+		/// - <c>using(m.Submenu(...)) { add items; }</c>. See example.
+		/// - <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
+		/// 
 		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
 		/// <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
 		/// </remarks>
+		/// <seealso cref="LazySubmenu"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu();
@@ -246,7 +249,7 @@ namespace Au
 		/// using(m.Submenu("Submenu")) {
 		/// 	m["Three"] = o => Print(o);
 		/// 	m["Four"] = o => Print(o);
-		/// 	using(m.Submenu("Submenu")) {
+		/// 	using(m.Submenu("Submenu2")) {
 		/// 		m["Five"] = o => Print(o);
 		/// 		m["Six"] = o => Print(o);
 		/// 	}
@@ -275,7 +278,7 @@ namespace Au
 			//	But then cannot be ToolStripDropDownMenu_.
 			//	It is important only if using in menu bar.
 
-			//var t = new APerf.Inst(); t.First();
+			//var t = APerf.Create();
 			dd.SuspendLayout();
 			if(_c._changedBackColor) dd.BackColor = _c.BackColor; //because by default gives 0xf0f0f0, although actually white, and then submenus would be gray
 			dd.BackgroundImage = _c.BackgroundImage;
@@ -343,11 +346,11 @@ namespace Au
 		/// var m = new AMenu();
 		/// m["One"] = o => Print(o);
 		/// m["Two"] = o => Print(o);
-		/// m.Submenu("Submenu 1", _ => {
+		/// m.LazySubmenu("Submenu", _ => {
 		/// 	Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 		/// 	m["Three"] = o => Print(o);
 		/// 	m["Four"] = o => Print(o);
-		/// 	m.Submenu("Submenu 2", _ => {
+		/// 	m.LazySubmenu("Submenu2", _ => {
 		/// 		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 		/// 		m["Five"] = o => Print(o);
 		/// 		m["Six"] = o => Print(o);
@@ -358,7 +361,7 @@ namespace Au
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public ToolStripMenuItem Submenu(string text, Action<AMenu> onOpening, object icon = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+		public ToolStripMenuItem LazySubmenu(string text, Action<AMenu> onOpening, object icon = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon, l);
 			dd._submenu_lazyDelegate = onOpening;

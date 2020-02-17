@@ -317,7 +317,7 @@ namespace Au
 
 					if(processName.Match(s)) {
 						if(first) return p[i].processID;
-						if(a == null) a = new List<int>();
+						a ??= new List<int>();
 						a.Add(p[i].processID);
 					}
 				}

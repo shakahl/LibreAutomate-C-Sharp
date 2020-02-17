@@ -22,7 +22,7 @@ namespace Au.Triggers
 	/// The main class of action triggers.
 	/// </summary>
 	/// <remarks>
-	/// Action triggers launch functions (aka <i>trigger actions</i>) in running automation scripts. To launch scripts are used other ways: manually, at startup, command line, <see cref="ATask.Run"/>, output link.
+	/// Action triggers launch functions (aka <i>trigger actions</i>) in a running automation script. To launch scripts are used other ways: manually, at startup, command line, <see cref="ATask.Run"/>, output link.
 	/// 
 	/// This class manages action triggers. The <see cref="AScript.Triggers"/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
 	/// 
@@ -32,13 +32,13 @@ namespace Au.Triggers
 	/// <code>
 	/// Triggers.Hotkey["Ctrl+K"] = o => Print(o.Trigger);
 	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => {
-	///		Print("This is a trigger action. Usually it is a lambda function, like in these examples.");
+	///		Print("This is a trigger action (lambda function).");
 	///		Print($"It runs when you press {o.Trigger}.");
 	/// };
 	/// Triggers.Run();
 	/// </code>
 	/// 
-	/// Also you can set options (<see cref="TriggerOptions"/>), window scopes (<see cref="TriggerScopes"/>) and custom scopes (<see cref="TriggerFuncs"/>) for multiple triggers added afterwards.
+	/// Also you can set options (<see cref="TriggerOptions"/>), window scopes (<see cref="TriggerScopes"/>) and custom scopes (<see cref="TriggerFuncs"/>) for triggers added afterwards.
 	/// 
 	/// Finally call <see cref="Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s).
 	/// 
@@ -289,12 +289,13 @@ namespace Au.Triggers
 
 			LibThrowIfRunning();
 
-			bool haveTriggers = false; HooksServer.UsedEvents hookEvents = 0;
+			//bool haveTriggers = false;
+			HooksServer.UsedEvents hookEvents = 0;
 			_windowTriggers = null;
 			for(int i = 0; i < _t.Length; i++) {
 				var t = _t[i];
 				if(t == null || !t.HasTriggers) continue;
-				haveTriggers = true;
+				//haveTriggers = true;
 				switch((TriggerType)i) {
 				case TriggerType.Hotkey: hookEvents |= HooksServer.UsedEvents.Keyboard; break;
 				case TriggerType.Autotext: hookEvents |= HooksServer.UsedEvents.Keyboard | HooksServer.UsedEvents.Mouse; break;
@@ -303,7 +304,7 @@ namespace Au.Triggers
 				}
 			}
 			//Print(haveTriggers, (uint)llHooks);
-			if(!haveTriggers) return;
+			//if(!haveTriggers) return; //no. The message loop may be used for toolbars etc.
 			_winTimerPeriod = 0;
 			_winTimerLastTime = 0;
 
@@ -516,7 +517,7 @@ namespace Au.Triggers
 		internal void LibRunAction(ActionTrigger trigger, TriggerArgs args, int muteMod = 0)
 		{
 			if(trigger.action != null) {
-				if(_threads == null) _threads = new TriggerActionThreads();
+				_threads ??= new TriggerActionThreads();
 				_threads.Run(trigger, args, muteMod);
 			} else Debug.Assert(muteMod == 0);
 		}

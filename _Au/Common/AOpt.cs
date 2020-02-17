@@ -280,7 +280,7 @@ namespace Au.Types
 		/// </example>
 		public RestoreWarnings DisableWarnings(params string[] warningsWild)
 		{
-			if(_disabledWarnings == null) _disabledWarnings = new List<string>();
+			_disabledWarnings ??= new List<string>();
 			int restoreCount = _disabledWarnings.Count;
 			_disabledWarnings.AddRange(warningsWild);
 			return new RestoreWarnings(this, restoreCount);

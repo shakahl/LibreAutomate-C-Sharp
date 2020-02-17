@@ -24,6 +24,8 @@ using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using System.Collections;
 
+//SHOULDDO: add to Au. Now can't because uses TreeViewAdv.
+
 namespace Au.Controls
 {
 	public class PopupList : IMessageFilter
@@ -360,7 +362,7 @@ namespace Au.Controls
 			}
 		}
 
-		class _Window : Form //SHOULDDO: try base InactiveWindow
+		class _Window : Form
 		{
 			PopupList _p;
 			Control _owner;

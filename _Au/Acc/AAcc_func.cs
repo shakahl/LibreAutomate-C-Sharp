@@ -528,7 +528,7 @@ namespace Au
 					wndOK = s != wndName;
 				}
 				if(wndOK && !docOK) {
-					if(f == null) f = new AAcc.Finder("web:") { ResultGetProperty = 'n' };
+					f ??= new AAcc.Finder("web:") { ResultGetProperty = 'n' };
 					if(!f.Find(w)) continue; //eg in Firefox for some time there is no DOCUMENT
 					var s = f.ResultProperty as string; if(s == null) continue;
 					docOK = s != docName;

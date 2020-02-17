@@ -54,7 +54,7 @@ namespace Au
 		/// </summary>
 		public bool IsFullScreen => IsFullScreen_(out _);
 
-		internal unsafe bool IsFullScreen_(out AScreen.Device screen)
+		internal unsafe bool IsFullScreen_(out AScreen.ScreenHandle screen)
 		{
 			screen = default;
 			if(Is0) return false;

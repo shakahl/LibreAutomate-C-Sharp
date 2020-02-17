@@ -170,7 +170,7 @@ namespace Au
 			[MethodImpl(MethodImplOptions.NoInlining)]
 			public Assembly Find(string asmFile)
 			{
-				if(_d == null) _d = new Dictionary<string, _Asm>(StringComparer.OrdinalIgnoreCase);
+				_d ??= new Dictionary<string, _Asm>(StringComparer.OrdinalIgnoreCase);
 				if(!AFile.GetProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
 				_fileTime = p.LastWriteTimeUtc;
 				if(_d.TryGetValue(asmFile, out var x)) {

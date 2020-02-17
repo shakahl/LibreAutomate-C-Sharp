@@ -17,7 +17,7 @@ using Microsoft.Win32;
 using System.Runtime.ExceptionServices;
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.Linq;
+//using System.Linq;
 
 using Au.Types;
 using static Au.AStatic;
@@ -50,26 +50,16 @@ namespace Au
 		/// </remarks>
 		public static unsafe Bitmap LoadImage(string image)
 		{
-			Bitmap R = null;
-			object o = null;
-			if(image.Starts("image:") || image.Starts("~:")) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
-				bool compressed = image[0] == '~';
-				int start = compressed ? 2 : 6, n = (int)((image.Length - start) * 3L / 4);
-				var b = new byte[n];
-				if(!Convert.TryFromBase64Chars(image.AsSpan(start), b, out n)) throw new ArgumentException("Invalid Base64 string");
-				using var stream = compressed ? new MemoryStream() : new MemoryStream(b, 0, n, false);
-				if(compressed) AConvert.Decompress(stream, b, 0, n);
-				R = new Bitmap(stream);
-				//size and speed of "image:" and "~:": "image:" usually is bigger by 10-20% and faster by ~25%
-			} else {
-				image = APath.Normalize(image, AFolders.ThisAppImages);
-				if(!AFile.ExistsAsFile(image, true))
-					o = AResources.GetAppResource(APath.GetFileName(image, true));
-				if(o == null) o = Image.FromFile(image);
-				R = o as Bitmap;
-				if(R == null) throw new ArgumentException("Bad image format."); //Image but not Bitmap
+			if(Image_.IsImageStringPrefix(image)) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
+				return Image_.LoadImageFromString(image);
 			}
-			return R;
+
+			object o = null;
+			image = APath.Normalize(image, AFolders.ThisAppImages);
+			if(!AFile.ExistsAsFile(image, true))
+				o = AResources.GetAppResource(APath.GetFileName(image, true));
+			if(o == null) o = Image.FromFile(image);
+			return (o as Bitmap) ?? throw new ArgumentException("Bad image format."); //Image but not Bitmap
 		}
 
 		#endregion
@@ -640,7 +630,7 @@ namespace Au
 				//	//Print("same size");
 				//	if(_skip > 0) return false;
 				//	if(!_CompareSameSize(areaPixels, imagePixels, imagePixelsTo, _colorDiff)) return false;
-				//	if(_tempResults == null) _tempResults = new List<RECT>();
+				//	_tempResults ??= new List<RECT>();
 				//	_tempResults.Add(new RECT(0, 0, imageWidth, imageHeight, true));
 				//	return true;
 				//}
@@ -888,7 +878,7 @@ namespace Au
 						if(i >= 0) {
 							_Add(bdata, i, areaWidth);
 							//find other different pixels
-							fixed (POSCOLOR* p = &v0) {
+							fixed(POSCOLOR* p = &v0) {
 								while(N < 4) {
 									for(++i; i < imagePixelCount; i++) {
 										var c = imagePixels[i];
@@ -927,7 +917,7 @@ namespace Au
 
 				void _Add(BitmapData bdata, int i, int areaWidth)
 				{
-					fixed (POSCOLOR* p0 = &v0) {
+					fixed(POSCOLOR* p0 = &v0) {
 						var p = p0 + N++;
 						p->color = ((uint*)bdata.Scan0)[i];
 						int w = bdata.Width, x = i % w, y = i / w;

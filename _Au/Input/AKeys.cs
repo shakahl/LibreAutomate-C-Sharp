@@ -204,7 +204,7 @@ namespace Au
 					e.MakeDown();
 					_a[_a.Count - 1] = e;
 					e.MakeUp();
-					if(_pstate.mod == null) _pstate.mod = new Stack<_KEvent>();
+					_pstate.mod ??= new Stack<_KEvent>();
 					_pstate.mod.Push(e);
 					if(len > 1) _pstate.paren = true; //"*("
 					else _pstate.plus = true;

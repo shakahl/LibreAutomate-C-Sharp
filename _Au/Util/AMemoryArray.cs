@@ -83,7 +83,7 @@ namespace Au.Util
 				n++; //for safety add 1 for terminating '\0'. See also code 'r.Length - 1' in LibChar etc.
 			}
 
-			if(weakReference == null) weakReference = new WeakReference<T[]>(null);
+			weakReference ??= new WeakReference<T[]>(null);
 			if(!weakReference.TryGetTarget(out var a)
 				|| a.Length < n
 				) weakReference.SetTarget(a = new T[n]);

@@ -563,7 +563,7 @@ namespace Au
 
 			public void Save(bool debug = false)
 			{
-				var p1 = new APerf.Inst(); //will need if debug==true. Don't delete the APerf statements, they are used by a public function.
+				var p1 = new APerf.Local(); //will need if debug==true. Don't delete the APerf statements, they are used by a public function.
 				bool allFormats = OptKey.RestoreClipboardAllFormats || debug;
 				string[] exceptFormats = OptKey.RestoreClipboardExceptFormats;
 
@@ -620,7 +620,7 @@ namespace Au
 					var b = Api.GlobalLock(data);
 					Debug.Assert(b != default); if(b == default) continue;
 					try {
-						if(_data == null) _data = new Dictionary<int, byte[]>();
+						_data ??= new Dictionary<int, byte[]>();
 						var a = new byte[size];
 						Marshal.Copy(b, a, 0, size);
 						_data.Add(format, a);

@@ -333,7 +333,7 @@ namespace Au
 		/// </summary>
 		static void _SendMove(POINT p)
 		{
-			if(t_prevMousePos == null) t_prevMousePos = new _PrevMousePos(); //sets .first=.last=XY
+			t_prevMousePos ??= new _PrevMousePos(); //sets .first=.last=XY
 			_SendRaw(Api.IMFlags.Move, p.x, p.y);
 		}
 

@@ -21,7 +21,7 @@ using static Au.AStatic;
 //rejected: store the static instance in shared memory. This is how it was implemented initially.
 //	Then would be easy to measure speed of process startup.
 //	However then too slow APerf startup (JIT + opening shared memory), eg 5 ms vs 1 ms.
-//	Also rejected Serialize: pass the string eg as command line args, then in that process create new Inst variable.
+//	Also rejected Serialize: pass the string eg as command line args, then in that process create new Local variable.
 //	Instead use ATime.PerfMicroseconds, eg with command line.
 
 namespace Au
@@ -40,14 +40,14 @@ namespace Au
 		/// 
 		/// Don't need to dispose variables of this type. The <see cref="Dispose"/> function just calls <see cref="NW"/>.
 		/// </remarks>
-		public unsafe struct Inst : IDisposable
+		public unsafe struct Local : IDisposable
 		{
-			static Inst()
+			static Local()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
 				//if(!Util.LibAssembly.LibIsAuNgened) { //unnecessary and makes slower
 #if PREPAREMETHOD
-				Util.AJit.Compile(typeof(Inst), "Next", "NW");
+				Util.AJit.Compile(typeof(Local), "Next", "NW");
 #if DEBUG //else these methods are inlined
 				Util.AJit.Compile(typeof(APerf), "Next", "NW");
 #endif
@@ -74,7 +74,7 @@ namespace Au
 			/// <summary>See <see cref="APerf.Incremental"/>.</summary>
 			/// <example>
 			/// <code><![CDATA[
-			/// var perf = new APerf.Inst { Incremental = true };
+			/// var perf = new APerf.Local { Incremental = true };
 			/// for(int i = 0; i < 5; i++) {
 			/// 	Thread.Sleep(100); //not included in the measurement
 			/// 	perf.First();
@@ -147,8 +147,19 @@ namespace Au
 
 			/// <summary>
 			/// Calls <see cref="NW"/>, which calls <see cref="Next"/> and <see cref="Write"/>.
-			/// Don't need to dispose variables of this type. There is nothing to dispose. This just allows to use the 'using' pattern instead of <b>NW</b>.
 			/// </summary>
+			/// <remarks>
+			/// Don't need to dispose variables of this type. This function just allows to use the 'using' pattern instead of <b>NW</b>. See example.
+			/// </remarks>
+			/// <example>
+			/// <code><![CDATA[
+			/// using(var p1 = APerf.Create()) { //p1.First();
+			/// 	1.ms();
+			/// 	p1.Next();
+			/// 	1.ms();
+			/// } //p1.NW();
+			/// ]]></code>
+			/// </example>
 			public void Dispose() => NW();
 
 			/// <summary>
@@ -262,11 +273,11 @@ namespace Au
 
 			//rejected. It's easier to use ATime.PerfMicroseconds in the same way.
 			///// <summary>
-			///// Converts this variable to string that can be used to create a copy of this variable with <see cref="Inst(string)"/>.
+			///// Converts this variable to string that can be used to create a copy of this variable with <see cref="Local(string)"/>.
 			///// </summary>
 			//public string Serialize()
 			//{
-			//	var si = sizeof(Inst);
+			//	var si = sizeof(Local);
 			//	var b = new byte[si];
 			//	fixed (long* p = _a) Marshal.Copy((IntPtr)p, b, 0, si);
 			//	return Convert.ToBase64String(b);
@@ -274,9 +285,9 @@ namespace Au
 			///// <summary>
 			///// Initializes this variable as a copy of another variable that has been converted to string with <see cref="Serialize"/>.
 			///// </summary>
-			//public Inst(string serialized) : this()
+			//public Local(string serialized) : this()
 			//{
-			//	var si = sizeof(Inst);
+			//	var si = sizeof(Local);
 			//	var b = Convert.FromBase64String(serialized);
 			//	if(b.Length == si)
 			//		fixed (long* p = _a) Marshal.Copy(b, 0, (IntPtr)p, si);
@@ -286,15 +297,15 @@ namespace Au
 		/// <summary>
 		/// This static variable is used by the static functions.
 		/// </summary>
-		static Inst StaticInst;
+		static Local StaticInst;
 		//rejected: public. Needed for Serialize. Maybe in the future will be implemented somehow differently.
 
 		/// <summary>
-		/// Creates and returns new <see cref="Inst"/> variable and calls its <see cref="Inst.First"/>.
+		/// Creates and returns new <see cref="Local"/> variable and calls its <see cref="Local.First"/>.
 		/// </summary>
-		public static Inst Create()
+		public static Local Create()
 		{
-			var R = new Inst();
+			var R = new Local();
 			R.First();
 			return R;
 		}

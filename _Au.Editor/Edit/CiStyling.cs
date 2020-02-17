@@ -425,7 +425,7 @@ partial class CiStyling
 			int pos = span.Start; if(pos >= end16) break;
 			//CiUtil.PrintNode(v);
 			switch(v) {
-			case BaseMethodDeclarationSyntax _: //method, ctor, etc
+			case BaseMethodDeclarationSyntax md when !(md.Body == null && md.ExpressionBody == null): //method, ctor, etc; not DllImport, interface, partial
 			case BasePropertyDeclarationSyntax _: //property, event
 			case BaseTypeDeclarationSyntax _: //class, struct, interface, enum
 				if(pos >= start16) _AddFoldPoint(pos, 1);

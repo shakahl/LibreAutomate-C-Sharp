@@ -139,6 +139,24 @@ namespace Au.Types
 	}
 
 	/// <summary>
+	/// Reasons to hide a toolbar. Used with <see cref="AToolbar.Hide"/>.
+	/// </summary>
+	[Flags]
+	public enum TBHide
+	{
+		/// <summary>Owner window is hidden, minimized, etc.</summary>
+		Owner = 1,
+
+		/// <summary>A full-screen window is active, and there is flag <see cref="TBFlags.HideIfFullScreen"/>.</summary>
+		FullScreen = 2,
+
+		//Satellite = 128, //no, _SetVisible and this enum aren't used with satellites
+
+		/// <summary>This and bigger flag values can be used by callers for any purpose. Value 0x10000.</summary>
+		User = 0x10000,
+	}
+
+	/// <summary>
 	/// Used with <see cref="AToolbar.Location"/>.
 	/// </summary>
 	public struct TBLocation : IEquatable<TBLocation>

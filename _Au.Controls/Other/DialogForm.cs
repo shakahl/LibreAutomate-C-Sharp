@@ -21,15 +21,10 @@ using static Au.AStatic;
 namespace Au.Controls
 {
 	/// <summary>
-	/// Can be used as base class for forms used as dialogs. Adds WS_POPUP style and correct auto-scaling when high DPI.
+	/// Can be used as base class for forms used as dialogs. Adds WS_POPUP style and Font auto-scaling.
 	/// </summary>
 	/// <remarks>
-	/// Sets these properties:
-	/// ZIsPopup = true;
-	/// AutoScaleMode = AutoScaleMode.Font;
-	/// 
-	/// The Visual Studio form designer uses these properties as default. It also adds 'this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);', it's OK.
-	/// <note>Never set font in designer if you want to support high DPI (AutoScaleMode = AutoScaleMode.Font). Because designer places the 'Font=...' line after the 'AutoScaleMode = ...' line, and then .NET does not scale the form at run time.</note>
+	/// Sets these properties: ZIsPopup = true; AutoScaleMode = AutoScaleMode.Font;
 	/// </remarks>
 	public class DialogForm : Form
 	{

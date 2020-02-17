@@ -197,7 +197,7 @@ namespace Au
 			//}
 
 			if(ResendBlockedKeys && ATime.WinMilliseconds - _startTime < c_maxResendTime) {
-				if(_blockedKeys == null) _blockedKeys = new AKeys(AOpt.Static.Key);
+				_blockedKeys ??= new AKeys(AOpt.Static.Key);
 				//Print("blocked", x.vkCode, !x.IsUp);
 				_blockedKeys.LibAddRaw(x.vkCode, (ushort)x.scanCode, x.LibSendInputFlags);
 			}

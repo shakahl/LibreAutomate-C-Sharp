@@ -470,7 +470,7 @@ namespace Au.Util
 		protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null, IEnumerable<T> children = null)
 		{
 			file = APath.LibNormalizeForNET(file);
-			if(sett == null) sett = new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
+			sett ??= new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
 			AFile.Save(file, temp => {
 				using var x = XmlWriter.Create(temp, sett);
 				XmlSave(x, nodeWriter, children);

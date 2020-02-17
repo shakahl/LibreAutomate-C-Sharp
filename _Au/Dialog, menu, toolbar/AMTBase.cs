@@ -184,7 +184,10 @@ namespace Au.Types
 			if(icon != null) {
 				try {
 					switch(icon) {
-					case string path: _SetItemFileIcon(isTB, item, path); break;
+					case string path:
+						if(Util.Image_.IsImageStringPrefix(path)) item.Image = Util.Image_.TryLoadImageFromString(path, warning: true);
+						else _SetItemFileIcon(isTB, item, path);
+						break;
 					case int index: if(index >= 0) item.ImageIndex = index; break;
 					case Image img: item.Image = img; break;
 					case Icon ico: item.Image = ico.ToBitmap(); break;
@@ -224,7 +227,7 @@ namespace Au.Types
 				//var perf = APerf.Create();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
-				if(_AsyncIcons == null) _AsyncIcons = new Util.IconsAsync(); //used by submenus too
+				_AsyncIcons ??= new Util.IconsAsync(); //used by submenus too
 				var submenuIcons = (owner as _IAuToolStrip).SubmenuAsyncIcons;
 				bool isFirstImage;
 
@@ -276,7 +279,7 @@ namespace Au.Types
 				_SetItemIcon(ts, item, im);
 
 				//to dispose images in our Dispose()
-				if(_images == null) _images = new List<Image>();
+				_images ??= new List<Image>();
 				_images.Add(im);
 			}
 
@@ -437,7 +440,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Data passed to Click event handler functions of <see cref="AMenu"/> and <see cref="AToolbar"/>.
+	/// Data passed to <b>Click</b> event handler functions of <see cref="AMenu"/> and <see cref="AToolbar"/>.
 	/// </summary>
 	public class MTClickArgs
 	{

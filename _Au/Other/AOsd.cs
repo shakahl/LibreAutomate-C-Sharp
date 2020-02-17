@@ -653,7 +653,7 @@ namespace Au
 				}
 
 				if(!Empty(Text)) {
-					var screen = XY?.GetScreen() ?? DefaultScreen.ToDevice();
+					var screen = XY?.GetScreen() ?? DefaultScreen.GetScreenHandle();
 					var rs = screen.WorkArea; z = new Size(rs.Width - zi.Width - 10, rs.Height - 14);
 					var tff = TextFormatFlags;
 					int ww = WrapWidth; if(ww > 0) { tff |= TextFormatFlags.WordBreak; if(ww < z.Width) z.Width = ww; }

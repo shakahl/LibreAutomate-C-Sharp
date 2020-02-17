@@ -97,6 +97,7 @@ class CiCompletion
 		if(_data != null) {
 			if(!_IsValidChar(ch)) {
 				var ci = _popupList.SelectedItem;
+				if(ci != null && _data.filterText.Length == 0 && ch != '.') ci = null;
 				if(ci != null) R = _Commit(doc, ci, ch, default);
 				_CancelList();
 				//return;
@@ -678,6 +679,7 @@ class CiCompletion
 		}
 		if(ch == ' ') ch = default;
 
+		var z = doc.Z;
 		var ci = item.ci;
 		var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
 		//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
@@ -685,22 +687,33 @@ class CiCompletion
 		var s = change.TextChange.NewText;
 		var span = change.TextChange.Span;
 		int i = span.Start, len = span.Length + (doc.Len16 - _data.codeLength);
-		//Print($"{change.NewPosition.HasValue}, cp={doc.Z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
+		//Print($"{change.NewPosition.HasValue}, cp={z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
 		//Print($"'{s}'");
-		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && !item.IsRegex, $"{_data.tempRange.CurrentFrom}, {i}");
 		bool isComplex = change.NewPosition.HasValue;
 		if(isComplex) { //xml doc, override, regex
 			if(ch != default) return CiComplResult.None;
 			//ci.DebugPrint();
 			int newPos = change.NewPosition ?? (i + len);
-			if(ci.ProviderName.Ends(".XmlDocCommentCompletionProvider") && !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag)) {
+			switch(APath.GetExtension(ci.ProviderName)) {
+			case ".OverrideCompletionProvider":
+				newPos = -1; //difficult to calculate and not useful
+				//Replace 4 spaces with tab. Make { in same line.
+				s = s.Replace("    ", "\t").RegexReplace(@"\R\t*\{", " {", 1);
+				//Make correct indentation. 
+				int indent = 0, indent2 = z.LineIndentationFromPos(true, _data.tempRange.CurrentFrom);
+				for(int j = s.IndexOf('\t'); (uint)j < s.Length && s[j] == '\t'; j++) indent++;
+				if(indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
+				break;
+			case ".XmlDocCommentCompletionProvider" when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
 				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && Empty(s1))) newPos++;
 				s += "></" + tag + ">";
+				break;
 			}
-			doc.Z.ReplaceRange(true, i, i + len, s);
-			doc.Z.GoToPos(true, newPos);
+			z.ReplaceRange(true, i, i + len, s);
+			if(newPos >= 0) z.GoToPos(true, newPos);
 			return CiComplResult.Complex;
 		}
+		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && !item.IsRegex, $"{_data.tempRange.CurrentFrom}, {i}");
 		//ci.DebugPrint();
 
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
@@ -792,7 +805,7 @@ class CiCompletion
 			if(isComplex = ch != default) {
 				if(ch == '{') {
 					if(isEnter) {
-						int indent = doc.Z.LineIndentationFromPos(true, i);
+						int indent = z.LineIndentationFromPos(true, i);
 						var b = new StringBuilder(" {\r\n");
 						b.Append('\t', indent + 1);
 						b.Append("\r\n").Append('\t', indent).Append('}');
@@ -815,9 +828,9 @@ class CiCompletion
 
 		if(!isComplex && s == _data.filterText) return CiComplResult.None;
 
-		doc.Z.SetAndReplaceSel(true, i, i + len, s);
+		z.SetAndReplaceSel(true, i, i + len, s);
 		if(isComplex) {
-			if(positionBack > 0) doc.Z.CurrentPos16 = i + s.Length - positionBack;
+			if(positionBack > 0) z.CurrentPos16 = i + s.Length - positionBack;
 			if(bracesFrom > 0) CodeInfo._correct.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen, bracesOperation);
 			if(ch == '(' || ch == '<') CodeInfo._signature.SciCharAdded(doc, ch);
 			return CiComplResult.Complex;

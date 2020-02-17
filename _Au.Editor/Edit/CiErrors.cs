@@ -226,7 +226,7 @@ class CiErrors
 		var usings = new List<string>();
 		var stack = new List<string>();
 		//var p1 = APerf.Create();
-		//var p1 = new APerf.Inst { Incremental = true };
+		//var p1 = new APerf.Local { Incremental = true };
 		_EnumNamespace(comp.GlobalNamespace);
 		//p1.Write();
 		//p1.NW();

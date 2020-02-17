@@ -43,7 +43,7 @@ namespace Au.Util
 			//Ensure WindowsFormsSynchronizationContext for this thread.
 			_prevContext = SynchronizationContext.Current;
 			if(!(_prevContext is WindowsFormsSynchronizationContext)) {
-				if(t_wfContext == null) t_wfContext = new WindowsFormsSynchronizationContext();
+				t_wfContext ??= new WindowsFormsSynchronizationContext();
 				SynchronizationContext.SetSynchronizationContext(t_wfContext);
 				_restoreContext = _prevContext != null;
 			}
@@ -88,7 +88,7 @@ namespace Au.Util
 					Debug.Assert(false);
 					throw new InvalidOperationException("this thread has wrong SynchronizationContext type or is not STA");
 				}
-				if(t_wfContext == null) t_wfContext = new WindowsFormsSynchronizationContext();
+				t_wfContext ??= new WindowsFormsSynchronizationContext();
 				SynchronizationContext.SetSynchronizationContext(t_wfContext);
 				WindowsFormsSynchronizationContext.AutoInstall = false; //prevent Application.Run/DoEvents setting wrong context
 				wfc = t_wfContext;

@@ -288,7 +288,7 @@ namespace Au.Types
 			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
 				if(workArea || !screen.IsNull || _NeedRect(x, y)) {
-					r = screen.ToDevice().GetRect(workArea);
+					r = screen.GetScreenHandle().GetRect(workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
 				p.x = x._Normalize(r.left, r.right);
@@ -404,11 +404,11 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets <see cref="AScreen.Device"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
+		/// Gets <see cref="AScreen.ScreenHandle"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
 		/// </summary>
-		public AScreen.Device GetScreen()
+		public AScreen.ScreenHandle GetScreen()
 		{
-			if(!screen.IsNull) return screen.ToDevice();
+			if(!screen.IsNull) return screen.GetScreenHandle();
 			POINT p = inRect ? Coord.NormalizeInRect(x, y, rect, centerIfEmpty: true) : Coord.Normalize(x, y, workArea);
 			return AScreen.Of(p);
 		}

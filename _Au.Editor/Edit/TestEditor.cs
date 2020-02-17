@@ -169,23 +169,23 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
-		if(AKeys.IsShift) {
-			AWnd.Find("*Notepad").Activate();
-			ATime.SleepDoEvents(100);
-		}
+		//if(AKeys.IsShift) {
+		//	AWnd.Find("*Notepad").Activate();
+		//	ATime.SleepDoEvents(100);
+		//}
 
-		var m = new AMenu("name");
-		m["A"] = o => Print(o);
-		m.Add(new ToolStripTextBox());
-		var cb = new ToolStripComboBox();
-		for(int i=0;i<60;i++) cb.Items.Add("aaa");
-		m.Add(cb);
-		m["B"] = o => Print(o);
-		using(m.Submenu("sub")) {
-			m["C"] = o => Print(o);
-			m.Add(new ToolStripTextBox());
-		}
-		m.Show(Program.MainForm);
+		//var m = new AMenu("name");
+		//m["A"] = o => Print(o);
+		//m.Add(new ToolStripTextBox());
+		//var cb = new ToolStripComboBox();
+		//for(int i=0;i<60;i++) cb.Items.Add("aaa");
+		//m.Add(cb);
+		//m["B"] = o => Print(o);
+		//using(m.Submenu("sub")) {
+		//	m["C"] = o => Print(o);
+		//	m.Add(new ToolStripTextBox());
+		//}
+		//m.Show(Program.MainForm);
 
 		//var task = "_Au.Editor";
 		//bool exists = WinTaskScheduler.TaskExists("Au", task);
@@ -203,6 +203,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		var Z = doc.Z;
 		var s = doc.Text;
 
+		Print(doc.Z.CurrentPos16);
 
 		//z.Select(false, 300, 295);
 		//z.ReplaceRange(false, 295, 300, "RE");

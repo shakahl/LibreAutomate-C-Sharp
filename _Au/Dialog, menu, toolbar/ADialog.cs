@@ -341,7 +341,7 @@ namespace Au
 				case IEnumerable<string> e:
 					int id = 0;
 					foreach(var v in e) {
-						if(_customButtons == null) _customButtons = new List<_Button>();
+						_customButtons ??= new List<_Button>();
 						string s = _ParseSingleString(v, ref id, true);
 						_customButtons.Add(new _Button(id, s));
 						DefaultButtonUserId = 1;
@@ -375,12 +375,12 @@ namespace Au
 					}
 
 					if(nativeId == 0) { //custom button
-						if(_customButtons == null) _customButtons = new List<_Button>();
+						_customButtons ??= new List<_Button>();
 						_customButtons.Add(new _Button(id, s));
 						if(id < 0) nativeId = nextNativeId++; //need to map, because native ids of positive user ids are minus user ids
 					}
 					if(nativeId != 0) {
-						if(_mapIdUserNative == null) _mapIdUserNative = new List<_IdMapItem>();
+						_mapIdUserNative ??= new List<_IdMapItem>();
 						_mapIdUserNative.Add(new _IdMapItem(id, nativeId));
 					}
 
@@ -911,7 +911,7 @@ namespace Au
 			if(!_rawXY) {
 				if(before) {
 					_screen = Screen; if(_screen.IsNull && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
-					if(_screen.Value is Delegate) _screen = new AScreen(_screen.ToDevice());
+					if(_screen.Value is Delegate) _screen = new AScreen(_screen.GetScreenHandle());
 				} else if(isXY || !_screen.IsNull) {
 					_dlg.MoveInScreen(_x, _y, _screen);
 				}

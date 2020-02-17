@@ -171,7 +171,7 @@ namespace Au
 							if(!readOK) useSB = true;
 							//Print(useSB, n);
 							if(useSB) { //rare
-								if(_sb == null) _sb = new StringBuilder(bLen);
+								_sb ??= new StringBuilder(bLen);
 								if(results == null && _s != null) _sb.Append(_s);
 								_s = null;
 								_sb.Append(b, n);

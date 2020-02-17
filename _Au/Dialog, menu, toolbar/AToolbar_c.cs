@@ -26,7 +26,7 @@ namespace Au
 	{
 		class _ToolStrip : Util.AToolStrip, _IAuToolStrip
 		{
-			AToolbar _tb;
+			readonly AToolbar _tb;
 			[ThreadStatic] static TBRenderer t_renderer;
 
 			_Settings _sett => _tb._sett;
@@ -53,7 +53,7 @@ namespace Au
 			protected override CreateParams CreateParams {
 				get {
 					var p = base.CreateParams;
-					if(_tb != null) { //this prop is called 3 times, first time before ctor
+					if(_tb != null) {
 						var es = WS2.TOOLWINDOW | WS2.NOACTIVATE;
 						if(_tb._topmost) es |= WS2.TOPMOST;
 						if(_tb._transparency != default) es |= WS2.LAYERED;
@@ -106,7 +106,7 @@ namespace Au
 
 			protected override unsafe void WndProc(ref Message m)
 			{
-				//AWnd.More.PrintMsg(m, new PrintMsgOptions(Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_NCMOUSEMOVE, Api.WM_MOUSEMOVE));
+				//if(_tb.Name=="ddd") AWnd.More.PrintMsg(m, new PrintMsgOptions(Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_NCMOUSEMOVE, Api.WM_MOUSEMOVE));
 				//AWnd.More.PrintMsg(m, new PrintMsgOptions(Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH));
 
 				switch(m.Msg) {
@@ -143,7 +143,7 @@ namespace Au
 				case Api.WM_LBUTTONDOWN:
 				case Api.WM_RBUTTONDOWN:
 				case Api.WM_MBUTTONDOWN:
-					var tb1 = _tb._satPlanet ?? _tb;
+					var tb1 = _tb._SatPlanetOrThis;
 					if(tb1.IsOwned && !tb1.MiscFlags.Has(TBFlags.DontActivateOwner)) {
 						tb1.OwnerWindow.ActivateLL();
 						//never mind: sometimes flickers. Here tb1._Zorder() does not help. The OBJECT_REORDER hook zorders when need. This feature is rarely used.
@@ -187,12 +187,24 @@ namespace Au
 
 			void _WmDestroy()
 			{
-				//Print("destroy", _tb._satellite != null);
+				if(RecreatingHandle) {
+					ADebug.Print("RecreateHandle not supported. Will not work satellite etc.");
+					return;
+				}
+				_destroyed = true;
+				if(!Disposing) Dispose();
 				_tb._SatDestroying();
 				_sett.Dispose();
 				//PROBLEM: not called if thread ends without closing the toolbar window.
 				//	Then will save settings only on process exit. Will not save if process terminated, eg by the 'end task' command.
 				//	SHOULDDO: the 'end task' command should be more intelligent. At least should save settings.
+			}
+
+			bool _destroyed;
+
+			protected override void DestroyHandle()
+			{
+				if(!_destroyed) base.DestroyHandle();
 			}
 
 			//Alternative to returning HTCAPTION on WM_NCITTEST.
@@ -321,9 +333,22 @@ namespace Au
 						sizable.Checked = _tb.Sizable;
 						autoSize.Checked = _tb.AutoSize;
 					};
+					using(var sub = m.Submenu("More")) {
+						if(_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
+						_AddFlag(TBFlags.HideIfFullScreen);
+
+						void _AddFlag(TBFlags f) => m.Add(_EnumToString(f), _ => _tb._SatPlanetOrThis.MiscFlags ^= f).Tag = f;
+
+						sub.MenuItem.DropDown.Opening += (sender, _) => {
+							var dd = sender as ToolStripDropDownMenu;
+							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBFlags f) v.Checked = _tb._SatPlanetOrThis.MiscFlags.Has(f);
+						};
+					}
+
+					m["Toolbars..."] = o => new _Form().Show();
 
 					//this is an example of a form-like sumenu. Or maybe better create a UserControl-based class in the form designer.
-					//m.Submenu("AutoSize", m => {
+					//m.LazySubmenu("AutoSize", m => {
 					//	var ddm = m.CurrentAddMenu;
 					//	ddm.ShowImageMargin = false;
 					//	int x = 80, cx = 70;
@@ -346,8 +371,17 @@ namespace Au
 					//	m.Add(h);
 					//});
 
+					static string _EnumToString(Enum e)
+					{
+						var s = e.ToString().RegexReplace(@"(?<=[^A-Z])(?=[A-Z])", " ");
+						s = s.Replace("Dont", "Don't");
+						return s;
+					}
+
 					m.Separator();
-					m["Close"] = o => (_tb._satPlanet ?? _tb).Close();
+					m["Close"] = o => _tb._SatPlanetOrThis.Close();
+
+					//m["test RecreateHandle"] = o => this.RecreateHandle();
 
 					_contextMenu = m;
 				}
@@ -360,6 +394,8 @@ namespace Au
 			}
 			AMenu _contextMenu;
 			ToolStripItem _cmItem;
+
+			internal ContextMenuStrip ContextMenu_ => _contextMenu?.Control;
 
 			#region overflow
 

@@ -23,7 +23,7 @@ namespace Au.Triggers
 	{
 		public Action<TOBAArgs> before;
 		public Action<TOBAArgs> after;
-		public short thread;
+		public short thread; //>=0 dedicated, -1 main, -2 new, -3 pool
 		public bool noWarning;
 		public int ifRunning; //for dedicated thread it is the timeout (>= -1); for new/pool threads it is 0 if single instance, 1 if multi.
 
@@ -79,6 +79,20 @@ namespace Au.Triggers
 		//CONSIDER: make default ifRunningWaitMS = 1000 if it is another action.
 
 		/// <summary>
+		/// Run actions in same thread as <see cref="ActionTriggers.Run"/>.
+		/// </summary>
+		/// <remarks>
+		/// Can be used only for actions that return as soon as possible, in less than 50 ms. Use to create and show toolbars (<see cref="AToolbar"/>).
+		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
+		/// </remarks>
+		public void RunActionInMainThread()
+		{
+			_New();
+			_new.thread = -1;
+			_new.ifRunning = 0;
+		}
+
+		/// <summary>
 		/// Run actions in new threads.
 		/// </summary>
 		/// <remarks>
@@ -90,7 +104,7 @@ namespace Au.Triggers
 		public void RunActionInNewThread(bool singleInstance)
 		{
 			_New();
-			_new.thread = -1;
+			_new.thread = -2;
 			_new.ifRunning = singleInstance ? 0 : 1;
 		}
 
@@ -106,11 +120,9 @@ namespace Au.Triggers
 		public void RunActionInThreadPool(bool singleInstance)
 		{
 			_New();
-			_new.thread = -2;
+			_new.thread = -3;
 			_new.ifRunning = singleInstance ? 0 : 1;
 		}
-
-		//CONSIDER: RunActionInTriggersThread. Now can use Func instead, but it is more code.
 
 		/// <summary>
 		/// A function to run before the trigger action.
@@ -215,7 +227,7 @@ namespace Au.Triggers
 					Print(e2);
 				}
 				finally {
-					if(opt.thread < 0 && opt.ifRunning == 0) _d.TryRemove(trigger, out _);
+					if(opt.thread < -1 && opt.ifRunning == 0) _d.TryRemove(trigger, out _);
 				}
 			};
 			//never mind: we should not create actionWrapper if cannot run. But such cases are rare. Fast and small, about 64 bytes.
@@ -225,11 +237,14 @@ namespace Au.Triggers
 				_Thread h = null; foreach(var v in _a) if(v.id == threadId) { h = v; break; }
 				if(h == null) _a.Add(h = new _Thread(threadId));
 				if(h.RunAction(actionWrapper, trigger)) return;
+			} else if(threadId == -1) { //main thread
+				actionWrapper();
+				return;
 			} else {
 				bool canRun = true;
 				bool singleInstance = trigger.options.ifRunning == 0;
 				if(singleInstance) {
-					if(_d == null) _d = new ConcurrentDictionary<ActionTrigger, object>();
+					_d ??= new ConcurrentDictionary<ActionTrigger, object>();
 					if(_d.TryGetValue(trigger, out var tt)) {
 						switch(tt) {
 						case Thread thread:
@@ -247,7 +262,7 @@ namespace Au.Triggers
 				}
 
 				if(canRun) {
-					if(threadId == -1) { //new thread
+					if(threadId == -2) { //new thread
 						var thread = new Thread(actionWrapper.Invoke) { IsBackground = true };
 						thread.SetApartmentState(ApartmentState.STA);
 						if(singleInstance) _d[trigger] = thread;

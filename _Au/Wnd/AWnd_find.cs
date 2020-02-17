@@ -357,7 +357,7 @@ namespace Au
 
 							if(!_program.Match(pname)) {
 								if(a.Type == _WndList.ListType.SingleWnd) break;
-								if(pids == null) pids = new List<int>(16);
+								pids ??= new List<int>(16);
 								pids.Add(pid); //add bad pid
 								continue;
 							}

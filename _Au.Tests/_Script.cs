@@ -208,11 +208,11 @@ class Script : AScript
 		var m = new AMenu();
 		m["One"] = o => Print(o);
 		m["Two"] = o => Print(o);
-		m.Submenu("Submenu 1", _ => {
+		m.LazySubmenu("Submenu 1", _ => {
 			Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 			m["Three"] = o => Print(o);
 			m["Four"] = o => Print(o);
-			m.Submenu("Submenu 2", _ => {
+			m.LazySubmenu("Submenu 2", _ => {
 				Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 				m["Five"] = o => Print(o);
 				m["Six"] = o => Print(o);
@@ -233,7 +233,7 @@ class Script : AScript
 	//		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 	//		m["Three"] = o => Print(o);
 	//		m["Four"] = o => Print(o);
-	//		m.Submenu("Submenu 2", _ => {
+	//		m.LazySubmenu("Submenu 2", _ => {
 	//			Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 	//			m["Five"] = o => Print(o);
 	//			m["Six"] = o => Print(o);
@@ -255,7 +255,7 @@ class Script : AScript
 	//		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 	//		m["Three"] = o => Print(o);
 	//		m["Four"] = o => Print(o);
-	//		m.Submenu("Submenu 2", _ => {
+	//		m.LazySubmenu("Submenu 2", _ => {
 	//			Print("adding items of " + m.CurrentAddMenu.OwnerItem);
 	//			m["Five"] = o => Print(o);
 	//			m["Six"] = o => Print(o);
@@ -546,7 +546,7 @@ class Script : AScript
 	{
 		var w = AWnd.Active;
 		var s = new AScreen(w);
-		var d = s.ToDevice();
+		var d = s.GetScreenHandle();
 		Print(d);
 
 		//var w = AWnd.Find("*Notepad", also: o => o.Screen.Index == 1);
@@ -657,7 +657,8 @@ class Script : AScript
 		//Print("before");
 		//ADebug.PrintLoadedAssemblies(true, true, true);
 
-		
+		//Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "*Notepad"]
+		//One()
 
 		//TestAScreen();
 		//TestClientToScreenRtlAware();
@@ -665,6 +666,9 @@ class Script : AScript
 		//TestMenu();
 		//TestCallerArgumentExpression("FF" + 5); var v = "gg"; TestCallerArgumentExpression(v);
 	}
+
+	void One(bool two) { }
+	bool Two() => false;
 
 	[STAThread] static void Main(string[] args) { new Script(args); }
 	Script(string[] args)

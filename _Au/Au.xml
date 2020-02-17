@@ -2312,7 +2312,7 @@
         </member>
         <member name="M:Au.Types.PopupXY.GetScreen">
             <summary>
-            Gets <see cref="T:Au.AScreen.Device"/> specified in <see cref="F:Au.Types.PopupXY.screen"/>. If not specified, gets that of the screen that contains the specified point.
+            Gets <see cref="T:Au.AScreen.ScreenHandle"/> specified in <see cref="F:Au.Types.PopupXY.screen"/>. If not specified, gets that of the screen that contains the specified point.
             </summary>
         </member>
         <member name="T:Au.Types.AnyWnd">
@@ -3045,7 +3045,7 @@
         </member>
         <member name="T:Au.Types.MTClickArgs">
             <summary>
-            Data passed to Click event handler functions of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
+            Data passed to <b>Click</b> event handler functions of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
             </summary>
         </member>
         <member name="P:Au.Types.MTClickArgs.Item">
@@ -3227,6 +3227,20 @@
             <summary>
             Anchors are all owner's edges, therefore the toolbar is resized when resizing its owner.
             </summary>
+        </member>
+        <member name="T:Au.Types.TBHide">
+            <summary>
+            Reasons to hide a toolbar. Used with <see cref="M:Au.AToolbar.Hide(System.Boolean,Au.Types.TBHide)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBHide.Owner">
+            <summary>Owner window is hidden, minimized, etc.</summary>
+        </member>
+        <member name="F:Au.Types.TBHide.FullScreen">
+            <summary>A full-screen window is active, and there is flag <see cref="F:Au.Types.TBFlags.HideIfFullScreen"/>.</summary>
+        </member>
+        <member name="F:Au.Types.TBHide.User">
+            <summary>This and bigger flag values can be used by callers for any purpose. Value 0x10000.</summary>
         </member>
         <member name="T:Au.Types.TBLocation">
             <summary>
@@ -4890,7 +4904,7 @@
             </summary>
         </member>
         <member name="F:Au.Types.SDefault.Zero">
-            <summary>0 (<see cref="P:Au.AScreen.Device.Is0"/> will return true).</summary>
+            <summary>0 (<see cref="P:Au.AScreen.ScreenHandle.Is0"/> will return true).</summary>
         </member>
         <member name="F:Au.Types.SDefault.Primary">
             <summary>The primary screen.</summary>
@@ -7352,6 +7366,7 @@
             <param name="onClick">Callback function. Called when clicked the menu item.</param>
             <param name="icon">Can be:
             - string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.GIFlags)"/>. If not full path, searches in <see cref="P:Au.AFolders.ThisAppImages"/>; see also <see cref="P:Au.Types.AMTBase.IconFlags"/>.
+            - string - Base-64 encoded png file with prefix "image:". Can be created with the "Find image..." dialog.
             - string - image name (key) in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
             - int - image index in the ImageList (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             - Icon, Image, FolderPath.
@@ -7394,18 +7409,20 @@
             <summary>
             Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
             Then the add-item functions will add items to the submenu.
-            Can be used in 2 ways:
-            1. <c>using(m.Submenu(...)) { add items; }</c>. See example.
-            2. <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="M:Au.AMenu.EndSubmenu"/>.
             </summary>
             <param name="text">Text.</param>
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <remarks>
+            Can be used in 2 ways:
+            - <c>using(m.Submenu(...)) { add items; }</c>. See example.
+            - <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="M:Au.AMenu.EndSubmenu"/>.
+            
             Submenus inherit these properties of the main menu, set before adding submenus (see example):
             <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
             </remarks>
+            <seealso cref="M:Au.AMenu.LazySubmenu(System.String,System.Action{Au.AMenu},System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)"/>
             <example>
             <code><![CDATA[
             var m = new AMenu();
@@ -7415,7 +7432,7 @@
             using(m.Submenu("Submenu")) {
             	m["Three"] = o => Print(o);
             	m["Four"] = o => Print(o);
-            	using(m.Submenu("Submenu")) {
+            	using(m.Submenu("Submenu2")) {
             		m["Five"] = o => Print(o);
             		m["Six"] = o => Print(o);
             	}
@@ -7444,7 +7461,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AMenu.Submenu(System.String,System.Action{Au.AMenu},System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)">
+        <member name="M:Au.AMenu.LazySubmenu(System.String,System.Action{Au.AMenu},System.Object,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
             Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
             When showing the submenu first time, your callback function will be called and can add submenu items.
@@ -7459,11 +7476,11 @@
             var m = new AMenu();
             m["One"] = o => Print(o);
             m["Two"] = o => Print(o);
-            m.Submenu("Submenu 1", _ => {
+            m.LazySubmenu("Submenu", _ => {
             	Print("adding items of " + m.CurrentAddMenu.OwnerItem);
             	m["Three"] = o => Print(o);
             	m["Four"] = o => Print(o);
-            	m.Submenu("Submenu 2", _ => {
+            	m.LazySubmenu("Submenu2", _ => {
             		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
             		m["Five"] = o => Print(o);
             		m["Six"] = o => Print(o);
@@ -7578,42 +7595,65 @@
         <member name="T:Au.AToolbar">
             <summary>
             Floating toolbar based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
-            Can be attached to windows and other UI objects of other programs.
+            Can be attached to windows of other programs.
             </summary>
-        </member>
-        <member name="M:Au.AToolbar.#ctor(System.String,System.Boolean,System.String,System.Int32)">
-            <summary>
-            Initializes this object.
-            Reads the settings file. Creates the <b>ToolStrip</b> object (<see cref="P:Au.AToolbar.Control"/>) but not its window handle.
-            </summary>
-            <param name="name">Toolbar name. Must be valid filename. Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="P:Au.AToolbar.Control"/>.</param>
-            <param name="resetSettings">Reset toolbar settings to default values. It deletes the settings file of this toolbar.</param>
-            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <example>
             <code><![CDATA[
-            var t = new AToolbar("example");
-            t["button 1"] = o => Print(o);
-            t[false, "menu"] = m => {
-            	m["item 1"] = o => Print(o);
-            	m["item 2"] = o => Print(o);
-            };
-            t["button 2"] = o => Print(o);
-            t.Show();
-            ADialog.Show();
+            _Toolbar_Common(); //show toolbar. Don't attach to a window.
+            //_Toolbar_Common2(); //add function for each toolbar
+            Triggers.Options.RunActionInMainThread(); //let all toolbars run in this thread
+            Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "*Notepad", "Notepad"] = o => _Toolbar_Notepad(o.Window); //show toolbar attached to this Notepad window
+            //Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "other window"] = o => _Toolbar_Other(o.Window); //add trigger and function for each toolbar
+            Triggers.Run();
+            
+            void _Toolbar_Common() {
+            	var t = new AToolbar("example");
+            	t.ExtractIconPathFromCode = true;
+            
+            	t["button 1", @"C:\example.ico"] = o => Print(o);
+            	t.MenuButton("menu", m => {
+            		m.ExtractIconPathFromCode = true;
+            		m["item 1"] = o => Print(o);
+            		m["item 2"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+            	}, AIcon.GetStockIcon(StockIcon.FOLDER, 16));
+            	t["Notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+            	t.Show();
+            }
+            
+            void _Toolbar_Notepad(AWnd w) {
+            	var t = new AToolbar("tb notepad");
+            	t["button 1"] = o => Print(o);
+            	t.Show(w);
+            }
             ]]></code>
             </example>
         </member>
+        <member name="M:Au.AToolbar.#ctor(System.String,System.Boolean,System.String,System.Int32)">
+            <param name="name">Toolbar name. Must be valid filename. Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="P:Au.AToolbar.Control"/>. Also used with <see cref="M:Au.AToolbar.Find(System.String)"/>.</param>
+            <param name="resetSettings">Reset toolbar settings to default values. It deletes the settings file of this toolbar.</param>
+            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <remarks>
+            Reads the settings file if exists, ie if settings changed in the past. Path: <see cref="P:Au.AFolders.Workspace"/>\toolbars\name.json. If <b>AFolders.Workspace</b> is null, uses <see cref="P:Au.AFolders.ThisAppDocuments"/>. If fails, prints warning and uses default settings.
+            
+            Creates <see cref="P:Au.AToolbar.Control"/> object. Does not create its window handle; will do it in <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
+            </remarks>
+        </member>
         <member name="P:Au.AToolbar.Control">
             <summary>
-            Gets the toolbar window as <see cref="T:System.Windows.Forms.ToolStrip"/>.
-            You can use its properties, methods and events.
+            Gets the <see cref="T:System.Windows.Forms.ToolStrip"/> of the toolbar.
             </summary>
+            <remarks>
+            The <b>AToolbar</b> class is based on <see cref="T:System.Windows.Forms.ToolStrip"/>. Not directly but as a facade class. This property gets the <b>ToolStrip</b>. You can use its properties, methods and events.
+            </remarks>
         </member>
         <member name="P:Au.AToolbar.Name">
             <summary>
-            Toolbar name.
+            Gets the name of the toolbar.
             </summary>
+        </member>
+        <member name="M:Au.AToolbar.ToString">
+            
         </member>
         <member name="P:Au.AToolbar.SettingsModified">
             <summary>
@@ -7644,7 +7684,7 @@
             <param name="tooltip">Tooltip text.</param>
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <remarks>
-            Sets button text, icon and Click event handler. Other properties can be specified later. See example.
+            Sets button text, icon and <b>Click</b> event handler. Other properties can be specified later.
             
             Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>. See <see cref="P:Au.AToolbar.Item(System.String,System.Object,System.String,System.Int32)"/>.
             </remarks>
@@ -7686,6 +7726,7 @@
             <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
             <param name="tooltip">Tooltip text.</param>
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <example><see cref="T:Au.AToolbar"/></example>
         </member>
         <member name="M:Au.AToolbar.SplitButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
             <summary>
@@ -7697,31 +7738,7 @@
             <param name="tooltip">Tooltip text.</param>
             <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-        </member>
-        <member name="P:Au.AToolbar.Item(System.Boolean,System.String,System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
-            <summary>
-            Adds new button with a drop-down menu.
-            </summary>
-            <param name="splitButton">If true, calls <see cref="M:Au.AToolbar.SplitButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)"/>, else <see cref="M:Au.AToolbar.MenuButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Int32)"/>.</param>
-            <param name="text">Text.</param>
-            <param name="icon">See <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},System.Object,System.Int32)"/>.</param>
-            <param name="tooltip">Tooltip text.</param>
-            <param name="onClick">Callback function. Called when the button part of the split button clicked. If null, will execute the first menu item. Not used if it is not split button.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <returns>The value is a callback function that adds drop-down menu items. Te same as parameter <i>menu</i> of <see cref="M:Au.AToolbar.MenuButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Int32)"/> or <see cref="M:Au.AToolbar.SplitButton(System.String,System.Action{Au.AMenu},System.Object,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)"/>.</returns>
-            <example>
-            <code><![CDATA[
-            var t = new AToolbar("example");
-            t["button 1"] = o => Print(o);
-            t[false, "menu"] = m => {
-            	m["item 1"] = o => Print(o);
-            	m["item 2"] = o => Print(o);
-            };
-            t["button 2"] = o => Print(o);
-            t.Show();
-            ADialog.Show();
-            ]]></code>
-            </example>
+            <example><see cref="T:Au.AToolbar"/></example>
         </member>
         <member name="P:Au.AToolbar.LastButton">
             <summary>
@@ -7737,6 +7754,7 @@
             Shows the toolbar and attaches to a screen.
             </summary>
             <param name="screen">Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
+            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
             <remarks>
             The toolbar will be moved when the screen moved or resized.
             </remarks>
@@ -7747,6 +7765,8 @@
             </summary>
             <param name="ownerWindow">Window or control. Can belong to any process.</param>
             <param name="clientArea">Let the toolbar position be relative to the client area of the window.</param>
+            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
+            <exception cref="T:System.ArgumentException"><b>ownerWindow</b> is 0.</exception>
             <remarks>
             The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
             </remarks>
@@ -7757,14 +7777,39 @@
             </summary>
             <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
             <param name="oo">A variable of a user-defined class that implements <see cref="T:Au.Types.ITBOwnerObject"/> interface. It provides object location, visibility, etc.</param>
+            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
+            <exception cref="T:System.ArgumentException"><b>ownerWindow</b> is 0.</exception>
             <remarks>
             The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
             </remarks>
         </member>
         <member name="M:Au.AToolbar.Close">
             <summary>
-            Closes and disposes the toolbar.
+            Hides and disposes the toolbar.
             </summary>
+        </member>
+        <member name="M:Au.AToolbar.Hide(System.Boolean,Au.Types.TBHide)">
+            <summary>
+            Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <seealso cref="M:Au.AToolbar.Close"/>.
+            </summary>
+            <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
+            <param name="reason">An user-defined reason to hide/unhide. Can be <see cref="F:Au.Types.TBHide.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>
+            <exception cref="T:System.InvalidOperationException">
+            - The toolbar was never shown (<see cref="M:Au.AToolbar.Show(Au.AScreen)"/> not called).
+            - It is a satellite toolbar.
+            </exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="F:Au.Types.TBHide.User"/>.</exception>
+            <remarks>
+            Toolbars are automatically hidden when the owner window is hidden, minimized, etc. This function can be used to hide toolbars for other reasons.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Hidden">
+            <summary>
+            Gets current reasons why the toolbar is hidden. Returns 0 if not hidden.
+            </summary>
+            <remarks>
+            Not used with satellite toolbars.
+            </remarks>
         </member>
         <member name="P:Au.AToolbar.IsOwned">
             <summary>
@@ -7774,14 +7819,17 @@
         <member name="P:Au.AToolbar.OwnerWindow">
             <summary>
             Returns the owner top-level window.
-            Returns default(AWnd) if the toolbar is not owned by a window or an object in a window.
+            Returns default(AWnd) if the toolbar is not owned. See <see cref="P:Au.AToolbar.IsOwned"/>.
             </summary>
         </member>
-        <member name="P:Au.AToolbar.OwnerControl">
+        <member name="M:Au.AToolbar.Find(System.String)">
             <summary>
-            Returns the owner control.
-            Returns default(AWnd) if not owned by a control or an object in a control.
+            Finds an open toolbar by <see cref="P:Au.AToolbar.Name"/>.
+            Returns null if not found or closed or never shown (<see cref="M:Au.AToolbar.Show(Au.AScreen)"/> not called).
             </summary>
+            <remarks>
+            Does not find satellite toolbars. Use this code: <c>AToolbar.Find("owner toolbar").Satellite</c>
+            </remarks>
         </member>
         <member name="P:Au.AToolbar.NoText">
             <summary>
@@ -7807,6 +7855,9 @@
             <summary>
             Border style.
             </summary>
+            <remarks>
+            This property is in the context menu and is saved.
+            </remarks>
         </member>
         <member name="P:Au.AToolbar.BorderColor">
             <summary>
@@ -7819,6 +7870,7 @@
             </summary>
             <remarks>
             The owner also can be a screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
+            This property is in the context menu and is saved.
             </remarks>
             <seealso cref="P:Au.AToolbar.Location"/>
         </member>
@@ -7828,20 +7880,23 @@
             </summary>
             <remarks>
             The owner also can be a screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
-            This property is updated when moving or resizing the toolbar.
+            This property is updated when moving or resizing the toolbar. It is saved.
             </remarks>
         </member>
         <member name="P:Au.AToolbar.Sizable">
             <summary>
             Whether the border can be used to resize the toolbar.
             </summary>
+            <remarks>
+            This property is in the context menu and is saved.
+            </remarks>
         </member>
         <member name="P:Au.AToolbar.Size">
             <summary>
             Toolbar width and height.
             </summary>
             <remarks>
-            This property is updated when resizing the toolbar.
+            This property is updated when resizing the toolbar. It is saved.
             </remarks>
         </member>
         <member name="P:Au.AToolbar.AutoSize">
@@ -7853,6 +7908,8 @@
             - When showing the toolbar.
             - When the user resizes the toolbar. It also sets the wrap width.
             - When setting this property = true (in code or in the context menu) or changing <see cref="P:Au.AToolbar.AutoSizeWrapWidth"/> wile it is true.
+            
+            This property is in the context menu and is saved.
             </remarks>
         </member>
         <member name="P:Au.AToolbar.AutoSizeWrapWidth">
@@ -7860,8 +7917,16 @@
             When <see cref="P:Au.AToolbar.AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
             </summary>
             <remarks>
-            This property is updated when the user resizes the toolbar while <see cref="P:Au.AToolbar.AutoSize"/> is true.
+            This property is updated when the user resizes the toolbar while <see cref="P:Au.AToolbar.AutoSize"/> is true. It is saved.
             If flow direction is vertical, this is the preferred height at which buttons are moved to the next column.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.MiscFlags">
+            <summary>
+            Miscellaneous options.
+            </summary>
+            <remarks>
+            This property is in the context menu (submenu "More") and is saved.
             </remarks>
         </member>
         <member name="P:Au.AToolbar.Transparency">
@@ -7881,13 +7946,29 @@
             </summary>
             <exception cref="T:System.InvalidOperationException">The 'set' function throws if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
             <remarks>
-            The satellite toolbar is shown when mouse enters its owner and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
+            The satellite toolbar is shown when mouse enters its owner toolbar and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
             A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
             </remarks>
         </member>
-        <member name="P:Au.AToolbar.SatellitePlanet">
+        <member name="P:Au.AToolbar.SatelliteOwner">
             <summary>
             If this is a sattellite toolbar (<see cref="P:Au.AToolbar.Satellite"/>), gets its owner toolbar. Else null.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar.NewToolbarsForm">
+            <summary>
+            Creates new form with a list of toolbars of this thread. Can be used to find lost toolbars.
+            </summary>
+            <example>
+            <code><![CDATA[
+            AToolbar.NewToolbarsForm().Show();
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AToolbar._Form.InitializeComponent">
+            <summary>
+            Required method for Designer support - do not modify
+            the contents of this method with the code editor.
             </summary>
         </member>
         <member name="M:Au.AToolbar._GetCachedOwnerRect">
@@ -14688,12 +14769,12 @@
             To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique int identifier, known as screen handle or HMONITOR. But it is a random variable value and therefore cannot be specified directly in script. In script instead is used screen index or some object on that screen (window, point, rectangle).
             
             There are two types (both are struct):
-            - an <b>AScreen.Device</b> variable contains a screen handle. Its functions are used to quickly get properties of that screen, eg bounds.
+            - an <b>AScreen.ScreenHandle</b> variable contains a screen handle, aka HMONITOR. Its functions are used to quickly get properties of that screen, eg bounds.
             - an <b>AScreen</b> variable contains a value that is used to get screen handle. It can be screen index, window, point, etc, and even a callback function.
             
             <b>AScreen</b> is used mostly in two ways:
-            - the static functions are used to get a screen handle as <see cref="T:Au.AScreen.Device"/> using screen index, window, point, etc. Then the <b>Device</b> gets screen properties. Example: <c>RECT r = AScreen.Of(AWnd.Active).Bounds; //get rectangle of screen that contains the active window</c>
-            - if a function parameter or some property etc is of <b>AScreen</b> type, callers can specify screen index, window, point, etc. Index can be passed directly; for other types use code like <c>new AScreen(window)</c>. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="M:Au.AScreen.ToDevice"/> to get <see cref="T:Au.AScreen.Device"/> corresponding that value at that time.
+            - the static functions are used to get a screen handle as <see cref="T:Au.AScreen.ScreenHandle"/> using screen index, window, point, etc. Then the <b>ScreenHandle</b> gets screen properties. Example: <c>RECT r = AScreen.Of(AWnd.Active).Bounds; //get rectangle of screen that contains the active window</c>
+            - if a function parameter or some property etc is of <b>AScreen</b> type, callers can specify screen index, window, point, etc. Index can be passed directly; for other types use code like <c>new AScreen(window)</c>. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="M:Au.AScreen.GetScreenHandle"/> to get <see cref="T:Au.AScreen.ScreenHandle"/> corresponding that value at that time.
             
             Why need two types? Why <b>AScreen</b> doesn't just get and store screen handle immediately when the variable is created. Because a handle cannot be reliably used for a long time. Reasons:
             - screen handles may change when changing the configuration of multiple screens.
@@ -14750,7 +14831,7 @@
             Creates variable that holds <see cref="T:System.Windows.Window"/>. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SDefault)"/>.
             </summary>
         </member>
-        <member name="M:Au.AScreen.#ctor(System.Func{Au.AScreen.Device})">
+        <member name="M:Au.AScreen.#ctor(System.Func{Au.AScreen.ScreenHandle})">
             <summary>
             Creates variable that calls your function to get screen when need.
             </summary>
@@ -14761,9 +14842,9 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AScreen.#ctor(Au.AScreen.Device)">
+        <member name="M:Au.AScreen.#ctor(Au.AScreen.ScreenHandle)">
             <summary>
-            Creates variable that holds <see cref="T:Au.AScreen.Device"/>.
+            Creates variable that holds <see cref="T:Au.AScreen.ScreenHandle"/>.
             </summary>
         </member>
         <member name="P:Au.AScreen.Primary">
@@ -14846,31 +14927,31 @@
             Returns true if rectangle of window w intersects with some screen.
             </summary>
         </member>
-        <member name="M:Au.AScreen.ToDevice">
+        <member name="M:Au.AScreen.GetScreenHandle">
             <summary>
-            Gets <see cref="T:Au.AScreen.Device"/> from the value stored in this variable (screen index, window, etc).
+            Gets <see cref="T:Au.AScreen.ScreenHandle"/> from the value stored in this variable (screen index, window, etc).
             If the value is null, gets the primary screen.
             </summary>
         </member>
-        <member name="T:Au.AScreen.Device">
+        <member name="T:Au.AScreen.ScreenHandle">
             <summary>
             Represents a screen device. Gets its rectangle etc.
             </summary>
         </member>
-        <member name="M:Au.AScreen.Device.#ctor(System.IntPtr)">
+        <member name="M:Au.AScreen.ScreenHandle.#ctor(System.IntPtr)">
             <param name="handle">A screen handle (HMONITOR).</param>
         </member>
-        <member name="P:Au.AScreen.Device.Handle">
+        <member name="P:Au.AScreen.ScreenHandle.Handle">
             <summary>
             The screen handle (HMONITOR).
             </summary>
         </member>
-        <member name="P:Au.AScreen.Device.Is0">
+        <member name="P:Au.AScreen.ScreenHandle.Is0">
             <summary>
             True if the screen handle is 0.
             </summary>
         </member>
-        <member name="P:Au.AScreen.Device.Index">
+        <member name="P:Au.AScreen.ScreenHandle.Index">
             <summary>
             Gets index of this screen in the <see cref="P:Au.AScreen.AllScreens"/> array.
             </summary>
@@ -14878,7 +14959,7 @@
             Returns -1 if this screen is not in the array. It can happen after changing display settings, but is rare. Also if the screen handle is 0.
             </remarks>
         </member>
-        <member name="M:Au.AScreen.Device.GetInfo">
+        <member name="M:Au.AScreen.ScreenHandle.GetInfo">
             <summary>
             Gets screen rectangle and other info.
             </summary>
@@ -14890,40 +14971,40 @@
             - isAlive - true if the screen handle is valid. If invalid (eg 0), the function gets info of the primary screen.
             </returns>
         </member>
-        <member name="M:Au.AScreen.Device.GetRect(System.Boolean)">
+        <member name="M:Au.AScreen.ScreenHandle.GetRect(System.Boolean)">
             <summary>
-            Calls <see cref="M:Au.AScreen.Device.GetInfo"/> and returns rectangle of the screen or its work area.
+            Calls <see cref="M:Au.AScreen.ScreenHandle.GetInfo"/> and returns rectangle of the screen or its work area.
             </summary>
             <param name="workArea">Get work area rectangle.</param>
         </member>
-        <member name="P:Au.AScreen.Device.Bounds">
+        <member name="P:Au.AScreen.ScreenHandle.Bounds">
             <summary>
-            Calls <see cref="M:Au.AScreen.Device.GetInfo"/> and returns rectangle of the screen.
+            Calls <see cref="M:Au.AScreen.ScreenHandle.GetInfo"/> and returns rectangle of the screen.
             </summary>
         </member>
-        <member name="P:Au.AScreen.Device.WorkArea">
+        <member name="P:Au.AScreen.ScreenHandle.WorkArea">
             <summary>
-            Calls <see cref="M:Au.AScreen.Device.GetInfo"/> and returns rectangle of the screen work area.
+            Calls <see cref="M:Au.AScreen.ScreenHandle.GetInfo"/> and returns rectangle of the screen work area.
             </summary>
         </member>
-        <member name="P:Au.AScreen.Device.IsAlive">
+        <member name="P:Au.AScreen.ScreenHandle.IsAlive">
             <summary>
             True if the screen handle is valid.
             </summary>
         </member>
-        <member name="M:Au.AScreen.Device.ToString">
+        <member name="M:Au.AScreen.ScreenHandle.ToString">
             
         </member>
-        <member name="M:Au.AScreen.Device.GetHashCode">
+        <member name="M:Au.AScreen.ScreenHandle.GetHashCode">
             
         </member>
-        <member name="M:Au.AScreen.Device.Equals(Au.AScreen.Device)">
+        <member name="M:Au.AScreen.ScreenHandle.Equals(Au.AScreen.ScreenHandle)">
             
         </member>
-        <member name="M:Au.AScreen.Device.op_Equality(Au.AScreen.Device,Au.AScreen.Device)">
+        <member name="M:Au.AScreen.ScreenHandle.op_Equality(Au.AScreen.ScreenHandle,Au.AScreen.ScreenHandle)">
             
         </member>
-        <member name="M:Au.AScreen.Device.op_Inequality(Au.AScreen.Device,Au.AScreen.Device)">
+        <member name="M:Au.AScreen.ScreenHandle.op_Inequality(Au.AScreen.ScreenHandle,Au.AScreen.ScreenHandle)">
             
         </member>
         <member name="T:Au.AWinImage">
@@ -18728,6 +18809,18 @@
             <param name="operandType">Defines the type of operand.</param>
             <returns>The size in bytes of the operand type.</returns>
         </member>
+        <member name="M:Au.Util.Image_.LoadImageFromString(System.String)">
+            <summary>
+            Loads image from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
+            Exception if fails.
+            </summary>
+            <param name="s">Must start with "image:" or "~:". Asserts. Use <see cref="M:Au.Util.Image_.IsImageStringPrefix(System.String)"/>.</param>
+        </member>
+        <member name="M:Au.Util.Image_.TryLoadImageFromString(System.String,System.Boolean)">
+            <summary>
+            Calls <see cref="M:Au.Util.Image_.LoadImageFromString(System.String)"/> and handles exceptions. On exception returns null and optionally prints warning.
+            </summary>
+        </member>
         <member name="T:Au.Util.JSettings">
             <summary>
             Base of classes that load/save various settings from/to a JSON file.
@@ -19543,21 +19636,21 @@
             Code speed measurement. Easier to use than <see cref="T:System.Diagnostics.Stopwatch"/>.
             </summary>
         </member>
-        <member name="T:Au.APerf.Inst">
+        <member name="T:Au.APerf.Local">
             <summary>
             The same as <see cref="T:Au.APerf"/> class, but allows to have multiple independent speed measurements.
             </summary>
             <remarks>
             Stores data in the variable, not in a static variable.
             
-            Don't need to dispose variables of this type. The <see cref="M:Au.APerf.Inst.Dispose"/> function just calls <see cref="M:Au.APerf.Inst.NW(System.Char)"/>.
+            Don't need to dispose variables of this type. The <see cref="M:Au.APerf.Local.Dispose"/> function just calls <see cref="M:Au.APerf.Local.NW(System.Char)"/>.
             </remarks>
         </member>
-        <member name="P:Au.APerf.Inst.Incremental">
+        <member name="P:Au.APerf.Local.Incremental">
             <summary>See <see cref="P:Au.APerf.Incremental"/>.</summary>
             <example>
             <code><![CDATA[
-            var perf = new APerf.Inst { Incremental = true };
+            var perf = new APerf.Local { Incremental = true };
             for(int i = 0; i < 5; i++) {
             	Thread.Sleep(100); //not included in the measurement
             	perf.First();
@@ -19572,45 +19665,56 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.APerf.Inst.First">
+        <member name="M:Au.APerf.Local.First">
             <summary><see cref="M:Au.APerf.First"/></summary>
         </member>
-        <member name="M:Au.APerf.Inst.Next(System.Char)">
+        <member name="M:Au.APerf.Local.Next(System.Char)">
             <summary><see cref="M:Au.APerf.Next(System.Char)"/></summary>
         </member>
-        <member name="M:Au.APerf.Inst.NW(System.Char)">
+        <member name="M:Au.APerf.Local.NW(System.Char)">
             <summary>
-            Calls <see cref="M:Au.APerf.Inst.Next(System.Char)"/> and <see cref="M:Au.APerf.Inst.Write"/>.
+            Calls <see cref="M:Au.APerf.Local.Next(System.Char)"/> and <see cref="M:Au.APerf.Local.Write"/>.
             </summary>
             <param name="cMark">A character to add to the results string like "A=150".</param>
         </member>
-        <member name="M:Au.APerf.Inst.Dispose">
+        <member name="M:Au.APerf.Local.Dispose">
             <summary>
-            Calls <see cref="M:Au.APerf.Inst.NW(System.Char)"/>, which calls <see cref="M:Au.APerf.Inst.Next(System.Char)"/> and <see cref="M:Au.APerf.Inst.Write"/>.
-            Don't need to dispose variables of this type. There is nothing to dispose. This just allows to use the 'using' pattern instead of <b>NW</b>.
+            Calls <see cref="M:Au.APerf.Local.NW(System.Char)"/>, which calls <see cref="M:Au.APerf.Local.Next(System.Char)"/> and <see cref="M:Au.APerf.Local.Write"/>.
             </summary>
+            <remarks>
+            Don't need to dispose variables of this type. This function just allows to use the 'using' pattern instead of <b>NW</b>. See example.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            using(var p1 = APerf.Create()) { //p1.First();
+            	1.ms();
+            	p1.Next();
+            	1.ms();
+            } //p1.NW();
+            ]]></code>
+            </example>
         </member>
-        <member name="M:Au.APerf.Inst.Write">
+        <member name="M:Au.APerf.Local.Write">
             <summary>
-            Formats a string from time values collected by calling <see cref="M:Au.APerf.Inst.First"/> and <see cref="M:Au.APerf.Inst.Next(System.Char)"/>, and shows it in the output.
+            Formats a string from time values collected by calling <see cref="M:Au.APerf.Local.First"/> and <see cref="M:Au.APerf.Local.Next(System.Char)"/>, and shows it in the output.
             The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
             </summary>
         </member>
-        <member name="M:Au.APerf.Inst.ToString">
+        <member name="M:Au.APerf.Local.ToString">
             <summary>
-            Formats a string from time values collected by calling <see cref="M:Au.APerf.Inst.First"/> and <see cref="M:Au.APerf.Inst.Next(System.Char)"/>.
+            Formats a string from time values collected by calling <see cref="M:Au.APerf.Local.First"/> and <see cref="M:Au.APerf.Local.Next(System.Char)"/>.
             The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
             </summary>
         </member>
-        <member name="M:Au.APerf.Inst.ToArray">
+        <member name="M:Au.APerf.Local.ToArray">
             <summary>
-            Return array of time values collected by calling <see cref="M:Au.APerf.Inst.First"/> and <see cref="M:Au.APerf.Inst.Next(System.Char)"/>.
+            Return array of time values collected by calling <see cref="M:Au.APerf.Local.First"/> and <see cref="M:Au.APerf.Local.Next(System.Char)"/>.
             Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
             </summary>
         </member>
-        <member name="P:Au.APerf.Inst.TimeTotal">
+        <member name="P:Au.APerf.Local.TimeTotal">
             <summary>
-            Gets the number of microseconds between <see cref="M:Au.APerf.Inst.First"/> and the last <see cref="M:Au.APerf.Inst.Next(System.Char)"/>.
+            Gets the number of microseconds between <see cref="M:Au.APerf.Local.First"/> and the last <see cref="M:Au.APerf.Local.Next(System.Char)"/>.
             </summary>
         </member>
         <member name="F:Au.APerf.StaticInst">
@@ -19620,7 +19724,7 @@
         </member>
         <member name="M:Au.APerf.Create">
             <summary>
-            Creates and returns new <see cref="T:Au.APerf.Inst"/> variable and calls its <see cref="M:Au.APerf.Inst.First"/>.
+            Creates and returns new <see cref="T:Au.APerf.Local"/> variable and calls its <see cref="M:Au.APerf.Local.First"/>.
             </summary>
         </member>
         <member name="P:Au.APerf.Incremental">
@@ -20894,6 +20998,15 @@
             There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
             The thread has <see cref="F:System.Threading.ApartmentState.STA"/>.
             The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active. If none called, it is the same as called this function without arguments.
+            </remarks>
+        </member>
+        <member name="M:Au.Triggers.TriggerOptions.RunActionInMainThread">
+            <summary>
+            Run actions in same thread as <see cref="M:Au.Triggers.ActionTriggers.Run"/>.
+            </summary>
+            <remarks>
+            Can be used only for actions that return as soon as possible, in less than 50 ms. Use to create and show toolbars (<see cref="T:Au.AToolbar"/>).
+            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
             </remarks>
         </member>
         <member name="M:Au.Triggers.TriggerOptions.RunActionInNewThread(System.Boolean)">
@@ -22502,25 +22615,24 @@
         <member name="M:Au.AWnd.Show(System.Boolean)">
             <summary>
             Shows (if hidden) or hides this window.
-            Does not activate/deactivate/zorder.
-            With windows of current thread usually it's better to use <see cref="M:Au.AWnd.ShowLL(System.Boolean)"/>.
             </summary>
             <remarks>
-            Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
+            Does not activate/deactivate/zorder.
+            This window can be of any thread. If you know it is of this thread, use <see cref="M:Au.AWnd.ShowLL(System.Boolean)"/>. This function calls it.
             </remarks>
             <exception cref="T:Au.Types.AuWndException"/>
         </member>
         <member name="M:Au.AWnd.ShowLL(System.Boolean)">
             <summary>
             Shows (if hidden) or hides this window.
-            Does not activate/deactivate/zorder.
             </summary>
+            <returns>Returns false if fails. Supports <see cref="T:Au.ALastError"/>.</returns>
             <remarks>
-            This library has two similar functions - <see cref="M:Au.AWnd.Show(System.Boolean)"/> and <b>ShowLL</b>. <b>Show</b> is better to use in automation scripts, with windows of any process/thread. <b>ShowLL</b> usually is better to use in programming, with windows of current thread.
-            <b>ShowLL</b> is more low-level. Does not throw exception when fails, and does not add a delay; <b>Show</b> adds a small delay when the window is of other thread.
+            Does not activate/deactivate/zorder.
             
-            Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
-            Supports <see cref="T:Au.ALastError"/>.
+            There are two similar functions to show/hide a window: 
+            - <see cref="M:Au.AWnd.Show(System.Boolean)"/> is better to use in automation scripts, with windows of any process/thread. It calls <b>ShowLL</b>, and throws exception if it fails. Adds a small delay if the window is of another thread.
+            - <b>ShowLL</b> is better to use in programming, with windows of current thread. It is low-level. Does not throw exceptions. Does not add a delay. But both functions can be used with windows of any thread.
             </remarks>
         </member>
         <member name="M:Au.AWnd.IsEnabled(System.Boolean)">
@@ -23254,7 +23366,7 @@
         </member>
         <member name="P:Au.AWnd.Screen">
             <summary>
-            Gets <see cref="T:Au.AScreen.Device"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
+            Gets <see cref="T:Au.AScreen.ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
             If this window handle is default(AWnd) or invalid, gets the primary screen.
             Calls <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)"/>.
             </summary>

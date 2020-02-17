@@ -469,11 +469,10 @@ namespace Au
 
 		/// <summary>
 		/// Shows (if hidden) or hides this window.
-		/// Does not activate/deactivate/zorder.
-		/// With windows of current thread usually it's better to use <see cref="ShowLL"/>.
 		/// </summary>
 		/// <remarks>
-		/// Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
+		/// Does not activate/deactivate/zorder.
+		/// This window can be of any thread. If you know it is of this thread, use <see cref="ShowLL"/>. This function calls it.
 		/// </remarks>
 		/// <exception cref="AuWndException"/>
 		public void Show(bool show)
@@ -484,33 +483,25 @@ namespace Au
 
 		/// <summary>
 		/// Shows (if hidden) or hides this window.
-		/// Does not activate/deactivate/zorder.
 		/// </summary>
+		/// <returns>Returns false if fails. Supports <see cref="ALastError"/>.</returns>
 		/// <remarks>
-		/// This library has two similar functions - <see cref="Show"/> and <b>ShowLL</b>. <b>Show</b> is better to use in automation scripts, with windows of any process/thread. <b>ShowLL</b> usually is better to use in programming, with windows of current thread.
-		/// <b>ShowLL</b> is more low-level. Does not throw exception when fails, and does not add a delay; <b>Show</b> adds a small delay when the window is of other thread.
+		/// Does not activate/deactivate/zorder.
 		/// 
-		/// Calls API <msdn>ShowWindow</msdn> with SW_SHOWNA or SW_HIDE.
-		/// Supports <see cref="ALastError"/>.
+		/// There are two similar functions to show/hide a window: 
+		/// - <see cref="Show"/> is better to use in automation scripts, with windows of any process/thread. It calls <b>ShowLL</b>, and throws exception if it fails. Adds a small delay if the window is of another thread.
+		/// - <b>ShowLL</b> is better to use in programming, with windows of current thread. It is low-level. Does not throw exceptions. Does not add a delay. But both functions can be used with windows of any thread.
 		/// </remarks>
 		public bool ShowLL(bool show)
 		{
-			//Is it already visible?
-			//This check makes MUCH faster when already visible (read comments below).
-			//But don't check when !show. Then would not hide if the parent is hidden, unless we instead check WS_VISIBLE style (not tested). And it does not make much faster.
-			if(show && IsVisible) return true;
-			ALastError.Clear();
-			Api.ShowWindow(this, show ? Api.SW_SHOWNA : Api.SW_HIDE);
-			return ALastError.Code == 0;
+			if(show == HasStyle(WS.VISIBLE)) return true; //avoid messages and make much faster. Never mind: if show==false, returns true even if invalid hwnd.
+			Send(Api.WM_SHOWWINDOW, show); //not necessary for most windows, but eg winforms would not update the Visible property without it. ShowWindow sends it but SetWindowPos doesn't.
+			return SetWindowPos((show ? Native.SWP.SHOWWINDOW : Native.SWP.HIDEWINDOW)
+				| Native.SWP.NOSIZE | Native.SWP.NOMOVE | Native.SWP.NOACTIVATE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER);
 
-			//speed when the window already is in the requested state:
-			//	ShowWindow and SetWindowPos don't test it.
-			//	ShowWindow(SW_SHOW/SW_HIDE) are quite fast (maybe 5 times slower than IsWindowVisible).
-			//	But SW_SHOW activates the window if it is top-level (depends on the foreground lock), and we don't want it.
-			//	SW_SHOWNA is MUCH slower.
-			//	SetWindowPos is slightly faster than SW_SHOWNA. With SWP_NOSENDCHANGING faster, especially with windows of other threads, but not much.
-			//speed when the window is not in the requested state:
-			//	All similar.
+			//This code is similar to ShowWindow(SW_SHOWNA). Don't use it because:
+			//	May change Z order. Eg makes above other windows of same thread.
+			//	Also may not work first time in process. The documentation is unclear. Not tested.
 		}
 
 		/// <summary>
@@ -565,9 +556,9 @@ namespace Au
 		/// <seealso cref="IsCloakedGetState"/>
 		public bool IsCloaked => IsCloakedGetState != 0;
 
-		#endregion
+#endregion
 
-		#region minimized, maximized
+#region minimized, maximized
 
 		/// <summary>
 		/// Returns true if minimized, false if not.
@@ -736,9 +727,9 @@ namespace Au
 			return false;
 		}
 
-		#endregion
+#endregion
 
-		#region activate, focus
+#region activate, focus
 
 		internal static partial class Lib
 		{
@@ -1214,9 +1205,9 @@ namespace Au
 			public static AWnd Active => Api.GetActiveWindow();
 		}
 
-		#endregion
+#endregion
 
-		#region rect
+#region rect
 
 		/// <summary>
 		/// Gets rectangle (position and size) in screen coordinates.
@@ -1679,9 +1670,9 @@ namespace Au
 			return ContainsWindowXY(Window, x, y);
 		}
 
-		#endregion
+#endregion
 
-		#region move, resize, SetWindowPos
+#region move, resize, SetWindowPos
 
 		/// <summary>
 		/// Calls API <msdn>SetWindowPos</msdn>.
@@ -1833,9 +1824,9 @@ namespace Au
 			Move(default, default, width, height, workArea, screen);
 		}
 
-		#endregion
+#endregion
 
-		#region MoveInScreen, EnsureInScreen, Screen
+#region MoveInScreen, EnsureInScreen, Screen
 
 		internal static partial class Lib
 		{
@@ -1847,13 +1838,13 @@ namespace Au
 				AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
 			{
 				RECT rs;
-				AScreen.Device scr;
+				AScreen.ScreenHandle scr;
 				if(inRect.HasValue) {
 					Debug.Assert(!useWindow);
 					rs = inRect.GetValueOrDefault();
 					scr = default;
 				} else {
-					if(!screen.IsNull) scr = screen.ToDevice();
+					if(!screen.IsNull) scr = screen.GetScreenHandle();
 					else if(useWindow) scr = AScreen.Of(w);
 					else if(bEnsureMethod) scr = AScreen.Of(r);
 					else scr = AScreen.Primary;
@@ -1973,15 +1964,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets <see cref="AScreen.Device"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
+		/// Gets <see cref="AScreen.ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(AWnd) or invalid, gets the primary screen.
 		/// Calls <see cref="AScreen.Of(AWnd, SDefault)"/>.
 		/// </summary>
-		public AScreen.Device Screen => AScreen.Of(this);
+		public AScreen.ScreenHandle Screen => AScreen.Of(this);
 
-		#endregion
+#endregion
 
-		#region Zorder
+#region Zorder
 		const Native.SWP _SWP_ZORDER = Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE;
 
 		/// <summary>
@@ -2127,9 +2118,9 @@ namespace Au
 			return false;
 		}
 
-		#endregion
+#endregion
 
-		#region style, exStyle
+#region style, exStyle
 		/// <summary>
 		/// Gets window style.
 		/// </summary>
@@ -2230,9 +2221,9 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool IsResizable => HasStyle(WS.THICKFRAME);
 
-		#endregion
+#endregion
 
-		#region window/class long, control id, prop
+#region window/class long, control id, prop
 
 		/// <summary>
 		/// Calls API <msdn>GetWindowLongPtr</msdn>.
@@ -2282,9 +2273,9 @@ namespace Au
 		/// </example>
 		public WProp Prop => new WProp(this);
 
-		#endregion
+#endregion
 
-		#region thread, process, is Unicode, is 64-bit, is hung/ghost, is console, UAC
+#region thread, process, is Unicode, is 64-bit, is hung/ghost, is console, UAC
 
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
@@ -2422,9 +2413,9 @@ namespace Au
 		//	get => UacIntegrityLevel > AUac.OfThisProcess.IntegrityLevel;
 		//}
 
-		#endregion
+#endregion
 
-		#region text, class, program
+#region text, class, program
 
 		/// <summary>
 		/// Gets window class name.
@@ -2687,9 +2678,9 @@ namespace Au
 		/// </remarks>
 		public string ProgramDescription => AProcess.GetDescription(ProcessId);
 
-		#endregion
+#endregion
 
-		#region close, destroy
+#region close, destroy
 
 		/// <summary>
 		/// Closes the window.
@@ -2801,7 +2792,7 @@ namespace Au
 		//	return a.Count;
 		//}
 
-		#endregion
+#endregion
 
 	}
 

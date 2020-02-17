@@ -30,12 +30,12 @@ namespace Au
 	/// To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique int identifier, known as screen handle or HMONITOR. But it is a random variable value and therefore cannot be specified directly in script. In script instead is used screen index or some object on that screen (window, point, rectangle).
 	/// 
 	/// There are two types (both are struct):
-	/// - an <b>AScreen.Device</b> variable contains a screen handle. Its functions are used to quickly get properties of that screen, eg bounds.
+	/// - an <b>AScreen.ScreenHandle</b> variable contains a screen handle, aka HMONITOR. Its functions are used to quickly get properties of that screen, eg bounds.
 	/// - an <b>AScreen</b> variable contains a value that is used to get screen handle. It can be screen index, window, point, etc, and even a callback function.
 	/// 
 	/// <b>AScreen</b> is used mostly in two ways:
-	/// - the static functions are used to get a screen handle as <see cref="Device"/> using screen index, window, point, etc. Then the <b>Device</b> gets screen properties. Example: <c>RECT r = AScreen.Of(AWnd.Active).Bounds; //get rectangle of screen that contains the active window</c>
-	/// - if a function parameter or some property etc is of <b>AScreen</b> type, callers can specify screen index, window, point, etc. Index can be passed directly; for other types use code like <c>new AScreen(window)</c>. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="ToDevice"/> to get <see cref="Device"/> corresponding that value at that time.
+	/// - the static functions are used to get a screen handle as <see cref="ScreenHandle"/> using screen index, window, point, etc. Then the <b>ScreenHandle</b> gets screen properties. Example: <c>RECT r = AScreen.Of(AWnd.Active).Bounds; //get rectangle of screen that contains the active window</c>
+	/// - if a function parameter or some property etc is of <b>AScreen</b> type, callers can specify screen index, window, point, etc. Index can be passed directly; for other types use code like <c>new AScreen(window)</c>. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="GetScreenHandle"/> to get <see cref="ScreenHandle"/> corresponding that value at that time.
 	/// 
 	/// Why need two types? Why <b>AScreen</b> doesn't just get and store screen handle immediately when the variable is created. Because a handle cannot be reliably used for a long time. Reasons:
 	/// - screen handles may change when changing the configuration of multiple screens.
@@ -104,23 +104,23 @@ namespace Au
 		/// new AScreen(() => AScreen.Of(AWnd.Active));
 		/// ]]></code>
 		/// </example>
-		public AScreen(Func<Device> f) => _o = f;
+		public AScreen(Func<ScreenHandle> f) => _o = f;
 
 		/// <summary>
-		/// Creates variable that holds <see cref="Device"/>.
+		/// Creates variable that holds <see cref="ScreenHandle"/>.
 		/// </summary>
-		public AScreen(Device screen) => _o = screen;
+		public AScreen(ScreenHandle screen) => _o = screen;
 
 		//no
 		///// <summary>
-		///// Creates variable that holds <see cref="Device"/>.
+		///// Creates variable that holds <see cref="ScreenHandle"/>.
 		///// </summary>
-		//public static implicit operator AScreen(Device screen) => new AScreen(screen);
+		//public static implicit operator AScreen(ScreenHandle screen) => new AScreen(screen);
 
 		/// <summary>
 		/// Gets the primary screen.
 		/// </summary>
-		public static Device Primary => new Device(MonitorFromWindow(default, SDefault.Primary)); //fast
+		public static ScreenHandle Primary => new ScreenHandle(MonitorFromWindow(default, SDefault.Primary)); //fast
 
 		/// <summary>
 		/// Gets <b>AScreen</b> variable that later will get the screen from the mouse cursor position at that time.
@@ -141,7 +141,7 @@ namespace Au
 		/// Gets screen at the specified index of the <see cref="AllScreens"/> array.
 		/// </summary>
 		/// <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
-		public static Device Index(int index)
+		public static ScreenHandle Index(int index)
 		{
 			if(index < 0) throw new ArgumentOutOfRangeException();
 			if(index > 0) {
@@ -159,11 +159,11 @@ namespace Au
 		/// To get screens is used API <msdn>EnumDisplayMonitors</msdn>. Its results are cached in a static array. The array is auto-updated after changing display settings, on <see cref="SystemEvents.DisplaySettingsChanging"/> event. This property returns that array. Don't modify it.
 		/// The order of array elements is different than in Windows Settings (Control Panel). The primary screen is always at index 0.
 		/// </remarks>
-		public static Device[] AllScreens => s_screens ??= _GetScreens();
-		static Device[] s_screens;
+		public static ScreenHandle[] AllScreens => s_screens ??= _GetScreens();
+		static ScreenHandle[] s_screens;
 		static bool s_haveEvent;
 
-		static Device[] _GetScreens()
+		static ScreenHandle[] _GetScreens()
 		{
 			if(!s_haveEvent) {
 				s_haveEvent = true;
@@ -171,9 +171,9 @@ namespace Au
 				new Thread(() => SystemEvents.DisplaySettingsChanging += (_, __) => s_screens = null).Start();
 				//async because very slow first time, eg 30 ms if cold CPU. Unless SystemEvents was already used by some code.
 			}
-			var a = new List<Device> { Primary };
+			var a = new List<ScreenHandle> { Primary };
 			EnumDisplayMonitors(default, default, (hmon, _1, _2, _3) => { //not very fast
-				if(hmon != a[0].Handle) a.Add(new Device(hmon));
+				if(hmon != a[0].Handle) a.Add(new ScreenHandle(hmon));
 				return true;
 			}, default);
 			return a.ToArray();
@@ -186,26 +186,26 @@ namespace Au
 		/// The order of array elements may be different than in Windows Settings (Control Panel). The primary screen is always at index 0.
 		/// The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
 		/// </remarks>
-		public static Device[] AllScreens => _AllScreens().ToArray();
+		public static ScreenHandle[] AllScreens => _AllScreens().ToArray();
 
-		static List<Device> _AllScreens()
+		static List<ScreenHandle> _AllScreens()
 		{
-			t_a ??= new List<Device>();
+			t_a ??= new List<ScreenHandle>();
 			t_a.Clear();
 			t_a.Add(Primary); //2 mcs with cold CPU
 			EnumDisplayMonitors(default, default, (hmon, _1, _2, param) => { //50-100 mcs with cold CPU
-				if(hmon != t_a[0].Handle) t_a.Add(new Device(hmon));
+				if(hmon != t_a[0].Handle) t_a.Add(new ScreenHandle(hmon));
 				return true;
 			}, default);
 			return t_a;
 		}
-		[ThreadStatic] static List<Device> t_a;
+		[ThreadStatic] static List<ScreenHandle> t_a;
 
 		/// <summary>
 		/// Gets screen at the specified index of the <see cref="AllScreens"/> array.
 		/// </summary>
 		/// <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
-		public static Device Index(int index)
+		public static ScreenHandle Index(int index)
 		{
 			if(index < 0) throw new ArgumentOutOfRangeException();
 			if(index > 0) {
@@ -222,15 +222,15 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control. Can be default(AWnd) or invalid.</param>
 		/// <param name="defaultScreen"></param>
-		public static Device Of(AWnd w, SDefault defaultScreen = SDefault.Nearest)
-			=> new Device(MonitorFromWindow(w, defaultScreen));
+		public static ScreenHandle Of(AWnd w, SDefault defaultScreen = SDefault.Nearest)
+			=> new ScreenHandle(MonitorFromWindow(w, defaultScreen));
 
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified control or form or nearest to it.
 		/// </summary>
 		/// <param name="c">Control or form. Cannot be null. The handle can be created or not.</param>
 		/// <param name="defaultScreen"></param>
-		public static Device Of(Control c, SDefault defaultScreen = SDefault.Nearest)
+		public static ScreenHandle Of(Control c, SDefault defaultScreen = SDefault.Nearest)
 			=> Of(c.Hwnd(), defaultScreen);
 
 		/// <summary>
@@ -238,7 +238,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">WPF window.</param>
 		/// <param name="defaultScreen"></param>
-		public static Device Of(System.Windows.Window w, SDefault defaultScreen = SDefault.Nearest)
+		public static ScreenHandle Of(System.Windows.Window w, SDefault defaultScreen = SDefault.Nearest)
 			=> Of((AWnd)w, defaultScreen);
 
 		/// <summary>
@@ -246,16 +246,16 @@ namespace Au
 		/// </summary>
 		/// <param name="p"></param>
 		/// <param name="defaultScreen"></param>
-		public static Device Of(POINT p, SDefault defaultScreen = SDefault.Nearest)
-			=> new Device(MonitorFromPoint(p, defaultScreen));
+		public static ScreenHandle Of(POINT p, SDefault defaultScreen = SDefault.Nearest)
+			=> new ScreenHandle(MonitorFromPoint(p, defaultScreen));
 
 		/// <summary>
 		/// Gets screen containing the biggest part of the specified rectangle or nearest to it.
 		/// </summary>
 		/// <param name="r"></param>
 		/// <param name="defaultScreen"></param>
-		public static Device Of(RECT r, SDefault defaultScreen = SDefault.Nearest)
-			=> new Device(MonitorFromRect(r, defaultScreen));
+		public static ScreenHandle Of(RECT r, SDefault defaultScreen = SDefault.Nearest)
+			=> new ScreenHandle(MonitorFromRect(r, defaultScreen));
 
 		/// <summary>
 		/// Returns true if point p is in some screen.
@@ -273,33 +273,33 @@ namespace Au
 		public static bool IsInAnyScreen(AWnd w) => MonitorFromWindow(w, SDefault.Zero) != default;
 
 		//no
-		///// <summary>Converts to <see cref="Device"/> (calls <see cref="ToDevice"/>).</summary>
-		//public static implicit operator Device(AScreen screen) => screen.ToDevice();
+		///// <summary>Converts to <see cref="ScreenHandle"/> (calls <see cref="GetScreenHandle"/>).</summary>
+		//public static implicit operator ScreenHandle(AScreen screen) => screen.GetScreenHandle();
 
 		/// <summary>
-		/// Gets <see cref="Device"/> from the value stored in this variable (screen index, window, etc).
+		/// Gets <see cref="ScreenHandle"/> from the value stored in this variable (screen index, window, etc).
 		/// If the value is null, gets the primary screen.
 		/// </summary>
-		public Device ToDevice() => _o switch
+		public ScreenHandle GetScreenHandle() => _o switch
 		{
 			null => Primary,
 			int k => Index(k),
 			POINT k => Of(k),
 			RECT k => Of(k),
-			Device k => k,
-			Func<Device> k => k(),
+			ScreenHandle k => k,
+			Func<ScreenHandle> k => k(),
 			_ => Of(AWnd.Lib.FromObject(_o)),
 		};
 
 		/// <summary>
 		/// Represents a screen device. Gets its rectangle etc.
 		/// </summary>
-		public unsafe struct Device : IEquatable<Device>
+		public unsafe struct ScreenHandle : IEquatable<ScreenHandle>
 		{
 			readonly IntPtr _h;
 
 			/// <param name="handle">A screen handle (HMONITOR).</param>
-			public Device(IntPtr handle) => _h = handle;
+			public ScreenHandle(IntPtr handle) => _h = handle;
 
 			/// <summary>
 			/// The screen handle (HMONITOR).
@@ -399,19 +399,19 @@ namespace Au
 			public override int GetHashCode() => (int)_h;
 
 			///
-			public bool Equals(Device other) => other._h == _h;
+			public bool Equals(ScreenHandle other) => other._h == _h;
 
 			///
-			public static bool operator ==(Device a, Device b) => a._h == b._h;
+			public static bool operator ==(ScreenHandle a, ScreenHandle b) => a._h == b._h;
 			///
-			public static bool operator !=(Device a, Device b) => a._h != b._h;
+			public static bool operator !=(ScreenHandle a, ScreenHandle b) => a._h != b._h;
 
 			//rejected. GetHashCode gets hmonitor but is undocumented. Rarely used.
 			///// <summary>Converts from <see cref="Screen"/>.</summary>
-			//public static implicit operator Device(Screen screen) => new Device((IntPtr)screen.GetHashCode());
+			//public static implicit operator ScreenHandle(Screen screen) => new ScreenHandle((IntPtr)screen.GetHashCode());
 
 			///// <summary>Converts to <see cref="Screen"/>. Returns null if fails.</summary>
-			//public static implicit operator Screen(Device screen) => Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == (int)screen._h);
+			//public static implicit operator Screen(ScreenHandle screen) => Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == (int)screen._h);
 		}
 
 		[DllImport("user32.dll")]
@@ -448,7 +448,7 @@ namespace Au.Types
 	/// </summary>
 	public enum SDefault
 	{
-		/// <summary>0 (<see cref="AScreen.Device.Is0"/> will return true).</summary>
+		/// <summary>0 (<see cref="AScreen.ScreenHandle.Is0"/> will return true).</summary>
 		Zero, //MONITOR_DEFAULTTONULL
 
 		/// <summary>The primary screen.</summary>

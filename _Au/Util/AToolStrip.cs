@@ -47,13 +47,6 @@ namespace Au.Util
 		protected override bool DefaultShowItemToolTips => false;
 		//tested: We will not have 2 tooltip windows created. ToolStrip does not create its own tooltip window until it shows a tooltip.
 
-		protected override void Dispose(bool disposing)
-		{
-			_ttTimer?.Stop(); _ttTimer = null;
-			if(!_tt.Is0) Api.DestroyWindow(_tt); _tt = default;
-			base.Dispose(disposing);
-		}
-
 		void _HideTooltip()
 		{
 			if(_ttItem == null) return;
@@ -195,6 +188,13 @@ namespace Au.Util
 			case Api.WM_MOUSEACTIVATE:
 				m.Result = (IntPtr)(((AWnd)TopLevelControl).HasExStyle(WS2.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;
+			case Api.WM_DESTROY:
+				//dispose tooltip and prepare to work again if recreating handle
+				if(!_tt.Is0) { Api.DestroyWindow(_tt); _tt = default; }
+				_ttTimer?.Stop(); _ttTimer = null;
+				_ttItem = null;
+				_ttUpdate = false;
+				break;
 			}
 
 			base.WndProc(ref m);

@@ -22,47 +22,63 @@ namespace Au
 {
 	/// <summary>
 	/// Floating toolbar based on <see cref="ToolStrip"/>.
-	/// Can be attached to windows and other UI objects of other programs.
+	/// Can be attached to windows of other programs.
 	/// </summary>
+	/// <example>
+	/// <code><![CDATA[
+	/// _Toolbar_Common(); //show toolbar. Don't attach to a window.
+	/// //_Toolbar_Common2(); //add function for each toolbar
+	/// Triggers.Options.RunActionInMainThread(); //let all toolbars run in this thread
+	/// Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "*Notepad", "Notepad"] = o => _Toolbar_Notepad(o.Window); //show toolbar attached to this Notepad window
+	/// //Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "other window"] = o => _Toolbar_Other(o.Window); //add trigger and function for each toolbar
+	/// Triggers.Run();
+	/// 
+	/// void _Toolbar_Common() {
+	/// 	var t = new AToolbar("example");
+	/// 	t.ExtractIconPathFromCode = true;
+	/// 
+	/// 	t["button 1", @"C:\example.ico"] = o => Print(o);
+	/// 	t.MenuButton("menu", m => {
+	/// 		m.ExtractIconPathFromCode = true;
+	/// 		m["item 1"] = o => Print(o);
+	/// 		m["item 2"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+	/// 	}, AIcon.GetStockIcon(StockIcon.FOLDER, 16));
+	/// 	t["Notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+	/// 	t.Show();
+	/// }
+	/// 
+	/// void _Toolbar_Notepad(AWnd w) {
+	/// 	var t = new AToolbar("tb notepad");
+	/// 	t["button 1"] = o => Print(o);
+	/// 	t.Show(w);
+	/// }
+	/// ]]></code>
+	/// </example>
 	public partial class AToolbar : AMTBase
 	{
-		_ToolStrip _c;
+		readonly _ToolStrip _c;
 		readonly _Settings _sett;
+		readonly string _name;
 		readonly bool _constructed; //ctor finished setting default properties
 		bool _loaded; //Show() called
-		bool _topmost; //no owner or topmost owner
-		readonly string _name;
+		bool _topmost; //no owner, or owner is topmost
 
 		static int s_treadId;
 
-		/// <summary>
-		/// Initializes this object.
-		/// Reads the settings file. Creates the <b>ToolStrip</b> object (<see cref="Control"/>) but not its window handle.
-		/// </summary>
-		/// <param name="name">Toolbar name. Must be valid filename. Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>.</param>
+		/// <param name="name">Toolbar name. Must be valid filename. Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>. Also used with <see cref="Find"/>.</param>
 		/// <param name="resetSettings">Reset toolbar settings to default values. It deletes the settings file of this toolbar.</param>
 		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		/// <example>
-		/// <code><![CDATA[
-		/// var t = new AToolbar("example");
-		/// t["button 1"] = o => Print(o);
-		/// t[false, "menu"] = m => {
-		/// 	m["item 1"] = o => Print(o);
-		/// 	m["item 2"] = o => Print(o);
-		/// };
-		/// t["button 2"] = o => Print(o);
-		/// t.Show();
-		/// ADialog.Show();
-		/// ]]></code>
-		/// </example>
+		/// <remarks>
+		/// Reads the settings file if exists, ie if settings changed in the past. Path: <see cref="AFolders.Workspace"/>\toolbars\name.json. If <b>AFolders.Workspace</b> is null, uses <see cref="AFolders.ThisAppDocuments"/>. If fails, prints warning and uses default settings.
+		/// 
+		/// Creates <see cref="Control"/> object. Does not create its window handle; will do it in <see cref="Show"/>.
+		/// </remarks>
 		public AToolbar(string name, bool resetSettings = false, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
 			: base(f, l)
 		{
-			APerf.First();
-
 			int tid = Thread.CurrentThread.ManagedThreadId;
-			if(s_treadId == 0) s_treadId = tid; else if(tid != s_treadId) PrintWarning("All toolbars should be in single thread. Multiple threads use more CPU.");
+			if(s_treadId == 0) s_treadId = tid; else if(tid != s_treadId) PrintWarning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.RunActionInMainThread();</code>");
 
 			if(Empty(name)) throw new ArgumentException("Empty name");
 			_name = name;
@@ -84,17 +100,22 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets the toolbar window as <see cref="ToolStrip"/>.
-		/// You can use its properties, methods and events.
+		/// Gets the <see cref="ToolStrip"/> of the toolbar.
 		/// </summary>
+		/// <remarks>
+		/// The <b>AToolbar</b> class is based on <see cref="ToolStrip"/>. Not directly but as a facade class. This property gets the <b>ToolStrip</b>. You can use its properties, methods and events.
+		/// </remarks>
 		public ToolStrip Control => _c;
 
 		private protected override ToolStrip MainToolStrip => _c; //used by AMTBase
 
 		/// <summary>
-		/// Toolbar name.
+		/// Gets the name of the toolbar.
 		/// </summary>
 		public string Name => _name;
+
+		///
+		public override string ToString() => _satPlanet != null ? "    " + Name : Name; //the indentation is for the list in the Toolbars form
 
 		/// <summary>
 		/// True if properties of this toolbar were modified now or in the past (the settings JSON file exists).
@@ -128,7 +149,7 @@ namespace Au
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
-		/// Sets button text, icon and Click event handler. Other properties can be specified later. See example.
+		/// Sets button text, icon and <b>Click</b> event handler. Other properties can be specified later.
 		/// 
 		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>. See <see cref="this[string, object, string, int]"/>.
 		/// </remarks>
@@ -226,6 +247,7 @@ namespace Au
 		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <example><see cref="AToolbar"/></example>
 		public ToolStripDropDownButton MenuButton(string text, Action<AMenu> menu, object icon = null, string tooltip = null, [CallerLineNumber] int l = 0)
 		{
 			var item = new _MenuButton(this, text, menu);
@@ -242,6 +264,7 @@ namespace Au
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <example><see cref="AToolbar"/></example>
 		public ToolStripSplitButton SplitButton(string text, Action<AMenu> menu, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = new _SplitButton(this, text, menu, onClick);
@@ -331,35 +354,36 @@ namespace Au
 			}
 		}
 
-		/// <summary>
-		/// Adds new button with a drop-down menu.
-		/// </summary>
-		/// <param name="splitButton">If true, calls <see cref="SplitButton"/>, else <see cref="MenuButton"/>.</param>
-		/// <param name="text">Text.</param>
-		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
-		/// <param name="tooltip">Tooltip text.</param>
-		/// <param name="onClick">Callback function. Called when the button part of the split button clicked. If null, will execute the first menu item. Not used if it is not split button.</param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		/// <returns>The value is a callback function that adds drop-down menu items. Te same as parameter <i>menu</i> of <see cref="MenuButton"/> or <see cref="SplitButton"/>.</returns>
-		/// <example>
-		/// <code><![CDATA[
-		/// var t = new AToolbar("example");
-		/// t["button 1"] = o => Print(o);
-		/// t[false, "menu"] = m => {
-		/// 	m["item 1"] = o => Print(o);
-		/// 	m["item 2"] = o => Print(o);
-		/// };
-		/// t["button 2"] = o => Print(o);
-		/// t.Show();
-		/// ADialog.Show();
-		/// ]]></code>
-		/// </example>
-		public Action<AMenu> this[bool splitButton, string text, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0] {
-			set {
-				if(splitButton) SplitButton(text, value, icon, tooltip, onClick, l);
-				else MenuButton(text, value, icon, tooltip, l);
-			}
-		}
+		//rejected
+		///// <summary>
+		///// Adds new button with a drop-down menu.
+		///// </summary>
+		///// <param name="splitButton">If true, calls <see cref="SplitButton"/>, else <see cref="MenuButton"/>.</param>
+		///// <param name="text">Text.</param>
+		///// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		///// <param name="tooltip">Tooltip text.</param>
+		///// <param name="onClick">Callback function. Called when the button part of the split button clicked. If null, will execute the first menu item. Not used if it is not split button.</param>
+		///// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		///// <returns>The value is a callback function that adds drop-down menu items. Te same as parameter <i>menu</i> of <see cref="MenuButton"/> or <see cref="SplitButton"/>.</returns>
+		///// <example>
+		///// <code><![CDATA[
+		///// var t = new AToolbar("example");
+		///// t["button 1"] = o => Print(o);
+		///// t[false, "menu"] = m => {
+		///// 	m["item 1"] = o => Print(o);
+		///// 	m["item 2"] = o => Print(o);
+		///// };
+		///// t["button 2"] = o => Print(o);
+		///// t.Show();
+		///// ADialog.Show();
+		///// ]]></code>
+		///// </example>
+		//public Action<AMenu> this[bool splitButton, string text, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0] {
+		//	set {
+		//		if(splitButton) SplitButton(text, value, icon, tooltip, onClick, l);
+		//		else MenuButton(text, value, icon, tooltip, l);
+		//	}
+		//}
 
 		/// <summary>
 		/// Gets the last added item as <see cref="ToolStripButton"/>.
@@ -378,6 +402,7 @@ namespace Au
 		/// Shows the toolbar and attaches to a screen.
 		/// </summary>
 		/// <param name="screen">Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
+		/// <exception cref="InvalidOperationException"><b>Show</b> already called.</exception>
 		/// <remarks>
 		/// The toolbar will be moved when the screen moved or resized.
 		/// </remarks>
@@ -388,6 +413,8 @@ namespace Au
 		/// </summary>
 		/// <param name="ownerWindow">Window or control. Can belong to any process.</param>
 		/// <param name="clientArea">Let the toolbar position be relative to the client area of the window.</param>
+		/// <exception cref="InvalidOperationException"><b>Show</b> already called.</exception>
+		/// <exception cref="ArgumentException"><b>ownerWindow</b> is 0.</exception>
 		/// <remarks>
 		/// The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
 		/// </remarks>
@@ -402,11 +429,14 @@ namespace Au
 		/// </summary>
 		/// <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
 		/// <param name="oo">A variable of a user-defined class that implements <see cref="ITBOwnerObject"/> interface. It provides object location, visibility, etc.</param>
+		/// <exception cref="InvalidOperationException"><b>Show</b> already called.</exception>
+		/// <exception cref="ArgumentException"><b>ownerWindow</b> is 0.</exception>
 		/// <remarks>
 		/// The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
 		/// </remarks>
 		public void Show(AWnd ownerWindow, ITBOwnerObject oo) => _Show(true, ownerWindow, oo, default);
 
+		//used for normal toolbars, not for satellite toolbars
 		void _Show(bool owned, AWnd owner, ITBOwnerObject oo, AScreen screen)
 		{
 			//if(_c.IsDisposed) throw new ObjectDisposedException("AToolbar");
@@ -423,28 +453,72 @@ namespace Au
 			_Manager.Add(this, owner, c, oo);
 		}
 
+		//used for normal and satellite toolbars
 		void _CreateControl(bool owned, AWnd owner, AScreen screen = default)
 		{
 			_topmost = !owned || owner.IsTopmost;
 			if(!owned || _anchor == TBAnchor.None) _os = new _OwnerScreen(this, screen);
 
-			//if(!_loaded) {
 			GetIconsAsync_(_c);
 			_c.ResumeLayout();
 			_AutoSize();
-			APerf.Next();
-			//}
 			_c.Hwnd(create: true);
 			_loaded = true;
 		}
 
 		/// <summary>
-		/// Closes and disposes the toolbar.
+		/// Hides and disposes the toolbar.
 		/// </summary>
 		public void Close()
 		{
 			_c.Dispose();
 		}
+
+		/// <summary>
+		/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <seealso cref="Close"/>.
+		/// </summary>
+		/// <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
+		/// <param name="reason">An user-defined reason to hide/unhide. Can be <see cref="TBHide.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>
+		/// <exception cref="InvalidOperationException">
+		/// - The toolbar was never shown (<see cref="Show"/> not called).
+		/// - It is a satellite toolbar.
+		/// </exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="TBHide.User"/>.</exception>
+		/// <remarks>
+		/// Toolbars are automatically hidden when the owner window is hidden, minimized, etc. This function can be used to hide toolbars for other reasons.
+		/// </remarks>
+		public void Hide(bool hide, TBHide reason)
+		{
+			if(!_loaded || _satPlanet != null) throw new InvalidOperationException();
+			if(0 != ((int)reason & 0xffff)) throw new ArgumentOutOfRangeException();
+			_SetVisible(!hide, reason);
+		}
+
+		/// <summary>
+		/// Gets current reasons why the toolbar is hidden. Returns 0 if not hidden.
+		/// </summary>
+		/// <remarks>
+		/// Not used with satellite toolbars.
+		/// </remarks>
+		public TBHide Hidden => _hide;
+
+		void _SetVisible(bool show, TBHide reason)
+		{
+			//Print(show, reason);
+			if(show) {
+				if(_hide == 0) return;
+				_hide &= ~reason;
+				if(_hide != 0) return;
+			} else {
+				var h = _hide;
+				_hide |= reason;
+				if(h != 0) return;
+			}
+			_SetVisibleLL(show);
+		}
+		TBHide _hide;
+
+		void _SetVisibleLL(bool show) => _c.Hwnd().ShowLL(show); //info: _c.Visible would activate and zorder
 
 		/// <summary>
 		/// Returns true if the toolbar is attached to a window or an object in a window.
@@ -453,15 +527,24 @@ namespace Au
 
 		/// <summary>
 		/// Returns the owner top-level window.
-		/// Returns default(AWnd) if the toolbar is not owned by a window or an object in a window.
+		/// Returns default(AWnd) if the toolbar is not owned. See <see cref="IsOwned"/>.
 		/// </summary>
 		public AWnd OwnerWindow => _ow?.w ?? default;
 
+		///// <summary>
+		///// Returns the owner control.
+		///// Returns default(AWnd) if not owned by a control or an object in a control.
+		///// </summary>
+		//public AWnd OwnerControl => _oc?.c ?? default;
+
 		/// <summary>
-		/// Returns the owner control.
-		/// Returns default(AWnd) if not owned by a control or an object in a control.
+		/// Finds an open toolbar by <see cref="Name"/>.
+		/// Returns null if not found or closed or never shown (<see cref="Show"/> not called).
 		/// </summary>
-		public AWnd OwnerControl => _oc?.c ?? default;
+		/// <remarks>
+		/// Does not find satellite toolbars. Use this code: <c>AToolbar.Find("owner toolbar").Satellite</c>
+		/// </remarks>
+		public static AToolbar Find(string name) => _Manager._atb.Find(o => o.Name == name);
 
 		#endregion
 
@@ -490,6 +573,9 @@ namespace Au
 		/// <summary>
 		/// Border style.
 		/// </summary>
+		/// <remarks>
+		/// This property is in the context menu and is saved.
+		/// </remarks>
 		public TBBorder Border {
 			get => _border;
 			set {
@@ -519,6 +605,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// The owner also can be a screen, control or other object. It is specified when calling <see cref="Show"/>.
+		/// This property is in the context menu and is saved.
 		/// </remarks>
 		/// <seealso cref="Location"/>
 		public TBAnchor Anchor {
@@ -546,7 +633,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// The owner also can be a screen, control or other object. It is specified when calling <see cref="Show"/>.
-		/// This property is updated when moving or resizing the toolbar.
+		/// This property is updated when moving or resizing the toolbar. It is saved.
 		/// </remarks>
 		public TBLocation Location {
 			get => _xy;
@@ -563,6 +650,9 @@ namespace Au
 		/// <summary>
 		/// Whether the border can be used to resize the toolbar.
 		/// </summary>
+		/// <remarks>
+		/// This property is in the context menu and is saved.
+		/// </remarks>
 		public bool Sizable {
 			get => _sett.sizable;
 			set => _sett.sizable = value;
@@ -572,7 +662,7 @@ namespace Au
 		/// Toolbar width and height.
 		/// </summary>
 		/// <remarks>
-		/// This property is updated when resizing the toolbar.
+		/// This property is updated when resizing the toolbar. It is saved.
 		/// </remarks>
 		public SIZE Size {
 			get => _c.Size;
@@ -593,6 +683,8 @@ namespace Au
 		/// - When showing the toolbar.
 		/// - When the user resizes the toolbar. It also sets the wrap width.
 		/// - When setting this property = true (in code or in the context menu) or changing <see cref="AutoSizeWrapWidth"/> wile it is true.
+		/// 
+		/// This property is in the context menu and is saved.
 		/// </remarks>
 		public bool AutoSize {
 			get => _sett.autoSize;
@@ -608,7 +700,7 @@ namespace Au
 		/// When <see cref="AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
 		/// </summary>
 		/// <remarks>
-		/// This property is updated when the user resizes the toolbar while <see cref="AutoSize"/> is true.
+		/// This property is updated when the user resizes the toolbar while <see cref="AutoSize"/> is true. It is saved.
 		/// If flow direction is vertical, this is the preferred height at which buttons are moved to the next column.
 		/// </remarks>
 		public int AutoSizeWrapWidth {
@@ -636,6 +728,12 @@ namespace Au
 
 		bool _IsVerticalFlow => _c.LayoutSettings is FlowLayoutSettings f && (f.FlowDirection == FlowDirection.TopDown || f.FlowDirection == FlowDirection.BottomUp);
 
+		/// <summary>
+		/// Miscellaneous options.
+		/// </summary>
+		/// <remarks>
+		/// This property is in the context menu (submenu "More") and is saved.
+		/// </remarks>
 		public TBFlags MiscFlags {
 			get => _sett.miscFlags;
 			set {
@@ -672,7 +770,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">The 'set' function throws if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
 		/// <remarks>
-		/// The satellite toolbar is shown when mouse enters its owner and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
+		/// The satellite toolbar is shown when mouse enters its owner toolbar and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
 		/// A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
 		/// </remarks>
 		public AToolbar Satellite {
@@ -696,7 +794,9 @@ namespace Au
 		/// <summary>
 		/// If this is a sattellite toolbar (<see cref="Satellite"/>), gets its owner toolbar. Else null.
 		/// </summary>
-		public AToolbar SatellitePlanet => _satPlanet;
+		public AToolbar SatelliteOwner => _satPlanet;
+
+		AToolbar _SatPlanetOrThis => _satPlanet ?? this;
 
 		AToolbar _satellite;
 		AToolbar _satPlanet;
@@ -731,81 +831,28 @@ namespace Au
 
 			POINT p = AMouse.XY;
 			int dist = Util.ADpi.ScaleInt(30);
-			//var r = _c.Hwnd().Rect;
-			//r.Inflate(dist, dist);
-			//if(r.Contains(p.x, p.y)) return;
 			var wa = AWnd.Active;
 
 			RECT ru = default;
-			foreach(var w in AWnd.GetWnd.ThreadWindows(AThread.NativeId, onlyVisible: true)) { //TODO
-				if(ToolStrip.FromHandle(w.Handle) is ToolStrip ts) {
-					if(w == wa) return;
-					if(ts is ContextMenuStrip) return;
-					var r = w.Rect;
-					r.Inflate(dist, dist);
-					if(r.Contains(p.x, p.y)) return;
-					ru.Union(r);
-				}
-			}
+			if(_MouseIsIn(_c) || _MouseIsIn(_satellite._c)) return;
 			if(ru.Contains(p.x, p.y)) return;
+			if((_c.ContextMenu_?.Visible ?? false) || (_satellite._c.ContextMenu_?.Visible ?? false)) return;
+
+			bool _MouseIsIn(ToolStrip ts)
+			{
+				var w = ts.Hwnd();
+				if(w == wa) return true;
+				var r = w.Rect;
+				r.Inflate(dist, dist);
+				if(r.Contains(p.x, p.y)) return true;
+				ru.Union(r);
+				if(ts.Items.OfType<ToolStripDropDownItem>().Any(o => o.Pressed)) return true;
+				if(ts.LayoutStyle != ToolStripLayoutStyle.Flow && ts.CanOverflow && ts.OverflowButton.Pressed) return true;
+				return false;
+			}
 
 			_SatHide(animate: true);
 		}
-		//void _SatTimer(ATimer _)
-		//{
-		//	if(_c.IsDisposed) {
-		//		_SatClose();
-		//		return;
-		//	}
-
-		//	POINT xy = AMouse.XY;
-		//	int dist = Util.ADpi.ScaleInt(30);
-		//	var rp = _c.Hwnd().Rect;
-		//	rp.Inflate(dist, dist);
-		//	if(rp.Contains(xy.x, xy.y)) return;
-
-		//	int nVisible = 0;
-		//	foreach(var v in _satList) {
-		//		var w = v._c.Hwnd();
-		//		if(!w.IsActive) {
-		//			if(!w.GetRect(out var r)) continue;
-		//			r.Inflate(dist, dist);
-		//			if(!r.Contains(xy.x, xy.y)) {
-		//				Print("hide");
-		//				w.ShowLL(false);
-		//				continue;
-		//			}
-		//		}
-		//		nVisible++;
-		//	}
-		//	if(nVisible == 0) {
-		//		_satVisible = false;
-		//		_satTimer.Stop();
-		//	}
-		//}
-		//void _SatTimer(ATimer t)
-		//{
-		//	int nVisible = 0;
-		//	POINT xy = AMouse.XY;
-		//	foreach(var v in _satList) {
-		//		var w = v._c.Hwnd();
-		//		if(!w.IsActive) {
-		//			if(!w.GetRect(out var r)) continue;
-		//			int dist = Util.ADpi.ScaleInt(30);
-		//			r.Inflate(dist, dist);
-		//			if(!r.Contains(xy.x, xy.y)) {
-		//				Print("hide");
-		//				w.ShowLL(false);
-		//				continue;
-		//			}
-		//		}
-		//		nVisible++;
-		//	}
-		//	if(nVisible == 0) {
-		//		_satVisible = false;
-		//		t.Stop();
-		//	}
-		//}
 
 		void _SatDestroying()
 		{
@@ -833,7 +880,7 @@ namespace Au
 		{
 			if(!animate || _satellite._transparency != default) {
 				var w = _satellite._c.Hwnd();
-				if(show != w.IsVisible) w.ShowLL(show);
+				if(show != w.IsVisible) _satellite._SetVisibleLL(show);
 				if(_satellite._transparency == default) w.SetTransparency(false);
 				_satAnimationTimer?.Stop();
 				_satAnimation = 0;
@@ -841,19 +888,18 @@ namespace Au
 			}
 
 			_satAnimationTimer ??= new ATimer(_ => {
-				var w = _satellite._c.Hwnd();
 				_satAnimation += _satVisible ? 64 : -32;
 				bool stop; if(_satVisible) { if(stop = _satAnimation >= 255) _satAnimation = 255; } else { if(stop = _satAnimation <= 0) _satAnimation = 0; }
 				if(stop) {
 					_satAnimationTimer.Stop();
-					if(_satAnimation == 0) w.ShowLL(false);
+					if(_satAnimation == 0) _satellite._SetVisibleLL(false);
 				}
-				if(_satellite._transparency == default) w.SetTransparency(!stop, _satAnimation);
+				if(_satellite._transparency == default) _satellite._c.Hwnd().SetTransparency(!stop, _satAnimation);
 			});
 			_satAnimationTimer.Now();
 			_satAnimationTimer.Every(30);
 
-			if(show) _satellite._c.Hwnd().ShowLL(true);
+			if(show) _satellite._SetVisibleLL(true);
 		}
 
 		void _SatFollow()
