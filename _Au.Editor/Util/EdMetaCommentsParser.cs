@@ -24,7 +24,7 @@ using Au.Compiler;
 class EdMetaCommentsParser
 {
 	FileNode _fn;
-	public string role, runMode, ifRunning, uac, prefer32bit/*, config*/,
+	public string role, runMode, ifRunning, ifRunning2, uac, prefer32bit,
 		optimize, warningLevel, noWarnings, define, preBuild, postBuild,
 		outputPath, console, icon, manifest, resFile, sign, xmlDoc;
 	List<string> _r, _pr, _c, _resource, _com;
@@ -54,9 +54,9 @@ class EdMetaCommentsParser
 		case "outputPath": outputPath = value; break;
 		case "runMode": runMode = value; break;
 		case "ifRunning": ifRunning = value; break;
+		case "ifRunning2": ifRunning2 = value; break;
 		case "uac": uac = value; break;
 		case "prefer32bit": prefer32bit = value; break;
-		//case "config": config = value; break;
 		case "optimize": optimize = value; break;
 		case "warningLevel": warningLevel = value; break;
 		case "noWarnings": noWarnings = value; break;
@@ -96,9 +96,9 @@ class EdMetaCommentsParser
 		_Append("outputPath", outputPath);
 		_Append("runMode", runMode);
 		_Append("ifRunning", ifRunning);
+		_Append("ifRunning2", ifRunning2);
 		_Append("uac", uac);
 		_Append("prefer32bit", prefer32bit);
-		//_Append("config", config, true);
 		_Append("optimize", optimize);
 		_Append("warningLevel", warningLevel);
 		_Append("noWarnings", noWarnings);

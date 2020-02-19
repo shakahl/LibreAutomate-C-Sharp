@@ -684,3 +684,6 @@ class Script : AScript
 		catch(Exception ex) { Print(ex); }
 	}
 }
+
+//TODO: trigger actions: options to run|cancel|wait if a green task is running. Eg use a mutex.
+//TODO: Triggers.Run: warn if green task.

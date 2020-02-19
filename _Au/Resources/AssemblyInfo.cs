@@ -34,7 +34,7 @@ using System.Runtime.InteropServices;
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
 //[assembly: AssemblyVersion("1.0.0.*")]
-[assembly: AssemblyVersion("1.0.0.0")]
+[assembly: AssemblyVersion("1.0.0.1")]
 //rejected: auto increment.
 //	Creates more problems and work than is useful. Eg after modifying this project always need to rebuild all exe projects, else fails to load this dll.
 //	VS adds 20-300 to the revision at each build. Why not 1? Now ~ 23000. What happens when it becomes the max possible 0xffff?

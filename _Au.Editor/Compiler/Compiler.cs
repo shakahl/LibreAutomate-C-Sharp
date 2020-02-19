@@ -88,6 +88,7 @@ namespace Au.Compiler
 			public ERole role;
 			public ERunMode runMode;
 			public EIfRunning ifRunning;
+			public EIfRunning2 ifRunning2;
 			public EUac uac;
 			public bool prefer32bit;
 			public bool console;
@@ -319,8 +320,9 @@ namespace Au.Compiler
 
 			r.name = m.Name;
 			r.role = m.Role;
-			r.ifRunning = m.IfRunning;
 			r.runMode = m.RunMode;
+			r.ifRunning = m.IfRunning;
+			r.ifRunning2 = m.IfRunning2;
 			r.uac = m.Uac;
 			r.prefer32bit = m.Prefer32Bit;
 			r.console = m.Console;

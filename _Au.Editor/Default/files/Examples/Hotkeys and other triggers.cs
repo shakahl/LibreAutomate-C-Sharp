@@ -1,4 +1,4 @@
-/*/ runMode blue; ifRunning restart; /*/ //.
+/*/ runMode blue; ifRunning warn_restart; /*/ //.
 using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
 using Au.Triggers; //need this for triggers
 using System.Windows.Forms; //need this for some examples in this script
@@ -106,8 +106,8 @@ Triggers.Run();
 //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
 Print("called Triggers.Stop");
 
-//Recommended properties for scripts containg triggers: runMode blue; ifRunning restart;. You can set it in the Properties dialog.
+//Recommended properties for scripts containg triggers: runMode blue; ifRunning warn_restart;. You can set it in the Properties dialog.
 //The first property allows other scripts to start while this script is running.
-//The second property makes easy to restart the script after editing: just click the Run button.
+//The second property makes easy to restart the script when editing: just click the Run button.
 
 }}

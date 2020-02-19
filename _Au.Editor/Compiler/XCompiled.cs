@@ -93,6 +93,9 @@ namespace Au.Compiler
 						case 'n':
 							r.ifRunning = (EIfRunning)value.ToInt(offs);
 							break;
+						case 'N':
+							r.ifRunning2 = (EIfRunning2)value.ToInt(offs);
+							break;
 						case 'u':
 							r.uac = (EUac)value.ToInt(offs);
 							break;
@@ -192,11 +195,12 @@ namespace Au.Compiler
 				}
 
 				/*
-	IDmain|=path.exe|tN|aN|nN|uN|b|q|z|dN|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
+	IDmain|=path.exe|tN|aN|nN|NN|uN|b|q|z|dN|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
 	= - outFile
 	t - role
 	a - runMode
 	n - ifRunning
+	N - ifRunning2
 	u - uac
 	b - prefer32bit
 	q - console
@@ -220,6 +224,7 @@ namespace Au.Compiler
 					if(m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
 					if(m.RunMode != default) b.Append("|a").Append((int)m.RunMode);
 					if(m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
+					if(m.IfRunning2 != default) b.Append("|N").Append((int)m.IfRunning2);
 					if(m.Uac != default) b.Append("|u").Append((int)m.Uac);
 					if(m.Prefer32Bit) b.Append("|b");
 					if(m.Console) b.Append("|q");

@@ -19,7 +19,6 @@ using Au.Types;
 using static Au.AStatic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
-using System.Collections.Immutable;
 
 namespace Au.Compiler
 {
@@ -100,12 +99,13 @@ namespace Au.Compiler
 	/// <h3>Settings used to run the compiled script</h3>
 	/// <code><![CDATA[
 	/// runMode green|blue - whether tasks can run simultaneously, etc. Default: green. More info below.
-	/// ifRunning runIfBlue|dontRun|wait|restart|restartOrWait //whether/how to start new task if a task is running. Default: unspecified. More info below.
+	/// ifRunning warn|warn_restart|cancel|cancel_restart|wait|wait_restart|run|run_restart|restart //what to do if this script is already running. Default: warn. More info below.
+	/// ifRunning2 same|warn|cancel|wait //what to do if another green script is running. Default: same. More info below.
 	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
 	/// prefer32bit false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
 	/// ]]></code>
 	/// Here word "task" is used for "script that is running or should start".
-	/// Options 'runMode', 'ifRunning' and 'uac' are applied only when the task is started from editor, not when it runs as independent exe program.
+	/// Options 'runMode', 'ifRunning', 'ifRunning2' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
 	/// 
 	/// About runMode:
 	/// Multiple green tasks cannot run simultaneously. Multiple blue tasks can run simultaneously. See also option 'ifRunning'.
@@ -113,12 +113,17 @@ namespace Au.Compiler
 	/// Blue tasks are used: to run simultaneously with any tasks (green, blue, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; contain multiple methods that can be executed with method triggers, toolbars and autotexts.
 	/// 
 	/// About ifRunning:
-	/// Defines whether/how to start new task if a task is running. What is "another task": if runMode green (default), it is "a green task"; else it is "another instance of this task".
-	/// runIfBlue (default) - if runMode blue, run simultaneously. Else don't run; print a warning.
-	/// dontRun - don't run. Don't print a warning.
+	/// When trying to start this script, what to do if it is already running. Values:
+	/// warn - print warning and don't run.
+	/// cancel - don't run.
 	/// wait - run later, when that task ends.
-	/// restart - if that task is another instance of this task, end it and run. Else like runIfBlue.
-	/// restartOrWait - if that task is another instance of this green task, end it and run. Else wait.
+	/// run - run simultaneously. Requires runMode blue.
+	/// restart - end it and run.
+	/// If ends with _restart, the Run button/menu will restart. Useful for quick edit-test.
+	/// 
+	/// About ifRunning2:
+	/// When trying to start this green script, what to do if another green script is running. Not used with runMode blue.
+	/// If same (default), inherits from ifRunning, or uses warn if unavailable. Other values (warn, cancel, wait) are like ifRunning.
 	/// 
 	/// About uac:
 	/// inherit (default) - the task process has the same UAC integrity level (IL) as the editor process.
@@ -265,9 +270,15 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Meta option 'ifRunning'.
-		/// Default: runIfBlue.
+		/// Default: warn (warn and don't run).
 		/// </summary>
 		public EIfRunning IfRunning { get; private set; }
+
+		/// <summary>
+		/// Meta option 'ifRunning2'.
+		/// Default: same (as IfRunning, or warn).
+		/// </summary>
+		public EIfRunning2 IfRunning2 { get; private set; }
 
 		/// <summary>
 		/// Meta option 'uac'.
@@ -531,6 +542,10 @@ namespace Au.Compiler
 				_Specified(EMSpecified.ifRunning);
 				if(_Enum(out EIfRunning ifR, value)) IfRunning = ifR;
 				break;
+			case "ifRunning2":
+				_Specified(EMSpecified.ifRunning2);
+				if(_Enum(out EIfRunning2 ifR2, value)) IfRunning2 = ifR2;
+				break;
 			case "uac":
 				_Specified(EMSpecified.uac);
 				if(_Enum(out EUac uac, value)) Uac = uac;
@@ -610,14 +625,35 @@ namespace Au.Compiler
 			return true;
 		}
 
-		bool _Enum<T>(out T result, string s) where T : Enum
+		//bool _Enum<T>(out T result, string s, ref FieldInfo[] fields) where T : unmanaged, Enum //slow, as well as with GetFields
+		//{
+		//	result = default;
+		//	var f = typeof(T).GetField(s);
+		//	if(f != null) { result = (T)f.GetRawConstantValue(); return true; }
+		//	_ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(typeof(T))));
+		//	return false;
+		//}
+		unsafe bool _Enum<T>(out T result, string s) where T : unmanaged, Enum
+		{
+			Debug.Assert(sizeof(T) == 4);
+			bool R = _Enum2(typeof(T), out int v, s);
+			result = Unsafe.As<int, T>(ref v);
+			return R;
+		}
+		bool _Enum2(Type ty, out int result, string s)
 		{
 			result = default;
-			var ty = typeof(T); var a = ty.GetFields();
-			foreach(var v in a) if(v.Name == s) { result = (T)v.GetRawConstantValue(); return true; }
-			_ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(ty)));
-			return false;
+			if(!s_enumCache.TryGetValue(ty, out var fields)) {
+				var names = Enum.GetNames(ty);
+				var values = Enum.GetValues(ty);
+				fields = new (string, int)[names.Length];
+				for(int i = 0; i < names.Length; i++) fields[i] = (names[i], (int)values.GetValue(i));
+				s_enumCache[ty] = fields;
+			}
+			foreach(var v in fields) if(v.name == s) { result = v.value; return true; }
+			return _ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(ty)));
 		}
+		static Dictionary<Type, (string name, int value)[]> s_enumCache = new Dictionary<Type, (string name, int value)[]>();
 
 		FileNode _GetFile(string s)
 		{
@@ -665,23 +701,22 @@ namespace Au.Compiler
 
 		bool _FinalCheckOptions()
 		{
+			const EMSpecified c_spec1 = EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.ifRunning2
+				| EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.manifest | EMSpecified.console;
+			const string c_spec1S = "cannot use runMode, ifRunning, ifRunning2, uac, prefer32bit, manifest, console";
+
 			switch(Role) {
 			case ERole.miniProgram:
-				if(Specified.HasAny(EMSpecified.outputPath))
-					return _ErrorM("with role miniProgram (default role of script files) cannot use outputPath");
+				if(Specified.HasAny(EMSpecified.outputPath)) return _ErrorM("with role miniProgram cannot use outputPath");
 				break;
 			case ERole.exeProgram:
 				if(OutputPath == null) OutputPath = AFolders.Workspace + "bin";
 				break;
 			case ERole.editorExtension:
-				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
-					/*| EMSpecified.config*/ | EMSpecified.manifest | EMSpecified.console | EMSpecified.outputPath))
-					return _ErrorM("with role editorExtension cannot use runMode, ifRunning, uac, prefer32bit, manifest, console, outputPath");
+				if(Specified.HasAny(c_spec1 | EMSpecified.outputPath)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath");
 				break;
 			case ERole.classLibrary:
-				if(Specified.HasAny(EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.uac | EMSpecified.prefer32bit
-					/*| EMSpecified.config*/ | EMSpecified.manifest | EMSpecified.console))
-					return _ErrorM("with role classLibrary cannot use runMode, ifRunning, uac, prefer32bit, manifest, console");
+				if(Specified.HasAny(c_spec1)) return _ErrorM("with role classLibrary " + c_spec1S);
 				if(OutputPath == null) OutputPath = AFolders.ThisApp + "Libraries";
 				break;
 			case ERole.classFile:
@@ -689,7 +724,8 @@ namespace Au.Compiler
 				break;
 			}
 
-			if(RunMode == ERunMode.blue && IfRunning == EIfRunning.restartOrWait) return _ErrorM("with runMode blue cannot use ifRunning restartOrWait");
+			if((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunMode == ERunMode.green) return _ErrorM("ifRunning run requires runMode blue");
+			if(Specified.Has(EMSpecified.ifRunning2) && RunMode == ERunMode.blue) return _ErrorM("with runMode blue cannot use ifRunning2");
 
 			if(ResFile != null) {
 				if(IconFile != null) return _ErrorM("cannot add both res file and icon");
@@ -797,8 +833,8 @@ namespace Au.Compiler
 
 	enum ERunMode { green, blue }
 
-	enum EIfRunning { runIfBlue, dontRun, wait, restart, restartOrWait }
-	//CONSIDER: default restart. For green and blue.
+	enum EIfRunning { warn, warn_restart, cancel, cancel_restart, wait, wait_restart, run, run_restart, restart, _restartFlag = 1 }
+	enum EIfRunning2 { same, warn, cancel, wait }
 
 	/// <summary>
 	/// Flags for <see cref="MetaComments.Parse"/>
@@ -828,9 +864,9 @@ namespace Au.Compiler
 	{
 		runMode = 1,
 		ifRunning = 2,
-		uac = 4,
-		prefer32bit = 8,
-		//config = 0x10,
+		ifRunning2 = 4,
+		uac = 8,
+		prefer32bit = 0x10,
 		optimize = 0x20,
 		define = 0x40,
 		noWarnings = 0x80,

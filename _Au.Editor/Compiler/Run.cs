@@ -39,12 +39,13 @@ static class Run
 	/// <param name="args">To pass to Main.</param>
 	/// <param name="noDefer">Don't schedule to run later.</param>
 	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
+	/// <param name="runFromEditor">Starting from the Run button or menu Run command.</param>
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
 	/// Must be always called in the main UI thread (Thread.CurrentThread.ManagedThreadId == 1), because calls its file model functions.
 	/// </remarks>
-	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null)
+	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false)
 	{
 #if TEST_STARTUP_SPEED
 		args = new string[] { ATime.PerfMilliseconds.ToString() }; //and in script use this code: Print(ATime.PerfMilliseconds-Convert.ToInt64(args[0]));
@@ -84,7 +85,7 @@ static class Run
 			return (int)ATask.ERunResult.editorThread;
 		}
 
-		return Program.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName);
+		return Program.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor);
 	}
 
 	static void _OnRunClassFile(FileNode f, FileNode projFolder)
@@ -416,12 +417,16 @@ class RunningTasks
 		return rt.End(onExit);
 	}
 
-	bool _CanRunNow(FileNode f, Compiler.CompResults r, out RunningTask running)
+	bool _CanRunNow(FileNode f, Compiler.CompResults r, out RunningTask running, bool runFromEditor = false)
 	{
 		running = null;
 		switch(r.runMode) {
-		case ERunMode.green: running = GetGreenTask(); break;
-		case ERunMode.blue when r.ifRunning != EIfRunning.runIfBlue: running = _GetRunning(f); break;
+		case ERunMode.green:
+			running = GetGreenTask();
+			break;
+		case ERunMode.blue when !(r.ifRunning == EIfRunning.run || (r.ifRunning == EIfRunning.run_restart && !runFromEditor)):
+			running = _GetRunning(f);
+			break;
 		default: return true;
 		}
 		return running == null;
@@ -437,23 +442,38 @@ class RunningTasks
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
 	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
-	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args, bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false)
+	/// <param name="runFromEditor">Starting from the Run button or menu Run command.</param>
+	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
+		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false)
 	{
 		g1:
-		if(!ignoreLimits && !_CanRunNow(f, r, out var running)) {
-			switch(r.ifRunning) {
-			case EIfRunning.restart:
-			case EIfRunning.restartOrWait:
-				if(running.f == f && _EndTask(running)) goto g1;
-				if(r.ifRunning == EIfRunning.restartOrWait) goto case EIfRunning.wait;
-				goto case EIfRunning.runIfBlue;
-			case EIfRunning.wait:
-				if(noDefer) goto case EIfRunning.runIfBlue;
+		if(!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
+			var ifRunning = r.ifRunning;
+			bool same = running.f == f;
+			if(!same) {
+				ifRunning = r.ifRunning2 switch
+				{
+					EIfRunning2.cancel => EIfRunning.cancel,
+					EIfRunning2.wait => EIfRunning.wait,
+					EIfRunning2.warn => EIfRunning.warn,
+					_ => (ifRunning & ~EIfRunning._restartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
+				};
+			} else if(ifRunning.Has(EIfRunning._restartFlag)) {
+				if(runFromEditor) ifRunning = EIfRunning.restart;
+				else ifRunning &= ~EIfRunning._restartFlag;
+			}
+			//Print(same, ifRunning);
+			switch(ifRunning) {
+			case EIfRunning.cancel:
+				break;
+			case EIfRunning.wait when !noDefer:
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)ATask.ERunResult.deferred;
-			case EIfRunning.runIfBlue:
-				string s1 = (running.f == f) ? "it" : $"{running.f.SciLink}";
-				Print($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>runMode<> or/and <c green>ifRunning<>.");
+				return (int)ATask.ERunResult.deferred; //-1
+			case EIfRunning.restart when _EndTask(running):
+				goto g1;
+			default: //warn
+				string s1 = same ? "it" : $"{running.f.SciLink}";
+				Print($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runMode<>.");
 				break;
 			}
 			return 0;

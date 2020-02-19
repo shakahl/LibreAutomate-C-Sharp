@@ -71,15 +71,15 @@ partial class FProperties : DialogForm, IMessageFilter
 	{
 		var g = _grid;
 
-		switch(_meta.role) {
-		case "miniProgram": _role = ERole.miniProgram; break;
-		case "exeProgram": _role = ERole.exeProgram; break;
-		case "editorExtension": _role = ERole.editorExtension; break;
-		case "classLibrary" when _isClass: _role = ERole.classLibrary; break;
-		case "classFile" when _isClass: _role = ERole.classFile; break;
-		default: _role = _isClass ? ERole.classFile : ERole.miniProgram; break;
-		}
-
+		_role = _meta.role switch
+		{
+			"miniProgram" => ERole.miniProgram,
+			"exeProgram" => ERole.exeProgram,
+			"editorExtension" => ERole.editorExtension,
+			"classLibrary" when _isClass => ERole.classLibrary,
+			"classFile" when _isClass => ERole.classFile,
+			_ => _isClass ? ERole.classFile : ERole.miniProgram,
+		};
 		var roles = _isClass ? "miniProgram|exeProgram|editorExtension|classLibrary|classFile" : "miniProgram|exeProgram|editorExtension";
 		_AddCombo("role", roles, null,
 @"<b>role</b> - purpose of this C# code file. What type of assembly to create and how to execute.
@@ -105,19 +105,30 @@ Unlike most other options, this option is saved not in meta comments. It is save
 		_AddCombo("runMode", "green|blue", _meta.runMode,
 @"<b>runMode</b> - whether tasks can run simultaneously, etc.
  • <i>green</i> (default) - multiple green tasks cannot run simultaneously.
- • <i>blue</i> - multiple blue tasks can run simultaneously.
+ • <i>blue</i> - multiple blue tasks can run simultaneously (see ifRunning).
 
 Green tasks change the tray icon and obey the ""End task"" hotkey; blue tasks don't.
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
-		_AddCombo("ifRunning", "runIfBlue|dontRun|wait|restart|restartOrWait", _meta.ifRunning,
-@"<b>ifRunning</b> - whether/how to run if a task is running. Here ""a task"" means: if runMode green - ""a green task""; if runMode blue - ""another instance of this task"".
- • <i>runIfBlue</i> (default) - if runMode blue, run simultaneously. Else don't run; print a warning.
- • <i>dontRun</i> - don't run. No warning.
- • <i>wait</i> - run later, when that task ends.
- • <i>restart</i> - if that task is another instance of this task, end it and run. Else like runIfBlue.
- • <i>restartOrWait</i> - if that task is another instance of this task, end it and run. Else wait.
+		_AddCombo("ifRunning", "warn|warn_restart|cancel|cancel_restart|wait|wait_restart|run|run_restart|restart", _meta.ifRunning,
+@"<b>ifRunning</b> - when trying to start this script, what to do if it is already running.
+ • <i>warn</i> (default) - print warning and don't run.
+ • <i>cancel</i> - don't run.
+ • <i>wait</i> - run later, when it ends.
+ • <i>run</i> - run simultaneously. Requires runMode blue.
+ • <i>restart</i> - end it and run.
+
+Suffix _restart means: restart when clicked the Run button/menu; don't restart when using other ways to run the script.
+
+This option is ignored when the task runs as .exe program started not from editor.
+");
+		_AddCombo("ifRunning2", "same|warn|cancel|wait", _meta.ifRunning2,
+@"<b>ifRunning2</b> - when trying to start this green script, what to do if another green script is running.
+ • <i>same</i> (default) - same as of ifRunning: cancel if cancel[_restart], wait if wait[_restart], else warn.
+ • <i>warn</i> - print warning and don't run.
+ • <i>cancel</i> - don't run.
+ • <i>wait</i> - run later, when it ends.
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
@@ -134,13 +145,6 @@ This option is ignored when the task runs as .exe program started not from edito
  • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
  • <i>true</i> - the process is 32-bit on all computers.
 ");
-		//		_AddEdit("config", _meta.config,
-		//@"<b>config</b> - let the running task use this <google .NET config files>configuration file<>.
-		//The file must be in this workspace. Can be path relative to this file (examples: App.config, Folder\App.config, ..\Folder\App.config) or path in the workspace (examples: \App.config, \Folder\App.config).
-
-		//The compiler copies it to the output directory, renamed to match the assembly name.
-		//If not specified, and role is not exeProgram, at run time is used host program's config file.
-		//");
 
 		g.ZAddHeaderRow("Compile");
 		_AddCombo("optimize", "false|true", _meta.optimize,
@@ -244,6 +248,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 ");
 
 		_SelectRole();
+		_SelectRunMode();
 
 		g.ZAutoSize(false, true); //and _SelectRole autosizes rows through ZShowRows
 
@@ -289,18 +294,21 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	void _SelectRole()
 	{
-		string hide;
-		switch(_role) {
-		case ERole.miniProgram: hide = "testScript outputPath icon-xmlDoc"; break;
-		case ERole.exeProgram: hide = "testScript"; break;
-		//case ERole.editorExtension: hide = "Run-config outputPath-xmlDoc"; break;
-		//case ERole.classLibrary: hide = "runMode-config console manifest"; break;
-		case ERole.editorExtension: hide = "Run-prefer32bit outputPath-xmlDoc"; break;
-		case ERole.classLibrary: hide = "runMode-prefer32bit console manifest"; break;
-		default: hide = "runMode-"; break;
-		}
+		var hide = _role switch
+		{
+			ERole.miniProgram => "testScript outputPath icon-xmlDoc",
+			ERole.exeProgram => "testScript",
+			ERole.editorExtension => "Run-prefer32bit outputPath-xmlDoc",
+			ERole.classLibrary => "runMode-prefer32bit console manifest",
+			_ => "runMode-",
+		};
 		_grid.ZShowRows(true, "Run-", hide);
 		_bAddLibraryProject.Enabled = _role != ERole.classFile;
+	}
+
+	void _SelectRunMode()
+	{
+		_grid.ZShowRows(_Get("runMode") != "blue", "ifRunning2");
 	}
 
 	private void _grid_ZValueChanged(SourceGrid.CellContext cc)
@@ -336,13 +344,16 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		//Print(p.Column, row, g.ZIsChecked(row));
 
-		//if runMode blue, cannot be ifRunning restartOrWait
 		switch(rk) {
 		case "runMode":
-		case "ifRunning":
-			if(_Get("ifRunning") == "restartOrWait" && _Get("runMode") == "blue") g.ZSetCellText("ifRunning", 1, "restart");
+			_SelectRunMode(); //show/hide ifRunning2
+			if(_IsRunGreen()) g.ZSetCellText("ifRunning", 1, "warn");
+			break;
+		case "ifRunning": //if runMode green, cannot be ifRunning run[_restart]
+			if(_IsRunGreen()) { g.ZSetCellText("runMode", 1, "blue"); g.ZCheck("runMode", true); }
 			break;
 		}
+		bool _IsRunGreen() => cc.IsEditing() && (_Get("ifRunning")?.Starts("run") ?? false) && _Get("runMode") != "blue";
 
 		if(p.Column == 0 && g.ZIsChecked(row)) {
 			switch(rk) {
@@ -380,9 +391,9 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		_meta.runMode = _Get("runMode");
 		_meta.ifRunning = _Get("ifRunning");
+		_meta.ifRunning2 = _Get("ifRunning2");
 		_meta.uac = _Get("uac");
 		_meta.prefer32bit = _Get("prefer32bit");
-		//_meta.config = _Get("config");
 
 		_meta.optimize = _Get("optimize");
 		_meta.warningLevel = _Get("warningLevel");
@@ -408,7 +419,6 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				if(Empty(_meta.outputPath)) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
 				break;
 			}
-			//if(_meta.config == "") _meta.config = "App.config";
 			var name = APath.GetFileName(_f.Name, true);
 			if(_meta.xmlDoc == "") _meta.xmlDoc = name + ".xml";
 			if(_meta.manifest == "") _meta.manifest = name + ".exe.manifest";

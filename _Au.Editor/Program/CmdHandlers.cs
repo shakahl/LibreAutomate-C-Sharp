@@ -498,7 +498,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Run_Run()
 	{
-		Run.CompileAndRun(true, Program.Model.CurrentFile);
+		Run.CompileAndRun(true, Program.Model.CurrentFile, runFromEditor: true);
 	}
 
 	public void Run_EndTask()

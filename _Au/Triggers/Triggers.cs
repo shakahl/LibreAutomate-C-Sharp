@@ -44,7 +44,7 @@ namespace Au.Triggers
 	/// 
 	/// Recommended properties for scripts containg triggers. You can set it in the Properties dialog.
 	/// - <c>runMode blue</c> allows other scripts to start while this script is running.
-	/// - <c>ifRunning restart</c> makes easy to restart the script after editing: just click the Run button.
+	/// - <c>ifRunning restart</c> makes easy to restart the script after editing: just click the Run button. This is default.
 	/// 
 	/// <note>Trigger actions don't inherit <b>AOpt</b> options that are set before adding triggers. The example shows two ways how to set <b>AOpt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>AOpt</b> options set by previous action; the trigger engine calls <see cref="AOpt.Reset"/> before executing an action.</note>
 	/// </remarks>
