@@ -134,7 +134,7 @@ class PanelInfo : AuUserControlBase
 			_isCodeInfo = false;
 			_sci.BringToFront();
 		}
-		using(new Au.Util.LibStringBuilder(out var b, 1000)) {
+		using(new Au.Util.StringBuilder_(out var b, 1000)) {
 			var cn = w.ClassName;
 			if(cn != null) {
 				var pc = p; w.MapScreenToClient(ref pc);

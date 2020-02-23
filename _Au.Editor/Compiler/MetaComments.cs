@@ -681,7 +681,7 @@ namespace Au.Compiler
 				if(s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
 				else s = APath.GetDirectoryPath(_fn.FilePath, true) + s;
 			}
-			return APath.LibNormalize(s, noExpandEV: true);
+			return APath.Normalize_(s, noExpandEV: true);
 		}
 
 		bool _PR(ref string value)

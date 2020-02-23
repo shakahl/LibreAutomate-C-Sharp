@@ -234,7 +234,7 @@ class CiGoTo
 
 	//public static void EditMenuOrToolbar(byte[] data)
 	//{
-	//	var a = Au.Util.LibSerializer.Deserialize(data);
+	//	var a = Au.Util.Serializer_.Deserialize(data);
 	//	bool isTB = a[0] != 0;
 	//	string sourceFile = a[1];
 	//	int line = a[2]; //ctor line

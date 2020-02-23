@@ -21,9 +21,9 @@ namespace Au.Util
 	/// <summary>
 	/// Lookup tables for various functions of this library.
 	/// </summary>
-	unsafe static class LibTables
+	unsafe static class Tables_
 	{
-		static LibTables()
+		static Tables_()
 		{
 			var t = new byte[55];
 			for(int u = 0; u < t.Length; u++) {

@@ -395,7 +395,7 @@ namespace Au.Types
 		/// </remarks>
 		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
-			AWnd.Lib.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
+			AWnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -407,7 +407,7 @@ namespace Au.Types
 		/// <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>. Default true.</param>
 		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = true)
 		{
-			AWnd.Lib.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
+			AWnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
 		}
 
 		/// <summary>
@@ -421,7 +421,7 @@ namespace Au.Types
 		/// </remarks>
 		public void EnsureInScreen(AScreen screen = default, bool workArea = true)
 		{
-			AWnd.Lib.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
+			AWnd.Internal_.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
 
 		public override string ToString()
@@ -723,7 +723,7 @@ namespace Au.Types
 
 			//rejected:
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
-			//int len2 = Util.LibCharPtr.Length(p, len); ADebug.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
+			//int len2 = Util.CharPtr_.Length(p, len); ADebug.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 
 			string r = len == 0 ? "" : new string(p, 0, len);
 			Dispose();

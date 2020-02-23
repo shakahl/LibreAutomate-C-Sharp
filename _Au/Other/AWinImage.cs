@@ -147,7 +147,7 @@ namespace Au
 		public WIAlso Skip(int n) => MatchIndex == n ? WIAlso.OkReturn : (MatchIndex < n ? WIAlso.FindOther : WIAlso.FindOtherOfList);
 
 		//Called by extension methods.
-		internal void LibMouseAction(MButton button, Coord x, Coord y)
+		internal void MouseAction_(MButton button, Coord x, Coord y)
 		{
 			if(_area.Type == WIArea.AreaType.Bitmap) throw new InvalidOperationException();
 
@@ -952,7 +952,7 @@ namespace Au
 					//get DC of screen or window
 					bool windowDC = 0 != (_flags & WIFlags.WindowDC);
 					AWnd w = windowDC ? _area.W : default;
-					using(var dc = new LibWindowDC(w)) { //quite fast, when compared with other parts
+					using(var dc = new WindowDC_(w)) { //quite fast, when compared with other parts
 						if(dc.Is0) w.ThrowNoNative("Failed");
 						//_Debug("get DC");
 						//copy from screen/window DC to memory bitmap

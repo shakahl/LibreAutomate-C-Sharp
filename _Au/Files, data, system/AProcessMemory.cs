@@ -27,7 +27,7 @@ namespace Au
 	/// </remarks>
 	public sealed unsafe class AProcessMemory : IDisposable
 	{
-		LibHandle _hproc;
+		Handle_ _hproc;
 		HandleRef _HprocHR => new HandleRef(this, _hproc);
 
 		///
@@ -89,7 +89,7 @@ namespace Au
 		{
 			string err = null;
 			const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
-			_hproc = w.Is0 ? LibHandle.OpenProcess(pid, fl) : LibHandle.OpenProcess(w, fl);
+			_hproc = w.Is0 ? Handle_.OpenProcess(pid, fl) : Handle_.OpenProcess(w, fl);
 			if(_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
 
 			if(nBytes != 0) {
@@ -167,15 +167,15 @@ namespace Au
 		{
 			if(Mem == default) return null;
 			int na = nChars; if(!ansiString) na *= 2;
-			var b = Util.AMemoryArray.LibChar((na + 1) / 2);
+			var b = Util.AMemoryArray.Char_((na + 1) / 2);
 			fixed (char* p = b.A) {
 				if(!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, p, na, null)) return null;
 				if(findLength) {
-					if(ansiString) nChars = Util.LibBytePtr.Length((byte*)p, nChars);
-					else nChars = Util.LibCharPtr.Length(p, nChars);
+					if(ansiString) nChars = Util.BytePtr_.Length((byte*)p, nChars);
+					else nChars = Util.CharPtr_.Length(p, nChars);
 				}
 			}
-			if(ansiString) return b.LibToStringFromAnsi(nChars, enc);
+			if(ansiString) return b.ToStringFromAnsi_(nChars, enc);
 			return b.ToString(nChars);
 		}
 

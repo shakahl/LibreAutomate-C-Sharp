@@ -92,7 +92,7 @@ namespace Au.Controls
 
 		#endregion
 
-		internal struct LibBitmapFileInfo
+		internal struct BitmapFileInfo_
 		{
 			/// <summary>
 			/// Can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
@@ -106,9 +106,9 @@ namespace Au.Controls
 		/// Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
 		/// Checks if it is valid bitmap file header. Returns false if invalid.
 		/// </summary>
-		internal static bool LibGetBitmapFileInfo(byte[] mem, out LibBitmapFileInfo x)
+		internal static bool GetBitmapFileInfo_(byte[] mem, out BitmapFileInfo_ x)
 		{
-			x = new LibBitmapFileInfo();
+			x = new BitmapFileInfo_();
 			fixed (byte* bp = mem) {
 				BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)bp;
 				int minHS = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPCOREHEADER);
@@ -176,31 +176,31 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
-		/// <param name="length">If -1, calls LibCharPtr.Length(s).</param>
+		/// <param name="length">If -1, calls CharPtr_.Length(s).</param>
 		internal static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1)
 		{
-			if(length < 0) length = LibBytePtr.Length(s);
+			if(length < 0) length = BytePtr_.Length(s);
 			if(length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
 
 			//special strings
 			switch(c1) {
 			case '~': return (c2 == ':') ? ImageType.Base64CompressedBmp : ImageType.None;
-			case 'i': if(LibBytePtr.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
-			case 'r': if(LibBytePtr.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
+			case 'i': if(BytePtr_.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
+			case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
 			}
 
 			//file path
 			if(length >= 8 && (c1 == '%' || (c2 == ':' && AChar.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
 				if(ext[-1] == '.') {
-					if(LibBytePtr.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
-					if(LibBytePtr.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
-					if(LibBytePtr.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
-					if(LibBytePtr.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
-					if(LibBytePtr.AsciiStartsi(ext, "ico")) return ImageType.Ico;
-					if(LibBytePtr.AsciiStartsi(ext, "cur")) return ImageType.Cur;
-					if(LibBytePtr.AsciiStartsi(ext, "ani")) return ImageType.Cur;
+					if(BytePtr_.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
+					if(BytePtr_.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
+					if(BytePtr_.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
+					if(BytePtr_.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
+					if(BytePtr_.AsciiStartsi(ext, "ico")) return ImageType.Ico;
+					if(BytePtr_.AsciiStartsi(ext, "cur")) return ImageType.Cur;
+					if(BytePtr_.AsciiStartsi(ext, "ani")) return ImageType.Cur;
 				} else if(AChar.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
 					for(; k > k2; k--) if(!AChar.IsAsciiDigit(*k)) break;

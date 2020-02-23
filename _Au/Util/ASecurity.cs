@@ -34,7 +34,7 @@ namespace Au.Util
 			bool ok = false;
 			var p = new Api.TOKEN_PRIVILEGES { PrivilegeCount = 1, Privileges = new Api.LUID_AND_ATTRIBUTES { Attributes = enable ? 2u : 0 } }; //SE_PRIVILEGE_ENABLED
 			if(Api.LookupPrivilegeValue(null, privilegeName, out p.Privileges.Luid)) {
-				Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out LibHandle hToken);
+				Api.OpenProcessToken(Api.GetCurrentProcess(), Api.TOKEN_ADJUST_PRIVILEGES, out Handle_ hToken);
 				Api.AdjustTokenPrivileges(hToken, false, p, 0, null, default);
 				ok = 0 == ALastError.Code;
 				hToken.Dispose();

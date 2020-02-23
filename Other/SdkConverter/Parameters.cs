@@ -355,7 +355,7 @@ namespace SdkConverter
 									ptr = 1;
 									isRawPtr = true;
 									//Could be StringBuilder, but the Au library does not use it, it is slow.
-									//Or [Out] char[]. The Au library uses it with Util.AMemoryArray.LibChar.
+									//Or [Out] char[]. The Au library uses it with Util.AMemoryArray.Char_.
 								}
 								break;
 							}

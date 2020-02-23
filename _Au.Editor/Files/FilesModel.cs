@@ -1183,7 +1183,6 @@ partial class FilesModel : ITreeModel
 					if(delay < 10) delay = 10;
 				}
 				ATimer.After(delay, t => {
-					_ = Au.Triggers.HooksServer.Instance.MsgWnd; //waits until started
 					Run.CompileAndRun(true, f);
 				});
 			}

@@ -69,7 +69,7 @@ namespace Au
 		{
 			//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
 			//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
-			using(LibActCtx.Activate()) {
+			using(ActCtx_.Activate()) {
 				//Also, don't use DllImport, because it uses v5 comctl32.dll if it is already loaded.
 				Api.GetDelegate(out _tTaskDialogIndirect R, "comctl32.dll", "TaskDialogIndirect");
 				return R;
@@ -177,6 +177,7 @@ namespace Au
 			/// </summary>
 			/// <seealso cref="FlagTopmost"/>
 			public static bool TopmostIfNoOwnerWindow { get; set; }
+			//TODO: consider: default true
 
 			/// <summary>
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
@@ -813,7 +814,7 @@ namespace Au
 					hook = AHookWin.ThreadGetMessage(_HookProc);
 				}
 
-				AWnd.Lib.EnableActivate(true);
+				AWnd.Internal_.EnableActivate(true);
 
 				for(int i = 0; i < 10; i++) { //see the API bug workaround comment below
 					_LockUnlock(true); //see the API bug workaround comment below
@@ -1090,7 +1091,7 @@ namespace Au
 			_isClosed = true;
 			if(_dlg.Is0) return;
 			_dlg = default;
-			Send.LibClear();
+			Send.Clear_();
 		}
 		bool _isClosed;
 
@@ -1118,7 +1119,7 @@ namespace Au
 		public DSend Send { get; private set; }
 
 		//called by DSend
-		internal int LibSendMessage(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default)
+		internal int SendMessage_(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default)
 		{
 			switch(message) {
 			case Native.TDM.CLICK_BUTTON:
@@ -1132,7 +1133,7 @@ namespace Au
 		}
 
 		//called by DSend
-		internal void LibSetText(bool resizeDialog, Native.TDE partId, string text)
+		internal void SetText_(bool resizeDialog, Native.TDE partId, string text)
 		{
 			if(partId == Native.TDE.CONTENT && _editType == DEdit.Multiline) {
 				text = _c.pszContent = text + c_multilineString;
@@ -1170,7 +1171,7 @@ namespace Au
 
 		string _TimeoutFooterText(int timeLeft)
 		{
-			using(new LibStringBuilder(out var b)) {
+			using(new StringBuilder_(out var b)) {
 				b.Append("This dialog will disappear if not clicked in ").Append(timeLeft).Append(" s.");
 				if(!Empty(_timeoutActionText)) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
 				if(FlagRtlLayout) b.Replace(".", "");
@@ -1195,7 +1196,7 @@ namespace Au
 
 			//create or get cached font and calculate control height
 			//note: don't use system messagebox font. ADialog API does not depend on it.
-			_editFont = LibNativeFont.Verdana9Cached;
+			_editFont = NativeFont_.Verdana9Cached;
 		}
 
 		void _EditControlUpdate(bool onlyZorder = false)
@@ -1305,7 +1306,7 @@ namespace Au
 		/// </summary>
 		public AWnd EditControl => _editWnd;
 		AWnd _editWnd, _editParent;
-		LibNativeFont _editFont;
+		NativeFont_ _editFont;
 
 		//Dlgproc of our intermediate #32770 control, the parent of out Edit control.
 		int _EditControlParentProc(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam)
@@ -2073,7 +2074,7 @@ namespace Au.Types
 		volatile ADialog _tdo;
 
 		internal DSend(ADialog tdo) { _tdo = tdo; }
-		internal void LibClear() { _tdo = null; }
+		internal void Clear_() { _tdo = null; }
 
 		/// <summary>
 		/// Sends a message to the dialog.
@@ -2087,12 +2088,12 @@ namespace Au.Types
 		/// </remarks>
 		public int Message(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default)
 		{
-			return _tdo?.LibSendMessage(message, wParam, lParam) ?? 0;
+			return _tdo?.SendMessage_(message, wParam, lParam) ?? 0;
 		}
 
 		void _SetText(bool resizeDialog, Native.TDE partId, string text)
 		{
-			_tdo?.LibSetText(resizeDialog, partId, text);
+			_tdo?.SetText_(resizeDialog, partId, text);
 		}
 
 		/// <summary>

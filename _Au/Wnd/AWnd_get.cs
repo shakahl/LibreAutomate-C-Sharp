@@ -591,7 +591,7 @@ namespace Au
 		/// <summary>
 		/// Returns <c>(AWnd)GetWindowLong(Native.GWL.HWNDPARENT)</c>.
 		/// </summary>
-		internal AWnd LibParentGWL => (AWnd)GetWindowLong(Native.GWL.HWNDPARENT);
+		internal AWnd ParentGWL_ => (AWnd)GetWindowLong(Native.GWL.HWNDPARENT);
 
 		/// <summary>
 		/// Gets the active (foreground) window.
@@ -611,7 +611,7 @@ namespace Au
 		/// Returns true if this window is the active (foreground) window.
 		/// If this is <see cref="GetWnd.Root"/>, returns true if there is no active window.
 		/// </summary>
-		internal bool LibIsActiveOrNoActiveAndThisIsWndRoot {
+		internal bool IsActiveOrNoActiveAndThisIsWndRoot_ {
 			get {
 				if(Is0) return false;
 				var f = Api.GetForegroundWindow();

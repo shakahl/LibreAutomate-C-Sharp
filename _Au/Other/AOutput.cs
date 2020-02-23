@@ -304,7 +304,7 @@ namespace Au
 			//	Eg its finalizer does not write to file. If we try to Close it in our finalizer, it throws 'already disposed'.
 			//	Also we don't need such buffering. Better to write to the OS file buffer immediately, it's quite fast.
 
-			LibHandle _h;
+			Handle_ _h;
 			string _name;
 
 			/// <summary>
@@ -314,7 +314,7 @@ namespace Au
 			public static _LogFile Open()
 			{
 				var path = LogFile;
-				var h = LibCreateFile(path, false);
+				var h = CreateFile_(path, false);
 				if(h.Is0) return null;
 				return new _LogFile() { _h = h, _name = path };
 			}
@@ -329,11 +329,11 @@ namespace Au
 			{
 				bool ok;
 				int n = Encoding.UTF8.GetByteCount(s ??= "") + 1;
-				fixed(byte* b = AMemoryArray.LibByte(n + 35)) {
+				fixed(byte* b = AMemoryArray.Byte_(n + 35)) {
 					if(LogFileTimestamp) {
 						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-						int nn = LibBytePtr.Length(b);
+						int nn = BytePtr_.Length(b);
 						Encoding.UTF8.GetBytes(s, new Span<byte>(b + nn, n));
 						n += nn;
 						if(s.Starts("<>")) {
@@ -378,7 +378,7 @@ namespace Au
 		/// </summary>
 		/// <param name="name">File path or mailslot name.</param>
 		/// <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
-		internal static LibHandle LibCreateFile(string name, bool openExisting)
+		internal static Handle_ CreateFile_(string name, bool openExisting)
 		{
 			return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, default, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 

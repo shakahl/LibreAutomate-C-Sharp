@@ -166,7 +166,7 @@ namespace Au.Controls
 			case Api.WM_LBUTTONDOWN:
 				if(Api.GetFocus() != hwnd) {
 					bool setFocus = true;
-					ZTags?.LibOnLButtonDownWhenNotFocused(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
+					ZTags?.OnLButtonDownWhenNotFocused_(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
 					if(setFocus && !ZNoMouseLeftSetFocus) Api.SetFocus(hwnd);
 				}
 				_DefWndProc(ref m);
@@ -204,7 +204,7 @@ namespace Au.Controls
 				if(ZDisableModifiedNotifications) return;
 				break;
 			case NOTIF.SCN_HOTSPOTRELEASECLICK:
-				ZTags?.LibOnLinkClick(n.position, 0 != (n.modifiers & SCMOD_CTRL));
+				ZTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
 				break;
 			}
 			ZOnSciNotify(ref n);
@@ -226,8 +226,8 @@ namespace Au.Controls
 				_aPos.Clear();
 
 				bool ins = 0 != (code & MOD.SC_MOD_INSERTTEXT);
-				ZImages?.LibOnTextChanged(ins, n);
-				ZTags?.LibOnTextChanged(ins, n);
+				ZImages?.OnTextChanged_(ins, n);
+				ZTags?.OnTextChanged_(ins, n);
 			}
 			//if(0!=(code& MOD.SC_MOD_CHANGEANNOTATION)) ChangedAnnotation?.Invoke(this, ref n);
 		}
@@ -296,7 +296,7 @@ namespace Au.Controls
 		public override string Text {
 			get {
 				//AOutput.QM2.Write($"Text: cached={_text != null}");
-				if(_text == null && IsHandleCreated) _text = Z.LibGetText(); //_NotifyModified sets _text=null
+				if(_text == null && IsHandleCreated) _text = Z.GetText_(); //_NotifyModified sets _text=null
 				return _text;
 			}
 			set {

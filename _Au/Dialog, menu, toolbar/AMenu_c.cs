@@ -114,8 +114,8 @@ namespace Au
 				base.OnOpening(e);
 			}
 
-			List<Util.IconsAsync.Item> _IAuToolStrip.SubmenuAsyncIcons => _isMain ? null : (_asyncIcons ??= new List<Util.IconsAsync.Item>());
-			List<Util.IconsAsync.Item> _asyncIcons;
+			List<Util.IconsAsync_.Item> _IAuToolStrip.SubmenuAsyncIcons => _isMain ? null : (_asyncIcons ??= new List<Util.IconsAsync_.Item>());
+			List<Util.IconsAsync_.Item> _asyncIcons;
 
 			protected override void OnOpened(EventArgs e)
 			{

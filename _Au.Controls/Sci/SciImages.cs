@@ -272,7 +272,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="line"></param>
 		/// <param name="s">New text without image info.</param>
-		internal void LibAnnotationText(int line, string s)
+		internal void AnnotationText_(int line, string s)
 		{
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
@@ -295,13 +295,13 @@ namespace Au.Controls
 					}
 				}
 			}
-			_t.LibAnnotationText(line, s);
+			_t.AnnotationText_(line, s);
 		}
 
 		/// <summary>
 		/// Gets annotation text without image info.
 		/// </summary>
-		internal string LibAnnotationText(int line)
+		internal string AnnotationText_(int line)
 		{
 			int n = _c.Call(SCI_ANNOTATIONGETTEXT, line);
 			if(n > 0) {
@@ -337,12 +337,12 @@ namespace Au.Controls
 			//if not editor, skip if not <image "..."
 			if(!isMulti) {
 				if(_isEditor) imageStringStartPos = i - 1;
-				else if(i >= 8 && LibBytePtr.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
+				else if(i >= 8 && BytePtr_.AsciiStarts(s + i - 8, "<image ")) imageStringStartPos = i - 8;
 				else goto g1;
 			}
 
 			//support "image1|image2|..."
-			int i3 = LibBytePtr.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
+			int i3 = BytePtr_.AsciiFindChar(s + i, i2 - i, (byte)'|') + i;
 			if(i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
@@ -373,7 +373,7 @@ namespace Au.Controls
 			byte[] b = ImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
 			t1 = ATime.WinMillisecondsWithoutSleep - t1; if(t1 > 1000) PrintWarning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
 			if(b == null) goto g1;
-			if(!ImageUtil.LibGetBitmapFileInfo(b, out var q)) goto g1;
+			if(!ImageUtil.GetBitmapFileInfo_(b, out var q)) goto g1;
 
 			//create _Image
 			im = new _Image() {
@@ -446,7 +446,7 @@ namespace Au.Controls
 					hasImages = true;
 
 					//draw image
-					if(!ImageUtil.LibGetBitmapFileInfo(u.data, out var q)) { Debug.Assert(false); continue; }
+					if(!ImageUtil.GetBitmapFileInfo_(u.data, out var q)) { Debug.Assert(false); continue; }
 					int isFirstLine = (c.annotLine == 0) ? 1 : 0, hLine = r.bottom - r.top;
 					int currentTop = c.annotLine * hLine, currentBottom = currentTop + hLine, imageBottom = q.height + IMAGE_MARGIN_TOP;
 					int y = r.top + isFirstLine * IMAGE_MARGIN_TOP, yy = Math.Min(currentBottom, imageBottom) - currentTop;
@@ -502,9 +502,9 @@ namespace Au.Controls
 
 			//If there are no image strings (text edited), delete the annotation or just its part containing image info and '\n's.
 			if(!hasImages && c.annotLine == 0) {
-				int line = c.line; var annot = LibAnnotationText(line);
-				//_t.LibAnnotationText(line, annot); //dangerous
-				_c.BeginInvoke(new Action(() => { _t.LibAnnotationText(line, annot); }));
+				int line = c.line; var annot = AnnotationText_(line);
+				//_t.AnnotationText_(line, annot); //dangerous
+				_c.BeginInvoke(new Action(() => { _t.AnnotationText_(line, annot); }));
 				return 1;
 			}
 
@@ -527,7 +527,7 @@ namespace Au.Controls
 		[DllImport("gdi32.dll")]
 		internal static extern bool LineTo(IntPtr hdc, int x, int y);
 
-		internal void LibOnTextChanged(bool inserted, in SCNotification n)
+		internal void OnTextChanged_(bool inserted, in SCNotification n)
 		{
 			if(_visible == AnnotationsVisible.ANNOTATION_HIDDEN) return;
 
@@ -563,7 +563,7 @@ namespace Au.Controls
 				textPos = from2;
 			}
 
-			int r = _isEditor ? LibBytePtr.AsciiFindChar(s, len, (byte)'\"') : LibBytePtr.AsciiFindString(s, len, "<image \"");
+			int r = _isEditor ? BytePtr_.AsciiFindChar(s, len, (byte)'\"') : BytePtr_.AsciiFindString(s, len, "<image \"");
 			if(r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 

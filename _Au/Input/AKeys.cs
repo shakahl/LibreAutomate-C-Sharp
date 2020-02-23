@@ -266,7 +266,7 @@ namespace Au
 
 			bool isPair; _KFlags f = 0;
 			if(!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
-			if(LibKeyTypes.IsExtended(key)) f |= _KFlags.Extended;
+			if(KeyTypes_.IsExtended(key)) f |= _KFlags.Extended;
 
 			return _AddKey(new _KEvent(isPair, key, f));
 		}
@@ -302,19 +302,19 @@ namespace Au
 		/// <param name="vk"></param>
 		/// <param name="scan"></param>
 		/// <param name="siFlags">SendInput flags.</param>
-		internal AKeys LibAddRaw(KKey vk, ushort scan, byte siFlags)
+		internal AKeys AddRaw_(KKey vk, ushort scan, byte siFlags)
 		{
 			_ThrowIfSending();
 			return _AddKey(new _KEvent(false, vk, (_KFlags)(siFlags & 0xf), scan));
 		}
 
 		/// <summary>
-		/// Sends key events added by AInputBlocker -> LibAddRaw.
+		/// Sends key events added by AInputBlocker -> AddRaw_.
 		/// Simply calls Api.SendInput. No options, no sleep, etc.
 		/// If new events added while sending, sends them too, until there are no new events added.
 		/// </summary>
 		/// <param name="onlyUp">Send only 'up' events.</param>
-		internal unsafe void LibSendBlocked(bool onlyUp)
+		internal unsafe void SendBlocked_(bool onlyUp)
 		{
 			g1:
 			int n = 0;
@@ -485,14 +485,14 @@ namespace Au
 				_sending = true;
 				//Print("{");
 				if(!Options.NoBlockInput) bi.Start(BIEvents.Keys);
-				restoreCapsLock = Lib.ReleaseModAndCapsLock(Options);
+				restoreCapsLock = Internal_.ReleaseModAndCapsLock(Options);
 				//APerf.Next();
 				for(int i = 0; i < _a.Count; i++) {
 					var k = _a[i];
 					switch(k.Type) {
 					case _KType.Sleep:
 						if(i == _a.Count - 1) sleepFinally = k.sleep;
-						else Lib.Sleep(k.sleep);
+						else Internal_.Sleep(k.sleep);
 						break;
 					case _KType.Repeat:
 						Debug.Assert(i > 0 && _a[i - 1].IsKey);
@@ -512,7 +512,7 @@ namespace Au
 				sleepFinally += _GetOptionsAndWndFocused(out _, false).SleepFinally;
 			}
 			finally {
-				if(restoreCapsLock) Lib.SendKey(KKey.CapsLock);
+				if(restoreCapsLock) Internal_.SendKey(KKey.CapsLock);
 				_sending = false;
 				bi.Dispose();
 				//APerf.NW();
@@ -528,7 +528,7 @@ namespace Au
 				}
 			}
 
-			if(sleepFinally > 0) Lib.Sleep(sleepFinally);
+			if(sleepFinally > 0) Internal_.Sleep(sleepFinally);
 
 			//_SyncWait();
 			//CONSIDER: instead of SleepFinally use TimeSyncFinally, default 100 ms. Eg send a sync key and wait max TimeSyncFinally ms.
@@ -545,7 +545,7 @@ namespace Au
 			var opt = _GetOptionsAndWndFocused(out var wFocus, needScanCode);
 			if(needScanCode) {
 				var hkl = Api.GetKeyboardLayout(wFocus.ThreadId); //most layouts have the same standard scancodes, but eg dvorak different
-				k.scan = Lib.VkToSc(k.vk, hkl);
+				k.scan = Internal_.VkToSc(k.vk, hkl);
 			}
 
 			bool isLast = i == _a.Count - 1;
@@ -559,7 +559,7 @@ namespace Au
 
 			int count = 1, sleep = opt.KeySpeed;
 			if(isLast) {
-				if(!k.IsPair) sleep = Lib.LimitSleepTime(sleep) - opt.SleepFinally;
+				if(!k.IsPair) sleep = Internal_.LimitSleepTime(sleep) - opt.SleepFinally;
 			} else {
 				if(kNext.IsRepeat) count = kNext.repeat;
 				else if(!k.IsPair) {
@@ -570,9 +570,9 @@ namespace Au
 					//	However some apps/controls then may not work. Maybe they process mod and nonmod keys somehow async.
 					//	For example, Ctrl+C in IE address bar often does not work if there is no sleep after Ctrl down. Always works if 1 ms.
 
-					sleep = Lib.LimitSleepTime(sleep);
+					sleep = Internal_.LimitSleepTime(sleep);
 					if(kNext.IsKey) {
-						bool thisMod = LibKeyTypes.IsMod(k.vk), nextMod = LibKeyTypes.IsMod(kNext.vk);
+						bool thisMod = KeyTypes_.IsMod(k.vk), nextMod = KeyTypes_.IsMod(kNext.vk);
 						if(!k.IsUp) {
 							if(kNext.IsUp) sleep = opt.KeySpeed;
 							else if(thisMod == nextMod) sleep = 0;
@@ -593,7 +593,7 @@ namespace Au
 				Api.SendInput(&ki);
 				//APerf.Next();
 				if(sleep > 0) {
-					Lib.Sleep(sleep);
+					Internal_.Sleep(sleep);
 				}
 				if(k.IsPair) {
 					ki.dwFlags |= Api.KEYEVENTF_KEYUP;
@@ -625,7 +625,7 @@ namespace Au
 			}
 
 			if(textOption == KTextOption.Paste) {
-				AClipboard.LibPaste(s, opt, wFocus);
+				AClipboard.Paste_(s, opt, wFocus);
 				return;
 			}
 
@@ -659,29 +659,29 @@ namespace Au
 					}
 
 					if(vk == 0) { //use vk_packet
-						if(prevMod != 0) { Lib.ModPressRelease(false, prevMod); prevMod = 0; }
+						if(prevMod != 0) { Internal_.ModPressRelease(false, prevMod); prevMod = 0; }
 
 						//note: need key-up event for VK_PACKET too.
 						//	Known controls that need it: Qt edit controls; Office 2003 'type question' field.
 					} else if(mod != prevMod) {
 						var pm = prevMod; prevMod |= mod; //to release in case of exception between here and 'prevMod = mod'
-						if(0 != (mod ^ pm & KMod.Ctrl)) Lib.SendCtrl(0 != (mod & KMod.Ctrl));
-						if(0 != (mod ^ pm & KMod.Alt)) Lib.SendAlt(0 != (mod & KMod.Alt));
-						if(0 != (mod ^ pm & KMod.Shift)) Lib.SendShift(0 != (mod & KMod.Shift));
+						if(0 != (mod ^ pm & KMod.Ctrl)) Internal_.SendCtrl(0 != (mod & KMod.Ctrl));
+						if(0 != (mod ^ pm & KMod.Alt)) Internal_.SendAlt(0 != (mod & KMod.Alt));
+						if(0 != (mod ^ pm & KMod.Shift)) Internal_.SendShift(0 != (mod & KMod.Shift));
 						prevMod = mod;
-						if(sleep > 0) Lib.Sleep(Lib.LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
+						if(sleep > 0) Internal_.Sleep(Internal_.LimitSleepTime(sleep)); //need for apps that process mod-nonmod keys async. Now I did not found such apps, but had one in the past.
 					}
 
-					var ki = new Lib.INPUTKEY2(vk, vk == 0 ? c : Lib.VkToSc(vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
+					var ki = new Internal_.INPUTKEY2(vk, vk == 0 ? c : Internal_.VkToSc(vk, hkl), vk == 0 ? Api.KEYEVENTF_UNICODE : 0);
 					Api.SendInput(&ki.k0, sleep > 0 ? 1 : 2);
 					if(sleep > 0) {
-						Lib.Sleep(sleep);
+						Internal_.Sleep(sleep);
 						Api.SendInput(&ki.k1, 1);
 					}
 				}
 			}
 			finally {
-				Lib.ModPressRelease(false, prevMod);
+				Internal_.ModPressRelease(false, prevMod);
 			}
 
 			//FUTURE: try this sync method if long text, eg > 500 char:

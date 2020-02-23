@@ -118,7 +118,7 @@ namespace Au
 		/// </remarks>
 		public static APidl FromString(string s, bool throwIfFailed = false)
 		{
-			IntPtr R = LibFromString(s, throwIfFailed);
+			IntPtr R = FromString_(s, throwIfFailed);
 			return (R == default) ? null : new APidl(R);
 		}
 
@@ -128,7 +128,7 @@ namespace Au
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="throwIfFailed"></param>
-		internal static IntPtr LibFromString(string s, bool throwIfFailed = false)
+		internal static IntPtr FromString_(string s, bool throwIfFailed = false)
 		{
 			IntPtr R;
 			s = _Normalize(s);
@@ -160,7 +160,7 @@ namespace Au
 		{
 			s = APath.ExpandEnvVar(s);
 			if(!APath.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
-			return APath.LibNormalize(s, PNFlags.DontPrefixLongPath, true);
+			return APath.Normalize_(s, PNFlags.DontPrefixLongPath, true);
 		}
 
 		/// <summary>
@@ -234,7 +234,7 @@ namespace Au
 			return ToBase64String(pidl);
 		}
 		//this version is 40% slower with non-virtual objects (why?), but with virtual objects same speed as SIGDN_DESKTOPABSOLUTEPARSING.
-		//The fastest (update: actually not) version would be to call LibToShellString(SIGDN_DESKTOPABSOLUTEPARSING), and then call ToBase64String if it returns not a path or URL. But it is unreliable, because can return string in any format, eg "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+		//The fastest (update: actually not) version would be to call ToShellString_(SIGDN_DESKTOPABSOLUTEPARSING), and then call ToBase64String if it returns not a path or URL. But it is unreliable, because can return string in any format, eg "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
 #elif false
 			//this version works, but with virtual objects 2 times slower than SIGDN_DESKTOPABSOLUTEPARSING (which already is very slow with virtual).
 			public static string ToString(IntPtr pidl)

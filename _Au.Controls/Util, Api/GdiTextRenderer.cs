@@ -39,7 +39,7 @@ namespace Au.Controls
 		{
 			_g = g;
 			_hdc = g.GetHdc();
-			_oldFont = Api.SelectObject(_hdc, Util.LibNativeFont.RegularCached);
+			_oldFont = Api.SelectObject(_hdc, Util.NativeFont_.RegularCached);
 			_oldAlign = 0xffffffff;
 			Api.SetBkMode(_hdc, 1);
 			_oldColor = Api.SetTextColor(_hdc, 0);
@@ -73,13 +73,13 @@ namespace Au.Controls
 			return p;
 		}
 
-		public void FontNormal() => Api.SelectObject(_hdc, Util.LibNativeFont.RegularCached);
+		public void FontNormal() => Api.SelectObject(_hdc, Util.NativeFont_.RegularCached);
 
-		public void FontBold() => Api.SelectObject(_hdc, Util.LibNativeFont.BoldCached);
+		public void FontBold() => Api.SelectObject(_hdc, Util.NativeFont_.BoldCached);
 
-		//public void FontItalic() => Api.SelectObject(_hdc, Au.Util.LibNativeFont.ItalicCached);
+		//public void FontItalic() => Api.SelectObject(_hdc, Au.Util.NativeFont_.ItalicCached);
 
-		//public void FontBoldItalic() => Api.SelectObject(_hdc, Au.Util.LibNativeFont.BoldItalicCached);
+		//public void FontBoldItalic() => Api.SelectObject(_hdc, Au.Util.NativeFont_.BoldItalicCached);
 
 		/// <summary>
 		/// Draws text at specified position. Does not use/update the current drawing position of the DC.

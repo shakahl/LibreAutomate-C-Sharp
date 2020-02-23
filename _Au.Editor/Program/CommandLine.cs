@@ -202,7 +202,7 @@ static class CommandLine
 				script = a[nRemove++];
 				args = a.Length == nRemove ? null : a.RemoveAt(0, nRemove);
 			} else {
-				var d = Au.Util.LibSerializer.Deserialize(b);
+				var d = Au.Util.Serializer_.Deserialize(b);
 				script = d[0]; args = d[1]; pipeName = d[2];
 			}
 			var f = Program.Model?.FindScript(script);

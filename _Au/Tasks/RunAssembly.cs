@@ -125,7 +125,7 @@ namespace Au
 				}
 
 				//APerf.Next('1');
-				if(!inEditorThread) Util.LibLog.Run.Write("Task started.");
+				if(!inEditorThread) Util.Log_.Run.Write("Task started.");
 
 				//APerf.Next('2');
 				if(useArgs) {
@@ -134,12 +134,12 @@ namespace Au
 					entryPoint.Invoke(null, null);
 				}
 
-				if(!inEditorThread) Util.LibLog.Run.Write("Task ended.");
+				if(!inEditorThread) Util.Log_.Run.Write("Task ended.");
 			}
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
 
-				if(!inEditorThread) Util.LibLog.Run.Write($"Unhandled exception: {e.ToStringWithoutStack()}");
+				if(!inEditorThread) Util.Log_.Run.Write($"Unhandled exception: {e.ToStringWithoutStack()}");
 
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//Print(e);

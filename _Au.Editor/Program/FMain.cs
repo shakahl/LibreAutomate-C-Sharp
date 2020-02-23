@@ -64,7 +64,6 @@ partial class FMain : Form
 		Program.Tasks = new RunningTasks();
 		Panels.Files.ZLoadWorkspace(CommandLine.WorkspaceDirectory);
 		EdTrayIcon.Add();
-		Au.Triggers.HooksServer.Start(false);
 		CommandLine.OnProgramLoaded();
 		Program.Loaded = EProgramState.LoadedWorkspace;
 		Program.Model.RunStartupScripts();
@@ -146,7 +145,6 @@ partial class FMain : Form
 		base.OnFormClosed(e);
 
 		CodeInfo.Stop();
-		Au.Triggers.HooksServer.Stop();
 		Panels.Files.ZUnloadOnFormClosed();
 		EdTrayIcon.Dispose();
 		Program.Loaded = EProgramState.Unloaded;

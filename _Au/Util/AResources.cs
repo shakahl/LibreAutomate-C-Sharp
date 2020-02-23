@@ -37,7 +37,7 @@ namespace Au.Util
 		public static object GetAppResource(string name)
 		{
 			try {
-				var rm = LibGetAppResourceManager(out var culture);
+				var rm = GetAppResourceManager_(out var culture);
 				return rm?.GetObject(name, culture);
 			}
 			catch { return null; }
@@ -62,7 +62,7 @@ namespace Au.Util
 		/// Returns null if fails or if the assembly does not have resources.
 		/// Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="AppResourcesName"/> before.
 		/// </summary>
-		internal static ResourceManager LibGetAppResourceManager(out CultureInfo culture)
+		internal static ResourceManager GetAppResourceManager_(out CultureInfo culture)
 		{
 			if(_appResourceManager == null) {
 				culture = null;
@@ -98,22 +98,5 @@ namespace Au.Util
 		}
 		static ResourceManager _appResourceManager;
 		static CultureInfo _appResourceCulture;
-
-		//rejected: now in generic methods we can use sizeof(T) if with 'unmanaged' constraint. Or Unsafe.SizeOf<T>().
-		///// <summary>
-		///// Do not call. Use class TypeSize, which caches the type size.
-		///// This is used by TypeSize, not in it, because it is a generic type...
-		///// </summary>
-		///// <param name="t"></param>
-		//[MethodImpl(MethodImplOptions.NoInlining)]
-		//internal static int LibGetTypeSize(Type t)
-		//{
-		//	var dm = new DynamicMethod("SizeOfType", typeof(int), Type.EmptyTypes);
-		//	ILGenerator il = dm.GetILGenerator();
-		//	il.Emit(OpCodes.Sizeof, t);
-		//	il.Emit(OpCodes.Ret);
-		//	return (int)dm.Invoke(null, null);
-		//	//Print(dm.MethodImplementationFlags);
-		//}
 	}
 }

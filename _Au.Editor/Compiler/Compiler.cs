@@ -378,7 +378,7 @@ namespace Au.Compiler
 			}
 
 			if(needAttr != 0) {
-				using(new Util.LibStringBuilder(out var sb)) {
+				using(new Util.StringBuilder_(out var sb)) {
 					sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
 					if(0 != (needAttr & 0x100)) sb.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]");
 					if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\"Au\")]");
@@ -508,7 +508,7 @@ namespace Au.Compiler
 				//p1.Next();
 				//write assembly name in placeholder memory. In AppHost.cpp: char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
 				fixed(byte* p = b) {
-					int i = Util.LibBytePtr.AsciiFindString(p, b.Length, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
+					int i = Util.BytePtr_.AsciiFindString(p, b.Length, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
 					i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
 					b[i] = 0;
 				}

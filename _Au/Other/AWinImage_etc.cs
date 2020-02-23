@@ -88,7 +88,7 @@ namespace Au
 			if(usePrintWindow && Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (AVersion.MinWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
 				//Print("PrintWindow OK");
 			} else {
-				using(var dc = new LibWindowDC(w)) {
+				using(var dc = new WindowDC_(w)) {
 					if(dc.Is0) w.ThrowNoNative("Failed");
 					uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
 					bool ok = Api.BitBlt(mb.Hdc, 0, 0, r.Width, r.Height, dc, r.left, r.top, rop);
@@ -214,7 +214,7 @@ namespace Au
 		public static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap)
 		{
 			var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
-			using(var dcs = new LibScreenDC(0)) {
+			using(var dcs = new ScreenDC_(0)) {
 				if(0 == Api.GetDIBits(dcs, hbitmap, 0, 0, null, &bh, 0)) goto ge;
 				int wid = bh.biWidth, hei = bh.biHeight;
 				if(hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
@@ -394,7 +394,7 @@ namespace Au
 
 				//format text to draw below magnifier
 				string text;
-				using(new LibStringBuilder(out var s)) {
+				using(new StringBuilder_(out var s)) {
 					var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
 					if(ic == 0) ic = WICFlags.Image | WICFlags.Color;
 					bool canColor = ic.Has(WICFlags.Color);

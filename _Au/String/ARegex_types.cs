@@ -109,7 +109,7 @@ namespace Au.Types
 		/// <summary>
 		/// The subject string in which this match was found.
 		/// </summary>
-		public string Subject => _groups[0].LibSubject;
+		public string Subject => _groups[0].Subject_;
 
 		/// <summary>
 		/// Returns <see cref="Value"/>.
@@ -184,7 +184,7 @@ namespace Au.Types
 		public int GroupNumberFromName(string groupName)
 		{
 			if(groupName == null) throw new ArgumentNullException();
-			fixed(char* p = groupName) return LibGroupNumberFromName(p, groupName.Length, out _);
+			fixed(char* p = groupName) return GroupNumberFromName_(p, groupName.Length, out _);
 		}
 
 		/// <summary>
@@ -204,11 +204,11 @@ namespace Au.Types
 		public int GroupNumberFromName(string groupName, out bool notUnique)
 		{
 			if(groupName == null) throw new ArgumentNullException();
-			fixed(char* p = groupName) return LibGroupNumberFromName(p, groupName.Length, out notUnique);
+			fixed(char* p = groupName) return GroupNumberFromName_(p, groupName.Length, out notUnique);
 		}
 
 		//Used by ARegex.ReplaceAll to avoid repl.Substring.
-		internal int LibGroupNumberFromName(char* s, int len, out bool notUnique)
+		internal int GroupNumberFromName_(char* s, int len, out bool notUnique)
 		{
 			notUnique = false;
 			if(len > 32 || len < 1) return -1;
@@ -246,8 +246,8 @@ namespace Au.Types
 		public string ExpandReplacement(string repl)
 		{
 			if(Empty(repl)) return repl;
-			using(new Util.LibStringBuilder(out var b)) {
-				ARegex.LibExpandReplacement(this, repl, b);
+			using(new Util.StringBuilder_(out var b)) {
+				ARegex.ExpandReplacement_(this, repl, b);
 				return b.ToString();
 			}
 		}
@@ -311,7 +311,7 @@ namespace Au.Types
 			}
 		}
 
-		internal string LibSubject => _subject;
+		internal string Subject_ => _subject;
 
 		/// <summary>
 		/// Returns true if the group exists in the subject string, false if does not exist.

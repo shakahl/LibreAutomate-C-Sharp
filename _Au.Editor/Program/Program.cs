@@ -33,7 +33,7 @@ static class Program
 #if TRACE
 		APerf.First();
 #endif
-		Au.Util.LibAssertListener.Setup();
+		Au.Util.AssertListener_.Setup();
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
 		//AOutput.LogFile = @"q:\Test\log.txt";

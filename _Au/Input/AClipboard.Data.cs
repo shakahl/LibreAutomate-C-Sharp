@@ -92,7 +92,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="Encoding.GetBytes(string)"/>, which is called if encoding is not UTF-16.</exception>
 		public AClipboardData AddText(string text, int format = ClipFormats.Text)
 		{
-			Encoding enc = ClipFormats.LibGetTextEncoding(format, out bool unknown);
+			Encoding enc = ClipFormats.GetTextEncoding_(format, out bool unknown);
 			if(enc == null) return _Add(text, format == 0 ? Api.CF_UNICODETEXT : format);
 			return _Add(enc.GetBytes(text + "\0"), format);
 		}
@@ -155,7 +155,7 @@ namespace Au
 		/// </example>
 		public AClipboardData AddHtml(string html)
 		{
-			return AddBinary(LibCreateHtmlFormatData(html), ClipFormats.Html);
+			return AddBinary(CreateHtmlFormatData_(html), ClipFormats.Html);
 			//note: don't support UTF-16 string of HTML format (starts with "Version:"). UTF8 conversion problems.
 		}
 
@@ -194,8 +194,8 @@ namespace Au
 		/// </remarks>
 		public void SetClipboard()
 		{
-			using(new AClipboard.LibOpenClipboard(true)) {
-				AClipboard.LibEmptyClipboard();
+			using(new AClipboard.OpenClipboard_(true)) {
+				AClipboard.EmptyClipboard_();
 				SetOpenClipboard();
 			}
 		}
@@ -274,7 +274,7 @@ namespace Au
 		/// <summary>
 		/// Copies Unicode text to the clipboard without open/empty/close.
 		/// </summary>
-		internal static void LibSetText(string text)
+		internal static void SetText_(string text)
 		{
 			Debug.Assert(text != null);
 			_SetClipboard(Api.CF_UNICODETEXT, text);
@@ -293,7 +293,7 @@ namespace Au
 		/// "<html><body><!--StartFragment--><i>italy</i><!--EndFragment--></body></html>"
 		/// ]]></code>
 		/// </example>
-		internal static unsafe byte[] LibCreateHtmlFormatData(string html)
+		internal static unsafe byte[] CreateHtmlFormatData_(string html)
 		{
 			if(html == null) throw new ArgumentNullException();
 			var b = new StringBuilder(c_headerTemplate);
@@ -383,7 +383,7 @@ EndFragment:0000000000
 		/// Gets clipboard text without open/close.
 		/// If format is 0, tries CF_UNICODETEXT and CF_HDROP.
 		/// </summary>
-		internal static unsafe string LibGetText(int format)
+		internal static unsafe string GetText_(int format)
 		{
 			IntPtr h = default;
 			if(format == 0) {
@@ -400,9 +400,9 @@ EndFragment:0000000000
 				if(mem == default) return null;
 				var s = (char*)mem; var b = (byte*)s;
 
-				Encoding enc = ClipFormats.LibGetTextEncoding(format, out bool unknown);
+				Encoding enc = ClipFormats.GetTextEncoding_(format, out bool unknown);
 				if(unknown) {
-					if((len & 1) != 0 || Util.LibBytePtr.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect
+					if((len & 1) != 0 || Util.BytePtr_.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect
 				}
 
 				if(enc == null) {
@@ -440,8 +440,8 @@ EndFragment:0000000000
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string GetText(int format = ClipFormats.Text)
 		{
-			using(new AClipboard.LibOpenClipboard(false)) {
-				return LibGetText(format);
+			using(new AClipboard.OpenClipboard_(false)) {
+				return GetText_(format);
 			}
 		}
 
@@ -454,7 +454,7 @@ EndFragment:0000000000
 		public static byte[] GetBinary(int format)
 		{
 			_CheckFormat(format);
-			using(new AClipboard.LibOpenClipboard(false)) {
+			using(new AClipboard.OpenClipboard_(false)) {
 				var h = Api.GetClipboardData(format); if(h == default) return null;
 				using(new _GlobalLock(h, out var mem, out int len)) {
 					if(mem == default) return null;
@@ -469,7 +469,7 @@ EndFragment:0000000000
 			public static IntPtr GetHandle(int format)
 			{
 				_CheckFormat(format, minimalCheckFormat: true);
-				using(new LibOpenClipboard(false)) {
+				using(new OpenClipboard_(false)) {
 					return Api.GetClipboardData(format);
 				}
 			}
@@ -483,7 +483,7 @@ EndFragment:0000000000
 		/// <exception cref="Exception">Exceptions of <see cref="Image.FromHbitmap"/>.</exception>
 		public static Bitmap GetImage()
 		{
-			using(new AClipboard.LibOpenClipboard(false)) {
+			using(new AClipboard.OpenClipboard_(false)) {
 				var h = Api.GetClipboardData(Api.CF_BITMAP); if(h == default) return null;
 				return Image.FromHbitmap(h, Api.GetClipboardData(Api.CF_PALETTE));
 			}
@@ -506,10 +506,10 @@ EndFragment:0000000000
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string GetHtml(out int fragmentStart, out int fragmentLength, out string sourceURL)
 		{
-			return LibParseHtmlFormatData(GetBinary(ClipFormats.Html), out fragmentStart, out fragmentLength, out sourceURL);
+			return ParseHtmlFormatData_(GetBinary(ClipFormats.Html), out fragmentStart, out fragmentLength, out sourceURL);
 		}
 
-		internal static string LibParseHtmlFormatData(byte[] b, out int fragmentStart, out int fragmentLength, out string sourceURL)
+		internal static string ParseHtmlFormatData_(byte[] b, out int fragmentStart, out int fragmentLength, out string sourceURL)
 		{
 			//Print(s);
 			fragmentStart = fragmentLength = 0; sourceURL = null;
@@ -563,7 +563,7 @@ EndFragment:0000000000
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static string[] GetFiles()
 		{
-			using(new AClipboard.LibOpenClipboard(false)) {
+			using(new AClipboard.OpenClipboard_(false)) {
 				var h = Api.GetClipboardData(Api.CF_HDROP); if(h == default) return null;
 				return _HdropToFiles(h);
 			}
@@ -667,7 +667,7 @@ namespace Au.Types
 		/// Gets text encoding for format.
 		/// Returns null if UTF-16 or if the format is unknown and not in s_textEncoding.
 		/// </summary>
-		internal static Encoding LibGetTextEncoding(int format, out bool unknown)
+		internal static Encoding GetTextEncoding_(int format, out bool unknown)
 		{
 			unknown = false;
 			if(format == 0 || format == Api.CF_UNICODETEXT || format == Api.CF_HDROP) return null;

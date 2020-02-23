@@ -262,7 +262,7 @@ namespace Au
 		/// </remarks>
 		public static XElement LoadElem(string file, LoadOptions options = default)
 		{
-			file = APath.LibNormalizeForNET(file);
+			file = APath.NormalizeForNET_(file);
 			return AFile.WaitIfLocked(() => {
 				using var r = new XmlTextReader(file); //to preserve \r\n
 				if(0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant; //to save correctly formatted. Default of XElement.Load(string).
@@ -296,7 +296,7 @@ namespace Au
 		/// </remarks>
 		public static XDocument LoadDoc(string file, LoadOptions options = default)
 		{
-			file = APath.LibNormalizeForNET(file);
+			file = APath.NormalizeForNET_(file);
 			return AFile.WaitIfLocked(() => {
 				using var r = new XmlTextReader(file);
 				if(0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant;

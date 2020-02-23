@@ -31,7 +31,7 @@ namespace Au
 	{
 		static void _Print(object text, string cp, int cln, string cmn)
 		{
-			string s = LibPrintObjectToString(text);
+			string s = PrintObjectToString_(text);
 			string prefix = null; if(s.Starts("<>")) { prefix = "<>"; s = s.Substring(2); }
 			AOutput.Write($"{prefix}Debug: {cmn} ({APath.GetFileName(cp)}:{cln}):  {s}");
 		}
@@ -71,14 +71,14 @@ namespace Au
 		/// In DEBUG config prints ALastError.Message.
 		/// </summary>
 		[Conditional("DEBUG")]
-		internal static void LibPrintNativeError([CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		internal static void PrintNativeError_([CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 			=> _Print(ALastError.Message, cp, cln, cmn);
 
 		/// <summary>
 		/// In DEBUG config prints ALastError.MessageFor(code).
 		/// </summary>
 		[Conditional("DEBUG")]
-		internal static void LibPrintNativeError(int code, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		internal static void PrintNativeError_(int code, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 			=> _Print(ALastError.MessageFor(code), cp, cln, cmn);
 
 		/// <summary>
@@ -89,7 +89,7 @@ namespace Au
 		[Conditional("DEBUG")]
 		public static void Dialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
-			string s = LibPrintObjectToString(text);
+			string s = PrintObjectToString_(text);
 			ADialog.ShowEx("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetFileName(cp)}:{cln})");
 		}
 
@@ -137,7 +137,7 @@ namespace Au
 		/// Does nothing if AOpt.Debug.<see cref="OptDebug.Verbose"/> == false.
 		/// When flags are valid, this function is fast.
 		/// </remarks>
-		internal static unsafe void LibCheckFlagsOpt<T>(T flags, T goodFlags) where T : unmanaged, Enum
+		internal static unsafe void CheckFlagsOpt_<T>(T flags, T goodFlags) where T : unmanaged, Enum
 		{
 			//FUTURE: if this is really often useful, make it public. If not used - remove.
 
@@ -164,7 +164,7 @@ namespace Au
 		}
 
 #if DEBUG
-		internal static int LibGetComObjRefCount(IntPtr obj)
+		internal static int GetComObjRefCount_(IntPtr obj)
 		{
 			Marshal.AddRef(obj);
 			return Marshal.Release(obj);
@@ -188,8 +188,8 @@ namespace Au
 		/// Returns managed memory size as formatted string. Uses GC.GetTotalMemory.
 		/// Works in Release too.
 		/// </summary>
-		/// <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
-		internal static string LibMemoryGet(bool fromAnchor = true)
+		/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
+		internal static string MemoryGet_(bool fromAnchor = true)
 		{
 			var mem = GC.GetTotalMemory(false);
 			//if(s_mem0 == 0) s_mem0 = mem;
@@ -202,13 +202,13 @@ namespace Au
 		/// Prints managed memory size. Uses GC.GetTotalMemory.
 		/// Works in Release too.
 		/// </summary>
-		/// <param name="fromAnchor">Get the difference from previous call to <b>LibMemorySetAnchor</b>.</param>
-		internal static void LibMemoryPrint(bool fromAnchor = true) => _Print2(LibMemoryGet(fromAnchor));
+		/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
+		internal static void MemoryPrint_(bool fromAnchor = true) => _Print2(MemoryGet_(fromAnchor));
 
 		/// <summary>
-		/// Memorizes current managed memory size, so that next call to another <b>LibMemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
+		/// Memorizes current managed memory size, so that next call to another <b>MemoryX</b> function with fromAnchor=true (default) will get memory size difference from current memory size.
 		/// </summary>
-		internal static void LibMemorySetAnchor() { s_mem0 = GC.GetTotalMemory(false); }
+		internal static void MemorySetAnchor_() { s_mem0 = GC.GetTotalMemory(false); }
 
 		/// <summary>
 		/// Prints assemblies already loaded or/and loaded in the future.

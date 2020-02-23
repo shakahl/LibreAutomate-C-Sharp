@@ -77,7 +77,7 @@ namespace Au
 
 			public override string ToString()
 			{
-				using(new Util.LibStringBuilder(out var b)) {
+				using(new Util.StringBuilder_(out var b)) {
 					_Append("name", _name);
 					_Append("cn", _cn);
 					if(_program != null) _Append("program", _program); else if(_processId != 0) _Append("processId", _processId); else if(_threadId != 0) _Append("threadId", _threadId);
@@ -194,13 +194,13 @@ namespace Au
 				return _FindOrMatch(k) >= 0;
 			}
 
-			Util.LibArrayBuilder<AWnd> _AllWindows()
+			Util.ArrayBuilder_<AWnd> _AllWindows()
 			{
 				//FUTURE: optimization: if cn not wildcard etc, at first find atom.
 				//	If not found, don't search. If found, compare atom, not class name string.
 
-				var f = _threadId != 0 ? Lib.EnumAPI.EnumThreadWindows : Lib.EnumAPI.EnumWindows;
-				return Lib.EnumWindows2(f, 0 == (_flags & WFFlags.HiddenToo), true, wParent: _owner, threadId: _threadId);
+				var f = _threadId != 0 ? Internal_.EnumAPI.EnumThreadWindows : Internal_.EnumAPI.EnumWindows;
+				return Internal_.EnumWindows2(f, 0 == (_flags & WFFlags.HiddenToo), true, wParent: _owner, threadId: _threadId);
 			}
 
 			/// <summary>
@@ -237,7 +237,7 @@ namespace Au
 			AWnd[] _FindAll(_WndList k)
 			{
 				using(k) {
-					using var ab = new Util.LibArrayBuilder<AWnd>();
+					using var ab = new Util.ArrayBuilder_<AWnd>();
 					_FindOrMatch(k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
 					return ab.ToArray();
 				}
@@ -282,7 +282,7 @@ namespace Au
 					cache?.Begin(w);
 
 					if(_name != null) {
-						var s = cache != null && cache.CacheName ? (cache.Name ?? (cache.Name = w.LibNameTL)) : w.LibNameTL;
+						var s = cache != null && cache.CacheName ? (cache.Name ?? (cache.Name = w.NameTL_)) : w.NameTL_;
 						if(!_name.Match(s)) { _stopProp = EProps.name; continue; }
 						//note: name is before classname. It makes faster in slowest cases (HiddenToo), because most windows are nameless.
 					}
@@ -330,7 +330,7 @@ namespace Au
 						//When it happens (AProcess.GetName returns null):
 						//	If need full path: continue, we cannot do anything more.
 						//	Switch to plan B and no longer use all the above. Plan B:
-						//	Get list of pids of all processes that match _program. For it we call AProcess.LibGetProcessesByName, which uses the same slow API, but we call it just one time.
+						//	Get list of pids of all processes that match _program. For it we call AProcess.GetProcessesByName_, which uses the same slow API, but we call it just one time.
 						//	If it returns null (it means there are no matching processes), break (window not found).
 						//	From now, in each loop will need just to find pid in the returned list, and continue if not found.
 
@@ -349,7 +349,7 @@ namespace Au
 								//if(0!=(_flags&WFFlags.ProgramPath)) continue;
 
 								//switch to plan B
-								AProcess.LibGetProcessesByName(ref pids, _program);
+								AProcess.GetProcessesByName_(ref pids, _program);
 								if(Empty(pids)) break;
 								programNamePlanB = true;
 								goto g1;
@@ -636,7 +636,7 @@ namespace Au
 			/// <seealso cref="FindAll"/>
 			public static AWnd[] AllWindows(bool onlyVisible = false, bool sortFirstVisible = false)
 			{
-				return Lib.EnumWindows(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
+				return Internal_.EnumWindows(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible);
 			}
 
 			/// <summary>
@@ -650,7 +650,7 @@ namespace Au
 			/// </remarks>
 			public static void AllWindows(ref List<AWnd> a, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
-				Lib.EnumWindows2(Lib.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<AWnd>());
+				Internal_.EnumWindows2(Internal_.EnumAPI.EnumWindows, onlyVisible, sortFirstVisible, list: a ??= new List<AWnd>());
 			}
 
 			/// <summary>
@@ -672,7 +672,7 @@ namespace Au
 			public static AWnd[] ThreadWindows(int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
-				return Lib.EnumWindows(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
+				return Internal_.EnumWindows(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId);
 			}
 
 			/// <summary>
@@ -682,14 +682,14 @@ namespace Au
 			public static void ThreadWindows(ref List<AWnd> a, int threadId, bool onlyVisible = false, bool sortFirstVisible = false)
 			{
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
-				Lib.EnumWindows2(Lib.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<AWnd>());
+				Internal_.EnumWindows2(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<AWnd>());
 			}
 		}
 
 		/// <summary>
 		/// Internal static functions.
 		/// </summary>
-		internal static partial class Lib
+		internal static partial class Internal_
 		{
 			internal enum EnumAPI { EnumWindows, EnumThreadWindows, EnumChildWindows, }
 
@@ -702,16 +702,16 @@ namespace Au
 
 			/// <summary>
 			/// This version creates much less garbage.
-			/// The caller must dispose the returned LibArrayBuilder, unless list is not null.
-			/// If list is not null, adds windows there (clears at first) and returns default(LibArrayBuilder).
+			/// The caller must dispose the returned ArrayBuilder_, unless list is not null.
+			/// If list is not null, adds windows there (clears at first) and returns default(ArrayBuilder_).
 			/// </summary>
-			internal static Util.LibArrayBuilder<AWnd> EnumWindows2(EnumAPI api,
+			internal static Util.ArrayBuilder_<AWnd> EnumWindows2(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible = false, AWnd wParent = default, bool directChild = false, int threadId = 0,
 				Func<AWnd, object, bool> predicate = null, object predParam = default, List<AWnd> list = null)
 			{
 				if(directChild && wParent == GetWnd.Root) { api = EnumAPI.EnumWindows; wParent = default; }
 
-				Util.LibArrayBuilder<AWnd> ab = default;
+				Util.ArrayBuilder_<AWnd> ab = default;
 				bool disposeArray = true;
 				var d = new _EnumData { api = api, onlyVisible = onlyVisible, directChild = directChild, wParent = wParent };
 				try {
@@ -785,7 +785,7 @@ namespace Au
 				{
 					if(onlyVisible && !_EnumIsVisible(w, api, wParent)) return 1;
 					if(api == EnumAPI.EnumChildWindows) {
-						if(directChild && w.LibParentGWL != wParent) return 1;
+						if(directChild && w.ParentGWL_ != wParent) return 1;
 					} else {
 						if(!wParent.Is0 && w.Owner != wParent) return 1;
 					}
@@ -807,13 +807,13 @@ namespace Au
 			}
 
 			static bool _EnumIsVisible(AWnd w, EnumAPI api, AWnd wParent)
-				=> api == EnumAPI.EnumChildWindows ? w.LibIsVisibleIn(wParent) : w.IsVisible;
+				=> api == EnumAPI.EnumChildWindows ? w.IsVisibleIn_(wParent) : w.IsVisible;
 		}
 
 		/// <summary>
 		/// An enumerable list of AWnd for <see cref="Finder._FindOrMatch"/> and <see cref="ChildFinder._FindInList"/>.
-		/// Holds Util.LibArrayBuilder or IEnumerator or single AWnd or none.
-		/// Must be disposed if it is Util.LibArrayBuilder or IEnumerator, else disposing is optional.
+		/// Holds Util.ArrayBuilder_ or IEnumerator or single AWnd or none.
+		/// Must be disposed if it is Util.ArrayBuilder_ or IEnumerator, else disposing is optional.
 		/// </summary>
 		struct _WndList : IDisposable
 		{
@@ -823,9 +823,9 @@ namespace Au
 			int _i;
 			AWnd _w;
 			IEnumerator<AWnd> _en;
-			Util.LibArrayBuilder<AWnd> _ab;
+			Util.ArrayBuilder_<AWnd> _ab;
 
-			internal _WndList(Util.LibArrayBuilder<AWnd> ab) : this()
+			internal _WndList(Util.ArrayBuilder_<AWnd> ab) : this()
 			{
 				_ab = ab;
 				_t = ListType.ArrayBuilder;

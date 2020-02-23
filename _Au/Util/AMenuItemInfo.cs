@@ -112,7 +112,7 @@ namespace Au.Util
 			if(!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null; //get required buffer size
 			if(mi.cch == 0) return "";
 			mi.cch++; //string length -> buffer length
-			var b = AMemoryArray.LibChar(ref mi.cch);
+			var b = AMemoryArray.Char_(ref mi.cch);
 			fixed (char* p = b.A) {
 				mi.dwTypeData = p;
 				if(!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null;

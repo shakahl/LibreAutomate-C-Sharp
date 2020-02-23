@@ -42,10 +42,10 @@ namespace Au.Controls
 
 		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
-		internal static byte[] LibByte(int n) => AMemoryArray.Get(n, ref t_byte);
+		internal static byte[] Byte_(int n) => AMemoryArray.Get(n, ref t_byte);
 		//these currently not used
-		//internal static AMemoryArray.ByteBuffer LibByte(ref int n) { var r = AMemoryArray.Get(n, ref t_byte); n = r.Length - 1; return r; }
-		//internal static AMemoryArray.ByteBuffer LibByte(int n, out int nHave) { var r = AMemoryArray.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
+		//internal static AMemoryArray.ByteBuffer Byte_(ref int n) { var r = AMemoryArray.Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static AMemoryArray.ByteBuffer Byte_(int n, out int nHave) { var r = AMemoryArray.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 
 		internal SciText(AuScintilla sc)
@@ -105,7 +105,7 @@ namespace Au.Controls
 		public int SetStringString(int sciMessage, string wParam0lParam)
 		{
 			fixed(byte* s = _ToUtf8(wParam0lParam, out var len)) {
-				int i = LibBytePtr.Length(s);
+				int i = BytePtr_.Length(s);
 				Debug.Assert(i < len);
 				return C.Call(sciMessage, s, s + i + 1);
 			}
@@ -128,11 +128,11 @@ namespace Au.Controls
 		{
 			if(bufferSize < 0) return GetStringOfLength(sciMessage, wParam, Call(sciMessage, wParam));
 			if(bufferSize == 0) return "";
-			fixed(byte* b = LibByte(bufferSize)) {
+			fixed(byte* b = Byte_(bufferSize)) {
 				b[bufferSize] = 0;
 				Call(sciMessage, wParam, b);
 				Debug.Assert(b[bufferSize] == 0);
-				int len = LibBytePtr.Length(b, bufferSize);
+				int len = BytePtr_.Length(b, bufferSize);
 				return _FromUtf8(b, len);
 			}
 		}
@@ -152,7 +152,7 @@ namespace Au.Controls
 		public string GetStringOfLength(int sciMessage, LPARAM wParam, int utf8Length)
 		{
 			if(utf8Length == 0) return "";
-			fixed(byte* b = LibByte(utf8Length)) {
+			fixed(byte* b = Byte_(utf8Length)) {
 				b[utf8Length] = 0;
 				Call(sciMessage, wParam, b);
 				Debug.Assert(b[utf8Length] == 0);
@@ -375,7 +375,7 @@ namespace Au.Controls
 		//public void SetTextUtf8(byte[] s, int startIndex = 0, SciSetTextFlags flags = 0)
 		//{
 		//	using(new _NoUndoNotif(this, flags)) {
-		//		LibSetText(s, startIndex);
+		//		SetText_(s, startIndex);
 		//	}
 		//}
 
@@ -386,18 +386,18 @@ namespace Au.Controls
 		/// Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 		/// s must end with 0. Asserts.
 		/// </remarks>
-		internal void LibSetText(byte[] s, int startIndex)
+		internal void SetText_(byte[] s, int startIndex)
 		{
 			Debug.Assert(s.Length > 0 && s[^1] == 0);
 			Debug.Assert((uint)startIndex < s.Length);
-			fixed(byte* p = s) LibSetText(p + startIndex);
+			fixed(byte* p = s) SetText_(p + startIndex);
 		}
 
 		/// <summary>
 		/// Sets UTF-8 text.
 		/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 		/// </summary>
-		internal void LibSetText(byte* s)
+		internal void SetText_(byte* s)
 		{
 			using(new _NoReadonly(this))
 				Call(SCI_SETTEXT, 0, s);
@@ -430,7 +430,7 @@ namespace Au.Controls
 		/// Sets or appends UTF-8 text of specified length.
 		/// Does not parse tags. Moves current position and scrolls to the end.
 		/// </summary>
-		internal void LibAddText(bool append, byte* s, int lenToAppend)
+		internal void AddText_(bool append, byte* s, int lenToAppend)
 		{
 			using(new _NoReadonly(this))
 				if(append) Call(SCI_APPENDTEXT, lenToAppend, s);
@@ -446,7 +446,7 @@ namespace Au.Controls
 		///// Uses SCI_ADDSTYLEDTEXT. Caller does not have to move cursor to the end.
 		///// lenToAppend is length in bytes, not in cells.
 		///// </summary>
-		//internal void LibAddStyledText(bool append, byte* s, int lenBytes)
+		//internal void AddStyledText_(bool append, byte* s, int lenBytes)
 		//{
 		//	if(append) Call(SCI_SETEMPTYSELECTION, TextLengthBytes);
 
@@ -461,7 +461,7 @@ namespace Au.Controls
 		/// Gets all text directly from Scintilla.
 		/// Does not use caching like AuScintilla.Text.
 		/// </summary>
-		internal string LibGetText() => _RangeText(0, C.Len8);
+		internal string GetText_() => _RangeText(0, C.Len8);
 
 		/// <summary>
 		/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
@@ -640,14 +640,14 @@ namespace Au.Controls
 		/// Gets annotation text of line.
 		/// Returns "" if the line does not contain annotation or is invalid line index.
 		/// </summary>
-		public string AnnotationText(int line) => C.ZImages?.LibAnnotationText(line) ?? LibAnnotationText(line);
+		public string AnnotationText(int line) => C.ZImages?.AnnotationText_(line) ?? AnnotationText_(line);
 
 		/// <summary>
 		/// Gets raw annotation text which can contain image info.
 		/// AnnotationText gets text without image info.
 		/// Returns "" if the line does not contain annotation or is invalid line index.
 		/// </summary>
-		public string LibAnnotationText(int line) => GetString(SCI_ANNOTATIONGETTEXT, line);
+		public string AnnotationText_(int line) => GetString(SCI_ANNOTATIONGETTEXT, line);
 
 		/// <summary>
 		/// Sets annotation text of line.
@@ -657,15 +657,15 @@ namespace Au.Controls
 		/// </summary>
 		public void AnnotationText(int line, string s)
 		{
-			if(C.ZImages != null) C.ZImages.LibAnnotationText(line, s);
-			else LibAnnotationText(line, s);
+			if(C.ZImages != null) C.ZImages.AnnotationText_(line, s);
+			else AnnotationText_(line, s);
 		}
 
 		/// <summary>
 		/// Sets raw annotation text which can contain image info.
 		/// If s is null or "", removes annotation.
 		/// </summary>
-		internal void LibAnnotationText(int line, string s)
+		internal void AnnotationText_(int line, string s)
 		{
 			if(Empty(s)) s = null;
 			SetString(SCI_ANNOTATIONSETTEXT, line, s);
@@ -930,7 +930,7 @@ namespace Au.Controls
 				}
 				if(s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
 				if(len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
-				int zeroAt = LibBytePtr.Length(s, len);
+				int zeroAt = BytePtr_.Length(s, len);
 				if(zeroAt == len - 1) len--; //WordPad saves .rtf files with '\0' at the end
 				if(zeroAt == len) { //no '\0'
 					byte* p = s, pe = s + len; for(; p < pe; p++) if(*p >= 128) break; //is ASCII?
@@ -938,7 +938,7 @@ namespace Au.Controls
 					return _Encoding.Utf8NoBOM;
 				}
 				var u = (char*)s; len /= 2;
-				if(LibCharPtr.Length(u, len) == len) //no '\0'
+				if(CharPtr_.Length(u, len) == len) //no '\0'
 					if(0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0, default, null)) return _Encoding.Utf16NoBOM;
 				return _Encoding.Binary;
 			}
@@ -987,7 +987,7 @@ namespace Au.Controls
 			public unsafe bool SetText(SciText z, byte[] text)
 			{
 				using(new _NoUndoNotif(z, SciSetTextFlags.NoUndoNoNotify)) {
-					z.LibSetText(text, _enc == _Encoding.Utf8BOM ? 3 : 0);
+					z.SetText_(text, _enc == _Encoding.Utf8BOM ? 3 : 0);
 				}
 				if(_enc != _Encoding.Binary) return true;
 				z.Call(SCI_SETREADONLY, 1);
@@ -1011,7 +1011,7 @@ namespace Au.Controls
 				int len = z.C.Len8;
 				int bom = (int)_enc >> 4;
 				if(bom == 2 || bom == 4) bom = 1; //1 UTF16 or UTF32 character
-				var b = LibByte(len + bom);
+				var b = Byte_(len + bom);
 
 				fixed(byte* p = b) z.Call(SCI_GETTEXT, len + 1, p + bom);
 

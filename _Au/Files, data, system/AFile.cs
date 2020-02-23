@@ -66,7 +66,7 @@ namespace Au
 		public static unsafe bool GetProperties(string path, out FileProperties properties, FAFlags flags = 0)
 		{
 			properties = new FileProperties();
-			if(0 == (flags & FAFlags.UseRawPath)) path = APath.LibNormalizeMinimally(path, true); //don't need LibNormalizeExpandEV, the API itself supports .. etc
+			if(0 == (flags & FAFlags.UseRawPath)) path = APath.NormalizeMinimally_(path, true); //don't need NormalizeExpandEV_, the API itself supports .. etc
 			_DisableDeviceNotReadyMessageBox();
 			if(!Api.GetFileAttributesEx(path, 0, out Api.WIN32_FILE_ATTRIBUTE_DATA d)) {
 				if(!_GetAttributesOnError(path, flags, out _, &d)) return false;
@@ -95,7 +95,7 @@ namespace Au
 		public static unsafe bool GetAttributes(string path, out FileAttributes attributes, FAFlags flags = 0)
 		{
 			attributes = 0;
-			if(0 == (flags & FAFlags.UseRawPath)) path = APath.LibNormalizeMinimally(path, true); //don't need LibNormalizeExpandEV, the API itself supports .. etc
+			if(0 == (flags & FAFlags.UseRawPath)) path = APath.NormalizeMinimally_(path, true); //don't need NormalizeExpandEV_, the API itself supports .. etc
 			_DisableDeviceNotReadyMessageBox();
 			var a = Api.GetFileAttributes(path);
 			if(a == (FileAttributes)(-1)) return _GetAttributesOnError(path, flags, out attributes);
@@ -148,7 +148,7 @@ namespace Au
 		/// </summary>
 		static unsafe bool _GetAttributes(string path, out FileAttributes attr, bool useRawPath)
 		{
-			if(!useRawPath) path = APath.LibNormalizeMinimally(path, false);
+			if(!useRawPath) path = APath.NormalizeMinimally_(path, false);
 			_DisableDeviceNotReadyMessageBox();
 			attr = Api.GetFileAttributes(path);
 			if(attr == (FileAttributes)(-1) && !_GetAttributesOnError(path, FAFlags.DontThrow, out attr)) return false;
@@ -273,7 +273,7 @@ namespace Au
 
 			string s = path;
 			if(APath.IsFullPathExpandEnvVar(ref s)) {
-				if(ExistsAsAny(s)) return APath.LibNormalize(s, noExpandEV: true);
+				if(ExistsAsAny(s)) return APath.Normalize_(s, noExpandEV: true);
 				return null;
 			}
 
@@ -282,15 +282,15 @@ namespace Au
 					s = d;
 					if(!APath.IsFullPathExpandEnvVar(ref s)) continue;
 					s = APath.Combine(s, path);
-					if(ExistsAsAny(s)) return APath.LibNormalize(s, noExpandEV: true);
+					if(ExistsAsAny(s)) return APath.Normalize_(s, noExpandEV: true);
 				}
 			}
 
 			s = AFolders.ThisApp + path;
-			if(ExistsAsAny(s)) return APath.LibNormalize(s, noExpandEV: true);
+			if(ExistsAsAny(s)) return APath.Normalize_(s, noExpandEV: true);
 
 			for(int na = 300; ;) {
-				var b = Util.AMemoryArray.LibChar(ref na);
+				var b = Util.AMemoryArray.Char_(ref na);
 				int nr = Api.SearchPath(null, path, null, na, b, null);
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
@@ -491,12 +491,12 @@ namespace Au
 			if(opType == _FileOpType.Rename) {
 				opType = _FileOpType.Move;
 				if(APath.IsInvalidFileName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
-				path2 = APath.LibCombine(_RemoveFilename(path1), path2);
+				path2 = APath.Combine_(_RemoveFilename(path1), path2);
 			} else {
 				string path2Parent;
 				if(into) {
 					path2Parent = _PreparePath(path2);
-					path2 = APath.LibCombine(path2Parent, _GetFilename(path1));
+					path2 = APath.Combine_(path2Parent, _GetFilename(path1));
 				} else {
 					path2 = _PreparePath(path2);
 					path2Parent = _RemoveFilename(path2, true);
@@ -525,7 +525,7 @@ namespace Au
 					case FileDir2.AccessDenied:
 						break;
 					default:
-						if(More.LibIsSameFile(path1, path2)) {
+						if(More.IsSameFile_(path1, path2)) {
 							//eg renaming "file.txt" to "FILE.txt"
 							ADebug.Print("same file");
 							//deleted = true;
@@ -894,7 +894,7 @@ namespace Au
 				if(ec == 0) {
 					//notify shell. Else, if it was open in Explorer, it shows an error message box.
 					//Info: .NET does not notify; SHFileOperation does.
-					LibShellNotify(Api.SHCNE_RMDIR, path);
+					ShellNotify_(Api.SHCNE_RMDIR, path);
 					return type;
 				}
 				ADebug.Print("Using _DeleteShell.");
@@ -1046,7 +1046,7 @@ namespace Au
 			return true;
 		}
 
-		internal static void LibShellNotify(uint @event, string path, string path2 = null)
+		internal static void ShellNotify_(uint @event, string path, string path2 = null)
 		{
 			//ThreadPool.QueueUserWorkItem(_ => Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2)); //no, this process may end soon
 			Api.SHChangeNotify(@event, Api.SHCNF_PATH, path, path2);
@@ -1059,7 +1059,7 @@ namespace Au
 		static string _PreparePath(string path)
 		{
 			if(!APath.IsFullPathExpandEnvVar(ref path)) throw new ArgumentException($"Not full path: '{path}'.");
-			return APath.LibNormalize(path, noExpandEV: true);
+			return APath.Normalize_(path, noExpandEV: true);
 		}
 
 		/// <summary>
@@ -1197,7 +1197,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllText(string)"/>.</exception>
 		public static string LoadText(string file, Encoding encoding = null)
 		{
-			file = APath.LibNormalizeForNET(file);
+			file = APath.NormalizeForNET_(file);
 			return WaitIfLocked(() => File.ReadAllText(file, encoding ?? Encoding.UTF8));
 			//FUTURE: why ReadAllText so slow when file contains 17_000_000 empty lines?
 			//	230 - 1600 ms. It seems makes so much garbage that triggers GC.
@@ -1213,7 +1213,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="File.ReadAllBytes(string)"/>.</exception>
 		public static byte[] LoadBytes(string file)
 		{
-			file = APath.LibNormalizeForNET(file);
+			file = APath.NormalizeForNET_(file);
 			return WaitIfLocked(() => File.ReadAllBytes(file));
 		}
 
@@ -1309,8 +1309,8 @@ namespace Au
 			string es = null;
 			if(ExistsAsFile(file, true)) {
 				if(!Api.ReplaceFile(file, temp, back, 6)) es = "ReplaceFile failed"; //random ERROR_UNABLE_TO_REMOVE_REPLACED; _LockedWaiter knows it
-				else if(backup) LibShellNotify(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
-				else if(!Api.DeleteFile(back)) ADebug.LibPrintNativeError(); //maybe should wait/retry if failed, but never noticed
+				else if(backup) ShellNotify_(Api.SHCNE_RENAMEITEM, temp, file); //without it Explorer shows 2 files with filename of temp
+				else if(!Api.DeleteFile(back)) ADebug.PrintNativeError_(); //maybe should wait/retry if failed, but never noticed
 			} else {
 				if(!Api.MoveFileEx(temp, file, Api.MOVEFILE_REPLACE_EXISTING)) es = "MoveFileEx failed";
 			}

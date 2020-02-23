@@ -128,9 +128,9 @@ namespace Au
 			var R = new RResult();
 			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
 			bool needHandle = flags.Has(RFlags.NeedProcessHandle);
-			LibWaitHandle ph = null;
+			WaitHandle_ ph = null;
 			if(!x.hProcess.Is0) {
-				if(waitForExit || needHandle) ph = new LibWaitHandle(x.hProcess, true);
+				if(waitForExit || needHandle) ph = new WaitHandle_(x.hProcess, true);
 				if(!waitForExit) R.ProcessId = AProcess.ProcessIdFromHandle(x.hProcess);
 			}
 
@@ -191,10 +191,10 @@ namespace Au
 			isShellPath = isFullPath = false;
 			file = APath.ExpandEnvVar(file);
 			if(Empty(file)) throw new ArgumentException();
-			if(runConsole || !(isShellPath = APath.LibIsShellPath(file))) {
+			if(runConsole || !(isShellPath = APath.IsShellPath_(file))) {
 				if(isFullPath = APath.IsFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
-					file = APath.LibNormalize(file, fl, true);
+					file = APath.Normalize_(file, fl, true);
 
 					//ShellExecuteEx supports long path prefix for exe but not for documents.
 					//Process.Run supports long path prefix, except when the exe is .NET.
@@ -299,11 +299,11 @@ namespace Au
 			exe = _NormalizeFile(true, exe, out _, out _);
 			//args = APath.ExpandEnvVar(args); //rejected
 
-			var ps = new LibProcessStarter(exe, args, curDir, rawExe: true);
+			var ps = new ProcessStarter_(exe, args, curDir, rawExe: true);
 
-			LibHandle hProcess = default;
+			Handle_ hProcess = default;
 			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
-			if(!Api.CreatePipe(out LibHandle hOutRead, out LibHandle hOutWrite, sa, 0)) throw new AuException(0);
+			if(!Api.CreatePipe(out Handle_ hOutRead, out Handle_ hOutWrite, sa, 0)) throw new AuException(0);
 
 			byte* b = null; char* c = null;
 			try {

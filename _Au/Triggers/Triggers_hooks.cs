@@ -17,53 +17,33 @@ using System.Runtime.ExceptionServices;
 using Au.Types;
 using static Au.AStatic;
 
-//Triggers of all non-exe task processes/threads use single low-level keyboard/mouse hook in editor process. Not own LL hooks, because:
-//	1. UAC. Editor normally is admin. Task processes can be any. Hooks of non-admin processes don't work when an admin window is active.
-//	2. In LL hook procedure some COM functions fail, eg AAcc.Find in some windows. Scripts often use acc in scope context functions etc.
+//Key/mouse/autotext triggers use low-level keyboard and mouse hooks. The hooks are in a separate thread, because:
+//	1. Safer when user code is slow or incorrect.
+//	2. Works well with COM. In LL hook procedure some COM functions fail, eg AAcc.Find with some windows.
 //		Error "An outgoing call cannot be made since the application is dispatching an input-synchronous call". Like when using SendMessage for IPC.
-//		That is why, even if hook is in task process, it must be in separate thread that communicates with action's thread through pipe.
-//	3. Scripts may use raw input or directX, and Windows has this bug: then low-level keyboard hook does not work in that process.
-//	4. Although now slightly slower when there is 1 task process/thread using hooks, but becomes faster when there are multiple.
-//We process triggers in task process, not in editor process. It is much simpler, more flexible, and does not make considerably slower.
-//	For IPC we use pipes. Unlike SendMessage, it solves the [2] problem. It is faster than SendMessage and hook IPC calls.
-//	To make even faster, could do initial processing in hook process. It is more difficult. Not worth.
-//For window triggers we use acc hooks in task processes, not single hook in editor process.
-//	Unlike LL hooks, acc hooks are fast.
+//		It is important because scripts often use acc in scope context functions etc that run in the main thread.
+
+//Low-level key/mouse hooks also have other problems, but not too big:
+//	1. UAC. Hooks of non-admin processes don't work when an admin window is active.
+//		Workaround: let users don't use triggers in non-admin processes. Editor normally is admin, and by default creates task processes of same UAC IL.
+//	2. Scripts may use raw input or directX, and Windows has this bug: then low-level keyboard hook does not work in that process.
+//		Workaround: let users run such scripts in separate processes.
+//	3. Each LL hook uses CPU on key/mouse events.
+//		Workaround: let users put all triggers in single script. But it's OK to use another script temporarily eg for testing.
+//		Actually in real conditions even 10 hooks don't use a significant part of CPU compared to CPU used by the target app and OS.
+//Rejected: single hook server in editor process. It would mitigate some of these problems. Tested. Much code and little benefit.
+
+//For window triggers we use acc hooks. They use less CPU for IPC.
 //	Tested: renaming a captionless toolwindow every 1-2 ms in loop:
 //		CPU usage with no acc hooks is 4%. With 1 hook - 7%. With 10 hooks in different processes - 7%.
 
 namespace Au.Triggers
 {
 	/// <summary>
-	/// Low-level keyboard and mouse hooks in editor process or task process.
-	/// Communicates with multiple task processes/threads.
+	/// Thread containing low-level keyboard and mouse hooks.
 	/// </summary>
-	/// <remarks>
-	/// To receive data from task processes, uses a message-only window and WM_COPYDATA/WM_USER.
-	/// To send data to task processes, uses pipes created by task processes/threads.
-	/// </remarks>
-	class HooksServer
+	class HooksThread : IDisposable
 	{
-		class _ThreadPipe
-		{
-			public LibHandle pipe;
-			public int threadId, processId;
-			public UsedEvents usedEvents;
-			public LibHandle threadHandle;
-
-			public _ThreadPipe(LibHandle pipe, int threadId, int processId, UsedEvents usedEvents)
-			{
-				this.pipe = pipe; this.threadId = threadId; this.processId = processId; this.usedEvents = usedEvents;
-				threadHandle = Api.OpenThread(Api.SYNCHRONIZE, false, threadId);
-			}
-
-			public void Dispose()
-			{
-				pipe.Dispose();
-				threadHandle.Dispose();
-			}
-		}
-
 		[Flags]
 		public enum UsedEvents
 		{
@@ -74,220 +54,153 @@ namespace Au.Triggers
 			MouseEdgeMove = 0x40, //Mouse edge and move triggers
 		}
 
-		AWnd _msgWnd;
-		readonly Thread _thread;
-		readonly List<_ThreadPipe> _pipes;
-		AHookWin _hookK, _hookM;
-		LibHandle _event;
-		bool _inTaskProcess;
-		MouseTriggers.LibEdgeMoveDetector _emDetector;
+		int _tid;
+		UsedEvents _usedEvents;
+		AWnd _wMsg;
+		MouseTriggers.EdgeMoveDetector_ _emDetector;
+		Handle_ _eventStartStop = Api.CreateEvent(false);
 
-		public static HooksServer Instance => s_instance;
-		static HooksServer s_instance;
-
-		public static void Start(bool inTaskProcess) => s_instance = new HooksServer(inTaskProcess);
-
-		public static void Stop() => s_instance?.MsgWnd.Send(Api.WM_CLOSE);
-
-		public HooksServer(bool inTaskProcess)
+		public HooksThread(UsedEvents usedEvents, AWnd wMsg)
 		{
-			_inTaskProcess = inTaskProcess;
-			_pipes = new List<_ThreadPipe>();
-			_event = Api.CreateEvent(true);
-			_thread = AThread.Start(_Thread);
+			_usedEvents = usedEvents;
+			_wMsg = wMsg;
+			AThread.Start(_Thread, sta: false); //important: not STA, because we use lock, which dispatches sent messages if STA
+			Api.WaitForSingleObject(_eventStartStop, -1);
+		}
+
+		public void Dispose()
+		{
+			Api.PostThreadMessage(_tid, Api.WM_QUIT, 0, 0);
+			Api.WaitForSingleObject(_eventStartStop, -1);
+			_eventStartStop.Dispose();
+			_eventSendData.Dispose();
 		}
 
 		void _Thread()
 		{
-			string cn = _inTaskProcess ? "Au.Hooks.Exe" : "Au.Hooks.Server";
-			AWnd.More.RegisterWindowClass(cn, _WndProc);
-			_msgWnd = AWnd.More.CreateMessageOnlyWindow(cn);
-			Api.SetEvent(_event);
-			if(_inTaskProcess) AProcess.Exit += (unu, sed) => _msgWnd.SendTimeout(1000, Api.WM_CLOSE); //unhook etc
+			_tid = AThread.NativeId;
 
-			//if(!Util.LibAssembly.LibIsAuNgened) {
-				Util.AJit.Compile(typeof(HooksServer), "_Send", "_KeyboardHookProc", "_MouseHookProc");
-				Util.AJit.Compile(typeof(Api), "WriteFile", "ReadFile", "WaitForMultipleObjectsEx");
-				_ = ATime.PerfMilliseconds;
-			//}
+			AHookWin hookK = null, hookM = null;
+			if(_usedEvents.Has(UsedEvents.Keyboard)) {
+				hookK = AHookWin.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
+			}
+			if(_usedEvents.Has(UsedEvents.Mouse)) {
+				hookM = AHookWin.MouseRaw_(_MouseHookProc);
+			}
+			if(_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
+				_emDetector = new MouseTriggers.EdgeMoveDetector_();
+			}
+			//tested: don't need JIT-compiling.
+
+			Api.SetEvent(_eventStartStop);
 
 			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
-		}
 
-		public Thread Thread => _thread;
-
-		public AWnd MsgWnd {
-			get {
-				if(_msgWnd.Is0) Api.WaitForSingleObject(_event, -1);
-				return _msgWnd;
-			}
-		}
-
-		LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam)
-		{
-			try {
-				switch(message) {
-				case Api.WM_DESTROY:
-					_hookK?.Dispose();
-					_hookM?.Dispose();
-					_emDetector = null;
-					foreach(var v in _pipes) v?.Dispose();
-					_event.Dispose();
-					s_instance = null;
-					Api.PostQuitMessage(0);
-					break;
-				case Api.WM_COPYDATA:
-					return _WmCopyData(wParam, lParam);
-				case Api.WM_USER:
-					int i = (int)wParam;
-					switch(i) {
-					case 1:
-						return _RemoveThread((int)lParam);
-					case 2:
-						_RemoveTask((int)lParam);
-						break;
-					}
-					return 0;
-				}
-			}
-			catch(Exception ex) { ADebug.Print(ex.Message); return default; }
-
-			return Api.DefWindowProc(w, message, wParam, lParam);
-		}
-
-		unsafe LPARAM _WmCopyData(LPARAM wParam, LPARAM lParam)
-		{
-			var c = new AWnd.More.CopyDataStruct(lParam);
-			byte[] b = c.GetBytes();
-			switch(c.DataId) {
-			case 1:
-				return _AddThread((int)wParam, b);
-			default:
-				Debug.Assert(false);
-				return 0;
-			}
-			//return 1;
-		}
-
-		unsafe int _AddThread(int threadId, byte[] data)
-		{
-			var pipeName = ActionTriggers.LibPipeName(threadId);
-			LibHandle pipe = Api.CreateFile(pipeName, Api.GENERIC_READ | Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, Api.FILE_FLAG_OVERLAPPED);
-			if(pipe.Is0) { ADebug.LibPrintNativeError(); return 0; }
-
-			var usedEvents = (UsedEvents)data.ReadInt(0);
-			int processId = data.ReadInt(4);
-
-			var tp = new _ThreadPipe(pipe, threadId, processId, usedEvents);
-			lock(_pipes) {
-				int pi = _pipes.IndexOf(null); //Print(_pipes.Count, pi);
-				if(pi >= 0) _pipes[pi] = tp; else _pipes.Add(tp);
-			}
-
-			if(0 != (usedEvents & UsedEvents.Keyboard) && _hookK == null) {
-				_hookK = AHookWin.Keyboard(_KeyboardHookProc); //note: don't use lambda, because then very slow JIT on first hook event
-			}
-			if(0 != (usedEvents & UsedEvents.Mouse) && _hookM == null) {
-				_hookM = AHookWin.LibMouseRaw(_MouseHookProc);
-			}
-			if(0 != (usedEvents & UsedEvents.MouseEdgeMove) && _emDetector == null) {
-				_emDetector = new MouseTriggers.LibEdgeMoveDetector();
-			}
-
-			return 1;
+			//Print("hooks thread ended");
+			hookK?.Dispose();
+			hookM?.Dispose();
+			_emDetector = null;
+			Api.SetEvent(_eventStartStop);
 		}
 
 		unsafe void _KeyboardHookProc(HookData.Keyboard k)
 		{
-			//var p = APerf.Create();
-			var d = new Api.KBDLLHOOKSTRUCT2(k.LibNativeStructPtr);
-			if(_Send(UsedEvents.Keyboard, &d, sizeof(Api.KBDLLHOOKSTRUCT2))) k.BlockEvent();
-			//p.NW();
+			_keyData = *k.NativeStructPtr_;
+			if(_Send(UsedEvents.Keyboard)) k.BlockEvent();
 		}
 
 		unsafe bool _MouseHookProc(LPARAM wParam, LPARAM lParam)
 		{
 			int msg = (int)wParam;
 			if(msg == Api.WM_MOUSEMOVE) {
-				var mll = (Api.MSLLHOOKSTRUCT*)lParam;
-				if(_emDetector?.Detect(mll->pt) ?? false) {
-					MouseTriggers.LibEdgeMoveDetector.Result d = _emDetector.result;
-					_Send(UsedEvents.MouseEdgeMove, &d, sizeof(MouseTriggers.LibEdgeMoveDetector.Result));
+				if(_usedEvents.Has(UsedEvents.MouseEdgeMove)) {
+					var mll = (Api.MSLLHOOKSTRUCT*)lParam;
+					if(_emDetector.Detect(mll->pt)) {
+						_emData = _emDetector.result;
+						_Send(UsedEvents.MouseEdgeMove);
+					}
 				}
-				return false;
+			} else {
+				bool wheel = _mouseMessage == Api.WM_MOUSEWHEEL || _mouseMessage == Api.WM_MOUSEHWHEEL;
+				if((_usedEvents.Has(UsedEvents.MouseWheel) && wheel) || (_usedEvents.Has(UsedEvents.MouseClick) && !wheel)) {
+					_mouseMessage = (int)wParam;
+					_mouseData = *(Api.MSLLHOOKSTRUCT*)lParam;
+					return _Send(wheel ? UsedEvents.MouseWheel : UsedEvents.MouseClick);
+				}
 			}
-
-			var m = new Api.MSLLHOOKSTRUCT2(wParam, lParam);
-			var eventType = m.IsWheel ? UsedEvents.MouseWheel : UsedEvents.MouseClick;
-			return _Send(eventType, &m, sizeof(Api.MSLLHOOKSTRUCT2));
-		}
-
-		int _RemoveThread(int threadId)
-		{
-			int pipeIndex = _pipes.FindIndex(o => o != null && o.threadId == threadId); if(pipeIndex < 0) return 0;
-			_RemovePipe(pipeIndex);
-			return 1;
-		}
-
-		int _RemovePipe(int pipeIndex)
-		{
-			//Print(pipeIndex);
-			_pipes[pipeIndex].Dispose();
-			lock(_pipes) _pipes[pipeIndex] = null;
-			return 1;
-		}
-
-		void _RemoveTask(int processId)
-		{
-			for(int i = _pipes.Count - 1; i >= 0; i--) {
-				var k = _pipes[i]; if(k == null || k.processId != processId) continue;
-				_RemovePipe(i);
-			}
+			return false;
 		}
 
 		/// <summary>
-		/// Called by RunningTasks.TaskEnded2.
+		/// Sends key/mouse event data (copied to _keyData etc) to the main thread.
+		/// Returns true to eat (block, discard) the event.
+		/// On 1100 ms timeout returns false.
 		/// </summary>
-		/// <param name="processId"></param>
-		public void RemoveTask(int processId)
+		bool _Send(UsedEvents eventType)
 		{
-			bool has = false;
-			lock(_pipes) {
-				foreach(var v in _pipes) if((v?.processId ?? 0) == processId) { has = true; break; }
+			//using var p1 = APerf.Create();
+			_wMsg.SendNotify(Api.WM_USER + 1, _messageId, (int)eventType);
+			bool timeout = Api.WaitForSingleObject(_eventSendData, 1100) == Api.WAIT_TIMEOUT;
+			lock(this) {
+				if(timeout) timeout = Api.WaitForSingleObject(_eventSendData, 0) == Api.WAIT_TIMEOUT; //other thread may SetEvent between WaitForSingleObject and lock
+				_messageId++;
+				return _eat && !timeout;
 			}
-			if(has) _msgWnd.Post(Api.WM_USER, 2, processId);
-
-			//This function is called in the main thread. All other functions that use _pipes are called in our thread.
-			//	We lock _pipes only here and in functions that modify it.
+			//info: HookWin._HookProcLL will print warning if > LowLevelHooksTimeout-50. Max LowLevelHooksTimeout is 1000.
 		}
 
-		unsafe bool _Send(UsedEvents eventType, void* data, int size)
-		{
-			for(int i = 0; i < _pipes.Count; i++) {
-				var x = _pipes[i]; if(x == null) continue;
-				if(0 == (x.usedEvents & eventType)) continue;
+		//fields for passing key/mouse event data to the main thread and getting its return value
+		Handle_ _eventSendData = Api.CreateEvent(false); //sync
+		int _messageId; //sync
+		bool _eat; //return value
+		Api.KBDLLHOOKSTRUCT _keyData;
+		Api.MSLLHOOKSTRUCT _mouseData;
+		int _mouseMessage;
+		MouseTriggers.EdgeMoveDetector_.Result _emData;
 
-				var ha = stackalloc IntPtr[2] { _event, x.threadHandle };
-				int r = 0;
-				bool read = false;
-				g1: //we use this weird goto code instead of a nested _Wait function to make faster JIT
-				var o = new Api.OVERLAPPED { hEvent = _event };
-				if(!(read ? Api.ReadFile(x.pipe, &r, 1, out _, &o) : Api.WriteFile(x.pipe, data, size, out _, &o))) {
-					if(ALastError.Code != Api.ERROR_IO_PENDING) { ADebug.LibPrintNativeError(); return false; }
-					for(; ; ) {
-						var r1 = Api.WaitForMultipleObjectsEx(2, ha, false, Timeout.Infinite, false);
-						if(r1 == 0) break;
-						Api.CancelIo(x.pipe);
-						if(r1 == 1) _RemovePipe(i); //probably TerminateThread
-						else ADebug.LibPrintNativeError(); //WAIT_FAILED
-						return false;
-						//note: not _ev.WaitOne. In STA thread it gets some messages, and then hook can reenter.
-					}
-				}
-				if(!read) { read = true; goto g1; }
-				if(r != 0) return true;
+		/// <summary>
+		/// Called by the main thread to resume the hooks thread (_Send) and pass the return value (eat).
+		/// Returns false on timeout.
+		/// </summary>
+		public bool Return(int messageId, bool eat)
+		{
+			lock(this) {
+				if(messageId != _messageId) return false;
+				_eat = eat;
+				Api.SetEvent(_eventSendData);
 			}
-			return false;
+			return true;
+		}
+
+		/// <summary>
+		/// Called by the main thread to get key event data sent by _Send.
+		/// Returns false on timeout.
+		/// </summary>
+		public bool GetKeyData(int messageId, out Api.KBDLLHOOKSTRUCT data)
+		{
+			data = _keyData;
+			return messageId == _messageId;
+		}
+
+		/// <summary>
+		/// Called by the main thread to get mouse click/wheel event data sent by _Send.
+		/// Returns false on timeout.
+		/// </summary>
+		public bool GetClickWheelData(int messageId, out Api.MSLLHOOKSTRUCT data, out int message)
+		{
+			data = _mouseData;
+			message = _mouseMessage;
+			return messageId == _messageId;
+		}
+
+		/// <summary>
+		/// Called by the main thread to get mouse edge/move event data sent by _Send.
+		/// Returns false on timeout.
+		/// </summary>
+		public bool GetEdgeMoveData(int messageId, out MouseTriggers.EdgeMoveDetector_.Result data)
+		{
+			data = _emData;
+			return messageId == _messageId;
 		}
 	}
 }

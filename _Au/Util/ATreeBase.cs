@@ -418,7 +418,7 @@ namespace Au.Util
 		/// <example><see cref="ATreeBase{T}"/></example>
 		protected static T XmlLoad(string file, XmlNodeReader nodeReader)
 		{
-			file = APath.LibNormalizeForNET(file);
+			file = APath.NormalizeForNET_(file);
 			var xs = new XmlReaderSettings() { IgnoreComments = true, IgnoreProcessingInstructions = true, IgnoreWhitespace = true };
 			using var r = AFile.WaitIfLocked(() => XmlReader.Create(file, xs));
 			return XmlLoad(r, nodeReader);
@@ -469,7 +469,7 @@ namespace Au.Util
 		/// <example><see cref="ATreeBase{T}"/></example>
 		protected void XmlSave(string file, XmlNodeWriter nodeWriter, XmlWriterSettings sett = null, IEnumerable<T> children = null)
 		{
-			file = APath.LibNormalizeForNET(file);
+			file = APath.NormalizeForNET_(file);
 			sett ??= new XmlWriterSettings() { OmitXmlDeclaration = true, Indent = true, IndentChars = "  " };
 			AFile.Save(file, temp => {
 				using var x = XmlWriter.Create(temp, sett);

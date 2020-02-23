@@ -85,7 +85,7 @@ namespace Au
 			if(!ignoreCase) return span.SequenceEqual(s);
 			return span.Equals(s, StringComparison.OrdinalIgnoreCase);
 			//Faster than string.Compare[Ordinal].
-			//With LibTables.LowerCase similar speed. Depends on whether match. 
+			//With Tables_.LowerCase similar speed. Depends on whether match. 
 		}
 
 		/// <summary>
@@ -1186,7 +1186,7 @@ namespace Au
 			if(quote) t = "\"" + t + "\"";
 			return t;
 			g1:
-			using(new LibStringBuilder(out var b, len + len / 16 + 100)) {
+			using(new StringBuilder_(out var b, len + len / 16 + 100)) {
 				if(quote) b.Append('\"');
 				for(i = 0; i < len; i++) {
 					var c = t[i];
@@ -1228,7 +1228,7 @@ namespace Au
 			int i = t.IndexOf('\\');
 			if(i < 0) return true;
 
-			using(new LibStringBuilder(out var b, t.Length)) {
+			using(new StringBuilder_(out var b, t.Length)) {
 				b.Append(t, 0, i);
 
 				for(; i < t.Length; i++) {

@@ -202,7 +202,7 @@ namespace Au.Controls
 			//QM2 also cleared the image cache, but now it is shared by all controls of this thread.
 		}
 
-		internal void LibOnTextChanged(bool inserted, in SCNotification n)
+		internal void OnTextChanged_(bool inserted, in SCNotification n)
 		{
 			//if deleted or replaced all text, clear user styles
 			if(!inserted && n.position == 0 && _c.Len8 == 0) {
@@ -374,7 +374,7 @@ namespace Au.Controls
 						currentStyle = (byte)i;
 					} else { //currently can be only <fold>
 						i &= 0x7fffffff;
-						if(!(s - tag == 6 && LibBytePtr.AsciiStarts(tag + 1, "fold"))) goto ge;
+						if(!(s - tag == 6 && BytePtr_.AsciiStarts(tag + 1, "fold"))) goto ge;
 						(folds ??= new List<POINT>()).Add((i, (int)(t - s0)));
 						//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
 					}
@@ -407,7 +407,7 @@ namespace Au.Controls
 					var quot = *s;
 					if(quot == '\'' || quot == '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
 					int n = (int)(sEnd - s);
-					int i = (quot == '>') ? LibBytePtr.AsciiFindChar(s, n, quot) : LibBytePtr.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
+					int i = (quot == '>') ? BytePtr_.AsciiFindChar(s, n, quot) : BytePtr_.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
 					if(i < 0) goto ge;
 					attr = s; s += i + 1; attrLen = i;
 					if(quot != '>') s++;
@@ -455,32 +455,32 @@ namespace Au.Controls
 					break;
 				case 4 << 16 | 's':
 					if(attr == null) goto ge;
-					if(LibBytePtr.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
+					if(BytePtr_.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
 					else goto ge;
 					break;
 				case 4 << 16 | 'm':
-					if(LibBytePtr.AsciiStarts(tag + 1, "ono")) style.Mono = true;
+					if(BytePtr_.AsciiStarts(tag + 1, "ono")) style.Mono = true;
 					else goto ge;
 					break;
 				//case 6 << 16 | 'h': //rejected. Not useful; does not hide newlines.
-				//	if(LibCharPtr.AsciiStartsWith(tag + 1, "idden")) style.Hidden = true;
+				//	if(CharPtr_.AsciiStartsWith(tag + 1, "idden")) style.Hidden = true;
 				//	else goto ge;
 				//	break;
 				case 5 << 16 | 'i':
 					if(attr == null) goto ge;
-					if(!LibBytePtr.AsciiStarts(tag + 1, "mage")) goto ge;
+					if(!BytePtr_.AsciiStarts(tag + 1, "mage")) goto ge;
 					hideTag = noEndTag = true;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
 				case 1 << 16 | '\a': //<\a>text where tags are ignored</\a>
-					i2 = LibBytePtr.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if(i2 < 0) goto ge;
+					i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if(i2 < 0) goto ge;
 					while(i2-- > 0) _Write(*s++, currentStyle);
 					s += 4;
 					//hasTags = true;
 					continue;
 				case 4 << 16 | 'c': //<code>code</code>
-					if(!LibBytePtr.AsciiStarts(tag + 1, "ode")) goto ge;
-					i2 = LibBytePtr.AsciiFindString(s, (int)(sEnd - s), "</code>"); if(i2 < 0) goto ge;
+					if(!BytePtr_.AsciiStarts(tag + 1, "ode")) goto ge;
+					i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), "</code>"); if(i2 < 0) goto ge;
 					if(codes == null) codes = new List<POINT>();
 					int iStartCode = (int)(t - s0);
 					codes.Add((iStartCode, iStartCode + i2));
@@ -489,7 +489,7 @@ namespace Au.Controls
 					hasTags = true;
 					continue;
 				case 4 << 16 | 'f': //<fold>text</fold>
-					if(!LibBytePtr.AsciiStarts(tag + 1, "old")) goto ge;
+					if(!BytePtr_.AsciiStarts(tag + 1, "old")) goto ge;
 					stackInt = (int)(t - s0);
 					//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
 					_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
@@ -532,7 +532,7 @@ namespace Au.Controls
 				}
 
 				if(linkTag != null) {
-					if(!userLinkTag && !LibBytePtr.AsciiStarts(tag, linkTag)) goto ge;
+					if(!userLinkTag && !BytePtr_.AsciiStarts(tag, linkTag)) goto ge;
 					//if(attr == null) goto ge; //no, use text as attribute
 					if(_linkStyle != null) style = new _TagStyle(_linkStyle);
 					else {
@@ -577,7 +577,7 @@ namespace Au.Controls
 			if(_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
 
 			//APerf.Next();
-			_t.LibAddText(append, s0, len);
+			_t.AddText_(append, s0, len);
 			if(!hasTags) return;
 
 			int endStyled = 0, prevLen = append ? _c.Len8 - len : 0;
@@ -711,7 +711,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Called on SCN_HOTSPOTRELEASECLICK.
 		/// </summary>
-		internal void LibOnLinkClick(int pos, bool ctrl)
+		internal void OnLinkClick_(int pos, bool ctrl)
 		{
 			if(AKeys.UI.IsAlt) return;
 
@@ -856,12 +856,7 @@ namespace Au.Controls
 		}
 		Dictionary<string, _TagStyle> _userStyles;
 
-		//internal void LibOnMessage(ref Message m)
-		//{
-
-		//}
-
-		internal void LibOnLButtonDownWhenNotFocused(ref Message m, ref bool setFocus)
+		internal void OnLButtonDownWhenNotFocused_(ref Message m, ref bool setFocus)
 		{
 			if(setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));

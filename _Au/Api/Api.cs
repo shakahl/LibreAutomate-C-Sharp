@@ -276,7 +276,7 @@ namespace Au.Types
 		internal const uint TOKEN_ADJUST_DEFAULT = 128;
 
 		[DllImport("advapi32.dll", SetLastError = true)]
-		internal static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out LibHandle TokenHandle);
+		internal static extern bool OpenProcessToken(IntPtr ProcessHandle, uint DesiredAccess, out Handle_ TokenHandle);
 
 		internal enum TOKEN_INFORMATION_CLASS
 		{
@@ -670,7 +670,7 @@ namespace Au.Types
 			public IntPtr hkeyClass;
 			public uint dwHotKey;
 			public IntPtr hMonitor;
-			public LibHandle hProcess;
+			public Handle_ hProcess;
 		}
 
 		[DllImport("shell32.dll", EntryPoint = "ShellExecuteExW", SetLastError = true)]
@@ -829,9 +829,9 @@ namespace Au.Types
 		///// <param name="dotExt"></param>
 		//internal static string AssocQueryString(string dotExt/*, ASSOCSTR what = ASSOCSTR.ASSOCSTR_EXECUTABLE*/)
 		//{
-		//	var b = Util.AMemoryArray.LibChar(300, out var n);
+		//	var b = Util.AMemoryArray.Char_(300, out var n);
 		//	int hr = AssocQueryString(0x20, 2, dotExt, null, b, ref n); //ASSOCF_NOTRUNCATE
-		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = Util.AMemoryArray.LibChar(n), ref n);
+		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = Util.AMemoryArray.Char_(n), ref n);
 		//	return hr == 0 ? b.ToString(n) : null;
 		//}
 
@@ -944,7 +944,7 @@ namespace Au.Types
 		internal static extern int AccessibleObjectFromEvent(AWnd hwnd, AccOBJID dwObjectId, int dwChildId, out IntPtr ppacc, out VARIANT pvarChild);
 
 		[DllImport("oleacc.dll")]
-		internal static extern LibHandle GetProcessHandleFromHwnd(AWnd hwnd);
+		internal static extern Handle_ GetProcessHandleFromHwnd(AWnd hwnd);
 
 		//[DllImport("oleacc.dll")]
 		////internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, [MarshalAs(UnmanagedType.IUnknown)] Object punk);

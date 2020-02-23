@@ -202,7 +202,7 @@ namespace Au.Compiler
 
 				var path = _ResolvePath(reference, isCOM);
 				if(path == null) return false;
-				path = APath.LibNormalize(path);
+				path = APath.Normalize_(path);
 
 				for(i = 0; i < a.Count; i++) {
 					if(a[i].path.Eqi(path) && _PropEq(a[i], alias, isCOM)) goto g1;
@@ -386,7 +386,7 @@ namespace Au.Compiler
 			/// <summary>
 			/// Returns true if the database contains XML doc of the reference assembly.
 			/// </summary>
-			/// <param name="refName">Like "mscorlib" or "System.Core" or "Au".</param>
+			/// <param name="refName">Like "mscorlib" or "System.Drawing" or "Au".</param>
 			public bool HaveRef(string refName) => _refs?.Contains(refName) ?? false;
 		}
 		static _NetDocumentationProvider s_netDocProvider;

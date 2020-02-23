@@ -76,7 +76,7 @@ namespace Au
 			if(t.Length == 0) return false;
 
 			fixed (char* str = t, pat = pattern) {
-				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.LibTables.LowerCase : null);
+				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.Tables_.LowerCase : null);
 			}
 
 			//info:

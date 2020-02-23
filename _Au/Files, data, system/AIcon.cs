@@ -113,7 +113,7 @@ namespace Au
 
 			if(0 == (flags & GIFlags.LiteralPath)) {
 				//is ".ext" or "protocol:"?
-				isFileType = APath.LibIsExtension(file) || (isURL = APath.LibIsProtocol(file));
+				isFileType = APath.IsExtension_(file) || (isURL = APath.IsProtocol_(file));
 				if(!isFileType) isURL = APath.IsUrl(file);
 				if(isFileType || isURL || (isShellPath = (file[0] == ':'))) isPath = false;
 				if(isPath) {
@@ -122,7 +122,7 @@ namespace Au
 
 					if(!searchPath) {
 						if(!APath.IsFullPath(file)) file = AFolders.ThisAppImages + file;
-						file = APath.LibNormalize(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
+						file = APath.Normalize_(file, PNFlags.DontPrefixLongPath, noExpandEV: true);
 					}
 				}
 			}
@@ -242,7 +242,7 @@ namespace Au
 			var pidl2 = pidl?.UnsafePtr ?? default;
 			if(usePidl) {
 				if(pidl2 == default) {
-					pidl2 = APidl.LibFromString(file);
+					pidl2 = APidl.FromString_(file);
 					if(pidl2 == default) usePidl = false; else freePidl = true;
 				}
 			}
@@ -495,7 +495,7 @@ namespace Au
 			int size = Api.GetSystemMetrics(size32 ? Api.SM_CXICON : Api.SM_CXSMICON);
 
 			//support Windows Store apps
-			if(1 == AWnd.Lib.GetWindowsStoreAppId(w, out var appId, true)) {
+			if(1 == AWnd.Internal_.GetWindowsStoreAppId(w, out var appId, true)) {
 				IntPtr hi = GetFileIconHandle(appId, size);
 				if(hi != default) return hi;
 			}

@@ -160,7 +160,7 @@ namespace Au.Controls
 		protected override void OnPaint(PaintEventArgs e)
 		{
 			if(_count == 0) return;
-			//ADebug.LibMemorySetAnchor();
+			//ADebug.MemorySetAnchor_();
 			//var p1 = APerf.Create();
 
 			var g = e.Graphics;
@@ -182,7 +182,7 @@ namespace Au.Controls
 
 			//p1.NW('P');
 			//APerf.Next();
-			//ADebug.LibMemoryPrint();
+			//ADebug.MemoryPrint_();
 
 			//base.OnPaint(e);
 		}
@@ -207,7 +207,7 @@ namespace Au.Controls
 			public ZItemMeasureArgs()
 			{
 				_dc = Api.GetDC(default);
-				_oldFont = Api.SelectObject(_dc, Util.LibNativeFont.RegularCached);
+				_oldFont = Api.SelectObject(_dc, Util.NativeFont_.RegularCached);
 			}
 
 			public void Dispose()
@@ -238,7 +238,7 @@ namespace Au.Controls
 			public ZItemDrawArgs()
 			{
 				_dc = Api.GetDC(default);
-				_oldFont = Api.SelectObject(_dc, Util.LibNativeFont.RegularCached);
+				_oldFont = Api.SelectObject(_dc, Util.NativeFont_.RegularCached);
 			}
 
 			public void Dispose()

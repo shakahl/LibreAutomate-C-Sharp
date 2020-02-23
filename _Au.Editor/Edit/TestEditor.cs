@@ -110,13 +110,13 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 	void TestNoGcRegion()
 	{
 		for(int i = 0; i < 2; i++) {
-			ADebug.LibMemorySetAnchor();
+			ADebug.MemorySetAnchor_();
 			bool noGC = GC.TryStartNoGCRegion(10_000_000);
 			var a = new byte[50_000_000];
 			for(int j = 0; j < a.Length; j++) a[j] = 1;
 			Print(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
 			if(noGC && GCSettings.LatencyMode == GCLatencyMode.NoGCRegion) try { GC.EndNoGCRegion(); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
-			ADebug.LibMemoryPrint();
+			ADebug.MemoryPrint_();
 			GC.Collect();
 			if(!ADialog.ShowYesNo("Continue?")) break;
 		}

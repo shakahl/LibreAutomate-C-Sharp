@@ -33,7 +33,7 @@ namespace Au
 		{
 			get
 			{
-				LibThrowIfDisposed();
+				ThrowIfDisposed_();
 				_Hresult(_FuncId.container_window, _GetWnd(out var w));
 				return w;
 			}
@@ -79,7 +79,7 @@ namespace Au
 		/// </remarks>
 		public bool GetRect(out RECT r)
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			var hr = _Hresult(_FuncId.rectangle, Cpp.Cpp_AccGetRect(this, out r));
 			GC.KeepAlive(this);
 			return hr == 0;
@@ -113,7 +113,7 @@ namespace Au
 		{
 			get
 			{
-				LibThrowIfDisposed();
+				ThrowIfDisposed_();
 				if(_misc.role != 0) return (AccROLE)_misc.role; //SHOULDDO: use AccMiscFlags.RoleIsString
 				_Hresult(_FuncId.role, _GetRole(out var role, out _, dontNeedStr: true));
 				return role;
@@ -134,7 +134,7 @@ namespace Au
 		{
 			get
 			{
-				LibThrowIfDisposed();
+				ThrowIfDisposed_();
 				var role = (AccROLE)_misc.role;
 				if(role == 0) {
 					if(0 != _Hresult(_FuncId.role, _GetRole(out role, out var roleStr, dontNeedStr: false))) return "";
@@ -187,7 +187,7 @@ namespace Au
 		{
 			get
 			{
-				LibThrowIfDisposed();
+				ThrowIfDisposed_();
 				_Hresult(_FuncId.state, _GetState(out var state));
 				return state;
 			}
@@ -208,9 +208,9 @@ namespace Au
 		/// If the object has both INVISIBLE and OFFSCREEN states, it is either invisible or just offscreen, depending on application etc. Then this function works like Find and similar functions: for most objects returns false (is visible), but for objects that have these roles returns true (invisible): WINDOW, DOCUMENT, PROPERTYPAGE, GROUPING, ALERT, MENUPOPUP.
 		/// Does not check whether this object is in an invisible parent/ancestor object.
 		/// </remarks>
-		public bool IsInvisible => LibIsInvisible(State);
+		public bool IsInvisible => IsInvisible_(State);
 
-		internal bool LibIsInvisible(AccSTATE state)
+		internal bool IsInvisible_(AccSTATE state)
 		{
 			if(!state.Has(AccSTATE.INVISIBLE)) return false;
 			if(!state.Has(AccSTATE.OFFSCREEN)) return true;
@@ -255,7 +255,7 @@ namespace Au
 
 		string _GetStringProp(char prop)
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			int hr = Cpp.Cpp_AccGetProp(this, prop, out var b);
 			GC.KeepAlive(this);
 			var s = _BstrToString(hr, b);
@@ -285,7 +285,7 @@ namespace Au
 		/// Gets <see cref="Name"/> of window/control w.
 		/// Returns null if w invalid. Returns "" if failed to get name.
 		/// </summary>
-		internal static string LibNameOfWindow(AWnd w)
+		internal static string NameOfWindow_(AWnd w)
 		{
 			if(!w.IsAlive) return null;
 			var hr = Cpp.Cpp_AccFromWindow(1 | 2, w, 0, out _, out var b);
@@ -309,7 +309,7 @@ namespace Au
 			get => _GetStringProp('v');
 			set
 			{
-				LibThrowIfDisposed();
+				ThrowIfDisposed_();
 				AuException.ThrowIfHresultNot0(Cpp.Cpp_AccAction(this, 'v', value));
 				GC.KeepAlive(this);
 			}
@@ -387,7 +387,7 @@ namespace Au
 		/// </remarks>
 		public void DoAction()
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			var hr = Cpp.Cpp_AccAction(this, 'a');
 			GC.KeepAlive(this);
 			AuException.ThrowIfHresultNot0(hr);
@@ -397,7 +397,7 @@ namespace Au
 		//void _MinimalSleep()
 		//{
 		//	Thread.Sleep(15);
-		//	//if(0 == _iacc.GetWnd(out var w)) w.LibMinimalSleepIfOtherThread(); //better don't call GetWnd
+		//	//if(0 == _iacc.GetWnd(out var w)) w.MinimalSleepIfOtherThread_(); //better don't call GetWnd
 		//}
 
 		/// <summary>
@@ -467,7 +467,7 @@ namespace Au
 			//	Also then releaseJavaObject does not return until the dialog closed. It even does not allow our process to exit. In QM2 the same.
 			//	Previously (with old Java version?) then whole JAB crashed. Now doesn't. Or crashes only in some conditions that I now cannot reproduce.
 
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 
 			if(action == null
 				&& 0 == _GetState(out var state)
@@ -480,7 +480,7 @@ namespace Au
 				w.Post(Api.WM_KEYDOWN, (byte)KKey.Space, 0);
 				w.Post(Api.WM_KEYUP, (byte)KKey.Space, 0);
 				//tested: works even if the window is inactive.
-				w.LibMinimalSleepNoCheckThread();
+				w.MinimalSleepNoCheckThread_();
 				return;
 			}
 
@@ -512,7 +512,7 @@ namespace Au
 			AWnd w = WndTopLevel; if(w.Is0) throw new AuException("*get window");
 			AAcc doc = AAcc.Wait(-1, w, "web:"); if(doc == null) throw new AuException("*find web page");
 
-			string wndName = w.LibNameTL, docName = doc.Name; Debug.Assert(!Empty(wndName) && !Empty(docName));
+			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!Empty(wndName) && !Empty(docName));
 			bool wndOK = false, docOK = false;
 			AAcc.Finder f = null;
 
@@ -523,7 +523,7 @@ namespace Au
 			while(to.Sleep()) {
 				w.ThrowIfInvalid();
 				if(!wndOK) {
-					var s = w.LibNameTL;
+					var s = w.NameTL_;
 					if(s == null) continue; //probably invalid, will throw in next loop
 					wndOK = s != wndName;
 				}
@@ -549,7 +549,7 @@ namespace Au
 		//Also, this function inevitably will stop working with some new web browser version with new bugs. Too unreliable.
 		public bool DoActionAndWaitForWebPageLoaded(double secondsTimeout = 60, Action<AAcc> action = null, AWnd w = default)
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 
 			int timeout; bool throwTimeout = false;
 			if(secondsTimeout == 0) timeout = Timeout.Infinite;
@@ -659,7 +659,7 @@ namespace Au
 		/// </remarks>
 		public void Select(AccSELFLAG how = AccSELFLAG.TAKESELECTION)
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 
 			//Workaround for Windows controls bugs, part 1.
 			AWnd w = default, wTL = default; bool focusingControl = false;
@@ -681,7 +681,7 @@ namespace Au
 				AuException.ThrowIfHresultNegative(hr);
 			}
 
-			if(!w.Is0) w.LibMinimalSleepIfOtherThread(); //sleep only when focusing. Assume selection is sync. Also need for the bug, because the control may be activated a millisecond later.
+			if(!w.Is0) w.MinimalSleepIfOtherThread_(); //sleep only when focusing. Assume selection is sync. Also need for the bug, because the control may be activated a millisecond later.
 
 			//Workaround for Windows controls bugs, part 2.
 			if(focusingControl && w.IsActive) {
@@ -729,7 +729,7 @@ namespace Au
 		{
 			get
 			{
-				LibThrowIfDisposed();
+				ThrowIfDisposed_();
 				if(_elem != 0) { ALastError.Clear(); return Array.Empty<AAcc>(); }
 				//return _iacc.get_accSelection();
 				if(0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<AAcc>();
@@ -752,7 +752,7 @@ namespace Au
 		{
 			get
 			{
-				LibThrowIfDisposed();
+				ThrowIfDisposed_();
 				if(_elem != 0) { ALastError.Clear(); return 0; }
 				_Hresult(_FuncId.child_count, Cpp.Cpp_AccGetInt(this, 'c', out int cc));
 				GC.KeepAlive(this);
@@ -794,7 +794,7 @@ namespace Au
 			//SHOULDDO: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
 
 			result = default;
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			if(props.Length == 0) return true;
 			int hr = Cpp.Cpp_AccGetProps(this, props, out var b);
 			GC.KeepAlive(this);
@@ -883,7 +883,7 @@ namespace Au
 		/// </example>
 		public AAcc Navigate(string navig, double secondsToWait = 0)
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			int hr; var ca = new Cpp.Cpp_Acc();
 			if(secondsToWait == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
@@ -913,7 +913,7 @@ namespace Au
 		/// </remarks>
 		public string Html(bool outer)
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, outer ? "'o" : "'i", out BSTR s));
 			GC.KeepAlive(this);
 			return _BstrToString(hr, s);
@@ -930,7 +930,7 @@ namespace Au
 		/// <exception cref="ArgumentException">name is null/""/invalid.</exception>
 		public string HtmlAttribute(string name)
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			if(Empty(name) || name[0] == '\'') throw new ArgumentException("Invalid name.");
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, name, out BSTR s));
 			GC.KeepAlive(this);
@@ -946,7 +946,7 @@ namespace Au
 		/// </remarks>
 		public Dictionary<string, string> HtmlAttributes()
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 			int hr = Cpp.Cpp_AccWeb(this, "'a", out BSTR s);
 			GC.KeepAlive(this);
 			_Hresult(_FuncId.html, hr);
@@ -965,7 +965,7 @@ namespace Au
 		/// </remarks>
 		public void ScrollTo()
 		{
-			LibThrowIfDisposed();
+			ThrowIfDisposed_();
 
 			int hr;
 			if(_misc.flags.Has(AccMiscFlags.UIA)) hr = Cpp.Cpp_AccAction(this, 's');

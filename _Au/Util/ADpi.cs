@@ -36,7 +36,7 @@ namespace Au.Util
 		public static int BaseDPI {
 			get {
 				if(_baseDPI == 0) {
-					using(var dcs = new LibScreenDC(0)) _baseDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
+					using(var dcs = new ScreenDC_(0)) _baseDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
 				}
 				return _baseDPI;
 			}

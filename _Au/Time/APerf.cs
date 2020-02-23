@@ -45,7 +45,7 @@ namespace Au
 			static Local()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
-				//if(!Util.LibAssembly.LibIsAuNgened) { //unnecessary and makes slower
+				//if(!Util.Assembly_.IsAuNgened) { //unnecessary and makes slower
 #if PREPAREMETHOD
 				Util.AJit.Compile(typeof(Local), "Next", "NW");
 #if DEBUG //else these methods are inlined
@@ -180,7 +180,7 @@ namespace Au
 			/// </summary>
 			public override string ToString()
 			{
-				using(new Util.LibStringBuilder(out var b)) {
+				using(new Util.StringBuilder_(out var b)) {
 					b.Append("speed:");
 					_Results(Math.Min(_counter, _nElem), b, null);
 					return b.ToString();

@@ -451,7 +451,7 @@ namespace Au
 		/// Like <see cref="IsVisible"/>, but does not check the visibility of the specified parent/ancestor window.
 		/// </summary>
 		/// <param name="wParent">Parent or ancestor window.</param>
-		internal bool LibIsVisibleIn(AWnd wParent)
+		internal bool IsVisibleIn_(AWnd wParent)
 		{
 			if(IsVisible) return true; //these two make faster in most cases (when wTL is visible)
 			if(wParent.IsVisible) return false;
@@ -459,7 +459,7 @@ namespace Au
 			for(int i = 0; i < 10000; i++) {
 				//Print(c);
 				if(!c.HasStyle(WS.VISIBLE)) return false;
-				c = c.LibParentGWL;
+				c = c.ParentGWL_;
 				if(c == wParent) return true;
 				if(c.Is0) break;
 			}
@@ -478,7 +478,7 @@ namespace Au
 		public void Show(bool show)
 		{
 			if(!ShowLL(show)) ThrowUseNative(show ? "*show*" : "*hide*");
-			LibMinimalSleepIfOtherThread();
+			MinimalSleepIfOtherThread_();
 		}
 
 		/// <summary>
@@ -655,7 +655,7 @@ namespace Au
 					ALastError.Clear();
 					Api.ShowWindow(this, state);
 					ok = 0 == ALastError.Code;
-				} else if(ok = LibGetWindowPlacement(out var p)) {
+				} else if(ok = GetWindowPlacement_(out var p)) {
 					int state2 = state;
 					switch(state) {
 					case Api.SW_MINIMIZE:
@@ -668,7 +668,7 @@ namespace Au
 
 					//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. Instead we use another workaround, see below.
 					p.showCmd = state2;
-					ok = LibSetWindowPlacement(ref p);
+					ok = SetWindowPlacement_(ref p);
 				}
 
 				if(!ok) {
@@ -695,7 +695,7 @@ namespace Au
 				}
 			}
 
-			LibMinimalSleepIfOtherThread();
+			MinimalSleepIfOtherThread_();
 		}
 
 		/// <summary>
@@ -703,7 +703,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
-		internal bool LibGetWindowPlacement(out Api.WINDOWPLACEMENT wp, string errStr = null)
+		internal bool GetWindowPlacement_(out Api.WINDOWPLACEMENT wp, string errStr = null)
 		{
 			//initially this was public, but probably don't need.
 
@@ -717,7 +717,7 @@ namespace Au
 		/// Sets WINDOWPLACEMENT <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
 		/// </summary>
 		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
-		internal bool LibSetWindowPlacement(ref Api.WINDOWPLACEMENT wp, string errStr = null)
+		internal bool SetWindowPlacement_(ref Api.WINDOWPLACEMENT wp, string errStr = null)
 		{
 			//initially this was public, but probably don't need.
 
@@ -731,7 +731,7 @@ namespace Au
 
 #region activate, focus
 
-		internal static partial class Lib
+		internal static partial class Internal_
 		{
 			/// <summary>
 			/// No exceptions.
@@ -793,7 +793,7 @@ namespace Au
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
-					t.LibSetWindowPlacement(ref wp); //activates t; fast (no animation)
+					t.SetWindowPlacement_(ref wp); //activates t; fast (no animation)
 					_EnableActivate_SendKey(false); //makes so that later our process can always activate
 					_EnableActivate_AllowSetFore();
 					Api.SetForegroundWindow(GetWnd.Root); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
@@ -817,7 +817,7 @@ namespace Au
 
 			internal static bool ActivateLL(AWnd w)
 			{
-				if(w.LibIsActiveOrNoActiveAndThisIsWndRoot) return true;
+				if(w.IsActiveOrNoActiveAndThisIsWndRoot_) return true;
 
 				try {
 					bool canAct = EnableActivate(true);
@@ -876,19 +876,19 @@ namespace Au
 		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
-		internal bool LibActivate(Lib.ActivateFlags flags)
+		internal bool Activate_(Internal_.ActivateFlags flags)
 		{
-			if(!flags.Has(Lib.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
-			if(flags.Has(Lib.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
+			if(!flags.Has(Internal_.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
+			if(flags.Has(Internal_.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
 			else {
 				var w = Window;
 				if(w != this) {
-					return w.LibActivate((flags | Lib.ActivateFlags.NoGetWindow) & ~Lib.ActivateFlags.NoThrowIfInvalid);
+					return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid);
 				}
 			}
 
 			bool R = false, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
-			bool forScreenCapture = 0 != (flags & Lib.ActivateFlags.ForScreenCapture);
+			bool forScreenCapture = 0 != (flags & Internal_.ActivateFlags.ForScreenCapture);
 
 			if(IsMinimized) {
 				ShowNotMinimized(true);
@@ -897,9 +897,9 @@ namespace Au
 			}
 			if(!IsVisible) Show(true);
 
-			R = LibIsActiveOrNoActiveAndThisIsWndRoot;
+			R = IsActiveOrNoActiveAndThisIsWndRoot_;
 			if(!R) {
-				if(0 != (flags & Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
+				if(0 != (flags & Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					var est = ExStyle;
 					if((est & WS2.NOACTIVATE) != 0) noAct = true;
 					else if((est & (WS2.TOOLWINDOW | WS2.APPWINDOW)) == WS2.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
@@ -913,8 +913,8 @@ namespace Au
 					bool ok = ActivateLL();
 
 					if(!ofThisThread) {
-						LibMinimalSleepNoCheckThread();
-						LibMinimalSleepNoCheckThread();
+						MinimalSleepNoCheckThread_();
+						MinimalSleepNoCheckThread_();
 					}
 
 					if(ok) {
@@ -930,7 +930,7 @@ namespace Au
 								} else {
 									R = Api.SetForegroundWindow(GetWnd.Root) && ActivateLL() && Active.ThreadId == tid;
 									if(R && !ofThisThread) {
-										LibMinimalSleepNoCheckThread();
+										MinimalSleepNoCheckThread_();
 										R = Active.ThreadId == tid;
 									}
 								}
@@ -960,10 +960,10 @@ namespace Au
 					for(int i = 0; i < 50; i++) { Thread.Sleep(30); if(R = !IsCloaked) break; }
 					if(R) {
 						if(forScreenCapture) Thread.Sleep(800); //need minimum 600 for 'find image' functions, because of animation while switching Win10 desktops.
-						LibMinimalSleepNoCheckThread();
+						MinimalSleepNoCheckThread_();
 						R = IsActive;
 						if(!R && ActivateLL()) {
-							LibMinimalSleepNoCheckThread();
+							MinimalSleepNoCheckThread_();
 							R = IsActive;
 						}
 					}
@@ -971,7 +971,7 @@ namespace Au
 			}
 
 			if(!R) ThrowNoNative("*activate*");
-			if(forScreenCapture) LibMinimalSleepIfOtherThread();
+			if(forScreenCapture) MinimalSleepIfOtherThread_();
 
 			return true;
 
@@ -996,7 +996,7 @@ namespace Au
 		/// <seealso cref="SwitchActiveWindow"/>
 		public void Activate()
 		{
-			LibActivate(0);
+			Activate_(0);
 		}
 		//CONSIDER: if fails to activate:
 		//TaskDialogEx("Failed to activate window", w.ToString(), footer: The script will continue if you activate the window in {x} s.", timeout: 10);
@@ -1009,7 +1009,7 @@ namespace Au
 		/// </summary>
 		public bool ActivateLL()
 		{
-			return Lib.ActivateLL(this);
+			return Internal_.ActivateLL(this);
 		}
 
 		public static partial class More
@@ -1043,7 +1043,7 @@ namespace Au
 			/// </summary>
 			public static bool EnableActivate()
 			{
-				return Lib.EnableActivate(false);
+				return Internal_.EnableActivate(false);
 			}
 		}
 
@@ -1084,7 +1084,7 @@ namespace Au
 		{
 			ThrowIfInvalid();
 			AWnd wTL = Window;
-			if(!wTL.IsActive) wTL.LibActivate(Lib.ActivateFlags.NoGetWindow);
+			if(!wTL.IsActive) wTL.Activate_(Internal_.ActivateFlags.NoGetWindow);
 
 			int tid = ThreadId;
 			if(tid == Api.GetCurrentThreadId()) {
@@ -1099,7 +1099,7 @@ namespace Au
 			if(!IsEnabled(true)) goto gDisabled;
 
 			bool ok = false;
-			using(new LibAttachThreadInput(tid, out bool atiOK)) {
+			using(new AttachThreadInput_(tid, out bool atiOK)) {
 				if(atiOK) { //FUTURE: if fails, try AAcc.Focus or UIA. AttachThreadInput is unreliable.
 					for(int i = 0; i < 5; i++) {
 						if(i > 0) Thread.Sleep(30);
@@ -1113,7 +1113,7 @@ namespace Au
 			}
 			if(!ok) goto gFailed;
 
-			LibMinimalSleepNoCheckThread();
+			MinimalSleepNoCheckThread_();
 			return;
 			gDisabled: //SetFocus fails if disabled
 			ThrowIfInvalid();
@@ -1416,7 +1416,7 @@ namespace Au
 		/// <exception cref="AuWndException"/>
 		public void SetClientSize(int? width, int? height)
 		{
-			if(LibGetWindowInfo(out var u)) {
+			if(GetWindowInfo_(out var u)) {
 				int W = width != null ? width.GetValueOrDefault() : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
 				int H = height != null ? height.GetValueOrDefault() : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
 
@@ -1431,7 +1431,7 @@ namespace Au
 		/// </summary>
 		/// <param name="wi">Receives window/client rectangles, styles etc.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		internal bool LibGetWindowInfo(out Api.WINDOWINFO wi)
+		internal bool GetWindowInfo_(out Api.WINDOWINFO wi)
 		{
 			//initially this was public, but probably don't need.
 
@@ -1447,7 +1447,7 @@ namespace Au
 		/// <remarks>Calls API <msdn>GetWindowInfo</msdn>. Supports <see cref="ALastError"/>.</remarks>
 		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient)
 		{
-			if(LibGetWindowInfo(out var u)) {
+			if(GetWindowInfo_(out var u)) {
 				rWindow = u.rcWindow;
 				rClient = u.rcClient;
 				return true;
@@ -1611,7 +1611,7 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool GetRectNotMinMax(out RECT r)
 		{
-			if(!LibGetWindowPlacement(out var p)) { r = default; return false; }
+			if(!GetWindowPlacement_(out var p)) { r = default; return false; }
 			r = p.rcNormalPosition;
 			return true;
 		}
@@ -1786,7 +1786,7 @@ namespace Au
 
 			if(!MoveLL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
 
-			LibMinimalSleepIfOtherThread();
+			MinimalSleepIfOtherThread_();
 		}
 
 		/// <summary>
@@ -1828,7 +1828,7 @@ namespace Au
 
 #region MoveInScreen, EnsureInScreen, Screen
 
-		internal static partial class Lib
+		internal static partial class Internal_
 		{
 			/// <summary>
 			/// Used directly by MoveInScreen, EnsureInScreen, RECT.MoveInScreen, RECT.EnsureInScreen. With inRect used by RECT.MoveInRect.
@@ -1880,7 +1880,7 @@ namespace Au
 				r.Offset(x - r.left, y - r.top);
 
 				if(useWindow) { //move window
-					w.LibGetWindowPlacement(out var wp, "*move*");
+					w.GetWindowPlacement_(out var wp, "*move*");
 					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(AScreen.Of(w));
 					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
 
@@ -1895,7 +1895,7 @@ namespace Au
 
 						wp.rcNormalPosition = r;
 						wp.showCmd = visible ? Api.SW_SHOWNA : Api.SW_HIDE;
-						w.LibSetWindowPlacement(ref wp, "*move*");
+						w.SetWindowPlacement_(ref wp, "*move*");
 
 						if(moveMaxWindowToOtherMonitor) {
 							//I found this way of moving max window to other screen by experimenting.
@@ -1910,7 +1910,7 @@ namespace Au
 						if(!hto.Is0) w.Owner = hto;
 					}
 
-					w.LibMinimalSleepIfOtherThread();
+					w.MinimalSleepIfOtherThread_();
 				}
 			}
 		}
@@ -1931,7 +1931,7 @@ namespace Au
 		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true)
 		{
 			RECT r = default;
-			Lib.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
+			Internal_.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
 		}
 
 		/// <summary>
@@ -1947,7 +1947,7 @@ namespace Au
 		public void EnsureInScreen(AScreen screen = default, bool workArea = true)
 		{
 			RECT r = default;
-			Lib.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
+			Internal_.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
 		}
 
 		/// <summary>
@@ -2336,7 +2336,7 @@ namespace Au
 			get {
 				bool is32bit = AVersion.Is32BitOS;
 				if(!is32bit) {
-					using var ph = LibHandle.OpenProcess(this);
+					using var ph = Handle_.OpenProcess(this);
 					if(ph.Is0 || !Api.IsWow64Process(ph, out is32bit)) return false;
 				}
 				ALastError.Clear();
@@ -2369,7 +2369,7 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
 
-		internal void LibUacCheckAndThrow(string prefix = null)
+		internal void UacCheckAndThrow_(string prefix = null)
 		{
 			if(!Is0 && IsUacAccessDenied) {
 				if(prefix == null) prefix = "Failed. The"; else if(prefix.Ends('.')) prefix += " The"; //this is to support prefix used by AMouse.Move: "The active"
@@ -2470,7 +2470,7 @@ namespace Au
 		/// Gets window name using API InternalGetWindowText. The same as GetText(false, false).
 		/// This should be a top-level window, because does not process ampersands.
 		/// </summary>
-		internal string LibNameTL => _GetTextFast(false);
+		internal string NameTL_ => _GetTextFast(false);
 
 		/// <summary>
 		/// Gets control text.
@@ -2532,7 +2532,7 @@ namespace Au
 		{
 			if(Is0) return null;
 			for(int na = 300; ; na *= 2) {
-				var b = AMemoryArray.LibChar(ref na);
+				var b = AMemoryArray.Char_(ref na);
 				ALastError.Clear();
 				int nr = Api.InternalGetWindowText(this, b, na);
 				if(nr < na - 1) {
@@ -2555,12 +2555,12 @@ namespace Au
 			if(!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
 			int n = (int)ln; if(n < 1) return "";
 
-			var b = AMemoryArray.LibChar(n);
+			var b = AMemoryArray.Char_(n);
 			fixed(char* p = b.A) {
 				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
 				if(ln < 1) return "";
 				b.A[n] = '\0';
-				n = LibCharPtr.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
+				n = CharPtr_.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
 				return new string(b, 0, n);
 			}
 
@@ -2623,7 +2623,7 @@ namespace Au
 		/// Gets <see cref="AAcc.Name"/> of the accessible object (role WINDOW) of this window or control.
 		/// Returns "" if the object has no name or failed to get it. Returns null if invalid window handle.
 		/// </summary>
-		public string NameAcc => AAcc.LibNameOfWindow(this);
+		public string NameAcc => AAcc.NameOfWindow_(this);
 
 		/// <summary>
 		/// Gets Control.Name property of a .NET Windows Forms control.
@@ -2645,7 +2645,7 @@ namespace Au
 		/// Calls <see cref="ProcessId"/> and <see cref="AProcess.GetName"/>.
 		/// This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>. Instead use <c>var s=w.ProgramName; if(s=="A" || s=="B")</c>.
 		/// </remarks>
-		public string ProgramName => AProcess.LibGetNameCached(this, ProcessId);
+		public string ProgramName => AProcess.GetNameCached_(this, ProcessId);
 
 		/// <summary>
 		/// If the program name of this window matches one of strings in <i>programNames</i>, returns 1-based index of the string. Else returns 0.
@@ -2666,7 +2666,7 @@ namespace Au
 		/// Calls <see cref="ProcessId"/> and <see cref="AProcess.GetName"/>.
 		/// This function is much slower than getting window name or class name. Don't use code like <c>if(w.ProgramPath=="A" || w.ProgramPath=="B")</c>. Instead use <c>var s=w.ProgramPath; if(s=="A" || s=="B")</c>.
 		/// </remarks>
-		public string ProgramPath => AProcess.LibGetNameCached(this, ProcessId, true);
+		public string ProgramPath => AProcess.GetNameCached_(this, ProcessId, true);
 
 		/// <summary>
 		/// Gets description of process executable file.
@@ -2760,7 +2760,7 @@ namespace Au
 					}
 				}
 			}
-			LibMinimalSleepNoCheckThread();
+			MinimalSleepNoCheckThread_();
 			More.WaitForAnActiveWindow();
 
 			return !IsAlive;

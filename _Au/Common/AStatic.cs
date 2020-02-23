@@ -59,13 +59,13 @@ namespace Au
 		/// </remarks>
 		public static void Print(object value)
 		{
-			AOutput.Write(LibPrintObjectToString(value));
+			AOutput.Write(PrintObjectToString_(value));
 		}
 
 		/// <summary>
 		/// Converts object to string like <see cref="Print(object)"/> does.
 		/// </summary>
-		internal static string LibPrintObjectToString(object value)
+		internal static string PrintObjectToString_(object value)
 		{
 			string s;
 			switch(value) {
@@ -89,7 +89,7 @@ namespace Au
 			foreach(var v in e) yield return v; //bad: if array or generic of struct, boxes all elements
 		}
 
-		internal static void LibPrintObjectToString(StringBuilder b, object value)
+		internal static void PrintObjectToString_(StringBuilder b, object value)
 		{
 			switch(value) {
 			case null: b.Append("null"); break;
@@ -127,10 +127,10 @@ namespace Au
 		public static void Print(object value1, object value2, params object[] more)
 		{
 			if(more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
-			using(new Util.LibStringBuilder(out var b)) {
+			using(new Util.StringBuilder_(out var b)) {
 				for(int i = 0, n = 2 + more.Length; i < n; i++) {
 					if(i > 0) b.Append(", ");
-					LibPrintObjectToString(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]));
+					PrintObjectToString_(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]));
 				}
 				AOutput.Write(b.ToString());
 

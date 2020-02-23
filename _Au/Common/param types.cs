@@ -437,7 +437,7 @@ namespace Au.Types
 		/// Gets the window or control handle as AWnd.
 		/// Returns default(AWnd) if not assigned.
 		/// </summary>
-		public AWnd Wnd => AWnd.Lib.FromObject(_o);
+		public AWnd Wnd => AWnd.Internal_.FromObject(_o);
 
 		/// <summary>
 		/// true if this is default(AnyWnd).

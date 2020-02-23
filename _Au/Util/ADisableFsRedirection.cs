@@ -62,7 +62,7 @@ namespace Au.Util
 			string sysDir = AFolders.System;
 			if(!path.Starts(sysDir, true)) return 0;
 			int len = sysDir.Length;
-			if(path.Length > len && !APath.LibIsSepChar(path[len])) return 0;
+			if(path.Length > len && !APath.IsSepChar_(path[len])) return 0;
 			return len;
 		}
 

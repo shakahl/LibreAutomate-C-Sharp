@@ -241,7 +241,7 @@ namespace Au
 							b = (int)_tb._border;
 							r = w.Rect;
 						} else {
-							w.LibGetWindowInfo(out var k);
+							w.GetWindowInfo_(out var k);
 							r = k.rcWindow;
 							b = k.cxWindowBorders;
 						}
@@ -258,7 +258,7 @@ namespace Au
 						} else return false;
 					} else { //disable resizing if border is natively sizable
 						if(_tb._border < TBBorder.Thick) return false;
-						w.LibGetWindowInfo(out var k);
+						w.GetWindowInfo_(out var k);
 						k.rcWindow.Inflate(-k.cxWindowBorders, -k.cyWindowBorders);
 						if(k.rcWindow.Contains(x, y)) return false;
 						h = Api.HTBORDER;
@@ -271,7 +271,7 @@ namespace Au
 			bool _WmNcpaint(AWnd w)
 			{
 				if(_tb.BorderColor == 0 || _tb._border < TBBorder.Width1 || _tb._border > TBBorder.Width4) return false;
-				using var dc = new Util.LibWindowDC(Api.GetWindowDC(w), w);
+				using var dc = new Util.WindowDC_(Api.GetWindowDC(w), w);
 				using var g = Graphics.FromHdc(dc);
 				var r = w.Rect; r.Offset(-r.left, -r.top);
 				ControlPaint.DrawBorder(g, r, (Color)_tb.BorderColor, ButtonBorderStyle.Solid);

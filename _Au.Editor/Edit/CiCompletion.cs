@@ -186,7 +186,7 @@ class CiCompletion
 		}
 
 #if NOGCREGION
-		ADebug.LibMemorySetAnchor();
+		ADebug.MemorySetAnchor_();
 		//Print(GCSettings.LatencyMode);
 		bool noGC = false;
 		if(!AVersion.Is32BitProcess) try { noGC = GC.TryStartNoGCRegion(50_000_000); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
@@ -527,7 +527,7 @@ class CiCompletion
 			//if(noGC && GCSettings.LatencyMode == GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
 			if(noGC) {
 				try { GC.EndNoGCRegion(); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
-				ADebug.LibMemoryPrint();
+				ADebug.MemoryPrint_();
 				ThreadPool.QueueUserWorkItem(_ => GC.Collect());
 			}
 		}

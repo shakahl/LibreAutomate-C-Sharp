@@ -383,7 +383,7 @@ namespace Au
 		/// </example>
 		public static bool WaitForKey(double secondsTimeout, string key, bool up = false, bool block = false)
 		{
-			return 0 != _WaitForKey(secondsTimeout, More.LibParseKeyNameThrow(key), up, block);
+			return 0 != _WaitForKey(secondsTimeout, More.ParseKeyNameThrow_(key), up, block);
 		}
 
 		/// <summary>
@@ -482,7 +482,7 @@ namespace Au
 			/// Calls <see cref="ParseKeyName"/> and throws ArgumentException if invalid key string.
 			/// </summary>
 			/// <param name="keyName"></param>
-			internal static KKey LibParseKeyNameThrow(string keyName)
+			internal static KKey ParseKeyNameThrow_(string keyName)
 			{
 				var k = ParseKeyName(keyName);
 				if(k == 0) throw new ArgumentException("Unknown key name or error in key string.");
@@ -541,7 +541,7 @@ namespace Au
 					if((i++ & 1) == 0) {
 						KKey k = _KeynameToKey(s, g.Start, g.Length);
 						if(k == 0) return false;
-						var m = Lib.KeyToMod(k);
+						var m = Internal_.KeyToMod(k);
 						if(m != 0) {
 							if((m & mod) != 0) return false;
 							mod |= m;
@@ -568,7 +568,7 @@ namespace Au
 			/// Like <see cref="ParseHotkeyString"/>, but supports 'any mod' (like "Shift?+K" or "?+K") and <i>noKey</i>.
 			/// <i>noKey</i> - s can contain only modifiers, not key. If false, s must be "key" or "mod+key", else returns false. Else s must be "mod" or null/"", else returns false.
 			/// </summary>
-			internal static bool LibParseHotkeyTriggerString(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey)
+			internal static bool ParseHotkeyTriggerString_(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey)
 			{
 				key = 0; mod = 0; modAny = 0;
 				if(Empty(s)) return noKey;
@@ -579,7 +579,7 @@ namespace Au
 					if((i++ & 1) == 0) {
 						KKey k = _KeynameToKey(s, g.Start, g.Length);
 						if(k == 0) return false;
-						var m = Lib.KeyToMod(k);
+						var m = Internal_.KeyToMod(k);
 						if(m != 0) {
 							if((m & (mod | modAny)) != 0) return false;
 							if(ignore = g.End < s.Length && s[g.End] == '?') modAny |= m; //eg "Shift?+K"

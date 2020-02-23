@@ -273,7 +273,7 @@ namespace Au.Triggers
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
 		public Action<WindowTriggerArgs> this[TWEvent winEvent, AWnd.Finder f, TWFlags flags = 0, TWLater later = 0] {
 			set {
-				_triggers.LibThrowIfRunning();
+				_triggers.ThrowIfRunning_();
 				switch(f.Props.contains) { case null: case AWnd.ChildFinder _: case AAcc.Finder _: break; default: PrintWarning("Window triggers with 'contains image' are unreliable."); break; }
 
 				var t = new WindowTrigger(_triggers, value, winEvent, f, flags, later);
@@ -340,7 +340,7 @@ namespace Au.Triggers
 				_hooks = new AHookAcc(ah, _HookProc);
 				_hookEventQueue = new Queue<(AccEVENT, int)>();
 
-				_triggers.LibWinTimerPeriod = 250;
+				_triggers.WinTimerPeriod_ = 250;
 
 				Api.IVirtualDesktopManager dm = null;
 				Api.EnumWindows((w, param) => {
@@ -395,13 +395,13 @@ namespace Au.Triggers
 		/// <summary>
 		/// Called from the message loop every 250 or less ms.
 		/// </summary>
-		internal unsafe void LibTimer()
+		internal unsafe void Timer_()
 		{
 			//bool print = !AKeys.IsNumLock;
 			//if(print) Print(ATime.PerfMilliseconds % 10000);
 
-			int period = _triggers.LibWinTimerPeriod;
-			if(period < 250) _triggers.LibWinTimerPeriod = Math.Min(period += period / 10 + 1, 250);
+			int period = _triggers.WinTimerPeriod_;
+			if(period < 250) _triggers.WinTimerPeriod_ = Math.Min(period += period / 10 + 1, 250);
 
 			//bool verbose = !AKeys.IsNumLock;
 			//if(AKeys.IsNumLock) return;
@@ -412,7 +412,7 @@ namespace Au.Triggers
 
 			//Array.Sort(a);
 
-			//using(var a=AWnd.Lib.EnumWindows2(AWnd.Lib.EnumAPI.EnumWindows, true)) {
+			//using(var a=AWnd.Internal_.EnumWindows2(AWnd.Internal_.EnumAPI.EnumWindows, true)) {
 
 			//}
 
@@ -426,7 +426,7 @@ namespace Au.Triggers
 			//	//if(n1 + n2 > 0) Print(n1, n2);
 			//}
 			//_aVisibleOld = a;
-			//ADebug.LibMemoryPrint();
+			//ADebug.MemoryPrint_();
 
 			//bool needEW = false;
 			//if(Visible.HasTriggers) needEW = true;
@@ -474,7 +474,7 @@ namespace Au.Triggers
 			} else if(w != _wActive) {
 				_Proc(TWLater.Active, w);
 			} else {
-				var name = w.LibNameTL;
+				var name = w.NameTL_;
 				if(name != null && name != _nameActive) {
 					_nameActive = name;
 					_Proc(TWLater.Name, w, name: name);
@@ -483,7 +483,7 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// Callback of EnumWindows used by LibTimer to get visible windows.
+		/// Callback of EnumWindows used by Timer_ to get visible windows.
 		/// </summary>
 		Api.WNDENUMPROC _enumWinProc;
 		unsafe int _EnumWinProc(AWnd w, void* _)
@@ -493,7 +493,7 @@ namespace Au.Triggers
 		}
 
 		/// <summary>
-		/// Called by LibTimer when it swaps _aVisible with _aVisibleOld and calls EnumWindows to populate _aVisible with visible windows.
+		/// Called by Timer_ when it swaps _aVisible with _aVisibleOld and calls EnumWindows to populate _aVisible with visible windows.
 		/// Finds what windows became visible or invisible and runs Visible/Invisible triggers for them.
 		/// </summary>
 		void _VisibleAddedRemoved()
@@ -602,7 +602,7 @@ namespace Au.Triggers
 					if(accEvent == AccEVENT.SYSTEM_FOREGROUND) {
 						bool fast = _hsSeenActivating.Add(w) && !_hsOld.Contains(w);
 						//Print("fast timer", fast);
-						_triggers.LibWinTimerPeriod = fast ? 1 : 100;
+						_triggers.WinTimerPeriod_ = fast ? 1 : 100;
 					}
 
 					if(_hookEventQueue.Count == 0) break;
@@ -622,7 +622,7 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// Processes events for main triggers (active, visible) and most "later" triggers.
-		/// Called from hook (_HookProc), timer (LibTimer), at startup (StartStop) and SimulateActiveNew/SimulateVisibleNew.
+		/// Called from hook (_HookProc), timer (Timer_), at startup (StartStop) and SimulateActiveNew/SimulateVisibleNew.
 		/// </summary>
 		void _Proc(TWLater e, AWnd w, _ProcCaller caller = _ProcCaller.Timer, string name = null)
 		{
@@ -660,7 +660,7 @@ namespace Au.Triggers
 
 			bool runActive = false;
 			if(e == TWLater.Active) {
-				name = w.LibNameTL;
+				name = w.NameTL_;
 				if(callerHT) {
 					_ProcLater(TWLater.Name, w, iTriggered, name); //maybe name changed while inactive
 					if(!_wActive.Is0) _ProcLater(TWLater.Inactive, _wActive);
@@ -676,7 +676,7 @@ namespace Au.Triggers
 					break;
 				case TWLater.Visible:
 				case TWLater.Uncloaked:
-					name = w.LibNameTL;
+					name = w.NameTL_;
 					break;
 				default: return;
 				}
@@ -750,7 +750,7 @@ namespace Au.Triggers
 
 					if(_log) Print($"<><c red>{t.TypeString}<>");
 
-					_triggers.LibRunAction(t, args);
+					_triggers.RunAction_(t, args);
 				} while(v != last);
 				//APerf.NW(); //speed ms/triggers when cold CPU: ~1/1000, 10/10000, 50/100000, 130/1000000
 			}
@@ -798,7 +798,7 @@ namespace Au.Triggers
 
 				if(_log) Print($"<><c red>\t{e}<>");
 
-				_triggers.LibRunAction(t, args);
+				_triggers.RunAction_(t, args);
 			}
 		}
 
@@ -832,12 +832,12 @@ namespace Au.Triggers
 
 		void _SimulateNew(TWLater e, AWnd w)
 		{
-			_triggers.LibThrowIfNotRunning();
-			Api.PostThreadMessage(_triggers.LibThreadId, Api.WM_USER + 20, (int)e, w.Handle); //calls LibSimulateNew in correct thread
+			_triggers.ThrowIfNotRunning_();
+			_triggers.Notify_(Api.WM_USER + 20, (int)e, w.Handle); //calls SimulateNew_ in correct thread
 		}
 
 		//Called in correct thread.
-		internal void LibSimulateNew(LPARAM wParam, LPARAM lParam)
+		internal void SimulateNew_(LPARAM wParam, LPARAM lParam)
 		{
 			var w = (AWnd)lParam;
 			if(w.IsAlive) _Proc((TWLater)(int)wParam, w, _ProcCaller.Run);

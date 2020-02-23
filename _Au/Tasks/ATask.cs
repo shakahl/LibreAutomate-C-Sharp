@@ -39,7 +39,7 @@ namespace Au
 		/// </summary>
 		public static unsafe ATRole Role { get; private set; }
 
-		internal static unsafe void LibInit(ATRole role, string name = null)
+		internal static unsafe void Init_(ATRole role, string name = null)
 		{
 			Role = role;
 			if(name != null) s_name = name;
@@ -101,7 +101,7 @@ namespace Au
 			using var tr = new _TaskResults();
 			if(needResult && !tr.Init()) throw new AuException("*get task results");
 
-			var data = Util.LibSerializer.Serialize(script, args, tr.pipeName);
+			var data = Util.Serializer_.Serialize(script, args, tr.pipeName);
 			int pid = (int)AWnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
 			switch((ERunResult)pid) {
 			case ERunResult.failed: throw new AuException("*start task");
@@ -110,7 +110,7 @@ namespace Au
 			}
 
 			if(0 != (mode & 1)) {
-				using var hProcess = LibWaitHandle.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
+				using var hProcess = WaitHandle_.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
 				if(hProcess == null) throw new AuException("*wait for task");
 
 				if(!needResult) hProcess.WaitOne(-1);
@@ -132,7 +132,7 @@ namespace Au
 
 		unsafe struct _TaskResults : IDisposable
 		{
-			LibHandle _hPipe;
+			Handle_ _hPipe;
 			public string pipeName;
 			string _s;
 			StringBuilder _sb;
@@ -239,7 +239,7 @@ namespace Au
 			}
 			return true;
 			ge:
-			ADebug.LibPrintNativeError();
+			ADebug.PrintNativeError_();
 			return false;
 		}
 

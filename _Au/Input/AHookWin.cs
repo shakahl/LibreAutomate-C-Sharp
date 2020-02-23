@@ -110,7 +110,7 @@ namespace Au
 		public static AHookWin Mouse(Action<HookData.Mouse> hookProc, bool ignoreAuInjected = true, bool setNow = true)
 			=> new AHookWin(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected);
 
-		internal static AHookWin LibMouseRaw(Func<LPARAM, LPARAM, bool> hookProc, bool ignoreAuInjected = true, bool setNow = true)
+		internal static AHookWin MouseRaw_(Func<LPARAM, LPARAM, bool> hookProc, bool ignoreAuInjected = true, bool setNow = true)
 			=> new AHookWin(Api.WH_MOUSE_LL, hookProc, setNow, 0, ignoreAuInjected, "Mouse");
 
 		/// <summary>
@@ -294,15 +294,26 @@ namespace Au
 
 		AHookWin(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string hookTypeString = null)
 		{
-			_proc1 = _HookProc;
 			_proc2 = hookProc;
 			_hookType = hookType;
 			_hookTypeString = hookTypeString;
 			_ignoreAuInjected = ignoreAuInjected;
+			if(hookType == Api.WH_KEYBOARD_LL || hookType == Api.WH_MOUSE_LL) {
+				_proc1 = _HookProcLL;
+				//JIT-compile our hook proc and some functions it may call.
+				//	Premature optimization? But OS gives us only 300 ms by default.
+				if(!s_jit1) {
+					s_jit1 = true;
+					AJit.Compile(typeof(AHookWin), nameof(_HookProcLL));
+					_ = ATime.PerfMilliseconds;
+					_ = AKeys.KeyTypes_.IsMod(KKey.Shift) && _IgnoreMod;
+				}
+			} else {
+				_proc1 = _HookProc;
+			}
 			if(setNow) Hook(tid);
-
-			//info: don't need to JIT _HookProc for LL hooks of triggers, because we use CBT hook before it to create the message-only window.
 		}
+		static bool s_jit1;
 
 		/// <summary>
 		/// Sets the hook.
@@ -373,11 +384,48 @@ namespace Au
 
 		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
 		{
-			try {
-				if(code >= 0) {
-					bool R = false;
+			if(code >= 0) {
+				try {
+					bool eat = false;
+
+					switch(_proc2) {
+					case Func<HookData.ThreadCbt, bool> p:
+						eat = p(new HookData.ThreadCbt(this, code, wParam, lParam));
+						break;
+					case Action<HookData.ThreadGetMessage> p:
+						p(new HookData.ThreadGetMessage(this, wParam, lParam));
+						break;
+					case Func<HookData.ThreadKeyboard, bool> p:
+						eat = p(new HookData.ThreadKeyboard(this, code, wParam, lParam));
+						break;
+					case Func<HookData.ThreadMouse, bool> p:
+						eat = p(new HookData.ThreadMouse(this, code, wParam, lParam));
+						break;
+					case Action<HookData.ThreadCallWndProc> p:
+						p(new HookData.ThreadCallWndProc(this, wParam, lParam));
+						break;
+					case Action<HookData.ThreadCallWndProcRet> p:
+						p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
+						break;
+					}
+
+					if(eat) return 1;
+				}
+				catch(Exception ex) { OnException_(ex); }
+			}
+
+			return Api.CallNextHookEx(default, code, wParam, lParam);
+		}
+
+		unsafe LPARAM _HookProcLL(int code, LPARAM wParam, LPARAM lParam)
+		{
+			if(code >= 0) {
+				try {
+					//using var p1 = APerf.Create();
+					bool eat = false;
 					long t1 = 0;
-					Action<HookData.Mouse> pm1; Func<LPARAM, LPARAM, bool> pm2;
+					Action<HookData.Mouse> pm1;
+					Func<LPARAM, LPARAM, bool> pm2;
 
 					switch(_proc2) {
 					case Action<HookData.Keyboard> p:
@@ -402,10 +450,11 @@ namespace Au
 							//	if(vk == KKey.LCtrl && kll->IsUp) { Print("lost Ctrl up"); goto gr; }
 							//}
 						}
-						if(AKeys.LibKeyTypes.IsMod(vk) && _IgnoreMod) goto gr;
+						if(AKeys.KeyTypes_.IsMod(vk) && _IgnoreMod) goto gr;
 						t1 = ATime.PerfMilliseconds;
+						//p1.Next();
 						p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
-						if(R = kll->BlockEvent) kll->BlockEvent = false;
+						if(eat = kll->BlockEvent) kll->BlockEvent = false;
 						break;
 					case Action<HookData.Mouse> p:
 						pm1 = p; pm2 = null;
@@ -417,33 +466,15 @@ namespace Au
 						if(_ignoreAuInjected && mll->IsInjectedByAu) goto gr;
 						t1 = ATime.PerfMilliseconds;
 						if(pm2 != null) {
-							R = pm2(wParam, lParam);
+							eat = pm2(wParam, lParam);
 						} else {
 							pm1(new HookData.Mouse(this, wParam, lParam));
-							if(R = mll->BlockEvent) mll->BlockEvent = false;
+							if(eat = mll->BlockEvent) mll->BlockEvent = false;
 						}
 						break;
 					case Func<LPARAM, LPARAM, bool> p: //raw mouse
 						pm2 = p; pm1 = null;
 						goto gm1;
-					case Func<HookData.ThreadCbt, bool> p:
-						R = p(new HookData.ThreadCbt(this, code, wParam, lParam));
-						break;
-					case Action<HookData.ThreadGetMessage> p:
-						p(new HookData.ThreadGetMessage(this, wParam, lParam));
-						break;
-					case Func<HookData.ThreadKeyboard, bool> p:
-						R = p(new HookData.ThreadKeyboard(this, code, wParam, lParam));
-						break;
-					case Func<HookData.ThreadMouse, bool> p:
-						R = p(new HookData.ThreadMouse(this, code, wParam, lParam));
-						break;
-					case Action<HookData.ThreadCallWndProc> p:
-						p(new HookData.ThreadCallWndProc(this, wParam, lParam));
-						break;
-					case Action<HookData.ThreadCallWndProcRet> p:
-						p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
-						break;
 					}
 
 					//Prevent Windows disabling the low-level key/mouse hook.
@@ -453,27 +484,25 @@ namespace Au
 					//		1. Does not wait more. Passes the message to the next hook etc, and we cannot return 1 to block it.
 					//		2. Kills the hook after several such cases. Usually 6 keys or 11 mouse events.
 					//		3. Makes the hook useless: next times does not wait for it, and we cannot return 1 to block the event.
-					//	Somehow does not apply 2 and 3 to some apps, eg C# apps created by Visual Studio, although applies to those created not by VS. I did not find why.
+					//	Somehow does not apply 2 and 3 to some apps, eg C# apps (Core too) created by Visual Studio, although applies to those created not by VS. I did not find why.
 					if(t1 != 0 && (t1 = ATime.PerfMilliseconds - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
 						if(t1 > LowLevelHooksTimeout - 50) {
 							var s1 = _hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
-							var s2 = R ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;
+							var s2 = eat ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;
 							//PrintWarning($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
 							//Print($"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //first Print JIT 30 ms
 							ThreadPool.QueueUserWorkItem(s3 => Print(s3), $"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //fast if with false. But async print can be confusing.
 						}
-						//FUTURE: print warning if t1 is >25 frequently. Unhook and don't rehook if >LowLevelHooksTimeout-50 frequently.
+						//FUTURE: print warning if t1 is >25 frequently. Unhook and don't rehook if >LowLevelHooksTimeout frequently.
 
 						Api.UnhookWindowsHookEx(_hh);
 						_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, 0);
 					}
 
-					if(R) return 1;
+					if(eat) return 1;
 				}
+				catch(Exception ex) { OnException_(ex); }
 			}
-			catch(Exception ex) { LibOnException(ex); }
-			//info: on any exception .NET would terminate process.
-			//	This prevents it when using eg ADialog. But not when eg MessageBox.Show; I don't know how to prevent it.
 			gr:
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
@@ -484,11 +513,13 @@ namespace Au
 		/// <remarks>
 		/// Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout. If it is missing, returns 300; it is the default value used by Windows. If greater than 1000, returns 1000, because Windows 10 ignores bigger values.
 		/// 
-		/// If a hook procedure takes more time, Windows does not wait. Then the return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then it restores the hook and displays a warning. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow and need to edit it.
+		/// If a hook procedure takes more time, Windows does not wait. Then its return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then it restores the hook and prints a warning. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow.
 		/// 
 		/// Callback functions of keyboard and mouse triggers are called in a hook procedure, therefore must be as fast as possible. More info: <see cref="Triggers.TriggerFuncs"/>.
 		/// 
 		/// More info: <msdn>registry LowLevelHooksTimeout</msdn>.
+		/// 
+		/// Note: After changing the timeout in registry, it is not applied immediately. Need to log off/on.
 		/// </remarks>
 		public static int LowLevelHooksTimeout {
 			get {
@@ -498,18 +529,17 @@ namespace Au
 					s_lowLevelHooksTimeout = i;
 				}
 				return s_lowLevelHooksTimeout;
-				//info: After changing the timeout in registry, it is not applied immediately. Need to log off/on.
 			}
 		}
 		static int s_lowLevelHooksTimeout;
 
-		internal static void LibOnException(Exception e)
+		internal static void OnException_(Exception e)
 		{
 			PrintWarning("Unhandled exception in hook procedure. " + e.ToString());
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.
-		internal struct LibSharedMemoryData
+		internal struct SharedMemoryData_
 		{
 			public long dontBlockModUntil, dontBlocLShiftCapsUntil;
 			//16 bytes reserved
@@ -520,15 +550,15 @@ namespace Au
 		/// Used by mouse triggers.
 		/// Returns the timeout time (ATime.WinMilliseconds + timeMS) or 0.
 		/// </summary>
-		internal unsafe long LibIgnoreModInOtherHooks(long timeMS)
+		internal unsafe long IgnoreModInOtherHooks_(long timeMS)
 		{
 			_ignoreModExceptThisHook = timeMS > 0;
 			var r = _ignoreModExceptThisHook ? ATime.WinMilliseconds + timeMS : 0;
-			LibSharedMemory.Ptr->winHook.dontBlockModUntil = r;
+			SharedMemory_.Ptr->winHook.dontBlockModUntil = r;
 			return r;
 		}
 
-		unsafe bool _IgnoreMod => LibSharedMemory.Ptr->winHook.dontBlockModUntil > ATime.WinMilliseconds && !_ignoreModExceptThisHook;
+		unsafe bool _IgnoreMod => SharedMemory_.Ptr->winHook.dontBlockModUntil > ATime.WinMilliseconds && !_ignoreModExceptThisHook;
 		bool _ignoreModExceptThisHook;
 
 		/// <summary>
@@ -536,14 +566,14 @@ namespace Au
 		/// Returns the timeout time (ATime.WinMilliseconds + timeMS) or 0.
 		/// Used when turning off CapsLock with Shift.
 		/// </summary>
-		internal static unsafe long LibIgnoreLShiftCaps(long timeMS)
+		internal static unsafe long IgnoreLShiftCaps_(long timeMS)
 		{
 			var r = timeMS > 0 ? ATime.WinMilliseconds + timeMS : 0;
-			LibSharedMemory.Ptr->winHook.dontBlocLShiftCapsUntil = r;
+			SharedMemory_.Ptr->winHook.dontBlocLShiftCapsUntil = r;
 			return r;
 		}
 
-		static unsafe bool _IgnoreLShiftCaps => LibSharedMemory.Ptr->winHook.dontBlocLShiftCapsUntil > ATime.WinMilliseconds;
+		static unsafe bool _IgnoreLShiftCaps => SharedMemory_.Ptr->winHook.dontBlocLShiftCapsUntil > ATime.WinMilliseconds;
 	}
 }
 
@@ -605,7 +635,7 @@ namespace Au.Types
 			/// <summary>
 			/// If the key is a modifier key (Shift, Ctrl, Alt, Win), returns the modifier flag. Else returns 0.
 			/// </summary>
-			public KMod Mod => AKeys.Lib.KeyToMod((KKey)_x->vkCode);
+			public KMod Mod => AKeys.Internal_.KeyToMod((KKey)_x->vkCode);
 
 			/// <summary>
 			/// If <b>vkCode</b> is a left or right modifier key code (LShift, LCtrl, LAlt, RShift, RCtrl, RAlt, RWin), returns the common modifier key code (Shift, Ctrl, Alt, Win). Else returns <b>vkCode</b>.
@@ -642,7 +672,7 @@ namespace Au.Types
 			/// <summary>
 			/// Converts flags to API SendInput flags KEYEVENTF_KEYUP and KEYEVENTF_EXTENDEDKEY.
 			/// </summary>
-			internal byte LibSendInputFlags {
+			internal byte SendInputFlags_ {
 				get {
 					uint f = 0;
 					if(IsUp) f |= Api.KEYEVENTF_KEYUP;
@@ -668,7 +698,7 @@ namespace Au.Types
 			/// <summary>API <msdn>KBDLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
 
-			internal Api.KBDLLHOOKSTRUCT* LibNativeStructPtr => _x;
+			internal Api.KBDLLHOOKSTRUCT* NativeStructPtr_ => _x;
 		}
 
 		/// <summary>
@@ -789,7 +819,7 @@ namespace Au.Types
 			/// <summary>API <msdn>MSLLHOOKSTRUCT</msdn></summary>
 			public LPARAM dwExtraInfo => _x->dwExtraInfo;
 
-			internal Api.MSLLHOOKSTRUCT* LibNativeStructPtr => _x;
+			internal Api.MSLLHOOKSTRUCT* NativeStructPtr_ => _x;
 		}
 
 		/// <summary>

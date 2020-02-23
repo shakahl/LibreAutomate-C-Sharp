@@ -58,7 +58,7 @@ namespace Au
 			//info: we don't call .NET functions directly to avoid loading assemblies.
 
 			isWPF = false;
-			int f = Util.LibAssembly.LibIsLoadedFormsWpf();
+			int f = Util.Assembly_.IsLoadedFormsWpf();
 			if(0 != (f & 1) && _HML_Forms()) return true;
 			if(0 != (f & 2) && _HML_Wpf()) return isWPF = true;
 			return false;
@@ -77,7 +77,7 @@ namespace Au
 		/// If it is a managed thread, at first need to set its IsBackground = true.
 		/// </summary>
 		/// <param name="nativeId"></param>
-		internal static void LibTerminate(int nativeId)
+		internal static void Terminate_(int nativeId)
 		{
 			using var th = Api.OpenThread(Api.THREAD_TERMINATE, false, nativeId);
 			if(!th.Is0) Api.TerminateThread(th, 0);

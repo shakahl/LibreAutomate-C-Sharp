@@ -305,7 +305,7 @@ namespace Au
 		bool _Disposed => _iacc == default;
 		//note: named not 'IsDisposed' because can be easily confused with IsDisabled.
 
-		internal void LibThrowIfDisposed()
+		internal void ThrowIfDisposed_()
 		{
 			if(_Disposed) throw new ObjectDisposedException(nameof(AAcc));
 		}
@@ -349,7 +349,7 @@ namespace Au
 
 		static void _WndThrow(int hr, AWnd w, string es)
 		{
-			w.LibUacCheckAndThrow(es);
+			w.UacCheckAndThrow_(es);
 			throw new AuException(hr, es);
 		}
 
@@ -555,7 +555,7 @@ namespace Au
 			if(_Disposed) return "<disposed>";
 			if(!GetProperties("Rnsvdarw@", out var k)) return "<failed>";
 
-			using(new Util.LibStringBuilder(out var b)) {
+			using(new Util.StringBuilder_(out var b)) {
 				if(Level > 0) b.Append(' ', Level);
 				b.Append(k.Role);
 				_Add('n', k.Name);

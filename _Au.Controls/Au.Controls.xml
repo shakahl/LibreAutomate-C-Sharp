@@ -1459,14 +1459,14 @@
             <param name="length">s length.</param>
             <param name="imageInfo">The NNN part of image info, or 0.</param>
         </member>
-        <member name="M:Au.Controls.SciImages.LibAnnotationText(System.Int32,System.String)">
+        <member name="M:Au.Controls.SciImages.AnnotationText_(System.Int32,System.String)">
             <summary>
             Sets annotation text, preserving existing image info.
             </summary>
             <param name="line"></param>
             <param name="s">New text without image info.</param>
         </member>
-        <member name="M:Au.Controls.SciImages.LibAnnotationText(System.Int32)">
+        <member name="M:Au.Controls.SciImages.AnnotationText_(System.Int32)">
             <summary>
             Gets annotation text without image info.
             </summary>
@@ -1666,7 +1666,7 @@
             <param name="flags"></param>
             <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
         </member>
-        <member name="M:Au.Controls.SciText.LibSetText(System.Byte[],System.Int32)">
+        <member name="M:Au.Controls.SciText.SetText_(System.Byte[],System.Int32)">
             <summary>
             Sets UTF-8 text.
             </summary>
@@ -1675,7 +1675,7 @@
             s must end with 0. Asserts.
             </remarks>
         </member>
-        <member name="M:Au.Controls.SciText.LibSetText(System.Byte*)">
+        <member name="M:Au.Controls.SciText.SetText_(System.Byte*)">
             <summary>
             Sets UTF-8 text.
             Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
@@ -1691,13 +1691,13 @@
             <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
             <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
         </member>
-        <member name="M:Au.Controls.SciText.LibAddText(System.Boolean,System.Byte*,System.Int32)">
+        <member name="M:Au.Controls.SciText.AddText_(System.Boolean,System.Byte*,System.Int32)">
             <summary>
             Sets or appends UTF-8 text of specified length.
             Does not parse tags. Moves current position and scrolls to the end.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.LibGetText">
+        <member name="M:Au.Controls.SciText.GetText_">
             <summary>
             Gets all text directly from Scintilla.
             Does not use caching like AuScintilla.Text.
@@ -1845,7 +1845,7 @@
             Returns "" if the line does not contain annotation or is invalid line index.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.LibAnnotationText(System.Int32)">
+        <member name="M:Au.Controls.SciText.AnnotationText_(System.Int32)">
             <summary>
             Gets raw annotation text which can contain image info.
             AnnotationText gets text without image info.
@@ -1860,7 +1860,7 @@
             Preserves existing image info.
             </summary>
         </member>
-        <member name="M:Au.Controls.SciText.LibAnnotationText(System.Int32,System.String)">
+        <member name="M:Au.Controls.SciText.AnnotationText_(System.Int32,System.String)">
             <summary>
             Sets raw annotation text which can contain image info.
             If s is null or "", removes annotation.
@@ -2124,7 +2124,7 @@
             <param name="appendLine">Append. Also appends "\r\n". Sets caret and scrolls to the end. If false, replaces control text.</param>
             <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
         </member>
-        <member name="M:Au.Controls.SciTags.LibOnLinkClick(System.Int32,System.Boolean)">
+        <member name="M:Au.Controls.SciTags.OnLinkClick_(System.Int32,System.Boolean)">
             <summary>
             Called on SCN_HOTSPOTRELEASECLICK.
             </summary>
@@ -2231,12 +2231,12 @@
             Draws text at the current drawing position of the DC, and updates it.
             </summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.LibBitmapFileInfo.biHeader">
+        <member name="F:Au.Controls.ImageUtil.BitmapFileInfo_.biHeader">
             <summary>
             Can be BITMAPINFOHEADER/BITMAPV5HEADER or BITMAPCOREHEADER.
             </summary>
         </member>
-        <member name="M:Au.Controls.ImageUtil.LibGetBitmapFileInfo(System.Byte[],Au.Controls.ImageUtil.LibBitmapFileInfo@)">
+        <member name="M:Au.Controls.ImageUtil.GetBitmapFileInfo_(System.Byte[],Au.Controls.ImageUtil.BitmapFileInfo_@)">
             <summary>
             Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
             Checks if it is valid bitmap file header. Returns false if invalid.
@@ -2283,7 +2283,7 @@
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
             <param name="s">File path etc. See <see cref="T:Au.Controls.ImageUtil.ImageType"/>.</param>
-            <param name="length">If -1, calls LibCharPtr.Length(s).</param>
+            <param name="length">If -1, calls CharPtr_.Length(s).</param>
         </member>
         <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)">
             <summary>

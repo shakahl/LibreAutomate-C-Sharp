@@ -1147,25 +1147,6 @@ namespace Au.Types
 			}
 		}
 
-		/// <summary>
-		/// Used to pass KBDLLHOOKSTRUCT from the triggers hook server process to a client process.
-		/// If they are of different 64/32 bitness, then sizeof(KBDLLHOOKSTRUCT) is different, but sizeof(KBDLLHOOKSTRUCT2) is the same, max of them.
-		/// </summary>
-		internal struct KBDLLHOOKSTRUCT2
-		{
-			public uint vkCode;
-			public uint scanCode;
-			public uint flags;
-			public int time;
-			public long dwExtraInfo;
-
-			public KBDLLHOOKSTRUCT2(LPARAM lParam)
-			{
-				var p = (KBDLLHOOKSTRUCT*)lParam;
-				vkCode = p->vkCode; scanCode = p->scanCode; flags = p->flags; time = p->time; dwExtraInfo = (long)p->dwExtraInfo;
-			}
-		}
-
 		internal const uint LLMHF_INJECTED = 0x1;
 
 		internal struct MSLLHOOKSTRUCT
@@ -1194,31 +1175,6 @@ namespace Au.Types
 				get => 0 != (flags & 0x80000000);
 				set { if(value) flags |= 0x80000000; else flags &= ~0x80000000; }
 			}
-		}
-
-		/// <summary>
-		/// Used to pass MSLLHOOKSTRUCT and mouse message from the triggers hook server process to a client process.
-		/// If they are of different 64/32 bitness, then sizeof(MSLLHOOKSTRUCT) is different, but sizeof(MSLLHOOKSTRUCT2) is the same, max of them.
-		/// </summary>
-		internal struct MSLLHOOKSTRUCT2
-		{
-			//must start with MSLLHOOKSTRUCT members
-			public POINT pt;
-			public uint mouseData;
-			public uint flags;
-			public int time;
-			public long dwExtraInfo; //not LPARAM because this struct will be passed between 64/32 bit processes
-
-			public int message;
-
-			public MSLLHOOKSTRUCT2(LPARAM wParam, LPARAM lParam)
-			{
-				var p = (MSLLHOOKSTRUCT*)lParam;
-				pt = p->pt; mouseData = p->mouseData; flags = p->flags; time = p->time; dwExtraInfo = (long)p->dwExtraInfo;
-				message = (int)wParam;
-			}
-
-			public bool IsWheel => message == WM_MOUSEWHEEL || message == WM_MOUSEHWHEEL;
 		}
 
 		internal struct CBTACTIVATESTRUCT

@@ -71,14 +71,14 @@ namespace Au.Types
 		/// </summary>
 		UIA = 0x200,
 
-		//Internal. See LibEnum.AFFlags_Mark.
+		//Internal. See Enum_.AFFlags_Mark.
 		//Mark = 0x10000,
 	}
 
 	/// <summary>
 	/// A workaround to add internal members to public enums.
 	/// </summary>
-	internal static partial class LibAFFlags
+	internal static partial class Enum_
 	{
 		/// <summary>
 		/// Used by tools like "Find accessible object", together with AccMiscFlags_Marked.
@@ -164,7 +164,7 @@ namespace Au.Types
 		/// </summary>
 		Java = 4,
 
-		//Internal. See LibEnum.AccMiscFlags_Marked.
+		//Internal. See Enum_.AccMiscFlags_Marked.
 		//Marked = 128,
 	}
 

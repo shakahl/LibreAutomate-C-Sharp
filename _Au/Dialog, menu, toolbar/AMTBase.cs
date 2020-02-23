@@ -25,7 +25,7 @@ namespace Au.Types
 	{
 		//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
 		bool PaintedOnce { get; }
-		List<Util.IconsAsync.Item> SubmenuAsyncIcons => null;
+		List<Util.IconsAsync_.Item> SubmenuAsyncIcons => null;
 	}
 
 	/// <summary>
@@ -227,7 +227,7 @@ namespace Au.Types
 				//var perf = APerf.Create();
 				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
-				_AsyncIcons ??= new Util.IconsAsync(); //used by submenus too
+				_AsyncIcons ??= new Util.IconsAsync_(); //used by submenus too
 				var submenuIcons = (owner as _IAuToolStrip).SubmenuAsyncIcons;
 				bool isFirstImage;
 
@@ -236,7 +236,7 @@ namespace Au.Types
 					_AsyncIcons.Add(s, item);
 				} else {
 					isFirstImage = submenuIcons.Count == 0;
-					submenuIcons.Add(new Util.IconsAsync.Item(s, item));
+					submenuIcons.Add(new Util.IconsAsync_.Item(s, item));
 				}
 
 				//Reserve space for image.
@@ -252,10 +252,10 @@ namespace Au.Types
 		Image _imagePlaceholder;
 
 		//This is shared by toolbars and main menus. Submenus have their own.
-		Util.IconsAsync _AsyncIcons { get; set; }
+		Util.IconsAsync_ _AsyncIcons { get; set; }
 
 		//list - used by submenus.
-		internal void GetIconsAsync_(ToolStrip ts, List<Util.IconsAsync.Item> list = null)
+		internal void GetIconsAsync_(ToolStrip ts, List<Util.IconsAsync_.Item> list = null)
 		{
 			if(_AsyncIcons == null) return;
 			if(list != null) _AsyncIcons.AddRange(list);
@@ -263,7 +263,7 @@ namespace Au.Types
 			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, IconFlags, ts);
 		}
 
-		void _AsyncCallback(Util.IconsAsync.Result r, object objCommon, int nLeft)
+		void _AsyncCallback(Util.IconsAsync_.Result r, object objCommon, int nLeft)
 		{
 			var ts = objCommon as ToolStrip;
 			var item = r.obj as ToolStripItem;
@@ -355,7 +355,7 @@ namespace Au.Types
 						if(i == patternStart + 1) filename = s;
 						else {
 							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AExec.TryRun(@"%AFolders.System%\notepad.exe");
-							if(APath.IsUrl(s) || APath.LibIsShellPath(s)) return s;
+							if(APath.IsUrl(s) || APath.IsShellPath_(s)) return s;
 							filename = null; patternStart = -1;
 							if(i == 1) filename2 = s;
 						}
@@ -434,7 +434,7 @@ namespace Au.Types
 		//{
 		//	var wmsg = ATask.WndMsg; if(wmsg.Is0) return;
 		//	Api.AllowSetForegroundWindow(wmsg.ProcessId);
-		//	var data = Util.LibSerializer.Serialize(isTB ? 1 : 0, _sourceFile, _sourceLine, tsi?.Text);
+		//	var data = Util.Serializer_.Serialize(isTB ? 1 : 0, _sourceFile, _sourceLine, tsi?.Text);
 		//	AWnd.More.CopyDataStruct.SendBytes(wmsg, 120, data);
 		//}
 	}

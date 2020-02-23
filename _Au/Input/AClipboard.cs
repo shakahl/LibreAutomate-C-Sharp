@@ -37,10 +37,10 @@ namespace Au
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry).</exception>
 		public static void Clear()
 		{
-			using(new LibOpenClipboard(false)) LibEmptyClipboard();
+			using(new OpenClipboard_(false)) EmptyClipboard_();
 		}
 
-		internal static void LibEmptyClipboard()
+		internal static void EmptyClipboard_()
 		{
 			if(!Api.EmptyClipboard()) Debug.Assert(false);
 		}
@@ -57,9 +57,9 @@ namespace Au
 		public static string Text {
 			get => AClipboardData.GetText(0);
 			set {
-				using(new LibOpenClipboard(true)) {
-					LibEmptyClipboard();
-					if(value != null) AClipboardData.LibSetText(value);
+				using(new OpenClipboard_(true)) {
+					EmptyClipboard_();
+					if(value != null) AClipboardData.SetText_(value);
 				}
 			}
 		}
@@ -73,7 +73,7 @@ namespace Au
 				break;
 			case string s:
 				if(renderLater) Api.SetClipboardData(Api.CF_UNICODETEXT, default);
-				else AClipboardData.LibSetText(s);
+				else AClipboardData.SetText_(s);
 				break;
 			}
 		}
@@ -145,10 +145,10 @@ namespace Au
 			bool restore = opt.RestoreClipboard;
 			_ClipboardListener listener = null;
 			var bi = new AInputBlocker() { ResendBlockedKeys = true };
-			var oc = new LibOpenClipboard(createOwner: true, noOpenNow: !restore);
+			var oc = new OpenClipboard_(createOwner: true, noOpenNow: !restore);
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
-				AKeys.Lib.ReleaseModAndDisableModMenu();
+				AKeys.Internal_.ReleaseModAndDisableModMenu();
 
 				var save = new _SaveRestore();
 				if(restore) {
@@ -156,11 +156,11 @@ namespace Au
 					oc.Close(false); //close clipboard; don't destroy our clipboard owner window
 				}
 
-				AWnd wFocus = AKeys.Lib.GetWndFocusedOrActive();
+				AWnd wFocus = AKeys.Internal_.GetWndFocusedOrActive();
 				listener = new _ClipboardListener(false, null, oc.WndClipOwner, wFocus);
 
 				if(!Api.AddClipboardFormatListener(oc.WndClipOwner)) throw new AuException();
-				var ctrlC = new AKeys.Lib.SendCopyPaste();
+				var ctrlC = new AKeys.Internal_.SendCopyPaste();
 				try {
 					if(wFocus.IsConsole) {
 						wFocus.Post(Api.WM_SYSCOMMAND, 65520);
@@ -184,7 +184,7 @@ namespace Au
 					if(restore) oc.Reopen();
 				} else {
 					oc.Reopen();
-					R = AClipboardData.LibGetText(0);
+					R = AClipboardData.GetText_(0);
 				}
 
 				if(restore) save.Restore();
@@ -258,21 +258,21 @@ namespace Au
 
 		static void _Paste(object data, OptKey options = null)
 		{
-			var wFocus = AKeys.Lib.GetWndFocusedOrActive();
+			var wFocus = AKeys.Internal_.GetWndFocusedOrActive();
 			var opt = options ?? AOpt.Key;
 			var bi = new AInputBlocker() { ResendBlockedKeys = true };
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
-				AKeys.Lib.ReleaseModAndDisableModMenu();
-				opt = opt.LibGetHookOptionsOrThis(wFocus);
-				LibPaste(data, opt, wFocus);
+				AKeys.Internal_.ReleaseModAndDisableModMenu();
+				opt = opt.GetHookOptionsOrThis_(wFocus);
+				Paste_(data, opt, wFocus);
 			}
 			finally {
 				bi.Dispose();
 			}
 
 			int sleepFinally = opt.SleepFinally;
-			if(sleepFinally > 0) AKeys.Lib.Sleep(sleepFinally);
+			if(sleepFinally > 0) AKeys.Internal_.Sleep(sleepFinally);
 		}
 
 		/// <summary>
@@ -282,7 +282,7 @@ namespace Au
 		/// <param name="data">string or Data.</param>
 		/// <param name="opt"></param>
 		/// <param name="wFocus"></param>
-		internal static void LibPaste(object data, OptKey opt, AWnd wFocus)
+		internal static void Paste_(object data, OptKey opt, AWnd wFocus)
 		{
 			bool isConsole = wFocus.IsConsole, enter = false;
 
@@ -291,7 +291,7 @@ namespace Au
 				if(enter = s != null && s.Ends('\n') && !isConsole) {
 					s = s.RemoveSuffix(s.Ends("\r\n") ? 2 : 1);
 					if(s.Length == 0) {
-						AKeys.Lib.SendCopyPaste.Enter(opt);
+						AKeys.Internal_.SendCopyPaste.Enter(opt);
 						return;
 					}
 					data = s;
@@ -304,13 +304,13 @@ namespace Au
 
 			bool sync = true; //FUTURE: option to turn off, depending on window.
 			_ClipboardListener listener = null;
-			using(var oc = new LibOpenClipboard(true)) {
+			using(var oc = new OpenClipboard_(true)) {
 
 				bool restore = opt.RestoreClipboard;
 				var save = new _SaveRestore();
 				if(restore) save.Save();
 
-				LibEmptyClipboard();
+				EmptyClipboard_();
 				_SetClipboardData_ClipboardViewerIgnore();
 				_SetClipboard(data, renderLater: sync);
 				oc.Close(false); //close clipboard; don't destroy our clipboard owner window
@@ -319,7 +319,7 @@ namespace Au
 				//	oc ctor creates a temporary message-only clipboard owner window. Its wndproc initially is DefWindowProc.
 				//	listener ctor subclasses it. Its wndproc receives WM_RENDERFORMAT which sets clipboard data etc.
 
-				var ctrlV = new AKeys.Lib.SendCopyPaste();
+				var ctrlV = new AKeys.Internal_.SendCopyPaste();
 				try {
 					if(isConsole) {
 						wFocus.Post(Api.WM_SYSCOMMAND, 65521);
@@ -335,7 +335,7 @@ namespace Au
 						if(listener.IsBadWindow) sync = false;
 					}
 					if(!sync) {
-						AKeys.Lib.Sleep(AKeys.Lib.LimitSleepTime(opt.KeySpeedClipboard)); //if too long, may autorepeat, eg BlueStacks after 500 ms
+						AKeys.Internal_.Sleep(AKeys.Internal_.LimitSleepTime(opt.KeySpeedClipboard)); //if too long, may autorepeat, eg BlueStacks after 500 ms
 					}
 				}
 				finally {
@@ -347,7 +347,7 @@ namespace Au
 				//CONSIDER: opt.SleepClipboard. If 0, uses smart sync, else simply sleeps.
 				for(int i = 0, n = sync ? 3 : (restore ? 25 : 15); i < n; i++) {
 					wFocus.SendTimeout(1000, 0, flags: 0);
-					AKeys.Lib.Sleep(i + 3);
+					AKeys.Internal_.Sleep(i + 3);
 
 					//info: repeats this min 3 times as a workaround for this Dreamweaver problem:
 					//	First time after starting DW, if several Paste called in loop, the first pasted text if of the second Paste.
@@ -362,7 +362,7 @@ namespace Au
 		/// Waits until the target app gets (Paste) or sets (Copy) clipboard text.
 		/// For it subclasses our clipboard owner window and uses clipboard messages. Does not unsubclass.
 		/// </summary>
-		class _ClipboardListener : LibWaitVariable
+		class _ClipboardListener : WaitVariable_
 		{
 			bool _paste; //true if used for paste, false if for copy
 			object _data; //string or Data. null if !_paste.
@@ -416,11 +416,11 @@ namespace Au
 			/// Throws AuException on timeout (3 s normally, 28 s if the target window is hung).
 			/// </summary>
 			/// <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
-			public void Wait(ref AKeys.Lib.SendCopyPaste ctrlKey)
+			public void Wait(ref AKeys.Internal_.SendCopyPaste ctrlKey)
 			{
 				//Print(Success); //on Paste often already true, because SendInput dispatches sent messages
 				for(int n = 6; !Success;) { //max 3 s (6*500 ms). If hung, max 28 s.
-					AWaitFor.LibWait(500, WHFlags.DoEvents, null, this);
+					AWaitFor.Wait_(500, WHFlags.DoEvents, null, this);
 
 					if(Success) break;
 					//is hung?
@@ -496,19 +496,19 @@ namespace Au
 		/// If the 'noOpenNow' parameter is true, does not open, only creates owner if need.
 		/// Dispose() closes clipboard and destroys the owner window.
 		/// </summary>
-		internal struct LibOpenClipboard : IDisposable
+		internal struct OpenClipboard_ : IDisposable
 		{
 			bool _isOpen;
 			AWnd _w;
 
 			public AWnd WndClipOwner => _w;
 
-			public LibOpenClipboard(bool createOwner, bool noOpenNow = false)
+			public OpenClipboard_(bool createOwner, bool noOpenNow = false)
 			{
 				_isOpen = false;
 				_w = default;
 				if(createOwner) {
-					_w = AWnd.Lib.CreateMessageWindowDefWndProc();
+					_w = AWnd.Internal_.CreateMessageWindowDefWndProc();
 					//MSDN says, SetClipboardData fails if OpenClipboard called with 0 hwnd. It doesn't, but better use hwnd.
 					//Creating/destroying window is the slowest part of SetText().
 				}
@@ -590,13 +590,13 @@ namespace Au
 						} //else registered
 
 						if(!skip && exceptFormats != null && exceptFormats.Length != 0) {
-							name = LibGetFormatName(format);
+							name = GetFormatName_(format);
 							foreach(string s in exceptFormats) if(s.Eqi(name)) { skip = true; break; }
 						}
 					}
 
 					if(debug) {
-						if(name == null) name = LibGetFormatName(format);
+						if(name == null) name = GetFormatName_(format);
 						if(skip) Print($"{name,-62}  restore=False");
 						else p1.First();
 						//note: we don't call GetClipboardData for formats in exceptFormats, because the conditions must be like when really saving. Time of GetClipboardData(format2) may depend on whether called GetClipboardData(format1).
@@ -632,7 +632,7 @@ namespace Au
 			public void Restore()
 			{
 				if(_data == null) return;
-				LibEmptyClipboard();
+				EmptyClipboard_();
 				foreach(var v in _data) {
 					var a = v.Value;
 					var h = Api.GlobalAlloc(Api.GMEM_MOVEABLE, a.Length);
@@ -649,7 +649,7 @@ namespace Au
 			public bool IsSaved => _data != null;
 		}
 
-		internal static unsafe string LibGetFormatName(int format)
+		internal static unsafe string GetFormatName_(int format)
 		{
 			//registered
 			if(format >= 0xC000) {
@@ -662,10 +662,10 @@ namespace Au
 			return s ?? format.ToString();
 		}
 
-		internal static void LibPrintClipboard()
+		internal static void PrintClipboard_()
 		{
 			Print("---- Clipboard ----");
-			using var oc = new LibOpenClipboard(true);
+			using var oc = new OpenClipboard_(true);
 			Api.GetClipboardData(0); //JIT
 			var save = new _SaveRestore();
 			save.Save(true);

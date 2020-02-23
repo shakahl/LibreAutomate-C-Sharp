@@ -91,7 +91,7 @@ namespace Au.Tools
 				if(w.Is0) return;
 			}
 
-			string wndName = w.LibNameTL;
+			string wndName = w.NameTL_;
 			bool sameWnd = captured && w == _wnd && wndName == _wndName;
 			_wndName = wndName;
 			//rejected: update window name in code box if changed name of same window. In AWinImage tool too. Currently only AWnd tool does it.
@@ -475,7 +475,7 @@ namespace Au.Tools
 			var stack = new Stack<_AccNode>(); stack.Push(xRoot);
 			int level = 0;
 
-			AFFlags flags = LibAFFlags.AFFlags_Mark | AFFlags.HiddenToo | AFFlags.MenuToo;
+			AFFlags flags = Enum_.AFFlags_Mark | AFFlags.HiddenToo | AFFlags.MenuToo;
 			if(_IsChecked2(nameof(AFFlags.UIA))) flags |= AFFlags.UIA;
 			var us = (uint)p.State;
 			var prop = $"rect={p.Rect.ToString()}\0state=0x{(us.ToString("X"))},!0x{((~us).ToString("X"))}";
@@ -497,7 +497,7 @@ namespace Au.Tools
 						level = lev;
 					}
 					x.a = o;
-					if(o.MiscFlags.Has(LibAFFlags.AccMiscFlags_Marked)) {
+					if(o.MiscFlags.Has(Enum_.AccMiscFlags_Marked)) {
 						//Print(o);
 						if(xSelect == null) xSelect = x;
 					}
@@ -723,7 +723,7 @@ namespace Au.Tools
 						}
 
 						if(isWINDOW) {
-							using(new Util.LibStringBuilder(out var b)) {
+							using(new Util.StringBuilder_(out var b)) {
 								b.Append(p.Role).Append("  (").Append(p.WndContainer.ClassName).Append(")");
 								if(p.Name.Length > 0) b.Append("  \"").Append(p.Name).Append("\"");
 								_displayText = b.ToString();
@@ -731,7 +731,7 @@ namespace Au.Tools
 						} else if(p.Name.Length == 0) _displayText = p.Role;
 						else _displayText = p.Role + " \"" + p.Name.Escape(limit: 250) + "\"";
 
-						IsInvisible = a.LibIsInvisible(p.State);
+						IsInvisible = a.IsInvisible_(p.State);
 					}
 					return _displayText;
 				}

@@ -206,7 +206,7 @@ namespace Au
 					}
 					catch { }
 
-					GetWnd.Shell.LibMinimalSleepIfOtherThread();
+					GetWnd.Shell.MinimalSleepIfOtherThread_();
 				}
 			}
 

@@ -288,7 +288,7 @@ namespace Au
 			RECT k => Of(k),
 			ScreenHandle k => k,
 			Func<ScreenHandle> k => k(),
-			_ => Of(AWnd.Lib.FromObject(_o)),
+			_ => Of(AWnd.Internal_.FromObject(_o)),
 		};
 
 		/// <summary>

@@ -139,7 +139,7 @@ namespace Au.Tools
 				if(sCode != null) b.Append(sCode);
 				else if((cls = wnd.ClassName) != null) {
 					b.Append("var w = AWnd.Find(");
-					b.AppendStringArg(TUtil.EscapeWindowName(wnd.LibNameTL, true), noComma: true);
+					b.AppendStringArg(TUtil.EscapeWindowName(wnd.NameTL_, true), noComma: true);
 					b.AppendStringArg(TUtil.StripWndClassName(cls, true));
 					string fl = null;
 					if(!wnd.IsVisible) fl = "WFFlags.HiddenToo";

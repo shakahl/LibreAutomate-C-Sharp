@@ -78,7 +78,7 @@ static unsafe class Program
 		}
 		//APerf.First();
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
-			if(pipe.Is0) { ADebug.LibPrintNativeError(); return; }
+			if(pipe.Is0) { ADebug.PrintNativeError_(); return; }
 			//APerf.Next();
 			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
 			//APerf.Next();
@@ -88,8 +88,8 @@ static unsafe class Program
 			//ADebug.PrintLoadedAssemblies(true, true);
 			//APerf.First();
 
-			var a = Au.Util.LibSerializer.Deserialize(b);
-			ATask.LibInit(ATRole.MiniProgram, a[0]);
+			var a = Au.Util.Serializer_.Deserialize(b);
+			ATask.Init_(ATRole.MiniProgram, a[0]);
 			asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4]; fullPathRefs = a[5];
 			string wrp = a[6]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
 			AFolders.Workspace = (string)a[7];
@@ -128,9 +128,9 @@ static unsafe class Program
 
 		//JIT slowest-to-JIT methods
 		//APerf.First();
-		//if(!Au.Util.LibAssembly.LibIsAuNgened) {
+		//if(!Au.Util.Assembly_.IsAuNgened) {
 			Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
-			Au.Util.AJit.Compile(typeof(Au.Util.LibSerializer), "Deserialize");
+			Au.Util.AJit.Compile(typeof(Au.Util.Serializer_), "Deserialize");
 			AFile.WaitIfLocked(() => (FileStream)null);
 		//}
 		//APerf.NW(); //Core ~15 ms

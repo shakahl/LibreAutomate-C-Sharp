@@ -106,7 +106,7 @@ namespace Au
 				}
 				file = ext;
 			} else if(APath.IsFullPathExpandEnvVar(ref file)) {
-				file = APath.LibNormalize(file, noExpandEV: true);
+				file = APath.Normalize_(file, noExpandEV: true);
 			}
 
 			return _GetImage(file, giFlags, null, autoUpdate, auParam, true);

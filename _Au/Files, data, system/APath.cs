@@ -58,7 +58,7 @@ namespace Au
 			}
 
 			for(int na = s.Length + 100; ;) {
-				var b = Util.AMemoryArray.LibChar(ref na);
+				var b = Util.AMemoryArray.Char_(ref na);
 				int nr = Api.ExpandEnvironmentStrings(s, b, na);
 				if(nr > na) na = nr;
 				else if(nr > 0) {
@@ -78,10 +78,10 @@ namespace Au
 		/// <remarks>
 		/// Environment variable values cannot be "" or null. Setting empty value removes the variable.
 		/// </remarks>
-		internal static string LibGetEnvVar(string name)
+		internal static string GetEnvVar_(string name)
 		{
 			for(int na = 300; ;) {
-				var b = Util.AMemoryArray.LibChar(ref na);
+				var b = Util.AMemoryArray.Char_(ref na);
 				int nr = Api.GetEnvironmentVariable(name, b, na);
 				if(nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
 			}
@@ -91,7 +91,7 @@ namespace Au
 		/// Returns true if environment variable exists.
 		/// </summary>
 		/// <param name="name">Case-insensitive name.</param>
-		internal static bool LibEnvVarExists(string name)
+		internal static bool EnvVarExists_(string name)
 		{
 			return 0 != Api.GetEnvironmentVariable(name, null, 0);
 		}
@@ -119,19 +119,19 @@ namespace Au
 
 			if(len >= 2) {
 				if(s[1] == ':' && AChar.IsAsciiAlpha(s[0])) {
-					return len == 2 || LibIsSepChar(s[2]);
+					return len == 2 || IsSepChar_(s[2]);
 					//info: returns false if eg "c:abc" which means "abc" in current directory of drive "c:"
 				}
 				switch(s[0]) {
 				case '\\':
 				case '/':
-					return LibIsSepChar(s[1]);
+					return IsSepChar_(s[1]);
 				case '%':
 #if true
 					if(!ExpandEnvVar(s).Starts('%'))
 						PrintWarning("Path starts with %environmentVariable%. Use APath.IsFullPathExpandEnvVar instead.");
 #else
-					s = ExpandEnvVar(s); //quite fast. 70% slower than just LibEnvVarExists, but reliable.
+					s = ExpandEnvVar(s); //quite fast. 70% slower than just EnvVarExists_, but reliable.
 					return !s.Starts('%') && IsFullPath(s);
 #endif
 					break;
@@ -188,13 +188,13 @@ namespace Au
 					if(AChar.IsAsciiAlpha(s[i])) {
 						int j = i + 2;
 						if(len == j) return j;
-						if(LibIsSepChar(s[j])) return j + 1;
+						if(IsSepChar_(s[j])) return j + 1;
 						//else invalid
 					}
 					break;
 				case '\\':
 				case '/':
-					if(LibIsSepChar(s[0])) {
+					if(IsSepChar_(s[0])) {
 						i = _GetPrefixLength(s);
 						if(i == 0) i = 2; //no prefix
 						else if(i == 4) {
@@ -204,7 +204,7 @@ namespace Au
 						int i0 = i, nSep = 0;
 						for(; i < len && nSep < 2; i++) {
 							char c = s[i];
-							if(LibIsSepChar(c)) nSep++;
+							if(IsSepChar_(c)) nSep++;
 							else if(c == ':') return i0;
 							else if(c == '0') break;
 						}
@@ -273,8 +273,8 @@ namespace Au
 			else if(s2CanBeFullPath && IsFullPath(s2)) r = s2;
 			else {
 				int k = 0;
-				if(LibIsSepChar(s1[s1.Length - 1])) k |= 1;
-				if(LibIsSepChar(s2[0])) k |= 2;
+				if(IsSepChar_(s1[s1.Length - 1])) k |= 1;
+				if(IsSepChar_(s2[0])) k |= 2;
 				switch(k) {
 				case 0: r = s1 + @"\" + s2; break;
 				case 3: r = s1 + s2.Substring(1); break;
@@ -291,16 +291,16 @@ namespace Au
 		/// If fails, throws exception or returns null (if noException).
 		/// </summary>
 		/// <exception cref="ArgumentException"></exception>
-		internal static string LibCombine(string s1, string s2, bool noException = false)
+		internal static string Combine_(string s1, string s2, bool noException = false)
 		{
 			if(!Empty(s1) && !Empty(s2)) {
 				int k = 0;
-				if(LibIsSepChar(s1[s1.Length - 1])) {
+				if(IsSepChar_(s1[s1.Length - 1])) {
 					if(s1.Length == 1) goto ge;
 					k |= 1;
 				}
-				if(LibIsSepChar(s2[0])) {
-					if(s2.Length == 1 || LibIsSepChar(s2[1])) goto ge;
+				if(IsSepChar_(s2[0])) {
+					if(s2.Length == 1 || IsSepChar_(s2[1])) goto ge;
 					k |= 2;
 				}
 				var r = k switch {
@@ -318,7 +318,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if character <c>c == '\\' || c == '/'</c>.
 		/// </summary>
-		internal static bool LibIsSepChar(char c) { return c == '\\' || c == '/'; }
+		internal static bool IsSepChar_(char c) { return c == '\\' || c == '/'; }
 
 		/// <summary>
 		/// Returns true if ends with ':' preceded by a drive letter, like "C:" or "more\C:", but not like "moreC:".
@@ -331,7 +331,7 @@ namespace Au
 			int i = ((length < 0) ? s.Length : length) - 1;
 			if(i < 1 || s[i] != ':') return false;
 			if(!AChar.IsAsciiAlpha(s[--i])) return false;
-			if(i > 0 && !LibIsSepChar(s[i - 1])) return false;
+			if(i > 0 && !IsSepChar_(s[i - 1])) return false;
 			return true;
 		}
 
@@ -344,7 +344,7 @@ namespace Au
 			if(s != null) {
 				int i = s.Length - 1;
 				if(i > 0) {
-					if(LibIsSepChar(s[i]) && s[i - 1] != ':') {
+					if(IsSepChar_(s[i]) && s[i - 1] != ':') {
 						var s2 = s.Trim(@"\/");
 						if(s2.Length != 0) s = s2;
 					}
@@ -379,13 +379,13 @@ namespace Au
 		{
 			path = ExpandEnvVar(path);
 			if(!IsFullPath(path)) { //note: not EEV
-				if(0 != (flags & PNFlags.CanBeUrlOrShell)) if(LibIsShellPath(path) || IsUrl(path)) return path;
+				if(0 != (flags & PNFlags.CanBeUrlOrShell)) if(IsShellPath_(path) || IsUrl(path)) return path;
 				if(Empty(defaultParentDirectory)) goto ge;
-				path = LibCombine(ExpandEnvVar(defaultParentDirectory), path);
+				path = Combine_(ExpandEnvVar(defaultParentDirectory), path);
 				if(!IsFullPath(path)) goto ge;
 			}
 
-			return LibNormalize(path, flags, true);
+			return Normalize_(path, flags, true);
 			ge:
 			throw new ArgumentException($"Not full path: '{path}'.");
 		}
@@ -394,11 +394,11 @@ namespace Au
 		/// Same as <see cref="Normalize"/>, but skips full-path checking.
 		/// s should be full path. If not full and not null/"", combines with current directory.
 		/// </summary>
-		internal static string LibNormalize(string s, PNFlags flags = 0, bool noExpandEV = false)
+		internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false)
 		{
 			if(!Empty(s)) {
 				if(!noExpandEV) s = ExpandEnvVar(s);
-				Debug.Assert(!LibIsShellPath(s) && !IsUrl(s));
+				Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
 
 				if(_EndsWithDriveWithoutSep(s)) s += "\\"; //API would append current directory
 
@@ -406,12 +406,12 @@ namespace Au
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath.
 				for(int na = 300; ;) {
-					var b = Util.AMemoryArray.LibChar(ref na);
+					var b = Util.AMemoryArray.Char_(ref na);
 					int nr = Api.GetFullPathName(s, na, b, null);
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}
 
-				if(0 == (flags & PNFlags.DontExpandDosPath) && LibIsPossiblyDos(s)) s = LibExpandDosPath(s);
+				if(0 == (flags & PNFlags.DontExpandDosPath) && IsPossiblyDos_(s)) s = ExpandDosPath_(s);
 
 				if(0 == (flags & PNFlags.DontRemoveEndSeparator)) s = _AddRemoveSep(s);
 				else if(_EndsWithDriveWithoutSep(s)) s += "\\";
@@ -426,10 +426,10 @@ namespace Au
 		/// Calls ExpandEnvVar, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
-		internal static string LibNormalizeMinimally(string path, bool throwIfNotFullPath)
+		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath)
 		{
 			var s = ExpandEnvVar(path);
-			Debug.Assert(!LibIsShellPath(s) && !IsUrl(s));
+			Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
 			if(throwIfNotFullPath && !IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 			s = _AddRemoveSep(s);
 			s = PrefixLongPathIfNeed(s);
@@ -441,10 +441,10 @@ namespace Au
 		/// Calls ExpandEnvVar, _AddRemoveSep. Throws if !IsFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		internal static string LibNormalizeForNET(string path)
+		internal static string NormalizeForNET_(string path)
 		{
 			var s = ExpandEnvVar(path);
-			Debug.Assert(!LibIsShellPath(s) && !IsUrl(s));
+			Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
 			if(!IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 			return _AddRemoveSep(s);
 		}
@@ -454,11 +454,11 @@ namespace Au
 		/// Does not check whether s contains '~' character etc. Note: the API is slow.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static string LibExpandDosPath(string s)
+		internal static string ExpandDosPath_(string s)
 		{
 			if(!Empty(s)) {
 				for(int na = 300; ;) {
-					var b = Util.AMemoryArray.LibChar(ref na);
+					var b = Util.AMemoryArray.Char_(ref na);
 					int nr = Api.GetLongPathName(s, b, na);
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}
@@ -473,7 +473,7 @@ namespace Au
 		/// Examples: <c>"abcde~12"</c>, <c>"abcde~12.txt"</c>, <c>@"c:\path\abcde~12.txt"</c>, <c>"c:\abcde~12\path"</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool LibIsPossiblyDos(string s)
+		internal static bool IsPossiblyDos_(string s)
 		{
 			//Print(s);
 			if(s != null && s.Length >= 8) {
@@ -497,7 +497,7 @@ namespace Au
 		/// Returns true if starts with "::".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool LibIsShellPath(string s)
+		internal static bool IsShellPath_(string s)
 		{
 			return s != null && s.Length >= 2 && s[0] == ':' && s[1] == ':';
 		}
@@ -517,7 +517,7 @@ namespace Au
 		{
 			var s = path;
 			if(IsFullPath(s) && 0 == _GetPrefixLength(s)) {
-				if(s.Length >= 2 && LibIsSepChar(s[0]) && LibIsSepChar(s[1])) s = s.ReplaceAt(0, 2, @"\\?\UNC\");
+				if(s.Length >= 2 && IsSepChar_(s[0]) && IsSepChar_(s[1])) s = s.ReplaceAt(0, 2, @"\\?\UNC\");
 				else s = @"\\?\" + s;
 			}
 			return s;
@@ -567,8 +567,8 @@ namespace Au
 		{
 			if(s == null) return 0;
 			int len = s.Length;
-			if(len >= 4 && s[2] == '?' && LibIsSepChar(s[0]) && LibIsSepChar(s[1]) && LibIsSepChar(s[3])) {
-				if(len >= 8 && LibIsSepChar(s[7]) && s.Eq(4, "UNC", true)) return 8;
+			if(len >= 4 && s[2] == '?' && IsSepChar_(s[0]) && IsSepChar_(s[1]) && IsSepChar_(s[3])) {
+				if(len >= 8 && IsSepChar_(s[7]) && s.Eq(4, "UNC", true)) return 8;
 				return 4;
 			}
 			return 0;
@@ -768,14 +768,14 @@ namespace Au
 			int len = s.Length, i, iExt = -1;
 
 			//rtrim '\\' and '/' etc
-			for(i = len; i > 0 && LibIsSepChar(s[i - 1]); i--) {
+			for(i = len; i > 0 && IsSepChar_(s[i - 1]); i--) {
 				if(what == _PathPart.Ext) return "";
 				if(what == _PathPart.NameWithoutExt) what = _PathPart.NameWithExt;
 			}
 			len = i;
 
 			//if ends with ":" or @":\", it is either drive or URL root or invalid
-			if(len > 0 && s[len - 1] == ':' && !LibIsShellPath(s)) return (what == _PathPart.Dir) ? null : "";
+			if(len > 0 && s[len - 1] == ':' && !IsShellPath_(s)) return (what == _PathPart.Dir) ? null : "";
 
 			//find '\\' or '/'. Also '.' if need.
 			//Note: we don't split at ':', which could be used for alt stream or URL port or in shell parsing name as non-separator. This library does not support paths like "C:relative path".
@@ -810,7 +810,7 @@ namespace Au
 				}
 				if(i > 0) {
 					//returns null if i is in root
-					int j = GetRootLength(s); if(j > 0 && LibIsSepChar(s[j - 1])) j--;
+					int j = GetRootLength(s); if(j > 0 && IsSepChar_(s[j - 1])) j--;
 					if(i < j) return null;
 
 					if(withSeparator || _EndsWithDriveWithoutSep(s, i)) i++;
@@ -825,7 +825,7 @@ namespace Au
 		/// Returns true if s is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool LibIsExtension(string s)
+		internal static bool IsExtension_(string s)
 		{
 			if(s == null || s.Length < 2 || s[0] != '.') return false;
 			for(int i = 1; i < s.Length; i++) {
@@ -838,7 +838,7 @@ namespace Au
 		/// Returns true if s is like "protocol:" and not like "c:" or "protocol:more".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool LibIsProtocol(string s)
+		internal static bool IsProtocol_(string s)
 		{
 			return s != null && s.Ends(':') && GetUrlProtocolLength(s) == s.Length;
 		}

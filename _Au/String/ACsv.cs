@@ -165,7 +165,7 @@ namespace Au
 		{
 			if(RowCount == 0 || ColumnCount == 0) return "";
 
-			using(new Util.LibStringBuilder(out var b)) {
+			using(new Util.StringBuilder_(out var b)) {
 				char quote = Quote;
 				string sQuote1 = null, sQuote2 = null;
 

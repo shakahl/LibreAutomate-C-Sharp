@@ -105,7 +105,7 @@ namespace Au.Triggers
 			if(flags == 0 && postfixType == 0 && postfixChars == null) {
 				_paramsString = text;
 			} else {
-				using(new Util.LibStringBuilder(out var b)) {
+				using(new Util.StringBuilder_(out var b)) {
 					b.Append(text);
 					if(flags != 0) b.Append("  (").Append(flags.ToString()).Append(')');
 					if(postfixType != 0) b.Append("  postfixType=").Append(postfixType.ToString());
@@ -159,7 +159,7 @@ namespace Au.Triggers
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public Action<AutotextTriggerArgs> this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
 			set {
-				_triggers.LibThrowIfRunning();
+				_triggers.ThrowIfRunning_();
 				int len = text.Lenn(); if(len < 1 || len > 100) throw new ArgumentException("Text length must be 1 - 100.");
 				if(text.IndexOf('\n') >= 0) { text = text.RegexReplace(@"\r?\n", "\r"); len = text.Length; }
 				TAFlags fl = flags ?? DefaultFlags;
@@ -239,7 +239,7 @@ namespace Au.Triggers
 		public KKey PostfixKey {
 			get => _postfixKey;
 			set {
-				var mod = AKeys.Lib.KeyToMod(value);
+				var mod = AKeys.Internal_.KeyToMod(value);
 				switch(mod) {
 				case KMod.Ctrl: case KMod.Shift: break;
 				default: throw new ArgumentException("Must be Ctrl, Shift, LCtrl, RCtrl, LShift or RShift.");
@@ -358,8 +358,8 @@ namespace Au.Triggers
 		}
 
 		internal static unsafe bool ResetEverywhere {
-			get => Util.LibSharedMemory.Ptr->triggers.resetAutotext;
-			set => Util.LibSharedMemory.Ptr->triggers.resetAutotext = value;
+			get => Util.SharedMemory_.Ptr->triggers.resetAutotext;
+			set => Util.SharedMemory_.Ptr->triggers.resetAutotext = value;
 		}
 
 		unsafe void _Trigger(char c, bool isPK, AWnd wFocus, TriggerHookContext thc)

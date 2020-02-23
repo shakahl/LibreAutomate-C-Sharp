@@ -76,7 +76,7 @@ namespace Au
 			if(r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
 
 			//is it desktop?
-			if(LibIsOfShellThread) return false;
+			if(IsOfShellThread_) return false;
 			if(this == GetWnd.Root) return false;
 
 			return true;
@@ -91,14 +91,14 @@ namespace Au
 		/// <summary>
 		/// Returns true if this belongs to GetShellWindow's thread (usually it is the desktop window).
 		/// </summary>
-		internal bool LibIsOfShellThread {
+		internal bool IsOfShellThread_ {
 			get => 1 == __isShellWindow.IsShellWindow(this);
 		}
 
 		/// <summary>
 		/// Returns true if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
 		/// </summary>
-		internal bool LibIsOfShellProcess {
+		internal bool IsOfShellProcess_ {
 			get => 0 != __isShellWindow.IsShellWindow(this);
 		}
 
@@ -136,7 +136,7 @@ namespace Au
 				if(!AVersion.MinWin8) return false;
 				if(!HasExStyle(WS2.TOPMOST | WS2.NOREDIRECTIONBITMAP) || (Style & WS.CAPTION) != 0) return false;
 				if(ClassNameIs("Windows.UI.Core.CoreWindow")) return true;
-				if(!AVersion.MinWin10 && LibIsOfShellProcess) return true;
+				if(!AVersion.MinWin10 && IsOfShellProcess_) return true;
 				return false;
 				//could use IsImmersiveProcess, but this is better
 			}
@@ -162,7 +162,7 @@ namespace Au
 		/// <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
 		public string SavePositionSizeState(bool canBeMinimized = false)
 		{
-			if(!LibGetWindowPlacement(out var p)) return null;
+			if(!GetWindowPlacement_(out var p)) return null;
 			//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
 			return AConvert.Base64UrlEncode(p);
@@ -198,7 +198,7 @@ namespace Au
 					}
 					p.showCmd = 0;
 				}
-				this.LibSetWindowPlacement(ref p, "*restore*");
+				this.SetWindowPlacement_(ref p, "*restore*");
 			}
 
 			if(ensureInScreen) this.EnsureInScreen();

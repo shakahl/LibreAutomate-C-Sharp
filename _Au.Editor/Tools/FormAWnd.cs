@@ -116,7 +116,7 @@ namespace Au.Tools
 
 			_noeventGridValueChanged = true;
 
-			var wndName = _wnd.LibNameTL;
+			var wndName = _wnd.NameTL_;
 			if(newWindow) {
 				g.ZAddHeaderRow("Window");
 				g.ZAdd(null, "name", TUtil.EscapeWindowName(wndName, true), true, info: "Window name.$");
@@ -608,7 +608,7 @@ namespace Au.Tools
 						var name = c.Name;
 						if(Empty(name)) _displayText = cn;
 						else {
-							using(new Util.LibStringBuilder(out var b)) {
+							using(new Util.StringBuilder_(out var b)) {
 								name = name.Escape(limit: 250);
 								b.Append(cn).Append("  \"").Append(name).Append("\"");
 								_displayText = b.ToString();

@@ -785,13 +785,13 @@ namespace Au
 				if(AStringUtil.IsAscii(name)) {
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if(LibBytePtr.AsciiEq(b, name)) return i;
+						if(BytePtr_.AsciiEq(b, name)) return i;
 					}
 				} else {
 					var bname = AConvert.ToUtf8(name);
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
-						if(LibBytePtr.Eq(b, bname)) return i;
+						if(BytePtr_.Eq(b, bname)) return i;
 					}
 				}
 			}
@@ -971,7 +971,7 @@ namespace Au.Types
 
 		internal static string Concat(string s1, string s2, string s3)
 		{
-			using(new LibStringBuilder(out var b)) {
+			using(new StringBuilder_(out var b)) {
 				_Append(s1); _Append(s2); if(s3 != s2) _Append(s3);
 				return b.ToString();
 

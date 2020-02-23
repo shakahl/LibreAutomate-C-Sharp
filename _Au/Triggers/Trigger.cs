@@ -35,11 +35,11 @@ namespace Au.Triggers
 		{
 			this.action = action;
 			this.triggers = triggers;
-			var to = triggers.options;
+			var to = triggers.options_;
 			options = to.Current;
 			EnabledAlways = to.EnabledAlways;
-			if(usesWindowScope) scope = triggers.scopes.Current;
-			var tf = triggers.funcs;
+			if(usesWindowScope) scope = triggers.scopes_.Current;
+			var tf = triggers.funcs_;
 			_funcBefore = _Func(tf.commonBefore, tf.nextBefore); tf.nextBefore = null;
 			_funcAfter = _Func(tf.nextAfter, tf.commonAfter); tf.nextAfter = null;
 
@@ -196,9 +196,9 @@ namespace Au.Triggers
 		/// </remarks>
 		public void RunAction(TriggerArgs args)
 		{
-			triggers.LibThrowIfNotRunning();
-			if(AThread.NativeId != triggers.LibThreadId) throw new InvalidOperationException("Wrong thread. Call from a FuncOf function.");
-			triggers.LibRunAction(this, args);
+			triggers.ThrowIfNotRunning_();
+			triggers.ThrowIfNotMainThread_();
+			triggers.RunAction_(this, args);
 		}
 	}
 
@@ -441,7 +441,7 @@ namespace Au.Triggers
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// //examples of assigning a CF to a single trigger
+	/// //examples of assigning a callback function (CF) to a single trigger
 	/// Triggers.FuncOf.NextTrigger = o => AKeys.IsCapsLock; //o => AKeys.IsCapsLock is the callback function (lambda)
 	/// Triggers.Hotkey["Ctrl+K"] = o => Print("action: Ctrl+K while CapsLock is on");
 	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; Print($"func: mod={v.Mod}"); return AMouse.IsPressed(MButtons.Left); };

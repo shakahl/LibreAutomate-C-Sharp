@@ -45,8 +45,8 @@ namespace Au
 	/// </example>
 	public unsafe class AInputBlocker : IDisposable
 	{
-		LibHandle _syncEvent, _stopEvent;
-		LibHandle _threadHandle;
+		Handle_ _syncEvent, _stopEvent;
+		Handle_ _threadHandle;
 		AKeys _blockedKeys;
 		long _startTime;
 		BIEvents _block;
@@ -162,11 +162,11 @@ namespace Au
 				try { hwe = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, _winEventProc ??= _WinEventProc); }
 				catch(AuException e1) { ADebug.Print(e1); } //failed to hook
 
-				AWaitFor.LibWait(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
+				AWaitFor.Wait_(-1, WHFlags.DoEvents, _stopEvent, _threadHandle);
 
 				if(_blockedKeys != null) {
 					bool onlyUp = _discardBlockedKeys || ATime.WinMilliseconds - _startTime > c_maxResendTime;
-					_blockedKeys.LibSendBlocked(onlyUp);
+					_blockedKeys.SendBlocked_(onlyUp);
 				}
 				//Print("ended");
 			}
@@ -199,7 +199,7 @@ namespace Au
 			if(ResendBlockedKeys && ATime.WinMilliseconds - _startTime < c_maxResendTime) {
 				_blockedKeys ??= new AKeys(AOpt.Static.Key);
 				//Print("blocked", x.vkCode, !x.IsUp);
-				_blockedKeys.LibAddRaw(x.vkCode, (ushort)x.scanCode, x.LibSendInputFlags);
+				_blockedKeys.AddRaw_(x.vkCode, (ushort)x.scanCode, x.SendInputFlags_);
 			}
 			x.BlockEvent();
 		}

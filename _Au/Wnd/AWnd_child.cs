@@ -97,10 +97,10 @@ namespace Au
 				return _FindInList(wParent, k) >= 0;
 			}
 
-			Util.LibArrayBuilder<AWnd> _AllChildren(AWnd wParent)
+			Util.ArrayBuilder_<AWnd> _AllChildren(AWnd wParent)
 			{
 				wParent.ThrowIfInvalid();
-				return Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows,
+				return Internal_.EnumWindows2(Internal_.EnumAPI.EnumChildWindows,
 						onlyVisible: 0 == (_flags & WCFlags.HiddenToo),
 						sortFirstVisible: true,
 						wParent: wParent,
@@ -145,7 +145,7 @@ namespace Au
 			AWnd[] _FindAll(_WndList k, AWnd wParent)
 			{
 				using(k) {
-					using var ab = new Util.LibArrayBuilder<AWnd>();
+					using var ab = new Util.ArrayBuilder_<AWnd>();
 					_FindInList(wParent, k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
 					return ab.ToArray();
 				}
@@ -171,11 +171,11 @@ namespace Au
 
 						if(inList) { //else the enum function did this
 							if(!_flags.Has(WCFlags.HiddenToo)) {
-								if(!w.LibIsVisibleIn(wParent)) continue;
+								if(!w.IsVisibleIn_(wParent)) continue;
 							}
 
 							if(_flags.Has(WCFlags.DirectChild) && !wParent.Is0) {
-								if(w.LibParentGWL != wParent) continue;
+								if(w.ParentGWL_ != wParent) continue;
 							}
 						}
 
@@ -402,8 +402,8 @@ namespace Au
 			Api.EnumChildWindows(this, (c, p) => {
 				ref var x = ref *(_KidEnumData*)p;
 				if(c.ControlId == x.id) {
-					if(x.flags.Has(WCFlags.DirectChild) && c.LibParentGWL != x.wThis) return 1;
-					if(c.LibIsVisibleIn(wParent)) { x.cVisible = c; return 0; }
+					if(x.flags.Has(WCFlags.DirectChild) && c.ParentGWL_ != x.wThis) return 1;
+					if(c.IsVisibleIn_(wParent)) { x.cVisible = c; return 0; }
 					if(x.flags.Has(WCFlags.HiddenToo) && x.cHidden.Is0) x.cHidden = c;
 				}
 				return 1;
@@ -489,7 +489,7 @@ namespace Au
 			public AWnd[] Children(bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
 			{
 				_w.ThrowIfInvalid();
-				return Lib.EnumWindows(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
+				return Internal_.EnumWindows(Internal_.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild);
 			}
 
 			/// <summary>
@@ -506,7 +506,7 @@ namespace Au
 			public void Children(ref List<AWnd> a, bool onlyVisible = false, bool sortFirstVisible = false, bool directChild = false)
 			{
 				_w.ThrowIfInvalid();
-				Lib.EnumWindows2(Lib.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ??= new List<AWnd>());
+				Internal_.EnumWindows2(Internal_.EnumAPI.EnumChildWindows, onlyVisible, sortFirstVisible, _w, directChild, list: a ??= new List<AWnd>());
 			}
 
 			//rejected: unreliable.
@@ -578,7 +578,7 @@ namespace Au
 				} else {
 					_PostBmClick(); //async if other thread, because may show a dialog.
 				}
-				W.LibMinimalSleepIfOtherThread();
+				W.MinimalSleepIfOtherThread_();
 				//FUTURE: sync better
 			}
 
@@ -635,7 +635,7 @@ namespace Au
 					switch(state) {
 					case 0:
 						if(k == 1) {
-							W.LibMinimalSleepIfOtherThread();
+							W.MinimalSleepIfOtherThread_();
 							if(GetCheckState(true) == 2) clickAgain = true;
 							else return;
 						}
@@ -655,7 +655,7 @@ namespace Au
 					W.Post(BM_SETCHECK, state);
 					W.Get.DirectParent.Post(Api.WM_COMMAND, id, (LPARAM)W);
 				}
-				W.LibMinimalSleepIfOtherThread();
+				W.MinimalSleepIfOtherThread_();
 			}
 
 			/// <summary>
@@ -791,7 +791,7 @@ namespace Au
 			var w = this;
 			if(ClassNameIs("#32768") && More.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
 			w.Post(systemMenu ? Api.WM_SYSCOMMAND : Api.WM_COMMAND, itemId);
-			w.LibMinimalSleepIfOtherThread();
+			w.MinimalSleepIfOtherThread_();
 		}
 
 		//rejected: use AAcc functions instead.

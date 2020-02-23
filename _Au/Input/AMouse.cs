@@ -77,7 +77,7 @@ namespace Au
 			}
 			if(!ok && !relaxed) {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
-				AWnd.Active.LibUacCheckAndThrow(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
+				AWnd.Active.UacCheckAndThrow_(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
 																	 //rejected: AWnd.GetWnd.Root.ActivateLL()
 				throw new AuException(es);
 				//known reasons:
@@ -141,7 +141,7 @@ namespace Au
 		/// </remarks>
 		public static POINT Move(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
-			LibWaitForNoButtonsPressed();
+			WaitForNoButtonsPressed_();
 			w.ThrowIfInvalid();
 			var wTL = w.Window;
 			if(!wTL.IsVisible) throw new AuWndException(wTL, "Cannot mouse-move. The window is invisible"); //should make visible? Probably not. If cloaked because in an inactive virtual desktop etc, Click activates and it usually uncloaks.
@@ -170,7 +170,7 @@ namespace Au
 		/// </remarks>
 		public static POINT Move(Coord x, Coord y)
 		{
-			LibWaitForNoButtonsPressed();
+			WaitForNoButtonsPressed_();
 			var p = Coord.Normalize(x, y);
 			_Move(p, fast: false);
 			return p;
@@ -202,7 +202,7 @@ namespace Au
 		/// </example>
 		public static void Move(POINT p)
 		{
-			LibWaitForNoButtonsPressed();
+			WaitForNoButtonsPressed_();
 			_Move(p, fast: false);
 		}
 
@@ -224,7 +224,7 @@ namespace Au
 		public static void Restore()
 		{
 			if(t_prevMousePos == null) return;
-			LibWaitForNoButtonsPressed();
+			WaitForNoButtonsPressed_();
 			_Move(t_prevMousePos.first, fast: true);
 		}
 
@@ -263,7 +263,7 @@ namespace Au
 		/// </remarks>
 		public static POINT MoveRelative(int dx, int dy)
 		{
-			LibWaitForNoButtonsPressed();
+			WaitForNoButtonsPressed_();
 			var p = LastXY;
 			p.x += dx; p.y += dy;
 			_Move(p, fast: false);
@@ -285,7 +285,7 @@ namespace Au
 		/// </remarks>
 		public static POINT MoveRecorded(string recordedString, double speedFactor = 1.0)
 		{
-			LibWaitForNoButtonsPressed();
+			WaitForNoButtonsPressed_();
 
 			var a = Convert.FromBase64String(recordedString);
 
@@ -494,7 +494,7 @@ namespace Au
 					if(!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
 					else if(wTL.ThreadId == AWnd.GetWnd.Shell.ThreadId) bad = true; //desktop
 					else if(wTL.IsActive) wTL.ZorderTop(); //can be below another window in the same topmost/normal Z order, although it is rare
-					else bad = !wTL.LibActivate(AWnd.Lib.ActivateFlags.NoThrowIfInvalid | AWnd.Lib.ActivateFlags.IgnoreIfNoActivateStyleEtc | AWnd.Lib.ActivateFlags.NoGetWindow);
+					else bad = !wTL.Activate_(AWnd.Internal_.ActivateFlags.NoThrowIfInvalid | AWnd.Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc | AWnd.Internal_.ActivateFlags.NoGetWindow);
 
 					//rejected: if wTL is desktop, minimize windows. Scripts should not have a reason to click desktop. If need, they can minimize windows explicitly.
 					//CONSIDER: activate always, because some controls don't respond when clicked while the window is inactive. But there is a risk to activate a window that does not want to be activated on click, even if we don't activate windows that have noactivate style. Probably better let the script author insert Activate before Click when need.
@@ -965,7 +965,7 @@ namespace Au
 		/// Waits while some buttons are down (pressed), except those pressed by a <see cref="AMouse"/> class function in this thread.
 		/// Does nothing option <b>Relaxed</b> is true.
 		/// </summary>
-		internal static void LibWaitForNoButtonsPressed()
+		internal static void WaitForNoButtonsPressed_()
 		{
 			//not public, because we have WaitForNoButtonsPressed, which is unaware about script-pressed buttons, and don't need this awareness because the script author knows what is pressed by that script
 
@@ -1252,7 +1252,7 @@ namespace Au
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this AWinImage t, Coord x = default, Coord y = default)
-			=> t.OrThrow().LibMouseAction(0, x, y);
+			=> t.OrThrow().MouseAction_(0, x, y);
 
 		/// <summary>
 		/// Clicks the found image.
@@ -1267,7 +1267,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this AWinImage t, Coord x = default, Coord y = default, MButton button = MButton.Left)
 		{
-			t.OrThrow().LibMouseAction(button == 0 ? MButton.Left : button, x, y);
+			t.OrThrow().MouseAction_(button == 0 ? MButton.Left : button, x, y);
 			return button;
 		}
 

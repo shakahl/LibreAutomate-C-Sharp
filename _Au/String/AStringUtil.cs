@@ -74,7 +74,7 @@ namespace Au.Util
 				for(int i = 0; i < s.Length; i++) if(s[i] == '&') goto g1;
 				return s;
 				g1:
-				var b = Util.AMemoryArray.LibChar(s.Length);
+				var b = Util.AMemoryArray.Char_(s.Length);
 				int j = 0;
 				for(int i = 0; i < s.Length; i++) {
 					if(s[i] == '&') {

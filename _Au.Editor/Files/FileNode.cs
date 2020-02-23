@@ -329,7 +329,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 			if(f == null) { Debug.Assert(IsDeleted); return null; }
 			a.Push(f._name);
 		}
-		using(new Au.Util.LibStringBuilder(out var b)) {
+		using(new Au.Util.StringBuilder_(out var b)) {
 			b.Append(prefix);
 			while(a.Count > 0) b.Append('\\').Append(a.Pop());
 			return b.ToString();

@@ -286,7 +286,7 @@ namespace Au.Types
 			return new RestoreWarnings(this, restoreCount);
 		}
 
-		internal void LibRestoreWarnings(int restoreCount)
+		internal void RestoreWarnings_(int restoreCount)
 		{
 			if(this == AOpt.Static.Debug) throw new InvalidOperationException(); //would be not thread-safe, and useless
 			_disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount);
@@ -314,7 +314,7 @@ namespace Au.Types
 			internal RestoreWarnings(OptDebug o, int restoreCount) { _o = o; _restoreCount = restoreCount; }
 
 			/// <summary>Restores warnings.</summary>
-			public void Dispose() => _o.LibRestoreWarnings(_restoreCount);
+			public void Dispose() => _o.RestoreWarnings_(_restoreCount);
 		}
 	}
 
@@ -341,13 +341,13 @@ namespace Au.Types
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
 		internal OptMouse(OptMouse cloneOptions = null) //don't need public like OptKey
 		{
-			LibCopyOrDefault(cloneOptions);
+			CopyOrDefault_(cloneOptions);
 		}
 
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		internal void LibCopyOrDefault(OptMouse o)
+		internal void CopyOrDefault_(OptMouse o)
 		{
 			if(o != null) {
 				_o = o._o;
@@ -362,7 +362,7 @@ namespace Au.Types
 		/// <summary>
 		/// Resets all options. Copies from <see cref="AOpt.Static.Mouse"/>.
 		/// </summary>
-		public void Reset() => LibCopyOrDefault(AOpt.Static.Mouse);
+		public void Reset() => CopyOrDefault_(AOpt.Static.Mouse);
 
 		bool _IsStatic => this == AOpt.Static.Mouse;
 
@@ -457,13 +457,13 @@ namespace Au.Types
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
 		public OptKey(OptKey cloneOptions = null)
 		{
-			LibCopyOrDefault(cloneOptions);
+			CopyOrDefault_(cloneOptions);
 		}
 
 		/// <summary>
 		/// Copies options from o, or sets default if o==null. Like ctor does.
 		/// </summary>
-		internal void LibCopyOrDefault(OptKey o)
+		internal void CopyOrDefault_(OptKey o)
 		{
 			if(o != null) {
 				_textSpeed = o._textSpeed;
@@ -497,13 +497,13 @@ namespace Au.Types
 		/// <summary>
 		/// Resets all options. Copies from <see cref="AOpt.Static.Key"/>.
 		/// </summary>
-		public void Reset() => LibCopyOrDefault(AOpt.Static.Key);
+		public void Reset() => CopyOrDefault_(AOpt.Static.Key);
 
 		/// <summary>
 		/// Returns this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
-		internal OptKey LibGetHookOptionsOrThis(AWnd wFocus)
+		internal OptKey GetHookOptionsOrThis_(AWnd wFocus)
 		{
 			var call = this.Hook;
 			if(call == null || wFocus.Is0) return this;
@@ -667,7 +667,7 @@ namespace Au.Types
 		/// <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="AClipboard.CopyText"/> and don't call this function in loop. Else it shows small times.</note>
 		/// The time depends on app, etc. More info: <see cref="RestoreClipboardExceptFormats"/>.
 		/// </remarks>
-		public static void PrintClipboard() => AClipboard.LibPrintClipboard();
+		public static void PrintClipboard() => AClipboard.PrintClipboard_();
 
 		#endregion
 

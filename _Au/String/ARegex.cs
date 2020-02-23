@@ -685,7 +685,7 @@ namespace Au
 		int _Replace(string s, out string result, string repl, Func<RXMatch, string> replFunc, int maxCount, Range? range, RXMatchFlags matchFlags)
 		{
 			StringBuilder b = null;
-			Util.LibStringBuilder bCache = default;
+			Util.StringBuilder_ bCache = default;
 			int prevEnd = 0;
 			int replType = 0; //0 empty, 1 simple, 2 with $, 3 callback
 
@@ -693,7 +693,7 @@ namespace Au
 			while(e.Next()) {
 				//init variables
 				if(b == null) {
-					bCache = new Util.LibStringBuilder(out b, s.Length + 100);
+					bCache = new Util.StringBuilder_(out b, s.Length + 100);
 					if(replFunc != null) replType = 3; else if(!Empty(repl)) replType = repl.IndexOf('$') < 0 ? 1 : 2;
 				}
 				//append s part before this match
@@ -706,7 +706,7 @@ namespace Au
 				if(replType >= 2) {
 					var m = e.Match; //FUTURE: optimization: if no callback, use single instance and set fields.
 					if(replFunc != null) re = replFunc(m);
-					else LibExpandReplacement(m, repl, b);
+					else ExpandReplacement_(m, repl, b);
 				} else re = repl;
 				if(!Empty(re)) b.Append(re);
 			}
@@ -863,7 +863,7 @@ namespace Au
 		//Used by _ReplaceAll and RXMatch.ExpandReplacement.
 		//Fully supports .NET regular expression substitution syntax. Also: replaces $* with the name of the last encountered mark; replaces ${+func} with the return value of a function registered with <see cref="AddReplaceFunc"/>.
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		internal static void LibExpandReplacement(RXMatch m, string repl, StringBuilder b)
+		internal static void ExpandReplacement_(RXMatch m, string repl, StringBuilder b)
 		{
 			fixed(char* s0 = repl) {
 				char* s = s0, eos = s + repl.Length, e = s; //e is the end of s part added to b
@@ -891,7 +891,7 @@ namespace Au
 								group = repl.ToInt((int)(s - s0), out int numEnd, STIFlags.NoHex);
 								if(s0 + numEnd != t || group < 0) continue;
 							} else { //${name}
-								group = m.LibGroupNumberFromName(s, (int)(t - s), out _); //speed: 40-100 ns
+								group = m.GroupNumberFromName_(s, (int)(t - s), out _); //speed: 40-100 ns
 								if(group < 0) continue;
 							}
 							s = t + 1;
@@ -922,7 +922,7 @@ namespace Au
 						if(group >= 0) {
 							if(group >= m.GroupCountPlusOne) continue;
 							var g = m[group];
-							if(g.Length > 0) b.Append(g.LibSubject, g.Start, g.Length);
+							if(g.Length > 0) b.Append(g.Subject_, g.Start, g.Length);
 						}
 
 						e = s;

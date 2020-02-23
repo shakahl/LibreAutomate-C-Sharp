@@ -154,7 +154,7 @@ namespace Aga.Controls.Tree
 		public override string Description {
 			get {
 				var tva = _tn.Tree;
-				using(new Au.Util.LibStringBuilder(out var b)) {
+				using(new Au.Util.StringBuilder_(out var b)) {
 					b.Append(_tn.IsLeaf ? "item" : "folder");
 					bool start = false;
 					foreach(var c in tva.NodeControls) {
@@ -280,7 +280,7 @@ namespace Aga.Controls.Tree
 
 		public override string Description {
 			get {
-				using(new Au.Util.LibStringBuilder(out var b)) {
+				using(new Au.Util.StringBuilder_(out var b)) {
 					foreach(var col in _tva.Columns) {
 						if(!col.IsVisible) continue;
 						if(b.Length > 0) b.Append(" | ");

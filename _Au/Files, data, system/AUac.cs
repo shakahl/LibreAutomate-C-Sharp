@@ -38,7 +38,7 @@ namespace Au
 		}
 		#endregion
 
-		LibHandle _htoken;
+		Handle_ _htoken;
 		HandleRef _HtokenHR => new HandleRef(this, _htoken);
 
 		/// <summary>
@@ -166,11 +166,11 @@ namespace Au
 		}
 		UacIL _integrityLevel; byte _haveIntegrityLevel;
 
-		AUac(LibHandle hToken) => _htoken = hToken;
+		AUac(Handle_ hToken) => _htoken = hToken;
 
 		static AUac _Create(IntPtr hProcess)
 		{
-			if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out LibHandle hToken)) return null;
+			if(!Api.OpenProcessToken(hProcess, Api.TOKEN_QUERY | Api.TOKEN_QUERY_SOURCE, out Handle_ hToken)) return null;
 			return new AUac(hToken);
 		}
 
@@ -185,7 +185,7 @@ namespace Au
 		public static AUac OfProcess(int processId)
 		{
 			if(processId == 0) return null;
-			using var hp = LibHandle.OpenProcess(processId);
+			using var hp = Handle_.OpenProcess(processId);
 			if(hp.Is0) return null;
 			return _Create(hp);
 		}

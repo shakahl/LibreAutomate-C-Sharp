@@ -138,12 +138,12 @@ namespace Au
 
 				if(Period < 9.9f && !_precisionIsSet) { //default Period is 10
 					_precisionIsSet = true;
-					ATime.LibSleepPrecision.TempSet1();
+					ATime.SleepPrecision_.TempSet1();
 				}
 
 				int t = (int)Period;
 				if(_doEvents) {
-					ATime.LibSleepDoEvents(t, noSetPrecision: true);
+					ATime.SleepDoEvents_(t, noSetPrecision: true);
 				} else {
 					Thread.Sleep(t);
 				}
@@ -207,22 +207,22 @@ namespace Au
 		/// </remarks>
 		public static int Handle(double secondsTimeout, WHFlags flags, params IntPtr[] handles)
 		{
-			return LibWaitS(secondsTimeout, flags, null, null, handles);
+			return WaitS_(secondsTimeout, flags, null, null, handles);
 		}
 
 		//Waits for handles or/and msgCallback returning true or/and stop becoming true.
-		//Calls LibWait(long timeMS, ...).
+		//Calls Wait_(long timeMS, ...).
 		//Returns:
 		//	0 if timeout (if secondsTimeout<0),
 		//	1-handles.Length if signaled,
 		//	-(1-handles.Length) if abandoned mutex,
 		//	1+handles.Length if msgCallback returned true,
 		//	2+handles.Length if stop became true.
-		internal static int LibWaitS(double secondsTimeout, WHFlags flags, object msgCallback, LibWaitVariable stopVar, params IntPtr[] handles)
+		internal static int WaitS_(double secondsTimeout, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles)
 		{
 			long timeMS = _TimeoutS2MS(secondsTimeout, out bool canThrow);
 
-			int r = LibWait(timeMS, flags, msgCallback, stopVar, handles);
+			int r = Wait_(timeMS, flags, msgCallback, stopVar, handles);
 			if(r < 0) throw new AuException(0);
 			if(r == Api.WAIT_TIMEOUT) {
 				if(canThrow) throw new TimeoutException();
@@ -248,19 +248,19 @@ namespace Au
 		/// If timeMS>0, waits max timeMS and on timeout returns Api.WAIT_TIMEOUT.
 		/// If failed, returns -1. Supports <see cref="ALastError"/>.
 		/// </summary>
-		internal static int LibWait(long timeMS, WHFlags flags, params IntPtr[] handles)
+		internal static int Wait_(long timeMS, WHFlags flags, params IntPtr[] handles)
 		{
-			return LibWait(timeMS, flags, null, null, handles);
+			return Wait_(timeMS, flags, null, null, handles);
 		}
 
 		/// <summary>
-		/// The same as <see cref="LibWait(long, WHFlags, IntPtr[])"/> + can wait for message and variable.
+		/// The same as <see cref="Wait_(long, WHFlags, IntPtr[])"/> + can wait for message and variable.
 		/// If msgCallback is not null, calls it when dispatching messages. If returns true, stops waiting and returns handles?.Length.
 		///		If it is WaitMsgCallback, calls it before dispatching a posted message.
 		///		If it is Func{bool}, calls it after dispatching one or more messages.
 		/// If stopVar is not null, when it becomes true stops waiting and returns handles?.Length + 1.
 		/// </summary>
-		internal static unsafe int LibWait(long timeMS, WHFlags flags, object msgCallback, LibWaitVariable stopVar, params IntPtr[] handles)
+		internal static unsafe int Wait_(long timeMS, WHFlags flags, object msgCallback, WaitVariable_ stopVar, params IntPtr[] handles)
 		{
 			int nHandles = handles?.Length ?? 0;
 			bool doEvents = flags.Has(WHFlags.DoEvents);
@@ -341,7 +341,7 @@ namespace Au
 		/// </example>
 		public static bool PostedMessage(double secondsTimeout, WaitMsgCallback callback)
 		{
-			return 1 == LibWaitS(secondsTimeout, WHFlags.DoEvents, callback, null);
+			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, callback, null);
 		}
 
 		/// <summary>
@@ -366,7 +366,7 @@ namespace Au
 		/// </example>
 		public static bool MessagesAndCondition(double secondsTimeout, Func<bool> condition)
 		{
-			return 1 == LibWaitS(secondsTimeout, WHFlags.DoEvents, condition, null);
+			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, condition, null);
 		}
 
 		/// <summary>
@@ -430,9 +430,9 @@ namespace Au.Types
 	public delegate bool WaitMsgCallback(ref Native.MSG m);
 
 	/// <summary>
-	/// Used with LibWait etc instead of ref bool.
+	/// Used with Wait_ etc instead of ref bool.
 	/// </summary>
-	internal class LibWaitVariable
+	internal class WaitVariable_
 	{
 		public bool waitVar;
 	}

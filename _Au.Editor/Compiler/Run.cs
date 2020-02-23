@@ -159,7 +159,7 @@ class RunningTask
 	volatile WaitHandle _process;
 	public readonly FileNode f;
 	public readonly int taskId;
-	public readonly int processId;
+	//public readonly int processId;
 	public readonly bool isBlue;
 
 	static int s_taskId;
@@ -169,7 +169,7 @@ class RunningTask
 		taskId = ++s_taskId;
 		this.f = f;
 		_process = hProcess;
-		processId = Api.GetProcessId(hProcess.SafeWaitHandle.DangerousGetHandle());
+		//processId = Api.GetProcessId(hProcess.SafeWaitHandle.DangerousGetHandle());
 		this.isBlue = isBlue;
 
 		RegisteredWaitHandle rwh = null;
@@ -249,8 +249,8 @@ class RunningTasks
 		_q = new List<_WaitingTask>();
 		_wMain = (AWnd)Program.MainForm;
 		Program.Timer1sOr025s += _TimerUpdateUI;
-		ATask.LibInit(ATRole.EditorExtension);
-		Au.Util.LibLog.Run.Start();
+		ATask.Init_(ATRole.EditorExtension);
+		Au.Util.Log_.Run.Start();
 	}
 
 	public void OnWorkspaceClosed()
@@ -311,9 +311,7 @@ class RunningTasks
 		int i = _Find(taskId);
 		if(i < 0) { ADebug.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
 
-		var rt = _a[i];
 		_a.RemoveAt(i);
-		HooksServer.Instance?.RemoveTask(rt.processId);
 
 		for(int j = _q.Count - 1; j >= 0; j--) {
 			var t = _q[j];
@@ -525,7 +523,7 @@ class RunningTasks
 			int iFlags = 0;
 			if(r.mtaThread) iFlags |= 2;
 			if(r.console) iFlags |= 4;
-			taskParams = Au.Util.LibSerializer.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
+			taskParams = Au.Util.Serializer_.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
 			wrPipeName = null;
 
 			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;
@@ -585,8 +583,8 @@ class RunningTasks
 	class _Preloaded
 	{
 		public readonly string pipeName;
-		public readonly LibHandle hPipe;
-		public readonly LibHandle overlappedEvent;
+		public readonly Handle_ hPipe;
+		public readonly Handle_ overlappedEvent;
 		public WaitHandle hProcess;
 		public int pid;
 
@@ -634,8 +632,8 @@ class RunningTasks
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.
 		} else {
-			var ps = new Au.Util.LibProcessStarter(exeFile, args, "", envVar: wrPipeName, rawExe: true);
-			var need = Au.Util.LibProcessStarter.Result.Need.WaitHandle;
+			var ps = new Au.Util.ProcessStarter_(exeFile, args, "", envVar: wrPipeName, rawExe: true);
+			var need = Au.Util.ProcessStarter_.Result.Need.WaitHandle;
 			var psr = uac == _SpUac.userFromAdmin ? ps.StartUserIL(need) : ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
 			return (psr.pid, psr.waitHandle);
 		}

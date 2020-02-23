@@ -51,7 +51,7 @@ namespace Au
 			//if(s_time != 0) Print(t - s_time);
 			//s_time = t;
 
-			using var ph = LibHandle.OpenProcess(processId);
+			using var ph = Handle_.OpenProcess(processId);
 			if(!ph.Is0) {
 				//In non-admin process fails if the process is of another user session.
 				//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
@@ -59,9 +59,9 @@ namespace Au
 				//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
 				if(_QueryFullProcessImageName(ph, !fullPath, out var s)) {
 					R = s;
-					if(APath.LibIsPossiblyDos(R)) {
+					if(APath.IsPossiblyDos_(R)) {
 						if(fullPath || _QueryFullProcessImageName(ph, false, out s)) {
-							R = APath.LibExpandDosPath(s);
+							R = APath.ExpandDosPath_(s);
 							if(!fullPath) R = _GetFileName(R);
 						}
 					}
@@ -78,7 +78,7 @@ namespace Au
 
 			return R;
 
-			//Would be good to cache process names here. But process id can be reused quickly. Use LibGetNameCached instead.
+			//Would be good to cache process names here. But process id can be reused quickly. Use GetNameCached_ instead.
 			//	tested: a process id is reused after creating ~100 processes (and waiting until exits). It takes ~2 s.
 			//	The window finder is optimized to call this once for each process and not for each window.
 		}
@@ -86,7 +86,7 @@ namespace Au
 		/// <summary>
 		/// Same as GetName, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
 		/// </summary>
-		internal static string LibGetNameCached(AWnd w, int processId, bool fullPath = false)
+		internal static string GetNameCached_(AWnd w, int processId, bool fullPath = false)
 		{
 			if(processId == 0) return null;
 			var cache = _LastWndProps.OfThread;
@@ -120,7 +120,7 @@ namespace Au
 		{
 			s = null;
 			for(int na = 300; ; na *= 2) {
-				var b = AMemoryArray.LibChar(ref na);
+				var b = AMemoryArray.Char_(ref na);
 				if(Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
 					if(getFilename) s = _GetFileName(b, na);
 					else s = new string(b, 0, na);
@@ -133,9 +133,9 @@ namespace Au
 #if USE_WTS //simple, safe, but ~2 times slower
 		struct _AllProcesses :IDisposable
 		{
-			LibProcessInfo* _p;
+			ProcessInfo_* _p;
 
-			public _AllProcesses(out LibProcessInfo* p, out int count)
+			public _AllProcesses(out ProcessInfo_* p, out int count)
 			{
 				if(WTSEnumerateProcessesW(default, 0, 1, out p, out count)) _p = p; else _p = null;
 			}
@@ -146,17 +146,17 @@ namespace Au
 			}
 
 			[DllImport("wtsapi32.dll", SetLastError = true)]
-			static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out LibProcessInfo* ppProcessInfo, out int pCount);
+			static extern bool WTSEnumerateProcessesW(IntPtr serverHandle, uint reserved, uint version, out ProcessInfo_* ppProcessInfo, out int pCount);
 
 			[DllImport("wtsapi32.dll", SetLastError = false)]
-			static extern void WTSFreeMemory(LibProcessInfo* memory);
+			static extern void WTSFreeMemory(ProcessInfo_* memory);
 		}
 #else //the .NET Process class uses this. But it creates about 0.4 MB of garbage.
 		struct _AllProcesses : IDisposable
 		{
-			LibProcessInfo* _p;
+			ProcessInfo_* _p;
 
-			public _AllProcesses(out LibProcessInfo* pi, out int count)
+			public _AllProcesses(out ProcessInfo_* pi, out int count)
 			{
 				_p = null;
 				Api.SYSTEM_PROCESS_INFORMATION* b = null;
@@ -179,8 +179,8 @@ namespace Au
 						nbNames += p->NameLength; //bytes, not chars
 					}
 					count = nProcesses;
-					_p = (LibProcessInfo*)AMemory.Alloc(nProcesses * sizeof(LibProcessInfo) + nbNames);
-					LibProcessInfo* r = _p;
+					_p = (ProcessInfo_*)AMemory.Alloc(nProcesses * sizeof(ProcessInfo_) + nbNames);
+					ProcessInfo_* r = _p;
 					char* names = (char*)(_p + nProcesses);
 					for(p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
 						r->processID = (int)p->UniqueProcessId;
@@ -206,9 +206,9 @@ namespace Au
 		}
 #endif
 
-		//Use LibProcessInfo and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory.
-		//	AllProcesses() converts LibProcessInfo to ProcessInfo where Name is string. Almost same speed.
-		internal unsafe struct LibProcessInfo
+		//Use ProcessInfo_ and ProcessInfo because with WTSEnumerateProcessesW _ProcessName must be IntPtr, and then WTSFreeMemory frees its memory.
+		//	AllProcesses() converts ProcessInfo_ to ProcessInfo where Name is string. Almost same speed.
+		internal unsafe struct ProcessInfo_
 		{
 #pragma warning disable 649 //never used
 			public int sessionID;
@@ -232,10 +232,10 @@ namespace Au
 					return null;
 				}
 				string R = new string(namePtr, 0, nameLen);
-				if(!cannotOpen && APath.LibIsPossiblyDos(R)) {
-					using var ph = LibHandle.OpenProcess(processID);
+				if(!cannotOpen && APath.IsPossiblyDos_(R)) {
+					using var ph = Handle_.OpenProcess(processID);
 					if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
-						R = _GetFileName(APath.LibExpandDosPath(s));
+						R = _GetFileName(APath.ExpandDosPath_(s));
 					}
 				}
 				return R;
@@ -286,7 +286,7 @@ namespace Au
 		{
 			if(Empty(processName)) throw new ArgumentException();
 			List<int> a = null;
-			LibGetProcessesByName(ref a, processName, fullPath, ofThisSession);
+			GetProcessesByName_(ref a, processName, fullPath, ofThisSession);
 			return a?.ToArray() ?? Array.Empty<int>();
 		}
 
@@ -300,10 +300,10 @@ namespace Au
 		{
 			if(Empty(processName)) throw new ArgumentException();
 			List<int> a = null;
-			return LibGetProcessesByName(ref a, processName, fullPath, ofThisSession, true);
+			return GetProcessesByName_(ref a, processName, fullPath, ofThisSession, true);
 		}
 
-		internal static int LibGetProcessesByName(ref List<int> a, AWildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false)
+		internal static int GetProcessesByName_(ref List<int> a, AWildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false)
 		{
 			a?.Clear();
 
@@ -424,7 +424,7 @@ namespace Au
 		public static string GetDescription(int processId) => GetVersionInfo(processId)?.FileDescription;
 
 
-		//internal static (long WorkingSet, long PageFile) LibGetCurrentProcessMemoryInfo()
+		//internal static (long WorkingSet, long PageFile) GetCurrentProcessMemoryInfo_()
 		//{
 		//	Api.PROCESS_MEMORY_COUNTERS m = default; m.cb = sizeof(Api.PROCESS_MEMORY_COUNTERS);
 		//	Api.GetProcessMemoryInfo(ProcessHandle, ref m, m.cb);

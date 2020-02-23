@@ -153,7 +153,7 @@ namespace Au
 		/// </example>
 		public static void Sleep(int timeMilliseconds)
 		{
-			LibSleepPrecision.LibTempSet1(timeMilliseconds);
+			SleepPrecision_.TempSet1_(timeMilliseconds);
 			if(timeMilliseconds < 2000) {
 				Thread.Sleep(timeMilliseconds);
 			} else { //workaround for Thread.Sleep bug: if there are APC, returns too soon after sleep/hibernate.
@@ -234,11 +234,11 @@ namespace Au
 		/// <seealso cref="Util.AMessageLoop"/>
 		public static void SleepDoEvents(int timeMS)
 		{
-			LibSleepDoEvents(timeMS);
+			SleepDoEvents_(timeMS);
 		}
 
 		/// <summary>SleepDoEvents + noSetPrecision.</summary>
-		internal static void LibSleepDoEvents(int timeMS, bool noSetPrecision = false)
+		internal static void SleepDoEvents_(int timeMS, bool noSetPrecision = false)
 		{
 			if(timeMS < 0 && timeMS != -1) throw new ArgumentOutOfRangeException();
 
@@ -247,9 +247,9 @@ namespace Au
 				return;
 			}
 
-			if(!noSetPrecision) LibSleepPrecision.LibTempSet1(timeMS);
+			if(!noSetPrecision) SleepPrecision_.TempSet1_(timeMS);
 
-			AWaitFor.LibWait(timeMS, WHFlags.DoEvents, null, null);
+			AWaitFor.Wait_(timeMS, WHFlags.DoEvents, null, null);
 		}
 
 		/// <summary>
@@ -275,7 +275,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>timeBeginPeriod</msdn>, which requests a time resolution for various system timers and wait functions. Actually it is the system thread scheduling timer period.
 		/// Normal resolution on Windows 7-10 is 15.625 ms. It means that, for example, <c>Thread.Sleep(1);</c> sleeps not 1 but 1-15 ms. If you set resolution 1, it sleeps 1-2 ms.
-		/// The new resolution is revoked (<msdn>timeEndPeriod</msdn>) when disposing the LibSleepPrecision variable or when this process ends. See example. See also <see cref="TempSet1"/>.
+		/// The new resolution is revoked (<msdn>timeEndPeriod</msdn>) when disposing the SleepPrecision_ variable or when this process ends. See example. See also <see cref="TempSet1"/>.
 		/// The resolution is applied to all threads and processes. Other applications can change it too. For example, often web browsers temporarily set resolution 1 ms when opening a web page.
 		/// The system uses the smallest period (best resolution) that currently is set by any application. You cannot make it bigger than current value.
 		/// <note>It is not recommended to keep small period (high resolution) for a long time. It can be bad for power saving.</note>
@@ -285,7 +285,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// _Test("before");
-		/// using(new ATime.LibSleepPrecision(2)) {
+		/// using(new ATime.SleepPrecision_(2)) {
 		/// 	_Test("in");
 		/// }
 		/// _Test("after");
@@ -299,7 +299,7 @@ namespace Au
 		/// }
 		/// ]]></code>
 		/// </example>
-		internal sealed class LibSleepPrecision : IDisposable
+		internal sealed class SleepPrecision_ : IDisposable
 		{
 			//info: this class could be public, but probably not useful. ATime.Sleep automatically sets 1 ms period if need.
 
@@ -313,7 +313,7 @@ namespace Au
 			/// Should be 1. Other values may stuck and later cannot be made smaller due to bugs in OS or some applications; this bug would impact many functions of this library.
 			/// </param>
 			/// <exception cref="ArgumentOutOfRangeException">periodMS &lt;= 0.</exception>
-			public LibSleepPrecision(int periodMS)
+			public SleepPrecision_(int periodMS)
 			{
 				if(periodMS <= 0) throw new ArgumentOutOfRangeException();
 				if(Api.timeBeginPeriod((uint)periodMS) != 0) return;
@@ -346,7 +346,7 @@ namespace Au
 			}
 
 			///
-			~LibSleepPrecision() { _Dispose(); }
+			~SleepPrecision_() { _Dispose(); }
 
 			/// <summary>
 			/// Gets current actual system time resolution (period).
@@ -366,11 +366,11 @@ namespace Au
 			/// <param name="endAfterMS">Revoke after this time, milliseconds.</param>
 			/// <example>
 			/// <code><![CDATA[
-			/// Print(ATime.LibSleepPrecision.Current); //probably 15.625
-			/// ATime.LibSleepPrecision.TempSet1(500);
-			/// Print(ATime.LibSleepPrecision.Current); //1
+			/// Print(ATime.SleepPrecision_.Current); //probably 15.625
+			/// ATime.SleepPrecision_.TempSet1(500);
+			/// Print(ATime.SleepPrecision_.Current); //1
 			/// Thread.Sleep(600);
-			/// Print(ATime.LibSleepPrecision.Current); //probably 15.625 again
+			/// Print(ATime.SleepPrecision_.Current); //probably 15.625 again
 			/// ]]></code>
 			/// </example>
 			public static void TempSet1(int endAfterMS = 1111)
@@ -378,7 +378,7 @@ namespace Au
 				lock("2KgpjPxRck+ouUuRC4uBYg") {
 					s_TS1_EndTime = WinMillisecondsWithoutSleep + endAfterMS;
 					if(s_TS1_Obj == null) {
-						s_TS1_Obj = new LibSleepPrecision(1); //info: instead could call the API directly, but may need to auto-revoke using the finalizer
+						s_TS1_Obj = new SleepPrecision_(1); //info: instead could call the API directly, but may need to auto-revoke using the finalizer
 						ThreadPool.QueueUserWorkItem(endAfterMS2 => {
 							Thread.Sleep((int)endAfterMS2); //note: don't use captured variables. It creates new garbage all the time.
 							for(; ; ) {
@@ -401,7 +401,7 @@ namespace Au
 				}
 				//tested: Task Manager shows 0% CPU. If we set/revoke period for each Sleep(1) in loop, shows ~0.5% CPU.
 			}
-			static LibSleepPrecision s_TS1_Obj;
+			static SleepPrecision_ s_TS1_Obj;
 			static long s_TS1_EndTime;
 			//never mind: finalizer is not called on process exit. Not a problem, because OS clears our set value (tested). Or we could use AProcess.Exit event.
 
@@ -409,7 +409,7 @@ namespace Au
 			/// Calls TempSet1 if sleepTimeMS is 1-99.
 			/// </summary>
 			/// <param name="sleepTimeMS">milliseconds of the caller 'sleep' function.</param>
-			internal static void LibTempSet1(int sleepTimeMS)
+			internal static void TempSet1_(int sleepTimeMS)
 			{
 				if(sleepTimeMS < 100 && sleepTimeMS > 0) TempSet1(1111);
 			}

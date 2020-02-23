@@ -130,7 +130,7 @@ namespace Au
 		//For local server, the thread and kernel timer would be not necessary. Instead could use just a user timer. But it has some limitations etc.
 
 		readonly ConcurrentQueue<OutServMessage> _messages = new ConcurrentQueue<OutServMessage>(); //all received and still not removed messages that were sent by clients when they call AOutput.Write etc
-		LibHandle _mailslot; //used if global
+		Handle_ _mailslot; //used if global
 		AWaitableTimer _timer; //used always
 		Action _callback;
 		System.Windows.Forms.Control _callbackControl;
@@ -152,7 +152,7 @@ namespace Au
 		{
 			lock(this) {
 				if(_isGlobal) {
-					var m = Api.CreateMailslot(LibMailslotName, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
+					var m = Api.CreateMailslot(MailslotName_, 0, 0, Api.SECURITY_ATTRIBUTES.ForLowIL);
 					if(m.Is0) {
 						var e = ALastError.Code;
 						if(e == Api.ERROR_ALREADY_EXISTS) return false; //called not first time, or exists in another process
@@ -177,7 +177,7 @@ namespace Au
 		void _CreateTimerAndThread()
 		{
 			try {
-				if(_isGlobal) _timer = AWaitableTimer.Create(false, LibTimerName);
+				if(_isGlobal) _timer = AWaitableTimer.Create(false, TimerName_);
 				else _timer = AWaitableTimer.Create();
 
 				AThread.Start(_Thread, sta: false);
@@ -256,7 +256,7 @@ namespace Au
 						if(_isGlobal) { //read messages from mailslot and add to _messages. Else messages are added directly to _messages.
 							while(Api.GetMailslotInfo(_mailslot, null, out var nextSize, out var msgCount) && msgCount > 0) {
 								//note: GetMailslotInfo makes Process Hacker show constant 24 B/s I/O total rate. Does not depend on period.
-								fixed (byte* b0 = AMemoryArray.LibByte(nextSize + 4)) {
+								fixed (byte* b0 = AMemoryArray.Byte_(nextSize + 4)) {
 									var b = b0; //+4 for "\r\n"
 									bool ok = Api.ReadFile(_mailslot, b, nextSize, out var readSize) && readSize == nextSize;
 									if(ok) {
@@ -330,7 +330,7 @@ namespace Au
 		/// Else if !NoNewline, appends "\r\n".
 		/// Used with local server only.
 		/// </summary>
-		internal void LibLocalWrite(string s, long time = 0, string caller = null)
+		internal void LocalWrite_(string s, long time = 0, string caller = null)
 		{
 			Debug.Assert(!_isGlobal);
 			if(!NoNewline && s != null) s += "\r\n";
@@ -388,7 +388,7 @@ namespace Au
 			}
 			bool _localNeedCaller;
 
-			internal static bool LibNeedCallerMethod
+			internal static bool NeedCallerMethod_
 			{
 				get { var t = s_localServer; return (t != null) ? t.NeedCallerMethod : _SM->NeedCaller != 0; }
 			}
@@ -397,7 +397,7 @@ namespace Au
 		/// <summary>
 		/// Gets mailslot name like <c>@"\\.\mailslot\Au.AOutput\" + sessionId</c>.
 		/// </summary>
-		internal static string LibMailslotName {
+		internal static string MailslotName_ {
 			get {
 				if(_mailslotName == null) {
 					_mailslotName = @"\\.\mailslot\Au.AOutput\" + AProcess.ProcessSessionId.ToString();
@@ -410,20 +410,20 @@ namespace Au
 		/// <summary>
 		/// Gets waitable timer name like "timer.Au.AOutput".
 		/// </summary>
-		internal static string LibTimerName => "timer.Au.AOutput";
+		internal static string TimerName_ => "timer.Au.AOutput";
 
 		/// <summary>
 		/// Shared memory variables. Used with global server only.
 		/// </summary>
 		[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.
-		internal struct LibSharedMemoryData
+		internal struct SharedMemoryData_
 		{
 			public byte IsServer, IsTimer;
 #if NEED_CALLER
 				public byte NeedCaller;
 #endif
 		}
-		internal static LibSharedMemoryData* _SM => &LibSharedMemory.Ptr->outp;
+		internal static SharedMemoryData_* _SM => &SharedMemory_.Ptr->outp;
 	}
 }
 
@@ -442,7 +442,7 @@ namespace Au
 
 			string caller = ATask.Name;
 #if NEED_CALLER
-			if(AOutputServer.LibNeedCallerMethod) {
+			if(AOutputServer.NeedCallerMethod_) {
 				//info: this func always called from WriteDirectly, which is usually called through Writer, Write, Print, etc. But it is public and can be called directly.
 				var k = new StackTrace(2); //skip this func and WriteDirectly
 				lock(_writerTypes) {
@@ -460,14 +460,14 @@ namespace Au
 #endif
 
 			var loc = s_localServer;
-			if(loc != null) loc.LibLocalWrite(s, time, caller);
+			if(loc != null) loc.LocalWrite_(s, time, caller);
 			else s_client.WriteLine(s, time, caller);
 		}
 
 		static void _ClearToOutputServer()
 		{
 			var loc = s_localServer;
-			if(loc != null) loc.LibLocalWrite(null);
+			if(loc != null) loc.LocalWrite_(null);
 			else s_client.Clear();
 		}
 
@@ -478,7 +478,7 @@ namespace Au
 		{
 			//info: the mailslot/timer are implicitly disposed when process ends.
 
-			LibHandle _mailslot;
+			Handle_ _mailslot;
 			AWaitableTimer _timer;
 			long _sizeWritten;
 
@@ -490,7 +490,7 @@ namespace Au
 					int lenS = s.Length, lenCaller = (caller != null) ? Math.Min(caller.Length, 255) : 0;
 					int lenAll = 1 + 8 + 1 + lenCaller * 2 + lenS * 2; //type, time, lenCaller, caller, s
 					bool ok;
-					fixed (byte* b = AMemoryArray.LibByte(lenAll)) {
+					fixed (byte* b = AMemoryArray.Byte_(lenAll)) {
 						b[0] = (byte)OutServMessageType.Write; //type
 						*(long*)(b + 1) = time; //time
 						b[9] = (byte)lenCaller; if(lenCaller != 0) fixed (char* p = caller) Api.memcpy(b + 10, p, lenCaller * 2); //caller
@@ -564,10 +564,10 @@ namespace Au
 				}
 
 				if(_mailslot.Is0) {
-					_mailslot = LibCreateFile(AOutputServer.LibMailslotName, true);
+					_mailslot = CreateFile_(AOutputServer.MailslotName_, true);
 					if(_mailslot.Is0) return false;
 
-					_timer = AWaitableTimer.Open(AOutputServer.LibTimerName, noException: true);
+					_timer = AWaitableTimer.Open(AOutputServer.TimerName_, noException: true);
 					if(_timer == null) {
 						_mailslot.Dispose();
 						return false;

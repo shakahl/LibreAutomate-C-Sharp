@@ -23,15 +23,15 @@ namespace Au
 		/// <summary>
 		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
 		/// </summary>
-		internal void LibMinimalSleepIfOtherThread()
+		internal void MinimalSleepIfOtherThread_()
 		{
-			if(!IsOfThisThread) LibMinimalSleepNoCheckThread();
+			if(!IsOfThisThread) MinimalSleepNoCheckThread_();
 		}
 
 		/// <summary>
 		/// Thread.Sleep(15); SendTimeout(1000, 0);
 		/// </summary>
-		internal void LibMinimalSleepNoCheckThread()
+		internal void MinimalSleepNoCheckThread_()
 		{
 			Debug.Assert(!IsOfThisThread);
 			//APerf.First();
@@ -55,7 +55,7 @@ namespace Au
 			if(!c.Is0) return c;
 			if(retry) return default;
 
-			name = w.LibNameTL; if(Empty(name)) return default;
+			name = w.NameTL_; if(Empty(name)) return default;
 
 			for(; ; ) {
 				c = Api.FindWindowEx(default, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
@@ -79,7 +79,7 @@ namespace Au
 		//	return Api.FindWindow("ApplicationFrameWindow", s);
 		//}
 
-		internal static partial class Lib
+		internal static partial class Internal_
 		{
 			/// <summary>
 			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
@@ -96,9 +96,9 @@ namespace Au
 				if(AVersion.MinWin8) {
 					switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 					case 1:
-						using(var p = LibHandle.OpenProcess(w)) {
+						using(var p = Handle_.OpenProcess(w)) {
 							if(!p.Is0) {
-								var b = Util.AMemoryArray.LibChar(1000, out int na);
+								var b = Util.AMemoryArray.Char_(1000, out int na);
 								if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
 							}
 						}

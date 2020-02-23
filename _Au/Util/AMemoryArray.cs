@@ -80,7 +80,7 @@ namespace Au.Util
 
 			if(sizeof(T) <= 2) { //info: don't concern about speed. In Release this is removed completely by the compiler.
 				if(n < 300) n = 300;
-				n++; //for safety add 1 for terminating '\0'. See also code 'r.Length - 1' in LibChar etc.
+				n++; //for safety add 1 for terminating '\0'. See also code 'r.Length - 1' in Char_ etc.
 			}
 
 			weakReference ??= new WeakReference<T[]>(null);
@@ -96,9 +96,9 @@ namespace Au.Util
 
 		[ThreadStatic] static WeakReference<char[]> t_char;
 
-		internal static CharBuffer LibChar(int n) { return Get(n, ref t_char); }
-		internal static CharBuffer LibChar(ref int n) { var r = Get(n, ref t_char); n = r.Length - 1; return r; }
-		internal static CharBuffer LibChar(int n, out int nHave) { var r = Get(n, ref t_char); nHave = r.Length - 1; return r; }
+		internal static CharBuffer Char_(int n) { return Get(n, ref t_char); }
+		internal static CharBuffer Char_(ref int n) { var r = Get(n, ref t_char); n = r.Length - 1; return r; }
+		internal static CharBuffer Char_(int n, out int nHave) { var r = Get(n, ref t_char); nHave = r.Length - 1; return r; }
 
 		/// <summary>
 		/// Provides functions to convert char[] to string easily.
@@ -125,7 +125,7 @@ namespace Au.Util
 			{
 				if(A == null) return null;
 				fixed (char* p = A) {
-					int n = LibCharPtr.Length(p, A.Length);
+					int n = CharPtr_.Length(p, A.Length);
 					return new string(p, 0, n);
 				}
 			}
@@ -145,11 +145,11 @@ namespace Au.Util
 			///// Converts the buffer, which contains '\0'-terminated native ANSI string, to String.
 			///// </summary>
 			///// <param name="enc">If null, uses system's default ANSI encoding.</param>
-			//internal string LibToStringFromAnsi(Encoding enc = null)
+			//internal string ToStringFromAnsi_(Encoding enc = null)
 			//{
 			//	if(A == null) return null;
 			//	fixed (char* p = A) {
-			//		int n = LibCharPtr.Length((byte*)p, A.Length * 2);
+			//		int n = CharPtr_.Length((byte*)p, A.Length * 2);
 			//		return new string((sbyte*)p, 0, n, enc);
 			//	}
 			//}
@@ -159,7 +159,7 @@ namespace Au.Util
 			/// </summary>
 			/// <param name="n">String length.</param>
 			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-			internal string LibToStringFromAnsi(int n, Encoding enc = null)
+			internal string ToStringFromAnsi_(int n, Encoding enc = null)
 			{
 				if(A == null) return null;
 				fixed (char* p = A) {
@@ -172,15 +172,15 @@ namespace Au.Util
 
 		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
-		internal static byte[] LibByte(int n) { return Get(n, ref t_byte); }
+		internal static byte[] Byte_(int n) { return Get(n, ref t_byte); }
 		//these currently not used
-		//internal static byte[] LibByte(ref int n) { var r = Get(n, ref t_byte); n = r.Length - 1; return r; }
-		//internal static byte[] LibByte(int n, out int nHave) { var r = Get(n, ref t_byte); nHave = r.Length - 1; return r; }
+		//internal static byte[] Byte_(ref int n) { var r = Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static byte[] Byte_(int n, out int nHave) { var r = Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 		//currently not used
-		//internal static ByteBuffer LibByte(int n) { return Get(n, ref t_byte); }
-		//internal static ByteBuffer LibByte(ref int n) { var r = Get(n, ref t_byte); n = r.Length - 1; return r; }
-		//internal static ByteBuffer LibByte(int n, out int nHave) { var r = Get(n, ref t_byte); nHave = r.Length - 1; return r; }
+		//internal static ByteBuffer Byte_(int n) { return Get(n, ref t_byte); }
+		//internal static ByteBuffer Byte_(ref int n) { var r = Get(n, ref t_byte); n = r.Length - 1; return r; }
+		//internal static ByteBuffer Byte_(int n, out int nHave) { var r = Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 		//public unsafe struct ByteBuffer
 		//{
@@ -197,7 +197,7 @@ namespace Au.Util
 		//	{
 		//		if(A == null) return null;
 		//		fixed (byte* p = A) {
-		//			int n = LibCharPtr.Length(p, A.Length * 2);
+		//			int n = CharPtr_.Length(p, A.Length * 2);
 		//			return new string((sbyte*)p, 0, n, enc);
 		//		}
 		//	}

@@ -196,7 +196,7 @@ namespace Au
 			bool _FindOrWait(AAcc a, double secondsTimeout, bool isWaitFunc)
 			{
 				if(a == null) throw new ArgumentNullException();
-				a.LibThrowIfDisposed();
+				a.ThrowIfDisposed_();
 				if(a.SimpleElementId != 0) throw new ArgumentException("SimpleElementId is not 0.");
 				if(_flags.HasAny(AFFlags.UIA | AFFlags.ClientArea)) throw new ArgumentException("Cannot use flags UIA and ClientArea when searching in AAcc.");
 
@@ -271,7 +271,7 @@ namespace Au
 
 					if(!doneUAC) {
 						doneUAC = true;
-						w.LibUacCheckAndThrow(); //CONSIDER: don't throw. Maybe show warning.
+						w.UacCheckAndThrow_(); //CONSIDER: don't throw. Maybe show warning.
 					}
 
 					//Print(hr > 0 ? $"hr={hr}" : $"hr={(int)hr:X}");

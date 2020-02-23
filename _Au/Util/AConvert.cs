@@ -89,7 +89,7 @@ namespace Au.Util
 		public static byte[] HexDecode(ReadOnlySpan<char> encoded)
 		{
 			int n = encoded.Length / 2;
-			fixed(byte* p = AMemoryArray.LibByte(n)) {
+			fixed(byte* p = AMemoryArray.Byte_(n)) {
 				n = HexDecode(encoded, p, n);
 				var r = new byte[n];
 				Marshal.Copy((IntPtr)p, r, 0, n);
@@ -111,7 +111,7 @@ namespace Au.Util
 		public static int HexDecode(ReadOnlySpan<char> encoded, void* decoded, int bufferSize)
 		{
 			if(encoded.Length == 0) return 0;
-			var t = LibTables.Hex;
+			var t = Tables_.Hex;
 			byte* r = (byte*)decoded, rTo = r + bufferSize;
 			uint k = 1;
 			for(int i = 0; i < encoded.Length; i++) {
@@ -214,7 +214,7 @@ namespace Au.Util
 
 		static char[] _Base64_Array(ReadOnlySpan<char> encoded)
 		{
-			char[] a = AMemoryArray.LibChar(encoded.Length);
+			char[] a = AMemoryArray.Char_(encoded.Length);
 			for(int i = 0; i < encoded.Length; i++) {
 				char c = encoded[i];
 				a[i] = c switch { '_' => '/', '-' => '+', _ => c, };
@@ -362,7 +362,7 @@ namespace Au.Util
 			}
 			return r;
 
-			//speed: faster than WideCharToMultiByte. Faster than with GetMaxByteCount + AMemoryArray.LibByte.
+			//speed: faster than WideCharToMultiByte. Faster than with GetMaxByteCount + AMemoryArray.Byte_.
 		}
 
 		/// <summary>
@@ -375,7 +375,7 @@ namespace Au.Util
 		{
 			if(utf8 == null) return null;
 			int n = length;
-			if(n < 0) n = LibBytePtr.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
+			if(n < 0) n = BytePtr_.Length(utf8); else if(n > 0 && utf8[n - 1] == 0) n--;
 			return Encoding.UTF8.GetString(utf8, n);
 		}
 

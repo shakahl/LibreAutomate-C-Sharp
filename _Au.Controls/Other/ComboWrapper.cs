@@ -144,7 +144,7 @@ namespace Au.Controls
 				if(buttonRgnType == NULLREGION) return true; //our buttons excluded
 			}
 
-			using var dc = new Util.LibWindowDC(Api.GetWindowDC(_hwnd), _hwnd);
+			using var dc = new Util.WindowDC_(Api.GetWindowDC(_hwnd), _hwnd);
 			if(Api.IntersectClipRect(dc, rb.left, rb.top, rb.right, rb.bottom) == NULLREGION) return true;
 
 			if(!_hwnd.IsEnabled()) { Api.FillRect(dc, rb, (IntPtr)(Api.COLOR_BTNFACE + 1)); return true; }

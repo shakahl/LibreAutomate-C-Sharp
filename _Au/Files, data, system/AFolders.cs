@@ -505,7 +505,7 @@ namespace Au
 		/// </summary>
 		public static FolderPath EnvVar(string envVar)
 		{
-			return APath.LibGetEnvVar(envVar);
+			return APath.GetEnvVar_(envVar);
 		}
 
 		#endregion

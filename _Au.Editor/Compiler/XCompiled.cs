@@ -219,7 +219,7 @@ namespace Au.Compiler
 				*/
 
 				string value = null;
-				using(new Util.LibStringBuilder(out var b)) {
+				using(new Util.StringBuilder_(out var b)) {
 					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
 					if(m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
 					if(m.RunMode != default) b.Append("|a").Append((int)m.RunMode);

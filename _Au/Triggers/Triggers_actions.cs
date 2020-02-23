@@ -82,7 +82,7 @@ namespace Au.Triggers
 		/// Run actions in same thread as <see cref="ActionTriggers.Run"/>.
 		/// </summary>
 		/// <remarks>
-		/// Can be used only for actions that return as soon as possible, in less than 50 ms. Use to create and show toolbars (<see cref="AToolbar"/>).
+		/// Can be used only for actions that return as soon as possible, in less than 10 ms. Use to create and show toolbars (<see cref="AToolbar"/>).
 		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
 		/// </remarks>
 		public void RunActionInMainThread()
@@ -194,7 +194,7 @@ namespace Au.Triggers
 					_MuteMod(ref muteMod);
 
 					string sTrigger = null;
-					if(ATask.Role == ATRole.MiniProgram) Util.LibLog.Run.Write($"Trigger action started. Trigger: {sTrigger = trigger.ToString()}");
+					if(ATask.Role == ATRole.MiniProgram) Util.Log_.Run.Write($"Trigger action started. Trigger: {sTrigger = trigger.ToString()}");
 
 					AOpt.Reset();
 
@@ -213,13 +213,13 @@ namespace Au.Triggers
 					try {
 						trigger.Run(args);
 
-						if(sTrigger != null) Util.LibLog.Run.Write($"Trigger action ended. Trigger: {sTrigger}");
+						if(sTrigger != null) Util.Log_.Run.Write($"Trigger action ended. Trigger: {sTrigger}");
 					}
-					catch(Exception ex) {
-						if(sTrigger != null) Util.LibLog.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {ex.ToStringWithoutStack()}");
+					catch(Exception e1) {
+						if(sTrigger != null) Util.Log_.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {e1.ToStringWithoutStack()}");
 
-						baArgs.Exception = ex;
-						Print(ex);
+						baArgs.Exception = e1;
+						Print(e1);
 					}
 					opt.after?.Invoke(baArgs);
 				}
@@ -240,6 +240,7 @@ namespace Au.Triggers
 			} else if(threadId == -1) { //main thread
 				actionWrapper();
 				return;
+				//note: can reenter. Probably it is better than to cancel if already running.
 			} else {
 				bool canRun = true;
 				bool singleInstance = trigger.options.ifRunning == 0;
@@ -305,7 +306,7 @@ namespace Au.Triggers
 		{
 			struct _Action { public Action actionWrapper; public long time; }
 
-			LibHandle _event;
+			Handle_ _event;
 			Queue<_Action> _q;
 			bool _running;
 			bool _disposed;
@@ -383,10 +384,10 @@ namespace Au.Triggers
 		{
 			switch(Interlocked.Exchange(ref muteMod, 0)) {
 			case c_modRelease:
-				AKeys.Lib.ReleaseModAndDisableModMenu();
+				AKeys.Internal_.ReleaseModAndDisableModMenu();
 				break;
 			case c_modCtrl:
-				AKeys.Lib.SendKey(KKey.Ctrl); //disable Alt/Win menu
+				AKeys.Internal_.SendKey(KKey.Ctrl); //disable Alt/Win menu
 				break;
 			}
 		}

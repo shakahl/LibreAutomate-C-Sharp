@@ -108,7 +108,7 @@ namespace Au.Util
 				if(completionCallback != null) {
 					_completionCallback = completionCallback;
 					//we need WindowsFormsSynchronizationContext to call _completionCallback in this thread
-					_context = LibEnsureWindowsFormsSynchronizationContext.EnsurePermanently();
+					_context = EnsureWindowsFormsSynchronizationContext_.EnsurePermanently();
 					//SHOULDDO: loads Forms dll. Try to avoid it. Also, test with WPF.
 				}
 

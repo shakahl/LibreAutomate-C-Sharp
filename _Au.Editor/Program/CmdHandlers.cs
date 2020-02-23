@@ -518,7 +518,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Run_Recent()
 	{
-		Au.Util.LibLog.Run.Show();
+		Au.Util.Log_.Run.Show();
 	}
 
 	public void Run_DisableTriggers()

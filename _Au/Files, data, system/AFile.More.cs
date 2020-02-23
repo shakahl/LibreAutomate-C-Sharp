@@ -91,7 +91,7 @@ namespace Au
 			/// <param name="fileId"></param>
 			public static unsafe bool GetFileId(string path, out FileId fileId)
 			{
-				path = APath.LibNormalizeMinimally(path, false);
+				path = APath.NormalizeMinimally_(path, false);
 				fileId = new FileId();
 				using var h = Api.CreateFile(path, Api.FILE_READ_ATTRIBUTES, Api.FILE_SHARE_ALL, default, Api.OPEN_EXISTING, Api.FILE_FLAG_BACKUP_SEMANTICS);
 				if(h.Is0) return false;
@@ -107,7 +107,7 @@ namespace Au
 			/// </summary>
 			/// <param name="path1"></param>
 			/// <param name="path2"></param>
-			internal static bool LibIsSameFile(string path1, string path2)
+			internal static bool IsSameFile_(string path1, string path2)
 			{
 				//try to optimize. No, unreliable.
 				//int i1 = path1.FindLastAny("\\/~"), i2 = path2.FindLastAny("\\/~");

@@ -675,7 +675,7 @@ class Script : AScript
 	{
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
-		Au.Util.LibAssertListener.Setup();
+		Au.Util.AssertListener_.Setup();
 
 		//APerf.First();
 		try {

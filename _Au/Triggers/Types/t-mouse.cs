@@ -181,11 +181,11 @@ namespace Au.Triggers
 
 		MouseTrigger _Add(Action<MouseTriggerArgs> f, ESubtype subtype, string modKeys, TMFlags flags, byte data, TMScreen screen, string sData)
 		{
-			_triggers.LibThrowIfRunning();
+			_triggers.ThrowIfRunning_();
 			bool noMod = Empty(modKeys);
 
 			string ps;
-			using(new Util.LibStringBuilder(out var b)) {
+			using(new Util.StringBuilder_(out var b)) {
 				b.Append(subtype.ToString()).Append(' ').Append(sData);
 				b.Append(" + ").Append(noMod ? "none" : (modKeys == "?" ? "any" : modKeys));
 				if(flags != 0) b.Append(" (").Append(flags.ToString()).Append(')');
@@ -203,16 +203,16 @@ namespace Au.Triggers
 			if(noMod) {
 				if(flags.HasAny(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 			} else {
-				if(!AKeys.More.LibParseHotkeyTriggerString(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
 			var t = new MouseTrigger(_triggers, f, mod, modAny, flags, screen, ps);
 			t.DictAdd(_d, _DictKey(subtype, data));
 			_lastAdded = t;
-			LibUsedHookEvents |= HooksServer.UsedEvents.Mouse; //just sets the hook
+			UsedHookEvents_ |= HooksThread.UsedEvents.Mouse; //just sets the hook
 			switch(subtype) {
-			case ESubtype.Click: LibUsedHookEvents |= HooksServer.UsedEvents.MouseClick; break;
-			case ESubtype.Wheel: LibUsedHookEvents |= HooksServer.UsedEvents.MouseWheel; break;
-			default: LibUsedHookEvents |= HooksServer.UsedEvents.MouseEdgeMove; break;
+			case ESubtype.Click: UsedHookEvents_ |= HooksThread.UsedEvents.MouseClick; break;
+			case ESubtype.Wheel: UsedHookEvents_ |= HooksThread.UsedEvents.MouseWheel; break;
+			default: UsedHookEvents_ |= HooksThread.UsedEvents.MouseEdgeMove; break;
 			}
 			return t;
 		}
@@ -227,7 +227,7 @@ namespace Au.Triggers
 
 		bool ITriggers.HasTriggers => _lastAdded != null;
 
-		internal HooksServer.UsedEvents LibUsedHookEvents { get; private set; }
+		internal HooksThread.UsedEvents UsedHookEvents_ { get; private set; }
 
 		void ITriggers.StartStop(bool start)
 		{
@@ -291,10 +291,10 @@ namespace Au.Triggers
 			return _HookProc2(thc, false, subtype, k.Event, k.pt, data, 0);
 		}
 
-		internal void HookProcEdgeMove(in LibEdgeMoveDetector.Result d, TriggerHookContext thc)
+		internal void HookProcEdgeMove(EdgeMoveDetector_.Result d, TriggerHookContext thc) //d not in
 		{
 			ESubtype subtype;
-			byte data = 0, dataAnyPart = 0;
+			byte data, dataAnyPart;
 
 			if(d.edgeEvent != 0) {
 				subtype = ESubtype.Edge;
@@ -353,7 +353,7 @@ namespace Au.Triggers
 					if(mod != 0) {
 						_SetTempKeybHook();
 						if(thc.trigger != null) thc.muteMod = TriggerActionThreads.c_modRelease;
-						else ThreadPool.QueueUserWorkItem(_ => AKeys.Lib.ReleaseModAndDisableModMenu());
+						else ThreadPool.QueueUserWorkItem(_ => AKeys.Internal_.ReleaseModAndDisableModMenu());
 					}
 
 					//Print(mEvent, pt, mod);
@@ -396,7 +396,7 @@ namespace Au.Triggers
 			if(_keyHook != null) {
 				//Print(". unhook");
 				_keyHook.Unhook();
-				_keyHookTimeout = _keyHook.LibIgnoreModInOtherHooks(0);
+				_keyHookTimeout = _keyHook.IgnoreModInOtherHooks_(0);
 			}
 		}
 
@@ -420,7 +420,7 @@ namespace Au.Triggers
 						if(0 != (mod & _upMod) && k.IsUp) {
 							_upMod &= ~mod;
 							if(_upMod == 0 && _upEvent == 0 && _upTrigger != null) {
-								_triggers.LibRunAction(_upTrigger, _upArgs);
+								_triggers.RunAction_(_upTrigger, _upArgs);
 								_ResetUp();
 							}
 						}
@@ -434,7 +434,7 @@ namespace Au.Triggers
 				}, setNow: false);
 			}
 			if(!_keyHook.IsSet) _keyHook.Hook();
-			_keyHookTimeout = _keyHook.LibIgnoreModInOtherHooks(5000);
+			_keyHookTimeout = _keyHook.IgnoreModInOtherHooks_(5000);
 		}
 
 		internal static void JitCompile()
@@ -449,7 +449,7 @@ namespace Au.Triggers
 		/// <remarks>
 		/// Used in the hook server, to avoid sending all mouse move events to clients, which would use 2 or more times more CPU, eg 0.9% instead of 0.45%. Tested: raw input uses slightly less CPU.
 		/// </remarks>
-		internal class LibEdgeMoveDetector
+		internal class EdgeMoveDetector_
 		{
 			int _x, _y; //mouse position. Relative to the primary screen.
 			int _xmin, _ymin, _xmax, _ymax; //min and max possible mouse position in current screen. Relative to the primary screen.
@@ -485,7 +485,7 @@ namespace Au.Triggers
 #endif
 			}
 
-			public LibEdgeMoveDetector()
+			public EdgeMoveDetector_()
 			{
 				_sens = Util.ADpi.BaseDPI / 4; //FUTURE: different for each screen
 			}

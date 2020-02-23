@@ -24,15 +24,15 @@ namespace Au.Util
 	/// </summary>
 	public class AMessageLoop
 	{
-		LibHandle _loopEndEvent;
+		Handle_ _loopEndEvent;
 
 		/// <summary>
 		/// Runs a message loop.
 		/// </summary>
 		public unsafe void Loop()
 		{
-			bool isForms = 0 != (1 & LibAssembly.LibIsLoadedFormsWpf());
-			using(isForms ? new LibEnsureWindowsFormsSynchronizationContext(true) : null) {
+			bool isForms = 0 != (1 & Assembly_.IsLoadedFormsWpf());
+			using(isForms ? new EnsureWindowsFormsSynchronizationContext_(true) : null) {
 				_loopEndEvent = Api.CreateEvent(true);
 				try {
 					_DoEvents();

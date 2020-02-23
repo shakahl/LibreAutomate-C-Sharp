@@ -121,7 +121,7 @@ namespace Au.Triggers
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0] {
 			set {
-				if(!AKeys.More.LibParseHotkeyTriggerString(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
+				if(!AKeys.More.ParseHotkeyTriggerString_(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
 				_Add(value, key, mod, modAny, flags, hotkey);
 			}
 		}
@@ -144,7 +144,7 @@ namespace Au.Triggers
 				var ps = key.ToString(); if(AChar.IsAsciiDigit(ps[0])) ps = "VK" + ps;
 				if(!Empty(modKeys)) ps = modKeys + "+" + ps;
 
-				if(!AKeys.More.LibParseHotkeyTriggerString(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
+				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 				_Add(value, key, mod, modAny, flags, ps);
 			}
 		}
@@ -152,7 +152,7 @@ namespace Au.Triggers
 		void _Add(Action<HotkeyTriggerArgs> action, KKey key, KMod mod, KMod modAny, TKFlags flags, string paramsString)
 		{
 			if(mod == 0 && flags.HasAny((TKFlags.LeftMod | TKFlags.RightMod))) throw new ArgumentException("Invalid flags.");
-			_triggers.LibThrowIfRunning();
+			_triggers.ThrowIfRunning_();
 			//actually could safely add triggers while running.
 			//	Currently would need just lock(_d) in several places. Also some triggers of this type must be added before starting, else we would not have the hook etc.
 			//	But probably not so useful. Makes programming more difficult. If need, can Stop, add triggers, then Run again.
@@ -238,7 +238,7 @@ namespace Au.Triggers
 						if(thc.trigger == null) { //KeyModUp or action==null
 							if(mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) {
 								//Print("need Ctrl");
-								ThreadPool.QueueUserWorkItem(o => AKeys.Lib.SendKey(KKey.Ctrl)); //disable Alt/Win menu
+								ThreadPool.QueueUserWorkItem(o => AKeys.Internal_.SendKey(KKey.Ctrl)); //disable Alt/Win menu
 							}
 						} else if(mod != 0) {
 							if(0 == (x.flags & TKFlags.NoModOff)) thc.muteMod = TriggerActionThreads.c_modRelease;

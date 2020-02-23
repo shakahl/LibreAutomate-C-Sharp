@@ -97,7 +97,7 @@ namespace Au
 			//named keys
 			//names start with an uppercase letter and must have at least 2 other anycase letters, except: Up, AltG (RAl), PageU (PgU), PageD (PgD), some alternative names (PU, PD, PB, PS, HM, SL, CL, NL, BS).
 			KKey k = 0;
-			char c1 = Char.ToLowerInvariant(s[i + 1]), //note: Util.LibTables.LowerCase would make startup slow
+			char c1 = Char.ToLowerInvariant(s[i + 1]), //note: Util.Tables_.LowerCase would make startup slow
 				c2 = len > 2 ? Char.ToLowerInvariant(s[i + 2]) : ' ',
 				c3 = len > 3 ? Char.ToLowerInvariant(s[i + 3]) : ' ',
 				c4 = len > 4 ? Char.ToLowerInvariant(s[i + 4]) : ' ';
@@ -244,7 +244,7 @@ namespace Au
 		/// <summary>
 		/// Internal static functions.
 		/// </summary>
-		internal static class Lib
+		internal static class Internal_
 		{
 			/// <summary>
 			/// Calls ATime.SleepDoEvents.
@@ -314,7 +314,7 @@ namespace Au
 			internal static void SendKey(KKey k, int downUp = 0)
 			{
 				uint f = 0;
-				if(LibKeyTypes.IsExtended(k)) f |= Api.KEYEVENTF_EXTENDEDKEY;
+				if(KeyTypes_.IsExtended(k)) f |= Api.KEYEVENTF_EXTENDEDKEY;
 				ushort scan = VkToSc(k);
 
 				if(0 == (downUp & 2)) SendKeyEventRaw(k, scan, f);
@@ -363,13 +363,13 @@ namespace Au
 					if(IsCapsLock) {
 						//Probably Shift is set to turn off CapsLock in CP dialog "Text Services and Input Languages".
 						//	Win10: Settings -> Time & Language -> Language -> Input method -> Hot keys.
-						AHookWin.LibIgnoreLShiftCaps(2000);
+						AHookWin.IgnoreLShiftCaps_(2000);
 						SendKey(KKey.Shift);
-						AHookWin.LibIgnoreLShiftCaps(0);
+						AHookWin.IgnoreLShiftCaps_(0);
 						R = !IsCapsLock;
 						Debug.Assert(R);
 
-						//note: need LibDontBlockLShiftCaps, because when we send Shift, the BlockInput hook receives these events:
+						//note: need IgnoreLShiftCaps_, because when we send Shift, the BlockInput hook receives these events:
 						//Left Shift down, not injected //!!
 						//Caps Lock down, not injected
 						//Caps Lock up, not injected
@@ -432,7 +432,7 @@ namespace Au
 					_opt = opt;
 
 					SendCtrl(true);
-					Lib.Sleep(opt.KeySpeedClipboard); //need 1 ms for IE address bar, 100 ms for BlueStacks
+					Internal_.Sleep(opt.KeySpeedClipboard); //need 1 ms for IE address bar, 100 ms for BlueStacks
 					SendKeyEventRaw(_vk, _scan, 0);
 				}
 
@@ -503,7 +503,7 @@ namespace Au
 				wFocus = default;
 				return Options;
 			}
-			return _GetOptions(wFocus = Lib.GetWndFocusedOrActive());
+			return _GetOptions(wFocus = Internal_.GetWndFocusedOrActive());
 		}
 
 		/// <summary>
@@ -516,7 +516,7 @@ namespace Au
 			if(call == null || wFocus.Is0) return Options;
 			if(wFocus != _sstate.wFocus) {
 				_sstate.wFocus = wFocus;
-				if(_sstate.options == null) _sstate.options = new OptKey(Options); else _sstate.options.LibCopyOrDefault(Options);
+				if(_sstate.options == null) _sstate.options = new OptKey(Options); else _sstate.options.CopyOrDefault_(Options);
 				call(new KOHookData(_sstate.options, wFocus));
 			}
 			return _sstate.options;
@@ -527,7 +527,7 @@ namespace Au
 			if(_sending) throw new InvalidOperationException();
 		}
 
-		internal static class LibKeyTypes
+		internal static class KeyTypes_
 		{
 			[Flags]
 			enum _KT : byte
@@ -541,27 +541,27 @@ namespace Au
 			/// <summary>
 			/// Ctrl, LCtrl, etc.
 			/// </summary>
-			public static bool IsMod(KKey vk) => _b[(byte)vk].Has(_KT.Mod);
+			public static bool IsMod(KKey vk) => 0 != (_b[(byte)vk] & _KT.Mod);
 
-			public static bool IsExtended(KKey vk) => _b[(byte)vk].Has(_KT.Extended);
+			public static bool IsExtended(KKey vk) => 0 != (_b[(byte)vk] & _KT.Extended);
 
-			public static bool IsMouse(KKey vk) => _b[(byte)vk].Has(_KT.Mouse);
+			public static bool IsMouse(KKey vk) => 0 != (_b[(byte)vk] & _KT.Mouse);
 
 			/// <summary>
 			/// API GetKeyState always works.
 			/// For other keys returns 0 if pressed or toggled before starting current thread.
 			/// Modifiers (left/right too), xLock, mouse, some other.
 			/// </summary>
-			public static bool IsGetKeyStateReliable(KKey vk) => _b[(byte)vk].Has(_KT.GksReliable);
+			public static bool IsGetKeyStateReliable(KKey vk) => 0 != (_b[(byte)vk] & _KT.GksReliable);
 
 			/// <summary>
 			/// The same as <see cref="IsGetKeyStateReliable"/>.
 			/// </summary>
-			public static bool IsToggleable(KKey vk) => _b[(byte)vk].Has(_KT.GksReliable);
+			public static bool IsToggleable(KKey vk) => 0 != (_b[(byte)vk] & _KT.GksReliable);
 
 			static _KT[] _b;
 
-			static LibKeyTypes()
+			static KeyTypes_()
 			{
 				_b = new _KT[256];
 
