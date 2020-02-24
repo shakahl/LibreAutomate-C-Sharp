@@ -720,11 +720,12 @@ class PanelFind : AuUserControlBase
 							bool limitStart = lineStart == lsMax && lineStart > 0;
 							for(; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if(c == '\r' || c == '\n') break; }
 							bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
-							Au.Util.AStringUtil.LineAndColumn(text, start, out int lineIndex, out _);
-							b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString()).Append((lineIndex + 1).ToString("D3")).Append(":<> ")
+							Au.Util.AStringUtil.LineAndColumn(text, start, out _, out _);
+							b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
 								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
 								.Append("<z 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
-								.Append("<\a>").Append(text, end, lineEnd - end).AppendLine(limitEnd ? "</\a>…" : "</\a>");
+								.Append("<\a>").Append(text, end, lineEnd - end).Append(limitEnd ? "</\a>…" : "</\a>")
+								.AppendLine("<>");
 						}
 					}
 				}

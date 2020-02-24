@@ -298,7 +298,7 @@ namespace Au.Compiler
 					var dbPath = AFolders.ThisAppTemp + md5.Hash.ToString() + ".db";
 					try {
 						if(!AFile.GetProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {
-							ADebug.Print($"creating db: {asmPath}  ->  {dbPath}");
+							//ADebug.Print($"creating db: {asmPath}  ->  {dbPath}");
 							AFile.Delete(dbPath);
 							using(var d = new ASqlite(dbPath)) {
 								using var trans = d.Transaction();

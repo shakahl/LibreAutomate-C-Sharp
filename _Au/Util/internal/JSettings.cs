@@ -1,4 +1,4 @@
-#define TRACE_JS
+//#define TRACE_JS
 
 using System;
 using System.Collections.Generic;

@@ -332,7 +332,7 @@ partial class CiStyling
 			CodeInfo._diag.EraseIndicatorsInLine(doc, doc.Z.CurrentPos8);
 		}
 #if TRACE
-		if(!s_debugPerf) { s_debugPerf = true; APerf.NW('s'); }
+		//if(!s_debugPerf) { s_debugPerf = true; APerf.NW('s'); }
 #endif
 	}
 #if TRACE

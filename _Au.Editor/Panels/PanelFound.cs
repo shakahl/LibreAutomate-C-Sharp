@@ -42,15 +42,16 @@ class PanelFound : AuUserControlBase
 
 	private void _c_HandleCreated(object sender, EventArgs e)
 	{
-		var t = _c.Z;
-		t.StyleFont(Sci.STYLE_DEFAULT, Font);
+		var z = _c.Z;
+		z.StyleFont(Sci.STYLE_DEFAULT, Font);
 
 		//t.Call(Sci.SCI_SETCARETLINEFRAME, 2);
 		//t.Call(Sci.SCI_SETCARETLINEBACK, 0xCB9594);
 		//t.Call(Sci.SCI_SETCARETLINEVISIBLE, 1);
 
-		t.MarginWidth(1, 0);
-		t.StyleClearAll();
+		z.MarginWidth(1, 0);
+		z.StyleClearAll();
+		_c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle(), 0, false);
 	}
 
 	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }

@@ -127,8 +127,8 @@ namespace Au
 							if(s_defWindowProc == default) s_defWindowProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");
 							x.lpfnWndProc = s_defWindowProc;
 #else
-							if(s_cwProc == default) s_cwProc = Marshal.GetFunctionPointerForDelegate<Native.WNDPROC>(_CWProc);
-							x.lpfnWndProc = s_cwProc;
+							if(s_cwProcFP == default) s_cwProcFP = Marshal.GetFunctionPointerForDelegate(s_cwProc);
+							x.lpfnWndProc = s_cwProcFP;
 #endif
 						}
 						x.style |= Api.CS_GLOBALCLASS;
@@ -156,7 +156,8 @@ namespace Au
 				w.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 				return wndProc(w, msg, wParam, lParam);
 			}
-			static IntPtr s_cwProc;
+			static Native.WNDPROC s_cwProc = _CWProc; //GC
+			static IntPtr s_cwProcFP;
 			[ThreadStatic] static Native.WNDPROC t_cwProc;
 #endif
 

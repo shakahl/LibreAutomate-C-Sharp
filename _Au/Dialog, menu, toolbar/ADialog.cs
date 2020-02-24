@@ -164,7 +164,6 @@ namespace Au
 				set { _defaultTitle = value; }
 			}
 			static string _defaultTitle;
-			//CONSIDER: use [assembly: AssemblyTitle("...")]. var a=Assembly.GetEntryAssembly();
 
 			/// <summary>
 			/// Right-to-left layout.
@@ -174,10 +173,10 @@ namespace Au
 
 			/// <summary>
 			/// If there is no owner window, let the dialog be always on top of most other windows.
+			/// Default true.
 			/// </summary>
 			/// <seealso cref="FlagTopmost"/>
-			public static bool TopmostIfNoOwnerWindow { get; set; }
-			//TODO: consider: default true
+			public static bool TopmostIfNoOwnerWindow { get; set; } = true;
 
 			/// <summary>
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
@@ -730,7 +729,7 @@ namespace Au
 		/// <summary>
 		/// Makes the dialog window topmost or non-topmost.
 		/// If true, will set topmost style when creating the dialog. If false, will not set.
-		/// If null (default), the dialog will be topmost if both these are true: no owner window, ADialog.Options.TopmostIfNoOwnerWindow is true.
+		/// If null (default), the dialog will be topmost if both these are true: no owner window, <see cref="ADialog.Options.TopmostIfNoOwnerWindow"/> is true (default).
 		/// </summary>
 		public bool? FlagTopmost { set; private get; }
 

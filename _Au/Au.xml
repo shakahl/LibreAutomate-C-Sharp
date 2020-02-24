@@ -6563,6 +6563,7 @@
         <member name="P:Au.ADialog.Options.TopmostIfNoOwnerWindow">
             <summary>
             If there is no owner window, let the dialog be always on top of most other windows.
+            Default true.
             </summary>
             <seealso cref="P:Au.ADialog.FlagTopmost"/>
         </member>
@@ -6788,7 +6789,7 @@
             <summary>
             Makes the dialog window topmost or non-topmost.
             If true, will set topmost style when creating the dialog. If false, will not set.
-            If null (default), the dialog will be topmost if both these are true: no owner window, ADialog.Options.TopmostIfNoOwnerWindow is true.
+            If null (default), the dialog will be topmost if both these are true: no owner window, <see cref="P:Au.ADialog.Options.TopmostIfNoOwnerWindow"/> is true (default).
             </summary>
         </member>
         <member name="M:Au.ADialog.ShowDialog">
