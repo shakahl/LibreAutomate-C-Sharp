@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 using Microsoft.Win32.SafeHandles;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -128,9 +126,9 @@ namespace Au.Util
 				//APerf.Next();
 				int pid = WinTaskScheduler.RunTask("Au", "rundll32");
 				//APerf.Next();
-				//Print(pid);
+				//AOutput.Write(pid);
 				var hUserProcess = Handle_.OpenProcess(pid);
-				//Print((IntPtr)hUserProcess);
+				//AOutput.Write((IntPtr)hUserProcess);
 				if(hUserProcess.Is0) goto ge;
 #else
 				bool retry = false;

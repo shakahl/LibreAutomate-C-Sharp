@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -37,10 +35,10 @@ namespace Au
 	/// 	var t = new AToolbar("example");
 	/// 	t.ExtractIconPathFromCode = true;
 	/// 
-	/// 	t["button 1", @"C:\example.ico"] = o => Print(o);
+	/// 	t["button 1", @"C:\example.ico"] = o => AOutput.Write(o);
 	/// 	t.MenuButton("menu", m => {
 	/// 		m.ExtractIconPathFromCode = true;
-	/// 		m["item 1"] = o => Print(o);
+	/// 		m["item 1"] = o => AOutput.Write(o);
 	/// 		m["item 2"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
 	/// 	}, AIcon.GetStockIcon(StockIcon.FOLDER, 16));
 	/// 	t["Notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
@@ -49,12 +47,12 @@ namespace Au
 	/// 
 	/// void _Toolbar_Notepad(AWnd w) {
 	/// 	var t = new AToolbar("tb notepad");
-	/// 	t["button 1"] = o => Print(o);
+	/// 	t["button 1"] = o => AOutput.Write(o);
 	/// 	t.Show(w);
 	/// }
 	/// ]]></code>
 	/// </example>
-	public partial class AToolbar : AMTBase
+	public partial class AToolbar : MTBase
 	{
 		readonly _ToolStrip _c;
 		readonly _Settings _sett;
@@ -70,7 +68,7 @@ namespace Au
 		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
-		/// Reads the settings file if exists, ie if settings changed in the past. Path: <see cref="AFolders.Workspace"/>\toolbars\name.json. If <b>AFolders.Workspace</b> is null, uses <see cref="AFolders.ThisAppDocuments"/>. If fails, prints warning and uses default settings.
+		/// Reads the settings file if exists, ie if settings changed in the past. Path: <see cref="AFolders.Workspace"/>\.toolbars\name.json. If <b>AFolders.Workspace</b> is null, uses <see cref="AFolders.ThisAppDocuments"/>. If fails, writes warning to the output and uses default settings.
 		/// 
 		/// Creates <see cref="Control"/> object. Does not create its window handle; will do it in <see cref="Show"/>.
 		/// </remarks>
@@ -78,13 +76,13 @@ namespace Au
 			: base(f, l)
 		{
 			int tid = Thread.CurrentThread.ManagedThreadId;
-			if(s_treadId == 0) s_treadId = tid; else if(tid != s_treadId) PrintWarning("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.RunActionInMainThread();</code>");
+			if(s_treadId == 0) s_treadId = tid; else if(tid != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.RunActionInMainThread();</code>");
 
-			if(Empty(name)) throw new ArgumentException("Empty name");
+			if(name.IsNE()) throw new ArgumentException("Empty name");
 			_name = name;
 
 			string s = AFolders.Workspace; if(s == null) s = AFolders.ThisAppDocuments;
-			_sett = _Settings.Load(s + @"\toolbars\" + name + ".json", resetSettings);
+			_sett = _Settings.Load(s + @"\.toolbars\" + name + ".json", resetSettings);
 
 			_c = new _ToolStrip(this) {
 				Name = _name,
@@ -107,7 +105,7 @@ namespace Au
 		/// </remarks>
 		public ToolStrip Control => _c;
 
-		private protected override ToolStrip MainToolStrip => _c; //used by AMTBase
+		private protected override ToolStrip MainToolStrip => _c;
 
 		/// <summary>
 		/// Gets the name of the toolbar.
@@ -129,14 +127,14 @@ namespace Au
 
 		/// <summary>
 		/// Adds new button as <see cref="ToolStripButton"/>.
-		/// The same as <see cref="Add(string, Action{MTClickArgs}, object, string, int)"/>.
+		/// The same as <see cref="Add(string, Action{MTClickArgs}, MTImage, string, int)"/>.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// tb["Example"] = o => Print(o);
+		/// tb["Example"] = o => AOutput.Write(o);
 		/// ]]></code>
 		/// </example>
-		public Action<MTClickArgs> this[string text, object icon = null, string tooltip = null, [CallerLineNumber] int l = 0] {
+		public Action<MTClickArgs> this[string text, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0] {
 			set { Add(text, value, icon, tooltip, l); }
 		}
 
@@ -145,18 +143,18 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onClick">Callback function. Called when the button clicked.</param>
-		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		/// <param name="icon"></param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
 		/// Sets button text, icon and <b>Click</b> event handler. Other properties can be specified later.
 		/// 
-		/// Code <c>t.Add("text", o => Print(o));</c> is the same as <c>t["text"] = o => Print(o);</c>. See <see cref="this[string, object, string, int]"/>.
+		/// Code <c>t.Add("text", o => AOutput.Write(o));</c> is the same as <c>t["text"] = o => AOutput.Write(o);</c>. See <see cref="this[string, MTImage, string, int]"/>.
 		/// </remarks>
-		public ToolStripButton Add(string text, Action<MTClickArgs> onClick, object icon = null, string tooltip = null, [CallerLineNumber] int l = 0)
+		public ToolStripButton Add(string text, Action<MTClickArgs> onClick, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0)
 		{
 			var item = new ToolStripButton(text);
-			_Add(item, onClick, icon, tooltip, l);
+			_Add(false, item, onClick, icon, tooltip, l);
 			return item;
 		}
 
@@ -164,14 +162,14 @@ namespace Au
 		/// Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
 		/// </summary>
 		/// <param name="item"></param>
-		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		/// <param name="icon"></param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		public void Add(ToolStripItem item, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+		public void Add(ToolStripItem item, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
-			_Add(item, onClick, icon, tooltip, l, true);
-			//Print(item.Padding, item.Margin);
+			_Add(false, item, onClick, icon, tooltip, l, true);
+			//AOutput.Write(item.Padding, item.Margin);
 
 			//Activate window when a child control clicked, or something may not work, eg cannot enter text in Edit control.
 			if(item is ToolStripControlHost h && h.CanSelect) { //combo, edit, progress
@@ -184,7 +182,7 @@ namespace Au
 			}
 		}
 
-		void _Add(ToolStripItem item, Action<MTClickArgs> onClick, object icon, string tooltip, int sourceLine, bool custom = false)
+		void _Add(bool isSub, ToolStripItem item, Action<MTClickArgs> onClick, MTImage icon, string tooltip, int sourceLine, bool custom = false)
 		{
 			if(!custom) {
 				item.Margin = default; //default top 1, bottom 2
@@ -201,9 +199,9 @@ namespace Au
 
 			_c.Items.Add(item);
 
-			_SetItemProp(true, item, onClick, icon, sourceLine);
+			_SetItemProp(true, isSub, item, onClick, icon, sourceLine);
 
-			bool onlyImage = NoText && (item.Image != null || item.ImageIndex >= 0 || !Empty(item.ImageKey));
+			bool onlyImage = NoText && (item.Image != null || item.ImageIndex >= 0 || !item.ImageKey.IsNE());
 			if(onlyImage) item.DisplayStyle = ToolStripItemDisplayStyle.Image; //default ImageAndText
 			else item.AutoToolTip = false; //default true
 
@@ -244,14 +242,14 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="menu">Callback function that adds menu items. Called when opening the menu first time. If sets <see cref="AMenu.MultiShow"/> = false, called each time.</param>
-		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		/// <param name="icon"></param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <example><see cref="AToolbar"/></example>
-		public ToolStripDropDownButton MenuButton(string text, Action<AMenu> menu, object icon = null, string tooltip = null, [CallerLineNumber] int l = 0)
+		public ToolStripDropDownButton MenuButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0)
 		{
 			var item = new _MenuButton(this, text, menu);
-			_Add(item, null, icon, tooltip, l);
+			_Add(true, item, null, icon, tooltip, l);
 			return item;
 		}
 
@@ -260,15 +258,15 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="menu">Callback function that adds menu items. Called when need the menu first time (when opening it, or when clicked the button if <i>onClick</i> null). If sets <see cref="AMenu.MultiShow"/> = false, called each time.</param>
-		/// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		/// <param name="icon"></param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <example><see cref="AToolbar"/></example>
-		public ToolStripSplitButton SplitButton(string text, Action<AMenu> menu, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+		public ToolStripSplitButton SplitButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = new _SplitButton(this, text, menu, onClick);
-			_Add(item, onClick, icon, tooltip, l);
+			_Add(false, item, onClick, icon, tooltip, l);
 			return item;
 		}
 
@@ -360,7 +358,7 @@ namespace Au
 		///// </summary>
 		///// <param name="splitButton">If true, calls <see cref="SplitButton"/>, else <see cref="MenuButton"/>.</param>
 		///// <param name="text">Text.</param>
-		///// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		///// <param name="icon">See <see cref="AMenu.Add(string, Action{MTClickArgs}, MTImage, int)"/>.</param>
 		///// <param name="tooltip">Tooltip text.</param>
 		///// <param name="onClick">Callback function. Called when the button part of the split button clicked. If null, will execute the first menu item. Not used if it is not split button.</param>
 		///// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
@@ -368,17 +366,17 @@ namespace Au
 		///// <example>
 		///// <code><![CDATA[
 		///// var t = new AToolbar("example");
-		///// t["button 1"] = o => Print(o);
+		///// t["button 1"] = o => AOutput.Write(o);
 		///// t[false, "menu"] = m => {
-		///// 	m["item 1"] = o => Print(o);
-		///// 	m["item 2"] = o => Print(o);
+		///// 	m["item 1"] = o => AOutput.Write(o);
+		///// 	m["item 2"] = o => AOutput.Write(o);
 		///// };
-		///// t["button 2"] = o => Print(o);
+		///// t["button 2"] = o => AOutput.Write(o);
 		///// t.Show();
 		///// ADialog.Show();
 		///// ]]></code>
 		///// </example>
-		//public Action<AMenu> this[bool splitButton, string text, object icon = null, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0] {
+		//public Action<AMenu> this[bool splitButton, string text, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0] {
 		//	set {
 		//		if(splitButton) SplitButton(text, value, icon, tooltip, onClick, l);
 		//		else MenuButton(text, value, icon, tooltip, l);
@@ -390,7 +388,7 @@ namespace Au
 		/// Returns null if it is not a <b>ToolStripButton</b>.
 		/// </summary>
 		/// <remarks>
-		/// You can instead use <see cref="AMTBase.LastItem"/>, which gets <see cref="ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
+		/// You can instead use <see cref="MTBase.LastItem"/>, which gets <see cref="ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
 		/// </remarks>
 		public ToolStripButton LastButton => LastItem as ToolStripButton;
 
@@ -504,7 +502,7 @@ namespace Au
 
 		void _SetVisible(bool show, TBHide reason)
 		{
-			//Print(show, reason);
+			//AOutput.Write(show, reason);
 			if(show) {
 				if(_hide == 0) return;
 				_hide &= ~reason;
@@ -560,12 +558,12 @@ namespace Au
 		/// <code><![CDATA[
 		/// var t = new AToolbar();
 		/// t.NoText = true;
-		/// t["Find", @"Q:\images\find.ico"] = o => Print(o);
-		/// t["Copy", @"Q:\images\copy.ico"] = o => Print(o);
+		/// t["Find", @"Q:\images\find.ico"] = o => AOutput.Write(o);
+		/// t["Copy", @"Q:\images\copy.ico"] = o => AOutput.Write(o);
 		/// t.NoText = false;
-		/// t["Delete", @"Q:\images\delete.ico"] = o => Print(o);
+		/// t["Delete", @"Q:\images\delete.ico"] = o => AOutput.Write(o);
 		/// t.NoText = true;
-		/// t["Run", @"Q:\images\run.ico"] = o => Print(o);
+		/// t["Run", @"Q:\images\run.ico"] = o => AOutput.Write(o);
 		/// ]]></code>
 		/// </example>
 		public bool NoText { get; set; }
@@ -810,13 +808,13 @@ namespace Au
 			if(_satellite == null || _satVisible) return;
 			_satVisible = true;
 
-			//Print("show");
+			//AOutput.Write("show");
 			if(!_satellite._loaded) {
 				var owner = _c.Hwnd();
 				_satellite._CreateControl(true, owner);
 				_satellite._ow = new _OwnerWindow(owner);
 				_satellite._ow.a.Add(_satellite);
-				var w1 = _satellite._c.Hwnd(); w1.Owner = owner; //let OS keep Z order and close/hide when owner toolbar closed/minimized
+				var w1 = _satellite._c.Hwnd(); w1.OwnerWindow = owner; //let OS keep Z order and close/hide when owner toolbar closed/minimized
 			}
 			_SatFollow();
 			_SatShowHide(true, animate: true);
@@ -865,7 +863,7 @@ namespace Au
 		void _SatHide(bool animate = false/*, [CallerMemberName] string cmn=null*/)
 		{
 			if(_satellite == null) return;
-			//Print("hide", cmn, _satVisible);
+			//AOutput.Write("hide", cmn, _satVisible);
 			if(_satVisible) {
 				_satVisible = false;
 				_satTimer.Stop();

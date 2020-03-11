@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Runtime.Serialization;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -95,9 +93,9 @@ namespace Au.Types
 		{
 			var m = base.Message;
 
-			if(!Empty(m)) {
+			if(!m.IsNE()) {
 				if(m[0] == '*') m = "Failed to " + m.Substring(1);
-				if(!Empty(commonPostfix)) {
+				if(!commonPostfix.IsNE()) {
 					int k = m.Length - 1;
 					if(m[k] == '*') m = m.Substring(0, k) + commonPostfix;
 				}
@@ -106,7 +104,7 @@ namespace Au.Types
 
 			if(appendMessage == null && NativeErrorCode != 0) appendMessage = ALastError.MessageFor(NativeErrorCode);
 
-			if(!Empty(appendMessage)) m = m + " " + appendMessage;
+			if(!appendMessage.IsNE()) m = m + " " + appendMessage;
 
 			if(InnerException != null) m = m + "\r\n\t" + InnerException.Message;
 

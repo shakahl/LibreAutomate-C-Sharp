@@ -12,13 +12,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -40,8 +38,6 @@ namespace Au
 	/// Why need two types? Why <b>AScreen</b> doesn't just get and store screen handle immediately when the variable is created. Because a handle cannot be reliably used for a long time. Reasons:
 	/// - screen handles may change when changing the configuration of multiple screens.
 	/// - the window etc that identifies the screen later may move to another screen.
-	/// 
-	/// Similar to the .NET class <see cref="Screen"/>. This library does not use it mostly because some functions are too slow.
 	/// </remarks>
 	public struct AScreen
 	{
@@ -147,7 +143,7 @@ namespace Au
 			if(index > 0) {
 				var a = AllScreens;
 				if(index < a.Length) return a[index];
-				//PrintWarning("Invalid screen index.");
+				//AWarning.Write("Invalid screen index.");
 			}
 			return Primary;
 		}
@@ -211,7 +207,7 @@ namespace Au
 			if(index > 0) {
 				var a = _AllScreens();
 				if(index < a.Count) return a[index];
-				//PrintWarning("Invalid screen index.");
+				//AWarning.Write("Invalid screen index.");
 			}
 			return Primary;
 		}
@@ -296,6 +292,8 @@ namespace Au
 		/// </summary>
 		public unsafe struct ScreenHandle : IEquatable<ScreenHandle>
 		{
+			//This type is similar to the .NET class Screen. We don't use it mostly because some functions are too slow.
+
 			readonly IntPtr _h;
 
 			/// <param name="handle">A screen handle (HMONITOR).</param>

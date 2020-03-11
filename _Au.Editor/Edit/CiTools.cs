@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -13,14 +12,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Tools;
 using Au.Controls;
 using Microsoft.CodeAnalysis.Text;
@@ -31,7 +28,7 @@ class CiTools
 	//	public static void RegexTest(int position)
 	//	{
 	//		var node = NodeAt(position);
-	//		Print(IsInString(ref node, position));
+	//		AOutput.Write(IsInString(ref node, position));
 	//	}
 	//#endif
 

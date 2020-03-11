@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -44,7 +42,7 @@ namespace Au.Util
 
 		public override void Fail(string message, string detailMessage)
 		{
-			if(!Empty(detailMessage)) message = message + " " + detailMessage;
+			if(!detailMessage.IsNE()) message = message + " " + detailMessage;
 			var s = message + "\r\n" + new StackTrace(4, true);
 			WriteLine(s);
 			if(!Debugger.IsAttached) {

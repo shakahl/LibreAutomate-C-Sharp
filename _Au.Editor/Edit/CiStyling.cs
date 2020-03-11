@@ -6,7 +6,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -17,15 +16,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
-using Au.Controls;
 using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -112,7 +108,7 @@ partial class CiStyling
 			if(si.visibleFromLine < _visibleLines.Start.Value || si.visibleToLine > _visibleLines.End.Value) {
 				_StylingAndFolding(doc); //all visible
 			} else if(_diagCounter > 0 && --_diagCounter == 0) {
-				CodeInfo._diag.Inicators(doc.Pos16(si.visibleFrom), doc.Pos16(si.visibleTo));
+				CodeInfo._diag.Indicators(doc.Pos16(si.visibleFrom), doc.Pos16(si.visibleTo));
 			}
 		}
 	}
@@ -169,7 +165,7 @@ partial class CiStyling
 		if(!cd.GetDocument()) return;
 #if PRINT
 		p1.Next('d');
-		Print($"<><c green>style needed: {start8}-{end8}, lines {doc.Z.LineFromPos(false, start8) + 1}-{doc.Z.LineFromPos(false, end8)}<>");
+		AOutput.Write($"<><c green>style needed: {start8}-{end8}, lines {doc.Z.LineFromPos(false, start8) + 1}-{doc.Z.LineFromPos(false, end8)}<>");
 #endif
 		int start16 = doc.Pos16(start8), end16 = doc.Pos16(end8);
 
@@ -201,13 +197,13 @@ partial class CiStyling
 		if(cancelToken.IsCancellationRequested) {
 #if PRINT
 			p1.Next();
-			Print($"<><c orange>canceled.  {p1.ToString()}<>");
+			AOutput.Write($"<><c orange>canceled.  {p1.ToString()}<>");
 #endif
 			return;
 		}
 		if(doc != Panels.Editor.ZActiveDoc) {
 #if PRINT
-			Print("<><c red>switched doc<>");
+			AOutput.Write("<><c red>switched doc<>");
 #endif
 			return;
 		}
@@ -226,12 +222,12 @@ partial class CiStyling
 		//}
 		//if(startMin < start16) start16 = doc.Pos16(start8 = doc.Z.LineStartFromPos(false, doc.Pos8(startMin)));
 		//if(endMax > end16) end16 = doc.Pos16(end8 = doc.Z.LineEndFromPos(false, doc.Pos8(endMax), withRN: true));
-		////Print(start8, end8, start16, end16);
+		////AOutput.Write(start8, end8, start16, end16);
 
 		var b = new byte[end8 - start8];
 
 		foreach(var v in a) {
-			//Print(v.ClassificationType, v.TextSpan);
+			//AOutput.Write(v.ClassificationType, v.TextSpan);
 			EToken style = v.ClassificationType switch
 			{
 				#region
@@ -327,7 +323,7 @@ partial class CiStyling
 		p1.NW('F');
 #endif
 		if(!minimal) {
-			_diagCounter = 8; //update diagnostics after 2 s
+			_diagCounter = 6; //update diagnostics after 1.5 s
 		} else {
 			CodeInfo._diag.EraseIndicatorsInLine(doc, doc.Z.CurrentPos8);
 		}
@@ -336,7 +332,7 @@ partial class CiStyling
 #endif
 	}
 #if TRACE
-	static bool s_debugPerf;
+	//static bool s_debugPerf;
 #endif
 
 	#region folding
@@ -384,7 +380,7 @@ partial class CiStyling
 					var k = v.Token.LeadingTrivia.Span;
 					commentEnd = k.End;
 					foreach(var g in s_rxComments.FindAllG(code, 0, k.Start..k.End)) {
-						//Print($"'{g}'");
+						//AOutput.Write($"'{g}'");
 						_AddFoldPoint(g.Start, 1);
 						_AddFoldPoint(g.End, -1);
 					}
@@ -413,7 +409,7 @@ partial class CiStyling
 
 		void _AddFoldPoint(int pos16, int level)
 		{
-			//Print(z.LineFromPos(true, pos16)+1, level);
+			//AOutput.Write(z.LineFromPos(true, pos16)+1, level);
 			(a ??= new List<int>()).Add(doc.Pos8(pos16) | (level > 0 ? 0 : unchecked((int)0x80000000)));
 		}
 
@@ -434,7 +430,7 @@ partial class CiStyling
 				//add separator below
 				int li = z.LineFromPos(true, span.End);
 				_DeleteUnderlinedLineMarkers(li);
-				//if(underlinedLine != li) Print("add", li + 1);
+				//if(underlinedLine != li) AOutput.Write("add", li + 1);
 				if(underlinedLine != li) doc.Call(SCI_MARKERADD, li, SciCode.c_markerUnderline);
 				else underlinedLine++;
 				break;
@@ -451,7 +447,7 @@ partial class CiStyling
 			for(; ; underlinedLine++) {
 				underlinedLine = doc.Call(SCI_MARKERNEXT, underlinedLine, marker);
 				if((uint)underlinedLine >= beforeLine) break;
-				//Print("delete", underlinedLine + 1);
+				//AOutput.Write("delete", underlinedLine + 1);
 				do doc.Call(SCI_MARKERDELETE, underlinedLine, SciCode.c_markerUnderline);
 				while(0 != (marker & doc.Call(SCI_MARKERGET, underlinedLine)));
 			}
@@ -462,7 +458,7 @@ partial class CiStyling
 		//p1.Next('s');
 
 		int lineTo = z.LineFromPos(false, end8); if(end8 > z.LineStart(false, lineTo)) lineTo++;
-		//Print(line + 1, lineTo + 1);
+		//AOutput.Write(line + 1, lineTo + 1);
 		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
 			fixed(int* ip = a?.ToArray()) Sci_SetFoldLevels(doc.SciPtr, line, lineTo, a?.Count ?? 0, ip);
 		}
@@ -611,7 +607,7 @@ partial class SciCode
 		//p1.Next();
 		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = Z.CurrentPos8;
 		if(top != _savedTop || pos != _savedPos || hash != _savedLinesMD5) {
-			//Print("changed", a.Count);
+			//AOutput.Write("changed", a.Count);
 			try {
 				using var p = db.Statement("REPLACE INTO _editor (id,top,pos,lines) VALUES (?,?,?,?)");
 				p.Bind(1, _fn.Id).Bind(2, top).Bind(3, pos).Bind(4, a).Step();
@@ -644,14 +640,14 @@ partial class SciCode
 	//unsafe void _TestSaveFolding()
 	//{
 	//	//int n = Z.LineCount;
-	//	//for(int i = 0; i < n; i++) Print(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
+	//	//for(int i = 0; i < n; i++) AOutput.Write(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
 
 	//	var a = new List<POINT>();
 	//	for(int i = 0; ; i++) {
 	//		i = Call(SCI_CONTRACTEDFOLDNEXT, i);
 	//		if(i < 0) break;
 	//		int j = Call(SCI_GETLASTCHILD, i, -1);
-	//		//Print(i, j);
+	//		//AOutput.Write(i, j);
 	//		a.Add((i, j));
 	//	}
 

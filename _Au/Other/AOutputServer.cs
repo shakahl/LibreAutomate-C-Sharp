@@ -33,7 +33,6 @@ How local output server/client is implemented:
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -44,17 +43,15 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
 {
 	/// <summary>
-	/// Receives messages sent by <see cref="AOutput.Write"/> and related methods (<b>Print</b> etc).
+	/// Receives messages sent by <see cref="AOutput.Write"/>.
 	/// </summary>
 	/// <remarks>
 	/// If server is global, clients can be multiple processes, including this. Else only this process.
@@ -112,10 +109,10 @@ namespace Au
 	/// 	{
 	/// 		_os.Start();
 	/// 
-	/// 		//test Print and Clear, before and after creating window
+	/// 		//test Write and Clear, before and after creating window
 	/// 		AOutput.IgnoreConsole = true;
-	/// 		Print("test before setting notifications");
-	/// 		Task.Run(() => { 1.s(); Print("test after"); 1.s(); AOutput.Clear(); 1.s(); Print("test after Clear"); });
+	/// 		AOutput.Write("test before setting notifications");
+	/// 		Task.Run(() => { 1.s(); AOutput.Write("test after"); 1.s(); AOutput.Clear(); 1.s(); AOutput.Write("test after Clear"); });
 	/// 
 	/// 		Application.Run(new OutputFormExample());
 	/// 		_os.Stop();
@@ -129,7 +126,7 @@ namespace Au
 		//Although global and local servers are implemented quite differently, the interface is almost the same. For this and other reasons I decided to use single class.
 		//For local server, the thread and kernel timer would be not necessary. Instead could use just a user timer. But it has some limitations etc.
 
-		readonly ConcurrentQueue<OutServMessage> _messages = new ConcurrentQueue<OutServMessage>(); //all received and still not removed messages that were sent by clients when they call AOutput.Write etc
+		readonly System.Collections.Concurrent.ConcurrentQueue<OutServMessage> _messages = new System.Collections.Concurrent.ConcurrentQueue<OutServMessage>(); //all received and still not removed messages that were sent by clients when they call AOutput.Write etc
 		Handle_ _mailslot; //used if global
 		AWaitableTimer _timer; //used always
 		Action _callback;
@@ -377,7 +374,7 @@ namespace Au
 
 #if NEED_CALLER
 			/// <summary>
-			/// Let clients provide the caller method of Write, Print etc.
+			/// Let clients provide the caller method of Write.
 			/// Note: It makes these methods much slower, especially when thread stack is big. Also generates much garbage. To find caller method is used <see cref="StackTrace"/> class.
 			/// See also: <see cref="IntroduceWriterClass"/>.
 			/// </summary>
@@ -443,7 +440,7 @@ namespace Au
 			string caller = ATask.Name;
 #if NEED_CALLER
 			if(AOutputServer.NeedCallerMethod_) {
-				//info: this func always called from WriteDirectly, which is usually called through Writer, Write, Print, etc. But it is public and can be called directly.
+				//info: this func always called from WriteDirectly, which is usually called through Writer, Write. But it is public and can be called directly.
 				var k = new StackTrace(2); //skip this func and WriteDirectly
 				lock(_writerTypes) {
 					for(int i = 0, n = k.FrameCount; i < n; i++) {
@@ -579,7 +576,7 @@ namespace Au
 		}
 
 #if NEED_CALLER
-		static readonly List<Type> _writerTypes = new List<Type>() { typeof(AOutput), typeof(_OutputWriter), typeof(AStatic) };
+		static readonly List<Type> _writerTypes = new List<Type>() { typeof(AOutput), typeof(_OutputWriter) };
 
 		/// <summary>
 		/// Introduces a class that contain methods designed to write to the output.
@@ -645,7 +642,7 @@ namespace Au.Types
 
 #if NEED_CALLER
 			/// <summary>
-			/// The <see cref="ATask.Name"/> property value of the process that called the Write/Print/etc method.
+			/// The <see cref="ATask.Name"/> property value of the process that called <see cref="AOutput.Write"/>.
 			/// Used with OutServMessageType.Write.
 			/// If <see cref="NeedCallerMethod"/> is true, also includes the caller method. Format: "scriptname:type.method".
 			/// </summary>
@@ -660,7 +657,7 @@ namespace Au.Types
 			}
 #else
 		/// <summary>
-		/// The <see cref="ATask.Name"/> property value of the process that called the Write/Print/etc method.
+		/// The <see cref="ATask.Name"/> property value of the process that called <see cref="AOutput.Write"/>.
 		/// Used with OutServMessageType.Write.
 		/// </summary>
 		public string Caller { get; }

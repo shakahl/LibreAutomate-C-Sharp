@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 static class CommandLine
 {
@@ -31,7 +29,7 @@ static class CommandLine
 		int cmd = 0;
 		bool activateWnd = true;
 		if(a.Length > 0) {
-			//Print(a);
+			//AOutput.Write(a);
 
 			for(int i = 0; i < a.Length; i++) {
 				if(a[i].Starts('-')) a[i] = a[i].ReplaceAt(0, 1, "/");
@@ -119,7 +117,7 @@ static class CommandLine
 					if(_importWorkspace != null) Program.Model.ImportWorkspace(_importWorkspace);
 					else Program.Model.ImportFiles(_importFiles);
 				}
-				catch(Exception ex) { Print(ex.Message); }
+				catch(Exception ex) { AOutput.Write(ex.Message); }
 			});
 		}
 	}
@@ -146,7 +144,7 @@ static class CommandLine
 		case Api.WM_COPYDATA:
 			if(Program.Loaded >= EProgramState.Unloading) return default;
 			try { return _WmCopyData(wParam, lParam); }
-			catch(Exception ex) { Print(ex.Message); }
+			catch(Exception ex) { AOutput.Write(ex.Message); }
 			return default;
 		case Api.WM_USER:
 			if(Program.Loaded >= EProgramState.Unloading) return default;
@@ -189,7 +187,7 @@ static class CommandLine
 		case 4:
 			var f1 = Program.Model.FindByFilePath(s);
 			if(f1 != null) Program.Model.OpenAndGoTo(f1, (int)wParam - 1);
-			else PrintWarning($"Script '{s}' not found. If renamed, please recompile it, then run again.", -1);
+			else AWarning.Write($"Script '{s}' not found. If renamed, please recompile it, then run again.", -1);
 			break;
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (ATask.Run/RunWait)
@@ -207,7 +205,7 @@ static class CommandLine
 			}
 			var f = Program.Model?.FindScript(script);
 			if(f == null) {
-				if(action == 99) Print($"Command line: script '{script}' not found."); //else the caller script will throw exception
+				if(action == 99) AOutput.Write($"Command line: script '{script}' not found."); //else the caller script will throw exception
 				return (int)ATask.ERunResult.notFound;
 			}
 			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);

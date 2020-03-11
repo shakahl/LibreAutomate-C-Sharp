@@ -14,13 +14,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -44,7 +42,7 @@ namespace Au
 		/// </remarks>
 		public static AWnd Hwnd(this Control t, bool create = false)
 			=> create || t.IsHandleCreated ? new AWnd(t.Handle) : default;
-		//TODO: use in most places instead of the (AWnd) cast. Except where null allowed.
+		//SHOULDDO: use this in most places instead of the (AWnd) cast. Except where null allowed.
 
 		/// <summary>
 		/// Creates handle of this control/form and descendant controls.
@@ -66,7 +64,7 @@ namespace Au
 		///// </remarks>
 		//internal static void CreateControlNow(this Control t/*, int level = 0*/)
 		//{
-		//	//Print(new string(' ', level) + t.ToString());
+		//	//AOutput.Write(new string(' ', level) + t.ToString());
 		//	Debug.Assert(!t.IsHandleCreated); if(t.IsHandleCreated) throw new InvalidOperationException("Control handle already created: " + t);
 		//	t.Hwnd(create: true);
 		//	if(t.HasChildren) {
@@ -123,7 +121,7 @@ namespace Au
 		{
 			if(c.IsHandleCreated) {
 				((AWnd)c).SendS(message, showWhenFocused, text);
-			} else if(!Empty(text)) {
+			} else if(!text.IsNE()) {
 				c.HandleCreated += (unu, sed) => _SetCueBanner(c, message, showWhenFocused, text);
 			}
 		}
@@ -146,15 +144,15 @@ namespace Au
 		//public static T AddChild<T>(this ContainerControl t, int x, int y, int width, int height, string text = null, string tooltip = null, AnchorStyles anchor = AnchorStyles.None/*, string name = null*/) where T : Control, new()
 		//{
 		//	var c = new T();
-		//	//if(!Empty(name)) c.Name = name;
+		//	//if(!name.IsNE()) c.Name = name;
 		//	c.Bounds = new System.Drawing.Rectangle(x, y, width, height);
 		//	if(anchor != AnchorStyles.None) c.Anchor = anchor;
 		//	if(text != null) c.Text = text;
-		//	if(!Empty(tooltip)) {
+		//	if(!tooltip.IsNE()) {
 		//		var tt = t.Tag as ToolTip;
 		//		if(tt == null) {
 		//			t.Tag = tt = new ToolTip();
-		//			//t.Disposed += (o, e) => Print((o as ContainerControl).Tag as ToolTip);
+		//			//t.Disposed += (o, e) => AOutput.Write((o as ContainerControl).Tag as ToolTip);
 		//			//t.Disposed += (o, e) => ((o as ContainerControl).Tag as ToolTip)?.Dispose(); //it seems tooltip is auto-disposed when its controls are disposed. Anyway, this event is only if the form is disposed explicitly, but nobody does it.
 		//		}
 		//		tt.SetToolTip(c, tooltip);

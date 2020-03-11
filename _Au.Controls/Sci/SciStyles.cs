@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -247,7 +245,7 @@ namespace Au.Controls
 			//SetStringString(SCI_SETPROPERTY, "lexer.cpp.verbatim.strings.allow.escapes\0" + "1"); //expected to style "", but it does nothing
 
 
-			//Print(GetString(SCI_DESCRIBEKEYWORDSETS, 0, -1));
+			//AOutput.Write(GetString(SCI_DESCRIBEKEYWORDSETS, 0, -1));
 			//Primary keywords and identifiers
 			//Secondary keywords and identifiers
 			//Documentation comment keywords
@@ -255,7 +253,7 @@ namespace Au.Controls
 			//Preprocessor definitions
 			//Task marker and error marker keywords
 			SetString(SCI_SETKEYWORDS, 0, "abstract as base bool break byte case catch char checked class const continue decimal default delegate do double else enum event explicit extern false finally fixed float for foreach goto if implicit in int interface internal is lock long namespace new null object operator out override params private protected public readonly ref return sbyte sealed short sizeof stackalloc static string struct switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while add alias ascending async await by descending dynamic equals from get global group into join let nameof on orderby partial remove select set value var when where yield unmanaged");
-			//SetString(SCI_SETKEYWORDS, 1, "Print"); //functions. Not using here.
+			//SetString(SCI_SETKEYWORDS, 1, "Function"); //functions. Not using here.
 			//SetString(SCI_SETKEYWORDS, 2, "summary <summary>"); //supports only JavaDoc and Doxygen
 			//SetString(SCI_SETKEYWORDS, 3, "Au"); //types. Not using here.
 			//SetString(SCI_SETKEYWORDS, 4, "DEBUG TRACE"); //if used with #if, lexer knows which #if/#else branch to style. Not using here (see "lexer.cpp.track.preprocessor").

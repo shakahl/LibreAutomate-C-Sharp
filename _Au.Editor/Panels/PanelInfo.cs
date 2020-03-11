@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using TheArtOfDev.HtmlRenderer.Core.Entities;
@@ -149,7 +147,7 @@ class PanelInfo : AuUserControlBase
 					if(m != null) {
 						b.AppendFormat("\r\n<b>Menu   id</b>  {0}", m.ItemId);
 						if(m.IsSystem) b.Append(" (system)");
-						//Print(m.GetText(true, true));
+						//AOutput.Write(m.GetText(true, true));
 					}
 				}
 			}

@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -27,7 +25,7 @@ namespace Au
 		/// </summary>
 		static unsafe KKey _KeynameToKey(string s, int i, int len)
 		{
-			//Print(s, i, len);
+			//AOutput.Write(s, i, len);
 			if(len < 1) return 0;
 
 			char c = s[i];
@@ -138,7 +136,7 @@ namespace Au
 				break;
 			case 'N':
 				if(_U('u', 'm') || _U('l', ' ')) k = KKey.NumLock;
-				//for NumEnter use Key((KKey.Enter, 0, true))
+				//for NumEnter use AKeys.Key((KKey.Enter, 0, true))
 				break;
 			case 'P':
 				if(_U('a', 'g') && c3 == 'e') k = c4 == 'u' ? KKey.PageUp : (c4 == 'd' ? KKey.PageDown : 0);
@@ -218,15 +216,15 @@ namespace Au
 				//var a2 = typeof(System.Windows.Forms.Keys).GetFields();
 				//for(int j = 4; j < a2.Length; j++) { //skip value__, KeyCode, Modifiers, None
 				//	var v = a2[j];
-				//	//Print(v.Name);
+				//	//AOutput.Write(v.Name);
 				//	if(t.ContainsKey(v.Name)) continue;
 				//	var k = v.GetRawConstantValue();
 				//	if((uint)(int)k >= 0xff) continue;
-				//	Print(v.Name, j);
+				//	AOutput.Write(v.Name, j);
 				//	t.Add(v.Name, k);
 				//}
 
-				//Print(a1.Length, /*a2.Length,*/ t.Count); //216 with Keys enum, 156 without
+				//AOutput.Write(a1.Length, /*a2.Length,*/ t.Count); //216 with Keys enum, 156 without
 				s_htEnum = t;
 			}
 			var r = s_htEnum[key];
@@ -475,7 +473,7 @@ namespace Au
 			{
 				for(int i = 0; i < 20; i++) {
 					AWnd.More.GetGUIThreadInfo(out var g);
-					//Print(i, g.hwndFocus, g.hwndActive);
+					//AOutput.Write(i, g.hwndFocus, g.hwndActive);
 					if(!g.hwndFocus.Is0) return g.hwndFocus;
 					if(!g.hwndActive.Is0) return g.hwndActive;
 					ATime.Sleep(1);
@@ -590,7 +588,7 @@ namespace Au
 
 				for(int i = (int)KKey.BrowserBack; i <= (int)KKey.LaunchApp2; i++) _b[i] = _KT.Extended; //media/browser/launchapp keys
 
-				//for(int i = 1; i < 256; i++) Print((KKey)i, _b[i]);
+				//for(int i = 1; i < 256; i++) AOutput.Write((KKey)i, _b[i]);
 			}
 		}
 	}

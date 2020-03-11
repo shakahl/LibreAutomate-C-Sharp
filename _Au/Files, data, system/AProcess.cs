@@ -12,11 +12,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -48,7 +46,7 @@ namespace Au
 			string R = null;
 
 			//var t = ATime.PerfMicroseconds;
-			//if(s_time != 0) Print(t - s_time);
+			//if(s_time != 0) AOutput.Write(t - s_time);
 			//s_time = t;
 
 			using var ph = Handle_.OpenProcess(processId);
@@ -165,7 +163,7 @@ namespace Au
 						b = (Api.SYSTEM_PROCESS_INFORMATION*)AMemory.Alloc(na);
 
 						int status = Api.NtQuerySystemInformation(5, b, na, out na);
-						//Print(na); //eg 224000
+						//AOutput.Write(na); //eg 224000
 
 						if(status == 0) break;
 						if(status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
@@ -284,7 +282,7 @@ namespace Au
 		/// </exception>
 		public static int[] GetProcessIds([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
 		{
-			if(Empty(processName)) throw new ArgumentException();
+			if(processName.IsNE()) throw new ArgumentException();
 			List<int> a = null;
 			GetProcessesByName_(ref a, processName, fullPath, ofThisSession);
 			return a?.ToArray() ?? Array.Empty<int>();
@@ -298,7 +296,7 @@ namespace Au
 		/// <exception cref="ArgumentException"/>
 		public static int GetProcessId([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
 		{
-			if(Empty(processName)) throw new ArgumentException();
+			if(processName.IsNE()) throw new ArgumentException();
 			List<int> a = null;
 			return GetProcessesByName_(ref a, processName, fullPath, ofThisSession, true);
 		}

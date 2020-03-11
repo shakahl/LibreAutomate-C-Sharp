@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 /*
@@ -65,7 +62,7 @@ CHANGES IN <image>:
 	Supports managed image resources of the entry assembly. Syntax: <image "resource:ResourceName". Does not support resources from forms or other assemblies.
 	Currently supports only 16x16 icons. Does not support icon resources.
 	Supports images embedded directly in text.
-	More info in help topic "Print tags". File "Print tags.md".
+	More info in help topic "Output tags". File "Output tags.md".
 */
 
 namespace Au.Controls
@@ -77,19 +74,19 @@ namespace Au.Controls
 	/// </summary>
 	/// <remarks>
 	/// Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
-	/// Reference: [](print_tags).
-	/// Tags are supported by the <b>Print</b> function when it writes to the Au script editor.
+	/// Reference: [](output_tags).
+	/// Tags are supported by <see cref="AOutput.Write"/> when it writes to the Au script editor.
 	/// 
 	/// This control does not implement some predefined tags: open, script.
 	/// If used, must be implemented by the program.
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.ZInitTagsStyle"/> and optionally <see cref="AuScintilla.ZInitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <see cref="AOutput.Write"/>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.ZInitTagsStyle"/> and optionally <see cref="AuScintilla.ZInitImagesStyle"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// Print("<>Text with <i>tags<>.");
+	/// AOutput.Write("<>Text with <i>tags<>.");
 	/// ]]></code>
 	/// </example>
 	public unsafe class SciTags
@@ -298,7 +295,7 @@ namespace Au.Controls
 		public void AddText(string text, bool appendLine, bool skipLTGT)
 		{
 			//APerf.First();
-			if(Empty(text) || (skipLTGT && text == "<>")) {
+			if(text.IsNE() || (skipLTGT && text == "<>")) {
 				if(appendLine) _t.AppendText("", true, true, true); else _t.ClearText();
 				return;
 			}
@@ -728,7 +725,7 @@ namespace Au.Controls
 			}
 			//get text <tag>LinkText
 			var s = _t.RangeText(false, iTag, pos);
-			//Print(iTag, iText, pos, s);
+			//AOutput.Write(iTag, iText, pos, s);
 
 			//is it <fold>?
 			if(s == " >>") {
@@ -739,7 +736,7 @@ namespace Au.Controls
 			//get tag, attribute and text
 			if(!s.RegexMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
-			//Print($"'{tag}'  '{attr}'  '{m[4].Value}'");
+			//AOutput.Write($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
 			//process it async, because bad things happen if now we remove focus or change control text etc
 			_c.BeginInvoke(new Action(() => _OnLinkClick(tag, attr)));
@@ -748,7 +745,7 @@ namespace Au.Controls
 		//note: attr can be ""
 		void _OnLinkClick(string tag, string attr)
 		{
-			//Print($"'{tag}'  '{attr}'");
+			//AOutput.Write($"'{tag}'  '{attr}'");
 
 			if(_userLinkTags.TryGetValue(tag, out var d) || s_userLinkTags.TryGetValue(tag, out d)) {
 				d.Invoke(attr);
@@ -775,21 +772,24 @@ namespace Au.Controls
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '+' (others are displayed as text).
-				if(AOpt.Debug.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
+				if(AOpt.Warnings.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
 				break;
 			}
 		}
 
-		public void SetLinkStyle(UserDefinedStyle style, ColorInt? activeColor = null, bool? activeUnderline = null)
+		public void SetLinkStyle(UserDefinedStyle style, (bool use, ColorInt color)? activeColor = null, bool? activeUnderline = null)
 		{
 			_linkStyle = style;
-			if(activeColor != null) _c.Call(SCI_SETHOTSPOTACTIVEFORE, true, (int)activeColor.Value);
-			if(activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.Value);
+			if(activeColor != null) {
+				var v = activeColor.GetValueOrDefault();
+				_c.Call(SCI_SETHOTSPOTACTIVEFORE, v.use, (int)v.color);
+			}
+			if(activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.GetValueOrDefault());
 		}
 		UserDefinedStyle _linkStyle;
 
 		Dictionary<string, Action<string>> _userLinkTags = new Dictionary<string, Action<string>>();
-		static ConcurrentDictionary<string, Action<string>> s_userLinkTags = new ConcurrentDictionary<string, Action<string>>();
+		static System.Collections.Concurrent.ConcurrentDictionary<string, Action<string>> s_userLinkTags = new System.Collections.Concurrent.ConcurrentDictionary<string, Action<string>>();
 
 		/// <summary>
 		/// Adds (registers) a user-defined link tag for this control.
@@ -860,7 +860,7 @@ namespace Au.Controls
 		{
 			if(setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
-				//Print(pos);
+				//AOutput.Write(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;
 			}
 		}

@@ -64,6 +64,8 @@ enum class eAF
 	NotInProc=0x100,
 	UIA=0x200,
 	Mark = 0x10000,
+	//used only in this dll
+	Marked_ = 0x40000000,
 };
 ENABLE_BITMASK_OPERATORS(eAF);
 

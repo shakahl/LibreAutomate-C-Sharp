@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -18,7 +17,6 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using Au.Tools;
 
@@ -397,7 +395,7 @@ class PanelFind : AuUserControlBase
 	{
 		if(!Visible) return;
 		if(onlyEditor && _cName.Checked) return;
-		//Print("UpdateQuickResults", Visible);
+		//AOutput.Write("UpdateQuickResults", Visible);
 
 		_timerUE ??= new ATimer(_ => {
 			if(_cName.Checked) {
@@ -501,7 +499,7 @@ class PanelFind : AuUserControlBase
 			i = f.wholeWord ? text.FindWord(f.findText, from.., !f.matchCase, "_") : text.Find(f.findText, from, !f.matchCase);
 			len = f.findText.Length;
 		}
-		//Print(from, i, len);
+		//AOutput.Write(from, i, len);
 		if(i < 0) {
 			if(retryFromStart || from8 == 0) return;
 			from = 0; retryFromStart = true; replace = false; goto g1;
@@ -559,7 +557,7 @@ class PanelFind : AuUserControlBase
 	{
 		_aEditor.Clear();
 		if(!_GetTextToFind(out var f, false, noRecent: true)) return;
-		var text = Panels.Editor.ZActiveDoc?.Text; if(Empty(text)) return;
+		var text = Panels.Editor.ZActiveDoc?.Text; if(text.IsNE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
@@ -702,8 +700,13 @@ class PanelFind : AuUserControlBase
 						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<>{2}<>", link, s1, s2);
 					} else {
 						int ns = 120 - path.Length * 7 / 4;
-						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\">Replace all<>",
+#if true //open and select the first found text
+						b.AppendFormat("<+f \"{0} {1} {2}\"><c 0x808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
+							link, a[0].Start.Value, a[0].End.Value, s1, s2, ns > 0 ? new string(' ', ns) : null);
+#else //just open
+						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><b>{2}{3}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
 							link, s1, s2, ns > 0 ? new string(' ', ns) : null);
+#endif
 					}
 				}
 				if(!names) b.Append("<>");
@@ -713,14 +716,13 @@ class PanelFind : AuUserControlBase
 				} else {
 					if(b.Length < 10_000_000) {
 						for(int i = 0; i < a.Count; i++) {
-							var p = a[i];
-							int start = p.Start.Value, end = p.End.Value, lineStart = start, lineEnd = end;
+							var range = a[i];
+							int start = range.Start.Value, end = range.End.Value, lineStart = start, lineEnd = end;
 							int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
 							for(; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if(c == '\n' || c == '\r') break; }
 							bool limitStart = lineStart == lsMax && lineStart > 0;
 							for(; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if(c == '\r' || c == '\n') break; }
 							bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
-							Au.Util.AStringUtil.LineAndColumn(text, start, out _, out _);
 							b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
 								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
 								.Append("<z 0xffff5f><\a>").Append(text, start, end - start).Append("</\a><>")
@@ -800,12 +802,12 @@ class PanelFind : AuUserControlBase
 		int k = f.matchCase ? 1 : 0; if(f.wholeWord) k |= 2; else if(f.rx != null) k |= 4;
 
 		if(f.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = f.findText, _recentPrevOptions = k);
-		if(!Empty(f.replaceText) && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
+		if(!f.replaceText.IsNE() && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
 
 		static void _Add(bool replace, string text, int options)
 		{
 			if(text.Length > 1000) {
-				//if(0 != (options & 4)) PrintWarning("The find text of length > 1000 will not be saved to 'recent'.", -1);
+				//if(0 != (options & 4)) AWarning.Write("The find text of length > 1000 will not be saved to 'recent'.", -1);
 				return;
 			}
 			var a = (replace ? Program.Settings.find_recentReplace : Program.Settings.find_recent) ?? new RecentItem[0];

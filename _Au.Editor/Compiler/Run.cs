@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -13,16 +12,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
-//using System.Windows.Forms;
-//using System.Drawing;
-using System.Linq;
-using System.Xml;
-using System.IO.Pipes;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Compiler;
 using Au.Controls;
 using Au.Triggers;
@@ -48,7 +40,7 @@ static class Run
 	public static int CompileAndRun(bool run, FileNode f, string[] args = null, bool noDefer = false, string wrPipeName = null, bool runFromEditor = false)
 	{
 #if TEST_STARTUP_SPEED
-		args = new string[] { ATime.PerfMilliseconds.ToString() }; //and in script use this code: Print(ATime.PerfMilliseconds-Convert.ToInt64(args[0]));
+		args = new string[] { ATime.PerfMilliseconds.ToString() }; //and in script use this code: AOutput.Write(ATime.PerfMilliseconds-Convert.ToInt64(args[0]));
 #endif
 
 		Program.Model.Save.TextNowIfNeed(onlyText: true);
@@ -64,7 +56,7 @@ static class Run
 			if(f2 != null) {
 				if(!f2.FindProject(out projFolder, out projMain)) f = f2;
 				else if(projMain != f) f = projMain;
-				else { Print($"<>The test script {f2.SciLink} cannot be in the project folder {projFolder.SciLink}"); return 0; }
+				else { AOutput.Write($"<>The test script {f2.SciLink} cannot be in the project folder {projFolder.SciLink}"); return 0; }
 			}
 		}
 
@@ -93,7 +85,7 @@ static class Run
 		if(!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
 		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or role exeProgram (<+runClass \"1|{ids}\">add<>)";
-		Print($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
+		AOutput.Write($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");
 	}
 
 	static void _SciLink_RunClassFile(string s)
@@ -460,7 +452,7 @@ class RunningTasks
 				if(runFromEditor) ifRunning = EIfRunning.restart;
 				else ifRunning &= ~EIfRunning._restartFlag;
 			}
-			//Print(same, ifRunning);
+			//AOutput.Write(same, ifRunning);
 			switch(ifRunning) {
 			case EIfRunning.cancel:
 				break;
@@ -471,7 +463,7 @@ class RunningTasks
 				goto g1;
 			default: //warn
 				string s1 = same ? "it" : $"{running.f.SciLink}";
-				Print($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runMode<>.");
+				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runMode<>.");
 				break;
 			}
 			return 0;
@@ -502,7 +494,7 @@ class RunningTasks
 				//break;
 				case UacIL.System:
 				case UacIL.Protected:
-					Print($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					AOutput.Write($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
 					return 0;
 					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
 				}
@@ -569,7 +561,7 @@ class RunningTasks
 			}
 		}
 		catch(Exception ex) {
-			Print(ex);
+			AOutput.Write(ex);
 			if(disconnectPipe) Api.DisconnectNamedPipe(pre.hPipe);
 			hProcess?.Dispose();
 			return 0;

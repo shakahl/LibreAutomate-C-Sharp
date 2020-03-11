@@ -12,14 +12,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
 
@@ -87,7 +85,7 @@ class PanelEdit : UserControl
 			byte[] text = null;
 			SciText.FileLoaderSaver fls = default;
 			try { text = fls.Load(path); }
-			catch(Exception ex) { Print("Failed to open file. " + ex.Message); }
+			catch(Exception ex) { AOutput.Write("Failed to open file. " + ex.Message); }
 			if(text == null) return false;
 
 			if(_activeDoc != null) _activeDoc.Visible = false;
@@ -102,17 +100,25 @@ class PanelEdit : UserControl
 			ZActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}
-		
+
 		if(focus && !newFile) {
 			_activeDoc.Focus();
-		} else { //don't focus now, or then cannot select treeview items
-			_activeDoc_MouseEnter ??= (object sender, EventArgs e) => {
+		} else { //don't focus now, or then cannot select treeview items with keyboard etc. Focus on mouse move in editor control.
+			_openFocus.onMM ??= (object sender, MouseEventArgs e) => {
 				var c = sender as Control;
-				if(!((AWnd)c.FindForm()).IsActive) return;
-				c.MouseEnter -= _activeDoc_MouseEnter;
+				if(!c.FindForm().Hwnd().IsActive) return;
+				if(_openFocus.dist >= 0) { //if new file, don't focus until mouse moved away from tree
+					int dist = (int)AMath.Distance(Program.Model.TreeControl.Hwnd().Rect, AMouse.XY);
+					if(dist < _openFocus.dist + 10) {
+						if(dist < _openFocus.dist) _openFocus.dist = dist;
+						return;
+					}
+				}
+				c.MouseMove -= _openFocus.onMM;
 				c.Focus();
 			};
-			_activeDoc.MouseEnter += _activeDoc_MouseEnter;
+			_activeDoc.MouseMove += _openFocus.onMM;
+			_openFocus.dist = newFile ? int.MaxValue - 10 : -1;
 		}
 
 		_activeDoc.Call(SCI_SETWRAPMODE, Program.Settings.edit_wrap); //fast and does nothing if already is in that wrap state
@@ -122,7 +128,7 @@ class PanelEdit : UserControl
 		Panels.Find.ZUpdateQuickResults(true);
 		return true;
 	}
-	EventHandler _activeDoc_MouseEnter;
+	(MouseEventHandler onMM, int dist) _openFocus;
 
 	/// <summary>
 	/// If f is open, closes its document and destroys its control.
@@ -225,7 +231,7 @@ class PanelEdit : UserControl
 
 		var dif = disable ^ _editDisabled; if(dif == 0) return;
 
-		//Print(dif);
+		//AOutput.Write(dif);
 		_editDisabled = disable;
 		if(dif.Has(_EUpdateUI.Undo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Undo), !disable.Has(_EUpdateUI.Undo));
 		if(dif.Has(_EUpdateUI.Redo)) Strips.EnableCmd(nameof(CmdHandlers.Edit_Redo), !disable.Has(_EUpdateUI.Redo));

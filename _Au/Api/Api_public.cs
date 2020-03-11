@@ -3,7 +3,6 @@ using System.Diagnostics;
 using System.Runtime.InteropServices;
 
 using Au.Types;
-using static Au.AStatic;
 
 #pragma warning disable 649, 169 //field never assigned/used
 
@@ -27,8 +26,8 @@ namespace Au
 	/// AWnd w = AWnd.Find("Notepag");
 	/// ALastError.Clear();
 	/// bool enabled = w.IsEnabled; //returns true if enabled, false if disabled or failed
-	/// if(!enabled && ALastError.Code != 0) { Print(ALastError.Message); return; } //1400, Invalid window handle
-	/// Print(enabled);
+	/// if(!enabled && ALastError.Code != 0) { AOutput.Write(ALastError.Message); return; } //1400, Invalid window handle
+	/// AOutput.Write(enabled);
 	/// ]]></code>
 	/// </example>
 	[DebuggerStepThrough]

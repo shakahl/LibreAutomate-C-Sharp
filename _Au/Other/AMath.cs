@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -156,5 +154,30 @@ namespace Au
 		/// Calculates angle degrees from coordinates x and y.
 		/// </summary>
 		public static double AngleFromXY(int x, int y) => Math.Atan2(y, x) * (180 / Math.PI);
+
+		/// <summary>
+		/// Calculates distance between two points.
+		/// </summary>
+		public static double Distance(POINT p1, POINT p2)
+		{
+			if(p1.y == p2.y) return Math.Abs(p2.x - p1.x); //horizontal line
+			if(p1.x == p2.x) return Math.Abs(p2.y - p1.y); //vertical line
+
+			long dx = p2.x - p1.x, dy = p2.y - p1.y;
+			return Math.Sqrt(dx * dx + dy * dy);
+		}
+
+		/// <summary>
+		/// Calculates distance between rectangle and point.
+		/// Returns 0 if point is in rectangle.
+		/// </summary>
+		public static double Distance(RECT r, POINT p)
+		{
+			r.Normalize(swap: true);
+			if(r.Contains(p)) return 0;
+			int x = p.x < r.left ? r.left : (p.x > r.right ? r.right : p.x);
+			int y = p.y < r.top ? r.top : (p.y > r.bottom ? r.bottom : p.y);
+			return Distance((x, y), p);
+		}
 	}
 }

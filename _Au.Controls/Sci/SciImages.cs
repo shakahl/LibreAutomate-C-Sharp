@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 //FUTURE: support mutiline images like @"image:line1 line2" and like "image:line1" + "line2";
@@ -84,7 +82,7 @@ namespace Au.Controls
 			public void CompactCache()
 			{
 				if(_a == null) return;
-				//Print(_cacheSize);
+				//AOutput.Write(_cacheSize);
 				if(CacheSize < MaxCacheSize || _a.Count < 4) return;
 				CacheSize = 0;
 				int n = _a.Count, max = MaxCacheSize / 4;
@@ -163,7 +161,7 @@ namespace Au.Controls
 					//		if(text[imStrStart + 1] == '~') { imStrStart += 3; imStrEnd--; } else hide = false;
 					//	} else {
 					//		if(imStrEnd < iTo && text[imStrEnd] == '>') imStrEnd++;
-					//		//Print(imStrStart, imStrEnd);
+					//		//AOutput.Write(imStrStart, imStrEnd);
 					//	}
 					//	if(hide) {
 					//		int len = imStrEnd - imStrStart;
@@ -184,7 +182,7 @@ namespace Au.Controls
 				//calculate n annotation lines from image height
 				int lineHeight = _t.LineHeight(); if(lineHeight <= 0) continue;
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
-				//Print(lineHeight, maxHeight, nAnnotLines);
+				//AOutput.Write(lineHeight, maxHeight, nAnnotLines);
 
 				fixed (byte* b0 = AMemoryArray.Get(annotLen + nAnnotLines + 20, ref t_data.BufferForAnnot)) {
 					var b = b0;
@@ -203,7 +201,7 @@ namespace Au.Controls
 						var a = b + 1;
 						_c.Call(SCI_ANNOTATIONGETTEXT, iLine, a);
 						a[annotLen] = 0;
-						//Print($"OLD: '{new string((sbyte*)a)}'");
+						//AOutput.Write($"OLD: '{new string((sbyte*)a)}'");
 
 						//is it our image info?
 						int imageLen = (int)(b - b0);
@@ -225,7 +223,7 @@ namespace Au.Controls
 						}
 					} //else case 1
 
-					//Print($"NEW: '{new string((sbyte*)b0)}'");
+					//AOutput.Write($"NEW: '{new string((sbyte*)b0)}'");
 					//APerf.First();
 					if(!annotAdded) {
 						annotAdded = true;
@@ -354,11 +352,11 @@ namespace Au.Controls
 			//is already loaded?
 			long hash = AHash.Fnv1Long(s + i, i2 - i);
 			var im = d.FindImage(hash);
-			//Print(im != null, new string((sbyte*)s, i, i2 - i));
+			//AOutput.Write(im != null, new string((sbyte*)s, i, i2 - i));
 			if(im != null) return im;
 
 			//var test = s.Substring(i, i2 - i);
-			//Print(test, EImageUtil.ImageToString(test));
+			//AOutput.Write(test, EImageUtil.ImageToString(test));
 
 			switch(imType) {
 			case ImageUtil.ImageType.Base64CompressedBmp: i += 2; break; //~:
@@ -371,7 +369,7 @@ namespace Au.Controls
 			//load
 			long t1 = ATime.WinMillisecondsWithoutSleep;
 			byte[] b = ImageUtil.BmpFileDataFromString(path, imType, !_isEditor);
-			t1 = ATime.WinMillisecondsWithoutSleep - t1; if(t1 > 1000) PrintWarning($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
+			t1 = ATime.WinMillisecondsWithoutSleep - t1; if(t1 > 1000) AWarning.Write($"Time to load image '{path}' is {t1} ms.", -1, prefix: "<>Note: "); //eg if network path unavailable, may wait ~7 s
 			if(b == null) goto g1;
 			if(!ImageUtil.GetBitmapFileInfo_(b, out var q)) goto g1;
 
@@ -552,7 +550,7 @@ namespace Au.Controls
 				if(!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
 				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPos(false, to);
 				len = to2 - from2;
-				//Print(inserted, from, to, from2, to2, len);
+				//AOutput.Write(inserted, from, to, from2, to2, len);
 				if(len < 10) return;
 				if(from2 == from && to2 == to) {
 					s = n.textUTF8;
@@ -567,7 +565,7 @@ namespace Au.Controls
 			if(r < 0) return;
 			//tested: all this is faster than SCI_FINDTEXT. Much faster when need to search in big text.
 
-			//Print(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
+			//AOutput.Write(firstLine, $"'{new string((sbyte*)s, 0, len, Encoding.UTF8)}'");
 			_SetImagesForTextRange(firstLine, s, len, allText, textPos);
 		}
 

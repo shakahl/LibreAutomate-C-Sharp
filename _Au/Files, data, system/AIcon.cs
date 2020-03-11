@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
-//using System.Linq;
 using System.Drawing;
+//using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -62,14 +60,14 @@ namespace Au
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
 		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
-			if(Empty(file)) return default;
+			if(file.IsNE()) return default;
 			size = _NormalizeIconSizeParameter(size);
 			file = APath.ExpandEnvVar(file);
 
 			//var perf = APerf.Create();
 			IntPtr R = _GetFileIcon(file, size, flags);
-			//perf.Next(); Print(perf.ToString(), file);
-			//Print($"<><c 0xff0000>{file}</c>");
+			//perf.Next(); AOutput.Write(perf.ToString(), file);
+			//AOutput.Write($"<><c 0xff0000>{file}</c>");
 			return R;
 		}
 
@@ -153,7 +151,7 @@ namespace Au
 				} else if(file.Ends(".lnk", true)) {
 					R = _GetLnkIcon(file, size);
 					if(R != default) return R;
-					//Print("_GetLnkIcon failed", file);
+					//AOutput.Write("_GetLnkIcon failed", file);
 				}
 
 				//note: here we don't cache icons.
@@ -172,11 +170,11 @@ namespace Au
 			string progId = isShellPath ? null : AFile.More.GetFileTypeOrProtocolRegistryKey(file, isFileType, isURL);
 
 			RegistryKey rk = (progId == null) ? null : ARegistry.Open(progId, Registry.ClassesRoot);
-			//Print(file, progId, isFileType, isURL, rk != null);
+			//AOutput.Write(file, progId, isFileType, isURL, rk != null);
 
 			if(rk == null) {
 				//Unregistered file type/protocol, no extension, folder, ::{CLSID}, shell:AppsFolder\WinStoreAppId, or no progId key in HKCR
-				//Print(@"unregistered", file, progId);
+				//AOutput.Write(@"unregistered", file, progId);
 				if(progId != null) goto gr; //the file type is known, but no progid key in HKCR. Let shell API figure out. Rare.
 				if(isExt || (isPath && AFile.FileExists(file))) return GetStockIconHandle(StockIcon.DOCNOASSOC, size);
 				goto gr;
@@ -185,32 +183,32 @@ namespace Au
 			//Registered file type/protocol.
 			using(rk) {
 				if(ARegistry.KeyExists(@"ShellEx\IconHandler", rk)) {
-					//Print(@"handler", file);
+					//AOutput.Write(@"handler", file);
 					goto gr;
 				}
 
 				string icon;
 				if(ARegistry.GetString(out icon, "", @"DefaultIcon", rk) && icon.Length > 0) {
-					//Print("registry: DefaultIcon", file, icon);
+					//AOutput.Write("registry: DefaultIcon", file, icon);
 					if(icon[0] == '@') icon = null; //eg @{Microsoft.Windows.Photos_16.622.13140.0_x64__8wekyb3d8bbwe?ms-resource://Microsoft.Windows.Photos/Files/Assets/PhotosLogoExtensions.png}
 					else ParseIconLocation(ref icon, out index);
 				} else if(ARegistry.GetString(out icon, "", @"shell\open\command", rk) && icon.Length > 0) {
-					//Print(@"registry: shell\open\command", file, icon);
+					//AOutput.Write(@"registry: shell\open\command", file, icon);
 					var a = icon.SegSplit((icon[0] == '\"') ? "\"" : " ", StringSplitOptions.RemoveEmptyEntries);
 					icon = (a.Length == 0) ? null : a[0];
 					if(icon.Ends("rundll32.exe", true)) icon = null;
 				} else {
 					icon = null;
-					//Print("registry: no", file);
+					//AOutput.Write("registry: no", file);
 					//Usually shell API somehow gets icon.
 					//For example also looks in .ext -> PerceivedType -> HKCR\SystemFileAssociations.
 					//We can use AssocQueryString(ASSOCSTR_DEFAULTICON), but it is slow and not always gets correct icon.
 				}
 
-				//if(icon != null) Print(file, icon);
+				//if(icon != null) AOutput.Write(file, icon);
 
 				if(icon == "%1") {
-					//Print(file);
+					//AOutput.Write(file);
 					if(isPath) icon = file;
 					else icon = null;
 				}
@@ -275,7 +273,7 @@ namespace Au
 			return R;
 		}
 
-		[HandleProcessCorruptedStateExceptions] //shell extensions may throw
+		[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions] //shell extensions may throw
 		static IntPtr _GetShellIcon2(bool isPidl, IntPtr pidl, int size)
 		{
 			IntPtr R = default, il = default; int index = -1, ilIndex, realSize;
@@ -306,10 +304,10 @@ namespace Au
 
 			try {
 				if(ilIndex == Api.SHIL_SMALL || ilIndex == Api.SHIL_LARGE || _GetShellImageList(ilIndex, out il)) {
-					//Print(il, ADebug.GetComObjRefCount(il));
+					//AOutput.Write(il, ADebug.GetComObjRefCount(il));
 					R = Api.ImageList_GetIcon(il, index, 0);
 					if(size != realSize && R != default) {
-						//Print(size, realSize, index, file);
+						//AOutput.Write(size, realSize, index, file);
 						R = Api.CopyImage(R, Api.IMAGE_ICON, size, size, Api.LR_COPYDELETEORG | Api.LR_COPYRETURNORG);
 					}
 				}
@@ -330,7 +328,7 @@ namespace Au
 				using var x = AShortcutFile.Open(file);
 				var s = x.GetIconLocation(out int ii); if(s != null) return LoadIconHandle(s, ii, size);
 				s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size);
-				//Print("need IDList", file);
+				//AOutput.Write("need IDList", file);
 				using(var pidl = x.TargetPidl) return GetPidlIconHandle(pidl, size);
 			}
 			catch { return default; }
@@ -401,7 +399,7 @@ namespace Au
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
 		public static unsafe IntPtr LoadIconHandle(string file, int index = 0, int size = 16)
 		{
-			if(Empty(file)) return default;
+			if(file.IsNE()) return default;
 			size = _NormalizeIconSizeParameter(size);
 
 			//We use SHDefExtractIcon because of better quality resizing (although several times slower) which matches shell and imagelist resizing.
@@ -614,7 +612,7 @@ namespace Au
 		public static bool ParseIconLocation(ref string s, out int index)
 		{
 			index = 0;
-			if(Empty(s)) return false;
+			if(s.IsNE()) return false;
 			if(s[0] == '\"') s = s.Replace("\"", ""); //can be eg "path",index
 			if(s.Length < 3) return false;
 			if(!AChar.IsAsciiDigit(s[s.Length - 1])) return false;

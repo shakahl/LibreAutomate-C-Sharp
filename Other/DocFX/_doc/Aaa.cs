@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 //#if DEBUG //no, then DocFX skips this. Better set build action "None"; then DocFX skips this file. TODO: find all #if, to ensure that DocFX does not skip something useful...
 namespace Au
@@ -92,7 +89,7 @@ namespace Au
 		/// </code>
 		/// 
 		/// <code><![CDATA[
-		/// var v = ADialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { Print(e.LinkHref); });
+		/// var v = ADialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
 		/// ]]></code>
 		/// 
 		///  C# keywords

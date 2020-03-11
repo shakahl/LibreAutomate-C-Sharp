@@ -1,9 +1,7 @@
-//#define NOGCREGION //Prevent GC while getting completions. In Debug build can reduce the time eg from 70 to 60 ms, but in Release almost same speed.
 #define HAVE_SYMBOLS //if the Roslyn project has been modified (added Symbols property to the CompletionItem class) and compiled
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -14,14 +12,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
@@ -71,7 +67,7 @@ class CiCompletion
 
 	void _CancelList(bool popupListHidden = false, bool tempRangeRemoved = false)
 	{
-		//Print("_CancelList", _data != null);
+		//AOutput.Write("_CancelList", _data != null);
 		if(_data == null) return;
 		if(!tempRangeRemoved) _data.tempRange.Remove();
 		_data = null;
@@ -82,7 +78,7 @@ class CiCompletion
 	{
 		//int pos = doc.Z.CurrentPosChars;
 		//var node = CiTools.NodeAt(pos);
-		//Print(CiTools.IsInString(ref node, pos));
+		//AOutput.Write(CiTools.IsInString(ref node, pos));
 
 	}
 
@@ -95,7 +91,7 @@ class CiCompletion
 	{
 		CiComplResult R = CiComplResult.None;
 		if(_data != null) {
-			if(!_IsValidChar(ch)) {
+			if(!_IsNameChar(ch)) {
 				var ci = _popupList.SelectedItem;
 				if(ci != null && _data.filterText.Length == 0 && ch != '.') ci = null;
 				if(ci != null) R = _Commit(doc, ci, ch, default);
@@ -106,7 +102,7 @@ class CiCompletion
 		return R;
 	}
 
-	static bool _IsValidChar(char ch) => char.IsLetterOrDigit(ch) || ch == '_' || ch == '@';
+	static bool _IsNameChar(char ch) => char.IsLetterOrDigit(ch) || ch == '_' || ch == '@';
 
 	/// <summary>
 	/// Asynchronously shows popup list if need. If already showing, synchronously filters/selects items.
@@ -125,28 +121,11 @@ class CiCompletion
 			bool trValid = _data.tempRange.GetCurrentFromTo(out int from, out int to, utf8: true);
 			Debug.Assert(trValid); if(!trValid) { Cancel(); return; }
 			string s = doc.Z.RangeText(false, from, to);
-			foreach(var v in s) if(!_IsValidChar(v)) return; //mostly because now is before SciCharAddedCommit, which commits (or cancels) if added invalid char
+			foreach(var v in s) if(!_IsNameChar(v)) return; //mostly because now is before SciCharAddedCommit, which commits (or cancels) if added invalid char
 			_data.filterText = s;
 			_FilterItems(_data);
 			_popupList.UpdateVisibleItems(); //and calls SelectBestMatch
 		}
-	}
-
-	bool _IsAfterDot(string code, int position)
-	{
-		if(position > 1) {
-			char c = code[position - 1];
-			if(c == '.') return true;
-			if(position > 2) {
-				char c2 = code[position - 2];
-				switch(c) {
-				case '>' when c2 == '-':
-				case ':' when c2 == ':':
-					return true;
-				}
-			}
-		}
-		return false;
 	}
 
 	public void ShowList()
@@ -156,41 +135,25 @@ class CiCompletion
 
 	enum _ShowReason { charAdded, charAdded2, command }
 
-	//long _debugTime;
-
-	//SHOULDDO: delay everything, eg 50 ms timer
+	//SHOULDDO: delay
 	async void _ShowList(_ShowReason showReason, int position = -1, char ch = default)
 	{
-		//long time = ATime.PerfMilliseconds;
-		//Print(_debugTime == 0 ? 0 : time - _debugTime, time);
-		//_debugTime = time;
+		//using
+		var p1 = APerf.Create(); //FUTURE: remove all p1 lines
 
-		var p1 = APerf.Create();
-
-		//Print(_cancelTS);
+		//AOutput.Write(_cancelTS);
 		Cancel();
-
-		if(showReason != _ShowReason.charAdded) ch = default;
 
 		if(!CodeInfo.GetContextWithoutDocument(out var cd, position)) return; //returns false if position is in meta comments
 		SciCode doc = cd.sciDoc;
 		position = cd.pos16; //changed if -1 or -2
 		string code = cd.code;
 
-		if(showReason == _ShowReason.charAdded) {
-			if(position > 1 && char.IsLetterOrDigit(ch) && char.IsLetterOrDigit(code[position - 2])) return; //middle of word
+		if(showReason != _ShowReason.charAdded) ch = default;
+		else if(position > 1 && _IsNameChar(ch) && _IsNameChar(code[position - 2])) return; //middle of word
 
-			//FUTURE: try to improve performance when typing text (_ShowReason.charAdded).
-			//	Return if the text would not trigger autocompletion.
-			//	Eg if in comments, non-regex string. Then need to get syntax tree after GetDocument.
-		}
+		//using var nogcr = AKeys.IsScrollLock ? new NoGcRegion(50_000_000) : default;
 
-#if NOGCREGION
-		ADebug.MemorySetAnchor_();
-		//Print(GCSettings.LatencyMode);
-		bool noGC = false;
-		if(!AVersion.Is32BitProcess) try { noGC = GC.TryStartNoGCRegion(50_000_000); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
-#endif
 		if(!cd.GetDocument()) return; //returns false if fails (unlikely)
 		Document document = cd.document;
 		Debug.Assert(code == document.GetTextAsync().Result.ToString());
@@ -200,7 +163,6 @@ class CiCompletion
 		PSFormat stringFormat = PSFormat.None; TextSpan stringSpan = default;
 		CompletionService completionService = null;
 		SemanticModel model = null;
-		//INamedTypeSymbol typeSymbol = null;
 
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
@@ -210,82 +172,67 @@ class CiCompletion
 #endif
 
 		try {
-			var r = await Task.Run(async () => { //info: somehow GetCompletionsAsync etc are not async
+			var r = await Task.Run(async () => { //info: actually GetCompletionsAsync etc are not async
 				completionService = CompletionService.GetService(document);
 				if(cancelToken.IsCancellationRequested) return null;
 
-				//var q = completionService.GetRules();
-				//Print(q.DefaultEnterKeyRule, q.DismissIfEmpty, q.DismissIfLastCharacterDeleted, q.SnippetsRule);
-				//Print(q.DefaultCommitCharacters);
-				//p1.Next('s');
+				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too. Currently we need only GetSyntaxTreeAsync here, but the speed is same, even when we don't call GetCompletionsAsync.
+				var root = model.Root;
+				var node = root.FindToken(position).Parent;
+				p1.Next('s');
 
-				if(showReason == _ShowReason.charAdded && ch == '[') { //attribute?
-					var node = cd.document.GetSyntaxRootAsync(cancelToken).Result.FindToken(position - 1).Parent;
-					//Print(node.Kind());
-					if(node.IsKind(SyntaxKind.AttributeList)) ch = default; //else GetCompletionsAsync does not work
+				//never mind: To make faster in some cases, could now return if in comments or non-regex etc string.
+				//	It is not so easy to check correctly. GetCompletionsAsync then not very fast and not too slow.
+
+				//is it member access syntax?
+				ExpressionSyntax nodeL = null; //node at left of . etc
+				int i = position - 1; while(i > 0 && _IsNameChar(code[i])) i--;
+				if(i > 0) {
+					var token = root.FindToken(i); //fast
+					if(position >= token.Span.End) {
+						var tk = token.Kind();
+						isDot = tk == SyntaxKind.DotToken || tk == SyntaxKind.MinusGreaterThanToken || tk == SyntaxKind.ColonColonToken;
+						if(isDot) {
+							node = token.Parent;
+							switch(node) {
+							case MemberAccessExpressionSyntax s1: nodeL = s1.Expression; break; // . or ->
+							case MemberBindingExpressionSyntax s1 when s1.Parent is ConditionalAccessExpressionSyntax cae: nodeL = cae.Expression; break; // ?.
+							case QualifiedNameSyntax s1: nodeL = s1.Left; break; // eg . outside functions
+							case AliasQualifiedNameSyntax s1: nodeL = s1.Alias; break; // ::
+							default: isDot = false; ADebug.Print(node.GetType()); break;
+							}
+						}
+					}
 				}
 
+				if(!isDot && ch == '[' && node is AttributeListSyntax) ch = default; //else GetCompletionsAsync does not work
+
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-				//Print($"'{ch}'");
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
 				p1.Next('C');
 				if(r1 != null) {
-					model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
-					//INamespaceOrTypeSymbol type = null;
-					int pos2 = position - 1;
-					if(isDot = (pos2 > 0 && code[pos2] == '.')) {
-						if(pos2 > 1 && code[pos2 - 1] == '?') pos2--;
-					} else if(isDot = (pos2 > 1 && ((code[pos2] == '>' && code[pos2 - 1] == '-') || (code[pos2] == ':' && code[pos2 - 1] == ':')))) {
-						pos2--;
-					}
 					if(isDot) {
-						var tree = model.SyntaxTree;
-						var node = tree.GetRoot().FindToken(pos2).Parent;
-						//Print($"NODE: {node.Kind()}, {node.GetType().Name}, <<{node}>>");
-
-						ExpressionSyntax es = null;
 						switch(node) {
-						case QualifiedNameSyntax s1: es = s1.Left; break; //can be namespace, type or value
-						case MemberAccessExpressionSyntax s1: es = s1.Expression; break; //can be namespace, type or value
-						case ConditionalAccessExpressionSyntax s1: canGroup = true; break; //can be only value
-																						   //case ConditionalAccessExpressionSyntax s1: es = s1.Expression; break;
-																						   //case AliasQualifiedNameSyntax s1: es = s1.Alias; break; //can be only root namespace
-						}
-						if(es != null) {
-							canGroup = true;
-							//Print("es kind:", es.Kind());
-							var u = model.GetSymbolInfo(es).Symbol;
-							if(u == null && model.GetTypeInfo(es).Type is IErrorTypeSymbol ee) {
-								var can = ee.CandidateSymbols;
-								if(!can.IsDefaultOrEmpty) u = can[0];
+						case MemberBindingExpressionSyntax _: canGroup = true; break; // ?.
+						case AliasQualifiedNameSyntax _: break; // ::
+						default:
+							//AOutput.Write(model.GetTypeInfo(nodeL).Type); //null if namespace
+							ISymbol s1 = null;
+							if(!(nodeL is LiteralExpressionSyntax || nodeL is InterpolatedStringExpressionSyntax)) {
+								s1 = model.GetSymbolInfo(nodeL).Symbol;
+								ADebug.PrintIf(s1 == null, node);
 							}
-							//Print(u, u?.Kind??default);
-							if(u != null) {
-								if(u.Kind == SymbolKind.Namespace) {
-									canGroup = false;
-									//	type = u as INamespaceSymbol;
-									//} else {
-									//	type = model.GetTypeInfo(es).Type;
-								}
-							}
-
-							//if(type == null) {
-							//	type = model.GetSpeculativeTypeInfo(pos2, es, SpeculativeBindingOption.BindAsExpression).Type;
-							//}
-
-							//if(type is IPointerTypeSymbol pts) type = pts.PointedAtType;
-							//typeSymbol = type as INamedTypeSymbol;
+							canGroup = s1 == null || s1.Kind != SymbolKind.Namespace;
+							break;
 						}
 					} else {
 						canGroup = true;
 					}
 					//p1.Next('M');
-				} else if(showReason == _ShowReason.command) {
-					var semo = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false);
-					var node = semo.Root.FindToken(position).Parent;
+				} else if(showReason == _ShowReason.command && !isDot) {
 					if(CiUtil.IsInString(ref node, position)) {
 						stringSpan = node.Span;
-						stringFormat = CiUtil.GetParameterStringFormat(node, semo, true);
+						stringFormat = CiUtil.GetParameterStringFormat(node, model, true);
 						if(stringFormat == PSFormat.AWildex) { //is regex in wildex?
 							if(code.RegexMatch(@"[\$@]*""(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, RXFlags.ANCHORED, stringSpan.Start..stringSpan.End)
 								&& position >= stringSpan.Start + rg.Length) stringFormat = PSFormat.ARegex;
@@ -334,23 +281,25 @@ class CiCompletion
 				items = new List<CiComplItem>(r.Items.Length),
 				noAutoSelect = r.SuggestionModeItem != null,
 			};
-			ADebug.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>", r.SuggestionModeItem);
+
+			ADebug.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().IsNE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
+																																													   //if(r.SuggestionModeItem != null) r.SuggestionModeItem.DebugPrint();
 
 			var groups = canGroup ? new Dictionary<INamespaceOrTypeSymbol, List<int>>() : null;
 			List<int> keywordsGroup = null, etcGroup = null;
 			foreach(var ci in r.Items) {
 				var v = new CiComplItem(ci);
 				var sym = v.FirstSymbol;
-				//Print(v.DisplayText, sym, canGroup);
+				//AOutput.Write(v.DisplayText, sym, canGroup);
 
 				//why cref provider adds internals from other assemblies?
 				if(provider == CiComplProvider.Cref && sym != null) {
 					switch(sym.Kind) {
 					case SymbolKind.NamedType when v.access == CiItemAccess.Internal && !sym.IsInSource() && !model.IsAccessible(0, sym):
-						//Print(sym);
+						//AOutput.Write(sym);
 						continue;
 					case SymbolKind.Namespace:
-						//Print(sym, sym.ContainingAssembly.Name);
+						//AOutput.Write(sym, sym.ContainingAssembly.Name);
 						switch(sym.Name) {
 						case "Internal" when sym.ContainingAssembly.Name == "System.Core":
 						case "Windows" when sym.ContainingAssembly.Name == "mscorlib":
@@ -389,12 +338,13 @@ class CiCompletion
 							case "CreateObjRef": //MarshalByRefObject
 							case "GetLifetimeService": //MarshalByRefObject
 							case "InitializeLifetimeService": //MarshalByRefObject
+							case "Clone" when sym.ContainingType.Name == "String": //this useless method would be the first in the list
 							case "OnUnhandledException" when sym.ContainingType.Name == "AScript":
 								v.moveDown = CiItemMoveDownBy.Name;
 								break;
 							}
 							//var ct = sym.ContainingType;
-							//Print(ct.ToString(), ct.Name, ct.ContainingNamespace.ToString(), ct.BaseType);
+							//AOutput.Write(ct.ToString(), ct.Name, ct.ContainingNamespace.ToString(), ct.BaseType);
 						}
 					}
 					break;
@@ -441,7 +391,7 @@ class CiCompletion
 						switch(k.AttributeClass.Name) {
 						case "ObsoleteAttribute": isObsolete = true; break;
 						}
-						//Print(ci.DisplayText, v.AttributeClass.Name);
+						//AOutput.Write(ci.DisplayText, v.AttributeClass.Name);
 					}
 					if(isObsolete) v.moveDown = CiItemMoveDownBy.Obsolete;
 				}
@@ -453,7 +403,7 @@ class CiCompletion
 
 			List<string> groupsList = null;
 			if(canGroup && groups.Count + (keywordsGroup == null ? 0 : 1) + (etcGroup == null ? 0 : 1) > 1) {
-				//foreach(var v in groups) Print(v.Key, v.Value.Count, v.Key.ContainingAssembly?.Name);
+				//foreach(var v in groups) AOutput.Write(v.Key, v.Value.Count, v.Key.ContainingAssembly?.Name);
 				List<(string, List<int>)> g = null;
 				if(isDot) {
 					var gs = groups.ToList();
@@ -471,6 +421,32 @@ class CiCompletion
 						ADebug.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}"); //usually because of the above bug
 						return 0;
 					});
+
+#if true
+					if(gs[0].Key.Name == "String") { //don't group Au extension methods
+						for(int i = 1; i < gs.Count; i++) {
+							if(d.items[gs[i].Value[0]].kind != CiItemKind.ExtensionMethod) continue;
+							var ns = gs[i].Key.ContainingNamespace;
+							if(ns.Name == "Au") {
+								gs[0].Value.AddRange(gs[i].Value);
+								gs.RemoveAt(i);
+								break;
+							}
+						}
+					}
+#else
+					if(!Program.Settings.ci_complGroupEM) { //don't group non-Linq extension methods
+						for(int i = 1; i < gs.Count; i++) {
+							if(d.items[gs[i].Value[0]].kind != CiItemKind.ExtensionMethod) continue;
+							var ns = gs[i].Key.ContainingNamespace;
+							if(ns.Name != "Linq") {
+								gs[0].Value.AddRange(gs[i].Value);
+								gs.RemoveAt(i--);
+							}
+						}
+					}
+#endif
+
 					g = gs.Select(o => (o.Key.Name, o.Value)).ToList(); //list<(itype, list)> -> list<typeName, list>
 
 					static bool _IsBase(INamedTypeSymbol t, INamedTypeSymbol tBase)
@@ -484,8 +460,8 @@ class CiCompletion
 						var nsName = g[i].Item1;
 						for(int j = 0; j < i; j++) if(g[j].Item1 == nsName) { g[j].Item2.AddRange(g[i].Item2); g.RemoveAt(i); break; }
 					}
-					//Print("----");
-					//foreach(var v in g) Print(v.Item1, v.Item2.Count);
+					//AOutput.Write("----");
+					//foreach(var v in g) AOutput.Write(v.Item1, v.Item2.Count);
 					g.Sort((e1, e2) => string.Compare(e1.Item1, e2.Item1, StringComparison.OrdinalIgnoreCase));
 				}
 				if(keywordsGroup != null) g.Add(("keywords", keywordsGroup));
@@ -500,9 +476,9 @@ class CiCompletion
 			p1.Next('F');
 
 			d.tempRange = doc.ZTempRanges_Add(this, span.Start, span.End, () => {
-				//Print("leave", _data==d);
+				//AOutput.Write("leave", _data==d);
 				if(_data == d) _CancelList(tempRangeRemoved: true);
-			}, SciCode.ZTempRangeFlags.LeaveIfPosNotAtEndOfRange);
+			}, position == span.End ? SciCode.ZTempRangeFlags.LeaveIfPosNotAtEndOfRange : 0);
 
 			_data = d;
 			if(_popupList == null) {
@@ -516,23 +492,11 @@ class CiCompletion
 		finally {
 			if(_data == null) {
 				p1.Next('z');
-				//Print($"{p1.ToString()}  |  ch='{(ch == default ? "" : ch.ToString())}', canceled={cancelTS.IsCancellationRequested}");
+				//AOutput.Write($"{p1.ToString()}  |  ch='{(ch == default ? "" : ch.ToString())}', canceled={cancelTS.IsCancellationRequested}");
 			}
 			cancelTS.Dispose();
 			if(cancelTS == _cancelTS) _cancelTS = null;
 		}
-#if NOGCREGION
-		finally {
-			Print(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
-			//if(noGC && GCSettings.LatencyMode == GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
-			if(noGC) {
-				try { GC.EndNoGCRegion(); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
-				ADebug.MemoryPrint_();
-				ThreadPool.QueueUserWorkItem(_ => GC.Collect());
-			}
-		}
-#endif
-		//p1.NW(); //FUTURE: remove all p1 lines
 	}
 
 	static void _FilterItems(_Data d)
@@ -543,14 +507,14 @@ class CiCompletion
 			v.hilite = 0;
 			v.moveDown &= ~CiItemMoveDownBy.FilterText;
 		}
-		if(!Empty(filterText)) {
+		if(!filterText.IsNE()) {
 			string textLower = filterText.ToLower(), textUpper = filterText.Upper();
 			char c0Lower = textLower[0], c0Upper = textUpper[0];
 			foreach(var v in d.items) {
 				if(v.kind == CiItemKind.None) continue; //eg regex completion
 				var s = v.ci.FilterText;
 				//ADebug.PrintIf(v.ci.FilterText != v.ci.DisplayText, $"{v.ci.FilterText}, {v.ci.DisplayText}");
-				//Print(v.ci.DisplayText, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
+				//AOutput.Write(v.ci.DisplayText, v.ci.FilterText, v.ci.SortText, v.ci.ToString());
 				bool found = false;
 				int iFirst = _FilterFindChar(s, 0, c0Lower, c0Upper), iFirstFirst = iFirst;
 				if(iFirst >= 0) {
@@ -596,7 +560,7 @@ class CiCompletion
 
 				//if DisplayText != FilterText, correct or clear hilites. Eg cref.
 				if(found && s != v.ci.DisplayText) {
-					//Print(v.ci.DisplayText, v.ci.FilterText);
+					//AOutput.Write(v.ci.DisplayText, v.ci.FilterText);
 					iFirst = v.ci.DisplayText.Find(s);
 					if(iFirst < 0) v.hilite = 0; else v.hilite <<= iFirst;
 				}
@@ -634,9 +598,10 @@ class CiCompletion
 	{
 		CiComplItem ci = null;
 		var filterText = _data.filterText;
-		if(!(_data.noAutoSelect || filterText == "_")) {
+		if(!(_data.noAutoSelect || filterText == "_")) { //noAutoSelect when lambda argument
+
 			//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
-			//if(Empty(filterText)) {
+			//if(filterText.IsNE()) {
 			//	_popupList.SelectFirstVisible();
 			//	return;
 			//}
@@ -647,8 +612,8 @@ class CiCompletion
 				//APerf.Next();
 				var fi = _data.completionService.FilterItems(_data.document, visible, filterText);
 				//APerf.Next();
-				//Print(fi);
-				//Print(visible.Length, fi.Length);
+				//AOutput.Write(fi);
+				//AOutput.Write(visible.Length, fi.Length);
 				if(!fi.IsDefaultOrEmpty) if(fi.Length < visible.Length || filterText.Length > 0 || visible.Length == 1) ci = _data.Map[fi[0]];
 			}
 			//APerf.NW('b');
@@ -677,7 +642,7 @@ class CiCompletion
 		if(item.IsRegex) { //can complete only on click or Tab
 			if(ch != default || !(key == default || key == Keys.Tab)) return CiComplResult.None;
 		}
-		if(ch == ' ') ch = default;
+		bool isSpace; if(isSpace = ch == ' ') ch = default;
 
 		var z = doc.Z;
 		var ci = item.ci;
@@ -687,8 +652,8 @@ class CiCompletion
 		var s = change.TextChange.NewText;
 		var span = change.TextChange.Span;
 		int i = span.Start, len = span.Length + (doc.Len16 - _data.codeLength);
-		//Print($"{change.NewPosition.HasValue}, cp={z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
-		//Print($"'{s}'");
+		//AOutput.Write($"{change.NewPosition.HasValue}, cp={z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
+		//AOutput.Write($"'{s}'");
 		bool isComplex = change.NewPosition.HasValue;
 		if(isComplex) { //xml doc, override, regex
 			if(ch != default) return CiComplResult.None;
@@ -697,6 +662,7 @@ class CiCompletion
 			switch(APath.GetExtension(ci.ProviderName)) {
 			case ".OverrideCompletionProvider":
 				newPos = -1; //difficult to calculate and not useful
+
 				//Replace 4 spaces with tab. Make { in same line.
 				s = s.Replace("    ", "\t").RegexReplace(@"\R\t*\{", " {", 1);
 				//Make correct indentation. 
@@ -705,7 +671,7 @@ class CiCompletion
 				if(indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
 				break;
 			case ".XmlDocCommentCompletionProvider" when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
-				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && Empty(s1))) newPos++;
+				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.IsNE())) newPos++;
 				s += "></" + tag + ">";
 				break;
 			}
@@ -721,108 +687,120 @@ class CiCompletion
 		int positionBack = 0, bracesFrom = 0, bracesLen = 0;
 		bool isEnter = key == Keys.Enter;
 		//ci.DebugPrint();
-		if(ch == default && s.FindAny("({[<") < 0) {
-			string s2 = null;
-			switch(item.kind) {
-			case CiItemKind.Method:
-			case CiItemKind.ExtensionMethod:
-				ch = '(';
-				break;
-			case CiItemKind.Keyword:
-				string name = item.DisplayText;
-				switch(name) {
-				case "nameof":
-				case "sizeof":
-				case "typeof":
+		if(s.FindAny("({[<") < 0) {
+			if(ch == default) { //completed with Enter, Tab, Space or click
+				string s2 = null;
+				switch(item.kind) {
+				case CiItemKind.Method:
+				case CiItemKind.ExtensionMethod:
 					ch = '(';
 					break;
-				case "for":
-				case "foreach":
-				case "while":
-				case "lock":
-				case "catch":
-				case "if" when !_IsDirective():
-				case "fixed" when _IsInFunction(): //else probably a fixed array field
-				case "using" when isEnter && _IsInFunction(): //else directive or without ()
-				case "when" when _IsInAncestorNode(i, n => (n is CatchClauseSyntax, n is SwitchSectionSyntax)): //catch(...) when
-					ch = '(';
-					s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
-					break;
-				case "do":
-				case "try":
-				case "finally":
-				case "get":
-				case "set":
-				case "add":
-				case "remove":
-				case "unsafe" when isEnter:
-				case "else" when !_IsDirective():
-					ch = '{';
-					break;
-				case "checked":
-				case "unchecked":
-					ch = isEnter ? '{' : '(';
-					break;
-				case "switch":
-					//is it switch statement or switch expression? Difficult to detect. Detect some common cases.
-					if(i > 0 && CodeInfo.GetContextWithoutDocument(out var cd, i)) {
-						if(cd.code[i - 1] == ' ' && cd.GetDocument()) {
-							var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
-							//Print(node.Kind(), i, node.Span, node);
-							if(node.SpanStart < i) switch(node) { case ExpressionSyntax _: case BaseArgumentListSyntax _: ch = '{'; break; } //expression
+				case CiItemKind.Keyword:
+					string name = item.DisplayText;
+					switch(name) {
+					case "nameof":
+					case "sizeof":
+					case "typeof":
+						ch = '(';
+						break;
+					case "for":
+					case "foreach":
+					case "while":
+					case "lock":
+					case "catch":
+					case "if" when !_IsDirective():
+					case "fixed" when _IsInFunction(): //else probably a fixed array field
+					case "using" when isEnter && _IsInFunction(): //else directive or without ()
+					case "when" when _IsInAncestorNode(i, n => (n is CatchClauseSyntax, n is SwitchSectionSyntax)): //catch(...) when
+						ch = '(';
+						s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
+						break;
+					case "do":
+					case "try":
+					case "finally":
+					case "get":
+					case "set":
+					case "add":
+					case "remove":
+					case "unsafe" when isEnter:
+					case "else" when !_IsDirective():
+						ch = '{';
+						break;
+					case "checked":
+					case "unchecked":
+						ch = isEnter ? '{' : '(';
+						break;
+					case "switch":
+						//is it switch statement or switch expression? Difficult to detect. Detect some common cases.
+						if(i > 0 && CodeInfo.GetContextWithoutDocument(out var cd, i)) {
+							if(cd.code[i - 1] == ' ' && cd.GetDocument()) {
+								var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
+								//AOutput.Write(node.Kind(), i, node.Span, node);
+								if(node.SpanStart < i) switch(node) { case ExpressionSyntax _: case BaseArgumentListSyntax _: ch = '{'; break; } //expression
+							}
+							if(ch == default) goto case "for";
 						}
-						if(ch == default) goto case "for";
+						break;
+					default:
+						if(0 != name.Eq(false, s_kwType)) _NewExpression();
+						break;
 					}
 					break;
-				default:
-					if(0 != name.Eq(false, s_kwType)) _NewExpression();
+				case CiItemKind.Class:
+				case CiItemKind.Structure:
+					if(ci.DisplayTextSuffix == "<>") ch = '<';
+					else _NewExpression();
 					break;
 				}
-				break;
-			case CiItemKind.Class:
-			case CiItemKind.Structure:
-				if(ci.DisplayTextSuffix == "<>") ch = '<';
-				else _NewExpression();
-				break;
-			}
 
-			bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
+				bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
 
-			bool _IsDirective() => doc.Text.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
+				bool _IsDirective() => doc.Text.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
 
-			//If 'new Type', adds '()'.
-			//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
-			void _NewExpression()
-			{
-				if(!CodeInfo.GetDocumentAndFindNode(out _, out var node, i)) return;
-				var p1 = node.Parent; if(p1 is QualifiedNameSyntax) p1 = p1.Parent;
-				if(p1 is ObjectCreationExpressionSyntax) {
-					ch = '(';
-					bracesOperation = CiAutocorrect.EBraces.NewExpression;
+				//If 'new Type', adds '()'.
+				//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
+				void _NewExpression()
+				{
+					if(!CodeInfo.GetDocumentAndFindNode(out _, out var node, i)) return;
+					var p1 = node.Parent; if(p1 is QualifiedNameSyntax) p1 = p1.Parent;
+					if(p1 is ObjectCreationExpressionSyntax) {
+						ch = '(';
+						bracesOperation = CiAutocorrect.EBraces.NewExpression;
+					}
 				}
-			}
 
-			if(isComplex = ch != default) {
-				if(ch == '{') {
-					if(isEnter) {
-						int indent = z.LineIndentationFromPos(true, i);
-						var b = new StringBuilder(" {\r\n");
-						b.Append('\t', indent + 1);
-						b.Append("\r\n").Append('\t', indent).Append('}');
-						s2 = b.ToString();
-						positionBack = indent + 3;
+				if(isComplex = ch != default) {
+					if(ch == '{') {
+						if(isEnter) {
+							int indent = z.LineIndentationFromPos(true, i);
+							var b = new StringBuilder(" {\r\n");
+							b.Append('\t', indent + 1);
+							b.Append("\r\n").Append('\t', indent).Append('}');
+							s2 = b.ToString();
+							positionBack = indent + 3;
+						} else {
+							s2 = " {  }";
+							positionBack = 2;
+						}
+						bracesFrom = i + s.Length + 2;
+						bracesLen = s2.Length - 3;
+					} else if((isSpace || !Program.Settings.ci_complParenSpace) && !_data.noAutoSelect && !doc.Text.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
+						s2 ??= ch == '(' ? "()" : "<>";
+						positionBack = 1;
+						bracesFrom = i + s.Length + s2.Length - 1;
 					} else {
-						s2 = " {  }";
-						positionBack = 2;
+						ch = default;
+						s2 = null;
 					}
-					bracesFrom = i + s.Length + 2;
-					bracesLen = s2.Length - 3;
-				} else {
-					s2 ??= ch == '(' ? "()" : "<>";
-					positionBack = 1;
-					bracesFrom = i + s.Length + s2.Length - 1;
+					s += s2;
 				}
-				s += s2;
+			} else if(!(ch == '(' || ch == '<' || _data.noAutoSelect)) { //completed with ';' or ',' or '.' or '?' or '-' or any other non-identifier char space, Tab, Enter
+				switch(item.kind) {
+				case CiItemKind.Method:
+				case CiItemKind.ExtensionMethod:
+					s += "()";
+					break;
+				}
 			}
 		}
 
@@ -917,7 +895,7 @@ class CiComplItem
 		int i = s.LastIndexOf('.') + 1;
 		Debug.Assert(i > 0);
 		s = s.Substring(i);
-		//Print(s);
+		//AOutput.Write(s);
 		return s switch
 		{
 			"SymbolCompletionProvider" => CiComplProvider.Symbol,
@@ -937,7 +915,7 @@ class CiComplItem
 	}
 }
 
-public enum CiComplProvider
+enum CiComplProvider
 {
 	Other,
 	Symbol,
@@ -947,7 +925,7 @@ public enum CiComplProvider
 	//Override,
 }
 
-public enum CiComplResult
+enum CiComplResult
 {
 	/// <summary>
 	/// No completion.
@@ -965,3 +943,37 @@ public enum CiComplResult
 	/// </summary>
 	Complex,
 }
+
+#if PREMATURE_OPTIMIZATION
+//Can be used to prevent GC while getting completions. Reduces the time eg from 70 to 60 ms.
+//It seems Roslyn uses weak references for expensive objects, eg syntax trees and semantic model.
+//Usually GC starts in the middle, and Roslyn has to rebuild them anyway.
+//But Roslyn is slow in other places too, eg syntax highlighting. Need to test everything. Maybe disable GC on every added char for eg 500 ms.
+struct NoGcRegion : IDisposable
+{
+	bool _restore;
+
+	public NoGcRegion(long memSize)
+	{
+		_restore = false;
+		if(AVersion.Is32BitProcess) return;
+		ADebug.MemorySetAnchor_();
+		//AOutput.Write(System.Runtime.GCSettings.LatencyMode);
+		try { _restore = GC.TryStartNoGCRegion(memSize); }
+		catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
+	}
+
+	public void Dispose()
+	{
+		if(_restore) {
+			_restore = false;
+			//AOutput.Write(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion);
+			//if(System.Runtime.GCSettings.LatencyMode == System.Runtime.GCLatencyMode.NoGCRegion) GC.EndNoGCRegion();
+			try { GC.EndNoGCRegion(); } //note: need to call even if not in nogc region (then exception); else TryStartNoGCRegion will throw exception.
+			catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
+			ADebug.MemoryPrint_();
+			ThreadPool.QueueUserWorkItem(_ => GC.Collect());
+		}
+	}
+}
+#endif

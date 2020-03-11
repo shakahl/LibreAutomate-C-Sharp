@@ -10,11 +10,8 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
-using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -26,6 +23,21 @@ namespace Au.Types
 	}
 
 	/// <summary>
+	/// Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
+	/// Usually returned by functions. Examples: <see cref="AOpt.Temp.Mouse"/>, <see cref="AMenu.Submenu"/>.
+	/// </summary>
+	public struct UsingAction : IDisposable
+	{
+		readonly Action _a;
+
+		/// <summary>Sets action to be invoked when disposing this variable.</summary>
+		public UsingAction(Action a) => _a = a;
+
+		/// <summary>Invokes the action.</summary>
+		public void Dispose() => _a();
+	}
+
+	/// <summary>
 	/// Used with <see cref="ParamStringAttribute"/> to specify string parameter format.
 	/// </summary>
 	public enum PSFormat
@@ -34,7 +46,7 @@ namespace Au.Types
 		None,
 
 		/// <summary>
-		/// Keys. See <see cref="AKeys.Key(object[])"/>.
+		/// Keys. See <see cref="AKeys.Key(KKeysEtc[])"/>.
 		/// </summary>
 		AKeys,
 

@@ -36,7 +36,9 @@
 			this._versionCheck = new Au.Controls.AuCheckBox();
 			this._runAtStartup = new Au.Controls.AuCheckBox();
 			this._tabFiles = new System.Windows.Forms.TabPage();
-			this._tabEditor = new System.Windows.Forms.TabPage();
+			this._usings = new Au.Tools.CodeBox();
+			this.auLabel1 = new Au.Controls.AuLabel();
+			this._tabFont = new System.Windows.Forms.TabPage();
 			this._pColor = new System.Windows.Forms.Panel();
 			this.label4 = new Au.Controls.AuLabel();
 			this.label5 = new Au.Controls.AuLabel();
@@ -59,14 +61,16 @@
 			this.label3 = new Au.Controls.AuLabel();
 			this._cbFont = new System.Windows.Forms.ComboBox();
 			this._sciStyles = new Au.Controls.AuScintilla();
-			this._tabHotkeys = new System.Windows.Forms.TabPage();
-			this._tabSounds = new System.Windows.Forms.TabPage();
+			this._tabCodeInfo = new System.Windows.Forms.TabPage();
+			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this._cComplParenSpace = new Au.Controls.AuCheckBox();
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bApply = new Au.Controls.AuButton();
 			this.tabControl1.SuspendLayout();
 			this._tabGeneral.SuspendLayout();
-			this._tabEditor.SuspendLayout();
+			this._tabFiles.SuspendLayout();
+			this._tabFont.SuspendLayout();
 			this._pColor.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nSat)).BeginInit();
 			((System.ComponentModel.ISupportInitialize)(this._nHue)).BeginInit();
@@ -76,6 +80,8 @@
 			((System.ComponentModel.ISupportInitialize)(this._nGreen)).BeginInit();
 			this._pFont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nFontSize)).BeginInit();
+			this._tabCodeInfo.SuspendLayout();
+			this.groupBox1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
 			this.SuspendLayout();
 			// 
@@ -98,9 +104,8 @@
 			// 
 			this.tabControl1.Controls.Add(this._tabGeneral);
 			this.tabControl1.Controls.Add(this._tabFiles);
-			this.tabControl1.Controls.Add(this._tabEditor);
-			this.tabControl1.Controls.Add(this._tabHotkeys);
-			this.tabControl1.Controls.Add(this._tabSounds);
+			this.tabControl1.Controls.Add(this._tabFont);
+			this.tabControl1.Controls.Add(this._tabCodeInfo);
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
@@ -128,7 +133,8 @@
 			this._startupScripts.Location = new System.Drawing.Point(232, 32);
 			this._startupScripts.Multiline = true;
 			this._startupScripts.Name = "_startupScripts";
-			this._startupScripts.Size = new System.Drawing.Size(248, 52);
+			this._startupScripts.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this._startupScripts.Size = new System.Drawing.Size(248, 60);
 			this._startupScripts.TabIndex = 3;
 			this._toolTip.SetToolTip(this._startupScripts, "Script name or path, and delay ms or s.\r\nExample:\r\nscript4.cs, 500 ms\r\n\\folder\\sc" +
         "ript5.cs, 2 s\r\n//disabled, 100 ms");
@@ -182,6 +188,8 @@
 			// 
 			// _tabFiles
 			// 
+			this._tabFiles.Controls.Add(this._usings);
+			this._tabFiles.Controls.Add(this.auLabel1);
 			this._tabFiles.Location = new System.Drawing.Point(4, 24);
 			this._tabFiles.Name = "_tabFiles";
 			this._tabFiles.Size = new System.Drawing.Size(488, 268);
@@ -189,18 +197,37 @@
 			this._tabFiles.Text = "Files";
 			this._tabFiles.UseVisualStyleBackColor = true;
 			// 
-			// _tabEditor
+			// _usings
 			// 
-			this._tabEditor.Controls.Add(this._pColor);
-			this._tabEditor.Controls.Add(this._pFont);
-			this._tabEditor.Controls.Add(this._sciStyles);
-			this._tabEditor.Location = new System.Drawing.Point(4, 24);
-			this._tabEditor.Name = "_tabEditor";
-			this._tabEditor.Padding = new System.Windows.Forms.Padding(3);
-			this._tabEditor.Size = new System.Drawing.Size(488, 268);
-			this._tabEditor.TabIndex = 1;
-			this._tabEditor.Text = "Editor";
-			this._tabEditor.UseVisualStyleBackColor = true;
+			this._usings.AccessibleName = "_usings";
+			this._usings.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
+			this._usings.Location = new System.Drawing.Point(8, 28);
+			this._usings.Name = "_usings";
+			this._usings.Size = new System.Drawing.Size(472, 64);
+			this._usings.TabIndex = 1;
+			this._usings.ZAcceptsReturn = true;
+			// 
+			// auLabel1
+			// 
+			this.auLabel1.AutoSize = true;
+			this.auLabel1.Location = new System.Drawing.Point(8, 8);
+			this.auLabel1.Name = "auLabel1";
+			this.auLabel1.Size = new System.Drawing.Size(300, 17);
+			this.auLabel1.TabIndex = 0;
+			this.auLabel1.Text = "In new files add this code below default using directives";
+			// 
+			// _tabFont
+			// 
+			this._tabFont.Controls.Add(this._pColor);
+			this._tabFont.Controls.Add(this._pFont);
+			this._tabFont.Controls.Add(this._sciStyles);
+			this._tabFont.Location = new System.Drawing.Point(4, 24);
+			this._tabFont.Name = "_tabFont";
+			this._tabFont.Padding = new System.Windows.Forms.Padding(3);
+			this._tabFont.Size = new System.Drawing.Size(488, 268);
+			this._tabFont.TabIndex = 1;
+			this._tabFont.Text = "Font";
+			this._tabFont.UseVisualStyleBackColor = true;
 			// 
 			// _pColor
 			// 
@@ -469,6 +496,8 @@
 			// 
 			// _sciStyles
 			// 
+			this._sciStyles.AccessibleName = "_sciStyles";
+			this._sciStyles.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._sciStyles.Location = new System.Drawing.Point(8, 8);
 			this._sciStyles.Name = "_sciStyles";
 			this._sciStyles.Size = new System.Drawing.Size(160, 252);
@@ -476,23 +505,35 @@
 			this._sciStyles.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this._sciStyles.ZInitReadOnlyAlways = true;
 			// 
-			// _tabHotkeys
+			// _tabCodeInfo
 			// 
-			this._tabHotkeys.Location = new System.Drawing.Point(4, 24);
-			this._tabHotkeys.Name = "_tabHotkeys";
-			this._tabHotkeys.Size = new System.Drawing.Size(488, 268);
-			this._tabHotkeys.TabIndex = 3;
-			this._tabHotkeys.Text = "Hotkeys";
-			this._tabHotkeys.UseVisualStyleBackColor = true;
+			this._tabCodeInfo.Controls.Add(this.groupBox1);
+			this._tabCodeInfo.Location = new System.Drawing.Point(4, 24);
+			this._tabCodeInfo.Name = "_tabCodeInfo";
+			this._tabCodeInfo.Size = new System.Drawing.Size(488, 268);
+			this._tabCodeInfo.TabIndex = 5;
+			this._tabCodeInfo.Text = "Code info";
+			this._tabCodeInfo.UseVisualStyleBackColor = true;
 			// 
-			// _tabSounds
+			// groupBox1
 			// 
-			this._tabSounds.Location = new System.Drawing.Point(4, 24);
-			this._tabSounds.Name = "_tabSounds";
-			this._tabSounds.Size = new System.Drawing.Size(488, 268);
-			this._tabSounds.TabIndex = 4;
-			this._tabSounds.Text = "Sounds";
-			this._tabSounds.UseVisualStyleBackColor = true;
+			this.groupBox1.Controls.Add(this._cComplParenSpace);
+			this.groupBox1.Location = new System.Drawing.Point(8, 12);
+			this.groupBox1.Name = "groupBox1";
+			this.groupBox1.Size = new System.Drawing.Size(472, 108);
+			this.groupBox1.TabIndex = 0;
+			this.groupBox1.TabStop = false;
+			this.groupBox1.Text = "Completion lists";
+			// 
+			// _cComplParenSpace
+			// 
+			this._cComplParenSpace.AutoSize = true;
+			this._cComplParenSpace.Location = new System.Drawing.Point(8, 24);
+			this._cComplParenSpace.Name = "_cComplParenSpace";
+			this._cComplParenSpace.Size = new System.Drawing.Size(188, 20);
+			this._cComplParenSpace.TabIndex = 1;
+			this._cComplParenSpace.Text = "Only spacebar adds () and <>";
+			this._cComplParenSpace.UseVisualStyleBackColor = false;
 			// 
 			// _errorProvider
 			// 
@@ -533,7 +574,9 @@
 			this.tabControl1.ResumeLayout(false);
 			this._tabGeneral.ResumeLayout(false);
 			this._tabGeneral.PerformLayout();
-			this._tabEditor.ResumeLayout(false);
+			this._tabFiles.ResumeLayout(false);
+			this._tabFiles.PerformLayout();
+			this._tabFont.ResumeLayout(false);
 			this._pColor.ResumeLayout(false);
 			this._pColor.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nSat)).EndInit();
@@ -545,6 +588,9 @@
 			this._pFont.ResumeLayout(false);
 			this._pFont.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nFontSize)).EndInit();
+			this._tabCodeInfo.ResumeLayout(false);
+			this.groupBox1.ResumeLayout(false);
+			this.groupBox1.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
 			this.ResumeLayout(false);
 
@@ -556,10 +602,8 @@
 	private Au.Controls.AuButtonCancel _bCancel;
 	private System.Windows.Forms.TabControl tabControl1;
 	private System.Windows.Forms.TabPage _tabGeneral;
-	private System.Windows.Forms.TabPage _tabEditor;
+	private System.Windows.Forms.TabPage _tabFont;
 	private System.Windows.Forms.TabPage _tabFiles;
-	private System.Windows.Forms.TabPage _tabHotkeys;
-	private System.Windows.Forms.TabPage _tabSounds;
 	private Au.Controls.AuCheckBox _versionCheck;
 	private Au.Controls.AuCheckBox _runAtStartup;
 	private System.Windows.Forms.TextBox _startupScripts;
@@ -590,4 +634,9 @@
 	private System.Windows.Forms.TextBox _eColor;
 	private System.Windows.Forms.Panel _pColor;
 	private System.Windows.Forms.Panel _pFont;
+	private System.Windows.Forms.TabPage _tabCodeInfo;
+	private System.Windows.Forms.GroupBox groupBox1;
+	private Au.Controls.AuCheckBox _cComplParenSpace;
+	private Au.Tools.CodeBox _usings;
+	private Au.Controls.AuLabel auLabel1;
 }

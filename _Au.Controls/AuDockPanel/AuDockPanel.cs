@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -19,7 +18,6 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -44,7 +42,7 @@ namespace Au.Controls
 				_xmlFile = null;
 			}
 
-			//Print(disposing, IsHandleCreated);
+			//AOutput.Write(disposing, IsHandleCreated);
 			base.Dispose(disposing);
 			_paintTools?.Dispose(); _paintTools = null;
 			_toolTip?.Dispose(); _toolTip = null;
@@ -135,14 +133,14 @@ namespace Au.Controls
 					} else {
 						//probably in this version there are less panels, most likely when downgraded. Or the file is corrupt.
 						if(fileLoaded && xmlVersion != _asmVersion) outInfo = "Info: this application version resets the panel/toolbar layout, sorry.";
-						else PrintWarning(sErr, -1);
+						else AWarning.Write(sErr, -1);
 					}
 					_aSplit.Clear(); _aTab.Clear(); _aPanel.Clear();
 				}
 			}
 
 			//if(usesDefaultXML || xmlVersion == _asmVersion) return;
-			if(outInfo != null) Print(outInfo);
+			if(outInfo != null) AOutput.Write(outInfo);
 		}
 
 		void _GetPanelXmlFromDefaultFile(string defFile)
@@ -157,7 +155,7 @@ namespace Au.Controls
 					SavedVisibleDockState = _DockState.Floating
 				};
 				c.Visible = false;
-				Print($"Info: new {(gp.HasToolbar ? "toolbar" : "panel")} '{gp.Text}' added in this aplication version. Currently it is hidden.");
+				AOutput.Write($"Info: new {(gp.HasToolbar ? "toolbar" : "panel")} '{gp.Text}' added in this aplication version. Currently it is hidden.");
 			}
 		}
 
@@ -186,11 +184,11 @@ namespace Au.Controls
 			}
 			catch(Exception ex) {
 #if DEBUG
-				AOutput.QM2.Write(ex); //cannot Print or show dialog in ctor
+				AOutput.QM2.Write(ex); //cannot Write or show dialog in ctor
 #else
 				_ = ex;
 #endif
-				//Print(ex);
+				//AOutput.Write(ex);
 				//these don't work, maybe because now is closing app. Never mind, unlikely to fail, and not very important.
 				//ADialog.ShowError("Failed to save panel/toolbar layout", _xmlFile, DFlags.Wider, expandedText: e.ToString());
 				//MessageBox.Show("aaaa");
@@ -305,7 +303,7 @@ namespace Au.Controls
 					}
 					//tooltip
 					var tt = ht.gp?.ToolTipText;
-					if(!Empty(tt)) {
+					if(!tt.IsNE()) {
 						isTooltip = true;
 						if(_toolTipTabButton != ht.gp) {
 							int delay = _toolTipTabButton == null ? _toolTip.InitialDelay : _toolTip.ReshowDelay;

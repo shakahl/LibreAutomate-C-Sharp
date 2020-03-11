@@ -38,10 +38,10 @@ var w = AWnd.Find("*- Mozilla Firefox", "MozillaWindowClass");
 w.Activate();
 AMouse.Click(w, 331, 115);
 2.s();
-Key("Left", "text", "Enter");
+AKeys.Key("Left", "text", "Enter");
 for(int i=0; i<5; i++) {
-,Print(i);
-,Print(i*i);
+,AOutput.Write(i);
+,AOutput.Write(i*i);
 }
 ```
 

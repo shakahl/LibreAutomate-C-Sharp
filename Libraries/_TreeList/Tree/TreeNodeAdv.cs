@@ -4,7 +4,6 @@ using System.Collections.ObjectModel;
 using System.Diagnostics;
 using System.Runtime.Serialization;
 using System.Security.Permissions;
-using static Au.AStatic;
 
 namespace Aga.Controls.Tree
 {
@@ -269,7 +268,7 @@ namespace Aga.Controls.Tree
 
 		internal Collection<TreeNodeAdv> GetOrCreateNodes()
 		{
-			//if(_nodes == s_emptyColl) Print("GetOrCreateNodes");
+			//if(_nodes == s_emptyColl) AOutput.Write("GetOrCreateNodes");
 			if(_nodes == s_emptyNodes) _nodes = new NodeCollection(this);
 			return _nodes;
 		}

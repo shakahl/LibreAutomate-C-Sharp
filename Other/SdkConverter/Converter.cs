@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -13,7 +12,6 @@ using System.Runtime.CompilerServices;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -111,10 +109,10 @@ namespace SdkConverter
 
 					//_ConvertTypedefAndTag();
 
-					//Print("#define CONST:");
-					//Print(_defineConst);
-					//Print("#define other:");
-					//Print(_defineOther);
+					//AOutput.Write("#define CONST:");
+					//AOutput.Write(_defineConst);
+					//AOutput.Write("#define other:");
+					//AOutput.Write(_defineOther);
 					//OutList(_defineConst.Count, _defineOther.Count);
 					//27890, 1061
 					//27659, 998
@@ -123,7 +121,7 @@ namespace SdkConverter
 					_FunctionsFinally();
 
 					stf = _PostProcessTypesFunctionsInterfaces();
-					//Print(stf);
+					//AOutput.Write(stf);
 				}
 
 				string sh = @"// Windows API declarations for C#.
@@ -172,12 +170,12 @@ internal static unsafe class API
 			}
 			//#if !TEST_SMALL
 			catch(ConverterException e) {
-				Print(e);
+				AOutput.Write(e);
 				AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 				throw;
 			}
 			catch(Exception e) {
-				Print(e);
+				AOutput.Write(e);
 				AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {" "}||{_cppFile}||{_Pos(_i)}");
 				throw;
 			}
@@ -186,7 +184,7 @@ internal static unsafe class API
 				Marshal.FreeHGlobal((IntPtr)_keywordMemory);
 			}
 
-			Print($"DONE {(is32bit ? 32 : 64)}-bit");
+			AOutput.Write($"DONE {(is32bit ? 32 : 64)}-bit");
 		}
 
 		char* _keywordMemory;
@@ -291,7 +289,7 @@ internal static unsafe class API
 		void _ConvertAll(int nestLevel)
 		{
 			for(; _i < _nTokUntilDefUndef; _i++) {
-				//Print(_TokToString(_i));
+				//AOutput.Write(_TokToString(_i));
 				char* s = T(_i); char c = *s;
 				if(_IsCharIdentStart(c)) {
 					_Statement();
@@ -301,7 +299,7 @@ internal static unsafe class API
 #if TEST_SMALL
 					if(c == '/' && s[1] == '/') return;
 #endif
-					//Print(_i);
+					//AOutput.Write(_i);
 					_Err(_i, $"unexpected: {_TokToString(_i)}");
 				}
 			}
@@ -316,7 +314,7 @@ internal static unsafe class API
 #if TEST_SMALL
 					if(*s == '/' && s[1] == '/') return;
 #endif
-					//Print(_i);
+					//AOutput.Write(_i);
 					_Err(_i, $"unexpected: {_TokToString(_i)}");
 				}
 			}
@@ -368,7 +366,7 @@ internal static unsafe class API
 			}
 			//}
 			//catch(ConverterException e) {
-			//	//Print(e);
+			//	//AOutput.Write(e);
 			//	AWnd.FindFast(null, "QM_Editor").SendS(Api.WM_SETTEXT, 1, $"M \"api_converter_error\" A(||) {e.Message}||{_cppFile}||{e.Offset}");
 			//	if(ADialog.Show("Error. Skip statement and continue?", e.Message, "Yes|No").ButtonName != "Yes") throw e as Exception;
 			//	_SkipStatement();
@@ -396,7 +394,7 @@ internal static unsafe class API
 #if DEBUG
 			if(debugShow) {
 				string s = new string(T(i0), 0, (int)(T(_i + 1) - T(i0)));
-				Print($"<><c 0xff>skipped:</c>\r\n{s}");
+				AOutput.Write($"<><c 0xff>skipped:</c>\r\n{s}");
 			}
 #endif
 		}
@@ -435,7 +433,7 @@ internal static unsafe class API
 
 			if(pushPop > 0) _packStack.Push(_pack); else if(pushPop < 0 && _packStack.Count > 0) _pack = _packStack.Pop();
 			if(pack != 0) _pack = pack;
-			//Print($"pushPop={pushPop}, pack={pack},    _pack={_pack}, _packStack.Count={_packStack.Count}");
+			//AOutput.Write($"pushPop={pushPop}, pack={pack},    _pack={_pack}, _packStack.Count={_packStack.Count}");
 		}
 
 		bool _ExternConst(bool isJustConst = false)
@@ -458,15 +456,15 @@ internal static unsafe class API
 
 				string name = _TokToString(_i), data;
 				if(!_guids.TryGetValue(name, out data)) {
-					//Print(name);
+					//AOutput.Write(name);
 					return false;
 				}
 
 				if(name.Ends("A") && char.IsLower(name[name.Length - 2])) {
-					//Print(name);
+					//AOutput.Write(name);
 					return false;
 				} else if(name.Ends("W") && char.IsLower(name[name.Length - 2])) {
-					//Print(name);
+					//AOutput.Write(name);
 					name = name.Remove(name.Length - 1);
 				}
 
@@ -494,7 +492,7 @@ internal static unsafe class API
 
 				__sbDef.Clear();
 				__sbDef.AppendFormat("internal const {0} {1} = {2};", ct.csTypename, name, r.valueS);
-				//Print(__sbDef);
+				//AOutput.Write(__sbDef);
 				_cppConst.Add(__sbDef.ToString());
 			}
 			return true;
@@ -516,7 +514,7 @@ internal static unsafe class API
 			//get GUIDs extracted from SDK lib files
 			_guids = new Dictionary<string, string>();
 			foreach(var s in File.ReadAllLines(@"Q:\app\Au\Other\Api\GuidMap.txt")) {
-				//Print(s);
+				//AOutput.Write(s);
 				int i = s.IndexOf(' ');
 				string sn = s.Substring(0, i), sd = s.Substring(i + 1), sOld;
 				if(_guids.TryGetValue(sn, out sOld)) {
@@ -547,7 +545,7 @@ internal static unsafe class API
 					if(!_TokIsChar(i + 5, ':')) continue; //class or IUnknown
 					if(!_TokIs(i - 1, "struct") && !_TokIs(i - 1, "__interface")) continue; //unexpected
 					i += 4;
-					//Print(_tok[i]);
+					//AOutput.Write(_tok[i]);
 					_interfaces.Add(_TokToString(i));
 				}
 			}

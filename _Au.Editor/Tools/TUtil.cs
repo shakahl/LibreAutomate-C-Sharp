@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -53,7 +50,7 @@ namespace Au.Tools
 		/// <param name="noComma">Don't append ', '. Use for the first parameter. If false, does not append only if b.Length is less than 2.</param>
 		public static StringBuilder AppendOtherArg(this StringBuilder t, string s, string param = null, bool noComma = false)
 		{
-			Debug.Assert(!Empty(s));
+			Debug.Assert(!s.IsNE());
 			_AppendArgPrefix(t, param, noComma);
 			t.Append(s);
 			return t;
@@ -80,7 +77,7 @@ namespace Au.Tools
 			bool isFlags = false;
 			string[] flagNames = flagsEnum.GetEnumNames();
 			for(int r = 0, n = grid.RowsCount; r < n; r++) {
-				var key = grid.ZGetRowKey(r); if(Empty(key)) continue;
+				var key = grid.ZGetRowKey(r); if(key.IsNE()) continue;
 				if(prefix != null) { if(key.Starts(prefix)) key = key.Substring(prefix.Length); else continue; }
 				if(!flagNames.Contains(key)) continue;
 				if(!grid.ZIsChecked(r)) continue;
@@ -100,7 +97,7 @@ namespace Au.Tools
 		/// </summary>
 		public static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow)
 		{
-			if(Empty(waitTime)) waitTime = "0"; else if(!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
+			if(waitTime.IsNE()) waitTime = "0"; else if(!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
 			t.Append(waitTime);
 			return t;
 		}
@@ -176,7 +173,7 @@ namespace Au.Tools
 		/// <param name="escapeWildex">If didn't replace, call <see cref="EscapeWildex"/>.</param>
 		public static string StripWndClassName(string s, bool escapeWildex)
 		{
-			if(!Empty(s)) {
+			if(!s.IsNE()) {
 				int n = s.RegexReplace(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
 				if(n == 0) n = s.RegexReplace(@"^(HwndWrapper\[.+?;).+", "$1*", out s);
 				if(escapeWildex && n == 0) s = EscapeWildex(s);
@@ -192,7 +189,7 @@ namespace Au.Tools
 		{
 			var d = Panels.Editor.ZActiveDoc;
 			if(d == null || d.Z.IsReadonly) {
-				Print(s);
+				AOutput.Write(s);
 			} else {
 				var z = d.Z;
 				d.Focus();
@@ -431,7 +428,7 @@ namespace Au.Tools
 							//show rect of UI object from mouse
 							AWnd w = AWnd.FromMouse(WXYFlags.NeedWindow);
 							RECT? r = default;
-							if(!(w.Is0 || w == wForm || w.Owner == wForm)) {
+							if(!(w.Is0 || w == wForm || w.OwnerWindow == wForm)) {
 								r = _cbGetRect();
 							}
 							if(r.HasValue) {
@@ -514,11 +511,11 @@ namespace Au.Tools
 		public static TestFindObjectResults RunTestFindObject(
 			string code, string wndVar, AWnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false)
 		{
-			if(Empty(code)) return default;
+			if(code.IsNE()) return default;
 			Form form = lSpeed.FindForm();
 			lSpeed.Text = "";
 
-			//Print(code);
+			//AOutput.Write(code);
 			//APerf.First();
 
 			//FUTURE: #line
@@ -533,7 +530,7 @@ namespace Au.Tools
 			b.AppendLine(lines[lastLine]);
 			b.AppendLine($"_p_.Next(); return new object[] {{ _p_.ToArray(), _a_, {wndVar} }};");
 			b.AppendLine("\r\n}");
-			code = b.ToString(); //Print(code);
+			code = b.ToString(); //AOutput.Write(code);
 
 			(long[] speed, object obj, AWnd wnd) r = default;
 			bool ok = false;
@@ -565,7 +562,7 @@ namespace Au.Tools
 			if(!ok) return default;
 
 			//APerf.NW();
-			//Print(r);
+			//AOutput.Write(r);
 
 			double _SpeedMcsToMs(long tn) => Math.Round(tn / 1000d, tn < 1000 ? 2 : (tn < 10000 ? 1 : 0));
 			double t0 = _SpeedMcsToMs(r.speed[0]), t1 = _SpeedMcsToMs(r.speed[1]); //times of AWnd.Find and Object.Find

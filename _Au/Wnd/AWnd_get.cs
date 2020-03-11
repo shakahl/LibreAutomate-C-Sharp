@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -191,7 +189,7 @@ namespace Au
 			/// A window that has an owner window is always on top of it.
 			/// Controls don't have an owner window.
 			/// Supports <see cref="ALastError"/>.
-			/// This function is the same as <see cref="AWnd.Owner"/>, which also allows to change owner.
+			/// This function is the same as <see cref="AWnd.OwnerWindow"/>, which also allows to change owner.
 			/// </remarks>
 			public AWnd Owner => Api.GetWindow(_w, Api.GW_OWNER);
 
@@ -286,7 +284,7 @@ namespace Au
 				var R = Api.GetLastActivePopup(wRoot);
 				if(!includeOwners) {
 					if(R != _w && wRoot != _w && !R.Is0) {
-						for(var t = _w; !t.Is0; t = t.Owner) if(t == R) return _w;
+						for(var t = _w; !t.Is0; t = t.OwnerWindow) if(t == R) return _w;
 					}
 				}
 				return R;
@@ -309,7 +307,7 @@ namespace Au
 					//never mind speed, better make it simple
 				} else { //fast
 					for(AWnd r = _w, t; ; r = t) {
-						t = r.Owner;
+						t = r.OwnerWindow;
 						if(t.Is0) return r.IsAlive ? r : default;
 					}
 				}
@@ -385,7 +383,7 @@ namespace Au
 			{
 				AWnd w = Shell;
 				var f = new ChildFinder(cn: "SysListView32");
-				if(!f.Find(w)) w = AWnd.Find(null, "WorkerW", WF3.Thread(w.ThreadId), also: t => f.Find(t));
+				if(!f.Find(w)) w = AWnd.Find(null, "WorkerW", WOwner.Thread(w.ThreadId), also: t => f.Find(t));
 				lvControl = f.Result;
 				return w;
 
@@ -419,7 +417,7 @@ namespace Au
 				var exStyle = w.ExStyle;
 				if((exStyle & WS2.APPWINDOW) == 0) {
 					if((exStyle & (WS2.TOOLWINDOW | WS2.NOACTIVATE)) != 0) return false;
-					if(!w.Owner.Is0) return false;
+					if(!w.OwnerWindow.Is0) return false;
 				}
 
 				if(skipMinimized && w.IsMinimized) return false;
@@ -469,7 +467,7 @@ namespace Au
 				//	var x = new CUIAutomation();
 				//	var cond = x.CreatePropertyCondition(30003, 0xC370); //UIA_ControlTypePropertyId, UIA_WindowControlTypeId
 				//	var a = x.GetRootElement().FindAll(TreeScope.TreeScope_Children, cond);
-				//	for(int i = 0; i < a.Length; i++) Print((AWnd)a.GetElement(i).CurrentNativeWindowHandle);
+				//	for(int i = 0; i < a.Length; i++) AOutput.Write((AWnd)a.GetElement(i).CurrentNativeWindowHandle);
 				//Advantages: 1. Maybe can filter unwanted windows more reliably, although I did't notice a difference.
 				//Disadvantages: 1. Skips windows of higher integrity level (UAC). 2. Cannot include cloaked windows, eg those in inactive Win10 virtual desktops. 3. About 1000 times slower, eg 70 ms vs 70 mcs; cold 140 ms.
 			}
@@ -551,7 +549,7 @@ namespace Au
 		/// The 'get' function returns default(AWnd) if this window isn't owned or is invalid. Supports <see cref="ALastError"/>.
 		/// The 'set' function can fail, eg if the owner's process has higher [](xref:uac) integrity level or is a Store app.
 		/// </remarks>
-		public AWnd Owner {
+		public AWnd OwnerWindow {
 			get => Api.GetWindow(this, Api.GW_OWNER);
 			set { SetWindowLong(Native.GWL.HWNDPARENT, (LPARAM)value); }
 		}

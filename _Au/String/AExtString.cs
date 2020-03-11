@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Globalization;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -104,6 +102,18 @@ namespace Au
 		{
 			for(int i = 0; i < strings.Length; i++) if(Eq(t, startIndex, strings[i], ignoreCase)) return i + 1;
 			return 0;
+		}
+
+		/// <summary>
+		/// Returns true if the specified character is at the specified position in this string.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="index">Offset in this string. If invalid, returns false.</param>
+		/// <param name="c">The character.</param>
+		public static bool Eq(this string t, int index, char c)
+		{
+			if((uint)index >= t.Length) return false;
+			return t[index] == c;
 		}
 
 		/// <summary>
@@ -475,10 +485,18 @@ namespace Au
 		public static int Lenn(this string t) => t?.Length ?? 0;
 
 		/// <summary>
-		/// Creates a new read-only span of this string using tuple (int start, int end).
+		/// Returns true if this string is null or empty ("").
 		/// </summary>
-		/// <seealso cref="Segments"/>
-		public static ReadOnlySpan<char> AsSpan(this string t, (int start, int end) se) => t.AsSpan(se.start, se.end - se.start);
+		/// <param name="t">This string.</param>
+		public static bool IsNE(this string t) => t==null ? true : t.Length == 0;
+
+		//rejected. Too simple. Not so often used. Could name AsSpan, then in completion lists it is joined with the .NET extension method, but then in our editor it is the first in the list.
+		///// <summary>
+		///// Creates a new read-only span of this string using tuple (int start, int end).
+		///// Can be used with <see cref="Segments"/>, which returns such tuples in foreach.
+		///// </summary>
+		//public static ReadOnlySpan<char> SegAsSpan(this string t, (int start, int end) se) => t.AsSpan(se.start, se.end - se.start);
+		///// <seealso cref="SegAsSpan"/>
 
 		/// <summary>
 		/// This function can be used with foreach to split this string into substrings as start/end offsets.
@@ -490,13 +508,12 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = "one * two three ";
-		/// foreach(var t in s.Segments(" ")) Print(t);
-		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) Print(t);
+		/// foreach(var t in s.Segments(" ")) AOutput.Write(t);
+		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(t);
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="SegSplit"/>
 		/// <seealso cref="SegLines"/>
-		/// <seealso cref="AsSpan"/>
 		public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null)
 		{
 			return new SegParser(t, separators, flags, range);

@@ -1264,7 +1264,7 @@
         <member name="T:Au.Controls.InfoBox">
             <summary>
             Scintilla-based control to show formatted information text.
-            To set text use the <see cref="M:Au.AStatic.Text(System.String)"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTags"/>.
+            To set text use the <see cref="P:Au.Controls.AuScintilla.Text"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTags"/>.
             </summary>
         </member>
         <member name="P:Au.Controls.InfoBox.ZInitUseControlFont">
@@ -1275,7 +1275,7 @@
         <member name="T:Au.Controls.InfoWindow">
             <summary>
             An info window, similar to tooltips but persistent, normally at the right side of a form/control/rectangle.
-            Supports print tags etc. Actually it is a floating <see cref="T:Au.Controls.InfoBox"/>.
+            Supports output tags etc. Actually it is a floating <see cref="T:Au.Controls.InfoBox"/>.
             You can set text, resize and show/hide/dispose it many times.
             User can middle-click to hide.
             </summary>
@@ -1303,12 +1303,12 @@
         </member>
         <member name="P:Au.Controls.InfoWindow.Text">
             <summary>
-            Text with print tags.
+            Text with output tags.
             </summary>
         </member>
         <member name="P:Au.Controls.InfoWindow.Text2">
             <summary>
-            Text of second control with print tags.
+            Text of second control with output tags.
             </summary>
         </member>
         <member name="P:Au.Controls.InfoWindow.Size">
@@ -2074,19 +2074,19 @@
             </summary>
             <remarks>
             Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
-            Reference: [](print_tags).
-            Tags are supported by the <b>Print</b> function when it writes to the Au script editor.
+            Reference: [](output_tags).
+            Tags are supported by <see cref="M:Au.AOutput.Write(System.String)"/> when it writes to the Au script editor.
             
             This control does not implement some predefined tags: open, script.
             If used, must be implemented by the program.
             Also you can register custom link tags that call your callback functions.
             See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
             
-            Tags are supported by some existing controls based on <see cref="T:Au.Controls.AuScintilla"/>. In the Au editor it is the output (use <b>Print</b>, like in the example below). In this library - the <see cref="T:Au.Controls.InfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.AuScintilla"/> controls, use <see cref="P:Au.Controls.AuScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.AuScintilla.ZInitImagesStyle"/>.
+            Tags are supported by some existing controls based on <see cref="T:Au.Controls.AuScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.AOutput.Write(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.InfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.AuScintilla"/> controls, use <see cref="P:Au.Controls.AuScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.AuScintilla.ZInitImagesStyle"/>.
             </remarks>
             <example>
             <code><![CDATA[
-            Print("<>Text with <i>tags<>.");
+            AOutput.Write("<>Text with <i>tags<>.");
             ]]></code>
             </example>
         </member>
@@ -2310,7 +2310,7 @@
         </member>
         <member name="M:Au.Controls.ImageUtil.ImageToString(System.String)">
             <summary>
-            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.AWinImage.Find(Au.Types.WIArea,System.Object,Au.Types.WIFlags,System.Int32,System.Func{Au.AWinImage,Au.Types.WIAlso})"/>.
+            Converts image file data to string that can be used in source code instead of file path. It is supported by some functions of this library, for example <see cref="M:Au.AWinImage.Find(Au.Types.WIArea,Au.Types.WIImage,Au.Types.WIFlags,System.Int32,System.Func{Au.AWinImage,Au.Types.WIAlso})"/>.
             Returns string with prefix "image:" (Base-64 encoded .png/gif/jpg file data) or "~:" (Base-64 encoded compressed .bmp file data).
             Supports all <see cref="T:Au.Controls.ImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
             Returns null if path is not a valid image string or the file does not exist or failed to load.

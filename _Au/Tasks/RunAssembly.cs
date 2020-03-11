@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -13,11 +12,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -35,7 +32,7 @@ namespace Au
 		/// <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
 		/// <param name="flags"></param>
 		/// <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
-		[HandleProcessCorruptedStateExceptions]
+		[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 		public static void Run(string asmFile, string[] args, int pdbOffset, RAFlags flags = 0, string fullPathRefs = null)
 		{
 			ADebug.PrintIf(pdbOffset == 0, "pdbOffset 0");
@@ -72,7 +69,7 @@ namespace Au
 				if(fullPathRefs != null) {
 					var fpr = fullPathRefs.SegSplit("|");
 					alc.Resolving += (System.Runtime.Loader.AssemblyLoadContext alc, AssemblyName an) => {
-						//Print(an, an.Name, an.FullName);
+						//AOutput.Write(an, an.Name, an.FullName);
 						foreach(var v in fpr) {
 							var s1 = an.Name;
 							int iName = v.Length - s1.Length - 4;
@@ -88,7 +85,7 @@ namespace Au
 
 				//ADebug.PrintLoadedAssemblies(true, true);
 
-				//Print(asm);
+				//AOutput.Write(asm);
 #else
 				byte[] bAsm, bPdb = null;
 				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
@@ -142,7 +139,7 @@ namespace Au
 				if(!inEditorThread) Util.Log_.Run.Write($"Unhandled exception: {e.ToStringWithoutStack()}");
 
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
-				//Print(e);
+				//AOutput.Write(e);
 				AScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
 			}
 
@@ -186,8 +183,8 @@ namespace Au
 				if(_fileTime == default) return; //AFile.GetProperties failed
 				_d.Add(asmFile, new _Asm { time = _fileTime, asm = asm });
 
-				//foreach(var v in _d.Values) Print(v.asm.FullName);
-				//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) Print(v.FullName);
+				//foreach(var v in _d.Values) AOutput.Write(v.asm.FullName);
+				//foreach(var v in AppDomain.CurrentDomain.GetAssemblies()) AOutput.Write(v.FullName);
 			}
 		}
 	}
@@ -200,7 +197,7 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// This class adds these features:
-	/// 1. The static constructor subscribes to the <see cref="AppDomain.UnhandledException"/> event. On unhandled exception prints exception info. Without this class not all unhandled exceptions would be printed.
+	/// 1. The static constructor subscribes to the <see cref="AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
 	/// 2. Provides virtual function <see cref="OnUnhandledException"/>. The script can override it.
 	/// 3. Provides property <see cref="Triggers"/>.
 	/// 
@@ -210,7 +207,7 @@ namespace Au.Types
 	{
 		static AScript()
 		{
-			//Print("static AScript"); //note: static ctor of inherited class is called BEFORE this. Never mind.
+			//AOutput.Write("static AScript"); //note: static ctor of inherited class is called BEFORE this. Never mind.
 			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
 				OnHostHandledException(e);
 
@@ -234,17 +231,17 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Prints exception info.
-		/// Override this function to intercept unhandled exceptions. Call the base function if want to print exception info as usually.
+		/// Writes exception info to the output.
+		/// Override this function to intercept unhandled exceptions. Call the base function if want to see exception info as usually.
 		/// </summary>
 		/// <param name="e"></param>
-		protected virtual void OnUnhandledException(UnhandledExceptionEventArgs e) => Print(e.ExceptionObject);
+		protected virtual void OnUnhandledException(UnhandledExceptionEventArgs e) => AOutput.Write(e.ExceptionObject);
 
 		internal static void OnHostHandledException(UnhandledExceptionEventArgs e)
 		{
 			var k = s_instance;
 			if(k != null) k.OnUnhandledException(e);
-			else Print(e.ExceptionObject);
+			else AOutput.Write(e.ExceptionObject);
 		}
 
 		/// <summary>
@@ -256,7 +253,7 @@ namespace Au.Types
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Hotkey["Ctrl+K"] = o => Print(o.Trigger);
+		/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(o.Trigger);
 		/// Triggers.Run();
 		/// ]]></code>
 		/// </example>

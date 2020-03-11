@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,27 +10,15 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
-using Au.Util;
 
 namespace Au
 {
 	/// <summary>
 	/// Writes text to the output window, console or log file.
 	/// </summary>
-	/// <remarks>
-	/// When <see cref="Write"/>, <b>Print</b>, etc is called, where the text goes:
-	/// - If redirected, to wherever it is redirected. See <see cref="Writer"/>.
-	/// - Else if using log file (<see cref="LogFile"/> not null), writes to the file.
-	/// - Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.
-	/// - Else if using local <see cref="AOutputServer"/> (in this process), writes to it.
-	/// - Else if exists global <see cref="AOutputServer"/> (in any process), writes to it.
-	/// - Else nowhere.
-	/// </remarks>
 	//[DebuggerStepThrough]
 	public static partial class AOutput
 	{
@@ -91,32 +78,133 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Writes text + <c>"\r\n"</c> to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
+		/// Writes text + <c>"\r\n"</c> to the output.
 		/// </summary>
 		/// <param name="value">
 		/// Text.
-		/// If "" or null, writes empty line.
+		/// If "" or null, writes empty line. To write "null" if variable s is null, use code <c>AOutput.Write((object)s);</c>.
 		/// </param>
 		/// <remarks>
-		/// Can display links, colors, images, etc. More info: [](xref:print_tags).
+		/// Can display links, colors, images, etc. More info: [](xref:output_tags).
+		/// 
+		/// Where the text goes:
+		/// - If redirected, to wherever it is redirected. See <see cref="Writer"/>.
+		/// - Else if using log file (<see cref="LogFile"/> not null), writes to the file.
+		/// - Else if using console (<see cref="IsWritingToConsole"/> returns true), writes to console.
+		/// - Else if using local <see cref="AOutputServer"/> (in this process), writes to it.
+		/// - Else if exists global <see cref="AOutputServer"/> (in any process), writes to it.
+		/// - Else nowhere.
 		/// </remarks>
-		/// <seealso cref="Print(string)"/>
-		/// <seealso cref="Print(object)"/>
-		/// <seealso cref="Print{T}(IEnumerable{T})"/>
-		/// <seealso cref="Print(object, object, object[])"/>
 		public static void Write(string value)
 		{
 			Writer.WriteLine(value);
 		}
 
 		/// <summary>
-		/// Gets or sets object that actually writes text when is called <see cref="Write"/>, <see cref="Print"/> and similar functions.
+		/// Writes value of any type to the output.
+		/// </summary>
+		/// <param name="value">Value of any type. If null, writes "null".</param>
+		/// <remarks>
+		/// Calls <see cref="object.ToString"/> and <see cref="Write(string)"/>.
+		/// If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
+		/// 
+		/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
+		/// For ref struct types use <c>AOutput.Write(x.ToString());</c>.
+		/// </remarks>
+		public static void Write(object value)
+		{
+			Write(ObjectToString_(value));
+		}
+
+		/// <summary>
+		/// Converts object to string like <see cref="Write(object)"/> does.
+		/// </summary>
+		internal static string ObjectToString_(object value)
+		{
+			string s;
+			switch(value) {
+			case null: s = "null"; break;
+			case string t: s = t; break;
+			case uint u: s = "0x" + u.ToString("X"); break;
+			case ulong u: s = "0x" + u.ToString("X"); break;
+			case ushort u: s = "0x" + u.ToString("X"); break;
+			case byte u: s = "0x" + u.ToString("X"); break;
+			case char[] t: s = new string(t); break;
+			case System.Collections.IEnumerable e: s = string.Join("\r\n", _Cast1(e)); break;
+			default: s = value.ToString(); break;
+			}
+			//if(s.IndexOf('\0') >= 0) s = s.Escape(quote: true); //no
+			return s;
+		}
+
+		//replaces System.Linq.Enumerable.Cast<object>(e) to avoid loading System.Linq.dll
+		static IEnumerable<object> _Cast1(System.Collections.IEnumerable e)
+		{
+			foreach(var v in e) yield return v; //bad: if array or generic of struct, boxes all elements
+		}
+
+		internal static void ObjectToString_(StringBuilder b, object value)
+		{
+			switch(value) {
+			case null: b.Append("null"); break;
+			case string s: b.Append(s); break;
+			case uint u: b.Append("0x").Append(u.ToString("X")); break;
+			case ulong u: b.Append("0x").Append(u.ToString("X")); break;
+			case ushort u: b.Append("0x").Append(u.ToString("X")); break;
+			case byte u: b.Append("0x").Append(u.ToString("X")); break;
+			case char[] t: b.Append(new string(t)); break;
+			case System.Collections.IEnumerable e: b.Append("{ ").AppendJoin(", ", _Cast1(e)).Append(" }"); break;
+			default: b.Append(value); break;
+			}
+		}
+
+		/// <summary>
+		/// Writes array, List, Dictionary or other generic collection to the output, as a list of items separated by "\r\n".
+		/// </summary>
+		/// <param name="value">Array or generic collection of any type. If null, writes "null".</param>
+		/// <remarks>
+		/// Calls <see cref="Write(string)"/>.
+		/// </remarks>
+		public static void Write<T>(IEnumerable<T> value)
+		{
+			Write(value switch { null => "null", char[] a => new string(a), _ => string.Join("\r\n", value) });
+		}
+
+		/// <summary>
+		/// Writes multiple arguments of any type to the output, using separator ", ".
 		/// </summary>
 		/// <remarks>
-		/// If you want to redirect, modify or just monitor output text, use code like in the example. It is known as "output redirection".
+		/// Calls <see cref="object.ToString"/> and <see cref="Write(string)"/>.
+		/// If a value is null, writes "null".
+		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
+		/// </remarks>
+		public static void Write(object value1, object value2, params object[] more)
+		{
+			if(more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
+			using(new Util.StringBuilder_(out var b)) {
+				for(int i = 0, n = 2 + more.Length; i < n; i++) {
+					if(i > 0) b.Append(", ");
+					ObjectToString_(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]));
+				}
+				Write(b.ToString());
+
+				//rejected: escape strings (eg if contains characters "\r\n,\0"):
+				//	it can damage formatting tags etc;
+				//	the string may be already escaped, eg AWnd.ToString or AAcc.ToString;
+				//	we don't know whether the caller wants it;
+				//	let the caller escape it if wants, it's easy.
+			}
+		}
+		static readonly object[] s_oaNull = { null };
+
+		/// <summary>
+		/// Gets or sets object that actually writes text when is called <see cref="Write"/>.
+		/// </summary>
+		/// <remarks>
+		/// If you want to redirect or modify or just monitor output text, use code like in the example. It is known as "output redirection".
 		/// Redirection is applied to whole process, not just this thread.
-		/// Redirection affects <see cref="Write"/>, <see cref="Print"/> and similar functions, also <see cref="RedirectConsoleOutput"/> and <see cref="RedirectDebugOutput"/>. It does not affect <see cref="WriteDirectly"/> and <see cref="Clear"/>.
-		/// Don't call <see cref="Write"/>, <see cref="Print"/> etc in method <b>WriteLine</b> of your writer class. It would call itself and create stack overflow. But you can call <see cref="WriteDirectly"/>.
+		/// Redirection affects <see cref="Write"/>, <see cref="RedirectConsoleOutput"/> and <see cref="RedirectDebugOutput"/>. It does not affect <see cref="WriteDirectly"/> and <see cref="Clear"/>.
+		/// Don't call <see cref="Write"/> in method <b>WriteLine</b> of your writer class. It would call itself and create stack overflow. Call <see cref="WriteDirectly"/>, like in the example.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -125,12 +213,12 @@ namespace Au
 		/// {
 		/// 	AOutput.Writer = new TestOutputWriter();
 		/// 
-		/// 	Print("test");
+		/// 	AOutput.Write("test");
 		/// }
 		/// 
 		/// class TestOutputWriter :TextWriter
 		/// {
-		/// 	public override void WriteLine(string value) { AOutput.WriteDirectly("redir: " + value); }
+		/// 	public override void WriteLine(string value) { AOutput.WriteDirectly("redirected: " + value); }
 		/// 	public override Encoding Encoding => Encoding.Unicode;
 		/// }
 		/// ]]></code>
@@ -149,7 +237,7 @@ namespace Au
 			public override void Write(string value)
 			{
 				//QM2.Write($"'{value}'");
-				if(Empty(value)) return;
+				if(value.IsNE()) return;
 				if(value.Ends('\n')) {
 					WriteLine(value.RemoveSuffix(value.Ends("\r\n") ? 2 : 1));
 				} else {
@@ -167,13 +255,13 @@ namespace Au
 			public override void Flush()
 			{
 				var s = _PrependBuilder(null);
-				if(!Empty(s)) WriteDirectly(s);
+				if(!s.IsNE()) WriteDirectly(s);
 			}
 		}
 
 		/// <summary>
 		/// Writes string value + "\r\n" to the output window or console (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
-		/// Unlike <see cref="Write"/>, <see cref="Print"/> etc, the string is not passed to <see cref="Writer"/>.
+		/// Unlike <see cref="Write"/>, the string is not passed to <see cref="Writer"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace, used in _WriteToOutputServer
 		public static void WriteDirectly(string value)
@@ -205,6 +293,7 @@ namespace Au
 					_prevConsoleOut = null;
 				}
 			}
+			get => _prevConsoleOut != null;
 		}
 		static TextWriter _prevConsoleOut;
 
@@ -223,14 +312,16 @@ namespace Au
 					//speed: 6100
 				} else if(_traceListener != null) {
 					Trace.Listeners.Remove(_traceListener);
+					_traceListener = null;
 				}
 			}
+			get => _traceListener != null;
 		}
 		static TextWriterTraceListener _traceListener;
 
 		/// <summary>
 		/// Sets log file path.
-		/// When set (not null), text passed to <see cref="Write"/>, <see cref="Print"/> and similar functions will be written to the file. Assuming that <see cref="Writer"/> is not changed.
+		/// When set (not null), text passed to <see cref="Write"/> will be written to the file.
 		/// If value is null - restores default behavior.
 		/// </summary>
 		/// <remarks>
@@ -278,7 +369,7 @@ namespace Au
 						}
 						var logf = _logFile;
 						_logFile = null;
-						PrintWarning($"Failed to create or open log file '{logf}'. {ALastError.MessageFor(e)}");
+						AWarning.Write($"Failed to create or open log file '{logf}'. {ALastError.MessageFor(e)}");
 						WriteDirectly(s);
 						return;
 					}
@@ -329,11 +420,11 @@ namespace Au
 			{
 				bool ok;
 				int n = Encoding.UTF8.GetByteCount(s ??= "") + 1;
-				fixed(byte* b = AMemoryArray.Byte_(n + 35)) {
+				fixed(byte* b = Util.AMemoryArray.Byte_(n + 35)) {
 					if(LogFileTimestamp) {
 						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-						int nn = BytePtr_.Length(b);
+						int nn = Util.BytePtr_.Length(b);
 						Encoding.UTF8.GetBytes(s, new Span<byte>(b + nn, n));
 						n += nn;
 						if(s.Starts("<>")) {
@@ -350,7 +441,7 @@ namespace Au
 				if(!ok) {
 					string emsg = ALastError.Message;
 					LogFile = null;
-					PrintWarning($"Failed to write to log file '{_name}'. {emsg}");
+					AWarning.Write($"Failed to write to log file '{_name}'. {emsg}");
 					WriteDirectly(s);
 					//Debug.Assert(false);
 				}

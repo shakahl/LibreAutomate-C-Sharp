@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Text.RegularExpressions;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -49,12 +47,12 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = @"C:\abc\mno.xyz";
-		/// if(s.Like(@"C:\abc\mno.xyz")) Print("matches whole text (no wildcard characters)");
-		/// if(s.Like(@"C:\abc\*")) Print("starts with");
-		/// if(s.Like(@"*.xyz")) Print("ends with");
-		/// if(s.Like(@"*mno*")) Print("contains");
-		/// if(s.Like(@"C:\*.xyz")) Print("starts and ends with");
-		/// if(s.Like(@"?:*")) Print("any character, : and possibly more text");
+		/// if(s.Like(@"C:\abc\mno.xyz")) AOutput.Write("matches whole text (no wildcard characters)");
+		/// if(s.Like(@"C:\abc\*")) AOutput.Write("starts with");
+		/// if(s.Like(@"*.xyz")) AOutput.Write("ends with");
+		/// if(s.Like(@"*mno*")) AOutput.Write("contains");
+		/// if(s.Like(@"C:\*.xyz")) AOutput.Write("starts and ends with");
+		/// if(s.Like(@"?:*")) AOutput.Write("any character, : and possibly more text");
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="AWildex"/>
@@ -194,10 +192,10 @@ namespace Au
 	{
 		//note: could be struct, but somehow then slower. Slower instance creation, calling methods, in all cases.
 
-		object _obj; //string, ARegex, Regex or AWildex[]. Tested: getting string etc with '_obj as string' is fast.
-		WXType _type;
-		bool _ignoreCase;
-		bool _not;
+		readonly object _o; //string, ARegex, Regex or AWildex[]. Tested: getting string etc with '_obj as string' is fast.
+		readonly WXType _type;
+		readonly bool _ignoreCase;
+		readonly bool _not;
 
 		/// <param name="wildcardExpression">
 		/// [Wildcard expression](xref:wildcard_expression).
@@ -240,22 +238,22 @@ namespace Au
 				switch(_type) {
 				case WXType.RegexNet:
 					var ro = _ignoreCase ? (RegexOptions.IgnoreCase | RegexOptions.CultureInvariant) : RegexOptions.CultureInvariant;
-					_obj = new Regex(w, ro);
+					_o = new Regex(w, ro);
 					return;
 				case WXType.RegexPcre:
-					_obj = new ARegex(w);
+					_o = new ARegex(w);
 					return;
 				case WXType.Multi:
 					var a = w.Split(split ?? _splitMulti, StringSplitOptions.None);
 					var multi = new AWildex[a.Length];
 					for(int i = 0; i < a.Length; i++) multi[i] = new AWildex(a[i]);
-					_obj = multi;
+					_o = multi;
 					return;
 				}
 			}
 
 			if(_type == WXType.Wildcard && !HasWildcardChars(w)) _type = WXType.Text;
-			_obj = w;
+			_o = w;
 		}
 		static readonly string[] _splitMulti = { "||" };
 
@@ -270,8 +268,8 @@ namespace Au
 			if(wildcardExpression == null) return null;
 
 			//rejected. It's job for code tools. This would be used mostly for 'name' parameter of AWnd.Find and AWnd.Child, where 'match any' is rare; but 'match any' is very often used for 'cn' and 'program' parameters, where "" causes exception, so they will quickly learn.
-			///// If the string is "", calls <see cref="PrintWarning"/>. To match "", use "**empty" instead.
-			//	if(wildcardExpression.Length == 0) PrintWarning("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
+			///// If the string is "", calls <see cref="AWarning.Write"/>. To match "", use "**empty" instead.
+			//	if(wildcardExpression.Length == 0) AWarning.Write("To match \"\", better use \"**empty\". To match any, use null, or omit the argument if it's optional.");
 
 			return new AWildex(wildcardExpression);
 		}
@@ -288,20 +286,20 @@ namespace Au
 			bool R = false;
 			switch(_type) {
 			case WXType.Wildcard:
-				R = s.Like(_obj as string, _ignoreCase);
+				R = s.Like(_o as string, _ignoreCase);
 				break;
 			case WXType.Text:
-				var t = _obj as string;
+				var t = _o as string;
 				R = s.Eq(t, _ignoreCase);
 				break;
 			case WXType.RegexPcre:
-				R = (_obj as ARegex).IsMatch(s);
+				R = (_o as ARegex).IsMatch(s);
 				break;
 			case WXType.RegexNet:
-				R = (_obj as Regex).IsMatch(s);
+				R = (_o as Regex).IsMatch(s);
 				break;
 			case WXType.Multi:
-				var multi = _obj as AWildex[];
+				var multi = _o as AWildex[];
 				//[n] parts: all must match (with their option n applied)
 				int nNot = 0;
 				for(int i = 0; i < multi.Length; i++) {
@@ -327,25 +325,25 @@ namespace Au
 		/// Gets the wildcard or simple text.
 		/// null if TextType is Regex or Multi.
 		/// </summary>
-		public string Text => _obj as string;
+		public string Text => _o as string;
 
 		/// <summary>
 		/// Gets the Regex object created from regular expression string.
 		/// null if TextType is not RegexPcre (no option r).
 		/// </summary>
-		public Regex RegexPcre => _obj as Regex;
+		public Regex RegexPcre => _o as Regex;
 
 		/// <summary>
 		/// Gets the Regex object created from regular expression string.
 		/// null if TextType is not RegexNet (no option R).
 		/// </summary>
-		public Regex RegexNet => _obj as Regex;
+		public Regex RegexNet => _o as Regex;
 
 		/// <summary>
 		/// Array of <b>AWildex</b> variables, one for each part in multi-part text.
 		/// null if TextType is not Multi (no option m).
 		/// </summary>
-		public AWildex[] MultiArray => _obj as AWildex[];
+		public AWildex[] MultiArray => _o as AWildex[];
 
 		/// <summary>
 		/// Gets the type of text (wildcard, regex, etc).
@@ -365,7 +363,7 @@ namespace Au
 		///
 		public override string ToString()
 		{
-			return _obj.ToString();
+			return _o.ToString();
 		}
 
 		/// <summary>

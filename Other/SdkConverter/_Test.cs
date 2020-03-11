@@ -3,7 +3,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -19,7 +18,6 @@ using System.ComponentModel; //Win32Exception
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 #pragma warning disable 169
 
@@ -167,10 +165,10 @@ namespace SdkConverter
 
 			//string[] a = { "one", "two" };
 			//TestArrayStr(a);
-			//Print(a[0]);
+			//AOutput.Write(a[0]);
 			//int[] a = { 1, 2 };
 			//TestArray(a);
-			//Print(a[0]);
+			//AOutput.Write(a[0]);
 
 			//string s = "instr";
 			//var p = new STSTR();
@@ -179,14 +177,14 @@ namespace SdkConverter
 			//p.s = s;
 			//TestStructString(ref p);
 			////TestStructString2(p);
-			//Print("returned");
+			//AOutput.Write("returned");
 			//OutList(p.k, p.s);
-			//Print(p.s == s);
+			//AOutput.Write(p.s == s);
 
 			//var p = new POINT();
 			//p.x = 2;
 			//TestStructBlit(ref p);
-			//Print(p.y);
+			//AOutput.Write(p.y);
 
 
 			//var v = new SRKH();
@@ -201,7 +199,7 @@ namespace SdkConverter
 
 			//var sb = new StringBuilder("test");
 			//CharUpper(sb);
-			//Print(sb);
+			//AOutput.Write(sb);
 
 			//int k = 1;
 			//int R=TestUnmanaged(ref k);
@@ -212,15 +210,15 @@ namespace SdkConverter
 			//OutList(R, k);
 
 
-			//Print(1);
+			//AOutput.Write(1);
 			//string s;
 			//s = new string(GetCommandLine());
-			//Print(s);
+			//AOutput.Write(s);
 			//s = new string(GetCommandLine());
-			//Print(s);
+			//AOutput.Write(s);
 			//s = new string(GetCommandLine());
-			//Print(s);
-			//Print(2);
+			//AOutput.Write(s);
+			//AOutput.Write(2);
 
 
 			//var v = new ARRHOLDER();
@@ -232,7 +230,7 @@ namespace SdkConverter
 			////var x = new ARR();
 			////for(int i=0; i<4; i++) {
 			////	x[i] = i + 100;
-			////	Print(x[i]);
+			////	AOutput.Write(x[i]);
 			////}
 
 			//int n1 = 0, n2 = 0;
@@ -242,9 +240,9 @@ namespace SdkConverter
 			////x.b = new int[100];
 			////for(int i = 0; i < 100; i++) {
 			////	x.a[i] = i + 100;
-			////	Print(x.a[i]);
+			////	AOutput.Write(x.a[i]);
 			////}
-			////Print("DONE");
+			////AOutput.Write("DONE");
 
 			//var a1 = new Action(() =>
 			//{

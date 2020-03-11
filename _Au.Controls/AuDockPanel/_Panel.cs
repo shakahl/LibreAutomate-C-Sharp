@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -19,7 +18,6 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -274,7 +272,7 @@ namespace Au.Controls
 				g.FillRectangle(colored ? t.brushCaptionBack : t.brushSplitter, r);
 
 				string s = this.Text;
-				if(!Empty(s) && !this.HasToolbar) {
+				if(!s.IsNE() && !this.HasToolbar) {
 					bool vert = this.IsVerticalCaption;
 					var tf = vert ? t.txtFormatVert : t.txtFormatHorz;
 					if(vert) r.Inflate(0, -2); else r.Inflate(-2, 0);

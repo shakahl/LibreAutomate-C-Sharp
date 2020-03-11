@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -46,7 +43,7 @@ namespace Au
 			if(Mem != default) {
 				var mem = Mem; Mem = default;
 				if(!_dontFree) {
-					if(!Api.VirtualFreeEx(_HprocHR, mem)) PrintWarning("Failed to free process memory. " + ALastError.Message);
+					if(!Api.VirtualFreeEx(_HprocHR, mem)) AWarning.Write("Failed to free process memory. " + ALastError.Message);
 				}
 			}
 			_hproc.Dispose();
@@ -138,7 +135,7 @@ namespace Au
 		public bool WriteUnicodeString(string s, int offsetBytes = 0)
 		{
 			if(Mem == default) return false;
-			if(Empty(s)) return true;
+			if(s.IsNE()) return true;
 			fixed (char* p = s) {
 				return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
 			}
@@ -155,7 +152,7 @@ namespace Au
 		public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null)
 		{
 			if(Mem == default) return false;
-			if(Empty(s)) return true;
+			if(s.IsNE()) return true;
 			if(enc == null) enc = Encoding.Default;
 			var a = enc.GetBytes(s + "\0");
 			fixed (byte* p = a) {

@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -112,7 +110,7 @@ namespace Au
 
 				if(curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectoryPath(file);
 			}
-			if(!Empty(args)) x.lpParameters = APath.ExpandEnvVar(args);
+			if(!args.IsNE()) x.lpParameters = APath.ExpandEnvVar(args);
 
 			AWnd.More.EnableActivate();
 
@@ -164,14 +162,14 @@ namespace Au
 
 		/// <summary>
 		/// Calls <see cref="Run"/> and handles exceptions. All parameters are the same.
-		/// If <b>Run</b> throws exception, prints it as warning and returns null.
+		/// If <b>Run</b> throws exception, writes it to the output as warning and returns null.
 		/// </summary>
 		/// <remarks>
 		/// This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
 		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
-		/// <seealso cref="PrintWarning"/>
-		/// <seealso cref="OptDebug.DisableWarnings"/>
+		/// <seealso cref="AWarning.Write"/>
+		/// <seealso cref="OptWarnings.Disable"/>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
 		public static RResult TryRun(string s, string args = null, RFlags flags = 0, ROptions curDirEtc = null)
@@ -180,7 +178,7 @@ namespace Au
 				return Run(s, args, flags, curDirEtc);
 			}
 			catch(AuException e) {
-				PrintWarning(e.Message, 1);
+				AWarning.Write(e.Message, 1);
 				return null;
 			}
 		}
@@ -190,7 +188,7 @@ namespace Au
 		{
 			isShellPath = isFullPath = false;
 			file = APath.ExpandEnvVar(file);
-			if(Empty(file)) throw new ArgumentException();
+			if(file.IsNE()) throw new ArgumentException();
 			if(runConsole || !(isShellPath = APath.IsShellPath_(file))) {
 				if(isFullPath = APath.IsFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
@@ -218,7 +216,7 @@ namespace Au
 
 		/// <summary>
 		/// Runs a console program, waits until its process ends, and gets its output text.
-		/// This overload prints text lines in real time.
+		/// This overload writes text lines to the output in real time.
 		/// </summary>
 		/// <param name="exe">
 		/// Path or name of an .exe or .bat file. Can be:
@@ -251,15 +249,15 @@ namespace Au
 		/// string v = "example";
 		/// int r1 = AExec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
 		/// 
-		/// int r2 = AExec.RunConsole(s => Print(s), @"Q:\Test\console2.exe");
+		/// int r2 = AExec.RunConsole(s => AOutput.Write(s), @"Q:\Test\console2.exe");
 		/// 
 		/// int r3 = AExec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
-		/// Print(text);
+		/// AOutput.Write(text);
 		/// ]]></code>
 		/// </example>
 		public static unsafe int RunConsole(string exe, string args = null, string curDir = null, Encoding encoding = null)
 		{
-			return _RunConsole(s => Print(s), null, exe, args, curDir, encoding);
+			return _RunConsole(s => AOutput.Write(s), null, exe, args, curDir, encoding);
 		}
 
 		/// <summary>

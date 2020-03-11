@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 class PanelFound : AuUserControlBase
@@ -43,15 +41,10 @@ class PanelFound : AuUserControlBase
 	private void _c_HandleCreated(object sender, EventArgs e)
 	{
 		var z = _c.Z;
-		z.StyleFont(Sci.STYLE_DEFAULT, Font);
-
-		//t.Call(Sci.SCI_SETCARETLINEFRAME, 2);
-		//t.Call(Sci.SCI_SETCARETLINEBACK, 0xCB9594);
-		//t.Call(Sci.SCI_SETCARETLINEVISIBLE, 1);
-
 		z.MarginWidth(1, 0);
+		z.StyleFont(Sci.STYLE_DEFAULT, Font);
 		z.StyleClearAll();
-		_c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle(), 0, false);
+		_c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle(), (false, default), false);
 	}
 
 	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }

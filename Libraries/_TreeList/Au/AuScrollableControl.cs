@@ -10,14 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -147,7 +144,7 @@ namespace Au.Controls
 			Api.SCROLLINFO k = default; unsafe { k.cbSize = sizeof(Api.SCROLLINFO); }
 			k.fMask = Api.SIF_TRACKPOS | Api.SIF_POS | Api.SIF_PAGE | Api.SIF_RANGE;
 			Api.GetScrollInfo((AWnd)this, vert, ref k);
-			//Print(k.nPos, k.nTrackPos, k.nPage, k.nMax);
+			//AOutput.Write(k.nPos, k.nTrackPos, k.nPage, k.nMax);
 			int i = k.nPos;
 			switch(code) {
 			case ScrollEventType.ThumbTrack: i = k.nTrackPos; break;

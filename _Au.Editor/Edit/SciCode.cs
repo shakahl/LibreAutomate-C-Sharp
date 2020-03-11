@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -13,14 +12,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
 using DiffMatchPatch;
@@ -133,10 +130,10 @@ partial class SciCode : AuScintilla
 		//case NOTIF.SCN_NEEDSHOWN:
 		//	break;
 		//case NOTIF.SCN_MODIFIED:
-		//	Print(n.nmhdr.code, n.modificationType);
+		//	AOutput.Write(n.nmhdr.code, n.modificationType);
 		//	break;
 		//default:
-		//	Print(n.nmhdr.code);
+		//	AOutput.Write(n.nmhdr.code);
 		//	break;
 		//}
 
@@ -148,10 +145,10 @@ partial class SciCode : AuScintilla
 			//never mind: we should cancel the 'save text later'
 			break;
 		case NOTIF.SCN_MODIFIED:
-			//Print("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, Z.CurrentPos8, n.Text);
-			//Print(n.modificationType);
+			//AOutput.Write("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, Z.CurrentPos8, n.Text);
+			//AOutput.Write(n.modificationType);
 			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
-			//	Print($"'{n.Text}'");
+			//	AOutput.Write($"'{n.Text}'");
 			//	if(n.length == 2 && n.textUTF8!=null && n.textUTF8[0]=='\r' && n.textUTF8[1] == '\n') {
 			//		Call(SCI_BEGINUNDOACTION); Call(SCI_ENDUNDOACTION);
 			//	}
@@ -162,7 +159,7 @@ partial class SciCode : AuScintilla
 				CodeInfo.SciModified(this, n);
 				Panels.Find.ZUpdateQuickResults(true);
 				//} else if(n.modificationType.Has(MOD.SC_MOD_INSERTCHECK)) {
-				//	//Print(n.Text);
+				//	//AOutput.Write(n.Text);
 				//	//if(n.length==1 && n.textUTF8[0] == ')') {
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
@@ -170,7 +167,7 @@ partial class SciCode : AuScintilla
 			}
 			break;
 		case NOTIF.SCN_CHARADDED:
-			//Print($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
+			//AOutput.Write($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
 			if(n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
 				Z.AddUndoPoint();
 			}
@@ -179,7 +176,7 @@ partial class SciCode : AuScintilla
 			}
 			break;
 		case NOTIF.SCN_UPDATEUI:
-			//Print((uint)n.updated, _modified);
+			//AOutput.Write((uint)n.updated, _modified);
 			if(0 != (n.updated & 1)) {
 				if(_modified) _modified = false; else n.updated &= ~1; //ignore notifications when changed styling or markers
 			}
@@ -222,32 +219,39 @@ partial class SciCode : AuScintilla
 		//}
 
 		//var w = (AWnd)m.HWnd;
-		//Print(m);
+		//AOutput.Write(m);
 		switch(m.Msg) {
 		case Api.WM_SETFOCUS:
 			if(!_noModelEnsureCurrentSelected) Program.Model?.EnsureCurrentSelected();
 			break;
-		case Api.WM_CHAR:
+		case Api.WM_CHAR: {
 			int c = (int)m.WParam;
 			if(c < 32) {
 				if(!(c == 9 || c == 10 || c == 13)) return;
 			} else {
 				if(CodeInfo.SciBeforeCharAdded(this, (char)c)) return;
 			}
-			break;
+		}
+		break;
 		case Api.WM_KEYDOWN:
 			if((KKey)m.WParam == KKey.Insert) return;
 			break;
-		case Api.WM_RBUTTONDOWN:
-			//prevent changing selection when right-clicked margin if selection start is in that line
+		case Api.WM_RBUTTONDOWN: {
+			//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
 			POINT p = (AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
-			if(Z.MarginFromPoint(p, false) >= 0) {
-				var cp = Z.SelectionStart8;
+			int margin = Z.MarginFromPoint(p, false);
+			if(margin >= 0) {
+				var selStart = Z.SelectionStart8;
 				var (_, start, end) = Z.LineStartEndFromPos(false, Z.PosFromXY(false, p, false));
-				if(cp >= start && cp <= end) return;
+				if(selStart >= start && selStart <= end) return;
+				//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
+				if(margin == c_marginLineNumbers || margin == c_marginMarkers) {
+					if(Z.SelectionEnd8 == start) Z.GoToPos(false, start); //clear selection above start
+				}
 			}
-			break;
-		case Api.WM_CONTEXTMENU:
+		}
+		break;
+		case Api.WM_CONTEXTMENU: {
 			bool kbd = (int)m.LParam == -1;
 			int margin = kbd ? -1 : Z.MarginFromPoint((AMath.LoShort(m.LParam), AMath.HiShort(m.LParam)), true);
 			switch(margin) {
@@ -261,7 +265,8 @@ partial class SciCode : AuScintilla
 				//case c_marginFold:
 				//	break;
 			}
-			return;
+		}
+		return;
 		}
 
 		base.WndProc(ref m);
@@ -284,10 +289,10 @@ partial class SciCode : AuScintilla
 	{
 		switch(keyData) {
 		case Keys.Control | Keys.C:
-			ZCopyModified(onlyInfo: true);
+			ZForumCopy(onlyInfo: true);
 			break;
 		case Keys.Control | Keys.V:
-			if(ZPasteModified()) return true;
+			if(ZForumPaste()) return true;
 			break;
 		case Keys.Control | Keys.W:
 			Strips.Cmd.Edit_WrapLines();
@@ -335,14 +340,14 @@ partial class SciCode : AuScintilla
 		var text = _fn.GetText(saved: true); if(text == this.Text) return;
 		ZReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-		if(this == Panels.Editor.ZActiveDoc) Print($"<>Info: file {_fn.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
+		if(this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
 	}
 	//internal void _FileModifiedExternally()
 	//{
 	//	var text = ZFile.GetText(saved: true); if(text == this.Text) return;
 	//	if(this == Panels.Editor.ActiveDoc && AWnd.Active.IsOfThisProcess) {
 	//		IsUnsaved = true;
-	//		Print($"<>Info: the active editor file {ZFile.SciLink} has been modified by another program. The modified file will be replaced with editor text.");
+	//		AOutput.Write($"<>Info: the active editor file {ZFile.SciLink} has been modified by another program. The modified file will be replaced with editor text.");
 	//		return;
 	//	}
 	//	ReplaceTextGently(text);
@@ -357,7 +362,7 @@ partial class SciCode : AuScintilla
 	protected override void OnDragEnter(DragEventArgs e)
 	{
 		var d = e.Data;
-		//foreach(var v in d.GetFormats()) Print(v, d.GetData(v, false)?.GetType()); Print("--");
+		//foreach(var v in d.GetFormats()) AOutput.Write(v, d.GetData(v, false)?.GetType()); AOutput.Write("--");
 		_drag = 0;
 		if(d.GetDataPresent("Aga.Controls.Tree.TreeNodeAdv[]", false)) _drag = _DD_DataType.Script;
 		else if(d.GetDataPresent("FileDrop", false)) _drag = _DD_DataType.Files;
@@ -487,7 +492,7 @@ partial class SciCode : AuScintilla
 			break;
 		}
 
-		if(!Empty(s)) {
+		if(!s.IsNE()) {
 			var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
 			var b = Au.Util.AConvert.ToUtf8(s);
 			fixed(byte* bp = b) {
@@ -541,7 +546,7 @@ partial class SciCode : AuScintilla
 					t.Append("//").Append(path);
 				} else {
 					t.Append(isFN ? "ATask.Run(@\"" : "AExec.Run(@\"").Append(path);
-					if(!Empty(args)) t.Append("\", \"").Append(args.Escape());
+					if(!args.IsNE()) t.Append("\", \"").Append(args.Escape());
 					t.Append("\");");
 					if(menuVar == null && !isFN && (path.Starts("::") || path.Find(name, true) < 0)) t.Append(" //").Append(name);
 					//FUTURE: add unexpanded path version
@@ -609,7 +614,7 @@ partial class SciCode : AuScintilla
 
 	#region copy paste
 
-	public void ZCopyModified(bool onlyInfo = false)
+	public void ZForumCopy(bool onlyInfo = false)
 	{
 		int i1 = Z.SelectionStart8, i2 = Z.SelectionEnd8, textLen = Len8;
 		if(textLen == 0) return;
@@ -617,7 +622,7 @@ partial class SciCode : AuScintilla
 		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !isCS;
 		if(onlyInfo) {
 			if(isFragment || s_infoCopy) return; s_infoCopy = true;
-			Print("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
+			AOutput.Write("Info: To copy C# code for pasting in the forum, use menu Edit -> Forum Copy. Then simply paste there; don't use the Code button.");
 			return;
 		}
 
@@ -637,9 +642,9 @@ partial class SciCode : AuScintilla
 	}
 	static bool s_infoCopy;
 
-	public bool ZPasteModified()
+	public bool ZForumPaste()
 	{
-		var s = AClipboardData.GetText();
+		var s = AClipboard.Text;
 		if(s == null) return false;
 		if(s.Like("[cs]*[/cs]\r\n")) s = s[4..^7];
 
@@ -671,7 +676,7 @@ partial class SciCode : AuScintilla
 
 	#region script header
 
-	const string c_usings = "using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;";
+	const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic;";
 	const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
 
 	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
@@ -1080,7 +1085,7 @@ partial class SciCode : AuScintilla
 	}
 
 	[Conditional("TRACE_TEMP_RANGES")]
-	static void _TraceTempRange(string action, object owner) => Print(action, owner);
+	static void _TraceTempRange(string action, object owner) => AOutput.Write(action, owner);
 
 	#endregion
 }

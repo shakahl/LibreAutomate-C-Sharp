@@ -121,9 +121,9 @@
 			</Edit_View>
 		</Menu_Edit>
     <Menu_Code>
-      <Code_Wnd/>
-      <Code_Acc/>
-      <Code_WinImage t="WinImage"/>
+      <Code_AWnd/>
+      <Code_AAcc/>
+      <Code_AWinImage t="AWinImage"/>
 			<sep/>
       <Code_Regex hkText="Ctrl+Space in string"/>
       <Code_Keys hkText="Ctrl+Space in string"/>

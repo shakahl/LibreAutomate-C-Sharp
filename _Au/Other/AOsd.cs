@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms; //SHOULDDO: avoid loading Forms dll. Now from it uses TextRenderer.
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -258,7 +255,7 @@ namespace Au
 		/// <param name="name">If not null, closes only OSD windows whose <see cref="Name"/> matches this [](xref:wildcard_expression).</param>
 		public static void CloseAll([ParamString(PSFormat.AWildex)] string name = null)
 		{
-			foreach(var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WF3.Process(AProcess.ProcessId))) w.Close(noWait: true);
+			foreach(var w in AWnd.FindAll(name, "**m Au.OSD||Au.OSD2", WOwner.Process(AProcess.ProcessId))) w.Close(noWait: true);
 		}
 	}
 
@@ -601,7 +598,7 @@ namespace Au
 		/// </summary>
 		protected override void OnPaint(Graphics g, Rectangle r)
 		{
-			//Print(AThread.NativeId);
+			//AOutput.Write(AThread.NativeId);
 			if(Opacity != 0) {
 				g.Clear((Color)BackColor); //else AOsdWindow cleared with TransparentColor
 
@@ -625,7 +622,7 @@ namespace Au
 				int k = Icon.Width + c_iconPadding * 2; r.X += k; r.Width -= k;
 			}
 
-			if(!Empty(Text)) {
+			if(!Text.IsNE()) {
 				r.Inflate(0, -1);
 				var font = Font ?? DefaultFont;
 				var tff = TextFormatFlags; if(WrapWidth > 0) tff |= TextFormatFlags.WordBreak;
@@ -652,7 +649,7 @@ namespace Au
 					zi.Width += c_iconPadding * 2; zi.Height += c_iconPadding * 2;
 				}
 
-				if(!Empty(Text)) {
+				if(!Text.IsNE()) {
 					var screen = XY?.GetScreen() ?? DefaultScreen.GetScreenHandle();
 					var rs = screen.WorkArea; z = new Size(rs.Width - zi.Width - 10, rs.Height - 14);
 					var tff = TextFormatFlags;
@@ -673,7 +670,7 @@ namespace Au
 			}
 
 			var r = new RECT(0, 0, z.Width, z.Height);
-			//Print(r);
+			//AOutput.Write(r);
 
 			if(XY != null) {
 				if(XY.inRect) r.MoveInRect(XY.rect, XY.x, XY.y, false);

@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -18,7 +17,6 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Aga.Controls.Tree;
 using Au.Compiler;
 
@@ -61,7 +59,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	void _CtorMisc(string linkTarget)
 	{
 		if(!IsFolder) {
-			if(!Empty(linkTarget)) {
+			if(!linkTarget.IsNE()) {
 				_state |= _State.Link;
 				_iconOrLinkTarget = linkTarget;
 			}
@@ -141,7 +139,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 				case "run": v.ToInt(out testScriptId); break;
 				}
 			}
-			if(Empty(_name)) throw new ArgumentException("no 'n' attribute in XML");
+			if(_name.IsNE()) throw new ArgumentException("no 'n' attribute in XML");
 			_id = _model.AddGetId(this, id);
 			_CtorMisc(linkTarget);
 			if(icon != null && linkTarget == null) _iconOrLinkTarget = icon;
@@ -363,7 +361,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		if(!saved && this == _model.CurrentFile) {
 			return Panels.Editor.ZActiveDoc.Text;
 		}
-		//if(cache) Print("GetText", Name, _text != null);
+		//if(cache) AOutput.Write("GetText", Name, _text != null);
 		if(_text != null) return _text;
 		string r = null, es = null, path = FilePath;
 		try {
@@ -376,7 +374,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		}
 		r ??= "";
 		if(es != null) {
-			PrintWarning($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
+			AWarning.Write($"{es}\r\n\tFailed to get text of <open>{ItemPath}<>, file <explore>{path}<>", -1);
 		} else if(cache && Model.IsWatchingFileChanges && !this.IsLink && r.Length < 1_000_000) { //don't cache links because we don't watch their file folders
 			_text = r; //FUTURE: set = null after some time if not used
 		}
@@ -386,7 +384,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 
 	public void UnCacheText(bool fromWatcher = false)
 	{
-		//Print("UnCacheText", Name, _text != null);
+		//AOutput.Write("UnCacheText", Name, _text != null);
 		_text = null;
 		if(fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?._FileModifiedExternally();
 	}
@@ -444,7 +442,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="folder">true - folder, false - file, null - any (prefer file if not relative).</param>
 	public FileNode FindDescendant(string name, bool? folder)
 	{
-		if(Empty(name)) return null;
+		if(name.IsNE()) return null;
 		if(name[0] == '\\') return _FindRelative(name, folder);
 		return _FindIn(Descendants(), name, folder, true);
 	}
@@ -499,7 +497,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	{
 		if(!IsFolder) return Parent.FindRelative(relativePath, folder);
 		var s = relativePath;
-		if(Empty(s)) return null;
+		if(s.IsNE()) return null;
 		FileNode p = this;
 		if(s[0] == '\\') p = Root;
 		else if(s[0] == '.') {
@@ -521,7 +519,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="name">File name. If starts with backslash, works like <see cref="FindDescendant"/>.</param>
 	public FileNode[] FindAllDescendantFiles(string name)
 	{
-		if(!Empty(name)) {
+		if(!name.IsNE()) {
 			if(name[0] == '\\') {
 				var f1 = _FindRelative(name, false);
 				if(f1 != null) return new FileNode[] { f1 };
@@ -685,7 +683,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="name">If not null, creates with this name (made unique). Else gets name from template. In any case, makes unique name.</param>
 	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, string template, string name = null)
 	{
-		Debug.Assert(!Empty(template)); if(Empty(template)) return null;
+		Debug.Assert(!template.IsNE()); if(template.IsNE()) return null;
 
 		if(target == null) {
 			var root = model.Root;
@@ -701,7 +699,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 			string templFile = s_dirTemplatesBS + template;
 			switch(AFile.ExistsAs(templFile, true)) {
 			case FileDir.Directory: isFolder = true; break;
-			case FileDir.File: text = _NI_GetTemplateText(templFile, template, newParent); break;
+			case FileDir.File: text = _GetTemplateText(templFile, template, newParent); break;
 			}
 		}
 
@@ -725,46 +723,54 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		f._Common_MoveCopyNew(target, pos);
 
 		if(isFolder && APath.GetFileName(template)[0] == '@') {
-			_NI_FillProjectFolder(model, f, s_dirTemplatesBS + template);
+			_FillProjectFolder(model, f, s_dirTemplatesBS + template);
 		}
 		return f;
-	}
-	static string s_dirTemplatesBS = AFolders.ThisAppBS + @"Default\Templates\";
 
-	static void _NI_FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent)
-	{
-		foreach(var v in AFile.EnumDirectory(dirParent, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
-			bool isFolder = v.IsDirectory;
-			var name = v.Name;
-			if(isFolder && name[0] == '@') continue; //error, project in project
-			if(name[0] == '!' && name.Length > 1) name = name.Substring(1); //!name can be used to make the file sorted first; then it will become the main file of project.
-			string template = v.FullPath.Substring(s_dirTemplatesBS.Length);
-			var f = NewItem(model, fnParent, NodePosition.Inside, template, name);
-			if(isFolder) _NI_FillProjectFolder(model, f, v.FullPath);
-		}
-	}
-
-	static string _NI_GetTemplateText(string templFile, string template, FileNode newParent)
-	{
-		string s = AFile.LoadText(templFile);
-		//replace //"#include file" with text of file from "include" subfolder
-		s = s.RegexReplace(@"(?m)^//#include +(.+)$", m => {
-			var si = s_dirTemplatesBS + @"include\" + m[1];
-			if(AFile.ExistsAsFile(si)) return AFile.LoadText(si);
-			Print($"Errror in {templFile}. #include file does not exist: {si}");
-			return null;
-		});
-
-		//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
-		if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
-			var rx = @"(?m)^namespace [\w\.]+";
-			if(!s.RegexIsMatch(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
-				s = s.RegexReplace(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
+		static void _FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent)
+		{
+			foreach(var v in AFile.EnumDirectory(dirParent, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+				bool isFolder = v.IsDirectory;
+				var name = v.Name;
+				if(isFolder && name[0] == '@') continue; //error, project in project
+				if(name[0] == '!' && name.Length > 1) name = name.Substring(1); //!name can be used to make the file sorted first; then it will become the main file of project.
+				string template = v.FullPath.Substring(s_dirTemplatesBS.Length);
+				var f = NewItem(model, fnParent, NodePosition.Inside, template, name);
+				if(isFolder) _FillProjectFolder(model, f, v.FullPath);
 			}
 		}
 
-		return s;
+		static string _GetTemplateText(string templFile, string template, FileNode newParent)
+		{
+			string s = AFile.LoadText(templFile);
+			//replace //"#include file" with text of file from "include" subfolder
+			s = s.RegexReplace(@"(?m)^//#include +(.+)$", m => {
+				var fn = m[1].Value;
+				var fp = s_dirTemplatesBS + @"include\" + fn;
+				if(!AFile.ExistsAsFile(fp)) {
+					AOutput.Write($"Errror in {templFile}. #include file does not exist: {fp}");
+					return null;
+				}
+				var code = AFile.LoadText(fp);
+				if(fn == "using.txt") {
+					var userCode = Program.Settings.files_usings;
+					if(!userCode.IsNE()) code = code + "\r\n" + userCode;
+				}
+				return code;
+			});
+
+			//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
+			if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
+				var rx = @"(?m)^namespace [\w\.]+";
+				if(!s.RegexIsMatch(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
+					s = s.RegexReplace(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
+				}
+			}
+
+			return s;
+		}
 	}
+	static readonly string s_dirTemplatesBS = AFolders.ThisAppBS + @"Default\Templates\";
 
 	public static string CreateNameUniqueInFolder(FileNode folder, string fromName, bool forFolder)
 	{

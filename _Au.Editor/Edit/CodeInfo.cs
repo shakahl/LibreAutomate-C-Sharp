@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -13,14 +12,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Compiler;
 using Au.Controls;
 
@@ -55,9 +52,9 @@ static class CodeInfo
 			//var p1 = APerf.Create();
 			try {
 				var code = @"//.
-using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+using Au; using Au.Types; using System; using System.Collections.Generic;
 class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) {
-Print(""t"" + 'c' + 1);
+AOutput.Write(""t"" + 'c' + 1);
 }}";
 
 				var refs = new MetaReferences().Refs;
@@ -117,7 +114,7 @@ Print(""t"" + 'c' + 1);
 
 	static void _Uncache()
 	{
-		//Print("_Uncache");
+		//AOutput.Write("_Uncache");
 		CurrentWorkspace = null;
 		_solution = null;
 		_projectId = null;
@@ -246,20 +243,20 @@ Print(""t"" + 'c' + 1);
 			_signature.SciCharAdded(c.doc, c.ch); //sync shows signature help.
 		}
 
-		//Example: user types 'pri('.
-		//	When typed 'p', _compl.SciCharAdded_ShowList shows popup list (async).
-		//	While typing 'ri', _compl.SciModified in the list selects Print.
+		//Example: user types 'wri('.
+		//	When typed 'w', _compl.SciCharAdded_ShowList shows popup list (async).
+		//	While typing 'ri', _compl.SciModified in the list selects Write.
 		//	When typed '(':
-		//		_compl.SciCharAdded_Commit replaces 'pri(' with 'Print('. Caret is after '('.
+		//		_compl.SciCharAdded_Commit replaces 'wri(' with 'Write('. Caret is after '('.
 		//		_correct adds ')'. Caret is still after '('.
 		//		_signature shows signature help.
 		//	If then user types 'tr)':
 		//		_compl on 't' shows popup list and on ')' replaces 'tr)' with 'true)'.
 		//		_correct deletes the ')' it added before.
 		//		_signature not called because discardChar==true. To hide signature help are used temp ranges.
-		//	Finally we have 'Print(true)', and caret is after it, and no double '))'.
+		//	Finally we have 'Write(true)', and caret is after it, and no double '))'.
 		//	If instead types 'tr;':
-		//		_correct on ';' moves caret after ')', and finally we have 'Print(true);', and caret after ';'.
+		//		_correct on ';' moves caret after ')', and finally we have 'Write(true);', and caret after ';'.
 	}
 
 	public static void SciUpdateUI(SciCode doc, int updated)
@@ -267,7 +264,7 @@ Print(""t"" + 'c' + 1);
 #if NO_COMPL_CORR_SIGN
 		return;
 #endif
-		//Print("SciUpdateUI", modified, _tempNoAutoComplete);
+		//AOutput.Write("SciUpdateUI", modified, _tempNoAutoComplete);
 		if(!_CanWork(doc)) return;
 
 		if(0 != (updated & 3)) { //text (1), selection/click (2)
@@ -511,7 +508,7 @@ Print(""t"" + 'c' + 1);
 	internal static void OnHtmlImageLoad(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlImageLoadEventArgs e)
 	{
 		var s = e.Src;
-		//Print(s);
+		//AOutput.Write(s);
 		if(s.Starts("@")) {
 			e.Handled = true;
 			int i = s.ToInt(2);

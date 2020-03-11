@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -31,8 +29,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var f = new AAcc.Finder("BUTTON", "Apply"); //AO properties
 		/// AWnd w = AWnd.Find(cn: "#32770", also: t => f.Find(t));
-		/// Print(w);
-		/// Print(f.Result);
+		/// AOutput.Write(w);
+		/// AOutput.Write(f.Result);
 		/// ]]></code>
 		/// </example>
 		public class Finder
@@ -82,7 +80,6 @@ namespace Au
 
 			/// <summary>
 			/// Stores the specified accessible object properties in this object. Reference: <see cref="AAcc.Find"/>.
-			/// Does not search now. For it call <b>Find</b> or <b>Wait</b>.
 			/// </summary>
 			public Finder(string role = null,
 				[ParamString(PSFormat.AWildex)] string name = null,
@@ -274,13 +271,13 @@ namespace Au
 						w.UacCheckAndThrow_(); //CONSIDER: don't throw. Maybe show warning.
 					}
 
-					//Print(hr > 0 ? $"hr={hr}" : $"hr={(int)hr:X}");
+					//AOutput.Write(hr > 0 ? $"hr={hr}" : $"hr={(int)hr:X}");
 					switch(hr) {
 					case Cpp.EError.NotFound:
 						if(!isWaitFunc) return false;
 						break;
 					case Cpp.EError.WaitChromeDisabled:
-						//Print("WaitChromeDisabled");
+						//AOutput.Write("WaitChromeDisabled");
 						if(to.TimeRemaining < 3000) to.TimeRemaining += (long)(to.Period * 15 / 16);
 						//normally waits ~10 times longer, eg 10 s instead of 1
 						break;
@@ -425,14 +422,14 @@ namespace Au
 		/// <code><![CDATA[
 		/// var w = AWnd.Find("* Chrome").OrThrow();
 		/// var a = AAcc.Find(w, "web:LINK", "Example");
-		/// if(a == null) { Print("not found"); return; }
+		/// if(a == null) { AOutput.Write("not found"); return; }
 		/// a.DoAction();
 		/// ]]></code>
 		/// Use <see cref="Finder"/>.
 		/// <code><![CDATA[
 		/// var w = AWnd.Find("* Chrome").OrThrow();
 		/// var f = new AAcc.Finder("BUTTON", "Example");
-		/// if(!f.Find(w)) { Print("not found"); return; }
+		/// if(!f.Find(w)) { AOutput.Write("not found"); return; }
 		/// AAcc a = f.Result;
 		/// a.DoAction();
 		/// ]]></code>
@@ -524,7 +521,7 @@ namespace Au
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
 		/// var w = AWnd.Find(null, "Shell_TrayWnd").OrThrow();
-		/// foreach(var a in AAcc.FindAll(w, "BUTTON", prop: "level=7")) Print(a);
+		/// foreach(var a in AAcc.FindAll(w, "BUTTON", prop: "level=7")) AOutput.Write(a);
 		/// ]]></code>
 		/// </example>
 		public static AAcc[] FindAll(AWnd w, string role = null,
@@ -552,7 +549,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var w = AWnd.Find(null, "Shell_TrayWnd").OrThrow();
 		/// var atb = AAcc.Find(w, "TOOLBAR", "Running applications").OrThrow();
-		/// foreach(var a in atb.FindAll("BUTTON", prop: "level=0")) Print(a);
+		/// foreach(var a in atb.FindAll("BUTTON", prop: "level=0")) AOutput.Write(a);
 		/// ]]></code>
 		/// </example>
 		public AAcc[] FindAll(string role = null,

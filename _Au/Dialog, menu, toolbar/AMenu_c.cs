@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -54,14 +52,14 @@ namespace Au
 
 				switch(m.Msg) {
 				case Api.WM_CLOSE:
-					//Print("WM_CLOSE", dd.Visible);
+					//AOutput.Write("WM_CLOSE", dd.Visible);
 					if((int)m.WParam != c_wmCloseWparam && Visible) { Close(); return; }
 					break;
 				case Api.WM_SHOWWINDOW when m.WParam != default:
 					if(_isMain) _Workaround1();
 					//workaround for .NET bug: makes a random window of this thread the owner window of the context menu.
 					//	Related .NET bug: AutoClose changes the topmost style. If the owner is topmost, it becomes nontopmost.
-					//AWnd w = this.Hwnd(), ow = w.Owner; if(!ow.Is0) w.Owner = default; //disabled. Currently it does not harm.
+					//AWnd w = this.Hwnd(), ow = w.OwnerWindow; if(!ow.Is0) w.OwnerWindow = default; //disabled. Currently it does not harm.
 					break;
 				case Api.WM_RBUTTONUP:
 					_ContextMenu();
@@ -81,7 +79,7 @@ namespace Au
 					break;
 				case Api.WM_DESTROY:
 					_m._closing_allMenus.Remove(this);
-					//Print("WM_DESTROY", _isMain, m.HWnd);
+					//AOutput.Write("WM_DESTROY", _isMain, m.HWnd);
 					break;
 				}
 			}
@@ -134,7 +132,7 @@ namespace Au
 				//if(e.CloseReason== ToolStripDropDownCloseReason.AppClicked) {
 				//	Debugger.Launch();
 				//}
-				//Print(e.Cancel, e.CloseReason, _isMain, AWnd.Active);
+				//AOutput.Write(e.Cancel, e.CloseReason, _isMain, AWnd.Active);
 				if(_m._closing) e.Cancel = false;
 				else if(_cancelClosing) e.Cancel = true;
 				else if(!e.Cancel) {
@@ -156,7 +154,7 @@ namespace Au
 				base.Dispose(disposing);
 			}
 
-			//~_ContextMenuStrip() => Print("dtor");
+			//~_ContextMenuStrip() => AOutput.Write("dtor");
 
 			protected override void OnPaint(PaintEventArgs e)
 			{

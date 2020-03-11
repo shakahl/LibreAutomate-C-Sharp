@@ -10,10 +10,8 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -106,8 +104,8 @@ namespace Au.Util
 		//		if(pid != _prevPID || ATime.PerfMilliseconds - _prevTime > 1000) {
 		//			if(_prev != null) { _prev.Dispose(); _prev = null; }
 		//			try { _prev = new AWinFormsControlNames(c); } catch { }
-		//			//Print("new");
-		//		} //else Print("cached");
+		//			//AOutput.Write("new");
+		//		} //else AOutput.Write("cached");
 		//		_prevPID = pid; _prevTime = ATime.PerfMilliseconds;
 		//		if(_prev == null) return null;
 		//		return _prev.GetControlNameOrText(c);

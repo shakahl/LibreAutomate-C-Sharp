@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -63,7 +61,7 @@ namespace Au
 	///  <td>Firefox web browser.</td>
 	///  <td>
 	///   <ol>
-	///    <li>By default, the Find function is about 50 times slower than it could be. Also for this reason the Wait function consumes much CPU. And HTML attributes may be unavailable. See <see cref="AFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: open URL about:config, find browser.tabs.remote.autostart, set it = false, restart Firefox. If there is no such option, right-click and create it, as Boolean. If there are more than one similar options, set them all = false. Note: Firefox may reset it when upgrading or reinstalling, or even remove it in the future. If this does not work, google how to disable Firefox multiprocess.</li>
+	///    <li>By default, the Find function is about 50 times slower than it could be. Also for this reason the Wait function consumes much CPU. And HTML attributes may be unavailable. See <see cref="AFFlags.NotInProc"/>. Workaround: disable the Firefox multiprocess feature: set system environment variable MOZ_FORCE_DISABLE_E10S=1 and restart Firefox. Note: Firefox may remove this option in the future. If this does not work, google how to disable Firefox multiprocess. Or use Chrome instead.</li>
 	///    <li>When Firefox starts, its web page AOs are unavailable. It creates them only when somebody asks (eg function Find), but does it lazily, and Find at first fails. Workaround: use Wait, not Find.</li>
 	///    <li>Ocassionally Firefox briefly turns off its web page AOs. Workaround: use Wait, not Find. With other web browsers also it's better to use Wait.</li>
 	///    <li>Some new web browser versions add new features or bugs that break something.</li>
@@ -248,8 +246,8 @@ namespace Au
 				//int rc =
 				Marshal.Release(t);
 				//APerf.NW();
-				//Print($"rel: {Marshal.Release(t)}");
-				//Print(t, _elem, rc);
+				//AOutput.Write($"rel: {Marshal.Release(t)}");
+				//AOutput.Write(t, _elem, rc);
 
 				int mp = _MemoryPressure;
 				GC.RemoveMemoryPressure(mp);
@@ -303,7 +301,6 @@ namespace Au
 		/// Returns true if this variable is disposed.
 		/// </summary>
 		bool _Disposed => _iacc == default;
-		//note: named not 'IsDisposed' because can be easily confused with IsDisabled.
 
 		internal void ThrowIfDisposed_()
 		{
@@ -535,7 +532,7 @@ namespace Au
 			t_debugNoRecurse = true;
 			try {
 				var s = ToString();
-				Print($"<><c 0xff>-{funcId}, 0x{hr:X} - {ALastError.MessageFor(hr)}    {s}</c>");
+				AOutput.Write($"<><c 0xff>-{funcId}, 0x{hr:X} - {ALastError.MessageFor(hr)}    {s}</c>");
 			}
 			finally { t_debugNoRecurse = false; }
 		}
@@ -590,7 +587,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Uses <see cref="ToString"/>.
-		/// Catches exceptions. On exception prints <c>$"!exception! exceptionType exceptionMessage"</c>.
+		/// Catches exceptions. On exception writes to the output: <c>$"!exception! exceptionType exceptionMessage"</c>.
 		/// Parameters are of <see cref="Find"/>.
 		/// By default skips invisible objects and objects in menus. Use flags to include them.
 		/// Chrome web page accessible objects normally are disabled (missing) when it starts. Use role prefix <c>"web:"</c> or <c>"chrome:"</c> to enable. See example.
@@ -600,18 +597,18 @@ namespace Au
 		/// <code><![CDATA[
 		/// AOutput.Clear();
 		/// var w = AWnd.Find("* Chrome").OrThrow();
-		/// Print("---- all ----");
+		/// AOutput.Write("---- all ----");
 		/// AAcc.PrintAll(w, "web:");
-		/// Print("---- links ----");
+		/// AOutput.Write("---- links ----");
 		/// AAcc.PrintAll(w, "web:LINK");
 		/// ]]></code>
 		/// </example>
 		public static void PrintAll(AWnd w, string role = null, AFFlags flags = 0, string prop = null)
 		{
 			try {
-				Find(w, role, null, prop, flags, also: o => { Print(o); return false; });
+				Find(w, role, null, prop, flags, also: o => { AOutput.Write(o); return false; });
 			}
-			catch(Exception ex) { Print($"!exception! {ex.ToStringWithoutStack()}"); }
+			catch(Exception ex) { AOutput.Write($"!exception! {ex.ToStringWithoutStack()}"); }
 		}
 	}
 }

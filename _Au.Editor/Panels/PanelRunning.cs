@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 using Aga.Controls.Tree;
@@ -111,6 +109,9 @@ class PanelRunning : AuUserControlBase, ITreeModel
 			var m = new AMenu();
 			m["End task '" + name + "'"] = o => Program.Tasks.EndTask(t);
 			m["End all '" + name + "'"] = o => Program.Tasks.EndTasksOf(f);
+			m.Separator();
+			m["Close\tM-click"] = o => Program.Model.CloseFile(f, true);
+			if(null == Panels.Editor.ZGetOpenDocOf(f)) m.LastMenuItem.Enabled = false;
 			m.Show(_c);
 			break;
 		case MouseButtons.Middle:
@@ -119,7 +120,7 @@ class PanelRunning : AuUserControlBase, ITreeModel
 		}
 	}
 
-	class _TreeViewAdv :TreeViewAdv
+	class _TreeViewAdv : TreeViewAdv
 	{
 		public _TreeViewAdv()
 		{

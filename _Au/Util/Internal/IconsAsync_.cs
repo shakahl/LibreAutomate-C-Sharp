@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -48,7 +45,7 @@ namespace Au.Util
 		/// <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
 		public void Add(string file, object obj)
 		{
-			if(Empty(file)) return;
+			if(file.IsNE()) return;
 			_files.Add(new Item(file, obj));
 		}
 
@@ -119,7 +116,7 @@ namespace Au.Util
 
 				using(new Util.EnsureWindowsFormsSynchronizationContext_()) {
 					foreach(var v in _host._files) {
-						if(!Empty(v.file)) _GetIconAsync(new Result(v.file, v.obj));
+						if(!v.file.IsNE()) _GetIconAsync(new Result(v.file, v.obj));
 					}
 				}
 			}
@@ -138,15 +135,15 @@ namespace Au.Util
 					k.hIcon = AIcon.GetFileIconHandle(k.file, _iconSize, _iconFlags);
 
 						//var hi = GetFileIconHandle(k.file, _iconSize, _iconFlags);
-						//if(0!=(_iconFlags&IconFlags.NeedImage) && _nPending>20) { /*Print(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
+						//if(0!=(_iconFlags&IconFlags.NeedImage) && _nPending>20) { /*AOutput.Write(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
 
-						//Print("1");
+						//AOutput.Write("1");
 
 						//Prevent overflowing the message queue and the number of icon handles.
 						//Because bad things start when eg toolbar icon count is more than 3000 and they are extracted faster than consumed.
 						//But don't make the threshold too low, because then may need to wait unnecessarily, and it makes slower.
 						if(Interlocked.Increment(ref _nPending) >= 900) {
-							//Print(_nPending);
+							//AOutput.Write(_nPending);
 							//var perf = APerf.Create();
 							Thread.Sleep(10);
 							//while(_nPending >= 900) Thread.Sleep(10);
@@ -156,7 +153,7 @@ namespace Au.Util
 				{ //this code runs in the caller's thread
 						Interlocked.Decrement(ref _nPending);
 
-						//Print("2");
+						//AOutput.Write("2");
 
 						var k = o as Result;
 					if(_canceled) {
@@ -244,7 +241,7 @@ namespace Au.Util
 		/// </summary>
 		public void Cancel()
 		{
-			//Print(_works.Count);
+			//AOutput.Write(_works.Count);
 			if(_works.Count == 0) return;
 			foreach(var work in _works) work.Cancel();
 			_works.Clear();

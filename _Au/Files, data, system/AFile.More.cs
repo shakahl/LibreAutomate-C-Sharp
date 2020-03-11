@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using System.Diagnostics.CodeAnalysis;
 
 namespace Au
@@ -47,7 +45,7 @@ namespace Au
 			{
 				if(!isFileType) fileType = GetExtensionOrProtocol(fileType, out isURL);
 				else if(isURL) fileType = fileType.RemoveSuffix(1); //"proto:" -> "proto"
-				if(Empty(fileType)) return null;
+				if(fileType.IsNE()) return null;
 
 				string R, userChoiceKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" + fileType + @"\UserChoice";
 				if(ARegistry.GetString(out R, "ProgId", userChoiceKey)) return R;
@@ -67,7 +65,7 @@ namespace Au
 			internal static string GetExtensionOrProtocol(string path, out bool isProtocol)
 			{
 				isProtocol = false;
-				if(Empty(path)) return null;
+				if(path.IsNE()) return null;
 				if(!PathIsExtension(path)) {
 					int i = path.IndexOf(':');
 					if(i > 1) {
@@ -76,7 +74,7 @@ namespace Au
 						isProtocol = true;
 					} else {
 						path = APath.GetExtension(path);
-						if(Empty(path)) return null;
+						if(path.IsNE()) return null;
 					}
 				}
 				return path;
@@ -119,7 +117,7 @@ namespace Au
 				var ok1 = GetFileId(path1, out var fid1);
 				var ok2 = GetFileId(path2, out var fid2);
 				if(ok1 && ok2) return fid1 == fid2;
-				PrintWarning("GetFileId failed"); //CONSIDER: throw
+				AWarning.Write("GetFileId failed"); //CONSIDER: throw
 				return false;
 			}
 

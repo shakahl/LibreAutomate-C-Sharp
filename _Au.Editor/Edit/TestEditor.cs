@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -19,7 +18,6 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
 using Au.Compiler;
@@ -52,12 +50,12 @@ partial class FMain
 	//		if(!f.IsCodeFile) continue;
 	//		if(f.Name == "5 M lines.cs") continue;
 	//		n++;
-	//		//Print(f.Name);
+	//		//AOutput.Write(f.Name);
 	//		//var s = f.GetText();
 	//		AFile.GetProperties(f.FilePath, out var p, FAFlags.UseRawPath);
 	//	}
 	//	APerf.NW();
-	//	Print(n);
+	//	AOutput.Write(n);
 	//}
 
 	//void TestFileNodeTextCache()
@@ -67,7 +65,7 @@ partial class FMain
 	//	APerf.First();
 	//	var s = f.GetText(saved: true, cache: true);
 	//	APerf.NW();
-	//	Print(s);
+	//	AOutput.Write(s);
 	//}
 
 	void TestReplaceTextGently()
@@ -83,13 +81,13 @@ partial class FMain
 	void TestDiffMatchPatch()
 	{
 		var s1 = @"//.
-using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+using Au; using Au.Types; using System; using System.Collections.Generic;
 class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 	
 	var s=""one"";
 ";
 		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //.
-using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+using Au; using Au.Types; using System; using System.Collections.Generic;
 using My.NS1; //ąčę îôû
 using My.NS2;
 class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
@@ -100,11 +98,11 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		List<Diff> diff = dmp.diff_main(s1, s2, true);
 		dmp.diff_cleanupSemantic(diff);
 		var delta = dmp.diff_toDelta(diff);
-		Print(delta);
-		Print("----");
+		AOutput.Write(delta);
+		AOutput.Write("----");
 		var d2 = dmp.diff_fromDelta(s1, delta);
-		//Print(d2);
-		Print(dmp.diff_text2(d2));
+		//AOutput.Write(d2);
+		AOutput.Write(dmp.diff_text2(d2));
 	}
 
 	void TestNoGcRegion()
@@ -114,7 +112,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 			bool noGC = GC.TryStartNoGCRegion(10_000_000);
 			var a = new byte[50_000_000];
 			for(int j = 0; j < a.Length; j++) a[j] = 1;
-			Print(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
+			AOutput.Write(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
 			if(noGC && GCSettings.LatencyMode == GCLatencyMode.NoGCRegion) try { GC.EndNoGCRegion(); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
 			ADebug.MemoryPrint_();
 			GC.Collect();
@@ -129,7 +127,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		{
 			if(Environment.HasShutdownStarted) return;
 			if(AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
-			Print("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
+			AOutput.Write("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
 			//ATimer.After(1, _ => new TestGC());
 			//var f = Program.MainForm; if(!f.IsHandleCreated) return;
 			//f.BeginInvoke(new Action(() => new TestGC()));
@@ -175,26 +173,28 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		//}
 
 		//var m = new AMenu("name");
-		//m["A"] = o => Print(o);
+		//m["A"] = o => AOutput.Write(o);
 		//m.Add(new ToolStripTextBox());
 		//var cb = new ToolStripComboBox();
 		//for(int i=0;i<60;i++) cb.Items.Add("aaa");
 		//m.Add(cb);
-		//m["B"] = o => Print(o);
+		//m["B"] = o => AOutput.Write(o);
 		//using(m.Submenu("sub")) {
-		//	m["C"] = o => Print(o);
+		//	m["C"] = o => AOutput.Write(o);
 		//	m.Add(new ToolStripTextBox());
 		//}
 		//m.Show(Program.MainForm);
 
 		//var task = "_Au.Editor";
 		//bool exists = WinTaskScheduler.TaskExists("Au", task);
-		//Print(exists);
+		//AOutput.Write(exists);
 		//if(exists) WinTaskScheduler.DeleteTask("Au", task);
 		//else WinTaskScheduler.CreateTaskToRunProgramOnDemand("Au", task, UacIL.System, AFolders.ThisAppBS + "Au.CL.exe", "/s $(Arg0)");
-		//Print("ok");
+		//AOutput.Write("ok");
 
 		//AOutput.Clear();
+
+
 
 		//EdDatabases.CreateRefAndDoc();
 		//EdDatabases.CreateWinapi();
@@ -203,7 +203,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		var Z = doc.Z;
 		var s = doc.Text;
 
-		Print(doc.Z.CurrentPos16);
+		//AOutput.Write(doc.Z.CurrentPos16);
 
 		//z.Select(false, 300, 295);
 		//z.ReplaceRange(false, 295, 300, "RE");
@@ -216,31 +216,31 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 		//CodeInfo.Stop();
 
-		//Print(z.CurrentPos16);
+		//AOutput.Write(z.CurrentPos16);
 
 		//int i = z.SelectionStart8, j = z.SelectionEnd8;
 		//doc.Call(SCI_STARTSTYLING, i);
 		//doc.Call(SCI_SETSTYLING, j - i, 31);
 
 		//int i = z.LineFromPos(false, z.CurrentPos8);
-		//Print(i + 1, (uint)doc.Call(SCI_GETFOLDLEVEL, i));
-		//Print(AWnd.ThisThread.FocusedControl);
+		//AOutput.Write(i + 1, (uint)doc.Call(SCI_GETFOLDLEVEL, i));
+		//AOutput.Write(AWnd.ThisThread.FocusedControl);
 
 		//int line = doc.Call(SCI_GETLINECOUNT);
-		////Print(doc.Len8, doc.Call(SCI_POSITIONFROMLINE, line), doc.Call(SCI_POSITIONFROMLINE, line+1), doc.Call(SCI_POSITIONFROMLINE, -1));
+		////AOutput.Write(doc.Len8, doc.Call(SCI_POSITIONFROMLINE, line), doc.Call(SCI_POSITIONFROMLINE, line+1), doc.Call(SCI_POSITIONFROMLINE, -1));
 		//int len = doc.Len8;
-		////Print(len);
-		////Print(z.LineStart(false, -1));
-		////Print(doc.Call(SCI_GETLINECOUNT), doc.Call(SCI_LINEFROMPOSITION, len), doc.Call(SCI_LINEFROMPOSITION, len + 100));
-		////Print(len, z.LineEnd(false, line + 1), z.LineEnd(false, line + 1, true));
-		////Print(len, z.LineStart(false, line + 1), z.LineStartFromPos(false, len+1));
-		////Print(len, z.LineEndFromPos(false, len+1), z.LineEndFromPos(false, len+1, true));
-		//Print(len, doc.Pos8(len), doc.Pos16(len));
-		////Print(doc.Pos8(len+100000));
-		//Print(doc.Pos16(len+1));
+		////AOutput.Write(len);
+		////AOutput.Write(z.LineStart(false, -1));
+		////AOutput.Write(doc.Call(SCI_GETLINECOUNT), doc.Call(SCI_LINEFROMPOSITION, len), doc.Call(SCI_LINEFROMPOSITION, len + 100));
+		////AOutput.Write(len, z.LineEnd(false, line + 1), z.LineEnd(false, line + 1, true));
+		////AOutput.Write(len, z.LineStart(false, line + 1), z.LineStartFromPos(false, len+1));
+		////AOutput.Write(len, z.LineEndFromPos(false, len+1), z.LineEndFromPos(false, len+1, true));
+		//AOutput.Write(len, doc.Pos8(len), doc.Pos16(len));
+		////AOutput.Write(doc.Pos8(len+100000));
+		//AOutput.Write(doc.Pos16(len+1));
 
 		//int pos8 = z.CurrentPos8, pos16= Encoding.UTF8.GetCharCount(Encoding.UTF8.GetBytes(s), 0, pos8);
-		//Print(pos8, pos16, doc.Pos8(pos16), doc.Pos16(pos8));
+		//AOutput.Write(pos8, pos16, doc.Pos8(pos16), doc.Pos16(pos8));
 		//return;
 
 		//APerf.SpeedUpCpu();
@@ -266,10 +266,10 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 			if(x.msg->message == Api.WM_CREATE) {
 				if(Program.MainForm.Visible) return;
 				var w = x.msg->hwnd;
-				var p = w.Get.DirectParent; if(p.Is0) p = w.Owner;
+				var p = w.Get.DirectParent; if(p.Is0) p = w.OwnerWindow;
 				var c = Control.FromHandle(w.Handle); //always null in CBT hook proc
 				var s = c?.ToString() ?? "";
-				Print($"<><c 0xcc00>{w} ({s}), {p.Handle}</c>");
+				AOutput.Write($"<><c 0xcc00>{w} ({s}), {p.Handle}</c>");
 
 				//if(c is Au.Controls.AToolStrip) { //never mind: .NET bug: if toolstrip Custom1 has overflow and window is maximized, creates parked handle
 				//	int stop = 0;

@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using Au.Tools;
 
@@ -34,7 +32,7 @@ class CmdHandlers : IGStripManagerCallbacks
 	void _OnClick(object sender, EventArgs args)
 	{
 		var item = sender as ToolStripItem;
-		//Print(item.Name);
+		//AOutput.Write(item.Name);
 		if(!_dict.TryGetValue(item.Name, out var d)) { Debug.Assert(false); return; }
 		d();
 	}
@@ -53,7 +51,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void ItemAdding(ToolStripItem item, ToolStrip owner)
 	{
-		//Print(item, owner);
+		//AOutput.Write(item, owner);
 	}
 	#endregion
 
@@ -116,9 +114,9 @@ class CmdHandlers : IGStripManagerCallbacks
 		//_dict.Add(nameof(Edit_Output), Edit_Output);
 		_dict.Add(nameof(Edit_WrapLines), Edit_WrapLines);
 		_dict.Add(nameof(Edit_ImagesInCode), Edit_ImagesInCode);
-		_dict.Add(nameof(Code_Wnd), Code_Wnd);
-		_dict.Add(nameof(Code_Acc), Code_Acc);
-		_dict.Add(nameof(Code_WinImage), Code_WinImage);
+		_dict.Add(nameof(Code_AWnd), Code_AWnd);
+		_dict.Add(nameof(Code_AAcc), Code_AAcc);
+		_dict.Add(nameof(Code_AWinImage), Code_AWinImage);
 		_dict.Add(nameof(Code_Regex), Code_Regex);
 		_dict.Add(nameof(Code_Keys), Code_Keys);
 		_dict.Add(nameof(Code_WindowsAPI), Code_WindowsAPI);
@@ -246,17 +244,17 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_Close()
 	{
-		Program.Model.CloseEtc(1);
+		Program.Model.CloseEtc(FilesModel.ECloseCmd.CloseSelectedOrCurrent);
 	}
 
 	public void File_CloseAll()
 	{
-		Program.Model.CloseEtc(2);
+		Program.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll);
 	}
 
 	public void File_CollapseFolders()
 	{
-		Program.Model.CloseEtc(3);
+		Program.Model.CloseEtc(FilesModel.ECloseCmd.CollapseFolders);
 	}
 
 	public void File_Cut()
@@ -362,19 +360,19 @@ class CmdHandlers : IGStripManagerCallbacks
 	public void Edit_Copy()
 	{
 		var doc = Panels.Editor.ZActiveDoc;
-		doc.ZCopyModified(onlyInfo: true);
+		doc.ZForumCopy(onlyInfo: true);
 		doc.Call(Sci.SCI_COPY);
 	}
 
 	public void Edit_ForumCopy()
 	{
-		Panels.Editor.ZActiveDoc.ZCopyModified();
+		Panels.Editor.ZActiveDoc.ZForumCopy();
 	}
 
 	public void Edit_Paste()
 	{
 		var doc = Panels.Editor.ZActiveDoc;
-		if(!doc.ZPasteModified()) doc.Call(Sci.SCI_PASTE);
+		if(!doc.ZForumPaste()) doc.Call(Sci.SCI_PASTE);
 	}
 
 	public void Edit_Find()
@@ -457,17 +455,17 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	#region menu Code
 
-	public void Code_Wnd()
+	public void Code_AWnd()
 	{
 		new FormAWnd().ZShow();
 	}
 
-	public void Code_Acc()
+	public void Code_AAcc()
 	{
 		new FormAAcc().ZShow();
 	}
 
-	public void Code_WinImage()
+	public void Code_AWinImage()
 	{
 		new FormAWinImage().ZShow();
 	}

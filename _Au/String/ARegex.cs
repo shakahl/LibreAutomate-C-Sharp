@@ -10,14 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using System.Text.RegularExpressions; //for XML doc links
 
 using Au.Types;
-using static Au.AStatic;
-using System.Collections.Concurrent;
 
 namespace Au
 {
@@ -49,75 +46,75 @@ namespace Au
 	/// var s = "one two22, three333,four"; //subject string
 	/// var x = new ARegex(@"\b(\w+?)(\d+)\b"); //regular expression
 	///  
-	///  Print("//IsMatch:");
-	/// Print(x.IsMatch(s));
+	///  AOutput.Write("//IsMatch:");
+	/// AOutput.Write(x.IsMatch(s));
 	///  
-	///  Print("//Match:");
-	/// if(x.Match(s, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+	///  AOutput.Write("//Match:");
+	/// if(x.Match(s, out var m)) AOutput.Write(m.Value, m[1].Value, m[2].Value);
 	///  
-	///  Print("//FindAll with foreach:");
-	/// foreach(var v in x.FindAll(s)) Print(v.Value, v[1].Value, v[2].Value);
-	///  Print("//FindAllS, get only strings of group 2:");
-	/// Print(x.FindAllS(s, 2));
+	///  AOutput.Write("//FindAll with foreach:");
+	/// foreach(var v in x.FindAll(s)) AOutput.Write(v.Value, v[1].Value, v[2].Value);
+	///  AOutput.Write("//FindAllS, get only strings of group 2:");
+	/// AOutput.Write(x.FindAllS(s, 2));
 	///  
-	///  Print("//Replace:");
-	/// Print(x.Replace(s, "'$2$1'"));
-	///  Print("//Replace with callback:");
-	/// Print(x.Replace(s, o => o.Value.Upper()));
-	///  Print("//Replace with callback and ExpandReplacement:");
-	/// Print(x.Replace(s, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+	///  AOutput.Write("//Replace:");
+	/// AOutput.Write(x.Replace(s, "'$2$1'"));
+	///  AOutput.Write("//Replace with callback:");
+	/// AOutput.Write(x.Replace(s, o => o.Value.Upper()));
+	///  AOutput.Write("//Replace with callback and ExpandReplacement:");
+	/// AOutput.Write(x.Replace(s, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
 	///  
-	///  Print("//Split:");
-	/// Print(new ARegex(@" *, *").Split(s));
+	///  AOutput.Write("//Split:");
+	/// AOutput.Write(new ARegex(@" *, *").Split(s));
 	/// ]]></code>
 	///  Examples with <b>String</b> extension methods. 
 	/// <code><![CDATA[
 	/// var s = "one two22, three333,four"; //subject string
 	/// var rx = @"\b(\w+?)(\d+)\b"; //regular expression
 	///  
-	///  Print("//RegexIsMatch:");
-	/// Print(s.RegexIsMatch(rx));
+	///  AOutput.Write("//RegexIsMatch:");
+	/// AOutput.Write(s.RegexIsMatch(rx));
 	///  
-	///  Print("//RegexMatch:");
-	/// if(s.RegexMatch(rx, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+	///  AOutput.Write("//RegexMatch:");
+	/// if(s.RegexMatch(rx, out var m)) AOutput.Write(m.Value, m[1].Value, m[2].Value);
 	///  
-	///  Print("//RegexMatch, get only string:");
-	/// if(s.RegexMatch(rx, 0, out var s0)) Print(s0);
-	///  Print("//RegexMatch, get only string of group 1:");
-	/// if(s.RegexMatch(rx, 1, out var s1)) Print(s1);
+	///  AOutput.Write("//RegexMatch, get only string:");
+	/// if(s.RegexMatch(rx, 0, out var s0)) AOutput.Write(s0);
+	///  AOutput.Write("//RegexMatch, get only string of group 1:");
+	/// if(s.RegexMatch(rx, 1, out var s1)) AOutput.Write(s1);
 	///  
-	///  Print("//RegexFindAll with foreach:");
-	/// foreach(var v in s.RegexFindAll(rx)) Print(v.Value, v[1].Value, v[2].Value);
+	///  AOutput.Write("//RegexFindAll with foreach:");
+	/// foreach(var v in s.RegexFindAll(rx)) AOutput.Write(v.Value, v[1].Value, v[2].Value);
 	///  
-	///  Print("//RegexFindAll with foreach, get only strings:");
-	/// foreach(var v in s.RegexFindAll(rx, 0)) Print(v);
-	///  Print("//RegexFindAll with foreach, get only strings of group 2:");
-	/// foreach(var v in s.RegexFindAll(rx, 2)) Print(v);
+	///  AOutput.Write("//RegexFindAll with foreach, get only strings:");
+	/// foreach(var v in s.RegexFindAll(rx, 0)) AOutput.Write(v);
+	///  AOutput.Write("//RegexFindAll with foreach, get only strings of group 2:");
+	/// foreach(var v in s.RegexFindAll(rx, 2)) AOutput.Write(v);
 	///  
-	///  Print("//RegexFindAll, get array:");
-	/// if(s.RegexFindAll(rx, out var am)) foreach(var k in am) Print(k.Value, k[1].Value, k[2].Value);
+	///  AOutput.Write("//RegexFindAll, get array:");
+	/// if(s.RegexFindAll(rx, out var am)) foreach(var k in am) AOutput.Write(k.Value, k[1].Value, k[2].Value);
 	///  
-	///  Print("//RegexFindAll, get array of strings:");
-	/// if(s.RegexFindAll(rx, 0, out var av)) Print(av);
-	///  Print("//RegexFindAll, get array of group 2 strings:");
-	/// if(s.RegexFindAll(rx, 2, out var ag)) Print(ag);
+	///  AOutput.Write("//RegexFindAll, get array of strings:");
+	/// if(s.RegexFindAll(rx, 0, out var av)) AOutput.Write(av);
+	///  AOutput.Write("//RegexFindAll, get array of group 2 strings:");
+	/// if(s.RegexFindAll(rx, 2, out var ag)) AOutput.Write(ag);
 	///  
-	///  Print("//RegexReplace:");
-	/// Print(s.RegexReplace(rx, "'$2$1'"));
+	///  AOutput.Write("//RegexReplace:");
+	/// AOutput.Write(s.RegexReplace(rx, "'$2$1'"));
 	///  
-	///  Print("//RegexReplace with callback:");
-	/// Print(s.RegexReplace(rx, o => o.Value.Upper()));
-	///  Print("//RegexReplace with callback and ExpandReplacement:");
-	/// Print(s.RegexReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
+	///  AOutput.Write("//RegexReplace with callback:");
+	/// AOutput.Write(s.RegexReplace(rx, o => o.Value.Upper()));
+	///  AOutput.Write("//RegexReplace with callback and ExpandReplacement:");
+	/// AOutput.Write(s.RegexReplace(rx, o => { if(o.Length > 5) return o.ExpandReplacement("'$2$1'"); else return o[1].Value; }));
 	///  
-	///  Print("//RegexReplace, get replacement count:");
-	/// if(0 != s.RegexReplace(rx, "'$2$1'", out var s2)) Print(s2);
+	///  AOutput.Write("//RegexReplace, get replacement count:");
+	/// if(0 != s.RegexReplace(rx, "'$2$1'", out var s2)) AOutput.Write(s2);
 	///  
-	///  Print("//RegexReplace with callback, get replacement count:");
-	/// if(0 != s.RegexReplace(rx, o => o.Value.Upper(), out var s3)) Print(s3);
+	///  AOutput.Write("//RegexReplace with callback, get replacement count:");
+	/// if(0 != s.RegexReplace(rx, o => o.Value.Upper(), out var s3)) AOutput.Write(s3);
 	///  
-	///  Print("//RegexSplit:");
-	/// Print(s.RegexSplit(@" *, *"));
+	///  AOutput.Write("//RegexSplit:");
+	/// AOutput.Write(s.RegexSplit(@" *, *"));
 	/// ]]></code></example>
 	public unsafe class ARegex
 	{
@@ -156,7 +153,7 @@ namespace Au
 		///
 		~ARegex()
 		{
-			//Print("dtor");
+			//AOutput.Write("dtor");
 			if(_codeUnsafe == default) return;
 			int codeSize = Cpp.Cpp_RegexDtor(_codeUnsafe);
 			GC.RemoveMemoryPressure(codeSize);
@@ -178,16 +175,16 @@ namespace Au
 		/// var s = "text <a href='url'>link</a> text";
 		/// var rx = @"(?C1)<a (?C2)href='.+?'>(?C3)[^<]*(?C4)</a>";
 		/// var x = new ARegex(rx);
-		/// x.Callout = o => { Print(o.callout_number, o.current_position, s.Substring(o.start_match, o.current_position), rx.Substring(o.pattern_position, o.next_item_length)); };
-		/// Print(x.IsMatch(s));
+		/// x.Callout = o => { AOutput.Write(o.callout_number, o.current_position, s.Substring(o.start_match, o.current_position), rx.Substring(o.pattern_position, o.next_item_length)); };
+		/// AOutput.Write(x.IsMatch(s));
 		/// ]]></code>
 		/// Track the matching progress with flag AUTO_CALLOUT.
 		/// <code><![CDATA[
 		/// var s = "one 'two' three";
 		/// var rx = @"'(.+?)'";
 		/// var x = new ARegex(rx, RXFlags.AUTO_CALLOUT);
-		/// x.Callout = o => Print(o.current_position, o.pattern_position, rx.Substring(o.pattern_position, o.next_item_length));
-		/// Print(x.IsMatch(s));
+		/// x.Callout = o => AOutput.Write(o.current_position, o.pattern_position, rx.Substring(o.pattern_position, o.next_item_length));
+		/// AOutput.Write(x.IsMatch(s));
 		/// ]]></code>
 		/// Get all instances of a group that can match multiple times.
 		/// <code><![CDATA[
@@ -195,17 +192,17 @@ namespace Au
 		/// var x = new ARegex(@"^(\w+) (?:(\d+) (?C1))+(\w+)$");
 		/// var a = new List<string>();
 		/// x.Callout = o => a.Add(o.LastGroupValue);
-		/// if(!x.Match(s, out var m)) { Print("no match"); return; }
-		/// Print(m[1]);
-		/// Print(a); //all numbers. m[2] contains only the last number.
-		/// Print(m[3]);
+		/// if(!x.Match(s, out var m)) { AOutput.Write("no match"); return; }
+		/// AOutput.Write(m[1]);
+		/// AOutput.Write(a); //all numbers. m[2] contains only the last number.
+		/// AOutput.Write(m[3]);
 		/// ]]></code>
 		/// Evaluate and reject some matches or match parts. This code rejects matches longer than 5.
 		/// <code><![CDATA[
 		/// var s = "one 123-5 two 12-456 three 1-34 four";
 		/// var x = new ARegex(@"\b\d+-\d+\b(?C1)");
-		/// x.Callout = o => { int len = o.current_position - o.start_match; /*Print(len);*/ if(len > 5) o.Result = 1; };
-		/// Print(x.FindAllS(s));
+		/// x.Callout = o => { int len = o.current_position - o.start_match; /*AOutput.Write(len);*/ if(len > 5) o.Result = 1; };
+		/// AOutput.Write(x.FindAllS(s));
 		/// ]]></code>
 		/// </example>
 		public RXCalloutFunc Callout {
@@ -276,14 +273,14 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// Print(x.IsMatch(s));
+		/// AOutput.Write(x.IsMatch(s));
 		/// ]]></code>
 		/// </example>
 		public bool IsMatch(string s, Range? range = null, RXMatchFlags matchFlags = 0)
 		{
 			if(!_GetStartEnd(s, range, out int start, out int end)) return false;
 			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, null, out BSTR errStr);
-			//Print(rc);
+			//AOutput.Write(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
 			if(rc < -1) throw new AuException(errStr.ToStringAndDispose());
 			return rc >= 0;
@@ -313,7 +310,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// if(x.Match(s, out var m)) Print(m.Value, m[1].Value, m[2].Value);
+		/// if(x.Match(s, out var m)) AOutput.Write(m.Value, m[1].Value, m[2].Value);
 		/// ]]></code>
 		/// </example>
 		public bool Match(string s, out RXMatch result, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -353,7 +350,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// if(x.MatchG(s, out var g)) Print(g.Value, g.Start);
+		/// if(x.MatchG(s, out var g)) AOutput.Write(g.Value, g.Start);
 		/// ]]></code>
 		/// </example>
 		public bool MatchG(string s, out RXGroup result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -394,7 +391,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// if(x.MatchS(s, out var v)) Print(v);
+		/// if(x.MatchS(s, out var v)) AOutput.Write(v);
 		/// ]]></code>
 		/// </example>
 		public bool MatchS(string s, out string result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -434,7 +431,7 @@ namespace Au
 		{
 			if(!_GetStartEnd(s, range, out int start, out int end)) { m = default; return -1; }
 			int rc = Cpp.Cpp_RegexMatch(_CodeHR, s, end, start, _GetMatchFlags(matchFlags), _pcreCallout, out m, out BSTR errStr);
-			//Print(rc);
+			//AOutput.Write(rc);
 			//info: 0 is partial match, -1 is no match, <-1 is error
 			if(rc < -1) throw new AuException(errStr.ToStringAndDispose());
 			if(group != 0 && rc >= 0 && (uint)group >= m.vecCount) throw new ArgumentOutOfRangeException(nameof(group));
@@ -469,7 +466,7 @@ namespace Au
 			{
 				if(foundCount >= (uint)_maxCount) return false;
 				_rc = Cpp.Cpp_RegexMatch(_regex._CodeHR, _subject, _to, _from, _matchFlags, _regex._pcreCallout, out _m, out BSTR errStr);
-				//Print(_rc);
+				//AOutput.Write(_rc);
 				//info: 0 cannot be (partial match), -1 is no match, <-1 is error
 				if(_rc < 0) {
 					if(_rc < -1) throw new AuException(errStr.ToStringAndDispose());
@@ -528,7 +525,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// foreach(var m in x.FindAll(s)) Print(m.Value, m[1].Value, m[2].Value);
+		/// foreach(var m in x.FindAll(s)) AOutput.Write(m.Value, m[1].Value, m[2].Value);
 		/// ]]></code>
 		/// </example>
 		public IEnumerable<RXMatch> FindAll(string s, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -556,8 +553,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// if(!x.FindAll(s, out var a)) { Print("not found"); return; }
-		/// foreach(var m in a) Print(m.Value, m[1].Value, m[2].Value);
+		/// if(!x.FindAll(s, out var a)) { AOutput.Write("not found"); return; }
+		/// foreach(var m in a) AOutput.Write(m.Value, m[1].Value, m[2].Value);
 		/// ]]></code>
 		/// </example>
 		public bool FindAll(string s, out RXMatch[] result, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -585,7 +582,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two three";
 		/// var x = new ARegex(@"\b\w+\b");
-		/// foreach(var g in x.FindAllG(s)) Print(g.Start, g.Value);
+		/// foreach(var g in x.FindAllG(s)) AOutput.Write(g.Start, g.Value);
 		/// ]]></code>
 		/// </example>
 		public IEnumerable<RXGroup> FindAllG(string s, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -614,8 +611,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two three";
 		/// var x = new ARegex(@"\b\w+\b");
-		/// if(!x.FindAllG(s, out var a)) { Print("not found"); return; }
-		/// foreach(var g in a) Print(g.Start, g.Value);
+		/// if(!x.FindAllG(s, out var a)) { AOutput.Write("not found"); return; }
+		/// foreach(var g in a) AOutput.Write(g.Start, g.Value);
 		/// ]]></code>
 		/// </example>
 		public bool FindAllG(string s, out RXGroup[] result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -643,7 +640,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two three";
 		/// var x = new ARegex(@"\b\w+\b");
-		/// foreach(var v in x.FindAllS(s)) Print(v);
+		/// foreach(var v in x.FindAllS(s)) AOutput.Write(v);
 		/// ]]></code>
 		/// </example>
 		public IEnumerable<string> FindAllS(string s, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -672,8 +669,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two three";
 		/// var x = new ARegex(@"\b\w+\b");
-		/// if(!x.FindAllS(s, out var a)) { Print("not found"); return; }
-		/// foreach(var v in a) Print(v);
+		/// if(!x.FindAllS(s, out var a)) { AOutput.Write("not found"); return; }
+		/// foreach(var v in a) AOutput.Write(v);
 		/// ]]></code>
 		/// </example>
 		public bool FindAllS(string s, out string[] result, int group = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -694,7 +691,7 @@ namespace Au
 				//init variables
 				if(b == null) {
 					bCache = new Util.StringBuilder_(out b, s.Length + 100);
-					if(replFunc != null) replType = 3; else if(!Empty(repl)) replType = repl.IndexOf('$') < 0 ? 1 : 2;
+					if(replFunc != null) replType = 3; else if(!repl.IsNE()) replType = repl.IndexOf('$') < 0 ? 1 : 2;
 				}
 				//append s part before this match
 				var p = e.GroupP; //x=start, y=end
@@ -708,7 +705,7 @@ namespace Au
 					if(replFunc != null) re = replFunc(m);
 					else ExpandReplacement_(m, repl, b);
 				} else re = repl;
-				if(!Empty(re)) b.Append(re);
+				if(!re.IsNE()) b.Append(re);
 			}
 
 			//append s part after last match
@@ -747,7 +744,7 @@ namespace Au
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
 		/// s = x.Replace(s, "'$2$1'");
-		/// Print(s);
+		/// AOutput.Write(s);
 		/// ]]></code>
 		/// </example>
 		public string Replace(string s,
@@ -783,8 +780,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// if(0 == x.Replace(s, "'$2$1'", out s)) Print("not found");
-		/// else Print(s);
+		/// if(0 == x.Replace(s, "'$2$1'", out s)) AOutput.Write("not found");
+		/// else AOutput.Write(s);
 		/// ]]></code>
 		/// </example>
 		public int Replace(string s,
@@ -818,7 +815,7 @@ namespace Au
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
 		/// s = x.Replace(s, o => o.Value.Upper());
-		/// Print(s);
+		/// AOutput.Write(s);
 		/// ]]></code>
 		/// </example>
 		public string Replace(string s, Func<RXMatch, string> replFunc, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -851,8 +848,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var s = "one two22 three333 four";
 		/// var x = new ARegex(@"\b(\w+?)(\d+)\b");
-		/// if(0 == x.Replace(s, o => o.Value.Upper(), out s)) Print("not found");
-		/// else Print(s);
+		/// if(0 == x.Replace(s, o => o.Value.Upper(), out s)) AOutput.Write("not found");
+		/// else AOutput.Write(s);
 		/// ]]></code>
 		/// </example>
 		public int Replace(string s, Func<RXMatch, string> replFunc, out string result, int maxCount = -1, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -957,7 +954,7 @@ namespace Au
 		{
 			s_userReplFuncs[name] = replFunc;
 		}
-		static ConcurrentDictionary<string, Func<RXMatch, string>> s_userReplFuncs = new ConcurrentDictionary<string, Func<RXMatch, string>>();
+		static System.Collections.Concurrent.ConcurrentDictionary<string, Func<RXMatch, string>> s_userReplFuncs = new System.Collections.Concurrent.ConcurrentDictionary<string, Func<RXMatch, string>>();
 
 		//rejected: use pcre2_substitute. Not useful because: we cannot implement RXMatch.ExpandReplacement with it; we have AddReplaceFunc.
 
@@ -982,7 +979,7 @@ namespace Au
 		/// var s = "one, two,three , four";
 		/// var x = new ARegex(@" *, *");
 		/// var a = x.Split(s);
-		/// for(int i = 0; i < a.Length; i++) Print(i, a[i]);
+		/// for(int i = 0; i < a.Length; i++) AOutput.Write(i, a[i]);
 		/// ]]></code>
 		/// </example>
 		public string[] Split(string s, int maxCount = 0, Range? range = null, RXMatchFlags matchFlags = 0)
@@ -1026,7 +1023,7 @@ namespace Au
 		/// var s = "one, two,three , four";
 		/// var x = new ARegex(@" *, *");
 		/// var a = x.SplitG(s);
-		/// foreach(var v in a) Print(v.Start, v.Value);
+		/// foreach(var v in a) AOutput.Write(v.Start, v.Value);
 		/// ]]></code>
 		/// </example>
 		public RXGroup[] SplitG(string s, int maxCount = 0, Range? range = null, RXMatchFlags matchFlags = 0)

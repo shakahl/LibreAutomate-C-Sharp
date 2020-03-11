@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -13,13 +12,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -34,7 +31,7 @@ namespace Au
 	/// Get bitmap image from clipboard.
 	/// <code><![CDATA[
 	/// var image = AClipboardData.GetImage();
-	/// if(image == null) Print("no image in clipboard"); else Print(image.Size);
+	/// if(image == null) AOutput.Write("no image in clipboard"); else AOutput.Write(image.Size);
 	/// ]]></code>
 	/// Set clipboard data of two formats: text and image.
 	/// <code><![CDATA[
@@ -48,7 +45,7 @@ namespace Au
 	/// <code><![CDATA[
 	/// string html = null, text = null;
 	/// AClipboard.CopyData(() => { html = AClipboardData.GetHtml(); text = AClipboardData.GetText(); });
-	/// Print(html); Print(text);
+	/// AOutput.Write(html); AOutput.Write(text);
 	/// ]]></code>
 	/// </example>
 	public class AClipboardData
@@ -307,7 +304,7 @@ namespace Au
 					ief = html.Find(c_endFragment, isf..ieb, true);
 				}
 			}
-			//Print($"{isb} {ieb}  {isf} {ief}");
+			//AOutput.Write($"{isb} {ieb}  {isf} {ief}");
 			if(ieb < 0) { //no "<body>...</body>"
 				b.Append("<html><body>").Append(c_startFragment).Append(html).Append(c_endFragment).Append("</body></html>");
 				isf = 12 + c_startFragment.Length;
@@ -332,7 +329,7 @@ namespace Au
 					}
 				}
 			}
-			//Print($"{isf} {ief}");
+			//AOutput.Write($"{isf} {ief}");
 			isf += c_headerTemplate.Length; ief += c_headerTemplate.Length;
 
 			b.Append('\0');
@@ -341,7 +338,7 @@ namespace Au
 			_SetNum(isf, 79);
 			_SetNum(ief, 103);
 
-			//Print(Encoding.UTF8.GetString(a));
+			//AOutput.Write(Encoding.UTF8.GetString(a));
 			return a;
 
 			void _SetNum(int num, int i)
@@ -511,7 +508,7 @@ EndFragment:0000000000
 
 		internal static string ParseHtmlFormatData_(byte[] b, out int fragmentStart, out int fragmentLength, out string sourceURL)
 		{
-			//Print(s);
+			//AOutput.Write(s);
 			fragmentStart = fragmentLength = 0; sourceURL = null;
 			if(b == null) return null;
 			string s = Encoding.UTF8.GetString(b);
@@ -533,7 +530,7 @@ EndFragment:0000000000
 				_CorrectOffset(ref ish);
 				_CorrectOffset(ref ieh);
 			} else if(ieh > s.Length) return null;
-			//Print(ish, ieh, isf, ief);
+			//AOutput.Write(ish, ieh, isf, ief);
 
 			int isu = s.Find("SourceURL:", true), ieu;
 			if(isu >= 0 && (ieu = s.FindAny("\r\n", isu += 10)) >= 0) sourceURL = s.Substring(isu, ieu - isu);
@@ -661,7 +658,7 @@ namespace Au.Types
 			return R;
 		}
 
-		static readonly ConcurrentDictionary<int, Encoding> s_textEncoding = new ConcurrentDictionary<int, Encoding>();
+		static readonly System.Collections.Concurrent.ConcurrentDictionary<int, Encoding> s_textEncoding = new System.Collections.Concurrent.ConcurrentDictionary<int, Encoding>();
 
 		/// <summary>
 		/// Gets text encoding for format.

@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -19,7 +18,6 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -192,7 +190,7 @@ namespace Au.Controls
 
 					//apply minimal child width or height, because may contain toolbars
 					int min1 = _MinimalChildWidthOrHeight(Child1), min2 = _MinimalChildWidthOrHeight(Child2);
-					//Print(min1, min2);
+					//AOutput.Write(min1, min2);
 					if(swap) {
 						if(min1 > w1) { w1 = Math.Min(min1, wFull); w2 = wNoSplitter - w1; }
 						if(min2 > w2) { w2 = Math.Min(min2, wFull); w1 = wNoSplitter - w2; } //min2 has priority

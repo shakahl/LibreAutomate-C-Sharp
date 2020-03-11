@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -19,12 +17,12 @@ using System.Net;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using System.Collections.Immutable;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.DocumentationComments;
 using Microsoft.CodeAnalysis.CSharp;
+using Microsoft.CodeAnalysis.SignatureHelp;
 
 //SHOULDDO: test whether are displayed ref and readonly modifiers of types, functions and fields. Now functions can be readonly, which means they don't modify state.
 
@@ -63,8 +61,8 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 		int i = -1, iBr = -2;
 		foreach(var v in tags) {
 			i++;
-			//Print($"{v.Tag}, '{v.Text}', {v.Style}");
-			//Print($"{v.Tag}, '{v.Text}', {v.Style}, navHint='{v.NavigationHint}', navTarget='{v.NavigationTarget}'");
+			//AOutput.Write($"{v.Tag}, '{v.Text}', {v.Style}");
+			//AOutput.Write($"{v.Tag}, '{v.Text}', {v.Style}, navHint='{v.NavigationHint}', navTarget='{v.NavigationTarget}'");
 			string s = v.Text, c = null;
 			switch(v.Tag) {
 			case TextTags.Class:
@@ -165,18 +163,18 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 		//APerf.Next();
 
 		if(sym != null) {
-			//Print($"<><c blue>{sym}<>");
-			//Print(sym.GetType().GetInterfaces());
+			//AOutput.Write($"<><c blue>{sym}<>");
+			//AOutput.Write(sym.GetType().GetInterfaces());
 
 			var parts = GetSymbolDescription(sym, model, position);
-			//Print(parts);
+			//AOutput.Write(parts);
 			if(parts.Any()) {
 				b.Append("<p>");
 				TaggedPartsToHtml(b, parts);
 				b.Append("</p>");
 			}
 
-			//Print(sym.GetDocumentationCommentXml());
+			//AOutput.Write(sym.GetDocumentationCommentXml());
 
 			ISymbol enclosing = null;
 			switch(sym.Kind) {
@@ -324,7 +322,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 								//case MethodKind.Destructor: goto g1; //don't check is accessible etc
 							}
 							if(m.IsImplicitlyDeclared) continue; //eg default ctor of struct
-																 //Print(m.MethodKind, m);
+																 //AOutput.Write(m.MethodKind, m);
 							break;
 						case IPropertySymbol p when p.IsIndexer:
 							break;
@@ -490,7 +488,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 		TaggedPartsToHtml(b, sym.ToDisplayParts(sym.Kind == SymbolKind.NamedType ? s_nameWithoutTypeParametersFormat : s_symbolWithoutParametersFormat));
 	}
 
-	public static void ParametersToHtml(StringBuilder b, ISymbol sym, int iSel = -1)
+	public static void ParametersToHtml(StringBuilder b, ISymbol sym, int iSel = -1, SignatureHelpItem sh = null)
 	{
 		ImmutableArray<IParameterSymbol> ap;
 		switch(sym) {
@@ -503,13 +501,13 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 		case INamedTypeSymbol sy:
 			if(sy.IsGenericType) {
 				var tp = sy.TypeParameters;
-				for(int j = 0; j < tp.Length; j++) {
-					_Param(sy.TypeParameters[j], j);
+				for(int i = 0; i < tp.Length; i++) {
+					_Param(sy.TypeParameters[i], i);
 				}
 			} else if(sy.IsTupleType) {
 				var te = sy.TupleElements;
-				for(int j = 0; j < te.Length; j++) {
-					_Param(te[j], j, true);
+				for(int i = 0; i < te.Length; i++) {
+					_Param(te[i], i, true);
 				}
 			} else {
 				ADebug.Print(sy);
@@ -519,8 +517,16 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			ADebug.Print(sym);
 			return;
 		}
-		for(int j = 0; j < ap.Length; j++) {
-			_Param(ap[j], j);
+
+		for(int i = 0; i < ap.Length; i++) _Param(ap[i], i);
+		if(sh != null) { //eg properties in [Attribute(params, properties)]. Can be used for params too, but formats not as I like.
+			var ap2 = sh.Parameters;
+			for(int i = ap.Length; i < ap2.Length; i++) {
+				if(i > 0) b.Append(", ");
+				if(i == iSel) b.Append("<b>");
+				TaggedPartsToHtml(b, ap2[i].DisplayParts);
+				if(i == iSel) b.Append("</b>");
+			}
 		}
 
 		void _Param(ISymbol p, int i, bool isField = false)
@@ -532,6 +538,17 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			if(i == iSel) b.Append("</b>");
 		}
 	}
+
+	//public static void ParametersToHtml(StringBuilder b, SignatureHelpItem sh, int iSel = -1)
+	//{
+	//	var ap = sh.Parameters;
+	//	for(int i = 0; i < ap.Length; i++) {
+	//		if(i > 0) b.Append(", ");
+	//		if(i == iSel) b.Append("<b>");
+	//		TaggedPartsToHtml(b, ap[i].DisplayParts);
+	//		if(i == iSel) b.Append("</b>");
+	//	}
+	//}
 
 	public static bool SymbolLinksToHtml(StringBuilder b, ISymbol sym, string prefix, string suffix)
 	{

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 /// <summary>
 /// Creates and opens databases ref.db, doc.db, winapi.db.
@@ -82,7 +79,7 @@ static class EdDatabases
 	{
 		Cursor.Current = Cursors.WaitCursor;
 		if(0 == AFolders.NetRuntimeBS.RegexReplace(@"(?i)\\shared\\(Microsoft\.NETCore\.App)\\.+", @"\packs\$1.Ref", out var refDir, 1)) throw new AuException();
-		//Print(refDir);
+		//AOutput.Write(refDir);
 		var a = new List<string>();
 		foreach(var f in AFile.EnumDirectory(refDir, FEFlags.UseRawPath)) { //for each version
 			if(!f.IsDirectory) continue;
@@ -99,17 +96,17 @@ static class EdDatabases
 		} else {
 			for(i = 0; i < n; i++) _CreateRefAndDoc(refDir, a[i], true, dataDir);
 		}
-		Print("CreateRefAndDoc done.");
+		AOutput.Write("CreateRefAndDoc done.");
 		Cursor.Current = Cursors.Arrow;
 	}
 
 	static void _CreateRefAndDoc(string refDir, string version, bool all, string dataDir)
 	{
 		var dir1 = refDir + @"\" + version + @"\ref\netcoreapp" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1);
-		//Print(dir1, AFile.ExistsAsDirectory(dir1));
+		//AOutput.Write(dir1, AFile.ExistsAsDirectory(dir1));
 		if(!AFile.ExistsAsDirectory(dir1, true)) throw new DirectoryNotFoundException("Not found: " + dir1);
 		if(0 == dir1.RegexReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.)", "WindowsDesktop", out string dir2, 1)) throw new AuException();
-		//Print(dir2, AFile.ExistsAsDirectory(dir2));
+		//AOutput.Write(dir2, AFile.ExistsAsDirectory(dir2));
 		if(!AFile.ExistsAsDirectory(dir2, true)) throw new DirectoryNotFoundException("Not found: " + dir2);
 
 		string dbRef, dbDoc;
@@ -143,7 +140,7 @@ static class EdDatabases
 		trans.Commit();
 		d.Execute("VACUUM");
 
-		Print("Created " + dbFile);
+		AOutput.Write("Created " + dbFile);
 
 		void _AddDir(string dir, params string[] skip)
 		{
@@ -159,7 +156,7 @@ static class EdDatabases
 
 		void _AddFile(string asmName, string asmFile)
 		{
-			//Print(asmName);
+			//AOutput.Write(asmName);
 			statInsert.Bind(1, asmName);
 			statInsert.Bind(2, File.ReadAllBytes(asmFile));
 			statInsert.Step();
@@ -188,7 +185,7 @@ static class EdDatabases
 		trans.Commit();
 		d.Execute("VACUUM");
 
-		Print("Created " + dbFile);
+		AOutput.Write("Created " + dbFile);
 
 		void _AddDir(string dir, params string[] skip)
 		{
@@ -198,7 +195,7 @@ static class EdDatabases
 				var asmName = f.Name.RemoveSuffix(4);
 				if(skip.Contains(asmName)) continue;
 				if(!AFile.ExistsAsFile(dir + asmName + ".dll")) {
-					Print("<><c 0x808080>" + f.Name + "</c>");
+					AOutput.Write("<><c 0x808080>" + f.Name + "</c>");
 					continue;
 				}
 				_AddFile(asmName, f.FullPath);
@@ -208,7 +205,7 @@ static class EdDatabases
 
 		void _AddFile(string asmName, string xmlFile)
 		{
-			//Print(asmName);
+			//AOutput.Write(asmName);
 			haveRefs.Add(asmName);
 			var xr = AExtXml.LoadElem(xmlFile);
 			foreach(var e in xr.Descendants("member")) {
@@ -221,14 +218,14 @@ static class EdDatabases
 				using var reader = e.CreateReader();
 				reader.MoveToContent();
 				var xml = reader.ReadInnerXml();
-				//Print(name, xml);
+				//AOutput.Write(name, xml);
 
 				//textFile.WriteLine(name); textFile.WriteLine(xml); textFile.WriteLine("\f");
 
 				if(uniq.TryGetValue(name, out var prevRef)) {
 					if(!statDupl.Bind(1, name).Step()) throw new AuException();
 					var prev = statDupl.GetText(0);
-					if(xml != prev && asmName != "System.Linq") Print($"<>\t{name} already defined in {prevRef}\r\n<c 0xc000>{prev}</c>\r\n<c 0xff0000>{xml}</c>");
+					if(xml != prev && asmName != "System.Linq") AOutput.Write($"<>\t{name} already defined in {prevRef}\r\n<c 0xc000>{prev}</c>\r\n<c 0xff0000>{xml}</c>");
 					statDupl.Reset();
 				} else {
 					statInsert.BindAll(name, xml).Step();
@@ -278,7 +275,7 @@ static class EdDatabases
 
 		Program.Settings.db_copy_winapi = dbFile;
 
-		Print("CreateWinapi done.");
+		AOutput.Write("CreateWinapi done.");
 		Cursor.Current = Cursors.Arrow;
 	}
 }

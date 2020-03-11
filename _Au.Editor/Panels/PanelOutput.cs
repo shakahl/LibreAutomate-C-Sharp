@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using static Au.Controls.Sci;
 
@@ -134,7 +132,7 @@ class PanelOutput : AuUserControlBase
 	public void ZHistory()
 	{
 		var dd = new PopupList { Items = _history.ToArray() };
-		dd.SelectedAction = o => Print((o.ResultItem as OutServMessage).Text);
+		dd.SelectedAction = o => AOutput.Write((o.ResultItem as OutServMessage).Text);
 		dd.Show(new Rectangle(AMouse.XY, default));
 	}
 
@@ -186,13 +184,13 @@ class PanelOutput : AuUserControlBase
 	{
 		var w = ((AWnd)this).Window;
 		if(on) {
-			w.Owner = default;
+			w.OwnerWindow = default;
 			w.ZorderTopmost();
 			//w.SetExStyle(WS2.APPWINDOW, SetAddRemove.Add);
 			//AWnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
-			w.Owner = (AWnd)Program.MainForm;
+			w.OwnerWindow = (AWnd)Program.MainForm;
 		}
 	}
 
@@ -252,7 +250,7 @@ class PanelOutput : AuUserControlBase
 
 		void _OpenLink(string s)
 		{
-			//Print(s);
+			//AOutput.Write(s);
 			var a = s.Split('|');
 			Program.Model.OpenAndGoTo(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}

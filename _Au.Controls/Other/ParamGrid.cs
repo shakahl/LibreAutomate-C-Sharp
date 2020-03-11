@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 using SG = SourceGrid;
 using Editors = SourceGrid.Cells.Editors;
@@ -114,7 +111,7 @@ namespace Au.Controls
 
 		void _AutoSizeLastColumn()
 		{
-			//Print(this.Name, this.RowsCount);
+			//AOutput.Write(this.Name, this.RowsCount);
 			if(this.RowsCount > 0) {
 				int n = this.ClientSize.Width;
 				if(this.VScrollBarVisible) n -= this.VScrollBar.Width;
@@ -226,7 +223,7 @@ namespace Au.Controls
 
 				//Start cell editing on mouse button down, prevent selecting all text, and set caret correctly.
 
-				//Print(sender.Cell.Editor);
+				//AOutput.Write(sender.Cell.Editor);
 				c.StartEdit();
 
 				TextBox tb = null;

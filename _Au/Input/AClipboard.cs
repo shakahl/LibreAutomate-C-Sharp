@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -27,7 +24,7 @@ namespace Au
 	/// 
 	/// To set/get clipboard data of non-text formats, use class <see cref="AClipboardData"/>; to paste, use it with <see cref="PasteData"/>; to copy (get from the active app), use it with <see cref="CopyData"/>.
 	/// 
-	/// Should not be used to copy/paste in windows of own thread. In most cases it works, but strange problems are possible, because it waits until the window processes the copy/paste request, and while waiting it gets/dispatches all messages/events/etc. It's better to call it from another thread. Example in <see cref="AKeys.Key"/>.
+	/// Don't copy/paste in windows of own thread. Call it from another thread. Example in <see cref="AKeys.Key"/>.
 	/// </remarks>
 	public static partial class AClipboard
 	{
@@ -51,11 +48,12 @@ namespace Au
 		/// <exception cref="AuException">Failed to open clipboard (after 10 s of wait/retry) or set clipboard data.</exception>
 		/// <exception cref="OutOfMemoryException">The 'set' function failed to allocate memory.</exception>
 		/// <remarks>
-		/// The 'get' function calls <see cref="AClipboardData.GetText"/>. Also can get file paths, as multiline text. Returns null if there is no text/files.
+		/// The 'get' function calls <see cref="AClipboardData.GetText"/>. Returns null if there is no text.
+		/// 
+		/// Gets/sets only data of text format. For other formats (files, HTML, image, etc) use <see cref="AClipboardData"/> class.
 		/// </remarks>
-		/// <seealso cref="AClipboardData"/>
 		public static string Text {
-			get => AClipboardData.GetText(0);
+			get => AClipboardData.GetText();
 			set {
 				using(new OpenClipboard_(true)) {
 					EmptyClipboard_();
@@ -104,7 +102,7 @@ namespace Au
 		/// Fails (exception) if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
 		/// Works with console windows too, even if they don't support Ctrl+C.
 		/// </remarks>
-		public static string CopyText(bool cut = false, OptKey options = null)
+		public static string Copy(bool cut = false, OptKey options = null)
 		{
 			return _Copy(cut, options, null);
 			//rejected: 'format' parameter. Not useful.
@@ -115,7 +113,7 @@ namespace Au
 		/// </summary>
 		/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="AClipboardData"/> class or the .NET <see cref="System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
 		/// <param name="cut">Use Ctrl+X.</param>
-		/// <param name="options">See <see cref="CopyText"/>.</param>
+		/// <param name="options">See <see cref="Copy"/>.</param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <exception cref="Exception">Exceptions thrown by the callback function.</exception>
 		/// <remarks>
@@ -127,9 +125,9 @@ namespace Au
 		/// <code><![CDATA[
 		/// string text = null; Bitmap image = null; string[] files = null;
 		/// AClipboard.CopyData(() => { text = AClipboardData.GetText(); image = AClipboardData.GetImage(); files = AClipboardData.GetFiles(); });
-		/// if(text == null) Print("no text in clipboard"); else Print(text);
-		/// if(image == null) Print("no image in clipboard"); else Print(image.Size);
-		/// if(files == null) Print("no files in clipboard"); else Print(files);
+		/// if(text == null) AOutput.Write("no text in clipboard"); else AOutput.Write(text);
+		/// if(image == null) AOutput.Write("no image in clipboard"); else AOutput.Write(image.Size);
+		/// if(files == null) AOutput.Write("no files in clipboard"); else AOutput.Write(files);
 		/// ]]></code>
 		/// </example>
 		public static void CopyData(Action callback, bool cut = false, OptKey options = null)
@@ -218,19 +216,18 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AClipboard.PasteText("Example\r\n");
-		/// Paste("Example\r\n"); //the same as above
 		/// ]]></code>
 		/// </example>
-		public static void PasteText(string text, OptKey options = null)
+		public static void Paste(string text, OptKey options = null)
 		{
-			if(Empty(text)) return;
+			if(text.IsNE()) return;
 			_Paste(text, options);
 		}
 		//problem: fails to paste in VMware player. QM2 too. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
 
 		/// <summary>
 		/// Pastes data added to a <see cref="AClipboardData"/> variable into the focused app using the clipboard.
-		/// More info: <see cref="PasteText"/>.
+		/// More info: <see cref="Paste"/>.
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
@@ -249,9 +246,9 @@ namespace Au
 		//public static void PasteRichText(string text, string rtf, string html = null, OptKey options = null)
 		//{
 		//	var a = new List<(int, object)>();
-		//	if(!Empty(text)) a.Add((0, text));
-		//	if(!Empty(rtf)) a.Add((Lib.RtfFormat, rtf));
-		//	if(!Empty(html)) a.Add((Lib.HtmlFormat, html));
+		//	if(!text.IsNE()) a.Add((0, text));
+		//	if(!rtf.IsNE()) a.Add((Lib.RtfFormat, rtf));
+		//	if(!html.IsNE()) a.Add((Lib.HtmlFormat, html));
 		//	if(a.Count == 0) return;
 		//	_Paste(a, options);
 		//}
@@ -260,15 +257,11 @@ namespace Au
 		{
 			var wFocus = AKeys.Internal_.GetWndFocusedOrActive();
 			var opt = options ?? AOpt.Key;
-			var bi = new AInputBlocker() { ResendBlockedKeys = true };
-			try {
+			using(var bi = new AInputBlocker { ResendBlockedKeys = true }) {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
 				AKeys.Internal_.ReleaseModAndDisableModMenu();
 				opt = opt.GetHookOptionsOrThis_(wFocus);
 				Paste_(data, opt, wFocus);
-			}
-			finally {
-				bi.Dispose();
 			}
 
 			int sleepFinally = opt.SleepFinally;
@@ -408,7 +401,7 @@ namespace Au
 				//		OpenOffice, LibreOffice: tested Writer, Calc.
 				//		VLC: after first Paste.
 				//_wPrevClipViewer = Api.SetClipboardViewer(clipOwner);
-				//Print(_wPrevClipViewer);
+				//AOutput.Write(_wPrevClipViewer);
 			}
 
 			/// <summary>
@@ -418,7 +411,7 @@ namespace Au
 			/// <param name="ctrlKey">The variable that was used to send Ctrl+V or Ctrl+C. This function may call Release to avoid too long Ctrl down.</param>
 			public void Wait(ref AKeys.Internal_.SendCopyPaste ctrlKey)
 			{
-				//Print(Success); //on Paste often already true, because SendInput dispatches sent messages
+				//AOutput.Write(Success); //on Paste often already true, because SendInput dispatches sent messages
 				for(int n = 6; !Success;) { //max 3 s (6*500 ms). If hung, max 28 s.
 					AWaitFor.Wait_(500, WHFlags.DoEvents, null, this);
 
@@ -445,7 +438,7 @@ namespace Au
 						//note: need to set clipboard data even if bad window.
 						//	Else the clipboard program may retry in loop. Eg Ditto. Then often pasting fails.
 						//	If IsBadWindow, we'll then sleep briefly.
-						//	Clipboard programs get clipboard data with a delay. Eg Ditto default is 100 ms and can be changed. Therefore usually they don't interfere, unless the target app is very slow.
+						//	Good clipboard programs get clipboard data with a delay. Eg Ditto default is 100 ms and can be changed. Therefore usually they don't interfere, unless the target app is very slow.
 						//	Also, after setting clipboard data we cannot wait for good window, because we'll not receive second WM_RENDERFORMAT.
 
 						try { _SetClipboard(_data, false); }
@@ -467,21 +460,35 @@ namespace Au
 					AWnd wOC = Api.GetOpenClipboardWindow();
 
 					//int color = 0; if(wOC != _wFocus) color = wOC.ProcessId == _wFocus.ProcessId ? 0xFF0000 : 0xFF;
-					//Print($"<><c {color}>{wOC}</c>");
+					//AOutput.Write($"<><c {color}>{wOC}</c>");
 
 					if(wOC == _wFocus) return true;
 					if(wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
 					if(wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers are classnamed so too, eg Ditto.
 					if(wOC.ProgramName.Eqi("RuntimeBroker.exe")) return true; //Edge, Store apps
 
-					//CONSIDER: option to return true for user-known windows. Also show warning or info that includes wOC info.
+					//CONSIDER: option to return true for user-known windows, eg using a callback. Print warning that includes wOC info.
 
 					ADebug.Print(wOC.ToString());
 					return false;
 
+					//TODO: pasting is unreliable with Windows 10 Clipboard History (CH).
+					//	Sometimes does not paste because OpenClipboard fails in the target app, because then CH has it open.
+					//	Then also debugprints here.
+					//	CH is enabled by default. Can be disabled in Settings -> System -> Clipboard.
+					//	If enabled, CH opens clipboard and gets text after 200 ms, and then repeats every several ms, total 13 times and 50 ms.
+					//		When the target app fails to OpenClipboard, our Paste function waits briefly and the script continues. We receive WM_RENDERFORMAT because CH gets text.
+					//	If disabled, CH still opens clipboard after 200 ms, total 1-2 times.
+					//		When the target app fails to OpenClipboard, our Paste function waits and fails, because does not receive WM_RENDERFORMAT. It seems CH does not get text.
+					//To disable CH completely, stop service "Clipboard User Service_xxxxxxx". Then no problems with Paste.
+					//	But OS does not allow to set startup type "Disabled". And auto-starts when eg the Settings page opened.
+					//	Another way - send WM_CLOSE to the CH clipboard listener window (wOC). Works well, but...
+					//	If running as admin, we could temporarily disable the service...
+					//	Or inject a dll into the target process and hook OpenClipboard, let it wait...
+
 					//BlueStacks problems:
 					//	Uses an aggressive viewer. Always debugprints while it is running, even when other apps are active.
-					//	Sometimes pastes old text, especially after starting BlueStacks or after some time of not using it.
+					//	Sometimes pastes old text, usually after starting BlueStacks or after some time of not using it.
 					//		With or without clipboard restoring.
 					//		Then starts to work correctly always. Difficult to debug.
 					//		KeySpeedClipboard=100 usually helps, but sometimes even 300 does not help.
@@ -511,6 +518,7 @@ namespace Au
 					_w = AWnd.Internal_.CreateMessageWindowDefWndProc();
 					//MSDN says, SetClipboardData fails if OpenClipboard called with 0 hwnd. It doesn't, but better use hwnd.
 					//Creating/destroying window is the slowest part of SetText().
+					//SHOULDDO: try to cache the window. Now setting clipboard text is ~4 ms. Without creating window < 1 ms.
 				}
 				if(!noOpenNow) Reopen();
 			}
@@ -597,7 +605,7 @@ namespace Au
 
 					if(debug) {
 						if(name == null) name = GetFormatName_(format);
-						if(skip) Print($"{name,-62}  restore=False");
+						if(skip) AOutput.Write($"{name,-62}  restore=False");
 						else p1.First();
 						//note: we don't call GetClipboardData for formats in exceptFormats, because the conditions must be like when really saving. Time of GetClipboardData(format2) may depend on whether called GetClipboardData(format1).
 					}
@@ -612,7 +620,7 @@ namespace Au
 
 					if(debug) {
 						p1.Next();
-						Print($"{name,-32}  time={p1.TimeTotal,-8}  size={size,-8}  restore={!skip}");
+						AOutput.Write($"{name,-32}  time={p1.TimeTotal,-8}  size={size,-8}  restore={!skip}");
 						continue;
 					}
 					if(skip) continue;
@@ -664,26 +672,11 @@ namespace Au
 
 		internal static void PrintClipboard_()
 		{
-			Print("---- Clipboard ----");
+			AOutput.Write("---- Clipboard ----");
 			using var oc = new OpenClipboard_(true);
 			Api.GetClipboardData(0); //JIT
 			var save = new _SaveRestore();
 			save.Save(true);
 		}
-	}
-
-	public static partial class AStatic
-	{
-		/// <summary>
-		/// Calls <see cref="AClipboard.PasteText"/>.
-		/// </summary>
-		/// <exception cref="AuException">Failed.</exception>
-		public static void Paste(string text) => AClipboard.PasteText(text);
-
-		/// <summary>
-		/// Calls <see cref="AClipboard.CopyText"/>.
-		/// </summary>
-		/// <exception cref="AuException">Failed.</exception>
-		public static string CopyText() => AClipboard.CopyText();
 	}
 }

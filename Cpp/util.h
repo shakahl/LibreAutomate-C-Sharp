@@ -83,6 +83,14 @@ public:
 
 extern Perf_Inst Perf;
 
+class PerfLocal {
+	Perf_Inst _p;
+public:
+	PerfLocal() : _p(true) { _p.First(); }
+	~PerfLocal() { _p.NW(); }
+	void Next(char mark = '\0') { _p.Next(mark); }
+};
+
 #endif
 
 #include "str.h"

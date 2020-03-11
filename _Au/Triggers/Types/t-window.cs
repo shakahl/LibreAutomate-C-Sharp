@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using System.Collections;
 
 namespace Au.Triggers
@@ -169,7 +166,7 @@ namespace Au.Triggers
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// Triggers.Window[TWEvent.ActiveNew, "Window name"] = o => Print(o.Window);
+	/// Triggers.Window[TWEvent.ActiveNew, "Window name"] = o => AOutput.Write(o.Window);
 	/// var v = Triggers.Window.Last; //v is the new WindowTrigger. Rarely used.
 	/// ]]></code>
 	/// </example>
@@ -216,8 +213,8 @@ namespace Au.Triggers
 	/// <example>
 	/// <code><![CDATA[
 	/// var wt = Triggers.Window; //wt is a WindowTriggers instance
-	/// wt[TWEvent.ActiveNew, "Window name"] = o => Print(o.Window);
-	/// wt[TWEvent.Visible, "Window2 name"] = o => Print(o.Window);
+	/// wt[TWEvent.ActiveNew, "Window name"] = o => AOutput.Write(o.Window);
+	/// wt[TWEvent.Visible, "Window2 name"] = o => AOutput.Write(o.Window);
 	/// Triggers.Run();
 	/// ]]></code>
 	/// More examples: <see cref="ActionTriggers"/>.
@@ -240,7 +237,7 @@ namespace Au.Triggers
 		/// <param name="winEvent">Trigger event.</param>
 		/// <param name="name">See <see cref="AWnd.Find"/>.</param>
 		/// <param name="cn">See <see cref="AWnd.Find"/>.</param>
-		/// <param name="program">See <see cref="AWnd.Find"/>.</param>
+		/// <param name="of">See <see cref="AWnd.Find"/>.</param>
 		/// <param name="also">See <see cref="AWnd.Find"/>.</param>
 		/// <param name="contains">See <see cref="AWnd.Find"/>.</param>
 		/// <param name="flags">Trigger flags.</param>
@@ -257,12 +254,12 @@ namespace Au.Triggers
 		public Action<WindowTriggerArgs> this[TWEvent winEvent,
 				[ParamString(PSFormat.AWildex)] string name = null,
 				[ParamString(PSFormat.AWildex)] string cn = null,
-				[ParamString(PSFormat.AWildex)] WF3 program = default,
-				Func<AWnd, bool> also = null, object contains = null,
+				[ParamString(PSFormat.AWildex)] WOwner of = default,
+				Func<AWnd, bool> also = null, WContains contains = default,
 				TWFlags flags = 0, TWLater later = 0
 				] {
 			set {
-				var f = new AWnd.Finder(name, cn, program, 0, also, contains);
+				var f = new AWnd.Finder(name, cn, of, 0, also, contains);
 				this[winEvent, f, flags, later] = value;
 			}
 		}
@@ -274,7 +271,7 @@ namespace Au.Triggers
 		public Action<WindowTriggerArgs> this[TWEvent winEvent, AWnd.Finder f, TWFlags flags = 0, TWLater later = 0] {
 			set {
 				_triggers.ThrowIfRunning_();
-				switch(f.Props.contains) { case null: case AWnd.ChildFinder _: case AAcc.Finder _: break; default: PrintWarning("Window triggers with 'contains image' are unreliable."); break; }
+				if(f.Props.contains.Value is AWinImage.Finder) AWarning.Write("Window triggers with 'contains image' are unreliable.");
 
 				var t = new WindowTrigger(_triggers, value, winEvent, f, flags, later);
 				ref var last = ref _tActive; if(t.IsVisible) last = ref _tVisible;
@@ -351,7 +348,7 @@ namespace Au.Triggers
 							//is it a window in an inactive virtual desktop? In both cases it does not have a child Windows.UI.Core.CoreWindow.
 							dm ??= new Api.VirtualDesktopManager() as Api.IVirtualDesktopManager;
 							if(0 == dm.GetWindowDesktopId(w.Get.RootOwnerOrThis(), out var guid) && guid == default) {
-								//Print(w);
+								//AOutput.Write(w);
 								return 1;
 							}
 						}
@@ -398,7 +395,7 @@ namespace Au.Triggers
 		internal unsafe void Timer_()
 		{
 			//bool print = !AKeys.IsNumLock;
-			//if(print) Print(ATime.PerfMilliseconds % 10000);
+			//if(print) AOutput.Write(ATime.PerfMilliseconds % 10000);
 
 			int period = _triggers.WinTimerPeriod_;
 			if(period < 250) _triggers.WinTimerPeriod_ = Math.Min(period += period / 10 + 1, 250);
@@ -423,7 +420,7 @@ namespace Au.Triggers
 
 
 
-			//	//if(n1 + n2 > 0) Print(n1, n2);
+			//	//if(n1 + n2 > 0) AOutput.Write(n1, n2);
 			//}
 			//_aVisibleOld = a;
 			//ADebug.MemoryPrint_();
@@ -434,7 +431,7 @@ namespace Au.Triggers
 
 			if(_usesVisibleArray) {
 
-				//Print(ATime.PerfMilliseconds % 10000);
+				//AOutput.Write(ATime.PerfMilliseconds % 10000);
 
 				var t1 = _aVisibleOld; _aVisibleOld = _aVisible; _aVisible = t1;
 				_aVisible.len = 0;
@@ -445,8 +442,8 @@ namespace Au.Triggers
 				//APerf.NW();
 				//speed with  3 main windows: 200, +IsVisible 270, +IsCloaked 450, +Name-IsCloaked 444
 				//speed with 20 main windows (79 visible, 541 total): 320, +IsVisible 430 (CPU 0.05). With 480 CPU 0.06, sometimes 0.05.
-				//Print(n);
-				//Print(_listVisible.Count);
+				//AOutput.Write(n);
+				//AOutput.Write(_listVisible.Count);
 			}
 
 			var a = _aTriggered.a;
@@ -506,9 +503,9 @@ namespace Au.Triggers
 			if(nNew == nOld && diffFrom == nNew) return;
 			int diffTo1 = nOld, diffTo2 = nNew;
 			while(diffTo1 > 0 && diffTo2 > 0) if(aNew[--diffTo2] != aOld[--diffTo1]) { diffTo1++; diffTo2++; break; }
-			//Print(diffFrom, diffTo1, diffTo2, Math.Max(diffTo1 - diffFrom, diffTo2 - diffFrom));
+			//AOutput.Write(diffFrom, diffTo1, diffTo2, Math.Max(diffTo1 - diffFrom, diffTo2 - diffFrom));
 			int n1 = diffTo1 - diffFrom, n2 = diffTo2 - diffFrom;
-			//Print($"from={diffFrom} to1={diffTo1} to2={diffTo2}    n1={n1} n2={n2}  n1*n2={n1*n2}");
+			//AOutput.Write($"from={diffFrom} to1={diffTo1} to2={diffTo2}    n1={n1} n2={n2}  n1*n2={n1*n2}");
 			if(n1 == 0) { //only added
 				if(0 != (_allEvents & TWLater.Visible)) {
 					for(int i = diffFrom; i < diffTo2; i++) _Added(i);
@@ -518,7 +515,7 @@ namespace Au.Triggers
 					for(int i = diffFrom; i < diffTo1; i++) _Removed(i);
 				}
 			} else { //reordered or/and added/removed
-					 //Print($"n1={n1} n2={n2}  n1*n2={n1 * n2}");
+					 //AOutput.Write($"n1={n1} n2={n2}  n1*n2={n1 * n2}");
 					 //APerf.Next();
 					 //SHOULDDO: optimize. Now slow when large array reordered. Eg divide the changed range into two.
 					 //n1 = n2 = 0;
@@ -534,17 +531,17 @@ namespace Au.Triggers
 				}
 				//APerf.NW();
 			}
-			//if(n1 + n2 > 0) Print($"<><z yellow>added {n2}, removed {n1}<>");
+			//if(n1 + n2 > 0) AOutput.Write($"<><z yellow>added {n2}, removed {n1}<>");
 
 			void _Added(int i)
 			{
-				//n2++; //Print("added", aNew[i]);
+				//n2++; //AOutput.Write("added", aNew[i]);
 				_Proc(TWLater.Visible, aNew[i]);
 			}
 
 			void _Removed(int i)
 			{
-				//n1++; //Print("removed", aOld[i]);
+				//n1++; //AOutput.Write("removed", aOld[i]);
 				_ProcLater(TWLater.Invisible, aOld[i]);
 			}
 		}
@@ -555,7 +552,7 @@ namespace Au.Triggers
 		/// <param name="k"></param>
 		void _HookProc(HookData.AccHookData k)
 		{
-			//if(!AKeys.IsNumLock) Print(k.ev, k.idObject, k.idChild, k.wnd);
+			//if(!AKeys.IsNumLock) AOutput.Write(k.ev, k.idObject, k.idChild, k.wnd);
 
 			if(k.idObject != AccOBJID.WINDOW) return;
 			if(k.idChild != 0 || k.wnd.Is0) return;
@@ -570,7 +567,7 @@ namespace Au.Triggers
 
 			if(_inProc) {
 				_hookEventQueue.Enqueue((accEvent, (int)w));
-				//Print(_hookEventQueue.Count);
+				//AOutput.Write(_hookEventQueue.Count);
 				ADebug.PrintIf(_hookEventQueue.Count > 4, "_hookEventQueue.Count=" + _hookEventQueue.Count);
 				return;
 			}
@@ -601,7 +598,7 @@ namespace Au.Triggers
 					//Else set period = 105, for Name events after closing an "Open File" dialog (then usually its owner becomes active and then changes name).
 					if(accEvent == AccEVENT.SYSTEM_FOREGROUND) {
 						bool fast = _hsSeenActivating.Add(w) && !_hsOld.Contains(w);
-						//Print("fast timer", fast);
+						//AOutput.Write("fast timer", fast);
 						_triggers.WinTimerPeriod_ = fast ? 1 : 100;
 					}
 
@@ -700,7 +697,7 @@ namespace Au.Triggers
 			//APerf.First();
 			WindowTriggerArgs args = null;
 
-			//Print(runVisible,runActive,w.IsActive, oldWindow);
+			//AOutput.Write(runVisible,runActive,w.IsActive, oldWindow);
 
 			if(runVisible) _Do(true, runActive && !detectedVisibleNow);
 			if(runActive && w.IsActive) _Do(false, e != TWLater.Active);
@@ -732,7 +729,7 @@ namespace Au.Triggers
 						//	Rare and too difficult. Cannot wait now. Would need to use timer or threadpool.
 					}
 					catch(Exception ex) {
-						Print(ex);
+						AOutput.Write(ex);
 						continue;
 					}
 
@@ -748,7 +745,7 @@ namespace Au.Triggers
 
 					//if(!visible && !w.IsActive) break; //no
 
-					if(_log) Print($"<><c red>{t.TypeString}<>");
+					if(_log) AOutput.Write($"<><c red>{t.TypeString}<>");
 
 					_triggers.RunAction_(t, args);
 				} while(v != last);
@@ -781,7 +778,7 @@ namespace Au.Triggers
 				_aTriggeredData[iTriggered].name = name;
 			}
 
-			if(_log) Print($"\t{ATime.PerfMilliseconds % 10000,4}, {e,-11}, {w}");
+			if(_log) AOutput.Write($"\t{ATime.PerfMilliseconds % 10000,4}, {e,-11}, {w}");
 
 			WindowTriggerArgs args = null;
 			var triggered = _aTriggeredData[iTriggered].triggered;
@@ -796,7 +793,7 @@ namespace Au.Triggers
 					if(!t.CallFunc(args)) continue;
 				}
 
-				if(_log) Print($"<><c red>\t{e}<>");
+				if(_log) AOutput.Write($"<><c red>\t{e}<>");
 
 				_triggers.RunAction_(t, args);
 			}
@@ -847,7 +844,7 @@ namespace Au.Triggers
 		Func<AWnd, bool> _logSkip;
 
 		/// <summary>
-		/// Starts or stops to print window events that can help to create or debug window triggers.
+		/// Starts or stops to log (write in output) window events that can help to create or debug window triggers.
 		/// </summary>
 		/// <param name="on">Start (true) or stop.</param>
 		/// <param name="skip">An optional callback function that can be used to reduce noise, eg skip tooltip windows. Return true to skip that window.</param>
@@ -869,8 +866,8 @@ namespace Au.Triggers
 		/// </ol>
 		/// 
 		/// Colors are used for window event types used for primary triggers: blue if activated; green if became visible; yellow if name changed.
-		/// For "later" events is logged time, event and window. Black, tab-indented. Prints only events that are specified in triggers.
-		/// When a trigger is activated, prints the event type in red.
+		/// For "later" events is logged time, event and window. Black, tab-indented. Only events that are specified in triggers.
+		/// When a trigger is activated, the event type is red.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -899,7 +896,7 @@ namespace Au.Triggers
 			var C = w.IsCloaked ? "C" : " ";
 			var O = oldWindow ? "O" : " ";
 			var T = caller == _ProcCaller.Timer ? "T" : " ";
-			Print($"<><c {col}>{ATime.PerfMilliseconds % 10000,4}, {e,-11}, {A}{H}{C}{O}{T}, {w}</c>");
+			AOutput.Write($"<><c {col}>{ATime.PerfMilliseconds % 10000,4}, {e,-11}, {A}{H}{C}{O}{T}, {w}</c>");
 		}
 
 		/// <summary>
@@ -919,7 +916,7 @@ namespace Au.Triggers
 
 			public unsafe int Find(AWnd w)
 			{
-				fixed (AWnd* p = a) {
+				fixed(AWnd* p = a) {
 					for(int i = 0, n = len; i < n; i++) if(p[i] == w) return i;
 				}
 				return -1;
@@ -972,7 +969,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => Print(o.Later, o.Window);
+		/// Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => AOutput.Write(o.Later, o.Window);
 		/// Triggers.Run();
 		/// ]]></code>
 		/// </example>

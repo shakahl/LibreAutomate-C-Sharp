@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -163,7 +161,7 @@ namespace Au
 		public string SavePositionSizeState(bool canBeMinimized = false)
 		{
 			if(!GetWindowPlacement_(out var p)) return null;
-			//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
+			//AOutput.Write(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 			if(!canBeMinimized && p.showCmd == Api.SW_SHOWMINIMIZED) p.showCmd = (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0 ? Api.SW_SHOWMAXIMIZED : Api.SW_SHOWNORMAL;
 			return AConvert.Base64UrlEncode(p);
 		}
@@ -178,7 +176,7 @@ namespace Au
 		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
 		{
 			if(AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
-				//Print(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
+				//AOutput.Write(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
 				if(!showActivate && !this.IsVisible) {
 					var style = this.Style;
 					switch(p.showCmd) {

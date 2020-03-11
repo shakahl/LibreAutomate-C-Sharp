@@ -9,7 +9,6 @@ using System.Threading.Tasks;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 using YamlDotNet.RepresentationModel;
 using System.Net;
@@ -30,7 +29,7 @@ unsafe class Program
 	static void Main(string[] args)
 	{
 		try { _Main(); }
-		catch(Exception e) { Print(e); }
+		catch(Exception e) { AOutput.Write(e); }
 	}
 
 	static void _Main()
@@ -68,7 +67,7 @@ unsafe class Program
 
 		using(var fw = new FileSystemWatcher(apiDir, "*.yml")) {
 			fw.Changed += (sen, e) => {
-				//Print(e.Name);
+				//AOutput.Write(e.Name);
 				if(e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false);
 			};
 			fw.EnableRaisingEvents = true;
@@ -77,7 +76,7 @@ unsafe class Program
 			bool serving = false;
 			try {
 				AExec.RunConsole(o => {
-					Print(o);
+					AOutput.Write(o);
 					if(o.Starts("Serving")) throw new OperationCanceledException();
 				}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"" --serve");
 				// --force
@@ -93,16 +92,16 @@ unsafe class Program
 
 		ProcessHtmlFiles(siteDir, false);
 
-		var t3 = ATime.PerfMilliseconds; Print("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
+		var t3 = ATime.PerfMilliseconds; AOutput.Write("speed (s):", (t2 - t1) / 1000, (t3 - t2) / 1000);
 
 		//AWnd.Find("* Chrome").Activate();
-		//Key("F5");
+		//AKeys.Key("F5");
 
 		1.s();
 		if(1 == ADialog.ShowEx("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
-		if(AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { Print("Deleting obj folder."); AFile.Delete(objDir); }
+		if(AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { AOutput.Write("Deleting obj folder."); AFile.Delete(objDir); }
 		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
 	}
 
@@ -112,7 +111,7 @@ unsafe class Program
 	/// </summary>
 	static void ProcessYamlFile(string path, bool test)
 	{
-		//Print(path);
+		//AOutput.Write(path);
 		try {
 			//var text = File.ReadAllText(path);
 			var yaml = new YamlStream();
@@ -127,7 +126,7 @@ unsafe class Program
 			foreach(YamlMappingNode item in (YamlSequenceNode)root.Children[new YamlScalarNode("items")]) {
 				foreach(var name in s_names) {
 					if(!item.Children.TryGetValue(name, out var node)) continue;
-					//Print("----", name, node.NodeType);
+					//AOutput.Write("----", name, node.NodeType);
 					if(node is YamlScalarNode scalar) { //summary, remarks
 						if(ProcessYamlValue(scalar)) save = true;
 					} else if(node is YamlMappingNode map) { //syntax
@@ -166,12 +165,12 @@ unsafe class Program
 				yaml.Save(sw, false);
 			}
 			if(test) {
-				//Print(File.ReadAllText(tmp));
+				//AOutput.Write(File.ReadAllText(tmp));
 			} else {
 				AFile.Move(tmp, path, IfExists.Delete);
 			}
 		}
-		catch(Exception e) { Print(e); }
+		catch(Exception e) { AOutput.Write(e); }
 	}
 	static string[] s_names = { "summary", "remarks", "example", "syntax", "exceptions" };
 
@@ -181,7 +180,7 @@ unsafe class Program
 		var s = scalar.Value;
 		int R = 0;
 
-		//Print(s);
+		//AOutput.Write(s);
 		//To avoid applying markdown in <c>...</c> (now <code>...</code>), enclose in <au><!--...--></au>.
 		//	Markdown is not applied inside any <...>, including HTML comment. Also add <au>, else may not add <p> etc.
 		//	Will remove the enclosing later, when processing HTML.
@@ -192,7 +191,7 @@ unsafe class Program
 		if(0 != s.RegexReplace(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
 
 		if(R == 0) return false;
-		//if(0 != (R & 2)) Print(s);
+		//if(0 != (R & 2)) AOutput.Write(s);
 		scalar.Value = s;
 		return true;
 	}
@@ -212,7 +211,7 @@ unsafe class Program
 			if(f.IsDirectory) continue;
 			var name = f.Name; if(!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
 			var file = f.FullPath;
-			//if(test) Print($"<><c 0xff>{file}</c>");
+			//if(test) AOutput.Write($"<><c 0xff>{file}</c>");
 			var s = File.ReadAllText(file);
 			bool modified = ProcessHtmlFile(ref s, name.Starts(@"\api"), siteDir);
 			if(modified) File.WriteAllText(!test ? file : file.Remove(file.Length - 1), s);
@@ -278,7 +277,7 @@ unsafe class Program
 						break;
 					}
 				}
-				if(href == null) { Print($"cannot resolve link: [{k}]()"); return m.Value; }
+				if(href == null) { AOutput.Write($"cannot resolve link: [{k}]()"); return m.Value; }
 				return m.ExpandReplacement($@"<a href=""{href}"">$1</a>");
 			}, out s);
 		}
@@ -312,7 +311,7 @@ unsafe class Program
 
 		return nr > 0;
 	}
-	static string[] s_ns = { "Au.", "Au.Triggers.", "Au.Types.", "Au.Util.", "Au.AStatic.", };
+	static string[] s_ns = { "Au.", "Au.Triggers.", "Au.Types.", "Au.Util.", };
 
 	//static void ProcessToc(string siteDir)
 	//{
@@ -322,7 +321,7 @@ unsafe class Program
 	//	//
 	//	if(0==s.RegexReplace(@"", @"", out s)) throw new Exception("regex failed");
 
-	//	Print(s);
+	//	AOutput.Write(s);
 	//	//File.WriteAllText(file, s);
 	//}
 
@@ -358,13 +357,13 @@ unsafe class Program
 		AFile.Delete(docDir + @"\_site.tar.bz2");
 
 		int r1 = AExec.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
-		if(r1 != 0) { Print(s); return; }
+		if(r1 != 0) { AOutput.Write(s); return; }
 		int r2 = AExec.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
-		if(r2 != 0) { Print(s); return; }
+		if(r2 != 0) { AOutput.Write(s); return; }
 
 		AFile.Delete(docDir + @"\_site.tar");
 
-		Print("Compressed");
+		AOutput.Write("Compressed");
 	}
 
 	static void Upload(string docDir)
@@ -383,14 +382,14 @@ unsafe class Program
 			client.UploadFile("ftp://ftp.quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 		}
 		AFile.Delete(path);
-		Print("Uploaded");
+		AOutput.Write("Uploaded");
 
 		//extract
 		using(var client = new WebClient()) {
 			string r1 = client.DownloadString($"https://www.quickmacros.com/au/extract_help.php?kaip={pass2}");
-			if(r1 != "done") { Print(r1); return; }
+			if(r1 != "done") { AOutput.Write(r1); return; }
 		}
-		Print("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
+		AOutput.Write("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
 	}
 
 }

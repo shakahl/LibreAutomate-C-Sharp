@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -19,7 +17,6 @@ using System.Net;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using Au.Editor.Resources;
 using System.Collections.Immutable;
@@ -29,6 +26,7 @@ using Microsoft.CodeAnalysis.Tags;
 using Microsoft.CodeAnalysis.Completion;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Text;
 
 static class CiUtil
 {
@@ -38,10 +36,16 @@ static class CiUtil
 		sym = null;
 		var doc = Panels.Editor.ZActiveDoc; if(doc == null) { cd = default; return false; }
 		if(!CodeInfo.GetContextAndDocument(out cd)) return false;
-		int position = cd.pos16;
+		return GetSymbolFromPos(cd.pos16, cd.document, out sym);
+	}
+
+	public static bool GetSymbolFromPos(int position, Document document, out ISymbol sym)
+	{
+		//using var p1 = APerf.Create();
+		sym = null;
 
 		//code like in Roslyn CommonQuickInfoProvider.GetQuickInfoAsync, but simplified
-		var tree = cd.document.GetSyntaxTreeAsync().Result;
+		var tree = document.GetSyntaxTreeAsync().Result;
 		var token = tree.GetTouchingTokenAsync(position, default, findInsideTrivia: true).Result;
 		if(token == default) return false;
 		if(!token.Span.IntersectsWith(position)) {
@@ -50,16 +54,24 @@ static class CiUtil
 			if(token == default || !token.Span.IntersectsWith(position)) return false;
 		}
 
-		var model = cd.document.GetSemanticModelAsync().Result;
-		var node = token.Parent;
-		sym = model.GetSymbolInfo(node).Symbol ?? model.GetSpeculativeSymbolInfo(position, node, SpeculativeBindingOption.BindAsExpression).Symbol;
-		if(sym == null) {
-			var mg = model.GetMemberGroup(node);
-			if(!mg.IsDefaultOrEmpty) sym = mg[0];
+		var model = document.GetSemanticModelAsync().Result;
+		//p1.Next();
+		bool preferGeneric = token.GetNextToken().IsKind(SyntaxKind.GreaterThanToken);
+		var si = model.GetSemanticInfo(token, document.Project.Solution.Workspace, default); //works better than GetSymbolInfo, and slightly faster
+		foreach(var v in si.GetSymbols(includeType: true)) {
+			bool gen = false;
+			switch(v) {
+			case IErrorTypeSymbol _: continue;
+			case INamedTypeSymbol ints when ints.IsGenericType:
+			case IMethodSymbol ims when ims.IsGenericMethod:
+				gen = true;
+				break;
+			}
+			//AOutput.Write(v, gen, v.Kind);
+			if(gen == preferGeneric) { sym = v; break; }
+			sym ??= v;
 		}
-		//Print(sym, sym?.Kind ?? default);
-		//return false;
-		return sym != null && sym.Kind != SymbolKind.ErrorType;
+		return sym != null;
 	}
 
 	public static void OpenSymbolFromPosHelp()
@@ -71,7 +83,7 @@ static class CiUtil
 
 	public static string GetSymbolHelpUrl(ISymbol sym)
 	{
-		//Print(sym.IsInSource(), sym.IsFromSource());
+		//AOutput.Write(sym.IsInSource(), sym.IsFromSource());
 		string query;
 		IModuleSymbol metadata = null;
 		foreach(var loc in sym.Locations) {
@@ -108,7 +120,7 @@ static class CiUtil
 	public static PSFormat GetParameterStringFormat(SyntaxNode node, SemanticModel semo, bool isString)
 	{
 		var kind = node.Kind();
-		//Print(kind);
+		//AOutput.Write(kind);
 		SyntaxNode parent;
 		if(isString || kind == SyntaxKind.StringLiteralExpression) parent = node.Parent;
 		else if(kind == SyntaxKind.InterpolatedStringText) parent = node.Parent.Parent;
@@ -145,15 +157,14 @@ static class CiUtil
 					}
 				}
 				break;
-			//default:
-			//	CiUtil.PrintNode(alis.Parent);
-			//	break;
+				//default:
+				//	CiUtil.PrintNode(alis.Parent);
+				//	break;
 			}
 
 			PSFormat _GetFormat(ExpressionSyntax es)
 			{
-				var sym = semo.GetSymbolInfo(es).Symbol;
-				if(sym is IMethodSymbol ims) {
+				if(semo.GetSymbolInfo(es).Symbol is IMethodSymbol ims) {
 					IParameterSymbol p = null;
 					var pa = ims.Parameters;
 					var nc = asy.NameColon;
@@ -186,7 +197,7 @@ static class CiUtil
 	{
 		if(node == null) return false;
 		var nk = node.Kind();
-		//Print(nk, position, node.Span, node.GetType(), node);
+		//AOutput.Write(nk, position, node.Span, node.GetType(), node);
 		switch(nk) {
 		case SyntaxKind.StringLiteralExpression:
 			//return true only if position is in the string value.
@@ -232,21 +243,21 @@ static class CiUtil
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
-		if(x == null) { Print("null"); return; }
-		if(printNode) Print($"<><c blue>{pos}, {x.Span}, {x.Kind()}, {x.GetType().Name},<> '<c green>{x}<>'");
-		if(printErrors) foreach(var d in x.GetDiagnostics()) Print(d.Code, d.Location.SourceSpan, d);
+		if(x == null) { AOutput.Write("null"); return; }
+		if(printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, {x.Kind()}, {x.GetType().Name},<> '<c green>{x}<>'");
+		if(printErrors) foreach(var d in x.GetDiagnostics()) AOutput.Write(d.Code, d.Location.SourceSpan, d);
 	}
 
 	public static void PrintNode(SyntaxToken x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
-		if(printNode) Print($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
-		if(printErrors) foreach(var d in x.GetDiagnostics()) Print(d.Code, d.Location.SourceSpan, d);
+		if(printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if(printErrors) foreach(var d in x.GetDiagnostics()) AOutput.Write(d.Code, d.Location.SourceSpan, d);
 	}
 
 	public static void PrintNode(SyntaxTrivia x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
-		if(printNode) Print($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
-		if(printErrors) foreach(var d in x.GetDiagnostics()) Print(d.Code, d.Location.SourceSpan, d);
+		if(printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, {x.Kind()},<> '<c green>{x}<>'");
+		if(printErrors) foreach(var d in x.GetDiagnostics()) AOutput.Write(d.Code, d.Location.SourceSpan, d);
 	}
 #endif
 
@@ -352,8 +363,8 @@ static class CiExt
 	[Conditional("DEBUG")]
 	public static void DebugPrint(this CompletionItem t, string color = "blue")
 	{
-		Print($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
-		Print(string.Join("\n", t.Properties));
+		AOutput.Write($"<><c {color}>{t.DisplayText},    {string.Join("|", t.Tags)},    prefix={t.DisplayTextPrefix},    suffix={t.DisplayTextSuffix},    filter={t.FilterText},    sort={t.SortText},    inline={t.InlineDescription},    automation={t.AutomationText},    provider={t.ProviderName}<>");
+		AOutput.Write(string.Join("\n", t.Properties));
 	}
 
 	[Conditional("DEBUG")]
@@ -364,12 +375,17 @@ static class CiExt
 
 	public static string QualifiedName(this ISymbol t, bool onlyNamespace = false, bool noDirectName = false)
 	{
-		var g = s_qnStack ??= new Stack<string>();
+		var g = t_qnStack ??= new Stack<string>();
 		g.Clear();
 		if(noDirectName) t = t.ContainingType ?? t.ContainingNamespace as ISymbol;
 		if(!onlyNamespace) for(var k = t; k != null; k = k.ContainingType) g.Push(k.Name);
 		for(var n = t.ContainingNamespace; n != null && !n.IsGlobalNamespace; n = n.ContainingNamespace) g.Push(n.Name);
 		return string.Join(".", g);
 	}
-	[ThreadStatic] static Stack<string> s_qnStack;
+	[ThreadStatic] static Stack<string> t_qnStack;
+
+	/// <summary>
+	/// Returns true if contains position and it is not at start.
+	/// </summary>
+	public static bool ContainsInside(this TextSpan t, int position) => position > t.Start && position < t.End;
 }

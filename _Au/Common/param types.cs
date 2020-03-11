@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Linq;
 
-using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -127,7 +125,7 @@ namespace Au.Types
 		//If 2 fields (int and CoordType), 64-bit compiler creates huge calling code.
 		//This version is good in 32-bit, very good in 64-bit. Even better than packing in single int (30 bits value and 2 bits type).
 		//Don't use struct or union with both int and float fields. It creates slow and huge calling code.
-		long _v;
+		readonly long _v;
 
 		/// <summary>
 		/// Value type.
@@ -395,7 +393,7 @@ namespace Au.Types
 					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
 
-					//Print(u.xHotspot, u.yHotspot);
+					//AOutput.Write(u.xHotspot, u.yHotspot);
 					p.y += cy - u.yHotspot - 1; //not perfect, but better than just to add SM_CYCURSOR or some constant value.
 					return p;
 				}
@@ -421,7 +419,7 @@ namespace Au.Types
 	[DebuggerStepThrough]
 	public struct AnyWnd
 	{
-		object _o;
+		readonly object _o;
 		AnyWnd(object o) { _o = o; }
 
 		/// <summary> Assignment of a value of type AWnd. </summary>
@@ -447,45 +445,48 @@ namespace Au.Types
 
 	/// <summary>
 	/// Used for function parameters to specify multiple strings.
-	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversion operators from these types.
+	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types.
 	/// </summary>
 	[DebuggerStepThrough]
 	public struct DStringList //with prefix D because this was created for ADialog
 	{
-		DStringList(object o) => Value = o;
+		readonly object _o;
+		DStringList(object o) { _o = o; }
+
+		/// <summary> Assignment of a value of type string. </summary>
+		public static implicit operator DStringList(string s) => new DStringList(s);
+
+		/// <summary> Assignment of a value of type string[]. </summary>
+		public static implicit operator DStringList(string[] e) => new DStringList(e);
+
+		/// <summary> Assignment of a value of type List&lt;string&gt;. </summary>
+		public static implicit operator DStringList(List<string> e) => new DStringList(e);
 
 		/// <summary>
 		/// The raw value.
 		/// </summary>
-		public object Value;
+		public object Value => _o;
 
-		/// <summary> Assignment of a value of type string. </summary>
-		public static implicit operator DStringList(string s) => new DStringList(s);
-		/// <summary> Assignment of a value of type string[]. </summary>
-		public static implicit operator DStringList(string[] e) { return new DStringList(e); }
-		/// <summary> Assignment of a value of type List&lt;string&gt;. </summary>
-		public static implicit operator DStringList(List<string> e) { return new DStringList(e); }
-
-		/// <summary>
-		/// Converts the value to string[].
-		/// </summary>
-		/// <param name="separator">If the value is string, use this character to split it. Default '|'.</param>
-		/// <remarks>
-		/// If the value was string or List, converts to string[] and stores the string[] in <b>Value</b>. If null, returns empty array.
-		/// </remarks>
-		public string[] ToArray(char separator = '|')
-		{
-			switch(Value) {
-			case null:
-				return Array.Empty<string>(); //for safe foreach
-			case string s:
-				Value = s.Split(separator);
-				break;
-			case List<string> a:
-				Value = a.ToArray();
-				break;
-			}
-			return Value as string[];
-		}
+		///// <summary>
+		///// Converts the value to string[].
+		///// </summary>
+		///// <param name="separator">If the value is string, use this character to split it. Default '|'.</param>
+		///// <remarks>
+		///// If the value was string or List, converts to string[] and stores the string[] in <b>Value</b>. If null, returns empty array.
+		///// </remarks>
+		//public string[] ToArray(char separator = '|')
+		//{
+		//	switch(_o) {
+		//	case null:
+		//		return Array.Empty<string>(); //for safe foreach
+		//	case string s:
+		//		_o = s.Split(separator);
+		//		break;
+		//	case List<string> a:
+		//		_o = a.ToArray();
+		//		break;
+		//	}
+		//	return _o as string[];
+		//}
 	}
 }

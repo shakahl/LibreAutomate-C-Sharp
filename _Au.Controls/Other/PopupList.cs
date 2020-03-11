@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 //using Au.Controls;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -213,7 +210,7 @@ namespace Au.Controls
 						if(z.Height < iz.height) z.Height = iz.height;
 					}
 				}
-				//Print(z);
+				//AOutput.Write(z);
 				if(height + z.Height <= maxHeight) height += z.Height; else hasVertSB = true;
 				if(z.Width > width) width = z.Width;
 			}
@@ -588,7 +585,7 @@ namespace Au.Controls
 
 			void _SetTooltip(string text)
 			{
-				if(!Empty(text)) {
+				if(!text.IsNE()) {
 					if(_tooltip == null) _tooltip = new ToolTip { IsBalloon = true, AutoPopDelay = 30000, ShowAlways = true };
 					_tooltip.Active = false;
 					_tooltip.SetToolTip(this, text);

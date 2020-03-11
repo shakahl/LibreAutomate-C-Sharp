@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Triggers
 {
@@ -117,7 +114,7 @@ namespace Au.Triggers
 				}
 			}
 			catch(Exception ex) {
-				Print(ex);
+				AOutput.Write(ex);
 				return false;
 			}
 			return true;
@@ -135,12 +132,12 @@ namespace Au.Triggers
 						var t1 = ATime.PerfMilliseconds;
 						bool ok = v.f(args);
 						var td = ATime.PerfMilliseconds - t1;
-						if(td > 200) PrintWarning($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {ATask.Name}.", -1);
+						if(td > 200) AWarning.Write($"Too slow Triggers.FuncOf function of a window trigger. Should be < 10 ms, now {td} ms. Task name: {ATask.Name}.", -1);
 						if(!ok) return false;
 					}
 				}
 				catch(Exception ex) {
-					Print(ex);
+					AOutput.Write(ex);
 					return false;
 				}
 			}
@@ -214,20 +211,20 @@ namespace Au.Triggers
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// Triggers.Hotkey["Ctrl+K"] = o => Print("this trigger works with all windows");
+	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write("this trigger works with all windows");
 	/// Triggers.Of.Window("* Notepad"); //specifies a working window for triggers added afterwards
-	/// Triggers.Hotkey["Ctrl+F11"] = o => Print("this trigger works only when a Notepad window is active");
-	/// Triggers.Hotkey["Ctrl+F12"] = o => Print("this trigger works only when a Notepad window is active");
+	/// Triggers.Hotkey["Ctrl+F11"] = o => AOutput.Write("this trigger works only when a Notepad window is active");
+	/// Triggers.Hotkey["Ctrl+F12"] = o => AOutput.Write("this trigger works only when a Notepad window is active");
 	/// var wordpad = Triggers.Of.Window("* WordPad"); //specifies another working window for triggers added afterwards
-	/// Triggers.Hotkey["Ctrl+F11"] = o => Print("this trigger works only when a WordPad window is active");
-	/// Triggers.Hotkey["Ctrl+F12"] = o => Print("this trigger works only when a WordPad window is active");
+	/// Triggers.Hotkey["Ctrl+F11"] = o => AOutput.Write("this trigger works only when a WordPad window is active");
+	/// Triggers.Hotkey["Ctrl+F12"] = o => AOutput.Write("this trigger works only when a WordPad window is active");
 	/// Triggers.Of.AllWindows(); //let triggers added afterwards work with all windows
-	/// Triggers.Mouse[TMEdge.RightInTop25] = o => Print("this trigger works with all windows");
+	/// Triggers.Mouse[TMEdge.RightInTop25] = o => AOutput.Write("this trigger works with all windows");
 	/// Triggers.Of.Again(wordpad); //sets a previously specified working window for triggers added afterwards
-	/// Triggers.Mouse[TMEdge.RightInBottom25] = o => Print("this trigger works only when a WordPad window is active");
-	/// Triggers.Mouse[TMMove.DownUp] = o => Print("this trigger works only when a WordPad window is active");
-	/// Triggers.Mouse[TMClick.Middle] = o => Print("this trigger works only when the mouse is in a WordPad window");
-	/// Triggers.Mouse[TMWheel.Forward] = o => Print("this trigger works only when the mouse is in a WordPad window");
+	/// Triggers.Mouse[TMEdge.RightInBottom25] = o => AOutput.Write("this trigger works only when a WordPad window is active");
+	/// Triggers.Mouse[TMMove.DownUp] = o => AOutput.Write("this trigger works only when a WordPad window is active");
+	/// Triggers.Mouse[TMClick.Middle] = o => AOutput.Write("this trigger works only when the mouse is in a WordPad window");
+	/// Triggers.Mouse[TMWheel.Forward] = o => AOutput.Write("this trigger works only when the mouse is in a WordPad window");
 	/// Triggers.Run();
 	/// ]]></code>
 	/// </example>
@@ -266,9 +263,9 @@ namespace Au.Triggers
 		public TriggerScope Window(
 			[ParamString(PSFormat.AWildex)] string name = null,
 			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WF3 program = default,
-			Func<AWnd, bool> also = null, object contains = null)
-			=> _Window(false, name, cn, program, also, contains);
+			[ParamString(PSFormat.AWildex)] WOwner of = default,
+			Func<AWnd, bool> also = null, WContains contains = default)
+			=> _Window(false, name, cn, of, also, contains);
 
 		/// <summary>
 		/// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
@@ -282,12 +279,12 @@ namespace Au.Triggers
 		public TriggerScope NotWindow(
 			[ParamString(PSFormat.AWildex)] string name = null,
 			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WF3 program = default,
-			Func<AWnd, bool> also = null, object contains = null)
-			=> _Window(true, name, cn, program, also, contains);
+			[ParamString(PSFormat.AWildex)] WOwner of = default,
+			Func<AWnd, bool> also = null, WContains contains = default)
+			=> _Window(true, name, cn, of, also, contains);
 
-		TriggerScope _Window(bool not, string name, string cn, WF3 program, Func<AWnd, bool> also, object contains)
-			=> _Add(not, new AWnd.Finder(name, cn, program, 0, also, contains));
+		TriggerScope _Window(bool not, string name, string cn, WOwner of, Func<AWnd, bool> also, WContains contains)
+			=> _Add(not, new AWnd.Finder(name, cn, of, 0, also, contains));
 
 		/// <summary>
 		/// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
@@ -443,18 +440,18 @@ namespace Au.Triggers
 	/// <code><![CDATA[
 	/// //examples of assigning a callback function (CF) to a single trigger
 	/// Triggers.FuncOf.NextTrigger = o => AKeys.IsCapsLock; //o => AKeys.IsCapsLock is the callback function (lambda)
-	/// Triggers.Hotkey["Ctrl+K"] = o => Print("action: Ctrl+K while CapsLock is on");
-	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; Print($"func: mod={v.Mod}"); return AMouse.IsPressed(MButtons.Left); };
-	/// Triggers.Hotkey["Ctrl+Shift?+B"] = o => Print("action: mouse left button + Ctrl+B or Ctrl+Shift+B");
+	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write("action: Ctrl+K while CapsLock is on");
+	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; AOutput.Write($"func: mod={v.Mod}"); return AMouse.IsPressed(MButtons.Left); };
+	/// Triggers.Hotkey["Ctrl+Shift?+B"] = o => AOutput.Write("action: mouse left button + Ctrl+B or Ctrl+Shift+B");
 	/// 
 	/// //examples of assigning a CF to multiple triggers
-	/// Triggers.FuncOf.FollowingTriggers = o => { var v = o as HotkeyTriggerArgs; Print("func", v.Trigger); return true; };
-	/// Triggers.Hotkey["Ctrl+F8"] = o => Print("action: " + o.Trigger);
-	/// Triggers.Hotkey["Ctrl+F9"] = o => Print("action: " + o.Trigger);
+	/// Triggers.FuncOf.FollowingTriggers = o => { var v = o as HotkeyTriggerArgs; AOutput.Write("func", v.Trigger); return true; };
+	/// Triggers.Hotkey["Ctrl+F8"] = o => AOutput.Write("action: " + o.Trigger);
+	/// Triggers.Hotkey["Ctrl+F9"] = o => AOutput.Write("action: " + o.Trigger);
 	/// Triggers.FuncOf.FollowingTriggers = null; //stop assigning the CF to triggers added afterwards
 	/// 
 	/// //sometimes all work can be done in CF and you don't need the trigger action
-	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; Print("func: " + v.Trigger); return true; };
+	/// Triggers.FuncOf.NextTrigger = o => { var v = o as HotkeyTriggerArgs; AOutput.Write("func: " + v.Trigger); return true; };
 	/// Triggers.Hotkey["Ctrl+F12"] = null;
 	/// 
 	/// Triggers.Run();

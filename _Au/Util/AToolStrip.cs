@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 #pragma warning disable 1591 //XML doc
 
@@ -68,7 +66,7 @@ namespace Au.Util
 			if(b1 == _ttItem) return;
 
 			string text = b1?.ToolTipText;
-			if(Empty(text)) {
+			if(text.IsNE()) {
 				_HideTooltip();
 				return;
 			}

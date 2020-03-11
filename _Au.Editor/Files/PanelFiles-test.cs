@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -18,7 +17,6 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -29,7 +27,7 @@ partial class PanelFiles
 {
 	public void Test()
 	{
-//		//Print(_c.SelectedNode);
+//		//AOutput.Write(_c.SelectedNode);
 
 //		//var name = "MSVCRT";
 //		//var name = "msvcrt";
@@ -39,11 +37,11 @@ partial class PanelFiles
 
 //		//var n = _c.AllNodes.ElementAt(2);
 //		var f = _model.Find(name, null);
-//		//Print(f);
-//		if(f == null) { Print("not found"); return; }
+//		//AOutput.Write(f);
+//		if(f == null) { AOutput.Write("not found"); return; }
 //		//var n = _c.FindNodeByTag(f);
 //		var n = f?.TreeNodeAdv;
-//		//Print(n?.Tag);
+//		//AOutput.Write(n?.Tag);
 
 //		var m = new AMenu();
 //		m["SelectedNode"] = o => _c.SelectedNode = n;
@@ -55,20 +53,20 @@ partial class PanelFiles
 //		m["ScrollTo"] = o => _c.ScrollTo(n);
 //		m["Find"] = o =>
 //		{
-//			Print(_model.Find("QM3 function flags.cs", false));
-//			Print(_model.Find(@"\Function ideAs\AAcc.path.cs", false));
-//			Print(_model.Find("mono compiler", false));
-//			Print(_model.Find(@"\oLd\mono compiler", false));
-//			Print("-----");
-//			Print(_model.Find("QM3 function flags.cs", false));
-//			Print(_model.Find(@"\Function ideAs\AAcc.path.cs", false));
-//			Print(_model.Find("mono compiler", false));
-//			Print(_model.Find(@"\oLd\mono compiler", false));
-//			Print("-----");
-//			Print(_model.Find("QM3 function flags.cs", true));
-//			Print(_model.Find(@"\Function ideAs\AAcc.path.cs", true));
-//			Print(_model.Find("mono compiler", true));
-//			Print(_model.Find(@"\oLd\mono compiler", true));
+//			AOutput.Write(_model.Find("QM3 function flags.cs", false));
+//			AOutput.Write(_model.Find(@"\Function ideAs\AAcc.path.cs", false));
+//			AOutput.Write(_model.Find("mono compiler", false));
+//			AOutput.Write(_model.Find(@"\oLd\mono compiler", false));
+//			AOutput.Write("-----");
+//			AOutput.Write(_model.Find("QM3 function flags.cs", false));
+//			AOutput.Write(_model.Find(@"\Function ideAs\AAcc.path.cs", false));
+//			AOutput.Write(_model.Find("mono compiler", false));
+//			AOutput.Write(_model.Find(@"\oLd\mono compiler", false));
+//			AOutput.Write("-----");
+//			AOutput.Write(_model.Find("QM3 function flags.cs", true));
+//			AOutput.Write(_model.Find(@"\Function ideAs\AAcc.path.cs", true));
+//			AOutput.Write(_model.Find("mono compiler", true));
+//			AOutput.Write(_model.Find(@"\oLd\mono compiler", true));
 //		};
 //		m["FullUpdate"] = o => _c.FullUpdate();
 //		m["HideEditor"] = o => _c.HideEditor();
@@ -80,21 +78,21 @@ partial class PanelFiles
 //		};
 //		m["GetNodeBounds"] = o =>
 //		{
-//			Print(_c.GetNodeBounds(n));
-//			Print(_c.GetNodeBoundsInClient(n));
+//			AOutput.Write(_c.GetNodeBounds(n));
+//			AOutput.Write(_c.GetNodeBoundsInClient(n));
 //		};
 //		m["GetNodeControls"] = o =>
 //		{
 //			int dx = _c.OffsetX, dy = _c.OffsetY;
 //			foreach(var v in _c.GetNodeControls(n)) {
 //				var r = v.Bounds; r.X -= dx; r.Y -= dy;
-//				Print(r);
+//				AOutput.Write(r);
 //			}
 //		};
 //		m["GetNodeControlInfoAt"] = o =>
 //		{
 //			var k = _c.GetNodeControlInfoAt(new Point(60, 40));
-//			Print(k.Node?.Tag, k.Bounds);
+//			AOutput.Write(k.Node?.Tag, k.Bounds);
 //		};
 //#if TEST_MANY_COLUMNS
 //				m["column IsVisible"] = o =>
@@ -147,20 +145,20 @@ partial class PanelFiles
 //		m["ItemPath"] = o =>
 //		{
 //			f = _model.Find("obsolete", null);
-//			Print(f?.ItemPath);
+//			AOutput.Write(f?.ItemPath);
 //			f = _model.Find("Zip_to_WEB", null);
-//			Print(f?.ItemPath);
+//			AOutput.Write(f?.ItemPath);
 //			f = _model.Find("tips.txt", null);
-//			Print(f?.ItemPath);
+//			AOutput.Write(f?.ItemPath);
 //		};
 //		m["FilePath"] = o =>
 //		{
 //			f = _model.Find("obsolete", null);
-//			Print(f?.FilePath);
+//			AOutput.Write(f?.FilePath);
 //			f = _model.Find("Zip_to_WEB", null);
-//			Print(f?.FilePath);
+//			AOutput.Write(f?.FilePath);
 //			f = _model.Find("tips.txt", null);
-//			Print(f?.FilePath);
+//			AOutput.Write(f?.FilePath);
 //		};
 //		m["delete icon cache"] = o => { FileNode.IconCache.ClearCache(); _c.Invalidate(); };
 //		m.Separator();

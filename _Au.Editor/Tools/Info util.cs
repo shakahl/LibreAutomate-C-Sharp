@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -9,12 +8,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 namespace Au.Tools

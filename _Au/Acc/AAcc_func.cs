@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -179,8 +177,8 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// if(a.State.Has(AccSTATE.INVISIBLE)) Print("has state INVISIBLE");
-		/// if(a.IsInvisible) Print("invisible");
+		/// if(a.State.Has(AccSTATE.INVISIBLE)) AOutput.Write("has state INVISIBLE");
+		/// if(a.IsInvisible) AOutput.Write("invisible");
 		/// ]]></code>
 		/// </example>
 		public AccSTATE State
@@ -512,7 +510,7 @@ namespace Au
 			AWnd w = WndTopLevel; if(w.Is0) throw new AuException("*get window");
 			AAcc doc = AAcc.Wait(-1, w, "web:"); if(doc == null) throw new AuException("*find web page");
 
-			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!Empty(wndName) && !Empty(docName));
+			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!wndName.IsNE() && !docName.IsNE());
 			bool wndOK = false, docOK = false;
 			AAcc.Finder f = null;
 
@@ -532,7 +530,7 @@ namespace Au
 					if(!f.Find(w)) continue; //eg in Firefox for some time there is no DOCUMENT
 					var s = f.ResultProperty as string; if(s == null) continue;
 					docOK = s != docName;
-					//if(!docOK) Print("doc is late");
+					//if(!docOK) AOutput.Write("doc is late");
 				}
 				if(wndOK && docOK) {
 					w.ThrowIfInvalid();
@@ -578,26 +576,26 @@ namespace Au
 
 			Api.WINEVENTPROC hook = (IntPtr hWinEventHook, AccEVENT ev, AWnd hwnd, int idObject, int idChild, int idEventThread, int time) =>
 			{
-				if(eventNotify == null) { /*Print("null 1");*/ return; }
+				if(eventNotify == null) { /*AOutput.Write("null 1");*/ return; }
 				if(ev == AccEVENT.OBJECT_CREATE && hwnd != w) return; //note: in Chrome hwnd is Chrome_RenderWidgetHostHWND
 				int di = ++debugIndex;
 				using(var a = AAcc.FromEvent(hwnd, idObject, idChild)) {
 					if(a == null) { /*ADebug.Print("AAcc.FromEvent null");*/ return; } //often IE, but these are not useful objects
-					if(eventNotify == null) { /*Print("null 2");*/ return; }
+					if(eventNotify == null) { /*AOutput.Write("null 2");*/ return; }
 					if(ev == AccEVENT.IA2_DOCUMENT_LOAD_COMPLETE) { //Chrome, Firefox
 
 						//filter out frame/iframe
 						if(browser == 2) { //Firefox does not fire events for frame/iframe. But the Chrome code would work too.
 						} else if(0 == a._iacc.get_accParent(out var a2)) { //bug in some Chrome versions: fails for main document
 							using(a2) {
-								if(eventNotify == null) { /*Print("null 3");*/ return; }
+								if(eventNotify == null) { /*AOutput.Write("null 3");*/ return; }
 								bool isFrame;
 								var hr = a2.GetRole(0, out var role, out var roleStr); if(hr != 0) ADebug.Print((uint)hr);
-								if(eventNotify == null) { /*Print("null 4");*/ return; }
+								if(eventNotify == null) { /*AOutput.Write("null 4");*/ return; }
 								if(hr != 0) isFrame = false;
 								else if(roleStr != null) isFrame = roleStr.Ends("frame", true);
 								else isFrame = !(role == AccROLE.WINDOW || role == AccROLE.CLIENT);
-								//Print(role, roleStr);
+								//AOutput.Write(role, roleStr);
 								if(isFrame) return;
 								//browser    main        frame     iframe
 								//Firefox    "browser"   "frame"   "iframe"
@@ -607,23 +605,23 @@ namespace Au
 					} else { //IE (OBJECT_CREATE)
 						if(a._elem != 0) return;
 						if(0 != a._iacc.GetRole(0, out var role) || role != AccROLE.PANE) return;
-						if(eventNotify == null) { /*Print("null 3");*/ return; }
+						if(eventNotify == null) { /*AOutput.Write("null 3");*/ return; }
 
 						//filter out frame/iframe
 						if(a.IsInvisible) return;
-						if(eventNotify == null) { /*Print("null 4");*/ return; }
+						if(eventNotify == null) { /*AOutput.Write("null 4");*/ return; }
 						using(var aCLIENT = _FromWindow(w, AccOBJID.CLIENT, noThrow: true)) {
-							if(eventNotify == null) { /*Print("null 5");*/ return; }
+							if(eventNotify == null) { /*AOutput.Write("null 5");*/ return; }
 							if(aCLIENT != null) {
-								var URL1 = a.Value; Debug.Assert(URL1.Length > 0); //Print(URL1); //http:..., about:...
+								var URL1 = a.Value; Debug.Assert(URL1.Length > 0); //AOutput.Write(URL1); //http:..., about:...
 								aCLIENT.get_accName(0, out var URL2, 0); Debug.Assert(URL2.Length > 0);
 								if(URL1 != URL2) return;
-								if(eventNotify == null) { /*Print("null 6");*/ return; }
+								if(eventNotify == null) { /*AOutput.Write("null 6");*/ return; }
 							} else ADebug.Print("aCLIENT null");
 						}
 					}
 
-					//Print(di, ev, a);
+					//AOutput.Write(di, ev, a);
 					eventNotify.Set();
 					eventNotify = null;
 				}
@@ -849,7 +847,7 @@ namespace Au
 					iv = i + 1;
 				}
 			}
-			//Print(d);
+			//AOutput.Write(d);
 			return d;
 		}
 
@@ -931,7 +929,7 @@ namespace Au
 		public string HtmlAttribute(string name)
 		{
 			ThrowIfDisposed_();
-			if(Empty(name) || name[0] == '\'') throw new ArgumentException("Invalid name.");
+			if(name.IsNE() || name[0] == '\'') throw new ArgumentException("Invalid name.");
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, name, out BSTR s));
 			GC.KeepAlive(this);
 			return _BstrToString(hr, s);

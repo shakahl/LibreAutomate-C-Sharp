@@ -7,7 +7,6 @@ using System.Collections;
 using System.Collections.Generic;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Types
 {

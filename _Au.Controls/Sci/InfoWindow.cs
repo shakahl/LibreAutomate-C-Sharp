@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,20 +10,18 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
 	/// <summary>
 	/// An info window, similar to tooltips but persistent, normally at the right side of a form/control/rectangle.
-	/// Supports print tags etc. Actually it is a floating <see cref="InfoBox"/>.
+	/// Supports output tags etc. Actually it is a floating <see cref="InfoBox"/>.
 	/// You can set text, resize and show/hide/dispose it many times.
 	/// User can middle-click to hide.
 	/// </summary>
@@ -70,7 +67,7 @@ namespace Au.Controls
 		public InfoBox Control2 { get { _ = _W; return _c2; } }
 
 		/// <summary>
-		/// Text with print tags.
+		/// Text with output tags.
 		/// </summary>
 		public string Text {
 			get => _c?.Text;
@@ -78,7 +75,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Text of second control with print tags.
+		/// Text of second control with output tags.
 		/// </summary>
 		public string Text2 {
 			get => _c2?.Text;
@@ -202,7 +199,7 @@ namespace Au.Controls
 
 		//bool IMessageFilter.PreFilterMessage(ref Message m)
 		//{
-		//	Print(m);
+		//	AOutput.Write(m);
 		//	return false;
 		//}
 

@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -24,14 +22,14 @@ namespace Au
 	/// <remarks>
 	/// The ADebug.PrintX functions write to the same output as <see cref="AOutput.Write"/>, not to the trace listeners like <see cref="Debug.Print(string)"/> etc do. Also they add caller's name, file and line number.
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
-	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Debug.Verbose) PrintWarning("text");</c>; see <see cref="PrintWarning"/>, AOpt.Debug.<see cref="OptDebug.Verbose"/>.
+	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AWarning.Write("text");</c>; see <see cref="AWarning.Write"/>, AOpt.Warnings.<see cref="OptWarnings.Verbose"/>.
 	/// </remarks>
 	[DebuggerStepThrough]
 	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
 	{
 		static void _Print(object text, string cp, int cln, string cmn)
 		{
-			string s = PrintObjectToString_(text);
+			string s = AOutput.ObjectToString_(text);
 			string prefix = null; if(s.Starts("<>")) { prefix = "<>"; s = s.Substring(2); }
 			AOutput.Write($"{prefix}Debug: {cmn} ({APath.GetFileName(cp)}:{cln}):  {s}");
 		}
@@ -89,42 +87,42 @@ namespace Au
 		[Conditional("DEBUG")]
 		public static void Dialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
-			string s = PrintObjectToString_(text);
+			string s = AOutput.ObjectToString_(text);
 			ADialog.ShowEx("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetFileName(cp)}:{cln})");
 		}
 
-		//rejected: use if(AOpt.Debug.Verbose) ADialog.ShowWarning(...). It adds stack trace.
+		//rejected: use if(AOpt.Warnings.Verbose) ADialog.ShowWarning(...). It adds stack trace.
 		///// <summary>
-		///// If AOpt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="ADialog.Show"/> with text and stack trace.
+		///// If AOpt.Warnings.<see cref="OptWarnings.Verbose"/> == true, calls <see cref="ADialog.Show"/> with text and stack trace.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
 		//public static void DialogOpt(string text)
 		//{
-		//	if(!AOpt.Debug.Verbose) return;
+		//	if(!AOpt.Warnings.Verbose) return;
 		//	var x = new StackTrace(1, true);
 		//	ADialog.ShowEx("Debug", text, flags: DFlags.ExpandDown | DFlags.Wider, expandedText: x.ToString());
 		//}
 
-		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use PrintWarning; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
+		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use AWarning.Write; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.
 		///// <summary>
-		///// If AOpt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="AOutput.Write(string)"/>.
+		///// If AOpt.Warnings.<see cref="OptWarnings.Verbose"/> == true, calls <see cref="AOutput.Write(string)"/>.
 		///// Read more in class help.
 		///// </summary>
 		//public static void PrintOpt(string text)
 		//{
-		//	if(AOpt.Debug.Verbose) AOutput.Write("Debug: " + text);
+		//	if(AOpt.Warnings.Verbose) AOutput.Write("Debug: " + text);
 		//}
 
-		//rejected: Don't need multiple warning functions. Now PrintWarning does not show more than 1 warning/second if AOpt.Debug.Verbose is false. Also users can add this in script themplate: #if !DEBUG Options.DisableWarnings(...);
+		//rejected: Don't need multiple warning functions. Now AWarning.Write does not show more than 1 warning/second if AOpt.Warnings.Verbose is false.
 		///// <summary>
-		///// If AOpt.Debug.<see cref="OptDebug.Verbose"/> == true, calls <see cref="PrintWarning"/>.
+		///// If AOpt.Warnings.<see cref="OptWarnings.Verbose"/> == true, calls <see cref="AWarning.Write"/>.
 		///// Read more in class help.
 		///// </summary>
 		//[MethodImpl(MethodImplOptions.NoInlining)]
 		//public static void WarningOpt(string text)
 		//{
-		//	if(AOpt.Debug.Verbose) PrintWarning(text, 1);
+		//	if(AOpt.Warnings.Verbose) AWarning.Write(text, 1);
 		//}
 
 		/// <summary>
@@ -134,7 +132,7 @@ namespace Au
 		/// <param name="goodFlags">Valid flags.</param>
 		/// <remarks>
 		/// Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
-		/// Does nothing if AOpt.Debug.<see cref="OptDebug.Verbose"/> == false.
+		/// Does nothing if AOpt.Warnings.<see cref="OptWarnings.Verbose"/> == false.
 		/// When flags are valid, this function is fast.
 		/// </remarks>
 		internal static unsafe void CheckFlagsOpt_<T>(T flags, T goodFlags) where T : unmanaged, Enum
@@ -150,7 +148,7 @@ namespace Au
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		static void _CheckFlagsOpt(Type t, int goodFlags)
 		{
-			if(!AOpt.Debug.Verbose) return;
+			if(!AOpt.Warnings.Verbose) return;
 			if(!t.IsEnum) throw new ArgumentException("Bad type.");
 			var s = new StringBuilder("Invalid flags. Only these flags can be used: "); bool added = false;
 			for(int i = 1; i != 0; i <<= 1) {
@@ -159,7 +157,7 @@ namespace Au
 				s.Append(t.GetEnumName(i));
 			}
 			s.Append('.');
-			//PrintWarning(s.ToString(), 1);
+			//AWarning.Write(s.ToString(), 1);
 			throw new ArgumentException(s.ToString());
 		}
 

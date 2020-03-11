@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 //CONSIDER: add an option to inject and execute the task in any process/thread.
 //	[assembly: Inject("firefox.exe", windowName="* - Firefox")]
@@ -96,7 +94,7 @@ namespace Au
 
 		static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null)
 		{
-			var w = WndMsg; if(w.Is0) throw new AuException("Au editor not found."); //CONSIDER: run editor program, if installed
+			var w = WndMsg_; if(w.Is0) throw new AuException("Au editor not found."); //CONSIDER: run editor program, if installed
 			bool needResult = 0 != (mode & 2); resultS = null;
 			using var tr = new _TaskResults();
 			if(needResult && !tr.Init()) throw new AuException("*get task results");
@@ -169,7 +167,7 @@ namespace Au
 						while(((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (ALastError.Code == Api.ERROR_MORE_DATA)) && n > 0) {
 							n /= 2;
 							if(!readOK) useSB = true;
-							//Print(useSB, n);
+							//AOutput.Write(useSB, n);
 							if(useSB) { //rare
 								_sb ??= new StringBuilder(bLen);
 								if(results == null && _s != null) _sb.Append(_s);
@@ -206,15 +204,9 @@ namespace Au
 		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
 		/// </summary>
-		internal static AWnd WndMsg {
-			get {
-				if(!s_wndMsg.IsAlive) { //TODO: timeout
-					s_wndMsg = AWnd.FindFast(null, "Au.Editor.Msg", true);
-				}
-				return s_wndMsg;
-			}
-		}
+		internal static AWnd WndMsg_ => s_wndMsg.FindFastCached_(ref s_wmTime, null, "Au.Editor.Msg", true);
 		static AWnd s_wndMsg;
+		static long s_wmTime;
 
 		/// <summary>
 		/// Writes a string result for the task that called <see cref="RunWait(out string, string, string[])"/> or <see cref="RunWait(Action{string}, string, string[])"/> to run this task, or for the program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs".
@@ -230,7 +222,7 @@ namespace Au
 		{
 			var pipeName = Environment.GetEnvironmentVariable("ATask.WriteResult.pipe");
 			if(pipeName == null) return false;
-			if(!Empty(s)) {
+			if(!s.IsNE()) {
 				if(!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
 				using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0)) {
 					if(pipe.Is0) goto ge;
@@ -249,13 +241,13 @@ namespace Au
 		///// </summary>
 		//public void CallFirstMethod()
 		//{
-		//	//Print(this.GetType().GetMethods(BindingFlags.Public|BindingFlags.Instance).Length);
+		//	//AOutput.Write(this.GetType().GetMethods(BindingFlags.Public|BindingFlags.Instance).Length);
 		//	//foreach(var m in this.GetType().GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.DeclaredOnly)) {
-		//	//	Print(m.Name);
+		//	//	AOutput.Write(m.Name);
 		//	//}
 
 		//	var a = GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-		//	if(a.Length == 0) { Print("Info: Script code should be in a non-static method. Example:\nvoid Script() { Print(\"test\"); }"); return; }
+		//	if(a.Length == 0) { AOutput.Write("Info: Script code should be in a non-static method. Example:\nvoid Script() { AOutput.Write(\"test\"); }"); return; }
 
 		//	_CallMethod(a[0], null);
 
@@ -271,8 +263,8 @@ namespace Au
 		//public void CallTriggerMethod(string name, object eventData)
 		//{
 		//	var m = GetType().GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-		//	//Print(m);
-		//	if(m == null) { Print($"Error: Method {name} not found."); return; }
+		//	//AOutput.Write(m);
+		//	if(m == null) { AOutput.Write($"Error: Method {name} not found."); return; }
 		//	_CallMethod(m, eventData);
 		//	//object[] a=null; if(parameter!=null) a=new object[1] { parameter };
 		//	//m.Invoke(this, a);
@@ -281,12 +273,12 @@ namespace Au
 		//void _CallMethod(MethodInfo m, object arg)
 		//{
 		//	int n = m.GetParameters().Length;
-		//	if(n != 0 && n != 1) { Print($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
+		//	if(n != 0 && n != 1) { AOutput.Write($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
 		//	try {
 		//		m.Invoke(this, n == 0 ? null : new object[1] { arg });
 		//	}
 		//	catch(Exception e) {
-		//		Print($"Error: Failed to call method {m.Name}. {e.Message}");
+		//		AOutput.Write($"Error: Failed to call method {m.Name}. {e.Message}");
 		//	}
 		//}
 

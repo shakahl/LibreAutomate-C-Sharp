@@ -15,7 +15,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -23,7 +22,6 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -89,7 +87,7 @@ namespace Au.Controls
 		{
 			_errorProvider?.Clear();
 			var s = comboColor.Text.Trim();
-			if(Empty(s) || ColorInt.FromString(s, out _)) return;
+			if(s.IsNE() || ColorInt.FromString(s, out _)) return;
 			e.Cancel = true;
 			_SetError(comboColor, "Invalid color name");
 		}
@@ -125,7 +123,7 @@ namespace Au.Controls
 			if(e.Data.GetData(DataFormats.FileDrop, false) is string[] a && a.Length > 0) s = a[0];
 			else s = e.Data.GetData(DataFormats.UnicodeText, false) as string;
 			s = s?.Trim();
-			if(!Empty(s)) textIcon.Text = s;
+			if(!s.IsNE()) textIcon.Text = s;
 		}
 		#endregion
 
@@ -168,7 +166,7 @@ namespace Au.Controls
 		private void _TextHotkey_Validating(object sender, CancelEventArgs e)
 		{
 			var s = textHotkey.Text.Trim();
-			if(Empty(s)) return;
+			if(s.IsNE()) return;
 			bool ok = true;
 			if(!AKeys.More.ParseHotkeyString(s, out var mod, out var k) || mod.Has(KMod.Win)) ok = false;
 			else if(!mod.HasAny(KMod.Ctrl | KMod.Alt)) ok = (k >= KKey.F2 && k <= KKey.F24);

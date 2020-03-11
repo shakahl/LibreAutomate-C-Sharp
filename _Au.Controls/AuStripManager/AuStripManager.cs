@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -18,7 +17,6 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -104,7 +102,7 @@ namespace Au.Controls
 			XElement xCustom = null;
 			if(AFile.ExistsAsFile(_xmlFileCustom)) {
 				try { xCustom = AExtXml.LoadElem(_xmlFileCustom); }
-				catch(Exception e) { Print("Failed to load file", _xmlFileCustom, e.Message); }
+				catch(Exception e) { AOutput.Write("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
 			Size imageScalingSize = Au.Util.ADpi.SmallIconSize; //if high DPI, auto scale images
@@ -270,7 +268,7 @@ namespace Au.Controls
 		void _Submenu(XElement x, ToolStripDropDownItem ddItem, string tag)
 		{
 			var s = x.Attr("dd");
-			if(!Empty(s)) {
+			if(!s.IsNE()) {
 				ddItem.DropDown = Submenus[s];
 			} else {
 				var dd = ddItem.DropDown as ToolStripDropDownMenu; //note: not ddItem.DropDown=new ToolStripDropDownMenu(). Then eg hotkeys don't work.
@@ -327,7 +325,7 @@ namespace Au.Controls
 			Image im = null;
 			if(x.Attr(out s, "i2")) { //custom image as icon file
 				im = AIcon.GetFileIconImage(s, (int)IconSize.SysSmall, GIFlags.SearchPath);
-				if(im == null) Print($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
+				if(im == null) AOutput.Write($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}
 			if(im == null && x.Attr(out s, "i")) im = _callbacks.GetImage(s); //image from resources
@@ -467,7 +465,7 @@ namespace Au.Controls
 			if(xCust2.HasElements) { xCust2.Remove(); xStripsCustom.Add(xCust2); }
 
 			//AOutput.Clear();
-			//Print(xStripsCustom);
+			//AOutput.Write(xStripsCustom);
 #if true
 			//save
 			try {
@@ -475,7 +473,7 @@ namespace Au.Controls
 				xStripsCustom.SaveElem(_xmlFileCustom);
 			}
 			catch(Exception e) {
-				Print("Failed to save XML file", _xmlFileCustom, e.Message);
+				AOutput.Write("Failed to save XML file", _xmlFileCustom, e.Message);
 			}
 #endif
 
@@ -649,12 +647,12 @@ namespace Au.Controls
 			ToolStripItem target = null; bool isOutside = false;
 			var ts = item.Owner;
 			bool isCustom = ts == _tsCustom1 || ts == _tsCustom2;
-			//Print(item, ts, isCustom);
+			//AOutput.Write(item, ts, isCustom);
 			if(!Au.Util.ADragDrop.SimpleDragDrop(ts, MButtons.Left, k =>
 			{
 				if(k.Msg.message != Api.WM_MOUSEMOVE) return;
 				target = ts.GetItemAt(ts.MouseClientXY());
-				//Print(target);
+				//AOutput.Write(target);
 				isOutside = (target == null && AWnd.FromMouse() != (AWnd)ts);
 				k.Cursor = isOutside ? Cursors.No : Cursors.Hand;
 			}) || isOutside) return;

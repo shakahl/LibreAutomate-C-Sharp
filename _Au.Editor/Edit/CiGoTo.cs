@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Linq;
 using System.Net;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
@@ -159,7 +156,7 @@ class CiGoTo
 		} else {
 			g._assembly = a[2];
 			g._docId = a[3];
-			if(!Empty(a[4])) g._typeName = a[4];
+			if(!a[4].IsNE()) g._typeName = a[4];
 		}
 		g.GoTo(menuOwner);
 	}
@@ -221,7 +218,7 @@ class CiGoTo
 	public static void GoToSymbolFromPos(bool onCtrlClick = false)
 	{
 		if(!CiUtil.GetSymbolFromPos(out var sym, out var cd)) return;
-		//Print(sym);
+		//AOutput.Write(sym);
 		var g = new CiGoTo(sym, onlyIfInSource: onCtrlClick);
 		if(g.CanGoTo) g.GoTo(cd.sciDoc);
 	}
@@ -239,7 +236,7 @@ class CiGoTo
 	//	string sourceFile = a[1];
 	//	int line = a[2]; //ctor line
 	//	string itemText = a[3];
-	//	Print(isTB, sourceFile, line, itemText);
+	//	AOutput.Write(isTB, sourceFile, line, itemText);
 	//	var f1 = Program.Model.FindByFilePath(sourceFile); if(f1 == null) return;
 	//	if(!Program.Model.OpenAndGoTo(f1, line)) return;
 	//	if(itemText != null) { //go to item
@@ -248,7 +245,7 @@ class CiGoTo
 	//		int i = doc.Z.LineStart(true, line);
 	//		string tn = isTB ? "AToolbar" : "AMenu";
 	//		if(!code.RegexMatch($@"\b([a-zA-Z_]\w*)\s*=\s*new\s+{tn}\s*\(", 1, out string v, RXFlags.FIRSTLINE, i..)) return; //get variable name
-	//		Print(v);
+	//		AOutput.Write(v);
 	//	}
 	//}
 }

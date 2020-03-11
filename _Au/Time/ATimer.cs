@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -28,9 +26,9 @@ namespace Au
 	/// <example>
 	/// This example sets 3 timers.
 	/// <code><![CDATA[
-	/// ATimer.After(500, _ => Print("after 500 ms"));
-	/// ATimer.Every(1000, _ => Print("every 1000 ms"));
-	/// var t3 = new ATimer(_ => Print("after 3000 ms")); t3.After(3000); //the same as ATimer.After
+	/// ATimer.After(500, _ => AOutput.Write("after 500 ms"));
+	/// ATimer.Every(1000, _ => AOutput.Write("every 1000 ms"));
+	/// var t3 = new ATimer(_ => AOutput.Write("after 3000 ms")); t3.After(3000); //the same as ATimer.After
 	/// MessageBox.Show("");
 	/// ]]></code>
 	/// </example>
@@ -106,13 +104,13 @@ namespace Au
 				_threadId = Thread.CurrentThread.ManagedThreadId;
 				(t_timers ??= new Dictionary<LPARAM, ATimer>()).Add(_id, this);
 			}
-			//Print($"Start: {_id}  isNew={isNew}  singlePeriod={singlePeriod}  _threadId={_threadId}");
+			//AOutput.Write($"Start: {_id}  isNew={isNew}  singlePeriod={singlePeriod}  _threadId={_threadId}");
 		}
 
 		static Api.TIMERPROC _timerProc = _TimerProc;
 		static void _TimerProc(AWnd w, int msg, LPARAM idEvent, uint time)
 		{
-			//Print(t_timers.Count, idEvent);
+			//AOutput.Write(t_timers.Count, idEvent);
 			if(!t_timers.TryGetValue(idEvent, out var t)) {
 				//ADebug.Print($"timer id {idEvent} not in t_timers");
 				return;
@@ -124,7 +122,7 @@ namespace Au
 			if(t._singlePeriod) t.Stop();
 
 			try { t._action(t); }
-			catch(Exception ex) { PrintWarning(ex.ToString(), -1); }
+			catch(Exception ex) { AWarning.Write(ex.ToString(), -1); }
 			//info: OS handles exceptions in timer procedure.
 		}
 
@@ -141,7 +139,7 @@ namespace Au
 		public void Stop()
 		{
 			if(_id != 0) {
-				//Print($"Stop: {_id}          _threadId={_threadId}");
+				//AOutput.Write($"Stop: {_id}          _threadId={_threadId}");
 				_CheckThread();
 				Api.KillTimer(default, _id);
 				//tested: KillTimer removes pending WM_TIMER messages from queue. MSDN lies. Tested on Win 10 and 7.
@@ -166,7 +164,7 @@ namespace Au
 			//FUTURE: somehow allow other thread. It is often useful.
 		}
 
-		//~ATimer() { Print("dtor"); } //don't call Stop() here, we are in other thread
+		//~ATimer() { AOutput.Write("dtor"); } //don't call Stop() here, we are in other thread
 
 		static ATimer _StartNew(bool singlePeriod, int milliseconds, Action<ATimer> timerAction, object tag = null)
 		{

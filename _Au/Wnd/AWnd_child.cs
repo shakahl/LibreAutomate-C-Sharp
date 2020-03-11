@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -33,8 +31,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var f = new AWnd.ChildFinder("Password*", "Static"); //control properties
 		/// AWnd w = AWnd.Find(cn: "#32770", also: t => f.Find(t));
-		/// Print(w);
-		/// Print(f.Result);
+		/// AOutput.Write(w);
+		/// AOutput.Write(f.Result);
 		/// ]]></code>
 		/// </example>
 		public class ChildFinder
@@ -208,7 +206,7 @@ namespace Au
 										return -1;
 									}
 									catch(AuException e) { //probably process of higher UAC integrity level
-										PrintWarning($"Failed to get .NET control names. {e.Message}");
+										AWarning.Write($"Failed to get .NET control names. {e.Message}");
 										return -1;
 									}
 								}
@@ -330,8 +328,8 @@ namespace Au
 		/// //find window that contains certain control, and get the control too
 		/// var f = new AWnd.ChildFinder("Password*", "Static"); //control properties
 		/// AWnd w = AWnd.Find(cn: "#32770", also: t => t.HasChild(f));
-		/// Print(w);
-		/// Print(f.Result);
+		/// AOutput.Write(w);
+		/// AOutput.Write(f.Result);
 		/// ]]></code>
 		/// </example>
 		public bool HasChild(
@@ -352,8 +350,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var cf = new AWnd.ChildFinder("Password*", "Static"); //control properties
 		/// AWnd w = AWnd.Find(cn: "#32770", also: t => t.HasChild(cf));
-		/// Print(w);
-		/// Print(f.Result);
+		/// AOutput.Write(w);
+		/// AOutput.Write(f.Result);
 		/// ]]></code>
 		/// </example>
 		public bool HasChild(ChildFinder f)
@@ -371,8 +369,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var af = new AAcc.Finder("BUTTON", "OK"); //AO properties
 		/// AWnd w = AWnd.Find(cn: "#32770", also: t => t.HasAcc(af));
-		/// Print(w);
-		/// Print(f.Result);
+		/// AOutput.Write(w);
+		/// AOutput.Write(f.Result);
 		/// ]]></code>
 		/// </example>
 		public bool HasAcc(AAcc.Finder f)

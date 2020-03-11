@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -42,12 +40,12 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Calls <see cref="LoadImageFromString"/> and handles exceptions. On exception returns null and optionally prints warning.
+		/// Calls <see cref="LoadImageFromString"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
 		/// </summary>
 		public static Bitmap TryLoadImageFromString(string s, bool warning)
 		{
 			try { return LoadImageFromString(s); }
-			catch(Exception ex) { if(warning) PrintWarning(ex.ToStringWithoutStack()); }
+			catch(Exception ex) { if(warning) AWarning.Write(ex.ToStringWithoutStack()); }
 			return null;
 		}
 	}

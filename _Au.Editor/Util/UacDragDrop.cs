@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 class UacDragDrop
 {
@@ -71,7 +68,7 @@ class UacDragDrop
 
 		void _StartedDragMode()
 		{
-			//Print("START");
+			//AOutput.Write("START");
 			_isDragMode = true;
 			_endCounter = 0;
 			_wTransparent = default;
@@ -84,7 +81,7 @@ class UacDragDrop
 		void _EndedDragMode()
 		{
 			if(!_isDragMode) return;
-			//Print("END");
+			//AOutput.Write("END");
 			_isDragMode = _isProcess2 = false;
 			_timer.Stop();
 			if(!_wTransparent.Is0) _wTransparent.Post(Api.WM_USER); //let it close self
@@ -110,7 +107,7 @@ class UacDragDrop
 			var w = AWnd.FromMouse(WXYFlags.NeedWindow);
 			if(!_isProcess2) {
 				if(!w.IsOfThisProcess) return;
-				//Print("drag");
+				//AOutput.Write("drag");
 				_isProcess2 = true;
 				_wWindow = w;
 				new Au.Util.ProcessStarter_("Au.Editor.exe", "/dd " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
@@ -151,7 +148,7 @@ class UacDragDrop
 		{
 			if(!_isDragMode) return 0;
 			DDEvent ev = (DDEvent)event_;
-			//if(ev != DDEvent.Over) Print(ev);
+			//if(ev != DDEvent.Over) AOutput.Write(ev);
 			if(ev == DDEvent.Enter) {
 				var a = Au.Util.Serializer_.Deserialize(b);
 				_allowedEffects = (DragDropEffects)(int)a[0];
@@ -201,7 +198,7 @@ class UacDragDrop
 		//If the control alows drop, calls its OnDragEnter/Over/Drop/Leave through reflection.
 		DragDropEffects _InvokeDDHandler(AWnd w, DDEvent ev, POINT p = default)
 		{
-			//Print(ev, w);
+			//AOutput.Write(ev, w);
 			var c = Control.FromHandle(w.Handle); //is it thread-safe? It seems yes.
 			if(c == null || !c.AllowDrop) return 0; //thread-safe
 
@@ -251,13 +248,13 @@ class UacDragDrop
 		//Called from Main() in non-admin process when command line starts with /dd.
 		public static void MainDD(string[] args)
 		{
-			//Print("NonAdminProcess");
+			//AOutput.Write("NonAdminProcess");
 			var msgWnd = (AWnd)args[1].ToInt();
 
 			var f = new NonAdminProcess(msgWnd);
 			f.ShowDialog();
 			f.Dispose();
-			//Print("exit");
+			//AOutput.Write("exit");
 		}
 
 		AWnd _msgWnd; //message-only IPC window in admin process
@@ -298,13 +295,13 @@ class UacDragDrop
 				break;
 			case Api.WM_USER: //admin posts it when ended drag mode
 				Hide();
-				//Print("WM_USER");
+				//AOutput.Write("WM_USER");
 				break;
 			}
 			base.WndProc(ref m);
 
 			//test process startup speed. About 300 ms. Ngened slower.
-			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) Print(ATime.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToInt64());
+			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) AOutput.Write(ATime.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToInt64());
 		}
 
 		bool _enteredOnce;
@@ -351,7 +348,7 @@ class UacDragDrop
 
 		public bool GetData(IDataObject d)
 		{
-			//foreach(var v in d.GetFormats()) Print(v, d.GetData(v, false)?.GetType()); Print("--");
+			//foreach(var v in d.GetFormats()) AOutput.Write(v, d.GetData(v, false)?.GetType()); AOutput.Write("--");
 			try {
 				if(d.GetDataPresent(DataFormats.FileDrop, false)) { //files
 					files = d.GetData(DataFormats.FileDrop, false) as string[]; if(files == null) return false;

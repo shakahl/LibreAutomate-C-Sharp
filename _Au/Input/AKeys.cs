@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -29,12 +27,9 @@ namespace Au
 	/// AKeys.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
 	/// 
 	/// AOpt.Key.KeySpeed = 300; //set options for static functions
-	/// AKeys.Key("Ctrl+A Del Tab*3", (KText)"text", "Enter", 500); //press Ctrl+A, press Del, press Tab 3 times, send text, press Enter, wait 100 ms
+	/// AKeys.Key("Ctrl+A Del Tab*3", (KText)"text", "Enter", 500); //press Ctrl+A, Del, Tab 3 times, send text, Enter, wait 500 ms
 	/// 
 	/// AKeys.Text("text\r\n"); //send text that ends with newline
-	/// 
-	/// Text("Key and Text can be used without the \"AKeys.\" prefix.");
-	/// Key("Enter");
 	/// ]]></code>
 	/// </example>
 	public partial class AKeys
@@ -164,10 +159,10 @@ namespace Au
 		public AKeys AddKeys([ParamString(PSFormat.AKeys)] string keys)
 		{
 			_ThrowIfSending();
-			if(Empty(keys)) return this;
+			if(keys.IsNE()) return this;
 			int i = 0, len = 0;
 			foreach(var g in _SplitKeysString(keys)) {
-				//Print($"<><c 0xC000>{g.Value}</c>"); //continue;
+				//AOutput.Write($"<><c 0xC000>{g.Value}</c>"); //continue;
 				i = g.Start; len = g.Length;
 				char c = keys[i]; _KEvent e;
 				switch(c) {
@@ -218,7 +213,7 @@ namespace Au
 					var k = _KeynameToKey(keys, i, len);
 					if(k == 0) goto ge;
 					AddKey(k);
-					//Print(k);
+					//AOutput.Write(k);
 					break;
 				}
 			}
@@ -342,7 +337,7 @@ namespace Au
 		public AKeys AddText(string text)
 		{
 			_ThrowIfSending();
-			if(!Empty(text)) _AddKey(new _KEvent(_KType.Text, _SetData(text)));
+			if(!text.IsNE()) _AddKey(new _KEvent(_KType.Text, _SetData(text)));
 			return this;
 		}
 
@@ -420,13 +415,12 @@ namespace Au
 		/// Returns self.
 		/// </summary>
 		/// <param name="keysEtc">Arguments. The same as with <see cref="Key"/>.</param>
-		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example unknown key name.</exception>
-		public AKeys Add([ParamString(PSFormat.AKeys)] params object[] keysEtc)
+		public AKeys Add([ParamString(PSFormat.AKeys)] params KKeysEtc[] keysEtc)
 		{
 			_ThrowIfSending();
 			if(keysEtc != null) {
 				for(int i = 0; i < keysEtc.Length; i++) {
-					var o = keysEtc[i] ?? "";
+					var o = keysEtc[i].Value ?? "";
 					switch(o) {
 					case string s:
 						AddKeys(s);
@@ -449,7 +443,6 @@ namespace Au
 					case ValueTuple<KKey, int, bool> t:
 						AddKey(t.Item1, t.Item2, t.Item3);
 						break;
-					default: throw new ArgumentException("Unsupported object type. Expected string, KText, KKey, int, Action, (int, bool) or (KKey, int, bool).");
 					}
 				}
 			}
@@ -469,13 +462,13 @@ namespace Au
 				if(_pstate.paren || _pstate.plus) throw new ArgumentException("canSendAgain cannot be true if keys ends with + or (");
 			}
 
-			//Print("-- _parsing.mod --");
-			//Print(_parsing.mod);
+			//AOutput.Write("-- _parsing.mod --");
+			//AOutput.Write(_parsing.mod);
 
 			_AddModUp(); //add mod-up events if need, eg Ctrl-up after "Ctrl+A"
 
-			//Print("-- _a --");
-			//Print(_a);
+			//AOutput.Write("-- _a --");
+			//AOutput.Write(_a);
 
 			//APerf.First();
 			int sleepFinally = 0;
@@ -483,7 +476,7 @@ namespace Au
 			var bi = new AInputBlocker() { ResendBlockedKeys = true };
 			try {
 				_sending = true;
-				//Print("{");
+				//AOutput.Write("{");
 				if(!Options.NoBlockInput) bi.Start(BIEvents.Keys);
 				restoreCapsLock = Internal_.ReleaseModAndCapsLock(Options);
 				//APerf.Next();
@@ -516,7 +509,7 @@ namespace Au
 				_sending = false;
 				bi.Dispose();
 				//APerf.NW();
-				//Print("}");
+				//AOutput.Write("}");
 
 				//if canSendAgain, can be used like: AddX(); for(...) Send();
 				//else can be used like: AddX(); Send(); AddX(); Send();
@@ -585,8 +578,8 @@ namespace Au
 			if(sleep < 0) sleep = 0;
 
 			//var s = (k.vk).ToString();
-			//if(k.IsPair) Print($"{s}<{sleep}>");
-			//else { var ud = k.IsUp ? '-' : '+'; if(sleep > 0) Print($"{s}{ud} {sleep}"); else Print($"{s}{ud}"); }
+			//if(k.IsPair) AOutput.Write($"{s}<{sleep}>");
+			//else { var ud = k.IsUp ? '-' : '+'; if(sleep > 0) AOutput.Write($"{s}{ud} {sleep}"); else AOutput.Write($"{s}{ud}"); }
 
 			for(int r = 0; r < count; r++) {
 				//APerf.First();
@@ -655,7 +648,7 @@ namespace Au
 						if(0 == (km & 0xf800)) { //-1 if failed, mod flag 8 Hankaku key, 16/32 reserved for driver
 							vk = (KKey)(km & 0xff); mod = (KMod)(km >> 8);
 						}
-						//Print(c, vk, mod, (ushort)km);
+						//AOutput.Write(c, vk, mod, (ushort)km);
 					}
 
 					if(vk == 0) { //use vk_packet

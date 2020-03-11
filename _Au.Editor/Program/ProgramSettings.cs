@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,22 +10,20 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 /// <summary>
 /// Program settings.
-/// AFolders.ThisAppDocuments + @"!Settings\Settings.json"
+/// AFolders.ThisAppDocuments + @".settings\Settings.json"
 /// </summary>
 class ProgramSettings : Au.Util.JSettings
 {
-	public static ProgramSettings Load() => _Load<ProgramSettings>(AFolders.ThisAppDocuments + @"!Settings\Settings.json");
+	public static ProgramSettings Load() => _Load<ProgramSettings>(AFolders.ThisAppDocuments + @".settings\Settings.json");
 
 	public string user { get => _user; set => Set(ref _user, value); }
 	string _user;
@@ -64,9 +61,6 @@ class ProgramSettings : Au.Util.JSettings
 	public int find_searchIn { get => _find_searchIn; set => Set(ref _find_searchIn, value); }
 	int _find_searchIn;
 
-	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
-	bool _ci_complGroup = true;
-
 	public bool edit_wrap { get => _edit_wrap; set => Set(ref _edit_wrap, value); }
 	bool _edit_wrap;
 
@@ -84,6 +78,18 @@ class ProgramSettings : Au.Util.JSettings
 
 	public CiStyling.TStyles edit_styles { get => _edit_styles ??= new CiStyling.TStyles(); set => SetNoCmp(ref _edit_styles, value); }
 	CiStyling.TStyles _edit_styles;
+
+	public string files_usings { get => _files_usings; set => Set(ref _files_usings, value); }
+	string _files_usings;
+
+	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
+	bool _ci_complGroup = true;
+
+	//public bool ci_complGroupEM { get => _ci_complGroupEM; set => Set(ref _ci_complGroupEM, value); }
+	//bool _ci_complGroupEM;
+
+	public bool ci_complParenSpace { get => _ci_complParenSpace; set => Set(ref _ci_complParenSpace, value); }
+	bool _ci_complParenSpace;
 
 	public string db_copy_ref { get => _db_copy_ref; set => Set(ref _db_copy_ref, value); }
 	string _db_copy_ref;

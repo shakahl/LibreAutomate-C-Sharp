@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using System.Text.RegularExpressions; //for XML doc links
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -35,7 +32,7 @@ namespace Au.Types
 	/// <code><![CDATA[
 	/// var s = "ab cd-45-ef gh";
 	/// if(s.RegexMatch(@"\b([a-z]+)-(\d+)\b", out RXMatch m))
-	/// 	Print(
+	/// 	AOutput.Write(
 	/// 		m.GroupCountPlusOne, //3 (whole match and 2 groups)
 	/// 		m.Start, //3, same as m[0].Index
 	/// 		m.Value, //"cd-45-ef", same as m[0].Value
@@ -49,7 +46,7 @@ namespace Au.Types
 	/// <code><![CDATA[
 	/// var s = "ab cd--ef gh";
 	/// if(s.RegexMatch(@"\b([a-z]+)-(\d+)?-([a-z]+)\b", out RXMatch m))
-	/// 	Print(
+	/// 	AOutput.Write(
 	/// 		m.GroupCountPlusOne, //4 (whole match and 3 groups)
 	/// 		m[2].Exists, //false
 	/// 		m[2].Start, //-1
@@ -245,7 +242,7 @@ namespace Au.Types
 		/// </remarks>
 		public string ExpandReplacement(string repl)
 		{
-			if(Empty(repl)) return repl;
+			if(repl.IsNE()) return repl;
 			using(new Util.StringBuilder_(out var b)) {
 				ARegex.ExpandReplacement_(this, repl, b);
 				return b.ToString();

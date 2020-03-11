@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -129,7 +127,7 @@ namespace Au
 				case '%':
 #if true
 					if(!ExpandEnvVar(s).Starts('%'))
-						PrintWarning("Path starts with %environmentVariable%. Use APath.IsFullPathExpandEnvVar instead.");
+						AWarning.Write("Path starts with %environmentVariable%. Use APath.IsFullPathExpandEnvVar instead.");
 #else
 					s = ExpandEnvVar(s); //quite fast. 70% slower than just EnvVarExists_, but reliable.
 					return !s.Starts('%') && IsFullPath(s);
@@ -268,8 +266,8 @@ namespace Au
 		public static string Combine(string s1, string s2, bool s2CanBeFullPath = false, bool prefixLongPath = true)
 		{
 			string r;
-			if(Empty(s1)) r = s2 ?? "";
-			else if(Empty(s2)) r = s1 ?? "";
+			if(s1.IsNE()) r = s2 ?? "";
+			else if(s2.IsNE()) r = s1 ?? "";
 			else if(s2CanBeFullPath && IsFullPath(s2)) r = s2;
 			else {
 				int k = 0;
@@ -293,7 +291,7 @@ namespace Au
 		/// <exception cref="ArgumentException"></exception>
 		internal static string Combine_(string s1, string s2, bool noException = false)
 		{
-			if(!Empty(s1) && !Empty(s2)) {
+			if(!s1.IsNE() && !s2.IsNE()) {
 				int k = 0;
 				if(IsSepChar_(s1[s1.Length - 1])) {
 					if(s1.Length == 1) goto ge;
@@ -380,7 +378,7 @@ namespace Au
 			path = ExpandEnvVar(path);
 			if(!IsFullPath(path)) { //note: not EEV
 				if(0 != (flags & PNFlags.CanBeUrlOrShell)) if(IsShellPath_(path) || IsUrl(path)) return path;
-				if(Empty(defaultParentDirectory)) goto ge;
+				if(defaultParentDirectory.IsNE()) goto ge;
 				path = Combine_(ExpandEnvVar(defaultParentDirectory), path);
 				if(!IsFullPath(path)) goto ge;
 			}
@@ -396,7 +394,7 @@ namespace Au
 		/// </summary>
 		internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false)
 		{
-			if(!Empty(s)) {
+			if(!s.IsNE()) {
 				if(!noExpandEV) s = ExpandEnvVar(s);
 				Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
 
@@ -456,7 +454,7 @@ namespace Au
 		/// <param name="s">Can be null.</param>
 		internal static string ExpandDosPath_(string s)
 		{
-			if(!Empty(s)) {
+			if(!s.IsNE()) {
 				for(int na = 300; ;) {
 					var b = Util.AMemoryArray.Char_(ref na);
 					int nr = Api.GetLongPathName(s, b, na);
@@ -475,7 +473,7 @@ namespace Au
 		/// <param name="s">Can be null.</param>
 		internal static bool IsPossiblyDos_(string s)
 		{
-			//Print(s);
+			//AOutput.Write(s);
 			if(s != null && s.Length >= 8) {
 				for(int i = 0; (i = s.IndexOf('~', i + 1)) > 0;) {
 					int j = i + 1, k = 0;
@@ -548,7 +546,7 @@ namespace Au
 		/// </param>
 		public static string UnprefixLongPath(string path)
 		{
-			if(!Empty(path)) {
+			if(!path.IsNE()) {
 				switch(_GetPrefixLength(path)) {
 				case 4: return path.Substring(4);
 				case 8: return path.Remove(2, 6);

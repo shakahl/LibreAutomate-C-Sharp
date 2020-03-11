@@ -11,14 +11,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 static class EdTrayIcon
@@ -51,7 +49,7 @@ static class EdTrayIcon
 
 	static void _trayIcon_MouseClick(object sender, MouseEventArgs e)
 	{
-		//Print(e.Button);
+		//AOutput.Write(e.Button);
 		switch(e.Button) {
 		case MouseButtons.Left:
 			Program.MainForm.ZShowAndActivate();

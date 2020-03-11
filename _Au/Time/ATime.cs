@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -292,7 +290,7 @@ namespace Au
 		/// 
 		/// void _Test(string name)
 		/// {
-		/// 	Print(name);
+		/// 	AOutput.Write(name);
 		/// 	APerf.First();
 		/// 	for(int i = 0; i < 8; i++) { Thread.Sleep(1); APerf.Next(); }
 		/// 	APerf.Write();
@@ -317,7 +315,7 @@ namespace Au
 			{
 				if(periodMS <= 0) throw new ArgumentOutOfRangeException();
 				if(Api.timeBeginPeriod((uint)periodMS) != 0) return;
-				//Print("set");
+				//AOutput.Write("set");
 				_period = periodMS;
 
 				//Bug in OS or drivers or some apps:
@@ -341,7 +339,7 @@ namespace Au
 			void _Dispose()
 			{
 				if(_period == 0) return;
-				//Print("revoke");
+				//AOutput.Write("revoke");
 				Api.timeEndPeriod((uint)_period); _period = 0;
 			}
 
@@ -366,11 +364,11 @@ namespace Au
 			/// <param name="endAfterMS">Revoke after this time, milliseconds.</param>
 			/// <example>
 			/// <code><![CDATA[
-			/// Print(ATime.SleepPrecision_.Current); //probably 15.625
+			/// AOutput.Write(ATime.SleepPrecision_.Current); //probably 15.625
 			/// ATime.SleepPrecision_.TempSet1(500);
-			/// Print(ATime.SleepPrecision_.Current); //1
+			/// AOutput.Write(ATime.SleepPrecision_.Current); //1
 			/// Thread.Sleep(600);
-			/// Print(ATime.SleepPrecision_.Current); //probably 15.625 again
+			/// AOutput.Write(ATime.SleepPrecision_.Current); //probably 15.625 again
 			/// ]]></code>
 			/// </example>
 			public static void TempSet1(int endAfterMS = 1111)

@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -11,7 +10,6 @@ using System.Runtime.CompilerServices;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -66,7 +64,7 @@ namespace SdkConverter
 			//don't declare typedef to typedef
 			if(typedefType == 0 && aliasOf is _Typedef) {
 				var t = aliasOf as _Typedef;
-				//Print($"unaliased: {_tok[_i-1]} -> {t.aliasOf.csTypename}");
+				//AOutput.Write($"unaliased: {_tok[_i-1]} -> {t.aliasOf.csTypename}");
 				aliasOf = t.aliasOf;
 				ptrBase = t.ptr;
 			}
@@ -96,7 +94,7 @@ namespace SdkConverter
 							defined = true;
 						} else if(_nsCurrent == 0 && aliasOf.forwardDecl && ptrBase + ptr == 0) {
 							string alias = _TokToString(_i);
-							//if(!(aliasOf is _Struct)) Print(aliasOf); //0 in SDK
+							//if(!(aliasOf is _Struct)) AOutput.Write(aliasOf); //0 in SDK
 							//OutList(aliasOf.csTypename, alias, ptr != 0);
 							try { _forwardDeclTypedefs.Add(aliasOf.csTypename, _i); } catch { } //info: try/catch because SDK contains 1 duplicate typedef
 						}
@@ -289,7 +287,7 @@ namespace SdkConverter
 					//borrow enum name from first member. Benefits: easier for users to find the enum; will not be a name conflict; easy.
 					if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
 					iName = _i;
-					//Print(_TokToString(iName));
+					//AOutput.Write(_TokToString(iName));
 				}
 				name = _TokToString(iName);
 			}
@@ -420,7 +418,7 @@ namespace SdkConverter
 				if(d.inTypedefNameToken == 0 && _nsCurrent == 0 && !isThisForwardDecl) {
 					string tag = _TokToString(_i); int k;
 					if(_forwardDeclTypedefs.TryGetValue(tag, out k)) {
-						//Print($"<><c 0xff0000>{tag}, {_TokToString(k)}</c>");
+						//AOutput.Write($"<><c 0xff0000>{tag}, {_TokToString(k)}</c>");
 						d.inTypedefNameToken = k;
 						_forwardDeclTypedefs.Remove(tag);
 					}
@@ -445,7 +443,7 @@ namespace SdkConverter
 						x.isInterface = isInterface;
 						x.isClass = isClass;
 						//info: don't need name in this case
-						//if(uuid != null) Print(isClass); //all True
+						//if(uuid != null) AOutput.Write(isClass); //all True
 						if(isClass && uuid != null && _nsCurrent == 0) { //coclass
 																		 //OutList(keyword, name, uuid);
 							_DeclareGuid("CLSID_", name, uuid);
@@ -578,7 +576,7 @@ namespace SdkConverter
 					while(_TokIsChar(_i, '*', '&')) _i++;
 					//int ptr = 0;
 					//while(_TokIsChar(_i, '*', '&')) { _i++; ptr++; }
-					//Print(ptr);
+					//AOutput.Write(ptr);
 
 					if(!_TokIsIdent(_i)) _Err(_i, "unexpected");
 					t.name = _TokToString(_i++);
@@ -785,7 +783,7 @@ namespace SdkConverter
 			string fullName = prefix + name;
 			if(_guids.ContainsKey(fullName)) return;
 			if(prefix == "IID_" && _guids.ContainsKey("DIID_" + name)) return;
-			//Print(fullName);
+			//AOutput.Write(fullName);
 			_sbVar.AppendFormat("\r\ninternal static Guid {0} = new Guid({1});\r\n", fullName, uuid);
 			//note: not 'readonly' because then could not be passed as ref.
 		}
@@ -821,7 +819,7 @@ namespace SdkConverter
 
 				//correct preprocessor-replaced method names that matched #define Func FuncW. Also there are several such struct members, never mind.
 				if(name.Ends("W") && name.Length > 2 && char.IsLower(name[name.Length - 2])) {
-					//Print(name);
+					//AOutput.Write(name);
 					name = name.Remove(name.Length - 1);
 				}
 
@@ -887,7 +885,7 @@ namespace SdkConverter
 				//most forward declarations were converted to definitions, but some don't have definitions; replace their pointers to IntPtr
 				if(sym.forwardDecl) {
 					var ts = sym as _Struct;
-					//if(ts==null) Print(v.Key); //0 in SDK
+					//if(ts==null) AOutput.Write(v.Key); //0 in SDK
 					if(ts != null && ts.isClass) continue; //all in SDK are with GUID, converted to coclass
 					string s = v.Key.ToString();
 
@@ -898,7 +896,7 @@ namespace SdkConverter
 					if(ts != null && ts.isInterface) n = R.RegexReplace($@"\b{s}\b", repl, out R); //decremented pointer level. 0 in SDK
 					else n = R.RegexReplace($@"\b{s}\*", repl, out R) + R.RegexReplace($@"\bref {s}\b", repl, out R);
 					if(n != 0) {
-						//Print($"<><c 0xff0000>{n}  {s}* = IntPtr</c>");
+						//AOutput.Write($"<><c 0xff0000>{n}  {s}* = IntPtr</c>");
 						continue;
 					}
 
@@ -919,10 +917,10 @@ namespace SdkConverter
 					//if(_FindIdentifierInString(R, s) >= 0) { //makes slower
 					//if(ts!=null) _FormatStruct(ts); else _FormatEnum(te);
 					if(0 != R.RegexReplace($@"\b{s}\b", t.csTypename, out R)) {
-						//Print($"<><c 0xff0000>{s} = {t.csTypename}    {t}</c>"); //all struct (0 enum) in SDK
+						//AOutput.Write($"<><c 0xff0000>{s} = {t.csTypename}    {t}</c>"); //all struct (0 enum) in SDK
 						continue;
 					}
-					//Print($"<><c 0x8000>{s} = {t.csTypename}    {t}</c>"); //OK, just not used between typedef and struct definition
+					//AOutput.Write($"<><c 0x8000>{s} = {t.csTypename}    {t}</c>"); //OK, just not used between typedef and struct definition
 				}
 			}
 			//APerf.NW();
@@ -968,7 +966,7 @@ namespace SdkConverter
 			what &= 0xff;
 
 			if(0 != R.RegexReplace($@"\b{name}{sW}\b", name, out R)) {
-				//Print($"<><c 0xff0000>{name}</c>");
+				//AOutput.Write($"<><c 0xff0000>{name}</c>");
 
 				//remove STRUCTA
 
@@ -983,7 +981,7 @@ namespace SdkConverter
 					//find attributes (regex with attributes would be very slow)
 					int i = m.Start - 3;
 					while(0 == string.Compare(R, i, "]\r\n", 0, 3)) {
-						//Print("attr");
+						//AOutput.Write("attr");
 						i = R.LastIndexOf('\n', i) - 2;
 					}
 					i += 3;
@@ -998,8 +996,8 @@ namespace SdkConverter
 					}
 				}
 			} else {
-				//Print($"<><c 0xff>{name}</c>"); //0
-				//Print(R.Find($"internal struct {name}A "));
+				//AOutput.Write($"<><c 0xff>{name}</c>"); //0
+				//AOutput.Write(R.Find($"internal struct {name}A "));
 			}
 		}
 	}

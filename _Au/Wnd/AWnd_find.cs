@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
-using System.Linq;
+//using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -26,8 +24,8 @@ namespace Au
 		/// <remarks>
 		/// Can be used instead of <see cref="AWnd.Find"/> or <see cref="AWnd.FindAll"/>.
 		/// These codes are equivalent:
-		/// <code>AWnd w = AWnd.Find(a, b, c, d, e); if(!w.Is0) Print(w);</code>
-		/// <code>var p = new AWnd.Finder(a, b, c, d, e); if(p.Find()) Print(p.Result);</code>
+		/// <code>AWnd w = AWnd.Find(a, b, c, d, e); if(!w.Is0) AOutput.Write(w);</code>
+		/// <code>var p = new AWnd.Finder(a, b, c, d, e); if(p.Find()) AOutput.Write(p.Result);</code>
 		/// Also can find in a list of windows.
 		/// </remarks>
 		public class Finder
@@ -36,11 +34,11 @@ namespace Au
 			readonly AWildex _cn;
 			readonly AWildex _program;
 			readonly Func<AWnd, bool> _also;
-			readonly WFFlags _flags;
+			readonly WFlags _flags;
 			readonly int _processId;
 			readonly int _threadId;
 			readonly AWnd _owner;
-			readonly object _contains;
+			readonly WContains _contains;
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 			/// <summary>
@@ -51,18 +49,18 @@ namespace Au
 			[NoDoc]
 			public struct TProps
 			{
-				Finder _f;
+				readonly Finder _f;
 				internal TProps(Finder f) { _f = f; }
 
 				public AWildex name => _f._name;
 				public AWildex cn => _f._cn;
 				public AWildex program => _f._program;
 				public Func<AWnd, bool> also => _f._also;
-				public WFFlags flags => _f._flags;
+				public WFlags flags => _f._flags;
 				public int processId => _f._processId;
 				public int threadId => _f._threadId;
 				public AWnd owner => _f._owner;
-				public object contains => _f._contains;
+				public WContains contains => _f._contains;
 
 				/// <summary>
 				/// After unsuccesful <see cref="IsMatch"/> indicates the parameter that does not match.
@@ -73,7 +71,7 @@ namespace Au
 			EProps _stopProp;
 
 			[NoDoc]
-			public enum EProps { name = 1, cn, program, also, contains, visible, cloaked, }
+			public enum EProps { name = 1, cn, of, also, contains, visible, cloaked, }
 
 			public override string ToString()
 			{
@@ -82,16 +80,7 @@ namespace Au
 					_Append("cn", _cn);
 					if(_program != null) _Append("program", _program); else if(_processId != 0) _Append("processId", _processId); else if(_threadId != 0) _Append("threadId", _threadId);
 					if(_also != null) _Append("also", "");
-					_Append("contains", _contains);
-					//if(_contains!=null) {
-					//string s = null;
-					//switch(_contains) {
-					//case AAcc.Finder _: s = "acc"; break;
-					//case ChildFinder _: s = "child"; break;
-					//default: s = "image"; break; //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
-					//}
-					//if(s != null) _Append("contains", s);
-					//}
+					_Append("contains", _contains.Value);
 					return b.ToString();
 
 					void _Append(string k, object v)
@@ -111,57 +100,28 @@ namespace Au
 			public Finder(
 				[ParamString(PSFormat.AWildex)] string name = null,
 				[ParamString(PSFormat.AWildex)] string cn = null,
-				[ParamString(PSFormat.AWildex)] WF3 program = default,
-				WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
+				[ParamString(PSFormat.AWildex)] WOwner of = default,
+				WFlags flags = 0, Func<AWnd, bool> also = null, WContains contains = default)
 			{
 				_name = name;
 				if(cn != null) _cn = cn.Length != 0 ? cn : throw new ArgumentException("Class name cannot be \"\". Use null.");
-				program.GetValue(out _program, out _processId, out _threadId, out _owner);
+				of.GetValue(out _program, out _processId, out _threadId, out _owner);
 				_flags = flags;
 				_also = also;
-				if(contains != null) _contains = _ParseContains(contains);
+				_contains = contains;
 			}
-
-			object _ParseContains(object contains)
-			{
-				switch(contains) {
-				case string s: //accessible object or control or image. AO format: "a'role' name" or "name". Control: "c'class' text". Image: "image:...".
-					if(s.Length == 0) return null;
-					string role = null, name = s; bool isControl = false;
-					switch(s[0]) {
-					case 'a':
-					case 'c':
-						if(s.RegexMatch(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) { role = m[1].Value; name = m[2].Value; isControl = s[0] == 'c'; }
-						break;
-					case 'i' when s.Starts("image:"):
-						return _LoadImage(s);
-					}
-					if(isControl) return new ChildFinder(name, role);
-					return new AAcc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
-				default:
-					return contains;
-					//case AAcc.Finder _:
-					//case ChildFinder _:
-					//case System.Drawing.Bitmap _: //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc. If invalid type, will throw later.
-					//	return contains;
-					//default: 
-					//	throw new ArgumentException("Unsupported object type.", nameof(contains));
-				}
-			}
-
-			[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading System.Drawing.dll when image not used
-			static object _LoadImage(string s) => AWinImage.LoadImage(s);
 
 			/// <summary>
-			/// Implicit conversion from string that can contain window name, class name, program and/or an object.
+			/// Implicit conversion from string that can contain window name, class name, program and/or a <i>contains</i> object.
 			/// Examples: <c>"name,cn,program"</c>, <c>"name"</c>, <c>",cn"</c>, <c>",,program"</c>, <c>"name,cn"</c>, <c>"name,,program"</c>, <c>",cn,program"</c>, <c>"name,,,object"</c>.
 			/// </summary>
 			/// <param name="s">
-			/// One or more comma-separated window properties: name, class, program and/or an object. Empty parts are considered null.
-			/// The same as parameters of <see cref="AWnd.Find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>program</i>. The last part is <i>contains</i> as string; can specify an accessible object, control or image.
+			/// One or more comma-separated window properties: name, class, program and/or a <i>contains</i> object. Empty parts are considered null.
+			/// The same as parameters of <see cref="AWnd.Find"/>. The first 3 parts are <i>name</i>, <i>cn</i> and <i>of</i>. The last part is <i>contains</i> as string; can specify an accessible object, control or image.
 			/// The first 3 comma-separated parts cannot contain commas. Alternatively, parts can be separated by '\0' characters, like <c>"name\0"+"cn\0"+"program\0"+"object"</c>. Then parts can contain commas. Example: <c>"*one, two, three*\0"</c> (name with commas).
 			/// </param>
-			/// <exception cref="Exception">Exceptions of the constructor.</exception>
+			/// <exception cref="ArgumentException">See <see cref="AWnd.Find"/>.</exception>
+			/// <exception cref="Exception">If specifies a <i>contains</i> object: exceptions of constructor of <see cref="ChildFinder"/> or <see cref="AAcc.Finder"/> or <see cref="AWinImage.Finder"/>.</exception>
 			public static implicit operator Finder(string s)
 			{
 				string name = null, cn = null, prog = null, contains = null;
@@ -200,7 +160,7 @@ namespace Au
 				//	If not found, don't search. If found, compare atom, not class name string.
 
 				var f = _threadId != 0 ? Internal_.EnumAPI.EnumThreadWindows : Internal_.EnumAPI.EnumWindows;
-				return Internal_.EnumWindows2(f, 0 == (_flags & WFFlags.HiddenToo), true, wParent: _owner, threadId: _threadId);
+				return Internal_.EnumWindows2(f, 0 == (_flags & WFlags.HiddenToo), true, wParent: _owner, threadId: _threadId);
 			}
 
 			/// <summary>
@@ -257,7 +217,7 @@ namespace Au
 				if(a.Type == _WndList.ListType.None) return -1;
 				bool inList = a.Type != _WndList.ListType.ArrayBuilder;
 				bool ignoreVisibility = cache?.IgnoreVisibility ?? false;
-				bool mustBeVisible = inList && (_flags & WFFlags.HiddenToo) == 0 && !ignoreVisibility;
+				bool mustBeVisible = inList && (_flags & WFlags.HiddenToo) == 0 && !ignoreVisibility;
 				bool isOwner = inList && !_owner.Is0;
 				bool isTid = inList ? _threadId != 0 : false;
 				List<int> pids = null; bool programNamePlanB = false; //variables for faster getting/matching program name
@@ -276,7 +236,7 @@ namespace Au
 					}
 
 					if(isOwner) {
-						if(_owner != w.Owner) { _stopProp = EProps.program; continue; }
+						if(_owner != w.OwnerWindow) { _stopProp = EProps.of; continue; }
 					}
 
 					cache?.Begin(w);
@@ -292,7 +252,7 @@ namespace Au
 						if(!_cn.Match(s)) { _stopProp = EProps.cn; continue; }
 					}
 
-					if(0 == (_flags & WFFlags.CloakedToo) && !ignoreVisibility) {
+					if(0 == (_flags & WFlags.CloakedToo) && !ignoreVisibility) {
 						if(w.IsCloaked) { _stopProp = EProps.cloaked; continue; }
 					}
 
@@ -302,16 +262,16 @@ namespace Au
 							if(cache.Tid == 0) cache.Tid = w.GetThreadProcessId(out cache.Pid);
 							tid = cache.Tid; pid = cache.Pid;
 						} else tid = w.GetThreadProcessId(out pid);
-						if(tid == 0) { _stopProp = EProps.program; continue; }
+						if(tid == 0) { _stopProp = EProps.of; continue; }
 						//speed: with foreign processes the same speed as getting name or class name. Much faster if same process.
 					}
 
 					if(isTid) {
-						if(_threadId != tid) { _stopProp = EProps.program; continue; }
+						if(_threadId != tid) { _stopProp = EProps.of; continue; }
 					}
 
 					if(_processId != 0) {
-						if(_processId != pid) { _stopProp = EProps.program; continue; }
+						if(_processId != pid) { _stopProp = EProps.of; continue; }
 					}
 
 					if(_program != null) {
@@ -334,7 +294,7 @@ namespace Au
 						//	If it returns null (it means there are no matching processes), break (window not found).
 						//	From now, in each loop will need just to find pid in the returned list, and continue if not found.
 
-						_stopProp = EProps.program;
+						_stopProp = EProps.of;
 						g1:
 						if(programNamePlanB) {
 							if(!pids.Contains(pid)) continue;
@@ -343,14 +303,14 @@ namespace Au
 
 							string pname = cache != null ? (cache.Program ?? (cache.Program = _Program())) : _Program();
 							string _Program() => AProcess.GetName(pid, false, true);
-							//string _Program() => AProcess.GetName(pid, 0!=(_flags&WFFlags.ProgramPath), true);
+							//string _Program() => AProcess.GetName(pid, 0!=(_flags&WFlags.ProgramPath), true);
 
 							if(pname == null) {
-								//if(0!=(_flags&WFFlags.ProgramPath)) continue;
+								//if(0!=(_flags&WFlags.ProgramPath)) continue;
 
 								//switch to plan B
 								AProcess.GetProcessesByName_(ref pids, _program);
-								if(Empty(pids)) break;
+								if(pids.IsNE_()) break;
 								programNamePlanB = true;
 								goto g1;
 							}
@@ -372,17 +332,17 @@ namespace Au
 						if(!ok) { _stopProp = EProps.also; continue; }
 					}
 
-					if(_contains != null) {
+					if(_contains.Value != null) {
 						bool found = false;
 						try {
-							switch(_contains) {
+							switch(_contains.Value) {
 							case AAcc.Finder f: found = f.Find(w); break;
 							case ChildFinder f: found = f.Find(w); break;
-							default: found = null != AWinImage.Find(w, _contains, WIFlags.WindowDC); break; //FUTURE: optimize. //note: avoid loading System.Drawing.dll. It can be Bitmap, ColorInt, etc.
+							case AWinImage.Finder f: found = f.Find(w); break;
 							}
 						}
 						catch(Exception ex) {
-							if(!(ex is AuWndException)) PrintWarning("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
+							if(!(ex is AuWndException)) AWarning.Write("Exception when tried to find the 'contains' object. " + ex.ToStringWithoutStack());
 						}
 						if(!found) { _stopProp = EProps.contains; continue; }
 					}
@@ -425,13 +385,13 @@ namespace Au
 		/// null means 'can be any'. Cannot be "".
 		/// You can see window name, class name and program in editor's status bar and dialog "Find window or control".
 		/// </param>
-		/// <param name="program">
+		/// <param name="of">
 		/// Program file name, like <c>"notepad.exe"</c>.
 		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// 
-		/// Or <see cref="WF3.Process"/>(process id), <see cref="WF3.Thread"/>(thread id), <see cref="WF3.Owner"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="AProcess.ProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>, <see cref="Owner"/>.
+		/// Or <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id), <see cref="WOwner.Window"/>(owner window).
+		/// See <see cref="ProcessId"/>, <see cref="AProcess.ProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>, <see cref="OwnerWindow"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -443,14 +403,14 @@ namespace Au
 		/// <param name="contains">
 		/// Text, image or other object in the client area of the window. Depends on type:
 		/// <ul>
-		/// <li><see cref="AAcc.Finder"/> - arguments for <see cref="AAcc.Find"/>. Defines an accessible object that must be in the window.</li>
-		/// <li><see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window.</li>
-		/// <li><see cref="System.Drawing.Bitmap"/> or other, except string - image(s) or color(s) that must be visible in the window. This function calls <see cref="AWinImage.Find"/> with flag <see cref="WIFlags.WindowDC"/>, and uses this value for the <i>image</i> parameter. See also <see cref="AWinImage.LoadImage"/>.</li>
+		/// <li><see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window. </li>
+		/// <li><see cref="AAcc.Finder"/> - arguments for <see cref="AAcc.Find"/>. Defines an accessible object that must be in the window. </li>
+		/// <li><see cref="AWinImage.Finder"/> - arguments for <see cref="AWinImage.Find"/>. Defines image(s) or color(s) that must be visible in the window. </li>
 		/// <li>string - an object that must be in the window. Depends on string format:
 		/// <ul>
-		/// <li><c>"a 'role' name"</c> or <c>"name"</c> or <c>"a 'role'"</c> - accessible object. See <see cref="AAcc.Find"/>.</li>
-		/// <li><c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c> - child control. See <see cref="Child"/>.</li>
-		/// <li><c>"image:..."</c> - image. See <see cref="AWinImage.Find"/>, <see cref="AWinImage.LoadImage"/>.</li>
+		/// <li><c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c> - child control. See <see cref="Child"/>. </li>
+		/// <li><c>"a 'role' name"</c> or <c>"name"</c> or <c>"a 'role'"</c> - accessible object. See <see cref="AAcc.Find"/>. </li>
+		/// <li><c>"image:..."</c> - image. See <see cref="AWinImage.Find"/>. Uses flag <see cref="WIFlags.WindowDC"/>. </li>
 		/// </ul>
 		/// </li>
 		/// </ul>
@@ -466,15 +426,14 @@ namespace Au
 		/// </remarks>
 		/// <exception cref="ArgumentException">
 		/// - <i>cn</i> is "". To match any, use null.
-		/// - <i>program</i> is "" or 0 or contains \ or /. To match any, use null.
+		/// - <i>of</i> is "" or 0 or contains character \ or /. To match any, use null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
-		/// - Invalid image string in <i>contains</i>.
 		/// </exception>
 		/// <example>
 		/// Try to find Notepad window. Return if not found.
 		/// <code>
 		/// AWnd w = AWnd.Find("* Notepad");
-		/// if(w.Is0) { Print("not found"); return; }
+		/// if(w.Is0) { AOutput.Write("not found"); return; }
 		/// </code>
 		/// Try to find Notepad window. Throw NotFoundException if not found.
 		/// <code>
@@ -485,10 +444,10 @@ namespace Au
 		public static AWnd Find(
 			[ParamString(PSFormat.AWildex)] string name = null,
 			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WF3 program = default,
-			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
+			[ParamString(PSFormat.AWildex)] WOwner of = default,
+			WFlags flags = 0, Func<AWnd, bool> also = null, WContains contains = default)
 		{
-			var f = new Finder(name, cn, program, flags, also, contains);
+			var f = new Finder(name, cn, of, flags, also, contains);
 			f.Find();
 			//LastFind = f;
 			return f.Result;
@@ -518,7 +477,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
 		/// <remarks>
-		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFFlags.HiddenToo"/>) are always after visible windows.
+		/// The list is sorted to match the Z order, however hidden windows (when using <see cref="WFlags.HiddenToo"/>) are always after visible windows.
 		/// </remarks>
 		/// <seealso cref="GetWnd.AllWindows"/>
 		/// <seealso cref="GetWnd.MainWindows"/>
@@ -526,10 +485,10 @@ namespace Au
 		public static AWnd[] FindAll(
 			[ParamString(PSFormat.AWildex)] string name = null,
 			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WF3 program = default,
-			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
+			[ParamString(PSFormat.AWildex)] WOwner of = default,
+			WFlags flags = 0, Func<AWnd, bool> also = null, WContains contains = default)
 		{
-			var f = new Finder(name, cn, program, flags, also, contains);
+			var f = new Finder(name, cn, of, flags, also, contains);
 			var a = f.FindAll();
 			//LastFind = f;
 			return a;
@@ -560,7 +519,21 @@ namespace Au
 		/// </remarks>
 		public static AWnd FindFast(string name, string cn, bool messageOnly = false, AWnd wAfter = default)
 		{
-			return Api.FindWindowEx(messageOnly? Native.HWND.MESSAGE : default, wAfter, cn, name);
+			return Api.FindWindowEx(messageOnly ? Native.HWND.MESSAGE : default, wAfter, cn, name);
+		}
+
+		/// <summary>
+		/// Calls <see cref="FindFast"/>, sets this and time, but only if !IsAlive or more than 1 s elapsed since that.
+		/// Returns this.
+		/// </summary>
+		internal AWnd FindFastCached_(ref long time, string name, string cn, bool messageOnly)
+		{
+			long t = ATime.WinMilliseconds;
+			if(t - time > 1000 || !IsAlive) {
+				time = t;
+				this = FindFast(name, cn, messageOnly);
+			}
+			return this;
 		}
 
 		/// <summary>
@@ -569,7 +542,7 @@ namespace Au
 		/// </summary>
 		/// <param name="name">See <see cref="Find"/>.</param>
 		/// <param name="cn">See <see cref="Find"/>.</param>
-		/// <param name="program">See <see cref="Find"/>.</param>
+		/// <param name="of">See <see cref="Find"/>.</param>
 		/// <param name="flags">See <see cref="Find"/>.</param>
 		/// <param name="also">See <see cref="Find"/>.</param>
 		/// <param name="contains">See <see cref="Find"/>.</param>
@@ -590,18 +563,18 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AWnd w = AWnd.FindOrRun("* Notepad", run: () => AExec.Run("notepad.exe"));
-		/// Print(w);
+		/// AOutput.Write(w);
 		/// ]]></code>
 		/// </example>
 		public static AWnd FindOrRun(
 			[ParamString(PSFormat.AWildex)] string name = null,
 			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WF3 program = default,
-			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null,
+			[ParamString(PSFormat.AWildex)] WOwner of = default,
+			WFlags flags = 0, Func<AWnd, bool> also = null, WContains contains = default,
 			Action run = null, double runWaitS = 60.0, bool needActiveWindow = true)
 		{
 			AWnd w = default;
-			var f = new Finder(name, cn, program, flags, also, contains);
+			var f = new Finder(name, cn, of, flags, also, contains);
 			if(f.Find()) {
 				w = f.Result;
 				if(needActiveWindow) w.Activate();
@@ -787,7 +760,7 @@ namespace Au
 					if(api == EnumAPI.EnumChildWindows) {
 						if(directChild && w.ParentGWL_ != wParent) return 1;
 					} else {
-						if(!wParent.Is0 && w.Owner != wParent) return 1;
+						if(!wParent.Is0 && w.OwnerWindow != wParent) return 1;
 					}
 					if(a == null) a = (int*)Util.AMemory.Alloc((_cap = onlyVisible ? 200 : 1000) * 4);
 					else if(len == _cap) a = (int*)Util.AMemory.ReAlloc(a, (_cap *= 2) * 4);
@@ -886,10 +859,10 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags of <see cref="AWnd.Find"/>.
+	/// Flags of <see cref="AWnd.Find"/> and similar functions.
 	/// </summary>
 	[Flags]
-	public enum WFFlags
+	public enum WFlags
 	{
 		/// <summary>
 		/// Can find invisible windows. See <see cref="AWnd.IsVisible"/>.
@@ -906,34 +879,38 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// <i>program</i> of <see cref="AWnd.Find"/>.
-	/// Program name, process id, thread id or owner window handle.
+	/// Used with <see cref="AWnd.Find"/> and similar functions to specify an owner object of the window.
+	/// Can be program name (like <c>"notepad.exe"</c>), process id (<see cref="Process"/>), thread id (<see cref="Thread"/> or <see cref="ThisThread"/>) or owner window (<see cref="Window"/>).
 	/// </summary>
-	public struct WF3
+	public struct WOwner
 	{
-		object _o;
-		WF3(object o) => _o = o;
+		readonly object _o;
+		WOwner(object o) => _o = o;
 
-		/// <summary>Program name like "notepad.exe", or null.</summary>
-		public static implicit operator WF3([ParamString(PSFormat.AWildex)] string program) => new WF3(program);
+		/// <summary>Program name like "notepad.exe", or null. See <see cref="AWnd.ProgramName"/>.</summary>
+		public static implicit operator WOwner([ParamString(PSFormat.AWildex)] string program) => new WOwner(program);
 
-		/// <summary>Process id.</summary>
-		public static WF3 Process(int processId) => new WF3(processId);
+		//rejected. Cannot check whether it is default(WOwner) or 0 window handle. And less readable code.
+		///// <summary>Owner window. See <see cref="AWnd.OwnerWindow"/>.</summary>
+		//public static implicit operator WOwner(AWnd ownerWindow) => new WOwner(ownerWindow);
 
-		/// <summary>Thread id.</summary>
-		public static WF3 Thread(int threadId) => new WF3((uint)threadId);
+		/// <summary>Process id. See <see cref="AWnd.ProcessId"/>.</summary>
+		public static WOwner Process(int processId) => new WOwner(processId);
+
+		/// <summary>Thread id. See <see cref="AWnd.ThreadId"/>.</summary>
+		public static WOwner Thread(int threadId) => new WOwner((uint)threadId);
 
 		/// <summary>Thread id of this thread.</summary>
-		public static WF3 ThisThread => new WF3((uint)AThread.NativeId);
+		public static WOwner ThisThread => new WOwner((uint)AThread.NativeId);
 
-		/// <summary>Owner window.</summary>
-		public static WF3 Owner(AnyWnd ownerWindow) => new WF3(ownerWindow);
+		/// <summary>Owner window. See <see cref="AWnd.OwnerWindow"/>.</summary>
+		public static WOwner Window(AnyWnd ownerWindow) => new WOwner(ownerWindow);
 
 		/// <summary>
 		/// Gets program name or process id or thread id or owner window.
 		/// Other variables will be null/0.
 		/// </summary>
-		/// <exception cref="ArgumentException">The value is "" or 0 or contains \ or /.</exception>
+		/// <exception cref="ArgumentException">The value is "" or 0 or contains characters \ or /.</exception>
 		public void GetValue(out AWildex program, out int pid, out int tid, out AWnd owner)
 		{
 			program = null; pid = 0; tid = 0; owner = default;
@@ -942,7 +919,7 @@ namespace Au.Types
 				if(s.Length == 0) throw new ArgumentException("Program name cannot be \"\". Use null.");
 				if(!s.Starts("**")) { //can be regex
 					if(s.FindAny(@"\/") >= 0) throw new ArgumentException("Program name contains \\ or /.");
-					if(APath.FindExtension(s) < 0 && !AWildex.HasWildcardChars(s)) PrintWarning("Program name without .exe.");
+					if(APath.FindExtension(s) < 0 && !AWildex.HasWildcardChars(s)) AWarning.Write("Program name without .exe.");
 				}
 				program = s;
 				break;
@@ -966,6 +943,55 @@ namespace Au.Types
 		/// Returns true if nothing was assigned to this variable.
 		/// </summary>
 		public bool IsEmpty => _o == null;
+	}
+
+	/// <summary>
+	/// The <i>contains</i> parameter of <see cref="AWnd.Find"/> and similar functions.
+	/// Specifies text, image or other object that must be in the window.
+	/// </summary>
+	public struct WContains
+	{
+		readonly object _o;
+		WContains(object o) => _o = o;
+
+		///
+		public static implicit operator WContains(AWnd.ChildFinder f) => new WContains(f);
+
+		///
+		public static implicit operator WContains(AAcc.Finder f) => new WContains(f);
+
+		///
+		public static implicit operator WContains(AWinImage.Finder f) => new WContains(f);
+
+		/// <summary>
+		/// Converts from string to <see cref="AWnd.ChildFinder"/>, <see cref="AAcc.Finder"/> or <see cref="AWinImage.Finder"/>.
+		/// See <see cref="AWnd.Find"/>.
+		/// </summary>
+		/// <exception cref="Exception">Exceptions of constructor of <see cref="AWnd.ChildFinder"/>, <see cref="AAcc.Finder"/> or <see cref="AWinImage.Finder"/>.</exception>
+		public static implicit operator WContains(string s) => new WContains(_ParseString(s));
+
+		static object _ParseString(string s)
+		{
+			if(s.Length == 0) return null;
+			string role = null, name = s;
+			switch(s[0]) {
+			case 'a': //"a'role' name" or just "name"
+			case 'c': //"c'class' text"
+				if(s.RegexMatch(@"^. ?'(.+?)?' ?((?s).+)?$", out var m)) {
+					role = m[1].Value; name = m[2].Value;
+					if(s[0] == 'c') return new AWnd.ChildFinder(name, role);
+				}
+				break;
+			case 'i' when s.Starts("image:"):
+				return new AWinImage.Finder(s, WIFlags.WindowDC);
+			}
+			return new AAcc.Finder(role, name, flags: AFFlags.ClientArea) { ResultGetProperty = '-' };
+		}
+
+		/// <summary>
+		/// Gets object stored in this variable. Can be null, <see cref="AWnd.ChildFinder"/>, <see cref="AAcc.Finder"/> or <see cref="AWinImage.Finder"/>.
+		/// </summary>
+		public object Value => _o;
 	}
 
 	/// <summary>
@@ -1024,7 +1050,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Match invisible and cloaked windows too, even if the flags are not set (see <see cref="WFFlags"/>).
+		/// Match invisible and cloaked windows too, even if the flags are not set (see <see cref="WFlags"/>).
 		/// </summary>
 		public bool IgnoreVisibility { get; set; }
 	}

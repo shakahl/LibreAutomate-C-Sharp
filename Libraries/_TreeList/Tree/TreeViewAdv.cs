@@ -12,7 +12,6 @@ using Aga.Controls.Tree.NodeControls;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Aga.Controls.Tree
 {
@@ -378,7 +377,7 @@ namespace Aga.Controls.Tree
 
 		protected override void OnSizeChanged(EventArgs e)
 		{
-			//if(IsHandleCreated) Print("OnSizeChanged");
+			//if(IsHandleCreated) AOutput.Write("OnSizeChanged");
 			UpdateScrollBars();
 			base.OnSizeChanged(e);
 		}
@@ -392,7 +391,7 @@ namespace Aga.Controls.Tree
 		public void UpdateScrollBars()
 		{
 			if(!IsHandleCreated) return;
-			//Print("UpdateScrollBars", ItemCount);
+			//AOutput.Write("UpdateScrollBars", ItemCount);
 			for(int i = 2; i >= 0; i--) {
 				SetScrollInfo(true, Math.Max(RowCount - 1, 0), _rowLayout.PageRowCount, notify: true);
 				SetScrollInfo(false, ContentWidth, Math.Max(DisplayRectangle.Width, 0), notify: true);

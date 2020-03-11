@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -32,16 +30,16 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// AWaitFor.Condition(0, () => AKeys.IsScrollLock);
-	/// Print("ScrollLock now is toggled");
+	/// AOutput.Write("ScrollLock now is toggled");
 	/// ]]></code>
 	/// Using in a Form/Control event handler.
 	/// <code><![CDATA[
 	/// var f = new Form();
 	/// f.Click += async (unu, sed) =>
 	///   {
-	/// 	  Print("waiting...");
+	/// 	  AOutput.Write("waiting...");
 	/// 	  var result = await Task.Run(() => AWaitFor.Condition(-10, () => AKeys.IsScrollLock));
-	/// 	  if(w.Is0) Print("timeout"); else Print(result);
+	/// 	  if(w.Is0) AOutput.Write("timeout"); else AOutput.Write(result);
 	///   };
 	/// f.ShowDialog();
 	/// ]]></code>
@@ -334,9 +332,9 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// ATimer.After(2000, t => { Print("timer"); });
-		/// AWaitFor.PostedMessage(5, (ref Native.MSG m) => { Print(m); return m.message == 0x113; }); //WM_TIMER
-		/// Print("finished");
+		/// ATimer.After(2000, t => { AOutput.Write("timer"); });
+		/// AWaitFor.PostedMessage(5, (ref Native.MSG m) => { AOutput.Write(m); return m.message == 0x113; }); //WM_TIMER
+		/// AOutput.Write("finished");
 		/// ]]></code>
 		/// </example>
 		public static bool PostedMessage(double secondsTimeout, WaitMsgCallback callback)
@@ -359,9 +357,9 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// bool stop = false;
-		/// ATimer.After(2000, t => { Print("timer"); stop = true; });
+		/// ATimer.After(2000, t => { AOutput.Write("timer"); stop = true; });
 		/// AWaitFor.MessagesAndCondition(5, () => stop);
-		/// Print(stop);
+		/// AOutput.Write(stop);
 		/// ]]></code>
 		/// </example>
 		public static bool MessagesAndCondition(double secondsTimeout, Func<bool> condition)
@@ -383,9 +381,9 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// bool stop = false;
-		/// Task.Run(() => { 2.s(); Print("task"); stop = true; });
+		/// Task.Run(() => { 2.s(); AOutput.Write("task"); stop = true; });
 		/// AWaitFor.Variable(5, stop);
-		/// Print(stop);
+		/// AOutput.Write(stop);
 		/// ]]></code>
 		/// </example>
 		public static bool Variable(double secondsTimeout, in bool variable, OptWaitFor options = null)

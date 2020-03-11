@@ -1,5 +1,5 @@
 /*/ ifRunning warn_restart; /*/ //.
-using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+using Au; using Au.Types; using System; using System.Collections.Generic;
 class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 
 /*
@@ -32,14 +32,14 @@ the script is running. Example: Example: script "Hotkeys and other triggers".
 
 //Examples of automation functions.
 
-Print("Main script code.");
+AOutput.Write("Main script code.");
 
 ADialog.Show("Message box.");
 
 AExec.Run(AFolders.System + "notepad.exe");
 var w = AWnd.Wait(0, true, "* - Notepad");
-Key("F5 Enter*2");
-Text(w.Name);
+AKeys.Key("F5 Enter*2");
+AKeys.Text(w.Name);
 2.s();
 w.Close();
 var w2 = AWnd.Wait(-3, true, "Notepad", "#32770");
@@ -63,14 +63,14 @@ System.Windows.Forms.MessageBox.Show(b.ToString());
 
 _sharedVariable = 1;
 FunctionExample("Example");
-Print(_sharedVariable);
+AOutput.Write(_sharedVariable);
 
 } //end of main function
 
 //Here you can add functions, shared variables (class fields), nested classes, struct, enum, [DllImport], etc.
 
 void FunctionExample(string s) {
-	Print(s, _sharedVariable);
+	AOutput.Write(s, _sharedVariable);
 	_sharedVariable++;
 }
 

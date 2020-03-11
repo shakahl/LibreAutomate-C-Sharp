@@ -12,11 +12,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -464,7 +462,7 @@ namespace Au
 			/// </summary>
 			public static void PrintMsg(in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
 			{
-				if(PrintMsg(out var s, in m, options, caller)) Print(s);
+				if(PrintMsg(out var s, in m, options, caller)) AOutput.Write(s);
 			}
 
 			/// <summary>
@@ -548,7 +546,7 @@ namespace Au.Types
 		public bool Indent { get; set; } = true;
 
 		/// <summary>
-		/// Don't print these messages.
+		/// Ignore these messages.
 		/// </summary>
 		public int[] Skip { get; set; }
 	}

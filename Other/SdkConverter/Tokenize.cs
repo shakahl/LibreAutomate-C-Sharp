@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -16,7 +15,6 @@ using System.ComponentModel; //Win32Exception
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -148,7 +146,7 @@ namespace SdkConverter
 
 			//ANSI string constant?
 			if(!isPrefix && _nTokUntilDefUndef != 0 && _TokIsChar(iPrevTok - 1, '`')) {
-				//Print(new string(s0, 0, (int)(d - s0)));
+				//AOutput.Write(new string(s0, 0, (int)(d - s0)));
 				//_Err(iPrevTok, "ANSI string");
 				*s0 = '\x2'; //later will restore '\"' and add to "FAILED TO CONVERT"
 			}

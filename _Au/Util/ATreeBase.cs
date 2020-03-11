@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Xml;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -29,7 +26,7 @@ namespace Au.Util
 	/// Implemented in the same way as <see cref="System.Xml.Linq.XContainer"/>.
 	/// </remarks>
 	/// <example>
-	/// Shows how to declare an ATreeBase-derived class, load tree of nodes from an XML file, print descendant nodes, save the tree to an XML file.
+	/// Shows how to declare an ATreeBase-derived class, load tree of nodes from an XML file, find descendant nodes, save the tree to an XML file.
 	/// <code><![CDATA[
 	/// /*/ r System.Xml */
 	/// using System.Xml;
@@ -66,7 +63,7 @@ namespace Au.Util
 	/// 				}
 	/// 			}
 	/// #endif
-	/// 			if(Empty(Name)) throw new ArgumentException("no name attribute in XML");
+	/// 			if(Name.IsNE()) throw new ArgumentException("no name attribute in XML");
 	/// 			if(Id == 0) throw new ArgumentException("no id attribute in XML");
 	/// 		}
 	/// 	}
@@ -109,9 +106,9 @@ namespace Au.Util
 	/// 	*/
 	/// 
 	/// 	var x = MyTree.Load(@"Q:\test\example.xml");
-	/// 	foreach(MyTree n in x.Descendants(true)) Print(n);
-	/// 	//Print(x.Descendants().FirstOrDefault(k => k.Name == "seven")); //find a descendant
-	/// 	//Print(x.Descendants().Where(k => k.Level > 2)); //find some descendants
+	/// 	foreach(MyTree n in x.Descendants(true)) AOutput.Write(n);
+	/// 	//AOutput.Write(x.Descendants().FirstOrDefault(k => k.Name == "seven")); //find a descendant
+	/// 	//AOutput.Write(x.Descendants().Where(k => k.Level > 2)); //find some descendants
 	/// 	x.Save(@"Q:\test\example2.xml");
 	/// }
 	/// ]]></code>

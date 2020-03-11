@@ -16,12 +16,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 using System.Security; //for XML comments
 using System.Globalization;
 
-using static Au.AStatic;
 
 //note: be careful when adding functions to this class. See comments in ExtensionMethods_Forms.cs.
 
@@ -86,7 +84,7 @@ namespace Au
 			return (v.Offset, v.Offset + v.Length);
 		}
 
-		//rejected: too simple. We have Print(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
+		//rejected: too simple. We have AOutput.Write(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 		///// <summary>
 		///// Converts int to hexadecimal string like "0x3A".
 		///// </summary>
@@ -104,12 +102,12 @@ namespace Au
 		///// <example>
 		///// <code><![CDATA[
 		///// for(int i = 0; i < 3; i++) {
-		///// 	Print(1);
+		///// 	AOutput.Write(1);
 		///// }
 		///// 
 		///// //this can be used instead of the above code with 'for'
 		///// 3.Times(() => {
-		///// 	Print(2);
+		///// 	AOutput.Write(2);
 		///// });
 		///// ]]></code>
 		///// </example>
@@ -129,12 +127,12 @@ namespace Au
 		///// <example>
 		///// <code><![CDATA[
 		///// for(int i = 0; i < 3; i++) {
-		///// 	Print(i);
+		///// 	AOutput.Write(i);
 		///// }
 		///// 
 		///// //this can be used instead of the above code with 'for'
 		///// 3.Times(i => {
-		///// 	Print(i);
+		///// 	AOutput.Write(i);
 		///// });
 		///// ]]></code>
 		///// </example>
@@ -350,6 +348,27 @@ namespace Au
 			foreach(var k in t.Where(predicate).Select(kv => kv.Key).ToList()) { t.Remove(k); }
 		}
 
+		/// <summary>
+		/// Returns <b>Length</b>, or 0 if null.
+		/// </summary>
+		internal static int Lenn_<T>(this T[] t) => t?.Length ?? 0;
+		//internal static int Lenn_(this System.Collections.ICollection t) => t?.Count ?? 0; //slower, as well as Array
+
+		/// <summary>
+		/// Returns <b>Count</b>, or 0 if null.
+		/// </summary>
+		internal static int Lenn_<T>(this List<T> t) => t?.Count ?? 0;
+
+		/// <summary>
+		/// Returns true if null or <b>Length</b> == 0.
+		/// </summary>
+		internal static bool IsNE_<T>(this T[] t) => (t?.Length ?? 0) == 0;
+
+		/// <summary>
+		/// Returns true if null or <b>Count</b> == 0.
+		/// </summary>
+		internal static bool IsNE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
+
 		#endregion
 
 		#region StringBuilder
@@ -369,7 +388,7 @@ namespace Au
 		/// </remarks>
 		public static StringBuilder AppendSentence(this StringBuilder t, string s, bool noUcase = false)
 		{
-			if(!Empty(s)) {
+			if(!s.IsNE()) {
 				bool makeUcase = !noUcase && Char.IsLower(s[0]);
 				if(t.Length > 0) {
 					if(makeUcase && t[t.Length - 1] != '.') makeUcase = false;
@@ -383,11 +402,6 @@ namespace Au
 			}
 			return t;
 		}
-
-		#endregion
-
-		#region internal
-
 
 		#endregion
 	}

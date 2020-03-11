@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
@@ -19,8 +17,6 @@ using System.Text.RegularExpressions;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
-using Au.Controls;
 using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -36,7 +32,7 @@ class CiErrors
 	readonly List<(int from, int to, string s)> _metaErrors = new List<(int, int, string)>();
 	readonly List<(int from, int to, string s)> _stringErrors = new List<(int, int, string)>();
 
-	public void Inicators(int start16, int end16)
+	public void Indicators(int start16, int end16)
 	{
 		_semo = null;
 
@@ -52,7 +48,7 @@ class CiErrors
 				if(d.IsSuppressed) continue;
 				var loc = d.Location; if(!loc.IsInSource) continue;
 				var span = loc.SourceSpan;
-				//Print(d.Severity, span, d.Id);
+				//AOutput.Write(d.Severity, span, d.Id);
 				int start = span.Start, end = span.End;
 				if(end == start) {
 					if(end < code.Length && !(code[end] == '\r' || code[end] == '\n')) end++;
@@ -98,7 +94,7 @@ class CiErrors
 		}
 	}
 
-	static readonly string[] s_defaultUsings = new string[] { "Au;", "Au.Types;", "static Au.AStatic;", "System;", "System.Collections.Generic;" };
+	static readonly string[] s_defaultUsings = new string[] { "Au;", "Au.Types;", "System;", "System.Collections.Generic;" };
 
 	void _Strings(SemanticModel semo, in CodeInfo.Context cd, int start16, int end16)
 	{
@@ -109,7 +105,7 @@ class CiErrors
 			var format = CiUtil.GetParameterStringFormat(node, semo, false);
 			if(format == PSFormat.None || format == PSFormat.ARegexReplacement) continue;
 			var s = node.GetFirstToken().ValueText; //replaced escape sequences
-													//Print(format, s);
+													//AOutput.Write(format, s);
 			string es = null;
 			try {
 				switch(format) {
@@ -161,7 +157,7 @@ class CiErrors
 		if(_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return false;
 		if(pos8 < 0) return false;
 		int all = doc.Call(SCI_INDICATORALLONFOR, pos8);
-		//Print(all);
+		//AOutput.Write(all);
 		if(0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return false;
 		int pos16 = doc.Pos16(pos8);
 		var b = new StringBuilder("<body>");
@@ -176,7 +172,7 @@ class CiErrors
 			b.AppendFormat("\r\n<div>{0}: {1}</div>", s1, s2);
 
 			if(_semo != null && d.Severity == DiagnosticSeverity.Error) {
-				//Print(d.Code, d.Id);
+				//AOutput.Write(d.Code, d.Id);
 				bool extMethod = false;
 				var ec = (ErrorCode)d.Code;
 				switch(ec) {
@@ -237,7 +233,7 @@ class CiErrors
 			bool found = false;
 			foreach(var nt in ns.GetMembers()) {
 				string sn = nt.Name;
-				//Print(sn);
+				//AOutput.Write(sn);
 				if(sn[0] == '<') continue;
 				if(nt is INamespaceSymbol ins) {
 					stack.Add(sn);

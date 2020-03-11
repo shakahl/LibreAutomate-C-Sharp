@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -57,7 +54,7 @@ namespace Au.Controls
 			get {
 				var p = base.CreateParams;
 				if(_wasCtor) {
-					//Print((WS)p.Style, (WS2)p.ExStyle);
+					//AOutput.Write((WS)p.Style, (WS2)p.ExStyle);
 					p.Style = (int)_style;
 					var es = _exStyle;
 					if(_owner == null) es |= WS2.TOPMOST;

@@ -10,18 +10,18 @@ Most 'wait for' functions have a *secondsTimeout* parameter. It is the maximal t
 ```csharp
 //wait for Notepad window
 var w = AWnd.Wait(0, true, "* Notepad");
-Print(w);
+AOutput.Write(w);
 
 //wait for Notepad window max 5 seconds. Then throw exception.
 var w = AWnd.Wait(5, true, "* Notepad");
-Print(w);
+AOutput.Write(w);
 
 //wait for Notepad window max 5 seconds. Then exit.
 var w = AWnd.Wait(-5, true, "* Notepad");
-if(w.Is0) { Print("timeout"); return; }
-Print(w);
+if(w.Is0) { AOutput.Write("timeout"); return; }
+AOutput.Write(w);
 
 //wait for hotkey max 5 seconds. Then exit.
 if(!AKeyb.WaitForHotkey(-5, "Ctrl+Shift+K")) return;
-Print("hotkey");
+AOutput.Write("hotkey");
 ```

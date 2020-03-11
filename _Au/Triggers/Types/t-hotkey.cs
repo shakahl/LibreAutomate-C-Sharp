@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using System.Collections;
 
 namespace Au.Triggers
@@ -72,7 +69,7 @@ namespace Au.Triggers
 			modMask = ~modAny & csaw;
 			modMasked = mod & modMask;
 			this.flags = flags;
-			_paramsString = flags == 0 ? paramsString : paramsString + " (" + flags.ToString() + ")"; //Print(_paramsString);
+			_paramsString = flags == 0 ? paramsString : paramsString + " (" + flags.ToString() + ")"; //AOutput.Write(_paramsString);
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as HotkeyTriggerArgs);
@@ -142,7 +139,7 @@ namespace Au.Triggers
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0] {
 			set {
 				var ps = key.ToString(); if(AChar.IsAsciiDigit(ps[0])) ps = "VK" + ps;
-				if(!Empty(modKeys)) ps = modKeys + "+" + ps;
+				if(!modKeys.IsNE()) ps = modKeys + "+" + ps;
 
 				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 				_Add(value, key, mod, modAny, flags, ps);
@@ -157,7 +154,7 @@ namespace Au.Triggers
 			//	Currently would need just lock(_d) in several places. Also some triggers of this type must be added before starting, else we would not have the hook etc.
 			//	But probably not so useful. Makes programming more difficult. If need, can Stop, add triggers, then Run again.
 
-			//Print($"key={key}, mod={mod}, modAny={modAny}");
+			//AOutput.Write($"key={key}, mod={mod}, modAny={modAny}");
 			var t = new HotkeyTrigger(_triggers, action, mod, modAny, flags, paramsString);
 			t.DictAdd(_d, (int)key);
 			_lastAdded = t;
@@ -179,7 +176,7 @@ namespace Au.Triggers
 
 		internal bool HookProc(HookData.Keyboard k, TriggerHookContext thc)
 		{
-			//Print(k.vkCode, !k.IsUp);
+			//AOutput.Write(k.vkCode, !k.IsUp);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
 			KKey key = k.vkCode;
@@ -232,12 +229,12 @@ namespace Au.Triggers
 							}
 						}
 
-						//Print(key, mod);
+						//AOutput.Write(key, mod);
 						if(0 != (x.flags & TKFlags.ShareEvent)) return false;
 
 						if(thc.trigger == null) { //KeyModUp or action==null
 							if(mod == KMod.Alt || mod == KMod.Win || mod == (KMod.Alt | KMod.Win)) {
-								//Print("need Ctrl");
+								//AOutput.Write("need Ctrl");
 								ThreadPool.QueueUserWorkItem(o => AKeys.Internal_.SendKey(KKey.Ctrl)); //disable Alt/Win menu
 							}
 						} else if(mod != 0) {

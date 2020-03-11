@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -223,7 +221,7 @@ namespace Au.Types
 			}
 
 			this.AutoSize = false;
-			this.Size = new Size(3, Empty(name) ? 3 : TextRenderer.MeasureText("A", ts.Font).Height + 3);
+			this.Size = new Size(3, name.IsNE() ? 3 : TextRenderer.MeasureText("A", ts.Font).Height + 3);
 			if(name != null) this.AccessibleName = this.Name = name;
 			var a = ts.Items;
 			a.Add(this);
@@ -242,7 +240,7 @@ namespace Au.Types
 		//{
 		//	base.OnParentChanged(oldParent, newParent);
 		//	if(newParent != null && !vertical) {
-		//		this.Height = Empty(this.Name) ? 3 : TextRenderer.MeasureText("A", newParent.Font).Height + 3;
+		//		this.Height = this.Name.IsNE() ? 3 : TextRenderer.MeasureText("A", newParent.Font).Height + 3;
 		//		if(newParent.LayoutSettings is FlowLayoutSettings flow) {
 		//			var a = newParent.Items;
 		//			int i = a.IndexOf(this);
@@ -309,7 +307,7 @@ namespace Au.Types
 			//if(!Debugger.IsAttached) Debugger.Launch();
 
 			//var c = new ProfessionalColorTable();
-			//Print((uint)c.ButtonSelectedGradientBegin.ToArgb(), (uint)c.ButtonSelectedGradientMiddle.ToArgb(), (uint)c.ButtonSelectedGradientEnd.ToArgb());
+			//AOutput.Write((uint)c.ButtonSelectedGradientBegin.ToArgb(), (uint)c.ButtonSelectedGradientMiddle.ToArgb(), (uint)c.ButtonSelectedGradientEnd.ToArgb());
 		}
 
 		//Makes selected buttons less vivid and more like of native toolbars.
@@ -357,7 +355,7 @@ namespace Au.Types
 				pen?.Dispose();
 				//draw text
 				var s = k.Name;
-				if(!Empty(s)) {
+				if(!s.IsNE()) {
 					var r = new Rectangle(dr.X, y + 1, dr.Width, k.Height - 1);
 					var f = TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix;
 					TextRenderer.DrawText(g, " " + s + " ", ts.Font, r, customForeColor ? foreColor : SystemColors.GrayText, ts.BackColor, f);

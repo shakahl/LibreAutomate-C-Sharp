@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -19,7 +17,6 @@ using System.Windows.Forms.VisualStyles;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -45,7 +42,7 @@ namespace Au.Controls
 		//}
 		//~ComboWrapper()
 		//{
-		//	Print("~ComboWrapper");
+		//	AOutput.Write("~ComboWrapper");
 		//	//Dispose(false);
 		//}
 
@@ -61,7 +58,7 @@ namespace Au.Controls
 			_wndProc = _WndProc;
 
 			_hwnd = (AWnd)_c;
-			//Print(_hwnd);
+			//AOutput.Write(_hwnd);
 			AWnd.More.SetWindowSubclass(_hwnd, _wndProc, 40159885, default);
 			_Redraw(true); //need WM_NCCALCSIZE etc
 		}
@@ -85,7 +82,7 @@ namespace Au.Controls
 			var R = AWnd.More.DefSubclassProc(w, msg, wParam, lParam);
 
 			if(msg == Api.WM_NCDESTROY) {
-				//Print("WM_NCDESTROY");
+				//AOutput.Write("WM_NCDESTROY");
 				AWnd.More.RemoveWindowSubclass(w, _wndProc, 40159885);
 				if(!_c.RecreatingHandle) _c.HandleCreated -= _handleCreated; //allow GC-collect _c and this
 			}
@@ -140,7 +137,7 @@ namespace Au.Controls
 					Api.DeleteObject(hrButton);
 				}
 				if(baseRgnType != NULLREGION) AWnd.More.DefSubclassProc(w, msg, wParam, lParam);
-				//Print(baseRgnType, buttonRgnType, hrgn);
+				//AOutput.Write(baseRgnType, buttonRgnType, hrgn);
 				if(buttonRgnType == NULLREGION) return true; //our buttons excluded
 			}
 

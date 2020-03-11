@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -16,7 +15,6 @@ using System.ComponentModel; //Win32Exception
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -90,9 +88,9 @@ namespace SdkConverter
 				if(i > 0) {
 					nameInDll = dll.Substring(i + 1);
 					dll = dll.Substring(0, i);
-					//Print(nameInDll);
+					//AOutput.Write(nameInDll);
 				} else if(name.Starts("K32")) {
-					//Print(name);
+					//AOutput.Write(name);
 					nameInDll = name;
 					name = name.Substring(3);
 					if(name.Ends("W")) name = name.Remove(name.Length - 1);
@@ -107,7 +105,7 @@ namespace SdkConverter
 				else if(name.Starts("Dll")) skip = true; //DllInstall, DllRegisterServer etc
 				else if(name.Starts("Ndr") || name.Starts("Rpc")) skip = true; //undocumented
 				else {
-					//Print(name);
+					//AOutput.Write(name);
 					skip = true; //all these in SDK others are undocumented, or documented as deprecated/removed
 					_funcUnknownDll.Add(name);
 				}
@@ -140,10 +138,10 @@ namespace SdkConverter
 			_func[name] = decl;
 			//try { _func.Add(name, decl); }
 			//catch { //about 10 in SDK. The second declarations are identical or better (without tagSTRUCT).
-			//	Print("----");
-			//	Print(name);
-			//	Print(_func[name]);
-			//	Print(decl);
+			//	AOutput.Write("----");
+			//	AOutput.Write(name);
+			//	AOutput.Write(_func[name]);
+			//	AOutput.Write(decl);
 			//}
 
 			if(!_TokIsChar(_i, ';')) _Err(_i, "unexpected");
@@ -155,8 +153,8 @@ namespace SdkConverter
 		void _FunctionsFinally()
 		{
 			if(_funcUnknownDll.Count > 50) {
-				Print("Warning: too many unknown dll:");
-				Print(_funcUnknownDll);
+				AOutput.Write("Warning: too many unknown dll:");
+				AOutput.Write(_funcUnknownDll);
 			}
 		}
 	}

@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -19,7 +18,6 @@ using System.Reflection.Emit;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using Au.Compiler;
 using System.Runtime.InteropServices.ComTypes;
@@ -113,7 +111,7 @@ This option is ignored when the task runs as .exe program started not from edito
 ");
 		_AddCombo("ifRunning", "warn|warn_restart|cancel|cancel_restart|wait|wait_restart|run|run_restart|restart", _meta.ifRunning,
 @"<b>ifRunning</b> - when trying to start this script, what to do if it is already running.
- • <i>warn</i> (default) - print warning and don't run.
+ • <i>warn</i> (default) - write warning in output and don't run.
  • <i>cancel</i> - don't run.
  • <i>wait</i> - run later, when it ends.
  • <i>run</i> - run simultaneously. Requires runMode blue.
@@ -126,7 +124,7 @@ This option is ignored when the task runs as .exe program started not from edito
 		_AddCombo("ifRunning2", "same|warn|cancel|wait", _meta.ifRunning2,
 @"<b>ifRunning2</b> - when trying to start this green script, what to do if another green script is running.
  • <i>same</i> (default) - same as of ifRunning: cancel if cancel[_restart], wait if wait[_restart], else warn.
- • <i>warn</i> - print warning and don't run.
+ • <i>warn</i> - write warning in output and don't run.
  • <i>cancel</i> - don't run.
  • <i>wait</i> - run later, when it ends.
 
@@ -163,17 +161,17 @@ These symbols also are visible in class files compiled together, but not in used
 See also <google C# #define>#define<>.
 ");
 		_AddCombo("warningLevel", "4|3|2|1|0", _meta.warningLevel,
-@"<b>warningLevel</b> - how many warnings to print.
+@"<b>warningLevel</b> - how many warnings to show.
 0 - no warnings.
-1 - print only severe warnings.
-2 - print level 1 warnings plus certain, less-severe warnings.
-3 - print most warnings.
-4 (default) print all warnings.
+1 - only severe warnings.
+2 - level 1 warnings plus certain, less-severe warnings.
+3 - most warnings.
+4 (default) all warnings.
 
 This option is also applied to class files compiled together.
  ");
 		_AddEdit("noWarnings", _meta.noWarnings,
-@"<b>noWarnings</b> - don't print these warnings.
+@"<b>noWarnings</b> - don't show these warnings.
 List separated by comma, semicolon or space. Example: 151,3001,120
 
 This option is also applied to class files compiled together.
@@ -324,7 +322,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			return;
 		}
 
-		//Print(p.Column, p.Row, cc.IsEditing());
+		//AOutput.Write(p.Column, p.Row, cc.IsEditing());
 
 		//uncheck if selected default value. The control checks when changed.
 		if(p.Column == 1 && cc.IsEditing()) {
@@ -334,7 +332,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				if(cb.Control.SelectedIndex <= 0) uncheck = true;
 				break;
 			case SourceGrid.Cells.Editors.TextBox tb:
-				if(Empty(cc.Value as string)) uncheck = true;
+				if((cc.Value as string).IsNE()) uncheck = true;
 				break;
 			}
 			if(uncheck) g.ZCheck(row, false);
@@ -342,7 +340,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		var rk = g.ZGetRowKey(row);
 
-		//Print(p.Column, row, g.ZIsChecked(row));
+		//AOutput.Write(p.Column, row, g.ZIsChecked(row));
 
 		switch(rk) {
 		case "runMode":
@@ -416,7 +414,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			switch(_role) {
 			case ERole.exeProgram:
 			case ERole.classLibrary:
-				if(Empty(_meta.outputPath)) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
+				if(_meta.outputPath.IsNE()) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
 				break;
 			}
 			var name = APath.GetFileName(_f.Name, true);
@@ -546,7 +544,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		using(var tlKey = Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
 			foreach(var sGuid in tlKey.GetSubKeyNames()) {
 				if(sGuid.Length != 38) continue;
-				//Print(sGuid);
+				//AOutput.Write(sGuid);
 				using var guidKey = tlKey.OpenSubKey(sGuid);
 				foreach(var sVer in guidKey.GetSubKeyNames()) {
 					using var verKey = guidKey.OpenSubKey(sVer);
@@ -554,7 +552,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 						if(rx.MatchG(description, out var g)) description = description.Remove(g.Start);
 						if(sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
 						a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
-					} //else Print(sGuid); //some Microsoft typelibs. VS does not show these too.
+					} //else AOutput.Write(sGuid); //some Microsoft typelibs. VS does not show these too.
 				}
 			}
 		}
@@ -634,7 +632,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		await Task.Run(() => {
 			this.Enabled = false;
-			Print($"Converting COM type library to .NET assembly.");
+			AOutput.Write($"Converting COM type library to .NET assembly.");
 			try {
 				if(_convertedDir == null) {
 					_convertedDir = AFolders.Workspace + @".interop\";
@@ -642,7 +640,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				}
 				List<string> converted = new List<string>();
 				Action<string> callback = s => {
-					Print(s);
+					AOutput.Write(s);
 					if(s.Starts("Converted: ")) {
 						s.RegexMatch(@"""(.+?)"".$", 1, out s);
 						converted.Add(s);
@@ -651,7 +649,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				int rr = AExec.RunConsole(callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{_convertedDir}|{comDll}\"", encoding: Encoding.UTF8);
 				if(rr == 0) {
 					foreach(var v in converted) if(!_meta.com.Contains(v)) _meta.com.Add(v);
-					Print(@"<>Converted and saved in <link>%AFolders.Workspace%\.interop<>.");
+					AOutput.Write(@"<>Converted and saved in <link>%AFolders.Workspace%\.interop<>.");
 					_Added(button, _meta.com);
 				}
 			}
@@ -673,7 +671,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 2. Add script name in Options -> General -> Run scripts when this workspace loaded.
 3. Call <help>ATask.Run<> from another script. Example: <code>ATask.Run(""Script8.cs"");</code>
 4. <help editor/Command line>Command line<>. Example: <code>Au.CL.exe ""Script8.cs""</code>
-5. An output link. Example: <code>Print(""<>Click to run <script>Script8.cs<>."");</code>
+5. An output link. Example: <code>AOutput.Write(""<>Click to run <script>Script8.cs<>."");</code>
 
 In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey etc) to execute parts of script code when it is running. There are no such triggers to launch scripts.
 ";
@@ -692,7 +690,7 @@ Don't need to add Au.dll and .NET Core runtime dlls.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
 To remove, delete the line in the code editor.
 
-Full path if the file is not in <link>%AFolders.ThisApp%<>. If role of the program file is not miniProgram, at run time the file must be directly in AFolders.ThisApp or AFolders.ThisApp\Libraries.
+If the file is in <link>%AFolders.ThisApp%<> or its subfolders, use file name or relative path, else need full path. If role of the script is not miniProgram, at run time the file must be directly in AFolders.ThisApp or AFolders.ThisApp\Libraries. If role is editorExtension, may need to restart editor.
 ");
 		const string c_com = @" COM component's type library to an <i>interop assembly<>.
 Adds meta <c green>com FileName.dll<>. Saves the assembly file in <link>%AFolders.Workspace%\.interop<>.
@@ -787,8 +785,8 @@ Examples of loading resources at run time:
 
 		void _SetTimer(string name)
 		{
-			//Print(name);
-			if(Empty(name) || !_infoDict.TryGetValue(name, out _infoText)) return;
+			//AOutput.Write(name);
+			if(name.IsNE() || !_infoDict.TryGetValue(name, out _infoText)) return;
 			_infoTimer.After(700);
 		}
 	}

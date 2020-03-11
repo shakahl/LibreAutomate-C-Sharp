@@ -2,7 +2,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -13,14 +12,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
 
 using Au.Types;
-using static Au.AStatic;
 
 //FUTURE: public
 
@@ -31,22 +28,24 @@ namespace Au.Util
 	/// </summary>
 	/// <remarks>
 	/// Derived classes must provide public get/set properties.
-	/// Getters usually just return a field.
-	/// Setters must call a <b>SetX</b> method. Then changes will be automatically lazily saved.
-	/// Most functions should be called from the same UI thread. The 'get' properties for string and atomic types (int/bool/etc) can be called from any thread.
+	/// - 'get' usually just return a field.
+	/// - 'set' must call a <b>SetX</b> method provided by this base class. Then changes will be automatically lazily saved.
+	/// 
+	/// All functions are thread-safe, except when setting/getting non-atomic struct types (containing multiple fields, decimal, also long in 32-bit process).
 	/// </remarks>
 	class JSettings
 	{
-		protected string _file;
-		protected bool _loaded;
-		protected bool _save;
-		EventHandler _onExit;
-		[ThreadStatic] static List<JSettings> t_list; //TODO: try not ThreadStatic, and use the SystemEvents thread to save.
+		string _file;
+		bool _loaded;
+		int _save;
+
+		static readonly List<JSettings> s_list = new List<JSettings>();
+		static int s_loadedOnce;
 
 		/// <summary>
 		/// Loads JSON file and deserializes to new object of type T.
 		/// Sets to save automatically whenever a property changed.
-		/// Returns new empty object if file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, prints error.
+		/// Returns new empty object if file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, writes error info to the output.
 		/// </summary>
 		/// <param name="file">Full path of .json file.</param>
 		/// <param name="useDefault">Use default settings, don't load from file. Delete file if exists.</param>
@@ -68,10 +67,10 @@ namespace Au.Util
 				catch(Exception ex) {
 					string es = ex.ToStringWithoutStack();
 					if(useDefault) {
-						Print($"Failed to delete settings file '{file}'. {es}");
+						AOutput.Write($"Failed to delete settings file '{file}'. {es}");
 					} else {
 						//ADialog.ShowWarning("Failed to load settings", $"Will backup '{file}' and use default settings.", expandedText: ex.ToStringWithoutStack());
-						Print($"Failed to load settings from '{file}'. Will use default settings. {es}");
+						AOutput.Write($"Failed to load settings from '{file}'. Will use default settings. {es}");
 						try { AFile.Rename(file, file + ".backup", IfExists.Delete); } catch { }
 					}
 				}
@@ -81,16 +80,24 @@ namespace Au.Util
 			R._loaded = true;
 
 			//autosave
-			if(t_list == null) {
-				t_list = new List<JSettings>();
-				ATimer.Every(3000, _ => {
-					foreach(var v in t_list) v.SaveIfNeed();
-				});
+			if(Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
+				AThread.Start(() => {
+					for(; ; ) {
+						Thread.Sleep(2000);
+						_SaveAllIfNeed();
+					}
+				}, sta: false);
+
+				AProcess.Exit += (unu, sed) => _SaveAllIfNeed(); //info: Core does not call finalizers when process exits
 			}
-			t_list.Add(R);
-			AProcess.Exit += R._onExit = (unu, sed) => R.SaveIfNeed(); //info: Core does not call finalizers when process exits
+			lock(s_list) s_list.Add(R);
 
 			return R;
+		}
+
+		static void _SaveAllIfNeed()
+		{
+			lock(s_list) foreach(var v in s_list) v.SaveIfNeed();
 		}
 
 		/// <summary>
@@ -99,34 +106,27 @@ namespace Au.Util
 		/// </summary>
 		public void Dispose()
 		{
-			AProcess.Exit -= _onExit;
-			t_list.Remove(this);
+			lock(s_list) s_list.Remove(this);
 			SaveIfNeed();
 		}
 
 		/// <summary>
-		/// <c>_save || AFile.ExistsAsAny(_file)</c>
-		/// </summary>
-		[JsonIgnore]
-		public bool Modified  => _save || AFile.ExistsAsAny(_file);
-
-		/// <summary>
 		/// Saves now if need.
-		/// Don't need to call explicitly. In UI thread called automatically every 3 s. Also automatically called on process exit and by <b>Dispose</b>.
+		/// Don't need to call explicitly. Autosaving is every 2 s, also on process exit and <b>Dispose</b>.
 		/// </summary>
 		public void SaveIfNeed()
 		{
 			//AOutput.QM2.Write(_save);
-			if(_save) {
+			if(Interlocked.Exchange(ref _save, 0) != 0) {
 				try {
 					var opt = new JsonSerializerOptions { IgnoreNullValues = true, IgnoreReadOnlyProperties = true, WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 					var b = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), opt);
 					AFile.SaveBytes(_file, b);
-					_save = false;
 					//AOutput.QM2.Write(GetType().Name + " saved");
 				}
 				catch(Exception ex) {
-					Print($"Failed to save settings to '{_file}'. {ex.ToStringWithoutStack()}");
+					SaveLater();
+					AOutput.Write($"Failed to save settings to '{_file}'. {ex.ToStringWithoutStack()}");
 				}
 			}
 		}
@@ -137,11 +137,17 @@ namespace Au.Util
 		public void SaveLater()
 		{
 #if TRACE_JS
-			//if(!_save)
-				PrintWarning("JSettings.SaveLater", 1, "<>Trace: ");
+			//if(_save == 0)
+				AWarning.Write("JSettings.SaveLater", 1, "<>Trace: ");
 #endif
-			_save = true;
+			Interlocked.Exchange(ref _save, 1);
 		}
+
+		/// <summary>
+		/// <c>_save || AFile.ExistsAsAny(_file)</c>
+		/// </summary>
+		[JsonIgnore]
+		public bool Modified => _save != 0 || AFile.ExistsAsAny(_file);
 
 		/// <summary>
 		/// Sets a string property value and will save later if need.

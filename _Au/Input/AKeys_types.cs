@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -260,7 +257,7 @@ namespace Au.Types
 #pragma warning restore 1591
 
 	/// <summary>
-	/// Used as an argument type with <see cref="AKeys.Key(object[])"/> and <see cref="AStatic.Key(object[])"/> to send text instead of keys. See example.
+	/// Used as an argument type with <see cref="AKeys.Key(KKeysEtc[])"/> and similar functions to send text instead of keys. See example.
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
@@ -275,6 +272,42 @@ namespace Au.Types
 		public static implicit operator KText(string s) => new KText(s);
 		///
 		public static implicit operator string(KText s) => s._text;
+	}
+
+	/// <summary>
+	/// Parameter type of <see cref="AKeys.Key"/> and similar functions.
+	/// Has implicit conversions from string, KText, KKey, int, Action, tuple (int, bool) and tuple (KKey, int, bool).
+	/// </summary>
+	public struct KKeysEtc
+	{
+		readonly object _o;
+		KKeysEtc(object o) { _o = o; }
+
+		/// <summary>
+		/// Raw value.
+		/// </summary>
+		public object Value => _o;
+
+		///
+		public static implicit operator KKeysEtc(string s)=>new KKeysEtc(s);
+
+		///
+		public static implicit operator KKeysEtc(KText s) => new KKeysEtc(s);
+
+		///
+		public static implicit operator KKeysEtc(KKey k) => new KKeysEtc(k);
+
+		///
+		public static implicit operator KKeysEtc(int ms) => new KKeysEtc(ms);
+
+		///
+		public static implicit operator KKeysEtc(Action a) => new KKeysEtc(a);
+
+		///
+		public static implicit operator KKeysEtc((int scan, bool ext) t) => new KKeysEtc(t);
+
+		///
+		public static implicit operator KKeysEtc((KKey k, int scan, bool ext) t) => new KKeysEtc(t);
 	}
 
 	/// <summary>

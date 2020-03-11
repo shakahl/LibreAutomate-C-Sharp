@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,20 +10,17 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
 	/// <summary>
 	/// Scintilla-based control to show formatted information text.
-	/// To set text use the <see cref="Text"/> property. For formatting and links use tags: <see cref="SciTags"/>.
+	/// To set text use the <see cref="AuScintilla.Text"/> property. For formatting and links use tags: <see cref="SciTags"/>.
 	/// </summary>
 	public class InfoBox :AuScintilla
 	{

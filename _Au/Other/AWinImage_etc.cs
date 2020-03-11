@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -20,7 +18,6 @@ using System.Drawing.Drawing2D;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -86,7 +83,7 @@ namespace Au
 
 			using var mb = new AMemoryBitmap(r.Width, r.Height);
 			if(usePrintWindow && Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (AVersion.MinWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
-				//Print("PrintWindow OK");
+				//AOutput.Write("PrintWindow OK");
 			} else {
 				using(var dc = new WindowDC_(w)) {
 					if(dc.Is0) w.ThrowNoNative("Failed");
@@ -129,7 +126,7 @@ namespace Au
 				int* k = (int*)d.Scan0;
 				for(int y = r.top; y < r.bottom; y++)
 					for(int x = r.left; x < r.right; x++, k++) {
-						//Print(x, y, path.IsVisible(x, y));
+						//AOutput.Write(x, y, path.IsVisible(x, y));
 						if(!path.IsVisible(x, y)) *k = 0xFFFFFF; //white, 0 alpha
 					}
 			}
@@ -265,7 +262,7 @@ namespace Au
 
 				g1:
 				RECT rs = SystemInformation.VirtualScreen;
-				//RECT rs = AScreen.Primary.Bounds; //for testing, to see Print output in other screen
+				//RECT rs = AScreen.Primary.Bounds; //for testing, to see Write output in other screen
 				Bitmap bs;
 				bool windowPixels = flags.HasAny(WICFlags.WindowDC | WICFlags.PrintWindow);
 				if(windowPixels) {

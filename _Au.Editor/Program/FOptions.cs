@@ -11,14 +11,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 partial class FOptions : DialogForm
@@ -60,13 +58,17 @@ partial class FOptions : DialogForm
 		base.OnLoad(e);
 
 		_InitGeneral();
-		_InitEditor();
+		_InitFiles();
+		_InitFont();
+		_InitCodeInfo();
 	}
 
 	private void _bApply_Click(object sender, EventArgs e)
 	{
 		_ApplyGeneral();
-		_ApplyEditor();
+		_ApplyFiles();
+		_ApplyFont();
+		_ApplyCodeInfo();
 	}
 
 	private void _bOK_Click(object sender, EventArgs e) => _bApply_Click(sender, e);
@@ -92,7 +94,7 @@ partial class FOptions : DialogForm
 				if(_initRunAtStartup) rk.DeleteValue("Au.Editor");
 				else rk.SetValue("Au.Editor", "\"" + AFolders.ThisAppBS + "Au.CL.exe\" /e");
 			}
-			catch(Exception ex) { Print("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
+			catch(Exception ex) { AOutput.Write("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 		}
 		Program.Settings.runHidden = _runHidden.Checked;
 
@@ -102,9 +104,9 @@ partial class FOptions : DialogForm
 
 	private void _startupScripts_Validating(object sender, CancelEventArgs e)
 	{
-		//Print("validating");
+		//AOutput.Write("validating");
 		_errorProvider.Clear();
-		string s = _startupScripts.Text; if(Empty(s)) return;
+		string s = _startupScripts.Text; if(s.IsNE()) return;
 		string err = null;
 		try {
 			var t = ACsv.Parse(s);
@@ -114,7 +116,7 @@ partial class FOptions : DialogForm
 				if(script.Starts("//")) continue;
 				if(Program.Model.FindScript(script) == null) { err = "Script not found: " + script; break; }
 				var delay = v.Length == 1 ? null : v[1];
-				if(!Empty(delay)) {
+				if(!delay.IsNE()) {
 					_rxDelay ??= new ARegex(@"(?i)^\d+ *m?s$");
 					if(!_rxDelay.IsMatch(delay)) { err = "Delay must be like 2 s or 500 ms"; break; }
 				}
@@ -154,14 +156,28 @@ partial class FOptions : DialogForm
 	//_gridScripts.Rows.Add("two", 2);
 
 	//foreach(DataGridViewRow row in _gridScripts.Rows) {
-	//	Print(row.Cells[0].Value, row.Cells[1].Value);
+	//	AOutput.Write(row.Cells[0].Value, row.Cells[1].Value);
 	//}
 
 	#endregion
 
-	#region Editor
+	#region Files
 
-	unsafe void _InitEditor()
+	void _InitFiles()
+	{
+		_usings.ZSetText(Program.Settings.files_usings, -1);
+	}
+
+	void _ApplyFiles()
+	{
+		Program.Settings.files_usings = _usings.Text;
+	}
+
+	#endregion
+
+	#region Font
+
+	unsafe void _InitFont()
 	{
 		var styles = Program.Settings.edit_styles;
 
@@ -229,7 +245,7 @@ line number";
 
 			} else {
 				if(i == (int)CiStyling.EToken.countUserDefined) i = Sci.STYLE_LINENUMBER;
-				//Print(i, s[v.start..v.end]);
+				//AOutput.Write(i, s[v.start..v.end]);
 				_sciStyles.Call(Sci.SCI_STARTSTYLING, v.start);
 				_sciStyles.Call(Sci.SCI_SETSTYLING, v.end - v.start, i);
 			}
@@ -403,7 +419,7 @@ line number";
 	[DllImport("shlwapi.dll")]
 	internal static extern int ColorHLSToRGB(ushort wHue, ushort wLuminance, ushort wSaturation);
 
-	void _ApplyEditor()
+	void _ApplyFont()
 	{
 		var styles = new CiStyling.TStyles(_sciStyles); //gets colors and bold
 		var fname = _cbFont.Text; if(fname == "" || fname.Starts("[ ")) fname = "Consolas";
@@ -417,6 +433,22 @@ line number";
 			foreach(var v in Panels.Editor.ZOpenDocs) styles.ToScintilla(v);
 		}
 
+	}
+
+	#endregion
+
+	#region Code info
+
+	unsafe void _InitCodeInfo()
+	{
+		//_cComplGroupEM.Checked = Program.Settings.ci_complGroupEM; //checkbox "Group all extension methods" (if unchecked, would group only Linq)
+		_cComplParenSpace.Checked = Program.Settings.ci_complParenSpace;
+	}
+
+	void _ApplyCodeInfo()
+	{
+		//Program.Settings.ci_complGroupEM = _cComplGroupEM.Checked;
+		Program.Settings.ci_complParenSpace = _cComplParenSpace.Checked;
 	}
 
 	#endregion

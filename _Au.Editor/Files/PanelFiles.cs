@@ -7,7 +7,6 @@ using System.Drawing;
 using System.Windows.Forms;
 //using System.Linq;
 using System.Xml.Linq;
-using static Au.AStatic;
 
 partial class PanelFiles : AuUserControlBase
 {
@@ -45,7 +44,7 @@ partial class PanelFiles : AuUserControlBase
 	public FilesModel ZLoadWorkspace(string wsDir = null)
 	{
 		wsDir ??= Program.Settings.workspace;
-		if(Empty(wsDir)) wsDir = AFolders.ThisAppDocuments + "Main";
+		if(wsDir.IsNE()) wsDir = AFolders.ThisAppDocuments + "Main";
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = _model;
 		FilesModel m = null;
@@ -69,7 +68,7 @@ partial class PanelFiles : AuUserControlBase
 		catch(Exception ex) {
 			m?.Dispose();
 			m = null;
-			//Print($"Failed to load '{wsDir}'. {ex.Message}");
+			//AOutput.Write($"Failed to load '{wsDir}'. {ex.Message}");
 			switch(ADialog.ShowError("Failed to load workspace", wsDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
 				owner: this, expandedText: ex.ToString())) {

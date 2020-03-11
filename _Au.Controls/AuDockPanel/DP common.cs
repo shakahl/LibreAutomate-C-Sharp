@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -19,7 +18,6 @@ using System.Xml;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -370,7 +368,7 @@ namespace Au.Controls
 
 			internal void SetDockState(_DockState state, bool onStartDrag = false)
 			{
-				//Print(this, Name);
+				//AOutput.Write(this, Name);
 				var gp = this as _Panel;
 
 				if(state == _DockState.LastVisible) {
@@ -400,7 +398,7 @@ namespace Au.Controls
 				this.DockState = state;
 
 				//get RECT for floating now, because later this.ParentControl will change and even may be destroyed
-				RECT rect = new RECT();
+				RECT rect = default;
 				if(state == _DockState.Floating) {
 					if(!onStartDrag && !SavedFloatingBounds.IsEmptyRect()) {
 						if(SavedFloatingBounds.X == int.MinValue) { //specified only width and height
@@ -489,8 +487,8 @@ namespace Au.Controls
 						{
 							foreach(Control c in parent.Controls) {
 								var s = tt.GetToolTip(c);
-								if(!Empty(s)) {
-									//Print($"<>{c}, <c blue>{s}<>");
+								if(!s.IsNE()) {
+									//AOutput.Write($"<>{c}, <c blue>{s}<>");
 									tt.SetToolTip(c, null);
 									tt.SetToolTip(c, s);
 								}

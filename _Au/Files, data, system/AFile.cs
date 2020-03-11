@@ -12,11 +12,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -269,7 +267,7 @@ namespace Au
 		/// <param name="dirs">0 or more directories where to search.</param>
 		public static unsafe string SearchPath(string path, params string[] dirs)
 		{
-			if(Empty(path)) return null;
+			if(path.IsNE()) return null;
 
 			string s = path;
 			if(APath.IsFullPathExpandEnvVar(ref s)) {
@@ -378,7 +376,7 @@ namespace Au
 						if(hfind == (IntPtr)(-1)) {
 							hfind = default;
 							var ec = ALastError.Code;
-							//Print(ec, ALastError.MessageFor(ec), path);
+							//AOutput.Write(ec, ALastError.MessageFor(ec), path);
 							bool itsOK = false;
 							switch(ec) {
 							case Api.ERROR_FILE_NOT_FOUND:
@@ -584,7 +582,7 @@ namespace Au
 					}
 					catch(Exception ex) {
 						if(!path1.Ends(':')) //moving drive contents. Deleted contents but cannot delete drive.
-							PrintWarning($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
+							AWarning.Write($"Failed to delete '{path1}' after copying it to another drive. {ex.Message}");
 						//throw new AuException("*move", ex); //don't. MoveFileEx also succeeds even if fails to delete source.
 					}
 				}
@@ -616,7 +614,7 @@ namespace Au
 			//foreach(var f in EnumDirectory(path1, edFlags, filter)) { //no, see comments above
 			foreach(var f in a) {
 				s1 = f.FullPath; s2 = APath.PrefixLongPathIfNeed(path2 + f.Name);
-				//Print(s1, s2);
+				//AOutput.Write(s1, s2);
 				//continue;
 				if(f.IsDirectory) {
 					if(merge) switch(ExistsAs(s2, true)) {
@@ -917,7 +915,7 @@ namespace Au
 
 		static int _DeleteLL(string path, bool dir)
 		{
-			//Print(dir, path);
+			//AOutput.Write(dir, path);
 			if(dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
 			var ec = ALastError.Code;
 			if(ec == Api.ERROR_ACCESS_DENIED) {
@@ -1173,7 +1171,7 @@ namespace Au
 			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			public bool ExceptionFilter(int ec)
 			{
-				//Print((uint)ec);
+				//AOutput.Write((uint)ec);
 				switch(ec) {
 				case Api.ERROR_SHARING_VIOLATION:
 				case Api.ERROR_LOCK_VIOLATION:
@@ -1280,7 +1278,7 @@ namespace Au
 		static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null)
 		{
 			file = APath.Normalize(file, flags: PNFlags.DontPrefixLongPath);
-			string s1 = Empty(tempDirectory) ? file : APath.Combine(APath.Normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), APath.GetFileName(file), prefixLongPath: false);
+			string s1 = tempDirectory.IsNE() ? file : APath.Combine(APath.Normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), APath.GetFileName(file), prefixLongPath: false);
 			string temp = s1 + "~temp";
 			string back = s1 + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 

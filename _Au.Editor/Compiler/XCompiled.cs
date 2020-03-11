@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,8 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Compiler
 {
@@ -70,7 +66,7 @@ namespace Au.Compiler
 					iPipe = value.IndexOf('|', 2); if(iPipe < 0) iPipe = value.Length;
 					asmFile = value.Substring(2, iPipe - 2);
 				} else asmFile = CacheDirectory + "\\" + f.IdString;
-				//Print(asmFile);
+				//AOutput.Write(asmFile);
 
 				if(!AFile.GetProperties(asmFile, out var asmProp, FAFlags.UseRawPath)) return false;
 				DateTime asmDate = asmProp.LastWriteTimeUtc;
@@ -143,9 +139,9 @@ namespace Au.Compiler
 							if(ch == 'l') {
 								if(f2.FindProject(out var projFolder2, out var projMain2)) f2 = projMain2;
 								if(f2 == f) return false; //will be compiler error "circular reference"
-														  //Print(f2, projFolder2);
+														  //AOutput.Write(f2, projFolder2);
 								if(!IsCompiled(f2, out _, projFolder2)) return false;
-								//Print("library is compiled");
+								//AOutput.Write("library is compiled");
 							} else {
 								if(_IsFileModified(f2)) return false;
 								//switch(ch) {
@@ -174,7 +170,7 @@ namespace Au.Compiler
 				bool _IsFileModified2(string path_)
 				{
 					if(!AFile.GetProperties(path_, out var prop_, FAFlags.UseRawPath)) return true;
-					//Print(prop_.LastWriteTimeUtc, asmDate);
+					//AOutput.Write(prop_.LastWriteTimeUtc, asmDate);
 					if(prop_.LastWriteTimeUtc > asmDate) return true;
 					return false;
 				}
@@ -329,7 +325,7 @@ namespace Au.Compiler
 			{
 				_data = null;
 				try { AFile.Delete(CacheDirectory); }
-				catch(AuException e) { PrintWarning(e.ToString(), -1); }
+				catch(AuException e) { AWarning.Write(e.ToString(), -1); }
 			}
 		}
 

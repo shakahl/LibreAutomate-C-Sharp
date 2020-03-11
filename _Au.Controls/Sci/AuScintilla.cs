@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -181,7 +179,7 @@ namespace Au.Controls
 
 			switch(m.Msg) {
 			case Api.WM_CREATE: //after inherited classes set styles etc
-				if(!Empty(_text)) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
+				if(!_text.IsNE()) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
 				break;
 			}
 		}
@@ -219,7 +217,7 @@ namespace Au.Controls
 		unsafe void _NotifyModified(in SCNotification n)
 		{
 			var code = n.modificationType;
-			//if(this.Name!= "Output_text") Print(code, n.position);
+			//if(this.Name!= "Output_text") AOutput.Write(code, n.position);
 			if(0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
 				_text = null;
 				_posState = default;
@@ -384,7 +382,7 @@ namespace Au.Controls
 		//public void TestCreatePosMap()
 		//{
 		//	_CreatePosMap();
-		//	//foreach(var v in _aPos) Print(v.i8, v.i16);
+		//	//foreach(var v in _aPos) AOutput.Write(v.i8, v.i16);
 		//}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -511,7 +509,7 @@ namespace Au.Controls
 		public void TestCreatePosMap()//TODO
 		{
 			_CreatePosMap();
-			//foreach(var v in _aPos) Print(v.i8, v.i16);
+			//foreach(var v in _aPos) AOutput.Write(v.i8, v.i16);
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
@@ -521,7 +519,7 @@ namespace Au.Controls
 
 			int textLen;
 			int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
-			//Print(textLen);
+			//AOutput.Write(textLen);
 			int to8 = p2 == null ? textLen : gap;
 			int i8 = 0, i16 = 0;
 			g1:
@@ -613,7 +611,7 @@ namespace Au.Controls
 				s_debugPM = new Dictionary<int, string>();
 				foreach(var v in typeof(Sci).GetFields()) {
 					var s = v.Name;
-					//Print(v.Name);
+					//AOutput.Write(v.Name);
 					if(s.Starts("SCI_")) s_debugPM.Add((int)v.GetRawConstantValue(), s);
 				}
 			}

@@ -12,13 +12,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -289,7 +287,12 @@ namespace Au
 
 					m["Edit"] = o => _tb.GoToEdit_(_cmItem);
 					m.Separator();
-					using(var sub = m.Submenu("Anchor")) {
+					using(m.Submenu("Anchor")) {
+						m.LastMenuItem.DropDown.Opening += (sender, _) => {
+							var dd = sender as ToolStripDropDownMenu;
+							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBAnchor an) v.Checked = an == _tb._anchor;
+						};
+						void _AddAnchor(TBAnchor an) => m.Add(an.ToString(), _ => _tb.Anchor = an).Tag = an;
 						_AddAnchor(TBAnchor.None);
 						_AddAnchor(TBAnchor.TopLeft);
 						_AddAnchor(TBAnchor.TopRight);
@@ -300,15 +303,13 @@ namespace Au
 						_AddAnchor(TBAnchor.Left);
 						_AddAnchor(TBAnchor.Right);
 						_AddAnchor(TBAnchor.All);
-
-						void _AddAnchor(TBAnchor an) => m.Add(an.ToString(), _ => _tb.Anchor = an).Tag = an;
-
-						sub.MenuItem.DropDown.Opening += (sender, _) => {
-							var dd = sender as ToolStripDropDownMenu;
-							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBAnchor an) v.Checked = an == _tb._anchor;
-						};
 					}
-					using(var sub = m.Submenu("Border")) {
+					using(m.Submenu("Border")) {
+						m.LastMenuItem.DropDown.Opening += (sender, _) => {
+							var dd = sender as ToolStripDropDownMenu;
+							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBBorder b) v.Checked = b == _tb._border;
+						};
+						void _AddBorder(TBBorder b) => m.Add(b.ToString(), _ => _tb.Border = b).Tag = b;
 						_AddBorder(TBBorder.None);
 						_AddBorder(TBBorder.Width1);
 						_AddBorder(TBBorder.Width2);
@@ -318,13 +319,6 @@ namespace Au
 						_AddBorder(TBBorder.Thick);
 						_AddBorder(TBBorder.Caption);
 						_AddBorder(TBBorder.CaptionX);
-
-						void _AddBorder(TBBorder b) => m.Add(b.ToString(), _ => _tb.Border = b).Tag = b;
-
-						sub.MenuItem.DropDown.Opening += (sender, _) => {
-							var dd = sender as ToolStripDropDownMenu;
-							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBBorder b) v.Checked = b == _tb._border;
-						};
 					}
 					var sizable = m.Add("Sizable", _ => _tb.Sizable ^= true);
 					var autoSize = m.Add("AutoSize", _ => _tb.AutoSize ^= true);
@@ -333,16 +327,14 @@ namespace Au
 						sizable.Checked = _tb.Sizable;
 						autoSize.Checked = _tb.AutoSize;
 					};
-					using(var sub = m.Submenu("More")) {
-						if(_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
-						_AddFlag(TBFlags.HideIfFullScreen);
-
-						void _AddFlag(TBFlags f) => m.Add(_EnumToString(f), _ => _tb._SatPlanetOrThis.MiscFlags ^= f).Tag = f;
-
-						sub.MenuItem.DropDown.Opening += (sender, _) => {
+					using(m.Submenu("More")) {
+						m.LastMenuItem.DropDown.Opening += (sender, _) => {
 							var dd = sender as ToolStripDropDownMenu;
 							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBFlags f) v.Checked = _tb._SatPlanetOrThis.MiscFlags.Has(f);
 						};
+						void _AddFlag(TBFlags f) => m.Add(_EnumToString(f), _ => _tb._SatPlanetOrThis.MiscFlags ^= f).Tag = f;
+						if(_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
+						_AddFlag(TBFlags.HideIfFullScreen);
 					}
 
 					m["Toolbars..."] = o => new _Form().Show();

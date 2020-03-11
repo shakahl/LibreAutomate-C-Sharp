@@ -7,7 +7,6 @@ using Aga.Controls.Tree.NodeControls;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Aga.Controls.Tree
 {

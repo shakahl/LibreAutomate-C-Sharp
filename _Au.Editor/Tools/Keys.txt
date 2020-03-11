@@ -10,4 +10,4 @@
 <b>Virtual-key:<><mono>   <+a VK>code<>  {name}<>
 <b>Operator:<><mono>  <+a *>*nTimes<>  {*down}  {*up}  <+a +>+key<>  <+a +(%)>+(keys)<>  <+a $>Shift+<><>
 
-<help AKeys.Key>Help<>
+<help AKeys.Key>Help<>        Example: <code>AKeys.Key("Ctrl+A Del Tab*3", (KText)"text", 100, "Enter");</code>

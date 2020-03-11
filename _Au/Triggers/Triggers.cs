@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Triggers
 {
@@ -30,10 +28,10 @@ namespace Au.Triggers
 	/// <code>Triggers.TriggerType[parameters] = action;</code>
 	/// Examples:
 	/// <code>
-	/// Triggers.Hotkey["Ctrl+K"] = o => Print(o.Trigger);
+	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(o.Trigger);
 	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => {
-	///		Print("This is a trigger action (lambda function).");
-	///		Print($"It runs when you press {o.Trigger}.");
+	///		AOutput.Write("This is a trigger action (lambda function).");
+	///		AOutput.Write($"It runs when you press {o.Trigger}.");
 	/// };
 	/// Triggers.Run();
 	/// </code>
@@ -66,11 +64,11 @@ namespace Au.Triggers
 	/// 
 	/// //hotkey triggers
 	/// 
-	/// hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
+	/// hk["Ctrl+K"] = o => AOutput.Write(o.Trigger); //it means: execute code "o => AOutput.Write(o.Trigger)" when I press Ctrl+K
 	/// hk["Ctrl+Shift+F11"] = o => {
-	/// 	Print(o.Trigger);
+	/// 	AOutput.Write(o.Trigger);
 	/// 	var w1 = AWnd.FindOrRun("* Notepad", run: () => AExec.Run(AFolders.System + "notepad.exe"));
-	/// 	Text("text");
+	/// 	AKeys.Text("text");
 	/// 	w1.Close();
 	/// };
 	/// hk["Win+Alt+K"] = o => ATask.Run("other script.cs"); //run other script in new process
@@ -78,34 +76,34 @@ namespace Au.Triggers
 	/// //triggers that work only with some windows
 	/// 
 	/// Triggers.Of.Window("* WordPad", "WordPadClass"); //let the following triggers work only when a WordPad window is active
-	/// hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
-	/// hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+	/// hk["Ctrl+F5"] = o => AOutput.Write(o.Trigger, o.Window);
+	/// hk["Ctrl+F6"] = o => AOutput.Write(o.Trigger, o.Window);
 	/// 
 	/// var notepad = Triggers.Of.Window("* Notepad"); //let the following triggers work only when a Notepad window is active
-	/// hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
-	/// hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+	/// hk["Ctrl+F5"] = o => AOutput.Write(o.Trigger, o.Window);
+	/// hk["Ctrl+F6"] = o => AOutput.Write(o.Trigger, o.Window);
 	/// 
 	/// Triggers.Of.AllWindows(); //let the following triggers work with all windows
 	/// 
 	/// //mouse triggers
 	/// 
-	/// mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
-	/// mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
+	/// mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => AOutput.Write(o.Trigger);
+	/// mouse[TMEdge.RightInCenter50] = o => { AOutput.Write(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
 	/// mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
 	/// 
 	/// Triggers.FuncOf.NextTrigger = o => AKeys.IsScrollLock; //example of a custom scope (aka context, condition)
-	/// mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
+	/// mouse[TMWheel.Forward] = o => AOutput.Write($"{o.Trigger} while ScrollLock is on");
 	/// 
 	/// Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
-	/// mouse[TMMove.LeftRightInBottom25] = o => { Print(o.Trigger); o.Window.Close(); };
+	/// mouse[TMMove.LeftRightInBottom25] = o => { AOutput.Write(o.Trigger); o.Window.Close(); };
 	/// Triggers.Of.AllWindows();
 	/// 
 	/// //window triggers. Note: window triggers don't depend on Triggers.Of.
 	/// 
-	/// window[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => Print("opened Notepad window");
+	/// window[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => AOutput.Write("opened Notepad window");
 	/// window[TWEvent.ActiveNew, "Notepad", "#32770", contains: "Do you want to save *"] = o => {
-	/// 	Print("opened Notepad's 'Do you want to save' dialog");
-	/// 	//Key("Alt+S"); //click the Save button
+	/// 	AOutput.Write("opened Notepad's 'Do you want to save' dialog");
+	/// 	//AKeys.Key("Alt+S"); //click the Save button
 	/// };
 	/// 
 	/// //autotext triggers
@@ -117,7 +115,7 @@ namespace Au.Triggers
 	/// tt["#file"] = o => {
 	/// 	o.Replace("");
 	/// 	var fd = new OpenFileDialog();
-	/// 	if(fd.ShowDialog() == DialogResult.OK) Text(fd.FileName);
+	/// 	if(fd.ShowDialog() == DialogResult.OK) AKeys.Text(fd.FileName);
 	/// };
 	/// tt.DefaultPostfixType = default;
 	/// 
@@ -138,7 +136,7 @@ namespace Au.Triggers
 	/// //another way to set AOpt options - use AOpt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
 	/// 
 	/// AOpt.Static.Key.PasteLength = 50;
-	/// AOpt.Static.Key.Hook = h => { var w1 = h.w.Window; Print(w1); if(w1.Name.Like("* Word")) h.opt.PasteEnter = true; };
+	/// AOpt.Static.Key.Hook = h => { var w1 = h.w.Window; AOutput.Write(w1); if(w1.Name.Like("* Word")) h.opt.PasteEnter = true; };
 	/// ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
 	/// 
 	/// //how to stop and disable/enable triggers
@@ -152,14 +150,14 @@ namespace Au.Triggers
 	/// hk["Ctrl+Alt+Win+D"] = o => ActionTriggers.DisabledEverywhere ^= true; //disable/enable triggers in all processes
 	/// hk.Last.EnabledAlways = true;
 	/// 
-	/// hk["Ctrl+F7"] = o => Print("This trigger can be disabled/enabled with Ctrl+F8.");
+	/// hk["Ctrl+F7"] = o => AOutput.Write("This trigger can be disabled/enabled with Ctrl+F8.");
 	/// var t1 = hk.Last;
 	/// hk["Ctrl+F8"] = o => t1.Disabled ^= true; //disable/enable a trigger
 	/// 
 	/// //finally call Triggers.Run(). Without it the triggers won't work.
 	/// Triggers.Run();
 	/// //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
-	/// Print("called Triggers.Stop");
+	/// AOutput.Write("called Triggers.Stop");
 	/// ]]></code>
 	/// </example>
 	public class ActionTriggers
@@ -192,7 +190,7 @@ namespace Au.Triggers
 		//		//new StackTrace(1, true);
 		//		var s = k.GetFileName();
 
-		//		//if(_test == false) _s1 = s; else Print(ReferenceEquals(s, _s1));
+		//		//if(_test == false) _s1 = s; else AOutput.Write(ReferenceEquals(s, _s1));
 
 		//			 _test = true;
 
@@ -294,7 +292,7 @@ namespace Au.Triggers
 				case TriggerType.Window: _windowTriggers = t as WindowTriggers; break;
 				}
 			}
-			//Print(haveTriggers, (uint)llHooks);
+			//AOutput.Write(haveTriggers, (uint)llHooks);
 			//if(!haveTriggers) return; //no. The message loop may be used for toolbars etc.
 
 			if(!s_wasRun) {
@@ -388,7 +386,7 @@ namespace Au.Triggers
 			//APerf.Next();
 			bool eat = false;
 			if(eventType == HooksThread.UsedEvents.Keyboard) {
-				//Print("key");
+				//AOutput.Write("key");
 				if(!_ht.GetKeyData(messageId, out var data)) return;
 				var k = new HookData.Keyboard(null, &data);
 				thc.InitMod(k);
@@ -399,13 +397,13 @@ namespace Au.Triggers
 					ta.HookProc(k, thc);
 				}
 			} else if(eventType == HooksThread.UsedEvents.MouseEdgeMove) {
-				//Print("edge/move");
+				//AOutput.Write("edge/move");
 				if(this[TriggerType.Mouse] is MouseTriggers tm) {
 					if(!_ht.GetEdgeMoveData(messageId, out var data)) return;
 					tm.HookProcEdgeMove(data, thc);
 				}
 			} else {
-				//Print(_ht.mouseMessage_);
+				//AOutput.Write(_ht.mouseMessage_);
 				if(this[TriggerType.Mouse] is MouseTriggers tm) {
 					if(!_ht.GetClickWheelData(messageId, out var data, out int message)) return;
 					var k = new HookData.Mouse(null, message, &data);
@@ -417,7 +415,7 @@ namespace Au.Triggers
 			//APerf.Next();
 
 			//var mem = GC.GetTotalMemory(false);
-			//if(mem != _debugMem && _debugMem != 0) Print(mem - _debugMem);
+			//if(mem != _debugMem && _debugMem != 0) AOutput.Write(mem - _debugMem);
 			//_debugMem = mem;
 
 			if(!_ht.Return(messageId, eat)) return;
@@ -444,11 +442,11 @@ namespace Au.Triggers
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Hotkey["Ctrl+T"] = o => Print("Ctrl+T");
-		/// Triggers.Hotkey["Ctrl+Q"] = o => { Print("Ctrl+Q (stop)"); Triggers.Stop(); };
+		/// Triggers.Hotkey["Ctrl+T"] = o => AOutput.Write("Ctrl+T");
+		/// Triggers.Hotkey["Ctrl+Q"] = o => { AOutput.Write("Ctrl+Q (stop)"); Triggers.Stop(); };
 		/// Triggers.Hotkey.Last.EnabledAlways = true;
 		/// Triggers.Run();
-		/// Print("stopped");
+		/// AOutput.Write("stopped");
 		/// ]]></code>
 		/// </example>
 		public void Stop()
@@ -502,8 +500,8 @@ namespace Au.Triggers
 		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Hotkey["Ctrl+T"] = o => Print("Ctrl+T");
-		/// Triggers.Hotkey["Ctrl+D"] = o => { Print("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle
+		/// Triggers.Hotkey["Ctrl+T"] = o => AOutput.Write("Ctrl+T");
+		/// Triggers.Hotkey["Ctrl+D"] = o => { AOutput.Write("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle
 		/// Triggers.Hotkey.Last.EnabledAlways = true;
 		/// Triggers.Run();
 		/// ]]></code>
@@ -690,7 +688,7 @@ namespace Au.Triggers
 
 			//calc average time of this scope. Assume the first time is 0.
 			if(perfTime != 0) perfTime = Math.Max(1, (int)(((long)perfTime * 7 + time) / 8));
-			//Print($"time={time}, avg={perfTime}");
+			//AOutput.Write($"time={time}, avg={perfTime}");
 
 			if(isFunc) time |= unchecked((int)0x80000000);
 			if(_perfLen == _perfList.Length) Array.Resize(ref _perfList, _perfList.Length * 2);
@@ -711,7 +709,7 @@ namespace Au.Triggers
 				ttCompare += ta;
 			}
 			ttCompare /= 1000; ttTrue /= 1000;
-			//Print(ttTrue, ttCompare);
+			//AOutput.Write(ttTrue, ttCompare);
 			if(ttCompare <= 25 && (ttTrue < 200 || ttTrue < AHookWin.LowLevelHooksTimeout - 100)) return;
 			var b = new StringBuilder();
 			b.AppendFormat("<>Warning: Too slow trigger scope detection (Triggers.Of or Triggers.FuncOf). Time: {0} ms. Task name: {1}. <fold>", ttTrue, ATask.Name);
@@ -723,7 +721,7 @@ namespace Au.Triggers
 				b.AppendLine();
 			}
 			b.Append("* W - Triggers.Of (window); F - Triggers.FuncOf.</fold>");
-			ThreadPool.QueueUserWorkItem(s1 => Print(s1), b.ToString()); //4 ms first time. Async because Print JIT slow.
+			ThreadPool.QueueUserWorkItem(s1 => AOutput.Write(s1), b.ToString()); //4 ms first time. Async because Write() JIT slow.
 		}
 
 		/// <summary>
@@ -786,7 +784,7 @@ namespace Au.Triggers
 					_modL &= modL; _modR &= modR;
 				}
 				_mod = _modL | _modR;
-				//Print(_mod, k.vkCode);
+				//AOutput.Write(_mod, k.vkCode);
 				_lastKeyTime = time;
 			}
 		}

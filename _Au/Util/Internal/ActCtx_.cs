@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -22,7 +20,7 @@ namespace Au.Util
 	/// Activates our manifest which tells to use comctl32.dll version 6.
 	/// The manifest is embedded in this dll, resource id 2.
 	/// </summary>
-	internal class ActCtx_ :IDisposable
+	internal sealed class ActCtx_ :IDisposable
 	{
 		IntPtr _cookie;
 
@@ -40,13 +38,13 @@ namespace Au.Util
 			}
 		}
 
-		static ActCtx s_actCtx = new ActCtx();
+		static _ActCtx s_actCtx = new _ActCtx();
 
-		class ActCtx
+		class _ActCtx
 		{
 			public IntPtr Handle;
 
-			public ActCtx()
+			public _ActCtx()
 			{
 				Api.ACTCTX a = default;
 				a.cbSize = Api.SizeOf<Api.ACTCTX>();
@@ -58,7 +56,7 @@ namespace Au.Util
 				if(h != (IntPtr)(-1)) Handle = h;
 			}
 
-			~ActCtx()
+			~_ActCtx()
 			{
 				if(Handle != default) {
 					Api.ReleaseActCtx(Handle);

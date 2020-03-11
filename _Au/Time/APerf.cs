@@ -12,11 +12,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 //rejected: store the static instance in shared memory. This is how it was implemented initially.
 //	Then would be easy to measure speed of process startup.
@@ -410,7 +408,7 @@ namespace Au
 		{
 			int n = 0;
 			for(long t0 = ATime.PerfMicroseconds; ATime.PerfMicroseconds - t0 < timeMilliseconds * 1000L; n++) { }
-			//Print(n);
+			//AOutput.Write(n);
 		}
 
 		//rejected: Not very useful. Not very easy to understand the purpose. Adds some overhead.

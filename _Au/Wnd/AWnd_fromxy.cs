@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -146,7 +144,7 @@ namespace Au
 				if(rr.Width * rr.Height > r.Width * r.Height || rr == r) continue; //bigger than R, or equal
 
 				//is R transparent?
-				//Print("WM_NCHITTEST", R);
+				//AOutput.Write("WM_NCHITTEST", R);
 				if(R.SendTimeout(100, out var ht, Api.WM_NCHITTEST, 0, AMath.MakeUint(p.x, p.y))) {
 					if((int)ht != Api.HTTRANSPARENT) break;
 				} else {
@@ -159,7 +157,7 @@ namespace Au
 				if(!directChild) //that control can contain a child in that point, so let's find it
 				{
 					R = _TopChildWindowFromPointSimple(t, p, false, true);
-					//Print(R);
+					//AOutput.Write(R);
 					if(!R.Is0) goto g1;
 				}
 				R = t;
@@ -218,7 +216,7 @@ namespace Au
 			case _SibXY.Above: p = (r.left + edgeOffset, r.top - distance); break;
 			case _SibXY.Below: p = (r.left + edgeOffset, r.bottom + distance); break;
 			}
-			//Print(p); if(w.Is0) AMouse.Move(p); else AMouse.Move(w, p.x, p.y);
+			//AOutput.Write(p); if(w.Is0) AMouse.Move(p); else AMouse.Move(w, p.x, p.y);
 			AWnd R = w.Is0
 				? FromXY(p, topChild ? 0 : WXYFlags.NeedWindow)
 				: w._ChildFromXY(p, !topChild, false);

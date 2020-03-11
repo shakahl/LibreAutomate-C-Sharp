@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -60,15 +57,15 @@ namespace Au
 	/// //get data
 	/// using(var p = db.Statement("SELECT * FROM test")) {
 	/// 	while(p.Step()) { //for each row of results
-	/// 		Print(p.GetInt(0), p.GetText(1), p.GetLong(2));
-	/// 		Print(p.GetStruct<Guid>("guid"));
-	/// 		Print(p.GetArray<int>("array"));
-	/// 		Print("----");
+	/// 		AOutput.Write(p.GetInt(0), p.GetText(1), p.GetLong(2));
+	/// 		AOutput.Write(p.GetStruct<Guid>("guid"));
+	/// 		AOutput.Write(p.GetArray<int>("array"));
+	/// 		AOutput.Write("----");
 	/// 	}
 	/// }
 	/// //get single value
-	/// if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) Print(s1); else Print("not found");
-	/// if(db.Get(out int i1, "PRAGMA page_size")) Print(i1);
+	/// if(db.Get(out string s1, "SELECT name FROM test WHERE id=?", 1)) AOutput.Write(s1); else AOutput.Write("not found");
+	/// if(db.Get(out int i1, "PRAGMA page_size")) AOutput.Write(i1);
 	/// ]]></code>
 	/// </example>
 	public unsafe class ASqlite : IDisposable
@@ -114,7 +111,7 @@ namespace Au
 
 		/// <summary>
 		/// Calls sqlite3_close_v2.
-		/// If fails, prints warning.
+		/// If fails, writes warning to the output.
 		/// </summary>
 		public void Dispose()
 		{
@@ -781,7 +778,7 @@ namespace Au
 		public int ColumnIndex(string name)
 		{
 			int n = ColumnCount;
-			if(n > 0 && !Empty(name)) {
+			if(n > 0 && !name.IsNE()) {
 				if(AStringUtil.IsAscii(name)) {
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
@@ -885,7 +882,7 @@ namespace Au.Types
 		{
 			if(_db == null) throw new InvalidOperationException();
 			if(sql == null) sql = SqlOfDispose;
-			//if(ErrorMessage!=null) Print(ErrorMessage);
+			//if(ErrorMessage!=null) AOutput.Write(ErrorMessage);
 			if(_db.IsInTransaction) //in some cases sqlite rolls back on error
 				_db.Execute(sql);
 			_db = null;
@@ -966,7 +963,7 @@ namespace Au.Types
 
 		internal static void Warn(SLError r, string func, string suffix = null)
 		{
-			if(r != 0) PrintWarning(SLUtil.Concat(func, SLApi.Errstr(r), suffix));
+			if(r != 0) AWarning.Write(SLUtil.Concat(func, SLApi.Errstr(r), suffix));
 		}
 
 		internal static string Concat(string s1, string s2, string s3)

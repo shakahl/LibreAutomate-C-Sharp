@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -38,16 +34,16 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AWnd w = AWnd.Wait(10, false, "* Notepad");
-		/// Print(w);
+		/// AOutput.Write(w);
 		/// ]]></code>
 		/// Using in a Form/Control event handler.
 		/// <code><![CDATA[
 		/// var f = new Form();
 		/// f.Click += async (unu, sed) =>
 		///   {
-		/// 	  Print("waiting for Notepad...");
+		/// 	  AOutput.Write("waiting for Notepad...");
 		/// 	  AWnd w = await Task.Run(() => AWnd.Wait(-10, false, "* Notepad"));
-		/// 	  if(w.Is0) Print("timeout"); else Print(w);
+		/// 	  if(w.Is0) AOutput.Write("timeout"); else AOutput.Write(w);
 		///   };
 		/// f.ShowDialog();
 		/// ]]></code>
@@ -56,11 +52,11 @@ namespace Au
 #pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 			[ParamString(PSFormat.AWildex)] string name = null,
 			[ParamString(PSFormat.AWildex)] string cn = null,
-			[ParamString(PSFormat.AWildex)] WF3 program = default,
-			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
+			[ParamString(PSFormat.AWildex)] WOwner of = default,
+			WFlags flags = 0, Func<AWnd, bool> also = null, WContains contains = default)
 #pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		{
-			var f = new Finder(name, cn, program, flags, also, contains);
+			var f = new Finder(name, cn, of, flags, also, contains);
 			var to = new AWaitFor.Loop(secondsTimeout);
 			for(; ; ) {
 				if(active) {
@@ -88,7 +84,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var (i, w) = AWnd.WaitAny(10, true, "* Notepad", new AWnd.Finder("* Word"));
-		/// Print(i, w);
+		/// AOutput.Write(i, w);
 		/// ]]></code>
 		/// </example>
 		public static (int index, AWnd wnd) WaitAny(double secondsTimeout, bool active, params Finder[] windows)
@@ -132,11 +128,11 @@ namespace Au
 		//#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		//			[ParamString(PSFormat.AWildex)] string name = null,
 		//			[ParamString(PSFormat.AWildex)] string cn = null,
-		//			[ParamString(PSFormat.AWildex)] WF3 program = default,
-		//			WFFlags flags = 0, Func<AWnd, bool> also = null, object contains = null)
+		//			[ParamString(PSFormat.AWildex)] WOwner of = default,
+		//			WFlags flags = 0, Func<AWnd, bool> also = null, WContents contains = default)
 		//#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		//		{
-		//			var f = new Finder(name, cn, program, flags, also, contains);
+		//			var f = new Finder(name, cn, of, flags, also, contains);
 		//			return WaitNot(secondsTimeout, out _, f);
 		//		}
 
@@ -189,25 +185,25 @@ namespace Au
 		/// 
 		/// //wait max 30 s until window w is active. Exception on timeout or if closed.
 		/// w.WaitForCondition(30, t => t.IsActive);
-		/// Print("active");
+		/// AOutput.Write("active");
 		/// 
 		/// //wait max 30 s until window w is enabled. Exception on timeout or if closed.
 		/// w.WaitForCondition(30, t => t.IsEnabled);
-		/// Print("enabled");
+		/// AOutput.Write("enabled");
 		/// 
 		/// //wait until window w is closed
 		/// w.WaitForCondition(0, t => !t.IsAlive, true); //same as w.WaitForClosed()
-		/// Print("closed");
+		/// AOutput.Write("closed");
 		/// 
 		/// //wait until window w is minimized or closed
 		/// w.WaitForCondition(0, t => t.IsMinimized || !t.IsAlive, true);
-		/// if(!w.IsAlive) { Print("closed"); return; }
-		/// Print("minimized");
+		/// if(!w.IsAlive) { AOutput.Write("closed"); return; }
+		/// AOutput.Write("minimized");
 		/// 
 		/// //wait until window w contains focused control classnamed "Edit"
 		/// var c = new AWnd.ChildFinder(cn: "Edit");
 		/// w.WaitForCondition(10, t => c.Find(t) && c.Result.IsFocused);
-		/// Print("control focused");
+		/// AOutput.Write("control focused");
 		/// ]]></code>
 		/// </example>
 		public bool WaitForCondition(double secondsTimeout, Func<AWnd, bool> condition, bool doNotThrowIfClosed = false)

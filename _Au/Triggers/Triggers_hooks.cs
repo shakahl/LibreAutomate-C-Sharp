@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 //Key/mouse/autotext triggers use low-level keyboard and mouse hooks. The hooks are in a separate thread, because:
 //	1. Safer when user code is slow or incorrect.
@@ -96,7 +93,7 @@ namespace Au.Triggers
 
 			while(Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 
-			//Print("hooks thread ended");
+			//AOutput.Write("hooks thread ended");
 			hookK?.Dispose();
 			hookM?.Dispose();
 			_emDetector = null;

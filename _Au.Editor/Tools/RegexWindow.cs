@@ -3,7 +3,6 @@ using System.IO;
 using System.Windows.Forms;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 namespace Au.Tools

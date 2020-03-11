@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -18,7 +17,6 @@ using System.Drawing.Imaging;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 #pragma warning disable 649
@@ -234,7 +232,7 @@ namespace Au.Controls
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="AFolders.ThisAppImages"/>.</remarks>
 		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
 		{
-			//Print(t, s);
+			//AOutput.Write(t, s);
 			try {
 				switch(t) {
 				case ImageType.Bmp:
@@ -318,24 +316,23 @@ namespace Au.Controls
 			}
 			if(hi == default) return null;
 			try {
-				using(var m = new AMemoryBitmap(siz, siz)) {
-					RECT r = new RECT(0, 0, siz, siz, false);
-					Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
-					if(!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
+				using var m = new AMemoryBitmap(siz, siz);
+				RECT r = new RECT(0, 0, siz, siz);
+				Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
+				if(!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
 
-					int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
-					var a = new byte[headersSize + siz * siz * 3];
-					fixed (byte* p = a) {
-						BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)p;
-						Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
-						for(int i = 0; i < headersSize; i++) p[i] = 0;
-						byte* bits = p + headersSize;
-						h->biSize = sizeof(Api.BITMAPINFOHEADER); h->biBitCount = 24; h->biWidth = siz; h->biHeight = siz; h->biPlanes = 1;
-						if(0 == Api.GetDIBits(m.Hdc, m.Hbitmap, 0, siz, bits, h, 0)) return null; //DIB_RGB_COLORS
-						f->bfType = ((byte)'M' << 8) | (byte)'B'; f->bfOffBits = headersSize; f->bfSize = a.Length;
-					}
-					return a;
+				int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
+				var a = new byte[headersSize + siz * siz * 3];
+				fixed(byte* p = a) {
+					BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)p;
+					Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
+					for(int i = 0; i < headersSize; i++) p[i] = 0;
+					byte* bits = p + headersSize;
+					h->biSize = sizeof(Api.BITMAPINFOHEADER); h->biBitCount = 24; h->biWidth = siz; h->biHeight = siz; h->biPlanes = 1;
+					if(0 == Api.GetDIBits(m.Hdc, m.Hbitmap, 0, siz, bits, h, 0)) return null; //DIB_RGB_COLORS
+					f->bfType = ((byte)'M' << 8) | (byte)'B'; f->bfOffBits = headersSize; f->bfSize = a.Length;
 				}
+				return a;
 			}
 			finally {
 				if(isCursor) Api.DestroyCursor(hi); else Api.DestroyIcon(hi);
@@ -355,7 +352,7 @@ namespace Au.Controls
 			var hb = (ii.hbmColor != default) ? ii.hbmColor : ii.hbmMask;
 			Api.BITMAP b;
 			if(0 == Api.GetObject(hb, sizeof(BITMAP), &b)) return 0;
-			Print(b.bmWidth, b.bmHeight, b.bmBits);
+			AOutput.Write(b.bmWidth, b.bmHeight, b.bmBits);
 			return b.bmWidth;
 		}
 		finally {

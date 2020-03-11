@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -315,7 +313,7 @@ namespace Au
 
 		string _CorrectPath(string R, bool fixMSI = false)
 		{
-			if(Empty(R)) return null;
+			if(R.IsNE()) return null;
 
 			if(!fixMSI) {
 				R = APath.ExpandEnvVar(R);

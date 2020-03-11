@@ -165,10 +165,11 @@ namespace Au.Types
 		internal const uint MEM_LARGE_PAGES = 0x20000000;
 
 		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern IntPtr VirtualAlloc(IntPtr lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);
+		internal static extern void* VirtualAlloc(void* lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_READWRITE);
+		//note: with PAGE_EXECUTE_READWRITE writing to the memory first time is much slower.
 
 		[DllImport("kernel32.dll")]
-		internal static extern bool VirtualFree(IntPtr lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
+		internal static extern bool VirtualFree(void* lpAddress, LPARAM dwSize = default, uint dwFreeType = MEM_RELEASE);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern IntPtr VirtualAllocEx(HandleRef hProcess, IntPtr lpAddress, LPARAM dwSize, uint flAllocationType = MEM_COMMIT | MEM_RESERVE, uint flProtect = PAGE_EXECUTE_READWRITE);

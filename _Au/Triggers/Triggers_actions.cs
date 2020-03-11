@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Triggers
 {
@@ -41,11 +38,11 @@ namespace Au.Triggers
 	/// <code><![CDATA[
 	/// Triggers.Options.RunActionInThreadPool(singleInstance: false);
 	/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 10; };
-	/// Triggers.Hotkey["Ctrl+K"] = o => Print(AOpt.Key.KeySpeed); //10
-	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => Print(AOpt.Key.KeySpeed); //10
+	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
+	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
 	/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 20; };
-	/// Triggers.Hotkey["Ctrl+L"] = o => Print(AOpt.Key.KeySpeed); //20
-	/// Triggers.Hotkey["Ctrl+Shift+L"] = o => Print(AOpt.Key.KeySpeed); //20
+	/// Triggers.Hotkey["Ctrl+L"] = o => AOutput.Write(AOpt.Key.KeySpeed); //20
+	/// Triggers.Hotkey["Ctrl+Shift+L"] = o => AOutput.Write(AOpt.Key.KeySpeed); //20
 	/// ]]></code>
 	/// </example>
 	public class TriggerOptions
@@ -141,7 +138,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Options.AfterAction = o => { if(o.Exception!=null) Print(o.Exception.Message); else Print("completed successfully"); };
+		/// Triggers.Options.AfterAction = o => { if(o.Exception!=null) AOutput.Write(o.Exception.Message); else AOutput.Write("completed successfully"); };
 		/// ]]></code>
 		/// </example>
 		public Action<TOBAArgs> AfterAction { set => _New().after = value; }
@@ -219,12 +216,12 @@ namespace Au.Triggers
 						if(sTrigger != null) Util.Log_.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {e1.ToStringWithoutStack()}");
 
 						baArgs.Exception = e1;
-						Print(e1);
+						AOutput.Write(e1);
 					}
 					opt.after?.Invoke(baArgs);
 				}
 				catch(Exception e2) {
-					Print(e2);
+					AOutput.Write(e2);
 				}
 				finally {
 					if(opt.thread < -1 && opt.ifRunning == 0) _d.TryRemove(trigger, out _);
@@ -245,14 +242,14 @@ namespace Au.Triggers
 				bool canRun = true;
 				bool singleInstance = trigger.options.ifRunning == 0;
 				if(singleInstance) {
-					_d ??= new ConcurrentDictionary<ActionTrigger, object>();
+					_d ??= new System.Collections.Concurrent.ConcurrentDictionary<ActionTrigger, object>();
 					if(_d.TryGetValue(trigger, out var tt)) {
 						switch(tt) {
 						case Thread thread:
 							if(thread.IsAlive) canRun = false;
 							break;
 						case Task task:
-							//Print(task.Status);
+							//AOutput.Write(task.Status);
 							switch(task.Status) {
 							case TaskStatus.RanToCompletion: case TaskStatus.Faulted: case TaskStatus.Canceled: break;
 							default: canRun = false; break;
@@ -296,11 +293,11 @@ namespace Au.Triggers
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		static void _OutOfMemory()
 		{
-			PrintWarning("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
+			AWarning.Write("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
 		}
 
 		List<_Thread> _a = new List<_Thread>();
-		ConcurrentDictionary<ActionTrigger, object> _d;
+		System.Collections.Concurrent.ConcurrentDictionary<ActionTrigger, object> _d;
 
 		class _Thread
 		{
@@ -344,7 +341,7 @@ namespace Au.Triggers
 							finally {
 								_event.Dispose();
 								_q = null; _running = false; //restart if aborted
-															 //Print("thread ended");
+															 //AOutput.Write("thread ended");
 							}
 						});
 					}
@@ -359,7 +356,7 @@ namespace Au.Triggers
 					int ifRunningWaitMS = trigger.options.ifRunning;
 					if(_running) {
 						if(ifRunningWaitMS == 0) {
-							if(!trigger.options.noWarning) Print("Warning: can't run the trigger action because an action is running in this thread. To run simultaneously or wait, use one of Triggers.Options.RunActionInX functions. To disable this warning: Triggers.Options.RunActionInThread(0, 0, noWarning: true);. Trigger: " + trigger);
+							if(!trigger.options.noWarning) AOutput.Write("Warning: can't run the trigger action because an action is running in this thread. To run simultaneously or wait, use one of Triggers.Options.RunActionInX functions. To disable this warning: Triggers.Options.RunActionInThread(0, 0, noWarning: true);. Trigger: " + trigger);
 							return false;
 						}
 						R = false;

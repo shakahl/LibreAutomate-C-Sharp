@@ -10,16 +10,13 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 using System.Xml.Linq;
 using System.Collections;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using SG = SourceGrid;
 using Aga.Controls.Tree;
@@ -122,8 +119,8 @@ namespace Au.Tools
 				g.ZAdd(null, "name", TUtil.EscapeWindowName(wndName, true), true, info: "Window name.$");
 				g.ZAdd(null, "class", TUtil.StripWndClassName(f.wClass, true), true, info: "Window class name.$");
 				f.wProg = _wnd.ProgramName;
-				var ap = new List<string> { f.wProg, "WFEtc.Process(processId)", "WFEtc.Thread(threadId)" }; if(!_wnd.Owner.Is0) ap.Add("WFEtc.Owner(ownerWindow)");
-				g.ZAdd(null, "program", ap, Empty(wndName), info: "Program.$", etype: ParamGrid.EditType.ComboText, comboIndex: 0);
+				var ap = new List<string> { f.wProg, "WOwner.Process(processId)", "WOwner.Thread(threadId)" }; if(!_wnd.OwnerWindow.Is0) ap.Add("WOwner.Window(ow)");
+				g.ZAdd(null, "program", ap, wndName.IsNE(), info: "Program.$", etype: ParamGrid.EditType.ComboText, comboIndex: 0);
 				g.ZAdd(null, "contains", (Func<string[]>)_ContainsCombo_DropDown, false, info: "An accessible object in the window. Format: 'role' name.\r\nName$$", etype: ParamGrid.EditType.ComboText);
 			} else if(wndName != _wndName) {
 				if(TUtil.ShouldChangeGridWildex(g.ZGetCellText("name", 1), wndName))
@@ -137,7 +134,7 @@ namespace Au.Tools
 
 				//name combo
 				f.cName = _con.Name;
-				int iSel = Empty(f.cName) ? -1 : 0;
+				int iSel = f.cName.IsNE() ? -1 : 0;
 				var an = new List<string> { TUtil.EscapeWildex(f.cName) };
 				_ConNameAdd("***wfName ", f.cWF = _con.NameWinForms);
 				/*bool isAcc =*/
@@ -148,7 +145,7 @@ namespace Au.Tools
 				_ConNameAdd("***text ", f.cText = _con.ControlText);
 				bool _ConNameAdd(string prefix, string value)
 				{
-					if(Empty(value)) return false;
+					if(value.IsNE()) return false;
 					if(iSel < 0) iSel = an.Count;
 					an.Add(prefix + TUtil.EscapeWildex(value));
 					return true;
@@ -173,7 +170,7 @@ namespace Au.Tools
 					var a1 = new List<string>();
 					//child
 					foreach(var c in _wnd.Get.Children(onlyVisible: true)) {
-						var cn = c.Name; if(Empty(cn)) continue;
+						var cn = c.Name; if(cn.IsNE()) continue;
 						cn = "c '" + TUtil.StripWndClassName(c.ClassName, true) + "' " + TUtil.EscapeWildex(cn);
 						if(!a1.Contains(cn)) a1.Add(cn);
 					}
@@ -181,7 +178,7 @@ namespace Au.Tools
 					var a2 = new List<string>();
 					var a3 = AAcc.FindAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: AFFlags.ClientArea); //all that have a name
 					string prevName = null;
-					for(int i = a3.Length - 1; i >= 0; i--) {
+					for(int i = a3.Length; --i >= 0; ) {
 						if(!a3[i].GetProperties("Rn", out var prop)) continue;
 						if(prop.Name == prevName && prop.Role == "WINDOW") continue; prevName = prop.Name; //skip parent WINDOW
 						string rn = "a '" + prop.Role + "' " + TUtil.EscapeWildex(prop.Name);
@@ -210,8 +207,8 @@ namespace Au.Tools
 
 		void _grid_ZValueChanged(SG.CellContext sender)
 		{
-			//Print(sender.DisplayText);
-			//Print(_inSetGrid);
+			//AOutput.Write(sender.DisplayText);
+			//AOutput.Write(_inSetGrid);
 
 			if(_noeventGridValueChanged) return; _noeventGridValueChanged = true;
 			var g = sender.Grid as ParamGrid;
@@ -266,11 +263,11 @@ namespace Au.Tools
 			if(_grid.ZGetValue("program", out var sProg, true)) m |= 2;
 			if(m != 0) b.AppendStringArg(sClass);
 			if(0 != (m & 2)) {
-				if(!sProg.Starts("WFEtc.")) b.AppendStringArg(sProg);
+				if(!sProg.Starts("WOwner.")) b.AppendStringArg(sProg);
 				else if(!forTest) b.AppendOtherArg(sProg);
 				else m &= ~2;
 			}
-			b.AppendFlagsFromGrid(typeof(WFFlags), _grid2, m < 2 ? "flags" : null);
+			b.AppendFlagsFromGrid(typeof(WFlags), _grid2, m < 2 ? "flags" : null);
 			if(_grid2.ZGetValue("alsoW", out sAlso, true)) b.AppendOtherArg(sAlso, "also");
 			if(_grid.ZGetValue("contains", out var sContains, true)) b.AppendStringArg(sContains, "contains");
 
@@ -306,7 +303,7 @@ namespace Au.Tools
 				sName = sClass = null;
 				if(0 == (m & 2)) sName = _grid.ZGetCellText("nameC", 1);
 				if(0 == (m & 4)) sClass = _grid.ZGetCellText("classC", 1);
-				m = 0; if(!Empty(sName)) m |= 1; if(!Empty(sClass)) m |= 2;
+				m = 0; if(!sName.IsNE()) m |= 1; if(!sClass.IsNE()) m |= 2;
 				if(m != 0) {
 					b.Append(" // ");
 					if(0 != (m & 2)) b.Append(sClass);
@@ -318,7 +315,7 @@ namespace Au.Tools
 				}
 			}
 
-			if(!orThrow && !forTest) b.AppendLine().Append("if(").Append(isCon ? "c" : "w").Append(".Is0) { Print(\"not found\"); }");
+			if(!orThrow && !forTest) b.AppendLine().Append("if(").Append(isCon ? "c" : "w").Append(".Is0) { AOutput.Write(\"not found\"); }");
 
 			var R = b.ToString();
 
@@ -341,8 +338,8 @@ namespace Au.Tools
 			}
 
 			g.ZAddHeaderRow("Window");
-			_AddFlag(nameof(WFFlags.HiddenToo), "Can be invisible", tt: "Flag WFFlags.HiddenToo.");
-			_AddFlag(nameof(WFFlags.CloakedToo), "Can be cloaked", tt: "Find cloaked windows. Flag WFFlags.CloakedToo.\r\nCloaked are windows on inactive Windows 10 virtual desktops, ghost windows of hidden Windows Store apps, various hidden system windows.");
+			_AddFlag(nameof(WFlags.HiddenToo), "Can be invisible", tt: "Flag WFlags.HiddenToo.");
+			_AddFlag(nameof(WFlags.CloakedToo), "Can be cloaked", tt: "Find cloaked windows. Flag WFlags.CloakedToo.\r\nCloaked are windows on inactive Windows 10 virtual desktops, ghost windows of hidden Windows Store apps, various hidden system windows.");
 			_AddProp("alsoW", "also", "o => false", tt: "Lambda that returns true if AWnd o is the wanted window.", info: c_infoAlsoW);
 			_AddProp(null, "wait", "5", tt: c_infoWait);
 			g.ZAddHidden = noCon;
@@ -436,7 +433,7 @@ namespace Au.Tools
 		private void _bOK_Click(object sender, EventArgs e)
 		{
 			ZResultCode = _code.Text;
-			if(Empty(ZResultCode)) this.DialogResult = DialogResult.Cancel;
+			if(ZResultCode.IsNE()) this.DialogResult = DialogResult.Cancel;
 			else ZResultUseControl = !_con.Is0 && _IsChecked("Control");
 		}
 
@@ -606,7 +603,7 @@ namespace Au.Tools
 						}
 
 						var name = c.Name;
-						if(Empty(name)) _displayText = cn;
+						if(name.IsNE()) _displayText = cn;
 						else {
 							using(new Util.StringBuilder_(out var b)) {
 								name = name.Escape(limit: 250);
@@ -704,16 +701,16 @@ namespace Au.Tools
 				string s, sh = w.Handle.ToString();
 				b.Append("<i>Handle<>:    ").AppendLine(sh);
 				b.Append("<i>ClassName<>:    ").AppendLine(className);
-				if(!isCon || !Empty(name)) b.Append("<i>Name<>:    ").AppendLine(name);
+				if(!isCon || !name.IsNE()) b.Append("<i>Name<>:    ").AppendLine(name);
 				if(isCon) {
-					//if(!Empty(cLabel)) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
-					if(!Empty(cAcc)) b.Append("<i>NameAcc<>:    ").AppendLine(cAcc);
-					if(!Empty(cWF)) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
-					if(!Empty(cText)) b.Append("<i>ControlText<>:    ").Append("<\a>").Append(cText.Escape(10000, true)).AppendLine("</\a>");
+					//if(!cLabel.IsNE()) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
+					if(!cAcc.IsNE()) b.Append("<i>NameAcc<>:    ").AppendLine(cAcc);
+					if(!cWF.IsNE()) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
+					if(!cText.IsNE()) b.Append("<i>ControlText<>:    ").Append("<\a>").Append(cText.Escape(10000, true)).AppendLine("</\a>");
 					b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
 					b.AppendFormat("<+rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 				} else {
-					var wo = w.Owner;
+					var wo = w.OwnerWindow;
 					if(!wo.Is0) b.AppendFormat("<+rect {0}><i>Owner<><>:    ", wo.Handle.ToString()).AppendLine(wo.ToString());
 					b.AppendFormat("<+rect {0}><i>Rect<><>:    ", sh).AppendLine(w.Rect.ToString());
 				}
@@ -832,13 +829,13 @@ namespace Au.Tools
 		const string c_infoWait = @"Wait timeout, seconds.
 If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns default(AWnd) or throws exception, depending on the 'Exception...' checkbox.";
 		const string c_infoAlsoW = @"<b>also<> examples:
-<code>o => { Print(o); return false; }</code>
+<code>o => { AOutput.Write(o); return false; }</code>
 <code>o => !o.IsPopupWindow</code>
 <code>o => o.Rect.Contains(10, 100)</code>
 
 Can be multiline. For newline use Ctrl+Enter.";
 		const string c_infoAlsoC = @"<b>also<> examples:
-<code>o => { Print(o); return false; }</code>
+<code>o => { AOutput.Write(o); return false; }</code>
 <code>o => o.IsEnabled</code>
 <code>o => o.RectInWindow.Contains(10, 100)</code>
 

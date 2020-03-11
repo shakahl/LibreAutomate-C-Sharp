@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -44,14 +42,14 @@ namespace Au
 	/// 		case 1: //WM_CREATE
 	/// 			bool r1 = _hk1.Register(1, "Ctrl+Alt+F10", this);
 	/// 			bool r2 = _hk2.Register(2, (KMod.Ctrl | KMod.Shift, KKey.D), this); //Ctrl+Shift+D
-	/// 			Print(r1, r2);
+	/// 			AOutput.Write(r1, r2);
 	/// 			break;
 	/// 		case 2: //WM_DESTROY
 	/// 			_hk1.Unregister();
 	/// 			_hk2.Unregister();
 	/// 			break;
 	/// 		case ARegisteredHotkey.WM_HOTKEY:
-	/// 			Print(m.WParam);
+	/// 			AOutput.Write(m.WParam);
 	/// 			break;
 	/// 		}
 	/// 		base.WndProc(ref m);
@@ -102,14 +100,14 @@ namespace Au
 		/// <remarks>
 		/// Called implicitly when disposing this variable.
 		/// Must be called from the same thread as when registering, and the window must be still alive.
-		/// If fails, calls <see cref="PrintWarning"/>.
+		/// If fails, calls <see cref="AWarning.Write"/>.
 		/// </remarks>
 		public void Unregister()
 		{
 			if(_id != 0) {
 				if(!Api.UnregisterHotKey(_w, _id)) {
 					var es = ALastError.Message;
-					PrintWarning($"Failed to unregister hotkey, id={_id.ToString()}. {es}");
+					AWarning.Write($"Failed to unregister hotkey, id={_id.ToString()}. {es}");
 					return;
 				}
 				_id = 0; _w = default;

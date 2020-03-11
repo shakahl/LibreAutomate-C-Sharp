@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Diagnostics;
@@ -16,7 +15,6 @@ using System.ComponentModel; //Win32Exception
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace SdkConverter
 {
@@ -31,7 +29,7 @@ namespace SdkConverter
 			string sValue, sType; bool isHex = false;
 
 			//if(debugConstName == "[]") return new _ExpressionResult(_TokToString(iFrom, iTo), null, true);
-			//Print($"{debugConstName} {_TokToString(iFrom, iTo)}");
+			//AOutput.Write($"{debugConstName} {_TokToString(iFrom, iTo)}");
 
 			//Unenclose whole expression (not parts).
 
@@ -67,7 +65,7 @@ namespace SdkConverter
 					if(len > 1 && len<=4) {
 						char* s = T(iFrom) + 1;
 						if(*s != '\\') {
-							//Print(_DebugGetLine(iFrom));
+							//AOutput.Write(_DebugGetLine(iFrom));
 							uint k = 0; for(int j = 0; j < len; j++) k = (k << 8) | ((uint)s[j] & 0xff);
 							return new _ExpressionResult($"0x{k:X}", "uint", false, k);
 						}
@@ -83,9 +81,9 @@ namespace SdkConverter
 						return new _ExpressionResult(sValue, sType, false, value);
 					}
 
-					//Print($"<><c 0xff0000>{_TokToString(iFrom, iTo)}</c>");
+					//AOutput.Write($"<><c 0xff0000>{_TokToString(iFrom, iTo)}</c>");
 				} else {
-					//Print($"<><c 0xff0000>{_TokToString(iFrom, iTo)}</c>"); //0 in SDK
+					//AOutput.Write($"<><c 0xff0000>{_TokToString(iFrom, iTo)}</c>"); //0 in SDK
 				}
 
 				return new _ExpressionResult(_TokToString(iFrom), null, true);
@@ -106,7 +104,7 @@ namespace SdkConverter
 
 			////Debug
 			//if(debugConstName == "WTS_CURRENT_SERVER") {
-			//	Print(debugConstName);
+			//	AOutput.Write(debugConstName);
 			//	int stop = 0;
 			//}
 
@@ -284,7 +282,7 @@ namespace SdkConverter
 			//		if(_eRPN[i].op < _OP._FirstOperator) deb.Append(_eRPN[i].value);
 			//		else deb.Append(_eRPN[i].op);
 			//	}
-			//	Print(deb);
+			//	AOutput.Write(deb);
 
 			//	int stop = 0;
 			//}
@@ -345,7 +343,7 @@ namespace SdkConverter
 			return new _ExpressionResult(sValue, sType, false, _eCalc[0].value);
 
 			gFail:
-			//Print($"<><c 0xff>{debugConstName}    {_TokToString(iFrom, iTo)}</c>");
+			//AOutput.Write($"<><c 0xff>{debugConstName}    {_TokToString(iFrom, iTo)}</c>");
 			//if(++_debugNFailed > 10) _Err(iFrom, "debug");
 			return new _ExpressionResult(_TokToString(iFrom, iTo), null, true);
 
@@ -358,7 +356,7 @@ namespace SdkConverter
 
 		void __ExprDebugOutValue(_EVAL v)
 		{
-			Print($"    {v.op}, { __ExprValueToString(v.value, v.op)}");
+			AOutput.Write($"    {v.op}, { __ExprValueToString(v.value, v.op)}");
 		}
 
 		//int _debugNFailed;
@@ -550,11 +548,11 @@ namespace SdkConverter
 
 		bool __ExprCalcCast(int i, ref _EVAL A)
 		{
-			//Print(_tok[i]);
+			//AOutput.Write(_tok[i]);
 
 			_Symbol x;
 			if(!_TryFindSymbol(i, out x, false)) {
-				//Print(_tok[i]); //0 in SDK
+				//AOutput.Write(_tok[i]); //0 in SDK
 				//_Err(i, "unknown");
 				return false;
 			}
@@ -582,7 +580,7 @@ namespace SdkConverter
 			case 8:
 				if(ct.csTypename[0] == 'd') return false; //double
 				if(ct.csTypename[0] == 'I') { //IntPtr
-					//Print(_DebugGetLine(i));
+					//AOutput.Write(_DebugGetLine(i));
 					if(A.op > _OP.OperandUint) return false; //0 in SDK
 					break; //let be the same type as in 32-bit mode (no long). All in SDK are like #define HKEY_CURRENT_USER (IntPtr)0x80000001.
 				}

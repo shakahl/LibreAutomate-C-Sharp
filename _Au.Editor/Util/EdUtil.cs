@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Collections;
 using System.Text;
 using System.Diagnostics;
@@ -12,15 +11,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Xml.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 /// <summary>
 /// Misc util functions.
@@ -133,7 +129,7 @@ static class EdResources
 	/// Thread-safe.
 	/// </remarks>
 	public static object GetObjectUseCache(string name) => s_cache.GetOrAdd(name, n => GetObjectNoCache(n));
-	static ConcurrentDictionary<string, object> s_cache = new ConcurrentDictionary<string, object>();
+	static System.Collections.Concurrent.ConcurrentDictionary<string, object> s_cache = new System.Collections.Concurrent.ConcurrentDictionary<string, object>();
 	//note: don't use WeakReference for s_cache. Maybe could use weekreferences for each image etc, but not tested whether it is good.
 
 	/// <summary>
@@ -186,11 +182,11 @@ static class EdResources
 	public static string GetEmbeddedResourceString(string file)
 	{
 		var asm = Assembly.GetEntryAssembly();
-		//Print(asm.GetManifestResourceNames());
+		//AOutput.Write(asm.GetManifestResourceNames());
 		using var stream = asm.GetManifestResourceStream(file);
 		var b = new byte[stream.Length];
 		stream.Read(b, 0, b.Length);
-		//Print(b);
+		//AOutput.Write(b);
 		int bom = b[0] == 239 ? 3 : 0;
 		return Encoding.UTF8.GetString(b, bom, b.Length - bom);
 	}
@@ -230,7 +226,7 @@ static class EdDebug
 	public static void PrintTabOrder(Control c, int level = 0)
 	{
 		var tabs = "".PadLeft(level, ' ');
-		Print($"{tabs}{c.GetType().Name} \"{c.Name}\"  {c.TabStop} {c.TabIndex}");
+		AOutput.Write($"{tabs}{c.GetType().Name} \"{c.Name}\"  {c.TabStop} {c.TabIndex}");
 		foreach(Control v in c.Controls) PrintTabOrder(v, level + 1);
 	}
 }

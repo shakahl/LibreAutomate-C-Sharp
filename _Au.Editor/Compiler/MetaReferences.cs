@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
@@ -53,7 +49,7 @@ namespace Au.Compiler
 
 			public _MR(string name, string path)
 			{
-				//Print(name);
+				//AOutput.Write(name);
 				this.name = name;
 				this.path = path;
 				_wr = new WeakReference<PortableExecutableReference>(null);
@@ -68,7 +64,7 @@ namespace Au.Compiler
 						//APerf.NW();
 
 						_wr.SetTarget(r);
-						//Print("LOADED", name, this is _MR2);
+						//AOutput.Write("LOADED", name, this is _MR2);
 
 						//prevent GC too early, eg in the middle of compiling many files
 						if(s_timer == null) {
@@ -82,13 +78,13 @@ namespace Au.Compiler
 										if(timeNow >= t) v._refKeeper = null;
 										else nKeep++;
 									}
-									//Print("timer", nRemoved);
+									//AOutput.Write("timer", nRemoved);
 									s_isTimer = nKeep > 0 ? s_timer.Change(c_timerPeriod, -1) : false;
 								}
 								if(nKeep == 0) GC.Collect();
 							});
 						}
-					} //else Print("cached", name, this is _MR2);
+					} //else AOutput.Write("cached", name, this is _MR2);
 
 					if(!s_isTimer) s_isTimer = s_timer.Change(c_timerPeriod, -1);
 					_timeout = ATime.WinMilliseconds + c_timerPeriod - 1000;
@@ -232,7 +228,7 @@ namespace Au.Compiler
 
 		static string _ResolvePath(string re, bool isCOM)
 		{
-			if(Empty(re)) return null;
+			if(re.IsNE()) return null;
 			bool isFull = APath.IsFullPathExpandEnvVar(ref re);
 			if(!isFull && isCOM) { isFull = true; re = AFolders.Workspace + @".interop\" + re; }
 			if(isFull) return AFile.ExistsAsFile(re) ? re : null;
@@ -266,7 +262,7 @@ namespace Au.Compiler
 #if DEBUG
 		internal static void DebugPrintCachedRefs()
 		{
-			foreach(var v in s_cache) if(v.IsCached) Print(v.name);
+			foreach(var v in s_cache) if(v.IsCached) AOutput.Write(v.name);
 		}
 #endif
 
@@ -316,7 +312,7 @@ namespace Au.Compiler
 									using var reader = e.CreateReader();
 									reader.MoveToContent();
 									var xml = reader.ReadInnerXml();
-									//Print(name, xml);
+									//AOutput.Write(name, xml);
 
 									statInsert.BindAll(name, xml).Step();
 									statInsert.Reset();
@@ -334,7 +330,7 @@ namespace Au.Compiler
 				}
 				return XmlDocumentationProvider.CreateFromFile(xmlPath);
 			}
-			static ConcurrentDictionary<string, _DocumentationProvider> s_d = new ConcurrentDictionary<string, _DocumentationProvider>(StringComparer.OrdinalIgnoreCase);
+			static System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider> s_d = new System.Collections.Concurrent.ConcurrentDictionary<string, _DocumentationProvider>(StringComparer.OrdinalIgnoreCase);
 
 			protected internal override string GetDocumentationForSymbol(string documentationMemberID, CultureInfo preferredCulture, CancellationToken cancellationToken = default)
 			{

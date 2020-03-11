@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Compiler;
 
 using Microsoft.CodeAnalysis.QuickInfo;
@@ -47,8 +44,8 @@ class CiQuickInfo
 		//APerf.Next();
 		if(r == null) { pi?.ZSetAboutInfo(); return; }
 
-		//Print(r.Span, r.RelatedSpans);
-		//Print(r.Tags);
+		//AOutput.Write(r.Span, r.RelatedSpans);
+		//AOutput.Write(r.Tags);
 
 		var b = new StringBuilder("<body><div>");
 
@@ -64,7 +61,7 @@ class CiQuickInfo
 		var a = r.Sections;
 		for(int i = 0; i < a.Length; i++) {
 			var se = a[i];
-			//Print(se.Kind, se.Text);
+			//AOutput.Write(se.Kind, se.Text);
 			int excFrom = 0;
 			switch(se.Kind) {
 			//case QuickInfoSectionKinds.Description:
@@ -86,7 +83,7 @@ class CiQuickInfo
 
 		b.Append("</body>");
 		var html = b.ToString();
-		//Print(html);
+		//AOutput.Write(html);
 		html = html.Replace("<p><br>", "<p>");
 		html = html.Replace("><br>", ">&nbsp;<br>"); //workaround for HtmlRenderer bug: adds 2 lines.
 													 //APerf.Next();

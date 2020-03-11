@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -40,7 +38,7 @@ namespace Au.Util
 		public static string AuHelpUrl(string topic)
 		{
 			var url = "https://www.quickmacros.com/au/help/";
-			if(!Empty(topic)) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
+			if(!topic.IsNE()) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
 			return url;
 		}
 #else //.chm

@@ -9,7 +9,6 @@ using System.Drawing.Design;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Aga.Controls.Tree.NodeControls
 {

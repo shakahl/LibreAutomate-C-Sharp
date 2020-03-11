@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -54,7 +52,7 @@ namespace Au.Util
 					else if(v <= 1 << 14) nbytes = 2;
 					else if(v <= 1 << 22) nbytes = 3;
 
-					//Print($"nbytes={nbytes}    sleep={v}");
+					//AOutput.Write($"nbytes={nbytes}    sleep={v}");
 					//never mind: ~90% is 7. Removing it would make almost 2 times smaller string. But need much more code. Or compress (see comment below).
 				} else {
 					//info: to make more compact, we write not distances (dx dy) but distance changes (x y).
@@ -68,7 +66,7 @@ namespace Au.Util
 					int shift = nbytes * 4 - 1, mask = (1 << shift) - 1;
 					v = (x & mask) | ((y & mask) << shift);
 
-					//Print($"dx={dx} dy={dy}    x={x} y={y}    nbytes={nbytes}    v=0x{v:X}");
+					//AOutput.Write($"dx={dx} dy={dy}    x={x} y={y}    nbytes={nbytes}    v=0x{v:X}");
 				}
 				v <<= 2; v |= (nbytes - 1);
 				for(; nbytes != 0; nbytes--, v >>= 8) a.Add((byte)v);
@@ -76,7 +74,7 @@ namespace Au.Util
 			}
 
 			//rejected: by default compresses to ~80% (20% smaller). When withSleepTimes, to ~50%, but never mind, rarely used.
-			//Print(a.Count, AConvert.Compress(a.ToArray()).Length);
+			//AOutput.Write(a.Count, AConvert.Compress(a.ToArray()).Length);
 
 			return Convert.ToBase64String(a.ToArray());
 		}

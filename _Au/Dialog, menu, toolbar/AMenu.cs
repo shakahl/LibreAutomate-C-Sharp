@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -26,19 +24,19 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new AMenu();
-	/// m["One"] = o => Print(o);
-	/// m["Two", icon: AFolders.System + "shell32.dll,15"] = o => { Print(o); ADialog.Show(o.ToString()); };
+	/// m["One"] = o => AOutput.Write(o);
+	/// m["Two", icon: AFolders.System + "shell32.dll,15"] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
 	/// m.LastItem.ToolTipText = "tooltip";
 	/// using(m.Submenu("Submenu")) {
-	/// 	m["Three"] = o => Print(o);
-	/// 	m["Four"] = o => Print(o);
+	/// 	m["Three"] = o => AOutput.Write(o);
+	/// 	m["Four"] = o => AOutput.Write(o);
 	/// }
 	/// m.ExtractIconPathFromCode = true;
 	/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
 	/// m.Show();
 	/// ]]></code>
 	/// </example>
-	public partial class AMenu : AMTBase, IDisposable
+	public partial class AMenu : MTBase, IDisposable
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		_ContextMenuStrip _c;
@@ -50,7 +48,7 @@ namespace Au
 		/// </summary>
 		public ContextMenuStrip Control => _c;
 
-		private protected override ToolStrip MainToolStrip => _c; //used by AMTBase
+		private protected override ToolStrip MainToolStrip => _c;
 
 		/// <summary>
 		/// Initializes this object.
@@ -70,19 +68,19 @@ namespace Au
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		public AMenu(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(f, l)
 		{
-			if(Empty(name)) throw new ArgumentException("Empty name");
+			if(name.IsNE()) throw new ArgumentException("Empty name");
 			_name = name;
 
 			_c = new _ContextMenuStrip(this, isMain: true);
 		}
 
-		//~AMenu() { Print("main dtor"); }
+		//~AMenu() { AOutput.Write("main dtor"); }
 
 		///
 		public void Dispose()
 		{
 			if(!_c.IsDisposed) _c.Dispose();
-			//Print(_c.Items.Count); //0
+			//AOutput.Write(_c.Items.Count); //0
 			//tested: ContextMenuStrip disposes its items but not their ToolStripDropDownMenu. And not their Image, therefore base._Dispose disposes images.
 			if(_submenusToDispose != null) {
 				foreach(var dd in _submenusToDispose) {
@@ -115,12 +113,11 @@ namespace Au
 		Then can auto-get icon without disassembling the callback.
 
 		Another example: instead of
-		m["Label"] = o => Paste("notepad.exe");
+		m["Label"] = o => AClipboard.Paste("notepad.exe");
 		can use
 		m.Paste("notepad.exe", "label"); //label is optional
-		And the same for Key.
 
-		Can even use extension methods for this. Example:
+		Can use extension methods for this. Example:
 		public static void Run(this AMenu m, string path, string label = null)
 		{
 			m[label ?? path, path] = o => AExec.TryRun(path);
@@ -130,22 +127,22 @@ namespace Au
 
 		/// <summary>
 		/// Adds new item.
-		/// The same as <see cref="Add(string, Action{MTClickArgs}, object, int)"/>.
+		/// The same as <see cref="Add(string, Action{MTClickArgs}, MTImage, int)"/>.
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu();
-		/// m["One"] = o => Print(o);
-		/// m["Two", @"icon file path"] = o => { Print(o); ADialog.Show(o.ToString()); };
+		/// m["One"] = o => AOutput.Write(o);
+		/// m["Two", @"icon file path"] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
 		/// m.LastItem.ToolTipText = "tooltip";
-		/// m["Three"] = o => { Print(o.MenuItem.Checked); };
+		/// m["Three"] = o => { AOutput.Write(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
 		/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public Action<MTClickArgs> this[string text, object icon = null, [CallerLineNumber] int l = 0] {
+		public Action<MTClickArgs> this[string text, MTImage icon = default, [CallerLineNumber] int l = 0] {
 			set { Add(text, value, icon, l); }
 		}
 
@@ -154,36 +151,28 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
 		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
-		/// <param name="icon">Can be:
-		/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>. If not full path, searches in <see cref="AFolders.ThisAppImages"/>; see also <see cref="AMTBase.IconFlags"/>.
-		/// - string - Base-64 encoded png file with prefix "image:". Can be created with the "Find image..." dialog.
-		/// - string - image name (key) in the ImageList (<see cref="ToolStripItem.ImageKey"/>).
-		/// - int - image index in the ImageList (<see cref="ToolStripItem.ImageIndex"/>).
-		/// - Icon, Image, FolderPath.
-		/// - null (default) - no icon. If <see cref="AMTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
-		/// - "" - no icon.
-		/// </param>
+		/// <param name="icon"></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
 		/// Sets menu item text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
 		/// 
-		/// Code <c>m.Add("text", o => Print(o));</c> is the same as <c>m["text"] = o => Print(o);</c>. See <see cref="this[string, object, int]"/>.
+		/// Code <c>m.Add("text", o => AOutput.Write(o));</c> is the same as <c>m["text"] = o => AOutput.Write(o);</c>. See <see cref="this[string, MTImage, int]"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu();
-		/// m.Add("One", o => Print(o), icon: AFolders.System + "shell32.dll,9");
-		/// var mi = m.Add("Two", o => { Print(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
+		/// m.Add("One", o => AOutput.Write(o), icon: AFolders.System + "shell32.dll,9");
+		/// var mi = m.Add("Two", o => { AOutput.Write(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
 		/// mi.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
 		/// m.Add("notepad", o => AExec.TryRun(AFolders.System + "notepad.exe"));
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public ToolStripMenuItem Add(string text, Action<MTClickArgs> onClick, object icon = null, [CallerLineNumber] int l = 0)
+		public ToolStripMenuItem Add(string text, Action<MTClickArgs> onClick, MTImage icon = default, [CallerLineNumber] int l = 0)
 		{
 			string sk = null;
-			if(!Empty(text)) {
+			if(!text.IsNE()) {
 				int i = text.IndexOf('\t');
 				if(i >= 0) { sk = text.Substring(i + 1); text = text.Remove(i); }
 			}
@@ -192,7 +181,7 @@ namespace Au
 
 			if(sk != null) item.ShortcutKeyDisplayString = sk;
 
-			Add(item, icon, onClick, l);
+			_Add(false, item, icon, onClick, l);
 			return item;
 		}
 
@@ -203,12 +192,15 @@ namespace Au
 		/// <param name="icon"></param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		public void Add(ToolStripItem item, object icon = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+		public void Add(ToolStripItem item, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+			=> _Add(false, item, icon, onClick, l);
+
+		void _Add(bool isSub, ToolStripItem item, MTImage icon, Action<MTClickArgs> onClick, int l)
 		{
 			var dd = CurrentAddMenu;
 			dd.SuspendLayout(); //makes adding items much faster. It's OK to suspend/resume when already suspended; .NET uses a layoutSuspendCount.
 			dd.Items.Add(item);
-			_SetItemProp(false, item, onClick, icon, l);
+			_SetItemProp(false, isSub, item, onClick, icon, l);
 			_OnItemAdded(item);
 			dd.ResumeLayout(false);
 		}
@@ -219,7 +211,7 @@ namespace Au
 		public ToolStripSeparator Separator()
 		{
 			var item = new ToolStripSeparator();
-			Add(item, null, null, 0);
+			_Add(false, item, default, null, 0);
 			return item;
 		}
 
@@ -228,7 +220,7 @@ namespace Au
 		/// Then the add-item functions will add items to the submenu.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">See <see cref="Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		/// <param name="icon"></param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
@@ -244,40 +236,33 @@ namespace Au
 		/// <code><![CDATA[
 		/// var m = new AMenu();
 		/// m.Control.BackColor = Color.PaleGoldenrod;
-		/// m["One"] = o => Print(o);
-		/// m["Two"] = o => Print(o);
+		/// m["One"] = o => AOutput.Write(o);
+		/// m["Two"] = o => AOutput.Write(o);
 		/// using(m.Submenu("Submenu")) {
-		/// 	m["Three"] = o => Print(o);
-		/// 	m["Four"] = o => Print(o);
+		/// 	m["Three"] = o => AOutput.Write(o);
+		/// 	m["Four"] = o => AOutput.Write(o);
 		/// 	using(m.Submenu("Submenu2")) {
-		/// 		m["Five"] = o => Print(o);
-		/// 		m["Six"] = o => Print(o);
+		/// 		m["Five"] = o => AOutput.Write(o);
+		/// 		m["Six"] = o => AOutput.Write(o);
 		/// 	}
-		/// 	m["Seven"] = o => Print(o);
+		/// 	m["Seven"] = o => AOutput.Write(o);
 		/// }
-		/// m["Eight"] = o => Print(o);
+		/// m["Eight"] = o => AOutput.Write(o);
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public MUsingSubmenu Submenu(string text, object icon = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+		public UsingAction Submenu(string text, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon, l);
 			_submenuStack.Push(dd);
-			return new MUsingSubmenu(this, item);
+			return new UsingAction(() => EndSubmenu());
 		}
 
-		ToolStripMenuItem _Submenu(out _ContextMenuStrip dd, string text, Action<MTClickArgs> onClick, object icon, int sourceLine)
+		ToolStripMenuItem _Submenu(out _ContextMenuStrip dd, string text, Action<MTClickArgs> onClick, MTImage icon, int sourceLine)
 		{
 			var item = new ToolStripMenuItem(text);
-			Add(item, icon, onClick, sourceLine);
 
 			dd = new _ContextMenuStrip(this, isMain: false);
-			item.DropDown = dd;
-			//SHOULDDO: should be 'dd=item.DropDown' (auto-created).
-			//	Because now eg hotkeys don't work.
-			//	But then cannot be ToolStripDropDownMenu_.
-			//	It is important only if using in menu bar.
-
 			//var t = APerf.Create();
 			dd.SuspendLayout();
 			if(_c._changedBackColor) dd.BackColor = _c.BackColor; //because by default gives 0xf0f0f0, although actually white, and then submenus would be gray
@@ -293,6 +278,13 @@ namespace Au
 			dd.ShowImageMargin = _c.ShowImageMargin;
 			dd.ResumeLayout(false);
 			//t.NW();
+			item.DropDown = dd;
+			//never mind: should be 'dd=item.DropDown' (auto-created).
+			//	Because now eg hotkeys don't work.
+			//	But then cannot be ToolStripDropDownMenu_.
+			//	It is important only if using in menu bar.
+
+			_Add(true, item, icon, onClick, sourceLine);
 
 			//Workaround for ToolStripDropDown bug: sometimes does not show 3-rd level submenu.
 			//	It happens when the mouse moves from the 1-level menu to the 2-nd level submenu-item over an unrelated item of 1-st level menu.
@@ -320,13 +312,13 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu();
-		/// m["One"] = o => Print(o);
-		/// m["Two"] = o => Print(o);
+		/// m["One"] = o => AOutput.Write(o);
+		/// m["Two"] = o => AOutput.Write(o);
 		/// m.Submenu("Submenu");
-		/// 	m["Three"] = o => Print(o);
-		/// 	m["Four"] = o => Print(o);
+		/// 	m["Three"] = o => AOutput.Write(o);
+		/// 	m["Four"] = o => AOutput.Write(o);
 		/// 	m.EndSubmenu();
-		/// m["Five"] = o => Print(o);
+		/// m["Five"] = o => AOutput.Write(o);
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -338,30 +330,30 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="onOpening">Callback function that should add submenu items.</param>
-		/// <param name="icon">See <see cref="Add(string, Action{MTClickArgs}, object, int)"/>.</param>
+		/// <param name="icon"></param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu();
-		/// m["One"] = o => Print(o);
-		/// m["Two"] = o => Print(o);
+		/// m["One"] = o => AOutput.Write(o);
+		/// m["Two"] = o => AOutput.Write(o);
 		/// m.LazySubmenu("Submenu", _ => {
-		/// 	Print("adding items of " + m.CurrentAddMenu.OwnerItem);
-		/// 	m["Three"] = o => Print(o);
-		/// 	m["Four"] = o => Print(o);
+		/// 	AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
+		/// 	m["Three"] = o => AOutput.Write(o);
+		/// 	m["Four"] = o => AOutput.Write(o);
 		/// 	m.LazySubmenu("Submenu2", _ => {
-		/// 		Print("adding items of " + m.CurrentAddMenu.OwnerItem);
-		/// 		m["Five"] = o => Print(o);
-		/// 		m["Six"] = o => Print(o);
+		/// 		AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
+		/// 		m["Five"] = o => AOutput.Write(o);
+		/// 		m["Six"] = o => AOutput.Write(o);
 		/// 	});
-		/// 	m["Seven"] = o => Print(o);
+		/// 	m["Seven"] = o => AOutput.Write(o);
 		/// });
-		/// m["Eight"] = o => Print(o);
+		/// m["Eight"] = o => AOutput.Write(o);
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public ToolStripMenuItem LazySubmenu(string text, Action<AMenu> onOpening, object icon = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+		public ToolStripMenuItem LazySubmenu(string text, Action<AMenu> onOpening, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon, l);
 			dd._submenu_lazyDelegate = onOpening;
@@ -393,7 +385,7 @@ namespace Au
 		/// Returns null if it is not a <b>ToolStripMenuItem</b>.
 		/// </summary>
 		/// <remarks>
-		/// You can instead use <see cref="AMTBase.LastItem"/>, which gets <see cref="ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
+		/// You can instead use <see cref="MTBase.LastItem"/>, which gets <see cref="ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
 		/// </remarks>
 		public ToolStripMenuItem LastMenuItem => LastItem as ToolStripMenuItem;
 
@@ -625,7 +617,7 @@ namespace Au
 
 			//close if mouse clicked an alien window
 			if(mouseClicked) {
-				//Print(_IsMenuWindow());
+				//AOutput.Write(_IsMenuWindow());
 				if(!AWnd.FromMouse(WXYFlags.NeedWindow).IsOfThisThread) {
 					goto g1;
 				}

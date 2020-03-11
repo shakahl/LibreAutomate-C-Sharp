@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,20 +10,18 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 namespace Au.Tools
 {
 	/// <summary>
 	/// Scintilla-based control that shows colored C# code created by its parent form (a code tool dialog).
+	/// Also can be used anywhere to edit partially styled C# code. To make editable and set text use <see cref="ZSetText"/> with readonlyFrom=-1.
 	/// </summary>
 	class CodeBox : AuScintilla
 	{
@@ -58,7 +55,7 @@ namespace Au.Tools
 		{
 			//switch(n.nmhdr.code) {
 			//case Sci.NOTIF.SCN_PAINTED: case Sci.NOTIF.SCN_UPDATEUI: break;
-			//default: Print(n.nmhdr.code, n.modificationType); break;
+			//default: AOutput.Write(n.nmhdr.code, n.modificationType); break;
 			//}
 
 			switch(n.nmhdr.code) {
@@ -82,13 +79,15 @@ namespace Au.Tools
 		/// Sets text and makes all or part of it readonly.
 		/// </summary>
 		/// <param name="s"></param>
-		/// <param name="readonlyFrom"></param>
+		/// <param name="readonlyFrom">If 0, makes all text readonly. If s.Length or -1, makes all text editable. If between 0 and s.Length, makes readonly from this position.</param>
 		public void ZSetText(string s, int readonlyFrom = 0)
 		{
 			Z.Call(Sci.SCI_SETREADONLY, false);
 			Z.SetText(s, SciSetTextFlags.NoUndoNoNotify);
 			if(readonlyFrom > 0) {
 				_readonlyLenUtf8 = _LenUtf8 - Pos8(readonlyFrom);
+			} else if(readonlyFrom < 0) {
+				_readonlyLenUtf8 = 0; 
 			} else {
 				Z.Call(Sci.SCI_SETREADONLY, true);
 				_readonlyLenUtf8 = -1;
@@ -142,8 +141,8 @@ namespace Au.Tools
 					b.AppendStringArg(TUtil.EscapeWindowName(wnd.NameTL_, true), noComma: true);
 					b.AppendStringArg(TUtil.StripWndClassName(cls, true));
 					string fl = null;
-					if(!wnd.IsVisible) fl = "WFFlags.HiddenToo";
-					if(wnd.IsCloaked) fl = fl == null ? "WFFlags.CloakedToo" : "WFFlags.HiddenToo|WFFlags.CloakedToo";
+					if(!wnd.IsVisible) fl = "WFlags.HiddenToo";
+					if(wnd.IsCloaked) fl = fl == null ? "WFlags.CloakedToo" : "WFlags.HiddenToo|WFlags.CloakedToo";
 					if(fl != null) b.AppendOtherArg(fl, "flags");
 					b.Append(").OrThrow();");
 				} else con = default;
@@ -158,14 +157,14 @@ namespace Au.Tools
 						} else {
 							cls = TUtil.StripWndClassName(cls, true);
 							string name = con.Name, prefix = null;
-							if(Empty(name)) {
+							if(name.IsNE()) {
 								name = con.NameWinForms;
-								if(!Empty(name)) prefix = "***wfName ";
+								if(!name.IsNE()) prefix = "***wfName ";
 								else {
 									var nameAcc = con.NameAcc;
 									//var nameLabel = con.NameLabel;
-									if(!Empty(nameAcc)/* || !Empty(nameLabel)*/) {
-										//if(Empty(nameAcc) || nameLabel == nameAcc) {
+									if(!nameAcc.IsNE()/* || !nameLabel.IsNE()*/) {
+										//if(nameAcc.IsNE() || nameLabel == nameAcc) {
 										//	name = nameLabel; prefix = "***label ";
 										//} else {
 										name = nameAcc; prefix = "***accName ";
@@ -211,17 +210,16 @@ namespace Au.Tools
 		/// </summary>
 		public (bool ok, AWnd wnd, AWnd con, bool useCon) ZShowWndTool(AWnd wnd, AWnd con, bool uncheckControl)
 		{
-			using(var f = new FormAWnd(con.Is0 ? wnd : con, uncheckControl)) {
-				if(f.ShowDialog(FindForm()) != DialogResult.OK) return default;
-				var code = f.ZResultCode;
-				_wnd = f.ZResultWindow;
-				_con = f.ZResultUseControl ? f.ZResultControl : default;
-				int i = _ReadonlyStartUtf8;
-				var code2 = Z.RangeText(false, i, i + _readonlyLenUtf8);
-				Z.Call(Sci.SCI_SETREADONLY, false);
-				Z.SetText(code + code2);
-				return (true, f.ZResultWindow, f.ZResultControl, f.ZResultUseControl);
-			}
+			using var f = new FormAWnd(con.Is0 ? wnd : con, uncheckControl);
+			if(f.ShowDialog(FindForm()) != DialogResult.OK) return default;
+			var code = f.ZResultCode;
+			_wnd = f.ZResultWindow;
+			_con = f.ZResultUseControl ? f.ZResultControl : default;
+			int i = _ReadonlyStartUtf8;
+			var code2 = Z.RangeText(false, i, i + _readonlyLenUtf8);
+			Z.Call(Sci.SCI_SETREADONLY, false);
+			Z.SetText(code + code2);
+			return (true, f.ZResultWindow, f.ZResultControl, f.ZResultUseControl);
 		}
 	}
 }

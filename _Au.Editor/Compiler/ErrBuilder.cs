@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 using Microsoft.CodeAnalysis;
 
@@ -140,7 +136,7 @@ namespace Au.Compiler
 			//errors and warnings
 			_b.Append(s);
 
-			Print(_b.ToString());
+			AOutput.Write(_b.ToString());
 			Clear();
 		}
 

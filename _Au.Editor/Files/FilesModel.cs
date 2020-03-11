@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -19,7 +18,6 @@ using System.Collections;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
@@ -84,7 +82,7 @@ partial class FilesModel : ITreeModel
 					);
 			}
 			catch(Exception ex) {
-				Print($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack()}");
+				AOutput.Write($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack()}");
 			}
 
 			OpenFiles = new List<FileNode>();
@@ -182,7 +180,7 @@ partial class FilesModel : ITreeModel
 	/// <param name="folder">true - folder, false - file, null - any (prefer file if not id and not relative).</param>
 	public FileNode Find(string name, bool? folder)
 	{
-		if(Empty(name)) return null;
+		if(name.IsNE()) return null;
 		if(name[0] == '<') { name.ToInt(out long id, 1); return FindById(id); }
 		return Root.FindDescendant(name, folder);
 		//rejected: support name without extension.
@@ -224,7 +222,7 @@ partial class FilesModel : ITreeModel
 		}
 		try { _idMap.Add(id, f); }
 		catch(ArgumentException) {
-			PrintWarning($"Duplicate id of '{f.Name}'. Creating new.");
+			AWarning.Write($"Duplicate id of '{f.Name}'. Creating new.");
 			id = 0;
 			goto g1;
 		}
@@ -310,7 +308,7 @@ partial class FilesModel : ITreeModel
 
 	private void _TV_NodeMouseClick(object sender, TreeNodeAdvMouseEventArgs e)
 	{
-		//Print(e.Button, e.ModifierKeys);
+		//AOutput.Write(e.Button, e.ModifierKeys);
 		if(e.ModifierKeys != 0) return;
 		var f = e.Node.Tag as FileNode;
 		switch(e.Button) {
@@ -364,11 +362,14 @@ partial class FilesModel : ITreeModel
 	/// Closes specified files that are open.
 	/// </summary>
 	/// <param name="files">Any IEnumerable except OpenFiles.</param>
-	public void CloseFiles(IEnumerable<FileNode> files)
+	public void CloseFiles(IEnumerable<FileNode> files, FileNode dontClose = null)
 	{
 		if(files == OpenFiles) files = OpenFiles.ToArray();
 		bool closeCurrent = false;
-		foreach(var f in files) if(f == _currentFile) closeCurrent = true; else CloseFile(f, false);
+		foreach(var f in files) {
+			if(f == dontClose) continue;
+			if(f == _currentFile) closeCurrent = true; else CloseFile(f, false);
+		}
 		if(closeCurrent) CloseFile(_currentFile, true);
 	}
 
@@ -418,7 +419,7 @@ partial class FilesModel : ITreeModel
 	{
 		Debug.Assert(!IsAlien(f));
 		if(f == _currentFile) return true;
-		//Print(f);
+		//AOutput.Write(f);
 		if(f.IsFolder) return false;
 
 		if(_currentFile != null) Save.TextNowIfNeed();
@@ -550,14 +551,14 @@ partial class FilesModel : ITreeModel
 	/// </remarks>
 	public bool OpenAndGoTo(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null)
 	{
-		var f = Empty(line1Based) && Empty(column1BasedOrPos) ? Find(fileOrFolder, null) : FindScript(fileOrFolder);
+		var f = line1Based.IsNE() && column1BasedOrPos.IsNE() ? Find(fileOrFolder, null) : FindScript(fileOrFolder);
 		if(f == null) return false;
 		if(f.IsFolder) {
 			f.SelectSingle();
 			return true;
 		}
-		int line = Empty(line1Based) ? -1 : line1Based.ToInt() - 1;
-		int columnOrPos = -1; if(!Empty(column1BasedOrPos)) columnOrPos = column1BasedOrPos.ToInt() - (line < 0 ? 0 : 1);
+		int line = line1Based.IsNE() ? -1 : line1Based.ToInt() - 1;
+		int columnOrPos = -1; if(!column1BasedOrPos.IsNE()) columnOrPos = column1BasedOrPos.ToInt() - (line < 0 ? 0 : 1);
 		return OpenAndGoTo(f, line, columnOrPos);
 	}
 
@@ -666,7 +667,7 @@ partial class FilesModel : ITreeModel
 			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		} else {
 			string s1 = doNotDeleteFile ? "File not deleted:" : "The deleted item was a link to";
-			Print($"<>Info: {s1} <explore>{f.FilePath}<>");
+			AOutput.Write($"<>Info: {s1} <explore>{f.FilePath}<>");
 		}
 
 		foreach(var k in e) {
@@ -772,27 +773,33 @@ partial class FilesModel : ITreeModel
 	/// Closes selected or all items, or collapses folders.
 	/// Used to implement menu File -> Open/Close.
 	/// </summary>
-	/// <param name="how">1 close selected file(s) and current file, 2 close all, 3 collapse folders.</param>
-	/// <remarks>
-	/// When how is 1: Closes selected files. If there are no selected files, closes current file. Does not collapse selected folders.
-	/// When how is 2: Closes all files and collapses folders.
-	/// </remarks>
-	public void CloseEtc(int how)
+	public void CloseEtc(ECloseCmd how, FileNode dontClose = null)
 	{
 		switch(how) {
-		case 1:
+		case ECloseCmd.CloseSelectedOrCurrent:
 			var a = SelectedItems;
 			if(a.Length > 0) CloseFiles(a);
 			else CloseFile(_currentFile, true);
 			break;
-		case 2:
-			CloseFiles(OpenFiles);
+		case ECloseCmd.CloseAll:
+			CloseFiles(OpenFiles, dontClose);
 			_control.CollapseAll();
+			if(dontClose != null) _control.EnsureVisible(dontClose.TreeNodeAdv);
 			break;
-		case 3:
+		case ECloseCmd.CollapseFolders:
 			_control.CollapseAll();
 			break;
 		}
+	}
+
+	public enum ECloseCmd
+	{
+		/// <summary>
+		/// Closes selected files. If there are no selected files, closes current file. Does not collapse selected folders.
+		/// </summary>
+		CloseSelectedOrCurrent,
+		CloseAll,
+		CollapseFolders,
 	}
 
 	public void Properties()
@@ -881,9 +888,9 @@ partial class FilesModel : ITreeModel
 
 			target.SelectSingle();
 
-			Print($"Info: Imported workspace '{wsDir}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
+			AOutput.Write($"Info: Imported workspace '{wsDir}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
 		}
-		catch(Exception ex) { Print(ex.Message); }
+		catch(Exception ex) { AOutput.Write(ex.Message); }
 	}
 
 	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, NodePosition pos, bool importingWorkspace = false)
@@ -911,7 +918,7 @@ partial class FilesModel : ITreeModel
 				foreach(var f in a2) f.IsSelected = true;
 			}
 		}
-		catch(Exception ex) { Print(ex.Message); }
+		catch(Exception ex) { AOutput.Write(ex.Message); }
 		finally { _control.EndUpdate(); }
 
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
@@ -990,9 +997,9 @@ partial class FilesModel : ITreeModel
 
 			var (nf2, nd2, nc2) = _CountFilesFolders();
 			int nf = nf2 - nf1, nd = nd2 - nd1, nc = nc2 - nc1;
-			if(nf + nd > 0) Print($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
+			if(nf + nd > 0) AOutput.Write($"Info: Imported {nf} files and {nd} folders.{(nc > 0 ? GetSecurityInfo("\r\n\t") : null)}");
 		}
-		catch(Exception ex) { Print(ex.Message); }
+		catch(Exception ex) { AOutput.Write(ex.Message); }
 		finally { _control.EndUpdate(); }
 		Save.WorkspaceLater();
 		CodeInfo.FilesChanged();
@@ -1053,7 +1060,7 @@ partial class FilesModel : ITreeModel
 			FileNode.Export(a, wsDir + @"\files.xml");
 		}
 		catch(Exception ex) {
-			Print(ex);
+			AOutput.Write(ex);
 			return false;
 		}
 
@@ -1110,7 +1117,7 @@ partial class FilesModel : ITreeModel
 	private void _watcher_Event2(FileSystemEventArgs e) //in main thread
 	{
 		var f = Find("\\" + e.Name, null);
-		//if(e is RenamedEventArgs r) Print(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f); else Print(e.ChangeType, e.Name, e.FullPath, f);
+		//if(e is RenamedEventArgs r) AOutput.Write(e.ChangeType, r.OldName, e.Name, r.OldFullPath, e.FullPath, f); else AOutput.Write(e.ChangeType, e.Name, e.FullPath, f);
 		if(f == null || f.IsLink) return;
 		//ADebug.Print($"<><c blue>File {e.ChangeType.ToString().Lower()} externally: {f}  ({e.FullPath})<>");
 		if(f.IsFolder) {
@@ -1132,7 +1139,7 @@ partial class FilesModel : ITreeModel
 			if(pause) _watcher.EnableRaisingEvents = false;
 			a();
 		}
-		catch(Exception ex) { Print(ex.ToStringWithoutStack()); return false; }
+		catch(Exception ex) { AOutput.Write(ex.ToStringWithoutStack()); return false; }
 		finally { if(pause) _watcher.EnableRaisingEvents = true; } //fast
 		return true;
 	}
@@ -1174,7 +1181,7 @@ partial class FilesModel : ITreeModel
 				string script = row[0];
 				if(script.Starts("//")) continue;
 				var f = FindScript(script);
-				if(f == null) { Print("Startup script not found: " + script + ". Please edit name in Options."); continue; }
+				if(f == null) { AOutput.Write("Startup script not found: " + script + ". Please edit name in Options."); continue; }
 				int delay = 10;
 				if(x.ColumnCount > 1) {
 					var sd = row[1];

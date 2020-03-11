@@ -10,7 +10,7 @@ C# code may look like this:
 ```csharp
 AMouse.Click(10, 20);
 if (AKeys.IsCtrl) {
-	Print("text");
+	AOutput.Write("text");
 }
 ```
 
@@ -19,7 +19,7 @@ You can type this text instead:
 amo.c 10, 20
 if ak.isct
 
-pr "text";
+aou.w "text";
 ```
 
 While typing, editor completes words, adds `()`, `;`, `{}` and indentation. The result is the first code.

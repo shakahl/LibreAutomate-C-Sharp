@@ -10,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
 using Au.Util;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -31,15 +29,15 @@ namespace Au
 	/// bool stop = false;
 	/// using(new AHookAcc(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
 	/// {
-	/// 	Print(x.wnd);
+	/// 	AOutput.Write(x.wnd);
 	/// 	var a = x.GetAcc();
-	/// 	Print(a);
+	/// 	AOutput.Write(a);
 	/// 	if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
 	/// })) {
 	/// 	MessageBox.Show("hook");
 	/// 	//or
 	/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
-	/// 	//Print("the end");
+	/// 	//AOutput.Write("the end");
 	/// }
 	/// ]]></code>
 	/// </example>
@@ -161,7 +159,7 @@ namespace Au
 		{
 			addedId--;
 			if(_a == null || (uint)addedId >= _a.Length || _a[addedId] == default) throw new ArgumentException();
-			if(!Api.UnhookWinEvent(_a[addedId])) PrintWarning("Failed to unhook AHookAcc.");
+			if(!Api.UnhookWinEvent(_a[addedId])) AWarning.Write("Failed to unhook AHookAcc.");
 			_a[addedId] = default;
 		}
 
@@ -182,7 +180,7 @@ namespace Au
 			if(_a != null) {
 				foreach(var hh in _a) {
 					if(hh == default) continue;
-					if(!Api.UnhookWinEvent(hh)) PrintWarning("AHookAcc.Unhook failed.");
+					if(!Api.UnhookWinEvent(hh)) AWarning.Write("AHookAcc.Unhook failed.");
 				}
 				_a = null;
 			}
@@ -200,7 +198,7 @@ namespace Au
 
 		//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.
 		///
-		~AHookAcc() { PrintWarning("Non-disposed AHookAcc variable."); } //unhooking makes no sense
+		~AHookAcc() { AWarning.Write("Non-disposed AHookAcc variable."); } //unhooking makes no sense
 
 		void _HookProc(IntPtr hHook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 		{

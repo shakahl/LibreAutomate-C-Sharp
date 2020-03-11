@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 
 using Au.Types;
 using Au.Util;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -65,13 +62,13 @@ namespace Au
 		/// <code><![CDATA[
 		/// var stop = false;
 		/// using(AHookWin.Keyboard(x => {
-		/// 	Print(x);
+		/// 	AOutput.Write(x);
 		/// 	if(x.vkCode == KKey.Escape) { stop = true; x.BlockEvent(); }
 		/// })) {
 		/// 	MessageBox.Show("Low-level keyboard hook.", "Test");
 		/// 	//or
 		/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
-		/// 	//Print("the end");
+		/// 	//AOutput.Write("the end");
 		/// }
 		/// ]]></code>
 		/// </example>
@@ -97,13 +94,13 @@ namespace Au
 		/// <code><![CDATA[
 		/// var stop = false;
 		/// using(AHookWin.Mouse(x => {
-		/// 	Print(x);
+		/// 	AOutput.Write(x);
 		/// 	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; x.BlockEvent(); }
 		/// })) {
 		/// 	MessageBox.Show("Low-level mouse hook.", "Test");
 		/// 	//or
 		/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
-		/// 	//Print("the end");
+		/// 	//AOutput.Write("the end");
 		/// }
 		/// ]]></code>
 		/// </example>
@@ -130,31 +127,31 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadCbt(x => {
-		/// 	Print(x.code);
+		/// 	AOutput.Write(x.code);
 		/// 	switch(x.code) {
 		/// 	case HookData.CbtEvent.ACTIVATE:
-		/// 		Print(x.ActivationInfo(out _, out _));
+		/// 		AOutput.Write(x.ActivationInfo(out _, out _));
 		/// 		break;
 		/// 	case HookData.CbtEvent.CREATEWND:
-		/// 		Print(x.CreationInfo(out var c, out _), c->x, c->lpszName);
+		/// 		AOutput.Write(x.CreationInfo(out var c, out _), c->x, c->lpszName);
 		/// 		break;
 		/// 	case HookData.CbtEvent.CLICKSKIPPED:
-		/// 		Print(x.MouseInfo(out var m), m->pt, m->hwnd);
+		/// 		AOutput.Write(x.MouseInfo(out var m), m->pt, m->hwnd);
 		/// 		break;
 		/// 	case HookData.CbtEvent.KEYSKIPPED:
-		/// 		Print(x.KeyInfo(out _));
+		/// 		AOutput.Write(x.KeyInfo(out _));
 		/// 		break;
 		/// 	case HookData.CbtEvent.SETFOCUS:
-		/// 		Print(x.FocusInfo(out AWnd wPrev), wPrev);
+		/// 		AOutput.Write(x.FocusInfo(out AWnd wPrev), wPrev);
 		/// 		break;
 		/// 	case HookData.CbtEvent.MOVESIZE:
-		/// 		Print(x.MoveSizeInfo(out var r), r->ToString());
+		/// 		AOutput.Write(x.MoveSizeInfo(out var r), r->ToString());
 		/// 		break;
 		/// 	case HookData.CbtEvent.MINMAX:
-		/// 		Print(x.MinMaxInfo(out var state), state);
+		/// 		AOutput.Write(x.MinMaxInfo(out var state), state);
 		/// 		break;
 		/// 	case HookData.CbtEvent.DESTROYWND:
-		/// 		Print((AWnd)x.wParam);
+		/// 		AOutput.Write((AWnd)x.wParam);
 		/// 		break;
 		/// 	}
 		/// 	return false;
@@ -184,7 +181,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadGetMessage(x => {
-		/// 	Print(x.msg->ToString(), x.PM_NOREMOVE);
+		/// 	AOutput.Write(x.msg->ToString(), x.PM_NOREMOVE);
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
@@ -207,7 +204,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadKeyboard(x => {
-		/// 	Print(x.key, 0 != (x.lParam & 0x80000000) ? "up" : "", x.lParam, x.PM_NOREMOVE);
+		/// 	AOutput.Write(x.key, 0 != (x.lParam & 0x80000000) ? "up" : "", x.lParam, x.PM_NOREMOVE);
 		/// 	return false;
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
@@ -232,7 +229,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// using(AHookWin.ThreadMouse(x => {
-		/// 	Print(x.message, x.m->pt, x.m->hwnd, x.PM_NOREMOVE);
+		/// 	AOutput.Write(x.message, x.m->pt, x.m->hwnd, x.PM_NOREMOVE);
 		/// 	return false;
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
@@ -259,7 +256,7 @@ namespace Au
 		/// using(AHookWin.ThreadCallWndProc(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam);
-		/// 	Print(mm, x.sentByOtherThread);
+		/// 	AOutput.Write(mm, x.sentByOtherThread);
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
@@ -285,7 +282,7 @@ namespace Au
 		/// using(AHookWin.ThreadCallWndProcRet(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam); mm.Result = m.lResult;
-		/// 	Print(mm, x.sentByOtherThread);
+		/// 	AOutput.Write(mm, x.sentByOtherThread);
 		/// })) MessageBox.Show("hook");
 		/// ]]></code>
 		/// </example>
@@ -349,7 +346,7 @@ namespace Au
 		{
 			if(_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if(!ok) PrintWarning($"AHookWin.Unhook failed ({_hookTypeString}). {ALastError.Message}");
+				if(!ok) AWarning.Write($"AHookWin.Unhook failed ({_hookTypeString}). {ALastError.Message}");
 				_hh = default;
 			}
 		}
@@ -360,7 +357,7 @@ namespace Au
 		public bool IsSet => _hh != default;
 
 		///// <summary>
-		///// Don't print warning "Non-disposed AHookWin variable".
+		///// Disable warning "Non-disposed AHookWin variable".
 		///// </summary>
 		//public bool NoWarningNondisposed { get; set; }
 
@@ -378,7 +375,7 @@ namespace Au
 		~AHookWin()
 		{
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
-			//if(_hh != default && !NoWarningNondisposed) PrintWarning($"Non-disposed AHookWin ({_hookTypeString}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
+			//if(_hh != default && !NoWarningNondisposed) AWarning.Write($"Non-disposed AHookWin ({_hookTypeString}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
 			ADebug.PrintIf(_hh != default, $"Non-disposed AHookWin ({_hookTypeString}) variable.");
 		}
 
@@ -446,8 +443,8 @@ namespace Au
 
 							//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
 							//if(AKeys.IsScrollLock) {
-							//	//if(vk == KKey.LCtrl && !kll->IsUp) { Print("lost Ctrl down"); goto gr; }
-							//	if(vk == KKey.LCtrl && kll->IsUp) { Print("lost Ctrl up"); goto gr; }
+							//	//if(vk == KKey.LCtrl && !kll->IsUp) { AOutput.Write("lost Ctrl down"); goto gr; }
+							//	if(vk == KKey.LCtrl && kll->IsUp) { AOutput.Write("lost Ctrl up"); goto gr; }
 							//}
 						}
 						if(AKeys.KeyTypes_.IsMod(vk) && _IgnoreMod) goto gr;
@@ -489,9 +486,9 @@ namespace Au
 						if(t1 > LowLevelHooksTimeout - 50) {
 							var s1 = _hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
 							var s2 = eat ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;
-							//PrintWarning($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
-							//Print($"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //first Print JIT 30 ms
-							ThreadPool.QueueUserWorkItem(s3 => Print(s3), $"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //fast if with false. But async print can be confusing.
+							//AWarning.Write($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
+							//AOutput.Write($"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //first Write() JIT 30 ms
+							ThreadPool.QueueUserWorkItem(s3 => AOutput.Write(s3), $"Warning: Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}\r\n{new StackTrace(0, false)}"); //fast if with false. But async print can be confusing.
 						}
 						//FUTURE: print warning if t1 is >25 frequently. Unhook and don't rehook if >LowLevelHooksTimeout frequently.
 
@@ -513,7 +510,7 @@ namespace Au
 		/// <remarks>
 		/// Gets registry value HKEY_CURRENT_USER\Control Panel\Desktop:LowLevelHooksTimeout. If it is missing, returns 300; it is the default value used by Windows. If greater than 1000, returns 1000, because Windows 10 ignores bigger values.
 		/// 
-		/// If a hook procedure takes more time, Windows does not wait. Then its return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then it restores the hook and prints a warning. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow.
+		/// If a hook procedure takes more time, Windows does not wait. Then its return value is ignored, and the event is passed to other apps, hooks, etc. After several such cases Windows may fully or partially disable the hook. This class detects such cases; then restores the hook and writes a warning to the output. If the warning is rare, you can ignore it. If frequent, it means your hook procedure is too slow.
 		/// 
 		/// Callback functions of keyboard and mouse triggers are called in a hook procedure, therefore must be as fast as possible. More info: <see cref="Triggers.TriggerFuncs"/>.
 		/// 
@@ -535,7 +532,7 @@ namespace Au
 
 		internal static void OnException_(Exception e)
 		{
-			PrintWarning("Unhandled exception in hook procedure. " + e.ToString());
+			AWarning.Write("Unhandled exception in hook procedure. " + e.ToString());
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 32)] //note: this struct is in shared memory. Size must be same in all library versions.

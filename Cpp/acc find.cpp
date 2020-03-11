@@ -137,7 +137,7 @@ class AccFinder
 			if(*s == ',' || s == eos) {
 				bool not; if(*start == '!') { start++; not = true; } else not = false;
 				int state;
-				if(s > start && *start >= '0' && *start <= '9') {
+				if(s > start&&* start >= '0' && *start <= '9') {
 					LPWSTR se;
 					state = strtoi(start, &se);
 					if(se != s) return false;
@@ -291,10 +291,10 @@ public:
 		if(ap.name != null && !_name.Parse(ap.name, ap.nameLength, true, _errStr)) return false;
 		if(!_ParseProp(ap.prop, ap.propLength)) return false;
 
-		if(!!(_flags2&eAF2::InWebPage)) {
+		if(!!(_flags2 & eAF2::InWebPage)) {
 			_flags |= eAF::MenuToo;
-			if(!!(_flags&(eAF::UIA | eAF::ClientArea))
-				|| !!(_flags2&eAF2::InControls)
+			if(!!(_flags & (eAF::UIA | eAF::ClientArea))
+				|| !!(_flags2 & eAF2::InControls)
 				) return _Error(L"role prefix 'web:' cannot be used with: flag UIA, flag ClientArea, prop 'class', prop 'id'.");
 		}
 
@@ -307,11 +307,11 @@ public:
 		_callback = callback;
 
 		if(a) {
-			if(!!(_flags2&eAF2::InWebPage)) return _ErrorHR(L"Don't use role prefix when searching in Acc.");
-			if(!!(_flags2&eAF2::InControls)) return _ErrorHR(L"Don't use class/id when searching in Acc.");
-			assert(!(_flags&(eAF::UIA | eAF::ClientArea))); //checked in C#
+			if(!!(_flags2 & eAF2::InWebPage)) return _ErrorHR(L"Don't use role prefix when searching in Acc.");
+			if(!!(_flags2 & eAF2::InControls)) return _ErrorHR(L"Don't use class/id when searching in Acc.");
+			assert(!(_flags & (eAF::UIA | eAF::ClientArea))); //checked in C#
 
-			_FindInAcc(ref *a, 0);
+			_FindInAcc(ref * a, 0);
 		} else if(!!(_flags2 & eAF2::InWebPage)) {
 			if(!!(_flags2 & eAF2::InIES)) { //info: Cpp_AccFind finds IES control and adds this flag
 				_FindInWnd(w);
@@ -328,17 +328,17 @@ public:
 				case _eMatchResult::Continue: _FindInAcc(ref aDoc, 1);
 				}
 			}
-		} else if(!!(_flags2&eAF2::InControls)) {
+		} else if(!!(_flags2 & eAF2::InControls)) {
 			wnd::EnumChildWindows(w, [this, w](HWND c)
 			{
-				if(!(_flags&eAF::HiddenToo) && !wnd::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
-				if(!!(_flags2&eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
+				if(!(_flags & eAF::HiddenToo) && !wnd::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
+				if(!!(_flags2 & eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
 				if(_controlClass.Is() && !wnd::ClassNameIs(c, _controlClass)) return true;
 				if(_controlWF != null && !wnd::WinFormsNameIs(c, _controlWF)) return true;
 				return (bool)_FindInWnd(c, true);
 			});
 		} else {
-			_wTL = (wnd::Style(w)&WS_CHILD) ? 0 : w;
+			_wTL = (wnd::Style(w) & WS_CHILD) ? 0 : w;
 			_FindInWnd(w);
 		}
 
@@ -350,14 +350,14 @@ private:
 	{
 		AccDtorIfElem0 aw;
 		HRESULT hr;
-		if(!!(_flags&eAF::UIA)) {
+		if(!!(_flags & eAF::UIA)) {
 			hr = AccUiaFromWindow(w, &aw.acc);
 			aw.misc.flags = eAccMiscFlags::UIA;
 			//FUTURE: to make faster, add option to use IUIAutomationElement::FindFirst or FindAll.
 			//	Problems: 1. No Level. 2. Cannot apply many flags; then in some cases can be slower or less reliable.
 			//	Not very important. Now fast enough. Edge only 3 times slower (outproc); many times faster than outproc Chrome. JavaFX almost same speed (inproc).
 		} else {
-			bool inCLIENT = !!(_flags&eAF::ClientArea);
+			bool inCLIENT = !!(_flags & eAF::ClientArea);
 			hr = ao::AccFromWindowSR(w, inCLIENT ? OBJID_CLIENT : OBJID_WINDOW, &aw.acc);
 			aw.misc.role = inCLIENT ? ROLE_SYSTEM_CLIENT : ROLE_SYSTEM_WINDOW; //not important: can be not CLIENT (eg DIALOG)
 		}
@@ -386,11 +386,11 @@ private:
 			if(_path[level].exactIndex) exactIndex = true;
 		}
 
-		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags&eAF::Reverse), _maxCC);
+		AccChildren c(ref aParent, startIndex, exactIndex, !!(_flags & eAF::Reverse), _maxCC);
 		if(c.Count() == 0) {
 			if(_wTL) {
 				//Java?
-				if(level == (!!(_flags&eAF::ClientArea) ? 0 : 1) && aParent.misc.role == ROLE_SYSTEM_CLIENT) {
+				if(level == (!!(_flags & eAF::ClientArea) ? 0 : 1) && aParent.misc.role == ROLE_SYSTEM_CLIENT) {
 					if(wnd::ClassNameIs(_wTL, L"SunAwt*")) {
 						AccDtorIfElem0 aw(AccJavaFromWindow(_wTL), 0, eAccMiscFlags::Java);
 						if(aw.acc) {
@@ -424,7 +424,7 @@ private:
 		if(_findDOCUMENT && a.elem != 0) return _eMatchResult::SkipChildren;
 
 		bool skipChildren = a.elem != 0 || level >= _maxLevel;
-		bool hiddenToo = !!(_flags&eAF::HiddenToo);
+		bool hiddenToo = !!(_flags & eAF::HiddenToo);
 		_AccState state(ref a);
 
 		_variant_t varRole;
@@ -455,22 +455,30 @@ private:
 		if(level < _minLevel) goto gr;
 
 		//If eAF::Mark, the caller is getting all AO using callback, and wants us to add eAccMiscFlags::Marked to AOs that match role, rect, name and state.
-		int mark = !!(_flags&eAF::Mark) ? 1 : 0; //if some of these props does not match, we'll set this = -1, to avoid comparing other props
+		//	If some of these props does not match, we set mark = -1, to avoid comparing other props.
+		int mark = !!(_flags & eAF::Mark) ? 1 : 0;
+		if(mark && !!(_flags & eAF::Marked_)) {
+			//Currently the caller needs single marked object. Used internally.
+			//	To make faster, don't compare properties of other objects. Some AO are very slow, eg .NET DataGridView with 10 columns and 1000 rows.
+			mark = -1;
+		}
 
-		if(roleNeeded != null) {
-			if(!roleString) roleString = ao::RoleToString(ref varRole);
-			if(wcscmp(roleNeeded, roleString)) {
-				if(mark) mark = -1;
-				else if(_path != null) return _eMatchResult::SkipChildren;
-				else goto gr;
+		if(mark >= 0) {
+			if(roleNeeded != null) {
+				if(!roleString) roleString = ao::RoleToString(ref varRole);
+				if(wcscmp(roleNeeded, roleString)) {
+					if(mark) mark = -1;
+					else if(_path != null) return _eMatchResult::SkipChildren;
+					else goto gr;
+				}
+			}
+			if(_path != null) {
+				if(level < _pathCount - 1) goto gr;
+				skipChildren = true;
 			}
 		}
-		if(_path != null) {
-			if(level < _pathCount - 1) goto gr;
-			skipChildren = true;
-		}
 
-		if(!!(_flags2&eAF2::IsElem) && a.elem != _elem) goto gr;
+		if(!!(_flags2 & eAF2::IsElem) && a.elem != _elem) goto gr;
 
 		if(mark > 0 && !_MatchRect(ref a)) mark = -1;
 
@@ -490,7 +498,7 @@ private:
 
 		if(!!(_stateYes | _stateNo) && mark >= 0) {
 			auto k = state.State();
-			if((k&_stateYes) != _stateYes || !!(k&_stateNo)) {
+			if((k & _stateYes) != _stateYes || !!(k & _stateNo)) {
 				if(mark) mark = -1; else goto gr;
 			}
 		}
@@ -509,7 +517,10 @@ private:
 			}
 		}
 
-		if(mark > 0) a.misc.flags |= eAccMiscFlags::Marked;
+		if(mark > 0) {
+			a.misc.flags |= eAccMiscFlags::Marked;
+			_flags |= eAF::Marked_;
+		}
 
 		switch((*_callback)(a)) {
 		case eAccFindCallbackResult::Continue: goto gr;
@@ -545,7 +556,7 @@ private:
 
 		//Returns: 1 INVISIBLE and not OFFSCREEN, 2 INVISIBLE and OFFSCREEN, 0 none.
 		int IsInvisible() {
-			switch(State()&(STATE_SYSTEM_INVISIBLE | STATE_SYSTEM_OFFSCREEN)) {
+			switch(State() & (STATE_SYSTEM_INVISIBLE | STATE_SYSTEM_OFFSCREEN)) {
 			case STATE_SYSTEM_INVISIBLE: return 1;
 			case STATE_SYSTEM_INVISIBLE | STATE_SYSTEM_OFFSCREEN: return 2;
 			}
@@ -580,7 +591,7 @@ private:
 	{
 		switch(role) {
 		case ROLE_SYSTEM_MENUITEM:
-			if(!(_flags&eAF::MenuToo))
+			if(!(_flags & eAF::MenuToo))
 				if(!str::Switch(roleNeeded, { L"MENUITEM", L"MENUPOPUP" })) return true;
 			break;
 		}
@@ -589,7 +600,7 @@ private:
 
 	//Returns true if the AO is most likely the client area of the top-level window.
 	bool _IsRoleTopLevelClient(int role, int level) {
-		if(_wTL &&  level == 0 && !(_flags&eAF::ClientArea)) {
+		if(_wTL && level == 0 && !(_flags & eAF::ClientArea)) {
 			switch(role) {
 			case ROLE_SYSTEM_MENUBAR: case ROLE_SYSTEM_TITLEBAR: case ROLE_SYSTEM_SCROLLBAR: case ROLE_SYSTEM_GRIP: break;
 			default: return true;
@@ -600,7 +611,7 @@ private:
 
 	bool _MatchRect(ref AccDtorIfElem0& a)
 	{
-		if(!!(_flags2&eAF2::IsRect)) {
+		if(!!(_flags2 & eAF2::IsRect)) {
 			long L, T, W, H;
 			if(0 != a.acc->accLocation(&L, &T, &W, &H, ao::VE(a.elem))) L = T = W = H = 0;
 
@@ -609,10 +620,10 @@ private:
 			//	For example, it is used by the "Find accessible object" tool, to select the captured AO in the tree.
 			//	Do not try to make it relative to window etc. Don't need to encourage users to use unreliable ways to find AO.
 
-			if(!!(_flags2&eAF2::IsRectL) && L != _rect.left) return false;
-			if(!!(_flags2&eAF2::IsRectT) && T != _rect.top) return false;
-			if(!!(_flags2&eAF2::IsRectW) && W != _rect.right) return false;
-			if(!!(_flags2&eAF2::IsRectH) && H != _rect.bottom) return false;
+			if(!!(_flags2 & eAF2::IsRectL) && L != _rect.left) return false;
+			if(!!(_flags2 & eAF2::IsRectT) && T != _rect.top) return false;
+			if(!!(_flags2 & eAF2::IsRectW) && W != _rect.right) return false;
+			if(!!(_flags2 & eAF2::IsRectH) && H != _rect.bottom) return false;
 		}
 		return true;
 	}
@@ -642,7 +653,7 @@ private:
 		if(!!(_flags2 & eAF2::InFirefoxPage)) {
 			//To get DOCUMENT, use Navigate(0x1009). It is documented and tested on FF>=2.
 			_variant_t vNav;
-			int hr = ap->accNavigate(0x1009, ao::VE(), out &vNav);
+			int hr = ap->accNavigate(0x1009, ao::VE(), out & vNav);
 			if(hr == 0 && vNav.vt == VT_DISPATCH && vNav.pdispVal && 0 == vNav.pdispVal->QueryInterface(&ar.acc) && ar.acc) {
 				return 0;
 				//note: don't check BUSY state, it's unreliable.
@@ -681,8 +692,8 @@ private:
 	{
 		int role = a.misc.role;
 		if(role == ROLE_SYSTEM_DOCUMENT) {
-			long state; if(0 != a.get_accState(out state) || !!(state&STATE_SYSTEM_INVISIBLE)) return _eMatchResult::SkipChildren;
-			if(!!(_flags2&eAF2::InChromePage)) { //skip devtools DOCUMENT
+			long state; if(0 != a.get_accState(out state) || !!(state & STATE_SYSTEM_INVISIBLE)) return _eMatchResult::SkipChildren;
+			if(!!(_flags2 & eAF2::InChromePage)) { //skip devtools DOCUMENT
 				Bstr b;
 				if(0 == a.acc->get_accValue(ao::VE(), &b) && b) {
 					//Print(b);
@@ -718,18 +729,18 @@ public:
 		HRESULT hr = _FindDocumentSimple(ap, out ar, eAF2::InChromePage);
 
 		//we use a window prop for the AO enabling status
-		auto enablingStatus = WinFlags::Get(w)&eWinFlags::AccEnableMask;
+		auto enablingStatus = WinFlags::Get(w) & eWinFlags::AccEnableMask;
 
 		if(hr != 0) {
 			//when not in-proc, sometimes does not find while enabling, eg fails to get role because the AO is disconnected
 			if(enablingStatus == eWinFlags::AccEnableStarted) return (HRESULT)eError::WaitChromeDisabled;
 			return hr;
 		}
-		if(!!(enablingStatus& eWinFlags::AccEnableYes)) return 0;
+		if(!!(enablingStatus & eWinFlags::AccEnableYes)) return 0;
 
 		//when Chrome web page AOs disabled, DOCUMENT has BUSY state, until enabling finished. Later never has BUSY state.
 		bool isEnabled = false; long state, cc;
-		if(0 == ar.get_accState(out state) && !(state&STATE_SYSTEM_BUSY)) isEnabled = true; //not BUSY
+		if(0 == ar.get_accState(out state) && !(state & STATE_SYSTEM_BUSY)) isEnabled = true; //not BUSY
 		else if(0 == ar.acc->get_accChildCount(&cc) && cc) isEnabled = true; //or has children
 
 		WinFlags::Set(w, isEnabled ? eWinFlags::AccEnableYes : eWinFlags::AccEnableStarted, eWinFlags::AccEnableMask);
@@ -783,13 +794,13 @@ namespace outproc
 //Returns: 0 not Chrome, 1 Chrome was already enabled, 2 Chrome enabled now.
 int AccEnableChrome(HWND w, bool checkClassName)
 {
-	assert(!(wnd::Style(w)&WS_CHILD));
+	assert(!(wnd::Style(w) & WS_CHILD));
 
 	if(checkClassName && !wnd::ClassNameIs(w, L"Chrome*")) return 0;
 
 	auto wf = WinFlags::Get(w);
-	if(!!(wf&eWinFlags::AccEnableYes)) return 1;
-	if(!!(wf&eWinFlags::AccEnableMask)) return 0; //No or Started
+	if(!!(wf & eWinFlags::AccEnableYes)) return 1;
+	if(!!(wf & eWinFlags::AccEnableMask)) return 0; //No or Started
 
 	//Perf.First();
 	IAccessible* iAgent;

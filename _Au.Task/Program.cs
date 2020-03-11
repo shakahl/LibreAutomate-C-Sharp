@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.IO.Pipes;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
@@ -111,7 +108,7 @@ static unsafe class Program
 
 		//APerf.Next();
 		try { RunAssembly.Run(asmFile, args, pdbOffset, fullPathRefs: fullPathRefs); }
-		catch(Exception ex) { Print(ex); }
+		catch(Exception ex) { AOutput.Write(ex); }
 		finally { s_hook?.Dispose(); }
 	}
 
@@ -168,27 +165,27 @@ static unsafe class Program
 	static void _Hook()
 	{
 		s_hook = AHookWin.ThreadCbt(m => {
-			//Print(m.code, m.wParam, m.lParam);
+			//AOutput.Write(m.code, m.wParam, m.lParam);
 			//switch(m.code) {
 			//case HookData.CbtEvent.ACTIVATE:
 			//case HookData.CbtEvent.SETFOCUS:
-			//	Print((AWnd)m.wParam);
-			//	Print(AWnd.Active);
-			//	Print(AWnd.ThisThread.Active);
-			//	Print(AWnd.Focused);
-			//	Print(AWnd.ThisThread.Focused);
+			//	AOutput.Write((AWnd)m.wParam);
+			//	AOutput.Write(AWnd.Active);
+			//	AOutput.Write(AWnd.ThisThread.Active);
+			//	AOutput.Write(AWnd.Focused);
+			//	AOutput.Write(AWnd.ThisThread.Focused);
 			//	break;
 			//}
 			if(m.code == HookData.CbtEvent.ACTIVATE) {
 				var w = (AWnd)m.wParam;
 				if(!w.HasExStyle(WS2.NOACTIVATE)) {
-					//Print(w);
-					//Print(w.ExStyle);
+					//AOutput.Write(w);
+					//AOutput.Write(w.ExStyle);
 					//Api.SetForegroundWindow(w); //does not work
 					ATimer.After(1, _ => {
 						if(s_hook == null) return;
-						//Print(AWnd.Active);
-						//Print(AWnd.ThisThread.Active);
+						//AOutput.Write(AWnd.Active);
+						//AOutput.Write(AWnd.ThisThread.Active);
 						bool isActive = w == AWnd.Active, activate = !isActive && w == AWnd.ThisThread.Active;
 						if(isActive || activate) { s_hook.Dispose(); s_hook = null; }
 						if(activate) {

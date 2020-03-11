@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -159,7 +157,7 @@ namespace Au
 				if(!_isAuto) return;
 				var k = AScreen.Of(_tb.Control);
 				int i = k.Index;
-				//Print(_tb._sett.screen, i);
+				//AOutput.Write(_tb._sett.screen, i);
 				if(i != _tb._sett.screen) {
 					_screen = i;
 					_tb._sett.screen = i;
@@ -261,7 +259,7 @@ namespace Au
 
 			void _Hook(HookData.AccHookData d)
 			{
-				//Print(d.ev, d.idObject, d.idChild, d.idThread, d.wnd);
+				//AOutput.Write(d.ev, d.idObject, d.idChild, d.idThread, d.wnd);
 				if(d.wnd.Is0 || d.idObject != (d.ev == AccEVENT.OBJECT_REORDER ? AccOBJID.CLIENT : AccOBJID.WINDOW) || d.idChild != 0) return;
 				_OwnerWindow ow;
 				switch(d.ev) {
@@ -395,7 +393,7 @@ namespace Au
 			} else if(_ow.visible) {
 				var wt = _c.Hwnd();
 				if(!_zorderedOnce || !wt.ZorderIsAbove(_ow.w)) {
-					//Print("ZorderAbove", this, _ow.w);
+					//AOutput.Write("ZorderAbove", this, _ow.w);
 					wt.ZorderAbove(_ow.w);
 					_zorderedOnce = true;
 					//never mind: when clicked owner's caption, we receive 2 hook events and need to ZorderAbove 2 times. Speed is OK, but flickers more often.
@@ -414,7 +412,7 @@ namespace Au
 			if(_anchor == TBAnchor.None && onFollowOwner && _followedOnce) return;
 
 			var (r, prevSize) = _GetCachedOwnerRect();
-			//Print(r, _anchor, _xy, Size);
+			//AOutput.Write(r, _anchor, _xy, Size);
 
 			var swp = Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE;
 			var bounds = _c.Bounds;
@@ -465,7 +463,7 @@ namespace Au
 		void _OnWindowPosChanging(ref Api.WINDOWPOS wp)
 		{
 			if(!_loaded) return;
-			//Print(this, wp.flags);
+			//AOutput.Write(this, wp.flags);
 			if(!wp.flags.Has(Native.SWP.NOSIZE)) {
 				SIZE min = _GetMinSize();
 				if(wp.cx < min.width) wp.cx = min.width;

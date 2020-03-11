@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
@@ -107,8 +104,8 @@ class CiSignature
 
 		//APerf.Next();
 		var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
-		var providers = SignatureHelpProviders;
-		//Print(providers);
+		var providers = _SignatureHelpProviders;
+		//AOutput.Write(providers);
 		//APerf.Next();
 		SignatureHelpItems r = null;
 		foreach(var p in providers) {
@@ -117,8 +114,8 @@ class CiSignature
 			//APerf.NW(); //quite fast, don't need async. But in the future can try to wrap this foreach+SignatureHelpProviders in async Task. Need to test with large files.
 			if(r2 == null) continue;
 			if(r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) r = r2;
-			//Example: 'Print(new Something())'.
-			//	The first provider probably is for Print (invocation).
+			//Example: 'AOutput.Write(new Something())'.
+			//	The first provider probably is for Write (invocation).
 			//	Then the second is for Something (object creation).
 			//	We need the innermost, in this case Something.
 		}
@@ -128,7 +125,7 @@ class CiSignature
 			return;
 		}
 		//APerf.NW('s');
-		//Print($"<><c orange>pos={de.position}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
+		//AOutput.Write($"<><c orange>pos={de.position}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
 
 		//var node = document.GetSyntaxRootAsync().Result;
 		var span = new _Span(r.ApplicableSpan, cd.code);
@@ -184,29 +181,38 @@ class CiSignature
 		var b = new StringBuilder("<body>");
 
 		for(int i = 0; i < r.Items.Count; i++) {
-			var k = r.Items[i];
-			if(k is AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem kk) {
+			var sh = r.Items[i];
+			if(sh is AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem kk) {
 				var sym = kk.Symbol;
 				using var li = new CiHtml.HtmlListItem(b, i == iSel);
 				if(i != iSel) b.AppendFormat("<a href='^{0}'>", i); else currentItem = sym;
-				if(!Empty(sym.Name)) CiHtml.SymbolWithoutParametersToHtml(b, sym); //empty name if tuple
+#if false
+				CiHtml.TaggedPartsToHtml(b, sh.PrefixDisplayParts); //works, but formats not as I like (too much garbage)
+#else
+				if(!sym.Name.IsNE()) CiHtml.SymbolWithoutParametersToHtml(b, sym); //empty name if tuple
 				string b1 = "(", b2 = ")";
 				switch(sym) {
 				case IPropertySymbol _: b1 = "["; b2 = "]"; break;
 				case INamedTypeSymbol ints when ints.IsGenericType: b1 = "&lt;"; b2 = "&gt;"; break;
 				}
 				b.Append(b1);
-				int iArg = r.ArgumentIndex, lastParam = k.Parameters.Length - 1;
-				int selParam = iArg <= lastParam ? iArg : (k.IsVariadic ? lastParam : -1);
-				if(!Empty(r.ArgumentName) && sym is IMethodSymbol ims) {
-					var pa = ims.Parameters; for(int pi = 0; pi < pa.Length; pi++) if(pa[pi].Name == r.ArgumentName) { selParam = pi; break; }
-					//selParam = ims.Parameters.FirstOrDefault(o => o.Name == r.ArgumentName)?.Ordinal ?? selParam; //the same
+#endif
+				int iArg = r.ArgumentIndex, lastParam = sh.Parameters.Length - 1;
+				int selParam = iArg <= lastParam ? iArg : (sh.IsVariadic ? lastParam : -1);
+				if(!r.ArgumentName.IsNE()) {
+					var pa = sh.Parameters;
+					for(int pi = 0; pi < pa.Length; pi++) if(pa[pi].Name == r.ArgumentName) { selParam = pi; break; }
 				}
-				CiHtml.ParametersToHtml(b, sym, selParam);
+				CiHtml.ParametersToHtml(b, sym, selParam, sh);
+				//CiHtml.ParametersToHtml(b, sh, selParam); //works, but formats not as I like (too much garbage)
+#if false
+				CiHtml.TaggedPartsToHtml(b, sh.SuffixDisplayParts);
+#else
 				b.Append(b2);
-				if(i != iSel) b.Append("</a>"); else if(selParam >= 0) currentParameter = k.Parameters[selParam];
+#endif
+				if(i != iSel) b.Append("</a>"); else if(selParam >= 0) currentParameter = sh.Parameters[selParam];
 			} else {
-				ADebug.Print(k);
+				ADebug.Print(sh);
 			}
 		}
 
@@ -224,7 +230,7 @@ class CiSignature
 			}
 		}
 
-		if(currentParameter != null && !Empty(currentParameter.Name)) { //if tuple, Name is "" and then would be exception
+		if(currentParameter != null && !currentParameter.Name.IsNE()) { //if tuple, Name is "" and then would be exception
 			b.Append("<p class='parameter'><b>").Append(currentParameter.Name).Append(":</b> &nbsp;");
 			CiHtml.TaggedPartsToHtml(b, currentParameter.DocumentationFactory?.Invoke(default));
 			b.Append("</p>");
@@ -238,7 +244,7 @@ class CiSignature
 	{
 		var a = new List<ISignatureHelpProvider>();
 		foreach(var t in Assembly.GetAssembly(typeof(InvocationExpressionSignatureHelpProvider)).DefinedTypes.Where(t => t.ImplementedInterfaces.Contains(typeof(ISignatureHelpProvider)) && !t.IsAbstract)) {
-			//Print(t);
+			//AOutput.Write(t);
 			var c = t.GetConstructor(Type.EmptyTypes); Debug.Assert(c != null); if(c == null) continue;
 			var o = c.Invoke(null) as ISignatureHelpProvider; Debug.Assert(o != null); if(o == null) continue;
 			a.Add(o);
@@ -246,7 +252,7 @@ class CiSignature
 		return a;
 	}
 
-	List<ISignatureHelpProvider> SignatureHelpProviders => _shp ??= _GetSignatureHelpProviders();
+	List<ISignatureHelpProvider> _SignatureHelpProviders => _shp ??= _GetSignatureHelpProviders();
 	List<ISignatureHelpProvider> _shp;
 
 	public bool OnCmdKey(Keys keyData)

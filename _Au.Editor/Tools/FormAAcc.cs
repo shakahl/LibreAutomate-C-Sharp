@@ -10,16 +10,13 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
 using System.Collections;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using SG = SourceGrid;
 using Aga.Controls.Tree;
@@ -161,7 +158,7 @@ namespace Au.Tools
 			if(!isWeb && !_con.Is0 && !_useCon) {
 				string sId = TUtil.GetUsefulControlId(_con, _wnd, out int id) ? id.ToString() : _con.NameWinForms;
 				if(sId != null) _Add("id", sId, sId.Length > 0, info: c_infoId);
-				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), Empty(sId), info: c_infoClass);
+				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), sId.IsNE(), info: c_infoClass);
 			}
 
 			_AddIfNotEmpty("value", p.Value, false, true, info: "Value.$");
@@ -192,7 +189,7 @@ namespace Au.Tools
 
 			bool _AddIfNotEmpty(string name, string value, bool check, bool escape, string tt = null, string info = null)
 			{
-				if(Empty(value)) return false;
+				if(value.IsNE()) return false;
 				if(escape) value = TUtil.EscapeWildex(value);
 				_Add(name, value, check, tt, info);
 				return true;
@@ -229,8 +226,8 @@ namespace Au.Tools
 
 		void _grid_ZValueChanged(SG.CellContext sender)
 		{
-			//Print(sender.DisplayText);
-			//Print(_inSetGrid);
+			//AOutput.Write(sender.DisplayText);
+			//AOutput.Write(_inSetGrid);
 
 			if(_noeventGridValueChanged) return; _noeventGridValueChanged = true;
 			var g = sender.Grid as ParamGrid;
@@ -304,7 +301,7 @@ namespace Au.Tools
 				}
 				int j = b.Length;
 				b.Append('\"').Append(na).Append('=');
-				if(!Empty(va)) {
+				if(!va.IsNE()) {
 					if(TUtil.IsVerbatim(va, out int prefixLen)) {
 						b.Insert(j, va.Remove(prefixLen++));
 						b.Append(va, prefixLen, va.Length - prefixLen);
@@ -325,7 +322,7 @@ namespace Au.Tools
 
 			if(orThrow && !isWait) b.Append(").OrThrow(");
 			b.Append(");");
-			if(!orThrow && !forTest) b.AppendLine().Append("if(a == null) { Print(\"not found\"); }");
+			if(!orThrow && !forTest) b.AppendLine().Append("if(a == null) { AOutput.Write(\"not found\"); }");
 
 			var R = b.ToString();
 
@@ -447,7 +444,7 @@ namespace Au.Tools
 		private void _bOK_Click(object sender, EventArgs e)
 		{
 			ZResultCode = _code.Text;
-			if(Empty(ZResultCode)) this.DialogResult = DialogResult.Cancel;
+			if(ZResultCode.IsNE()) this.DialogResult = DialogResult.Cancel;
 		}
 
 		private void _bTest_Click(object sender, EventArgs ea)
@@ -478,9 +475,9 @@ namespace Au.Tools
 			AFFlags flags = Enum_.AFFlags_Mark | AFFlags.HiddenToo | AFFlags.MenuToo;
 			if(_IsChecked2(nameof(AFFlags.UIA))) flags |= AFFlags.UIA;
 			var us = (uint)p.State;
-			var prop = $"rect={p.Rect.ToString()}\0state=0x{(us.ToString("X"))},!0x{((~us).ToString("X"))}";
+			var prop = $"rect={p.Rect.ToString()}\0state=0x{us.ToString("X")},!0x{(~us).ToString("X")}";
 			if(skipWINDOW) prop += $"\0 notin=WINDOW";
-			//Print(prop.Replace('\0', ';'));
+			//AOutput.Write(prop.Replace('\0', ';'));
 			var role = p.Role; if(role.Length == 0) role = null;
 			try {
 				AAcc.Find(w, role, "**tc " + p.Name, prop, flags, also: o => {
@@ -498,7 +495,7 @@ namespace Au.Tools
 					}
 					x.a = o;
 					if(o.MiscFlags.Has(Enum_.AccMiscFlags_Marked)) {
-						//Print(o);
+						//AOutput.Write(o);
 						if(xSelect == null) xSelect = x;
 					}
 					stack.Peek().Add(x);
@@ -523,7 +520,7 @@ namespace Au.Tools
 			var (xRoot, xSelect) = _CreateModel(w, in p, false);
 			if(xRoot == null) return;
 
-			if(xSelect == null) {
+			if(xSelect == null && w.IsAlive) {
 				//IAccessible of some controls are not connected to the parent.
 				//	Noticed this in Office 2003 Word Options dialog and in Dreamweaver.
 				//	Also, WndContainer then may get the top-level window. Eg in Word.
@@ -545,8 +542,8 @@ namespace Au.Tools
 				}
 			}
 
-			//Print("------");
-			//Print(xr);
+			//AOutput.Write("------");
+			//AOutput.Write(xr);
 
 			//APerf.Next();
 			_tree.Model = new _AccTree(xRoot);
@@ -579,7 +576,7 @@ namespace Au.Tools
 			var ri = _acc.RoleInt;
 			if(!_acc.GetProperties(ri == 0 ? "Rrn" : "rn", out var p)) return false;
 			string rs = ri == 0 ? p.Role : null;
-			//Print(elem, ri, rs, p.Rect, _acc);
+			//AOutput.Write(elem, ri, rs, p.Rect, _acc);
 			var xr = (_tree.Model as _AccTree).Root;
 			foreach(var xe in xr.Descendants()) {
 				var n = xe as _AccNode;
@@ -630,7 +627,7 @@ namespace Au.Tools
 
 			_ccName.ValueNeeded = node => {
 				var a = node.Tag as _AccNode;
-				//Print(a.a);
+				//AOutput.Write(a.a);
 				return a.DisplayText;
 			};
 			_ccName.DrawText += _ccName_DrawText;
@@ -642,9 +639,9 @@ namespace Au.Tools
 		private void _ccName_DrawText(object sender, DrawEventArgs e)
 		{
 			var a = e.Node.Tag as _AccNode;
-			//Print(a.a);
+			//AOutput.Write(a.a);
 			if(e.Node.IsSelected) {
-				//Print(e.Text, e.Context.DrawSelection);
+				//AOutput.Write(e.Text, e.Context.DrawSelection);
 				if(e.Context.DrawSelection == DrawSelectionMode.Inactive) e.TextColor = Color.Blue;
 			} else {
 				if(a.IsInvisible) e.TextColor = Color.Gray;
@@ -809,7 +806,7 @@ Example: {W=100 H=20}";
 		const string c_infoElem = @"Simple element id.
 Note: It usually changes when elements before the AO are added or removed. Use it only if really need.";
 		const string c_infoAlso = @"<b>also<> examples:
-<code>o => { Print(o); return false; }</code>
+<code>o => { AOutput.Write(o); return false; }</code>
 <code>o => o.GetRect(out var r, o.WndTopLevel) && r.Contains(266, 33)</code>
 
 Can be multiline. For newline use Ctrl+Enter.";
@@ -818,7 +815,7 @@ Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child (-3 wou
 		const string c_infoWait = @"Wait timeout, seconds.
 If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.";
 		const string c_infoLevel = @"<b>level<> - 0-based level of the AO in the object tree. Or min and max levels. Default 0 1000. Relative to the window, control (if used <b>class<> or <b>id<>) or web page (role prefix <b>web:<> etc).";
-		const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature: open URL <link firefox.exe|about:config>about:config<>, set <b>browser.tabs.remote.autostart<> = <b>false<>, restart Firefox. More info in <help>AAcc<> help.
+		const string c_infoFirefox = @"To make much faster in Firefox, disable its multiprocess feature. More info in <help>AAcc<> help. Or use Chrome instead.
 <+resetInfo>X<>";
 		const string c_infoJava = @"If there are no AOs in this window, need to <+jab>enable<> Java Access Bridge etc. More info in <help>AAcc<> help.
 <+resetInfo>X<>";

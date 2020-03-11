@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,20 +10,19 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.Shared.Extensions;
 
 class CiAutocorrect
 {
@@ -58,7 +56,7 @@ class CiAutocorrect
 	}
 
 	/// <summary>
-	/// Called on Enter, Shift+Enter, Ctrl+Enter, Ctrl+; Tab and Backspace, before passing it to Scintilla. Won't pass if returns true.
+	/// Called on Enter, Shift+Enter, Ctrl+Enter, Ctrl+;, Tab, Backspace and Delete, before passing it to Scintilla. Won't pass if returns true.
 	/// Enter: If before ')' or ']' and not after ',': leaves the argument list etc and adds newline, maybe semicolon, braces, indentation, and returns true.
 	/// Shift+Enter or Ctrl+Enter: The same as above, but anywhere.
 	/// Ctrl+;: Like SciBeforeCharAdded(';'), but anywhere; and inserts semicolon now.
@@ -172,7 +170,8 @@ class CiAutocorrect
 			if(trivia.SpanStart != --pos) return;
 			tempRangeFrom = 0;
 		} else {
-			var node = root.FindToken(pos).Parent;
+			var token = root.FindToken(pos);
+			var node = token.Parent;
 			var kind = node.Kind();
 			if(kind == SyntaxKind.InterpolatedStringText) {
 				node = node.Parent;
@@ -185,7 +184,7 @@ class CiAutocorrect
 			if(span.Start > pos) return; // > if pos is in node's leading trivia, eg comments or #if-disabled block
 
 			//CiUtil.PrintNode(node);
-			//Print("ALL");
+			//AOutput.Write("ALL");
 			//CiUtil.PrintNode(root, false);
 
 			if(ch == '\"' || ch == '\'') {
@@ -210,8 +209,8 @@ class CiAutocorrect
 					tempRangeFrom = 0;
 				}
 			} else {
-				//Print(kind);
-				if(ch == '<' && !(kind == SyntaxKind.TypeParameterList || kind == SyntaxKind.TypeArgumentList)) return; //can be operators
+				//AOutput.Write(kind);
+				if(ch == '<' && !_IsGenericLessThan()) return; //can be operators
 				switch(kind) {
 				case SyntaxKind.CompilationUnit:
 				case SyntaxKind.CharacterLiteralExpression:
@@ -239,6 +238,26 @@ class CiAutocorrect
 						newPos = tempRangeFrom + 1;
 					}
 					break;
+				}
+
+				bool _IsGenericLessThan()
+				{
+					if(kind == SyntaxKind.TypeParameterList || kind == SyntaxKind.TypeArgumentList) return true;
+					if(kind != SyntaxKind.LessThanExpression) return false;
+					var tok2 = token.GetPreviousToken(); if(!tok2.IsKind(SyntaxKind.IdentifierToken)) return false;
+					var semo = cd.document.GetSemanticModelAsync().Result;
+					var si = semo.GetSemanticInfo(tok2, cd.document.Project.Solution.Workspace, default);
+					foreach(var v in si.GetSymbols(includeType: true)) {
+						//AOutput.Write(v);
+						switch(v) {
+						case INamedTypeSymbol ints when ints.IsGenericType:
+						case IMethodSymbol ims when ims.IsGenericMethod:
+							return true;
+						}
+						//not perfect: if eg IList and IList<T> are available, GetSemanticInfo gets only IList. Then no '>' completion. The same in VS.
+						//	OK if only IList<T> available. Methods OK.
+					}
+					return false;
 				}
 			}
 		}
@@ -276,6 +295,7 @@ class CiAutocorrect
 			char ch = code[pos];
 			canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
 			if(!(canCorrect | canAutoindent)) return false;
+			//shoulddo?: don't correct after inner ']' etc, eg A(1, [In] 2)
 		}
 
 		if(!cd.GetDocument()) return false;
@@ -299,7 +319,7 @@ class CiAutocorrect
 		bool needSemicolon = false, needBlock = false, canExitBlock = false, dontIndent = false;
 		SyntaxToken token = default; _Block block = null;
 		foreach(var v in nodeFromPos.AncestorsAndSelf()) {
-			//Print(v.GetType().Name);
+			//AOutput.Write(v.GetType().Name);
 			if(v is StatementSyntax ss) {
 				node = v;
 				switch(ss) {
@@ -398,6 +418,7 @@ class CiAutocorrect
 					break;
 				}
 			} else if(v is AttributeListSyntax als) {
+				if(v.Parent is ParameterSyntax) continue;
 				node = v;
 				token = als.CloseBracketToken;
 				if(token.IsMissing) canCorrect = false;
@@ -456,7 +477,7 @@ class CiAutocorrect
 				canAutoindent = true;
 				canExitBlock = anywhere && node == nodeFromPos && tok1.IsKind(SyntaxKind.CloseBraceToken) && pos <= tok1.SpanStart;
 			}
-			//Print(canCorrect, canAutoindent, canExitBlock);
+			//AOutput.Write(canCorrect, canAutoindent, canExitBlock);
 
 			if(canCorrect) {
 				if(needSemicolon) {
@@ -472,7 +493,7 @@ class CiAutocorrect
 			break;
 		}
 
-		//Print("----");
+		//AOutput.Write("----");
 		//CiUtil.PrintNode(nodeFromPos);
 		//CiUtil.PrintNode(node);
 
@@ -495,11 +516,11 @@ class CiAutocorrect
 		if(!(canCorrect | canAutoindent)) return false;
 
 		if(canCorrect) {
-			//Print($"Span={ node.Span}, Span.End={node.Span.End}, FullSpan={ node.FullSpan}, SpanStart={ node.SpanStart}, EndPosition={ node.EndPosition}, FullWidth={ node.FullWidth}, HasTrailingTrivia={ node.HasTrailingTrivia}, Position={ node.Position}, Width={ node.Width}");
+			//AOutput.Write($"Span={ node.Span}, Span.End={node.Span.End}, FullSpan={ node.FullSpan}, SpanStart={ node.SpanStart}, EndPosition={ node.EndPosition}, FullWidth={ node.FullWidth}, HasTrailingTrivia={ node.HasTrailingTrivia}, Position={ node.Position}, Width={ node.Width}");
 			//return true;
 
 			int endOfSpan = token.Span.End, endOfFullSpan = token.FullSpan.End;
-			//Print(endOfSpan, endOfFullSpan);
+			//AOutput.Write(endOfSpan, endOfFullSpan);
 
 			if(onSemicolon) {
 				if(anywhere) {
@@ -550,13 +571,14 @@ class CiAutocorrect
 				}
 
 				var s = b.ToString();
-				//Print($"'{s}'");
+				//AOutput.Write($"'{s}'");
 				doc.Z.ReplaceRange(true, endOfSpan, endOfSpan + replaceLen, s);
 				doc.Z.GoToPos(true, finalPos);
 			}
 		} else { //autoindent
+			int indent = 0;
 
-			//Print(pos);
+			//AOutput.Write(pos);
 
 			//remove spaces and tabs around the line break
 			static bool _IsSpace(char c) => c == ' ' || c == '\t';
@@ -568,6 +590,8 @@ class CiAutocorrect
 			if(canExitBlock && (canExitBlock = code.RegexMatch(@"(?m)^[\t \r\n]*\}", 0, out RXGroup g, RXFlags.ANCHORED, from..))) replaceTo = g.End;
 
 			if(!canExitBlock) {
+				if(node is AttributeListSyntax) { indent--; node = node.Parent; } //don't indent after [Attribute]
+
 				//if we are not inside node span, find the first ancestor node where we are inside
 				TextSpan spanN = node.Span;
 				if(!(from >= spanN.End && tok1.IsKind(SyntaxKind.CloseParenToken))) { //if after ')', we are after eg if(...) or inside an expression
@@ -588,14 +612,13 @@ class CiAutocorrect
 			}
 
 			//get indentation
-			int indent = 0;
 			bool prevBlock = false;
 			foreach(var v in node.AncestorsAndSelf()) {
 				if(v is BlockSyntax) {
 					prevBlock = true;
 				} else {
 					if(prevBlock) { //don't indent block that is child of eg 'if' which adds indentation.
-									//Print("-");
+									//AOutput.Write("-");
 						prevBlock = false;
 						indent--;
 					}
@@ -606,9 +629,10 @@ class CiAutocorrect
 					case CatchClauseSyntax _:
 					case FinallyClauseSyntax _:
 					case LabeledStatementSyntax _:
+					case AttributeListSyntax _:
 					case NamespaceDeclarationSyntax _: //don't indent namespaces
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
-						//Print("-" + v.GetType().Name, v.Span, pos);
+						//AOutput.Write("-" + v.GetType().Name, v.Span, pos);
 						continue;
 					case ExpressionSyntax _:
 					case BaseArgumentListSyntax _:
@@ -616,7 +640,7 @@ class CiAutocorrect
 					case EqualsValueClauseSyntax _:
 					case VariableDeclaratorSyntax _:
 					case VariableDeclarationSyntax _:
-						//Print("--" + v.GetType().Name, v.Span, pos);
+						//AOutput.Write("--" + v.GetType().Name, v.Span, pos);
 						continue; //these can be if we are in a lambda block. And maybe more, nevermind.
 					case CompilationUnitSyntax _:
 					case ClassDeclarationSyntax k1 when k1.Identifier.Text == "Script": //don't indent script class content
@@ -624,7 +648,7 @@ class CiAutocorrect
 						goto endLoop1;
 					}
 				}
-				//Print(v.GetType().Name, v.Span, pos);
+				//AOutput.Write(v.GetType().Name, v.Span, pos);
 				indent++;
 			}
 			endLoop1:
@@ -654,8 +678,8 @@ class CiAutocorrect
 				static bool _IsBreaklessSection(SwitchSectionSyntax ss) => !ss.Statements.Any(o => o is BreakStatementSyntax);
 			}
 
-			//Print($"from={from}, to={to}, nodeFromPos={nodeFromPos.GetType().Name}, node={node.GetType().Name}");
-			//Print($"indent={indent}, isBraceLine={isBraceLine}, expandBraces={expandBraces}");
+			//AOutput.Write($"from={from}, to={to}, nodeFromPos={nodeFromPos.GetType().Name}, node={node.GetType().Name}");
+			//AOutput.Write($"indent={indent}, isBraceLine={isBraceLine}, expandBraces={expandBraces}");
 
 			if(indent < 1 && !(expandBraces | addBreak | canExitBlock)) return false;
 
@@ -696,7 +720,7 @@ class CiAutocorrect
 
 			//replace text and set caret position
 			var s = b.ToString();
-			//Print($"'{s}'");
+			//AOutput.Write($"'{s}'");
 			doc.Z.ReplaceRange(true, replaceFrom, replaceTo, s);
 			pos = replaceFrom + s.Length;
 			if(expandBraces) pos -= indent + 2; else if(isBraceLine && code.Eq(replaceFrom - 1, "\n")) pos -= indent;
@@ -880,7 +904,7 @@ class CiAutocorrect
 	{
 		var trivia = node.FindTrivia(pos);
 		if(trivia.RawKind != 0) {
-			//Print($"{trivia.Kind()}, {pos}, {trivia.FullSpan}, '{trivia}'");
+			//AOutput.Write($"{trivia.Kind()}, {pos}, {trivia.FullSpan}, '{trivia}'");
 			var ts = trivia.Span;
 			if(!(pos > ts.Start && pos < ts.End)) { //pos is not inside trivia; possibly at start or end.
 				bool lookBefore = pos == ts.Start && trivia.IsKind(SyntaxKind.EndOfLineTrivia) && node.FullSpan.Start < pos;

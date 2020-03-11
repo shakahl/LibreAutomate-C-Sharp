@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -71,7 +69,7 @@ namespace Au
 					ATime.Sleep(j); //0+1+2+3
 				}
 				//APerf.NW();
-				//Print(j, i);
+				//AOutput.Write(j, i);
 				if(ok || willFail) break;
 				//note: don't put the _Sleep(7) here
 			}
@@ -107,7 +105,7 @@ namespace Au
 						if(dtfr >= 1) break;
 
 						int dx = (int)(dtfr * dxall), dy = (int)(dtfr * dyall);
-						//Print(dx, dy, dtfr);
+						//AOutput.Write(dx, dy, dtfr);
 
 						POINT pt = (p0.x + dx, p0.y + dy);
 						if(dx != pdx || dy != pdy) {
@@ -307,7 +305,7 @@ namespace Au
 				for(int j = 1; j < nbytes; j++) v |= a[i++] << j * 8;
 				v = (int)((uint)v >> 2);
 				if(isSleep) {
-					//Print($"nbytes={nbytes}    sleep={v}");
+					//AOutput.Write($"nbytes={nbytes}    sleep={v}");
 
 					_Sleep((int)Math.Round(v * speedFactor));
 				} else {
@@ -317,7 +315,7 @@ namespace Au
 					int dx = pdx + x; pdx = dx;
 					int dy = pdy + y; pdy = dy;
 
-					//Print($"dx={dx} dy={dy}    x={x} y={y}    nbytes={nbytes}    v=0x{v:X}");
+					//AOutput.Write($"dx={dx} dy={dy}    x={x} y={y}    nbytes={nbytes}    v=0x{v:X}");
 
 					p.x += dx; p.y += dy;
 				}
@@ -419,7 +417,7 @@ namespace Au
 		{
 			if(w.Is0) w = Api.WindowFromPoint(p);
 			bool windowOfThisThread = w.IsOfThisThread;
-			if(windowOfThisThread) PrintWarning("Click(window of own thread) may not work. Use another thread.");
+			if(windowOfThisThread) AWarning.Write("Click(window of own thread) may not work. Use another thread.");
 			//Sending a click to a window of own thread often does not work.
 			//Reason 1: often the window on down event enters a message loop that waits for up event. But then this func cannot send the up event because it is in the loop (if it does doevents).
 			//	Known workarounds:
@@ -973,7 +971,7 @@ namespace Au
 			var mb = (MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 				& ~t_pressedButtons;
 			if(WaitForNoButtonsPressed(-5, mb)) return;
-			PrintWarning("Info: Waiting for releasing mouse buttons. See AOpt.Mouse.Relaxed.");
+			AWarning.Write("Info: Waiting for releasing mouse buttons. See AOpt.Mouse.Relaxed.");
 			WaitForNoButtonsPressed(0, mb);
 		}
 
@@ -995,7 +993,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AMouse.WaitForClick(0, MButtons.Left, up: true, block: false);
-		/// Print("click");
+		/// AOutput.Write("click");
 		/// ]]></code>
 		/// </example>
 		public static bool WaitForClick(double secondsTimeout, MButtons button, bool up = false, bool block = false)
@@ -1015,7 +1013,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var button = AMouse.WaitForClick(0, up: true, block: true);
-		/// Print(button);
+		/// AOutput.Write(button);
 		/// ]]></code>
 		/// </example>
 		public static MButtons WaitForClick(double secondsTimeout, bool up = false, bool block = false)
@@ -1351,7 +1349,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// The <b>Dispose</b> function releases mouse buttons pressed by the function that returned this variable.
+	/// At the end of <c>using(...) { ... }</c> block releases mouse buttons pressed by the function that returned this variable. See example.
 	/// </summary>
 	/// <example>
 	/// Drag and drop: start at x=8 y=8, move 20 pixels down, drop.

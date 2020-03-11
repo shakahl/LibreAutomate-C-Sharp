@@ -10,14 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 using SG = SourceGrid;
 
@@ -203,7 +200,7 @@ namespace Au.Tools
 
 		(string code, string wndVar) _FormatCode(bool forTest = false)
 		{
-			//Print("_FormatCode");
+			//AOutput.Write("_FormatCode");
 			if(_image == null) return default;
 
 			var b = new StringBuilder();
@@ -226,7 +223,7 @@ namespace Au.Tools
 
 			var (wndCode, wndVar) = _code.ZGetWndFindCode(_wnd, _useCon ? _con : default);
 
-			if(_grid.ZGetValue("rect", out var sRect, true)) b.Append("(").Append(wndVar).Append(", ").Append(sRect).Append(")");
+			if(_grid.ZGetValue("rect", out var sRect, true)) b.AppendFormat("({0}, {1})", wndVar, sRect);
 			else b.Append(wndVar);
 
 			b.AppendOtherArg(isColor ? "0x" : "image");
@@ -253,7 +250,7 @@ namespace Au.Tools
 
 			if(!isColor) {
 				if(isMulti) {
-					bb.AppendLine("object[] image = {");
+					bb.AppendLine("WIImage[] image = {");
 					foreach(var v in _multi) bb.Append('\t').Append(v).AppendLine(",");
 					bb.Append('}');
 				} else {
@@ -281,7 +278,7 @@ namespace Au.Tools
 					if(!orThrow || mouse != null) b.AppendLine();
 					if(!orThrow) b.Append("if(im != null) { ");
 					if(mouse != null) b.Append(mouse);
-					if(!orThrow) b.Append(" } else { Print(\"not found\"); }");
+					if(!orThrow) b.Append(" } else { AOutput.Write(\"not found\"); }");
 				} else if(!orThrow) {
 					bb.Append("bool ok = ");
 				}
@@ -442,7 +439,7 @@ namespace Au.Tools
 		private void _bOK_Click(object sender, EventArgs e)
 		{
 			ZResultCode = _code.Text;
-			if(Empty(ZResultCode)) this.DialogResult = DialogResult.Cancel;
+			if(ZResultCode.IsNE()) this.DialogResult = DialogResult.Cancel;
 		}
 
 		private void _bTest_Click(object sender, EventArgs e)

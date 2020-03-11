@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -150,7 +148,7 @@ namespace Au.Controls
 			{
 				//note: we always get all _Node and controls (docked and floating), regardless of _control type (AuDockPanel or _Float).
 
-				//Print(index);
+				//AOutput.Write(index);
 				var n = _manager._aPanel.Count * 2;
 				if(index < n) {
 					var gp = _manager._aPanel[index / 2];
@@ -183,7 +181,7 @@ namespace Au.Controls
 
 			internal _AccNode(_Node gn)
 			{
-				//Print("_AccNode ctor", gn.AccName);
+				//AOutput.Write("_AccNode ctor", gn.AccName);
 				_gn = gn;
 			}
 
@@ -225,7 +223,7 @@ namespace Au.Controls
 
 			public override AccessibleObject HitTest(int x, int y)
 			{
-				//Print("node.HitTest");
+				//AOutput.Write("node.HitTest");
 				if(this.Bounds.Contains(x, y)) return this;
 				return null;
 			}

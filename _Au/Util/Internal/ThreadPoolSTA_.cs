@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 //CONSIDER: instead use standard C# STA pool code.
 //	Initially I rejected it because each apppdomain that uses it creates 4 threads. But now we don't support multiple apppdomains.
@@ -213,7 +211,7 @@ namespace Au.Util
 
 			//~Work()
 			//{
-			//	Print("dtor");
+			//	AOutput.Write("dtor");
 			//}
 		}
 

@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -70,7 +67,7 @@ namespace Au.Util
 		/// </remarks>
 		public static string RemoveUnderlineAmpersand(string s)
 		{
-			if(!Empty(s)) {
+			if(!s.IsNE()) {
 				for(int i = 0; i < s.Length; i++) if(s[i] == '&') goto g1;
 				return s;
 				g1:
@@ -99,7 +96,7 @@ namespace Au.Util
 			StringBuilder b = null;
 			foreach(var v in a) {
 				int esc = 0;
-				if(Empty(v)) esc = 1; else if(v.IndexOf('\"') >= 0) esc = 2; else foreach(var c in v) if(c <= ' ') { esc = 1; break; }
+				if(v.IsNE()) esc = 1; else if(v.IndexOf('\"') >= 0) esc = 2; else foreach(var c in v) if(c <= ' ') { esc = 1; break; }
 				if(esc == 0 && a.Length == 1) return a[0];
 				if(b == null) b = new StringBuilder(); else b.Append(' ');
 				if(esc == 0) b.Append(v);
@@ -124,7 +121,7 @@ namespace Au.Util
 		/// </summary>
 		public static unsafe string[] CommandLineToArray(string s)
 		{
-			if(Empty(s)) return Array.Empty<string>();
+			if(s.IsNE()) return Array.Empty<string>();
 			char** p = Api.CommandLineToArgvW(s, out int n);
 			var a = new string[n];
 			for(int i = 0; i < n; i++) a[i] = new string(p[i]);
@@ -163,7 +160,7 @@ namespace Au.Util
 		/// </remarks>
 		public static int[] StringToIntArray(string s)
 		{
-			if(Empty(s)) return Array.Empty<int>();
+			if(s.IsNE()) return Array.Empty<int>();
 			int n = 1; foreach(var v in s) if(v == ' ') n++;
 			var a = new int[n];
 			a[0] = s.ToInt(0, STIFlags.DontSkipSpaces);

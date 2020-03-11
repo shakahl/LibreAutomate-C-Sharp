@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -30,7 +28,7 @@ namespace Au.Util
 	/// 	{
 	/// 		AWnd w = AWnd.FindFast(null, "Notepad");
 	/// 		string s = GetWndText(w);
-	/// 		Print(s);
+	/// 		AOutput.Write(s);
 	/// 	}
 	/// 
 	/// 	public static string GetWndText(AWnd w)
@@ -76,7 +74,7 @@ namespace Au.Util
 		/// </remarks>
 		public static unsafe T[] Get<T>(int n, ref WeakReference<T[]> weakReference) where T : unmanaged
 		{
-			//if(threadStaticWeakReference != null && !threadStaticWeakReference.TryGetTarget(out var test)) Print("collected"); test = null;
+			//if(threadStaticWeakReference != null && !threadStaticWeakReference.TryGetTarget(out var test)) AOutput.Write("collected"); test = null;
 
 			if(sizeof(T) <= 2) { //info: don't concern about speed. In Release this is removed completely by the compiler.
 				if(n < 300) n = 300;

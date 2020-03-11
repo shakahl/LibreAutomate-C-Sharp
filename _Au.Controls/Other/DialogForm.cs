@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Windows.Forms;
 using System.Drawing;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -70,7 +68,7 @@ namespace Au.Controls
 					var w = (AWnd)this;
 					if(w.IsActive) {
 						Owner = null;
-						w.Owner = (AWnd)fo;
+						w.OwnerWindow = (AWnd)fo;
 					}
 				}
 			}

@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 using Microsoft.Win32.SafeHandles;
 
-using static Au.AStatic;
 
 namespace Au.Types
 {

@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -37,10 +35,10 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// using(new AInputBlocker(BIEvents.All)) {
-	/// 	Print("blocked");
+	/// 	AOutput.Write("blocked");
 	/// 	5.s();
 	/// }
-	/// Print("not blocked");
+	/// AOutput.Write("not blocked");
 	/// ]]></code>
 	/// </example>
 	public unsafe class AInputBlocker : IDisposable
@@ -155,7 +153,7 @@ namespace Au
 				//To reproduce, let our script send small series of chars in loop, and simultaneously a foreign script send other chars.
 				ATime.DoEvents();
 
-				//Print("started");
+				//AOutput.Write("started");
 				Api.SetEvent(_syncEvent);
 
 				//the acc hook detects Ctrl+Alt+Del, Win+L, UAC consent, etc. SystemEvents.SessionSwitch only Win+L.
@@ -168,7 +166,7 @@ namespace Au
 					bool onlyUp = _discardBlockedKeys || ATime.WinMilliseconds - _startTime > c_maxResendTime;
 					_blockedKeys.SendBlocked_(onlyUp);
 				}
-				//Print("ended");
+				//AOutput.Write("ended");
 			}
 			finally {
 				_blockedKeys = null;
@@ -187,10 +185,10 @@ namespace Au
 		void _KeyHookProc(HookData.Keyboard x)
 		{
 			if(_DontBlock(x.IsInjected, x.dwExtraInfo, x.vkCode)) {
-				//Print("ok", x.vkCode, !x.IsUp);
+				//AOutput.Write("ok", x.vkCode, !x.IsUp);
 				return;
 			}
-			//Print(message, x.vkCode);
+			//AOutput.Write(message, x.vkCode);
 
 			//if(x.vkCode == KKey.Delete && !x.IsUp) {
 			//	//Could detect Ctrl+Alt+Del here. But SetWinEventHook(SYSTEM_DESKTOPSWITCH) is better.
@@ -198,7 +196,7 @@ namespace Au
 
 			if(ResendBlockedKeys && ATime.WinMilliseconds - _startTime < c_maxResendTime) {
 				_blockedKeys ??= new AKeys(AOpt.Static.Key);
-				//Print("blocked", x.vkCode, !x.IsUp);
+				//AOutput.Write("blocked", x.vkCode, !x.IsUp);
 				_blockedKeys.AddRaw_(x.vkCode, (ushort)x.scanCode, x.SendInputFlags_);
 			}
 			x.BlockEvent();
@@ -241,7 +239,7 @@ namespace Au
 			//the hook is called before and after Ctrl+Alt+Del screen. Only idEventThread different.
 			//	GetForegroundWindow returns 0. WTSGetActiveConsoleSessionId returns main session.
 
-			//Print("desktop switch"); //return;
+			//AOutput.Write("desktop switch"); //return;
 
 			_startTime = 0; //don't resend Ctrl+Alt+Del and other blocked keys
 			if(!ResumeAfterCtrlAltDelete)

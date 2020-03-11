@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au.Controls
@@ -356,7 +354,7 @@ namespace Au.Controls
 
 		bool _CanParseTags(string s)
 		{
-			if(Empty(s)) return false;
+			if(s.IsNE()) return false;
 			return C.ZInitTagsStyle switch
 			{
 				AuScintilla.ZTagsStyle.AutoAlways => s.IndexOf('<') >= 0,
@@ -667,7 +665,7 @@ namespace Au.Controls
 		/// </summary>
 		internal void AnnotationText_(int line, string s)
 		{
-			if(Empty(s)) s = null;
+			if(s.IsNE()) s = null;
 			SetString(SCI_ANNOTATIONSETTEXT, line, s);
 		}
 
@@ -894,7 +892,7 @@ namespace Au.Controls
 				fixed(byte* p = b) _enc = _DetectEncoding(p, trySize);
 				if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
 				int bomLength = (int)_enc >> 4;
-				//Print(_enc, bomLength, fileSize);
+				//AOutput.Write(_enc, bomLength, fileSize);
 
 				if(fileSize > trySize) {
 					var old = b; b = new byte[fileSize + 4]; Array.Copy(old, b, trySize);
@@ -1030,7 +1028,7 @@ namespace Au.Controls
 					b[0] = 0xEF; b[1] = 0xBB; b[2] = 0xBF;
 				} //else bom 0
 
-				//for(int i = 0; i < len; i++) Print(b[i]); return; //test
+				//for(int i = 0; i < len; i++) AOutput.Write(b[i]); return; //test
 
 				AFile.Save(file, temp => { using var fs = File.OpenWrite(temp); fs.Write(b, 0, len); }, tempDirectory: tempDirectory);
 				//using(var fs = File.OpenWrite(file)) fs.Write(b, 0, len); //not much faster

@@ -1,5 +1,5 @@
 /*/ runMode blue; ifRunning warn_restart; /*/ //.
-using Au; using Au.Types; using static Au.AStatic; using System; using System.Collections.Generic;
+using Au; using Au.Types; using System; using System.Collections.Generic;
 using Au.Triggers; //need this for triggers
 using System.Windows.Forms; //need this for some examples in this script
 
@@ -26,45 +26,45 @@ var tt = Triggers.Autotext;
 
 //hotkey triggers
 
-hk["Ctrl+K"] = o => Print(o.Trigger); //it means: execute code "o => Print(o.Trigger)" when I press Ctrl+K
+hk["Ctrl+K"] = o => AOutput.Write(o.Trigger); //it means: execute code "o => AOutput.Write(o.Trigger)" when I press Ctrl+K
 hk["Ctrl+Shift+F11"] = o => {
-	Print(o.Trigger);
+	AOutput.Write(o.Trigger);
 	var w1 = AWnd.FindOrRun("* Notepad", run: () => AExec.Run(AFolders.System + "notepad.exe"));
-	Text("text");
+	AKeys.Text("text");
 	w1.Close();
 };
 
 //triggers that work only with some windows
 
 Triggers.Of.Window("* WordPad", "WordPadClass"); //let the following triggers work only when a WordPad window is active
-hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
-hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+hk["Ctrl+F5"] = o => AOutput.Write(o.Trigger, o.Window);
+hk["Ctrl+F6"] = o => AOutput.Write(o.Trigger, o.Window);
 
 var notepad = Triggers.Of.Window("* Notepad"); //let the following triggers work only when a Notepad window is active
-hk["Ctrl+F5"] = o => Print(o.Trigger, o.Window);
-hk["Ctrl+F6"] = o => Print(o.Trigger, o.Window);
+hk["Ctrl+F5"] = o => AOutput.Write(o.Trigger, o.Window);
+hk["Ctrl+F6"] = o => AOutput.Write(o.Trigger, o.Window);
 
 Triggers.Of.AllWindows(); //let the following triggers work with all windows
 
 //mouse triggers
 
-mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => Print(o.Trigger);
-mouse[TMEdge.RightInCenter50] = o => { Print(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
+mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => AOutput.Write(o.Trigger);
+mouse[TMEdge.RightInCenter50] = o => { AOutput.Write(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
 mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
 
 Triggers.FuncOf.NextTrigger = o => AKeys.IsScrollLock; //example of a custom scope (aka context, condition)
-mouse[TMWheel.Forward] = o => Print($"{o.Trigger} while ScrollLock is on");
+mouse[TMWheel.Forward] = o => AOutput.Write($"{o.Trigger} while ScrollLock is on");
 
 Triggers.Of.Again(notepad); //let the following triggers work only when a Notepad window is active
-mouse[TMMove.LeftRightInBottom25] = o => { Print(o.Trigger); o.Window.Close(); };
+mouse[TMMove.LeftRightInBottom25] = o => { AOutput.Write(o.Trigger); o.Window.Close(); };
 Triggers.Of.AllWindows();
 
 //window triggers. Note: window triggers don't depend on Triggers.Of.
 
-window[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => Print("opened Notepad window");
+window[TWEvent.ActiveNew, "* Notepad", "Notepad"] = o => AOutput.Write("opened Notepad window");
 window[TWEvent.ActiveNew, "Notepad", "#32770", contains: "Do you want to save *"] = o => {
-	Print("opened Notepad's 'Do you want to save' dialog");
-	//Key("Alt+S"); //press button Save
+	AOutput.Write("opened Notepad's 'Do you want to save' dialog");
+	//AKeys.Key("Alt+S"); //press button Save
 };
 
 //autotext triggers
@@ -77,7 +77,7 @@ Triggers.Options.BeforeAction = o => { AOpt.Key.TextOption = KTextOption.Paste; 
 tt["#file"] = o => {
 	o.Replace("");
 	var fd = new OpenFileDialog();
-	if(fd.ShowDialog() == DialogResult.OK) Text(fd.FileName);
+	if(fd.ShowDialog() == DialogResult.OK) AKeys.Text(fd.FileName);
 };
 Triggers.Options.BeforeAction = null;
 tt.DefaultPostfixType = default;
@@ -97,14 +97,14 @@ hk.Last.EnabledAlways = true;
 hk["Ctrl+Alt+Win+D"] = o => ActionTriggers.DisabledEverywhere ^= true; //disable/enable triggers in all processes
 hk.Last.EnabledAlways = true;
 
-hk["Ctrl+F7"] = o => Print("This trigger can be disabled/enabled with Ctrl+F8.");
+hk["Ctrl+F7"] = o => AOutput.Write("This trigger can be disabled/enabled with Ctrl+F8.");
 var t1 = hk.Last;
 hk["Ctrl+F8"] = o => t1.Disabled ^= true; //disable/enable a trigger
 
 //finally call Triggers.Run(). Without it the triggers won't work.
 Triggers.Run();
 //Triggers.Run returns when is called Triggers.Stop (see the "Ctrl+Alt+Q" trigger above).
-Print("called Triggers.Stop");
+AOutput.Write("called Triggers.Stop");
 
 //Recommended properties for scripts containg triggers: runMode blue; ifRunning warn_restart;. You can set it in the Properties dialog.
 //The first property allows other scripts to start while this script is running.

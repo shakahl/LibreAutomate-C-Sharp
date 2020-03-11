@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Drawing2D;
@@ -18,7 +17,6 @@ using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Controls
 {
@@ -139,7 +137,7 @@ namespace Au.Controls
 			{
 				_sizeChanged = true;
 				var r = this.ClientRectangle;
-				//Print(IsHandleCreated, r);
+				//AOutput.Write(IsHandleCreated, r);
 				if(r.Width > 0 && r.Height > 0) _gc.UpdateLayout(r); //not r.IsEmpty, because can be negative Width/Height
 				if(e != null) base.OnClientSizeChanged(e);
 			}
@@ -230,8 +228,7 @@ namespace Au.Controls
 
 				internal void OnFloatMoved(Point p)
 				{
-					RECT r, rb;
-					_isTargetValid = _OnFloatMoved(p, out r, out rb);
+					_isTargetValid = _OnFloatMoved(p, out var r, out var rb);
 					if(r != _rect || rb != _rectTabButton) {
 						_rect = r;
 						_rectTabButton = rb;
@@ -244,7 +241,7 @@ namespace Au.Controls
 				/// </summary>
 				bool _OnFloatMoved(Point p, out RECT r, out RECT rb)
 				{
-					r = rb = new RECT();
+					r = rb = default;
 
 					var firstSplit = _manager._firstSplit;
 					if(!firstSplit.Bounds.Contains(p)) return false;
@@ -349,7 +346,7 @@ namespace Au.Controls
 				internal DockTarget OnFloatDropped()
 				{
 					if(!_isTargetValid) return null;
-					//Print($"{_target.gc?.Name}, dockAsTab={_target.dockAsTab}, verticalSplit={_target.verticalSplit}, after={_target.after}");
+					//AOutput.Write($"{_target.gc?.Name}, dockAsTab={_target.dockAsTab}, verticalSplit={_target.verticalSplit}, after={_target.after}");
 					return _target;
 				}
 			} //class _DockIndicator

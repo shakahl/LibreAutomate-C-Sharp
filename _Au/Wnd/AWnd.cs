@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -46,10 +43,10 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// AWnd w = AWnd.Find("* - Notepad");
-	/// if(w.Is0) { Print("window not found"); return; }
+	/// if(w.Is0) { AOutput.Write("window not found"); return; }
 	/// w.Activate();
 	/// AWnd c = w.Child(cn: "Button");
-	/// Print(c.Name);
+	/// AOutput.Write(c.Name);
 	/// ]]></code>
 	/// </example>
 	[Serializable]
@@ -319,6 +316,17 @@ namespace Au
 			if(_h == null || !Api.IsWindow(this)) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
+		///// <summary>
+		///// If <see cref="Is0"/>, throws <see cref="AuWndException"/>. Returns !<see cref="IsAlive"/>.
+		///// </summary>
+		///// <exception cref="AuWndException"></exception>
+		//public bool IsInvalidThrowIf0()
+		//{
+		//	if(_h == null) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+		//	return !Api.IsWindow(this);
+		//}
+		//CONSIDER: in many places replace ThrowIfInvalid with ThrowIf0 or IsInvalidThrowIf0.
+
 		/// <summary>
 		/// Throws <see cref="AuWndException"/> that uses the last Windows API error (code and message).
 		/// Also the message depends on whether the window handle is 0/invalid.
@@ -365,7 +373,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AWnd w = AWnd.Find("Window*");
-		/// if(w.Is0) { Print("window not found"); return; }
+		/// if(w.Is0) { AOutput.Write("window not found"); return; }
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="IsAlive"/>
@@ -432,7 +440,7 @@ namespace Au
 		//			//is it a ghost ApplicationFrameWindow, like closed Calculator on Win10?
 		//			if(AVersion.MinWin10 && HasExStyle(WS2.NOREDIRECTIONBITMAP) && IsCloaked && ClassNameIs("ApplicationFrameWindow")) {
 		//				var isGhost = default == Api.FindWindowEx(this, default, "Windows.UI.Core.CoreWindow", null);
-		//				//Print(isGhost, this);
+		//				//AOutput.Write(isGhost, this);
 		//				return !isGhost;
 		//			}
 		//		}
@@ -457,7 +465,7 @@ namespace Au
 			if(wParent.IsVisible) return false;
 			var c = this;
 			for(int i = 0; i < 10000; i++) {
-				//Print(c);
+				//AOutput.Write(c);
 				if(!c.HasStyle(WS.VISIBLE)) return false;
 				c = c.ParentGWL_;
 				if(c == wParent) return true;
@@ -925,7 +933,7 @@ namespace Au
 							int tid = ThreadId; if(tid == 0) break;
 							if(f.ThreadId == tid) {
 								//at first try to recognize such known windows, to avoid the hard way
-								if(isMinimized || (f.Owner == this && Rect.IsEmpty)) {
+								if(isMinimized || (f.OwnerWindow == this && Rect.IsEmpty)) {
 									R = true;
 								} else {
 									R = Api.SetForegroundWindow(GetWnd.Root) && ActivateLL() && Active.ThreadId == tid;
@@ -1889,8 +1897,8 @@ namespace Au
 						//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
 						//There are several workarounds. The best of them - temporarily set owner window 0.
 						if(!visible) {
-							hto = w.Owner;
-							if(!hto.Is0) w.Owner = default;
+							hto = w.OwnerWindow;
+							if(!hto.Is0) w.OwnerWindow = default;
 						}
 
 						wp.rcNormalPosition = r;
@@ -1907,7 +1915,7 @@ namespace Au
 						}
 					}
 					finally {
-						if(!hto.Is0) w.Owner = hto;
+						if(!hto.Is0) w.OwnerWindow = hto;
 					}
 
 					w.MinimalSleepIfOtherThread_();
@@ -2073,7 +2081,7 @@ namespace Au
 			for(int i = 0; i < 4; i++) {
 				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.NOTOPMOST)) return false;
 				if(i == 0 && !IsTopmost) break;
-				//Print("retry");
+				//AOutput.Write("retry");
 			}
 
 			//place this after the active window
@@ -2177,7 +2185,7 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="Style"/>
-		public void SetStyle(WS style, WSSFlags flags = 0)
+		public void SetStyle(WS style, WSFlags flags = 0)
 			=> _SetStyle(false, (int)style, flags);
 
 		/// <summary>
@@ -2187,20 +2195,20 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="ExStyle"/>
-		public void SetExStyle(WS2 style, WSSFlags flags = 0)
+		public void SetExStyle(WS2 style, WSFlags flags = 0)
 			=> _SetStyle(true, (int)style, flags);
 
-		void _SetStyle(bool ex, int style, WSSFlags flags)
+		void _SetStyle(bool ex, int style, WSFlags flags)
 		{
 			var gwl = ex ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
-			switch(flags & (WSSFlags.Add | WSSFlags.Remove)) {
-			case WSSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
-			case WSSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
+			switch(flags & (WSFlags.Add | WSFlags.Remove)) {
+			case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
+			case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
 			}
 			SetWindowLong(gwl, style);
 
-			if(flags.Has(WSSFlags.UpdateNonclient)) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
-			if(flags.Has(WSSFlags.UpdateClient)) Api.InvalidateRect(this, default, true);
+			if(flags.Has(WSFlags.UpdateNonclient)) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
+			if(flags.Has(WSFlags.UpdateClient)) Api.InvalidateRect(this, default, true);
 		}
 
 		/// <summary>
@@ -2266,8 +2274,8 @@ namespace Au
 		/// <code><![CDATA[
 		/// var w = AWnd.Find("* Explorer");
 		/// w.Prop.Set("example", 5);
-		/// Print(w.Prop["example"]);
-		/// Print(w.Prop); //all w properties
+		/// AOutput.Write(w.Prop["example"]);
+		/// AOutput.Write(w.Prop); //all w properties
 		/// w.Prop.Remove("example"); //you should always remove window properties if don't want to see unrelated applications crashing after some time. And don't use many unique property names.
 		/// ]]></code>
 		/// </example>
@@ -2514,7 +2522,7 @@ namespace Au
 			else R = _GetTextFast(false);
 
 			if(removeUnderlineAmpersand
-				&& !Empty(R)
+				&& !R.IsNE()
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
 				) R = AStringUtil.RemoveUnderlineAmpersand(R);
@@ -2735,7 +2743,7 @@ namespace Au
 
 			bool ok = Post(msg, wparam);
 			if(!ok) {
-				//Print(ALastError.Code); //0 when UAC access denied
+				//AOutput.Write(ALastError.Code); //0 when UAC access denied
 				if(!useXButton) ok = Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE); //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
 			}
 
@@ -2772,7 +2780,7 @@ namespace Au
 		//	var t = ATime.PerfMicroseconds;
 		//	SendTimeout(5 + milliseconds, 0, flags: 0);
 		//	var d = ATime.PerfMicroseconds - t;
-		//	//Print(d);
+		//	//AOutput.Write(d);
 		//	return (d >= milliseconds * 1000L);
 		//}
 
@@ -2783,16 +2791,16 @@ namespace Au
 		///// Returns the number of found windows.
 		///// </summary>
 		//public static int CloseAll(
-		//	string name, string cn = null, WFEtc program = default,
-		//	WFFlags flags = 0, Func<AWnd, bool> f = null, object contains = null
+		//	string name, string cn = null, WOwner of = default,
+		//	WFlags flags = 0, Func<AWnd, bool> f = null, WContains contains = default
 		//	)
 		//{
-		//	var a = FindAll(name, cn, program, flags, f, contains);
+		//	var a = FindAll(name, cn, of, flags, f, contains);
 		//	foreach(AWnd w in a) w.Close();
 		//	return a.Count;
 		//}
 
-#endregion
+		#endregion
 
 	}
 
@@ -2910,7 +2918,7 @@ namespace Au.Types
 	/// Flags for <see cref="AWnd.SetStyle"/> and <see cref="AWnd.SetExStyle"/>.
 	/// </summary>
 	[Flags]
-	public enum WSSFlags
+	public enum WSFlags
 	{
 		/// <summary>Add the specified styles and don't change others.</summary>
 		Add = 1,

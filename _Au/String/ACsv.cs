@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -84,7 +81,7 @@ namespace Au
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static unsafe ACsv Parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true)
 		{
-			if(Empty(csv)) return new ACsv();
+			if(csv.IsNE()) return new ACsv();
 
 			var a = new List<string[]>();
 			var tempRow = new List<string>(8);
@@ -135,12 +132,12 @@ namespace Au
 					}
 					g1:
 
-					//Print(field);
+					//AOutput.Write(field);
 
 					tempRow.Add(field);
 					if(s >= se || *s == '\n') {
-						//Print(a.Count);
-						//Print(tempRow);
+						//AOutput.Write(a.Count);
+						//AOutput.Write(tempRow);
 
 						a.Add(tempRow.ToArray());
 						if(tempRow.Count > nCol) nCol = tempRow.Count;
@@ -150,7 +147,7 @@ namespace Au
 
 				var R = new ACsv(a, 0);
 				R.ColumnCount = nCol; //make all rows of equal length and set _columnCount
-				//Print(R.RowCount, R.ColumnCount);
+				//AOutput.Write(R.RowCount, R.ColumnCount);
 				return R;
 			} //fixed
 		}
@@ -172,7 +169,7 @@ namespace Au
 				for(int r = 0; r < _a.Count; r++) {
 					for(int c = 0; c < _columnCount; c++) {
 						var field = _a[r][c];
-						if(!Empty(field)) {
+						if(!field.IsNE()) {
 							bool hasQuote = field.IndexOf(quote) >= 0;
 							if(hasQuote || field.IndexOf(Separator) >= 0 || field[0] == ' ' || field[field.Length - 1] == ' ') {
 								if(hasQuote) {

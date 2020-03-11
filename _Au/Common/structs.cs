@@ -10,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Drawing;
 //using System.Linq;
 
-using static Au.AStatic;
 
 namespace Au.Types
 {
@@ -246,9 +244,11 @@ namespace Au.Types
 			if(useWidthHeight) { right += left; bottom += top; }
 		}
 
-		//no
-		//public static implicit operator RECT((int L, int T, int R, int B) t) => new RECT(t.L, t.T, t.R, t.B, true);
-		//public static implicit operator RECT((int L, int T, int R, int B, bool wh) t) => new RECT(t.L, t.T, t.R, t.B, t.wh);
+		/// <summary>
+		/// Creates new <b>RECT</b> from tuple containing left, top, width and height.
+		/// </summary>
+		public static implicit operator RECT((int L, int T, int W, int H) t) => new RECT(t.L, t.T, t.W, t.H, true);
+		//public static implicit operator RECT((int L, int T, int RW, int BH, bool wh) t) => new RECT(t.L, t.T, t.RW, t.BH, t.wh);
 
 		public static implicit operator RECT(Rectangle r) => new RECT(r.Left, r.Top, r.Width, r.Height, true);
 		public static explicit operator RECT(RectangleF r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }

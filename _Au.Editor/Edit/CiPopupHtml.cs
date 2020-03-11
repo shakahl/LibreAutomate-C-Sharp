@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 //To render rich text for code info can be used 3 controls: Scintilla, WeBrowser, HtmlRenderer.
@@ -85,7 +82,7 @@ class CiPopupHtml
 	public string Html {
 		get => _html;
 		set {
-			ADebug.PrintIf(!(Empty(value) || value.Starts("<body", true) || value.Starts("<html", true)), "no <body>");
+			ADebug.PrintIf(!(value.IsNE() || value.Starts("<body", true) || value.Starts("<html", true)), "no <body>");
 			if(value != _html) {
 				_html = value;
 				if(IsVisible) {
@@ -146,7 +143,7 @@ class CiPopupHtml
 
 	Size _MeasureHtml(string html)
 	{
-		if(Empty(html)) return default;
+		if(html.IsNE()) return default;
 		int sbWid = SystemInformation.VerticalScrollBarWidth;
 		using var g = _c.CreateGraphics();
 		var zf = HtmlRender.Measure(g, html, 0, _c.BaseCssData, imageLoad: OnLoadImage);
@@ -219,7 +216,7 @@ class CiPopupHtml
 
 		protected override void OnMouseUp(MouseEventArgs e)
 		{
-			if(Visible && !Empty(this.SelectedText)) Focus(); //the user may want Ctrl+C
+			if(Visible && !this.SelectedText.IsNE()) Focus(); //the user may want Ctrl+C
 			base.OnMouseUp(e);
 		}
 	}

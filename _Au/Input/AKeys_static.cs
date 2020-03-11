@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
@@ -37,7 +33,7 @@ namespace Au
 		/// This class (<b>AKeys.UI</b>) uses API <msdn>GetKeyState</msdn>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <msdn>AttachThreadInput</msdn> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
 		/// 
 		/// The key state returned by these API is not always the same as of the physical keyboard. There is no API to get physical state. The two most common cases when it is different:
-		/// 1. When the key is pressed or released by software, such as the <b>Key</b> function of this library.
+		/// 1. When the key is pressed or released by software, such as the <see cref="Key"/> function of this library.
 		/// 2. When the key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
 		/// 
 		/// Also there is API <msdn>GetKeyboardState</msdn>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
@@ -323,7 +319,7 @@ namespace Au
 		/// AKeys.WaitForHotkey(0, (KMod.Ctrl | KMod.Shift, KKey.P)); //Ctrl+Shift+P
 		/// AKeys.WaitForHotkey(0, Keys.Control | Keys.Alt | Keys.H); //Ctrl+Alt+H
 		/// AKeys.WaitForHotkey(5, "Ctrl+Win+K"); //exception after 5 s
-		/// if(!AKeys.WaitForHotkey(-5, "Left")) Print("timeout"); //returns false after 5 s
+		/// if(!AKeys.WaitForHotkey(-5, "Left")) AOutput.Write("timeout"); //returns false after 5 s
 		/// ]]></code>
 		/// </example>
 		public static bool WaitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false)
@@ -356,7 +352,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AKeys.WaitForKey(0, KKey.Ctrl, up: false, block: true);
-		/// Print("Ctrl");
+		/// AOutput.Write("Ctrl");
 		/// ]]></code>
 		/// </example>
 		public static bool WaitForKey(double secondsTimeout, KKey key, bool up = false, bool block = false)
@@ -378,7 +374,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// AKeys.WaitForKey(0, "Ctrl", up: false, block: true);
-		/// Print("Ctrl");
+		/// AOutput.Write("Ctrl");
 		/// ]]></code>
 		/// </example>
 		public static bool WaitForKey(double secondsTimeout, string key, bool up = false, bool block = false)
@@ -400,7 +396,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var key = AKeys.WaitForKey(0, up: true, block: true);
-		/// Print(key);
+		/// AOutput.Write(key);
 		/// ]]></code>
 		/// </example>
 		public static KKey WaitForKey(double secondsTimeout, bool up = false, bool block = false)
@@ -571,7 +567,7 @@ namespace Au
 			internal static bool ParseHotkeyTriggerString_(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey)
 			{
 				key = 0; mod = 0; modAny = 0;
-				if(Empty(s)) return noKey;
+				if(s.IsNE()) return noKey;
 				int i = 0; bool ignore = false;
 				foreach(var g in _SplitKeysString(s)) {
 					if(ignore) { ignore = false; continue; }
@@ -617,36 +613,36 @@ namespace Au
 		/// <param name="keysEtc">
 		/// Any number of arguments of these types:
 		/// - string - keys. One or more key names separated by spaces or operators. More info in Remarks.
-		/// <br/>Example: <c>Key("Enter A Ctrl+A");</c>
+		/// <br/>Example: <c>AKeys.Key("Enter A Ctrl+A");</c>
 		/// Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
 		/// <br/>See <see cref="AddKeys"/>.
 		/// - <see cref="KText"/> - literal text, like function <see cref="Text"/>.
-		/// <br/>Example: <c>Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
+		/// <br/>Example: <c>AKeys.Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
 		/// <br/>Uses virtual keystrokes or the clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// <br/>See <see cref="AddText"/>.
 		/// - <see cref="KKey"/> - a single key.
-		/// <br/>Example: <c>Key("Shift+", KKey.Left, "*3");</c> is the same as <c>Key("Shift+Left*3");</c>.
+		/// <br/>Example: <c>AKeys.Key("Shift+", KKey.Left, "*3");</c> is the same as <c>AKeys.Key("Shift+Left*3");</c>.
 		/// <br/>See <see cref="AddKey(KKey, bool?)"/>.
 		/// - int - milliseconds to sleep. Max 10000.
-		/// <br/>Example: <c>Key("Left", 500, "Right");</c>
+		/// <br/>Example: <c>AKeys.Key("Left", 500, "Right");</c>
 		/// <br/>See <see cref="AddSleep"/>.
 		/// - <see cref="Action"/> - callback function.
-		/// <br/>Example: <c>Action click = () => AMouse.Click(); Key("Shift+", click);</c>
+		/// <br/>Example: <c>Action click = () => AMouse.Click(); AKeys.Key("Shift+", click);</c>
 		/// <br/>See <see cref="AddAction"/>.
 		/// - null or "" - nothing.
 		/// - (int, bool) - a single key, specified using scan code and extended-key flag.
-		/// <br/>Example: <c>Key((0x3B, false)); //key F1</c>
+		/// <br/>Example: <c>AKeys.Key((0x3B, false)); //key F1</c>
 		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
 		/// - (KKey, int, bool) - a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
-		/// <br/>Example: <c>Key((KKey.Enter, 0, true)); //numpad Enter</c>
+		/// <br/>Example: <c>AKeys.Key((KKey.Enter, 0, true)); //numpad Enter</c>
 		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
 		/// </param>
-		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+		/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// Generates virtual keystrokes. Uses API <msdn>SendInput</msdn>. It works almost like real keyboard.
 		/// 
 		/// Usually keys are specified in string, like in this example:
-		/// <code><![CDATA[Key("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
+		/// <code><![CDATA[AKeys.Key("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
 		/// ]]></code>
 		/// 
 		/// Key names:
@@ -687,14 +683,14 @@ namespace Au
 		/// <td>Other keys</td>
 		/// <td>Names of enum <see cref="KKey"/> members.</td>
 		/// <td>Start with an uppercase character.
-		/// <br/>Example: <c>Key("BrowserBack"); //KKey.BrowserBack</c>
+		/// <br/>Example: <c>AKeys.Key("BrowserBack"); //KKey.BrowserBack</c>
 		/// </td>
 		/// </tr>
 		/// <tr>
 		/// <td>Other keys</td>
 		/// <td>Virtual-key codes.</td>
 		/// <td>Start with VK or Vk.
-		/// <br/>Example: <c>Key("VK65 VK0x42");</c>
+		/// <br/>Example: <c>AKeys.Key("VK65 VK0x42");</c>
 		/// </td>
 		/// </tr>
 		/// <tr>
@@ -756,7 +752,7 @@ namespace Au
 		/// </tr>
 		/// </table>
 		/// 
-		/// Operators and related keys can be in separate arguments. Examples: <c>Key("Shift+", KKey.A); Key(KKey.A, "*3");</c>.
+		/// Operators and related keys can be in separate arguments. Examples: <c>AKeys.Key("Shift+", KKey.A); AKeys.Key(KKey.A, "*3");</c>.
 		/// 
 		/// Uses <see cref="AOpt.Key"/>:
 		/// <table>
@@ -811,7 +807,7 @@ namespace Au
 		/// <td><see cref="OptKey.SleepFinally"/></td>
 		/// <td>10 ms.</td>
 		/// <td>0 - 10000.
-		/// <br/>Tip: to sleep finally, also can be used code like this: <c>Key("keys", 1000);</c>.</td>
+		/// <br/>Tip: to sleep finally, also can be used code like this: <c>AKeys.Key("keys", 1000);</c>.</td>
 		/// </tr>
 		/// <tr>
 		/// <td><see cref="OptKey.TextOption"/></td>
@@ -850,7 +846,7 @@ namespace Au
 		/// 
 		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
-		/// This function should not be used to automate windows of own thread. It may work or not. Call it from another thread. See the last example.
+		/// Don't use this function to automate windows of own thread. Call it from another thread. See the last example.
 		/// 
 		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See [](xref:uac).
 		/// 
@@ -862,61 +858,61 @@ namespace Au
 		/// AKeys.Key("Enter");
 		/// 
 		/// //The same as above. The "AKeys." prefix is optional.
-		/// Key("Enter");
+		/// AKeys.Key("Enter");
 		/// 
 		/// //Press keys Ctrl+A.
-		/// Key("Ctrl+A");
+		/// AKeys.Key("Ctrl+A");
 		/// 
 		/// //Ctrl+Alt+Shift+Win+A.
-		/// Key("Ctrl+Alt+Shift+Win+A");
+		/// AKeys.Key("Ctrl+Alt+Shift+Win+A");
 		/// 
 		/// //Alt down, E, P, Alt up.
-		/// Key("Alt+(E P)");
+		/// AKeys.Key("Alt+(E P)");
 		/// 
 		/// //Alt down, E, P, Alt up.
-		/// Key("Alt*down E P Alt*up");
+		/// AKeys.Key("Alt*down E P Alt*up");
 		/// 
 		/// //Press key End, key Backspace 3 times, send text "Text".
-		/// Key("End Back*3", (KText)"Text");
+		/// AKeys.Key("End Back*3", (KText)"Text");
 		/// 
 		/// //Press Tab n times, send text "user", press Tab, send text "password", press Enter.
 		/// int n = 5;
-		/// Key($"Tab*{n}", (KText)"user", "Tab", (KText)"password", "Enter");
+		/// AKeys.Key($"Tab*{n}", (KText)"user", "Tab", (KText)"password", "Enter");
 		/// 
-		/// //Send text "Text".
-		/// Text("Text");
+		/// //Send text "Example".
+		/// AKeys.Text("Example");
 		/// 
 		/// //Press Ctrl+V, wait 500 ms, press Enter.
-		/// Key("Ctrl+V", 500, "Enter");
+		/// AKeys.Key("Ctrl+V", 500, "Enter");
 		/// 
 		/// //F2, Ctrl+K, Left 3 times, Space, A, comma, 5, numpad 5, Shift+A, B, C, BrowserBack.
-		/// Key("F2 Ctrl+K Left*3 Space a , 5 #5 $abc", KKey.BrowserBack);
+		/// AKeys.Key("F2 Ctrl+K Left*3 Space a , 5 #5 $abc", KKey.BrowserBack);
 		/// 
 		/// //Shift down, A 3 times, Shift up.
-		/// Key("Shift+A*3");
+		/// AKeys.Key("Shift+A*3");
 		/// 
 		/// //Shift down, A 3 times, Shift up.
-		/// Key("Shift+", KKey.A, "*3");
+		/// AKeys.Key("Shift+", KKey.A, "*3");
 		/// 
 		/// //Shift down, A, wait 500 ms, B, Shift up.
-		/// Key("Shift+(", KKey.A, 500, KKey.B, ")");
+		/// AKeys.Key("Shift+(", KKey.A, 500, KKey.B, ")");
 		/// 
 		/// //Send keys and text slowly.
 		/// AOpt.Key.KeySpeed = AOpt.Key.TextSpeed = 50;
-		/// Key("keys$:Space 123456789 Space 123456789 ,Space", (KText)"text: 123456789 123456789\n");
+		/// AKeys.Key("keys$:Space 123456789 Space 123456789 ,Space", (KText)"text: 123456789 123456789\n");
 		/// 
 		/// //Ctrl+click
 		/// Action click = () => AMouse.Click();
-		/// Key("Ctrl+", click);
+		/// AKeys.Key("Ctrl+", click);
 		/// 
 		/// //Ctrl+drag
 		/// Action drag = () => { using(AMouse.LeftDown()) AMouse.MoveRelative(0, 50); };
-		/// Key("Ctrl+", drag);
+		/// AKeys.Key("Ctrl+", drag);
 		/// 
 		/// //Ctrl+drag, poor man's version
-		/// Key("Ctrl*down");
+		/// AKeys.Key("Ctrl*down");
 		/// using(AMouse.LeftDown()) AMouse.MoveRelative(0, 50);
-		/// Key("Ctrl*up");
+		/// AKeys.Key("Ctrl*up");
 		/// ]]></code>
 		/// Show form and send keys/text to it when button clicked.
 		/// <code><![CDATA[
@@ -930,14 +926,14 @@ namespace Au
 		/// 
 		/// b.Click += async (unu, sed) =>
 		/// {
-		/// 	//Key("Tab", (KText)"text", 2000, "Esc"); //no
-		/// 	await Task.Run(() => { Key("Tab", (KText)"text", 2000, "Esc"); }); //use other thread
+		/// 	//AKeys.Key("Tab", (KText)"text", 2000, "Esc"); //no
+		/// 	await Task.Run(() => { AKeys.Key("Tab", (KText)"text", 2000, "Esc"); }); //use other thread
 		/// };
 		/// 
 		/// f.ShowDialog();
 		/// ]]></code>
 		/// </example>
-		public static void Key([ParamString(PSFormat.AKeys)] params object[] keysEtc)
+		public static void Key([ParamString(PSFormat.AKeys)] params KKeysEtc[] keysEtc)
 		{
 			new AKeys(AOpt.Key).Add(keysEtc).Send();
 		}
@@ -950,12 +946,11 @@ namespace Au
 		/// Uses virtual keystrokes or the clipboard, depending on <see cref="AOpt.Key"/> and text.
 		/// To send text and keys use function <see cref="Key"/>.
 		/// </remarks>
-		/// <seealso cref="AClipboard.PasteText"/>
+		/// <seealso cref="AClipboard.Paste"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// AKeys.Text("Text.\r\n");
 		/// AKeys.Key((KText)"Send this text and press key", "Enter");
-		/// Text("Can be used without the \"AKeys.\" prefix.\n");
 		/// ]]></code>
 		/// </example>
 		public static void Text(string text)
@@ -963,33 +958,7 @@ namespace Au
 			new AKeys(AOpt.Key).AddText(text).Send();
 		}
 	}
-
-	public static partial class AStatic
-	{
-		/// <summary>
-		/// Generates virtual keystrokes (keys, text). Also can wait, etc.
-		/// Calls <see cref="AKeys.Key"/>.
-		/// </summary>
-		/// <param name="keysEtc">
-		/// Keys, text, etc.
-		/// Example: <c>Key("Down Tab*2 Ctrl+X", (KText)"text", "Enter");</c>
-		/// Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
-		/// </param>
-		/// <exception cref="ArgumentException">An argument is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// Key("Down Tab*2 Ctrl+X", (KText)"text", "Enter");
-		/// ]]></code>
-		/// </example>
-		public static void Key([ParamString(PSFormat.AKeys)] params object[] keysEtc) => AKeys.Key(keysEtc);
-
-		/// <summary>
-		/// Sends text to the active window, using virtual keystrokes or the clipboard.
-		/// Calls <see cref="AKeys.Text"/>.
-		/// </summary>
-		public static void Text(string text) => AKeys.Text(text);
-	}
 }
 
-//FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); Key((KText)password, "Tab", (KText)user, "Enter");
+//FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); AKeys.Key((KText)password, "Tab", (KText)user, "Enter");
 //public static void FocusPasswordField()

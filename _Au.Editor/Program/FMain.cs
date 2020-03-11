@@ -7,7 +7,6 @@ using System.Drawing;
 using System.Runtime;
 using System.Threading;
 using System.Windows.Forms;
-using static Au.AStatic;
 
 partial class FMain : Form
 {
@@ -83,7 +82,7 @@ partial class FMain : Form
 
 	protected override void OnVisibleChanged(EventArgs e)
 	{
-		//Print("OnVisibleChanged", Visible, ((AWnd)this).IsVisible); //true, false
+		//AOutput.Write("OnVisibleChanged", Visible, ((AWnd)this).IsVisible); //true, false
 		bool visible = Visible;
 
 		//note: we don't use OnLoad. It's unreliable, sometimes not called, eg when made visible from outside.
@@ -93,7 +92,7 @@ partial class FMain : Form
 			_StartProfileOptimization(); //fast
 			APerf.Next('v');
 
-			Panels.PanelManager.ZGetPanel(Panels.Output).Visible = true; //else Print etc would not auto set visible until the user makes it visible, because handle not created if invisible
+			Panels.PanelManager.ZGetPanel(Panels.Output).Visible = true; //else AOutput.Write would not auto set visible until the user makes it visible, because handle not created if invisible
 
 			var hm = Api.GetSystemMenu(_Hwnd, false);
 			Api.AppendMenu(hm, 0, c_menuid_Exit, "&Exit");
@@ -112,7 +111,7 @@ partial class FMain : Form
 			ATimer.After(1, _ => {
 				var s = CommandLine.TestArg;
 				if(s != null) {
-					Print(ATime.PerfMicroseconds - Convert.ToInt64(s));
+					AOutput.Write(ATime.PerfMicroseconds - Convert.ToInt64(s));
 				}
 				//APerf.NW('V');
 
@@ -200,7 +199,7 @@ partial class FMain : Form
 			break;
 		case Api.WM_WINDOWPOSCHANGING:
 			var p = (Api.WINDOWPOS*)lParam;
-			//Print(p->flags);
+			//AOutput.Write(p->flags);
 			//workaround: if started maximized, does not receive WM_SHOWWINDOW. Then .NET at first makes visible, then creates controls and calls OnLoad.
 			if(p->flags.Has(Native.SWP.SHOWWINDOW) && Program.Loaded == EProgramState.LoadedWorkspace) {
 				//p->flags &= ~Native.SWP.SHOWWINDOW; //no, adds 5 duplicate messages
@@ -216,7 +215,7 @@ partial class FMain : Form
 		switch(m.Msg) {
 		case Api.WM_ENABLE:
 			//.NET ignores this. Eg if an owned form etc disables this window, the Enabled property is not changed and no EnabledChanged event.
-			//Print(wParam, Enabled);
+			//AOutput.Write(wParam, Enabled);
 			//Enabled = wParam != 0; //not good
 			Panels.PanelManager.ZEnableDisableAllFloatingWindows(wParam != 0);
 			break;
@@ -318,7 +317,7 @@ static class Panels
 
 	internal static void Init()
 	{
-		//Print("----");
+		//AOutput.Write("----");
 		//var p1 = APerf.Create();
 		Editor = new PanelEdit();
 		//p1.Next('e');
@@ -343,7 +342,7 @@ static class Panels
 
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
-		m.ZCreate(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @"!Settings\Panels.xml",
+		m.ZCreate(AFolders.ThisAppBS + @"Default\Panels.xml", AFolders.ThisAppDocuments + @".settings\Panels.xml",
 			Editor, Files, Find, Found, Output, Open, Running, Info,
 			//#if TRACE
 			//			c,

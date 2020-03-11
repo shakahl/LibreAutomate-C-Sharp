@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Xml.Linq;
 using System.Collections;
@@ -18,7 +17,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 
 using Au.Types;
-using static Au.AStatic;
 using Au.Util;
 
 namespace Au
@@ -263,7 +261,7 @@ namespace Au
 			lock(this) _AddImage(k.file, b, true);
 			//k.autoUpdated?.Invoke(b, k.auParam);
 
-			//Print(k.auParam);
+			//AOutput.Write(k.auParam);
 			//APerf.First();
 			k.autoUpdated?.Invoke(b, k.auParam);
 			//APerf.NW();

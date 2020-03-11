@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -45,8 +43,8 @@ namespace Au.Util
 		{
 			if(Api.GetFocus() == default) { //prevent activating the menu window on click
 				ATimer.After(1, _ => {
-					var w = AWnd.Find("", "#32768", WF3.ThisThread); //find visible classic menu window of this thread
-					if(!w.Is0) w.SetExStyle(WS2.NOACTIVATE, WSSFlags.Add);
+					var w = AWnd.Find("", "#32768", WOwner.ThisThread); //find visible classic menu window of this thread
+					if(!w.Is0) w.SetExStyle(WS2.NOACTIVATE, WSFlags.Add);
 				});
 			}
 			var p = AMouse.XY;

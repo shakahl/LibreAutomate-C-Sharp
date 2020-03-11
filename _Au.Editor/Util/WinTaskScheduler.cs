@@ -10,12 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Security.Principal;
 
+using Au;
 using Au.Types;
-using static Au.AStatic;
 
 static class WinTaskScheduler
 {
@@ -103,7 +102,7 @@ $@"<?xml version='1.0' encoding='UTF-16'?>
 	/// <exception cref="Exception">Failed. Probably the task does not exist.</exception>
 	public static int RunTask(string taskFolder, string taskName, bool joinArgs, params string[] args)
 	{
-		object a; if(Empty(args)) a = null; else if(joinArgs) a = Au.Util.AStringUtil.CommandLineFromArray(args); else a = args;
+		object a; if(args.IsNE_()) a = null; else if(joinArgs) a = Au.Util.AStringUtil.CommandLineFromArray(args); else a = args;
 		var ts = new Api.TaskScheduler() as Api.ITaskService;
 		ts.Connect();
 		var rt = ts.GetFolder(taskFolder).GetTask(taskName).Run(a);

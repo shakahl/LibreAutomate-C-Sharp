@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,10 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Collections;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Triggers
 {
@@ -182,7 +179,7 @@ namespace Au.Triggers
 		MouseTrigger _Add(Action<MouseTriggerArgs> f, ESubtype subtype, string modKeys, TMFlags flags, byte data, TMScreen screen, string sData)
 		{
 			_triggers.ThrowIfRunning_();
-			bool noMod = Empty(modKeys);
+			bool noMod = modKeys.IsNE();
 
 			string ps;
 			using(new Util.StringBuilder_(out var b)) {
@@ -196,7 +193,7 @@ namespace Au.Triggers
 					else if(screen == TMScreen.OfActiveWindow) b.Append(", screen of the active window");
 					else throw new ArgumentException();
 				}
-				ps = b.ToString(); //Print(ps);
+				ps = b.ToString(); //AOutput.Write(ps);
 			}
 
 			KMod mod = 0, modAny = 0;
@@ -240,7 +237,7 @@ namespace Au.Triggers
 
 		internal bool HookProcClickWheel(HookData.Mouse k, TriggerHookContext thc)
 		{
-			//Print(k.Event, k.pt);
+			//AOutput.Write(k.Event, k.pt);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
 			ESubtype subtype;
@@ -356,7 +353,7 @@ namespace Au.Triggers
 						else ThreadPool.QueueUserWorkItem(_ => AKeys.Internal_.ReleaseModAndDisableModMenu());
 					}
 
-					//Print(mEvent, pt, mod);
+					//AOutput.Write(mEvent, pt, mod);
 					if(isEdgeMove || 0 != (x.flags & TMFlags.ShareEvent)) return false;
 					if(subtype == ESubtype.Click) _eatUp = mEvent;
 					return true;
@@ -394,7 +391,7 @@ namespace Au.Triggers
 		void _UnhookTempKeybHook()
 		{
 			if(_keyHook != null) {
-				//Print(". unhook");
+				//AOutput.Write(". unhook");
 				_keyHook.Unhook();
 				_keyHookTimeout = _keyHook.IgnoreModInOtherHooks_(0);
 			}
@@ -409,7 +406,7 @@ namespace Au.Triggers
 
 		void _SetTempKeybHook()
 		{
-			//Print(". hook");
+			//AOutput.Write(". hook");
 			if(_keyHook == null) {
 				_keyHook = AHookWin.Keyboard(k => {
 					if(ATime.WinMilliseconds >= _keyHookTimeout) {
@@ -425,7 +422,7 @@ namespace Au.Triggers
 							}
 						}
 						if(0 != (mod & _eatMod)) {
-							//Print(k);
+							//AOutput.Write(k);
 							k.BlockEvent();
 							if(k.IsUp) _eatMod &= ~mod;
 						}
@@ -493,13 +490,13 @@ namespace Au.Triggers
 			public bool Detect(POINT pt)
 			{
 				//get normal x y. In pt can be outside screen when cursor moved fast and was stopped by a screen edge. Tested: never for click/wheel events.
-				//Print(pt, AMouse.XY);
+				//AOutput.Write(pt, AMouse.XY);
 				//var r = AScreen.Of(pt).Bounds; //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
 				var r = AScreen.Of(AMouse.XY).Bounds; //smaller problem: AMouse.XY gets previous coordinates
 				_xmin = r.left; _ymin = r.top; _xmax = r.right - 1; _ymax = r.bottom - 1;
 				_x = AMath.MinMax(pt.x, _xmin, _xmax);
 				_y = AMath.MinMax(pt.y, _ymin, _ymax);
-				//Print(pt, _x, _y, r);
+				//AOutput.Write(pt, _x, _y, r);
 
 				result = default;
 				result.pt = (_x, _y);
@@ -508,7 +505,7 @@ namespace Au.Triggers
 				_prev.xx = _x; _prev.yy = _y;
 
 #if DEBUG
-				//Print(++_prev.debug, edgeEvent, moveEvent, (_x, _y));
+				//AOutput.Write(++_prev.debug, edgeEvent, moveEvent, (_x, _y));
 #endif
 				return result.edgeEvent != 0 || result.moveEvent != 0;
 			}
@@ -521,14 +518,14 @@ namespace Au.Triggers
 				}
 
 				int x = _x, y = _y;
-				if(x == _prev.xx && y == _prev.yy) { /*Print("same x y");*/ return; }
+				if(x == _prev.xx && y == _prev.yy) { /*AOutput.Write("same x y");*/ return; }
 
 				long time = ATime.PerfMilliseconds;
 				int dt = (int)(time - _prev.time);
 				_prev.time = time;
 				if(dt <= 0) return; //never noticed
 
-				//Print((x, y), AMouse.XY, time%10000);
+				//AOutput.Write((x, y), AMouse.XY, time%10000);
 
 				if(y == _ymin || y == _ymax || x == _xmin || x == _xmax) {
 					_prev.mDirection = 0;
@@ -587,7 +584,7 @@ namespace Au.Triggers
 							}
 						}
 						if(e != 0) {
-							//Print(e);
+							//AOutput.Write(e);
 							_prev.mDirection = e;
 							_prev.mTimeout = time + 250;
 							_prev.mx1 = _prev.xx; _prev.my1 = _prev.yy; _prev.mx2 = x; _prev.my2 = y;
@@ -664,7 +661,7 @@ namespace Au.Triggers
 			//		if((uint)value > 10) throw new ArgumentOutOfRangeException(null, "0-10");
 			//		_sensPublic = value;
 			//		_sens = (int)(Math.Pow(1.414, 14 - value) * 1.3);
-			//		Print(_sens); //29 when _sensPublic 5 (default)
+			//		AOutput.Write(_sens); //29 when _sensPublic 5 (default)
 			//	}
 			//}
 			//int _sensPublic;

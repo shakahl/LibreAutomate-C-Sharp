@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,12 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 
@@ -432,7 +428,7 @@ namespace Au.Compiler
 				foreach(var t in EnumOptions(code, endOf)) {
 					//var p1 = APerf.Create();
 					_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
-					//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) Print(t1, t.Name(), t.Value());
+					//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) AOutput.Write(t1, t.Name(), t.Value());
 				}
 			}
 			//p1.NW();
@@ -444,7 +440,7 @@ namespace Au.Compiler
 
 		void _ParseOption(string name, string value, int iName, int iValue)
 		{
-			//Print(name, value);
+			//AOutput.Write(name, value);
 			_nameFrom = iName; _nameTo = iName + name.Length;
 			_valueFrom = iValue; _valueTo = iValue + value.Length;
 
@@ -691,7 +687,7 @@ namespace Au.Compiler
 			foreach(var v in CodeFiles) if(v.f == f) return _ErrorV("circular reference");
 			if(!_flags.Has(EMPFlags.ForCodeInfo)) {
 				if(!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
-				//Print(r.role, r.file);
+				//AOutput.Write(r.role, r.file);
 				if(r.role != ERole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
 				value = r.file;
 			}

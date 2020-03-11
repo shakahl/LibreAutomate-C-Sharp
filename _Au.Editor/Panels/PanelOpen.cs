@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 using Aga.Controls.Tree;
@@ -105,8 +103,13 @@ class PanelOpen : AuUserControlBase, ITreeModel
 			Program.Model.SetCurrentFile(f);
 			break;
 		case MouseButtons.Right:
-			//_ItemRightClicked(f);
-			//_c.BeginInvoke(new Action(() => _ItemRightClicked(f)));
+			var m = new AMenu();
+			m["Close\tM-click"] = o => Program.Model.CloseFile(f, true);
+			using(m.Submenu("Multiple")) {
+				m["Close all other"]=o => Program.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll, dontClose: f);
+				m["Close all"]=o => Program.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll);
+			}
+			m.Show(_c);
 			break;
 		case MouseButtons.Middle:
 			Program.Model.CloseFile(f, true);

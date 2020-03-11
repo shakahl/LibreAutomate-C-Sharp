@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 partial class FilesModel
 {
@@ -152,7 +150,7 @@ partial class FilesModel
 	bool _SaveWorkspaceNow()
 	{
 		try {
-			//Print("saving");
+			//AOutput.Write("saving");
 			Root.Save(WorkspaceFile);
 			return true;
 		}
@@ -205,7 +203,7 @@ partial class FilesModel
 			Save.LoadingState = true;
 
 			//expanded folders
-			if(DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !Empty(s)) {
+			if(DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !s.IsNE()) {
 				_control.BeginUpdate();
 				foreach(var v in s.Segments(" ")) {
 					var fn = FindById(s[v.start..v.end]);
@@ -215,7 +213,7 @@ partial class FilesModel
 			}
 
 			//open files
-			if(DB.Get(out s, "SELECT data FROM _misc WHERE key='open'") && !Empty(s)) {
+			if(DB.Get(out s, "SELECT data FROM _misc WHERE key='open'") && !s.IsNE()) {
 				//format: indexOfActiveDocOrMinusOne id1 id2 ...
 				int i = -2, iActive = s.ToInt();
 				FileNode fnActive = null;

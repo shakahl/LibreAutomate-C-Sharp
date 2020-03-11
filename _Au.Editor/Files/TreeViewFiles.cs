@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
@@ -181,7 +178,7 @@ partial class FilesModel
 			_ccComboEnum.ParentColumn = _columnComboEnum;
 			_ccComboEnum.DataPropertyName = "ComboEnum";
 			_ccComboEnum.EditEnabled = true; _ccComboEnum.EditOnClick = true;
-			//_ccComboEnum.CreatingEditor += (unu, sed) => Print("ce");
+			//_ccComboEnum.CreatingEditor += (unu, sed) => AOutput.Write("ce");
 
 			_ccDecimal = new NodeDecimalTextBox();
 			this.NodeControls.Add(_ccDecimal);
@@ -210,20 +207,20 @@ partial class FilesModel
 #if TEST_MANY_COLUMNS
 		private void _ccCombo_CreatingEditor(object sender, EditEventArgs e)
 		{
-			//Print(e.Control);
+			//AOutput.Write(e.Control);
 			var c = e.Control as ComboBox;
 			var dd = c.Items; dd.Add("one"); dd.Add(2); dd.Add(3.5); dd.Add(4); dd.Add(5); dd.Add(6); dd.Add(7); dd.Add(8); dd.Add(9); dd.Add(10);
 		}
 		//private void _nodeCheckBox_CheckStateChanged(object sender, TreeViewAdvEventArgs e)
 		//{
-		//	Print(node);
+		//	AOutput.Write(node);
 		//}
 #endif
 
 		private object _ccIcon_ValueNeeded(TreeNodeAdv node)
 		{
 			var f = node.Tag as FileNode;
-			//Print(f);
+			//AOutput.Write(f);
 			Debug.Assert(node.IsLeaf != f.IsFolder);
 
 			if(_model.IsInPrivateClipboard(f, out bool cut)) return EdResources.GetImageUseCache(cut ? nameof(Au.Editor.Resources.Resources.cut) : nameof(Au.Editor.Resources.Resources.copy));

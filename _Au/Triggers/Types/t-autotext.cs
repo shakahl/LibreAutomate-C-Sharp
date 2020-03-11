@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 using System.Globalization;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using System.Collections;
 
 namespace Au.Triggers
@@ -113,7 +110,7 @@ namespace Au.Triggers
 					_paramsString = b.ToString();
 				}
 			}
-			//Print(this);
+			//AOutput.Write(this);
 		}
 
 		internal override void Run(TriggerArgs args) => RunT(args as AutotextTriggerArgs);
@@ -172,7 +169,7 @@ namespace Au.Triggers
 					var c = text[i]; if(matchCase) c = char.ToLowerInvariant(c);
 					k |= (byte)c << j;
 				}
-				//Print((uint)k);
+				//AOutput.Write((uint)k);
 				t.DictAdd(_d, k);
 				_lastAdded = t;
 			}
@@ -216,7 +213,7 @@ namespace Au.Triggers
 
 		static string _CheckPostfixChars(string s)
 		{
-			if(Empty(s)) return null;
+			if(s.IsNE()) return null;
 			int k = 0;
 			for(int i = 0; i < s.Length; i++) {
 				char c = s[i];
@@ -224,7 +221,7 @@ namespace Au.Triggers
 				if(c == '\r') k |= 1;
 				if(c == '\n') k |= 2;
 			}
-			if(k == 2) PrintWarning("Postfix characters contains \\n (Ctrl+Enter) but no \\r (Enter).");
+			if(k == 2) AWarning.Write("Postfix characters contains \\n (Ctrl+Enter) but no \\r (Enter).");
 			return s;
 		}
 
@@ -281,7 +278,7 @@ namespace Au.Triggers
 		{
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
-			//Print(k);
+			//AOutput.Write(k);
 			//APerf.First();
 
 			if(ResetEverywhere) { //set by mouse hooks on click left|right and by keyboard hooks on Au-injected key events. In shared memory.
@@ -293,7 +290,7 @@ namespace Au.Triggers
 				if(_singlePK) {
 					_singlePK = false;
 					if(_IsPostfixMod(thc.ModThis)) {
-						//Print("< Ctrl up >");
+						//AOutput.Write("< Ctrl up >");
 						_Trigger(default, true, _GetFocusedWindow(), thc);
 						//goto gReset; //no, resets if triggered, else don't reset
 					}
@@ -330,7 +327,7 @@ namespace Au.Triggers
 				}
 				if(n < 0) return; //dead key
 			}
-			//Print(n, c[0], c[1]);
+			//AOutput.Write(n, c[0], c[1]);
 
 			for(int i = 0; i < n; i++) _Trigger(c[i], false, wFocus, thc);
 
@@ -377,7 +374,7 @@ namespace Au.Triggers
 			if(isPK) {
 				postfixType = _DetectedPostfix.Key;
 			} else {
-				//Print((int)c);
+				//AOutput.Write((int)c);
 
 				if(c < ' ' || c == 127) {
 					switch(c) {
@@ -423,7 +420,7 @@ namespace Au.Triggers
 			g1:
 			for(int k = 0, ii = nc - 1, jj = 0; ii >= 0 && jj <= 24; ii--, jj += 8) { //create dictionary key from 1-4 last characters lowercase
 				k |= (byte)_text[ii].cLow << jj;
-				//Print((uint)k);
+				//AOutput.Write((uint)k);
 				if(_d.TryGetValue(k, out var v)) {
 					AutotextTriggerArgs args = null;
 					for(; v != null; v = v.next) {
@@ -521,7 +518,7 @@ namespace Au.Triggers
 			//	On Alt up could call tounicodeex with sc with flag 0x8000. It gets the char, but resets keyboard state, and the char is not typed.
 			//4. In console windows does not work with Unicode characters.
 
-			//if(MapVirtualKeyEx(vk, MAPVK_VK_TO_CHAR, hkl)&0x80000000) { Print("DEAD"); return -1; } //this cannot be used because resets dead key
+			//if(MapVirtualKeyEx(vk, MAPVK_VK_TO_CHAR, hkl)&0x80000000) { AOutput.Write("DEAD"); return -1; } //this cannot be used because resets dead key
 		}
 
 		_DeadKey _deadKey;
@@ -561,11 +558,11 @@ namespace Au.Triggers
 		}
 
 		[Conditional("DEBUG")]
-		unsafe void DebugPrintText()
+		unsafe void _DebugPrintText()
 		{
 			var s = new string(' ', _len);
 			fixed (char* p = s) for(int i = 0; i < s.Length; i++) p[i] = _text[i].c;
-			Print(s);
+			AOutput.Write(s);
 		}
 
 		internal static unsafe void JitCompile()
@@ -624,7 +621,7 @@ namespace Au.Triggers
 			Text = text;
 			HasPostfixChar = hasPChar;
 
-			//Print($"'{text}'", hasPChar);
+			//AOutput.Write($"'{text}'", hasPChar);
 		}
 
 		/// <summary>
@@ -632,7 +629,7 @@ namespace Au.Triggers
 		/// </summary>
 		/// <param name="text">The replacement text.</param>
 		/// <param name="keysEtc">Optional arguments to send keys etc. The same as with <see cref="AKeys.Key"/>.</param>
-		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> is of an unsupported type or has an invalid value, for example an unknown key name.</exception>
+		/// <exception cref="ArgumentException">An argument in <i>keysEtc</i> has an invalid value, for example an unknown key name.</exception>
 		/// <remarks>
 		/// Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="AutotextTriggers.DefaultFlags"/>. Uses these flags: <see cref="TAFlags.DontErase"/> <see cref="TAFlags.RemovePostfix"/> <see cref="TAFlags.ReplaceRaw"/> <see cref="TAFlags.Confirm"/>.
 		/// 
@@ -646,7 +643,7 @@ namespace Au.Triggers
 		/// ]]></code>
 		/// More examples: <see cref="ActionTriggers"/>.
 		/// </example>
-		public void Replace(string text, [ParamString(PSFormat.AKeys)] params object[] keysEtc)
+		public void Replace(string text, [ParamString(PSFormat.AKeys)] params KKeysEtc[] keysEtc)
 		{
 			var flags = Trigger.flags;
 
@@ -682,7 +679,7 @@ namespace Au.Triggers
 				//note: Back down down ... up does not work with some apps
 			}
 			if(pc != 0) {
-				if(0 == (flags & TAFlags.RemovePostfix)) r += t[len].ToString(); else pc = 0;
+				if(0 == (flags & TAFlags.RemovePostfix)) r += t[len].ToString();
 			}
 			k.AddText(r);
 

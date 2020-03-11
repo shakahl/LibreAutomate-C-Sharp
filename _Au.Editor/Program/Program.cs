@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using System.Resources;
 
 static class Program
@@ -28,7 +25,7 @@ static class Program
 		//Api.GetProcessTimes(Api.GetCurrentProcess(), out long c, out _, out long k, out long u);
 		//Api.GetSystemTimeAsFileTime(out long t);
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
-		//Print(k/10000, u / 10000, (t - c) / 10000); //60 ms
+		//AOutput.Write(k/10000, u / 10000, (t - c) / 10000); //60 ms
 
 #if TRACE
 		APerf.First();
@@ -89,6 +86,7 @@ static class Program
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
+		//Application.SetHighDpiMode(HighDpiMode.SystemAware); //no, we have manifest
 		//Application.EnableVisualStyles(); //no, we have manifest
 		Application.SetCompatibleTextRenderingDefault(false);
 
@@ -98,8 +96,8 @@ static class Program
 
 		ATimer.Every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
-		//Timer1s += () => Print("1 s");
-		//Timer1sOr025s += () => Print("0.25 s");
+		//Timer1s += () => AOutput.Write("1 s");
+		//Timer1sOr025s += () => AOutput.Write("0.25 s");
 
 		FMain.ZRunApplication();
 

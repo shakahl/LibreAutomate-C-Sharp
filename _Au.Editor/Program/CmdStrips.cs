@@ -10,14 +10,12 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 using Au.Controls;
 
 static class Strips
@@ -44,7 +42,7 @@ static class Strips
 		//p.Next();
 
 		_strips = new AuStripManager(Program.MainForm, _cmd);
-		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", AFolders.ThisAppDocuments + @"!Settings\Strips.xml", new AuDockPanel.ZDockedToolStripRenderer());
+		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", AFolders.ThisAppDocuments + @".settings\Strips.xml", new AuDockPanel.ZDockedToolStripRenderer());
 		//p.Next();
 
 		//get top-level toolstrips (menu bar and toolbars)
@@ -70,13 +68,14 @@ static class Strips
 		//get controls
 		cHelpFind = tbHelp.Items["Help_Find"] as ToolStripSpringTextBox;
 		//var cw1 = new ComboWrapper(cHelpFind.Control);
-		//cw1.ArrowButtonPressed += (unu, sed) => Print("not implemented");
+		//cw1.ArrowButtonPressed += (unu, sed) => AOutput.Write("not implemented");
 		cHelpFind.Visible = false; //FUTURE
 
 		//p.NW();
 
 		//make some buttons wider
-		var rr = tbRun.Items["Run_Run"]; rr.AutoSize = false; rr.Width = rr.Width * 3 / 2;
+		int wider = Au.Util.ADpi.ScaleInt(5);
+		tbRun.Items["Run_Run"].Padding = new Padding(wider, 0, wider, 0);
 
 		//tbHelp.Padding = new Padding(); //removes 1-pixel right margin that causes a visual artifact because of gradient, but then not good when no margin when the edit is at the very right edge of the form
 
@@ -84,8 +83,8 @@ static class Strips
 		//all commands have menu items?
 		//var p = APerf.Create();
 		foreach(var k in _cmd.Dict.Keys) {
-			//Print(k);
-			if(_strips.Xml.Desc(k) == null) PrintWarning("no menu item for command " + k);
+			//AOutput.Write(k);
+			if(_strips.Xml.Desc(k) == null) AWarning.Write("no menu item for command " + k);
 		}
 		//p.NW(); //450
 		//for vice versa, AuStripManager takes care

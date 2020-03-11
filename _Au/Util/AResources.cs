@@ -10,13 +10,11 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 using System.Resources;
 using System.Globalization;
 
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au.Util
 {
@@ -49,7 +47,7 @@ namespace Au.Util
 		/// Full name of embedded resources file, like "Project.Properties.Resources.resources".
 		/// Set this property once before calling <see cref="GetAppResource"/>.
 		/// If not set, it will look for resource where name ends with ".Resources.resources". If there is no such resources, uses the first.
-		/// To see embedded resource file names you can use this code: <c>Print(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
+		/// To see embedded resource file names you can use this code: <c>AOutput.Write(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
 		/// </summary>
 		public static string AppResourcesName {
 			get => s_appResourcesName;

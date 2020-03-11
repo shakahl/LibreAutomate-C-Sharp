@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,17 +10,14 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 //using System.Linq;
 
-using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Au
 {
 	/// <summary>
-	/// Options used by some functions of this library.
+	/// Options for some functions of this library.
 	/// </summary>
 	/// <remarks>
 	/// Some frequently used static functions of this library have some options (settings). For example <see cref="AKeys.Key"/> allows to change speed, text sending method, etc. Passing options as parameters in each call usually isn't what you want to do in automation scripts. Instead you can set options using static properties. This class contains several groups of options for functions of various classes. See examples.
@@ -41,18 +37,18 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// AOpt.Key.KeySpeed = 20;
-		/// Key("Tab Ctrl+V");
+		/// AOpt.Key.KeySpeed = 100;
+		/// AKeys.Key("Right*10 Ctrl+A");
 		/// ]]></code>
 		/// Use an AKeys instance.
 		/// <code><![CDATA[
 		/// var k = new AKeys(AOpt.Key); //create new AKeys instance and copy options from AOpt.Key to it
 		/// k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Key
-		/// k.Add("Tab Ctrl+V").Send(); //uses options of k
+		/// k.Add("Right*10 Ctrl+A").Send(); //uses options of k
 		/// ]]></code>
 		/// </example>
 		public static OptKey Key => t_key ??= new OptKey(AOpt.Static.Key);
-		[ThreadStatic] internal static OptKey t_key;
+		[ThreadStatic] static OptKey t_key;
 
 		/// <summary>
 		/// Options for mouse functions (class <see cref="AMouse"/> and functions that use it).
@@ -67,23 +63,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static OptMouse Mouse => t_mouse ??= new OptMouse(AOpt.Static.Mouse);
-		[ThreadStatic] internal static OptMouse t_mouse;
-
-		/// <summary>
-		/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
-		/// </summary>
-		/// <remarks>
-		/// Each thread has its own <b>AOpt.Debug</b> instance. It inherits options from <see cref="AOpt.Static.Debug"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// AOpt.Debug.Verbose = false;
-		/// PrintWarning("Example");
-		/// PrintWarning("Example");
-		/// ]]></code>
-		/// </example>
-		public static OptDebug Debug => t_debug ??= new OptDebug(AOpt.Static.Debug);
-		[ThreadStatic] static OptDebug t_debug;
+		[ThreadStatic] static OptMouse t_mouse;
 
 		/// <summary>
 		/// Options for 'wait for' functions.
@@ -96,6 +76,22 @@ namespace Au
 		[ThreadStatic] static OptWaitFor t_waitFor;
 
 		/// <summary>
+		/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
+		/// </summary>
+		/// <remarks>
+		/// Each thread has its own <b>AOpt.Warnings</b> instance. It inherits options from <see cref="AOpt.Static.Warnings"/>.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// AOpt.Warnings.Verbose = false;
+		/// AWarning.Write("Example");
+		/// AWarning.Write("Example");
+		/// ]]></code>
+		/// </example>
+		public static OptWarnings Warnings => t_warnings ??= new OptWarnings(AOpt.Static.Warnings);
+		[ThreadStatic] static OptWarnings t_warnings;
+
+		/// <summary>
 		/// Resets all options. Copies from <see cref="AOpt.Static"/>.
 		/// </summary>
 		public static void Reset()
@@ -103,14 +99,14 @@ namespace Au
 			t_key?.Reset();
 			t_mouse?.Reset();
 			t_waitFor?.Reset();
-			t_debug?.Reset();
+			t_warnings?.Reset();
 		}
 
 		/// <summary>
 		/// Default <see cref="AOpt"/> properties of each thread.
 		/// </summary>
 		/// <remarks>
-		/// You can change these options at the start of your script or in the static constructor of script's class. Don't change later.
+		/// You can change these options at the start of your script/program. Don't change later.
 		/// </remarks>
 		public static class Static
 		{
@@ -124,7 +120,7 @@ namespace Au
 			/// <code><![CDATA[
 			/// AOpt.Static.Key.KeySpeed = 10;
 			/// ...
-			/// Key("Tab Ctrl+V"); //uses AOpt.Key, which is implicitly copied from AOpt.Static.Key
+			/// AKeys.Key("Tab Ctrl+V"); //uses AOpt.Key, which is implicitly copied from AOpt.Static.Key
 			/// ]]></code>
 			/// Use an AKeys instance.
 			/// <code><![CDATA[
@@ -148,14 +144,14 @@ namespace Au
 			public static OptMouse Mouse { get; } = new OptMouse();
 
 			/// <summary>
-			/// Default option values for <see cref="AOpt.Debug"/> of each thread.
+			/// Default option values for <see cref="AOpt.Warnings"/> of each thread.
 			/// </summary>
 			/// <example>
 			/// <code><![CDATA[
-			/// AOpt.Static.Debug.Verbose = false;
+			/// AOpt.Static.Warnings.Verbose = false;
 			/// ]]></code>
 			/// </example>
-			public static OptDebug Debug { get; } = new OptDebug();
+			public static OptWarnings Warnings { get; } = new OptWarnings();
 
 		}
 
@@ -169,30 +165,65 @@ namespace Au
 			/// </summary>
 			/// <example>
 			/// <code><![CDATA[
-			/// Print(AOpt.Mouse.ClickSpeed);
+			/// AOutput.Write(AOpt.Mouse.ClickSpeed);
 			/// using(AOpt.Temp.Mouse) {
 			/// 	AOpt.Mouse.ClickSpeed = 100;
-			/// 	Print(AOpt.Mouse.ClickSpeed);
+			/// 	AOutput.Write(AOpt.Mouse.ClickSpeed);
 			/// } //here restored automatically
-			/// Print(AOpt.Mouse.ClickSpeed);
+			/// AOutput.Write(AOpt.Mouse.ClickSpeed);
 			/// ]]></code>
 			/// </example>
-			public static OTRestoreMouse Mouse => new OTRestoreMouse(0);
+			public static UsingAction Mouse {
+				get {
+					var old = t_mouse;
+					t_mouse = new OptMouse(old ?? Static.Mouse);
+					//t_mouse = old == null ? null : new OptMouse(old); //lazy
+					return new UsingAction(() => t_mouse = old);
+				}
+			}
 
 			/// <summary>
 			/// Makes easy to restore current <see cref="AOpt.Key"/> of this thread. See example.
 			/// </summary>
 			/// <example>
 			/// <code><![CDATA[
-			/// Print(AOpt.Key.KeySpeed);
+			/// AOutput.Write(AOpt.Key.KeySpeed);
 			/// using(AOpt.Temp.Key) {
 			/// 	AOpt.Key.KeySpeed = 5;
-			/// 	Print(AOpt.Key.KeySpeed);
+			/// 	AOutput.Write(AOpt.Key.KeySpeed);
 			/// } //here restored automatically
-			/// Print(AOpt.Key.KeySpeed);
+			/// AOutput.Write(AOpt.Key.KeySpeed);
 			/// ]]></code>
 			/// </example>
-			public static OTRestoreKey Key => new OTRestoreKey(0);
+			public static UsingAction Key {
+				get {
+					var old = t_key;
+					t_key = new OptKey(old ?? Static.Key);
+					//t_key = old == null ? null : new OptKey(old); //lazy
+					return new UsingAction(() => t_key = old);
+				}
+			}
+
+			/// <summary>
+			/// Makes easy to restore current <see cref="AOpt.WaitFor"/> of this thread. See example.
+			/// </summary>
+			/// <example>
+			/// <code><![CDATA[
+			/// AOutput.Write(AOpt.WaitFor.Period);
+			/// using(AOpt.Temp.WaitFor) {
+			/// 	AOpt.WaitFor.Period = 5;
+			/// 	AOutput.Write(AOpt.WaitFor.Period);
+			/// } //here restored automatically
+			/// AOutput.Write(AOpt.WaitFor.Period);
+			/// ]]></code>
+			/// </example>
+			public static UsingAction WaitFor {
+				get {
+					var old = t_waitFor;
+					t_waitFor = new OptWaitFor(old?.Period ?? 10, old?.DoEvents ?? false);
+					return new UsingAction(() => t_waitFor = old);
+				}
+			}
 		}
 	}
 }
@@ -200,9 +231,9 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Options for showing run-time warnings and other info that can be useful to find problems in code at run time.
+	/// Options for run-time warnings (<see cref="AWarning.Write"/>).
 	/// </summary>
-	public class OptDebug
+	public class OptWarnings
 	{
 		struct _Options //makes easier to copy and reset fields
 		{
@@ -215,23 +246,23 @@ namespace Au.Types
 		/// Initializes this instance with default values or values copied from another instance.
 		/// </summary>
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
-		internal OptDebug(OptDebug cloneOptions = null)
+		internal OptWarnings(OptWarnings cloneOptions = null)
 		{
 			if(cloneOptions != null) {
 				_Copy(cloneOptions);
 			}
 		}
 
-		void _Copy(OptDebug o)
+		void _Copy(OptWarnings o)
 		{
 			_o = o._o;
 			_disabledWarnings = o._disabledWarnings == null ? null : new List<string>(o._disabledWarnings);
 		}
 
 		/// <summary>
-		/// Resets all options. Copies from <see cref="AOpt.Static.Debug"/>.
+		/// Resets all options. Copies from <see cref="AOpt.Static.Warnings"/>.
 		/// </summary>
-		public void Reset() => _Copy(AOpt.Static.Debug);
+		public void Reset() => _Copy(AOpt.Static.Warnings);
 
 		/// <summary>
 		/// If true, some library functions may display more warnings and other info.
@@ -260,61 +291,43 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="warningsWild">One or more warnings as case-insensitive wildcard strings. See <see cref="AExtString.Like(string, string, bool)"/>.</param>
 		/// <remarks>
-		/// Adds the strings to an internal list. When <see cref="PrintWarning"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
+		/// Adds the strings to an internal list. When <see cref="AWarning.Write"/> is called, it looks in the list. If finds the warning in the list, does not show the warning.
 		/// It's easy to auto-restore warnings with 'using', like in the second example. Restoring is optional.
 		/// </remarks>
 		/// <example>
 		/// This code at the very start of script disables two warnings in all threads.
 		/// <code><![CDATA[
-		/// AOpt.Static.Debug.DisableWarnings("*part of warning 1 text*", "*part of warning 2 text*");
+		/// AOpt.Static.Warnings.Disable("*part of warning 1 text*", "*part of warning 2 text*");
 		/// ]]></code>
 		/// Temporarily disable all warnings in this thread.
 		/// <code><![CDATA[
-		/// AOpt.Debug.Verbose = true;
-		/// PrintWarning("one");
-		/// using(AOpt.Debug.DisableWarnings("*")) {
-		/// 	PrintWarning("two");
+		/// AOpt.Warnings.Verbose = true;
+		/// AWarning.Write("one");
+		/// using(AOpt.Warnings.Disable("*")) {
+		/// 	AWarning.Write("two");
 		/// }
-		/// PrintWarning("three");
+		/// AWarning.Write("three");
 		/// ]]></code>
+		/// Don't use code <c>using(AOpt.Static.Warnings.Disable...</c>, it's not thread-safe.
 		/// </example>
-		public RestoreWarnings DisableWarnings(params string[] warningsWild)
+		public UsingAction Disable(params string[] warningsWild)
 		{
 			_disabledWarnings ??= new List<string>();
 			int restoreCount = _disabledWarnings.Count;
 			_disabledWarnings.AddRange(warningsWild);
-			return new RestoreWarnings(this, restoreCount);
-		}
-
-		internal void RestoreWarnings_(int restoreCount)
-		{
-			if(this == AOpt.Static.Debug) throw new InvalidOperationException(); //would be not thread-safe, and useless
-			_disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount);
+			return new UsingAction(() => _disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount));
 		}
 
 		/// <summary>
-		/// Returns true if the specified warning text matches a wildcard string added with <see cref="DisableWarnings"/>.
+		/// Returns true if the specified warning text matches a wildcard string added with <see cref="Disable"/>.
 		/// </summary>
 		/// <param name="text">Warning text. Case-insensitive.</param>
-		public bool IsWarningDisabled(string text)
+		public bool IsDisabled(string text)
 		{
 			string s = text ?? "";
 			var a = _disabledWarnings;
 			if(a != null) foreach(var k in a) if(s.Like(k, true)) return true;
 			return false;
-		}
-
-		/// <summary>Infrastructure.</summary>
-		[NoDoc]
-		public struct RestoreWarnings : IDisposable
-		{
-			OptDebug _o;
-			int _restoreCount;
-
-			internal RestoreWarnings(OptDebug o, int restoreCount) { _o = o; _restoreCount = restoreCount; }
-
-			/// <summary>Restores warnings.</summary>
-			public void Dispose() => _o.RestoreWarnings_(_restoreCount);
 		}
 	}
 
@@ -341,28 +354,21 @@ namespace Au.Types
 		/// <param name="cloneOptions">If not null, copies its options into this variable.</param>
 		internal OptMouse(OptMouse cloneOptions = null) //don't need public like OptKey
 		{
-			CopyOrDefault_(cloneOptions);
-		}
-
-		/// <summary>
-		/// Copies options from o, or sets default if o==null. Like ctor does.
-		/// </summary>
-		internal void CopyOrDefault_(OptMouse o)
-		{
-			if(o != null) {
-				_o = o._o;
+			if(cloneOptions != null) {
+				_o = cloneOptions._o;
 			} else {
 				_o.ClickSpeed = 20;
-				_o.MoveSpeed = 0;
+				//_o.MoveSpeed = 0;
 				_o.ClickSleepFinally = 10;
 				_o.MoveSleepFinally = 10;
+				//_o.Relaxed = false;
 			}
 		}
 
 		/// <summary>
 		/// Resets all options. Copies from <see cref="AOpt.Static.Mouse"/>.
 		/// </summary>
-		public void Reset() => CopyOrDefault_(AOpt.Static.Mouse);
+		public void Reset() => _o = AOpt.Static.Mouse._o;
 
 		bool _IsStatic => this == AOpt.Static.Mouse;
 
@@ -375,8 +381,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
-		/// Default: 20. Valid values: 0 - 1000 (1 s). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100 (1 s).
+		/// Default: 20.
 		/// </summary>
+		/// <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100 (1 s).</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		public int ClickSpeed {
 			get => _o.ClickSpeed;
@@ -385,8 +392,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// If not 0, makes mouse movements slower, not instant.
-		/// Default: 0. Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100.
+		/// Default: 0.
 		/// </summary>
+		/// <value>Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used by <see cref="AMouse.Move"/>, <see cref="AMouse.Click"/> and other functions that generate mouse movement events, except <see cref="AMouse.MoveRecorded"/>.
@@ -400,8 +408,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
-		/// Default: 10. Valid values: 0 - 10000 (10 s). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100.
+		/// Default: 10.
 		/// </summary>
+		/// <value>Valid values: 0 - 10000 (10 s). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// The 'click' functions also sleep <see cref="ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
@@ -413,8 +422,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
-		/// Default: 10. Valid values: 0 - 1000 (1 s). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100.
+		/// Default: 10.
 		/// </summary>
+		/// <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="AOpt.Static.Mouse"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// Used by <see cref="AMouse.Move"/> (finally), <see cref="AMouse.Click"/> (between moving and clicking) and other functions that generate mouse movement events.
@@ -514,11 +524,12 @@ namespace Au.Types
 
 		/// <summary>
 		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="AKeys.Text"/>, <see cref="AKeys.Key"/> (arguments of type <see cref="KText"/>) and similar functions.
-		/// Default: 0. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
+		/// Default: 0.
 		/// </summary>
+		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Not used for 'keys' parameters. See <see cref="KeySpeed"/>.
+		/// Not used for 'keys' arguments. See <see cref="KeySpeed"/>.
 		/// </remarks>
 		public int TextSpeed {
 			get => _textSpeed;
@@ -527,12 +538,13 @@ namespace Au.Types
 		int _textSpeed;
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="AKeys.Key"/> (string arguments) and similar functions.
-		/// Default: 1. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.
+		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="AKeys.Key"/> and similar functions for 'keys' arguments (not for 'text' arguments).
+		/// Default: 1.
 		/// </summary>
+		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Not used for 'text' parameters. See <see cref="TextSpeed"/>.
+		/// Not used for 'text' arguments. See <see cref="TextSpeed"/>.
 		/// </remarks>
 		public int KeySpeed {
 			get => _keySpeed;
@@ -542,8 +554,9 @@ namespace Au.Types
 
 		/// <summary>
 		/// How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
-		/// Default: 5. Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 50.
+		/// Default: 5.
 		/// </summary>
+		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 50.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
 		/// In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
@@ -556,11 +569,12 @@ namespace Au.Types
 
 		/// <summary>
 		/// How long to wait (milliseconds) before a 'send keys or text' function returns.
-		/// Default: 10. Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 100.
+		/// Default: 10.
 		/// </summary>
+		/// <value>Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 100.</value>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <remarks>
-		/// Not used by <see cref="AClipboard.CopyText"/>.
+		/// Not used by <see cref="AClipboard.Copy"/>.
 		/// </remarks>
 		public int SleepFinally {
 			get => _sleepFinally;
@@ -609,7 +623,7 @@ namespace Au.Types
 		/// </remarks>
 		public bool PasteEnter { get; set; }
 
-		//rejected: rarely used. Eg can be useful for Python programmers. Let call Paste() explicitly or set the Paste option eg in hook.
+		//rejected: rarely used. Eg can be useful for Python programmers. Let call AClipboard.Paste() explicitly or set the Paste option eg in hook.
 		///// <summary>
 		///// To send text use <see cref="KTextOption.Paste"/> if text contains characters '\n' followed by '\t' (tab) or spaces.
 		///// </summary>
@@ -660,11 +674,11 @@ namespace Au.Types
 		public static string[] RestoreClipboardExceptFormats { get; set; }
 
 		/// <summary>
-		/// Prints some info about current clipboard data.
+		/// Writes to the output some info about current clipboard data.
 		/// </summary>
 		/// <remarks>
-		/// Shows this info in the output, for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="RestoreClipboardExceptFormats"/>).
-		/// <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="AClipboard.CopyText"/> and don't call this function in loop. Else it shows small times.</note>
+		/// Shows this info for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="RestoreClipboardExceptFormats"/>).
+		/// <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="AClipboard.Copy"/> and don't call this function in loop. Else it shows small times.</note>
 		/// The time depends on app, etc. More info: <see cref="RestoreClipboardExceptFormats"/>.
 		/// </remarks>
 		public static void PrintClipboard() => AClipboard.PrintClipboard_();
@@ -697,7 +711,7 @@ namespace Au.Types
 		/// Default: null.
 		/// </summary>
 		/// <remarks>
-		/// The callback function is called by <see cref="Key"/>, <see cref="Text"/>, <see cref="AKeys.Send"/>, <see cref="AClipboard.PasteText"/> and similar functions. Not called by <see cref="AClipboard.CopyText"/>.
+		/// The callback function is called by <see cref="AKeys.Key"/>, <see cref="AKeys.Text"/>, <see cref="AKeys.Send"/>, <see cref="AClipboard.Paste"/> and similar functions. Not called by <see cref="AClipboard.Copy"/>.
 		/// </remarks>
 		/// <seealso cref="KOHookData"/>
 		public Action<KOHookData> Hook { get; set; }
@@ -777,8 +791,9 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// The sleep time between checking the wait condition. Milliseconds.
-		/// Default: 10. Valid values: 1-1000.
+		/// Default: 10.
 		/// </summary>
+		/// <value>Valid values: 1-1000.</value>
 		/// <remarks>
 		/// Most 'wait for' functions of this library use <see cref="AWaitFor.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
 		/// This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
@@ -831,23 +846,5 @@ namespace Au.Types
 		///// Implicit conversion from bool. Sets <see cref="DoEvents"/>.
 		///// </summary>
 		//public static implicit operator OptWaitFor(bool doEvents) => new OptWaitFor(10, doEvents);
-	}
-
-	/// <summary>Used by <see cref="AOpt.Temp.Mouse"/>.</summary>
-	public struct OTRestoreMouse : IDisposable
-	{
-		OptMouse _o;
-		internal OTRestoreMouse(int _) => AOpt.t_mouse = new OptMouse(_o = AOpt.t_mouse);
-		/// <summary>Restores options.</summary>
-		public void Dispose() => AOpt.t_mouse = _o;
-	}
-
-	/// <summary>Used by <see cref="AOpt.Temp.Key"/>.</summary>
-	public struct OTRestoreKey : IDisposable
-	{
-		OptKey _o;
-		internal OTRestoreKey(int _) => AOpt.t_key = new OptKey(_o = AOpt.t_key);
-		/// <summary>Restores options.</summary>
-		public void Dispose() => AOpt.t_key = _o;
 	}
 }

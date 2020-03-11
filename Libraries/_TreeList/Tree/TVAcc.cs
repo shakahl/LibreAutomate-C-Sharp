@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -19,7 +18,6 @@ using Aga.Controls.Tree.NodeControls;
 
 using Au;
 using Au.Types;
-using static Au.AStatic;
 
 namespace Aga.Controls.Tree
 {
@@ -73,7 +71,7 @@ namespace Aga.Controls.Tree
 
 		public override AccessibleObject GetChild(int index)
 		{
-			//Print(index);
+			//AOutput.Write(index);
 			if(_tva.UseColumns) {
 				if(index == 0) return _AccHeader;
 				index--;
@@ -119,7 +117,7 @@ namespace Aga.Controls.Tree
 
 		public override AccessibleObject HitTest(int x, int y)
 		{
-			//Print("node.HitTest");
+			//AOutput.Write("node.HitTest");
 			if(this.Bounds.Contains(x, y)) return this;
 			return null;
 		}

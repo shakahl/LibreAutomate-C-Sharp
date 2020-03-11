@@ -1,6 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Collections.Concurrent;
 using System.Text;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -11,11 +10,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
-using System.Runtime.ExceptionServices;
 using System.Linq;
 
 using Au.Types;
-using static Au.AStatic;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -55,7 +52,7 @@ namespace Au.Compiler
 			var cache = XCompiled.OfCollection(f.Model);
 			bool isCompiled = reason != ECompReason.CompileAlways && cache.IsCompiled(f, out r, projFolder);
 
-			//Print("isCompiled=" + isCompiled);
+			//AOutput.Write("isCompiled=" + isCompiled);
 
 			if(!isCompiled) {
 				bool ok = false;
@@ -63,8 +60,8 @@ namespace Au.Compiler
 					ok = _Compile(reason == ECompReason.Run, f, out r, projFolder);
 				}
 				catch(Exception ex) {
-					//Print($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
-					Print($"Failed to compile '{f.Name}'. {ex}");
+					//AOutput.Write($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
+					AOutput.Write($"Failed to compile '{f.Name}'. {ex}");
 				}
 
 				if(!ok) {
@@ -117,7 +114,7 @@ namespace Au.Compiler
 			/// <param name="path">Full path.</param>
 			public void AddToFullPathRefsIfNeed(string path)
 			{
-				//Print(path);
+				//AOutput.Write(path);
 				if(role != ERole.miniProgram) return;
 				var ta = AFolders.ThisAppBS;
 				if(path.Starts(ta, true)) {
@@ -126,7 +123,7 @@ namespace Au.Compiler
 					if(j - i == 9 && path.Eq(i, "Libraries", true) && path.IndexOf('\\', j + 1) < 0) return;
 				}
 				if(!path.Ends(".dll", true)) return;
-				//Print("AddToFullPathRefsIfNeed", path);
+				//AOutput.Write("AddToFullPathRefsIfNeed", path);
 				fullPathRefs = fullPathRefs == null ? path : fullPathRefs + "|" + path;
 			}
 		}
@@ -359,7 +356,7 @@ namespace Au.Compiler
 			int needAttr = 0x100;
 
 			foreach(var v in compilation.SourceModule.GetAttributes()) {
-				//Print(v.AttributeClass.Name);
+				//AOutput.Write(v.AttributeClass.Name);
 				switch(v.AttributeClass.Name) {
 				case "DefaultCharSetAttribute": needAttr &= ~0x100; break;
 				}
@@ -368,7 +365,7 @@ namespace Au.Compiler
 			if(needVersionEtc) {
 				needAttr |= 7;
 				foreach(var v in compilation.Assembly.GetAttributes()) {
-					//Print(v.AttributeClass.Name);
+					//AOutput.Write(v.AttributeClass.Name);
 					switch(v.AttributeClass.Name) {
 					case "AssemblyCompanyAttribute": needAttr &= ~1; break;
 					case "AssemblyProductAttribute": needAttr &= ~2; break;
@@ -556,7 +553,7 @@ namespace Au.Compiler
 			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
 			var mr = pr.GetMetadataReader();
 			var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToList();
-			//Print(usedRefs); Print("---");
+			//AOutput.Write(usedRefs); AOutput.Write("---");
 
 			bool _CopyRefIfNeed(string sFrom, string sTo)
 			{
@@ -574,7 +571,7 @@ namespace Au.Compiler
 			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
 				var s1 = refs[i].FilePath;
 				var s2 = m.OutputPath + "\\" + APath.GetFileName(s1);
-				//Print(s1, s2);
+				//AOutput.Write(s1, s2);
 				_CopyRefIfNeed(s1, s2);
 			}
 
@@ -582,14 +579,14 @@ namespace Au.Compiler
 			bool usesSqlite = false;
 			foreach(var handle in mr.TypeReferences) {
 				var tr = mr.GetTypeReference(handle);
-				//Print(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
+				//AOutput.Write(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
 				string type = mr.GetString(tr.Name);
 				if((type.Starts("ASqlite") && mr.GetString(tr.Namespace) == "Au") || (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) {
 					usesSqlite = true;
 					break;
 				}
 			}
-			//Print(usesSqlite);
+			//AOutput.Write(usesSqlite);
 			if(usesSqlite) {
 				if(need64) _CopyFileIfNeed(AFolders.ThisAppBS + @"64\sqlite3.dll", m.OutputPath + @"\64\sqlite3.dll");
 				if(need32) _CopyFileIfNeed(AFolders.ThisAppBS + @"32\sqlite3.dll", m.OutputPath + @"\32\sqlite3.dll");
@@ -598,7 +595,7 @@ namespace Au.Compiler
 
 		static void _CopyFileIfNeed(string sFrom, string sTo)
 		{
-			//Print(sFrom);
+			//AOutput.Write(sFrom);
 			if(AFile.GetProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
 				&& AFile.GetProperties(sFrom, out var p1, FAFlags.UseRawPath)
 				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
