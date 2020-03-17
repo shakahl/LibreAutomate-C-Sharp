@@ -49,7 +49,7 @@ Triggers.Of.AllWindows(); //let the following triggers work with all windows
 //mouse triggers
 
 mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => AOutput.Write(o.Trigger);
-mouse[TMEdge.RightInCenter50] = o => { AOutput.Write(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
+mouse[TMEdge.RightInCenter50] = o => { AOutput.Write(o.Trigger); ADialog.Show("Bang!", x: Coord.Max); };
 mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
 
 Triggers.FuncOf.NextTrigger = o => AKeys.IsScrollLock; //example of a custom scope (aka context, condition)

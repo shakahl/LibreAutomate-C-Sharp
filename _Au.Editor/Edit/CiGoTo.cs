@@ -156,7 +156,7 @@ class CiGoTo
 		} else {
 			g._assembly = a[2];
 			g._docId = a[3];
-			if(!a[4].IsNE()) g._typeName = a[4];
+			if(!a[4].NE()) g._typeName = a[4];
 		}
 		g.GoTo(menuOwner);
 	}

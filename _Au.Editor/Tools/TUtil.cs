@@ -50,7 +50,7 @@ namespace Au.Tools
 		/// <param name="noComma">Don't append ', '. Use for the first parameter. If false, does not append only if b.Length is less than 2.</param>
 		public static StringBuilder AppendOtherArg(this StringBuilder t, string s, string param = null, bool noComma = false)
 		{
-			Debug.Assert(!s.IsNE());
+			Debug.Assert(!s.NE());
 			_AppendArgPrefix(t, param, noComma);
 			t.Append(s);
 			return t;
@@ -77,7 +77,7 @@ namespace Au.Tools
 			bool isFlags = false;
 			string[] flagNames = flagsEnum.GetEnumNames();
 			for(int r = 0, n = grid.RowsCount; r < n; r++) {
-				var key = grid.ZGetRowKey(r); if(key.IsNE()) continue;
+				var key = grid.ZGetRowKey(r); if(key.NE()) continue;
 				if(prefix != null) { if(key.Starts(prefix)) key = key.Substring(prefix.Length); else continue; }
 				if(!flagNames.Contains(key)) continue;
 				if(!grid.ZIsChecked(r)) continue;
@@ -97,7 +97,7 @@ namespace Au.Tools
 		/// </summary>
 		public static StringBuilder AppendWaitTime(this StringBuilder t, string waitTime, bool orThrow)
 		{
-			if(waitTime.IsNE()) waitTime = "0"; else if(!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
+			if(waitTime.NE()) waitTime = "0"; else if(!orThrow && waitTime != "0" && !waitTime.Starts('-')) t.Append('-');
 			t.Append(waitTime);
 			return t;
 		}
@@ -173,7 +173,7 @@ namespace Au.Tools
 		/// <param name="escapeWildex">If didn't replace, call <see cref="EscapeWildex"/>.</param>
 		public static string StripWndClassName(string s, bool escapeWildex)
 		{
-			if(!s.IsNE()) {
+			if(!s.NE()) {
 				int n = s.RegexReplace(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
 				if(n == 0) n = s.RegexReplace(@"^(HwndWrapper\[.+?;).+", "$1*", out s);
 				if(escapeWildex && n == 0) s = EscapeWildex(s);
@@ -511,7 +511,7 @@ namespace Au.Tools
 		public static TestFindObjectResults RunTestFindObject(
 			string code, string wndVar, AWnd wnd, Button bTest, Label lSpeed, Func<object, RECT> getRect, bool activateWindow = false)
 		{
-			if(code.IsNE()) return default;
+			if(code.NE()) return default;
 			Form form = lSpeed.FindForm();
 			lSpeed.Text = "";
 
@@ -586,7 +586,7 @@ namespace Au.Tools
 					}
 				}
 			} else {
-				//ADialog.ShowEx("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
+				//ADialog.Show("Not found", owner: this, flags: DFlags.OwnerCenter, icon: DIcon.Info, secondsTimeout: 2);
 				lSpeed.ForeColor = Color.Red;
 				lSpeed.Text = "Not found,";
 				ATimer.After(700, _ => lSpeed.Text = sTime);

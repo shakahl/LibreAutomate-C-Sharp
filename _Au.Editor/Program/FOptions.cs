@@ -53,20 +53,25 @@ partial class FOptions : DialogForm
 		s_form = null;
 	}
 
+	bool _loaded;
+
 	protected override void OnLoad(EventArgs e)
 	{
 		base.OnLoad(e);
 
 		_InitGeneral();
 		_InitFiles();
+		_InitTemplates();
 		_InitFont();
 		_InitCodeInfo();
+		_loaded = true;
 	}
 
 	private void _bApply_Click(object sender, EventArgs e)
 	{
 		_ApplyGeneral();
 		_ApplyFiles();
+		_ApplyTemplates();
 		_ApplyFont();
 		_ApplyCodeInfo();
 	}
@@ -106,7 +111,7 @@ partial class FOptions : DialogForm
 	{
 		//AOutput.Write("validating");
 		_errorProvider.Clear();
-		string s = _startupScripts.Text; if(s.IsNE()) return;
+		string s = _startupScripts.Text; if(s.NE()) return;
 		string err = null;
 		try {
 			var t = ACsv.Parse(s);
@@ -116,7 +121,7 @@ partial class FOptions : DialogForm
 				if(script.Starts("//")) continue;
 				if(Program.Model.FindScript(script) == null) { err = "Script not found: " + script; break; }
 				var delay = v.Length == 1 ? null : v[1];
-				if(!delay.IsNE()) {
+				if(!delay.NE()) {
 					_rxDelay ??= new ARegex(@"(?i)^\d+ *m?s$");
 					if(!_rxDelay.IsMatch(delay)) { err = "Delay must be like 2 s or 500 ms"; break; }
 				}
@@ -165,12 +170,68 @@ partial class FOptions : DialogForm
 
 	void _InitFiles()
 	{
-		_usings.ZSetText(Program.Settings.files_usings, -1);
 	}
 
 	void _ApplyFiles()
 	{
-		Program.Settings.files_usings = _usings.Text;
+	}
+
+	#endregion
+
+	#region Templates
+
+	void _InitTemplates()
+	{
+		_cCustTemplS.CheckedChanged += _CustomTempl_CheckedChanged;
+		_cCustTemplC.CheckedChanged += _CustomTempl_CheckedChanged;
+		if(Program.Settings.templ_script) _cCustTemplS.Checked = true; else { _cDefTemplS.Checked = true; _CustomTempl_CheckedChanged(_cCustTemplS, null); }
+		if(Program.Settings.templ_class) _cCustTemplC.Checked = true; else { _cDefTemplC.Checked = true; _CustomTempl_CheckedChanged(_cCustTemplC, null); }
+	}
+
+	private void _CustomTempl_CheckedChanged(object sender, EventArgs e)
+	{
+		string text = null;
+		var rb = sender as RadioButton;
+		bool custom = rb.Checked;
+		bool script = sender == _cCustTemplS;
+		var codeBox = script ? _templScript : _templClass;
+		if(_loaded) {
+			_templCustom ??= new string[2];
+			int i = script ? 0 : 1;
+			if(custom) text = _templCustom[i]; else _templCustom[i] = codeBox.Text;
+		}
+		text ??= FileNode.Templates.Load(script, custom);
+		codeBox.ZSetText(text, readonlyFrom: custom ? -1 : 0);
+	}
+	string[] _templCustom;
+
+	void _ApplyTemplates()
+	{
+		Program.Settings.templ_script = _ApplyTempl(true);
+		Program.Settings.templ_class = _ApplyTempl(false);
+
+		bool _ApplyTempl(bool script)
+		{
+			var rb = script ? _cCustTemplS : _cCustTemplC;
+			bool custom = rb.Checked;
+			var userFile = FileNode.Templates.FilePathRaw(script, true);
+			var codeBox = script ? _templScript : _templClass;
+			string saveText = null;
+			if(custom) {
+				saveText = codeBox.Text;
+			} else if(_templCustom != null) {
+				saveText = _templCustom[script ? 0 : 1];
+			}
+			if(saveText != null) {
+				if(saveText == FileNode.Templates.Load(script, false)) {
+					custom = false;
+					AFile.Delete(userFile);
+				} else if(saveText != FileNode.Templates.Load(script, true)) {
+					AFile.SaveText(userFile, saveText);
+				}
+			}
+			return custom;
+		}
 	}
 
 	#endregion

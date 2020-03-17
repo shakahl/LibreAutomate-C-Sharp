@@ -43,7 +43,7 @@ public class FormWinapi : DialogForm
 		_eName.TextChanged += _eName_TextChanged;
 		_bOK.Click += (unu, sed) => {
 			string s = _code.Text;
-			if(!s.IsNE()) Clipboard.SetText(s);
+			if(!s.NE()) Clipboard.SetText(s);
 		};
 	}
 

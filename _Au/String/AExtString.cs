@@ -488,7 +488,7 @@ namespace Au
 		/// Returns true if this string is null or empty ("").
 		/// </summary>
 		/// <param name="t">This string.</param>
-		public static bool IsNE(this string t) => t==null ? true : t.Length == 0;
+		public static bool NE(this string t) => t==null ? true : t.Length == 0;
 
 		//rejected. Too simple. Not so often used. Could name AsSpan, then in completion lists it is joined with the .NET extension method, but then in our editor it is the first in the list.
 		///// <summary>

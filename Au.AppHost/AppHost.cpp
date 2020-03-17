@@ -257,6 +257,8 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 	//QueryPerformanceCounter(&t2);
 	//Print(L"%i", (t2.LowPart - t1.LowPart) / 10);
 
+	SetEnvironmentVariable(L"COMPlus_legacyCorruptedStateExceptionsPolicy", L"1");
+
 	void* hostHandle;
 	unsigned int domainId;
 

@@ -89,7 +89,7 @@ namespace Au
 		/// </code>
 		/// 
 		/// <code><![CDATA[
-		/// var v = ADialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
+		/// var v = ADialog.Show("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
 		/// ]]></code>
 		/// 
 		///  C# keywords

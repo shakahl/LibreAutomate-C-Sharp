@@ -158,7 +158,7 @@ namespace Au.Tools
 			if(!isWeb && !_con.Is0 && !_useCon) {
 				string sId = TUtil.GetUsefulControlId(_con, _wnd, out int id) ? id.ToString() : _con.NameWinForms;
 				if(sId != null) _Add("id", sId, sId.Length > 0, info: c_infoId);
-				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), sId.IsNE(), info: c_infoClass);
+				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), sId.NE(), info: c_infoClass);
 			}
 
 			_AddIfNotEmpty("value", p.Value, false, true, info: "Value.$");
@@ -189,7 +189,7 @@ namespace Au.Tools
 
 			bool _AddIfNotEmpty(string name, string value, bool check, bool escape, string tt = null, string info = null)
 			{
-				if(value.IsNE()) return false;
+				if(value.NE()) return false;
 				if(escape) value = TUtil.EscapeWildex(value);
 				_Add(name, value, check, tt, info);
 				return true;
@@ -301,7 +301,7 @@ namespace Au.Tools
 				}
 				int j = b.Length;
 				b.Append('\"').Append(na).Append('=');
-				if(!va.IsNE()) {
+				if(!va.NE()) {
 					if(TUtil.IsVerbatim(va, out int prefixLen)) {
 						b.Insert(j, va.Remove(prefixLen++));
 						b.Append(va, prefixLen, va.Length - prefixLen);
@@ -444,7 +444,7 @@ namespace Au.Tools
 		private void _bOK_Click(object sender, EventArgs e)
 		{
 			ZResultCode = _code.Text;
-			if(ZResultCode.IsNE()) this.DialogResult = DialogResult.Cancel;
+			if(ZResultCode.NE()) this.DialogResult = DialogResult.Cancel;
 		}
 
 		private void _bTest_Click(object sender, EventArgs ea)

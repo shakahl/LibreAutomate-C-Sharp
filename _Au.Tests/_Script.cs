@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Linq;
+//using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Runtime.CompilerServices;
@@ -636,7 +636,7 @@ class Script : AScript
 
 	//	//AOutput.Write(Api.LoadLibrary(@"C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\wpfgfx_cor3.dll"));
 
-	//	ADialog.ShowEx(secondsTimeout: 2);
+	//	ADialog.Show(secondsTimeout: 2);
 	//}
 
 	//void TestAWndFromObject()
@@ -648,8 +648,8 @@ class Script : AScript
 	//	var v = new AScreen(f);
 	//	AOutput.Write(v.ToDevice());
 
-	//	//ADialog.ShowEx(secondsTimeout: 2);
-	//	ADialog.ShowEx(owner: f);
+	//	//ADialog.Show(secondsTimeout: 2);
+	//	ADialog.Show(owner: f);
 	//}
 
 	class Se : Au.Util.JSettings
@@ -823,7 +823,7 @@ class Script : AScript
 		using(m.Submenu("sub")) {
 			m["bb"] = null;
 			m["dd", @"q:\app\copy.ico"] = null;
-			m["notepad"] = o=>AExec.Run("notepad.exe");
+			m["notepad"] = o => AExec.Run("notepad.exe");
 		}
 		m.Separator();
 		m["cc", ""] = null;
@@ -873,7 +873,7 @@ class Script : AScript
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	bool TestArrayExt(string[] a)
 	{
-		return a.IsNE_();
+		return a.NE_();
 	}
 	//int TestArrayExt(string[] a)
 	//{
@@ -886,10 +886,29 @@ class Script : AScript
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
 
+		//int r = ADialog.ShowInput(out string s, "Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Browse",
+		//onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; } });
 
-		//string s = "";
-		//int n = s.Lenn();
-		//if(s.IsNE())
+		//ADialog.ShowInput(out string s2, "Example", "Try to click OK while text is empty.", onButtonClick: e => {
+		//	var t = e;
+		//	if(e.Button == 1 && e.EditText.NE()) {
+		//	//if(e.Button == 1 && string.IsNullOrEmpty(e.EditText)) {
+		//		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
+		//		e.dialog.EditControl.Focus();
+		//		e.DontCloseDialog = true;
+		//	}
+		//});
+
+		string s = "";
+		if(string.IsNullOrEmpty(s)) { }
+		if(s == null || s == "") { }
+		if((s ?? "") == "") { }
+		if(s == "") { }
+		if(s.Lenn() == 0) { }
+		if(s.NE()) { }
+		//if(s.No()) { }
+		//if(Empty(s)) { }
+
 	}
 
 	void One(bool two) { }

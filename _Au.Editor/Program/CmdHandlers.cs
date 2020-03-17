@@ -387,7 +387,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Edit_ParameterInfo()
 	{
-		CodeInfo.ShowSignature(Panels.Editor.ZActiveDoc);
+		CodeInfo.ShowSignature();
 	}
 
 	public void Edit_GoToDefinition()
@@ -472,12 +472,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Code_Regex()
 	{
-		CiTools.CmdShowRegexOrKeysWindow(true);
+		CiTools.CmdShowRegexWindow();
 	}
 
 	public void Code_Keys()
 	{
-		CiTools.CmdShowRegexOrKeysWindow(false);
+		CiTools.CmdShowKeysWindow();
 	}
 
 	public void Code_WindowsAPI()

@@ -81,7 +81,7 @@ namespace Au
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static unsafe ACsv Parse(string csv, char separator = ',', char quote = '"', bool trimSpaces = true)
 		{
-			if(csv.IsNE()) return new ACsv();
+			if(csv.NE()) return new ACsv();
 
 			var a = new List<string[]>();
 			var tempRow = new List<string>(8);
@@ -169,7 +169,7 @@ namespace Au
 				for(int r = 0; r < _a.Count; r++) {
 					for(int c = 0; c < _columnCount; c++) {
 						var field = _a[r][c];
-						if(!field.IsNE()) {
+						if(!field.NE()) {
 							bool hasQuote = field.IndexOf(quote) >= 0;
 							if(hasQuote || field.IndexOf(Separator) >= 0 || field[0] == ' ' || field[field.Length - 1] == ' ') {
 								if(hasQuote) {

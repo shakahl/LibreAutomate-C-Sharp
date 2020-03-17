@@ -266,8 +266,8 @@ namespace Au
 		public static string Combine(string s1, string s2, bool s2CanBeFullPath = false, bool prefixLongPath = true)
 		{
 			string r;
-			if(s1.IsNE()) r = s2 ?? "";
-			else if(s2.IsNE()) r = s1 ?? "";
+			if(s1.NE()) r = s2 ?? "";
+			else if(s2.NE()) r = s1 ?? "";
 			else if(s2CanBeFullPath && IsFullPath(s2)) r = s2;
 			else {
 				int k = 0;
@@ -291,7 +291,7 @@ namespace Au
 		/// <exception cref="ArgumentException"></exception>
 		internal static string Combine_(string s1, string s2, bool noException = false)
 		{
-			if(!s1.IsNE() && !s2.IsNE()) {
+			if(!s1.NE() && !s2.NE()) {
 				int k = 0;
 				if(IsSepChar_(s1[s1.Length - 1])) {
 					if(s1.Length == 1) goto ge;
@@ -378,7 +378,7 @@ namespace Au
 			path = ExpandEnvVar(path);
 			if(!IsFullPath(path)) { //note: not EEV
 				if(0 != (flags & PNFlags.CanBeUrlOrShell)) if(IsShellPath_(path) || IsUrl(path)) return path;
-				if(defaultParentDirectory.IsNE()) goto ge;
+				if(defaultParentDirectory.NE()) goto ge;
 				path = Combine_(ExpandEnvVar(defaultParentDirectory), path);
 				if(!IsFullPath(path)) goto ge;
 			}
@@ -394,7 +394,7 @@ namespace Au
 		/// </summary>
 		internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false)
 		{
-			if(!s.IsNE()) {
+			if(!s.NE()) {
 				if(!noExpandEV) s = ExpandEnvVar(s);
 				Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
 
@@ -454,7 +454,7 @@ namespace Au
 		/// <param name="s">Can be null.</param>
 		internal static string ExpandDosPath_(string s)
 		{
-			if(!s.IsNE()) {
+			if(!s.NE()) {
 				for(int na = 300; ;) {
 					var b = Util.AMemoryArray.Char_(ref na);
 					int nr = Api.GetLongPathName(s, b, na);
@@ -546,7 +546,7 @@ namespace Au
 		/// </param>
 		public static string UnprefixLongPath(string path)
 		{
-			if(!path.IsNE()) {
+			if(!path.NE()) {
 				switch(_GetPrefixLength(path)) {
 				case 4: return path.Substring(4);
 				case 8: return path.Remove(2, 6);

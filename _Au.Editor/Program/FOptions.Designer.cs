@@ -36,7 +36,12 @@
 			this._versionCheck = new Au.Controls.AuCheckBox();
 			this._runAtStartup = new Au.Controls.AuCheckBox();
 			this._tabFiles = new System.Windows.Forms.TabPage();
-			this._usings = new Au.Tools.CodeBox();
+			this._tabTemplates = new System.Windows.Forms.TabPage();
+			this._cCustTemplS = new Au.Controls.AuRadioButton();
+			this._cDefTemplS = new Au.Controls.AuRadioButton();
+			this._templClass = new Au.Tools.CodeBox();
+			this._templScript = new Au.Tools.CodeBox();
+			this.auLabel2 = new Au.Controls.AuLabel();
 			this.auLabel1 = new Au.Controls.AuLabel();
 			this._tabFont = new System.Windows.Forms.TabPage();
 			this._pColor = new System.Windows.Forms.Panel();
@@ -67,9 +72,13 @@
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bApply = new Au.Controls.AuButton();
+			this.panel1 = new System.Windows.Forms.Panel();
+			this.panel2 = new System.Windows.Forms.Panel();
+			this._cDefTemplC = new Au.Controls.AuRadioButton();
+			this._cCustTemplC = new Au.Controls.AuRadioButton();
 			this.tabControl1.SuspendLayout();
 			this._tabGeneral.SuspendLayout();
-			this._tabFiles.SuspendLayout();
+			this._tabTemplates.SuspendLayout();
 			this._tabFont.SuspendLayout();
 			this._pColor.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nSat)).BeginInit();
@@ -83,6 +92,8 @@
 			this._tabCodeInfo.SuspendLayout();
 			this.groupBox1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
+			this.panel1.SuspendLayout();
+			this.panel2.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// _bOK
@@ -104,6 +115,7 @@
 			// 
 			this.tabControl1.Controls.Add(this._tabGeneral);
 			this.tabControl1.Controls.Add(this._tabFiles);
+			this.tabControl1.Controls.Add(this._tabTemplates);
 			this.tabControl1.Controls.Add(this._tabFont);
 			this.tabControl1.Controls.Add(this._tabCodeInfo);
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
@@ -188,8 +200,6 @@
 			// 
 			// _tabFiles
 			// 
-			this._tabFiles.Controls.Add(this._usings);
-			this._tabFiles.Controls.Add(this.auLabel1);
 			this._tabFiles.Location = new System.Drawing.Point(4, 24);
 			this._tabFiles.Name = "_tabFiles";
 			this._tabFiles.Size = new System.Drawing.Size(488, 268);
@@ -197,24 +207,77 @@
 			this._tabFiles.Text = "Files";
 			this._tabFiles.UseVisualStyleBackColor = true;
 			// 
-			// _usings
+			// _tabTemplates
 			// 
-			this._usings.AccessibleName = "_usings";
-			this._usings.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
-			this._usings.Location = new System.Drawing.Point(8, 28);
-			this._usings.Name = "_usings";
-			this._usings.Size = new System.Drawing.Size(472, 64);
-			this._usings.TabIndex = 1;
-			this._usings.ZAcceptsReturn = true;
+			this._tabTemplates.Controls.Add(this.panel2);
+			this._tabTemplates.Controls.Add(this.panel1);
+			this._tabTemplates.Controls.Add(this._templClass);
+			this._tabTemplates.Controls.Add(this._templScript);
+			this._tabTemplates.Controls.Add(this.auLabel2);
+			this._tabTemplates.Controls.Add(this.auLabel1);
+			this._tabTemplates.Location = new System.Drawing.Point(4, 24);
+			this._tabTemplates.Name = "_tabTemplates";
+			this._tabTemplates.Size = new System.Drawing.Size(488, 268);
+			this._tabTemplates.TabIndex = 6;
+			this._tabTemplates.Text = "Templates";
+			this._tabTemplates.UseVisualStyleBackColor = true;
+			// 
+			// _cCustTemplS
+			// 
+			this._cCustTemplS.Location = new System.Drawing.Point(144, 4);
+			this._cCustTemplS.Name = "_cCustTemplS";
+			this._cCustTemplS.Size = new System.Drawing.Size(128, 14);
+			this._cCustTemplS.TabIndex = 1;
+			this._cCustTemplS.Text = "Custom template";
+			this._cCustTemplS.UseVisualStyleBackColor = false;
+			// 
+			// _cDefTemplS
+			// 
+			this._cDefTemplS.Location = new System.Drawing.Point(16, 4);
+			this._cDefTemplS.Name = "_cDefTemplS";
+			this._cDefTemplS.Size = new System.Drawing.Size(128, 14);
+			this._cDefTemplS.TabIndex = 0;
+			this._cDefTemplS.TabStop = true;
+			this._cDefTemplS.Text = "Default template";
+			this._cDefTemplS.UseVisualStyleBackColor = false;
+			// 
+			// _templClass
+			// 
+			this._templClass.AccessibleName = "_templClass";
+			this._templClass.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
+			this._templClass.Location = new System.Drawing.Point(8, 156);
+			this._templClass.Name = "_templClass";
+			this._templClass.Size = new System.Drawing.Size(472, 100);
+			this._templClass.TabIndex = 2;
+			this._templClass.ZAcceptsReturn = true;
+			// 
+			// _templScript
+			// 
+			this._templScript.AccessibleName = "_templScript";
+			this._templScript.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
+			this._templScript.Location = new System.Drawing.Point(8, 24);
+			this._templScript.Name = "_templScript";
+			this._templScript.Size = new System.Drawing.Size(472, 100);
+			this._templScript.TabIndex = 0;
+			this._templScript.ZAcceptsReturn = true;
+			// 
+			// auLabel2
+			// 
+			this.auLabel2.AutoSize = true;
+			this.auLabel2.Location = new System.Drawing.Point(8, 136);
+			this.auLabel2.Name = "auLabel2";
+			this.auLabel2.Size = new System.Drawing.Size(78, 17);
+			this.auLabel2.TabIndex = 4;
+			this.auLabel2.Text = "New class file";
 			// 
 			// auLabel1
 			// 
 			this.auLabel1.AutoSize = true;
-			this.auLabel1.Location = new System.Drawing.Point(8, 8);
+			this.auLabel1.Location = new System.Drawing.Point(8, 4);
 			this.auLabel1.Name = "auLabel1";
-			this.auLabel1.Size = new System.Drawing.Size(300, 17);
-			this.auLabel1.TabIndex = 0;
-			this.auLabel1.Text = "In new files add this code below default using directives";
+			this.auLabel1.Size = new System.Drawing.Size(82, 17);
+			this.auLabel1.TabIndex = 4;
+			this.auLabel1.Text = "New script file";
 			// 
 			// _tabFont
 			// 
@@ -554,6 +617,43 @@
 			this._bApply.Text = "&Apply";
 			this._bApply.Click += new System.EventHandler(this._bOK_Click);
 			// 
+			// panel1
+			// 
+			this.panel1.Controls.Add(this._cDefTemplS);
+			this.panel1.Controls.Add(this._cCustTemplS);
+			this.panel1.Location = new System.Drawing.Point(208, 4);
+			this.panel1.Name = "panel1";
+			this.panel1.Size = new System.Drawing.Size(272, 20);
+			this.panel1.TabIndex = 1;
+			// 
+			// panel2
+			// 
+			this.panel2.Controls.Add(this._cDefTemplC);
+			this.panel2.Controls.Add(this._cCustTemplC);
+			this.panel2.Location = new System.Drawing.Point(208, 136);
+			this.panel2.Name = "panel2";
+			this.panel2.Size = new System.Drawing.Size(272, 20);
+			this.panel2.TabIndex = 3;
+			// 
+			// _cDefTemplC
+			// 
+			this._cDefTemplC.Location = new System.Drawing.Point(16, 4);
+			this._cDefTemplC.Name = "_cDefTemplC";
+			this._cDefTemplC.Size = new System.Drawing.Size(128, 14);
+			this._cDefTemplC.TabIndex = 0;
+			this._cDefTemplC.TabStop = true;
+			this._cDefTemplC.Text = "Default template";
+			this._cDefTemplC.UseVisualStyleBackColor = false;
+			// 
+			// _cCustTemplC
+			// 
+			this._cCustTemplC.Location = new System.Drawing.Point(144, 4);
+			this._cCustTemplC.Name = "_cCustTemplC";
+			this._cCustTemplC.Size = new System.Drawing.Size(128, 14);
+			this._cCustTemplC.TabIndex = 1;
+			this._cCustTemplC.Text = "Custom template";
+			this._cCustTemplC.UseVisualStyleBackColor = false;
+			// 
 			// FOptions
 			// 
 			this.AcceptButton = this._bOK;
@@ -574,8 +674,8 @@
 			this.tabControl1.ResumeLayout(false);
 			this._tabGeneral.ResumeLayout(false);
 			this._tabGeneral.PerformLayout();
-			this._tabFiles.ResumeLayout(false);
-			this._tabFiles.PerformLayout();
+			this._tabTemplates.ResumeLayout(false);
+			this._tabTemplates.PerformLayout();
 			this._tabFont.ResumeLayout(false);
 			this._pColor.ResumeLayout(false);
 			this._pColor.PerformLayout();
@@ -592,6 +692,8 @@
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
+			this.panel1.ResumeLayout(false);
+			this.panel2.ResumeLayout(false);
 			this.ResumeLayout(false);
 
 	}
@@ -637,6 +739,15 @@
 	private System.Windows.Forms.TabPage _tabCodeInfo;
 	private System.Windows.Forms.GroupBox groupBox1;
 	private Au.Controls.AuCheckBox _cComplParenSpace;
-	private Au.Tools.CodeBox _usings;
+	private System.Windows.Forms.TabPage _tabTemplates;
+	private Au.Tools.CodeBox _templClass;
+	private Au.Tools.CodeBox _templScript;
+	private Au.Controls.AuLabel auLabel2;
 	private Au.Controls.AuLabel auLabel1;
+	private Au.Controls.AuRadioButton _cCustTemplS;
+	private Au.Controls.AuRadioButton _cDefTemplS;
+	private System.Windows.Forms.Panel panel2;
+	private Au.Controls.AuRadioButton _cDefTemplC;
+	private Au.Controls.AuRadioButton _cCustTemplC;
+	private System.Windows.Forms.Panel panel1;
 }

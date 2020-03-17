@@ -567,7 +567,7 @@ namespace Au
 			internal static bool ParseHotkeyTriggerString_(string s, out KMod mod, out KMod modAny, out KKey key, bool noKey)
 			{
 				key = 0; mod = 0; modAny = 0;
-				if(s.IsNE()) return noKey;
+				if(s.NE()) return noKey;
 				int i = 0; bool ignore = false;
 				foreach(var g in _SplitKeysString(s)) {
 					if(ignore) { ignore = false; continue; }

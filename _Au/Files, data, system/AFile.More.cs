@@ -45,7 +45,7 @@ namespace Au
 			{
 				if(!isFileType) fileType = GetExtensionOrProtocol(fileType, out isURL);
 				else if(isURL) fileType = fileType.RemoveSuffix(1); //"proto:" -> "proto"
-				if(fileType.IsNE()) return null;
+				if(fileType.NE()) return null;
 
 				string R, userChoiceKey = @"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\FileExts\" + fileType + @"\UserChoice";
 				if(ARegistry.GetString(out R, "ProgId", userChoiceKey)) return R;
@@ -65,7 +65,7 @@ namespace Au
 			internal static string GetExtensionOrProtocol(string path, out bool isProtocol)
 			{
 				isProtocol = false;
-				if(path.IsNE()) return null;
+				if(path.NE()) return null;
 				if(!PathIsExtension(path)) {
 					int i = path.IndexOf(':');
 					if(i > 1) {
@@ -74,7 +74,7 @@ namespace Au
 						isProtocol = true;
 					} else {
 						path = APath.GetExtension(path);
-						if(path.IsNE()) return null;
+						if(path.NE()) return null;
 					}
 				}
 				return path;

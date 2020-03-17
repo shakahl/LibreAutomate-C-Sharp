@@ -100,10 +100,10 @@ namespace Au
 		/// Sends API <msdn>EM_SETCUEBANNER</msdn>.
 		/// Does nothing if Multiline.
 		/// </summary>
-		internal static void SetCueBanner(this TextBox t, string text, bool showWhenFocused = false)
+		internal static void SetCueBanner(this TextBox t, string text, bool focusedToo = false)
 		{
 			Debug.Assert(!t.Multiline);
-			_SetCueBanner(t, Api.EM_SETCUEBANNER, showWhenFocused, text);
+			_SetCueBanner(t, Api.EM_SETCUEBANNER, focusedToo, text);
 		}
 		//internal because Core added TextBox.PlaceholderText property and possibly will add it to other controls too in the future.
 
@@ -117,12 +117,12 @@ namespace Au
 		}
 		//internal because Core added TextBox.PlaceholderText property and possibly will add it to other controls too in the future.
 
-		static void _SetCueBanner(Control c, int message, bool showWhenFocused, string text)
+		static void _SetCueBanner(Control c, int message, bool focusedToo, string text)
 		{
 			if(c.IsHandleCreated) {
-				((AWnd)c).SendS(message, showWhenFocused, text);
-			} else if(!text.IsNE()) {
-				c.HandleCreated += (unu, sed) => _SetCueBanner(c, message, showWhenFocused, text);
+				((AWnd)c).SendS(message, focusedToo, text);
+			} else if(!text.NE()) {
+				c.HandleCreated += (unu, sed) => _SetCueBanner(c, message, focusedToo, text);
 			}
 		}
 
@@ -144,11 +144,11 @@ namespace Au
 		//public static T AddChild<T>(this ContainerControl t, int x, int y, int width, int height, string text = null, string tooltip = null, AnchorStyles anchor = AnchorStyles.None/*, string name = null*/) where T : Control, new()
 		//{
 		//	var c = new T();
-		//	//if(!name.IsNE()) c.Name = name;
+		//	//if(!name.NE()) c.Name = name;
 		//	c.Bounds = new System.Drawing.Rectangle(x, y, width, height);
 		//	if(anchor != AnchorStyles.None) c.Anchor = anchor;
 		//	if(text != null) c.Text = text;
-		//	if(!tooltip.IsNE()) {
+		//	if(!tooltip.NE()) {
 		//		var tt = t.Tag as ToolTip;
 		//		if(tt == null) {
 		//			t.Tag = tt = new ToolTip();

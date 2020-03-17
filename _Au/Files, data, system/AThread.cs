@@ -69,16 +69,16 @@ namespace Au
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		static bool _HML_Wpf() => System.Windows.Threading.Dispatcher.FromThread(Thread.CurrentThread) != null;
 
-		/// <summary>
-		/// Calls API OpenThread and TerminateThread.
-		/// If it is a managed thread, at first need to set its IsBackground = true.
-		/// </summary>
-		/// <param name="nativeId"></param>
-		internal static void Terminate_(int nativeId)
-		{
-			using var th = Api.OpenThread(Api.THREAD_TERMINATE, false, nativeId);
-			if(!th.Is0) Api.TerminateThread(th, 0);
-		}
+		///// <summary>
+		///// Calls API OpenThread and TerminateThread.
+		///// If it is a managed thread, at first need to set its IsBackground = true.
+		///// </summary>
+		///// <param name="nativeId"></param>
+		//internal static void Terminate_(int nativeId)
+		//{
+		//	using var th = Api.OpenThread(Api.THREAD_TERMINATE, false, nativeId);
+		//	if(!th.Is0) Api.TerminateThread(th, 0);
+		//}
 
 		/// <summary>
 		/// Starts new thread: creates new <see cref="Thread"/> object, sets some properties and calls <see cref="Thread.Start"/>.

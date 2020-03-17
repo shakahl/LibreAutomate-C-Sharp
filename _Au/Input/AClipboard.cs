@@ -79,7 +79,7 @@ namespace Au
 		/// <summary>
 		/// Calls API SetClipboardData("Clipboard Viewer Ignore"). Clipboard must be open.
 		/// Then clipboard manager/viewer/etc programs that are aware of this convention don't try to get our clipboard data while we are pasting.
-		/// Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't.
+		/// Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't. Windows 10 Clipboard History doesn't.
 		/// </summary>
 		static void _SetClipboardData_ClipboardViewerIgnore()
 		{
@@ -142,11 +142,14 @@ namespace Au
 			var opt = options ?? AOpt.Key;
 			bool restore = opt.RestoreClipboard;
 			_ClipboardListener listener = null;
+			_DisableClipboardHistory disableCH = default;
 			var bi = new AInputBlocker() { ResendBlockedKeys = true };
 			var oc = new OpenClipboard_(createOwner: true, noOpenNow: !restore);
 			try {
 				if(!opt.NoBlockInput) bi.Start(BIEvents.Keys);
 				AKeys.Internal_.ReleaseModAndDisableModMenu();
+
+				disableCH.Disable(); //fast
 
 				var save = new _SaveRestore();
 				if(restore) {
@@ -190,6 +193,7 @@ namespace Au
 			finally {
 				oc.Dispose();
 				bi.Dispose();
+				disableCH.Restore();
 			}
 			GC.KeepAlive(listener);
 			if(R == null && callback == null) throw new AuException("*copy text"); //no text in the clipboard. Probably not a text control; if text control but empty selection, usually throws in Wait, not here, because the target app then does not use the clipboard.
@@ -220,7 +224,7 @@ namespace Au
 		/// </example>
 		public static void Paste(string text, OptKey options = null)
 		{
-			if(text.IsNE()) return;
+			if(text.NE()) return;
 			_Paste(text, options);
 		}
 		//problem: fails to paste in VMware player. QM2 too. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
@@ -246,9 +250,9 @@ namespace Au
 		//public static void PasteRichText(string text, string rtf, string html = null, OptKey options = null)
 		//{
 		//	var a = new List<(int, object)>();
-		//	if(!text.IsNE()) a.Add((0, text));
-		//	if(!rtf.IsNE()) a.Add((Lib.RtfFormat, rtf));
-		//	if(!html.IsNE()) a.Add((Lib.HtmlFormat, html));
+		//	if(!text.NE()) a.Add((0, text));
+		//	if(!rtf.NE()) a.Add((Lib.RtfFormat, rtf));
+		//	if(!html.NE()) a.Add((Lib.HtmlFormat, html));
 		//	if(a.Count == 0) return;
 		//	_Paste(a, options);
 		//}
@@ -297,7 +301,10 @@ namespace Au
 
 			bool sync = true; //FUTURE: option to turn off, depending on window.
 			_ClipboardListener listener = null;
-			using(var oc = new OpenClipboard_(true)) {
+			_DisableClipboardHistory disableCH = default;
+			var oc = new OpenClipboard_(true);
+			try {
+				disableCH.Disable(); //fast
 
 				bool restore = opt.RestoreClipboard;
 				var save = new _SaveRestore();
@@ -316,7 +323,7 @@ namespace Au
 				try {
 					if(isConsole) {
 						wFocus.Post(Api.WM_SYSCOMMAND, 65521);
-						//system menu -> &Edit -> &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it may be disabled.
+						//system menu -> &Edit -> &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it can be disabled.
 					} else {
 						ctrlV.Press(KKey.V, opt, wFocus, enter);
 					}
@@ -343,10 +350,14 @@ namespace Au
 					AKeys.Internal_.Sleep(i + 3);
 
 					//info: repeats this min 3 times as a workaround for this Dreamweaver problem:
-					//	First time after starting DW, if several Paste called in loop, the first pasted text if of the second Paste.
+					//	First time after starting DW, if several Paste called in loop, the first pasted text is of the second Paste.
 				}
 
 				if(restore && oc.Reopen(true)) save.Restore();
+			}
+			finally {
+				oc.Dispose();
+				disableCH.Restore();
 			}
 			GC.KeepAlive(listener);
 		}
@@ -396,12 +407,15 @@ namespace Au
 				clipOwner.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
 
 				//rejected: use SetClipboardViewer to block clipboard managers/viewers/etc. This was used in QM2.
-				//	Nowadays most such programs don't use SetClipboardViewer. Probably they use AddClipboardFormatListener.
+				//	Nowadays most such programs don't use SetClipboardViewer. Probably they use AddClipboardFormatListener+WM_CLIPBOARDUPDATE.
 				//	known apps that have clipboard viewer installed with SetClipboardViewer:
 				//		OpenOffice, LibreOffice: tested Writer, Calc.
 				//		VLC: after first Paste.
 				//_wPrevClipViewer = Api.SetClipboardViewer(clipOwner);
 				//AOutput.Write(_wPrevClipViewer);
+
+				//TRY: Hook posted messages (in C++ dll) and block WM_CLIPBOARDUPDATE. Then don't need _DisableClipboardHistory.
+
 			}
 
 			/// <summary>
@@ -471,20 +485,6 @@ namespace Au
 
 					ADebug.Print(wOC.ToString());
 					return false;
-
-					//TODO: pasting is unreliable with Windows 10 Clipboard History (CH).
-					//	Sometimes does not paste because OpenClipboard fails in the target app, because then CH has it open.
-					//	Then also debugprints here.
-					//	CH is enabled by default. Can be disabled in Settings -> System -> Clipboard.
-					//	If enabled, CH opens clipboard and gets text after 200 ms, and then repeats every several ms, total 13 times and 50 ms.
-					//		When the target app fails to OpenClipboard, our Paste function waits briefly and the script continues. We receive WM_RENDERFORMAT because CH gets text.
-					//	If disabled, CH still opens clipboard after 200 ms, total 1-2 times.
-					//		When the target app fails to OpenClipboard, our Paste function waits and fails, because does not receive WM_RENDERFORMAT. It seems CH does not get text.
-					//To disable CH completely, stop service "Clipboard User Service_xxxxxxx". Then no problems with Paste.
-					//	But OS does not allow to set startup type "Disabled". And auto-starts when eg the Settings page opened.
-					//	Another way - send WM_CLOSE to the CH clipboard listener window (wOC). Works well, but...
-					//	If running as admin, we could temporarily disable the service...
-					//	Or inject a dll into the target process and hook OpenClipboard, let it wait...
 
 					//BlueStacks problems:
 					//	Uses an aggressive viewer. Always debugprints while it is running, even when other apps are active.
@@ -655,6 +655,59 @@ namespace Au
 			}
 
 			public bool IsSaved => _data != null;
+		}
+
+		/// <summary>
+		/// Temporarily disables Windows 10 Clipboard History.
+		/// Note: before disabling, we must open clipboard, else Clipboard History could be suspended while it has clipboard open.
+		/// </summary>
+		struct _DisableClipboardHistory
+		{
+			//Pasting is unreliable with Windows 10 Clipboard History (CH).
+			//Sometimes does not paste because OpenClipboard fails in the target app, because then CH has it open.
+			//Then also _IsTargetWindow debugprints. Often just debugprints and waits briefly, but pasting works.
+			//CH is enabled by default. Can be disabled in Settings -> System -> Clipboard.
+			//If enabled, CH opens clipboard and gets text after 200 ms, and then repeats every several ms, total ~15 times and 50 ms.
+			//	When the target app fails to OpenClipboard, Paste_ waits briefly and the script continues. We receive WM_RENDERFORMAT because CH gets text.
+			//If disabled, CH still opens clipboard after 200 ms, total 1-3 times.
+			//	When the target app fails to OpenClipboard, Paste_ waits and fails, because does not receive WM_RENDERFORMAT. It seems CH does not get text.
+			//Used workaround: temporarily SuspendThread. The service process is in user session and not admin.
+			//Other possible workarounds, most untested or unreliable or too crazy:
+			//	Stop service "Clipboard User Service_xxxxxxx". Tested. It disables CH completely.
+			//		But OS does not allow to set startup type "Disabled". And auto-starts when eg the Settings page opened.
+			//		If running as admin, we could temporarily pause the service. Not tested.
+			//	Send WM_CLOSE to the CH clipboard window (wOC). Tested, works, but too crazy.
+			//	Hook posted messages (in C++ dll) and block WM_CLIPBOARDUPDATE. Not tested.
+			//	Inject a dll into the target process and hook OpenClipboard, let it wait until succeeds. Too crazy.
+			//	Temporarily RemoveClipboardFormatListener. Does not work.
+			//Plus there are other OS parts that use clipboard viewers.
+			//	Eg the Settings app in the Clipboard page opens/gets text after 500 ms, usually 2 times.
+
+			List<Handle_> _a;
+
+			public void Disable()
+			{
+				if(!AVersion.MinWin10) return;
+				for(AWnd w = default; ;) {
+					w = AWnd.FindFast(null, "CLIPBRDWNDCLASS", true, w); if(w.Is0) break;
+					int tid = w.GetThreadProcessId(out int pid); if(tid == 0) continue;
+					if(!AProcess.GetName(pid, noSlowAPI: true).Eqi("svchost.exe")) continue;
+					var ht = Api.OpenThread(Api.THREAD_SUSPEND_RESUME, false, tid); if(ht.Is0) continue;
+					if(Api.SuspendThread(ht) < 0) { ht.Dispose(); continue; }
+					_a ??= new List<Handle_>();
+					_a.Add(ht);
+				}
+				ADebug.PrintIf(_a == null, "no suspended threads");
+			}
+
+			public void Restore()
+			{
+				if(_a == null) return;
+				foreach(var ht in _a) {
+					Api.ResumeThread(ht);
+					ht.Dispose();
+				}
+			}
 		}
 
 		internal static unsafe string GetFormatName_(int format)

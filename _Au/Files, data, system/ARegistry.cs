@@ -75,7 +75,7 @@ namespace Au
 		static RegistryKey _Open(bool create, string key, RegistryKey parentKeyOrHive)
 		{
 			if(parentKeyOrHive == null) parentKeyOrHive = ParseKeyString(ref key);
-			if(key.IsNE()) return parentKeyOrHive;
+			if(key.NE()) return parentKeyOrHive;
 			RegistryKey k = create ? parentKeyOrHive.CreateSubKey(key) : parentKeyOrHive.OpenSubKey(key);
 			Debug.Assert(!(create && k == null)); //CreateSubKey doc says it returns null when failed, but it is not true, I saw the code
 			return k;

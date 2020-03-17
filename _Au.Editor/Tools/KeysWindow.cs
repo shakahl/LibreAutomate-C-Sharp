@@ -11,7 +11,7 @@ namespace Au.Tools
 	{
 		public KeysWindow()
 		{
-			this.Size = Util.ADpi.ScaleSize((500, 250));
+			this.Size = Util.ADpi.ScaleSize((500, 300));
 			this.Caption = "Keys";
 		}
 
@@ -24,6 +24,7 @@ namespace Au.Tools
 			c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
 			var s = EdResources.GetEmbeddedResourceString("Au.Editor.Tools.Keys.txt").RegexReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
+			var z = this.Window.ClientSize; z.Height = c.Z.LineHeight() * s.LineCount() + 6; this.Window.ClientSize = z;
 			this.Text = s;
 		}
 
@@ -31,12 +32,20 @@ namespace Au.Tools
 		/// A text control in which to insert the link text when clicked.
 		/// If null, uses the focused control.
 		/// </summary>
-		public Control InsertInControl { get; set; }
+		public AuScintilla InsertInControl { get; set; }
 
 		void _Insert(string s)
 		{
-			var sci = InsertInControl as AuScintilla;
+			var sci = InsertInControl;
 			var pos8 = sci.Z.CurrentPos8;
+
+			switch(s) {
+			case "text": _AddParameter(sci, pos8, ", (KText)\"%\""); return;
+			case "sleepMs": _AddParameter(sci, pos8, ", 100"); return;
+			case "keyCode": _AddParameter(sci, pos8, ", KKey.Left"); return;
+			case "scanCode": _AddParameter(sci, pos8, ", (1, false)"); return;
+			case "action": _AddParameter(sci, pos8, ", new Action(() => { AMouse.RightClick(); })"); return;
+			}
 
 			if(s.Length == 2 && s[0] != '#' && !AChar.IsAsciiAlpha(s[0])) s = s[0] == '\\' ? "|" : s[..1]; //eg 2@ or /? or \|
 
@@ -80,5 +89,12 @@ namespace Au.Tools
 "Break  //Ctrl+Pause", "Clear  //Shift+#5", "Sleep",
 "F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24",
   };
+
+		void _AddParameter(AuScintilla sci, int pos8, string s)
+		{
+			pos8 = sci.Z.FindText(false, "\"", pos8) + 1; if(pos8 == 0) return;
+			sci.Z.GoToPos(false, pos8);
+			TUtil.InsertTextInControl(sci, s);
+		}
 	}
 }

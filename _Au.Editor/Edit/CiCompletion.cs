@@ -163,6 +163,7 @@ class CiCompletion
 		PSFormat stringFormat = PSFormat.None; TextSpan stringSpan = default;
 		CompletionService completionService = null;
 		SemanticModel model = null;
+		SyntaxNode node = null;
 
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
@@ -178,7 +179,7 @@ class CiCompletion
 
 				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too. Currently we need only GetSyntaxTreeAsync here, but the speed is same, even when we don't call GetCompletionsAsync.
 				var root = model.Root;
-				var node = root.FindToken(position).Parent;
+				node = root.FindToken(position).Parent;
 				p1.Next('s');
 
 				//never mind: To make faster in some cases, could now return if in comments or non-regex etc string.
@@ -282,11 +283,10 @@ class CiCompletion
 				noAutoSelect = r.SuggestionModeItem != null,
 			};
 
-			ADebug.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().IsNE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
-																																													   //if(r.SuggestionModeItem != null) r.SuggestionModeItem.DebugPrint();
+			//ADebug.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().NE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
 
 			var groups = canGroup ? new Dictionary<INamespaceOrTypeSymbol, List<int>>() : null;
-			List<int> keywordsGroup = null, etcGroup = null;
+			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
 			foreach(var ci in r.Items) {
 				var v = new CiComplItem(ci);
 				var sym = v.FirstSymbol;
@@ -348,6 +348,14 @@ class CiCompletion
 						}
 					}
 					break;
+				case CiItemKind.Namespace:
+					switch(ci.DisplayText) {
+					case "Accessibility":
+					case "UIAutomationClientsideProviders":
+						v.moveDown = CiItemMoveDownBy.Name;
+						break;
+					}
+					break;
 				case CiItemKind.TypeParameter:
 					if(sym == null && ci.DisplayText == "T") continue;
 					break;
@@ -365,10 +373,34 @@ class CiCompletion
 
 				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script" && t.BaseType?.Name == "AScript";
 
-				if(canGroup) {
-					int i = d.items.Count;
+				if(sym != null && v.kind != CiItemKind.LocalVariable && v.kind != CiItemKind.Namespace && v.kind != CiItemKind.TypeParameter) {
+					bool isObsolete = false;
+					foreach(var k in sym.GetAttributes()) { //fast
+						switch(k.AttributeClass.Name) {
+						case "ObsoleteAttribute": isObsolete = true; break;
+						}
+						//AOutput.Write(ci.DisplayText, v.AttributeClass.Name);
+					}
+					if(isObsolete) v.moveDown = CiItemMoveDownBy.Obsolete;
+				}
+
+				d.items.Add(v);
+			}
+
+			//add snippets
+			if(!isDot && canGroup && (provider == CiComplProvider.Symbol || provider == CiComplProvider.Keyword) && !d.noAutoSelect) {
+				CiSnippets.AddSnippets(d.items, span, node);
+			}
+
+			if(d.items.Count == 0) return;
+
+			if(canGroup) {
+				for(int i = 0; i < d.items.Count; i++) {
+					var v = d.items[i];
+					var sym = v.FirstSymbol;
 					if(sym == null) {
 						if(v.kind == CiItemKind.Keyword) (keywordsGroup ??= new List<int>()).Add(i);
+						else if(v.kind == CiItemKind.Snippet) (snippetsGroup ??= new List<int>()).Add(i);
 						else (etcGroup ??= new List<int>()).Add(i);
 					} else {
 						INamespaceOrTypeSymbol nts;
@@ -384,25 +416,10 @@ class CiCompletion
 						if(groups.TryGetValue(nts, out var list)) list.Add(i); else groups.Add(nts, new List<int> { i });
 					}
 				}
-
-				if(sym != null && v.kind != CiItemKind.LocalVariable && v.kind != CiItemKind.Namespace && v.kind != CiItemKind.TypeParameter) {
-					bool isObsolete = false;
-					foreach(var k in sym.GetAttributes()) { //fast
-						switch(k.AttributeClass.Name) {
-						case "ObsoleteAttribute": isObsolete = true; break;
-						}
-						//AOutput.Write(ci.DisplayText, v.AttributeClass.Name);
-					}
-					if(isObsolete) v.moveDown = CiItemMoveDownBy.Obsolete;
-				}
-
-				d.items.Add(v);
 			}
 
-			if(d.items.Count == 0) return;
-
 			List<string> groupsList = null;
-			if(canGroup && groups.Count + (keywordsGroup == null ? 0 : 1) + (etcGroup == null ? 0 : 1) > 1) {
+			if(canGroup && groups.Count + (keywordsGroup == null ? 0 : 1) + (etcGroup == null ? 0 : 1) + (snippetsGroup == null ? 0 : 1) > 1) {
 				//foreach(var v in groups) AOutput.Write(v.Key, v.Value.Count, v.Key.ContainingAssembly?.Name);
 				List<(string, List<int>)> g = null;
 				if(isDot) {
@@ -465,6 +482,7 @@ class CiCompletion
 					g.Sort((e1, e2) => string.Compare(e1.Item1, e2.Item1, StringComparison.OrdinalIgnoreCase));
 				}
 				if(keywordsGroup != null) g.Add(("keywords", keywordsGroup));
+				if(snippetsGroup != null) g.Add(("snippets", snippetsGroup));
 				if(etcGroup != null) g.Add(("etc", etcGroup));
 				for(int i = 0; i < g.Count; i++) {
 					foreach(var v in g[i].Item2) d.items[v].group = i;
@@ -507,7 +525,7 @@ class CiCompletion
 			v.hilite = 0;
 			v.moveDown &= ~CiItemMoveDownBy.FilterText;
 		}
-		if(!filterText.IsNE()) {
+		if(!filterText.NE()) {
 			string textLower = filterText.ToLower(), textUpper = filterText.Upper();
 			char c0Lower = textLower[0], c0Upper = textUpper[0];
 			foreach(var v in d.items) {
@@ -601,7 +619,7 @@ class CiCompletion
 		if(!(_data.noAutoSelect || filterText == "_")) { //noAutoSelect when lambda argument
 
 			//rejected. Need FilterItems anyway, eg to select enum type or 'new' type.
-			//if(filterText.IsNE()) {
+			//if(filterText.NE()) {
 			//	_popupList.SelectFirstVisible();
 			//	return;
 			//}
@@ -624,9 +642,13 @@ class CiCompletion
 	public string GetDescriptionHtml(CiComplItem ci, int iSelect)
 	{
 		if(_data == null) return null;
+		switch(ci.kind) {
+		case CiItemKind.Keyword: return CiHtml.KeywordToHtml(ci.DisplayText);
+		case CiItemKind.Label: return CiHtml.LabelToHtml(ci.DisplayText);
+		case CiItemKind.Snippet: return CiSnippets.GetDescriptionHtml(ci);
+		}
 		var symbols = ci.ci.Symbols;
 		if(symbols != null) return CiHtml.SymbolsToHtml(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
-		if(ci.kind == CiItemKind.Keyword) return CiHtml.KeywordToHtml(ci.DisplayText);
 		ADebug.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
 		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
 		return r == null ? null : CiHtml.TaggedPartsToHtml(r.TaggedParts);
@@ -646,7 +668,10 @@ class CiCompletion
 
 		var z = doc.Z;
 		var ci = item.ci;
-		var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
+		int selectLength = 0; bool showSignature = false;
+		var change = item.kind == CiItemKind.Snippet
+			? CiSnippets.GetCompletionChange(item, out selectLength, out showSignature)
+			: _data.completionService.GetChangeAsync(_data.document, ci).Result;
 		//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 
 		var s = change.TextChange.NewText;
@@ -656,7 +681,7 @@ class CiCompletion
 		//AOutput.Write($"'{s}'");
 		bool isComplex = change.NewPosition.HasValue;
 		if(isComplex) { //xml doc, override, regex
-			if(ch != default) return CiComplResult.None;
+			if(ch != default && !(item.kind == CiItemKind.Snippet && ch == '(' && s.RegexIsMatch(@"^[\w\.]+ ?\("))) return CiComplResult.None;
 			//ci.DebugPrint();
 			int newPos = change.NewPosition ?? (i + len);
 			switch(APath.GetExtension(ci.ProviderName)) {
@@ -665,18 +690,26 @@ class CiCompletion
 
 				//Replace 4 spaces with tab. Make { in same line.
 				s = s.Replace("    ", "\t").RegexReplace(@"\R\t*\{", " {", 1);
-				//Make correct indentation. 
+				//Correct indentation. 
 				int indent = 0, indent2 = z.LineIndentationFromPos(true, _data.tempRange.CurrentFrom);
 				for(int j = s.IndexOf('\t'); (uint)j < s.Length && s[j] == '\t'; j++) indent++;
 				if(indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
 				break;
 			case ".XmlDocCommentCompletionProvider" when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
-				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.IsNE())) newPos++;
+				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos++;
 				s += "></" + tag + ">";
 				break;
 			}
 			z.ReplaceRange(true, i, i + len, s);
-			if(newPos >= 0) z.GoToPos(true, newPos);
+			if(newPos >= 0) {
+				z.Select(true, newPos, newPos + selectLength, makeVisible: true);
+				if(showSignature) {
+					ATimer.After(1, _ => {
+						CodeInfo.ShowSignature();
+						if(s == "AKeys.Key(\"\");") CiTools.CmdShowKeysWindow();
+					});
+				}
+			}
 			return CiComplResult.Complex;
 		}
 		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && !item.IsRegex, $"{_data.tempRange.CurrentFrom}, {i}");

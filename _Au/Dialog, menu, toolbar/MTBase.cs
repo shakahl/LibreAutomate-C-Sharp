@@ -240,7 +240,7 @@ namespace Au.Types
 
 		void _SetItemFileIcon(bool isTB, ToolStripItem item, string s)
 		{
-			if(s.IsNE()) return;
+			if(s.NE()) return;
 			var owner = item.Owner;
 			var il = owner.ImageList;
 			if(il != null && il.Images.ContainsKey(s)) {

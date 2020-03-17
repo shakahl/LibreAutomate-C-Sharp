@@ -93,9 +93,9 @@ namespace Au.Types
 		{
 			var m = base.Message;
 
-			if(!m.IsNE()) {
+			if(!m.NE()) {
 				if(m[0] == '*') m = "Failed to " + m.Substring(1);
-				if(!commonPostfix.IsNE()) {
+				if(!commonPostfix.NE()) {
 					int k = m.Length - 1;
 					if(m[k] == '*') m = m.Substring(0, k) + commonPostfix;
 				}
@@ -104,7 +104,7 @@ namespace Au.Types
 
 			if(appendMessage == null && NativeErrorCode != 0) appendMessage = ALastError.MessageFor(NativeErrorCode);
 
-			if(!appendMessage.IsNE()) m = m + " " + appendMessage;
+			if(!appendMessage.NE()) m = m + " " + appendMessage;
 
 			if(InnerException != null) m = m + "\r\n\t" + InnerException.Message;
 

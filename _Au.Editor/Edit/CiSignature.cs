@@ -74,7 +74,7 @@ class CiSignature
 		if(_data == null) return;
 		foreach(var r in _data.sciDoc.ZTempRanges_Enum(this)) r.Remove();
 		_data = null;
-		_popupHtml.Hide();
+		_popupHtml?.Hide();
 	}
 
 	public void SciPositionChanged(SciCode doc)
@@ -189,7 +189,7 @@ class CiSignature
 #if false
 				CiHtml.TaggedPartsToHtml(b, sh.PrefixDisplayParts); //works, but formats not as I like (too much garbage)
 #else
-				if(!sym.Name.IsNE()) CiHtml.SymbolWithoutParametersToHtml(b, sym); //empty name if tuple
+				if(!sym.Name.NE()) CiHtml.SymbolWithoutParametersToHtml(b, sym); //empty name if tuple
 				string b1 = "(", b2 = ")";
 				switch(sym) {
 				case IPropertySymbol _: b1 = "["; b2 = "]"; break;
@@ -199,7 +199,7 @@ class CiSignature
 #endif
 				int iArg = r.ArgumentIndex, lastParam = sh.Parameters.Length - 1;
 				int selParam = iArg <= lastParam ? iArg : (sh.IsVariadic ? lastParam : -1);
-				if(!r.ArgumentName.IsNE()) {
+				if(!r.ArgumentName.NE()) {
 					var pa = sh.Parameters;
 					for(int pi = 0; pi < pa.Length; pi++) if(pa[pi].Name == r.ArgumentName) { selParam = pi; break; }
 				}
@@ -230,7 +230,7 @@ class CiSignature
 			}
 		}
 
-		if(currentParameter != null && !currentParameter.Name.IsNE()) { //if tuple, Name is "" and then would be exception
+		if(currentParameter != null && !currentParameter.Name.NE()) { //if tuple, Name is "" and then would be exception
 			b.Append("<p class='parameter'><b>").Append(currentParameter.Name).Append(":</b> &nbsp;");
 			CiHtml.TaggedPartsToHtml(b, currentParameter.DocumentationFactory?.Invoke(default));
 			b.Append("</p>");

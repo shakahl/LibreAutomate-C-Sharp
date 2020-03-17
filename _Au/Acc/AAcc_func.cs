@@ -510,7 +510,7 @@ namespace Au
 			AWnd w = WndTopLevel; if(w.Is0) throw new AuException("*get window");
 			AAcc doc = AAcc.Wait(-1, w, "web:"); if(doc == null) throw new AuException("*find web page");
 
-			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!wndName.IsNE() && !docName.IsNE());
+			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!wndName.NE() && !docName.NE());
 			bool wndOK = false, docOK = false;
 			AAcc.Finder f = null;
 
@@ -929,7 +929,7 @@ namespace Au
 		public string HtmlAttribute(string name)
 		{
 			ThrowIfDisposed_();
-			if(name.IsNE() || name[0] == '\'') throw new ArgumentException("Invalid name.");
+			if(name.NE() || name[0] == '\'') throw new ArgumentException("Invalid name.");
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, name, out BSTR s));
 			GC.KeepAlive(this);
 			return _BstrToString(hr, s);

@@ -585,7 +585,7 @@ namespace Au.Controls
 
 			void _SetTooltip(string text)
 			{
-				if(!text.IsNE()) {
+				if(!text.NE()) {
 					if(_tooltip == null) _tooltip = new ToolTip { IsBalloon = true, AutoPopDelay = 30000, ShowAlways = true };
 					_tooltip.Active = false;
 					_tooltip.SetToolTip(this, text);

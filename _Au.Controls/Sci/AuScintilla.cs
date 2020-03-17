@@ -179,7 +179,7 @@ namespace Au.Controls
 
 			switch(m.Msg) {
 			case Api.WM_CREATE: //after inherited classes set styles etc
-				if(!_text.IsNE()) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
+				if(!_text.NE()) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
 				break;
 			}
 		}

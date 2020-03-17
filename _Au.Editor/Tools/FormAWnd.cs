@@ -120,7 +120,7 @@ namespace Au.Tools
 				g.ZAdd(null, "class", TUtil.StripWndClassName(f.wClass, true), true, info: "Window class name.$");
 				f.wProg = _wnd.ProgramName;
 				var ap = new List<string> { f.wProg, "WOwner.Process(processId)", "WOwner.Thread(threadId)" }; if(!_wnd.OwnerWindow.Is0) ap.Add("WOwner.Window(ow)");
-				g.ZAdd(null, "program", ap, wndName.IsNE(), info: "Program.$", etype: ParamGrid.EditType.ComboText, comboIndex: 0);
+				g.ZAdd(null, "program", ap, wndName.NE(), info: "Program.$", etype: ParamGrid.EditType.ComboText, comboIndex: 0);
 				g.ZAdd(null, "contains", (Func<string[]>)_ContainsCombo_DropDown, false, info: "An accessible object in the window. Format: 'role' name.\r\nName$$", etype: ParamGrid.EditType.ComboText);
 			} else if(wndName != _wndName) {
 				if(TUtil.ShouldChangeGridWildex(g.ZGetCellText("name", 1), wndName))
@@ -134,7 +134,7 @@ namespace Au.Tools
 
 				//name combo
 				f.cName = _con.Name;
-				int iSel = f.cName.IsNE() ? -1 : 0;
+				int iSel = f.cName.NE() ? -1 : 0;
 				var an = new List<string> { TUtil.EscapeWildex(f.cName) };
 				_ConNameAdd("***wfName ", f.cWF = _con.NameWinForms);
 				/*bool isAcc =*/
@@ -145,7 +145,7 @@ namespace Au.Tools
 				_ConNameAdd("***text ", f.cText = _con.ControlText);
 				bool _ConNameAdd(string prefix, string value)
 				{
-					if(value.IsNE()) return false;
+					if(value.NE()) return false;
 					if(iSel < 0) iSel = an.Count;
 					an.Add(prefix + TUtil.EscapeWildex(value));
 					return true;
@@ -170,7 +170,7 @@ namespace Au.Tools
 					var a1 = new List<string>();
 					//child
 					foreach(var c in _wnd.Get.Children(onlyVisible: true)) {
-						var cn = c.Name; if(cn.IsNE()) continue;
+						var cn = c.Name; if(cn.NE()) continue;
 						cn = "c '" + TUtil.StripWndClassName(c.ClassName, true) + "' " + TUtil.EscapeWildex(cn);
 						if(!a1.Contains(cn)) a1.Add(cn);
 					}
@@ -303,7 +303,7 @@ namespace Au.Tools
 				sName = sClass = null;
 				if(0 == (m & 2)) sName = _grid.ZGetCellText("nameC", 1);
 				if(0 == (m & 4)) sClass = _grid.ZGetCellText("classC", 1);
-				m = 0; if(!sName.IsNE()) m |= 1; if(!sClass.IsNE()) m |= 2;
+				m = 0; if(!sName.NE()) m |= 1; if(!sClass.NE()) m |= 2;
 				if(m != 0) {
 					b.Append(" // ");
 					if(0 != (m & 2)) b.Append(sClass);
@@ -433,7 +433,7 @@ namespace Au.Tools
 		private void _bOK_Click(object sender, EventArgs e)
 		{
 			ZResultCode = _code.Text;
-			if(ZResultCode.IsNE()) this.DialogResult = DialogResult.Cancel;
+			if(ZResultCode.NE()) this.DialogResult = DialogResult.Cancel;
 			else ZResultUseControl = !_con.Is0 && _IsChecked("Control");
 		}
 
@@ -603,7 +603,7 @@ namespace Au.Tools
 						}
 
 						var name = c.Name;
-						if(name.IsNE()) _displayText = cn;
+						if(name.NE()) _displayText = cn;
 						else {
 							using(new Util.StringBuilder_(out var b)) {
 								name = name.Escape(limit: 250);
@@ -701,12 +701,12 @@ namespace Au.Tools
 				string s, sh = w.Handle.ToString();
 				b.Append("<i>Handle<>:    ").AppendLine(sh);
 				b.Append("<i>ClassName<>:    ").AppendLine(className);
-				if(!isCon || !name.IsNE()) b.Append("<i>Name<>:    ").AppendLine(name);
+				if(!isCon || !name.NE()) b.Append("<i>Name<>:    ").AppendLine(name);
 				if(isCon) {
-					//if(!cLabel.IsNE()) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
-					if(!cAcc.IsNE()) b.Append("<i>NameAcc<>:    ").AppendLine(cAcc);
-					if(!cWF.IsNE()) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
-					if(!cText.IsNE()) b.Append("<i>ControlText<>:    ").Append("<\a>").Append(cText.Escape(10000, true)).AppendLine("</\a>");
+					//if(!cLabel.NE()) b.Append("<i>NameLabel<>:    ").AppendLine(cLabel);
+					if(!cAcc.NE()) b.Append("<i>NameAcc<>:    ").AppendLine(cAcc);
+					if(!cWF.NE()) b.Append("<i>NameWinForms<>:    ").AppendLine(cWF);
+					if(!cText.NE()) b.Append("<i>ControlText<>:    ").Append("<\a>").Append(cText.Escape(10000, true)).AppendLine("</\a>");
 					b.Append("<i>ControlId<>:    ").AppendLine(cId.ToString());
 					b.AppendFormat("<+rect {0}><i>RectInWindow<><>:    ", sh).AppendLine(w.RectInWindow.ToString());
 				} else {

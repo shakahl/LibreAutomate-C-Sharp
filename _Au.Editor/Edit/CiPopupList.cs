@@ -169,7 +169,7 @@ class CiPopupList
 
 	public void SetListItems(List<CiComplItem> a, List<string> groups)
 	{
-		if(a.IsNE_()) {
+		if(a.NE_()) {
 			Hide();
 			return;
 		}
@@ -251,7 +251,7 @@ class CiPopupList
 			if(_groupsEnabled) {
 				diff = c1.group - c2.group;
 				if(diff != 0) return diff;
-				if(_groups[c1.group].IsNE()) {
+				if(_groups[c1.group].NE()) {
 					diff = c1.kind - c2.kind;
 					if(diff != 0) return diff;
 				}
@@ -314,7 +314,7 @@ class CiPopupList
 
 		//draw text
 		var s = ci.DisplayText;
-		ADebug.PrintIf(!ci.ci.DisplayTextPrefix.IsNE(), s); //we don't support prefix; never seen.
+		ADebug.PrintIf(!ci.ci.DisplayTextPrefix.NE(), s); //we don't support prefix; never seen.
 		int xEndOfText = 0;
 		using(var tr = new GdiTextRenderer(g)) {
 			ColorInt color = ci.moveDown.HasAny(CiItemMoveDownBy.Name | CiItemMoveDownBy.FilterText) ? 0x808080 : 0;
@@ -362,8 +362,8 @@ class CiPopupList
 	{
 		var ci = _VisibleItem(visibleIndex);
 		var r = ci.ci.InlineDescription;
-		if(r.IsNE() && _groupsEnabled && (visibleIndex == 0 || _VisibleItem(visibleIndex - 1).group != ci.group)) r = _groups[ci.group];
-		return r.IsNE() ? null : "    //" + r;
+		if(r.NE() && _groupsEnabled && (visibleIndex == 0 || _VisibleItem(visibleIndex - 1).group != ci.group)) r = _groups[ci.group];
+		return r.NE() ? null : "    //" + r;
 	}
 
 	public bool OnCmdKey(Keys keyData)

@@ -68,7 +68,7 @@ namespace Au
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		public AMenu(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(f, l)
 		{
-			if(name.IsNE()) throw new ArgumentException("Empty name");
+			if(name.NE()) throw new ArgumentException("Empty name");
 			_name = name;
 
 			_c = new _ContextMenuStrip(this, isMain: true);
@@ -172,7 +172,7 @@ namespace Au
 		public ToolStripMenuItem Add(string text, Action<MTClickArgs> onClick, MTImage icon = default, [CallerLineNumber] int l = 0)
 		{
 			string sk = null;
-			if(!text.IsNE()) {
+			if(!text.NE()) {
 				int i = text.IndexOf('\t');
 				if(i >= 0) { sk = text.Substring(i + 1); text = text.Remove(i); }
 			}

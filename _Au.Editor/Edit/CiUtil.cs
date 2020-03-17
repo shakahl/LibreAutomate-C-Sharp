@@ -240,6 +240,32 @@ static class CiUtil
 		return root.FindToken(position).Parent;
 	}
 
+	public static string GetTextWithoutUnusedUsingDirectives()
+	{
+		if(!CodeInfo.GetContextAndDocument(out var cd, 0, metaToo: true)) return cd.code;
+		var code = cd.code;
+		var semo = cd.document.GetSemanticModelAsync().Result;
+		var a = semo.GetDiagnostics(null)
+			.Where(d => d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019)
+			.Select(d => d.Location.SourceSpan)
+			.OrderBy(span => span.Start);
+		if(!a.Any()) return code;
+		var b = new StringBuilder();
+		int i = 0;
+		foreach(var span in a) {
+			int start = span.Start;
+			if(start > i && code[start - 1] == ' ') start--;
+			if(start > i) b.Append(code, i, start - i);
+			i = span.End;
+			if(b.Length == 0 || b[b.Length - 1] == '\n') {
+				if(code.Eq(i, "\r\n")) i += 2;
+				else if(code.Eq(i, ' ')) i++;
+			}
+		}
+		b.Append(code, i, code.Length - i);
+		return b.ToString();
+	}
+
 #if DEBUG
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
@@ -286,8 +312,8 @@ static class CiUtil
 			WellKnownTags.Keyword => CiItemKind.Keyword,
 			WellKnownTags.Namespace => CiItemKind.Namespace,
 			WellKnownTags.Label => CiItemKind.Label,
-			WellKnownTags.Snippet => CiItemKind.Snippet,
 			WellKnownTags.TypeParameter => CiItemKind.TypeParameter,
+			WellKnownTags.Snippet => CiItemKind.Snippet,
 			_ => CiItemKind.None
 		};
 		if(tags.Length > 1) {

@@ -104,7 +104,10 @@ class CiTools
 
 	#endregion
 
-	public static void CmdShowRegexOrKeysWindow(bool regex)
+	public static void CmdShowRegexWindow() => _ShowRegexOrKeysWindow(true);
+	public static void CmdShowKeysWindow() => _ShowRegexOrKeysWindow(false);
+
+	static void _ShowRegexOrKeysWindow(bool regex)
 	{
 		if(!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		var pos16 = cd.pos16;

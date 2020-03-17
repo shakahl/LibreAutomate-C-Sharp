@@ -228,7 +228,7 @@ namespace Au.Compiler
 
 		static string _ResolvePath(string re, bool isCOM)
 		{
-			if(re.IsNE()) return null;
+			if(re.NE()) return null;
 			bool isFull = APath.IsFullPathExpandEnvVar(ref re);
 			if(!isFull && isCOM) { isFull = true; re = AFolders.Workspace + @".interop\" + re; }
 			if(isFull) return AFile.ExistsAsFile(re) ? re : null;

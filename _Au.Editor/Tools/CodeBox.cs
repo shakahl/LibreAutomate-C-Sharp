@@ -157,14 +157,14 @@ namespace Au.Tools
 						} else {
 							cls = TUtil.StripWndClassName(cls, true);
 							string name = con.Name, prefix = null;
-							if(name.IsNE()) {
+							if(name.NE()) {
 								name = con.NameWinForms;
-								if(!name.IsNE()) prefix = "***wfName ";
+								if(!name.NE()) prefix = "***wfName ";
 								else {
 									var nameAcc = con.NameAcc;
 									//var nameLabel = con.NameLabel;
-									if(!nameAcc.IsNE()/* || !nameLabel.IsNE()*/) {
-										//if(nameAcc.IsNE() || nameLabel == nameAcc) {
+									if(!nameAcc.NE()/* || !nameLabel.NE()*/) {
+										//if(nameAcc.NE() || nameLabel == nameAcc) {
 										//	name = nameLabel; prefix = "***label ";
 										//} else {
 										name = nameAcc; prefix = "***accName ";

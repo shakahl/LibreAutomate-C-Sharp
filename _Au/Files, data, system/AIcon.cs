@@ -60,7 +60,7 @@ namespace Au
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
 		public static IntPtr GetFileIconHandle(string file, int size, GIFlags flags = 0)
 		{
-			if(file.IsNE()) return default;
+			if(file.NE()) return default;
 			size = _NormalizeIconSizeParameter(size);
 			file = APath.ExpandEnvVar(file);
 
@@ -273,7 +273,6 @@ namespace Au
 			return R;
 		}
 
-		[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions] //shell extensions may throw
 		static IntPtr _GetShellIcon2(bool isPidl, IntPtr pidl, int size)
 		{
 			IntPtr R = default, il = default; int index = -1, ilIndex, realSize;
@@ -296,6 +295,11 @@ namespace Au
 					//Marshal.Release(il); //undocumented, but without it IImageList refcount grows. Probably it's ok, because it is static, never deleted until process exits.
 				}
 				catch { ADebug.Print("exception"); }
+				//Shell extensions may throw.
+				//By default .NET does not allow to handle eg access violation exceptions.
+				//	Previously we would add [HandleProcessCorruptedStateExceptions], but Core ignores it.
+				//	Now our AppHost sets environment variable COMPlus_legacyCorruptedStateExceptionsPolicy=1 before loading runtime.
+				//	Or could move the API call to the C++ dll.
 			}
 			if(index < 0) return default;
 
@@ -399,7 +403,7 @@ namespace Au
 		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
 		public static unsafe IntPtr LoadIconHandle(string file, int index = 0, int size = 16)
 		{
-			if(file.IsNE()) return default;
+			if(file.NE()) return default;
 			size = _NormalizeIconSizeParameter(size);
 
 			//We use SHDefExtractIcon because of better quality resizing (although several times slower) which matches shell and imagelist resizing.
@@ -612,7 +616,7 @@ namespace Au
 		public static bool ParseIconLocation(ref string s, out int index)
 		{
 			index = 0;
-			if(s.IsNE()) return false;
+			if(s.NE()) return false;
 			if(s[0] == '\"') s = s.Replace("\"", ""); //can be eg "path",index
 			if(s.Length < 3) return false;
 			if(!AChar.IsAsciiDigit(s[s.Length - 1])) return false;

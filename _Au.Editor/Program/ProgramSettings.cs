@@ -79,8 +79,11 @@ class ProgramSettings : Au.Util.JSettings
 	public CiStyling.TStyles edit_styles { get => _edit_styles ??= new CiStyling.TStyles(); set => SetNoCmp(ref _edit_styles, value); }
 	CiStyling.TStyles _edit_styles;
 
-	public string files_usings { get => _files_usings; set => Set(ref _files_usings, value); }
-	string _files_usings;
+	public bool templ_script { get => _templ_script; set => Set(ref _templ_script, value); }
+	bool _templ_script;
+
+	public bool templ_class { get => _templ_class; set => Set(ref _templ_class, value); }
+	bool _templ_class;
 
 	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
 	bool _ci_complGroup = true;

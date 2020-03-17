@@ -622,7 +622,7 @@ namespace Au
 				int k = Icon.Width + c_iconPadding * 2; r.X += k; r.Width -= k;
 			}
 
-			if(!Text.IsNE()) {
+			if(!Text.NE()) {
 				r.Inflate(0, -1);
 				var font = Font ?? DefaultFont;
 				var tff = TextFormatFlags; if(WrapWidth > 0) tff |= TextFormatFlags.WordBreak;
@@ -649,7 +649,7 @@ namespace Au
 					zi.Width += c_iconPadding * 2; zi.Height += c_iconPadding * 2;
 				}
 
-				if(!Text.IsNE()) {
+				if(!Text.NE()) {
 					var screen = XY?.GetScreen() ?? DefaultScreen.GetScreenHandle();
 					var rs = screen.WorkArea; z = new Size(rs.Width - zi.Width - 10, rs.Height - 14);
 					var tff = TextFormatFlags;

@@ -778,7 +778,7 @@ namespace Au
 		public int ColumnIndex(string name)
 		{
 			int n = ColumnCount;
-			if(n > 0 && !name.IsNE()) {
+			if(n > 0 && !name.NE()) {
 				if(AStringUtil.IsAscii(name)) {
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);

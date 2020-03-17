@@ -27,35 +27,53 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// You can use static functions (less code) or create class instances (more options).
-	/// More info: <see cref="ShowEx"/>.
+	/// More info: <see cref="Show"/>.
 	/// 
 	/// Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
 	/// 
 	/// Cannot be used in services. Instead use <b>MessageBox.Show</b> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
 	/// </remarks>
 	/// <example>
+	/// Simple examples.
+	/// <code><![CDATA[
+	/// ADialog.Show("Info");
+	/// 
+	/// string s = "More info.";
+	/// ADialog.ShowInfo("Info", s);
+	/// 
+	/// if(!ADialog.ShowYesNo("Continue?", "More info.")) return;
+	/// 
+	/// switch(ADialog.Show("Save?", "More info.", "1 Save|2 Don't Save|Cancel")) {
+	/// case 1: AOutput.Write("save"); break;
+	/// case 2: AOutput.Write("don't"); break;
+	/// default: AOutput.Write("cancel"); break;
+	/// }
+	/// 
+	/// if(!ADialog.ShowInput(out string s, "Example")) return;
+	/// AOutput.Write(s);
+	/// ]]></code>
+	/// 
 	/// This example creates a class instance, sets properties, shows dialog, uses events, uses result.
 	/// <code><![CDATA[
-	/// var d = new ADialog(); //info: another constructor has the same parameters as ShowEx
+	/// var d = new ADialog();
 	/// d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClicked event.");
 	/// d.SetButtons("1 OK|2 Cancel|3 Custom|4 Custom2");
 	/// d.SetIcon(DIcon.Warning);
 	/// d.SetExpandedText("Expanded info\nand more info.", true);
 	/// d.FlagCanBeMinimized = true;
-	/// d.SetRadioButtons("1 r1|2 r2");
 	/// d.SetCheckbox("Check");
+	/// d.SetRadioButtons("1 r1|2 r2");
 	/// d.SetTimeout(30, "OK");
 	/// d.HyperlinkClicked += e => { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
 	/// d.ButtonClicked += e => { AOutput.Write(e.Button); if(e.Button == 4) e.DontCloseDialog = true; };
 	/// d.FlagShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
 	/// var r = d.ShowDialog();
-	/// AOutput.Write(r);
-	/// switch(r.Button) { case 1: AOutput.Write("OK"); break; case DResult.Timeout: AOutput.Write("timeout"); break; }
+	/// AOutput.Write(r, d.Controls.IsChecked, d.Controls.RadioId);
+	/// switch(r) { case 1: AOutput.Write("OK"); break; case ADialog.Timeout: AOutput.Write("timeout"); break; }
 	/// ]]></code>
 	/// </example>
 	public class ADialog
 	{
-		#region API
 		#region private API
 
 		//[DllImport("comctl32.dll")]
@@ -144,7 +162,6 @@ namespace Au
 		}
 
 		#endregion private API
-		#endregion API
 
 		#region static options
 
@@ -206,15 +223,14 @@ namespace Au
 
 		/// <summary>
 		/// Initializes a new <see cref="ADialog"/> instance and sets main properties.
-		/// Parameters etc are of <see cref="ShowEx"/>.
+		/// Parameters etc are of <see cref="Show"/>.
 		/// </summary>
 		public ADialog(
 			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
-			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
+			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			) : this()
 		{
-			//FlagEndThread = 0 != (flags & DFlags.EndThread);
 			if(0 != (flags & DFlags.Topmost)) FlagTopmost = true; //else use Options.TopmostIfNoOwnerWindow if no owner
 			FlagXCancel = 0 != (flags & DFlags.XCancel);
 			if(0 != (flags & DFlags.Wider)) Width = 700;
@@ -224,8 +240,11 @@ namespace Au
 			SetIcon(icon);
 			SetButtons(buttons, 0 != (flags & DFlags.CommandLinks));
 			if(defaultButton != 0) DefaultButton = defaultButton;
-			SetRadioButtons(radioButtons);
-			_SetCheckboxFromText(checkBox);
+			if(controls != null) {
+				_controls = controls;
+				if(controls.Checkbox != null) SetCheckbox(controls.Checkbox, controls.IsChecked);
+				if(controls.RadioButtons != null) SetRadioButtons(controls.RadioButtons, controls.RadioId);
+			}
 			SetOwnerWindow(owner, 0 != (flags & DFlags.OwnerCenter));
 			SetXY(x, y, 0 != (flags & DFlags.RawXY));
 			SetTimeout(secondsTimeout);
@@ -253,7 +272,7 @@ namespace Au
 		/// </summary>
 		public void SetTitleBarText(string title)
 		{
-			_c.pszWindowTitle = title.IsNE() ? Options.DefaultTitle : title;
+			_c.pszWindowTitle = title.NE() ? Options.DefaultTitle : title;
 			//info: if "", API uses "ProcessName.exe".
 		}
 
@@ -271,7 +290,6 @@ namespace Au
 		/// <summary>
 		/// Sets common icon.
 		/// </summary>
-		/// <param name="icon"></param>
 		public void SetIcon(DIcon icon)
 		{
 			_c.hMainIcon = (IntPtr)(int)icon;
@@ -287,13 +305,13 @@ namespace Au
 		/// </param>
 		public void SetIcon(Icon icon)
 		{
-			_iconGC = icon; //keep from GC
+			_iconGC = icon; //GC
 			_c.hMainIcon = (icon == null) ? default : icon.Handle;
 			_SetFlag(TDF_.USE_HICON_MAIN, _c.hMainIcon != default);
 			//tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32.
 			//note: for App icon ShowDialog will execute more code. The same for footer icon.
 		}
-		Icon _iconGC; //keep from GC
+		Icon _iconGC; //GC
 
 		#region buttons
 
@@ -304,6 +322,11 @@ namespace Au
 		const int _idNo = 7;
 		const int _idClose = 8;
 		const int _idTimeout = int.MinValue;
+
+		/// <summary>
+		/// The return value of <b>ShowX</b> functions on timeout.
+		/// </summary>
+		public const int Timeout = int.MinValue;
 
 		_Buttons _buttons;
 
@@ -351,7 +374,7 @@ namespace Au
 
 			TDCBF_ _ParseStringList(string b, bool onlyCustom)
 			{
-				if(b.IsNE()) return 0;
+				if(b.NE()) return 0;
 
 				TDCBF_ commonButtons = 0;
 				int id = 0, nextNativeId = 100;
@@ -399,7 +422,7 @@ namespace Au
 			internal void SetRadioButtons(string buttons)
 			{
 				_radioButtons = null;
-				if(buttons.IsNE()) return;
+				if(buttons.NE()) return;
 
 				_radioButtons = new List<_Button>();
 				int id = 0;
@@ -512,15 +535,17 @@ namespace Au
 
 		/// <summary>
 		/// Adds radio buttons.
-		/// To get selected radio button id after closing the dialog, use the RadioButton property of the <see cref="DResult"/> variable returned by <see cref="ShowDialog"/> or the <see cref="Result"/> property.
 		/// </summary>
 		/// <param name="buttons">A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
 		/// <param name="defaultId">Check the radio button that has this id. If omitted or 0, checks the first. If negative, does not check.</param>
+		/// <remarks>
+		/// To get selected radio button id after closing the dialog, use <see cref="Controls"/>.
+		/// </remarks>
 		public void SetRadioButtons(string buttons, int defaultId = 0)
 		{
-			//_radioButtonsStr = buttons;
-			_buttons.SetRadioButtons(buttons);
-			_c.nDefaultRadioButton = defaultId;
+			_controls ??= new DControls();
+			_buttons.SetRadioButtons(_controls.RadioButtons = buttons);
+			_c.nDefaultRadioButton = _controls.RadioId = defaultId;
 			_SetFlag(TDF_.NO_DEFAULT_RADIO_BUTTON, defaultId < 0);
 		}
 
@@ -528,24 +553,15 @@ namespace Au
 
 		/// <summary>
 		/// Adds check box (if text is not null/empty).
-		/// To get check box state after closing the dialog, use the IsChecked property of the <see cref="DResult"/> variable returned by <see cref="ShowDialog"/> or the <see cref="Result"/> property.
 		/// </summary>
+		/// <remarks>
+		/// To get check box state after closing the dialog, use <see cref="Controls"/>.
+		/// </remarks>
 		public void SetCheckbox(string text, bool check = false)
 		{
-			_c.pszVerificationText = text;
-			_SetFlag(TDF_.VERIFICATION_FLAG_CHECKED, check);
-		}
-
-		//Parses "Text|check" etc and calls SetCheckbox.
-		void _SetCheckboxFromText(string checkBox)
-		{
-			string text = null; bool check = false;
-			if(!checkBox.IsNE()) {
-				string[] a = checkBox.SegSplit("|", maxCount: 2);
-				text = a[0];
-				if(a.Length == 2) switch(a[1]) { case "true": case "check": case "checked": check = true; break; }
-			}
-			SetCheckbox(text, check);
+			_controls ??= new DControls();
+			_c.pszVerificationText = _controls.Checkbox = text;
+			_SetFlag(TDF_.VERIFICATION_FLAG_CHECKED, _controls.IsChecked = check);
 		}
 
 		/// <summary>
@@ -555,7 +571,7 @@ namespace Au
 		/// <param name="showInFooter">Show the text at the bottom of the dialog.</param>
 		public void SetExpandedText(string text, bool showInFooter = false)
 		{
-			if(text.IsNE()) { text = null; showInFooter = false; }
+			if(text.NE()) { text = null; showInFooter = false; }
 			_SetFlag(TDF_.EXPAND_FOOTER_AREA, showInFooter);
 			_c.pszExpandedInformation = text;
 		}
@@ -592,6 +608,7 @@ namespace Au
 			}
 			SetFooterText(text, icon);
 		}
+
 		/// <summary>
 		/// Adds text and common icon at the bottom of the dialog.
 		/// </summary>
@@ -603,6 +620,7 @@ namespace Au
 			_c.hFooterIcon = (IntPtr)(int)icon;
 			_SetFlag(TDF_.USE_HICON_FOOTER, false);
 		}
+
 		/// <summary>
 		/// Adds text and custom icon at the bottom of the dialog.
 		/// </summary>
@@ -611,38 +629,35 @@ namespace Au
 		public void SetFooterText(string text, Icon icon)
 		{
 			_c.pszFooter = text;
-			_iconFooterGC = icon; //keep from GC
+			_iconFooterGC = icon; //GC
 			_c.hFooterIcon = (icon == null) ? default : icon.Handle;
 			_SetFlag(TDF_.USE_HICON_FOOTER, _c.hFooterIcon != default);
 		}
-		Icon _iconFooterGC; //keep from GC
+		Icon _iconFooterGC; //GC
 
 		/// <summary>
 		/// Adds Edit or Combo control.
 		/// </summary>
 		/// <param name="editType">Control type/style.</param>
-		/// <param name="editText">
-		/// Initial text. Can be string or any other type.
-		/// If <i>editType</i> is <b>DEdit.Combo</b>, it can be:
-		/// - <b>IEnumerable&lt;object&gt;</b>. Sets combo box drop-down list items. For example a string array or list, like <c>new string[] { "one", "two", "three" }</c>.
-		/// - tuple (object text, IEnumerable&lt;object&gt; items). Sets edit text and drop-down list items. Example: <c>("one", new string[] { "one", "two", "three" })</c>.
-		/// </param>
+		/// <param name="editText">Initial edit field text.</param>
+		/// <param name="comboItems">Combo box items used when <i>editType</i> is Combo.</param>
 		/// <remarks>
-		/// To get control text after closing the dialog, use the <see cref="DResult.EditText"/> property of the <see cref="DResult"/> variable returned by <see cref="ShowDialog"/> or the <see cref="Result"/> property.
+		/// To get control text after closing the dialog, use <see cref="Controls"/>.
 		/// 
 		/// Dialogs with an input field cannot have a progress bar.
 		/// </remarks>
-		public void SetEditControl(DEdit editType, object editText = null)
+		public void SetEditControl(DEdit editType, string editText = null, IEnumerable<string> comboItems = null)
 		{
-			_editType = editType;
-			_editText = editText;
+			_controls ??= new DControls();
+			_controls.EditType = editType;
+			_controls.EditText = editText;
+			_controls.ComboboxValues = comboItems;
 			//will set other props later, because need to override user-set props
 		}
-		DEdit _editType; object _editText;
 
 		/// <summary>
 		/// Sets the width of the dialog's client area.
-		/// The actual width will depend on DPI (the Windows "text size" setting).
+		/// The actual width will depend on DPI (the Windows setting "scale" or "text size").
 		/// If less than default width, will be used default width.
 		/// </summary>
 		/// <seealso cref="DFlags.Wider"/>
@@ -687,8 +702,7 @@ namespace Au
 		public AScreen Screen { set; private get; }
 
 		/// <summary>
-		/// Let the dialog close itself after closeAfterS seconds.
-		/// On timeout ShowDialog returns DResult.Timeout.
+		/// Let the dialog close itself after <i>closeAfterS</i> seconds. Then <see cref="ShowDialog"/> returns <see cref="Timeout"/>.
 		/// Example: <c>d.SetTimeout(30, "OK");</c>
 		/// </summary>
 		public void SetTimeout(int closeAfterS, string timeoutActionText = null, bool noInfo = false)
@@ -750,15 +764,15 @@ namespace Au
 
 		/// <summary>
 		/// Shows the dialog.
-		/// Returns selected button id and other results packed in a <see cref="DResult"/> variable.
+		/// Returns selected button id.
 		/// Call this method after setting text and other properties.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public unsafe DResult ShowDialog()
+		public unsafe int ShowDialog()
 		{
 			//info: named ShowDialog, not Show, to not confuse with the static Show() which is used almost everywhere in documentation.
 
-			_result = null;
+			_result = 0;
 			_isClosed = false;
 
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
@@ -801,7 +815,6 @@ namespace Au
 			_c.pfCallback = _CallbackProc;
 
 			int rNativeButton = 0, rRadioButton = 0, rIsChecked = 0, hr = 0;
-			//bool hasCustomButtons = false;
 			AHookWin hook = null;
 
 			try {
@@ -809,7 +822,6 @@ namespace Au
 
 				_buttons.MarshalButtons(ref _c);
 				if(_c.pButtons == null) _SetFlag(TDF_.USE_COMMAND_LINKS | TDF_.USE_COMMAND_LINKS_NO_ICON, false); //to avoid exception
-																												  //else hasCustomButtons = true;
 
 				if(_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
 					hook = AHookWin.ThreadGetMessage(_HookProc);
@@ -838,7 +850,11 @@ namespace Au
 				}
 
 				if(hr == 0) {
-					_result = new DResult(_buttons.MapIdNativeToUser(rNativeButton), rRadioButton, rIsChecked != 0, _editText?.ToString());
+					_result = _buttons.MapIdNativeToUser(rNativeButton);
+					if(_controls != null) {
+						_controls.IsChecked = rIsChecked != 0;
+						_controls.RadioId = rRadioButton;
+					}
 
 					AWnd.More.WaitForAnActiveWindow();
 				}
@@ -863,10 +879,10 @@ namespace Au
 			return _result;
 		}
 
-		[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 		int _CallTDI(out int pnButton, out int pnRadioButton, out int pChecked)
 		{
 #if DEBUG
+			ADebug.PrintIf("1" != Environment.GetEnvironmentVariable("COMPlus_legacyCorruptedStateExceptionsPolicy"), "no env var COMPlus_legacyCorruptedStateExceptionsPolicy=1");
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
@@ -878,8 +894,10 @@ namespace Au
 			}
 
 			//The API throws 'access violation' exception if some value is invalid (eg unknown flags in dwCommonButtons) or it does not like something.
-			//.NET does not allow to handle such exceptions, unless we use [HandleProcessCorruptedStateExceptions] or <legacyCorruptedStateExceptionsPolicy enabled="true"/> in config file.
-			//It makes dev/debug more difficult.
+			//By default .NET does not allow to handle eg access violation exceptions.
+			//	Previously we would add [HandleProcessCorruptedStateExceptions], but Core ignores it.
+			//	Now our AppHost sets environment variable COMPlus_legacyCorruptedStateExceptionsPolicy=1 before loading runtime.
+			//	Or could move the API call to the C++ dll.
 
 			//CONSIDER: don't use the API. Reinvent wheel with Form. Because:
 			//	1. The API is so unreliable. Unexpected errors and even exceptions. Etc, etc.
@@ -966,7 +984,7 @@ namespace Au
 						if(!_timeoutNoInfo) Send.ChangeFooterText(_TimeoutFooterText(_timeoutS - timeElapsed - 1), false);
 					} else {
 						_timeoutActive = false;
-						Send.Close(DResult.Timeout);
+						Send.Close(_idTimeout);
 					}
 				}
 
@@ -1001,7 +1019,6 @@ namespace Au
 		}
 
 		/// <summary>
-		/// ADialog events.
 		/// Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
 		/// </summary>
 		public event Action<DEventArgs>
@@ -1014,7 +1031,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Calls <see cref="ThreadWaitForOpen"/>, therefore the dialog is already open when this function returns.
-		/// More info: <see cref="ShowNoWaitEx"/>
+		/// More info: <see cref="ShowNoWait"/>
 		/// </remarks>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
 		public void ShowDialogNoWait()
@@ -1024,20 +1041,29 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets selected button id and other results packed in a DResult variable.
-		/// It is the same variable as the ShowDialog return value.
-		/// If the result is still unavailable (eg the dialog still not closed):
-		///		If called from the same thread that called ShowDialog, returns null.
-		///		If called from another thread, waits until the dialog is closed and the return value is available.
-		///		Note that ShowDialogNoWait calls ShowDialog in another thread.
+		/// Selected button id. The same as the <see cref="ShowDialog"/> return value.
 		/// </summary>
-		public DResult Result {
+		/// <remarks>
+		/// If the result is still unavailable (the dialog still not closed):
+		///	- If called from the same thread that called <see cref="ShowDialog"/>, returns 0.
+		///	- If called from another thread, waits until the dialog is closed.
+		///	
+		///	Note: <see cref="ShowDialogNoWait"/> calls <see cref="ShowDialog"/> in another thread.
+		/// </remarks>
+		public int Result {
 			get {
-				if(!_WaitWhileInShow()) return null;
+				if(!_WaitWhileInShow()) return 0;
 				return _result;
 			}
 		}
-		DResult _result;
+		int _result;
+
+		/// <summary>
+		/// After closing the dialog contains values of checkbox, radio buttons and/or text edit control.
+		/// null if no controls.
+		/// </summary>
+		public DControls Controls => _controls;
+		DControls _controls;
 
 		bool _WaitWhileInShow()
 		{
@@ -1115,7 +1141,7 @@ namespace Au
 		/// Example: <c>d.Send.Message(Native.TDM.CLICK_VERIFICATION, 1);</c> .
 		/// 
 		/// Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
-		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWaitEx"/> and <see cref="ShowProgressEx"/>.
+		/// Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="ShowNoWait"/> and <see cref="ShowProgress"/>.
 		/// </remarks>
 		public DSend Send { get; private set; }
 
@@ -1136,7 +1162,7 @@ namespace Au
 		//called by DSend
 		internal void SetText_(bool resizeDialog, Native.TDE partId, string text)
 		{
-			if(partId == Native.TDE.CONTENT && _editType == DEdit.Multiline) {
+			if(partId == Native.TDE.CONTENT && (_controls?.EditType ?? default) == DEdit.Multiline) {
 				text = _c.pszContent = text + c_multilineString;
 			}
 
@@ -1174,9 +1200,9 @@ namespace Au
 		{
 			using(new StringBuilder_(out var b)) {
 				b.Append("This dialog will disappear if not clicked in ").Append(timeLeft).Append(" s.");
-				if(!_timeoutActionText.IsNE()) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
+				if(!_timeoutActionText.NE()) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
 				if(FlagRtlLayout) b.Replace(".", "");
-				if(!_timeoutFooterText.IsNE()) b.Append('\n').Append(_timeoutFooterText);
+				if(!_timeoutFooterText.NE()) b.Append('\n').Append(_timeoutFooterText);
 				return b.ToString();
 			}
 		}
@@ -1185,7 +1211,7 @@ namespace Au
 
 		#region Edit control
 
-		bool _IsEdit => _editType != DEdit.None;
+		bool _IsEdit => _controls != null && _controls.EditType != DEdit.None;
 
 		void _EditControlInitBeforeShowDialog()
 		{
@@ -1193,7 +1219,7 @@ namespace Au
 			FlagShowMarqueeProgressBar = true;
 			FlagShowProgressBar = false;
 			_c.pszContent ??= "";
-			if(_c.pszExpandedInformation != null && _editType == DEdit.Multiline) _SetFlag(TDF_.EXPAND_FOOTER_AREA, true);
+			if(_c.pszExpandedInformation != null && _controls.EditType == DEdit.Multiline) _SetFlag(TDF_.EXPAND_FOOTER_AREA, true);
 
 			//create or get cached font and calculate control height
 			//note: don't use system messagebox font. ADialog API does not depend on it.
@@ -1216,7 +1242,7 @@ namespace Au
 			_editParent.Post(Api.WM_APP + 111, onlyZorder);
 		}
 
-		//used to reserve space for multiline Edit control by appending this to text2
+		//to reserve space for multiline Edit control we append this to text2
 		const string c_multilineString = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n ";
 
 		AWnd _EditControlGetPlace(out RECT r)
@@ -1227,7 +1253,7 @@ namespace Au
 			AWnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);
 			prog.GetRectIn(parent, out r);
 
-			if(_editType == DEdit.Multiline) {
+			if(_controls.EditType == DEdit.Multiline) {
 				int top = r.top;
 				if(!_c.pszContent.Ends(c_multilineString)) {
 					_c.pszContent += c_multilineString;
@@ -1260,7 +1286,7 @@ namespace Au
 			//Create Edit or ComboBox control.
 			string cn = "Edit";
 			var style = WS.CHILD | WS.VISIBLE; //don't need WS_TABSTOP
-			switch(_editType) {
+			switch(_controls.EditType) {
 			case DEdit.Text: style |= (WS)Api.ES_AUTOHSCROLL; break;
 			case DEdit.Password: style |= (WS)(Api.ES_PASSWORD | Api.ES_AUTOHSCROLL); break;
 			case DEdit.Number: style |= (WS)(Api.ES_NUMBER | Api.ES_AUTOHSCROLL); break;
@@ -1271,27 +1297,14 @@ namespace Au
 			AWnd.More.SetFont(_editWnd, _editFont);
 
 			//Init the control.
-			if(_editType == DEdit.Combo) {
-				string cbText = null; IEnumerable<object> cbItems = null;
-				switch(_editText) {
-				case IEnumerable<object> en:
-					cbItems = en;
-					break;
-				case (object t1, IEnumerable<object> t2):
-					cbText = t1?.ToString();
-					cbItems = t2;
-					break;
-				default:
-					cbText = _editText?.ToString();
-					break;
+			_editWnd.SetText(_controls.EditText);
+			if(_controls.EditType == DEdit.Combo) {
+				if(_controls.ComboboxValues != null) {
+					foreach(var s in _controls.ComboboxValues) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s);
 				}
-				if(cbText != null) _editWnd.SetText(cbText);
-				if(cbItems != null) foreach(var s in cbItems) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s?.ToString());
-
 				RECT cbr = _editWnd.Rect;
 				_editParent.ResizeLL(cbr.Width, cbr.Height); //because ComboBox resizes itself
 			} else {
-				_editWnd.SetText(_editText?.ToString());
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}
 			_editParent.ZorderTop();
@@ -1302,7 +1315,7 @@ namespace Au
 		{
 			switch(message) {
 			case Native.TDN.BUTTON_CLICKED:
-				_editText = _editWnd.ControlText;
+				_controls.EditText = _editWnd.ControlText;
 				break;
 			case Native.TDN.EXPANDO_BUTTON_CLICKED:
 			case Native.TDN.NAVIGATED:
@@ -1348,68 +1361,12 @@ namespace Au
 
 		/// <summary>
 		/// Shows dialog.
-		/// Returns selected button id and other results packed in a <see cref="DResult"/> variable.
-		/// </summary>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="buttons">See <see cref="Show"/>. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".</param>
-		/// <param name="flags"></param>
-		/// <param name="icon"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-		/// <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="DResult.Timeout"/>.</param>
-		/// <param name="onLinkClick">
-		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
-		/// Example:
-		/// <code><![CDATA[
-		/// ADialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
-		/// ]]></code>
-		/// </param>
-		/// <remarks>
-		/// The returned <see cref="DResult"/> variable has these properties: selected button id, selected radio button id, check box state.
-		/// Tip: DResult supports implicit cast to int. You can use code <c>switch(ADialog.ShowEx(...))</c> instead of <c>switch(ADialog.ShowEx(...).Button)</c> .
-		/// Tip: Use named arguments. Example: <c>ADialog.ShowEx("Text.", icon: DIcon.Info, title: "Title")</c> .
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var r = ADialog.ShowEx("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", radioButtons: "1 One|2 Two|3 Three", checkBox: "Check", secondsTimeout: 30);
-		/// AOutput.Write(r);
-		/// switch(r) {
-		/// case 1: AOutput.Write("OK"); break;
-		/// case DResult.Timeout: AOutput.Write("timeout"); break;
-		/// default: AOutput.Write("Cancel"); break;
-		/// }
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static DResult ShowEx(
-			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
-			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
-			)
-		{
-			var d = new ADialog(text1, text2, buttons, flags, icon, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
-				defaultButton, x, y, secondsTimeout, onLinkClick);
-			return d.ShowDialog();
-		}
-
-		/// <summary>
-		/// Shows dialog.
 		/// Returns selected button id.
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">
-		/// Button ids and labels, like "1 OK|2 Cancel|5 Save|4 Don't Save".
+		/// Button ids and labels. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".
 		/// Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
 		/// The first in the list button is <i>default</i>, ie responds to the Enter key. For example, "2 No|1 Yes" adds Yes and No buttons and makes No default.
 		/// Trims newlines around ids and labels. For example, "\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n" is the same as "1 One|2 Two".
@@ -1430,21 +1387,30 @@ namespace Au
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="icon"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
+		/// <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
+		/// <param name="onLinkClick">
+		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
+		/// Example:
+		/// <code><![CDATA[
+		/// ADialog.Show("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
+		/// ]]></code>
+		/// </param>
 		/// <remarks>
-		/// Calls <see cref="ShowEx"/>.
-		/// Tip: Use named arguments. Example: <c>ADialog.Show("Text.", icon: DIcon.Info)</c> .
+		/// Tip: Use named arguments. Example: <c>ADialog.Show("Text", icon: DIcon.Info, title: "Title")</c> .
+		/// 
+		/// This function allows you to use many dialog features, but not all. Alternatively you can create an <b>ADialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="ADialog"/> class help.
 		/// </remarks>
-		/// <seealso cref="ShowInfo"/>
-		/// <seealso cref="ShowWarning"/>
-		/// <seealso cref="ShowError"/>
-		/// <seealso cref="ShowOKCancel"/>
-		/// <seealso cref="ShowYesNo"/>
-		/// <seealso cref="ADebug.Dialog"/>
 		/// <example>
 		/// <code><![CDATA[
-		/// if(ADialog.Show("Show another example?", null, "1 OK|2 Cancel", DIcon.Info) != 1) return;
+		/// if(1 != ADialog.Show("Show another example?", null, "1 OK|2 Cancel", icon: DIcon.Info)) return;
 		/// AOutput.Write("OK");
 		/// 
 		/// switch(ADialog.Show("Save changes?", "More info.", "1 Save|2 Don't Save|Cancel")) {
@@ -1453,11 +1419,29 @@ namespace Au
 		/// default: AOutput.Write("cancel"); break;
 		/// }
 		/// ]]></code>
+		/// 
+		/// <code><![CDATA[
+		/// var con = new DControls { Checkbox = "Check", RadioButtons = "1 One|2 Two|3 Three", EditType = DEdit.Combo, EditText = "zero", ComboboxValues = new string[] { "one", "two" } };
+		/// var r = ADialog.Show("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", controls: con, secondsTimeout: 30);
+		/// AOutput.Write(r, con.IsChecked, con.RadioId, con.EditText);
+		/// switch(r) {
+		/// case 1: AOutput.Write("OK"); break;
+		/// case ADialog.Timeout: AOutput.Write("timeout"); break;
+		/// default: AOutput.Write("Cancel"); break;
+		/// }
+		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int Show(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
+		public static int Show(
+			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
+			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
+			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
+			)
 		{
-			return ShowEx(text1, text2, buttons, flags, icon, owner, expandedText).Button;
+			var d = new ADialog(text1, text2, buttons, flags, icon, owner,
+				expandedText, footerText, title, controls,
+				defaultButton, x, y, secondsTimeout, onLinkClick);
+			return d.ShowDialog();
 		}
 
 		/// <summary>
@@ -1514,203 +1498,133 @@ namespace Au
 
 		#endregion Show
 
-		#region ShowTextInput
+		#region ShowInput
 
 		/// <summary>
-		/// Shows dialog with a text edit field, buttons OK and Cancel, optionally check box, radio buttons and custom buttons.
-		/// Returns results packed in a DResult variable: selected button id (1 for OK, 2 for Cancel), text and check box state.
-		/// </summary>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
-		/// <param name="editType">Edit field type. It can be simple text (DEdit.Text, default), multiline, number, password or combo box.</param>
-		/// <param name="editText">Initial edit field text or/and combo box items. See <see cref="SetEditControl"/>.</param>
-		/// <param name="flags"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-		/// <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
-		/// <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.</param>
-		/// <param name="onButtonClick">
-		/// A button-clicked event handler function, eg lambda.
-		/// Examples:
-		/// <code><![CDATA[
-		/// ADialog.ShowTextInputEx("Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Browse\nSets edit control text.",
-		///		onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; } });
-		/// 
-		/// ADialog.ShowTextInputEx("Example", "Try to click OK while text is empty.", onButtonClick: e =>
-		/// {
-		/// 	if(e.Button == 1 && e.EditText.IsNE()) {
-		/// 		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
-		/// 		e.dialog.EditControl.Focus();
-		/// 		e.DontCloseDialog = true;
-		/// 	}
-		/// });
-		/// ]]></code>
-		/// </param>
-		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var r = ADialog.ShowTextInputEx("Example", "Comments.", checkBox: "Check");
-		/// if(r.Button != 1) return;
-		/// AOutput.Write(r.EditText);
-		/// AOutput.Write(r.IsChecked);
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static DResult ShowTextInputEx(
-			string text1 = null, string text2 = null,
-			DEdit editType = DEdit.Text, object editText = null,
-			DFlags flags = 0, AnyWnd owner = default,
-			string expandedText = null, string footerText = null, string title = null, string checkBox = null, string radioButtons = null,
-			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null,
-			string buttons = "1 OK|2 Cancel", Action<DEventArgs> onButtonClick = null
-			)
-		{
-			if(buttons.IsNE()) buttons = "1 OK|2 Cancel";
-
-			var d = new ADialog(text1, text2, buttons, flags, 0, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
-				0, x, y, secondsTimeout, onLinkClick);
-
-			d.SetEditControl((editType == DEdit.None) ? DEdit.Text : editType, editText);
-			if(onButtonClick != null) d.ButtonClicked += onButtonClick;
-
-			return d.ShowDialog();
-		}
-
-		/// <summary>
-		/// Shows dialog with a text edit field and buttons OK and Cancel, and gets that text.
-		/// Returns true if selected OK, false if Cancel.
+		/// Shows dialog with a text edit field and gets that text.
+		/// Returns true if selected OK (or a custom button with id 1), else false.
 		/// </summary>
 		/// <param name="s">Variable that receives the text.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
-		/// <param name="editType">Edit field type.</param>
-		/// <param name="editText">Initial edit field text or/and combo box items. See <see cref="SetEditControl"/>.</param>
+		/// <param name="editType">Edit field type. It can be simple text (DEdit.Text, default), multiline, number, password or combo box.</param>
+		/// <param name="editText">Initial edit field text.</param>
+		/// <param name="comboItems">Combo box items used when <i>editType</i> is Combo.</param>
 		/// <param name="flags"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
+		/// <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
+		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="Show"/>.</param>
+		/// <param name="buttons">
+		/// Buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="Show"/>.
+		/// Note: this function returns true only when clicked button with id 1.
+		/// Usually custom buttons are used with <i>onButtonClick</i> function, which for example can get button id or disable closing the dialog.
+		/// </param>
+		/// <param name="onButtonClick">A button-clicked event handler function. See examples.</param>
 		/// <remarks>
-		/// Calls <see cref="ShowTextInputEx"/>.
+		/// This function allows you to use many dialog features, but not all. Alternatively you can create an <b>ADialog</b> class instance, call <see cref="SetEditControl"/> or use the <i>controls</i> parameter, set other properties and call <b>ShowDialog</b>.
 		/// </remarks>
 		/// <example>
+		/// Simple.
 		/// <code><![CDATA[
 		/// string s;
-		/// if(!ADialog.ShowTextInput(out s, "Example")) return;
+		/// if(!ADialog.ShowInput(out s, "Example")) return;
 		/// AOutput.Write(s);
 		/// 
-		/// //or you can declare the variable like this
-		/// if(!ADialog.ShowTextInput(out string s2, "Example")) return;
+		/// if(!ADialog.ShowInput(out var s2, "Example")) return;
 		/// AOutput.Write(s2);
+		/// ]]></code>
+		/// 
+		/// With checkbox.
+		/// <code><![CDATA[
+		/// var con = new DControls { Checkbox = "Check" };
+		/// if(!ADialog.ShowInput(out var s, "Example", "Comments.", controls: con)) return;
+		/// AOutput.Write(s, con.IsChecked);
+		/// ]]></code>
+		/// 
+		/// With <i>onButtonClick</i> function.
+		/// <code><![CDATA[
+		/// int r = 0;
+		/// ADialog.ShowInput(out string s, "Example", buttons: "OK|Cancel|Later", onButtonClick: e => r = e.Button);
+		/// AOutput.Write(r);
+		/// 
+		/// if(!ADialog.ShowInput(out string s, "Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Set text", onButtonClick: e => {
+		///		if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; }
+		///	})) return;
+		/// 
+		/// if(!ADialog.ShowInput(out string s2, "Example", "Try to click OK while text is empty.", onButtonClick: e => {
+		/// 	if(e.Button == 1 && e.EditText.NE()) {
+		/// 		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
+		/// 		e.dialog.EditControl.Focus();
+		/// 		e.DontCloseDialog = true;
+		/// 	}
+		/// })) return;
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowTextInput(
-			out string s,
+		public static bool ShowInput(out string s,
 			string text1 = null, string text2 = null,
-			DEdit editType = DEdit.Text, object editText = null,
-			DFlags flags = 0, AnyWnd owner = default
+			DEdit editType = DEdit.Text, string editText = null, IEnumerable<string> comboItems = null,
+			DFlags flags = 0, AnyWnd owner = default,
+			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
+			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null,
+			string buttons = "1 OK|2 Cancel", Action<DEventArgs> onButtonClick = null
 			)
 		{
-			s = null;
-			DResult r = ShowTextInputEx(text1, text2, editType, editText, flags, owner);
-			if(r.Button != 1) return false;
-			s = r.EditText;
-			return true;
+			if(buttons.NE()) buttons = "1 OK|2 Cancel";
+
+			var d = new ADialog(text1, text2, buttons, flags, 0, owner,
+				expandedText, footerText, title, controls,
+				0, x, y, secondsTimeout, onLinkClick);
+
+			d.SetEditControl(editType == DEdit.None ? DEdit.Text : editType, editText, comboItems);
+			if(onButtonClick != null) d.ButtonClicked += onButtonClick;
+
+			bool r = 1 == d.ShowDialog();
+			s = r ? d._controls.EditText : null;
+			return r;
 		}
 
 		/// <summary>
-		/// Shows dialog with a number edit field and buttons OK and Cancel, and gets that number.
+		/// Shows dialog with a number edit field and gets that number.
 		/// Returns true if selected OK, false if Cancel.
 		/// </summary>
 		/// <param name="i">Variable that receives the number.</param>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Read-only text below main instruction, above the edit field.</param>
-		/// <param name="editType">Edit field type.</param>
 		/// <param name="editText">Initial edit field text.</param>
 		/// <param name="flags"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
 		/// <remarks>
-		/// Calls <see cref="ShowTextInputEx"/>.
+		/// Calls <see cref="ShowInput"/> and converts string to int.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// int i;
-		/// if(!ADialog.ShowNumberInput(out i, "Example")) return;
+		/// if(!ADialog.ShowInputNumber(out i, "Example")) return;
 		/// AOutput.Write(i);
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowNumberInput(
-			out int i,
-			string text1 = null, string text2 = null,
-			DEdit editType = DEdit.Number, object editText = null,
+		public static bool ShowInputNumber(out int i,
+			string text1 = null, string text2 = null, int? editText = null,
 			DFlags flags = 0, AnyWnd owner = default
 			)
 		{
 			i = 0;
-			if(!ShowTextInput(out string s, text1, text2, editType, editText, flags, owner)) return false;
+			if(!ShowInput(out string s, text1, text2, DEdit.Number, editText?.ToString(), null, flags, owner)) return false;
 			i = s.ToInt();
 			return true;
 		}
 
-		#endregion ShowTextInput
+		#endregion ShowInput
 
 		#region ShowList
-
-		/// <summary>
-		/// Shows dialog with a list of command-link buttons.
-		/// Returns results packed in a <see cref="DResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
-		/// The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
-		/// </summary>
-		/// <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="SetButtons"/>.</param>
-		/// <param name="text1">Main instruction. Bigger font.</param>
-		/// <param name="text2">Text below main instruction.</param>
-		/// <param name="flags"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
-		/// <param name="expandedText">Text that the user can show and hide.</param>
-		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
-		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="ShowEx"/>.</param>
-		/// <remarks>
-		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// int r = ADialog.ShowListEx("One|Two|Three", "Example", y: -1, secondsTimeout: 15);
-		/// if(r <= 0) return; //X/Esc or timeout
-		/// AOutput.Write(r);
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static DResult ShowListEx(
-			DStringList list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
-			string expandedText = null, string footerText = null, string title = null, string checkBox = null,
-			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
-			Action<DEventArgs> onLinkClick = null
-			)
-		{
-			var d = new ADialog(text1, text2, null, flags, 0, owner,
-				expandedText, footerText, title, null, checkBox,
-				defaultButton, x, y, secondsTimeout, onLinkClick);
-
-			d.SetButtons(null, true, list);
-			d.FlagXCancel = true;
-			d.SetExpandedText(expandedText, true);
-			return d.ShowDialog();
-		}
 
 		/// <summary>
 		/// Shows dialog with a list of command-link buttons.
@@ -1720,21 +1634,42 @@ namespace Au
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="flags"></param>
-		/// <param name="owner">Owner window or null. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="owner">Owner window. See <see cref="SetOwnerWindow"/>.</param>
+		/// <param name="expandedText">Text that the user can show and hide.</param>
+		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
+		/// <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
+		/// <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="Show"/>.</param>
 		/// <remarks>
-		/// Calls <see cref="ShowListEx"/>.
+		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="ADialog"/> class help.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// int r = ADialog.ShowList("One|Two|Three", "Example");
-		/// if(r == 0) return; //X/Esc
+		/// int r = ADialog.ShowList("One|Two|Three", "Example", y: -1, secondsTimeout: 15);
+		/// if(r <= 0) return; //X/Esc or timeout
 		/// AOutput.Write(r);
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowList(DStringList list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default)
+		public static int ShowList(
+			DStringList list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
+			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
+			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
+			Action<DEventArgs> onLinkClick = null
+			)
 		{
-			return ShowListEx(list, text1, text2, flags, owner);
+			var d = new ADialog(text1, text2, null, flags, 0, owner,
+				expandedText, footerText, title, controls,
+				defaultButton, x, y, secondsTimeout, onLinkClick);
+
+			d.SetButtons(null, true, list);
+			d.FlagXCancel = true;
+			d.SetExpandedText(expandedText, true);
+			return d.ShowDialog();
 		}
 
 		#endregion ShowList
@@ -1745,8 +1680,8 @@ namespace Au
 		/// <summary>
 		/// Shows dialog with progress bar.
 		/// Creates dialog in new thread and returns without waiting until it is closed.
-		/// Returns <see cref="ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-		/// Most parameters are the same as with <see cref="ShowEx"/>.
+		/// Returns <see cref="ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
+		/// Most parameters are the same as with <see cref="Show"/>.
 		/// </summary>
 		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
 		/// <remarks>
@@ -1754,50 +1689,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var pd = ADialog.ShowProgressEx(false, "Working", buttons: "1 Stop", y: -1);
-		/// for(int i = 1; i <= 100; i++) {
-		/// 	if(!pd.IsOpen) { AOutput.Write(pd.Result); break; } //if the user closed the dialog
-		/// 	pd.Send.Progress(i); //don't need this if marquee
-		/// 	50.ms(); //do something in the loop
-		/// }
-		/// pd.Send.Close();
-		/// ]]></code>
-		/// </example>
-		/// <exception cref="AuException">Failed to show dialog.</exception>
-		public static ADialog ShowProgressEx(bool marquee,
-			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
-			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
-			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
-		)
-		{
-			if(buttons.IsNE()) buttons = "0 Cancel";
-
-			var d = new ADialog(text1, text2, buttons, flags, 0, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
-				0, x, y, secondsTimeout, onLinkClick);
-
-			if(marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
-
-			d.ShowDialogNoWait();
-
-			if(marquee) d.Send.Message(Native.TDM.SET_PROGRESS_BAR_MARQUEE, true);
-
-			return d;
-		}
-
-		/// <summary>
-		/// Shows dialog with progress bar.
-		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-		/// All parameters except marquee are the same as with <see cref="ShowEx"/>.
-		/// </summary>
-		/// <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
-		/// <remarks>
-		/// Calls <see cref="ShowProgressEx"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var pd = ADialog.ShowProgress(false, "Working");
+		/// var pd = ADialog.ShowProgress(false, "Working", buttons: "1 Stop", y: -1);
 		/// for(int i = 1; i <= 100; i++) {
 		/// 	if(!pd.IsOpen) { AOutput.Write(pd.Result); break; } //if the user closed the dialog
 		/// 	pd.Send.Progress(i); //don't need this if marquee
@@ -1809,22 +1701,34 @@ namespace Au
 		/// <exception cref="AuException">Failed to show dialog.</exception>
 		public static ADialog ShowProgress(bool marquee,
 			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
-			Coord x = default, Coord y = default)
+			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
+			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
+		)
 		{
-			return ShowProgressEx(marquee, text1, text2, buttons, flags, owner, x: x, y: y);
+			if(buttons.NE()) buttons = "0 Cancel";
+
+			var d = new ADialog(text1, text2, buttons, flags, 0, owner,
+				expandedText, footerText, title, controls,
+				0, x, y, secondsTimeout, onLinkClick);
+
+			if(marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
+
+			d.ShowDialogNoWait();
+
+			if(marquee) d.Send.Message(Native.TDM.SET_PROGRESS_BAR_MARQUEE, true);
+
+			return d;
 		}
 
-#pragma warning restore 1573 //missing XML documentation for parameters
 		#endregion ShowProgress
 
 		#region ShowNoWait
-#pragma warning disable 1573 //missing XML documentation for parameters
 
 		/// <summary>
-		/// Shows dialog like <see cref="ShowEx"/> but does not wait.
+		/// Shows dialog like <see cref="Show"/> but does not wait.
 		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
-		/// Parameters are the same as with <see cref="ShowEx"/>.
+		/// Returns <see cref="ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="Controls"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>; through the Send property you can modify controls and close the dialog (see example).
+		/// Parameters are the same as with <see cref="Show"/>.
 		/// </summary>
 		/// <remarks>
 		/// This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call <see cref="ShowDialogNoWait"/>.
@@ -1833,7 +1737,7 @@ namespace Au
 		/// <code><![CDATA[
 		/// ADialog.ShowNoWait("Simple example");
 		/// 
-		/// var d = ADialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, secondsTimeout: 30);
+		/// var d = ADialog.ShowNoWait("Another example", "text", "1 OK|2 Cancel", y: -1, secondsTimeout: 30);
 		/// 2.s(); //do something while the dialog is open
 		/// d.Send.ChangeText2("new text", false);
 		/// 2.s(); //do something while the dialog is open
@@ -1841,36 +1745,17 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
-		public static ADialog ShowNoWaitEx(
+		public static ADialog ShowNoWait(
 			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
-			string expandedText = null, string footerText = null, string title = null, string radioButtons = null, string checkBox = null,
+			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
 			)
 		{
 			var d = new ADialog(text1, text2, buttons, flags, icon, owner,
-				expandedText, footerText, title, radioButtons, checkBox,
+				expandedText, footerText, title, controls,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
 			d.ShowDialogNoWait();
 			return d;
-		}
-
-		/// <summary>
-		/// Shows dialog like <see cref="Show"/> but does not wait.
-		/// Creates dialog in other thread and returns without waiting until it is closed.
-		/// Returns <see cref="ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="IsOpen"/>, <see cref="ThreadWaitForClosed"/>, <see cref="Result"/> (when closed), <see cref="DialogWindow"/>, <see cref="Send"/>. Through the <b>Send</b> property you can modify controls and close the dialog. Example in <see cref="ShowNoWaitEx"/> topic.
-		/// Parameters are the same as with <see cref="Show"/>.
-		/// </summary>
-		/// <remarks>
-		/// Calls <see cref="ShowNoWaitEx"/>.
-		/// </remarks>
-		/// <exception cref="AggregateException">Failed to show dialog.</exception>
-		public static ADialog ShowNoWait(
-			string text1 = null, string text2 = null,
-			string buttons = null, DFlags flags = 0, DIcon icon = 0,
-			AnyWnd owner = default
-			)
-		{
-			return ShowNoWaitEx(text1, text2, buttons, flags, icon, owner);
 		}
 
 #pragma warning restore 1573 //missing XML documentation for parameters
@@ -1900,7 +1785,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Text edit field type for <see cref="ADialog.ShowTextInputEx"/> and <see cref="ADialog.SetEditControl"/>.
+	/// Text edit field type for <see cref="ADialog.ShowInput"/>, <see cref="ADialog.SetEditControl"/>, etc.
 	/// </summary>
 	public enum DEdit
 	{
@@ -1969,54 +1854,47 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Result of <see cref="ADialog.ShowEx"/> and similar functions: button id, radio button id, check box state, edit field text.
+	/// Used with <see cref="ADialog.Show"/> and similar functions to add more controls and get their final values.
 	/// </summary>
-	public class DResult
+	public class DControls
 	{
-		internal DResult(int button, int radioButton, bool isChecked, string editText)
-		{
-			Button = button; RadioButton = radioButton; IsChecked = isChecked; EditText = editText;
-		}
-
 		/// <summary>
-		/// Returned <see cref="Button"/> value on timeout.
+		/// If not null, adds checkbox with this text.
 		/// </summary>
-		public const int Timeout = int.MinValue;
+		public string Checkbox { get; set; }
 
 		/// <summary>
-		/// Gets selected button id.
-		/// On timeout it is DResult.Timeout.
-		/// </summary>
-		public int Button { get; set; }
-
-		/// <summary>
-		/// Gets selected (checked) radio button id.
-		/// </summary>
-		public int RadioButton { get; set; }
-
-		/// <summary>
-		/// Gets check box state.
+		/// Sets initial and gets final checkbox value (true if checked).
 		/// </summary>
 		public bool IsChecked { get; set; }
 
 		/// <summary>
-		/// Gets edit field text.
+		/// If not null, adds radio buttons.
+		/// A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".
+		/// </summary>
+		public string RadioButtons { get; set; }
+
+		/// <summary>
+		/// Sets initial and gets final checked radio button. It is button id (as specified in <see cref="RadioButtons"/>), not index.
+		/// See <see cref="ADialog.SetRadioButtons"/>.
+		/// </summary>
+		public int RadioId { get; set; }
+
+		/// <summary>
+		/// If set (not None, which is default), adds a text edit control.
+		/// Note: then the dialog cannot have a progress bar.
+		/// </summary>
+		public DEdit EditType { get; set; }
+
+		/// <summary>
+		/// Sets initial and gets final text edit control value.
 		/// </summary>
 		public string EditText { get; set; }
 
 		/// <summary>
-		/// Converts DResult to int.
-		/// Allows to use code <c>switch(ADialog.ShowEx(...))</c> instead of <c>switch(ADialog.ShowEx(...).Button)</c> .
+		/// Sets combo box items used when <see cref="EditType"/> is Combo.
 		/// </summary>
-		public static implicit operator int(DResult r) { return r.Button; }
-
-		/// <summary>
-		/// Formats string $"Button={Button}, RadioButton={RadioButton}, IsChecked={IsChecked}, EditText={EditText}".
-		/// </summary>
-		public override string ToString()
-		{
-			return $"Button={Button}, RadioButton={RadioButton}, IsChecked={IsChecked}, EditText={EditText}";
-		}
+		public IEnumerable<string> ComboboxValues { get; set; }
 	}
 
 	/// <summary>

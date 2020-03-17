@@ -540,12 +540,15 @@ class RunningTasks
 				//APerf.First();
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
-					int e = ALastError.Code; if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
-					var ha = stackalloc IntPtr[2] { pre.overlappedEvent, hProcess.SafeWaitHandle.DangerousGetHandle() };
-					int wr = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
-					if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
-					disconnectPipe = true;
-					if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
+					int e = ALastError.Code;
+					if(e != Api.ERROR_PIPE_CONNECTED) {
+						if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
+						var ha = stackalloc IntPtr[2] { pre.overlappedEvent, hProcess.SafeWaitHandle.DangerousGetHandle() };
+						int wr = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
+						if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
+						disconnectPipe = true;
+						if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
+					}
 				}
 				//APerf.Next();
 				if(!Api.WriteFileArr(pre.hPipe, taskParams, out _)) throw new AuException(0);

@@ -44,7 +44,7 @@ partial class PanelFiles : AuUserControlBase
 	public FilesModel ZLoadWorkspace(string wsDir = null)
 	{
 		wsDir ??= Program.Settings.workspace;
-		if(wsDir.IsNE()) wsDir = AFolders.ThisAppDocuments + "Main";
+		if(wsDir.NE()) wsDir = AFolders.ThisAppDocuments + "Main";
 		var xmlFile = wsDir + @"\files.xml";
 		var oldModel = _model;
 		FilesModel m = null;
@@ -191,7 +191,7 @@ partial class PanelFiles : AuUserControlBase
 	{
 		if(_newMenuDone) return; _newMenuDone = true;
 
-		var templDir = AFolders.ThisAppBS + @"Default\Templates";
+		var templDir = FileNode.Templates.DefaultDirBS;
 		_CreateMenu(templDir, ddm, 0);
 
 		void _CreateMenu(string dir, ToolStripDropDownMenu ddParent, int level)
@@ -202,21 +202,20 @@ partial class PanelFiles : AuUserControlBase
 				bool isProject = false;
 				string name = v.Name;
 				if(v.IsDirectory) {
-					if(level == 0 && name.Eqi("include")) continue;
-					if(isProject = (name[0] == '@')) name = name.Substring(1);
+					if(level == 0 && name.Eqi("include")) continue; //currently not used
+					if(isProject = (name[0] == '@')) name = name[1..];
 				} else {
 					if(level == 0 && 0 != name.Eq(true, "Script.cs", "Class.cs")) continue;
 				}
 
 				bool isFolder = v.IsDirectory && !isProject;
-				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(v.FullPath.Substring(templDir.Length + 1), beginRenaming: true));
+				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(v.FullPath.Substring(templDir.Length), beginRenaming: true));
 				if(isFolder) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;
-					_CreateMenu(dir + "\\" + name, ddSub, level + 1);
+					_CreateMenu(dir + name, ddSub, level + 1);
 				} else {
 					string si = null;
-					//if(isProject) si = nameof(Au.Editor.Resources.Resources.project);
 					if(isProject) si = nameof(Au.Editor.Resources.Resources.folder);
 					else {
 						switch(FileNode.DetectFileType(v.FullPath)) {

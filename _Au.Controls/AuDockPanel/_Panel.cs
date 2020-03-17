@@ -272,7 +272,7 @@ namespace Au.Controls
 				g.FillRectangle(colored ? t.brushCaptionBack : t.brushSplitter, r);
 
 				string s = this.Text;
-				if(!s.IsNE() && !this.HasToolbar) {
+				if(!s.NE() && !this.HasToolbar) {
 					bool vert = this.IsVerticalCaption;
 					var tf = vert ? t.txtFormatVert : t.txtFormatHorz;
 					if(vert) r.Inflate(0, -2); else r.Inflate(-2, 0);

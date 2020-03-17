@@ -342,17 +342,6 @@ partial class SciCode : AuScintilla
 		Call(SCI_SETSAVEPOINT);
 		if(this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
 	}
-	//internal void _FileModifiedExternally()
-	//{
-	//	var text = ZFile.GetText(saved: true); if(text == this.Text) return;
-	//	if(this == Panels.Editor.ActiveDoc && AWnd.Active.IsOfThisProcess) {
-	//		IsUnsaved = true;
-	//		AOutput.Write($"<>Info: the active editor file {ZFile.SciLink} has been modified by another program. The modified file will be replaced with editor text.");
-	//		return;
-	//	}
-	//	ReplaceTextGently(text);
-	//	Call(SCI_SETSAVEPOINT);
-	//}
 
 	#region drag drop
 
@@ -492,7 +481,7 @@ partial class SciCode : AuScintilla
 			break;
 		}
 
-		if(!s.IsNE()) {
+		if(!s.NE()) {
 			var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
 			var b = Au.Util.AConvert.ToUtf8(s);
 			fixed(byte* bp = b) {
@@ -546,7 +535,7 @@ partial class SciCode : AuScintilla
 					t.Append("//").Append(path);
 				} else {
 					t.Append(isFN ? "ATask.Run(@\"" : "AExec.Run(@\"").Append(path);
-					if(!args.IsNE()) t.Append("\", \"").Append(args.Escape());
+					if(!args.NE()) t.Append("\", \"").Append(args.Escape());
 					t.Append("\");");
 					if(menuVar == null && !isFN && (path.Starts("::") || path.Find(name, true) < 0)) t.Append(" //").Append(name);
 					//FUTURE: add unexpanded path version
@@ -626,13 +615,13 @@ partial class SciCode : AuScintilla
 			return;
 		}
 
-		if(!isFragment) { i1 = 0; i2 = textLen; }
-		string s = Z.RangeText(false, i1, i2);
 		bool isScript = _fn.IsScript;
 		var b = new StringBuilder(isCS ? "[cs]" : "[code]");
+		string s;
 		if(isFragment) {
-			b.Append(s);
+			b.Append(Z.RangeText(false, i1, i2));
 		} else {
+			s = CiUtil.GetTextWithoutUnusedUsingDirectives();
 			var name = _fn.Name; if(name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
 			b.AppendFormat("// {0} \"{1}\"{2}{3}", isScript ? "script" : "class", name, s[0] == '/' ? " " : "\r\n", s);
 		}

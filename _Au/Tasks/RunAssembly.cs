@@ -32,7 +32,6 @@ namespace Au
 		/// <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
 		/// <param name="flags"></param>
 		/// <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
-		[System.Runtime.ExceptionServices.HandleProcessCorruptedStateExceptions]
 		public static void Run(string asmFile, string[] args, int pdbOffset, RAFlags flags = 0, string fullPathRefs = null)
 		{
 			ADebug.PrintIf(pdbOffset == 0, "pdbOffset 0");
@@ -188,10 +187,7 @@ namespace Au
 			}
 		}
 	}
-}
 
-namespace Au.Types
-{
 	/// <summary>
 	/// This class is used in automation script files as base of their main class. Adds some features.
 	/// </summary>
@@ -263,7 +259,10 @@ namespace Au.Types
 		}
 		Au.Triggers.ActionTriggers _triggers;
 	}
+}
 
+namespace Au.Types
+{
 	/// <summary>
 	/// Flags for <see cref="RunAssembly.Run"/>.
 	/// </summary>

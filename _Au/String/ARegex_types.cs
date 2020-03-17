@@ -242,7 +242,7 @@ namespace Au.Types
 		/// </remarks>
 		public string ExpandReplacement(string repl)
 		{
-			if(repl.IsNE()) return repl;
+			if(repl.NE()) return repl;
 			using(new Util.StringBuilder_(out var b)) {
 				ARegex.ExpandReplacement_(this, repl, b);
 				return b.ToString();

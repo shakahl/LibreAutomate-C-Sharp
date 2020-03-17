@@ -332,7 +332,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				if(cb.Control.SelectedIndex <= 0) uncheck = true;
 				break;
 			case SourceGrid.Cells.Editors.TextBox tb:
-				if((cc.Value as string).IsNE()) uncheck = true;
+				if((cc.Value as string).NE()) uncheck = true;
 				break;
 			}
 			if(uncheck) g.ZCheck(row, false);
@@ -414,7 +414,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			switch(_role) {
 			case ERole.exeProgram:
 			case ERole.classLibrary:
-				if(_meta.outputPath.IsNE()) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
+				if(_meta.outputPath.NE()) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
 				break;
 			}
 			var name = APath.GetFileName(_f.Name, true);
@@ -786,7 +786,7 @@ Examples of loading resources at run time:
 		void _SetTimer(string name)
 		{
 			//AOutput.Write(name);
-			if(name.IsNE() || !_infoDict.TryGetValue(name, out _infoText)) return;
+			if(name.NE() || !_infoDict.TryGetValue(name, out _infoText)) return;
 			_infoTimer.After(700);
 		}
 	}

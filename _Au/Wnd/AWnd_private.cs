@@ -53,7 +53,7 @@ namespace Au
 			if(!c.Is0) return c;
 			if(retry) return default;
 
-			name = w.NameTL_; if(name.IsNE()) return default;
+			name = w.NameTL_; if(name.NE()) return default;
 
 			for(; ; ) {
 				c = Api.FindWindowEx(default, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
@@ -73,7 +73,7 @@ namespace Au
 		//{
 		//	if(!AVersion.MinWin10 || !w.ClassNameIs("Windows.UI.Core.CoreWindow")) return default;
 		//	AWnd wo = w.Get.DirectParent; if(!wo.Is0 && wo.ClassNameIs("ApplicationFrameWindow")) return wo;
-		//	string s = w.GetText(false, false); if(s.IsNE()) return default;
+		//	string s = w.GetText(false, false); if(s.NE()) return default;
 		//	return Api.FindWindow("ApplicationFrameWindow", s);
 		//}
 

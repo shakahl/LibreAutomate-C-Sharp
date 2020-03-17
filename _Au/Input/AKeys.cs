@@ -159,7 +159,7 @@ namespace Au
 		public AKeys AddKeys([ParamString(PSFormat.AKeys)] string keys)
 		{
 			_ThrowIfSending();
-			if(keys.IsNE()) return this;
+			if(keys.NE()) return this;
 			int i = 0, len = 0;
 			foreach(var g in _SplitKeysString(keys)) {
 				//AOutput.Write($"<><c 0xC000>{g.Value}</c>"); //continue;
@@ -337,7 +337,7 @@ namespace Au
 		public AKeys AddText(string text)
 		{
 			_ThrowIfSending();
-			if(!text.IsNE()) _AddKey(new _KEvent(_KType.Text, _SetData(text)));
+			if(!text.NE()) _AddKey(new _KEvent(_KType.Text, _SetData(text)));
 			return this;
 		}
 

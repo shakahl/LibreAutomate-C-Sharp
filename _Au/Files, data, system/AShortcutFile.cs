@@ -313,7 +313,7 @@ namespace Au
 
 		string _CorrectPath(string R, bool fixMSI = false)
 		{
-			if(R.IsNE()) return null;
+			if(R.NE()) return null;
 
 			if(!fixMSI) {
 				R = APath.ExpandEnvVar(R);

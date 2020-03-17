@@ -267,7 +267,7 @@ namespace Au
 		/// <param name="dirs">0 or more directories where to search.</param>
 		public static unsafe string SearchPath(string path, params string[] dirs)
 		{
-			if(path.IsNE()) return null;
+			if(path.NE()) return null;
 
 			string s = path;
 			if(APath.IsFullPathExpandEnvVar(ref s)) {
@@ -1278,7 +1278,7 @@ namespace Au
 		static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null)
 		{
 			file = APath.Normalize(file, flags: PNFlags.DontPrefixLongPath);
-			string s1 = tempDirectory.IsNE() ? file : APath.Combine(APath.Normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), APath.GetFileName(file), prefixLongPath: false);
+			string s1 = tempDirectory.NE() ? file : APath.Combine(APath.Normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), APath.GetFileName(file), prefixLongPath: false);
 			string temp = s1 + "~temp";
 			string back = s1 + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 

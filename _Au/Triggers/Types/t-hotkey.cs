@@ -139,7 +139,7 @@ namespace Au.Triggers
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0] {
 			set {
 				var ps = key.ToString(); if(AChar.IsAsciiDigit(ps[0])) ps = "VK" + ps;
-				if(!modKeys.IsNE()) ps = modKeys + "+" + ps;
+				if(!modKeys.NE()) ps = modKeys + "+" + ps;
 
 				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 				_Add(value, key, mod, modAny, flags, ps);

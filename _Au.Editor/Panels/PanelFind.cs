@@ -557,7 +557,7 @@ class PanelFind : AuUserControlBase
 	{
 		_aEditor.Clear();
 		if(!_GetTextToFind(out var f, false, noRecent: true)) return;
-		var text = Panels.Editor.ZActiveDoc?.Text; if(text.IsNE()) return;
+		var text = Panels.Editor.ZActiveDoc?.Text; if(text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
@@ -802,7 +802,7 @@ class PanelFind : AuUserControlBase
 		int k = f.matchCase ? 1 : 0; if(f.wholeWord) k |= 2; else if(f.rx != null) k |= 4;
 
 		if(f.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = f.findText, _recentPrevOptions = k);
-		if(!f.replaceText.IsNE() && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
+		if(!f.replaceText.NE() && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
 
 		static void _Add(bool replace, string text, int options)
 		{

@@ -63,7 +63,7 @@ namespace Au.Util
 	/// 				}
 	/// 			}
 	/// #endif
-	/// 			if(Name.IsNE()) throw new ArgumentException("no name attribute in XML");
+	/// 			if(Name.NE()) throw new ArgumentException("no name attribute in XML");
 	/// 			if(Id == 0) throw new ArgumentException("no id attribute in XML");
 	/// 		}
 	/// 	}

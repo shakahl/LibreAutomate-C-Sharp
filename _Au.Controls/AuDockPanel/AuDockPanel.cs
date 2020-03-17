@@ -303,7 +303,7 @@ namespace Au.Controls
 					}
 					//tooltip
 					var tt = ht.gp?.ToolTipText;
-					if(!tt.IsNE()) {
+					if(!tt.NE()) {
 						isTooltip = true;
 						if(_toolTipTabButton != ht.gp) {
 							int delay = _toolTipTabButton == null ? _toolTip.InitialDelay : _toolTip.ReshowDelay;

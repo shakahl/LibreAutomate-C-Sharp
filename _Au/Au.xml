@@ -1581,8 +1581,9 @@
         <member name="P:Au.Types.OptMouse.MoveSpeed">
             <summary>
             If not 0, makes mouse movements slower, not instant.
-            Default: 0. Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100.
+            Default: 0.
             </summary>
+            <value>Valid values: 0 (instant) - 10000 (slowest). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
             Used by <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.AMouse.Click(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and other functions that generate mouse movement events, except <see cref="M:Au.AMouse.MoveRecorded(System.String,System.Double)"/>.
@@ -1593,8 +1594,9 @@
         <member name="P:Au.Types.OptMouse.ClickSleepFinally">
             <summary>
             How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
-            Default: 10. Valid values: 0 - 10000 (10 s). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100.
+            Default: 10.
             </summary>
+            <value>Valid values: 0 - 10000 (10 s). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
             The 'click' functions also sleep <see cref="P:Au.Types.OptMouse.ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
@@ -1603,8 +1605,9 @@
         <member name="P:Au.Types.OptMouse.MoveSleepFinally">
             <summary>
             How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
-            Default: 10. Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100.
+            Default: 10.
             </summary>
+            <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
             Used by <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (finally), <see cref="M:Au.AMouse.Click(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (between moving and clicking) and other functions that generate mouse movement events.
@@ -1660,23 +1663,23 @@
         </member>
         <member name="P:Au.Types.OptKey.TextSpeed">
             <summary>
-            How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="M:Au.AKeys.Text(System.String)"/>, <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> (arguments of type <see cref="T:Au.Types.KText"/>) and similar functions.
+            How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="M:Au.AKeys.Text(System.String)"/>. Also by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions for <c>(KText)"text"</c> arguments.
             Default: 0.
             </summary>
+            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 10.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 10.
             Not used for 'keys' arguments. See <see cref="P:Au.Types.OptKey.KeySpeed"/>.
             </remarks>
         </member>
         <member name="P:Au.Types.OptKey.KeySpeed">
             <summary>
-            How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions for 'keys' arguments (not for 'text' arguments).
+            How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions, except for <c>(KText)"text"</c> arguments.
             Default: 1.
             </summary>
+            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 10.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 10.
             Not used for 'text' arguments. See <see cref="P:Au.Types.OptKey.TextSpeed"/>.
             </remarks>
         </member>
@@ -1685,17 +1688,18 @@
             How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
             Default: 5.
             </summary>
+            <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 50.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 50.
             In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
             </remarks>
         </member>
         <member name="P:Au.Types.OptKey.SleepFinally">
             <summary>
             How long to wait (milliseconds) before a 'send keys or text' function returns.
-            Default: 10. Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 100.
+            Default: 10.
             </summary>
+            <value>Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 100.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
             Not used by <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.OptKey)"/>.
@@ -1867,8 +1871,9 @@
         <member name="P:Au.Types.OptWaitFor.Period">
             <summary>
             The sleep time between checking the wait condition. Milliseconds.
-            Default: 10. Valid values: 1-1000.
+            Default: 10.
             </summary>
+            <value>Valid values: 1-1000.</value>
             <remarks>
             Most 'wait for' functions of this library use <see cref="T:Au.AWaitFor.Loop"/>, which repeatedly checks the wait condition and sleeps (waits) several ms. This property sets the initial sleep time, which then is incremented by <b>Period</b>/10 ms (default 1 ms) in each loop until reaches <b>Period</b>*50 (default 500 ms).
             This property makes the response time shorter or longer. If &lt;10, makes it shorter (faster response), but increases CPU usage; if &gt;10, makes it longer (slower response).
@@ -2690,7 +2695,7 @@
         </member>
         <member name="T:Au.Types.DIcon">
             <summary>
-            Standard icons for <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> and similar functions.
+            Standard icons for <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.DIcon.App">
@@ -2701,19 +2706,19 @@
         </member>
         <member name="T:Au.Types.DEdit">
             <summary>
-            Text edit field type for <see cref="M:Au.ADialog.ShowTextInputEx(System.String,System.String,Au.Types.DEdit,System.Object,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs},System.String,System.Action{Au.Types.DEventArgs})"/> and <see cref="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.Object)"/>.
+            Text edit field type for <see cref="M:Au.ADialog.ShowInput(System.String@,System.String,System.String,Au.Types.DEdit,System.String,System.Collections.Generic.IEnumerable{System.String},Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs},System.String,System.Action{Au.Types.DEventArgs})"/>, <see cref="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.String,System.Collections.Generic.IEnumerable{System.String})"/>, etc.
             </summary>
         </member>
         <member name="T:Au.Types.DFlags">
             <summary>
-            Flags for <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> and similar functions.
+            Flags for <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.DFlags.CommandLinks">
             <summary>
             Display custom buttons as a column of command-links, not as a row of classic buttons.
             Command links can have multi-line text. The first line has bigger font.
-            More info about custom buttons: <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
+            More info about custom buttons: <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
         </member>
         <member name="F:Au.Types.DFlags.ExpandDown">
@@ -2751,46 +2756,47 @@
             The same as <see cref="P:Au.ADialog.FlagXCancel"/>.
             </summary>
         </member>
-        <member name="T:Au.Types.DResult">
+        <member name="T:Au.Types.DControls">
             <summary>
-            Result of <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions: button id, radio button id, check box state, edit field text.
+            Used with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and similar functions to add more controls and get their final values.
             </summary>
         </member>
-        <member name="F:Au.Types.DResult.Timeout">
+        <member name="P:Au.Types.DControls.Checkbox">
             <summary>
-            Returned <see cref="P:Au.Types.DResult.Button"/> value on timeout.
+            If not null, adds checkbox with this text.
             </summary>
         </member>
-        <member name="P:Au.Types.DResult.Button">
+        <member name="P:Au.Types.DControls.IsChecked">
             <summary>
-            Gets selected button id.
-            On timeout it is DResult.Timeout.
+            Sets initial and gets final checkbox value (true if checked).
             </summary>
         </member>
-        <member name="P:Au.Types.DResult.RadioButton">
+        <member name="P:Au.Types.DControls.RadioButtons">
             <summary>
-            Gets selected (checked) radio button id.
+            If not null, adds radio buttons.
+            A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".
             </summary>
         </member>
-        <member name="P:Au.Types.DResult.IsChecked">
+        <member name="P:Au.Types.DControls.RadioId">
             <summary>
-            Gets check box state.
+            Sets initial and gets final checked radio button. It is button id (as specified in <see cref="P:Au.Types.DControls.RadioButtons"/>), not index.
+            See <see cref="M:Au.ADialog.SetRadioButtons(System.String,System.Int32)"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.DResult.EditText">
+        <member name="P:Au.Types.DControls.EditType">
             <summary>
-            Gets edit field text.
+            If set (not None, which is default), adds a text edit control.
+            Note: then the dialog cannot have a progress bar.
             </summary>
         </member>
-        <member name="M:Au.Types.DResult.op_Implicit(Au.Types.DResult)~System.Int32">
+        <member name="P:Au.Types.DControls.EditText">
             <summary>
-            Converts DResult to int.
-            Allows to use code <c>switch(ADialog.ShowEx(...))</c> instead of <c>switch(ADialog.ShowEx(...).Button)</c> .
+            Sets initial and gets final text edit control value.
             </summary>
         </member>
-        <member name="M:Au.Types.DResult.ToString">
+        <member name="P:Au.Types.DControls.ComboboxValues">
             <summary>
-            Formats string $"Button={Button}, RadioButton={RadioButton}, IsChecked={IsChecked}, EditText={EditText}".
+            Sets combo box items used when <see cref="P:Au.Types.DControls.EditType"/> is Combo.
             </summary>
         </member>
         <member name="T:Au.Types.DEventArgs">
@@ -5639,44 +5645,6 @@
             The task runs in editor process.
             </summary>
         </member>
-        <member name="T:Au.Types.AScript">
-            <summary>
-            This class is used in automation script files as base of their main class. Adds some features.
-            </summary>
-            <remarks>
-            This class adds these features:
-            1. The static constructor subscribes to the <see cref="E:System.AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
-            2. Provides virtual function <see cref="M:Au.Types.AScript.OnUnhandledException(System.UnhandledExceptionEventArgs)"/>. The script can override it.
-            3. Provides property <see cref="P:Au.Types.AScript.Triggers"/>.
-            
-            More features may be added in the future.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.AScript.#ctor">
-            
-        </member>
-        <member name="M:Au.Types.AScript.OnUnhandledException(System.UnhandledExceptionEventArgs)">
-            <summary>
-            Writes exception info to the output.
-            Override this function to intercept unhandled exceptions. Call the base function if want to see exception info as usually.
-            </summary>
-            <param name="e"></param>
-        </member>
-        <member name="P:Au.Types.AScript.Triggers">
-            <summary>
-            Gets or sets an <see cref="T:Au.Triggers.ActionTriggers"/> instance, as a field of this class.
-            </summary>
-            <remarks>
-            This property can be used in automation scripts to avoid creating an <b>ActionTriggers</b> variable explicitly. The returned value is a field of this class. The <b>ActionTriggers</b> object is auto-created when callig this property first time or after setting it = null.
-            In automation scripts this property is available because this class is the base of the Script class. In other classes need to create an <b>ActionTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(o.Trigger);
-            Triggers.Run();
-            ]]></code>
-            </example>
-        </member>
         <member name="T:Au.Types.RAFlags">
             <summary>
             Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags,System.String)"/>.
@@ -6511,12 +6479,12 @@
             Returns <b>Count</b>, or 0 if null.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.IsNE_``1(``0[])">
+        <member name="M:Au.AExtensions.NE_``1(``0[])">
             <summary>
             Returns true if null or <b>Length</b> == 0.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.IsNE_``1(System.Collections.Generic.List{``0})">
+        <member name="M:Au.AExtensions.NE_``1(System.Collections.Generic.List{``0})">
             <summary>
             Returns true if null or <b>Count</b> == 0.
             </summary>
@@ -6542,30 +6510,46 @@
             </summary>
             <remarks>
             You can use static functions (less code) or create class instances (more options).
-            More info: <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            More info: <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             
             Uses task dialog API <msdn>TaskDialogIndirect</msdn>.
             
             Cannot be used in services. Instead use <b>MessageBox.Show</b> with option ServiceNotification or DefaultDesktopOnly, or API <msdn>MessageBox</msdn> with corresponding flags.
             </remarks>
             <example>
+            Simple examples.
+            <code><![CDATA[
+            ADialog.Show("Info");
+            
+            ADialog.ShowInfo("Info");
+            
+            string s = "More info."
+            if(!ADialog.ShowYesNo("Info", s)) return;
+            
+            switch(ADialog.Show("Save changes?", "More info.", "1 Save|2 Don't Save|Cancel")) {
+            case 1: AOutput.Write("save"); break;
+            case 2: AOutput.Write("don't"); break;
+            default: AOutput.Write("cancel"); break;
+            }
+            ]]></code>
+            
             This example creates a class instance, sets properties, shows dialog, uses events, uses result.
             <code><![CDATA[
-            var d = new ADialog(); //info: another constructor has the same parameters as ShowEx
+            var d = new ADialog();
             d.SetText("Main text.", "More text.\nSupports <A HREF=\"link data\">links</A> if you subscribe to HyperlinkClicked event.");
             d.SetButtons("1 OK|2 Cancel|3 Custom|4 Custom2");
             d.SetIcon(DIcon.Warning);
             d.SetExpandedText("Expanded info\nand more info.", true);
             d.FlagCanBeMinimized = true;
-            d.SetRadioButtons("1 r1|2 r2");
             d.SetCheckbox("Check");
+            d.SetRadioButtons("1 r1|2 r2");
             d.SetTimeout(30, "OK");
             d.HyperlinkClicked += e => { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
             d.ButtonClicked += e => { AOutput.Write(e.Button); if(e.Button == 4) e.DontCloseDialog = true; };
             d.FlagShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
             var r = d.ShowDialog();
-            AOutput.Write(r);
-            switch(r.Button) { case 1: AOutput.Write("OK"); break; case DResult.Timeout: AOutput.Write("timeout"); break; }
+            AOutput.Write(r, d.Controls.IsChecked, d.Controls.RadioId);
+            switch(r) { case 1: AOutput.Write("OK"); break; case ADialog.Timeout: AOutput.Write("timeout"); break; }
             ]]></code>
             </example>
         </member>
@@ -6612,10 +6596,10 @@
         <member name="M:Au.ADialog.#ctor">
             
         </member>
-        <member name="M:Au.ADialog.#ctor(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
+        <member name="M:Au.ADialog.#ctor(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
             Initializes a new <see cref="T:Au.ADialog"/> instance and sets main properties.
-            Parameters etc are of <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Parameters etc are of <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
         </member>
         <member name="M:Au.ADialog.SetTitleBarText(System.String)">
@@ -6635,7 +6619,6 @@
             <summary>
             Sets common icon.
             </summary>
-            <param name="icon"></param>
         </member>
         <member name="M:Au.ADialog.SetIcon(System.Drawing.Icon)">
             <summary>
@@ -6645,6 +6628,11 @@
             Icon of size 32 or 16.
             Don't dispose it until the dialog is closed.
             </param>
+        </member>
+        <member name="F:Au.ADialog.Timeout">
+            <summary>
+            The return value of <b>ShowX</b> functions on timeout.
+            </summary>
         </member>
         <member name="M:Au.ADialog._Buttons.MarshalButtons(Au.ADialog.TASKDIALOGCONFIG@)">
             <summary>
@@ -6662,7 +6650,7 @@
             Sets common and/or custom buttons and custom buttons style.
             </summary>
             <param name="buttons">
-            Common and/or custom buttons, like with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
+            Common and/or custom buttons, like with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             These ids should be negative if you use <i>customButtons</i> too, because ids of <i>customButtons</i> are 1, 2, ... .
             </param>
             <param name="asCommandLinks">Custom buttons style. If false - row of classic buttons. If true - column of command-link buttons that can have multiline text.</param>
@@ -6683,16 +6671,20 @@
         <member name="M:Au.ADialog.SetRadioButtons(System.String,System.Int32)">
             <summary>
             Adds radio buttons.
-            To get selected radio button id after closing the dialog, use the RadioButton property of the <see cref="T:Au.Types.DResult"/> variable returned by <see cref="M:Au.ADialog.ShowDialog"/> or the <see cref="P:Au.ADialog.Result"/> property.
             </summary>
             <param name="buttons">A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
             <param name="defaultId">Check the radio button that has this id. If omitted or 0, checks the first. If negative, does not check.</param>
+            <remarks>
+            To get selected radio button id after closing the dialog, use <see cref="P:Au.ADialog.Controls"/>.
+            </remarks>
         </member>
         <member name="M:Au.ADialog.SetCheckbox(System.String,System.Boolean)">
             <summary>
             Adds check box (if text is not null/empty).
-            To get check box state after closing the dialog, use the IsChecked property of the <see cref="T:Au.Types.DResult"/> variable returned by <see cref="M:Au.ADialog.ShowDialog"/> or the <see cref="P:Au.ADialog.Result"/> property.
             </summary>
+            <remarks>
+            To get check box state after closing the dialog, use <see cref="P:Au.ADialog.Controls"/>.
+            </remarks>
         </member>
         <member name="M:Au.ADialog.SetExpandedText(System.String,System.Boolean)">
             <summary>
@@ -6729,19 +6721,15 @@
             <param name="text">Text.</param>
             <param name="icon">Icon of size 16. Read more: <see cref="M:Au.ADialog.SetIcon(System.Drawing.Icon)"/>.</param>
         </member>
-        <member name="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.Object)">
+        <member name="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.String,System.Collections.Generic.IEnumerable{System.String})">
             <summary>
             Adds Edit or Combo control.
             </summary>
             <param name="editType">Control type/style.</param>
-            <param name="editText">
-            Initial text. Can be string or any other type.
-            If <i>editType</i> is <b>DEdit.Combo</b>, it can be:
-            - <b>IEnumerable&lt;object&gt;</b>. Sets combo box drop-down list items. For example a string array or list, like <c>new string[] { "one", "two", "three" }</c>.
-            - tuple (object text, IEnumerable&lt;object&gt; items). Sets edit text and drop-down list items. Example: <c>("one", new string[] { "one", "two", "three" })</c>.
-            </param>
+            <param name="editText">Initial edit field text.</param>
+            <param name="comboItems">Combo box items used when <i>editType</i> is Combo.</param>
             <remarks>
-            To get control text after closing the dialog, use the <see cref="P:Au.Types.DResult.EditText"/> property of the <see cref="T:Au.Types.DResult"/> variable returned by <see cref="M:Au.ADialog.ShowDialog"/> or the <see cref="P:Au.ADialog.Result"/> property.
+            To get control text after closing the dialog, use <see cref="P:Au.ADialog.Controls"/>.
             
             Dialogs with an input field cannot have a progress bar.
             </remarks>
@@ -6749,7 +6737,7 @@
         <member name="P:Au.ADialog.Width">
             <summary>
             Sets the width of the dialog's client area.
-            The actual width will depend on DPI (the Windows "text size" setting).
+            The actual width will depend on DPI (the Windows setting "scale" or "text size").
             If less than default width, will be used default width.
             </summary>
             <seealso cref="F:Au.Types.DFlags.Wider"/>
@@ -6782,8 +6770,7 @@
         </member>
         <member name="M:Au.ADialog.SetTimeout(System.Int32,System.String,System.Boolean)">
             <summary>
-            Let the dialog close itself after closeAfterS seconds.
-            On timeout ShowDialog returns DResult.Timeout.
+            Let the dialog close itself after <i>closeAfterS</i> seconds. Then <see cref="M:Au.ADialog.ShowDialog"/> returns <see cref="F:Au.ADialog.Timeout"/>.
             Example: <c>d.SetTimeout(30, "OK");</c>
             </summary>
         </member>
@@ -6826,50 +6813,43 @@
         <member name="M:Au.ADialog.ShowDialog">
             <summary>
             Shows the dialog.
-            Returns selected button id and other results packed in a <see cref="T:Au.Types.DResult"/> variable.
+            Returns selected button id.
             Call this method after setting text and other properties.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
         <member name="E:Au.ADialog.Created">
             <summary>
-            ADialog events.
             Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
             </summary>
         </member>
         <member name="E:Au.ADialog.Destroyed">
             <summary>
-            ADialog events.
             Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
             </summary>
         </member>
         <member name="E:Au.ADialog.Timer">
             <summary>
-            ADialog events.
             Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
             </summary>
         </member>
         <member name="E:Au.ADialog.ButtonClicked">
             <summary>
-            ADialog events.
             Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
             </summary>
         </member>
         <member name="E:Au.ADialog.HyperlinkClicked">
             <summary>
-            ADialog events.
             Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
             </summary>
         </member>
         <member name="E:Au.ADialog.HelpF1">
             <summary>
-            ADialog events.
             Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
             </summary>
         </member>
         <member name="E:Au.ADialog.OtherEvents">
             <summary>
-            ADialog events.
             Occurs when the internal <msdn>TaskDialogCallbackProc</msdn> function is called by the task dialog API.
             </summary>
         </member>
@@ -6879,18 +6859,26 @@
             </summary>
             <remarks>
             Calls <see cref="M:Au.ADialog.ThreadWaitForOpen"/>, therefore the dialog is already open when this function returns.
-            More info: <see cref="M:Au.ADialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+            More info: <see cref="M:Au.ADialog.ShowNoWait(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
             </remarks>
             <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>
         <member name="P:Au.ADialog.Result">
             <summary>
-            Gets selected button id and other results packed in a DResult variable.
-            It is the same variable as the ShowDialog return value.
-            If the result is still unavailable (eg the dialog still not closed):
-            	If called from the same thread that called ShowDialog, returns null.
-            	If called from another thread, waits until the dialog is closed and the return value is available.
-            	Note that ShowDialogNoWait calls ShowDialog in another thread.
+            Selected button id. The same as the <see cref="M:Au.ADialog.ShowDialog"/> return value.
+            </summary>
+            <remarks>
+            If the result is still unavailable (the dialog still not closed):
+            - If called from the same thread that called <see cref="M:Au.ADialog.ShowDialog"/>, returns 0.
+            - If called from another thread, waits until the dialog is closed.
+            
+            Note: <see cref="M:Au.ADialog.ShowDialogNoWait"/> calls <see cref="M:Au.ADialog.ShowDialog"/> in another thread.
+            </remarks>
+        </member>
+        <member name="P:Au.ADialog.Controls">
+            <summary>
+            After closing the dialog contains values of checkbox, radio buttons and/or text edit control.
+            null if no controls.
             </summary>
         </member>
         <member name="M:Au.ADialog.ThreadWaitForOpen">
@@ -6926,7 +6914,7 @@
             Example: <c>d.Send.Message(Native.TDM.CLICK_VERIFICATION, 1);</c> .
             
             Can be used only while the dialog is open. Before showing the dialog returns null. After closing the dialog the returned variable is deactivated; its method calls are ignored.
-            Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="M:Au.ADialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and <see cref="M:Au.ADialog.ShowProgressEx(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Can be used in dialog event handlers. Also can be used in another thread, for example with <see cref="M:Au.ADialog.ShowNoWait(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> and <see cref="M:Au.ADialog.ShowProgress(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </remarks>
         </member>
         <member name="P:Au.ADialog.EditControl">
@@ -6934,53 +6922,7 @@
             Gets edit control handle as AWnd.
             </summary>
         </member>
-        <member name="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
-            <summary>
-            Shows dialog.
-            Returns selected button id and other results packed in a <see cref="T:Au.Types.DResult"/> variable.
-            </summary>
-            <param name="text1">Main instruction. Bigger font.</param>
-            <param name="text2">Text below main instruction.</param>
-            <param name="buttons">See <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".</param>
-            <param name="flags"></param>
-            <param name="icon"></param>
-            <param name="owner">Owner window or null. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
-            <param name="expandedText">Text that the user can show and hide.</param>
-            <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-            <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.ADialog.Options.DefaultTitle"/>.</param>
-            <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-            <param name="checkBox">If not null/"", shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-            <param name="defaultButton">id of button that responds to the Enter key.</param>
-            <param name="x">X position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="y">Y position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="secondsTimeout">If not 0, auto-close the dialog after this time (seconds) and set result's Button property = <see cref="F:Au.Types.DResult.Timeout"/>.</param>
-            <param name="onLinkClick">
-            A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
-            Example:
-            <code><![CDATA[
-            ADialog.ShowEx("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
-            ]]></code>
-            </param>
-            <remarks>
-            The returned <see cref="T:Au.Types.DResult"/> variable has these properties: selected button id, selected radio button id, check box state.
-            Tip: DResult supports implicit cast to int. You can use code <c>switch(ADialog.ShowEx(...))</c> instead of <c>switch(ADialog.ShowEx(...).Button)</c> .
-            Tip: Use named arguments. Example: <c>ADialog.ShowEx("Text.", icon: DIcon.Info, title: "Title")</c> .
-            This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="T:Au.ADialog"/> class help.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            var r = ADialog.ShowEx("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", radioButtons: "1 One|2 Two|3 Three", checkBox: "Check", secondsTimeout: 30);
-            AOutput.Write(r);
-            switch(r) {
-            case 1: AOutput.Write("OK"); break;
-            case DResult.Timeout: AOutput.Write("timeout"); break;
-            default: AOutput.Write("Cancel"); break;
-            }
-            ]]></code>
-            </example>
-            <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
-        </member>
-        <member name="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)">
+        <member name="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
             Shows dialog.
             Returns selected button id.
@@ -6988,7 +6930,7 @@
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
             <param name="buttons">
-            Button ids and labels, like "1 OK|2 Cancel|5 Save|4 Don't Save".
+            Button ids and labels. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".
             Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
             The first in the list button is <i>default</i>, ie responds to the Enter key. For example, "2 No|1 Yes" adds Yes and No buttons and makes No default.
             Trims newlines around ids and labels. For example, "\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n" is the same as "1 One|2 Two".
@@ -7009,21 +6951,30 @@
             </param>
             <param name="flags"></param>
             <param name="icon"></param>
-            <param name="owner">Owner window or null. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
+            <param name="owner">Owner window. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
             <param name="expandedText">Text that the user can show and hide.</param>
+            <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+            <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.ADialog.Options.DefaultTitle"/>.</param>
+            <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+            <param name="defaultButton">id of button that responds to the Enter key.</param>
+            <param name="x">X position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="F:Au.ADialog.Timeout"/>.</param>
+            <param name="onLinkClick">
+            A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.
+            Example:
+            <code><![CDATA[
+            ADialog.Show("", "Text <a href=\"example\">link</a>.", onLinkClick: e => { AOutput.Write(e.LinkHref); });
+            ]]></code>
+            </param>
             <remarks>
-            Calls <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
-            Tip: Use named arguments. Example: <c>ADialog.Show("Text.", icon: DIcon.Info)</c> .
+            Tip: Use named arguments. Example: <c>ADialog.Show("Text", icon: DIcon.Info, title: "Title")</c> .
+            
+            This function allows you to use many dialog features, but not all. Alternatively you can create an <b>ADialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="T:Au.ADialog"/> class help.
             </remarks>
-            <seealso cref="M:Au.ADialog.ShowInfo(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
-            <seealso cref="M:Au.ADialog.ShowWarning(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
-            <seealso cref="M:Au.ADialog.ShowError(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)"/>
-            <seealso cref="M:Au.ADialog.ShowOKCancel(System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>
-            <seealso cref="M:Au.ADialog.ShowYesNo(System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>
-            <seealso cref="M:Au.ADebug.Dialog(System.Object,System.String,System.Int32,System.String)"/>
             <example>
             <code><![CDATA[
-            if(ADialog.Show("Show another example?", null, "1 OK|2 Cancel", DIcon.Info) != 1) return;
+            if(1 != ADialog.Show("Show another example?", null, "1 OK|2 Cancel", icon: DIcon.Info)) return;
             AOutput.Write("OK");
             
             switch(ADialog.Show("Save changes?", "More info.", "1 Save|2 Don't Save|Cancel")) {
@@ -7032,27 +6983,38 @@
             default: AOutput.Write("cancel"); break;
             }
             ]]></code>
+            
+            <code><![CDATA[
+            var con = new DControls { Checkbox = "Check", RadioButtons = "1 One|2 Two|3 Three", EditType = DEdit.Combo, EditText = "zero", ComboboxValues = new string[] { "one", "two" } };
+            var r = ADialog.Show("Main text", "More text.", "1 OK|2 Cancel", expandedText: "Expanded text", controls: con, secondsTimeout: 30);
+            AOutput.Write(r, con.IsChecked, con.RadioId, con.EditText);
+            switch(r) {
+            case 1: AOutput.Write("OK"); break;
+            case ADialog.Timeout: AOutput.Write("timeout"); break;
+            default: AOutput.Write("Cancel"); break;
+            }
+            ]]></code>
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
         <member name="M:Au.ADialog.ShowInfo(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with DIcon.Info icon.
-            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
         <member name="M:Au.ADialog.ShowWarning(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with DIcon.Warning icon.
-            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
         <member name="M:Au.ADialog.ShowError(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String)">
             <summary>
             Shows dialog with DIcon.Error icon.
-            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
@@ -7060,7 +7022,7 @@
             <summary>
             Shows dialog with OK and Cancel buttons.
             Returns true if selected OK.
-            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
@@ -7068,146 +7030,103 @@
             <summary>
             Shows dialog with Yes and No buttons.
             Returns true if selected Yes.
-            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
+            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.ADialog.ShowTextInputEx(System.String,System.String,Au.Types.DEdit,System.Object,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs},System.String,System.Action{Au.Types.DEventArgs})">
+        <member name="M:Au.ADialog.ShowInput(System.String@,System.String,System.String,Au.Types.DEdit,System.String,System.Collections.Generic.IEnumerable{System.String},Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs},System.String,System.Action{Au.Types.DEventArgs})">
             <summary>
-            Shows dialog with a text edit field, buttons OK and Cancel, optionally check box, radio buttons and custom buttons.
-            Returns results packed in a DResult variable: selected button id (1 for OK, 2 for Cancel), text and check box state.
-            </summary>
-            <param name="text1">Main instruction. Bigger font.</param>
-            <param name="text2">Read-only text below main instruction, above the edit field.</param>
-            <param name="editType">Edit field type. It can be simple text (DEdit.Text, default), multiline, number, password or combo box.</param>
-            <param name="editText">Initial edit field text or/and combo box items. See <see cref="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.Object)"/>.</param>
-            <param name="flags"></param>
-            <param name="owner">Owner window or null. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
-            <param name="expandedText">Text that the user can show and hide.</param>
-            <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-            <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.ADialog.Options.DefaultTitle"/>.</param>
-            <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-            <param name="radioButtons">Adds radio buttons. A list of strings "id text" separated by |, like "1 One|2 Two|3 Three".</param>
-            <param name="x">X position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="y">Y position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
-            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
-            <param name="buttons">You can use this to add more buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.</param>
-            <param name="onButtonClick">
-            A button-clicked event handler function, eg lambda.
-            Examples:
-            <code><![CDATA[
-            ADialog.ShowTextInputEx("Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Browse\nSets edit control text.",
-            	onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; } });
-            
-            ADialog.ShowTextInputEx("Example", "Try to click OK while text is empty.", onButtonClick: e =>
-            {
-            	if(e.Button == 1 && e.EditText.IsNE()) {
-            		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
-            		e.dialog.EditControl.Focus();
-            		e.DontCloseDialog = true;
-            	}
-            });
-            ]]></code>
-            </param>
-            <remarks>
-            This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="T:Au.ADialog"/> class help.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            var r = ADialog.ShowTextInputEx("Example", "Comments.", checkBox: "Check");
-            if(r.Button != 1) return;
-            AOutput.Write(r.EditText);
-            AOutput.Write(r.IsChecked);
-            ]]></code>
-            </example>
-            <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
-        </member>
-        <member name="M:Au.ADialog.ShowTextInput(System.String@,System.String,System.String,Au.Types.DEdit,System.Object,Au.Types.DFlags,Au.Types.AnyWnd)">
-            <summary>
-            Shows dialog with a text edit field and buttons OK and Cancel, and gets that text.
-            Returns true if selected OK, false if Cancel.
+            Shows dialog with a text edit field and gets that text.
+            Returns true if selected OK (or a custom button with id 1), else false.
             </summary>
             <param name="s">Variable that receives the text.</param>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Read-only text below main instruction, above the edit field.</param>
-            <param name="editType">Edit field type.</param>
-            <param name="editText">Initial edit field text or/and combo box items. See <see cref="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.Object)"/>.</param>
+            <param name="editType">Edit field type. It can be simple text (DEdit.Text, default), multiline, number, password or combo box.</param>
+            <param name="editText">Initial edit field text.</param>
+            <param name="comboItems">Combo box items used when <i>editType</i> is Combo.</param>
             <param name="flags"></param>
-            <param name="owner">Owner window or null. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
+            <param name="owner">Owner window. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
+            <param name="expandedText">Text that the user can show and hide.</param>
+            <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+            <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.ADialog.Options.DefaultTitle"/>.</param>
+            <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+            <param name="x">X position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="F:Au.ADialog.Timeout"/>.</param>
+            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
+            <param name="buttons">
+            Buttons. A list of strings "id text" separated by |, like "1 OK|2 Cancel|10 Browse...". See <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Note: this function returns true only when clicked button with id 1.
+            Usually custom buttons are used with <i>onButtonClick</i> function, which for example can get button id or disable closing the dialog.
+            </param>
+            <param name="onButtonClick">A button-clicked event handler function. See examples.</param>
             <remarks>
-            Calls <see cref="M:Au.ADialog.ShowTextInputEx(System.String,System.String,Au.Types.DEdit,System.Object,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs},System.String,System.Action{Au.Types.DEventArgs})"/>.
+            This function allows you to use many dialog features, but not all. Alternatively you can create an <b>ADialog</b> class instance, call <see cref="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.String,System.Collections.Generic.IEnumerable{System.String})"/> or use the <i>controls</i> parameter, set other properties and call <b>ShowDialog</b>.
             </remarks>
             <example>
+            Simple.
             <code><![CDATA[
             string s;
-            if(!ADialog.ShowTextInput(out s, "Example")) return;
+            if(!ADialog.ShowInput(out s, "Example")) return;
             AOutput.Write(s);
             
-            //or you can declare the variable like this
-            if(!ADialog.ShowTextInput(out string s2, "Example")) return;
+            if(!ADialog.ShowInput(out var s2, "Example")) return;
             AOutput.Write(s2);
+            ]]></code>
+            
+            With checkbox.
+            <code><![CDATA[
+            var con = new DControls { Checkbox = "Check" };
+            if(!ADialog.ShowInput(out var s, "Example", "Comments.", controls: con)) return;
+            AOutput.Write(s, con.IsChecked);
+            ]]></code>
+            
+            With <i>onButtonClick</i> function.
+            <code><![CDATA[
+            int r = 0;
+            ADialog.ShowInput(out string s, "Example", buttons: "OK|Cancel|Later", onButtonClick: e => r = e.Button);
+            AOutput.Write(r);
+            
+            if(!ADialog.ShowInput(out string s, "Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Set text", onButtonClick: e => {
+            	if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; }
+            })) return;
+            
+            if(!ADialog.ShowInput(out string s2, "Example", "Try to click OK while text is empty.", onButtonClick: e => {
+            	if(e.Button == 1 && e.EditText.NE()) {
+            		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
+            		e.dialog.EditControl.Focus();
+            		e.DontCloseDialog = true;
+            	}
+            })) return;
             ]]></code>
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.ADialog.ShowNumberInput(System.Int32@,System.String,System.String,Au.Types.DEdit,System.Object,Au.Types.DFlags,Au.Types.AnyWnd)">
+        <member name="M:Au.ADialog.ShowInputNumber(System.Int32@,System.String,System.String,System.Nullable{System.Int32},Au.Types.DFlags,Au.Types.AnyWnd)">
             <summary>
-            Shows dialog with a number edit field and buttons OK and Cancel, and gets that number.
+            Shows dialog with a number edit field and gets that number.
             Returns true if selected OK, false if Cancel.
             </summary>
             <param name="i">Variable that receives the number.</param>
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Read-only text below main instruction, above the edit field.</param>
-            <param name="editType">Edit field type.</param>
             <param name="editText">Initial edit field text.</param>
             <param name="flags"></param>
-            <param name="owner">Owner window or null. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
+            <param name="owner">Owner window. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
             <remarks>
-            Calls <see cref="M:Au.ADialog.ShowTextInputEx(System.String,System.String,Au.Types.DEdit,System.Object,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs},System.String,System.Action{Au.Types.DEventArgs})"/>.
+            Calls <see cref="M:Au.ADialog.ShowInput(System.String@,System.String,System.String,Au.Types.DEdit,System.String,System.Collections.Generic.IEnumerable{System.String},Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs},System.String,System.Action{Au.Types.DEventArgs})"/> and converts string to int.
             </remarks>
             <example>
             <code><![CDATA[
             int i;
-            if(!ADialog.ShowNumberInput(out i, "Example")) return;
+            if(!ADialog.ShowInputNumber(out i, "Example")) return;
             AOutput.Write(i);
             ]]></code>
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.ADialog.ShowListEx(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
-            <summary>
-            Shows dialog with a list of command-link buttons.
-            Returns results packed in a <see cref="T:Au.Types.DResult"/> variable. Its Button property is id of the selected button, which is its 1-based index in the list; it is 0 if clicked the X (close window) button or pressed Esc.
-            The return value can be assigned to an int variable or used in switch; then it is the id (1-based index or 0).
-            </summary>
-            <param name="list">List items (buttons). Can be string like "One|Two|Three" or string[] or List&lt;string&gt;. See <see cref="M:Au.ADialog.SetButtons(System.String,System.Boolean,Au.Types.DStringList)"/>.</param>
-            <param name="text1">Main instruction. Bigger font.</param>
-            <param name="text2">Text below main instruction.</param>
-            <param name="flags"></param>
-            <param name="owner">Owner window or null. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
-            <param name="expandedText">Text that the user can show and hide.</param>
-            <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
-            <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.ADialog.Options.DefaultTitle"/>.</param>
-            <param name="checkBox">If not empty, shows a check box with this text. To make it checked, append "|true", "|check" or "|checked".</param>
-            <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
-            <param name="x">X position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="y">Y position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="secondsTimeout">If not 0, auto-close the dialog after this time, number of seconds.</param>
-            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
-            <remarks>
-            This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="T:Au.ADialog"/> class help.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            int r = ADialog.ShowListEx("One|Two|Three", "Example", y: -1, secondsTimeout: 15);
-            if(r <= 0) return; //X/Esc or timeout
-            AOutput.Write(r);
-            ]]></code>
-            </example>
-            <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
-        </member>
-        <member name="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd)">
+        <member name="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
             Shows dialog with a list of command-link buttons.
             Returns 1-based index of the selected button. Returns 0 if clicked the X (close window) button or pressed Esc.
@@ -7216,25 +7135,34 @@
             <param name="text1">Main instruction. Bigger font.</param>
             <param name="text2">Text below main instruction.</param>
             <param name="flags"></param>
-            <param name="owner">Owner window or null. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
+            <param name="owner">Owner window. See <see cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>.</param>
+            <param name="expandedText">Text that the user can show and hide.</param>
+            <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
+            <param name="title">Title bar text. If omitted, null or "", uses <see cref="P:Au.ADialog.Options.DefaultTitle"/>.</param>
+            <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+            <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
+            <param name="x">X position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y position in <see cref="P:Au.ADialog.Screen"/>. If default - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="F:Au.ADialog.Timeout"/>.</param>
+            <param name="onLinkClick">Enables hyperlinks in small-font text. A link-clicked event handler function, like with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.</param>
             <remarks>
-            Calls <see cref="M:Au.ADialog.ShowListEx(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call ShowDialog. Example in <see cref="T:Au.ADialog"/> class help.
             </remarks>
             <example>
             <code><![CDATA[
-            int r = ADialog.ShowList("One|Two|Three", "Example");
-            if(r == 0) return; //X/Esc
+            int r = ADialog.ShowList("One|Two|Three", "Example", y: -1, secondsTimeout: 15);
+            if(r <= 0) return; //X/Esc or timeout
             AOutput.Write(r);
             ]]></code>
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.ADialog.ShowProgressEx(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
+        <member name="M:Au.ADialog.ShowProgress(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
             Shows dialog with progress bar.
             Creates dialog in new thread and returns without waiting until it is closed.
-            Returns <see cref="T:Au.ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.ADialog.IsOpen"/>, <see cref="M:Au.ADialog.ThreadWaitForClosed"/>, <see cref="P:Au.ADialog.Result"/> (when closed), <see cref="P:Au.ADialog.DialogWindow"/>, <see cref="P:Au.ADialog.Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-            Most parameters are the same as with <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Returns <see cref="T:Au.ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.ADialog.IsOpen"/>, <see cref="M:Au.ADialog.ThreadWaitForClosed"/>, <see cref="P:Au.ADialog.Result"/> (when closed), <see cref="P:Au.ADialog.Controls"/> (when closed), <see cref="P:Au.ADialog.DialogWindow"/>, <see cref="P:Au.ADialog.Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
+            Most parameters are the same as with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
             <remarks>
@@ -7242,7 +7170,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            var pd = ADialog.ShowProgressEx(false, "Working", buttons: "1 Stop", y: -1);
+            var pd = ADialog.ShowProgress(false, "Working", buttons: "1 Stop", y: -1);
             for(int i = 1; i <= 100; i++) {
             	if(!pd.IsOpen) { AOutput.Write(pd.Result); break; } //if the user closed the dialog
             	pd.Send.Progress(i); //don't need this if marquee
@@ -7253,36 +7181,12 @@
             </example>
             <exception cref="T:Au.Types.AuException">Failed to show dialog.</exception>
         </member>
-        <member name="M:Au.ADialog.ShowProgress(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,Au.Types.Coord,Au.Types.Coord)">
+        <member name="M:Au.ADialog.ShowNoWait(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
-            Shows dialog with progress bar.
+            Shows dialog like <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> but does not wait.
             Creates dialog in other thread and returns without waiting until it is closed.
-            Returns <see cref="T:Au.ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.ADialog.IsOpen"/>, <see cref="M:Au.ADialog.ThreadWaitForClosed"/>, <see cref="P:Au.ADialog.Result"/> (when closed), <see cref="P:Au.ADialog.DialogWindow"/>, <see cref="P:Au.ADialog.Send"/>; through the Send property you can set progress, modify controls and close the dialog (see example).
-            All parameters except marquee are the same as with <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
-            </summary>
-            <param name="marquee">Let the progress bar animate without indicating a percent of work done.</param>
-            <remarks>
-            Calls <see cref="M:Au.ADialog.ShowProgressEx(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            var pd = ADialog.ShowProgress(false, "Working");
-            for(int i = 1; i <= 100; i++) {
-            	if(!pd.IsOpen) { AOutput.Write(pd.Result); break; } //if the user closed the dialog
-            	pd.Send.Progress(i); //don't need this if marquee
-            	50.ms(); //do something in the loop
-            }
-            pd.Send.Close();
-            ]]></code>
-            </example>
-            <exception cref="T:Au.Types.AuException">Failed to show dialog.</exception>
-        </member>
-        <member name="M:Au.ADialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
-            <summary>
-            Shows dialog like <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> but does not wait.
-            Creates dialog in other thread and returns without waiting until it is closed.
-            Returns <see cref="T:Au.ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.ADialog.IsOpen"/>, <see cref="M:Au.ADialog.ThreadWaitForClosed"/>, <see cref="P:Au.ADialog.Result"/> (when closed), <see cref="P:Au.ADialog.DialogWindow"/>, <see cref="P:Au.ADialog.Send"/>; through the Send property you can modify controls and close the dialog (see example).
-            Parameters are the same as with <see cref="M:Au.ADialog.ShowEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
+            Returns <see cref="T:Au.ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.ADialog.IsOpen"/>, <see cref="M:Au.ADialog.ThreadWaitForClosed"/>, <see cref="P:Au.ADialog.Result"/> (when closed), <see cref="P:Au.ADialog.Controls"/> (when closed), <see cref="P:Au.ADialog.DialogWindow"/>, <see cref="P:Au.ADialog.Send"/>; through the Send property you can modify controls and close the dialog (see example).
+            Parameters are the same as with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
             </summary>
             <remarks>
             This function allows you to use most of the dialog features, but not all. Alternatively you can create an ADialog class instance, set properties and call <see cref="M:Au.ADialog.ShowDialogNoWait"/>.
@@ -7291,25 +7195,13 @@
             <code><![CDATA[
             ADialog.ShowNoWait("Simple example");
             
-            var d = ADialog.ShowNoWaitEx("Another example", "text", "1 OK|2 Cancel", y: -1, secondsTimeout: 30);
+            var d = ADialog.ShowNoWait("Another example", "text", "1 OK|2 Cancel", y: -1, secondsTimeout: 30);
             2.s(); //do something while the dialog is open
             d.Send.ChangeText2("new text", false);
             2.s(); //do something while the dialog is open
             d.ThreadWaitForClosed(); AOutput.Write(d.Result); //wait until the dialog is closed and get result. Optional, just an example.
             ]]></code>
             </example>
-            <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
-        </member>
-        <member name="M:Au.ADialog.ShowNoWait(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd)">
-            <summary>
-            Shows dialog like <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> but does not wait.
-            Creates dialog in other thread and returns without waiting until it is closed.
-            Returns <see cref="T:Au.ADialog"/> variable that can be used to communicate with the dialog using these methods and properties: <see cref="P:Au.ADialog.IsOpen"/>, <see cref="M:Au.ADialog.ThreadWaitForClosed"/>, <see cref="P:Au.ADialog.Result"/> (when closed), <see cref="P:Au.ADialog.DialogWindow"/>, <see cref="P:Au.ADialog.Send"/>. Through the <b>Send</b> property you can modify controls and close the dialog. Example in <see cref="M:Au.ADialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> topic.
-            Parameters are the same as with <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/>.
-            </summary>
-            <remarks>
-            Calls <see cref="M:Au.ADialog.ShowNoWaitEx(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,System.String,System.String,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>.
-            </remarks>
             <exception cref="T:System.AggregateException">Failed to show dialog.</exception>
         </member>
         <member name="T:Au.AMenu">
@@ -11058,13 +10950,6 @@
         <member name="M:Au.AThread.HasMessageLoop">
             
         </member>
-        <member name="M:Au.AThread.Terminate_(System.Int32)">
-            <summary>
-            Calls API OpenThread and TerminateThread.
-            If it is a managed thread, at first need to set its IsBackground = true.
-            </summary>
-            <param name="nativeId"></param>
-        </member>
         <member name="M:Au.AThread.Start(System.Action,System.Boolean,System.Boolean)">
             <summary>
             Starts new thread: creates new <see cref="T:System.Threading.Thread"/> object, sets some properties and calls <see cref="M:System.Threading.Thread.Start"/>.
@@ -11256,7 +11141,7 @@
             <summary>
             Calls API SetClipboardData("Clipboard Viewer Ignore"). Clipboard must be open.
             Then clipboard manager/viewer/etc programs that are aware of this convention don't try to get our clipboard data while we are pasting.
-            Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't.
+            Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't. Windows 10 Clipboard History doesn't.
             </summary>
         </member>
         <member name="M:Au.AClipboard.Copy(System.Boolean,Au.Types.OptKey)">
@@ -11407,6 +11292,12 @@
             <summary>
             Saves and restores clipboard data.
             Clipboard must be open. Don't need to call EmptyClipboard before Restore.
+            </summary>
+        </member>
+        <member name="T:Au.AClipboard._DisableClipboardHistory">
+            <summary>
+            Temporarily disables Windows 10 Clipboard History.
+            Note: before disabling, we must open clipboard, else Clipboard History could be suspended while it has clipboard open.
             </summary>
         </member>
         <member name="T:Au.AClipboardData">
@@ -13814,7 +13705,7 @@
         </member>
         <member name="M:Au.ADebug.Dialog(System.Object,System.String,System.Int32,System.String)">
             <summary>
-            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String)"/> to show some debug info.
+            Calls <see cref="M:Au.ADialog.Show(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/> to show some debug info.
             Works only if DEBUG is defined. Read more in class help.
             The 3 optional arguments are not used explicitly.
             </summary>
@@ -15923,7 +15814,7 @@
             </summary>
             <param name="t">This string.</param>
         </member>
-        <member name="M:Au.AExtString.IsNE(System.String)">
+        <member name="M:Au.AExtString.NE(System.String)">
             <summary>
             Returns true if this string is null or empty ("").
             </summary>
@@ -18377,7 +18268,7 @@
             				}
             			}
             #endif
-            			if(Name.IsNE()) throw new ArgumentException("no name attribute in XML");
+            			if(Name.NE()) throw new ArgumentException("no name attribute in XML");
             			if(Id == 0) throw new ArgumentException("no id attribute in XML");
             		}
             	}
@@ -19762,6 +19653,44 @@
             Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.
             </summary>
         </member>
+        <member name="T:Au.AScript">
+            <summary>
+            This class is used in automation script files as base of their main class. Adds some features.
+            </summary>
+            <remarks>
+            This class adds these features:
+            1. The static constructor subscribes to the <see cref="E:System.AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
+            2. Provides virtual function <see cref="M:Au.AScript.OnUnhandledException(System.UnhandledExceptionEventArgs)"/>. The script can override it.
+            3. Provides property <see cref="P:Au.AScript.Triggers"/>.
+            
+            More features may be added in the future.
+            </remarks>
+        </member>
+        <member name="M:Au.AScript.#ctor">
+            
+        </member>
+        <member name="M:Au.AScript.OnUnhandledException(System.UnhandledExceptionEventArgs)">
+            <summary>
+            Writes exception info to the output.
+            Override this function to intercept unhandled exceptions. Call the base function if want to see exception info as usually.
+            </summary>
+            <param name="e"></param>
+        </member>
+        <member name="P:Au.AScript.Triggers">
+            <summary>
+            Gets or sets an <see cref="T:Au.Triggers.ActionTriggers"/> instance, as a field of this class.
+            </summary>
+            <remarks>
+            This property can be used in automation scripts to avoid creating an <b>ActionTriggers</b> variable explicitly. The returned value is a field of this class. The <b>ActionTriggers</b> object is auto-created when callig this property first time or after setting it = null.
+            In automation scripts this property is available because this class is the base of the Script class. In other classes need to create an <b>ActionTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(o.Trigger);
+            Triggers.Run();
+            ]]></code>
+            </example>
+        </member>
         <member name="T:Au.APerf">
             <summary>
             Code speed measurement. Easier to use than <see cref="T:System.Diagnostics.Stopwatch"/>.
@@ -20770,7 +20699,7 @@
             <remarks>
             Action triggers are used to call functions (aka <i>trigger actions</i>) in a running script in response to events such as hotkey, typed text, mouse action, activated window. To launch scripts are used other ways: manually, at startup, command line, <see cref="M:Au.ATask.Run(System.String,System.String[])"/>, output link.
             
-            This class manages action triggers. The <see cref="P:Au.Types.AScript.Triggers"/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
+            This class manages action triggers. The <see cref="P:Au.AScript.Triggers"/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
             
             Code syntax to add an action trigger:
             <code>Triggers.TriggerType[parameters] = action;</code>
@@ -20836,7 +20765,7 @@
             //mouse triggers
             
             mouse[TMClick.Right, "Ctrl+Shift", TMFlags.ButtonModUp] = o => AOutput.Write(o.Trigger);
-            mouse[TMEdge.RightInCenter50] = o => { AOutput.Write(o.Trigger); ADialog.ShowEx("Bang!", x: Coord.Max); };
+            mouse[TMEdge.RightInCenter50] = o => { AOutput.Write(o.Trigger); ADialog.Show("Bang!", x: Coord.Max); };
             mouse[TMMove.LeftRightInCenter50] = o => AWnd.SwitchActiveWindow();
             
             Triggers.FuncOf.NextTrigger = o => AKeys.IsScrollLock; //example of a custom scope (aka context, condition)
@@ -20914,7 +20843,7 @@
             Initializes a new instance of this class.
             </summary>
             <remarks>
-            In automation scripts don't need to create new instances of this class. Instead use the <see cref="P:Au.Types.AScript.Triggers"/> property to get an instance.
+            In automation scripts don't need to create new instances of this class. Instead use the <see cref="P:Au.AScript.Triggers"/> property to get an instance.
             </remarks>
         </member>
         <member name="P:Au.Triggers.ActionTriggers.Of">
@@ -23797,6 +23726,7 @@
             Also returns false when fails (probably window closed or 0 handle). Supports <see cref="T:Au.ALastError"/>.
             </summary>
             <param name="cn">Class name. Case-insensitive wildcard. See <see cref="M:Au.AExtString.Like(System.String,System.String,System.Boolean)"/>. Cannot be null.</param>
+            <seealso cref="M:Au.AWnd.IsMatch(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>
         </member>
         <member name="M:Au.AWnd.ClassNameIs(System.String[])">
             <summary>
@@ -24803,6 +24733,7 @@
             </summary>
             <param name="w">A top-level window. If 0 or invalid, returns false.</param>
             <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
+            <seealso cref="M:Au.AWnd.IsMatch(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>
         </member>
         <member name="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)">
             <summary>
@@ -24952,6 +24883,27 @@
             AOutput.Write(w);
             ]]></code>
             </example>
+        </member>
+        <member name="M:Au.AWnd.IsMatch(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)">
+            <summary>
+            Compares window name and other properties like <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/> does.
+            Returns true if all specified (non-null/default) properties match.
+            </summary>
+            <param name="name">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
+            <param name="cn">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
+            <param name="of">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
+            <param name="flags">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
+            <param name="also">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
+            <param name="contains">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</exception>
+            <remarks>
+            Creates new <see cref="T:Au.AWnd.Finder"/> and calls <see cref="M:Au.AWnd.Finder.IsMatch(Au.AWnd,Au.Types.WFCache)"/>.
+            To compare single parameter, use more lightweight code. Examples: <c>if (w.Name.Like("* Notepad"))</c>, <c>if (w.ClassNameIs("CabinetWClass"))</c>.
+            </remarks>
+            <seealso cref="P:Au.AWnd.Name"/>
+            <seealso cref="P:Au.AWnd.ClassName"/>
+            <seealso cref="M:Au.AWnd.ClassNameIs(System.String)"/>
+            <seealso cref="P:Au.AWnd.ProgramName"/>
         </member>
         <member name="T:Au.AWnd._WndList">
             <summary>

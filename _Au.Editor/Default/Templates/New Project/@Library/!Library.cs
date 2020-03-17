@@ -1,5 +1,5 @@
 ﻿/*/ role classLibrary; outputPath %AFolders.ThisApp%\Libraries /*/
-//#include using.txt
+using Au; using Au.Types; using System; using System.Collections.Generic;
 
 [assembly: System.Reflection.AssemblyVersion("1.0.0.0")]
 

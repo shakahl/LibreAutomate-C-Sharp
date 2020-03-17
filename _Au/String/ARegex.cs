@@ -691,7 +691,7 @@ namespace Au
 				//init variables
 				if(b == null) {
 					bCache = new Util.StringBuilder_(out b, s.Length + 100);
-					if(replFunc != null) replType = 3; else if(!repl.IsNE()) replType = repl.IndexOf('$') < 0 ? 1 : 2;
+					if(replFunc != null) replType = 3; else if(!repl.NE()) replType = repl.IndexOf('$') < 0 ? 1 : 2;
 				}
 				//append s part before this match
 				var p = e.GroupP; //x=start, y=end
@@ -705,7 +705,7 @@ namespace Au
 					if(replFunc != null) re = replFunc(m);
 					else ExpandReplacement_(m, repl, b);
 				} else re = repl;
-				if(!re.IsNE()) b.Append(re);
+				if(!re.NE()) b.Append(re);
 			}
 
 			//append s part after last match

@@ -310,7 +310,7 @@ namespace Au
 
 								//switch to plan B
 								AProcess.GetProcessesByName_(ref pids, _program);
-								if(pids.IsNE_()) break;
+								if(pids.NE_()) break;
 								programNamePlanB = true;
 								goto g1;
 							}
@@ -364,6 +364,7 @@ namespace Au
 			/// </summary>
 			/// <param name="w">A top-level window. If 0 or invalid, returns false.</param>
 			/// <param name="cache">Can be used to make faster when multiple <b>Finder</b> variables are used with same window. The function gets window name/class/program once, and stores in <i>cache</i>; next time it gets these strings from <i>cache</i>.</param>
+			/// <seealso cref="AWnd.IsMatch"/>
 			public bool IsMatch(AWnd w, WFCache cache = null)
 			{
 				return 0 == _FindOrMatch(new _WndList(w), cache: cache);
@@ -584,6 +585,35 @@ namespace Au
 			}
 			return w;
 		}
+
+		/// <summary>
+		/// Compares window name and other properties like <see cref="Find"/> does.
+		/// Returns true if all specified (non-null/default) properties match.
+		/// </summary>
+		/// <param name="name">See <see cref="Find"/>.</param>
+		/// <param name="cn">See <see cref="Find"/>.</param>
+		/// <param name="of">See <see cref="Find"/>.</param>
+		/// <param name="flags">See <see cref="Find"/>.</param>
+		/// <param name="also">See <see cref="Find"/>.</param>
+		/// <param name="contains">See <see cref="Find"/>.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="Find"/>.</exception>
+		/// <remarks>
+		/// Creates new <see cref="Finder"/> and calls <see cref="Finder.IsMatch"/>.
+		/// To compare single parameter, use more lightweight code. Examples: <c>if (w.Name.Like("* Notepad"))</c>, <c>if (w.ClassNameIs("CabinetWClass"))</c>.
+		/// </remarks>
+		/// <seealso cref="Name"/>
+		/// <seealso cref="ClassName"/>
+		/// <seealso cref="ClassNameIs"/>
+		/// <seealso cref="ProgramName"/>
+		public bool IsMatch([ParamString(PSFormat.AWildex)] string name = null,
+			[ParamString(PSFormat.AWildex)] string cn = null,
+			[ParamString(PSFormat.AWildex)] WOwner of = default,
+			WFlags flags = 0, Func<AWnd, bool> also = null, WContains contains = default)
+		{
+			var f = new Finder(name, cn, of, flags, also, contains);
+			return f.IsMatch(this);
+		}
+
 
 		public partial struct GetWnd
 		{

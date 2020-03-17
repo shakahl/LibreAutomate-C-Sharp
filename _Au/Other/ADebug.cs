@@ -88,7 +88,7 @@ namespace Au
 		public static void Dialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
 			string s = AOutput.ObjectToString_(text);
-			ADialog.ShowEx("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetFileName(cp)}:{cln})");
+			ADialog.Show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetFileName(cp)}:{cln})");
 		}
 
 		//rejected: use if(AOpt.Warnings.Verbose) ADialog.ShowWarning(...). It adds stack trace.
@@ -101,7 +101,7 @@ namespace Au
 		//{
 		//	if(!AOpt.Warnings.Verbose) return;
 		//	var x = new StackTrace(1, true);
-		//	ADialog.ShowEx("Debug", text, flags: DFlags.ExpandDown | DFlags.Wider, expandedText: x.ToString());
+		//	ADialog.Show("Debug", text, flags: DFlags.ExpandDown | DFlags.Wider, expandedText: x.ToString());
 		//}
 
 		//rejected: Not used in this library. Not useful for debug because don't show the stack trace. Instead use AWarning.Write; it supports prefix "Debug: ", "Note: ", "Info :"; it also supports disabling warnings etc.

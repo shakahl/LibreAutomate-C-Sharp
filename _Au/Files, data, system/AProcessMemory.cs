@@ -135,7 +135,7 @@ namespace Au
 		public bool WriteUnicodeString(string s, int offsetBytes = 0)
 		{
 			if(Mem == default) return false;
-			if(s.IsNE()) return true;
+			if(s.NE()) return true;
 			fixed (char* p = s) {
 				return Api.WriteProcessMemory(_HprocHR, Mem + offsetBytes, p, (s.Length + 1) * 2, null);
 			}
@@ -152,7 +152,7 @@ namespace Au
 		public bool WriteAnsiString(string s, int offsetBytes = 0, Encoding enc = null)
 		{
 			if(Mem == default) return false;
-			if(s.IsNE()) return true;
+			if(s.NE()) return true;
 			if(enc == null) enc = Encoding.Default;
 			var a = enc.GetBytes(s + "\0");
 			fixed (byte* p = a) {

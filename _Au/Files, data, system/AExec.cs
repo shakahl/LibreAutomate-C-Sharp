@@ -110,7 +110,7 @@ namespace Au
 
 				if(curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectoryPath(file);
 			}
-			if(!args.IsNE()) x.lpParameters = APath.ExpandEnvVar(args);
+			if(!args.NE()) x.lpParameters = APath.ExpandEnvVar(args);
 
 			AWnd.More.EnableActivate();
 
@@ -188,7 +188,7 @@ namespace Au
 		{
 			isShellPath = isFullPath = false;
 			file = APath.ExpandEnvVar(file);
-			if(file.IsNE()) throw new ArgumentException();
+			if(file.NE()) throw new ArgumentException();
 			if(runConsole || !(isShellPath = APath.IsShellPath_(file))) {
 				if(isFullPath = APath.IsFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;

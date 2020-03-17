@@ -110,6 +110,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			case TextTags.Property:
 			case TextTags.RangeVariable:
 			case TextTags.Alias:
+			case TextTags.Label:
 			case TextTags.ErrorType:
 				break;
 			default:
@@ -576,6 +577,11 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 <hr>
 <p>Links: <a href='{url} {name}'>more info</a> , <a href='{url}s'>C# keywords</a>.</p>
 </body>";
+	}
+
+	public static string LabelToHtml(string name)
+	{
+		return $@"<body><div>Label <b>{name}</b></div></body>";
 	}
 
 	public struct HtmlListItem : IDisposable

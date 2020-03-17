@@ -362,12 +362,12 @@ namespace Au
 		/// <summary>
 		/// Returns true if null or <b>Length</b> == 0.
 		/// </summary>
-		internal static bool IsNE_<T>(this T[] t) => (t?.Length ?? 0) == 0;
+		internal static bool NE_<T>(this T[] t) => (t?.Length ?? 0) == 0;
 
 		/// <summary>
 		/// Returns true if null or <b>Count</b> == 0.
 		/// </summary>
-		internal static bool IsNE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
+		internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
 
 		#endregion
 
@@ -388,7 +388,7 @@ namespace Au
 		/// </remarks>
 		public static StringBuilder AppendSentence(this StringBuilder t, string s, bool noUcase = false)
 		{
-			if(!s.IsNE()) {
+			if(!s.NE()) {
 				bool makeUcase = !noUcase && Char.IsLower(s[0]);
 				if(t.Length > 0) {
 					if(makeUcase && t[t.Length - 1] != '.') makeUcase = false;

@@ -712,7 +712,7 @@ namespace Au
 		/// </param>
 		public static FolderPath GetFolder(string folderName)
 		{
-			if(folderName.IsNE()) return null;
+			if(folderName.NE()) return null;
 			bool isVirtual = folderName.Starts("Virtual.");
 			if(isVirtual) folderName = folderName.Substring(8);
 
@@ -790,7 +790,7 @@ namespace Au.Types
 		/// <exception cref="AuException">fp is empty. Most likely, used code <c>AFolders.X + "append"</c> and AFolders.X failed to get folder path.</exception>
 		public static string operator +(FolderPath fp, string append)
 		{
-			if(fp._path.IsNE()) throw new AuException("No folder path.");
+			if(fp._path.NE()) throw new AuException("No folder path.");
 			return APath.Combine(fp._path, append);
 		}
 	}

@@ -487,7 +487,7 @@ namespace Au.Controls
 						{
 							foreach(Control c in parent.Controls) {
 								var s = tt.GetToolTip(c);
-								if(!s.IsNE()) {
+								if(!s.NE()) {
 									//AOutput.Write($"<>{c}, <c blue>{s}<>");
 									tt.SetToolTip(c, null);
 									tt.SetToolTip(c, s);

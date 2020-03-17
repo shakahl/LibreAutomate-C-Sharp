@@ -213,7 +213,7 @@ namespace Au.Triggers
 
 		static string _CheckPostfixChars(string s)
 		{
-			if(s.IsNE()) return null;
+			if(s.NE()) return null;
 			int k = 0;
 			for(int i = 0; i < s.Length; i++) {
 				char c = s[i];

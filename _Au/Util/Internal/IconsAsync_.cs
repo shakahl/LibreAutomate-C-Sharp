@@ -45,7 +45,7 @@ namespace Au.Util
 		/// <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
 		public void Add(string file, object obj)
 		{
-			if(file.IsNE()) return;
+			if(file.NE()) return;
 			_files.Add(new Item(file, obj));
 		}
 
@@ -116,7 +116,7 @@ namespace Au.Util
 
 				using(new Util.EnsureWindowsFormsSynchronizationContext_()) {
 					foreach(var v in _host._files) {
-						if(!v.file.IsNE()) _GetIconAsync(new Result(v.file, v.obj));
+						if(!v.file.NE()) _GetIconAsync(new Result(v.file, v.obj));
 					}
 				}
 			}

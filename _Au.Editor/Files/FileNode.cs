@@ -59,7 +59,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	void _CtorMisc(string linkTarget)
 	{
 		if(!IsFolder) {
-			if(!linkTarget.IsNE()) {
+			if(!linkTarget.NE()) {
 				_state |= _State.Link;
 				_iconOrLinkTarget = linkTarget;
 			}
@@ -139,7 +139,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 				case "run": v.ToInt(out testScriptId); break;
 				}
 			}
-			if(_name.IsNE()) throw new ArgumentException("no 'n' attribute in XML");
+			if(_name.NE()) throw new ArgumentException("no 'n' attribute in XML");
 			_id = _model.AddGetId(this, id);
 			_CtorMisc(linkTarget);
 			if(icon != null && linkTarget == null) _iconOrLinkTarget = icon;
@@ -442,7 +442,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="folder">true - folder, false - file, null - any (prefer file if not relative).</param>
 	public FileNode FindDescendant(string name, bool? folder)
 	{
-		if(name.IsNE()) return null;
+		if(name.NE()) return null;
 		if(name[0] == '\\') return _FindRelative(name, folder);
 		return _FindIn(Descendants(), name, folder, true);
 	}
@@ -497,7 +497,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	{
 		if(!IsFolder) return Parent.FindRelative(relativePath, folder);
 		var s = relativePath;
-		if(s.IsNE()) return null;
+		if(s.NE()) return null;
 		FileNode p = this;
 		if(s[0] == '\\') p = Root;
 		else if(s[0] == '.') {
@@ -519,7 +519,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="name">File name. If starts with backslash, works like <see cref="FindDescendant"/>.</param>
 	public FileNode[] FindAllDescendantFiles(string name)
 	{
-		if(!name.IsNE()) {
+		if(!name.NE()) {
 			if(name[0] == '\\') {
 				var f1 = _FindRelative(name, false);
 				if(f1 != null) return new FileNode[] { f1 };
@@ -683,7 +683,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="name">If not null, creates with this name (made unique). Else gets name from template. In any case, makes unique name.</param>
 	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, string template, string name = null)
 	{
-		Debug.Assert(!template.IsNE()); if(template.IsNE()) return null;
+		Debug.Assert(!template.NE()); if(template.NE()) return null;
 
 		if(target == null) {
 			var root = model.Root;
@@ -696,7 +696,8 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		string text = "";
 		bool isFolder = template == "Folder";
 		if(!isFolder) {
-			string templFile = s_dirTemplatesBS + template;
+			i = template.Eq(false, "Script.cs", "Class.cs");
+			string templFile = i == 0 ? (Templates.DefaultDirBS + template) : Templates.FilePathReal(i == 1);
 			switch(AFile.ExistsAs(templFile, true)) {
 			case FileDir.Directory: isFolder = true; break;
 			case FileDir.File: text = _GetTemplateText(templFile, template, newParent); break;
@@ -723,7 +724,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		f._Common_MoveCopyNew(target, pos);
 
 		if(isFolder && APath.GetFileName(template)[0] == '@') {
-			_FillProjectFolder(model, f, s_dirTemplatesBS + template);
+			_FillProjectFolder(model, f, Templates.DefaultDirBS + template);
 		}
 		return f;
 
@@ -734,7 +735,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 				var name = v.Name;
 				if(isFolder && name[0] == '@') continue; //error, project in project
 				if(name[0] == '!' && name.Length > 1) name = name.Substring(1); //!name can be used to make the file sorted first; then it will become the main file of project.
-				string template = v.FullPath.Substring(s_dirTemplatesBS.Length);
+				string template = v.FullPath.Substring(Templates.DefaultDirBS.Length);
 				var f = NewItem(model, fnParent, NodePosition.Inside, template, name);
 				if(isFolder) _FillProjectFolder(model, f, v.FullPath);
 			}
@@ -743,21 +744,10 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		static string _GetTemplateText(string templFile, string template, FileNode newParent)
 		{
 			string s = AFile.LoadText(templFile);
-			//replace //"#include file" with text of file from "include" subfolder
-			s = s.RegexReplace(@"(?m)^//#include +(.+)$", m => {
-				var fn = m[1].Value;
-				var fp = s_dirTemplatesBS + @"include\" + fn;
-				if(!AFile.ExistsAsFile(fp)) {
-					AOutput.Write($"Errror in {templFile}. #include file does not exist: {fp}");
-					return null;
-				}
-				var code = AFile.LoadText(fp);
-				if(fn == "using.txt") {
-					var userCode = Program.Settings.files_usings;
-					if(!userCode.IsNE()) code = code + "\r\n" + userCode;
-				}
-				return code;
-			});
+			if(s.NE()) {
+				int i = template.Ends(false, "Script.cs", "Class.cs");
+				if(i > 0) s = Templates.Load(i == 1); //load default or customized template
+			}
 
 			//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
 			if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
@@ -770,7 +760,6 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 			return s;
 		}
 	}
-	static readonly string s_dirTemplatesBS = AFolders.ThisAppBS + @"Default\Templates\";
 
 	public static string CreateNameUniqueInFolder(FileNode folder, string fromName, bool forFolder)
 	{
@@ -792,6 +781,29 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 			if(null != _FindIn(folder.Children(), s, null, false)) return true;
 			if(AFile.ExistsAsAny(folder.FilePath + "\\" + s)) return true; //orphaned file?
 			return false;
+		}
+	}
+
+	public static class Templates
+	{
+		public static readonly string DefaultDirBS = AFolders.ThisAppBS + @"Default\Templates\";
+		public static readonly string UserDirBS = AFolders.ThisAppDocuments + @".settings\Templates\";
+
+		public static string FileName(bool script) => script ? "Script.cs" : "Class.cs";
+
+		public static string FilePathRaw(bool script, bool user) => (user ? UserDirBS : DefaultDirBS) + FileName(script);
+
+		public static string FilePathReal(bool script, bool? user = null)
+		{
+			bool u = user ?? (script ? Program.Settings.templ_script : Program.Settings.templ_class);
+			var file = FilePathRaw(script, u);
+			if(u && !AFile.ExistsAsFile(file, true)) file = FilePathRaw(script, false);
+			return file;
+		}
+
+		public static string Load(bool script, bool? user = null)
+		{
+			return AFile.LoadText(FilePathReal(script, user));
 		}
 	}
 

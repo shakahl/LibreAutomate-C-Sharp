@@ -296,6 +296,7 @@ class CiAutocorrect
 			canCorrect = (ch == ')' || ch == ']') && code[pos - 1] != ',';
 			if(!(canCorrect | canAutoindent)) return false;
 			//shoulddo?: don't correct after inner ']' etc, eg A(1, [In] 2)
+			//SHOULDDO: don't move ';' outside of lambda expression when user wants to enclose it. Example: ATimer.After(1, _=>{AOutput.Write(1)); (user cannot ype ';' after "AOutput.Write(1)".
 		}
 
 		if(!cd.GetDocument()) return false;

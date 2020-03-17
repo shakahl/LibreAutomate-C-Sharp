@@ -282,7 +282,7 @@ namespace Au
 		/// </exception>
 		public static int[] GetProcessIds([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
 		{
-			if(processName.IsNE()) throw new ArgumentException();
+			if(processName.NE()) throw new ArgumentException();
 			List<int> a = null;
 			GetProcessesByName_(ref a, processName, fullPath, ofThisSession);
 			return a?.ToArray() ?? Array.Empty<int>();
@@ -296,7 +296,7 @@ namespace Au
 		/// <exception cref="ArgumentException"/>
 		public static int GetProcessId([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
 		{
-			if(processName.IsNE()) throw new ArgumentException();
+			if(processName.NE()) throw new ArgumentException();
 			List<int> a = null;
 			return GetProcessesByName_(ref a, processName, fullPath, ofThisSession, true);
 		}

@@ -180,7 +180,7 @@ partial class FilesModel : ITreeModel
 	/// <param name="folder">true - folder, false - file, null - any (prefer file if not id and not relative).</param>
 	public FileNode Find(string name, bool? folder)
 	{
-		if(name.IsNE()) return null;
+		if(name.NE()) return null;
 		if(name[0] == '<') { name.ToInt(out long id, 1); return FindById(id); }
 		return Root.FindDescendant(name, folder);
 		//rejected: support name without extension.
@@ -551,14 +551,14 @@ partial class FilesModel : ITreeModel
 	/// </remarks>
 	public bool OpenAndGoTo(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null)
 	{
-		var f = line1Based.IsNE() && column1BasedOrPos.IsNE() ? Find(fileOrFolder, null) : FindScript(fileOrFolder);
+		var f = line1Based.NE() && column1BasedOrPos.NE() ? Find(fileOrFolder, null) : FindScript(fileOrFolder);
 		if(f == null) return false;
 		if(f.IsFolder) {
 			f.SelectSingle();
 			return true;
 		}
-		int line = line1Based.IsNE() ? -1 : line1Based.ToInt() - 1;
-		int columnOrPos = -1; if(!column1BasedOrPos.IsNE()) columnOrPos = column1BasedOrPos.ToInt() - (line < 0 ? 0 : 1);
+		int line = line1Based.NE() ? -1 : line1Based.ToInt() - 1;
+		int columnOrPos = -1; if(!column1BasedOrPos.NE()) columnOrPos = column1BasedOrPos.ToInt() - (line < 0 ? 0 : 1);
 		return OpenAndGoTo(f, line, columnOrPos);
 	}
 
@@ -648,11 +648,12 @@ partial class FilesModel : ITreeModel
 		//confirmation
 		var text = string.Join("\n", a.Select(f => f.Name));
 		var expandedText = "The file will be deleted, unless it is external.\r\nWill use Recycle Bin, if possible.";
-		var r = ADialog.ShowEx("Deleting", text, "1 OK|0 Cancel", owner: _control, checkBox: "Don't delete file", expandedText: expandedText);
-		if(r.Button == 0) return;
+		var con = new DControls { Checkbox = "Don't delete file" };
+		var r = ADialog.Show("Deleting", text, "1 OK|0 Cancel", owner: _control, controls: con, expandedText: expandedText);
+		if(r == 0) return;
 
 		foreach(var f in a) {
-			_Delete(f, doNotDeleteFile: r.IsChecked); //info: and saves everything, now and/or later
+			_Delete(f, doNotDeleteFile: con.IsChecked); //info: and saves everything, now and/or later
 		}
 	}
 
@@ -831,7 +832,7 @@ partial class FilesModel : ITreeModel
 			_MultiCopyMove(copy, a, target, pos);
 		} else {
 			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
-				switch(ADialog.ShowEx("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
+				switch(ADialog.Show("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
 				case 1: ATimer.After(1, _ => Panels.Files.ZLoadWorkspace(files[0])); break;
 				case 2: ImportWorkspace(files[0], target, pos); break;
 				}
@@ -930,7 +931,7 @@ partial class FilesModel : ITreeModel
 		for(int i = 0; i < a.Length; i++) {
 			var s = a[i] = APath.Normalize(a[i]);
 			if(s.Find(@"\$RECYCLE.BIN\", true) > 0) {
-				ADialog.ShowEx("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
+				ADialog.Show("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
 					icon: DIcon.Info, owner: _control, onLinkClick: e => AExec.TryRun(e.LinkHref));
 				return;
 			}
@@ -951,7 +952,7 @@ partial class FilesModel : ITreeModel
 			r = 3; //move
 		} else {
 			string buttons = (dirsDropped ? null : "1 Add as a link to the external file|") + "2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel";
-			r = ADialog.ShowEx("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
+			r = ADialog.Show("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
 			if(r == 0) return;
 		}
 

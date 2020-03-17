@@ -1,0 +1,226 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<Au.Snippets>
+
+	<!-- C# language -->
+
+	<snippet name="foriSnippet" info="Repeat count times. Set variable i = 0 and increment after each loop.">
+		<![CDATA[for (int i = 0; i < $end$count$end$; i++) {
+	
+}]]>
+	</snippet>
+
+	
+	<snippet name="forjSnippet" info="Repeat count times. Set variable j = 0 and increment after each loop.">
+		<![CDATA[for (int j = 0; j < $end$count$end$; j++) {
+	
+}]]>
+	</snippet>
+
+
+	<snippet name="forrSnippet" info="Repeat count times. Set variable i = count - 1 and decrement after each loop.">
+		<![CDATA[for (int i = $end$count$end$; --i >= 0; ) {
+	
+}]]>
+	</snippet>
+
+
+	<snippet name="foreverSnippet" info="Repeat forever (or until break etc).">
+		<![CDATA[for (;;) {
+	$end$
+}]]>
+	</snippet>
+
+
+	<snippet name="propAutoSnippet" info="Auto-implemented property.">
+		<![CDATA[public int $end$MyProperty$end$ { get; set; }
+]]>
+	</snippet>
+
+
+	<snippet name="propGetSetSnippet" info="Property with 'get' and 'set' functions and field.">
+		<![CDATA[public string $end$MyProperty$end$ {
+	get => _field;
+//	get {
+//		if (_field == null) {
+//			//get value and set field (cache)
+//			//_field = ;
+//		}
+//		return _field;
+//	}
+	set => _field = value;
+//	set {
+//		if (value != _field) {
+//			_field = value;
+//			//update object state
+//		}
+//	}
+}
+string _field;
+]]>
+	</snippet>
+
+
+	<snippet name="methodSnippet" info="Public function.">
+		<![CDATA[public void $end$MyFunction$end$() {
+	
+}
+]]>
+	</snippet>
+
+
+	<snippet name="methodPrivateSnippet" info="Private or local function.">
+		<![CDATA[void _$end$MyFunction$end$() {
+	
+}
+]]>
+	</snippet>
+
+
+	<snippet name="tryCatchSnippet" info="Exception handling.">
+		<![CDATA[try {
+	$end$
+}
+catch(Exception e1) {  }]]>
+	</snippet>
+	
+		
+	<snippet name="tryFinallySnippet">
+		<![CDATA[try {
+	$end$
+}
+finally {  }]]>
+	</snippet>
+	
+	
+	<snippet name="ifDirectiveSnippet">
+		<![CDATA[#if $end$true$end$
+#endif]]>
+	</snippet>
+	
+		
+	<snippet name="ifElseDirectiveSnippet">
+		<![CDATA[#if $end$true$end$
+#else
+#endif]]>
+	</snippet>
+	
+		
+	<snippet name="regionSnippet" info="Fold (hide) code using #region directive.">
+		<![CDATA[#region $end$name$end$
+
+#endregion]]>
+	</snippet>
+	
+
+	<!-- comments -->
+
+	<snippet name="foldSnippet" info="Fold (hide) code using special comments as an alternative to #region.">
+		<![CDATA[//.
+$end$
+//;]]>
+	</snippet>
+	
+		
+	<snippet name="docSnippet" info="XML documentation comments above class, function, etc.">
+		<![CDATA[/// <summary>
+/// $end$
+/// </summary>
+/// <param name=""></param>
+/// <returns></returns>]]>
+	</snippet>
+	
+
+	<!-- functions -->
+	
+	<snippet name="outSnippet" info="Display text and variables in the output window.">AOutput.Write($end$);</snippet>
+
+	<snippet name="printSnippet" info="Display text and variables in the output window.">AOutput.Write($end$);</snippet>
+	
+	<snippet name="dialogSnippet" info="Standard dialog window with specified buttons.">int button = ADialog.Show("$end$", "", "1 Button1|2 Button2|3 Button3|0 Cancel");</snippet>
+	
+	<snippet name="dialogListSnippet" info="Standard dialog window with list of buttons.">int button = ADialog.ShowList("$end$one|two|three$end$");</snippet>
+	
+	<snippet name="dialogOkSnippet" info="Standard dialog window with OK button.">ADialog.Show("$end$");</snippet>
+	
+	<snippet name="dialogOkCancelSnippet" info="Standard dialog window with OK and Cancel buttons.">if (!ADialog.ShowOkCancel("$end$")) return;</snippet>
+	
+	<snippet name="dialogYesNoSnippet" info="Standard dialog window with Yes and No buttons.">if (!ADialog.ShowYesNo("$end$")) return;</snippet>
+	
+	<snippet name="dialogInputSnippet" info="Standard dialog window for text input.">if (!ADialog.ShowInput(out string s, "$end$")) return;</snippet>
+	
+	<snippet name="winFindSnippet" info="Find window. Throw exception if not found, unless removed .OrThrow().">var w = AWnd.Find("$end$").OrThrow();</snippet>
+	
+	<snippet name="winWaitSnippet" info="Find window, wait. Throw exception on timeout, unless the wait time is negative.">var w = AWnd.Wait(10, true, "$end$");</snippet>
+	
+	<snippet name="failedSnippet" info="Throw 'failed' exception. Exception text is optional.">throw new AuException($end$);</snippet>
+	
+	<snippet name="endTaskSnippet" info="Exit this process. Note: usually there are better ways: return, throw exception, in some cases Application.Exit().">Environment.Exit(0);</snippet>
+	
+	<snippet name="keySnippet" info="Generate virtual keystrokes (keys, text).">AKeys.Key("$end$");</snippet>
+	
+	<snippet name="ktextSnippet" info="Send text to the active window using virtual keystrokes.">AKeys.Text("$end$");</snippet>
+	
+	<snippet name="pasteSnippet" info="Paste text using the clipboard and Ctrl+V.">AClipboard.Paste("$end$");</snippet>
+	
+	<snippet name="copySnippet" info="Get selected text using the clipboard and Ctrl+C.">string s = AClipboard.Copy();</snippet>
+	
+	<snippet name="runSnippet" info="Run a program or open a document, folder, web page.">AExec.Run($end$AFolders.System + @"Notepad.exe"$end$);</snippet>
+	
+	<snippet name="scriptSnippet" info="Start to execute a script. See also: RunWait.">ATask.Run(@"$end$\Folder\Script$end$.cs");</snippet>
+	
+	<snippet name="clickSnippet" info="Mouse left click.">AMouse.Click($end$);</snippet>
+	
+	<snippet name="rclickSnippet" info="Mouse right click.">AMouse.RightClick($end$);</snippet>
+	
+	<snippet name="dclickSnippet" info="Mouse double click.">AMouse.DoubleClick($end$);</snippet>
+	
+	<snippet name="mmoveSnippet" info="Mouse move.">AMouse.Move($end$);</snippet>
+	
+	
+	<snippet name="actWinSnippet" info="Find window and activate. Throw exception if not found.">
+		<![CDATA[var w = AWnd.Find("$end$").OrThrow();
+w.Activate();]]>
+	</snippet>
+	
+	
+	<snippet name="ifActWinIsSnippet" info="If the active window has the specified name, class, program, etc.">
+		<![CDATA[var w = AWnd.Active;
+if (w.IsMatch("$end$")) {
+	
+}]]>
+	</snippet>
+	
+	
+	<snippet name="ifKeySnippet" info="If key is pressed. Snippets for various keys.">
+		<![CDATA[if (AKeys.IsCtrl) {  }
+if (AKeys.IsShift) {  }
+if (AKeys.IsAlt) {  }
+if (AKeys.IsWin) {  }
+if (AKeys.IsMod()) {  }
+if (AKeys.IsPressed($end$)) {  }
+//if toggled
+if (AKeys.IsCapsLock) {  }
+if (AKeys.IsNumLock) {  }
+if (AKeys.IsScrollLock) {  }]]>
+	</snippet>
+	
+	
+	<snippet name="speedSnippet" info="Change sleep times used by keyboard and mouse functions. Snippets with default values.">
+		<![CDATA[AOpt.Key.KeySpeed = $end$1$end$;
+AOpt.Key.TextSpeed = 0;
+AOpt.Key.SleepFinally = 10;
+AOpt.Key.KeySpeedClipboard = 5;
+AOpt.Mouse.ClickSpeed = 20;
+AOpt.Mouse.ClickSleepFinally = 10;
+AOpt.Mouse.MoveSpeed = 0;
+AOpt.Mouse.MoveSleepFinally = 10;]]>
+	</snippet>
+	
+	
+	<snippet name="perfSnippet" info="Measure code speed.">
+		<![CDATA[APerf.First();
+$end$APerf.Next();
+$end$APerf.Write();]]>
+	</snippet>
+
+</Au.Snippets>

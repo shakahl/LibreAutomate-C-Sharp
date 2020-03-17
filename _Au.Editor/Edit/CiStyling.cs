@@ -466,7 +466,7 @@ partial class CiStyling
 		doc._RestoreEditorData();
 		//p1.NW('F');
 	}
-	static ARegex s_rxComments = new ARegex(@"(?m)^[ \t]*//(?!-[{}]|/[^/]).*(\R\s*//(?!-[{}]|/[^/]).*)+");
+	static ARegex s_rxComments = new ARegex(@"(?m)^[ \t]*//(?!\.\s|;|/[^/]).*(\R\s*//(?!\.\s|;|/[^/]).*)+");
 
 	static void _InitFolding(SciCode doc)
 	{

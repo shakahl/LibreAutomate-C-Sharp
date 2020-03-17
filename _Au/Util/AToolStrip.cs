@@ -66,7 +66,7 @@ namespace Au.Util
 			if(b1 == _ttItem) return;
 
 			string text = b1?.ToolTipText;
-			if(text.IsNE()) {
+			if(text.NE()) {
 				_HideTooltip();
 				return;
 			}

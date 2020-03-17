@@ -439,7 +439,7 @@ namespace Au.Tools
 		private void _bOK_Click(object sender, EventArgs e)
 		{
 			ZResultCode = _code.Text;
-			if(ZResultCode.IsNE()) this.DialogResult = DialogResult.Cancel;
+			if(ZResultCode.NE()) this.DialogResult = DialogResult.Cancel;
 		}
 
 		private void _bTest_Click(object sender, EventArgs e)

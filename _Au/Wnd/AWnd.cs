@@ -2444,6 +2444,7 @@ namespace Au
 		/// Also returns false when fails (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="cn">Class name. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. Cannot be null.</param>
+		/// <seealso cref="IsMatch"/>
 		public bool ClassNameIs(string cn) => ClassName.Like(cn, true);
 
 		/// <summary>
@@ -2522,7 +2523,7 @@ namespace Au
 			else R = _GetTextFast(false);
 
 			if(removeUnderlineAmpersand
-				&& !R.IsNE()
+				&& !R.NE()
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
 				) R = AStringUtil.RemoveUnderlineAmpersand(R);

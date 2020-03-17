@@ -78,7 +78,7 @@ namespace Au
 			int tid = Thread.CurrentThread.ManagedThreadId;
 			if(s_treadId == 0) s_treadId = tid; else if(tid != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.RunActionInMainThread();</code>");
 
-			if(name.IsNE()) throw new ArgumentException("Empty name");
+			if(name.NE()) throw new ArgumentException("Empty name");
 			_name = name;
 
 			string s = AFolders.Workspace; if(s == null) s = AFolders.ThisAppDocuments;
@@ -201,7 +201,7 @@ namespace Au
 
 			_SetItemProp(true, isSub, item, onClick, icon, sourceLine);
 
-			bool onlyImage = NoText && (item.Image != null || item.ImageIndex >= 0 || !item.ImageKey.IsNE());
+			bool onlyImage = NoText && (item.Image != null || item.ImageIndex >= 0 || !item.ImageKey.NE());
 			if(onlyImage) item.DisplayStyle = ToolStripItemDisplayStyle.Image; //default ImageAndText
 			else item.AutoToolTip = false; //default true
 

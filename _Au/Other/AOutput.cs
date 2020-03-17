@@ -237,7 +237,7 @@ namespace Au
 			public override void Write(string value)
 			{
 				//QM2.Write($"'{value}'");
-				if(value.IsNE()) return;
+				if(value.NE()) return;
 				if(value.Ends('\n')) {
 					WriteLine(value.RemoveSuffix(value.Ends("\r\n") ? 2 : 1));
 				} else {
@@ -255,7 +255,7 @@ namespace Au
 			public override void Flush()
 			{
 				var s = _PrependBuilder(null);
-				if(!s.IsNE()) WriteDirectly(s);
+				if(!s.NE()) WriteDirectly(s);
 			}
 		}
 

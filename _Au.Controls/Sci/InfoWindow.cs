@@ -243,6 +243,12 @@ namespace Au.Controls
 				base.OnLoad(e);
 				_t.OnLoad(e);
 			}
+
+			protected override void OnSizeChanged(EventArgs e)
+			{
+				_t._size = Size;
+				base.OnSizeChanged(e);
+			}
 		}
 
 		class _Control : InfoBox

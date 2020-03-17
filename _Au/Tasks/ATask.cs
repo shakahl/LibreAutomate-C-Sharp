@@ -156,10 +156,13 @@ namespace Au
 					for(bool useSB = false; ; useSB = results == null) {
 						var o = new Api.OVERLAPPED { hEvent = ev.SafeWaitHandle.DangerousGetHandle() };
 						if(!Api.ConnectNamedPipe(_hPipe, &o)) {
-							int e = ALastError.Code; if(e != Api.ERROR_IO_PENDING) break;
-							int wr = WaitHandle.WaitAny(ha);
-							if(wr != 0) { Api.CancelIo(_hPipe); R = true; break; } //task ended
-							if(!Api.GetOverlappedResult(_hPipe, ref o, out _, false)) { Api.DisconnectNamedPipe(_hPipe); break; }
+							int e = ALastError.Code;
+							if(e != Api.ERROR_PIPE_CONNECTED) {
+								if(e != Api.ERROR_IO_PENDING) break;
+								int wr = WaitHandle.WaitAny(ha);
+								if(wr != 0) { Api.CancelIo(_hPipe); R = true; break; } //task ended
+								if(!Api.GetOverlappedResult(_hPipe, ref o, out _, false)) { Api.DisconnectNamedPipe(_hPipe); break; }
+							}
 						}
 
 						if(b == null) b = (char*)Util.AMemory.Alloc(bLen);
@@ -222,7 +225,7 @@ namespace Au
 		{
 			var pipeName = Environment.GetEnvironmentVariable("ATask.WriteResult.pipe");
 			if(pipeName == null) return false;
-			if(!s.IsNE()) {
+			if(!s.NE()) {
 				if(!Api.WaitNamedPipe(pipeName, 3000)) goto ge;
 				using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_WRITE, 0, default, Api.OPEN_EXISTING, 0)) {
 					if(pipe.Is0) goto ge;

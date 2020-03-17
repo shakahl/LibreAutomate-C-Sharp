@@ -523,7 +523,7 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="AKeys.Text"/>, <see cref="AKeys.Key"/> (arguments of type <see cref="KText"/>) and similar functions.
+		/// How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="AKeys.Text"/>. Also by <see cref="AKeys.Key"/> and similar functions for <c>(KText)"text"</c> arguments.
 		/// Default: 0.
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.</value>
@@ -538,7 +538,7 @@ namespace Au.Types
 		int _textSpeed;
 
 		/// <summary>
-		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="AKeys.Key"/> and similar functions for 'keys' arguments (not for 'text' arguments).
+		/// How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="AKeys.Key"/> and similar functions, except for <c>(KText)"text"</c> arguments.
 		/// Default: 1.
 		/// </summary>
 		/// <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="AOpt.Static.Key"/>: 0 - 10.</value>

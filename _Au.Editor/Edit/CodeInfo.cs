@@ -284,8 +284,9 @@ AOutput.Write(""t"" + 'c' + 1);
 		_compl.ShowList();
 	}
 
-	public static void ShowSignature(SciCode doc)
+	public static void ShowSignature(SciCode doc = null)
 	{
+		doc ??= Panels.Editor.ZActiveDoc;
 		if(!_CanWork(doc)) return;
 		_signature.ShowSignature(doc);
 	}

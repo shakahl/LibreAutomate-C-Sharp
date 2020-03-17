@@ -32,6 +32,7 @@ namespace Au.Types
 		internal const int ERROR_ALREADY_EXISTS = 183;
 		internal const int ERROR_MORE_DATA = 234;
 		internal const int ERROR_DIRECTORY = 267;
+		internal const int ERROR_PIPE_CONNECTED = 535;
 		internal const int ERROR_IO_PENDING = 997;
 		internal const int ERROR_UNABLE_TO_REMOVE_REPLACED = 1175;
 		internal const int ERROR_USER_MAPPED_FILE = 1224;

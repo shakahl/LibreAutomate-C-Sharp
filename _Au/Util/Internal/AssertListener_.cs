@@ -42,7 +42,7 @@ namespace Au.Util
 
 		public override void Fail(string message, string detailMessage)
 		{
-			if(!detailMessage.IsNE()) message = message + " " + detailMessage;
+			if(!detailMessage.NE()) message = message + " " + detailMessage;
 			var s = message + "\r\n" + new StackTrace(4, true);
 			WriteLine(s);
 			if(!Debugger.IsAttached) {

@@ -82,7 +82,7 @@ class CiPopupHtml
 	public string Html {
 		get => _html;
 		set {
-			ADebug.PrintIf(!(value.IsNE() || value.Starts("<body", true) || value.Starts("<html", true)), "no <body>");
+			ADebug.PrintIf(!(value.NE() || value.Starts("<body", true) || value.Starts("<html", true)), "no <body>");
 			if(value != _html) {
 				_html = value;
 				if(IsVisible) {
@@ -143,7 +143,7 @@ class CiPopupHtml
 
 	Size _MeasureHtml(string html)
 	{
-		if(html.IsNE()) return default;
+		if(html.NE()) return default;
 		int sbWid = SystemInformation.VerticalScrollBarWidth;
 		using var g = _c.CreateGraphics();
 		var zf = HtmlRender.Measure(g, html, 0, _c.BaseCssData, imageLoad: OnLoadImage);
@@ -216,7 +216,7 @@ class CiPopupHtml
 
 		protected override void OnMouseUp(MouseEventArgs e)
 		{
-			if(Visible && !this.SelectedText.IsNE()) Focus(); //the user may want Ctrl+C
+			if(Visible && !this.SelectedText.NE()) Focus(); //the user may want Ctrl+C
 			base.OnMouseUp(e);
 		}
 	}

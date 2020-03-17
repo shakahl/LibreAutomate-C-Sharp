@@ -203,7 +203,7 @@ partial class FilesModel
 			Save.LoadingState = true;
 
 			//expanded folders
-			if(DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !s.IsNE()) {
+			if(DB.Get(out string s, "SELECT data FROM _misc WHERE key='expanded'") && !s.NE()) {
 				_control.BeginUpdate();
 				foreach(var v in s.Segments(" ")) {
 					var fn = FindById(s[v.start..v.end]);
@@ -213,7 +213,7 @@ partial class FilesModel
 			}
 
 			//open files
-			if(DB.Get(out s, "SELECT data FROM _misc WHERE key='open'") && !s.IsNE()) {
+			if(DB.Get(out s, "SELECT data FROM _misc WHERE key='open'") && !s.NE()) {
 				//format: indexOfActiveDocOrMinusOne id1 id2 ...
 				int i = -2, iActive = s.ToInt();
 				FileNode fnActive = null;

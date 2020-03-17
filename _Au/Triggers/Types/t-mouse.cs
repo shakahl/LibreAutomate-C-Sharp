@@ -179,7 +179,7 @@ namespace Au.Triggers
 		MouseTrigger _Add(Action<MouseTriggerArgs> f, ESubtype subtype, string modKeys, TMFlags flags, byte data, TMScreen screen, string sData)
 		{
 			_triggers.ThrowIfRunning_();
-			bool noMod = modKeys.IsNE();
+			bool noMod = modKeys.NE();
 
 			string ps;
 			using(new Util.StringBuilder_(out var b)) {

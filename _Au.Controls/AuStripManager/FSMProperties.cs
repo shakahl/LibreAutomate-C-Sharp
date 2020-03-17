@@ -87,7 +87,7 @@ namespace Au.Controls
 		{
 			_errorProvider?.Clear();
 			var s = comboColor.Text.Trim();
-			if(s.IsNE() || ColorInt.FromString(s, out _)) return;
+			if(s.NE() || ColorInt.FromString(s, out _)) return;
 			e.Cancel = true;
 			_SetError(comboColor, "Invalid color name");
 		}
@@ -123,7 +123,7 @@ namespace Au.Controls
 			if(e.Data.GetData(DataFormats.FileDrop, false) is string[] a && a.Length > 0) s = a[0];
 			else s = e.Data.GetData(DataFormats.UnicodeText, false) as string;
 			s = s?.Trim();
-			if(!s.IsNE()) textIcon.Text = s;
+			if(!s.NE()) textIcon.Text = s;
 		}
 		#endregion
 
@@ -166,7 +166,7 @@ namespace Au.Controls
 		private void _TextHotkey_Validating(object sender, CancelEventArgs e)
 		{
 			var s = textHotkey.Text.Trim();
-			if(s.IsNE()) return;
+			if(s.NE()) return;
 			bool ok = true;
 			if(!AKeys.More.ParseHotkeyString(s, out var mod, out var k) || mod.Has(KMod.Win)) ok = false;
 			else if(!mod.HasAny(KMod.Ctrl | KMod.Alt)) ok = (k >= KKey.F2 && k <= KKey.F24);

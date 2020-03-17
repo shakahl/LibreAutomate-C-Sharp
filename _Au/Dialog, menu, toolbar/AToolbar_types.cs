@@ -221,7 +221,7 @@ namespace Au.Types
 			}
 
 			this.AutoSize = false;
-			this.Size = new Size(3, name.IsNE() ? 3 : TextRenderer.MeasureText("A", ts.Font).Height + 3);
+			this.Size = new Size(3, name.NE() ? 3 : TextRenderer.MeasureText("A", ts.Font).Height + 3);
 			if(name != null) this.AccessibleName = this.Name = name;
 			var a = ts.Items;
 			a.Add(this);
@@ -240,7 +240,7 @@ namespace Au.Types
 		//{
 		//	base.OnParentChanged(oldParent, newParent);
 		//	if(newParent != null && !vertical) {
-		//		this.Height = this.Name.IsNE() ? 3 : TextRenderer.MeasureText("A", newParent.Font).Height + 3;
+		//		this.Height = this.Name.NE() ? 3 : TextRenderer.MeasureText("A", newParent.Font).Height + 3;
 		//		if(newParent.LayoutSettings is FlowLayoutSettings flow) {
 		//			var a = newParent.Items;
 		//			int i = a.IndexOf(this);
@@ -355,7 +355,7 @@ namespace Au.Types
 				pen?.Dispose();
 				//draw text
 				var s = k.Name;
-				if(!s.IsNE()) {
+				if(!s.NE()) {
 					var r = new Rectangle(dr.X, y + 1, dr.Width, k.Height - 1);
 					var f = TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix;
 					TextRenderer.DrawText(g, " " + s + " ", ts.Font, r, customForeColor ? foreColor : SystemColors.GrayText, ts.BackColor, f);

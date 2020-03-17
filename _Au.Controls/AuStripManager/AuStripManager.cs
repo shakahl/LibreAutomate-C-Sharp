@@ -268,7 +268,7 @@ namespace Au.Controls
 		void _Submenu(XElement x, ToolStripDropDownItem ddItem, string tag)
 		{
 			var s = x.Attr("dd");
-			if(!s.IsNE()) {
+			if(!s.NE()) {
 				ddItem.DropDown = Submenus[s];
 			} else {
 				var dd = ddItem.DropDown as ToolStripDropDownMenu; //note: not ddItem.DropDown=new ToolStripDropDownMenu(). Then eg hotkeys don't work.
@@ -527,7 +527,7 @@ namespace Au.Controls
 				string folder = APath.GetDirectoryPath(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
 				m["How to backup, restore, reset..."] = o =>
 				{
-					ADialog.ShowEx("How to backup, restore or reset customizations",
+					ADialog.Show("How to backup, restore or reset customizations",
 					"All customizations are saved in XML files in folder\n" +
 					link +
 					"\n\nTo backup:  copy the file." +

@@ -354,7 +354,7 @@ namespace Au.Controls
 
 		bool _CanParseTags(string s)
 		{
-			if(s.IsNE()) return false;
+			if(s.NE()) return false;
 			return C.ZInitTagsStyle switch
 			{
 				AuScintilla.ZTagsStyle.AutoAlways => s.IndexOf('<') >= 0,
@@ -665,7 +665,7 @@ namespace Au.Controls
 		/// </summary>
 		internal void AnnotationText_(int line, string s)
 		{
-			if(s.IsNE()) s = null;
+			if(s.NE()) s = null;
 			SetString(SCI_ANNOTATIONSETTEXT, line, s);
 		}
 

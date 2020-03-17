@@ -295,7 +295,7 @@ namespace Au.Controls
 		public void AddText(string text, bool appendLine, bool skipLTGT)
 		{
 			//APerf.First();
-			if(text.IsNE() || (skipLTGT && text == "<>")) {
+			if(text.NE() || (skipLTGT && text == "<>")) {
 				if(appendLine) _t.AppendText("", true, true, true); else _t.ClearText();
 				return;
 			}
