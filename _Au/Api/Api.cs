@@ -598,7 +598,7 @@ namespace Au.Types
 		internal const int SHIL_LARGE = 0;
 		internal const int SHIL_SMALL = 1;
 		internal const int SHIL_EXTRALARGE = 2;
-		internal const int SHIL_SYSSMALL = 3;
+		//internal const int SHIL_SYSSMALL = 3;
 		internal const int SHIL_JUMBO = 4;
 
 		//[DllImport("shell32.dll", EntryPoint = "#727", PreserveSig = true)]

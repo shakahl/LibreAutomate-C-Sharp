@@ -58,31 +58,29 @@ class CiQuickInfo
 
 		//bool hasDocComm = false;
 		//QuickInfoSection descr = null;
+		POINT excRange = default, retRange = default;
 		var a = r.Sections;
 		for(int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//AOutput.Write(se.Kind, se.Text);
-			int excFrom = 0;
-			switch(se.Kind) {
-			//case QuickInfoSectionKinds.Description:
-			//	descr = se;
-			//	break;
-			//case QuickInfoSectionKinds.DocumentationComments:
-			//	hasDocComm = true;
-			//	break;
-			case QuickInfoSectionKinds.Exception:
-				excFrom = b.Length + 12;
-				break;
-			}
 			if(i > 0) b.Append("<p>");
+			int from = b.Length;
 			CiHtml.TaggedPartsToHtml(b, se.TaggedParts);
+			int to = b.Length;
+			switch(se.Kind) {
+			case QuickInfoSectionKinds.ReturnsDocumentationComments: retRange = (from, to); break;
+			case QuickInfoSectionKinds.Exception: excRange = (from, to); break;
+			}
 			b.Append(i > 0 ? "</p>" : "</div>");
-
-			if(excFrom > 0) b.Replace(":<br>", ": ", excFrom, b.Length - excFrom).Replace("><br>", ">, ", excFrom, b.Length - excFrom); //exceptions make single line
 		}
 
 		b.Append("</body>");
 		var html = b.ToString();
+
+		//join lines
+		if(retRange.x > 0) html = html.RegexReplace(":<br>", ": ", 1, 0, retRange.x..retRange.y);
+		if(excRange.x > 0) html = html.RegexReplace(":<br>", ": ", 1, 0, excRange.x..excRange.y).RegexReplace("><br>", ">, ", range: excRange.x..excRange.y);
+
 		//AOutput.Write(html);
 		html = html.Replace("<p><br>", "<p>");
 		html = html.Replace("><br>", ">&nbsp;<br>"); //workaround for HtmlRenderer bug: adds 2 lines.

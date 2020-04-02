@@ -151,13 +151,13 @@ namespace Au
 	/// <example>
 	/// Click link "Example" in Chrome.
 	/// <code><![CDATA[
-	/// var w = AWnd.Find("* Chrome").OrThrow();
-	/// var a = AAcc.Find(w, "web:LINK", "Example").OrThrow();
+	/// var w = +AWnd.Find("* Chrome");
+	/// var a = +AAcc.Find(w, "web:LINK", "Example");
 	/// a.DoAction();
 	/// ]]></code>
 	/// Click a link, wait for new web page, click a link in it.
 	/// <code><![CDATA[
-	/// var w = AWnd.Find("* Chrome").OrThrow();
+	/// var w = +AWnd.Find("* Chrome");
 	/// var a = AAcc.Wait(1, w, "web:LINK", "Link 1");
 	/// a.DoActionAndWaitForNewWebPage();
 	/// a = AAcc.Wait(10, w, "web:LINK", "Link 2");
@@ -165,7 +165,7 @@ namespace Au
 	/// ]]></code>
 	/// </example>
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe partial class AAcc :IDisposable
+	public unsafe sealed partial class AAcc :IDisposable
 	{
 		//FUTURE: AAcc.More.EnableAccInChromeWebPagesWhenItStarts
 		//FUTURE: AAcc.More.EnableAccInJavaWindows (see JavaEnableJAB in QM2)
@@ -238,7 +238,7 @@ namespace Au
 		//internal static int DebugMemorySum;
 
 		///
-		protected virtual void Dispose(bool disposing)
+		void _Dispose()
 		{
 			if(_iacc != default) {
 				var t = _iacc; _iacc = default;
@@ -262,14 +262,14 @@ namespace Au
 		/// </summary>
 		public void Dispose()
 		{
-			Dispose(true);
+			_Dispose();
 			GC.SuppressFinalize(this);
 		}
 
 		///
 		~AAcc()
 		{
-			Dispose(false);
+			_Dispose();
 		}
 
 		/// <summary>
@@ -354,14 +354,27 @@ namespace Au
 		/// Gets accessible object from point.
 		/// </summary>
 		/// <param name="p">
-		/// Coordinates relative to the primary screen.
-		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = AAcc.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
+		/// Coordinates.
+		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
+		/// <example>
+		/// Find object at 100 200.
+		/// <code><![CDATA[
+		/// var a = AAcc.FromXY((100, 200));
+		/// AOutput.Write(a);
+		/// ]]></code>
+		/// 
+		/// Find object at 50 from left and 100 from bottom of the work area.
+		/// <code><![CDATA[
+		/// var a = AAcc.FromXY(Coord.Normalize(50, Coord.Reverse(100), true));
+		/// AOutput.Write(a);
+		/// ]]></code>
+		/// </example>
 		public static AAcc FromXY(POINT p, AXYFlags flags = 0)
 		{
 			for(int i = 0; ; i++) {
@@ -596,7 +609,7 @@ namespace Au
 		/// Displays visible accessible objects in Chrome web page.
 		/// <code><![CDATA[
 		/// AOutput.Clear();
-		/// var w = AWnd.Find("* Chrome").OrThrow();
+		/// var w = +AWnd.Find("* Chrome");
 		/// AOutput.Write("---- all ----");
 		/// AAcc.PrintAll(w, "web:");
 		/// AOutput.Write("---- links ----");

@@ -69,9 +69,12 @@ namespace Au.Util
 					if(useDefault) {
 						AOutput.Write($"Failed to delete settings file '{file}'. {es}");
 					} else {
-						//ADialog.ShowWarning("Failed to load settings", $"Will backup '{file}' and use default settings.", expandedText: ex.ToStringWithoutStack());
-						AOutput.Write($"Failed to load settings from '{file}'. Will use default settings. {es}");
-						try { AFile.Rename(file, file + ".backup", IfExists.Delete); } catch { }
+						string backup = file + ".backup";
+						try { AFile.Move(file, backup, IfExists.Delete); } catch { backup = "failed"; }
+						AOutput.Write(
+$@"Failed to load settings from {file}. Will use default settings.
+	{es}
+	Backup: {backup}");
 					}
 				}
 			}

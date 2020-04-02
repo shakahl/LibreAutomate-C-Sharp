@@ -63,7 +63,7 @@ partial class FOptions : DialogForm
 		_InitFiles();
 		_InitTemplates();
 		_InitFont();
-		_InitCodeInfo();
+		_InitCode();
 		_loaded = true;
 	}
 
@@ -73,7 +73,7 @@ partial class FOptions : DialogForm
 		_ApplyFiles();
 		_ApplyTemplates();
 		_ApplyFont();
-		_ApplyCodeInfo();
+		_ApplyCode();
 	}
 
 	private void _bOK_Click(object sender, EventArgs e) => _bApply_Click(sender, e);
@@ -85,15 +85,15 @@ partial class FOptions : DialogForm
 
 	void _InitGeneral()
 	{
-		_runAtStartup.Checked = _initRunAtStartup = ARegistry.GetString(out _, "Au.Editor", c_rkRun, ARegistry.HKEY_CURRENT_USER);
-		_runHidden.Checked = Program.Settings.runHidden;
-		_startupScripts.Text = Program.Model.StartupScriptsCsv;
+		_cRunAtStartup.Checked = _initRunAtStartup = ARegistry.GetString(out _, "Au.Editor", c_rkRun, ARegistry.HKEY_CURRENT_USER);
+		_cRunHidden.Checked = Program.Settings.runHidden;
+		_eStartupScripts.Text = Program.Model.StartupScriptsCsv;
 
 	}
 
 	void _ApplyGeneral()
 	{
-		if(_runAtStartup.Checked != _initRunAtStartup) {
+		if(_cRunAtStartup.Checked != _initRunAtStartup) {
 			try {
 				using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
 				if(_initRunAtStartup) rk.DeleteValue("Au.Editor");
@@ -101,9 +101,9 @@ partial class FOptions : DialogForm
 			}
 			catch(Exception ex) { AOutput.Write("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 		}
-		Program.Settings.runHidden = _runHidden.Checked;
+		Program.Settings.runHidden = _cRunHidden.Checked;
 
-		if(_startupScripts.Modified) Program.Model.StartupScriptsCsv = _startupScripts.Text;
+		if(_eStartupScripts.Modified) Program.Model.StartupScriptsCsv = _eStartupScripts.Text;
 
 	}
 
@@ -111,7 +111,7 @@ partial class FOptions : DialogForm
 	{
 		//AOutput.Write("validating");
 		_errorProvider.Clear();
-		string s = _startupScripts.Text; if(s.NE()) return;
+		string s = _eStartupScripts.Text; if(s.NE()) return;
 		string err = null;
 		try {
 			var t = ACsv.Parse(s);
@@ -130,8 +130,8 @@ partial class FOptions : DialogForm
 		catch(FormatException ex) { err = ex.Message; }
 		ge:
 		if(err != null) {
-			_errorProvider.SetIconAlignment(_startupScripts, ErrorIconAlignment.TopLeft);
-			_errorProvider.SetError(_startupScripts, err);
+			_errorProvider.SetIconAlignment(_eStartupScripts, ErrorIconAlignment.TopLeft);
+			_errorProvider.SetError(_eStartupScripts, err);
 			e.Cancel = true;
 		}
 	}
@@ -182,56 +182,49 @@ partial class FOptions : DialogForm
 
 	void _InitTemplates()
 	{
-		_cCustTemplS.CheckedChanged += _CustomTempl_CheckedChanged;
-		_cCustTemplC.CheckedChanged += _CustomTempl_CheckedChanged;
-		if(Program.Settings.templ_script) _cCustTemplS.Checked = true; else { _cDefTemplS.Checked = true; _CustomTempl_CheckedChanged(_cCustTemplS, null); }
-		if(Program.Settings.templ_class) _cCustTemplC.Checked = true; else { _cDefTemplC.Checked = true; _CustomTempl_CheckedChanged(_cCustTemplC, null); }
+		_comboTemplate.Items.AddRange(new string[] { "Script", "Class", "Partial" });
+		_comboTemplate.SelectedIndex = 0;
+		_comboTemplate.SelectionChangeCommitted += _TemplCombo_Changed;
+		_comboUseTemplate.Items.AddRange(new string[] { "Default", "Custom" });
+		_templUseCustom = Program.Settings.templ_use;
+		_comboUseTemplate.SelectionChangeCommitted += _TemplCombo_Changed;
+		_TemplCombo_Changed(_comboTemplate, null);
+		_sciTemplate.ZTextChanged += (_, __) => _templCustomText[_comboTemplate.SelectedIndex] = _sciTemplate.Text;
 	}
 
-	private void _CustomTempl_CheckedChanged(object sender, EventArgs e)
+	private void _TemplCombo_Changed(object sender, EventArgs e)
 	{
+		int i = _comboTemplate.SelectedIndex;
+		FileNode.ETempl tt = i switch { 1 => FileNode.ETempl.Class, 2 => FileNode.ETempl.Partial, _ => FileNode.ETempl.Script, };
+		if(sender == _comboTemplate) _comboUseTemplate.SelectedIndex = _templUseCustom.Has(tt) ? 1 : 0;
+		bool custom = _comboUseTemplate.SelectedIndex > 0;
 		string text = null;
-		var rb = sender as RadioButton;
-		bool custom = rb.Checked;
-		bool script = sender == _cCustTemplS;
-		var codeBox = script ? _templScript : _templClass;
 		if(_loaded) {
-			_templCustom ??= new string[2];
-			int i = script ? 0 : 1;
-			if(custom) text = _templCustom[i]; else _templCustom[i] = codeBox.Text;
+			_templUseCustom.SetFlag(tt, custom);
+			if(custom) text = _templCustomText[i];
 		}
-		text ??= FileNode.Templates.Load(script, custom);
-		codeBox.ZSetText(text, readonlyFrom: custom ? -1 : 0);
+		text ??= FileNode.Templates.Load(tt, custom);
+		_sciTemplate.ZSetText(text, readonlyFrom: custom ? -1 : 0);
 	}
-	string[] _templCustom;
+	string[] _templCustomText = new string[3];
+	FileNode.ETempl _templUseCustom;
 
 	void _ApplyTemplates()
 	{
-		Program.Settings.templ_script = _ApplyTempl(true);
-		Program.Settings.templ_class = _ApplyTempl(false);
-
-		bool _ApplyTempl(bool script)
-		{
-			var rb = script ? _cCustTemplS : _cCustTemplC;
-			bool custom = rb.Checked;
-			var userFile = FileNode.Templates.FilePathRaw(script, true);
-			var codeBox = script ? _templScript : _templClass;
-			string saveText = null;
-			if(custom) {
-				saveText = codeBox.Text;
-			} else if(_templCustom != null) {
-				saveText = _templCustom[script ? 0 : 1];
-			}
-			if(saveText != null) {
-				if(saveText == FileNode.Templates.Load(script, false)) {
-					custom = false;
-					AFile.Delete(userFile);
-				} else if(saveText != FileNode.Templates.Load(script, true)) {
-					AFile.SaveText(userFile, saveText);
+		for(int i = 0; i < _templCustomText.Length; i++) {
+			string text = _templCustomText[i]; if(text == null) continue;
+			var tt = (FileNode.ETempl)(1 << i);
+			var file = FileNode.Templates.FilePathRaw(tt, true);
+			try {
+				if(text == FileNode.Templates.Load(tt, false)) {
+					AFile.Delete(file);
+				} else {
+					AFile.SaveText(file, text);
 				}
 			}
-			return custom;
+			catch(Exception ex) { AOutput.Write(ex.ToStringWithoutStack()); }
 		}
+		Program.Settings.templ_use = _templUseCustom;
 	}
 
 	#endregion
@@ -256,15 +249,15 @@ partial class FOptions : DialogForm
 			}, default, 0);
 
 		}
-		_cbFont.Items.Add("[ Fixed-width fonts ]");
+		_comboFont.Items.Add("[ Fixed-width fonts ]");
 		fontsMono.Sort();
 		fontsVar.Sort();
-		_cbFont.Items.AddRange(fontsMono.ToArray());
-		_cbFont.Items.Add("");
-		_cbFont.Items.Add("[ Variable-width fonts ]");
-		_cbFont.Items.AddRange(fontsVar.ToArray());
+		_comboFont.Items.AddRange(fontsMono.ToArray());
+		_comboFont.Items.Add("");
+		_comboFont.Items.Add("[ Variable-width fonts ]");
+		_comboFont.Items.AddRange(fontsVar.ToArray());
 		var selFont = styles.FontName;
-		_cbFont.SelectedItem = selFont; if(_cbFont.SelectedItem == null) _cbFont.Text = selFont;
+		_comboFont.SelectedItem = selFont; if(_comboFont.SelectedItem == null) _comboFont.Text = selFont;
 		_nFontSize.Value = styles.FontSize;
 		_pFont.Location = _pColor.Location; //_pFont in designer is at wrong place, else would overlap with _pColor. _pColor is initially hidden.
 
@@ -342,15 +335,15 @@ line number";
 			}
 		};
 		//when values of style controls changed
-		_cbFont.TextChanged += (sender, _) => _ChangeFont(sender);
+		_comboFont.TextChanged += (sender, _) => _ChangeFont(sender);
 		_nFontSize.TextChanged += (sender, _) => _ChangeFont(sender);
 		void _ChangeFont(object control = null)
 		{
 			var z = _sciStyles.Z;
-			var fname = _cbFont.Text; if(fname == "" || fname.Starts("[ ")) fname = "Consolas";
+			var fname = _comboFont.Text; if(fname == "" || fname.Starts("[ ")) fname = "Consolas";
 			int fsize = _UpDownValue(_nFontSize);
 			for(int i = 0; i <= Sci.STYLE_LINENUMBER; i++) {
-				if(control == _cbFont) z.StyleFont(i, fname);
+				if(control == _comboFont) z.StyleFont(i, fname);
 				else z.StyleFontSize(i, fsize);
 			}
 		}
@@ -483,7 +476,7 @@ line number";
 	void _ApplyFont()
 	{
 		var styles = new CiStyling.TStyles(_sciStyles); //gets colors and bold
-		var fname = _cbFont.Text; if(fname == "" || fname.Starts("[ ")) fname = "Consolas";
+		var fname = _comboFont.Text; if(fname == "" || fname.Starts("[ ")) fname = "Consolas";
 		styles.FontName = fname;
 		int fsize = _UpDownValue(_nFontSize);
 		styles.FontSize = fsize;
@@ -498,18 +491,29 @@ line number";
 
 	#endregion
 
-	#region Code info
+	#region Code
 
-	unsafe void _InitCodeInfo()
+	unsafe void _InitCode()
 	{
 		//_cComplGroupEM.Checked = Program.Settings.ci_complGroupEM; //checkbox "Group all extension methods" (if unchecked, would group only Linq)
 		_cComplParenSpace.Checked = Program.Settings.ci_complParenSpace;
+
+		_cCustomSnippets.Checked = 1 == Program.Settings.ci_complCustomSnippets & AFile.ExistsAsFile(CiSnippets.CustomFile);
+		_cCustomSnippets.CheckedChanged += (_, __) => {
+			if(!_cCustomSnippets.Checked) return;
+			if(!AFile.ExistsAsFile(CiSnippets.CustomFile)) AFile.Copy(CiSnippets.DefaultFile, CiSnippets.CustomFile);
+			AExec.SelectInExplorer(CiSnippets.CustomFile);
+		};
+
+		_cStringEnterRN.Checked = 0 == Program.Settings.ci_correctStringEnter;
 	}
 
-	void _ApplyCodeInfo()
+	void _ApplyCode()
 	{
 		//Program.Settings.ci_complGroupEM = _cComplGroupEM.Checked;
 		Program.Settings.ci_complParenSpace = _cComplParenSpace.Checked;
+		Program.Settings.ci_complCustomSnippets = (byte)(_cCustomSnippets.Checked ? 1 : 0);
+		Program.Settings.ci_correctStringEnter = (byte)(_cStringEnterRN.Checked ? 0 : 1);
 	}
 
 	#endregion

@@ -230,7 +230,7 @@ namespace Au
 		//problem: fails to paste in VMware player. QM2 too. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
 
 		/// <summary>
-		/// Pastes data added to a <see cref="AClipboardData"/> variable into the focused app using the clipboard.
+		/// Pastes data added to an <see cref="AClipboardData"/> variable into the focused app using the clipboard.
 		/// More info: <see cref="Paste"/>.
 		/// </summary>
 		/// <exception cref="AuException">Failed.</exception>

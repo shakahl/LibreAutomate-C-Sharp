@@ -304,11 +304,62 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control that contains the AO.</param>
 		/// <param name="role">
-		/// AO role, like <c>"LINK"</c> or <c>nameof(AccROLE.LINK)</c>. Or path, like <c>"ROLE/ROLE/ROLE"</c>.
-		/// Can be used standard roles (see <see cref="AccROLE"/>) and custom roles (like <c>"div"</c> in Firefox). More info: <see cref="Role"/>.
+		/// AO role, like <c>"LINK"</c>. Or path, like <c>"ROLE/ROLE/ROLE"</c>.
+		/// Can have prefix <c>"web:"</c>, <c>"firefox:"</c> or <c>"chrome:"</c> which means "search only in web page" and enables Chrome AOs.
+		/// Case-sensitive. Not wildcard. null means 'can be any'. Cannot be "".
+		/// More info in Remarks.
+		/// </param>
+		/// <param name="name">
+		/// AO name (<see cref="Name"/>).
+		/// String format: [](xref:wildcard_expression).
+		/// null means 'any'. "" means 'empty or unavailable'.
+		/// </param>
+		/// <param name="prop">
+		/// Other AO properties and search settings.
+		/// Example: <c>"description=xxx\0 @href=yyy"</c>.
+		/// More info in Remarks.
+		/// </param>
+		/// <param name="flags"></param>
+		/// <param name="also">
+		/// Callback function. Called for each matching AO. Let it return true if this is the wanted AO.
+		/// Example: the AO must contain point x y: <c>o => o.GetRect(out var r, o.WndTopLevel) &amp;&amp; r.Contains(266, 33)</c>
+		/// </param>
+		/// <param name="skip">
+		/// 0-based index of matching AO.
+		/// For example, if 1, the function skips the first matching AO and returns the second.
+		/// </param>
+		/// <param name="navig">If not null, the specified object is an intermediate object. After finding it, call <see cref="Navigate"/> with this string and return its result.</param>
+		/// <param name="controls">
+		/// Defines child controls where to search.
+		/// This is an alternative for class/id in <i>prop</i>. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
+		/// </param>
 		/// 
-		/// Case-sensitive. Not wildcard.
-		/// null means 'can be any'. Cannot be "".
+		/// <exception cref="ArgumentException">
+		/// - <i>role</i> is "" or invalid.
+		/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
+		/// - <i>navig</i> string is invalid.
+		/// - <i>flags</i> has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
+		/// </exception>
+		/// <exception cref="AuWndException">Invalid window.</exception>
+		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
+		/// 
+		/// <remarks>
+		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.FormAAcc</b> in Au.Tools.dll.
+		/// 
+		/// Walks the tree of accessible objects, until finds a matching AO.
+		/// 
+		/// Uses <see cref="Finder"/>. You can use it directly. See example.
+		/// 
+		/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
+		/// 
+		/// To find web page AOs usually it's better to use <see cref="Wait"/> instead, it's more reliable.
+		/// 
+		/// More info in <see cref="AAcc"/> topic.
+		/// 
+		/// ##### About the <i>role</i> parameter
+		/// 
+		/// Can be standard role (see <see cref="AccROLE"/>) like <c>"LINK"</c> or custom role like <c>"div"</c>. More info: <see cref="Role"/>.
 		/// 
 		/// Can have a prefix:
 		/// - <c>"web:"</c> - search only in the visible web page, not in whole window. Examples: <c>"web:LINK"</c>, <c>"web:/LIST/LISTITEM/LINK"</c>.\
@@ -327,18 +378,13 @@ namespace Au
 		/// Can be path consisting of roles separated by "/". Examples:
 		/// - <c>"web:DOCUMENT/div/LIST/LISTITEM/LINK"</c> - find LINK using its full path in web page.
 		/// - <c>"web:/div/LIST//LINK"</c> - the empty parts mean 'any role'. For example don't need to specify DOCUMENT because in web pages the first part is always DOCUMENT (Firefox, Chrome) or PANE (IE).
-		/// - <c>"web:/div/LIST[4]/LISTITEM[-1]/LINK"</c> - the 4 is 1-based index of div child from which to start searching (4-th, then 3-th, 5-th and so on). It can make faster. Negative means 'index from end', for example use -1 to search in reverse order. Flag <see cref="AFFlags.Reverse"/> is not applied to path parts with indexes. If index is invalid, will use the nearest valid index.
+		/// - <c>"web:/div/LIST[4]/LISTITEM[-1]/LINK"</c> - the 4 is 1-based index of div child from which to start searching (4-th, then 3-th, 5-th and so on). It can make faster. Negative means 'index from end', for example use -1 to search in reverse order. Flag <see cref="AFFlags.Reverse"/> is not applied to path parts with an index. If index is invalid, will use the nearest valid index.
 		/// - <c>"web:/div/LIST[4!]/LISTITEM[-1!]/LINK"</c> - like the above, but the LIST must be exactly 4-th child (don't search 3-th, 5-th etc) and the LISTITEM must be the last child. This can be useful when waiting (uses less CPU), however useless if AO indices in the window or web page change often.
 		/// - <c>"web://[4]/[-1!]/[2]"</c> - index without role.
 		/// - <c>"CLIENT/WINDOW/TREE/TREEITEM[-1]"</c> - path in window or control. The first path part is a direct child AO of the WINDOW AO of the window/control. The WINDOW AO itself is not included in the search; if you need it, instead use <see cref="FromWindow"/>.
-		/// </param>
-		/// <param name="name">
-		/// AO name (<see cref="Name"/>).
-		/// String format: [](xref:wildcard_expression).
-		/// null means 'any'. "" means 'empty or unavailable'.
-		/// </param>
-		/// <param name="prop">
-		/// Other AO properties and search settings.
+		/// 
+		/// ##### About the <i>prop</i> parameter
+		/// 
 		/// Format: one or more <c>"name=value"</c>, separated with <c>"\0"</c> or <c>"\0 "</c>, like <c>"description=xxx\0 @href=yyy"</c>. Names must match case. Values of string properties are wildcard expressions.
 		/// 
 		/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="AWnd.ClassName"/>).
@@ -367,67 +413,26 @@ namespace Au
 		/// The default value is 10000. It also prevents hanging or crashing when an AO in the object tree has large number of children. For example OpenOffice Calc TABLE has one billion children.
 		/// - <c>"notin"</c> - when searching, skip children of AO that have these roles. It can make faster.
 		/// Example: <c>"notin=TREE,LIST,TOOLBAR"</c>.
-		/// Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard.
-		/// See also: <see cref="AFFlags.MenuToo"/>.
-		/// - <c>"@attr"</c> - <see cref="HtmlAttribute"/>. Here "attr" is any attribute name.
-		/// 
-		/// Example: <c>"@id=example"</c>.
-		/// </param>
-		/// <param name="flags"></param>
-		/// <param name="also">
-		/// Callback function. Called for each matching AO. Let it return true if this is the wanted AO.
-		/// Example: the AO must contain point x y: <c>o => o.GetRect(out var r, o.WndTopLevel) &amp;&amp; r.Contains(266, 33)</c>
-		/// </param>
-		/// <param name="skip">
-		/// 0-based index of matching AO.
-		/// For example, if 1, the function skips the first matching AO and returns the second.
-		/// </param>
-		/// <param name="navig">If not null, the specified object is an intermediate object. After finding it, call <see cref="Navigate"/> with this string and return its result.</param>
-		/// <param name="controls">
-		/// Properties of child controls where to search.
-		/// This is an alternative for class/id in <i>prop</i>. Allows to specify more control properties. Works better/faster when the control is of a different process or thread than the parent window; else slightly slower.
-		/// </param>
-		/// 
-		/// <exception cref="ArgumentException">
-		/// - <i>role</i> is "" or invalid.
-		/// - <i>name</i> is invalid wildcard expression (<c>"**options "</c> or regular expression).
-		/// - <i>prop</i> has invalid format or contains unknown property names or invalid wildcard expressions.
-		/// - <i>navig</i> string is invalid.
-		/// - <i>flags</i> has <see cref="AFFlags.UIA"/> when searching in web page (role prefix <c>"web:"</c> etc).
-		/// </exception>
-		/// <exception cref="AuWndException">Invalid window.</exception>
-		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
-		/// 
-		/// <remarks>
-		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.FormAAcc</b> in Au.Tools.dll.
-		/// 
-		/// Walks the tree of accessible objects, until finds a matching AO.
-		/// 
-		/// Uses <see cref="Finder"/>. You can use it directly. See example.
-		/// 
-		/// In wildcard expressions supports PCRE regular expressions (prefix <c>"**r "</c>) but not .NET regular expressions (prefix <c>"**R "</c>). They are similar.
-		/// 
-		/// To find web page AOs usually it's better to use <see cref="Wait"/> instead, it's more reliable.
-		/// 
-		/// More info in <see cref="AAcc"/> topic.
+		/// Roles in the list must be separated with <c>","</c> or <c>", "</c>. Case-sensitive, not wildcard. See also: <see cref="AFFlags.MenuToo"/>.
+		/// - <c>"@attr"</c> - <see cref="HtmlAttribute"/>. Here "attr" is any attribute name. Example: <c>"@id=example"</c>.
 		/// </remarks>
 		/// <example>
 		/// Find link "Example" in web page, and click. Throw <b>NotFoundException</b> if not found.
 		/// <code><![CDATA[
-		/// var w = AWnd.Find("* Chrome").OrThrow();
-		/// var a = AAcc.Find(w, "web:LINK", "Example").OrThrow();
+		/// var w = +AWnd.Find("* Chrome");
+		/// var a = +AAcc.Find(w, "web:LINK", "Example");
 		/// a.DoAction();
 		/// ]]></code>
 		/// Try to find link "Example" in web page. Return if not found.
 		/// <code><![CDATA[
-		/// var w = AWnd.Find("* Chrome").OrThrow();
+		/// var w = +AWnd.Find("* Chrome");
 		/// var a = AAcc.Find(w, "web:LINK", "Example");
 		/// if(a == null) { AOutput.Write("not found"); return; }
 		/// a.DoAction();
 		/// ]]></code>
 		/// Use <see cref="Finder"/>.
 		/// <code><![CDATA[
-		/// var w = AWnd.Find("* Chrome").OrThrow();
+		/// var w = +AWnd.Find("* Chrome");
 		/// var f = new AAcc.Finder("BUTTON", "Example");
 		/// if(!f.Find(w)) { AOutput.Write("not found"); return; }
 		/// AAcc a = f.Result;
@@ -520,7 +525,7 @@ namespace Au
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
-		/// var w = AWnd.Find(null, "Shell_TrayWnd").OrThrow();
+		/// var w = +AWnd.Find(null, "Shell_TrayWnd");
 		/// foreach(var a in AAcc.FindAll(w, "BUTTON", prop: "level=7")) AOutput.Write(a);
 		/// ]]></code>
 		/// </example>
@@ -547,8 +552,8 @@ namespace Au
 		/// <example>
 		/// Get all taskbar buttons (Windows 10).
 		/// <code><![CDATA[
-		/// var w = AWnd.Find(null, "Shell_TrayWnd").OrThrow();
-		/// var atb = AAcc.Find(w, "TOOLBAR", "Running applications").OrThrow();
+		/// var w = +AWnd.Find(null, "Shell_TrayWnd");
+		/// var atb = +AAcc.Find(w, "TOOLBAR", "Running applications");
 		/// foreach(var a in atb.FindAll("BUTTON", prop: "level=0")) AOutput.Write(a);
 		/// ]]></code>
 		/// </example>
@@ -564,6 +569,18 @@ namespace Au
 			});
 			return a.ToArray();
 		}
-	}
 
+		/// <summary>
+		/// Returns the same value if it is not null. Else throws <see cref="NotFoundException"/>.
+		/// </summary>
+		/// <exception cref="NotFoundException"></exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// var w = +AWnd.Find("Example");
+		/// var a1 = +AAcc.Find(w, "web:LINK", "Example");
+		/// var a2 = +AAcc.Find(w, ...)?.Find(...);
+		/// ]]></code>
+		/// </example>
+		public static AAcc operator +(AAcc a) => a ?? throw new NotFoundException("Not found (AAcc).");
+	}
 }

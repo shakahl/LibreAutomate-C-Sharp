@@ -374,7 +374,7 @@ namespace Au
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>AWnd</b>.
 		/// </summary>
-		/// <returns>Returns <c>default(AWnd)</c> if not found.</returns>
+		/// <returns>Returns <c>default(AWnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(AWnd)"/>.</returns>
 		/// <param name="name">
 		/// Window name. Usually it is the title bar text.
 		/// String format: [](xref:wildcard_expression).
@@ -384,7 +384,6 @@ namespace Au
 		/// Window class name.
 		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be "".
-		/// You can see window name, class name and program in editor's status bar and dialog "Find window or control".
 		/// </param>
 		/// <param name="of">
 		/// Program file name, like <c>"notepad.exe"</c>.
@@ -402,19 +401,10 @@ namespace Au
 		/// Called after evaluating all other parameters except <i>contains</i>.
 		/// </param>
 		/// <param name="contains">
-		/// Text, image or other object in the client area of the window. Depends on type:
-		/// <ul>
-		/// <li><see cref="ChildFinder"/> - arguments for <see cref="Child"/>. Defines a child control that must be in the window. </li>
-		/// <li><see cref="AAcc.Finder"/> - arguments for <see cref="AAcc.Find"/>. Defines an accessible object that must be in the window. </li>
-		/// <li><see cref="AWinImage.Finder"/> - arguments for <see cref="AWinImage.Find"/>. Defines image(s) or color(s) that must be visible in the window. </li>
-		/// <li>string - an object that must be in the window. Depends on string format:
-		/// <ul>
-		/// <li><c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c> - child control. See <see cref="Child"/>. </li>
-		/// <li><c>"a 'role' name"</c> or <c>"name"</c> or <c>"a 'role'"</c> - accessible object. See <see cref="AAcc.Find"/>. </li>
-		/// <li><c>"image:..."</c> - image. See <see cref="AWinImage.Find"/>. Uses flag <see cref="WIFlags.WindowDC"/>. </li>
-		/// </ul>
-		/// </li>
-		/// </ul>
+		/// Defines an object that must be in the client area of the window:
+		/// - Accessible object: <see cref="AAcc.Finder"/> or string like <c>"name"</c> or <c>"a 'role' name"</c> or <c>"a 'role'"</c>.
+		/// - Child control: <see cref="ChildFinder"/> or string like <c>"c 'cn' name"</c> or <c>"c '' name"</c> or <c>"c 'cn'"</c>.
+		/// - Image(s) or color(s): <see cref="AWinImage.Finder"/> or string <c>"image:..."</c> (uses <b>AWinImage.Find</b> with flag <see cref="WIFlags.WindowDC"/>).
 		/// </param>
 		/// <remarks>
 		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
@@ -438,7 +428,7 @@ namespace Au
 		/// </code>
 		/// Try to find Notepad window. Throw NotFoundException if not found.
 		/// <code>
-		/// AWnd w1 = AWnd.Find("* Notepad").OrThrow();
+		/// AWnd w1 = +AWnd.Find("* Notepad");
 		/// </code>
 		/// </example>
 		[MethodImpl(MethodImplOptions.NoInlining)] //inlined code makes harder to debug using disassembly
@@ -497,8 +487,8 @@ namespace Au
 
 		/// <summary>
 		/// Finds a top-level window and returns its handle as <b>AWnd</b>.
-		/// Returns <c>default(AWnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
 		/// </summary>
+		/// <returns>Returns <c>default(AWnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(AWnd)"/>.</returns>
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
@@ -1002,7 +992,7 @@ namespace Au.Types
 
 		static object _ParseString(string s)
 		{
-			if(s.Length == 0) return null;
+			if(s.NE()) return null;
 			string role = null, name = s;
 			switch(s[0]) {
 			case 'a': //"a'role' name" or just "name"

@@ -608,39 +608,36 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Generates virtual keystrokes (keys, text). Also can wait, etc.
+		/// Generates virtual keystrokes (keys, text).
 		/// </summary>
 		/// <param name="keysEtc">
-		/// Any number of arguments of these types:
-		/// - string - keys. One or more key names separated by spaces or operators. More info in Remarks.
-		/// <br/>Example: <c>AKeys.Key("Enter A Ctrl+A");</c>
-		/// Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
-		/// <br/>See <see cref="AddKeys"/>.
-		/// - <see cref="KText"/> - literal text, like function <see cref="Text"/>.
+		/// Arguments of these types:
+		/// <list type="bullet">
+		/// <item><description>string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c> .
+		/// <br/>Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
+		/// </description></item>
+		/// <item><description><see cref="KText"/> - literal text, like function <see cref="Text"/>.
 		/// <br/>Example: <c>AKeys.Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
-		/// <br/>Uses virtual keystrokes or the clipboard, depending on <see cref="AOpt.Key"/> and text.
-		/// <br/>See <see cref="AddText"/>.
-		/// - <see cref="KKey"/> - a single key.
+		/// </description></item>
+		/// <item><description><see cref="KKey"/> - a single key.
 		/// <br/>Example: <c>AKeys.Key("Shift+", KKey.Left, "*3");</c> is the same as <c>AKeys.Key("Shift+Left*3");</c>.
-		/// <br/>See <see cref="AddKey(KKey, bool?)"/>.
-		/// - int - milliseconds to sleep. Max 10000.
+		/// </description></item>
+		/// <item><description>int - sleep milliseconds. Max 10000.
 		/// <br/>Example: <c>AKeys.Key("Left", 500, "Right");</c>
-		/// <br/>See <see cref="AddSleep"/>.
-		/// - <see cref="Action"/> - callback function.
+		/// </description></item>
+		/// <item><description><see cref="Action"/> - callback function.
 		/// <br/>Example: <c>Action click = () => AMouse.Click(); AKeys.Key("Shift+", click);</c>
-		/// <br/>See <see cref="AddAction"/>.
-		/// - null or "" - nothing.
-		/// - (int, bool) - a single key, specified using scan code and extended-key flag.
+		/// </description></item>
+		/// <item><description>(int, bool) - a single key, specified using scan code and extended-key flag.
 		/// <br/>Example: <c>AKeys.Key((0x3B, false)); //key F1</c>
-		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
-		/// - (KKey, int, bool) - a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
+		/// </description></item>
+		/// <item><description>(KKey, int, bool) - a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
 		/// <br/>Example: <c>AKeys.Key((KKey.Enter, 0, true)); //numpad Enter</c>
-		/// <br/>See <see cref="AddKey(KKey, int, bool, bool?)"/>.
+		/// </description></item>
+		/// </list>
 		/// </param>
 		/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
 		/// <remarks>
-		/// Generates virtual keystrokes. Uses API <msdn>SendInput</msdn>. It works almost like real keyboard.
-		/// 
 		/// Usually keys are specified in string, like in this example:
 		/// <code><![CDATA[AKeys.Key("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
 		/// ]]></code>
@@ -649,7 +646,7 @@ namespace Au
 		/// <table>
 		/// <tr>
 		/// <th>Group</th>
-		/// <th>Keys</th>
+		/// <th style="width:40%">Keys</th>
 		/// <th>Info</th>
 		/// </tr>
 		/// <tr>
@@ -682,20 +679,19 @@ namespace Au
 		/// <tr>
 		/// <td>Other keys</td>
 		/// <td>Names of enum <see cref="KKey"/> members.</td>
-		/// <td>Start with an uppercase character.
-		/// <br/>Example: <c>AKeys.Key("BrowserBack"); //KKey.BrowserBack</c>
+		/// <td>Example: <c>AKeys.Key("BrowserBack");</c>
 		/// </td>
 		/// </tr>
 		/// <tr>
 		/// <td>Other keys</td>
 		/// <td>Virtual-key codes.</td>
 		/// <td>Start with VK or Vk.
-		/// <br/>Example: <c>AKeys.Key("VK65 VK0x42");</c>
+		/// Example: <c>AKeys.Key("VK65 VK0x42");</c>
 		/// </td>
 		/// </tr>
 		/// <tr>
 		/// <td>Forbidden</td>
-		/// <td>Fn, Ctrl+Alt+Del, Win+L, some other</td>
+		/// <td>Fn, Ctrl+Alt+Del, Win+L, some other.</td>
 		/// <td>Programs cannot press these keys.</td>
 		/// </tr>
 		/// <tr>
@@ -842,8 +838,6 @@ namespace Au
 		/// </tr>
 		/// </table>
 		/// 
-		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use a <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", (KText)"text").Send();</c>. More examples in <see cref="AKeys(OptKey)"/> topic.
-		/// 
 		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
 		/// Don't use this function to automate windows of own thread. Call it from another thread. See the last example.
@@ -851,6 +845,12 @@ namespace Au
 		/// Administrator and uiAccess processes don't receive keystrokes sent by standard user processes. See [](xref:uac).
 		/// 
 		/// Mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
+		/// 
+		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use an <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", (KText)"text").Send();</c>. More examples in <see cref="AKeys(OptKey)"/> topic.
+		/// 
+		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>. Then calls <see cref="Send"/>.
+		/// 
+		/// Uses API <msdn>SendInput</msdn>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[

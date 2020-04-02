@@ -166,7 +166,7 @@ namespace Au.Controls
 
 						if(_onlyIcons && gp.Image != null) {
 							//var z = gp.Image.Size;
-							var z = Au.Util.ADpi.SmallIconSize;
+							var z = Au.Util.ADpi.SmallIconSize_;
 							if(z.width > r.Width) z.width = r.Width;
 							if(z.height > r.Height) z.height = r.Height;
 							var x = (r.Left + r.Right - z.width) / 2;

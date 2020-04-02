@@ -20,24 +20,15 @@ namespace Au
 	/// Allocates, writes and reads memory in other process.
 	/// </summary>
 	/// <remarks>
-	/// Objects of this class must be disposed. Example: <c>using(var pm=new AProcessMemory(...)) { ... }</c>.
+	/// Must be disposed. Example: <c>using(var pm=new AProcessMemory(...)) { ... }</c>.
 	/// </remarks>
-	public sealed unsafe class AProcessMemory : IDisposable
+	public unsafe class AProcessMemory : IDisposable
 	{
 		Handle_ _hproc;
 		HandleRef _HprocHR => new HandleRef(this, _hproc);
 
 		///
-		~AProcessMemory() { _Dispose(); }
-
-		///
-		public void Dispose()
-		{
-			_Dispose();
-			GC.SuppressFinalize(this);
-		}
-
-		void _Dispose()
+		protected virtual void Dispose(bool disposing)
 		{
 			if(_hproc.Is0) return;
 			if(Mem != default) {
@@ -48,6 +39,16 @@ namespace Au
 			}
 			_hproc.Dispose();
 		}
+
+		///
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
+		///
+		~AProcessMemory() => Dispose(false);
 
 		/// <summary>
 		/// Process handle.
@@ -84,7 +85,7 @@ namespace Au
 
 		void _Alloc(int pid, AWnd w, int nBytes)
 		{
-			string err = null;
+			string err;
 			const uint fl = Api.PROCESS_VM_OPERATION | Api.PROCESS_VM_READ | Api.PROCESS_VM_WRITE;
 			_hproc = w.Is0 ? Handle_.OpenProcess(pid, fl) : Handle_.OpenProcess(w, fl);
 			if(_hproc.Is0) { err = "Failed to open process handle."; goto ge; }
@@ -96,7 +97,7 @@ namespace Au
 			return;
 			ge:
 			var e = new AuException(0, err);
-			_Dispose();
+			Dispose();
 			throw e;
 		}
 

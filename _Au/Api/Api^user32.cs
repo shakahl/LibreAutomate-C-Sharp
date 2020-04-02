@@ -1220,6 +1220,8 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetCaretPos(out POINT lpPoint);
 
+		internal static bool GetCaretPosInScreen_(out POINT p) => GetCaretPos(out p) && GetFocus().MapClientToScreen(ref p);
+
 		[DllImport("user32.dll")]
 		internal static extern int ToUnicodeEx(uint wVirtKey, uint wScanCode, byte* lpKeyState, char* pwszBuff, int cchBuff, uint wFlags, IntPtr dwhkl);
 

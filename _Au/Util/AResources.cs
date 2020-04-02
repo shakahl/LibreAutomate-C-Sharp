@@ -30,7 +30,7 @@ namespace Au.Util
 		/// <param name="name">Resource name, like "example", not like "Project.Properties.Resources.example".</param>
 		/// <remarks>
 		/// Uses <see cref="ResourceManager.GetObject(string, CultureInfo)"/>.
-		/// The Image is not cached. Will need to Dispose.
+		/// The Image is not cached. Each call returns new object. The caller should dispose it if need.
 		/// </remarks>
 		public static object GetAppResource(string name)
 		{

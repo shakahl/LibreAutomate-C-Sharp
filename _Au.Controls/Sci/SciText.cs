@@ -1048,10 +1048,11 @@ namespace Au.Controls
 		/// Gets text and offsets of lines containing selection.
 		/// Returns true. If <i>ifFullLines</i> is true, may return false.
 		/// </summary>
-		/// <param name="x">Receives results. The positions are UTF-8.</param>
+		/// <param name="utf16">Return UTF-16.</param>
+		/// <param name="x">Results.</param>
 		/// <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
 		/// <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
-		public bool GetSelectionLines(out SelectionLines x, bool ifFullLines = false, bool oneMore = false)
+		public bool GetSelectionLines(bool utf16, out (int selStart, int selEnd, int linesStart, int linesEnd, string text) x, bool ifFullLines = false, bool oneMore = false)
 		{
 			x = default;
 			x.selStart = SelectionStart8; x.selEnd = SelectionEnd8;
@@ -1068,13 +1069,13 @@ namespace Au.Controls
 
 			x.linesEnd = end;
 			x.text = _RangeText(x.linesStart, end);
+			if(utf16) {
+				x.linesStart = C.Pos16(x.linesStart);
+				x.linesEnd = C.Pos16(x.linesEnd);
+				x.selStart = C.Pos16(x.selStart);
+				x.selEnd = C.Pos16(x.selEnd);
+			}
 			return true;
-		}
-
-		public struct SelectionLines
-		{
-			public int selStart, selEnd, linesStart, linesEnd;
-			public string text;
 		}
 
 		public string SelectedText() => _RangeText(SelectionStart8, SelectionEnd8);

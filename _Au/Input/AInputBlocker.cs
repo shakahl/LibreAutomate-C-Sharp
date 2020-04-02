@@ -41,7 +41,7 @@ namespace Au
 	/// AOutput.Write("not blocked");
 	/// ]]></code>
 	/// </example>
-	public unsafe class AInputBlocker : IDisposable
+	public sealed unsafe class AInputBlocker : IDisposable
 	{
 		Handle_ _syncEvent, _stopEvent;
 		Handle_ _threadHandle;

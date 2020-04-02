@@ -30,18 +30,17 @@
 			this._bCancel = new Au.Controls.AuButtonCancel();
 			this.tabControl1 = new System.Windows.Forms.TabControl();
 			this._tabGeneral = new System.Windows.Forms.TabPage();
-			this._startupScripts = new System.Windows.Forms.TextBox();
+			this._eStartupScripts = new System.Windows.Forms.TextBox();
 			this.label1 = new Au.Controls.AuLabel();
-			this._runHidden = new Au.Controls.AuCheckBox();
-			this._versionCheck = new Au.Controls.AuCheckBox();
-			this._runAtStartup = new Au.Controls.AuCheckBox();
+			this._cRunHidden = new Au.Controls.AuCheckBox();
+			this._cCheckVersion = new Au.Controls.AuCheckBox();
+			this._cRunAtStartup = new Au.Controls.AuCheckBox();
 			this._tabFiles = new System.Windows.Forms.TabPage();
 			this._tabTemplates = new System.Windows.Forms.TabPage();
-			this._cCustTemplS = new Au.Controls.AuRadioButton();
-			this._cDefTemplS = new Au.Controls.AuRadioButton();
-			this._templClass = new Au.Tools.CodeBox();
-			this._templScript = new Au.Tools.CodeBox();
+			this._comboUseTemplate = new System.Windows.Forms.ComboBox();
+			this._comboTemplate = new System.Windows.Forms.ComboBox();
 			this.auLabel2 = new Au.Controls.AuLabel();
+			this._sciTemplate = new Au.Tools.CodeBox();
 			this.auLabel1 = new Au.Controls.AuLabel();
 			this._tabFont = new System.Windows.Forms.TabPage();
 			this._pColor = new System.Windows.Forms.Panel();
@@ -64,18 +63,17 @@
 			this.label2 = new Au.Controls.AuLabel();
 			this._nFontSize = new System.Windows.Forms.NumericUpDown();
 			this.label3 = new Au.Controls.AuLabel();
-			this._cbFont = new System.Windows.Forms.ComboBox();
+			this._comboFont = new System.Windows.Forms.ComboBox();
 			this._sciStyles = new Au.Controls.AuScintilla();
-			this._tabCodeInfo = new System.Windows.Forms.TabPage();
+			this._tabCode = new System.Windows.Forms.TabPage();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
+			this._cCustomSnippets = new Au.Controls.AuCheckBox();
 			this._cComplParenSpace = new Au.Controls.AuCheckBox();
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bApply = new Au.Controls.AuButton();
-			this.panel1 = new System.Windows.Forms.Panel();
-			this.panel2 = new System.Windows.Forms.Panel();
-			this._cDefTemplC = new Au.Controls.AuRadioButton();
-			this._cCustTemplC = new Au.Controls.AuRadioButton();
+			this._cStringEnterRN = new Au.Controls.AuCheckBox();
+			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.tabControl1.SuspendLayout();
 			this._tabGeneral.SuspendLayout();
 			this._tabTemplates.SuspendLayout();
@@ -89,11 +87,10 @@
 			((System.ComponentModel.ISupportInitialize)(this._nGreen)).BeginInit();
 			this._pFont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nFontSize)).BeginInit();
-			this._tabCodeInfo.SuspendLayout();
+			this._tabCode.SuspendLayout();
 			this.groupBox1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
-			this.panel1.SuspendLayout();
-			this.panel2.SuspendLayout();
+			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// _bOK
@@ -117,7 +114,7 @@
 			this.tabControl1.Controls.Add(this._tabFiles);
 			this.tabControl1.Controls.Add(this._tabTemplates);
 			this.tabControl1.Controls.Add(this._tabFont);
-			this.tabControl1.Controls.Add(this._tabCodeInfo);
+			this.tabControl1.Controls.Add(this._tabCode);
 			this.tabControl1.Location = new System.Drawing.Point(0, 0);
 			this.tabControl1.Name = "tabControl1";
 			this.tabControl1.SelectedIndex = 0;
@@ -126,11 +123,11 @@
 			// 
 			// _tabGeneral
 			// 
-			this._tabGeneral.Controls.Add(this._startupScripts);
+			this._tabGeneral.Controls.Add(this._eStartupScripts);
 			this._tabGeneral.Controls.Add(this.label1);
-			this._tabGeneral.Controls.Add(this._runHidden);
-			this._tabGeneral.Controls.Add(this._versionCheck);
-			this._tabGeneral.Controls.Add(this._runAtStartup);
+			this._tabGeneral.Controls.Add(this._cRunHidden);
+			this._tabGeneral.Controls.Add(this._cCheckVersion);
+			this._tabGeneral.Controls.Add(this._cRunAtStartup);
 			this._tabGeneral.Location = new System.Drawing.Point(4, 24);
 			this._tabGeneral.Name = "_tabGeneral";
 			this._tabGeneral.Padding = new System.Windows.Forms.Padding(3);
@@ -139,19 +136,19 @@
 			this._tabGeneral.Text = "General";
 			this._tabGeneral.UseVisualStyleBackColor = true;
 			// 
-			// _startupScripts
+			// _eStartupScripts
 			// 
-			this._startupScripts.AcceptsReturn = true;
-			this._startupScripts.Location = new System.Drawing.Point(232, 32);
-			this._startupScripts.Multiline = true;
-			this._startupScripts.Name = "_startupScripts";
-			this._startupScripts.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-			this._startupScripts.Size = new System.Drawing.Size(248, 60);
-			this._startupScripts.TabIndex = 3;
-			this._toolTip.SetToolTip(this._startupScripts, "Script name or path, and delay ms or s.\r\nExample:\r\nscript4.cs, 500 ms\r\n\\folder\\sc" +
+			this._eStartupScripts.AcceptsReturn = true;
+			this._eStartupScripts.Location = new System.Drawing.Point(232, 32);
+			this._eStartupScripts.Multiline = true;
+			this._eStartupScripts.Name = "_eStartupScripts";
+			this._eStartupScripts.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this._eStartupScripts.Size = new System.Drawing.Size(248, 60);
+			this._eStartupScripts.TabIndex = 3;
+			this._toolTip.SetToolTip(this._eStartupScripts, "Script name or path, and delay ms or s.\r\nExample:\r\nscript4.cs, 500 ms\r\n\\folder\\sc" +
         "ript5.cs, 2 s\r\n//disabled, 100 ms");
-			this._startupScripts.WordWrap = false;
-			this._startupScripts.Validating += new System.ComponentModel.CancelEventHandler(this._startupScripts_Validating);
+			this._eStartupScripts.WordWrap = false;
+			this._eStartupScripts.Validating += new System.ComponentModel.CancelEventHandler(this._startupScripts_Validating);
 			// 
 			// label1
 			// 
@@ -162,41 +159,41 @@
 			this.label1.TabIndex = 2;
 			this.label1.Text = "Run scripts when this workspace loaded";
 			// 
-			// _runHidden
+			// _cRunHidden
 			// 
-			this._runHidden.AutoSize = true;
-			this._runHidden.Location = new System.Drawing.Point(8, 32);
-			this._runHidden.Name = "_runHidden";
-			this._runHidden.Size = new System.Drawing.Size(198, 20);
-			this._runHidden.TabIndex = 1;
-			this._runHidden.Text = "Start hidden; hide when closing";
-			this._toolTip.SetToolTip(this._runHidden, "Start this program without a window.\r\nTo show it, click the tray icon or run this" +
+			this._cRunHidden.AutoSize = true;
+			this._cRunHidden.Location = new System.Drawing.Point(8, 32);
+			this._cRunHidden.Name = "_cRunHidden";
+			this._cRunHidden.Size = new System.Drawing.Size(198, 20);
+			this._cRunHidden.TabIndex = 1;
+			this._cRunHidden.Text = "Start hidden; hide when closing";
+			this._toolTip.SetToolTip(this._cRunHidden, "Start this program without a window.\r\nTo show it, click the tray icon or run this" +
         " program again.\r\nThe \'close window\' button hides it instead. To exit, use a menu" +
         ".");
-			this._runHidden.UseVisualStyleBackColor = false;
+			this._cRunHidden.UseVisualStyleBackColor = false;
 			// 
-			// _versionCheck
+			// _cCheckVersion
 			// 
-			this._versionCheck.AutoSize = true;
-			this._versionCheck.Location = new System.Drawing.Point(8, 52);
-			this._versionCheck.Name = "_versionCheck";
-			this._versionCheck.Size = new System.Drawing.Size(177, 20);
-			this._versionCheck.TabIndex = 2;
-			this._versionCheck.Text = "Check for program updates";
-			this._versionCheck.UseVisualStyleBackColor = false;
-			this._versionCheck.Visible = false;
+			this._cCheckVersion.AutoSize = true;
+			this._cCheckVersion.Location = new System.Drawing.Point(8, 52);
+			this._cCheckVersion.Name = "_cCheckVersion";
+			this._cCheckVersion.Size = new System.Drawing.Size(177, 20);
+			this._cCheckVersion.TabIndex = 2;
+			this._cCheckVersion.Text = "Check for program updates";
+			this._cCheckVersion.UseVisualStyleBackColor = false;
+			this._cCheckVersion.Visible = false;
 			// 
-			// _runAtStartup
+			// _cRunAtStartup
 			// 
-			this._runAtStartup.AutoSize = true;
-			this._runAtStartup.Location = new System.Drawing.Point(8, 12);
-			this._runAtStartup.Name = "_runAtStartup";
-			this._runAtStartup.Size = new System.Drawing.Size(134, 20);
-			this._runAtStartup.TabIndex = 0;
-			this._runAtStartup.Text = "Start with Windows";
-			this._toolTip.SetToolTip(this._runAtStartup, "Run this program when Windows starts and user logs on.\r\nThis setting is in Regist" +
+			this._cRunAtStartup.AutoSize = true;
+			this._cRunAtStartup.Location = new System.Drawing.Point(8, 12);
+			this._cRunAtStartup.Name = "_cRunAtStartup";
+			this._cRunAtStartup.Size = new System.Drawing.Size(134, 20);
+			this._cRunAtStartup.TabIndex = 0;
+			this._cRunAtStartup.Text = "Start with Windows";
+			this._toolTip.SetToolTip(this._cRunAtStartup, "Run this program when Windows starts and user logs on.\r\nThis setting is in Regist" +
         "ry.");
-			this._runAtStartup.UseVisualStyleBackColor = false;
+			this._cRunAtStartup.UseVisualStyleBackColor = false;
 			// 
 			// _tabFiles
 			// 
@@ -209,11 +206,10 @@
 			// 
 			// _tabTemplates
 			// 
-			this._tabTemplates.Controls.Add(this.panel2);
-			this._tabTemplates.Controls.Add(this.panel1);
-			this._tabTemplates.Controls.Add(this._templClass);
-			this._tabTemplates.Controls.Add(this._templScript);
+			this._tabTemplates.Controls.Add(this._comboUseTemplate);
+			this._tabTemplates.Controls.Add(this._comboTemplate);
 			this._tabTemplates.Controls.Add(this.auLabel2);
+			this._tabTemplates.Controls.Add(this._sciTemplate);
 			this._tabTemplates.Controls.Add(this.auLabel1);
 			this._tabTemplates.Location = new System.Drawing.Point(4, 24);
 			this._tabTemplates.Name = "_tabTemplates";
@@ -222,62 +218,51 @@
 			this._tabTemplates.Text = "Templates";
 			this._tabTemplates.UseVisualStyleBackColor = true;
 			// 
-			// _cCustTemplS
+			// _comboUseTemplate
 			// 
-			this._cCustTemplS.Location = new System.Drawing.Point(144, 4);
-			this._cCustTemplS.Name = "_cCustTemplS";
-			this._cCustTemplS.Size = new System.Drawing.Size(128, 14);
-			this._cCustTemplS.TabIndex = 1;
-			this._cCustTemplS.Text = "Custom template";
-			this._cCustTemplS.UseVisualStyleBackColor = false;
+			this._comboUseTemplate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this._comboUseTemplate.FormattingEnabled = true;
+			this._comboUseTemplate.Location = new System.Drawing.Point(360, 8);
+			this._comboUseTemplate.Name = "_comboUseTemplate";
+			this._comboUseTemplate.Size = new System.Drawing.Size(120, 23);
+			this._comboUseTemplate.TabIndex = 5;
 			// 
-			// _cDefTemplS
+			// _comboTemplate
 			// 
-			this._cDefTemplS.Location = new System.Drawing.Point(16, 4);
-			this._cDefTemplS.Name = "_cDefTemplS";
-			this._cDefTemplS.Size = new System.Drawing.Size(128, 14);
-			this._cDefTemplS.TabIndex = 0;
-			this._cDefTemplS.TabStop = true;
-			this._cDefTemplS.Text = "Default template";
-			this._cDefTemplS.UseVisualStyleBackColor = false;
-			// 
-			// _templClass
-			// 
-			this._templClass.AccessibleName = "_templClass";
-			this._templClass.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
-			this._templClass.Location = new System.Drawing.Point(8, 156);
-			this._templClass.Name = "_templClass";
-			this._templClass.Size = new System.Drawing.Size(472, 100);
-			this._templClass.TabIndex = 2;
-			this._templClass.ZAcceptsReturn = true;
-			// 
-			// _templScript
-			// 
-			this._templScript.AccessibleName = "_templScript";
-			this._templScript.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
-			this._templScript.Location = new System.Drawing.Point(8, 24);
-			this._templScript.Name = "_templScript";
-			this._templScript.Size = new System.Drawing.Size(472, 100);
-			this._templScript.TabIndex = 0;
-			this._templScript.ZAcceptsReturn = true;
+			this._comboTemplate.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+			this._comboTemplate.FormattingEnabled = true;
+			this._comboTemplate.Location = new System.Drawing.Point(72, 8);
+			this._comboTemplate.Name = "_comboTemplate";
+			this._comboTemplate.Size = new System.Drawing.Size(168, 23);
+			this._comboTemplate.TabIndex = 5;
 			// 
 			// auLabel2
 			// 
 			this.auLabel2.AutoSize = true;
-			this.auLabel2.Location = new System.Drawing.Point(8, 136);
+			this.auLabel2.Location = new System.Drawing.Point(328, 8);
 			this.auLabel2.Name = "auLabel2";
-			this.auLabel2.Size = new System.Drawing.Size(78, 17);
+			this.auLabel2.Size = new System.Drawing.Size(26, 17);
 			this.auLabel2.TabIndex = 4;
-			this.auLabel2.Text = "New class file";
+			this.auLabel2.Text = "Use";
+			// 
+			// _sciTemplate
+			// 
+			this._sciTemplate.AccessibleName = "";
+			this._sciTemplate.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
+			this._sciTemplate.Location = new System.Drawing.Point(8, 40);
+			this._sciTemplate.Name = "_sciTemplate";
+			this._sciTemplate.Size = new System.Drawing.Size(472, 220);
+			this._sciTemplate.TabIndex = 0;
+			this._sciTemplate.ZAcceptsReturn = true;
 			// 
 			// auLabel1
 			// 
 			this.auLabel1.AutoSize = true;
-			this.auLabel1.Location = new System.Drawing.Point(8, 4);
+			this.auLabel1.Location = new System.Drawing.Point(8, 8);
 			this.auLabel1.Name = "auLabel1";
-			this.auLabel1.Size = new System.Drawing.Size(82, 17);
+			this.auLabel1.Size = new System.Drawing.Size(55, 17);
 			this.auLabel1.TabIndex = 4;
-			this.auLabel1.Text = "New script file";
+			this.auLabel1.Text = "Template";
 			// 
 			// _tabFont
 			// 
@@ -508,7 +493,7 @@
 			this._pFont.Controls.Add(this.label2);
 			this._pFont.Controls.Add(this._nFontSize);
 			this._pFont.Controls.Add(this.label3);
-			this._pFont.Controls.Add(this._cbFont);
+			this._pFont.Controls.Add(this._comboFont);
 			this._pFont.Location = new System.Drawing.Point(184, 204);
 			this._pFont.Name = "_pFont";
 			this._pFont.Size = new System.Drawing.Size(296, 56);
@@ -549,17 +534,17 @@
 			this.label3.TabIndex = 2;
 			this.label3.Text = "Size";
 			// 
-			// _cbFont
+			// _comboFont
 			// 
-			this._cbFont.FormattingEnabled = true;
-			this._cbFont.Location = new System.Drawing.Point(40, 0);
-			this._cbFont.Name = "_cbFont";
-			this._cbFont.Size = new System.Drawing.Size(256, 23);
-			this._cbFont.TabIndex = 1;
+			this._comboFont.FormattingEnabled = true;
+			this._comboFont.Location = new System.Drawing.Point(40, 0);
+			this._comboFont.Name = "_comboFont";
+			this._comboFont.Size = new System.Drawing.Size(256, 23);
+			this._comboFont.TabIndex = 1;
 			// 
 			// _sciStyles
 			// 
-			this._sciStyles.AccessibleName = "_sciStyles";
+			this._sciStyles.AccessibleName = "";
 			this._sciStyles.AccessibleRole = System.Windows.Forms.AccessibleRole.Text;
 			this._sciStyles.Location = new System.Drawing.Point(8, 8);
 			this._sciStyles.Name = "_sciStyles";
@@ -568,30 +553,42 @@
 			this._sciStyles.ZInitBorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
 			this._sciStyles.ZInitReadOnlyAlways = true;
 			// 
-			// _tabCodeInfo
+			// _tabCode
 			// 
-			this._tabCodeInfo.Controls.Add(this.groupBox1);
-			this._tabCodeInfo.Location = new System.Drawing.Point(4, 24);
-			this._tabCodeInfo.Name = "_tabCodeInfo";
-			this._tabCodeInfo.Size = new System.Drawing.Size(488, 268);
-			this._tabCodeInfo.TabIndex = 5;
-			this._tabCodeInfo.Text = "Code info";
-			this._tabCodeInfo.UseVisualStyleBackColor = true;
+			this._tabCode.Controls.Add(this.groupBox2);
+			this._tabCode.Controls.Add(this.groupBox1);
+			this._tabCode.Location = new System.Drawing.Point(4, 24);
+			this._tabCode.Name = "_tabCode";
+			this._tabCode.Size = new System.Drawing.Size(488, 268);
+			this._tabCode.TabIndex = 5;
+			this._tabCode.Text = "Code";
+			this._tabCode.UseVisualStyleBackColor = true;
 			// 
 			// groupBox1
 			// 
+			this.groupBox1.Controls.Add(this._cCustomSnippets);
 			this.groupBox1.Controls.Add(this._cComplParenSpace);
 			this.groupBox1.Location = new System.Drawing.Point(8, 12);
 			this.groupBox1.Name = "groupBox1";
-			this.groupBox1.Size = new System.Drawing.Size(472, 108);
+			this.groupBox1.Size = new System.Drawing.Size(472, 72);
 			this.groupBox1.TabIndex = 0;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Completion lists";
 			// 
+			// _cCustomSnippets
+			// 
+			this._cCustomSnippets.AutoSize = true;
+			this._cCustomSnippets.Location = new System.Drawing.Point(8, 44);
+			this._cCustomSnippets.Name = "_cCustomSnippets";
+			this._cCustomSnippets.Size = new System.Drawing.Size(141, 20);
+			this._cCustomSnippets.TabIndex = 2;
+			this._cCustomSnippets.Text = "Use custom snippets";
+			this._cCustomSnippets.UseVisualStyleBackColor = false;
+			// 
 			// _cComplParenSpace
 			// 
 			this._cComplParenSpace.AutoSize = true;
-			this._cComplParenSpace.Location = new System.Drawing.Point(8, 24);
+			this._cComplParenSpace.Location = new System.Drawing.Point(8, 20);
 			this._cComplParenSpace.Name = "_cComplParenSpace";
 			this._cComplParenSpace.Size = new System.Drawing.Size(188, 20);
 			this._cComplParenSpace.TabIndex = 1;
@@ -617,42 +614,25 @@
 			this._bApply.Text = "&Apply";
 			this._bApply.Click += new System.EventHandler(this._bOK_Click);
 			// 
-			// panel1
+			// _cStringEnterRN
 			// 
-			this.panel1.Controls.Add(this._cDefTemplS);
-			this.panel1.Controls.Add(this._cCustTemplS);
-			this.panel1.Location = new System.Drawing.Point(208, 4);
-			this.panel1.Name = "panel1";
-			this.panel1.Size = new System.Drawing.Size(272, 20);
-			this.panel1.TabIndex = 1;
+			this._cStringEnterRN.AutoSize = true;
+			this._cStringEnterRN.Location = new System.Drawing.Point(8, 20);
+			this._cStringEnterRN.Name = "_cStringEnterRN";
+			this._cStringEnterRN.Size = new System.Drawing.Size(157, 20);
+			this._cStringEnterRN.TabIndex = 0;
+			this._cStringEnterRN.Text = "Enter in string adds \\r\\n";
+			this._cStringEnterRN.UseVisualStyleBackColor = false;
 			// 
-			// panel2
+			// groupBox2
 			// 
-			this.panel2.Controls.Add(this._cDefTemplC);
-			this.panel2.Controls.Add(this._cCustTemplC);
-			this.panel2.Location = new System.Drawing.Point(208, 136);
-			this.panel2.Name = "panel2";
-			this.panel2.Size = new System.Drawing.Size(272, 20);
-			this.panel2.TabIndex = 3;
-			// 
-			// _cDefTemplC
-			// 
-			this._cDefTemplC.Location = new System.Drawing.Point(16, 4);
-			this._cDefTemplC.Name = "_cDefTemplC";
-			this._cDefTemplC.Size = new System.Drawing.Size(128, 14);
-			this._cDefTemplC.TabIndex = 0;
-			this._cDefTemplC.TabStop = true;
-			this._cDefTemplC.Text = "Default template";
-			this._cDefTemplC.UseVisualStyleBackColor = false;
-			// 
-			// _cCustTemplC
-			// 
-			this._cCustTemplC.Location = new System.Drawing.Point(144, 4);
-			this._cCustTemplC.Name = "_cCustTemplC";
-			this._cCustTemplC.Size = new System.Drawing.Size(128, 14);
-			this._cCustTemplC.TabIndex = 1;
-			this._cCustTemplC.Text = "Custom template";
-			this._cCustTemplC.UseVisualStyleBackColor = false;
+			this.groupBox2.Controls.Add(this._cStringEnterRN);
+			this.groupBox2.Location = new System.Drawing.Point(8, 96);
+			this.groupBox2.Name = "groupBox2";
+			this.groupBox2.Size = new System.Drawing.Size(472, 48);
+			this.groupBox2.TabIndex = 3;
+			this.groupBox2.TabStop = false;
+			this.groupBox2.Text = "Auto correction";
 			// 
 			// FOptions
 			// 
@@ -688,12 +668,12 @@
 			this._pFont.ResumeLayout(false);
 			this._pFont.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nFontSize)).EndInit();
-			this._tabCodeInfo.ResumeLayout(false);
+			this._tabCode.ResumeLayout(false);
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
-			this.panel1.ResumeLayout(false);
-			this.panel2.ResumeLayout(false);
+			this.groupBox2.ResumeLayout(false);
+			this.groupBox2.PerformLayout();
 			this.ResumeLayout(false);
 
 	}
@@ -706,16 +686,16 @@
 	private System.Windows.Forms.TabPage _tabGeneral;
 	private System.Windows.Forms.TabPage _tabFont;
 	private System.Windows.Forms.TabPage _tabFiles;
-	private Au.Controls.AuCheckBox _versionCheck;
-	private Au.Controls.AuCheckBox _runAtStartup;
-	private System.Windows.Forms.TextBox _startupScripts;
+	private Au.Controls.AuCheckBox _cCheckVersion;
+	private Au.Controls.AuCheckBox _cRunAtStartup;
+	private System.Windows.Forms.TextBox _eStartupScripts;
 	private Au.Controls.AuLabel label1;
 	private System.Windows.Forms.ErrorProvider _errorProvider;
 	private System.Windows.Forms.ToolTip _toolTip;
-	private Au.Controls.AuCheckBox _runHidden;
+	private Au.Controls.AuCheckBox _cRunHidden;
 	private System.Windows.Forms.NumericUpDown _nFontSize;
 	private Au.Controls.AuLabel label3;
-	private System.Windows.Forms.ComboBox _cbFont;
+	private System.Windows.Forms.ComboBox _comboFont;
 	private Au.Controls.AuLabel label2;
 	private Au.Controls.AuButton _bApply;
 	private Au.Controls.AuScintilla _sciStyles;
@@ -736,18 +716,16 @@
 	private System.Windows.Forms.TextBox _eColor;
 	private System.Windows.Forms.Panel _pColor;
 	private System.Windows.Forms.Panel _pFont;
-	private System.Windows.Forms.TabPage _tabCodeInfo;
+	private System.Windows.Forms.TabPage _tabCode;
 	private System.Windows.Forms.GroupBox groupBox1;
 	private Au.Controls.AuCheckBox _cComplParenSpace;
 	private System.Windows.Forms.TabPage _tabTemplates;
-	private Au.Tools.CodeBox _templClass;
-	private Au.Tools.CodeBox _templScript;
-	private Au.Controls.AuLabel auLabel2;
+	private Au.Tools.CodeBox _sciTemplate;
 	private Au.Controls.AuLabel auLabel1;
-	private Au.Controls.AuRadioButton _cCustTemplS;
-	private Au.Controls.AuRadioButton _cDefTemplS;
-	private System.Windows.Forms.Panel panel2;
-	private Au.Controls.AuRadioButton _cDefTemplC;
-	private Au.Controls.AuRadioButton _cCustTemplC;
-	private System.Windows.Forms.Panel panel1;
+	private Au.Controls.AuCheckBox _cCustomSnippets;
+	private System.Windows.Forms.ComboBox _comboUseTemplate;
+	private System.Windows.Forms.ComboBox _comboTemplate;
+	private Au.Controls.AuLabel auLabel2;
+	private System.Windows.Forms.GroupBox groupBox2;
+	private Au.Controls.AuCheckBox _cStringEnterRN;
 }

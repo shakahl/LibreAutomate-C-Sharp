@@ -61,15 +61,14 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var stop = false;
-		/// using(AHookWin.Keyboard(x => {
+		/// using var hook = AHookWin.Keyboard(x => {
 		/// 	AOutput.Write(x);
 		/// 	if(x.vkCode == KKey.Escape) { stop = true; x.BlockEvent(); }
-		/// })) {
-		/// 	MessageBox.Show("Low-level keyboard hook.", "Test");
-		/// 	//or
-		/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
-		/// 	//AOutput.Write("the end");
-		/// }
+		/// });
+		/// ADialog.Show("hook");
+		/// //or
+		/// //AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for Esc key
+		/// //AOutput.Write("the end");
 		/// ]]></code>
 		/// </example>
 		public static AHookWin Keyboard(Action<HookData.Keyboard> hookProc, bool ignoreAuInjected = true, bool setNow = true)
@@ -93,15 +92,14 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// var stop = false;
-		/// using(AHookWin.Mouse(x => {
+		/// using var hook = AHookWin.Mouse(x => {
 		/// 	AOutput.Write(x);
 		/// 	if(x.Event == HookData.MouseEvent.RightButton) { stop = x.IsButtonUp; x.BlockEvent(); }
-		/// })) {
-		/// 	MessageBox.Show("Low-level mouse hook.", "Test");
-		/// 	//or
-		/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
-		/// 	//AOutput.Write("the end");
-		/// }
+		/// });
+		/// ADialog.Show("hook");
+		/// //or
+		/// //AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for right-click
+		/// //AOutput.Write("the end");
 		/// ]]></code>
 		/// </example>
 		public static AHookWin Mouse(Action<HookData.Mouse> hookProc, bool ignoreAuInjected = true, bool setNow = true)
@@ -126,7 +124,7 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(AHookWin.ThreadCbt(x => {
+		/// using var hook = AHookWin.ThreadCbt(x => {
 		/// 	AOutput.Write(x.code);
 		/// 	switch(x.code) {
 		/// 	case HookData.CbtEvent.ACTIVATE:
@@ -155,10 +153,9 @@ namespace Au
 		/// 		break;
 		/// 	}
 		/// 	return false;
-		/// })) {
-		/// 	MessageBox.Show("CBT hook.", "Test", MessageBoxButtons.OKCancel);
-		/// 	//new Form().ShowDialog(); //to test MINMAX
-		/// }
+		/// });
+		/// ADialog.ShowOkCancel("hook");
+		/// //new Form().ShowDialog(); //to test MINMAX
 		/// ]]></code>
 		/// </example>
 		public static AHookWin ThreadCbt(Func<HookData.ThreadCbt, bool> hookProc, int threadId = 0, bool setNow = true)
@@ -180,9 +177,10 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(AHookWin.ThreadGetMessage(x => {
+		/// using var hook = AHookWin.ThreadGetMessage(x => {
 		/// 	AOutput.Write(x.msg->ToString(), x.PM_NOREMOVE);
-		/// })) MessageBox.Show("hook");
+		/// });
+		/// ADialog.Show("hook");
 		/// ]]></code>
 		/// </example>
 		public static AHookWin ThreadGetMessage(Action<HookData.ThreadGetMessage> hookProc, int threadId = 0, bool setNow = true)
@@ -203,10 +201,11 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(AHookWin.ThreadKeyboard(x => {
+		/// using var hook = AHookWin.ThreadKeyboard(x => {
 		/// 	AOutput.Write(x.key, 0 != (x.lParam & 0x80000000) ? "up" : "", x.lParam, x.PM_NOREMOVE);
 		/// 	return false;
-		/// })) MessageBox.Show("hook");
+		/// });
+		/// ADialog.Show("hook");
 		/// ]]></code>
 		/// </example>
 		public static AHookWin ThreadKeyboard(Func<HookData.ThreadKeyboard, bool> hookProc, int threadId = 0, bool setNow = true)
@@ -228,10 +227,11 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(AHookWin.ThreadMouse(x => {
+		/// using var hook = AHookWin.ThreadMouse(x => {
 		/// 	AOutput.Write(x.message, x.m->pt, x.m->hwnd, x.PM_NOREMOVE);
 		/// 	return false;
-		/// })) MessageBox.Show("hook");
+		/// });
+		/// ADialog.Show("hook");
 		/// ]]></code>
 		/// </example>
 		public static AHookWin ThreadMouse(Func<HookData.ThreadMouse, bool> hookProc, int threadId = 0, bool setNow = true)
@@ -253,11 +253,12 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(AHookWin.ThreadCallWndProc(x => {
+		/// using var hook = AHookWin.ThreadCallWndProc(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam);
 		/// 	AOutput.Write(mm, x.sentByOtherThread);
-		/// })) MessageBox.Show("hook");
+		/// });
+		/// ADialog.Show("hook");
 		/// ]]></code>
 		/// </example>
 		public static AHookWin ThreadCallWndProc(Action<HookData.ThreadCallWndProc> hookProc, int threadId = 0, bool setNow = true)
@@ -279,11 +280,12 @@ namespace Au
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(AHookWin.ThreadCallWndProcRet(x => {
+		/// using var hook = AHookWin.ThreadCallWndProcRet(x => {
 		/// 	ref var m = ref *x.msg;
 		/// 	var mm = Message.Create(m.hwnd.Handle, (int)m.message, m.wParam, m.lParam); mm.Result = m.lResult;
 		/// 	AOutput.Write(mm, x.sentByOtherThread);
-		/// })) MessageBox.Show("hook");
+		/// });
+		/// ADialog.Show("hook");
 		/// ]]></code>
 		/// </example>
 		public static AHookWin ThreadCallWndProcRet(Action<HookData.ThreadCallWndProcRet> hookProc, int threadId = 0, bool setNow = true)
@@ -324,7 +326,7 @@ namespace Au
 		/// </remarks>
 		public void Hook(int threadId = 0)
 		{
-			if(_proc2 == null) throw new ObjectDisposedException("AHookWin");
+			if(_proc2 == null) throw new ObjectDisposedException(nameof(AHookWin));
 			if(_hh != default) throw new InvalidOperationException("The hook is already set.");
 			if(_hookType == Api.WH_KEYBOARD_LL || _hookType == Api.WH_MOUSE_LL) {
 				if(threadId != 0) throw new ArgumentException("threadId must be 0");
@@ -371,12 +373,13 @@ namespace Au
 			GC.SuppressFinalize(this);
 		}
 
-		///
+		/// <summary>
+		/// Writes warning if the variable is not disposed. Cannot dispose in finalizer.
+		/// </summary>
 		~AHookWin()
 		{
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
-			//if(_hh != default && !NoWarningNondisposed) AWarning.Write($"Non-disposed AHookWin ({_hookTypeString}) variable."); //rejected. Eg when called Environment.Exit, finalizers are executed but finally code blocks not.
-			ADebug.PrintIf(_hh != default, $"Non-disposed AHookWin ({_hookTypeString}) variable.");
+			if(_hh != default) AWarning.Write($"Non-disposed AHookWin ({_hookTypeString}) variable.");
 		}
 
 		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)

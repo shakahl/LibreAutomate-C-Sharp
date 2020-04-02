@@ -107,8 +107,8 @@ class PanelRunning : AuUserControlBase, ITreeModel
 		case MouseButtons.Right:
 			var name = f.DisplayName;
 			var m = new AMenu();
-			m["End task '" + name + "'"] = o => Program.Tasks.EndTask(t);
-			m["End all '" + name + "'"] = o => Program.Tasks.EndTasksOf(f);
+			m["End task  " + name] = o => Program.Tasks.EndTask(t);
+			m["End all  " + name] = o => Program.Tasks.EndTasksOf(f);
 			m.Separator();
 			m["Close\tM-click"] = o => Program.Model.CloseFile(f, true);
 			if(null == Panels.Editor.ZGetOpenDocOf(f)) m.LastMenuItem.Enabled = false;

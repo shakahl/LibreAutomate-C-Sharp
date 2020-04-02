@@ -258,7 +258,7 @@ namespace Au
 		/// <remarks>
 		/// If the path argument is full path, calls <see cref="ExistsAsAny"/> and returns normalized path if exists, null if not.
 		/// Else searches in these places:
-		///	1. dirs, if used.
+		///	1. <i>dirs</i>, if used.
 		/// 2. <see cref="AFolders.ThisApp"/>.
 		/// 3. Calls API <msdn>SearchPath</msdn>, which searches in process directory, Windows system directories, current directory, PATH environment variable. The search order depends on API <msdn>SetSearchPathMode</msdn> or registry settings.
 		/// 4. If path ends with ".exe", tries to get path from registry "App Paths" keys.

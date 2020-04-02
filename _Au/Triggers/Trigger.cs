@@ -300,21 +300,22 @@ namespace Au.Triggers
 		public TriggerScope NotWindow(AWnd.Finder f)
 			=> _Add(true, f);
 
-		/// <summary>
-		/// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
-		/// </summary>
-		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		/// <exception cref="AuWndException">Invalid window handle.</exception>
-		public TriggerScope Window(AWnd w)
-			=> _Add(false, w);
+		//rejected. May be used incorrectly. Rare. When really need, can use the 'also' parameter.
+		///// <summary>
+		///// Sets scope "only this window". Hotkey, autotext and mouse triggers added afterwards will work only when the specified window is active.
+		///// </summary>
+		///// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
+		///// <exception cref="AuWndException">Invalid window handle.</exception>
+		//public TriggerScope Window(AWnd w)
+		//	=> _Add(false, w);
 
-		/// <summary>
-		/// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
-		/// </summary>
-		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
-		/// <exception cref="AuWndException">Invalid window handle.</exception>
-		public TriggerScope NotWindow(AWnd w)
-			=> _Add(true, w);
+		///// <summary>
+		///// Sets scope "not this window". Hotkey, autotext and mouse triggers added afterwards will not work when the specified window is active.
+		///// </summary>
+		///// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
+		///// <exception cref="AuWndException">Invalid window handle.</exception>
+		//public TriggerScope NotWindow(AWnd w)
+		//	=> _Add(true, w);
 
 		/// <summary>
 		/// Sets scope "only these windows". Hotkey, autotext and mouse triggers added afterwards will work only when one of the specified windows is active.
@@ -322,13 +323,12 @@ namespace Au.Triggers
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <param name="any">
 		/// Specifies one or more windows.
-		/// Supported object types: <see cref="AWnd.Finder"/>, <see cref="AWnd"/>, string.
-		/// If string, its format must be like with <see cref="AWnd.Finder.op_Implicit(string)"/>. Examples: "Name", "Name,Class", ",,Program.exe".
+		/// Tip: <b>AWnd.Finder</b> has implicit conversion from string. See <see cref="AWnd.Finder.op_Implicit(string)"/>.
+		/// Examples: <c>"Name"</c>, <c>"Name,Class"</c>, <c>",,Program.exe"</c>.
 		/// The easiest way to specify "all windows of program X.exe": <c>Triggers.Of.Windows(",,X.exe")</c>.
 		/// </param>
-		/// <exception cref="ArgumentException">Unsupported object type.</exception>
-		/// <exception cref="AuWndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
-		public TriggerScope Windows(params object[] any)
+		/// <exception cref="Exception">Exceptions of <see cref="AWnd.Finder.op_Implicit(string)"/>. This function itself does not throw exceptions.</exception>
+		public TriggerScope Windows(params AWnd.Finder[] any)
 			=> _Add(false, any);
 
 		/// <summary>
@@ -336,35 +336,23 @@ namespace Au.Triggers
 		/// </summary>
 		/// <returns>Returns an object that can be later passed to <see cref="Again"/> to reuse this scope.</returns>
 		/// <param name="any">See <see cref="Windows"/>.</param>
-		/// <exception cref="ArgumentException">Unsupported object type.</exception>
-		/// <exception cref="AuWndException">Invalid window handle (when object type is <b>AWnd</b>).</exception>
-		public TriggerScope NotWindows(params object[] any)
+		/// <exception cref="Exception">See <see cref="Windows"/>.</exception>
+		public TriggerScope NotWindows(params AWnd.Finder[] any)
 			=> _Add(true, any);
 
-		TriggerScope _Add(bool not, object o)
+		TriggerScope _Add(bool not, AWnd.Finder f)
 		{
-			switch(o) {
-			case null: throw new ArgumentNullException();
-			case AWnd w: w.ThrowIf0(); break;
-			case object[] a:
-				if(a.Length > 1) a = (o = a.Clone()) as object[]; //don't overwrite elements of array passed as argument. In most cases it contains strings.
-				for(int j = 0; j < a.Length; j++) {
-					switch(a[j]) {
-					case AWnd.Finder _: break;
-					case AWnd w: w.ThrowIf0(); break;
-					case string s:
-						var f = (AWnd.Finder)s;
-						if(a.Length > 1) a[j] = f; else o = f;
-						break;
-					case null: throw new ArgumentNullException();
-					default: throw new ArgumentException("Unsupported object type.");
-					}
-				}
-				break;
-			}
-
+			if(f == null) throw new ArgumentNullException();
 			Used = true;
-			return Current = new TriggerScope(o, not);
+			return Current = new TriggerScope(f, not);
+		}
+
+		TriggerScope _Add(bool not, AWnd.Finder[] a)
+		{
+			if(a.Length == 0) return _Add(not, a[0]);
+			foreach(var v in a) if(v == null) throw new ArgumentNullException();
+			Used = true;
+			return Current = new TriggerScope(a, not);
 		}
 
 		internal bool Used { get; private set; }
@@ -376,7 +364,7 @@ namespace Au.Triggers
 	/// <example>See <see cref="TriggerScopes"/>.</example>
 	public class TriggerScope
 	{
-		internal readonly object o; //AWnd.Finder, AWnd, object<AWnd.Finder|AWnd>[]
+		internal readonly object o; //AWnd.Finder, AWnd.Finder[]
 		internal readonly bool not;
 		internal int perfTime;
 
@@ -399,16 +387,9 @@ namespace Au.Triggers
 				case AWnd.Finder f:
 					yes = f.IsMatch(w, thc);
 					break;
-				case AWnd hwnd:
-					yes = w == hwnd;
-					break;
-				case object[] a:
+				case AWnd.Finder[] a:
 					foreach(var v in a) {
-						switch(v) {
-						case AWnd.Finder f1: yes = f1.IsMatch(w, thc); break;
-						case AWnd w1: yes = (w == w1); break;
-						}
-						if(yes) break;
+						if(yes = v.IsMatch(w, thc)) break;
 					}
 					break;
 				}
@@ -427,7 +408,7 @@ namespace Au.Triggers
 	/// 
 	/// You may ask: why to use CF when the trigger action (TA) can do the same?
 	/// 1. CF runs synchronously; if it returns false, the trigger key or mouse button message is passed to other triggers, hooks and apps. TA cannot do it reliably; it runs asynchronously, and the message is already stealed from other apps/triggers/hooks.
-	/// 2. CF is faster to call. It is simply called in the same thread that processes trigger messages. TA runs in another thread.
+	/// 2. CF is faster to call. It is simply called in the same thread that processes trigger messages. TA usually runs in another thread.
 	/// 3. A CF can be assigned to multiple triggers with a single line of code. Don't need to add the same code in all trigger actions.
 	/// 
 	/// A trigger can have up to 4 CF delegates and a window scope (<c>Triggers.Of...</c>). They are called in this order: CF assigned through <see cref="FollowingTriggersBeforeWindow"/>, <see cref="NextTriggerBeforeWindow"/>, window scope, <see cref="NextTrigger"/>, <see cref="FollowingTriggers"/>. The <b>NextX</b> properties assign the CF to the next single trigger. The <b>FollowingX</b> properties assign the CF to all following triggers until you assign another CF or null. If several are assigned, the trigger action runs only if all CF return true and the window scope matches. The <b>XBeforeWindow</b> properties are used only with hotkey, autotext and mouse triggers.

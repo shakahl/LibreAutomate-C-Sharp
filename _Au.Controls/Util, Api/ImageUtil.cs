@@ -291,10 +291,9 @@ namespace Au.Controls
 					var old = im; im = t; old.Dispose();
 				}
 
-				using(var m = new MemoryStream()) {
-					im.Save(m, ImageFormat.Bmp);
-					return m.ToArray();
-				}
+				using var m = new MemoryStream();
+				im.Save(m, ImageFormat.Bmp);
+				return m.ToArray();
 			}
 			finally { im.Dispose(); }
 		}
@@ -311,7 +310,7 @@ namespace Au.Controls
 				siz = Api.GetSystemMetrics(Api.SM_CXCURSOR);
 				//note: if LR_DEFAULTSIZE, uses SM_CXCURSOR, normally 32. It may be not what Explorer displays eg in Cursors folder. But without it gets the first cursor, which often is large, eg 128.
 			} else {
-				hi = AIcon.GetFileIconHandle(s, 16, searchPath ? GIFlags.SearchPath : 0);
+				hi = AIcon.GetFileIconHandle(s, 16, searchPath ? 0 : IconGetFlags.DontSearch);
 				siz = 16;
 			}
 			if(hi == default) return null;

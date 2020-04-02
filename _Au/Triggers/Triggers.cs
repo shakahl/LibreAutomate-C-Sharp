@@ -324,6 +324,8 @@ namespace Au.Triggers
 					});
 				}
 
+				_thc = new TriggerHookContext(this);
+
 				_ht = new HooksThread(hookEvents, _wMsg);
 			}
 
@@ -356,6 +358,7 @@ namespace Au.Triggers
 		int _mainThreadId;
 		AWnd _wMsg;
 		HooksThread _ht;
+		TriggerHookContext _thc;
 		static bool s_wasRun, s_wasKM;
 		const string c_cn = "Au.Triggers.Hooks";
 
@@ -380,38 +383,37 @@ namespace Au.Triggers
 		unsafe void _KeyMouseEvent(int messageId, HooksThread.UsedEvents eventType)
 		{
 			//APerf.First();
-			var thc = new TriggerHookContext(this);
 			//APerf.Next();
-			thc.InitContext();
+			_thc.InitContext();
 			//APerf.Next();
 			bool eat = false;
 			if(eventType == HooksThread.UsedEvents.Keyboard) {
 				//AOutput.Write("key");
 				if(!_ht.GetKeyData(messageId, out var data)) return;
 				var k = new HookData.Keyboard(null, &data);
-				thc.InitMod(k);
+				_thc.InitMod(k);
 				if(this[TriggerType.Hotkey] is HotkeyTriggers tk) { //if not null
-					eat = tk.HookProc(k, thc);
+					eat = tk.HookProc(k, _thc);
 				}
-				if(!eat /*&& thc.trigger == null*/ && this[TriggerType.Autotext] is AutotextTriggers ta) {
-					ta.HookProc(k, thc);
+				if(!eat /*&& _thc.trigger == null*/ && this[TriggerType.Autotext] is AutotextTriggers ta) {
+					ta.HookProc(k, _thc);
 				}
 			} else if(eventType == HooksThread.UsedEvents.MouseEdgeMove) {
 				//AOutput.Write("edge/move");
 				if(this[TriggerType.Mouse] is MouseTriggers tm) {
 					if(!_ht.GetEdgeMoveData(messageId, out var data)) return;
-					tm.HookProcEdgeMove(data, thc);
+					tm.HookProcEdgeMove(data, _thc);
 				}
 			} else {
 				//AOutput.Write(_ht.mouseMessage_);
 				if(this[TriggerType.Mouse] is MouseTriggers tm) {
 					if(!_ht.GetClickWheelData(messageId, out var data, out int message)) return;
 					var k = new HookData.Mouse(null, message, &data);
-					eat = tm.HookProcClickWheel(k, thc);
+					eat = tm.HookProcClickWheel(k, _thc);
 				}
 			}
 			//APerf.Next();
-			thc.PerfWarn();
+			_thc.PerfWarn();
 			//APerf.Next();
 
 			//var mem = GC.GetTotalMemory(false);
@@ -420,7 +422,7 @@ namespace Au.Triggers
 
 			if(!_ht.Return(messageId, eat)) return;
 			//APerf.NW();
-			if(thc.trigger != null) RunAction_(thc.trigger, thc.args, thc.muteMod);
+			if(_thc.trigger != null) RunAction_(_thc.trigger, _thc.args, _thc.muteMod);
 		}
 
 		//long _debugMem;
@@ -509,14 +511,18 @@ namespace Au.Triggers
 		public bool Disabled { get; set; }
 
 		/// <summary>
-		/// true if triggers are disabled in all processes that use this library in this user session.
+		/// Gets or sets whether triggers are disabled in all processes that use this library in this user session.
 		/// </summary>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		/// <seealso cref="Disabled"/>
 		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		public static unsafe bool DisabledEverywhere {
 			get => Util.SharedMemory_.Ptr->triggers.disabled;
-			set => Util.SharedMemory_.Ptr->triggers.disabled = value;
+			set {
+				if(value == DisabledEverywhere) return;
+				Util.SharedMemory_.Ptr->triggers.disabled = value;
+				var w = ATask.WndMsg_; if(!w.Is0) w.SendNotify(Api.WM_USER, 20); //update tray icon etc
+			}
 		}
 
 		[StructLayout(LayoutKind.Sequential, Size = 16)] //note: this struct is in shared memory. Size must be same in all library versions.

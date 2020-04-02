@@ -8,8 +8,13 @@ using System.IO;
 //This small program modifies the Roslyn solution.
 //Setup:
 //Download Roslyn solution to Q:\Downloads\roslyn-master.
-//Run this project. It modifies Roslyn solution files.
-//	Currently does not add the InternalsVisible.cs files; will need to add them manually or edit this project.
+//Open the Roslyn project.
+//To make VS not so slow, select all folders and unload projects. Then load only the 6 projects we need:
+//	In folder Compilers: Core\Microsoft.CodeAnalysis, CSharp\Microsoft.CodeAnalysis.CSharp.
+//	In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
+//	In folder Workspaces: Microsoft.CodeAnalysis.CSharp.Workspaces, Microsoft.CodeAnalysis.Workspaces.
+//Edit as described below under EDIT.
+//Run this project. It modifies Roslyn solution project files.
 //In Roslyn solution compile Microsoft.CodeAnalysis.CSharp.Features. It also compiles other 5. Copies the 6 dlls to Q:\app\Au\Other\CompilerDlls.
 //In _Au.Editor: Add references to the 6 dlls that are in folder Q:\app\Au\Other\CompilerDlls. On build will copy to _.
 //	VS will detect when the dlls modified when building Roslyn.
@@ -25,6 +30,28 @@ using System.IO;
 //		System.Composition.TypedParts.dll
 //		maybe in the future will need System.Composition.Convention.dll
 //If at run time says "dll not found", try to add the dll to references.
+
+//EDIT
+//Edit these manually, because Roslyn source in new version is very likely changed in that place.
+//Add only internal members. If public, need to declare it in PublicApi.Shipped.txt. Roslyn's internals are visible to the editor project.
+
+//Add Symbols property to the CompletionItem class:
+//1. Open Features\Core\Portable\Completion\CompletionItem.cs in project Microsoft.CodeAnalysis.Features.
+//2. Find method private CompletionItem With(...). In it find: return new CompletionItem...{
+//3. In the { } add line: Symbols = Symbols, //au
+//4. Below the method add property: internal System.Collections.Generic.IReadOnlyList<ISymbol> Symbols { get; set; } //au
+//5. Open Features\Core\Portable\Completion\Providers\SymbolCompletionItem.cs.
+//6. In method CreateWorker find: tags: tags);
+//7. Add property: item.Symbols = symbols; //au
+
+//Add Symbol property to the SymbolKeySignatureHelpItem class.
+//1. Open Features\Core\Portable\SignatureHelp\AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem.cs.
+//2. Add property: internal ISymbol Symbol { get; } //au
+//3. In ctor add:  Symbol = symbol; //au
+
+//In all 6 projects add link to Au.InternalsVisible.cs. It is in this project.
+
+//In all 6 projects .csproj replace <TargetFrameworks>netcoreapp3.1;netstandard2.0</TargetFrameworks> with <TargetFramework>netcoreapp3.1</TargetFramework>
 
 namespace CompilerDlls
 {
@@ -43,43 +70,6 @@ namespace CompilerDlls
 			bool writeFile = true;
 
 			string roslynDir = @"Q:\Downloads\roslyn-master\src\";
-
-#if true
-			//add Symbols property to the CompletionItem class
-			_Mod(@"Features\Core\Portable\Completion\CompletionItem.cs",
-(@"internal bool IsCached { get; set; }",
-@"
-        public System.Collections.Generic.IReadOnlyList<ISymbol> Symbols { get; internal set; } //au
-", 1),
-				(@"ProviderName = ProviderName",
-				@"                , Symbols = Symbols //au
-", 1)
-				);
-
-			_Mod(@"Features\Core\Portable\Completion\Providers\SymbolCompletionItem.cs",
-(@"tags: tags);",
-@"            item.Symbols = symbols; //au
-", 1)
-				);
-
-			_Mod(@"Features\Core\Portable\PublicAPI.Unshipped.txt",
-(@"",
-@"Microsoft.CodeAnalysis.Completion.CompletionItem.Symbols.get -> System.Collections.Generic.IReadOnlyList<Microsoft.CodeAnalysis.ISymbol>
-", -1)
-				);
-
-			//add Symbol property to the SymbolKeySignatureHelpItem class (this code still not tested)
-			_Mod(@"Features\Core\Portable\SignatureHelp\AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem.cs",
-(@"public SymbolKey? SymbolKey { get; }",
-@"
-            public ISymbol Symbol { get; } //au
-", 1),
-(@"SymbolKey = symbol?.GetSymbolKey();",
-@"
-                Symbol = symbol; //au
-", 1)
-				);
-#endif
 
 			var project = @"</Project>";
 			var copy = @"  <Target Name=""PostBuild"" AfterTargets=""PostBuildEvent"">

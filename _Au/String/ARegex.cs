@@ -254,8 +254,8 @@ namespace Au
 		/// If null, always returns false, even if the regular expression matches empty string.
 		/// </param>
 		/// <param name="range">
-		/// The start and end indexes (offsets) in the subject string. If null (default), uses whole string.
-		/// Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end of the subject string), <c>..j</c> (from 0 to j).
+		/// Start and end offsets in the subject string. If null (default), uses whole string.
+		/// Examples: <c>i..j</c> (from i to j), <c>i..</c> (from i to the end), <c>..j</c> (from 0 to j).
 		/// The subject part before the start index is not ignored if regular expression starts with a lookbehind assertion or anchor, eg <c>^</c> or <c>\b</c> or <c>(?&lt;=...)</c>. Instead of <c>^</c> you can use <c>\G</c>. More info in PCRE documentation topic <see href="https://www.pcre.org/current/doc/html/pcre2api.html">pcre2api</see>, chapter "The string to be matched by pcre2_match()".
 		/// The subject part after the end index is always ignored.
 		/// </param>

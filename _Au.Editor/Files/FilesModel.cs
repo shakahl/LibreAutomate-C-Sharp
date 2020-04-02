@@ -13,7 +13,6 @@ using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-using System.Xml.Linq;
 using System.Collections;
 
 using Au;
@@ -622,12 +621,21 @@ partial class FilesModel : ITreeModel
 		if(f == null) return null;
 
 		if(f.IsFolder) {
+			if(beginRenaming && template.Starts("Examples\\")) beginRenaming = false;
 			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true); //open the main file of the new project folder
 			else f.SelectSingle(); //select the new folder
 		} else SetCurrentFile(f, newFile: true); //open the new file
 
 		if(text != null && f == CurrentFile) {
-			string s = text.meta + (text.replaceTemplate ? null : f.GetText()) + text.text;
+			string s;
+			if(text.replaceTemplate) {
+				s = text.text;
+			} else {
+				s = f.GetText();
+				if(f.IsScript) s = s.RegexReplace(@"(?m)\R\R\K", text.text, 1);
+				Debug.Assert(f.IsScript);
+			}
+			s = text.meta + s;
 			Panels.Editor.ZActiveDoc.Z.SetText(s);
 		}
 

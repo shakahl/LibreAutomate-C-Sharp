@@ -39,6 +39,7 @@
 			<File_New>
 				<File_NewScript i="fileScript" hk="Ctrl+N"/>
 				<File_NewClass i="fileClass"/>
+				<File_NewPartial i="fileClass"/>
 				<File_NewFolder i="folder"/>
 				<sep/>
 				<File_Import t="Import..." i="open" tt="Copy, move or link a file to this workspace.
@@ -87,7 +88,7 @@
 			</File_Workspace>
 			<sep/>
 			<File_CloseWindow hkText="Alt+F4"/>
-			<File_Exit hk="Ctrl+Alt+F4"/>
+			<File_Exit/>
 		</Menu_File>
 		<Menu_Edit>
 			<Edit_Undo i="undo" hkText="Ctrl+Z"/>
@@ -106,31 +107,31 @@
 			<Edit_GoToDefinition hkText="F12, Ctrl+click"/>
 			<!--<Edit_PeekDefinition/>-->
 			<sep/>
-			<Edit_Lines>
+			<Edit_Selection>
 				<Edit_Comment hkText="r-click sel. bar"/>
 				<Edit_Uncomment hkText="r-click sel. bar"/>
-        <Edit_Indent hkText="Tab"/>
-        <Edit_Unindent hkText="Shift+Tab"/>
+				<Edit_IndentLines hkText="Tab"/>
+				<Edit_UnindentLines hkText="Shift+Tab"/>
 				<Edit_SelectAll hkText="Ctrl+A"/>
 				<!--<Edit_HideRegion/>-->
 				<!--<Edit_Output/>-->
-			</Edit_Lines>
+			</Edit_Selection>
 			<Edit_View>
 				<Edit_WrapLines i="wrap" hkText="Ctrl+W"/>
 				<Edit_ImagesInCode i="images"/>
 			</Edit_View>
 		</Menu_Edit>
-    <Menu_Code>
-      <Code_AWnd/>
-      <Code_AAcc/>
-      <Code_AWinImage t="AWinImage"/>
+		<Menu_Code>
+			<Code_AWnd/>
+			<Code_AAcc/>
+			<Code_AWinImage t="AWinImage"/>
 			<sep/>
-      <Code_Regex hkText="Ctrl+Space in string"/>
-      <Code_Keys hkText="Ctrl+Space in string"/>
+			<Code_Keys hkText="Ctrl+Space in string"/>
+			<Code_Regex hkText="Ctrl+Space in string"/>
 			<sep/>
-      <Code_WindowsAPI/>
-    </Menu_Code>
-    <Menu_Run>
+			<Code_WindowsAPI/>
+		</Menu_Code>
+		<Menu_Run>
 			<Run_Run i="run"/>
 			<Run_EndTask i="stop"/>
 			<Run_Pause i="pause" color="white"/>
@@ -145,18 +146,18 @@
 				<Debug_ClearLocalBreakpoints/>
 				<Debug_ClearAllBreakpoints/>
 			</Debug_Breakpoints>
-      <Run_Debug color="white">
+			<Run_Debug color="white">
 				<Debug_RunToBreakpoint i="deb_run"/>
 				<Debug_RunToCursor i="deb_cursor"/>
 				<Debug_StepInto i="deb_into"/>
 				<Debug_StepOver i="deb_next"/>
 				<Debug_StepOut i="deb_out"/>
 			</Run_Debug>
-      <Debug_DebugOptions color="white"/>
+			<Debug_DebugOptions color="white"/>
 		</Menu_Run>
 		<Menu_Tools>
 			<Tools_Record i="record" color="white"/>
-      <Tools_RecordOther color="white">
+			<Tools_RecordOther color="white">
 				<Tools_RecordMenu/>
 				<Tools_RecordSingleAction/>
 			</Tools_RecordOther>
@@ -165,15 +166,15 @@
 			<Tools_Toolbars dd=""/>
 			<Tools_FilesAndTriggers i="mm" color="white"/>
 			<Tools_DialogEditor i="dialog" color="white"/>
-      <Tools_ToolbarEditor color="white"/>
-      <Tools_MenuEditor color="white"/>
-      <Tools_ImagelistEditor color="white"/>
+			<Tools_ToolbarEditor color="white"/>
+			<Tools_MenuEditor color="white"/>
+			<Tools_ImagelistEditor color="white"/>
 			<Tools_HelpEditor i="tip" color="white"/>
 			<Tools_Resources i="resources" color="white"/>
 			<Tools_Icons i="icons" color="white"/>
-      <Tools_ExploreWindows color="white"/>
-      <Tools_RemapKeys color="white"/>
-      <Tools_Portable color="white"/>
+			<Tools_ExploreWindows color="white"/>
+			<Tools_RemapKeys color="white"/>
+			<Tools_Portable color="white"/>
 			<sep/>
 			<Tools_Output>
 				<Tools_Output_Clear hkText="M-click"/>
@@ -181,8 +182,8 @@
 				<Tools_Output_FindSelectedText hkText="Ctrl+F"/>
 				<Tools_Output_History/>
 				<sep/>
-        <Tools_Output_LogWindowEvents color="white"/>
-        <Tools_Output_LogAccEvents color="white"/>
+				<Tools_Output_LogWindowEvents color="white"/>
+				<Tools_Output_LogAccEvents color="white"/>
 				<sep/>
 				<Tools_Output_WrapLines/>
 				<Tools_Output_WhiteSpace/>
@@ -193,16 +194,16 @@
 			<Tools_Options i="options"/>
 		</Menu_Tools>
 		<Menu_Help>
-      <Help_Program/>
-      <Help_Library i="help"/>
+			<Help_Program/>
+			<Help_Library i="help"/>
 			<Help_Context hk="F1"/>
 			<sep/>
-      <!--<Help_Download/>-->
-      <Help_Forum color="white"/>
-				<Help_Email/>
+			<!--<Help_Download/>-->
+			<Help_Forum color="white"/>
+			<Help_Email/>
 			<sep/>
 			<!--<Help_Donate/>-->
-      <Help_About color="white"/>
+			<Help_About color="white"/>
 		</Menu_Help>
 	</Menu>
 	<!--
@@ -233,7 +234,7 @@
 	<Run>
 		<Run_Compile i="compile"/>
 		<Run_Run i="run"/>
-    <Run_EndTask i="stop"/>
+		<Run_EndTask i="stop"/>
 		<!--<Run_Pause i="pause"/>
 		<sep/>
 		<Debug_RunToBreakpoint i="deb_run"/>
@@ -251,7 +252,7 @@
 		<Tools_Options i="options"/>
 	</Tools>
 	<Help>
-    <Help_Library i="help"/>
+		<Help_Library i="help"/>
 		<!-- note: don't use combo, it adds ~12 ms of startup time -->
 		<Help_Find type="edit" cue="Find help, functions, tools" tt="Enter - search.
 &#xA;Esc - focus the code editor.

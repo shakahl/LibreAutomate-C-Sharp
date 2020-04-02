@@ -517,7 +517,7 @@ namespace Au.Controls
 				//_ccText.LeftMargin = 0; //default 1
 				_ccText.Trimming = StringTrimming.EllipsisCharacter;
 				_ccText.ValueNeeded = node => node.Tag;
-				_ccText.FontNeeded = node => (node.Tag is IPopupListItem x && x.BoldFont) ? _p._w.FontBold : null;
+				_ccText.FontNeeded = node => (node.Tag is IPopupListItem x && x.BoldFont) ? _p._w.FontBold : _p._w.Font;
 				_ccText.DrawText += _ccText_DrawText;
 				_ccText.NeedDrawTextEvent = node => node.Tag is IPopupListItem x && (x.TextColor != default || (x.Disabled && x.BackColor == default));
 				NodeControls.Add(_ccText);

@@ -338,7 +338,7 @@ namespace Au.Types
 		}
 
 		/// <summary>Implicit conversion from tuple (KMod, KKey).</summary>
-		public static implicit operator KHotkey(ValueTuple<KMod, KKey> hotkey) => new KHotkey(hotkey.Item1, hotkey.Item2);
+		public static implicit operator KHotkey((KMod, KKey) hotkey) => new KHotkey(hotkey.Item1, hotkey.Item2);
 
 		/// <summary>Implicit conversion from <see cref="KKey"/> (hotkey without modifiers).</summary>
 		public static implicit operator KHotkey(KKey key) => new KHotkey(0, key);

@@ -2045,12 +2045,13 @@
             <exception cref="T:System.Exception">Exceptions of AFile.Save.</exception>
             <exception cref="T:System.InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
         </member>
-        <member name="M:Au.Controls.SciText.GetSelectionLines(Au.Controls.SciText.SelectionLines@,System.Boolean,System.Boolean)">
+        <member name="M:Au.Controls.SciText.GetSelectionLines(System.Boolean,System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.String}@,System.Boolean,System.Boolean)">
             <summary>
             Gets text and offsets of lines containing selection.
             Returns true. If <i>ifFullLines</i> is true, may return false.
             </summary>
-            <param name="x">Receives results. The positions are UTF-8.</param>
+            <param name="utf16">Return UTF-16.</param>
+            <param name="x">Results.</param>
             <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
             <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
         </member>

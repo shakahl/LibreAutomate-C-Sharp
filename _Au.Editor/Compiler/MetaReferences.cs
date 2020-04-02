@@ -279,7 +279,7 @@ namespace Au.Compiler
 			/// <summary>
 			/// Creates documentation provider for assembly <i>asmPath</i>.
 			/// Returns null if its xml file does not exist.
-			/// Returns _DocumentationProvider if xml file size is quite big and found or successfully created and successfully loaded database for it.
+			/// Returns _DocumentationProvider if xml file is big and found or successfully created and successfully loaded database for it.
 			/// Else returns XmlDocumentationProvider.
 			/// </summary>
 			public static DocumentationProvider Create(string asmPath)

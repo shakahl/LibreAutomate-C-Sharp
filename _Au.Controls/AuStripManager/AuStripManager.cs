@@ -105,7 +105,7 @@ namespace Au.Controls
 				catch(Exception e) { AOutput.Write("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
-			Size imageScalingSize = Au.Util.ADpi.SmallIconSize; //if high DPI, auto scale images
+			Size imageScalingSize = Au.Util.ADpi.SmallIconSize_; //if high DPI, auto scale images
 
 			//create top-level toolstrips (menu bar and toolbars), and call _AddChildItems to add items and create drop-down menus and submenus
 			_inBuildAll = true;
@@ -157,6 +157,10 @@ namespace Au.Controls
 		/// <param name="isMenu">true if menu, false if toolbar.</param>
 		void _AddChildItems(XElement xParent, ToolStrip owner, bool isMenu)
 		{
+			//Temporary workaround for .NET bug: creates DropDown for each added item. Then slower and uses much more memory.
+			//SHOULDDO: implement tooltips. Also for AMenu.
+			if(isMenu && owner is ToolStripDropDownMenu dd) dd.ShowItemToolTips = false;
+
 			foreach(XElement x in xParent.Elements()) {
 				var item = _CreateChildItem(x, isMenu);
 				if(item != null) _AddChildItem(x, item, owner);
@@ -179,12 +183,14 @@ namespace Au.Controls
 			}
 
 			Debug.Assert(x != null && object.ReferenceEquals(x, item.Tag));
-			x.AddAnnotation(item); //info: this method is so smartly optimized, it just assigns item to its member 'object annotation;'. Creates array only if assigned more items.
+			x.AddAnnotation(item); //info: this method is optimized, it just assigns item to its member 'object annotation;'. Creates array only if assigned more items.
 
 			_callbacks.ItemAdding(item, owner);
 
 			var k = owner.Items;
 			if(insertAt >= 0) k.Insert(insertAt, item); else k.Add(item);
+
+			//if(item is ToolStripMenuItem mi) AOutput.Write(mi.HasDropDown, mi.Tag);
 		}
 
 		/// <summary>
@@ -198,7 +204,7 @@ namespace Au.Controls
 
 			if(tag == "sep") return new ToolStripSeparator() { Tag = x };
 
-			ToolStripItem item = null; ToolStripMenuItem mi = null;
+			ToolStripItem item; ToolStripMenuItem mi;
 			bool isControl = false, needHandler = false;
 			if(isMenu) {
 				mi = new ToolStripMenuItem();
@@ -324,7 +330,7 @@ namespace Au.Controls
 
 			Image im = null;
 			if(x.Attr(out s, "i2")) { //custom image as icon file
-				im = AIcon.GetFileIconImage(s, (int)IconSize.SysSmall, GIFlags.SearchPath);
+				im = AIcon.GetFileIconImage(s);
 				if(im == null) AOutput.Write($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}
@@ -497,8 +503,7 @@ namespace Au.Controls
 			var x = item.Tag as XElement;
 
 			var m = new AMenu();
-			m["Properties..."] = o =>
-			{
+			m["Properties..."] = o => {
 				using(var f = new FSMProperties(this, item.Tag as XElement, isMenu)) {
 					if(f.ShowDialog(_form) == DialogResult.OK)
 						_Strips_Customize(6, item, null, f);
@@ -521,18 +526,19 @@ namespace Au.Controls
 			if(!isMenu) {
 				m.Separator();
 				m["How to customize..."] = o => ADialog.ShowInfo("Customizing toolbars and menus",
-					"There are several standard toolbars and two custom toolbars (initially empty). Standard toolbar buttons cannot be added and removed, but can be hidden and reordered. Menu items cannot be added, removed, hidden and reordered." +
-					"\n\nYou can find most customization options in two context menus. Right-clicking a button or menu item shows its context menu. Right-clicking before the first button shows toolbar's context menu. You can Alt+drag toolbar buttons to reorder them on the same toolbar. You can Alt+drag toolbars to dock them somewhere else. Use splitters to resize. Right click a splitter to change its thickness."
+@"There are several standard toolbars and two custom toolbars (initially empty). Standard toolbar buttons cannot be added and removed, but can be hidden and reordered. Menu items cannot be added, removed, hidden and reordered.
+
+You can find most customization options in two context menus. Right-clicking a button or menu item shows its context menu. Right-clicking before the first button shows toolbar's context menu. You can Alt+drag toolbar buttons to reorder them on the same toolbar. You can Alt+drag toolbars to dock them somewhere else. Use splitters to resize. Right click a splitter to change its thickness."
 					);
 				string folder = APath.GetDirectoryPath(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
-				m["How to backup, restore, reset..."] = o =>
-				{
+				m["How to backup, restore, reset..."] = o => {
 					ADialog.Show("How to backup, restore or reset customizations",
-					"All customizations are saved in XML files in folder\n" +
-					link +
-					"\n\nTo backup:  copy the file." +
-					"\nTo restore:  exit this application and replace the file with the backup file." +
-					"\nTo reset:  exit this application and delete the file."
+$@"All customizations are saved in XML files in folder
+{link}
+
+To backup:  copy the file.
+To restore:  exit this application and replace the file with the backup file.
+To reset:  exit this application and delete the file."
 					, icon: DIcon.Info, onLinkClick: h => { AExec.Run(h.LinkHref); });
 				};
 			}
@@ -558,7 +564,7 @@ namespace Au.Controls
 			switch(AMath.LoUshort(action)) {
 			case 1: //copy from menu or standard toolbar to custom toolbar
 				var xNew = new XElement(x.Name, x.Attributes()); //copy without descendants but with attributes
-				if(item is ToolStripDropDownItem ddi && ddi.HasDropDown) {
+				if(item is ToolStripDropDownItem ddi && ddi.HasDropDownItems) {
 					var dd = ddi.DropDown as ToolStripDropDownMenu;
 					xNew.SetAttributeValue("dd", dd.Name);
 				}
@@ -648,8 +654,7 @@ namespace Au.Controls
 			var ts = item.Owner;
 			bool isCustom = ts == _tsCustom1 || ts == _tsCustom2;
 			//AOutput.Write(item, ts, isCustom);
-			if(!Au.Util.ADragDrop.SimpleDragDrop(ts, MButtons.Left, k =>
-			{
+			if(!Au.Util.ADragDrop.SimpleDragDrop(ts, MButtons.Left, k => {
 				if(k.Msg.message != Api.WM_MOUSEMOVE) return;
 				target = ts.GetItemAt(ts.MouseClientXY());
 				//AOutput.Write(target);

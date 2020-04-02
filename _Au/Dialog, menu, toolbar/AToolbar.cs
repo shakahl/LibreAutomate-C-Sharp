@@ -63,26 +63,33 @@ namespace Au
 
 		static int s_treadId;
 
-		/// <param name="name">Toolbar name. Must be valid filename. Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>. Also used with <see cref="Find"/>.</param>
-		/// <param name="resetSettings">Reset toolbar settings to default values. It deletes the settings file of this toolbar.</param>
+		/// <param name="name">
+		/// Toolbar name. Must be valid filename.
+		/// Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>, and used with <see cref="Find"/>.
+		/// </param>
 		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <exception cref="ArgumentException">Empty or invalid name.</exception>
 		/// <remarks>
-		/// Reads the settings file if exists, ie if settings changed in the past. Path: <see cref="AFolders.Workspace"/>\.toolbars\name.json. If <b>AFolders.Workspace</b> is null, uses <see cref="AFolders.ThisAppDocuments"/>. If fails, writes warning to the output and uses default settings.
+		/// Reads the settings file if exists, ie if settings changed in the past. See <see cref="GetSettingsFilePath"/>. If fails, writes warning to the output and uses default settings.
 		/// 
 		/// Creates <see cref="Control"/> object. Does not create its window handle; will do it in <see cref="Show"/>.
+		/// 
+		/// Sets properties:
+		/// - <see cref="MTBase.ItemThread"/> = <see cref="MTThread.StaThread"/>.
+		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
+		/// - <see cref="MTBase.DefaultIcon"/> = <see cref="MTBase.CommonIcon"/>.
+		/// - <see cref="MTBase.DefaultSubmenuIcon"/> = <see cref="MTBase.CommonSubmenuIcon"/>.
 		/// </remarks>
-		public AToolbar(string name, bool resetSettings = false, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
+		public AToolbar(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
 			: base(f, l)
 		{
 			int tid = Thread.CurrentThread.ManagedThreadId;
 			if(s_treadId == 0) s_treadId = tid; else if(tid != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.RunActionInMainThread();</code>");
 
-			if(name.NE()) throw new ArgumentException("Empty name");
+			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
 			_name = name;
-
-			string s = AFolders.Workspace; if(s == null) s = AFolders.ThisAppDocuments;
-			_sett = _Settings.Load(s + @"\.toolbars\" + name + ".json", resetSettings);
+			_sett = _Settings.Load(GetSettingsFilePath(name));
 
 			_c = new _ToolStrip(this) {
 				Name = _name,
@@ -93,6 +100,11 @@ namespace Au
 			_anchor = _sett.anchor;
 			_xy = _sett.location;
 			Border = _sett.border; //default Sizable2
+
+			ExtractIconPathFromCode = true;
+			DefaultIcon = CommonIcon;
+			DefaultSubmenuIcon = CommonSubmenuIcon;
+			ItemThread = MTThread.StaThread;
 
 			_constructed = true;
 		}
@@ -116,12 +128,51 @@ namespace Au
 		public override string ToString() => _satPlanet != null ? "    " + Name : Name; //the indentation is for the list in the Toolbars form
 
 		/// <summary>
-		/// True if properties of this toolbar were modified now or in the past (the settings JSON file exists).
+		/// True if properties of this toolbar were modified now or in the past (the settings file exists).
+		/// </summary>
+		/// <seealso cref="GetSettingsFilePath"/>
+		/// <seealso cref="DeleteSettings"/>
+		public bool SettingsModified => _sett.Modified;
+
+		#region static functions
+
+		/// <summary>
+		/// Gets full path of toolbar's settings file. The file may exist or not.
+		/// </summary>
+		/// <param name="toolbarName">Toolbar name.</param>
+		/// <remarks>
+		/// Path: <c>AFolders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="AFolders.Workspace"/> is null, uses <see cref="AFolders.ThisAppDocuments"/>.
+		/// </remarks>
+		public static string GetSettingsFilePath(string toolbarName)
+		{
+			if(toolbarName.NE()) throw new ArgumentException("Empty name");
+			string s = AFolders.Workspace; if(s == null) s = AFolders.ThisAppDocuments;
+			return s + @"\.toolbars\" + toolbarName + ".json";
+		}
+
+		/// <summary>
+		/// Deletes the settings file of the toolbar, if exists. It resets toolbar settings.
+		/// The toolbar should not be open when calling this function.
+		/// </summary>
+		/// <param name="toolbarName">Toolbar name.</param>
+		/// <exception cref="Exception">Exceptions of <see cref="AFile.Delete(string, bool)"/>.</exception>
+		public static void DeleteSettings(string toolbarName)
+		{
+			AFile.Delete(GetSettingsFilePath(toolbarName));
+		}
+
+		/// <summary>
+		/// Finds an open toolbar by <see cref="Name"/>.
+		/// Returns null if not found or closed or never shown (<see cref="Show"/> not called).
 		/// </summary>
 		/// <remarks>
-		/// To delete the settings JSON file you can use the constructor's parameter <i>resetSettings</i>.
+		/// Finds only toolbars created in the same script and thread.
+		/// 
+		/// Does not find satellite toolbars. Use this code: <c>AToolbar.Find("owner toolbar").Satellite</c>
 		/// </remarks>
-		public bool SettingsModified => _sett.Modified;
+		public static AToolbar Find(string name) => _Manager._atb.Find(o => o.Name == name);
+
+		#endregion
 
 		#region add item
 
@@ -273,7 +324,10 @@ namespace Au
 		AMenu _CreateMenu(ToolStripDropDownItem item, ref Action<AMenu> menu)
 		{
 			if(menu == null) return null;
-			var m = new AMenu(item.Text, _sourceFile, GetItemSourceLine_(item)) { MultiShow = true };
+			var m = new AMenu(this.Name + " + " + item.Text, _sourceFile, GetItemSourceLine_(item)) {
+				MultiShow = true,
+				ItemThread = this.ItemThread,
+			};
 			item.DropDown = m.Control; //attaches
 			m.Control.OwnerItem = item; //the callback may ned it
 			menu(m);
@@ -535,15 +589,6 @@ namespace Au
 		///// </summary>
 		//public AWnd OwnerControl => _oc?.c ?? default;
 
-		/// <summary>
-		/// Finds an open toolbar by <see cref="Name"/>.
-		/// Returns null if not found or closed or never shown (<see cref="Show"/> not called).
-		/// </summary>
-		/// <remarks>
-		/// Does not find satellite toolbars. Use this code: <c>AToolbar.Find("owner toolbar").Satellite</c>
-		/// </remarks>
-		public static AToolbar Find(string name) => _Manager._atb.Find(o => o.Name == name);
-
 		#endregion
 
 		#region properties
@@ -780,7 +825,7 @@ namespace Au
 						_satellite = null;
 						//and don't clear _satPlanet etc
 					} else {
-						if((_c?.IsDisposed ?? false) || (value._c?.IsDisposed ?? false)) throw new ObjectDisposedException("AToolbar");
+						if((_c?.IsDisposed ?? false) || (value._c?.IsDisposed ?? false)) throw new ObjectDisposedException(nameof(AToolbar));
 						var p = value._satPlanet; if(p != this) { if(p != null || value._loaded) throw new InvalidOperationException(); }
 						_satellite = value;
 						_satellite._satPlanet = this;

@@ -27,16 +27,20 @@ namespace Au
 		/// The returned <see cref="RResult"/> variable contains some process info - process id etc.
 		/// </summary>
 		/// <param name="file">
-		/// What to run. Can be:
-		/// Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>AFolders.System + "notepad.exe"</c>, <c>@"%AFolders.System%\notepad.exe"</c>.
-		/// Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="AFile.SearchPath"/>.
-		/// Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
-		/// URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
-		/// Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="APidl.ToBase64String"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-		/// Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
-		/// To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="AWnd.More.GetWindowsStoreAppId"/> or Google.
-		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.ExpandEnvVar"/>.
+		/// Examples:
+		/// - <c>@"C:\file.txt"</c>
+		/// - <c>AFolders.Documents</c>
+		/// - <c>AFolders.System + "notepad.exe"</c>
+		/// - <c>@"%AFolders.System%\notepad.exe"</c>
+		/// - <c>@"%TMP%\file.txt"</c>
+		/// - <c>"notepad.exe"</c>
+		/// - <c>@"..\folder\x.exe"</c>
+		/// - <c>"http://a.b.c/d"</c>
+		/// - <c>"file:///path"</c>
+		/// - <c>"mailto:a@b.c"</c>
+		/// - <c>":: ITEMIDLIST"</c>
+		/// - <c>@"::{CLSID}"</c>
+		/// - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
 		/// </param>
 		/// <param name="args">
 		/// Command line arguments.
@@ -44,8 +48,8 @@ namespace Au
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="curDirEtc">
-		/// Allows to specify more parameters: current directory, verb, window state, etc.
-		/// If string, it sets initial current directory for the new process. Use "" to get it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
+		/// Allows to specify more parameters: current directory, verb, etc.
+		/// If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
 		/// </param>
 		/// <exception cref="ArgumentException">Used both ROptions.Verb and RFlags.Admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
@@ -53,6 +57,18 @@ namespace Au
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
 		/// Uses API <msdn>ShellExecuteEx</msdn>.
 		/// Similar to <see cref="Process.Start(string, string)"/>.
+		/// 
+		/// The <i>file</i> parameter can be:
+		/// - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>AFolders.Documents</c>, <c>AFolders.System + "notepad.exe"</c>, <c>@"%AFolders.System%\notepad.exe"</c>.
+		/// - Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="AFile.SearchPath"/>.
+		/// - Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+		/// - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
+		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
+		/// - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="APidl.ToBase64String"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="AWnd.More.GetWindowsStoreAppId"/> or Google.
+		/// 
+		/// Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="APath.ExpandEnvVar"/>.
 		/// </remarks>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		/// <example>
@@ -114,14 +130,8 @@ namespace Au
 
 			AWnd.More.EnableActivate();
 
-			bool ok = false;
-			try {
-				ok = Api.ShellExecuteEx(ref x);
-			}
-			finally {
-				pidl?.Dispose();
-			}
-			if(!ok) throw new AuException(0, $"*run '{file}'");
+			if(!Api.ShellExecuteEx(ref x)) throw new AuException(0, $"*run '{file}'");
+			pidl?.Dispose();
 
 			var R = new RResult();
 			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
@@ -220,9 +230,10 @@ namespace Au
 		/// </summary>
 		/// <param name="exe">
 		/// Path or name of an .exe or .bat file. Can be:
-		/// Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>AFolders.System + "x.exe"</c>, <c>@"%AFolders.System%\x.exe"</c>.
-		/// Filename, like <c>"x.exe"</c>. This function calls <see cref="AFile.SearchPath"/>.
-		/// Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+		/// - Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>AFolders.System + "x.exe"</c>, <c>@"%AFolders.System%\x.exe"</c>.
+		/// - Filename, like <c>"x.exe"</c>. This function calls <see cref="AFile.SearchPath"/>.
+		/// - Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
+		/// 
 		/// Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="args">null or command line arguments.</param>

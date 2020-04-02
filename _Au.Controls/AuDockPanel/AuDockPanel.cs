@@ -495,7 +495,7 @@ namespace Au.Controls
 			m.Items.Add(new ToolStripSeparator());
 			(m.Items.Add("Reset...", null, (unu, sed) => {
 				if(ZResetLayoutAfterRestart) ZResetLayoutAfterRestart = false;
-				else ZResetLayoutAfterRestart = ADialog.ShowOKCancel("Reset panel/toolbar layout", "After restarting this application.");
+				else ZResetLayoutAfterRestart = ADialog.ShowOkCancel("Reset panel/toolbar layout", "After restarting this application.");
 			}) as ToolStripMenuItem).Checked = ZResetLayoutAfterRestart;
 
 			m.ResumeLayout();

@@ -258,8 +258,8 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control and returns its handle as AWnd.
-		/// Returns default(AWnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
 		/// </summary>
+		/// <returns>Returns <c>default(AWnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(AWnd)"/>.</returns>
 		/// <param name="name">
 		/// Control name.
 		/// String format: [](xref:wildcard_expression).
@@ -267,22 +267,15 @@ namespace Au
 		/// 
 		/// By default to get control names this function uses <see cref="Name"/>.
 		/// Can start with these prefix strings:
-		/// - <c>"***text "</c> - use <see cref="ControlText"/>.
-		/// <br/>Slower and can be less reliable (because can get editable text), especially if not used cn (class name). Does not remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
-		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>.
-		/// <br/>Useful when the control itself does not have a name but an adjacent Static text control is used as its name. Examples - Edit controls in dialogs. Slower.
-		/// - <c>"***wfName "</c> - use .NET Windows Forms Control Name property.
-		/// <br/>To get it this function uses <see cref="AWinFormsControlNames"/>. Slower and can fail because of [](xref:uac).
-		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id.
-		/// <br/>To get it this function uses <see cref="ControlId"/>.
-		/// <br/>The id value cannot be wildcard expression.
-		/// <br/>See also <see cref="ChildById"/>.
+		/// - <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert '&amp;' before it.
+		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>. Slower.
+		/// - <c>"***wfName "</c> - use .NET Forms control name (see <see cref="AWinFormsControlNames"/>). Slower and can fail because of [](xref:uac).
+		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id (<see cref="ControlId"/>). See also <see cref="ChildById"/>.
 		/// </param>
 		/// <param name="cn">
 		/// Control class name.
 		/// String format: [](xref:wildcard_expression).
 		/// null means 'can be any'. Cannot be "".
-		/// You can see control class name etc in editor's status bar and dialog "Find window or control".
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -380,8 +373,8 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child control by its id and returns its handle as AWnd.
-		/// Returns default(AWnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
 		/// </summary>
+		/// <returns>Returns <c>default(AWnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(AWnd)"/>.</returns>
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		/// <remarks>
@@ -439,12 +432,8 @@ namespace Au
 
 		/// <summary>
 		/// Finds a direct child control and returns its handle as AWnd.
-		/// Returns default(AWnd) if not found. See also: <see cref="Is0"/>, <see cref="AExtAu.OrThrow(AWnd)"/>.
-		/// Calls API <msdn>FindWindowEx</msdn>.
-		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
-		/// Can be used only when you know full name and/or class name.
-		/// Finds hidden controls too.
 		/// </summary>
+		/// <returns>Returns <c>default(AWnd)</c> if not found. See also: <see cref="Is0"/>, <see cref="operator +(AWnd)"/>. Supports <see cref="ALastError"/>.</returns>
 		/// <param name="name">
 		/// Name.
 		/// Full, case-insensitive. Wildcard etc not supported.
@@ -458,11 +447,14 @@ namespace Au
 		/// </param>
 		/// <param name="wAfter">If used, starts searching from the next control in the Z order.</param>
 		/// <remarks>
-		/// Supports <see cref="ALastError"/>.
+		/// Calls API <msdn>FindWindowEx</msdn>.
+		/// Faster than <see cref="Child"/>, which uses API <msdn>EnumChildWindows</msdn>.
+		/// Can be used only when you know full name and/or class name.
+		/// Finds hidden controls too.
 		/// </remarks>
 		public AWnd ChildFast(string name, string cn, AWnd wAfter = default)
 		{
-			//ThrowIfInvalid(); //no, it can be Message
+			//ThrowIfInvalid(); //no, it can be HWND_MESSAGE
 			if(Is0) {
 				Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE);
 				return default;

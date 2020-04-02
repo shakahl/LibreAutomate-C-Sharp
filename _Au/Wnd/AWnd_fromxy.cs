@@ -28,8 +28,8 @@ namespace Au
 		/// Gets visible top-level window or control from point.
 		/// </summary>
 		/// <param name="p">
-		/// Coordinates relative to the primary screen.
-		/// Tip: When need coordinates relative to another screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>var a = AWnd.FromXY((x, y, true));</c>. Also when need <see cref="Coord.Reverse"/> etc.
+		/// Coordinates.
+		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <remarks>
@@ -37,6 +37,19 @@ namespace Au
 		/// This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
 		/// This function is not very fast, probably 0.3 - 1 ms.
 		/// </remarks>
+		/// <example>
+		/// Find window at 100 200.
+		/// <code><![CDATA[
+		/// var w = AWnd.FromXY((100, 200), WXYFlags.NeedWindow);
+		/// AOutput.Write(w);
+		/// ]]></code>
+		/// 
+		/// Find window or control at 50 from left and 100 from bottom of the work area.
+		/// <code><![CDATA[
+		/// var w = AWnd.FromXY(Coord.Normalize(50, Coord.Reverse(100), true));
+		/// AOutput.Write(w);
+		/// ]]></code>
+		/// </example>
 		public static AWnd FromXY(POINT p, WXYFlags flags = 0)
 		{
 			bool needW = 0 != (flags & WXYFlags.NeedWindow);

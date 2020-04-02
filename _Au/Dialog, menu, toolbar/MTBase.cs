@@ -14,7 +14,7 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 using System.Reflection.Emit;
-
+using Au.Util;
 
 namespace Au.Types
 {
@@ -92,7 +92,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// In what thread to execute item callback functions.
-		/// Default: current thread.
+		/// Default: <see cref="MTThread.Current"/> for <b>AMenu</b> created with the parameterless constructor, else <see cref="MTThread.StaThread"/>.
 		/// </summary>
 		/// <remarks>
 		/// If current thread is a UI thread (has windows etc), and item callback functions execute some long automations in the same thread, current thread probably is hung during that time. Use this property to avoid it.
@@ -131,17 +131,17 @@ namespace Au.Types
 		/// </remarks>
 		public event Action<ToolStripItem> ItemAdded;
 
-		/// <summary>
-		/// Flags to pass to <see cref="AIcon.GetFileIcon"/>. See <see cref="GIFlags"/>.
-		/// </summary>
-		/// <remarks>
-		/// This property is applied to all items.
-		/// </remarks>
-		public GIFlags IconFlags { get; set; }
+		///// <summary>
+		///// Flags to pass to <see cref="AIcon.GetFileIcon"/>. See <see cref="IconGetFlags"/>.
+		///// </summary>
+		///// <remarks>
+		///// This property is applied to all items.
+		///// </remarks>
+		//public IconGetFlags IconFlags { get; set; }
+		// If not full path, searches in <see cref="AFolders.ThisAppImages"/>; see also <see cref="MTBase.IconFlags"/>.
 
 		/// <summary>
-		/// Image width and height.
-		/// Also can be enum <see cref="IconSize"/>, cast to int.
+		/// Image width and height. Default is <see cref="AIcon.SizeSmall"/>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">The 'set' function is called after adding items.</exception>
 		/// <remarks>
@@ -157,24 +157,47 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Gets "invoke method" image from Au library resources. Can be used for <see cref="DefaultIcon"/> of toolbars and menus. Common to <see cref="AMenu"/> and <see cref="AToolbar"/>.
+		/// </summary>
+		public static Image CommonIcon {
+			get => s_commonIcon ??= _GetCommonIcon(false);
+			set => s_commonIcon = value;
+		}
+
+		/// <summary>
+		/// Gets "drop-down menu" image from Au library resources. Can be used for <see cref="DefaultSubmenuIcon"/> of toolbars and menus. Common to <see cref="AMenu"/> and <see cref="AToolbar"/>.
+		/// </summary>
+		public static Image CommonSubmenuIcon {
+			get => s_commonSubmenuIcon ??= _GetCommonIcon(true);
+			set => s_commonSubmenuIcon = value;
+		}
+
+		static Image s_commonIcon, s_commonSubmenuIcon;
+
+		static Image _GetCommonIcon(bool submenu)
+		{
+			string name = submenu ? "mtHamburgerMenu" : "mtInvokeMethod";
+			int i = ADpi.ScaleInt(16); if(i >= 20) name += i < 24 ? "_20" : (i < 32 ? "_24" : "_32");
+			return Resources.Resources.ResourceManager.GetObject(name, Resources.Resources.Culture) as Bitmap; //13 ms first time
+		}
+
+		/// <summary>
 		/// Image for items that don't have an icon specified or auto-extracted from code.
 		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// m.DefaultIcon = AIcon.GetFileIconImage(@"c:\icons\menu item.ico", 16);
-		/// ]]></code>
-		/// </example>
-		public Image DefaultIcon { get; set; }
+		public MTImage DefaultIcon { get; set; }
 
 		/// <summary>
 		/// Image for submenu-items that don't have an icon specified.
 		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// m.DefaultIcon = AIcon.GetFileIconImage(@"c:\icons\menu submenu.ico", 16);
-		/// ]]></code>
-		/// </example>
-		public Image DefaultSubmenuIcon { get; set; }
+		public MTImage DefaultSubmenuIcon { get; set; }
+
+		/// <summary>
+		/// When adding items without explicitly specified icon, extract icon from item action code.
+		/// </summary>
+		/// <remarks>
+		/// This property is applied to items added afterwards.
+		/// </remarks>
+		public bool ExtractIconPathFromCode { get; set; }
 
 		/// <summary>
 		/// Sets onClick delegate, image and some properties.
@@ -188,35 +211,62 @@ namespace Au.Types
 				sourceLine = sourceLine
 			};
 
-			var imgObj = icon.Value;
+			var iconObj = icon.Value;
 
 			if(onClick != null) {
 				if(item is ToolStripSplitButton sb) sb.ButtonClick += _onClick; else item.Click += _onClick;
 
 				//APerf.First();
-				if(imgObj == null && ExtractIconPathFromCode) imgObj = _IconPathFromCode(onClick.Method);
+				if(iconObj == null && ExtractIconPathFromCode) iconObj = _IconPathFromCode(onClick.Method);
 				//APerf.NW(); //ngened about 10 ms first time, then fast. Else 30-40 ms first time.
-				//AOutput.Write(img);
+				//AOutput.Write(iconObj);
 			}
 
 #if true //to quickly disable icons when measuring speed
-			if(imgObj != null) {
+			if(iconObj != null) {
+				_SetIconObj(iconObj, 0);
+			} else if(isSub) {
+				if(DefaultSubmenuIcon.Value != null) _SetIconObj(DefaultSubmenuIcon.Value, 2);
+			} else if(!(item is ToolStripSeparator)){
+				if(DefaultIcon.Value != null) _SetIconObj(DefaultIcon.Value, 1);
+			}
+
+			void _SetIconObj(object iconObj, int useDefault)
+			{
 				try {
-					switch(imgObj) {
-					case string path:
-						if(Util.Image_.IsImageStringPrefix(path)) item.Image = Util.Image_.TryLoadImageFromString(path, warning: true);
-						else _SetItemFileIcon(isTB, item, path);
+					Image imageResult = null;
+					switch(iconObj) {
+					case Image im:
+						item.Image = im;
 						break;
-					case int index: if(index >= 0) item.ImageIndex = index; break;
-					case Image im: item.Image = im; break;
-					case Icon ic: item.Image = ic.ToBitmap(); break;
+					case Icon ic:
+						imageResult = ic.ToBitmap();
+						break;
+					case StockIcon ic:
+						imageResult = AIcon.GetStockIconImage(ic, IconSize);
+						break;
+					case string s when s.Length > 0:
+						if(Util.Image_.IsImageStringPrefix(s)) {
+							imageResult = Util.Image_.TryLoadImageFromString(s, warning: true);
+						} else if(s.Starts("key:")) {
+							item.ImageKey = s[4..];
+						} else if(useDefault != 0) {
+							imageResult = AIcon.GetFileIconImage(s, IconSize);
+						} else {
+							_SetItemFileIcon(isTB, item, s); //async
+						}
+						break;
+					case int index:
+						item.ImageIndex = index;
+						break;
+					}
+
+					if(imageResult != null) {
+						item.Image = imageResult;
+						if(useDefault == 1) DefaultIcon = imageResult; else if(useDefault == 2) DefaultSubmenuIcon = imageResult;
 					}
 				}
 				catch(Exception e) { ADebug.Print(e.Message); } //ToBitmap() may throw
-			} else if(isSub && DefaultSubmenuIcon != null) {
-				item.Image = DefaultSubmenuIcon;
-			} else if(DefaultIcon != null && !(item is ToolStripSeparator)) {
-				item.Image = DefaultIcon;
 			}
 #endif
 		}
@@ -230,46 +280,31 @@ namespace Au.Types
 			var e = ItemAdded; if(e != null && !(item is ToolStripSeparator)) e(item);
 		}
 
-		/// <summary>
-		/// When adding items without explicitly specified icon, extract icon from item code.
-		/// </summary>
-		/// <remarks>
-		/// This property is applied to items added afterwards.
-		/// </remarks>
-		public bool ExtractIconPathFromCode { get; set; }
-
 		void _SetItemFileIcon(bool isTB, ToolStripItem item, string s)
 		{
-			if(s.NE()) return;
-			var owner = item.Owner;
-			var il = owner.ImageList;
-			if(il != null && il.Images.ContainsKey(s)) {
-				item.ImageKey = s;
+			//var perf = APerf.Create();
+			item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
+
+			_AsyncIcons ??= new Util.IconsAsync_(); //used by submenus too
+			var submenuIcons = (item.Owner as _IAuToolStrip).SubmenuAsyncIcons;
+			bool isFirstImage;
+
+			if(submenuIcons == null) {
+				isFirstImage = _AsyncIcons.Count == 0;
+				_AsyncIcons.Add(s, item);
 			} else {
-				//var perf = APerf.Create();
-				item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
-
-				_AsyncIcons ??= new Util.IconsAsync_(); //used by submenus too
-				var submenuIcons = (owner as _IAuToolStrip).SubmenuAsyncIcons;
-				bool isFirstImage;
-
-				if(submenuIcons == null) {
-					isFirstImage = _AsyncIcons.Count == 0;
-					_AsyncIcons.Add(s, item);
-				} else {
-					isFirstImage = submenuIcons.Count == 0;
-					submenuIcons.Add(new Util.IconsAsync_.Item(s, item));
-				}
-
-				//Reserve space for image.
-				//If toolbar, need to do it for each button, else only for the first item (it sets size of all items).
-				if(isFirstImage) {
-					var z = owner.ImageScalingSize;
-					_imagePlaceholder = new Bitmap(z.Width, z.Height);
-				}
-				if(isTB || isFirstImage) item.Image = _imagePlaceholder;
-				//perf.NW();
+				isFirstImage = submenuIcons.Count == 0;
+				submenuIcons.Add(new Util.IconsAsync_.Item(s, item));
 			}
+
+			//Reserve space for image.
+			//If toolbar, need to do it for each button, else only for the first item (it sets size of all items).
+			if(isFirstImage) {
+				var z = item.Owner.ImageScalingSize;
+				_imagePlaceholder = new Bitmap(z.Width, z.Height);
+			}
+			if(isTB || isFirstImage) item.Image = _imagePlaceholder;
+			//perf.NW();
 		}
 		Image _imagePlaceholder;
 
@@ -282,7 +317,7 @@ namespace Au.Types
 			if(_AsyncIcons == null) return;
 			if(list != null) _AsyncIcons.AddRange(list);
 			if(_AsyncIcons.Count == 0) return;
-			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, IconFlags, ts);
+			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, 0 /*IconFlags*/, ts);
 		}
 
 		void _AsyncCallback(Util.IconsAsync_.Result r, object objCommon, int nLeft)
@@ -296,9 +331,9 @@ namespace Au.Types
 
 			Image im = AIcon.HandleToImage(r.hIcon, true);
 
-			//if(im != null) _SetItemIcon(ts, item, im);
+			//if(im != null) _SetItemImage(ts, item, im);
 			if(im != null) {
-				_SetItemIcon(ts, item, im);
+				_SetItemImage(ts, item, im);
 
 				//to dispose images in our Dispose()
 				_images ??= new List<Image>();
@@ -315,7 +350,7 @@ namespace Au.Types
 			}
 		}
 
-		void _SetItemIcon(ToolStrip ts, ToolStripItem item, Image im)
+		void _SetItemImage(ToolStrip ts, ToolStripItem item, Image im)
 		{
 			AWnd w = default;
 			var its = ts as _IAuToolStrip;
@@ -364,6 +399,7 @@ namespace Au.Types
 			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
 			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
 			//also code pattern like 'AExec.TryRun("notepad.exe")'.
+			//AOutput.Write(mi.Name);
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
 				var reader = new Util.ILReader(mi);
@@ -371,7 +407,9 @@ namespace Au.Types
 					if(++i > 100) break;
 					var op = instruction.Op;
 					//AOutput.Write(op);
-					if(instruction.Op == OpCodes.Ldstr) {
+					if(op == OpCodes.Nop) {
+						i--;
+					} else if(op == OpCodes.Ldstr) {
 						var s = instruction.Data as string;
 						//AOutput.Write(s);
 						if(i == patternStart + 1) filename = s;
@@ -411,7 +449,7 @@ namespace Au.Types
 
 		private protected void _Dispose(bool disposing)
 		{
-			//AOutput.Write("_Dispose", _isDisposed);
+			//AOutput.Write("_Dispose", _isDisposed, this);
 			if(_isDisposed) return;
 			_isDisposed = true;
 
@@ -432,7 +470,11 @@ namespace Au.Types
 		bool _isDisposed;
 
 		///
-		~MTBase() { /*AOutput.Write("base dtor");*/ _Dispose(false); }
+		~MTBase()
+		{
+			//AOutput.Write("base dtor", this);
+			_Dispose(false);
+		}
 
 		/// <summary>
 		/// If item not null, gets its 1-based source line. Else gets that of ctor.
@@ -538,12 +580,13 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// Has implicit conversions from:
-	/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>. If not full path, searches in <see cref="AFolders.ThisAppImages"/>; see also <see cref="MTBase.IconFlags"/>.
-	/// - string - Base-64 encoded png file with prefix "image:". Can be created with the "Find image..." dialog.
-	/// - string - imagelist image key (<see cref="ToolStripItem.ImageKey"/>).
+	/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>.
+	/// - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
+	/// - string with prefix "key:" - imagelist image key (<see cref="ToolStripItem.ImageKey"/>).
 	/// - int - imagelist image index (<see cref="ToolStripItem.ImageIndex"/>).
 	/// - Image - image object.
 	/// - Icon - icon object.
+	/// - <see cref="StockIcon"/> - a shell icon.
 	/// - FolderPath - folder path.
 	/// - default - no icon. If <see cref="MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
 	/// - "" - no icon.
@@ -562,6 +605,8 @@ namespace Au.Types
 		public static implicit operator MTImage(Image image) => new MTImage(image);
 		///
 		public static implicit operator MTImage(Icon icon) => new MTImage(icon);
+		///
+		public static implicit operator MTImage(StockIcon icon) => new MTImage(icon);
 		///
 		public static implicit operator MTImage(FolderPath path) => new MTImage((string)path);
 

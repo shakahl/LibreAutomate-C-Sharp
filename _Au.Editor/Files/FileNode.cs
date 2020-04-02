@@ -14,6 +14,7 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using System.Xml;
+using System.Xml.Linq;
 
 using Au;
 using Au.Types;
@@ -87,7 +88,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		EFileType type;
 		if(isFolder) type = EFileType.Folder;
 		else if(template == "Script.cs") type = EFileType.Script;
-		else if(template == "Class.cs") type = EFileType.Class;
+		else if(template == "Class.cs" || template == "Partial.cs") type = EFileType.Class;
 		else type = DetectFileType(sourcePath);
 
 		_model = model;
@@ -403,13 +404,13 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 				k = expandedFolder ? nameof(Au.Editor.Resources.Resources.folderOpen) : nameof(Au.Editor.Resources.Resources.folder);
 				break;
 			default: //_Type.NotCodeFile
-				return IconCache.GetImage(LinkTarget ?? FilePath, true);
+				return IconCache.GetImage(FilePath, useExt: true);
 			}
 		}
 		return EdResources.GetImageUseCache(k);
 	}
 
-	public static AIconCache IconCache = new AIconCache(AFolders.ThisAppDataLocal + @"fileIconCache.xml", (int)IconSize.SysSmall);
+	public static AIconCache IconCache = new AIconCache(AFolders.ThisAppDataLocal + @"fileIconCache.xml", AIcon.SizeSmall);
 
 	///// <summary>
 	///// Gets or sets 'has triggers' flag.
@@ -533,14 +534,18 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <summary>
 	/// Finds ancestor (including self) project folder and its main file.
 	/// If both found, sets folder and main and returns true. If some not found, sets folder=null, main=null, and returns false.
+	/// If ofAnyScript, gets project even if this is a non-main script in project folder. 
 	/// </summary>
-	public bool FindProject(out FileNode folder, out FileNode main)
+	public bool FindProject(out FileNode folder, out FileNode main, bool ofAnyScript = false)
 	{
 		folder = main = null;
 		for(FileNode r = Root, f = IsFolder ? this : Parent; f != r && f != null; f = f.Parent) {
 			if(!f.IsProjectFolder(out main)) continue;
 			if(main == null) break;
-			if(this.IsScript && this != main) { main = null; break; } //script is not part of project if not main
+			if(this.IsScript && this != main && !ofAnyScript) { //non-main scripts are not part of project
+				main = null;
+				break;
+			}
 			folder = f;
 			return true;
 		}
@@ -674,11 +679,11 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="pos"></param>
 	/// <param name="template">
 	/// Item type and template.
-	/// Can be filename or relative path of a file or folder from the Templates folder.
+	/// Can be filename or relative path of a file or folder from the Templates\files folder.
 	/// Examples: "File.cs", "File.txt", "Subfolder", "Subfolder\File.cs".
-	/// Special names: "Folder", "Script.cs", "Class.cs". Case-sensitive.
+	/// Special names: "Folder", "Script.cs", "Class.cs", "Partial.cs". Case-sensitive.
 	/// Else detects type (folder, script, class, other) by file type (folder or not), extension (.cs or not) or text (if .cs).
-	/// If folder name starts with '@', creates multi-file project from template if exists. To sort the main code file first, its name can start with '!' character.
+	/// If folder name starts with '@', creates multi-file project from template. If with '!' - simple folder with descendants.
 	/// </param>
 	/// <param name="name">If not null, creates with this name (made unique). Else gets name from template. In any case, makes unique name.</param>
 	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, string template, string name = null)
@@ -694,12 +699,11 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 
 		int i;
 		string text = "";
-		bool isFolder = template == "Folder";
+		bool isFolder = template == "Folder", fillFolder = false;
 		if(!isFolder) {
-			i = template.Eq(false, "Script.cs", "Class.cs");
-			string templFile = i == 0 ? (Templates.DefaultDirBS + template) : Templates.FilePathReal(i == 1);
+			string templFile = Templates.IsStandardTemplateName(template, out var tt) ? Templates.FilePathReal(tt) : (Templates.DefaultDirBS + template);
 			switch(AFile.ExistsAs(templFile, true)) {
-			case FileDir.Directory: isFolder = true; break;
+			case FileDir.Directory: isFolder = fillFolder = true; break;
 			case FileDir.File: text = _GetTemplateText(templFile, template, newParent); break;
 			}
 		}
@@ -707,8 +711,11 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		//create unique name
 		if(name == null) {
 			name = APath.GetFileName(template);
+			if(fillFolder && name.Starts('!')) name = name[1..];
 			//let unique names start from 1
-			if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
+			if(!template.Starts("Examples\\")) {
+				if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
+			}
 		}
 		name = CreateNameUniqueInFolder(newParent, name, isFolder);
 
@@ -723,30 +730,29 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		var f = new FileNode(model, name, path, isFolder, template: template);
 		f._Common_MoveCopyNew(target, pos);
 
-		if(isFolder && APath.GetFileName(template)[0] == '@') {
-			_FillProjectFolder(model, f, Templates.DefaultDirBS + template);
+		if(fillFolder) {
+			var x = AExtXml.LoadElem(Templates.DefaultFilesXml);
+			foreach(var v in template.Split('\\')) x = x.Elem("d", "n", v);
+			_FillFolder(model, f, x, template);
 		}
 		return f;
 
-		static void _FillProjectFolder(FilesModel model, FileNode fnParent, string dirParent)
+		static void _FillFolder(FilesModel model, FileNode fnParent, XElement xParent, string dir)
 		{
-			foreach(var v in AFile.EnumDirectory(dirParent, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
-				bool isFolder = v.IsDirectory;
-				var name = v.Name;
-				if(isFolder && name[0] == '@') continue; //error, project in project
-				if(name[0] == '!' && name.Length > 1) name = name.Substring(1); //!name can be used to make the file sorted first; then it will become the main file of project.
-				string template = v.FullPath.Substring(Templates.DefaultDirBS.Length);
+			foreach(var x in xParent.Elements()) {
+				string tag = x.Name.LocalName, name = x.Attr("n");
+				bool isFolder = tag == "d";
+				string template = dir + "\\" + name;
 				var f = NewItem(model, fnParent, NodePosition.Inside, template, name);
-				if(isFolder) _FillProjectFolder(model, f, v.FullPath);
+				if(isFolder) _FillFolder(model, f, x, template);
 			}
 		}
 
 		static string _GetTemplateText(string templFile, string template, FileNode newParent)
 		{
 			string s = AFile.LoadText(templFile);
-			if(s.NE()) {
-				int i = template.Ends(false, "Script.cs", "Class.cs");
-				if(i > 0) s = Templates.Load(i == 1); //load default or customized template
+			if(s.NE() && Templates.IsStandardTemplateName(template, out var tt, ends: true)) {
+				s = Templates.Load(tt); //load default or custom template
 			}
 
 			//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
@@ -786,26 +792,40 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 
 	public static class Templates
 	{
-		public static readonly string DefaultDirBS = AFolders.ThisAppBS + @"Default\Templates\";
-		public static readonly string UserDirBS = AFolders.ThisAppDocuments + @".settings\Templates\";
+		public static readonly string DefaultDirBS = AFolders.ThisAppBS + @"Templates\files\";
+		public static readonly string UserDirBS = ProgramSettings.DirBS + @"Templates\";
+		public static readonly string DefaultFilesXml = AFolders.ThisAppBS + @"Templates\files.xml";
 
-		public static string FileName(bool script) => script ? "Script.cs" : "Class.cs";
+		public static string FileName(ETempl templ) => templ switch { ETempl.Class => "Class.cs", ETempl.Partial => "Partial.cs", _ => "Script.cs" };
 
-		public static string FilePathRaw(bool script, bool user) => (user ? UserDirBS : DefaultDirBS) + FileName(script);
+		public static string FilePathRaw(ETempl templ, bool user) => (user ? UserDirBS : DefaultDirBS) + FileName(templ);
 
-		public static string FilePathReal(bool script, bool? user = null)
+		public static string FilePathReal(ETempl templ, bool? user = null)
 		{
-			bool u = user ?? (script ? Program.Settings.templ_script : Program.Settings.templ_class);
-			var file = FilePathRaw(script, u);
-			if(u && !AFile.ExistsAsFile(file, true)) file = FilePathRaw(script, false);
+			bool u = user ?? Program.Settings.templ_use.Has(templ);
+			var file = FilePathRaw(templ, u);
+			if(u && !AFile.ExistsAsFile(file, true)) file = FilePathRaw(templ, false);
 			return file;
 		}
 
-		public static string Load(bool script, bool? user = null)
+		public static string Load(ETempl templ, bool? user = null)
 		{
-			return AFile.LoadText(FilePathReal(script, user));
+			return AFile.LoadText(FilePathReal(templ, user));
 		}
+
+		public static bool IsStandardTemplateName(string template, out ETempl result, bool ends = false)
+		{
+			int i = ends ? template.Ends(false, s_names) : template.Eq(false, s_names);
+			if(i-- == 0) { result = 0; return false; }
+			result = (ETempl)(1 << i);
+			return true;
+		}
+
+		static string[] s_names = { "Script.cs", "Class.cs", "Partial.cs" };
 	}
+
+	[Flags]
+	public enum ETempl { Script = 1, Class = 2, Partial = 4 }
 
 	#endregion
 

@@ -19,7 +19,7 @@ namespace Au
 	/// <summary>
 	/// Creates shell shortcuts (.lnk files) and gets shortcut properties.
 	/// </summary>
-	public unsafe class AShortcutFile : IDisposable
+	public unsafe sealed class AShortcutFile : IDisposable
 	{
 		Api.IShellLink _isl;
 		Api.IPersistFile _ipf;

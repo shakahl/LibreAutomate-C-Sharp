@@ -10,7 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Drawing;
-//using System.Linq;
+using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Runtime.CompilerServices;
@@ -479,7 +479,7 @@ class Script : AScript
 	//{
 
 	//	ATimer.After(500, _ => {
-	//		var w = AWnd.Find(null, "#32770").OrThrow();
+	//		var w = +AWnd.Find(null, "#32770");
 	//		//RECT r;
 	//		//AOutput.Write(w.GetClientRect(out r), r);
 	//		//AOutput.Write(w.GetClientRect2(out r), r);
@@ -591,7 +591,7 @@ class Script : AScript
 		//var screenFromActiveWindow = new HScreen(() => HScreen.FromWindow(AWnd.Active));
 		//AOutput.Write(screenFromMouse, screenFromActiveWindow);
 
-		//while(ADialog.ShowOKCancel("test")) {
+		//while(ADialog.ShowOkCancel("test")) {
 		//	two = AKeys.IsScrollLock;
 		//	200.ms();
 		//	//APerf.SpeedUpCpu();
@@ -688,16 +688,16 @@ class Script : AScript
 		//while(AKeys.IsScrollLock) 100.ms();
 
 
-		var w = AWnd.Find("Au - Microsoft Visual Studio", "HwndWrapper[DefaultDomain;*").OrThrow();
+		var w = +AWnd.Find("Au - Microsoft Visual Studio", "HwndWrapper[DefaultDomain;*");
 		string image = @"image:iVBORw0KGgoAAAANSUhEUgAAAA0AAAAQCAYAAADNo/U5AAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAC2SURBVDhPYzhz9cN/DHzlw/+Hp1b8v7osHisGazoNVISOr6/N+39rZ+f/k6efY2C4Jmwm4sJDRdPNjSVgGobvH56BVQMIwzX1rz36nzd40n8Grx4w3bfh3P8Hxxfg1wRSuHzvZXCQgmgQ/+Hj8/g1gWxAjgvpmGlgcYKa0G0CiWPDDCDCo2krWBMMgzTM3XkZnJxAhqJjBpgGEI1sGjbFMAzWBNOATQE2DHYeKRpAGBwQpOEP/wF46o8knB4kYgAAAABJRU5ErkJggg==";
 		//string image = @"Q:\Test\find.bmp";
 
 		//for(int i = 0; i < 10; i++) {
-		//	var im = AWinImage.Find(w, image, WIFlags.WindowDC).OrThrow();
+		//	var im = +AWinImage.Find(w, image, WIFlags.WindowDC);
 		//	AOutput.Write(im);
 		//}
 
-		var im = AWinImage.Find(w, image, WIFlags.WindowDC).OrThrow();
+		var im = +AWinImage.Find(w, image, WIFlags.WindowDC);
 
 		//var b = AWinImage.LoadImage(image);
 
@@ -707,7 +707,7 @@ class Script : AScript
 		//AOutput.Write(d.Stride);
 		//b.UnlockBits(d);
 
-		//var im = AWinImage.Find(w, b, WIFlags.WindowDC).OrThrow();
+		//var im = +AWinImage.Find(w, b, WIFlags.WindowDC);
 		AOutput.Write(im);
 
 	}
@@ -831,45 +831,6 @@ class Script : AScript
 
 	}
 
-	class Ho : IDisposable
-	{
-
-		#region IDisposable Support
-		private bool disposedValue = false; // To detect redundant calls
-
-		protected virtual void Dispose(bool disposing)
-		{
-			if(!disposedValue) {
-				if(disposing) {
-					// TODO: dispose managed state (managed objects).
-				}
-
-				// TODO: free unmanaged resources (unmanaged objects) and override a finalizer below.
-				// TODO: set large fields to null.
-
-				disposedValue = true;
-			}
-		}
-
-		// TODO: override a finalizer only if Dispose(bool disposing) above has code to free unmanaged resources.
-		// ~Ho()
-		// {
-		//   // Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-		//   Dispose(false);
-		// }
-
-		// This code added to correctly implement the disposable pattern.
-		public void Dispose()
-		{
-			// Do not change this code. Put cleanup code in Dispose(bool disposing) above.
-			Dispose(true);
-			// TODO: uncomment the following line if the finalizer is overridden above.
-			// GC.SuppressFinalize(this);
-		}
-		#endregion
-
-	}
-
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	bool TestArrayExt(string[] a)
 	{
@@ -880,34 +841,136 @@ class Script : AScript
 	//	return a.Len_();
 	//}
 
+	/// <summary>
+	/// <para>List:</para>
+	/// <list type="bullet">
+	/// <item>ONE.</item>
+	/// <item>TWO.</item>
+	/// </list>
+	/// 
+	/// <p>List:</p>
+	/// <ul>
+	/// <li>one.</li>
+	/// <li>two.</li>
+	/// </ul>
+	/// </summary>
+	void TestMarkdownXmlDocComments()
+	{
+		string markdown = @"List:
+- one.
+- two.
+
+<para>List:</para>
+<list type=""bullet"">
+<item>ONE.</item>
+<item>TWO.</item>
+</list>
+
+<p>List:</p>
+<ul>
+<li>one.</li>
+<li>two.</li>
+</ul>
+
+";
+
+		string html = Markdig.Markdown.ToHtml(markdown);
+		html = html.RegexReplace(@"(?m)^", "/// ");
+		AOutput.Write(html);
+	}
+
+	//void TestMenuDropdownBug()
+	//{
+	//	bool test = AKeys.IsScrollLock;
+	//	{
+	//		var m = new ToolStripDropDownMenu();
+	//		var k = m.Items;
+	//		k.Add("0");
+	//	}
+	//	for(int j = 0; j < 1; j++) {
+	//		ADebug.MemorySetAnchor_();
+
+	//		APerf.First();
+	//		var m = new ToolStripDropDownMenu();
+	//		var k = m.Items;
+	//		if(test) m.ShowItemToolTips = false;
+
+	//		for(int i = 0; i < 100; i++) {
+	//			k.Add("0");
+	//		}
+	//		APerf.Next();
+	//		//foreach(ToolStripMenuItem v in m.Items) {
+	//		//	if(v.HasDropDown) AOutput.Write("has");
+	//		//}
+	//		//APerf.Next();
+	//		//if(test) {
+	//		//	m.ShowItemToolTips = true;
+	//		//	APerf.Next();
+	//		//}
+
+	//		ADebug.MemoryPrint_();
+	//		APerf.Write();
+
+	//		//m.Show();
+
+	//		//ADebug.MemoryPrint_();
+
+	//		100.ms();
+	//	}
+	//}
+	void TestMenuDropdownBug()
+	{
+		bool test = AKeys.IsScrollLock;
+		{
+			var m = new AMenu();
+			m["0"] = o => AOutput.Write(o);
+			ATimer.After(30, _ => m.Close());
+			m.Show();
+		}
+		for(int j = 0; j < 1; j++) {
+			ADebug.MemorySetAnchor_();
+
+			APerf.First();
+			var m = new AMenu();
+			if(test) m.Control.ShowItemToolTips = false;
+
+			for(int i = 0; i < 100; i++) {
+				m["1"] = o => AOutput.Write(o);
+			}
+			APerf.Next();
+			//foreach(ToolStripMenuItem v in m.Control.Items) {
+			//	if(v.HasDropDown) AOutput.Write("has");
+			//}
+			//APerf.Next();
+			//if(test) {
+			//	m.Control.ShowItemToolTips = true;
+			//	APerf.Next();
+			//}
+
+			ADebug.MemoryPrint_();
+			APerf.Write();
+
+			//m.Show();
+
+			//ADebug.MemoryPrint_();
+
+			100.ms();
+		}
+	}
+
 	unsafe void _Main()
 	{
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
 
-		//int r = ADialog.ShowInput(out string s, "Example", flags: DFlags.CommandLinks, buttons: "OK|Cancel|10 Browse",
-		//onButtonClick: e => { if(e.Button == 10) { e.EditText = "text"; e.DontCloseDialog = true; } });
+		//TestMenuDropdownBug();
+		//TestMarkdownXmlDocComments();
 
-		//ADialog.ShowInput(out string s2, "Example", "Try to click OK while text is empty.", onButtonClick: e => {
-		//	var t = e;
-		//	if(e.Button == 1 && e.EditText.NE()) {
-		//	//if(e.Button == 1 && string.IsNullOrEmpty(e.EditText)) {
-		//		ADialog.Show("Text cannot be empty.", owner: e.hwnd);
-		//		e.dialog.EditControl.Focus();
-		//		e.DontCloseDialog = true;
-		//	}
-		//});
+		var methods = from mi in typeof(Script).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod)
+					  where mi.Name == "ff"
+					  select mi;
 
-		string s = "";
-		if(string.IsNullOrEmpty(s)) { }
-		if(s == null || s == "") { }
-		if((s ?? "") == "") { }
-		if(s == "") { }
-		if(s.Lenn() == 0) { }
-		if(s.NE()) { }
-		//if(s.No()) { }
-		//if(Empty(s)) { }
 
 	}
 

@@ -45,7 +45,7 @@ namespace Au.Util
 		/// Gets small icon size that depends on DPI of the primary screen.
 		/// Width and Height are <see cref="BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
 		/// </summary>
-		public static SIZE SmallIconSize { get { var t = BaseDPI / 6; return new SIZE(t, t); } }
+		internal static SIZE SmallIconSize_ { get { var t = BaseDPI / 6; return new SIZE(t, t); } } //same as AIcon.SizeSmall
 
 		/// <summary>
 		/// If <see cref="BaseDPI"/> is more than 96, returns stretched i.
@@ -55,7 +55,7 @@ namespace Au.Util
 		public static int ScaleInt(int i)
 		{
 			long dpi = BaseDPI;
-			if(dpi > 96) i = (int)(i * dpi / 96);
+			if(dpi > 96) i = checked((int)(i * dpi / 96)); //TODO: round?
 			return i;
 		}
 
@@ -67,10 +67,10 @@ namespace Au.Util
 		/// <param name="z"></param>
 		public static SIZE ScaleSize(SIZE z)
 		{
-			int dpi = BaseDPI;
-			if(dpi > 96) {
-				z.width = (int)((long)z.width * dpi / 96);
-				z.height = (int)((long)z.height * dpi / 96);
+			long dpi = BaseDPI;
+			if(dpi > 96) checked {
+				z.width = (int)(z.width * dpi / 96);
+				z.height = (int)(z.height * dpi / 96);
 			}
 			return z;
 		}
@@ -84,10 +84,10 @@ namespace Au.Util
 		{
 			if(image == null) return default;
 			SIZE r = image.Size;
-			int dpi = BaseDPI;
-			if(dpi > 96) {
-				r.width = (int)((long)r.width * dpi / (int)Math.Round(image.HorizontalResolution));
-				r.height = (int)((long)r.height * dpi / (int)Math.Round(image.VerticalResolution));
+			long dpi = BaseDPI;
+			if(dpi > 96) checked {
+				r.width = (int)(r.width * dpi / (int)Math.Round(image.HorizontalResolution));
+				r.height = (int)(r.height * dpi / (int)Math.Round(image.VerticalResolution));
 			}
 			return r;
 		}

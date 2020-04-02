@@ -112,7 +112,7 @@ partial class FilesModel
 			_ccName.EditEnabled = true;
 			_ccName.ValueNeeded = node => (node.Tag as FileNode).DisplayName;
 			_ccName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, true); };
-			_ccName.FontNeeded = node => node.Tag == _model.CurrentFile ? Au.Util.AFonts.Bold : null;
+			_ccName.FontNeeded = node => node.Tag == _model.CurrentFile ? Au.Util.AFontsCached_.Bold : Au.Util.AFontsCached_.Regular;
 			_ccName.DrawText += _ccName_DrawText;
 
 #if TEST_MANY_COLUMNS

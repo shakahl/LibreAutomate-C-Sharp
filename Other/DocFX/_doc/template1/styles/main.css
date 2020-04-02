@@ -135,6 +135,8 @@ article h4 {
 article h5 {
     border-bottom: none;
     font-weight: bold;
+    margin-top: 14px;
+    margin-bottom: 7px;
 }
 
 /* See namespace.tmpl.partial. Initially the links were <h3>, but does not look good after changing <h3> style. */

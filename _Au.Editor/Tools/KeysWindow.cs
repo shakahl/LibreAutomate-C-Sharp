@@ -68,13 +68,13 @@ namespace Au.Tools
 				m.SelectedAction = m => {
 					var s = m.ResultItem as string;
 					int i = s.IndexOf(' '); if(i > 0) s = s[0..i];
-					TUtil.InsertTextInControl(sci, prefix + s + suffix);
+					InsertCode.TextSimplyInControl(sci, prefix + s + suffix);
 				};
 				var p = AMouse.XY;
 				m.Show(new Rectangle(p.x, p.y, 0, 0));
 			} else {
 				s = prefix + s + suffix;
-				TUtil.InsertTextInControl(sci, s);
+				InsertCode.TextSimplyInControl(sci, s);
 			}
 
 			if(suffix == " ") sci.Call(Sci.SCI_CHARLEFT);
@@ -94,7 +94,7 @@ namespace Au.Tools
 		{
 			pos8 = sci.Z.FindText(false, "\"", pos8) + 1; if(pos8 == 0) return;
 			sci.Z.GoToPos(false, pos8);
-			TUtil.InsertTextInControl(sci, s);
+			InsertCode.TextSimplyInControl(sci, s);
 		}
 	}
 }

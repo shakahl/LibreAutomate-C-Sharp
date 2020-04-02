@@ -73,7 +73,7 @@ namespace Au
 						ADialog.Show("Offscreen", "Rectangle: " + r.ToString(), owner: this);
 					}
 				} else if(sender == _bMove) {
-					if(!w.IsVisible && !ADialog.ShowOKCancel("Hidden", "Move this hidden toolbar?", owner: this)) return;
+					if(!w.IsVisible && !ADialog.ShowOkCancel("Hidden", "Move this hidden toolbar?", owner: this)) return;
 					var xy = AMouse.XY;
 					w.MoveLL(xy.x, xy.y);
 					var w2 = this.Hwnd();

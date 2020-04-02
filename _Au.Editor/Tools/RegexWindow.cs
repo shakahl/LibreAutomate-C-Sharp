@@ -25,7 +25,7 @@ namespace Au.Tools
 				c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
 			}
 			this.Control2.ZTags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
-			this.Control2.ZTags.AddLinkTag("+a", o => TUtil.InsertTextInControl(InsertInControl, o)); //link that inserts a regex token
+			this.Control2.ZTags.AddLinkTag("+a", o => InsertCode.TextSimplyInControl(InsertInControl, o)); //link that inserts a regex token
 
 			_SetTocText();
 			CurrentTopic = "help";

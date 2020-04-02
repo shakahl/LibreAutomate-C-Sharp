@@ -205,6 +205,12 @@ namespace Au
 				if(!_destroyed) base.DestroyHandle();
 			}
 
+			protected override void Dispose(bool disposing)
+			{
+				_tb._Dispose(disposing);
+				base.Dispose(disposing);
+			}
+
 			//Alternative to returning HTCAPTION on WM_NCITTEST.
 			//void _DragMoveWindow()
 			//{

@@ -276,50 +276,6 @@ namespace Au.Types
 
 namespace Au
 {
-	/// <summary>
-	/// Extension methods for types of this library.
-	/// </summary>
-	public static partial class AExtAu
-	{
-		/// <summary>
-		/// If this is default(AWnd), throws <see cref="NotFoundException"/>, else returns this.
-		/// </summary>
-		/// <exception cref="NotFoundException"></exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// var w = AWnd.Find("Example").OrThrow();
-		/// ]]></code>
-		/// </example>
-		public static AWnd OrThrow(this AWnd x) => !x.Is0 ? x : throw new NotFoundException("Not found (AWnd).");
-
-		/// <summary>
-		/// If this is null, throws <see cref="NotFoundException"/>, else returns this.
-		/// </summary>
-		/// <exception cref="NotFoundException"></exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// var w = AWnd.Find("Example").OrThrow();
-		/// 
-		/// var a1 = AAcc.Find(w, "web:LINK", "Example").OrThrow();
-		/// 
-		/// var a2 = (AAcc.Find(w, ...)?.Find(...)).OrThrow();
-		/// ]]></code>
-		/// </example>
-		public static AAcc OrThrow(this AAcc x) => x ?? throw new NotFoundException("Not found (AAcc).");
-
-		/// <summary>
-		/// If this is null, throws <see cref="NotFoundException"/>, else returns this.
-		/// </summary>
-		/// <exception cref="NotFoundException"></exception>
-		/// <example>
-		/// <code><![CDATA[
-		/// var w = AWnd.Find("Example").OrThrow();
-		/// var wi = AWinImage.Find(w, ...).OrThrow();
-		/// ]]></code>
-		/// </example>
-		public static AWinImage OrThrow(this AWinImage x) => x ?? throw new NotFoundException("Not found (AWinImage).");
-	}
-
 	static partial class AExtensions
 	{
 		/// <summary>

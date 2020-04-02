@@ -25,6 +25,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Markdig" Version="0.18.3" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Libraries\_HtmlRenderer\_HtmlRenderer.csproj" />
     <ProjectReference Include="..\_Au\_Au.csproj" />
     <ProjectReference Include="..\_Au.Controls\_Au.Controls.csproj" />

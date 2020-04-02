@@ -278,7 +278,6 @@ class CiAutocorrect
 		var doc = cd.sciDoc;
 		var code = cd.code;
 		int pos = cd.pos16;
-		//if(pos < 1 || pos == code.Length) return false;
 		if(pos < 1) return false;
 		if(!anywhere && doc.Z.IsSelection) return false;
 		if(pos == code.Length) {
@@ -759,7 +758,7 @@ class CiAutocorrect
 		} else {
 			//CiUtil.PrintNode(token, pos);
 			if(pos == span.End) return false;
-			bool atStart = pos == span.Start;
+			bool atStart = pos == span.Start, interpol = false;
 
 			var node = token.Parent;
 			if(node.Parent is InterpolatedStringExpressionSyntax ise) {
@@ -770,11 +769,14 @@ class CiAutocorrect
 				default:
 					return false;
 				}
+				interpol = true;
 				node = ise;
 			} else {
 				switch(token.Kind()) {
 				case SyntaxKind.StringLiteralToken when !atStart:
+					break;
 				case SyntaxKind.InterpolatedStringEndToken when atStart:
+					interpol = true;
 					break;
 				case SyntaxKind.CharacterLiteralToken when !atStart:
 					suppress = !onSemicolon;
@@ -787,8 +789,8 @@ class CiAutocorrect
 
 			span = node.Span;
 			if(0 != cd.code.Eq(span.Start, false, "@", "$@", "@$")) return true;
-			prefix = "\\r\\n\" +";
-			suffix = "\"";
+			prefix = Program.Settings.ci_correctStringEnter == 0 ? @"\r\n"" +" : "\" +"; //"A\r\n" + "B" (default) or "A" + "B" (like in VS)
+			suffix = interpol ? "$\"" : "\"";
 			//indent more, unless line starts with "
 			int i = cd.sciDoc.Z.LineStartFromPos(true, pos);
 			if(!cd.code.RegexIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;

@@ -63,6 +63,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 		_dict.Add(nameof(File_NewScript), File_NewScript);
 		_dict.Add(nameof(File_NewClass), File_NewClass);
+		_dict.Add(nameof(File_NewPartial), File_NewPartial);
 		_dict.Add(nameof(File_NewFolder), File_NewFolder);
 		_dict.Add(nameof(File_Import), File_Import);
 		//_dict.Add(nameof(File_Disable), File_Disable);
@@ -107,8 +108,8 @@ class CmdHandlers : IGStripManagerCallbacks
 		//_dict.Add(nameof(Edit_PeekDefinition), Edit_PeekDefinition);
 		_dict.Add(nameof(Edit_Comment), Edit_Comment);
 		_dict.Add(nameof(Edit_Uncomment), Edit_Uncomment);
-		_dict.Add(nameof(Edit_Indent), Edit_Indent);
-		_dict.Add(nameof(Edit_Unindent), Edit_Unindent);
+		_dict.Add(nameof(Edit_IndentLines), Edit_IndentLines);
+		_dict.Add(nameof(Edit_UnindentLines), Edit_UnindentLines);
 		_dict.Add(nameof(Edit_SelectAll), Edit_SelectAll);
 		//_dict.Add(nameof(Edit_HideRegion), Edit_HideRegion);
 		//_dict.Add(nameof(Edit_Output), Edit_Output);
@@ -117,8 +118,8 @@ class CmdHandlers : IGStripManagerCallbacks
 		_dict.Add(nameof(Code_AWnd), Code_AWnd);
 		_dict.Add(nameof(Code_AAcc), Code_AAcc);
 		_dict.Add(nameof(Code_AWinImage), Code_AWinImage);
-		_dict.Add(nameof(Code_Regex), Code_Regex);
 		_dict.Add(nameof(Code_Keys), Code_Keys);
+		_dict.Add(nameof(Code_Regex), Code_Regex);
 		_dict.Add(nameof(Code_WindowsAPI), Code_WindowsAPI);
 		_dict.Add(nameof(Run_Run), Run_Run);
 		_dict.Add(nameof(Run_EndTask), Run_EndTask);
@@ -184,6 +185,11 @@ class CmdHandlers : IGStripManagerCallbacks
 	public void File_NewClass()
 	{
 		Program.Model.NewItem("Class.cs", beginRenaming: true);
+	}
+
+	public void File_NewPartial()
+	{
+		Program.Model.NewItem("Partial.cs", beginRenaming: true);
 	}
 
 	public void File_NewFolder()
@@ -415,12 +421,12 @@ class CmdHandlers : IGStripManagerCallbacks
 		Panels.Editor.ZActiveDoc.ZCommentLines(false);
 	}
 
-	public void Edit_Indent()
+	public void Edit_IndentLines()
 	{
 		Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB);
 	}
 
-	public void Edit_Unindent()
+	public void Edit_UnindentLines()
 	{
 		Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB);
 	}
@@ -470,14 +476,14 @@ class CmdHandlers : IGStripManagerCallbacks
 		new FormAWinImage().ZShow();
 	}
 
-	public void Code_Regex()
-	{
-		CiTools.CmdShowRegexWindow();
-	}
-
 	public void Code_Keys()
 	{
 		CiTools.CmdShowKeysWindow();
+	}
+
+	public void Code_Regex()
+	{
+		CiTools.CmdShowRegexWindow();
 	}
 
 	public void Code_WindowsAPI()
@@ -501,11 +507,14 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Run_EndTask()
 	{
-		if(Program.Tasks.EndTasksOf(Program.Model.CurrentFile)) return;
+		var f = Program.Model.CurrentFile;
+		if(f != null) {
+			if(f.FindProject(out _, out var fMain)) f = fMain;
+			if(Program.Tasks.EndTasksOf(f)) return;
+		}
 		var t = Program.Tasks.GetGreenTask(); if(t == null) return;
 		var m = new AMenu();
-		m.Add("End task:", null).Enabled = false;
-		m[t.f.DisplayName] = o => Program.Tasks.EndTask(t);
+		m["End task  " + t.f.DisplayName] = o => Program.Tasks.EndTask(t);
 		m.Show(Program.MainForm);
 	}
 
@@ -530,8 +539,8 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Debug_AddDebuggerBreakCode()
 	{
-		TUtil.InsertUsingDirectiveInEditor("System.Diagnostics");
-		TUtil.InsertStatementInEditor("if(Debugger.IsAttached) Debugger.Break(); else Debugger.Launch();");
+		InsertCode.UsingDirective("System.Diagnostics");
+		InsertCode.Statements("if(Debugger.IsAttached) Debugger.Break(); else Debugger.Launch();");
 	}
 
 	public void Debug_ToggleBreakpoint()

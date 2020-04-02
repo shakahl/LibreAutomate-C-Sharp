@@ -122,7 +122,7 @@ namespace Au
 		/// Gets standard or custom role, as string.
 		/// </summary>
 		/// <remarks>
-		/// Most objects have a standard role, as enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
+		/// Most objects have a standard role, defined in enum <see cref="AccROLE"/>. Some objects have a custom role, usually as string, for example in web pages in Firefox and Chrome.
 		/// For standard roles this function returns enum <see cref="AccROLE"/> member name. For string roles - the string. For unknown non-string roles - the int value like "0" or "500".
 		/// Returns "" if failed. Supports <see cref="ALastError"/>.
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
@@ -762,21 +762,21 @@ namespace Au
 		/// Gets multiple properties.
 		/// </summary>
 		/// <param name="props">
-		/// Which properties to get. Each character specifies a property:
-		/// 'R' - <see cref="Role"/>.
-		/// 'n' - <see cref="Name"/>.
-		/// 'v' - <see cref="Value"/>.
-		/// 'd' - <see cref="Description"/>.
-		/// 'h' - <see cref="Help"/>.
-		/// 'a' - <see cref="DefaultAction"/>.
-		/// 'k' - <see cref="KeyboardShortcut"/>.
-		/// 'u' - <see cref="UiaId"/>.
-		/// 's' - <see cref="State"/>.
-		/// 'r' - <see cref="Rect"/>.
-		/// 'w' - <see cref="WndContainer"/>.
-		/// 'o' - <see cref="Html"/> outer.
-		/// 'i' - <see cref="Html"/> inner.
-		/// '@' - <see cref="HtmlAttributes"/>.
+		/// String that specifies properties to get, for example "nv" for name and value.
+		/// - R - <see cref="Role"/>.
+		/// - n - <see cref="Name"/>.
+		/// - v - <see cref="Value"/>.
+		/// - d - <see cref="Description"/>.
+		/// - h - <see cref="Help"/>.
+		/// - a - <see cref="DefaultAction"/>.
+		/// - k - <see cref="KeyboardShortcut"/>.
+		/// - u - <see cref="UiaId"/>.
+		/// - s - <see cref="State"/>.
+		/// - r - <see cref="Rect"/>.
+		/// - w - <see cref="WndContainer"/>.
+		/// - o - <see cref="Html"/> outer.
+		/// - i - <see cref="Html"/> inner.
+		/// - @ - <see cref="HtmlAttributes"/>.
 		/// </param>
 		/// <param name="result">Receives results.</param>
 		/// <exception cref="ArgumentException">Unknown property character.</exception>
@@ -863,17 +863,19 @@ namespace Au
 		/// - <c>"last"</c> - last child AO.
 		/// - <c>"parent"</c> - parent (container) AO.
 		/// - <c>"child"</c> - child AO by 1-based index. Example: <c>"child3"</c> (3-th child). Negative index means from end, for example -1 is the last child.
-		/// - <c>"#N"</c> - N is a numeric value to pass to <msdn>IAccessible.accNavigate</msdn> as navDir. Can be any standard or custom value supported by the AO.
-		/// 
+		/// - <c>"#N"</c> - custom. More info in Remarks.
+		/// </param>
+		/// <param name="secondsToWait">Wait for the wanted AO max this number of seconds. If negative, waits forever.</param>
+		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
+		/// <remarks>
 		/// Can be only 2 letters, like <c>"pr"</c> for <c>"previous"</c>.
 		/// A string like <c>"next3"</c> or <c>"next,3"</c> is the same as <c>"next next next"</c>. Except for <c>"child"</c>.
+		/// Use string like <c>"#1000"</c> to specify a custom <i>navDir</i> value to pass to <msdn>IAccessible.accNavigate</msdn>. Can be any standard or custom value supported by the AO.
 		/// 
 		/// For <c>"next"</c>, <c>"previous"</c>, <c>"firstchild"</c>, <c>"lastchild"</c> and <c>"#N"</c> is used <msdn>IAccessible.accNavigate</msdn>. Not all AOs support it. Some AOs skip invisible siblings. Instead you can use <c>"parent childN"</c> or <c>"childN"</c>.
 		/// For <c>"parent"</c> is used <msdn>IAccessible.get_accParent</msdn>. Few AOs don't support. Some AOs return a different parent than in the AO tree.
 		/// For <c>"child"</c> is used API <msdn>AccessibleChildren</msdn>.
-		/// </param>
-		/// <param name="secondsToWait">Wait for the wanted AO max this number of seconds. If negative, waits forever.</param>
-		/// <exception cref="ArgumentException">Invalid <i>navig</i> string.</exception>
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// a = a.Navigate("parent next ch3", true);

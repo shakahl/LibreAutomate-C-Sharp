@@ -76,12 +76,11 @@ namespace Au
 		/// Opens or creates a database file.
 		/// </summary>
 		/// <param name="file">
-		/// Database file.
-		/// Special strings:
-		/// ":memory:" - create a private, temporary in-memory database.
-		/// "" - create a private, temporary on-disk database.
-		/// Starts with "file:" - see sqlite3_open_v2 documentation in SQLite website.
-		/// If not one of above special strings, must be full path, and can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>
+		/// Database file. Can be:
+		/// - Full path. Supports environment variables etc, see <see cref="APath.ExpandEnvVar"/>
+		/// - ":memory:" - create a private, temporary in-memory database.
+		/// - "" - create a private, temporary on-disk database.
+		/// - Starts with "file:" - see sqlite3_open_v2 documentation in SQLite website.
 		/// </param>
 		/// <param name="flags">sqlite3_open_v2 flags, documanted in SQLite website. Default: read-write, create file if does not exist (and parent directory).</param>
 		/// <param name="sql">
@@ -109,22 +108,28 @@ namespace Au
 			Execute("PRAGMA foreign_keys=ON;PRAGMA secure_delete=ON;" + sql);
 		}
 
+		///
+		protected virtual void Dispose(bool disposing)
+		{
+			if(_db != default) {
+				var r = SLApi.sqlite3_close_v2(_db);
+				Debug.Assert(r == 0); SLUtil.Warn(r, "sqlite3_close");
+				_db = default;
+			}
+		}
+
 		/// <summary>
 		/// Calls sqlite3_close_v2.
 		/// If fails, writes warning to the output.
 		/// </summary>
 		public void Dispose()
 		{
-			if(_db != default) {
-				var r = SLApi.sqlite3_close_v2(_db);
-				Debug.Assert(r == 0); SLUtil.Warn(r, "sqlite3_close");
-				_db = default;
-				GC.SuppressFinalize(this);
-			}
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		///
-		~ASqlite() => Dispose();
+		~ASqlite() => Dispose(false);
 
 		/// <summary>sqlite3*</summary>
 		public static implicit operator IntPtr(ASqlite c) => c._db;
@@ -150,7 +155,7 @@ namespace Au
 		/// </summary>
 		/// <param name="sql">Single SQL statement.</param>
 		/// <param name="bind">
-		/// Values that will replace ? characters in sql.
+		/// Values that will replace <c>?</c> characters in sql.
 		/// Read about SQL parameters in SQLite website. Supported types: <see cref="ASqliteStatement.BindAll"/>. Example: <see cref="ASqlite"/>.
 		/// </param>
 		/// <exception cref="SLException">Failed.</exception>
@@ -173,7 +178,7 @@ namespace Au
 		/// </summary>
 		/// <param name="sql">Single SQL statement. This function does not execute it.</param>
 		/// <param name="bind">
-		/// Values that will replace ? characters in sql. Optional.
+		/// Values that will replace <c>?</c> characters in sql. Optional.
 		/// Read about SQL parameters in SQLite website. Supported types: <see cref="ASqliteStatement.BindAll"/>. Example: <see cref="ASqlite"/>.
 		/// </param>
 		/// <seealso cref="ASqliteStatement"/>
@@ -189,7 +194,7 @@ namespace Au
 		/// <param name="value">Receives data.</param>
 		/// <param name="sql">SQL statement.</param>
 		/// <param name="bind">
-		/// Values that will replace ? characters in sql.
+		/// Values that will replace <c>?</c> characters in sql.
 		/// Read about SQL parameters in SQLite website. Supported types: <see cref="ASqliteStatement.BindAll"/>. Example: <see cref="ASqlite"/>.
 		/// </param>
 		/// <exception cref="SLException">Failed.</exception>
@@ -403,21 +408,27 @@ namespace Au
 			}
 		}
 
-		/// <summary>
-		/// Calls sqlite3_finalize.
-		/// </summary>
-		public void Dispose()
+		///
+		protected virtual void Dispose(bool disposing)
 		{
 			if(_st != default) {
 				//note: don't throw, because sqlite3_finalize can return error of previous sqlite3_step etc
 				SLApi.sqlite3_finalize(_st);
 				_st = default;
-				GC.SuppressFinalize(this);
 			}
 		}
 
+		/// <summary>
+		/// Calls sqlite3_finalize.
+		/// </summary>
+		public void Dispose()
+		{
+			Dispose(true);
+			GC.SuppressFinalize(this);
+		}
+
 		///
-		~ASqliteStatement() => Dispose();
+		~ASqliteStatement() => Dispose(false);
 
 		/// <summary>sqlite3_stmt*</summary>
 		public static implicit operator IntPtr(ASqliteStatement s) => s._st;
@@ -594,17 +605,17 @@ namespace Au
 		/// Returns self.
 		/// </summary>
 		/// <param name="values">
-		/// Values that will replace ? characters in sql.
+		/// Values that will replace <c>?</c> characters in sql.
 		/// Read about SQL parameters in SQLite website. Example: <see cref="ASqlite"/>.
 		/// Supported types:
-		/// int, uint, byte, sbyte, short, ushort - calls sqlite3_bind_int.
-		/// bool - calls sqlite3_bind_int(true?1:0).
-		/// long, ulong - calls sqlite3_bind_int64.
-		/// double, float - calls sqlite3_bind_double.
-		/// string - calls sqlite3_bind_text16.
-		/// decimal - calls sqlite3_bind_blob64.
-		/// Guid - calls sqlite3_bind_blob64.
-		/// An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
+		/// - int, uint, byte, sbyte, short, ushort - calls sqlite3_bind_int.
+		/// - bool - calls sqlite3_bind_int(true?1:0).
+		/// - long, ulong - calls sqlite3_bind_int64.
+		/// - double, float - calls sqlite3_bind_double.
+		/// - string - calls sqlite3_bind_text16.
+		/// - decimal - calls sqlite3_bind_blob64.
+		/// - Guid - calls sqlite3_bind_blob64.
+		/// - An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
 		/// </param>
 		/// <exception cref="NotSupportedException">A value is of an unsupported type.</exception>
 		/// <exception cref="SLException">Failed.</exception>

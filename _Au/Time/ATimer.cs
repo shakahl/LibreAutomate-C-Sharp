@@ -29,7 +29,7 @@ namespace Au
 	/// ATimer.After(500, _ => AOutput.Write("after 500 ms"));
 	/// ATimer.Every(1000, _ => AOutput.Write("every 1000 ms"));
 	/// var t3 = new ATimer(_ => AOutput.Write("after 3000 ms")); t3.After(3000); //the same as ATimer.After
-	/// MessageBox.Show("");
+	/// ADialog.Show("timer");
 	/// ]]></code>
 	/// </example>
 	public class ATimer

@@ -299,7 +299,7 @@ class CiErrors
 			if(action == 'p') {
 				doc.Z.InsertText(false, pos8, s + ".", addUndoPoint: true);
 			} else {
-				Au.Tools.TUtil.InsertUsingDirectiveInEditor(s);
+				InsertCode.UsingDirective(s);
 			}
 		} else if(action == 'w') { //Windows API
 			s = s[2..];

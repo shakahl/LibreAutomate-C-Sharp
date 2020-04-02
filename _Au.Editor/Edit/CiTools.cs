@@ -109,9 +109,19 @@ class CiTools
 
 	static void _ShowRegexOrKeysWindow(bool regex)
 	{
+		bool retry = false;
+		g1:
 		if(!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		var pos16 = cd.pos16;
-		if(!CiUtil.IsInString(ref node, pos16)) { ADialog.ShowInfo("Text cursor must be in string."); return; }
+		if(!CiUtil.IsInString(ref node, pos16)) {
+			if(regex || retry) {
+				ADialog.ShowInfo("The text cursor must be in a string.");
+				return;
+			}
+			InsertCode.Statements("AKeys.Key(\"%\");", goToPercent: true);
+			retry = true;
+			goto g1;
+		}
 		var doc = cd.sciDoc;
 		var stringSpan = node.Span;
 

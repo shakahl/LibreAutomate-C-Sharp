@@ -5,8 +5,8 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-//using System.Linq;
 using System.Xml.Linq;
+//using System.Linq;
 
 partial class PanelFiles : AuUserControlBase
 {
@@ -39,7 +39,7 @@ partial class PanelFiles : AuUserControlBase
 	/// Workspace's directory. The directory should contain file "files.xml" and subdirectory "files".
 	/// If null, loads the last used workspace (its path is in settings).
 	/// If the setting does not exist, uses AFolders.ThisAppDocuments + @"Main".
-	/// If the file does not exist, copies from AFolders.ThisApp + @"Default".
+	/// If the file does not exist, copies from AFolders.ThisApp + @"Default\Workspace".
 	/// </param>
 	public FilesModel ZLoadWorkspace(string wsDir = null)
 	{
@@ -51,13 +51,10 @@ partial class PanelFiles : AuUserControlBase
 		_isNewWorkspace = false;
 		g1:
 		try {
-			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin user processes.
+			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
 
-			//CONSIDER: use different logic. Now silently creates empty files, it's not always good.
-			//	Add parameter createNew. If false, show error if file not found.
 			if(_isNewWorkspace = !AFile.ExistsAsFile(xmlFile)) {
-				AFile.CopyTo(AFolders.ThisAppBS + @"Default\files", wsDir);
-				AFile.Copy(AFolders.ThisAppBS + @"Default\files.xml", xmlFile);
+				AFile.Copy(AFolders.ThisAppBS + @"Default\Workspace", wsDir);
 			}
 
 			_model?.UnloadingWorkspace(); //saves all, closes documents, sets current file = null
@@ -161,7 +158,7 @@ partial class PanelFiles : AuUserControlBase
 		void _Add(string path, bool bold)
 		{
 			var mi = dd.Items.Add(path, null, (o, u) => ZLoadWorkspace(o.ToString()));
-			if(bold) mi.Font = Au.Util.AFonts.Bold;
+			if(bold) mi.Font = Au.Util.AFontsCached_.Bold;
 		}
 
 		dd.SuspendLayout();
@@ -192,38 +189,37 @@ partial class PanelFiles : AuUserControlBase
 		if(_newMenuDone) return; _newMenuDone = true;
 
 		var templDir = FileNode.Templates.DefaultDirBS;
-		_CreateMenu(templDir, ddm, 0);
+		var xroot = AExtXml.LoadElem(FileNode.Templates.DefaultFilesXml);
 
-		void _CreateMenu(string dir, ToolStripDropDownMenu ddParent, int level)
+		_CreateMenu(ddm, xroot, null, 0);
+
+		void _CreateMenu(ToolStripDropDownMenu ddParent, XElement xParent, string dir, int level)
 		{
 			ddParent.SuspendLayout();
-			int i = level == 0 ? 3 : 0;
-			foreach(var v in AFile.EnumDirectory(dir, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
-				bool isProject = false;
-				string name = v.Name;
-				if(v.IsDirectory) {
-					if(level == 0 && name.Eqi("include")) continue; //currently not used
-					if(isProject = (name[0] == '@')) name = name[1..];
+			int i = level == 0 ? 4 : 0;
+			foreach(var x in xParent.Elements()) {
+				string tag = x.Name.LocalName, name = x.Attr("n");
+				int isFolder = tag == "d" ? 1 : 0;
+				if(isFolder == 1) {
+					isFolder = name[0] switch { '@' => 2, '!' => 3, _ => 1 }; //@ project, ! simple folder
 				} else {
-					if(level == 0 && 0 != name.Eq(true, "Script.cs", "Class.cs")) continue;
+					if(level == 0 && FileNode.Templates.IsStandardTemplateName(name, out _)) continue;
 				}
-
-				bool isFolder = v.IsDirectory && !isProject;
-				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(v.FullPath.Substring(templDir.Length), beginRenaming: true));
-				if(isFolder) {
+				string relPath = dir + name;
+				if(isFolder == 3) name = name[1..];
+				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(relPath, beginRenaming: true));
+				if(isFolder == 1) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;
-					_CreateMenu(dir + name, ddSub, level + 1);
+					_CreateMenu(ddSub, x, dir + name + "\\", level + 1);
 				} else {
 					string si = null;
-					if(isProject) si = nameof(Au.Editor.Resources.Resources.folder);
-					else {
-						switch(FileNode.DetectFileType(v.FullPath)) {
-						case EFileType.Script: si = nameof(Au.Editor.Resources.Resources.fileScript); break;
-						case EFileType.Class: si = nameof(Au.Editor.Resources.Resources.fileClass); break;
-						}
-					}
-					Bitmap im = si != null ? EdResources.GetImageUseCache(si) : FileNode.IconCache.GetImage(v.FullPath, true);
+					if(isFolder != 0) si = nameof(Au.Editor.Resources.Resources.folder);
+					else if(tag == "s") si = nameof(Au.Editor.Resources.Resources.fileScript);
+					else if(tag == "c") si = nameof(Au.Editor.Resources.Resources.fileClass);
+					Bitmap im = si != null
+						? EdResources.GetImageUseCache(si)
+						: FileNode.IconCache.GetImage(templDir + relPath, useExt: true);
 					if(im != null) item.Image = im;
 				}
 				ddParent.Items.Insert(i++, item);

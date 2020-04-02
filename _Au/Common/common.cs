@@ -18,7 +18,7 @@ namespace Au.Types
 	/// <summary>
 	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
 	/// </summary>
-	public class NoDoc : Attribute
+	public sealed class NoDoc : Attribute
 	{
 	}
 
@@ -76,7 +76,7 @@ namespace Au.Types
 	/// Code editors should help to create correct string arguments: provide tools or reference, show errors.
 	/// </summary>
 	[AttributeUsage(AttributeTargets.Parameter /*| AttributeTargets.Field | AttributeTargets.Property*/, AllowMultiple = false)]
-	public class ParamStringAttribute : Attribute
+	public sealed class ParamStringAttribute : Attribute
 	{
 		///
 		public ParamStringAttribute(PSFormat format) => Format = format;

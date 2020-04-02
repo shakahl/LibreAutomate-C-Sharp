@@ -36,7 +36,7 @@ namespace Au
 	/// m.Show();
 	/// ]]></code>
 	/// </example>
-	public partial class AMenu : MTBase, IDisposable
+	public partial class AMenu : MTBase
 	{
 		//The main wrapped object. The class is derived from ContextMenuStrip.
 		_ContextMenuStrip _c;
@@ -52,8 +52,12 @@ namespace Au
 
 		/// <summary>
 		/// Initializes this object.
-		/// Use this overload with non-user-editable menus.
+		/// Use this overload for various context menus of your app.
 		/// </summary>
+		/// <remarks>
+		/// Item actions run in this thread by default (see <see cref="MTBase.ItemThread"/>).
+		/// Users cannot right-click a menu item to open/select it in editor.
+		/// </remarks>
 		public AMenu() : base(null, 0)
 		{
 			_c = new _ContextMenuStrip(this, isMain: true);
@@ -61,22 +65,33 @@ namespace Au
 
 		/// <summary>
 		/// Initializes this object.
-		/// Use this overload with user-editable menus.
+		/// Use this overload for starting and/or automating other apps.
 		/// </summary>
 		/// <param name="name">Menu name. Must be valid filename. Currently used only as the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>.</param>
 		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <remarks>
+		/// This overload sets properties:
+		/// - <see cref="MTBase.ItemThread"/> = <see cref="MTThread.StaThread"/>.
+		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
+		/// 
+		/// Users can right-click a menu item to open/select it in editor.
+		/// </remarks>
 		public AMenu(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(f, l)
 		{
 			if(name.NE()) throw new ArgumentException("Empty name");
 			_name = name;
 
 			_c = new _ContextMenuStrip(this, isMain: true);
+
+			ExtractIconPathFromCode = true;
+			ItemThread = MTThread.StaThread;
 		}
 
-		//~AMenu() { AOutput.Write("main dtor"); }
-
-		///
+		/// <summary>
+		/// Disposes <see cref="Control"/>, submenus, images, etc.
+		/// Rarely used. Don't need when <see cref="MultiShow"/> is false.
+		/// </summary>
 		public void Dispose()
 		{
 			if(!_c.IsDisposed) _c.Dispose();
@@ -433,14 +448,19 @@ namespace Au
 		/// Shows the menu at the mouse cursor position.
 		/// </summary>
 		/// <param name="owner">A control or form that will own the menu.</param>
+		/// <param name="byCaret">Show at the text cursor (caret) position, if available.</param>
 		/// <param name="direction">Menu drop direction.</param>
 		/// <remarks>
 		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="Control"/> property, which gets <see cref="ContextMenuStrip"/>.
 		/// </remarks>
-		public void Show(Control owner, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
+		public void Show(Control owner, bool byCaret = false, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
 		{
-			var p = owner.MouseClientXY();
-			_Show(3, p.x, p.y, direction, owner);
+			if(byCaret) {
+				_Show(4, 0, 0, direction, owner);
+			} else {
+				var p = owner.MouseClientXY();
+				_Show(3, p.x, p.y, direction, owner);
+			}
 		}
 
 		void _Show(int overload, int x = 0, int y = 0, ToolStripDropDownDirection direction = 0, Control control = null)
@@ -457,7 +477,8 @@ namespace Au
 			case 3: _c.Show(control, new Point(x, y), direction); break;
 			case 4:
 				AKeys.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
-				_c.Show(new Point(cr.left - 32, cr.bottom + 2));
+				var p = new Point(cr.left - 32, cr.bottom + 2);
+				if(control != null) _c.Show(control, control.PointToClient(p), direction); else _c.Show(p);
 				break;
 			}
 			_inOurShow = false;

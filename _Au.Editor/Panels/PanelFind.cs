@@ -441,6 +441,7 @@ class PanelFind : AuUserControlBase
 
 		_AddToRecent(f, noRecent);
 
+		if(forReplace && (Panels.Editor.ZActiveDoc?.Z.IsReadonly ?? true)) return false;
 		return true;
 	}
 
@@ -526,7 +527,7 @@ class PanelFind : AuUserControlBase
 	{
 		_cName.Checked = false;
 		if(!_GetTextToFind(out var f, true)) return;
-		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
+		var doc = Panels.Editor.ZActiveDoc;
 		var text = doc.Text;
 		var repl = f.replaceText;
 		if(f.rx != null) {

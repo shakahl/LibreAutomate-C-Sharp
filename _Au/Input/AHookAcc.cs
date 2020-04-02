@@ -27,18 +27,16 @@ namespace Au
 	/// <example>
 	/// <code><![CDATA[
 	/// bool stop = false;
-	/// using(new AHookAcc(AccEVENT.SYSTEM_FOREGROUND, 0, x =>
-	/// {
+	/// using var hook = new AHookAcc(AccEVENT.SYSTEM_FOREGROUND, 0, x => {
 	/// 	AOutput.Write(x.wnd);
 	/// 	var a = x.GetAcc();
 	/// 	AOutput.Write(a);
 	/// 	if(x.wnd.ClassNameIs("Shell_TrayWnd")) stop = true;
-	/// })) {
-	/// 	MessageBox.Show("hook");
-	/// 	//or
-	/// 	//AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
-	/// 	//AOutput.Write("the end");
-	/// }
+	/// });
+	/// ADialog.Show("hook");
+	/// //or
+	/// //AWaitFor.MessagesAndCondition(-10, () => stop); //wait max 10 s for activated taskbar
+	/// //AOutput.Write("the end");
 	/// ]]></code>
 	/// </example>
 	public class AHookAcc : IDisposable
@@ -196,9 +194,13 @@ namespace Au
 			GC.SuppressFinalize(this);
 		}
 
-		//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.
-		///
-		~AHookAcc() { AWarning.Write("Non-disposed AHookAcc variable."); } //unhooking makes no sense
+		/// <summary>
+		/// Writes warning if the variable is not disposed. Cannot dispose in finalizer.
+		/// </summary>
+		~AHookAcc() {
+			//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.
+			if(_a != null) AWarning.Write("Non-disposed AHookAcc variable.");
+		}
 
 		void _HookProc(IntPtr hHook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
 		{

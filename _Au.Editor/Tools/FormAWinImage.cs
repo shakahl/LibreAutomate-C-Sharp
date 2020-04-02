@@ -218,6 +218,7 @@ namespace Au.Tools
 			if(waitFunc != 0) {
 				b.Append(waitFunc == 1 ? "AWinImage.Wait(" : "AWinImage.WaitNot(").AppendWaitTime(waitTime, orThrow).Append(", ");
 			} else {
+				if(orThrow) b.Append('+');
 				b.Append("AWinImage.Find(");
 			}
 
@@ -241,9 +242,7 @@ namespace Au.Tools
 			}
 			if(also != null) b.AppendOtherArg(also, "also");
 
-			b.Append(")");
-			if(orThrow && waitFunc == 0) b.Append(".OrThrow()");
-			b.Append(";");
+			b.Append(");");
 
 			var bb = new StringBuilder();
 			bb.AppendLine(wndCode);

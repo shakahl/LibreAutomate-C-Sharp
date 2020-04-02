@@ -178,7 +178,7 @@ namespace Au.Tools
 					var a2 = new List<string>();
 					var a3 = AAcc.FindAll(_wnd, name: "?*", prop: "notin=SCROLLBAR\0maxcc=100", flags: AFFlags.ClientArea); //all that have a name
 					string prevName = null;
-					for(int i = a3.Length; --i >= 0; ) {
+					for(int i = a3.Length; --i >= 0;) {
 						if(!a3[i].GetProperties("Rn", out var prop)) continue;
 						if(prop.Name == prevName && prop.Role == "WINDOW") continue; prevName = prop.Name; //skip parent WINDOW
 						string rn = "a '" + prop.Role + "' " + TUtil.EscapeWildex(prop.Name);
@@ -245,15 +245,16 @@ namespace Au.Tools
 			bool isCon = !_con.Is0 && _IsChecked("Control");
 			bool orThrow = !forTest && _IsChecked2("orThrow");
 
-			b.Append(forTest ? "AWnd w;\r\n" : "var ").Append("w = AWnd.");
+			b.Append(forTest ? "AWnd w;\r\n" : "var ").Append("w = ");
 
 			string waitTime = null;
 			bool isWait = !forTest && _grid2.ZGetValue("wait", out waitTime, false);
 			if(isWait) {
-				b.Append("Wait(").AppendWaitTime(waitTime, orThrow || isCon);
+				b.Append("AWnd.Wait(").AppendWaitTime(waitTime, orThrow || isCon);
 				b.Append(", active: true");
 			} else {
-				b.Append("Find(");
+				if(orThrow || isCon) b.Append('+');
+				b.Append("AWnd.Find(");
 			}
 
 			int m = 0;
@@ -272,8 +273,7 @@ namespace Au.Tools
 			if(_grid.ZGetValue("contains", out var sContains, true)) b.AppendStringArg(sContains, "contains");
 
 			if(isCon) {
-				b.AppendLine(isWait ? ");" : ").OrThrow();");
-				isWait = false;
+				b.AppendLine(");");
 				m = 0;
 				if(_grid.ZGetValueIfExists("id", out var sId, true)) m |= 1;
 				else if(_grid.ZGetValue("nameC", out sName, false)) { m |= 2; if(sName == null) sName = ""; }
@@ -281,6 +281,7 @@ namespace Au.Tools
 				if(_grid2.ZGetValue("alsoC", out sAlso, true)) m |= 8;
 				if(_grid2.ZGetValue("skip", out var sSkip, true)) m |= 16;
 				if(!forTest) b.Append("var c = ");
+				if(orThrow) b.Append('+');
 				b.Append("w.Child");
 				if(m == 1) {
 					b.Append("ById(").Append(sId);
@@ -296,7 +297,6 @@ namespace Au.Tools
 				}
 			}
 
-			if(orThrow && !isWait) b.Append(").OrThrow(");
 			b.Append(");");
 
 			if(!forTest && isCon && 0 == (m & 2)) { //add comments controlClass controlName

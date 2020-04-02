@@ -136,7 +136,13 @@ static class Run
 	{
 		bool dis = disable switch { true => true, false => false, _ => !ActionTriggers.DisabledEverywhere };
 		if(dis == ActionTriggers.DisabledEverywhere) return;
-		ActionTriggers.DisabledEverywhere = dis;
+		ActionTriggers.DisabledEverywhere = dis; //notifies us to update tray icon etc
+	}
+
+	//from ActionTriggers.DisabledEverywhere through our message-only window
+	internal static void OnDisableTriggers()
+	{
+		bool dis = ActionTriggers.DisabledEverywhere;
 		EdTrayIcon.Disabled = dis;
 		Strips.CheckCmd(nameof(CmdHandlers.Run_DisableTriggers), dis);
 	}

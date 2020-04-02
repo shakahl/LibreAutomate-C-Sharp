@@ -213,7 +213,12 @@ _Pvt_Extensions/
 ModelManifest.xml
 
 # Au
-/_/
+/_/**
+!/_/Templates/files/
+!/_/Templates/files.xml
+!/_/Default/Workspace/files/
+!/_/Default/Workspace/files.xml
+!/_/Default/Workspace/state.db
 /Test Projects/
 /Other/Api/
 

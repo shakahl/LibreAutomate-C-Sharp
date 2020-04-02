@@ -180,6 +180,7 @@ class CiSignature
 		SignatureHelpParameter currentParameter = null;
 		var b = new StringBuilder("<body>");
 
+		//AOutput.Clear();
 		for(int i = 0; i < r.Items.Count; i++) {
 			var sh = r.Items[i];
 			if(sh is AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem kk) {
@@ -187,13 +188,33 @@ class CiSignature
 				using var li = new CiHtml.HtmlListItem(b, i == iSel);
 				if(i != iSel) b.AppendFormat("<a href='^{0}'>", i); else currentItem = sym;
 #if false
-				CiHtml.TaggedPartsToHtml(b, sh.PrefixDisplayParts); //works, but formats not as I like (too much garbage)
+				CiHtml.TaggedPartsToHtml(b, sh.PrefixDisplayParts); //works, but formats not as I like (too much garbage). Has bugs with tuples.
 #else
-				if(!sym.Name.NE()) CiHtml.SymbolWithoutParametersToHtml(b, sym); //empty name if tuple
+				//if(nt != null) {
+				//	AOutput.Write(1, nt.IsGenericType, nt.IsTupleType, nt.IsUnboundGenericType, nt.Arity, nt.CanBeReferencedByName);
+				//	AOutput.Write(2, nt.IsAnonymousType, nt.IsDefinition, nt.IsImplicitlyDeclared, nt.Kind, nt.TypeKind);
+				//	AOutput.Write(3, nt.MemberNames);
+				//	AOutput.Write(4, nt.Name, nt.MetadataName, nt.OriginalDefinition, nt.TupleUnderlyingType);
+				//	AOutput.Write("TypeParameters:");
+				//	AOutput.Write(nt.TypeParameters);
+				//	AOutput.Write("TypeArguments:");
+				//	AOutput.Write(nt.TypeArguments);
+				//	AOutput.Write("TupleElements:");
+				//	try { var te = nt.TupleElements; if(!te.IsDefault) AOutput.Write(te); } catch(Exception e1) { AOutput.Write(e1.ToStringWithoutStack()); }
+				//	AOutput.Write("---");
+				//}
+
+				int isTuple = 0; //1 ValueTuple<...>, 2 (...)
+				var nt = sym as INamedTypeSymbol;
+				if(nt != null && nt.IsTupleType) isTuple = nt.IsDefinition ? 1 : 2;
+
+				if(isTuple == 1) b.Append("ValueTuple"); //SymbolWithoutParametersToHtml formats incorrectly
+				else if(isTuple == 0) CiHtml.SymbolWithoutParametersToHtml(b, sym);
 				string b1 = "(", b2 = ")";
-				switch(sym) {
-				case IPropertySymbol _: b1 = "["; b2 = "]"; break;
-				case INamedTypeSymbol ints when ints.IsGenericType: b1 = "&lt;"; b2 = "&gt;"; break;
+				if(nt != null) {
+					if(nt.IsGenericType && isTuple != 2) { b1 = "&lt;"; b2 = "&gt;"; }
+				} else if(sym is IPropertySymbol) {
+					b1 = "["; b2 = "]";
 				}
 				b.Append(b1);
 #endif
@@ -237,6 +258,7 @@ class CiSignature
 		}
 
 		b.Append("</body>");
+		//AOutput.Write(b.ToString());
 		return b.ToString();
 	}
 
@@ -245,7 +267,9 @@ class CiSignature
 		var a = new List<ISignatureHelpProvider>();
 		foreach(var t in Assembly.GetAssembly(typeof(InvocationExpressionSignatureHelpProvider)).DefinedTypes.Where(t => t.ImplementedInterfaces.Contains(typeof(ISignatureHelpProvider)) && !t.IsAbstract)) {
 			//AOutput.Write(t);
-			var c = t.GetConstructor(Type.EmptyTypes); Debug.Assert(c != null); if(c == null) continue;
+			var c = t.GetConstructor(Type.EmptyTypes);
+			ADebug.PrintIf(c == null && t.Name != "PythiaSignatureHelpProvider", t.ToString());
+			if(c == null) continue;
 			var o = c.Invoke(null) as ISignatureHelpProvider; Debug.Assert(o != null); if(o == null) continue;
 			a.Add(o);
 		}

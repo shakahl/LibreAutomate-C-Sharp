@@ -47,7 +47,7 @@ static class EdNetExtensions
 	/// </remarks>
 	public static void ZShowAsContextMenu(this ToolStripDropDownMenu t, bool caret = false)
 	{
-		POINT p; if(caret && Api.GetCaretPos(out p)) Api.GetFocus().MapClientToScreen(ref p); else p = AMouse.XY;
+		if(!(caret && Api.GetCaretPosInScreen_(out POINT p))) Api.GetCursorPos(out p);
 		var oi = t.OwnerItem; t.OwnerItem = null; //to set position
 		try { t.Show(p); }
 		finally { t.OwnerItem = oi; }
@@ -207,11 +207,7 @@ static class EdStock
 
 	public static Icon IconAppRunning => _iconTrayRunning ??= _Icon(Au.Editor.Resources.Resources.app_running);
 
-	static Icon _Icon(Icon icon)
-	{
-		int size = AIcon.GetShellIconSize(IconSize.SysSmall);
-		return new Icon(icon, size, size);
-	}
+	static Icon _Icon(Icon icon) => new Icon(icon, SystemInformation.SmallIconSize);
 
 	//rejected. Use EdResources.
 	//static Image _imageNamespace, _imageClass, _imageStruct, _imageEnum, _imageDelegate, _imageInterface,

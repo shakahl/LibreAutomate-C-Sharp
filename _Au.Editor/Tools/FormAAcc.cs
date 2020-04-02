@@ -266,6 +266,7 @@ namespace Au.Tools
 			if(isWait) {
 				b.Append("AAcc.Wait(").AppendWaitTime(waitTime, orThrow);
 			} else {
+				if(orThrow) b.Append('+');
 				b.Append("AAcc.Find(");
 			}
 
@@ -320,7 +321,6 @@ namespace Au.Tools
 			if(_grid2.ZGetValue("skip", out var skip, true)) b.AppendOtherArg(skip, "skip");
 			if(_grid2.ZGetValue("navig", out var navig, true)) b.AppendStringArg(navig, "navig");
 
-			if(orThrow && !isWait) b.Append(").OrThrow(");
 			b.Append(");");
 			if(!orThrow && !forTest) b.AppendLine().Append("if(a == null) { AOutput.Write(\"not found\"); }");
 

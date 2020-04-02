@@ -43,7 +43,7 @@ namespace Au
 	/// 
 	/// if(!ADialog.ShowYesNo("Continue?", "More info.")) return;
 	/// 
-	/// switch(ADialog.Show("Save?", "More info.", "1 Save|2 Don't Save|Cancel")) {
+	/// switch(ADialog.Show("Save?", "More info.", "1 Save|2 Don't Save|0 Cancel")) {
 	/// case 1: AOutput.Write("save"); break;
 	/// case 2: AOutput.Write("don't"); break;
 	/// default: AOutput.Write("cancel"); break;
@@ -882,7 +882,7 @@ namespace Au
 		int _CallTDI(out int pnButton, out int pnRadioButton, out int pChecked)
 		{
 #if DEBUG
-			ADebug.PrintIf("1" != Environment.GetEnvironmentVariable("COMPlus_legacyCorruptedStateExceptionsPolicy"), "no env var COMPlus_legacyCorruptedStateExceptionsPolicy=1");
+			//ADebug.PrintIf("1" != Environment.GetEnvironmentVariable("COMPlus_legacyCorruptedStateExceptionsPolicy"), "no env var COMPlus_legacyCorruptedStateExceptionsPolicy=1");
 			pnButton = pnRadioButton = pChecked = 0;
 			try {
 #endif
@@ -1366,24 +1366,10 @@ namespace Au
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
 		/// <param name="buttons">
-		/// Button ids and labels. Examples: "OK|Cancel", "1 OK|2 Cancel|5 Save|4 Don't Save".
-		/// Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
-		/// The first in the list button is <i>default</i>, ie responds to the Enter key. For example, "2 No|1 Yes" adds Yes and No buttons and makes No default.
-		/// Trims newlines around ids and labels. For example, "\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n" is the same as "1 One|2 Two".
-		/// 
-		/// To create keyboard shortcuts, use &amp; character in custom button labels. Use &amp;&amp; for literal &amp;. Example: "1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday".
-		/// 
-		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
-		/// How common buttons are different:
-		///		1. DFlags.CommandLinks does not change their style.
-		///		2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
-		///		3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
-		///		4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
-		///		5. The displayed button label is localized, ie different when the Windows UI language is not English.
-		///	
+		/// Button ids and labels. Examples: "OK|Cancel", "1 &amp;Save|2 Do&amp;n't Save|0 Cancel".
 		/// If omitted, null or "", the dialog will have OK button, id 1.
-		/// You can use <see cref="DFlags.CommandLinks"/> in flags to change the style of custom buttons.
-		/// See also: <see cref="SetButtons"/>.
+		/// Common buttons: OK, Yes, No, Retry, Cancel, Close.
+		/// More info in Remarks.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="icon"></param>
@@ -1391,7 +1377,7 @@ namespace Au
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
@@ -1407,13 +1393,35 @@ namespace Au
 		/// Tip: Use named arguments. Example: <c>ADialog.Show("Text", icon: DIcon.Info, title: "Title")</c> .
 		/// 
 		/// This function allows you to use many dialog features, but not all. Alternatively you can create an <b>ADialog</b> class instance, set properties and call <b>ShowDialog</b>. Example in <see cref="ADialog"/> class help.
+		/// 
+		/// ##### More info about the <i>buttons</i> parameter
+		/// 
+		/// Missing ids are auto-generated, for example "OK|Cancel|100 Custom1|Custom2" is the same as "1 OK|2 Cancel|100 Custom1|101 Custom2".
+		/// 
+		/// The first in the list button is default, ie responds to the Enter key. For example, "2 No|1 Yes" adds Yes and No buttons and makes No default.
+		/// 
+		/// To create keyboard shortcuts, use &amp; character in custom button labels. Use &amp;&amp; for literal &amp;. Example: "1 &amp;Tuesday[]2 T&amp;hursday[]3 Saturday &amp;&amp; Sunday".
+		/// 
+		/// Trims newlines around ids and labels. For example, "\r\n1 One\r\n|\r\n2\r\nTwo\r\n\r\n" is the same as "1 One|2 Two".
+		/// 
+		/// There are 6 <i>common buttons</i>: OK, Yes, No, Retry, Cancel, Close. Buttons that have other labels are <i>custom buttons</i>.
+		/// How common buttons are different:
+		///		1. DFlags.CommandLinks does not change their style.
+		///		2. They have keyboard shortcuts that cannot be changed. Inserting &amp; in a label makes it a custom button.
+		///		3. Button Cancel can be selected with the Esc key. It also adds X (Close) button in title bar, which selects Cancel.
+		///		4. Always displayed in standard order (eg Yes No, never No Yes). But you can for example use "2 No|1 Yes" to set default button = No.
+		///		5. The displayed button label is localized, ie different when the Windows UI language is not English.
+		///	
+		/// You can use flag <see cref="DFlags.CommandLinks"/> to change the style of custom buttons.
+		/// 
+		/// See also: <see cref="SetButtons"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// if(1 != ADialog.Show("Show another example?", null, "1 OK|2 Cancel", icon: DIcon.Info)) return;
+		/// if(1 != ADialog.Show("Continue?", null, "1 OK|2 Cancel", icon: DIcon.Info)) return;
 		/// AOutput.Write("OK");
 		/// 
-		/// switch(ADialog.Show("Save changes?", "More info.", "1 Save|2 Don't Save|Cancel")) {
+		/// switch(ADialog.Show("Save changes?", "More info.", "1 Save|2 Don't Save|0 Cancel")) {
 		/// case 1: AOutput.Write("save"); break;
 		/// case 2: AOutput.Write("don't"); break;
 		/// default: AOutput.Write("cancel"); break;
@@ -1480,7 +1488,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOKCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
+		public static bool ShowOkCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
 		{
 			return 1 == Show(text1, text2, "OK|Cancel", flags, icon, owner, expandedText);
 		}
@@ -1515,7 +1523,7 @@ namespace Au
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
@@ -1638,7 +1646,7 @@ namespace Au
 		/// <param name="expandedText">Text that the user can show and hide.</param>
 		/// <param name="footerText">Text at the bottom of the dialog. Icon can be specified like "i|Text", where i is: x error, ! warning, i info, v shield, a app.</param>
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
-		/// <param name="controls">Can be used to add checkbox or/and radio buttons and later get their values.</param>
+		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id (1-based index) of button that responds to the Enter key.</param>
 		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>

@@ -22,8 +22,6 @@ namespace Au
 	/// </summary>
 	public sealed class AUac : IDisposable
 	{
-		#region IDisposable Support
-
 		///
 		~AUac() => _htoken.Dispose();
 
@@ -33,7 +31,6 @@ namespace Au
 			_htoken.Dispose();
 			GC.SuppressFinalize(this);
 		}
-		#endregion
 
 		Handle_ _htoken;
 		HandleRef _HtokenHR => new HandleRef(this, _htoken);

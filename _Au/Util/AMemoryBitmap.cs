@@ -23,9 +23,10 @@ namespace Au.Util
 	/// Creates and manages native bitmap handle and memory DC (GDI device context).
 	/// The bitmap is selected in the DC.
 	/// </summary>
-	public sealed class AMemoryBitmap : IDisposable, IDeviceContext
+	public class AMemoryBitmap : IDisposable, IDeviceContext
 	{
 		IntPtr _dc, _bm, _oldbm;
+		bool _disposed;
 
 		/// <summary>
 		/// DC handle.
@@ -62,18 +63,27 @@ namespace Au.Util
 		//	Attach(hBitmap);
 		//}
 
+		///
+		protected virtual void Dispose(bool disposing)
+		{
+			if(_disposed) return;
+			_disposed = true;
+			Delete();
+		}
+
 		/// <summary>
 		/// Deletes the bitmap and DC.
 		/// </summary>
 		public void Dispose()
 		{
-			Delete();
-			//GC.SuppressFinalize(this); //no. We allow to Create/Attach after calling this.
+			Dispose(true);
+			GC.SuppressFinalize(this);
 		}
 
 		///
-		~AMemoryBitmap() => Delete();
-		//info: calls DeleteDC. MSDN says that ReleaseDC must be called from the same thread. But does not say it about DeleteDC and others.
+		~AMemoryBitmap() => Dispose(false);
+		//Calls DeleteDC. MSDN says that ReleaseDC must be called from the same thread. But does not say it about DeleteDC and others.
+		//	Tested: DeleteDC returns true in finalizer (other thread).
 
 		///
 		public IntPtr GetHdc() => _dc;
@@ -105,6 +115,7 @@ namespace Au.Util
 		/// <param name="height">Height, pixels. Must be &gt; 0.</param>
 		public bool Create(int width, int height)
 		{
+			if(_disposed) throw new ObjectDisposedException(nameof(AMemoryBitmap));
 			using var dcs = new ScreenDC_(0);
 			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
 			return _bm != default;
@@ -118,6 +129,7 @@ namespace Au.Util
 		/// <param name="hBitmap">Native bitmap handle.</param>
 		public void Attach(IntPtr hBitmap)
 		{
+			if(_disposed) throw new ObjectDisposedException(nameof(AMemoryBitmap));
 			Delete();
 			if(hBitmap != default) {
 				_dc = Api.CreateCompatibleDC(default);

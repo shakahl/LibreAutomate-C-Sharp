@@ -178,8 +178,9 @@ namespace Au
 		/// <summary>
 		/// Moves the cursor (mouse pointer) to the specified position in screen.
 		/// </summary>
-		/// <param name="p">Coordinates.
-		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>AMouse.Move((x, y, true));</c>.</note>
+		/// <param name="p">
+		/// Coordinates.
+		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
 		/// <exception cref="ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
 		/// <exception cref="AuException">Failed to move the cursor to the specified x y.</exception>
@@ -195,7 +196,7 @@ namespace Au
 		/// ]]></code>
 		/// Use coodinates in the first non-primary screen.
 		/// <code><![CDATA[
-		/// AMouse.Move(Coord.Normalize(10, 10, screen: 1));
+		/// AMouse.Move(Coord.Normalize(10, Coord.Reverse(10), screen: 1));
 		/// ]]></code>
 		/// </example>
 		public static void Move(POINT p)
@@ -541,11 +542,23 @@ namespace Au
 		/// </summary>
 		/// <returns>The return value can be used to auto-release the pressed button. Example: <see cref="MRelease"/>.</returns>
 		/// <param name="button">Button and action.</param>
-		/// <param name="p">Coordinates.
-		/// <note type="tip">When need coordinates relative to a non-primary screen or/and the work area, use <see cref="Coord.Normalize"/> or tuple (x, y, workArea) etc. Example: <c>AMouse.ClickEx(MButton.Right, (x, y, true));</c>.</note>
+		/// <param name="p">
+		/// Coordinates.
+		/// Tip: To specify coordinates relative to the right, bottom, work area or a non-primary screen, use <see cref="Coord.Normalize"/>, like in the example.
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(Coord, Coord)"/>.</exception>
+		/// <example>
+		/// Click at 100 200.
+		/// <code><![CDATA[
+		/// AMouse.ClickEx(MButton.Left, (100, 200));
+		/// ]]></code>
+		/// 
+		/// Right-click at 50 from left and 100 from bottom of the work area.
+		/// <code><![CDATA[
+		/// AMouse.ClickEx(MButton.Right, Coord.Normalize(50, Coord.Reverse(100), true));
+		/// ]]></code>
+		/// </example>
 		public static MRelease ClickEx(MButton button, POINT p)
 		{
 			Move(p);
@@ -960,7 +973,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Waits while some buttons are down (pressed), except those pressed by a <see cref="AMouse"/> class function in this thread.
+		/// Waits while some buttons are down (pressed), except those pressed by an <see cref="AMouse"/> class function in this thread.
 		/// Does nothing option <b>Relaxed</b> is true.
 		/// </summary>
 		internal static void WaitForNoButtonsPressed_()
@@ -1162,6 +1175,9 @@ namespace Au
 	}
 #endif
 
+	/// <summary>
+	/// Extension methods for types of this library.
+	/// </summary>
 	public static partial class AExtAu
 	{
 		#region AWnd
@@ -1173,7 +1189,7 @@ namespace Au
 		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
-			=> AMouse.Move(w.OrThrow(), x, y, nonClient);
+			=> AMouse.Move(+w, x, y, nonClient);
 
 		/// <summary>
 		/// Clicks, double-clicks, presses or releases a mouse button at position x y relative to this window.
@@ -1182,7 +1198,7 @@ namespace Au
 		/// <exception cref="NotFoundException">Window not found (this variable is 0).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this AWnd w, Coord x = default, Coord y = default, MButton button = MButton.Left, bool nonClient = false)
-			=> AMouse.ClickEx(button, w.OrThrow(), x, y, nonClient);
+			=> AMouse.ClickEx(button, +w, x, y, nonClient);
 
 		#endregion
 
@@ -1199,7 +1215,7 @@ namespace Au
 		/// <exception cref="AuException">Failed to get object rectangle (<see cref="AAcc.GetRect(out RECT, AWnd)"/>) or container window (<see cref="AAcc.WndContainer"/>).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this AAcc t, Coord x = default, Coord y = default)
-			=> _AccMouseAction(t.OrThrow(), false, x, y, default);
+			=> _AccMouseAction(+t, false, x, y, default);
 
 		/// <summary>
 		/// Clicks this accessible object.
@@ -1214,7 +1230,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this AAcc t, Coord x = default, Coord y = default, MButton button = MButton.Left)
 		{
-			_AccMouseAction(t.OrThrow(), true, x, y, button);
+			_AccMouseAction(+t, true, x, y, button);
 			return button;
 		}
 
@@ -1250,7 +1266,7 @@ namespace Au
 		/// <exception cref="InvalidOperationException">area is Bitmap.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void MouseMove(this AWinImage t, Coord x = default, Coord y = default)
-			=> t.OrThrow().MouseAction_(0, x, y);
+			=> (+t).MouseAction_(0, x, y);
 
 		/// <summary>
 		/// Clicks the found image.
@@ -1265,7 +1281,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="AMouse.ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease MouseClick(this AWinImage t, Coord x = default, Coord y = default, MButton button = MButton.Left)
 		{
-			t.OrThrow().MouseAction_(button == 0 ? MButton.Left : button, x, y);
+			(+t).MouseAction_(button == 0 ? MButton.Left : button, x, y);
 			return button;
 		}
 

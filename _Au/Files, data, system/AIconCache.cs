@@ -91,7 +91,7 @@ namespace Au
 		/// Else if it is in the file cache, gets it from there and adds to the memory cache.
 		/// Else gets from file (uses <see cref="AIcon.GetFileIconImage"/> and adds to the file cache and to the memory cache.
 		/// </remarks>
-		public Bitmap GetImage(string file, bool useExt, GIFlags giFlags = 0, Action<Bitmap, object> autoUpdate = null, object auParam = null)
+		public Bitmap GetImage(string file, bool useExt, IconGetFlags giFlags = 0, Action<Bitmap, object> autoUpdate = null, object auParam = null)
 		{
 			if(useExt) {
 				var ext = APath.GetExtension(file);
@@ -129,7 +129,7 @@ namespace Au
 			return _GetImage(name, 0, callback, autoUpdate, auParam, auDispose);
 		}
 
-		Bitmap _GetImage(string file, GIFlags giFlags, Func<Bitmap> callback, Action<Bitmap, object> autoUpdate, object auParam, bool auDispose)
+		Bitmap _GetImage(string file, IconGetFlags giFlags, Func<Bitmap> callback, Action<Bitmap, object> autoUpdate, object auParam, bool auDispose)
 		{
 			bool cached = true;
 			lock(this) {
@@ -185,7 +185,7 @@ namespace Au
 			}
 		}
 
-		bool _LoadImage(out Bitmap b, string file, GIFlags giFlags, Func<Bitmap> callback)
+		bool _LoadImage(out Bitmap b, string file, IconGetFlags giFlags, Func<Bitmap> callback)
 		{
 			if(callback != null) b = callback();
 			else b = AIcon.GetFileIconImage(file, _iconSize, giFlags);
@@ -275,7 +275,7 @@ namespace Au
 			public Func<Bitmap> callback;
 			public Action<Bitmap, object> autoUpdated;
 			public object auParam;
-			public GIFlags giFlags;
+			public IconGetFlags giFlags;
 			public bool canDispose;
 		}
 

@@ -123,6 +123,17 @@ namespace Au
 		public static bool operator ==(AWnd? w1, AWnd w2) => false;
 		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true)]
 		public static bool operator !=(AWnd? w1, AWnd w2) => true;
+
+		/// <summary>
+		/// Returns the same value if it is not default(AWnd). Else throws <see cref="NotFoundException"/>.
+		/// </summary>
+		/// <exception cref="NotFoundException"></exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// var w = +AWnd.Find("Example");
+		/// ]]></code>
+		/// </example>
+		public static AWnd operator +(AWnd w) => !w.Is0 ? w : throw new NotFoundException("Not found (AWnd).");
 #pragma warning restore 1591 //XML doc
 
 		/// <summary>
@@ -2502,9 +2513,10 @@ namespace Au
 		/// This is a low-level function. You can instead use <see cref="Name"/> and <see cref="ControlText"/>.
 		/// </summary>
 		/// <param name="getText">
-		/// false - use API function <msdn>InternalGetWindowText</msdn>. It is fast and usually does not get variable text. This is used by <see cref="Name"/>.
-		/// true - use API message <msdn>WM_GETTEXT</msdn>. It is slow and prefers variable text. This is used by <see cref="ControlText"/>. Fails if the window is hung.
-		/// null - try InternalGetWindowText. If it gets "", and this is a control, then try WM_GETTEXT.
+		/// How to get text:
+		/// - false - use API <msdn>InternalGetWindowText</msdn>. This is used by <see cref="Name"/>.
+		/// - true - use API <msdn>WM_GETTEXT</msdn>. It is slow and prefers editable text. This is used by <see cref="ControlText"/>. Fails if the window is hung.
+		/// - null - try <b>InternalGetWindowText</b>. If it gets "" and this is a control, then try WM_GETTEXT.
 		/// </param>
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
@@ -2641,7 +2653,7 @@ namespace Au
 		/// <remarks>
 		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
 		/// 
-		/// <note>Slow when getting names of multiple controls in a window. Instead create a <see cref="AWinFormsControlNames"/> instance and call its <see cref="AWinFormsControlNames.GetControlName"/> method for each control.</note>
+		/// <note>Slow when getting names of multiple controls in a window. Instead create an <see cref="AWinFormsControlNames"/> instance and call its <see cref="AWinFormsControlNames.GetControlName"/> method for each control.</note>
 		/// </remarks>
 		/// <seealso cref="AWinFormsControlNames.IsWinFormsControl"/>
 		public string NameWinForms => AWinFormsControlNames.GetSingleControlName(this);

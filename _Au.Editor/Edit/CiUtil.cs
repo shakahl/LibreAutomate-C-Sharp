@@ -384,6 +384,7 @@ static class CiUtil
 enum CiItemKind : sbyte { Class, Structure, Enum, Delegate, Interface, Method, ExtensionMethod, Property, Event, Field, LocalVariable, Constant, EnumMember, Namespace, Keyword, Label, Snippet, TypeParameter, None }
 
 enum CiItemAccess : sbyte { Public, Private, Protected, Internal }
+
 static class CiExt
 {
 	[Conditional("DEBUG")]
@@ -411,7 +412,7 @@ static class CiExt
 	[ThreadStatic] static Stack<string> t_qnStack;
 
 	/// <summary>
-	/// Returns true if contains position and it is not at start.
+	/// <c>position &gt; t.Start &amp;&amp; position &lt; t.End;</c>
 	/// </summary>
 	public static bool ContainsInside(this TextSpan t, int position) => position > t.Start && position < t.End;
 }

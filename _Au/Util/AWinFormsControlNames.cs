@@ -19,7 +19,7 @@ namespace Au.Util
 	/// Gets programming names of .NET Windows Forms controls.
 	/// </summary>
 	/// <remarks>
-	/// Usually each control has a unique name. It is useful to identify controls without a classic name/text.
+	/// Usually each control has a unique name. It's the Control.Name property. Useful to identify controls without a classic name/text.
 	/// The control id of these controls is not useful, it is not constant.
 	/// </remarks>
 	public sealed class AWinFormsControlNames : IDisposable

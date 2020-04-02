@@ -96,7 +96,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 				break;
 			case TextTags.Text:
 				s = WebUtility.HtmlEncode(s);
-				//TODO: parse [][xref:topic_id]
+				//SHOULDDO: parse [][xref:topic_id]
 				break;
 #if DEBUG
 			case TextTags.Space:
@@ -111,6 +111,8 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			case TextTags.RangeVariable:
 			case TextTags.Alias:
 			case TextTags.Label:
+			case TextTags.ContainerStart:
+			case TextTags.ContainerEnd:
 			case TextTags.ErrorType:
 				break;
 			default:
@@ -383,6 +385,8 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 				foreach(var att in a) {
 					var ac = att.AttributeClass; if(ac == null) continue;
 					if(!_IsAccessible(ac)) continue;
+					string aname = ac.Name.RemoveSuffix("Attribute");
+					if(aname == "CompilerGenerated") continue;
 					//att.ToString(); //similar, but too much noise
 					if(isParameter) {
 						_AppendComma(ref attrComma);
@@ -393,7 +397,6 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 							b.Append(": ");
 						}
 					}
-					string aname = ac.Name.RemoveSuffix("Attribute");
 					bool hilite = aname == "Obsolete";
 					if(hilite) b.Append("<span class='hilite'>");
 					_AppendTypeName(aname);
@@ -405,7 +408,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 						bool paramComma = false;
 						foreach(var v in ca) {
 							_AppendComma(ref paramComma);
-							b.Append(v.ToCSharpString());
+							b.Append(v.ToCSharpString()); //never mind: enum with namespace
 						}
 						foreach(var v in na) {
 							_AppendComma(ref paramComma);
@@ -438,12 +441,25 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 	static IDocumentationCommentFormattingService _Formatter => s_formatter ??= CodeInfo.CurrentWorkspace.Services.GetLanguageServices("C#").GetService<IDocumentationCommentFormattingService>();
 	static IDocumentationCommentFormattingService s_formatter;
 
-	const SymbolDisplayMiscellaneousOptions s_miscDisplayOptions = SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral | SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers | SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier | SymbolDisplayMiscellaneousOptions.RemoveAttributeSuffix | SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName | SymbolDisplayMiscellaneousOptions.UseSpecialTypes;
-	const SymbolDisplayParameterOptions s_parameterDisplayOptions = SymbolDisplayParameterOptions.IncludeType | SymbolDisplayParameterOptions.IncludeName | SymbolDisplayParameterOptions.IncludeParamsRefOut | SymbolDisplayParameterOptions.IncludeOptionalBrackets | SymbolDisplayParameterOptions.IncludeDefaultValue | SymbolDisplayParameterOptions.IncludeExtensionThis;
+	const SymbolDisplayMiscellaneousOptions s_miscDisplayOptions =
+		SymbolDisplayMiscellaneousOptions.AllowDefaultLiteral
+		| SymbolDisplayMiscellaneousOptions.EscapeKeywordIdentifiers
+		//| SymbolDisplayMiscellaneousOptions.IncludeNullableReferenceTypeModifier //?
+		//| SymbolDisplayMiscellaneousOptions.IncludeNotNullableReferenceTypeModifier //!
+		| SymbolDisplayMiscellaneousOptions.RemoveAttributeSuffix
+		| SymbolDisplayMiscellaneousOptions.UseErrorTypeSymbolName
+		| SymbolDisplayMiscellaneousOptions.UseSpecialTypes;
+	const SymbolDisplayParameterOptions s_parameterDisplayOptions =
+		SymbolDisplayParameterOptions.IncludeType
+		| SymbolDisplayParameterOptions.IncludeName
+		| SymbolDisplayParameterOptions.IncludeParamsRefOut
+		| SymbolDisplayParameterOptions.IncludeOptionalBrackets
+		| SymbolDisplayParameterOptions.IncludeDefaultValue
+		| SymbolDisplayParameterOptions.IncludeExtensionThis;
 
 	static SymbolDisplayFormat s_symbolFullFormat = new SymbolDisplayFormat(
 				SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
-				SymbolDisplayTypeQualificationStyle.NameOnly,
+				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
 				SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeConstantValue | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
 				SymbolDisplayDelegateStyle.NameAndSignature,
@@ -467,13 +483,15 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 				miscellaneousOptions: s_miscDisplayOptions
 				);
 	static SymbolDisplayFormat s_parameterFormat = new SymbolDisplayFormat(
+				SymbolDisplayGlobalNamespaceStyle.Omitted,
+				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
 				genericsOptions: SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
 				parameterOptions: s_parameterDisplayOptions,
 				miscellaneousOptions: s_miscDisplayOptions
 		);
 	static SymbolDisplayFormat s_symbolWithoutParametersFormat = new SymbolDisplayFormat(
 				SymbolDisplayGlobalNamespaceStyle.Omitted,
-				SymbolDisplayTypeQualificationStyle.NameOnly,
+				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance,
 				SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
 				miscellaneousOptions: s_miscDisplayOptions
@@ -486,7 +504,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 
 	public static void SymbolWithoutParametersToHtml(StringBuilder b, ISymbol sym)
 	{
-		TaggedPartsToHtml(b, sym.ToDisplayParts(sym.Kind == SymbolKind.NamedType ? s_nameWithoutTypeParametersFormat : s_symbolWithoutParametersFormat));
+		TaggedPartsToHtml(b, sym.ToDisplayParts(sym is INamedTypeSymbol ? s_nameWithoutTypeParametersFormat : s_symbolWithoutParametersFormat));
 	}
 
 	public static void ParametersToHtml(StringBuilder b, ISymbol sym, int iSel = -1, SignatureHelpItem sh = null)
@@ -500,15 +518,15 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			ap = sy.Parameters;
 			break;
 		case INamedTypeSymbol sy:
-			if(sy.IsGenericType) {
+			if(sy.IsTupleType && !sy.IsDefinition) {
+				var te = sy.TupleElements;
+				for(int i = 0; i < te.Length; i++) {
+					_Param(te[i], i, isField: true);
+				}
+			} else if(sy.IsGenericType) {
 				var tp = sy.TypeParameters;
 				for(int i = 0; i < tp.Length; i++) {
 					_Param(sy.TypeParameters[i], i);
-				}
-			} else if(sy.IsTupleType) {
-				var te = sy.TupleElements;
-				for(int i = 0; i < te.Length; i++) {
-					_Param(te[i], i, true);
 				}
 			} else {
 				ADebug.Print(sy);
@@ -535,7 +553,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			if(i > 0) b.Append(", ");
 			if(i == iSel) b.Append("<b>");
 			TaggedPartsToHtml(b, p.ToDisplayParts(isField ? s_symbolWithoutParametersFormat : s_parameterFormat));
-			//info: s_symbolWithoutParametersFormat here probably is not the best, but it worked well with all tested tuple parameter types.
+			//info: s_symbolWithoutParametersFormat here maybe is not the best, but it worked well with all tested tuple parameter types.
 			if(i == iSel) b.Append("</b>");
 		}
 	}

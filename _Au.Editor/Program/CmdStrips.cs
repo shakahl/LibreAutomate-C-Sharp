@@ -35,14 +35,16 @@ static class Strips
 
 	public static void Init()
 	{
-		//var p = APerf.Create();
+		//using var p = APerf.Create();
 
 		//map command handler names/delegates etc
 		_cmd = new CmdHandlers();
 		//p.Next();
 
+		//ADebug.MemorySetAnchor_();
 		_strips = new AuStripManager(Program.MainForm, _cmd);
-		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", AFolders.ThisAppDocuments + @".settings\Strips.xml", new AuDockPanel.ZDockedToolStripRenderer());
+		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", ProgramSettings.DirBS + "Strips.xml", new AuDockPanel.ZDockedToolStripRenderer());
+		//ADebug.MemoryPrint_();
 		//p.Next();
 
 		//get top-level toolstrips (menu bar and toolbars)

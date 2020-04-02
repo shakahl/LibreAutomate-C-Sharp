@@ -4,7 +4,7 @@ uid: code_editor
 
 # Code editor
 
-In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, brace completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions/types, images in code, comment/uncomment/indent/unindent lines, drop files, find/replace text, find namespace, find Windows API, code creation tools.
+In the code editor you edit automation scripts and other C# code. It is a text editor with various features for easier C# code editing: lists of symbols, autocompletion, brace completion, statement completion, auto indentation, parameter info, quick info, XML documentation comments, go to documentation, go to definition/source, error info, code coloring, text folding, separators between functions/types, images in code, snippets, comment/uncomment/indent/unindent lines, drop files, find/replace text, find namespace, find Windows API, code creation tools.
 
 C# code may look like this:
 ```csharp
@@ -19,10 +19,10 @@ You can type this text instead:
 amo.c 10, 20
 if ak.isct
 
-aou.w "text";
+out "text"
 ```
 
-While typing, editor completes words, adds `()`, `;`, `{}` and indentation. The result is the first code.
+While typing, editor completes words, inserts code snippets, adds `()`, `;`, `{}` and indentation. The result is the first code.
 
 #### Lists of symbols and autocompletion
 When you start typing a word, editor shows a list of symbols (classes, functions, variables, C# keywords, etc) available there. Or you can press Ctrl+Space to show the list anywhere, including regular expression strings.
@@ -83,6 +83,9 @@ Editor draws horizontal lines at the end of each function and type definition.
 
 #### Images in code
 Whenever code contains a string or comment that looks like an image file path or image embedded in code, editor draws the image below. Image file paths are strings like `@"C:\a\b.png"` (or bmp, jpg, gif). Images embedded in code are strings that start with `"image:"`, created by the "Find image" tool dialog.
+
+#### Snippets
+Autocompletion lists also contain snippets. For example the outSnippet inserts code `AOutput.Write();` when you type `out` and space or Tab or Enter or click it.
 
 #### Comment/uncomment/indent/unindent lines
 Often you'll want to disable or enable one or more lines of code by converting them to/from comments. The easiest way - right click the selection margin. If multiple lines are selected, it converst all.

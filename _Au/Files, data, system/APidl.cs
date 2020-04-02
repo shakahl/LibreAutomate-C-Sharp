@@ -15,23 +15,21 @@ using Microsoft.Win32;
 using Au.Types;
 using Au.Util;
 
-//TODO: classes that contain simple unmanaged memory should not be IDisposable. Instaed use GC.AddMemoryPressure. Maybe also AAcc etc.
-//TODO: seal IDisposable classes if inhritance not implemented.
-
 namespace Au
 {
 	/// <summary>
 	/// Manages an ITEMIDLIST structure that is used to identify files and other shell objects instead of a file-system path.
 	/// </summary>
 	/// <remarks>
-	/// Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST. In C# it is IntPtr.
+	/// Wraps an ITEMIDLIST*, also known as PIDL or LPITEMIDLIST.
+	/// 
 	/// When calling native shell API, virtual objects can be identified only by ITEMIDLIST*. Some API also support "parsing name", which may look like <c>"::{CLSID-1}\::{CLSID-2}"</c>. File-system objects can be identified by path as well as by ITEMIDLIST*. URLs can be identified by URL as well as by ITEMIDLIST*.
 	/// 
-	/// The ITEMIDLIST structure is in unmanaged memory. You can dispose APidl variables, or GC will do it later.
+	/// The ITEMIDLIST structure is in unmanaged memory. You can dispose <b>APidl</b> variables, or GC will do it later.
 	/// 
 	/// This class has only ITEMIDLIST functions that are used in this library. Look for other functions in the MSDN library. Many of them are named with IL prefix, like ILClone, ILGetSize, ILFindLastID.
 	/// </remarks>
-	public unsafe sealed class APidl : IDisposable
+	public unsafe class APidl : IDisposable
 	{
 		IntPtr _pidl;
 
@@ -47,12 +45,12 @@ namespace Au
 		/// Gets the ITEMIDLIST* (PIDL).
 		/// </summary>
 		/// <remarks>
-		/// Use to pass to API where the parameter type is HandlePtr. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
+		/// Use to pass to API where the parameter type is <b>HandleRef</b>. It is safer than <see cref="UnsafePtr"/> because ensures that this variable will not be GC-collected during API call even if not referenced after the call.
 		/// </remarks>
 		public HandleRef HandleRef => new HandleRef(this, _pidl);
 
 		/// <summary>
-		/// Returns true if the PIDL is default(IntPtr).
+		/// Returns true if the PIDL is null.
 		/// </summary>
 		public bool IsNull => _pidl == default;
 
@@ -80,11 +78,12 @@ namespace Au
 		/// </summary>
 		public void Dispose()
 		{
-			_Dispose();
+			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
-		void _Dispose()
+		///
+		protected virtual void Dispose(bool disposing)
 		{
 			if(_pidl != default) {
 				Marshal.FreeCoTaskMem(_pidl);
@@ -93,7 +92,7 @@ namespace Au
 		}
 
 		///
-		~APidl() { _Dispose(); }
+		~APidl() { Dispose(false); }
 
 		/// <summary>
 		/// Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it use Marshal.FreeCoTaskMem.

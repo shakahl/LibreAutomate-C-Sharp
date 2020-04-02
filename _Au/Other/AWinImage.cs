@@ -173,6 +173,18 @@ namespace Au
 			}
 		}
 
+		/// <summary>
+		/// Returns the same value if it is not null. Else throws <see cref="NotFoundException"/>.
+		/// </summary>
+		/// <exception cref="NotFoundException"></exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// var w = +AWnd.Find("Example");
+		/// var wi = +AWinImage.Find(w, ...);
+		/// ]]></code>
+		/// </example>
+		public static AWinImage operator +(AWinImage wi) => wi ?? throw new NotFoundException("Not found (AWinImage).");
+
 		///
 		public override string ToString() => $"{ListIndex.ToString()}, {MatchIndex.ToString()}, {Rect.ToString()}";
 
@@ -182,15 +194,15 @@ namespace Au
 		/// Finds image(s) or color(s) displayed in a window or other area.
 		/// </summary>
 		/// <returns>
-		/// Returns a <see cref="AWinImage"/> object that contains the rectangle of the found image and can click it etc.
+		/// Returns an <see cref="AWinImage"/> object that contains the rectangle of the found image and can click it etc.
 		/// Returns null if not found. See example.
 		/// </returns>
 		/// <param name="area">
-		/// Where to search. Can be a window/control, accessible object, another image or a rectangle in screen.
+		/// Where to search:
 		/// - <see cref="AWnd"/> - window or control. The search area is its client area.
 		/// - <see cref="AAcc"/> - accessible object.
-		/// - <see cref="Bitmap"/> - another image. These flags are invalid: <see cref="WIFlags.WindowDC"/>, <see cref="WIFlags.PrintWindow"/>.
-		/// - <see cref="RECT"/> - a rectangle area in screen. These flags are invalid: <see cref="WIFlags.WindowDC"/>, <see cref="WIFlags.PrintWindow"/>.
+		/// - <see cref="Bitmap"/> - another image.
+		/// - <see cref="RECT"/> - a rectangle area in screen.
 		/// - <see cref="WIArea"/> - can contain AWnd, AAcc or Bitmap. Also allows to specify a rectangle in it, which makes the search area smaller and the function faster. Example: <c>AWinImage.Find((w, (left, top, width, height)), "image.png");</c>.
 		/// </param>
 		/// <param name="image">Image or color to find. Or array of them. More info: <see cref="WIImage"/>.</param>
@@ -227,13 +239,15 @@ namespace Au
 		/// Transparent and partially transparent pixels are ignored. For example, when you capture a non-rectangular area image, the image actually is rectangular, but pixels outside of its captured area are transparent and therefore not compared. Also you can draw transparent areas with an image editor that supports it, for example Paint.NET.
 		/// 
 		/// This function is not the best way to find objects when the script is intended for long use or for use on multiple computers or must be very reliable. Because it may fail to find the image after are changed some settings - system theme, application theme, text size (DPI), font smoothing (if the image contains text), etc. Also are possible various unexpected temporary conditions that may distort or hide the image, for example adjacent window shadow, a tooltip or some temporary window. If possible, in such scripts instead use other functions, eg find control or accessible object.
+		/// 
+		/// Flags <see cref="WIFlags.WindowDC"/> and <see cref="WIFlags.PrintWindow"/> cannot be used if <i>area</i> is <b>Bitmap</b> or <b>RECT</b>.
 		/// </remarks>
 		/// <example>
 		/// Code created with dialog "Find image or color in window".
 		/// <code><![CDATA[
-		/// var w = AWnd.Find("Window Name").OrThrow();
+		/// var w = +AWnd.Find("Window Name");
 		/// string image = "image:iVBORw0KGgoAAAANSUhEUgAAABYAAAANCAYAAACtpZ5jAAAAAXNSR0IArs4c...";
-		/// var wi = AWinImage.Find(w, image).OrThrow();
+		/// var wi = +AWinImage.Find(w, image);
 		/// wi.Click();
 		/// ]]></code>
 		/// </example>

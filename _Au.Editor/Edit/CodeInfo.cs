@@ -187,7 +187,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		case Keys.Enter | Keys.Control:
 		case Keys.OemSemicolon | Keys.Control:
 			var complResult = _compl.OnCmdKey_Commit(doc, keyData);
-			if(complResult == CiComplResult.Complex && !keyData.HasAny(Keys.Modifiers)) return true;
+			//if(complResult == CiComplResult.Complex && !keyData.HasAny(Keys.Modifiers)) return true;
 			return _correct.SciBeforeKey(doc, keyData) | (complResult != CiComplResult.None);
 		case Keys.Back:
 		case Keys.Delete:
@@ -385,8 +385,8 @@ AOutput.Write(""t"" + 'c' + 1);
 
 	/// <summary>
 	/// Creates new Context and calls its GetDocument.
-	/// Returns false if position is in meta comments (unless metaToo==true) or if fails to create/update Solution (unlikely). Then r.document is null.
-	/// Else returns true. Then r.document is Document for Panels.Editor.ActiveDoc. If need, parses meta, creates Project, Solution, etc.
+	/// Returns false if: 1. Not a code file; 2. position is in meta comments (unless metaToo==true); 3. Fails to create/update Solution (unlikely). Then r.document is null.
+	/// If returns true, r.document is Document for Panels.Editor.ActiveDoc. If need, parses meta, creates Project, Solution, etc.
 	/// Always sets other r fields.
 	/// </summary>
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
@@ -398,13 +398,15 @@ AOutput.Write(""t"" + 'c' + 1);
 	}
 
 	/// <summary>
-	/// Creates new Context with document=null.
+	/// Creates new Context with document=null. Even if returns false.
+	/// Returns false if: 1. Not a code file; 2. position is in meta comments (unless metaToo==true).
 	/// </summary>
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
 	public static bool GetContextWithoutDocument(out Context r, int position = -1, bool metaToo = false)
 	{
 		r = new Context(position);
+		if(!r.sciDoc.ZFile.IsCodeFile) { r.metaEnd = 0; return false; }
 		return r.pos16 >= r.metaEnd || metaToo;
 	}
 

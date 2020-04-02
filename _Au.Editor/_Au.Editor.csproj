@@ -25,13 +25,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="Default\files\Examples\Hotkeys and other triggers.cs" />
-    <Compile Remove="Default\files\Examples\Script syntax and examples.cs" />
-    <Compile Remove="Default\files\Script1.cs" />
-    <Compile Remove="Default\Templates\Class.cs" />
-    <Compile Remove="Default\Templates\New Project\@Library\!Library.cs" />
-    <Compile Remove="Default\Templates\New Project\@Script\!Script.cs" />
-    <Compile Remove="Default\Templates\Script.cs" />
+    <Compile Remove="Default\files\**" />
+    <Compile Remove="Default\Templates\**" />
+    <EmbeddedResource Remove="Default\files\**" />
+    <EmbeddedResource Remove="Default\Templates\**" />
+    <None Remove="Default\files\**" />
+    <None Remove="Default\Templates\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -39,33 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="Default\files\Examples\Hotkeys and other triggers.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Default\files\Examples\Script syntax and examples.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Default\files\Script1.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Default\Templates\Class.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Default\Templates\New Project\@Library\!Library.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Default\Templates\New Project\@Script\!Script.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="Default\Templates\Script.cs">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Content Include="Default\files.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
     <Content Include="Default\Panels.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
@@ -76,9 +48,6 @@
     <Content Include="Default\Strips.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <SubType>Designer</SubType>
-    </Content>
-    <Content Include="Default\Templates\New File\TextFile.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
@@ -93,27 +62,6 @@
     <ProjectReference Include="..\_Au.Controls\_Au.Controls.csproj" />
     <ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
     <ProjectReference Include="..\Libraries\_SourceGrid\_SourceGrid.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Reference Include="Microsoft.CodeAnalysis">
-      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp">
-      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
-      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
-      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.Features">
-      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Features.dll</HintPath>
-    </Reference>
-    <Reference Include="Microsoft.CodeAnalysis.Workspaces">
-      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>
@@ -224,6 +172,27 @@
 
   <ItemGroup>
     <Folder Include="Properties\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Microsoft.CodeAnalysis">
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp">
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Features">
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Features.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.CSharp.Workspaces">
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.CSharp.Workspaces.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.Features">
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Features.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CodeAnalysis.Workspaces">
+      <HintPath>..\Other\CompilerDlls\Microsoft.CodeAnalysis.Workspaces.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

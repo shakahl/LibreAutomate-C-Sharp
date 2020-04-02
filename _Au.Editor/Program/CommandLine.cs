@@ -17,6 +17,12 @@ using System.Drawing;
 using Au;
 using Au.Types;
 
+//TODO: /portable
+//	1. Set AFolders.ThisAppDocuments etc in AFolders.ThisApp\Portable.
+//	2. Don't restart as admin.
+//	3. Don't allow to set option to run at startup.
+//	4. Etc.
+
 static class CommandLine
 {
 	/// <summary>
@@ -158,6 +164,9 @@ static class CommandLine
 				return (int)UacDragDrop.AdminProcess.OnDragEvent(i, (int)lParam);
 			case 10:
 				UacDragDrop.AdminProcess.OnTransparentWindowCreated((AWnd)lParam);
+				break;
+			case 20: //from Triggers.DisabledEverywhere
+				Run.OnDisableTriggers();
 				break;
 			}
 			return 0;

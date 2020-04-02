@@ -40,7 +40,9 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 
 [Files]
 Source: "Q:\app\Au\_\Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Default\*"; DestDir: "{app}\Default"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Q:\app\Au\_\Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "Q:\app\Au\_\Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
+Source: "Q:\app\Au\_\Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.CL.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -84,6 +86,10 @@ Source: "Q:\app\Au\Other\Data\doc.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\ref.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
+
+;TODO: remove this code after some time
+[InstallDelete]
+Type: filesandordirs; Name: "{app}\Default"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

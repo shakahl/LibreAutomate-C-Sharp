@@ -105,6 +105,29 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Compares part of this string with other string. Returns true if equal.
+		/// </summary>
+		/// <param name="t">This string.</param>
+		/// <param name="range">Range of this string. Can return true only if its length == s.Length. If invalid, returns false.</param>
+		/// <param name="s">Other string.</param>
+		/// <param name="ignoreCase">Case-insensitive.</param>
+		/// <exception cref="ArgumentNullException"><i>s</i> is null.</exception>
+		/// <remarks>
+		/// Uses ordinal comparison (does not depend on current culture/locale).
+		/// </remarks>
+		/// <seealso cref="string.Compare"/>
+		/// <seealso cref="string.CompareOrdinal"/>
+		public static bool Eq(this string t, Range range, string s, bool ignoreCase = false)
+		{
+			int n = s?.Length ?? throw new ArgumentNullException();
+			try {
+				var (i, len) = range.GetOffsetAndLength(t.Length);
+				return n == len && Eq(t, i, s, ignoreCase);
+			}
+			catch(ArgumentOutOfRangeException) { return false; }
+		}
+
+		/// <summary>
 		/// Returns true if the specified character is at the specified position in this string.
 		/// </summary>
 		/// <param name="t">This string.</param>

@@ -135,6 +135,8 @@ class CiCompletion
 
 	enum _ShowReason { charAdded, charAdded2, command }
 
+	static bool s_workaround1;
+
 	//SHOULDDO: delay
 	async void _ShowList(_ShowReason showReason, int position = -1, char ch = default)
 	{
@@ -209,6 +211,16 @@ class CiCompletion
 				if(!isDot && ch == '[' && node is AttributeListSyntax) ch = default; //else GetCompletionsAsync does not work
 
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
+
+				//This is a temporary workaround for exception in new Roslyn version, in AbstractEmbeddedLanguageCompletionProvider.GetLanguageProviders().
+				//	TODO: After some time try a newer version. Or maybe I build it incorrectly etc.
+				if(!s_workaround1) {
+					s_workaround1 = true;
+					if(ch != default) {
+						_ = completionService.GetCompletionsAsync(document, position).Result;
+					}
+				}
+
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
 				p1.Next('C');
 				if(r1 != null) {
@@ -291,6 +303,8 @@ class CiCompletion
 				var v = new CiComplItem(ci);
 				var sym = v.FirstSymbol;
 				//AOutput.Write(v.DisplayText, sym, canGroup);
+
+				//AOutput.Write(ci.Flags); //a new internal property. Always None.
 
 				//why cref provider adds internals from other assemblies?
 				if(provider == CiComplProvider.Cref && sym != null) {
@@ -668,10 +682,11 @@ class CiCompletion
 
 		var z = doc.Z;
 		var ci = item.ci;
-		int selectLength = 0; bool showSignature = false;
+		int selectLength = 0; bool showSignature = false; string usingDir = null;
 		var change = item.kind == CiItemKind.Snippet
-			? CiSnippets.GetCompletionChange(item, out selectLength, out showSignature)
+			? CiSnippets.GetCompletionChange(doc, item, out selectLength, out showSignature, out usingDir)
 			: _data.completionService.GetChangeAsync(_data.document, ci).Result;
+		if(change == null) return CiComplResult.Complex;
 		//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 
 		var s = change.TextChange.NewText;
@@ -699,6 +714,13 @@ class CiCompletion
 				if(s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos++;
 				s += "></" + tag + ">";
 				break;
+			}
+			if(usingDir != null) {
+				int len1 = doc.Len16;
+				if(InsertCode.UsingDirective(usingDir)) {
+					int lenDiff = doc.Len16 - len1;
+					i += lenDiff; newPos += lenDiff;
+				}
 			}
 			z.ReplaceRange(true, i, i + len, s);
 			if(newPos >= 0) {

@@ -23,7 +23,9 @@ using Au.Types;
 /// </summary>
 class ProgramSettings : Au.Util.JSettings
 {
-	public static ProgramSettings Load() => _Load<ProgramSettings>(AFolders.ThisAppDocuments + @".settings\Settings.json");
+	public static ProgramSettings Load() => _Load<ProgramSettings>(DirBS + "Settings.json");
+
+	public static readonly string DirBS = AFolders.ThisAppDocuments + @".settings\";
 
 	public string user { get => _user; set => Set(ref _user, value); }
 	string _user;
@@ -79,11 +81,8 @@ class ProgramSettings : Au.Util.JSettings
 	public CiStyling.TStyles edit_styles { get => _edit_styles ??= new CiStyling.TStyles(); set => SetNoCmp(ref _edit_styles, value); }
 	CiStyling.TStyles _edit_styles;
 
-	public bool templ_script { get => _templ_script; set => Set(ref _templ_script, value); }
-	bool _templ_script;
-
-	public bool templ_class { get => _templ_class; set => Set(ref _templ_class, value); }
-	bool _templ_class;
+	public FileNode.ETempl templ_use { get => (FileNode.ETempl)_templ_use; set => Set(ref _templ_use, (int)value); }
+	int _templ_use;
 
 	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
 	bool _ci_complGroup = true;
@@ -93,6 +92,12 @@ class ProgramSettings : Au.Util.JSettings
 
 	public bool ci_complParenSpace { get => _ci_complParenSpace; set => Set(ref _ci_complParenSpace, value); }
 	bool _ci_complParenSpace;
+
+	public byte ci_complCustomSnippets { get => _ci_complCustomSnippets; set => Set(ref _ci_complCustomSnippets, value); }
+	byte _ci_complCustomSnippets;
+
+	public byte ci_correctStringEnter { get => _ci_correctStringEnter; set => Set(ref _ci_correctStringEnter, value); }
+	byte _ci_correctStringEnter;
 
 	public string db_copy_ref { get => _db_copy_ref; set => Set(ref _db_copy_ref, value); }
 	string _db_copy_ref;

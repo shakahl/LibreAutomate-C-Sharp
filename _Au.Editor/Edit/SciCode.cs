@@ -20,7 +20,6 @@ using Au;
 using Au.Types;
 using Au.Controls;
 using static Au.Controls.Sci;
-using DiffMatchPatch;
 
 partial class SciCode : AuScintilla
 {
@@ -222,7 +221,7 @@ partial class SciCode : AuScintilla
 		//AOutput.Write(m);
 		switch(m.Msg) {
 		case Api.WM_SETFOCUS:
-			if(!_noModelEnsureCurrentSelected) Program.Model?.EnsureCurrentSelected();
+			if(!_noModelEnsureCurrentSelected) Program.Model.EnsureCurrentSelected();
 			break;
 		case Api.WM_CHAR: {
 			int c = (int)m.WParam;
@@ -337,10 +336,11 @@ partial class SciCode : AuScintilla
 	//Called by FileNode.UnCacheText.
 	internal void _FileModifiedExternally()
 	{
+		if(Z.IsReadonly) return;
 		var text = _fn.GetText(saved: true); if(text == this.Text) return;
 		ZReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
-		if(this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified by another program and therefore reloaded in editor. You can Undo.");
+		if(this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
 	}
 
 	#region drag drop
@@ -359,12 +359,18 @@ partial class SciCode : AuScintilla
 		else if(d.GetDataPresent("UnicodeText", false))
 			_drag = d.GetDataPresent("FileGroupDescriptorW", false) ? _DD_DataType.Link : _DD_DataType.Text;
 		e.Effect = _DD_GetEffect(e);
+		CodeInfo.Cancel();
 		base.OnDragEnter(e);
 	}
 
-	protected override void OnDragOver(DragEventArgs e)
+	protected override unsafe void OnDragOver(DragEventArgs e)
 	{
-		if((e.Effect = _DD_GetEffect(e)) != 0) _DD_Over(e);
+		if((e.Effect = _DD_GetEffect(e)) != 0) {
+			var p = _DD_GetDropPos(e, out _);
+			var z = new Sci_DragDropData { x = p.X, y = p.Y };
+			Call(SCI_DRAGDROP, 1, &z);
+			//FUTURE: upgrade Scintilla. Version 4.3.1 supports auto-scroll when dragging.
+		}
 		base.OnDragOver(e);
 	}
 
@@ -396,28 +402,33 @@ partial class SciCode : AuScintilla
 		return p;
 	}
 
-	unsafe void _DD_Over(DragEventArgs e)
-	{
-		var p = _DD_GetDropPos(e, out _);
-		var z = new Sci_DragDropData { x = p.X, y = p.Y };
-		Call(SCI_DRAGDROP, 1, &z);
-
-		//FUTURE: auto-scroll
-	}
-
 	unsafe void _DD_Drop(DragEventArgs e)
 	{
-		var xy = _DD_GetDropPos(e, out int pos);
-		string s = null; StringBuilder t = null;
-		int endOfMeta = 0; bool inMeta = false; string menuVar = null;
+		var xy = _DD_GetDropPos(e, out int pos8);
+		string s = null;
+		var b = new StringBuilder();
+		int what = 0;
 
 		if(_drag != _DD_DataType.Text) {
-			t = new StringBuilder();
 			if(_fn.IsCodeFile) {
 				var text = this.Text;
-				endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
-				if(pos < endOfMeta) inMeta = true;
-				else if(pos > endOfMeta) text.RegexMatch(@"\b(\w+)\s*=\s*new\s+Au(?:Menu|Toolbar)", 1, out menuVar, 0, endOfMeta..pos);
+				int endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
+				if(endOfMeta > 0 && Pos16(pos8) < endOfMeta) return;
+
+				var m = new AMenu { Modal = true };
+				if(_drag == _DD_DataType.Script) {
+					m["var s = name;"] = o => what = 1;
+					m["var s = path;"] = o => what = 2;
+					m["ATask.Run(path);"] = o => what = 3;
+					m["t[name] = o => ATask.Run(path);"] = o => what = 4;
+				} else {
+					m["var s = path;"] = o => what = 11;
+					m["AExec.Run(path);"] = o => what = 12;
+					m["t[name] = o => AExec.Run(path);"] = o => what = 13;
+					//FUTURE: also add same items with unexpanded path.
+				}
+				m.Show(this);
+				if(what == 0) return;
 			}
 		}
 
@@ -430,7 +441,7 @@ partial class SciCode : AuScintilla
 			if(d.GetData("FileDrop", false) is string[] paths) {
 				foreach(var path in paths) {
 					bool isLnk = path.Ends(".lnk", true);
-					if(isLnk) t.Append("//");
+					if(isLnk) b.Append("//");
 					var name = APath.GetFileName(path, true);
 					_AppendFile(path, name);
 					if(isLnk) {
@@ -450,7 +461,7 @@ partial class SciCode : AuScintilla
 						catch(AuException) { break; }
 					}
 				}
-				s = t.ToString();
+				s = b.ToString();
 			}
 			break;
 		case _DD_DataType.Shell:
@@ -459,38 +470,37 @@ partial class SciCode : AuScintilla
 				for(int i = 0; i < shells.Length; i++) {
 					_AppendFile(shells[i], names[i]);
 				}
-				s = t.ToString();
+				s = b.ToString();
 			}
 			break;
 		case _DD_DataType.Link:
 			_DD_GetLink(d, out s, out var s2);
 			if(s != null) {
 				_AppendFile(s, s2);
-				s = t.ToString();
+				s = b.ToString();
 			}
 			break;
 		case _DD_DataType.Script:
-			var nodes = d.GetData("Aga.Controls.Tree.TreeNodeAdv[]", false) as Aga.Controls.Tree.TreeNodeAdv[];
-			if(nodes != null) {
+			if(d.GetData("Aga.Controls.Tree.TreeNodeAdv[]", false) is Aga.Controls.Tree.TreeNodeAdv[] nodes) {
 				foreach(var tn in nodes) {
 					var fn = tn.Tag as FileNode;
 					_AppendFile(fn.ItemPath, fn.Name, null, fn);
 				}
-				s = t.ToString();
+				s = b.ToString();
 			}
 			break;
 		}
 
 		if(!s.NE()) {
 			var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
-			var b = Au.Util.AConvert.ToUtf8(s);
-			fixed(byte* bp = b) {
-				z.text = bp;
-				z.len = b.Length - 1;
+			var s8 = Au.Util.AConvert.ToUtf8(s);
+			fixed(byte* p8 = s8) {
+				z.text = p8;
+				z.len = s8.Length - 1;
 				if(_drag != _DD_DataType.Text || 0 == (e.Effect & DragDropEffects.Move)) z.copy = 1;
 				Call(SCI_DRAGDROP, 2, &z);
 			}
-			if(!Focused && ((AWnd)(FindForm())).IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
+			if(!Focused && FindForm().Hwnd().IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
 				_noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
 				Focus();
 				_noModelEnsureCurrentSelected = false;
@@ -501,47 +511,30 @@ partial class SciCode : AuScintilla
 
 		void _AppendFile(string path, string name, string args = null, FileNode fn = null)
 		{
-			if(!_fn.IsCodeFile) {
-				t.Append(path);
-			} else if(inMeta) {
-				//rejected. Better use the Properties dialog. This code is older than the dialog.
-				return;
-				//string opt = null;
-				//switch(_drag) {
-				//case _DD_DataType.Files:
-				//	opt = AFile.ExistsAsDirectory(path) ? "outputPath " : "r ";
-				//	break;
-				//case _DD_DataType.Script:
-				//	if(fn.IsFolder) {
-				//		if(fn.IsProjectFolder(out fn)) { opt = "pr "; path = fn.ItemPath; }
-				//	} else if(!fn.IsScript) {
-				//		if(!fn.IsCodeFile) opt = "resource ";
-				//		else if(fn.FindProject(out _, out var fMain) && fn == fMain) opt = "pr ";
-				//		else opt = "c ";
-				//	}
-				//	break;
-				//}
-				//if(opt == null) return;
-				////make relative path
-				//var p2 = _fn.ItemPath; int i = p2.LastIndexOf('\\') + 1;
-				//if(0 == string.CompareOrdinal(path, 0, p2, 0, i)) path = path.Substring(i);
-
-				//t.Append(opt).Append(path).Append(';');
+			b.Append('\t', Z.LineIndentationFromPos(false, pos8));
+			if(what == 0) {
+				b.Append(path);
 			} else {
 				name = name.Escape();
-				if(menuVar != null) t.Append(menuVar).Append("[\"").Append(name).Append("\"] =o=> ");
-				bool isFN = fn != null;
-				if(isFN && !fn.IsCodeFile) {
-					t.Append("//").Append(path);
-				} else {
-					t.Append(isFN ? "ATask.Run(@\"" : "AExec.Run(@\"").Append(path);
-					if(!args.NE()) t.Append("\", \"").Append(args.Escape());
-					t.Append("\");");
-					if(menuVar == null && !isFN && (path.Starts("::") || path.Find(name, true) < 0)) t.Append(" //").Append(name);
-					//FUTURE: add unexpanded path version
+				switch(what) {
+				case 1: case 2: case 11: b.Append("var s = "); break;
+				case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
+				}
+				if(what == 12 || what == 13) b.Append("AExec.Run(");
+				if((what == 11 || what == 12) && path.Starts(":: ")) b.AppendFormat("/* {0} */ ", name);
+				switch(what) {
+				case 1: b.AppendFormat("\"{0}\";", name); break;
+				case 2: case 11: b.AppendFormat("@\"{0}\";", path); break;
+				case 3: case 4: b.AppendFormat("ATask.Run(@\"{0}\");", path); break;
+				case 12:
+				case 13:
+					b.AppendFormat("@\"{0}", path);
+					if(!args.NE()) b.Append("\", \"").Append(args.Escape());
+					b.Append("\");");
+					break;
 				}
 			}
-			t.AppendLine();
+			b.AppendLine();
 		}
 	}
 
@@ -550,7 +543,7 @@ partial class SciCode : AuScintilla
 		if(_drag == 0) return 0;
 		if(Z.IsReadonly) return 0;
 		var ae = e.AllowedEffect;
-		DragDropEffects r = 0;
+		DragDropEffects r;
 		switch(e.KeyState & (4 | 8 | 32)) { case 0: r = DragDropEffects.Move; break; case 8: r = DragDropEffects.Copy; break; default: return 0; }
 		if(_drag == _DD_DataType.Text) return 0 != (ae & r) ? r : ae;
 		if(0 != (ae & DragDropEffects.Link)) r = DragDropEffects.Link;
@@ -643,10 +636,9 @@ partial class SciCode : AuScintilla
 		var name = m[2].Length > 0 ? m[2].Value : (isClass ? "Class1.cs" : "Script1.cs");
 
 		string buttons = _fn.FileType != (isClass ? EFileType.Class : EFileType.Script)
-			? "1 Create new file|Cancel"
-			: "1 Create new file|2 Replace all text|3 Paste|Cancel";
+			? "1 Create new file|0 Cancel"
+			: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
 		switch(ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
-		case 0: break; //Cancel
 		case 1: //Create new file
 			Program.Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));
 			break;
@@ -668,7 +660,7 @@ partial class SciCode : AuScintilla
 	const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic;";
 	const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
 
-	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q" + c_scriptMain + @"\E$");
+	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
 	static ARegex s_rxScript;
 
 	/// <summary>
@@ -774,60 +766,6 @@ partial class SciCode : AuScintilla
 		}
 		if(!has) return;
 		_indicHaveDiag = true;
-	}
-
-	#endregion
-
-	#region text replacements etc
-
-	/// <summary>
-	/// Replaces text without losing markers, expanding folded code, etc.
-	/// </summary>
-	public void ZReplaceTextGently(string s)
-	{
-		int len = s.Lenn(); if(len == 0) goto gRaw;
-		string old = Text;
-		if(len > 1_000_000 || old.Length > 1_000_000 || old.Length == 0) goto gRaw;
-		var dmp = new diff_match_patch();
-		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
-		if(a.Count > 1000) goto gRaw;
-		dmp.diff_cleanupEfficiency(a);
-		Call(SCI_BEGINUNDOACTION);
-		for(int i = a.Count - 1, j = old.Length; i >= 0; i--) {
-			var d = a[i];
-			if(d.operation == Operation.INSERT) {
-				Z.InsertText(true, j, d.text);
-			} else {
-				j -= d.text.Length;
-				if(d.operation == Operation.DELETE) Z.DeleteRange(true, j, j + d.text.Length);
-			}
-		}
-		Call(SCI_ENDUNDOACTION);
-		return;
-		gRaw:
-		this.Text = s;
-	}
-
-	/// <summary>
-	/// Comments (adds //) or uncomments (removes //) selected lines or current line.
-	/// </summary>
-	/// <param name="comment">Comment (true), uncomment (false) or toggle (null).</param>
-	public void ZCommentLines(bool? comment)
-	{
-		if(Z.IsReadonly) return;
-		Z.GetSelectionLines(out var x);
-		var s = x.text;
-		if(s.Length == 0) return;
-		bool wasSelection = x.selEnd > x.selStart;
-		bool caretAtEnd = wasSelection && Z.CurrentPos8 == x.linesEnd;
-		int fromEnd = Len8 - x.linesEnd;
-		bool com = comment ?? !s.RegexIsMatch("^[ \t]*//(?!/[^/])");
-		s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
-		Z.ReplaceRange(false, x.linesStart, x.linesEnd, s);
-		if(wasSelection) {
-			int i = x.linesStart, j = Len8 - fromEnd;
-			Call(SCI_SETSEL, caretAtEnd ? i : j, caretAtEnd ? j : i);
-		}
 	}
 
 	#endregion

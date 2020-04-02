@@ -14,10 +14,8 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
-using Au;
 using Au.Types;
 using Au.Controls;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 
 namespace Au.Tools
 {
@@ -179,136 +177,6 @@ namespace Au.Tools
 				if(escapeWildex && n == 0) s = EscapeWildex(s);
 			}
 			return s;
-		}
-
-		/// <summary>
-		/// Inserts one or more statements in Panels.Editor.ZActiveDoc with correct indentation. If null or readonly, prints in output.
-		/// </summary>
-		/// <param name="s">Text without "\r\n" at the end.</param>
-		public static void InsertStatementInEditor(string s)
-		{
-			var d = Panels.Editor.ZActiveDoc;
-			if(d == null || d.Z.IsReadonly) {
-				AOutput.Write(s);
-			} else {
-				var z = d.Z;
-				d.Focus();
-				int start = z.LineStartFromPos(false, z.CurrentPos8);
-				int indent = z.LineIndentationFromPos(false, start);
-				if(indent == 0) {
-					s += "\r\n";
-				} else {
-					var b = new StringBuilder();
-					foreach(var v in s.SegLines()) b.Append('\t', indent).AppendLine(v);
-					s = b.ToString();
-				}
-				z.ReplaceSel(false, start, s);
-			}
-		}
-
-		/// <summary>
-		/// Finds start and end of using directives. Returns start.
-		/// If no usings, sets start = end = where new using directives can be inserted: 0 or end of meta or extern aliases or preprocessor directives.
-		/// Sets end = the start of next line if possible.
-		/// If ifNoNamespace!=null, returns -1 if 'using ifNoNamespace;' exists.
-		/// </summary>
-		static int _FindUsings(in CodeInfo.Context k, out int end, string ifNoNamespace = null)
-		{
-			end = -1;
-			int start = -1, end2 = -1;
-			var root = k.document.GetSyntaxRootAsync().Result;
-			foreach(var v in root.ChildNodes()) {
-				switch(v) {
-				case UsingDirectiveSyntax u:
-					if(ifNoNamespace != null && ifNoNamespace == u.Name.ToString()) return -1;
-					if(start < 0) start = v.SpanStart;
-					end = v.FullSpan.End;
-					break;
-				case ExternAliasDirectiveSyntax _:
-					end2 = v.FullSpan.End;
-					break;
-				default: goto gr;
-				}
-				//CiUtil.PrintNode(v);
-			}
-			gr:
-			if(start < 0) {
-				if(end2 < 0) foreach(var v in root.GetLeadingTrivia()) if(v.IsDirective) end2 = v.FullSpan.End;
-				if(end2 < 0) {
-					end2 = k.metaEnd;
-					if(k.code.RegexMatch(@"\s*//.+\R", 0, out RXGroup g, RXFlags.ANCHORED, end2..)) end2 = g.End;
-				}
-				start = end = end2;
-			}
-			return start;
-		}
-
-		/// <summary>
-		/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
-		/// </summary>
-		/// <param name="ns">Namespace, eg "System.Diagnostics".</param>
-		public static void InsertUsingDirectiveInEditor(string ns)
-		{
-			if(!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return;
-			if(_FindUsings(k, out int end, ns) < 0) return;
-			var doc = k.sciDoc;
-			//doc.Z.Select(true, start, end);
-
-			var b = new StringBuilder();
-			if(end > 0 && k.code[end - 1] != '\n') b.AppendLine();
-			b.Append("using ").Append(ns).AppendLine(";");
-
-			int line = doc.Z.LineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
-			doc.Z.InsertText(true, end, b.ToString(), addUndoPoint: true);
-			if(foldLine >= 0) doc.Call(Sci.SCI_FOLDLINE, foldLine); //InsertText expands folding
-
-			//CONSIDER: option to auto-add usings above the folded header.
-		}
-
-		/// <summary>
-		/// Inserts text in Panels.Editor.ZActiveDoc if not null/readonly.
-		/// At current position, not as new line, replaces selection.
-		/// </summary>
-		/// <param name="s">If contains '%', removes it and moves caret there.</param>
-		public static void InsertTextInEditor(string s)
-		{
-			var d = Panels.Editor.ZActiveDoc;
-			if(d == null || d.Z.IsReadonly) return;
-			InsertTextInControl(d, s);
-		}
-
-		/// <summary>
-		/// Inserts text in specified or focused control.
-		/// At current position, not as new line, replaces selection.
-		/// </summary>
-		/// <param name="c">If null, uses the focused control, else sets focus.</param>
-		/// <param name="s">If contains '%', removes it and moves caret there.</param>
-		public static void InsertTextInControl(Control c, string s)
-		{
-			if(c == null) {
-				c = AWnd.ThisThread.FocusedControl;
-				if(c == null) return;
-			} else c.Focus();
-
-			int i = s.IndexOf('%');
-			if(i >= 0) {
-				Debug.Assert(!s.Contains('\r'));
-				s = s.Remove(i, 1);
-				i = s.Length - i;
-			}
-
-			if(c is AuScintilla sci) {
-				if(sci.Z.IsReadonly) return;
-				sci.Z.ReplaceSel(s);
-				while(i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
-			} else {
-				Task.Run(() => {
-					var k = new AKeys(null);
-					k.AddText(s);
-					if(i > 0) k.AddKey(KKey.Left).AddRepeat(i);
-					k.Send();
-				});
-			}
 		}
 
 		#endregion
@@ -493,7 +361,7 @@ namespace Au.Tools
 		/// </summary>
 		/// <param name="code">
 		/// Must start with one or more lines that find window or control and set AWnd variable named wndVar. Can be any code.
-		/// The last line must be a 'find object' function call. Example: <c>AAcc.Find(...);</c>. Without 'var obj = ', without OrThrow, without Wait.
+		/// The last line must be a 'find object' function call. Example: <c>AAcc.Find(...);</c>. Without 'var obj = ', without +, without Wait.
 		/// </param>
 		/// <param name="wndVar">Name of AWnd variable of the window or control in which to search.</param>
 		/// <param name="wnd">Window or control in which to search.</param>
@@ -613,16 +481,6 @@ namespace Au.Tools
 		#endregion
 	}
 
-	//public static class Test
-	//{
-	//	public static void AOsdRect()
-	//	{
-	//		RECT r = (500, 500, 30, 20);
-	//		TUtil.ShowOsdRect(r);
-	//		ADialog.Show();
-	//	}
-	//}
-
 	/// <summary>
 	/// All tool forms of this library should inherit from this class and override its virtual functions.
 	/// </summary>
@@ -637,7 +495,7 @@ namespace Au.Tools
 		{
 			FormClosed += (unu, e) => {
 				if(e.CloseReason == CloseReason.UserClosing && DialogResult == DialogResult.OK) {
-					TUtil.InsertStatementInEditor(ZResultCode);
+					InsertCode.Statements(ZResultCode);
 				}
 			};
 			Show(Program.MainForm);

@@ -477,9 +477,21 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			_meta.pr, sender);
 
 	private void _bAddClass_Click(object sender, EventArgs e)
-		=> _AddFromWorkspace(
-			f => (f != _f && f.IsClass && !f.FindProject(out _, out _) && f.GetClassFileRole() == FileNode.EClassFileRole.Class) ? f : null,
-			_meta.c, sender);
+	{
+		FileNode prFolder1 = null;
+		if(_f.IsScript && _f.FindProject(out prFolder1, out var prMain1, ofAnyScript: true) && _f == prMain1) prFolder1 = null;
+
+		bool _Include(FileNode f)
+		{
+			if(!f.IsClass || f == _f) return false;
+			if(f.FindProject(out var prFolder, out var prMain)) { //exclude class files that are in projects
+				if(prFolder != prFolder1) return false; //but if _f is a non-project script in a project folder, include local classes
+			}
+			return f.GetClassFileRole() == FileNode.EClassFileRole.Class;
+		}
+
+		_AddFromWorkspace(f => _Include(f) ? f : null, _meta.c, sender);
+	}
 
 	private void _bAddResource_Click(object sender, EventArgs e)
 		=> _AddFromWorkspace(

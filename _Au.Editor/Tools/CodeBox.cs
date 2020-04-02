@@ -115,7 +115,7 @@ namespace Au.Tools
 		/// <summary>
 		/// Returns code to find window wnd and optionally control con in it.
 		/// If wnd/con is same as previous and code of this control is valid, gets code from this code control, from the start to ZReadonlyStart.
-		/// Else creates code "var w = AWnd.Find(...).OrThrow();". If wnd is invalid, creates code "AWnd w = default;".
+		/// Else creates code "var w = +AWnd.Find(...);". If wnd is invalid, creates code "AWnd w = default;".
 		/// The returned wndVar is final AWnd variable name (of window or control).
 		/// </summary>
 		public (string code, string wndVar) ZGetWndFindCode(AWnd wnd, AWnd con = default)
@@ -137,20 +137,20 @@ namespace Au.Tools
 				var b = new StringBuilder();
 				if(sCode != null) b.Append(sCode);
 				else if((cls = wnd.ClassName) != null) {
-					b.Append("var w = AWnd.Find(");
+					b.Append("var w = +AWnd.Find(");
 					b.AppendStringArg(TUtil.EscapeWindowName(wnd.NameTL_, true), noComma: true);
 					b.AppendStringArg(TUtil.StripWndClassName(cls, true));
 					string fl = null;
 					if(!wnd.IsVisible) fl = "WFlags.HiddenToo";
 					if(wnd.IsCloaked) fl = fl == null ? "WFlags.CloakedToo" : "WFlags.HiddenToo|WFlags.CloakedToo";
 					if(fl != null) b.AppendOtherArg(fl, "flags");
-					b.Append(").OrThrow();");
+					b.Append(");");
 				} else con = default;
 
 				if(!con.Is0) {
 					bool isId = TUtil.GetUsefulControlId(con, wnd, out int id);
 					if(isId || (cls = con.ClassName) != null) {
-						b.AppendFormat("\r\nvar {0} = {1}.Child", conVar, wndVar);
+						b.AppendFormat("\r\nvar {0} = +{1}.Child", conVar, wndVar);
 						wndVar = conVar;
 						if(isId) {
 							b.AppendFormat("ById({0});", id);
@@ -179,7 +179,7 @@ namespace Au.Tools
 							b.AppendStringArg(name, noComma: true);
 							b.AppendStringArg(cls);
 							if(!con.IsVisible) b.AppendOtherArg("WCFlags.HiddenToo", "flags");
-							b.Append(").OrThrow();");
+							b.Append(");");
 						}
 					} else con = default;
 				}

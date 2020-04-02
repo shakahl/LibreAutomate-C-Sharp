@@ -29,7 +29,7 @@ namespace Au.Util
 	/// Create a callback function of type <see cref="Callback"/> and pass its delegate to <b>GetAllAsync</b>.
 	/// </remarks>
 	/// <seealso cref="AIconCache"/>
-	internal sealed class IconsAsync_ :IDisposable
+	internal sealed class IconsAsync_ : IDisposable
 	{
 		//never mind:
 		//	Could instead use Dictionary<string, List<object>>, to avoid extracting icon multiple times for the same path or even file type (difficult).
@@ -69,15 +69,15 @@ namespace Au.Util
 		/// Starts getting icons of added files.
 		/// </summary>
 		/// <param name="callback">A callback function delegate.</param>
-		/// <param name="iconSize">Icon width and height. Also can be enum <see cref="IconSize"/>, cast to int.</param>
-		/// <param name="flags"><see cref="GIFlags"/></param>
+		/// <param name="iconSize">Icon width and height.</param>
+		/// <param name="flags"></param>
 		/// <param name="objCommon">Something to pass to callback functions.</param>
 		/// <remarks>
 		/// After this function returns, icons are asynchronously extracted with <see cref="AIcon.GetFileIconHandle"/>, and callback called with icon handle (or default(IntPtr) if failed).
 		/// The callback is called in this thread. This thread must have a message loop (eg Application.Run).
 		/// If you'll need more icons, you can add more files and call this function again with the same <b>IconsAsync_</b> instance, even if getting old icons if still not finished.
 		/// </remarks>
-		public void GetAllAsync(Callback callback, int iconSize, GIFlags flags = 0, object objCommon = null)
+		public void GetAllAsync(Callback callback, int iconSize, IconGetFlags flags = 0, object objCommon = null)
 		{
 			if(_files.Count == 0) return;
 			var work = new _AsyncWork();
@@ -97,13 +97,13 @@ namespace Au.Util
 			IconsAsync_ _host;
 			Callback _callback;
 			int _iconSize;
-			GIFlags _iconFlags;
+			IconGetFlags _iconFlags;
 			object _objCommon;
 			int _counter;
 			volatile int _nPending;
 			bool _canceled;
 
-			internal void GetAllAsync(IconsAsync_ host, Callback callback, int iconSize, GIFlags flags, object objCommon)
+			internal void GetAllAsync(IconsAsync_ host, Callback callback, int iconSize, IconGetFlags flags, object objCommon)
 			{
 				Debug.Assert(_callback == null); //must be called once
 
@@ -124,43 +124,41 @@ namespace Au.Util
 #if true
 			void _GetIconAsync(Result state)
 			{
-				Util.ThreadPoolSTA_.SubmitCallback(state, d =>
-				{ //this code runs in a thread pool thread
-						if(_canceled) {
+				Util.ThreadPoolSTA_.SubmitCallback(state, d => { //this code runs in a thread pool thread
+					if(_canceled) {
 						d.completionCallback = null;
 						return;
 					}
-						//Thread.Sleep(10);
-						var k = d.state as Result;
+					//Thread.Sleep(10);
+					var k = d.state as Result;
 					k.hIcon = AIcon.GetFileIconHandle(k.file, _iconSize, _iconFlags);
 
-						//var hi = GetFileIconHandle(k.file, _iconSize, _iconFlags);
-						//if(0!=(_iconFlags&IconFlags.NeedImage) && _nPending>20) { /*AOutput.Write(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
+					//var hi = GetFileIconHandle(k.file, _iconSize, _iconFlags);
+					//if(0!=(_iconFlags&IconGetFlags.NeedImage) && _nPending>20) { /*AOutput.Write(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
 
-						//AOutput.Write("1");
+					//AOutput.Write("1");
 
-						//Prevent overflowing the message queue and the number of icon handles.
-						//Because bad things start when eg toolbar icon count is more than 3000 and they are extracted faster than consumed.
-						//But don't make the threshold too low, because then may need to wait unnecessarily, and it makes slower.
-						if(Interlocked.Increment(ref _nPending) >= 900) {
-							//AOutput.Write(_nPending);
-							//var perf = APerf.Create();
-							Thread.Sleep(10);
-							//while(_nPending >= 900) Thread.Sleep(10);
-							//perf.NW();
-						}
-				}, o =>
-				{ //this code runs in the caller's thread
-						Interlocked.Decrement(ref _nPending);
+					//Prevent overflowing the message queue and the number of icon handles.
+					//Because bad things start when eg toolbar icon count is more than 3000 and they are extracted faster than consumed.
+					//But don't make the threshold too low, because then may need to wait unnecessarily, and it makes slower.
+					if(Interlocked.Increment(ref _nPending) >= 900) {
+						//AOutput.Write(_nPending);
+						//var perf = APerf.Create();
+						Thread.Sleep(10);
+						//while(_nPending >= 900) Thread.Sleep(10);
+						//perf.NW();
+					}
+				}, o => { //this code runs in the caller's thread
+					Interlocked.Decrement(ref _nPending);
 
-						//AOutput.Write("2");
+					//AOutput.Write("2");
 
-						var k = o as Result;
+					var k = o as Result;
 					if(_canceled) {
 						Api.DestroyIcon(k.hIcon);
 					} else {
 						_callback(k, _objCommon, --_counter); //even if hIcon == default, it can be useful
-							if(_counter == 0) {
+						if(_counter == 0) {
 							_host._works.Remove(this);
 							_host = null;
 							Debug.Assert(_nPending == 0);
@@ -286,7 +284,7 @@ namespace Au.Util
 			/// <summary>Icon handle. To get managed object from it, use <b>AIcon.HandleToX</b> functions; else finally call <see cref="AIcon.DestroyIconHandle"/>. Can be default(IntPtr).</summary>
 			public IntPtr hIcon;
 
-			/// <summary>Icon converted to Image object, if used IconFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
+			/// <summary>Icon converted to Image object, if used IconGetFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
 			//public Image image;
 
 			public Result(string file, object obj) { this.file = file; this.obj = obj; }

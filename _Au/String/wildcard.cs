@@ -388,7 +388,7 @@ namespace Au.Types
 	//	Does not make faster, although in most cases creates less garbage.
 
 	/// <summary>
-	/// The type of text (wildcard expression) of a <see cref="AWildex"/> variable.
+	/// The type of text (wildcard expression) of an <see cref="AWildex"/> variable.
 	/// </summary>
 	public enum WXType : byte
 	{
