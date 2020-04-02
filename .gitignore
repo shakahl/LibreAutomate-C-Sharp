@@ -213,14 +213,25 @@ _Pvt_Extensions/
 ModelManifest.xml
 
 # Au
-/_/**
+/Test Projects/
+/Other/Api/
+
+/_/*
+!/_/Templates/
+!/_/Default/
+
+/_/Templates/*
 !/_/Templates/files/
 !/_/Templates/files.xml
+
+/_/Default/*
+!/_/Default/Workspace/
+
+/_/Default/Workspace/*
 !/_/Default/Workspace/files/
 !/_/Default/Workspace/files.xml
 !/_/Default/Workspace/state.db
-/Test Projects/
-/Other/Api/
+
 
 # To delete files or folders from git:
 # In Team Explorer pane click Actions link and open VS command prompt.
