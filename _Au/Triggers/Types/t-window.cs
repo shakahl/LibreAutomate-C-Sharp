@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -958,6 +957,10 @@ namespace Au.Triggers
 		/// The trigger.
 		/// </summary>
 		public WindowTrigger Trigger { get; internal set; }
+
+		///
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public override ActionTrigger TriggerBase => Trigger;
 
 		/// <summary>
 		/// The window.

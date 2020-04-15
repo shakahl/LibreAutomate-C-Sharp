@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -101,7 +100,7 @@ namespace Au.Controls
 			//u1
 			public int Color { get => (int)(u1 & 0xffffff); set => u1 = (u1 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
 			public bool HasColor => 0 != (u1 & 0x1000000);
-			public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)AMath.MinMax(value, 0, 127) << 25); }
+			public int Size { get => (int)(u1 >> 25); set => u1 = (u1 & 0x1ffffff) | ((uint)Math.Clamp(value, 0, 127) << 25); }
 
 			//u2
 			public int BackColor { get => (int)(u2 & 0xffffff); set => u2 = (u2 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
@@ -761,7 +760,7 @@ namespace Au.Controls
 				AExec.TryRun(s1, s2);
 				break;
 			case "google":
-				AExec.TryRun("http://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
+				AExec.TryRun("https://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
 				AHelp.AuHelp(attr);

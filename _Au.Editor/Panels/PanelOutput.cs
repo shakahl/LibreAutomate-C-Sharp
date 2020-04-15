@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -252,7 +251,7 @@ class PanelOutput : AuUserControlBase
 		{
 			//AOutput.Write(s);
 			var a = s.Split('|');
-			Program.Model.OpenAndGoTo(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
+			Program.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}
 
 		void _RunScript(string s)

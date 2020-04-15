@@ -43,6 +43,7 @@
 			this._sciTemplate = new Au.Tools.CodeBox();
 			this.auLabel1 = new Au.Controls.AuLabel();
 			this._tabFont = new System.Windows.Forms.TabPage();
+			this._bFontInfo = new Au.Controls.AuButton();
 			this._pColor = new System.Windows.Forms.Panel();
 			this.label4 = new Au.Controls.AuLabel();
 			this.label5 = new Au.Controls.AuLabel();
@@ -66,14 +67,13 @@
 			this._comboFont = new System.Windows.Forms.ComboBox();
 			this._sciStyles = new Au.Controls.AuScintilla();
 			this._tabCode = new System.Windows.Forms.TabPage();
+			this.groupBox2 = new System.Windows.Forms.GroupBox();
+			this._cStringEnterRN = new Au.Controls.AuCheckBox();
 			this.groupBox1 = new System.Windows.Forms.GroupBox();
-			this._cCustomSnippets = new Au.Controls.AuCheckBox();
 			this._cComplParenSpace = new Au.Controls.AuCheckBox();
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bApply = new Au.Controls.AuButton();
-			this._cStringEnterRN = new Au.Controls.AuCheckBox();
-			this.groupBox2 = new System.Windows.Forms.GroupBox();
 			this.tabControl1.SuspendLayout();
 			this._tabGeneral.SuspendLayout();
 			this._tabTemplates.SuspendLayout();
@@ -88,9 +88,9 @@
 			this._pFont.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nFontSize)).BeginInit();
 			this._tabCode.SuspendLayout();
+			this.groupBox2.SuspendLayout();
 			this.groupBox1.SuspendLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).BeginInit();
-			this.groupBox2.SuspendLayout();
 			this.SuspendLayout();
 			// 
 			// _bOK
@@ -266,6 +266,7 @@
 			// 
 			// _tabFont
 			// 
+			this._tabFont.Controls.Add(this._bFontInfo);
 			this._tabFont.Controls.Add(this._pColor);
 			this._tabFont.Controls.Add(this._pFont);
 			this._tabFont.Controls.Add(this._sciStyles);
@@ -276,6 +277,15 @@
 			this._tabFont.TabIndex = 1;
 			this._tabFont.Text = "Font";
 			this._tabFont.UseVisualStyleBackColor = true;
+			// 
+			// _bFontInfo
+			// 
+			this._bFontInfo.Location = new System.Drawing.Point(456, 244);
+			this._bFontInfo.Name = "_bFontInfo";
+			this._bFontInfo.Size = new System.Drawing.Size(24, 20);
+			this._bFontInfo.TabIndex = 14;
+			this._bFontInfo.Text = "?";
+			this._bFontInfo.UseVisualStyleBackColor = false;
 			// 
 			// _pColor
 			// 
@@ -494,7 +504,7 @@
 			this._pFont.Controls.Add(this._nFontSize);
 			this._pFont.Controls.Add(this.label3);
 			this._pFont.Controls.Add(this._comboFont);
-			this._pFont.Location = new System.Drawing.Point(184, 204);
+			this._pFont.Location = new System.Drawing.Point(184, 148);
 			this._pFont.Name = "_pFont";
 			this._pFont.Size = new System.Drawing.Size(296, 56);
 			this._pFont.TabIndex = 12;
@@ -564,9 +574,28 @@
 			this._tabCode.Text = "Code";
 			this._tabCode.UseVisualStyleBackColor = true;
 			// 
+			// groupBox2
+			// 
+			this.groupBox2.Controls.Add(this._cStringEnterRN);
+			this.groupBox2.Location = new System.Drawing.Point(8, 96);
+			this.groupBox2.Name = "groupBox2";
+			this.groupBox2.Size = new System.Drawing.Size(472, 48);
+			this.groupBox2.TabIndex = 3;
+			this.groupBox2.TabStop = false;
+			this.groupBox2.Text = "Auto correction";
+			// 
+			// _cStringEnterRN
+			// 
+			this._cStringEnterRN.AutoSize = true;
+			this._cStringEnterRN.Location = new System.Drawing.Point(8, 20);
+			this._cStringEnterRN.Name = "_cStringEnterRN";
+			this._cStringEnterRN.Size = new System.Drawing.Size(157, 20);
+			this._cStringEnterRN.TabIndex = 0;
+			this._cStringEnterRN.Text = "Enter in string adds \\r\\n";
+			this._cStringEnterRN.UseVisualStyleBackColor = false;
+			// 
 			// groupBox1
 			// 
-			this.groupBox1.Controls.Add(this._cCustomSnippets);
 			this.groupBox1.Controls.Add(this._cComplParenSpace);
 			this.groupBox1.Location = new System.Drawing.Point(8, 12);
 			this.groupBox1.Name = "groupBox1";
@@ -574,16 +603,6 @@
 			this.groupBox1.TabIndex = 0;
 			this.groupBox1.TabStop = false;
 			this.groupBox1.Text = "Completion lists";
-			// 
-			// _cCustomSnippets
-			// 
-			this._cCustomSnippets.AutoSize = true;
-			this._cCustomSnippets.Location = new System.Drawing.Point(8, 44);
-			this._cCustomSnippets.Name = "_cCustomSnippets";
-			this._cCustomSnippets.Size = new System.Drawing.Size(141, 20);
-			this._cCustomSnippets.TabIndex = 2;
-			this._cCustomSnippets.Text = "Use custom snippets";
-			this._cCustomSnippets.UseVisualStyleBackColor = false;
 			// 
 			// _cComplParenSpace
 			// 
@@ -613,26 +632,6 @@
 			this._bApply.TabIndex = 3;
 			this._bApply.Text = "&Apply";
 			this._bApply.Click += new System.EventHandler(this._bOK_Click);
-			// 
-			// _cStringEnterRN
-			// 
-			this._cStringEnterRN.AutoSize = true;
-			this._cStringEnterRN.Location = new System.Drawing.Point(8, 20);
-			this._cStringEnterRN.Name = "_cStringEnterRN";
-			this._cStringEnterRN.Size = new System.Drawing.Size(157, 20);
-			this._cStringEnterRN.TabIndex = 0;
-			this._cStringEnterRN.Text = "Enter in string adds \\r\\n";
-			this._cStringEnterRN.UseVisualStyleBackColor = false;
-			// 
-			// groupBox2
-			// 
-			this.groupBox2.Controls.Add(this._cStringEnterRN);
-			this.groupBox2.Location = new System.Drawing.Point(8, 96);
-			this.groupBox2.Name = "groupBox2";
-			this.groupBox2.Size = new System.Drawing.Size(472, 48);
-			this.groupBox2.TabIndex = 3;
-			this.groupBox2.TabStop = false;
-			this.groupBox2.Text = "Auto correction";
 			// 
 			// FOptions
 			// 
@@ -669,11 +668,11 @@
 			this._pFont.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._nFontSize)).EndInit();
 			this._tabCode.ResumeLayout(false);
+			this.groupBox2.ResumeLayout(false);
+			this.groupBox2.PerformLayout();
 			this.groupBox1.ResumeLayout(false);
 			this.groupBox1.PerformLayout();
 			((System.ComponentModel.ISupportInitialize)(this._errorProvider)).EndInit();
-			this.groupBox2.ResumeLayout(false);
-			this.groupBox2.PerformLayout();
 			this.ResumeLayout(false);
 
 	}
@@ -722,10 +721,10 @@
 	private System.Windows.Forms.TabPage _tabTemplates;
 	private Au.Tools.CodeBox _sciTemplate;
 	private Au.Controls.AuLabel auLabel1;
-	private Au.Controls.AuCheckBox _cCustomSnippets;
 	private System.Windows.Forms.ComboBox _comboUseTemplate;
 	private System.Windows.Forms.ComboBox _comboTemplate;
 	private Au.Controls.AuLabel auLabel2;
 	private System.Windows.Forms.GroupBox groupBox2;
 	private Au.Controls.AuCheckBox _cStringEnterRN;
+	private Au.Controls.AuButton _bFontInfo;
 }

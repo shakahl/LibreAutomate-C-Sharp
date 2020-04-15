@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms; //SHOULDDO: avoid loading Forms dll. Now from it uses TextRenderer.
 using System.Drawing;
 //using System.Linq;
@@ -164,7 +163,7 @@ namespace Au
 			string cn; byte regMask;
 			if(Shadow) { cn = "Au.OSD2"; regMask = 2; } else { cn = "Au.OSD"; regMask = 1; }
 			if((s_isWinClassRegistered & regMask) == 0) {
-				var ce = new WndClassEx() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
+				var ce = new RWCEtc() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
 				AWnd.More.RegisterWindowClass(cn, null, ce);
 				s_isWinClassRegistered |= regMask;

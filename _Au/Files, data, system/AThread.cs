@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au;
@@ -85,8 +84,11 @@ namespace Au
 		/// Returns the <b>Thread</b> variable.
 		/// </summary>
 		/// <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
-		/// <param name="background">If true (default), sets <see cref="Thread.IsBackground"/> = true.</param>
-		/// <param name="sta">If true (default), calls <see cref="Thread.SetApartmentState"/>(ApartmentState.STA).</param>
+		/// <param name="background">
+		/// If true (default), sets <see cref="Thread.IsBackground"/> = true.
+		/// The process ends when the main thread and all foreground threads end; background threads then are terminated.
+		/// </param>
+		/// <param name="sta">If true (default), sets <see cref="ApartmentState.STA"/>.</param>
 		/// <exception cref="OutOfMemoryException"></exception>
 		public static Thread Start(Action threadProc, bool background = true, bool sta = true)
 		{

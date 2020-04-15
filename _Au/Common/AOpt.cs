@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -804,7 +803,7 @@ namespace Au.Types
 		/// AOpt.WaitFor.Period = 100;
 		/// ]]></code>
 		/// </example>
-		public int Period { get => _period; set => _period = AMath.MinMax(value, 1, 1000); }
+		public int Period { get => _period; set => _period = Math.Clamp(value, 1, 1000); }
 		int _period;
 
 		/// <summary>

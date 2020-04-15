@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
@@ -33,8 +32,8 @@ namespace Au
 			public TBAnchor anchor { get => _anchor; set => Set2(ref _anchor, value); }
 			TBAnchor _anchor = TBAnchor.TopLeft;
 
-			public TBLocation location { get => _location; set => Set(ref _location, value); }
-			TBLocation _location; // = new TBLocation { Left = 150, Top = 5, Right = 7, Bottom = 7 };
+			public TBOffsets offsets { get => _location; set => Set(ref _location, value); }
+			TBOffsets _location; // = new TBOffsets(150, 5, 7, 7);
 
 			public bool sizable { get => _sizable; set => Set(ref _sizable, value); }
 			bool _sizable = true;

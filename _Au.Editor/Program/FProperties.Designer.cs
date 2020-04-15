@@ -117,7 +117,7 @@
 		this._bAddComRegistry.Name = "_bAddComRegistry";
 		this._bAddComRegistry.Size = new System.Drawing.Size(68, 24);
 		this._bAddComRegistry.TabIndex = 1;
-		this._bAddComRegistry.Text = "COM";
+		this._bAddComRegistry.Text = "COM ▾";
 		this._bAddComRegistry.Click += new System.EventHandler(this._bAddComRegistry_Click);
 		// 
 		// _bAddComBrowse
@@ -135,7 +135,7 @@
 		this._bAddLibraryProject.Name = "_bAddLibraryProject";
 		this._bAddLibraryProject.Size = new System.Drawing.Size(110, 24);
 		this._bAddLibraryProject.TabIndex = 1;
-		this._bAddLibraryProject.Text = "Library project";
+		this._bAddLibraryProject.Text = "Library project ▾";
 		this._bAddLibraryProject.Click += new System.EventHandler(this._bAddLibraryProject_Click);
 		// 
 		// groupBox2
@@ -155,7 +155,7 @@
 		this._bAddClass.Name = "_bAddClass";
 		this._bAddClass.Size = new System.Drawing.Size(80, 24);
 		this._bAddClass.TabIndex = 1;
-		this._bAddClass.Text = "Class file...";
+		this._bAddClass.Text = "Class file ▾";
 		this._bAddClass.Click += new System.EventHandler(this._bAddClass_Click);
 		// 
 		// _bAddResource
@@ -164,7 +164,7 @@
 		this._bAddResource.Name = "_bAddResource";
 		this._bAddResource.Size = new System.Drawing.Size(80, 24);
 		this._bAddResource.TabIndex = 1;
-		this._bAddResource.Text = "Resource...";
+		this._bAddResource.Text = "Resource ▾";
 		this._bAddResource.Click += new System.EventHandler(this._bAddResource_Click);
 		// 
 		// label4

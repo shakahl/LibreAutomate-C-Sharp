@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 //using System.Drawing;
 using System.Linq;
@@ -27,7 +26,7 @@ static class EdDatabases
 		string copy = Program.Settings.db_copy_ref;
 		if(copy != null) {
 			Program.Settings.db_copy_ref = null;
-			AFile.CopyTo(copy, AFolders.ThisApp, IfExists.Delete);
+			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
 		}
 		return new ASqlite(AFolders.ThisAppBS + "ref.db", SLFlags.SQLITE_OPEN_READONLY);
 	}
@@ -37,7 +36,7 @@ static class EdDatabases
 		string copy = Program.Settings.db_copy_doc;
 		if(copy != null) {
 			Program.Settings.db_copy_doc = null;
-			AFile.CopyTo(copy, AFolders.ThisApp, IfExists.Delete);
+			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
 		}
 		return new ASqlite(AFolders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY);
 	}
@@ -47,7 +46,7 @@ static class EdDatabases
 		string copy = Program.Settings.db_copy_winapi;
 		if(copy != null) {
 			Program.Settings.db_copy_winapi = null;
-			AFile.CopyTo(copy, AFolders.ThisApp, IfExists.Delete);
+			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
 		}
 		return new ASqlite(AFolders.ThisAppBS + "winapi.db", SLFlags.SQLITE_OPEN_READONLY);
 	}

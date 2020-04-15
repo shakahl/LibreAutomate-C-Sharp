@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -95,13 +94,21 @@ namespace Au
 		public static byte HiByte(ushort x) => (byte)((uint)x >> 8);
 
 		/// <summary>
-		/// Multiplies number and numerator without overflow, and divides by denominator.
-		/// The return value is rounded up or down to the nearest integer.
-		/// If either an overflow occurred or denominator was 0, the return value is –1.
+		/// Returns <c>number * multiply / divide</c>.
+		/// Multiplies without overflow and rounds the result up or down to the nearest integer.
 		/// </summary>
-		public static int MulDiv(int number, int numerator, int denominator) => Api.MulDiv(number, numerator, denominator);
-		//=> (int)(((long)number * numerator) / denominator);
-		//could use this, but the API rounds down or up to the nearest integer, but this always rounds down.
+		/// <exception cref="OverflowException"></exception>
+		/// <exception cref="DivideByZeroException"></exception>
+		public static int MulDiv(int number, int multiply, int divide)
+		{
+			long r = (long)number * multiply;
+			int d = divide / 2; if(r < 0 == divide < 0) r += d; else r -= d; //round
+			return checked((int)(r / divide));
+
+			//This code produces the same results as API MulDiv. Tested with millions of random and edge values. Faster.
+			//The only difference, API does not support int.MinValue.
+		}
+		//public static int MulDiv(int number, int multiply, int divide) => Api.MulDiv(number, multiply, divide);
 
 		/// <summary>
 		/// Returns percent of part in whole.
@@ -118,7 +125,9 @@ namespace Au
 		/// </summary>
 		/// <param name="value">An integer value.</param>
 		/// <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
-		/// <remarks>For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.</remarks>
+		/// <remarks>
+		/// For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
+		/// </remarks>
 		public static uint AlignUp(uint value, uint alignment) => (value + (alignment - 1)) & ~(alignment - 1);
 
 		/// <summary>
@@ -126,21 +135,15 @@ namespace Au
 		/// </summary>
 		/// <param name="value">An integer value.</param>
 		/// <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
-		/// <remarks>For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.</remarks>
+		/// <remarks>
+		/// For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// for (int i = 0; i <= 20; i++) AOutput.Write(i, AMath.AlignUp(i, 4));
+		/// ]]></code>
+		/// </example>
 		public static int AlignUp(int value, uint alignment) => (int)AlignUp((uint)value, alignment);
-
-		/// <summary>
-		/// Returns value but not less than min and not greater than max.
-		/// If value is less than min, returns min.
-		/// If value is greater than max, returns max.
-		/// </summary>
-		public static int MinMax(int value, int min, int max)
-		{
-			Debug.Assert(max >= min);
-			if(value < min) return min;
-			if(value > max) return max;
-			return value;
-		}
 
 		/// <summary>
 		/// Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
@@ -171,7 +170,8 @@ class CiErrors
 			var s2 = System.Web.HttpUtility.HtmlEncode(d.GetMessage());
 			b.AppendFormat("\r\n<div>{0}: {1}</div>", s1, s2);
 
-			if(_semo != null && d.Severity == DiagnosticSeverity.Error) {
+			if(d.Severity == DiagnosticSeverity.Error) {
+				if(_semo == null) continue;
 				//AOutput.Write(d.Code, d.Id);
 				bool extMethod = false;
 				var ec = (ErrorCode)d.Code;
@@ -185,6 +185,12 @@ class CiErrors
 					if(ec == ecPrev) continue; //probably "not found 'AbcAttribute'" followed by "not found 'Abc'"
 					ecPrev = ec;
 					_UsingsEtc(b, v, doc, extMethod);
+					break;
+				}
+			} else if(d.Severity == DiagnosticSeverity.Warning) {
+				switch((ErrorCode)d.Code) {
+				case ErrorCode.WRN_MissingXMLComment:
+					_XmlComment(b/*, v*/);
 					break;
 				}
 			}
@@ -215,7 +221,7 @@ class CiErrors
 		int end2 = code.IndexOf('<', v.start, v.end - v.start);
 		if(end2 < 0) end2 = v.end; else isGeneric = true;
 		var errName = code[v.start..end2];
-		bool isAttribute = !extMethod && _semo.Root.FindNode(TextSpan.FromBounds(v.start, end2))?.Parent is AttributeSyntax && !errName.Ends("Attribute");
+		bool isAttribute = !extMethod && _semo.Root.FindToken(v.start).Parent?.Parent is AttributeSyntax && !errName.Ends("Attribute");
 		var errName2 = isAttribute ? errName + "Attribute" : null;
 
 		var comp = _semo.Compilation;
@@ -307,5 +313,14 @@ class CiErrors
 		} else if(action == 'r') { //Add reference
 			Strips.Cmd.File_Properties();
 		}
+	}
+
+	void _XmlComment(StringBuilder b/*, in (Diagnostic d, int start, int end) v*/)
+	{
+		//b.AppendFormat("\r\n<div><a href='^xa{0}'>Add XML comment</a></div>", v.start);
+		//b.AppendFormat("\r\n<div><a href='^xd{0}'>Disable warning</a></div>", v.start);
+
+		b.Append("\r\n<div>To add XML comment, use docSnippet. Type <b>doc</b> above, and select docSnippet from the completion list.</div>");
+		b.Append("\r\n<div>To disable warning, add <b>///</b> above or disable warning 1591 (warningDisableSnippet) or make non-public.</div>");
 	}
 }

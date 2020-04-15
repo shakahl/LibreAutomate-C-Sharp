@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Linq;
 
 using Au.Types;
@@ -296,7 +295,7 @@ namespace Au
 			if(path.Ends(".exe", true) && path.FindAny(@"\/") < 0) {
 				try {
 					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
-					if(ARegistry.GetString(out path, "", rk) || ARegistry.GetString(out path, "", rk, Registry.LocalMachine)) {
+					if(ARegistry.GetString(out path, "", rk) || ARegistry.GetString(out path, "", rk, Microsoft.Win32.Registry.LocalMachine)) {
 						path = APath.Normalize(path.Trim('\"'));
 						if(ExistsAsAny(path, true)) return path;
 					}
@@ -479,7 +478,7 @@ namespace Au
 
 		enum _FileOpType { Rename, Move, Copy, }
 
-		static unsafe void _FileOp(_FileOpType opType, bool into, string path1, string path2, IfExists ifExists, FCFlags copyFlags, Func<FEFile, bool> filter)
+		static unsafe void _FileOp(_FileOpType opType, bool into, string path1, string path2, FIfExists ifExists, FCFlags copyFlags, Func<FEFile, bool> filter)
 		{
 			string opName = (opType == _FileOpType.Rename) ? "rename" : ((opType == _FileOpType.Move) ? "move" : "copy");
 			path1 = _PreparePath(path1);
@@ -488,7 +487,7 @@ namespace Au
 
 			if(opType == _FileOpType.Rename) {
 				opType = _FileOpType.Move;
-				if(APath.IsInvalidFileName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
+				if(APath.IsInvalidName(path2)) throw new ArgumentException($"Invalid filename: '{path2}'");
 				path2 = APath.Combine_(_RemoveFilename(path1), path2);
 			} else {
 				string path2Parent;
@@ -508,12 +507,12 @@ namespace Au
 			bool ok = false, copy = opType == _FileOpType.Copy, deleteSource = false, mergeDirectory = false;
 			var del = new _SafeDeleteExistingDirectory();
 			try {
-				if(ifExists == IfExists.MergeDirectory && type1 != FileDir2.Directory) ifExists = IfExists.Fail;
+				if(ifExists == FIfExists.MergeDirectory && type1 != FileDir2.Directory) ifExists = FIfExists.Fail;
 
-				if(ifExists == IfExists.Fail) {
+				if(ifExists == FIfExists.Fail) {
 					//API will fail if exists. We don't use use API flags 'replace existing'.
 				} else {
-					//Delete, RenameExisting, IfExists
+					//Delete, RenameExisting, MergeDirectory
 					//bool deleted = false;
 					var existsAs = ExistsAs2(path2, true);
 					switch(existsAs) {
@@ -528,15 +527,15 @@ namespace Au
 							ADebug.Print("same file");
 							//deleted = true;
 							//copy will fail, move will succeed
-						} else if(ifExists == IfExists.MergeDirectory && (existsAs == FileDir2.Directory || existsAs == FileDir2.SymLinkDirectory)) {
+						} else if(ifExists == FIfExists.MergeDirectory && (existsAs == FileDir2.Directory || existsAs == FileDir2.SymLinkDirectory)) {
 							if(type1 == FileDir2.Directory || type1 == FileDir2.SymLinkDirectory) {
 								//deleted = true;
 								mergeDirectory = true;
 								if(!copy) { copy = true; deleteSource = true; }
 							} // else API will fail. We refuse to replace a directory with a file.
-						} else if(ifExists == IfExists.RenameExisting || existsAs == FileDir2.Directory) {
+						} else if(ifExists == FIfExists.RenameExisting || existsAs == FileDir2.Directory) {
 							//deleted = 
-							del.Rename(path2, ifExists == IfExists.RenameExisting);
+							del.Rename(path2, ifExists == FIfExists.RenameExisting);
 							//Rename to a temp name. Finally delete if ok (if !RenameExisting), undo if failed.
 							//It also solves this problem: if we delete the directory now, need to ensure that it does not delete the source directory, which is quite difficult.
 						} else {
@@ -707,7 +706,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>MoveFileEx</msdn>.
 		/// </remarks>
-		public static void Rename(string path, string newName, IfExists ifExists = IfExists.Fail)
+		public static void Rename(string path, string newName, FIfExists ifExists = FIfExists.Fail)
 		{
 			_FileOp(_FileOpType.Rename, false, path, newName, ifExists, 0, null);
 		}
@@ -732,7 +731,7 @@ namespace Au
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// If path and newPath share the same parent directory, just renames the file.
 		/// </remarks>
-		public static void Move(string path, string newPath, IfExists ifExists = IfExists.Fail)
+		public static void Move(string path, string newPath, FIfExists ifExists = FIfExists.Fail)
 		{
 			_FileOp(_FileOpType.Move, false, path, newPath, ifExists, 0, null);
 		}
@@ -756,7 +755,7 @@ namespace Au
 		/// 
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
-		public static void MoveTo(string path, string newDirectory, IfExists ifExists = IfExists.Fail)
+		public static void MoveTo(string path, string newDirectory, FIfExists ifExists = FIfExists.Fail)
 		{
 			_FileOp(_FileOpType.Move, true, path, newDirectory, ifExists, 0, null);
 		}
@@ -785,7 +784,7 @@ namespace Au
 		/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
-		public static void Copy(string path, string newPath, IfExists ifExists = IfExists.Fail, FCFlags copyFlags = 0, Func<FEFile, bool> filter = null)
+		public static void Copy(string path, string newPath, FIfExists ifExists = FIfExists.Fail, FCFlags copyFlags = 0, Func<FEFile, bool> filter = null)
 		{
 			_FileOp(_FileOpType.Copy, false, path, newPath, ifExists, copyFlags, filter);
 		}
@@ -810,7 +809,7 @@ namespace Au
 		/// Does not copy symbolic links (silently skips, no exception) if this process is not running as administrator.
 		/// Creates the destination directory if does not exist (see <see cref="CreateDirectory"/>).
 		/// </remarks>
-		public static void CopyTo(string path, string newDirectory, IfExists ifExists = IfExists.Fail, FCFlags copyFlags = 0, Func<FEFile, bool> filter = null)
+		public static void CopyTo(string path, string newDirectory, FIfExists ifExists = FIfExists.Fail, FCFlags copyFlags = 0, Func<FEFile, bool> filter = null)
 		{
 			_FileOp(_FileOpType.Copy, true, path, newDirectory, ifExists, copyFlags, filter);
 		}
@@ -1278,7 +1277,7 @@ namespace Au
 		static void _Save(string file, object data, bool backup, string tempDirectory, int lockedWaitMS, Encoding encoding = null)
 		{
 			file = APath.Normalize(file, flags: PNFlags.DontPrefixLongPath);
-			string s1 = tempDirectory.NE() ? file : APath.Combine(APath.Normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), APath.GetFileName(file), prefixLongPath: false);
+			string s1 = tempDirectory.NE() ? file : APath.Combine(APath.Normalize(tempDirectory, flags: PNFlags.DontPrefixLongPath), APath.GetName(file), prefixLongPath: false);
 			string temp = s1 + "~temp";
 			string back = s1 + "~backup"; //always use the backup parameter, then ERROR_UNABLE_TO_REMOVE_REPLACED is far not so frequent, etc
 
@@ -1553,7 +1552,7 @@ namespace Au.Types
 	/// Used with <see cref="AFile.Copy"/>, <see cref="AFile.Move"/> and similar functions.
 	/// When renaming or moving, if the destination is the same as the source, these options are ignored and the destination is simply renamed. For example when renaming "file.txt" to "FILE.TXT".
 	/// </summary>
-	public enum IfExists
+	public enum FIfExists
 	{
 		/// <summary>Throw exception. Default.</summary>
 		Fail,

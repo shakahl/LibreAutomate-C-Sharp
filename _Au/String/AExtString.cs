@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 using System.Globalization;
 
@@ -531,8 +530,8 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string s = "one * two three ";
-		/// foreach(var t in s.Segments(" ")) AOutput.Write(t);
-		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(t);
+		/// foreach(var t in s.Segments(" ")) AOutput.Write(s[t.start..t.end]);
+		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(s[t.start..t.end]);
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="SegSplit"/>

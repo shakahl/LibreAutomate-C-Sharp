@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -395,7 +394,7 @@ namespace Au.Controls
 						}).Checked = k == 0;
 				}
 
-				m.Show(_manager, p.X, p.Y);
+				m.Show(_manager, p);
 			}
 
 			[Conditional("DEBUG")]

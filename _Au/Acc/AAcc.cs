@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -178,7 +177,7 @@ namespace Au
 			public ushort level; //for ToString. 0 if not set.
 
 			public void SetRole(AccROLE role) { this.role = (byte)((uint)role <= 0xff ? role : 0); }
-			public void SetLevel(int level) { this.level = (ushort)AMath.MinMax(level, 0, 0xffff); }
+			public void SetLevel(int level) { this.level = (ushort)Math.Clamp(level, 0, 0xffff); }
 		}
 
 		internal IntPtr _iacc;

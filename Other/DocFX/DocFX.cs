@@ -167,7 +167,7 @@ unsafe class Program
 			if(test) {
 				//AOutput.Write(File.ReadAllText(tmp));
 			} else {
-				AFile.Move(tmp, path, IfExists.Delete);
+				AFile.Move(tmp, path, FIfExists.Delete);
 			}
 		}
 		catch(Exception e) { AOutput.Write(e); }

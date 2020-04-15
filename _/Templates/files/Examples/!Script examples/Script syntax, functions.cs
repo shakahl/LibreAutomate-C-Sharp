@@ -42,7 +42,7 @@ AKeys.Text(w.Name);
 2.s();
 w.Close();
 var w2 = AWnd.Wait(-3, true, "Notepad", "#32770");
-if(!w2.Is0) {
+if (!w2.Is0) {
 	500.ms();
 	var c = +w2.Child(null, "Button", skip: 1); // "Don't Save"
 	AMouse.Click(c);
@@ -53,7 +53,7 @@ if(!w2.Is0) {
 
 string s = "Example";
 var b = new System.Text.StringBuilder();
-for(int i = 0; i < s.Length; i++) {
+for (int i = 0; i < s.Length; i++) {
 	b.Append(s[i]).AppendLine();
 }
 MessageBox.Show(b.ToString());

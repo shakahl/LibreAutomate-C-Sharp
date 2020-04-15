@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -17,7 +16,7 @@ using System.Drawing;
 using Au;
 using Au.Types;
 
-//TODO: /portable
+//FUTURE: /portable
 //	1. Set AFolders.ThisAppDocuments etc in AFolders.ThisApp\Portable.
 //	2. Don't restart as admin.
 //	3. Don't allow to set option to run at startup.
@@ -60,8 +59,8 @@ static class CommandLine
 					//rejected: /h start hidden. Not useful.
 				}
 			} else { //one or more files
-				if(a.Length == 1 && FilesModel.IsWorkspaceDirectory(s)) {
-					switch(cmd = ADialog.Show("Workspace", s, "1 Open|2 Import|0 Cancel", footerText: FilesModel.GetSecurityInfo("v|"))) {
+				if(a.Length == 1 && FilesModel.IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(s, out cmd)) {
+					switch(cmd) {
 					case 1: WorkspaceDirectory = s; break;
 					case 2: _importWorkspace = s; break;
 					}
@@ -166,7 +165,7 @@ static class CommandLine
 				UacDragDrop.AdminProcess.OnTransparentWindowCreated((AWnd)lParam);
 				break;
 			case 20: //from Triggers.DisabledEverywhere
-				Run.OnDisableTriggers();
+				TriggersAndToolbars.OnDisableTriggers();
 				break;
 			}
 			return 0;
@@ -184,10 +183,10 @@ static class CommandLine
 		byte[] b = isString ? null : c.GetBytes();
 		switch(action) {
 		case 1:
-			Program.Model.ImportWorkspace(s);
+			Panels.Files.ZLoadWorkspace(s);
 			break;
 		case 2:
-			Panels.Files.ZLoadWorkspace(s);
+			Program.Model.ImportWorkspace(s);
 			break;
 		case 3:
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog

@@ -7,7 +7,7 @@ void Function1() {
 }
 
 void TriggerActionExample2(AWnd w) {
-	AOutput.Write("TriggerActionExample2", w);
+	AOutput.Write("trigger action example 4", w);
 }
 
 

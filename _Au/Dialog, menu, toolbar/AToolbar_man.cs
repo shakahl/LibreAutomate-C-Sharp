@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -247,7 +246,7 @@ namespace Au
 					var ow = _aow[i];
 					if(!_FollowOwner(ow)) {
 						foreach(var tb in ow.a) {
-							tb.Close();
+							tb._Close();
 							_atb.Remove(tb);
 						}
 						_aow.RemoveAt(i);
@@ -347,7 +346,7 @@ namespace Au
 					} else {
 						(visible, dead) = oc.IsVisible(visibleW);
 						if(dead) {
-							tb.Close();
+							tb._Close();
 							ow.a.RemoveAt(i);
 							continue;
 						}
@@ -381,7 +380,7 @@ namespace Au
 			bool hide;
 			if(screen.Is0) hide = false;
 			else if(IsOwned) hide = OwnerWindow == wFore;
-			else hide = AScreen.Of(_c, SDefault.Zero) == screen;
+			else hide = AScreen.Of(_c, SODefault.Zero) == screen;
 
 			_SetVisible(!hide, TBHide.FullScreen);
 		}
@@ -419,31 +418,35 @@ namespace Au
 			int x, y, cx = bounds.Width, cy = bounds.Height;
 
 			if(_anchor.HasLeft()) {
-				x = r.left + _xy.Left;
-				if(_anchor.HasRight() && (!_followedOnce || r.Width != prevSize.width)) {
-					if(_preferSize) _xy.Right = r.right - x - cx;
-					else cx = Math.Max(r.right - _xy.Right - x, 2); //_OnWindowPosChanging will limit min max if need
+				x = r.left + _offsets.Left;
+				if(_anchor.OppositeX()) x -= cx;
+				else if(_anchor.HasRight() && (!_followedOnce || r.Width != prevSize.width)) {
+					if(_preferSize) _offsets.Right = r.right - x - cx;
+					else cx = Math.Max(r.right - _offsets.Right - x, 2); //_OnWindowPosChanging will limit min max if need
 				}
 			} else if(_anchor.HasRight()) {
-				x = r.right - _xy.Right - cx;
+				x = r.right - _offsets.Right;
+				if(!_anchor.OppositeX()) x -= cx;
 			} else { //none
-				x = r.left + _xy.Left;
+				x = r.left + _offsets.Left;
 			}
 			if(_anchor.HasTop()) {
-				y = r.top + _xy.Top;
-				if(_anchor.HasBottom() && (!_followedOnce || r.Height != prevSize.height)) {
-					if(_preferSize) _xy.Bottom = r.bottom - y - cy;
-					else cy = Math.Max(r.bottom - _xy.Bottom - y, 2);
+				y = r.top + _offsets.Top;
+				if(_anchor.OppositeY()) y -= cy;
+				else if(_anchor.HasBottom() && (!_followedOnce || r.Height != prevSize.height)) {
+					if(_preferSize) _offsets.Bottom = r.bottom - y - cy;
+					else cy = Math.Max(r.bottom - _offsets.Bottom - y, 2);
 				}
 			} else if(_anchor.HasBottom()) {
-				y = r.bottom - _xy.Bottom - cy;
+				y = r.bottom - _offsets.Bottom;
+				if(!_anchor.OppositeY()) y -= cy;
 			} else { //none
-				y = r.top + _xy.Top;
+				y = r.top + _offsets.Top;
 			}
 
 			if(_preferSize) {
 				_preferSize = false;
-				_sett.location = _xy;
+				_sett.offsets = _offsets;
 			}
 
 			if(x == bounds.X && y == bounds.Y) swp |= Native.SWP.NOMOVE;
@@ -488,7 +491,7 @@ namespace Au
 			if(!wp.flags.Has(Native.SWP.NOMOVE | Native.SWP.NOSIZE)) {
 				if(!_ignorePosChanged) {
 					_os?.UpdateIfAutoScreen();
-					_UpdateXY(wp.x, wp.y, wp.cx, wp.cy);
+					_UpdateOffsets(wp.x, wp.y, wp.cx, wp.cy);
 				} else {
 					if(!wp.flags.Has(Native.SWP.NOSIZE) && !_inMoveSize) _sett.size = (wp.cx, wp.cy);
 				}
@@ -499,15 +502,20 @@ namespace Au
 			}
 		}
 
-		void _UpdateXY(int x, int y, int cx, int cy)
+		void _UpdateOffsets(int x, int y, int cx, int cy)
 		{
 			var (r, _) = _GetCachedOwnerRect();
-			if(_anchor.HasLeft() || _anchor == TBAnchor.None) _xy.Left = x - r.left;
-			if(_anchor.HasTop() || _anchor == TBAnchor.None) _xy.Top = y - r.top;
-			if(_anchor.HasRight()) _xy.Right = r.right - x - cx;
-			if(_anchor.HasBottom()) _xy.Bottom = r.bottom - y - cy;
+			if(_anchor == TBAnchor.None) {
+				_offsets.Left = x - r.left;
+				_offsets.Top = y - r.top;
+			} else {
+				if(_anchor.HasLeft()) _offsets.Left = x + (_anchor.OppositeX() ? cx : 0) - r.left;
+				if(_anchor.HasTop()) _offsets.Top = y + (_anchor.OppositeY() ? cy : 0) - r.top;
+				if(_anchor.HasRight()) _offsets.Right = r.right - x - (_anchor.OppositeX() ? 0 : cx);
+				if(_anchor.HasBottom()) _offsets.Bottom = r.bottom - y - (_anchor.OppositeY() ? 0 : cy);
+			}
 			if(!_inMoveSize) {
-				_sett.location = _xy;
+				_sett.offsets = _offsets;
 				_sett.size = (cx, cy);
 			}
 		}
@@ -516,7 +524,7 @@ namespace Au
 		{
 			_inMoveSize = start;
 			if(!start) {
-				_sett.location = _xy;
+				_sett.offsets = _offsets;
 				SIZE z = _c.Size;
 				if(z != _sett.size) {
 					_sett.size = z;

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -221,6 +220,17 @@ namespace Au.Triggers
 		public TriggerOptions Options => options_;
 		internal readonly TriggerOptions options_;
 
+		/// <summary>
+		/// Clears all options (of <see cref="Options"/>, <see cref="Of"/>, <see cref="FuncOf"/>, <see cref="Autotext"/>).
+		/// </summary>
+		public void ResetOptions()
+		{
+			Of.AllWindows();
+			FuncOf.Reset();
+			Options.Reset();
+			Autotext.ResetOptions();
+		}
+
 		ITriggers _Get(TriggerType e)
 		{
 			int i = (int)e;
@@ -372,6 +382,9 @@ namespace Au.Triggers
 					return 0;
 				case Api.WM_USER + 20:
 					_windowTriggers.SimulateNew_(wParam, lParam);
+					return 0;
+				case Api.WM_USER + 30:
+					AToolbar.NewToolbarsForm().Show();
 					return 0;
 				}
 			}

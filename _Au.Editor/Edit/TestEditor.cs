@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -167,6 +166,13 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+		//var doc = Panels.Editor.ZActiveDoc;
+		//var Z = doc.Z;
+		//var s = doc.Text;
+
+		//AOutput.Write(FilesModel.IsWorkspaceZip(@"C:\Users\G\Documents\Au\@Script3.zip"));
+
+
 		//if(AKeys.IsShift) {
 		//	AWnd.Find("*Notepad").Activate();
 		//	ATime.SleepDoEvents(100);
@@ -198,10 +204,6 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 		//EdDatabases.CreateRefAndDoc();
 		//EdDatabases.CreateWinapi();
-
-		var doc = Panels.Editor.ZActiveDoc;
-		var Z = doc.Z;
-		var s = doc.Text;
 
 		//AOutput.Write(doc.Z.CurrentPos16);
 

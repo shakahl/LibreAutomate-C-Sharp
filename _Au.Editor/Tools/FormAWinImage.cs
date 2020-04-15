@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -370,7 +369,7 @@ namespace Au.Tools
 				return;
 			}
 
-			var d = new OpenFileDialog { Filter = c_fileDialogFilter, DefaultExt = "png" };
+			using var d = new OpenFileDialog { Filter = c_fileDialogFilter, DefaultExt = "png" };
 			if(d.ShowDialog(this) != DialogResult.OK) return;
 			var f = d.FileName;
 			var im = Image.FromFile(f) as Bitmap;

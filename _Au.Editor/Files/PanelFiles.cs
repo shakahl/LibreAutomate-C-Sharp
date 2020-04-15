@@ -129,14 +129,14 @@ partial class PanelFiles : AuUserControlBase
 	/// </summary>
 	public FilesModel ZLoadAnotherWorkspace()
 	{
-		var d = new OpenFileDialog { Title = "Open workspace", Filter = "files.xml|files.xml" };
+		using var d = new OpenFileDialog { Title = "Open workspace", Filter = "files.xml|files.xml" };
 		if(d.ShowDialog(this) != DialogResult.OK) return null;
 		var filesXml = d.FileName;
-		if(!APath.GetFileName(filesXml).Eqi("files.xml")) {
+		if(!APath.GetName(filesXml).Eqi("files.xml")) {
 			ADialog.ShowError("Must be files.xml");
 			return null;
 		}
-		return ZLoadWorkspace(APath.GetDirectoryPath(filesXml));
+		return ZLoadWorkspace(APath.GetDirectory(filesXml));
 	}
 
 	/// <summary>
@@ -186,17 +186,18 @@ partial class PanelFiles : AuUserControlBase
 	/// </summary>
 	public void ZFillMenuNew(ToolStripDropDownMenu ddm)
 	{
-		if(_newMenuDone) return; _newMenuDone = true;
+		var (xroot, cached) = FileNode.Templates.LoadXml();
+		if(ddm.Items.Count > 4) { //not first time
+			if(cached) return; //else rebuild menu because Templates\files.xml modified
+			for(int i = ddm.Items.Count; --i >= 4;) ddm.Items.RemoveAt(i);
+		}
 
 		var templDir = FileNode.Templates.DefaultDirBS;
-		var xroot = AExtXml.LoadElem(FileNode.Templates.DefaultFilesXml);
-
 		_CreateMenu(ddm, xroot, null, 0);
 
 		void _CreateMenu(ToolStripDropDownMenu ddParent, XElement xParent, string dir, int level)
 		{
 			ddParent.SuspendLayout();
-			int i = level == 0 ? 4 : 0;
 			foreach(var x in xParent.Elements()) {
 				string tag = x.Name.LocalName, name = x.Attr("n");
 				int isFolder = tag == "d" ? 1 : 0;
@@ -207,11 +208,12 @@ partial class PanelFiles : AuUserControlBase
 				}
 				string relPath = dir + name;
 				if(isFolder == 3) name = name[1..];
-				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(relPath, beginRenaming: true));
+				//var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(relPath, beginRenaming: true));
+				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItemX(x, beginRenaming: true));
 				if(isFolder == 1) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;
-					_CreateMenu(ddSub, x, dir + name + "\\", level + 1);
+					_CreateMenu(ddSub, x, relPath + "\\", level + 1);
 				} else {
 					string si = null;
 					if(isFolder != 0) si = nameof(Au.Editor.Resources.Resources.folder);
@@ -222,10 +224,9 @@ partial class PanelFiles : AuUserControlBase
 						: FileNode.IconCache.GetImage(templDir + relPath, useExt: true);
 					if(im != null) item.Image = im;
 				}
-				ddParent.Items.Insert(i++, item);
+				ddParent.Items.Add(item);
 			}
 			ddParent.ResumeLayout();
 		}
 	}
-	bool _newMenuDone;
 }

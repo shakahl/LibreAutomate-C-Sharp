@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -417,7 +416,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				if(_meta.outputPath.NE()) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
 				break;
 			}
-			var name = APath.GetFileName(_f.Name, true);
+			var name = APath.GetNameNoExt(_f.Name);
 			if(_meta.xmlDoc == "") _meta.xmlDoc = name + ".xml";
 			if(_meta.manifest == "") _meta.manifest = name + ".exe.manifest";
 		}
@@ -450,7 +449,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	private void _bAddNet_Click(object button, EventArgs e)
 	{
-		using var d = new System.Windows.Forms.OpenFileDialog { InitialDirectory = AFolders.ThisApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
+		using var d = new OpenFileDialog { InitialDirectory = AFolders.ThisApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
 		if(d.ShowDialog(this) != DialogResult.OK) return;
 
 		var a = d.FileNames;
@@ -484,7 +483,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		bool _Include(FileNode f)
 		{
 			if(!f.IsClass || f == _f) return false;
-			if(f.FindProject(out var prFolder, out var prMain)) { //exclude class files that are in projects
+			if(f.FindProject(out var prFolder, out var prMain) && !prFolder.Name.Starts("@@")) { //exclude class files that are in projects, except if project name starts with @@
 				if(prFolder != prFolder1) return false; //but if _f is a non-project script in a project folder, include local classes
 			}
 			return f.GetClassFileRole() == FileNode.EClassFileRole.Class;
@@ -543,7 +542,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	private void _bAddComBrowse_Click(object button, EventArgs e)
 	{
-		using var ofd = new System.Windows.Forms.OpenFileDialog { Filter = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*" };
+		using var ofd = new OpenFileDialog { Filter = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*" };
 		if(ofd.ShowDialog(this) == DialogResult.OK) _ConvertTypeLibrary(ofd.FileName, button);
 	}
 
@@ -553,7 +552,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		var sFind = _tFindInList.Text;
 		var rx = new ARegex(@"(?i) (?:Type |Object )?Library[ \d\.]*$");
 		var a = new List<_RegTypelib>(1000);
-		using(var tlKey = Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
+		using(var tlKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
 			foreach(var sGuid in tlKey.GetSubKeyNames()) {
 				if(sGuid.Length != 38) continue;
 				//AOutput.Write(sGuid);
@@ -597,7 +596,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
 			for(int i = 0; i < 2; i++) {
 				var bits = AVersion.Is32BitProcess == (i == 1) ? "32" : "64";
-				using var hk = Registry.ClassesRoot.OpenSubKey(k0 + bits);
+				using var hk = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(k0 + bits);
 				if(hk?.GetValue("") is string path) return path.Trim('\"');
 			}
 			return null;
@@ -615,7 +614,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			//can be several locales
 			var aloc = new List<string>(); //registry keys like "0" or "409"
 			var aloc2 = new List<string>(); //locale names for display in the list dialog
-			using(var verKey = Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
+			using(var verKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
 				foreach(var s1 in verKey.GetSubKeyNames()) {
 					int lcid = s1.ToInt(0, out int iEnd, STIFlags.IsHexWithout0x);
 					if(iEnd != s1.Length) continue; //"FLAGS" etc; must be hex number without 0x
@@ -728,7 +727,7 @@ To remove, delete the line in the code editor. Optionally delete unused dll file
 Adds meta <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
 
 If this file is in a project, don't need to add class files that are in the project folder.
-Can be added only files that are in this workspace. Import files if need, for example drag/drop.
+Can be added only files that are in this workspace. Import files if need, for example drag-drop.
 Can be path relative to this file (examples: Class5.cs, Folder\Class5.cs, ..\Folder\Class5.cs) or path in the workspace (examples: \Class5.cs, \Folder\Class5.cs).
 To remove, delete the line in the code editor.
 ");

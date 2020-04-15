@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 using System.Collections;
 
@@ -206,11 +205,12 @@ namespace Au.Triggers
 			t.DictAdd(_d, _DictKey(subtype, data));
 			_lastAdded = t;
 			UsedHookEvents_ |= HooksThread.UsedEvents.Mouse; //just sets the hook
-			switch(subtype) {
-			case ESubtype.Click: UsedHookEvents_ |= HooksThread.UsedEvents.MouseClick; break;
-			case ESubtype.Wheel: UsedHookEvents_ |= HooksThread.UsedEvents.MouseWheel; break;
-			default: UsedHookEvents_ |= HooksThread.UsedEvents.MouseEdgeMove; break;
-			}
+			UsedHookEvents_ |= subtype switch
+			{
+				ESubtype.Click => HooksThread.UsedEvents.MouseClick,
+				ESubtype.Wheel => HooksThread.UsedEvents.MouseWheel,
+				_ => HooksThread.UsedEvents.MouseEdgeMove,
+			};
 			return t;
 		}
 
@@ -494,8 +494,8 @@ namespace Au.Triggers
 				//var r = AScreen.Of(pt).Bounds; //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
 				var r = AScreen.Of(AMouse.XY).Bounds; //smaller problem: AMouse.XY gets previous coordinates
 				_xmin = r.left; _ymin = r.top; _xmax = r.right - 1; _ymax = r.bottom - 1;
-				_x = AMath.MinMax(pt.x, _xmin, _xmax);
-				_y = AMath.MinMax(pt.y, _ymin, _ymax);
+				_x = Math.Clamp(pt.x, _xmin, _xmax);
+				_y = Math.Clamp(pt.y, _ymin, _ymax);
 				//AOutput.Write(pt, _x, _y, r);
 
 				result = default;
@@ -693,6 +693,10 @@ namespace Au.Triggers
 	{
 		///
 		public MouseTrigger Trigger { get; internal set; }
+
+		///
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public override ActionTrigger TriggerBase => Trigger;
 
 		/// <summary>
 		/// The active window (Edge and Move triggers) or the mouse window (Click and Wheel triggers).

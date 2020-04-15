@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -205,7 +204,7 @@ namespace Au.Tools
 		{
 			var g = _grid2;
 
-			g.ZAdd(null, "also", "o => false", tt: "Lambda that returns true if AAcc o is the wanted AO.", info: c_infoAlso);
+			g.ZAdd(null, "also", "o => true", tt: "Lambda that returns true if AAcc o is the wanted AO.", info: c_infoAlso);
 			g.ZAdd(null, "skip", "1", tt: "0-based index of matching AO.\nFor example, if 1, gets the second matching AO.");
 			g.ZAdd(null, "navig", null, tt: "When found, call AAcc.Navigate to get another AO.", info: c_infoNavig);
 			g.ZAdd(null, "wait", "5", tt: c_infoWait);

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using System.Text.RegularExpressions; //for XML doc links
@@ -333,12 +332,6 @@ namespace Au.Types
 	}
 
 	#region callout
-
-	/// <summary>
-	/// Delegate type of callout callback function.
-	/// See <see cref="ARegex.Callout"/>.
-	/// </summary>
-	public delegate void RXCalloutFunc(RXCalloutData b);
 
 	/// <summary>
 	/// Managed version of PCRE API struct pcre2_callout_block.

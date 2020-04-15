@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 using System.Globalization;
 
@@ -188,6 +187,8 @@ namespace Au.Triggers
 		public TASimpleReplace SimpleReplace => _simpleReplace;
 		TASimpleReplace _simpleReplace;
 
+		#region options
+
 		/// <summary>
 		/// Default value for the <i>flags</i> parameter used for triggers added afterwards.
 		/// </summary>
@@ -208,7 +209,10 @@ namespace Au.Triggers
 		/// For Enter use \r.
 		/// </remarks>
 		/// <exception cref="ArgumentException">The value contains letters or digits.</exception>
-		public string DefaultPostfixChars { get => _defaultPostfixChars; set => _defaultPostfixChars = _CheckPostfixChars(value); }
+		public string DefaultPostfixChars {
+			get => _defaultPostfixChars;
+			set => _defaultPostfixChars = _CheckPostfixChars(value);
+		}
 		string _defaultPostfixChars;
 
 		static string _CheckPostfixChars(string s)
@@ -227,7 +231,7 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// The postfix key for all triggers where postfix type is <see cref="TAPostfix.Key"/> or <see cref="TAPostfix.CharOrKey"/> (default).
-		/// Can be Ctrl, Shift, LCtrl, RCtrl, LShift or RShift.
+		/// Can be Ctrl (default), Shift, LCtrl, RCtrl, LShift or RShift.
 		/// </summary>
 		/// <exception cref="ArgumentException">The value is not Ctrl or Shift.</exception>
 		/// <remarks>
@@ -259,6 +263,20 @@ namespace Au.Triggers
 		public string WordCharsPlus { get; set; }
 
 		/// <summary>
+		/// Clears all options.
+		/// </summary>
+		public void ResetOptions()
+		{
+			this.DefaultFlags = 0;
+			this.DefaultPostfixType = 0;
+			this._defaultPostfixChars = null;
+			this.PostfixKey = KKey.Ctrl;
+			this.WordCharsPlus = null;
+		}
+
+		#endregion
+
+		/// <summary>
 		/// The last added trigger.
 		/// </summary>
 		public AutotextTrigger Last => _lastAdded;
@@ -283,7 +301,7 @@ namespace Au.Triggers
 
 			if(ResetEverywhere) { //set by mouse hooks on click left|right and by keyboard hooks on Au-injected key events. In shared memory.
 				ResetEverywhere = false;
-				Reset();
+				_Reset();
 			}
 
 			if(k.IsUp) {
@@ -333,7 +351,7 @@ namespace Au.Triggers
 
 			return;
 			gReset:
-			Reset();
+			_Reset();
 		}
 
 		static AWnd _GetFocusedWindow()
@@ -347,7 +365,7 @@ namespace Au.Triggers
 		bool _singlePK; //used to detect postfix key (Ctrl or Shift)
 		AWnd _wFocus; //the focused window/control. Used to reset if focus changed.
 
-		internal void Reset()
+		void _Reset()
 		{
 			_len = 0;
 			_singlePK = false;
@@ -363,7 +381,7 @@ namespace Au.Triggers
 		{
 			//APerf.Next();
 			if(wFocus != _wFocus) {
-				Reset();
+				_Reset();
 				_wFocus = wFocus;
 			}
 			if(wFocus.Is0) return;
@@ -386,7 +404,7 @@ namespace Au.Triggers
 					case '\n':
 						break;
 					default: //Ctrl+C etc generate control characters. Also Esc.
-						Reset();
+						_Reset();
 						return;
 						//tested: control codes <32 in most windows don't type characters
 						//tested: Ctrl+Backspace (127) in some windows types a rectangle, in others erases previous word
@@ -405,7 +423,7 @@ namespace Au.Triggers
 						i = c_bufLen - 20; //remove several first chars. Triggers will not match anyway, because max string lenhth is 100.
 					}
 					nc = c_bufLen - ++i;
-					fixed (_Char* p = _text) Api.memmove(p, p + i, nc * sizeof(_Char));
+					fixed(_Char* p = _text) Api.memmove(p, p + i, nc * sizeof(_Char));
 				}
 
 				_text[nc] = new _Char(c, isWordChar);
@@ -458,13 +476,13 @@ namespace Au.Triggers
 							bool hasPChar = postfixType == _DetectedPostfix.Delim;
 							int n = s.Length, to = nc; if(hasPChar) { n++; to++; }
 							var tt = new string('\0', n);
-							i = to - n; fixed (char* p = tt) for(int j = 0; i < to;) p[j++] = _text[i++].c;
+							i = to - n; fixed(char* p = tt) for(int j = 0; i < to;) p[j++] = _text[i++].c;
 							thc.args = args = new AutotextTriggerArgs(x, thc.Window, tt, hasPChar);
 						} else args.Trigger = x;
 
 						if(!x.MatchScopeWindowAndFunc(thc)) continue;
 
-						Reset(); //CONSIDER: flag DontReset. If the action generates keyboard events or mouse clicks, our kooks will reset.
+						_Reset(); //CONSIDER: flag DontReset. If the action generates keyboard events or mouse clicks, our kooks will reset.
 
 						thc.trigger = x;
 						return;
@@ -561,7 +579,7 @@ namespace Au.Triggers
 		unsafe void _DebugPrintText()
 		{
 			var s = new string(' ', _len);
-			fixed (char* p = s) for(int i = 0; i < s.Length; i++) p[i] = _text[i].c;
+			fixed(char* p = s) for(int i = 0; i < s.Length; i++) p[i] = _text[i].c;
 			AOutput.Write(s);
 		}
 
@@ -597,6 +615,10 @@ namespace Au.Triggers
 	{
 		///
 		public AutotextTrigger Trigger { get; internal set; }
+
+		///
+		[EditorBrowsable(EditorBrowsableState.Never)]
+		public override ActionTrigger TriggerBase => Trigger;
 
 		/// <summary>
 		/// The active window.
@@ -722,7 +744,7 @@ namespace Au.Triggers
 		public bool Confirm(string text) //can be static, but, because it is public, would be not so easy to use.
 		{
 			bool ok = false;
-			var m = new AMenu { Modal = true }; //FUTURE: need something better. Creates 60 KB of garbage etc.
+			var m = new AMenu { Modal = true }; //FUTURE: need something better. Creates much garbage etc.
 			m[text.Escape(limit: 60)] = u => ok = true;
 			using(AHookWin.Keyboard(x => {
 				if(x.IsUp) return;
@@ -734,7 +756,7 @@ namespace Au.Triggers
 				x.BlockEvent();
 				m.Close();
 			})) {
-				m.Show(true);
+				m.Show(byCaret: true);
 				return ok;
 			}
 		}

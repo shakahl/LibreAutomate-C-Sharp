@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
@@ -78,23 +77,14 @@ class ProgramSettings : Au.Util.JSettings
 	public bool output_topmost { get => _output_topmost; set => Set(ref _output_topmost, value); }
 	bool _output_topmost;
 
-	public CiStyling.TStyles edit_styles { get => _edit_styles ??= new CiStyling.TStyles(); set => SetNoCmp(ref _edit_styles, value); }
-	CiStyling.TStyles _edit_styles;
-
 	public FileNode.ETempl templ_use { get => (FileNode.ETempl)_templ_use; set => Set(ref _templ_use, (int)value); }
 	int _templ_use;
 
 	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
 	bool _ci_complGroup = true;
 
-	//public bool ci_complGroupEM { get => _ci_complGroupEM; set => Set(ref _ci_complGroupEM, value); }
-	//bool _ci_complGroupEM;
-
 	public bool ci_complParenSpace { get => _ci_complParenSpace; set => Set(ref _ci_complParenSpace, value); }
 	bool _ci_complParenSpace;
-
-	public byte ci_complCustomSnippets { get => _ci_complCustomSnippets; set => Set(ref _ci_complCustomSnippets, value); }
-	byte _ci_complCustomSnippets;
 
 	public byte ci_correctStringEnter { get => _ci_correctStringEnter; set => Set(ref _ci_correctStringEnter, value); }
 	byte _ci_correctStringEnter;

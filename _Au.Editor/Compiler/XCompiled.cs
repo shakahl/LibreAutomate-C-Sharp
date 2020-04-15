@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 
 using Au.Types;
 
@@ -162,7 +161,7 @@ namespace Au.Compiler
 				//ADebug.Print("compiled");
 
 				r.file = asmFile;
-				r.name = APath.GetFileName(f.Name, true);
+				r.name = APath.GetNameNoExt(f.Name);
 				return true;
 
 				bool _IsFileModified(FileNode f_) => _IsFileModified2(f_.FilePath);

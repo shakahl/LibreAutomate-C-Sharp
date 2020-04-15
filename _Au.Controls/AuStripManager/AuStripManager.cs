@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -530,7 +529,7 @@ namespace Au.Controls
 
 You can find most customization options in two context menus. Right-clicking a button or menu item shows its context menu. Right-clicking before the first button shows toolbar's context menu. You can Alt+drag toolbar buttons to reorder them on the same toolbar. You can Alt+drag toolbars to dock them somewhere else. Use splitters to resize. Right click a splitter to change its thickness."
 					);
-				string folder = APath.GetDirectoryPath(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
+				string folder = APath.GetDirectory(_xmlFileCustom), link = $"<a href=\"{folder}\">{folder}</a>";
 				m["How to backup, restore, reset..."] = o => {
 					ADialog.Show("How to backup, restore or reset customizations",
 $@"All customizations are saved in XML files in folder

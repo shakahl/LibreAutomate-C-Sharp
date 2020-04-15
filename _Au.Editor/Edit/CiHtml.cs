@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -463,7 +462,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,
 				SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeConstantValue | SymbolDisplayMemberOptions.IncludeRef | SymbolDisplayMemberOptions.IncludeExplicitInterface,
 				SymbolDisplayDelegateStyle.NameAndSignature,
-				SymbolDisplayExtensionMethodStyle.InstanceMethod,
+				SymbolDisplayExtensionMethodStyle.Default,
 				s_parameterDisplayOptions,
 				SymbolDisplayPropertyStyle.ShowReadWriteDescriptor,
 				SymbolDisplayLocalOptions.IncludeType | SymbolDisplayLocalOptions.IncludeRef | SymbolDisplayLocalOptions.IncludeConstantValue,

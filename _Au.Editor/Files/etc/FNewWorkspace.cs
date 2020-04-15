@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -64,7 +63,7 @@ partial class FilesModel
 			var name = textName.Text.Trim();
 			string path = null;
 			if(location.Length > 0 && name.Length > 0) {
-				name = APath.CorrectFileName(name);
+				name = APath.CorrectName(name);
 				path = APath.Combine(location, name);
 				try { path = APath.Normalize(path); } catch { path = null; }
 			}

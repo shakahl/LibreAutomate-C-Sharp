@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Drawing;
 //using System.Linq;
 
@@ -1231,7 +1230,7 @@ namespace Au
 			if(_editWnd.Is0) return;
 			if(!onlyZorder) {
 				_EditControlGetPlace(out RECT r);
-				_editParent.MoveLL(r.left, r.top, r.Width, r.Height);
+				_editParent.MoveLL(r);
 				_editWnd.MoveLL(0, 0, r.Width, r.Height);
 			}
 			_editParent.ZorderTop();
@@ -1663,6 +1662,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
+		/// <seealso cref="AMenu.ShowSimple"/>
 		public static int ShowList(
 			DStringList list, string text1 = null, string text2 = null, DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,

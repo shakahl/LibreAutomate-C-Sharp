@@ -966,12 +966,10 @@ class Script : AScript
 
 		//TestMenuDropdownBug();
 		//TestMarkdownXmlDocComments();
-
-		var methods = from mi in typeof(Script).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod)
-					  where mi.Name == "ff"
-					  select mi;
-
-
+#pragma warning disable 200, 168 //
+		int kkk = 9;
+		string s = "DDD" + "mmm";
+		
 	}
 
 	void One(bool two) { }

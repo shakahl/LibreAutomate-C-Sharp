@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -292,7 +291,7 @@ namespace Au.Controls
 				//custom
 				_manager.ZPanelContextMenu?.Invoke(new ZContextMenuEventArgs(gp, m));
 
-				m.Show(this.ParentControl, p.X, p.Y);
+				m.Show(this.ParentControl, p);
 			}
 
 			//internal void ShowContextMenu(Point p)

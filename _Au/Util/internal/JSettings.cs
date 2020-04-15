@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -70,7 +69,7 @@ namespace Au.Util
 						AOutput.Write($"Failed to delete settings file '{file}'. {es}");
 					} else {
 						string backup = file + ".backup";
-						try { AFile.Move(file, backup, IfExists.Delete); } catch { backup = "failed"; }
+						try { AFile.Move(file, backup, FIfExists.Delete); } catch { backup = "failed"; }
 						AOutput.Write(
 $@"Failed to load settings from {file}. Will use default settings.
 	{es}

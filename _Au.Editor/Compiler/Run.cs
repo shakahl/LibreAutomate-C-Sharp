@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 
 using Au;
 using Au.Types;
@@ -31,7 +30,7 @@ static class Run
 	/// <param name="args">To pass to Main.</param>
 	/// <param name="noDefer">Don't schedule to run later.</param>
 	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
-	/// <param name="runFromEditor">Starting from the Run button or menu Run command.</param>
+	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	/// <remarks>
 	/// Saves editor text if need.
 	/// Calls <see cref="Compiler.Compile"/>.
@@ -98,10 +97,10 @@ static class Run
 			Program.Model.Properties();
 		} else {
 			if(action == 2) { //create project
-				if(!_NewItem(out f2, @"New Project\@Script")) return;
-				f.FileMove(f2, Aga.Controls.Tree.NodePosition.After);
+				if(!_NewItem(out f2, @"New Project\@@Script")) return;
+				f.FileMove(f2, FNPosition.After);
 			} else { //create test script
-				s = "test " + APath.GetFileName(f.Name, true);
+				s = "test " + APath.GetNameNoExt(f.Name);
 				if(!_NewItem(out f2, "Script.cs", s)) return;
 				f.TestScript = f2;
 			}
@@ -114,38 +113,18 @@ static class Run
 
 				var text = new EdNewFileText();
 				if(action == 2) {
-					text.text = "Class1.Function1();\r\n";
+					text.text = "//Class1.Function1();\r\n";
 				} else {
-					text.meta = $"/*/ {(isProject ? "pr" : "c")} {f.ItemPath} /*/ ";
-					text.text = $"{(isProject ? "Library." : "")}Class1.Function1();\r\n";
+					text.meta = $"/*/ {(isProject ? "pr" : "c")} {f.ItemPath}; /*/ ";
+					text.text = $"{(isProject ? "Library." : "")}//Class1.Function1();\r\n";
 				}
 
-				ni = Program.Model.NewItem(target, Aga.Controls.Tree.NodePosition.Before, template, name, text: text);
+				ni = Program.Model.NewItem(template, (target, FNPosition.Before), name, text: text);
 				return ni != null;
 			}
 		}
 	}
 	static bool s_isRegisteredLinkRCF;
-
-	/// <summary>
-	/// Disables, enables or toggles triggers in all processes. See <see cref="ActionTriggers.DisabledEverywhere"/>.
-	/// Also updates UI: changes tray icon and checks/unchecks the menu item.
-	/// </summary>
-	/// <param name="disable">If null, toggles.</param>
-	public static void DisableTriggers(bool? disable)
-	{
-		bool dis = disable switch { true => true, false => false, _ => !ActionTriggers.DisabledEverywhere };
-		if(dis == ActionTriggers.DisabledEverywhere) return;
-		ActionTriggers.DisabledEverywhere = dis; //notifies us to update tray icon etc
-	}
-
-	//from ActionTriggers.DisabledEverywhere through our message-only window
-	internal static void OnDisableTriggers()
-	{
-		bool dis = ActionTriggers.DisabledEverywhere;
-		EdTrayIcon.Disabled = dis;
-		Strips.CheckCmd(nameof(CmdHandlers.Run_DisableTriggers), dis);
-	}
 }
 
 /// <summary>
@@ -438,7 +417,7 @@ class RunningTasks
 	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
 	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
 	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
-	/// <param name="runFromEditor">Starting from the Run button or menu Run command.</param>
+	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
 	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
 		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false)
 	{

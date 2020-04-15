@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -83,15 +82,15 @@ class CiCompletion
 	}
 
 	/// <summary>
-	/// If showing popup list, synchronously commits the selected item if need (inserts text).
 	/// Called before <see cref="CiAutocorrect.SciCharAdded"/> and before passing the character to Scintilla.
+	/// If showing popup list, synchronously commits the selected item if need (inserts text).
 	/// Else inserts text at caret position and now caret is after the text.
 	/// </summary>
 	public CiComplResult SciCharAdding_Commit(SciCode doc, char ch)
 	{
 		CiComplResult R = CiComplResult.None;
 		if(_data != null) {
-			if(!_IsNameChar(ch)) {
+			if(!SyntaxFacts.IsIdentifierPartCharacter(ch)) {
 				var ci = _popupList.SelectedItem;
 				if(ci != null && _data.filterText.Length == 0 && ch != '.') ci = null;
 				if(ci != null) R = _Commit(doc, ci, ch, default);
@@ -102,8 +101,6 @@ class CiCompletion
 		return R;
 	}
 
-	static bool _IsNameChar(char ch) => char.IsLetterOrDigit(ch) || ch == '_' || ch == '@';
-
 	/// <summary>
 	/// Asynchronously shows popup list if need. If already showing, synchronously filters/selects items.
 	/// Called after <see cref="SciCharAdding_Commit"/> and <see cref="CiAutocorrect.SciCharAdded"/>.
@@ -111,7 +108,7 @@ class CiCompletion
 	public void SciCharAdded_ShowList(CodeInfo.CharContext c)
 	{
 		if(_data == null) {
-			_ShowList(_cancelTS == null ? _ShowReason.charAdded : _ShowReason.charAdded2, -1, c.ch);
+			_ShowList(c.ch);
 		}
 	}
 
@@ -121,7 +118,7 @@ class CiCompletion
 			bool trValid = _data.tempRange.GetCurrentFromTo(out int from, out int to, utf8: true);
 			Debug.Assert(trValid); if(!trValid) { Cancel(); return; }
 			string s = doc.Z.RangeText(false, from, to);
-			foreach(var v in s) if(!_IsNameChar(v)) return; //mostly because now is before SciCharAddedCommit, which commits (or cancels) if added invalid char
+			foreach(var v in s) if(!SyntaxFacts.IsIdentifierPartCharacter(v)) return; //mostly because now is before SciCharAddedCommit, which commits (or cancels) if added invalid char
 			_data.filterText = s;
 			_FilterItems(_data);
 			_popupList.UpdateVisibleItems(); //and calls SelectBestMatch
@@ -130,29 +127,30 @@ class CiCompletion
 
 	public void ShowList()
 	{
-		_ShowList(_ShowReason.command);
+		_ShowList(default);
 	}
-
-	enum _ShowReason { charAdded, charAdded2, command }
 
 	static bool s_workaround1;
 
 	//SHOULDDO: delay
-	async void _ShowList(_ShowReason showReason, int position = -1, char ch = default)
+	async void _ShowList(char ch)
 	{
 		//using
 		var p1 = APerf.Create(); //FUTURE: remove all p1 lines
 
 		//AOutput.Write(_cancelTS);
+		bool isCommand = ch == default, wasBusy = _cancelTS != null;
 		Cancel();
 
-		if(!CodeInfo.GetContextWithoutDocument(out var cd, position)) return; //returns false if position is in meta comments
+		if(!CodeInfo.GetContextWithoutDocument(out var cd)) return; //returns false if position is in meta comments
 		SciCode doc = cd.sciDoc;
-		position = cd.pos16; //changed if -1 or -2
+		int position = cd.pos16;
 		string code = cd.code;
 
-		if(showReason != _ShowReason.charAdded) ch = default;
-		else if(position > 1 && _IsNameChar(ch) && _IsNameChar(code[position - 2])) return; //middle of word
+		if(ch != default && position > 1 && SyntaxFacts.IsIdentifierPartCharacter(ch) && SyntaxFacts.IsIdentifierPartCharacter(code[position - 2])) { //in word
+			if(!wasBusy) return;
+			ch = default;
+		}
 
 		//using var nogcr = AKeys.IsScrollLock ? new NoGcRegion(50_000_000) : default;
 
@@ -165,7 +163,7 @@ class CiCompletion
 		PSFormat stringFormat = PSFormat.None; TextSpan stringSpan = default;
 		CompletionService completionService = null;
 		SemanticModel model = null;
-		SyntaxNode node = null;
+		SyntaxNode node = null, root = null;
 
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
@@ -180,7 +178,7 @@ class CiCompletion
 				if(cancelToken.IsCancellationRequested) return null;
 
 				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too. Currently we need only GetSyntaxTreeAsync here, but the speed is same, even when we don't call GetCompletionsAsync.
-				var root = model.Root;
+				root = model.Root;
 				node = root.FindToken(position).Parent;
 				p1.Next('s');
 
@@ -189,7 +187,7 @@ class CiCompletion
 
 				//is it member access syntax?
 				ExpressionSyntax nodeL = null; //node at left of . etc
-				int i = position - 1; while(i > 0 && _IsNameChar(code[i])) i--;
+				int i = position - 1; while(i > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[i])) i--;
 				if(i > 0) {
 					var token = root.FindToken(i); //fast
 					if(position >= token.Span.End) {
@@ -210,17 +208,14 @@ class CiCompletion
 
 				if(!isDot && ch == '[' && node is AttributeListSyntax) ch = default; //else GetCompletionsAsync does not work
 
-				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
-
 				//This is a temporary workaround for exception in new Roslyn version, in AbstractEmbeddedLanguageCompletionProvider.GetLanguageProviders().
-				//	TODO: After some time try a newer version. Or maybe I build it incorrectly etc.
-				if(!s_workaround1) {
+				//	FUTURE: After some time try a newer version.
+				if(!s_workaround1 && ch != default) {
+					_ = completionService.GetCompletionsAsync(document, position).Result;
 					s_workaround1 = true;
-					if(ch != default) {
-						_ = completionService.GetCompletionsAsync(document, position).Result;
-					}
 				}
 
+				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
 				p1.Next('C');
 				if(r1 != null) {
@@ -242,7 +237,7 @@ class CiCompletion
 						canGroup = true;
 					}
 					//p1.Next('M');
-				} else if(showReason == _ShowReason.command && !isDot) {
+				} else if(isCommand && !isDot) {
 					if(CiUtil.IsInString(ref node, position)) {
 						stringSpan = node.Span;
 						stringFormat = CiUtil.GetParameterStringFormat(node, model, true);
@@ -262,7 +257,7 @@ class CiCompletion
 					var m = new AMenu { Modal = true };
 					m["Regex"] = o => stringFormat = PSFormat.ARegex;
 					m["Keys"] = o => stringFormat = PSFormat.AKeys;
-					m.Show(doc);
+					m.Show(doc, byCaret: true);
 				}
 				switch(stringFormat) {
 				case PSFormat.ARegex:
@@ -403,7 +398,7 @@ class CiCompletion
 
 			//add snippets
 			if(!isDot && canGroup && (provider == CiComplProvider.Symbol || provider == CiComplProvider.Keyword) && !d.noAutoSelect) {
-				CiSnippets.AddSnippets(d.items, span, node);
+				CiSnippets.AddSnippets(d.items, span, root, code);
 			}
 
 			if(d.items.Count == 0) return;
@@ -679,24 +674,27 @@ class CiCompletion
 			if(ch != default || !(key == default || key == Keys.Tab)) return CiComplResult.None;
 		}
 		bool isSpace; if(isSpace = ch == ' ') ch = default;
+		int codeLenDiff = doc.Len16 - _data.codeLength;
+
+		if(item.kind == CiItemKind.Snippet) {
+			if(ch != default && ch != '(') return CiComplResult.None;
+			CiSnippets.Commit(doc, item, codeLenDiff);
+			return CiComplResult.Complex;
+		}
 
 		var z = doc.Z;
 		var ci = item.ci;
-		int selectLength = 0; bool showSignature = false; string usingDir = null;
-		var change = item.kind == CiItemKind.Snippet
-			? CiSnippets.GetCompletionChange(doc, item, out selectLength, out showSignature, out usingDir)
-			: _data.completionService.GetChangeAsync(_data.document, ci).Result;
-		if(change == null) return CiComplResult.Complex;
+		var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
 		//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
 
 		var s = change.TextChange.NewText;
 		var span = change.TextChange.Span;
-		int i = span.Start, len = span.Length + (doc.Len16 - _data.codeLength);
+		int i = span.Start, len = span.Length + codeLenDiff;
 		//AOutput.Write($"{change.NewPosition.HasValue}, cp={z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
 		//AOutput.Write($"'{s}'");
 		bool isComplex = change.NewPosition.HasValue;
 		if(isComplex) { //xml doc, override, regex
-			if(ch != default && !(item.kind == CiItemKind.Snippet && ch == '(' && s.RegexIsMatch(@"^[\w\.]+ ?\("))) return CiComplResult.None;
+			if(ch != default) return CiComplResult.None;
 			//ci.DebugPrint();
 			int newPos = change.NewPosition ?? (i + len);
 			switch(APath.GetExtension(ci.ProviderName)) {
@@ -715,23 +713,8 @@ class CiCompletion
 				s += "></" + tag + ">";
 				break;
 			}
-			if(usingDir != null) {
-				int len1 = doc.Len16;
-				if(InsertCode.UsingDirective(usingDir)) {
-					int lenDiff = doc.Len16 - len1;
-					i += lenDiff; newPos += lenDiff;
-				}
-			}
 			z.ReplaceRange(true, i, i + len, s);
-			if(newPos >= 0) {
-				z.Select(true, newPos, newPos + selectLength, makeVisible: true);
-				if(showSignature) {
-					ATimer.After(1, _ => {
-						CodeInfo.ShowSignature();
-						if(s == "AKeys.Key(\"\");") CiTools.CmdShowKeysWindow();
-					});
-				}
-			}
+			if(newPos >= 0) z.Select(true, newPos, newPos, makeVisible: true);
 			return CiComplResult.Complex;
 		}
 		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && !item.IsRegex, $"{_data.tempRange.CurrentFrom}, {i}");
@@ -770,15 +753,15 @@ class CiCompletion
 						ch = '(';
 						s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
 						break;
-					case "do":
 					case "try":
 					case "finally":
-					case "get":
-					case "set":
-					case "add":
-					case "remove":
+					case "get" when isEnter:
+					case "set" when isEnter:
+					case "add" when isEnter:
+					case "remove" when isEnter:
+					case "do" when isEnter:
 					case "unsafe" when isEnter:
-					case "else" when !_IsDirective():
+					case "else" when isEnter && !_IsDirective():
 						ch = '{';
 						break;
 					case "checked":

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -59,121 +58,15 @@ class CmdHandlers : IGStripManagerCallbacks
 	{
 		_onClick = _OnClick;
 
-		#region add to _dict
-
-		_dict.Add(nameof(File_NewScript), File_NewScript);
-		_dict.Add(nameof(File_NewClass), File_NewClass);
-		_dict.Add(nameof(File_NewPartial), File_NewPartial);
-		_dict.Add(nameof(File_NewFolder), File_NewFolder);
-		_dict.Add(nameof(File_Import), File_Import);
-		//_dict.Add(nameof(File_Disable), File_Disable);
-		_dict.Add(nameof(File_Rename), File_Rename);
-		_dict.Add(nameof(File_Delete), File_Delete);
-		_dict.Add(nameof(File_Properties), File_Properties);
-		_dict.Add(nameof(File_Open), File_Open);
-		//_dict.Add(nameof(File_OpenInNewWindow), File_OpenInNewWindow);
-		_dict.Add(nameof(File_OpenInDefaultApp), File_OpenInDefaultApp);
-		_dict.Add(nameof(File_SelectInExplorer), File_SelectInExplorer);
-		_dict.Add(nameof(File_PreviousDocument), File_PreviousDocument);
-		_dict.Add(nameof(File_Close), File_Close);
-		_dict.Add(nameof(File_CloseAll), File_CloseAll);
-		_dict.Add(nameof(File_CollapseFolders), File_CollapseFolders);
-		_dict.Add(nameof(File_Cut), File_Cut);
-		_dict.Add(nameof(File_Copy), File_Copy);
-		_dict.Add(nameof(File_Paste), File_Paste);
-		_dict.Add(nameof(File_CopyRelativePath), File_CopyRelativePath);
-		_dict.Add(nameof(File_CopyFullPath), File_CopyFullPath);
-		_dict.Add(nameof(File_PrintSetup), File_PrintSetup);
-		_dict.Add(nameof(File_Print), File_Print);
-		_dict.Add(nameof(File_OpenWorkspace), File_OpenWorkspace);
-		_dict.Add(nameof(File_NewWorkspace), File_NewWorkspace);
-		_dict.Add(nameof(File_ExportWorkspace), File_ExportWorkspace);
-		_dict.Add(nameof(File_ImportWorkspace), File_ImportWorkspace);
-		_dict.Add(nameof(File_FindInWorkspaces), File_FindInWorkspaces);
-		_dict.Add(nameof(File_WorkspaceProperties), File_WorkspaceProperties);
-		_dict.Add(nameof(File_SaveNow), File_SaveNow);
-		_dict.Add(nameof(File_CloseWindow), File_CloseWindow);
-		_dict.Add(nameof(File_Exit), File_Exit);
-		_dict.Add(nameof(Edit_Undo), Edit_Undo);
-		_dict.Add(nameof(Edit_Redo), Edit_Redo);
-		_dict.Add(nameof(Edit_Cut), Edit_Cut);
-		_dict.Add(nameof(Edit_Copy), Edit_Copy);
-		_dict.Add(nameof(Edit_Paste), Edit_Paste);
-		_dict.Add(nameof(Edit_ForumCopy), Edit_ForumCopy);
-		_dict.Add(nameof(Edit_Find), Edit_Find);
-		_dict.Add(nameof(Edit_FindReferences), Edit_FindReferences);
-		_dict.Add(nameof(Edit_AutocompletionList), Edit_AutocompletionList);
-		_dict.Add(nameof(Edit_ParameterInfo), Edit_ParameterInfo);
-		_dict.Add(nameof(Edit_GoToDefinition), Edit_GoToDefinition);
-		//_dict.Add(nameof(Edit_PeekDefinition), Edit_PeekDefinition);
-		_dict.Add(nameof(Edit_Comment), Edit_Comment);
-		_dict.Add(nameof(Edit_Uncomment), Edit_Uncomment);
-		_dict.Add(nameof(Edit_IndentLines), Edit_IndentLines);
-		_dict.Add(nameof(Edit_UnindentLines), Edit_UnindentLines);
-		_dict.Add(nameof(Edit_SelectAll), Edit_SelectAll);
-		//_dict.Add(nameof(Edit_HideRegion), Edit_HideRegion);
-		//_dict.Add(nameof(Edit_Output), Edit_Output);
-		_dict.Add(nameof(Edit_WrapLines), Edit_WrapLines);
-		_dict.Add(nameof(Edit_ImagesInCode), Edit_ImagesInCode);
-		_dict.Add(nameof(Code_AWnd), Code_AWnd);
-		_dict.Add(nameof(Code_AAcc), Code_AAcc);
-		_dict.Add(nameof(Code_AWinImage), Code_AWinImage);
-		_dict.Add(nameof(Code_Keys), Code_Keys);
-		_dict.Add(nameof(Code_Regex), Code_Regex);
-		_dict.Add(nameof(Code_WindowsAPI), Code_WindowsAPI);
-		_dict.Add(nameof(Run_Run), Run_Run);
-		_dict.Add(nameof(Run_EndTask), Run_EndTask);
-		_dict.Add(nameof(Run_Pause), Run_Pause);
-		_dict.Add(nameof(Run_Compile), Run_Compile);
-		_dict.Add(nameof(Run_Recent), Run_Recent);
-		_dict.Add(nameof(Run_DisableTriggers), Run_DisableTriggers);
-		_dict.Add(nameof(Debug_RunToBreakpoint), Debug_RunToBreakpoint);
-		_dict.Add(nameof(Debug_RunToCursor), Debug_RunToCursor);
-		_dict.Add(nameof(Debug_StepInto), Debug_StepInto);
-		_dict.Add(nameof(Debug_StepOver), Debug_StepOver);
-		_dict.Add(nameof(Debug_StepOut), Debug_StepOut);
-		_dict.Add(nameof(Debug_ToggleBreakpoint), Debug_ToggleBreakpoint);
-		_dict.Add(nameof(Debug_AddDebuggerBreakCode), Debug_AddDebuggerBreakCode);
-		_dict.Add(nameof(Debug_ClearLocalBreakpoints), Debug_ClearLocalBreakpoints);
-		_dict.Add(nameof(Debug_ClearAllBreakpoints), Debug_ClearAllBreakpoints);
-		_dict.Add(nameof(Debug_DebugOptions), Debug_DebugOptions);
-		_dict.Add(nameof(Tools_Record), Tools_Record);
-		_dict.Add(nameof(Tools_RecordMenu), Tools_RecordMenu);
-		_dict.Add(nameof(Tools_RecordSingleAction), Tools_RecordSingleAction);
-		_dict.Add(nameof(Tools_FilesAndTriggers), Tools_FilesAndTriggers);
-		_dict.Add(nameof(Tools_DialogEditor), Tools_DialogEditor);
-		_dict.Add(nameof(Tools_ToolbarEditor), Tools_ToolbarEditor);
-		_dict.Add(nameof(Tools_MenuEditor), Tools_MenuEditor);
-		_dict.Add(nameof(Tools_ImagelistEditor), Tools_ImagelistEditor);
-		_dict.Add(nameof(Tools_Resources), Tools_Resources);
-		_dict.Add(nameof(Tools_Icons), Tools_Icons);
-		_dict.Add(nameof(Tools_HelpEditor), Tools_HelpEditor);
-		_dict.Add(nameof(Tools_ExploreWindows), Tools_ExploreWindows);
-		_dict.Add(nameof(Tools_RemapKeys), Tools_RemapKeys);
-		_dict.Add(nameof(Tools_Portable), Tools_Portable);
-		_dict.Add(nameof(Tools_Options), Tools_Options);
-		_dict.Add(nameof(Tools_Output_Clear), Tools_Output_Clear);
-		_dict.Add(nameof(Tools_Output_Copy), Tools_Output_Copy);
-		_dict.Add(nameof(Tools_Output_FindSelectedText), Tools_Output_FindSelectedText);
-		_dict.Add(nameof(Tools_Output_History), Tools_Output_History);
-		_dict.Add(nameof(Tools_Output_LogWindowEvents), Tools_Output_LogWindowEvents);
-		_dict.Add(nameof(Tools_Output_LogAccEvents), Tools_Output_LogAccEvents);
-		_dict.Add(nameof(Tools_Output_WrapLines), Tools_Output_WrapLines);
-		_dict.Add(nameof(Tools_Output_WhiteSpace), Tools_Output_WhiteSpace);
-		_dict.Add(nameof(Tools_Output_Topmost), Tools_Output_Topmost);
-		_dict.Add(nameof(Help_Program), Help_Program);
-		_dict.Add(nameof(Help_Library), Help_Library);
-		_dict.Add(nameof(Help_Context), Help_Context);
-		//_dict.Add(nameof(Help_Download), Help_Download);
-		_dict.Add(nameof(Help_Forum), Help_Forum);
-		_dict.Add(nameof(Help_Email), Help_Email);
-		//_dict.Add(nameof(Help_Donate), Help_Donate);
-		_dict.Add(nameof(Help_About), Help_About);
-		
-		#endregion add
-
+		var ta = typeof(Action);
+		foreach(var mi in typeof(CmdHandlers).GetMethods(BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Instance)) {
+			string name = mi.Name;
+			if(name.IndexOf('_', 1) < 0) continue;
+			//AOutput.Write(name);
+			_dict.Add(name, (Action)mi.CreateDelegate(ta, this));
+		}
+		//AOutput.Write(_dict.Count);
 	}
-
 
 	#region menu File
 
@@ -194,17 +87,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void File_NewFolder()
 	{
-		Program.Model.NewItem("Folder", beginRenaming: true);
+		Program.Model.NewItemX(null, beginRenaming: true);
 	}
 
 	public void File_Import()
 	{
 		Program.Model.ImportFiles();
-	}
-
-	public void File_Disable()
-	{
-
 	}
 
 	public void File_Rename()
@@ -308,14 +196,28 @@ class CmdHandlers : IGStripManagerCallbacks
 		Panels.Files.ZLoadNewWorkspace();
 	}
 
-	public void File_ExportWorkspace()
-	{
-		Program.Model.ExportSelected();
-	}
-
 	public void File_ImportWorkspace()
 	{
-		Program.Model.ImportWorkspace();
+		using var d = new OpenFileDialog { Title = "Import workspace", Filter = "files.xml|files.xml" };
+		if(d.ShowDialog(Program.MainForm) != DialogResult.OK) return;
+		Program.Model.ImportWorkspace(APath.GetDirectory(d.FileName));
+	}
+
+	public void File_ImportZip()
+	{
+		using var d = new OpenFileDialog { Title = "Import .zip", Filter = "Zip files|*.zip" };
+		if(d.ShowDialog(Program.MainForm) != DialogResult.OK) return;
+		Program.Model.ImportWorkspace(d.FileName);
+	}
+
+	public void File_ExportWorkspace()
+	{
+		Program.Model.ExportSelected(zip: false);
+	}
+
+	public void File_ExportZip()
+	{
+		Program.Model.ExportSelected(zip: true);
 	}
 
 	public void File_FindInWorkspaces()
@@ -401,10 +303,10 @@ class CmdHandlers : IGStripManagerCallbacks
 		CiGoTo.GoToSymbolFromPos();
 	}
 
-	public void Edit_PeekDefinition()
-	{
+	//public void Edit_PeekDefinition()
+	//{
 
-	}
+	//}
 
 	public void Edit_FindReferences()
 	{
@@ -436,16 +338,11 @@ class CmdHandlers : IGStripManagerCallbacks
 		Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL);
 	}
 
-	public void Edit_HideRegion()
-	{
-
-	}
-
-	public void Edit_Output()
-	{
-		//get selected text and show in output with <code> tag.
-		//It can be used to copy/paste text to another place in the document, instead of split-view.
-	}
+	//public void Edit_Output()
+	//{
+	//	//get selected text and show in output with <code> tag.
+	//	//It can be used to copy/paste text to another place in the document, instead of split-view.
+	//}
 
 	public void Edit_WrapLines()
 	{
@@ -528,11 +425,6 @@ class CmdHandlers : IGStripManagerCallbacks
 		Au.Util.Log_.Run.Show();
 	}
 
-	public void Run_DisableTriggers()
-	{
-		Run.DisableTriggers(null);
-	}
-
 	#endregion
 
 	#region menu Debug
@@ -586,6 +478,75 @@ class CmdHandlers : IGStripManagerCallbacks
 	public void Debug_DebugOptions()
 	{
 
+	}
+
+	#endregion
+
+	#region menu T&T
+
+	public void TT_AddTrigger()
+	{
+		TriggersAndToolbars.AddTrigger();
+	}
+
+	public void TT_AddToolbar()
+	{
+		TriggersAndToolbars.AddToolbar();
+	}
+
+	public void TT_EditHotkeyTriggers()
+	{
+		TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs");
+	}
+
+	public void TT_EditAutotextTriggers()
+	{
+		TriggersAndToolbars.Edit(@"Triggers\Autotext triggers.cs");
+	}
+
+	public void TT_EditMouseTriggers()
+	{
+		TriggersAndToolbars.Edit(@"Triggers\Mouse triggers.cs");
+	}
+
+	public void TT_EditWindowTriggers()
+	{
+		TriggersAndToolbars.Edit(@"Triggers\Window triggers.cs");
+	}
+
+	public void TT_EditCommonToolbars()
+	{
+		TriggersAndToolbars.Edit(@"Toolbars\Common toolbars.cs");
+	}
+
+	public void TT_EditWindowToolbars()
+	{
+		TriggersAndToolbars.Edit(@"Toolbars\Window toolbars.cs");
+	}
+
+	public void TT_EditScript()
+	{
+		TriggersAndToolbars.Edit(@"Triggers and toolbars.cs");
+	}
+
+	public void TT_RestartScript()
+	{
+		TriggersAndToolbars.Restart();
+	}
+
+	public void TT_DisableTriggers()
+	{
+		TriggersAndToolbars.DisableTriggers(null);
+	}
+
+	public void TT_RecentTriggers()
+	{
+		Au.Util.Log_.Run.Show();
+	}
+
+	public void TT_ActiveToobars()
+	{
+		TriggersAndToolbars.ShowActiveTriggers();
 	}
 
 	#endregion
@@ -738,7 +699,7 @@ class CmdHandlers : IGStripManagerCallbacks
 		var c = AWnd.ThisThread.FocusedControl;
 		if(c == null) return;
 		if(c == Panels.Editor.ZActiveDoc) {
-			CiUtil.OpenSymbolFromPosHelp();
+			CiUtil.OpenSymbolOrKeywordFromPosHelp();
 		}
 	}
 

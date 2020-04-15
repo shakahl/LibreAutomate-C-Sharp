@@ -15,7 +15,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Linq;
 using System.Security; //for XML comments
 using System.Globalization;

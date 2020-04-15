@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -88,7 +87,7 @@ namespace Au
 					if(s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2);
 					//preserve client size and position
 					Api.AdjustWindowRectEx(ref r, _BorderStyle(value), false, WS2.TOOLWINDOW);
-					w.MoveLL(r.left, r.top, r.Width, r.Height, Native.SWP.FRAMECHANGED);
+					w.MoveLL(r, Native.SWP.FRAMECHANGED);
 				}
 #else //this simpler code does not preserve client size and position
 				int pOld = _Pad(_tb._border), pNew = _Pad(value);
@@ -296,9 +295,26 @@ namespace Au
 					using(m.Submenu("Anchor")) {
 						m.LastMenuItem.DropDown.Opening += (sender, _) => {
 							var dd = sender as ToolStripDropDownMenu;
-							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBAnchor an) v.Checked = an == _tb._anchor;
+							foreach(var v in dd.Items.OfType<ToolStripMenuItem>()) {
+								if(v.Tag is TBAnchor an) {
+									if(an < TBAnchor.OppositeToolbarEdgeX) {
+										v.Checked = _tb._anchor.WithoutFlags() == an;
+									} else {
+										v.Checked =  _tb._anchor.Has(an);
+										v.Enabled = !_GetInvalidAnchorFlags(_tb._anchor).Has(an);
+									}
+								}
+							}
 						};
-						void _AddAnchor(TBAnchor an) => m.Add(an.ToString(), _ => _tb.Anchor = an).Tag = an;
+						void _AddAnchor(TBAnchor an)
+						{
+							m.Add(an.ToString(), _ => {
+								var anchor = _tb.Anchor;
+								if(an < TBAnchor.OppositeToolbarEdgeX) anchor = (anchor & ~TBAnchor.All) | an; else anchor ^= an;
+								_tb.Anchor = anchor;
+							}).Tag = an;
+							if(_tb._IsSatellite) m.LastMenuItem.ToolTipText = "Note: You may want to set anchor of the owner toolbar instead. Anchor of this auto-hide toolbar is relative to the owner toolbar.";
+						}
 						_AddAnchor(TBAnchor.None);
 						_AddAnchor(TBAnchor.TopLeft);
 						_AddAnchor(TBAnchor.TopRight);
@@ -309,6 +325,9 @@ namespace Au
 						_AddAnchor(TBAnchor.Left);
 						_AddAnchor(TBAnchor.Right);
 						_AddAnchor(TBAnchor.All);
+						m.Separator();
+						_AddAnchor(TBAnchor.OppositeToolbarEdgeX);
+						_AddAnchor(TBAnchor.OppositeToolbarEdgeY);
 					}
 					using(m.Submenu("Border")) {
 						m.LastMenuItem.DropDown.Opening += (sender, _) => {
@@ -342,7 +361,6 @@ namespace Au
 						if(_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
 						_AddFlag(TBFlags.HideIfFullScreen);
 					}
-
 					m["Toolbars..."] = o => new _Form().Show();
 
 					//this is an example of a form-like sumenu. Or maybe better create a UserControl-based class in the form designer.
@@ -377,7 +395,7 @@ namespace Au
 					}
 
 					m.Separator();
-					m["Close"] = o => _tb._SatPlanetOrThis.Close();
+					m["Close"] = o => _tb._Close(true);
 
 					//m["test RecreateHandle"] = o => this.RecreateHandle();
 

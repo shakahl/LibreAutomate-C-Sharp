@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -82,14 +81,11 @@ static class Strips
 		//tbHelp.Padding = new Padding(); //removes 1-pixel right margin that causes a visual artifact because of gradient, but then not good when no margin when the edit is at the very right edge of the form
 
 #if DEBUG
-		//all commands have menu items?
-		//var p = APerf.Create();
+		//all commands have menu items? AuStripManager takes care for vice versa.
 		foreach(var k in _cmd.Dict.Keys) {
 			//AOutput.Write(k);
 			if(_strips.Xml.Desc(k) == null) AWarning.Write("no menu item for command " + k);
 		}
-		//p.NW(); //450
-		//for vice versa, AuStripManager takes care
 #endif
 
 #if TRACE

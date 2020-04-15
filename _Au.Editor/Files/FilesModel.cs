@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -19,6 +18,8 @@ using Au;
 using Au.Types;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
+using System.Xml.Linq;
+using System.IO.Compression;
 
 partial class FilesModel : ITreeModel
 {
@@ -56,8 +57,8 @@ partial class FilesModel : ITreeModel
 		_importing = c == null;
 		_control = c;
 		WorkspaceFile = APath.Normalize(file);
-		WorkspaceDirectory = APath.GetDirectoryPath(WorkspaceFile);
-		WorkspaceName = APath.GetFileName(WorkspaceDirectory);
+		WorkspaceDirectory = APath.GetDirectory(WorkspaceFile);
+		WorkspaceName = APath.GetName(WorkspaceDirectory);
 		FilesDirectory = WorkspaceDirectory + @"\files";
 		TempDirectory = WorkspaceDirectory + @"\.temp";
 		if(!_importing) {
@@ -548,7 +549,7 @@ partial class FilesModel : ITreeModel
 	/// <remarks>
 	/// If column1BasedOrPos or line1Based not empty, searches only files, not folders.
 	/// </remarks>
-	public bool OpenAndGoTo(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null)
+	public bool OpenAndGoTo2(string fileOrFolder, string line1Based = null, string column1BasedOrPos = null)
 	{
 		var f = line1Based.NE() && column1BasedOrPos.NE() ? Find(fileOrFolder, null) : FindScript(fileOrFolder);
 		if(f == null) return false;
@@ -563,7 +564,7 @@ partial class FilesModel : ITreeModel
 
 	#endregion
 
-	#region hotkeys, new, delete, open/close (menu commands), cut/copy/paste, properties
+	#region hotkeys, rename, delete, open/close (menu commands), cut/copy/paste, properties
 
 	private void _TV_KeyDown(object sender, KeyEventArgs e)
 	{
@@ -575,72 +576,6 @@ partial class FilesModel : ITreeModel
 		case Keys.Control | Keys.V: Paste(); break;
 		case Keys.Escape: _myClipboard.Clear(); break;
 		}
-	}
-
-	/// <summary>
-	/// Gets the place where item should be added in operations such as new, paste, import.
-	/// </summary>
-	FileNode _GetInsertPos(out NodePosition pos, bool askIntoFolder = false)
-	{
-		//CONSIDER: use _inContextMenu here. If it is false, and askIntoFolder, show dialog with 2 or 3 options: top, above selected, in selected folder.
-
-		FileNode r;
-		var c = _control.CurrentNode;
-		if(c == null) { //empty treeview?
-			r = Root;
-			pos = NodePosition.Inside;
-		} else {
-			r = c.Tag as FileNode;
-			if(askIntoFolder && r.IsFolder && c.IsSelected && _control.SelectedNodes.Count == 1 && ADialog.ShowYesNo("Into the folder?", owner: _control)) pos = NodePosition.Inside;
-			else if(r.Next == null) pos = NodePosition.After; //usually we want to add after the last, not before
-			else pos = NodePosition.Before;
-		}
-		return r;
-	}
-
-	/// <summary>
-	/// Creates new item at the top of the tree or at the context menu position.
-	/// Opens file or selects folder. Optionally begins renaming.
-	/// Calls <see cref="FileNode.NewItem"/>.
-	/// </summary>
-	public FileNode NewItem(string template, string name = null, bool beginRenaming = false, EdNewFileText text = null)
-	{
-		var pos = NodePosition.Inside;
-		var target = _inContextMenu ? _GetInsertPos(out pos) : null;
-		return NewItem(target, pos, template, name, beginRenaming, text);
-	}
-
-	/// <summary>
-	/// Creates new item at the specified position.
-	/// Opens file, or selects folder, or opens main file of project folder. Optionally begins renaming.
-	/// Calls <see cref="FileNode.NewItem"/>.
-	/// </summary>
-	public FileNode NewItem(FileNode target, NodePosition pos, string template, string name = null, bool beginRenaming = false, EdNewFileText text = null)
-	{
-		var f = FileNode.NewItem(this, target, pos, template, name);
-		if(f == null) return null;
-
-		if(f.IsFolder) {
-			if(beginRenaming && template.Starts("Examples\\")) beginRenaming = false;
-			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true); //open the main file of the new project folder
-			else f.SelectSingle(); //select the new folder
-		} else SetCurrentFile(f, newFile: true); //open the new file
-
-		if(text != null && f == CurrentFile) {
-			string s;
-			if(text.replaceTemplate) {
-				s = text.text;
-			} else {
-				s = f.GetText();
-				if(f.IsScript) s = s.RegexReplace(@"(?m)\R\R\K", text.text, 1);
-				Debug.Assert(f.IsScript);
-			}
-			s = text.meta + s;
-			Panels.Editor.ZActiveDoc.Z.SetText(s);
-		}
-
-		if(beginRenaming && f.IsSelected) RenameSelected();
-		return f;
 	}
 
 	public void RenameSelected()
@@ -740,7 +675,7 @@ partial class FilesModel : ITreeModel
 	public void Paste()
 	{
 		if(_myClipboard.IsEmpty) return;
-		var target = _GetInsertPos(out var pos, true);
+		var (target, pos) = _GetInsertPos(true);
 		_MultiCopyMove(!_myClipboard.cut, _myClipboard.nodes, target, pos);
 		_myClipboard.Clear();
 	}
@@ -829,24 +764,213 @@ partial class FilesModel : ITreeModel
 
 	#endregion
 
+	#region new item
+
+	/// <summary>
+	/// Gets the place where item should be added in operations such as new, paste, import.
+	/// If in context menu or atSelection (true when pasting), uses selection and may show dialog "Into the folder?". Else first item in workspace.
+	/// </summary>
+	(FileNode target, FNPosition pos) _GetInsertPos(bool atSelection = false)
+	{
+		FileNode target; FNPosition pos = FNPosition.Before;
+
+		if(atSelection || _inContextMenu) {
+			var c = _control.CurrentNode;
+			if(c == null) return (Root, FNPosition.Inside);
+
+			target = c.Tag as FileNode;
+			int i;
+			bool isFolder = target.IsFolder && c.IsSelected && _control.SelectedNodes.Count == 1;
+			if(isFolder && !target.HasChildren) pos = FNPosition.Inside;
+			else if(isFolder && (i = AMenu.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", owner: _control)) > 0) {
+				switch(i) {
+				case 1: target = target.FirstChild; break;
+				case 2: pos = FNPosition.Inside; break;
+				case 4: pos = FNPosition.After; break;
+				}
+			} else if(target.Next == null) pos = FNPosition.After; //usually users want to add after the last, not before
+		} else { //top
+			target = Root.FirstChild;
+			if(target == null) { target = Root; pos = FNPosition.Inside; }
+		}
+
+		return (target, pos);
+	}
+
+	/// <summary>
+	/// Creates new item.
+	/// Opens file, or selects folder, or opens main file of project folder. Optionally begins renaming.
+	/// Loads files.xml, finds template's element and calls <see cref="NewItemX"/>; it calls <see cref="NewItemLLX"/>.
+	/// </summary>
+	/// <param name="template">
+	/// Relative path of a file or folder in the Templates\files folder. Case-sensitive, as in workspace.
+	/// Examples: "File.cs", "File.txt", "Subfolder", "Subfolder\File.cs".
+	/// Special names: null (creates folder), "Script.cs", "Class.cs", "Partial.cs".
+	/// If folder and not null, adds descendants too; removes '!' from the start of template folder name.
+	/// </param>
+	/// <param name="where">If null, adds at the context menu position or top.</param>
+	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	public FileNode NewItem(string template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null)
+	{
+		XElement x = null;
+		if(template != null) {
+			x = FileNode.Templates.LoadXml(template).x; if(x == null) return null;
+		}
+		return NewItemX(x, where, name, beginRenaming, text);
+	}
+
+	/// <summary>
+	/// Creates new item.
+	/// Returns the new item, or null if fails.
+	/// Does not open/select/startRenaming.
+	/// </summary>
+	/// <param name="template">See <see cref="NewItem"/>.</param>
+	/// <param name="where">If null, adds at the context menu position or top.</param>
+	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	public FileNode NewItemLL(string template, (FileNode target, FNPosition pos)? where = null, string name = null)
+	{
+		XElement x = null;
+		if(template != null) {
+			x = FileNode.Templates.LoadXml(template).x; if(x == null) return null;
+		}
+		return NewItemLLX(x, where, name);
+	}
+
+	/// <summary>
+	/// Creates new item.
+	/// Opens file, or selects folder, or opens main file of project folder. Optionally begins renaming.
+	/// Calls <see cref="NewItemLLX"/>.
+	/// <param name="template">An XElement of files.xml of the Templates workspace. If null, creates folder.</param>
+	/// <param name="where">If null, adds at the context menu position or top.</param>
+	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	/// </summary>
+	public FileNode NewItemX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null)
+	{
+		var f = NewItemLLX(template, where, name);
+		if(f == null) return null;
+
+		if(beginRenaming && template != null && FileNode.Templates.IsInExamples(template)) beginRenaming = false;
+
+		if(f.IsFolder) {
+			if(f.IsProjectFolder(out var main) && main != null) SetCurrentFile(f = main, newFile: true); //open the main file of the new project folder
+			else f.SelectSingle(); //select the new folder
+		} else SetCurrentFile(f, newFile: true); //open the new file
+
+		if(text != null && f == CurrentFile) {
+			string s;
+			if(text.replaceTemplate) {
+				s = text.meta + text.text;
+			} else {
+				Debug.Assert(f.IsScript);
+				s = f.GetText();
+				if(text.meta != null) {
+					if(0 == Au.Compiler.MetaComments.FindMetaComments(s)) s = text.meta + s;
+					else s = text.meta[..^4] + s[3..];
+				}
+				s = s.RegexReplace(@"(?m)\R\R\K", text.text, 1);
+			}
+			Panels.Editor.ZActiveDoc.Z.SetText(s);
+		}
+
+		if(beginRenaming && f.IsSelected) RenameSelected();
+		return f;
+	}
+
+	/// <summary>
+	/// Creates new item.
+	/// Returns the new item, or null if fails.
+	/// Does not open/select/startRenaming.
+	/// </summary>
+	/// <param name="template">An XElement of files.xml of the Templates workspace. If null, creates folder.</param>
+	/// <param name="where">If null, adds at the context menu position or top.</param>
+	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
+	public FileNode NewItemLLX(XElement template, (FileNode target, FNPosition pos)? where = null, string name = null)
+	{
+		var (target, pos) = where ?? _GetInsertPos();
+		FileNode newParent = (pos == FNPosition.Inside) ? target : target.Parent;
+
+		//create unique name
+		bool isFolder = template == null || template.Name.LocalName == "d";
+		if(name == null) {
+			bool append1 = true;
+			if(template == null) {
+				name = "Folder";
+			} else {
+				name = template.Attr("n");
+				if(isFolder && name.Starts('!')) name = name[1..];
+				append1 = !FileNode.Templates.IsInExamples(template);
+			}
+			//let unique names start from 1
+			if(append1) {
+				int i;
+				if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
+			}
+		}
+		name = FileNode.CreateNameUniqueInFolder(newParent, name, isFolder);
+
+		return _NewItem(target, pos, template, name);
+	}
+
+	FileNode _NewItem(FileNode target, FNPosition pos, XElement template, string name)
+	{
+		var fileType = template == null ? EFileType.Folder : FileNode.XmlTagToFileType(template.Name.LocalName, canThrow: false);
+
+		string text = null;
+		if(fileType != EFileType.Folder) {
+			string relPath = template.Attr("n");
+			for(var p = template; (p = p.Parent).Name.LocalName != "files";) relPath = p.Attr("n") + "\\" + relPath;
+			if(fileType == EFileType.NotCodeFile) {
+				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
+			} else if(FileNode.Templates.IsStandardTemplateName(relPath, out var tt)) {
+				text = FileNode.Templates.Load(tt);
+			} else {
+				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
+				if(text.Length < 20 && text.Starts("//#")) { //load default or custom template?
+					tt = text switch { "//#script" => FileNode.ETempl.Script, "//#class" => FileNode.ETempl.Class, "//#partial" => FileNode.ETempl.Partial, _ => 0 };
+					if(tt != 0) text = FileNode.Templates.Load(tt);
+				}
+			}
+		}
+
+		FileNode parent = (pos == FNPosition.Inside) ? target : target.Parent;
+		var path = parent.FilePath + "\\" + name;
+		if(!TryFileOperation(() => {
+			if(fileType == EFileType.Folder) AFile.CreateDirectory(path);
+			else AFile.SaveText(path, text, tempDirectory: TempDirectory);
+		})) return null;
+
+		var f = new FileNode(this, name, fileType);
+		f.Common_MoveCopyNew(target, pos);
+
+		if(fileType == EFileType.Folder && template != null) {
+			foreach(var x in template.Elements()) {
+				_NewItem(f, FNPosition.Inside, x, x.Attr("n"));
+			}
+		}
+
+		return f;
+	}
+
+	#endregion
+
 	#region import, move, copy
 
 	void _OnDragDrop(TreeNodeAdv[] nodes, string[] files, bool copy, DropPosition dropPos)
 	{
-		var pos = dropPos.Position;
+		var pos = (FNPosition)dropPos.Position;
 		var target = dropPos.Node.Tag as FileNode;
 		if(nodes != null) {
 			var a = nodes.Select(tn => tn.Tag as FileNode).ToArray();
 			_MultiCopyMove(copy, a, target, pos);
 		} else {
-			if(files.Length == 1 && IsWorkspaceDirectory(files[0])) {
-				switch(ADialog.Show("Workspace", files[0], "1 Open|2 Import|0 Cancel", footerText: GetSecurityInfo("v|"))) {
+			if(files.Length == 1 && IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(files[0], out int dialogResult)) {
+				switch(dialogResult) {
 				case 1: ATimer.After(1, _ => Panels.Files.ZLoadWorkspace(files[0])); break;
-				case 2: ImportWorkspace(files[0], target, pos); break;
+				case 2: ImportWorkspace(files[0], (target, pos)); break;
 				}
 				return;
 			}
-			_ImportFiles(copy, files, target, pos);
+			_ImportFiles(files, target, pos, copySilently: copy);
 		}
 	}
 
@@ -857,59 +981,67 @@ partial class FilesModel : ITreeModel
 	public void ImportFiles(string[] a = null)
 	{
 		if(a == null) {
-			var d = new System.Windows.Forms.OpenFileDialog();
-			d.Multiselect = true;
-			d.Title = "Import files to the workspace";
+			using var d = new OpenFileDialog {
+				Multiselect = true, Title = "Import files"
+			};
 			if(d.ShowDialog(Program.MainForm) != DialogResult.OK) return;
 			a = d.FileNames;
 		}
 
-		var target = _GetInsertPos(out var pos);
-		_ImportFiles(false, a, target, pos);
+		var (target, pos) = _GetInsertPos();
+		_ImportFiles(a, target, pos);
 	}
 
 	/// <summary>
-	/// Imports another workspace into this workspace.
+	/// Imports another workspace folder or zip file (workspace or not) into this workspace.
 	/// </summary>
-	/// <param name="wsDir">Workspace directory. If null, shows dialog to select.</param>
-	/// <param name="target">If null, calls _GetInsertPos.</param>
-	/// <param name="pos">Used when target is not null.</param>
-	public void ImportWorkspace(string wsDir = null, FileNode target = null, NodePosition pos = 0)
+	/// <param name="wsDirOrZip">Workspace directory or any .zip file.</param>
+	/// <param name="where">If null, calls _GetInsertPos.</param>
+	public void ImportWorkspace(string wsDirOrZip = null, (FileNode target, FNPosition pos)? where = null)
 	{
-		string xmlFile;
-		if(wsDir != null) xmlFile = wsDir + @"\files.xml";
-		else {
-			var d = new System.Windows.Forms.OpenFileDialog() { Title = "Import workspace", Filter = "files.xml|files.xml" };
-			if(d.ShowDialog(Program.MainForm) != DialogResult.OK) return;
-			wsDir = APath.GetDirectoryPath(xmlFile = d.FileName);
-		}
-
 		try {
+			string wsDir, folderName;
+			bool isZip = wsDirOrZip.Ends(".zip") && AFile.ExistsAsFile(wsDirOrZip), notWorkspace = false;
+
+			if(isZip) {
+				folderName = APath.GetNameNoExt(wsDirOrZip);
+				wsDir = AFolders.ThisAppTemp + folderName;
+				AFile.Delete(wsDir);
+				ZipFile.ExtractToDirectory(wsDirOrZip, wsDir);
+				notWorkspace = !IsWorkspaceDirectoryOrZip(wsDir, out _);
+			} else {
+				wsDir = wsDirOrZip;
+				folderName = APath.GetName(wsDir);
+			}
+
 			//create new folder for workspace's items
-			if(target == null) target = _GetInsertPos(out pos);
-			target = FileNode.NewItem(this, target, pos, "Folder", APath.GetFileName(wsDir));
-			if(target == null) return;
+			var folder = NewItemLLX(null, where, folderName);
+			if(folder == null) return;
 
-			var m = new FilesModel(null, xmlFile);
-			var a = m.Root.Children().ToArray();
-			_MultiCopyMove(true, a, target, NodePosition.Inside, true);
-			m.Dispose(); //currently does nothing
+			if(notWorkspace) {
+				_ImportFiles(Directory.GetFileSystemEntries(wsDir), folder, FNPosition.Inside, copySilently: true);
+			} else {
+				var m = new FilesModel(null, wsDir + @"\files.xml");
+				var a = m.Root.Children().ToArray();
+				_MultiCopyMove(true, a, folder, FNPosition.Inside, true);
+				m.Dispose(); //currently does nothing
+				AOutput.Write($"Info: Imported '{wsDirOrZip}' to folder '{folder.Name}'.\r\n\t{GetSecurityInfo()}");
+			}
 
-			target.SelectSingle();
-
-			AOutput.Write($"Info: Imported workspace '{wsDir}' to folder '{target.Name}'.\r\n\t{GetSecurityInfo()}");
+			folder.SelectSingle();
+			if(isZip) AFile.Delete(wsDir);
 		}
 		catch(Exception ex) { AOutput.Write(ex.Message); }
 	}
 
-	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, NodePosition pos, bool importingWorkspace = false)
+	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, FNPosition pos, bool importingWorkspace = false)
 	{
 		_control.ClearSelection();
 		_control.BeginUpdate();
 		try {
 			bool movedCurrentFile = false;
 			var a2 = new List<FileNode>(a.Length);
-			foreach(var f in (pos == NodePosition.After) ? a.Reverse() : a) {
+			foreach(var f in (pos == FNPosition.After) ? a.Reverse() : a) {
 				if(!importingWorkspace && !this.IsMyFileNode(f)) continue; //deleted?
 				if(copy) {
 					var fCopied = f.FileCopy(target, pos, this);
@@ -923,7 +1055,7 @@ partial class FilesModel : ITreeModel
 				}
 			}
 			if(movedCurrentFile) _control.EnsureVisible(_currentFile.TreeNodeAdv);
-			if(pos != NodePosition.Inside || target.TreeNodeAdv.IsExpanded) {
+			if(pos != FNPosition.Inside || target.TreeNodeAdv.IsExpanded) {
 				foreach(var f in a2) f.IsSelected = true;
 			}
 		}
@@ -933,7 +1065,7 @@ partial class FilesModel : ITreeModel
 		//info: don't need to schedule saving here. FileCopy and FileMove did it.
 	}
 
-	void _ImportFiles(bool copy, string[] a, FileNode target, NodePosition pos)
+	void _ImportFiles(string[] a, FileNode target, FNPosition pos, bool copySilently = false)
 	{
 		bool fromWorkspaceDir = false, dirsDropped = false;
 		for(int i = 0; i < a.Length; i++) {
@@ -950,7 +1082,7 @@ partial class FilesModel : ITreeModel
 			}
 		}
 		int r;
-		if(copy) {
+		if(copySilently) {
 			if(fromWorkspaceDir) {
 				ADialog.ShowInfo("Files from workspace folder", "Ctrl not supported."); //not implemented
 				return;
@@ -964,8 +1096,8 @@ partial class FilesModel : ITreeModel
 			if(r == 0) return;
 		}
 
-		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
-		bool select = pos != NodePosition.Inside || target.TreeNodeAdv.IsExpanded;
+		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
+		bool select = pos != FNPosition.Inside || target.TreeNodeAdv.IsExpanded;
 		if(select) _control.ClearSelection();
 		_control.BeginUpdate();
 		try {
@@ -980,7 +1112,7 @@ partial class FilesModel : ITreeModel
 				else continue; //skip symlinks or if does not exist
 
 				FileNode k;
-				var name = APath.GetFileName(path);
+				var name = APath.GetName(path);
 				if(r == 1) { //add as link
 					k = new FileNode(this, name, path, false, path); //CONSIDER: unexpand
 				} else {
@@ -996,8 +1128,8 @@ partial class FilesModel : ITreeModel
 					k = new FileNode(this, name, path, isDir);
 					if(isDir) _AddDir(path, k);
 					if(!TryFileOperation(() => {
-						if(r == 2) AFile.CopyTo(path, newParentPath, IfExists.Fail);
-						else AFile.MoveTo(path, newParentPath, IfExists.Fail);
+						if(r == 2) AFile.CopyTo(path, newParentPath, FIfExists.Fail);
+						else AFile.MoveTo(path, newParentPath, FIfExists.Fail);
 					})) continue;
 				}
 				target.AddChildOrSibling(k, pos, false);
@@ -1044,22 +1176,39 @@ partial class FilesModel : ITreeModel
 	/// <param name="location">Default parent directory of the main directory of the workspace.</param>
 	public static string GetDirectoryPathForNewWorkspace(string name = null, string location = null)
 	{
-		var f = new FNewWorkspace();
+		using var f = new FNewWorkspace();
 		f.textName.Text = name;
 		f.textLocation.Text = location ?? AFolders.ThisAppDocuments;
 		if(f.ShowDialog() != DialogResult.OK) return null;
 		return f.textPath.Text;
 	}
 
-	public bool ExportSelected(string location = null)
+	public bool ExportSelected(string location = null, bool zip = false)
 	{
 		var a = SelectedItems; if(a.Length < 1) return false;
 
-		string name = a[0].Name; if(!a[0].IsFolder) name = APath.GetFileName(name, true);
+		string name = a[0].Name; if(!a[0].IsFolder) name = APath.GetNameNoExt(name);
 
 		if(a.Length == 1 && a[0].IsFolder && a[0].HasChildren) a = a[0].Children().ToArray();
 
-		var wsDir = GetDirectoryPathForNewWorkspace(name, location); if(wsDir == null) return false;
+		string wsDir;
+		if(zip) {
+			using var d = new SaveFileDialog {
+				Filter = "Zip files|*.zip",
+				DefaultExt = "zip",
+				InitialDirectory = location ?? AFolders.ThisAppDocuments,
+				FileName = name + ".zip",
+				OverwritePrompt = false
+			};
+			if(d.ShowDialog() != DialogResult.OK) return false;
+			location = d.FileName;
+			wsDir = AFolders.ThisAppTemp + "Workspace zip";
+			AFile.Delete(wsDir);
+		} else {
+			wsDir = GetDirectoryPathForNewWorkspace(name, location);
+			if(wsDir == null) return false;
+		}
+
 		string filesDir = wsDir + @"\files";
 		try {
 			AFile.CreateDirectory(filesDir);
@@ -1073,7 +1222,14 @@ partial class FilesModel : ITreeModel
 			return false;
 		}
 
-		AExec.SelectInExplorer(wsDir);
+		if(zip) {
+			AFile.Delete(location);
+			ZipFile.CreateFromDirectory(wsDir, location);
+			AFile.Delete(wsDir);
+			wsDir = location;
+		}
+
+		AOutput.Write($"<>Exported to <explore>{wsDir}<>");
 		return true;
 	}
 
@@ -1216,15 +1372,36 @@ partial class FilesModel : ITreeModel
 	public bool IsMyFileNode(FileNode f) { return Root.IsAncestorOf(f); }
 
 	/// <summary>
-	/// Returns true if s is path of a workspace directory.
+	/// Returns true if s is path of a workspace directory or .zip file.
 	/// </summary>
-	public static bool IsWorkspaceDirectory(string s)
+	public static bool IsWorkspaceDirectoryOrZip(string path, out bool zip)
 	{
-		string xmlFile = s + @"\files.xml";
-		if(AFile.ExistsAsFile(xmlFile) && AFile.ExistsAsDirectory(s + @"\files")) {
-			try { return AExtXml.LoadElem(xmlFile).Name == "files"; } catch { }
+		zip = false;
+		switch(AFile.ExistsAs(path)) {
+		case FileDir.Directory:
+			string xmlFile = path + @"\files.xml";
+			if(AFile.ExistsAsFile(xmlFile) && AFile.ExistsAsDirectory(path + @"\files")) {
+				try { return AExtXml.LoadElem(xmlFile).Name == "files"; } catch { }
+			}
+			break;
+		case FileDir.File when path.Ends(".zip", true):
+			return zip = true;
 		}
 		return false;
+	}
+
+	/// <summary>
+	/// If s is path of a workspace directory or .zip file, shows "Open/import" dialog and returns true.
+	/// dialogResult receives: 1 Open, 2 Import, 0 Cancel.
+	/// </summary>
+	public static bool IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(string path, out int dialogResult)
+	{
+		dialogResult = 0;
+		if(!IsWorkspaceDirectoryOrZip(path, out bool zip)) return false;
+		var text1 = zip ? "Import files from zip" : "Workspace";
+		var buttons = zip ? "2 Import|0 Cancel" : "1 Open|2 Import|0 Cancel";
+		dialogResult = ADialog.Show(text1, path, buttons, footerText: GetSecurityInfo("v|"));
+		return true;
 	}
 
 	/// <summary>
@@ -1236,6 +1413,12 @@ partial class FilesModel : ITreeModel
 	}
 
 	#endregion
+}
+
+public enum FNPosition
+{
+	//note: must match Aga.Controls.Tree.NodePosition
+	Inside, Before, After
 }
 
 class EdNewFileText

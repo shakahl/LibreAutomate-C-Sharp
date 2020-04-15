@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -40,7 +39,7 @@ static class EdTrayIcon
 
 		var m = new AMenu { MultiShow = true, ActivateMenuWindow = true };
 		m["End green task\tSleep"] = o => Program.Tasks.EndTask();
-		m["Disable triggers\tM-click"] = o => Run.DisableTriggers(null); var dt = m.LastMenuItem;
+		m["Disable triggers\tM-click"] = o => TriggersAndToolbars.DisableTriggers(null); var dt = m.LastMenuItem;
 		m.Control.Opening += (unu, sed) => { dt.Checked = _disabled; };
 		m.Separator();
 		m["Exit"] = o => Strips.Cmd.File_Exit();
@@ -55,7 +54,7 @@ static class EdTrayIcon
 			Program.MainForm.ZShowAndActivate();
 			break;
 		case MouseButtons.Middle:
-			Run.DisableTriggers(null);
+			TriggersAndToolbars.DisableTriggers(null);
 			break;
 		}
 	}

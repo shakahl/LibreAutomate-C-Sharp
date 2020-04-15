@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -33,27 +32,73 @@ static class CiUtil
 
 	public static bool GetSymbolFromPos(out ISymbol sym, out CodeInfo.Context cd)
 	{
-		sym = null;
-		var doc = Panels.Editor.ZActiveDoc; if(doc == null) { cd = default; return false; }
-		if(!CodeInfo.GetContextAndDocument(out cd)) return false;
-		return GetSymbolFromPos(cd.pos16, cd.document, out sym);
+		(sym, _, _, _) = GetSymbolEtcFromPos(out cd);
+		return sym != null;
 	}
 
-	public static bool GetSymbolFromPos(int position, Document document, out ISymbol sym)
+	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd)
+	{
+		var doc = Panels.Editor.ZActiveDoc; if(doc == null) { cd = default; return default; }
+		if(!CodeInfo.GetContextAndDocument(out cd)) return default;
+		return GetSymbolOrKeywordFromPos(cd.document, cd.pos16, cd.code);
+	}
+
+	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token)
+		GetSymbolOrKeywordFromPos(Document document, int position, string code)
 	{
 		//using var p1 = APerf.Create();
-		sym = null;
 
-		//code like in Roslyn CommonQuickInfoProvider.GetQuickInfoAsync, but simplified
 		var tree = document.GetSyntaxTreeAsync().Result;
 		var token = tree.GetTouchingTokenAsync(position, default, findInsideTrivia: true).Result;
-		if(token == default) return false;
-		if(!token.Span.IntersectsWith(position)) {
-			if(token.Parent.IsKind(SyntaxKind.XmlCrefAttribute)) return false;
-			token = token.GetPreviousToken();
-			if(token == default || !token.Span.IntersectsWith(position)) return false;
-		}
+		if(token == default) return default;
 
+		var span = token.Span; string word = code[span.Start..span.End];
+		//PrintNode(token);
+
+		if(token.IsKind(SyntaxKind.IdentifierToken)) {
+			switch(word) {
+			case "var": case "dynamic": case "nameof": case "unmanaged": //tested cases
+				return (null, word, HelpKind.ContextualKeyword, token);
+			}
+		} else {
+			var k = token.Kind();
+
+			//PrintNode(token.GetPreviousToken());
+			//AOutput.Write(
+			//	//token.IsKeyword(), //IsReservedKeyword||IsContextualKeyword, but not IsPreprocessorKeyword
+			//	SyntaxFacts.IsReservedKeyword(k), //also true for eg #if
+			//	SyntaxFacts.IsContextualKeyword(k)
+			//	//SyntaxFacts.IsQueryContextualKeyword(k) //included in IsContextualKeyword
+			//	//SyntaxFacts.IsAccessorDeclarationKeyword(k),
+			//	//SyntaxFacts.IsPreprocessorKeyword(k), //true if #something or can be used in #something context. Also true for eg if without #.
+			//	//SyntaxFacts.IsPreprocessorContextualKeyword(k) //badly named. True only if #something.
+			//	);
+			//return default;
+
+			if(SyntaxFacts.IsReservedKeyword(k)) {
+				bool preproc = (word == "if" || word == "else") && token.GetPreviousToken().IsKind(SyntaxKind.HashToken);
+				if(preproc) word = "#" + word;
+				return (null, word, preproc ? HelpKind.PreprocKeyword : HelpKind.ReservedKeyword, token);
+			}
+			if(SyntaxFacts.IsContextualKeyword(k)) {
+				return (null, word, SyntaxFacts.IsAttributeTargetSpecifier(k) ? HelpKind.AttributeTarget : HelpKind.ContextualKeyword, token);
+			}
+			if(SyntaxFacts.IsPreprocessorKeyword(k)) {
+				//if(SyntaxFacts.IsPreprocessorContextualKeyword(k)) word = "#" + word; //better don't use this internal func
+				if(token.GetPreviousToken().IsKind(SyntaxKind.HashToken)) word = "#" + word;
+				return (null, word, HelpKind.PreprocKeyword, token);
+			}
+			switch(k) {
+			case SyntaxKind.StringLiteralToken:
+			case SyntaxKind.InterpolatedStringTextToken:
+			case SyntaxKind.InterpolatedStringEndToken:
+			case SyntaxKind.InterpolatedStringStartToken:
+				return (null, null, HelpKind.String, token);
+			}
+		}
+		//note: don't pass contextual keywords to GetSemanticInfo. It may get info for something other, eg for 'new' gets the ctor method.
+
+		ISymbol symbol = null;
 		var model = document.GetSemanticModelAsync().Result;
 		//p1.Next();
 		bool preferGeneric = token.GetNextToken().IsKind(SyntaxKind.GreaterThanToken);
@@ -68,21 +113,52 @@ static class CiUtil
 				break;
 			}
 			//AOutput.Write(v, gen, v.Kind);
-			if(gen == preferGeneric) { sym = v; break; }
-			sym ??= v;
+			if(gen == preferGeneric) { symbol = v; break; }
+			symbol ??= v;
 		}
-		return sym != null;
+
+		return (symbol, null, default, token);
 	}
 
-	public static void OpenSymbolFromPosHelp()
+	public enum HelpKind
 	{
-		if(!GetSymbolFromPos(out var sym, out _)) return;
-		var url = GetSymbolHelpUrl(sym); if(url == null) return;
-		AExec.TryRun(url);
+		None, ReservedKeyword, ContextualKeyword, AttributeTarget, PreprocKeyword, String
 	}
+
+	public static void OpenSymbolOrKeywordFromPosHelp()
+	{
+		string url = null;
+		var (symbol, keyword, helpKind, _) = GetSymbolEtcFromPos(out _);
+		if(symbol != null) {
+			url = GetSymbolHelpUrl(symbol);
+		} else if(keyword != null) {
+			var s = helpKind switch
+			{
+				HelpKind.PreprocKeyword => "preprocessor directive",
+				HelpKind.AttributeTarget => "attributes, ",
+				_ => "keyword"
+			};
+			s = $"C# {s} \"{keyword}\"";
+			//AOutput.Write(s); return;
+			url = _GoogleURL(s);
+		} else if(helpKind == HelpKind.String) {
+			int i = AMenu.ShowSimple("1 C# strings|2 String formatting|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", owner: Panels.Editor.ZActiveDoc, byCaret: true);
+			switch(i) {
+			case 1: url = "C# strings"; break;
+			case 2: url = "C# string formatting"; break;
+			case 11: CiTools.CmdShowRegexWindow(); break;
+			case 12: CiTools.CmdShowKeysWindow(); break;
+			}
+			if(url != null) url = _GoogleURL(url);
+		}
+		if(url != null) AExec.TryRun(url);
+	}
+
+	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + Uri.EscapeDataString(query);
 
 	public static string GetSymbolHelpUrl(ISymbol sym)
 	{
+		//AOutput.Write(sym);
 		//AOutput.Write(sym.IsInSource(), sym.IsFromSource());
 		string query;
 		IModuleSymbol metadata = null;
@@ -91,10 +167,17 @@ static class CiUtil
 		}
 		if(metadata != null) {
 			query = sym.QualifiedName();
+			query = query.Replace("..", ".-"); //..ctor
 			if(metadata.Name == "Au.dll") return Au.Util.AHelp.AuHelpUrl(query);
 			if(metadata.Name.Starts("Au.")) return null;
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();
+		} else if(!sym.IsInSource()) { //eg an operator of string etc
+			if(!(sym is IMethodSymbol me && me.MethodKind == MethodKind.BuiltinOperator)) return null;
+			//AOutput.Write(sym, sym.Kind, sym.QualifiedName());
+			//query = "C# " + sym.ToString(); //eg "string.operator +(string, string)", and Google finds just Equality
+			//query = "C# " + sym.QualifiedName(); //eg "System.String.op_Addition", and Google finds nothing
+			query = "C# " + sym.ToString().RegexReplace(@"\(.+\)$", "", 1).Replace('.', ' '); //eg C# string operator +, not bad
 		} else if(sym.IsExtern) { //[DllImport]
 			query = sym.Name + " function";
 		} else if(sym is INamedTypeSymbol ints && ints.IsComImport) { //[ComImport]
@@ -103,7 +186,7 @@ static class CiUtil
 			return null;
 		}
 
-		return "http://www.google.com/search?q=" + query;
+		return _GoogleURL(query);
 	}
 
 	/// <summary>
@@ -263,6 +346,17 @@ static class CiUtil
 			}
 		}
 		b.Append(code, i, code.Length - i);
+		return b.ToString();
+	}
+
+	public static string FormatSignatureXmlDoc(MethodDeclarationSyntax md, string code)
+	{
+		var b = new StringBuilder();
+		foreach(var p in md.ParameterList.Parameters) {
+			b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
+		}
+		var rt = md.ReturnType;
+		if(!code.Eq(rt.Span.Start..rt.Span.End, "void")) b.Append("\r\n/// <returns></returns>");
 		return b.ToString();
 	}
 

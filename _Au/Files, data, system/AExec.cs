@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -124,7 +123,7 @@ namespace Au
 			} else {
 				x.lpFile = file;
 
-				if(curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectoryPath(file);
+				if(curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectory(file);
 			}
 			if(!args.NE()) x.lpParameters = APath.ExpandEnvVar(args);
 
@@ -240,7 +239,7 @@ namespace Au
 		/// <param name="curDir">
 		/// Initial current directory of the new process.
 		/// - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-		/// - Else if "", calls <c>APath.GetDirectoryPath(exe)</c>.
+		/// - Else if "", calls <c>APath.GetDirectory(exe)</c>.
 		/// - Else calls <see cref="APath.ExpandEnvVar"/>.
 		/// </param>
 		/// <param name="encoding">

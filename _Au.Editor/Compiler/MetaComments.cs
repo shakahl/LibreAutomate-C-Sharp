@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Linq;
 
 using Au.Types;
@@ -403,7 +402,7 @@ namespace Au.Compiler
 			bool isScript = f.IsScript;
 
 			if(_isMain = isMain) {
-				Name = APath.GetFileName(f.Name, true);
+				Name = APath.GetNameNoExt(f.Name);
 				IsScript = isScript;
 
 				Optimize = DefaultOptimize;
@@ -675,7 +674,7 @@ namespace Au.Compiler
 			s = s.TrimEnd('\\');
 			if(!APath.IsFullPathExpandEnvVar(ref s)) {
 				if(s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
-				else s = APath.GetDirectoryPath(_fn.FilePath, true) + s;
+				else s = APath.GetDirectory(_fn.FilePath, true) + s;
 			}
 			return APath.Normalize_(s, noExpandEV: true);
 		}

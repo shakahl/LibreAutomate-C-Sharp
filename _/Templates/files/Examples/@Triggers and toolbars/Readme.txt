@@ -6,19 +6,13 @@ After editing project files, click the Run button to restart the script.
 To run the script at program startup, add its name in Options -> General -> Run scripts...
 
 This folder is a script project. It is one big script divided into multiple files. The
-script starts in file "Triggers and toolbars". It calls functions defined in other files.
+script starts in file "Triggers and toolbars". It calls function RunTriggersAndToolbars,
+which calls functions with attribute [Triggers] or [Toolbars]; they are in other files.
 Then it runs all the time, waiting for trigger events and clicked toolbar buttons.
 When you press a defined hotkey or click a toolbar button etc, it executes the trigger
- action or button action (code that follows the =>).
+action or button action (code that follows the =>).
 
-If the action code is big, you can place it in a seperate function or script. See examples.
-If the code is in a separate function, it starts faster and can share variables (fields) with
-other functions of the project. The function can be anywhere in the project folder.
-If the code is in a separate script, it runs in separate process and therefore starts slower
-and does not share variables. But then it's easier to edit and test it, because don't need
-to restart the main script. And it cannot crash the main process (triggers and toolbars).
-The script can be anywhere (in project folder or outside).
-
+Add triggers in functions with attribute [Triggers]. Toolbars - with attribute [Toolbars].
 To add a trigger or toolbar or button, you can use snippets. Start typing "trig" or "tool",
 and you'll see snippets in the completion list.
 
@@ -26,12 +20,22 @@ When you add a new toolbar, also need to call the toolbar function, like in the 
 When deleting a toolbar, also remove the function call.
 To disable a toolbar temporarily, just comment out the function call.
 
-To disable a trigger, comment out the trigger code line or move it to another script. Then
+When trigger action code is big, you can place it in a seperate script. See examples.
+Then it runs in separate process and therefore starts slower. You can edit and test the
+script without restarting the main script process (triggers and toolbars). And it cannot
+crash the main process. The script can be anywhere (in project folder or outside).
+
+To disable a trigger, comment out the trigger code line or move it from this folder. Then
 click Run to restart the script. To disable/enable all triggers, use the tray icon (menu
 or middle-click) or menu Run. See also examples in class ActionTriggers help.
-To disable all triggers of a type (eg all hotkeys), comment out the [Triggers] attribute.
+Also you can comment out the [Triggers] attribute to disable all triggers defined there.
 
 Avoid multiple scripts with triggers running all the time. It makes your computer slower.
 
 Also you can define menus. They are like toolbars, but displayed temporarily and therefore
 can be in any script. To create menus and menu items, use snippets that start with "menu".
+
+If after editing or deleting files something does not work and you don't know how to fix it,
+you can create new project again: menu File -> New -> Examples -> @Triggers and toolbars.
+Then either fix your old project or move triggers etc from it to the new project. Then
+delete the unused project folder. Finally restore folder name if changed.

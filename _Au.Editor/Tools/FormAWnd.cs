@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -340,13 +339,13 @@ namespace Au.Tools
 			g.ZAddHeaderRow("Window");
 			_AddFlag(nameof(WFlags.HiddenToo), "Can be invisible", tt: "Flag WFlags.HiddenToo.");
 			_AddFlag(nameof(WFlags.CloakedToo), "Can be cloaked", tt: "Find cloaked windows. Flag WFlags.CloakedToo.\r\nCloaked are windows on inactive Windows 10 virtual desktops, ghost windows of hidden Windows Store apps, various hidden system windows.");
-			_AddProp("alsoW", "also", "o => false", tt: "Lambda that returns true if AWnd o is the wanted window.", info: c_infoAlsoW);
+			_AddProp("alsoW", "also", "o => true", tt: "Lambda that returns true if AWnd o is the wanted window.", info: c_infoAlsoW);
 			_AddProp(null, "wait", "5", tt: c_infoWait);
 			g.ZAddHidden = noCon;
 			g.ZAddHeaderRow("Control");
 			_AddFlag("C." + nameof(WCFlags.HiddenToo), "Can be invisible", tt: "Flag WCFlags.HiddenToo.");
 			//_AddFlag("C." + nameof(WCFlags.DirectChild), "Direct child of the window", tt: "Don't find indirect descendant controls (children of children and so on).\r\nFlag WCFlags.DirectChild."); //rejected: almost not useful here
-			_AddProp("alsoC", "also", "o => false", tt: "Lambda that returns true if AWnd o is the wanted control.", info: c_infoAlsoC);
+			_AddProp("alsoC", "also", "o => true", tt: "Lambda that returns true if AWnd o is the wanted control.", info: c_infoAlsoC);
 			_AddProp(null, "skip", "1", tt: "0-based index of matching control.\nFor example, if 1, gets the second matching control.");
 			g.ZAddHidden = false;
 			_AddFlag("orThrow", "Exception if not found", true, tt: "Checked - throw exception.\nUnchecked - return default(AWnd).");

@@ -37,22 +37,17 @@
 	<Menu>
 		<Menu_File>
 			<File_New>
-				<File_NewScript i="fileScript" hk="Ctrl+N"/>
+				<File_NewScript i="fileScript"/>
 				<File_NewClass i="fileClass"/>
 				<File_NewPartial i="fileClass"/>
 				<File_NewFolder i="folder"/>
-				<sep/>
-				<File_Import t="Import..." i="open" tt="Copy, move or link a file to this workspace.
-&#xA;Another way: drag and drop from a folder window."/>
 			</File_New>
 			<sep/>
-			<!--<File_Disable/>-->
 			<File_Rename hkText="F2"/>
 			<File_Delete i="delete" hkText="Delete"/>
-			<File_Properties t="Properties..." i="properties" hk="Ctrl+P"/>
+			<File_Properties t="Properties..." i="properties"/>
 			<File_OpenClose t="Open/Close">
 				<File_Open hkText="Enter"/>
-				<!--<File_OpenInNewWindow/>-->
 				<File_OpenInDefaultApp/>
 				<File_SelectInExplorer/>
 				<sep/>
@@ -76,12 +71,18 @@
 				<File_SaveNow i="save" hk="Ctrl+S"/>
 			</File_More>
 			<sep/>
+			<File_ExportImport t="Export/Import">
+				<File_ExportZip t="Export as .zip..."/>
+				<File_ExportWorkspace t="Export as Workspace..."/>
+				<sep/>
+				<File_ImportZip t="Import .zip..." hkText="Drag-drop"/>
+				<File_ImportWorkspace t="Import Workspace..." hkText="Drag-drop folder"/>
+				<File_Import t="Import File(s)..." hkText="Drag-drop"/>
+			</File_ExportImport>
 			<File_Workspace>
 				<File_RecentWorkspaces dd=""/>
 				<File_OpenWorkspace t="Open Workspace..."/>
 				<File_NewWorkspace t="New Workspace..."/>
-				<File_ExportWorkspace t="Export Selected as Workspace..."/>
-				<File_ImportWorkspace t="Import Workspace..."/>
 				<sep/>
 				<File_FindInWorkspaces t="Find in Other Workspaces..." color="white"/>
 				<File_WorkspaceProperties t="Workspace Properties..." color="white"/>
@@ -108,12 +109,11 @@
 			<!--<Edit_PeekDefinition/>-->
 			<sep/>
 			<Edit_Selection>
-				<Edit_Comment hkText="r-click sel. bar"/>
-				<Edit_Uncomment hkText="r-click sel. bar"/>
+				<Edit_Comment hkText="r-click margin"/>
+				<Edit_Uncomment hkText="r-click margin"/>
 				<Edit_IndentLines hkText="Tab"/>
 				<Edit_UnindentLines hkText="Shift+Tab"/>
 				<Edit_SelectAll hkText="Ctrl+A"/>
-				<!--<Edit_HideRegion/>-->
 				<!--<Edit_Output/>-->
 			</Edit_Selection>
 			<Edit_View>
@@ -138,8 +138,6 @@
 			<Run_Compile i="compile"/>
 			<Run_Recent t="Recent..."/>
 			<sep/>
-			<Run_DisableTriggers/>
-			<sep/>
 			<Debug_AddDebuggerBreakCode/>
 			<Debug_Breakpoints color="white">
 				<Debug_ToggleBreakpoint/>
@@ -155,6 +153,25 @@
 			</Run_Debug>
 			<Debug_DebugOptions color="white"/>
 		</Menu_Run>
+		<Menu_TT t="T&amp;&amp;T">
+			<TT_AddTrigger t="Add Trigger..."/>
+			<TT_AddToolbar t="Add Toolbar..."/>
+			<sep/>
+			<TT_EditHotkeyTriggers/>
+			<TT_EditAutotextTriggers/>
+			<TT_EditMouseTriggers/>
+			<TT_EditWindowTriggers/>
+			<sep/>
+			<TT_EditCommonToolbars/>
+			<TT_EditWindowToolbars/>
+			<sep/>
+			<TT_EditScript t="Edit T&amp;&amp;T Script"/>
+			<TT_RestartScript t="Restart T&amp;&amp;T Script"/>
+			<sep/>
+			<TT_DisableTriggers/>
+			<TT_RecentTriggers/>
+			<TT_ActiveToobars/>
+		</Menu_TT>
 		<Menu_Tools>
 			<Tools_Record i="record" color="white"/>
 			<Tools_RecordOther color="white">
@@ -194,7 +211,7 @@
 			<Tools_Options i="options"/>
 		</Menu_Tools>
 		<Menu_Help>
-			<Help_Program/>
+			<Help_Program i="help"/>
 			<Help_Library i="help"/>
 			<Help_Context hk="F1"/>
 			<sep/>
@@ -259,7 +276,7 @@
 &#xA;Down arrow - recent.
 &#xA;Middle click - clear.
 &#xA;F1 - function help.
-&#xA;F2 - function definition."/>
+&#xA;F12 - function definition."/>
 	</Help>
 
 	<!--

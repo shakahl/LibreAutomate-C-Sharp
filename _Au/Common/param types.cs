@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 //using System.Linq;
 
@@ -111,11 +110,11 @@ namespace Au.Types
 #endif
 
 	/// <summary>
-	/// Contains x or y coordinate in screen or some other rectangle that can be specified in various ways (normal, reverse, fraction, center, max).
+	/// Contains x or y coordinate in screen or some other rectangle that can be specified in various ways: normal, reverse, fraction, center, max.
 	/// Used for parameters of functions like <see cref="AMouse.Move"/>, <see cref="AWnd.Move"/>.
 	/// </summary>
 	/// <remarks>
-	/// To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b>, <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
+	/// To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
 	/// Also there are functions to convert <b>Coord</b> to normal coodinates.
 	/// </remarks>
 	[DebuggerStepThrough]
@@ -156,11 +155,21 @@ namespace Au.Types
 		//[MethodImpl(MethodImplOptions.NoInlining)] //makes bigger/slower
 		public static implicit operator Coord(int v) => new Coord(CoordType.Normal, v);
 
-		//rejected. Because would be used when assigning uint, long, ulong. Or need functions for these too.
-		///// <summary>
-		///// Creates Coord of Fraction type.
-		///// </summary>
-		//public static implicit operator Coord(float v) => Fraction(v);
+		/// <summary>
+		/// Creates Coord of Fraction type.
+		/// </summary>
+		public static implicit operator Coord(float v) => Fraction(v);
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
+		public static implicit operator Coord(uint f) => default;
+
+		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
+		public static implicit operator Coord(long f) => default;
+
+		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
+		public static implicit operator Coord(ulong f) => default;
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -174,6 +183,7 @@ namespace Au.Types
 		/// <summary>
 		/// Creates Coord of Fraction type.
 		/// Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
+		/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(0.5)</c> can be replaced with <c>0.5f</c>.
 		/// </summary>
 		public static unsafe Coord Fraction(double v)
 		{
@@ -467,26 +477,19 @@ namespace Au.Types
 		/// </summary>
 		public object Value => _o;
 
-		///// <summary>
-		///// Converts the value to string[].
-		///// </summary>
-		///// <param name="separator">If the value is string, use this character to split it. Default '|'.</param>
-		///// <remarks>
-		///// If the value was string or List, converts to string[] and stores the string[] in <b>Value</b>. If null, returns empty array.
-		///// </remarks>
-		//public string[] ToArray(char separator = '|')
-		//{
-		//	switch(_o) {
-		//	case null:
-		//		return Array.Empty<string>(); //for safe foreach
-		//	case string s:
-		//		_o = s.Split(separator);
-		//		break;
-		//	case List<string> a:
-		//		_o = a.ToArray();
-		//		break;
-		//	}
-		//	return _o as string[];
-		//}
+		/// <summary>
+		/// Converts the value to string[].
+		/// </summary>
+		/// <param name="separator">If the value is string, use this character to split it. Default '|'.</param>
+		public string[] ToArray(char separator = '|')
+		{
+			return _o switch
+			{
+				string s => s.Split(separator),
+				string[] a => a,
+				List<string> a => a.ToArray(),
+				_ => Array.Empty<string>(), //null
+			};
+		}
 	}
 }

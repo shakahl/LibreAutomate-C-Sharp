@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -85,7 +84,7 @@ namespace Au.Controls
 		public void SetScrollPos(bool vertical, int pos, bool notify)
 		{
 			_GetScrollInfo(vertical, out var k);
-			pos = AMath.MinMax(pos, k.nMin, k.nMax);
+			pos = Math.Clamp(pos, k.nMin, k.nMax);
 			if(pos == k.nPos) return;
 			k.nPos = pos;
 

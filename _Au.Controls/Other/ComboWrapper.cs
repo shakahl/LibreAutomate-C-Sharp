@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -75,7 +74,7 @@ namespace Au.Controls
 			case Api.WM_NCMOUSEMOVE: if(_OnNcMouseMove(false, lParam)) return 0; break;
 			case Api.WM_NCMOUSELEAVE: _OnNcMouseMove(true); break;
 			case Api.WM_NCHITTEST: if(0 != _IsCursorInButton(lParam)) return 5; break; //HTMENU
-			case Api.WM_MBUTTONDOWN: _OnNcMbuttonDown(); return 0; //clear with Undo
+			case Api.WM_MBUTTONDOWN: _OnMbuttonDown(); break; //clear with Undo
 			case Api.WM_SYSKEYDOWN: if(_OnSysKeyDown(wParam)) return 0; break;
 			}
 
@@ -273,10 +272,15 @@ namespace Au.Controls
 			return true;
 		}
 
-		void _OnNcMbuttonDown()
+		void _OnMbuttonDown()
 		{
-			if(_c is TextBox t) {
-				if(!t.ReadOnly) { t.SelectAll(); t.Paste(""); }
+			switch(_c) {
+			case AuScintilla c:
+				if(!c.Z.IsReadonly) c.Z.ClearText();
+				break;
+			case TextBox c:
+				if(!c.ReadOnly) { c.SelectAll(); c.Paste(""); }
+				break;
 			}
 		}
 

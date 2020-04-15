@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -48,46 +47,36 @@ namespace Au.Util
 		internal static SIZE SmallIconSize_ { get { var t = BaseDPI / 6; return new SIZE(t, t); } } //same as AIcon.SizeSmall
 
 		/// <summary>
-		/// If <see cref="BaseDPI"/> is more than 96, returns stretched i.
-		/// Else returns i.
+		/// If <see cref="BaseDPI"/> isn't 96 (100%), returns scaled i. Else returns i.
 		/// </summary>
 		/// <param name="i"></param>
-		public static int ScaleInt(int i)
-		{
-			long dpi = BaseDPI;
-			if(dpi > 96) i = checked((int)(i * dpi / 96)); //TODO: round?
-			return i;
-		}
+		public static int ScaleInt(int i) => AMath.MulDiv(i, BaseDPI, 96);
 
 		/// <summary>
-		/// If <see cref="BaseDPI"/> is more than 96, returns scaled (stretched) z.
-		/// Else returns z.
+		/// If <see cref="BaseDPI"/> isn't 96 (100%), returns scaled z. Else returns z.
 		/// Note: for images use <see cref="ImageSize"/>.
 		/// </summary>
 		/// <param name="z"></param>
 		public static SIZE ScaleSize(SIZE z)
 		{
-			long dpi = BaseDPI;
-			if(dpi > 96) checked {
-				z.width = (int)(z.width * dpi / 96);
-				z.height = (int)(z.height * dpi / 96);
-			}
+			int dpi = BaseDPI;
+			z.width = AMath.MulDiv(z.width, dpi, 96);
+			z.height = AMath.MulDiv(z.height, dpi, 96);
 			return z;
 		}
 
 		/// <summary>
-		/// If <see cref="BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
-		/// Else returns image.Size.
+		/// If <see cref="BaseDPI"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
 		/// </summary>
 		/// <param name="image"></param>
 		public static SIZE ImageSize(System.Drawing.Image image)
 		{
 			if(image == null) return default;
 			SIZE r = image.Size;
-			long dpi = BaseDPI;
-			if(dpi > 96) checked {
-				r.width = (int)(r.width * dpi / (int)Math.Round(image.HorizontalResolution));
-				r.height = (int)(r.height * dpi / (int)Math.Round(image.VerticalResolution));
+			int dpi = BaseDPI;
+			if(dpi > 96) {
+				r.width = AMath.MulDiv(r.width, dpi, (int)Math.Round(image.HorizontalResolution));
+				r.height = AMath.MulDiv(r.height, dpi, (int)Math.Round(image.VerticalResolution));
 			}
 			return r;
 		}

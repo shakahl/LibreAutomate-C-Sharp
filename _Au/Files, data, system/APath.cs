@@ -9,10 +9,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
+
+//tested: System.IO.Path functions improved in Core.
+//	No exceptions if path contains invalid characters. Although the exceptions are still documented in MSDN.
+//	Support long paths and file streams.
+//	Faster, etc.
 
 namespace Au
 {
@@ -40,7 +44,7 @@ namespace Au
 			var s = path;
 			if(s == null || s.Length < 3) return s;
 			if(s[0] != '%') {
-				if(s[0] == '\"' && s[1] == '%') return "\"" + ExpandEnvVar(s.Substring(1));
+				if(s[0] == '\"' && s[1] == '%') return "\"" + ExpandEnvVar(s[1..]);
 				return s;
 			}
 			int i = s.IndexOf('%', 1); if(i < 2) return s;
@@ -48,7 +52,7 @@ namespace Au
 
 			//support known folders, like @"%AFolders.Documents%\..."
 			if(i > 12 && s.Starts("%AFolders.")) {
-				var prop = s.Substring(10, i - 10);
+				var prop = s[10..i];
 				var k = AFolders.GetFolder(prop);
 				if(k != null) return k + s.Substring(i + 1);
 				//throw new AuException("AFolders does not have property " + prop);
@@ -259,8 +263,8 @@ namespace Au
 		/// <param name="prefixLongPath">Call <see cref="PrefixLongPathIfNeed"/> which may prepend <c>@"\\?\"</c> if the result path is very long. Default true.</param>
 		/// <remarks>
 		/// If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
-		/// Similar to System.IO.Path.Combine. Main differences: does not throw exceptions; has some options.
-		/// Does not expand environment variables. For it use <see cref="ExpandEnvVar"/> before, or <see cref="Normalize"/> instead. Path that starts with an environment variable is considerd not full path.
+		/// Does not expand environment variables. For it use <see cref="ExpandEnvVar"/> before, or <see cref="Normalize"/> instead. Path that starts with an environment variable here is considerd not full path.
+		/// Similar to <see cref="Path.Combine"/>. Main differences: has some options; supports null arguments.
 		/// </remarks>
 		/// <seealso cref="Normalize"/>
 		public static string Combine(string s1, string s2, bool s2CanBeFullPath = false, bool prefixLongPath = true)
@@ -271,7 +275,7 @@ namespace Au
 			else if(s2CanBeFullPath && IsFullPath(s2)) r = s2;
 			else {
 				int k = 0;
-				if(IsSepChar_(s1[s1.Length - 1])) k |= 1;
+				if(IsSepChar_(s1[^1])) k |= 1;
 				if(IsSepChar_(s2[0])) k |= 2;
 				switch(k) {
 				case 0: r = s1 + @"\" + s2; break;
@@ -371,7 +375,7 @@ namespace Au
 		/// 8. Appends <c>'\\'</c> character if ends with a drive name (eg <c>"C:"</c> -> <c>@"C:\"</c>).
 		/// 9. If no flag DontPrefixLongPath, calls <see cref="PrefixLongPathIfNeed"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
 		/// 
-		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, supports <c>@"\\?\very long path"</c>, trims <c>'\\'</c> at the end if need, does not throw exceptions when it thinks that path is invalid (except when path is not full).
+		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, trims <c>'\\'</c> at the end if need.
 		/// </remarks>
 		public static string Normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0)
 		{
@@ -585,14 +589,14 @@ namespace Au
 
 		/// <summary>
 		/// Replaces characters that cannot be used in file names.
-		/// Returns valid filename. However it can be too long (itself or when combined with a directory path).
 		/// </summary>
 		/// <param name="name">Initial filename.</param>
 		/// <param name="invalidCharReplacement">A string that will replace each invalid character. Default <c>"-"</c>.</param>
 		/// <remarks>
 		/// Also corrects other forms of invalid or problematic filename: trims spaces and other blank characters; replaces <c>"."</c> at the end; prepends <c>"@"</c> if a reserved name like <c>"CON"</c> or <c>"CON.txt"</c>; returns <c>"-"</c> if name is null/empty/whitespace.
+		/// Usually returns valid filename, however it can be too long (itself or when combined with a directory path).
 		/// </remarks>
-		public static string CorrectFileName(string name, string invalidCharReplacement = "-")
+		public static string CorrectName(string name, string invalidCharReplacement = "-")
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return "-";
 			name = name.RegexReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
@@ -605,24 +609,23 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if name cannot be used for a file name, eg contains <c>'\\'</c> etc characters or is empty.
-		/// More info: <see cref="CorrectFileName"/>.
+		/// More info: <see cref="CorrectName"/>.
 		/// </summary>
 		/// <param name="name">Any string. Example: "name.txt". Can be null.</param>
-		public static bool IsInvalidFileName(string name)
+		public static bool IsInvalidName(string name)
 		{
 			if(name == null || (name = name.Trim()).Length == 0) return true;
 			return name.RegexIsMatch(_rxInvalidFN1) || name.RegexIsMatch(_rxInvalidFN2);
 		}
 
 		/// <summary>
-		/// Gets filename with or without extension.
+		/// Gets filename from path. Does not remove extension.
 		/// Returns "" if there is no filename.
 		/// Returns null if path is null.
 		/// </summary>
 		/// <param name="path">Path or filename. Can be null.</param>
-		/// <param name="withoutExtension">Remove extension, unless <i>path</i> ends with <c>'\\'</c> or <c>'/'</c>.</param>
 		/// <remarks>
-		/// Similar to <see cref="Path.GetFileName"/> and <see cref="Path.GetFileNameWithoutExtension"/>. Some differences: does not throw exceptions; if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
+		/// Similar to <see cref="Path.GetFileName"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
 		/// 
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.
@@ -645,8 +648,26 @@ namespace Au
 		/// | <c>"::{A}\::{B}"</c> | <c>"::{B}"</c>
 		/// | <c>""</c> | <c>""</c>
 		/// | <c>null</c> | <c>null</c>
+		/// </remarks>
+		public static string GetName(string path)
+		{
+			return _GetPathPart(path, _PathPart.NameWithExt);
+		}
+
+		/// <summary>
+		/// Gets filename without extension.
+		/// Returns "" if there is no filename.
+		/// Returns null if path is null.
+		/// </summary>
+		/// <param name="path">Path or filename (then just removes extension). Can be null.</param>
+		/// <remarks>
+		/// The same as <see cref="GetName"/>, just removes extension.
+		/// Similar to <see cref="Path.GetFileName"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
 		/// 
-		/// Examples when <i>withoutExtension</i> true:
+		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
+		/// Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.
+		/// 
+		/// Examples:
 		/// 
 		/// | path | result
 		/// | - | -
@@ -659,9 +680,9 @@ namespace Au
 		/// | <c>@"C:\aa\file.txt:alt.stream"</c> | <c>"file.txt:alt"</c>
 		/// | <c>"http://a.b.c"</c> | <c>"a.b"</c>
 		/// </remarks>
-		public static string GetFileName(string path, bool withoutExtension = false)
+		public static string GetNameNoExt(string path)
 		{
-			return _GetPathPart(path, withoutExtension ? _PathPart.NameWithoutExt : _PathPart.NameWithExt);
+			return _GetPathPart(path, _PathPart.NameWithoutExt);
 		}
 
 		/// <summary>
@@ -672,7 +693,6 @@ namespace Au
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <remarks>
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
-		/// Like <see cref="Path.GetExtension"/>, but does not throw exceptions.
 		/// </remarks>
 		public static string GetExtension(string path)
 		{
@@ -715,14 +735,15 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Removes filename part from path. By default also removes separator (<c>'\\'</c> or <c>'/'</c>) if it is not after drive name (eg <c>"C:"</c>).
+		/// Removes filename part from path.
+		/// By default also removes separator (<c>'\\'</c> or <c>'/'</c>) if it is not after drive name (eg <c>"C:"</c>).
 		/// Returns "" if the string is a filename.
 		/// Returns null if the string is null or a root (like <c>@"C:\"</c> or <c>"C:"</c> or <c>@"\\server\share"</c> or <c>"http:"</c>).
 		/// </summary>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <param name="withSeparator">Don't remove separator character(s) (<c>'\\'</c> or <c>'/'</c>). See examples.</param>
 		/// <remarks>
-		/// Similar to <see cref="Path.GetDirectoryName"/>. Some differences: does not throw exceptions; skips <c>'\\'</c> or <c>'/'</c> at the end (eg from <c>@"C:\A\B\"</c> gets <c>@"C:\A"</c>, not <c>@"C:\A\B"</c>); does not expand DOS path; much faster.
+		/// Similar to <see cref="Path.GetDirectoryName"/>. Some differences: skips <c>'\\'</c> or <c>'/'</c> at the end (eg from <c>@"C:\A\B\"</c> gets <c>@"C:\A"</c>, not <c>@"C:\A\B"</c>); does not replace / with \.
 		/// 
 		/// Parses raw string. You may want to <see cref="Normalize"/> it at first.
 		/// 
@@ -753,7 +774,7 @@ namespace Au
 		/// | <c>@"C:\A\B"</c> | <c>@"C:\A\"</c> (not <c>@"C:\A"</c>)
 		/// | <c>"http://x.y"</c> | <c>"http://"</c> (not <c>"http:"</c>)
 		/// </remarks>
-		public static string GetDirectoryPath(string path, bool withSeparator = false)
+		public static string GetDirectory(string path, bool withSeparator = false)
 		{
 			return _GetPathPart(path, _PathPart.Dir, withSeparator);
 		}

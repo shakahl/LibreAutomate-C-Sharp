@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Linq;
 
 using Au.Types;
@@ -557,7 +556,7 @@ namespace Au.Compiler
 
 			bool _CopyRefIfNeed(string sFrom, string sTo)
 			{
-				if(!usedRefs.Contains(APath.GetFileName(sFrom, withoutExtension: true), StringComparer.OrdinalIgnoreCase)) return false;
+				if(!usedRefs.Contains(APath.GetNameNoExt(sFrom), StringComparer.OrdinalIgnoreCase)) return false;
 				_CopyFileIfNeed(sFrom, sTo);
 				return true;
 			}
@@ -570,7 +569,7 @@ namespace Au.Compiler
 			var refs = m.References.Refs;
 			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
 				var s1 = refs[i].FilePath;
-				var s2 = m.OutputPath + "\\" + APath.GetFileName(s1);
+				var s2 = m.OutputPath + "\\" + APath.GetName(s1);
 				//AOutput.Write(s1, s2);
 				_CopyRefIfNeed(s1, s2);
 			}
@@ -600,7 +599,7 @@ namespace Au.Compiler
 				&& AFile.GetProperties(sFrom, out var p1, FAFlags.UseRawPath)
 				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
 				&& p2.Size == p1.Size) return;
-			AFile.Copy(sFrom, sTo, IfExists.Delete);
+			AFile.Copy(sFrom, sTo, FIfExists.Delete);
 		}
 
 		static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile)

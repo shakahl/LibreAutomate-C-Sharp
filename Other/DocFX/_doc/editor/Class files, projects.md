@@ -22,6 +22,10 @@ The first code file in the project folder is the project's main file. All class 
 
 The main file can be a script or a class file. Most of its properties are applied to whole compilation. If it's a script, it runs when you click Run; such project is a *script project* and also can be used to create .exe programs. Else the project is a *library project* and can be used to create .dll files.
 
+The folder can contain script files that are not main. They are not part of the project. If they want to use project's class files, add them explicitly: Properties -> Add file -> Class file.
+
+Usually project files are used only in the project folder, therefore they are not included in Properties -> Add file -> Class file of scripts that are not in the folder, unless the folder name starts with @@.
+
 #### Libraries
 A library is a .dll file. It contains compiled classes with functions that can be used anywhere.
 

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -126,7 +125,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="AuWndException">
 		/// - Invalid window.
 		/// - The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
@@ -469,7 +468,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuWndException">x y is not in the window (read more in Remarks).</exception>
@@ -602,7 +601,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void Click(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -641,7 +640,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void RightClick(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -678,7 +677,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void DoubleClick(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -716,7 +715,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease LeftDown(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -755,7 +754,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void LeftUp(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{
@@ -792,7 +791,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		/// <exception cref="AuException">x y is not in the window. More info: <see cref="ClickEx(MButton, AWnd, Coord, Coord, bool)"/>.</exception>
 		public static MRelease RightDown(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
@@ -831,7 +830,7 @@ namespace Au
 		/// <param name="w">Window or control.</param>
 		/// <param name="x">X coordinate relative to the client area of w. Default - center.</param>
 		/// <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-		/// <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+		/// <param name="nonClient">x y are relative to the window rectangle.</param>
 		/// <exception cref="Exception">Exceptions of <see cref="Move(AWnd, Coord, Coord, bool)"/>.</exception>
 		public static void RightUp(AWnd w, Coord x = default, Coord y = default, bool nonClient = false)
 		{

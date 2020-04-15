@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -38,7 +37,7 @@ namespace Au
 			if(allowTransparency) {
 				uint col = 0, f = 0; byte op = 0;
 				if(colorKey != null) { f |= 1; col = (uint)colorKey.GetValueOrDefault().ToBGR(); }
-				if(opacity != null) { f |= 2; op = (byte)AMath.MinMax(opacity.GetValueOrDefault(), 0, 255); }
+				if(opacity != null) { f |= 2; op = (byte)Math.Clamp(opacity.GetValueOrDefault(), 0, 255); }
 
 				if(!layered) SetExStyle(est | WS2.LAYERED);
 				if(!Api.SetLayeredWindowAttributes(this, col, op, f)) ThrowUseNative();
@@ -68,7 +67,7 @@ namespace Au
 			}
 
 			//covers whole monitor rect?
-			screen = AScreen.Of(this, SDefault.Zero); if(screen.Is0) return false;
+			screen = AScreen.Of(this, SODefault.Zero); if(screen.Is0) return false;
 			rm = screen.Bounds;
 
 			if(r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
@@ -182,7 +181,7 @@ namespace Au
 					switch(p.showCmd) {
 					case Api.SW_SHOWMAXIMIZED:
 						if((style & WS.MAXIMIZE) == 0) {
-							this.MoveLL(p.rcNormalPosition.left, p.rcNormalPosition.top, p.rcNormalPosition.Width, p.rcNormalPosition.Height); //without this would be always in primary monitor
+							this.MoveLL(p.rcNormalPosition); //without this would be always in primary monitor
 							this.SetStyle(style | WS.MAXIMIZE);
 						}
 						break;

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 
@@ -18,9 +17,8 @@ namespace Au.Types
 	/// <summary>
 	/// In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
 	/// </summary>
-	public sealed class NoDoc : Attribute
-	{
-	}
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public sealed class NoDoc : Attribute { }
 
 	/// <summary>
 	/// Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.

@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -95,7 +94,7 @@ partial class FOptions : DialogForm
 	{
 		if(_cRunAtStartup.Checked != _initRunAtStartup) {
 			try {
-				using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
+				using var rk = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(c_rkRun, true);
 				if(_initRunAtStartup) rk.DeleteValue("Au.Editor");
 				else rk.SetValue("Au.Editor", "\"" + AFolders.ThisAppBS + "Au.CL.exe\" /e");
 			}
@@ -233,7 +232,7 @@ partial class FOptions : DialogForm
 
 	unsafe void _InitFont()
 	{
-		var styles = Program.Settings.edit_styles;
+		var styles = CiStyling.TStyles.Settings;
 
 		//font
 
@@ -266,36 +265,34 @@ partial class FOptions : DialogForm
 		_sciStyles.Z.MarginWidth(1, 0);
 		styles.ToScintilla(_sciStyles);
 		bool ignoreColorEvents = false;
-		int backColor = styles.BackgroundColor ?? 0xffffff;
+		int backColor = styles.BackgroundColor;
 		PopupList listColors = null;
 		var s = @"Font
 Background
-// Comment
+None
+//Comment
 ""String"" 'c'
-\r\n\t\\\0
+\r\n\t\0\\
 1234567890
 ()[]{},;:
-operator
-keyword
+Operator
+Keyword
 Namespace
 Type
 Function
-localVariable
-parameter
-_field
-constant
-EnumMember
-label
+Variable
+Constant
+GotoLabel
 #preprocessor
-excluded
+#if-excluded
 XML doc text
 /// <doc tag>
-line number";
+Line number";
 		_sciStyles.Text = s;
-		int i = -2;
+		int i = -3;
 		foreach(var v in s.Segments(SegSep.Line)) {
 			i++;
-			if(i <= 0) { //Font, Background
+			if(i < 0) { //Font, Background
 
 			} else {
 				if(i == (int)CiStyling.EToken.countUserDefined) i = Sci.STYLE_LINENUMBER;
@@ -313,14 +310,14 @@ line number";
 				if(line != currentLine) {
 					currentLine = line;
 					int tok = _SciStylesLineToTok(line);
-					if(tok == -1) { //Font
+					if(tok == -2) { //Font
 						_pColor.Visible = false;
 						_pFont.Visible = true;
 					} else {
 						_pFont.Visible = false;
 						_pColor.Visible = true;
 						int color;
-						if(tok == 0) {
+						if(tok == -1) {
 							color = backColor;
 							_cBold.Visible = false;
 						} else {
@@ -396,10 +393,10 @@ line number";
 			var z = _sciStyles.Z;
 			int tok = _SciStylesLineToTok(z.LineFromPos(false, z.CurrentPos8));
 			int color = _eColor.Text.ToInt();
-			if(tok > 0) {
+			if(tok >= 0) {
 				if(control == _cBold) z.StyleBold(tok, _cBold.Checked);
 				else z.StyleForeColor(tok, color);
-			} else if(tok == 0) {
+			} else if(tok == -1) {
 				backColor = color;
 				for(int i = 0; i <= Sci.STYLE_DEFAULT; i++) _sciStyles.Z.StyleBackColor(i, color);
 				listColors = null;
@@ -408,7 +405,7 @@ line number";
 
 		int _SciStylesLineToTok(int line)
 		{
-			line--; if(line <= 0) return line;
+			line -= 2; if(line < 0) return line;
 			int tok = line, nu = (int)CiStyling.EToken.countUserDefined;
 			if(tok >= nu) tok = tok - nu + Sci.STYLE_LINENUMBER;
 			return tok;
@@ -432,6 +429,22 @@ line number";
 				listColors.SelectedAction = o => _eColor.Text = o.ResultItem.ToString();
 			}
 			listColors.Show(_eColor);
+		};
+
+		//[?] button
+		_bFontInfo.Click += (_, __) => {
+			string link = CiStyling.TStyles.s_settingsFile;
+			ADialog.Show(null,
+$@"Changed font/color settings are saved in file
+<a href=""{link}"">{link}</a>
+
+To reset: delete the file.
+To reset some colors etc: delete some lines.
+To change all: replace the file.
+To backup: copy the file.
+
+To apply changes after deleting etc, restart this application.
+", icon: DIcon.Info, onLinkClick: e => { AExec.SelectInExplorer(e.LinkHref); });
 		};
 	}
 
@@ -481,8 +494,8 @@ line number";
 		int fsize = _UpDownValue(_nFontSize);
 		styles.FontSize = fsize;
 
-		if(!styles.Equals(Program.Settings.edit_styles)) {
-			Program.Settings.edit_styles = styles;
+		if(!styles.Equals(CiStyling.TStyles.Settings)) {
+			CiStyling.TStyles.Settings = styles;
 			Program.Settings.SaveLater();
 			foreach(var v in Panels.Editor.ZOpenDocs) styles.ToScintilla(v);
 		}
@@ -495,24 +508,13 @@ line number";
 
 	unsafe void _InitCode()
 	{
-		//_cComplGroupEM.Checked = Program.Settings.ci_complGroupEM; //checkbox "Group all extension methods" (if unchecked, would group only Linq)
 		_cComplParenSpace.Checked = Program.Settings.ci_complParenSpace;
-
-		_cCustomSnippets.Checked = 1 == Program.Settings.ci_complCustomSnippets & AFile.ExistsAsFile(CiSnippets.CustomFile);
-		_cCustomSnippets.CheckedChanged += (_, __) => {
-			if(!_cCustomSnippets.Checked) return;
-			if(!AFile.ExistsAsFile(CiSnippets.CustomFile)) AFile.Copy(CiSnippets.DefaultFile, CiSnippets.CustomFile);
-			AExec.SelectInExplorer(CiSnippets.CustomFile);
-		};
-
 		_cStringEnterRN.Checked = 0 == Program.Settings.ci_correctStringEnter;
 	}
 
 	void _ApplyCode()
 	{
-		//Program.Settings.ci_complGroupEM = _cComplGroupEM.Checked;
 		Program.Settings.ci_complParenSpace = _cComplParenSpace.Checked;
-		Program.Settings.ci_complCustomSnippets = (byte)(_cCustomSnippets.Checked ? 1 : 0);
 		Program.Settings.ci_correctStringEnter = (byte)(_cStringEnterRN.Checked ? 0 : 1);
 	}
 

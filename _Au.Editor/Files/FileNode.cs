@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -67,32 +66,23 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		}
 	}
 
-	//currently not used
 	//this ctor is used when creating new item of known type
-	//public FileNode(FilesModel model, string name, EFileType type, string linkTarget = null)
-	//{
-	//	_model = model;
-	//	_type = type;
-	//	_name = name;
-	//	_id = _model.AddGetId(this);
-	//	_CtorMisc(linkTarget);
-	//}
-
-	//this ctor is used when creating new item, importing items from files etc.
-	//name is filename with extension.
-	//sourcePath is used when need to get file text to detect type.
-	//template used when creating new item, to detect item type.
-	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, string linkTarget = null, string template = null)
+	public FileNode(FilesModel model, string name, EFileType type, string linkTarget = null)
 	{
-		//detect file type
-		EFileType type;
-		if(isFolder) type = EFileType.Folder;
-		else if(template == "Script.cs") type = EFileType.Script;
-		else if(template == "Class.cs" || template == "Partial.cs") type = EFileType.Class;
-		else type = DetectFileType(sourcePath);
-
 		_model = model;
 		_type = type;
+		_name = name;
+		_id = _model.AddGetId(this);
+		_CtorMisc(linkTarget);
+	}
+
+	//this ctor is used when importing items from files etc.
+	//name is filename with extension.
+	//sourcePath is used to get file text to detect type when !isFolder.
+	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, string linkTarget = null)
+	{
+		_model = model;
+		_type = isFolder ? EFileType.Folder : DetectFileType(sourcePath);
 		_name = name;
 		_id = _model.AddGetId(this);
 		_CtorMisc(linkTarget);
@@ -120,14 +110,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 			x["max-i"].ToInt(out uint u);
 			_model.MaxId = u;
 		} else {
-			_type = x.Name switch
-			{
-				"d" => EFileType.Folder,
-				"s" => EFileType.Script,
-				"c" => EFileType.Class,
-				"n" => EFileType.NotCodeFile,
-				_ => throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'"),
-			};
+			_type = XmlTagToFileType(x.Name, canThrow: true);
 			uint id = 0, testScriptId = 0; string linkTarget = null, icon = null;
 			while(x.MoveToNextAttribute()) {
 				var v = x.Value;
@@ -668,105 +651,6 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 
 	#region new item
 
-	/// <summary>
-	/// Creates new item in, before or after target.
-	/// Also creates new file or directory.
-	/// Returns the new item, or null if fails.
-	/// Does not open it.
-	/// </summary>
-	/// <param name="model"></param>
-	/// <param name="target">Can be null, then adds at the top.</param>
-	/// <param name="pos"></param>
-	/// <param name="template">
-	/// Item type and template.
-	/// Can be filename or relative path of a file or folder from the Templates\files folder.
-	/// Examples: "File.cs", "File.txt", "Subfolder", "Subfolder\File.cs".
-	/// Special names: "Folder", "Script.cs", "Class.cs", "Partial.cs". Case-sensitive.
-	/// Else detects type (folder, script, class, other) by file type (folder or not), extension (.cs or not) or text (if .cs).
-	/// If folder name starts with '@', creates multi-file project from template. If with '!' - simple folder with descendants.
-	/// </param>
-	/// <param name="name">If not null, creates with this name (made unique). Else gets name from template. In any case, makes unique name.</param>
-	public static FileNode NewItem(FilesModel model, FileNode target, NodePosition pos, string template, string name = null)
-	{
-		Debug.Assert(!template.NE()); if(template.NE()) return null;
-
-		if(target == null) {
-			var root = model.Root;
-			target = root.FirstChild;
-			if(target != null) pos = NodePosition.Before; else { target = root; pos = NodePosition.Inside; }
-		}
-		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
-
-		int i;
-		string text = "";
-		bool isFolder = template == "Folder", fillFolder = false;
-		if(!isFolder) {
-			string templFile = Templates.IsStandardTemplateName(template, out var tt) ? Templates.FilePathReal(tt) : (Templates.DefaultDirBS + template);
-			switch(AFile.ExistsAs(templFile, true)) {
-			case FileDir.Directory: isFolder = fillFolder = true; break;
-			case FileDir.File: text = _GetTemplateText(templFile, template, newParent); break;
-			}
-		}
-
-		//create unique name
-		if(name == null) {
-			name = APath.GetFileName(template);
-			if(fillFolder && name.Starts('!')) name = name[1..];
-			//let unique names start from 1
-			if(!template.Starts("Examples\\")) {
-				if(!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
-			}
-		}
-		name = CreateNameUniqueInFolder(newParent, name, isFolder);
-
-		//create file or folder
-		var path = newParent.FilePath + "\\" + name;
-		if(!model.TryFileOperation(() => {
-			if(isFolder) AFile.CreateDirectory(path);
-			else AFile.SaveText(path, text, tempDirectory: model.TempDirectory);
-		})) return null;
-
-		//create new FileNode and insert at the specified place
-		var f = new FileNode(model, name, path, isFolder, template: template);
-		f._Common_MoveCopyNew(target, pos);
-
-		if(fillFolder) {
-			var x = AExtXml.LoadElem(Templates.DefaultFilesXml);
-			foreach(var v in template.Split('\\')) x = x.Elem("d", "n", v);
-			_FillFolder(model, f, x, template);
-		}
-		return f;
-
-		static void _FillFolder(FilesModel model, FileNode fnParent, XElement xParent, string dir)
-		{
-			foreach(var x in xParent.Elements()) {
-				string tag = x.Name.LocalName, name = x.Attr("n");
-				bool isFolder = tag == "d";
-				string template = dir + "\\" + name;
-				var f = NewItem(model, fnParent, NodePosition.Inside, template, name);
-				if(isFolder) _FillFolder(model, f, x, template);
-			}
-		}
-
-		static string _GetTemplateText(string templFile, string template, FileNode newParent)
-		{
-			string s = AFile.LoadText(templFile);
-			if(s.NE() && Templates.IsStandardTemplateName(template, out var tt, ends: true)) {
-				s = Templates.Load(tt); //load default or custom template
-			}
-
-			//when adding classes to a library project, if the main file contains a namespace, add that namespace in the new file too.
-			if(template == "Class.cs" && newParent.FindProject(out var projFolder, out var projMain)) {
-				var rx = @"(?m)^namespace [\w\.]+";
-				if(!s.RegexIsMatch(rx) && projMain.GetText().RegexMatch(rx, 0, out string ns)) {
-					s = s.RegexReplace(@"(?ms)^public class .+\}", ns + "\r\n{\r\n$0\r\n}", 1);
-				}
-			}
-
-			return s;
-		}
-	}
-
 	public static string CreateNameUniqueInFolder(FileNode folder, string fromName, bool forFolder)
 	{
 		if(!_Exists(fromName)) return fromName;
@@ -794,7 +678,6 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	{
 		public static readonly string DefaultDirBS = AFolders.ThisAppBS + @"Templates\files\";
 		public static readonly string UserDirBS = ProgramSettings.DirBS + @"Templates\";
-		public static readonly string DefaultFilesXml = AFolders.ThisAppBS + @"Templates\files.xml";
 
 		public static string FileName(ETempl templ) => templ switch { ETempl.Class => "Class.cs", ETempl.Partial => "Partial.cs", _ => "Script.cs" };
 
@@ -822,6 +705,36 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		}
 
 		static string[] s_names = { "Script.cs", "Class.cs", "Partial.cs" };
+
+		/// <summary>
+		/// Loads Templates\files.xml and optionally finds a template in it.
+		/// Returns null if template not found. Exception if fails to load file.
+		/// Uses caching to avoid loading file each time, but reloads if file modified; don't modify the XML DOM.
+		/// </summary>
+		/// <param name="template">null or relative path of template in Templates\files. Case-sensitive.</param>
+		public static (XElement x, bool cached) LoadXml(string template = null)
+		{
+			//load files.xml first time, or reload if file modified
+			AFile.GetProperties(s_xmlFilePath, out var fp, FAFlags.UseRawPath);
+			bool cached = s_xml != null && fp.LastWriteTimeUtc == s_xmlFileTime;
+			if(!cached) {
+				s_xml = AExtXml.LoadElem(s_xmlFilePath);
+				s_xmlFileTime = fp.LastWriteTimeUtc;
+			}
+
+			var x = s_xml;
+			if(template != null) {
+				var a = template.Split('\\');
+				for(int i = 0; i < a.Length; i++) x = x?.Elem(i < a.Length - 1 ? "d" : null, "n", a[i]);
+				Debug.Assert(x != null);
+			}
+			return (x, cached);
+		}
+		static XElement s_xml;
+		static readonly string s_xmlFilePath = AFolders.ThisAppBS + @"Templates\files.xml";
+		static DateTime s_xmlFileTime;
+
+		public static bool IsInExamples(XElement x) => x.Ancestors().Any(o => o.Attr("n") == "Examples");
 	}
 
 	[Flags]
@@ -843,7 +756,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="userEdited">true if called from the control edit notification.</param>
 	public bool FileRename(string name, bool userEdited = false)
 	{
-		name = APath.CorrectFileName(name);
+		name = APath.CorrectName(name);
 		if(!IsFolder) {
 			var ext = APath.GetExtension(_name);
 			if(ext.Length > 0) if(name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
@@ -851,7 +764,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		if(name == _name) return true;
 
 		if(!IsLink) {
-			if(!_model.TryFileOperation(() => AFile.Rename(this.FilePath, name, IfExists.Fail))) return false;
+			if(!_model.TryFileOperation(() => AFile.Rename(this.FilePath, name, FIfExists.Fail))) return false;
 		}
 
 		_name = name;
@@ -868,20 +781,20 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// For example, cannot move parent into child etc.
 	/// Does not check whether can move the file.
 	/// </summary>
-	public bool CanMove(FileNode target, NodePosition pos)
+	public bool CanMove(FileNode target, FNPosition pos)
 	{
 		//cannot move into self or descendants
 		if(target == this || target.IsDescendantOf(this)) return false;
 
 		//cannot move into a non-folder or before/after self
 		switch(pos) {
-		case NodePosition.Inside:
+		case FNPosition.Inside:
 			if(!target.IsFolder) return false;
 			break;
-		case NodePosition.Before:
+		case FNPosition.Before:
 			if(Next == target) return false;
 			break;
-		case NodePosition.After:
+		case FNPosition.After:
 			if(Previous == target) return false;
 			break;
 		}
@@ -894,27 +807,27 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// </summary>
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
-	public bool FileMove(FileNode target, NodePosition pos)
+	public bool FileMove(FileNode target, FNPosition pos)
 	{
 		if(!CanMove(target, pos)) return false;
 
 		//move file or directory
 		if(!IsLink) {
 			var oldParent = Parent;
-			var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
+			var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
 			if(newParent != oldParent) {
-				if(!_model.TryFileOperation(() => AFile.Move(this.FilePath, newParent.FilePath + "\\" + _name, IfExists.Fail))) return false;
+				if(!_model.TryFileOperation(() => AFile.Move(this.FilePath, newParent.FilePath + "\\" + _name, FIfExists.Fail))) return false;
 			}
 		}
 
 		//move tree node
 		_model.OnNodeRemoved(this);
 		Remove();
-		_Common_MoveCopyNew(target, pos);
+		Common_MoveCopyNew(target, pos);
 		return true;
 	}
 
-	void _Common_MoveCopyNew(FileNode target, NodePosition pos)
+	public void Common_MoveCopyNew(FileNode target, FNPosition pos)
 	{
 		target.AddChildOrSibling(this, pos, true);
 		CodeInfo.FilesChanged();
@@ -923,9 +836,9 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <summary>
 	/// Adds f to the tree, updates control, optionally sets to save workspace.
 	/// </summary>
-	public void AddChildOrSibling(FileNode f, NodePosition inBeforeAfter, bool setSaveWorkspace)
+	public void AddChildOrSibling(FileNode f, FNPosition inBeforeAfter, bool setSaveWorkspace)
 	{
-		if(inBeforeAfter == NodePosition.Inside) AddChild(f); else AddSibling(f, inBeforeAfter == NodePosition.After);
+		if(inBeforeAfter == FNPosition.Inside) AddChild(f); else AddSibling(f, inBeforeAfter == FNPosition.After);
 		_model.OnNodeInserted(f);
 		if(setSaveWorkspace) _model.Save.WorkspaceLater();
 	}
@@ -938,17 +851,17 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
 	/// <param name="newModel">Used when importing workspace.</param>
-	internal FileNode FileCopy(FileNode target, NodePosition pos, FilesModel newModel = null)
+	internal FileNode FileCopy(FileNode target, FNPosition pos, FilesModel newModel = null)
 	{
 		_model.Save?.TextNowIfNeed(true);
 
 		//create unique name
-		var newParent = (pos == NodePosition.Inside) ? target : target.Parent;
+		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
 		string name = CreateNameUniqueInFolder(newParent, _name, IsFolder);
 
 		//copy file or directory
 		if(!IsLink) {
-			if(!_model.TryFileOperation(() => AFile.Copy(FilePath, newParent.FilePath + "\\" + name, IfExists.Fail))) return null;
+			if(!_model.TryFileOperation(() => AFile.Copy(FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return null;
 		}
 
 		//create new FileNode with descendants
@@ -967,13 +880,26 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		}
 
 		//insert at the specified place and set to save
-		f._Common_MoveCopyNew(target, pos);
+		f.Common_MoveCopyNew(target, pos);
 		return f;
 	}
 
 	#endregion
 
 	#region util
+
+	/// <summary>
+	/// Gets file type from XML tag which should be "d", "s", "c" or "n".
+	/// If none, throws ArgumentException if canThrow, else returns EFileType.NotCodeFile.
+	/// </summary>
+	public static EFileType XmlTagToFileType(string tag, bool canThrow) => tag switch
+	{
+		"d" => EFileType.Folder,
+		"s" => EFileType.Script,
+		"c" => EFileType.Class,
+		"n" => EFileType.NotCodeFile,
+		_ => !canThrow ? EFileType.NotCodeFile : throw new ArgumentException("XML element name must be 'd', 's', 'c' or 'n'")
+	};
 
 	/// <summary>
 	/// Detects file type from extension or text.

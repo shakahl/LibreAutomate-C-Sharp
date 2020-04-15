@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -189,7 +188,7 @@ namespace Au.Triggers
 		/// <param name="args"></param>
 		/// <exception cref="InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
 		/// <remarks>
-		/// Must be called while <see cref="ActionTriggers.Run"/> is running, from the same thread that called it.
+		/// Must be called while <c>Triggers.Run();</c> is running, from the same thread.
 		/// </remarks>
 		public void RunAction(TriggerArgs args)
 		{
@@ -204,6 +203,10 @@ namespace Au.Triggers
 	/// </summary>
 	public abstract class TriggerArgs
 	{
+		/// <summary>
+		/// Gets the trigger as <see cref="ActionTrigger"/> (the base class of all trigger type classes).
+		/// </summary>
+		public abstract ActionTrigger TriggerBase { get; }
 	}
 
 	/// <summary>
@@ -444,7 +447,7 @@ namespace Au.Triggers
 
 		internal Dictionary<TFunc, TriggerFunc> perfDict = new Dictionary<TFunc, TriggerFunc>();
 
-		internal bool Used { get; private set; }
+		//internal bool Used { get; private set; }
 
 		internal TFunc nextAfter, nextBefore, commonAfter, commonBefore;
 
@@ -492,8 +495,19 @@ namespace Au.Triggers
 
 		TFunc _Func(TFunc f)
 		{
-			if(f != null) Used = true;
+			//if(f != null) Used = true;
 			return f;
+		}
+
+		/// <summary>
+		/// Clears all properties (sets = null).
+		/// </summary>
+		public void Reset()
+		{
+			nextAfter = null;
+			nextBefore = null;
+			commonAfter = null;
+			commonBefore = null;
 		}
 	}
 

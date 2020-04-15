@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -324,7 +323,7 @@ partial class FilesModel
 			if(!copy && _dragNodes != null) {
 				foreach(TreeNodeAdv n in _dragNodes) {
 					var f = n.Tag as FileNode;
-					if(!f.CanMove(fTarget, this.DropPosition.Position)) return;
+					if(!f.CanMove(fTarget, (FNPosition)this.DropPosition.Position)) return;
 				}
 			}
 

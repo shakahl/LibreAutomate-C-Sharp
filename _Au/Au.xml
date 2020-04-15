@@ -2167,11 +2167,11 @@
         </member>
         <member name="T:Au.Types.Coord">
             <summary>
-            Contains x or y coordinate in screen or some other rectangle that can be specified in various ways (normal, reverse, fraction, center, max).
+            Contains x or y coordinate in screen or some other rectangle that can be specified in various ways: normal, reverse, fraction, center, max.
             Used for parameters of functions like <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>, <see cref="M:Au.AWnd.Move(Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,Au.Types.Coord,System.Boolean,Au.AScreen)"/>.
             </summary>
             <remarks>
-            To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b>, <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
+            To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
             Also there are functions to convert <b>Coord</b> to normal coodinates.
             </remarks>
         </member>
@@ -2200,6 +2200,11 @@
             Creates Coord of Normal type.
             </summary>
         </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.Single)~Au.Types.Coord">
+            <summary>
+            Creates Coord of Fraction type.
+            </summary>
+        </member>
         <member name="M:Au.Types.Coord.Reverse(System.Int32)">
             <summary>
             Creates Coord of Reverse type.
@@ -2210,6 +2215,7 @@
             <summary>
             Creates Coord of Fraction type.
             Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
+            Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(0.5)</c> can be replaced with <c>0.5f</c>.
             </summary>
         </member>
         <member name="P:Au.Types.Coord.Center">
@@ -2382,6 +2388,12 @@
             <summary>
             The raw value.
             </summary>
+        </member>
+        <member name="M:Au.Types.DStringList.ToArray(System.Char)">
+            <summary>
+            Converts the value to string[].
+            </summary>
+            <param name="separator">If the value is string, use this character to split it. Default '|'.</param>
         </member>
         <member name="T:Au.Types.LPARAM">
             <summary>
@@ -3005,27 +3017,7 @@
         </member>
         <member name="F:Au.Types.TBAnchor.None">
             <summary>
-            Don't move the toolbar together with the owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor.Top">
-            <summary>
-            Anchor is the owner's top edge. Also left and right edges, therefore the toolbar is resized when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor.Bottom">
-            <summary>
-            Anchor is the owner's bottom edge. Also left and right edges, therefore the toolbar is resized when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor.Left">
-            <summary>
-            Anchor is the owner's left edge. Also top and bottom edges, therefore the toolbar is resized when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor.Right">
-            <summary>
-            Anchor is the owner's right edge. Also top and bottom edges, therefore the toolbar is resized when resizing its owner.
+            Don't move the toolbar together with its owner.
             </summary>
         </member>
         <member name="F:Au.Types.TBAnchor.TopLeft">
@@ -3048,9 +3040,41 @@
             Anchors are owner's bottom and right edges.
             </summary>
         </member>
+        <member name="F:Au.Types.TBAnchor.Top">
+            <summary>
+            Anchors are owner's top, left and right edges. The toolbar is resized vertically when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.Bottom">
+            <summary>
+            Anchors are owner's bottom, left and right edges. The toolbar is resized vertically when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.Left">
+            <summary>
+            Anchors are owner's left, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.Right">
+            <summary>
+            Anchors are owner's right, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+            </summary>
+        </member>
         <member name="F:Au.Types.TBAnchor.All">
             <summary>
-            Anchors are all owner's edges, therefore the toolbar is resized when resizing its owner.
+            Anchors are all owner's edges. The toolbar is resized when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.OppositeToolbarEdgeX">
+            <summary>
+            Use toolbar's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
+            This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.OppositeToolbarEdgeY">
+            <summary>
+            Use toolbar's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
+            This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
             </summary>
         </member>
         <member name="T:Au.Types.TBHide">
@@ -3067,40 +3091,40 @@
         <member name="F:Au.Types.TBHide.User">
             <summary>This and bigger flag values can be used by callers for any purpose. Value 0x10000.</summary>
         </member>
-        <member name="T:Au.Types.TBLocation">
+        <member name="T:Au.Types.TBOffsets">
             <summary>
-            Used with <see cref="P:Au.AToolbar.Location"/>.
+            Used with <see cref="P:Au.AToolbar.Offsets"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.TBLocation.Left">
+        <member name="P:Au.Types.TBOffsets.Left">
             <summary>
-            Horizontal distance from the owner's left edge to the toolbar's left edge.
+            Horizontal distance from the owner's left edge to the toolbar's left edge (right if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeX"/>).
             </summary>
         </member>
-        <member name="P:Au.Types.TBLocation.Top">
+        <member name="P:Au.Types.TBOffsets.Top">
             <summary>
-            Vertical distance from the owner's top edge to the toolbar's top edge.
+            Vertical distance from the owner's top edge to the toolbar's top edge (bottom if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeY"/>).
             </summary>
         </member>
-        <member name="P:Au.Types.TBLocation.Right">
+        <member name="P:Au.Types.TBOffsets.Right">
             <summary>
-            Horizontal distance from the toolbar's right edge to the owner's right edge.
+            Horizontal distance from the toolbar's right edge (left if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeX"/>) to the owner's right edge.
             </summary>
         </member>
-        <member name="P:Au.Types.TBLocation.Bottom">
+        <member name="P:Au.Types.TBOffsets.Bottom">
             <summary>
-            Vertical distance from the toolbar's bottom edge to the owner's bottom edge.
+            Vertical distance from the toolbar's bottom edge (top if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeY"/>) to the owner's bottom edge.
             </summary>
         </member>
-        <member name="M:Au.Types.TBLocation.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+        <member name="M:Au.Types.TBOffsets.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
             <summary>
             Sets all properties.
             </summary>
         </member>
-        <member name="M:Au.Types.TBLocation.Equals(Au.Types.TBLocation)">
+        <member name="M:Au.Types.TBOffsets.Equals(Au.Types.TBOffsets)">
             
         </member>
-        <member name="M:Au.Types.TBLocation.ToString">
+        <member name="M:Au.Types.TBOffsets.ToString">
             
         </member>
         <member name="T:Au.Types.TBGroupSeparator">
@@ -3628,7 +3652,7 @@
         </member>
         <member name="T:Au.Types.FCFlags">
             <summary>
-            flags for <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> and some other similar functions.
+            flags for <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> and some other similar functions.
             Used only when copying directory.
             </summary>
         </member>
@@ -3695,23 +3719,23 @@
             Returns FullPath.
             </summary>
         </member>
-        <member name="T:Au.Types.IfExists">
+        <member name="T:Au.Types.FIfExists">
             <summary>
             What to do if the destination directory contains a file or directory with the same name as the source file or directory when copying, moving or renaming.
-            Used with <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>, <see cref="M:Au.AFile.Move(System.String,System.String,Au.Types.IfExists)"/> and similar functions.
+            Used with <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>, <see cref="M:Au.AFile.Move(System.String,System.String,Au.Types.FIfExists)"/> and similar functions.
             When renaming or moving, if the destination is the same as the source, these options are ignored and the destination is simply renamed. For example when renaming "file.txt" to "FILE.TXT".
             </summary>
         </member>
-        <member name="F:Au.Types.IfExists.Fail">
+        <member name="F:Au.Types.FIfExists.Fail">
             <summary>Throw exception. Default.</summary>
         </member>
-        <member name="F:Au.Types.IfExists.Delete">
+        <member name="F:Au.Types.FIfExists.Delete">
             <summary>Delete destination.</summary>
         </member>
-        <member name="F:Au.Types.IfExists.RenameExisting">
+        <member name="F:Au.Types.FIfExists.RenameExisting">
             <summary>Rename (backup) destination.</summary>
         </member>
-        <member name="F:Au.Types.IfExists.MergeDirectory">
+        <member name="F:Au.Types.FIfExists.MergeDirectory">
             <summary>
             If destination directory exists, merge the source directory into it, replacing existing files.
             If destination file exists, deletes it.
@@ -4950,18 +4974,18 @@
         <member name="M:Au.Types.OutServMessage.ToString">
             
         </member>
-        <member name="T:Au.Types.SDefault">
+        <member name="T:Au.Types.SODefault">
             <summary>
-            Used with <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)"/> to specify what screen to use if the function fails, for example if the window/point/etc is not in a screen or if the window handle is invalid.
+            Used with <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)"/> to specify what screen to use if the function fails, for example if the window/point/etc is not in a screen or if the window handle is invalid.
             </summary>
         </member>
-        <member name="F:Au.Types.SDefault.Zero">
+        <member name="F:Au.Types.SODefault.Zero">
             <summary>0 (<see cref="P:Au.AScreen.ScreenHandle.Is0"/> will return true).</summary>
         </member>
-        <member name="F:Au.Types.SDefault.Primary">
+        <member name="F:Au.Types.SODefault.Primary">
             <summary>The primary screen.</summary>
         </member>
-        <member name="F:Au.Types.SDefault.Nearest">
+        <member name="F:Au.Types.SODefault.Nearest">
             <summary>The nearest screen. If window handle is invalid - the primary screen.</summary>
         </member>
         <member name="T:Au.Types.WIArea">
@@ -5386,12 +5410,6 @@
             Returns <see cref="P:Au.Types.RXGroup.Value"/>.
             </summary>
         </member>
-        <member name="T:Au.Types.RXCalloutFunc">
-            <summary>
-            Delegate type of callout callback function.
-            See <see cref="P:Au.ARegex.Callout"/>.
-            </summary>
-        </member>
         <member name="T:Au.Types.RXCalloutData">
             <summary>
             Managed version of PCRE API struct pcre2_callout_block.
@@ -5661,9 +5679,9 @@
             While waiting, dispatch Windows messages, events, hooks etc. Like <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/>.
             </summary>
         </member>
-        <member name="T:Au.Types.WaitMsgCallback">
+        <member name="T:Au.Types.WPMCallback">
             <summary>
-            Delegate type for <see cref="M:Au.AWaitFor.PostedMessage(System.Double,Au.Types.WaitMsgCallback)"/>.
+            Delegate type for <see cref="M:Au.AWaitFor.PostedMessage(System.Double,Au.Types.WPMCallback)"/>.
             </summary>
             <param name="m">API <msdn>MSG</msdn>.</param>
         </member>
@@ -5974,9 +5992,9 @@
             Not used with flag NeedWindow.
             </summary>
         </member>
-        <member name="T:Au.Types.WndClassEx">
+        <member name="T:Au.Types.RWCEtc">
             <summary>
-            Used with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/>.
+            Used with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/>.
             </summary>
         </member>
         <member name="T:Au.Types.PrintMsgOptions">
@@ -7054,6 +7072,7 @@
             ]]></code>
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
+            <seealso cref="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)"/>
         </member>
         <member name="M:Au.ADialog.ShowProgress(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
@@ -7106,6 +7125,9 @@
             <summary>
             Popup menu based on <see cref="T:System.Windows.Forms.ContextMenuStrip"/>. Can be used everywhere, not only in forms.
             </summary>
+            <remarks>
+            Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
+            </remarks>
             <example>
             <code><![CDATA[
             var m = new AMenu();
@@ -7322,42 +7344,28 @@
             You can instead use <see cref="P:Au.Types.MTBase.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
             </remarks>
         </member>
-        <member name="M:Au.AMenu.Show(System.Boolean)">
+        <member name="M:Au.AMenu.Show(System.Nullable{Au.Types.POINT},System.Boolean,System.Nullable{System.Windows.Forms.ToolStripDropDownDirection})">
             <summary>
-            Shows the menu at the mouse cursor position.
+            Shows the menu unowned.
             </summary>
-            <param name="byCaret">Show at the text cursor (caret) position, if available.</param>
-        </member>
-        <member name="M:Au.AMenu.Show(System.Int32,System.Int32,System.Windows.Forms.ToolStripDropDownDirection)">
-            <summary>
-            Shows the menu at the specified position.
-            </summary>
-            <param name="x">X position in screen.</param>
-            <param name="y">Y position in screen.</param>
+            <param name="xy">Position in screen. If null (default), uses the mouse cursor or caret position.</param>
+            <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
             <param name="direction">Menu drop direction.</param>
+            <seealso cref="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)"/>
         </member>
-        <member name="M:Au.AMenu.Show(System.Windows.Forms.Control,System.Int32,System.Int32,System.Windows.Forms.ToolStripDropDownDirection)">
+        <member name="M:Au.AMenu.Show(System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Nullable{System.Windows.Forms.ToolStripDropDownDirection})">
             <summary>
-            Shows the menu on a form or control.
+            Shows the menu owned by a control or form.
             </summary>
             <param name="owner">A control or form that will own the menu.</param>
-            <param name="x">X position in control's client area.</param>
-            <param name="y">Y position in control's client area.</param>
+            <param name="xy">Position in control's client area. If null (default), uses the mouse cursor or caret position.</param>
+            <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
             <param name="direction">Menu drop direction.</param>
+            <exception cref="T:System.ArgumentNullException"><i>owner</i> is null.</exception>
             <remarks>
             Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AMenu.Control"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
             </remarks>
-        </member>
-        <member name="M:Au.AMenu.Show(System.Windows.Forms.Control,System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)">
-            <summary>
-            Shows the menu at the mouse cursor position.
-            </summary>
-            <param name="owner">A control or form that will own the menu.</param>
-            <param name="byCaret">Show at the text cursor (caret) position, if available.</param>
-            <param name="direction">Menu drop direction.</param>
-            <remarks>
-            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AMenu.Control"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
-            </remarks>
+            <seealso cref="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)"/>
         </member>
         <member name="P:Au.AMenu.MultiShow">
             <summary>
@@ -7409,11 +7417,33 @@
             Closes the menu and its submenus.
             </summary>
         </member>
+        <member name="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)">
+            <summary>
+            Creates and shows popup menu where items use ids instead of actions.
+            Returns selected item id, or 0 if cancelled.
+            </summary>
+            <param name="items">
+            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+            For separators use null or empty strings: "One|Two||Three|Four".
+            </param>
+            <param name="owner">Owner control/form or null.</param>
+            <param name="position">Position in screen or owner's client area. If null (default), uses the mouse cursor position.</param>
+            <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
+            <param name="direction">Menu drop direction.</param>
+            <remarks>
+            The menu is modal; the function returns when it is closed.
+            </remarks>
+            <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+        </member>
         <member name="T:Au.AToolbar">
             <summary>
             Floating toolbar based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
             Can be attached to windows of other programs.
             </summary>
+            <remarks>
+            Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="P:Au.Types.MTBase.ItemThread"/>.
+            </remarks>
             <example>
             <code><![CDATA[
             _Toolbar_Common(); //show toolbar. Don't attach to a window.
@@ -7472,6 +7502,11 @@
             <remarks>
             The <b>AToolbar</b> class is based on <see cref="T:System.Windows.Forms.ToolStrip"/>. Not directly but as a facade class. This property gets the <b>ToolStrip</b>. You can use its properties, methods and events.
             </remarks>
+        </member>
+        <member name="P:Au.AToolbar.IsAlive">
+            <summary>
+            Returns true if the toolbar is open. False if closed or <see cref="M:Au.AToolbar.Show(Au.AScreen)"/> still not called.
+            </summary>
         </member>
         <member name="P:Au.AToolbar.Name">
             <summary>
@@ -7604,7 +7639,7 @@
         </member>
         <member name="M:Au.AToolbar.Show(Au.AScreen)">
             <summary>
-            Shows the toolbar and attaches to a screen.
+            Shows the toolbar.
             </summary>
             <param name="screen">Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
             <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
@@ -7624,6 +7659,16 @@
             The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
             </remarks>
         </member>
+        <member name="M:Au.AToolbar.Show(Au.Triggers.TriggerArgs)">
+            <summary>
+            Shows the toolbar and optionally attaches to a window.
+            </summary>
+            <param name="ta">
+            Trigger arguments or null.
+            If it is a window trigger, attaches to the window (calls <see cref="M:Au.AToolbar.Show(Au.AWnd,System.Boolean)"/>).
+            If it is some other trigger, disables the trigger to avoid multiple toolbar instances; later enables when closed.
+            </param>
+        </member>
         <member name="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)">
             <summary>
             Shows the toolbar and attaches to an object in a window.
@@ -7639,7 +7684,11 @@
         <member name="M:Au.AToolbar.Close">
             <summary>
             Hides and disposes the toolbar.
+            If it's a satellite toolbar, closes its owner too.
             </summary>
+            <remarks>
+            Can be called from any thread.
+            </remarks>
         </member>
         <member name="M:Au.AToolbar.Hide(System.Boolean,Au.Types.TBHide)">
             <summary>
@@ -7650,6 +7699,7 @@
             <exception cref="T:System.InvalidOperationException">
             - The toolbar was never shown (<see cref="M:Au.AToolbar.Show(Au.AScreen)"/> not called).
             - It is a satellite toolbar.
+            - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="P:Au.Types.MTBase.ItemThread"/>.
             </exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="F:Au.Types.TBHide.User"/>.</exception>
             <remarks>
@@ -7716,16 +7766,21 @@
             The owner also can be a screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
             This property is in the context menu and is saved.
             </remarks>
-            <seealso cref="P:Au.AToolbar.Location"/>
+            <seealso cref="P:Au.AToolbar.Offsets"/>
         </member>
-        <member name="P:Au.AToolbar.Location">
+        <member name="P:Au.AToolbar.Offsets">
             <summary>
             Specifies distances between edges of the toolbar and edges of its owner, depending on <see cref="P:Au.AToolbar.Anchor"/>.
             </summary>
             <remarks>
-            The owner also can be a screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
+            Owner is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>. It can be a window, screen, control or other object.
             This property is updated when moving or resizing the toolbar. It is saved.
             </remarks>
+            <example>
+            <code><![CDATA[
+            t.Offsets = new TBOffsets(150, 5, 0, 0);
+            ]]></code>
+            </example>
         </member>
         <member name="P:Au.AToolbar.Sizable">
             <summary>
@@ -7742,16 +7797,22 @@
             <remarks>
             This property is updated when resizing the toolbar. It is saved.
             </remarks>
+            <example>
+            <code><![CDATA[
+            t.Size = (300, 40);
+            ]]></code>
+            </example>
         </member>
         <member name="P:Au.AToolbar.AutoSize">
             <summary>
             Automatically resize the toolbar to make all buttons visible.
             </summary>
             <remarks>
-            Autosizing occurs in these cases:
+            Autosizing occurs when:
             - When showing the toolbar.
             - When the user resizes the toolbar. It also sets the wrap width.
-            - When setting this property = true (in code or in the context menu) or changing <see cref="P:Au.AToolbar.AutoSizeWrapWidth"/> wile it is true.
+            - When setting this property = true (in code or in the context menu) or changing <see cref="P:Au.AToolbar.AutoSizeWrapWidth"/> while it is true.
+            - <see cref="M:Au.AToolbar.AutoSizeNow"/>.
             
             This property is in the context menu and is saved.
             </remarks>
@@ -7764,6 +7825,12 @@
             This property is updated when the user resizes the toolbar while <see cref="P:Au.AToolbar.AutoSize"/> is true. It is saved.
             If flow direction is vertical, this is the preferred height at which buttons are moved to the next column.
             </remarks>
+        </member>
+        <member name="M:Au.AToolbar.AutoSizeNow">
+            <summary>
+            If <see cref="P:Au.AToolbar.AutoSize"/> true, resizes the toolbar now if need.
+            Call after changing toolbar buttons etc at run time.
+            </summary>
         </member>
         <member name="P:Au.AToolbar.MiscFlags">
             <summary>
@@ -7780,7 +7847,7 @@
             <seealso cref="M:Au.AWnd.SetTransparency(System.Boolean,System.Nullable{System.Int32},System.Nullable{Au.Types.ColorInt})"/>
             <example>
             <code><![CDATA[
-            tb.Transparency = (64, null);
+            t.Transparency = (64, null);
             ]]></code>
             </example>
         </member>
@@ -7792,6 +7859,16 @@
             <remarks>
             The satellite toolbar is shown when mouse enters its owner toolbar and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
             A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.CreateSatelliteOwner(System.String,System.Int32)">
+            <summary>
+            If this is not a satellite toolbar, creates owner toolbar and set its <see cref="P:Au.AToolbar.Satellite"/> = this.
+            In any case returns the owner toolbar.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
+            <remarks>
+            Sets owner toolbar's name = <c>this.Name + "^"</c>.
             </remarks>
         </member>
         <member name="P:Au.AToolbar.SatelliteOwner">
@@ -8141,7 +8218,7 @@
             <param name="curDir">
             Initial current directory of the new process.
             - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-            - Else if "", calls <c>APath.GetDirectoryPath(exe)</c>.
+            - Else if "", calls <c>APath.GetDirectory(exe)</c>.
             - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
             </param>
             <param name="encoding">
@@ -8350,7 +8427,7 @@
             <param name="flags"></param>
             <param name="filter">
             Callback function. Called for each file and subdirectory. If returns false, the file/subdirectory is not included in results.
-            Can be useful when <b>EnumDirectory</b> is called indirectly, for example by the <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> method. If you call it directly, you can instead skip the file in your foreach loop.
+            Can be useful when <b>EnumDirectory</b> is called indirectly, for example by the <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> method. If you call it directly, you can instead skip the file in your foreach loop.
             Example: <c>filter: k => k.IsDirectory || k.Name.Ends(".png", true)</c>. See <see cref="P:Au.Types.FEFile.IsDirectory"/>.
             </param>
             <param name="errorHandler">
@@ -8385,7 +8462,7 @@
             note: path must be normalized.
             </summary>
         </member>
-        <member name="M:Au.AFile.Rename(System.String,System.String,Au.Types.IfExists)">
+        <member name="M:Au.AFile.Rename(System.String,System.String,Au.Types.FIfExists)">
             <summary>
             Renames file or directory.
             </summary>
@@ -8402,14 +8479,14 @@
             Uses API <msdn>MoveFileEx</msdn>.
             </remarks>
         </member>
-        <member name="M:Au.AFile.Move(System.String,System.String,Au.Types.IfExists)">
+        <member name="M:Au.AFile.Move(System.String,System.String,Au.Types.FIfExists)">
             <summary>
             Moves (changes path of) file or directory.
             </summary>
             <param name="path">Full path.</param>
             <param name="newPath">
             New full path.
-            <note>It is not the new parent directory. Use <see cref="M:Au.AFile.MoveTo(System.String,System.String,Au.Types.IfExists)"/> for it.</note>
+            <note>It is not the new parent directory. Use <see cref="M:Au.AFile.MoveTo(System.String,System.String,Au.Types.FIfExists)"/> for it.</note>
             </param>
             <param name="ifExists"></param>
             <exception cref="T:System.ArgumentException">path or newPath is not full path (see <see cref="M:Au.APath.IsFullPath(System.String)"/>).</exception>
@@ -8424,7 +8501,7 @@
             If path and newPath share the same parent directory, just renames the file.
             </remarks>
         </member>
-        <member name="M:Au.AFile.MoveTo(System.String,System.String,Au.Types.IfExists)">
+        <member name="M:Au.AFile.MoveTo(System.String,System.String,Au.Types.FIfExists)">
             <summary>
             Moves file or directory into another directory.
             </summary>
@@ -8433,7 +8510,7 @@
             <param name="ifExists"></param>
             <exception cref="T:System.ArgumentException">
             - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="M:Au.APath.IsFullPath(System.String)"/>).
-            - <i>path</i> is drive. To move drive content, use <see cref="M:Au.AFile.Move(System.String,System.String,Au.Types.IfExists)"/>.
+            - <i>path</i> is drive. To move drive content, use <see cref="M:Au.AFile.Move(System.String,System.String,Au.Types.FIfExists)"/>.
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
@@ -8445,14 +8522,14 @@
             Creates the destination directory if does not exist (see <see cref="M:Au.AFile.CreateDirectory(System.String,System.String)"/>).
             </remarks>
         </member>
-        <member name="M:Au.AFile.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
+        <member name="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
             <summary>
             Copies file or directory.
             </summary>
             <param name="path">Full path.</param>
             <param name="newPath">
             New full path.
-            <note>It is not the new parent directory. Use <see cref="M:Au.AFile.CopyTo(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> for it.</note>
+            <note>It is not the new parent directory. Use <see cref="M:Au.AFile.CopyTo(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> for it.</note>
             </param>
             <param name="ifExists"></param>
             <param name="copyFlags">Options used when copying directory.</param>
@@ -8471,7 +8548,7 @@
             Creates the destination directory if does not exist (see <see cref="M:Au.AFile.CreateDirectory(System.String,System.String)"/>).
             </remarks>
         </member>
-        <member name="M:Au.AFile.CopyTo(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
+        <member name="M:Au.AFile.CopyTo(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})">
             <summary>
             Copies file or directory into another directory.
             </summary>
@@ -8479,10 +8556,10 @@
             <param name="newDirectory">New parent directory.</param>
             <param name="ifExists"></param>
             <param name="copyFlags">Options used when copying directory.</param>
-            <param name="filter">See <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.</param>
+            <param name="filter">See <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.</param>
             <exception cref="T:System.ArgumentException">
             - <i>path</i> or <i>newDirectory</i> is not full path (see <see cref="M:Au.APath.IsFullPath(System.String)"/>).
-            - <i>path</i> is drive. To copy drive content, use <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.IfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.
+            - <i>path</i> is drive. To copy drive content, use <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/>.
             </exception>
             <exception cref="T:System.IO.FileNotFoundException">The source file (path) does not exist or cannot be found.</exception>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
@@ -9401,8 +9478,8 @@
             <param name="prefixLongPath">Call <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/> which may prepend <c>@"\\?\"</c> if the result path is very long. Default true.</param>
             <remarks>
             If s1 and s2 are null or "", returns "". Else if s1 is null or "", returns s2. Else if s2 is null or "", returns s1.
-            Similar to System.IO.Path.Combine. Main differences: does not throw exceptions; has some options.
-            Does not expand environment variables. For it use <see cref="M:Au.APath.ExpandEnvVar(System.String)"/> before, or <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/> instead. Path that starts with an environment variable is considerd not full path.
+            Does not expand environment variables. For it use <see cref="M:Au.APath.ExpandEnvVar(System.String)"/> before, or <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/> instead. Path that starts with an environment variable here is considerd not full path.
+            Similar to <see cref="M:System.IO.Path.Combine(System.String,System.String)"/>. Main differences: has some options; supports null arguments.
             </remarks>
             <seealso cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/>
         </member>
@@ -9452,7 +9529,7 @@
             8. Appends <c>'\\'</c> character if ends with a drive name (eg <c>"C:"</c> -> <c>@"C:\"</c>).
             9. If no flag DontPrefixLongPath, calls <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>, which adds <c>@"\\?\"</c> etc prefix if path is very long.
             
-            Similar to <see cref="M:System.IO.Path.GetFullPath(System.String)"/>. Main differences: this function expands environment variables, does not support relative paths, supports <c>@"\\?\very long path"</c>, trims <c>'\\'</c> at the end if need, does not throw exceptions when it thinks that path is invalid (except when path is not full).
+            Similar to <see cref="M:System.IO.Path.GetFullPath(System.String)"/>. Main differences: this function expands environment variables, does not support relative paths, trims <c>'\\'</c> at the end if need.
             </remarks>
         </member>
         <member name="M:Au.APath.Normalize_(System.String,Au.Types.PNFlags,System.Boolean)">
@@ -9547,34 +9624,33 @@
             For longer paths need <c>@"\\?\"</c> prefix. It is supported by most native kernel API (but not shell API) and by most functions of this library.
             </summary>
         </member>
-        <member name="M:Au.APath.CorrectFileName(System.String,System.String)">
+        <member name="M:Au.APath.CorrectName(System.String,System.String)">
             <summary>
             Replaces characters that cannot be used in file names.
-            Returns valid filename. However it can be too long (itself or when combined with a directory path).
             </summary>
             <param name="name">Initial filename.</param>
             <param name="invalidCharReplacement">A string that will replace each invalid character. Default <c>"-"</c>.</param>
             <remarks>
             Also corrects other forms of invalid or problematic filename: trims spaces and other blank characters; replaces <c>"."</c> at the end; prepends <c>"@"</c> if a reserved name like <c>"CON"</c> or <c>"CON.txt"</c>; returns <c>"-"</c> if name is null/empty/whitespace.
+            Usually returns valid filename, however it can be too long (itself or when combined with a directory path).
             </remarks>
         </member>
-        <member name="M:Au.APath.IsInvalidFileName(System.String)">
+        <member name="M:Au.APath.IsInvalidName(System.String)">
             <summary>
             Returns true if name cannot be used for a file name, eg contains <c>'\\'</c> etc characters or is empty.
-            More info: <see cref="M:Au.APath.CorrectFileName(System.String,System.String)"/>.
+            More info: <see cref="M:Au.APath.CorrectName(System.String,System.String)"/>.
             </summary>
             <param name="name">Any string. Example: "name.txt". Can be null.</param>
         </member>
-        <member name="M:Au.APath.GetFileName(System.String,System.Boolean)">
+        <member name="M:Au.APath.GetName(System.String)">
             <summary>
-            Gets filename with or without extension.
+            Gets filename from path. Does not remove extension.
             Returns "" if there is no filename.
             Returns null if path is null.
             </summary>
             <param name="path">Path or filename. Can be null.</param>
-            <param name="withoutExtension">Remove extension, unless <i>path</i> ends with <c>'\\'</c> or <c>'/'</c>.</param>
             <remarks>
-            Similar to <see cref="M:System.IO.Path.GetFileName(System.ReadOnlySpan{System.Char})"/> and <see cref="M:System.IO.Path.GetFileNameWithoutExtension(System.ReadOnlySpan{System.Char})"/>. Some differences: does not throw exceptions; if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
+            Similar to <see cref="M:System.IO.Path.GetFileName(System.ReadOnlySpan{System.Char})"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
             
             Supports separators <c>'\\'</c> and <c>'/'</c>.
             Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.
@@ -9597,8 +9673,23 @@
             | <c>"::{A}\::{B}"</c> | <c>"::{B}"</c>
             | <c>""</c> | <c>""</c>
             | <c>null</c> | <c>null</c>
+            </remarks>
+        </member>
+        <member name="M:Au.APath.GetNameNoExt(System.String)">
+            <summary>
+            Gets filename without extension.
+            Returns "" if there is no filename.
+            Returns null if path is null.
+            </summary>
+            <param name="path">Path or filename (then just removes extension). Can be null.</param>
+            <remarks>
+            The same as <see cref="M:Au.APath.GetName(System.String)"/>, just removes extension.
+            Similar to <see cref="M:System.IO.Path.GetFileName(System.ReadOnlySpan{System.Char})"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
             
-            Examples when <i>withoutExtension</i> true:
+            Supports separators <c>'\\'</c> and <c>'/'</c>.
+            Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.
+            
+            Examples:
             
             | path | result
             | - | -
@@ -9621,7 +9712,6 @@
             <param name="path">Path or filename. Can be null.</param>
             <remarks>
             Supports separators <c>'\\'</c> and <c>'/'</c>.
-            Like <see cref="M:System.IO.Path.GetExtension(System.ReadOnlySpan{System.Char})"/>, but does not throw exceptions.
             </remarks>
         </member>
         <member name="M:Au.APath.GetExtension(System.String,System.String@)">
@@ -9642,16 +9732,17 @@
             Returns -1 if <c>'.'</c> is before <c>'\\'</c> or <c>'/'</c>.
             </remarks>
         </member>
-        <member name="M:Au.APath.GetDirectoryPath(System.String,System.Boolean)">
+        <member name="M:Au.APath.GetDirectory(System.String,System.Boolean)">
             <summary>
-            Removes filename part from path. By default also removes separator (<c>'\\'</c> or <c>'/'</c>) if it is not after drive name (eg <c>"C:"</c>).
+            Removes filename part from path.
+            By default also removes separator (<c>'\\'</c> or <c>'/'</c>) if it is not after drive name (eg <c>"C:"</c>).
             Returns "" if the string is a filename.
             Returns null if the string is null or a root (like <c>@"C:\"</c> or <c>"C:"</c> or <c>@"\\server\share"</c> or <c>"http:"</c>).
             </summary>
             <param name="path">Path or filename. Can be null.</param>
             <param name="withSeparator">Don't remove separator character(s) (<c>'\\'</c> or <c>'/'</c>). See examples.</param>
             <remarks>
-            Similar to <see cref="M:System.IO.Path.GetDirectoryName(System.ReadOnlySpan{System.Char})"/>. Some differences: does not throw exceptions; skips <c>'\\'</c> or <c>'/'</c> at the end (eg from <c>@"C:\A\B\"</c> gets <c>@"C:\A"</c>, not <c>@"C:\A\B"</c>); does not expand DOS path; much faster.
+            Similar to <see cref="M:System.IO.Path.GetDirectoryName(System.ReadOnlySpan{System.Char})"/>. Some differences: skips <c>'\\'</c> or <c>'/'</c> at the end (eg from <c>@"C:\A\B\"</c> gets <c>@"C:\A"</c>, not <c>@"C:\A\B"</c>); does not replace / with \.
             
             Parses raw string. You may want to <see cref="M:Au.APath.Normalize(System.String,System.String,Au.Types.PNFlags)"/> it at first.
             
@@ -10956,8 +11047,11 @@
             Returns the <b>Thread</b> variable.
             </summary>
             <param name="threadProc">Thread procedure. Parameter <i>start</i> of <b>Thread</b> constructor.</param>
-            <param name="background">If true (default), sets <see cref="P:System.Threading.Thread.IsBackground"/> = true.</param>
-            <param name="sta">If true (default), calls <see cref="M:System.Threading.Thread.SetApartmentState(System.Threading.ApartmentState)"/>(ApartmentState.STA).</param>
+            <param name="background">
+            If true (default), sets <see cref="P:System.Threading.Thread.IsBackground"/> = true.
+            The process ends when the main thread and all foreground threads end; background threads then are terminated.
+            </param>
+            <param name="sta">If true (default), sets <see cref="F:System.Threading.ApartmentState.STA"/>.</param>
             <exception cref="T:System.OutOfMemoryException"></exception>
         </member>
         <member name="T:Au.AUac">
@@ -13918,10 +14012,11 @@
         </member>
         <member name="M:Au.AMath.MulDiv(System.Int32,System.Int32,System.Int32)">
             <summary>
-            Multiplies number and numerator without overflow, and divides by denominator.
-            The return value is rounded up or down to the nearest integer.
-            If either an overflow occurred or denominator was 0, the return value is –1.
+            Returns <c>number * multiply / divide</c>.
+            Multiplies without overflow and rounds the result up or down to the nearest integer.
             </summary>
+            <exception cref="T:System.OverflowException"></exception>
+            <exception cref="T:System.DivideByZeroException"></exception>
         </member>
         <member name="M:Au.AMath.Percent(System.Int32,System.Int32)">
             <summary>
@@ -13939,7 +14034,9 @@
             </summary>
             <param name="value">An integer value.</param>
             <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
-            <remarks>For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.</remarks>
+            <remarks>
+            For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
+            </remarks>
         </member>
         <member name="M:Au.AMath.AlignUp(System.Int32,System.UInt32)">
             <summary>
@@ -13947,14 +14044,14 @@
             </summary>
             <param name="value">An integer value.</param>
             <param name="alignment">Alignment. Must be a power of two (2, 4, 8, 16...).</param>
-            <remarks>For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.</remarks>
-        </member>
-        <member name="M:Au.AMath.MinMax(System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Returns value but not less than min and not greater than max.
-            If value is less than min, returns min.
-            If value is greater than max, returns max.
-            </summary>
+            <remarks>
+            For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            for (int i = 0; i <= 20; i++) AOutput.Write(i, AMath.AlignUp(i, 4));
+            ]]></code>
+            </example>
         </member>
         <member name="M:Au.AMath.Swap``1(``0@,``0@)">
             <summary>
@@ -14837,27 +14934,27 @@
         </member>
         <member name="M:Au.AScreen.#ctor(Au.Types.POINT)">
             <summary>
-            Creates variable that holds <see cref="T:Au.Types.POINT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SDefault)"/>.
+            Creates variable that holds <see cref="T:Au.Types.POINT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SODefault)"/>.
             </summary>
         </member>
         <member name="M:Au.AScreen.#ctor(Au.Types.RECT)">
             <summary>
-            Creates variable that holds <see cref="T:Au.Types.RECT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SDefault)"/>.
+            Creates variable that holds <see cref="T:Au.Types.RECT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SODefault)"/>.
             </summary>
         </member>
         <member name="M:Au.AScreen.#ctor(Au.AWnd)">
             <summary>
-            Creates variable that holds window handle. Later will be called <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)"/>.
+            Creates variable that holds window handle. Later will be called <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)"/>.
             </summary>
         </member>
         <member name="M:Au.AScreen.#ctor(System.Windows.Forms.Control)">
             <summary>
-            Creates variable that holds <see cref="T:System.Windows.Forms.Control"/>. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SDefault)"/>.
+            Creates variable that holds <see cref="T:System.Windows.Forms.Control"/>. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SODefault)"/>.
             </summary>
         </member>
         <member name="M:Au.AScreen.#ctor(System.Windows.Window)">
             <summary>
-            Creates variable that holds <see cref="T:System.Windows.Window"/>. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SDefault)"/>.
+            Creates variable that holds <see cref="T:System.Windows.Window"/>. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SODefault)"/>.
             </summary>
         </member>
         <member name="M:Au.AScreen.#ctor(System.Func{Au.AScreen.ScreenHandle})">
@@ -14906,35 +15003,35 @@
             </summary>
             <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
         </member>
-        <member name="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)">
+        <member name="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)">
             <summary>
             Gets screen containing the biggest part of the specified window or nearest to it.
             </summary>
             <param name="w">Window or control. Can be default(AWnd) or invalid.</param>
             <param name="defaultScreen"></param>
         </member>
-        <member name="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SDefault)">
+        <member name="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SODefault)">
             <summary>
             Gets screen containing the biggest part of the specified control or form or nearest to it.
             </summary>
             <param name="c">Control or form. Cannot be null. The handle can be created or not.</param>
             <param name="defaultScreen"></param>
         </member>
-        <member name="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SDefault)">
+        <member name="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SODefault)">
             <summary>
             Gets screen containing the biggest part of the specified WPF window or nearest to it.
             </summary>
             <param name="w">WPF window.</param>
             <param name="defaultScreen"></param>
         </member>
-        <member name="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SDefault)">
+        <member name="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SODefault)">
             <summary>
             Gets screen containing the specified coordinate or nearest to it.
             </summary>
             <param name="p"></param>
             <param name="defaultScreen"></param>
         </member>
-        <member name="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SDefault)">
+        <member name="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SODefault)">
             <summary>
             Gets screen containing the biggest part of the specified rectangle or nearest to it.
             </summary>
@@ -15988,8 +16085,8 @@
             <example>
             <code><![CDATA[
             string s = "one * two three ";
-            foreach(var t in s.Segments(" ")) AOutput.Write(t);
-            foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(t);
+            foreach(var t in s.Segments(" ")) AOutput.Write(s[t.start..t.end]);
+            foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(s[t.start..t.end]);
             ]]></code>
             </example>
             <seealso cref="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags,System.Int32,System.Nullable{System.Range})"/>
@@ -16608,7 +16705,7 @@
             <remarks>
             PCRE is a regular expression library: <see href="https://www.pcre.org/"/>.
             PCRE regular expression syntax: <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">full</see>, <see href="https://www.pcre.org/current/doc/html/pcre2syntax.html">short</see>.
-            Some websites with tutorials and info: <see href="http://www.rexegg.com/">rexegg</see>, <see href="https://www.regular-expressions.info/">regular-expressions.info</see>.
+            Some websites with tutorials and info: <see href="https://www.rexegg.com/">rexegg</see>, <see href="https://www.regular-expressions.info/">regular-expressions.info</see>.
             
             This class is an alternative to the .NET <see cref="T:System.Text.RegularExpressions.Regex"/> class. The regular expression syntax is similar. PCRE has some features unavailable in .NET, and vice versa. In most cases PCRE is about 2 times faster. You can use any of these classes. Functions of <see cref="T:Au.AAcc"/> class support only PCRE.
             
@@ -16732,7 +16829,7 @@
             Callouts can be used to: 1. Track the matching progress. 2. Get all instances of a group that can match multiple times. 3. Evaluate and reject some matches or match parts. 4. Etc.
             The callback function is called by <see cref="M:Au.ARegex.IsMatch(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.Match(System.String,Au.Types.RXMatch@,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.FindAll(System.String,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.Replace(System.String,System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/>, <see cref="M:Au.ARegex.Split(System.String,System.Int32,System.Nullable{System.Range},Au.Types.RXMatchFlags)"/> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
             More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
-            See also: <see href="http://www.rexegg.com/pcre-callouts.html"/>
+            See also: <see href="https://www.rexegg.com/pcre-callouts.html"/>
             </remarks>
             <example>
             Track the matching progress.
@@ -17668,23 +17765,20 @@
         </member>
         <member name="M:Au.Util.ADpi.ScaleInt(System.Int32)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.BaseDPI"/> is more than 96, returns stretched i.
-            Else returns i.
+            If <see cref="P:Au.Util.ADpi.BaseDPI"/> isn't 96 (100%), returns scaled i. Else returns i.
             </summary>
             <param name="i"></param>
         </member>
         <member name="M:Au.Util.ADpi.ScaleSize(Au.Types.SIZE)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.BaseDPI"/> is more than 96, returns scaled (stretched) z.
-            Else returns z.
+            If <see cref="P:Au.Util.ADpi.BaseDPI"/> isn't 96 (100%), returns scaled z. Else returns z.
             Note: for images use <see cref="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)"/>.
             </summary>
             <param name="z"></param>
         </member>
         <member name="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.BaseDPI"/> is more than 96 and image resolution is different, returns scaled (stretched) image.Size.
-            Else returns image.Size.
+            If <see cref="P:Au.Util.ADpi.BaseDPI"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
             </summary>
             <param name="image"></param>
         </member>
@@ -19362,7 +19456,7 @@
             Initial current directory of the new process.
             - If null, uses <c>Directory.GetCurrentDirectory()</c>.
             - Else if <i>rawCurDir</i>==true, uses raw <i>curDir</i> value.
-            - Else if "", calls <c>APath.GetDirectoryPath(exe)</c>.
+            - Else if "", calls <c>APath.GetDirectory(exe)</c>.
             - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
             </param>
             <param name="envVar">null or environment variables to pass to the new process together with variables of this process. Format: "var1=value1\0var2=value2\0". If ends with "\0\0", will pass only these variables.</param>
@@ -20182,7 +20276,7 @@
             </remarks>
             <exception cref="T:System.ArgumentOutOfRangeException"><i>timeMS</i> is negative and not Timeout.Infinite.</exception>
             <seealso cref="M:Au.AWaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})"/>
-            <seealso cref="M:Au.AWaitFor.PostedMessage(System.Double,Au.Types.WaitMsgCallback)"/>
+            <seealso cref="M:Au.AWaitFor.PostedMessage(System.Double,Au.Types.WPMCallback)"/>
             <seealso cref="T:Au.Util.AMessageLoop"/>
         </member>
         <member name="M:Au.ATime.SleepDoEvents_(System.Int32,System.Boolean)">
@@ -20528,12 +20622,12 @@
             <summary>
             The same as <see cref="M:Au.AWaitFor.Wait_(System.Int64,Au.Types.WHFlags,System.IntPtr[])"/> + can wait for message and variable.
             If msgCallback is not null, calls it when dispatching messages. If returns true, stops waiting and returns handles?.Length.
-            	If it is WaitMsgCallback, calls it before dispatching a posted message.
+            	If it is WPMCallback, calls it before dispatching a posted message.
             	If it is Func{bool}, calls it after dispatching one or more messages.
             If stopVar is not null, when it becomes true stops waiting and returns handles?.Length + 1.
             </summary>
         </member>
-        <member name="M:Au.AWaitFor.PostedMessage(System.Double,Au.Types.WaitMsgCallback)">
+        <member name="M:Au.AWaitFor.PostedMessage(System.Double,Au.Types.WPMCallback)">
             <summary>
             Waits for a posted message received by this thread.
             </summary>
@@ -20653,12 +20747,17 @@
             <param name="args"></param>
             <exception cref="T:System.InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
             <remarks>
-            Must be called while <see cref="M:Au.Triggers.ActionTriggers.Run"/> is running, from the same thread that called it.
+            Must be called while <c>Triggers.Run();</c> is running, from the same thread.
             </remarks>
         </member>
         <member name="T:Au.Triggers.TriggerArgs">
             <summary>
             Base of trigger action argument classes of all trigger types.
+            </summary>
+        </member>
+        <member name="P:Au.Triggers.TriggerArgs.TriggerBase">
+            <summary>
+            Gets the trigger as <see cref="T:Au.Triggers.ActionTrigger"/> (the base class of all trigger type classes).
             </summary>
         </member>
         <member name="T:Au.Triggers.TriggerScopes">
@@ -20841,6 +20940,11 @@
             The value can be null.
             </summary>
         </member>
+        <member name="M:Au.Triggers.TriggerFuncs.Reset">
+            <summary>
+            Clears all properties (sets = null).
+            </summary>
+        </member>
         <member name="T:Au.Triggers.TFunc">
             <summary>
             Type of functions used with class <see cref="T:Au.Triggers.TriggerFuncs"/> to define custom scope for triggers.
@@ -21019,6 +21123,11 @@
             Allows to set some options for multiple triggers and their actions.
             </summary>
             <remarks>More info and examples: <see cref="T:Au.Triggers.TriggerOptions"/>, <see cref="T:Au.Triggers.ActionTriggers"/>.</remarks>
+        </member>
+        <member name="M:Au.Triggers.ActionTriggers.ResetOptions">
+            <summary>
+            Clears all options (of <see cref="P:Au.Triggers.ActionTriggers.Options"/>, <see cref="P:Au.Triggers.ActionTriggers.Of"/>, <see cref="P:Au.Triggers.ActionTriggers.FuncOf"/>, <see cref="P:Au.Triggers.ActionTriggers.Autotext"/>).
+            </summary>
         </member>
         <member name="P:Au.Triggers.ActionTriggers.Hotkey">
             <summary>
@@ -21226,7 +21335,7 @@
         </member>
         <member name="M:Au.Triggers.TriggerOptions.RunActionInMainThread">
             <summary>
-            Run actions in same thread as <see cref="M:Au.Triggers.ActionTriggers.Run"/>.
+            Run actions in same thread as <c>Triggers.Run();</c>.
             </summary>
             <remarks>
             Can be used only for actions that return as soon as possible, in less than 10 ms. Use to create and show toolbars (<see cref="T:Au.AToolbar"/>).
@@ -21281,6 +21390,11 @@
             <summary>
             If true, triggers added afterwards don't depend on <see cref="P:Au.Triggers.ActionTriggers.Disabled"/> and <see cref="P:Au.Triggers.ActionTriggers.DisabledEverywhere"/>.
             This property sets the <see cref="P:Au.Triggers.ActionTrigger.EnabledAlways"/> property of triggers added afterwards.
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.TriggerOptions.Reset">
+            <summary>
+            Clears all options.
             </summary>
         </member>
         <member name="T:Au.Triggers.TOBAArgs">
@@ -21478,7 +21592,7 @@
         <member name="P:Au.Triggers.AutotextTriggers.PostfixKey">
             <summary>
             The postfix key for all triggers where postfix type is <see cref="F:Au.Triggers.TAPostfix.Key"/> or <see cref="F:Au.Triggers.TAPostfix.CharOrKey"/> (default).
-            Can be Ctrl, Shift, LCtrl, RCtrl, LShift or RShift.
+            Can be Ctrl (default), Shift, LCtrl, RCtrl, LShift or RShift.
             </summary>
             <exception cref="T:System.ArgumentException">The value is not Ctrl or Shift.</exception>
             <remarks>
@@ -21495,6 +21609,11 @@
             This is used to avoid activating triggers when a trigger text found inside a word.
             This property is applied to all triggers, not just to those added afterwards.
             </remarks>
+        </member>
+        <member name="M:Au.Triggers.AutotextTriggers.ResetOptions">
+            <summary>
+            Clears all options.
+            </summary>
         </member>
         <member name="P:Au.Triggers.AutotextTriggers.Last">
             <summary>
@@ -21513,6 +21632,9 @@
             </summary>
         </member>
         <member name="P:Au.Triggers.AutotextTriggerArgs.Trigger">
+            
+        </member>
+        <member name="P:Au.Triggers.AutotextTriggerArgs.TriggerBase">
             
         </member>
         <member name="P:Au.Triggers.AutotextTriggerArgs.Window">
@@ -21690,6 +21812,9 @@
         <member name="P:Au.Triggers.HotkeyTriggerArgs.Trigger">
             
         </member>
+        <member name="P:Au.Triggers.HotkeyTriggerArgs.TriggerBase">
+            
+        </member>
         <member name="P:Au.Triggers.HotkeyTriggerArgs.Window">
             <summary>
             The active window.
@@ -21846,6 +21971,9 @@
             </summary>
         </member>
         <member name="P:Au.Triggers.MouseTriggerArgs.Trigger">
+            
+        </member>
+        <member name="P:Au.Triggers.MouseTriggerArgs.TriggerBase">
             
         </member>
         <member name="P:Au.Triggers.MouseTriggerArgs.Window">
@@ -22205,6 +22333,9 @@
             The trigger.
             </summary>
         </member>
+        <member name="P:Au.Triggers.WindowTriggerArgs.TriggerBase">
+            
+        </member>
         <member name="P:Au.Triggers.WindowTriggerArgs.Window">
             <summary>
             The window.
@@ -22457,7 +22588,7 @@
             <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
             <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.NativeId"/>.</param>
         </member>
-        <member name="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)">
+        <member name="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)">
             <summary>
             Registers new window class in this process.
             </summary>
@@ -22468,7 +22599,7 @@
             Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
             If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
             </param>
-            <param name="ex">
+            <param name="etc">
             Can be used to specify more fields of <msdn>WNDCLASSEX</msdn> that is passed to API <msdn>RegisterClassEx</msdn>.
             Defaults: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; style = CS_GLOBALCLASS; others = 0/null/default.
             This function also adds CS_GLOBALCLASS style.
@@ -22479,16 +22610,16 @@
             <remarks>
             Calls API <msdn>RegisterClassEx</msdn>.
             The window class is registered until this process ends. Don't need to unregister.
-            If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both null). Then ignores <i>ex</i>. Throws exception if different.
+            If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both null). Then ignores <i>etc</i>. Throws exception if different.
             Thread-safe.
             Protects the <i>wndProc</i> delegate from GC.
             </remarks>
         </member>
         <member name="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
             <summary>
-            Creates native/unmanaged window of a class registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/> with null <i>wndProc</i>, and sets its window procedure.
+            Creates native/unmanaged window of a class registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/> with null <i>wndProc</i>, and sets its window procedure.
             </summary>
-            <exception cref="T:System.ArgumentException">The class is not registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/>, or registered with non-null <i>wndProc</i>.</exception>
+            <exception cref="T:System.ArgumentException">The class is not registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/>, or registered with non-null <i>wndProc</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
             <remarks>
             Calls API <msdn>CreateWindowEx</msdn>.
@@ -22505,7 +22636,7 @@
             Calls API <msdn>CreateWindowEx</msdn>.
             Later call <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/> or <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>.
             </remarks>
-            <seealso cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/>
+            <seealso cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/>
         </member>
         <member name="M:Au.AWnd.More.CreateMessageOnlyWindow(System.String)">
             <summary>
@@ -22520,11 +22651,11 @@
         </member>
         <member name="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)">
             <summary>
-            Creates native/unmanaged <msdn>message-only window</msdn> of a class registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/> with null <i>wndProc</i>, and sets its window procedure.
+            Creates native/unmanaged <msdn>message-only window</msdn> of a class registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/> with null <i>wndProc</i>, and sets its window procedure.
             </summary>
             <param name="className">Window class name.</param>
             <param name="wndProc"></param>
-            <exception cref="T:System.ArgumentException">The class is not registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.WndClassEx)"/>, or registered with non-null <i>wndProc</i>.</exception>
+            <exception cref="T:System.ArgumentException">The class is not registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/>, or registered with non-null <i>wndProc</i>.</exception>
             <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
             <remarks>
             Styles: WS_POPUP, WS_EX_NOACTIVATE.
@@ -23514,6 +23645,11 @@
             </remarks>
             <seealso cref="M:Au.AWnd.SetWindowPos(Au.Types.Native.SWP,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd)"/>
         </member>
+        <member name="M:Au.AWnd.MoveLL(Au.Types.RECT,Au.Types.Native.SWP)">
+            <summary>
+            Moves and resizes. Same as <see cref="M:Au.AWnd.MoveLL(System.Int32,System.Int32,System.Int32,System.Int32,Au.Types.Native.SWP)"/>.
+            </summary>
+        </member>
         <member name="M:Au.AWnd.MoveLL(System.Int32,System.Int32)">
             <summary>
             Moves.
@@ -23624,7 +23760,7 @@
             <summary>
             Gets <see cref="T:Au.AScreen.ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
             If this window handle is default(AWnd) or invalid, gets the primary screen.
-            Calls <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SDefault)"/>.
+            Calls <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)"/>.
             </summary>
         </member>
         <member name="M:Au.AWnd.ZorderAbove(Au.AWnd)">

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -21,6 +20,9 @@ namespace Au
 	/// <summary>
 	/// Popup menu based on <see cref="ContextMenuStrip"/>. Can be used everywhere, not only in forms.
 	/// </summary>
+	/// <remarks>
+	/// Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
+	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
 	/// var m = new AMenu();
@@ -409,77 +411,62 @@ namespace Au
 		#region show
 
 		/// <summary>
-		/// Shows the menu at the mouse cursor position.
+		/// Shows the menu unowned.
 		/// </summary>
-		/// <param name="byCaret">Show at the text cursor (caret) position, if available.</param>
-		public void Show(bool byCaret = false)
-		{
-			_Show(byCaret ? 4 : 1);
-		}
-
-		/// <summary>
-		/// Shows the menu at the specified position.
-		/// </summary>
-		/// <param name="x">X position in screen.</param>
-		/// <param name="y">Y position in screen.</param>
+		/// <param name="xy">Position in screen. If null (default), uses the mouse cursor or caret position.</param>
+		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
 		/// <param name="direction">Menu drop direction.</param>
-		public void Show(int x, int y, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
-		{
-			//CONSIDER: Coord, screen. Maybe as new overload.
-			_Show(2, x, y, direction);
-		}
-
-		/// <summary>
-		/// Shows the menu on a form or control.
-		/// </summary>
-		/// <param name="owner">A control or form that will own the menu.</param>
-		/// <param name="x">X position in control's client area.</param>
-		/// <param name="y">Y position in control's client area.</param>
-		/// <param name="direction">Menu drop direction.</param>
-		/// <remarks>
-		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="Control"/> property, which gets <see cref="ContextMenuStrip"/>.
-		/// </remarks>
-		public void Show(Control owner, int x, int y, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
-		{
-			_Show(3, x, y, direction, owner);
-		}
-
-		/// <summary>
-		/// Shows the menu at the mouse cursor position.
-		/// </summary>
-		/// <param name="owner">A control or form that will own the menu.</param>
-		/// <param name="byCaret">Show at the text cursor (caret) position, if available.</param>
-		/// <param name="direction">Menu drop direction.</param>
-		/// <remarks>
-		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="Control"/> property, which gets <see cref="ContextMenuStrip"/>.
-		/// </remarks>
-		public void Show(Control owner, bool byCaret = false, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
+		/// <seealso cref="ShowSimple"/>
+		public void Show(POINT? xy = null, bool byCaret = false, ToolStripDropDownDirection? direction = null)
 		{
 			if(byCaret) {
-				_Show(4, 0, 0, direction, owner);
+				_Show(true, xy ?? default, direction);
 			} else {
-				var p = owner.MouseClientXY();
-				_Show(3, p.x, p.y, direction, owner);
+				_Show(false, xy ?? AMouse.XY, direction);
 			}
 		}
 
-		void _Show(int overload, int x = 0, int y = 0, ToolStripDropDownDirection direction = 0, Control control = null)
+		/// <summary>
+		/// Shows the menu owned by a control or form.
+		/// </summary>
+		/// <param name="owner">A control or form that will own the menu.</param>
+		/// <param name="xy">Position in control's client area. If null (default), uses the mouse cursor or caret position.</param>
+		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
+		/// <param name="direction">Menu drop direction.</param>
+		/// <exception cref="ArgumentNullException"><i>owner</i> is null.</exception>
+		/// <remarks>
+		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="Control"/> property, which gets <see cref="ContextMenuStrip"/>.
+		/// </remarks>
+		/// <seealso cref="ShowSimple"/>
+		public void Show(Control owner, POINT? xy = null, bool byCaret = false, ToolStripDropDownDirection? direction = null)
+		{
+			if(owner == null) throw new ArgumentNullException();
+			if(byCaret) {
+				_Show(true, xy ?? default, direction, owner);
+			} else {
+				_Show(false, xy ?? owner.MouseClientXY(), direction, owner);
+			}
+		}
+
+		void _Show(bool byCaret, POINT p, ToolStripDropDownDirection? direction, Control control = null)
 		{
 			_CheckDisposed();
 			if(_c.Items.Count == 0) return;
 
 			_isModal = Modal ?? !AThread.HasMessageLoop();
 
+			if(byCaret) {
+				bool caretOK = AKeys.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
+				var p2 = new Point(cr.left - 32, cr.bottom + 2);
+				if(caretOK) p2.Offset(p);
+				p = control?.PointToClient(p2) ?? p2;
+			}
+
 			_inOurShow = true;
-			switch(overload) {
-			case 1: _c.Show(AMouse.XY); break;
-			case 2: _c.Show(new Point(x, y), direction); break;
-			case 3: _c.Show(control, new Point(x, y), direction); break;
-			case 4:
-				AKeys.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
-				var p = new Point(cr.left - 32, cr.bottom + 2);
-				if(control != null) _c.Show(control, control.PointToClient(p), direction); else _c.Show(p);
-				break;
+			if(control != null) {
+				if(direction == null) _c.Show(control, p); else _c.Show(control, p, direction.GetValueOrDefault());
+			} else {
+				if(direction == null) _c.Show(p); else _c.Show(p, direction.GetValueOrDefault());
 			}
 			_inOurShow = false;
 
@@ -706,6 +693,55 @@ namespace Au
 		public void Close()
 		{
 			_Close();
+		}
+
+		#endregion
+
+		#region static
+
+		/// <summary>
+		/// Creates and shows popup menu where items use ids instead of actions.
+		/// Returns selected item id, or 0 if cancelled.
+		/// </summary>
+		/// <param name="items">
+		/// Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+		/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+		/// For separators use null or empty strings: "One|Two||Three|Four".
+		/// </param>
+		/// <param name="owner">Owner control/form or null.</param>
+		/// <param name="position">Position in screen or owner's client area. If null (default), uses the mouse cursor position.</param>
+		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
+		/// <param name="direction">Menu drop direction.</param>
+		/// <remarks>
+		/// The menu is modal; the function returns when it is closed.
+		/// </remarks>
+		/// <seealso cref="ADialog.ShowList"/>
+		public static int ShowSimple(DStringList items, Control owner = null, POINT? position = null, bool byCaret = false, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default)
+		{
+			var a = items.ToArray();
+			var m = new AMenu { Modal = true };
+			int result = 0, autoId = 0;
+			foreach(var v in a) {
+				var s = v;
+				if(s.NE()) {
+					m.Separator();
+				} else {
+					if(s.ToInt(out int id, 0, out int end)) {
+						if(s.Eq(end, ' ')) end++;
+						s = s[end..];
+						autoId = id;
+					} else {
+						id = ++autoId;
+					}
+					m.Add(s, o => result = (int)o.MenuItem.Tag).Tag = id;
+				}
+			}
+			if(owner != null) {
+				m.Show(owner, position, byCaret, direction);
+			} else {
+				m.Show(position, byCaret, direction);
+			}
+			return result;
 		}
 
 		#endregion

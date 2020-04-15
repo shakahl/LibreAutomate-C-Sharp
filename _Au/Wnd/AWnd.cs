@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -115,13 +114,13 @@ namespace Au
 		public static bool operator !=(AWnd w1, AWnd w2) => w1._h != w2._h;
 
 		//Prevent accidental usage AWnd==null. The C# compiler allows it without a warning. As a side effect, the above also disables AWnd==AWnd?.
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true)]
+		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
 		public static bool operator ==(AWnd w1, AWnd? w2) => false;
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true)]
+		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
 		public static bool operator !=(AWnd w1, AWnd? w2) => true;
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true)]
+		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
 		public static bool operator ==(AWnd? w1, AWnd w2) => false;
-		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true)]
+		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
 		public static bool operator !=(AWnd? w1, AWnd w2) => true;
 
 		/// <summary>
@@ -1727,6 +1726,14 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Moves and resizes. Same as <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
+		/// </summary>
+		public bool MoveLL(RECT r, Native.SWP swpFlagsToAdd = 0)
+		{
+			return MoveLL(r.left, r.top, r.Width, r.Height, swpFlagsToAdd);
+		}
+
+		/// <summary>
 		/// Moves.
 		/// </summary>
 		/// <remarks>
@@ -1985,7 +1992,7 @@ namespace Au
 		/// <summary>
 		/// Gets <see cref="AScreen.ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(AWnd) or invalid, gets the primary screen.
-		/// Calls <see cref="AScreen.Of(AWnd, SDefault)"/>.
+		/// Calls <see cref="AScreen.Of(AWnd, SODefault)"/>.
 		/// </summary>
 		public AScreen.ScreenHandle Screen => AScreen.Of(this);
 

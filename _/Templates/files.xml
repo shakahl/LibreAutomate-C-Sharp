@@ -1,43 +1,46 @@
-﻿<files max-i="35">
-  <c n="Class.cs" i="29" />
-  <c n="Partial.cs" i="30" />
-  <s n="Script.cs" i="31" />
-  <d n="New File" i="5">
-    <n n="TextFile.txt" i="6" />
+﻿<files max-i="62">
+  <s n="Script.cs" i="1" />
+  <c n="Class.cs" i="2" />
+  <c n="Partial.cs" i="3" />
+  <d n="New File" i="4">
+    <n n="TextFile.txt" i="5" />
   </d>
-  <d n="New Project" i="7">
-    <d n="@Script" i="10">
-      <c n="Script.cs" i="11" />
+  <d n="New Project" i="6">
+    <d n="@Script" i="7">
+      <s n="Script.cs" i="8" />
     </d>
-    <d n="@Library" i="8">
-      <c n="Library.cs" i="9" />
+    <d n="@Library" i="9">
+      <c n="Library.cs" i="10" />
     </d>
   </d>
-  <d n="Examples" i="32">
-    <d n="!Script examples" i="34">
-      <s n="Automation script example.cs" i="35" />
-      <s n="Script syntax, functions.cs" i="33" />
+  <d n="Examples" i="11">
+    <d n="!Script examples" i="12">
+      <s n="Automation script example.cs" i="13" />
+      <s n="Script syntax, functions.cs" i="14" />
     </d>
-    <d n="@Triggers and toolbars" i="12">
+    <d n="@Triggers and toolbars" i="15">
       <n n="Readme.txt" i="16" />
-      <s n="Triggers and toolbars.cs" i="28" />
-      <d n="Triggers" i="23">
-        <c n="Hotkey triggers.cs" i="25" />
-        <c n="Autotext triggers.cs" i="24" />
-        <c n="Mouse triggers.cs" i="26" />
-        <c n="Window triggers.cs" i="27" />
+      <s n="Triggers and toolbars.cs" i="17" />
+      <d n="Triggers" i="18">
+        <c n="Hotkey triggers.cs" i="19" />
+        <c n="Autotext triggers.cs" i="20" />
+        <c n="Mouse triggers.cs" i="21" />
+        <c n="Window triggers.cs" i="22" />
       </d>
-      <d n="Toolbars" i="19">
-        <c n="Common toolbars.cs" i="20" />
-        <c n="Notepad toolbars.cs" i="21" />
-        <c n="Window toolbars template.cs" i="22" />
+      <d n="Toolbars" i="23">
+        <c n="Common toolbars.cs" i="24" />
+        <c n="Window toolbars.cs" i="25" />
+        <c n="Window toolbars template.cs" i="26" />
       </d>
-      <d n="Functions" i="13">
-        <c n="Partial1.cs" i="15" />
-        <c n="Class1.cs" i="14" />
+      <d n="Functions" i="27">
+        <c n="Partial1.cs" i="28" />
+        <c n="Class1.cs" i="29" />
       </d>
-      <d n="Scripts" i="17">
-        <s n="Script example1.cs" i="18" />
+      <d n="Scripts" i="30">
+        <s n="Script example1.cs" i="31" />
+      </d>
+      <d n="System" i="60">
+        <c n="RunTriggersAndToolbars.cs" i="58" />
       </d>
     </d>
   </d>

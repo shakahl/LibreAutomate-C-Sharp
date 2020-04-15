@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -31,7 +30,7 @@ namespace Au
 		{
 			string s = AOutput.ObjectToString_(text);
 			string prefix = null; if(s.Starts("<>")) { prefix = "<>"; s = s.Substring(2); }
-			AOutput.Write($"{prefix}Debug: {cmn} ({APath.GetFileName(cp)}:{cln}):  {s}");
+			AOutput.Write($"{prefix}Debug: {cmn} ({APath.GetName(cp)}:{cln}):  {s}");
 		}
 
 		/// <summary>
@@ -88,7 +87,7 @@ namespace Au
 		public static void Dialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
 		{
 			string s = AOutput.ObjectToString_(text);
-			ADialog.Show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetFileName(cp)}:{cln})");
+			ADialog.Show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetName(cp)}:{cln})");
 		}
 
 		//rejected: use if(AOpt.Warnings.Verbose) ADialog.ShowWarning(...). It adds stack trace.

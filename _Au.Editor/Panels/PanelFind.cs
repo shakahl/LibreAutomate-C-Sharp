@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -87,7 +86,6 @@ class PanelFind : AuUserControlBase
 		this._tFind.TabIndex = 0;
 		this._toolTip.SetToolTip(this._tFind, "Text to find");
 		this._tFind.ZTextChanged += new System.EventHandler(this._tFind_TextChanged);
-		this._tFind.MouseUp += new System.Windows.Forms.MouseEventHandler(this._tFind_MouseUp);
 		// 
 		// _bFind
 		// 
@@ -173,7 +171,6 @@ class PanelFind : AuUserControlBase
 		this._tReplace.Size = new System.Drawing.Size(199, 20);
 		this._tReplace.TabIndex = 7;
 		this._toolTip.SetToolTip(this._tReplace, "Replacement text");
-		this._tReplace.MouseUp += new System.Windows.Forms.MouseEventHandler(this._tFind_MouseUp);
 		// 
 		// _bReplace
 		// 
@@ -262,11 +259,6 @@ class PanelFind : AuUserControlBase
 	}
 
 	#region control events
-
-	private void _tFind_MouseUp(object sender, MouseEventArgs e)
-	{
-		(sender as _SciTextBox).Z.ClearText();
-	}
 
 	private void _tFind_TextChanged(object sender, EventArgs e)
 	{

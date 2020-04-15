@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 //using System.Linq;
 
@@ -67,27 +66,27 @@ namespace Au
 		public static implicit operator AScreen(int screenIndex) => new AScreen(screenIndex);
 
 		/// <summary>
-		/// Creates variable that holds <see cref="POINT"/>. Later will be called <see cref="Of(POINT, SDefault)"/>.
+		/// Creates variable that holds <see cref="POINT"/>. Later will be called <see cref="Of(POINT, SODefault)"/>.
 		/// </summary>
 		public AScreen(POINT p) => _o = p;
 
 		/// <summary>
-		/// Creates variable that holds <see cref="RECT"/>. Later will be called <see cref="Of(RECT, SDefault)"/>.
+		/// Creates variable that holds <see cref="RECT"/>. Later will be called <see cref="Of(RECT, SODefault)"/>.
 		/// </summary>
 		public AScreen(RECT r) => _o = r;
 
 		/// <summary>
-		/// Creates variable that holds window handle. Later will be called <see cref="Of(AWnd, SDefault)"/>.
+		/// Creates variable that holds window handle. Later will be called <see cref="Of(AWnd, SODefault)"/>.
 		/// </summary>
 		public AScreen(AWnd w) => _o = w;
 
 		/// <summary>
-		/// Creates variable that holds <see cref="Control"/>. Later will be called <see cref="Of(Control, SDefault)"/>.
+		/// Creates variable that holds <see cref="Control"/>. Later will be called <see cref="Of(Control, SODefault)"/>.
 		/// </summary>
 		public AScreen(Control w) => _o = w;
 
 		/// <summary>
-		/// Creates variable that holds <see cref="System.Windows.Window"/>. Later will be called <see cref="Of(System.Windows.Window, SDefault)"/>.
+		/// Creates variable that holds <see cref="System.Windows.Window"/>. Later will be called <see cref="Of(System.Windows.Window, SODefault)"/>.
 		/// </summary>
 		public AScreen(System.Windows.Window w) => _o = new object[] { w };
 
@@ -116,7 +115,7 @@ namespace Au
 		/// <summary>
 		/// Gets the primary screen.
 		/// </summary>
-		public static ScreenHandle Primary => new ScreenHandle(MonitorFromWindow(default, SDefault.Primary)); //fast
+		public static ScreenHandle Primary => new ScreenHandle(MonitorFromWindow(default, SODefault.Primary)); //fast
 
 		/// <summary>
 		/// Gets <b>AScreen</b> variable that later will get the screen from the mouse cursor position at that time.
@@ -218,7 +217,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">Window or control. Can be default(AWnd) or invalid.</param>
 		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(AWnd w, SDefault defaultScreen = SDefault.Nearest)
+		public static ScreenHandle Of(AWnd w, SODefault defaultScreen = SODefault.Nearest)
 			=> new ScreenHandle(MonitorFromWindow(w, defaultScreen));
 
 		/// <summary>
@@ -226,7 +225,7 @@ namespace Au
 		/// </summary>
 		/// <param name="c">Control or form. Cannot be null. The handle can be created or not.</param>
 		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(Control c, SDefault defaultScreen = SDefault.Nearest)
+		public static ScreenHandle Of(Control c, SODefault defaultScreen = SODefault.Nearest)
 			=> Of(c.Hwnd(), defaultScreen);
 
 		/// <summary>
@@ -234,7 +233,7 @@ namespace Au
 		/// </summary>
 		/// <param name="w">WPF window.</param>
 		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(System.Windows.Window w, SDefault defaultScreen = SDefault.Nearest)
+		public static ScreenHandle Of(System.Windows.Window w, SODefault defaultScreen = SODefault.Nearest)
 			=> Of((AWnd)w, defaultScreen);
 
 		/// <summary>
@@ -242,7 +241,7 @@ namespace Au
 		/// </summary>
 		/// <param name="p"></param>
 		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(POINT p, SDefault defaultScreen = SDefault.Nearest)
+		public static ScreenHandle Of(POINT p, SODefault defaultScreen = SODefault.Nearest)
 			=> new ScreenHandle(MonitorFromPoint(p, defaultScreen));
 
 		/// <summary>
@@ -250,23 +249,23 @@ namespace Au
 		/// </summary>
 		/// <param name="r"></param>
 		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(RECT r, SDefault defaultScreen = SDefault.Nearest)
+		public static ScreenHandle Of(RECT r, SODefault defaultScreen = SODefault.Nearest)
 			=> new ScreenHandle(MonitorFromRect(r, defaultScreen));
 
 		/// <summary>
 		/// Returns true if point p is in some screen.
 		/// </summary>
-		public static bool IsInAnyScreen(POINT p) => MonitorFromPoint(p, SDefault.Zero) != default;
+		public static bool IsInAnyScreen(POINT p) => MonitorFromPoint(p, SODefault.Zero) != default;
 
 		/// <summary>
 		/// Returns true if rectangle r intersects with some screen.
 		/// </summary>
-		public static bool IsInAnyScreen(RECT r) => MonitorFromRect(r, SDefault.Zero) != default;
+		public static bool IsInAnyScreen(RECT r) => MonitorFromRect(r, SODefault.Zero) != default;
 
 		/// <summary>
 		/// Returns true if rectangle of window w intersects with some screen.
 		/// </summary>
-		public static bool IsInAnyScreen(AWnd w) => MonitorFromWindow(w, SDefault.Zero) != default;
+		public static bool IsInAnyScreen(AWnd w) => MonitorFromWindow(w, SODefault.Zero) != default;
 
 		//no
 		///// <summary>Converts to <see cref="ScreenHandle"/> (calls <see cref="GetScreenHandle"/>).</summary>
@@ -413,13 +412,13 @@ namespace Au
 		}
 
 		[DllImport("user32.dll")]
-		static extern IntPtr MonitorFromPoint(POINT pt, SDefault dwFlags);
+		static extern IntPtr MonitorFromPoint(POINT pt, SODefault dwFlags);
 
 		[DllImport("user32.dll")]
-		static extern IntPtr MonitorFromRect(in RECT lprc, SDefault dwFlags);
+		static extern IntPtr MonitorFromRect(in RECT lprc, SODefault dwFlags);
 
 		[DllImport("user32.dll")]
-		static extern IntPtr MonitorFromWindow(AWnd hwnd, SDefault dwFlags);
+		static extern IntPtr MonitorFromWindow(AWnd hwnd, SODefault dwFlags);
 
 		struct MONITORINFO
 		{
@@ -444,7 +443,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="AScreen.Of"/> to specify what screen to use if the function fails, for example if the window/point/etc is not in a screen or if the window handle is invalid.
 	/// </summary>
-	public enum SDefault
+	public enum SODefault
 	{
 		/// <summary>0 (<see cref="AScreen.ScreenHandle.Is0"/> will return true).</summary>
 		Zero, //MONITOR_DEFAULTTONULL

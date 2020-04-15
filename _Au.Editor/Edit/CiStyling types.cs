@@ -15,7 +15,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
@@ -43,11 +42,8 @@ partial class CiStyling
 		Namespace,
 		Type,
 		Function,
-		LocalVar,
-		Parameter,
-		Field,
+		Variable,
 		Constant,
-		EnumMember,
 		Label,
 		Preprocessor,
 		Excluded,
@@ -66,8 +62,8 @@ partial class CiStyling
 	public struct TStyle
 #pragma warning restore
 	{
-		public int color { get; set; }
-		public bool bold { get; set; }
+		public int color;
+		public bool bold;
 
 		public TStyle(int color, bool bold)
 		{
@@ -84,38 +80,49 @@ partial class CiStyling
 
 	public class TStyles
 	{
-		public string FontName { get; set; }
-		public int FontSize { get; set; }
-		public int? BackgroundColor { get; set; }
+		public string FontName;
+		public int FontSize;
+		public int BackgroundColor;
 
-		public TStyle Comment { get; set; }
-		public TStyle String { get; set; }
-		public TStyle StringEscape { get; set; }
-		public TStyle Number { get; set; }
-		public TStyle Punctuation { get; set; }
-		public TStyle Operator { get; set; }
-		public TStyle Keyword { get; set; }
-		public TStyle Namespace { get; set; }
-		public TStyle Type { get; set; }
-		public TStyle Function { get; set; }
-		public TStyle LocalVar { get; set; }
-		public TStyle Parameter { get; set; }
-		public TStyle Field { get; set; }
-		public TStyle Constant { get; set; }
-		public TStyle EnumMember { get; set; }
-		public TStyle Label { get; set; }
-		public TStyle Preprocessor { get; set; }
-		public TStyle Excluded { get; set; }
-		public TStyle XmlDocText { get; set; }
-		public TStyle XmlDocTag { get; set; }
+		public TStyle None;
+		public TStyle Comment;
+		public TStyle String;
+		public TStyle StringEscape;
+		public TStyle Number;
+		public TStyle Punctuation;
+		public TStyle Operator;
+		public TStyle Keyword;
+		public TStyle Namespace;
+		public TStyle Type;
+		public TStyle Function;
+		public TStyle Variable;
+		public TStyle Constant;
+		public TStyle Label;
+		public TStyle Preprocessor;
+		public TStyle Excluded;
+		public TStyle XmlDocText;
+		public TStyle XmlDocTag;
 
-		public TStyle LineNumber { get; set; }
+		public TStyle LineNumber;
+
+		public static TStyles Settings {
+			get => s_styles ??= new TStyles();
+			set {
+				s_styles = value;
+				if(value != null) value._Save();
+				else AFile.Delete(s_settingsFile);
+			}
+		}
+		static TStyles s_styles;
+		internal static readonly string s_settingsFile = ProgramSettings.DirBS + "Font.csv";
 
 		public TStyles()
 		{
 			FontName = "Consolas";
 			FontSize = 10;
+			BackgroundColor = 0xffffff;
 
+			//None = 0;
 			Comment = 0x408000; //green like in VS but towards yellow
 			String = 0xA07040; //brown, more green
 							   //0xc0c0c0; //good contrast with 0xA07040, but maybe not with white background
@@ -128,11 +135,8 @@ partial class CiStyling
 			Namespace = 0x808000; //dark yellow
 			Type = 0x0080c0; //like in VS but more blue
 			Function = (0, true);
-			LocalVar = 0x204020; //dark green gray
-			Parameter = 0x204020; //like variable
-			Field = 0x204020; //like variable
+			Variable = 0x204020; //dark green gray
 			Constant = 0x204020; //like variable
-			EnumMember = 0x204020; //like variable
 			Label = 0xff00ff; //magenta
 			Preprocessor = 0xff8000; //orange
 			Excluded = 0x808080; //gray
@@ -140,6 +144,89 @@ partial class CiStyling
 			XmlDocTag = 0x808080; //gray
 
 			LineNumber = 0x808080;
+
+			_Load();
+		}
+
+		void _Load()
+		{
+			ACsv csv;
+			if(!AFile.ExistsAsFile(s_settingsFile)) return;
+			try { csv = ACsv.Load(s_settingsFile); }
+			catch(Exception e1) { AOutput.Write(e1.ToStringWithoutStack()); return; }
+			if(csv.ColumnCount < 2) return;
+
+			foreach(var a in csv.Data) {
+				switch(a[0]) {
+				case "Font":
+					if(!a[1].NE()) FontName = a[1];
+					if(a.Length > 2) { int fs = a[2].ToInt(); if(fs >= 5 && fs <= 100) FontSize = fs; }
+					break;
+				case "Background":
+					if(!a[1].NE()) BackgroundColor = a[1].ToInt();
+					break;
+				case nameof(None): _Style(ref None, a); break;
+				case nameof(Comment): _Style(ref Comment, a); break;
+				case nameof(String): _Style(ref String, a); break;
+				case nameof(StringEscape): _Style(ref StringEscape, a); break;
+				case nameof(Number): _Style(ref Number, a); break;
+				case nameof(Punctuation): _Style(ref Punctuation, a); break;
+				case nameof(Operator): _Style(ref Operator, a); break;
+				case nameof(Keyword): _Style(ref Keyword, a); break;
+				case nameof(Namespace): _Style(ref Namespace, a); break;
+				case nameof(Type): _Style(ref Type, a); break;
+				case nameof(Function): _Style(ref Function, a); break;
+				case nameof(Variable): _Style(ref Variable, a); break;
+				case nameof(Constant): _Style(ref Constant, a); break;
+				case nameof(Label): _Style(ref Label, a); break;
+				case nameof(Preprocessor): _Style(ref Preprocessor, a); break;
+				case nameof(Excluded): _Style(ref Excluded, a); break;
+				case nameof(XmlDocText): _Style(ref XmlDocText, a); break;
+				case nameof(XmlDocTag): _Style(ref XmlDocTag, a); break;
+				case nameof(LineNumber): _Style(ref LineNumber, a); break;
+				}
+			}
+
+			static void _Style(ref TStyle r, string[] a)
+			{
+				if(!a[1].NE()) r.color = a[1].ToInt();
+				if(a.Length > 2 && !a[2].NE()) r.bold = 0 != (1 & a[2].ToInt());
+			}
+		}
+
+		void _Save()
+		{
+			var b = new StringBuilder(); //don't need ACsv for such simple values
+			b.AppendFormat("Font, {0}, {1}\r\n", FontName, FontSize);
+			b.Append("Background, 0x").AppendLine(BackgroundColor.ToString("X6"));
+			_Style(nameof(None), None);
+			_Style(nameof(Comment), Comment);
+			_Style(nameof(String), String);
+			_Style(nameof(StringEscape), StringEscape);
+			_Style(nameof(Number), Number);
+			_Style(nameof(Punctuation), Punctuation);
+			_Style(nameof(Operator), Operator);
+			_Style(nameof(Keyword), Keyword);
+			_Style(nameof(Namespace), Namespace);
+			_Style(nameof(Type), Type);
+			_Style(nameof(Function), Function);
+			_Style(nameof(Variable), Variable);
+			_Style(nameof(Constant), Constant);
+			_Style(nameof(Label), Label);
+			_Style(nameof(Preprocessor), Preprocessor);
+			_Style(nameof(Excluded), Excluded);
+			_Style(nameof(XmlDocText), XmlDocText);
+			_Style(nameof(XmlDocTag), XmlDocTag);
+			_Style(nameof(LineNumber), LineNumber);
+
+			void _Style(string name, TStyle r)
+			{
+				b.Append(name).Append(", 0x").Append(r.color.ToString("X6"));
+				if(r.bold) b.Append(", 1");
+				b.AppendLine();
+			}
+
+			AFile.SaveText(s_settingsFile, b.ToString());
 		}
 
 		/// <summary>
@@ -156,6 +243,7 @@ partial class CiStyling
 				return new TStyle(color, bold);
 			}
 
+			None = _Get(EToken.None);
 			Comment = _Get(EToken.Comment);
 			String = _Get(EToken.String);
 			StringEscape = _Get(EToken.StringEscape);
@@ -166,11 +254,8 @@ partial class CiStyling
 			Namespace = _Get(EToken.Namespace);
 			Type = _Get(EToken.Type);
 			Function = _Get(EToken.Function);
-			LocalVar = _Get(EToken.LocalVar);
-			Parameter = _Get(EToken.Parameter);
-			Field = _Get(EToken.Field);
+			Variable = _Get(EToken.Variable);
 			Constant = _Get(EToken.Constant);
-			EnumMember = _Get(EToken.EnumMember);
 			Label = _Get(EToken.Label);
 			Preprocessor = _Get(EToken.Preprocessor);
 			Excluded = _Get(EToken.Excluded);
@@ -185,7 +270,8 @@ partial class CiStyling
 			var z = sci.Z;
 
 			z.StyleFont(STYLE_DEFAULT, FontName, FontSize);
-			if(BackgroundColor != null) z.StyleBackColor(STYLE_DEFAULT, BackgroundColor.Value);
+			z.StyleBackColor(STYLE_DEFAULT, BackgroundColor);
+			//if(None.color != 0) z.StyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
 			z.StyleClearAll();
 
 			void _Set(EToken tok, TStyle sty)
@@ -194,6 +280,7 @@ partial class CiStyling
 				if(sty.bold) z.StyleBold((int)tok, true);
 			}
 
+			_Set(EToken.None, None);
 			_Set(EToken.Comment, Comment);
 			_Set(EToken.String, String);
 			_Set(EToken.StringEscape, StringEscape);
@@ -204,11 +291,8 @@ partial class CiStyling
 			_Set(EToken.Namespace, Namespace);
 			_Set(EToken.Type, Type);
 			_Set(EToken.Function, Function);
-			_Set(EToken.LocalVar, LocalVar);
-			_Set(EToken.Parameter, Parameter);
-			_Set(EToken.Field, Field);
+			_Set(EToken.Variable, Variable);
 			_Set(EToken.Constant, Constant);
-			_Set(EToken.EnumMember, EnumMember);
 			_Set(EToken.Label, Label);
 			_Set(EToken.Preprocessor, Preprocessor);
 			_Set(EToken.Excluded, Excluded);
@@ -221,6 +305,7 @@ partial class CiStyling
 		public TStyle GetStyle(EToken token)
 		{
 			switch(token) {
+			case EToken.None: return None;
 			case EToken.Comment: return Comment;
 			case EToken.String: return String;
 			case EToken.StringEscape: return StringEscape;
@@ -231,11 +316,8 @@ partial class CiStyling
 			case EToken.Namespace: return Namespace;
 			case EToken.Type: return Type;
 			case EToken.Function: return Function;
-			case EToken.LocalVar: return LocalVar;
-			case EToken.Parameter: return Parameter;
-			case EToken.Field: return Field;
+			case EToken.Variable: return Variable;
 			case EToken.Constant: return Constant;
-			case EToken.EnumMember: return EnumMember;
 			case EToken.Label: return Label;
 			case EToken.Preprocessor: return Preprocessor;
 			case EToken.Excluded: return Excluded;
@@ -249,6 +331,7 @@ partial class CiStyling
 		//public void SetStyle(EToken token, TStyle style)
 		//{
 		//	switch(token) {
+		//	case EToken.None: None = style; break;
 		//	case EToken.Comment: Comment = style; break;
 		//	case EToken.String: String = style; break;
 		//	case EToken.StringEscape: StringEscape = style; break;
@@ -259,11 +342,8 @@ partial class CiStyling
 		//	case EToken.Namespace: Namespace = style; break;
 		//	case EToken.Type: Type = style; break;
 		//	case EToken.Function: Function = style; break;
-		//	case EToken.LocalVar: LocalVar = style; break;
-		//	case EToken.Parameter: Parameter = style; break;
-		//	case EToken.Field: Field = style; break;
+		//	case EToken.Variable: Variable = style; break;
 		//	case EToken.Constant: Constant = style; break;
-		//	case EToken.EnumMember: EnumMember = style; break;
 		//	case EToken.Label: Label = style; break;
 		//	case EToken.Preprocessor: Preprocessor = style; break;
 		//	case EToken.Excluded: Excluded = style; break;
@@ -278,6 +358,7 @@ partial class CiStyling
 			return FontName == s.FontName
 				&& FontSize == s.FontSize
 				&& BackgroundColor == s.BackgroundColor
+				&& None == s.None
 				&& Comment == s.Comment
 				&& String == s.String
 				&& StringEscape == s.StringEscape
@@ -288,11 +369,8 @@ partial class CiStyling
 				&& Namespace == s.Namespace
 				&& Type == s.Type
 				&& Function == s.Function
-				&& LocalVar == s.LocalVar
-				&& Parameter == s.Parameter
-				&& Field == s.Field
+				&& Variable == s.Variable
 				&& Constant == s.Constant
-				&& EnumMember == s.EnumMember
 				&& Label == s.Label
 				&& Preprocessor == s.Preprocessor
 				&& Excluded == s.Excluded

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -36,6 +35,9 @@ namespace Au
 			{
 				InitializeComponent();
 
+				var taskName = ATask.Name;
+				if(taskName != "Triggers and toolbars") this.Text = "Toolbars of " + taskName;
+
 				_FillLB();
 
 				_bShow.Click += _bClick;
@@ -51,7 +53,16 @@ namespace Au
 						_lb.Items.Add(tb);
 						var sat = tb.Satellite; if(sat != null && !sat._c.Hwnd().Is0) _lb.Items.Add(sat);
 					}
+					_EnableButtons(false);
 				}
+
+				void _EnableButtons(bool enable)
+				{
+					_bShow.Enabled = enable;
+					_bMove.Enabled = enable;
+				}
+
+				_lb.SelectedIndexChanged += (_, __) => _EnableButtons(_lb.SelectedIndex >= 0);
 			}
 
 			private void _bClick(object sender, EventArgs e)
@@ -105,13 +116,13 @@ namespace Au
 				// 
 				this._lb.Location = new System.Drawing.Point(0, 0);
 				this._lb.Name = "_lb";
-				this._lb.Size = new System.Drawing.Size(172, 199);
+				this._lb.Size = new System.Drawing.Size(272, 199);
 				this._lb.TabIndex = 0;
 				// 
 				// _bShow
 				// 
 				this._bShow.FlatStyle = System.Windows.Forms.FlatStyle.System;
-				this._bShow.Location = new System.Drawing.Point(178, 0);
+				this._bShow.Location = new System.Drawing.Point(278, 0);
 				this._bShow.Name = "_bShow";
 				this._bShow.Size = new System.Drawing.Size(106, 24);
 				this._bShow.TabIndex = 1;
@@ -120,7 +131,7 @@ namespace Au
 				// _bMove
 				// 
 				this._bMove.FlatStyle = System.Windows.Forms.FlatStyle.System;
-				this._bMove.Location = new System.Drawing.Point(178, 28);
+				this._bMove.Location = new System.Drawing.Point(278, 28);
 				this._bMove.Name = "_bMove";
 				this._bMove.Size = new System.Drawing.Size(106, 24);
 				this._bMove.TabIndex = 2;
@@ -129,7 +140,7 @@ namespace Au
 				// _bRefresh
 				// 
 				this._bRefresh.FlatStyle = System.Windows.Forms.FlatStyle.System;
-				this._bRefresh.Location = new System.Drawing.Point(178, 168);
+				this._bRefresh.Location = new System.Drawing.Point(278, 168);
 				this._bRefresh.Name = "_bRefresh";
 				this._bRefresh.Size = new System.Drawing.Size(106, 24);
 				this._bRefresh.TabIndex = 3;
@@ -139,7 +150,7 @@ namespace Au
 				// 
 				this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
 				this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-				this.ClientSize = new System.Drawing.Size(291, 199);
+				this.ClientSize = new System.Drawing.Size(391, 199);
 				this.Controls.Add(this._bMove);
 				this.Controls.Add(this._bShow);
 				this.Controls.Add(this._bRefresh);

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Linq;
 
 using Au.Types;
@@ -126,7 +125,7 @@ namespace Au
 		public static void RenameFileOrDirectory(string path, string newName)
 		{
 			APerf.First();
-			if(APath.IsInvalidFileName(newName)) throw new ArgumentException("Invalid filename.", nameof(newName));
+			if(APath.IsInvalidName(newName)) throw new ArgumentException("Invalid filename.", nameof(newName));
 			path = _PreparePath(path, nameof(path));
 
 			APerf.Next();

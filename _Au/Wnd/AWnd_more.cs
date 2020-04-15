@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Linq;
 
 using Au.Types;
@@ -90,7 +89,7 @@ namespace Au
 			/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
 			/// If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
 			/// </param>
-			/// <param name="ex">
+			/// <param name="etc">
 			/// Can be used to specify more fields of <msdn>WNDCLASSEX</msdn> that is passed to API <msdn>RegisterClassEx</msdn>.
 			/// Defaults: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; style = CS_GLOBALCLASS; others = 0/null/default.
 			/// This function also adds CS_GLOBALCLASS style.
@@ -101,11 +100,11 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>RegisterClassEx</msdn>.
 			/// The window class is registered until this process ends. Don't need to unregister.
-			/// If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both null). Then ignores <i>ex</i>. Throws exception if different.
+			/// If called next time for the same window class, does nothing if <i>wndProc</i> is equal to the previous (or both null). Then ignores <i>etc</i>. Throws exception if different.
 			/// Thread-safe.
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// </remarks>
-			public static unsafe void RegisterWindowClass(string className, Native.WNDPROC wndProc = null, WndClassEx ex = null)
+			public static unsafe void RegisterWindowClass(string className, Native.WNDPROC wndProc = null, RWCEtc etc = null)
 			{
 				if(wndProc?.Target != null) throw new ArgumentException("wndProc must be static method or null. Use non-static wndProc with CreateWindow.");
 
@@ -114,7 +113,7 @@ namespace Au
 						if(wpPrev != wndProc) throw new InvalidOperationException("Window class already registered"); //another method or another target object
 						return;
 					}
-					var x = new Api.WNDCLASSEX(ex);
+					var x = new Api.WNDCLASSEX(etc);
 
 					fixed(char* pCN = className) {
 						x.lpszClassName = pCN;
@@ -507,7 +506,7 @@ namespace Au.Types
 	/// Used with <see cref="AWnd.More.RegisterWindowClass"/>.
 	/// </summary>
 	[NoDoc]
-	public class WndClassEx
+	public class RWCEtc
 	{
 #pragma warning disable 1591 //XML doc
 		public uint style;

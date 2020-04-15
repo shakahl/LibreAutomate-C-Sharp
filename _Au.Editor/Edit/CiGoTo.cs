@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Linq;
 using System.Net;
@@ -217,10 +216,15 @@ class CiGoTo
 
 	public static void GoToSymbolFromPos(bool onCtrlClick = false)
 	{
-		if(!CiUtil.GetSymbolFromPos(out var sym, out var cd)) return;
-		//AOutput.Write(sym);
-		var g = new CiGoTo(sym, onlyIfInSource: onCtrlClick);
-		if(g.CanGoTo) g.GoTo(cd.sciDoc);
+		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out var cd);
+		if(sym != null) {
+			//AOutput.Write(sym);
+			var g = new CiGoTo(sym, onlyIfInSource: onCtrlClick);
+			if(g.CanGoTo) g.GoTo(cd.sciDoc);
+		} else if(helpKind == CiUtil.HelpKind.String && token.IsKind(SyntaxKind.StringLiteralToken)) {
+			var s = token.ValueText;
+			if(s.Ends(".cs", true)) Program.Model.OpenAndGoTo(s);
+		}
 	}
 
 	//public static void EditMenuOrToolbar(string sourceFile, int line)

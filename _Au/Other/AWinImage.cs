@@ -13,7 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Drawing;
 using System.Drawing.Imaging;
 //using System.Linq;
@@ -55,7 +54,7 @@ namespace Au
 			object o = null;
 			image = APath.Normalize(image, AFolders.ThisAppImages);
 			if(!AFile.ExistsAsFile(image, true))
-				o = AResources.GetAppResource(APath.GetFileName(image, true));
+				o = AResources.GetAppResource(APath.GetNameNoExt(image));
 			if(o == null) o = Image.FromFile(image);
 			return (o as Bitmap) ?? throw new ArgumentException("Bad image format."); //Image but not Bitmap
 		}

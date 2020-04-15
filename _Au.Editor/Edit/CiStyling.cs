@@ -15,7 +15,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
@@ -38,7 +37,7 @@ partial class CiStyling
 	/// </summary>
 	public static void DocHandleCreated(SciCode doc)
 	{
-		Program.Settings.edit_styles.ToScintilla(doc);
+		TStyles.Settings.ToScintilla(doc);
 
 		doc.Call(SCI_MARKERDEFINE, SciCode.c_markerUnderline, SC_MARK_UNDERLINE);
 		doc.Call(SCI_MARKERSETBACK, SciCode.c_markerUnderline, 0xe0e0e0);
@@ -236,23 +235,23 @@ partial class CiStyling
 				ClassificationTypeNames.ConstantName => EToken.Constant,
 				ClassificationTypeNames.ControlKeyword => EToken.Keyword,
 				ClassificationTypeNames.DelegateName => EToken.Type,
-				ClassificationTypeNames.EnumMemberName => EToken.EnumMember,
+				ClassificationTypeNames.EnumMemberName => EToken.Constant,
 				ClassificationTypeNames.EnumName => EToken.Type,
 				ClassificationTypeNames.EventName => EToken.Function,
 				ClassificationTypeNames.ExcludedCode => EToken.Excluded,
 				ClassificationTypeNames.ExtensionMethodName => EToken.Function,
-				ClassificationTypeNames.FieldName => EToken.Field,
+				ClassificationTypeNames.FieldName => EToken.Variable,
 				ClassificationTypeNames.Identifier => _TryResolveMethod(),
 				ClassificationTypeNames.InterfaceName => EToken.Type,
 				ClassificationTypeNames.Keyword => EToken.Keyword,
 				ClassificationTypeNames.LabelName => EToken.Label,
-				ClassificationTypeNames.LocalName => EToken.LocalVar,
+				ClassificationTypeNames.LocalName => EToken.Variable,
 				ClassificationTypeNames.MethodName => EToken.Function,
 				ClassificationTypeNames.NamespaceName => EToken.Namespace,
 				ClassificationTypeNames.NumericLiteral => EToken.Number,
 				ClassificationTypeNames.Operator => EToken.Operator,
 				ClassificationTypeNames.OperatorOverloaded => EToken.Function,
-				ClassificationTypeNames.ParameterName => EToken.Parameter,
+				ClassificationTypeNames.ParameterName => EToken.Variable,
 				ClassificationTypeNames.PreprocessorKeyword => EToken.Preprocessor,
 				//ClassificationTypeNames.PreprocessorText => EStyle.None,
 				ClassificationTypeNames.PropertyName => EToken.Function,
@@ -418,22 +417,48 @@ partial class CiStyling
 		foreach(var v in root.DescendantNodes()) {
 			var span = v.Span;
 			if(span.End <= start16) continue;
-			int pos = span.Start; if(pos >= end16) break;
+			if(span.Start >= end16) break;
 			//CiUtil.PrintNode(v);
+			bool fold = false, separator = false;
+			int foldStart = span.Start; //to skip [Attributes]
 			switch(v) {
-			case BaseMethodDeclarationSyntax md when !(md.Body == null && md.ExpressionBody == null): //method, ctor, etc; not DllImport, interface, partial
-			case BasePropertyDeclarationSyntax _: //property, event
-			case BaseTypeDeclarationSyntax _: //class, struct, interface, enum
-				if(pos >= start16) _AddFoldPoint(pos, 1);
+			case BaseTypeDeclarationSyntax bt: //class, struct, interface, enum
+				fold = separator = true;
+				foldStart = bt.Identifier.SpanStart;
+				break;
+			case BaseMethodDeclarationSyntax md: //method, ctor, etc
+				if(md.Body == null && md.ExpressionBody == null) break; //extern, interface, partial
+				fold = separator = true;
+				foldStart = md.ParameterList.SpanStart;
+				break;
+			case PropertyDeclarationSyntax bp:
+				fold = separator = true;
+				foldStart = bp.Identifier.SpanStart;
+				break;
+			case EventDeclarationSyntax bp:
+				fold = separator = true;
+				foldStart = bp.Identifier.SpanStart;
+				break;
+			case LocalFunctionStatementSyntax lf when lf.Body != null:
+				fold = true;
+				foldStart = lf.Identifier.SpanStart;
+				break;
+			case AnonymousFunctionExpressionSyntax af when af.ExpressionBody == null: //lambda, delegate(){}
+				fold = !(v.Parent is ArgumentSyntax);
+				break;
+			}
+			if(fold && !separator && code.IndexOf('\n', span.Start, span.End - span.Start) < 0) fold = false;
+			if(fold) {
+				if(foldStart >= start16) _AddFoldPoint(foldStart, 1);
 				_AddFoldPoint(span.End, -1);
-
+			}
+			if(separator) {
 				//add separator below
 				int li = z.LineFromPos(true, span.End);
 				_DeleteUnderlinedLineMarkers(li);
 				//if(underlinedLine != li) AOutput.Write("add", li + 1);
 				if(underlinedLine != li) doc.Call(SCI_MARKERADD, li, SciCode.c_markerUnderline);
 				else underlinedLine++;
-				break;
 			}
 		}
 		//p1.Next('n');
@@ -487,7 +512,7 @@ partial class CiStyling
 			doc.Call(SCI_MARKERSETBACK, i, 0x808080);
 			doc.Call(SCI_MARKERSETBACKSELECTED, i, i == SC_MARKNUM_FOLDER ? 0xFF : 0x808080);
 		}
-		doc.Call(SCI_MARKERENABLEHIGHLIGHT, 1);
+		//doc.Call(SCI_MARKERENABLEHIGHLIGHT, 1); //red [+]
 
 		doc.Call(SCI_SETAUTOMATICFOLD, SC_AUTOMATICFOLD_SHOW //show hidden lines when header line deleted. Also when hidden text modified, and it is not always good.
 									| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'

@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
@@ -76,31 +75,11 @@ namespace Au.Types
 	public enum TBAnchor
 	{
 		/// <summary>
-		/// Don't move the toolbar together with the owner.
+		/// Don't move the toolbar together with its owner.
 		/// </summary>
 		None,
 
 		//top 1, bottom 2, left 4, right 8
-
-		/// <summary>
-		/// Anchor is the owner's top edge. Also left and right edges, therefore the toolbar is resized when resizing its owner.
-		/// </summary>
-		Top = 1 | 4 | 8,
-
-		/// <summary>
-		/// Anchor is the owner's bottom edge. Also left and right edges, therefore the toolbar is resized when resizing its owner.
-		/// </summary>
-		Bottom = 2 | 4 | 8,
-
-		/// <summary>
-		/// Anchor is the owner's left edge. Also top and bottom edges, therefore the toolbar is resized when resizing its owner.
-		/// </summary>
-		Left = 4 | 1 | 2,
-
-		/// <summary>
-		/// Anchor is the owner's right edge. Also top and bottom edges, therefore the toolbar is resized when resizing its owner.
-		/// </summary>
-		Right = 8 | 1 | 2,
 
 		/// <summary>
 		/// Anchors are owner's top and left edges. Default.
@@ -123,9 +102,41 @@ namespace Au.Types
 		BottomRight = 2 | 8,
 
 		/// <summary>
-		/// Anchors are all owner's edges, therefore the toolbar is resized when resizing its owner.
+		/// Anchors are owner's top, left and right edges. The toolbar is resized vertically when resizing its owner.
+		/// </summary>
+		Top = 1 | 4 | 8,
+
+		/// <summary>
+		/// Anchors are owner's bottom, left and right edges. The toolbar is resized vertically when resizing its owner.
+		/// </summary>
+		Bottom = 2 | 4 | 8,
+
+		/// <summary>
+		/// Anchors are owner's left, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+		/// </summary>
+		Left = 4 | 1 | 2,
+
+		/// <summary>
+		/// Anchors are owner's right, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+		/// </summary>
+		Right = 8 | 1 | 2,
+
+		/// <summary>
+		/// Anchors are all owner's edges. The toolbar is resized when resizing its owner.
 		/// </summary>
 		All = 15,
+
+		/// <summary>
+		/// Use toolbar's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
+		/// This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
+		/// </summary>
+		OppositeToolbarEdgeX = 32,
+
+		/// <summary>
+		/// Use toolbar's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
+		/// This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
+		/// </summary>
+		OppositeToolbarEdgeY = 64,
 	}
 
 	static partial class TBExt_
@@ -134,6 +145,9 @@ namespace Au.Types
 		internal static bool HasBottom(this TBAnchor a) => 0 != ((int)a & 2);
 		internal static bool HasLeft(this TBAnchor a) => 0 != ((int)a & 4);
 		internal static bool HasRight(this TBAnchor a) => 0 != ((int)a & 8);
+		internal static bool OppositeX(this TBAnchor a) => 0 != ((int)a & 32);
+		internal static bool OppositeY(this TBAnchor a) => 0 != ((int)a & 64);
+		internal static TBAnchor WithoutFlags(this TBAnchor a) => a & TBAnchor.All;
 	}
 
 	/// <summary>
@@ -155,40 +169,40 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Location"/>.
+	/// Used with <see cref="AToolbar.Offsets"/>.
 	/// </summary>
-	public struct TBLocation : IEquatable<TBLocation>
+	public struct TBOffsets : IEquatable<TBOffsets>
 	{
 		/// <summary>
-		/// Horizontal distance from the owner's left edge to the toolbar's left edge.
+		/// Horizontal distance from the owner's left edge to the toolbar's left edge (right if <see cref="TBAnchor.OppositeToolbarEdgeX"/>).
 		/// </summary>
 		public int Left { get; set; }
 
 		/// <summary>
-		/// Vertical distance from the owner's top edge to the toolbar's top edge.
+		/// Vertical distance from the owner's top edge to the toolbar's top edge (bottom if <see cref="TBAnchor.OppositeToolbarEdgeY"/>).
 		/// </summary>
 		public int Top { get; set; }
 
 		/// <summary>
-		/// Horizontal distance from the toolbar's right edge to the owner's right edge.
+		/// Horizontal distance from the toolbar's right edge (left if <see cref="TBAnchor.OppositeToolbarEdgeX"/>) to the owner's right edge.
 		/// </summary>
 		public int Right { get; set; }
 
 		/// <summary>
-		/// Vertical distance from the toolbar's bottom edge to the owner's bottom edge.
+		/// Vertical distance from the toolbar's bottom edge (top if <see cref="TBAnchor.OppositeToolbarEdgeY"/>) to the owner's bottom edge.
 		/// </summary>
 		public int Bottom { get; set; }
 
 		/// <summary>
 		/// Sets all properties.
 		/// </summary>
-		public TBLocation(int left, int top, int right, int bottom)
+		public TBOffsets(int left, int top, int right, int bottom)
 		{
 			Left = left; Top = top; Right = right; Bottom = bottom;
 		}
 
 		///
-		public bool Equals(TBLocation other)
+		public bool Equals(TBOffsets other)
 			=> other.Left == this.Left && other.Top == this.Top && other.Right == this.Right && other.Bottom == this.Bottom;
 
 		///

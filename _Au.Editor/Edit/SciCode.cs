@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -235,6 +234,9 @@ partial class SciCode : AuScintilla
 		case Api.WM_KEYDOWN:
 			if((KKey)m.WParam == KKey.Insert) return;
 			break;
+		case Api.WM_MBUTTONDOWN:
+			this.Focus();
+			return;
 		case Api.WM_RBUTTONDOWN: {
 			//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
 			POINT p = (AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
@@ -264,8 +266,8 @@ partial class SciCode : AuScintilla
 				//case c_marginFold:
 				//	break;
 			}
+			return;
 		}
-		return;
 		}
 
 		base.WndProc(ref m);
@@ -442,7 +444,7 @@ partial class SciCode : AuScintilla
 				foreach(var path in paths) {
 					bool isLnk = path.Ends(".lnk", true);
 					if(isLnk) b.Append("//");
-					var name = APath.GetFileName(path, true);
+					var name = APath.GetNameNoExt(path);
 					_AppendFile(path, name);
 					if(isLnk) {
 						try {
@@ -454,7 +456,7 @@ partial class SciCode : AuScintilla
 							} else {
 								args = g.Arguments;
 								if(!target.Ends(".exe", true) || name.Find("Shortcut") >= 0)
-									name = APath.GetFileName(target, true);
+									name = APath.GetNameNoExt(target);
 							}
 							_AppendFile(target, name, args);
 						}
@@ -640,7 +642,7 @@ partial class SciCode : AuScintilla
 			: "1 Create new file|2 Replace all text|3 Paste|0 Cancel";
 		switch(ADialog.Show("Import C# file text from clipboard", "Source file: " + name, buttons, DFlags.CommandLinks, owner: this)) {
 		case 1: //Create new file
-			Program.Model.NewItem(isClass ? "Class.cs" : "Script.cs", name, text: new EdNewFileText(true, s));
+			Program.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, s));
 			break;
 		case 2: //Replace all text
 			Z.SetText(s);

@@ -19,7 +19,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -334,7 +333,7 @@ namespace Au.Controls
 				case Keys.PageDown: i += this.GetScrollInfo(true).Page; break;
 				case Keys.PageUp: i -= this.GetScrollInfo(true).Page; break;
 				}
-				i = AMath.MinMax(i, 0, _count - 1);
+				i = Math.Clamp(i, 0, _count - 1);
 			} else if(_count > 0) {
 				i = 0;
 			}

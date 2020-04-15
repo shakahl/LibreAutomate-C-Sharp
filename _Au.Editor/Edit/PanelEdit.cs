@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
@@ -71,7 +70,7 @@ class PanelEdit : UserControl
 		Debug.Assert(!Program.Model.IsAlien(f));
 
 		if(f == _activeDoc?.ZFile) return true;
-		bool focus = _activeDoc?.Focused ?? false;
+		bool wasFocused = _activeDoc?.Focused ?? false;
 
 		var doc = ZGetOpenDocOf(f);
 		if(doc != null) {
@@ -101,24 +100,30 @@ class PanelEdit : UserControl
 			//CodeInfo.FileOpened(doc);
 		}
 
-		if(focus && !newFile) {
+		if(wasFocused && !newFile) {
 			_activeDoc.Focus();
-		} else { //don't focus now, or then cannot select treeview items with keyboard etc. Focus on mouse move in editor control.
+		} else {
+			//Don't focus now, or then cannot select treeview items with keyboard etc. Focus on mouse move in editor control.
+			//But often would focus when user does not want it. Instead can middle-click or Esc.
+			//But need to somehow focus after opening. It is not problem eg in VS, because it opens on double-click.
+			//OK, focus only when at least 300 pixels from treeview.
+#if true
 			_openFocus.onMM ??= (object sender, MouseEventArgs e) => {
 				var c = sender as Control;
 				if(!c.FindForm().Hwnd().IsActive) return;
-				if(_openFocus.dist >= 0) { //if new file, don't focus until mouse moved away from tree
-					int dist = (int)AMath.Distance(Program.Model.TreeControl.Hwnd().Rect, AMouse.XY);
-					if(dist < _openFocus.dist + 10) {
-						if(dist < _openFocus.dist) _openFocus.dist = dist;
-						return;
-					}
+				int dist = (int)AMath.Distance(Program.Model.TreeControl.Hwnd().Rect, AMouse.XY);
+				if(dist < Au.Util.ADpi.ScaleInt(300)) return;
+				if(_openFocus.dist >= 0 && dist < _openFocus.dist + 20) { //if new file, don't focus until mouse is moving away from tree
+					if(dist < _openFocus.dist) _openFocus.dist = dist;
+					return;
 				}
 				c.MouseMove -= _openFocus.onMM;
+				if(Program.Model.TreeControl.SelectedNodes.Count > 1) return;
 				c.Focus();
 			};
 			_activeDoc.MouseMove += _openFocus.onMM;
-			_openFocus.dist = newFile ? int.MaxValue - 10 : -1;
+			_openFocus.dist = newFile ? int.MaxValue - 10000 : -1;
+#endif
 		}
 
 		_activeDoc.Call(SCI_SETWRAPMODE, Program.Settings.edit_wrap); //fast and does nothing if already is in that wrap state

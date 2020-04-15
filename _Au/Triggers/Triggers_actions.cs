@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -76,7 +75,7 @@ namespace Au.Triggers
 		//CONSIDER: make default ifRunningWaitMS = 1000 if it is another action.
 
 		/// <summary>
-		/// Run actions in same thread as <see cref="ActionTriggers.Run"/>.
+		/// Run actions in same thread as <c>Triggers.Run();</c>.
 		/// </summary>
 		/// <remarks>
 		/// Can be used only for actions that return as soon as possible, in less than 10 ms. Use to create and show toolbars (<see cref="AToolbar"/>).
@@ -156,6 +155,15 @@ namespace Au.Triggers
 		/// This property sets the <see cref="ActionTrigger.EnabledAlways"/> property of triggers added afterwards.
 		/// </summary>
 		public bool EnabledAlways { get; set; }
+
+		/// <summary>
+		/// Clears all options.
+		/// </summary>
+		public void Reset()
+		{
+			_new = null;
+			_prev = null;
+		}
 	}
 
 	/// <summary>

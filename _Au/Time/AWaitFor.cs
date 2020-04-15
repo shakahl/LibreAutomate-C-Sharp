@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 //using System.Linq;
 
 using Au.Types;
@@ -254,7 +253,7 @@ namespace Au
 		/// <summary>
 		/// The same as <see cref="Wait_(long, WHFlags, IntPtr[])"/> + can wait for message and variable.
 		/// If msgCallback is not null, calls it when dispatching messages. If returns true, stops waiting and returns handles?.Length.
-		///		If it is WaitMsgCallback, calls it before dispatching a posted message.
+		///		If it is WPMCallback, calls it before dispatching a posted message.
 		///		If it is Func{bool}, calls it after dispatching one or more messages.
 		/// If stopVar is not null, when it becomes true stops waiting and returns handles?.Length + 1.
 		/// </summary>
@@ -300,7 +299,7 @@ namespace Au
 			bool R = false;
 			while(Api.PeekMessage(out var m, default, 0, 0, Api.PM_REMOVE)) {
 				//AWnd.More.PrintMsg(m);
-				if(msgCallback is WaitMsgCallback callback1) {
+				if(msgCallback is WPMCallback callback1) {
 					if(callback1(ref m)) { msgCallback = null; R = true; }
 					if(m.message == 0) continue;
 				}
@@ -337,7 +336,7 @@ namespace Au
 		/// AOutput.Write("finished");
 		/// ]]></code>
 		/// </example>
-		public static bool PostedMessage(double secondsTimeout, WaitMsgCallback callback)
+		public static bool PostedMessage(double secondsTimeout, WPMCallback callback)
 		{
 			return 1 == WaitS_(secondsTimeout, WHFlags.DoEvents, callback, null);
 		}
@@ -422,10 +421,10 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Delegate type for <see cref="AWaitFor.PostedMessage(double, WaitMsgCallback)"/>.
+	/// Delegate type for <see cref="AWaitFor.PostedMessage(double, WPMCallback)"/>.
 	/// </summary>
 	/// <param name="m">API <msdn>MSG</msdn>.</param>
-	public delegate bool WaitMsgCallback(ref Native.MSG m);
+	public delegate bool WPMCallback(ref Native.MSG m);
 
 	/// <summary>
 	/// Used with Wait_ etc instead of ref bool.

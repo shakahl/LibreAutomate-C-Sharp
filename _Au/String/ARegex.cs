@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Linq;
 
 using System.Text.RegularExpressions; //for XML doc links
@@ -24,7 +23,7 @@ namespace Au
 	/// <remarks>
 	/// PCRE is a regular expression library: <see href="https://www.pcre.org/"/>.
 	/// PCRE regular expression syntax: <see href="https://www.pcre.org/current/doc/html/pcre2pattern.html">full</see>, <see href="https://www.pcre.org/current/doc/html/pcre2syntax.html">short</see>.
-	/// Some websites with tutorials and info: <see href="http://www.rexegg.com/">rexegg</see>, <see href="https://www.regular-expressions.info/">regular-expressions.info</see>.
+	/// Some websites with tutorials and info: <see href="https://www.rexegg.com/">rexegg</see>, <see href="https://www.regular-expressions.info/">regular-expressions.info</see>.
 	/// 
 	/// This class is an alternative to the .NET <see cref="Regex"/> class. The regular expression syntax is similar. PCRE has some features unavailable in .NET, and vice versa. In most cases PCRE is about 2 times faster. You can use any of these classes. Functions of <see cref="AAcc"/> class support only PCRE.
 	/// 
@@ -167,7 +166,7 @@ namespace Au
 		/// Callouts can be used to: 1. Track the matching progress. 2. Get all instances of a group that can match multiple times. 3. Evaluate and reject some matches or match parts. 4. Etc.
 		/// The callback function is called by <see cref="IsMatch"/>, <see cref="Match"/>, <see cref="FindAll"/>, <see cref="Replace"/>, <see cref="Split"/> and similar functions, when they reach callout points in regular expression. To insert callout points use (?C), (?C1), (?C2), (?C'name') etc or pass flag AUTO_CALLOUT to the constructor.
 		/// More info in PCRE help topic <see href="https://www.pcre.org/current/doc/html/pcre2callout.html">pcre2callout</see>.
-		/// See also: <see href="http://www.rexegg.com/pcre-callouts.html"/>
+		/// See also: <see href="https://www.rexegg.com/pcre-callouts.html"/>
 		/// </remarks>
 		/// <example>
 		/// Track the matching progress.
@@ -205,7 +204,7 @@ namespace Au
 		/// AOutput.Write(x.FindAllS(s));
 		/// ]]></code>
 		/// </example>
-		public RXCalloutFunc Callout {
+		public Action<RXCalloutData> Callout {
 			set {
 				lock(this) {
 					if(value == null) {

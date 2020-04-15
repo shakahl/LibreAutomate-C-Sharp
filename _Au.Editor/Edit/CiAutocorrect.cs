@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using Microsoft.Win32;
 using System.Windows.Forms;
 //using System.Drawing;
 using System.Linq;
@@ -273,7 +272,7 @@ class CiAutocorrect
 	{
 		bcc = null; //need to return it only if onSemicolon==true and anywhere==false and returns true
 
-		g1:
+		//g1:
 		if(!CodeInfo.GetContextWithoutDocument(out var cd)) return false;
 		var doc = cd.sciDoc;
 		var code = cd.code;
@@ -281,12 +280,14 @@ class CiAutocorrect
 		if(pos < 1) return false;
 		if(!anywhere && doc.Z.IsSelection) return false;
 		if(pos == code.Length) {
-			if(code[pos - 1] == '\n') return false;
-			//if text does not end with '\n' and we are at the end, add empty line at the end after pos.
-			//	Else difficult because FindToken then finds the end of text token and its parent is the compilation unit and not the node before.
-			cd.sciDoc.Z.InsertText(true, pos, "\r\n");
-			cd.sciDoc.Z.CurrentPos16 = pos; //don't need, but
-			goto g1;
+			return false;
+			//This code now not useful, because normally file ends with } or }\r\n.
+			//if(code[pos - 1] == '\n') return false;
+			////if text does not end with '\n' and we are at the end, add empty line at the end after pos.
+			////	Else difficult because FindToken then finds the end of text token and its parent is the compilation unit and not the node before.
+			//cd.sciDoc.Z.InsertText(true, pos, "\r\n");
+			//cd.sciDoc.Z.CurrentPos16 = pos; //don't need, but
+			//goto g1;
 		}
 
 		bool canCorrect = true, canAutoindent = !(onSemicolon | anywhere); //note: complResult is never Complex here
@@ -602,11 +603,15 @@ class CiAutocorrect
 					}
 				}
 
-				//don't indent if we are after 'do ...' or 'try ...' or 'try ... catch ...'
+				//don't indent if we are after 'do ...' or 'try ...' or 'try ... catch ...' or before 'else'
 				SyntaxNode doTryChild = null;
 				switch(node) {
 				case DoStatementSyntax k1: doTryChild = k1.Statement; break;
 				case TryStatementSyntax k2: doTryChild = k2.Block; break;
+				case IfStatementSyntax k3:
+					var e = k3.Else;
+					if(e != null && e.SpanStart == to) indent--;
+					break;
 				}
 				if(doTryChild != null && spanN.End >= doTryChild.Span.End) node = node.Parent;
 			}

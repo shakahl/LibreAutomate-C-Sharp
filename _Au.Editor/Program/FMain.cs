@@ -176,6 +176,7 @@ partial class FMain : Form
 			//restore focused control correctly
 			if(isActive == 0) _wFocus = AWnd.ThisThread.Focused;
 			else if(_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
+			else Panels.Editor.ZActiveDoc?.Focus();
 			return;
 		case Api.WM_SYSCOMMAND:
 			int sc = (int)wParam;
