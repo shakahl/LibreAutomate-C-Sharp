@@ -9,14 +9,16 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Windows.Forms;
-//using System.Drawing;
-//using System.Linq;
+using System.Linq;
 
 using Au;
 using Au.Types;
 using Au.Controls;
+
+using Microsoft.CodeAnalysis;
+using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using acc = Microsoft.CodeAnalysis.Accessibility;
 
 /// <summary>
 /// Inserts various code in code editor. With correct indentation etc.
@@ -165,4 +167,122 @@ static class InsertCode
 		return start;
 	}
 
+	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1)
+	{
+		if(!CodeInfo.GetContextAndDocument(out var cd, position)) return;
+		var semo = cd.document.GetSemanticModelAsync().Result;
+		var node = semo.Root.FindToken(cd.pos16).Parent;
+		//CiUtil.PrintNode(node);
+
+		bool haveBaseType = false;
+		for(var n = node; n != null; n = n.Parent) {
+			//AOutput.Write(n.Kind());
+			if(n is BaseTypeSyntax bts) {
+				node = bts.Type;
+				haveBaseType = true;
+			} else if(n is ClassDeclarationSyntax cds) {
+				if(!haveBaseType) try { node = cds.BaseList.Types[0].Type; } catch { return; }
+				position = cds.CloseBraceToken.Span.Start;
+				goto g1;
+			}
+		}
+		return;
+		g1:
+
+		var baseType = semo.GetTypeInfo(node).Type as INamedTypeSymbol;
+		if(baseType == null) return;
+		bool isInterface = false;
+		switch(baseType.TypeKind) {
+		case TypeKind.Interface: isInterface = true; break;
+		case TypeKind.Class when baseType.IsAbstract: break;
+		default: return;
+		}
+
+		var b = new StringBuilder();
+		var format = CiHtml.s_symbolFullFormat;
+		var formatExp = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeRef);
+
+		b.Append("\r\n#region ").Append(baseType.ToMinimalDisplayString(semo, position, CiHtml.s_symbolFullFormat));
+
+		if(isInterface) {
+			_Base(baseType, explicitly);
+			foreach(var bi in baseType.AllInterfaces) {
+				_Base(bi,
+					explicitly || (baseType.IsGenericType && !bi.IsGenericType) //eg public IEnumerable<T> and explicit IEnumerable
+					);
+			}
+		} else {
+			for(; baseType != null && baseType.IsAbstract; baseType = baseType.BaseType) {
+				_Base(baseType, false);
+			}
+		}
+
+		b.AppendLine("\r\n\r\n#endregion");
+
+		void _Base(INamedTypeSymbol type, bool explicitly)
+		{
+			foreach(var v in type.GetMembers()) {
+				//AOutput.Write(v, v.IsStatic, v.GetType().GetInterfaces());
+				bool isAbstract = v.IsAbstract;
+				if(!isAbstract && !isInterface) continue;
+				if(v.IsStatic) continue;
+				bool expl = explicitly || (isInterface && v.DeclaredAccessibility != acc.Public);
+
+				string append = null;
+				switch(v) {
+				case IMethodSymbol ims when ims.MethodKind == MethodKind.Ordinary:
+					append = ims.ReturnsVoid ? @" {
+	
+}" : @" {
+	
+	return default;
+}";
+					break;
+				case IPropertySymbol ips:
+					if(!expl && isInterface) {
+						if(ips.GetMethod != null && ips.GetMethod.DeclaredAccessibility != acc.Public) expl = true;
+						if(ips.SetMethod != null && ips.SetMethod.DeclaredAccessibility != acc.Public) expl = true;
+					}
+					break;
+				case IEventSymbol _:
+					append = !expl ? ";" : @" {
+	add {  }
+	remove {  }
+}";
+					break;
+				default:
+					continue;
+				}
+
+				//if(null != classType.FindImplementationForInterfaceMember(v)) continue; //never mind
+
+				b.AppendLine("\r\n");
+				if(isInterface) {
+					if(!isAbstract) b.AppendLine("//has default implementation");
+					if(!expl) b.Append("public ");
+				} else {
+					b.Append(v.DeclaredAccessibility switch { acc.Public => "public", acc.Internal => "internal", acc.Protected => "protected", acc.ProtectedOrInternal => "protected internal", acc.ProtectedAndInternal => "private protected", _ => "" });
+					b.Append(" override ");
+				}
+				b.Append(v.ToMinimalDisplayString(semo, position, expl ? formatExp : format)).Append(append);
+			}
+		}
+
+		var text = b.ToString();
+		text = text.Replace("] { get; set; }", @"] {
+	get { return default; }
+	set {  }
+}"); //indexers
+		text = text.RegexReplace(@"[^\]] \{\K set; \}", @"
+	set {  }
+}"); //write-only properties
+
+		//AOutput.Write(text);
+		//AClipboard.Text = text;
+
+		cd.sciDoc.Z.InsertText(true, position, text, addUndoPoint: true);
+		cd.sciDoc.Z.GoToPos(true, position);
+
+		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
+	}
 }

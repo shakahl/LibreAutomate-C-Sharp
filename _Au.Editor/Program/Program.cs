@@ -15,7 +15,6 @@ using System.Windows.Forms;
 
 using Au;
 using Au.Types;
-using System.Resources;
 
 static class Program
 {

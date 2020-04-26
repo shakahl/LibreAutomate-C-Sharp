@@ -857,7 +857,7 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 				string jabswitch = dir + @"\bin\jabswitch.exe", sout = null;
 				if(!AFile.ExistsAsFile(jabswitch)) return (false, "Cannot find jabswitch.exe.");
 				try {
-					AExec.RunConsole(out sout, jabswitch, en ? "-enable" : "-disable");
+					AFile.RunConsole(out sout, jabswitch, en ? "-enable" : "-disable");
 					sout = sout?.Trim();
 				}
 				catch(Exception ex) {

@@ -1539,11 +1539,6 @@
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="M:Au.Types.OptWarnings.Reset">
-            <summary>
-            Resets all options. Copies from <see cref="P:Au.AOpt.Static.Warnings"/>.
-            </summary>
-        </member>
         <member name="P:Au.Types.OptWarnings.Verbose">
             <summary>
             If true, some library functions may display more warnings and other info.
@@ -1597,11 +1592,6 @@
             Initializes this instance with default values or values copied from another instance.
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
-        </member>
-        <member name="M:Au.Types.OptMouse.Reset">
-            <summary>
-            Resets all options. Copies from <see cref="P:Au.AOpt.Static.Mouse"/>.
-            </summary>
         </member>
         <member name="P:Au.Types.OptMouse.ClickSpeed">
             <summary>
@@ -1683,14 +1673,9 @@
             Copies options from o, or sets default if o==null. Like ctor does.
             </summary>
         </member>
-        <member name="M:Au.Types.OptKey.Reset">
-            <summary>
-            Resets all options. Copies from <see cref="P:Au.AOpt.Static.Key"/>.
-            </summary>
-        </member>
         <member name="M:Au.Types.OptKey.GetHookOptionsOrThis_(Au.AWnd)">
             <summary>
-            Returns this variable or OptKey cloned from this variable and possibly modified by Hook.
+            Returns this variable, or OptKey cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
         </member>
@@ -1936,27 +1921,22 @@
         <member name="M:Au.Types.OptWaitFor.#ctor(System.Int32,System.Boolean)">
             
         </member>
-        <member name="M:Au.Types.OptWaitFor.Reset">
-            <summary>
-            Resets all options.
-            </summary>
-        </member>
         <member name="T:Au.Types.NoDoc">
             <summary>
             In DocFX-generated help files removes documentation and auto-generated links in TOC and class pages.
             </summary>
         </member>
-        <member name="T:Au.Types.UsingAction">
+        <member name="T:Au.Types.UsingEndAction">
             <summary>
             Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
-            Usually returned by functions. Examples: <see cref="P:Au.AOpt.Temp.Mouse"/>, <see cref="M:Au.AMenu.Submenu(System.String,Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)"/>.
+            Usually returned by functions. Examples: <see cref="M:Au.AOpt.Scope.Mouse(System.Boolean)"/>, <see cref="M:Au.AMenu.Submenu(System.String,Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)"/>.
             </summary>
         </member>
-        <member name="M:Au.Types.UsingAction.#ctor(System.Action)">
+        <member name="M:Au.Types.UsingEndAction.#ctor(System.Action)">
             <summary>Sets action to be invoked when disposing this variable.</summary>
         </member>
-        <member name="M:Au.Types.UsingAction.Dispose">
-            <summary>Invokes the action.</summary>
+        <member name="M:Au.Types.UsingEndAction.Dispose">
+            <summary>Invokes the action if not null.</summary>
         </member>
         <member name="T:Au.Types.PSFormat">
             <summary>
@@ -2205,6 +2185,15 @@
             Creates Coord of Fraction type.
             </summary>
         </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.UInt32)~Au.Types.Coord">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.Int64)~Au.Types.Coord">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Implicit(System.UInt64)~Au.Types.Coord">
+            
+        </member>
         <member name="M:Au.Types.Coord.Reverse(System.Int32)">
             <summary>
             Creates Coord of Reverse type.
@@ -2238,6 +2227,13 @@
             </summary>
             <seealso cref="M:Au.Types.Coord.Reverse(System.Int32)"/>
         </member>
+        <member name="M:Au.Types.Coord.NormalizeInRange(System.Int32,System.Int32)">
+            <summary>
+            Converts fractional/reverse coordinate to normal coordinate in a range.
+            </summary>
+            <param name="start">Start of range.</param>
+            <param name="end">End of range.</param>
+        </member>
         <member name="M:Au.Types.Coord.NormalizeInRect(Au.Types.Coord,Au.Types.Coord,Au.Types.RECT,System.Boolean,System.Boolean)">
             <summary>
             Converts fractional/reverse coordinates to normal coordinates in a rectangle.
@@ -2270,6 +2266,18 @@
             <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
         </member>
         <member name="M:Au.Types.Coord.ToString">
+            
+        </member>
+        <member name="M:Au.Types.Coord.Equals(Au.Types.Coord)">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Equality(Au.Types.Coord,Au.Types.Coord)">
+            
+        </member>
+        <member name="M:Au.Types.Coord.op_Inequality(Au.Types.Coord,Au.Types.Coord)">
+            
+        </member>
+        <member name="M:Au.Types.Coord.GetHashCode">
             
         </member>
         <member name="T:Au.Types.CoordType">
@@ -3022,59 +3030,102 @@
         </member>
         <member name="F:Au.Types.TBAnchor.TopLeft">
             <summary>
-            Anchors are owner's top and left edges. Default.
+            Anchors are top and left edges. Default.
             </summary>
         </member>
         <member name="F:Au.Types.TBAnchor.TopRight">
             <summary>
-            Anchors are owner's top and right edges.
+            Anchors are top and right edges.
             </summary>
         </member>
         <member name="F:Au.Types.TBAnchor.BottomLeft">
             <summary>
-            Anchors are owner's bottom and left edges.
+            Anchors are bottom and left edges.
             </summary>
         </member>
         <member name="F:Au.Types.TBAnchor.BottomRight">
             <summary>
-            Anchors are owner's bottom and right edges.
+            Anchors are bottom and right edges.
             </summary>
         </member>
-        <member name="F:Au.Types.TBAnchor.Top">
+        <member name="F:Au.Types.TBAnchor.TopLR">
             <summary>
-            Anchors are owner's top, left and right edges. The toolbar is resized vertically when resizing its owner.
+            Anchors are top, left and right edges. The toolbar is resized horizontally when resizing its owner.
             </summary>
         </member>
-        <member name="F:Au.Types.TBAnchor.Bottom">
+        <member name="F:Au.Types.TBAnchor.BottomLR">
             <summary>
-            Anchors are owner's bottom, left and right edges. The toolbar is resized vertically when resizing its owner.
+            Anchors are bottom, left and right edges. The toolbar is resized horizontally when resizing its owner.
             </summary>
         </member>
-        <member name="F:Au.Types.TBAnchor.Left">
+        <member name="F:Au.Types.TBAnchor.LeftTB">
             <summary>
-            Anchors are owner's left, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+            Anchors are left, top and bottom edges. The toolbar is resized vertically when resizing its owner.
             </summary>
         </member>
-        <member name="F:Au.Types.TBAnchor.Right">
+        <member name="F:Au.Types.TBAnchor.RightTB">
             <summary>
-            Anchors are owner's right, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+            Anchors are right, top and bottom edges. The toolbar is resized vertically when resizing its owner.
             </summary>
         </member>
         <member name="F:Au.Types.TBAnchor.All">
             <summary>
-            Anchors are all owner's edges. The toolbar is resized when resizing its owner.
+            Anchors are all edges. The toolbar is resized when resizing its owner.
             </summary>
         </member>
-        <member name="F:Au.Types.TBAnchor.OppositeToolbarEdgeX">
+        <member name="F:Au.Types.TBAnchor.OppositeEdgeX">
             <summary>
-            Use toolbar's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
+            Use owner's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
+            This flag is for toolbars that normally are outside of the owner rectangle (at the left or right).
             This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
             </summary>
         </member>
-        <member name="F:Au.Types.TBAnchor.OppositeToolbarEdgeY">
+        <member name="F:Au.Types.TBAnchor.OppositeEdgeY">
             <summary>
-            Use toolbar's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
+            Use owner's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
+            This flag is for toolbars that normally are outside of the owner rectangle (above or below).
             This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
+            </summary>
+        </member>
+        <member name="T:Au.Types.TBOffsets">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Offsets"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Left">
+            <summary>
+            Horizontal distance from the owner's left edge (right if <see cref="F:Au.Types.TBAnchor.OppositeEdgeX"/>) to the toolbar's left edge.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Top">
+            <summary>
+            Vertical distance from the owner's top edge (bottom if <see cref="F:Au.Types.TBAnchor.OppositeEdgeY"/>) to the toolbar's top edge.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Right">
+            <summary>
+            Horizontal distance from the toolbar's right edge to the owner's right edge (left if <see cref="F:Au.Types.TBAnchor.OppositeEdgeX"/>).
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Bottom">
+            <summary>
+            Vertical distance from the toolbar's bottom edge to the owner's bottom edge (top if <see cref="F:Au.Types.TBAnchor.OppositeEdgeY"/>).
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBOffsets.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Sets all properties.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBOffsets.Equals(Au.Types.TBOffsets)">
+            
+        </member>
+        <member name="M:Au.Types.TBOffsets.ToString">
+            
+        </member>
+        <member name="T:Au.Types.TBLayout">
+            <summary>
+            See <see cref="P:Au.AToolbar.Layout"/>.
             </summary>
         </member>
         <member name="T:Au.Types.TBHide">
@@ -3091,53 +3142,25 @@
         <member name="F:Au.Types.TBHide.User">
             <summary>This and bigger flag values can be used by callers for any purpose. Value 0x10000.</summary>
         </member>
-        <member name="T:Au.Types.TBOffsets">
+        <member name="T:Au.Types.TBNoMenu">
             <summary>
-            Used with <see cref="P:Au.AToolbar.Offsets"/>.
+            See <see cref="P:Au.AToolbar.NoMenu"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.TBOffsets.Left">
+        <member name="T:Au.Types.TBCtor">
             <summary>
-            Horizontal distance from the owner's left edge to the toolbar's left edge (right if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeX"/>).
+            Flags for <see cref="T:Au.AToolbar"/> constructor.
             </summary>
         </member>
-        <member name="P:Au.Types.TBOffsets.Top">
+        <member name="F:Au.Types.TBCtor.ResetSettings">
             <summary>
-            Vertical distance from the owner's top edge to the toolbar's top edge (bottom if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeY"/>).
+            Don't load saved settings. Delete the settings file of the toolbar, if exists.
             </summary>
         </member>
-        <member name="P:Au.Types.TBOffsets.Right">
+        <member name="F:Au.Types.TBCtor.DontSaveSettings">
             <summary>
-            Horizontal distance from the toolbar's right edge (left if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeX"/>) to the owner's right edge.
+            Don't load and save settings. No file will be created or opened.
             </summary>
-        </member>
-        <member name="P:Au.Types.TBOffsets.Bottom">
-            <summary>
-            Vertical distance from the toolbar's bottom edge (top if <see cref="F:Au.Types.TBAnchor.OppositeToolbarEdgeY"/>) to the owner's bottom edge.
-            </summary>
-        </member>
-        <member name="M:Au.Types.TBOffsets.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Sets all properties.
-            </summary>
-        </member>
-        <member name="M:Au.Types.TBOffsets.Equals(Au.Types.TBOffsets)">
-            
-        </member>
-        <member name="M:Au.Types.TBOffsets.ToString">
-            
-        </member>
-        <member name="T:Au.Types.TBGroupSeparator">
-            <summary>
-            Horizontal separator for <b>ToolStrip</b> controls. With or without a text label. See <see cref="M:Au.AToolbar.Group(System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.TBGroupSeparator.#ctor(System.Windows.Forms.ToolStrip,System.String)">
-            <summary>
-            Adds horizontal separator to the toolstrip.
-            </summary>
-            <param name="ts">Parent control.</param>
-            <param name="name">Optional label.</param>
         </member>
         <member name="T:Au.Types.ITBOwnerObject">
             <summary>
@@ -3155,6 +3178,7 @@
             </summary>
             <remarks>
             Not called if the owner window is invisible or cloaked or minimized.
+            The default implementation returns true.
             </remarks>
         </member>
         <member name="P:Au.Types.ITBOwnerObject.IsVisible">
@@ -3163,6 +3187,7 @@
             </summary>
             <remarks>
             Not called if the owner window is invisible or cloaked or minimized.
+            The default implementation returns true.
             </remarks>
         </member>
         <member name="M:Au.Types.ITBOwnerObject.GetRect(Au.Types.RECT@)">
@@ -3174,6 +3199,18 @@
             <remarks>
             Not called if the owner window is invisible or cloaked or minimized or if <see cref="P:Au.Types.ITBOwnerObject.IsVisible"/> returned false.
             </remarks>
+        </member>
+        <member name="T:Au.Types.TBGroupSeparator">
+            <summary>
+            Horizontal separator for <b>ToolStrip</b> controls. With or without a text label. See <see cref="M:Au.AToolbar.Group(System.String)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBGroupSeparator.#ctor(System.Windows.Forms.ToolStrip,System.String)">
+            <summary>
+            Adds horizontal separator to the toolstrip.
+            </summary>
+            <param name="ts">Parent control.</param>
+            <param name="name">Optional label.</param>
         </member>
         <member name="T:Au.Types.TBRenderer">
             <summary>
@@ -3393,7 +3430,7 @@
             - Icon - icon object.
             - <see cref="T:Au.Types.StockIcon"/> - a shell icon.
             - FolderPath - folder path.
-            - default - no icon. If <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
+            - default - no icon. If <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
             - "" - no icon.
             </remarks>
         </member>
@@ -3418,110 +3455,6 @@
         <member name="P:Au.Types.MTImage.Value">
             <summary>
             Gets the raw value stored in this variable. Can be string, int, Image, Icon, null.
-            </summary>
-        </member>
-        <member name="T:Au.Types.RFlags">
-            <summary>
-            Flags for <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.RFlags.ShowErrorUI">
-            <summary>
-            Show error message box if fails, for example if file not found.
-            Note: this does not disable exceptions. Still need exception handling. Or call <see cref="M:Au.AExec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.RFlags.WaitForExit">
-            <summary>
-            If started new process, wait until it exits.
-            </summary>
-        </member>
-        <member name="F:Au.Types.RFlags.NeedProcessHandle">
-            <summary>
-            Get process handle (<see cref="P:Au.Types.RResult.ProcessHandle"/>), if possible.
-            </summary>
-        </member>
-        <member name="F:Au.Types.RFlags.Admin">
-            <summary>
-            Run as administrator, probably with UAC consent dialog.
-            Uses verb "runas", therefore other verb cannot be specified.
-            </summary>
-        </member>
-        <member name="T:Au.Types.ROptions">
-            <summary>
-            More parameters for <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
-            </summary>
-            <remarks>
-            Implicit conversion from <b>string</b> sets <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.ROptions.op_Implicit(System.String)~Au.Types.ROptions">
-            <summary>
-            Sets <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.ROptions.CurrentDirectory">
-            <summary>
-            Initial current directory for the new process.
-            If null (default), the new process will inherit the curent directory of this process.
-            If "", the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as null.
-            <note>Some programs look for their files in current directory and fail to start if it is not the program's directory.</note>
-            </summary>
-        </member>
-        <member name="F:Au.Types.ROptions.Verb">
-            <summary>
-            File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
-            Not all menu items will work. Some may have different name than in the menu.
-            </summary>
-        </member>
-        <member name="F:Au.Types.ROptions.OwnerWindow">
-            <summary>
-            Owner window for error message boxes.
-            Also, new window should be opened on the same screen. However many programs ignore it.
-            </summary>
-        </member>
-        <member name="F:Au.Types.ROptions.WindowState">
-            <summary>
-            Preferred window state.
-            Many programs ignore it.
-            </summary>
-        </member>
-        <member name="T:Au.Types.RResult">
-            <summary>
-            Results of <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RResult.ProcessExitCode">
-            <summary>
-            The exit code of the process.
-            0 if no flag <b>WaitForExit</b> or if cannot wait.
-            </summary>
-            <remarks>
-            Usually the exit code is 0 or a process-defined error code.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.RResult.ProcessId">
-            <summary>
-            The process id.
-            0 if used flag <b>WaitForExit</b> or if did not start new process (eg opened the document in an existing process) or if cannot get it.
-            </summary>
-        </member>
-        <member name="P:Au.Types.RResult.ProcessHandle">
-            <summary>
-            If used flag <b>NeedProcessHandle</b>, contains process handle. Later the <see cref="T:System.Threading.WaitHandle"/> variable must be disposed.
-            null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
-            </summary>
-            <example>
-            This code does the same as <c>AExec.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
-            <code><![CDATA[
-            var r = AExec.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
-            using(var h = r.ProcessHandle) h?.WaitOne();
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Types.RResult.ToString">
-            <summary>
-            Returns <see cref="P:Au.Types.RResult.ProcessId"/> as string.
             </summary>
         </member>
         <member name="T:Au.Types.FileDir">
@@ -3757,6 +3690,110 @@
         </member>
         <member name="F:Au.Types.FileId.FileIndex">
             <summary>An identifier that is associated with the file. It is unique in that volume.</summary>
+        </member>
+        <member name="T:Au.Types.RFlags">
+            <summary>
+            Flags for <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.RFlags.ShowErrorUI">
+            <summary>
+            Show error message box if fails, for example if file not found.
+            Note: this does not disable exceptions. Still need exception handling. Or call <see cref="M:Au.AFile.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.RFlags.WaitForExit">
+            <summary>
+            If started new process, wait until it exits.
+            </summary>
+        </member>
+        <member name="F:Au.Types.RFlags.NeedProcessHandle">
+            <summary>
+            Get process handle (<see cref="P:Au.Types.RResult.ProcessHandle"/>), if possible.
+            </summary>
+        </member>
+        <member name="F:Au.Types.RFlags.Admin">
+            <summary>
+            Run as administrator, probably with UAC consent dialog.
+            Uses verb "runas", therefore other verb cannot be specified.
+            </summary>
+        </member>
+        <member name="T:Au.Types.ROptions">
+            <summary>
+            More parameters for <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            </summary>
+            <remarks>
+            Implicit conversion from <b>string</b> sets <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ROptions.op_Implicit(System.String)~Au.Types.ROptions">
+            <summary>
+            Sets <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ROptions.CurrentDirectory">
+            <summary>
+            Initial current directory for the new process.
+            If null (default), the new process will inherit the curent directory of this process.
+            If "", the function gets parent directory path from the <i>file</i> parameter, if possible (if full path is specified or found). If not possible, same as null.
+            <note>Some programs look for their files in current directory and fail to start if it is not the program's directory.</note>
+            </summary>
+        </member>
+        <member name="F:Au.Types.ROptions.Verb">
+            <summary>
+            File's right-click menu command, also known as verb. For example "edit", "print", "properties". The default verb is bold in the menu.
+            Not all menu items will work. Some may have different name than in the menu.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ROptions.OwnerWindow">
+            <summary>
+            Owner window for error message boxes.
+            Also, new window should be opened on the same screen. However many programs ignore it.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ROptions.WindowState">
+            <summary>
+            Preferred window state.
+            Many programs ignore it.
+            </summary>
+        </member>
+        <member name="T:Au.Types.RResult">
+            <summary>
+            Results of <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RResult.ProcessExitCode">
+            <summary>
+            The exit code of the process.
+            0 if no flag <b>WaitForExit</b> or if cannot wait.
+            </summary>
+            <remarks>
+            Usually the exit code is 0 or a process-defined error code.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.RResult.ProcessId">
+            <summary>
+            The process id.
+            0 if used flag <b>WaitForExit</b> or if did not start new process (eg opened the document in an existing process) or if cannot get it.
+            </summary>
+        </member>
+        <member name="P:Au.Types.RResult.ProcessHandle">
+            <summary>
+            If used flag <b>NeedProcessHandle</b>, contains process handle. Later the <see cref="T:System.Threading.WaitHandle"/> variable must be disposed.
+            null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
+            </summary>
+            <example>
+            This code does the same as <c>AFile.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+            <code><![CDATA[
+            var r = AFile.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+            using(var h = r.ProcessHandle) h?.WaitOne();
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Types.RResult.ToString">
+            <summary>
+            Returns <see cref="P:Au.Types.RResult.ProcessId"/> as string.
+            </summary>
         </member>
         <member name="T:Au.Types.FolderPath">
             <summary>
@@ -6159,11 +6196,6 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AOpt.Reset">
-            <summary>
-            Resets all options. Copies from <see cref="T:Au.AOpt.Static"/>.
-            </summary>
-        </member>
         <member name="T:Au.AOpt.Static">
             <summary>
             Default <see cref="T:Au.AOpt"/> properties of each thread.
@@ -6215,19 +6247,21 @@
             ]]></code>
             </example>
         </member>
-        <member name="T:Au.AOpt.Temp">
+        <member name="T:Au.AOpt.Scope">
             <summary>
-            Makes easy to restore current options of this thread. See example.
+            Creates temporary scopes for options.
+            Example: <c>using(AOpt.Scope.Key()) { AOpt.Key.KeySpeed=5; ... }</c>.
             </summary>
         </member>
-        <member name="P:Au.AOpt.Temp.Mouse">
+        <member name="M:Au.AOpt.Scope.Mouse(System.Boolean)">
             <summary>
-            Makes easy to restore current <see cref="P:Au.AOpt.Mouse"/> of this thread. See example.
+            Creates temporary scope for <see cref="P:Au.AOpt.Mouse"/> options. See example.
             </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.AOpt.Static"/>).</param>
             <example>
             <code><![CDATA[
             AOutput.Write(AOpt.Mouse.ClickSpeed);
-            using(AOpt.Temp.Mouse) {
+            using(AOpt.Scope.Mouse()) {
             	AOpt.Mouse.ClickSpeed = 100;
             	AOutput.Write(AOpt.Mouse.ClickSpeed);
             } //here restored automatically
@@ -6235,14 +6269,15 @@
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.AOpt.Temp.Key">
+        <member name="M:Au.AOpt.Scope.Key(System.Boolean)">
             <summary>
-            Makes easy to restore current <see cref="P:Au.AOpt.Key"/> of this thread. See example.
+            Creates temporary scope for <see cref="P:Au.AOpt.Key"/> options. See example.
             </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.AOpt.Static"/>).</param>
             <example>
             <code><![CDATA[
             AOutput.Write(AOpt.Key.KeySpeed);
-            using(AOpt.Temp.Key) {
+            using(AOpt.Scope.Key()) {
             	AOpt.Key.KeySpeed = 5;
             	AOutput.Write(AOpt.Key.KeySpeed);
             } //here restored automatically
@@ -6250,18 +6285,54 @@
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.AOpt.Temp.WaitFor">
+        <member name="M:Au.AOpt.Scope.WaitFor(System.Boolean)">
             <summary>
-            Makes easy to restore current <see cref="P:Au.AOpt.WaitFor"/> of this thread. See example.
+            Creates temporary scope for <see cref="P:Au.AOpt.WaitFor"/> options. See example.
             </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.AOpt.Static"/>).</param>
             <example>
             <code><![CDATA[
             AOutput.Write(AOpt.WaitFor.Period);
-            using(AOpt.Temp.WaitFor) {
+            using(AOpt.Scope.WaitFor()) {
             	AOpt.WaitFor.Period = 5;
             	AOutput.Write(AOpt.WaitFor.Period);
             } //here restored automatically
             AOutput.Write(AOpt.WaitFor.Period);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AOpt.Scope.Warnings(System.Boolean)">
+            <summary>
+            Creates temporary scope for <see cref="P:Au.AOpt.Warnings"/> options. See example.
+            </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.AOpt.Static"/>).</param>
+            <example>
+            <code><![CDATA[
+            AOpt.Warnings.Verbose = false;
+            AOutput.Write(AOpt.Warnings.Verbose, AOpt.Warnings.IsDisabled("Test*"));
+            using(AOpt.Scope.Warnings()) {
+            	AOpt.Warnings.Verbose = true;
+            	AOpt.Warnings.Disable("Test*");
+            	AOutput.Write(AOpt.Warnings.Verbose, AOpt.Warnings.IsDisabled("Test*"));
+            } //here restored automatically
+            AOutput.Write(AOpt.Warnings.Verbose, AOpt.Warnings.IsDisabled("Test*"));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AOpt.Scope.All(System.Boolean)">
+            <summary>
+            Creates temporary scope for all options. See example.
+            </summary>
+            <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="T:Au.AOpt.Static"/>).</param>
+            <example>
+            <code><![CDATA[
+            AOutput.Write(AOpt.Key.KeySpeed, AOpt.Mouse.ClickSpeed);
+            using(AOpt.Scope.All()) {
+            	AOpt.Key.KeySpeed = 5;
+            	AOpt.Mouse.ClickSpeed = 50;
+            	AOutput.Write(AOpt.Key.KeySpeed, AOpt.Mouse.ClickSpeed);
+            } //here restored automatically
+            AOutput.Write(AOpt.Key.KeySpeed, AOpt.Mouse.ClickSpeed);
             ]]></code>
             </example>
         </member>
@@ -6299,7 +6370,7 @@
         <member name="M:Au.AExtensions.IsEmptyRect(System.Drawing.Rectangle)">
             <summary>
             Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
-            This extension method has been added because Rectangle.IsEmpty returns true only when all fields are 0, which is not very useful.
+            Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
             </summary>
         </member>
         <member name="M:Au.AExtensions.GetStartEnd(System.Range,System.Int32)">
@@ -7123,9 +7194,11 @@
         </member>
         <member name="T:Au.AMenu">
             <summary>
-            Popup menu based on <see cref="T:System.Windows.Forms.ContextMenuStrip"/>. Can be used everywhere, not only in forms.
+            Popup menu.
             </summary>
             <remarks>
+            Based on <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
+            Can be used everywhere, not only in forms.
             Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
             </remarks>
             <example>
@@ -7139,7 +7212,7 @@
             	m["Four"] = o => AOutput.Write(o);
             }
             m.ExtractIconPathFromCode = true;
-            m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+            m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
             m.Show();
             ]]></code>
             </example>
@@ -7165,7 +7238,7 @@
             Initializes this object.
             Use this overload for starting and/or automating other apps.
             </summary>
-            <param name="name">Menu name. Must be valid filename. Currently used only as the initial <b>Name</b> and <b>Text</b> of <see cref="P:Au.AMenu.Control"/>.</param>
+            <param name="name">Menu name. Must be valid filename. Currently only sets <see cref="P:Au.AMenu.Control"/>'s <b>Text</b> property.</param>
             <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <remarks>
@@ -7199,7 +7272,7 @@
             m["Three"] = o => { AOutput.Write(o.MenuItem.Checked); };
             m.LastMenuItem.Checked = true;
             m.ExtractIconPathFromCode = true;
-            m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+            m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
             m.Show();
             ]]></code>
             </example>
@@ -7224,7 +7297,7 @@
             var mi = m.Add("Two", o => { AOutput.Write(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
             mi.Checked = true;
             m.ExtractIconPathFromCode = true;
-            m.Add("notepad", o => AExec.TryRun(AFolders.System + "notepad.exe"));
+            m.Add("notepad", o => AFile.TryRun(AFolders.System + "notepad.exe"));
             m.Show();
             ]]></code>
             </example>
@@ -7438,32 +7511,30 @@
         </member>
         <member name="T:Au.AToolbar">
             <summary>
-            Floating toolbar based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
+            Floating toolbar.
             Can be attached to windows of other programs.
             </summary>
             <remarks>
+            Based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
             Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="P:Au.Types.MTBase.ItemThread"/>.
             </remarks>
             <example>
             <code><![CDATA[
             _Toolbar_Common(); //show toolbar. Don't attach to a window.
             //_Toolbar_Common2(); //add function for each toolbar
-            Triggers.Options.RunActionInMainThread(); //let all toolbars run in this thread
+            Triggers.Options.ThreadMain(); //let all toolbars run in this thread
             Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "*Notepad", "Notepad"] = o => _Toolbar_Notepad(o.Window); //show toolbar attached to this Notepad window
             //Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "other window"] = o => _Toolbar_Other(o.Window); //add trigger and function for each toolbar
             Triggers.Run();
             
             void _Toolbar_Common() {
             	var t = new AToolbar("example");
-            	t.ExtractIconPathFromCode = true;
-            
             	t["button 1", @"C:\example.ico"] = o => AOutput.Write(o);
             	t.MenuButton("menu", m => {
-            		m.ExtractIconPathFromCode = true;
             		m["item 1"] = o => AOutput.Write(o);
-            		m["item 2"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+            		m["item 2"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
             	}, AIcon.GetStockIcon(StockIcon.FOLDER, 16));
-            	t["Notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+            	t["Notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
             	t.Show();
             }
             
@@ -7475,10 +7546,15 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AToolbar.#ctor(System.String,System.String,System.Int32)">
+        <member name="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)">
             <param name="name">
             Toolbar name. Must be valid filename.
-            Used for the toolbar's settings file name. Also it is the initial <b>Name</b> and <b>Text</b> of <see cref="P:Au.AToolbar.Control"/>, and used with <see cref="M:Au.AToolbar.Find(System.String)"/>.
+            Used for the toolbar's settings file name. Also sets <see cref="P:Au.AToolbar.Control"/>'s <b>Text</b> property and is used by <see cref="M:Au.AToolbar.Find(System.String)"/> and some other functions.
+            </param>
+            <param name="flags"></param>
+            <param name="control">
+            If not null, sets the <see cref="P:Au.AToolbar.Control"/> property.
+            Can be used to extend the toolbar (add or change some features) by overriding control's functions etc. Define class that inherits from <see cref="T:Au.AToolbar.ToolStripWindow"/>. Then create toolbars like <c>var t = new AToolbar("name", control: new MyToolStripWindow());</c>.
             </param>
             <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
@@ -7486,7 +7562,7 @@
             <remarks>
             Reads the settings file if exists, ie if settings changed in the past. See <see cref="M:Au.AToolbar.GetSettingsFilePath(System.String)"/>. If fails, writes warning to the output and uses default settings.
             
-            Creates <see cref="P:Au.AToolbar.Control"/> object. Does not create its window handle; will do it in <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
+            Creates <see cref="P:Au.AToolbar.Control"/> object or uses <i>control</i>. Its window handle will be created in <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
             
             Sets properties:
             - <see cref="P:Au.Types.MTBase.ItemThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
@@ -7497,10 +7573,11 @@
         </member>
         <member name="P:Au.AToolbar.Control">
             <summary>
-            Gets the <see cref="T:System.Windows.Forms.ToolStrip"/> of the toolbar.
+            Gets the toolbar window as <see cref="T:System.Windows.Forms.ToolStrip"/>.
             </summary>
             <remarks>
-            The <b>AToolbar</b> class is based on <see cref="T:System.Windows.Forms.ToolStrip"/>. Not directly but as a facade class. This property gets the <b>ToolStrip</b>. You can use its properties, methods and events.
+            The toolbar window is a top-level <see cref="T:System.Windows.Forms.ToolStrip"/> control. You can use its properties, methods and events.
+            The object is created in <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/> constructor or passed to it as the <i>control</i> parameter.
             </remarks>
         </member>
         <member name="P:Au.AToolbar.IsAlive">
@@ -7521,7 +7598,7 @@
             True if properties of this toolbar were modified now or in the past (the settings file exists).
             </summary>
             <seealso cref="M:Au.AToolbar.GetSettingsFilePath(System.String)"/>
-            <seealso cref="M:Au.AToolbar.DeleteSettings(System.String)"/>
+            <seealso cref="T:Au.Types.TBCtor"/>
         </member>
         <member name="M:Au.AToolbar.GetSettingsFilePath(System.String)">
             <summary>
@@ -7531,14 +7608,6 @@
             <remarks>
             Path: <c>AFolders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="P:Au.AFolders.Workspace"/> is null, uses <see cref="P:Au.AFolders.ThisAppDocuments"/>.
             </remarks>
-        </member>
-        <member name="M:Au.AToolbar.DeleteSettings(System.String)">
-            <summary>
-            Deletes the settings file of the toolbar, if exists. It resets toolbar settings.
-            The toolbar should not be open when calling this function.
-            </summary>
-            <param name="toolbarName">Toolbar name.</param>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AFile.Delete(System.String,System.Boolean)"/>.</exception>
         </member>
         <member name="M:Au.AToolbar.Find(System.String)">
             <summary>
@@ -7597,7 +7666,6 @@
             Adds new horizontal separator, optionally with text.
             </summary>
             <param name="name">If not null, this text will be displayed.</param>
-            <exception cref="T:System.InvalidOperationException">Unsupported <b>LayoutStyle</b> (must be flow or vertical) or <b>FlowDirection</b> (must be horizontal).</exception>
             <example>
             Add separator and set color.
             <code><![CDATA[
@@ -7641,7 +7709,11 @@
             <summary>
             Shows the toolbar.
             </summary>
-            <param name="screen">Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.</param>
+            <param name="screen">
+            Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on).
+            If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.
+            If not specified and this toolbar is created by <see cref="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>, uses its screen parameter.
+            </param>
             <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
             <remarks>
             The toolbar will be moved when the screen moved or resized.
@@ -7659,16 +7731,6 @@
             The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
             </remarks>
         </member>
-        <member name="M:Au.AToolbar.Show(Au.Triggers.TriggerArgs)">
-            <summary>
-            Shows the toolbar and optionally attaches to a window.
-            </summary>
-            <param name="ta">
-            Trigger arguments or null.
-            If it is a window trigger, attaches to the window (calls <see cref="M:Au.AToolbar.Show(Au.AWnd,System.Boolean)"/>).
-            If it is some other trigger, disables the trigger to avoid multiple toolbar instances; later enables when closed.
-            </param>
-        </member>
         <member name="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)">
             <summary>
             Shows the toolbar and attaches to an object in a window.
@@ -7680,6 +7742,13 @@
             <remarks>
             The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
             </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Show(Au.Triggers.TriggerArgs)">
+            <summary>
+            Shows the toolbar.
+            If ta is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
+            Else if ta != null, calls <see cref="M:Au.Triggers.TriggerArgs.DisableTriggerUntilClosed(Au.AToolbar)"/>.
+            </summary>
         </member>
         <member name="M:Au.AToolbar.Close">
             <summary>
@@ -7774,6 +7843,9 @@
             </summary>
             <remarks>
             Owner is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>. It can be a window, screen, control or other object.
+            
+            The <see cref="T:Au.Types.TBOffsets"/> type has 4 properties - <b>Top</b>, <b>Bottom</b>, <b>Left</b> and <b>Right</b>, but used are only those included in <see cref="P:Au.AToolbar.Anchor"/>. For example, if <b>Anchor</b> is <b>TopLeft</b>, used are only <b>Top</b> and <b>Left</b>.
+            
             This property is updated when moving or resizing the toolbar. It is saved.
             </remarks>
             <example>
@@ -7781,6 +7853,14 @@
             t.Offsets = new TBOffsets(150, 5, 0, 0);
             ]]></code>
             </example>
+        </member>
+        <member name="P:Au.AToolbar.Layout">
+            <summary>
+            Gets or sets <b>Control</b>'s <see cref="P:System.Windows.Forms.ToolStrip.LayoutStyle"/>.
+            </summary>
+            <remarks>
+            This property is in the context menu and is saved.
+            </remarks>
         </member>
         <member name="P:Au.AToolbar.Sizable">
             <summary>
@@ -7811,7 +7891,7 @@
             Autosizing occurs when:
             - When showing the toolbar.
             - When the user resizes the toolbar. It also sets the wrap width.
-            - When setting this property = true (in code or in the context menu) or changing <see cref="P:Au.AToolbar.AutoSizeWrapWidth"/> while it is true.
+            - When setting this property = true (in code or in the context menu) or changing <see cref="P:Au.AToolbar.AutoSizeWrapWidth"/> or <see cref="P:Au.AToolbar.Layout"/> while it is true.
             - <see cref="M:Au.AToolbar.AutoSizeNow"/>.
             
             This property is in the context menu and is saved.
@@ -7851,6 +7931,14 @@
             ]]></code>
             </example>
         </member>
+        <member name="P:Au.AToolbar.NoMenu">
+            <summary>
+            Hides some context menu items or menu itself.
+            </summary>
+            <remarks>
+            This property isn't saved.
+            </remarks>
+        </member>
         <member name="P:Au.AToolbar.Satellite">
             <summary>
             A toolbar attached to this toolbar. Can be null.
@@ -7861,20 +7949,86 @@
             A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
             </remarks>
         </member>
-        <member name="M:Au.AToolbar.CreateSatelliteOwner(System.String,System.Int32)">
-            <summary>
-            If this is not a satellite toolbar, creates owner toolbar and set its <see cref="P:Au.AToolbar.Satellite"/> = this.
-            In any case returns the owner toolbar.
-            </summary>
-            <exception cref="T:System.InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
-            <remarks>
-            Sets owner toolbar's name = <c>this.Name + "^"</c>.
-            </remarks>
-        </member>
         <member name="P:Au.AToolbar.SatelliteOwner">
             <summary>
             If this is a sattellite toolbar (<see cref="P:Au.AToolbar.Satellite"/>), gets its owner toolbar. Else null.
             </summary>
+        </member>
+        <member name="M:Au.AToolbar.AutoHide(Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)">
+            <summary>
+            Creates new toolbar and sets its <see cref="P:Au.AToolbar.Satellite"/> = this.
+            Returns the new toolbar.
+            </summary>
+            <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>.</param>
+            <param name="control">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>.</param>
+            <param name="f">[CallerFilePath]</param>
+            <param name="l">[CallerLineNumber]</param>
+            <exception cref="T:System.InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
+            <remarks>
+            Sets toolbar name = <c>this.Name + "^"</c>.
+            If this already is a satellite toolbar, just returns its owner.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)">
+            <summary>
+            Creates new toolbar and sets its <see cref="P:Au.AToolbar.Satellite"/> = this. Sets properties for showing at a screen edge.
+            Returns the new toolbar.
+            </summary>
+            <param name="mta">Mouse edge trigger arguments.</param>
+            <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
+            <param name="rangeEnd"></param>
+            <param name="thickness">The visible thickness.</param>
+            <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>.</param>
+            <param name="control">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>.</param>
+            <param name="f">[CallerFilePath]</param>
+            <param name="l">[CallerLineNumber]</param>
+        </member>
+        <member name="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.TMEdge,Au.Triggers.TMScreen,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)">
+            <summary>
+            Creates new toolbar and sets its <see cref="P:Au.AToolbar.Satellite"/> = this. Sets properties for showing at a screen edge.
+            Returns the new toolbar.
+            </summary>
+            <param name="edge">Screen edge/part.</param>
+            <param name="screen">Screen index. Default: primary.</param>
+            <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
+            <param name="rangeEnd"></param>
+            <param name="thickness">The visible thickness.</param>
+            <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>.</param>
+            <param name="control">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>.</param>
+            <param name="f">[CallerFilePath]</param>
+            <param name="l">[CallerLineNumber]</param>
+        </member>
+        <member name="T:Au.AToolbar.ToolStripWindow">
+            <summary>
+            The type of <see cref="P:Au.AToolbar.Control"/>. Inherits from <see cref="T:System.Windows.Forms.ToolStrip"/>.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.ToolStripWindow.Toolbar">
+            
+        </member>
+        <member name="M:Au.AToolbar.ToolStripWindow.#ctor">
+            
+        </member>
+        <member name="P:Au.AToolbar.ToolStripWindow.CreateParams">
+            
+        </member>
+        <member name="M:Au.AToolbar.ToolStripWindow.WndProc(System.Windows.Forms.Message@)">
+            
+        </member>
+        <member name="M:Au.AToolbar.ToolStripWindow.DestroyHandle">
+            
+        </member>
+        <member name="M:Au.AToolbar.ToolStripWindow.Dispose(System.Boolean)">
+            
+        </member>
+        <member name="M:Au.AToolbar.ToolStripWindow.OnContextMenu(System.Windows.Forms.ToolStrip)">
+            <summary>
+            Called on right-click. Shows context menu.
+            </summary>
+            <param name="ts">This control or the overflow dropdown.</param>
+        </member>
+        <member name="M:Au.AToolbar.ToolStripWindow.OnLayoutStyleChanged(System.EventArgs)">
+            
         </member>
         <member name="M:Au.AToolbar.NewToolbarsForm">
             <summary>
@@ -8121,163 +8275,6 @@
             </summary>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XDocument.Save(System.IO.Stream)"/> and <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.</exception>
         </member>
-        <member name="T:Au.AExec">
-            <summary>
-            This class contains static functions to execute or open programs, other files, folders, web pages, etc.
-            </summary>
-        </member>
-        <member name="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
-            <summary>
-            Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
-            The returned <see cref="T:Au.Types.RResult"/> variable contains some process info - process id etc.
-            </summary>
-            <param name="file">
-            Examples:
-            - <c>@"C:\file.txt"</c>
-            - <c>AFolders.Documents</c>
-            - <c>AFolders.System + "notepad.exe"</c>
-            - <c>@"%AFolders.System%\notepad.exe"</c>
-            - <c>@"%TMP%\file.txt"</c>
-            - <c>"notepad.exe"</c>
-            - <c>@"..\folder\x.exe"</c>
-            - <c>"http://a.b.c/d"</c>
-            - <c>"file:///path"</c>
-            - <c>"mailto:a@b.c"</c>
-            - <c>":: ITEMIDLIST"</c>
-            - <c>@"::{CLSID}"</c>
-            - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
-            </param>
-            <param name="args">
-            Command line arguments.
-            This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
-            </param>
-            <param name="flags"></param>
-            <param name="curDirEtc">
-            Allows to specify more parameters: current directory, verb, etc.
-            If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
-            </param>
-            <exception cref="T:System.ArgumentException">Used both ROptions.Verb and RFlags.Admin.</exception>
-            <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
-            <remarks>
-            It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
-            Uses API <msdn>ShellExecuteEx</msdn>.
-            Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
-            
-            The <i>file</i> parameter can be:
-            - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>AFolders.Documents</c>, <c>AFolders.System + "notepad.exe"</c>, <c>@"%AFolders.System%\notepad.exe"</c>.
-            - Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
-            - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
-            - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-            - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.APidl.ToBase64String"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
-            - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, <see cref="T:Au.AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
-            - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/> or Google.
-            
-            Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </remarks>
-            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
-            <example>
-            Run notepad and wait for its window.
-            <code><![CDATA[
-            AExec.Run("notepad.exe");
-            AWnd w = AWnd.Wait(10, true, "*- Notepad", "Notepad");
-            ]]></code>
-            Run notepad or activate its window.
-            <code><![CDATA[
-            AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AExec.Run("notepad.exe"));
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AExec.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
-            <summary>
-            Calls <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> and handles exceptions. All parameters are the same.
-            If <b>Run</b> throws exception, writes it to the output as warning and returns null.
-            </summary>
-            <remarks>
-            This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
-            Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
-            </remarks>
-            <seealso cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>
-            <seealso cref="M:Au.Types.OptWarnings.Disable(System.String[])"/>
-            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
-        </member>
-        <member name="M:Au.AExec.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload writes text lines to the output in real time.
-            </summary>
-            <param name="exe">
-            Path or name of an .exe or .bat file. Can be:
-            - Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>AFolders.System + "x.exe"</c>, <c>@"%AFolders.System%\x.exe"</c>.
-            - Filename, like <c>"x.exe"</c>. This function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
-            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
-            
-            Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </param>
-            <param name="args">null or command line arguments.</param>
-            <param name="curDir">
-            Initial current directory of the new process.
-            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
-            - Else if "", calls <c>APath.GetDirectory(exe)</c>.
-            - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
-            </param>
-            <param name="encoding">
-            Console's text encoding.
-            If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="P:System.Text.Encoding.UTF8"/>.
-            </param>
-            <returns>The process exit code. Usually a non-0 value means error.</returns>
-            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
-            <remarks>
-            The console window is hidden. The text that would be displayed in it is redirected to this function.
-            
-            Console programs have two output text streams - standard output and standard error. This function gets both.
-            Alternatively use <see cref="M:System.Diagnostics.Process.Start"/>. It gets the output and error streams separately, and some lines may be received in incorrect order in time.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            string v = "example";
-            int r1 = AExec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
-            
-            int r2 = AExec.RunConsole(s => AOutput.Write(s), @"Q:\Test\console2.exe");
-            
-            int r3 = AExec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
-            AOutput.Write(text);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AExec.RunConsole(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text.
-            This overload uses a callback function that receives text lines in real time.
-            </summary>
-            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
-            <param name="exe"></param>
-            <param name="args"></param>
-            <param name="curDir"></param>
-            <param name="encoding"></param>
-            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
-        </member>
-        <member name="M:Au.AExec.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
-            <summary>
-            Runs a console program, waits until its process ends, and gets its output text when it ends.
-            </summary>
-            <param name="output">A variable that receives the output text.</param>
-            <param name="exe"></param>
-            <param name="args"></param>
-            <param name="curDir"></param>
-            <param name="encoding"></param>
-            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
-        </member>
-        <member name="M:Au.AExec.SelectInExplorer(System.String)">
-            <summary>
-            Opens parent folder in Explorer and selects the specified file.
-            Returns null if fails, for example if the file does not exist.
-            </summary>
-            <param name="path">
-            Full path of a file or directory or other shell object.
-            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.APidl.ToBase64String"/>).
-            </param>
-        </member>
         <member name="T:Au.AFile">
             <summary>
             File system functions.
@@ -8289,6 +8286,9 @@
             Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
             Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="M:Au.APath.PrefixLongPath(System.String)"/>, <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>. Many functions support long paths even without prefix.
             </remarks>
+            <summary>
+            This class contains static functions to execute or open programs, other files, folders, web pages, etc.
+            </summary>
         </member>
         <member name="M:Au.AFile._DisableDeviceNotReadyMessageBox">
             <summary>
@@ -8824,6 +8824,158 @@
             - subfolder "64" or "32" of <see cref="P:Au.AFolders.ThisAppTemp"/>. For example the dll may be extracted there from resources.
             </remarks>
         </member>
+        <member name="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
+            <summary>
+            Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
+            The returned <see cref="T:Au.Types.RResult"/> variable contains some process info - process id etc.
+            </summary>
+            <param name="file">
+            Examples:
+            - <c>@"C:\file.txt"</c>
+            - <c>AFolders.Documents</c>
+            - <c>AFolders.System + "notepad.exe"</c>
+            - <c>@"%AFolders.System%\notepad.exe"</c>
+            - <c>@"%TMP%\file.txt"</c>
+            - <c>"notepad.exe"</c>
+            - <c>@"..\folder\x.exe"</c>
+            - <c>"http://a.b.c/d"</c>
+            - <c>"file:///path"</c>
+            - <c>"mailto:a@b.c"</c>
+            - <c>":: ITEMIDLIST"</c>
+            - <c>@"::{CLSID}"</c>
+            - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
+            </param>
+            <param name="args">
+            Command line arguments.
+            This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
+            </param>
+            <param name="flags"></param>
+            <param name="curDirEtc">
+            Allows to specify more parameters: current directory, verb, etc.
+            If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
+            </param>
+            <exception cref="T:System.ArgumentException">Used both ROptions.Verb and RFlags.Admin.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
+            <remarks>
+            It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
+            Uses API <msdn>ShellExecuteEx</msdn>.
+            Similar to <see cref="M:System.Diagnostics.Process.Start(System.String,System.String)"/>.
+            
+            The <i>file</i> parameter can be:
+            - Full path of a file or directory. Examples: <c>@"C:\file.txt"</c>, <c>AFolders.Documents</c>, <c>AFolders.System + "notepad.exe"</c>, <c>@"%AFolders.System%\notepad.exe"</c>.
+            - Filename of a file or directory, like <c>"notepad.exe"</c>. The function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
+            - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
+            - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
+            - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.APidl.ToBase64String"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+            - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, <see cref="T:Au.AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
+            - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/> or Google.
+            
+            Supports environment variables, like <c>@"%TMP%\file.txt"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            </remarks>
+            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
+            <example>
+            Run notepad and wait for its window.
+            <code><![CDATA[
+            AFile.Run("notepad.exe");
+            AWnd w = AWnd.Wait(10, true, "*- Notepad", "Notepad");
+            ]]></code>
+            Run notepad or activate its window.
+            <code><![CDATA[
+            AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AFile.Run("notepad.exe"));
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AFile.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)">
+            <summary>
+            Calls <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> and handles exceptions. All parameters are the same.
+            If <b>Run</b> throws exception, writes it to the output as warning and returns null.
+            </summary>
+            <remarks>
+            This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
+            Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
+            </remarks>
+            <seealso cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>
+            <seealso cref="M:Au.Types.OptWarnings.Disable(System.String[])"/>
+            <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
+        </member>
+        <member name="M:Au.AFile.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text.
+            This overload writes text lines to the output in real time.
+            </summary>
+            <param name="exe">
+            Path or name of an .exe or .bat file. Can be:
+            - Full path. Examples: <c>@"C:\folder\x.exe"</c>, <c>AFolders.System + "x.exe"</c>, <c>@"%AFolders.System%\x.exe"</c>.
+            - Filename, like <c>"x.exe"</c>. This function calls <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\folder\x.exe"</c>.
+            
+            Supports environment variables, like <c>@"%TMP%\x.bat"</c>. See <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            </param>
+            <param name="args">null or command line arguments.</param>
+            <param name="curDir">
+            Initial current directory of the new process.
+            - If null, uses <c>Directory.GetCurrentDirectory()</c>.
+            - Else if "", calls <c>APath.GetDirectory(exe)</c>.
+            - Else calls <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            </param>
+            <param name="encoding">
+            Console's text encoding.
+            If null (default), uses the default console text encoding (API <msdn>GetOEMCP</msdn>); it is not Unicode. Programs that display Unicode text use <see cref="P:System.Text.Encoding.UTF8"/>.
+            </param>
+            <returns>The process exit code. Usually a non-0 value means error.</returns>
+            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
+            <remarks>
+            The console window is hidden. The text that would be displayed in it is redirected to this function.
+            
+            Console programs have two output text streams - standard output and standard error. This function gets both.
+            Alternatively use <see cref="M:System.Diagnostics.Process.Start"/>. It gets the output and error streams separately, and some lines may be received in incorrect order in time.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            string v = "example";
+            int r1 = AFile.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+            
+            int r2 = AFile.RunConsole(s => AOutput.Write(s), @"Q:\Test\console2.exe");
+            
+            int r3 = AFile.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+            AOutput.Write(text);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AFile.RunConsole(System.Action{System.String},System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text.
+            This overload uses a callback function that receives text lines in real time.
+            </summary>
+            <param name="output">A callback function that receives the output text. It receives single full line at a time, without line break characters.</param>
+            <param name="exe"></param>
+            <param name="args"></param>
+            <param name="curDir"></param>
+            <param name="encoding"></param>
+            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
+        </member>
+        <member name="M:Au.AFile.RunConsole(System.String@,System.String,System.String,System.String,System.Text.Encoding)">
+            <summary>
+            Runs a console program, waits until its process ends, and gets its output text when it ends.
+            </summary>
+            <param name="output">A variable that receives the output text.</param>
+            <param name="exe"></param>
+            <param name="args"></param>
+            <param name="curDir"></param>
+            <param name="encoding"></param>
+            <exception cref="T:Au.Types.AuException">Failed, for example file not found.</exception>
+        </member>
+        <member name="M:Au.AFile.SelectInExplorer(System.String)">
+            <summary>
+            Opens parent folder in Explorer and selects the specified file.
+            Returns null if fails, for example if the file does not exist.
+            </summary>
+            <param name="path">
+            Full path of a file or directory or other shell object.
+            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.APidl.ToBase64String"/>).
+            </param>
+        </member>
         <member name="T:Au.AFolders">
              <summary>
              Gets known/special folder paths (Desktop, Temp, etc).
@@ -8835,7 +8987,7 @@
              Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
              Some known folders, although supported and registerd, may be still not created.
              
-             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.APidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AExec</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
+             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.APidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
             
              Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
              The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -9379,7 +9531,7 @@
              Usually known folders are used like <c>string path = AFolders.Documents + "file.txt"</c>. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
              To get known folder path, this function calls <see cref="M:Au.AFolders.GetFolder(System.String)"/>.
             
-             This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AExec</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
+             This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
              </remarks>
         </member>
         <member name="M:Au.APath.GetEnvVar_(System.String)">
@@ -9935,7 +10087,7 @@
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
             <remarks>
-            The string can be used with some functions of this library, mostly of classes <b>AExec</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
+            The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
             </remarks>
         </member>
         <member name="M:Au.APidl.ToBase64String(System.IntPtr)">
@@ -10492,7 +10644,7 @@
         <member name="P:Au.AShortcutFile.TargetAnyType">
             <summary>
             Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="T:Au.APidl"/>).
-            The string can be used with <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            The string can be used with <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
             <exception cref="T:Au.Types.AuException">The 'set' function failed.</exception>
         </member>
@@ -13155,7 +13307,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:Au.Types.AuWndException">
             - Invalid window.
             - The top-level window is hidden. No exception if just cloaked, for example in another desktop; then on click will activate, which usually uncloaks.
@@ -13289,7 +13441,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuWndException">x y is not in the window (read more in Remarks).</exception>
@@ -13363,7 +13515,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.AMouse.ClickEx(Au.Types.MButton,Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -13391,7 +13543,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.AMouse.ClickEx(Au.Types.MButton,Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -13419,7 +13571,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.AMouse.ClickEx(Au.Types.MButton,Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -13448,7 +13600,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.AMouse.ClickEx(Au.Types.MButton,Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -13478,7 +13630,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
         <member name="M:Au.AMouse.LeftUp(Au.Types.Coord,Au.Types.Coord)">
@@ -13506,7 +13658,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
             <exception cref="T:Au.Types.AuException">x y is not in the window. More info: <see cref="M:Au.AMouse.ClickEx(Au.Types.MButton,Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
@@ -13536,7 +13688,7 @@
             <param name="w">Window or control.</param>
             <param name="x">X coordinate relative to the client area of w. Default - center.</param>
             <param name="y">Y coordinate relative to the client area of w. Default - center.</param>
-            <param name="nonClient">x y are relative to the top-left of the window rectangle.</param>
+            <param name="nonClient">x y are relative to the window rectangle.</param>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>.</exception>
         </member>
         <member name="M:Au.AMouse.RightUp(Au.Types.Coord,Au.Types.Coord)">
@@ -14013,19 +14165,37 @@
         <member name="M:Au.AMath.MulDiv(System.Int32,System.Int32,System.Int32)">
             <summary>
             Returns <c>number * multiply / divide</c>.
-            Multiplies without overflow and rounds the result up or down to the nearest integer.
+            Multiplies without overflow and rounds up or down to the nearest integer.
             </summary>
             <exception cref="T:System.OverflowException"></exception>
             <exception cref="T:System.DivideByZeroException"></exception>
         </member>
-        <member name="M:Au.AMath.Percent(System.Int32,System.Int32)">
+        <member name="M:Au.AMath.PercentFromValue(System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Returns percent of part in whole.
+            Calculates how many % of <i>whole</i> is <i>part</i>: <c>100L * part / whole</c>.
+            </summary>
+            <param name="whole"></param>
+            <param name="part"></param>
+            <param name="canRoundUp">Round down or up. If false (default), can only round down.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.AMath.PercentFromValue(System.Double,System.Double)">
+            <summary>
+            Calculates how many % of <i>whole</i> is <i>part</i>: <c>100 * part / whole</c>.
             </summary>
         </member>
-        <member name="M:Au.AMath.Percent(System.Double,System.Double)">
+        <member name="M:Au.AMath.PercentToValue(System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Returns percent of part in whole.
+            Returns <i>percent</i> % of <i>whole</i>: <c>(long)whole * percent / 100</c>.
+            </summary>
+            <param name="whole"></param>
+            <param name="percent"></param>
+            <param name="canRoundUp">Use <see cref="M:Au.AMath.MulDiv(System.Int32,System.Int32,System.Int32)"/>, which can round down or up. If false (default), can only round down.</param>
+            <exception cref="T:System.OverflowException"></exception>
+        </member>
+        <member name="M:Au.AMath.PercentToValue(System.Double,System.Double)">
+            <summary>
+            Returns <i>percent</i> % of <i>whole</i>: <c>whole * percent / 100</c>.
             </summary>
         </member>
         <member name="M:Au.AMath.AlignUp(System.UInt32,System.UInt32)">
@@ -15384,7 +15554,7 @@
             AWnd w = AWnd.Find("* Notepad");
             w.Activate();
             using(var b = AWinImage.Capture(w.Rect)) { b.Save(file); }
-            AExec.Run(file);
+            AFile.Run(file);
             ]]></code>
             </example>
         </member>
@@ -17393,7 +17563,7 @@
         </member>
         <member name="M:Au.Util.AStringUtil.CommandLineFromArray(System.String[])">
             <summary>
-            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
+            Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>, <see cref="M:System.Diagnostics.Process.Start"/>.
             Returns null if a is null or has 0 elements.
             </summary>
             <param name="a"></param>
@@ -19280,14 +19450,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -19380,7 +19542,7 @@
             Sets to save automatically whenever a property changed.
             Returns new empty object if file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, writes error info to the output.
             </summary>
-            <param name="file">Full path of .json file.</param>
+            <param name="file">Full path of .json file. If null, does not load and will not save.</param>
             <param name="useDefault">Use default settings, don't load from file. Delete file if exists.</param>
         </member>
         <member name="M:Au.Util.JSettings.Dispose">
@@ -19560,11 +19722,6 @@
         <member name="T:Au.Util.SharedMemory_">
             <summary>
             Memory shared by all processes using this library.
-            </summary>
-        </member>
-        <member name="F:Au.Util.SharedMemory_.Size">
-            <summary>
-            Shared memory size.
             </summary>
         </member>
         <member name="F:Au.Util.SharedMemory_.Ptr">
@@ -20140,6 +20297,21 @@
             You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
             There are programs that show current CPU speed. For example HWMonitor.
             </remarks>
+        </member>
+        <member name="P:Au.APerf.SharedMemory">
+            <summary>
+            Gets a reference to a <see cref="T:Au.APerf.Local"/> variable in shared memory.
+            </summary>
+            <remarks>
+            The variable can be used by multiple processes, for example to measure process startup time.
+            Note: slow first time in process, eg 3 ms. It's because need to JIT-compile functions and open shared memory.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            ref var p = ref APerf.SharedMemory;
+            p.First();
+            ]]></code>
+            </example>
         </member>
         <member name="T:Au.ATime">
             <summary>
@@ -20747,7 +20919,7 @@
             <param name="args"></param>
             <exception cref="T:System.InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
             <remarks>
-            Must be called while <c>Triggers.Run();</c> is running, from the same thread.
+            Call while <c>Triggers.Run();</c> is running, from the same thread.
             </remarks>
         </member>
         <member name="T:Au.Triggers.TriggerArgs">
@@ -20758,6 +20930,12 @@
         <member name="P:Au.Triggers.TriggerArgs.TriggerBase">
             <summary>
             Gets the trigger as <see cref="T:Au.Triggers.ActionTrigger"/> (the base class of all trigger type classes).
+            </summary>
+        </member>
+        <member name="M:Au.Triggers.TriggerArgs.DisableTriggerUntilClosed(Au.AToolbar)">
+            <summary>
+            Disables the trigger. Enables later when the toolbar is closed.
+            Use to implement single-instance toolbars.
             </summary>
         </member>
         <member name="T:Au.Triggers.TriggerScopes">
@@ -20983,7 +21161,7 @@
             
             Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="M:Au.ATask.Run(System.String,System.String[])"/> to run other scripts in new process; see example.
             
-            Trigger actions don't inherit <b>AOpt</b> options that are set before adding triggers. The example shows two ways how to set <b>AOpt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>AOpt</b> options set by previous action; the trigger engine calls <see cref="M:Au.AOpt.Reset"/> before executing an action.
+            Trigger actions don't inherit <b>AOpt</b> options that are set before adding triggers. The example shows two ways how to set <b>AOpt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>AOpt</b> options set by previous action.
             </remarks>
             <example>
             This is a single script with many action triggers.
@@ -20991,7 +21169,7 @@
             using Au.Triggers; //add this above or below other 'using' directives
             
             //you can set options for triggers added afterwards
-            Triggers.Options.RunActionInThread(0, 500);
+            Triggers.Options.Thread(0, 500);
             
             //you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
             var hk = Triggers.Hotkey;
@@ -21004,7 +21182,7 @@
             hk["Ctrl+K"] = o => AOutput.Write(o.Trigger); //it means: execute code "o => AOutput.Write(o.Trigger)" when I press Ctrl+K
             hk["Ctrl+Shift+F11"] = o => {
             	AOutput.Write(o.Trigger);
-            	var w1 = AWnd.FindOrRun("* Notepad", run: () => AExec.Run(AFolders.System + "notepad.exe"));
+            	var w1 = AWnd.FindOrRun("* Notepad", run: () => AFile.Run(AFolders.System + "notepad.exe"));
             	AKeys.Text("text");
             	w1.Close();
             };
@@ -21307,7 +21485,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            Triggers.Options.RunActionInThreadPool(singleInstance: false);
+            Triggers.Options.ThreadNew();
             Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 10; };
             Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
             Triggers.Hotkey["Ctrl+Shift+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
@@ -21317,11 +21495,11 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Triggers.TriggerOptions.RunActionInThread(System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.Triggers.TriggerOptions.Thread(System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Run actions in a dedicated thread that does not end when actions end.
+            Run actions always in the same dedicated thread that does not end when actions end.
             </summary>
-            <param name="thread">A number that you want to use to identify the thread. Can be 0-32767 (short.MaxValue). Default 0.</param>
+            <param name="thread">A number that you want to use to identify the thread. Can be 0-127. Default 0.</param>
             <param name="ifRunningWaitMS">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
             <param name="noWarning">No warning when cannot start an action because an action is running and ifRunningWaitMS==0.</param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
@@ -21330,39 +21508,36 @@
             There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => ATask.RunWait("Other Script");</c>.
             There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
             The thread has <see cref="F:System.Threading.ApartmentState.STA"/>.
-            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active. If none called, it is the same as called this function without arguments.
+            There are several <b>ThreadX</b> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
             </remarks>
         </member>
-        <member name="M:Au.Triggers.TriggerOptions.RunActionInMainThread">
+        <member name="M:Au.Triggers.TriggerOptions.ThreadMain">
             <summary>
-            Run actions in same thread as <c>Triggers.Run();</c>.
+            Run trigger actions in same thread as <c>Triggers.Run();</c>.
             </summary>
             <remarks>
-            Can be used only for actions that return as soon as possible, in less than 10 ms. Use to create and show toolbars (<see cref="T:Au.AToolbar"/>).
-            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
+            The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="T:Au.AToolbar"/>). Rarely used for other purposes.
             </remarks>
         </member>
-        <member name="M:Au.Triggers.TriggerOptions.RunActionInNewThread(System.Boolean)">
+        <member name="M:Au.Triggers.TriggerOptions.ThreadNew(System.Boolean,System.Boolean)">
             <summary>
-            Run actions in new threads.
+            Run trigger actions in new threads.
             </summary>
+            <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
+            <param name="mta">Don't set <see cref="F:System.Threading.ApartmentState.STA"/>.</param>
             <remarks>
-            Use if need to run actions simultaneously with other actions or other instances of self, especially if the action is long-running (maybe 5 s and more).
-            The thread has <see cref="F:System.Threading.ApartmentState.STA"/>.
-            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
+            The action can run simultaneously with other actions.
             </remarks>
-            <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
         </member>
-        <member name="M:Au.Triggers.TriggerOptions.RunActionInThreadPool(System.Boolean)">
+        <member name="M:Au.Triggers.TriggerOptions.ThreadPool(System.Boolean)">
             <summary>
-            Run actions in thread pool threads.
+            Run trigger actions in thread pool threads.
             </summary>
+            <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
             <remarks>
-            Use if need to run actions simultaneously with other actions or other instances of self, and the action is short-running (maybe less than 5 s) and don't need <see cref="F:System.Threading.ApartmentState.STA"/>.
-            Thread pool threads have <see cref="F:System.Threading.ApartmentState.MTA"/>.
-            The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
+            The action can run simultaneously with other actions. May start later if the pool is busy.
+            You should know how to use thread pool correctly. The action runs in the .NET thread pool through <see cref="M:System.Threading.Tasks.Task.Run(System.Action)"/>.
             </remarks>
-            <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
         </member>
         <member name="P:Au.Triggers.TriggerOptions.BeforeAction">
             <summary>
@@ -21878,6 +22053,24 @@
             Returns a string containing trigger parameters.
             </summary>
         </member>
+        <member name="P:Au.Triggers.MouseTrigger.Kind">
+            
+        </member>
+        <member name="P:Au.Triggers.MouseTrigger.Button">
+            
+        </member>
+        <member name="P:Au.Triggers.MouseTrigger.Wheel">
+            
+        </member>
+        <member name="P:Au.Triggers.MouseTrigger.Edge">
+            
+        </member>
+        <member name="P:Au.Triggers.MouseTrigger.Move">
+            
+        </member>
+        <member name="P:Au.Triggers.MouseTrigger.ScreenIndex">
+            
+        </member>
         <member name="P:Au.Triggers.MouseTrigger.Flags">
             
         </member>
@@ -21991,6 +22184,11 @@
         </member>
         <member name="M:Au.Triggers.MouseTriggerArgs.#ctor(Au.Triggers.MouseTrigger,Au.AWnd,Au.Types.KMod)">
             
+        </member>
+        <member name="T:Au.Triggers.TMKind">
+            <summary>
+            What kind of mouse triggers.
+            </summary>
         </member>
         <member name="T:Au.Triggers.TMClick">
             <summary>
@@ -22258,7 +22456,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            Triggers.Options.RunActionInNewThread(true);
+            Triggers.Options.ThreadNew(true);
             Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
             Triggers.Hotkey["Ctrl+T"] = o => Triggers.Window.SimulateActiveNew(AWnd.Active);
             Triggers.Hotkey["Ctrl+Alt+T"] = o => Triggers.Stop();
@@ -22756,18 +22954,6 @@
             <summary>
             Writes a Windows message as API <msdn>MSG</msdn> to the output.
             </summary>
-        </member>
-        <member name="M:Au.AWnd.More.SetWindowSubclass(Au.AWnd,Au.Types.Native.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr)">
-            <summary>API <msdn>SetWindowSubclass</msdn></summary>
-        </member>
-        <member name="M:Au.AWnd.More.GetWindowSubclass(Au.AWnd,Au.Types.Native.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr@)">
-            <summary>API <msdn>GetWindowSubclass</msdn></summary>
-        </member>
-        <member name="M:Au.AWnd.More.RemoveWindowSubclass(Au.AWnd,Au.Types.Native.SUBCLASSPROC,Au.Types.LPARAM)">
-            <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
-        </member>
-        <member name="M:Au.AWnd.More.DefSubclassProc(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>API <msdn>DefSubclassProc</msdn></summary>
         </member>
         <member name="T:Au.AWnd.More.TaskbarButton">
             <summary>
@@ -25140,7 +25326,7 @@
         </member>
         <member name="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)">
             <summary>
-            Finds a top-level window (calls <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.AExec.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            Finds a top-level window (calls <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             Returns window handle as <b>AWnd</b>. Returns <c>default(AWnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
             </summary>
             <param name="name">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</param>
@@ -25165,7 +25351,7 @@
             </remarks>
             <example>
             <code><![CDATA[
-            AWnd w = AWnd.FindOrRun("* Notepad", run: () => AExec.Run("notepad.exe"));
+            AWnd w = AWnd.FindOrRun("* Notepad", run: () => AFile.Run("notepad.exe"));
             AOutput.Write(w);
             ]]></code>
             </example>

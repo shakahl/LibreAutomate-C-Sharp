@@ -454,7 +454,7 @@ namespace Au
 		///// This example is similar to what <see cref="FindOrRun"/> does.
 		///// <code><![CDATA[
 		///// AWnd w = AWnd.Find("*- Notepad", "Notepad");
-		///// if(w.Is0) { AExec.Run("notepad.exe"); w = AWnd.WaitAny(60, true, AWnd.LastFind).wnd; }
+		///// if(w.Is0) { AFile.Run("notepad.exe"); w = AWnd.WaitAny(60, true, AWnd.LastFind).wnd; }
 		///// ]]></code>
 		///// </example>
 		//[field: ThreadStatic]
@@ -527,7 +527,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="AExec.Run"/>.
+		/// Finds a top-level window (calls <see cref="Find"/>). If found, activates (optionally), else calls callback function and waits for the window. The callback should open the window, for example call <see cref="AFile.Run"/>.
 		/// Returns window handle as <b>AWnd</b>. Returns <c>default(AWnd)</c> if not found (if <i>runWaitS</i> is negative; else exception).
 		/// </summary>
 		/// <param name="name">See <see cref="Find"/>.</param>
@@ -552,7 +552,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// AWnd w = AWnd.FindOrRun("* Notepad", run: () => AExec.Run("notepad.exe"));
+		/// AWnd w = AWnd.FindOrRun("* Notepad", run: () => AFile.Run("notepad.exe"));
 		/// AOutput.Write(w);
 		/// ]]></code>
 		/// </example>

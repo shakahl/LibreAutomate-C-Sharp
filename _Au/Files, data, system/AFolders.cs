@@ -27,7 +27,7 @@ namespace Au
 	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registerd, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="APidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AExec</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="APidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
@@ -513,11 +513,11 @@ namespace Au
 		static FolderPath _Get(uint a, uint b, uint c, uint d)
 		{
 			//info: we don't use caching. It seems the API use caching internally.
-			//Speed first time (ngened, shell32.dll loaded (almost 1 ms)) - 200, then 90. It is for each folder first time; next time 1.
 			//tested: with IKnownFolder much slower.
 
 			var guid = new KNOWNFOLDERID(a, b, c, d);
-			return (0 == SHGetKnownFolderPath(guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out string R)) ? R : null;
+			if(0 != SHGetKnownFolderPath(guid, KNOWN_FOLDER_FLAG.KF_FLAG_DONT_VERIFY, default, out string R)) R = null;
+			return new FolderPath(R);
 		}
 
 		//Gets virtual known folder ITEMIDLIST from KNOWNFOLDERID specified with 4 uints.
@@ -775,8 +775,8 @@ namespace Au.Types
 	/// </summary>
 	public struct FolderPath
 	{
-		string _path;
-		FolderPath(string path) { _path = path; }
+		readonly string _path;
+		internal FolderPath(string path) { _path = path; }
 
 		public static implicit operator FolderPath(string path) => new FolderPath(path);
 		public static implicit operator string(FolderPath f) => f._path;

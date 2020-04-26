@@ -84,7 +84,7 @@ class PanelInfo : AuUserControlBase
 		} else if(s.Starts('#')) { //anchor
 			e.Handled = false;
 		} else {
-			AExec.TryRun(s);
+			AFile.TryRun(s);
 		}
 	}
 

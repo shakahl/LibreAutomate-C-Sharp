@@ -45,7 +45,7 @@ namespace Au.Triggers
 	/// 
 	/// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="ATask.Run"/> to run other scripts in new process; see example.
 	/// 
-	/// Trigger actions don't inherit <b>AOpt</b> options that are set before adding triggers. The example shows two ways how to set <b>AOpt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>AOpt</b> options set by previous action; the trigger engine calls <see cref="AOpt.Reset"/> before executing an action.
+	/// Trigger actions don't inherit <b>AOpt</b> options that are set before adding triggers. The example shows two ways how to set <b>AOpt</b> options for multiple actions. Also you can set them in action code. Next action running in the same thread will not inherit <b>AOpt</b> options set by previous action.
 	/// </remarks>
 	/// <example>
 	/// This is a single script with many action triggers.
@@ -53,7 +53,7 @@ namespace Au.Triggers
 	/// using Au.Triggers; //add this above or below other 'using' directives
 	/// 
 	/// //you can set options for triggers added afterwards
-	/// Triggers.Options.RunActionInThread(0, 500);
+	/// Triggers.Options.Thread(0, 500);
 	/// 
 	/// //you can use variables if don't want to type "Triggers.Hotkey" etc for each trigger
 	/// var hk = Triggers.Hotkey;
@@ -66,7 +66,7 @@ namespace Au.Triggers
 	/// hk["Ctrl+K"] = o => AOutput.Write(o.Trigger); //it means: execute code "o => AOutput.Write(o.Trigger)" when I press Ctrl+K
 	/// hk["Ctrl+Shift+F11"] = o => {
 	/// 	AOutput.Write(o.Trigger);
-	/// 	var w1 = AWnd.FindOrRun("* Notepad", run: () => AExec.Run(AFolders.System + "notepad.exe"));
+	/// 	var w1 = AWnd.FindOrRun("* Notepad", run: () => AFile.Run(AFolders.System + "notepad.exe"));
 	/// 	AKeys.Text("text");
 	/// 	w1.Close();
 	/// };

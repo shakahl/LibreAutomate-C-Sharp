@@ -31,6 +31,7 @@ static class TriggersAndToolbars
 		if(create) {
 			if(fProject == null) {
 				fProject = Program.Model.NewItemLL(s_templPath);
+				AOutput.Write("Info: project \"@Triggers and toolbars\" has been created.");
 			} else { //create missing files. Note: don't cache, because files can be deleted at any time. Fast enough.
 				var xTempl = FileNode.Templates.LoadXml(s_templPath).x; //fast, does not load the xml file each time
 				_Folder(xTempl, fProject);
@@ -49,6 +50,29 @@ static class TriggersAndToolbars
 					}
 				}
 			}
+
+			//set run at startup
+			const string script = @"\@Triggers and toolbars\Triggers and toolbars.cs";
+			bool startupFound = false;
+			var ss = Program.Model.StartupScriptsCsv;
+			if(ss == null) {
+				ss = script;
+			} else {
+				try {
+					var x = ACsv.Parse(ss);
+					var rx = @"(?i)^(?://)?(?:\\@Triggers and toolbars\\)?Triggers and toolbars(?:\.cs)?$"; //path or name; with or without .cs; can be //disabled
+					startupFound = x.Data.Exists(a => a[0].RegexIsMatch(rx));
+					if(!startupFound) {
+						x.AddRow(script);
+						ss = x.ToString();
+					}
+				}
+				catch(FormatException) { }
+			}
+			if(!startupFound) {
+				Program.Model.StartupScriptsCsv = ss;
+				AOutput.Write("Info: script \"Triggers and toolbars\" will run at program startup. If you want to disable it, add prefix // in Options -> Run scripts...");
+			}
 		}
 		return fProject;
 	}
@@ -57,9 +81,7 @@ static class TriggersAndToolbars
 	static FileNode _GetFile(string file, bool create)
 	{
 		var f = _GetProject(create: create);
-		f = f?.FindRelative(file, folder: false);
-		Debug.Assert(f != null);
-		return f;
+		return f?.FindRelative(file, folder: false);
 	}
 
 	public static void Restart()

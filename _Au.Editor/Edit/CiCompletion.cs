@@ -164,6 +164,8 @@ class CiCompletion
 		CompletionService completionService = null;
 		SemanticModel model = null;
 		SyntaxNode node = null, root = null;
+		ExpressionSyntax nodeL = null; //node at left of . etc
+		ISymbol symL = null; //symbol at left of . etc
 
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
@@ -186,7 +188,6 @@ class CiCompletion
 				//	It is not so easy to check correctly. GetCompletionsAsync then not very fast and not too slow.
 
 				//is it member access syntax?
-				ExpressionSyntax nodeL = null; //node at left of . etc
 				int i = position - 1; while(i > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[i])) i--;
 				if(i > 0) {
 					var token = root.FindToken(i); //fast
@@ -197,7 +198,7 @@ class CiCompletion
 							node = token.Parent;
 							switch(node) {
 							case MemberAccessExpressionSyntax s1: nodeL = s1.Expression; break; // . or ->
-							case MemberBindingExpressionSyntax s1 when s1.Parent is ConditionalAccessExpressionSyntax cae: nodeL = cae.Expression; break; // ?.
+							case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae: nodeL = cae.Expression; break; // ?. //OperatorToken is '.', GetPreviousToken is '?'
 							case QualifiedNameSyntax s1: nodeL = s1.Left; break; // eg . outside functions
 							case AliasQualifiedNameSyntax s1: nodeL = s1.Alias; break; // ::
 							default: isDot = false; ADebug.Print(node.GetType()); break;
@@ -225,12 +226,13 @@ class CiCompletion
 						case AliasQualifiedNameSyntax _: break; // ::
 						default:
 							//AOutput.Write(model.GetTypeInfo(nodeL).Type); //null if namespace
-							ISymbol s1 = null;
 							if(!(nodeL is LiteralExpressionSyntax || nodeL is InterpolatedStringExpressionSyntax)) {
-								s1 = model.GetSymbolInfo(nodeL).Symbol;
-								ADebug.PrintIf(s1 == null, node);
+								var si = model.GetSymbolInfo(nodeL);
+								symL = si.Symbol;
+								ADebug.PrintIf(symL == null && si.CandidateReason != CandidateReason.NotATypeOrNamespace, nodeL);
+								//AOutput.Write(si.CandidateReason, si.CandidateSymbols);
 							}
-							canGroup = s1 == null || s1.Kind != SymbolKind.Namespace;
+							canGroup = symL == null || symL.Kind != SymbolKind.Namespace;
 							break;
 						}
 					} else {
@@ -276,6 +278,7 @@ class CiCompletion
 			p1.Next('T');
 
 			var provider = CiComplItem.Provider(r.Items[0]);
+			if(!isDot && provider == CiComplProvider.Override) isDot = true;
 
 			var span = r.Span;
 			if(span.Length > 0 && provider == CiComplProvider.Regex) span = new TextSpan(position, 0);
@@ -325,8 +328,9 @@ class CiCompletion
 							switch(ci.DisplayText) {
 							case "Equals":
 							case "ReferenceEquals":
+								//hide static members inherited from Object
 								if(sym.ContainingType.BaseType == null) { //Object
-									if(isDot) continue;
+									if(isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue;
 									v.moveDown = CiItemMoveDownBy.Name;
 								}
 								break;
@@ -383,13 +387,7 @@ class CiCompletion
 				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script" && t.BaseType?.Name == "AScript";
 
 				if(sym != null && v.kind != CiItemKind.LocalVariable && v.kind != CiItemKind.Namespace && v.kind != CiItemKind.TypeParameter) {
-					bool isObsolete = false;
-					foreach(var k in sym.GetAttributes()) { //fast
-						switch(k.AttributeClass.Name) {
-						case "ObsoleteAttribute": isObsolete = true; break;
-						}
-						//AOutput.Write(ci.DisplayText, v.AttributeClass.Name);
-					}
+					bool isObsolete = ci.Symbols.All(sy => sy.GetAttributes().Any(o => o.AttributeClass.Name == "ObsoleteAttribute")); //can be several overloads, some obsolete but others not
 					if(isObsolete) v.moveDown = CiItemMoveDownBy.Obsolete;
 				}
 
@@ -940,7 +938,7 @@ class CiComplItem
 			"KeywordCompletionProvider" => CiComplProvider.Keyword,
 			"CrefCompletionProvider" => CiComplProvider.Cref,
 			"EmbeddedLanguageCompletionProvider" => CiComplProvider.Regex,
-			//"OverrideCompletionProvider" => CiComplProvider.Override,
+			"OverrideCompletionProvider" => CiComplProvider.Override,
 			_ => CiComplProvider.Other
 		};
 	}
@@ -960,7 +958,7 @@ enum CiComplProvider
 	Keyword,
 	Cref,
 	Regex,
-	//Override,
+	Override,
 }
 
 enum CiComplResult

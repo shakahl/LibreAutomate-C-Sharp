@@ -166,6 +166,8 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+		//InsertCode.ImplementInterfaceOrAbstractClass(AKeys.IsScrollLock);
+
 		//var doc = Panels.Editor.ZActiveDoc;
 		//var Z = doc.Z;
 		//var s = doc.Text;

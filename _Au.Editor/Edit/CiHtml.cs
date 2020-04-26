@@ -377,17 +377,18 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 			void _AppendAttributes(ImmutableArray<AttributeData> a, string target = null, bool isParameter = false)
 			{
 				if(a.IsDefaultOrEmpty) return;
-				if(isParameter) {
-					b.Append("<div>").Append(target).Append(": [");
-				}
-				bool attrComma = false;
+				bool attrComma = false, paramAdded = false;
 				foreach(var att in a) {
 					var ac = att.AttributeClass; if(ac == null) continue;
-					if(!_IsAccessible(ac)) continue;
+					//if(!_IsAccessible(ac)) continue; //no, would not show attributes if code does not have 'using' for the attribute
 					string aname = ac.Name.RemoveSuffix("Attribute");
 					if(aname == "CompilerGenerated") continue;
 					//att.ToString(); //similar, but too much noise
 					if(isParameter) {
+						if(!paramAdded) {
+							paramAdded = true;
+							b.Append("<div>").Append(target).Append(": [");
+						}
 						_AppendComma(ref attrComma);
 					} else {
 						b.Append("<div>[");
@@ -417,7 +418,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 					}
 					if(!isParameter) b.Append("]</div>");
 				}
-				if(isParameter) b.Append("]</div>");
+				if(isParameter && paramAdded) b.Append("]</div>");
 			}
 		}
 		void _AppendComment(string s) => b.Append(" &nbsp; <span class='comment'>//").Append(s).Append("</span>");
@@ -456,7 +457,7 @@ div.dashline { border-top: 1px dashed #ccc; } /* cannot use div border-bottom be
 		| SymbolDisplayParameterOptions.IncludeDefaultValue
 		| SymbolDisplayParameterOptions.IncludeExtensionThis;
 
-	static SymbolDisplayFormat s_symbolFullFormat = new SymbolDisplayFormat(
+	internal static readonly SymbolDisplayFormat s_symbolFullFormat = new SymbolDisplayFormat(
 				SymbolDisplayGlobalNamespaceStyle.OmittedAsContaining,
 				SymbolDisplayTypeQualificationStyle.NameAndContainingTypes,
 				SymbolDisplayGenericsOptions.IncludeTypeParameters | SymbolDisplayGenericsOptions.IncludeVariance | SymbolDisplayGenericsOptions.IncludeTypeConstraints,

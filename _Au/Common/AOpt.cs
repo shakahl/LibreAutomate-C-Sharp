@@ -90,16 +90,17 @@ namespace Au
 		public static OptWarnings Warnings => t_warnings ??= new OptWarnings(AOpt.Static.Warnings);
 		[ThreadStatic] static OptWarnings t_warnings;
 
-		/// <summary>
-		/// Resets all options. Copies from <see cref="AOpt.Static"/>.
-		/// </summary>
-		public static void Reset()
-		{
-			t_key?.Reset();
-			t_mouse?.Reset();
-			t_waitFor?.Reset();
-			t_warnings?.Reset();
-		}
+		//rejected. Use AOpt.Scope.
+		///// <summary>
+		///// Resets all options. Copies from <see cref="AOpt.Static"/>.
+		///// </summary>
+		//public static void Reset()
+		//{
+		//	t_key?.Reset();
+		//	t_mouse?.Reset();
+		//	t_waitFor?.Reset();
+		//	t_warnings?.Reset();
+		//}
 
 		/// <summary>
 		/// Default <see cref="AOpt"/> properties of each thread.
@@ -155,73 +156,152 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Makes easy to restore current options of this thread. See example.
+		/// Creates temporary scopes for options.
+		/// Example: <c>using(AOpt.Scope.Key()) { AOpt.Key.KeySpeed=5; ... }</c>.
 		/// </summary>
-		public static class Temp
+		public static class Scope
 		{
 			/// <summary>
-			/// Makes easy to restore current <see cref="AOpt.Mouse"/> of this thread. See example.
+			/// Creates temporary scope for <see cref="AOpt.Mouse"/> options. See example.
 			/// </summary>
+			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="AOpt.Static"/>).</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// AOutput.Write(AOpt.Mouse.ClickSpeed);
-			/// using(AOpt.Temp.Mouse) {
+			/// using(AOpt.Scope.Mouse()) {
 			/// 	AOpt.Mouse.ClickSpeed = 100;
 			/// 	AOutput.Write(AOpt.Mouse.ClickSpeed);
 			/// } //here restored automatically
 			/// AOutput.Write(AOpt.Mouse.ClickSpeed);
 			/// ]]></code>
 			/// </example>
-			public static UsingAction Mouse {
-				get {
-					var old = t_mouse;
-					t_mouse = new OptMouse(old ?? Static.Mouse);
-					//t_mouse = old == null ? null : new OptMouse(old); //lazy
-					return new UsingAction(() => t_mouse = old);
-				}
+			public static UsingEndAction Mouse(bool inherit = true)
+			{
+				var old = _Mouse(inherit);
+				return new UsingEndAction(() => t_mouse = old);
+			}
+
+			static OptMouse _Mouse(bool inherit)
+			{
+				var old = t_mouse;
+				//t_mouse = new OptMouse((old != null && inherit) ? old : Static.Mouse);
+				t_mouse = (old != null && inherit) ? new OptMouse(old) : null; //lazy
+				return old;
 			}
 
 			/// <summary>
-			/// Makes easy to restore current <see cref="AOpt.Key"/> of this thread. See example.
+			/// Creates temporary scope for <see cref="AOpt.Key"/> options. See example.
 			/// </summary>
+			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="AOpt.Static"/>).</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// AOutput.Write(AOpt.Key.KeySpeed);
-			/// using(AOpt.Temp.Key) {
+			/// using(AOpt.Scope.Key()) {
 			/// 	AOpt.Key.KeySpeed = 5;
 			/// 	AOutput.Write(AOpt.Key.KeySpeed);
 			/// } //here restored automatically
 			/// AOutput.Write(AOpt.Key.KeySpeed);
 			/// ]]></code>
 			/// </example>
-			public static UsingAction Key {
-				get {
-					var old = t_key;
-					t_key = new OptKey(old ?? Static.Key);
-					//t_key = old == null ? null : new OptKey(old); //lazy
-					return new UsingAction(() => t_key = old);
-				}
+			public static UsingEndAction Key(bool inherit = true)
+			{
+				var old = _Key(inherit);
+				return new UsingEndAction(() => t_key = old);
+			}
+
+			static OptKey _Key(bool inherit)
+			{
+				var old = t_key;
+				//t_key = new OptKey((old != null && inherit) ? old : Static.Key);
+				t_key = (old != null && inherit) ? new OptKey(old) : null; //lazy
+				return old;
 			}
 
 			/// <summary>
-			/// Makes easy to restore current <see cref="AOpt.WaitFor"/> of this thread. See example.
+			/// Creates temporary scope for <see cref="AOpt.WaitFor"/> options. See example.
 			/// </summary>
+			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="AOpt.Static"/>).</param>
 			/// <example>
 			/// <code><![CDATA[
 			/// AOutput.Write(AOpt.WaitFor.Period);
-			/// using(AOpt.Temp.WaitFor) {
+			/// using(AOpt.Scope.WaitFor()) {
 			/// 	AOpt.WaitFor.Period = 5;
 			/// 	AOutput.Write(AOpt.WaitFor.Period);
 			/// } //here restored automatically
 			/// AOutput.Write(AOpt.WaitFor.Period);
 			/// ]]></code>
 			/// </example>
-			public static UsingAction WaitFor {
-				get {
-					var old = t_waitFor;
-					t_waitFor = new OptWaitFor(old?.Period ?? 10, old?.DoEvents ?? false);
-					return new UsingAction(() => t_waitFor = old);
-				}
+			public static UsingEndAction WaitFor(bool inherit = true)
+			{
+				var old = _WaitFor(inherit);
+				return new UsingEndAction(() => t_waitFor = old);
+			}
+
+			static OptWaitFor _WaitFor(bool inherit)
+			{
+				var old = t_waitFor;
+				//t_waitFor = (old != null && inherit) ? new OptWaitFor(old.Period, old.DoEvents) : new OptWaitFor();
+				t_waitFor = (old != null && inherit) ? new OptWaitFor(old.Period, old.DoEvents) : null; //lazy
+				return old;
+			}
+
+			/// <summary>
+			/// Creates temporary scope for <see cref="AOpt.Warnings"/> options. See example.
+			/// </summary>
+			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="AOpt.Static"/>).</param>
+			/// <example>
+			/// <code><![CDATA[
+			/// AOpt.Warnings.Verbose = false;
+			/// AOutput.Write(AOpt.Warnings.Verbose, AOpt.Warnings.IsDisabled("Test*"));
+			/// using(AOpt.Scope.Warnings()) {
+			/// 	AOpt.Warnings.Verbose = true;
+			/// 	AOpt.Warnings.Disable("Test*");
+			/// 	AOutput.Write(AOpt.Warnings.Verbose, AOpt.Warnings.IsDisabled("Test*"));
+			/// } //here restored automatically
+			/// AOutput.Write(AOpt.Warnings.Verbose, AOpt.Warnings.IsDisabled("Test*"));
+			/// ]]></code>
+			/// </example>
+			public static UsingEndAction Warnings(bool inherit = true)
+			{
+				var old = _Warnings(inherit);
+				return new UsingEndAction(() => t_warnings = old);
+			}
+
+			static OptWarnings _Warnings(bool inherit)
+			{
+				var old = t_warnings;
+				//t_warnings = new OptWarnings((old != null && inherit) ? old : Static.Warnings);
+				t_warnings = (old != null && inherit) ? new OptWarnings(old) : null; //lazy
+				return old;
+			}
+
+			/// <summary>
+			/// Creates temporary scope for all options. See example.
+			/// </summary>
+			/// <param name="inherit">If true (default), inherit current options. If false, inherit default options (<see cref="AOpt.Static"/>).</param>
+			/// <example>
+			/// <code><![CDATA[
+			/// AOutput.Write(AOpt.Key.KeySpeed, AOpt.Mouse.ClickSpeed);
+			/// using(AOpt.Scope.All()) {
+			/// 	AOpt.Key.KeySpeed = 5;
+			/// 	AOpt.Mouse.ClickSpeed = 50;
+			/// 	AOutput.Write(AOpt.Key.KeySpeed, AOpt.Mouse.ClickSpeed);
+			/// } //here restored automatically
+			/// AOutput.Write(AOpt.Key.KeySpeed, AOpt.Mouse.ClickSpeed);
+			/// ]]></code>
+			/// </example>
+			public static UsingEndAction All(bool inherit = true)
+			{
+				var o1 = _Mouse(inherit);
+				var o2 = _Key(inherit);
+				var o3 = _WaitFor(inherit);
+				var o4 = _Warnings(inherit);
+				return new UsingEndAction(() => {
+					t_mouse = o1;
+					t_key = o2;
+					t_waitFor = o3;
+					t_warnings = o4;
+				});
 			}
 		}
 	}
@@ -234,11 +314,7 @@ namespace Au.Types
 	/// </summary>
 	public class OptWarnings
 	{
-		struct _Options //makes easier to copy and reset fields
-		{
-			public byte Verbose; //0 non-init, 1 false, 2 true
-		}
-		_Options _o;
+		bool? _verbose;
 		List<string> _disabledWarnings;
 
 		/// <summary>
@@ -254,27 +330,23 @@ namespace Au.Types
 
 		void _Copy(OptWarnings o)
 		{
-			_o = o._o;
+			_verbose = o._verbose;
 			_disabledWarnings = o._disabledWarnings == null ? null : new List<string>(o._disabledWarnings);
 		}
 
-		/// <summary>
-		/// Resets all options. Copies from <see cref="AOpt.Static.Warnings"/>.
-		/// </summary>
-		public void Reset() => _Copy(AOpt.Static.Warnings);
+		//rejected. Use AOpt.Scope.
+		///// <summary>
+		///// Resets all options. Copies from <see cref="AOpt.Static.Warnings"/>.
+		///// </summary>
+		//public void Reset() => _Copy(AOpt.Static.Warnings);
 
 		/// <summary>
 		/// If true, some library functions may display more warnings and other info.
 		/// If not explicitly set, the default value depends on the build configuration of the entry assymbly: true if Debug, false if Release.
 		/// </summary>
 		public bool Verbose {
-			get {
-				if(_o.Verbose == 0) Verbose = _IsAppDebugConfig();
-				return _o.Verbose == 2;
-			}
-			set {
-				_o.Verbose = (byte)(value ? 2 : 1);
-			}
+			get => (_verbose ??= _IsAppDebugConfig()) == true;
+			set => _verbose = value;
 		}
 
 		static bool _IsAppDebugConfig()
@@ -309,12 +381,12 @@ namespace Au.Types
 		/// ]]></code>
 		/// Don't use code <c>using(AOpt.Static.Warnings.Disable...</c>, it's not thread-safe.
 		/// </example>
-		public UsingAction Disable(params string[] warningsWild)
+		public UsingEndAction Disable(params string[] warningsWild)
 		{
 			_disabledWarnings ??= new List<string>();
 			int restoreCount = _disabledWarnings.Count;
 			_disabledWarnings.AddRange(warningsWild);
-			return new UsingAction(() => _disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount));
+			return new UsingEndAction(() => _disabledWarnings.RemoveRange(restoreCount, _disabledWarnings.Count - restoreCount));
 		}
 
 		/// <summary>
@@ -364,10 +436,11 @@ namespace Au.Types
 			}
 		}
 
-		/// <summary>
-		/// Resets all options. Copies from <see cref="AOpt.Static.Mouse"/>.
-		/// </summary>
-		public void Reset() => _o = AOpt.Static.Mouse._o;
+		//rejected. Use AOpt.Scope.
+		///// <summary>
+		///// Resets all options. Copies from <see cref="AOpt.Static.Mouse"/>.
+		///// </summary>
+		//public void Reset() => _o = AOpt.Static.Mouse._o;
 
 		bool _IsStatic => this == AOpt.Static.Mouse;
 
@@ -503,13 +576,14 @@ namespace Au.Types
 			}
 		}
 
-		/// <summary>
-		/// Resets all options. Copies from <see cref="AOpt.Static.Key"/>.
-		/// </summary>
-		public void Reset() => CopyOrDefault_(AOpt.Static.Key);
+		//rejected. Use AOpt.Scope.
+		///// <summary>
+		///// Resets all options. Copies from <see cref="AOpt.Static.Key"/>.
+		///// </summary>
+		//public void Reset() => CopyOrDefault_(AOpt.Static.Key);
 
 		/// <summary>
-		/// Returns this variable or OptKey cloned from this variable and possibly modified by Hook.
+		/// Returns this variable, or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
 		internal OptKey GetHookOptionsOrThis_(AWnd wFocus)
@@ -827,13 +901,14 @@ namespace Au.Types
 			Period = period; DoEvents = doEvents;
 		}
 
-		/// <summary>
-		/// Resets all options.
-		/// </summary>
-		public void Reset()
-		{
-			Period = 10; DoEvents = false;
-		}
+		//rejected. Use AOpt.Scope.
+		///// <summary>
+		///// Resets all options.
+		///// </summary>
+		//public void Reset()
+		//{
+		//	Period = 10; DoEvents = false;
+		//}
 
 		//no
 		///// <summary>

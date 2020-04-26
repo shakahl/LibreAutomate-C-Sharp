@@ -15,14 +15,8 @@ using Au.Types;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
-//note: All this info is with Framework. Less tested with Core.
 //PROBLEM: slow startup.
-//When Au.dll not ngened, a minimal script starts in 98 ms. Else in 150 ms.
-//One of reasons is: when Au.dll ngened, together with it is always loaded System.dll and System.Core.dll, even if not used.
-//	Don't know why. Didn't find a way to avoid it. Loading Au.dll with Assembly.LoadFrom does not help (loads ngened anyway).
-//	Also then no AppDomain.AssemblyLoad event for these two .NET assemblies.
-//	Luckily other assemblies used by Au.dll are not loaded when not used.
-//	The same is for our-compiled .exe files.
+//A minimal script starts in 80 ms.
 //Workaround:
 //	Preload this process. Let it wait for next task.
 //	Then a script can start in ~20 ms.
@@ -46,42 +40,31 @@ static unsafe class Program
 		if(args.Length != 1) return;
 		string pipeName = args[0]; //if(!pipeName.Starts(@"\\.\pipe\Au.Task-")) return;
 
-		int nr = 0;
-#if false
-			//With NamedPipeClientStream faster by 1 ms, because don't need to JIT. But problems:
-			//1. Loads System and System.Core immediately, making slower startup.
-			//2. This process does not end when editor process ended, because then Connect spin-waits for server created.
-			using(var pipe = new NamedPipeClientStream(".", pipeName.Substring(9), PipeDirection.In)) {
-				pipe.Connect();
-				var b = new byte[10000];
-				nr=pipe.Read(b, 0, b.Length);
-			}
-#else
+		ref var p1 = ref APerf.SharedMemory;
 		//APerf.First();
 		//_PrepareTest();
 		//APerf.NW();
 
 		for(int i = 0; i < 3; i++) {
-			if(Api.WaitNamedPipe(pipeName, i == 2 ? -1 : 100)) break;
+			if(Api.WaitNamedPipe(pipeName, i == 2 ? -1 : 50)) break;
 			if(Marshal.GetLastWin32Error() != Api.ERROR_SEM_TIMEOUT) return;
 			//APerf.First();
 			switch(i) {
-			case 0: _Prepare1(); break; //~25 ms with cold CPU
-			//case 1: _Prepare2(); break; //~15 ms with cold CPU
+			case 0: _Prepare0(); break;
+			case 1: _Prepare1(); break;
 			}
 			//APerf.NW();
 		}
-		//APerf.First();
+		//ADebug.PrintLoadedAssemblies(true, true);
+
+		//p1.Next('1');
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
 			if(pipe.Is0) { ADebug.PrintNativeError_(); return; }
-			//APerf.Next();
-			int size; if(!Api.ReadFile(pipe, &size, 4, out nr, default) || nr != 4) return;
-			//APerf.Next();
+			//p1.Next('2');
+			int size; if(!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
+			//p1.Next('3');
 			if(!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
-			//APerf.Next();
-
-			//ADebug.PrintLoadedAssemblies(true, true);
-			//APerf.First();
+			//p1.Next('4');
 
 			var a = Au.Util.Serializer_.Deserialize(b);
 			ATask.Init_(ATRole.MiniProgram, a[0]);
@@ -89,8 +72,7 @@ static unsafe class Program
 			string wrp = a[6]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
 			AFolders.Workspace = (string)a[7];
 		}
-#endif
-		//APerf.Next();
+		//p1.Next('5');
 
 		bool mtaThread = 0 != (flags & 2); //app without [STAThread]
 		if(mtaThread == s_isSTA) _SetComApartment(mtaThread ? ApartmentState.MTA : ApartmentState.STA);
@@ -104,7 +86,7 @@ static unsafe class Program
 
 		if(s_hook == null) _Hook();
 
-		//APerf.Next();
+		//p1.Next('6');
 		try { RunAssembly.Run(asmFile, args, pdbOffset, fullPathRefs: fullPathRefs); }
 		catch(Exception ex) { AOutput.Write(ex); }
 		finally { s_hook?.Dispose(); }
@@ -117,42 +99,58 @@ static unsafe class Program
 	//}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
+	static void _Prepare0()
+	{
+#if !DEBUG
+		//makes faster by several ms. Without AJit.Compile makes faster 2 times. This code 5 ms.
+		var fProfile = AFolders.LocalAppData.ToString() + @"\Au\ProfileOptimization"; //3.8 ms first time. Environment.GetFolderPath 6 ms. SHGetFolderPath 2.7 ms, never mind.
+		if(AFile.ExistsAsDirectory(fProfile, true)) { //created by editor
+			var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
+			alc.SetProfileOptimizationRoot(fProfile);
+			alc.StartProfileOptimization("Tasks.speed");
+			//same: ProfileOptimization.SetProfileRoot(fProfile); ProfileOptimization.StartProfile("Tasks.speed");
+		}
+#endif
+
+		//JIT slowest-to-JIT methods. Makes faster even with profile optimization.
+		Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
+		Au.Util.AJit.Compile(typeof(Au.Util.Serializer_), "Deserialize");
+		//AFile.WaitIfLocked(() => (FileStream)null);
+	}
+
+	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _Prepare1()
 	{
 		_SetComApartment(ApartmentState.STA);
 
-		//JIT slowest-to-JIT methods
-		//APerf.First();
-		//if(!Au.Util.Assembly_.IsAuNgened) {
-			Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
-			Au.Util.AJit.Compile(typeof(Au.Util.Serializer_), "Deserialize");
-			AFile.WaitIfLocked(() => (FileStream)null);
-		//}
-		//APerf.NW(); //Core ~15 ms
-
-		//Core assembly loading is fast, but let's save several ms anyway
+		//Core assembly loading is fast, but anyway
 		_ = typeof(Stack<string>).Assembly; //System.Collections
 
-		using(var stream = AFile.WaitIfLocked(() => File.OpenRead(Assembly.GetExecutingAssembly().Location))) stream.ReadByte(); //Core is not JIT-ed therefore opens file first time much slower than Framework. //TODO: too dirty
+		//using(var stream = AFile.WaitIfLocked(() => File.OpenRead(Assembly.GetExecutingAssembly().Location))) stream.ReadByte(); //Core is not JIT-ed therefore opens file first time much slower than Framework. //TODO: too dirty
+
+		var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
+		var asmFile = @"Q:\Test\ok\.compiled\test";
+		using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
+			alc.LoadFromStream(stream); //very slow first time
+		}
+
+		ATask.Init_(ATRole.MiniProgram);
+		Au.Util.Log_.Run.Write(null);
 
 		_Hook();
 	}
 
-	//rejected
-	//[MethodImpl(MethodImplOptions.NoInlining)]
 	//static void _Prepare2()
 	//{
-	//	_ = typeof(System.Windows.Forms.Control).Assembly; //System.Windows.Forms, System.Drawing.Primitives, System.ComponentModel.Primitives
-	//	//SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1); //makes starting slower
+	//	//SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1); //makes slower
 	//}
-	////[DllImport("kernel32.dll")]
-	////internal static extern bool SetProcessWorkingSetSize(IntPtr hProcess, LPARAM dwMinimumWorkingSetSize, LPARAM dwMaximumWorkingSetSize);
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _SetComApartment(ApartmentState state)
 	{
-		Thread.CurrentThread.TrySetApartmentState(ApartmentState.Unknown);
-		Thread.CurrentThread.TrySetApartmentState(state);
+		var t = Thread.CurrentThread;
+		t.TrySetApartmentState(ApartmentState.Unknown);
+		t.TrySetApartmentState(state);
 		s_isSTA = state == ApartmentState.STA;
 
 		//This is undocumented, but works if we set ApartmentState.Unknown at first.

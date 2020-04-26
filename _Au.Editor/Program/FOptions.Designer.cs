@@ -142,7 +142,7 @@
 			this._eStartupScripts.Location = new System.Drawing.Point(232, 32);
 			this._eStartupScripts.Multiline = true;
 			this._eStartupScripts.Name = "_eStartupScripts";
-			this._eStartupScripts.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+			this._eStartupScripts.ScrollBars = System.Windows.Forms.ScrollBars.Both;
 			this._eStartupScripts.Size = new System.Drawing.Size(248, 60);
 			this._eStartupScripts.TabIndex = 3;
 			this._toolTip.SetToolTip(this._eStartupScripts, "Script name or path, and delay ms or s.\r\nExample:\r\nscript4.cs, 500 ms\r\n\\folder\\sc" +

@@ -397,7 +397,7 @@ namespace Au.Types
 			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
 			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
 			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
-			//also code pattern like 'AExec.TryRun("notepad.exe")'.
+			//also code pattern like 'AFile.TryRun("notepad.exe")'.
 			//AOutput.Write(mi.Name);
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
@@ -413,7 +413,7 @@ namespace Au.Types
 						//AOutput.Write(s);
 						if(i == patternStart + 1) filename = s;
 						else {
-							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AExec.TryRun(@"%AFolders.System%\notepad.exe");
+							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AFile.TryRun(@"%AFolders.System%\notepad.exe");
 							if(APath.IsUrl(s) || APath.IsShellPath_(s)) return s;
 							filename = null; patternStart = -1;
 							if(i == 1) filename2 = s;
@@ -587,7 +587,7 @@ namespace Au.Types
 	/// - Icon - icon object.
 	/// - <see cref="StockIcon"/> - a shell icon.
 	/// - FolderPath - folder path.
-	/// - default - no icon. If <see cref="MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AExec.TryRun(@"c:\path\file.exe")</c> or <c>AExec.TryRun(AFolders.System + "file.exe")</c>.
+	/// - default - no icon. If <see cref="MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
 	/// - "" - no icon.
 	/// </remarks>
 	[DebuggerStepThrough]

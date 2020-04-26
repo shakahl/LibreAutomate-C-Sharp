@@ -154,8 +154,8 @@
 			<Debug_DebugOptions color="white"/>
 		</Menu_Run>
 		<Menu_TT t="T&amp;&amp;T">
-			<TT_AddTrigger t="Add Trigger..."/>
-			<TT_AddToolbar t="Add Toolbar..."/>
+			<TT_AddTrigger t="Add Trigger..." color="white"/>
+			<TT_AddToolbar t="Add Toolbar..." color="white"/>
 			<sep/>
 			<TT_EditHotkeyTriggers/>
 			<TT_EditAutotextTriggers/>
@@ -169,8 +169,8 @@
 			<TT_RestartScript t="Restart T&amp;&amp;T Script"/>
 			<sep/>
 			<TT_DisableTriggers/>
-			<TT_RecentTriggers/>
-			<TT_ActiveToobars/>
+			<TT_RecentTriggers t="Recent Triggers..."/>
+			<TT_ActiveToobars t="Active Toolbars..."/>
 		</Menu_TT>
 		<Menu_Tools>
 			<Tools_Record i="record" color="white"/>

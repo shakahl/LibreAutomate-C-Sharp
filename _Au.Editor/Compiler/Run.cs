@@ -523,6 +523,7 @@ class RunningTasks
 
 			if(pre != null) {
 				//APerf.First();
+				APerf.SharedMemory.Next('a');
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
 					int e = ALastError.Code;
@@ -535,8 +536,10 @@ class RunningTasks
 						if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
 					}
 				}
+				APerf.SharedMemory.Next('b');
 				//APerf.Next();
 				if(!Api.WriteFileArr(pre.hPipe, taskParams, out _)) throw new AuException(0);
+				APerf.SharedMemory.Next('c');
 				//APerf.Next();
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
 				//APerf.NW('e');
@@ -607,7 +610,7 @@ class RunningTasks
 		if(wrPipeName != null) wrPipeName = "ATask.WriteResult.pipe=" + wrPipeName;
 		if(uac == _SpUac.admin) {
 			if(wrPipeName != null) throw new AuException($"*start process '{exeFile}' as admin and enable ATask.WriteResult"); //cannot pass environment variables. //rare //FUTURE
-			var k = AExec.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
+			var k = AFile.Run(exeFile, args, RFlags.Admin | RFlags.NeedProcessHandle, "");
 			return (k.ProcessId, k.ProcessHandle);
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.

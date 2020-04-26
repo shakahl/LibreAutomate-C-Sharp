@@ -75,7 +75,7 @@ unsafe class Program
 
 			bool serving = false;
 			try {
-				AExec.RunConsole(o => {
+				AFile.RunConsole(o => {
 					AOutput.Write(o);
 					if(o.Starts("Serving")) throw new OperationCanceledException();
 				}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"" --serve");
@@ -356,9 +356,9 @@ unsafe class Program
 		AFile.Delete(docDir + @"\_site.tar");
 		AFile.Delete(docDir + @"\_site.tar.bz2");
 
-		int r1 = AExec.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
+		int r1 = AFile.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site\*", docDir);
 		if(r1 != 0) { AOutput.Write(s); return; }
-		int r2 = AExec.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
+		int r2 = AFile.RunConsole(out s, sevenZip, $@"a _site.tar.bz2 _site.tar", docDir);
 		if(r2 != 0) { AOutput.Write(s); return; }
 
 		AFile.Delete(docDir + @"\_site.tar");

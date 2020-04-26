@@ -116,7 +116,7 @@ This option is ignored when the task runs as .exe program started not from edito
  • <i>run</i> - run simultaneously. Requires runMode blue.
  • <i>restart</i> - end it and run.
 
-Suffix _restart means: restart when clicked the Run button/menu; don't restart when using other ways to run the script.
+Suffix _restart means restart if starting the script with the Run button/menu.
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
@@ -657,7 +657,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 						converted.Add(s);
 					}
 				};
-				int rr = AExec.RunConsole(callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{_convertedDir}|{comDll}\"", encoding: Encoding.UTF8);
+				int rr = AFile.RunConsole(callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{_convertedDir}|{comDll}\"", encoding: Encoding.UTF8);
 				if(rr == 0) {
 					foreach(var v in converted) if(!_meta.com.Contains(v)) _meta.com.Add(v);
 					AOutput.Write(@"<>Converted and saved in <link>%AFolders.Workspace%\.interop<>.");

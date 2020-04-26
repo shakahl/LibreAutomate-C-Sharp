@@ -46,53 +46,60 @@ namespace Au.Util
 		/// Sets to save automatically whenever a property changed.
 		/// Returns new empty object if file does not exist or failed to load or parse (invalid JSON) or <i>useDefault</i> true. If failed, writes error info to the output.
 		/// </summary>
-		/// <param name="file">Full path of .json file.</param>
+		/// <param name="file">Full path of .json file. If null, does not load and will not save.</param>
 		/// <param name="useDefault">Use default settings, don't load from file. Delete file if exists.</param>
-		protected static T _Load<T>(string file, bool useDefault = false) where T : JSettings => (T)_Load(file, typeof(T), useDefault);
+		protected static T _Load<T>(string file, bool useDefault = false) where T : JSettings
+			=> (T)_Load(file, typeof(T), useDefault);
 
 		static JSettings _Load(string file, Type type, bool useDefault)
 		{
 			JSettings R = null;
-			if(AFile.ExistsAsAny(file)) {
-				try {
-					if(useDefault) {
-						AFile.Delete(file);
-					} else {
-						var b = AFile.LoadBytes(file);
-						var opt = new JsonSerializerOptions { IgnoreNullValues = true, AllowTrailingCommas = true };
-						R = JsonSerializer.Deserialize(b, type, opt) as JSettings;
+			if(file != null) {
+				if(AFile.ExistsAsAny(file)) {
+					try {
+						if(useDefault) {
+							AFile.Delete(file);
+						} else {
+							var b = AFile.LoadBytes(file);
+							var opt = new JsonSerializerOptions { IgnoreNullValues = true, AllowTrailingCommas = true };
+							R = JsonSerializer.Deserialize(b, type, opt) as JSettings;
+						}
 					}
-				}
-				catch(Exception ex) {
-					string es = ex.ToStringWithoutStack();
-					if(useDefault) {
-						AOutput.Write($"Failed to delete settings file '{file}'. {es}");
-					} else {
-						string backup = file + ".backup";
-						try { AFile.Move(file, backup, FIfExists.Delete); } catch { backup = "failed"; }
-						AOutput.Write(
-$@"Failed to load settings from {file}. Will use default settings.
+					catch(Exception ex) {
+						string es = ex.ToStringWithoutStack();
+						if(useDefault) {
+							AOutput.Write($"Failed to delete settings file '{file}'. {es}");
+						} else {
+							string backup = file + ".backup";
+							try { AFile.Move(file, backup, FIfExists.Delete); } catch { backup = "failed"; }
+							AOutput.Write(
+	$@"Failed to load settings from {file}. Will use default settings.
 	{es}
 	Backup: {backup}");
+						}
 					}
 				}
 			}
+
 			R ??= Activator.CreateInstance(type) as JSettings;
-			R._file = file;
 			R._loaded = true;
 
-			//autosave
-			if(Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
-				AThread.Start(() => {
-					for(; ; ) {
-						Thread.Sleep(2000);
-						_SaveAllIfNeed();
-					}
-				}, sta: false);
+			if(file != null) {
+				R._file = file;
 
-				AProcess.Exit += (unu, sed) => _SaveAllIfNeed(); //info: Core does not call finalizers when process exits
+				//autosave
+				if(Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
+					AThread.Start(() => {
+						for(; ; ) {
+							Thread.Sleep(2000);
+							_SaveAllIfNeed();
+						}
+					}, sta: false);
+
+					AProcess.Exit += (unu, sed) => _SaveAllIfNeed(); //info: Core does not call finalizers when process exits
+				}
+				lock(s_list) s_list.Add(R);
 			}
-			lock(s_list) s_list.Add(R);
 
 			return R;
 		}
@@ -118,6 +125,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 		/// </summary>
 		public void SaveIfNeed()
 		{
+			if(_file == null) return;
 			//AOutput.QM2.Write(_save);
 			if(Interlocked.Exchange(ref _save, 0) != 0) {
 				try {
@@ -149,7 +157,7 @@ $@"Failed to load settings from {file}. Will use default settings.
 		/// <c>_save || AFile.ExistsAsAny(_file)</c>
 		/// </summary>
 		[JsonIgnore]
-		public bool Modified => _save != 0 || AFile.ExistsAsAny(_file);
+		public bool Modified => _save != 0 || (_file != null && AFile.ExistsAsAny(_file));
 
 		/// <summary>
 		/// Sets a string property value and will save later if need.

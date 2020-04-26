@@ -27,7 +27,7 @@ namespace Au.Util
 		/// <param name="topic">Topic file name, like "Au.AAcc.Find" or "AAcc.Find" or "articles/Wildcard expression".</param>
 		public static void AuHelp(string topic)
 		{
-			AExec.TryRun(AuHelpUrl(topic));
+			AFile.TryRun(AuHelpUrl(topic));
 		}
 
 		/// <summary>

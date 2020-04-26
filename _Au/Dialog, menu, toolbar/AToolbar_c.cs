@@ -21,17 +21,22 @@ namespace Au
 {
 	public partial class AToolbar
 	{
-		class _ToolStrip : Util.AToolStrip, _IAuToolStrip
+		/// <summary>
+		/// The type of <see cref="Control"/>. Inherits from <see cref="ToolStrip"/>.
+		/// </summary>
+		public class ToolStripWindow : Util.AToolStrip, _IAuToolStrip
 		{
-			readonly AToolbar _tb;
 			[ThreadStatic] static TBRenderer t_renderer;
+			AToolbar _tb;
+
+			///
+			protected AToolbar Toolbar => _tb;
 
 			_Settings _sett => _tb._sett;
 
-			internal _ToolStrip(AToolbar tb)
+			///
+			public ToolStripWindow()
 			{
-				_tb = tb;
-
 				//like in ctors of Form and ToolStripDropDown
 				this.Visible = false; //else SetTopLevel(true) creates handle and tries to activate
 				this.SetTopLevel(true);
@@ -40,13 +45,20 @@ namespace Au
 				this.AutoSize = false;
 				this.Stretch = false;
 				this.Dock = DockStyle.None;
-				this.LayoutStyle = ToolStripLayoutStyle.Flow;
 				this.GripStyle = ToolStripGripStyle.Hidden;
 				this.Padding = default;
 				//this.BackColor = SystemColors.ButtonFace; //default
 				this.Renderer = t_renderer ??= new TBRenderer();
+				this.Name = "AToolbar.Control";
 			}
 
+			internal void Ctor2_(AToolbar tb)
+			{
+				_tb = tb;
+				this.Text = tb._name;
+			}
+
+			///
 			protected override CreateParams CreateParams {
 				get {
 					var p = base.CreateParams;
@@ -75,7 +87,7 @@ namespace Au
 
 			internal void SetBorder(TBBorder value)
 			{
-				int _Pad(TBBorder b) => b >= TBBorder.Width2 && b <= TBBorder.Width4 ? (int)b - 1 : 0;
+				static int _Pad(TBBorder b) => b >= TBBorder.Width2 && b <= TBBorder.Width4 ? (int)b - 1 : 0;
 #if true
 				int pOld = _Pad(_tb._border), pNew = _Pad(value), pDif = pNew - pOld;
 				if(pDif != 0) this.Padding = new Padding(pNew);
@@ -99,8 +111,10 @@ namespace Au
 					if(s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2, updateNC: true, updateClient: true);
 				}
 #endif
+				//SHOULDDO: both above codes are incorrect. Must resize in direction that depends on Anchor and not on client rect. See _AutoSize.
 			}
 
+			///
 			protected override unsafe void WndProc(ref Message m)
 			{
 				//if(_tb.Name=="ddd") AWnd.More.PrintMsg(m, new PrintMsgOptions(Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_NCMOUSEMOVE, Api.WM_MOUSEMOVE));
@@ -170,7 +184,7 @@ namespace Au
 					break;
 				case Api.WM_RBUTTONUP:
 				case Api.WM_NCRBUTTONUP:
-					_ContextMenu(this);
+					OnContextMenu(this);
 					break;
 				}
 			}
@@ -199,11 +213,13 @@ namespace Au
 
 			bool _destroyed;
 
+			///
 			protected override void DestroyHandle()
 			{
 				if(!_destroyed) base.DestroyHandle();
 			}
 
+			///
 			protected override void Dispose(bool disposing)
 			{
 				_tb._Dispose(disposing);
@@ -284,23 +300,31 @@ namespace Au
 			bool _IAuToolStrip.PaintedOnce => _paintedOnce;
 			bool _paintedOnce;
 
-			void _ContextMenu(ToolStrip ts) //ts is either this or the overflow dropdown
+			/// <summary>
+			/// Called on right-click. Shows context menu.
+			/// </summary>
+			/// <param name="ts">This control or the overflow dropdown.</param>
+			protected virtual void OnContextMenu(ToolStrip ts)
 			{
+				var no = _tb.NoMenu;
+				if(no.Has(TBNoMenu.Menu)) return;
 				if(_contextMenu == null) {
 					var m = new AMenu { MultiShow = true, Modal = false };
 					m.Control.RenderMode = ToolStripRenderMode.System;
+					_cmItems = new _CMItems();
 
-					m["Edit"] = o => _tb.GoToEdit_(_cmItem);
-					m.Separator();
+					_cmItems.edit = m.Add("Edit", o => _tb.GoToEdit_(_cmItem));
+					_cmItems.sepEdit = m.Separator();
 					using(m.Submenu("Anchor")) {
+						_cmItems.anchor = m.LastMenuItem;
 						m.LastMenuItem.DropDown.Opening += (sender, _) => {
 							var dd = sender as ToolStripDropDownMenu;
 							foreach(var v in dd.Items.OfType<ToolStripMenuItem>()) {
 								if(v.Tag is TBAnchor an) {
-									if(an < TBAnchor.OppositeToolbarEdgeX) {
+									if(an < TBAnchor.OppositeEdgeX) {
 										v.Checked = _tb._anchor.WithoutFlags() == an;
 									} else {
-										v.Checked =  _tb._anchor.Has(an);
+										v.Checked = _tb._anchor.Has(an);
 										v.Enabled = !_GetInvalidAnchorFlags(_tb._anchor).Has(an);
 									}
 								}
@@ -310,7 +334,7 @@ namespace Au
 						{
 							m.Add(an.ToString(), _ => {
 								var anchor = _tb.Anchor;
-								if(an < TBAnchor.OppositeToolbarEdgeX) anchor = (anchor & ~TBAnchor.All) | an; else anchor ^= an;
+								if(an < TBAnchor.OppositeEdgeX) anchor = (anchor & ~TBAnchor.All) | an; else anchor ^= an;
 								_tb.Anchor = anchor;
 							}).Tag = an;
 							if(_tb._IsSatellite) m.LastMenuItem.ToolTipText = "Note: You may want to set anchor of the owner toolbar instead. Anchor of this auto-hide toolbar is relative to the owner toolbar.";
@@ -320,16 +344,29 @@ namespace Au
 						_AddAnchor(TBAnchor.TopRight);
 						_AddAnchor(TBAnchor.BottomLeft);
 						_AddAnchor(TBAnchor.BottomRight);
-						_AddAnchor(TBAnchor.Top);
-						_AddAnchor(TBAnchor.Bottom);
-						_AddAnchor(TBAnchor.Left);
-						_AddAnchor(TBAnchor.Right);
+						_AddAnchor(TBAnchor.TopLR);
+						_AddAnchor(TBAnchor.BottomLR);
+						_AddAnchor(TBAnchor.LeftTB);
+						_AddAnchor(TBAnchor.RightTB);
 						_AddAnchor(TBAnchor.All);
 						m.Separator();
-						_AddAnchor(TBAnchor.OppositeToolbarEdgeX);
-						_AddAnchor(TBAnchor.OppositeToolbarEdgeY);
+						_AddAnchor(TBAnchor.OppositeEdgeX);
+						_AddAnchor(TBAnchor.OppositeEdgeY);
+					}
+					using(m.Submenu("Layout")) {
+						_cmItems.layout = m.LastMenuItem;
+						m.LastMenuItem.DropDown.Opening += (sender, _) => {
+							var dd = sender as ToolStripDropDownMenu;
+							var layout = _tb.Layout;
+							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBLayout tl) v.Checked = tl == layout;
+						};
+						void _AddLayout(TBLayout tl) => m.Add(tl.ToString(), _ => _tb.Layout = tl).Tag = tl;
+						_AddLayout(TBLayout.Flow);
+						if(!_tb._hasGroups) _AddLayout(TBLayout.Horizontal);
+						_AddLayout(TBLayout.Vertical);
 					}
 					using(m.Submenu("Border")) {
+						_cmItems.border = m.LastMenuItem;
 						m.LastMenuItem.DropDown.Opening += (sender, _) => {
 							var dd = sender as ToolStripDropDownMenu;
 							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBBorder b) v.Checked = b == _tb._border;
@@ -345,14 +382,15 @@ namespace Au
 						_AddBorder(TBBorder.Caption);
 						_AddBorder(TBBorder.CaptionX);
 					}
-					var sizable = m.Add("Sizable", _ => _tb.Sizable ^= true);
-					var autoSize = m.Add("AutoSize", _ => _tb.AutoSize ^= true);
+					_cmItems.sizable = m.Add("Sizable", _ => _tb.Sizable ^= true);
+					_cmItems.autosize = m.Add("AutoSize", _ => _tb.AutoSize ^= true);
 					m.Control.Opening += (sender, _) => {
 						var dd = sender as ToolStripDropDownMenu;
-						sizable.Checked = _tb.Sizable;
-						autoSize.Checked = _tb.AutoSize;
+						_cmItems.sizable.Checked = _tb.Sizable;
+						_cmItems.autosize.Checked = _tb.AutoSize;
 					};
 					using(m.Submenu("More")) {
+						_cmItems.more = m.LastMenuItem;
 						m.LastMenuItem.DropDown.Opening += (sender, _) => {
 							var dd = sender as ToolStripDropDownMenu;
 							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBFlags f) v.Checked = _tb._SatPlanetOrThis.MiscFlags.Has(f);
@@ -361,7 +399,7 @@ namespace Au
 						if(_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
 						_AddFlag(TBFlags.HideIfFullScreen);
 					}
-					m["Toolbars..."] = o => new _Form().Show();
+					_cmItems.toolbars = m.Add("Toolbars...", o => new _Form().Show());
 
 					//this is an example of a form-like sumenu. Or maybe better create a UserControl-based class in the form designer.
 					//m.LazySubmenu("AutoSize", m => {
@@ -394,46 +432,70 @@ namespace Au
 						return s;
 					}
 
-					m.Separator();
-					m["Close"] = o => _tb._Close(true);
+					_cmItems.sepClose = m.Separator();
+					_cmItems.close = m.Add("Close", o => _tb._Close(true));
 
 					//m["test RecreateHandle"] = o => this.RecreateHandle();
 
 					_contextMenu = m;
 				}
-				var items = _contextMenu.Control.Items;
-				bool canEdit = CanGoToEdit_;
-				items[0].Visible = canEdit;
-				items[1].Visible = canEdit;
+
+				bool canEdit = !no.Has(TBNoMenu.Edit) && CanGoToEdit_;
+				_cmItems.edit.Visible = canEdit;
+				_cmItems.sepEdit.Visible = canEdit;
+				_cmItems.anchor.Visible = !no.Has(TBNoMenu.Anchor);
+				_cmItems.layout.Visible = !no.Has(TBNoMenu.Layout) && _tb.Layout != TBLayout.Table;
+				_cmItems.border.Visible = !no.Has(TBNoMenu.Border);
+				_cmItems.sizable.Visible = !no.Has(TBNoMenu.Sizable);
+				_cmItems.autosize.Visible = !no.Has(TBNoMenu.AutoSize);
+				_cmItems.more.Visible = !no.Has(TBNoMenu.More);
+				_cmItems.toolbars.Visible = !no.Has(TBNoMenu.Toolbars);
+				_cmItems.sepClose.Visible = !no.Has(TBNoMenu.Close);
+				_cmItems.close.Visible = !no.Has(TBNoMenu.Close);
+
 				_cmItem = ts.GetItemAt(ts.MouseClientXY());
 				_contextMenu.Show(ts);
 			}
 			AMenu _contextMenu;
 			ToolStripItem _cmItem;
+			_CMItems _cmItems;
+
+			class _CMItems
+			{
+				public ToolStripMenuItem edit, anchor, layout, border, sizable, autosize, more, toolbars, close;
+				public ToolStripSeparator sepEdit, sepClose;
+			}
 
 			internal ContextMenuStrip ContextMenu_ => _contextMenu?.Control;
 
 			#region overflow
 
+			///
 			protected override void OnLayoutStyleChanged(EventArgs e)
 			{
-				base.OnLayoutStyleChanged(e);
-				if(!(_tb?._constructed ?? false) || _overflow != null) return;
-				switch(LayoutStyle) {
-				case ToolStripLayoutStyle.HorizontalStackWithOverflow:
-				case ToolStripLayoutStyle.VerticalStackWithOverflow:
-					var ob = this.OverflowButton;
-					ob.DropDown = _overflow = new _ToolStripOverflow(this, ob);
-					break;
+				if(_tb?._constructed ?? false) {
+					_tb._OnLayoutStyleChanged();
+					if(_overflow == null) {
+						switch(LayoutStyle) {
+						case ToolStripLayoutStyle.HorizontalStackWithOverflow:
+						case ToolStripLayoutStyle.VerticalStackWithOverflow:
+							var ob = this.OverflowButton;
+							ob.DropDown = _overflow = new _ToolStripOverflow(this, ob);
+							PerformLayout(); //workaround for: if changed layout after Show, the overflow strip is empty
+							break;
+						}
+					}
+					_tb._AutoSize();
 				}
+				base.OnLayoutStyleChanged(e);
 			}
 			_ToolStripOverflow _overflow;
 
 			class _ToolStripOverflow : ToolStripOverflow
 			{
-				_ToolStrip _ts;
+				ToolStripWindow _ts;
 
-				internal _ToolStripOverflow(_ToolStrip ts, ToolStripItem parentItem) : base(parentItem) { _ts = ts; }
+				internal _ToolStripOverflow(ToolStripWindow ts, ToolStripItem parentItem) : base(parentItem) { _ts = ts; }
 
 				//workaround for .NET bug: the default ToolStripOverflow window has a taskbar button and is activated on click.
 				protected override CreateParams CreateParams {
@@ -451,7 +513,7 @@ namespace Au
 						m.Result = (IntPtr)Api.MA_NOACTIVATE;
 						return;
 					case Api.WM_CONTEXTMENU:
-						_ts._ContextMenu(this);
+						_ts.OnContextMenu(this);
 						break;
 					}
 

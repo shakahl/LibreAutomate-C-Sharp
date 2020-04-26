@@ -67,6 +67,8 @@ class CiErrors
 					case ErrorCode.ERR_SingleTypeNameNotFound:
 					case ErrorCode.ERR_NoSuchMemberOrExtension:
 					case ErrorCode.ERR_NoSuchMemberOrExtensionNeedUsing: //all these end with (are you missing a using directive...
+					case ErrorCode.ERR_UnimplementedInterfaceMember:
+					case ErrorCode.ERR_UnimplementedAbstractMethod:
 						_semo = semo;
 						break;
 					}
@@ -162,6 +164,7 @@ class CiErrors
 		var b = new StringBuilder("<body>");
 
 		ErrorCode ecPrev = 0;
+		int implPos = -1; bool implInterface = false;
 		for(int i = 0, n = _codeDiag?.Count ?? 0; i < n; i++) {
 			var v = _codeDiag[i];
 			if(pos16 < v.start || pos16 > v.end) continue;
@@ -186,6 +189,12 @@ class CiErrors
 					ecPrev = ec;
 					_UsingsEtc(b, v, doc, extMethod);
 					break;
+				case ErrorCode.ERR_UnimplementedInterfaceMember:
+				case ErrorCode.ERR_UnimplementedAbstractMethod:
+					Debug.Assert(implPos == -1 || implPos == v.start);
+					implPos = v.start;
+					implInterface = ec == ErrorCode.ERR_UnimplementedInterfaceMember;
+					break;
 				}
 			} else if(d.Severity == DiagnosticSeverity.Warning) {
 				switch((ErrorCode)d.Code) {
@@ -195,6 +204,7 @@ class CiErrors
 				}
 			}
 		}
+		if(implPos >= 0) _Implement(b, implPos, implInterface, doc);
 
 		_Also(_metaErrors, "Error: ");
 		_Also(_stringErrors, null);
@@ -312,7 +322,15 @@ class CiErrors
 			FormWinapi.ZShowDialog(s);
 		} else if(action == 'r') { //Add reference
 			Strips.Cmd.File_Properties();
+		} else if(action == 'i') { //implement interface or abstract class
+			InsertCode.ImplementInterfaceOrAbstractClass(s[2] == 'e', s.ToInt(3));
 		}
+	}
+
+	void _Implement(StringBuilder b, int pos, bool isInterface, SciCode doc)
+	{
+		b.AppendFormat("\r\n<div><a href='^ii{0}'>Implement {1}</a></div>", pos, isInterface ? "interface" : "abstract class");
+		if(isInterface) b.AppendFormat("\r\n<div><a href='^ie{0}'>Implement explicitly</a></div>", pos);
 	}
 
 	void _XmlComment(StringBuilder b/*, in (Diagnostic d, int start, int end) v*/)

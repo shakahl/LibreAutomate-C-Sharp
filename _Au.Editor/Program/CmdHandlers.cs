@@ -715,7 +715,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Help_Email()
 	{
-		AExec.TryRun("mailto:support@quickmacros.com?subject=" + Program.AppName);
+		AFile.TryRun("mailto:support@quickmacros.com?subject=" + Program.AppName);
 	}
 
 	//public void Help_Donate()

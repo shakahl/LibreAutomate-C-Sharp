@@ -538,7 +538,7 @@ $@"All customizations are saved in XML files in folder
 To backup:  copy the file.
 To restore:  exit this application and replace the file with the backup file.
 To reset:  exit this application and delete the file."
-					, icon: DIcon.Info, onLinkClick: h => { AExec.Run(h.LinkHref); });
+					, icon: DIcon.Info, onLinkClick: h => { AFile.Run(h.LinkHref); });
 				};
 			}
 

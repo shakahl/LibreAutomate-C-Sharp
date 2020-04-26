@@ -95,7 +95,7 @@ namespace Au
 
 		/// <summary>
 		/// Returns <c>number * multiply / divide</c>.
-		/// Multiplies without overflow and rounds the result up or down to the nearest integer.
+		/// Multiplies without overflow and rounds up or down to the nearest integer.
 		/// </summary>
 		/// <exception cref="OverflowException"></exception>
 		/// <exception cref="DivideByZeroException"></exception>
@@ -111,14 +111,36 @@ namespace Au
 		//public static int MulDiv(int number, int multiply, int divide) => Api.MulDiv(number, multiply, divide);
 
 		/// <summary>
-		/// Returns percent of part in whole.
+		/// Calculates how many % of <i>whole</i> is <i>part</i>: <c>100L * part / whole</c>.
 		/// </summary>
-		public static int Percent(int whole, int part) => (int)(100L * part / whole);
+		/// <param name="whole"></param>
+		/// <param name="part"></param>
+		/// <param name="canRoundUp">Round down or up. If false (default), can only round down.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static int PercentFromValue(int whole, int part, bool canRoundUp = false)
+			=> whole == default ? default : (canRoundUp ? MulDiv(100, part, whole) : checked((int)(100L * part / whole)));
 
 		/// <summary>
-		/// Returns percent of part in whole.
+		/// Calculates how many % of <i>whole</i> is <i>part</i>: <c>100 * part / whole</c>.
 		/// </summary>
-		public static double Percent(double whole, double part) => 100.0 * part / whole;
+		public static double PercentFromValue(double whole, double part)
+			=> whole == default ? default : (100.0 * part / whole);
+
+		/// <summary>
+		/// Returns <i>percent</i> % of <i>whole</i>: <c>(long)whole * percent / 100</c>.
+		/// </summary>
+		/// <param name="whole"></param>
+		/// <param name="percent"></param>
+		/// <param name="canRoundUp">Use <see cref="MulDiv"/>, which can round down or up. If false (default), can only round down.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static int PercentToValue(int whole, int percent, bool canRoundUp = false)
+			=> canRoundUp ? MulDiv(whole, percent, 100) : checked((int)((long)whole * percent / 100L));
+
+		/// <summary>
+		/// Returns <i>percent</i> % of <i>whole</i>: <c>whole * percent / 100</c>.
+		/// </summary>
+		public static double PercentToValue(double whole, double percent)
+			=> whole * percent / 100.0;
 
 		/// <summary>
 		/// If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.
@@ -129,6 +151,7 @@ namespace Au
 		/// For example if alignment is 4, returns 4 if value is 1-4, returns 8 if value is 5-8, returns 12 if value is 9-10, and so on.
 		/// </remarks>
 		public static uint AlignUp(uint value, uint alignment) => (value + (alignment - 1)) & ~(alignment - 1);
+		//shorter: (value + --alignment) & ~alignment. But possibly less optimized. Now (alignment - 1) and ~(alignment - 1) usually are constants.
 
 		/// <summary>
 		/// If value is divisible by alignment, returns value. Else returns nearest bigger number that is divisible by alignment.

@@ -425,8 +425,8 @@ partial class SciCode : AuScintilla
 					m["t[name] = o => ATask.Run(path);"] = o => what = 4;
 				} else {
 					m["var s = path;"] = o => what = 11;
-					m["AExec.Run(path);"] = o => what = 12;
-					m["t[name] = o => AExec.Run(path);"] = o => what = 13;
+					m["AFile.Run(path);"] = o => what = 12;
+					m["t[name] = o => AFile.Run(path);"] = o => what = 13;
 					//FUTURE: also add same items with unexpanded path.
 				}
 				m.Show(this);
@@ -522,7 +522,7 @@ partial class SciCode : AuScintilla
 				case 1: case 2: case 11: b.Append("var s = "); break;
 				case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
 				}
-				if(what == 12 || what == 13) b.Append("AExec.Run(");
+				if(what == 12 || what == 13) b.Append("AFile.Run(");
 				if((what == 11 || what == 12) && path.Starts(":: ")) b.AppendFormat("/* {0} */ ", name);
 				switch(what) {
 				case 1: b.AppendFormat("\"{0}\";", name); break;

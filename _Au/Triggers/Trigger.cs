@@ -188,7 +188,7 @@ namespace Au.Triggers
 		/// <param name="args"></param>
 		/// <exception cref="InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
 		/// <remarks>
-		/// Must be called while <c>Triggers.Run();</c> is running, from the same thread.
+		/// Call while <c>Triggers.Run();</c> is running, from the same thread.
 		/// </remarks>
 		public void RunAction(TriggerArgs args)
 		{
@@ -207,6 +207,16 @@ namespace Au.Triggers
 		/// Gets the trigger as <see cref="ActionTrigger"/> (the base class of all trigger type classes).
 		/// </summary>
 		public abstract ActionTrigger TriggerBase { get; }
+
+		/// <summary>
+		/// Disables the trigger. Enables later when the toolbar is closed.
+		/// Use to implement single-instance toolbars.
+		/// </summary>
+		public void DisableTriggerUntilClosed(AToolbar t)
+		{
+			TriggerBase.Disabled = true;
+			t.Control.Disposed += (_, __) => TriggerBase.Disabled = false;
+		}
 	}
 
 	/// <summary>

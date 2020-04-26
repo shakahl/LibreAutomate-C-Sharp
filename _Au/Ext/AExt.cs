@@ -63,7 +63,7 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
-		/// This extension method has been added because Rectangle.IsEmpty returns true only when all fields are 0, which is not very useful.
+		/// Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
 		public static bool IsEmptyRect(this System.Drawing.Rectangle t)
@@ -155,11 +155,16 @@ namespace Au
 		/// The same as code <c>(t &amp; flag) == flag</c> or <b>Enum.HasFlag</b>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-#if true //Enum.HasFlag used to be slow, but now compiler for it creates the same code as with operator
-		public static unsafe bool Has<T>(this T t, T flag) where T : unmanaged, Enum => t.HasFlag(flag);
-#else //the same speed, although compiler may create more code
 		public static unsafe bool Has<T>(this T t, T flag) where T : unmanaged, Enum
 		{
+#if false //Enum.HasFlag used to be slow, but now compiler for it creates the same code as with operator
+			return t.HasFlag(flag);
+			//However cannot use this because of JIT compiler bug: in some cases Has returns true when no flag.
+			//Noticed it in TriggerActionThreads.Run in finally{} of actionWrapper, code opt.flags.Has(TOFlags.SingleInstance).
+			//It was elusive, difficult to debug, only in Release, and only after some time/times, when tiered JIT fully optimizes.
+			//When Has returned true, AOutput.Write showed that flags is 0.
+			//No bug if HasFlag called directly, not in extension method.
+#else //the same speed, although compiler may create more code
 			switch(sizeof(T)) {
 			case 4: {
 				var a = Unsafe.As<T, uint>(ref t);
@@ -183,8 +188,8 @@ namespace Au
 			}
 			}
 			//compiler removes the switch/case, because sizeof(T) is const
-		}
 #endif
+		}
 
 		/// <summary>
 		/// Returns true if this enum variable has one or more flag bits specified in <i>flags</i>.

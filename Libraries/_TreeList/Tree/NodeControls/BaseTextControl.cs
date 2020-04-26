@@ -80,7 +80,8 @@ namespace Aga.Controls.Tree.NodeControls
 		{
 			_formatFlags = TextFormatFlags.PreserveGraphicsClipping | TextFormatFlags.PreserveGraphicsTranslateTransform
 				| TextHelper.TranslateAligmentToFlag(TextAlign)
-				| TextHelper.TranslateTrimmingToFlag(Trimming);
+				| TextHelper.TranslateTrimmingToFlag(Trimming)
+				| TextFormatFlags.NoPrefix; //au
 		}
 
 		public override Size MeasureSize(TreeNodeAdv node, DrawContext context)
@@ -102,7 +103,8 @@ namespace Aga.Controls.Tree.NodeControls
 			Font font = FontNeeded?.Invoke(node) ?? context.Font;
 
 			bool empty = string.IsNullOrEmpty(label); if(empty) label = " "; //au
-			Size s = TextRenderer.MeasureText(label, font);
+			Size s = TextRenderer.MeasureText(label, font
+				, new Size(int.MaxValue, int.MaxValue), _formatFlags); //au
 			if(empty) s.Width = 0;
 			s.Height += 2; if(s.Height < 17) s.Height = 17; //au
 			return s;

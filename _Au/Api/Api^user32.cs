@@ -970,6 +970,9 @@ namespace Au.Types
 		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl, CharSet = CharSet.Ansi)]
 		internal static extern int wsprintfA(byte* lpOut1024, string lpFmt, __arglist);
 
+		[DllImport("user32.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int wsprintfW(char* lpOut1024, string lpFmt, __arglist);
+
 		internal struct PAINTSTRUCT
 		{
 			public IntPtr hdc;

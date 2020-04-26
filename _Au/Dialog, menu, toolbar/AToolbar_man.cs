@@ -418,28 +418,24 @@ namespace Au
 			int x, y, cx = bounds.Width, cy = bounds.Height;
 
 			if(_anchor.HasLeft()) {
-				x = r.left + _offsets.Left;
-				if(_anchor.OppositeX()) x -= cx;
-				else if(_anchor.HasRight() && (!_followedOnce || r.Width != prevSize.width)) {
+				x = (_anchor.OppositeX() ? r.right : r.left) + _offsets.Left;
+				if(_anchor.HasRight() && (!_followedOnce || r.Width != prevSize.width)) {
 					if(_preferSize) _offsets.Right = r.right - x - cx;
 					else cx = Math.Max(r.right - _offsets.Right - x, 2); //_OnWindowPosChanging will limit min max if need
 				}
 			} else if(_anchor.HasRight()) {
-				x = r.right - _offsets.Right;
-				if(!_anchor.OppositeX()) x -= cx;
+				x = (_anchor.OppositeX() ? r.left : r.right) - _offsets.Right - cx;
 			} else { //none
 				x = r.left + _offsets.Left;
 			}
 			if(_anchor.HasTop()) {
-				y = r.top + _offsets.Top;
-				if(_anchor.OppositeY()) y -= cy;
-				else if(_anchor.HasBottom() && (!_followedOnce || r.Height != prevSize.height)) {
+				y = (_anchor.OppositeY() ? r.bottom : r.top) + _offsets.Top;
+				if(_anchor.HasBottom() && (!_followedOnce || r.Height != prevSize.height)) {
 					if(_preferSize) _offsets.Bottom = r.bottom - y - cy;
 					else cy = Math.Max(r.bottom - _offsets.Bottom - y, 2);
 				}
 			} else if(_anchor.HasBottom()) {
-				y = r.bottom - _offsets.Bottom;
-				if(!_anchor.OppositeY()) y -= cy;
+				y = (_anchor.OppositeY() ? r.top : r.bottom) - _offsets.Bottom - cy;
 			} else { //none
 				y = r.top + _offsets.Top;
 			}
@@ -465,7 +461,7 @@ namespace Au
 
 		void _OnWindowPosChanging(ref Api.WINDOWPOS wp)
 		{
-			if(!_loaded) return;
+			if(!_showed) return;
 			//AOutput.Write(this, wp.flags);
 			if(!wp.flags.Has(Native.SWP.NOSIZE)) {
 				SIZE min = _GetMinSize();
@@ -487,7 +483,7 @@ namespace Au
 
 		void _OnWindowPosChanged(in Api.WINDOWPOS wp)
 		{
-			if(!_loaded) return;
+			if(!_showed) return;
 			if(!wp.flags.Has(Native.SWP.NOMOVE | Native.SWP.NOSIZE)) {
 				if(!_ignorePosChanged) {
 					_os?.UpdateIfAutoScreen();
@@ -504,15 +500,16 @@ namespace Au
 
 		void _UpdateOffsets(int x, int y, int cx, int cy)
 		{
+			//AOutput.Write(x, y, cx, cy, swp); //tested: if SWP_NOMOVE or SWP_NOSIZE, here we receive current values
 			var (r, _) = _GetCachedOwnerRect();
 			if(_anchor == TBAnchor.None) {
 				_offsets.Left = x - r.left;
 				_offsets.Top = y - r.top;
 			} else {
-				if(_anchor.HasLeft()) _offsets.Left = x + (_anchor.OppositeX() ? cx : 0) - r.left;
-				if(_anchor.HasTop()) _offsets.Top = y + (_anchor.OppositeY() ? cy : 0) - r.top;
-				if(_anchor.HasRight()) _offsets.Right = r.right - x - (_anchor.OppositeX() ? 0 : cx);
-				if(_anchor.HasBottom()) _offsets.Bottom = r.bottom - y - (_anchor.OppositeY() ? 0 : cy);
+				if(_anchor.HasLeft()) _offsets.Left = x - (_anchor.OppositeX() ? r.right : r.left);
+				if(_anchor.HasRight()) _offsets.Right = (_anchor.OppositeX() ? r.left : r.right) - x - cx;
+				if(_anchor.HasTop()) _offsets.Top = y - (_anchor.OppositeY() ? r.bottom : r.top);
+				if(_anchor.HasBottom()) _offsets.Bottom = (_anchor.OppositeY() ? r.top : r.bottom) - y - cy;
 			}
 			if(!_inMoveSize) {
 				_sett.offsets = _offsets;

@@ -823,7 +823,7 @@ class Script : AScript
 		using(m.Submenu("sub")) {
 			m["bb"] = null;
 			m["dd", @"q:\app\copy.ico"] = null;
-			m["notepad"] = o => AExec.Run("notepad.exe");
+			m["notepad"] = o => AFile.Run("notepad.exe");
 		}
 		m.Separator();
 		m["cc", ""] = null;
@@ -967,13 +967,71 @@ class Script : AScript
 		//TestMenuDropdownBug();
 		//TestMarkdownXmlDocComments();
 #pragma warning disable 200, 168 //
-		int kkk = 9;
-		string s = "DDD" + "mmm";
-		
+		//int kkk = 9;
+		//string s = "DDD" + "mmm";
+
+		var asmFile = @"Q:\Test\ok\.compiled\2802";
+
+		//byte[] bAsm, bPdb = null;
+		//using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
+		//	bAsm = new byte[stream.Length];
+		//	stream.Read(bAsm, 0, bAsm.Length);
+		//}
+		//Assembly.Load(bAsm, bPdb);
+
+		//var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
+		//using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) { //TODO: use API
+		//	alc.LoadFromStream(stream);
+		//}
 	}
 
-	void One(bool two) { }
-	bool Two() => false;
+
+
+	//class Implement : IDisposable
+	//{
+	//	int i;
+	//}
+
+	//class Implement2 : IEnumerable<int>
+	//{
+
+	//}
+
+	//public interface ITest : ITestBase
+	//{
+	//	bool PropDef => true;
+	//	bool Prop { get; set; }
+	//	bool PropGet { get; }
+	//	bool PropSet { set; }
+	//	bool Meth(int i, out RECT r);
+	//	void MethDef(int j) { }
+	//	event EventHandler Event;
+	//	int this[int index] { get; set; }
+	//	bool Prop2 { get; protected set; }
+	//	ref int Ref();
+	//	internal bool PropInternal { get; set; }
+	//	//	protected bool PropInternal { get; set; }
+
+	//	const int Const = 5;
+	//	static ITest() { }
+	//	public static ITest operator +(ITest a, ITest b) => default;
+	//	public struct Struct { int i; }
+	//	static int s_i;
+	//	public static void StatMeth() { }
+	//	//	void ITestBase.OfBase() {  }
+	//}
+
+	//public interface ITestBase
+	//{
+	//	void OfBase();
+	//}
+
+	//class Implement3 : ITest
+	//{
+	//}
+
+	//void One(bool two) { }
+	//bool Two() => false;
 
 	[STAThread] static void Main(string[] args) { new Script(args); }
 	Script(string[] args)

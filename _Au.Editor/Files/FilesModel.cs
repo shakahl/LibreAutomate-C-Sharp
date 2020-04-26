@@ -704,10 +704,10 @@ partial class FilesModel : ITreeModel
 			//	//FUTURE
 			//	break;
 			case 3:
-				AExec.Run(f.FilePath);
+				AFile.Run(f.FilePath);
 				break;
 			case 4:
-				AExec.SelectInExplorer(f.FilePath);
+				AFile.SelectInExplorer(f.FilePath);
 				break;
 			}
 		}
@@ -1072,7 +1072,7 @@ partial class FilesModel : ITreeModel
 			var s = a[i] = APath.Normalize(a[i]);
 			if(s.Find(@"\$RECYCLE.BIN\", true) > 0) {
 				ADialog.Show("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
-					icon: DIcon.Info, owner: _control, onLinkClick: e => AExec.TryRun(e.LinkHref));
+					icon: DIcon.Info, owner: _control, onLinkClick: e => AFile.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = FilesDirectory;
@@ -1346,7 +1346,7 @@ partial class FilesModel : ITreeModel
 				string script = row[0];
 				if(script.Starts("//")) continue;
 				var f = FindScript(script);
-				if(f == null) { AOutput.Write("Startup script not found: " + script + ". Please edit name in Options."); continue; }
+				if(f == null) { AOutput.Write("Startup script not found: " + script + ". Please edit Options -> Run scripts..."); continue; }
 				int delay = 10;
 				if(x.ColumnCount > 1) {
 					var sd = row[1];

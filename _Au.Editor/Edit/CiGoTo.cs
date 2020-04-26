@@ -189,7 +189,7 @@ class CiGoTo
 				md5.Add(_docId);
 				var hash = md5.Hash.ToString().Remove(16);
 
-				AExec.TryRun(s_sources[i].site + $"/{_assembly}/a.html#{hash}");
+				AFile.TryRun(s_sources[i].site + $"/{_assembly}/a.html#{hash}");
 			});
 		}
 	}

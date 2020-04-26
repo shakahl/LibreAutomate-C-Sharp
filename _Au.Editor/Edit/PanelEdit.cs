@@ -106,13 +106,13 @@ class PanelEdit : UserControl
 			//Don't focus now, or then cannot select treeview items with keyboard etc. Focus on mouse move in editor control.
 			//But often would focus when user does not want it. Instead can middle-click or Esc.
 			//But need to somehow focus after opening. It is not problem eg in VS, because it opens on double-click.
-			//OK, focus only when at least 300 pixels from treeview.
+			//OK, focus only when at some distance from treeview.
 #if true
 			_openFocus.onMM ??= (object sender, MouseEventArgs e) => {
 				var c = sender as Control;
 				if(!c.FindForm().Hwnd().IsActive) return;
 				int dist = (int)AMath.Distance(Program.Model.TreeControl.Hwnd().Rect, AMouse.XY);
-				if(dist < Au.Util.ADpi.ScaleInt(300)) return;
+				if(dist < Au.Util.ADpi.ScaleInt(100)) return;
 				if(_openFocus.dist >= 0 && dist < _openFocus.dist + 20) { //if new file, don't focus until mouse is moving away from tree
 					if(dist < _openFocus.dist) _openFocus.dist = dist;
 					return;

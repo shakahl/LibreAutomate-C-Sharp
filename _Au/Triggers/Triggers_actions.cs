@@ -19,11 +19,22 @@ namespace Au.Triggers
 	{
 		public Action<TOBAArgs> before;
 		public Action<TOBAArgs> after;
-		public short thread; //>=0 dedicated, -1 main, -2 new, -3 pool
-		public bool noWarning;
-		public int ifRunning; //for dedicated thread it is the timeout (>= -1); for new/pool threads it is 0 if single instance, 1 if multi.
+		public sbyte thread; //>=0 dedicated or <0 TOThread
+		public TOFlags flags;
+		public int ifRunningWaitMS;
 
 		public TOptions Clone() => this.MemberwiseClone() as TOptions;
+	}
+
+	class TOThread { public const sbyte Main = -1, New = -2, Pool = -3; }
+
+	[Flags]
+	enum TOFlags : byte
+	{
+		NoWarning = 1,
+		Single = 2,
+		MtaThread = 4,
+		//BackgroundThread=8, //rejected. Always background. Foreground has no sense here. If need, can easily set in code.
 	}
 
 	/// <summary>
@@ -35,7 +46,7 @@ namespace Au.Triggers
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// Triggers.Options.RunActionInThreadPool(singleInstance: false);
+	/// Triggers.Options.ThreadNew();
 	/// Triggers.Options.BeforeAction = o => { AOpt.Key.KeySpeed = 10; };
 	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
 	/// Triggers.Hotkey["Ctrl+Shift+K"] = o => AOutput.Write(AOpt.Key.KeySpeed); //10
@@ -51,9 +62,9 @@ namespace Au.Triggers
 		TOptions _New() => _new ??= (_prev?.Clone() ?? new TOptions());
 
 		/// <summary>
-		/// Run actions in a dedicated thread that does not end when actions end.
+		/// Run actions always in the same dedicated thread that does not end when actions end.
 		/// </summary>
-		/// <param name="thread">A number that you want to use to identify the thread. Can be 0-32767 (short.MaxValue). Default 0.</param>
+		/// <param name="thread">A number that you want to use to identify the thread. Can be 0-127. Default 0.</param>
 		/// <param name="ifRunningWaitMS">Defines when to start an action if an action (other or same) is currently running in this thread. If 0 (default), don't run. If -1 (<b>Timeout.Infinite</b>), run when that action ends (and possibly other queed actions). If &gt; 0, run when that action ends, if it ends within this time from now; the time is in milliseconds.</param>
 		/// <param name="noWarning">No warning when cannot start an action because an action is running and ifRunningWaitMS==0.</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
@@ -62,63 +73,71 @@ namespace Au.Triggers
 		/// There is no "end old running action" feature. If need it, use other script. Example: <c>Triggers.Hotkey["Ctrl+M"] = o => ATask.RunWait("Other Script");</c>.
 		/// There is no "temporarily pause old running action to run new action" feature. As well as for scripts.
 		/// The thread has <see cref="ApartmentState.STA"/>.
-		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active. If none called, it is the same as called this function without arguments.
+		/// There are several <b>ThreadX</b> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
 		/// </remarks>
-		public void RunActionInThread(int thread = 0, int ifRunningWaitMS = 0, bool noWarning = false)
+		public void Thread(int thread = 0, int ifRunningWaitMS = 0, bool noWarning = false)
 		{
 			_New();
-			if((uint)thread > short.MaxValue) throw new ArgumentOutOfRangeException();
-			_new.thread = (short)thread;
-			_new.ifRunning = ifRunningWaitMS >= -1 ? ifRunningWaitMS : throw new ArgumentOutOfRangeException();
-			_new.noWarning = noWarning;
+			if((uint)thread > 127) throw new ArgumentOutOfRangeException();
+			_new.thread = (sbyte)thread;
+			_new.ifRunningWaitMS = ifRunningWaitMS >= -1 ? ifRunningWaitMS : throw new ArgumentOutOfRangeException();
+			_new.flags = noWarning ? TOFlags.NoWarning : 0;
 		}
 		//CONSIDER: make default ifRunningWaitMS = 1000 if it is another action.
 
 		/// <summary>
-		/// Run actions in same thread as <c>Triggers.Run();</c>.
+		/// Run trigger actions in same thread as <c>Triggers.Run();</c>.
 		/// </summary>
 		/// <remarks>
-		/// Can be used only for actions that return as soon as possible, in less than 10 ms. Use to create and show toolbars (<see cref="AToolbar"/>).
-		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
+		/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="AToolbar"/>). Rarely used for other purposes.
 		/// </remarks>
-		public void RunActionInMainThread()
+		public void ThreadMain()
 		{
 			_New();
-			_new.thread = -1;
-			_new.ifRunning = 0;
+			_new.thread = TOThread.Main;
+			_new.ifRunningWaitMS = 0;
+			_new.flags = 0;
 		}
 
 		/// <summary>
-		/// Run actions in new threads.
+		/// Run trigger actions in new threads.
 		/// </summary>
+		/// <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
+		/// <param name="mta">Don't set <see cref="ApartmentState.STA"/>.</param>
 		/// <remarks>
-		/// Use if need to run actions simultaneously with other actions or other instances of self, especially if the action is long-running (maybe 5 s and more).
-		/// The thread has <see cref="ApartmentState.STA"/>.
-		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
+		/// The action can run simultaneously with other actions.
 		/// </remarks>
-		/// <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
-		public void RunActionInNewThread(bool singleInstance)
+		public void ThreadNew(bool single = false, bool mta = false)
 		{
 			_New();
-			_new.thread = -2;
-			_new.ifRunning = singleInstance ? 0 : 1;
+			_new.thread = TOThread.New;
+			_new.ifRunningWaitMS = 0;
+			TOFlags f = 0;
+			if(single) f |= TOFlags.Single;
+			if(mta) f |= TOFlags.MtaThread;
+			_new.flags = f;
 		}
 
 		/// <summary>
-		/// Run actions in thread pool threads.
+		/// Run trigger actions in thread pool threads.
 		/// </summary>
+		/// <param name="single">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
 		/// <remarks>
-		/// Use if need to run actions simultaneously with other actions or other instances of self, and the action is short-running (maybe less than 5 s) and don't need <see cref="ApartmentState.STA"/>.
-		/// Thread pool threads have <see cref="ApartmentState.MTA"/>.
-		/// The <b>RunActionInX</b> functions are mutually exclusive: only the last called function is active.
+		/// The action can run simultaneously with other actions. May start later if the pool is busy.
+		/// You should know how to use thread pool correctly. The action runs in the .NET thread pool through <see cref="Task.Run"/>.
 		/// </remarks>
-		/// <param name="singleInstance">Don't run if this action is already running. If false, multiple action instances can run paralelly in multiple threads.</param>
-		public void RunActionInThreadPool(bool singleInstance)
+		public void ThreadPool(bool single = false)
 		{
 			_New();
-			_new.thread = -3;
-			_new.ifRunning = singleInstance ? 0 : 1;
+			_new.thread = TOThread.Pool;
+			_new.ifRunningWaitMS = 0;
+			_new.flags = single ? TOFlags.Single : 0;
 		}
+
+		//rejected: Green - don't run simultaneously with a green script or another green action.
+		//	For key/autotext/mouse triggers it has no sense. If user uses kyboard/mouse while a green script is running, then why action can't.
+		//	For window triggers usually has no sense too. If an unwanted window appears during a green script, it usually breaks the script anyway. And it is rare.
+		//	Trigger actions should be short/fast. For long code let use scripts.
 
 		/// <summary>
 		/// A function to run before the trigger action.
@@ -193,15 +212,20 @@ namespace Au.Triggers
 	{
 		public void Run(ActionTrigger trigger, TriggerArgs args, int muteMod)
 		{
+			//APerf.First();
 			Action actionWrapper = () => {
 				var opt = trigger.options;
+				var oldAOpt = opt.thread == TOThread.New ? default : AOpt.Scope.All(inherit: false);
 				try {
 					_MuteMod(ref muteMod);
 
 					string sTrigger = null;
-					if(ATask.Role == ATRole.MiniProgram) Util.Log_.Run.Write($"Trigger action started. Trigger: {sTrigger = trigger.ToString()}");
-
-					AOpt.Reset();
+					//APerf.Next();
+					if(ATask.Role == ATRole.MiniProgram) {
+						sTrigger = trigger.ToString();
+						Util.Log_.Run.Write("Action started. Trigger: " + sTrigger);
+						//APerf.Next();
+					}
 
 					var baArgs = new TOBAArgs(args); //struct
 #if true
@@ -216,12 +240,13 @@ namespace Au.Triggers
 					}
 #endif
 					try {
+						//APerf.NW();
 						trigger.Run(args);
 
-						if(sTrigger != null) Util.Log_.Run.Write($"Trigger action ended. Trigger: {sTrigger}");
+						if(sTrigger != null) Util.Log_.Run.Write("Action ended. Trigger: " + sTrigger);
 					}
 					catch(Exception e1) {
-						if(sTrigger != null) Util.Log_.Run.Write($"Unhandled exception in trigger action. Trigger: {sTrigger}. Exception: {e1.ToStringWithoutStack()}");
+						if(sTrigger != null) Util.Log_.Run.Write($"Action failed. Trigger: {sTrigger}. Exception: {e1.ToStringWithoutStack()}");
 
 						baArgs.Exception = e1;
 						AOutput.Write(e1);
@@ -232,24 +257,26 @@ namespace Au.Triggers
 					AOutput.Write(e2);
 				}
 				finally {
-					if(opt.thread < -1 && opt.ifRunning == 0) _d.TryRemove(trigger, out _);
+					oldAOpt.Dispose();
+					if(opt.flags.Has(TOFlags.Single)) _d.TryRemove(trigger, out _);
 				}
 			};
 			//never mind: we should not create actionWrapper if cannot run. But such cases are rare. Fast and small, about 64 bytes.
 
-			int threadId = trigger.options.thread;
+			var opt1 = trigger.options;
+			int threadId = opt1.thread;
 			if(threadId >= 0) { //dedicated thread
 				_Thread h = null; foreach(var v in _a) if(v.id == threadId) { h = v; break; }
 				if(h == null) _a.Add(h = new _Thread(threadId));
 				if(h.RunAction(actionWrapper, trigger)) return;
-			} else if(threadId == -1) { //main thread
+			} else if(threadId == TOThread.Main) {
 				actionWrapper();
 				return;
 				//note: can reenter. Probably it is better than to cancel if already running.
 			} else {
 				bool canRun = true;
-				bool singleInstance = trigger.options.ifRunning == 0;
-				if(singleInstance) {
+				bool single = opt1.flags.Has(TOFlags.Single);
+				if(single) {
 					_d ??= new System.Collections.Concurrent.ConcurrentDictionary<ActionTrigger, object>();
 					if(_d.TryGetValue(trigger, out var tt)) {
 						switch(tt) {
@@ -268,13 +295,13 @@ namespace Au.Triggers
 				}
 
 				if(canRun) {
-					if(threadId == -2) { //new thread
+					if(threadId == TOThread.New) {
 						var thread = new Thread(actionWrapper.Invoke) { IsBackground = true };
-						thread.SetApartmentState(ApartmentState.STA);
-						if(singleInstance) _d[trigger] = thread;
+						if(!opt1.flags.Has(TOFlags.MtaThread)) thread.SetApartmentState(ApartmentState.STA);
+						if(single) _d[trigger] = thread;
 						try { thread.Start(); }
 						catch(OutOfMemoryException) { //too many threads, probably 32-bit process
-							if(singleInstance) _d.TryRemove(trigger, out _);
+							if(single) _d.TryRemove(trigger, out _);
 							_OutOfMemory();
 							//SHOULDDO: before starting thread, warn if there are too many action threads.
 							//	In 32-bit process normally fails at ~3000 threads.
@@ -282,7 +309,7 @@ namespace Au.Triggers
 						}
 					} else { //thread pool
 						var task = new Task(actionWrapper);
-						if(singleInstance) _d[trigger] = task;
+						if(single) _d[trigger] = task;
 						task.Start();
 					}
 					return;
@@ -361,10 +388,14 @@ namespace Au.Triggers
 
 				bool R = true;
 				lock(_q) {
-					int ifRunningWaitMS = trigger.options.ifRunning;
+					int ifRunningWaitMS = trigger.options.ifRunningWaitMS;
 					if(_running) {
 						if(ifRunningWaitMS == 0) {
-							if(!trigger.options.noWarning) AOutput.Write("Warning: can't run the trigger action because an action is running in this thread. To run simultaneously or wait, use one of Triggers.Options.RunActionInX functions. To disable this warning: Triggers.Options.RunActionInThread(0, 0, noWarning: true);. Trigger: " + trigger);
+							if(!trigger.options.flags.Has(TOFlags.NoWarning))
+								AOutput.Write("Warning: can't run the trigger action because an action is running in this thread." +
+									" To run simultaneously or wait, use one of Triggers.Options.ThreadX functions." +
+									" To disable this warning: Triggers.Options.Thread(noWarning: true);." +
+									" Trigger: " + trigger);
 							return false;
 						}
 						R = false;

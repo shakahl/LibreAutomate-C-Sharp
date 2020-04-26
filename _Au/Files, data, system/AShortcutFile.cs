@@ -154,7 +154,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets or sets target of any type - file/folder, URL, virtual shell object (see <see cref="APidl"/>).
-		/// The string can be used with <see cref="AExec.Run"/>.
+		/// The string can be used with <see cref="AFile.Run"/>.
 		/// </summary>
 		/// <exception cref="AuException">The 'set' function failed.</exception>
 		public string TargetAnyType {

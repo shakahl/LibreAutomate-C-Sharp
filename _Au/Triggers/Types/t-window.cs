@@ -809,7 +809,7 @@ namespace Au.Triggers
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// Triggers.Options.RunActionInNewThread(true);
+		/// Triggers.Options.ThreadNew(true);
 		/// Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
 		/// Triggers.Hotkey["Ctrl+T"] = o => Triggers.Window.SimulateActiveNew(AWnd.Active);
 		/// Triggers.Hotkey["Ctrl+Alt+T"] = o => Triggers.Stop();

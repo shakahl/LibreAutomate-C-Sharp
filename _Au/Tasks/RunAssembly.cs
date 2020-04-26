@@ -35,34 +35,41 @@ namespace Au
 		{
 			ADebug.PrintIf(pdbOffset == 0, "pdbOffset 0");
 
+			ref var p1 = ref APerf.SharedMemory;
+			p1.Next('i');
+
 			bool inEditorThread = 0 != (flags & RAFlags.InEditorThread);
 			bool findLoaded = inEditorThread;
 			_LoadedScriptAssembly lsa = default;
 			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
 			if(asm == null) {
 #if true
-				//var p1 = APerf.Create();
 				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
 				//SHOULDDO: try to unload. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
-				//p1.Next();
-				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
-					//p1.Next();
-					if(pdbOffset > 0) {
-						var b = new byte[pdbOffset];
-						stream.Read(b, 0, b.Length);
-						using var msAsm = new MemoryStream(b);
-						b = new byte[stream.Length - pdbOffset];
-						stream.Read(b, 0, b.Length);
-						using var msDeb = new MemoryStream(b);
-						//p1.Next('f');
-						asm = alc.LoadFromStream(msAsm, msDeb);
-						//p1.Next();
-					} else {
-						asm = alc.LoadFromStream(stream);
+				p1.Next();
+				if(AKeys.IsScrollLock) {
+					asm = alc.LoadFromAssemblyPath(asmFile); //1 ms
+				} else {
+					using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) { //TODO: use API
+						p1.Next('j');
+						if(pdbOffset > 0) {
+							var b = new byte[pdbOffset];
+							stream.Read(b, 0, b.Length);
+							using var msAsm = new MemoryStream(b);
+							//asm = alc.LoadFromStream(msAsm);
+
+							b = new byte[stream.Length - pdbOffset];
+							stream.Read(b, 0, b.Length);
+							using var msDeb = new MemoryStream(b);
+							p1.Next('k');
+							asm = alc.LoadFromStream(msAsm, msDeb);
+						} else {
+							asm = alc.LoadFromStream(stream);
+						}
 					}
 				}
-				//p1.NW();
-				//APerf.Next('a');
+
+				//alc.StartProfileOptimization //TODO: test
 
 				if(fullPathRefs != null) {
 					var fpr = fullPathRefs.SegSplit("|");
@@ -93,19 +100,34 @@ namespace Au
 						if(pdbOffset > 0) {
 							bPdb = new byte[stream.Length - pdbOffset];
 							stream.Read(bPdb, 0, bPdb.Length);
-						} else {
-							var s1 = Path.ChangeExtension(asmFile, "pdb");
-							if(AFile.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
+						//} else {
+						//	var s1 = Path.ChangeExtension(asmFile, "pdb");
+						//	if(AFile.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
 						}
 					}
 					catch(Exception ex) { bPdb = null; ADebug.Print(ex); } //not very important
 				}
-				//APerf.Next('f');
-				//APerf.First();
+				p1.Next('k');
 				asm = Assembly.Load(bAsm, bPdb);
+
+				if(fullPathRefs != null) { //TODO: not tested, just converted from above
+					var fpr = fullPathRefs.SegSplit("|");
+					AppDomain.CurrentDomain.AssemblyResolve += (object sender, ResolveEventArgs e) => {
+						//AOutput.Write(an, an.Name, an.FullName);
+						foreach(var v in fpr) {
+							var s1 = e.Name;
+							int iName = v.Length - s1.Length - 4;
+							if(iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, s1, true)) continue;
+							if(!AFile.ExistsAsFile(v)) continue;
+							//try {
+							return Assembly.LoadFile(v);
+							//} catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); break; }
+						}
+						return null;
+					};
+				}
 #endif
-				//APerf.Next('A');
-				//APerf.NW(); //without AV 7 ms. With Windows Defender 10 ms, but first time 20-900 ms.
+				p1.Next('L'); //30 ms. Same in both cases. Before Core used to be 7 ms without AV, 10 ms with WD (first time 20-900 ms).
 				if(findLoaded) lsa.Add(asmFile, asm);
 
 				//never mind: it's possible that we load a newer compiled assembly version of script than intended.
@@ -119,10 +141,10 @@ namespace Au
 					if(args == null) args = Array.Empty<string>();
 				}
 
-				//APerf.Next('1');
+				p1.Next('m');
 				if(!inEditorThread) Util.Log_.Run.Write("Task started.");
+				p1.Next('n');
 
-				//APerf.Next('2');
 				if(useArgs) {
 					entryPoint.Invoke(null, new object[] { args });
 				} else {
@@ -134,7 +156,7 @@ namespace Au
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
 
-				if(!inEditorThread) Util.Log_.Run.Write($"Unhandled exception: {e.ToStringWithoutStack()}");
+				if(!inEditorThread) Util.Log_.Run.Write($"Task failed. Exception: {e.ToStringWithoutStack()}");
 
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//AOutput.Write(e);

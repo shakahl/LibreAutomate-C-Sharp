@@ -85,13 +85,11 @@ namespace Au
 			/// perf.Incremental = false;
 			/// ]]></code>
 			/// </example>
-			public bool Incremental
-			{
+			public bool Incremental {
 				get => _incremental;
-				set
-				{
+				set {
 					if(_incremental = value) {
-						fixed (long* p = _a) { for(int i = 0; i < _nElem; i++) p[i] = 0; }
+						fixed(long* p = _a) { for(int i = 0; i < _nElem; i++) p[i] = 0; }
 						_nMeasurements = 0;
 					}
 				}
@@ -127,7 +125,7 @@ namespace Au
 #endif
 				int n = _counter; if(n >= _nElem) return;
 				_counter++;
-				fixed (long* p = _a) {
+				fixed(long* p = _a) {
 					Api.QueryPerformanceCounter(out long pc); long t = pc - _time0;
 					if(_incremental) p[n] += t; else p[n] = t;
 					//fixed (char* c = _aMark) c[n] = cMark;
@@ -201,7 +199,7 @@ namespace Au
 				if(n == 0) return;
 				bool average = false; int nMeasurements = 1;
 
-				fixed (long* p = _a) fixed (char* c = _aMark) {
+				fixed(long* p = _a) fixed(char* c = _aMark) {
 					g1:
 					double t = 0d, tPrev = 0d;
 					for(int i = 0; i < n; i++) {
@@ -235,14 +233,12 @@ namespace Au
 			/// <summary>
 			/// Gets the number of microseconds between <see cref="First"/> and the last <see cref="Next"/>.
 			/// </summary>
-			public long TimeTotal
-			{
-				get
-				{
+			public long TimeTotal {
+				get {
 					int n = _counter;
 					if(n == 0) return 0;
 					if(n > _nElem) n = _nElem;
-					fixed (long* p = _a) { return (long)(ATime.s_freqMCS * p[n - 1]); }
+					fixed(long* p = _a) { return (long)(ATime.s_freqMCS * p[n - 1]); }
 				}
 			}
 
@@ -328,8 +324,7 @@ namespace Au
 		/// APerf.Incremental = false;
 		/// ]]></code>
 		/// </example>
-		public static bool Incremental
-		{
+		public static bool Incremental {
 			get => StaticInst.Incremental;
 			set => StaticInst.Incremental = value;
 		}
@@ -420,5 +415,20 @@ namespace Au
 		///// <i>countAll</i> times executes this code: <c>First(); foreach(Action a in codes) Execute(countEach, a); Write();</c>.
 		///// </summary>
 		//public static void ExecuteMulti(int countAll, int countEach, params Action[] codes) => StaticInst.ExecuteMulti(countAll, countEach, codes);
+
+		/// <summary>
+		/// Gets a reference to a <see cref="Local"/> variable in shared memory.
+		/// </summary>
+		/// <remarks>
+		/// The variable can be used by multiple processes, for example to measure process startup time.
+		/// Note: slow first time in process, eg 3 ms. It's because need to JIT-compile functions and open shared memory.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// ref var p = ref APerf.SharedMemory;
+		/// p.First();
+		/// ]]></code>
+		/// </example>
+		public static ref Local SharedMemory => ref Util.SharedMemory_.Ptr->perf;
 	}
 }

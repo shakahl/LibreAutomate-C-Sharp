@@ -757,16 +757,16 @@ namespace Au.Controls
 
 			switch(tag) {
 			case "link":
-				AExec.TryRun(s1, s2);
+				AFile.TryRun(s1, s2);
 				break;
 			case "google":
-				AExec.TryRun("https://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
+				AFile.TryRun("https://www.google.com/search?q=" + Uri.EscapeDataString(s1) + s2);
 				break;
 			case "help":
 				AHelp.AuHelp(attr);
 				break;
 			case "explore":
-				AExec.SelectInExplorer(attr);
+				AFile.SelectInExplorer(attr);
 				break;
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.

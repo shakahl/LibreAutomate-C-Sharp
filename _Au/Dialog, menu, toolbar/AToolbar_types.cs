@@ -82,61 +82,63 @@ namespace Au.Types
 		//top 1, bottom 2, left 4, right 8
 
 		/// <summary>
-		/// Anchors are owner's top and left edges. Default.
+		/// Anchors are top and left edges. Default.
 		/// </summary>
 		TopLeft = 1 | 4,
 
 		/// <summary>
-		/// Anchors are owner's top and right edges.
+		/// Anchors are top and right edges.
 		/// </summary>
 		TopRight = 1 | 8,
 
 		/// <summary>
-		/// Anchors are owner's bottom and left edges.
+		/// Anchors are bottom and left edges.
 		/// </summary>
 		BottomLeft = 2 | 4,
 
 		/// <summary>
-		/// Anchors are owner's bottom and right edges.
+		/// Anchors are bottom and right edges.
 		/// </summary>
 		BottomRight = 2 | 8,
 
 		/// <summary>
-		/// Anchors are owner's top, left and right edges. The toolbar is resized vertically when resizing its owner.
+		/// Anchors are top, left and right edges. The toolbar is resized horizontally when resizing its owner.
 		/// </summary>
-		Top = 1 | 4 | 8,
+		TopLR = 1 | 4 | 8,
 
 		/// <summary>
-		/// Anchors are owner's bottom, left and right edges. The toolbar is resized vertically when resizing its owner.
+		/// Anchors are bottom, left and right edges. The toolbar is resized horizontally when resizing its owner.
 		/// </summary>
-		Bottom = 2 | 4 | 8,
+		BottomLR = 2 | 4 | 8,
 
 		/// <summary>
-		/// Anchors are owner's left, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+		/// Anchors are left, top and bottom edges. The toolbar is resized vertically when resizing its owner.
 		/// </summary>
-		Left = 4 | 1 | 2,
+		LeftTB = 4 | 1 | 2,
 
 		/// <summary>
-		/// Anchors are owner's right, top and bottom edges. The toolbar is resized horizontally when resizing its owner.
+		/// Anchors are right, top and bottom edges. The toolbar is resized vertically when resizing its owner.
 		/// </summary>
-		Right = 8 | 1 | 2,
+		RightTB = 8 | 1 | 2,
 
 		/// <summary>
-		/// Anchors are all owner's edges. The toolbar is resized when resizing its owner.
+		/// Anchors are all edges. The toolbar is resized when resizing its owner.
 		/// </summary>
 		All = 15,
 
 		/// <summary>
-		/// Use toolbar's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
+		/// Use owner's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
+		/// This flag is for toolbars that normally are outside of the owner rectangle (at the left or right).
 		/// This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
 		/// </summary>
-		OppositeToolbarEdgeX = 32,
+		OppositeEdgeX = 32,
 
 		/// <summary>
-		/// Use toolbar's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
+		/// Use owner's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
+		/// This flag is for toolbars that normally are outside of the owner rectangle (above or below).
 		/// This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
 		/// </summary>
-		OppositeToolbarEdgeY = 64,
+		OppositeEdgeY = 64,
 	}
 
 	static partial class TBExt_
@@ -148,6 +150,63 @@ namespace Au.Types
 		internal static bool OppositeX(this TBAnchor a) => 0 != ((int)a & 32);
 		internal static bool OppositeY(this TBAnchor a) => 0 != ((int)a & 64);
 		internal static TBAnchor WithoutFlags(this TBAnchor a) => a & TBAnchor.All;
+	}
+
+	/// <summary>
+	/// Used with <see cref="AToolbar.Offsets"/>.
+	/// </summary>
+	public struct TBOffsets : IEquatable<TBOffsets>
+	{
+		/// <summary>
+		/// Horizontal distance from the owner's left edge (right if <see cref="TBAnchor.OppositeEdgeX"/>) to the toolbar's left edge.
+		/// </summary>
+		public int Left { get; set; }
+
+		/// <summary>
+		/// Vertical distance from the owner's top edge (bottom if <see cref="TBAnchor.OppositeEdgeY"/>) to the toolbar's top edge.
+		/// </summary>
+		public int Top { get; set; }
+
+		/// <summary>
+		/// Horizontal distance from the toolbar's right edge to the owner's right edge (left if <see cref="TBAnchor.OppositeEdgeX"/>).
+		/// </summary>
+		public int Right { get; set; }
+
+		/// <summary>
+		/// Vertical distance from the toolbar's bottom edge to the owner's bottom edge (top if <see cref="TBAnchor.OppositeEdgeY"/>).
+		/// </summary>
+		public int Bottom { get; set; }
+
+		/// <summary>
+		/// Sets all properties.
+		/// </summary>
+		public TBOffsets(int left, int top, int right, int bottom)
+		{
+			Left = left; Top = top; Right = right; Bottom = bottom;
+		}
+
+		///
+		public bool Equals(TBOffsets other)
+			=> other.Left == this.Left && other.Top == this.Top && other.Right == this.Right && other.Bottom == this.Bottom;
+
+		///
+		public override string ToString() => $"L={Left} T={Top} R={Right} B={Bottom}";
+	}
+
+	/// <summary>
+	/// See <see cref="AToolbar.Layout"/>.
+	/// </summary>
+	public enum TBLayout
+	{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		Flow = (int)ToolStripLayoutStyle.Flow,
+
+		Horizontal = (int)ToolStripLayoutStyle.HorizontalStackWithOverflow,
+
+		Vertical = (int)ToolStripLayoutStyle.VerticalStackWithOverflow,
+
+		Table = (int)ToolStripLayoutStyle.Table,
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 	}
 
 	/// <summary>
@@ -169,44 +228,100 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Offsets"/>.
+	/// See <see cref="AToolbar.NoMenu"/>.
 	/// </summary>
-	public struct TBOffsets : IEquatable<TBOffsets>
+	[Flags]
+	public enum TBNoMenu
+	{
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		Menu = 1,
+		Edit = 1 << 1,
+		Anchor = 1 << 2,
+		Layout = 1 << 3,
+		Border = 1 << 4,
+		Sizable = 1 << 5,
+		AutoSize = 1 << 6,
+		More = 1 << 7,
+		Toolbars = 1 << 8,
+		Close = 1 << 9,
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+	}
+
+	/// <summary>
+	/// Flags for <see cref="AToolbar"/> constructor.
+	/// </summary>
+	[Flags]
+	public enum TBCtor
 	{
 		/// <summary>
-		/// Horizontal distance from the owner's left edge to the toolbar's left edge (right if <see cref="TBAnchor.OppositeToolbarEdgeX"/>).
+		/// Don't load saved settings. Delete the settings file of the toolbar, if exists.
 		/// </summary>
-		public int Left { get; set; }
+		ResetSettings = 1,
 
 		/// <summary>
-		/// Vertical distance from the owner's top edge to the toolbar's top edge (bottom if <see cref="TBAnchor.OppositeToolbarEdgeY"/>).
+		/// Don't load and save settings. No file will be created or opened.
 		/// </summary>
-		public int Top { get; set; }
+		DontSaveSettings = 2,
+	}
+
+	//rejected
+	//Instead of TBCtor etc could be used this class.
+	//Example: AToolbar.Next.ResetSettings = true; var t = new AToolbar("name");
+	//public class TBNext
+	//{
+	//	public bool ResetSettings { get; set; }
+	//	public bool DontSaveSettings { get; set; }
+	//	public string Name { get; set; }
+
+	//	internal void Clear_()
+	//	{
+	//		ResetSettings = false;
+	//		DontSaveSettings = false;
+	//		Name = null;
+	//	}
+	//}
+	//in AToolbar class:
+	//public static TBNext Next => t_next ??= new TBNext();
+	//[ThreadStatic] static TBNext t_next;
+	//And remove all flags/ctorFlags parameters.
+
+	/// <summary>
+	/// Used with <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
+	/// </summary>
+	/// <remarks>
+	/// Allows a toolbar to follow an object in the owner window, for example an accessible object or image. Or to hide in certain conditions.
+	/// Define a class that implements this interface. Create a variable of that class and pass it to <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
+	/// The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
+	/// </remarks>
+	public interface ITBOwnerObject
+	{
+		/// <summary>
+		/// Returns false to close the toolbar.
+		/// </summary>
+		/// <remarks>
+		/// Not called if the owner window is invisible or cloaked or minimized.
+		/// The default implementation returns true.
+		/// </remarks>
+		bool IsAlive => true;
 
 		/// <summary>
-		/// Horizontal distance from the toolbar's right edge (left if <see cref="TBAnchor.OppositeToolbarEdgeX"/>) to the owner's right edge.
+		/// Returns false to hide the toolbar temporarily.
 		/// </summary>
-		public int Right { get; set; }
+		/// <remarks>
+		/// Not called if the owner window is invisible or cloaked or minimized.
+		/// The default implementation returns true.
+		/// </remarks>
+		bool IsVisible => true;
 
 		/// <summary>
-		/// Vertical distance from the toolbar's bottom edge (top if <see cref="TBAnchor.OppositeToolbarEdgeY"/>) to the owner's bottom edge.
+		/// Gets object rectangle.
+		/// Returns false if failed.
 		/// </summary>
-		public int Bottom { get; set; }
-
-		/// <summary>
-		/// Sets all properties.
-		/// </summary>
-		public TBOffsets(int left, int top, int right, int bottom)
-		{
-			Left = left; Top = top; Right = right; Bottom = bottom;
-		}
-
-		///
-		public bool Equals(TBOffsets other)
-			=> other.Left == this.Left && other.Top == this.Top && other.Right == this.Right && other.Bottom == this.Bottom;
-
-		///
-		public override string ToString() => $"{Left} {Top} {Right} {Bottom}";
+		/// <param name="r">Rectangle in screen coordinates.</param>
+		/// <remarks>
+		/// Not called if the owner window is invisible or cloaked or minimized or if <see cref="IsVisible"/> returned false.
+		/// </remarks>
+		bool GetRect(out RECT r);
 	}
 
 	/// <summary>
@@ -224,19 +339,30 @@ namespace Au.Types
 			switch(ts.LayoutStyle) {
 			case ToolStripLayoutStyle.HorizontalStackWithOverflow:
 			case ToolStripLayoutStyle.Table:
-				throw new InvalidOperationException("Cannot use groups with this LayoutStyle");
+				AWarning.Write("This layout cannot be used with groups.");
+				ts.LayoutStyle = ToolStripLayoutStyle.Flow;
+				break;
 			}
 			if(ts.LayoutSettings is FlowLayoutSettings f1) {
 				switch(f1.FlowDirection) {
 				case FlowDirection.TopDown:
 				case FlowDirection.BottomUp:
-					throw new InvalidOperationException("Cannot use groups with this FlowDirection");
+					AWarning.Write("This FlowDirection cannot be used with groups.");
+					f1.FlowDirection = FlowDirection.LeftToRight;
+					break;
 				}
 			}
 
 			this.AutoSize = false;
-			this.Size = new Size(3, name.NE() ? 3 : TextRenderer.MeasureText("A", ts.Font).Height + 3);
-			if(name != null) this.AccessibleName = this.Name = name;
+			Size z;
+			if(name.NE()) z = new Size(3, 3);
+			else {
+				z = TextRenderer.MeasureText(name, ts.Font);
+				z.Width += 20; z.Height += 3;
+				this.AccessibleName = this.Name = name;
+			}
+			this.Size = z;
+
 			var a = ts.Items;
 			a.Add(this);
 			if(ts.LayoutSettings is FlowLayoutSettings f2) {
@@ -265,43 +391,6 @@ namespace Au.Types
 		//		}
 		//	}
 		//}
-	}
-
-	/// <summary>
-	/// Used with <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
-	/// </summary>
-	/// <remarks>
-	/// Allows a toolbar to follow an object in the owner window, for example an accessible object or image. Or to hide in certain conditions.
-	/// Define a class that implements this interface. Create a variable of that class and pass it to <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
-	/// The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
-	/// </remarks>
-	public interface ITBOwnerObject
-	{
-		/// <summary>
-		/// Returns false to close the toolbar.
-		/// </summary>
-		/// <remarks>
-		/// Not called if the owner window is invisible or cloaked or minimized.
-		/// </remarks>
-		bool IsAlive { get; }
-
-		/// <summary>
-		/// Returns false to hide the toolbar temporarily.
-		/// </summary>
-		/// <remarks>
-		/// Not called if the owner window is invisible or cloaked or minimized.
-		/// </remarks>
-		bool IsVisible { get; }
-
-		/// <summary>
-		/// Gets object rectangle.
-		/// Returns false if failed.
-		/// </summary>
-		/// <param name="r">Rectangle in screen coordinates.</param>
-		/// <remarks>
-		/// Not called if the owner window is invisible or cloaked or minimized or if <see cref="IsVisible"/> returned false.
-		/// </remarks>
-		bool GetRect(out RECT r);
 	}
 
 	/// <summary>
@@ -370,7 +459,7 @@ namespace Au.Types
 				//draw text
 				var s = k.Name;
 				if(!s.NE()) {
-					var r = new Rectangle(dr.X, y + 1, dr.Width, k.Height - 1);
+					var r = new Rectangle(dr.X - 1, y + 1, dr.Width, k.Height - 1);
 					var f = TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix;
 					TextRenderer.DrawText(g, " " + s + " ", ts.Font, r, customForeColor ? foreColor : SystemColors.GrayText, ts.BackColor, f);
 				}

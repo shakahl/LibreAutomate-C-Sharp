@@ -52,6 +52,12 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool SetHandleInformation(IntPtr hObject, uint dwMask, uint dwFlags);
 
+		[DllImport("kernel32.dll", EntryPoint = "CreateMutexW", SetLastError = true)]
+		internal static extern IntPtr CreateMutex(SECURITY_ATTRIBUTES lpMutexAttributes, bool bInitialOwner, string lpName);
+
+		[DllImport("kernel32.dll", SetLastError = true)]
+		internal static extern bool ReleaseMutex(IntPtr hMutex);
+
 		[DllImport("kernel32.dll")]
 		internal static extern IntPtr GetCurrentThread();
 

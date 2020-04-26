@@ -231,7 +231,7 @@ static class CiSnippets
 	public static void Commit(SciCode doc, CiComplItem item, int codeLenDiff)
 	{
 		var snippet = item as _CiComplItemSnippet;
-		string s;
+		string s, usingDir = null;
 		var ci = item.ci;
 		int pos = ci.Span.Start, endPos = pos + ci.Span.Length + codeLenDiff;
 
@@ -277,14 +277,18 @@ static class CiSnippets
 				s = before + "\r\n" + s;
 			}
 
-			//replace $guid$ with new GUID. Note: can be in the 'before' code.
+			//replace $guid$ and $random$. Note: can be in the 'before' code.
 			int j = s.Find("$guid$");
 			if(j >= 0) s = s.ReplaceAt(j, 6, Guid.NewGuid().ToString());
+			j = s.Find("$random$");
+			if(j >= 0) s = s.ReplaceAt(j, 8, new Random().Next().ToString());
 
 			//remove ';' if in =>
 			if(s.Ends(';') && s_context == _Context.Arrow) {
 				if(doc.Text.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
 			}
+
+			usingDir = x.Attr("using");
 		}
 
 		//if multiline, add indentation
@@ -311,7 +315,6 @@ static class CiSnippets
 		}
 
 		//maybe need a using directive
-		var usingDir = snippet.x.Attr("using");
 		if(usingDir != null) {
 			int len1 = doc.Len16;
 			if(InsertCode.UsingDirective(usingDir)) {

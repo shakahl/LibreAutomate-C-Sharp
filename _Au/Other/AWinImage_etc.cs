@@ -40,7 +40,7 @@ namespace Au
 		/// AWnd w = AWnd.Find("* Notepad");
 		/// w.Activate();
 		/// using(var b = AWinImage.Capture(w.Rect)) { b.Save(file); }
-		/// AExec.Run(file);
+		/// AFile.Run(file);
 		/// ]]></code>
 		/// </example>
 		public static Bitmap Capture(RECT rect)

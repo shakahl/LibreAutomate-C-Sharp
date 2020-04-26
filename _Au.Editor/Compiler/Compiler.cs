@@ -1,3 +1,5 @@
+//#define PDB_EMBEDDED
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -207,9 +209,12 @@ namespace Au.Compiler
 					//	Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''
 					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 				} else {
+#if PDB_EMBEDDED
+					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded); //no, it is difficult to extract, because we load assembly from byte[] to avoid locking. We instead append portable PDB stream to the assembly stream.
+#else
 					pdbStream = new MemoryStream();
-					//eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded); //no, it is difficult to extract, because we load assembly from byte[] to avoid locking. We instead append portable PDB stream to the assembly stream.
 					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
+#endif
 					//adds < 1 KB; almost the same compiling speed. Separate pdb file is 14 KB; 2 times slower compiling, slower loading.
 				}
 #endif
@@ -268,9 +273,11 @@ namespace Au.Compiler
 					asmStream.CopyTo(fileStream);
 
 					if(m.OutputPath == null) {
+#if !PDB_EMBEDDED
 						pdbStream.Position = 0;
 						pdbStream.CopyTo(fileStream);
 						r.pdbOffset = (int)asmStream.Length;
+#endif
 					} else {
 #if PDB
 						pdbStream.Position = 0;

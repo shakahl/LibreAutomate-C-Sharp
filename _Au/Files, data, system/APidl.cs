@@ -271,7 +271,7 @@ namespace Au
 		/// Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
 		/// </summary>
 		/// <remarks>
-		/// The string can be used with some functions of this library, mostly of classes <b>AExec</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
+		/// The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
 		/// </remarks>
 		public string ToBase64String()
 		{

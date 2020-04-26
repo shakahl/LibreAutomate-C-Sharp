@@ -17,7 +17,7 @@ void HotkeyTriggers() {
 		
 		hk["Ctrl+Alt+K"] = o => AOutput.Write("trigger action example 1", o.Trigger); //it means: when I press Ctrl+Alt+K, execute trigger action AOutput.Write(...)
 		hk["Ctrl+Shift+F11"] = o => { //multiple statements. To hide the code, click the [-] box at the left.
-			var w1 = AWnd.FindOrRun("* Notepad", run: () => AExec.Run(AFolders.System + "notepad.exe"));
+			var w1 = AWnd.FindOrRun("* Notepad", run: () => AFile.Run(AFolders.System + "notepad.exe"));
 			AKeys.Text("trigger action example 2");
 			500.ms();
 			w1.Close();

@@ -13,9 +13,9 @@ using Au.Types;
 namespace Aga.Controls.Tree
 {
 	[TypeConverter(typeof(TreeColumn.TreeColumnConverter)), DesignTimeVisible(false), ToolboxItem(false)]
-	public class TreeColumn :Component
+	public class TreeColumn : Component
 	{
-		private class TreeColumnConverter :ComponentConverter
+		private class TreeColumnConverter : ComponentConverter
 		{
 			public TreeColumnConverter()
 				: base(typeof(TreeColumn))
@@ -34,24 +34,22 @@ namespace Aga.Controls.Tree
 
 		private TextFormatFlags _headerFlags;
 		private TextFormatFlags _baseHeaderFlags = TextFormatFlags.NoPadding |
-												   TextFormatFlags.EndEllipsis |
-												   TextFormatFlags.VerticalCenter |
-												TextFormatFlags.PreserveGraphicsTranslateTransform;
+			TextFormatFlags.EndEllipsis |
+			TextFormatFlags.VerticalCenter |
+			TextFormatFlags.PreserveGraphicsTranslateTransform
+			| TextFormatFlags.NoPrefix; //Au
 
 		#region Properties
 
 		private TreeColumnCollection _owner;
-		internal TreeColumnCollection Owner
-		{
+		internal TreeColumnCollection Owner {
 			get { return _owner; }
 			set { _owner = value; }
 		}
 
 		[Browsable(false)]
-		public int Index
-		{
-			get
-			{
+		public int Index {
+			get {
 				if(Owner != null)
 					return Owner.IndexOf(this);
 				else
@@ -61,11 +59,9 @@ namespace Aga.Controls.Tree
 
 		private string _header;
 		[Localizable(true)]
-		public string Header
-		{
+		public string Header {
 			get { return _header; }
-			set
-			{
+			set {
 				_header = value;
 				OnHeaderChanged();
 			}
@@ -73,22 +69,18 @@ namespace Aga.Controls.Tree
 
 		private string _tooltipText;
 		[Localizable(true)]
-		public string TooltipText
-		{
+		public string TooltipText {
 			get { return _tooltipText; }
 			set { _tooltipText = value; }
 		}
 
 		private int _width;
 		[DefaultValue(50), Localizable(true)]
-		public int Width
-		{
-			get
-			{
+		public int Width {
+			get {
 				return _width;
 			}
-			set
-			{
+			set {
 				if(_width != value) {
 					_width = Math.Max(MinColumnWidth, value);
 					if(_maxColumnWidth > 0) {
@@ -101,11 +93,9 @@ namespace Aga.Controls.Tree
 
 		private int _minColumnWidth;
 		[DefaultValue(0)]
-		public int MinColumnWidth
-		{
+		public int MinColumnWidth {
 			get { return _minColumnWidth; }
-			set
-			{
+			set {
 				if(value < 0)
 					throw new ArgumentOutOfRangeException("value");
 
@@ -116,11 +106,9 @@ namespace Aga.Controls.Tree
 
 		private int _maxColumnWidth;
 		[DefaultValue(0)]
-		public int MaxColumnWidth
-		{
+		public int MaxColumnWidth {
 			get { return _maxColumnWidth; }
-			set
-			{
+			set {
 				if(value < 0)
 					throw new ArgumentOutOfRangeException("value");
 
@@ -132,11 +120,9 @@ namespace Aga.Controls.Tree
 
 		private bool _visible = true;
 		[DefaultValue(true)]
-		public bool IsVisible
-		{
+		public bool IsVisible {
 			get { return _visible; }
-			set
-			{
+			set {
 				_visible = value;
 				OnIsVisibleChanged();
 			}
@@ -144,11 +130,9 @@ namespace Aga.Controls.Tree
 
 		private HorizontalAlignment _textAlign = HorizontalAlignment.Left;
 		[DefaultValue(HorizontalAlignment.Left)]
-		public HorizontalAlignment TextAlign
-		{
+		public HorizontalAlignment TextAlign {
 			get { return _textAlign; }
-			set
-			{
+			set {
 				if(value != _textAlign) {
 					_textAlign = value;
 					_headerFlags = _baseHeaderFlags | TextHelper.TranslateAligmentToFlag(value);
@@ -159,18 +143,15 @@ namespace Aga.Controls.Tree
 
 		private bool _sortable = false;
 		[DefaultValue(false)]
-		public bool Sortable
-		{
+		public bool Sortable {
 			get { return _sortable; }
 			set { _sortable = value; }
 		}
 
 		private SortOrder _sort_order = SortOrder.None;
-		public SortOrder SortOrder
-		{
+		public SortOrder SortOrder {
 			get { return _sort_order; }
-			set
-			{
+			set {
 				if(value == _sort_order)
 					return;
 				_sort_order = value;
@@ -178,10 +159,8 @@ namespace Aga.Controls.Tree
 			}
 		}
 
-		public Size SortMarkSize
-		{
-			get
-			{
+		public Size SortMarkSize {
+			get {
 				if(Application.RenderWithVisualStyles)
 					return new Size(9, 5);
 				else
@@ -199,7 +178,7 @@ namespace Aga.Controls.Tree
 		{
 			_header = header;
 			_width = width;
-			_headerFlags = _baseHeaderFlags | TextFormatFlags.Left;
+			_headerFlags = _baseHeaderFlags;
 		}
 
 		public override string ToString()
@@ -243,7 +222,7 @@ namespace Aga.Controls.Tree
 			if(SortOrder != SortOrder.None)
 				innerBounds.Width -= (SortMarkSize.Width + SortOrderMarkMargin);
 
-			Size maxTextSize = TextRenderer.MeasureText(gr, Header, font, innerBounds.Size, TextFormatFlags.NoPadding);
+			Size maxTextSize = TextRenderer.MeasureText(gr, Header, font, innerBounds.Size, TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix);
 			Size textSize = TextRenderer.MeasureText(gr, Header, font, innerBounds.Size, _baseHeaderFlags);
 
 			if(SortOrder != SortOrder.None) {
@@ -259,10 +238,9 @@ namespace Aga.Controls.Tree
 				DrawSortMark(gr, bounds, x);
 			}
 
-			//au: TextRenderer.DrawText bug workaround: use DrawString.
-			var f = (textSize.Width < maxTextSize.Width) ? _baseHeaderFlags | TextFormatFlags.Left : _headerFlags;
-			if(memoryBitmap)
-				gr.DrawString(Header, font, SystemBrushes.ControlText, innerBounds);
+			var f = (textSize.Width < maxTextSize.Width) ? _baseHeaderFlags : _headerFlags;
+			if(memoryBitmap) //au: TextRenderer.DrawText bug workaround: use backColor.
+				TextRenderer.DrawText(gr, Header, font, innerBounds, SystemColors.ControlText, SystemColors.Control, f);
 			else
 				TextRenderer.DrawText(gr, Header, font, innerBounds, SystemColors.ControlText, f);
 		}

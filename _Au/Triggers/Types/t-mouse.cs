@@ -58,17 +58,23 @@ namespace Au.Triggers
 	public class MouseTrigger : ActionTrigger
 	{
 		internal readonly KMod modMasked, modMask;
-		internal readonly TMFlags flags;
-		internal readonly TMScreen screenIndex;
-		string _paramsString;
+		readonly TMFlags _flags;
+		readonly TMKind _kind;
+		readonly byte _data;
+		readonly TMScreen _screenIndex;
+		readonly string _paramsString;
 
-		internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action, KMod mod, KMod modAny, TMFlags flags, TMScreen screen, string paramsString) : base(triggers, action, true)
+		internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action,
+			TMKind kind, byte data, KMod mod, KMod modAny, TMFlags flags, TMScreen screenIndex,
+			string paramsString) : base(triggers, action, true)
 		{
 			const KMod csaw = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win;
 			modMask = ~modAny & csaw;
 			modMasked = mod & modMask;
-			this.flags = flags;
-			this.screenIndex = screen;
+			_flags = flags;
+			_kind = kind;
+			_data = data;
+			_screenIndex = screenIndex;
 			_paramsString = paramsString;
 		}
 
@@ -85,7 +91,25 @@ namespace Au.Triggers
 		public override string ParamsString => _paramsString;
 
 		///
-		public TMFlags Flags => flags;
+		public TMKind Kind => _kind;
+
+		///
+		public TMClick Button => _kind == TMKind.Click ? (TMClick)_data : default;
+
+		///
+		public TMWheel Wheel => _kind == TMKind.Wheel ? (TMWheel)_data : default;
+
+		///
+		public TMEdge Edge => _kind == TMKind.Edge ? (TMEdge)_data : default;
+
+		///
+		public TMMove Move => _kind == TMKind.Move ? (TMMove)_data : default;
+
+		///
+		public TMScreen ScreenIndex => _screenIndex;
+
+		///
+		public TMFlags Flags => _flags;
 	}
 
 	/// <summary>
@@ -94,8 +118,6 @@ namespace Au.Triggers
 	/// <example> See <see cref="ActionTriggers"/>.</example>
 	public class MouseTriggers : ITriggers, IEnumerable<MouseTrigger>
 	{
-		enum ESubtype : byte { Click, Wheel, Edge, Move }
-
 		ActionTriggers _triggers;
 		Dictionary<int, ActionTrigger> _d = new Dictionary<int, ActionTrigger>();
 
@@ -120,7 +142,7 @@ namespace Au.Triggers
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMClick button, string modKeys = null, TMFlags flags = 0] {
 			set {
-				var t = _Add(value, ESubtype.Click, modKeys, flags, (byte)button, 0, button.ToString());
+				_Add(value, TMKind.Click, (byte)button, modKeys, flags, default, button.ToString());
 			}
 		}
 
@@ -135,7 +157,7 @@ namespace Au.Triggers
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMWheel direction, string modKeys = null, TMFlags flags = 0] {
 			set {
-				var t = _Add(value, ESubtype.Wheel, modKeys, flags, (byte)direction, 0, direction.ToString());
+				_Add(value, TMKind.Wheel, (byte)direction, modKeys, flags, default, direction.ToString());
 			}
 		}
 
@@ -155,7 +177,7 @@ namespace Au.Triggers
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {
-				var t = _Add(value, ESubtype.Edge, modKeys, flags, (byte)edge, screen, edge.ToString());
+				_Add(value, TMKind.Edge, (byte)edge, modKeys, flags, screen, edge.ToString());
 			}
 		}
 
@@ -171,21 +193,21 @@ namespace Au.Triggers
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {
-				var t = _Add(value, ESubtype.Move, modKeys, flags, (byte)move, screen, move.ToString());
+				_Add(value, TMKind.Move, (byte)move, modKeys, flags, screen, move.ToString());
 			}
 		}
 
-		MouseTrigger _Add(Action<MouseTriggerArgs> f, ESubtype subtype, string modKeys, TMFlags flags, byte data, TMScreen screen, string sData)
+		MouseTrigger _Add(Action<MouseTriggerArgs> f, TMKind kind, byte data, string modKeys, TMFlags flags, TMScreen screen, string sData)
 		{
 			_triggers.ThrowIfRunning_();
 			bool noMod = modKeys.NE();
 
 			string ps;
 			using(new Util.StringBuilder_(out var b)) {
-				b.Append(subtype.ToString()).Append(' ').Append(sData);
+				b.Append(kind.ToString()).Append(' ').Append(sData);
 				b.Append(" + ").Append(noMod ? "none" : (modKeys == "?" ? "any" : modKeys));
 				if(flags != 0) b.Append(" (").Append(flags.ToString()).Append(')');
-				if(subtype == ESubtype.Edge || subtype == ESubtype.Move) {
+				if(kind == TMKind.Edge || kind == TMKind.Move) {
 					if(screen == 0) b.Append(", primary screen");
 					else if(screen > 0) b.Append(", non-primary screen ").Append((int)screen);
 					else if(screen == TMScreen.Any) b.Append(", any screen");
@@ -197,24 +219,24 @@ namespace Au.Triggers
 
 			KMod mod = 0, modAny = 0;
 			if(noMod) {
-				if(flags.HasAny(subtype == ESubtype.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
+				if(flags.HasAny(kind == TMKind.Click ? TMFlags.LeftMod | TMFlags.RightMod : TMFlags.LeftMod | TMFlags.RightMod | TMFlags.ButtonModUp)) throw new ArgumentException("Invalid flags.");
 			} else {
 				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
-			var t = new MouseTrigger(_triggers, f, mod, modAny, flags, screen, ps);
-			t.DictAdd(_d, _DictKey(subtype, data));
+			var t = new MouseTrigger(_triggers, f, kind, data, mod, modAny, flags, screen, ps);
+			t.DictAdd(_d, _DictKey(kind, data));
 			_lastAdded = t;
 			UsedHookEvents_ |= HooksThread.UsedEvents.Mouse; //just sets the hook
-			UsedHookEvents_ |= subtype switch
+			UsedHookEvents_ |= kind switch
 			{
-				ESubtype.Click => HooksThread.UsedEvents.MouseClick,
-				ESubtype.Wheel => HooksThread.UsedEvents.MouseWheel,
+				TMKind.Click => HooksThread.UsedEvents.MouseClick,
+				TMKind.Wheel => HooksThread.UsedEvents.MouseWheel,
 				_ => HooksThread.UsedEvents.MouseEdgeMove,
 			};
 			return t;
 		}
 
-		static int _DictKey(ESubtype subtype, byte data) => (data << 8) | (byte)subtype;
+		static int _DictKey(TMKind kind, byte data) => (data << 8) | (byte)kind;
 
 		/// <summary>
 		/// The last added trigger.
@@ -240,7 +262,7 @@ namespace Au.Triggers
 			//AOutput.Write(k.Event, k.pt);
 			Debug.Assert(!k.IsInjectedByAu); //server must ignore
 
-			ESubtype subtype;
+			TMKind kind;
 			byte data;
 
 			if(k.IsButton) {
@@ -263,67 +285,67 @@ namespace Au.Triggers
 				}
 				if(k.Event == _eatUp) _eatUp = 0;
 
-				subtype = ESubtype.Click;
-				TMClick b;
-				switch(k.Event) {
-				case HookData.MouseEvent.LeftButton: b = TMClick.Left; break;
-				case HookData.MouseEvent.RightButton: b = TMClick.Right; break;
-				case HookData.MouseEvent.MiddleButton: b = TMClick.Middle; break;
-				case HookData.MouseEvent.X1Button: b = TMClick.X1; break;
-				default: b = TMClick.X2; break;
-				}
+				kind = TMKind.Click;
+				var b = k.Event switch
+				{
+					HookData.MouseEvent.LeftButton => TMClick.Left,
+					HookData.MouseEvent.RightButton => TMClick.Right,
+					HookData.MouseEvent.MiddleButton => TMClick.Middle,
+					HookData.MouseEvent.X1Button => TMClick.X1,
+					_ => TMClick.X2,
+				};
 				data = (byte)b;
 			} else { //wheel
-				subtype = ESubtype.Wheel;
-				TMWheel b;
-				switch(k.Event) {
-				case HookData.MouseEvent.WheelForward: b = TMWheel.Forward; break;
-				case HookData.MouseEvent.WheelBackward: b = TMWheel.Backward; break;
-				case HookData.MouseEvent.WheelLeft: b = TMWheel.Left; break;
-				default: b = TMWheel.Right; break;
-				}
+				kind = TMKind.Wheel;
+				var b = k.Event switch
+				{
+					HookData.MouseEvent.WheelForward => TMWheel.Forward,
+					HookData.MouseEvent.WheelBackward => TMWheel.Backward,
+					HookData.MouseEvent.WheelLeft => TMWheel.Left,
+					_ => TMWheel.Right,
+				};
 				data = (byte)b;
 			}
 
-			return _HookProc2(thc, false, subtype, k.Event, k.pt, data, 0);
+			return _HookProc2(thc, false, kind, k.Event, k.pt, data, 0);
 		}
 
 		internal void HookProcEdgeMove(EdgeMoveDetector_.Result d, TriggerHookContext thc) //d not in
 		{
-			ESubtype subtype;
+			TMKind kind;
 			byte data, dataAnyPart;
 
 			if(d.edgeEvent != 0) {
-				subtype = ESubtype.Edge;
+				kind = TMKind.Edge;
 				data = (byte)d.edgeEvent; dataAnyPart = (byte)d.edgeEventAnyPart;
 			} else {
-				subtype = ESubtype.Move;
+				kind = TMKind.Move;
 				data = (byte)d.moveEvent; dataAnyPart = (byte)d.moveEventAnyPart;
 			}
 
-			_HookProc2(thc, true, subtype, HookData.MouseEvent.Move, d.pt, data, dataAnyPart);
+			_HookProc2(thc, true, kind, HookData.MouseEvent.Move, d.pt, data, dataAnyPart);
 		}
 
-		bool _HookProc2(TriggerHookContext thc, bool isEdgeMove, ESubtype subtype, HookData.MouseEvent mEvent, POINT pt, byte data, byte dataAnyPart)
+		bool _HookProc2(TriggerHookContext thc, bool isEdgeMove, TMKind kind, HookData.MouseEvent mEvent, POINT pt, byte data, byte dataAnyPart)
 		{
 			var mod = TrigUtil.GetModLR(out var modL, out var modR) | _eatMod;
 			MouseTriggerArgs args = null;
 			g1:
-			if(_d.TryGetValue(_DictKey(subtype, data), out var v)) {
+			if(_d.TryGetValue(_DictKey(kind, data), out var v)) {
 				if(!isEdgeMove) thc.UseWndFromPoint(pt);
 				for(; v != null; v = v.next) {
 					var x = v as MouseTrigger;
 					if((mod & x.modMask) != x.modMasked) continue;
 
-					switch(x.flags & (TMFlags.LeftMod | TMFlags.RightMod)) {
+					switch(x.Flags & (TMFlags.LeftMod | TMFlags.RightMod)) {
 					case TMFlags.LeftMod: if(modL != mod) continue; break;
 					case TMFlags.RightMod: if(modR != mod) continue; break;
 					}
 
-					if(isEdgeMove && x.screenIndex != TMScreen.Any) {
-						var screen = x.screenIndex == TMScreen.OfActiveWindow
+					if(isEdgeMove && x.ScreenIndex != TMScreen.Any) {
+						var screen = x.ScreenIndex == TMScreen.OfActiveWindow
 							? AScreen.Of(AWnd.Active)
-							: AScreen.Index((int)x.screenIndex);
+							: AScreen.Index((int)x.ScreenIndex);
 						if(!screen.Bounds.Contains(pt)) continue;
 					}
 
@@ -336,10 +358,10 @@ namespace Au.Triggers
 
 					if(x.action == null) {
 						_ResetUp();
-					} else if(0 != (x.flags & TMFlags.ButtonModUp) && (mod != 0 || subtype == ESubtype.Click)) {
+					} else if(0 != (x.Flags & TMFlags.ButtonModUp) && (mod != 0 || kind == TMKind.Click)) {
 						_upTrigger = x;
 						_upArgs = args;
-						_upEvent = subtype == ESubtype.Click ? mEvent : 0;
+						_upEvent = kind == TMKind.Click ? mEvent : 0;
 						_upMod = mod;
 					} else {
 						thc.trigger = x;
@@ -354,8 +376,8 @@ namespace Au.Triggers
 					}
 
 					//AOutput.Write(mEvent, pt, mod);
-					if(isEdgeMove || 0 != (x.flags & TMFlags.ShareEvent)) return false;
-					if(subtype == ESubtype.Click) _eatUp = mEvent;
+					if(isEdgeMove || 0 != (x.Flags & TMFlags.ShareEvent)) return false;
+					if(kind == TMKind.Click) _eatUp = mEvent;
 					return true;
 				}
 			}
@@ -720,15 +742,21 @@ namespace Au.Triggers
 	}
 
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+
+	/// <summary>
+	/// What kind of mouse triggers.
+	/// </summary>
+	public enum TMKind : byte { Click, Wheel, Edge, Move }
+
 	/// <summary>
 	/// Button for mouse click triggers.
 	/// </summary>
-	public enum TMClick : byte { Left, Right, Middle, X1, X2 }
+	public enum TMClick : byte { Left = 1, Right, Middle, X1, X2 }
 
 	/// <summary>
 	/// Mouse wheel direction for mouse wheel triggers.
 	/// </summary>
-	public enum TMWheel : byte { Forward, Backward, Left, Right }
+	public enum TMWheel : byte { Forward = 1, Backward, Left, Right }
 
 	/// <summary>
 	/// Screen edge for mouse edge triggers.

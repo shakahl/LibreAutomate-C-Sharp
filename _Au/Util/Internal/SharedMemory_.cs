@@ -38,17 +38,15 @@ namespace Au.Util
 		internal AOutputServer.SharedMemoryData_ outp;
 		internal Triggers.ActionTriggers.SharedMemoryData_ triggers;
 		internal AHookWin.SharedMemoryData_ winHook;
+		internal APerf.Local perf;
 
 		#endregion
 
-		/// <summary>
-		/// Shared memory size.
-		/// </summary>
-		internal const int Size = 0x10000;
+		const int c_size = 0x10000;
 
 		static SharedMemory_()
 		{
-			Ptr = (SharedMemory_*)CreateOrGet("Au_SM_0x10000", Size, out var created);
+			Ptr = (SharedMemory_*)CreateOrGet("Au_SM_0x10000", c_size, out var created);
 #if DEBUG
 			if(created) { //must be zero-inited, it's documented
 				int* p = (int*)Ptr;
@@ -79,7 +77,9 @@ namespace Au.Util
 		/// </remarks>
 		public static void* CreateOrGet(string name, uint size, out bool created)
 		{
-			Debug.Assert(AppDomain.CurrentDomain.IsDefaultAppDomain());
+			//CONSIDER: don't use Api.SECURITY_ATTRIBUTES.ForLowIL. Speed with it 2.7 ms, without 1.7 ms.
+			//	But then cannot use this library in low IL processes. Probably never used anyway.
+			//	Try to move everything to the cpp dll.
 
 			created = false;
 			var hm = Api.CreateFileMapping((IntPtr)~0, Api.SECURITY_ATTRIBUTES.ForLowIL, Api.PAGE_READWRITE, 0, size, name);

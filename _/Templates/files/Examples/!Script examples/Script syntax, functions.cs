@@ -35,7 +35,7 @@ AOutput.Write("Main script code.");
 
 ADialog.Show("Message box.");
 
-AExec.Run(AFolders.System + "notepad.exe");
+AFile.Run(AFolders.System + "notepad.exe");
 var w = AWnd.Wait(0, true, "*- Notepad");
 AKeys.Key("F5 Enter*2");
 AKeys.Text(w.Name);

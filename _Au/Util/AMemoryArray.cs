@@ -201,6 +201,8 @@ namespace Au.Util
 		//}
 	}
 
+	//FUTURE: SkipLocalsInitAttribute probably will be added in C# 9 and .NET 5.
+	//	I guess .NET 5 also will add a "MemoryBufferOnStackOrHeap" class that uses the attribute.
 
 	//Tried to create a fast memory buffer class, eg for calling API.
 	//Failed, because compiler memsets the buffer. If buffer size is > 1000, it is slower than HeapAlloc/HeapFree.

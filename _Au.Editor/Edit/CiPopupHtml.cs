@@ -133,7 +133,7 @@ class CiPopupHtml
 				} else if(s.Starts('|')) { //go to symbol source file/position or web page
 					CiGoTo.LinkGoTo(s, _w);
 				} else {
-					AExec.TryRun(s);
+					AFile.TryRun(s);
 				}
 			};
 		}

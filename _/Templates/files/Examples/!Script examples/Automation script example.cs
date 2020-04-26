@@ -6,7 +6,7 @@ partial class Script : AScript { [STAThread] static void Main(string[] a) => new
 
 AOutput.Write("The programming language is C#.");
 if (ADialog.ShowYesNo("Run Notepad?", "The script will add some text and close Notepad after 2 s.")) {
-	AExec.Run(AFolders.System + @"Notepad.exe");
+	AFile.Run(AFolders.System + @"Notepad.exe");
 	var w = AWnd.Wait(5, active: true, "*- Notepad"); //to create this code can be used the Code menu
 	50.ms();
 	AKeys.Text("some text");

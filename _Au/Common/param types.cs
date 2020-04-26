@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Forms;
+using System.Diagnostics.CodeAnalysis;
 //using System.Linq;
 
 
@@ -118,7 +119,7 @@ namespace Au.Types
 	/// Also there are functions to convert <b>Coord</b> to normal coodinates.
 	/// </remarks>
 	[DebuggerStepThrough]
-	public struct Coord
+	public struct Coord : IEquatable<Coord>
 	{
 		//Use single long field that packs int and CoordType.
 		//If 2 fields (int and CoordType), 64-bit compiler creates huge calling code.
@@ -160,16 +161,15 @@ namespace Au.Types
 		/// </summary>
 		public static implicit operator Coord(float v) => Fraction(v);
 
-#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		///
 		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
 		public static implicit operator Coord(uint f) => default;
-
+		///
 		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
 		public static implicit operator Coord(long f) => default;
-
+		///
 		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
 		public static implicit operator Coord(ulong f) => default;
-#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -219,14 +219,20 @@ namespace Au.Types
 			return (x.Type > CoordType.Normal) || (y.Type > CoordType.Normal);
 		}
 
-		int _Normalize(int min, int max)
+		/// <summary>
+		/// Converts fractional/reverse coordinate to normal coordinate in a range.
+		/// </summary>
+		/// <param name="start">Start of range.</param>
+		/// <param name="end">End of range.</param>
+		public int NormalizeInRange(int start, int end)
 		{
-			switch(Type) {
-			case CoordType.Normal: return min + Value;
-			case CoordType.Reverse: return max - Value; //info: could subtract 1, then 0 would be in rectangle, but in some contexts it is not good
-			case CoordType.Fraction: return min + (int)((max - min) * FractionValue);
-			default: return 0;
-			}
+			return Type switch
+			{
+				CoordType.Normal => start + Value,
+				CoordType.Reverse => end - Value,
+				CoordType.Fraction => start + (int)((end - start) * FractionValue),
+				_ => 0,
+			};
 		}
 
 		/// <summary>
@@ -244,7 +250,7 @@ namespace Au.Types
 				if(x.IsEmpty) x = Center;
 				if(y.IsEmpty) y = Center;
 			}
-			return (x._Normalize(r.left, r.right), y._Normalize(r.top, r.bottom));
+			return (x.NormalizeInRange(r.left, r.right), y.NormalizeInRange(r.top, r.bottom));
 		}
 
 		/// <summary>
@@ -271,8 +277,8 @@ namespace Au.Types
 				} else if(_NeedRect(x, y)) {
 					r = w.ClientRect;
 				} else r = default;
-				p.x = x._Normalize(r.left, r.right);
-				p.y = y._Normalize(r.top, r.bottom);
+				p.x = x.NormalizeInRange(r.left, r.right);
+				p.y = y.NormalizeInRange(r.top, r.bottom);
 			}
 			return p;
 		}
@@ -299,8 +305,8 @@ namespace Au.Types
 					r = screen.GetScreenHandle().GetRect(workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
-				p.x = x._Normalize(r.left, r.right);
-				p.y = y._Normalize(r.top, r.bottom);
+				p.x = x.NormalizeInRange(r.left, r.right);
+				p.y = y.NormalizeInRange(r.top, r.bottom);
 			}
 			return p;
 		}
@@ -315,6 +321,15 @@ namespace Au.Types
 			default: return "default";
 			}
 		}
+
+		///
+		public bool Equals(Coord other) => other._v == _v; //IEquatable
+		///
+		public static bool operator ==(Coord a, Coord b) => a._v == b._v;
+		///
+		public static bool operator !=(Coord a, Coord b) => a._v != b._v;
+		///
+		public override int GetHashCode() => _v.GetHashCode();
 	}
 
 	/// <summary>

@@ -32,7 +32,7 @@ namespace Au
 			{
 				_m = am;
 				_isMain = isMain;
-				this.Name = _m._name;
+				this.Name = "AMenu.Control";
 				this.Text = _m._name;
 			}
 

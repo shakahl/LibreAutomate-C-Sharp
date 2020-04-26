@@ -21,13 +21,16 @@ namespace Au
 	{
 		class _Settings : Util.JSettings
 		{
-			public static _Settings Load(string file, bool useDefault = false) => _Load<_Settings>(file, useDefault);
+			public static _Settings Load(string file, bool useDefault) => _Load<_Settings>(file, useDefault);
 
 			public TBBorder border { get => _border; set => Set2(ref _border, value); }
 			TBBorder _border = TBBorder.Width2;
 
 			public int borderColor { get => _borderColor; set => Set(ref _borderColor, value); }
 			int _borderColor; //not ColorInt because in JSON it is saved as struct
+
+			public TBLayout layout { get => _layout; set => Set2(ref _layout, value); }
+			TBLayout _layout = TBLayout.Flow;
 
 			public TBAnchor anchor { get => _anchor; set => Set2(ref _anchor, value); }
 			TBAnchor _anchor = TBAnchor.TopLeft;

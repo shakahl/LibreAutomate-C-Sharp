@@ -444,7 +444,7 @@ To change all: replace the file.
 To backup: copy the file.
 
 To apply changes after deleting etc, restart this application.
-", icon: DIcon.Info, onLinkClick: e => { AExec.SelectInExplorer(e.LinkHref); });
+", icon: DIcon.Info, onLinkClick: e => { AFile.SelectInExplorer(e.LinkHref); });
 		};
 	}
 

@@ -441,7 +441,6 @@ namespace Au
 					lock("AVCyoRcQCkSl+3W8ZTi5oA") {
 						if(!_subscribedEventExit) {
 							var d = AppDomain.CurrentDomain;
-							Debug.Assert(d.IsDefaultAppDomain());
 							d.ProcessExit += _ProcessExit;
 							d.UnhandledException += _ProcessExit; //because ProcessExit is missing on exception
 							_subscribedEventExit = true;

@@ -34,9 +34,9 @@ namespace Au
 		/// In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
 		/// In other processes always returns <b>ExeProgram</b>.
 		/// </summary>
-		public static unsafe ATRole Role { get; private set; }
+		public static ATRole Role { get; private set; }
 
-		internal static unsafe void Init_(ATRole role, string name = null)
+		internal static void Init_(ATRole role, string name = null)
 		{
 			Role = role;
 			if(name != null) s_name = name;
@@ -99,12 +99,24 @@ namespace Au
 			if(needResult && !tr.Init()) throw new AuException("*get task results");
 
 			var data = Util.Serializer_.Serialize(script, args, tr.pipeName);
+			//APerf.SharedMemory.Next('x'); //TODO
 			int pid = (int)AWnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
+			//APerf.SharedMemory.Next('y');
 			switch((ERunResult)pid) {
 			case ERunResult.failed: throw new AuException("*start task");
 			case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
 			case ERunResult.editorThread: case ERunResult.deferred: return 0;
 			}
+			//TODO: don't throw if cannot start a green script because a green script is running.
+			//	Now prints warning and exception. Looks like a bug.
+			//	Return TRResult.
+			//	Or add TryRun.
+
+			//TODO: it seems now cannot start next green task for some time after the first is actually ended.
+			//	See maybe the process ends too slowly.
+			//	Eg if we start short script every 50-60 ms, cannot start every 2-nd script. OK if every 70 ms.
+
+			//TODO: too slowly starts preloaded task. Now 50 ms, while simple exe is 80 ms. Measured from before ATask.Run. Same if optimized.
 
 			if(0 != (mode & 1)) {
 				using var hProcess = WaitHandle_.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);

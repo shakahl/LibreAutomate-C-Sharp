@@ -19,7 +19,7 @@ namespace Au
 	/// <summary>
 	/// This class contains static functions to execute or open programs, other files, folders, web pages, etc.
 	/// </summary>
-	public static partial class AExec
+	public static partial class AFile
 	{
 		/// <summary>
 		/// Runs/opens a program, document, directory (folder), URL, new email, Control Panel item etc.
@@ -73,12 +73,12 @@ namespace Au
 		/// <example>
 		/// Run notepad and wait for its window.
 		/// <code><![CDATA[
-		/// AExec.Run("notepad.exe");
+		/// AFile.Run("notepad.exe");
 		/// AWnd w = AWnd.Wait(10, true, "*- Notepad", "Notepad");
 		/// ]]></code>
 		/// Run notepad or activate its window.
 		/// <code><![CDATA[
-		/// AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AExec.Run("notepad.exe"));
+		/// AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AFile.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
 		public static RResult Run(string file, string args = null, RFlags flags = 0, ROptions curDirEtc = null)
@@ -257,11 +257,11 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string v = "example";
-		/// int r1 = AExec.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
+		/// int r1 = AFile.RunConsole(@"Q:\Test\console1.exe", $@"/an ""{v}"" /etc");
 		/// 
-		/// int r2 = AExec.RunConsole(s => AOutput.Write(s), @"Q:\Test\console2.exe");
+		/// int r2 = AFile.RunConsole(s => AOutput.Write(s), @"Q:\Test\console2.exe");
 		/// 
-		/// int r3 = AExec.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
+		/// int r3 = AFile.RunConsole(out var text, @"Q:\Test\console3.exe", encoding: Encoding.UTF8);
 		/// AOutput.Write(text);
 		/// ]]></code>
 		/// </example>
@@ -434,14 +434,14 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="AExec.Run"/>.
+	/// Flags for <see cref="AFile.Run"/>.
 	/// </summary>
 	[Flags]
 	public enum RFlags
 	{
 		/// <summary>
 		/// Show error message box if fails, for example if file not found.
-		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="AExec.TryRun"/>.
+		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="AFile.TryRun"/>.
 		/// </summary>
 		ShowErrorUI = 1,
 
@@ -463,7 +463,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// More parameters for <see cref="AExec.Run"/>.
+	/// More parameters for <see cref="AFile.Run"/>.
 	/// </summary>
 	/// <remarks>
 	/// Implicit conversion from <b>string</b> sets <see cref="CurrentDirectory"/>.
@@ -508,7 +508,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Results of <see cref="AExec.Run"/>.
+	/// Results of <see cref="AFile.Run"/>.
 	/// </summary>
 	public class RResult
 	{
@@ -532,9 +532,9 @@ namespace Au.Types
 		/// null if no flag or if did not start new process (eg opened the document in an existing process) or if cannot get it.
 		/// </summary>
 		/// <example>
-		/// This code does the same as <c>AExec.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
+		/// This code does the same as <c>AFile.Run(@"notepad.exe", flags: SRFlags.WaitForExit);</c>
 		/// <code><![CDATA[
-		/// var r = AExec.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
+		/// var r = AFile.Run(@"notepad.exe", flags: SRFlags.NeedProcessHandle);
 		/// using(var h = r.ProcessHandle) h?.WaitOne();
 		/// ]]></code>
 		/// </example>
@@ -550,7 +550,7 @@ namespace Au.Types
 	}
 
 	///// <summary>
-	///// Flags for <see cref="AExec.RunConsole"/>.
+	///// Flags for <see cref="AFile.RunConsole"/>.
 	///// </summary>
 	//[Flags]
 	//public enum RCFlags

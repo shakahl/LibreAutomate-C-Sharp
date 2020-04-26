@@ -126,32 +126,33 @@ finally {  }]]>
 			<![CDATA[AMouse.Move($end$);]]>
 		</snippet>
 
-		<snippet name="trigAutotextSnippet" info="Add autotext trigger." using="Au.Triggers" before="var tt = Triggers.Autotext;" more="Where: \@Toolbars and triggers\Triggers\Autotext triggers. To create: menu File -> New -> Examples.">
+		<snippet name="trigAutotextSnippet" info="Add autotext trigger." using="Au.Triggers" before="var tt = Triggers.Autotext;" more="Where: \@Triggers and toolbars\Triggers\Autotext triggers. To create: menu File -> New -> Examples.">
 			<![CDATA[tt["$end$"] = o => {  };]]>
 		</snippet>
 
-		<snippet name="trigReplaceSnippet" info="Add autotext simple replacement trigger." using="Au.Triggers" before="var tr = Triggers.Autotext.SimpleReplace;" more="Where: \@Toolbars and triggers\Triggers\Autotext triggers. To create: menu File -> New -> Examples.">
+		<snippet name="trigReplaceSnippet" info="Add autotext simple replacement trigger." using="Au.Triggers" before="var tr = Triggers.Autotext.SimpleReplace;" more="Where: \@Triggers and toolbars\Triggers\Autotext triggers. To create: menu File -> New -> Examples.">
 			<![CDATA[tr["$end$"] = "";]]>
 		</snippet>
 
-		<snippet name="trigHotKeySnippet" info="Add hotkey trigger." using="Au.Triggers" before="var hk = Triggers.Hotkey;" more="Where: \@Toolbars and triggers\Triggers\Hotkey triggers. To create: menu File -> New -> Examples.">
+		<snippet name="trigHotKeySnippet" info="Add hotkey trigger." using="Au.Triggers" before="var hk = Triggers.Hotkey;" more="Where: \@Triggers and toolbars\Triggers\Hotkey triggers. To create: menu File -> New -> Examples.">
 			<![CDATA[hk["$end$"] = o => {  };]]>
 		</snippet>
 
-		<snippet name="trigMouseSnippet" info="Add mouse trigger." using="Au.Triggers" more="Where: \@Toolbars and triggers\Triggers\Mouse triggers. To create: menu File -> New -> Examples.">
+		<snippet name="trigMouseSnippet" info="Add mouse trigger." using="Au.Triggers" more="Where: \@Triggers and toolbars\Triggers\Mouse triggers. To create: menu File -> New -> Examples.">
 			<![CDATA[Triggers.Mouse[TM$end$] = o => {  };]]>
 		</snippet>
 
-		<snippet name="trigWindowSnippet" info="Add window trigger." using="Au.Triggers" more="Where: \@Toolbars and triggers\Triggers\Window triggers. To create: menu File -> New -> Examples.">
+		<snippet name="trigWindowSnippet" info="Add window trigger." using="Au.Triggers" more="Where: \@Triggers and toolbars\Triggers\Window triggers. To create: menu File -> New -> Examples.">
 			<![CDATA[Triggers.Window[TWEvent.ActiveOnce, "$end$"] = o => {  };]]>
 		</snippet>
 
-		<snippet name="taskRunSnippet" info="Run action in a thread pool thread." using="System.Threading.Tasks">
-			<![CDATA[Task.Run(() => { $end$ });]]>
-		</snippet>
-
-		<snippet name="threadStartSnippet" info="Run action in new thread." using="System.Threading.Tasks">
-			<![CDATA[AThread.Start(() => { $end$ }, background: true);]]>
+		<snippet name="threadSnippet" info="Run action in other thread.">
+			<list item="Start new thread">
+				<![CDATA[AThread.Start(() => { $end$ }, background: true);]]>
+			</list>
+			<list item="Use thread pool" using="System.Threading.Tasks">
+				<![CDATA[Task.Run(() => { $end$ });]]>
+			</list>
 		</snippet>
 
 		<snippet name="stringBuilderSnippet" info="Create string with StringBuilder." using="System.Text">
@@ -220,7 +221,7 @@ using(m.Submenu("")) {
 	m[""] = o => {  };
 }
 m.Separator();
-m["Run program example"] = o => AExec.Run(AFolders.System + @"notepad.exe");
+m["Run program example"] = o => AFile.Run(AFolders.System + @"notepad.exe");
 m["Run script example"] = o => ATask.Run("Script123456789.cs");
 m["Copy-paste example"] = o => {
 	string s = AClipboard.Copy();
@@ -297,7 +298,7 @@ m.Show(ownerFormOrControl);]]>
 		</snippet>
 
 		<snippet name="runSnippet" info="Run a program or open a document, folder, web page." more="Tip: drag and drop.">
-			<![CDATA[AExec.Run($end$AFolders.System + @"Notepad.exe"$end$);]]>
+			<![CDATA[AFile.Run($end$AFolders.System + @"Notepad.exe"$end$);]]>
 		</snippet>
 
 		<snippet name="scriptSnippet" info="Start to execute a script." more="Tip: drag and drop. See also: RunWait.">
@@ -329,31 +330,45 @@ m.Show(ownerFormOrControl);]]>
 ]]>
 		</snippet>
 
-		<snippet name="propAutoSnippet" info="Auto-implemented property.">
-			<![CDATA[public int $end$MyProperty$end$ { get; set; }
+		<snippet name="propSnippet" info="Property.">
+			<list item="{ get; set; }">
+				<![CDATA[public int $end$MyProperty$end$ { get; set; }
 ]]>
-		</snippet>
-
-		<snippet name="propGetSetSnippet" info="Property with 'get' and 'set' functions and field.">
-			<![CDATA[public string $end$MyProperty$end$ {
-	get => _field;
-//	get {
-//		if (_field == null) {
-//			//...
-//			//_field = ;
-//		}
-//		return _field;
-//	}
-	set => _field = value;
-//	set {
-//		if (value != _field) {
-//			_field = value;
-//			//...
-//		}
-//	}
+			</list>
+			<list item="{ get; private set; }">
+				<![CDATA[public int $end$MyProperty$end$ { get; private set; }
+]]>
+			</list>
+			<list item="{ get {  } set {  } }">
+				<![CDATA[public string $end$MyProperty$end$ {
+	get {
+		
+	}
+	set {
+		
+	}
+}
+]]>
+			</list>
+			<list item="{ get { ... } set { ... } }">
+				<![CDATA[public string $end$MyProperty$end$ {
+	get {
+		if (_field == null) {
+			
+			_field = ;
+		}
+		return _field;
+	}
+	set {
+		if (value != _field) {
+			_field = value;
+			
+		}
+	}
 }
 string _field;
 ]]>
+			</list>
 		</snippet>
 
 	</group>
@@ -363,14 +378,15 @@ string _field;
 	<group context="Type|Function">
 		<!-- snippets that are valid in types and functions -->
 
-		<snippet name="toolbarSnippet" info="Create toolbar." more="Where: \@Toolbars and triggers\Toolbars, in an existing file or new partial file. Use menu TT -> Edit Toolbars.">
+		<snippet name="toolbarSnippet" info="Create toolbar." more="Where: \@Triggers and toolbars\Toolbars, in an existing file or new partial file. Use menu TT -> Edit Toolbars.">
 			<![CDATA[//Call this function from the [Toolbars] function, directly or from a trigger. Examples:
 //Toolbar_RenameMe(); //show the toolbar at startup
-//Triggers.Window[TWEvent.ActiveOnce, "*Name", "ClassName"] = o => Toolbar_RenameMe(o); //attach the toolbar to the window
-//Triggers.Mouse[TMEdge.TopInLeft25] = o => Toolbar_RenameMe(o); //show when the mouse touches the screen edge first time
+//Triggers.Window[TWEvent.ActiveOnce, "*Name", "ClassName"] = Toolbar_RenameMe; //attach the toolbar to the window
+//Triggers.Window[TWEvent.ActiveOnce, "*Name", "ClassName"] = o => { Toolbar_One(o); Toolbar_Two(o); } //attach 2 toolbars
+//Triggers.Mouse[TMEdge.TopInLeft25] = Toolbar_RenameMe; //show when the mouse touches the screen edge first time
 void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
-	var t = new AToolbar("$guid$");
-	if(!t.SettingsModified) {
+	var t = new AToolbar("Toolbar_RenameMe $random$");
+	if (!t.SettingsModified) {
 		t.AutoSize = true;
 	}
 	
@@ -384,13 +400,21 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	t[""] = o => {  };
 	t[""] = o => {  };
 	
-//	//auto-hide. Above is the auto-hide part. Below is the visible part.
-//	t = t.CreateSatelliteOwner();
-//	if(!t.SettingsModified) {
+//	//auto-hide. Above is the auto-hide part. Below is the always-visible part.
+//	t = t.AutoHide();
+//	if (!t.SettingsModified) {
 //		
 //	}
 	
 	t.Show(ta);
+	
+//	//this code is the same as the above line, but you can specify more Show parameters, for example attach to a control
+//	if (ta is Au.Triggers.WindowTriggerArgs wta) {
+//		t.Show(wta.Window); //attach to the trigger window
+//	} else {
+//		t.Show();
+//		ta?.DisableTriggerUntilClosed(t); //single instance
+//	}
 }]]>
 		</snippet>
 

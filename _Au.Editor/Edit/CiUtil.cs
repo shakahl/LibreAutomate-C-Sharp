@@ -102,7 +102,7 @@ static class CiUtil
 		var model = document.GetSemanticModelAsync().Result;
 		//p1.Next();
 		bool preferGeneric = token.GetNextToken().IsKind(SyntaxKind.GreaterThanToken);
-		var si = model.GetSemanticInfo(token, document.Project.Solution.Workspace, default); //works better than GetSymbolInfo, and slightly faster
+		var si = model.GetSemanticInfo(token, document.Project.Solution.Workspace, default); //works better than GetSymbolInfo, and slightly faster. Or could call GetSymbolInfo, and if its Symbol is null, use its CandidateSymbols; not tested here.
 		foreach(var v in si.GetSymbols(includeType: true)) {
 			bool gen = false;
 			switch(v) {
@@ -151,7 +151,7 @@ static class CiUtil
 			}
 			if(url != null) url = _GoogleURL(url);
 		}
-		if(url != null) AExec.TryRun(url);
+		if(url != null) AFile.TryRun(url);
 	}
 
 	static string _GoogleURL(string query) => "https://www.google.com/search?q=" + Uri.EscapeDataString(query);

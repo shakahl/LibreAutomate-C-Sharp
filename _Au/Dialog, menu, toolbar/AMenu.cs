@@ -18,9 +18,11 @@ using Au.Types;
 namespace Au
 {
 	/// <summary>
-	/// Popup menu based on <see cref="ContextMenuStrip"/>. Can be used everywhere, not only in forms.
+	/// Popup menu.
 	/// </summary>
 	/// <remarks>
+	/// Based on <see cref="ContextMenuStrip"/>.
+	/// Can be used everywhere, not only in forms.
 	/// Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
 	/// </remarks>
 	/// <example>
@@ -34,7 +36,7 @@ namespace Au
 	/// 	m["Four"] = o => AOutput.Write(o);
 	/// }
 	/// m.ExtractIconPathFromCode = true;
-	/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+	/// m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
 	/// m.Show();
 	/// ]]></code>
 	/// </example>
@@ -69,7 +71,7 @@ namespace Au
 		/// Initializes this object.
 		/// Use this overload for starting and/or automating other apps.
 		/// </summary>
-		/// <param name="name">Menu name. Must be valid filename. Currently used only as the initial <b>Name</b> and <b>Text</b> of <see cref="Control"/>.</param>
+		/// <param name="name">Menu name. Must be valid filename. Currently only sets <see cref="Control"/>'s <b>Text</b> property.</param>
 		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
@@ -124,9 +126,9 @@ namespace Au
 		Specialized AddX methods.
 		
 		For example, instead of
-		m["Label"] = o => AExec.TryRun("notepad.exe");
+		m["Label"] = o => AFile.TryRun("notepad.exe");
 		can use
-		m.Run("notepad.exe", "label"); //label is optional
+		m.AddRun("notepad.exe", "label"); //label is optional
 		Then can auto-get icon without disassembling the callback.
 
 		Another example: instead of
@@ -135,9 +137,9 @@ namespace Au
 		m.Paste("notepad.exe", "label"); //label is optional
 
 		Can use extension methods for this. Example:
-		public static void Run(this AMenu m, string path, string label = null)
+		public static void AddRun(this AMenu m, string path, string label = null)
 		{
-			m[label ?? path, path] = o => AExec.TryRun(path);
+			m[label ?? path, path] = o => AFile.TryRun(path);
 		}
 
 		*/
@@ -155,7 +157,7 @@ namespace Au
 		/// m["Three"] = o => { AOutput.Write(o.MenuItem.Checked); };
 		/// m.LastMenuItem.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
-		/// m["notepad"] = o => AExec.TryRun(AFolders.System + "notepad.exe");
+		/// m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -182,7 +184,7 @@ namespace Au
 		/// var mi = m.Add("Two", o => { AOutput.Write(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
 		/// mi.Checked = true;
 		/// m.ExtractIconPathFromCode = true;
-		/// m.Add("notepad", o => AExec.TryRun(AFolders.System + "notepad.exe"));
+		/// m.Add("notepad", o => AFile.TryRun(AFolders.System + "notepad.exe"));
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
@@ -268,11 +270,11 @@ namespace Au
 		/// m.Show();
 		/// ]]></code>
 		/// </example>
-		public UsingAction Submenu(string text, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
+		public UsingEndAction Submenu(string text, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
 		{
 			var item = _Submenu(out var dd, text, onClick, icon, l);
 			_submenuStack.Push(dd);
-			return new UsingAction(() => EndSubmenu());
+			return new UsingEndAction(() => EndSubmenu());
 		}
 
 		ToolStripMenuItem _Submenu(out _ContextMenuStrip dd, string text, Action<MTClickArgs> onClick, MTImage icon, int sourceLine)

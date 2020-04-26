@@ -37,7 +37,7 @@ namespace Au
 		/// Usually known folders are used like <c>string path = AFolders.Documents + "file.txt"</c>. However it cannot be used when you want to store paths in text files, registry, etc. Then this feature is useful.
 		/// To get known folder path, this function calls <see cref="AFolders.GetFolder"/>.
 		///
-		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AExec</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
+		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
 		/// </remarks>
 		public static string ExpandEnvVar(string path)
 		{

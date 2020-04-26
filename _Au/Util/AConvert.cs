@@ -360,6 +360,9 @@ namespace Au.Util
 			return r;
 
 			//speed: faster than WideCharToMultiByte. Faster than with GetMaxByteCount + AMemoryArray.Byte_.
+			//About tiered JIT:
+			//	Until fully optimized, many times slower with short strings, but not much slower with big strings.
+			//	When fully optimized, faster than when tiered JIT turned off.
 		}
 
 		/// <summary>
