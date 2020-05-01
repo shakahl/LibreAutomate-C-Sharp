@@ -74,6 +74,7 @@ Source: "Q:\app\Au\_\Au.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\HtmlRenderer.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\SourceGrid.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\TreeList.xml"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\SciLexer.dll"; DestDir: "{app}\64"; Flags: ignoreversion

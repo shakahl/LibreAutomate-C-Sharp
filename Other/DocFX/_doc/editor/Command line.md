@@ -25,7 +25,7 @@ The command line is the script name and optionally command line arguments, separ
 
 Use prefix * to wait until the script ends. Use prefix ** to wait until the script ends and capture its [ATask.WriteResult]() text. To capture **Console.Write** text, instead compile the script to .exe and run the .exe file.
 
-The exit code of this program when it waits is the script's exit code. To set it the script can use **Environment.ExitCode**. When does not wait, the exit code normally is 0. When fails to run (script not found, contains errors, etc), the exit code is a negative value.
+The exit code of this program when it waits is the script's exit code. To set it the script can use **Environment.ExitCode**. When does not wait, the exit code is the process id of the script. When fails to run (script not found, contains errors, etc), the exit code is < 0.
 
 This program starts the editor process if not running. To start editor and don't execute a script, use command line `/e`. It is slightly faster way to start editor process as administrator.
 

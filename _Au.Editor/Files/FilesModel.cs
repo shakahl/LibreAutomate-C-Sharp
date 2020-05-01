@@ -90,7 +90,7 @@ partial class FilesModel : ITreeModel
 			_InitWatcher();
 			//_triggers = new TriggersUI(this);
 
-			AFolders.Workspace = WorkspaceDirectory;
+			AFolders.Workspace = new FolderPath(WorkspaceDirectory);
 		}
 		_initedFully = true;
 	}
@@ -1147,7 +1147,7 @@ partial class FilesModel : ITreeModel
 
 		void _AddDir(string path, FileNode parent)
 		{
-			foreach(var u in AFile.EnumDirectory(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
+			foreach(var u in AFile.Enumerate(path, FEFlags.UseRawPath | FEFlags.SkipHiddenSystem)) {
 				bool isDir = u.IsDirectory;
 				var k = new FileNode(this, u.Name, u.FullPath, isDir);
 				parent.AddChild(k);

@@ -1,5 +1,3 @@
-//#define PDB_EMBEDDED
-
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -100,9 +98,6 @@ namespace Au.Compiler
 			/// <summary>The assembly is normal .exe or .dll file, not in cache. If exe, its dependencies were copied to its directory.</summary>
 			public bool notInCache;
 
-			/// <summary>In cache assembly files we append portable PDB to the assembly file at this offset.</summary>
-			public int pdbOffset;
-
 			/// <summary>
 			/// |-separated list of full paths of references that are not directly in <see cref="AFolders.ThisApp"/> or its subfolder "Libraries".
 			/// </summary>
@@ -149,8 +144,9 @@ namespace Au.Compiler
 
 			XCompiled cache = XCompiled.OfCollection(f.Model);
 			string outPath = null, outFile = null, fileName = null;
+			bool notInCache = false;
 			if(needOutputFiles) {
-				if(m.OutputPath != null) {
+				if(notInCache = m.OutputPath != null) {
 					outPath = m.OutputPath;
 					fileName = m.Name + ".dll";
 				} else {
@@ -178,10 +174,6 @@ namespace Au.Compiler
 			var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, m.CreateCompilationOptions());
 			//p1.Next('c');
 
-#if PDB
-			string pdbFile = null;
-#endif
-			MemoryStream pdbStream = null;
 			string xdFile = null;
 			Stream xdStream = null;
 			Stream resNat = null;
@@ -189,35 +181,12 @@ namespace Au.Compiler
 			EmitOptions eOpt = null;
 
 			if(needOutputFiles) {
-				_AddAttributes(ref compilation, needVersionEtc: m.Role == ERole.miniProgram || m.Role == ERole.exeProgram);
+				_AddAttributes(ref compilation, m);
 
-				//create debug info always. It is used for run-time error links.
-#if PDB
-				pdbStream = new MemoryStream();
-				if(m.OutputPath != null) {
-					pdbFile = Path.ChangeExtension(outFile, "pdb");
-					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Pdb, pdbFilePath: pdbFile);
-					//eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb, pdbFilePath: pdbFile); //smaller, but not all tools support it
-				} else {
-					//eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded); //no, it is difficult to extract, because we load assembly from byte[] to avoid locking. We instead append portable PDB stream to the assembly stream.
-					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
-					//adds < 1 KB; almost the same compiling speed. Separate pdb file is 14 KB; 2 times slower compiling, slower loading.
-				}
-#else
-				if(m.OutputPath != null) {
-					//we don't use classic pdb file becouse of this error after switching to .NET Core:
-					//	Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''
-					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
-				} else {
-#if PDB_EMBEDDED
-					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded); //no, it is difficult to extract, because we load assembly from byte[] to avoid locking. We instead append portable PDB stream to the assembly stream.
-#else
-					pdbStream = new MemoryStream();
-					eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
-#endif
-					//adds < 1 KB; almost the same compiling speed. Separate pdb file is 14 KB; 2 times slower compiling, slower loading.
-				}
-#endif
+				//Create debug info always. It is used for run-time error links.
+				//Embed it in assembly. It adds < 1 KB. Almost the same compiling speed. Same loading speed.
+				//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error after switching to .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
+				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 
 				if(m.XmlDocFile != null) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = APath.Normalize(m.XmlDocFile, outPath)));
 
@@ -232,7 +201,7 @@ namespace Au.Compiler
 
 			//p1.Next();
 			var asmStream = new MemoryStream(8000);
-			var emitResult = compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
+			var emitResult = compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 
 			if(needOutputFiles) {
 				xdStream?.Dispose();
@@ -251,11 +220,8 @@ namespace Au.Compiler
 			}
 			if(!emitResult.Success) {
 				if(needOutputFiles) {
-					AFile.Delete(outFile);
-#if PDB
-					if(pdbFile != null) AFile.Delete(pdbFile);
-#endif
-					if(xdFile != null) AFile.Delete(xdFile);
+					Api.DeleteFile(outFile);
+					if(xdFile != null) Api.DeleteFile(xdFile);
 				}
 				return false;
 			}
@@ -268,23 +234,30 @@ namespace Au.Compiler
 				}
 
 				//create assembly file
-				asmStream.Position = 0;
-				using(var fileStream = AFile.WaitIfLocked(() => File.Create(outFile, (int)asmStream.Length))) {
-					asmStream.CopyTo(fileStream);
-
-					if(m.OutputPath == null) {
-#if !PDB_EMBEDDED
-						pdbStream.Position = 0;
-						pdbStream.CopyTo(fileStream);
-						r.pdbOffset = (int)asmStream.Length;
-#endif
-					} else {
-#if PDB
-						pdbStream.Position = 0;
-						using(var v = AFile.WaitIfLocked(() => File.Create(pdbFile))) pdbStream.CopyTo(v);
-#endif
+				p1.Next();
+				gSave:
+#if true
+				var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, default, Api.CREATE_ALWAYS);
+				if(hf.Is0) {
+					var ec = ALastError.Code;
+					if(ec == Api.ERROR_SHARING_VIOLATION && _RenameLockedFile(outFile, notInCache: notInCache)) goto gSave;
+					throw new AuException(ec);
+				}
+				var b = asmStream.GetBuffer();
+				using(hf) if(!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
+#else //same speed, but I like code without exceptions
+				try {
+						using var fileStream = File.Create(outFile, (int)asmStream.Length);
+						asmStream.Position = 0;
+						asmStream.CopyTo(fileStream);
+					}
+					catch(IOException e1) when((e1.HResult & 0xffff) == Api.ERROR_SHARING_VIOLATION) {
+						if(!_RenameLockedFile(outFile)) throw;
+						goto gSave;
 					}
 				}
+#endif
+				p1.Next('s'); //saving would be fast, but with AV can take half of time. Tested only with WD.
 				r.file = outFile;
 
 				if(m.Role == ERole.exeProgram) {
@@ -293,13 +266,10 @@ namespace Au.Compiler
 					need32 |= m.Optimize;
 
 					//copy Core app host template exe, add native resources, set assembly name, set console flag if need
-					p1.Next();
 					if(need64) _AppHost(outFile, fileName, m, bit32: false);
-					p1.Next('6');
 					if(need32) _AppHost(outFile, fileName, m, bit32: true);
-					p1.Next('3');
+					p1.Next('h');
 
-					//p1.Next();
 					//copy dlls to the output directory
 					_CopyDlls(m, asmStream, need64: need64, need32: need32);
 					p1.Next('d');
@@ -318,7 +288,7 @@ namespace Au.Compiler
 			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
 
 			if(needOutputFiles) {
-				cache.AddCompiled(f, outFile, m, r.pdbOffset, r.mtaThread);
+				cache.AddCompiled(f, outFile, m, r.mtaThread);
 			}
 
 			r.name = m.Name;
@@ -329,14 +299,18 @@ namespace Au.Compiler
 			r.uac = m.Uac;
 			r.prefer32bit = m.Prefer32Bit;
 			r.console = m.Console;
-			r.notInCache = m.OutputPath != null;
-			var refs = m.References.Refs;
-			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
+			r.notInCache = notInCache;
+			if(m.Role == ERole.miniProgram) {
+				var refs = m.References.Refs;
+				for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
+			}
 
 #if TRACE
 			p1.NW('C');
 #endif
 			return true;
+
+			//SHOULDDO: rebuild if missing apphost. Now rebuilds only if missing dll.
 		}
 
 		static int c_versionCounter;
@@ -344,20 +318,18 @@ namespace Au.Compiler
 		//public static void Warmup(Document document)
 		//{
 		//	var compilation = document.Project.GetCompilationAsync().Result;
-		//	//var pdbStream = new MemoryStream();
-		//	//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.PortablePdb);
+		//	//var eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 		//	var asmStream = new MemoryStream(4096);
 		//	compilation.Emit(asmStream);
-		//	//compilation.Emit(asmStream, pdbStream, options: eOpt); //somehow makes slower later
-		//	//compilation.Emit(asmStream, pdbStream, xdStream, resNat, resMan, eOpt);
+		//	//compilation.Emit(asmStream, null, options: eOpt); //somehow makes slower later
+		//	//compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 		//}
 
 		/// <summary>
 		/// Adds some attributes if not specified in code.
-		/// Adds: [module: DefaultCharSet(CharSet.Unicode)];
-		/// If needVersionEtc, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. It is to avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
+		/// Adds: [module: DefaultCharSet(CharSet.Unicode)], [assembly: TargetFramework("...")]
 		/// </summary>
-		static void _AddAttributes(ref CSharpCompilation compilation, bool needVersionEtc)
+		static void _AddAttributes(ref CSharpCompilation compilation, MetaComments m)
 		{
 			int needAttr = 0x100;
 
@@ -367,26 +339,38 @@ namespace Au.Compiler
 				case "DefaultCharSetAttribute": needAttr &= ~0x100; break;
 				}
 			}
-
-			if(needVersionEtc) {
-				needAttr |= 7;
+			if(m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) {
+				needAttr |= 0x200; //need [TargetFramework] for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
 				foreach(var v in compilation.Assembly.GetAttributes()) {
 					//AOutput.Write(v.AttributeClass.Name);
 					switch(v.AttributeClass.Name) {
-					case "AssemblyCompanyAttribute": needAttr &= ~1; break;
-					case "AssemblyProductAttribute": needAttr &= ~2; break;
-					case "AssemblyInformationalVersionAttribute": needAttr &= ~4; break;
+					case "TargetFrameworkAttribute": needAttr &= ~0x200; break;
 					}
 				}
 			}
+
+			//rejected. Now we don't load from byte[].
+			///// If miniProgram or exeProgram, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. It is to avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
+			//if(m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
+			//	needAttr |= 7;
+			//	foreach(var v in compilation.Assembly.GetAttributes()) {
+			//		//AOutput.Write(v.AttributeClass.Name);
+			//		switch(v.AttributeClass.Name) {
+			//		case "AssemblyCompanyAttribute": needAttr &= ~1; break;
+			//		case "AssemblyProductAttribute": needAttr &= ~2; break;
+			//		case "AssemblyInformationalVersionAttribute": needAttr &= ~4; break;
+			//		}
+			//	}
+			//}
 
 			if(needAttr != 0) {
 				using(new Util.StringBuilder_(out var sb)) {
 					sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
 					if(0 != (needAttr & 0x100)) sb.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]");
-					if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\"Au\")]");
-					if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
-					if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
+					if(0 != (needAttr & 0x200)) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
+					//if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\" \")]");
+					//if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
+					//if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
 
 					var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
 					compilation = compilation.AddSyntaxTrees(tree);
@@ -457,35 +441,6 @@ namespace Au.Compiler
 			return new ResourceDescription[] { new ResourceDescription("Project.Resources.resources", () => stream, false) };
 		}
 
-		static Stream _CreateNativeResources(MetaComments m, CSharpCompilation compilation)
-		{
-			var manifest = m.ManifestFile;
-
-			string manifestPath = null;
-			if(manifest != null) manifestPath = manifest.FilePath;
-			else if(m.Role == ERole.exeProgram && m.ResFile == null) { //add default manifest if need
-				manifestPath = AFolders.ThisAppBS + "default.exe.manifest"; //don't: uac
-				if(!AFile.ExistsAsFile(manifestPath)) manifestPath = null;
-			}
-
-			if(m.IconFile == null && manifestPath == null && m.ResFile == null && m.OutputPath == null) return null;
-			Stream manStream = null, icoStream = null;
-			FileNode curFile = null;
-			try {
-				if(m.ResFile != null) return File.OpenRead((curFile = m.ResFile).FilePath);
-				if(manifestPath != null) { curFile = manifest; manStream = File.OpenRead(manifestPath); }
-				if(m.IconFile != null) icoStream = File.OpenRead((curFile = m.IconFile).FilePath);
-				curFile = null;
-				return compilation.CreateDefaultWin32Resources(versionResource: m.OutputPath != null, noManifest: manifestPath == null, manStream, icoStream);
-			}
-			catch(Exception e) {
-				manStream?.Dispose();
-				icoStream?.Dispose();
-				_ResourceException(e, m, curFile);
-				return null;
-			}
-		}
-
 		static void _ResourceException(Exception e, MetaComments m, FileNode curFile)
 		{
 			var em = e.ToStringWithoutStack();
@@ -495,16 +450,50 @@ namespace Au.Compiler
 			else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
 		}
 
+		static Stream _CreateNativeResources(MetaComments m, CSharpCompilation compilation)
+		{
+#if true
+			return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
+#else
+			var manifest = m.ManifestFile;
+
+			string manifestPath = null;
+			if(manifest != null) manifestPath = manifest.FilePath;
+			else if(m.Role == ERole.exeProgram /*&& m.ResFile == null*/) manifestPath = AFolders.ThisAppBS + "default.exe.manifest"; //don't: uac
+
+			Stream manStream = null, icoStream = null;
+			FileNode curFile = null;
+			try {
+				//if(m.ResFile != null) return File.OpenRead((curFile = m.ResFile).FilePath);
+				if(manifestPath != null) { curFile = manifest; manStream = File.OpenRead(manifestPath); }
+				if(m.IconFile != null) icoStream = File.OpenRead((curFile = m.IconFile).FilePath);
+				curFile = null;
+				return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: manifestPath == null, manStream, icoStream);
+			}
+			catch(Exception e) {
+				manStream?.Dispose();
+				icoStream?.Dispose();
+				_ResourceException(e, m, curFile);
+				return null;
+			}
+#endif
+		}
+
 		static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32)
 		{
 			//A .NET Core exe actually is a managed dll hosted by a native exe file known as apphost.
 			//When creating an exe, VS copies template apphost from eg "C:\Program Files\dotnet\sdk\3.1.100\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
 			//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
 
-			string exeFile = DllNameToAppHostExeName(outFile, bit32);
-			var appHost = AFolders.ThisAppBS + (bit32 ? "32" : "64") + @"\Au.AppHost.exe";
-#if true
 			//var p1 = APerf.Create();
+			string exeFile = DllNameToAppHostExeName(outFile, bit32);
+
+			if(AFile.ExistsAsAny(exeFile) && !Api.DeleteFile(exeFile)) {
+				var ec = ALastError.Code;
+				if(!(ec == Api.ERROR_ACCESS_DENIED && _RenameLockedFile(exeFile, notInCache: true))) throw new AuException(ec);
+			}
+
+			var appHost = AFolders.ThisAppBS + (bit32 ? "32" : "64") + @"\Au.AppHost.exe";
 			bool done = false;
 			try {
 				var b = File.ReadAllBytes(appHost);
@@ -515,10 +504,25 @@ namespace Au.Compiler
 					i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
 					b[i] = 0;
 				}
-				//if console, write IMAGE_SUBSYSTEM_WINDOWS_CUI
-				if(m.Console) b[0x14c] = 3;
 
-				for(int i = 5; ; i += Math.Min(i, 200)) { //retry, because sometimes access violation, maybe is open by AV
+#if true
+				var res = new _Resources();
+				if(m.IconFile != null) res.AddIcon(m.IconFile.FilePath);
+				res.AddVersion(outFile);
+
+				string manifest = null;
+				if(m.ManifestFile != null) manifest = m.ManifestFile.FilePath;
+				else if(m.Role == ERole.exeProgram) manifest = AFolders.ThisAppBS + "default.exe.manifest"; //don't: uac
+				if(manifest != null) res.AddManifest(manifest);
+
+				res.WriteAll(exeFile, b, bit32, m.Console);
+
+				//speed: AV makes this slooow.
+#else
+				//if console, write IMAGE_SUBSYSTEM_WINDOWS_CUI
+				if(m.Console) b[0x14c] = 3; //todo: different if bit32
+
+				for(int i = 5; ; i += Math.Min(i, 100)) { //retry, because sometimes access violation, maybe is open by AV
 					try {
 						File.WriteAllBytes(exeFile, b);
 						//p1.Next('c');
@@ -526,34 +530,32 @@ namespace Au.Compiler
 						using var u = new Microsoft.NET.HostModel.ResourceUpdater(exeFile);
 						u.AddResourcesFromPEImage(outFile).Update();
 					}
-					catch when(i < 2_000) { //WriteAllBytes usually throws IOException; ResourceUpdater undocumented.
+					catch when(i < 700) { //WriteAllBytes usually throws IOException; ResourceUpdater undocumented.
 						Thread.Sleep(i);
 						continue;
 					}
 					break;
 				}
+
+				//speed: Windows Defender makes this the slowest part of the compilation.
+				//	Whole compilation 4 times slower if creating only 64bit or 32bit exe, and 6 times slower if both.
+				//	With the above code whole compilation in slowest cases is 2 times faster that with this, eg 180 -> 90 ms.
+				//	Workaround: add the output folder to AV exclusions.
+
+				//or
+				//Microsoft.NET.HostModel.AppHost.HostWriter.CreateAppHost(appHost, exeFile, fileName, !m.Console, outFile); //nuget Microsoft.NET.HostModel
+				//works, but: 1. Need nuget Microsoft.NET.HostModel, or copy more code from its source. 2. Apphost exe must be console; can't because used not only here.
+				//	Most of the above code is like in HostWriter.CreateAppHost.
+#endif
 				//p1.NW();
 				done = true;
 			}
 			finally { if(!done) Api.DeleteFile(exeFile); }
-#else
-			Microsoft.NET.HostModel.AppHost.HostWriter.CreateAppHost(appHost, exeFile, fileName, !m.Console, outFile); //nuget Microsoft.NET.HostModel
-			//works, but: 1. Need nuget Microsoft.NET.HostModel, or copy more code from its source. 2. Apphost exe must be console; can't because used not only here.
-			//	Most of the above code is like in HostWriter.CreateAppHost.
-#endif
 
 			return exeFile;
-
-			//speed: Windows Defender makes this the slowest part of the compilation.
-			//	2-3 times slower if this is used only for 64bit, and 3-5 times slower if for 32bit too.
-			//	Workaround: add the output folder to AV exclusions.
-			//	FUTURE: try to replace ResourceUpdater.AddResourcesFromPEImage with code that would be faster with AV.
-			//		Now opens/saves 2 times. Each 25-30 ms with AV. Would be single 25-30 ms.
-			//		Also don't write native resources to the dll.
-			//			But wait, maybe in the future .NET Core can run managed exe without native apphost, like the old good .NET Framework.
 		}
 
-		static void _CopyDlls(MetaComments m, MemoryStream asmStream, bool need64, bool need32)
+		static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32)
 		{
 			asmStream.Position = 0;
 			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
@@ -642,7 +644,7 @@ namespace Au.Compiler
 			if(r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
 			if(!ok) return false;
 
-			RunAssembly.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
+			RunAssembly.Run(r.file, args, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
 			return true;
 		}
 		static ARegex s_rx1;
@@ -652,6 +654,42 @@ namespace Au.Compiler
 		/// </summary>
 		public static string DllNameToAppHostExeName(string dll, bool bit32)
 			=> dll.ReplaceAt(dll.Length - 4, 4, bit32 ? "-32.exe" : ".exe");
+
+		static bool _RenameLockedFile(string file, bool notInCache)
+		{
+			//If the assembly file is currently loaded, we get ERROR_SHARING_VIOLATION. But we can rename the file.
+			//tested: can't rename if ERROR_USER_MAPPED_FILE or ERROR_LOCK_VIOLATION.
+			string renamed = null;
+			for(int i = 1; ; i++) {
+				renamed = file + "'" + i.ToString();
+				if(Api.MoveFileEx(file, renamed, 0)) goto g1;
+				if(ALastError.Code != Api.ERROR_ALREADY_EXISTS) break;
+				if(Api.MoveFileEx(file, renamed, Api.MOVEFILE_REPLACE_EXISTING)) goto g1;
+			}
+			return false;
+			g1:
+			if(notInCache) {
+				if(s_renamedFiles == null) {
+					s_renamedFiles = new List<string>();
+					AProcess.Exit += (_, __) => _DeleteRenamedLockedFiles(null);
+					s_rfTimer = new ATimer(_DeleteRenamedLockedFiles);
+				}
+				if(!s_rfTimer.IsRunning) s_rfTimer.Every(60_000);
+				s_renamedFiles.Add(renamed);
+			}
+			return true;
+		}
+		static List<string> s_renamedFiles;
+		static ATimer s_rfTimer;
+
+		static void _DeleteRenamedLockedFiles(ATimer timer)
+		{
+			var a = s_renamedFiles;
+			for(int i = a.Count; --i >= 0;) {
+				if(Api.DeleteFile(a[i]) || ALastError.Code == Api.ERROR_FILE_NOT_FOUND) a.RemoveAt(i);
+			}
+			if(a.Count == 0) timer?.Stop();
+		}
 	}
 
 	public enum ECompReason { Run, CompileAlways, CompileIfNeed }

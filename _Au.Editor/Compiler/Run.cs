@@ -16,7 +16,6 @@ using Au;
 using Au.Types;
 using Au.Compiler;
 using Au.Controls;
-using Au.Triggers;
 
 static class Run
 {
@@ -72,7 +71,7 @@ static class Run
 		if(!run) return 1;
 
 		if(r.role == ERole.editorExtension) {
-			RunAssembly.Run(r.file, args, r.pdbOffset, RAFlags.InEditorThread);
+			RunAssembly.Run(r.file, args, RAFlags.InEditorThread);
 			return (int)ATask.ERunResult.editorThread;
 		}
 
@@ -116,7 +115,7 @@ static class Run
 					text.text = "//Class1.Function1();\r\n";
 				} else {
 					text.meta = $"/*/ {(isProject ? "pr" : "c")} {f.ItemPath}; /*/ ";
-					text.text = $"{(isProject ? "Library." : "")}//Class1.Function1();\r\n";
+					text.text = $"//{(isProject ? "Library." : "")}Class1.Function1();\r\n";
 				}
 
 				ni = Program.Model.NewItem(template, (target, FNPosition.Before), name, text: text);
@@ -500,7 +499,7 @@ class RunningTasks
 			int iFlags = 0;
 			if(r.mtaThread) iFlags |= 2;
 			if(r.console) iFlags |= 4;
-			taskParams = Au.Util.Serializer_.SerializeWithSize(r.name, r.file, r.pdbOffset, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
+			taskParams = Au.Util.Serializer_.SerializeWithSize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
 			wrPipeName = null;
 
 			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;
@@ -510,7 +509,6 @@ class RunningTasks
 
 		int pid; WaitHandle hProcess = null; bool disconnectPipe = false;
 		try {
-			//APerf.First();
 			var pp = pre?.hProcess;
 			if(pp != null && 0 != Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
 				hProcess = pp; pid = pre.pid;
@@ -522,8 +520,6 @@ class RunningTasks
 			Api.AllowSetForegroundWindow(pid);
 
 			if(pre != null) {
-				//APerf.First();
-				APerf.SharedMemory.Next('a');
 				var o = new Api.OVERLAPPED { hEvent = pre.overlappedEvent };
 				if(!Api.ConnectNamedPipe(pre.hPipe, &o)) {
 					int e = ALastError.Code;
@@ -536,13 +532,8 @@ class RunningTasks
 						if(!Api.GetOverlappedResult(pre.hPipe, ref o, out _, false)) throw new AuException(0);
 					}
 				}
-				APerf.SharedMemory.Next('b');
-				//APerf.Next();
-				if(!Api.WriteFileArr(pre.hPipe, taskParams, out _)) throw new AuException(0);
-				APerf.SharedMemory.Next('c');
-				//APerf.Next();
+				if(!Api.WriteFile2(pre.hPipe, taskParams, out _)) throw new AuException(0);
 				Api.DisconnectNamedPipe(pre.hPipe); disconnectPipe = false;
-				//APerf.NW('e');
 
 				//start preloaded process for next task. Let it wait for pipe connection.
 				if(uac != _SpUac.admin) { //we don't want second UAC consent

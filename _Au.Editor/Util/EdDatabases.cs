@@ -80,7 +80,7 @@ static class EdDatabases
 		if(0 == AFolders.NetRuntimeBS.RegexReplace(@"(?i)\\shared\\(Microsoft\.NETCore\.App)\\.+", @"\packs\$1.Ref", out var refDir, 1)) throw new AuException();
 		//AOutput.Write(refDir);
 		var a = new List<string>();
-		foreach(var f in AFile.EnumDirectory(refDir, FEFlags.UseRawPath)) { //for each version
+		foreach(var f in AFile.Enumerate(refDir, FEFlags.UseRawPath)) { //for each version
 			if(!f.IsDirectory) continue;
 			var s = f.Name;
 			int v1 = s.ToInt(0, out int ne), v2 = s.ToInt(ne + 1); if(v1 < 3 || v2 < 1) continue; //must be 3.1 or later
@@ -143,7 +143,7 @@ static class EdDatabases
 
 		void _AddDir(string dir, params string[] skip)
 		{
-			foreach(var f in AFile.EnumDirectory(dir)) {
+			foreach(var f in AFile.Enumerate(dir)) {
 				if(f.IsDirectory) continue;
 				if(!f.Name.Ends(".dll", true)) continue;
 				var asmName = f.Name.RemoveSuffix(4);
@@ -188,7 +188,7 @@ static class EdDatabases
 
 		void _AddDir(string dir, params string[] skip)
 		{
-			foreach(var f in AFile.EnumDirectory(dir)) {
+			foreach(var f in AFile.Enumerate(dir)) {
 				if(f.IsDirectory) continue;
 				if(!f.Name.Ends(".xml", true)) continue;
 				var asmName = f.Name.RemoveSuffix(4);

@@ -23,7 +23,6 @@ namespace Au
 	/// <remarks>
 	/// Works with files and directories. Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
 	/// Extends .NET file system classes such as <see cref="File"/> and <see cref="Directory"/>.
-	/// Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
 	/// Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
 	/// Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="APath.PrefixLongPath"/>, <see cref="APath.PrefixLongPathIfNeed"/>. Many functions support long paths even without prefix.
 	/// </remarks>
@@ -58,7 +57,7 @@ namespace Au
 		/// <exception cref="AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DontThrow.</exception>
 		/// <remarks>
 		/// For symbolic links etc, gets properties of the link, not of its target.
-		/// You can also get most of these properties with <see cref="EnumDirectory"/>.
+		/// You can also get most of these properties with <see cref="Enumerate"/>.
 		/// </remarks>
 		public static unsafe bool GetProperties(string path, out FileProperties properties, FAFlags flags = 0)
 		{
@@ -314,13 +313,13 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <param name="filter">
 		/// Callback function. Called for each file and subdirectory. If returns false, the file/subdirectory is not included in results.
-		/// Can be useful when <b>EnumDirectory</b> is called indirectly, for example by the <see cref="Copy"/> method. If you call it directly, you can instead skip the file in your foreach loop.
+		/// Can be useful when <b>Enumerate</b> is called indirectly, for example by the <see cref="Copy"/> method. If you call it directly, you can instead skip the file in your foreach loop.
 		/// Example: <c>filter: k => k.IsDirectory || k.Name.Ends(".png", true)</c>. See <see cref="FEFile.IsDirectory"/>.
 		/// </param>
 		/// <param name="errorHandler">
 		/// Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="FEFlags.AndSubdirectories"/>.
 		/// Receives the subdirectory path. Can call <see cref="ALastError"/><b>.Code</b> and throw an exception. If does not throw, the enumeration continues as if the directory is empty.
-		/// If <i>errorHandler</i> not used, then <b>EnumDirectory</b> throws exception. See also: flag <see cref="FEFlags.IgnoreAccessDeniedErrors"/>.
+		/// If <i>errorHandler</i> not used, then <b>Enumerate</b> throws exception. See also: flag <see cref="FEFlags.IgnoreInaccessible"/>.
 		/// </param>
 		/// <exception cref="ArgumentException"><i>directoryPath</i> is invalid path or not full path.</exception>
 		/// <exception cref="DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
@@ -337,13 +336,13 @@ namespace Au
 		/// 
 		/// These errors are ignored:
 		/// 1. Missing target directory of a symbolic link or mounted folder.
-		/// 2. If used flag <see cref="FEFlags.IgnoreAccessDeniedErrors"/> - access denied.
+		/// 2. If used flag <see cref="FEFlags.IgnoreInaccessible"/> - access denied.
 		/// 
 		/// When an error is ignored, the function works as if that [sub]directory is empty; does not throw exception and does not call <i>errorHandler</i>.
 		/// 
 		/// Enumeration of a subdirectory starts immediately after the subdirectory itself is retrieved.
 		/// </remarks>
-		public static IEnumerable<FEFile> EnumDirectory(string directoryPath, FEFlags flags = 0, Func<FEFile, bool> filter = null, Action<string> errorHandler = null)
+		public static IEnumerable<FEFile> Enumerate(string directoryPath, FEFlags flags = 0, Func<FEFile, bool> filter = null, Action<string> errorHandler = null)
 		{
 			string path = directoryPath;
 			if(0 == (flags & FEFlags.UseRawPath)) path = APath.Normalize(path);
@@ -388,7 +387,7 @@ namespace Au
 								itsOK = true;
 								break;
 							case Api.ERROR_ACCESS_DENIED:
-								itsOK = 0 != (flags & FEFlags.IgnoreAccessDeniedErrors);
+								itsOK = 0 != (flags & FEFlags.IgnoreInaccessible);
 								break;
 							case Api.ERROR_PATH_NOT_FOUND: //the directory not found, or symlink target directory is missing
 							case Api.ERROR_DIRECTORY: //it is file, not directory. Error text is "The directory name is invalid".
@@ -596,11 +595,11 @@ namespace Au
 		static unsafe void _CopyDirectory(string path1, string path2, bool merge, FCFlags copyFlags, Func<FEFile, bool> filter)
 		{
 			//FUTURE: add progressInterface parameter. Create a default interface implementation class that supports progress dialog and/or progress in taskbar button. Or instead create a ShellCopy function.
-			//FUTURE: maybe add errorHandler parameter. Call it here when fails to copy, and also pass to EnumDirectory which calls it when fails to enum.
+			//FUTURE: maybe add errorHandler parameter. Call it here when fails to copy, and also pass to Enumerate which calls it when fails to enum.
 
 			//use intermediate array, and get it before creating path2 directory. It requires more memory, but is safer. Without it, eg bad things happen when copying a directory into itself.
 			var edFlags = FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths | FEFlags.UseRawPath | (FEFlags)copyFlags;
-			var a = EnumDirectory(path1, edFlags, filter).ToArray();
+			var a = Enumerate(path1, edFlags, filter).ToArray();
 
 			bool ok = false;
 			string s1 = null, s2 = null;
@@ -610,7 +609,7 @@ namespace Au
 				if(!ok) goto ge;
 			}
 
-			//foreach(var f in EnumDirectory(path1, edFlags, filter)) { //no, see comments above
+			//foreach(var f in Enumerate(path1, edFlags, filter)) { //no, see comments above
 			foreach(var f in a) {
 				s1 = f.FullPath; s2 = APath.PrefixLongPathIfNeed(path2 + f.Name);
 				//AOutput.Write(s1, s2);
@@ -641,7 +640,7 @@ namespace Au
 						//ADebug.Print($"failed to copy symbolic link '{s1}'. It's OK, skipped it. Error: {ALastError.MessageFor()}");
 						continue;
 					}
-					if(0 != (copyFlags & FCFlags.IgnoreAccessDeniedErrors)) {
+					if(0 != (copyFlags & FCFlags.IgnoreInaccessible)) {
 						if(ALastError.Code == Api.ERROR_ACCESS_DENIED) continue;
 					}
 					goto ge;
@@ -880,7 +879,7 @@ namespace Au
 			int ec = 0;
 			if(type == FileDir2.Directory) {
 				var dirs = new List<string>();
-				foreach(var f in EnumDirectory(path, FEFlags.AndSubdirectories | FEFlags.UseRawPath | FEFlags.IgnoreAccessDeniedErrors)) {
+				foreach(var f in Enumerate(path, FEFlags.AndSubdirectories | FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
 					if(f.IsDirectory) dirs.Add(f.FullPath);
 					else _DeleteLL(f.FullPath, false); //delete as many as possible
 				}
@@ -935,7 +934,7 @@ namespace Au
 			}
 			if(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
 			ADebug.Print("_DeleteLL failed. " + ALastError.MessageFor(ec) + "  " + path
-				+ (dir ? ("   Children: " + string.Join(" | ", EnumDirectory(path).Select(f => f.Name))) : null));
+				+ (dir ? ("   Children: " + string.Join(" | ", Enumerate(path).Select(f => f.Name))) : null));
 			return ec;
 
 			//never mind: .NET also calls DeleteVolumeMountPoint if it is a mounted folder.
@@ -1234,7 +1233,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of the <i>writer</i> function.</exception>
 		/// <exception cref="IOException">Failed to replace file. The <i>writer</i> function also can thow it.</exception>
 		/// <remarks>
-		/// The file-write functions provided by .NET and Windows API are unreliable, because:
+		/// The file-write functions provided by .NET and Windows API are less reliable, because:
 		/// 1. Fails if the file is temporarily open by another process or thread without sharing.
 		/// 2. Can corrupt file data. If this thread, process, PC or disk dies while writing, may write only part of data or just make empty file. Usually it happens when PC is turned off incorrectly.
 		/// 
@@ -1405,7 +1404,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// flags for <see cref="AFile.EnumDirectory"/>.
+	/// flags for <see cref="AFile.Enumerate"/>.
 	/// </summary>
 	[Flags]
 	public enum FEFlags
@@ -1436,7 +1435,7 @@ namespace Au.Types
 		/// If fails to get contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
 		/// Without this flag then throws exception or calls errorHandler.
 		/// </summary>
-		IgnoreAccessDeniedErrors = 0x10,
+		IgnoreInaccessible = 0x10,
 
 		/// <summary>
 		/// Temporarily disable file system redirection in this thread of this 32-bit process running on 64-bit Windows.
@@ -1477,11 +1476,11 @@ namespace Au.Types
 		/// <summary>
 		/// If fails to get contents of the directory or a subdirectory because of its security settings, don't throw exception but assume that the [sub]directory is empty.
 		/// </summary>
-		IgnoreAccessDeniedErrors = 0x10,
+		IgnoreInaccessible = 0x10,
 	}
 
 	/// <summary>
-	/// Contains name and other main properties of a file or subdirectory retrieved by <see cref="AFile.EnumDirectory"/>.
+	/// Contains name and other main properties of a file or subdirectory retrieved by <see cref="AFile.Enumerate"/>.
 	/// The values are not changed after creating the variable.
 	/// </summary>
 	public class FEFile

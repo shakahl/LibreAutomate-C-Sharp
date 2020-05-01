@@ -6,8 +6,6 @@ using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
 using System.IO;
 using System.Threading;
-using System.Threading.Tasks;
-using System.ComponentModel;
 using System.Reflection;
 
 using Au;
@@ -16,11 +14,11 @@ using Au.Types;
 [module: DefaultCharSet(CharSet.Unicode)]
 
 //PROBLEM: slow startup.
-//A minimal script starts in 80 ms.
+//A minimal script starts in 90-100 ms.
 //Workaround:
-//	Preload this process. Let it wait for next task.
-//	Then a script can start in ~20 ms.
-//	We don't preload first time or if exe. Also not faster if several scripts are started without a delay. Never mind.
+//	Preload this process. Let it wait for next task. While waiting, it also can JIT etc.
+//	Then a script starts in 7 ms.
+//	Except first time or if exe. Also not faster if several scripts are started without a delay. Never mind.
 
 //Smaller problem: many threads.
 //Initially 4 or 7 treads. After 20-30 s becomes 5 (+1 or -2). With [STAThread] would be +2.
@@ -35,15 +33,12 @@ static unsafe class Program
 	//[STAThread] //we use TrySetApartmentState instead
 	static void Main(string[] args)
 	{
-		string asmFile, fullPathRefs; int pdbOffset, flags;
+		string asmFile, fullPathRefs; int flags;
 
 		if(args.Length != 1) return;
 		string pipeName = args[0]; //if(!pipeName.Starts(@"\\.\pipe\Au.Task-")) return;
 
-		ref var p1 = ref APerf.SharedMemory;
-		//APerf.First();
-		//_PrepareTest();
-		//APerf.NW();
+		//ref var p1 = ref APerf.Shared;
 
 		for(int i = 0; i < 3; i++) {
 			if(Api.WaitNamedPipe(pipeName, i == 2 ? -1 : 50)) break;
@@ -55,9 +50,10 @@ static unsafe class Program
 			}
 			//APerf.NW();
 		}
-		//ADebug.PrintLoadedAssemblies(true, true);
 
+		//ADebug.PrintLoadedAssemblies(true, true);
 		//p1.Next('1');
+
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
 			if(pipe.Is0) { ADebug.PrintNativeError_(); return; }
 			//p1.Next('2');
@@ -68,10 +64,11 @@ static unsafe class Program
 
 			var a = Au.Util.Serializer_.Deserialize(b);
 			ATask.Init_(ATRole.MiniProgram, a[0]);
-			asmFile = a[1]; pdbOffset = a[2]; flags = a[3]; args = a[4]; fullPathRefs = a[5];
-			string wrp = a[6]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
-			AFolders.Workspace = (string)a[7];
+			asmFile = a[1]; flags = a[2]; args = a[3]; fullPathRefs = a[4];
+			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
+			AFolders.Workspace = new FolderPath(a[6]);
 		}
+
 		//p1.Next('5');
 
 		bool mtaThread = 0 != (flags & 2); //app without [STAThread]
@@ -87,23 +84,18 @@ static unsafe class Program
 		if(s_hook == null) _Hook();
 
 		//p1.Next('6');
-		try { RunAssembly.Run(asmFile, args, pdbOffset, fullPathRefs: fullPathRefs); }
+
+		try { RunAssembly.Run(asmFile, args, fullPathRefs: fullPathRefs); }
 		catch(Exception ex) { AOutput.Write(ex); }
 		finally { s_hook?.Dispose(); }
 	}
-
-	//[MethodImpl(MethodImplOptions.NoInlining)]
-	//static void _PrepareTest()
-	//{
-	//	_ = typeof(Stack<string>).Assembly; //System.Collections. 0.7 ms
-	//}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _Prepare0()
 	{
 #if !DEBUG
 		//makes faster by several ms. Without AJit.Compile makes faster 2 times. This code 5 ms.
-		var fProfile = AFolders.LocalAppData.ToString() + @"\Au\ProfileOptimization"; //3.8 ms first time. Environment.GetFolderPath 6 ms. SHGetFolderPath 2.7 ms, never mind.
+		var fProfile = AFolders.LocalAppData.ToString() + @"\Au\ProfileOptimization"; //3.8 ms first time. Environment.GetFolderPath 6 ms. SHGetFolderPath 2.7 ms.
 		if(AFile.ExistsAsDirectory(fProfile, true)) { //created by editor
 			var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
 			alc.SetProfileOptimizationRoot(fProfile);
@@ -115,7 +107,10 @@ static unsafe class Program
 		//JIT slowest-to-JIT methods. Makes faster even with profile optimization.
 		Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
 		Au.Util.AJit.Compile(typeof(Au.Util.Serializer_), "Deserialize");
-		//AFile.WaitIfLocked(() => (FileStream)null);
+
+		//_ = Assembly.GetExecutingAssembly().EntryPoint.GetParameters().Length;
+		var ep = Assembly.GetExecutingAssembly().EntryPoint;
+		if(ep.GetParameters().Length == 1) ep.Invoke(null, new object[] { Array.Empty<string>() }); //call our Main, it just returns because args.Length==0
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
@@ -123,27 +118,16 @@ static unsafe class Program
 	{
 		_SetComApartment(ApartmentState.STA);
 
-		//Core assembly loading is fast, but anyway
-		_ = typeof(Stack<string>).Assembly; //System.Collections
-
-		//using(var stream = AFile.WaitIfLocked(() => File.OpenRead(Assembly.GetExecutingAssembly().Location))) stream.ReadByte(); //Core is not JIT-ed therefore opens file first time much slower than Framework. //TODO: too dirty
-
-		var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
-		var asmFile = @"Q:\Test\ok\.compiled\test";
-		using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
-			alc.LoadFromStream(stream); //very slow first time
-		}
+		//if need to preload some assemblies, use code like this
+		//_ = typeof(Stack<string>).Assembly; //System.Collections
 
 		ATask.Init_(ATRole.MiniProgram);
 		Au.Util.Log_.Run.Write(null);
 
 		_Hook();
-	}
 
-	//static void _Prepare2()
-	//{
-	//	//SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1); //makes slower
-	//}
+		APerf.Shared.Next();
+	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _SetComApartment(ApartmentState state)

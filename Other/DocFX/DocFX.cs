@@ -207,7 +207,7 @@ unsafe class Program
 			files = @"\articles\Wildcard expression";
 			files += ".html";
 		}
-		foreach(var f in AFile.EnumDirectory(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
+		foreach(var f in AFile.Enumerate(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
 			if(f.IsDirectory) continue;
 			var name = f.Name; if(!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
 			var file = f.FullPath;

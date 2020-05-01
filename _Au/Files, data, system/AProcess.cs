@@ -360,16 +360,38 @@ namespace Au
 		public static IntPtr ExeModuleHandle => Api.GetModuleHandle(null);
 
 		/// <summary>
+		/// Gets full path of the program file of this process.
+		/// </summary>
+		public static unsafe string ExePath {
+			get {
+				if(s_exePath == null) {
+					var a = stackalloc char[300];
+					int n = Api.GetModuleFileName(default, a, 300);
+					s_exePath = new string(a, 0, n);
+					//documented and tested: can be C:\SHORT~1\NAME~1.exe or \\?\C:\long path\name.exe.
+					//tested: AppContext.BaseDirectory gets raw path, like above examples. Used by AFolders.ThisApp.
+					//tested: CreateProcessW supports long paths in lpApplicationName, but my tested apps then crash.
+					//tested: ShellExecuteW does not support long paths.
+					//tested: Windows Explorer cannot launch exe if long path.
+					//tested: When launched with path containing .\, ..\ or /, here we get normalized path.
+				}
+				return s_exePath;
+			}
+		}
+		static string s_exePath, s_exeName;
+
+		/// <summary>
+		/// Gets file name of the program file of this process, like "name.exe".
+		/// </summary>
+		public static string ExeName => s_exeName ??= APath.GetName(ExePath);
+
+		/// <summary>
 		/// Gets process id from handle.
 		/// Returns 0 if failed. Supports <see cref="ALastError"/>.
 		/// Calls API <msdn>GetProcessId</msdn>.
 		/// </summary>
 		/// <param name="processHandle">Process handle.</param>
-		public static int ProcessIdFromHandle(IntPtr processHandle)
-		{
-			return Api.GetProcessId(processHandle);
-			//speed: 250 ns
-		}
+		public static int ProcessIdFromHandle(IntPtr processHandle) => Api.GetProcessId(processHandle); //fast
 
 		//public static Process GetProcessObject(IntPtr processHandle)
 		//{

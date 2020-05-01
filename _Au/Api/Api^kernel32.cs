@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 
 namespace Au.Types
 {
-	internal static unsafe partial class Api
+	static unsafe partial class Api
 	{
 		[DllImport("kernel32.dll", SetLastError = true)] //note: without 'SetLastError = true' Marshal.GetLastWin32Error is unaware that we set the code to 0 etc and returns old captured error code
 		internal static extern void SetLastError(int errCode);
@@ -93,6 +93,11 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", EntryPoint = "LoadLibraryW", SetLastError = true)]
 		internal static extern IntPtr LoadLibrary(string lpLibFileName);
+
+		internal const uint LOAD_LIBRARY_AS_DATAFILE = 0x2;
+
+		[DllImport("kernel32.dll", EntryPoint = "LoadLibraryExW", SetLastError = true)]
+		internal static extern IntPtr LoadLibraryEx(string lpLibFileName, IntPtr hFile, uint dwFlags);
 
 		[DllImport("kernel32.dll")]
 		internal static extern bool FreeLibrary(IntPtr hLibModule);
@@ -358,10 +363,15 @@ namespace Au.Types
 		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
 
 		//note: don't use overloads, because we AJit.Compile("WriteFile").
-		internal static bool WriteFileArr(IntPtr hFile, byte[] a, out int nBytesWritten, void* lpOverlapped = null)
+		internal static bool WriteFile2(IntPtr hFile, ReadOnlySpan<byte> a, out int nBytesWritten)
 		{
-			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten, lpOverlapped);
+			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten);
 		}
+
+		//internal static bool WriteFile2(IntPtr hFile, ReadOnlySpan<byte> a, out int nBytesWritten, void* lpOverlapped)
+		//{
+		//	fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten, lpOverlapped);
+		//}
 
 		internal struct OVERLAPPED
 		{
@@ -751,7 +761,7 @@ namespace Au.Types
 		internal static extern bool QueryPerformanceFrequency(out long lpFrequency);
 
 		[DllImport("kernel32.dll", EntryPoint = "GetModuleFileNameW", SetLastError = true)]
-		internal static extern int GetModuleFileName(IntPtr hModule, char[] lpFilename, int nSize);
+		internal static extern int GetModuleFileName(IntPtr hModule, char* lpFilename, int nSize);
 
 		internal const uint PIPE_ACCESS_INBOUND = 0x1;
 		internal const uint PIPE_ACCESS_OUTBOUND = 0x2;

@@ -130,9 +130,9 @@ namespace Au.Compiler
 	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for class files. More info below.
 	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %AFolders.Workspace%\bin. Default for classLibrary: %AFolders.ThisApp%\Libraries.
 	/// console false|true //let the program run with console
-	/// icon file.ico //icon of the .exe/.dll file. Can be filename or relative path, like with 'c'.
+	/// icon file.ico //icon of the .exe file. Can be filename or relative path, like with 'c'.
 	/// manifest file.manifest //manifest file of the .exe file. Can be filename or relative path, like with 'c'.
-	/// resFile file.res //file containing native resources to add to the .exe/.dll file. Can be filename or relative path, like with 'c'.
+	/// (rejected) resFile file.res //file containing native resources to add to the .exe/.dll file. Can be filename or relative path, like with 'c'.
 	/// sign file.snk //sign the output assembly with a strong name using this .snk file. Can be filename or relative path, like with 'c'. 
 	/// xmlDoc file.xml //create this XML documentation file from XML comments. If not full path, creates in the 'outputPath' directory.
 	/// ]]></code>
@@ -147,9 +147,9 @@ namespace Au.Compiler
 	/// Files used with other options ('c', 'resource' etc) must be in this workspace.
 	/// 
 	/// About native resources:
-	/// If option 'resFile' specified, adds resources from the file, and cannot add other resources; error if also specified 'icon' or 'manifest'.
-	/// If 'manifest' and 'resFile' not specified when creating .exe file, adds manifest from file "default.exe.manifest" in the main Au folder, if exists.
-	/// If 'resFile' not specified when creating .exe or .dll file, adds version resource, with values collected from attributes such as [assembly: AssemblyVersion("...")]; see how it is in Visual Studio projects, in file Properties\AssemblyInfo.cs.
+	/// (rejected) If option 'resFile' specified, adds resources from the file, and cannot add other resources; error if also specified 'icon' or 'manifest'.
+	/// If 'manifest' and 'resFile' not specified when creating .exe file, adds manifest from file "default.exe.manifest" in the main Au folder.
+	/// If 'resFile' not specified when creating .exe or .dll file, adds version resource, with values from attributes such as [assembly: AssemblyVersion("...")]; see how it is in Visual Studio projects, in file Properties\AssemblyInfo.cs.
 	/// 
 	/// About thread COM apartment type:
 	/// For scripts it is STA, and cannot be changed.
@@ -303,10 +303,11 @@ namespace Au.Compiler
 		/// </summary>
 		public FileNode ManifestFile { get; private set; }
 
-		/// <summary>
-		/// Meta option 'res'.
-		/// </summary>
-		public FileNode ResFile { get; private set; }
+		//rejected
+		///// <summary>
+		///// Meta option 'res'.
+		///// </summary>
+		//public FileNode ResFile { get; private set; }
 
 		/// <summary>
 		/// Meta option 'outputPath'.
@@ -565,10 +566,10 @@ namespace Au.Compiler
 				_Specified(EMSpecified.icon);
 				IconFile = _GetFile(value);
 				break;
-			case "resFile":
-				_Specified(EMSpecified.resFile);
-				ResFile = _GetFile(value);
-				break;
+			//case "resFile":
+			//	_Specified(EMSpecified.resFile);
+			//	ResFile = _GetFile(value);
+			//	break;
 			case "sign":
 				_Specified(EMSpecified.sign);
 				SignFile = _GetFile(value);
@@ -697,22 +698,22 @@ namespace Au.Compiler
 		bool _FinalCheckOptions()
 		{
 			const EMSpecified c_spec1 = EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.ifRunning2
-				| EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.manifest | EMSpecified.console;
-			const string c_spec1S = "cannot use runMode, ifRunning, ifRunning2, uac, prefer32bit, manifest, console";
+				| EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
+			const string c_spec1S = "cannot use runMode, ifRunning, ifRunning2, uac, prefer32bit, manifest, icon, console";
 
 			switch(Role) {
 			case ERole.miniProgram:
 				if(Specified.HasAny(EMSpecified.outputPath)) return _ErrorM("with role miniProgram cannot use outputPath");
 				break;
 			case ERole.exeProgram:
-				if(OutputPath == null) OutputPath = AFolders.Workspace + "bin";
+				OutputPath ??= AFolders.Workspace + "bin";
 				break;
 			case ERole.editorExtension:
 				if(Specified.HasAny(c_spec1 | EMSpecified.outputPath)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath");
 				break;
 			case ERole.classLibrary:
 				if(Specified.HasAny(c_spec1)) return _ErrorM("with role classLibrary " + c_spec1S);
-				if(OutputPath == null) OutputPath = AFolders.ThisApp + "Libraries";
+				OutputPath ??= AFolders.ThisApp + "Libraries";
 				break;
 			case ERole.classFile:
 				if(Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, r, resource, com");
@@ -722,10 +723,10 @@ namespace Au.Compiler
 			if((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunMode == ERunMode.green) return _ErrorM("ifRunning run requires runMode blue");
 			if(Specified.Has(EMSpecified.ifRunning2) && RunMode == ERunMode.blue) return _ErrorM("with runMode blue cannot use ifRunning2");
 
-			if(ResFile != null) {
-				if(IconFile != null) return _ErrorM("cannot add both res file and icon");
-				if(ManifestFile != null) return _ErrorM("cannot add both res file and manifest");
-			}
+			//if(ResFile != null) {
+			//	if(IconFile != null) return _ErrorM("cannot add both res file and icon");
+			//	if(ManifestFile != null) return _ErrorM("cannot add both res file and manifest");
+			//}
 
 			return true;
 		}
@@ -872,7 +873,7 @@ namespace Au.Compiler
 		role = 0x1000,
 		icon = 0x2000,
 		manifest = 0x4000,
-		resFile = 0x8000,
+		//resFile = 0x8000,
 		sign = 0x10000,
 		xmlDoc = 0x20000,
 		console = 0x40000,

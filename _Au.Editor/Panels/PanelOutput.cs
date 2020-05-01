@@ -24,7 +24,7 @@ class PanelOutput : AuUserControlBase
 	Queue<OutServMessage> _history;
 	StringBuilder _sb;
 
-	//public SciControl Output => _c;
+	public AuScintilla ZOutput => _c;
 
 	public PanelOutput()
 	{

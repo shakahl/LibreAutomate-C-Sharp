@@ -4,4 +4,4 @@ SaveAs= Au.Task32.exe
 Log= CONSOLE
 [COMMANDS]
 -add ..\_Au.Editor\Resources\ico\app_native.ico, ICONGROUP,32512,0
--add ..\_Au.Editor\Resources\Au.manifest, MANIFEST,1,0
+-addoverwrite ..\_Au.Editor\Resources\Au.manifest, MANIFEST,1,0

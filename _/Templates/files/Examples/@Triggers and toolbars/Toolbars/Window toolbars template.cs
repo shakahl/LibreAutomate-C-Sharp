@@ -7,13 +7,13 @@
 //1. Start typing "tool" and in the completion list select "toolbarSnippet".
 //2. In the added code replace all Toolbar_RenameMe with a unique name, for example Toolbar_X.
 //3. In the Toolbar_X function add a window trigger, like in the example. Edit window name and other arguments.
-//4. Edit the toolbar. Add/delete/edit buttons, menus. Set properties if need. To add buttons use toolbarX snippets.
+//4. Edit the toolbar. Add/delete/edit buttons (use toolbarButtonSnippet). Set properties if need.
 
 //To apply changes after editing, click Run to restart the script. To show the toolbar(s), open or activate the window.
 //If the trigger is correct, the toolbar(s) should be in its top-left corner. Shift+drag to some other place. Try to move
 //the window to see how it works. You can right-click a toolbar and change its properties.
 
-using Au; using Au.Types; using System; using System.Collections.Generic;
+using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
 using Au.Triggers; using System.Windows.Forms; using System.Drawing;
 
 partial class Script {

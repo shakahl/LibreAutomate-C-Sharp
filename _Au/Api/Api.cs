@@ -787,7 +787,7 @@ namespace Au.Types
 
 		//[DllImport("shlwapi.dll", EntryPoint = "PathIsDirectoryEmptyW")]
 		//internal static extern bool PathIsDirectoryEmpty(string pszPath);
-		//speed: slightly faster than with EnumDirectory.
+		//speed: slightly faster than with AFile.Enumerate.
 
 		[DllImport("shlwapi.dll")]
 		internal static extern uint ColorAdjustLuma(uint clrRGB, int n, bool fScale);

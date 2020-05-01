@@ -5,17 +5,17 @@ uid: qm2
 # Compared with Quick Macros 2
 This program is the new major version of Quick Macros 2 (QM). Let's call it QM3. It has or will have most of QM features. But also it is very different.
 
-The script language now is C#. It is one of most popular programming languages and has many good libraries.
+The script language now is C#. It is one of most popular programming languages and has many libraries.
 
 QM3 cannot execute or convert QM scripts. If you have many active QM scripts, probably not worth to convert them. Let both programs run at the same time.
 
 QM3 is free and open-source. Its open-source automation library can be used in other programs too.
 
-QM3 can run on Windows 7-10 with .NET Core runtime 3.1 or later. More info [here](xref:index).
+QM3 can run on Windows 7-10 with .NET Core runtime 3.1. More info [here](xref:index).
 
 QM3 and its library are still unfinished. The most important parts are finished and can be used, but some classes and functions can be changed in the future, which can break your scripts, clear settings, etc.
 
-QM will not have more features in the future. Only bug fixes. But it will be available and supported for long time.
+QM (Quick Macros 2) will not have more features in the future. Only bug fixes. But it will be available and supported for long time.
 
 Let's compare QM and QM3 code.
 
@@ -28,8 +28,8 @@ lef 331 115 w 1
 key L "text" Y
 int i
 for i 0 5
-,out i
-,out i*i
+	out i
+	out i*i
 ```
 
 The same script in QM3 (C#):
@@ -40,24 +40,24 @@ AMouse.Click(w, 331, 115);
 2.s();
 AKeys.Key("Left", "text", "Enter");
 for(int i=0; i<5; i++) {
-,AOutput.Write(i);
-,AOutput.Write(i*i);
+	AOutput.Write(i);
+	AOutput.Write(i*i);
 }
 ```
 
 As you see, C# code is longer, but usually it is easier to understand. The [code editor](xref:code_editor) can add `; () { }` automatically as you type, and has other code editing features that are much better than in QM.
 
-QM3 does not have triggers like hotkey to launch scripts. But the automation library has triggers to execute parts of a running script, like in AutoHotkey. Trigger types: hotkey, autotext, mouse, window; more in the future.
+QM3 has triggers to execute parts of a running script. Trigger types: hotkey, autotext, mouse, window; more in the future. Triggers also can be used to launch scripts, but differently than in QM.
 
-QM3 does not have item types like "menu", "toolbar" and "autotext". Now in any script can be used classes [AMenu](), AToolbar (still not) and [AutotextTriggers](xref:Au.Triggers.AutotextTriggers).
+QM3 does not have item types like "menu", "toolbar" and "autotext". Instead use classes AMenu, AToolbar and AutotextTriggers.
 
 Instead of dialogs now use Windows Forms or WPF. Editor in the future.
 
-Currently QM3 has only the most important code creation tools in the Code menu: keys, regex, find window/control/accessible/image. More in the future.
+Currently QM3 has only the most important code creation tools in the Code menu: keys, regex, find window/control/accessible/image, Windows API. More in the future.
 
 In QM3 each script is a separate file. [Read more](xref:au_editor).
 
-In QM3 each script runs in a separate process by default.
+In QM3 each script runs in a separate process.
 
 In QM3 each script can use only namespaces it wants to use. Namespaces contain classes; classes contain functions. In QM all scripts share all classes and global functions.
 
@@ -69,7 +69,6 @@ QM3 saves all settings in files, not in the Registry.
 
 #### Some important features still missing
 - Recording.
-- User toolbars.
 - Dialog editor.
 - Most Tools menu commands.
 - Many options in the Options dialog.

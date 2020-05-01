@@ -165,9 +165,10 @@ static class Program
 	{
 		if(Debugger.IsAttached) return false; //very fast
 		try {
+			bool isAuHomePC = Api.GetEnvironmentVariable("Au.Home<PC>", null, 0) > 0;
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
-				AFolders.ThisAppBS.Eqi(@"Q:\app\Au\_\") ? "_Au.Editor" : "Au.Editor", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
+				isAuHomePC ? "_Au.Editor" : "Au.Editor", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
 				true, args);
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
 		}

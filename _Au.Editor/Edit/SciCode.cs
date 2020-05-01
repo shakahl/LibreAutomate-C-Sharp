@@ -105,10 +105,29 @@ partial class SciCode : AuScintilla
 	internal void _Init(byte[] text, bool newFile)
 	{
 		if(!IsHandleCreated) CreateHandle();
-		_fls.SetText(Z, text);
-		if(newFile) _openState = 1;
+		bool editable = _fls.SetText(Z, text);
+		if(newFile) _openState = _EOpenState.NewFile; else if(Program.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		if(_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
+
+		//detect \r without '\n', because it is not well supported
+		if(editable) {
+			bool badCR = false;
+			for(int i = 0, n = text.Length - 1; i <= n; i++) {
+				if(text[i] == '\r' && (i == n || text[i + 1] != '\n')) badCR = true;
+			}
+			if(badCR) {
+				AOutput.Write($@"<>Note: text of {_fn.Name} contains single \r (CR) as line end characters. It can create problems. <+badCR s>Show<>, <+badCR h>hide<>, <+badCR f>fix<>.");
+				if(!s_badCR) {
+					s_badCR = true;
+					Panels.Output.ZOutput.ZTags.AddLinkTag("+badCR", s1 => {
+						bool fix = s1.Starts('f');
+						Panels.Editor.ZActiveDoc?.Call(fix ? SCI_CONVERTEOLS : SCI_SETVIEWEOL, fix || s1.Starts('h') ? 0 : 1); //tested: SCI_CONVERTEOLS ignored if readonly
+					});
+				}
+			}
+		}
 	}
+	static bool s_badCR;
 
 	//protected override void Dispose(bool disposing)
 	//{
@@ -659,21 +678,22 @@ partial class SciCode : AuScintilla
 
 	#region script header
 
-	const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic;";
-	const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
+	//const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic;";
+	//const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
 
-	static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
-	static ARegex s_rxScript;
+	//static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
+	//static ARegex s_rxScript;
 
-	/// <summary>
-	/// Finds script header "//. ... //;;;\r\n" using regular expression.
-	/// </summary>
-	/// <param name="s">Script text.</param>
-	/// <param name="m">
-	/// Group 1 is "" or text between //. and c_usings. Includes the starting newline but not the ending newline.
-	/// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
-	/// </param>
-	public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScriptHeader.Match(s, out m);
+	//currently not used and does not work
+	///// <summary>
+	///// Finds script header "//. ... //;;;\r\n" using regular expression.
+	///// </summary>
+	///// <param name="s">Script text.</param>
+	///// <param name="m">
+	///// Group 1 is "" or text between //. and c_usings. Includes the starting newline but not the ending newline.
+	///// Group 2 is "" or text between c_usings and c_scriptMain. Includes the starting newline but not the ending newline.
+	///// </param>
+	//public static bool ZFindScriptHeader(string s, out RXMatch m) => _RxScriptHeader.Match(s, out m);
 
 	/// <summary>
 	/// Finds script header "//.\r\nusing Au; ... //;;;\r\n".
@@ -681,7 +701,7 @@ partial class SciCode : AuScintilla
 	/// Does not get whole text; instead uses SCI_FINDTEXT.
 	/// Returns false if not script or not found.
 	/// </summary>
-	public bool ZFindScriptHeader(out (int start, int end, int startLine, int endLine) found)
+	public bool ZFindScriptHeader8(out (int start, int end, int startLine, int endLine) found)
 	{
 		//never mind: can be text between "//.\r\n" and "using Au;". Could use regex, but then need to get UTF-16 text; better avoid it.
 		found = default;
@@ -701,7 +721,7 @@ partial class SciCode : AuScintilla
 	/// <param name="setCaret">Set caret position below header.</param>
 	public unsafe void ZFoldScriptHeader(bool setCaret = false)
 	{
-		if(!ZFindScriptHeader(out var k)) return;
+		if(!ZFindScriptHeader8(out var k)) return;
 		var a = stackalloc int[2] { k.start, (k.end - 2) | unchecked((int)0x80000000) };
 		Sci_SetFoldLevels(SciPtr, 0, k.endLine, 2, a);
 		Call(SCI_FOLDCHILDREN, k.startLine);

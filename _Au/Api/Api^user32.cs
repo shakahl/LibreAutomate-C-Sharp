@@ -8,7 +8,7 @@ using System.Runtime.CompilerServices;
 
 namespace Au.Types
 {
-	internal static unsafe partial class Api
+	static unsafe partial class Api
 	{
 		[DllImport("user32.dll", EntryPoint = "SendMessageW", SetLastError = true)]
 		internal static extern LPARAM SendMessage(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam);

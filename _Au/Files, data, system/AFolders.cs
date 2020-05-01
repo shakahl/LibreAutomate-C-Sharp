@@ -21,17 +21,17 @@ namespace Au
 	/// Gets known/special folder paths (Desktop, Temp, etc).
 	/// </summary>
 	/// <remarks>
-	/// For return values is used type <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example: <c>string s = AFolders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
+	/// Most functions return <see cref="FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example: <c>string s = AFolders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
 	/// If a function cannot get folder path, the return value contains null string. Then the + operator would throw <see cref="AuException"/>.
 	///
-	/// Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
+	/// Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
 	/// Some known folders, although supported and registerd, may be still not created.
 	/// 
-	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="APidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
+	/// Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="VirtualPidl"/> return it as <see cref="APidl"/>. Functions of the nested class <see cref="Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
 	///
 	/// Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
 	/// The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
-	/// Names of folders specific to this application have prefix <b>This</b>, like <b>ThisApp</b>.
+	/// Names of folders specific to current process have prefix <b>This</b>, like <b>ThisApp</b>.
 	/// 
 	/// Some paths depend on the bitness (32 or 64 bit) of the OS and this process.
 	/// <table>
@@ -114,12 +114,12 @@ namespace Au
 		public static FolderPath Profile => _Get(0x5E6C858F, 0x0E224760, 0x9AFEEA33, 0x17B67173);
 		public static FolderPath ProgramData => _Get(0x62AB5D82, 0xFDC14DC3, 0xA9DD070D, 0x1D495D97);
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFiles => __ProgramFiles ??= _ProgramFiles;
+		public static FolderPath ProgramFiles => new FolderPath(__ProgramFiles ??= _ProgramFiles);
 		static string __ProgramFiles;
 		static FolderPath _ProgramFiles => _Get(0x905e63b6, 0xc1bf494e, 0xb29c65b7, 0x32d3d21a);
 		//broken static FolderPath ProgramFilesX64 => _Get(0x6D809377, 0x6AF0444b, 0x8957A377, 0x3F02200E);
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesX86 => __ProgramFilesX86 ??= _ProgramFilesX86;
+		public static FolderPath ProgramFilesX86 => new FolderPath(__ProgramFilesX86 ??= _ProgramFilesX86);
 		static string __ProgramFilesX86;
 		static FolderPath _ProgramFilesX86 => _Get(0x7C5A40EF, 0xA0FB4BFC, 0x874AC0F2, 0xE0B9FA8E);
 		/// <summary>More info in class help.</summary>
@@ -168,7 +168,7 @@ namespace Au
 		public static FolderPath StartMenu => _Get(0x625B53C3, 0xAB484EC1, 0xBA1FA1EF, 0x4146FC19);
 		public static FolderPath Startup => _Get(0xB97D20BB, 0xF46A4C97, 0xBA105E36, 0x08430854);
 		/// <summary>More info in class help.</summary>
-		public static FolderPath System => __System ??= _System;
+		public static FolderPath System => new FolderPath(__System ??= _System);
 		static string __System;
 		static FolderPath _System => _Get(0x1AC14E77, 0x02E74E5D, 0xB7442EB1, 0xAE5198B7);
 		/// <summary>More info in class help.</summary>
@@ -180,7 +180,7 @@ namespace Au
 		public static FolderPath UserProgramFilesCommon => _Get(0xBCBD3057, 0xCA5C4622, 0xB42DBC56, 0xDB0AE516);
 		public static FolderPath Videos => _Get(0x18989B1D, 0x99B5455B, 0x841CAB7C, 0x74E4DDFC);
 		public static FolderPath VideosLibrary => _Get(0x491E922F, 0x56434AF4, 0xA7EB4E7A, 0x138D8174);
-		public static FolderPath Windows => __Windows ??= _Windows;
+		public static FolderPath Windows => new FolderPath(__Windows ??= _Windows);
 		static string __Windows;
 		static FolderPath _Windows => _Get(0xF38BF404, 0x1D4342F2, 0x930567DE, 0x0B28FC23);
 
@@ -253,21 +253,29 @@ namespace Au
 		/// <summary>
 		/// Temp folder (temporary files) of this user account.
 		/// </summary>
-		public static FolderPath Temp => __temp ??= Path.GetTempPath().TrimEnd('\\');
+		public static FolderPath Temp => new FolderPath(__temp ??= Path.GetTempPath().TrimEnd('\\'));
 		static string __temp;
 
 		/// <summary>
 		/// Folder containing assemblies of this app.
 		/// </summary>
-		public static FolderPath ThisApp => __thisApp ??= ThisAppBS.TrimEnd('\\');
+		/// <remarks>
+		/// Uses <see cref="AppContext.BaseDirectory"/>.
+		/// </remarks>
+		/// <seealso cref="AProcess.ExePath"/>
+		public static FolderPath ThisApp => new FolderPath(__thisApp ??= ThisAppBS.TrimEnd('\\'));
 		static string __thisApp;
 
 		/// <summary>
 		/// <see cref="ThisApp"/> with appended backslash character.
-		/// Note: returns string, not <see cref="FolderPath"/> like other functions.
+		/// Returns string, not <see cref="FolderPath"/> like other functions.
 		/// </summary>
-		public static string ThisAppBS => __thisAppBS ??= AppDomain.CurrentDomain.BaseDirectory;
+		/// <remarks>
+		/// Uses <see cref="AppContext.BaseDirectory"/>.
+		/// </remarks>
+		public static string ThisAppBS => __thisAppBS ??= AppContext.BaseDirectory; //info: AppDomain.CurrentDomain.BaseDirectory calls it
 		static string __thisAppBS;
+		//Can change: AppDomain.CurrentDomain.SetData("APP_CONTEXT_BASE_DIRECTORY", "C:\\");
 
 		const string c_defaultAppSubDir = "Au";
 		//note: don't use Application.ProductName etc. It loads Forms, throws if dynamic assembly, etc.
@@ -278,8 +286,8 @@ namespace Au
 		{
 			lock(_lock) {
 				if(propVar == null) {
-					propVar = value;
 					if(create) AFile.CreateDirectory(value);
+					propVar = value;
 				}
 			}
 			return propVar;
@@ -290,8 +298,8 @@ namespace Au
 		{
 			lock(_lock) {
 				if(propVar != null) throw new InvalidOperationException("AFolders." + propName + " is already set.");
-				propVar = value;
 				if(create) AFile.CreateDirectory(value);
+				propVar = value;
 			}
 		}
 
@@ -307,7 +315,7 @@ namespace Au
 		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppTemp {
-			get => __thisAppTemp ?? _SetAuto(ref __thisAppTemp, Temp + c_defaultAppSubDir, create: true);
+			get => new FolderPath(__thisAppTemp ?? _SetAuto(ref __thisAppTemp, Temp + c_defaultAppSubDir, create: true));
 			set => _SetOnce(ref __thisAppTemp, value, create: true);
 		}
 		static string __thisAppTemp;
@@ -322,7 +330,7 @@ namespace Au
 		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppDocuments {
-			get => __thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, Documents + c_defaultAppSubDir, create: true);
+			get => new FolderPath(__thisAppDocuments ?? _SetAuto(ref __thisAppDocuments, Documents + c_defaultAppSubDir, create: true));
 			set => _SetOnce(ref __thisAppDocuments, value, create: true);
 		}
 		static string __thisAppDocuments;
@@ -337,7 +345,7 @@ namespace Au
 		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppData {
-			get => __thisAppData ?? _SetAuto(ref __thisAppData, RoamingAppData + c_defaultAppSubDir, create: true);
+			get => new FolderPath(__thisAppData ?? _SetAuto(ref __thisAppData, RoamingAppData + c_defaultAppSubDir, create: true));
 			set => _SetOnce(ref __thisAppData, value, create: true);
 		}
 		static string __thisAppData;
@@ -352,7 +360,7 @@ namespace Au
 		/// Creates the folder if does not exist when 'set' or 'get' function called first time in this process.
 		/// </remarks>
 		public static FolderPath ThisAppDataLocal {
-			get => __thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, LocalAppData + c_defaultAppSubDir, create: true);
+			get => new FolderPath(__thisAppDataLocal ?? _SetAuto(ref __thisAppDataLocal, LocalAppData + c_defaultAppSubDir, create: true));
 			set => _SetOnce(ref __thisAppDataLocal, value, create: true);
 		}
 		static string __thisAppDataLocal;
@@ -368,7 +376,7 @@ namespace Au
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </remarks>
 		public static FolderPath ThisAppDataCommon {
-			get => __thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, ProgramData + c_defaultAppSubDir, create: false);
+			get => new FolderPath(__thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, ProgramData + c_defaultAppSubDir, create: false));
 			set => _SetOnce(ref __thisAppDataCommon, value, create: false);
 		}
 		static string __thisAppDataCommon;
@@ -383,7 +391,7 @@ namespace Au
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </remarks>
 		public static FolderPath ThisAppImages {
-			get => __thisAppImages ?? _SetAuto(ref __thisAppImages, ThisAppBS + "Images", create: false);
+			get => new FolderPath(__thisAppImages ?? _SetAuto(ref __thisAppImages, ThisAppBS + "Images", create: false));
 			set => _SetOnce(ref __thisAppImages, value, create: false);
 		}
 		static string __thisAppImages;
@@ -396,7 +404,7 @@ namespace Au
 			get => __workspace;
 			internal set => __workspace = value;
 		}
-		static string __workspace;
+		static FolderPath __workspace;
 
 		/// <summary>
 		/// Gets non-redirected path of the System32 folder.
@@ -407,22 +415,22 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="Util.ADisableFsRedirection"/>
 		/// <seealso cref="AVersion.Is32BitProcessAnd64BitOS"/>
-		public static FolderPath SystemX64 => __SystemX64 ??= AVersion.Is32BitProcessAnd64BitOS ? (FolderPath)(Windows + "Sysnative") : System;
+		public static FolderPath SystemX64 => new FolderPath(__SystemX64 ??= AVersion.Is32BitProcessAnd64BitOS ? Windows + "Sysnative" : System);
 		static string __SystemX64;
 
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesX64 => __ProgramFilesX64 ??= AVersion.Is32BitProcessAnd64BitOS ? EnvVar("ProgramW6432") : ProgramFiles;
+		public static FolderPath ProgramFilesX64 => new FolderPath(__ProgramFilesX64 ??= AVersion.Is32BitProcessAnd64BitOS ? EnvVar("ProgramW6432") : ProgramFiles);
 		static string __ProgramFilesX64;
 
 		/// <summary>More info in class help.</summary>
-		public static FolderPath ProgramFilesCommonX64 => __ProgramFilesCommonX64 ??= AVersion.Is32BitProcessAnd64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon;
+		public static FolderPath ProgramFilesCommonX64 => new FolderPath(__ProgramFilesCommonX64 ??= AVersion.Is32BitProcessAnd64BitOS ? EnvVar("CommonProgramW6432") : ProgramFilesCommon);
 		static string __ProgramFilesCommonX64;
 		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
 
 		/// <summary>
 		/// Gets .NET Core runtime folder, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0</c>.
 		/// </summary>
-		public static FolderPath NetRuntime => __netRuntime ??= NetRuntimeBS.TrimEnd('\\');
+		public static FolderPath NetRuntime => new FolderPath(__netRuntime ??= NetRuntimeBS.TrimEnd('\\'));
 		static string __netRuntime;
 
 		/// <summary>
@@ -434,7 +442,7 @@ namespace Au
 		/// <summary>
 		/// Gets .NET Core runtime desktop folder, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0</c>.
 		/// </summary>
-		public static FolderPath NetRuntimeDesktop => __netRuntimeDesktop ??= NetRuntimeDesktopBS.TrimEnd('\\');
+		public static FolderPath NetRuntimeDesktop => new FolderPath(__netRuntimeDesktop ??= NetRuntimeDesktopBS.TrimEnd('\\'));
 		static string __netRuntimeDesktop;
 
 		/// <summary>
@@ -450,9 +458,9 @@ namespace Au
 		public static FolderPath CdDvdDrive {
 			get {
 				foreach(DriveInfo di in DriveInfo.GetDrives()) {
-					if(di.DriveType == DriveType.CDRom) return di.Name;
+					if(di.DriveType == DriveType.CDRom) return new FolderPath(di.Name);
 				}
-				return null;
+				return default;
 			}
 		}
 
@@ -474,9 +482,9 @@ namespace Au
 		public static FolderPath RemovableDrive(int driveIndex = 0)
 		{
 			foreach(DriveInfo di in DriveInfo.GetDrives()) {
-				if(di.DriveType == DriveType.Removable && driveIndex-- == 0) return di.Name;
+				if(di.DriveType == DriveType.Removable && driveIndex-- == 0) return new FolderPath(di.Name);
 			}
-			return null;
+			return default;
 		}
 
 		/// <summary>
@@ -490,10 +498,10 @@ namespace Au
 				if(di.DriveType == DriveType.Removable) {
 					string v = null; try { v = di.VolumeLabel; } catch { continue; }
 					if(!v.Eqi(volumeLabel)) continue;
-					return di.Name;
+					return new FolderPath(di.Name);
 				}
 			}
-			return null;
+			return default;
 		}
 
 		/// <summary>
@@ -502,7 +510,7 @@ namespace Au
 		/// </summary>
 		public static FolderPath EnvVar(string envVar)
 		{
-			return APath.GetEnvVar_(envVar);
+			return new FolderPath(APath.GetEnvVar_(envVar));
 		}
 
 		#endregion
@@ -533,7 +541,7 @@ namespace Au
 		static FolderPath _GetV(uint a, uint b, uint c, uint d)
 		{
 			using var pidl = _GetVI(a, b, c, d);
-			return pidl?.ToBase64String();
+			return new FolderPath(pidl?.ToBase64String());
 		}
 
 		#endregion
@@ -711,7 +719,7 @@ namespace Au
 		/// </param>
 		public static FolderPath GetFolder(string folderName)
 		{
-			if(folderName.NE()) return null;
+			if(folderName.NE()) return default;
 			bool isVirtual = folderName.Starts("Virtual.");
 			if(isVirtual) folderName = folderName.Substring(8);
 
@@ -721,7 +729,7 @@ namespace Au
 			if(pi != null) {
 				var o = pi.GetValue(null);
 				if(o is FolderPath fp) return fp;
-				return null;
+				return default;
 			}
 			//Using reflection is not the fastest way, but simplest, cannot make bugs, and don't need maitenance. Fast enough.
 
@@ -730,13 +738,13 @@ namespace Au
 			IKnownFolderManager man = null; IKnownFolder kf = null;
 			try {
 				man = (IKnownFolderManager)new KnownFolderManager();
-				if(man.GetFolderByName(folderName, out kf) != 0) return null;
+				if(man.GetFolderByName(folderName, out kf) != 0) return default;
 				if(isVirtual) {
-					if(0 != kf.GetIDList(0, out IntPtr pidl)) return null;
+					if(0 != kf.GetIDList(0, out IntPtr pidl)) return default;
 					R = APidl.ToBase64String(pidl);
 					Marshal.FreeCoTaskMem(pidl);
 				} else {
-					if(0 != kf.GetPath(0, out R)) return null;
+					if(0 != kf.GetPath(0, out R)) return default;
 					R = APath.ExpandEnvVar(R);
 				}
 				//tested: works in MTA apartment too. And all props.
@@ -747,7 +755,7 @@ namespace Au
 				Api.ReleaseComObject(man);
 			}
 
-			return R;
+			return new FolderPath(R);
 
 			//speed:
 			//	The get-property code is 2 times slower than calling properties directly.
@@ -776,9 +784,9 @@ namespace Au.Types
 	public struct FolderPath
 	{
 		readonly string _path;
-		internal FolderPath(string path) { _path = path; }
+		public FolderPath(string path) { _path = path; }
 
-		public static implicit operator FolderPath(string path) => new FolderPath(path);
+		public static explicit operator FolderPath(string path) => new FolderPath(path); //not implicit. Example: var s = "STRING " + AFolders.ThisApp; // converts "STRING " to FolderPath and result is @"STRING \C:\path"
 		public static implicit operator string(FolderPath f) => f._path;
 		public override string ToString() => _path;
 

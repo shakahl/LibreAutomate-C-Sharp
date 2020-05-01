@@ -39,6 +39,9 @@ namespace Au
 		///
 		/// This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
 		/// </remarks>
+		/// <seealso cref="Environment.ExpandEnvironmentVariables"/>
+		/// <seealso cref="Environment.GetEnvironmentVariable"/>
+		/// <seealso cref="Environment.SetEnvironmentVariable"/>
 		public static string ExpandEnvVar(string path)
 		{
 			var s = path;
@@ -406,7 +409,7 @@ namespace Au
 
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
-				//	We still ~2 times faster than Path.GetFullPath.
+				//	We still ~2 times faster than Path.GetFullPath (tested before Core).
 				for(int na = 300; ;) {
 					var b = Util.AMemoryArray.Char_(ref na);
 					int nr = Api.GetFullPathName(s, na, b, null);
@@ -578,12 +581,13 @@ namespace Au
 
 		/// <summary>
 		/// Maximal file (not directory) path length supported by all functions (native, .NET and this library).
-		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by most native kernel API (but not shell API) and by most functions of this library.
+		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by: most native kernel API (but not shell API), most functions of this library, some .NET functions.
 		/// </summary>
 		public const int MaxFilePathLength = 259;
+
 		/// <summary>
 		/// Maximal directory path length supported by all functions (native, .NET and this library).
-		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by most native kernel API (but not shell API) and by most functions of this library.
+		/// For longer paths need <c>@"\\?\"</c> prefix. It is supported by: most native kernel API (but not shell API), most functions of this library, some .NET functions.
 		/// </summary>
 		public const int MaxDirectoryPathLength = 247;
 
@@ -662,7 +666,7 @@ namespace Au
 		/// <param name="path">Path or filename (then just removes extension). Can be null.</param>
 		/// <remarks>
 		/// The same as <see cref="GetName"/>, just removes extension.
-		/// Similar to <see cref="Path.GetFileName"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
+		/// Similar to <see cref="Path.GetFileNameWithoutExtension"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
 		/// 
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.

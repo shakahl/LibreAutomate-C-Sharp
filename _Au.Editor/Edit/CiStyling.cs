@@ -574,9 +574,10 @@ partial class SciCode
 
 	internal void _RestoreEditorData()
 	{
-		if(_openState == 2) return;
-		bool newFile = _openState == 1;
-		_openState = 2;
+		//AOutput.Write(_openState);
+		if(_openState == _EOpenState.FoldingDone) return;
+		bool newFile = _openState == _EOpenState.NewFile, reopened = _openState == _EOpenState.Reopen;
+		_openState = _EOpenState.FoldingDone;
 		if(newFile) {
 		} else {
 			//restore saved folding, markers, scroll position and caret position
@@ -585,7 +586,8 @@ partial class SciCode
 				using var p = db.Statement("SELECT top,pos,lines FROM _editor WHERE id=?", _fn.Id);
 				if(p.Step()) {
 					int cp = Z.CurrentPos8;
-					int top = p.GetInt(0), pos = p.GetInt(1);
+					int top = p.GetInt(0);
+					int pos = p.GetInt(1);
 					var a = p.GetList<int>(2);
 					if(a != null) {
 						_savedLinesMD5 = _Hash(a);
@@ -597,16 +599,22 @@ partial class SciCode
 						}
 						if(cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, Z.LineFromPos(false, cp));
 					}
-					if(top + pos > 0 && cp == 0) {
-						if(top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
-						if(pos > 0 && pos <= Len8) Z.CurrentPos8 = _savedPos = pos;
+					if(top + pos > 0) {
+						if(!reopened) {
+							db.Execute($"REPLACE INTO _editor (id,top,pos) VALUES ({_fn.Id},0,0)");
+						} else if(cp == 0) {
+							if(top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
+							if(pos > 0 && pos <= Len8) Z.CurrentPos8 = _savedPos = pos;
+						}
 					}
 				}
 			}
 			catch(SLException ex) { ADebug.Print(ex); }
 		}
 	}
-	byte _openState; //0 opened old file, 1 opened new file, 2 folding done
+
+	enum _EOpenState : byte { Open, Reopen, NewFile, FoldingDone }
+	_EOpenState _openState;
 
 	/// <summary>
 	/// Saves folding, markers etc in database.
@@ -619,7 +627,7 @@ partial class SciCode
 
 		//never mind: should update folding if edited and did not fold until end. Too slow. Not important.
 
-		if(_openState < 2) return; //if did not have time to open editor data, better keep old data than delete. Also < 2 if not a code file.
+		if(_openState < _EOpenState.FoldingDone) return; //if did not have time to open editor data, better keep old data than delete. Also if not a code file.
 		var db = Program.Model.DB; if(db == null) return;
 		//var p1 = APerf.Create();
 		var a = new List<int>();

@@ -90,7 +90,7 @@ bool GetPaths(_PATHS& p) {
 	char version[100];
 
 	//get exe full path
-	DWORD len = ::GetModuleFileNameW(GetModuleHandle(0), w, lenof(w));
+	DWORD len = ::GetModuleFileNameW(0, w, lenof(w));
 	len = toUtf8(w, len + 1, p.appDir, lenof(w) - 100) - 1; if(len < 7 || p.appDir[len - 4] != '.') return false;
 
 	//get asmDll if it is not exe created from script
@@ -248,11 +248,12 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, in
 	std::string nd(p.netCore);
 	nd[nd.length() - 1] = ';'; nd += p.netDesktop; nd[nd.length() - 1] = 0;
 
-	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS", "NATIVE_DLL_SEARCH_DIRECTORIES" };
-	const char* propertyValues[] = { tpaList.c_str(), ap.c_str(), nd.c_str() };
+	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS", "NATIVE_DLL_SEARCH_DIRECTORIES", "APP_CONTEXT_BASE_DIRECTORY" };
+	const char* propertyValues[] = { tpaList.c_str(), ap.c_str(), nd.c_str(), p.appDir };
 	//Print("TPA:"); Print("%s", propertyValues[0]);
 	//Print("APP:"); Print("%s", propertyValues[1]);
 	//Print("ND:"); Print("%s", propertyValues[2]);
+	//Print("ABD:"); Print("%s", propertyValues[3]);
 #endif
 	//QueryPerformanceCounter(&t2);
 	//Print(L"%i", (t2.LowPart - t1.LowPart) / 10);

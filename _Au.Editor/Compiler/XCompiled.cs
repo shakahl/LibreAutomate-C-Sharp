@@ -103,9 +103,6 @@ namespace Au.Compiler
 						case 'z':
 							r.mtaThread = true;
 							break;
-						case 'd':
-							r.pdbOffset = value.ToInt(offs);
-							break;
 						case 'p':
 							isMultiFileProject = true;
 							if(projFolder != null) {
@@ -129,7 +126,7 @@ namespace Au.Compiler
 						case 'x':
 						case 'k':
 						case 'm':
-						case 'y':
+						//case 'y':
 						case 's':
 							//case 'o':
 							value.ToInt(out uint u1, offs);
@@ -181,9 +178,8 @@ namespace Au.Compiler
 			/// <param name="f"></param>
 			/// <param name="outFile">The output assembly.</param>
 			/// <param name="m"></param>
-			/// <param name="pdbOffset"></param>
 			/// <param name="mtaThread">No [STAThread].</param>
-			public void AddCompiled(FileNode f, string outFile, MetaComments m, int pdbOffset, bool mtaThread)
+			public void AddCompiled(FileNode f, string outFile, MetaComments m, bool mtaThread)
 			{
 				if(_data == null) {
 					_data = new Dictionary<uint, string>();
@@ -200,17 +196,18 @@ namespace Au.Compiler
 	b - prefer32bit
 	q - console
 	z - mtaThread
-	d - pdbOffset
 	p - MD5 of Id of all project files except main
 	c - c
 	l - pr
 	x - resource
 	k - icon
 	m - manifest
-	y - res
 	s - sign
 	o - config (now removed)
 	* - r
+
+	rejected:
+	y - res
 				*/
 
 				string value = null;
@@ -224,7 +221,6 @@ namespace Au.Compiler
 					if(m.Prefer32Bit) b.Append("|b");
 					if(m.Console) b.Append("|q");
 					if(mtaThread) b.Append("|z");
-					if(pdbOffset != 0) b.Append("|d").Append(pdbOffset);
 
 					int nAll = m.CodeFiles.Count, nNoC = nAll - m.CountC;
 					if(nNoC > 1) { //add MD5 hash of project files, except main
@@ -237,7 +233,7 @@ namespace Au.Compiler
 					if(m.Resources != null) foreach(var v in m.Resources) _AppendFile("|x", v.f); //ids of meta 'resource' files
 					_AppendFile("|k", m.IconFile);
 					_AppendFile("|m", m.ManifestFile);
-					_AppendFile("|y", m.ResFile);
+					//_AppendFile("|y", m.ResFile);
 					_AppendFile("|s", m.SignFile);
 					//_AppendFile("|o", m.ConfigFile);
 
@@ -300,6 +296,12 @@ namespace Au.Compiler
 					_data[id] = v.end > idEnd ? sData[idEnd..v.end] : null;
 				}
 				if(_data == null) return false; //empty file
+
+				//delete renamed locked files
+				foreach(var f in AFile.Enumerate(CacheDirectory, FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
+					if(f.Name.Like("*'*")) Api.DeleteFile(f.FullPath);
+				}
+
 				return true;
 				g1:
 				_ClearCache();
@@ -311,13 +313,12 @@ namespace Au.Compiler
 			void _Save()
 			{
 				AFile.CreateDirectory(CacheDirectory);
-				using(var b = AFile.WaitIfLocked(() => File.CreateText(_file))) {
-					b.WriteLine(s_coreAuVersions);
-					foreach(var v in _data) {
-						if(v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
-					}
-					//tested: fast, same speed as StringBuilder+WriteAllText. With b.WriteLine(v.Key+v.Value) same speed or slower.
+				using var b = AFile.WaitIfLocked(() => File.CreateText(_file));
+				b.WriteLine(s_coreAuVersions);
+				foreach(var v in _data) {
+					if(v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
 				}
+				//tested: fast, same speed as StringBuilder+WriteAllText. With b.WriteLine(v.Key+v.Value) same speed or slower.
 			}
 
 			void _ClearCache()

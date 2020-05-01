@@ -110,7 +110,7 @@ namespace Au.Util
 					var a = Encoding.UTF8.GetBytes(s); //slow until tiered JIT optimization
 					if(preloading) a = Array.Empty<byte>();
 					Api.SetFilePointerEx(_hfile, 0, null, Api.FILE_END); //always, because our file pointer isn't moved when others write
-					Api.WriteFileArr(_hfile, a, out _);
+					Api.WriteFile2(_hfile, a, out _);
 				}
 				finally { Api.ReleaseMutex(_mutex); }
 			}

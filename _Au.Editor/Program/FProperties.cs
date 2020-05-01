@@ -13,13 +13,11 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-using System.Reflection.Emit;
 
 using Au;
 using Au.Types;
 using Au.Controls;
 using Au.Compiler;
-using System.Runtime.InteropServices.ComTypes;
 using System.Globalization;
 
 partial class FProperties : DialogForm, IMessageFilter
@@ -215,24 +213,24 @@ If role classLibrary, the dll file is named like the class file. It can be used 
 @"<b>console</b> - let the program run with console.
 ");
 		_AddEdit("icon", _meta.icon,
-@"<b>icon</b> - icon of the output assembly file.
-The file must be in this workspace. Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\App.ico) or path in the workspace (examples: \App.ico, \Folder\App.ico).
+@"<b>icon</b> - icon of the output exe file.
+The .ico file must be in this workspace. Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\App.ico) or path in the workspace (examples: \App.ico, \Folder\App.ico).
 
 The icon will be added as a native resource and displayed in File Explorer etc.
 ");
 		_AddEdit("manifest", _meta.manifest,
-@"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output assembly file.
-The file must be in this workspace. Can be path relative to this file (examples: App.manifest, Folder\App.manifest, ..\Folder\App.manifest) or path in the workspace (examples: \App.manifest, \Folder\App.manifest).
+@"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe or dll file.
+The .manifest file must be in this workspace. Can be path relative to this file (examples: App.manifest, Folder\App.manifest, ..\Folder\App.manifest) or path in the workspace (examples: \App.manifest, \Folder\App.manifest).
 
 The manifest will be added as a native resource.
 ");
-		_AddEdit("resFile", _meta.resFile,
-@"<b>resFile</b> - .res file containing resources to add to the output assembly file as native resources.
-The file must be in this workspace. Can be path relative to this file or path in the workspace.
+//		_AddEdit("resFile", _meta.resFile,
+//@"<b>resFile</b> - .res file containing resources to add to the output exe or dll file as native resources.
+//The .res file must be in this workspace. Can be path relative to this file or path in the workspace.
 
-.res files contain compiled native resources of any type, including icons and manifest.
-This option is rarely used. Instead you use managed resources (button ""Resource..."").
-");
+//.res files contain compiled native resources of any type, including icons and manifest.
+//This option is rarely used. Instead you use managed resources (button ""Resource..."").
+//");
 		_AddEdit("xmlDoc", _meta.xmlDoc,
 @"<b>xmlDoc</b> - XML documentation file to create from XML comments of classes, functions, etc.
 If not full path, the compiler creates the XML file in the 'outputPath' folder.
@@ -296,7 +294,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			ERole.miniProgram => "testScript outputPath icon-xmlDoc",
 			ERole.exeProgram => "testScript",
 			ERole.editorExtension => "Run-prefer32bit outputPath-xmlDoc",
-			ERole.classLibrary => "runMode-prefer32bit console manifest",
+			ERole.classLibrary => "runMode-prefer32bit console icon manifest",
 			_ => "runMode-",
 		};
 		_grid.ZShowRows(true, "Run-", hide);
@@ -352,18 +350,18 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		}
 		bool _IsRunGreen() => cc.IsEditing() && (_Get("ifRunning")?.Starts("run") ?? false) && _Get("runMode") != "blue";
 
-		if(p.Column == 0 && g.ZIsChecked(row)) {
-			switch(rk) {
-			case "icon":
-			case "manifest":
-				g.ZCheck("resFile", false);
-				break;
-			case "resFile":
-				g.ZCheck("icon", false);
-				g.ZCheck("manifest", false);
-				break;
-			}
-		}
+		//if(p.Column == 0 && g.ZIsChecked(row)) {
+		//	switch(rk) {
+		//	case "icon":
+		//	case "manifest":
+		//		g.ZCheck("resFile", false);
+		//		break;
+		//	case "resFile":
+		//		g.ZCheck("icon", false);
+		//		g.ZCheck("manifest", false);
+		//		break;
+		//	}
+		//}
 	}
 
 	string _Get(string name)
@@ -403,7 +401,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		_meta.console = _Get("console");
 		_meta.icon = _Get("icon");
 		_meta.manifest = _Get("manifest");
-		_meta.resFile = _Get("resFile");
+		//_meta.resFile = _Get("resFile");
 		_meta.sign = _Get("sign");
 		_meta.xmlDoc = _Get("xmlDoc");
 

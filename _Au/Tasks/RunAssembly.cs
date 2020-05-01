@@ -28,48 +28,23 @@ namespace Au
 		/// </summary>
 		/// <param name="asmFile">Full path of assembly file.</param>
 		/// <param name="args">To pass to Main.</param>
-		/// <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
 		/// <param name="flags"></param>
 		/// <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
-		public static void Run(string asmFile, string[] args, int pdbOffset, RAFlags flags = 0, string fullPathRefs = null)
+		public static void Run(string asmFile, string[] args, RAFlags flags = 0, string fullPathRefs = null)
 		{
-			ADebug.PrintIf(pdbOffset == 0, "pdbOffset 0");
-
-			ref var p1 = ref APerf.SharedMemory;
-			p1.Next('i');
+			//ref var p1 = ref APerf.Shared;
+			//p1.Next('i');
 
 			bool inEditorThread = 0 != (flags & RAFlags.InEditorThread);
 			bool findLoaded = inEditorThread;
 			_LoadedScriptAssembly lsa = default;
 			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
 			if(asm == null) {
-#if true
 				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
-				//SHOULDDO: try to unload. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
-				p1.Next();
-				if(AKeys.IsScrollLock) {
-					asm = alc.LoadFromAssemblyPath(asmFile); //1 ms
-				} else {
-					using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) { //TODO: use API
-						p1.Next('j');
-						if(pdbOffset > 0) {
-							var b = new byte[pdbOffset];
-							stream.Read(b, 0, b.Length);
-							using var msAsm = new MemoryStream(b);
-							//asm = alc.LoadFromStream(msAsm);
-
-							b = new byte[stream.Length - pdbOffset];
-							stream.Read(b, 0, b.Length);
-							using var msDeb = new MemoryStream(b);
-							p1.Next('k');
-							asm = alc.LoadFromStream(msAsm, msDeb);
-						} else {
-							asm = alc.LoadFromStream(stream);
-						}
-					}
-				}
-
-				//alc.StartProfileOptimization //TODO: test
+				//SHOULDDO: try to unload editorExtension assemblies. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
+				//p1.Next();
+				asm = alc.LoadFromAssemblyPath(asmFile);
+				//p1.Next('L'); //1.5-3 ms, depending on AV. LoadFromStream 30-100 ms, depending on AV.
 
 				if(fullPathRefs != null) {
 					var fpr = fullPathRefs.SegSplit("|");
@@ -87,47 +62,6 @@ namespace Au
 						return null;
 					};
 				}
-
-				//ADebug.PrintLoadedAssemblies(true, true);
-
-				//AOutput.Write(asm);
-#else
-				byte[] bAsm, bPdb = null;
-				using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
-					bAsm = new byte[pdbOffset > 0 ? pdbOffset : stream.Length];
-					stream.Read(bAsm, 0, bAsm.Length);
-					try {
-						if(pdbOffset > 0) {
-							bPdb = new byte[stream.Length - pdbOffset];
-							stream.Read(bPdb, 0, bPdb.Length);
-						//} else {
-						//	var s1 = Path.ChangeExtension(asmFile, "pdb");
-						//	if(AFile.ExistsAsFile(s1)) bPdb = File.ReadAllBytes(s1);
-						}
-					}
-					catch(Exception ex) { bPdb = null; ADebug.Print(ex); } //not very important
-				}
-				p1.Next('k');
-				asm = Assembly.Load(bAsm, bPdb);
-
-				if(fullPathRefs != null) { //TODO: not tested, just converted from above
-					var fpr = fullPathRefs.SegSplit("|");
-					AppDomain.CurrentDomain.AssemblyResolve += (object sender, ResolveEventArgs e) => {
-						//AOutput.Write(an, an.Name, an.FullName);
-						foreach(var v in fpr) {
-							var s1 = e.Name;
-							int iName = v.Length - s1.Length - 4;
-							if(iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, s1, true)) continue;
-							if(!AFile.ExistsAsFile(v)) continue;
-							//try {
-							return Assembly.LoadFile(v);
-							//} catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); break; }
-						}
-						return null;
-					};
-				}
-#endif
-				p1.Next('L'); //30 ms. Same in both cases. Before Core used to be 7 ms without AV, 10 ms with WD (first time 20-900 ms).
 				if(findLoaded) lsa.Add(asmFile, asm);
 
 				//never mind: it's possible that we load a newer compiled assembly version of script than intended.
@@ -141,9 +75,9 @@ namespace Au
 					if(args == null) args = Array.Empty<string>();
 				}
 
-				p1.Next('m');
+				//p1.Next('m');
 				if(!inEditorThread) Util.Log_.Run.Write("Task started.");
-				p1.Next('n');
+				//p1.Next('n');
 
 				if(useArgs) {
 					entryPoint.Invoke(null, new object[] { args });
@@ -151,7 +85,8 @@ namespace Au
 					entryPoint.Invoke(null, null);
 				}
 
-				if(!inEditorThread) Util.Log_.Run.Write("Task ended.");
+				//if(!inEditorThread) Util.Log_.Run.Write("Task ended."); //no, wait for other foreground threads
+				if(!inEditorThread) AProcess.Exit += (_, __) => Util.Log_.Run.Write("Task ended.");
 			}
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
@@ -163,12 +98,17 @@ namespace Au
 				AScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
 			}
 
+			//never mind: although Script.Main starts fast, but the process ends slowly, because of .NET.
+			//	Eg if starting an empty green script every <70 ms, cannot start eg every 2-nd time.
+			//	This func could notify when Script.Main ended, but it cannot know when other foreground threads end, plus process exit event handlers etc.
+
 			//see also: TaskScheduler.UnobservedTaskException event.
 			//	tested: the event works.
 			//	tested: somehow does not terminate process even with <ThrowUnobservedTaskExceptions enabled="true"/>.
 			//		Only when ADialog.Show called, the GC.Collect makes it to disappear but the process does not exit.
 			//	note: the terminating behavior also can be set in registry or env var. It overrides <ThrowUnobservedTaskExceptions enabled="false"/>.
 		}
+
 
 		/// <summary>
 		/// Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.

@@ -44,7 +44,7 @@ namespace Au
 				//Prevent JIT delay when calling Next etc if not ngened.
 				//if(!Util.Assembly_.IsAuNgened) { //unnecessary and makes slower
 #if PREPAREMETHOD
-				Util.AJit.Compile(typeof(Local), "Next", "NW");
+				Util.AJit.Compile(typeof(Local), "Next", "NW", "Dispose");
 #if DEBUG //else these methods are inlined
 				Util.AJit.Compile(typeof(APerf), "Next", "NW");
 #endif
@@ -425,10 +425,12 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// ref var p = ref APerf.SharedMemory;
+		/// ref var p = ref APerf.Shared;
 		/// p.First();
+		/// //or
+		/// APerf.Shared.First();
 		/// ]]></code>
 		/// </example>
-		public static ref Local SharedMemory => ref Util.SharedMemory_.Ptr->perf;
+		public static ref Local Shared => ref Util.SharedMemory_.Ptr->perf;
 	}
 }

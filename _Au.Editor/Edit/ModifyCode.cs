@@ -103,7 +103,7 @@ partial class SciCode
 			}
 		}
 		bool caretAtEnd = isSelection && Z.CurrentPos16 == selEnd;
-		Z.ReplaceRange(false, replStart, replEnd, s);
+		Z.ReplaceRange(true, replStart, replEnd, s);
 		if(isSelection) {
 			int i = replStart, j = replStart + s.Length;
 			Z.Select(true, caretAtEnd ? i : j, caretAtEnd ? j : i);

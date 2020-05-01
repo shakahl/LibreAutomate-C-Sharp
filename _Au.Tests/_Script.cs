@@ -958,35 +958,6 @@ class Script : AScript
 		}
 	}
 
-	unsafe void _Main()
-	{
-		//Application.SetCompatibleTextRenderingDefault(false);
-		//AOutput.Write("before");
-		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
-
-		//TestMenuDropdownBug();
-		//TestMarkdownXmlDocComments();
-#pragma warning disable 200, 168 //
-		//int kkk = 9;
-		//string s = "DDD" + "mmm";
-
-		var asmFile = @"Q:\Test\ok\.compiled\2802";
-
-		//byte[] bAsm, bPdb = null;
-		//using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) {
-		//	bAsm = new byte[stream.Length];
-		//	stream.Read(bAsm, 0, bAsm.Length);
-		//}
-		//Assembly.Load(bAsm, bPdb);
-
-		//var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
-		//using(var stream = AFile.WaitIfLocked(() => File.OpenRead(asmFile))) { //TODO: use API
-		//	alc.LoadFromStream(stream);
-		//}
-	}
-
-
-
 	//class Implement : IDisposable
 	//{
 	//	int i;
@@ -1032,6 +1003,15 @@ class Script : AScript
 
 	//void One(bool two) { }
 	//bool Two() => false;
+
+	unsafe void _Main()
+	{
+		//Application.SetCompatibleTextRenderingDefault(false);
+		//AOutput.Write("before");
+		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
+
+
+	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }
 	Script(string[] args)

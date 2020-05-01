@@ -260,19 +260,19 @@ namespace Au
 #endif
 
 			/// <summary>
-			/// Calls <see cref="EnumDirectory"/> and returns sum of all file sizes.
+			/// Calls <see cref="Enumerate"/> and returns sum of all file sizes.
 			/// With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
 			/// </summary>
 			/// <param name="path">Full path.</param>
-			/// <param name="flags"><b>EnumDirectory</b> flags.</param>
-			/// <exception cref="Exception"><see cref="EnumDirectory"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
+			/// <param name="flags"><b>Enumerate</b> flags.</param>
+			/// <exception cref="Exception"><see cref="Enumerate"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
 			/// <remarks>
 			/// This function is slow if the directory is large.
 			/// Don't use this function for files (throws exception) and drives (instead use <see cref="DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
 			/// </remarks>
-			public static long CalculateDirectorySize(string path, FEFlags flags = FEFlags.AndSubdirectories | FEFlags.IgnoreAccessDeniedErrors)
+			public static long CalculateDirectorySize(string path, FEFlags flags = FEFlags.AndSubdirectories | FEFlags.IgnoreInaccessible)
 			{
-				return EnumDirectory(path, flags).Sum(f => f.Size);
+				return Enumerate(path, flags).Sum(f => f.Size);
 			}
 
 			//rejected: unreliable. Uses registry, where many mimes are incorrect and nonconstant.

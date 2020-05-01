@@ -9,8 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Windows.Forms;
-//using System.Drawing;
 using System.Linq;
 
 using Au;
@@ -22,7 +20,7 @@ class EdMetaCommentsParser
 	FileNode _fn;
 	public string role, runMode, ifRunning, ifRunning2, uac, prefer32bit,
 		optimize, warningLevel, noWarnings, define, preBuild, postBuild,
-		outputPath, console, icon, manifest, resFile, sign, xmlDoc;
+		outputPath, console, icon, manifest, /*resFile,*/ sign, xmlDoc;
 	List<string> _r, _pr, _c, _resource, _com;
 
 	public List<string> r => _r ??= new List<string>();
@@ -62,7 +60,7 @@ class EdMetaCommentsParser
 		case "console": console = value; break;
 		case "icon": icon = value; break;
 		case "manifest": manifest = value; break;
-		case "resFile": resFile = value; break;
+		//case "resFile": resFile = value; break;
 		case "sign": sign = value; break;
 		case "xmlDoc": xmlDoc = value; break;
 		case "r": r.Add(value); break;
@@ -104,7 +102,7 @@ class EdMetaCommentsParser
 		_Append("console", console);
 		_Append("icon", icon, true);
 		_Append("manifest", manifest, true);
-		_Append("resFile", resFile, true);
+		//_Append("resFile", resFile, true);
 		_Append("sign", sign, true);
 		_Append("xmlDoc", xmlDoc);
 		_AppendList("r", _r);

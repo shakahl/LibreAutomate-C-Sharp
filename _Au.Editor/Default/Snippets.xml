@@ -3,32 +3,32 @@
 	<group context="Function">
 		<!-- snippets that are valid in functions -->
 
-		<snippet name="foriSnippet" info="Repeat count times. Set variable i = 0 and increment after each loop.">
-			<![CDATA[for (int i = 0; i < $end$count$end$; i++) {
+		<snippet name="forRepeatLoopSnippet" info="Repeat { code } count times." more="There are 4 parts: for (part1; part2; part3) { part4 }. Each can be empty. Part1 sets variable(s), like i=0 or int i=0 or int i=0, j=-1. Part2 is an expression evaluated before each loop; repeats while it is true. Part3 increments or decrements variable(s) after each loop, like i++ or i+=10 or i++, j--. Part4 can be any code; it is executed repeatedly; if single statement, the { } are optional. The first snippet in human language: set variable i = 0; while i &amp;lt; count, repeat code in { }; incremet i after each loop.">
+			<list item="Increment variable i">
+				<![CDATA[for (int i = 0; i < $end$count$end$; i++) {
 	
 }]]>
-		</snippet>
-
-		<snippet name="forjSnippet" info="Repeat count times. Set variable j = 0 and increment after each loop.">
-			<![CDATA[for (int j = 0; j < $end$count$end$; j++) {
+			</list>
+			<list item="Increment variable j">
+				<![CDATA[for (int j = 0; j < $end$count$end$; j++) {
 	
 }]]>
-		</snippet>
-
-		<snippet name="forrSnippet" info="Repeat count times. Set variable i = count and decrement before each loop.">
-			<![CDATA[for (int i = $end$count$end$; --i >= 0; ) {
+			</list>
+			<list item="Decrement variable i">
+				<![CDATA[for (int i = $end$count$end$; --i >= 0; ) {
 	
 }]]>
-		</snippet>
-
-		<snippet name="foreverSnippet" info="Repeat forever (or until break etc).">
-			<![CDATA[for (;;) {
+			</list>
+			<list item="Repeat forever (or until break etc)">
+				<![CDATA[for (;;) {
 	$end$
 }]]>
+			</list>
 		</snippet>
 
-		<snippet name="switchIntSnippet" info="Go to a case that matches an int variable, or default if none.">
-			<![CDATA[switch ($end$variable$end$) {
+		<snippet name="switchSnippet" info="Go to a case that matches a variable, or default if none.">
+			<list item="int">
+				<![CDATA[switch ($end$variable$end$) {
 case 1:
 	
 	break;
@@ -42,10 +42,9 @@ default:
 	
 	break;
 }]]>
-		</snippet>
-
-		<snippet name="switchStringSnippet" info="Go to a case that matches a string variable, or default if none.">
-			<![CDATA[switch ($end$variable$end$) {
+			</list>
+			<list item="string">
+				<![CDATA[switch ($end$variable$end$) {
 case "value1":
 	
 	break;
@@ -59,20 +58,29 @@ default:
 	
 	break;
 }]]>
+			</list>
 		</snippet>
 
-		<snippet name="tryCatchSnippet" info="Execute the try code. On exception execute the catch code and continue (unless it throws/returns/etc).">
-			<![CDATA[try {
+		<snippet name="tryCatchFinallySnippet" info="Exception handling." more="The catch code is executed on exception in the try code, and allows to continue. The finally code is executed always, even on exception/return/etc.">
+			<list item="try catch">
+				<![CDATA[try {
 	$end$
 }
 catch(Exception e1) {  }]]>
-		</snippet>
-
-		<snippet name="tryFinallySnippet" info="Execute the try code. Then execute the catch code, even on exception/return/etc.">
-			<![CDATA[try {
+			</list>
+			<list item="try finally">
+				<![CDATA[try {
 	$end$
 }
 finally {  }]]>
+			</list>
+			<list item="try catch finally">
+				<![CDATA[try {
+	$end$
+}
+catch(Exception e1) {  }
+finally {  }]]>
+			</list>
 		</snippet>
 
 		<snippet name="methodLocalSnippet" info="Local function.">
@@ -99,51 +107,52 @@ finally {  }]]>
 		</snippet>
 
 		<snippet name="winFindSnippet" info="Find window." more="The + operator throws exception if not found.">
-			<![CDATA[var w = +AWnd.Find("$end$");]]>
+			<![CDATA[var w = +AWnd.Find("$end$*Name$end$");]]>
 		</snippet>
 
 		<snippet name="winWaitSnippet" info="Find window, wait." more="Throws exception on timeout, unless the wait time is negative.">
-			<![CDATA[var w = AWnd.Wait(10, true, "$end$");]]>
+			<![CDATA[var w = AWnd.Wait(10, true, "$end$*Name$end$");]]>
 		</snippet>
 
 		<snippet name="copySnippet" info="Get selected text using the clipboard and Ctrl+C.">
 			<![CDATA[string s = AClipboard.Copy();]]>
 		</snippet>
 
-		<snippet name="clickSnippet" info="Mouse left click.">
-			<![CDATA[AMouse.Click($end$);]]>
+		<snippet name="clickSnippet" info="Mouse click or move in window." more="The + operator throws exception if not found.">
+			<list item="Left click">
+				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
+AMouse.Click(w, );]]>
+			</list>
+			<list item="Right click">
+				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
+AMouse.RightClick(w, );]]>
+			</list>
+			<list item="Double click">
+				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
+AMouse.DoubleClick(w, );]]>
+			</list>
+			<list item="Move">
+				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
+AMouse.Move(w, );]]>
+			</list>
 		</snippet>
 
-		<snippet name="rclickSnippet" info="Mouse right click.">
-			<![CDATA[AMouse.RightClick($end$);]]>
-		</snippet>
-
-		<snippet name="dclickSnippet" info="Mouse double click.">
-			<![CDATA[AMouse.DoubleClick($end$);]]>
-		</snippet>
-
-		<snippet name="mmoveSnippet" info="Mouse move.">
-			<![CDATA[AMouse.Move($end$);]]>
-		</snippet>
-
-		<snippet name="trigAutotextSnippet" info="Add autotext trigger." using="Au.Triggers" before="var tt = Triggers.Autotext;" more="Where: \@Triggers and toolbars\Triggers\Autotext triggers. To create: menu File -> New -> Examples.">
-			<![CDATA[tt["$end$"] = o => {  };]]>
-		</snippet>
-
-		<snippet name="trigReplaceSnippet" info="Add autotext simple replacement trigger." using="Au.Triggers" before="var tr = Triggers.Autotext.SimpleReplace;" more="Where: \@Triggers and toolbars\Triggers\Autotext triggers. To create: menu File -> New -> Examples.">
-			<![CDATA[tr["$end$"] = "";]]>
-		</snippet>
-
-		<snippet name="trigHotKeySnippet" info="Add hotkey trigger." using="Au.Triggers" before="var hk = Triggers.Hotkey;" more="Where: \@Triggers and toolbars\Triggers\Hotkey triggers. To create: menu File -> New -> Examples.">
-			<![CDATA[hk["$end$"] = o => {  };]]>
-		</snippet>
-
-		<snippet name="trigMouseSnippet" info="Add mouse trigger." using="Au.Triggers" more="Where: \@Triggers and toolbars\Triggers\Mouse triggers. To create: menu File -> New -> Examples.">
-			<![CDATA[Triggers.Mouse[TM$end$] = o => {  };]]>
-		</snippet>
-
-		<snippet name="trigWindowSnippet" info="Add window trigger." using="Au.Triggers" more="Where: \@Triggers and toolbars\Triggers\Window triggers. To create: menu File -> New -> Examples.">
-			<![CDATA[Triggers.Window[TWEvent.ActiveOnce, "$end$"] = o => {  };]]>
+		<snippet name="triggerSnippet" info="Add hotkey, autotext, mouse or window trigger." more="Add it in a file that contains triggers of this type. To open, use menu T&amp;amp;T.">
+			<list item="Hotkey">
+				<![CDATA[hk["$end$"] = o => {  };]]>
+			</list>
+			<list item="Autotext">
+				<![CDATA[tt["$end$"] = o => {  };]]>
+			</list>
+			<list item="Autotext simple replace">
+				<![CDATA[tr["$end$"] = "";]]>
+			</list>
+			<list item="Mouse">
+				<![CDATA[Triggers.Mouse[TM$end$] = o => {  };]]>
+			</list>
+			<list item="Window">
+				<![CDATA[Triggers.Window[TWEvent.ActiveOnce, "$end$"] = o => {  };]]>
+			</list>
 		</snippet>
 
 		<snippet name="threadSnippet" info="Run action in other thread.">
@@ -164,16 +173,17 @@ var s = b.ToString();
 AOutput.Write(s);]]>
 		</snippet>
 
-		<snippet name="actWinSnippet" info="Find window and activate" more="The + operator throws exception if not found.">
-			<![CDATA[var w = +AWnd.Find("$end$");
+		<snippet name="actWinSnippet" info="Activate window; check if window is active." more="The + operator throws exception if not found.">
+			<list item="Find window and activate">
+				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
 w.Activate();]]>
-		</snippet>
-
-		<snippet name="ifActWinIsSnippet" info="If the active window has the specified name, class, program, etc.">
-			<![CDATA[var w = AWnd.Active;
-if (w.IsMatch("$end$")) {
+			</list>
+			<list item="If the active window has the specified name etc">
+				<![CDATA[var w = AWnd.Active;
+if (w.IsMatch("$end$*Name$end$")) {
 	
 }]]>
+			</list>
 		</snippet>
 
 		<snippet name="ifKeySnippet" info="If key is down (pressed).">
@@ -199,15 +209,21 @@ AOpt.Mouse.MoveSpeed = 0;
 AOpt.Mouse.MoveSleepFinally = 10;]]>
 		</snippet>
 
-		<snippet name="perfStaticSnippet" info="Measure code speed.">
-			<![CDATA[APerf.First();$end$
+		<snippet name="perfSnippet" info="Measure code speed.">
+			<list item ="Static">
+				<![CDATA[APerf.First();$end$
 APerf.Next();
 APerf.Write();]]>
-		</snippet>
-
-		<snippet name="perfLocalSnippet" info="Measure code speed in single function or { code block } and write result when it exits.">
-			<![CDATA[using var p1 = APerf.Create();$end$
+			</list>
+			<list item ="Local">
+				<![CDATA[var p1 = APerf.Create();$end$
+p1.Next();
+p1.Write();]]>
+			</list>
+			<list item ="Local, auto-NW">
+				<![CDATA[using var p1 = APerf.Create();$end$
 p1.Next();]]>
+			</list>
 		</snippet>
 
 		<snippet name="menuSnippet" info="Create popup menu.">
@@ -248,26 +264,28 @@ m.Show(ownerFormOrControl);]]>
 			</list>
 		</snippet>
 
-		<snippet name="menuItemSnippet" info="Add menu item." more="Tip: to add menu items you can drag and drop files and scripts.">
-			<![CDATA[m["$end$"] = o => {  };]]>
-		</snippet>
-
-		<snippet name="menuSubmenuSnippet" info="Add submenu to a menu.">
-			<![CDATA[using (m.Submenu("$end$")) {
+		<snippet name="menuItemSnippet" info="Add menu item or submenu." more="Tip: to add menu items you can drag and drop files and scripts.">
+			<list item="Item">
+				<![CDATA[m["$end$"] = o => {  };]]>
+			</list>
+			<list item="Submenu">
+				<![CDATA[using (m.Submenu("$end$")) {
 	m[""] = o => {  };
 	m[""] = o => {  };
 }]]>
+			</list>
 		</snippet>
 
-		<snippet name="toolbarButtonSnippet" info="Add toolbar button." more="Tip: to add buttons you can drag and drop files and scripts.">
-			<![CDATA[t["$end$"] = o => {  };]]>
-		</snippet>
-
-		<snippet name="toolbarMenuButtonSnippet" info="Add drop-down menu to a toolbar.">
-			<![CDATA[t.MenuButton("$end$", m => {
+		<snippet name="toolbarButtonSnippet" info="Add toolbar button or drop-down menu." more="Tip: to add buttons you can drag and drop files and scripts.">
+			<list item="Button">
+				<![CDATA[t["$end$"] = o => {  };]]>
+			</list>
+			<list item="Drop-down menu">
+				<![CDATA[t.MenuButton("$end$", m => {
 	m[""] = o => {  };
 	m[""] = o => {  };
 });]]>
+			</list>
 		</snippet>
 
 	</group>
@@ -449,30 +467,32 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	<group context="Any|Line">
 		<!-- snippets that are valid anywhere at the start of line -->
 
-		<snippet name="warningDisableSnippet" info="Disables one or more warnings in surrounded code." more="Or you can disable warnings in the Properties dialog.">
-			<![CDATA[#pragma warning disable $end$ //
+		<snippet name="warningDisableSnippet" info="Disables one or more warnings." more="Or you can disable warnings in the Properties dialog.">
+			<![CDATA[#pragma warning disable $end$123, 456$end$ //
 #pragma warning restore]]>
 		</snippet>
 
-		<snippet name="ifDirectiveSnippet" info="Compile code only if the value is true or a defined preprocessor symbol." more="The value can be literal true, false or a preprocessor symbol or symbols with ||, &amp;&amp;, !. To define symbols use #define or the Properties dialog.">
-			<![CDATA[#if $end$true$end$
+		<snippet name="ifDirectiveSnippet" info="Enable code if the specified preprocessor expression is true (symbol exists, etc)." more="Snippet 1: compile code if true. Snippet 2: compile code before #else if true; else compile code after #else. The preprocessor expression can be literal true, false or a preprocessor symbol or symbols with ||, &amp;&amp;, !. To define symbols use #define or the Properties dialog. For 'else if' use #elif otherExpression.">
+			<list item="">
+				<![CDATA[#if $end$true$end$
 #endif]]>
-		</snippet>
-
-		<snippet name="ifElseDirectiveSnippet" info="Compile code before #else if the value is true or a defined preprocessor symbol. Else compile code after #else." more="The value can be literal true, false or a preprocessor symbol or symbols with ||, &amp;&amp;, !. To define symbols use #define or the Properties dialog. For 'else if' use #elif otherValue.">
-			<![CDATA[#if $end$true$end$
+			</list>
+			<list item="">
+				<![CDATA[#if $end$true$end$
 #else
 #endif]]>
+			</list>
 		</snippet>
 
-		<snippet name="regionSnippet" info="Fold (hide) code lines using #region and #endregion.">
-			<![CDATA[#region $end$name$end$
+		<snippet name="regionSnippet" info="Fold (hide) code lines.">
+			<list item="#region and #endregion">
+				<![CDATA[#region $end$name$end$
 #endregion]]>
-		</snippet>
-
-		<snippet name="foldSnippet" info="Fold (hide) code lines using //. and //; istead of #region and #region.">
-			<![CDATA[//.$end$
+			</list>
+			<list item="//. and //;">
+				<![CDATA[//.$end$
 //;]]>
+			</list>
 		</snippet>
 
 	</group>

@@ -3534,7 +3534,7 @@
         </member>
         <member name="T:Au.Types.FEFlags">
             <summary>
-            flags for <see cref="M:Au.AFile.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
+            flags for <see cref="M:Au.AFile.Enumerate(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
             </summary>
         </member>
         <member name="F:Au.Types.FEFlags.AndSubdirectories">
@@ -3559,7 +3559,7 @@
             Without this flag the function skips only these hidden-system root directories when enumerating a drive: <c>"$Recycle.Bin"</c>, <c>"System Volume Information"</c>, <c>"Recovery"</c>. If you want to include them too, use network path of the drive, for example <c>@"\\localhost\D$\"</c> for D drive.
             </summary>
         </member>
-        <member name="F:Au.Types.FEFlags.IgnoreAccessDeniedErrors">
+        <member name="F:Au.Types.FEFlags.IgnoreInaccessible">
             <summary>
             If fails to get contents of the directory or a subdirectory because of its security settings, assume that the [sub]directory is empty.
             Without this flag then throws exception or calls errorHandler.
@@ -3597,14 +3597,14 @@
             Without this flag the function skips only these hidden-system root directories when enumerating a drive: "$Recycle.Bin", "System Volume Information", "Recovery".
             </summary>
         </member>
-        <member name="F:Au.Types.FCFlags.IgnoreAccessDeniedErrors">
+        <member name="F:Au.Types.FCFlags.IgnoreInaccessible">
             <summary>
             If fails to get contents of the directory or a subdirectory because of its security settings, don't throw exception but assume that the [sub]directory is empty.
             </summary>
         </member>
         <member name="T:Au.Types.FEFile">
             <summary>
-            Contains name and other main properties of a file or subdirectory retrieved by <see cref="M:Au.AFile.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
+            Contains name and other main properties of a file or subdirectory retrieved by <see cref="M:Au.AFile.Enumerate(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
             The values are not changed after creating the variable.
             </summary>
         </member>
@@ -5698,7 +5698,7 @@
         </member>
         <member name="T:Au.Types.RAFlags">
             <summary>
-            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags,System.String)"/>.
+            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],Au.Types.RAFlags,System.String)"/>.
             </summary>
         </member>
         <member name="T:Au.Types.WHFlags">
@@ -8282,7 +8282,6 @@
             <remarks>
             Works with files and directories. Disk drives like <c>@"C:\"</c> or <c>"C:"</c> are directories too.
             Extends .NET file system classes such as <see cref="T:System.IO.File"/> and <see cref="T:System.IO.Directory"/>.
-            Many functions of this class can be used instead of existing similar .NET functions that are slow, limited or unreliable.
             Most functions support only full path. Most of them throw <b>ArgumentException</b> if passed a filename or relative path, ie in "current directory". Using current directory is unsafe.
             Most functions support extended-length paths (longer than 259). Such local paths should have <c>@"\\?\"</c> prefix, like <c>@"\\?\C:\..."</c>. Such network path should be like <c>@"\\?\UNC\server\share\..."</c>. See <see cref="M:Au.APath.PrefixLongPath(System.String)"/>, <see cref="M:Au.APath.PrefixLongPathIfNeed(System.String)"/>. Many functions support long paths even without prefix.
             </remarks>
@@ -8309,7 +8308,7 @@
             <exception cref="T:Au.Types.AuException">The file/directory exist but failed to get its properties. Not thrown if used flag DontThrow.</exception>
             <remarks>
             For symbolic links etc, gets properties of the link, not of its target.
-            You can also get most of these properties with <see cref="M:Au.AFile.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
+            You can also get most of these properties with <see cref="M:Au.AFile.Enumerate(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/>.
             </remarks>
         </member>
         <member name="M:Au.AFile.GetAttributes(System.String,System.IO.FileAttributes@,Au.Types.FAFlags)">
@@ -8418,7 +8417,7 @@
             <param name="path">Full or relative path or just filename with extension. Supports network paths too.</param>
             <param name="dirs">0 or more directories where to search.</param>
         </member>
-        <member name="M:Au.AFile.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})">
+        <member name="M:Au.AFile.Enumerate(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})">
             <summary>
             Gets names and other info of files and subdirectories in the specified directory.
             Returns an enumerable collection of <see cref="T:Au.Types.FEFile"/> objects containing the info.
@@ -8427,13 +8426,13 @@
             <param name="flags"></param>
             <param name="filter">
             Callback function. Called for each file and subdirectory. If returns false, the file/subdirectory is not included in results.
-            Can be useful when <b>EnumDirectory</b> is called indirectly, for example by the <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> method. If you call it directly, you can instead skip the file in your foreach loop.
+            Can be useful when <b>Enumerate</b> is called indirectly, for example by the <see cref="M:Au.AFile.Copy(System.String,System.String,Au.Types.FIfExists,Au.Types.FCFlags,System.Func{Au.Types.FEFile,System.Boolean})"/> method. If you call it directly, you can instead skip the file in your foreach loop.
             Example: <c>filter: k => k.IsDirectory || k.Name.Ends(".png", true)</c>. See <see cref="P:Au.Types.FEFile.IsDirectory"/>.
             </param>
             <param name="errorHandler">
             Callback function. Called when fails to get children of a subdirectory, when using flag <see cref="F:Au.Types.FEFlags.AndSubdirectories"/>.
             Receives the subdirectory path. Can call <see cref="T:Au.ALastError"/><b>.Code</b> and throw an exception. If does not throw, the enumeration continues as if the directory is empty.
-            If <i>errorHandler</i> not used, then <b>EnumDirectory</b> throws exception. See also: flag <see cref="F:Au.Types.FEFlags.IgnoreAccessDeniedErrors"/>.
+            If <i>errorHandler</i> not used, then <b>Enumerate</b> throws exception. See also: flag <see cref="F:Au.Types.FEFlags.IgnoreInaccessible"/>.
             </param>
             <exception cref="T:System.ArgumentException"><i>directoryPath</i> is invalid path or not full path.</exception>
             <exception cref="T:System.IO.DirectoryNotFoundException"><i>directoryPath</i> directory does not exist.</exception>
@@ -8450,7 +8449,7 @@
             
             These errors are ignored:
             1. Missing target directory of a symbolic link or mounted folder.
-            2. If used flag <see cref="F:Au.Types.FEFlags.IgnoreAccessDeniedErrors"/> - access denied.
+            2. If used flag <see cref="F:Au.Types.FEFlags.IgnoreInaccessible"/> - access denied.
             
             When an error is ignored, the function works as if that [sub]directory is empty; does not throw exception and does not call <i>errorHandler</i>.
             
@@ -8748,7 +8747,7 @@
             <exception cref="T:System.Exception">Exceptions of the <i>writer</i> function.</exception>
             <exception cref="T:System.IO.IOException">Failed to replace file. The <i>writer</i> function also can thow it.</exception>
             <remarks>
-            The file-write functions provided by .NET and Windows API are unreliable, because:
+            The file-write functions provided by .NET and Windows API are less reliable, because:
             1. Fails if the file is temporarily open by another process or thread without sharing.
             2. Can corrupt file data. If this thread, process, PC or disk dies while writing, may write only part of data or just make empty file. Usually it happens when PC is turned off incorrectly.
             
@@ -8799,12 +8798,12 @@
         </member>
         <member name="M:Au.AFile.More.CalculateDirectorySize(System.String,Au.Types.FEFlags)">
             <summary>
-            Calls <see cref="M:Au.AFile.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> and returns sum of all file sizes.
+            Calls <see cref="M:Au.AFile.Enumerate(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> and returns sum of all file sizes.
             With default flags, it includes sizes of all descendant files, in this directory and all subdirectories except in inaccessible [sub]directories.
             </summary>
             <param name="path">Full path.</param>
-            <param name="flags"><b>EnumDirectory</b> flags.</param>
-            <exception cref="T:System.Exception"><see cref="M:Au.AFile.EnumDirectory(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
+            <param name="flags"><b>Enumerate</b> flags.</param>
+            <exception cref="T:System.Exception"><see cref="M:Au.AFile.Enumerate(System.String,Au.Types.FEFlags,System.Func{Au.Types.FEFile,System.Boolean},System.Action{System.String})"/> exceptions. By default, no exceptions if used full path and the directory exists.</exception>
             <remarks>
             This function is slow if the directory is large.
             Don't use this function for files (throws exception) and drives (instead use <see cref="T:System.IO.DriveInfo"/>, it's fast and includes sizes of Recycle Bin and other protected hidden system directories).
@@ -8981,17 +8980,17 @@
              Gets known/special folder paths (Desktop, Temp, etc).
              </summary>
              <remarks>
-             For return values is used type <see cref="T:Au.Types.FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example: <c>string s = AFolders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
+             Most functions return <see cref="T:Au.Types.FolderPath"/>, not string. It is implicitly convertible to string. Its operator + appends a filename or relative path string, with \ separator if need. Example: <c>string s = AFolders.Desktop + "file.txt"; //C:\Users\Name\Desktop\file.txt</c>
              If a function cannot get folder path, the return value contains null string. Then the + operator would throw <see cref="T:Au.Types.AuException"/>.
             
-             Some folders are known only on newer Windows versions or only on some computers. Some property-get functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
+             Some folders are known only on newer Windows versions or only on some computers. Some functions have a suffix like <b>_Win8</b> which means that the folder is unavailable on older Windows.
              Some known folders, although supported and registerd, may be still not created.
              
-             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by an unmanaged array called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.APidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
+             Some folders are virtual, for example Control Panel. They don't have a file system path, but can be identified by a data structure called "ITEMIDLIST" or "PIDL". Functions of the nested class <see cref="T:Au.AFolders.VirtualPidl"/> return it as <see cref="T:Au.APidl"/>. Functions of the nested class <see cref="T:Au.AFolders.Virtual"/> return it as string <c>":: ITEMIDLIST"</c> that can be used with some functions of this library (of classes <b>AFile</b>, <b>APidl</b>, <b>AIcon</b>) but not with .NET or native functions.
             
              Most functions use Windows "Known Folders" API, such as <msdn>SHGetKnownFolderPath</msdn>.
              The list of Windows predefined known folders: <msdn>KNOWNFOLDERID</msdn>.
-             Names of folders specific to this application have prefix <b>This</b>, like <b>ThisApp</b>.
+             Names of folders specific to current process have prefix <b>This</b>, like <b>ThisApp</b>.
              
              Some paths depend on the bitness (32 or 64 bit) of the OS and this process.
              <table>
@@ -9066,12 +9065,19 @@
             <summary>
             Folder containing assemblies of this app.
             </summary>
+            <remarks>
+            Uses <see cref="P:System.AppContext.BaseDirectory"/>.
+            </remarks>
+            <seealso cref="P:Au.AProcess.ExePath"/>
         </member>
         <member name="P:Au.AFolders.ThisAppBS">
             <summary>
             <see cref="P:Au.AFolders.ThisApp"/> with appended backslash character.
-            Note: returns string, not <see cref="T:Au.Types.FolderPath"/> like other functions.
+            Returns string, not <see cref="T:Au.Types.FolderPath"/> like other functions.
             </summary>
+            <remarks>
+            Uses <see cref="P:System.AppContext.BaseDirectory"/>.
+            </remarks>
         </member>
         <member name="P:Au.AFolders.ThisAppTemp">
             <summary>
@@ -9533,6 +9539,9 @@
             
              This function is called by many functions of classes <b>APath</b>, <b>AFile</b>, <b>AIcon</b>, some others, therefore all they support environment variables and known folders in path string.
              </remarks>
+             <seealso cref="M:System.Environment.ExpandEnvironmentVariables(System.String)"/>
+             <seealso cref="M:System.Environment.GetEnvironmentVariable(System.String)"/>
+             <seealso cref="M:System.Environment.SetEnvironmentVariable(System.String,System.String)"/>
         </member>
         <member name="M:Au.APath.GetEnvVar_(System.String)">
             <summary>
@@ -9767,13 +9776,13 @@
         <member name="F:Au.APath.MaxFilePathLength">
             <summary>
             Maximal file (not directory) path length supported by all functions (native, .NET and this library).
-            For longer paths need <c>@"\\?\"</c> prefix. It is supported by most native kernel API (but not shell API) and by most functions of this library.
+            For longer paths need <c>@"\\?\"</c> prefix. It is supported by: most native kernel API (but not shell API), most functions of this library, some .NET functions.
             </summary>
         </member>
         <member name="F:Au.APath.MaxDirectoryPathLength">
             <summary>
             Maximal directory path length supported by all functions (native, .NET and this library).
-            For longer paths need <c>@"\\?\"</c> prefix. It is supported by most native kernel API (but not shell API) and by most functions of this library.
+            For longer paths need <c>@"\\?\"</c> prefix. It is supported by: most native kernel API (but not shell API), most functions of this library, some .NET functions.
             </summary>
         </member>
         <member name="M:Au.APath.CorrectName(System.String,System.String)">
@@ -9836,7 +9845,7 @@
             <param name="path">Path or filename (then just removes extension). Can be null.</param>
             <remarks>
             The same as <see cref="M:Au.APath.GetName(System.String)"/>, just removes extension.
-            Similar to <see cref="M:System.IO.Path.GetFileName(System.ReadOnlySpan{System.Char})"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
+            Similar to <see cref="M:System.IO.Path.GetFileNameWithoutExtension(System.ReadOnlySpan{System.Char})"/>. Some differences: if ends with <c>'\\'</c> or <c>'/'</c>, gets part before it, eg <c>"B"</c> from <c>@"C:\A\B\"</c>.
             
             Supports separators <c>'\\'</c> and <c>'/'</c>.
             Also supports URL and shell parsing names like <c>@"::{CLSID-1}\0\::{CLSID-2}"</c>.
@@ -10180,6 +10189,16 @@
         <member name="P:Au.AProcess.ExeModuleHandle">
             <summary>
             Gets native module handle of the program file of this process.
+            </summary>
+        </member>
+        <member name="P:Au.AProcess.ExePath">
+            <summary>
+            Gets full path of the program file of this process.
+            </summary>
+        </member>
+        <member name="P:Au.AProcess.ExeName">
+            <summary>
+            Gets file name of the program file of this process, like "name.exe".
             </summary>
         </member>
         <member name="M:Au.AProcess.ProcessIdFromHandle(System.IntPtr)">
@@ -19450,6 +19469,14 @@
             </summary>
             <value>The length.</value>
         </member>
+        <member name="M:Au.Util.ILInstruction.ToString">
+            <summary>
+            Returns a <see cref="T:System.String"/> that represents this instance.
+            </summary>
+            <returns>
+            A <see cref="T:System.String"/> that represents this instance.
+            </returns>
+        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -20003,11 +20030,11 @@
             Native process id of the task process.
             Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
             Returns 0 if role editorExtension; then waits until the task ends.
+            Returns -1 if failed to start the script, for example it contains errors or cannot run because a script is running.
             </returns>
             <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
             <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
             <exception cref="T:System.IO.FileNotFoundException">Script file not found.</exception>
-            <exception cref="T:Au.Types.AuException">Failed to start script.</exception>
         </member>
         <member name="M:Au.ATask.RunWait(System.String,System.String[])">
             <summary>
@@ -20060,14 +20087,13 @@
             Used by other Au projects to execute a script assembly.
             </summary>
         </member>
-        <member name="M:Au.RunAssembly.Run(System.String,System.String[],System.Int32,Au.Types.RAFlags,System.String)">
+        <member name="M:Au.RunAssembly.Run(System.String,System.String[],Au.Types.RAFlags,System.String)">
             <summary>
             Executes assembly in this thread.
             Handles exceptions.
             </summary>
             <param name="asmFile">Full path of assembly file.</param>
             <param name="args">To pass to Main.</param>
-            <param name="pdbOffset">0 or offset of portable PDB in assembly file.</param>
             <param name="flags"></param>
             <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
         </member>
@@ -20298,7 +20324,7 @@
             There are programs that show current CPU speed. For example HWMonitor.
             </remarks>
         </member>
-        <member name="P:Au.APerf.SharedMemory">
+        <member name="P:Au.APerf.Shared">
             <summary>
             Gets a reference to a <see cref="T:Au.APerf.Local"/> variable in shared memory.
             </summary>
@@ -20308,8 +20334,10 @@
             </remarks>
             <example>
             <code><![CDATA[
-            ref var p = ref APerf.SharedMemory;
+            ref var p = ref APerf.Shared;
             p.First();
+            //or
+            APerf.Shared.First();
             ]]></code>
             </example>
         </member>

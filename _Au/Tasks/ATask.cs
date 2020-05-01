@@ -13,9 +13,6 @@ using System.Reflection;
 
 using Au.Types;
 
-//CONSIDER: add an option to inject and execute the task in any process/thread.
-//	[assembly: Inject("firefox.exe", windowName="* - Firefox")]
-
 namespace Au
 {
 	/// <summary>
@@ -49,11 +46,11 @@ namespace Au
 		/// Native process id of the task process.
 		/// Returns 0 if task start is deferred because a script is running (see meta option ifRunning).
 		/// Returns 0 if role editorExtension; then waits until the task ends.
+		/// Returns -1 if failed to start the script, for example it contains errors or cannot run because a script is running.
 		/// </returns>
 		/// <param name="script">Script name like "Script5.cs", or path like @"\Folder\Script5.cs".</param>
 		/// <param name="args">Command line arguments. In script it will be variable <i>args</i>. Should not contain '\0' characters.</param>
 		/// <exception cref="FileNotFoundException">Script file not found.</exception>
-		/// <exception cref="AuException">Failed to start script.</exception>
 		public static int Run(string script, params string[] args)
 			=> _Run(0, script, args, out _);
 
@@ -94,31 +91,19 @@ namespace Au
 		static int _Run(int mode, string script, string[] args, out string resultS, Action<string> resultA = null)
 		{
 			var w = WndMsg_; if(w.Is0) throw new AuException("Au editor not found."); //CONSIDER: run editor program, if installed
-			bool needResult = 0 != (mode & 2); resultS = null;
+			bool waitMode = 0 != (mode & 1), needResult = 0 != (mode & 2); resultS = null;
 			using var tr = new _TaskResults();
 			if(needResult && !tr.Init()) throw new AuException("*get task results");
 
 			var data = Util.Serializer_.Serialize(script, args, tr.pipeName);
-			//APerf.SharedMemory.Next('x'); //TODO
 			int pid = (int)AWnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
-			//APerf.SharedMemory.Next('y');
 			switch((ERunResult)pid) {
-			case ERunResult.failed: throw new AuException("*start task");
+			case ERunResult.failed: return !waitMode ? - 1 : throw new AuException("*start task"); //don't throw, eg maibe cannot run because other green script is running
 			case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
 			case ERunResult.editorThread: case ERunResult.deferred: return 0;
 			}
-			//TODO: don't throw if cannot start a green script because a green script is running.
-			//	Now prints warning and exception. Looks like a bug.
-			//	Return TRResult.
-			//	Or add TryRun.
 
-			//TODO: it seems now cannot start next green task for some time after the first is actually ended.
-			//	See maybe the process ends too slowly.
-			//	Eg if we start short script every 50-60 ms, cannot start every 2-nd script. OK if every 70 ms.
-
-			//TODO: too slowly starts preloaded task. Now 50 ms, while simple exe is 80 ms. Measured from before ATask.Run. Same if optimized.
-
-			if(0 != (mode & 1)) {
+			if(waitMode) {
 				using var hProcess = WaitHandle_.FromProcessId(pid, Api.SYNCHRONIZE | Api.PROCESS_QUERY_LIMITED_INFORMATION);
 				if(hProcess == null) throw new AuException("*wait for task");
 
@@ -248,54 +233,6 @@ namespace Au
 			ADebug.PrintNativeError_();
 			return false;
 		}
-
-		///// <summary>
-		///// Calls the first non-static method of the derived class.
-		///// The method must have 0 parameters.
-		///// </summary>
-		//public void CallFirstMethod()
-		//{
-		//	//AOutput.Write(this.GetType().GetMethods(BindingFlags.Public|BindingFlags.Instance).Length);
-		//	//foreach(var m in this.GetType().GetMethods(BindingFlags.Public|BindingFlags.NonPublic|BindingFlags.Instance|BindingFlags.DeclaredOnly)) {
-		//	//	AOutput.Write(m.Name);
-		//	//}
-
-		//	var a = GetType().GetMethods(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-		//	if(a.Length == 0) { AOutput.Write("Info: Script code should be in a non-static method. Example:\nvoid Script() { AOutput.Write(\"test\"); }"); return; }
-
-		//	_CallMethod(a[0], null);
-
-		//	//From MSDN: The GetMethods method does not return methods in a particular order, such as alphabetical or declaration order. Your code must not depend on the order in which methods are returned, because that order varies.
-		//	//But in my experience it returns methods in declaration order. At least when che class is in single file.
-		//}
-
-		///// <summary>
-		///// Calls a non-static method of the derived class by name.
-		///// </summary>
-		///// <param name="name">Method name. The method must have 0 or 1 parameter.</param>
-		///// <param name="eventData">An argument.</param>
-		//public void CallTriggerMethod(string name, object eventData)
-		//{
-		//	var m = GetType().GetMethod(name, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.DeclaredOnly);
-		//	//AOutput.Write(m);
-		//	if(m == null) { AOutput.Write($"Error: Method {name} not found."); return; }
-		//	_CallMethod(m, eventData);
-		//	//object[] a=null; if(parameter!=null) a=new object[1] { parameter };
-		//	//m.Invoke(this, a);
-		//}
-
-		//void _CallMethod(MethodInfo m, object arg)
-		//{
-		//	int n = m.GetParameters().Length;
-		//	if(n != 0 && n != 1) { AOutput.Write($"Error: Method {m.Name} must have 0 or 1 parameter."); return; }
-		//	try {
-		//		m.Invoke(this, n == 0 ? null : new object[1] { arg });
-		//	}
-		//	catch(Exception e) {
-		//		AOutput.Write($"Error: Failed to call method {m.Name}. {e.Message}");
-		//	}
-		//}
-
 	}
 }
 

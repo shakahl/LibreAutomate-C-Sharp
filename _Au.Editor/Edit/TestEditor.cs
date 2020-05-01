@@ -166,11 +166,26 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+
 		//InsertCode.ImplementInterfaceOrAbstractClass(AKeys.IsScrollLock);
 
-		//var doc = Panels.Editor.ZActiveDoc;
-		//var Z = doc.Z;
-		//var s = doc.Text;
+		var doc = Panels.Editor.ZActiveDoc;
+		var Z = doc.Z;
+		var s = doc.Text;
+
+		//AOutput.Write(SciCode.ZFindScriptHeader(s, out var m));
+
+		//int pos = Z.CurrentPos16;
+		////AOutput.Write();
+
+		//for(int i = pos; i < pos+4; i++) {
+		//	AOutput.Write((int)s[i], s[i]>' ' ? s[i] : ' ');
+		//}
+
+		//doc.Call(SCI_SETVIEWEOL, 1);
+		//doc.Call(SCI_SETREADONLY, 1);
+
+		//doc.Text=s.Replace("\n", "");
 
 		//AOutput.Write(FilesModel.IsWorkspaceZip(@"C:\Users\G\Documents\Au\@Script3.zip"));
 
