@@ -23,6 +23,8 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
+//never mind: should decrease indent when typing }. Rarely need to type it because we auto-add it.
+
 class CiAutocorrect
 {
 	public class BeforeCharContext
@@ -116,6 +118,7 @@ class CiAutocorrect
 			if(pos != from) return false;
 		} else {
 			if(ch != (char)Keys.Tab && ch != (char)doc.Call(Sci.SCI_GETCHARAT, to)) return false; //info: '\0' if posUtf8 invalid
+			if(ch == (char)Keys.Tab && doc.Call(Sci.SCI_GETCHARAT, pos - 1) < 32) return false; //don't exit temp range if pos is after tab or newline
 		}
 		for(int i = pos; i < to; i++) switch((char)doc.Call(Sci.SCI_GETCHARAT, i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
 

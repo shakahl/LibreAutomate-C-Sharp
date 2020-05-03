@@ -90,18 +90,18 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// In what thread to execute item callback functions.
+		/// In what thread to execute item actions (callback functions).
 		/// Default: <see cref="MTThread.Current"/> for <b>AMenu</b> created with the parameterless constructor, else <see cref="MTThread.StaThread"/>.
 		/// </summary>
 		/// <remarks>
 		/// If current thread is a UI thread (has windows etc), and item callback functions execute some long automations in the same thread, current thread probably is hung during that time. Use this property to avoid it.
 		/// This property is applied to items added afterwards.
 		/// </remarks>
-		public MTThread ItemThread { get; set; }
+		public MTThread ActionThread { get; set; }
 
 		/// <summary>
-		/// Whether/how to handle unhandled exceptions in item code.
-		/// Default: <see cref="MTExcept.Exception"/> (don't handle exceptions if <see cref="ItemThread"/> is <see cref="MTThread.Current"/> (default), else show warning).
+		/// Whether/how to handle unhandled exceptions in item action code.
+		/// Default: <see cref="MTExcept.Exception"/> (don't handle exceptions if <see cref="ActionThread"/> is <see cref="MTThread.Current"/> (default), else show warning).
 		/// </summary>
 		/// <remarks>
 		/// This property is applied to items added afterwards.
@@ -205,7 +205,7 @@ namespace Au.Types
 		{
 			_itemData[item] = new _ItemData {
 				action = onClick,
-				threadOpt = this.ItemThread,
+				threadOpt = this.ActionThread,
 				exceptOpt = this.ExceptionHandling,
 				sourceLine = sourceLine
 			};
@@ -527,7 +527,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="MTBase.ItemThread"/>.
+	/// Used with <see cref="MTBase.ActionThread"/>.
 	/// </summary>
 	public enum MTThread : byte
 	{
@@ -562,7 +562,7 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Don't handle exceptions. This is default.
-		/// However if <see cref="MTBase.ItemThread"/> is not <see cref="MTThread.Current"/>, handles exceptions and shows warning.
+		/// However if <see cref="MTBase.ActionThread"/> is not <see cref="MTThread.Current"/>, handles exceptions and shows warning.
 		/// On unhandled exception .NET probably will show an unhandled exception dialog with exception info and "Continue" button, unless your app uses <see cref="Application.ThreadException"/> event.
 		/// </summary>
 		Exception,

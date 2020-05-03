@@ -147,14 +147,16 @@ This option is ignored when the task runs as .exe program started not from edito
  • <i>false</i> (default) - don't optimize. Define DEBUG and TRACE. This is known as ""Debug configuration"".
  • <i>true</i> - optimize. This is known as ""Release configuration"".
 
-If true, low-level processing code is faster, but can be difficult to debug.
-This option is also applied to class files compiled together. Use true if they contain code that must be as fast as possible. Not applied to used dlls.
+Default is false, because optimization makes difficult to debug. It makes noticeably faster only some types of code, for example processing of text and byte arrays. Before deploying class libraries and exe programs always compile with optimize true.
+
+This option is also applied to class files compiled together, eg as part of project. Use true if they contain code that must be as fast as possible.
 ");
 		_AddEdit("define", _meta.define,
 @"<b>define</b> - symbols that can be used with #if.
-List separated by comma, semicolon or space. Example: TRACE,ETC
+List separated by comma, semicolon or space. Example: ONE,TWO,d:THREE,r:FOUR
+Can be used prefix r: or d: to define the symbol only if optimize true or false.
 If no optimize true, DEBUG and TRACE are added implicitly.
-These symbols also are visible in class files compiled together, but not in used dlls.
+These symbols also are visible in class files compiled together, eg as part of project.
 See also <google C# #define>#define<>.
 ");
 		_AddCombo("warningLevel", "4|3|2|1|0", _meta.warningLevel,
@@ -165,13 +167,13 @@ See also <google C# #define>#define<>.
 3 - most warnings.
 4 (default) all warnings.
 
-This option is also applied to class files compiled together.
+This option is also applied to class files compiled together, eg as part of project.
  ");
 		_AddEdit("noWarnings", _meta.noWarnings,
 @"<b>noWarnings</b> - don't show these warnings.
 List separated by comma, semicolon or space. Example: 151,3001,120
 
-This option is also applied to class files compiled together.
+This option is also applied to class files compiled together, eg as part of project.
 See also <google C# #pragma warning>#pragma warning<>.
 ");
 		_AddEdit("preBuild", _meta.preBuild,
@@ -195,17 +197,19 @@ Everything else is like with preBuild.
 		g.ZAddHeaderRow("Assembly");
 		_AddEdit("outputPath", _meta.outputPath,
 @"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
-Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
+Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin\filename<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
 
 If role exeProgram, the exe file is named like the script. The 32-bit version has suffix ""-32"". If optimize true, creates both 64-bit and 32-bit versions. Else creates only 32-bit if prefer32bit true or 32-bit OS, else only 64-bit.
 If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
 ", noCheckbox: true, buttonAction: (sender, sed) => {
 	var m = new AMenu();
-	m[_role == ERole.classLibrary ? @"%AFolders.ThisApp%\Libraries" : @"%AFolders.Workspace%\bin"] = o => _SetEditCellText(o.ToString());
+	m[_GetOutputPath(getDefault: true)] = o => _SetEditCellText(o.ToString());
 	m["Browse..."] = o => {
-		var f = new FolderBrowserDialog { SelectedPath = AFolders.ThisAppDocuments, ShowNewFolderButton = true };
+		using var f = new FolderBrowserDialog {
+			SelectedPath = _GetOutputPath(getDefault: false, expandEnvVar: true),
+			ShowNewFolderButton = true,
+		};
 		if(f.ShowDialog(this) == DialogResult.OK) _SetEditCellText(f.SelectedPath);
-		f.Dispose();
 	};
 	m.Show(sender as Control);
 });
@@ -224,13 +228,13 @@ The .manifest file must be in this workspace. Can be path relative to this file 
 
 The manifest will be added as a native resource.
 ");
-//		_AddEdit("resFile", _meta.resFile,
-//@"<b>resFile</b> - .res file containing resources to add to the output exe or dll file as native resources.
-//The .res file must be in this workspace. Can be path relative to this file or path in the workspace.
+		//		_AddEdit("resFile", _meta.resFile,
+		//@"<b>resFile</b> - .res file containing resources to add to the output exe or dll file as native resources.
+		//The .res file must be in this workspace. Can be path relative to this file or path in the workspace.
 
-//.res files contain compiled native resources of any type, including icons and manifest.
-//This option is rarely used. Instead you use managed resources (button ""Resource..."").
-//");
+		//.res files contain compiled native resources of any type, including icons and manifest.
+		//This option is rarely used. Instead you use managed resources (button ""Resource..."").
+		//");
 		_AddEdit("xmlDoc", _meta.xmlDoc,
 @"<b>xmlDoc</b> - XML documentation file to create from XML comments of classes, functions, etc.
 If not full path, the compiler creates the XML file in the 'outputPath' folder.
@@ -411,7 +415,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			switch(_role) {
 			case ERole.exeProgram:
 			case ERole.classLibrary:
-				if(_meta.outputPath.NE()) _meta.outputPath = _role == ERole.exeProgram ? @"%AFolders.Workspace%\bin" : @"%AFolders.ThisApp%\Libraries";
+				_meta.outputPath = _GetOutputPath(getDefault: false);
 				break;
 			}
 			var name = APath.GetNameNoExt(_f.Name);
@@ -420,6 +424,19 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		}
 
 		return true;
+	}
+
+	string _GetOutputPath(bool getDefault, bool expandEnvVar = false)
+	{
+		string r;
+		if(!getDefault) getDefault = _meta.outputPath.NE();
+		if(getDefault) {
+			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
+		} else {
+			r = _meta.outputPath;
+			if(expandEnvVar) r = APath.ExpandEnvVar(r);
+		}
+		return r;
 	}
 
 	private void _bOK_Click(object sender, EventArgs e)

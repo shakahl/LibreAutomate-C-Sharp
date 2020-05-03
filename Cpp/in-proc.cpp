@@ -376,7 +376,7 @@ bool RunDll(HWND w)
 	t = b.GetBufferToAppend(out n); b.FixBuffer(GetWindowsDirectoryW(t, n));
 	b << rundll;
 	t = b.GetBufferToAppend(out n); b.FixBuffer(GetModuleFileNameW(s_moduleHandle, t, n));
-	auto u = wcsrchr(t, '\\') - 5; u[0] = bits[0]; u[1] = bits[1]; //"32" to "64" or vice versa
+	auto u = wcsrchr(t, '\\') - 2; u[0] = bits[0]; u[1] = bits[1]; //"32" to "64" or vice versa
 	if(GetFileAttributes(t) == INVALID_FILE_ATTRIBUTES) return false; //avoid messagebox when our antimatter dll does not exist
 	b << L"\",Cpp_RunDll "; //note: without W
 	b << (__int64)w << ' ' << (__int64)ev.m_h;

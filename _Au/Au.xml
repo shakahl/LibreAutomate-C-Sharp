@@ -3241,9 +3241,9 @@
             Calls the true item's onClick callback if need. Calls it in correct thread.
             </summary>
         </member>
-        <member name="P:Au.Types.MTBase.ItemThread">
+        <member name="P:Au.Types.MTBase.ActionThread">
             <summary>
-            In what thread to execute item callback functions.
+            In what thread to execute item actions (callback functions).
             Default: <see cref="F:Au.Types.MTThread.Current"/> for <b>AMenu</b> created with the parameterless constructor, else <see cref="F:Au.Types.MTThread.StaThread"/>.
             </summary>
             <remarks>
@@ -3253,8 +3253,8 @@
         </member>
         <member name="P:Au.Types.MTBase.ExceptionHandling">
             <summary>
-            Whether/how to handle unhandled exceptions in item code.
-            Default: <see cref="F:Au.Types.MTExcept.Exception"/> (don't handle exceptions if <see cref="P:Au.Types.MTBase.ItemThread"/> is <see cref="F:Au.Types.MTThread.Current"/> (default), else show warning).
+            Whether/how to handle unhandled exceptions in item action code.
+            Default: <see cref="F:Au.Types.MTExcept.Exception"/> (don't handle exceptions if <see cref="P:Au.Types.MTBase.ActionThread"/> is <see cref="F:Au.Types.MTThread.Current"/> (default), else show warning).
             </summary>
             <remarks>
             This property is applied to items added afterwards.
@@ -3372,7 +3372,7 @@
         </member>
         <member name="T:Au.Types.MTThread">
             <summary>
-            Used with <see cref="P:Au.Types.MTBase.ItemThread"/>.
+            Used with <see cref="P:Au.Types.MTBase.ActionThread"/>.
             </summary>
         </member>
         <member name="F:Au.Types.MTThread.Current">
@@ -3406,7 +3406,7 @@
         <member name="F:Au.Types.MTExcept.Exception">
             <summary>
             Don't handle exceptions. This is default.
-            However if <see cref="P:Au.Types.MTBase.ItemThread"/> is not <see cref="F:Au.Types.MTThread.Current"/>, handles exceptions and shows warning.
+            However if <see cref="P:Au.Types.MTBase.ActionThread"/> is not <see cref="F:Au.Types.MTThread.Current"/>, handles exceptions and shows warning.
             On unhandled exception .NET probably will show an unhandled exception dialog with exception info and "Continue" button, unless your app uses <see cref="E:System.Windows.Forms.Application.ThreadException"/> event.
             </summary>
         </member>
@@ -6381,6 +6381,22 @@
             <param name="length"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
+        <member name="M:Au.AExtensions.GetStartEnd(System.Nullable{System.Range},System.Int32)">
+            <summary>
+            If this is null, returns <c>(0, length)</c>. Else calls <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> and returns start and end instead of start and length.
+            </summary>
+            <param name="t"></param>
+            <param name="length"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.AExtensions.GetOffsetAndLength(System.Nullable{System.Range},System.Int32)">
+            <summary>
+            If this is null, returns <c>(0, length)</c>. Else calls <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/>.
+            </summary>
+            <param name="t"></param>
+            <param name="length"></param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
+        </member>
         <member name="M:Au.AExtensions.Has``1(``0,``0)">
             <summary>
             Returns true if this enum variable has all flag bits specified in <i>flag</i>.
@@ -7229,7 +7245,7 @@
             Use this overload for various context menus of your app.
             </summary>
             <remarks>
-            Item actions run in this thread by default (see <see cref="P:Au.Types.MTBase.ItemThread"/>).
+            Item actions run in this thread by default (see <see cref="P:Au.Types.MTBase.ActionThread"/>).
             Users cannot right-click a menu item to open/select it in editor.
             </remarks>
         </member>
@@ -7243,7 +7259,7 @@
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
             <remarks>
             This overload sets properties:
-            - <see cref="P:Au.Types.MTBase.ItemThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
+            - <see cref="P:Au.Types.MTBase.ActionThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
             - <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> = true.
             
             Users can right-click a menu item to open/select it in editor.
@@ -7516,7 +7532,7 @@
             </summary>
             <remarks>
             Based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
-            Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="P:Au.Types.MTBase.ItemThread"/>.
+            Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="P:Au.Types.MTBase.ActionThread"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -7565,7 +7581,7 @@
             Creates <see cref="P:Au.AToolbar.Control"/> object or uses <i>control</i>. Its window handle will be created in <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
             
             Sets properties:
-            - <see cref="P:Au.Types.MTBase.ItemThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
+            - <see cref="P:Au.Types.MTBase.ActionThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
             - <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> = true.
             - <see cref="P:Au.Types.MTBase.DefaultIcon"/> = <see cref="P:Au.Types.MTBase.CommonIcon"/>.
             - <see cref="P:Au.Types.MTBase.DefaultSubmenuIcon"/> = <see cref="P:Au.Types.MTBase.CommonSubmenuIcon"/>.
@@ -7768,7 +7784,7 @@
             <exception cref="T:System.InvalidOperationException">
             - The toolbar was never shown (<see cref="M:Au.AToolbar.Show(Au.AScreen)"/> not called).
             - It is a satellite toolbar.
-            - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="P:Au.Types.MTBase.ItemThread"/>.
+            - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="P:Au.Types.MTBase.ActionThread"/>.
             </exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="F:Au.Types.TBHide.User"/>.</exception>
             <remarks>
@@ -16307,13 +16323,15 @@
             <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
             <seealso cref="F:Au.Types.SegSep.Line"/>
         </member>
-        <member name="M:Au.AExtString.LineCount(System.String,System.Boolean)">
+        <member name="M:Au.AExtString.LineCount(System.String,System.Boolean,System.Nullable{System.Range})">
             <summary>
             Returns the number of lines.
             Counts line separators "\r\n", "\n", "\r".
             </summary>
             <param name="t">This string.</param>
             <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
+            <param name="range">Part of this string or null (default).</param>
+            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <seealso cref="M:Au.Util.AStringUtil.LineAndColumn(System.String,System.Int32,System.Int32@,System.Int32@)"/>
         </member>
         <member name="M:Au.AExtString.Lower(System.String)">

@@ -148,7 +148,7 @@ public:
 		if(r == 0) delete this;
 		return r;
 	}
-#pragma region
+#pragma region IAccessible
 	virtual STDMETHODIMP GetTypeInfoCount(UINT * pctinfo) override
 	{
 		return E_NOTIMPL;
@@ -265,6 +265,7 @@ enum class eAccResult {
 };
 ENABLE_BITMASK_OPERATORS(eAccResult);
 
+#if true
 bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null)
 {
 	if(stream == null) CreateStreamOnHGlobal(0, true, &stream);
@@ -280,27 +281,92 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 	if(a.elem != 0) has |= eAccResult::Elem;
 	if(a.misc.role != 0) has |= eAccResult::Role;
 
-	//problem: with some AO the hook is not called when we try to do something inproc, eg get all props.
-	//	They use a custom IMarshal, which redirects to another (not hooked) IAccessible interface. In most cases it is even in another process.
-	//	Workaround: don't add InProc flag. With all known such apps it does not make faster anyway.
-	//	Known apps: 1. Firefox, when multiprocess not disabled. 2. Some hidden AO in IE. 3. Windows store apps, but we don't use inproc.
-	//	Known apps where is custom IMarshal but the hook works: 1. Task Scheduler MMC: controls of other process.
-	//	Other workarounds:
-	//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, Firefox crashes.
-	//		Not tested: wrap the AO in our AO (like we do with Java and UIA). Makes no sense, just would make slower.
-	IMarshal* m = null;
-	if(0 == a.acc->QueryInterface(&m)) {
-		m->Release();
-		a.misc.flags &= ~eAccMiscFlags::InProc;
-		//PRINTS(L"custom IMarshal. Using NotInProc.");
-	} else {
-		a.misc.flags |= eAccMiscFlags::InProc;
-		//PRINTS(L"standard IMarshal.");
+	if(stream->Write(&has, 1, null)) return false;
+
+	a.misc.flags |= eAccMiscFlags::InProc;
+	if(!(has & eAccResult::UsePrevAcc)) {
+		//problem: with some AO the hook is not called when we try to do something inproc, eg get all props.
+		//	They use a custom IMarshal, which redirects to another (not hooked) IAccessible interface. In most cases it is even in another process.
+		//	Known apps: 1. Firefox, when multiprocess not disabled. 2. Some hidden AO in IE. 3. Windows store apps, but we don't use inproc.
+		//	Known apps where is custom IMarshal but the hook works: 1. Task Scheduler MMC: controls of other process.
+		//	Workarounds:
+		//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, Firefox crashes.
+		//		Old, rejected: remove InProc flag. But with new Firefox then all AOs are not inproc.
+		//		Now using: wrap the AO in AccessibleMarshalWrapper and marshal it instead, like we always did for Firefox TEXT AOs.
+		HRESULT hr = 1;
+		IMarshal* m = null;
+		if(0 == a.acc->QueryInterface(&m)) m->Release();
+		else hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
+		//ao::PrintAcc(a.acc, a.elem);
+		if(hr) {
+			//Firefox bug when multi-process: fails to marshal all TEXT AOs.
+			//	Workaround: wrap a.acc into an AccessibleMarshalWrapper and marshal it instead.
+			//	Or could detect Firefox multi-process and use NotInProc implicitly. But slower almost 2 times. Also then cannot get HTML attributes etc later.
+			//	With new Firefox we have to use this for all Firefox AOs.
+#if true
+			HRESULT hr1 = hr;
+			auto wrap = new AccessibleMarshalWrapper(a.acc);
+			a.acc = wrap;
+			hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
+			if(hr == 0) wrap->ignoreQI = false; else delete wrap;
+			//Print((UINT)hr);
+
+			if(hr) PRINTF(L"failed to marshal AO: 0x%X 0x%X", hr1, hr);
+#endif
+			//ao::PrintAcc(a.acc, a.elem);
+		} //else Print(L"OK");
+		if(hr) return false;
+		inproc::s_hookIAcc.Hook(a.acc);
 	}
+
+	if(!!(has & eAccResult::Elem))
+		if(stream->Write(&a.elem, 4, null)) return false;
+
+	if(stream->Write(&a.misc.flags, 1, null)) return false;
+
+	if(!!(has & eAccResult::Role))
+		if(stream->Write(&a.misc.role, 1, null)) return false;
+
+	if(!!(has & eAccResult::Level))
+		if(stream->Write(&a.misc.level, 2, null)) return false;
+
+	return true;
+}
+#else
+bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = null)
+{
+	if(stream == null) CreateStreamOnHGlobal(0, true, &stream);
+
+	eAccResult has = (eAccResult)0;
+	if(aPrev != null) {
+		if(a.acc == aPrev->acc && a.elem != 0) has |= eAccResult::UsePrevAcc; else aPrev->acc = a.acc;
+		if(a.misc.level != 0) has |= a.misc.level == aPrev->misc.level ? eAccResult::UsePrevLevel : eAccResult::Level;
+		aPrev->misc.level = a.misc.level;
+	} else {
+		if(a.misc.level != 0) has |= eAccResult::Level;
+	}
+	if(a.elem != 0) has |= eAccResult::Elem;
+	if(a.misc.role != 0) has |= eAccResult::Role;
 
 	if(stream->Write(&has, 1, null)) return false;
 
-	if(!(has&eAccResult::UsePrevAcc)) {
+	a.misc.flags |= eAccMiscFlags::InProc;
+	if(!(has & eAccResult::UsePrevAcc)) {
+		//problem: with some AO the hook is not called when we try to do something inproc, eg get all props.
+		//	They use a custom IMarshal, which redirects to another (not hooked) IAccessible interface. In most cases it is even in another process.
+		//	Known apps: 1. Firefox, when multiprocess not disabled. 2. Some hidden AO in IE. 3. Windows store apps, but we don't use inproc.
+		//	Known apps where is custom IMarshal but the hook works: 1. Task Scheduler MMC: controls of other process.
+		//	Workaround: don't add InProc flag. With all known such apps it does not make faster anyway.
+		//	Other workarounds:
+		//		Tested, fails: replace CoMarshalInterface with CoGetStandardMarshal/MarshalInterface. Chrome works, Firefox crashes.
+		//		Not tested: wrap the AO in our AO (like we do with Java and UIA). Makes no sense, just would make slower.
+		IMarshal* m = null;
+		if(0 == a.acc->QueryInterface(&m)) {
+			m->Release();
+			a.misc.flags &= ~eAccMiscFlags::InProc;
+			//PRINTS(L"custom IMarshal. Using NotInProc.");
+		}
+
 		HRESULT hr = CoMarshalInterface(stream, IID_IAccessible, a.acc, MSHCTX_LOCAL, null, MSHLFLAGS_NORMAL);
 		//ao::PrintAcc(a.acc, a.elem);
 		if(hr) {
@@ -323,19 +389,20 @@ bool WriteAccToStream(ref Smart<IStream>& stream, Cpp_Acc a, Cpp_Acc* aPrev = nu
 		inproc::s_hookIAcc.Hook(a.acc);
 	}
 
-	if(!!(has&eAccResult::Elem))
+	if(!!(has & eAccResult::Elem))
 		if(stream->Write(&a.elem, 4, null)) return false;
 
 	if(stream->Write(&a.misc.flags, 1, null)) return false;
 
-	if(!!(has&eAccResult::Role))
+	if(!!(has & eAccResult::Role))
 		if(stream->Write(&a.misc.role, 1, null)) return false;
 
-	if(!!(has&eAccResult::Level))
+	if(!!(has & eAccResult::Level))
 		if(stream->Write(&a.misc.level, 2, null)) return false;
 
 	return true;
 }
+#endif
 
 #pragma endregion
 

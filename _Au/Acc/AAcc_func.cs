@@ -883,7 +883,7 @@ namespace Au
 		public AAcc Navigate(string navig, double secondsToWait = 0)
 		{
 			ThrowIfDisposed_();
-			int hr; var ca = new Cpp.Cpp_Acc();
+			int hr; Cpp.Cpp_Acc ca;
 			if(secondsToWait == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {

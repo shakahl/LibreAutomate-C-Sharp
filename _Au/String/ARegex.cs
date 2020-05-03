@@ -406,7 +406,7 @@ namespace Au
 		static bool _GetStartEnd(string s, Range? range, out int start, out int end)
 		{
 			if(s == null) { start = end = 0; return false; }
-			(start, end) = range?.GetStartEnd(s.Length) ?? (0, s.Length);
+			(start, end) = range.GetStartEnd(s.Length);
 			return true;
 		}
 

@@ -340,7 +340,6 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 		public static int IndexOfNot(this ReadOnlySpan<char> t, string chars)
 		{
 			if(chars == null) throw new ArgumentNullException();
@@ -359,7 +358,6 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 		public static int LastIndexOfNot(this ReadOnlySpan<char> t, string chars)
 		{
 			if(chars == null) throw new ArgumentNullException();
@@ -466,7 +464,7 @@ namespace Au
 		/// </remarks>
 		public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null)
 		{
-			var (start, end) = range?.GetStartEnd(t.Length) ?? (0, t.Length);
+			var (start, end) = range.GetStartEnd(t.Length);
 			int lens = s?.Length ?? throw new ArgumentNullException();
 			if(lens == 0) return 0; //like IndexOf and Find
 
@@ -510,7 +508,7 @@ namespace Au
 		/// Returns true if this string is null or empty ("").
 		/// </summary>
 		/// <param name="t">This string.</param>
-		public static bool NE(this string t) => t==null ? true : t.Length == 0;
+		public static bool NE(this string t) => t == null ? true : t.Length == 0;
 
 		//rejected. Too simple. Not so often used. Could name AsSpan, then in completion lists it is joined with the .NET extension method, but then in our editor it is the first in the list.
 		///// <summary>
@@ -580,17 +578,19 @@ namespace Au
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="preferMore">Add 1 if the string ends with a line separator or its length is 0.</param>
+		/// <param name="range">Part of this string or null (default).</param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <seealso cref="AStringUtil.LineAndColumn"/>
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static int LineCount(this string t, bool preferMore = false)
+		public static int LineCount(this string t, bool preferMore = false, Range? range = null)
 		{
-			if(t.Length == 0) return preferMore ? 1 : 0;
-			int i = 0, n = 1;
-			for(; i < t.Length; i++) {
+			var (i, to) = range.GetStartEnd(t.Length);
+			if(to - i == 0) return preferMore ? 1 : 0;
+			int n = 1;
+			for(; i < to; i++) {
 				char c = t[i];
 				if(c > '\r') continue;
 				if(c == '\r') {
-					if(++i == t.Length || t[i] != '\n') i--; //single \r ?
+					if(++i == to || t[i] != '\n') i--; //single \r ?
 					n++;
 				} else if(c == '\n') n++;
 			}
@@ -644,7 +644,6 @@ namespace Au
 
 		#region ToNumber
 
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags)
 		{
 			numberEndIndex = 0;
@@ -994,7 +993,7 @@ namespace Au
 		static ReadOnlySpan<char> _NumSpan(string t, Range? range)
 		{
 			if(t == null) return default;
-			var (start, len) = range?.GetOffsetAndLength(t.Length) ?? (0, t.Length);
+			var (start, len) = range.GetOffsetAndLength(t.Length);
 			return t.AsSpan(start, len);
 		}
 #else
@@ -1206,7 +1205,6 @@ namespace Au
 		/// <remarks>
 		/// Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
 		/// </remarks>
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static string Escape(this string t, int limit = 0, bool quote = false)
 		{
 			int i, len = t.Length;
@@ -1260,7 +1258,6 @@ namespace Au
 		/// Supports all escape sequences of <see cref="Escape"/>: \\ \" \t \n \r \0 \uXXXX.
 		/// Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
 		/// </remarks>
-		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
 		public static bool Unescape(this string t, out string result)
 		{
 			result = t;

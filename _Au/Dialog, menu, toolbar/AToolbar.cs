@@ -24,7 +24,7 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// Based on <see cref="ToolStrip"/>.
-	/// Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="MTBase.ItemThread"/>.
+	/// Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -84,7 +84,7 @@ namespace Au
 		/// Creates <see cref="Control"/> object or uses <i>control</i>. Its window handle will be created in <see cref="Show"/>.
 		/// 
 		/// Sets properties:
-		/// - <see cref="MTBase.ItemThread"/> = <see cref="MTThread.StaThread"/>.
+		/// - <see cref="MTBase.ActionThread"/> = <see cref="MTThread.StaThread"/>.
 		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// - <see cref="MTBase.DefaultIcon"/> = <see cref="MTBase.CommonIcon"/>.
 		/// - <see cref="MTBase.DefaultSubmenuIcon"/> = <see cref="MTBase.CommonSubmenuIcon"/>.
@@ -109,7 +109,7 @@ namespace Au
 			_offsets = _sett.offsets;
 			Border = _sett.border; //default Sizable2
 
-			ItemThread = MTThread.StaThread;
+			ActionThread = MTThread.StaThread;
 			ExtractIconPathFromCode = true;
 			DefaultIcon = CommonIcon;
 			DefaultSubmenuIcon = CommonSubmenuIcon;
@@ -352,7 +352,7 @@ namespace Au
 			if(menu == null) return null;
 			var m = new AMenu(this.Name + " + " + item.Text, _sourceFile, GetItemSourceLine_(item)) {
 				MultiShow = true,
-				ItemThread = this.ItemThread,
+				ActionThread = this.ActionThread,
 			};
 			item.DropDown = m.Control; //attaches
 			m.Control.OwnerItem = item; //the callback may ned it
@@ -626,7 +626,7 @@ namespace Au
 		/// <exception cref="InvalidOperationException">
 		/// - The toolbar was never shown (<see cref="Show"/> not called).
 		/// - It is a satellite toolbar.
-		/// - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="MTBase.ItemThread"/>.
+		/// - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="MTBase.ActionThread"/>.
 		/// </exception>
 		/// <exception cref="ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="TBHide.User"/>.</exception>
 		/// <remarks>

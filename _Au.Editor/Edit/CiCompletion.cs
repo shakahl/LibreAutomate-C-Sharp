@@ -201,6 +201,7 @@ class CiCompletion
 							case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae: nodeL = cae.Expression; break; // ?. //OperatorToken is '.', GetPreviousToken is '?'
 							case QualifiedNameSyntax s1: nodeL = s1.Left; break; // eg . outside functions
 							case AliasQualifiedNameSyntax s1: nodeL = s1.Alias; break; // ::
+							case ExplicitInterfaceSpecifierSyntax s1: nodeL = s1.Name; break;
 							default: isDot = false; ADebug.Print(node.GetType()); break;
 							}
 						}
@@ -222,7 +223,10 @@ class CiCompletion
 				if(r1 != null) {
 					if(isDot) {
 						switch(node) {
-						case MemberBindingExpressionSyntax _: canGroup = true; break; // ?.
+						case MemberBindingExpressionSyntax _: // ?.
+						case ExplicitInterfaceSpecifierSyntax _: // Interface.Member
+							canGroup = true;
+							break;
 						case AliasQualifiedNameSyntax _: break; // ::
 						default:
 							//AOutput.Write(model.GetTypeInfo(nodeL).Type); //null if namespace

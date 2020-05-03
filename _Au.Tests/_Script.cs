@@ -1004,13 +1004,38 @@ class Script : AScript
 	//void One(bool two) { }
 	//bool Two() => false;
 
+	void TestFirefoxAcc()
+	{
+		try {
+			//var w = +AWnd.Find("*- Mozilla Firefox", "MozillaWindowClass");
+			//var a = AAcc.FromWindow(w);
+
+			var w = +AWnd.Find("Au automation library and editor | Au - Mozilla Firefox", "MozillaWindowClass");
+			//var a = +AAcc.Find(w, "web:LINK", "Library");
+			var a = +AAcc.Find(w, "web:DOCUMENT");
+			a=+a.Navigate("ch2");
+			//a = +a.Navigate("fi ne fi4 ne fi ne fi2");
+			//a=a.Find("LINK", "Library");
+
+			AOutput.Write(a.MiscFlags, a);
+
+			if(a.GetProperties("@", out var p)) {
+				AOutput.Write(p.HtmlAttributes);
+			}
+
+		}
+		finally {
+			Cpp.Unload();
+		}
+	}
+
 	unsafe void _Main()
 	{
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
 
-
+		//TestFirefoxAcc();
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

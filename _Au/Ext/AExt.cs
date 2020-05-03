@@ -83,6 +83,24 @@ namespace Au
 			return (v.Offset, v.Offset + v.Length);
 		}
 
+		/// <summary>
+		/// If this is null, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/> and returns start and end instead of start and length.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="length"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static (int start, int end) GetStartEnd(this Range? t, int length)
+			=> t?.GetStartEnd(length) ?? (0, length);
+
+		/// <summary>
+		/// If this is null, returns <c>(0, length)</c>. Else calls <see cref="Range.GetOffsetAndLength"/>.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="length"></param>
+		/// <exception cref="ArgumentOutOfRangeException"></exception>
+		public static (int Offset, int Length) GetOffsetAndLength(this Range? t, int length)
+			=> t?.GetOffsetAndLength(length) ?? (0, length);
+
 		//rejected: too simple. We have AOutput.Write(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 		///// <summary>
 		///// Converts int to hexadecimal string like "0x3A".

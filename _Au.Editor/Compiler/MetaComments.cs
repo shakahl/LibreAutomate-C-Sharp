@@ -80,7 +80,7 @@ namespace Au.Compiler
 	/// <h3>Settings used when compiling</h3>
 	/// <code><![CDATA[
 	/// optimize false|true //if false (default), don't optimize code; this is known as "Debug configuration". If true, optimizes code; then low-level code is faster, but can be difficult to debug; this is known as "Release configuration".
-	/// define SYMBOL1,SYMBOL2 //define preprocessor symbols that can be used with #if etc. If no 'optimize' true, DEBUG and TRACE are added implicitly.
+	/// define SYMBOL1,SYMBOL2,d:DEBUG_ONLY,r:RELEASE_ONLY //define preprocessor symbols that can be used with #if etc. If no optimize true, DEBUG and TRACE are added implicitly.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// noWarnings 3009,162 //don't show these compiler warnings
 	/// preBuild file /arguments //run this script before compiling. More info below.
@@ -128,7 +128,7 @@ namespace Au.Compiler
 	/// <h3>Settings used to create assembly file</h3>
 	/// <code><![CDATA[
 	/// role miniProgram|exeProgram|editorExtension|classLibrary|classFile //purpose of this C# file. Also the type of the output assembly file (exe, dll, none). Default: miniProgram for scripts, classFile for class files. More info below.
-	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %AFolders.Workspace%\bin. Default for classLibrary: %AFolders.ThisApp%\Libraries.
+	/// outputPath path //create output files (.exe, .dll, etc) in this directory. Used with role exeProgram and classLibrary. Can be full path or relative path like with 'c'. Default for exeProgram: %AFolders.Workspace%\bin\filename. Default for classLibrary: %AFolders.ThisApp%\Libraries.
 	/// console false|true //let the program run with console
 	/// icon file.ico //icon of the .exe file. Can be filename or relative path, like with 'c'.
 	/// manifest file.manifest //manifest file of the .exe file. Can be filename or relative path, like with 'c'.
@@ -375,13 +375,20 @@ namespace Au.Compiler
 				}
 			}
 
+			//define d:DEBUG_ONLY, r:RELEASE_ONLY
+			for(int i = Defines.Count; --i >= 0;) {
+				var s = Defines[i]; if(s.Length < 3 || s[1] != ':') continue;
+				bool? del = s[0] switch { 'r' => !Optimize, 'd' => Optimize, _ => null };
+				if(del == true) Defines.RemoveAt(i); else if(del == false) Defines[i] = s[2..];
+			}
+
 			if(!Optimize) {
 				if(!Defines.Contains("DEBUG")) Defines.Add("DEBUG");
 				if(!Defines.Contains("TRACE")) Defines.Add("TRACE");
 			}
 			//if(Role == ERole.exeProgram && !Defines.Contains("EXE")) Defines.Add("EXE"); //rejected
 
-			_FinalCheckOptions();
+			_FinalCheckOptions(f);
 
 			if(Errors.ErrorCount > 0) {
 				if(flags.Has(EMPFlags.PrintErrors)) Errors.PrintAll();
@@ -695,30 +702,32 @@ namespace Au.Compiler
 			return true;
 		}
 
-		bool _FinalCheckOptions()
+		bool _FinalCheckOptions(FileNode f)
 		{
 			const EMSpecified c_spec1 = EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.ifRunning2
 				| EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
 			const string c_spec1S = "cannot use runMode, ifRunning, ifRunning2, uac, prefer32bit, manifest, icon, console";
 
+			bool needOP = false;
 			switch(Role) {
 			case ERole.miniProgram:
 				if(Specified.HasAny(EMSpecified.outputPath)) return _ErrorM("with role miniProgram cannot use outputPath");
 				break;
 			case ERole.exeProgram:
-				OutputPath ??= AFolders.Workspace + "bin";
+				needOP = true;
 				break;
 			case ERole.editorExtension:
 				if(Specified.HasAny(c_spec1 | EMSpecified.outputPath)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath");
 				break;
 			case ERole.classLibrary:
 				if(Specified.HasAny(c_spec1)) return _ErrorM("with role classLibrary " + c_spec1S);
-				OutputPath ??= AFolders.ThisApp + "Libraries";
+				needOP = true;
 				break;
 			case ERole.classFile:
 				if(Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, r, resource, com");
 				break;
 			}
+			if(needOP) OutputPath ??= GetDefaultOutputPath(f, Role, withEnvVar: false);
 
 			if((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunMode == ERunMode.green) return _ErrorM("ifRunning run requires runMode blue");
 			if(Specified.Has(EMSpecified.ifRunning2) && RunMode == ERunMode.blue) return _ErrorM("with runMode blue cannot use ifRunning2");
@@ -729,6 +738,15 @@ namespace Au.Compiler
 			//}
 
 			return true;
+		}
+
+		public static string GetDefaultOutputPath(FileNode f, ERole role, bool withEnvVar)
+		{
+			Debug.Assert(role == ERole.exeProgram || role == ERole.classLibrary);
+			string r;
+			if(role == ERole.classLibrary) r = withEnvVar ? @"%AFolders.ThisApp%\Libraries" : AFolders.ThisApp + @"Libraries";
+			else r = (withEnvVar ? @"%AFolders.Workspace%\bin\" : AFolders.Workspace + @"bin\") + f.DisplayName;
+			return r;
 		}
 
 		public CSharpCompilationOptions CreateCompilationOptions()

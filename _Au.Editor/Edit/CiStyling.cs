@@ -376,10 +376,14 @@ partial class CiStyling
 				} else if(code.Eq(pos, "//;")) {
 					for(int j = pos + 2; j < code.Length && code[j] == ';'; j++) _AddFoldPoint(pos, -1);
 				} else if(pos > commentEnd) {
-					var k = v.Token.LeadingTrivia.Span;
+					var t1 = v.Token;
+					var k = t1.LeadingTrivia.Span;
 					commentEnd = k.End;
+					bool? inFunc = null;
 					foreach(var g in s_rxComments.FindAllG(code, 0, k.Start..k.End)) {
 						//AOutput.Write($"'{g}'");
+						inFunc ??= t1.GetAncestor<BlockSyntax>() != null;
+						if(inFunc == true && code.LineCount(false, g.Start..g.End) < 10) continue;
 						_AddFoldPoint(g.Start, 1);
 						_AddFoldPoint(g.End, -1);
 					}

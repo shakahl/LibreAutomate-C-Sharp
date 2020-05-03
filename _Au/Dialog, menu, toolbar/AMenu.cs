@@ -59,7 +59,7 @@ namespace Au
 		/// Use this overload for various context menus of your app.
 		/// </summary>
 		/// <remarks>
-		/// Item actions run in this thread by default (see <see cref="MTBase.ItemThread"/>).
+		/// Item actions run in this thread by default (see <see cref="MTBase.ActionThread"/>).
 		/// Users cannot right-click a menu item to open/select it in editor.
 		/// </remarks>
 		public AMenu() : base(null, 0)
@@ -76,7 +76,7 @@ namespace Au
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
 		/// This overload sets properties:
-		/// - <see cref="MTBase.ItemThread"/> = <see cref="MTThread.StaThread"/>.
+		/// - <see cref="MTBase.ActionThread"/> = <see cref="MTThread.StaThread"/>.
 		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// 
 		/// Users can right-click a menu item to open/select it in editor.
@@ -89,7 +89,7 @@ namespace Au
 			_c = new _ContextMenuStrip(this, isMain: true);
 
 			ExtractIconPathFromCode = true;
-			ItemThread = MTThread.StaThread;
+			ActionThread = MTThread.StaThread;
 		}
 
 		/// <summary>

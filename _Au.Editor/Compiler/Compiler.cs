@@ -289,6 +289,8 @@ namespace Au.Compiler
 
 			if(needOutputFiles) {
 				cache.AddCompiled(f, outFile, m, r.mtaThread);
+
+				if(notInCache) AOutput.Write($"<>Output folder: <link>{m.OutputPath}<>");
 			}
 
 			r.name = m.Name;

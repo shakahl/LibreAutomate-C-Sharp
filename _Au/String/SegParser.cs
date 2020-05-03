@@ -81,7 +81,7 @@ namespace Au.Types
 			_s = s;
 			_sepLength = 1;
 			_flags = flags;
-			(_sStart, _sEnd) = range?.GetStartEnd(s.Length) ?? (0, s.Length);
+			(_sStart, _sEnd) = range.GetStartEnd(s.Length);
 			_start = 0;
 			_end = _sStart - 1;
 		}

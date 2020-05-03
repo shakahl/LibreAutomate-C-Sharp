@@ -26,7 +26,9 @@ The program can run on computers with installed .NET Core Runtime 3.1. Download:
 To add version info, use attributes like the examples above.
 */
 
-AOutput.Write($"<><explore \"{AProcess.ExePath}\">Find me<>");
+
+
+
 
 
 

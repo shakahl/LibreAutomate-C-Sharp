@@ -659,10 +659,10 @@ private:
 				//note: don't check BUSY state, it's unreliable.
 			}
 
+			//Fails when calling first time after starting Firefox. _FindDocumentSimple too. Never mind, it is documented, let use Wait.
 			//In some Firefox versions (56, 57) accNavigate(0x1009) is broken.
-			//In very old Firefox, Navigate() used to fail when calling first time after starting Firefox.
 			//Also ocassionally fails in some pages, even if page is loaded, maybe when executing scripts.
-			//Then _FindDocumentSimple finds it. Also, the caller by default waits.
+			//	Then _FindDocumentSimple finds it. Also, the caller by default waits.
 
 		} else if(!!(_flags2 & eAF2::InChromePage)) {
 			return GetChromeDOCUMENT(w, ap, out ar);

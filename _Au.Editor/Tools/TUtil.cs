@@ -127,7 +127,7 @@ namespace Au.Tools
 
 		/// <summary>
 		/// If s has *? characters, prepends "**t ".
-		/// But if s has single * character, converts to "**r regexp" that ignores it. Because single * often is used to indicate unsaved state.
+		/// But if s has single * character, converts to "**r regex" that ignores it. Because single * often is used to indicate unsaved state.
 		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines/controlchars, prepends @" and appends " and replaces all " with "".
 		/// s can be null.
 		/// </summary>
@@ -419,7 +419,7 @@ namespace Au.Tools
 			catch(Exception e) {
 				if(e is TargetInvocationException tie) e = tie.InnerException;
 				string s1, s2;
-				if(e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If changed window name, you can replace part of name\r\nwith * or use regexp like @\"**r .+ - Notepad\"."; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
+				if(e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If changed window name, you can replace part of name\r\nwith * or use regex like @\"**r Notepad$\"."; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
 				else { s1 = e.GetType().Name; s2 = e.Message; }
 				ADialog.ShowError(s1, s2, owner: form, flags: DFlags.OwnerCenter);
 			}

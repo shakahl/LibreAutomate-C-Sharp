@@ -827,17 +827,9 @@ namespace Au.Tools
 5. In editor add code to use the window/control. If need, rename variables, delete duplicate AWnd.Find lines, replace part of window name with *, etc.";
 		const string c_infoWait = @"Wait timeout, seconds.
 If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns default(AWnd) or throws exception, depending on the 'Exception...' checkbox.";
-		const string c_infoAlsoW = @"<b>also<> examples:
-<code>o => { AOutput.Write(o); return false; }</code>
-<code>o => !o.IsPopupWindow</code>
-<code>o => o.Rect.Contains(10, 100)</code>
-
+		const string c_infoAlsoW = @"<help>AWnd.Find<> <i>also<> lambda.
 Can be multiline. For newline use Ctrl+Enter.";
-		const string c_infoAlsoC = @"<b>also<> examples:
-<code>o => { AOutput.Write(o); return false; }</code>
-<code>o => o.IsEnabled</code>
-<code>o => o.RectInWindow.Contains(10, 100)</code>
-
+		const string c_infoAlsoC = @"<help>AWnd.Child<> <i>also<> lambda.
 Can be multiline. For newline use Ctrl+Enter.";
 
 		#endregion

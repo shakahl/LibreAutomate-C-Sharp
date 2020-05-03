@@ -22,6 +22,7 @@ using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 
 //SHOULDDO: if checked state, activate window before test. Else different FOCUSED etc.
+//SHOULDDO: update window name in code when capturing new AO.
 //FUTURE: support Edge better. Eg can find without UIA. See the workaround.
 
 namespace Au.Tools
@@ -804,10 +805,7 @@ Example: {W=100 H=20}";
 		const string c_infoId = @"Control id. Will search only in controls that have it.";
 		const string c_infoElem = @"Simple element id.
 Note: It usually changes when elements before the AO are added or removed. Use it only if really need.";
-		const string c_infoAlso = @"<b>also<> examples:
-<code>o => { AOutput.Write(o); return false; }</code>
-<code>o => o.GetRect(out var r, o.WndTopLevel) && r.Contains(266, 33)</code>
-
+		const string c_infoAlso = @"<help>AAcc.Find<> <i>also<> lambda.
 Can be multiline. For newline use Ctrl+Enter.";
 		const string c_infoNavig = @"<b>navig<> is a path to another AO from the found AO in the object tree. One or more of these words: <u><i>parent<> <i>child<> <i>first<> <i>last<> <i>next<> <i>previous<><>. Or 2 letters, like <i>ne<>.
 Example: pa ne2 ch3. The 2 means 2 times (ne ne). The 3 means 3-rd child (-3 would be 3-rd from end). More info: <help>AAcc.Navigate<>.";
