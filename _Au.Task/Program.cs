@@ -33,12 +33,61 @@ static unsafe class Program
 	//[STAThread] //we use TrySetApartmentState instead
 	static void Main(string[] args)
 	{
-		string asmFile, fullPathRefs; int flags;
+		//To test task startup speed, use this script:
+		//300.ms(); //give time to preload new task process
+		//for (int i = 0; i < 4; i++) {
+		//	APerf.Shared.First();
+		//	ATask.Run(@"\blue script that contains APerf.Shared.NW();.cs");
+		//	600.ms(); //give time for the process to exit
+		//}
+		//Results should be:
+		//speed:  1=14453  4396  (18850)
+		//speed:  1=1758  4533  (6292)
+		//speed:  1=769  4659  (5428)
+		//speed:  1=715  4253  (4968)
+		//The first 14 ms is to JIT ATask.Run.
 
 		if(args.Length != 1) return;
-		string pipeName = args[0]; //if(!pipeName.Starts(@"\\.\pipe\Au.Task-")) return;
 
-		//ref var p1 = ref APerf.Shared;
+		string asmFile, fullPathRefs; int flags;
+
+#if false //use shared memory instead of pipe. Works, but unfinished, used only to compare speed. Same speed.
+		var eventName = args[0];
+		var handles = stackalloc IntPtr[2] {
+			OpenEvent(Api.SYNCHRONIZE, false, eventName),
+			default
+		};
+
+		for(int i = 0; i < 2; i++) {
+			int er = Api.WaitForSingleObject(handles[0], 50);
+			//AOutput.Write(er);
+			if(er == 0) goto g1;
+			if(er != Api.WAIT_TIMEOUT) return;
+			//APerf.First();
+			switch(i) {
+			case 0: _Prepare0(); break;
+			case 1: _Prepare1(); break;
+			}
+			//APerf.NW();
+		}
+		handles[1] = Handle_.OpenProcess(eventName.ToInt(eventName.IndexOf('-') + 1), Api.SYNCHRONIZE);
+		if(0 != Api.WaitForMultipleObjectsEx(2, handles, false, -1, false)) return;
+		g1:
+
+		//ADebug.PrintLoadedAssemblies(true, true);
+		APerf.Shared.Next('1');
+
+		//todo: mutex
+		var m = Au.Util.SharedMemory_.Ptr;
+		var b = new ReadOnlySpan<byte>(m->tasks.data, m->tasks.size).ToArray();
+		//AOutput.Write(m->tasks.size, b);
+		var a = Au.Util.Serializer_.Deserialize(b);
+		ATask.Init_(ATRole.MiniProgram, a[0]);
+		asmFile = a[1]; flags = a[2]; args = a[3]; fullPathRefs = a[4];
+		string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
+		AFolders.Workspace = new FolderPath(a[6]);
+#else
+		string pipeName = args[0]; //if(!pipeName.Starts(@"\\.\pipe\Au.Task-")) return;
 
 		for(int i = 0; i < 3; i++) {
 			if(Api.WaitNamedPipe(pipeName, i == 2 ? -1 : 50)) break;
@@ -52,15 +101,15 @@ static unsafe class Program
 		}
 
 		//ADebug.PrintLoadedAssemblies(true, true);
-		//p1.Next('1');
+		//APerf.Shared.Next('1');
 
 		using(var pipe = Api.CreateFile(pipeName, Api.GENERIC_READ, 0, default, Api.OPEN_EXISTING, 0)) {
 			if(pipe.Is0) { ADebug.PrintNativeError_(); return; }
-			//p1.Next('2');
+			//APerf.Shared.Next('2');
 			int size; if(!Api.ReadFile(pipe, &size, 4, out int nr, default) || nr != 4) return;
-			//p1.Next('3');
+			//APerf.Shared.Next('3');
 			if(!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
-			//p1.Next('4');
+			//APerf.Shared.Next('4');
 
 			var a = Au.Util.Serializer_.Deserialize(b);
 			ATask.Init_(ATRole.MiniProgram, a[0]);
@@ -68,8 +117,9 @@ static unsafe class Program
 			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
 			AFolders.Workspace = new FolderPath(a[6]);
 		}
+#endif
 
-		//p1.Next('5');
+		//APerf.Shared.Next('5');
 
 		bool mtaThread = 0 != (flags & 2); //app without [STAThread]
 		if(mtaThread == s_isSTA) _SetComApartment(mtaThread ? ApartmentState.MTA : ApartmentState.STA);
@@ -83,7 +133,7 @@ static unsafe class Program
 
 		if(s_hook == null) _Hook();
 
-		//p1.Next('6');
+		//APerf.Shared.Next('6');
 
 		try { RunAssembly.Run(asmFile, args, fullPathRefs: fullPathRefs); }
 		catch(Exception ex) { AOutput.Write(ex); }

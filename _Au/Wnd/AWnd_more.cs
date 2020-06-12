@@ -480,23 +480,6 @@ namespace Au
 			{
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, options, caller);
 			}
-
-			//rejected. Rarely useful. Or need to wrap and protect pfnSubclass from GC etc.
-			///// <summary>API <msdn>SetWindowSubclass</msdn></summary>
-			//[DllImport("comctl32.dll", EntryPoint = "#410")]
-			//public static extern bool SetWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData = default);
-
-			///// <summary>API <msdn>GetWindowSubclass</msdn></summary>
-			//[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-			//public static extern bool GetWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
-
-			///// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
-			//[DllImport("comctl32.dll", EntryPoint = "#412")]
-			//public static extern bool RemoveWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
-
-			///// <summary>API <msdn>DefSubclassProc</msdn></summary>
-			//[DllImport("comctl32.dll", EntryPoint = "#413")]
-			//public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 		}
 	}
 }

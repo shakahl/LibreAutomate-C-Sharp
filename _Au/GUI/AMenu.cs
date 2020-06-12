@@ -377,7 +377,7 @@ namespace Au
 			var item = _Submenu(out var dd, text, onClick, icon, l);
 			dd._submenu_lazyDelegate = onOpening;
 
-			//add one item, or it will not work like a submenu parent item
+			//add one visible item, or will not draw the submenu arrow
 			dd.SuspendLayout();
 			dd.Items.Add(new ToolStripSeparator());
 			dd.ResumeLayout(false);

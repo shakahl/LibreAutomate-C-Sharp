@@ -72,8 +72,8 @@ namespace Aga.Controls.Tree
 		private bool ApplyChanges()
 		{
 			try {
-				CurrentEditorOwner.ApplyChanges(_editingNode, CurrentEditor);
 				_errorProvider?.Clear();
+				CurrentEditorOwner.ApplyChanges(_editingNode, CurrentEditor);
 				return true;
 			}
 			catch(ArgumentException ex) {
@@ -82,7 +82,7 @@ namespace Aga.Controls.Tree
 				return false;
 			}
 		}
-		ErrorProvider _errorProvider;
+		ErrorProvider _errorProvider; //TODO: dispose
 
 		void EditorValidating(object sender, System.ComponentModel.CancelEventArgs e)
 		{

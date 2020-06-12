@@ -86,9 +86,9 @@ namespace Au
 		public AScreen(Control w) => _o = w;
 
 		/// <summary>
-		/// Creates variable that holds <see cref="System.Windows.Window"/>. Later will be called <see cref="Of(System.Windows.Window, SODefault)"/>.
+		/// Creates variable that holds a WPF window/popup/control. Later will be called <see cref="Of(System.Windows.DependencyObject, SODefault)"/>.
 		/// </summary>
-		public AScreen(System.Windows.Window w) => _o = new object[] { w };
+		public AScreen(System.Windows.DependencyObject w) => _o = new object[] { w };
 
 		/// <summary>
 		/// Creates variable that calls your function to get screen when need.
@@ -162,8 +162,8 @@ namespace Au
 		{
 			if(!s_haveEvent) {
 				s_haveEvent = true;
-				//ThreadPool.QueueUserWorkItem(_ => SystemEvents.DisplaySettingsChanging += (_, __) => s_screens = null); //slower if used first time. Task.Run much slower.
-				new Thread(() => SystemEvents.DisplaySettingsChanging += (_, __) => s_screens = null).Start();
+				//ThreadPool.QueueUserWorkItem(_ => SystemEvents.DisplaySettingsChanging += (_, _) => s_screens = null); //slower if used first time. Task.Run much slower.
+				new Thread(() => SystemEvents.DisplaySettingsChanging += (_, _) => s_screens = null).Start();
 				//async because very slow first time, eg 30 ms if cold CPU. Unless SystemEvents was already used by some code.
 			}
 			var a = new List<ScreenHandle> { Primary };
@@ -229,12 +229,12 @@ namespace Au
 			=> Of(c.Hwnd(), defaultScreen);
 
 		/// <summary>
-		/// Gets screen containing the biggest part of the specified WPF window or nearest to it.
+		/// Gets screen containing the biggest part of the specified WPF window/popup/control or nearest to it.
 		/// </summary>
-		/// <param name="w">WPF window.</param>
+		/// <param name="w">WPF window, popup or a child object.</param>
 		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(System.Windows.Window w, SODefault defaultScreen = SODefault.Nearest)
-			=> Of((AWnd)w, defaultScreen);
+		public static ScreenHandle Of(System.Windows.DependencyObject w, SODefault defaultScreen = SODefault.Nearest)
+			=> Of(w.Hwnd(), defaultScreen);
 
 		/// <summary>
 		/// Gets screen containing the specified coordinate or nearest to it.

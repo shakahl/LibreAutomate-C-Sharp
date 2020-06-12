@@ -205,6 +205,25 @@ namespace Au.Types
 		/// <summary>API <msdn>WNDPROC</msdn></summary>
 		public delegate LPARAM WNDPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 
+		//Native control subclassing isn't often useful in OO programming, but still there are some cases, eg to subclass nested controls like Edit of ComboBox.
+		//	These are public to encourage using them instead of SetProp, because safer.
+
+		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#410")]
+		public static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData = default);
+
+		/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
+		public static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
+
+		/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#412")]
+		public static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
+
+		/// <summary>API <msdn>DefSubclassProc</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#413")]
+		public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
+
 		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
 		public delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
 
@@ -251,6 +270,7 @@ namespace Au.Types
 		/// Window long constants. Used with <see cref="AWnd.GetWindowLong"/> and <see cref="AWnd.SetWindowLong"/>.
 		/// See API <msdn>GetWindowLong</msdn>.
 		/// </summary>
+		/// <seealso cref="SetWindowSubclass"/>
 		public static class GWL
 		{
 			public const int WNDPROC = -4;

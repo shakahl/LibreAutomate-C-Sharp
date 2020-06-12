@@ -17,6 +17,7 @@ using System.Linq;
 using Au;
 using Au.Types;
 using Au.Controls;
+using Microsoft.Win32;
 
 partial class FOptions : DialogForm
 {
@@ -40,7 +41,7 @@ partial class FOptions : DialogForm
 	{
 		//workaround for:
 		//	Cannot close the form with Cancel/X/Esc when failed validation of an edit control.
-		//	_bCancel.CausesValidation is false, but somehow it does not prevent validation. I guess it works only with ShowDialog, but we use Show.
+		//	_bCancel.CausesValidation is false, but somehow it does not prevent validation.
 		e.Cancel = false;
 
 		base.OnFormClosing(e);
@@ -84,7 +85,7 @@ partial class FOptions : DialogForm
 
 	void _InitGeneral()
 	{
-		_cRunAtStartup.Checked = _initRunAtStartup = ARegistry.GetString(out _, "Au.Editor", c_rkRun, ARegistry.HKEY_CURRENT_USER);
+		_cRunAtStartup.Checked = _initRunAtStartup = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string;
 		_cRunHidden.Checked = Program.Settings.runHidden;
 		_eStartupScripts.Text = Program.Model.StartupScriptsCsv;
 
@@ -94,7 +95,7 @@ partial class FOptions : DialogForm
 	{
 		if(_cRunAtStartup.Checked != _initRunAtStartup) {
 			try {
-				using var rk = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(c_rkRun, true);
+				using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
 				if(_initRunAtStartup) rk.DeleteValue("Au.Editor");
 				else rk.SetValue("Au.Editor", "\"" + AFolders.ThisAppBS + "Au.CL.exe\" /e");
 			}
@@ -109,7 +110,7 @@ partial class FOptions : DialogForm
 	private void _startupScripts_Validating(object sender, CancelEventArgs e)
 	{
 		//AOutput.Write("validating");
-		_errorProvider.Clear();
+		_errorProvider.SetError(_eStartupScripts, "");
 		string s = _eStartupScripts.Text; if(s.NE()) return;
 		string err = null;
 		try {
@@ -188,7 +189,7 @@ partial class FOptions : DialogForm
 		_templUseCustom = Program.Settings.templ_use;
 		_comboUseTemplate.SelectionChangeCommitted += _TemplCombo_Changed;
 		_TemplCombo_Changed(_comboTemplate, null);
-		_sciTemplate.ZTextChanged += (_, __) => _templCustomText[_comboTemplate.SelectedIndex] = _sciTemplate.Text;
+		_sciTemplate.ZTextChanged += (_, _) => _templCustomText[_comboTemplate.SelectedIndex] = _sciTemplate.Text;
 	}
 
 	private void _TemplCombo_Changed(object sender, EventArgs e)
@@ -432,7 +433,7 @@ Line number";
 		};
 
 		//[?] button
-		_bFontInfo.Click += (_, __) => {
+		_bFontInfo.Click += (_, _) => {
 			string link = CiStyling.TStyles.s_settingsFile;
 			ADialog.Show(null,
 $@"Changed font/color settings are saved in file

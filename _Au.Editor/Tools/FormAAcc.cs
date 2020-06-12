@@ -20,6 +20,7 @@ using Au.Controls;
 using SG = SourceGrid;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
+using Microsoft.Win32;
 
 //SHOULDDO: if checked state, activate window before test. Else different FOCUSED etc.
 //SHOULDDO: update window name in code when capturing new AO.
@@ -55,7 +56,7 @@ namespace Au.Tools
 
 			AWnd w = (AWnd)this;
 			var wp = Program.Settings.tools_AAcc_wndPos;
-			if(wp != null) try { w.RestorePositionSizeState(wp, true); } catch { }
+			if(wp != null) try { w.RestoreRectAndState(wp, true); } catch { }
 
 			if(_acc != null) _SetAcc(false);
 
@@ -70,7 +71,7 @@ namespace Au.Tools
 			_capt?.Dispose();
 
 			AWnd w = (AWnd)this;
-			Program.Settings.tools_AAcc_wndPos = w.SavePositionSizeState();
+			Program.Settings.tools_AAcc_wndPos = w.SaveRectAndState();
 
 			base.OnFormClosing(e);
 		}
@@ -887,9 +888,9 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 			{
 				path = null;
 				string rk = @"HKEY_LOCAL_MACHINE\SOFTWARE\JavaSoft\Java Runtime Environment";
-				if(!ARegistry.GetString(out var ver, "CurrentVersion", rk)) return false;
-				if(!ARegistry.GetString(out path, "JavaHome", rk + @"\" + ver)) return false;
-				return true;
+				if(!(Registry.GetValue(rk, "CurrentVersion", null) is string ver)) return false;
+				path = Registry.GetValue(rk + @"\" + ver, "JavaHome", null) as string;
+				return path != null;
 			}
 		}
 

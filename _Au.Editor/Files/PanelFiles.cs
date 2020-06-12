@@ -208,8 +208,8 @@ partial class PanelFiles : AuUserControlBase
 				}
 				string relPath = dir + name;
 				if(isFolder == 3) name = name[1..];
-				//var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItem(relPath, beginRenaming: true));
-				var item = new ToolStripMenuItem(name, null, (unu, sed) => ZModel.NewItemX(x, beginRenaming: true));
+				//var item = new ToolStripMenuItem(name, null, (_, _) => ZModel.NewItem(relPath, beginRenaming: true));
+				var item = new ToolStripMenuItem(name, null, (_, _) => ZModel.NewItemX(x, beginRenaming: true));
 				if(isFolder == 1) {
 					var ddSub = new ToolStripDropDownMenu();
 					item.DropDown = ddSub;

@@ -271,7 +271,7 @@ namespace Au.Controls
 						var gs2 = gs.ParentSplit;
 						if(gs2 != null) {
 							using(m.Submenu("Container")) {
-								m.LastMenuItem.DropDown.Opened += (unu, sed) => {
+								m.LastMenuItem.DropDown.Opened += (_, _) => {
 									var osd = new AOsdRect { Rect = _manager.RectangleToScreen(gs.Bounds), Color = 0x00c000 };
 									osd.Show();
 									ATimer.After(1000, _ => osd.Dispose());

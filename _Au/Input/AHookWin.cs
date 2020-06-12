@@ -523,9 +523,9 @@ namespace Au
 		public static int LowLevelHooksTimeout {
 			get {
 				if(s_lowLevelHooksTimeout == 0) {
-					if(!ARegistry.GetInt(out int i, "LowLevelHooksTimeout", @"Control Panel\Desktop")) i = 300; //default 300, tested on Win10 and 7
-					else if((uint)i > 1000) i = 1000; //Win10. On Win7 the limit is bigger. Not tested on Win8. On Win7/8 may be changed by a Windows update.
-					s_lowLevelHooksTimeout = i;
+					//default 300, tested on Win10 and 7
+					//max 1000 on Win10. On Win7 more. Not tested on Win8. On Win7/8 may be changed by a Windows update.
+					s_lowLevelHooksTimeout = Math.Min(1000, (int)Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "LowLevelHooksTimeout", 300));
 				}
 				return s_lowLevelHooksTimeout;
 			}

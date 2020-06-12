@@ -1337,6 +1337,34 @@ namespace Au
 		///// <seealso cref="AConvert.Utf8ToString"/>
 		///// <seealso cref="Encoding.UTF8"/>
 		//public static byte[] ToUtf8And0(this string t) => AConvert.Utf8FromString(t);
+
+
+		/// <summary>
+		/// Reverses this string, like "Abc" -> "cbA".
+		/// Returns the result string.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="raw">Ignore char sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
+		public static unsafe string ReverseString(this string t, bool raw)
+		{
+			if(t.Length < 2) return t;
+			var r = new string('\0', t.Length);
+			fixed(char* p = r) {
+				if(raw || AStringUtil.IsAscii(t)) {
+					for(int i = 0, j = t.Length; i < t.Length; i++) {
+						p[--j] = t[i];
+					}
+				} else {
+					var a = StringInfo.ParseCombiningCharacters(t); //speed: same as StringInfo.GetTextElementEnumerator+MoveNext+ElementIndex
+					for(int gTo = t.Length, j = 0, i = a.Length; --i >= 0; gTo = a[i]) {
+						for(int g = a[i]; g < gTo; g++) p[j++] = t[g];
+					}
+				}
+			}
+			return r;
+
+			//tested: string.Create slower.
+		}
 	}
 }
 

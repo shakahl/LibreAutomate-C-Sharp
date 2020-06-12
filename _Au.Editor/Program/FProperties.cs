@@ -464,7 +464,8 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	private void _bAddNet_Click(object button, EventArgs e)
 	{
-		using var d = new OpenFileDialog { InitialDirectory = AFolders.ThisApp, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
+		var dir = AFolders.ThisApp + "Libraries"; if(!AFile.ExistsAsDirectory(dir)) dir = AFolders.ThisApp;
+		using var d = new OpenFileDialog { InitialDirectory = dir, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
 		if(d.ShowDialog(this) != DialogResult.OK) return;
 
 		var a = d.FileNames;

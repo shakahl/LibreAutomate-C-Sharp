@@ -439,7 +439,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Window handle.
-	/// Used for function parameters where the function needs a window handle as <see cref="Au.AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or any control class), System.Windows.Window (WPF window), IntPtr (window handle).
+	/// Used for function parameters where the function needs a window handle as <see cref="Au.AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
 	/// </summary>
 	[DebuggerStepThrough]
 	public struct AnyWnd
@@ -453,8 +453,8 @@ namespace Au.Types
 		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((AWnd)hwnd);
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
 		public static implicit operator AnyWnd(Control c) => new AnyWnd(c);
-		/// <summary> Assignment of a value of type System.Windows.Window (WPF window). </summary>
-		public static implicit operator AnyWnd(System.Windows.Window w) => new AnyWnd(new object[] { w });
+		/// <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
+		public static implicit operator AnyWnd(System.Windows.DependencyObject c) => new AnyWnd(new object[] { c });
 
 		/// <summary>
 		/// Gets the window or control handle as AWnd.
@@ -495,12 +495,11 @@ namespace Au.Types
 		/// <summary>
 		/// Converts the value to string[].
 		/// </summary>
-		/// <param name="separator">If the value is string, use this character to split it. Default '|'.</param>
-		public string[] ToArray(char separator = '|')
+		public string[] ToArray()
 		{
 			return _o switch
 			{
-				string s => s.Split(separator),
+				string s => s.Split('|'),
 				string[] a => a,
 				List<string> a => a.ToArray(),
 				_ => Array.Empty<string>(), //null

@@ -12,8 +12,9 @@
     <AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <OutDir>$(SolutionDir)_</OutDir>
-    <NoWin32Manifest>true</NoWin32Manifest>
     <NoWarn>1701;1702;3001,3002,3003,3009</NoWarn>
+	<LangVersion>preview</LangVersion>
+	<NoWin32Manifest>true</NoWin32Manifest>
   </PropertyGroup>
   
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -200,7 +201,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="cd $(TargetDir)&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;::&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker32.txt&quot;&#xD;&#xA;del &quot;$(TargetDir)$(TargetName).*.json&quot;&#xD;&#xA;" />
+    <Exec Command="cd $(TargetDir)&#xD;&#xA;del &quot;$(TargetName).exe&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;::&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker32.txt&quot;&#xD;&#xA;del &quot;$(TargetName).*.json&quot;&#xD;&#xA;" />
   </Target>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

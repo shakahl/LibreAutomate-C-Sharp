@@ -177,7 +177,7 @@ partial class FilesModel
 			_ccComboEnum.ParentColumn = _columnComboEnum;
 			_ccComboEnum.DataPropertyName = "ComboEnum";
 			_ccComboEnum.EditEnabled = true; _ccComboEnum.EditOnClick = true;
-			//_ccComboEnum.CreatingEditor += (unu, sed) => AOutput.Write("ce");
+			//_ccComboEnum.CreatingEditor += (_, _) => AOutput.Write("ce");
 
 			_ccDecimal = new NodeDecimalTextBox();
 			this.NodeControls.Add(_ccDecimal);

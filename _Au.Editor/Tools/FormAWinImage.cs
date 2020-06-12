@@ -42,7 +42,7 @@ namespace Au.Tools
 
 			AWnd w = (AWnd)this;
 			var wp = Program.Settings.tools_AWinImage_wndPos;
-			if(wp != null) try { w.RestorePositionSizeState(wp, true); } catch { }
+			if(wp != null) try { w.RestoreRectAndState(wp, true); } catch { }
 
 			_info.Z.SetText(c_infoForm);
 			_FillGrid();
@@ -51,7 +51,7 @@ namespace Au.Tools
 		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
 			AWnd w = (AWnd)this;
-			Program.Settings.tools_AWinImage_wndPos = w.SavePositionSizeState();
+			Program.Settings.tools_AWinImage_wndPos = w.SaveRectAndState();
 
 			base.OnFormClosing(e);
 		}
@@ -127,7 +127,7 @@ namespace Au.Tools
 			g.ZClear();
 
 			g.ZAdd(null, "Control", "Edit window/control...", false, etype: ParamGrid.EditType.Button,
-				buttonAction: (unu, sed) => { var r = _code.ZShowWndTool(_wnd, _con, !_useCon); if(r.ok) _SetWndCon(r.wnd, r.con, r.useCon, true); },
+				buttonAction: (_, _) => { var r = _code.ZShowWndTool(_wnd, _con, !_useCon); if(r.ok) _SetWndCon(r.wnd, r.con, r.useCon, true); },
 				tt: "Search only in control (if captured), not in whole window.\r\nTo edit window or/and control name etc, click 'Edit window/control...' or edit it in the code field.");
 			g.ZEnableCell(0, 0, false);
 			g.ZAdd("rect", "Search in rectangle", "(left, top, width, height)", etype: ParamGrid.EditType.TextButton, buttonAction: _MenuRect,

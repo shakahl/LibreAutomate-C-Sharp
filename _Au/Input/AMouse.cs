@@ -14,6 +14,9 @@ using System.Reflection;
 using Au.Types;
 using Au.Util;
 
+//SHOULDDO: test how mouse moves through non-screen area between screens A and C when screen B is in between.
+//	QM2 has problems crossing non-screen corners at default speed. Au works well.
+
 namespace Au
 {
 	/// <summary>

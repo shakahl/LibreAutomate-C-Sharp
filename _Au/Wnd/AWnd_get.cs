@@ -407,7 +407,7 @@ namespace Au
 			/// Returns false if it is invisible, cloaked, owned, toolwindow, menu, etc.
 			/// </summary>
 			/// <param name="w"></param>
-			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has [](xref:uac) integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="AllWindows(bool, bool)"/>.</param>
 			/// <param name="skipMinimized">Return false if w is minimized.</param>
 			public static bool IsMainWindow(AWnd w, bool allDesktops = false, bool skipMinimized = false)
 			{
@@ -449,7 +449,7 @@ namespace Au
 			/// Gets main windows, ie those that probably are in the Windows taskbar.
 			/// Returns array containing 0 or more AWnd.
 			/// </summary>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has [](xref:uac) integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="AllWindows(bool, bool)"/>.</param>
 			/// <remarks>
 			/// Uses <see cref="IsMainWindow"/>.
 			/// Does not match the order of buttons in the Windows taskbar.
@@ -476,7 +476,7 @@ namespace Au
 			/// Returns default(AWnd) if there are no such windows.
 			/// </summary>
 			/// <param name="w">Start from this window. If default(AWnd), starts from the top of the Z order.</param>
-			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps (only if this process has [](xref:uac) integrity level uiAccess).</param>
+			/// <param name="allDesktops">On Windows 10 include windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="AllWindows(bool, bool)"/>.</param>
 			/// <param name="skipMinimized">Skip minimized windows.</param>
 			/// <param name="retryFromTop">If w is not default(AWnd) and there are no matching windows after it, retry from the top of the Z order. Then can return w.</param>
 			/// <remarks>
@@ -514,6 +514,7 @@ namespace Au
 				if(!wMain.Is0 && wMain != wActive && wMain != wRO) {
 					var wMainOrOwned = wMain.Get.LastActiveOwnedOrThis();
 					if(!wMainOrOwned.Is0) {
+						//AOutput.Write(wMainOrOwned);
 						wMainOrOwned.Activate();
 						return true;
 					}

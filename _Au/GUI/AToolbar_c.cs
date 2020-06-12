@@ -401,28 +401,14 @@ namespace Au
 					}
 					_cmItems.toolbars = m.Add("Toolbars...", o => new _Form().Show());
 
-					//this is an example of a form-like sumenu. Or maybe better create a UserControl-based class in the form designer.
+					//this is an example of a form-like sumenu
 					//m.LazySubmenu("AutoSize", m => {
 					//	var ddm = m.CurrentAddMenu;
 					//	ddm.ShowImageMargin = false;
-					//	int x = 80, cx = 70;
-					//	var panel = new Panel { Width = x + cx + 3, Height = 86 };
-					//	var cc = panel.Controls;
-					//	cc.Add(new Label { Text = "Wrap width", Width = x });
-					//	cc.Add(new Label { Text = "Max height", Width = x, Top = 30 });
-					//	var wrapWidth = new NumericUpDown { Left = x, Width = cx, Maximum = 1000000, Increment = 50, Value = _tb.AutoSize.WrapWidth };
-					//	var maxHeight = new NumericUpDown { Top = 30, Left = x, Width = cx, Maximum = 1000000, Increment = 50, Value = _tb.AutoSize.MaxHeight };
-					//	cc.Add(wrapWidth);
-					//	cc.Add(maxHeight);
-					//	var ok = new Button { Top = 60, Left = x, Width = cx, Text = "Apply" };
-					//	ok.Click += (_, __) => _tb.AutoSize = new TBAutoSize((int)wrapWidth.Value, (int)maxHeight.Value);
-					//	cc.Add(ok);
-					//	if(Util.ADpi.BaseDPI != 96) {
-					//		float scale = Util.ADpi.BaseDPI / 96f;
-					//		panel.Scale(new SizeF(scale, scale));
-					//	}
-					//	var h = new ToolStripControlHost(panel);
-					//	m.Add(h);
+					//	new AFormBuilder(ddm)
+					//		.Row.Add("Text", out TextBox text1)
+					//		.Row.AddButton("OK", _ => { AOutput.Write("OK"); ddm.Close(); })
+					//		.End();
 					//});
 
 					static string _EnumToString(Enum e)

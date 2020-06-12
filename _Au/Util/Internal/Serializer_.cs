@@ -129,7 +129,7 @@ namespace Au.Util
 		/// Deserializes values serialized by <see cref="Serialize"/>.
 		/// Returns array of values passed to <b>Serialize</b>.
 		/// </summary>
-		public static Value[] Deserialize(byte[] serialized)
+		public static Value[] Deserialize(ReadOnlySpan<byte> serialized)
 		{
 			fixed (byte* b0 = serialized) {
 				byte* b = b0;
@@ -151,10 +151,9 @@ namespace Au.Util
 						a[i] = k;
 						break;
 					case VType.ByteArray:
-						var u = new byte[*(int*)b]; b += 4;
-						Array.Copy(serialized, b - b0, u, 0, u.Length);
-						b += u.Length;
-						a[i] = u;
+						int len = *(int*)b; b += 4;
+						a[i] = serialized.Slice((int)(b - b0), len).ToArray();
+						b += len;
 						break;
 					default: throw new ArgumentException();
 					}

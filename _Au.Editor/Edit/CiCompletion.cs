@@ -163,8 +163,7 @@ class CiCompletion
 		PSFormat stringFormat = PSFormat.None; TextSpan stringSpan = default;
 		CompletionService completionService = null;
 		SemanticModel model = null;
-		SyntaxNode node = null, root = null;
-		ExpressionSyntax nodeL = null; //node at left of . etc
+		SyntaxNode root = null;
 		ISymbol symL = null; //symbol at left of . etc
 
 		_cancelTS = new CancellationTokenSource();
@@ -181,34 +180,13 @@ class CiCompletion
 
 				model = await document.GetSemanticModelAsync(cancelToken).ConfigureAwait(false); //speed: does not make slower, because GetCompletionsAsync calls it too. Currently we need only GetSyntaxTreeAsync here, but the speed is same, even when we don't call GetCompletionsAsync.
 				root = model.Root;
-				node = root.FindToken(position).Parent;
+				var node = root.FindToken(position).Parent;
 				p1.Next('s');
 
 				//never mind: To make faster in some cases, could now return if in comments or non-regex etc string.
 				//	It is not so easy to check correctly. GetCompletionsAsync then not very fast and not too slow.
 
-				//is it member access syntax?
-				int i = position - 1; while(i > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[i])) i--;
-				if(i > 0) {
-					var token = root.FindToken(i); //fast
-					if(position >= token.Span.End) {
-						var tk = token.Kind();
-						isDot = tk == SyntaxKind.DotToken || tk == SyntaxKind.MinusGreaterThanToken || tk == SyntaxKind.ColonColonToken;
-						if(isDot) {
-							node = token.Parent;
-							switch(node) {
-							case MemberAccessExpressionSyntax s1: nodeL = s1.Expression; break; // . or ->
-							case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae: nodeL = cae.Expression; break; // ?. //OperatorToken is '.', GetPreviousToken is '?'
-							case QualifiedNameSyntax s1: nodeL = s1.Left; break; // eg . outside functions
-							case AliasQualifiedNameSyntax s1: nodeL = s1.Alias; break; // ::
-							case ExplicitInterfaceSpecifierSyntax s1: nodeL = s1.Name; break;
-							default: isDot = false; ADebug.Print(node.GetType()); break;
-							}
-						}
-					}
-				}
-
-				if(!isDot && ch == '[' && node is AttributeListSyntax) ch = default; //else GetCompletionsAsync does not work
+				if(ch == '[' && node is AttributeListSyntax) ch = default; //else GetCompletionsAsync does not work
 
 				//This is a temporary workaround for exception in new Roslyn version, in AbstractEmbeddedLanguageCompletionProvider.GetLanguageProviders().
 				//	FUTURE: After some time try a newer version.
@@ -221,29 +199,53 @@ class CiCompletion
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);
 				p1.Next('C');
 				if(r1 != null) {
-					if(isDot) {
-						switch(node) {
-						case MemberBindingExpressionSyntax _: // ?.
-						case ExplicitInterfaceSpecifierSyntax _: // Interface.Member
-							canGroup = true;
-							break;
-						case AliasQualifiedNameSyntax _: break; // ::
-						default:
-							//AOutput.Write(model.GetTypeInfo(nodeL).Type); //null if namespace
-							if(!(nodeL is LiteralExpressionSyntax || nodeL is InterpolatedStringExpressionSyntax)) {
-								var si = model.GetSymbolInfo(nodeL);
-								symL = si.Symbol;
-								ADebug.PrintIf(symL == null && si.CandidateReason != CandidateReason.NotATypeOrNamespace, nodeL);
-								//AOutput.Write(si.CandidateReason, si.CandidateSymbols);
+					canGroup = true;
+					//is it member access?
+					int i = r1.Span.Start - 1;
+					if(i > 0) {
+						var token = root.FindToken(i); //fast
+						if(position >= token.Span.End) {
+							var tk = token.Kind();
+							isDot = tk == SyntaxKind.DotToken || tk == SyntaxKind.MinusGreaterThanToken || tk == SyntaxKind.ColonColonToken;
+							if(isDot) {
+								node = token.Parent;
+								//CiUtil.PrintNode(node);
+								ExpressionSyntax nodeL = null; //node at left of . etc
+								bool canBeNamespace = false;
+								switch(node) {
+								case MemberAccessExpressionSyntax s1: // . or ->
+									nodeL = s1.Expression;
+									canBeNamespace = true;
+									break;
+								case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae:
+									// ?. //OperatorToken is '.', GetPreviousToken is '?'
+									//nodeL = cae.Expression;
+									break;
+								case QualifiedNameSyntax s1: // eg . outside functions
+									nodeL = s1.Left;
+									canBeNamespace = true;
+									break;
+								case AliasQualifiedNameSyntax s1: // ::
+									canGroup = false;
+									//nodeL = s1.Alias;
+									break;
+								case ExplicitInterfaceSpecifierSyntax s1:
+									//nodeL = s1.Name;
+									break;
+								default:
+									isDot = false;
+									ADebug.Print(node.GetType());
+									break;
+								}
+
+								if(canBeNamespace && tk == SyntaxKind.DotToken && nodeL is IdentifierNameSyntax) {
+									if(model.GetSymbolInfo(nodeL).Symbol is INamespaceSymbol) canGroup = false;
+								}
 							}
-							canGroup = symL == null || symL.Kind != SymbolKind.Namespace;
-							break;
 						}
-					} else {
-						canGroup = true;
 					}
 					//p1.Next('M');
-				} else if(isCommand && !isDot) {
+				} else if(isCommand) {
 					if(CiUtil.IsInString(ref node, position)) {
 						stringSpan = node.Span;
 						stringFormat = CiUtil.GetParameterStringFormat(node, model, true);
@@ -282,7 +284,8 @@ class CiCompletion
 			p1.Next('T');
 
 			var provider = CiComplItem.Provider(r.Items[0]);
-			if(!isDot && provider == CiComplProvider.Override) isDot = true;
+			if(!isDot) isDot = provider == CiComplProvider.ObjectInitializer || provider == CiComplProvider.Override;
+			//AOutput.Write(provider, isDot, canGroup);
 
 			var span = r.Span;
 			if(span.Length > 0 && provider == CiComplProvider.Regex) span = new TextSpan(position, 0);
@@ -315,10 +318,10 @@ class CiCompletion
 						//AOutput.Write(sym);
 						continue;
 					case SymbolKind.Namespace:
-						//AOutput.Write(sym, sym.ContainingAssembly.Name);
+						//AOutput.Write(sym, sym.ContainingAssembly?.Name);
 						switch(sym.Name) {
-						case "Internal" when sym.ContainingAssembly.Name == "System.Core":
-						case "Windows" when sym.ContainingAssembly.Name == "mscorlib":
+						case "Internal" when sym.ContainingAssembly?.Name == "System.Core":
+						case "Windows" when sym.ContainingAssembly?.Name == "mscorlib":
 							continue;
 						}
 						break;
@@ -446,9 +449,20 @@ class CiCompletion
 						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
 						if(_IsBase(t1, t2)) return -1;
 						if(_IsBase(t2, t1)) return 1;
-						ADebug.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}"); //usually because of the above bug
+						//can be both interfaces, or interface and object. For object and interfaces BaseType returns null.
+						var tk1 = t1.TypeKind; var tk2 = t2.TypeKind;
+						if(tk1 == TypeKind.Class && t1.BaseType == null) return 1; //t1 is object
+						if(tk2 == TypeKind.Class && t2.BaseType == null) return -1; //t2 is object
+						if(tk1 == TypeKind.Interface && tk2 == TypeKind.Interface) {
+							if(t2.AllInterfaces.Contains(t1)) return 1;
+							if(t1.AllInterfaces.Contains(t2)) return -1;
+						}
+						ADebug.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}, {tk1}, {tk2}, {t1.BaseType}, {t2.BaseType}"); //usually because of Roslyn bugs
+
+						//SHOULDDO: workaround for Roslyn bug: in argument-lambda, on dot after lambda parameter, also adds members of types of parameter at that position of other overloads.
 						return 0;
 					});
+					//AOutput.Write(gs);
 
 #if true
 					if(gs[0].Key.Name == "String") { //don't group Au extension methods
@@ -940,6 +954,8 @@ class CiComplItem
 		{
 			"SymbolCompletionProvider" => CiComplProvider.Symbol,
 			"KeywordCompletionProvider" => CiComplProvider.Keyword,
+			"ObjectInitializerCompletionProvider" => CiComplProvider.ObjectInitializer,
+			//"AttributeNamedParameterCompletionProvider" => CiComplProvider.AttributeNamedParameter, //don't use because can be mixed with other symbols
 			"CrefCompletionProvider" => CiComplProvider.Cref,
 			"EmbeddedLanguageCompletionProvider" => CiComplProvider.Regex,
 			"OverrideCompletionProvider" => CiComplProvider.Override,
@@ -960,6 +976,8 @@ enum CiComplProvider
 	Other,
 	Symbol,
 	Keyword,
+	ObjectInitializer,
+	//AttributeNamedParameter,
 	Cref,
 	Regex,
 	Override,

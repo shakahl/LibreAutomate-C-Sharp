@@ -410,7 +410,7 @@ namespace Au
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// 
-		/// On Windows 8 and later finds only desktop windows, not Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has uiAccess or High+uiAccess or has disableWindowFiltering in manifest; to find such windows you can use <see cref="FindFast"/>.
+		/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have disableWindowFiltering true in its manifest and is not uiAccess; to find such windows you can use <see cref="FindFast"/>.
 		/// 
 		/// To find message-only windows use <see cref="FindFast"/> instead.
 		/// </remarks>
@@ -620,8 +620,8 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>EnumWindows</msdn>.
 			/// <note>The array can be bigger than you expect, because there are many invisible windows, tooltips, etc. See also <see cref="MainWindows"/>.</note>
-			/// Does not get message-only windows; use <see cref="FindFast"/> if need.
-			/// On Windows 8 and later does not get Windows Store app Metro-style windows (on Windows 10 few such windows exist), unless this process has [](xref:uac) integrity level uiAccess or High+uiAccess or its manifest contains disableWindowFiltering; to get such windows you can use <see cref="FindFast"/>.
+			/// Skips message-only windows; use <see cref="FindFast"/> if need.
+			/// On Windows 8 and later may skip Windows Store app Metro-style windows (on Windows 10 few such windows exist). It happens if this program does not have disableWindowFiltering true in its manifest and is not uiAccess; to find such windows you can use <see cref="FindFast"/>.
 			/// Tip: To get top-level and child windows in single array: <c>var a = AWnd.GetWnd.Root.Get.Children();</c>.
 			/// </remarks>
 			/// <seealso cref="Children"/>

@@ -86,7 +86,7 @@ namespace Au
 				}
 
 				//if(!inEditorThread) Util.Log_.Run.Write("Task ended."); //no, wait for other foreground threads
-				if(!inEditorThread) AProcess.Exit += (_, __) => Util.Log_.Run.Write("Task ended.");
+				if(!inEditorThread) AProcess.Exit += (_, _) => Util.Log_.Run.Write("Task ended.");
 			}
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;

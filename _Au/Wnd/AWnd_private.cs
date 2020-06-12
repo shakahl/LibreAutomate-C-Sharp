@@ -220,7 +220,7 @@ namespace Au
 
 			/// <summary>
 			/// Converts object to AWnd.
-			/// Object can contain null, AWnd, Control, or System.Windows.Window (must be in element 0 of object[]).
+			/// Object can contain null, AWnd, Control, or System.Windows.DependencyObject (must be in element 0 of object[]).
 			/// Avoids loading Forms and WPF dlls when not used.
 			/// </summary>
 			public static AWnd FromObject(object o) => o switch
@@ -235,7 +235,7 @@ namespace Au
 			static AWnd _Control(object o) => (o as System.Windows.Forms.Control).Hwnd();
 
 			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
-			static AWnd _Wpf(object o) => (AWnd)(o as System.Windows.Window);
+			static AWnd _Wpf(object o) => (o as System.Windows.DependencyObject).Hwnd();
 		}
 	}
 }

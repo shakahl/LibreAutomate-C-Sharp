@@ -58,7 +58,7 @@ namespace Au.Tools
 
 			AWnd w = (AWnd)this;
 			var wp = Program.Settings.tools_AWnd_wndPos;
-			if(wp != null) try { w.RestorePositionSizeState(wp, true); } catch { }
+			if(wp != null) try { w.RestoreRectAndState(wp, true); } catch { }
 
 			if(!_con.Is0) _SetWnd(false);
 
@@ -73,7 +73,7 @@ namespace Au.Tools
 			_capt?.Dispose();
 
 			AWnd w = (AWnd)this;
-			Program.Settings.tools_AWnd_wndPos = w.SavePositionSizeState();
+			Program.Settings.tools_AWnd_wndPos = w.SaveRectAndState();
 
 			base.OnFormClosing(e);
 		}

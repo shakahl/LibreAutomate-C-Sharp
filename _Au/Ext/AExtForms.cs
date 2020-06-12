@@ -29,7 +29,7 @@ namespace Au
 		#region Control
 
 		/// <summary>
-		/// Gets the window handle as <see cref="AWnd"/>.
+		/// Gets window handle as <see cref="AWnd"/>.
 		/// </summary>
 		/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be null.</param>
 		/// <param name="create">
@@ -121,7 +121,7 @@ namespace Au
 			if(c.IsHandleCreated) {
 				((AWnd)c).SendS(message, focusedToo, text);
 			} else if(!text.NE()) {
-				c.HandleCreated += (unu, sed) => _SetCueBanner(c, message, focusedToo, text);
+				c.HandleCreated += (_, _) => _SetCueBanner(c, message, focusedToo, text);
 			}
 		}
 

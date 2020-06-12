@@ -31,7 +31,7 @@ namespace Au.Util
 
 		//static AFontsNonCached_()
 		//{
-		//	SystemEvents.UserPreferenceChanged += (unu, sed) => _regularCached = SystemFonts.MessageBoxFont; //never mind
+		//	SystemEvents.UserPreferenceChanged += (_, _) => _regularCached = SystemFonts.MessageBoxFont; //never mind
 		//}
 
 		/// <summary>

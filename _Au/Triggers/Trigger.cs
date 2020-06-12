@@ -215,7 +215,7 @@ namespace Au.Triggers
 		public void DisableTriggerUntilClosed(AToolbar t)
 		{
 			TriggerBase.Disabled = true;
-			t.Control.Disposed += (_, __) => TriggerBase.Disabled = false;
+			t.Control.Disposed += (_, _) => TriggerBase.Disabled = false;
 		}
 	}
 

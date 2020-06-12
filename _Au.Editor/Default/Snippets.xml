@@ -27,7 +27,7 @@
 		</snippet>
 
 		<snippet name="switchSnippet" info="Go to a case that matches a variable, or default if none.">
-			<list item="int">
+			<list item="switch (int)">
 				<![CDATA[switch ($end$variable$end$) {
 case 1:
 	
@@ -43,7 +43,7 @@ default:
 	break;
 }]]>
 			</list>
-			<list item="string">
+			<list item="switch (string)">
 				<![CDATA[switch ($end$variable$end$) {
 case "value1":
 	
@@ -58,6 +58,38 @@ default:
 	
 	break;
 }]]>
+			</list>
+			<list item="switch (type)">
+				<![CDATA[switch ($end$type$end$) {
+case Type1 _:
+	
+	break;
+case Type2 _:
+	
+	break;
+case Type3 _:
+	
+	break;
+case null:
+	
+	break;
+default:
+	
+	break;
+}]]>
+			</list>
+			<list item="switch expression, 1 line">
+				<![CDATA[int i = 2;
+string s = i switch { 1 => "one", 2 => "two", 3 => "three", _ => null };]]>
+			</list>
+			<list item="switch expression, multiline">
+				<![CDATA[int i = 2;
+string s = i switch {
+	1 => "one",
+	2 => "two",
+	3 => "three",
+	_ => null
+};]]>
 			</list>
 		</snippet>
 
@@ -93,15 +125,35 @@ finally {  }]]>
 
 		<!-- call functions -->
 
-		<snippet name="dialogSnippet" info="Standard dialog window.">
+		<snippet name="dialogSnippet" info="Standard dialog window." more="See also: guiBuilderSnippet.">
 			<list item="OK button">ADialog.Show("$end$");</list>
 			<list item="OK button and info icon">ADialog.ShowInfo("$end$");</list>
 			<list item="OK button and warning icon">ADialog.ShowWarning("$end$");</list>
 			<list item="OK button and error icon">ADialog.ShowError("$end$");</list>
 			<list item="OK and Cancel buttons">if (!ADialog.ShowOkCancel("$end$")) return;</list>
 			<list item="Yes and No buttons">if (!ADialog.ShowYesNo("$end$")) return;</list>
-			<list item="Custom buttons">int button = ADialog.Show("$end$", "", "1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2", flags: DFlags.CommandLinks);</list>
-			<list item="List of buttons">int button = ADialog.ShowList("$end$one|two|three$end$");</list>
+			<list item="Custom buttons">
+				<![CDATA[int button = ADialog.Show("$end$", "", "1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2", flags: DFlags.CommandLinks);
+switch (button) {
+case 1:  break;
+case 2:  break;
+case 3:  break;
+case 4:  break;
+case 5:  break;
+case 10:  break;
+case 11:  break;
+default: return;
+}]]>
+			</list>
+			<list item="List of buttons">
+				<![CDATA[int button = ADialog.ShowList("$end$one|two|three$end$");
+switch (button) {
+case 1:  break;
+case 2:  break;
+case 3:  break;
+default: return;
+}]]>
+			</list>
 			<list item="Text input">if (!ADialog.ShowInput(out string s, "$end$")) return;</list>
 			<list item="Number input">if (!ADialog.ShowInputNumber(out int s, "$end$")) return;</list>
 		</snippet>
@@ -199,7 +251,7 @@ if (w.IsMatch("$end$*Name$end$")) {
 		</snippet>
 
 		<snippet name="speedSnippet" info="Change sleep times used by keyboard and mouse functions." more="The snippet code sets default values.">
-			<![CDATA[AOpt.Key.KeySpeed = $end$1$end$;
+			<![CDATA[AOpt.Key.KeySpeed = 1;
 AOpt.Key.TextSpeed = 0;
 AOpt.Key.SleepFinally = 10;
 AOpt.Key.KeySpeedClipboard = 5;
@@ -226,11 +278,11 @@ p1.Next();]]>
 			</list>
 		</snippet>
 
-		<snippet name="menuSnippet" info="Create popup menu.">
+		<snippet name="menuSnippet" info="Popup menu.">
 			<list item="Menu for automation scripts">
 				<![CDATA[var m = new AMenu("$guid$");
 
-m["$end$Item1$end$"] = o => {  };
+m["Item1"] = o => {  };
 m[""] = o => {  };
 using(m.Submenu("")) {
 	m[""] = o => {  };
@@ -244,13 +296,13 @@ m["Copy-paste example"] = o => {
 	s = s.Upper();
 	AClipboard.Paste(s);
 };
-	
+
 m.Show();]]>
 			</list>
 			<list item="Context menu for your program">
 				<![CDATA[var m = new AMenu();
-	
-m["$end$Item1$end$"] = o => {  };
+
+m["Item1"] = o => {  };
 m[""] = o => {  };
 using(m.Submenu("")) {
 	m[""] = o => {  };
@@ -259,8 +311,26 @@ using(m.Submenu("")) {
 m.Separator();
 m[""] = o => {  };
 m[""] = o => {  };
-	
-m.Show(ownerFormOrControl);]]>
+
+m.Show(owner);]]>
+			</list>
+			<list item="Menu that returns item id">
+				<![CDATA[int mi = AMenu.ShowSimple("1 One|2 Two|3 Three||0 Cancel");
+switch (mi) {
+case 1:  break;
+case 2:  break;
+case 3:  break;
+default: return;
+}]]>
+			</list>
+			<list item="Menu with switch expression">
+				<![CDATA[var s = AMenu.ShowSimple("1 One|2 Two|3 Three||0 Cancel") switch {
+	1 => "one",
+	2 => "two",
+	3 => "three",
+	_ => null
+};
+if (s == null) return;]]>
 			</list>
 		</snippet>
 
@@ -285,6 +355,80 @@ m.Show(ownerFormOrControl);]]>
 	m[""] = o => {  };
 	m[""] = o => {  };
 });]]>
+			</list>
+		</snippet>
+
+		<snippet name="guiBuilderSnippet" info="Create window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Media" more="See also: dialogSnippet.">
+			<list item="Simple">
+				<![CDATA[var b = new AGuiBuilder("Window").WinSize(400)
+	.R.Add("Text", out TextBox text1).Focus()
+	.R.Add("Combo", out ComboBox combo1, true).Items("One|Two|Three")
+	.R.Add(out CheckBool c1, "Check")
+	.R.AddOkCancel()
+	.End();
+if (!b.ShowDialog()) return;
+//AOutput.Write(text1.Text, combo1.SelectedIndex); if(c1) AOutput.Write("c1 checked");]]>
+			</list>
+			<list item="Tabs">
+				<![CDATA[var b = new AGuiBuilder("Window").WinSize(400)
+	.Row(-1).Add(out TabControl tc).Height(300..)
+	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).Disabled().End();
+
+AGuiBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
+	var tp = new TabItem { Header = name };
+	tc.Items.Add(tp);
+	return new AGuiBuilder(tp, panelType);
+}
+
+_Page("Page1")
+	.R.Add("Text", out TextBox _)
+	.End();
+
+_Page("Page2")
+	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
+	.R.Add(out CheckBool _, "Check")
+	.End();
+
+//tc.SelectedIndex = 1;
+
+b.End();
+if (!b.ShowDialog()) return;]]>
+			</list>
+			<list item="With my window class">
+				<![CDATA[//class Window1 : Window {  }
+var w = new Window1 { Title = "Window", Width = 400 };
+var b = new AGuiBuilder(w)
+	.R.Add("Text", out TextBox _).Focus()
+	.R.AddOkCancel()
+	.End();
+if (!b.ShowDialog()) return;]]>
+			</list>
+			<list item="Tabs and my class">
+				<![CDATA[//class Window1 : Window {  }
+var w = new Window1 { Title = "Window", Width = 400 };
+var b = new AGuiBuilder(w)
+	.Row(-1).Add(out TabControl tc).Height(300..)
+	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).Disabled().End();
+
+AGuiBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
+	var tp = new TabItem { Header = name };
+	tc.Items.Add(tp);
+	return new AGuiBuilder(tp, panelType);
+}
+
+_Page("Page1")
+	.R.Add("Text", out TextBox _)
+	.End();
+
+_Page("Page2")
+	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
+	.R.Add(out CheckBool _, "Check")
+	.End();
+
+//tc.SelectedIndex = 1;
+
+b.End();
+if (!b.ShowDialog()) return;]]>
 			</list>
 		</snippet>
 
@@ -350,15 +494,15 @@ m.Show(ownerFormOrControl);]]>
 
 		<snippet name="propSnippet" info="Property.">
 			<list item="{ get; set; }">
-				<![CDATA[public int $end$MyProperty$end$ { get; set; }
+				<![CDATA[public int $end$Property$end$ { get; set; }
 ]]>
 			</list>
 			<list item="{ get; private set; }">
-				<![CDATA[public int $end$MyProperty$end$ { get; private set; }
+				<![CDATA[public int $end$Property$end$ { get; private set; }
 ]]>
 			</list>
 			<list item="{ get {  } set {  } }">
-				<![CDATA[public string $end$MyProperty$end$ {
+				<![CDATA[public string $end$Property$end$ {
 	get {
 		
 	}
@@ -368,8 +512,35 @@ m.Show(ownerFormOrControl);]]>
 }
 ]]>
 			</list>
+			<list item="{ get => _field; set { ... } }">
+				<![CDATA[public string $end$Property$end$ {
+	get => _field;
+	set {
+		if (value != _field) {
+			_field = value;
+			
+		}
+	}
+}
+string _field;
+]]>
+			</list>
+			<list item="{ get { ... } set => _field = value; }">
+				<![CDATA[public string $end$Property$end$ {
+	get {
+		if (_field == null) {
+			
+			_field = ;
+		}
+		return _field;
+	}
+	set => _field = value;
+}
+string _field;
+]]>
+			</list>
 			<list item="{ get { ... } set { ... } }">
-				<![CDATA[public string $end$MyProperty$end$ {
+				<![CDATA[public string $end$Property$end$ {
 	get {
 		if (_field == null) {
 			
@@ -473,11 +644,11 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 		</snippet>
 
 		<snippet name="ifDirectiveSnippet" info="Enable code if the specified preprocessor expression is true (symbol exists, etc)." more="Snippet 1: compile code if true. Snippet 2: compile code before #else if true; else compile code after #else. The preprocessor expression can be literal true, false or a preprocessor symbol or symbols with ||, &amp;&amp;, !. To define symbols use #define or the Properties dialog. For 'else if' use #elif otherExpression.">
-			<list item="">
+			<list item="#if">
 				<![CDATA[#if $end$true$end$
 #endif]]>
 			</list>
-			<list item="">
+			<list item="#if #else">
 				<![CDATA[#if $end$true$end$
 #else
 #endif]]>

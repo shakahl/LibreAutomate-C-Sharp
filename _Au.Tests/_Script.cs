@@ -320,7 +320,7 @@ class Script : AScript
 #if false
 			var dd = new ToolStripDropDownButton("DD");
 			t.Add(dd, @"Q:\app\find.ico");
-			dd.DropDownOpening += (unu, sed) => {
+			dd.DropDownOpening += (_, _) => {
 				var m = new AMenu(dd);
 				m["one"] = o => AOutput.Write(o);
 				using(m.Submenu("Sub")) {
@@ -401,16 +401,16 @@ class Script : AScript
 			//t.Separator("");
 			////t["GC"] = o => GC.Collect();
 
-			//var dd = new ToolStripSplitButton("SB2", null, (unu,sed)=>AOutput.Write("click"));
+			//var dd = new ToolStripSplitButton("SB2", null, (_, _)=>AOutput.Write("click"));
 			//t.Add(dd, @"Q:\app\delete.ico");
-			//dd.DropDownOpening += (unu, sed) => {
+			//dd.DropDownOpening += (_, _) => {
 			//	var m = new AMenu();
 			//	dd.DropDown = m.Control;
 			//	m["one"] = o => AOutput.Write(o);
 			//};
-			//dd.ButtonClick += (unu, sed) => AOutput.Write("button click");
+			//dd.ButtonClick += (_, _) => AOutput.Write("button click");
 			//dd.DoubleClickEnabled = true;
-			//dd.ButtonDoubleClick += (unu, sed) => AOutput.Write("button double click");
+			//dd.ButtonDoubleClick += (_, _) => AOutput.Write("button double click");
 
 			//ATimer.After(3000, _ => {
 			//	var c = t.Control.Items[0];
@@ -1029,13 +1029,52 @@ class Script : AScript
 		}
 	}
 
+	[MethodImpl(MethodImplOptions.NoInlining)]
+	void TestUnsafe()
+	{
+		//var a = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
+		//ulong k = Unsafe.As<byte, ulong>(ref a[0]);
+		//AOutput.Write(k);
+
+		//a[2] = Unsafe.As<ulong, byte>(ref k);
+		//AOutput.Write(a);
+
+		var f = AKeys.IsScrollLock ? FAFlags.DontThrow : FAFlags.UseRawPath;
+		//f.SetFlag2(AFFlags.Reverse, true);
+		//AOutput.Write(f);
+		//f.SetFlag2(AFFlags.Reverse, false);
+		//AOutput.Write(f);
+
+		int k1=0,k2 = 0, k3=0, k4=0, k5=0;
+		APerf.SpeedUpCpu();
+		//if(f.HasAny(AFFlags.HiddenToo)) k3++;
+		for(int i1 = 0; i1 < 7; i1++) {
+			int n2 = 10000;
+			APerf.First();
+			for(int i2 = 0; i2 < n2; i2++) { f.SetFlag(FAFlags.DontThrow, true); f.SetFlag(FAFlags.DontThrow, false); }
+			APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(f.HasFlag(FAFlags.UseRawPath)) k1++; }
+			APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(f.Has(FAFlags.UseRawPath)) k2++; }
+			APerf.Next();
+			for(int i2 = 0; i2 < n2; i2++) { if(f.HasAny(FAFlags.UseRawPath)) k3++; }
+			//APerf.Next();
+			//for(int i2 = 0; i2 < n2; i2++) { if(f.HasAny5(AFFlags.HiddenToo)) k5++; }
+			APerf.NW();
+			Thread.Sleep(200);
+		}
+		AOutput.Write(f, k1, k2, k3, k4, k5);
+	}
+
 	unsafe void _Main()
 	{
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
+		var b = new StringBuilder();
+		b.Append("ff")
+			.Append("fs");
 
-		//TestFirefoxAcc();
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }

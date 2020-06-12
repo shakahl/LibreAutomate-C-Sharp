@@ -101,6 +101,7 @@ namespace Au
 		/// <exception cref="DivideByZeroException"></exception>
 		public static int MulDiv(int number, int multiply, int divide)
 		{
+			if(divide == multiply) return number;
 			long r = (long)number * multiply;
 			int d = divide / 2; if(r < 0 == divide < 0) r += d; else r -= d; //round
 			return checked((int)(r / divide));

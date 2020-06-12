@@ -14,3 +14,4 @@
 		</dependentAssembly>
 	</dependency>
 </assembly>
+<!-- used by ActCtx_. To embed, in csproj add: <ApplicationManifest>Resources\Au.manifest</ApplicationManifest> -->

@@ -38,7 +38,7 @@ namespace Au
 		/// Using in a Form/Control event handler.
 		/// <code><![CDATA[
 		/// var f = new Form();
-		/// f.Click += async (unu, sed) =>
+		/// f.Click += async (_, _) =>
 		///   {
 		/// 	  AOutput.Write("waiting for Notepad...");
 		/// 	  AWnd w = await Task.Run(() => AWnd.Wait(-10, false, "* Notepad"));

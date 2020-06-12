@@ -93,11 +93,12 @@ namespace Au
 
 						//call the caller-provided callback function that should add submenu items on demand
 						if(_submenu_lazyDelegate != null) {
-							Items.Clear(); //remove the placeholder separator
+							Items.Clear(); //remove the placeholder item
 							_m._submenuStack.Push(this);
 							_submenu_lazyDelegate(_m);
 							_m._submenuStack.Pop();
 							_submenu_lazyDelegate = null;
+							if(Items.Count == 0) e.Cancel = true;
 						}
 
 						PerformLayout();

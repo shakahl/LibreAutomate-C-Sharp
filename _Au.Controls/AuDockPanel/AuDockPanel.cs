@@ -488,11 +488,11 @@ namespace Au.Controls
 			foreach(var v in a) {
 				var s = v.Text;
 				if(!v.Visible) s += "  (hidden)";
-				m.Items.Add(s, v.Image, (unu, sed) => { v.Show(true); });
+				m.Items.Add(s, v.Image, (_, _) => { v.Show(true); });
 			}
 			//add Reset...
 			m.Items.Add(new ToolStripSeparator());
-			(m.Items.Add("Reset...", null, (unu, sed) => {
+			(m.Items.Add("Reset...", null, (_, _) => {
 				if(ZResetLayoutAfterRestart) ZResetLayoutAfterRestart = false;
 				else ZResetLayoutAfterRestart = ADialog.ShowOkCancel("Reset panel/toolbar layout", "After restarting this application.");
 			}) as ToolStripMenuItem).Checked = ZResetLayoutAfterRestart;

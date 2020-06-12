@@ -37,7 +37,7 @@ namespace Au
 		{
 			_cacheFile = cacheFile;
 			_iconSize = iconSize;
-			AProcess.Exit += (unu, sed) => SaveCacheFileNow();
+			AProcess.Exit += (_, _) => SaveCacheFileNow();
 		}
 
 		/// <summary>

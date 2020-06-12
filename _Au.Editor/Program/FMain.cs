@@ -33,7 +33,11 @@ partial class FMain : Form
 		Program.MainForm = this;
 
 		this.SuspendLayout();
+
+		//TODO: support per-monitor high DPI. Else eg AAcc tool works incorrectly. Now in manifest is PM, but resizing and font sizes are incorrect.
 		this.AutoScaleMode = AutoScaleMode.None;
+		//this.AutoScaleDimensions = new SizeF(96f, 96f); this.AutoScaleMode = AutoScaleMode.Dpi;
+
 		this.Icon = EdStock.IconAppNormal;
 		this.StartPosition = FormStartPosition.Manual;
 		unsafe {
@@ -135,7 +139,7 @@ partial class FMain : Form
 	protected override void OnFormClosed(FormClosedEventArgs e)
 	{
 		if(Program.Loaded >= EProgramState.LoadedUI) {
-			Program.Settings.wndPos = _Hwnd.SavePositionSizeState();
+			Program.Settings.wndPos = _Hwnd.SaveRectAndState();
 			UacDragDrop.AdminProcess.Enable(false);
 		}
 		Program.Loaded = EProgramState.Unloading;
@@ -208,6 +212,9 @@ partial class FMain : Form
 				base.WndProc(ref m2); //creates controls and calls OnLoad and OnVisibleChanged
 				return;
 			}
+			break;
+		case Api.WM_DISPLAYCHANGE:
+			Program.Tasks.OnWM_DISPLAYCHANGE();
 			break;
 		}
 

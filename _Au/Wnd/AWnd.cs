@@ -101,13 +101,6 @@ namespace Au
 		/// </remarks>
 		public static explicit operator AWnd(System.Windows.Forms.Control c) => c == null || !c.IsHandleCreated ? default : new AWnd(c.Handle);
 
-		/// <summary>
-		/// Gets the window handle as AWnd from a System.Windows.Window variable (WPF window).
-		/// Returns default(AWnd) if w is null or the handle is still not created.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		public static explicit operator AWnd(System.Windows.Window w) => new AWnd(w == null ? default : new System.Windows.Interop.WindowInteropHelper(w).Handle);
-
 		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(AWnd w1, AWnd w2) => w1._h == w2._h;
 		/// <summary>Compares window handles.</summary>
@@ -2267,6 +2260,7 @@ namespace Au
 		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <param name="newValue">New value.</param>
 		/// <exception cref="AuWndException"/>
+		/// <seealso cref="Native.SetWindowSubclass"/>
 		public LPARAM SetWindowLong(int index, LPARAM newValue)
 		{
 			ALastError.Clear();

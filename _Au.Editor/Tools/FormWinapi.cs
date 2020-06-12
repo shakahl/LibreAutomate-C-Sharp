@@ -40,9 +40,11 @@ public class FormWinapi : DialogForm
 		_db = EdDatabases.OpenWinapi();
 
 		_eName.TextChanged += _eName_TextChanged;
-		_bOK.Click += (unu, sed) => {
+		_bOK.Click += (_, _) => {
 			string s = _code.Text;
-			if(!s.NE()) Clipboard.SetText(s);
+			if(s.NE()) return;
+			Clipboard.SetText(s);
+			InsertCode.UsingDirective("System.Runtime.InteropServices");
 		};
 	}
 

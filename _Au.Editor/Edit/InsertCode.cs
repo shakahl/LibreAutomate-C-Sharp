@@ -111,17 +111,21 @@ static class InsertCode
 	/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
 	/// Returns true if inserted.
 	/// </summary>
-	/// <param name="ns">Namespace, eg "System.Diagnostics".</param>
+	/// <param name="ns">Namespace, eg "System.Diagnostics". Can be multiple, separated with semicolon, colon or space.</param>
 	public static bool UsingDirective(string ns)
 	{
 		if(!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return false;
-		if(_FindUsings(k, out int end, ns) < 0) return false;
+		var namespaces = ns.SegSplit(";, ", SegFlags.NoEmpty);
+		var (_, end) = _FindUsings(k, namespaces);
+		if(!namespaces.Any(o => o != null)) return false;
 		var doc = k.sciDoc;
 		//doc.Z.Select(true, start, end);
 
 		var b = new StringBuilder();
 		if(end > 0 && k.code[end - 1] != '\n') b.AppendLine();
-		b.Append("using ").Append(ns).AppendLine(";");
+		foreach(var v in namespaces) {
+			if(v != null) b.Append("using ").Append(v).AppendLine(";");
+		}
 
 		int line = doc.Z.LineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
 		doc.Z.InsertText(true, end, b.ToString(), addUndoPoint: true);
@@ -131,20 +135,22 @@ static class InsertCode
 	}
 
 	/// <summary>
-	/// Finds start and end of using directives. Returns start.
+	/// Finds start and end of using directives.
 	/// If no usings, sets start = end = where new using directives can be inserted: 0 or end of meta or extern aliases or preprocessor directives.
 	/// Sets end = the start of next line if possible.
-	/// If ifNoNamespace!=null, returns -1 if 'using ifNoNamespace;' exists.
+	/// If namespaces!=null, clears existing namespaces in it (sets =null).
 	/// </summary>
-	static int _FindUsings(in CodeInfo.Context k, out int end, string ifNoNamespace = null)
+	static (int start, int end) _FindUsings(in CodeInfo.Context k, string[] namespaces = null)
 	{
-		end = -1;
-		int start = -1, end2 = -1;
+		int start = -1, end = -1, end2 = -1;
 		var root = k.document.GetSyntaxRootAsync().Result;
 		foreach(var v in root.ChildNodes()) {
 			switch(v) {
 			case UsingDirectiveSyntax u:
-				if(ifNoNamespace != null && ifNoNamespace == u.Name.ToString()) return -1;
+				if(namespaces != null) {
+					int i = Array.IndexOf(namespaces, u.Name.ToString());
+					if(i >= 0) namespaces[i] = null;
+				}
 				if(start < 0) start = v.SpanStart;
 				end = v.FullSpan.End;
 				break;
@@ -164,7 +170,7 @@ static class InsertCode
 			}
 			start = end = end2;
 		}
-		return start;
+		return (start, end);
 	}
 
 	public static void ImplementInterfaceOrAbstractClass(bool explicitly, int position = -1)

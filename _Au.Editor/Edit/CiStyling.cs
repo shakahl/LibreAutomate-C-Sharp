@@ -189,6 +189,7 @@ partial class CiStyling
 			});
 		}
 		catch(OperationCanceledException) { }
+		catch(Exception e1) { ADebug.Print(e1); return; } //InvalidOperationException when this code: AGuiBuilder ... .Also(b=>b.Panel.for)
 		finally {
 			cancelTS.Dispose();
 			if(cancelTS == _cancelTS) _cancelTS = null;

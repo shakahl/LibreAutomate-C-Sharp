@@ -79,7 +79,7 @@ namespace Au.Controls
 			}
 			comboColor.DrawItem += _ComboColor_DrawItem;
 			comboColor.Validating += _ComboColor_Validating;
-			comboColor.TextChanged += (unu, sed) => _errorProvider?.Clear();
+			comboColor.TextChanged += (_, _) => _errorProvider?.Clear();
 		}
 
 		private void _ComboColor_Validating(object sender, CancelEventArgs e)

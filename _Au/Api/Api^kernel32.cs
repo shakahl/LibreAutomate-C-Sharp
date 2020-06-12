@@ -29,6 +29,9 @@ namespace Au.Types
 		internal static Handle_ CreateEvent(bool bManualReset)
 			=> CreateEvent2(default, bManualReset, false, null);
 
+		//[DllImport("kernel32.dll", EntryPoint = "OpenEventW", SetLastError = true)]
+		//internal static extern IntPtr OpenEvent(uint dwDesiredAccess, bool bInheritHandle, string lpName);
+
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool SetEvent(IntPtr hEvent);
 

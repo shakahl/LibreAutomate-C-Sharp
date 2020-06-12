@@ -250,7 +250,7 @@ class CiErrors
 			foreach(var nt in ns.GetMembers()) {
 				string sn = nt.Name;
 				//AOutput.Write(sn);
-				if(sn[0] == '<') continue;
+				if(sn.NE() || sn[0] == '<') continue;
 				if(nt is INamespaceSymbol ins) {
 					stack.Add(sn);
 					_EnumNamespace(ins);

@@ -110,6 +110,8 @@ class CiSignature
 		foreach(var p in providers) {
 			//APerf.First();
 			var r2 = p.GetItemsAsync(cd.document, cd.pos16, trigger, default).Result;
+			//TODO: hangs once in 1-2 days. Maybe when called while displayed previous or while previous GetItemsAsync is working.
+
 			//APerf.NW(); //quite fast, don't need async. But in the future can try to wrap this foreach+SignatureHelpProviders in async Task. Need to test with large files.
 			if(r2 == null) continue;
 			if(r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) r = r2;

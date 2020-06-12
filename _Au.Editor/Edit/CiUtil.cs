@@ -168,8 +168,9 @@ static class CiUtil
 		}
 		if(metadata != null) {
 			query = sym.QualifiedName();
-			query = query.Replace("..", ".-"); //..ctor
-			if(metadata.Name == "Au.dll") return Au.Util.AHelp.AuHelpUrl(query);
+			bool au = metadata.Name == "Au.dll";
+			query = query.Replace("..ctor", au ? ".-ctor" : null);
+			if(au) return Au.Util.AHelp.AuHelpUrl(query);
 			if(metadata.Name.Starts("Au.")) return null;
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();
@@ -356,8 +357,9 @@ static class CiUtil
 		foreach(var p in md.ParameterList.Parameters) {
 			b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
 		}
-		var rt = md.ReturnType;
-		if(!code.Eq(rt.Span.Start..rt.Span.End, "void")) b.Append("\r\n/// <returns></returns>");
+		//rejected. Rarely used. VS intellisense ignores it.
+		//var rt = md.ReturnType;
+		//if(!code.Eq(rt.Span.Start..rt.Span.End, "void")) b.Append("\r\n/// <returns></returns>");
 		return b.ToString();
 	}
 
@@ -365,7 +367,7 @@ static class CiUtil
 	public static void PrintNode(SyntaxNode x, int pos = 0, bool printNode = true, bool printErrors = false)
 	{
 		if(x == null) { AOutput.Write("null"); return; }
-		if(printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, {x.Kind()}, {x.GetType().Name},<> '<c green>{x}<>'");
+		if(printNode) AOutput.Write($"<><c blue>{pos}, {x.Span}, k={x.Kind()}, t={x.GetType().Name},<> '<c green>{x}<>'");
 		if(printErrors) foreach(var d in x.GetDiagnostics()) AOutput.Write(d.Code, d.Location.SourceSpan, d);
 	}
 

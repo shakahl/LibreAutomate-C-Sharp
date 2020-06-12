@@ -1378,8 +1378,8 @@ namespace Au
 		/// <param name="title">Title bar text. If omitted, null or "", uses <see cref="Options.DefaultTitle"/>.</param>
 		/// <param name="controls">Can be used to add more controls and later get their values: checkbox, radio buttons, text input.</param>
 		/// <param name="defaultButton">id of button that responds to the Enter key.</param>
-		/// <param name="x">X position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="y">Y position in <see cref="Screen"/>. If default - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="x">X position in <see cref="Screen"/>. If default - center. You also can use <see cref="Coord.Reverse"/> etc.</param>
+		/// <param name="y">Y position in <see cref="Screen"/>. If default - center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="secondsTimeout">If not 0, after this time (seconds) auto-close the dialog and return <see cref="Timeout"/>.</param>
 		/// <param name="onLinkClick">
 		/// A link-clicked event handler function, eg lambda. Enables hyperlinks in small-font text.

@@ -167,11 +167,13 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 	public unsafe void TestEditor()
 	{
 
+		//InsertCode.UsingDirective("System.Windows.Forms;System.Drawing");
+
 		//InsertCode.ImplementInterfaceOrAbstractClass(AKeys.IsScrollLock);
 
-		var doc = Panels.Editor.ZActiveDoc;
-		var Z = doc.Z;
-		var s = doc.Text;
+		//var doc = Panels.Editor.ZActiveDoc;
+		//var Z = doc.Z;
+		//var s = doc.Text;
 
 		//AOutput.Write(SciCode.ZFindScriptHeader(s, out var m));
 
@@ -295,7 +297,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 				//}
 			}
 		});
-		Application.ApplicationExit += (unu, sed) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with AHookWin) 
+		Application.ApplicationExit += (_, _) => _hook.Dispose(); //without it at exit crashes (tested with raw API and not with AHookWin) 
 	}
 	static AHookWin _hook;
 }

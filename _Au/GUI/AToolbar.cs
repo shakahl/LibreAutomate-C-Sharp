@@ -239,7 +239,7 @@ namespace Au
 
 			//Activate window when a child control clicked, or something may not work, eg cannot enter text in Edit control.
 			if(item is ToolStripControlHost h && h.CanSelect) { //combo, edit, progress
-				h.GotFocus += (unu, sed) => { //info: before MouseDown, which does not work well with combo box
+				h.GotFocus += (_, _) => { //info: before MouseDown, which does not work well with combo box
 					Api.SetForegroundWindow((AWnd)_c); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 				};
 				h.KeyDown += (_, e) => {

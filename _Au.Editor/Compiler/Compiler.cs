@@ -308,7 +308,7 @@ namespace Au.Compiler
 			}
 
 #if TRACE
-			p1.NW('C');
+			//p1.NW('C');
 #endif
 			return true;
 
@@ -673,7 +673,7 @@ namespace Au.Compiler
 			if(notInCache) {
 				if(s_renamedFiles == null) {
 					s_renamedFiles = new List<string>();
-					AProcess.Exit += (_, __) => _DeleteRenamedLockedFiles(null);
+					AProcess.Exit += (_, _) => _DeleteRenamedLockedFiles(null);
 					s_rfTimer = new ATimer(_DeleteRenamedLockedFiles);
 				}
 				if(!s_rfTimer.IsRunning) s_rfTimer.Every(60_000);

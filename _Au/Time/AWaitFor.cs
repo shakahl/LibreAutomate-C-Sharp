@@ -34,7 +34,7 @@ namespace Au
 	/// Using in a Form/Control event handler.
 	/// <code><![CDATA[
 	/// var f = new Form();
-	/// f.Click += async (unu, sed) =>
+	/// f.Click += async (_, _) =>
 	///   {
 	/// 	  AOutput.Write("waiting...");
 	/// 	  var result = await Task.Run(() => AWaitFor.Condition(-10, () => AKeys.IsScrollLock));

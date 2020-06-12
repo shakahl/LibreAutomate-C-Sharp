@@ -40,6 +40,10 @@ namespace Au.Util
 		internal AHookWin.SharedMemoryData_ winHook;
 		internal APerf.Local perf;
 
+		//public const int TasksDataSize_ = 0x4000;
+		//internal struct TasksData_ { public int size; public fixed byte data[TasksDataSize_]; }
+		//internal TasksData_ tasks;
+
 		#endregion
 
 		const int c_size = 0x10000;

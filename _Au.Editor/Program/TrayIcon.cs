@@ -40,7 +40,7 @@ static class EdTrayIcon
 		var m = new AMenu { MultiShow = true, ActivateMenuWindow = true };
 		m["End green task\tSleep"] = o => Program.Tasks.EndTask();
 		m["Disable triggers\tM-click"] = o => TriggersAndToolbars.DisableTriggers(null); var dt = m.LastMenuItem;
-		m.Control.Opening += (unu, sed) => { dt.Checked = _disabled; };
+		m.Control.Opening += (_, _) => { dt.Checked = _disabled; };
 		m.Separator();
 		m["Exit"] = o => Strips.Cmd.File_Exit();
 		_trayIcon.ContextMenuStrip = m.Control;

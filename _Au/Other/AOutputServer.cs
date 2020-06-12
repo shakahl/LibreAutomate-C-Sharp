@@ -224,7 +224,7 @@ namespace Au
 				_callback = cbFunc;
 				if(cbFunc != null && c != null) {
 					if(c.IsHandleCreated) _timer?.Set(30);
-					else c.HandleCreated += (unu, sed) => _timer?.Set(30);
+					else c.HandleCreated += (_, _) => _timer?.Set(30);
 				}
 			}
 		}

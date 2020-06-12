@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Linq;
 
 using Au.Types;
+using Microsoft.Win32;
 
 namespace Au
 {
@@ -293,8 +294,9 @@ namespace Au
 
 			if(path.Ends(".exe", true) && path.FindAny(@"\/") < 0) {
 				try {
-					string rk = @"Software\Microsoft\Windows\CurrentVersion\App Paths\" + path;
-					if(ARegistry.GetString(out path, "", rk) || ARegistry.GetString(out path, "", rk, Microsoft.Win32.Registry.LocalMachine)) {
+					path = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string
+						?? Registry.GetValue(@"HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\App Paths\" + path, "", null) as string;
+					if(path != null) {
 						path = APath.Normalize(path.Trim('\"'));
 						if(ExistsAsAny(path, true)) return path;
 					}

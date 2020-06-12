@@ -273,8 +273,8 @@ static class CiSnippets
 			if(s.Starts('#') && doc.Text.Eq(pos - 1, '#')) s = s[1..];
 
 			//maybe need more code before
-			if(x.Attr(out string before, "before") && doc.Text.Find(before, 0..pos) < 0) {
-				s = before + "\r\n" + s;
+			if(x.Attr(out string before, "before") || snippet.x.Attr(out before, "before")) {
+				if(doc.Text.Find(before, 0..pos) < 0) s = before + "\r\n" + s;
 			}
 
 			//replace $guid$ and $random$. Note: can be in the 'before' code.
@@ -288,13 +288,13 @@ static class CiSnippets
 				if(doc.Text.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
 			}
 
-			usingDir = x.Attr("using");
+			usingDir = x.Attr("using") ?? snippet.x.Attr("using");
 		}
 
 		//if multiline, add indentation
 		if(s.Contains('\n')) {
 			int indent = doc.Z.LineIndentationFromPos(true, pos);
-			if(indent > 0) s = s.RegexReplace(@"(?m)\n\K", new string('\t', indent));
+			if(indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
 		}
 
 		//$end$ sets final position. Or $end$select_text$end$. Show signature if like Method($end$.
@@ -314,7 +314,7 @@ static class CiSnippets
 			}
 		}
 
-		//maybe need a using directive
+		//maybe need using directives
 		if(usingDir != null) {
 			int len1 = doc.Len16;
 			if(InsertCode.UsingDirective(usingDir)) {

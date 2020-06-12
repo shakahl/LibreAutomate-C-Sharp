@@ -72,7 +72,7 @@ namespace Au.Controls
 			//	The properties only allow to change background color when focused/nonfocused.
 			//	We use OnEnter/OnLeave to show a focus rect only when the control is focused.
 
-			VScrollBar.LocationChanged += (unu, sed) => _AutoSizeLastColumn(); //when vscrollbar added/removed (SB width changed); when grid width changed.
+			VScrollBar.LocationChanged += (_, _) => _AutoSizeLastColumn(); //when vscrollbar added/removed (SB width changed); when grid width changed.
 		}
 
 		protected override void OnHandleDestroyed(EventArgs e)
@@ -557,7 +557,7 @@ namespace Au.Controls
 							var ed = new Editors.ComboBox(typeof(string), a, false) { EditableMode = c_editableMode };
 							var cb = ed.Control;
 							cb.DropDownStyle = ComboBoxStyle.DropDownList;
-							cb.SelectionChangeCommitted += (unu, sed) => ZEndEdit(false);
+							cb.SelectionChangeCommitted += (_, _) => ZEndEdit(false);
 							if(buttonAction != null) cb.DropDown += buttonAction;
 							t = new EditCell(comboIndex >= 0 ? a[comboIndex] : "") { Editor = ed, Info = info };
 						} else { //editable

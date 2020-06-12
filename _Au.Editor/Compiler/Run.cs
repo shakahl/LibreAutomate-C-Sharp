@@ -406,6 +406,164 @@ class RunningTasks
 		return running == null;
 	}
 
+#if false //use shared memory instead of pipe. Works, but unfinished, used only to compare speed. Same speed.
+	/// <summary>
+	/// Executes the compiled assembly in new process.
+	/// Returns: process id if started now, 0 if failed, (int)ATask.ERunResult.deferred if scheduled to run later.
+	/// </summary>
+	/// <param name="f"></param>
+	/// <param name="r"></param>
+	/// <param name="args"></param>
+	/// <param name="noDefer">Don't schedule to run later. If cannot run now, just return 0.</param>
+	/// <param name="wrPipeName">Pipe name for ATask.WriteResult.</param>
+	/// <param name="ignoreLimits">Don't check whether the task can run now.</param>
+	/// <param name="runFromEditor">Starting from the Run button or menu Run command. Can restart etc.</param>
+	public unsafe int RunCompiled(FileNode f, Compiler.CompResults r, string[] args,
+		bool noDefer = false, string wrPipeName = null, bool ignoreLimits = false, bool runFromEditor = false)
+	{
+		g1:
+		if(!ignoreLimits && !_CanRunNow(f, r, out var running, runFromEditor)) {
+			var ifRunning = r.ifRunning;
+			bool same = running.f == f;
+			if(!same) {
+				ifRunning = r.ifRunning2 switch
+				{
+					EIfRunning2.cancel => EIfRunning.cancel,
+					EIfRunning2.wait => EIfRunning.wait,
+					EIfRunning2.warn => EIfRunning.warn,
+					_ => (ifRunning & ~EIfRunning._restartFlag) switch { EIfRunning.cancel => EIfRunning.cancel, EIfRunning.wait => EIfRunning.wait, _ => EIfRunning.warn }
+				};
+			} else if(ifRunning.Has(EIfRunning._restartFlag)) {
+				if(runFromEditor) ifRunning = EIfRunning.restart;
+				else ifRunning &= ~EIfRunning._restartFlag;
+			}
+			//AOutput.Write(same, ifRunning);
+			switch(ifRunning) {
+			case EIfRunning.cancel:
+				break;
+			case EIfRunning.wait when !noDefer:
+				_q.Insert(0, new _WaitingTask(f, r, args));
+				return (int)ATask.ERunResult.deferred; //-1
+			case EIfRunning.restart when _EndTask(running):
+				goto g1;
+			default: //warn
+				string s1 = same ? "it" : $"{running.f.SciLink}";
+				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runMode<>.");
+				break;
+			}
+			return 0;
+		}
+
+		_SpUac uac = _SpUac.normal; int preIndex = 0;
+		if(!AUac.IsUacDisabled) {
+			//info: to completely disable UAC on Win7: gpedit.msc/Computer configuration/Windows settings/Security settings/Local policies/Security options/User Account Control:Run all administrators in Admin Approval Mode/Disabled. Reboot.
+			//note: when UAC disabled, if our uac is System, IsUacDisabled returns false (we probably run as SYSTEM user). It's OK.
+			var IL = AUac.OfThisProcess.IntegrityLevel;
+			if(r.uac == EUac.inherit) {
+				switch(IL) {
+				case UacIL.High: preIndex = 1; break;
+				case UacIL.UIAccess: uac = _SpUac.uiAccess; preIndex = 2; break;
+				}
+			} else {
+				switch(IL) {
+				case UacIL.Medium:
+				case UacIL.UIAccess:
+					if(r.uac == EUac.admin) uac = _SpUac.admin;
+					break;
+				case UacIL.High:
+					if(r.uac == EUac.user) uac = _SpUac.userFromAdmin;
+					break;
+				case UacIL.Low:
+				case UacIL.Untrusted:
+				case UacIL.Unknown:
+				//break;
+				case UacIL.System:
+				case UacIL.Protected:
+					AOutput.Write($"<>Cannot run {f.SciLink}. Meta comment option <c green>uac {r.uac}<> cannot be used when the UAC integrity level of this process is {IL}. Supported levels are Medium, High and uiAccess.");
+					return 0;
+					//info: cannot start Medium IL process from System process. Would need another function. Never mind.
+				}
+				if(r.uac == EUac.admin) preIndex = 1;
+			}
+		}
+
+		string exeFile, argsString;
+		_Preloaded pre = null; byte[] taskArgs = null;
+		bool bit32 = r.prefer32bit || AVersion.Is32BitOS;
+		if(r.notInCache) { //meta role exeProgram
+			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
+			argsString = args == null ? null : Au.Util.AStringUtil.CommandLineFromArray(args);
+		} else {
+			exeFile = AFolders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
+
+			//int iFlags = r.hasConfig ? 1 : 0;
+			int iFlags = 0;
+			if(r.mtaThread) iFlags |= 2;
+			if(r.console) iFlags |= 4;
+			taskArgs = Au.Util.Serializer_.Serialize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
+			wrPipeName = null;
+
+			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;
+			pre = _preloaded[preIndex] ??= new _Preloaded(preIndex);
+			argsString = pre.eventName;
+		}
+
+		int pid; WaitHandle hProcess = null; //bool disconnectPipe = false;
+		try {
+			var pp = pre?.hProcess;
+			if(pp != null && 0 != Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
+				hProcess = pp; pid = pre.pid;
+				pre.hProcess = null; pre.pid = 0;
+			} else {
+				if(pp != null) { pp.Dispose(); pre.hProcess = null; pre.pid = 0; } //preloaded process existed but somehow ended
+				(pid, hProcess) = _StartProcess(uac, exeFile, argsString, wrPipeName);
+			}
+			Api.AllowSetForegroundWindow(pid);
+
+			if(pre != null) {
+				if(taskArgs.Length > Au.Util.SharedMemory_.TasksDataSize_) throw new ArgumentException("Too long task arguments data."); //TODO
+																																		 //AOutput.Write(taskArgs.Length);
+				var m = Au.Util.SharedMemory_.Ptr;
+				m->tasks.size = taskArgs.Length;
+				//AOutput.Write(taskArgs.Length, taskArgs);
+				fixed(byte* p = taskArgs) Buffer.MemoryCopy(p, m->tasks.data, Au.Util.SharedMemory_.TasksDataSize_, taskArgs.Length);
+				Api.SetEvent(pre.hEvent);
+				//500.ms();
+
+				//start preloaded process for next task. Let it wait for pipe connection.
+				if(uac != _SpUac.admin) { //we don't want second UAC consent
+					try { (pre.pid, pre.hProcess) = _StartProcess(uac, exeFile, argsString, null); }
+					catch(Exception ex) { ADebug.Print(ex); }
+				}
+			}
+		}
+		catch(Exception ex) {
+			AOutput.Write(ex);
+			//if(disconnectPipe) Api.DisconnectNamedPipe(pre.hPipe);
+			hProcess?.Dispose();
+			return 0;
+		}
+
+		var rt = new RunningTask(f, hProcess, r.runMode != ERunMode.green);
+		_Add(rt);
+		return pid;
+	}
+
+	class _Preloaded
+	{
+		public readonly string eventName;
+		public readonly IntPtr hEvent;
+		public WaitHandle hProcess;
+		public int pid;
+
+		public _Preloaded(int index)
+		{
+			eventName = $"Au.Task-{Api.GetCurrentProcessId()}-{index}";
+			hEvent = Api.CreateEvent2(default, false, false, eventName);
+		}
+	}
+	_Preloaded[] _preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
+#else
 	/// <summary>
 	/// Executes the compiled assembly in new process.
 	/// Returns: process id if started now, 0 if failed, (int)ATask.ERunResult.deferred if scheduled to run later.
@@ -510,7 +668,7 @@ class RunningTasks
 		int pid; WaitHandle hProcess = null; bool disconnectPipe = false;
 		try {
 			var pp = pre?.hProcess;
-			if(pp != null && 0 != Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
+			if(pp != null && Api.WAIT_TIMEOUT == Api.WaitForSingleObject(pp.SafeWaitHandle.DangerousGetHandle(), 0)) { //preloaded process exists
 				hProcess = pp; pid = pre.pid;
 				pre.hProcess = null; pre.pid = 0;
 			} else {
@@ -526,6 +684,7 @@ class RunningTasks
 					if(e != Api.ERROR_PIPE_CONNECTED) {
 						if(e != Api.ERROR_IO_PENDING) throw new AuException(e);
 						var ha = stackalloc IntPtr[2] { pre.overlappedEvent, hProcess.SafeWaitHandle.DangerousGetHandle() };
+						//APerf.Shared.Next('r');
 						int wr = Api.WaitForMultipleObjectsEx(2, ha, false, -1, false);
 						if(wr != 0) { Api.CancelIo(pre.hPipe); throw new AuException("*start task. Preloaded task process ended"); } //note: if fails when 32-bit process, rebuild solution with platform x86
 						disconnectPipe = true;
@@ -579,6 +738,7 @@ class RunningTasks
 		}
 	}
 	_Preloaded[] s_preloaded = new _Preloaded[6]; //user, admin, uiAccess, user32, admin32, uiAccess32
+#endif
 
 	/// <summary>
 	/// How _StartProcess must start process.
@@ -619,5 +779,17 @@ class RunningTasks
 			if(_a[i].taskId == taskId) return i;
 		}
 		return -1;
+	}
+
+	public void OnWM_DISPLAYCHANGE()
+	{
+		//End preloaded processes. Else they may use wrong DPI.
+		foreach(var v in s_preloaded) {
+			if(v?.hProcess == null) continue;
+			if(!Api.TerminateProcess(v.hProcess.SafeWaitHandle.DangerousGetHandle(), 0)) return;
+			v.hProcess.Dispose();
+			v.hProcess = null;
+			v.pid = 0;
+		}
 	}
 }

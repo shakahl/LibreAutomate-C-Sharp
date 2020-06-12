@@ -840,18 +840,6 @@ namespace Au.Types
 
 		#region comctl32
 
-		[DllImport("comctl32.dll", EntryPoint = "#410")]
-		public static extern bool SetWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData = default);
-
-		//[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-		//public static extern bool GetWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
-
-		[DllImport("comctl32.dll", EntryPoint = "#412")]
-		public static extern bool RemoveWindowSubclass(AWnd w, Native.SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
-
-		[DllImport("comctl32.dll", EntryPoint = "#413")]
-		public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
-
 		[DllImport("comctl32.dll")]
 		internal static extern IntPtr ImageList_GetIcon(IntPtr himl, int i, uint flags);
 

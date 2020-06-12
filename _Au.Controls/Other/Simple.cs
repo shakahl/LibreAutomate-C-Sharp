@@ -172,6 +172,7 @@ namespace Au.Controls
 		bool ShouldSerializePadding() { return base.Padding != new Padding(0, 2, 0, 0); }
 	}
 
+	//FUTURE: test, maybe it fixed in Core
 	/// <summary>
 	/// Auto-scales SplitterDistance depending on DPI.
 	/// </summary>

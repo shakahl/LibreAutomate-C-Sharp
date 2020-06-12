@@ -153,11 +153,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets window position, size and state stored in a string that can be used with <see cref="RestorePositionSizeState"/>.
+		/// Gets window position, size and state stored in a string that can be used with <see cref="RestoreRectAndState"/>.
 		/// Returns null if failed. Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <param name="canBeMinimized">If now the window is minimized, let RestorePositionSizeState make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
-		public string SavePositionSizeState(bool canBeMinimized = false)
+		/// <param name="canBeMinimized">If now the window is minimized, let <see cref="RestoreRectAndState"/> make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
+		public string SaveRectAndState(bool canBeMinimized = false)
 		{
 			if(!GetWindowPlacement_(out var p)) return null;
 			//AOutput.Write(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);
@@ -166,13 +166,13 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Restores window position, size and state that is stored in a string created by <see cref="SavePositionSizeState"/>.
+		/// Restores window position, size and state that is stored in a string created by <see cref="SaveRectAndState"/>.
 		/// </summary>
 		/// <param name="s">The string. Can be null/"".</param>
-		/// <param name="ensureInScreen">Call <see cref="EnsureInScreen"/>. Even when s is null/"".</param>
+		/// <param name="ensureInScreen">Call <see cref="EnsureInScreen"/>. Even when s is null/"". Default true.</param>
 		/// <param name="showActivate">Call <see cref="Show"/>(true) and <see cref="ActivateLL"/>. Even when s is null/"".</param>
 		/// <exception cref="AuWndException"/>
-		public unsafe void RestorePositionSizeState(string s, bool ensureInScreen = false, bool showActivate = false)
+		public unsafe void RestoreRectAndState(string s, bool ensureInScreen = true, bool showActivate = false)
 		{
 			if(AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
 				//AOutput.Write(p.showCmd, p.flags, p.ptMaxPosition, p.rcNormalPosition);

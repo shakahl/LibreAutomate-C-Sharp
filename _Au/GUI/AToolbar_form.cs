@@ -42,7 +42,7 @@ namespace Au
 
 				_bShow.Click += _bClick;
 				_bMove.Click += _bClick;
-				_bRefresh.Click += (_, __) => {
+				_bRefresh.Click += (_, _) => {
 					_lb.Items.Clear();
 					_FillLB();
 				};
@@ -62,7 +62,7 @@ namespace Au
 					_bMove.Enabled = enable;
 				}
 
-				_lb.SelectedIndexChanged += (_, __) => _EnableButtons(_lb.SelectedIndex >= 0);
+				_lb.SelectedIndexChanged += (_, _) => _EnableButtons(_lb.SelectedIndex >= 0);
 			}
 
 			private void _bClick(object sender, EventArgs e)

@@ -12,6 +12,7 @@ using Au.Types;
 
 using YamlDotNet.RepresentationModel;
 using System.Net;
+using Microsoft.Win32;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
@@ -368,10 +369,10 @@ unsafe class Program
 
 	static void Upload(string docDir)
 	{
-		if(!ARegistry.GetString(out var user, "kas", @"\Help")
-			|| !ARegistry.GetString(out var pass, "kaip", @"\Help")
-			|| !ARegistry.GetString(out var pass2, "kaip2", @"\Help")
-			) throw new FileNotFoundException("user or password not found in registry");
+		var user = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Au\Help", "kas", null) as string;
+		var pass = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Au\Help", "kaip", null) as string;
+		var pass2 = Registry.GetValue(@"HKEY_CURRENT_USER\Software\Au\Help", "kaip2", null) as string;
+		if(user == null || pass == null || pass2 == null) throw new FileNotFoundException("user or password not found in registry");
 
 		//upload
 		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass));
