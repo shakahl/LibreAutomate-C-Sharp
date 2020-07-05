@@ -55,7 +55,7 @@ class UacDragDrop
 
 			//note: we don't use SYSTEM_CAPTUREEND. It's too early and sometimes missing.
 			//tested: no EVENT_SYSTEM_DRAGDROPSTART events.
-			//info: classname "DragWindow" is of Windows Store, eg Edge.
+			//info: classname "DragWindow" is of Windows Store.
 			//rejected: int pid = d.wnd.ProcessId; using(var u = AUac.OfProcess(pid)) { if(u == null || u.Elevation == UacElevation.Full) return; }
 		}
 
@@ -165,7 +165,7 @@ class UacDragDrop
 			DragDropEffects ef = 0;
 			if(ev != DDEvent.Leave) {
 				var p = AMouse.XY;
-				var w = _wWindow.ChildFromXY(p, screenXY: true);
+				var w = _wWindow.ChildFromXY(p, WXYCFlags.ScreenXY);
 				if(w.Is0) w = _wWindow;
 				if(w != _wTargetControl && !_wTargetControl.Is0) {
 					_InvokeDDHandler(_wTargetControl, DDEvent.Leave);

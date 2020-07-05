@@ -493,7 +493,7 @@ namespace Au
 					ADebug.Print("need to activate");
 					//info: activating brings to the Z top and also uncloaks
 					if(!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
-					else if(wTL.ThreadId == AWnd.GetWnd.Shell.ThreadId) bad = true; //desktop
+					else if(wTL.ThreadId == AWnd.GetWnd.ShellWindow.ThreadId) bad = true; //desktop
 					else if(wTL.IsActive) wTL.ZorderTop(); //can be below another window in the same topmost/normal Z order, although it is rare
 					else bad = !wTL.Activate_(AWnd.Internal_.ActivateFlags.NoThrowIfInvalid | AWnd.Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc | AWnd.Internal_.ActivateFlags.NoGetWindow);
 

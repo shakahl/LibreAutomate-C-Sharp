@@ -63,7 +63,7 @@ partial class SciCode : AuScintilla
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
 
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
-		Z.MarginWidth(c_marginLineNumbers, 40 * Au.Util.ADpi.BaseDPI / 96);
+		Z.MarginWidth(c_marginLineNumbers, 40 * Au.Util.ADpi.OfThisProcess / 96);
 
 		_InicatorsInit();
 
@@ -765,7 +765,7 @@ partial class SciCode : AuScintilla
 
 	bool _indicHaveFind, _indicHaveDiag;
 
-	internal void _InicatorsFind(List<Range> a)
+	internal void InicatorsFind_(List<Range> a)
 	{
 		if(_indicHaveFind) {
 			_indicHaveFind = false;
@@ -777,7 +777,7 @@ partial class SciCode : AuScintilla
 		foreach(var v in a) Z.IndicatorAdd(true, c_indicFind, v);
 	}
 
-	internal void _InicatorsDiag(bool has)
+	internal void InicatorsDiag_(bool has)
 	{
 		if(_indicHaveDiag) {
 			_indicHaveDiag = false;

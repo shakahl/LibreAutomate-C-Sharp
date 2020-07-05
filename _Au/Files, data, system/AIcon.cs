@@ -443,7 +443,7 @@ namespace Au
 		/// Returns native icon handle, or default(IntPtr) if there are no icons.
 		/// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
 		/// </returns>
-		internal static IntPtr GetAppIconHandle(int size = 0)
+		public static IntPtr GetAppIconHandle(int size = 0)
 		{
 			var h = AProcess.ExeModuleHandle;
 			if(h == default) return default;
@@ -546,8 +546,8 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts unmanaged icon to Icon object.
-		/// Returns null if hIcon is default(IntPtr).
+		/// Converts unmanaged icon to <b>Icon</b> object.
+		/// Returns null if <i>hIcon</i> is default(IntPtr).
 		/// </summary>
 		/// <param name="hIcon">Icon handle.</param>
 		/// <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="DestroyIconHandle"/>.</param>
@@ -576,11 +576,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
-		/// Returns null if hIcon is default(IntPtr) or if fails to convert.
+		/// Converts unmanaged icon to <b>Bitmap</b> object and destroys the unmanaged icon.
+		/// Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
 		/// </summary>
 		/// <param name="hIcon">Icon handle.</param>
-		/// <param name="destroyIcon">If true (default), destroys the unmanaged icon.</param>
+		/// <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
 		public static Bitmap HandleToImage(IntPtr hIcon, bool destroyIcon = true)
 		{
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
@@ -589,11 +589,27 @@ namespace Au
 			//var perf = APerf.Create();
 			Icon ic = Icon.FromHandle(hIcon);
 			Bitmap im = null;
-			try { im = ic.ToBitmap(); } catch(Exception e) { ADebug.Print(e.Message); }
+			try { im = ic.ToBitmap(); }
+			catch(Exception e) { AWarning.Write(e.ToString(), -1); }
 			ic.Dispose();
 			if(destroyIcon) Api.DestroyIcon(hIcon);
 			//perf.NW();
 			return im;
+		}
+
+		/// <summary>
+		/// Converts unmanaged icon to <b>ImageSource</b> object and destroys the unmanaged icon.
+		/// Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
+		/// </summary>
+		/// <param name="hIcon">Icon handle.</param>
+		/// <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
+		public static System.Windows.Media.ImageSource HandleToImageSource(IntPtr hIcon, bool destroyIcon = true) {
+			if (hIcon == default) return null;
+			System.Windows.Media.Imaging.BitmapSource source = null;
+			try { source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(hIcon, default, default); }
+			catch (Exception e) { AWarning.Write(e.ToString(), -1); }
+			if(destroyIcon) Api.DestroyIcon(hIcon);
+			return source;
 		}
 
 		/// <summary>
@@ -628,15 +644,15 @@ namespace Au
 		/// Gets size of small icons displayed in UI.
 		/// Depends on DPI; 16 when DPI 100%.
 		/// </summary>
-		public static int SizeSmall => ADpi.BaseDPI / 6; //eg 96/6=16
+		public static int SizeSmall => ADpi.OfThisProcess / 6; //eg 96/6=16
 
 		/// <summary>
 		/// Gets size of large icons displayed in UI.
 		/// Depends on DPI; 32 when DPI 100%.
 		/// </summary>
-		public static int SizeLarge => ADpi.BaseDPI / 3;
+		public static int SizeLarge => ADpi.OfThisProcess / 3;
 
-		static int _SizeExtraLarge => ADpi.BaseDPI / 2;
+		static int _SizeExtraLarge => ADpi.OfThisProcess / 2;
 
 		//tested: shell imagelist icon sizes match these.
 		//note: don't use GetSystemMetrics(SM_CXSMICON/SM_CXICON). They are for other purposes, eg window title bar, tray icon. On Win7 they can be different because can be changed in Control Panel. Used by SystemInformation.SmallIconSize etc.

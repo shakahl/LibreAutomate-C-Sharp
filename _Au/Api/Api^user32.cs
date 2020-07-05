@@ -291,9 +291,14 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern bool UnionRect(out RECT lprcDst, in RECT lprcSrc1, in RECT lprcSrc2);
 
-		//Gets DPI physical cursor pos, ie always in pixels.
-		//The classic GetCursorPos API gets logical pos. Also it has a bug: randomly gets physical pos, even for same point.
-		//Make sure that the process is DPI-aware.
+		/// <summary>
+		/// GetPhysicalCursorPos.
+		/// </summary>
+		/// <remarks>
+		/// Gets DPI physical cursor pos, ie always in pixels.
+		/// The classic GetCursorPos API behavior is undefined. Sometimes physical, sometimes logical.
+		/// Make sure the process is fully DPI-aware.
+		/// </remarks>
 		[DllImport("user32.dll", EntryPoint = "GetPhysicalCursorPos", SetLastError = true)]
 		internal static extern bool GetCursorPos(out POINT lpPoint);
 
@@ -324,7 +329,7 @@ namespace Au.Types
 		internal struct WINDOWPLACEMENT
 		{
 			public int length;
-			/// <summary> WPF_ </summary>
+			/// <summary> WPF_ </summary>//TODO: don't use prefix WPF
 			public uint flags;
 			public int showCmd;
 			public POINT ptMinPosition;
@@ -705,11 +710,11 @@ namespace Au.Types
 
 		#endregion
 
-		[DllImport("user32.dll")]
+		/// <summary>
+		/// WindowFromPhysicalPoint.
+		/// </summary>
+		[DllImport("user32.dll", EntryPoint = "WindowFromPhysicalPoint")]
 		internal static extern AWnd WindowFromPoint(POINT pt);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern AWnd RealChildWindowFromPoint(AWnd hwndParent, POINT ptParentClientCoords);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ScreenToClient(AWnd hWnd, ref POINT lpPoint);
@@ -1346,15 +1351,17 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
 		internal static extern int MessageBox(AWnd hWnd, string lpText, string lpCaption, uint uType);
 
-		internal struct LASTINPUTINFO
-		{
-			public int cbSize;
-			public int dwTime;
-		}
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern int GetWindowRgn(AWnd hWnd, IntPtr hRgn);
 
-		[DllImport("user32.dll")]
-		internal static extern bool GetLastInputInfo(ref LASTINPUTINFO plii);
+		//[DllImport("user32.dll")]
+		//internal static extern bool PhysicalToLogicalPoint(AWnd hWnd, ref POINT lpPoint);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern int GetDpiForWindow(AWnd hWnd);
+
+		[DllImport("shcore.dll", PreserveSig = true)]
+		internal static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out int dpiX, out int dpiY);
 	}
 
 }

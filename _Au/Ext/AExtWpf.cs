@@ -16,6 +16,7 @@ using Au.Types;
 using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
+using System.Windows.Controls;
 
 /// <summary>
 /// Adds extension methods for some WPF classes.
@@ -58,4 +59,11 @@ public static class AExtWpf
 	//	if(PresentationSource.FromDependencyObject(t) is HwndSource hs) return (AWnd)hs.Handle;
 	//	return default;
 	//}
+
+	/// <summary>
+	/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
+	/// </summary>
+	/// <param name="t"></param>
+	public static bool IsCheck(this CheckBox t) => t.IsChecked.GetValueOrDefault();
+
 }

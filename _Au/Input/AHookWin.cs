@@ -290,26 +290,26 @@ namespace Au
 		public static AHookWin ThreadCallWndProcRet(Action<HookData.ThreadCallWndProcRet> hookProc, int threadId = 0, bool setNow = true)
 			=> new AHookWin(Api.WH_CALLWNDPROCRET, hookProc, setNow, threadId);
 
-		AHookWin(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string hookTypeString = null)
-		{
+		AHookWin(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string hookTypeString = null) {
 			_proc2 = hookProc;
 			_hookType = hookType;
 			_hookTypeString = hookTypeString;
 			_ignoreAuInjected = ignoreAuInjected;
-			if(hookType == Api.WH_KEYBOARD_LL || hookType == Api.WH_MOUSE_LL) {
+			if (hookType == Api.WH_KEYBOARD_LL || hookType == Api.WH_MOUSE_LL) {
 				_proc1 = _HookProcLL;
 				//JIT-compile our hook proc and some functions it may call.
 				//	Premature optimization? But OS gives us only 300 ms by default.
-				if(!s_jit1) {
+				if (!s_jit1) {
 					s_jit1 = true;
 					AJit.Compile(typeof(AHookWin), nameof(_HookProcLL));
 					_ = ATime.PerfMilliseconds;
 					_ = AKeys.KeyTypes_.IsMod(KKey.Shift) && _IgnoreMod;
 				}
-			} else {
+			}
+			else {
 				_proc1 = _HookProc;
 			}
-			if(setNow) Hook(tid);
+			if (setNow) Hook(tid);
 		}
 		static bool s_jit1;
 
@@ -323,17 +323,17 @@ namespace Au
 		/// <remarks>
 		/// Usually don't need to call this function, because the <b>AHookWin</b> static methods that return a new <b>AHookWin</b> object by default call it.
 		/// </remarks>
-		public void Hook(int threadId = 0)
-		{
-			if(_proc2 == null) throw new ObjectDisposedException(nameof(AHookWin));
-			if(_hh != default) throw new InvalidOperationException("The hook is already set.");
-			if(_hookType == Api.WH_KEYBOARD_LL || _hookType == Api.WH_MOUSE_LL) {
-				if(threadId != 0) throw new ArgumentException("threadId must be 0");
-			} else if(threadId == 0) {
+		public void Hook(int threadId = 0) {
+			if (_proc2 == null) throw new ObjectDisposedException(nameof(AHookWin));
+			if (_hh != default) throw new InvalidOperationException("The hook is already set.");
+			if (_hookType == Api.WH_KEYBOARD_LL || _hookType == Api.WH_MOUSE_LL) {
+				if (threadId != 0) throw new ArgumentException("threadId must be 0");
+			}
+			else if (threadId == 0) {
 				threadId = Api.GetCurrentThreadId();
 			}
 			_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, threadId);
-			if(_hh == default) throw new AuException(0, "*set hook");
+			if (_hh == default) throw new AuException(0, "*set hook");
 		}
 
 		/// <summary>
@@ -343,11 +343,10 @@ namespace Au
 		/// Does nothing if already removed or wasn't set.
 		/// Later you can call <see cref="Hook"/> to set hook again.
 		/// </remarks>
-		public void Unhook()
-		{
-			if(_hh != default) {
+		public void Unhook() {
+			if (_hh != default) {
 				bool ok = Api.UnhookWindowsHookEx(_hh);
-				if(!ok) AWarning.Write($"AHookWin.Unhook failed ({_hookTypeString}). {ALastError.Message}");
+				if (!ok) AWarning.Write($"AHookWin.Unhook failed ({_hookTypeString}). {ALastError.Message}");
 				_hh = default;
 			}
 		}
@@ -365,8 +364,7 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="Unhook"/> and disposes this object.
 		/// </summary>
-		public void Dispose()
-		{
+		public void Dispose() {
 			Unhook();
 			_proc2 = null;
 			GC.SuppressFinalize(this);
@@ -375,50 +373,47 @@ namespace Au
 		/// <summary>
 		/// Writes warning if the variable is not disposed. Cannot dispose in finalizer.
 		/// </summary>
-		~AHookWin()
-		{
+		~AHookWin() {
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
-			if(_hh != default) AWarning.Write($"Non-disposed AHookWin ({_hookTypeString}) variable.");
+			if (_hh != default) AWarning.Write($"Non-disposed AHookWin ({_hookTypeString}) variable.");
 		}
 
-		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam)
-		{
-			if(code >= 0) {
+		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam) {
+			if (code >= 0) {
 				try {
 					bool eat = false;
 
-					switch(_proc2) {
-					case Func<HookData.ThreadCbt, bool> p:
-						eat = p(new HookData.ThreadCbt(this, code, wParam, lParam));
-						break;
-					case Action<HookData.ThreadGetMessage> p:
-						p(new HookData.ThreadGetMessage(this, wParam, lParam));
-						break;
-					case Func<HookData.ThreadKeyboard, bool> p:
-						eat = p(new HookData.ThreadKeyboard(this, code, wParam, lParam));
-						break;
-					case Func<HookData.ThreadMouse, bool> p:
-						eat = p(new HookData.ThreadMouse(this, code, wParam, lParam));
-						break;
-					case Action<HookData.ThreadCallWndProc> p:
-						p(new HookData.ThreadCallWndProc(this, wParam, lParam));
-						break;
-					case Action<HookData.ThreadCallWndProcRet> p:
-						p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
-						break;
+					switch (_proc2) {
+						case Func<HookData.ThreadCbt, bool> p:
+							eat = p(new HookData.ThreadCbt(this, code, wParam, lParam));
+							break;
+						case Action<HookData.ThreadGetMessage> p:
+							p(new HookData.ThreadGetMessage(this, wParam, lParam));
+							break;
+						case Func<HookData.ThreadKeyboard, bool> p:
+							eat = p(new HookData.ThreadKeyboard(this, code, wParam, lParam));
+							break;
+						case Func<HookData.ThreadMouse, bool> p:
+							eat = p(new HookData.ThreadMouse(this, code, wParam, lParam));
+							break;
+						case Action<HookData.ThreadCallWndProc> p:
+							p(new HookData.ThreadCallWndProc(this, wParam, lParam));
+							break;
+						case Action<HookData.ThreadCallWndProcRet> p:
+							p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
+							break;
 					}
 
-					if(eat) return 1;
+					if (eat) return 1;
 				}
-				catch(Exception ex) { OnException_(ex); }
+				catch (Exception ex) { OnException_(ex); }
 			}
 
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
 
-		unsafe LPARAM _HookProcLL(int code, LPARAM wParam, LPARAM lParam)
-		{
-			if(code >= 0) {
+		unsafe LPARAM _HookProcLL(int code, LPARAM wParam, LPARAM lParam) {
+			if (code >= 0) {
 				try {
 					//using var p1 = APerf.Create();
 					bool eat = false;
@@ -426,54 +421,64 @@ namespace Au
 					Action<HookData.Mouse> pm1;
 					Func<LPARAM, LPARAM, bool> pm2;
 
-					switch(_proc2) {
-					case Action<HookData.Keyboard> p:
-						var kll = (Api.KBDLLHOOKSTRUCT*)lParam;
-						var vk = (KKey)kll->vkCode;
-						if(kll->IsInjected) {
-							if(kll->IsInjectedByAu) {
-								if(kll->vkCode == 0) goto gr; //used to enable activating windows
-								if(!kll->IsUp) Triggers.AutotextTriggers.ResetEverywhere = true;
-								if(_ignoreAuInjected) goto gr;
+					switch (_proc2) {
+						case Action<HookData.Keyboard> p:
+							var kll = (Api.KBDLLHOOKSTRUCT*)lParam;
+							var vk = (KKey)kll->vkCode;
+							if (kll->IsInjected) {
+								if (kll->IsInjectedByAu) {
+									if (kll->vkCode == 0) goto gr; //used to enable activating windows
+									if (!kll->IsUp) Triggers.AutotextTriggers.ResetEverywhere = true;
+									if (_ignoreAuInjected) goto gr;
+								}
+								if (vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
 							}
-							if(vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
-						} else {
-							//When AKeys.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
-							//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
-							//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
-							if((vk == KKey.CapsLock || vk == KKey.LShift) && _ignoreAuInjected && _IgnoreLShiftCaps) goto gr;
+							else {
+								//When AKeys.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
+								//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
+								//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
+								if ((vk == KKey.CapsLock || vk == KKey.LShift) && _ignoreAuInjected && _IgnoreLShiftCaps) goto gr;
 
-							//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
-							//if(AKeys.IsScrollLock) {
-							//	//if(vk == KKey.LCtrl && !kll->IsUp) { AOutput.Write("lost Ctrl down"); goto gr; }
-							//	if(vk == KKey.LCtrl && kll->IsUp) { AOutput.Write("lost Ctrl up"); goto gr; }
-							//}
-						}
-						if(AKeys.KeyTypes_.IsMod(vk) && _IgnoreMod) goto gr;
-						t1 = ATime.PerfMilliseconds;
-						//p1.Next();
-						p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
-						if(eat = kll->BlockEvent) kll->BlockEvent = false;
-						break;
-					case Action<HookData.Mouse> p:
-						pm1 = p; pm2 = null;
+								//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
+								//if(AKeys.IsScrollLock) {
+								//	//if(vk == KKey.LCtrl && !kll->IsUp) { AOutput.Write("lost Ctrl down"); goto gr; }
+								//	if(vk == KKey.LCtrl && kll->IsUp) { AOutput.Write("lost Ctrl up"); goto gr; }
+								//}
+							}
+							if (AKeys.KeyTypes_.IsMod(vk) && _IgnoreMod) goto gr;
+							t1 = ATime.PerfMilliseconds;
+							//p1.Next();
+							p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
+							if (eat = kll->BlockEvent) kll->BlockEvent = false;
+							break;
+						case Action<HookData.Mouse> p:
+							pm1 = p; pm2 = null;
 						gm1:
-						var mll = (Api.MSLLHOOKSTRUCT*)lParam;
-						switch((int)wParam) {
-						case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: Triggers.AutotextTriggers.ResetEverywhere = true; break;
-						}
-						if(_ignoreAuInjected && mll->IsInjectedByAu) goto gr;
-						t1 = ATime.PerfMilliseconds;
-						if(pm2 != null) {
-							eat = pm2(wParam, lParam);
-						} else {
-							pm1(new HookData.Mouse(this, wParam, lParam));
-							if(eat = mll->BlockEvent) mll->BlockEvent = false;
-						}
-						break;
-					case Func<LPARAM, LPARAM, bool> p: //raw mouse
-						pm2 = p; pm1 = null;
-						goto gm1;
+							var mll = (Api.MSLLHOOKSTRUCT*)lParam;
+							switch ((int)wParam) {
+								case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: Triggers.AutotextTriggers.ResetEverywhere = true; break;
+							}
+							if (_ignoreAuInjected && mll->IsInjectedByAu) goto gr;
+
+							//API bug workaround. In DPI-scaled windows on click mhsLL->pt is logical, although on move/wheel is physical. Must be always physical.
+							//At first noticed only on Win10. But then noticed the same on Win7, although used to be correct. OK on Win8.1. Maybe depends on some other conditions, eg UAC IL, DPI, multimonitor.
+							//Now it seems the bug is fixed on Win10. Found on SO: "Microsoft fixed it in 10.0.14393"; it is version 1607, August 2, 2016; but I cannot confirm it.
+							//The wrong coords are the same as GetCursorPos. Only GetPhysicalCursorPos does not lie. Api.GetCursorPos is mapped to GetPhysicalCursorPos.
+							//Note: on WM_MOUSEMOVE Get[Physical]CursorPos returns previous coords. On other messages same as hook.
+							if (wParam != Api.WM_MOUSEMOVE /*&& AVersion.WinVer < AVersion.Win10*/) Api.GetCursorPos(out mll->pt);
+
+							t1 = ATime.PerfMilliseconds;
+							if (pm2 != null) {
+								eat = pm2(wParam, lParam);
+							}
+							else {
+								pm1(new HookData.Mouse(this, wParam, lParam));
+								if (eat = mll->BlockEvent) mll->BlockEvent = false;
+							}
+							break;
+						case Func<LPARAM, LPARAM, bool> p: //raw mouse
+							pm2 = p; pm1 = null;
+							goto gm1;
 					}
 
 					//Prevent Windows disabling the low-level key/mouse hook.
@@ -484,8 +489,8 @@ namespace Au
 					//		2. Kills the hook after several such cases. Usually 6 keys or 11 mouse events.
 					//		3. Makes the hook useless: next times does not wait for it, and we cannot return 1 to block the event.
 					//	Somehow does not apply 2 and 3 to some apps, eg C# apps (Core too) created by Visual Studio, although applies to those created not by VS. I did not find why.
-					if(t1 != 0 && (t1 = ATime.PerfMilliseconds - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
-						if(t1 > LowLevelHooksTimeout - 50) {
+					if (t1 != 0 && (t1 = ATime.PerfMilliseconds - t1) > 200 /*&& t1 < 5000*/ && !Debugger.IsAttached) {
+						if (t1 > LowLevelHooksTimeout - 50) {
 							var s1 = _hookType == Api.WH_KEYBOARD_LL ? "key" : "mouse";
 							var s2 = eat ? $" On timeout the {s1} message is passed to the active window, other hooks, etc." : null;
 							//AWarning.Write($"Possible hook timeout. Hook procedure time: {t1} ms. LowLevelHooksTimeout: {LowLevelHooksTimeout} ms.{s2}"); //too slow first time
@@ -498,11 +503,11 @@ namespace Au
 						_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, 0);
 					}
 
-					if(eat) return 1;
+					if (eat) return 1;
 				}
-				catch(Exception ex) { OnException_(ex); }
+				catch (Exception ex) { OnException_(ex); }
 			}
-			gr:
+		gr:
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
 
@@ -522,7 +527,7 @@ namespace Au
 		/// </remarks>
 		public static int LowLevelHooksTimeout {
 			get {
-				if(s_lowLevelHooksTimeout == 0) {
+				if (s_lowLevelHooksTimeout == 0) {
 					//default 300, tested on Win10 and 7
 					//max 1000 on Win10. On Win7 more. Not tested on Win8. On Win7/8 may be changed by a Windows update.
 					s_lowLevelHooksTimeout = Math.Min(1000, (int)Microsoft.Win32.Registry.GetValue(@"HKEY_CURRENT_USER\Control Panel\Desktop", "LowLevelHooksTimeout", 300));
@@ -532,8 +537,7 @@ namespace Au
 		}
 		static int s_lowLevelHooksTimeout;
 
-		internal static void OnException_(Exception e)
-		{
+		internal static void OnException_(Exception e) {
 			AWarning.Write("Unhandled exception in hook procedure. " + e.ToString());
 		}
 
@@ -549,8 +553,7 @@ namespace Au
 		/// Used by mouse triggers.
 		/// Returns the timeout time (ATime.WinMilliseconds + timeMS) or 0.
 		/// </summary>
-		internal unsafe long IgnoreModInOtherHooks_(long timeMS)
-		{
+		internal unsafe long IgnoreModInOtherHooks_(long timeMS) {
 			_ignoreModExceptThisHook = timeMS > 0;
 			var r = _ignoreModExceptThisHook ? ATime.WinMilliseconds + timeMS : 0;
 			SharedMemory_.Ptr->winHook.dontBlockModUntil = r;
@@ -565,8 +568,7 @@ namespace Au
 		/// Returns the timeout time (ATime.WinMilliseconds + timeMS) or 0.
 		/// Used when turning off CapsLock with Shift.
 		/// </summary>
-		internal static unsafe long IgnoreLShiftCaps_(long timeMS)
-		{
+		internal static unsafe long IgnoreLShiftCaps_(long timeMS) {
 			var r = timeMS > 0 ? ATime.WinMilliseconds + timeMS : 0;
 			SharedMemory_.Ptr->winHook.dontBlocLShiftCapsUntil = r;
 			return r;
@@ -594,8 +596,7 @@ namespace Au.Types
 
 			readonly Api.KBDLLHOOKSTRUCT* _x;
 
-			internal Keyboard(AHookWin hook, LPARAM lParam)
-			{
+			internal Keyboard(AHookWin hook, LPARAM lParam) {
 				this.hook = hook;
 				_x = (Api.KBDLLHOOKSTRUCT*)lParam;
 			}
@@ -642,11 +643,11 @@ namespace Au.Types
 			public KKey Key {
 				get {
 					var vk = (KKey)_x->vkCode;
-					switch(vk) {
-					case KKey.LShift: case KKey.RShift: return KKey.Shift;
-					case KKey.LCtrl: case KKey.RCtrl: return KKey.Ctrl;
-					case KKey.LAlt: case KKey.RAlt: return KKey.Alt;
-					case KKey.RWin: return KKey.Win;
+					switch (vk) {
+						case KKey.LShift: case KKey.RShift: return KKey.Shift;
+						case KKey.LCtrl: case KKey.RCtrl: return KKey.Ctrl;
+						case KKey.LAlt: case KKey.RAlt: return KKey.Alt;
+						case KKey.RWin: return KKey.Win;
 					}
 					return vk;
 				}
@@ -655,15 +656,14 @@ namespace Au.Types
 			/// <summary>
 			/// Returns true if <i>key</i> == <b>vkCode</b> or <i>key</i> is Shift, Ctrl, Alt or Win and <b>vkCode</b> is LShift/RShift, LCtrl/RCtrl, LAlt/RAlt or RWin.
 			/// </summary>
-			public bool IsKey(KKey key)
-			{
+			public bool IsKey(KKey key) {
 				var vk = (KKey)_x->vkCode;
-				if(key == vk) return true;
-				switch(key) {
-				case KKey.Shift: return vk == KKey.LShift || vk == KKey.RShift;
-				case KKey.Ctrl: return vk == KKey.LCtrl || vk == KKey.RCtrl;
-				case KKey.Alt: return vk == KKey.LAlt || vk == KKey.RAlt;
-				case KKey.Win: return vk == KKey.RWin;
+				if (key == vk) return true;
+				switch (key) {
+					case KKey.Shift: return vk == KKey.LShift || vk == KKey.RShift;
+					case KKey.Ctrl: return vk == KKey.LCtrl || vk == KKey.RCtrl;
+					case KKey.Alt: return vk == KKey.LAlt || vk == KKey.RAlt;
+					case KKey.Win: return vk == KKey.RWin;
 				}
 				return false;
 			}
@@ -674,15 +674,14 @@ namespace Au.Types
 			internal byte SendInputFlags_ {
 				get {
 					uint f = 0;
-					if(IsUp) f |= Api.KEYEVENTF_KEYUP;
-					if(IsExtended) f |= Api.KEYEVENTF_EXTENDEDKEY;
+					if (IsUp) f |= Api.KEYEVENTF_KEYUP;
+					if (IsExtended) f |= Api.KEYEVENTF_EXTENDEDKEY;
 					return (byte)f;
 				}
 			}
 
 			///
-			public override string ToString()
-			{
+			public override string ToString() {
 				return $"{vkCode.ToString()} {(IsUp ? "up" : "")}{(IsInjected ? " (injected)" : "")}";
 			}
 
@@ -717,28 +716,27 @@ namespace Au.Types
 			readonly Api.MSLLHOOKSTRUCT* _x;
 			readonly MouseEvent _event;
 
-			internal Mouse(AHookWin hook, LPARAM wParam, LPARAM lParam)
-			{
+			internal Mouse(AHookWin hook, LPARAM wParam, LPARAM lParam) {
 				IsButtonDown = IsButtonUp = IsWheel = false;
 				this.hook = hook;
 				var p = (Api.MSLLHOOKSTRUCT*)lParam;
 				_x = p;
 				int e = (int)wParam;
-				switch(e) {
-				case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: case Api.WM_MBUTTONDOWN: IsButtonDown = true; break;
-				case Api.WM_LBUTTONUP: case Api.WM_RBUTTONUP: case Api.WM_MBUTTONUP: e--; IsButtonUp = true; break;
-				case Api.WM_XBUTTONUP: e--; IsButtonUp = true; goto g1;
-				case Api.WM_XBUTTONDOWN:
-					IsButtonDown = true;
+				switch (e) {
+					case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: case Api.WM_MBUTTONDOWN: IsButtonDown = true; break;
+					case Api.WM_LBUTTONUP: case Api.WM_RBUTTONUP: case Api.WM_MBUTTONUP: e--; IsButtonUp = true; break;
+					case Api.WM_XBUTTONUP: e--; IsButtonUp = true; goto g1;
+					case Api.WM_XBUTTONDOWN:
+						IsButtonDown = true;
 					g1:
-					switch(p->mouseData >> 16) { case 1: e |= 0x1000; break; case 2: e |= 0x2000; break; }
-					break;
-				case Api.WM_MOUSEWHEEL:
-				case Api.WM_MOUSEHWHEEL:
-					IsWheel = true;
-					short wheel = (short)(p->mouseData >> 16);
-					if(wheel > 0) e |= 0x1000; else if(wheel < 0) e |= 0x2000;
-					break;
+						switch (p->mouseData >> 16) { case 1: e |= 0x1000; break; case 2: e |= 0x2000; break; }
+						break;
+					case Api.WM_MOUSEWHEEL:
+					case Api.WM_MOUSEHWHEEL:
+						IsWheel = true;
+						short wheel = (short)(p->mouseData >> 16);
+						if (wheel > 0) e |= 0x1000; else if (wheel < 0) e |= 0x2000;
+						break;
 				}
 				_event = (MouseEvent)e;
 			}
@@ -773,12 +771,12 @@ namespace Au.Types
 			/// </summary>
 			public MButtons Button {
 				get {
-					switch(_event) {
-					case MouseEvent.LeftButton: return MButtons.Left;
-					case MouseEvent.RightButton: return MButtons.Right;
-					case MouseEvent.MiddleButton: return MButtons.Middle;
-					case MouseEvent.X1Button: return MButtons.X1;
-					case MouseEvent.X2Button: return MButtons.X2;
+					switch (_event) {
+						case MouseEvent.LeftButton: return MButtons.Left;
+						case MouseEvent.RightButton: return MButtons.Right;
+						case MouseEvent.MiddleButton: return MButtons.Middle;
+						case MouseEvent.X1Button: return MButtons.X1;
+						case MouseEvent.X2Button: return MButtons.X2;
 					}
 					return 0;
 				}
@@ -801,9 +799,8 @@ namespace Au.Types
 			public bool IsInjectedByAu => IsInjected && dwExtraInfo == Api.AuExtraInfo;
 
 			///
-			public override string ToString()
-			{
-				var ud = ""; if(IsButtonDown) ud = "down"; else if(IsButtonUp) ud = "up";
+			public override string ToString() {
+				var ud = ""; if (IsButtonDown) ud = "down"; else if (IsButtonUp) ud = "up";
 				return $"{Event.ToString()} {ud} {pt.ToString()}{(IsInjected ? " (injected)" : "")}";
 			}
 
@@ -858,8 +855,7 @@ namespace Au.Types
 			/// <summary>API <msdn>CBTProc</msdn></summary>
 			public readonly LPARAM lParam;
 
-			internal ThreadCbt(AHookWin hook, int code, LPARAM wParam, LPARAM lParam)
-			{
+			internal ThreadCbt(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				this.code = (CbtEvent)code;
 				this.wParam = wParam;
@@ -872,9 +868,8 @@ namespace Au.Types
 			/// <param name="fMouse">true if the reason is the mouse.</param>
 			/// <param name="wPrevActive">The previously active window, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.ACTIVATE.</exception>
-			public unsafe AWnd ActivationInfo(out bool fMouse, out AWnd wPrevActive)
-			{
-				if(code != CbtEvent.ACTIVATE) throw new InvalidOperationException();
+			public unsafe AWnd ActivationInfo(out bool fMouse, out AWnd wPrevActive) {
+				if (code != CbtEvent.ACTIVATE) throw new InvalidOperationException();
 				var t = (Api.CBTACTIVATESTRUCT*)lParam;
 				fMouse = t->fMouse;
 				wPrevActive = t->hWndActive;
@@ -890,9 +885,8 @@ namespace Au.Types
 			/// </param>
 			/// <param name="wInsertAfter">Window whose position in the Z order precedes that of the window being created, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CREATEWND.</exception>
-			public unsafe AWnd CreationInfo(out Native.CREATESTRUCT* c, out AWnd wInsertAfter)
-			{
-				if(code != CbtEvent.CREATEWND) throw new InvalidOperationException();
+			public unsafe AWnd CreationInfo(out Native.CREATESTRUCT* c, out AWnd wInsertAfter) {
+				if (code != CbtEvent.CREATEWND) throw new InvalidOperationException();
 				var t = (Api.CBT_CREATEWND*)lParam;
 				c = t->lpcs;
 				wInsertAfter = t->hwndInsertAfter;
@@ -904,9 +898,8 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="m">API <msdn>MOUSEHOOKSTRUCT</msdn>.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CLICKSKIPPED.</exception>
-			public unsafe uint MouseInfo(out Native.MOUSEHOOKSTRUCT* m)
-			{
-				if(code != CbtEvent.CLICKSKIPPED) throw new InvalidOperationException();
+			public unsafe uint MouseInfo(out Native.MOUSEHOOKSTRUCT* m) {
+				if (code != CbtEvent.CLICKSKIPPED) throw new InvalidOperationException();
 				m = (Native.MOUSEHOOKSTRUCT*)lParam;
 				return (uint)wParam;
 			}
@@ -916,9 +909,8 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See API <msdn>WM_KEYDOWN</msdn>.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.KEYSKIPPED.</exception>
-			public KKey KeyInfo(out uint lParam)
-			{
-				if(code != CbtEvent.KEYSKIPPED) throw new InvalidOperationException();
+			public KKey KeyInfo(out uint lParam) {
+				if (code != CbtEvent.KEYSKIPPED) throw new InvalidOperationException();
 				lParam = (uint)this.lParam;
 				return (KKey)(uint)wParam;
 			}
@@ -928,9 +920,8 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="wLostFocus">The previously focused window, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.SETFOCUS.</exception>
-			public AWnd FocusInfo(out AWnd wLostFocus)
-			{
-				if(code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
+			public AWnd FocusInfo(out AWnd wLostFocus) {
+				if (code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
 				wLostFocus = (AWnd)lParam;
 				return (AWnd)wParam;
 			}
@@ -940,9 +931,8 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="r">The new rectangle of the window.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MOVESIZE.</exception>
-			public unsafe AWnd MoveSizeInfo(out RECT* r)
-			{
-				if(code != CbtEvent.MOVESIZE) throw new InvalidOperationException();
+			public unsafe AWnd MoveSizeInfo(out RECT* r) {
+				if (code != CbtEvent.MOVESIZE) throw new InvalidOperationException();
 				r = (RECT*)lParam;
 				return (AWnd)wParam;
 			}
@@ -952,9 +942,8 @@ namespace Au.Types
 			/// </summary>
 			/// <param name="showState">The new show state. See API <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MINMAX.</exception>
-			public AWnd MinMaxInfo(out int showState)
-			{
-				if(code != CbtEvent.MINMAX) throw new InvalidOperationException();
+			public AWnd MinMaxInfo(out int showState) {
+				if (code != CbtEvent.MINMAX) throw new InvalidOperationException();
 				showState = (int)lParam & 0xffff;
 				return (AWnd)wParam;
 			}
@@ -1000,8 +989,7 @@ namespace Au.Types
 			/// </summary>
 			public readonly Native.MSG* msg;
 
-			internal ThreadGetMessage(AHookWin hook, LPARAM wParam, LPARAM lParam)
-			{
+			internal ThreadGetMessage(AHookWin hook, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = (uint)wParam == Api.PM_NOREMOVE;
 				msg = (Native.MSG*)lParam;
@@ -1032,8 +1020,7 @@ namespace Au.Types
 			/// </summary>
 			public readonly uint lParam;
 
-			internal ThreadKeyboard(AHookWin hook, int code, LPARAM wParam, LPARAM lParam)
-			{
+			internal ThreadKeyboard(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = code == Api.HC_NOREMOVE;
 				key = (KKey)(uint)wParam;
@@ -1066,8 +1053,7 @@ namespace Au.Types
 			/// </summary>
 			public readonly Native.MOUSEHOOKSTRUCT* m;
 
-			internal ThreadMouse(AHookWin hook, int code, LPARAM wParam, LPARAM lParam)
-			{
+			internal ThreadMouse(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = code == Api.HC_NOREMOVE;
 				message = (uint)wParam;
@@ -1095,8 +1081,7 @@ namespace Au.Types
 			/// </summary>
 			public readonly Native.CWPSTRUCT* msg;
 
-			internal ThreadCallWndProc(AHookWin hook, LPARAM wParam, LPARAM lParam)
-			{
+			internal ThreadCallWndProc(AHookWin hook, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				sentByOtherThread = wParam;
 				msg = (Native.CWPSTRUCT*)lParam;
@@ -1123,8 +1108,7 @@ namespace Au.Types
 			/// </summary>
 			public readonly Native.CWPRETSTRUCT* msg;
 
-			internal ThreadCallWndProcRet(AHookWin hook, LPARAM wParam, LPARAM lParam)
-			{
+			internal ThreadCallWndProcRet(AHookWin hook, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				sentByOtherThread = wParam;
 				msg = (Native.CWPRETSTRUCT*)lParam;

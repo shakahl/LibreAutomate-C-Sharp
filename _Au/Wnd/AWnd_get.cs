@@ -36,56 +36,97 @@ namespace Au
 			#region instance
 
 			/// <summary>
-			/// Gets a sibling control to the left from this.
+			/// Gets nearest visible sibling control to the left from this.
+			/// Returns default(AWnd) if not found.
+			/// </summary>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <remarks>
+			/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+			/// </remarks>
+			public AWnd SiblingLeft() => _w._SiblingXY(_SibXY.Left);
+			//FUTURE: add these to the window tool, like navig in acc tool. Also add previous/next/parent/child in Z order.
+
+			/// <summary>
+			/// Gets nearest visible sibling control to the right from this.
+			/// Returns default(AWnd) if not found.
+			/// </summary>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <remarks>
+			/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+			/// </remarks>
+			public AWnd SiblingRight() => _w._SiblingXY(_SibXY.Right);
+
+			/// <summary>
+			/// Gets nearest visible sibling control above this.
+			/// Returns default(AWnd) if not found.
+			/// </summary>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <remarks>
+			/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+			/// </remarks>
+			public AWnd SiblingAbove() => _w._SiblingXY(_SibXY.Above);
+
+			/// <summary>
+			/// Gets nearest visible sibling control to below this.
+			/// Returns default(AWnd) if not found.
+			/// </summary>
+			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+			/// <remarks>
+			/// This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+			/// </remarks>
+			public AWnd SiblingBelow() => _w._SiblingXY(_SibXY.Below);
+
+			/// <summary>
+			/// Gets a visible sibling control to the left from this.
 			/// Returns default(AWnd) if there is no sibling.
 			/// </summary>
-			/// <param name="distance">Horizontal distance from the left of this control. Default 10.</param>
+			/// <param name="distance">Horizontal distance from the left of this control.</param>
 			/// <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
 			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
-			public AWnd Left(int distance = 10, int yOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Left, distance, yOffset, topChild);
+			public AWnd SiblingLeft(int distance, int yOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Left, distance, yOffset, topChild);
 
 			/// <summary>
-			/// Gets a sibling control to the right from this.
+			/// Gets a visible sibling control to the right from this.
 			/// Returns default(AWnd) if there is no sibling.
 			/// </summary>
-			/// <param name="distance">Horizontal distance from the right of this control. Default 10.</param>
+			/// <param name="distance">Horizontal distance from the right of this control.</param>
 			/// <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
 			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
-			public AWnd Right(int distance = 10, int yOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Right, distance, yOffset, topChild);
+			public AWnd SiblingRight(int distance, int yOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Right, distance, yOffset, topChild);
 
 			/// <summary>
-			/// Gets a sibling control above this.
+			/// Gets a visible sibling control above this.
 			/// Returns default(AWnd) if there is no sibling.
 			/// </summary>
-			/// <param name="distance">Vertical distance from the top of this control. Default 10.</param>
+			/// <param name="distance">Vertical distance from the top of this control.</param>
 			/// <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
 			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
-			public AWnd Above(int distance = 10, int xOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Above, distance, xOffset, topChild);
+			public AWnd SiblingAbove(int distance, int xOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Above, distance, xOffset, topChild);
 
 			/// <summary>
-			/// Gets a sibling control below this.
+			/// Gets a visible sibling control below this.
 			/// Returns default(AWnd) if there is no sibling.
 			/// </summary>
-			/// <param name="distance">Vertical distance from the bottom of this control. Default 10.</param>
+			/// <param name="distance">Vertical distance from the bottom of this control.</param>
 			/// <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
 			/// <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
 			/// <exception cref="AuWndException">This variable is invalid (window not found, closed, etc).</exception>
 			/// <remarks>
 			/// This function is used mostly with controls, but supports top-level windows too.
 			/// </remarks>
-			public AWnd Below(int distance = 10, int xOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Below, distance, xOffset, topChild);
+			public AWnd SiblingBelow(int distance, int xOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Below, distance, xOffset, topChild);
 
 			AWnd _GetWindow(int dir, int skip)
 			{
@@ -230,7 +271,7 @@ namespace Au
 						Debug.Assert(ec == Api.ERROR_INVALID_WINDOW_HANDLE);
 					}
 					return default;
-#else //the msdn-recommended version, but 6 times slower. The same IsTopLevelWindow (undocumented API).
+#else //the msdn-recommended version, but >=6 times slower. The same IsTopLevelWindow (undocumented API).
 					var p = Api.GetAncestor(_w, Api.GA_PARENT);
 					if(p.Is0 || p == Root) return default;
 					return p;
@@ -357,38 +398,32 @@ namespace Au
 			/// <remarks>
 			/// It can be the window that contains desktop icons (see <see cref="Desktop"/>) or other window of the same thread.
 			/// </remarks>
-			public static AWnd Shell => Api.GetShellWindow();
+			public static AWnd ShellWindow => Api.GetShellWindow();
 
 			/// <summary>
-			/// Gets the desktop window that displays desktop icons and wallpaper in its child control <see cref="DesktopControl"/>.
+			/// Gets the desktop window and its child control that displays desktop icons and wallpaper.
+			/// Returns false if fails.
 			/// </summary>
+			/// <param name="window">Receives the desktop window. Class name "Progman" or "WorkerW".</param>
+			/// <param name="control">Receives the control of "SysListView32" class that contains icons and wallpaper.</param>
 			/// <remarks>
-			/// <note>It is not API <msdn>GetDesktopWindow</msdn> (<see cref="Root"/>)</note>
-			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
-			/// Returns default(AWnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
+			/// This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.
+			/// Fails if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
 			/// </remarks>
-			public static AWnd Desktop => _Desktop(out var lv);
-
-			/// <summary>
-			/// Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="Desktop"/>.
-			/// </summary>
-			/// <remarks>
-			/// <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
-			/// Returns default(AWnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
-			/// </remarks>
-			public static AWnd DesktopControl { get { _Desktop(out var lv); return lv; } }
-
-			static AWnd _Desktop(out AWnd lvControl)
+			public static bool Desktop(out AWnd window, out AWnd control)
 			{
-				AWnd w = Shell;
+				AWnd w = ShellWindow;
 				var f = new ChildFinder(cn: "SysListView32");
 				if(!f.Find(w)) w = AWnd.Find(null, "WorkerW", WOwner.Thread(w.ThreadId), also: t => f.Find(t));
-				lvControl = f.Result;
-				return w;
+				window = w;
+				control = f.Result;
+				return !w.Is0;
 
 				//info:
 				//If no wallpaper, desktop is GetShellWindow, else a visible WorkerW window.
 				//When was no wallpaper and user selects a wallpaper, explorer creates WorkerW and moves the same SysListView32 control to it.
+
+				//tested: with COM (IShellWindows -> IShellBrowser -> IShellView.GetWindow) slower 17 times.
 			}
 
 			//FUTURE:
@@ -434,7 +469,7 @@ namespace Au
 				} else if(AVersion.MinWin8) {
 					if((exStyle & WS2.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
 						if(!allDesktops && (exStyle & WS2.TOPMOST) != 0) return false; //skip store apps
-						if(Shell.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
+						if(ShellWindow.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
 					}
 					//On Win8 impossible to get next window like Alt+Tab.
 					//	All store apps are topmost, covering non-topmost desktop windows.

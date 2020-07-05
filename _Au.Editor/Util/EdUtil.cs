@@ -165,7 +165,7 @@ static class EdResources
 
 	static string _DpiImage(string name)
 	{
-		int dpi = Au.Util.ADpi.BaseDPI;
+		int dpi = Au.Util.ADpi.OfThisProcess;
 		if(dpi >= 120) name += dpi < 144 ? "_20" : (dpi < 192 ? "_24" : "_32");
 		return name;
 	}

@@ -166,19 +166,25 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+		Task.Run(() => {
+			for (; ; ) {
+				200.ms();
+				GC.Collect();
+			}
+		});
 
 		//InsertCode.UsingDirective("System.Windows.Forms;System.Drawing");
 
 		//InsertCode.ImplementInterfaceOrAbstractClass(AKeys.IsScrollLock);
 
-		//var doc = Panels.Editor.ZActiveDoc;
-		//var Z = doc.Z;
+		var doc = Panels.Editor.ZActiveDoc;
+		var Z = doc.Z;
 		//var s = doc.Text;
+		//AOutput.Write(Z.CurrentPos16);
 
 		//AOutput.Write(SciCode.ZFindScriptHeader(s, out var m));
 
 		//int pos = Z.CurrentPos16;
-		////AOutput.Write();
 
 		//for(int i = pos; i < pos+4; i++) {
 		//	AOutput.Write((int)s[i], s[i]>' ' ? s[i] : ' ');

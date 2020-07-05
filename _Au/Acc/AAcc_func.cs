@@ -959,8 +959,8 @@ namespace Au
 		/// <exception cref="AuException">Failed to scroll, or the object does not support scrolling.</exception>
 		/// <remarks>
 		/// This function works with these objects:
-		/// - Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="AFFlags.NotInProc"/>.
-		/// - Objects in Edge browser, standard treeview and listview controls, some other. With Find use flag <see cref="AFFlags.UIA"/>.
+		/// - Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, Edge, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="AFFlags.NotInProc"/>.
+		/// - Objects standard treeview and listview controls, some other. With <b>Find</b> use flag <see cref="AFFlags.UIA"/>.
 		/// </remarks>
 		public void ScrollTo()
 		{
@@ -973,7 +973,7 @@ namespace Au
 
 			AuException.ThrowIfHresultNot0(hr, "*scroll");
 
-			//tested: Chrome and Firefox don't support UI Automation scrolling (IUIAutomationScrollItemPattern). IE and Edge support.
+			//tested: Chrome and Firefox don't support UI Automation scrolling (IUIAutomationScrollItemPattern).
 		}
 	}
 }

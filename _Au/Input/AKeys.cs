@@ -608,7 +608,7 @@ namespace Au
 
 			if(textOption != KTextOption.Paste) {
 				//use paste if there are Unicode surrogate pairs, because some apps/controls/frameworks don't support surrogates with WM_PACKET.
-				//known apps that support: standard Edit and RichEdit controls, Chrome, Firefox, IE, Edge, WPF, WinForms, new Scintilla, Dreamweaver, LibreOffice.
+				//known apps that support: standard Edit and RichEdit controls, Chrome, Firefox, IE, WPF, WinForms, new Scintilla, Dreamweaver, LibreOffice.
 				//known apps that don't: Office 2003, OpenOffice, old Scintilla (QM2).
 				//known apps that don't if 0 sleep: QT edit controls in VirtualBox.
 				//known apps that don't support these chars even when pasting: Java (tested the old and new frameworks).

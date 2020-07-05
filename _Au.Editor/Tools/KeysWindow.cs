@@ -28,12 +28,6 @@ namespace Au.Tools
 			this.Text = s;
 		}
 
-		/// <summary>
-		/// A text control in which to insert the link text when clicked.
-		/// If null, uses the focused control.
-		/// </summary>
-		public AuScintilla InsertInControl { get; set; }
-
 		void _Insert(string s)
 		{
 			var sci = InsertInControl;

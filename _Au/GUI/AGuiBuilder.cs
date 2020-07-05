@@ -40,7 +40,7 @@ using Au.Types;
 /// 
 /// Note: WPF starts slowly and uses much memory. It is normal if to show the first window in process takes 500-1000 ms and the process uses 30 MB of memory, whereas WinForms takes 250 ms / 10 MB and native takes 50 ms / 2 MB. However WinForms becomes slower than WPF if there are more than 100 controls in window. This library uses WPF because it is the most powerful and works well with high DPI screens.
 /// 
-/// WPF has many control types, for example <see cref="Button"/>, <see cref="Label"/>, <see cref="TextBox"/>, <see cref="ComboBox"/>. Most are in namespaces <b>System.Windows.Controls</b> and <b>System.Windows.Controls.Primitives</b>. This library adds these control classes that wrap some WPF controls to make them simpler to use: <see cref="CheckBool"/>. Also on the internet you can find lots of libraries containing WPF controls and themes. For example, search for <i>github awesome dotnet C#</i>. Note: use .NET Core libraries, not old .NET Framework 4.x libraries. Many libraries have both versions.
+/// WPF has many control types, for example <see cref="Button"/>, <see cref="CheckBox"/>, <see cref="TextBox"/>, <see cref="ComboBox"/>, <see cref="Label"/>. Most are in namespaces <b>System.Windows.Controls</b> and <b>System.Windows.Controls.Primitives</b>. Also on the internet you can find many libraries containing WPF controls and themes. For example, search for <i>github awesome dotnet C#</i>. Many libraries are open-source, and most can be found in GitHub (source, info and sometimes compiled files). Compiled files usually can be downloaded from <see href="https://www.nuget.org/"/> as packages. A nupkg file is a zip file. Extract it and use the dll file. Also take the xml and pdb files if available. Note: use .NET Core libraries, not old .NET Framework 4.x libraries. Many libraries have both versions. If original library is only Framework 4, look in NuGet for its Core version.
 /// 
 /// By default don't need XAML. When need, you can load XAML strings and files with <see cref="System.Windows.Markup.XamlReader"/>. For example when you want to apply a theme from a library or add something to resources. See examples.
 /// </remarks>
@@ -50,11 +50,11 @@ using Au.Types;
 /// var b = new AGuiBuilder("Example").WinSize(400) //create Window object with Grid control; set window width 400
 /// 	.R.Add("Text", out TextBox text1).Focus() //add label and text box control in first row
 /// 	.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three") //in second row add label and combo box control with items
-/// 	.R.Add(out CheckBool c1, "Check") //in third row add check box control
+/// 	.R.Add(out CheckBox c1, "Check") //in third row add check box control
 /// 	.R.AddOkCancel() //finally add standard OK and Cancel buttons
 /// 	.End();
 /// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
-/// AOutput.Write(text1.Text, combo1.SelectedIndex); if(c1) AOutput.Write("c1 checked"); //get user input from control variables
+/// AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck()); //get user input from control variables
 /// ]]></code>
 /// Dialog window with TabControl (code from guiBuilderSnippet).
 /// <code><![CDATA[
@@ -74,7 +74,7 @@ using Au.Types;
 /// 
 /// _Page("Page2")
 /// 	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
-/// 	.R.Add(out CheckBool _, "Check")
+/// 	.R.Add(out CheckBox _, "Check")
 /// 	.End();
 /// 
 /// //tc.SelectedIndex = 1;
@@ -923,7 +923,7 @@ public class AGuiBuilder
 		Add(out Button c, text);
 		if (flags.Has(GBBFlags.OK)) c.IsDefault = true;
 		if (flags.Has(GBBFlags.Cancel)) c.IsCancel = true;
-		if (flags.HasAny(GBBFlags.OK | GBBFlags.Cancel | GBBFlags.SizeLikeOkCancel)) { c.MinWidth = 70; c.MinHeight = 21; }
+		if (flags.HasAny(GBBFlags.OK | GBBFlags.Cancel)) { c.MinWidth = 70; c.MinHeight = 21; }
 		if (click != null || flags.HasAny(GBBFlags.OK | GBBFlags.Validate)) c.Click += (_, _) => {
 			var w = _FindWindow(c);
 			if (flags.HasAny(GBBFlags.OK | GBBFlags.Validate) && !_Validate(w, c)) return;
@@ -2509,36 +2509,24 @@ namespace Au.Types
 
 		/// <summary>Perform validation like OK button. For example if it is Apply button.</summary>
 		Validate = 4,
-
-		/// <summary>Set minimal width/height like of OK and Cancel buttons.</summary>
-		SizeLikeOkCancel = 8,
 	}
 
-	/// <summary>
-	/// <see cref="CheckBox"/> that can be used like bool.
-	/// For example instead of <c>if(c.IsChecked == true)</c> can be used <c>if(c)</c> or <c>if(c.True)</c>.
-	/// </summary>
-	public class CheckBool : CheckBox
-	{
-		///
-		public CheckBool()
-		{
-			this.SetResourceReference(StyleProperty, typeof(CheckBox));
-		}
-
-		/// <summary>
-		/// Gets or sets <see cref="ToggleButton.IsChecked"/>.
-		/// The 'get' function returns true if <b>IsChecked</b> is true; false if it is false or null.
-		/// </summary>
-		public bool True
-		{
-			get => IsChecked == true;
-			set => IsChecked = value;
-		}
-
-		/// <summary>
-		/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
-		/// </summary>
-		public static implicit operator bool(CheckBool c) => c.IsChecked == true;
-	}
+//rejected. Unsafe etc. For example, when assigning to object, uses CheckBool whereas the user may expect bool.
+//	/// <summary>
+//	/// <see cref="CheckBox"/> that can be used like bool.
+//	/// For example instead of <c>if(c.IsChecked == true)</c> can be used <c>if(c)</c>.
+//	/// </summary>
+//	public class CheckBool : CheckBox
+//	{
+//		///
+//		public CheckBool()
+//		{
+//			this.SetResourceReference(StyleProperty, typeof(CheckBox));
+//		}
+//
+//		/// <summary>
+//		/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
+//		/// </summary>
+//		public static implicit operator bool(CheckBool c) => c.IsChecked.GetValueOrDefault();
+//	}
 }

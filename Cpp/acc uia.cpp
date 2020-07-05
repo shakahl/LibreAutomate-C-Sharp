@@ -433,7 +433,7 @@ public:
 		if(navDir == 10 && varStart.vt == VT_I4) {
 			//Perf.First();
 			HWND w = _GetHWND();
-			//Perf.NW(); //2-3 ms in Edge web page
+			//Perf.NW();
 			if(w == 0) return 1;
 			pvarEndUpAt->vt = VT_I4;
 			pvarEndUpAt->lVal = (int)(LPARAM)w;

@@ -558,7 +558,7 @@
             Hides on mouse middle click.
             </remarks>
         </member>
-        <member name="M:Au.Controls.InactiveWindow.ZCalculateAndSetPosition(System.Int32,System.Int32,Au.Controls.PopupAlignment,System.Drawing.Rectangle,System.Nullable{System.Drawing.Size})">
+        <member name="M:Au.Controls.InactiveWindow.ZCalculateAndSetPosition(Au.Types.POINT,Au.Controls.PopupAlignment,System.Drawing.Rectangle,System.Nullable{System.Drawing.Size})">
             <summary>
             Calls API <msdn>CalculatePopupWindowPosition</msdn> and sets <b>Bounds</b>.
             </summary>
@@ -1320,16 +1320,17 @@
             If visible, does not ensure correct position. Usually it's better to hide, set size and show again.
             </remarks>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Show(System.Windows.Forms.Control,Au.Controls.PopupAlignment)">
+        <member name="M:Au.Controls.InfoWindow.Show(System.Windows.Forms.Control,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
             <summary>
             Shows the info window by the control.
             </summary>
             <param name="c">Control. Its top-level parent window will own the info window.</param>
             <param name="align"></param>
+            <param name="anchor"></param>
             <exception cref="T:System.ArgumentException">c is null or its handle is not created.</exception>
             <exception cref="T:System.InvalidOperationException">Exceptions of <see cref="M:System.Windows.Forms.Form.Show(System.Windows.Forms.IWin32Window)"/>.</exception>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Show(System.Windows.Forms.Control,System.Drawing.Rectangle,System.Boolean,Au.Controls.PopupAlignment)">
+        <member name="M:Au.Controls.InfoWindow.Show(System.Windows.Forms.Control,System.Drawing.Rectangle,System.Boolean,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
             <summary>
             Shows the info window by the control and rectangle.
             </summary>
@@ -1337,15 +1338,17 @@
             <param name="r">Rectangle in control's client area or in screen.</param>
             <param name="screenRect">r is in screen.</param>
             <param name="align"></param>
+            <param name="anchor"></param>
             <exception cref="T:System.ArgumentException">c is null or its handle is not created.</exception>
             <exception cref="T:System.InvalidOperationException">Exceptions of <see cref="M:System.Windows.Forms.Form.Show(System.Windows.Forms.IWin32Window)"/>.</exception>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Show(System.Drawing.Rectangle,Au.Controls.PopupAlignment)">
+        <member name="M:Au.Controls.InfoWindow.Show(System.Drawing.Rectangle,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
             <summary>
             Shows the info window by the rectangle.
             </summary>
             <param name="r">Rectangle in screen.</param>
             <param name="align"></param>
+            <param name="anchor"></param>
             <remarks>
             The info window is top-most.
             </remarks>
@@ -1365,6 +1368,12 @@
         <member name="P:Au.Controls.InfoWindow.Caption">
             <summary>
             If set to a non-null string before creating the info window, the window will be with caption and resizable.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.InfoWindow.InsertInControl">
+            <summary>
+            A text control in which to insert the link text when clicked.
+            If null, uses the focused control.
             </summary>
         </member>
         <member name="P:Au.Controls.InfoWindow.UserClosed">

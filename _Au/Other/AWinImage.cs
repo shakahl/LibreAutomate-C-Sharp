@@ -951,7 +951,7 @@ namespace Au
 
 				//copy from screen/window to memory bitmap
 				if(0 != (_flags & WIFlags.PrintWindow) && Api.PrintWindow(_area.W, _ad.mb.Hdc, Api.PW_CLIENTONLY | (AVersion.MinWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
-					//PW_RENDERFULLCONTENT is new in Win8.1. Undocumented in MSDN, but defined in h. Then can capture windows like Chrome, Edge, winstore.
+					//PW_RENDERFULLCONTENT is new in Win8.1. Undocumented in MSDN, but defined in h. Then can capture windows like Chrome, winstore.
 					//AOutput.Write("PrintWindow OK");
 				} else {
 					//get DC of screen or window

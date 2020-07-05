@@ -99,12 +99,13 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="c">Control. Its top-level parent window will own the info window.</param>
 		/// <param name="align"></param>
+		/// <param name="anchor"></param>
 		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
-		public void Show(Control c, PopupAlignment align = default)
+		public void Show(Control c, PopupAlignment align = 0, POINT? anchor = null)
 		{
 			_ = c?.IsHandleCreated ?? throw new ArgumentException();
-			_Show(c, ((AWnd)c).Rect, align);
+			_Show(c, ((AWnd)c).Rect, align, anchor);
 		}
 
 		/// <summary>
@@ -114,13 +115,14 @@ namespace Au.Controls
 		/// <param name="r">Rectangle in control's client area or in screen.</param>
 		/// <param name="screenRect">r is in screen.</param>
 		/// <param name="align"></param>
+		/// <param name="anchor"></param>
 		/// <exception cref="ArgumentException">c is null or its handle is not created.</exception>
 		/// <exception cref="InvalidOperationException">Exceptions of <see cref="Form.Show(IWin32Window)"/>.</exception>
-		public void Show(Control c, Rectangle r, bool screenRect, PopupAlignment align = 0)
+		public void Show(Control c, Rectangle r, bool screenRect, PopupAlignment align = 0, POINT? anchor = null)
 		{
 			_ = c?.IsHandleCreated ?? throw new ArgumentException();
 			if(!screenRect) r = c.RectangleToScreen(r);
-			_Show(c, r, align);
+			_Show(c, r, align, anchor);
 		}
 
 		/// <summary>
@@ -128,17 +130,19 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="r">Rectangle in screen.</param>
 		/// <param name="align"></param>
+		/// <param name="anchor"></param>
 		/// <remarks>
 		/// The info window is top-most.
 		/// </remarks>
-		public void Show(Rectangle r, PopupAlignment align = 0)
+		public void Show(Rectangle r, PopupAlignment align = 0, POINT? anchor = null)
 		{
-			_Show(null, r, align);
+			_Show(null, r, align, anchor);
 		}
 
-		void _Show(Control c, Rectangle r, PopupAlignment align)
+		void _Show(Control c, Rectangle r, PopupAlignment align, POINT? alignAnchor)
 		{
-			_W.ZCalculateAndSetPosition(r.Right, r.Top, align, r, _size);
+			POINT p = alignAnchor ?? new POINT(r.Right, r.Top);
+			_W.ZCalculateAndSetPosition(p, align, r, _size);
 			_w.ZShow(c);
 		}
 
@@ -172,6 +176,12 @@ namespace Au.Controls
 			}
 		}
 		string _caption;
+
+		/// <summary>
+		/// A text control in which to insert the link text when clicked.
+		/// If null, uses the focused control.
+		/// </summary>
+		public AuScintilla InsertInControl { get; set; }
 
 		/// <summary>
 		/// true if hidden when the user clicked the x button.

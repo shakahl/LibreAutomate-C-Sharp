@@ -52,18 +52,17 @@ namespace Au.Types
 		/// Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
 		/// Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher [](xref:uac) integrity level, Firefox web page if its multiprocess feature is not disabled.
 		/// Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="AWnd.Child"/> and search in it. 3. Use <see cref="AAcc.Finder.Find(AWnd, AWnd.ChildFinder)"/>.
-		/// Don't need this flag when searching in AAcc (then it is inherited from the Acc variable).
+		/// Don't need this flag when searching in AAcc (then it is inherited from the AAcc variable).
 		/// See also: <see cref="AAcc.MiscFlags"/>.
 		/// </summary>
 		NotInProc = 0x100,
 
 		/// <summary>
 		/// Use UI Automation API.
-		/// Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements.
-		/// Examples of such windows: Microsoft Edge web browser (web page), JavaFX applications.
+		/// Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements. For example JavaFX applications.
 		/// Objects found with this flag never have HtmlX properties, but can have <see cref="AAcc.UiaId"/>.
 		/// This flag can be used with most other windows too.
-		/// Don't use this flag when searching in AAcc (then it is inherited from the Acc variable) or web page (role prefix "web:" etc).
+		/// Don't use this flag when searching in AAcc (then it is inherited from the AAcc variable) or web page (role prefix "web:" etc).
 		/// See also: <see cref="AAcc.MiscFlags"/>.
 		/// </summary>
 		UIA = 0x200,

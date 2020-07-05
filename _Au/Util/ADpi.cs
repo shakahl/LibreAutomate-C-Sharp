@@ -27,15 +27,15 @@ namespace Au.Util
 	public static class ADpi
 	{
 		/// <summary>
-		/// Gets DPI of the primary screen.
+		/// Gets DPI of this process.
 		/// </summary>
 		/// <remarks>
-		/// On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
+		/// It is DPI of the primary screen when this process started. Used by API that aren't per-monitor DPI aware.
 		/// </remarks>
-		public static int BaseDPI {
+		public static int OfThisProcess {
 			get {
-				if(_baseDPI == 0) {
-					using(var dcs = new ScreenDC_(0)) _baseDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
+				if (_baseDPI == 0) {
+					using (var dcs = new ScreenDC_(0)) _baseDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
 				}
 				return _baseDPI;
 			}
@@ -43,40 +43,81 @@ namespace Au.Util
 		static int _baseDPI;
 
 		/// <summary>
+		/// Gets DPI of a window.
+		/// Returns <see cref="OfThisProcess"/> if fails or if Windows version is less than 8.1.
+		/// </summary>
+		/// <remarks>
+		/// On Windows 10 1607 and later uses API <msdn>GetDpiForWindow</msdn>. On Windows 8.1 and early Windows 10 uses API <msdn>GetDpiForMonitor</msdn>; it's less reliable. Older Windows versions don't support multiple screens with different DPI, therefore returns the system DPI.
+		/// </remarks>
+		public static int OfWindow(AWnd w) {
+			int R = 0;
+			if (AVersion.MinWin10_1607) R = Api.GetDpiForWindow(w);
+			else if (AVersion.MinWin8_1 && w.GetRect(out var k)) return OfScreen(AScreen.Of(k).Handle);
+			return R != 0 ? R : OfThisProcess;
+		}
+
+		///// <summary>
+		///// Let <see cref="OfWindow"/> and 
+		///// </summary>
+		//public static bool SupportPerMonitorDpiOnWin8_1 { get; set; }
+
+		///// <summary>
+		///// Gets DPI of a window (API <msdn>GetDpiForWindow</msdn>).
+		///// Returns <see cref="OfThisProcess"/> if fails or if the API is unavailable (added in Windows 10 1607, year 2016).
+		///// </summary>
+		//public static int OfWindow(AWnd w) {
+		//	int R = AVersion.MinWin10_1607 ? Api.GetDpiForWindow(w) : 0;
+		//	return R != 0 ? R : OfThisProcess;
+		//}
+
+		/// <summary>
+		/// Gets DPI of a screen.
+		/// Returns <see cref="OfThisProcess"/> if fails or if Windows version is less than 8.1.
+		/// </summary>
+		/// <remarks>
+		/// Uses API <msdn>GetDpiForMonitor</msdn>.
+		/// </remarks>
+		public static int OfScreen(IntPtr hmon) {
+			return AVersion.MinWin8_1 && 0 == Api.GetDpiForMonitor(hmon, 0, out int R, out _) ? R : OfThisProcess;
+		}
+
+		/// <summary>
 		/// Gets small icon size that depends on DPI of the primary screen.
-		/// Width and Height are <see cref="BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
+		/// Width and Height are <see cref="OfThisProcess"/>/6, which is 16 if DPI is 96 (100%).
 		/// </summary>
-		internal static SIZE SmallIconSize_ { get { var t = BaseDPI / 6; return new SIZE(t, t); } } //same as AIcon.SizeSmall
+		internal static SIZE SmallIconSize_ { get { var t = OfThisProcess / 6; return new SIZE(t, t); } } //same as AIcon.SizeSmall
 
 		/// <summary>
-		/// If <see cref="BaseDPI"/> isn't 96 (100%), returns scaled i. Else returns i.
+		/// If DPI <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
 		/// </summary>
-		/// <param name="i"></param>
-		public static int ScaleInt(int i) => AMath.MulDiv(i, BaseDPI, 96);
+		public static int ScaleInt(int i) => AMath.MulDiv(i, OfThisProcess, 96);
 
 		/// <summary>
-		/// If <see cref="BaseDPI"/> isn't 96 (100%), returns scaled z. Else returns z.
+		/// If DPI <see cref="OfWindow"/> isn't 96 (100%), returns scaled i. Else returns i.
+		/// </summary>
+		public static int ScaleInt(AWnd w, int i) => AMath.MulDiv(i, OfWindow(w), 96);
+
+		/// <summary>
+		/// If <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled z. Else returns z.
 		/// Note: for images use <see cref="ImageSize"/>.
 		/// </summary>
 		/// <param name="z"></param>
-		public static SIZE ScaleSize(SIZE z)
-		{
-			int dpi = BaseDPI;
+		public static SIZE ScaleSize(SIZE z) {
+			int dpi = OfThisProcess;
 			z.width = AMath.MulDiv(z.width, dpi, 96);
 			z.height = AMath.MulDiv(z.height, dpi, 96);
 			return z;
 		}
 
 		/// <summary>
-		/// If <see cref="BaseDPI"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
+		/// If <see cref="OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
 		/// </summary>
 		/// <param name="image"></param>
-		public static SIZE ImageSize(Image image)
-		{
-			if(image == null) return default;
+		public static SIZE ImageSize(Image image) {
+			if (image == null) return default;
 			SIZE z = image.Size;
-			int dpi = BaseDPI;
-			if(dpi > 96) {
+			int dpi = OfThisProcess;
+			if (dpi > 96) {
 				z.width = AMath.MulDiv(z.width, dpi, (int)Math.Round(image.HorizontalResolution));
 				z.height = AMath.MulDiv(z.height, dpi, (int)Math.Round(image.VerticalResolution));
 			}
@@ -84,24 +125,23 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// If <see cref="BaseDPI"/> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
+		/// If <see cref="OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
 		/// </summary>
 		/// <param name="image"></param>
 		/// <param name="disposeOld">If performed scaling (it means created new image), dispose old image.</param>
 		/// <remarks>
 		/// Unlike <see cref="System.Windows.Forms.Control.ScaleBitmapLogicalToDevice"/>, returns same object if don't need scaling.
 		/// </remarks>
-		public static Image ScaleImage(Image image, bool disposeOld)
-		{
-			if(image != null) {
-				int dpi = BaseDPI;
-				if(dpi > 96) {
+		public static Image ScaleImage(Image image, bool disposeOld) {
+			if (image != null) {
+				int dpi = OfThisProcess;
+				if (dpi > 96) {
 					int xRes = (int)Math.Round(image.HorizontalResolution), yRes = (int)Math.Round(image.VerticalResolution);
 					//AOutput.Write(xRes, yRes, dpi);
-					if(xRes != dpi || yRes != dpi) {
+					if (xRes != dpi || yRes != dpi) {
 						var z = image.Size;
 						var r = _ScaleBitmap(image, AMath.MulDiv(z.Width, dpi, xRes), AMath.MulDiv(z.Height, dpi, yRes), z);
-						if(disposeOld) image.Dispose();
+						if (disposeOld) image.Dispose();
 						image = r;
 					}
 				}
@@ -110,13 +150,12 @@ namespace Au.Util
 		}
 
 		//From .NET DpiHelper.ScaleBitmapToSize, which is used by Control.ScaleBitmapLogicalToDevice.
-		private static Bitmap _ScaleBitmap(Image oldImage, int width, int height, Size oldSize)
-		{
+		private static Bitmap _ScaleBitmap(Image oldImage, int width, int height, Size oldSize) {
 			//note: could simply return new Bitmap(oldImage, width, height). It uses similar code, but lower quality.
 
 			var r = new Bitmap(width, height, oldImage.PixelFormat);
 
-			Debug.Assert(r.HorizontalResolution == BaseDPI); //if fails, need r.SetResolution
+			Debug.Assert(r.HorizontalResolution == OfThisProcess); //if fails, need r.SetResolution
 
 			using var graphics = Graphics.FromImage(r);
 			var mode = InterpolationMode.HighQualityBicubic;

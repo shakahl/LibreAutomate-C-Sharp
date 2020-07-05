@@ -137,10 +137,12 @@ class PanelInfo : AuUserControlBase
 				var pc = p; w.MapScreenToClient(ref pc);
 				b.AppendFormat("<b>xy</b> {0,5} {1,5},   <b>client</b> {2,5} {3,5}\r\n<b>Window</b>  {4}\r\n\t<b>cn</b>  {5}\r\n\t<b>program</b>  {6}",
 					p.x, p.y, pc.x, pc.y,
-					w.Name?.Escape(140), cn.Escape(70), w.ProgramName?.Escape(70));
+					w.Name?.Escape(200), cn.Escape(), w.ProgramName?.Escape());
 				if(c != w) {
 					b.AppendFormat("\r\n<b>Control   id</b>  {0}\r\n\t<b>cn</b>  {1}",
-						c.ControlId, c.ClassName?.Escape(70));
+						c.ControlId, c.ClassName?.Escape());
+					var ct = c.Name;
+					if (!ct.NE()) b.Append("\r\n\t<b>name</b>  ").Append(ct.Escape(200));
 				} else if(cn == "#32768") {
 					var m = Au.Util.AMenuItemInfo.FromXY(p, w, 50);
 					if(m != null) {

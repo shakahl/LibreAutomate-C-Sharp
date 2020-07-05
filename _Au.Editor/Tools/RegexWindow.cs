@@ -74,11 +74,5 @@ namespace Au.Tools
 		/// If null (default), uses text from resources of this dll.
 		/// </summary>
 		public string ContentText { get; set; }
-
-		/// <summary>
-		/// A text control in which to insert the regex token when the link clicked.
-		/// If null, uses the focused control.
-		/// </summary>
-		public Control InsertInControl { get; set; }
 	}
 }

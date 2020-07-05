@@ -112,9 +112,9 @@ namespace Au.Controls
 		/// <summary>
 		/// Calls API <msdn>CalculatePopupWindowPosition</msdn> and sets <b>Bounds</b>.
 		/// </summary>
-		public void ZCalculateAndSetPosition(int x, int y, PopupAlignment align, Rectangle excludeRect = default, Size? size = null)
+		public void ZCalculateAndSetPosition(POINT anchor, PopupAlignment align, Rectangle excludeRect = default, Size? size = null)
 		{
-			Api.CalculatePopupWindowPosition((x, y), size ?? this.Size, (uint)align, excludeRect, out var r);
+			Api.CalculatePopupWindowPosition(anchor, size ?? this.Size, (uint)align, excludeRect, out var r);
 			Bounds = r;
 		}
 
@@ -126,7 +126,7 @@ namespace Au.Controls
 		{
 			int x = align.HasAny(PopupAlignment.TPM_VERTICAL | PopupAlignment.TPM_RIGHTALIGN) ? anchorRect.Left : anchorRect.Right;
 			int y = align.Has(PopupAlignment.TPM_VERTICAL) && !align.Has(PopupAlignment.TPM_BOTTOMALIGN) ? anchorRect.Bottom : anchorRect.Top;
-			ZCalculateAndSetPosition(x, y, align, anchorRect, size);
+			ZCalculateAndSetPosition((x, y), align, anchorRect, size);
 		}
 
 		/// <summary>

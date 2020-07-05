@@ -24,7 +24,6 @@ using Microsoft.Win32;
 
 //SHOULDDO: if checked state, activate window before test. Else different FOCUSED etc.
 //SHOULDDO: update window name in code when capturing new AO.
-//FUTURE: support Edge better. Eg can find without UIA. See the workaround.
 
 namespace Au.Tools
 {
@@ -56,7 +55,7 @@ namespace Au.Tools
 
 			AWnd w = (AWnd)this;
 			var wp = Program.Settings.tools_AAcc_wndPos;
-			if(wp != null) try { w.RestoreRectAndState(wp, true); } catch { }
+			if(wp != null) try { w.RestoreSavedRect(wp, true); } catch { }
 
 			if(_acc != null) _SetAcc(false);
 
@@ -71,7 +70,7 @@ namespace Au.Tools
 			_capt?.Dispose();
 
 			AWnd w = (AWnd)this;
-			Program.Settings.tools_AAcc_wndPos = w.SaveRectAndState();
+			Program.Settings.tools_AAcc_wndPos = w.SaveRect();
 
 			base.OnFormClosing(e);
 		}
@@ -83,7 +82,7 @@ namespace Au.Tools
 			AWnd c = _acc.WndContainer, w = c.Window;
 			if(w.Is0) return;
 			if(captured && w.IsCloaked) {
-				//Edge workaround. w is a cloaked windowsuicorecorewindow of other process. There are many such cloaked windows, and AWnd.Find often finds wrong window.
+				//workaround for old pre-Chromium Edge. w is a cloaked windowsuicorecorewindow of other process. There are many such cloaked windows, and AWnd.Find often finds wrong window.
 				c = AWnd.FromMouse();
 				w = c.Window;
 				if(w.Is0) return;

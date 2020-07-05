@@ -331,10 +331,7 @@ static class CiSnippets
 			int newPos = pos + i;
 			z.Select(true, newPos, newPos + selectLength, makeVisible: true);
 			if(tempRange != default) CodeInfo._correct.BracesAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
-			if(showSignature) {
-				CodeInfo.ShowSignature();
-				if(i == 11 && s == "AKeys.Key(\"\");") CiTools.CmdShowKeysWindow();
-			}
+			if(showSignature) CodeInfo.ShowSignature();
 		}
 	}
 

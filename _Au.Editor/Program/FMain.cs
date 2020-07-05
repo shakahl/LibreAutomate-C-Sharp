@@ -43,7 +43,7 @@ partial class FMain : Form
 		unsafe {
 			var s = Program.Settings.wndPos;
 			if(s != null && Au.Util.AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
-				p.rcNormalPosition.EnsureInScreen();
+				p.rcNormalPosition.EnsureInScreen();//TODO: for non-toolwindows it is workspace coords
 				this.Bounds = p.rcNormalPosition;
 				if(p.showCmd == Api.SW_SHOWMAXIMIZED) this.WindowState = FormWindowState.Maximized;
 			} else {
@@ -139,7 +139,7 @@ partial class FMain : Form
 	protected override void OnFormClosed(FormClosedEventArgs e)
 	{
 		if(Program.Loaded >= EProgramState.LoadedUI) {
-			Program.Settings.wndPos = _Hwnd.SaveRectAndState();
+			Program.Settings.wndPos = _Hwnd.SaveRect();
 			UacDragDrop.AdminProcess.Enable(false);
 		}
 		Program.Loaded = EProgramState.Unloading;

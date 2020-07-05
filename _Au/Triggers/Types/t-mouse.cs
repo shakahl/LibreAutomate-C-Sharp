@@ -506,7 +506,7 @@ namespace Au.Triggers
 
 			public EdgeMoveDetector_()
 			{
-				_sens = Util.ADpi.BaseDPI / 4; //FUTURE: different for each screen
+				_sens = Util.ADpi.OfThisProcess / 4; //FUTURE: different for each screen
 			}
 
 			public bool Detect(POINT pt)

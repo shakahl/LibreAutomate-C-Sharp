@@ -143,7 +143,7 @@ namespace Au
 					try {
 						if(_x == null && AFile.ExistsAsFile(_cacheFile)) {
 							_x = AExtXml.LoadElem(_cacheFile);
-							if(_iconSize != _x.Attr("size", 0) || ADpi.BaseDPI != _x.Attr("dpi", 0)) {
+							if(_iconSize != _x.Attr("size", 0) || ADpi.OfThisProcess != _x.Attr("dpi", 0)) {
 								_x = null;
 								ADebug.Print("info: cleared icon cache");
 							}
@@ -208,7 +208,7 @@ namespace Au
 					if(_x == null) {
 						_x = new XElement("images");
 						_x.SetAttributeValue("size", _iconSize);
-						_x.SetAttributeValue("dpi", ADpi.BaseDPI);
+						_x.SetAttributeValue("dpi", ADpi.OfThisProcess);
 					}
 					_x.Add(d);
 				}

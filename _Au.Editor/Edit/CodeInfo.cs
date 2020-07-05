@@ -239,7 +239,9 @@ AOutput.Write(""t"" + 'c' + 1);
 		_correct.SciCharAdded(c); //sync adds or removes ')' etc if need.
 		if(!c.ignoreChar) {
 			_compl.SciCharAdded_ShowList(c); //async gets completions and shows popup list. If already showing, filters/selects items.
-			_signature.SciCharAdded(c.doc, c.ch); //sync shows signature help.
+			_signature.SciCharAdded(c.doc, c.ch); //async shows signature help. Faster than _compl.
+
+			//TODO: test more. Previously _signature.SciCharAdded was sync.
 		}
 
 		//Example: user types 'wri('.

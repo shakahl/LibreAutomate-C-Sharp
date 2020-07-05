@@ -1071,9 +1071,14 @@ class Script : AScript
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
-		var b = new StringBuilder();
-		b.Append("ff")
-			.Append("fs");
+		//var b = new StringBuilder();
+		//b.Append("ff")
+		//				.Append("fs");
+
+		//var s = "asd";
+		//AOutput.Write(s[0]);
+
+		
 
 	}
 

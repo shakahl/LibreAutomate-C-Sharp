@@ -20,6 +20,8 @@ using Au.Types;
 using Au.Tools;
 using Au.Controls;
 using Microsoft.CodeAnalysis.Text;
+using System.Drawing;
+using System.Windows.Forms;
 
 class CiTools
 {
@@ -42,7 +44,7 @@ class CiTools
 	RegexWindow _regexWindow;
 	string _regexTopic;
 
-	public void RegexWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan, bool replace)
+	public void RegexWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan, bool replace, Form dontCover = null)
 	{
 		int j = stringSpan.Start, vi = _StringPrefixLength(code, j);
 
@@ -54,12 +56,7 @@ class CiTools
 			_regexWindow.Window.Name = "Ci.Regex"; //prevent hiding when activated
 		}
 
-		var r = CiUtil.GetCaretRectFromPos(doc, pos16);
-		int i = Au.Util.ADpi.ScaleInt(100);
-		r.Width = i;
-		r.Inflate(i, 0);
-		_regexWindow.Show(doc, r, false, PopupAlignment.TPM_CENTERALIGN | PopupAlignment.TPM_VERTICAL);
-		_regexWindow.InsertInControl = doc;
+		_ShowWindow(_regexWindow, doc, pos16, dontCover);
 		var s = _regexWindow.CurrentTopic;
 		if(s == "replace") {
 			if(!replace) _regexWindow.CurrentTopic = _regexTopic;
@@ -74,6 +71,23 @@ class CiTools
 
 	#endregion
 
+	#region keys
+
+	KeysWindow _keysWindow;
+
+	public void KeysWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan, Form dontCover = null)
+	{
+		if(_keysWindow == null) {
+			_keysWindow = new KeysWindow();
+			_keysWindow.Window.Name = "Ci.Keys"; //prevent hiding when activated
+		}
+		_ShowWindow(_keysWindow, doc, pos16, dontCover);
+		int vi = _StringPrefixLength(code, stringSpan.Start);
+		doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _keysWindow.Hide());
+	}
+
+	#endregion
+
 	static int _StringPrefixLength(string s, int j)
 	{
 		int R = 0;
@@ -81,45 +95,39 @@ class CiTools
 		return R;
 	}
 
-	#region keys
-
-	KeysWindow _keysWindow;
-
-	public void KeysWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan)
-	{
-		if(_keysWindow == null) {
-			_keysWindow = new KeysWindow();
-			_keysWindow.Window.Name = "Ci.Keys"; //prevent hiding when activated
-		}
-		var r = CiUtil.GetCaretRectFromPos(doc, pos16);
+	static void _ShowWindow(InfoWindow w, SciCode doc, int position, Form dontCover) {
+		bool above = dontCover != null;
+		if (w.Window.Visible) w.Window.Hwnd().ZorderTop();
+		var r = CiUtil.GetCaretRectFromPos(doc, position, inScreen: true);
 		int i = Au.Util.ADpi.ScaleInt(100);
 		r.Width = i;
 		r.Inflate(i, 0);
-		_keysWindow.Show(doc, r, false, PopupAlignment.TPM_CENTERALIGN | PopupAlignment.TPM_VERTICAL);
-		_keysWindow.InsertInControl = doc;
-		int vi = _StringPrefixLength(code, stringSpan.Start);
-		doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _keysWindow.Hide());
+		if(dontCover != null) {
+			r = Rectangle.Union(r, dontCover.Bounds);
+		}
+		var align = above ? PopupAlignment.TPM_BOTTOMALIGN : 0;
+		var anchor = new POINT(r.Left, above ? r.Top : r.Bottom);
+		w.Show(doc, r, true, align | PopupAlignment.TPM_VERTICAL, anchor);
+		w.InsertInControl = doc;
 	}
-
-	#endregion
 
 	public static void CmdShowRegexWindow() => _ShowRegexOrKeysWindow(true);
 	public static void CmdShowKeysWindow() => _ShowRegexOrKeysWindow(false);
 
 	static void _ShowRegexOrKeysWindow(bool regex)
 	{
-		bool retry = false;
-		g1:
+		//bool retry = false;
+		//g1:
 		if(!CodeInfo.GetDocumentAndFindNode(out var cd, out var node)) return;
 		var pos16 = cd.pos16;
 		if(!CiUtil.IsInString(ref node, pos16)) {
-			if(regex || retry) {
+			//if(regex || retry) {
 				ADialog.ShowInfo("The text cursor must be in a string.");
 				return;
-			}
-			InsertCode.Statements("AKeys.Key(\"%\");", goToPercent: true);
-			retry = true;
-			goto g1;
+			//}
+			//InsertCode.Statements("AKeys.Key(\"%\");", goToPercent: true); //rejected. Eg could be AKeys.Key("", here).
+			//retry = true;
+			//goto g1;
 		}
 		var doc = cd.sciDoc;
 		var stringSpan = node.Span;
@@ -127,5 +135,18 @@ class CiTools
 		var t = CodeInfo._tools;
 		if(regex) t.RegexWindowShow(doc, cd.code, pos16, stringSpan, replace: false);
 		else t.KeysWindowShow(doc, cd.code, pos16, stringSpan);
+	}
+
+	public void ShowForStringParameter(PSFormat stringFormat, in CodeInfo.Context cd, TextSpan stringSpan, Form dontCover = null) {
+		//var alignment = above ? c_popupAlignmentAbove : c_popupAlignmentNormal;
+		switch (stringFormat) {
+			case PSFormat.ARegex:
+			case PSFormat.ARegexReplacement:
+				RegexWindowShow(cd.sciDoc, cd.code, cd.pos16, stringSpan, replace: stringFormat == PSFormat.ARegexReplacement, dontCover);
+				break;
+			case PSFormat.AKeys:
+				KeysWindowShow(cd.sciDoc, cd.code, cd.pos16, stringSpan, dontCover);
+				break;
+		}
 	}
 }

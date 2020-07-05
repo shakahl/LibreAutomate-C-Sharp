@@ -478,7 +478,7 @@ namespace Au
 					if(wOC == _wFocus) return true;
 					if(wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
 					if(wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers are classnamed so too, eg Ditto.
-					if(wOC.ProgramName.Eqi("RuntimeBroker.exe")) return true; //Edge, Store apps
+					if(wOC.ProgramName.Eqi("RuntimeBroker.exe")) return true; //Store apps
 
 					//CONSIDER: option to return true for user-known windows, eg using a callback. Print warning that includes wOC info.
 

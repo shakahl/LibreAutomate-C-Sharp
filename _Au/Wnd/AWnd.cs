@@ -666,7 +666,7 @@ namespace Au
 					ALastError.Clear();
 					Api.ShowWindow(this, state);
 					ok = 0 == ALastError.Code;
-				} else if(ok = GetWindowPlacement_(out var p)) {
+				} else if(ok = GetWindowPlacement_(out var p, false)) {
 					int state2 = state;
 					switch(state) {
 					case Api.SW_MINIMIZE:
@@ -679,7 +679,7 @@ namespace Au
 
 					//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. Instead we use another workaround, see below.
 					p.showCmd = state2;
-					ok = SetWindowPlacement_(ref p);
+					ok = SetWindowPlacement_(ref p, false);
 				}
 
 				if(!ok) {
@@ -712,14 +712,20 @@ namespace Au
 		/// <summary>
 		/// Initializes a WINDOWPLACEMENT struct and calls API <msdn>GetWindowPlacement</msdn>.
 		/// </summary>
+		/// <param name="wp"></param>
+		/// <param name="rectInScreen">Remove workarea thickness from wp.rcNormalPosition.</param>
+		/// <param name="errStr">If not null, throws it if fails.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
-		internal bool GetWindowPlacement_(out Api.WINDOWPLACEMENT wp, string errStr = null)
+		internal bool GetWindowPlacement_(out Api.WINDOWPLACEMENT wp, bool rectInScreen, string errStr = null)
 		{
 			//initially this was public, but probably don't need.
 
 			wp = new Api.WINDOWPLACEMENT(); wp.length = Api.SizeOf(wp);
-			if(Api.GetWindowPlacement(this, ref wp)) return true;
+			if (Api.GetWindowPlacement(this, ref wp)) {
+				if (rectInScreen) _Wp1(ref wp, false);
+				return true;
+			}
 			if(errStr != null) ThrowUseNative(errStr);
 			return false;
 		}
@@ -727,15 +733,28 @@ namespace Au
 		/// <summary>
 		/// Sets WINDOWPLACEMENT <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
 		/// </summary>
+		/// <param name="wp"></param>
+		/// <param name="rectInScreen">wp.rcNormalPosition is without workarea thickness.</param>
+		/// <param name="errStr">If not null, throws it if fails.</param>
 		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
-		internal bool SetWindowPlacement_(ref Api.WINDOWPLACEMENT wp, string errStr = null)
+		internal bool SetWindowPlacement_(ref Api.WINDOWPLACEMENT wp, bool rectInScreen, string errStr = null)
 		{
 			//initially this was public, but probably don't need.
 
+			if (rectInScreen) _Wp1(ref wp, true);
 			wp.length = Api.SizeOf(wp);
-			if(Api.SetWindowPlacement(this, wp)) return true;
+			if (Api.SetWindowPlacement(this, wp)) return true; //TODO: test
 			if(errStr != null) ThrowUseNative(errStr);
 			return false;
+		}
+
+		void _Wp1(ref Api.WINDOWPLACEMENT wp, bool set) {
+			if (!IsToolWindow) { //TODO: test
+				var s = set ? AScreen.Of(wp.rcNormalPosition) : AScreen.Of(this);
+				var v = s.GetInfo();
+				int i = set ? -1 : 1;
+				wp.rcNormalPosition.Offset((v.workArea.left - v.bounds.left)*i, (v.workArea.top - v.bounds.top)*i);
+			}
 		}
 
 #endregion
@@ -804,7 +823,7 @@ namespace Au
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
-					t.SetWindowPlacement_(ref wp); //activates t; fast (no animation)
+					t.SetWindowPlacement_(ref wp, false); //activates t; fast (no animation)
 					_EnableActivate_SendKey(false); //makes so that later our process can always activate
 					_EnableActivate_AllowSetFore();
 					Api.SetForegroundWindow(GetWnd.Root); //set no foreground window, or may activate the higher IL window (maybe does not activate, but winevents hook gets events, in random order). Other way would be to destroy our window later, but more difficult to implement.
@@ -1237,6 +1256,7 @@ namespace Au
 				if(0 == Api.DwmGetWindowAttribute(this, Api.DWMWA.EXTENDED_FRAME_BOUNDS, &t, 16)) {
 					r = t;
 					return true;
+					//tested: on Win7 gets physical (not logical) coords of DPI-scaled window
 				}
 			}
 
@@ -1622,7 +1642,8 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool GetRectNotMinMax(out RECT r)
 		{
-			if(!GetWindowPlacement_(out var p)) { r = default; return false; }
+			if (!(IsMinimized || IsMaximized)) return GetRect(out r); //TODO: test
+			if(!GetWindowPlacement_(out var p, true)) { r = default; return false; }
 			r = p.rcNormalPosition;
 			return true;
 		}
@@ -1899,9 +1920,9 @@ namespace Au
 				r.Offset(x - r.left, y - r.top);
 
 				if(useWindow) { //move window
-					w.GetWindowPlacement_(out var wp, "*move*");
+					w.GetWindowPlacement_(out var wp, false, "*move*");
 					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(AScreen.Of(w));
-					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
+					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;//TODO: for non-toolwindows it is workspace coords
 
 					AWnd hto = default; bool visible = w.IsVisible;
 					try {
@@ -1914,7 +1935,7 @@ namespace Au
 
 						wp.rcNormalPosition = r;
 						wp.showCmd = visible ? Api.SW_SHOWNA : Api.SW_HIDE;
-						w.SetWindowPlacement_(ref wp, "*move*");
+						w.SetWindowPlacement_(ref wp, true, "*move*"); //TODO: test
 
 						if(moveMaxWindowToOtherMonitor) {
 							//I found this way of moving max window to other screen by experimenting.

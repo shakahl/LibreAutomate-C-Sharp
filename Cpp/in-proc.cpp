@@ -29,7 +29,7 @@
 //	Also, I expected to make 'find all' much faster, because then can search and send/unmarshal results at the same time on different CPU cores. But it made faster only by 15%. Also, calling the final callback function before finishing searching is not a good idea, because then the finder must DoEvents because the callback would probably call object's methods.
 
 //Cannot inject dll into some processes, including:
-//	Windows Store apps (including the Edge web browser);
+//	Windows Store apps;
 //	Console (not useful anyway);
 //	Protected processes (eg antivirus);
 //	Processes of higher UAC integrity level (unless this process is uiAccess);

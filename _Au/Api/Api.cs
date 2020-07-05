@@ -96,6 +96,9 @@ namespace Au.Types
 		internal static extern IntPtr CreateRectRgnIndirect(in RECT lprect);
 
 		[DllImport("gdi32.dll")]
+		internal static extern bool PtInRegion(IntPtr hrgn, int x, int y);
+
+		[DllImport("gdi32.dll")]
 		internal static extern IntPtr CreateCompatibleDC(IntPtr hdc);
 
 		[DllImport("gdi32.dll")]

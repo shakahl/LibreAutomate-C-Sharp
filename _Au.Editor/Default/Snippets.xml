@@ -363,16 +363,16 @@ if (s == null) return;]]>
 				<![CDATA[var b = new AGuiBuilder("Window").WinSize(400)
 	.R.Add("Text", out TextBox text1).Focus()
 	.R.Add("Combo", out ComboBox combo1, true).Items("One|Two|Three")
-	.R.Add(out CheckBool c1, "Check")
+	.R.Add(out CheckBox c1, "Check")
 	.R.AddOkCancel()
 	.End();
 if (!b.ShowDialog()) return;
-//AOutput.Write(text1.Text, combo1.SelectedIndex); if(c1) AOutput.Write("c1 checked");]]>
+//AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck());]]>
 			</list>
 			<list item="Tabs">
 				<![CDATA[var b = new AGuiBuilder("Window").WinSize(400)
 	.Row(-1).Add(out TabControl tc).Height(300..)
-	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).Disabled().End();
+	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70..).Disabled().End();
 
 AGuiBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
 	var tp = new TabItem { Header = name };
@@ -386,7 +386,7 @@ _Page("Page1")
 
 _Page("Page2")
 	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
-	.R.Add(out CheckBool _, "Check")
+	.R.Add(out CheckBox _, "Check")
 	.End();
 
 //tc.SelectedIndex = 1;
@@ -408,7 +408,7 @@ if (!b.ShowDialog()) return;]]>
 var w = new Window1 { Title = "Window", Width = 400 };
 var b = new AGuiBuilder(w)
 	.Row(-1).Add(out TabControl tc).Height(300..)
-	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).Disabled().End();
+	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70..).Disabled().End();
 
 AGuiBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
 	var tp = new TabItem { Header = name };
@@ -422,7 +422,7 @@ _Page("Page1")
 
 _Page("Page2")
 	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
-	.R.Add(out CheckBool _, "Check")
+	.R.Add(out CheckBox _, "Check")
 	.End();
 
 //tc.SelectedIndex = 1;

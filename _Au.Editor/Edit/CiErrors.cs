@@ -56,7 +56,7 @@ class CiErrors
 				if(d.Severity == DiagnosticSeverity.Hidden && d.Code == 8019) { //unnecessary using directive
 					if(0 != code.Eq(start + 6, false, s_defaultUsings)) continue;
 				}
-				if(!has) doc._InicatorsDiag(has = true);
+				if(!has) doc.InicatorsDiag_(has = true);
 				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
 				doc.Z.IndicatorAdd(true, indic, start..end);
 				_codeDiag.Add((d, start, end));
@@ -78,19 +78,19 @@ class CiErrors
 		if(_metaErrors.Count > 0) {
 			foreach(var v in _metaErrors) {
 				if(v.to <= start16 || v.from >= end16) continue;
-				if(!has) doc._InicatorsDiag(has = true);
+				if(!has) doc.InicatorsDiag_(has = true);
 				doc.Z.IndicatorAdd(true, SciCode.c_indicError, v.from..v.to);
 			}
 		}
 		_Strings(semo, cd, start16, end16);
 		if(_stringErrors.Count > 0) {
-			if(!has) doc._InicatorsDiag(has = true);
+			if(!has) doc.InicatorsDiag_(has = true);
 			foreach(var v in _stringErrors) {
 				doc.Z.IndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
 			}
 		}
 		if(!has) {
-			doc._InicatorsDiag(false);
+			doc.InicatorsDiag_(false);
 			_codeDiag = null;
 		}
 	}

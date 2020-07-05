@@ -42,7 +42,7 @@ namespace Au.Tools
 
 			AWnd w = (AWnd)this;
 			var wp = Program.Settings.tools_AWinImage_wndPos;
-			if(wp != null) try { w.RestoreRectAndState(wp, true); } catch { }
+			if(wp != null) try { w.RestoreSavedRect(wp, true); } catch { }
 
 			_info.Z.SetText(c_infoForm);
 			_FillGrid();
@@ -51,7 +51,7 @@ namespace Au.Tools
 		protected override void OnFormClosing(FormClosingEventArgs e)
 		{
 			AWnd w = (AWnd)this;
-			Program.Settings.tools_AWinImage_wndPos = w.SaveRectAndState();
+			Program.Settings.tools_AWinImage_wndPos = w.SaveRect();
 
 			base.OnFormClosing(e);
 		}
@@ -301,7 +301,6 @@ namespace Au.Tools
 
 		bool _CaptureImageOrRect(bool rect, out WICResult r)
 		{
-			r = null;
 			WICFlags fl = 0;
 			if(rect) fl = WICFlags.Rectangle;
 			else if(_grid.ZGetValue("windowPixels", out var wpFlag, false)) fl = wpFlag.Ends("WindowDC") ? WICFlags.WindowDC : WICFlags.PrintWindow; //FUTURE: how rect is if DPI-scaled window?

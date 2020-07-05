@@ -61,7 +61,7 @@ HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult)
 		//Perf.Next();
 
 		//UIA?
-		if(elem == 0 && specWnd == 0 && (role == ROLE_SYSTEM_CLIENT || role == ROLE_SYSTEM_PANE)) { //info: Edge web page is PANE
+		if(elem == 0 && specWnd == 0 && (role == ROLE_SYSTEM_CLIENT || role == ROLE_SYSTEM_PANE)) {
 			Smart<IAccessible> auia; long x, y, wid1, hei1, wid2, hei2;
 			if(0 == AccUiaFromPoint(p, &auia)) { //speed outproc: similar to AOFP
 
@@ -77,8 +77,6 @@ HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult)
 					//Perf.NW();
 				}
 			}
-
-			//FUTURE: if Edge, try to get non-UIA: at first get UIA, then get its WndContainer (it is cloaked), then get from it using the hard way.
 		}
 	}
 
@@ -173,7 +171,7 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
 	aResult.Zero();
 
 	HWND wTL = GetAncestor(w, GA_ROOT);
-	//if(!wTL || wTL != GetForegroundWindow()) return 1; //return quickly, anyway would fail. No, does not work with Edge.
+	//if(!wTL || wTL != GetForegroundWindow()) return 1; //return quickly, anyway would fail. No, does not work with some windows.
 	if(!wTL) return 1;
 
 	bool screenReader = false;
@@ -201,8 +199,6 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
 		HRESULT hr = AccUiaFocused(&aResult.acc);
 		if(hr) return hr;
 		aResult.misc.flags = eAccMiscFlags::UIA;
-
-		//Edge bug: gets wrong element. Without this flag works well.
 	} else {
 		Smart<IAccessible> aw;
 		HRESULT hr = ao::AccFromWindow(w, OBJID_CLIENT, &aw, screenReader); if(hr) return hr;
@@ -215,11 +211,7 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
 		} else {
 			aResult = a2;
 
-			//works with Edge too.
-			//	The AO is in w, which is not in the main Edge window. It is in another process. It is cloaked.
-			//	Edge actually has AOs, but they are not in the main Edge window, therefore Find and FromXY don't see them. But Finds finds them if using w.
-
-			//never mind: cannot get focused AO of other UIA-only windows, eg Java FX.
+			//never mind: cannot get focused AO of UIA-only windows, eg Java FX.
 		}
 	}
 	return 0;

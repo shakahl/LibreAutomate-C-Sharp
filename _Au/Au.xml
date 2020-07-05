@@ -58,7 +58,7 @@
              </td>
             </tr>
             <tr>
-            <td>Edge web browser, JavaFX and other applications that don't have true accessible objects but have UI Automation elements.</td>
+            <td>JavaFX and other applications that don't have true accessible objects but have UI Automation elements.</td>
              <td>
               <ol>
                <li>To find AOs in these applications, need flag <see cref="F:Au.Types.AFFlags.UIA"/>.</li>
@@ -1085,8 +1085,8 @@
             <exception cref="T:Au.Types.AuException">Failed to scroll, or the object does not support scrolling.</exception>
             <remarks>
             This function works with these objects:
-            - Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="F:Au.Types.AFFlags.NotInProc"/>.
-            - Objects in Edge browser, standard treeview and listview controls, some other. With Find use flag <see cref="F:Au.Types.AFFlags.UIA"/>.
+            - Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, Edge, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="F:Au.Types.AFFlags.NotInProc"/>.
+            - Objects standard treeview and listview controls, some other. With <b>Find</b> use flag <see cref="F:Au.Types.AFFlags.UIA"/>.
             </remarks>
         </member>
         <member name="T:Au.Types.AFFlags">
@@ -1127,18 +1127,17 @@
             Disadvantages: 1. Much slower. 2. Some properties are not supported, for example HTML attributes (while searching and later). 3. And more.
             Even without this flag, the default search method is not used with Windows Store app windows, console windows, most Java windows, windows of protected processes and processes of higher [](xref:uac) integrity level, Firefox web page if its multiprocess feature is not disabled.
             Some windows have child controls that belong to a different process or thread than the window. Example - Internet Explorer. When searching in such windows, the default search method is not used when searching in these controls. Workaround - find the control(s) and search in it/them. For it can be used one of: 1. With Internet Explorer use role prefix "web:". 2. Find the control with <see cref="M:Au.AWnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.AWnd,System.Boolean},System.Int32)"/> and search in it. 3. Use <see cref="M:Au.AAcc.Finder.Find(Au.AWnd,Au.AWnd.ChildFinder)"/>.
-            Don't need this flag when searching in AAcc (then it is inherited from the Acc variable).
+            Don't need this flag when searching in AAcc (then it is inherited from the AAcc variable).
             See also: <see cref="P:Au.AAcc.MiscFlags"/>.
             </summary>
         </member>
         <member name="F:Au.Types.AFFlags.UIA">
             <summary>
             Use UI Automation API.
-            Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements.
-            Examples of such windows: Microsoft Edge web browser (web page), JavaFX applications.
+            Need this flag to find objects in windows that don't support accessible objects but support UI Automation elements. For example JavaFX applications.
             Objects found with this flag never have HtmlX properties, but can have <see cref="P:Au.AAcc.UiaId"/>.
             This flag can be used with most other windows too.
-            Don't use this flag when searching in AAcc (then it is inherited from the Acc variable) or web page (role prefix "web:" etc).
+            Don't use this flag when searching in AAcc (then it is inherited from the AAcc variable) or web page (role prefix "web:" etc).
             See also: <see cref="P:Au.AAcc.MiscFlags"/>.
             </summary>
         </member>
@@ -1364,8 +1363,23 @@
             Like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid.
             </summary>
         </member>
+        <member name="M:Au.Types.Api.GetCursorPos(Au.Types.POINT@)">
+            <summary>
+            GetPhysicalCursorPos.
+            </summary>
+            <remarks>
+            Gets DPI physical cursor pos, ie always in pixels.
+            The classic GetCursorPos API behavior is undefined. Sometimes physical, sometimes logical.
+            Make sure the process is fully DPI-aware.
+            </remarks>
+        </member>
         <member name="F:Au.Types.Api.WINDOWPLACEMENT.flags">
-            <summary> WPF_ </summary>
+            <summary> WPF_ </summary>//TODO: don't use prefix WPF
+        </member>
+        <member name="M:Au.Types.Api.WindowFromPoint(Au.Types.POINT)">
+            <summary>
+            WindowFromPhysicalPoint.
+            </summary>
         </member>
         <member name="F:Au.Types.Api.AuExtraInfo">
             <summary>
@@ -3820,29 +3834,6 @@
         <member name="F:Au.Types.GBBFlags.Validate">
             <summary>Perform validation like OK button. For example if it is Apply button.</summary>
         </member>
-        <member name="F:Au.Types.GBBFlags.SizeLikeOkCancel">
-            <summary>Set minimal width/height like of OK and Cancel buttons.</summary>
-        </member>
-        <member name="T:Au.Types.CheckBool">
-            <summary>
-            <see cref="T:System.Windows.Controls.CheckBox"/> that can be used like bool.
-            For example instead of <c>if(c.IsChecked == true)</c> can be used <c>if(c)</c> or <c>if(c.True)</c>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.CheckBool.#ctor">
-            
-        </member>
-        <member name="P:Au.Types.CheckBool.True">
-            <summary>
-            Gets or sets <see cref="P:System.Windows.Controls.Primitives.ToggleButton.IsChecked"/>.
-            The 'get' function returns true if <b>IsChecked</b> is true; false if it is false or null.
-            </summary>
-        </member>
-        <member name="M:Au.Types.CheckBool.op_Implicit(Au.Types.CheckBool)~System.Boolean">
-            <summary>
-            Returns true if <see cref="P:System.Windows.Controls.Primitives.ToggleButton.IsChecked"/> == true.
-            </summary>
-        </member>
         <member name="T:Au.Types.TBFlags">
             <summary>
             Used with <see cref="P:Au.AToolbar.MiscFlags"/>.
@@ -6200,21 +6191,45 @@
             <summary>
             Need top-level window. If at that point is a control, gets its top-level parent.
             Don't use together with NeedControl.
-            If none of flags NeedWindow and NeedControl are specified, the function gets exactly what is at that point (control or top-level window).
             </summary>
         </member>
         <member name="F:Au.Types.WXYFlags.NeedControl">
             <summary>
             Need a control (child window). Returns default(AWnd) if there is no control at that point.
             Don't use together with NeedWindow.
-            If none of flags NeedWindow and NeedControl are specified, the function gets exactly what is at that point (control or top-level window).
+            Without flags NeedWindow and NeedControl the function gets control or top-level window.
             </summary>
         </member>
         <member name="F:Au.Types.WXYFlags.Raw">
             <summary>
-            Just call API <msdn>WindowFromPoint</msdn>.
-            Faster but less accurate with controls. Does not see disabled controls, does not prefer non-transparent controls.
+            Just call API <msdn>WindowFromPhysicalPoint</msdn>.
+            Faster, but skips disabled controls and in some cases gets transparent control like group box although a smaller visible sibling is there.
             Not used with flag NeedWindow.
+            </summary>
+        </member>
+        <member name="T:Au.Types.WXYCFlags">
+            <summary>
+            Flags for <see cref="M:Au.AWnd.ChildFromXY(Au.Types.Coord,Au.Types.Coord,Au.Types.WXYCFlags)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXYCFlags.OrThis">
+            <summary>
+            If the point is in this window but not in a descendant control, return this. Default - return default(AWnd).
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXYCFlags.ScreenXY">
+            <summary>
+            The point is in screen coordinates. Default - client area.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXYCFlags.DirectChild">
+            <summary>
+            Must be direct child of this. Default - any descendant.
+            </summary>
+        </member>
+        <member name="F:Au.Types.WXYCFlags.Inside">
+            <summary>
+            If the point is not in client area, don't look for descendants; if with flag <b>OrThis</b> and the point is in this (non-client area), return this, else return default(AWnd).
             </summary>
         </member>
         <member name="T:Au.Types.RWCEtc">
@@ -8103,19 +8118,27 @@
         </member>
         <member name="M:Au.AIcon.HandleToIcon(System.IntPtr,System.Boolean)">
             <summary>
-            Converts unmanaged icon to Icon object.
-            Returns null if hIcon is default(IntPtr).
+            Converts unmanaged icon to <b>Icon</b> object.
+            Returns null if <i>hIcon</i> is default(IntPtr).
             </summary>
             <param name="hIcon">Icon handle.</param>
             <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/>.</param>
         </member>
         <member name="M:Au.AIcon.HandleToImage(System.IntPtr,System.Boolean)">
             <summary>
-            Converts unmanaged icon to Bitmap object and destroys the unmanaged icon.
-            Returns null if hIcon is default(IntPtr) or if fails to convert.
+            Converts unmanaged icon to <b>Bitmap</b> object and destroys the unmanaged icon.
+            Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
             </summary>
             <param name="hIcon">Icon handle.</param>
-            <param name="destroyIcon">If true (default), destroys the unmanaged icon.</param>
+            <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
+        </member>
+        <member name="M:Au.AIcon.HandleToImageSource(System.IntPtr,System.Boolean)">
+            <summary>
+            Converts unmanaged icon to <b>ImageSource</b> object and destroys the unmanaged icon.
+            Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
+            </summary>
+            <param name="hIcon">Icon handle.</param>
+            <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
         </member>
         <member name="M:Au.AIcon.ParseIconLocation(System.String@,System.Int32@)">
             <summary>
@@ -9805,6 +9828,12 @@
             Example: <c>if(AVersion.WinVer >= AVersion.Win8) ...</c>
             </summary>
         </member>
+        <member name="P:Au.AVersion.WinBuild">
+            <summary>
+            Gets Windows build number.
+            For example 14393 for Windows 10 version 1607.
+            </summary>
+        </member>
         <member name="F:Au.AVersion.Win7">
             <summary>
             Classic Windows version major+minor values that can be used with <see cref="P:Au.AVersion.WinVer"/>.
@@ -9842,6 +9871,46 @@
         <member name="P:Au.AVersion.MinWin10">
             <summary>
             true if Windows 10 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_1607">
+            <summary>
+            true if Windows 10 version 1607 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_1703">
+            <summary>
+            true if Windows 10 version 1703 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_1709">
+            <summary>
+            true if Windows 10 version 1709 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_1803">
+            <summary>
+            true if Windows 10 version 1803 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_1809">
+            <summary>
+            true if Windows 10 version 1809 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_1903">
+            <summary>
+            true if Windows 10 version 1903 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_1909">
+            <summary>
+            true if Windows 10 version 1909 or later.
+            </summary>
+        </member>
+        <member name="P:Au.AVersion.MinWin10_2004">
+            <summary>
+            true if Windows 10 version 2004 or later.
             </summary>
         </member>
         <member name="P:Au.AVersion.Is32BitProcess">
@@ -18010,42 +18079,64 @@
             Currently this class and this library don't support multiple screens that have different DPI. The Windows OS supports it since version 8.1.
             </remarks>
         </member>
-        <member name="P:Au.Util.ADpi.BaseDPI">
+        <member name="P:Au.Util.ADpi.OfThisProcess">
             <summary>
-            Gets DPI of the primary screen.
+            Gets DPI of this process.
             </summary>
             <remarks>
-            On newer Windows versions, users can change DPI without logoff-logon. This function gets the setting that was after logon.
+            It is DPI of the primary screen when this process started. Used by API that aren't per-monitor DPI aware.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.ADpi.OfWindow(Au.AWnd)">
+            <summary>
+            Gets DPI of a window.
+            Returns <see cref="P:Au.Util.ADpi.OfThisProcess"/> if fails or if Windows version is less than 8.1.
+            </summary>
+            <remarks>
+            On Windows 10 1607 and later uses API <msdn>GetDpiForWindow</msdn>. On Windows 8.1 and early Windows 10 uses API <msdn>GetDpiForMonitor</msdn>; it's less reliable. Older Windows versions don't support multiple screens with different DPI, therefore returns the system DPI.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.ADpi.OfScreen(System.IntPtr)">
+            <summary>
+            Gets DPI of a screen.
+            Returns <see cref="P:Au.Util.ADpi.OfThisProcess"/> if fails or if Windows version is less than 8.1.
+            </summary>
+            <remarks>
+            Uses API <msdn>GetDpiForMonitor</msdn>.
             </remarks>
         </member>
         <member name="P:Au.Util.ADpi.SmallIconSize_">
             <summary>
             Gets small icon size that depends on DPI of the primary screen.
-            Width and Height are <see cref="P:Au.Util.ADpi.BaseDPI"/>/6, which is 16 if DPI is 96 (100%).
+            Width and Height are <see cref="P:Au.Util.ADpi.OfThisProcess"/>/6, which is 16 if DPI is 96 (100%).
             </summary>
         </member>
         <member name="M:Au.Util.ADpi.ScaleInt(System.Int32)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.BaseDPI"/> isn't 96 (100%), returns scaled i. Else returns i.
+            If DPI <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
             </summary>
-            <param name="i"></param>
+        </member>
+        <member name="M:Au.Util.ADpi.ScaleInt(Au.AWnd,System.Int32)">
+            <summary>
+            If DPI <see cref="M:Au.Util.ADpi.OfWindow(Au.AWnd)"/> isn't 96 (100%), returns scaled i. Else returns i.
+            </summary>
         </member>
         <member name="M:Au.Util.ADpi.ScaleSize(Au.Types.SIZE)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.BaseDPI"/> isn't 96 (100%), returns scaled z. Else returns z.
+            If <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled z. Else returns z.
             Note: for images use <see cref="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)"/>.
             </summary>
             <param name="z"></param>
         </member>
         <member name="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.BaseDPI"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
+            If <see cref="P:Au.Util.ADpi.OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
             </summary>
             <param name="image"></param>
         </member>
         <member name="M:Au.Util.ADpi.ScaleImage(System.Drawing.Image,System.Boolean)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.BaseDPI"/> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
+            If <see cref="P:Au.Util.ADpi.OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
             </summary>
             <param name="image"></param>
             <param name="disposeOld">If performed scaling (it means created new image), dispose old image.</param>
@@ -23202,6 +23293,83 @@
             Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
             </summary>
         </member>
+        <member name="T:Au.AWnd.More.SavedRect">
+            <summary>
+            Helps to save and restore window rectangle and state in correct way (ensure in screen, per-monitor-DPI-aware, etc).
+            </summary>
+            <example>
+            <code><![CDATA[
+            class Form9 : Form {
+            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test";
+            	const string c_rvalue = @"Form9.Rect";
+            	
+            	public Form9() {
+            		this.StartPosition = FormStartPosition.Manual;
+            		if(Registry.GetValue(c_rkey, c_rvalue, null) is string s1) {
+            			var v = AWnd.More.SavedRect.FromString(s1);
+            			this.Bounds = v.NormalizeRect();
+            			if(v.Maximize) this.WindowState = FormWindowState.Maximized;
+            		}
+            	}
+            
+            	protected override void OnFormClosing(FormClosingEventArgs e) {
+            		Registry.SetValue(c_rkey, c_rvalue, new AWnd.More.SavedRect(this.Hwnd()).ToString());
+            		base.OnFormClosing(e);
+            	}
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.RawRect">
+            <summary>
+            Window rectangle in normal state (not maximized/minimized), as retrieved by API <msdn>GetWindowPlacement</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.Dpi">
+            <summary>
+            <see cref="M:Au.Util.ADpi.OfWindow(Au.AWnd)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.Maximize">
+            <summary>
+            The window should be maximized.
+            </summary>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.IsToolWindow">
+            <summary>
+            <see cref="P:Au.AWnd.IsToolWindow"/>. If false, <see cref="P:Au.AWnd.More.SavedRect.RawRect"/> may have an offset that depends on work area.
+            </summary>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.ToString">
+            <summary>
+            Converts this object to string for saving.
+            The string is very simple, like "1 2 3 4 5 6".
+            </summary>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.FromString(System.String,Au.AWnd.More.SavedRect@)">
+            <summary>
+            Creates <b>SavedRect</b> from string created by <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
+            Returns false if the string is null or invalid.
+            </summary>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.#ctor(Au.AWnd)">
+            <summary>
+            Gets window rectangle and state for saving. Usually called when closing the window.
+            See also <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.NormalizeRect">
+            <summary>
+            Gets real rectangle for restoring saved window rectangle.
+            </summary>
+            <remarks>
+            It is recommended to call this before creating window, and create window with the returned rectangle. Also set maximized state if <see cref="P:Au.AWnd.More.SavedRect.Maximize"/>.
+            If it is not possible, call this when window is already created but still invisible. However then may need to set window rectangle two times, because the window may be for example DPI-scaled when moving to another screen etc.
+            
+            This function ensures the window is in screen, ensures correct size when screen DPI changed, etc.
+            </remarks>
+        </member>
         <member name="M:Au.AWnd.ThrowIf0">
             <summary>
             If <see cref="P:Au.AWnd.Is0"/>, throws <see cref="T:Au.Types.AuWndException"/>.
@@ -23405,17 +23573,23 @@
             <param name="noAnimation">Use SetWindowPlacement (no animation).</param>
             <exception cref="T:Au.Types.AuWndException"/>
         </member>
-        <member name="M:Au.AWnd.GetWindowPlacement_(Au.Types.Api.WINDOWPLACEMENT@,System.String)">
+        <member name="M:Au.AWnd.GetWindowPlacement_(Au.Types.Api.WINDOWPLACEMENT@,System.Boolean,System.String)">
             <summary>
             Initializes a WINDOWPLACEMENT struct and calls API <msdn>GetWindowPlacement</msdn>.
             </summary>
+            <param name="wp"></param>
+            <param name="rectInScreen">Remove workarea thickness from wp.rcNormalPosition.</param>
+            <param name="errStr">If not null, throws it if fails.</param>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
             <exception cref="T:Au.Types.AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
         </member>
-        <member name="M:Au.AWnd.SetWindowPlacement_(Au.Types.Api.WINDOWPLACEMENT@,System.String)">
+        <member name="M:Au.AWnd.SetWindowPlacement_(Au.Types.Api.WINDOWPLACEMENT@,System.Boolean,System.String)">
             <summary>
             Sets WINDOWPLACEMENT <b>length</b> field and calls API <msdn>SetWindowPlacement</msdn>.
             </summary>
+            <param name="wp"></param>
+            <param name="rectInScreen">wp.rcNormalPosition is without workarea thickness.</param>
+            <param name="errStr">If not null, throws it if fails.</param>
             <exception cref="T:Au.Types.AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
         </member>
         <member name="T:Au.AWnd.Internal_">
@@ -24823,12 +24997,52 @@
         <member name="M:Au.AWnd.GetWnd.#ctor(Au.AWnd)">
             
         </member>
-        <member name="M:Au.AWnd.GetWnd.Left(System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.AWnd.GetWnd.SiblingLeft">
             <summary>
-            Gets a sibling control to the left from this.
+            Gets nearest visible sibling control to the left from this.
+            Returns default(AWnd) if not found.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+            </remarks>
+        </member>
+        <member name="M:Au.AWnd.GetWnd.SiblingRight">
+            <summary>
+            Gets nearest visible sibling control to the right from this.
+            Returns default(AWnd) if not found.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+            </remarks>
+        </member>
+        <member name="M:Au.AWnd.GetWnd.SiblingAbove">
+            <summary>
+            Gets nearest visible sibling control above this.
+            Returns default(AWnd) if not found.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+            </remarks>
+        </member>
+        <member name="M:Au.AWnd.GetWnd.SiblingBelow">
+            <summary>
+            Gets nearest visible sibling control to below this.
+            Returns default(AWnd) if not found.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+            <remarks>
+            This function is used mostly with controls, but supports top-level windows too. Skips maximized/minimized windows and desktop.
+            </remarks>
+        </member>
+        <member name="M:Au.AWnd.GetWnd.SiblingLeft(System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            Gets a visible sibling control to the left from this.
             Returns default(AWnd) if there is no sibling.
             </summary>
-            <param name="distance">Horizontal distance from the left of this control. Default 10.</param>
+            <param name="distance">Horizontal distance from the left of this control.</param>
             <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
             <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
             <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -24836,12 +25050,12 @@
             This function is used mostly with controls, but supports top-level windows too.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.GetWnd.Right(System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.AWnd.GetWnd.SiblingRight(System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Gets a sibling control to the right from this.
+            Gets a visible sibling control to the right from this.
             Returns default(AWnd) if there is no sibling.
             </summary>
-            <param name="distance">Horizontal distance from the right of this control. Default 10.</param>
+            <param name="distance">Horizontal distance from the right of this control.</param>
             <param name="yOffset">Vertical offset from the top of this control. If negative - up. Default 5.</param>
             <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
             <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -24849,12 +25063,12 @@
             This function is used mostly with controls, but supports top-level windows too.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.GetWnd.Above(System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.AWnd.GetWnd.SiblingAbove(System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Gets a sibling control above this.
+            Gets a visible sibling control above this.
             Returns default(AWnd) if there is no sibling.
             </summary>
-            <param name="distance">Vertical distance from the top of this control. Default 10.</param>
+            <param name="distance">Vertical distance from the top of this control.</param>
             <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
             <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
             <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -24862,12 +25076,12 @@
             This function is used mostly with controls, but supports top-level windows too.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.GetWnd.Below(System.Int32,System.Int32,System.Boolean)">
+        <member name="M:Au.AWnd.GetWnd.SiblingBelow(System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Gets a sibling control below this.
+            Gets a visible sibling control below this.
             Returns default(AWnd) if there is no sibling.
             </summary>
-            <param name="distance">Vertical distance from the bottom of this control. Default 10.</param>
+            <param name="distance">Vertical distance from the bottom of this control.</param>
             <param name="xOffset">Horizontal offset from the left of this control. If negative - to the left. Default 5.</param>
             <param name="topChild">If at that point is a visible child of the sibling, get that child. Default false.</param>
             <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
@@ -25039,35 +25253,28 @@
             Calls API <msdn>GetDesktopWindow</msdn>. It gets the virtual parent window of all top-level windows.
             </summary>
             <remarks>
-            <note>It is not the desktop window (see <see cref="P:Au.AWnd.GetWnd.Desktop"/>) that displays icons and wallpaper.</note>
+            <note>It is not the desktop window (see <see cref="M:Au.AWnd.GetWnd.Desktop(Au.AWnd@,Au.AWnd@)"/>) that displays icons and wallpaper.</note>
             </remarks>
         </member>
-        <member name="P:Au.AWnd.GetWnd.Shell">
+        <member name="P:Au.AWnd.GetWnd.ShellWindow">
             <summary>
             Calls API <msdn>GetShellWindow</msdn>. It gets a window of the shell process (usually process "explorer", class name "Progman").
             Returns default(AWnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
             </summary>
             <remarks>
-            It can be the window that contains desktop icons (see <see cref="P:Au.AWnd.GetWnd.Desktop"/>) or other window of the same thread.
+            It can be the window that contains desktop icons (see <see cref="M:Au.AWnd.GetWnd.Desktop(Au.AWnd@,Au.AWnd@)"/>) or other window of the same thread.
             </remarks>
         </member>
-        <member name="P:Au.AWnd.GetWnd.Desktop">
+        <member name="M:Au.AWnd.GetWnd.Desktop(Au.AWnd@,Au.AWnd@)">
             <summary>
-            Gets the desktop window that displays desktop icons and wallpaper in its child control <see cref="P:Au.AWnd.GetWnd.DesktopControl"/>.
+            Gets the desktop window and its child control that displays desktop icons and wallpaper.
+            Returns false if fails.
             </summary>
+            <param name="window">Receives the desktop window. Class name "Progman" or "WorkerW".</param>
+            <param name="control">Receives the control of "SysListView32" class that contains icons and wallpaper.</param>
             <remarks>
-            <note>It is not API <msdn>GetDesktopWindow</msdn> (<see cref="P:Au.AWnd.GetWnd.Root"/>)</note>
-            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
-            Returns default(AWnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
-            </remarks>
-        </member>
-        <member name="P:Au.AWnd.GetWnd.DesktopControl">
-            <summary>
-            Gets the control of "SysListView32" class that contains desktop icons and wallpaper. It is a child of <see cref="P:Au.AWnd.GetWnd.Desktop"/>.
-            </summary>
-            <remarks>
-            <note>This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.</note>
-            Returns default(AWnd) if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
+            This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.
+            Fails if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
             </remarks>
         </member>
         <member name="M:Au.AWnd.GetWnd.IsMainWindow(Au.AWnd,System.Boolean,System.Boolean)">
@@ -25504,9 +25711,7 @@
             </param>
             <param name="flags"></param>
             <remarks>
-            Alternatively can be used API <msdn>WindowFromPoint</msdn>, <msdn>ChildWindowFromPointEx</msdn> or <msdn>RealChildWindowFromPoint</msdn>, but all they have various limitations and are not very useful in automation scripts.
-            This function gets non-transparent controls that are behind (in the Z order) transparent controls (group button, tab control etc); supports more control types than <msdn>RealChildWindowFromPoint</msdn>. Also does not skip disabled controls. All this is not true with flag Raw.
-            This function is not very fast, probably 0.3 - 1 ms.
+            Unlike API <msdn>WindowFromPhysicalPoint</msdn> etc, this function: does not skip disabled controls; always skips transparent control like group box if a smaller sibling is there. All this is not true with flag Raw.
             </remarks>
             <example>
             Find window at 100 200.
@@ -25528,30 +25733,48 @@
             More info: <see cref="M:Au.AWnd.FromXY(Au.Types.POINT,Au.Types.WXYFlags)"/>.
             </summary>
         </member>
-        <member name="M:Au.AWnd.ChildFromXY(Au.Types.Coord,Au.Types.Coord,System.Boolean,System.Boolean)">
+        <member name="M:Au.AWnd.ChildFromXY(Au.Types.Coord,Au.Types.Coord,Au.Types.WXYCFlags)">
             <summary>
-            Gets child control from point.
-            Returns default(AWnd) if the point is not in a child control or not in the client area of this window.
+            Gets descendant control from point.
+            By default returns default(AWnd) if the point is not in a child control; it depends on <i>flags</i>.
             </summary>
-            <param name="x">X coordinate in the client area of this window. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="y">Y coordinate in the client area of this window. Can be <b>Coord.Reverse</b> etc.</param>
-            <param name="screenXY">The coordinates are relative to the pimary screen, not to the client area.</param>
-            <param name="directChild">Get direct child, not a child of a child and so on.</param>
+            <param name="x">X coordinate in client area or screen (if flag <b>ScreenXY</b>). Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
+            <param name="y">Y coordinate.</param>
+            <param name="flags"></param>
             <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
         </member>
-        <member name="M:Au.AWnd.ChildFromXY(Au.Types.POINT,System.Boolean,System.Boolean)">
-            <param name="p">Coordinates in the client area of this window.</param>
-            <param name="screenXY"></param>
-            <param name="directChild"></param>
+        <member name="M:Au.AWnd.ChildFromXY(Au.Types.POINT,Au.Types.WXYCFlags)">
+            <summary>
+            Gets descendant control from point.
+            By default returns default(AWnd) if the point is not in a child control; it depends on <i>flags</i>.
+            </summary>
+            <param name="p">Coordinates in client area or screen (if flag <b>ScreenXY</b>).</param>
+            <param name="flags"></param>
             <exception cref="T:Au.Types.AuWndException">This variable is invalid (window not found, closed, etc).</exception>
+        </member>
+        <member name="M:Au.AWnd._FromXY(Au.Types.POINT,System.Boolean@)">
+            <summary>
+            Gets window or control from point.
+            Returns default(AWnd) if failed (unlikely).
+            </summary>
+            <param name="p">Point in screen.</param>
+            <param name="isChild">Receives true if control, false if top-level or failed.</param>
+        </member>
+        <member name="M:Au.AWnd._ChildFromXY(Au.Types.POINT,Au.Types.WXYCFlags)">
+            <summary>
+            Gets descendant control from point. This can be top-level window or control.
+            If there is no descendant, the return value depends on <i>flags</i>.
+            </summary>
+            <param name="p">Point in client area or screen (if flag <b>ScreenXY</b>).</param>
+            <param name="flags"></param>
         </member>
         <member name="M:Au.AWnd._SiblingXY(Au.AWnd._SibXY,System.Int32,System.Int32,System.Boolean)">
             <summary>
-            Get sibling control in space: left, right, above or below.
+            Gets sibling control in space: left, right, above or below.
             Returns default(AWnd) if there is no sibling.
             </summary>
             <param name="direction"></param>
-            <param name="distance">Distance from this control (from its edge) in the specified direction. Default 10.</param>
+            <param name="distance">Distance from this control (from its edge) in the specified direction.</param>
             <param name="edgeOffset">
             Distance in perpendicular direction, along the specified edge. Default 5.
             If <i>direction</i> is <b>Left</b> or <b>Right</b>, 0 is the top edge, 1 is 1 pixel down, -1 is 1 pixel up, and so on.
@@ -25683,16 +25906,16 @@
             </summary>
             <seealso cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Au.AWnd.SaveRectAndState(System.Boolean)">
+        <member name="M:Au.AWnd.SaveRect(System.Boolean)">
             <summary>
-            Gets window position, size and state stored in a string that can be used with <see cref="M:Au.AWnd.RestoreRectAndState(System.String,System.Boolean,System.Boolean)"/>.
+            Gets window position, size and state stored in a string that can be used with <see cref="M:Au.AWnd.RestoreSavedRect(System.String,System.Boolean,System.Boolean)"/>.
             Returns null if failed. Supports <see cref="T:Au.ALastError"/>.
             </summary>
-            <param name="canBeMinimized">If now the window is minimized, let <see cref="M:Au.AWnd.RestoreRectAndState(System.String,System.Boolean,System.Boolean)"/> make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
+            <param name="canBeMinimized">If now the window is minimized, let <see cref="M:Au.AWnd.RestoreSavedRect(System.String,System.Boolean,System.Boolean)"/> make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
         </member>
-        <member name="M:Au.AWnd.RestoreRectAndState(System.String,System.Boolean,System.Boolean)">
+        <member name="M:Au.AWnd.RestoreSavedRect(System.String,System.Boolean,System.Boolean)">
             <summary>
-            Restores window position, size and state that is stored in a string created by <see cref="M:Au.AWnd.SaveRectAndState(System.Boolean)"/>.
+            Restores window position, size and state that is stored in a string created by <see cref="M:Au.AWnd.SaveRect(System.Boolean)"/>.
             </summary>
             <param name="s">The string. Can be null/"".</param>
             <param name="ensureInScreen">Call <see cref="M:Au.AWnd.EnsureInScreen(Au.AScreen,System.Boolean)"/>. Even when s is null/"". Default true.</param>
@@ -25847,6 +26070,12 @@
             </summary>
             <param name="t"></param>
         </member>
+        <member name="M:AExtWpf.IsCheck(System.Windows.Controls.CheckBox)">
+            <summary>
+            Returns true if <see cref="P:System.Windows.Controls.Primitives.ToggleButton.IsChecked"/> == true.
+            </summary>
+            <param name="t"></param>
+        </member>
         <member name="T:AGuiBuilder">
             <summary>
             With this class you can create windows with controls, for example for data input.
@@ -25864,7 +26093,7 @@
             
             Note: WPF starts slowly and uses much memory. It is normal if to show the first window in process takes 500-1000 ms and the process uses 30 MB of memory, whereas WinForms takes 250 ms / 10 MB and native takes 50 ms / 2 MB. However WinForms becomes slower than WPF if there are more than 100 controls in window. This library uses WPF because it is the most powerful and works well with high DPI screens.
             
-            WPF has many control types, for example <see cref="T:System.Windows.Controls.Button"/>, <see cref="T:System.Windows.Controls.Label"/>, <see cref="T:System.Windows.Controls.TextBox"/>, <see cref="T:System.Windows.Controls.ComboBox"/>. Most are in namespaces <b>System.Windows.Controls</b> and <b>System.Windows.Controls.Primitives</b>. This library adds these control classes that wrap some WPF controls to make them simpler to use: <see cref="T:Au.Types.CheckBool"/>. Also on the internet you can find lots of libraries containing WPF controls and themes. For example, search for <i>github awesome dotnet C#</i>. Note: use .NET Core libraries, not old .NET Framework 4.x libraries. Many libraries have both versions.
+            WPF has many control types, for example <see cref="T:System.Windows.Controls.Button"/>, <see cref="T:System.Windows.Controls.CheckBox"/>, <see cref="T:System.Windows.Controls.TextBox"/>, <see cref="T:System.Windows.Controls.ComboBox"/>, <see cref="T:System.Windows.Controls.Label"/>. Most are in namespaces <b>System.Windows.Controls</b> and <b>System.Windows.Controls.Primitives</b>. Also on the internet you can find many libraries containing WPF controls and themes. For example, search for <i>github awesome dotnet C#</i>. Many libraries are open-source, and most can be found in GitHub (source, info and sometimes compiled files). Compiled files usually can be downloaded from <see href="https://www.nuget.org/"/> as packages. A nupkg file is a zip file. Extract it and use the dll file. Also take the xml and pdb files if available. Note: use .NET Core libraries, not old .NET Framework 4.x libraries. Many libraries have both versions. If original library is only Framework 4, look in NuGet for its Core version.
             
             By default don't need XAML. When need, you can load XAML strings and files with <see cref="T:System.Windows.Markup.XamlReader"/>. For example when you want to apply a theme from a library or add something to resources. See examples.
             </remarks>
@@ -25874,11 +26103,11 @@
             var b = new AGuiBuilder("Example").WinSize(400) //create Window object with Grid control; set window width 400
             	.R.Add("Text", out TextBox text1).Focus() //add label and text box control in first row
             	.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three") //in second row add label and combo box control with items
-            	.R.Add(out CheckBool c1, "Check") //in third row add check box control
+            	.R.Add(out CheckBox c1, "Check") //in third row add check box control
             	.R.AddOkCancel() //finally add standard OK and Cancel buttons
             	.End();
             if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
-            AOutput.Write(text1.Text, combo1.SelectedIndex); if(c1) AOutput.Write("c1 checked"); //get user input from control variables
+            AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck()); //get user input from control variables
             ]]></code>
             Dialog window with TabControl (code from guiBuilderSnippet).
             <code><![CDATA[
@@ -25898,7 +26127,7 @@
             
             _Page("Page2")
             	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
-            	.R.Add(out CheckBool _, "Check")
+            	.R.Add(out CheckBox _, "Check")
             	.End();
             
             //tc.SelectedIndex = 1;

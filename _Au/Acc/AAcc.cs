@@ -68,7 +68,7 @@ namespace Au
 	///  </td>
 	/// </tr>
 	/// <tr>
-	/// <td>Edge web browser, JavaFX and other applications that don't have true accessible objects but have UI Automation elements.</td>
+	/// <td>JavaFX and other applications that don't have true accessible objects but have UI Automation elements.</td>
 	///  <td>
 	///   <ol>
 	///    <li>To find AOs in these applications, need flag <see cref="AFFlags.UIA"/>.</li>

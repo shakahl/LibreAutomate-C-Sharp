@@ -40,6 +40,8 @@ namespace Au.Tools
 			InitializeComponent();
 			splitContainer3.SplitterWidth = splitContainer1.SplitterWidth;
 
+			this.Bounds = new Rectangle(35, 1114, 600, 600);
+
 			Action<SG.CellContext> f = _grid_ZValueChanged;
 			_grid.ZValueChanged += f;
 			_grid2.ZValueChanged += f;
@@ -56,9 +58,9 @@ namespace Au.Tools
 		{
 			base.OnLoad(e);
 
-			AWnd w = (AWnd)this;
-			var wp = Program.Settings.tools_AWnd_wndPos;
-			if(wp != null) try { w.RestoreRectAndState(wp, true); } catch { }
+			//AWnd w = (AWnd)this;
+			//var wp = Program.Settings.tools_AWnd_wndPos;
+			//if(wp != null) try { w.RestoreSavedRect(wp, true); } catch { }
 
 			if(!_con.Is0) _SetWnd(false);
 
@@ -73,7 +75,7 @@ namespace Au.Tools
 			_capt?.Dispose();
 
 			AWnd w = (AWnd)this;
-			Program.Settings.tools_AWnd_wndPos = w.SaveRectAndState();
+			Program.Settings.tools_AWnd_wndPos = w.SaveRect();
 
 			base.OnFormClosing(e);
 		}
@@ -454,7 +456,7 @@ namespace Au.Tools
 
 		#region tree
 
-		//Most of this code copied from the Acc form. Comments removed.
+		//Most of this code copied from the AAcc form. Comments removed.
 
 		(_WndNode xRoot, _WndNode xSelect) _CreateModel()
 		{

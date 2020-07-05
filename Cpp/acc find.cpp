@@ -355,7 +355,7 @@ private:
 			aw.misc.flags = eAccMiscFlags::UIA;
 			//FUTURE: to make faster, add option to use IUIAutomationElement::FindFirst or FindAll.
 			//	Problems: 1. No Level. 2. Cannot apply many flags; then in some cases can be slower or less reliable.
-			//	Not very important. Now fast enough. Edge only 3 times slower (outproc); many times faster than outproc Chrome. JavaFX almost same speed (inproc).
+			//	Not very important. Now fast enough. JavaFX almost same speed (inproc).
 		} else {
 			bool inCLIENT = !!(_flags & eAF::ClientArea);
 			hr = ao::AccFromWindowSR(w, inCLIENT ? OBJID_CLIENT : OBJID_WINDOW, &aw.acc);
@@ -579,7 +579,7 @@ private:
 		}
 		return false;
 		//note: don't add CLIENT. It is often used as default role. Although in some windows it can make faster.
-		//note: don't add PANE. Too often used for various purposes. Bug in Edge: the active non-first tab is PANE, state INVISIBLE|OFFSCREEN.
+		//note: don't add PANE. Too often used for various purposes.
 
 		//problem: some frameworks mark visible offscreen objects as invisible. Eg IE, WPF, Windows controls. Not Firefox, Chrome.
 		//	Can be even parent marked as invisible when child not. Then we'll not find child if parent's role is one of above.
