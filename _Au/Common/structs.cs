@@ -236,11 +236,10 @@ namespace Au.Types
 		/// <param name="rightOrWidth">right or width, depending on <i>useWidthHeight</i>.</param>
 		/// <param name="bottomOrHeight">bottom or height, depending on <i>useWidthHeight</i>.</param>
 		/// <param name="useWidthHeight">If true (default), <i>rightOrWidth</i>/<i>bottomOrHeight</i> are width/height. Else right/bottom.</param>
-		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true)
-		{
+		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true) {
 			this.left = left; this.top = top;
 			right = rightOrWidth; bottom = bottomOrHeight;
-			if(useWidthHeight) { right += left; bottom += top; }
+			if (useWidthHeight) { right += left; bottom += top; }
 		}
 
 		/// <summary>
@@ -267,11 +266,10 @@ namespace Au.Types
 		/// <summary>
 		/// Sets fields like the constructor <see cref="RECT(int,int,int,int,bool)"/>.
 		/// </summary>
-		public void Set(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true)
-		{
+		public void Set(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true) {
 			this.left = left; this.top = top;
 			right = rightOrWidth; bottom = bottomOrHeight;
-			if(useWidthHeight) { right += left; bottom += top; }
+			if (useWidthHeight) { right += left; bottom += top; }
 		}
 
 		/// <summary>
@@ -303,12 +301,14 @@ namespace Au.Types
 		/// <summary>
 		/// Gets horizontal center.
 		/// </summary>
-		public int CenterX => (int)(((long)left + right) / 2);
+		public int CenterX => left + (right - left) / 2;
+		//public int CenterX => (int)(((long)left + right) / 2);
 
 		/// <summary>
 		/// Gets vertical center.
 		/// </summary>
-		public int CenterY => (int)(((long)top + bottom) / 2);
+		public int CenterY => top + (bottom - top) / 2;
+		//public int CenterY => (int)(((long)top + bottom) / 2);
 
 		/// <summary>
 		/// Returns true if this rectangle contains the specified point.
@@ -374,10 +374,9 @@ namespace Au.Types
 		/// If width or height are negative, modifies this rectangle so that they would not be negative.
 		/// </summary>
 		/// <param name="swap">true - swap right/left, bottom/top; false - set right = left, bottom = top.</param>
-		public void Normalize(bool swap)
-		{
-			if(right < left) { if(swap) AMath.Swap(ref left, ref right); else right = left; }
-			if(bottom < top) { if(swap) AMath.Swap(ref top, ref bottom); else bottom = top; }
+		public void Normalize(bool swap) {
+			if (right < left) { if (swap) AMath.Swap(ref left, ref right); else right = left; }
+			if (bottom < top) { if (swap) AMath.Swap(ref top, ref bottom); else bottom = top; }
 		}
 
 		/// <summary>
@@ -392,8 +391,7 @@ namespace Au.Types
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="AWnd.MoveInScreen"/>.
 		/// </remarks>
-		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true)
-		{
+		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true) {
 			AWnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, screen, workArea, ensureInScreen);
 		}
 
@@ -404,8 +402,7 @@ namespace Au.Types
 		/// <param name="x">X coordinate relative to <i>r</i>. Default - center. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate relative to <i>r</i>. Default - center. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="ensureInRect">If part of rectangle is not in <i>r</i>, move and/or resize it so that entire rectangle would be in <i>r</i>.</param>
-		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = false)
-		{
+		public void MoveInRect(RECT r, Coord x = default, Coord y = default, bool ensureInRect = false) {
 			AWnd.Internal_.MoveInScreen(false, x, y, false, default, ref this, default, false, ensureInRect, r);
 		}
 
@@ -418,13 +415,11 @@ namespace Au.Types
 		/// <remarks>
 		/// This function can be used to calculate new window location before creating it. If window already exists, use <see cref="AWnd.EnsureInScreen"/>.
 		/// </remarks>
-		public void EnsureInScreen(AScreen screen = default, bool workArea = true)
-		{
+		public void EnsureInScreen(AScreen screen = default, bool workArea = true) {
 			AWnd.Internal_.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
 
-		public override string ToString()
-		{
+		public override string ToString() {
 			return $"{{L={left} T={top} W={Width} H={Height}}}";
 			//note: don't change the format. Some functions parse it.
 
@@ -452,9 +447,8 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="colorARGB"></param>
 		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
-		public ColorInt(int colorARGB, bool makeOpaque)
-		{
-			if(makeOpaque) colorARGB |= unchecked((int)0xFF000000);
+		public ColorInt(int colorARGB, bool makeOpaque) {
+			if (makeOpaque) colorARGB |= unchecked((int)0xFF000000);
 			this.color = colorARGB;
 		}
 
@@ -488,21 +482,20 @@ namespace Au.Types
 		/// If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
 		/// If s is null or invalid, sets c.color = 0 and returns false.
 		/// </remarks>
-		public static bool FromString(string s, out ColorInt c)
-		{
+		public static bool FromString(string s, out ColorInt c) {
 			c.color = 0;
-			if(s == null || s.Length < 2) return false;
-			if(s[0] == '0' && s[1] == 'x') {
+			if (s == null || s.Length < 2) return false;
+			if (s[0] == '0' && s[1] == 'x') {
 				c.color = s.ToInt(0, out int end);
-				if(end < 3) return false;
-				if(end <= 8) c.color |= unchecked((int)0xFF000000);
-			} else if(s[0] == '#') {
+				if (end < 3) return false;
+				if (end <= 8) c.color |= unchecked((int)0xFF000000);
+			} else if (s[0] == '#') {
 				c.color = s.ToInt(1, out int end, STIFlags.IsHexWithout0x);
-				if(end < 2) return false;
-				if(end <= 7) c.color |= unchecked((int)0xFF000000);
+				if (end < 2) return false;
+				if (end <= 7) c.color |= unchecked((int)0xFF000000);
 			} else {
 				c.color = Color.FromName(s).ToArgb();
-				if(c.color == 0) return false; //invalid is 0, black is 0xFF000000
+				if (c.color == 0) return false; //invalid is 0, black is 0xFF000000
 			}
 			return true;
 		}
@@ -519,10 +512,9 @@ namespace Au.Types
 		/// Returns color in COLORREF format. Does not modify this variable.
 		/// </summary>
 		/// <param name="zeroAlpha">Set the alpha byte = 0.</param>
-		public int ToBGR(bool zeroAlpha = true)
-		{
+		public int ToBGR(bool zeroAlpha = true) {
 			var r = SwapRB(color);
-			if(zeroAlpha) r &= 0xFFFFFF;
+			if (zeroAlpha) r &= 0xFFFFFF;
 			return r;
 		}
 
@@ -536,8 +528,7 @@ namespace Au.Types
 		public static explicit operator Color(ColorInt c) => Color.FromArgb(c.color);
 
 		/// <summary>Creates <see cref="System.Windows.Media.Color"/> from ColorInt.</summary>
-		public static explicit operator System.Windows.Media.Color(ColorInt c)
-		{
+		public static explicit operator System.Windows.Media.Color(ColorInt c) {
 			uint k = (uint)c.color;
 			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
 		}
@@ -562,8 +553,7 @@ namespace Au.Types
 		/// ARGB is used in .NET, GDI+ and HTML/CSS.
 		/// ABGR is used by most Windows API.
 		/// </summary>
-		public static int SwapRB(int color)
-		{
+		public static int SwapRB(int color) {
 			return (color & unchecked((int)0xff00ff00)) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff);
 		}
 
@@ -592,8 +582,7 @@ namespace Au.Types
 		/// Calls API <msdn>ColorAdjustLuma</msdn>.
 		/// Does not change hue and saturation. Does not use alpha.
 		/// </remarks>
-		internal ColorInt AdjustLuminance(int n, bool totalRange = false)
-		{
+		internal ColorInt AdjustLuminance(int n, bool totalRange = false) {
 			uint u = (uint)color;
 			u = Api.ColorAdjustLuma(u & 0xffffff, n, !totalRange) | (u & 0xFF000000);
 			return new ColorInt((int)u, false);
@@ -627,36 +616,32 @@ namespace Au.Types
 		/// <summary>
 		/// Calls VariantClear.
 		/// </summary>
-		public void Dispose()
-		{
+		public void Dispose() {
 			_Clear();
 		}
 
-		void _Clear()
-		{
-			if(vt >= Api.VARENUM.VT_BSTR) Api.VariantClear(ref this);
+		void _Clear() {
+			if (vt >= Api.VARENUM.VT_BSTR) Api.VariantClear(ref this);
 			else vt = 0; //info: VariantClear just sets vt=0 and does not clear other members
 		}
 
 		/// <summary>
 		/// Converts to string.
 		/// </summary>
-		public override string ToString()
-		{
+		public override string ToString() {
 			return _ToString();
 		}
 
-		string _ToString()
-		{
-			switch(vt) {
-			case Api.VARENUM.VT_BSTR: return value == default ? null : ValueBstr.ToString();
-			case Api.VARENUM.VT_I4: return value.ToString();
-			case 0: case Api.VARENUM.VT_NULL: return null;
+		string _ToString() {
+			switch (vt) {
+				case Api.VARENUM.VT_BSTR: return value == default ? null : ValueBstr.ToString();
+				case Api.VARENUM.VT_I4: return value.ToString();
+				case 0: case Api.VARENUM.VT_NULL: return null;
 			}
 			VARIANT v2 = default;
 			uint lcid = 0x409; //invariant
-			switch(vt & (Api.VARENUM)0xff) { case Api.VARENUM.VT_DATE: case Api.VARENUM.VT_DISPATCH: lcid = 0x400; break; } //LOCALE_USER_DEFAULT
-			if(0 != Api.VariantChangeTypeEx(ref v2, this, lcid, 2, Api.VARENUM.VT_BSTR)) return null; //2 VARIANT_ALPHABOOL
+			switch (vt & (Api.VARENUM)0xff) { case Api.VARENUM.VT_DATE: case Api.VARENUM.VT_DISPATCH: lcid = 0x400; break; } //LOCALE_USER_DEFAULT
+			if (0 != Api.VariantChangeTypeEx(ref v2, this, lcid, 2, Api.VARENUM.VT_BSTR)) return null; //2 VARIANT_ALPHABOOL
 			return v2.value == default ? null : v2.ValueBstr.ToStringAndDispose();
 		}
 
@@ -664,8 +649,7 @@ namespace Au.Types
 		/// Converts to string.
 		/// Disposes this VARIANT.
 		/// </summary>
-		public string ToStringAndDispose()
-		{
+		public string ToStringAndDispose() {
 			var r = _ToString();
 			Dispose();
 			return r;
@@ -706,18 +690,16 @@ namespace Au.Types
 		/// Converts to string.
 		/// Does not dispose.
 		/// </summary>
-		public override string ToString()
-		{
-			var p = _p; if(p == null) return null;
+		public override string ToString() {
+			var p = _p; if (p == null) return null;
 			return Marshal.PtrToStringBSTR((IntPtr)_p);
 		}
 
 		/// <summary>
 		/// Converts to string and disposes.
 		/// </summary>
-		public string ToStringAndDispose()
-		{
-			var p = _p; if(p == null) return null;
+		public string ToStringAndDispose() {
+			var p = _p; if (p == null) return null;
 			int len = Api.SysStringLen(p);
 
 			//rejected:
@@ -729,10 +711,9 @@ namespace Au.Types
 			return r;
 		}
 
-		public void Dispose()
-		{
+		public void Dispose() {
 			var t = _p;
-			if(t != null) {
+			if (t != null) {
 				_p = null;
 				Api.SysFreeString(t);
 			}

@@ -24,7 +24,7 @@ namespace Au
 	/// Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
 	/// </summary>
 	/// <threadsafety static="true" instance="true"/>
-	public sealed class AIconCache
+	internal sealed class AIconCache
 	{
 		XElement _x;
 		Hashtable _table;
@@ -78,7 +78,7 @@ namespace Au
 		/// Get file type icon, depending on filename extension. Use this to avoid getting separate image object for each file of same type.
 		/// This is ignored if filename extension is ".ico" or ".exe" or starts with ".exe," or ".dll,".
 		/// </param>
-		/// <param name="giFlags">Flags for <see cref="AIcon.GetFileIconImage"/>.</param>
+		/// <param name="giFlags">Flags for <see cref="AIcon.OfFile"/>.</param>
 		/// <param name="autoUpdate">
 		/// If not null, the cached image will be auto-updated when changed. Then will be called this function. It can update the image in UI.
 		/// How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
@@ -88,7 +88,7 @@ namespace Au
 		/// <remarks>
 		/// If the icon is in the memory cache, gets it from there.
 		/// Else if it is in the file cache, gets it from there and adds to the memory cache.
-		/// Else gets from file (uses <see cref="AIcon.GetFileIconImage"/> and adds to the file cache and to the memory cache.
+		/// Else gets from file (uses <see cref="AIcon.OfFile"/> and adds to the file cache and to the memory cache.
 		/// </remarks>
 		public Bitmap GetImage(string file, bool useExt, IconGetFlags giFlags = 0, Action<Bitmap, object> autoUpdate = null, object auParam = null)
 		{
@@ -114,7 +114,7 @@ namespace Au
 		/// Returns null if the icon is not cached and the callback function returns null.
 		/// </summary>
 		/// <param name="name">Some unique name. It is used to identify this image in cache.</param>
-		/// <param name="callback">Called to get image. To convert icon handle to image, use <see cref="AIcon.HandleToImage"/>.</param>
+		/// <param name="callback">Called to get image. See <see cref="AIcon.ToBitmap"/>.</param>
 		/// <param name="autoUpdate"></param>
 		/// <param name="auParam"></param>
 		/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
@@ -143,10 +143,7 @@ namespace Au
 					try {
 						if(_x == null && AFile.ExistsAsFile(_cacheFile)) {
 							_x = AExtXml.LoadElem(_cacheFile);
-							if(_iconSize != _x.Attr("size", 0) || ADpi.OfThisProcess != _x.Attr("dpi", 0)) {
-								_x = null;
-								ADebug.Print("info: cleared icon cache");
-							}
+							if(_iconSize != _x.Attr("size", 0)) _x = null;
 
 							//FUTURE: Delete unused entries. Maybe try to auto-update changed icons.
 							//	Not very important, because there is ClearCache.
@@ -187,7 +184,7 @@ namespace Au
 		bool _LoadImage(out Bitmap b, string file, IconGetFlags giFlags, Func<Bitmap> callback)
 		{
 			if(callback != null) b = callback();
-			else b = AIcon.GetFileIconImage(file, _iconSize, giFlags);
+			else b = AIcon.OfFile(file, _iconSize, giFlags).ToBitmap();
 			return b != null;
 		}
 
@@ -208,7 +205,6 @@ namespace Au
 					if(_x == null) {
 						_x = new XElement("images");
 						_x.SetAttributeValue("size", _iconSize);
-						_x.SetAttributeValue("dpi", ADpi.OfThisProcess);
 					}
 					_x.Add(d);
 				}

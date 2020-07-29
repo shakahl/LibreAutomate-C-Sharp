@@ -142,7 +142,7 @@ static class EdResources
 	/// <summary>
 	/// Same as <see cref="GetImageUseCache"/>, but appends suffix "_20" or "_24" or "_32" if high DPI.
 	/// </summary>
-	public static Bitmap GetImageUseCacheDpi(string name) => GetImageUseCache(_DpiImage(name));
+	public static Bitmap GetImageUseCacheDpi(string name, int dpi) => GetImageUseCache(_DpiImage(name, dpi));
 
 	/// <summary>
 	/// Gets a non-string resource (eg Bitmap) from project resources. Each time returns a new copy.
@@ -161,14 +161,19 @@ static class EdResources
 	/// <summary>
 	/// Same as <see cref="GetImageNoCache"/>, but appends suffix "_20" or "_24" or "_32" if high DPI.
 	/// </summary>
-	public static Bitmap GetImageNoCacheDpi(string name) => GetImageNoCache(_DpiImage(name));
+	public static Bitmap GetImageNoCacheDpi(string name, int dpi) => GetImageNoCache(_DpiImage(name, dpi));
 
-	static string _DpiImage(string name)
+	static string _DpiImage(string name, int dpi)
 	{
-		int dpi = Au.Util.ADpi.OfThisProcess;
 		if(dpi >= 120) name += dpi < 144 ? "_20" : (dpi < 192 ? "_24" : "_32");
 		return name;
 	}
+
+	/// <summary>
+	/// Gets available image dpi for specified dpi.
+	/// Available are 96, 120, 144, 192. If unavailable exact, gets nearest available.
+	/// </summary>
+	public static int DpiToImageDpi(int dpi) => dpi < 120 ? 96 : (dpi < 144 ? 120 : (dpi < 192 ? 144 : 192));
 
 	/// <summary>
 	/// Gets text of an embedded text resource.

@@ -30,6 +30,8 @@ namespace Au.Controls
 		public const int SCI_ISXINMARGIN = 9506;
 		public const int SCI_DRAGDROP = 9507;
 
+		public const int MK_SCI_NOFOCUS = 0x10000;
+
 		[DllImport("SciLexer", EntryPoint = "Scintilla_DirectFunction")]
 		public static extern LPARAM Sci_Call(LPARAM sci, int message, LPARAM wParam = default, LPARAM lParam = default);
 

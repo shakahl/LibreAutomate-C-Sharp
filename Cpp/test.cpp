@@ -4,7 +4,6 @@
 #include "stdafx.h"
 #include "cpp.h"
 
-
 #if _DEBUG
 //#if 1
 
@@ -51,6 +50,41 @@ inline HMODULE GetCurrentModuleHandle()
 {
 	return (HMODULE)&__ImageBase;
 }
+
+
+LRESULT CALLBACK ClipboardHook(int code, WPARAM wParam, LPARAM lParam) {
+	if(code < 0) goto g1;
+	auto m = (MSG*)lParam;
+	if(m->message == WM_CLIPBOARDUPDATE) {
+		//Print("WM_CLIPBOARDUPDATE");
+		char cn[256];
+		if(0 == GetClassNameA(m->hwnd, cn, sizeof(cn)) || 0 != strcmp(cn, "Au.DWP")) {
+			m->message = 0;
+			//Print(cn);
+		}
+		return 0;
+	}
+g1:
+	return CallNextHookEx(0, code, wParam, lParam);
+
+	//After unhooking, this dll remains loaded until hooked threads receive messages.
+	//	To unload when [un]installing, installer calls Cpp_Unload which broadcasts messages to all top-level and message-only windows.
+	//	To unload when building, Cpp project's pre-link event runs "unload AuCpp dll.exe" (created from QM2 macro "unload AuCpp dll") which calls Cpp_Unload.
+}
+
+EXPORT HHOOK Cpp_Clipboard(HHOOK hh)
+{
+	if(hh == NULL) {
+		auto hh = SetWindowsHookExW(WH_GETMESSAGE, ClipboardHook, GetCurrentModuleHandle(), 0);
+		return hh;
+	} else {
+		UnhookWindowsHookEx(hh);
+	}
+	return NULL;
+}
+
+
+
 
 LRESULT CALLBACK KeyHookProc(int code, WPARAM wParam, LPARAM lParam)
 {

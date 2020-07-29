@@ -708,6 +708,9 @@ namespace Au.Types
 		//[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
 		//internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, void* pvParam, uint fWinIni);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool SystemParametersInfoForDpi(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni, int dpi);
+
 		#endregion
 
 		/// <summary>
@@ -879,6 +882,9 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool AdjustWindowRectEx(ref RECT lpRect, WS dwStyle, bool bMenu, WS2 dwExStyle);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool AdjustWindowRectExForDpi(ref RECT lpRect, WS dwStyle, bool bMenu, WS2 dwExStyle, int dpi);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ChangeWindowMessageFilter(int message, uint dwFlag);
@@ -1362,6 +1368,9 @@ namespace Au.Types
 
 		[DllImport("shcore.dll", PreserveSig = true)]
 		internal static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out int dpiX, out int dpiY);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern LPARAM SetThreadDpiAwarenessContext(LPARAM dpiContext);
 	}
 
 }

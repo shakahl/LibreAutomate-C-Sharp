@@ -99,7 +99,7 @@ class CiTools
 		bool above = dontCover != null;
 		if (w.Window.Visible) w.Window.Hwnd().ZorderTop();
 		var r = CiUtil.GetCaretRectFromPos(doc, position, inScreen: true);
-		int i = Au.Util.ADpi.ScaleInt(100);
+		int i = Au.Util.ADpi.Scale(100);
 		r.Width = i;
 		r.Inflate(i, 0);
 		if(dontCover != null) {

@@ -131,7 +131,7 @@ namespace Au.Types
 		public event Action<ToolStripItem> ItemAdded;
 
 		///// <summary>
-		///// Flags to pass to <see cref="AIcon.GetFileIcon"/>. See <see cref="IconGetFlags"/>.
+		///// Flags to pass to <see cref="AIcon.OfFile"/>. See <see cref="IconGetFlags"/>.
 		///// </summary>
 		///// <remarks>
 		///// This property is applied to all items.
@@ -140,7 +140,7 @@ namespace Au.Types
 		// If not full path, searches in <see cref="AFolders.ThisAppImages"/>; see also <see cref="MTBase.IconFlags"/>.
 
 		/// <summary>
-		/// Image width and height. Default is <see cref="AIcon.SizeSmall"/>.
+		/// Image width and height. Default 16.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">The 'set' function is called after adding items.</exception>
 		/// <remarks>
@@ -148,12 +148,14 @@ namespace Au.Types
 		/// To set different icon size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
 		/// </remarks>
 		public int IconSize {
-			get => MainToolStrip.ImageScalingSize.Width;
+			get => _iconSize;
 			set {
 				if(MainToolStrip.Items.Count != 0) throw new InvalidOperationException();
+				_iconSize = value;
 				MainToolStrip.ImageScalingSize = new Size(value, value);
 			}
 		}
+		int _iconSize = 16;
 
 		/// <summary>
 		/// Gets "invoke method" image from Au library resources. Can be used for <see cref="DefaultIcon"/> of toolbars and menus. Common to <see cref="AMenu"/> and <see cref="AToolbar"/>.
@@ -176,7 +178,7 @@ namespace Au.Types
 		static Image _GetCommonIcon(bool submenu)
 		{
 			string name = submenu ? "mtHamburgerMenu" : "mtInvokeMethod";
-			int i = ADpi.ScaleInt(16); if(i >= 20) name += i < 24 ? "_20" : (i < 32 ? "_24" : "_32");
+			int i = ADpi.Scale(16); if(i >= 20) name += i < 24 ? "_20" : (i < 32 ? "_24" : "_32");
 			return Resources.Resources.ResourceManager.GetObject(name, Resources.Resources.Culture) as Bitmap; //13 ms first time
 		}
 
@@ -242,7 +244,7 @@ namespace Au.Types
 						imageResult = ic.ToBitmap();
 						break;
 					case StockIcon ic:
-						imageResult = AIcon.GetStockIconImage(ic, IconSize);
+						imageResult = AIcon.Stock(ic, IconSize).ToBitmap();
 						break;
 					case string s when s.Length > 0:
 						if(Util.Image_.IsImageStringPrefix(s)) {
@@ -250,7 +252,7 @@ namespace Au.Types
 						} else if(s.Starts("key:")) {
 							item.ImageKey = s[4..];
 						} else if(useDefault != 0) {
-							imageResult = AIcon.GetFileIconImage(s, IconSize);
+							imageResult = AIcon.OfFile(s, IconSize).ToBitmap();
 						} else {
 							_SetItemFileIcon(isTB, item, s); //async
 						}
@@ -282,7 +284,7 @@ namespace Au.Types
 		void _SetItemFileIcon(bool isTB, ToolStripItem item, string s)
 		{
 			//var perf = APerf.Create();
-			item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
+			//item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
 			_AsyncIcons ??= new Util.IconsAsync_(); //used by submenus too
 			var submenuIcons = (item.Owner as _IAuToolStrip).SubmenuAsyncIcons;
@@ -299,8 +301,9 @@ namespace Au.Types
 			//Reserve space for image.
 			//If toolbar, need to do it for each button, else only for the first item (it sets size of all items).
 			if(isFirstImage) {
-				var z = item.Owner.ImageScalingSize;
-				_imagePlaceholder = new Bitmap(z.Width, z.Height);
+				//var z = item.Owner.ImageScalingSize;//TODO
+				//_imagePlaceholder = new Bitmap(z.Width, z.Height);
+				_imagePlaceholder = new Bitmap(_iconSize, _iconSize);
 			}
 			if(isTB || isFirstImage) item.Image = _imagePlaceholder;
 			//perf.NW();
@@ -316,7 +319,8 @@ namespace Au.Types
 			if(_AsyncIcons == null) return;
 			if(list != null) _AsyncIcons.AddRange(list);
 			if(_AsyncIcons.Count == 0) return;
-			_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, 0 /*IconFlags*/, ts);
+			//_AsyncIcons.GetAllAsync(_AsyncCallback, ts.ImageScalingSize.Width, 0 /*IconFlags*/, ts);//TODO
+			_AsyncIcons.GetAllAsync(_AsyncCallback, IconSize, 0 /*IconFlags*/, ts);
 		}
 
 		void _AsyncCallback(Util.IconsAsync_.Result r, object objCommon, int nLeft)
@@ -324,13 +328,7 @@ namespace Au.Types
 			var ts = objCommon as ToolStrip;
 			var item = r.obj as ToolStripItem;
 
-			//AOutput.Write(r.image, r.hIcon);
-			//Image im = r.image;
-			//if(im == null && r.hIcon != default) im = AIcon.HandleToImage(r.hIcon);
-
-			Image im = AIcon.HandleToImage(r.hIcon, true);
-
-			//if(im != null) _SetItemImage(ts, item, im);
+			Image im = r.icon.ToBitmap(true);
 			if(im != null) {
 				_SetItemImage(ts, item, im);
 
@@ -579,12 +577,13 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// Has implicit conversions from:
-	/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.GetFileIcon"/>.
+	/// - string - path of .ico or any other file or folder or non-file object. See <see cref="AIcon.OfFile"/>.
 	/// - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
 	/// - string with prefix "key:" - imagelist image key (<see cref="ToolStripItem.ImageKey"/>).
 	/// - int - imagelist image index (<see cref="ToolStripItem.ImageIndex"/>).
 	/// - Image - image object.
 	/// - Icon - icon object.
+	/// - <see cref="AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="AIcon.ToBitmap"/> and disposes the native icon.
 	/// - <see cref="StockIcon"/> - a shell icon.
 	/// - FolderPath - folder path.
 	/// - default - no icon. If <see cref="MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
@@ -605,12 +604,14 @@ namespace Au.Types
 		///
 		public static implicit operator MTImage(Icon icon) => new MTImage(icon);
 		///
+		public static implicit operator MTImage(AIcon icon) => new MTImage(icon.ToBitmap());
+		///
 		public static implicit operator MTImage(StockIcon icon) => new MTImage(icon);
 		///
 		public static implicit operator MTImage(FolderPath path) => new MTImage((string)path);
 
 		/// <summary>
-		/// Gets the raw value stored in this variable. Can be string, int, Image, Icon, null.
+		/// Gets the raw value stored in this variable. Can be string, int, Image, Icon, StockIcon, null.
 		/// </summary>
 		public object Value => _o;
 	}

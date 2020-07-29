@@ -558,7 +558,7 @@ namespace Au
 		/// <summary>
 		/// Default <see cref="MouseClosingDistance"/> value of <b>AMenu</b> instances.
 		/// </summary>
-		public static int DefaultMouseClosingDistance { get; set; } = Util.ADpi.ScaleInt(200);
+		public static int DefaultMouseClosingDistance { get; set; } = Util.ADpi.Scale(200);
 
 		const int c_wmCloseWparam = 827549482;
 		List<ToolStripDropDown> _closing_allMenus = new List<ToolStripDropDown>(); //all menu windows, including hidden submenus

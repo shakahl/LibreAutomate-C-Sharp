@@ -33,6 +33,8 @@ namespace Au.Tools
 		{
 			InitializeComponent();
 
+			AWnd.More.SavedRect.Restore(this, Program.Settings.tools_AWinImage_wndPos);
+
 			_grid.ZValueChanged += _grid_ZValueChanged;
 		}
 
@@ -40,23 +42,11 @@ namespace Au.Tools
 		{
 			base.OnLoad(e);
 
-			AWnd w = (AWnd)this;
-			var wp = Program.Settings.tools_AWinImage_wndPos;
-			if(wp != null) try { w.RestoreSavedRect(wp, true); } catch { }
-
 			_info.Z.SetText(c_infoForm);
 			_FillGrid();
 		}
 
 		protected override void OnFormClosing(FormClosingEventArgs e)
-		{
-			AWnd w = (AWnd)this;
-			Program.Settings.tools_AWinImage_wndPos = w.SaveRect();
-
-			base.OnFormClosing(e);
-		}
-
-		protected override void OnFormClosed(FormClosedEventArgs e)
 		{
 			if(_image != null) {
 				_pict.Image = null;
@@ -64,7 +54,9 @@ namespace Au.Tools
 				_image = null;
 			}
 
-			base.OnFormClosed(e);
+			Program.Settings.tools_AWinImage_wndPos = new AWnd.More.SavedRect(this).ToString();
+
+			base.OnFormClosing(e);
 		}
 
 		private void _bCapture_Click(object sender, EventArgs e)
@@ -177,7 +169,7 @@ namespace Au.Tools
 				case "windowPixels":
 					if(!_onceInfoWindowPixels && _image != null) {
 						_onceInfoWindowPixels = true;
-						_errorProvider.Icon = AIcon.GetStockIcon(StockIcon.INFO, 16);
+						_errorProvider.Icon = AIcon.Stock(StockIcon.INFO).ToIcon();
 						_errorProvider.SetError(_bTest, "After changing 'Get window pixels' may need to capture again.\nClick Test. If not found, click Capture.");
 					}
 					break;

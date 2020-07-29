@@ -158,7 +158,7 @@ partial class PanelFiles : AuUserControlBase
 		void _Add(string path, bool bold)
 		{
 			var mi = dd.Items.Add(path, null, (o, u) => ZLoadWorkspace(o.ToString()));
-			if(bold) mi.Font = Au.Util.AFontsCached_.Bold;
+			if(bold) mi.Font = new Font(mi.Font, FontStyle.Bold);
 		}
 
 		dd.SuspendLayout();

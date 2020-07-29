@@ -40,7 +40,7 @@ namespace Au.Tools
 			InitializeComponent();
 			splitContainer3.SplitterWidth = splitContainer1.SplitterWidth;
 
-			this.Bounds = new Rectangle(35, 1114, 600, 600);
+			AWnd.More.SavedRect.Restore(this, Program.Settings.tools_AWnd_wndPos);
 
 			Action<SG.CellContext> f = _grid_ZValueChanged;
 			_grid.ZValueChanged += f;
@@ -58,11 +58,7 @@ namespace Au.Tools
 		{
 			base.OnLoad(e);
 
-			//AWnd w = (AWnd)this;
-			//var wp = Program.Settings.tools_AWnd_wndPos;
-			//if(wp != null) try { w.RestoreSavedRect(wp, true); } catch { }
-
-			if(!_con.Is0) _SetWnd(false);
+			if (!_con.Is0) _SetWnd(false);
 
 			_InitInfo();
 
@@ -74,8 +70,7 @@ namespace Au.Tools
 			_cCapture.Checked = false;
 			_capt?.Dispose();
 
-			AWnd w = (AWnd)this;
-			Program.Settings.tools_AWnd_wndPos = w.SaveRect();
+			Program.Settings.tools_AWnd_wndPos = new AWnd.More.SavedRect(this).ToString();
 
 			base.OnFormClosing(e);
 		}

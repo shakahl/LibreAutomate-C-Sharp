@@ -18,6 +18,7 @@ using Au.Types;
 
 namespace Au.Util
 {
+	//TODO: like AIcon
 	/// <summary>
 	/// Helps to load cursors, etc.
 	/// </summary>

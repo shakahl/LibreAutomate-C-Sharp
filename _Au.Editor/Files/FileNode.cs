@@ -393,7 +393,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		return EdResources.GetImageUseCache(k);
 	}
 
-	public static AIconCache IconCache = new AIconCache(AFolders.ThisAppDataLocal + @"fileIconCache.xml", AIcon.SizeSmall);
+	public static AIconCache IconCache = new AIconCache(AFolders.ThisAppDataLocal + @"fileIconCache.xml", 16);
 
 	///// <summary>
 	///// Gets or sets 'has triggers' flag.

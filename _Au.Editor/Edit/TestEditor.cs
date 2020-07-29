@@ -31,6 +31,7 @@ using Microsoft.CodeAnalysis.Host.Mef;
 using DiffMatchPatch;
 using System.Runtime;
 using System.Globalization;
+using System.Windows.Media.Imaging;
 
 #if TRACE
 
@@ -166,12 +167,40 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 	public unsafe void TestEditor()
 	{
+
+
 		Task.Run(() => {
-			for (; ; ) {
-				200.ms();
-				GC.Collect();
+			var w = +AWnd.Find("* Notepad", "Notepad");
+			w.Activate();
+			100.ms();
+			
+			var hh = Cpp.Cpp_Clipboard(default);
+
+			//AClipboard.Text = "test";
+			//AClipboard.Paste("123");
+			try {
+				AClipboard.Copy();
 			}
+			catch (Exception e) { AOutput.Write(e.ToStringWithoutStack()); }
+
+			ATime.SleepDoEvents(100);
+
+			hh = Cpp.Cpp_Clipboard(hh);
 		});
+
+
+		//new System.Windows.Application();
+		////var bitmapImage = new BitmapImage(new Uri("pack://application:,,,/Au.Editor;component/resources/png/folder.png"));
+		////var bitmapImage = new BitmapImage(new Uri("pack://application:,,,/resources/png/folder.png"));
+		//var bitmapImage = new BitmapImage(new Uri("/resources/png/folder.png", UriKind.Relative));
+		//AOutput.Write(bitmapImage);
+
+		//Task.Run(() => {
+		//	for (; ; ) {
+		//		200.ms();
+		//		GC.Collect();
+		//	}
+		//});
 
 		//InsertCode.UsingDirective("System.Windows.Forms;System.Drawing");
 

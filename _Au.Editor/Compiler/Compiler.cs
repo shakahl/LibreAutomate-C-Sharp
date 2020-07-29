@@ -405,7 +405,7 @@ namespace Au.Compiler
 							o = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);
 							break;
 						case ".ico":
-							//o = AIcon.GetFileIcon(path, size); //adds 4-bit icon, distorted
+							//o = AIcon.OfFile(path, size); //adds 4-bit icon, distorted
 							o = new System.Drawing.Icon(path); //adds of all sizes. At run time: var icon=new Icon(GetResourceIcon(), 16, 16).
 							break;
 						//case ".cur":

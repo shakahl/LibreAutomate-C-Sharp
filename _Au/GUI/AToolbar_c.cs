@@ -98,7 +98,7 @@ namespace Au
 					WS s1 = w.Style, s2 = _BorderStyle(value);
 					if(s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2);
 					//preserve client size and position
-					Api.AdjustWindowRectEx(ref r, _BorderStyle(value), false, WS2.TOOLWINDOW);
+					AWnd.More.WindowRectFromClientRect(ref r, _BorderStyle(value), WS2.TOOLWINDOW);
 					w.MoveLL(r, Native.SWP.FRAMECHANGED);
 				}
 #else //this simpler code does not preserve client size and position

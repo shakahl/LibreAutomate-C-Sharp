@@ -1,4 +1,6 @@
-﻿using System;
+﻿//#define TOPLEVEL
+
+using System;
 using System.Collections.Generic;
 #if true
 using System.Text;
@@ -44,15 +46,111 @@ using Au.Types;
 
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
+#if TOPLEVEL
+
+//// TEST C# 9 ////
+
+// TOP-LEVEL PROGRAMS
+
+//int i = 7;
+//AOutput.Write("no class", LocFunc(), args.Length, Thread.CurrentThread.GetApartmentState());
+
+//var v = new Abc();
+//v.Test();
+
+////[STAThread]
+//int LocFunc() {
+//	return i;
+//}
+
+//class Abc
+//{
+//	public void Test() {
+//		AOutput.Write("test", typeof(Abc).FullName);
+//	}
+//}
+
+
+// RECORDS
+
+//var p = new Product { Name = "asd", CategoryId = 4 };
+//p = p with { CategoryId = 10 };
+//AOutput.Write(p.Name, p.CategoryId);
+
+//public record Product
+//{
+//	public string Name { get; init; }
+//	public int CategoryId { get; init; }
+//}
+
+//public record Product2
+//{
+//	string Name;
+//	int CategoryId;
+//}
+
+
+// PATTERN-MATCHING
+
+//object o = "asdf";
+//switch (o) {
+//	case int: AOutput.Write("int"); break;
+//	case string: AOutput.Write("string"); break;
+//}
+
+//int i = 15;
+//switch (i) {
+//	case < 10: AOutput.Write("<10"); break;
+//	case >= 10 and <=20: AOutput.Write("10..20"); break;
+//}
+
+//if (o is not int) AOutput.Write("not");
+////if (o is not int and i is not double) AOutput.Write("not"); //no
+////if(i>=10 and i<=20) //no
+
+
+// TARGET-TYPING
+
+//System.Drawing.Point p = new(3, 5);
+//System.Drawing.Point pp = new();
+
+//Control c1 = null; Form f1 = null;
+//Control c = c1 ?? f1; // Shared base type
+////int? result = false ? 0 : null; // nullable value type //error
+
+
+// SKIP LOCALS-INIT
+
+//Skiiip();
+
+//[System.Runtime.CompilerServices.SkipLocalsInitAttribute]
+//unsafe void Skiiip() {
+//	var v = stackalloc long[1000];
+
+//	AOutput.Write(v[0]);
+//}
+
+
+// NATIVE INT
+
+//nint i = 5;
+////AOutput.Write(sizeof(nint));
+
+
+//////////////////////////////
+
+
+
+#else
+
 class Script : AScript
 {
 
 	class TestGC
 	{
-		~TestGC()
-		{
-			if(Environment.HasShutdownStarted) return;
-			if(AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
+		~TestGC() {
+			if (Environment.HasShutdownStarted) return;
+			if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
 			AOutput.Write("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
 			//ATimer.After(1, _ => new TestGC());
 			//var f = Program.MainForm; if(!f.IsHandleCreated) return;
@@ -62,10 +160,9 @@ class Script : AScript
 	}
 	static bool s_debug2;
 
-	void _MonitorGC()
-	{
+	void _MonitorGC() {
 		//return;
-		if(!s_debug2) {
+		if (!s_debug2) {
 			s_debug2 = true;
 			new TestGC();
 
@@ -204,8 +301,7 @@ class Script : AScript
 	//static extern int Cpp_Uninstall();
 
 
-	void TestMenu()
-	{
+	void TestMenu() {
 		var m = new AMenu();
 		m["One"] = o => AOutput.Write(o);
 		m["Two"] = o => AOutput.Write(o);
@@ -543,8 +639,7 @@ class Script : AScript
 	static void Bug1(string s = null, Func<Screen, bool> f = null) { }
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	void TestAScreen()
-	{
+	void TestAScreen() {
 		var w = AWnd.Active;
 		var s = new AScreen(w);
 		var d = s.GetScreenHandle();
@@ -661,8 +756,7 @@ class Script : AScript
 
 	}
 
-	void TestJSettings()
-	{
+	void TestJSettings() {
 		var se = Se.Load();
 		AOutput.Write(se.user);
 		//ATimer.After(1000, _ => se.user = AKeys.IsScrollLock ? "scroll" : "no");
@@ -671,8 +765,7 @@ class Script : AScript
 		Api.MessageBox(default, "JSettings", "test", 0x00040000);
 	}
 
-	void TestBitmapLockBitsDispose()
-	{
+	void TestBitmapLockBitsDispose() {
 		//Bitmap.FromFile(@"Q:\Test\qm small icon.png").Dispose();
 		//AOutput.Write("start");
 		//3.s();
@@ -716,25 +809,24 @@ class Script : AScript
 	static HashSet<object> hs2 = new HashSet<object>();
 	static System.Collections.Concurrent.ConcurrentDictionary<object, byte> cd = new System.Collections.Concurrent.ConcurrentDictionary<object, byte>();
 
-	void TestConcurrentSpeed()
-	{
+	void TestConcurrentSpeed() {
 		var a = new object[100];
-		for(int i = 0; i < a.Length; i++) a[i] = new object();
+		for (int i = 0; i < a.Length; i++) a[i] = new object();
 
 		APerf.SpeedUpCpu();
-		for(int i1 = 0; i1 < 7; i1++) {
+		for (int i1 = 0; i1 < 7; i1++) {
 			int n2 = a.Length;
 			APerf.First();
-			for(int i2 = 0; i2 < n2; i2++) { hs.Add(a[i2]); }
-			for(int i2 = 0; i2 < n2; i2++) { hs.Remove(a[i2]); }
+			for (int i2 = 0; i2 < n2; i2++) { hs.Add(a[i2]); }
+			for (int i2 = 0; i2 < n2; i2++) { hs.Remove(a[i2]); }
 			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { lock(hs2) hs2.Add(a[i2]); } //20% slower
-			for(int i2 = 0; i2 < n2; i2++) { lock(hs2) hs2.Remove(a[i2]); }
+			for (int i2 = 0; i2 < n2; i2++) { lock (hs2) hs2.Add(a[i2]); } //20% slower
+			for (int i2 = 0; i2 < n2; i2++) { lock (hs2) hs2.Remove(a[i2]); }
 			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { cd.TryAdd(a[i2], default); } //50% slower
-			for(int i2 = 0; i2 < n2; i2++) { cd.TryRemove(a[i2], out _); }
+			for (int i2 = 0; i2 < n2; i2++) { cd.TryAdd(a[i2], default); } //50% slower
+			for (int i2 = 0; i2 < n2; i2++) { cd.TryRemove(a[i2], out _); }
 			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { var gc = GCHandle.Alloc(a[i2]); gc.Free(); } //50% faster
+			for (int i2 = 0; i2 < n2; i2++) { var gc = GCHandle.Alloc(a[i2]); gc.Free(); } //50% faster
 			APerf.NW();
 			Thread.Sleep(100);
 		}
@@ -805,8 +897,7 @@ class Script : AScript
 	//		}
 	//	}
 
-	void TestMenuDefaultIcon()
-	{
+	void TestMenuDefaultIcon() {
 		var m = new AMenu();
 		var c = m.Control;
 
@@ -815,12 +906,12 @@ class Script : AScript
 		//c.BackColor = Color.Wheat;
 		//c.Font = new Font("Courier New", 20);
 
-		m.DefaultIcon = AIcon.GetFileIconImage(@"q:\app\macro.ico", 16);
-		m.DefaultSubmenuIcon = AIcon.GetFileIconImage(@"q:\app\menu.ico", 16);
+		m.DefaultIcon = AIcon.OfFile(@"q:\app\macro.ico", 16).ToBitmap();
+		m.DefaultSubmenuIcon = AIcon.OfFile(@"q:\app\menu.ico", 16).ToBitmap();
 		m.ExtractIconPathFromCode = true;
 		m["aa"] = null;
 		//m.LastMenuItem.ToolTipText = "TT";
-		using(m.Submenu("sub")) {
+		using (m.Submenu("sub")) {
 			m["bb"] = null;
 			m["dd", @"q:\app\copy.ico"] = null;
 			m["notepad"] = o => AFile.Run("notepad.exe");
@@ -832,8 +923,7 @@ class Script : AScript
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-	bool TestArrayExt(string[] a)
-	{
+	bool TestArrayExt(string[] a) {
 		return a.NE_();
 	}
 	//int TestArrayExt(string[] a)
@@ -854,8 +944,7 @@ class Script : AScript
 	/// <li>two.</li>
 	/// </ul>
 	/// </summary>
-	void TestMarkdownXmlDocComments()
-	{
+	void TestMarkdownXmlDocComments() {
 		string markdown = @"List:
 - one.
 - two.
@@ -918,8 +1007,7 @@ class Script : AScript
 	//		100.ms();
 	//	}
 	//}
-	void TestMenuDropdownBug()
-	{
+	void TestMenuDropdownBug() {
 		bool test = AKeys.IsScrollLock;
 		{
 			var m = new AMenu();
@@ -927,14 +1015,14 @@ class Script : AScript
 			ATimer.After(30, _ => m.Close());
 			m.Show();
 		}
-		for(int j = 0; j < 1; j++) {
+		for (int j = 0; j < 1; j++) {
 			ADebug.MemorySetAnchor_();
 
 			APerf.First();
 			var m = new AMenu();
-			if(test) m.Control.ShowItemToolTips = false;
+			if (test) m.Control.ShowItemToolTips = false;
 
-			for(int i = 0; i < 100; i++) {
+			for (int i = 0; i < 100; i++) {
 				m["1"] = o => AOutput.Write(o);
 			}
 			APerf.Next();
@@ -1004,8 +1092,7 @@ class Script : AScript
 	//void One(bool two) { }
 	//bool Two() => false;
 
-	void TestFirefoxAcc()
-	{
+	void TestFirefoxAcc() {
 		try {
 			//var w = +AWnd.Find("*- Mozilla Firefox", "MozillaWindowClass");
 			//var a = AAcc.FromWindow(w);
@@ -1013,25 +1100,26 @@ class Script : AScript
 			var w = +AWnd.Find("Au automation library and editor | Au - Mozilla Firefox", "MozillaWindowClass");
 			//var a = +AAcc.Find(w, "web:LINK", "Library");
 			var a = +AAcc.Find(w, "web:DOCUMENT");
-			a=+a.Navigate("ch2");
+			a = +a.Navigate("ch2");
 			//a = +a.Navigate("fi ne fi4 ne fi ne fi2");
 			//a=a.Find("LINK", "Library");
 
 			AOutput.Write(a.MiscFlags, a);
 
-			if(a.GetProperties("@", out var p)) {
+			if (a.GetProperties("@", out var p)) {
 				AOutput.Write(p.HtmlAttributes);
 			}
 
 		}
 		finally {
-			Cpp.Unload();
+#if DEBUG
+			Cpp.DebugUnload();
+#endif
 		}
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
-	void TestUnsafe()
-	{
+	void TestUnsafe() {
 		//var a = new byte[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 0 };
 		//ulong k = Unsafe.As<byte, ulong>(ref a[0]);
 		//AOutput.Write(k);
@@ -1045,19 +1133,19 @@ class Script : AScript
 		//f.SetFlag2(AFFlags.Reverse, false);
 		//AOutput.Write(f);
 
-		int k1=0,k2 = 0, k3=0, k4=0, k5=0;
+		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0;
 		APerf.SpeedUpCpu();
 		//if(f.HasAny(AFFlags.HiddenToo)) k3++;
-		for(int i1 = 0; i1 < 7; i1++) {
+		for (int i1 = 0; i1 < 7; i1++) {
 			int n2 = 10000;
 			APerf.First();
-			for(int i2 = 0; i2 < n2; i2++) { f.SetFlag(FAFlags.DontThrow, true); f.SetFlag(FAFlags.DontThrow, false); }
+			for (int i2 = 0; i2 < n2; i2++) { f.SetFlag(FAFlags.DontThrow, true); f.SetFlag(FAFlags.DontThrow, false); }
 			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { if(f.HasFlag(FAFlags.UseRawPath)) k1++; }
+			for (int i2 = 0; i2 < n2; i2++) { if (f.HasFlag(FAFlags.UseRawPath)) k1++; }
 			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { if(f.Has(FAFlags.UseRawPath)) k2++; }
+			for (int i2 = 0; i2 < n2; i2++) { if (f.Has(FAFlags.UseRawPath)) k2++; }
 			APerf.Next();
-			for(int i2 = 0; i2 < n2; i2++) { if(f.HasAny(FAFlags.UseRawPath)) k3++; }
+			for (int i2 = 0; i2 < n2; i2++) { if (f.HasAny(FAFlags.UseRawPath)) k3++; }
 			//APerf.Next();
 			//for(int i2 = 0; i2 < n2; i2++) { if(f.HasAny5(AFFlags.HiddenToo)) k5++; }
 			APerf.NW();
@@ -1066,33 +1154,29 @@ class Script : AScript
 		AOutput.Write(f, k1, k2, k3, k4, k5);
 	}
 
-	unsafe void _Main()
-	{
+	void TestNetCoreVersion() {
+		AOutput.Write(AFolders.NetRuntime);
+	}
+
+	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
-		//var b = new StringBuilder();
-		//b.Append("ff")
-		//				.Append("fs");
 
-		//var s = "asd";
-		//AOutput.Write(s[0]);
-
-		
-
+		TestNetCoreVersion();
 	}
 
 	[STAThread] static void Main(string[] args) { new Script(args); }
-	Script(string[] args)
-	{
+	Script(string[] args) {
 		AOutput.QM2.UseQM2 = true;
-		AOutput.Clear();
+		//AOutput.Clear();
 		Au.Util.AssertListener_.Setup();
 
 		//APerf.First();
 		try {
 			_Main();
 		}
-		catch(Exception ex) { AOutput.Write(ex); }
+		catch (Exception ex) { AOutput.Write(ex); }
 	}
 }
+#endif

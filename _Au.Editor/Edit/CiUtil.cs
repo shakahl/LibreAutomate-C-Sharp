@@ -60,8 +60,7 @@ static class CiUtil
 				case "unmanaged": //tested cases
 					return (null, word, HelpKind.ContextualKeyword, token);
 			}
-		}
-		else {
+		} else {
 			var k = token.Kind();
 
 			//PrintNode(token.GetPreviousToken());
@@ -131,8 +130,7 @@ static class CiUtil
 		var (symbol, keyword, helpKind, _) = GetSymbolEtcFromPos(out _);
 		if (symbol != null) {
 			url = GetSymbolHelpUrl(symbol);
-		}
-		else if (keyword != null) {
+		} else if (keyword != null) {
 			var s = helpKind switch
 			{
 				HelpKind.PreprocKeyword => "preprocessor directive",
@@ -142,8 +140,7 @@ static class CiUtil
 			s = $"C# {s} \"{keyword}\"";
 			//AOutput.Write(s); return;
 			url = _GoogleURL(s);
-		}
-		else if (helpKind == HelpKind.String) {
+		} else if (helpKind == HelpKind.String) {
 			int i = AMenu.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", owner: Panels.Editor.ZActiveDoc, byCaret: true);
 			switch (i) {
 				case 1: url = "C# strings"; break;
@@ -175,21 +172,17 @@ static class CiUtil
 			if (metadata.Name.Starts("Au.")) return null;
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();
-		}
-		else if (!sym.IsInSource()) { //eg an operator of string etc
+		} else if (!sym.IsInSource()) { //eg an operator of string etc
 			if (!(sym is IMethodSymbol me && me.MethodKind == MethodKind.BuiltinOperator)) return null;
 			//AOutput.Write(sym, sym.Kind, sym.QualifiedName());
 			//query = "C# " + sym.ToString(); //eg "string.operator +(string, string)", and Google finds just Equality
 			//query = "C# " + sym.QualifiedName(); //eg "System.String.op_Addition", and Google finds nothing
 			query = "C# " + sym.ToString().RegexReplace(@"\(.+\)$", "", 1).Replace('.', ' '); //eg C# string operator +, not bad
-		}
-		else if (sym.IsExtern) { //[DllImport]
+		} else if (sym.IsExtern) { //[DllImport]
 			query = sym.Name + " function";
-		}
-		else if (sym is INamedTypeSymbol ints && ints.IsComImport) { //[ComImport]
+		} else if (sym is INamedTypeSymbol ints && ints.IsComImport) { //[ComImport]
 			query = sym.Name + " " + ints.TypeKind.ToString().Lower();
-		}
-		else {
+		} else {
 			return null;
 		}
 
@@ -260,8 +253,7 @@ static class CiUtil
 					if (nc != null) {
 						var name = nc.Name.Identifier.Text;
 						foreach (var v in pa) if (v.Name == name) { p = v; break; }
-					}
-					else {
+					} else {
 						int i; var aa = alis.Arguments;
 						for (i = 0; i < aa.Count; i++) if ((object)aa[i] == asy) break;
 						if (i >= pa.Length && pa[^1].IsParams) i = pa.Length - 1;
@@ -429,13 +421,12 @@ static class CiUtil
 		}
 	}
 
-	static Bitmap[] s_images;
+	static (int dpi, Bitmap[] a)[] s_images;
 	static string[] s_imageNames;
 	const int c_nKinds = 18;
 
-	static void _InitImages() {
-		if (s_images == null) {
-			s_images = new Bitmap[c_nKinds + 3];
+	static Bitmap[] _InitImages(ref int dpi) {
+		if (s_imageNames == null) {
 			s_imageNames = new string[c_nKinds + 3] {
 				nameof(Resources.ciClass),
 				nameof(Resources.ciStructure),
@@ -460,21 +451,32 @@ static class CiUtil
 				nameof(Resources.ciOverlayInternal),
 			};
 		}
+		dpi = EdResources.DpiToImageDpi(dpi);
+		int i = 0;
+		if (s_images == null) s_images = new (int dpi, Bitmap[] a)[1];
+		else {
+			for (; i < s_images.Length; i++) if (s_images[i].dpi == dpi) goto g1;
+			Array.Resize(ref s_images, i + 1);
+		}
+		s_images[i].a = new Bitmap[c_nKinds + 3];
+		s_images[i].dpi = dpi;
+	g1:
+		return s_images[i].a;
 	}
 
-	static Bitmap _ResImage(int i) => EdResources.GetImageNoCacheDpi(s_imageNames[i]);
+	static Bitmap _ResImage(int i, int dpi) => EdResources.GetImageNoCacheDpi(s_imageNames[i], dpi);
 
-	public static Bitmap GetKindImage(CiItemKind kind) {
+	public static Bitmap GetKindImage(CiItemKind kind, int dpi) {
 		if (kind == CiItemKind.None) return null;
-		_InitImages();
-		return s_images[(int)kind] ??= _ResImage((int)kind);
+		var a = _InitImages(ref dpi);
+		return a[(int)kind] ??= _ResImage((int)kind, dpi);
 	}
 
-	public static Bitmap GetAccessImage(CiItemAccess access) {
+	public static Bitmap GetAccessImage(CiItemAccess access, int dpi) {
 		if (access == default) return null;
-		_InitImages();
+		var a = _InitImages(ref dpi);
 		int i = c_nKinds - 1 + (int)access;
-		return s_images[i] ??= _ResImage(i);
+		return a[i] ??= _ResImage(i, dpi);
 	}
 
 	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Event", "Field", "LocalVariable", "Constant", "EnumMember", "Namespace", "Keyword", "Label", "Snippet", "TypeParameter" }; //must match enum CiItemKind

@@ -406,12 +406,12 @@ namespace Au
 
 		/// <summary>
 		/// Font.
-		/// Default: <see cref="DefaultFont"/>.
+		/// If not set, uses <see cref="DefaultSmallFont"/>.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
-		public Font Font { get; set; }
+		public AOsdFont Font { get; set; }
 
 		/// <summary>
 		/// Text color.
@@ -539,7 +539,7 @@ namespace Au
 		///
 		public AOsd()
 		{
-			Font = DefaultFont;
+			Font = DefaultSmallFont;
 			_textColor = DefaultTextColor;
 			_backColor = DefaultBackColor;
 			_borderColor = DefaultBorderColor;
@@ -622,11 +622,9 @@ namespace Au
 			}
 
 			if(!Text.NE()) {
-				r.Inflate(0, -1);
-				var font = Font ?? DefaultFont;
 				var tff = TextFormatFlags; if(WrapWidth > 0) tff |= TextFormatFlags.WordBreak;
-				TextRenderer.DrawText(g, Text, font, r, (Color)TextColor, tff);
-				//TextRenderer.DrawText(g, Text, font, r, (Color)TextColor, Opacity==0 ? (Color)TransparentColor : (Color)BackColor, _textFormatFlags);
+				TextRenderer.DrawText(g, Text, _font, r, (Color)TextColor, tff);
+				//TextRenderer.DrawText(g, Text, _font, r, (Color)TextColor, Opacity==0 ? (Color)TransparentColor : (Color)BackColor, _textFormatFlags);
 			}
 		}
 
@@ -650,12 +648,13 @@ namespace Au
 
 				if(!Text.NE()) {
 					var screen = XY?.GetScreen() ?? DefaultScreen.GetScreenHandle();
+					int dpi = Util.ADpi.OfScreen(screen.Handle);
+					_font = (Font ?? DefaultSmallFont).CreateFont(dpi);
 					var rs = screen.WorkArea; z = new Size(rs.Width - zi.Width - 10, rs.Height - 14);
 					var tff = TextFormatFlags;
 					int ww = WrapWidth; if(ww > 0) { tff |= TextFormatFlags.WordBreak; if(ww < z.Width) z.Width = ww; }
-					var font = Font ?? DefaultFont;
-					z = TextRenderer.MeasureText(Text, font, z, tff);
-					z.Height += 4; //1 above text (eg for font Verdana) and 3 below (eg for font Segoe UI)
+					z = TextRenderer.MeasureText(Text, _font, z, tff);
+					z.Height += AMath.MulDiv(3, dpi, 96);
 				}
 
 				z.Width += zi.Width;
@@ -681,6 +680,7 @@ namespace Au
 
 			return r;
 		}
+		Font _font;
 
 		/// <summary>
 		/// Shows a tooltip-like OSD window with text and optionally icon.
@@ -732,7 +732,7 @@ namespace Au
 		/// <param name="doNotShow">See <see cref="ShowText"/>.</param>
 		/// <returns>Returns an <see cref="AOsd"/> object that can be used to change properties or close the OSD window.</returns>
 		/// <remarks>
-		/// Also sets these properties: <see cref="Font"/>=<see cref="DefaultTransparentTextFont"/>, <see cref="AOsdWindow.Opacity"/>=0.
+		/// Also sets these properties: <see cref="Font"/>=<see cref="DefaultBigFont"/>, <see cref="AOsdWindow.Opacity"/>=0.
 		/// </remarks>
 		public static AOsd ShowTransparentText(string text,
 			int secondsTimeout = 0, PopupXY xy = null,
@@ -747,7 +747,7 @@ namespace Au
 			o.Name = name;
 			o.ShowMode = showMode;
 
-			o.Font = s_transparentTextFont;
+			o.Font = s_bigFont;
 			o.Opacity = 0d;
 
 			if(!doNotShow) o.Show();
@@ -787,11 +787,15 @@ namespace Au
 			return o;
 		}
 
-		/// <summary>Default font for <see cref="ShowText"/> and <b>AOsd</b>. Default: <b>SystemFonts.MessageBoxFont</b> of size 12.</summary>
+		/// <summary>Default font for <see cref="ShowText"/> and <b>AOsd</b>. Default: Segoe UI 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
-		/// <remarks>The font object is cached, don't dispose.</remarks>
-		public static Font DefaultFont { get => s_defaultFont; set => s_defaultFont = value ?? throw new ArgumentNullException(); }
-		static Font s_defaultFont = Util.AFontsNonCached_.OfSize(12);
+		public static AOsdFont DefaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
+		static AOsdFont s_smallFont = new AOsdFont(12);
+
+		/// <summary>Default font for <see cref="ShowTransparentText"/>. Default: Default: Segoe UI 20.</summary>
+		/// <exception cref="ArgumentNullException"></exception>
+		public static AOsdFont DefaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
+		static AOsdFont s_bigFont = new AOsdFont(20);
 
 		/// <summary>Default text color for <see cref="ShowText"/> and <b>AOsd</b>. Default: 0xFF404040 (dark gray).</summary>
 		public static ColorInt DefaultTextColor { get; set; } = 0xFF404040;
@@ -801,11 +805,6 @@ namespace Au
 
 		/// <summary>Default background color for <see cref="ShowText"/> and <b>AOsd</b>. Default: 0xFFFFFFF0 (light yellow).</summary>
 		public static ColorInt DefaultBackColor { get; set; } = 0xFFFFFFF0;
-
-		/// <summary>Default font for <see cref="ShowTransparentText"/>. Default: "Tahoma" of size 18.</summary>
-		/// <exception cref="ArgumentNullException"></exception>
-		public static Font DefaultTransparentTextFont { get => s_transparentTextFont; set => s_transparentTextFont = value ?? throw new ArgumentNullException(); }
-		static Font s_transparentTextFont = new Font("Tahoma", 18);
 
 		/// <summary>Default text color for <see cref="ShowTransparentText"/>. Default: 0xFF8A2BE2 (Color.BlueViolet).</summary>
 		public static ColorInt DefaultTransparentTextColor { get; set; } = 0xFF8A2BE2;
@@ -847,5 +846,34 @@ namespace Au.Types
 		/// Waits <see cref="AOsd.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="ATime.SleepDoEvents"/>.
 		/// </summary>
 		Wait,
+	}
+
+	/// <summary>
+	/// Font size and family name for OSD classes.
+	/// </summary>
+	public class AOsdFont { //FUTURE: could be record
+		/// <summary>
+		/// Family name.
+		/// </summary>
+		public string Name { get; }
+
+		/// <summary>
+		/// Size.
+		/// On high-DPI screen the font size will be scaled.
+		/// </summary>
+		public int Size { get; }
+
+		/// <summary>
+		/// Creates font.
+		/// </summary>
+		/// <param name="dpi">DPI for scaling.</param>
+		public Font CreateFont(int dpi) => new Font(Name, AMath.MulDiv(Size, dpi, 96));
+
+		/// <param name="size">Sets <see cref="Size"/>.</param>
+		/// <param name="name">Sets <see cref="Name"/>. Default "Segoe UI".</param>
+		public AOsdFont(int size, string name = "Segoe UI") {
+			Size = size;
+			Name = name ?? "Segoe UI";
+		}
 	}
 }

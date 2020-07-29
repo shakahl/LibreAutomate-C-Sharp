@@ -63,7 +63,8 @@ partial class SciCode : AuScintilla
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
 
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
-		Z.MarginWidth(c_marginLineNumbers, 40 * Au.Util.ADpi.OfThisProcess / 96);
+		//Z.MarginWidth(c_marginLineNumbers, 40 * Au.Util.ADpi.OfThisProcess / 96);//TODO
+		Z.MarginWidth(c_marginLineNumbers, 40);
 
 		_InicatorsInit();
 

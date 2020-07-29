@@ -21,30 +21,27 @@ using Au.Types;
 /// </summary>
 static class EdDatabases
 {
-	public static ASqlite OpenRef()
-	{
+	public static ASqlite OpenRef() {
 		string copy = Program.Settings.db_copy_ref;
-		if(copy != null) {
+		if (copy != null) {
 			Program.Settings.db_copy_ref = null;
 			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
 		}
 		return new ASqlite(AFolders.ThisAppBS + "ref.db", SLFlags.SQLITE_OPEN_READONLY);
 	}
 
-	public static ASqlite OpenDoc()
-	{
+	public static ASqlite OpenDoc() {
 		string copy = Program.Settings.db_copy_doc;
-		if(copy != null) {
+		if (copy != null) {
 			Program.Settings.db_copy_doc = null;
 			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
 		}
 		return new ASqlite(AFolders.ThisAppBS + "doc.db", SLFlags.SQLITE_OPEN_READONLY);
 	}
 
-	public static ASqlite OpenWinapi()
-	{
+	public static ASqlite OpenWinapi() {
 		string copy = Program.Settings.db_copy_winapi;
-		if(copy != null) {
+		if (copy != null) {
 			Program.Settings.db_copy_winapi = null;
 			AFile.CopyTo(copy, AFolders.ThisApp, FIfExists.Delete);
 		}
@@ -74,42 +71,55 @@ static class EdDatabases
 	///			
 	/// Need to run this after changing Core version of C# projects (<TargetFramework>netcoreapp3.1</TargetFramework>). Also update COREVER2 etc in AppHost.cpp.
 	/// </remarks>
-	public static void CreateRefAndDoc(string dataDir = @"Q:\app\Au\Other\Data")
-	{
+	public static void CreateRefAndDoc(string dataDir = @"Q:\app\Au\Other\Data") {
 		Cursor.Current = Cursors.WaitCursor;
-		if(0 == AFolders.NetRuntimeBS.RegexReplace(@"(?i)\\shared\\(Microsoft\.NETCore\.App)\\.+", @"\packs\$1.Ref", out var refDir, 1)) throw new AuException();
-		//AOutput.Write(refDir);
+		string dirPacks = APath.Normalize_(AFolders.NetRuntimeBS + @"..\..\..\packs");
+		string dirCore = dirPacks + @"\Microsoft.NETCore.App.Ref\";
 		var a = new List<string>();
-		foreach(var f in AFile.Enumerate(refDir, FEFlags.UseRawPath)) { //for each version
-			if(!f.IsDirectory) continue;
+		foreach (var f in AFile.Enumerate(dirCore, FEFlags.UseRawPath)) { //for each version
+			if (!f.IsDirectory) continue;
 			var s = f.Name;
-			int v1 = s.ToInt(0, out int ne), v2 = s.ToInt(ne + 1); if(v1 < 3 || v2 < 1) continue; //must be 3.1 or later
+			int v1 = s.ToInt(0, out int ne), v2 = s.ToInt(ne + 1);
+			//if (v1 < 3 || (v1 == 3 && v2 < 1)) continue; //must be 3.1 or later
+			if (v1 < 5 || (v1 == 5 && v2 < 0)) continue; //must be 5.0 or later
 			a.Add(s);
 		}
 		a.Add("All");
 		int i = ADialog.ShowList(a, "Create database", "For runtime") - 1;
-		if(i < 0) return;
+		if (i < 0) return;
 		int n = a.Count - 1;
-		if(i < n) {
-			_CreateRefAndDoc(refDir, a[i], false, dataDir);
+		if (i < n) {
+			_CreateRefAndDoc(dirPacks, dirCore, a[i], false, dataDir);
 		} else {
-			for(i = 0; i < n; i++) _CreateRefAndDoc(refDir, a[i], true, dataDir);
+			for (i = 0; i < n; i++) _CreateRefAndDoc(dirPacks, dirCore, a[i], true, dataDir);
 		}
 		AOutput.Write("CreateRefAndDoc done.");
 		Cursor.Current = Cursors.Arrow;
 	}
 
-	static void _CreateRefAndDoc(string refDir, string version, bool all, string dataDir)
-	{
-		var dir1 = refDir + @"\" + version + @"\ref\netcoreapp" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1);
-		//AOutput.Write(dir1, AFile.ExistsAsDirectory(dir1));
-		if(!AFile.ExistsAsDirectory(dir1, true)) throw new DirectoryNotFoundException("Not found: " + dir1);
-		if(0 == dir1.RegexReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.)", "WindowsDesktop", out string dir2, 1)) throw new AuException();
-		//AOutput.Write(dir2, AFile.ExistsAsDirectory(dir2));
-		if(!AFile.ExistsAsDirectory(dir2, true)) throw new DirectoryNotFoundException("Not found: " + dir2);
+	static void _CreateRefAndDoc(string dirPacks, string dirCore, string version, bool all, string dataDir) {
+		//string subdirRN = @"\ref\netcoreapp" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1); //Core 3.x
+		string subdirRN = @"\ref\net" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1); //.NET 5
+
+		var dir1 = dirCore + version + subdirRN;
+		if (!AFile.ExistsAsDirectory(dir1, true)) throw new DirectoryNotFoundException("Not found: " + dir1);
+
+		//find WindowsDesktop folder. Must have same X.X.X version. Preview version may be different.
+		bool preview; int i = version.Find("-p", true);
+		if (preview = i >= 0) version = version[..(i + 2)];
+		string verDesktop = null;
+		string dirDesktop = dirPacks + @"\Microsoft.WindowsDesktop.App.Ref\";
+		foreach (var f in AFile.Enumerate(dirDesktop, FEFlags.UseRawPath)) { //for each version
+			if (!f.IsDirectory) continue;
+			var s = f.Name;
+			if (preview ? s.Starts(version, true) : s == version) { verDesktop = s; break; }
+		}
+		if (verDesktop == null) throw new DirectoryNotFoundException("Not found: WindowsDesktop SDK");
+		var dir2 = dirDesktop + verDesktop + subdirRN;
+		if (!AFile.ExistsAsDirectory(dir2, true)) throw new DirectoryNotFoundException("Not found: " + dir2);
 
 		string dbRef, dbDoc;
-		if(all) {
+		if (all) {
 			dbRef = AFolders.ThisAppBS + "ref." + version + ".db";
 			dbDoc = AFolders.ThisAppBS + "doc." + version + ".db";
 		} else {
@@ -119,14 +129,13 @@ static class EdDatabases
 		_CreateRef(dbRef, dir1, dir2);
 		_CreateDoc(dbDoc, dir1, dir2);
 
-		if(!all) {
+		if (!all) {
 			Program.Settings.db_copy_ref = dbRef;
 			Program.Settings.db_copy_doc = dbDoc;
 		}
 	}
 
-	static void _CreateRef(string dbFile, string dir1, string dir2)
-	{
+	static void _CreateRef(string dbFile, string dir1, string dir2) {
 		AFile.Delete(dbFile);
 		using var d = new ASqlite(dbFile);
 		using var trans = d.Transaction();
@@ -141,20 +150,18 @@ static class EdDatabases
 
 		AOutput.Write("Created " + dbFile);
 
-		void _AddDir(string dir, params string[] skip)
-		{
-			foreach(var f in AFile.Enumerate(dir)) {
-				if(f.IsDirectory) continue;
-				if(!f.Name.Ends(".dll", true)) continue;
+		void _AddDir(string dir, params string[] skip) {
+			foreach (var f in AFile.Enumerate(dir)) {
+				if (f.IsDirectory) continue;
+				if (!f.Name.Ends(".dll", true)) continue;
 				var asmName = f.Name.RemoveSuffix(4);
-				if(skip.Contains(asmName)) continue;
+				if (skip.Contains(asmName)) continue;
 				_AddFile(asmName, f.FullPath);
 				//break;
 			}
 		}
 
-		void _AddFile(string asmName, string asmFile)
-		{
+		void _AddFile(string asmName, string asmFile) {
 			//AOutput.Write(asmName);
 			statInsert.Bind(1, asmName);
 			statInsert.Bind(2, File.ReadAllBytes(asmFile));
@@ -163,8 +170,7 @@ static class EdDatabases
 		}
 	}
 
-	static void _CreateDoc(string dbFile, string dir1, string dir2)
-	{
+	static void _CreateDoc(string dbFile, string dir1, string dir2) {
 		AFile.Delete(dbFile);
 		using var d = new ASqlite(dbFile, sql: "PRAGMA page_size = 8192;"); //8192 makes file smaller by 2-3 MB.
 		using var trans = d.Transaction();
@@ -186,14 +192,13 @@ static class EdDatabases
 
 		AOutput.Write("Created " + dbFile);
 
-		void _AddDir(string dir, params string[] skip)
-		{
-			foreach(var f in AFile.Enumerate(dir)) {
-				if(f.IsDirectory) continue;
-				if(!f.Name.Ends(".xml", true)) continue;
+		void _AddDir(string dir, params string[] skip) {
+			foreach (var f in AFile.Enumerate(dir)) {
+				if (f.IsDirectory) continue;
+				if (!f.Name.Ends(".xml", true)) continue;
 				var asmName = f.Name.RemoveSuffix(4);
-				if(skip.Contains(asmName)) continue;
-				if(!AFile.ExistsAsFile(dir + asmName + ".dll")) {
+				if (skip.Contains(asmName)) continue;
+				if (!AFile.ExistsAsFile(dir + asmName + ".dll")) {
 					AOutput.Write("<><c 0x808080>" + f.Name + "</c>");
 					continue;
 				}
@@ -202,17 +207,16 @@ static class EdDatabases
 			}
 		}
 
-		void _AddFile(string asmName, string xmlFile)
-		{
+		void _AddFile(string asmName, string xmlFile) {
 			//AOutput.Write(asmName);
 			haveRefs.Add(asmName);
 			var xr = AExtXml.LoadElem(xmlFile);
-			foreach(var e in xr.Descendants("member")) {
+			foreach (var e in xr.Descendants("member")) {
 				var name = e.Attr("name");
 
 				//remove <remarks> and <example>. Does not save much space, because .NET xmls don't have it.
-				foreach(var v in e.Descendants("remarks").ToArray()) v.Remove();
-				foreach(var v in e.Descendants("example").ToArray()) v.Remove();
+				foreach (var v in e.Descendants("remarks").ToArray()) v.Remove();
+				foreach (var v in e.Descendants("example").ToArray()) v.Remove();
 
 				using var reader = e.CreateReader();
 				reader.MoveToContent();
@@ -221,10 +225,10 @@ static class EdDatabases
 
 				//textFile.WriteLine(name); textFile.WriteLine(xml); textFile.WriteLine("\f");
 
-				if(uniq.TryGetValue(name, out var prevRef)) {
-					if(!statDupl.Bind(1, name).Step()) throw new AuException();
+				if (uniq.TryGetValue(name, out var prevRef)) {
+					if (!statDupl.Bind(1, name).Step()) throw new AuException();
 					var prev = statDupl.GetText(0);
-					if(xml != prev && asmName != "System.Linq") AOutput.Write($"<>\t{name} already defined in {prevRef}\r\n<c 0xc000>{prev}</c>\r\n<c 0xff0000>{xml}</c>");
+					if (xml != prev && asmName != "System.Linq") AOutput.Write($"<>\t{name} already defined in {prevRef}\r\n<c 0xc000>{prev}</c>\r\n<c 0xff0000>{xml}</c>");
 					statDupl.Reset();
 				} else {
 					statInsert.BindAll(name, xml).Step();
@@ -240,8 +244,7 @@ static class EdDatabases
 	/// <summary>
 	/// Creates SQLite database containing Windows API declarations.
 	/// </summary>
-	public static void CreateWinapi(string csDir = @"Q:\app\Au\Other\Api", string dataDir = @"Q:\app\Au\Other\Data")
-	{
+	public static void CreateWinapi(string csDir = @"Q:\app\Au\Other\Api", string dataDir = @"Q:\app\Au\Other\Data") {
 		Cursor.Current = Cursors.WaitCursor;
 		string dbFile = dataDir + @"\winapi.db";
 		AFile.Delete(dbFile);
@@ -257,12 +260,11 @@ static class EdDatabases
 		string rxFunc = @"(?m)^(?:\[[^\r\n]+\r\n)*internal (?:static extern|delegate) \w+\** (\w+)\(.+;$";
 		string rxVarConst = @"(?m)^internal (?:const|readonly|static) \w+ (\w+) =.+;$";
 
-		foreach(var m in s.RegexFindAll(rxType)) _Add(m);
-		foreach(var m in s.RegexFindAll(rxFunc)) _Add(m);
-		foreach(var m in s.RegexFindAll(rxVarConst)) _Add(m);
+		foreach (var m in s.RegexFindAll(rxType)) _Add(m);
+		foreach (var m in s.RegexFindAll(rxFunc)) _Add(m);
+		foreach (var m in s.RegexFindAll(rxVarConst)) _Add(m);
 
-		void _Add(RXMatch m)
-		{
+		void _Add(RXMatch m) {
 			statInsert.Bind(1, m[1].Value);
 			statInsert.Bind(2, m.Value);
 			statInsert.Step();

@@ -98,7 +98,7 @@ namespace Au.Controls
 			_border.left = r.left - p.left; _border.top = r.top - p.top; _border.right = p.right - r.right; _border.bottom = p.bottom - r.bottom;
 			if(_border.right > _border.left) _border.right = _border.left; //vert scrollbar is inside
 
-			if(_noArrow) _buttonWidth = 0; else _buttonWidth = Util.ADpi.ScaleInt(16); //left border is on image's left
+			if(_noArrow) _buttonWidth = 0; else _buttonWidth = Util.ADpi.Scale(16); //left border is on image's left
 			if(_buttonImage != null) _buttonWidth += _buttonImage.Width + 3; //+ margins=2 + left border=1
 			if(_buttonWidth > 0) {
 				if(_border.right == 2 && VisualStyleRenderer.IsSupported) {

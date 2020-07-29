@@ -375,13 +375,32 @@ namespace Au
 			#region static
 
 			/// <summary>
-			/// Gets the very first top-level window in the Z order.
+			/// Gets the first top-level window in the Z order.
 			/// </summary>
 			/// <remarks>
-			/// Probably it is a topmost window.
+			/// Probably it is a topmost window. To get the first non-topmost window, use <see cref="Top2"/>.
 			/// Calls API <msdn>GetTopWindow</msdn>(default(AWnd)).
 			/// </remarks>
 			public static AWnd Top => Api.GetTopWindow(default);
+
+			/// <summary>
+			/// Finds and returns the first non-topmost window in the Z order.
+			/// </summary>
+			/// <param name="lastTopmost">Receives the last topmost window.</param>
+			/// <remarks>
+			/// This function is slower than <see cref="Top"/> etc. Enumerates windows, because there is no API to get directly.
+			/// </remarks>
+			public static AWnd Top2(out AWnd lastTopmost) {
+				AWnd w, lastTM, w2 = default, lastTM2 = default;
+				for (; ; ) { //repeat until gets same results 2 times. At any time windows can be destroyed, reordered, reparented. The second time 2-3 times faster.
+					lastTM = default; w = Top; if (w.Is0) break; //no windows in this session
+					for (; w.IsTopmost; w = w.Get.Next()) lastTM = w;
+					if (w == w2 && lastTM == lastTM2 && !w.Is0) break;
+					w2 = w; lastTM2 = lastTM;
+				}
+				lastTopmost = lastTM;
+				return w;
+			}
 
 			/// <summary>
 			/// Calls API <msdn>GetDesktopWindow</msdn>. It gets the virtual parent window of all top-level windows.

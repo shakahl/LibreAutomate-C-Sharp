@@ -321,7 +321,7 @@ size_t ScreenLine::Length() const {
 size_t ScreenLine::RepresentationCount() const {
 	return std::count_if(&ll->bidiData->widthReprs[start],
 		&ll->bidiData->widthReprs[start + len],
-		[](XYPOSITION w) {return w > 0.0f; });
+		[](XYPOSITION w) noexcept { return w > 0.0f; });
 }
 
 XYPOSITION ScreenLine::Width() const {
@@ -489,7 +489,7 @@ static unsigned int KeyFromString(const char *charBytes, size_t len) {
 	return k;
 }
 
-SpecialRepresentations::SpecialRepresentations() noexcept {
+SpecialRepresentations::SpecialRepresentations() {
 	const short none = 0;
 	std::fill(startByteHasReprs, std::end(startByteHasReprs), none);
 }
@@ -794,13 +794,13 @@ void PositionCache::MeasureWidths(Surface *surface, const ViewStyle &vstyle, uns
 			probe = probe2;
 		}
 	}
+	FontAlias fontStyle = vstyle.styles[styleNumber].font;
 	if (len > BreakFinder::lengthStartSubdivision) {
 		// Break up into segments
 		unsigned int startSegment = 0;
 		XYPOSITION xStartSegment = 0;
 		while (startSegment < len) {
 			const unsigned int lenSegment = pdoc->SafeSegment(s + startSegment, len - startSegment, BreakFinder::lengthEachSubdivision);
-			FontAlias fontStyle = vstyle.styles[styleNumber].font;
 			surface->MeasureWidths(fontStyle, std::string_view(s + startSegment, lenSegment), positions + startSegment);
 			for (unsigned int inSeg = 0; inSeg < lenSegment; inSeg++) {
 				positions[startSegment + inSeg] += xStartSegment;
@@ -809,7 +809,6 @@ void PositionCache::MeasureWidths(Surface *surface, const ViewStyle &vstyle, uns
 			startSegment += lenSegment;
 		}
 	} else {
-		FontAlias fontStyle = vstyle.styles[styleNumber].font;
 		surface->MeasureWidths(fontStyle, std::string_view(s, len), positions);
 	}
 	if (probe < pces.size()) {

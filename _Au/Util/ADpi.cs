@@ -51,10 +51,22 @@ namespace Au.Util
 		/// </remarks>
 		public static int OfWindow(AWnd w) {
 			int R = 0;
-			if (AVersion.MinWin10_1607) R = Api.GetDpiForWindow(w);
-			else if (AVersion.MinWin8_1 && w.GetRect(out var k)) return OfScreen(AScreen.Of(k).Handle);
+			if (!w.Is0) {
+				if (AVersion.MinWin10_1607) R = Api.GetDpiForWindow(w);
+				else if (AVersion.MinWin8_1 && w.GetRect(out var k)) return OfScreen(AScreen.Of(k).Handle);
+			}
 			return R != 0 ? R : OfThisProcess;
-		}
+		}//TODO: by default don't support Win8.1. Add param supportWin81.
+
+		/// <summary>
+		/// Returns <c>OfWindow(w.Hwnd())</c>.
+		/// </summary>
+		public static int OfWindow(System.Windows.Forms.Control w) => OfWindow(w.Hwnd());
+
+		/// <summary>
+		/// Returns <c>OfWindow(w.Hwnd())</c>.
+		/// </summary>
+		public static int OfWindow(System.Windows.DependencyObject w) => OfWindow(w.Hwnd());
 
 		///// <summary>
 		///// Let <see cref="OfWindow"/> and 
@@ -81,33 +93,45 @@ namespace Au.Util
 			return AVersion.MinWin8_1 && 0 == Api.GetDpiForMonitor(hmon, 0, out int R, out _) ? R : OfThisProcess;
 		}
 
-		/// <summary>
-		/// Gets small icon size that depends on DPI of the primary screen.
-		/// Width and Height are <see cref="OfThisProcess"/>/6, which is 16 if DPI is 96 (100%).
-		/// </summary>
-		internal static SIZE SmallIconSize_ { get { var t = OfThisProcess / 6; return new SIZE(t, t); } } //same as AIcon.SizeSmall
+		///// <summary>
+		///// Gets small icon size that depends on DPI of the primary screen.
+		///// Width and Height are <see cref="OfThisProcess"/>/6, which is 16 if DPI is 96 (100%).
+		///// </summary>
+		//internal static SIZE SmallIconSize_ { get { var t = OfThisProcess / 6; return new SIZE(t, t); } } //same as AIcon.SizeSmall
 
 		/// <summary>
-		/// If DPI <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
+		/// If <i>dpi</i> isn't 96 (100%), returns scaled i. Else returns i.
 		/// </summary>
-		public static int ScaleInt(int i) => AMath.MulDiv(i, OfThisProcess, 96);
+		public static int Scale(int i, int dpi) => AMath.MulDiv(i, dpi, 96);
 
 		/// <summary>
 		/// If DPI <see cref="OfWindow"/> isn't 96 (100%), returns scaled i. Else returns i.
 		/// </summary>
-		public static int ScaleInt(AWnd w, int i) => AMath.MulDiv(i, OfWindow(w), 96);
+		public static int Scale(int i, AWnd w) => AMath.MulDiv(i, OfWindow(w), 96);
 
 		/// <summary>
-		/// If <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled z. Else returns z.
-		/// Note: for images use <see cref="ImageSize"/>.
+		/// If DPI <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
 		/// </summary>
-		/// <param name="z"></param>
-		public static SIZE ScaleSize(SIZE z) {
-			int dpi = OfThisProcess;
+		public static int Scale(int i) => AMath.MulDiv(i, OfThisProcess, 96);
+
+		/// <summary>
+		/// If <i>dpi</i> isn't 96 (100%), returns scaled z. Else returns z.
+		/// </summary>
+		public static SIZE ScaleSize(SIZE z, int dpi) {
 			z.width = AMath.MulDiv(z.width, dpi, 96);
 			z.height = AMath.MulDiv(z.height, dpi, 96);
 			return z;
 		}
+
+		/// <summary>
+		/// If DPI <see cref="OfWindow"/> isn't 96 (100%), returns scaled z. Else returns z.
+		/// </summary>
+		public static SIZE ScaleSize(SIZE z, AWnd w) => ScaleSize(z, OfWindow(w));
+
+		/// <summary>
+		/// If DPI <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled z. Else returns z.
+		/// </summary>
+		public static SIZE ScaleSize(SIZE z) => ScaleSize(z, OfThisProcess);
 
 		/// <summary>
 		/// If <see cref="OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
@@ -171,7 +195,49 @@ namespace Au.Util
 			return r;
 		}
 
-		//TEST: Win10 API GetDpiForWindow, GetSystemDpiForProcess, GetSystemMetricsForDpi.
-		//	Win8.1 LogicalToPhysicalPointForPerMonitorDPI, PhysicalToLogicalPointForPerMonitorDPI.
+		/// <summary>
+		/// Can be used to temporarily change thread's DPI awareness context with API <msdn>SetThreadDpiAwarenessContext</msdn>.
+		/// Does nothing if the API is unavailable (added in Windows 10 version 1607).
+		/// </summary>
+		/// <remarks>
+		/// Programs that use this library should use manifest with dpiAwareness = PerMonitorV2 and dpiAware = True/PM. Then default DPI awareness context is DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// using var dac = new ADpi.AwarenessContext(ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE);
+		/// ]]></code>
+		/// </example>
+		public struct AwarenessContext : IDisposable
+		{
+			LPARAM _dac;
+
+			/// <summary>
+			/// Calls API <msdn>SetThreadDpiAwarenessContext</msdn> if available.
+			/// </summary>
+			/// <param name="dpiContext">One of <b>DPI_AWARENESS_CONTEXT_X</b> constants, for example <see cref="DPI_AWARENESS_CONTEXT_UNAWARE"/>.</param>
+			public AwarenessContext(LPARAM dpiContext) {
+				_dac = AVersion.MinWin10_1607 ? Api.SetThreadDpiAwarenessContext(dpiContext) : default;
+			}
+
+			/// <summary>
+			/// Restores previous DPI awareness context.
+			/// </summary>
+			public void Dispose() {
+				if(_dac==default) return;
+				Api.SetThreadDpiAwarenessContext(_dac);
+				_dac = default;
+			}
+
+			///
+			public const int DPI_AWARENESS_CONTEXT_UNAWARE = -1;
+			///
+			public const int DPI_AWARENESS_CONTEXT_SYSTEM_AWARE = -2;
+			///
+			public const int DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE = -3;
+			///
+			public const int DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 = -4;
+			///
+			public const int DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED = -5;
+		}
 	}
 }

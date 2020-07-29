@@ -9,7 +9,7 @@ namespace Au.Tools
 {
 	class RegexWindow : InfoWindow
 	{
-		public RegexWindow() : base(Util.ADpi.ScaleInt(250))
+		public RegexWindow() : base(Util.ADpi.Scale(250))
 		{
 			this.Size = Util.ADpi.ScaleSize((800, 220));
 			this.Caption = "Regex";

@@ -104,7 +104,7 @@ namespace Au.Controls
 				catch(Exception e) { AOutput.Write("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
-			Size imageScalingSize = Au.Util.ADpi.SmallIconSize_; //if high DPI, auto scale images
+			//Size imageScalingSize = Au.Util.ADpi.SmallIconSize_; //if high DPI, auto scale images //TODO
 
 			//create top-level toolstrips (menu bar and toolbars), and call _AddChildItems to add items and create drop-down menus and submenus
 			_inBuildAll = true;
@@ -137,7 +137,7 @@ namespace Au.Controls
 					t.Padding = new Padding(); //remove menu bar paddings
 				} else {
 				}
-				if(imageScalingSize.Height != 16) t.ImageScalingSize = imageScalingSize; //info: all submenus will inherit it from menubar
+				//if(imageScalingSize.Height != 16) t.ImageScalingSize = imageScalingSize; //info: all submenus will inherit it from menubar
 
 				_AddChildItems(x, t, isMenu);
 
@@ -329,7 +329,7 @@ namespace Au.Controls
 
 			Image im = null;
 			if(x.Attr(out s, "i2")) { //custom image as icon file
-				im = AIcon.GetFileIconImage(s);
+				im = AIcon.OfFile(s).ToBitmap();
 				if(im == null) AOutput.Write($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}

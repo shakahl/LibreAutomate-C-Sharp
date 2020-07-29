@@ -4,27 +4,28 @@ using Au.Types;
 using System;
 using System.Diagnostics;
 using System.Drawing;
+using System.Reflection;
 using System.Runtime;
 using System.Threading;
 using System.Windows.Forms;
+
+//TODO: on DPI change now moves/resizes controls incorrectly. Especially if DPI changed from 150% to 125%.
 
 partial class FMain : Form
 {
 	AWnd _wFocus;
 	const int c_menuid_Exit = 101;
 
-	public static void ZRunApplication()
-	{
+	public static void ZRunApplication() {
 		var f = new FMain();
 #if TRACE
 		ATimer.After(1, _ => APerf.NW('P'));
 #endif
-		if(!Program.Settings.runHidden || CommandLine.StartVisible) Application.Run(f);
+		if (!Program.Settings.runHidden || CommandLine.StartVisible) Application.Run(f);
 		else Application.Run();
 	}
 
-	public FMain()
-	{
+	public FMain() {
 		//#if DEBUG
 		//		AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//		SetHookToMonitorCreatedWindowsOfThisThread();
@@ -34,22 +35,14 @@ partial class FMain : Form
 
 		this.SuspendLayout();
 
-		//TODO: support per-monitor high DPI. Else eg AAcc tool works incorrectly. Now in manifest is PM, but resizing and font sizes are incorrect.
 		this.AutoScaleMode = AutoScaleMode.None;
 		//this.AutoScaleDimensions = new SizeF(96f, 96f); this.AutoScaleMode = AutoScaleMode.Dpi;
 
 		this.Icon = EdStock.IconAppNormal;
-		this.StartPosition = FormStartPosition.Manual;
-		unsafe {
-			var s = Program.Settings.wndPos;
-			if(s != null && Au.Util.AConvert.Base64UrlDecode(s, out Api.WINDOWPLACEMENT p)) {
-				p.rcNormalPosition.EnsureInScreen();//TODO: for non-toolwindows it is workspace coords
-				this.Bounds = p.rcNormalPosition;
-				if(p.showCmd == Api.SW_SHOWMAXIMIZED) this.WindowState = FormWindowState.Maximized;
-			} else {
-				var wa = AScreen.Primary.WorkArea;
-				this.Bounds = new Rectangle(wa.left + 10, wa.top + 10, wa.Width * 3 / 4, wa.Height - 20);
-			}
+		if (!AWnd.More.SavedRect.Restore(this, Program.Settings.wndPos)) {
+			this.StartPosition = FormStartPosition.Manual;
+			var wa = AScreen.Primary.WorkArea;
+			this.Bounds = new Rectangle(wa.left + 10, wa.top + 10, wa.Width * 3 / 4, wa.Height - 20);
 		}
 
 		//APerf.Next();
@@ -84,13 +77,12 @@ partial class FMain : Form
 
 	AWnd _Hwnd => (AWnd)Handle;
 
-	protected override void OnVisibleChanged(EventArgs e)
-	{
+	protected override void OnVisibleChanged(EventArgs e) {
 		//AOutput.Write("OnVisibleChanged", Visible, ((AWnd)this).IsVisible); //true, false
 		bool visible = Visible;
 
 		//note: we don't use OnLoad. It's unreliable, sometimes not called, eg when made visible from outside.
-		if(visible && Program.Loaded == EProgramState.LoadedWorkspace) {
+		if (visible && Program.Loaded == EProgramState.LoadedWorkspace) {
 
 			//APerf.Next();
 			_StartProfileOptimization(); //fast
@@ -114,7 +106,7 @@ partial class FMain : Form
 #if TRACE
 			ATimer.After(1, _ => {
 				var s = CommandLine.TestArg;
-				if(s != null) {
+				if (s != null) {
 					AOutput.Write(ATime.PerfMicroseconds - Convert.ToInt64(s));
 				}
 				//APerf.NW('V');
@@ -124,7 +116,7 @@ partial class FMain : Form
 #endif
 		}
 
-		if(!visible) CodeInfo.Stop();
+		if (!visible) CodeInfo.Stop();
 		UacDragDrop.AdminProcess.Enable(visible);
 
 		base.OnVisibleChanged(e);
@@ -136,10 +128,9 @@ partial class FMain : Form
 	/// </summary>
 	public new event EventHandler Load;
 
-	protected override void OnFormClosed(FormClosedEventArgs e)
-	{
-		if(Program.Loaded >= EProgramState.LoadedUI) {
-			Program.Settings.wndPos = _Hwnd.SaveRect();
+	protected override void OnFormClosed(FormClosedEventArgs e) {
+		if (Program.Loaded >= EProgramState.LoadedUI) {
+			Program.Settings.wndPos = new AWnd.More.SavedRect(this).ToString();
 			UacDragDrop.AdminProcess.Enable(false);
 		}
 		Program.Loaded = EProgramState.Unloading;
@@ -159,93 +150,110 @@ partial class FMain : Form
 	/// </summary>
 	public CloseReason ZCloseReason { get; private set; }
 
-	protected override unsafe void WndProc(ref Message m)
-	{
+	protected override unsafe void WndProc(ref Message m) {
 		AWnd w = (AWnd)m.HWnd; LPARAM wParam = m.WParam, lParam = m.LParam;
 		//AWnd.More.PrintMsg(m, Api.WM_ENTERIDLE, Api.WM_SETCURSOR, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_GETICON, Api.WM_NCMOUSEMOVE);
 
-		switch(m.Msg) {
-		case RunningTasks.WM_TASK_ENDED: //WM_USER+900
-			Program.Tasks.TaskEnded2(m.WParam);
-			return;
-		case Api.WM_ACTIVATE:
-			int isActive = AMath.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
-			if(isActive == 1 && !w.IsActive && !Api.SetForegroundWindow(w)) {
-				//Normally at startup always inactive, because started as admin from task scheduler. SetForegroundWindow sometimes works, sometimes not.
-				//workaround for: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
-				ADebug.Print("window inactive");
-				AWnd.More.TaskbarButton.Add(w);
-				if(!w.ActivateLL()) AWnd.More.TaskbarButton.Flash(w, 5);
-			}
-			//restore focused control correctly
-			if(isActive == 0) _wFocus = AWnd.ThisThread.Focused;
-			else if(_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
-			else Panels.Editor.ZActiveDoc?.Focus();
-			return;
-		case Api.WM_SYSCOMMAND:
-			int sc = (int)wParam;
-			if(sc >= 0xf000) { //system
-				sc &= 0xfff0;
-				if(sc == Api.SC_CLOSE && Visible && Program.Settings.runHidden) {
-					this.WindowState = FormWindowState.Minimized;
-					this.Visible = false;
-					EdUtil.MinimizeProcessPhysicalMemory(500);
-					return;
-					//initially this code was in OnFormClosing, but sometimes hides instead of closing, because .NET gives incorrect CloseReason. Cannot reproduce and debug.
-				}
-			} else { //our
-				switch(sc) {
-				case c_menuid_Exit: Strips.Cmd.File_Exit(); return;
-				}
-			}
-			break;
-		case Api.WM_POWERBROADCAST:
-			if(wParam == 4) Program.Tasks.EndTask(); //PBT_APMSUSPEND
-			break;
-		case Api.WM_WINDOWPOSCHANGING:
-			var p = (Api.WINDOWPOS*)lParam;
-			//AOutput.Write(p->flags);
-			//workaround: if started maximized, does not receive WM_SHOWWINDOW. Then .NET at first makes visible, then creates controls and calls OnLoad.
-			if(p->flags.Has(Native.SWP.SHOWWINDOW) && Program.Loaded == EProgramState.LoadedWorkspace) {
-				//p->flags &= ~Native.SWP.SHOWWINDOW; //no, adds 5 duplicate messages
-				var m2 = Message.Create(m.HWnd, Api.WM_SHOWWINDOW, (IntPtr)1, default);
-				base.WndProc(ref m2); //creates controls and calls OnLoad and OnVisibleChanged
+		switch (m.Msg) {
+			case RunningTasks.WM_TASK_ENDED: //WM_USER+900
+				Program.Tasks.TaskEnded2(m.WParam);
 				return;
-			}
-			break;
-		case Api.WM_DISPLAYCHANGE:
-			Program.Tasks.OnWM_DISPLAYCHANGE();
-			break;
+			case Api.WM_NCCREATE:
+				_DpiWorkaround1((AWnd)m.HWnd);
+				break;
+			case Api.WM_ACTIVATE:
+				int isActive = AMath.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
+				if (isActive == 1 && !w.IsActive && !Api.SetForegroundWindow(w)) {
+					//Normally at startup always inactive, because started as admin from task scheduler. SetForegroundWindow sometimes works, sometimes not.
+					//workaround for: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
+					ADebug.Print("window inactive");
+					AWnd.More.TaskbarButton.Add(w);
+					if (!w.ActivateLL()) AWnd.More.TaskbarButton.Flash(w, 5);
+				}
+				//restore focused control correctly
+				if (isActive == 0) _wFocus = AWnd.ThisThread.Focused;
+				else if (_wFocus.IsAlive) AWnd.ThisThread.Focus(_wFocus);
+				else Panels.Editor.ZActiveDoc?.Focus();
+				return;
+			case Api.WM_SYSCOMMAND:
+				int sc = (int)wParam;
+				if (sc >= 0xf000) { //system
+					sc &= 0xfff0;
+					if (sc == Api.SC_CLOSE && Visible && Program.Settings.runHidden) {
+						this.WindowState = FormWindowState.Minimized;
+						this.Visible = false;
+						EdUtil.MinimizeProcessPhysicalMemory(500);
+						return;
+						//initially this code was in OnFormClosing, but sometimes hides instead of closing, because .NET gives incorrect CloseReason. Cannot reproduce and debug.
+					}
+				} else { //our
+					switch (sc) {
+						case c_menuid_Exit: Strips.Cmd.File_Exit(); return;
+					}
+				}
+				break;
+			case Api.WM_POWERBROADCAST:
+				if (wParam == 4) Program.Tasks.EndTask(); //PBT_APMSUSPEND
+				break;
+			case Api.WM_WINDOWPOSCHANGING:
+				var p = (Api.WINDOWPOS*)lParam;
+				//AOutput.Write(p->flags);
+				//workaround: if started maximized, does not receive WM_SHOWWINDOW. Then .NET at first makes visible, then creates controls and calls OnLoad.
+				if (p->flags.Has(Native.SWP.SHOWWINDOW) && Program.Loaded == EProgramState.LoadedWorkspace) {
+					//p->flags &= ~Native.SWP.SHOWWINDOW; //no, adds 5 duplicate messages
+					var m2 = Message.Create(m.HWnd, Api.WM_SHOWWINDOW, (IntPtr)1, default);
+					base.WndProc(ref m2); //creates controls and calls OnLoad and OnVisibleChanged
+					return;
+				}
+				break;
+			case Api.WM_DISPLAYCHANGE:
+				Program.Tasks.OnWM_DISPLAYCHANGE();
+				break;
 		}
 
 		base.WndProc(ref m);
 
-		switch(m.Msg) {
-		case Api.WM_ENABLE:
-			//.NET ignores this. Eg if an owned form etc disables this window, the Enabled property is not changed and no EnabledChanged event.
-			//AOutput.Write(wParam, Enabled);
-			//Enabled = wParam != 0; //not good
-			Panels.PanelManager.ZEnableDisableAllFloatingWindows(wParam != 0);
-			break;
+		switch (m.Msg) {
+			case Api.WM_ENABLE:
+				//.NET ignores this. Eg if an owned form etc disables this window, the Enabled property is not changed and no EnabledChanged event.
+				//AOutput.Write(wParam, Enabled);
+				//Enabled = wParam != 0; //not good
+				Panels.PanelManager.ZEnableDisableAllFloatingWindows(wParam != 0);
+				break;
 		}
 	}
 
-	protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
-	{
-		if(base.ProcessCmdKey(ref msg, keyData)) return true;
+	//workaround: if form started in non-primary screen with different DPI than primary, it uses DPI of primary screen.
+	//	Probably this is by design, see Control.cs -> OnHandleCreated -> && !(typeof(Form).IsAssignableFrom(GetType())).
+	unsafe void _DpiWorkaround1(AWnd w) {
+		if (!AVersion.MinWin10_1607) return;
+		int dpi = Au.Util.ADpi.OfWindow(w), dpiNET = this.DeviceDpi;
+		if (dpi == dpiNET) return;
+		var fi = typeof(Control).GetField("_deviceDpi", BindingFlags.Instance | BindingFlags.NonPublic);
+		Debug.Assert(fi != null);
+		if (fi == null) return;
+		fi.SetValue(this, dpi);
+		var f = this.Font;
+		this.Font = new Font(f.FontFamily, f.Size * ((float)dpi / dpiNET), f.Style);
+		//other tested workaround is to send WM_DPICHANGED in OnHandleCreated, before calling base.
+		//	But it is slower and somehow creates some (not all) controls.
+	}
+
+	protected override bool ProcessCmdKey(ref Message msg, Keys keyData) {
+		if (base.ProcessCmdKey(ref msg, keyData)) return true;
 		//let Esc focus the code editor. If editor focused - previously focused control or the Files treeview. Because the code editor is excluded from tabstopping.
-		if(keyData == Keys.Escape || keyData == (Keys.Escape | Keys.Shift)) {
+		if (keyData == Keys.Escape || keyData == (Keys.Escape | Keys.Shift)) {
 			var doc = Panels.Editor.ZActiveDoc;
-			if(doc != null) {
-				if(doc.Focused) {
-					if(keyData == Keys.Escape) {
+			if (doc != null) {
+				if (doc.Focused) {
+					if (keyData == Keys.Escape) {
 						CodeInfo.Cancel();
 					} else {
 						var c = _escFocus;
-						for(int i = 0; ; i++) {
-							if(c != null && !c.IsDisposed && c.Visible && c.FindForm() == this && c.Focus()) break;
-							if(i == 0) c = Panels.Files.ZControl;
-							else if(i == 1) c = this.GetNextControl(doc, true);
+						for (int i = 0; ; i++) {
+							if (c != null && !c.IsDisposed && c.Visible && c.FindForm() == this && c.Focus()) break;
+							if (i == 0) c = Panels.Files.ZControl;
+							else if (i == 1) c = this.GetNextControl(doc, true);
 							else break;
 						}
 					}
@@ -264,20 +272,18 @@ partial class FMain : Form
 	/// </summary>
 	class _AppMessageFilter : IMessageFilter
 	{
-		public bool PreFilterMessage(ref Message m)
-		{
-			switch(m.Msg) {
-			case Api.WM_MOUSEWHEEL: //let's scroll the mouse control, not the focused control
-				var w1 = AWnd.FromMouse();
-				if(w1.IsOfThisThread) m.HWnd = w1.Handle;
-				break;
+		public bool PreFilterMessage(ref Message m) {
+			switch (m.Msg) {
+				case Api.WM_MOUSEWHEEL: //let's scroll the mouse control, not the focused control
+					var w1 = AWnd.FromMouse();
+					if (w1.IsOfThisThread) m.HWnd = w1.Handle;
+					break;
 			}
 			return false;
 		}
 	}
 
-	static void _StartProfileOptimization()
-	{
+	static void _StartProfileOptimization() {
 #if !DEBUG
 		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
 		AFile.CreateDirectory(fProfile);
@@ -286,20 +292,18 @@ partial class FMain : Form
 #endif
 	}
 
-	public void ZShowAndActivate()
-	{
+	public void ZShowAndActivate() {
 		Show();
 		var w = (AWnd)Program.MainForm;
 		w.ShowNotMinimized(true);
 		w.ActivateLL();
 	}
 
-	public void ZSetTitle()
-	{
+	public void ZSetTitle() {
 		string title, app = Program.AppName;
 #if true
 		var f = Program.Model?.CurrentFile;
-		if(f == null) title = app;
+		if (f == null) title = app;
 		//else if(f.IsLink) title = $"{f.Name} ({f.FilePath}) - " + app;
 		else title = f.Name + " - " + app;
 #else
@@ -323,8 +327,7 @@ static class Panels
 	public static PanelFound Found;
 	public static PanelInfo Info;
 
-	internal static void Init()
-	{
+	internal static void Init() {
 		//AOutput.Write("----");
 		//var p1 = APerf.Create();
 		Editor = new PanelEdit();

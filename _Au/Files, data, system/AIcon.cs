@@ -18,15 +18,48 @@ using Au.Util;
 namespace Au
 {
 	/// <summary>
-	/// Gets icons for files etc.
+	/// Gets icons for files etc. Contains native icon handle.
 	/// </summary>
-	public static class AIcon
+	/// <remarks>
+	/// Native icons must be destroyed, it is very important. An <b>AIcon</b> variable destroys its native icon when disposing it. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Note: it's not a reference type and does not have a finalizer that could be called by GC. But usually you need not native handle but <b>Icon</b>, <b>Bitmap</b> or <b>ImageSource</b>. Then use <see cref="ToIcon"/>, <see cref="ToBitmap"/> or <see cref="ToImageSource"/>. By default they dispose the native icon and clear the <b>AIcon</b> variable; then don't need to dispose it.
+	/// </remarks>
+	public struct AIcon :IDisposable
 	{
+		IntPtr _hi;
+
+		/// <summary>
+		/// Sets native icon handle.
+		/// The icon will be destroyed when disposing this variable or when converting to object of other type.
+		/// </summary>
+		public AIcon(IntPtr hicon) { _hi = hicon; }
+
+		/// <summary>
+		/// Destroys native icon handle.
+		/// </summary>
+		public void Dispose() {
+			if (_hi!=default) { Api.DestroyIcon(_hi); _hi = default; }
+		}
+
+		/// <summary>
+		/// Gets native icon handle.
+		/// </summary>
+		public IntPtr Handle => _hi;
+
+		/// <summary>
+		/// Returns true if <b>Handle</b>==default(IntPtr).
+		/// </summary>
+		public bool Is0 => _hi == default;
+
+		/// <summary>
+		/// Gets native icon handle.
+		/// </summary>
+		public static implicit operator IntPtr(AIcon icon) => icon._hi;
+
 		/// <summary>
 		/// Gets file icon.
 		/// Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, etc.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns>Returns default(AIcon) if failed.</returns>
 		/// <param name="file">
 		/// Can be:
 		/// - Path of any file or folder. Supports environment variables.
@@ -35,70 +68,32 @@ namespace Au
 		/// - Icon resource index or negative id, like "c:\file.dll,4", "c:\file.dll,-4".
 		/// - URL.
 		/// </param>
-		/// <param name="size">Icon width and height. If 0 (default), uses <see cref="SizeSmall"/>.</param>
+		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="flags"></param>
 		/// <remarks>
-		/// If not full path, the function uses <see cref="AFolders.ThisAppImages"/> and <see cref="AFile.SearchPath"/>.
+		/// If not full path, uses <see cref="AFolders.ThisAppImages"/> and <see cref="AFile.SearchPath"/>.
 		/// 
-		/// ITEMIDLIST can be of any file, folder, URL or virtual object like Control Panel. See <see cref="APidl.ToBase64String"/>.
+		/// ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="APidl.ToBase64String"/>.
 		/// </remarks>
-		public static Icon GetFileIcon(string file, int size = 0, IconGetFlags flags = 0)
-			=> HandleToIcon(GetFileIconHandle(file, size, flags), true);
-		///// If not full path, the function will look in <see cref="AFolders.ThisAppImages"/>. See also <see cref="IconGetFlags"/>.
-
-		/// <summary>
-		/// Gets file icon.
-		/// More info: <see cref="GetFileIcon"/>.
-		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		public static Bitmap GetFileIconImage(string file, int size = 0, IconGetFlags flags = 0)
-			=> HandleToImage(GetFileIconHandle(file, size, flags), true);
-
-		/// <summary>
-		/// Gets file icon.
-		/// More info: <see cref="GetFileIcon"/>.
-		/// </summary>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		public static IntPtr GetFileIconHandle(string file, int size = 0, IconGetFlags flags = 0)
+		public static AIcon OfFile(string file, int size = 16, IconGetFlags flags = 0)
 		{
 			if(file.NE()) return default;
 			size = _NormalizeIconSizeArgument(size);
 			file = APath.ExpandEnvVar(file);
-
-			//var perf = APerf.Create();
-			IntPtr R = _GetFileIcon(file, size, flags);
-			//perf.Next(); AOutput.Write(perf.ToString(), file);
-			//AOutput.Write($"<><c 0xff0000>{file}</c>");
-			return R;
+			return new AIcon(_GetFileIcon(file, size, flags));
 		}
 
 		/// <summary>
 		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns>Returns default(AIcon) if failed.</returns>
 		/// <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
-		/// <param name="size">Icon width and height. If 0 (default), uses <see cref="SizeSmall"/>.</param>
-		public static Icon GetPidlIcon(APidl pidl, int size = 0)
-			=> HandleToIcon(GetPidlIconHandle(pidl, size), true);
-
-		/// <summary>
-		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
-		/// More info: <see cref="GetPidlIcon"/>.
-		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		public static Bitmap GetPidlIconImage(APidl pidl, int size = 0)
-			=> HandleToImage(GetPidlIconHandle(pidl, size), true);
-
-		/// <summary>
-		/// Gets icon of a file or other shell object specified as ITEMIDLIST.
-		/// More info: <see cref="GetPidlIcon"/>.
-		/// </summary>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		public static IntPtr GetPidlIconHandle(APidl pidl, int size = 0)
+		/// <param name="size">Icon width and height. Default 16.</param>
+		public static AIcon OfPidl(APidl pidl, int size = 16)
 		{
 			if(pidl?.IsNull ?? false) return default;
 			size = _NormalizeIconSizeArgument(size);
-			return _GetShellIcon(true, null, pidl, size);
+			return new AIcon(_GetShellIcon(true, null, pidl, size));
 		}
 
 		static IntPtr _GetFileIcon(string file, int size, IconGetFlags flags)
@@ -138,7 +133,7 @@ namespace Au
 				int ext = 0;
 				if(!extractFromFile && file.Length > 4) ext = file.Ends(true, ".exe", ".scr", ".ico", ".cur", ".ani");
 				if(extractFromFile || ext > 0) {
-					R = LoadIconHandle(file, index, size);
+					R = Load(file, index, size);
 					if(R != default || extractFromFile) return R;
 					switch(AFile.ExistsAs(file, true)) {
 					case FileDir.NotFound:
@@ -146,7 +141,7 @@ namespace Au
 					case FileDir.File:
 						var siid = StockIcon.DOCNOASSOC;
 						if(ext >= 1 && ext <= 2) siid = StockIcon.APPLICATION;
-						return GetStockIconHandle(siid, size);
+						return Stock(siid, size);
 						//case FileDir.Directory: //folder name ends with .ico etc
 					}
 				} else if(file.Ends(".lnk", true)) {
@@ -217,7 +212,7 @@ namespace Au
 				if(icon != null) {
 					icon = APath.ExpandEnvVar(icon);
 					if(!APath.IsFullPath(icon)) icon = AFolders.System + icon;
-					R = GetFileIconHandleRaw(icon, index, size);
+					R = LoadIconHandle(icon, index, size);
 					if(R != default) return R;
 				}
 			}
@@ -278,15 +273,17 @@ namespace Au
 		{
 			IntPtr R = default, il = default; int index = -1, ilIndex, realSize;
 
-			if(size < (realSize = SizeSmall) * 5 / 4) ilIndex = Api.SHIL_SMALL;
-			else if(size < (realSize = SizeLarge) * 5 / 4) ilIndex = Api.SHIL_LARGE;
+			if(size < (realSize = 16) * 5 / 4) ilIndex = Api.SHIL_SMALL;
+			else if(size < (realSize = 32) * 5 / 4) ilIndex = Api.SHIL_LARGE;
 			else if(size < 256) {
-				ilIndex = Api.SHIL_EXTRALARGE; realSize = _SizeExtraLarge;
+				ilIndex = Api.SHIL_EXTRALARGE; realSize = 48;
 				//info: cannot resize from 256 because GetIcon(SHIL_JUMBO) gives 48 icon if 256 icon unavailable. Getting real icon size is either impossible or quite difficult and slow (not tested).
 			} else { ilIndex = Api.SHIL_JUMBO; realSize = 256; }
 
+			using var dac = new ADpi.AwarenessContext(ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE);
+
 			//Need to lock this part, or randomly fails with some file types.
-			lock("TK6Z4XiSxkGSfC14/or5Mw") {
+			lock ("TK6Z4XiSxkGSfC14/or5Mw") {
 				try {
 					uint fl = Api.SHGFI_SYSICONINDEX | Api.SHGFI_SHELLICONSIZE;
 					if(ilIndex == Api.SHIL_SMALL) fl |= Api.SHGFI_SMALLICON;
@@ -340,38 +337,22 @@ namespace Au
 		{
 			try {
 				using var x = AShortcutFile.Open(file);
-				var s = x.GetIconLocation(out int ii); if(s != null) return LoadIconHandle(s, ii, size);
-				s = x.TargetPathRawMSI; if(s != null) return GetFileIconHandle(s, size, IconGetFlags.DontSearch);
+				var s = x.GetIconLocation(out int ii); if(s != null) return Load(s, ii, size);
+				s = x.TargetPathRawMSI; if(s != null) return OfFile(s, size, IconGetFlags.DontSearch);
 				//AOutput.Write("need IDList", file);
-				using(var pidl = x.TargetPidl) return GetPidlIconHandle(pidl, size);
+				using(var pidl = x.TargetPidl) return OfPidl(pidl, size);
 			}
 			catch { return default; }
 		}
 
 		/// <summary>
-		/// Extracts icon from file that contains it.
+		/// Extracts icon directly from file that contains it.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns>Returns default(AIcon) if failed.</returns>
 		/// <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
 		/// <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
-		/// <param name="size">Icon width and height. If 0 (default), uses <see cref="SizeSmall"/>.</param>
-		public static unsafe Icon LoadIcon(string file, int index = 0, int size = 0)
-			=> HandleToIcon(LoadIconHandle(file, index, size), true);
-
-		/// <summary>
-		/// Extracts icon from file that contains it.
-		/// More info: <see cref="LoadIcon"/>.
-		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		public static unsafe Bitmap LoadIconImage(string file, int index = 0, int size = 0)
-			=> HandleToImage(LoadIconHandle(file, index, size), true);
-
-		/// <summary>
-		/// Extracts icon from file that contains it.
-		/// More info: <see cref="LoadIcon"/>.
-		/// </summary>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		public static unsafe IntPtr LoadIconHandle(string file, int index = 0, int size = 0)
+		/// <param name="size">Icon width and height. Default 16.</param>
+		public static unsafe AIcon Load(string file, int index = 0, int size = 16)
 		{
 			if(file.NE()) return default;
 			size = _NormalizeIconSizeArgument(size);
@@ -379,10 +360,10 @@ namespace Au
 			//We use SHDefExtractIcon because of better quality resizing (although several times slower) which matches shell and imagelist resizing.
 			//With .ico it matches LoadImage speed (without resizing). PrivateExtractIcons is slightly slower.
 
-			IntPtr R = default;
-			int hr = Api.SHDefExtractIcon(file, index, 0, &R, null, size);
+			IntPtr hi = default;
+			int hr = Api.SHDefExtractIcon(file, index, 0, &hi, null, size);
 			if(hr != 0) return default;
-			return R;
+			return new AIcon(hi);
 
 			//if(Api.PrivateExtractIcons(file, index, size, size, out R, default, 1, 0) != 1) return default;
 		}
@@ -390,31 +371,15 @@ namespace Au
 		/// <summary>
 		/// Gets a shell stock icon.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
+		/// <returns>Returns default(AIcon) if failed.</returns>
 		/// <param name="icon">Shell stock icon id.</param>
-		/// <param name="size">Icon width and height. If 0 (default), uses <see cref="SizeSmall"/>.</param>
-		public static Icon GetStockIcon(StockIcon icon, int size = 0)
-			=> HandleToIcon(GetStockIconHandle(icon, size), true);
-
-		/// <summary>
-		/// Gets a shell stock icon.
-		/// More info: <see cref="GetStockIcon"/>.
-		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		public static Bitmap GetStockIconImage(StockIcon icon, int size = 0)
-			=> HandleToImage(GetStockIconHandle(icon, size), true);
-
-		/// <summary>
-		/// Gets a shell stock icon.
-		/// More info: <see cref="GetStockIcon"/>.
-		/// </summary>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		public static unsafe IntPtr GetStockIconHandle(StockIcon icon, int size = 0)
+		/// <param name="size">Icon width and height. Default 16.</param>
+		public static unsafe AIcon Stock(StockIcon icon, int size = 16)
 		{
 			var x = new Api.SHSTOCKICONINFO(); x.cbSize = Api.SizeOf(x);
 			if(0 != Api.SHGetStockIconInfo(icon, 0, ref x)) return default;
 			var s = new string(x.szPath);
-			return LoadIconHandle(s, x.iIcon, size);
+			return Load(s, x.iIcon, size);
 			//note: don't cache, because of the limit of handles a process can have. Maybe only exe and document icons; maybe also folder and open folder.
 
 			//tested: always gets 32x32 icon: Api.LoadImage(default, 32516, Api.IMAGE_ICON, 16, 16, Api.LR_SHARED); //OIC_INFORMATION
@@ -423,32 +388,17 @@ namespace Au
 		/// <summary>
 		/// Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
 		/// </summary>
-		/// <returns>Returns null if there are no icons.</returns>
-		/// <param name="size">Icon width and height. If 0 (default), uses <see cref="SizeSmall"/>.</param>
-		public static Icon GetAppIcon(int size = 0)
-			=> HandleToIcon(GetAppIconHandle(size), false);
-
-		/// <summary>
-		/// Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
-		/// More info: <see cref="GetAppIcon"/>.
-		/// </summary>
-		public static Bitmap GetAppIconImage(int size = 0)
-			=> HandleToImage(GetAppIconHandle(size), false);
-
-		/// <summary>
-		/// Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
-		/// More info: <see cref="GetAppIcon"/>.
-		/// </summary>
-		/// <returns>
-		/// Returns native icon handle, or default(IntPtr) if there are no icons.
+		/// <returns>Returns default(AIcon) if there are no icons.</returns>
+		/// <param name="size">Icon width and height. Default 16.</param>
+		/// <remarks>
 		/// The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
-		/// </returns>
-		public static IntPtr GetAppIconHandle(int size = 0)
+		/// </remarks>
+		public static AIcon OfThisApp(int size = 16)
 		{
 			var h = AProcess.ExeModuleHandle;
 			if(h == default) return default;
 			size = _NormalizeIconSizeArgument(size);
-			return Api.LoadImage(h, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED);
+			return new AIcon(Api.LoadImage(h, Api.IDI_APPLICATION, Api.IMAGE_ICON, size, size, Api.LR_SHARED));
 
 			//This is not 100% reliable because the icon id 32512 (IDI_APPLICATION) is undocumented.
 			//I could not find a .NET method to get icon directly from native resources of assembly.
@@ -459,48 +409,29 @@ namespace Au
 		/// <summary>
 		/// Gets icon that is displayed in window title bar and in taskbar button.
 		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		/// <param name="w"></param>
-		/// <param name="large">Get large icon. If false, gets small icon.</param>
-		/// <remarks>
-		/// Icon size depends on DPI (text size) and other Windows settings.
-		/// This function can be used with windows of any process.
-		/// </remarks>
-		public static Icon GetWindowIcon(AWnd w, bool large = false)
-			=> HandleToIcon(GetWindowIconHandle(w, large), true);
-
-		/// <summary>
-		/// Gets icon that is displayed in window title bar and in taskbar button.
-		/// More info: <see cref="GetWindowIcon"/>.
-		/// </summary>
-		/// <returns>Returns null if failed.</returns>
-		public static Bitmap GetWindowIconImage(AWnd w, bool large = false)
-			=> HandleToImage(GetWindowIconHandle(w, large), true);
-
-		/// <summary>
-		/// Gets icon that is displayed in window title bar and in taskbar button.
-		/// More info: <see cref="GetWindowIcon"/>.
-		/// </summary>
-		/// <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		public static IntPtr GetWindowIconHandle(AWnd w, bool large = false)
+		/// <returns>Returns default(AIcon) if failed.</returns>
+		/// <param name="w">Window of any process.</param>
+		/// <param name="size">Icon width and height. Default 16.</param>
+		public static AIcon OfWindow(AWnd w, int size = 16)
 		{
-			int size = Api.GetSystemMetrics(large ? Api.SM_CXICON : Api.SM_CXSMICON);
+			//int size = Api.GetSystemMetrics(large ? Api.SM_CXICON : Api.SM_CXSMICON);
 
 			//support Windows Store apps
-			if(1 == AWnd.Internal_.GetWindowsStoreAppId(w, out var appId, true)) {
-				IntPtr hi = GetFileIconHandle(appId, size, IconGetFlags.DontSearch);
-				if(hi != default) return hi;
+			if (1 == AWnd.Internal_.GetWindowsStoreAppId(w, out var appId, true)) {
+				IntPtr hi = OfFile(appId, size, IconGetFlags.DontSearch);
+				if(hi != default) return new AIcon(hi);
 			}
 
+			bool large = size >= 24; //SHOULDDO: make high-DPI-aware. How?
 			bool ok = w.SendTimeout(2000, out LPARAM R, Api.WM_GETICON, large);
 			if(R == 0 && ok) w.SendTimeout(2000, out R, Api.WM_GETICON, !large);
 			if(R == 0) R = AWnd.More.GetClassLong(w, large ? Native.GCL.HICON : Native.GCL.HICONSM);
 			if(R == 0) R = AWnd.More.GetClassLong(w, large ? Native.GCL.HICONSM : Native.GCL.HICON);
 			//tested this code with DPI 125%. Small icon of most windows match DPI (20), some 16, some 24.
-			//TEST: undocumented API InternalGetWindowIcon.
+			//tested: undocumented API InternalGetWindowIcon does not get icon of winstore app.
 
 			//Copy, because will DestroyIcon, also it resizes if need.
-			if(R != 0) return Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0);
+			if(R != default) return new AIcon(Api.CopyImage(R, Api.IMAGE_ICON, size, size, 0));
 			return default;
 		}
 
@@ -510,52 +441,48 @@ namespace Au
 		/// <param name="width"></param>
 		/// <param name="height"></param>
 		/// <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
-		public static Icon CreateIcon(int width, int height, Action<Graphics> drawCallback = null)
-			=> HandleToIcon(CreateIconHandle(width, height, drawCallback), true);
-
-		/// <summary>
-		/// Creates icon at run time.
-		/// More info: <see cref="CreateIcon"/>.
-		/// </summary>
-		/// <returns>Returns native icon handle. Later call <see cref="DestroyIconHandle"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-		public static IntPtr CreateIconHandle(int width, int height, Action<Graphics> drawCallback = null)
+		public static AIcon Create(int width, int height, Action<Graphics> drawCallback = null)
 		{
+			IntPtr hi;
 			if(drawCallback != null) {
 				using var b = new Bitmap(width, height);
 				using var g = Graphics.FromImage(b);
 				g.Clear(Color.Transparent); //optional, new bitmaps are transparent, but it is undocumented, and eg .NET Bitmap.MakeTransparent does it
 				drawCallback(g);
-				return b.GetHicon();
+				hi=b.GetHicon();
 			} else {
 				int nb = AMath.AlignUp(width, 32) / 8 * height;
 				var aAnd = new byte[nb]; for(int i = 0; i < nb; i++) aAnd[i] = 0xff;
 				var aXor = new byte[nb];
-				return Api.CreateIcon(default, width, height, 1, 1, aAnd, aXor);
+				hi=Api.CreateIcon(default, width, height, 1, 1, aAnd, aXor);
 
 				//speed: ~20 mcs. About 10 times faster than above. Faster than CopyImage etc.
 			}
+			return new AIcon(hi);
 		}
 
-		/// <summary>
-		/// Destroys native icon.
-		/// Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is default(IntPtr).
-		/// </summary>
-		public static void DestroyIconHandle(IntPtr iconHandle)
-		{
-			if(iconHandle != default) Api.DestroyIcon(iconHandle);
-		}
+		///// <summary>
+		///// Destroys native icon.
+		///// Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is default(IntPtr).
+		///// </summary>
+		//public static void DestroyIconHandle(IntPtr iconHandle)
+		//{
+		//	if(iconHandle != default) Api.DestroyIcon(iconHandle);
+		//}
 
 		/// <summary>
-		/// Converts unmanaged icon to <b>Icon</b> object.
-		/// Returns null if <i>hIcon</i> is default(IntPtr).
+		/// Converts native icon to <b>Icon</b> object.
+		/// Returns null if <i>Handle</i> is default(IntPtr).
 		/// </summary>
-		/// <param name="hIcon">Icon handle.</param>
-		/// <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="DestroyIconHandle"/>.</param>
-		public static Icon HandleToIcon(IntPtr hIcon, bool destroyIcon = true)
+		/// <param name="destroyNative">
+		/// If true (default), the returned variable owns the native icon and destroys it when disposing; also clears this variable and don't need to dispose it.
+		/// If false, the returned variable just uses the native icon handle of this variable and will not destroy; later will need to dispose this variable.
+		/// </param>
+		public Icon ToIcon(bool destroyNative = true)
 		{
-			if(hIcon == default) return null;
-			var R = Icon.FromHandle(hIcon);
-			if(destroyIcon) LetObjectDestroyIconOrCursor_(R);
+			if(_hi == default) return null;
+			var R = Icon.FromHandle(_hi);
+			if (destroyNative) { LetObjectDestroyIconOrCursor_(R); _hi = default; }
 			return R;
 		}
 
@@ -576,39 +503,41 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts unmanaged icon to <b>Bitmap</b> object and destroys the unmanaged icon.
-		/// Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
+		/// Converts native icon to <b>Bitmap</b> object.
+		/// Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
 		/// </summary>
-		/// <param name="hIcon">Icon handle.</param>
-		/// <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
-		public static Bitmap HandleToImage(IntPtr hIcon, bool destroyIcon = true)
+		/// <param name="destroyNative">
+		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
+		/// If false, later will need to dispose this variable.
+		/// </param>
+		public Bitmap ToBitmap(bool destroyNative = true)
 		{
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
 
-			if(hIcon == default) return null;
-			//var perf = APerf.Create();
-			Icon ic = Icon.FromHandle(hIcon);
+			if(_hi == default) return null;
+			Icon ic = Icon.FromHandle(_hi);
 			Bitmap im = null;
 			try { im = ic.ToBitmap(); }
 			catch(Exception e) { AWarning.Write(e.ToString(), -1); }
 			ic.Dispose();
-			if(destroyIcon) Api.DestroyIcon(hIcon);
-			//perf.NW();
+			if(destroyNative) Dispose();
 			return im;
 		}
 
 		/// <summary>
-		/// Converts unmanaged icon to <b>ImageSource</b> object and destroys the unmanaged icon.
-		/// Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
+		/// Converts native icon to <b>ImageSource</b> object.
+		/// Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
 		/// </summary>
-		/// <param name="hIcon">Icon handle.</param>
-		/// <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
-		public static System.Windows.Media.ImageSource HandleToImageSource(IntPtr hIcon, bool destroyIcon = true) {
-			if (hIcon == default) return null;
+		/// <param name="destroyNative">
+		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
+		/// If false, later will need to dispose this variable.
+		/// </param>
+		public System.Windows.Media.ImageSource ToImageSource(bool destroyNative = true) {
+			if (_hi == default) return null;
 			System.Windows.Media.Imaging.BitmapSource source = null;
-			try { source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(hIcon, default, default); }
+			try { source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(_hi, default, default); }
 			catch (Exception e) { AWarning.Write(e.ToString(), -1); }
-			if(destroyIcon) Api.DestroyIcon(hIcon);
+			finally { if (destroyNative) Dispose(); }
 			return source;
 		}
 
@@ -636,23 +565,24 @@ namespace Au
 
 		static int _NormalizeIconSizeArgument(int size)
 		{
-			if(size == 0) return SizeSmall;
+			if(size == 0) return 16;
 			return (uint)size <= 256 ? size : throw new ArgumentOutOfRangeException("size", "Must be 0 - 256");
 		}
 
-		/// <summary>
-		/// Gets size of small icons displayed in UI.
-		/// Depends on DPI; 16 when DPI 100%.
-		/// </summary>
-		public static int SizeSmall => ADpi.OfThisProcess / 6; //eg 96/6=16
+		//rejected. Not per-monitor-DPI-aware, etc. Better use 16 etc and then auto-scale.
+		///// <summary>
+		///// Gets size of small icons displayed in UI.
+		///// Depends on DPI; 16 when DPI 100%.
+		///// </summary>
+		//public static int SizeSmall => ADpi.OfThisProcess / 6; //eg 96/6=16
 
-		/// <summary>
-		/// Gets size of large icons displayed in UI.
-		/// Depends on DPI; 32 when DPI 100%.
-		/// </summary>
-		public static int SizeLarge => ADpi.OfThisProcess / 3;
+		///// <summary>
+		///// Gets size of large icons displayed in UI.
+		///// Depends on DPI; 32 when DPI 100%.
+		///// </summary>
+		//public static int SizeLarge => ADpi.OfThisProcess / 3;
 
-		static int _SizeExtraLarge => ADpi.OfThisProcess / 2;
+		//static int _SizeExtraLarge => ADpi.OfThisProcess / 2;
 
 		//tested: shell imagelist icon sizes match these.
 		//note: don't use GetSystemMetrics(SM_CXSMICON/SM_CXICON). They are for other purposes, eg window title bar, tray icon. On Win7 they can be different because can be changed in Control Panel. Used by SystemInformation.SmallIconSize etc.
@@ -662,7 +592,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Flags for <see cref="AIcon.GetFileIcon"/> and similar functions.
+	/// Flags for <see cref="AIcon.OfFile"/> and similar functions.
 	/// </summary>
 	[Flags]
 	public enum IconGetFlags
@@ -678,11 +608,6 @@ namespace Au.Types
 		DontSearch = 2,
 
 #if false
-		/// <summary>
-		/// Scale the specified size according to DPI (text size) specified in Windows Settings.
-		/// </summary>
-		DpiScale = 4, //rejected. In most cases can use standard-size icons, they are DPI-scaled. Or pass Au.Util.ADpi.ScaleInt(size).
-
 		/// Use shell API for all file types, including exe and ico.
 		Shell=8, //rejected because SHGetFileInfo does not get exe icon with shield overlay
 
@@ -690,17 +615,11 @@ namespace Au.Types
 		/// If file does not exist or fails to get its icon, get common icon for that file type, or default document icon if cannot get common icon.
 		/// </summary>
 		DefaultIfFails = 16, //rejected. Now for exe/ico/etc is like with shell API: if file exists, gets default icon (exe or document), else returns default(IntPtr).
-
-		/// <summary>
-		/// Used only with AsyncIcons class. If the thread pool has spare time, let it convert icon handle to Image object. The callback will receive either handle or Image, it must check both for default(IntPtr) and null. This is to make whole process as fast as possible.
-		/// </summary>
-		NeedImage = 128, //rejected because with our menu/toolbar almost always makes slower
 #endif
 	}
 
 #pragma warning disable 1591 //missing XML documentation
-	/// <summary>See <msdn>SHSTOCKICONID</msdn>.</summary>
-	/// <seealso cref="AIcon.GetStockIcon"/>
+	/// <summary>See <see cref="AIcon.Stock"/>, <msdn>SHSTOCKICONID</msdn>.</summary>
 	public enum StockIcon
 	{
 		DOCNOASSOC,

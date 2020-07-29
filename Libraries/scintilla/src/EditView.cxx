@@ -72,7 +72,7 @@ PrintParameters::PrintParameters() noexcept {
 
 namespace Scintilla {
 
-bool ValidStyledText(const ViewStyle &vs, size_t styleOffset, const StyledText &st) {
+bool ValidStyledText(const ViewStyle &vs, size_t styleOffset, const StyledText &st) noexcept {
 	if (st.multipleStyles) {
 		for (size_t iStyle = 0; iStyle<st.length; iStyle++) {
 			if (!vs.ValidStyle(styleOffset + st.styles[iStyle]))
@@ -170,8 +170,6 @@ void DrawStyledText(Surface *surface, const ViewStyle &vs, int styleOffset, PRec
 }
 
 }
-
-const XYPOSITION epsilon = 0.0001f;	// A small nudge to avoid floating point precision issues
 
 EditView::EditView() {
 	tabWidthMinimumPixels = 2; // needed for calculating tab stops for fractional proportional fonts
@@ -343,6 +341,36 @@ LineLayout *EditView::RetrieveLineLayout(Sci::Line lineNumber, const EditModel &
 		model.LinesOnScreen() + 1, model.pdoc->LinesTotal());
 }
 
+namespace {
+
+constexpr XYPOSITION epsilon = 0.0001f;	// A small nudge to avoid floating point precision issues
+
+/**
+* Return the chDoc argument with case transformed as indicated by the caseForce argument.
+* chPrevious is needed for camel casing.
+* This only affects ASCII characters and is provided for languages with case-insensitive
+* ASCII keywords where the user wishes to view keywords in a preferred case.
+*/
+inline char CaseForce(Style::ecaseForced caseForce, char chDoc, char chPrevious) {
+	switch (caseForce) {
+	case Style::caseMixed:
+		return chDoc;
+	case Style::caseLower:
+		return MakeLowerCase(chDoc);
+	case Style::caseUpper:
+		return MakeUpperCase(chDoc);
+	case Style::caseCamel:
+	default:	// default should not occur, included to avoid warnings
+		if (IsUpperOrLowerCase(chDoc) && !IsUpperOrLowerCase(chPrevious)) {
+			return MakeUpperCase(chDoc);
+		} else {
+			return MakeLowerCase(chDoc);
+		}
+	}
+}
+
+}
+
 /**
 * Fill in the LineLayout data for the given line.
 * Copy the given @a line and its styles from the document into local arrays.
@@ -371,29 +399,16 @@ void EditView::LayoutLine(const EditModel &model, Sci::Line line, Surface *surfa
 			// Check base line layout
 			int styleByte = 0;
 			int numCharsInLine = 0;
+			char chPrevious = 0;
 			while (numCharsInLine < lineLength) {
 				const Sci::Position charInDoc = numCharsInLine + posLineStart;
 				const char chDoc = model.pdoc->CharAt(charInDoc);
 				styleByte = model.pdoc->StyleIndexAt(charInDoc);
 				allSame = allSame &&
 					(ll->styles[numCharsInLine] == styleByte);
-				if (vstyle.styles[ll->styles[numCharsInLine]].caseForce == Style::caseMixed)
-					allSame = allSame &&
-					(ll->chars[numCharsInLine] == chDoc);
-				else if (vstyle.styles[ll->styles[numCharsInLine]].caseForce == Style::caseLower)
-					allSame = allSame &&
-					(ll->chars[numCharsInLine] == MakeLowerCase(chDoc));
-				else if (vstyle.styles[ll->styles[numCharsInLine]].caseForce == Style::caseUpper)
-					allSame = allSame &&
-					(ll->chars[numCharsInLine] == MakeUpperCase(chDoc));
-				else	{ // Style::caseCamel
-					if ((model.pdoc->IsASCIIWordByte(ll->chars[numCharsInLine])) &&
-					  ((numCharsInLine == 0) || (!model.pdoc->IsASCIIWordByte(ll->chars[numCharsInLine - 1])))) {
-						allSame = allSame && (ll->chars[numCharsInLine] == MakeUpperCase(chDoc));
-					} else {
-						allSame = allSame && (ll->chars[numCharsInLine] == MakeLowerCase(chDoc));
-					}
-				}
+				allSame = allSame &&
+					(ll->chars[numCharsInLine] == CaseForce(vstyle.styles[styleByte].caseForce, chDoc, chPrevious));
+				chPrevious = chDoc;
 				numCharsInLine++;
 			}
 			allSame = allSame && (ll->styles[numCharsInLine] == styleByte);	// For eolFilled
@@ -425,26 +440,13 @@ void EditView::LayoutLine(const EditModel &model, Sci::Line line, Surface *surfa
 		model.pdoc->GetStyleRange(ll->styles.get(), posLineStart, lineLength);
 		const int numCharsBeforeEOL = static_cast<int>(model.pdoc->LineEnd(line) - posLineStart);
 		const int numCharsInLine = (vstyle.viewEOL) ? lineLength : numCharsBeforeEOL;
-		for (Sci::Position styleInLine = 0; styleInLine < numCharsInLine; styleInLine++) {
-			const unsigned char styleByte = ll->styles[styleInLine];
-			ll->styles[styleInLine] = styleByte;
-		}
 		const unsigned char styleByteLast = (lineLength > 0) ? ll->styles[lineLength - 1] : 0;
 		if (vstyle.someStylesForceCase) {
+			char chPrevious = 0;
 			for (int charInLine = 0; charInLine<lineLength; charInLine++) {
 				const char chDoc = ll->chars[charInLine];
-				if (vstyle.styles[ll->styles[charInLine]].caseForce == Style::caseUpper)
-					ll->chars[charInLine] = MakeUpperCase(chDoc);
-				else if (vstyle.styles[ll->styles[charInLine]].caseForce == Style::caseLower)
-					ll->chars[charInLine] = MakeLowerCase(chDoc);
-				else if (vstyle.styles[ll->styles[charInLine]].caseForce == Style::caseCamel) {
-					if ((model.pdoc->IsASCIIWordByte(ll->chars[charInLine])) &&
-					  ((charInLine == 0) || (!model.pdoc->IsASCIIWordByte(ll->chars[charInLine - 1])))) {
-						ll->chars[charInLine] = MakeUpperCase(chDoc);
-					} else {
-						ll->chars[charInLine] = MakeLowerCase(chDoc);
-					}
-				}
+				ll->chars[charInLine] = CaseForce(vstyle.styles[ll->styles[charInLine]].caseForce, chDoc, chPrevious);
+				chPrevious = chDoc;
 			}
 		}
 		ll->xHighlightGuide = 0;
@@ -715,7 +717,13 @@ SelectionPosition EditView::SPositionFromLocation(Surface *surface, const EditMo
 	if (surface && ll) {
 		LayoutLine(model, lineDoc, surface, vs, ll, model.wrapWidth);
 		const Sci::Line lineStartSet = model.pcs->DisplayFromDoc(lineDoc);
-		const int subLine = static_cast<int>(visibleLine - lineStartSet);
+		int subLine = static_cast<int>(visibleLine - lineStartSet);
+
+		//Au: prevent jumping caret to the end of line on click (or drag) on an annotation. I's very annoying, eg may scroll.
+		//Platform::DebugPrintf("%i %i %i", lineStartSet, subLine, ll->lines);
+		//It seems that ll->lines is the number of text lines (including wrapped lines but not annotations).
+		if(subLine >= ll->lines) subLine = ll->lines - 1; //if annotation, use the last text line
+
 		if (subLine < ll->lines) {
 			const Range rangeSubLine = ll->SubLineRange(subLine, LineLayout::Scope::visibleOnly);
 			const XYPOSITION subLineStart = ll->positions[rangeSubLine.start];
@@ -833,7 +841,7 @@ static ColourDesired SelectionBackground(const ViewStyle &vsDraw, bool main, boo
 }
 
 static ColourDesired TextBackground(const EditModel &model, const ViewStyle &vsDraw, const LineLayout *ll,
-	ColourOptional background, int inSelection, bool inHotspot, int styleMain, Sci::Position i) {
+	ColourOptional background, int inSelection, bool inHotspot, int styleMain, Sci::Position i) noexcept {
 	if (inSelection == 1) {
 		if (vsDraw.selColours.back.isSet && (vsDraw.selAlpha == SC_ALPHA_NOALPHA)) {
 			return SelectionBackground(vsDraw, true, model.primarySelection);
@@ -1229,7 +1237,7 @@ void EditView::DrawFoldDisplayText(Surface *surface, const EditModel &model, con
 
 	if (model.trackLineWidth) {
 		if (rcSegment.right + 1> lineWidthMaxSeen) {
-			// Fold display text border drawn on rcSegment.right with width 1 is the last visble object of the line
+			// Fold display text border drawn on rcSegment.right with width 1 is the last visible object of the line
 			lineWidthMaxSeen = static_cast<int>(rcSegment.right + 1);
 		}
 	}
@@ -1455,7 +1463,9 @@ void EditView::DrawCarets(Surface *surface, const EditModel &model, const ViewSt
 	for (size_t r = 0; (r<model.sel.Count()) || drawDrag; r++) {
 		const bool mainCaret = r == model.sel.Main();
 		SelectionPosition posCaret = (drawDrag ? model.posDrag : model.sel.Range(r).caret);
-		if ((vsDraw.IsBlockCaretStyle() || imeCaretBlockOverride) && !drawDrag && posCaret > model.sel.Range(r).anchor) {
+		if ((vsDraw.DrawCaretInsideSelection(model.inOverstrike, imeCaretBlockOverride)) && 
+			!drawDrag &&
+			posCaret > model.sel.Range(r).anchor) {
 			if (posCaret.VirtualSpace() > 0)
 				posCaret.SetVirtualSpace(posCaret.VirtualSpace() - 1);
 			else
@@ -1470,7 +1480,7 @@ void EditView::DrawCarets(Surface *surface, const EditModel &model, const ViewSt
 				// Get caret point
 				const ScreenLine screenLine(ll, subLine, vsDraw, rcLine.right, tabWidthMinimumPixels);
 
-				const int caretPosition = static_cast<int>(posCaret.Position() - posLineStart - ll->LineStart(subLine));
+				const int caretPosition = offset - ll->LineStart(subLine);
 
 				std::unique_ptr<IScreenLineLayout> slLayout = surface->Layout(&screenLine);
 				const XYPOSITION caretLeft = slLayout->XFromPosition(caretPosition);
@@ -1485,20 +1495,19 @@ void EditView::DrawCarets(Surface *surface, const EditModel &model, const ViewSt
 			}
 			const bool caretBlinkState = (model.caret.active && model.caret.on) || (!additionalCaretsBlink && !mainCaret);
 			const bool caretVisibleState = additionalCaretsVisible || mainCaret;
-			if ((xposCaret >= 0) && (vsDraw.caretWidth > 0) && (vsDraw.caretStyle != CARETSTYLE_INVISIBLE) &&
+			if ((xposCaret >= 0) && vsDraw.IsCaretVisible() &&
 				(drawDrag || (caretBlinkState && caretVisibleState))) {
-				bool caretAtEOF = false;
-				bool caretAtEOL = false;
+				bool canDrawBlockCaret = true;
 				bool drawBlockCaret = false;
 				XYPOSITION widthOverstrikeCaret;
 				XYPOSITION caretWidthOffset = 0;
 				PRectangle rcCaret = rcLine;
 
 				if (posCaret.Position() == model.pdoc->Length()) {   // At end of document
-					caretAtEOF = true;
+					canDrawBlockCaret = false;
 					widthOverstrikeCaret = vsDraw.aveCharWidth;
 				} else if ((posCaret.Position() - posLineStart) >= ll->numCharsInLine) {	// At end of line
-					caretAtEOL = true;
+					canDrawBlockCaret = false;
 					widthOverstrikeCaret = vsDraw.aveCharWidth;
 				} else {
 					const int widthChar = model.pdoc->LenChar(posCaret.Position());
@@ -1523,7 +1532,7 @@ void EditView::DrawCarets(Surface *surface, const EditModel &model, const ViewSt
 				} else if ((caretShape == ViewStyle::CaretShape::block) || imeCaretBlockOverride) {
 					/* Block caret */
 					rcCaret.left = xposCaret;
-					if (!caretAtEOL && !caretAtEOF && (ll->chars[offset] != '\t') && !(IsControlCharacter(ll->chars[offset]))) {
+					if (canDrawBlockCaret && !(IsControlCharacter(ll->chars[offset]))) {
 						drawBlockCaret = true;
 						rcCaret.right = xposCaret + widthOverstrikeCaret;
 					} else {
@@ -2048,7 +2057,7 @@ void EditView::DrawLine(Surface *surface, const EditModel &model, const ViewStyl
 		return; // No further drawing
 	}
 
-	// See if something overrides the line background color.
+	// See if something overrides the line background colour.
 	const ColourOptional background = vsDraw.Background(model.pdoc->GetMark(line), model.caret.active, ll->containsCaret);
 
 	const Sci::Position posLineStart = model.pdoc->LineStart(line);
@@ -2128,9 +2137,12 @@ static void DrawFoldLines(Surface *surface, const EditModel &model, const ViewSt
 		if ((expanded && (model.foldFlags & SC_FOLDFLAG_LINEBEFORE_EXPANDED))
 			||
 			(!expanded && (model.foldFlags & SC_FOLDFLAG_LINEBEFORE_CONTRACTED))) {
-			PRectangle rcFoldLine = rcLine;
-			rcFoldLine.bottom = rcFoldLine.top + 1;
-			surface->FillRectangle(rcFoldLine, vsDraw.styles[STYLE_DEFAULT].fore);
+			if(!(level & 0x1000000)) //Au: QM2: don't draw lines over #region. Draw only over #sub and #ret. QM sets this flag in _FoldingCallback().
+			{
+				PRectangle rcFoldLine = rcLine;
+				rcFoldLine.bottom = rcFoldLine.top + 1;
+				surface->FillRectangle(rcFoldLine, vsDraw.styles[STYLE_DEFAULT].fore);
+			}
 		}
 		// Paint the line below the fold
 		if ((expanded && (model.foldFlags & SC_FOLDFLAG_LINEAFTER_EXPANDED))
@@ -2453,13 +2465,11 @@ Sci::Position EditView::FormatRange(bool draw, const Sci_RangeToFormat *pfr, Sur
 		vsPrint.Refresh(*surfaceMeasure, model.pdoc->tabInChars);	// Recalculate fixedColumnWidth
 	}
 
-	const Sci::Line linePrintStart =
-		model.pdoc->SciLineFromPosition(static_cast<Sci::Position>(pfr->chrg.cpMin));
+	const Sci::Line linePrintStart = model.pdoc->SciLineFromPosition(pfr->chrg.cpMin);
 	Sci::Line linePrintLast = linePrintStart + (pfr->rc.bottom - pfr->rc.top) / vsPrint.lineHeight - 1;
 	if (linePrintLast < linePrintStart)
 		linePrintLast = linePrintStart;
-	const Sci::Line linePrintMax =
-		model.pdoc->SciLineFromPosition(static_cast<Sci::Position>(pfr->chrg.cpMax));
+	const Sci::Line linePrintMax = model.pdoc->SciLineFromPosition(pfr->chrg.cpMax);
 	if (linePrintLast > linePrintMax)
 		linePrintLast = linePrintMax;
 	//Platform::DebugPrintf("Formatting lines=[%0d,%0d,%0d] top=%0d bottom=%0d line=%0d %0d\n",
@@ -2477,7 +2487,7 @@ Sci::Position EditView::FormatRange(bool draw, const Sci_RangeToFormat *pfr, Sur
 
 	Sci::Line lineDoc = linePrintStart;
 
-	Sci::Position nPrintPos = static_cast<Sci::Position>(pfr->chrg.cpMin);
+	Sci::Position nPrintPos = pfr->chrg.cpMin;
 	int visibleLine = 0;
 	int widthPrint = pfr->rc.right - pfr->rc.left - vsPrint.fixedColumnWidth;
 	if (printParameters.wrapState == eWrapNone)

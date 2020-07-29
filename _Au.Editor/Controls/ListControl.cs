@@ -34,6 +34,7 @@ namespace Au.Controls
 		Action<ZItemDrawArgs> _drawAction;
 		Func<int, string> _accName;
 		System.Collections.BitArray _measuredItems;
+		int _dpi;
 
 		public AuListControl()
 		{
@@ -42,7 +43,7 @@ namespace Au.Controls
 			this.ResizeRedraw = true;
 		}
 
-		public void ZAddItems(int count, Func<ZItemMeasureArgs, int> measureFunc, Action<ZItemDrawArgs> drawAction, Func<int, string> accName)
+		public void ZAddItems(int count, Func<ZItemMeasureArgs, int> measureFunc, Action<ZItemDrawArgs> drawAction, Func<int, string> accName, int dpi)
 		{
 			if(count + _count == 0) return;
 			_measureFunc = measureFunc;
@@ -53,6 +54,7 @@ namespace Au.Controls
 			_itemWidth = _itemHeight = 0;
 			_measuredItems = null;
 			_count = count;
+			_dpi=dpi;
 			if(count > 0) {
 				_measuredItems = new System.Collections.BitArray(count);
 				_MeasureItems(0, -1); //now measure only visible items, else slow if many items. When scrolled, will measure others and set AutoScrollMinSize if need again, which will add or update horizontal scrollbar.
@@ -64,7 +66,7 @@ namespace Au.Controls
 
 		public void ZReMeasure()
 		{
-			ZAddItems(_count, _measureFunc, _drawAction, _accName);
+			ZAddItems(_count, _measureFunc, _drawAction, _accName, _dpi);
 		}
 
 		public int ZCount => _count;
@@ -108,7 +110,7 @@ namespace Au.Controls
 		//Sets _itemWidth. If iTo<0, sets _itemHeight too. Uses/sets _measuredItems.
 		void _MeasureItems(int iFrom, int iTo)
 		{
-			using var m = new ZItemMeasureArgs();
+			using var m = new ZItemMeasureArgs(_dpi);
 			if(iTo < 0) {
 				m.index = 0;
 				var z = m.MeasureText("A");
@@ -167,7 +169,7 @@ namespace Au.Controls
 			int iFrom = yFrom / _itemHeight, iTo = Math.Min(_count, yTo / _itemHeight);
 			//AOutput.Write(iFrom, iTo);
 
-			using var args = new ZItemDrawArgs { graphics = g };
+			using var args = new ZItemDrawArgs(_dpi) { graphics = g };
 			for(int i = iFrom; i < iTo; i++) {
 				args.index = i;
 				args.bounds = new Rectangle(-xScroll, i * _itemHeight - yScroll, Math.Max(clip.Width, _itemWidth), _itemHeight);
@@ -198,11 +200,12 @@ namespace Au.Controls
 		{
 			public int index;
 			IntPtr _dc, _oldFont;
+			int _dpi;
 
-			public ZItemMeasureArgs()
+			public ZItemMeasureArgs(int dpi)
 			{
 				_dc = Api.GetDC(default);
-				_oldFont = Api.SelectObject(_dc, Util.NativeFont_.RegularCached);
+				_oldFont = Api.SelectObject(_dc, Util.NativeFont_.RegularCached(_dpi=dpi));
 			}
 
 			public void Dispose()
@@ -229,11 +232,12 @@ namespace Au.Controls
 			public Rectangle bounds;
 			public bool isSelected;
 			IntPtr _dc, _oldFont;
+			int _dpi;
 
-			public ZItemDrawArgs()
+			public ZItemDrawArgs(int dpi)
 			{
 				_dc = Api.GetDC(default);
-				_oldFont = Api.SelectObject(_dc, Util.NativeFont_.RegularCached);
+				_oldFont = Api.SelectObject(_dc, Util.NativeFont_.RegularCached(_dpi=dpi));
 			}
 
 			public void Dispose()

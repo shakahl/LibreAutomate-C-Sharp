@@ -40,7 +40,7 @@ namespace Au.Util
 		/// <summary>
 		/// Adds a file path to an internal collection.
 		/// </summary>
-		/// <param name="file">File path etc. See <see cref="AIcon.GetFileIcon"/>.</param>
+		/// <param name="file">File path etc. See <see cref="AIcon.OfFile"/>.</param>
 		/// <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
 		public void Add(string file, object obj)
 		{
@@ -72,7 +72,7 @@ namespace Au.Util
 		/// <param name="flags"></param>
 		/// <param name="objCommon">Something to pass to callback functions.</param>
 		/// <remarks>
-		/// After this function returns, icons are asynchronously extracted with <see cref="AIcon.GetFileIconHandle"/>, and callback called with icon handle (or default(IntPtr) if failed).
+		/// After this function returns, icons are asynchronously extracted with <see cref="AIcon.OfFile"/>, and callback called with icon handle (or default(IntPtr) if failed).
 		/// The callback is called in this thread. This thread must have a message loop (eg Application.Run).
 		/// If you'll need more icons, you can add more files and call this function again with the same <b>IconsAsync_</b> instance, even if getting old icons if still not finished.
 		/// </remarks>
@@ -130,12 +130,7 @@ namespace Au.Util
 					}
 					//Thread.Sleep(10);
 					var k = d.state as Result;
-					k.hIcon = AIcon.GetFileIconHandle(k.file, _iconSize, _iconFlags);
-
-					//var hi = GetFileIconHandle(k.file, _iconSize, _iconFlags);
-					//if(0!=(_iconFlags&IconGetFlags.NeedImage) && _nPending>20) { /*AOutput.Write(_nPending);*/ k.image = HandleToImage(hi); } else k.hIcon = hi;
-
-					//AOutput.Write("1");
+					k.icon = AIcon.OfFile(k.file, _iconSize, _iconFlags);
 
 					//Prevent overflowing the message queue and the number of icon handles.
 					//Because bad things start when eg toolbar icon count is more than 3000 and they are extracted faster than consumed.
@@ -154,7 +149,7 @@ namespace Au.Util
 
 					var k = o as Result;
 					if(_canceled) {
-						Api.DestroyIcon(k.hIcon);
+						k.icon.Dispose();
 					} else {
 						_callback(k, _objCommon, --_counter); //even if hIcon == default, it can be useful
 						if(_counter == 0) {
@@ -280,8 +275,8 @@ namespace Au.Util
 			/// <summary>obj passed to <see cref="Add(string, object)"/>.</summary>
 			public object obj;
 
-			/// <summary>Icon handle. To get managed object from it, use <b>AIcon.HandleToX</b> functions; else finally call <see cref="AIcon.DestroyIconHandle"/>. Can be default(IntPtr).</summary>
-			public IntPtr hIcon;
+			/// <summary>Icon handle. Will need to dispose. Can be empty.</summary>
+			public AIcon icon;
 
 			/// <summary>Icon converted to Image object, if used IconGetFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
 			//public Image image;

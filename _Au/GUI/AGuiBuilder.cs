@@ -115,32 +115,26 @@ public class AGuiBuilder
 		public FrameworkElement lastAdded;
 		public bool ended;
 
-		protected _PanelBase(AGuiBuilder b, Panel p)
-		{
+		protected _PanelBase(AGuiBuilder b, Panel p) {
 			_b = b;
 			parent = b._p;
 			lastAdded = panel = p;
 		}
 
-		public virtual void BeforeAdd(GBAdd flags = 0)
-		{
+		public virtual void BeforeAdd(GBAdd flags = 0) {
 			if (ended) throw new InvalidOperationException("Cannot add after End()");
 			if (flags.Has(GBAdd.ChildOfLast) && (object)lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
 		}
 
-		public virtual void Add(FrameworkElement c)
-		{
+		public virtual void Add(FrameworkElement c) {
 			panel.Children.Add(lastAdded = c);
 		}
 
 		public virtual void End() { ended = true; }
 
-		public FrameworkElement LastDirect
-		{
-			get
-			{
-				for (var c = lastAdded; ;)
-				{
+		public FrameworkElement LastDirect {
+			get {
+				for (var c = lastAdded; ;) {
 					var pa = c.Parent as FrameworkElement;
 					if ((object)pa == panel) return c;
 					c = pa;
@@ -151,8 +145,7 @@ public class AGuiBuilder
 
 	class _Canvas : _PanelBase
 	{
-		public _Canvas(AGuiBuilder b) : base(b, new Canvas())
-		{
+		public _Canvas(AGuiBuilder b) : base(b, new Canvas()) {
 			panel.HorizontalAlignment = HorizontalAlignment.Left;
 			panel.VerticalAlignment = VerticalAlignment.Top;
 		}
@@ -160,15 +153,13 @@ public class AGuiBuilder
 
 	class _DockPanel : _PanelBase
 	{
-		public _DockPanel(AGuiBuilder b) : base(b, new DockPanel())
-		{
+		public _DockPanel(AGuiBuilder b) : base(b, new DockPanel()) {
 		}
 	}
 
 	class _StackPanel : _PanelBase
 	{
-		public _StackPanel(AGuiBuilder b, bool vertical) : base(b, new StackPanel { Orientation = vertical ? Orientation.Vertical : Orientation.Horizontal })
-		{
+		public _StackPanel(AGuiBuilder b, bool vertical) : base(b, new StackPanel { Orientation = vertical ? Orientation.Vertical : Orientation.Horizontal }) {
 		}
 	}
 
@@ -179,22 +170,17 @@ public class AGuiBuilder
 		bool _isSpan;
 		double? _andWidth;
 
-		public _Grid(AGuiBuilder b) : base(b, new Grid())
-		{
+		public _Grid(AGuiBuilder b) : base(b, new Grid()) {
 			_grid = panel as Grid;
 			if (GridLines) _grid.ShowGridLines = true;
 		}
 
-		public void Row(GBGridLength height)
-		{
+		public void Row(GBGridLength height) {
 			if (_andWidth != null) throw new InvalidOperationException("And().Row()");
-			if (_row >= 0)
-			{
+			if (_row >= 0) {
 				_SetLastSpan();
 				_col = 0;
-			}
-			else if (_grid.ColumnDefinitions.Count == 0)
-			{
+			} else if (_grid.ColumnDefinitions.Count == 0) {
 				_grid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(0, GridUnitType.Auto) });
 				_grid.ColumnDefinitions.Add(new ColumnDefinition());
 			}
@@ -202,27 +188,22 @@ public class AGuiBuilder
 			_grid.RowDefinitions.Add(height.Row);
 		}
 
-		public override void BeforeAdd(GBAdd flags = 0)
-		{
+		public override void BeforeAdd(GBAdd flags = 0) {
 			base.BeforeAdd(flags);
 			if (flags.Has(GBAdd.ChildOfLast)) return;
 			if (_row < 0 || _col >= _grid.ColumnDefinitions.Count) Row(0);
 			_isSpan = false;
 		}
 
-		public override void Add(FrameworkElement c)
-		{
-			if (_andWidth != null)
-			{
+		public override void Add(FrameworkElement c) {
+			if (_andWidth != null) {
 				var width = _andWidth.Value; _andWidth = null;
 				if (width < 0) { var m = c.Margin; m.Left += -width + 3; c.Margin = m; } else { c.Width = width; c.HorizontalAlignment = HorizontalAlignment.Right; }
 				var last = LastDirect;
 				Grid.SetColumn(c, Grid.GetColumn(last));
 				Grid.SetColumnSpan(c, Grid.GetColumnSpan(last));
 				_isSpan = true;
-			}
-			else
-			{
+			} else {
 				Grid.SetColumn(c, _col);
 			}
 			_col++;
@@ -230,8 +211,7 @@ public class AGuiBuilder
 			base.Add(c);
 		}
 
-		public void And(double width)
-		{
+		public void And(double width) {
 			if (_col == 0 || _andWidth != null) throw new InvalidOperationException("And()");
 			var c = LastDirect;
 			if (width < 0) { c.Width = -width; c.HorizontalAlignment = HorizontalAlignment.Left; } else { var m = c.Margin; m.Right += width + 3; c.Margin = m; }
@@ -239,13 +219,11 @@ public class AGuiBuilder
 			_col--;
 		}
 
-		public void Span(int span)
-		{
+		public void Span(int span) {
 			if (_col == 0) throw new InvalidOperationException("Span() at row start");
 			int cc = _grid.ColumnDefinitions.Count;
 			_col--;
-			if (span != 0)
-			{ //if 0, will add 2 controls in 1 cell
+			if (span != 0) { //if 0, will add 2 controls in 1 cell
 				if (span < 0 || _col + span > cc) span = cc - _col;
 				Grid.SetColumnSpan(LastDirect, span);
 				_col += span;
@@ -254,25 +232,21 @@ public class AGuiBuilder
 		}
 
 		//If not all row cells filled, let the last control span all remaining cells, unless its span specified explicitly.
-		void _SetLastSpan()
-		{
-			if (!_isSpan && _row >= 0)
-			{
+		void _SetLastSpan() {
+			if (!_isSpan && _row >= 0) {
 				int n = _grid.ColumnDefinitions.Count - _col;
 				if (n > 0) Grid.SetColumnSpan(LastDirect, n + 1);
 			}
 			_isSpan = false;
 		}
 
-		public void Skip(int span = 1)
-		{
+		public void Skip(int span = 1) {
 			BeforeAdd();
 			_col += span;
 			_isSpan = true;
 		}
 
-		public override void End()
-		{
+		public override void End() {
 			base.End();
 			_SetLastSpan();
 		}
@@ -288,17 +262,12 @@ public class AGuiBuilder
 	/// <remarks>
 	/// Always call this method to end a nested panel. For root panel it is optional if using <see cref="ShowDialog"/>.
 	/// </remarks>
-	public AGuiBuilder End()
-	{
-		if (!_p.ended)
-		{
+	public AGuiBuilder End() {
+		if (!_p.ended) {
 			_p.End();
-			if (_p.parent != null)
-			{
+			if (_p.parent != null) {
 				_p = _p.parent;
-			}
-			else
-			{
+			} else {
 
 			}
 		}
@@ -322,8 +291,7 @@ public class AGuiBuilder
 	/// 
 	/// If there are star-sized columns, grid width should be defined. Call <see cref="Width"/> or <see cref="Size"/>. But it the grid is in a cell of another grid, usually it's better to set column width of that grid to a non-zero value, ie let it be not auto-sized.
 	/// </remarks>
-	public AGuiBuilder Columns(params GBGridLength[] widths)
-	{
+	public AGuiBuilder Columns(params GBGridLength[] widths) {
 		var g = Last as Grid ?? throw new InvalidOperationException("Columns() in wrong place");
 		g.ColumnDefinitions.Clear();
 		foreach (var v in widths) g.ColumnDefinitions.Add(v.Column);
@@ -346,8 +314,7 @@ public class AGuiBuilder
 	/// 
 	/// If there are star-sized rows, grid height should be defined. Call <see cref="Height"/> or <see cref="Size"/>. But it the grid is in a cell of another grid, usually it's better to set row height of that grid to a non-zero value, ie let it be not auto-sized.
 	/// </remarks>
-	public AGuiBuilder Row(GBGridLength height)
-	{
+	public AGuiBuilder Row(GBGridLength height) {
 		if (_p.ended) throw new InvalidOperationException("Row() after End()");
 		var g = _p as _Grid ?? throw new InvalidOperationException("Row() in non-grid panel");
 		g.Row(height);
@@ -373,8 +340,7 @@ public class AGuiBuilder
 	/// </summary>
 	/// <param name="windowTitle">Window title bar text.</param>
 	/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
-	public AGuiBuilder(string windowTitle, GBPanelType panelType = GBPanelType.Grid)
-	{
+	public AGuiBuilder(string windowTitle, GBPanelType panelType = GBPanelType.Grid) {
 		/*_container=*/
 		_window = new Window() { Title = windowTitle };
 		_AddRootPanel(_window, false, panelType, true);
@@ -395,17 +361,14 @@ public class AGuiBuilder
 	/// - <b>WindowStartupLocation</b> = Center.
 	/// - <b>Topmost</b> and <b>Background</b> depending on static properties <see cref="WinTopmost"/> and <see cref="WinWhite"/>.
 	/// </param>
-	public AGuiBuilder(FrameworkElement container = null, GBPanelType panelType = GBPanelType.Grid, bool setProperties = true)
-	{
+	public AGuiBuilder(FrameworkElement container = null, GBPanelType panelType = GBPanelType.Grid, bool setProperties = true) {
 		//_container=container; // ?? throw new ArgumentNullException("container"); //can be null
 		_window = container as Window;
 		_AddRootPanel(container, true, panelType, setProperties);
 	}
 
-	void _AddRootPanel(FrameworkElement container, bool externalContainer, GBPanelType panelType, bool setProperties)
-	{
-		switch (panelType)
-		{
+	void _AddRootPanel(FrameworkElement container, bool externalContainer, GBPanelType panelType, bool setProperties) {
+		switch (panelType) {
 			case GBPanelType.Grid:
 				_p = new _Grid(this);
 				break;
@@ -420,8 +383,7 @@ public class AGuiBuilder
 				break;
 		}
 		if (_window != null) _p.panel.Margin = new Thickness(3);
-		switch (container)
-		{
+		switch (container) {
 			case ContentControl c: c.Content = _p.panel; break;
 			case Popup c: c.Child = _p.panel; break;
 				//rejected. Rare. Let users add explicitly, like .Also(b => container.Child = b.Panel).
@@ -431,18 +393,12 @@ public class AGuiBuilder
 				//		case TextBlock c: c.Inlines.Add(_p.panel); break;
 				//		default: throw new NotSupportedException("Unsupported container type");
 		}
-		if (setProperties)
-		{
-			if (_window != null)
-			{
-				if (panelType != GBPanelType.Canvas)
-				{
-					if (externalContainer)
-					{
+		if (setProperties) {
+			if (_window != null) {
+				if (panelType != GBPanelType.Canvas) {
+					if (externalContainer) {
 						_window.SizeToContent = (double.IsNaN(_window.Width) ? SizeToContent.Width : 0) | (double.IsNaN(_window.Height) ? SizeToContent.Height : 0);
-					}
-					else
-					{
+					} else {
 						_window.SizeToContent = SizeToContent.WidthAndHeight;
 					}
 				}
@@ -468,8 +424,7 @@ public class AGuiBuilder
 	/// Calls <see cref="End"/>, sets <see cref="Window.Owner"/> and calls <see cref="Window.ShowDialog"/>.
 	/// You can instead call these functions directly. Or call <see cref="Window.Show"/> to show as non-modal window, ie don't wait. Or add <see cref="Panel"/> to some container window or other element, etc.
 	/// </remarks>
-	public bool ShowDialog(Window owner = null)
-	{
+	public bool ShowDialog(Window owner = null) {
 		_ThrowIfNotWindow();
 		if (_IsNested) throw new InvalidOperationException("Missing End() for a StartX() panel");
 		End();
@@ -489,9 +444,8 @@ public class AGuiBuilder
 	/// <remarks>
 	/// Use WPF logical device-independent units, not real pixels.
 	/// </remarks>
-	/// <seealso cref="WinSaveRestore"/>
-	public AGuiBuilder WinSize(GBLength? width = null, GBLength? height = null)
-	{
+	/// <seealso cref="WinSaved"/>
+	public AGuiBuilder WinSize(GBLength? width = null, GBLength? height = null) {
 		_ThrowIfNotWindow();
 		if (_IsWindowEnded) throw new InvalidOperationException("WinSize() cannot be after last End()"); //although currently could be anywhere
 		var u = _window.SizeToContent;
@@ -520,9 +474,8 @@ public class AGuiBuilder
 	/// .WinXY(Coord.Max);
 	/// ]]></code>
 	/// </example>
-	/// <seealso cref="WinSaveRestore"/>
-	public AGuiBuilder WinXY(Coord x = default, Coord y = default, AScreen screen = default, bool workArea = true, bool ensureInside = true)
-	{
+	/// <seealso cref="WinSaved"/>
+	public AGuiBuilder WinXY(Coord x = default, Coord y = default, AScreen screen = default, bool workArea = true, bool ensureInside = true) {
 		WinXY(WindowStartupLocation.Manual);
 		_window.WindowState = WindowState.Normal;
 		_window.Loaded += (o, _) => {
@@ -533,8 +486,7 @@ public class AGuiBuilder
 			//repeat if: A. Rescaled when moved to a screen with different DPI. B. Applied Width/Height etc after this.
 			//	Would be more efficient to set Left/Top etc in that screen, but difficult because WPF uses different units.
 
-			RECT _Move()
-			{
+			RECT _Move() {
 				RECT r = w.Rect;
 				r.MoveInScreen(x, y, screen, workArea, ensureInside);
 				w.MoveLL(r);
@@ -554,8 +506,7 @@ public class AGuiBuilder
 	/// </summary>
 	/// <exception cref="InvalidOperationException">Container is not Window.</exception>
 	/// <exception cref="NotSupportedException">Window is loaded.</exception>
-	public AGuiBuilder WinXY(WindowStartupLocation startLocation)
-	{
+	public AGuiBuilder WinXY(WindowStartupLocation startLocation) {
 		_ThrowIfNotWindow();
 		if (_window.IsLoaded) throw new NotSupportedException("WinXY() when window is loaded");
 		_window.WindowStartupLocation = startLocation;
@@ -565,12 +516,9 @@ public class AGuiBuilder
 	/// <summary>
 	/// Saves window xy/size/state when closing and restores when opening.
 	/// </summary>
-	/// <param name="save">Called when closing the window. Receives XML string containing window xy/size/state. Can save it in registry, file, anywhere.</param>
 	/// <param name="saved">String that the <i>save</i> action received previously. Can be null or "", usually first time (still not saved).</param>
-	/// <exception cref="InvalidOperationException">
-	/// - Container is not Window.
-	/// - Cannot be after last End().
-	/// </exception>
+	/// <param name="save">Called when closing the window. Receives string containing window xy/size/state. Can save it in registry, file, anywhere.</param>
+	/// <exception cref="InvalidOperationException">Container is not Window.</exception>
 	/// <remarks>
 	/// If you use <see cref="WinSize"/>, call it before. It is used if size is still not saved. The same if you set window position or state.
 	/// </remarks>
@@ -578,15 +526,17 @@ public class AGuiBuilder
 	/// <code><![CDATA[
 	/// string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
 	/// var b = new AGuiBuilder("Window").WinSize(300)
-	/// 	.WinSaveRestore(o => Microsoft.Win32.Registry.SetValue(rk, rv, o), Microsoft.Win32.Registry.GetValue(rk, rv, null) as string)
+	/// 	.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o))
 	/// 	.Row(0).Add("Text", out TextBox _)
 	/// 	.R.AddOkCancel()
 	/// 	.End();
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder WinSaveRestore(Action<string> save, string saved)
-	{
+	public AGuiBuilder WinSaved(string saved, Action<string> save) {
 		_ThrowIfNotWindow();
+#if true
+		AWnd.More.SavedRect.Restore(_window, saved, save);
+#else
 		if (_IsWindowEnded) throw new InvalidOperationException("WinSaveRestoreRectAndState() cannot be after last End()");
 		if (!saved.NE())
 		{
@@ -611,6 +561,7 @@ public class AGuiBuilder
 			var ws = _window.WindowState; if (ws != WindowState.Normal) x.SetAttributeValue("state", (int)ws);
 			save(x.ToString());
 		};
+#endif
 		return this;
 	}
 
@@ -630,8 +581,7 @@ public class AGuiBuilder
 	/// The function uses only non-null parameters.
 	/// Or you can change <see cref="Window"/> properties directly, for example <c>.Also(b => { b.Window.Topmost = true; })</c>.
 	/// </remarks>
-	public AGuiBuilder WinProperties(ResizeMode? resizeMode = null, bool? showActivated = null, bool? showInTaskbar = null, bool? topmost = null, WindowState? state = null, WindowStyle? style = null, ImageSource icon = null, bool? whiteBackground = null)
-	{
+	public AGuiBuilder WinProperties(ResizeMode? resizeMode = null, bool? showActivated = null, bool? showInTaskbar = null, bool? topmost = null, WindowState? state = null, WindowStyle? style = null, ImageSource icon = null, bool? whiteBackground = null) {
 		_ThrowIfNotWindow();
 		//		if(_IsWindowEnded) throw new InvalidOperationException("WinProperties() cannot be after last End()"); //no, can be anywhere
 		if (resizeMode.HasValue) _window.ResizeMode = resizeMode.Value;
@@ -714,8 +664,7 @@ public class AGuiBuilder
 	/// <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align better when using default theme. Default value of this option depends on application's theme.</param>
 	/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 	/// <param name="margin">Default margin of elements. If not set, default marging is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
-	public AGuiBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null)
-	{
+	public AGuiBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null) {
 		if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
 		if (rightAlignLabels != null) _opt_rightAlignLabels = rightAlignLabels.Value;
 		if (margin != null) _opt_margin = margin.Value;
@@ -746,25 +695,20 @@ public class AGuiBuilder
 	/// </param>
 	/// <param name="flags"></param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-	public AGuiBuilder Add<T>(out T variable, object text = null, GBAdd flags = 0) where T : FrameworkElement, new()
-	{
+	public AGuiBuilder Add<T>(out T variable, object text = null, GBAdd flags = 0) where T : FrameworkElement, new() {
 		_p.BeforeAdd(flags);
 		variable = new T();
 		_Add(variable, text, flags, true);
 		return this;
 	}
 
-	void _Add(FrameworkElement e, object text, GBAdd flags, bool add)
-	{
+	void _Add(FrameworkElement e, object text, GBAdd flags, bool add) {
 		bool childOfLast = flags.Has(GBAdd.ChildOfLast);
-		if (!flags.Has(GBAdd.DontSetProperties))
-		{
-			if (e is Control c)
-			{
+		if (!flags.Has(GBAdd.DontSetProperties)) {
+			if (e is Control c) {
 				//rejected: modify padding etc through XAML. Not better than this.
 				//rejected: use _opt_modifyPadding only if font Segoe UI. Tested with several fonts.
-				switch (c)
-				{
+				switch (c) {
 					case Label _:
 						if (_opt_modifyPadding) c.Padding = new Thickness(1, 2, 1, 1); //default 5
 						if (_opt_rightAlignLabels) c.HorizontalAlignment = HorizontalAlignment.Right;
@@ -790,19 +734,14 @@ public class AGuiBuilder
 					case ComboBox cb:
 						//Change padding because default Windows font Segoe UI is badly centered vertically. Too big space above text, and too big control height.
 						//Tested: changed padding isn't the reason of different control heights or/and arrows when high DPI.
-						if (cb.IsEditable)
-						{
+						if (cb.IsEditable) {
 							if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 2, 2); //default (2)
-						}
-						else
-						{
+						} else {
 							if (_opt_modifyPadding) c.Padding = new Thickness(5, 2, 4, 3); //default (6,3,5,3)
 						}
 						break;
 				}
-			}
-			else if (e is Image)
-			{
+			} else if (e is Image) {
 				e.UseLayoutRounding = true; //workaround for blurred images
 			}
 
@@ -815,10 +754,8 @@ public class AGuiBuilder
 			//			e.UseLayoutRounding=true;
 			//			e.SnapsToDevicePixels=true; //does not help
 
-			if (text != null)
-			{
-				switch (e)
-				{
+			if (text != null) {
+				switch (e) {
 					case HeaderedContentControl u: u.Header = text; break; //GroupBox, Expander
 					case HeaderedItemsControl u: u.Header = text; break;
 					case ContentControl u: u.Content = text; break; //Label, buttons, etc
@@ -833,20 +770,15 @@ public class AGuiBuilder
 		}
 		if (!(childOfLast || e is GridSplitter)) e.Margin = _opt_margin;
 
-		if (add)
-		{
+		if (add) {
 			_AddToParent(e, childOfLast);
-			if (_alsoAll != null)
-			{
+			if (_alsoAll != null) {
 				_alsoAllArgs ??= new GBAlsoAllArgs();
-				if (_p is _Grid g)
-				{
+				if (_p is _Grid g) {
 					var v = g.NextCell;
 					_alsoAllArgs.Column = v.column - 1;
 					_alsoAllArgs.Row = v.row;
-				}
-				else
-				{
+				} else {
 					_alsoAllArgs.Column = _alsoAllArgs.Row = -1;
 				}
 				_alsoAll(this, _alsoAllArgs);
@@ -854,21 +786,16 @@ public class AGuiBuilder
 		}
 	}
 
-	void _AddToParent(FrameworkElement e, bool childOfLast)
-	{
-		if (childOfLast)
-		{ //info: BeforeAdd throws if Last is panel
-			switch (Last)
-			{
+	void _AddToParent(FrameworkElement e, bool childOfLast) {
+		if (childOfLast) { //info: BeforeAdd throws if Last is panel
+			switch (Last) {
 				case ContentControl d: d.Content = e; break;
 				case Decorator d: d.Child = e; break;
 				//case Panel d: d.Children.Add(e); break; //no, cannot add multiple items because Last becomes the added child
 				default: throw new NotSupportedException($"Cannot add child to {Last.GetType().Name}.");
 			}
 			_p.lastAdded = e;
-		}
-		else
-		{
+		} else {
 			_p.Add(e);
 		}
 	}
@@ -888,8 +815,7 @@ public class AGuiBuilder
 	/// <param name="variable">Receives element's variable. More info - see other overload.</param>
 	/// <param name="text">Text, header or other content. More info - see other overload.</param>
 	/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-	public AGuiBuilder Add<T>(string label, out T variable, object text = null) where T : FrameworkElement, new()
-	{
+	public AGuiBuilder Add<T>(string label, out T variable, object text = null) where T : FrameworkElement, new() {
 		Add(out Label la, label);
 		Add(out variable, text); //note: no flags
 		System.Windows.Automation.AutomationProperties.SetLabeledBy(variable, la);
@@ -902,8 +828,7 @@ public class AGuiBuilder
 	/// <param name="element"></param>
 	/// <param name="flags"></param>
 	/// <exception cref="NotSupportedException">The function does not support flag <i>childOfLast</i> for this element type.</exception>
-	public AGuiBuilder Add(FrameworkElement element, GBAdd flags = 0)
-	{
+	public AGuiBuilder Add(FrameworkElement element, GBAdd flags = 0) {
 		_p.BeforeAdd(flags);
 		_Add(element, null, flags, true);
 		return this;
@@ -918,8 +843,7 @@ public class AGuiBuilder
 	/// <remarks>
 	/// If <i>flags</i> contains <b>OK</b> or <b>Validate</b> and this window contains elements for which was called <see cref="Validation"/>, on click performs validation; if fails, does not call the <i>click</i> action and does not close the window.
 	/// </remarks>
-	public AGuiBuilder AddButton(object text, Action<GBButtonClickArgs> click, GBBFlags flags = 0/*, Action<GBButtonClickArgs> clickSplit = null*/)
-	{
+	public AGuiBuilder AddButton(object text, Action<GBButtonClickArgs> click, GBBFlags flags = 0/*, Action<GBButtonClickArgs> clickSplit = null*/) {
 		Add(out Button c, text);
 		if (flags.Has(GBBFlags.OK)) c.IsDefault = true;
 		if (flags.Has(GBBFlags.Cancel)) c.IsCancel = true;
@@ -927,8 +851,7 @@ public class AGuiBuilder
 		if (click != null || flags.HasAny(GBBFlags.OK | GBBFlags.Validate)) c.Click += (_, _) => {
 			var w = _FindWindow(c);
 			if (flags.HasAny(GBBFlags.OK | GBBFlags.Validate) && !_Validate(w, c)) return;
-			if (click != null)
-			{
+			if (click != null) {
 				var e = new GBButtonClickArgs { Button = c, Window = w };
 				click.Invoke(e);
 				if (e.Cancel) return;
@@ -952,8 +875,7 @@ public class AGuiBuilder
 	/// <remarks>
 	/// When clicked, sets <see cref="ResultButton"/> = <i>result</i>, closes the window, and <see cref="ShowDialog"/> returns true.
 	/// </remarks>
-	public AGuiBuilder AddButton(object text, int result/*, Action<GBButtonClickArgs> clickSplit = null*/)
-	{
+	public AGuiBuilder AddButton(object text, int result/*, Action<GBButtonClickArgs> clickSplit = null*/) {
 		Add(out Button c, text);
 		c.Click += (_, _) => { _resultButton = result; _FindWindow(c).DialogResult = true; };
 		//		if(clickSplit!=null) c.ClickSplit+=clickSplit;
@@ -982,8 +904,7 @@ public class AGuiBuilder
 	/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If <i>ok</i> or <i>cancel</i> is null, adds single button without panel.
 	/// Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
 	/// </remarks>
-	public AGuiBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", Action<GBButtonClickArgs> clickOk = null)
-	{
+	public AGuiBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", Action<GBButtonClickArgs> clickOk = null) {
 		int n = 0; if (ok != null) n++; if (cancel != null) n++;
 		if (n == 0) throw new ArgumentNullException(null, "AddOkCancel(null, null)");
 		bool stack = n > 1 && !(_p is _StackPanel);
@@ -1001,11 +922,9 @@ public class AGuiBuilder
 	/// <remarks>
 	/// In <b>Canvas</b> panel separator's default size is 1x1. Need to set size, like <c>.AddSeparator()[0, 50, 100, 1]</c>.
 	/// </remarks>
-	public AGuiBuilder AddSeparator(bool? vertical = null)
-	{
+	public AGuiBuilder AddSeparator(bool? vertical = null) {
 		Add(out Separator c);
-		if (vertical ?? (_p.panel is StackPanel p && p.Orientation == Orientation.Horizontal))
-		{
+		if (vertical ?? (_p.panel is StackPanel p && p.Orientation == Orientation.Horizontal)) {
 			c.Style = _style_VertSep ??= c.FindResource(ToolBar.SeparatorStyleKey) as Style;
 		}
 		return this;
@@ -1020,8 +939,7 @@ public class AGuiBuilder
 	/// <remarks>
 	/// Actually just changes column index where next element will be added.
 	/// </remarks>
-	public AGuiBuilder Skip(int span = 1)
-	{
+	public AGuiBuilder Skip(int span = 1) {
 		if (span < 0) throw new ArgumentException();
 		var g = _p as _Grid ?? throw new InvalidOperationException("Skip() in non-grid panel");
 		g.Skip(span);
@@ -1042,8 +960,7 @@ public class AGuiBuilder
 	/// .Add("File", out TextBox _).And(70).AddButton("Browse...", null)
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder And(double width)
-	{
+	public AGuiBuilder And(double width) {
 		var g = _p as _Grid ?? throw new InvalidOperationException("And() in non-grid panel");
 		g.And(width);
 		return this;
@@ -1061,8 +978,7 @@ public class AGuiBuilder
 	/// <remarks>
 	/// Also there is an indexer for it. For example, instead of code <c>.Span(2)</c> use code <c>[2]</c>.
 	/// </remarks>
-	public AGuiBuilder Span(int columns)
-	{
+	public AGuiBuilder Span(int columns) {
 		_ParentOfLastAsOrThrow<_Grid>().Span(columns);
 		return this;
 	}
@@ -1083,8 +999,7 @@ public class AGuiBuilder
 	/// In next row(s) use <see cref="Skip"/> to skip cells occupied by this element.
 	/// Often it's better to add a nested panel instead. See <see cref="StartGrid"/>.
 	/// </remarks>
-	public AGuiBuilder SpanRows(int rows)
-	{
+	public AGuiBuilder SpanRows(int rows) {
 		var c = _ParentOfLastAsOrThrow<_Grid>().LastDirect;
 		Grid.SetRowSpan(c, rows);
 		return this;
@@ -1094,8 +1009,7 @@ public class AGuiBuilder
 	/// Calls your callback function.
 	/// </summary>
 	/// <param name="action"></param>
-	public AGuiBuilder Also(Action<AGuiBuilder> action)
-	{
+	public AGuiBuilder Also(Action<AGuiBuilder> action) {
 		action(this);
 		return this;
 	}
@@ -1111,8 +1025,7 @@ public class AGuiBuilder
 	/// })
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder AlsoAll(Action<AGuiBuilder, GBAlsoAllArgs> action)
-	{
+	public AGuiBuilder AlsoAll(Action<AGuiBuilder, GBAlsoAllArgs> action) {
 		_alsoAll = action;
 		return this;
 	}
@@ -1127,8 +1040,7 @@ public class AGuiBuilder
 	/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 	/// <param name="alignY">Vertical alignment.</param>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-	public AGuiBuilder Size(GBLength width, GBLength height, string alignX = null, string alignY = null)
-	{
+	public AGuiBuilder Size(GBLength width, GBLength height, string alignX = null, string alignY = null) {
 		var c = Last;
 		width.ApplyTo(c, false);
 		height.ApplyTo(c, true);
@@ -1142,8 +1054,7 @@ public class AGuiBuilder
 	/// <param name="width">Width or/and min/max width.</param>
 	/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-	public AGuiBuilder Width(GBLength width, string alignX = null)
-	{
+	public AGuiBuilder Width(GBLength width, string alignX = null) {
 		width.ApplyTo(Last, false);
 		if (alignX != null) Align(alignX);
 		return this;
@@ -1155,8 +1066,7 @@ public class AGuiBuilder
 	/// <param name="height">Height or/and min/max height.</param>
 	/// <param name="alignY">Vertical alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 	/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-	public AGuiBuilder Height(GBLength height, string alignY = null)
-	{
+	public AGuiBuilder Height(GBLength height, string alignY = null) {
 		height.ApplyTo(Last, true);
 		if (alignY != null) Align(null, alignY);
 		return this;
@@ -1173,8 +1083,7 @@ public class AGuiBuilder
 	/// <remarks>
 	/// Only in <see cref="Canvas"/> panel you can set position explicitly. In other panel types it is set automatically and can be adjusted with <see cref="Margin"/>, <see cref="Align"/>, container's <see cref="AlignContent"/>, etc.
 	/// </remarks>
-	public AGuiBuilder XY(double x, double y, GBLength? width = null, GBLength? height = null)
-	{
+	public AGuiBuilder XY(double x, double y, GBLength? width = null, GBLength? height = null) {
 		var c = _ParentOfLastAsOrThrow<_Canvas>().LastDirect;
 		Canvas.SetLeft(c, x);
 		Canvas.SetTop(c, y);
@@ -1193,8 +1102,7 @@ public class AGuiBuilder
 	/// </summary>
 	/// <param name="dock"></param>
 	/// <exception cref="InvalidOperationException">Current panel is not <b>DockPanel</b>.</exception>
-	public AGuiBuilder Dock(Dock dock)
-	{
+	public AGuiBuilder Dock(Dock dock) {
 		var c = _ParentOfLastAsOrThrow<_DockPanel>().LastDirect;
 		DockPanel.SetDock(c, dock);
 		return this;
@@ -1206,8 +1114,7 @@ public class AGuiBuilder
 	/// <param name="x">Horizontal alignment.</param>
 	/// <param name="y">Vertical alignment.</param>
 	/// <exception cref="InvalidOperationException">Current panel is <b>Canvas</b>.</exception>
-	public AGuiBuilder Align(HorizontalAlignment? x = null, VerticalAlignment? y = null)
-	{
+	public AGuiBuilder Align(HorizontalAlignment? x = null, VerticalAlignment? y = null) {
 		var c = Last;
 		if (c.Parent is Canvas) throw new InvalidOperationException("Align() in Canvas panel.");
 		if (x != null) c.HorizontalAlignment = x.Value;
@@ -1233,8 +1140,7 @@ public class AGuiBuilder
 	/// <param name="x">Horizontal alignment.</param>
 	/// <param name="y">Vertical alignment.</param>
 	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
-	public AGuiBuilder AlignContent(HorizontalAlignment? x = null, VerticalAlignment? y = null)
-	{
+	public AGuiBuilder AlignContent(HorizontalAlignment? x = null, VerticalAlignment? y = null) {
 		var c = _LastAsControlOrThrow();
 		if (x != null) c.HorizontalContentAlignment = x.Value;
 		if (y != null) c.VerticalContentAlignment = y.Value;
@@ -1253,8 +1159,7 @@ public class AGuiBuilder
 	/// <summary>
 	/// Sets margin of the last added element.
 	/// </summary>
-	public AGuiBuilder Margin(Thickness margin)
-	{
+	public AGuiBuilder Margin(Thickness margin) {
 		Last.Margin = margin;
 		return this;
 	}
@@ -1262,8 +1167,7 @@ public class AGuiBuilder
 	/// <summary>
 	/// Sets margin of the last added element.
 	/// </summary>
-	public AGuiBuilder Margin(double? left = null, double? top = null, double? right = null, double? bottom = null)
-	{
+	public AGuiBuilder Margin(double? left = null, double? top = null, double? right = null, double? bottom = null) {
 		var c = Last;
 		var p = c.Margin;
 		left ??= p.Left;
@@ -1282,8 +1186,7 @@ public class AGuiBuilder
 	/// Examples: "tb" (top 0, bottom 0), "L5 R15" (left 5, right 15), "2" (all sides 2).
 	/// </param>
 	/// <exception cref="ArgumentException">Invalid string.</exception>
-	public AGuiBuilder Margin(string margin)
-	{
+	public AGuiBuilder Margin(string margin) {
 		var c = Last;
 		var m = c.Margin;
 		_ThicknessFromString(ref m, margin);
@@ -1291,21 +1194,17 @@ public class AGuiBuilder
 		return this;
 	}
 
-	static void _ThicknessFromString(ref Thickness t, string s, [CallerMemberName] string caller = null)
-	{
+	static void _ThicknessFromString(ref Thickness t, string s, [CallerMemberName] string caller = null) {
 		if (s.NE()) return;
-		if (s.ToInt(out int v1, 0, out int e1) && e1 == s.Length)
-		{
+		if (s.ToInt(out int v1, 0, out int e1) && e1 == s.Length) {
 			t = new Thickness(v1);
 			return;
 		}
 
-		for (int i = 0; i < s.Length; i++)
-		{
+		for (int i = 0; i < s.Length; i++) {
 			var c = s[i]; if (c == ' ') continue;
 			int v = s.ToInt(i + 1, out int end); if (end > 0) i = end - 1; //never mind: should be double. Currently we don't have a function that can recognize and convert part of string to double.
-			switch (c)
-			{
+			switch (c) {
 				case 't': case 'T': t.Top = v; break;
 				case 'b': case 'B': t.Bottom = v; break;
 				case 'l': case 'L': t.Left = v; break;
@@ -1319,8 +1218,7 @@ public class AGuiBuilder
 	/// Sets padding of the last added control.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
-	public AGuiBuilder Padding(Thickness thickness)
-	{
+	public AGuiBuilder Padding(Thickness thickness) {
 		_LastAsControlOrThrow().Padding = thickness;
 		return this;
 	}
@@ -1329,8 +1227,7 @@ public class AGuiBuilder
 	/// Sets padding of the last added control.
 	/// </summary>
 	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
-	public AGuiBuilder Padding(double? left = null, double? top = null, double? right = null, double? bottom = null)
-	{
+	public AGuiBuilder Padding(double? left = null, double? top = null, double? right = null, double? bottom = null) {
 		var c = _LastAsControlOrThrow();
 		var p = c.Padding;
 		left ??= p.Left;
@@ -1350,8 +1247,7 @@ public class AGuiBuilder
 	/// </param>
 	/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
 	/// <exception cref="ArgumentException">Invalid string.</exception>
-	public AGuiBuilder Padding(string padding)
-	{
+	public AGuiBuilder Padding(string padding) {
 		var c = _LastAsControlOrThrow();
 		var p = c.Padding;
 		_ThicknessFromString(ref p, padding);
@@ -1363,8 +1259,7 @@ public class AGuiBuilder
 	/// Sets <see cref="UIElement.IsEnabled"/> of the last added element.
 	/// </summary>
 	/// <param name="disabled">If true (default), sets IsEnabled=false, else sets IsEnabled=true.</param>
-	public AGuiBuilder Disabled(bool disabled = true)
-	{
+	public AGuiBuilder Disabled(bool disabled = true) {
 		Last.IsEnabled = !disabled;
 		return this;
 	}
@@ -1373,8 +1268,7 @@ public class AGuiBuilder
 	/// Sets <see cref="UIElement.Visibility"/> of the last added element.
 	/// </summary>
 	/// <param name="hidden">If true (default), sets <see cref="Visibility"/> <b>Hiden</b>; if false - <b>Visible</b>; if null - <b>Collapsed</b>.</param>
-	public AGuiBuilder Hidden(bool? hidden = true)
-	{
+	public AGuiBuilder Hidden(bool? hidden = true) {
 		Last.Visibility = hidden switch { true => Visibility.Hidden, false => Visibility.Visible, _ => Visibility.Collapsed };
 		return this;
 	}
@@ -1390,7 +1284,7 @@ public class AGuiBuilder
 	/// Tooltip with content created by another AGuiBuilder.
 	/// <code><![CDATA[
 	/// var btt = new AGuiBuilder() //creates tooltip content
-	/// 	.R.Add<Image>().Image(AIcon.GetStockIconHandle(StockIcon.INFO))
+	/// 	.R.Add<Image>().Image(AIcon.Stock(StockIcon.INFO))
 	/// 	.R.Add<TextBlock>().Text("Some ", "<b>text", ".")
 	/// 	.End();
 	/// 
@@ -1401,8 +1295,7 @@ public class AGuiBuilder
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder Tooltip(object tooltip)
-	{
+	public AGuiBuilder Tooltip(object tooltip) {
 		Last.ToolTip = tooltip;
 		return this;
 	}
@@ -1421,23 +1314,18 @@ public class AGuiBuilder
 	/// .R.Add<Label>("Example2").Brush(new LinearGradientBrush(Colors.Chocolate, Colors.White, 0))
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder Brush(Brush background = null, Brush foreground = null)
-	{ //named not Colors because: 1. Can set other brush than color, eg gradient. 2. Rarely used and in autocompletion lists is above Columns.
+	public AGuiBuilder Brush(Brush background = null, Brush foreground = null) { //named not Colors because: 1. Can set other brush than color, eg gradient. 2. Rarely used and in autocompletion lists is above Columns.
 		var last = Last;
-		if (foreground != null)
-		{
-			switch (last)
-			{
+		if (foreground != null) {
+			switch (last) {
 				case Control c: c.Foreground = foreground; break;
 				case TextBlock c: c.Foreground = foreground; break;
 				default: throw new NotSupportedException("Color(): Last added must be Control or TextBlock, or foreground null");
 			}
 		}
-		if (background != null)
-		{
+		if (background != null) {
 			if (last == _p.panel && !_IsNested && _window != null) last = _window;
-			switch (last)
-			{
+			switch (last) {
 				case Control c: c.Background = background; break;
 				case TextBlock c: c.Background = background; break;
 				case Border c: c.Background = background; break;
@@ -1462,11 +1350,9 @@ public class AGuiBuilder
 	/// .R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", GBAdd.ChildOfLast)
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder Border(Brush color, double thickness, Thickness? padding = null, double? cornerRadius = null)
-	{
+	public AGuiBuilder Border(Brush color, double thickness, Thickness? padding = null, double? cornerRadius = null) {
 		var thick = new Thickness(thickness);
-		switch (Last)
-		{
+		switch (Last) {
 			case Control c:
 				if (cornerRadius != null) throw new NotSupportedException("Border(): Last added must be Border, or cornerRadius null");
 				c.BorderBrush = color;
@@ -1491,8 +1377,7 @@ public class AGuiBuilder
 	/// <param name="size"></param>
 	/// <param name="bold"></param>
 	/// <param name="italic"></param>
-	public AGuiBuilder Font(string name = null, double? size = null, bool? bold = null, bool? italic = null)
-	{
+	public AGuiBuilder Font(string name = null, double? size = null, bool? bold = null, bool? italic = null) {
 		var c = Last;
 		if (name != null) TextElement.SetFontFamily(c, new FontFamily(name));
 		if (size != null) TextElement.SetFontSize(c, size.Value);
@@ -1507,8 +1392,7 @@ public class AGuiBuilder
 	/// <summary>
 	/// Attempts to set focus to the last added element when it'll become visible.
 	/// </summary>
-	public AGuiBuilder Focus()
-	{
+	public AGuiBuilder Focus() {
 		Last.Focus();
 		return this;
 	}
@@ -1518,8 +1402,7 @@ public class AGuiBuilder
 	/// Then with <see cref="Bind"/> of this and descendant elements don't need to specify data source object because it is set by this function.
 	/// </summary>
 	/// <param name="source">Data source object.</param>
-	public AGuiBuilder BindingContext(object source)
-	{
+	public AGuiBuilder BindingContext(object source) {
 		Last.DataContext = source;
 		return this;
 	}
@@ -1529,8 +1412,7 @@ public class AGuiBuilder
 	/// </summary>
 	/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 	/// <param name="path">Source property name or path, for example <c>nameof(MyData.Property)</c>. Source object should be set with <see cref="BindingContext"/>.</param>
-	public AGuiBuilder Bind(DependencyProperty property, string path)
-	{
+	public AGuiBuilder Bind(DependencyProperty property, string path) {
 		Last.SetBinding(property, path);
 		return this;
 	}
@@ -1540,8 +1422,7 @@ public class AGuiBuilder
 	/// </summary>
 	/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 	/// <param name="binding">A binding object, for example <c>new Binding(nameof(MyData.Property))</c> or <c>new Binding(nameof(MyData.Property)) { Source = dataObject }</c>. In the first case, source object should be set with <see cref="BindingContext"/>.</param>
-	public AGuiBuilder Bind(DependencyProperty property, BindingBase binding)
-	{
+	public AGuiBuilder Bind(DependencyProperty property, BindingBase binding) {
 		Last.SetBinding(property, binding);
 		return this;
 	}
@@ -1552,8 +1433,7 @@ public class AGuiBuilder
 	/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 	/// <param name="binding">A binding object.</param>
 	///	<param name="r">The return value of <b>SetBinding</b>.</param>
-	public AGuiBuilder Bind(DependencyProperty property, BindingBase binding, out BindingExpressionBase r)
-	{
+	public AGuiBuilder Bind(DependencyProperty property, BindingBase binding, out BindingExpressionBase r) {
 		r = Last.SetBinding(property, binding);
 		return this;
 	}
@@ -1564,8 +1444,7 @@ public class AGuiBuilder
 	/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 	/// <param name="source">Data source object.</param>
 	/// <param name="path">Source property name or path, for example <c>nameof(MyData.Property)</c>.</param>
-	public AGuiBuilder Bind(DependencyProperty property, object source, string path)
-	{
+	public AGuiBuilder Bind(DependencyProperty property, object source, string path) {
 		var binding = new Binding(path) { Source = source };
 		Last.SetBinding(property, binding);
 		return this;
@@ -1590,8 +1469,7 @@ public class AGuiBuilder
 	/// AOutput.Write(tName.Text, tCount.Text.ToInt());
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder Validation(Func<FrameworkElement, string> func/*, DependencyProperty property=null*/)
-	{
+	public AGuiBuilder Validation(Func<FrameworkElement, string> func/*, DependencyProperty property=null*/) {
 		var c = Last;
 		//validate on click of OK or some other button. Often eg text fields initially are empty and must be filled.
 		(_validations ??= new List<_Validation>()).Add(new _Validation { e = c, func = func });
@@ -1614,14 +1492,11 @@ public class AGuiBuilder
 
 	List<_Validation> _validations;
 
-	bool _Validate(Window w, Button b)
-	{
+	bool _Validate(Window w, Button b) {
 		TextBlock tb = null;
-		foreach (var gb in _GetAllGuiBuilders(w))
-		{ //find all AGuiBuilders used to build this window
+		foreach (var gb in _GetAllGuiBuilders(w)) { //find all AGuiBuilders used to build this window
 			if (gb._validations == null) continue;
-			foreach (var v in gb._validations)
-			{
+			foreach (var v in gb._validations) {
 				var e = v.e;
 				var s = v.func(e); if (s == null) continue;
 				if (tb == null) tb = new TextBlock(); else tb.Inlines.Add(new LineBreak());
@@ -1629,8 +1504,7 @@ public class AGuiBuilder
 				h.Click += (o, y) => {
 					if (_FindAncestorTabItem(e, out var ti)) ti.IsSelected = true; //SHOULDDO: support other cases too, eg other tabcontrol-like control class or tabcontrol in tabcontrol.
 					ATimer.After(1, _ => { //else does not focus etc if was in hidden tab page
-						try
-						{
+						try {
 							e.BringIntoView();
 							e.Focus();
 						}
@@ -1649,14 +1523,11 @@ public class AGuiBuilder
 		return false;
 	}
 
-	static List<AGuiBuilder> _GetAllGuiBuilders(DependencyObject root)
-	{
+	static List<AGuiBuilder> _GetAllGuiBuilders(DependencyObject root) {
 		var a = new List<AGuiBuilder>();
 		_Enum(root, 0);
-		void _Enum(DependencyObject parent, int level)
-		{
-			foreach (var o in LogicalTreeHelper.GetChildren(parent).OfType<DependencyObject>())
-			{
+		void _Enum(DependencyObject parent, int level) {
+			foreach (var o in LogicalTreeHelper.GetChildren(parent).OfType<DependencyObject>()) {
 				//				AOutput.Write(new string(' ', level) + o);
 				if (o is Panel p && s_cwt.TryGetValue(p, out var gb)) a.Add(gb);
 				_Enum(o, level + 1);
@@ -1665,13 +1536,11 @@ public class AGuiBuilder
 		return a;
 	}
 
-	static bool _FindAncestorTabItem(DependencyObject e, out TabItem ti)
-	{
+	static bool _FindAncestorTabItem(DependencyObject e, out TabItem ti) {
 		ti = null;
 		for (; ; )
 		{
-			switch (e = LogicalTreeHelper.GetParent(e))
-			{
+			switch (e = LogicalTreeHelper.GetParent(e)) {
 				case null: return false;
 				case TabItem t: ti = t; return true;
 			}
@@ -1699,8 +1568,7 @@ public class AGuiBuilder
 	/// <param name="check"></param>
 	/// <param name="threeState"></param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>ToggleButton</b>.</exception>
-	public AGuiBuilder Checked(bool? check = true, bool threeState = false)
-	{
+	public AGuiBuilder Checked(bool? check = true, bool threeState = false) {
 		var c = Last as ToggleButton ?? throw new NotSupportedException("Checked(): Last added element must be CheckBox or RadioButton");
 		c.IsThreeState = threeState;
 		c.IsChecked = check;
@@ -1715,8 +1583,7 @@ public class AGuiBuilder
 	/// <remarks>
 	/// Unlike other similar functions, does not use <see cref="Last"/>.
 	/// </remarks>
-	public AGuiBuilder Checked(bool check, RadioButton control)
-	{
+	public AGuiBuilder Checked(bool check, RadioButton control) {
 		control.IsChecked = check;
 		return this;
 	}
@@ -1726,10 +1593,8 @@ public class AGuiBuilder
 	/// </summary>
 	/// <param name="readOnly"></param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>TextBoxBase</b> or <b>ComboBox</b>.</exception>
-	public AGuiBuilder Readonly(bool readOnly = true)
-	{ //rejected: , bool caretVisible=false. Not useful.
-		switch (Last)
-		{
+	public AGuiBuilder Readonly(bool readOnly = true) { //rejected: , bool caretVisible=false. Not useful.
+		switch (Last) {
 			case TextBoxBase c:
 				c.IsReadOnly = readOnly;
 				//			c.IsReadOnlyCaretVisible=caretVisible;
@@ -1748,8 +1613,7 @@ public class AGuiBuilder
 	/// <param name="height">If not null, sets height or/and min/max height.</param>
 	/// <param name="wrap"><see cref="TextBox.TextWrapping"/>.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>TextBox</b>.</exception>
-	public AGuiBuilder Multiline(GBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow)
-	{
+	public AGuiBuilder Multiline(GBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow) {
 		var c = Last as TextBox ?? throw new NotSupportedException("Multiline(): Last added must be TextBox");
 		c.AcceptsReturn = true;
 		c.TextWrapping = wrap;
@@ -1763,8 +1627,7 @@ public class AGuiBuilder
 	/// Makes the last added <see cref="ComboBox"/> editable.
 	/// </summary>
 	/// <exception cref="NotSupportedException">The last added element is not <b>ComboBox</b>.</exception>
-	public AGuiBuilder Editable()
-	{
+	public AGuiBuilder Editable() {
 		var c = Last as ComboBox ?? throw new NotSupportedException("Editable(): Last added must be ComboBox");
 		c.IsEditable = true;
 		if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 2, 2); //default (2) or set by _Add() for non-editable
@@ -1791,16 +1654,12 @@ public class AGuiBuilder
 	/// </remarks>
 	public AGuiBuilder Items(params object[] items) => _Items(items, null);
 
-	AGuiBuilder _Items(object[] a, System.Collections.IEnumerable e)
-	{
+	AGuiBuilder _Items(object[] a, System.Collections.IEnumerable e) {
 		var ic = Last as ItemsControl ?? throw new NotSupportedException("Items(): Last added must be ItemsControl, for example ComboBox");
-		if (a != null)
-		{
+		if (a != null) {
 			ic.Items.Clear();
 			foreach (var v in a) ic.Items.Add(v);
-		}
-		else if (e != null)
-		{
+		} else if (e != null) {
 			ic.ItemsSource = e;
 		}
 		if (Last is ComboBox cb && !cb.IsEditable && cb.HasItems) cb.SelectedIndex = 0;
@@ -1824,8 +1683,7 @@ public class AGuiBuilder
 	/// <param name="once">Call the function once. If false, calls on each drop down.</param>
 	/// <param name="onDropDown">Callback function that should add items. Called when (if) showing the dropdown part of the <b>ComboBox</b> first time. Don't need to clear old items.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>ComboBox</b>.</exception>
-	public AGuiBuilder Items(bool once, Action<ComboBox> onDropDown)
-	{
+	public AGuiBuilder Items(bool once, Action<ComboBox> onDropDown) {
 		var c = Last as ComboBox ?? throw new NotSupportedException("Items(): Last added must be ComboBox");
 		EventHandler d = null;
 		d = (_, _) => {
@@ -1843,8 +1701,7 @@ public class AGuiBuilder
 	/// <param name="index">0-based item index</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>Selector</b>.</exception>
 	/// <seealso cref="Items"/>.
-	public AGuiBuilder Select(int index)
-	{
+	public AGuiBuilder Select(int index) {
 		var c = Last as Selector ?? throw new NotSupportedException("Items(): Last added must be Selector, for example ComboBox or ListBox");
 		c.SelectedIndex = index;
 		return this;
@@ -1856,8 +1713,7 @@ public class AGuiBuilder
 	/// <param name="item">An added item.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>Selector</b>.</exception>
 	/// <seealso cref="Items"/>.
-	public AGuiBuilder Select(object item)
-	{
+	public AGuiBuilder Select(object item) {
 		var c = Last as Selector ?? throw new NotSupportedException("Items(): Last added must be Selector, for example ComboBox or ListBox");
 		c.SelectedItem = item;
 		return this;
@@ -1884,17 +1740,14 @@ public class AGuiBuilder
 	/// .R.Add<TextBlock>().Text("Text ", "<b>bold ", "<a>link", new Action(() => AOutput.Write("click")), " ", new Run("color") { Foreground=Brushes.Blue, Background=Brushes.Cornsilk, FontSize=20 }, ".")
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder Text(params object[] inlines)
-	{
+	public AGuiBuilder Text(params object[] inlines) {
 		var c = Last as TextBlock ?? throw new NotSupportedException("Text(): Last added must be TextBlock");
 		var k = c.Inlines;
 		k.Clear();
 		Hyperlink link = null;
-		foreach (var v in inlines)
-		{
+		foreach (var v in inlines) {
 			Inline n = null; int i;
-			switch (v)
-			{
+			switch (v) {
 				case Hyperlink x:
 					n = link = x;
 					break;
@@ -1908,19 +1761,15 @@ public class AGuiBuilder
 					k.Add(x);
 					continue;
 				case string x:
-					if (x.Starts('<') && (i = x.Starts(false, "<a>", "<b>", "<i>", "<u>")) > 0)
-					{
+					if (x.Starts('<') && (i = x.Starts(false, "<a>", "<b>", "<i>", "<u>")) > 0) {
 						var run = new Run(x[3..]);
-						switch (i)
-						{
+						switch (i) {
 							case 1: n = link = new Hyperlink(run); break;
 							case 2: n = new Bold(run); break;
 							case 3: n = new Italic(run); break;
 							case 4: n = new Underline(run); break;
 						}
-					}
-					else
-					{
+					} else {
 						k.Add(x);
 						continue;
 					}
@@ -1948,15 +1797,12 @@ public class AGuiBuilder
 	/// <remarks>
 	/// If fails to load, prints warning. See <see cref="AWarning.Write"/>.
 	/// </remarks>
-	public AGuiBuilder Load(string source)
-	{
+	public AGuiBuilder Load(string source) {
 		var c = Last;
 		bool bad = false;
-		try
-		{
+		try {
 			source = _UriNormalize(source);
-			switch (c)
-			{
+			switch (c) {
 				case WebBrowser u: u.Source = new Uri(source); break;
 				case Frame u: u.Source = new Uri(source); break;
 				case RichTextBox u when source.Ends(".rtf", true):
@@ -1981,8 +1827,7 @@ public class AGuiBuilder
 	public AGuiBuilder Image(ImageSource source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 		 => _Image(source, null, stretch, stretchDirection);
 
-	AGuiBuilder _Image(ImageSource source, string file, Stretch stretch, StretchDirection stretchDirection)
-	{
+	AGuiBuilder _Image(ImageSource source, string file, Stretch stretch, StretchDirection stretchDirection) {
 		var c = Last as Image ?? throw new NotSupportedException("Image(): Last added must be Image");
 		if (file != null) try { source = new BitmapImage(_Uri(file)); } catch (Exception ex) { AWarning.Write(ex.ToString(), -1); }
 		c.Stretch = stretch; //default Uniform
@@ -2005,23 +1850,19 @@ public class AGuiBuilder
 		=> _Image(null, source, stretch, stretchDirection);
 
 	/// <summary>
-	/// Gets file/folder/etc icon with <see cref="AIcon.GetFileIcon"/> and sets <see cref="Image.Source"/> of the last added <see cref="System.Windows.Controls.Image"/>.
+	/// Creates image from native icon handle and loads into the last added <see cref="System.Windows.Controls.Image"/>.
 	/// </summary>
-	/// <param name="hIcon">Native icon handle. See <see cref="AIcon"/>, <see cref="System.Drawing.SystemIcons"/>. Does nothing if <c>default(IntPtr)</c>.</param>
-	/// <param name="dispose">Destroy the native icon object. Default true.</param>
+	/// <param name="icon">Native icon handle. Does nothing if empty.</param>
+	/// <param name="dispose">Destroy the native icon object. Default true. If false, caller can dispose it at any time.</param>
 	/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
 	/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 	/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
 	/// <remarks>
 	/// If fails to convert icon to image, prints warning. See <see cref="AWarning.Write"/>.
 	/// </remarks>
-	public AGuiBuilder Image(IntPtr hIcon, bool dispose = true, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
-	{
-		if (hIcon == default) return this;
-		BitmapSource source;
-		try { source = System.Windows.Interop.Imaging.CreateBitmapSourceFromHIcon(hIcon, default, default); }
-		catch (Exception ex) { AWarning.Write(ex.ToString(), -1); return this; }
-		finally { if (dispose) AIcon.DestroyIconHandle(hIcon); }
+	public AGuiBuilder Image(AIcon icon, bool dispose = true, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly) {
+		var source = icon.ToImageSource(dispose);
+		if (source == null) return this;
 		return _Image(source, null, stretch, stretchDirection);
 		//FUTURE: option to not DPI-scale. This could work: source.CopyPixels(pixels), Bitmap.Image.Create(pixels, dpiX, dpiY).
 	}
@@ -2057,20 +1898,16 @@ public class AGuiBuilder
 	/// if (!b.ShowDialog()) return;
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder Splitter(bool vertical, int span = 1, double thickness = 4)
-	{
+	public AGuiBuilder Splitter(bool vertical, int span = 1, double thickness = 4) {
 		var g = _ParentOfLastAsOrThrow<_Grid>();
 		var c = Last as GridSplitter ?? throw new NotSupportedException("Splitter(): Last added must be GridSplitter");
-		if (vertical)
-		{
+		if (vertical) {
 			c.HorizontalAlignment = HorizontalAlignment.Center;
 			c.VerticalAlignment = VerticalAlignment.Stretch;
 			c.ResizeDirection = GridResizeDirection.Columns;
 			c.Width = thickness;
 			if (span != 1) Grid.SetRowSpan(c, span);
-		}
-		else
-		{
+		} else {
 			c.HorizontalAlignment = HorizontalAlignment.Stretch;
 			c.VerticalAlignment = VerticalAlignment.Center;
 			c.ResizeDirection = GridResizeDirection.Rows;
@@ -2098,16 +1935,14 @@ public class AGuiBuilder
 
 	#region nested panel
 
-	AGuiBuilder _Start(_PanelBase p, bool childOfLast)
-	{
+	AGuiBuilder _Start(_PanelBase p, bool childOfLast) {
 		_p.BeforeAdd(childOfLast ? GBAdd.ChildOfLast : 0);
 		_AddToParent(p.panel, childOfLast);
 		_p = p;
 		return this;
 	}
 
-	AGuiBuilder _Start<T>(_PanelBase p, out T container, object header) where T : HeaderedContentControl, new()
-	{
+	AGuiBuilder _Start<T>(_PanelBase p, out T container, object header) where T : HeaderedContentControl, new() {
 		Add(out container, header);
 		container.Content = p.panel;
 		if (container is GroupBox) p.panel.Margin = new Thickness(0, 2, 0, 0);
@@ -2225,12 +2060,10 @@ public class AGuiBuilder
 	/// .StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).End()
 	/// ]]></code>
 	/// </example>
-	public AGuiBuilder StartOkCancel()
-	{
+	public AGuiBuilder StartOkCancel() {
 		var pa = _p;
 		StartStack();
-		if (!(pa is _Canvas))
-		{
+		if (!(pa is _Canvas)) {
 			_p.panel.HorizontalAlignment = HorizontalAlignment.Right;
 			_p.panel.VerticalAlignment = VerticalAlignment.Bottom;
 			_p.panel.Margin = new Thickness(0, 2, 0, 0);
@@ -2248,8 +2081,7 @@ public class AGuiBuilder
 
 	Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c);
 
-	void _ThrowIfNotWindow([CallerMemberName] string func = null)
-	{
+	void _ThrowIfNotWindow([CallerMemberName] string func = null) {
 		if (_window == null) throw new InvalidOperationException(func + "(): Container is not Window");
 	}
 
@@ -2257,8 +2089,7 @@ public class AGuiBuilder
 
 	_PanelBase _ParentOfLast => ReferenceEquals(Last, _p.panel) ? _p.parent : _p;
 
-	T _ParentOfLastAsOrThrow<T>([CallerMemberName] string caller = null) where T : _PanelBase
-	{
+	T _ParentOfLastAsOrThrow<T>([CallerMemberName] string caller = null) where T : _PanelBase {
 		return _ParentOfLast is T t ? t : throw new InvalidOperationException($"{caller}() not in {typeof(T).Name[1..]} panel.");
 	}
 
@@ -2271,10 +2102,8 @@ public class AGuiBuilder
 	static Uri _Uri(string source) => new Uri(_UriNormalize(source));
 
 	//Returns true if probably using a custom theme. I don't know what is the correct way, but this should work in most cases. Fast.
-	static bool _IsCustomTheme()
-	{
-		if (s_isCustomTheme == null)
-		{
+	static bool _IsCustomTheme() {
+		if (s_isCustomTheme == null) {
 			var app = Application.Current;
 			s_isCustomTheme = app != null && app.Resources.MergedDictionaries.Count > 0;
 		}
@@ -2340,8 +2169,7 @@ namespace Au.Types
 		double _v;
 		Range _r;
 
-		GBLength(double v, Range r)
-		{
+		GBLength(double v, Range r) {
 			if (r.Start.IsFromEnd || (r.End.IsFromEnd && r.End.Value != 0)) throw new ArgumentException();
 			_v = v; _r = r;
 		}
@@ -2358,8 +2186,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets the width or height value. Returns false if not set.
 		/// </summary>
-		public bool GetLength(out double value)
-		{
+		public bool GetLength(out double value) {
 			value = _v;
 			return !double.IsNaN(_v);
 		}
@@ -2367,8 +2194,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets the minimal value. Returns false if not set.
 		/// </summary>
-		public bool GetMin(out int value)
-		{
+		public bool GetMin(out int value) {
 			value = _r.Start.Value;
 			return value > 0;
 		}
@@ -2376,8 +2202,7 @@ namespace Au.Types
 		/// <summary>
 		/// Gets the maximal value. Returns false if not set.
 		/// </summary>
-		public bool GetMax(out int value)
-		{
+		public bool GetMax(out int value) {
 			value = _r.End.Value;
 			return !_r.End.IsFromEnd;
 		}
@@ -2387,8 +2212,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="e">Element.</param>
 		/// <param name="height">Set <b>Height</b>. If false, sets <b>Width</b>.</param>
-		public void ApplyTo(FrameworkElement e, bool height)
-		{
+		public void ApplyTo(FrameworkElement e, bool height) {
 			if (GetLength(out double d)) { if (height) e.Height = d; else e.Width = d; }
 			if (GetMin(out int i)) { if (height) e.MinHeight = i; else e.MinWidth = i; }
 			if (GetMax(out i)) { if (height) e.MaxHeight = i; else e.MaxWidth = i; }
@@ -2405,8 +2229,7 @@ namespace Au.Types
 		Range _r;
 		DefinitionBase _def;
 
-		GBGridLength(double v, Range r)
-		{
+		GBGridLength(double v, Range r) {
 			if (r.Start.IsFromEnd || (r.End.IsFromEnd && r.End.Value != 0)) throw new ArgumentException();
 			_v = v; _r = r; _def = null;
 		}
@@ -2426,10 +2249,8 @@ namespace Au.Types
 		/// <summary>
 		/// Creates column definition object from assigned width or/and min/max width values. Or just returns the assigned or previously created object.
 		/// </summary>
-		public ColumnDefinition Column
-		{
-			get
-			{
+		public ColumnDefinition Column {
+			get {
 				if (_def is ColumnDefinition d) return d;
 				d = new ColumnDefinition { Width = _GridLength(_v) };
 				if (_r.Start.Value > 0) d.MinWidth = _r.Start.Value;
@@ -2442,10 +2263,8 @@ namespace Au.Types
 		/// <summary>
 		/// Creates row definition object from assigned height or/and min/max height values. Or just returns the assigned or previously created object.
 		/// </summary>
-		public RowDefinition Row
-		{
-			get
-			{
+		public RowDefinition Row {
+			get {
 				if (_def is RowDefinition d) return d;
 				d = new RowDefinition { Height = _GridLength(_v) };
 				if (_r.Start.Value > 0) d.MinHeight = _r.Start.Value;
@@ -2455,8 +2274,7 @@ namespace Au.Types
 			}
 		}
 
-		GridLength _GridLength(double d)
-		{
+		GridLength _GridLength(double d) {
 			if (d > 0) return new GridLength(d, GridUnitType.Pixel);
 			if (d < 0) return new GridLength(-d, GridUnitType.Star);
 			return new GridLength();
@@ -2511,22 +2329,22 @@ namespace Au.Types
 		Validate = 4,
 	}
 
-//rejected. Unsafe etc. For example, when assigning to object, uses CheckBool whereas the user may expect bool.
-//	/// <summary>
-//	/// <see cref="CheckBox"/> that can be used like bool.
-//	/// For example instead of <c>if(c.IsChecked == true)</c> can be used <c>if(c)</c>.
-//	/// </summary>
-//	public class CheckBool : CheckBox
-//	{
-//		///
-//		public CheckBool()
-//		{
-//			this.SetResourceReference(StyleProperty, typeof(CheckBox));
-//		}
-//
-//		/// <summary>
-//		/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
-//		/// </summary>
-//		public static implicit operator bool(CheckBool c) => c.IsChecked.GetValueOrDefault();
-//	}
+	//rejected. Unsafe etc. For example, when assigning to object, uses CheckBool whereas the user may expect bool.
+	//	/// <summary>
+	//	/// <see cref="CheckBox"/> that can be used like bool.
+	//	/// For example instead of <c>if(c.IsChecked == true)</c> can be used <c>if(c)</c>.
+	//	/// </summary>
+	//	public class CheckBool : CheckBox
+	//	{
+	//		///
+	//		public CheckBool()
+	//		{
+	//			this.SetResourceReference(StyleProperty, typeof(CheckBox));
+	//		}
+	//
+	//		/// <summary>
+	//		/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
+	//		/// </summary>
+	//		public static implicit operator bool(CheckBool c) => c.IsChecked.GetValueOrDefault();
+	//	}
 }

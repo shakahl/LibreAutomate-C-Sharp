@@ -1078,7 +1078,7 @@ namespace Au.Types
 	/// - <see cref="Bitmap"/> - image object.
 	/// - <b>WIImage[]</b> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
 	/// 
-	/// Icons are not supported directly, but you can use <see cref="AIcon.GetFileIconImage"/> or <see cref="AIcon.HandleToImage"/>.
+	/// Icons are not supported directly; you can use <see cref="AIcon"/> to get icon and convert to bitmap.
 	/// </remarks>
 	public struct WIImage
 	{

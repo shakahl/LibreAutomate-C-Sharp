@@ -126,22 +126,26 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_AccGetProps(Cpp_Acc a, string props, out BSTR sResult);
 
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		static extern void Cpp_Unload();
-
-		internal static void Unload()
+#if DEBUG
+		internal static void DebugUnload()
 		{
 			//run GC to release Firefox acc wrappers. Else may not unload from Firefox.
 			GC.Collect();
 			GC.WaitForPendingFinalizers();
-			Cpp_Unload();
+			//Cpp_Unload(0); //in Setup32.dll, it's 32-bit
+			AFile.Run(@"Q:\app\Au\Other\Programs\unload AuCpp dll.exe", null, RFlags.WaitForExit); //loads Setup32.dll and calls Cpp_Unload
 		}
+#endif
 
 		// STRING
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern char* Cpp_LowercaseTable();
+
+		// CLIPBOARD
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern IntPtr Cpp_Clipboard(IntPtr hh);
 
 		// PROCESS
 

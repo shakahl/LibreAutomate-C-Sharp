@@ -40,6 +40,8 @@ namespace Au.Tools
 		{
 			InitializeComponent();
 
+			AWnd.More.SavedRect.Restore(this, Program.Settings.tools_AAcc_wndPos);
+
 			Action<SG.CellContext> f = _grid_ZValueChanged;
 			_grid.ZValueChanged += f;
 			_grid2.ZValueChanged += f;
@@ -53,10 +55,6 @@ namespace Au.Tools
 		{
 			base.OnLoad(e);
 
-			AWnd w = (AWnd)this;
-			var wp = Program.Settings.tools_AAcc_wndPos;
-			if(wp != null) try { w.RestoreSavedRect(wp, true); } catch { }
-
 			if(_acc != null) _SetAcc(false);
 
 			_InitInfo();
@@ -69,8 +67,7 @@ namespace Au.Tools
 			_cCapture.Checked = false;
 			_capt?.Dispose();
 
-			AWnd w = (AWnd)this;
-			Program.Settings.tools_AAcc_wndPos = w.SaveRect();
+			Program.Settings.tools_AAcc_wndPos = new AWnd.More.SavedRect(this).ToString();
 
 			base.OnFormClosing(e);
 		}

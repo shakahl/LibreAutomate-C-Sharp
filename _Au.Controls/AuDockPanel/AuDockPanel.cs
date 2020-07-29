@@ -198,7 +198,7 @@ namespace Au.Controls
 			get {
 				if(__captionHeight == 0) {
 					var fh = this.Font.Height; //not FontHeight, it caches the value and it is not auto updated on font change
-					__captionHeight = Math.Max(fh, Au.Util.ADpi.ScaleInt(16)) + 2; //16 for icon, 2 for padding
+					__captionHeight = Math.Max(fh, Au.Util.ADpi.Scale(16)) + 2; //16 for icon, 2 for padding
 				}
 				return __captionHeight;
 			}

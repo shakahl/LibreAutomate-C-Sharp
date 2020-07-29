@@ -1,20 +1,20 @@
-﻿#define _CRT_SECURE_NO_WARNINGS
+﻿
+#define _CRT_SECURE_NO_WARNINGS
 #pragma warning(disable: 6386 6385 6255 6305 6011 28251)
 
-//#include <stdlib.h>
-#include <string.h>
 #include <string>
+#include <vector>
 #include <Windows.h>
+//#include <Shlwapi.h>
+//#pragma comment(lib, "shlwapi.lib")
 #include "coreclrhost.h"
 
-//min supported Core version.
-//SHOULDDO: somehow auto-update, else will forget this when updating Core version of C# projects (<TargetFramework>netcoreapp3.1</TargetFramework>).
-#define COREVER1 3
-#define COREVER2 1
-#define COREVER3 0
+//min supported .NET version. Installed major must be ==, minor >=, patch any (we'll use highest found), preview any (we'll use release or highest preview).
+//SHOULDDO: somehow auto-update, else will forget this when updating .NET version of C# projects (<TargetFramework>...</TargetFramework>).
+#define NETVERMAJOR 5
+#define NETVERMINOR 0
 
-//#define PRINT
-#ifdef PRINT
+#if 0
 template<typename ... Args>
 void Print(LPCSTR frm, Args ... args)
 {
@@ -41,135 +41,225 @@ void Print(LPCSTR frm, Args ... args)
 #define lenof(x) (sizeof(x) / sizeof(*(x)))
 #define is32bit (sizeof(void*) == 4)
 
-int toUtf8(LPCWSTR utf16, int lenUtf16, LPSTR utf8, int lenUtf8) {
-	return WideCharToMultiByte(CP_UTF8, 0, utf16, lenUtf16, utf8, lenUtf8, nullptr, nullptr);
+void _WstringFrom(std::wstring& r, LPCWSTR w1, size_t len1, LPCWSTR w2, size_t len2) {
+	if(len1 == (size_t)(-1)) len1 = w1 == nullptr ? 0 : wcslen(w1);
+	if(len2 == (size_t)(-1)) len2 = w2 == nullptr ? 0 : wcslen(w2);
+	if(len1 > 0) {
+		r.reserve(len1 + len2);
+		r.assign(w1, len1);
+		if(len2 > 0) r.append(w2, len2);
+	} else r.assign(w2, len2);
 }
 
-int toUtf16(LPCSTR utf8, int lenUtf8, LPWSTR utf16, int lenUtf16) {
-	return MultiByteToWideChar(CP_UTF8, 0, utf8, lenUtf8, utf16, lenUtf16);
+void _WstringFrom(std::wstring& r, const std::wstring& w1, LPCWSTR w2, size_t len2) {
+	_WstringFrom(r, w1.c_str(), w1.length(), w2, len2);
 }
 
-bool regOpenKey(HKEY hkey, LPCWSTR subkey, HKEY& hkRet) {
-	return 0 == ::RegOpenKeyExW(hkey, subkey, 0, KEY_READ | (is32bit ? 0 : KEY_WOW64_32KEY), &hkRet);
+void _ToUtf8(LPCWSTR w, size_t len, std::string& r) {
+	r.resize(WideCharToMultiByte(CP_UTF8, 0, w, (int)len, nullptr, 0, nullptr, nullptr));
+	WideCharToMultiByte(CP_UTF8, 0, w, (int)len, &r[0], (int)r.length(), nullptr, nullptr);
+	//note: reserve/resize does not work, because resize fills with 0 chars. It seems there is no way to avoid.
 }
 
-bool regGetUtf8(HKEY hkey, LPCWSTR name, LPSTR value, DWORD& size) {
-	auto w = (LPWSTR)_alloca(size);
-	DWORD size2 = size;
-	bool R = 0 == RegQueryValueExW(hkey, name, nullptr, nullptr, (LPBYTE)w, &size2);
-	if(R) {
-		int n = toUtf8(w, size2 / 2, value, size) - 1;
-		if(n > 0) size = n; else R = false;
-	}
-	if(!R) size = 0;
-	return R;
+void _ToUtf8(const std::wstring& w, std::string& r) {
+	_ToUtf8(w.c_str(), (int)w.length(), r);
 }
 
-bool regGetUtf8(HKEY hkey, LPCWSTR subkey, LPCWSTR name, LPSTR value, DWORD& size) {
-	bool R = regOpenKey(hkey, subkey, hkey);
-	if(R) {
-		R = regGetUtf8(hkey, name, value, size);
-		RegCloseKey(hkey);
-	} else size = 0;
-	return R;
+int _ToUtf8(LPCWSTR w, size_t len, LPSTR utf8, size_t lenUtf8) {
+	return WideCharToMultiByte(CP_UTF8, 0, w, (int)len, utf8, (int)lenUtf8, nullptr, nullptr);
 }
 
-struct _PATHS {
-	char appDir[1000], netCore[1000], netDesktop[1000], asmDll[1000];
-	wchar_t coreclrDll[300];
+//int _ToUtf16(LPCSTR utf8, int lenUtf8, LPWSTR utf16, int lenUtf16) {
+//	return MultiByteToWideChar(CP_UTF8, 0, utf8, lenUtf8, utf16, lenUtf16);
+//}
+
+bool _FileExists(LPCWSTR path) {
+	return 0 == (FILE_ATTRIBUTE_DIRECTORY & GetFileAttributesW(path));
+}
+
+bool _DirExists(LPCWSTR path) {
+	DWORD att = GetFileAttributesW(path);
+	return att != 0xffffffff && 0 != (att & FILE_ATTRIBUTE_DIRECTORY);
+}
+
+bool _IsWow64() {
+	BOOL isWow = 0;
+	return IsWow64Process(GetCurrentProcess(), &isWow) && isWow;
+}
+
+struct PATHS {
+	std::wstring appDir, netCore, netDesktop, coreclrDll, exeName;
+	std::string asmDll, exePath;
 	bool isPrivate;
 };
 
-//HINSTANCE s_hInstance;
-char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
+struct VERSTRUCT {
+	int vMinor, vPatch;
+	bool preview;
+	LPWSTR dirName;
+};
 
-bool GetPaths(_PATHS& p) {
-	//https://github.com/dotnet/designs/blob/master/accepted/install-locations.md
-
-	wchar_t w[300];
-	char version[100];
-
-	//get exe full path
-	DWORD len = ::GetModuleFileNameW(0, w, lenof(w));
-	len = toUtf8(w, len + 1, p.appDir, lenof(w) - 100) - 1; if(len < 7 || p.appDir[len - 4] != '.') return false;
-
-	//get asmDll if it is not exe created from script
-	if(s_asmName[0] == 0) {
-		bool asmSuffixed = is32bit && w[len - 6] == '3' && w[len - 5] == '2'; //if exe is "name32.exe", dll is "name.dll"
-		strcpy(p.asmDll, p.appDir); strcpy(p.asmDll + len - (asmSuffixed ? 6 : 4), ".dll");
+bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT& ver, bool desktop) {
+	//get all compatible installed .NET versions
+	//	See Q:\Downloads\runtime-master\src\installer\corehost\cli\fxr\fx_resolver.cpp
+	std::vector<VERSTRUCT> a;
+	wcscpy(dotnetDir + len, desktop ? L"\\shared\\Microsoft.WindowsDesktop.App\\*" : L"\\shared\\Microsoft.NETCore.App\\*");
+//#define TESTVERSIONS
+#ifdef TESTVERSIONS
+	LPCWSTR atest[] = { L"3.2.1", L"3.1.1", L"3.1.2-preview2", L"3.1.2-preview10", L"3.1.2"/*, L"3.1.9"*/, };
+	for(int itest=0; itest< lenof(atest); itest++) {
+		LPWSTR s = (LPWSTR)atest[itest], s0 = s;
+#else
+	WIN32_FIND_DATAW fd;
+	HANDLE h = FindFirstFileW(dotnetDir, &fd);
+	if(h == INVALID_HANDLE_VALUE) return false;
+	do {
+		LPWSTR s = fd.cFileName, s0 = s;
+		if(*s < '1' || *s > '9' || 0 == (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)) continue;
+#endif
+		//Print("%S", s);
+		int vMajor = wcstol(s, &s, 10); if(vMajor != NETVERMAJOR) continue;
+		if(*s++ != '.' || *s < '0' || *s>'9') continue;
+		int vMinor = wcstol(s, &s, 10); if(vMinor < NETVERMINOR) continue;
+		//if(desktop && vMinor != ver.vMinor) continue; //no, dotnet apphost eats it
+		if(*s++ != '.' || *s < '0' || *s>'9') continue;
+		VERSTRUCT v;
+		v.vMinor = vMinor;
+		v.vPatch = wcstol(s, &s, 10);
+		v.preview = s[0] == '-' && s[1] == 'p';
+		v.dirName = _wcsdup(s0);
+		//Print("%i %i %i %i", vMajor, v.vMinor, v.vPatch, v.preview);
+		a.push_back(v);
+#ifdef TESTVERSIONS
 	}
+#else
+	} while(FindNextFileW(h, &fd));
+	FindClose(h);
+#endif
+	int n = (int)a.size();
+	if(n == 0) return false;
 
-	//get appDir
-	while(p.appDir[len - 1] != '\\') len--;
-	p.appDir[len] = 0;
-
-	//get asmDll if it is exe created from script. See code in Compiler.cs, function _AppHost.
-	if(s_asmName[0] != 0) {
-		strncpy(p.asmDll, p.appDir, len);
-		strcpy(p.asmDll + len, s_asmName);
+	//get best match
+	//	https://docs.microsoft.com/en-us/dotnet/core/versions/selection
+	//	Like documented there, we roll forward minor version and use highest patch version.
+	//	But dotnet apphost doesn't, eg fails if need 3.1 but found 3.2, and even if need 3.1.2 but found 3.1.0. Only rolls forward patch version. I guess this is configurable in json.
+	int iBest = -1, bestMinor = -1, bestPatch = -1;
+	for(int i = 0; i < n; i++) {
+		int v = a[i].vMinor;
+		if(desktop && v == ver.vMinor) { bestMinor = v; break; }
+		if((DWORD)v < (DWORD)bestMinor) bestMinor = v;
 	}
-
-	//is coreclr.dll in app dir?
-	wcscpy(w + len, L"coreclr.dll");
-	if(p.isPrivate = (0xffffffff != GetFileAttributesW(w))) {
-		strcpy(p.netCore, p.appDir);
-		strcpy(p.netDesktop, p.appDir);
-		wcscpy(p.coreclrDll, w);
-		return true;
+	for(int i = 0; i < n; i++) {
+		if(a[i].vMinor != bestMinor) continue;
+		int v = a[i].vPatch;
+		if(desktop && v == ver.vPatch) { bestPatch = v; iBest = i; break; }
+		if(v > bestPatch) {
+			bestPatch = v; iBest = i;
+		}
 	}
-
-	//get Core root path, like "C:\Program Files\dotnet"
-	wchar_t key[] = LR"(SOFTWARE\dotnet\Setup\InstalledVersions\x64)"; if(is32bit) { key[41] = '8'; key[42] = '6'; }
-	HKEY hk1;
-	if(!regOpenKey(HKEY_LOCAL_MACHINE, key, hk1)) return false;
-	if(!regGetUtf8(hk1, L"InstallLocation", p.netCore, len = sizeof(p.netCore) - 150)) { //Core 3.0.1+ does not set InstallLocation; assume default location.
-		int len1 = ExpandEnvironmentStringsW(L"%ProgramFiles%\\dotnet", w, lenof(w)); //info: if is32bit, expands to "C:\Program Files (x86)"
-		toUtf8(w, len1, p.netCore, sizeof(p.netCore) - 150);
+	if(a[iBest].preview) { //don't need this if preview is auto-uninstalled when installing release, but I still did not have a chance to test
+		for(int i = 0; i < n; i++) {
+			if(a[i].vMinor != bestMinor || a[i].vPatch != bestPatch) continue;
+			//if(!a[i].preview || StrCmpLogicalW(a[i].dirName, a[iBest].dirName) > 0) iBest = i; //no, it seems old previews are auto-unisnstalled
+			if(!a[i].preview) {
+				iBest = i; break;
+			}
+		}
 	}
+	//Print("BEST: %i %i %S", bestMinor, bestPatch, a[iBest].dirName);
 
-	//get latest installed Core runtime version, like "3.1.0\"
-	bool ok = regGetUtf8(hk1, L"hostfxr", L"Version", version, len = sizeof(version) - 2);
-	if(ok) {
-		LPSTR v = version; if(strtol(v, &v, 10) < COREVER1 || strtol(++v, &v, 10) < COREVER2 || strtol(++v, &v, 10) < COREVER3) return false;
-		version[len] = '\\'; version[len + 1] = 0;
-	}
-	RegCloseKey(hk1);
-	if(!ok) return false;
+	_WstringFrom(rtDir, dotnetDir, wcslen(dotnetDir) - 1, a[iBest].dirName, -1);
+	ver = a[iBest];
 
-	//get netCore and netDesktop
-	strcat(p.netCore, "\\shared\\Microsoft.");
-	strcpy(p.netDesktop, p.netCore);
-	strcat(p.netCore, "NETCore.App\\"); strcat(p.netCore, version);
-	strcat(p.netDesktop, "WindowsDesktop.App\\"); strcat(p.netDesktop, version);
-
-	//get coreclrDll
-	len = toUtf16(p.netCore, -1, p.coreclrDll, lenof(p.coreclrDll) - 12) - 1; if(len < 0) return false;
-	wcscpy(p.coreclrDll + len, L"coreclr.dll");
-	if(0xffffffff == GetFileAttributesW(p.coreclrDll)) return false;
-
-	//is Desktop installed?
-	len = toUtf16(p.netDesktop, -1, w, lenof(w)) - 2; if(len < 0)return false;
-	w[len] = 0;
-	if(0xffffffff == GetFileAttributesW(w)) return false;
+	for(int i = 0; i < n; i++) free(a[i].dirName);
 
 	return true;
 }
 
-void BuildTpaList(LPCSTR dir, std::string& tpaList)
+char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
+
+bool GetPaths(PATHS& p) {
+	//https://github.com/dotnet/designs/blob/master/accepted/install-locations.md
+
+	wchar_t w[1000];
+	size_t lenApp, lenAppDir;
+
+	//get exe full path
+	lenApp = ::GetModuleFileNameW(0, w, lenof(w) - 50);
+	_ToUtf8(w, lenApp, p.exePath);
+
+	//get appDir and exeName
+	for(lenAppDir = lenApp; w[--lenAppDir] != '\\'; ) { }
+	p.appDir.assign(w, lenAppDir);
+	p.exeName = w + lenAppDir + 1;
+
+	//get asmDll
+	if(s_asmName[0] != 0) { //exe created from script. See code in Compiler.cs, function _AppHost.
+		_ToUtf8(w, lenAppDir + 1, p.asmDll);
+		p.asmDll += s_asmName;
+	} else {
+		int replace = (is32bit && w[lenApp - 6] == '3' && w[lenApp - 5] == '2') ? 6 : 4; //if exe is "name32.exe", dll is "name.dll"
+		_ToUtf8(w, lenApp - replace, p.asmDll);
+		p.asmDll += ".dll";
+	}
+
+	//is coreclr.dll in app dir?
+	wcscpy(w + lenAppDir, L"\\coreclr.dll");
+	if(p.isPrivate = _FileExists(w)) {
+		p.coreclrDll = w;
+		p.netCore = p.appDir;
+		p.netDesktop = p.appDir;
+		return true;
+	}
+
+	//get .NET root path, like "C:\Program Files\dotnet". See Q:\Downloads\runtime-master\src\installer\corehost\cli\fxr_resolver.cpp.
+	DWORD lenDotnet;
+	for(int i = 0; ; i++) {
+		if(i == 0) { //env var DOTNET_ROOT
+			lenDotnet = GetEnvironmentVariableW(_IsWow64() ? L"DOTNET_ROOT(x86)" : L"DOTNET_ROOT", w, lenof(w));
+		} else if(i == 1) { //registry InstallLocation
+			wchar_t key[] = LR"(SOFTWARE\dotnet\Setup\InstalledVersions\x64)"; if(is32bit) { key[41] = '8'; key[42] = '6'; }
+			HKEY hk1;
+			if(0 != RegOpenKeyExW(HKEY_LOCAL_MACHINE, key, 0, KEY_READ | KEY_WOW64_32KEY, &hk1)) lenDotnet = 0;
+			else {
+				if(0 != RegQueryValueExW(hk1, L"InstallLocation", nullptr, nullptr, (LPBYTE)w, &(lenDotnet = lenof(w)))) lenDotnet = 0; else lenDotnet /= 2;
+				RegCloseKey(hk1);
+			}
+		} else { //default location. Eg .NET Core 3.0.1 did not set InstallLocation.
+			lenDotnet = ExpandEnvironmentStringsW(L"%ProgramFiles%\\dotnet", w, lenof(w));
+			if(w[0] == '%') lenDotnet = 0;
+			//SHGetSpecialFolderPathW //no, better don't use shell apis, it's not so important. Current .NET versions set the registry value. Dotnet apphost even uses literal "Program Files" etc string.
+		}
+		if(i > 0 && lenDotnet != 0) lenDotnet--;
+		if(lenDotnet > 1 && lenDotnet < lenof(w) - 100 && _DirExists(w)) break;
+		if(i == 2) return false;
+	}
+	//Print("%S", w);
+
+	VERSTRUCT ver;
+	if(!GetRuntimeDir(w, lenDotnet, p.netCore, ver, false)) return false;
+	if(!GetRuntimeDir(w, lenDotnet, p.netDesktop, ver, true)) return false;
+
+	//get coreclrDll
+	_WstringFrom(p.coreclrDll, p.netCore, L"\\coreclr.dll", -1);
+	return _FileExists(p.coreclrDll.c_str());
+}
+
+void BuildTpaList(const std::wstring& dir, std::string& tpaList)
 {
-	std::string wild = dir; wild += "*.dll";
-	WIN32_FIND_DATAA findData;
-	HANDLE h = FindFirstFileA(wild.c_str(), &findData);
+	std::string dir8, name8; _ToUtf8(dir, dir8); dir8 += '\\';
+	std::wstring wild; _WstringFrom(wild, dir, L"\\*.dll", 6);
+	WIN32_FIND_DATAW fd;
+	HANDLE h = FindFirstFileW(wild.c_str(), &fd);
 	if(h != INVALID_HANDLE_VALUE) {
 		do {
-			char* s = findData.cFileName;
-			int four = *(int*)s;
-			if(four == '-ipa') continue; //api-ms-
-			//Print("%s", s);
-			tpaList += dir;
-			tpaList += s;
-			tpaList += ";";
-		} while(FindNextFileA(h, &findData));
+			wchar_t* s = fd.cFileName;
+			if(s[0] == 'a' && s[1] == 'p' && s[2] == 'i' && s[3] == '-') continue; //api-ms-
+			//Print("%S", s);
+			tpaList += dir8;
+			_ToUtf8(s, name8); tpaList += name8;
+			tpaList += ';';
+		} while(FindNextFileW(h, &fd));
 		FindClose(h);
 	}
 
@@ -179,11 +269,11 @@ void BuildTpaList(LPCSTR dir, std::string& tpaList)
 const char** ArgsUtf8(int& nArgs) {
 	int na = __argc - 1;
 	auto a = __wargv + 1;
-	int size = 0; for(int i = 0; i < na; i++) size += (int)wcslen(a[i]) * 3 + 1;
+	size_t size = 0; for(int i = 0; i < na; i++) size += wcslen(a[i]) * 3 + 1;
 	auto r = (const char**)malloc(na * sizeof(LPSTR) + size);
 	LPSTR p = (LPSTR)(r + na);
 	for(int i = 0; i < na; i++) {
-		int k = toUtf8(a[i], -1, p, size);
+		int k = _ToUtf8(a[i], -1, p, size);
 		if(k == 0) exit(-1);
 		r[i] = p;
 		p += k;
@@ -193,87 +283,90 @@ const char** ArgsUtf8(int& nArgs) {
 	return r;
 }
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR s, int nCmdShow)
+int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdLine, int nCmdShow)
 {
-#if false
-	LARGE_INTEGER c;
-	QueryPerformanceCounter(&c);
-	return c.LowPart;
+#if 0
+	//LARGE_INTEGER c;
+	//QueryPerformanceCounter(&c);
+	//return c.LowPart;
 
+
+	return 0;
 #else
+	//LARGE_INTEGER t1, t2;
+	//QueryPerformanceCounter(&t1);
 
-	//s_hInstance = hInstance;
+	PATHS p;
+	bool pathsOK = GetPaths(p);
+	//Print("exePath=%s", p.exePath.c_str());
+	//Print("asmDll=%s", p.asmDll.c_str());
+	//Print("appDir=%S", p.appDir.c_str());
+	//Print("netCore=%S", p.netCore.c_str());
+	//Print("netDesktop=%S", p.netDesktop.c_str());
+	//Print("coreclrDll=%S", p.coreclrDll.c_str());
 
-	_PATHS p = {};
-	if(!GetPaths(p)) { //fast
-		std::string s1 = "Please install or update .NET Core Desktop Runtime x";
-		s1 += is32bit ? "86" : "64";
-		s1 += ".\r\n\r\nhttps://dotnet.microsoft.com/download";
-		MessageBoxA(0, s1.c_str(), nullptr, MB_ICONERROR);
+	if(!pathsOK) {
+		wchar_t w[200];
+		wsprintfW(w, L"To run this application, need .NET Runtime.\r\nPlease install .NET Desktop Runtime %i.%i x%s.\r\n\r\nDownload from\r\nhttps://dotnet.microsoft.com/download\r\n\r\nOpen the web page?", NETVERMAJOR, NETVERMINOR, is32bit ? L"86" : L"64");
+		if(IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO)) {
+			AllowSetForegroundWindow(ASFW_ANY);
+			int (__stdcall* ShellExecuteA)(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd);
+			(*(FARPROC*)(&ShellExecuteA)) = GetProcAddress(LoadLibraryW(L"shell32"), "ShellExecuteA");
+			ShellExecuteA(NULL, nullptr, "https://dotnet.microsoft.com/download", nullptr, nullptr, SW_SHOWNORMAL);
+		}
 		return -1;
 	}
 
-	//Print("appDir=%s", p.appDir);
-	//Print("netCore=%s", p.netCore);
-	//Print("netDesktop=%s", p.netDesktop);
-	//Print("coreclrDll=%S", p.coreclrDll);
-	//Print("asmDll=%s", p.asmDll);
-	//return 0;
-
-	HMODULE hm = LoadLibraryW(p.coreclrDll); //~3 ms
+	HMODULE hm = LoadLibraryW(p.coreclrDll.c_str()); //3 ms
 	if(hm == NULL) return -2;
 	coreclr_initialize_ptr coreclr_initialize = (coreclr_initialize_ptr)GetProcAddress(hm, "coreclr_initialize");
 	coreclr_execute_assembly_ptr coreclr_execute_assembly = (coreclr_execute_assembly_ptr)GetProcAddress(hm, "coreclr_execute_assembly");
 	//coreclr_create_delegate_ptr coreclr_create_delegate = (coreclr_create_delegate_ptr)GetProcAddress(hm, "coreclr_create_delegate");
 	coreclr_shutdown_ptr coreclr_shutdown = (coreclr_shutdown_ptr)GetProcAddress(hm, "coreclr_shutdown");
 
-	//LARGE_INTEGER t1, t2;
-	//QueryPerformanceCounter(&t1);
-
-	std::string tpaList; //~2 ms total
-	if(!p.isPrivate) {
-		BuildTpaList(p.netDesktop, tpaList); //note: must be first, else eg WPF does not work because netCore dir contains WindowsBase too, and it is invalid
-		BuildTpaList(p.netCore, tpaList);
-	}
-#if false
-	BuildTpaList(p.appDir, tpaList);
-
-	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS" };
-	const char* propertyValues[] = { tpaList.c_str(), strcat(p.appDir, "Libraries") };
-#else
-	else BuildTpaList(p.appDir, tpaList);
-
-	std::string ap(p.appDir);
-	ap[ap.length() - 1] = ';'; ap += p.appDir; ap += "Libraries";
-	std::string nd(p.netCore);
-	nd[nd.length() - 1] = ';'; nd += p.netDesktop; nd[nd.length() - 1] = 0;
-
-	const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS", "NATIVE_DLL_SEARCH_DIRECTORIES", "APP_CONTEXT_BASE_DIRECTORY" };
-	const char* propertyValues[] = { tpaList.c_str(), ap.c_str(), nd.c_str(), p.appDir };
-	//Print("TPA:"); Print("%s", propertyValues[0]);
-	//Print("APP:"); Print("%s", propertyValues[1]);
-	//Print("ND:"); Print("%s", propertyValues[2]);
-	//Print("ABD:"); Print("%s", propertyValues[3]);
-#endif
-	//QueryPerformanceCounter(&t2);
-	//Print(L"%i", (t2.LowPart - t1.LowPart) / 10);
-
-	SetEnvironmentVariable(L"COMPlus_legacyCorruptedStateExceptionsPolicy", L"1");
-
 	void* hostHandle;
 	unsigned int domainId;
+	int hr;
+	{
+		std::string tpaList; tpaList.reserve(30000);
+		if(p.isPrivate) {
+			BuildTpaList(p.appDir, tpaList);
+		} else {
+			BuildTpaList(p.netDesktop, tpaList); //note: must be first, else eg WPF does not work because netCore dir contains WindowsBase too, and it is invalid
+			BuildTpaList(p.netCore, tpaList);
+		}
 
-	int hr = coreclr_initialize(p.appDir, "main", lenof(propertyKeys), propertyKeys, propertyValues, &hostHandle, &domainId); //~15 ms
-	if(hr < 0) {
-		return -3;
-	}
+		std::string appDir8, netDesktop8;
+		_ToUtf8(p.appDir, appDir8);
+		_ToUtf8(p.netDesktop, netDesktop8);
+		std::string ap(appDir8); ap += ';'; ap += appDir8; ap += "\\Libraries";
+		std::string nd; _ToUtf8(p.netCore, nd); nd += ';'; nd += netDesktop8;
+		appDir8 += '\\';
+
+		const char* propertyKeys[] = { "TRUSTED_PLATFORM_ASSEMBLIES", "APP_PATHS", "NATIVE_DLL_SEARCH_DIRECTORIES", "APP_CONTEXT_BASE_DIRECTORY" };
+		const char* propertyValues[] = { tpaList.c_str(), ap.c_str(), nd.c_str(), appDir8.c_str() };
+		//Print("TPA:"); Print("%s", propertyValues[0]);
+		//Print("APP:"); Print("%s", propertyValues[1]);
+		//Print("ND:"); Print("%s", propertyValues[2]);
+		//Print("ABD:"); Print("%s", propertyValues[3]);
+
+		SetEnvironmentVariableW(L"COMPlus_legacyCorruptedStateExceptionsPolicy", L"1");
+
+		//QueryPerformanceCounter(&t2);
+		//Print("%i", (t2.LowPart - t1.LowPart) / 10); //all above code 6 ms
+
+		hr = coreclr_initialize(p.exePath.c_str(), "main", lenof(propertyKeys), propertyKeys, propertyValues, &hostHandle, &domainId); //20 ms
+		if(hr < 0) {
+			return -3;
+		}
+	} //free temp strings eg tpaList 30000
 
 	int nArgs = 0;
 	const char* args0[1] = {};
-	const char** args = (s != nullptr && s[0] != 0) ? ArgsUtf8(nArgs) : args0;
+	const char** args = (pCmdLine != nullptr && *pCmdLine != 0) ? ArgsUtf8(nArgs) : args0;
 
 	unsigned int ec = 0;
-	hr = coreclr_execute_assembly(hostHandle, domainId, nArgs, args, p.asmDll, &ec); //6 ms
+	hr = coreclr_execute_assembly(hostHandle, domainId, nArgs, args, p.asmDll.c_str(), &ec); //6 ms
 
 	coreclr_shutdown(hostHandle, domainId);
 

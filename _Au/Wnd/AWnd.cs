@@ -131,16 +131,14 @@ namespace Au
 		/// <summary>
 		/// Returns true if w != null and w.Value == this.
 		/// </summary>
-		public bool Equals(AWnd? w)
-		{
+		public bool Equals(AWnd? w) {
 			return w != null && w.GetValueOrDefault() == this;
 		}
 
 		/// <summary>
 		/// Returns true if obj is AWnd and contains the same window handle.
 		/// </summary>
-		public override bool Equals(object obj)
-		{
+		public override bool Equals(object obj) {
 			//return obj is AWnd w && this == w; //compiler creates slow and big code if 'is ValueType variable'
 			return obj is AWnd && this == (AWnd)obj;
 		}
@@ -170,14 +168,13 @@ namespace Au
 		/// <summary>
 		/// Formats string <c>$"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}"</c>.
 		/// </summary>
-		public override string ToString()
-		{
-			if(Is0) return "0";
+		public override string ToString() {
+			if (Is0) return "0";
 			var cn = ClassName;
 			var sh = Handle.ToString();
-			if(cn == null) return sh + " <invalid handle>";
+			if (cn == null) return sh + " <invalid handle>";
 			string s = Name;
-			if(s != null) s = s.Escape(limit: 250);
+			if (s != null) s = s.Escape(limit: 250);
 			return $"{sh}  {cn}  \"{s}\"  {ProgramName}  {Rect.ToString()}";
 		}
 
@@ -189,8 +186,7 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn>.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM Send(int message, LPARAM wParam = default, LPARAM lParam = default)
-		{
+		public LPARAM Send(int message, LPARAM wParam = default, LPARAM lParam = default) {
 			Debug.Assert(!Is0);
 			return Api.SendMessage(this, message, wParam, lParam);
 		}
@@ -199,10 +195,9 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn> where lParam is string.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM SendS(int message, LPARAM wParam, string lParam)
-		{
+		public LPARAM SendS(int message, LPARAM wParam, string lParam) {
 			Debug.Assert(!Is0);
-			fixed(char* p = lParam)
+			fixed (char* p = lParam)
 				return Api.SendMessage(this, message, wParam, p);
 			//info: don't use overload, then eg ambiguous if null.
 		}
@@ -211,10 +206,9 @@ namespace Au
 		/// Calls API <msdn>SendMessage</msdn> where lParam is char[].
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM SendS(int message, LPARAM wParam, char[] lParam)
-		{
+		public LPARAM SendS(int message, LPARAM wParam, char[] lParam) {
 			Debug.Assert(!Is0);
-			fixed(char* p = lParam)
+			fixed (char* p = lParam)
 				return Api.SendMessage(this, message, wParam, p);
 		}
 
@@ -222,8 +216,7 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeout(int millisecondsTimeout, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
-		{
+		public bool SendTimeout(int millisecondsTimeout, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out LPARAM R);
 		}
@@ -232,8 +225,7 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn> and gets the result of the message processing.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeout(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
-		{
+		public bool SendTimeout(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam = default, LPARAM lParam = default, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			result = 0;
 			return 0 != Api.SendMessageTimeout(this, message, wParam, lParam, flags, millisecondsTimeout, out result);
@@ -243,11 +235,10 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is string.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
-		{
+		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, string lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			result = 0;
-			fixed(char* p = lParam)
+			fixed (char* p = lParam)
 				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
 		}
 
@@ -255,11 +246,10 @@ namespace Au
 		/// Calls API <msdn>SendMessageTimeout</msdn> where lParam is char[].
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG)
-		{
+		public bool SendTimeoutS(int millisecondsTimeout, out LPARAM result, int message, LPARAM wParam, char[] lParam, Native.SMTO flags = Native.SMTO.ABORTIFHUNG) {
 			Debug.Assert(!Is0);
 			result = 0;
-			fixed(char* p = lParam)
+			fixed (char* p = lParam)
 				return 0 != Api.SendMessageTimeout(this, message, wParam, p, flags, millisecondsTimeout, out result);
 		}
 
@@ -267,8 +257,7 @@ namespace Au
 		/// Calls API <msdn>SendNotifyMessage</msdn>.
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
-		public bool SendNotify(int message, LPARAM wParam = default, LPARAM lParam = default)
-		{
+		public bool SendNotify(int message, LPARAM wParam = default, LPARAM lParam = default) {
 			Debug.Assert(!Is0);
 			return Api.SendNotifyMessage(this, message, wParam, lParam);
 		}
@@ -278,8 +267,7 @@ namespace Au
 		/// Returns its return value (false if failed). Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <seealso cref="More.PostThreadMessage(int, int, LPARAM, LPARAM)"/>
-		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default)
-		{
+		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default) {
 			Debug.Assert(!Is0);
 			return Api.PostMessage(this, message, wParam, lParam);
 		}
@@ -291,8 +279,7 @@ namespace Au
 			/// Calls API <msdn>PostThreadMessage</msdn>. 
 			/// Returns false if failed. Supports <see cref="ALastError"/>.
 			/// </summary>
-			public static bool PostThreadMessage(int threadId, int message, LPARAM wParam = default, LPARAM lParam = default)
-			{
+			public static bool PostThreadMessage(int threadId, int message, LPARAM wParam = default, LPARAM lParam = default) {
 				return Api.PostThreadMessage(threadId, message, wParam, lParam);
 			}
 		}
@@ -305,18 +292,16 @@ namespace Au
 		/// If <see cref="Is0"/>, throws <see cref="AuWndException"/>.
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowIf0()
-		{
-			if(_h == null) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+		public void ThrowIf0() {
+			if (_h == null) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		/// <summary>
 		/// If <see cref="Is0"/> or !<see cref="IsAlive"/>, throws <see cref="AuWndException"/>.
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowIfInvalid()
-		{
-			if(_h == null || !Api.IsWindow(this)) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+		public void ThrowIfInvalid() {
+			if (_h == null || !Api.IsWindow(this)) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		///// <summary>
@@ -335,8 +320,7 @@ namespace Au
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowUseNative()
-		{
+		public void ThrowUseNative() {
 			throw new AuWndException(this, 0);
 		}
 
@@ -345,8 +329,7 @@ namespace Au
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowUseNative(string mainMessage)
-		{
+		public void ThrowUseNative(string mainMessage) {
 			throw new AuWndException(this, 0, mainMessage);
 		}
 
@@ -355,8 +338,7 @@ namespace Au
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowUseNative(int errorCode, string mainMessage)
-		{
+		public void ThrowUseNative(int errorCode, string mainMessage) {
 			throw new AuWndException(this, errorCode, mainMessage);
 		}
 
@@ -365,8 +347,7 @@ namespace Au
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
-		public void ThrowNoNative(string mainMessage)
-		{
+		public void ThrowNoNative(string mainMessage) {
 			throw new AuWndException(this, mainMessage);
 		}
 
@@ -462,17 +443,16 @@ namespace Au
 		/// Like <see cref="IsVisible"/>, but does not check the visibility of the specified parent/ancestor window.
 		/// </summary>
 		/// <param name="wParent">Parent or ancestor window.</param>
-		internal bool IsVisibleIn_(AWnd wParent)
-		{
-			if(IsVisible) return true; //these two make faster in most cases (when wTL is visible)
-			if(wParent.IsVisible) return false;
+		internal bool IsVisibleIn_(AWnd wParent) {
+			if (IsVisible) return true; //these two make faster in most cases (when wTL is visible)
+			if (wParent.IsVisible) return false;
 			var c = this;
-			for(int i = 0; i < 10000; i++) {
+			for (int i = 0; i < 10000; i++) {
 				//AOutput.Write(c);
-				if(!c.HasStyle(WS.VISIBLE)) return false;
+				if (!c.HasStyle(WS.VISIBLE)) return false;
 				c = c.ParentGWL_;
-				if(c == wParent) return true;
-				if(c.Is0) break;
+				if (c == wParent) return true;
+				if (c.Is0) break;
 			}
 			Debug.Assert(false);
 			return false;
@@ -486,9 +466,8 @@ namespace Au
 		/// This window can be of any thread. If you know it is of this thread, use <see cref="ShowLL"/>. This function calls it.
 		/// </remarks>
 		/// <exception cref="AuWndException"/>
-		public void Show(bool show)
-		{
-			if(!ShowLL(show)) ThrowUseNative(show ? "*show*" : "*hide*");
+		public void Show(bool show) {
+			if (!ShowLL(show)) ThrowUseNative(show ? "*show*" : "*hide*");
 			MinimalSleepIfOtherThread_();
 		}
 
@@ -503,9 +482,8 @@ namespace Au
 		/// - <see cref="Show"/> is better to use in automation scripts, with windows of any process/thread. It calls <b>ShowLL</b>, and throws exception if it fails. Adds a small delay if the window is of another thread.
 		/// - <b>ShowLL</b> is better to use in programming, with windows of current thread. It is low-level. Does not throw exceptions. Does not add a delay. But both functions can be used with windows of any thread.
 		/// </remarks>
-		public bool ShowLL(bool show)
-		{
-			if(show == HasStyle(WS.VISIBLE)) return true; //avoid messages and make much faster. Never mind: if show==false, returns true even if invalid hwnd.
+		public bool ShowLL(bool show) {
+			if (show == HasStyle(WS.VISIBLE)) return true; //avoid messages and make much faster. Never mind: if show==false, returns true even if invalid hwnd.
 			Send(Api.WM_SHOWWINDOW, show); //not necessary for most windows, but eg winforms would not update the Visible property without it. ShowWindow sends it but SetWindowPos doesn't.
 			return SetWindowPos((show ? Native.SWP.SHOWWINDOW : Native.SWP.HIDEWINDOW)
 				| Native.SWP.NOSIZE | Native.SWP.NOMOVE | Native.SWP.NOACTIVATE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER);
@@ -520,12 +498,11 @@ namespace Au
 		/// Returns false if disabled. Also false if failed (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="ancestorsToo">Check whether all ancestors of this control are enabled too. If false (default), this function simply calls API <msdn>IsWindowEnabled</msdn>, which usualy returns true for controls in disabled windows.</param>
-		public bool IsEnabled(bool ancestorsToo = false)
-		{
-			if(!ancestorsToo) return Api.IsWindowEnabled(this);
-			for(var w = this; ;) {
-				if(!Api.IsWindowEnabled(w)) return false;
-				w = w.Get.DirectParent; if(w.Is0) break;
+		public bool IsEnabled(bool ancestorsToo = false) {
+			if (!ancestorsToo) return Api.IsWindowEnabled(this);
+			for (var w = this; ;) {
+				if (!Api.IsWindowEnabled(w)) return false;
+				w = w.Get.DirectParent; if (w.Is0) break;
 			}
 			return true;
 		}
@@ -536,11 +513,10 @@ namespace Au
 		/// </summary>
 		/// <param name="enable">Enable or disable.</param>
 		/// <exception cref="AuWndException"/>
-		public void Enable(bool enable)
-		{
+		public void Enable(bool enable) {
 			ALastError.Clear();
 			Api.EnableWindow(this, enable);
-			if(ALastError.Code != 0) ThrowUseNative("*enable/disable*");
+			if (ALastError.Code != 0) ThrowUseNative("*enable/disable*");
 		}
 
 		/// <summary>
@@ -552,7 +528,7 @@ namespace Au
 		/// <seealso cref="IsCloaked"/>
 		public int IsCloakedGetState {
 			get {
-				if(!AVersion.MinWin8) return 0;
+				if (!AVersion.MinWin8) return 0;
 				int cloaked = 0;
 				int hr = Api.DwmGetWindowAttribute(this, Api.DWMWA.CLOAKED, &cloaked, 4);
 				return cloaked;
@@ -567,9 +543,9 @@ namespace Au
 		/// <seealso cref="IsCloakedGetState"/>
 		public bool IsCloaked => IsCloakedGetState != 0;
 
-#endregion
+		#endregion
 
-#region minimized, maximized
+		#region minimized, maximized
 
 		/// <summary>
 		/// Returns true if minimized, false if not.
@@ -591,8 +567,7 @@ namespace Au
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowMinimized(bool noAnimation = false)
-		{
+		public void ShowMinimized(bool noAnimation = false) {
 			_MinMaxRes(Api.SW_MINIMIZE, noAnimation);
 		}
 
@@ -602,8 +577,7 @@ namespace Au
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowMaximized(bool noAnimation = false)
-		{
+		public void ShowMaximized(bool noAnimation = false) {
 			_MinMaxRes(Api.SW_SHOWMAXIMIZED, noAnimation);
 		}
 
@@ -613,8 +587,7 @@ namespace Au
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowNotMinMax(bool noAnimation = false)
-		{
+		public void ShowNotMinMax(bool noAnimation = false) {
 			_MinMaxRes(Api.SW_SHOWNORMAL, noAnimation);
 		}
 
@@ -624,8 +597,7 @@ namespace Au
 		/// </summary>
 		/// <param name="noAnimation">Visually fast, without animation.</param>
 		/// <exception cref="AuWndException">The API call failed. No exception if the window did not obey.</exception>
-		public void ShowNotMinimized(bool noAnimation = false)
-		{
+		public void ShowNotMinimized(bool noAnimation = false) {
 			_MinMaxRes(Api.SW_RESTORE, noAnimation);
 		}
 
@@ -636,45 +608,44 @@ namespace Au
 		/// <param name="state">Must be SW_MINIMIZE, SW_RESTORE (restores to normal/max if minimized), SW_SHOWNORMAL or SW_SHOWMAXIMIZED.</param>
 		/// <param name="noAnimation">Use SetWindowPlacement (no animation).</param>
 		/// <exception cref="AuWndException"/>
-		void _MinMaxRes(int state, bool noAnimation)
-		{
+		void _MinMaxRes(int state, bool noAnimation) {
 			Debug.Assert(state == Api.SW_MINIMIZE || state == Api.SW_RESTORE || state == Api.SW_SHOWNORMAL || state == Api.SW_SHOWMAXIMIZED);
 			ThrowIfInvalid();
 
 			bool ok = false, wasMinimized = IsMinimized;
 
-			switch(state) {
-			case Api.SW_MINIMIZE:
-				ok = wasMinimized;
-				break;
-			case Api.SW_RESTORE:
-				ok = !wasMinimized;
-				break;
-			case Api.SW_SHOWNORMAL:
-				ok = !wasMinimized && !IsMaximized; //info: if invalid handle, Show() will return false, don't need to check here.
-				break;
-			case Api.SW_SHOWMAXIMIZED:
-				ok = IsMaximized;
-				break;
+			switch (state) {
+				case Api.SW_MINIMIZE:
+					ok = wasMinimized;
+					break;
+				case Api.SW_RESTORE:
+					ok = !wasMinimized;
+					break;
+				case Api.SW_SHOWNORMAL:
+					ok = !wasMinimized && !IsMaximized; //info: if invalid handle, Show() will return false, don't need to check here.
+					break;
+				case Api.SW_SHOWMAXIMIZED:
+					ok = IsMaximized;
+					break;
 			}
 
-			if(ok) {
-				if(IsVisible) return;
+			if (ok) {
+				if (IsVisible) return;
 				Show(true);
 			} else {
-				if(!noAnimation) {
+				if (!noAnimation) {
 					ALastError.Clear();
 					Api.ShowWindow(this, state);
 					ok = 0 == ALastError.Code;
-				} else if(ok = GetWindowPlacement_(out var p, false)) {
+				} else if (ok = GetWindowPlacement_(out var p, false)) {
 					int state2 = state;
-					switch(state) {
-					case Api.SW_MINIMIZE:
-						if(p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
-						break;
-					case Api.SW_RESTORE:
-						if((p.showCmd == Api.SW_SHOWMINIMIZED) && (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state2 = Api.SW_SHOWMAXIMIZED; //without this would make normal
-						break;
+					switch (state) {
+						case Api.SW_MINIMIZE:
+							if (p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
+							break;
+						case Api.SW_RESTORE:
+							if ((p.showCmd == Api.SW_SHOWMINIMIZED) && (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state2 = Api.SW_SHOWMAXIMIZED; //without this would make normal
+							break;
 					}
 
 					//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. Instead we use another workaround, see below.
@@ -682,27 +653,27 @@ namespace Au
 					ok = SetWindowPlacement_(ref p, false);
 				}
 
-				if(!ok) {
-					if(ALastError.Code == Api.ERROR_ACCESS_DENIED) {
+				if (!ok) {
+					if (ALastError.Code == Api.ERROR_ACCESS_DENIED) {
 						//UAC blocks the API but not WM_SYSCOMMAND.
 						//However does not allow to maximize with WM_SYSCOMMAND.
 						uint cmd;
-						switch(state) {
-						case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
-						case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
-						default: cmd = Api.SC_RESTORE; break;
+						switch (state) {
+							case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
+							case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
+							default: cmd = Api.SC_RESTORE; break;
 						}
 						ok = Send(Api.WM_SYSCOMMAND, cmd);
 						//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
-						if(ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = Send(Api.WM_SYSCOMMAND, cmd);
+						if (ok && state == Api.SW_SHOWNORMAL && IsMaximized) ok = Send(Api.WM_SYSCOMMAND, cmd);
 					}
 
-					if(!ok) ThrowUseNative("*minimize/maximize/restore*");
+					if (!ok) ThrowUseNative("*minimize/maximize/restore*");
 				}
 
-				if(!IsOfThisThread) {
-					if(wasMinimized) ActivateLL(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
-					else if(state == Api.SW_MINIMIZE) More.WaitForAnActiveWindow();
+				if (!IsOfThisThread) {
+					if (wasMinimized) ActivateLL(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
+					else if (state == Api.SW_MINIMIZE) More.WaitForAnActiveWindow();
 				}
 			}
 
@@ -717,8 +688,7 @@ namespace Au
 		/// <param name="errStr">If not null, throws it if fails.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
-		internal bool GetWindowPlacement_(out Api.WINDOWPLACEMENT wp, bool rectInScreen, string errStr = null)
-		{
+		internal bool GetWindowPlacement_(out Api.WINDOWPLACEMENT wp, bool rectInScreen, string errStr = null) {
 			//initially this was public, but probably don't need.
 
 			wp = new Api.WINDOWPLACEMENT(); wp.length = Api.SizeOf(wp);
@@ -726,7 +696,7 @@ namespace Au
 				if (rectInScreen) _Wp1(ref wp, false);
 				return true;
 			}
-			if(errStr != null) ThrowUseNative(errStr);
+			if (errStr != null) ThrowUseNative(errStr);
 			return false;
 		}
 
@@ -737,55 +707,53 @@ namespace Au
 		/// <param name="rectInScreen">wp.rcNormalPosition is without workarea thickness.</param>
 		/// <param name="errStr">If not null, throws it if fails.</param>
 		/// <exception cref="AuWndException">Failed. Throws, only if errStr!=null, else returns false.</exception>
-		internal bool SetWindowPlacement_(ref Api.WINDOWPLACEMENT wp, bool rectInScreen, string errStr = null)
-		{
+		internal bool SetWindowPlacement_(ref Api.WINDOWPLACEMENT wp, bool rectInScreen, string errStr = null) {
 			//initially this was public, but probably don't need.
 
 			if (rectInScreen) _Wp1(ref wp, true);
 			wp.length = Api.SizeOf(wp);
-			if (Api.SetWindowPlacement(this, wp)) return true; //TODO: test
-			if(errStr != null) ThrowUseNative(errStr);
+			if (Api.SetWindowPlacement(this, wp)) return true;
+			if (errStr != null) ThrowUseNative(errStr);
 			return false;
 		}
 
 		void _Wp1(ref Api.WINDOWPLACEMENT wp, bool set) {
-			if (!IsToolWindow) { //TODO: test
+			if (!IsToolWindow) {
 				var s = set ? AScreen.Of(wp.rcNormalPosition) : AScreen.Of(this);
 				var v = s.GetInfo();
 				int i = set ? -1 : 1;
-				wp.rcNormalPosition.Offset((v.workArea.left - v.bounds.left)*i, (v.workArea.top - v.bounds.top)*i);
+				wp.rcNormalPosition.Offset((v.workArea.left - v.bounds.left) * i, (v.workArea.top - v.bounds.top) * i);
 			}
 		}
 
-#endregion
+		#endregion
 
-#region activate, focus
+		#region activate, focus
 
 		internal static partial class Internal_
 		{
 			/// <summary>
 			/// No exceptions.
 			/// </summary>
-			internal static bool EnableActivate(bool goingToActivateAWindow)
-			{
-				if(_EnableActivate_AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
+			internal static bool EnableActivate(bool goingToActivateAWindow) {
+				if (_EnableActivate_AllowSetFore()) return true; //not locked, or already successfully called ASF_Key
 
 				_EnableActivate_SendKey(true);
-				if(_EnableActivate_AllowSetFore()) return true;
+				if (_EnableActivate_AllowSetFore()) return true;
 				//First time fails if the foreground window is of higher IL. Then sending keys does not work.
 
 				//_EnableActivate_MinRes() makes no active window...
-				if(goingToActivateAWindow) {
+				if (goingToActivateAWindow) {
 					_EnableActivate_MinRes();
 					return _EnableActivate_AllowSetFore();
 				}
 
 				var wFore = Active; bool retry = false;
-				g1: _EnableActivate_MinRes();
-				if(!_EnableActivate_AllowSetFore()) return false;
-				if(!wFore.Is0 && !retry) {
+			g1: _EnableActivate_MinRes();
+				if (!_EnableActivate_AllowSetFore()) return false;
+				if (!wFore.Is0 && !retry) {
 					Api.SetForegroundWindow(wFore);
-					if(!_EnableActivate_AllowSetFore()) { retry = true; goto g1; } //didn't notice this but let's be safer
+					if (!_EnableActivate_AllowSetFore()) { retry = true; goto g1; } //didn't notice this but let's be safer
 				}
 				return true;
 
@@ -802,9 +770,8 @@ namespace Au
 			/// Don't know why is this behavior. Tested on all OS from XP to 10.
 			/// Does not work if the foreground process has higher UAC IL.
 			/// </summary>
-			static void _EnableActivate_SendKey(bool debugOut)
-			{
-				if(debugOut) ADebug.Print("EnableActivate: need key");
+			static void _EnableActivate_SendKey(bool debugOut) {
+				if (debugOut) ADebug.Print("EnableActivate: need key");
 
 				var x = new Api.INPUTK(0, 128, Api.KEYEVENTF_KEYUP);
 				Api.SendInput(&x);
@@ -815,8 +782,7 @@ namespace Au
 			/// Creates a temporary minimized window and restores it. It activates the window and allows us to activate.
 			/// Then sets 'no active window' to prevent auto-activating another window when destroying the temporary window.
 			/// </summary>
-			static void _EnableActivate_MinRes()
-			{
+			static void _EnableActivate_MinRes() {
 				ADebug.Print("EnableActivate: need min/res");
 
 				AWnd t = More.CreateWindow("#32770", null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS2.TOOLWINDOW);
@@ -840,33 +806,31 @@ namespace Au
 			/// <summary>
 			/// Calls Api.AllowSetForegroundWindow(Api.GetCurrentProcessId()).
 			/// </summary>
-			static bool _EnableActivate_AllowSetFore()
-			{
+			static bool _EnableActivate_AllowSetFore() {
 				return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId());
 			}
 
-			internal static bool ActivateLL(AWnd w)
-			{
-				if(w.IsActiveOrNoActiveAndThisIsWndRoot_) return true;
+			internal static bool ActivateLL(AWnd w) {
+				if (w.IsActiveOrNoActiveAndThisIsWndRoot_) return true;
 
 				try {
 					bool canAct = EnableActivate(true);
 
-					if(!Api.SetForegroundWindow(w)) {
-						if(!canAct || !w.IsAlive) return false;
+					if (!Api.SetForegroundWindow(w)) {
+						if (!canAct || !w.IsAlive) return false;
 						//It happens when foreground process called LockSetForegroundWindow.
 						//Although AllowSetForegroundWindow returns true, SetForegroundWindow fails.
 						//It happens only before this process sends keys. Eg after first _EnableActivate_SendKey this never happens again.
 						//If it has higher IL (and this process is User), also need _EnableActivate_MinRes.
 						_EnableActivate_SendKey(true);
-						if(!Api.SetForegroundWindow(w)) {
+						if (!Api.SetForegroundWindow(w)) {
 							_EnableActivate_MinRes();
-							if(!Api.SetForegroundWindow(w)) return false;
+							if (!Api.SetForegroundWindow(w)) return false;
 						}
 					}
 
 					//Sometimes after SetForegroundWindow there is no active window for several ms. Not if the window is of this thread.
-					if(w == GetWnd.Root) return Active.Is0;
+					if (w == GetWnd.Root) return Active.Is0;
 					//CONSIDER: if GetForegroundWindow is not w, send WM_NULL. Info: https://blogs.msdn.microsoft.com/oldnewthing/20161118-00/?p=94745
 					return More.WaitForAnActiveWindow();
 				}
@@ -906,13 +870,12 @@ namespace Au
 		/// Returns false if does not activate because of flag IgnoreIfNoActivateStyleEtc.
 		/// </summary>
 		/// <exception cref="AuWndException"/>
-		internal bool Activate_(Internal_.ActivateFlags flags)
-		{
-			if(!flags.Has(Internal_.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
-			if(flags.Has(Internal_.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
+		internal bool Activate_(Internal_.ActivateFlags flags) {
+			if (!flags.Has(Internal_.ActivateFlags.NoThrowIfInvalid)) ThrowIfInvalid();
+			if (flags.Has(Internal_.ActivateFlags.NoGetWindow)) Debug.Assert(!IsChild);
 			else {
 				var w = Window;
-				if(w != this) {
+				if (w != this) {
 					return w.Activate_((flags | Internal_.ActivateFlags.NoGetWindow) & ~Internal_.ActivateFlags.NoThrowIfInvalid);
 				}
 			}
@@ -920,46 +883,46 @@ namespace Au
 			bool R = false, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
 			bool forScreenCapture = 0 != (flags & Internal_.ActivateFlags.ForScreenCapture);
 
-			if(IsMinimized) {
+			if (IsMinimized) {
 				ShowNotMinimized(true);
 				isMinimized = IsMinimized;
-				if(forScreenCapture && !isMinimized && !ofThisThread) Thread.Sleep(250); //although we use noAnimation, in some cases still restores with animation
+				if (forScreenCapture && !isMinimized && !ofThisThread) Thread.Sleep(250); //although we use noAnimation, in some cases still restores with animation
 			}
-			if(!IsVisible) Show(true);
+			if (!IsVisible) Show(true);
 
 			R = IsActiveOrNoActiveAndThisIsWndRoot_;
-			if(!R) {
-				if(0 != (flags & Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
+			if (!R) {
+				if (0 != (flags & Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc)) {
 					var est = ExStyle;
-					if((est & WS2.NOACTIVATE) != 0) noAct = true;
-					else if((est & (WS2.TOOLWINDOW | WS2.APPWINDOW)) == WS2.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
-					if(noAct && !IsCloaked) {
+					if ((est & WS2.NOACTIVATE) != 0) noAct = true;
+					else if ((est & (WS2.TOOLWINDOW | WS2.APPWINDOW)) == WS2.TOOLWINDOW) noAct = !HasStyle(WS.CAPTION);
+					if (noAct && !IsCloaked) {
 						ZorderTop(); //in most cases does not work, but try anyway, it just calls the API. It seems works if the window is topmost.
 						return false; //if cloaked, need to activate to uncloak
 					}
 				}
 
-				for(int i = 0; i < 3; i++) {
+				for (int i = 0; i < 3; i++) {
 					bool ok = ActivateLL();
 
-					if(!ofThisThread) {
+					if (!ofThisThread) {
 						MinimalSleepNoCheckThread_();
 						MinimalSleepNoCheckThread_();
 					}
 
-					if(ok) {
+					if (ok) {
 						AWnd f = Active;
-						if(f == this) R = true;
-						else if(this == GetWnd.Root) R = f.Is0; //activating GetDesktopWindow makes "no active window"
+						if (f == this) R = true;
+						else if (this == GetWnd.Root) R = f.Is0; //activating GetDesktopWindow makes "no active window"
 						else { //forgive if the target app instead activated another window of same thread
-							int tid = ThreadId; if(tid == 0) break;
-							if(f.ThreadId == tid) {
+							int tid = ThreadId; if (tid == 0) break;
+							if (f.ThreadId == tid) {
 								//at first try to recognize such known windows, to avoid the hard way
-								if(isMinimized || (f.OwnerWindow == this && Rect.IsEmpty)) {
+								if (isMinimized || (f.OwnerWindow == this && Rect.IsEmpty)) {
 									R = true;
 								} else {
 									R = Api.SetForegroundWindow(GetWnd.Root) && ActivateLL() && Active.ThreadId == tid;
-									if(R && !ofThisThread) {
+									if (R && !ofThisThread) {
 										MinimalSleepNoCheckThread_();
 										R = Active.ThreadId == tid;
 									}
@@ -974,25 +937,25 @@ namespace Au
 								//Inno Setup, SQLite Expert. They have a zero-size owner window that just adds taskbar button.
 							}
 						}
-						if(R) break;
+						if (R) break;
 					}
 
-					if(noAct) break;
+					if (noAct) break;
 					Thread.Sleep(30);
 				}
 			}
 
-			if(R && !ofThisThread && this != GetWnd.Root) {
+			if (R && !ofThisThread && this != GetWnd.Root) {
 				//If we activate a window that is on an inactive Win10 desktop, its desktop becomes active.
 				//Windows on inactive desktops are cloaked. They are uncloaked after ~15 ms.
-				if(IsCloaked) {
+				if (IsCloaked) {
 					R = false;
-					for(int i = 0; i < 50; i++) { Thread.Sleep(30); if(R = !IsCloaked) break; }
-					if(R) {
-						if(forScreenCapture) Thread.Sleep(800); //need minimum 600 for 'find image' functions, because of animation while switching Win10 desktops.
+					for (int i = 0; i < 50; i++) { Thread.Sleep(30); if (R = !IsCloaked) break; }
+					if (R) {
+						if (forScreenCapture) Thread.Sleep(800); //need minimum 600 for 'find image' functions, because of animation while switching Win10 desktops.
 						MinimalSleepNoCheckThread_();
 						R = IsActive;
-						if(!R && ActivateLL()) {
+						if (!R && ActivateLL()) {
 							MinimalSleepNoCheckThread_();
 							R = IsActive;
 						}
@@ -1000,8 +963,8 @@ namespace Au
 				}
 			}
 
-			if(!R) ThrowNoNative("*activate*");
-			if(forScreenCapture) MinimalSleepIfOtherThread_();
+			if (!R) ThrowNoNative("*activate*");
+			if (forScreenCapture) MinimalSleepIfOtherThread_();
 
 			return true;
 
@@ -1024,8 +987,7 @@ namespace Au
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="Active"/>
 		/// <seealso cref="SwitchActiveWindow"/>
-		public void Activate()
-		{
+		public void Activate() {
 			Activate_(0);
 		}
 		//CONSIDER: if fails to activate:
@@ -1037,8 +999,7 @@ namespace Au
 		/// No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
 		/// Returns false if fails.
 		/// </summary>
-		public bool ActivateLL()
-		{
+		public bool ActivateLL() {
 			return Internal_.ActivateLL(this);
 		}
 
@@ -1051,11 +1012,10 @@ namespace Au
 			/// Processes Windows messages that are in the message queue of this thread.
 			/// Don't need to call this after calling functions of this library.
 			/// </summary>
-			public static bool WaitForAnActiveWindow()
-			{
-				for(int i = 1; i < 32; i++) {
+			public static bool WaitForAnActiveWindow() {
+				for (int i = 1; i < 32; i++) {
 					ATime.DoEvents();
-					if(!Active.Is0) return true;
+					if (!Active.Is0) return true;
 					ATime.Sleep(i);
 				}
 				return false;
@@ -1071,8 +1031,7 @@ namespace Au
 			/// Usually you don't call SetForegroundWindow directly. It is called by some other functions, for example Form.Show.
 			/// Don't need to call this function before calling <see cref="AWnd.Activate"/> and other functions of this library that activate windows.
 			/// </summary>
-			public static bool EnableActivate()
-			{
+			public static bool EnableActivate() {
 				return Internal_.EnableActivate(false);
 			}
 		}
@@ -1110,45 +1069,44 @@ namespace Au
 		/// <seealso cref="Focused"/>
 		/// <seealso cref="IsFocused"/>
 		/// <seealso cref="AAcc.Focus"/>
-		public void Focus()
-		{
+		public void Focus() {
 			ThrowIfInvalid();
 			AWnd wTL = Window;
-			if(!wTL.IsActive) wTL.Activate_(Internal_.ActivateFlags.NoGetWindow);
+			if (!wTL.IsActive) wTL.Activate_(Internal_.ActivateFlags.NoGetWindow);
 
 			int tid = ThreadId;
-			if(tid == Api.GetCurrentThreadId()) {
-				if(!ThisThread.Focus(this)) {
-					if(!IsEnabled(true)) goto gDisabled;
+			if (tid == Api.GetCurrentThreadId()) {
+				if (!ThisThread.Focus(this)) {
+					if (!IsEnabled(true)) goto gDisabled;
 					goto gFailed;
 				}
 				return;
 			}
 
-			if(IsFocused) return;
-			if(!IsEnabled(true)) goto gDisabled;
+			if (IsFocused) return;
+			if (!IsEnabled(true)) goto gDisabled;
 
 			bool ok = false;
-			using(new AttachThreadInput_(tid, out bool atiOK)) {
-				if(atiOK) { //FUTURE: if fails, try AAcc.Focus or UIA. AttachThreadInput is unreliable.
-					for(int i = 0; i < 5; i++) {
-						if(i > 0) Thread.Sleep(30);
+			using (new AttachThreadInput_(tid, out bool atiOK)) {
+				if (atiOK) { //FUTURE: if fails, try AAcc.Focus or UIA. AttachThreadInput is unreliable.
+					for (int i = 0; i < 5; i++) {
+						if (i > 0) Thread.Sleep(30);
 						ALastError.Clear();
-						if(ThisThread.Focus(this)) {
+						if (ThisThread.Focus(this)) {
 							AWnd f = Focused;
-							if(f == this || f.IsChildOf(this)) { ok = true; break; }
+							if (f == this || f.IsChildOf(this)) { ok = true; break; }
 						}
 					}
 				}
 			}
-			if(!ok) goto gFailed;
+			if (!ok) goto gFailed;
 
 			MinimalSleepNoCheckThread_();
 			return;
-			gDisabled: //SetFocus fails if disabled
+		gDisabled: //SetFocus fails if disabled
 			ThrowIfInvalid();
 			ThrowNoNative("*set focus. Disabled");
-			gFailed:
+		gFailed:
 			ThrowUseNative("*set focus");
 		}
 
@@ -1195,12 +1153,11 @@ namespace Au
 			/// Fails if the control/window belongs to another thread or is invalid or disabled.
 			/// Can instead focus a child control. For example, if ComboBox, will focus its child Edit control. Then returns true.
 			/// </remarks>
-			public static bool Focus(AWnd w)
-			{
-				if(w.Is0) { Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE); return false; }
-				var f = Api.GetFocus(); if(f == w) return true;
-				if(!Api.SetFocus(w).Is0) return true;
-				if(f.Is0) return !Api.GetFocus().Is0;
+			public static bool Focus(AWnd w) {
+				if (w.Is0) { Api.SetLastError(Api.ERROR_INVALID_WINDOW_HANDLE); return false; }
+				var f = Api.GetFocus(); if (f == w) return true;
+				if (!Api.SetFocus(w).Is0) return true;
+				if (f.Is0) return !Api.GetFocus().Is0;
 				return false;
 			}
 
@@ -1235,9 +1192,9 @@ namespace Au
 			public static AWnd Active => Api.GetActiveWindow();
 		}
 
-#endregion
+		#endregion
 
-#region rect
+		#region rect
 
 		/// <summary>
 		/// Gets rectangle (position and size) in screen coordinates.
@@ -1249,18 +1206,17 @@ namespace Au
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool GetRect(out RECT r, bool withoutExtendedFrame = false)
-		{
-			if(withoutExtendedFrame) {
+		public bool GetRect(out RECT r, bool withoutExtendedFrame = false) {
+			if (withoutExtendedFrame) {
 				RECT t;
-				if(0 == Api.DwmGetWindowAttribute(this, Api.DWMWA.EXTENDED_FRAME_BOUNDS, &t, 16)) {
+				if (0 == Api.DwmGetWindowAttribute(this, Api.DWMWA.EXTENDED_FRAME_BOUNDS, &t, 16)) {
 					r = t;
 					return true;
 					//tested: on Win7 gets physical (not logical) coords of DPI-scaled window
 				}
 			}
 
-			if(Api.GetWindowRect(this, out r)) return true;
+			if (Api.GetWindowRect(this, out r)) return true;
 			r = default;
 			return false;
 		}
@@ -1274,9 +1230,8 @@ namespace Au
 		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool GetSize(out SIZE z)
-		{
-			if(Api.GetWindowRect(this, out RECT r)) { z = new SIZE(r.Width, r.Height); return true; }
+		public bool GetSize(out SIZE z) {
+			if (Api.GetWindowRect(this, out RECT r)) { z = new SIZE(r.Width, r.Height); return true; }
 			z = default;
 			return false;
 		}
@@ -1350,10 +1305,9 @@ namespace Au
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool GetClientRect(out RECT r, bool inScreen = false)
-		{
+		public bool GetClientRect(out RECT r, bool inScreen = false) {
 #if true
-			if(Api.GetClientRect(this, out r) && (!inScreen || Api.MapWindowPoints(this, default, ref r, out _))) return true;
+			if (Api.GetClientRect(this, out r) && (!inScreen || Api.MapWindowPoints(this, default, ref r, out _))) return true;
 			r = default; return false;
 #else //>= 2 times slower
 			if(inScreen) return GetWindowAndClientRectInScreen(out _, out r);
@@ -1373,9 +1327,8 @@ namespace Au
 		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool GetClientSize(out SIZE z)
-		{
-			if(Api.GetClientRect(this, out RECT r)) { z = new SIZE(r.right, r.bottom); return true; }
+		public bool GetClientSize(out SIZE z) {
+			if (Api.GetClientRect(this, out RECT r)) { z = new SIZE(r.right, r.bottom); return true; }
 			z = default;
 			return false;
 		}
@@ -1445,13 +1398,12 @@ namespace Au
 		/// <param name="width">Width. Use null to not change.</param>
 		/// <param name="height">Height. Use null to not change.</param>
 		/// <exception cref="AuWndException"/>
-		public void SetClientSize(int? width, int? height)
-		{
-			if(GetWindowInfo_(out var u)) {
+		public void SetClientSize(int? width, int? height) {
+			if (GetWindowInfo_(out var u)) {
 				int W = width != null ? width.GetValueOrDefault() : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
 				int H = height != null ? height.GetValueOrDefault() : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
 
-				if(ResizeLL(W, H)) return;
+				if (ResizeLL(W, H)) return;
 			}
 
 			ThrowUseNative();
@@ -1462,8 +1414,7 @@ namespace Au
 		/// </summary>
 		/// <param name="wi">Receives window/client rectangles, styles etc.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		internal bool GetWindowInfo_(out Api.WINDOWINFO wi)
-		{
+		internal bool GetWindowInfo_(out Api.WINDOWINFO wi) {
 			//initially this was public, but probably don't need.
 
 			wi = default; wi.cbSize = Api.SizeOf(wi);
@@ -1476,9 +1427,8 @@ namespace Au
 		/// <param name="rWindow">Receives window rectangle.</param>
 		/// <param name="rClient">Receives client area rectangle.</param>
 		/// <remarks>Calls API <msdn>GetWindowInfo</msdn>. Supports <see cref="ALastError"/>.</remarks>
-		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient)
-		{
-			if(GetWindowInfo_(out var u)) {
+		public bool GetWindowAndClientRectInScreen(out RECT rWindow, out RECT rClient) {
+			if (GetWindowInfo_(out var u)) {
 				rWindow = u.rcWindow;
 				rClient = u.rcClient;
 				return true;
@@ -1544,9 +1494,8 @@ namespace Au
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapClientToWindow(ref POINT p)
-		{
-			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
+		public bool MapClientToWindow(ref POINT p) {
+			if (!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
 			p.x += rc.left - rw.left; p.y += rc.top - rw.top;
 			return true;
 		}
@@ -1555,9 +1504,8 @@ namespace Au
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the top-left corner of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapClientToWindow(ref RECT r)
-		{
-			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
+		public bool MapClientToWindow(ref RECT r) {
+			if (!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
 			r.Offset(rc.left - rw.left, rc.top - rw.top);
 			return true;
 		}
@@ -1566,9 +1514,8 @@ namespace Au
 		/// Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapWindowToClient(ref POINT p)
-		{
-			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
+		public bool MapWindowToClient(ref POINT p) {
+			if (!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
 			p.x += rw.left - rc.left; p.y += rw.top - rc.top;
 			return true;
 		}
@@ -1577,9 +1524,8 @@ namespace Au
 		/// Converts coordinates relative to the top-left corner of this window to coordinates relative to the client area of this window.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapWindowToClient(ref RECT r)
-		{
-			if(!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
+		public bool MapWindowToClient(ref RECT r) {
+			if (!GetWindowAndClientRectInScreen(out var rw, out var rc)) return false;
 			r.Offset(rw.left - rc.left, rw.top - rc.top);
 			return true;
 		}
@@ -1588,9 +1534,8 @@ namespace Au
 		/// Converts coordinates relative to the top-left corner of this window to screen coordinates.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapWindowToScreen(ref POINT p)
-		{
-			if(!GetRect(out var rw)) return false;
+		public bool MapWindowToScreen(ref POINT p) {
+			if (!GetRect(out var rw)) return false;
 			p.x += rw.left; p.y += rw.top;
 			return true;
 		}
@@ -1599,9 +1544,8 @@ namespace Au
 		/// Converts coordinates relative to the top-left corner of this window to screen coordinates.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapWindowToScreen(ref RECT r)
-		{
-			if(!GetRect(out var rw)) return false;
+		public bool MapWindowToScreen(ref RECT r) {
+			if (!GetRect(out var rw)) return false;
 			r.Offset(rw.left, rw.top);
 			return true;
 		}
@@ -1614,9 +1558,8 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		/// <seealso cref="RectInDirectParent"/>
 		/// <seealso cref="RectInWindow"/>
-		public bool GetRectIn(AWnd w, out RECT r)
-		{
-			if(w.Is0) return GetRect(out r);
+		public bool GetRectIn(AWnd w, out RECT r) {
+			if (w.Is0) return GetRect(out r);
 			return GetRect(out r) && w.MapScreenToClient(ref r);
 		}
 
@@ -1640,10 +1583,9 @@ namespace Au
 		/// Gets rectangle of normal (restored) window even if currently it is minimized or maximized.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool GetRectNotMinMax(out RECT r)
-		{
-			if (!(IsMinimized || IsMaximized)) return GetRect(out r); //TODO: test
-			if(!GetWindowPlacement_(out var p, true)) { r = default; return false; }
+		public bool GetRectNotMinMax(out RECT r) {
+			if (!(IsMinimized || IsMaximized)) return GetRect(out r);
+			if (!GetWindowPlacement_(out var p, true)) { r = default; return false; }
 			r = p.rcNormalPosition;
 			return true;
 		}
@@ -1656,7 +1598,7 @@ namespace Au
 		public POINT MouseClientXY {
 			get {
 				Api.GetCursorPos(out var p);
-				if(!MapScreenToClient(ref p)) p = default;
+				if (!MapScreenToClient(ref p)) p = default;
 				return p;
 			}
 		}
@@ -1666,11 +1608,10 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in screen. Not used if default(Coord).</param>
 		/// <param name="y">Y coordinate in screen. Not used if default(Coord).</param>
-		public bool ContainsScreenXY(Coord x, Coord y)
-		{
+		public bool ContainsScreenXY(Coord x, Coord y) {
 			POINT p = Coord.Normalize(x, y);
-			if(!GetRect(out RECT r)) return false;
-			if(!r.Contains(x.IsEmpty ? r.left : p.x, y.IsEmpty ? r.top : p.y)) return false;
+			if (!GetRect(out RECT r)) return false;
+			if (!r.Contains(x.IsEmpty ? r.left : p.x, y.IsEmpty ? r.top : p.y)) return false;
 			return true;
 
 			//note: we don't use name ContainsXY and 2 overloads, mostly because of possible incorrect usage. Also now easier to read the code.
@@ -1685,26 +1626,24 @@ namespace Au
 		/// </param>
 		/// <param name="x">X coordinate. Not used if default(Coord).</param>
 		/// <param name="y">Y coordinate. Not used if default(Coord).</param>
-		public bool ContainsWindowXY(AWnd parent, Coord x, Coord y)
-		{
-			if(!parent.IsAlive) return false;
+		public bool ContainsWindowXY(AWnd parent, Coord x, Coord y) {
+			if (!parent.IsAlive) return false;
 			POINT p = Coord.NormalizeInWindow(x, y, parent);
-			if(!GetRectIn(parent, out RECT r)) return false;
-			if(!r.Contains(x.IsEmpty ? r.left : p.x, y.IsEmpty ? r.top : p.y)) return false;
+			if (!GetRectIn(parent, out RECT r)) return false;
+			if (!r.Contains(x.IsEmpty ? r.left : p.x, y.IsEmpty ? r.top : p.y)) return false;
 			return true;
 		}
 
 		/// <summary>
 		/// This overload calls <see cref="ContainsWindowXY(AWnd, Coord, Coord)"/>(Window, x, y).
 		/// </summary>
-		public bool ContainsWindowXY(Coord x, Coord y)
-		{
+		public bool ContainsWindowXY(Coord x, Coord y) {
 			return ContainsWindowXY(Window, x, y);
 		}
 
-#endregion
+		#endregion
 
-#region move, resize, SetWindowPos
+		#region move, resize, SetWindowPos
 
 		/// <summary>
 		/// Calls API <msdn>SetWindowPos</msdn>.
@@ -1718,8 +1657,7 @@ namespace Au
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, AWnd wndInsertAfter = default)
-		{
+		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, AWnd wndInsertAfter = default) {
 			return Api.SetWindowPos(this, wndInsertAfter, x, y, cx, cy, swpFlags);
 		}
 
@@ -1734,16 +1672,14 @@ namespace Au
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool MoveLL(int x, int y, int width, int height, Native.SWP swpFlagsToAdd = 0)
-		{
+		public bool MoveLL(int x, int y, int width, int height, Native.SWP swpFlagsToAdd = 0) {
 			return SetWindowPos(Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE | swpFlagsToAdd, x, y, width, height);
 		}
 
 		/// <summary>
 		/// Moves and resizes. Same as <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
 		/// </summary>
-		public bool MoveLL(RECT r, Native.SWP swpFlagsToAdd = 0)
-		{
+		public bool MoveLL(RECT r, Native.SWP swpFlagsToAdd = 0) {
 			return MoveLL(r.left, r.top, r.Width, r.Height, swpFlagsToAdd);
 		}
 
@@ -1758,8 +1694,7 @@ namespace Au
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool MoveLL(int x, int y)
-		{
+		public bool MoveLL(int x, int y) {
 			return MoveLL(x, y, 0, 0, Native.SWP.NOSIZE);
 		}
 
@@ -1772,8 +1707,7 @@ namespace Au
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool ResizeLL(int width, int height)
-		{
+		public bool ResizeLL(int width, int height) {
 			return MoveLL(0, 0, width, height, Native.SWP.NOMOVE);
 		}
 
@@ -1792,13 +1726,12 @@ namespace Au
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
 		/// </remarks>
 		/// <exception cref="AuWndException"/>
-		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, AScreen screen = default)
-		{
+		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, AScreen screen = default) {
 			ThrowIfInvalid();
 
 			AWnd w = Get.DirectParent;
 			POINT xy, wh;
-			if(!w.Is0) {
+			if (!w.Is0) {
 				xy = Coord.NormalizeInWindow(x, y, w);
 				wh = Coord.NormalizeInWindow(width, height, w);
 			} else {
@@ -1807,24 +1740,24 @@ namespace Au
 			}
 
 			Native.SWP f = 0; uint getRect = 0;
-			if(x.IsEmpty && y.IsEmpty) f |= Native.SWP.NOMOVE; else if(x.IsEmpty) getRect |= 1; else if(y.IsEmpty) getRect |= 2;
-			if(width.IsEmpty && height.IsEmpty) f |= Native.SWP.NOSIZE; else if(width.IsEmpty) getRect |= 4; else if(height.IsEmpty) getRect |= 8;
+			if (x.IsEmpty && y.IsEmpty) f |= Native.SWP.NOMOVE; else if (x.IsEmpty) getRect |= 1; else if (y.IsEmpty) getRect |= 2;
+			if (width.IsEmpty && height.IsEmpty) f |= Native.SWP.NOSIZE; else if (width.IsEmpty) getRect |= 4; else if (height.IsEmpty) getRect |= 8;
 
-			if(getRect != 0) {
-				if(!GetRectIn(w, out RECT r)) ThrowUseNative("*move/resize*");
-				if((getRect & 1) != 0) xy.x = r.left;
-				if((getRect & 2) != 0) xy.y = r.top;
-				if((getRect & 4) != 0) wh.x = r.Width;
-				if((getRect & 8) != 0) wh.y = r.Height;
+			if (getRect != 0) {
+				if (!GetRectIn(w, out RECT r)) ThrowUseNative("*move/resize*");
+				if ((getRect & 1) != 0) xy.x = r.left;
+				if ((getRect & 2) != 0) xy.y = r.top;
+				if ((getRect & 4) != 0) wh.x = r.Width;
+				if ((getRect & 8) != 0) wh.y = r.Height;
 			}
 
 			//restore min/max, except if child or hidden
-			if(w.Is0 && (IsMinimized || IsMaximized) && IsVisible) {
+			if (w.Is0 && (IsMinimized || IsMaximized) && IsVisible) {
 				ShowNotMinMax(true);
 				//info: '&& IsVisible' because ShowNotMinMax unhides
 			}
 
-			if(!MoveLL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
+			if (!MoveLL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
 
 			MinimalSleepIfOtherThread_();
 		}
@@ -1842,8 +1775,7 @@ namespace Au
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
 		/// </remarks>
-		public void Move(Coord x, Coord y, bool workArea = false, AScreen screen = default)
-		{
+		public void Move(Coord x, Coord y, bool workArea = false, AScreen screen = default) {
 			Move(x, y, default, default, workArea, screen);
 		}
 
@@ -1859,14 +1791,13 @@ namespace Au
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
 		/// </remarks>
-		public void Resize(Coord width, Coord height, bool workArea = false, AScreen screen = default)
-		{
+		public void Resize(Coord width, Coord height, bool workArea = false, AScreen screen = default) {
 			Move(default, default, width, height, workArea, screen);
 		}
 
-#endregion
+		#endregion
 
-#region MoveInScreen, EnsureInScreen, Screen
+		#region MoveInScreen, EnsureInScreen, Screen
 
 		internal static partial class Internal_
 		{
@@ -1875,79 +1806,78 @@ namespace Au
 			/// </summary>
 			internal static void MoveInScreen(bool bEnsureMethod,
 				Coord left, Coord top, bool useWindow, AWnd w, ref RECT r,
-				AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default)
-			{
+				AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default) {
 				RECT rs;
 				AScreen.ScreenHandle scr;
-				if(inRect.HasValue) {
+				if (inRect.HasValue) {
 					Debug.Assert(!useWindow);
 					rs = inRect.GetValueOrDefault();
 					scr = default;
 				} else {
-					if(!screen.IsNull) scr = screen.GetScreenHandle();
-					else if(useWindow) scr = AScreen.Of(w);
-					else if(bEnsureMethod) scr = AScreen.Of(r);
+					if (!screen.IsNull) scr = screen.GetScreenHandle();
+					else if (useWindow) scr = AScreen.Of(w);
+					else if (bEnsureMethod) scr = AScreen.Of(r);
 					else scr = AScreen.Primary;
 
 					rs = scr.GetRect(bWorkArea);
 
-					if(useWindow) {
-						if(!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
+					if (useWindow) {
+						if (!w.GetRectNotMinMax(out r)) w.ThrowUseNative("*move*");
 					}
 				}
 
 				int x, y, wid = r.Width, hei = r.Height;
-				if(bEnsureMethod) {
+				if (bEnsureMethod) {
 					Debug.Assert(bEnsureInScreen == true && left.IsEmpty && top.IsEmpty); //left/top unused
 					x = r.left;
 					y = r.top;
 				} else {
-					if(left.IsEmpty) left = Coord.Center;
-					if(top.IsEmpty) top = Coord.Center;
+					if (left.IsEmpty) left = Coord.Center;
+					if (top.IsEmpty) top = Coord.Center;
 					var p = Coord.NormalizeInRect(left, top, rs);
 					x = p.x; y = p.y;
-					switch(left.Type) { case CoordType.Reverse: x -= wid; break; case CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
-					switch(top.Type) { case CoordType.Reverse: y -= hei; break; case CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
+					switch (left.Type) { case CoordType.Reverse: x -= wid; break; case CoordType.Fraction: x -= (int)(wid * left.FractionValue); break; }
+					switch (top.Type) { case CoordType.Reverse: y -= hei; break; case CoordType.Fraction: y -= (int)(hei * top.FractionValue); break; }
 				}
 
-				if(bEnsureInScreen) {
+				if (bEnsureInScreen) {
 					x = Math.Max(Math.Min(x, rs.right - wid), rs.left);
 					y = Math.Max(Math.Min(y, rs.bottom - hei), rs.top);
-					if(r.Width > rs.Width) r.Width = rs.Width;
-					if(r.Height > rs.Height) r.Height = rs.Height;
+					if (r.Width > rs.Width) r.Width = rs.Width;
+					if (r.Height > rs.Height) r.Height = rs.Height;
 				}
 
 				r.Offset(x - r.left, y - r.top);
 
-				if(useWindow) { //move window
+				if (useWindow) { //move window
 					w.GetWindowPlacement_(out var wp, false, "*move*");
 					bool moveMaxWindowToOtherMonitor = wp.showCmd == Api.SW_SHOWMAXIMIZED && !scr.Equals(AScreen.Of(w));
-					if(r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;//TODO: for non-toolwindows it is workspace coords
+					if (r == wp.rcNormalPosition && !moveMaxWindowToOtherMonitor) return;
 
 					AWnd hto = default; bool visible = w.IsVisible;
 					try {
 						//Windows bug: before a dialog is first time shown, may fail to move if it has an owner window. Depends on coordinates and on don't know what.
 						//There are several workarounds. The best of them - temporarily set owner window 0.
-						if(!visible) {
+						if (!visible) {
 							hto = w.OwnerWindow;
-							if(!hto.Is0) w.OwnerWindow = default;
+							if (!hto.Is0) w.OwnerWindow = default;
 						}
 
 						wp.rcNormalPosition = r;
 						wp.showCmd = visible ? Api.SW_SHOWNA : Api.SW_HIDE;
-						w.SetWindowPlacement_(ref wp, true, "*move*"); //TODO: test
+						w.SetWindowPlacement_(ref wp, true, "*move*");
 
-						if(moveMaxWindowToOtherMonitor) {
+						if (moveMaxWindowToOtherMonitor) {
 							//I found this way of moving max window to other screen by experimenting.
 							//When moved to screen's coordinates and sized to screen's work area size, OS adjusts window pos to be correct, ie border is outside screen, but invisible in adjacent screen.
 							//Must call SetWindowPos twice, or it may refuse to move at all.
 							//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
 							rs = scr.WorkArea;
-							if(!w.MoveLL(rs.left, rs.top) || !w.ResizeLL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
+							if (!w.MoveLL(rs.left, rs.top) || !w.ResizeLL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
 						}
 					}
 					finally {
-						if(!hto.Is0) w.OwnerWindow = hto;
+						if (!hto.Is0) w.OwnerWindow = hto;
 					}
 
 					w.MinimalSleepIfOtherThread_();
@@ -1968,8 +1898,7 @@ namespace Au
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately, except when moving maximized to another screen.
 		/// </remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true)
-		{
+		public void MoveInScreen(Coord x, Coord y, AScreen screen = default, bool workArea = true, bool ensureInScreen = true) {
 			RECT r = default;
 			Internal_.MoveInScreen(false, x, y, true, this, ref r, screen, workArea, ensureInScreen);
 		}
@@ -1984,8 +1913,7 @@ namespace Au
 		/// If the window is maximized, minimized or hidden, it will have the new position and size when restored, not immediately.
 		/// </remarks>
 		/// <seealso cref="RECT.EnsureInScreen"/>
-		public void EnsureInScreen(AScreen screen = default, bool workArea = true)
-		{
+		public void EnsureInScreen(AScreen screen = default, bool workArea = true) {
 			RECT r = default;
 			Internal_.MoveInScreen(true, default, default, true, this, ref r, screen, workArea, true);
 		}
@@ -1997,8 +1925,7 @@ namespace Au
 		/// <exception cref="AuWndException"/>
 		/// <remarks>Calls <c>ShowNotMinMax(true)</c> and <c>MoveInScreen(default, default, screen, true)</c>.</remarks>
 		/// <seealso cref="RECT.MoveInScreen"/>
-		public void MoveToScreenCenter(AScreen screen = default)
-		{
+		public void MoveToScreenCenter(AScreen screen = default) {
 			ShowNotMinMax(true);
 			MoveInScreen(default, default, screen, true);
 		}
@@ -2010,116 +1937,105 @@ namespace Au
 		/// </summary>
 		public AScreen.ScreenHandle Screen => AScreen.Of(this);
 
-#endregion
+		#endregion
 
-#region Zorder
+		#region Zorder
 		const Native.SWP _SWP_ZORDER = Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE;
+		//CONSIDER: option to | Native.SWP.NOOWNERZORDER.
 
 		/// <summary>
-		/// Places this window before window w in the Z order.
+		/// Places this window above window w in the Z order.
+		/// </summary>
+		/// <remarks>
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
 		/// This window and w can be both top-level windows or both controls of same parent.
-		/// May not work with top-level windows when it would move an inactive window above the active window.
 		/// If w is default(AWnd), calls <see cref="ZorderBottom"/>.
-		/// </summary>
-		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool ZorderAbove(AWnd w)
-		{
-			return _ZorderAfterBefore(w, true);
-		}
+		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; it depends on many documented and undocumented conditions; can even return true when failed.
+		/// Supports <see cref="ALastError"/>.
+		/// </remarks>
+		public bool ZorderAbove(AWnd w) => _ZorderAfterBefore(w, true);
 
 		/// <summary>
-		/// Places this window after window w in the Z order.
+		/// Places this window below window w in the Z order.
+		/// </summary>
+		/// <remarks>
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
 		/// This window and w can be both top-level windows or both controls of same parent.
-		/// May not work with top-level windows when it would move an inactive window above the active window.
 		/// If w is default(AWnd), calls <see cref="ZorderTop"/>.
-		/// </summary>
-		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool ZorderBelow(AWnd w)
-		{
-			return _ZorderAfterBefore(w, false);
-		}
+		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Supports <see cref="ALastError"/>.
+		/// </remarks>
+		public bool ZorderBelow(AWnd w) => _ZorderAfterBefore(w, false);
 
-		bool _ZorderAfterBefore(AWnd w, bool before)
-		{
-			if(w.Is0) return before ? ZorderBottom() : ZorderTop();
-			if(w == this) return true;
-			if(IsTopmost && !w.IsTopmost) ZorderNoTopmost(); //see comments below
+		bool _ZorderAfterBefore(AWnd w, bool before) {
+			if (w.Is0) return before ? ZorderBottom() : ZorderTop();
+			if (w == this) return true;
+			if (IsTopmost && !w.IsTopmost) ZorderNoTopmost(); //see comments below
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, before ? w.Get.Previous() : w);
 		}
 
 		/// <summary>
-		/// Places this window or control at the top of the Z order.
-		/// If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows (after topmost windows).
-		/// Does not activate.
-		/// In most cases does not work with top-level inactive windows, although returns true; instead use <see cref="ActivateLL"/>.
+		/// Places this window or control at the top of the Z order. Does not activate.
+		/// If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows.
 		/// </summary>
-		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool ZorderTop()
-		{
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOP);
-
-			//CONSIDER: find a workaround. Eg in some cases this works: set HWND_TOPMOST then HWND_NOTOPMOST.
+		/// <remarks>
+		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Supports <see cref="ALastError"/>.
+		/// </remarks>
+		public bool ZorderTop() {
+			if (IsChild || IsTopmost) return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOP);
+			GetWnd.Top2(out var lastTopmost);
+			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, lastTopmost);
 		}
-		//This version tries a workaround, but on latest Windows it does not work.
-		//Better don't use workarounds here.
-		//public bool ZorderTop()
-		//{
-		//	AWnd wa = Native.HWND.TOP;
-		//	if(!IsChild) {
-		//		//SWP does not work if this window is inactive, unless wndInsertAfter is used.
-		//		//Workaround: insert this after the first window, then insert the first window after this.
-		//		wa = Api.GetTopWindow(IsTopmost ? default : this);
-		//		return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa) && wa.SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, this);
-		//	}
-		//	return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
-		//}
 
 		/// <summary>
 		/// Places this window or control at the bottom of the Z order.
 		/// If the window was topmost, makes it and its owner window non-topmost.
 		/// </summary>
-		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool ZorderBottom()
-		{
+		/// <remarks>
+		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Supports <see cref="ALastError"/>.
+		/// </remarks>
+		public bool ZorderBottom() {
 			ZorderNoTopmost(); //see comments below
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.BOTTOM);
 		}
 
 		/// <summary>
-		/// Makes this window topmost (always on top of non-topmost windows in the Z order).
-		/// Does not activate.
-		/// If this window has an owner window, the owner does not become topmost.
-		/// This cannot be a control.
+		/// Makes this window topmost (always on top of non-topmost windows in the Z order). Does not activate.
 		/// </summary>
-		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool ZorderTopmost()
-		{
+		/// <remarks>
+		/// This cannot be a control.
+		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Supports <see cref="ALastError"/>.
+		/// </remarks>
+		public bool ZorderTopmost() {
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOPMOST);
 		}
 
 		/// <summary>
 		/// Makes this window non-topmost.
-		/// If this window has an owner window, makes the owner window non-topmost too.
-		/// This cannot be a control.
 		/// </summary>
 		/// <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is its owner.</param>
-		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool ZorderNoTopmost(bool afterActiveWindow = false)
-		{
-			if(!IsTopmost) return true;
+		/// <remarks>
+		/// If this window has an owner window, makes it non-topmost too.
+		/// This cannot be a control.
+		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+		/// Supports <see cref="ALastError"/>.
+		/// </remarks>
+		public bool ZorderNoTopmost(bool afterActiveWindow = false) {
+			if (!IsTopmost) return true;
 
-			for(int i = 0; i < 4; i++) {
-				if(!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.NOTOPMOST)) return false;
-				if(i == 0 && !IsTopmost) break;
+			for (int i = 0; i < 4; i++) {
+				if (!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.NOTOPMOST)) return false;
+				if (i == 0 && !IsTopmost) break;
 				//AOutput.Write("retry");
 			}
 
 			//place this after the active window
-			if(afterActiveWindow) {
+			if (afterActiveWindow) {
 				AWnd wa = Active;
-				if(wa != this && !wa.IsTopmost) SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
+				if (wa != this && !wa.IsTopmost) SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
 			}
 
 			return true;
@@ -2148,19 +2064,18 @@ namespace Au
 		/// <summary>
 		/// Returns true if this window is above window w in the Z order.
 		/// </summary>
-		public bool ZorderIsAbove(AWnd w)
-		{
-			if(w.Is0) return false;
-			for(AWnd t = this; !t.Is0;) {
+		public bool ZorderIsAbove(AWnd w) {
+			if (w.Is0) return false;
+			for (AWnd t = this; !t.Is0;) {
 				t = Api.GetWindow(t, Api.GW_HWNDNEXT);
-				if(t == w) return true;
+				if (t == w) return true;
 			}
 			return false;
 		}
 
-#endregion
+		#endregion
 
-#region style, exStyle
+		#region style, exStyle
 		/// <summary>
 		/// Gets window style.
 		/// </summary>
@@ -2192,8 +2107,7 @@ namespace Au
 		/// Note: don't use <see cref="WS.CAPTION"/>, because it consists of two other styles - BORDER and DLGFRAME.
 		/// </param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool HasStyle(WS style, bool any = false)
-		{
+		public bool HasStyle(WS style, bool any = false) {
 			var k = Style & style;
 			return any ? k != 0 : k == style;
 		}
@@ -2204,8 +2118,7 @@ namespace Au
 		/// <param name="exStyle">One or more extended styles.</param>
 		/// <param name="any">Return true if has any (not necessary all) of the specified styles.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool HasExStyle(WS2 exStyle, bool any = false)
-		{
+		public bool HasExStyle(WS2 exStyle, bool any = false) {
 			var k = ExStyle & exStyle;
 			return any ? k != 0 : k == exStyle;
 		}
@@ -2230,17 +2143,16 @@ namespace Au
 		public void SetExStyle(WS2 style, WSFlags flags = 0)
 			=> _SetStyle(true, (int)style, flags);
 
-		void _SetStyle(bool ex, int style, WSFlags flags)
-		{
+		void _SetStyle(bool ex, int style, WSFlags flags) {
 			var gwl = ex ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
-			switch(flags & (WSFlags.Add | WSFlags.Remove)) {
-			case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
-			case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
+			switch (flags & (WSFlags.Add | WSFlags.Remove)) {
+				case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
+				case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
 			}
 			SetWindowLong(gwl, style);
 
-			if(flags.Has(WSFlags.UpdateNonclient)) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
-			if(flags.Has(WSFlags.UpdateClient)) Api.InvalidateRect(this, default, true);
+			if (flags.Has(WSFlags.UpdateNonclient)) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
+			if (flags.Has(WSFlags.UpdateClient)) Api.InvalidateRect(this, default, true);
 		}
 
 		/// <summary>
@@ -2261,15 +2173,15 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool IsResizable => HasStyle(WS.THICKFRAME);
 
-#endregion
+		#endregion
 
-#region window/class long, control id, prop
+		#region window/class long, control id, prop
 
 		/// <summary>
 		/// Calls API <msdn>GetWindowLongPtr</msdn>.
 		/// </summary>
+		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <remarks>
-		/// For index can be used constants from <see cref="Native.GWL"/>.
 		/// Supports <see cref="ALastError"/>.
 		/// In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
 		/// </remarks>
@@ -2282,11 +2194,10 @@ namespace Au
 		/// <param name="newValue">New value.</param>
 		/// <exception cref="AuWndException"/>
 		/// <seealso cref="Native.SetWindowSubclass"/>
-		public LPARAM SetWindowLong(int index, LPARAM newValue)
-		{
+		public LPARAM SetWindowLong(int index, LPARAM newValue) {
 			ALastError.Clear();
 			var prev = Api.SetWindowLongPtr(this, index, newValue);
-			if(prev == 0 && ALastError.Code != 0) ThrowUseNative();
+			if (prev == 0 && ALastError.Code != 0) ThrowUseNative();
 			return prev;
 		}
 
@@ -2314,9 +2225,9 @@ namespace Au
 		/// </example>
 		public WProp Prop => new WProp(this);
 
-#endregion
+		#endregion
 
-#region thread, process, is Unicode, is 64-bit, is hung/ghost, is console, UAC
+		#region thread, process, is Unicode, is 64-bit, is hung/ghost, is console, UAC, is message-only
 
 		/// <summary>
 		/// Calls API <msdn>GetWindowThreadProcessId</msdn>.
@@ -2324,8 +2235,7 @@ namespace Au
 		/// Returns 0 if fails. Supports <see cref="ALastError"/>.
 		/// <note>It is native thread id, not Thread.ManagedThreadId.</note>
 		/// </summary>
-		public int GetThreadProcessId(out int processId)
-		{
+		public int GetThreadProcessId(out int processId) {
 			processId = 0;
 			return Api.GetWindowThreadProcessId(this, out processId);
 		}
@@ -2376,9 +2286,9 @@ namespace Au
 		public bool Is32Bit {
 			get {
 				bool is32bit = AVersion.Is32BitOS;
-				if(!is32bit) {
+				if (!is32bit) {
 					using var ph = Handle_.OpenProcess(this);
-					if(ph.Is0 || !Api.IsWow64Process(ph, out is32bit)) return false;
+					if (ph.Is0 || !Api.IsWow64Process(ph, out is32bit)) return false;
 				}
 				ALastError.Clear();
 				return is32bit;
@@ -2410,10 +2320,9 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
 
-		internal void UacCheckAndThrow_(string prefix = null)
-		{
-			if(!Is0 && IsUacAccessDenied) {
-				if(prefix == null) prefix = "Failed. The"; else if(prefix.Ends('.')) prefix += " The"; //this is to support prefix used by AMouse.Move: "The active"
+		internal void UacCheckAndThrow_(string prefix = null) {
+			if (!Is0 && IsUacAccessDenied) {
+				if (prefix == null) prefix = "Failed. The"; else if (prefix.Ends('.')) prefix += " The"; //this is to support prefix used by AMouse.Move: "The active"
 				throw new AuException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
 			}
 		}
@@ -2454,9 +2363,42 @@ namespace Au
 		//	get => UacIntegrityLevel > AUac.OfThisProcess.IntegrityLevel;
 		//}
 
-#endregion
+		/// <summary>
+		/// Returns true if this is a <msdn>message-only window</msdn>.
+		/// </summary>
+		/// <remarks>
+		/// To find message-only windows use <see cref="FindFast"/>.
+		/// </remarks>
+		public bool IsMessageOnly {
+			get {
+				var t = HasStyle(WS.CHILD) ? Window : this;
+				var v = t.ParentGWL_;
+				if (v != default) {
+					if (!s_messageOnlyParent.IsAlive) {
+						if (AKeys.IsScrollLock) {
+							var w = More.CreateMessageOnlyWindow("Static");
+							s_messageOnlyParent=w.ParentGWL_;
+							Api.DestroyWindow(w);
+						} else {
+							for (int i = 0; i < 5; i++) {
+								var w = FindFast(null, null, true); //find a message-only window
+								if (w.Is0) return false; //if there are no message-only windows, this window isn't message only
+								w = w.ParentGWL_;
+								if (!w.Is0) { s_messageOnlyParent = w; break; } //if 0, either w destroyed/reparented or GetWindowLong(GWL_HWNDPARENT) always returns 0 on this OS version
+							}
+						}
+						Debug.Assert(!s_messageOnlyParent.Is0);
+					}
+					return v == s_messageOnlyParent;
+				}
+				return false;
+			}
+		}
+		static AWnd s_messageOnlyParent;
 
-#region text, class, program
+		#endregion
+
+		#region text, class, program
 
 		/// <summary>
 		/// Gets window class name.
@@ -2467,7 +2409,7 @@ namespace Au
 				const int stackSize = 260;
 				var b = stackalloc char[stackSize]; //tested: same speed with AMemoryArray
 				int n = Api.GetClassName(this, b, stackSize);
-				if(n == 0) return null;
+				if (n == 0) return null;
 				return new string(b, 0, n);
 			}
 		}
@@ -2485,9 +2427,8 @@ namespace Au
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
-		public int ClassNameIs(params string[] classNames)
-		{
-			string s = ClassName; if(s == null) return 0;
+		public int ClassNameIs(params string[] classNames) {
+			string s = ClassName; if (s == null) return 0;
 			return s.Like(true, classNames);
 		}
 
@@ -2548,15 +2489,14 @@ namespace Au
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="NameAcc"/>
 		/// <seealso cref="NameWinForms"/>
-		public string GetText(bool? getText = null, bool removeUnderlineAmpersand = true)
-		{
+		public string GetText(bool? getText = null, bool removeUnderlineAmpersand = true) {
 			string R = null;
 
-			if(getText == null) R = _GetTextFast(true);
-			else if(getText.GetValueOrDefault()) R = _GetTextSlow();
+			if (getText == null) R = _GetTextFast(true);
+			else if (getText.GetValueOrDefault()) R = _GetTextSlow();
 			else R = _GetTextFast(false);
 
-			if(removeUnderlineAmpersand
+			if (removeUnderlineAmpersand
 				&& !R.NE()
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
@@ -2571,17 +2511,16 @@ namespace Au
 		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="ALastError"/>.
 		/// Calls API InternalGetWindowText. If it fails, and getControlTextIfEmpty==true, and this is a control, calls _GetTextSlow, which uses WM_GETTEXT.
 		/// </summary>
-		string _GetTextFast(bool useSlowIfEmpty)
-		{
-			if(Is0) return null;
-			for(int na = 300; ; na *= 2) {
+		string _GetTextFast(bool useSlowIfEmpty) {
+			if (Is0) return null;
+			for (int na = 300; ; na *= 2) {
 				var b = AMemoryArray.Char_(ref na);
 				ALastError.Clear();
 				int nr = Api.InternalGetWindowText(this, b, na);
-				if(nr < na - 1) {
-					if(nr > 0) return new string(b, 0, nr);
-					if(ALastError.Code != 0) return null;
-					if(useSlowIfEmpty && HasStyle(WS.CHILD)) return _GetTextSlow();
+				if (nr < na - 1) {
+					if (nr > 0) return new string(b, 0, nr);
+					if (ALastError.Code != 0) return null;
+					if (useSlowIfEmpty && HasStyle(WS.CHILD)) return _GetTextSlow();
 					return "";
 				}
 			}
@@ -2593,15 +2532,14 @@ namespace Au
 		/// Returns null if fails, eg if the control is destroyed or its thread is hung. Supports <see cref="ALastError"/>.
 		/// Uses WM_GETTEXT.
 		/// </summary>
-		string _GetTextSlow()
-		{
-			if(!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
-			int n = (int)ln; if(n < 1) return "";
+		string _GetTextSlow() {
+			if (!SendTimeout(5000, out LPARAM ln, Api.WM_GETTEXTLENGTH)) return null;
+			int n = (int)ln; if (n < 1) return "";
 
 			var b = AMemoryArray.Char_(n);
-			fixed(char* p = b.A) {
-				if(!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
-				if(ln < 1) return "";
+			fixed (char* p = b.A) {
+				if (!SendTimeout(30000, out ln, Api.WM_GETTEXT, n + 1, p)) return null;
+				if (ln < 1) return "";
 				b.A[n] = '\0';
 				n = CharPtr_.Length(p, n); //info: some controls return incorrect ln, eg including '\0'
 				return new string(b, 0, n);
@@ -2628,9 +2566,8 @@ namespace Au
 		/// <seealso cref="GetText"/>
 		/// <seealso cref="Name"/>
 		/// <seealso cref="ControlText"/>
-		public void SetText(string text)
-		{
-			if(!SendTimeoutS(30000, out var _, Api.WM_SETTEXT, 0, text ?? "", 0)) ThrowUseNative();
+		public void SetText(string text) {
+			if (!SendTimeoutS(30000, out var _, Api.WM_SETTEXT, 0, text ?? "", 0)) ThrowUseNative();
 		}
 
 		//rejected: faster but not better than NameAcc. Or must be improved.
@@ -2695,9 +2632,8 @@ namespace Au
 		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
-		public int ProgramNameIs(params string[] programNames)
-		{
-			string s = ProgramName; if(s == null) return 0;
+		public int ProgramNameIs(params string[] programNames) {
+			string s = ProgramName; if (s == null) return 0;
 			return s.Like(true, programNames);
 		}
 
@@ -2721,9 +2657,9 @@ namespace Au
 		/// </remarks>
 		public string ProgramDescription => AProcess.GetDescription(ProcessId);
 
-#endregion
+		#endregion
 
-#region close, destroy
+		#region close, destroy
 
 		/// <summary>
 		/// Closes the window.
@@ -2749,14 +2685,13 @@ namespace Au
 		/// AWnd.FindAll("* Notepad", "Notepad").ForEach(t => t.Close());
 		/// ]]></code>
 		/// </example>
-		public bool Close(bool noWait = false, bool useXButton = false)
-		{
-			if(!IsAlive) return true;
+		public bool Close(bool noWait = false, bool useXButton = false) {
+			if (!IsAlive) return true;
 
-			int msg = Api.WM_CLOSE; uint wparam = 0; if(useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
+			int msg = Api.WM_CLOSE; uint wparam = 0; if (useXButton) { msg = Api.WM_SYSCOMMAND; wparam = Api.SC_CLOSE; }
 
-			if(IsOfThisThread) {
-				if(noWait) Post(msg, wparam);
+			if (IsOfThisThread) {
+				if (noWait) Post(msg, wparam);
 				else Send(msg, wparam);
 				return true;
 			}
@@ -2777,28 +2712,28 @@ namespace Au
 			//	Imagine if the target window's app is in SendMessage which dispatches foreign messages, and after it returns, the window is already died.
 
 			bool ok = Post(msg, wparam);
-			if(!ok) {
+			if (!ok) {
 				//AOutput.Write(ALastError.Code); //0 when UAC access denied
-				if(!useXButton) ok = Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE); //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
+				if (!useXButton) ok = Post(Api.WM_SYSCOMMAND, Api.SC_CLOSE); //UAC blocks WM_CLOSE but not WM_SYSCOMMAND
 			}
 
 			//if(!noWait.HasValue) noWait = AThread.IsUI; //rejected
-			if(noWait) return true;
+			if (noWait) return true;
 
-			if(ok) {
-				for(int i = 0; i < 100; i++) {
+			if (ok) {
+				for (int i = 0; i < 100; i++) {
 					Thread.Sleep(15);
-					if(!IsEnabled(false)) break; //destroyed or has an owned modal dialog box, eg "Save?"
+					if (!IsEnabled(false)) break; //destroyed or has an owned modal dialog box, eg "Save?"
 
 					//Wait less if hidden, eg has a tray icon.
 					//Also if a popup, eg a Yes/No message box (disabled X button).
 					//Also if child.
 					//if(!IsVisible && !_IsBusy(2)) i += 4; //unreliable, too dirty
-					if(!IsVisible || (Style & (WS.POPUP | WS.CHILD)) != 0) i += 2;
+					if (!IsVisible || (Style & (WS.POPUP | WS.CHILD)) != 0) i += 2;
 
-					if(i >= 50) {
-						if(!SendTimeout(200, 0)) {
-							if(!IsAlive || IsHung) break;
+					if (i >= 50) {
+						if (!SendTimeout(200, 0)) {
+							if (!IsAlive || IsHung) break;
 						}
 					}
 				}
@@ -2881,8 +2816,7 @@ namespace Au.Types
 		/// 
 		/// Later call <see cref="Remove(string)"/> to remove the property. If you use many unique property names and don't remove the properties, the property name strings can fill the global atom table which is of a fixed size (about 48000) and which is used by all processes for various purposes.
 		/// </remarks>
-		public bool Set(string name, LPARAM value)
-		{
+		public bool Set(string name, LPARAM value) {
 			return Api.SetProp(_w, name, value);
 		}
 
@@ -2895,8 +2829,7 @@ namespace Au.Types
 		/// <remarks>
 		/// This overload uses atom instead of string. I's about 3 times faster. See API <msdn>GlobalAddAtom</msdn>, <msdn>GlobalDeleteAtom</msdn>.
 		/// </remarks>
-		public bool Set(ushort atom, LPARAM value)
-		{
+		public bool Set(ushort atom, LPARAM value) {
 			return Api.SetProp(_w, atom, value);
 		}
 
@@ -2906,8 +2839,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="name">Property name. Other overload allows to use global atom instead, which is faster.</param>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public LPARAM Remove(string name)
-		{
+		public LPARAM Remove(string name) {
 			return Api.RemoveProp(_w, name);
 		}
 
@@ -2916,8 +2848,7 @@ namespace Au.Types
 		/// Calls API <msdn>RemoveProp</msdn> and returns its return value.
 		/// </summary>
 		/// <param name="atom">Property name atom in the global atom table.</param>
-		public LPARAM Remove(ushort atom)
-		{
+		public LPARAM Remove(ushort atom) {
 			return Api.RemoveProp(_w, atom);
 		}
 
@@ -2928,12 +2859,11 @@ namespace Au.Types
 		/// <remarks>
 		/// Returns 0-length list if fails. Fails if invalid window or access denied ([](xref:uac)). Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public Dictionary<string, LPARAM> GetList()
-		{
+		public Dictionary<string, LPARAM> GetList() {
 			var a = new Dictionary<string, LPARAM>();
 			Api.EnumPropsEx(_w, (w, name, data, p) => {
 				string s;
-				if((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);
+				if ((long)name < 0x10000) s = "#" + (int)name; else s = Marshal.PtrToStringUni(name);
 				a.Add(s, data);
 				return true;
 			}, default);
@@ -2943,8 +2873,7 @@ namespace Au.Types
 		/// <summary>
 		/// Calls <see cref="GetList"/> and converts to string.
 		/// </summary>
-		public override string ToString()
-		{
+		public override string ToString() {
 			return string.Join("\r\n", GetList());
 		}
 	}

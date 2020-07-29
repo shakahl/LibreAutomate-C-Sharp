@@ -1,5 +1,7 @@
 #define HAVE_SYMBOLS //if the Roslyn project has been modified (added Symbols property to the CompletionItem class) and compiled
 
+//#define WPF
+
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -29,7 +31,11 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 
 class CiCompletion
 {
+#if WPF
+	CiPopupListWPF _popupList;
+#else
 	CiPopupList _popupList;
+#endif
 	_Data _data; //not null while the popup list window is visible
 	CancellationTokenSource _cancelTS;
 
@@ -515,11 +521,14 @@ class CiCompletion
 
 			_data = d;
 			if (_popupList == null) {
-				_popupList = new CiPopupList(this);
+#if WPF
+				_popupList = new CiPopupListWPF(this);
+#else
+				_popupList = new CiPopupList(this, doc);
 				_popupList.PopupWindow.ZHiddenOrDestroyed += destroyed => _CancelUI(popupListHidden: true);
+#endif
 			}
-			_popupList.SetListItems(_data.items, groupsList); //and calls SelectBestMatch
-			_popupList.Show(doc, span.Start);
+			_popupList.Show(doc, span.Start, _data.items, groupsList); //and calls SelectBestMatch
 		}
 		catch (OperationCanceledException) { /*ADebug.Print("canceled");*/ return; }
 		finally {
@@ -900,7 +909,11 @@ class CiCompletion
 	/// <summary>
 	/// Esc, Arrow, Page.
 	/// </summary>
+#if WPF
+	public bool OnCmdKey_SelectOrHide(Keys keyData) => false;
+#else
 	public bool OnCmdKey_SelectOrHide(Keys keyData) => _data == null ? false : _popupList.OnCmdKey(keyData);
+#endif
 }
 
 [Flags]
@@ -922,9 +935,9 @@ class CiComplItem
 
 	public string DisplayText => _text ??= ci.DisplayText + ci.DisplayTextSuffix;
 
-	public Bitmap KindImage => CiUtil.GetKindImage(kind);
+	//public Bitmap KindImage => CiUtil.GetKindImage(kind);
 
-	public Bitmap AccessImage => CiUtil.GetAccessImage(access);
+	//public Bitmap AccessImage => CiUtil.GetAccessImage(access);
 
 	public ISymbol FirstSymbol => ci.Symbols?[0];
 

@@ -515,8 +515,9 @@ AOutput.Write(""t"" + 'c' + 1);
 		//AOutput.Write(s);
 		if(s.Starts("@")) {
 			e.Handled = true;
+			int dpi = Au.Util.ADpi.OfWindow(sender as Control);
 			int i = s.ToInt(2);
-			var b = s[1] switch { 'k' => CiUtil.GetKindImage((CiItemKind)i), 'a' => CiUtil.GetAccessImage((CiItemAccess)i), _ => null };
+			var b = s[1] switch { 'k' => CiUtil.GetKindImage((CiItemKind)i, dpi), 'a' => CiUtil.GetAccessImage((CiItemAccess)i, dpi), _ => null };
 			e.Callback(b);
 		}
 	}

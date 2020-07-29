@@ -26,29 +26,34 @@ namespace Au
 		{
 			/// <summary>
 			/// Calculates window rectangle from client area rectangle and style.
-			/// Calls API <msdn>AdjustWindowRectEx</msdn>.
 			/// </summary>
 			/// <param name="r">Input - client area rectangle in screen. Output - window rectangle in screen.</param>
 			/// <param name="style"></param>
 			/// <param name="exStyle"></param>
-			/// <param name="hasMenu"></param>
+			/// <param name="hasMenu">Has classic menu bar in non-client area.</param>
 			/// <remarks>
 			/// Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
+			/// Calls API <msdn>AdjustWindowRectEx</msdn> or <msdn>AdjustWindowRectExForDpi</msdn>.
 			/// </remarks>
 			public static bool WindowRectFromClientRect(ref RECT r, WS style, WS2 exStyle, bool hasMenu = false)
 			{
+				if (AVersion.MinWin10_1607) {
+					int dpi = AScreen.Of(r).Dpi;
+					return Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpi);
+				}
 				return Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
 			}
 
-			/// <summary>
-			/// Calculates window border width from style.
-			/// </summary>
-			public static int BorderWidth(WS style, WS2 exStyle)
-			{
-				RECT r = default;
-				Api.AdjustWindowRectEx(ref r, style, false, exStyle);
-				return r.right;
-			}
+			//rejected. Does not support per-monitor DPI. Use WindowRectFromClientRect instead.
+			///// <summary>
+			///// Calculates window border width from style.
+			///// </summary>
+			//public static int BorderWidth(WS style, WS2 exStyle)
+			//{
+			//	RECT r = default;
+			//	Api.AdjustWindowRectEx(ref r, style, false, exStyle);
+			//	return r.right;
+			//}
 
 			/// <summary>
 			/// Gets window border width.
@@ -268,33 +273,16 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Returns true if the window is a <msdn>message-only window</msdn>.
-			/// </summary>
-			/// <remarks>
-			/// To find message-only windows use <see cref="FindFast"/>.
-			/// </remarks>
-			public static bool IsMessageOnlyWindow(AWnd w)
-			{
-				var v = w.ParentGWL_;
-				if(v != default) {
-					if(s_messageOnlyParent.Is0) s_messageOnlyParent = FindFast(null, null, true).ParentGWL_;
-					return v == s_messageOnlyParent;
-				}
-				return false;
-			}
-			static AWnd s_messageOnlyParent;
-
-			/// <summary>
 			/// Sets font.
 			/// </summary>
 			/// <param name="w"></param>
-			/// <param name="font">Native font handle. If default(IntPtr), sets font that is used by most windows and controls on this computer. Usually it is Segoe UI, 9.</param>
+			/// <param name="font">Native font handle. If default(IntPtr), sets font that is used by most windows and controls on this computer. Usually it is Segoe UI, 9. DPI-scales for w screen.</param>
 			/// <remarks>
 			/// Sends <msdn>WM_SETFONT</msdn> message.
 			/// </remarks>
 			public static void SetFont(AWnd w, IntPtr font = default)
 			{
-				w.Send(Api.WM_SETFONT, font != default ? font : Util.NativeFont_.RegularCached.Handle);
+				w.Send(Api.WM_SETFONT, font != default ? font : Util.NativeFont_.RegularCached(Util.ADpi.OfWindow(w)).Handle);
 			}
 
 			/// <summary>

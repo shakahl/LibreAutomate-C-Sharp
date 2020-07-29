@@ -481,7 +481,7 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	DWORD pid, tid = GetWindowThreadProcessId(w, &pid); if(tid == 0) return (HRESULT)eError::WindowClosed;
 
 	//use a simple cache to make faster, for example when waiting for AO in w
-	if(t_agentCache.Get(tid, out wa, out &iaccAgent)) {
+	if(t_agentCache.Get(tid, out wa, out & iaccAgent)) {
 		if(wAgent) *wAgent = wa;
 		return 0;
 	}
@@ -549,22 +549,6 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 
 	if(wAgent) *wAgent = wa;
 	return 0;
-}
-
-//Unloads this dll from all processes except this.
-//Can be used when developing this dll and when installing new version.
-//The installer then should wait min 200 ms, call FreeLibrary, and retry/wait if the dll is still locked.
-EXPORT void Cpp_Unload()
-{
-	int n = 0;
-	for(HWND wPrev = 0; ; ) {
-		HWND w = FindWindowEx(HWND_MESSAGE, 0, c_agentWindowClassName, null);
-		if(w == 0 || w == wPrev) break;
-		wPrev = w;
-		DWORD_PTR res;
-		SendMessageTimeout(w, WM_CLOSE, 0, 0, SMTO_ABORTIFHUNG, 5000, &res);
-	}
-	if(n > 0) Sleep(200 + n * 50);
 }
 
 #ifdef _DEBUG

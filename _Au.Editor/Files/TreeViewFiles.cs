@@ -63,6 +63,18 @@ partial class FilesModel
 			this.AllowColumnReorder = true;
 #endif
 			_AddNodeControls();
+
+			//ATimer.After(1500, _ => {//TODO
+			//	Font = new Font("Segoe UI", 20f);
+			//	this.AutoRowHeight = false;
+			//	this.RowHeight *= 2;
+			//});
+		}
+
+		Font _fontBold;
+		protected override void OnFontChanged(EventArgs e) {
+			_fontBold=null;
+			base.OnFontChanged(e);
 		}
 
 		#region node controls
@@ -111,7 +123,7 @@ partial class FilesModel
 			_ccName.EditEnabled = true;
 			_ccName.ValueNeeded = node => (node.Tag as FileNode).DisplayName;
 			_ccName.ValuePushed = (node, value) => { (node.Tag as FileNode).FileRename(value as string, true); };
-			_ccName.FontNeeded = node => node.Tag == _model.CurrentFile ? Au.Util.AFontsCached_.Bold : Au.Util.AFontsCached_.Regular;
+			_ccName.FontNeeded = node => node.Tag == _model.CurrentFile ? (_fontBold ??= new Font(this.Font, FontStyle.Bold)) : this.Font;
 			_ccName.DrawText += _ccName_DrawText;
 
 #if TEST_MANY_COLUMNS

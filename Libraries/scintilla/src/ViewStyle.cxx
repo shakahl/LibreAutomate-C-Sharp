@@ -56,13 +56,13 @@ void FontRealised::Realise(Surface &surface, int zoomLevel, int technology, cons
 	spaceWidth = surface.WidthText(font, " ");
 }
 
-ViewStyle::ViewStyle() : markers(MARKER_MAX + 1), indicators(INDIC_MAX + 1) {
+ViewStyle::ViewStyle() : markers(MARKER_MAX + 1), indicators(INDICATOR_MAX + 1) {
 	Init();
 }
 
 // Copy constructor only called when printing copies the screen ViewStyle so it can be
 // modified for printing styles.
-ViewStyle::ViewStyle(const ViewStyle &source) : markers(MARKER_MAX + 1), indicators(INDIC_MAX + 1) {
+ViewStyle::ViewStyle(const ViewStyle &source) : markers(MARKER_MAX + 1), indicators(INDICATOR_MAX + 1) {
 	Init(source.styles.size());
 	styles = source.styles;
 	for (size_t sty=0; sty<source.styles.size(); sty++) {
@@ -310,10 +310,10 @@ void ViewStyle::Refresh(Surface &surface, int tabInChars) {
 	}
 
 	indicatorsDynamic = std::any_of(indicators.cbegin(), indicators.cend(),
-		[](const Indicator &indicator) { return indicator.IsDynamic(); });
+		[](const Indicator &indicator) noexcept { return indicator.IsDynamic(); });
 
 	indicatorsSetFore = std::any_of(indicators.cbegin(), indicators.cend(),
-		[](const Indicator &indicator) { return indicator.OverridesTextFore(); });
+		[](const Indicator &indicator) noexcept { return indicator.OverridesTextFore(); });
 
 	maxAscent = 1;
 	maxDescent = 1;
@@ -328,10 +328,10 @@ void ViewStyle::Refresh(Surface &surface, int tabInChars) {
 		lineOverlap = lineHeight;
 
 	someStylesProtected = std::any_of(styles.cbegin(), styles.cend(),
-		[](const Style &style) { return style.IsProtected(); });
+		[](const Style &style) noexcept { return style.IsProtected(); });
 
 	someStylesForceCase = std::any_of(styles.cbegin(), styles.cend(),
-		[](const Style &style) { return style.caseForce != Style::caseMixed; });
+		[](const Style &style) noexcept { return style.caseForce != Style::caseMixed; });
 
 	aveCharWidth = styles[STYLE_DEFAULT].aveCharWidth;
 	spaceWidth = styles[STYLE_DEFAULT].spaceWidth;
@@ -460,12 +460,12 @@ bool ViewStyle::IsLineFrameOpaque(bool caretActive, bool lineContainsCaret) cons
 		(caretLineAlpha == SC_ALPHA_NOALPHA) && lineContainsCaret;
 }
 
-// See if something overrides the line background color:  Either if caret is on the line
-// and background color is set for that, or if a marker is defined that forces its background
-// color onto the line, or if a marker is defined but has no selection margin in which to
+// See if something overrides the line background colour:  Either if caret is on the line
+// and background colour is set for that, or if a marker is defined that forces its background
+// colour onto the line, or if a marker is defined but has no selection margin in which to
 // display itself (as long as it's not an SC_MARK_EMPTY marker).  These are checked in order
 // with the earlier taking precedence.  When multiple markers cause background override,
-// the color for the highest numbered one is used.
+// the colour for the highest numbered one is used.
 ColourOptional ViewStyle::Background(int marksOfLine, bool caretActive, bool lineContainsCaret) const {
 	ColourOptional background;
 	if (!caretLineFrame && (caretActive || alwaysShowCaretLineBackground) && showCaretLineBackground &&
@@ -565,7 +565,20 @@ bool ViewStyle::SetWrapIndentMode(int wrapIndentMode_) noexcept {
 }
 
 bool ViewStyle::IsBlockCaretStyle() const noexcept {
-	return (caretStyle == CARETSTYLE_BLOCK) || (caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0;
+	return ((caretStyle & CARETSTYLE_INS_MASK) == CARETSTYLE_BLOCK) ||
+		(caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0;
+}
+
+bool ViewStyle::IsCaretVisible() const noexcept {
+	return caretWidth > 0 && caretStyle != CARETSTYLE_INVISIBLE;
+}
+
+bool ViewStyle::DrawCaretInsideSelection(bool inOverstrike, bool imeCaretBlockOverride) const noexcept {
+	if (caretStyle & CARETSTYLE_BLOCK_AFTER)
+		return false;
+	return ((caretStyle & CARETSTYLE_INS_MASK) == CARETSTYLE_BLOCK) ||
+		(inOverstrike && (caretStyle & CARETSTYLE_OVERSTRIKE_BLOCK) != 0) ||
+		imeCaretBlockOverride;
 }
 
 ViewStyle::CaretShape ViewStyle::CaretShapeForMode(bool inOverstrike) const noexcept {

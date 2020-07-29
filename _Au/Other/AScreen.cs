@@ -379,6 +379,11 @@ namespace Au
 			public RECT WorkArea => GetRect(true);
 
 			/// <summary>
+			/// Gets DPI of this screen. See <see cref="Util.ADpi.OfScreen"/>.
+			/// </summary>
+			public int Dpi => Util.ADpi.OfScreen(_h);
+
+			/// <summary>
 			/// True if the screen handle is valid.
 			/// </summary>
 			public bool IsAlive {

@@ -401,7 +401,7 @@ namespace Au
 					text = s.ToString();
 				}
 
-				int magnWH = ADpi.ScaleInt(200) / 10 * 10; //width and height of the magnified image without borders etc
+				int magnWH = ADpi.Scale(200) / 10 * 10; //width and height of the magnified image without borders etc
 
 				var m = _gMagn;
 				if (m == null) {

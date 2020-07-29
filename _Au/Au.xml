@@ -3125,7 +3125,7 @@
         </member>
         <member name="T:Au.Types.IconGetFlags">
             <summary>
-            Flags for <see cref="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.IconGetFlags)"/> and similar functions.
+            Flags for <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/> and similar functions.
             </summary>
         </member>
         <member name="F:Au.Types.IconGetFlags.LiteralPath">
@@ -3139,8 +3139,7 @@
             </summary>
         </member>
         <member name="T:Au.Types.StockIcon">
-            <summary>See <msdn>SHSTOCKICONID</msdn>.</summary>
-            <seealso cref="M:Au.AIcon.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>
+            <summary>See <see cref="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)"/>, <msdn>SHSTOCKICONID</msdn>.</summary>
         </member>
         <member name="T:Au.Types.PNFlags">
             <summary>
@@ -4145,7 +4144,7 @@
         </member>
         <member name="P:Au.Types.MTBase.IconSize">
             <summary>
-            Image width and height. Default is <see cref="P:Au.AIcon.SizeSmall"/>.
+            Image width and height. Default 16.
             </summary>
             <exception cref="T:System.InvalidOperationException">The 'set' function is called after adding items.</exception>
             <remarks>
@@ -4285,12 +4284,13 @@
             </summary>
             <remarks>
             Has implicit conversions from:
-            - string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
+            - string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
             - string with prefix "key:" - imagelist image key (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
             - int - imagelist image index (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             - Image - image object.
             - Icon - icon object.
+            - <see cref="T:Au.AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="M:Au.AIcon.ToBitmap(System.Boolean)"/> and disposes the native icon.
             - <see cref="T:Au.Types.StockIcon"/> - a shell icon.
             - FolderPath - folder path.
             - default - no icon. If <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
@@ -4309,6 +4309,9 @@
         <member name="M:Au.Types.MTImage.op_Implicit(System.Drawing.Icon)~Au.Types.MTImage">
             
         </member>
+        <member name="M:Au.Types.MTImage.op_Implicit(Au.AIcon)~Au.Types.MTImage">
+            
+        </member>
         <member name="M:Au.Types.MTImage.op_Implicit(Au.Types.StockIcon)~Au.Types.MTImage">
             
         </member>
@@ -4317,7 +4320,7 @@
         </member>
         <member name="P:Au.Types.MTImage.Value">
             <summary>
-            Gets the raw value stored in this variable. Can be string, int, Image, Icon, null.
+            Gets the raw value stored in this variable. Can be string, int, Image, Icon, StockIcon, null.
             </summary>
         </member>
         <member name="T:Au.Types.ClipFormats">
@@ -5139,6 +5142,32 @@
             Waits <see cref="P:Au.AOsd.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/>.
             </summary>
         </member>
+        <member name="T:Au.Types.AOsdFont">
+            <summary>
+            Font size and family name for OSD classes.
+            </summary>
+        </member>
+        <member name="P:Au.Types.AOsdFont.Name">
+            <summary>
+            Family name.
+            </summary>
+        </member>
+        <member name="P:Au.Types.AOsdFont.Size">
+            <summary>
+            Size.
+            On high-DPI screen the font size will be scaled.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AOsdFont.CreateFont(System.Int32)">
+            <summary>
+            Creates font.
+            </summary>
+            <param name="dpi">DPI for scaling.</param>
+        </member>
+        <member name="M:Au.Types.AOsdFont.#ctor(System.Int32,System.String)">
+            <param name="size">Sets <see cref="P:Au.Types.AOsdFont.Size"/>.</param>
+            <param name="name">Sets <see cref="P:Au.Types.AOsdFont.Name"/>. Default "Segoe UI".</param>
+        </member>
         <member name="T:Au.Types.OutServMessageType">
             <summary>
             See <see cref="P:Au.Types.OutServMessage.Type"/>.
@@ -5230,7 +5259,7 @@
             - <see cref="T:System.Drawing.Bitmap"/> - image object.
             - <b>WIImage[]</b> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
             
-            Icons are not supported directly, but you can use <see cref="M:Au.AIcon.GetFileIconImage(System.String,System.Int32,Au.Types.IconGetFlags)"/> or <see cref="M:Au.AIcon.HandleToImage(System.IntPtr,System.Boolean)"/>.
+            Icons are not supported directly; you can use <see cref="T:Au.AIcon"/> to get icon and convert to bitmap.
             </remarks>
         </member>
         <member name="P:Au.Types.WIImage.Value">
@@ -6071,6 +6100,90 @@
         <member name="F:Au.Types.WCFlags.DirectChild">
             <summary>Skip indirect descendant controls (children of children and so on).</summary>
         </member>
+        <member name="T:Au.Types.AWndButton">
+            <summary>
+            Like <see cref="T:Au.AWnd"/>, but has only button, check box and radio button functions - <b>Click</b>, <b>Check</b> etc.
+            See also <see cref="P:Au.AWnd.AsButton"/>.
+            </summary>
+            <example>
+            <code><![CDATA[
+            AWnd.Find("Options").Child("Cancel").AsButton.Click();
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.Types.AWndButton.W">
+            <summary>
+            Button handle as AWnd.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AWndButton.op_Implicit(Au.Types.AWndButton)~Au.AWnd">
+            
+        </member>
+        <member name="M:Au.Types.AWndButton.op_Explicit(Au.AWnd)~Au.Types.AWndButton">
+            
+        </member>
+        <member name="M:Au.Types.AWndButton.ToString">
+            
+        </member>
+        <member name="M:Au.Types.AWndButton.Click(System.Boolean)">
+            <summary>
+            Sends a "click" message to this button control. Does not use the mouse.
+            </summary>
+            <param name="useAcc">Use <see cref="M:Au.AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+            <exception cref="T:Au.Types.AuWndException">This window is invalid.</exception>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Works not with all button controls. Sometimes does not work if the window is inactive.
+            Check boxes and radio buttons also are buttons. This function can click them.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            AWnd.Find("Options").Child("Cancel").AsButton.Click();
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Types.AWndButton.Check(System.Boolean,System.Boolean)">
+            <summary>
+            Checks or unchecks this check box. Does not use the mouse.
+            Calls <see cref="M:Au.Types.AWndButton.SetCheckState(System.Int32,System.Boolean)"/> with state 0 or 1.
+            </summary>
+            <param name="on">Checks if true, unchecks if false.</param>
+            <param name="useAcc"></param>
+            <exception cref="T:Au.Types.AuWndException">This window is invalid.</exception>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Works not with all button controls. Sometimes does not work if the window is inactive.
+            If this is a radio button, does not uncheck other radio buttons in its group.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.AWndButton.SetCheckState(System.Int32,System.Boolean)">
+            <summary>
+            Sets checkbox state. Does not use the mouse.
+            </summary>
+            <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
+            <param name="useAcc">Use <see cref="M:Au.AAcc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid state.</exception>
+            <exception cref="T:Au.Types.AuWndException">This window is invalid.</exception>
+            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <remarks>
+            Does nothing if the check box already has the specified check state (if can get it).
+            Works not with all button controls. Sometimes does not work if the window is inactive.
+            If this is a radio button, does not uncheck other radio buttons in its group.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.AWndButton.IsChecked(System.Boolean)">
+            <summary>
+            Gets check state of this check box or radio button.
+            Calls <see cref="M:Au.Types.AWndButton.GetCheckState(System.Boolean)"/> and returns true if it returns 1.
+            </summary>
+        </member>
+        <member name="M:Au.Types.AWndButton.GetCheckState(System.Boolean)">
+            <summary>
+            Gets check state of this check box or radio button.
+            Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
+            </summary>
+            <param name="useAcc">Use <see cref="P:Au.AAcc.State"/>. If false (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
+        </member>
         <member name="T:Au.Types.WFlags">
             <summary>
             Flags of <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/> and similar functions.
@@ -6267,9 +6380,9 @@
             Ignore these messages.
             </summary>
         </member>
-        <member name="T:Au.Types.TBProgressState">
+        <member name="T:Au.Types.WTBProgressState">
             <summary>
-            Used by <see cref="M:Au.AWnd.More.TaskbarButton.SetProgressState(Au.AWnd,Au.Types.TBProgressState)"/>.
+            Used by <see cref="M:Au.AWnd.More.TaskbarButton.SetProgressState(Au.AWnd,Au.Types.WTBProgressState)"/>.
             </summary>
         </member>
         <member name="T:Au.ALastError">
@@ -7940,15 +8053,44 @@
         </member>
         <member name="T:Au.AIcon">
             <summary>
-            Gets icons for files etc.
+            Gets icons for files etc. Contains native icon handle.
+            </summary>
+            <remarks>
+            Native icons must be destroyed, it is very important. An <b>AIcon</b> variable destroys its native icon when disposing it. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Note: it's not a reference type and does not have a finalizer that could be called by GC. But usually you need not native handle but <b>Icon</b>, <b>Bitmap</b> or <b>ImageSource</b>. Then use <see cref="M:Au.AIcon.ToIcon(System.Boolean)"/>, <see cref="M:Au.AIcon.ToBitmap(System.Boolean)"/> or <see cref="M:Au.AIcon.ToImageSource(System.Boolean)"/>. By default they dispose the native icon and clear the <b>AIcon</b> variable; then don't need to dispose it.
+            </remarks>
+        </member>
+        <member name="M:Au.AIcon.#ctor(System.IntPtr)">
+            <summary>
+            Sets native icon handle.
+            The icon will be destroyed when disposing this variable or when converting to object of other type.
             </summary>
         </member>
-        <member name="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.IconGetFlags)">
+        <member name="M:Au.AIcon.Dispose">
+            <summary>
+            Destroys native icon handle.
+            </summary>
+        </member>
+        <member name="P:Au.AIcon.Handle">
+            <summary>
+            Gets native icon handle.
+            </summary>
+        </member>
+        <member name="P:Au.AIcon.Is0">
+            <summary>
+            Returns true if <b>Handle</b>==default(IntPtr).
+            </summary>
+        </member>
+        <member name="M:Au.AIcon.op_Implicit(Au.AIcon)~System.IntPtr">
+            <summary>
+            Gets native icon handle.
+            </summary>
+        </member>
+        <member name="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)">
             <summary>
             Gets file icon.
             Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, etc.
             </summary>
-            <returns>Returns null if failed.</returns>
+            <returns>Returns default(AIcon) if failed.</returns>
             <param name="file">
             Can be:
             - Path of any file or folder. Supports environment variables.
@@ -7957,145 +8099,58 @@
             - Icon resource index or negative id, like "c:\file.dll,4", "c:\file.dll,-4".
             - URL.
             </param>
-            <param name="size">Icon width and height. If 0 (default), uses <see cref="P:Au.AIcon.SizeSmall"/>.</param>
+            <param name="size">Icon width and height. Default 16.</param>
             <param name="flags"></param>
             <remarks>
-            If not full path, the function uses <see cref="P:Au.AFolders.ThisAppImages"/> and <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
+            If not full path, uses <see cref="P:Au.AFolders.ThisAppImages"/> and <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
             
-            ITEMIDLIST can be of any file, folder, URL or virtual object like Control Panel. See <see cref="M:Au.APidl.ToBase64String"/>.
+            ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="M:Au.APidl.ToBase64String"/>.
             </remarks>
         </member>
-        <member name="M:Au.AIcon.GetFileIconImage(System.String,System.Int32,Au.Types.IconGetFlags)">
-            <summary>
-            Gets file icon.
-            More info: <see cref="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
-            </summary>
-            <returns>Returns null if failed.</returns>
-        </member>
-        <member name="M:Au.AIcon.GetFileIconHandle(System.String,System.Int32,Au.Types.IconGetFlags)">
-            <summary>
-            Gets file icon.
-            More info: <see cref="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
-            </summary>
-            <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-        </member>
-        <member name="M:Au.AIcon.GetPidlIcon(Au.APidl,System.Int32)">
+        <member name="M:Au.AIcon.OfPidl(Au.APidl,System.Int32)">
             <summary>
             Gets icon of a file or other shell object specified as ITEMIDLIST.
             </summary>
-            <returns>Returns null if failed.</returns>
+            <returns>Returns default(AIcon) if failed.</returns>
             <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
-            <param name="size">Icon width and height. If 0 (default), uses <see cref="P:Au.AIcon.SizeSmall"/>.</param>
+            <param name="size">Icon width and height. Default 16.</param>
         </member>
-        <member name="M:Au.AIcon.GetPidlIconImage(Au.APidl,System.Int32)">
+        <member name="M:Au.AIcon.Load(System.String,System.Int32,System.Int32)">
             <summary>
-            Gets icon of a file or other shell object specified as ITEMIDLIST.
-            More info: <see cref="M:Au.AIcon.GetPidlIcon(Au.APidl,System.Int32)"/>.
+            Extracts icon directly from file that contains it.
             </summary>
-            <returns>Returns null if failed.</returns>
-        </member>
-        <member name="M:Au.AIcon.GetPidlIconHandle(Au.APidl,System.Int32)">
-            <summary>
-            Gets icon of a file or other shell object specified as ITEMIDLIST.
-            More info: <see cref="M:Au.AIcon.GetPidlIcon(Au.APidl,System.Int32)"/>.
-            </summary>
-            <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-        </member>
-        <member name="M:Au.AIcon.LoadIcon(System.String,System.Int32,System.Int32)">
-            <summary>
-            Extracts icon from file that contains it.
-            </summary>
-            <returns>Returns null if failed.</returns>
+            <returns>Returns default(AIcon) if failed.</returns>
             <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
             <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
-            <param name="size">Icon width and height. If 0 (default), uses <see cref="P:Au.AIcon.SizeSmall"/>.</param>
+            <param name="size">Icon width and height. Default 16.</param>
         </member>
-        <member name="M:Au.AIcon.LoadIconImage(System.String,System.Int32,System.Int32)">
-            <summary>
-            Extracts icon from file that contains it.
-            More info: <see cref="M:Au.AIcon.LoadIcon(System.String,System.Int32,System.Int32)"/>.
-            </summary>
-            <returns>Returns null if failed.</returns>
-        </member>
-        <member name="M:Au.AIcon.LoadIconHandle(System.String,System.Int32,System.Int32)">
-            <summary>
-            Extracts icon from file that contains it.
-            More info: <see cref="M:Au.AIcon.LoadIcon(System.String,System.Int32,System.Int32)"/>.
-            </summary>
-            <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-        </member>
-        <member name="M:Au.AIcon.GetStockIcon(Au.Types.StockIcon,System.Int32)">
+        <member name="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)">
             <summary>
             Gets a shell stock icon.
             </summary>
-            <returns>Returns null if failed.</returns>
+            <returns>Returns default(AIcon) if failed.</returns>
             <param name="icon">Shell stock icon id.</param>
-            <param name="size">Icon width and height. If 0 (default), uses <see cref="P:Au.AIcon.SizeSmall"/>.</param>
+            <param name="size">Icon width and height. Default 16.</param>
         </member>
-        <member name="M:Au.AIcon.GetStockIconImage(Au.Types.StockIcon,System.Int32)">
-            <summary>
-            Gets a shell stock icon.
-            More info: <see cref="M:Au.AIcon.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>.
-            </summary>
-            <returns>Returns null if failed.</returns>
-        </member>
-        <member name="M:Au.AIcon.GetStockIconHandle(Au.Types.StockIcon,System.Int32)">
-            <summary>
-            Gets a shell stock icon.
-            More info: <see cref="M:Au.AIcon.GetStockIcon(Au.Types.StockIcon,System.Int32)"/>.
-            </summary>
-            <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-        </member>
-        <member name="M:Au.AIcon.GetAppIcon(System.Int32)">
+        <member name="M:Au.AIcon.OfThisApp(System.Int32)">
             <summary>
             Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
             </summary>
-            <returns>Returns null if there are no icons.</returns>
-            <param name="size">Icon width and height. If 0 (default), uses <see cref="P:Au.AIcon.SizeSmall"/>.</param>
-        </member>
-        <member name="M:Au.AIcon.GetAppIconImage(System.Int32)">
-            <summary>
-            Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
-            More info: <see cref="M:Au.AIcon.GetAppIcon(System.Int32)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AIcon.GetAppIconHandle(System.Int32)">
-            <summary>
-            Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
-            More info: <see cref="M:Au.AIcon.GetAppIcon(System.Int32)"/>.
-            </summary>
-            <returns>
-            Returns native icon handle, or default(IntPtr) if there are no icons.
-            The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
-            </returns>
-        </member>
-        <member name="M:Au.AIcon.GetWindowIcon(Au.AWnd,System.Boolean)">
-            <summary>
-            Gets icon that is displayed in window title bar and in taskbar button.
-            </summary>
-            <returns>Returns null if failed.</returns>
-            <param name="w"></param>
-            <param name="large">Get large icon. If false, gets small icon.</param>
+            <returns>Returns default(AIcon) if there are no icons.</returns>
+            <param name="size">Icon width and height. Default 16.</param>
             <remarks>
-            Icon size depends on DPI (text size) and other Windows settings.
-            This function can be used with windows of any process.
+            The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
             </remarks>
         </member>
-        <member name="M:Au.AIcon.GetWindowIconImage(Au.AWnd,System.Boolean)">
+        <member name="M:Au.AIcon.OfWindow(Au.AWnd,System.Int32)">
             <summary>
             Gets icon that is displayed in window title bar and in taskbar button.
-            More info: <see cref="M:Au.AIcon.GetWindowIcon(Au.AWnd,System.Boolean)"/>.
             </summary>
-            <returns>Returns null if failed.</returns>
+            <returns>Returns default(AIcon) if failed.</returns>
+            <param name="w">Window of any process.</param>
+            <param name="size">Icon width and height. Default 16.</param>
         </member>
-        <member name="M:Au.AIcon.GetWindowIconHandle(Au.AWnd,System.Boolean)">
-            <summary>
-            Gets icon that is displayed in window title bar and in taskbar button.
-            More info: <see cref="M:Au.AIcon.GetWindowIcon(Au.AWnd,System.Boolean)"/>.
-            </summary>
-            <returns>Returns icon handle, or default(IntPtr) if failed. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
-        </member>
-        <member name="M:Au.AIcon.CreateIcon(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
+        <member name="M:Au.AIcon.Create(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
             <summary>
             Creates icon at run time.
             </summary>
@@ -8103,42 +8158,35 @@
             <param name="height"></param>
             <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
         </member>
-        <member name="M:Au.AIcon.CreateIconHandle(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})">
+        <member name="M:Au.AIcon.ToIcon(System.Boolean)">
             <summary>
-            Creates icon at run time.
-            More info: <see cref="M:Au.AIcon.CreateIcon(System.Int32,System.Int32,System.Action{System.Drawing.Graphics})"/>.
+            Converts native icon to <b>Icon</b> object.
+            Returns null if <i>Handle</i> is default(IntPtr).
             </summary>
-            <returns>Returns native icon handle. Later call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/> or some <b>HandleToX</b> function that will destroy it.</returns>
+            <param name="destroyNative">
+            If true (default), the returned variable owns the native icon and destroys it when disposing; also clears this variable and don't need to dispose it.
+            If false, the returned variable just uses the native icon handle of this variable and will not destroy; later will need to dispose this variable.
+            </param>
         </member>
-        <member name="M:Au.AIcon.DestroyIconHandle(System.IntPtr)">
+        <member name="M:Au.AIcon.ToBitmap(System.Boolean)">
             <summary>
-            Destroys native icon.
-            Calls API <msdn>DestroyIcon</msdn>. Does nothing if iconHandle is default(IntPtr).
+            Converts native icon to <b>Bitmap</b> object.
+            Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
             </summary>
+            <param name="destroyNative">
+            If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
+            If false, later will need to dispose this variable.
+            </param>
         </member>
-        <member name="M:Au.AIcon.HandleToIcon(System.IntPtr,System.Boolean)">
+        <member name="M:Au.AIcon.ToImageSource(System.Boolean)">
             <summary>
-            Converts unmanaged icon to <b>Icon</b> object.
-            Returns null if <i>hIcon</i> is default(IntPtr).
+            Converts native icon to <b>ImageSource</b> object.
+            Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
             </summary>
-            <param name="hIcon">Icon handle.</param>
-            <param name="destroyIcon">If true (default), the returned variable owns the unmanaged icon and destroys it when disposing. If false, the returned variable just uses the unmanaged icon and will not destroy; the caller later should destroy it with <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/>.</param>
-        </member>
-        <member name="M:Au.AIcon.HandleToImage(System.IntPtr,System.Boolean)">
-            <summary>
-            Converts unmanaged icon to <b>Bitmap</b> object and destroys the unmanaged icon.
-            Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
-            </summary>
-            <param name="hIcon">Icon handle.</param>
-            <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
-        </member>
-        <member name="M:Au.AIcon.HandleToImageSource(System.IntPtr,System.Boolean)">
-            <summary>
-            Converts unmanaged icon to <b>ImageSource</b> object and destroys the unmanaged icon.
-            Returns null if <i>hIcon</i> is default(IntPtr) or if fails to convert.
-            </summary>
-            <param name="hIcon">Icon handle.</param>
-            <param name="destroyIcon">If true (default), destroys the unmanaged icon object.</param>
+            <param name="destroyNative">
+            If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
+            If false, later will need to dispose this variable.
+            </param>
         </member>
         <member name="M:Au.AIcon.ParseIconLocation(System.String@,System.Int32@)">
             <summary>
@@ -8148,77 +8196,6 @@
             <param name="s">Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path. Receives path.</param>
             <param name="index">Receives the number or 0.</param>
             <remarks>Also supports path enclosed in double quotes like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.</remarks>
-        </member>
-        <member name="P:Au.AIcon.SizeSmall">
-            <summary>
-            Gets size of small icons displayed in UI.
-            Depends on DPI; 16 when DPI 100%.
-            </summary>
-        </member>
-        <member name="P:Au.AIcon.SizeLarge">
-            <summary>
-            Gets size of large icons displayed in UI.
-            Depends on DPI; 32 when DPI 100%.
-            </summary>
-        </member>
-        <member name="T:Au.AIconCache">
-            <summary>
-            Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
-            </summary>
-            <threadsafety static="true" instance="true"/>
-        </member>
-        <member name="M:Au.AIconCache.#ctor(System.String,System.Int32)">
-            
-        </member>
-        <member name="M:Au.AIconCache.SaveCacheFileNow">
-            <summary>
-            Saves to the cache file now, if need.
-            Automatically called on process exit.
-            </summary>
-        </member>
-        <member name="M:Au.AIconCache.ClearCache">
-            <summary>
-            Clears the memory cache and deletes the cache file.
-            </summary>
-        </member>
-        <member name="M:Au.AIconCache.GetImage(System.String,System.Boolean,Au.Types.IconGetFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
-            <summary>
-            Gets file icon as <b>Bitmap</b>.
-            Returns null if the icon is not cached and failed to get it, eg file does not exist.
-            </summary>
-            <param name="file">Any file or folder.</param>
-            <param name="useExt">
-            Get file type icon, depending on filename extension. Use this to avoid getting separate image object for each file of same type.
-            This is ignored if filename extension is ".ico" or ".exe" or starts with ".exe," or ".dll,".
-            </param>
-            <param name="giFlags">Flags for <see cref="M:Au.AIcon.GetFileIconImage(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
-            <param name="autoUpdate">
-            If not null, the cached image will be auto-updated when changed. Then will be called this function. It can update the image in UI.
-            How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
-            Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
-            </param>
-            <param name="auParam">Something to pass to the <i>autoUpdate</i> callback function.</param>
-            <remarks>
-            If the icon is in the memory cache, gets it from there.
-            Else if it is in the file cache, gets it from there and adds to the memory cache.
-            Else gets from file (uses <see cref="M:Au.AIcon.GetFileIconImage(System.String,System.Int32,Au.Types.IconGetFlags)"/> and adds to the file cache and to the memory cache.
-            </remarks>
-        </member>
-        <member name="M:Au.AIconCache.GetImage(System.String,System.Func{System.Drawing.Bitmap},System.Action{System.Drawing.Bitmap,System.Object},System.Object,System.Boolean)">
-            <summary>
-            Gets any icon or image using callback function.
-            Returns null if the icon is not cached and the callback function returns null.
-            </summary>
-            <param name="name">Some unique name. It is used to identify this image in cache.</param>
-            <param name="callback">Called to get image. To convert icon handle to image, use <see cref="M:Au.AIcon.HandleToImage(System.IntPtr,System.Boolean)"/>.</param>
-            <param name="autoUpdate"></param>
-            <param name="auParam"></param>
-            <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
-            <remarks>
-            If the icon is in the memory cache, gets it from there.
-            Else if it is in the file cache, gets it from there and adds to the memory cache.
-            Else calls callback function, which should return image, and adds to the file cache and to the memory cache.
-            </remarks>
         </member>
         <member name="T:Au.APath">
             <summary>
@@ -10982,7 +10959,7 @@
             	t.MenuButton("menu", m => {
             		m["item 1"] = o => AOutput.Write(o);
             		m["item 2"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
-            	}, AIcon.GetStockIcon(StockIcon.FOLDER, 16));
+            	}, StockIcon.FOLDER);
             	t["Notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
             	t.Show();
             }
@@ -14628,7 +14605,7 @@
         <member name="P:Au.AOsd.Font">
             <summary>
             Font.
-            Default: <see cref="P:Au.AOsd.DefaultFont"/>.
+            If not set, uses <see cref="P:Au.AOsd.DefaultSmallFont"/>.
             </summary>
             <remarks>
             This property cannot be changed after creating OSD window.
@@ -14796,7 +14773,7 @@
             <param name="doNotShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>.</param>
             <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
-            Also sets these properties: <see cref="P:Au.AOsd.Font"/>=<see cref="P:Au.AOsd.DefaultTransparentTextFont"/>, <see cref="P:Au.AOsdWindow.Opacity"/>=0.
+            Also sets these properties: <see cref="P:Au.AOsd.Font"/>=<see cref="P:Au.AOsd.DefaultBigFont"/>, <see cref="P:Au.AOsdWindow.Opacity"/>=0.
             </remarks>
         </member>
         <member name="M:Au.AOsd.ShowImage(System.Drawing.Image,System.Int32,Au.Types.PopupXY,System.String,Au.Types.OsdShowMode,System.Boolean)">
@@ -14814,10 +14791,13 @@
             Also sets these properties: <see cref="P:Au.AOsd.IsOfImageSize"/>=true, <see cref="P:Au.AOsdWindow.Opacity"/>=0, <see cref="P:Au.AOsd.ClickToClose"/>=true.
             </remarks>
         </member>
-        <member name="P:Au.AOsd.DefaultFont">
-            <summary>Default font for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: <b>SystemFonts.MessageBoxFont</b> of size 12.</summary>
+        <member name="P:Au.AOsd.DefaultSmallFont">
+            <summary>Default font for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: Segoe UI 12.</summary>
             <exception cref="T:System.ArgumentNullException"></exception>
-            <remarks>The font object is cached, don't dispose.</remarks>
+        </member>
+        <member name="P:Au.AOsd.DefaultBigFont">
+            <summary>Default font for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>. Default: Default: Segoe UI 20.</summary>
+            <exception cref="T:System.ArgumentNullException"></exception>
         </member>
         <member name="P:Au.AOsd.DefaultTextColor">
             <summary>Default text color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFF404040 (dark gray).</summary>
@@ -14827,10 +14807,6 @@
         </member>
         <member name="P:Au.AOsd.DefaultBackColor">
             <summary>Default background color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFFFFFFF0 (light yellow).</summary>
-        </member>
-        <member name="P:Au.AOsd.DefaultTransparentTextFont">
-            <summary>Default font for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>. Default: "Tahoma" of size 18.</summary>
-            <exception cref="T:System.ArgumentNullException"></exception>
         </member>
         <member name="P:Au.AOsd.DefaultTransparentTextColor">
             <summary>Default text color for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>. Default: 0xFF8A2BE2 (Color.BlueViolet).</summary>
@@ -15431,6 +15407,11 @@
         <member name="P:Au.AScreen.ScreenHandle.WorkArea">
             <summary>
             Calls <see cref="M:Au.AScreen.ScreenHandle.GetInfo"/> and returns rectangle of the screen work area.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.ScreenHandle.Dpi">
+            <summary>
+            Gets DPI of this screen. See <see cref="M:Au.Util.ADpi.OfScreen(System.IntPtr)"/>.
             </summary>
         </member>
         <member name="P:Au.AScreen.ScreenHandle.IsAlive">
@@ -18096,6 +18077,16 @@
             On Windows 10 1607 and later uses API <msdn>GetDpiForWindow</msdn>. On Windows 8.1 and early Windows 10 uses API <msdn>GetDpiForMonitor</msdn>; it's less reliable. Older Windows versions don't support multiple screens with different DPI, therefore returns the system DPI.
             </remarks>
         </member>
+        <member name="M:Au.Util.ADpi.OfWindow(System.Windows.Forms.Control)">
+            <summary>
+            Returns <c>OfWindow(w.Hwnd())</c>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ADpi.OfWindow(System.Windows.DependencyObject)">
+            <summary>
+            Returns <c>OfWindow(w.Hwnd())</c>.
+            </summary>
+        </member>
         <member name="M:Au.Util.ADpi.OfScreen(System.IntPtr)">
             <summary>
             Gets DPI of a screen.
@@ -18105,28 +18096,35 @@
             Uses API <msdn>GetDpiForMonitor</msdn>.
             </remarks>
         </member>
-        <member name="P:Au.Util.ADpi.SmallIconSize_">
+        <member name="M:Au.Util.ADpi.Scale(System.Int32,System.Int32)">
             <summary>
-            Gets small icon size that depends on DPI of the primary screen.
-            Width and Height are <see cref="P:Au.Util.ADpi.OfThisProcess"/>/6, which is 16 if DPI is 96 (100%).
+            If <i>dpi</i> isn't 96 (100%), returns scaled i. Else returns i.
             </summary>
         </member>
-        <member name="M:Au.Util.ADpi.ScaleInt(System.Int32)">
-            <summary>
-            If DPI <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ADpi.ScaleInt(Au.AWnd,System.Int32)">
+        <member name="M:Au.Util.ADpi.Scale(System.Int32,Au.AWnd)">
             <summary>
             If DPI <see cref="M:Au.Util.ADpi.OfWindow(Au.AWnd)"/> isn't 96 (100%), returns scaled i. Else returns i.
             </summary>
         </member>
+        <member name="M:Au.Util.ADpi.Scale(System.Int32)">
+            <summary>
+            If DPI <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ADpi.ScaleSize(Au.Types.SIZE,System.Int32)">
+            <summary>
+            If <i>dpi</i> isn't 96 (100%), returns scaled z. Else returns z.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ADpi.ScaleSize(Au.Types.SIZE,Au.AWnd)">
+            <summary>
+            If DPI <see cref="M:Au.Util.ADpi.OfWindow(Au.AWnd)"/> isn't 96 (100%), returns scaled z. Else returns z.
+            </summary>
+        </member>
         <member name="M:Au.Util.ADpi.ScaleSize(Au.Types.SIZE)">
             <summary>
-            If <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled z. Else returns z.
-            Note: for images use <see cref="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)"/>.
+            If DPI <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled z. Else returns z.
             </summary>
-            <param name="z"></param>
         </member>
         <member name="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)">
             <summary>
@@ -18143,6 +18141,46 @@
             <remarks>
             Unlike <see cref="M:System.Windows.Forms.Control.ScaleBitmapLogicalToDevice(System.Drawing.Bitmap@)"/>, returns same object if don't need scaling.
             </remarks>
+        </member>
+        <member name="T:Au.Util.ADpi.AwarenessContext">
+            <summary>
+            Can be used to temporarily change thread's DPI awareness context with API <msdn>SetThreadDpiAwarenessContext</msdn>.
+            Does nothing if the API is unavailable (added in Windows 10 version 1607).
+            </summary>
+            <remarks>
+            Programs that use this library should use manifest with dpiAwareness = PerMonitorV2 and dpiAware = True/PM. Then default DPI awareness context is DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            using var dac = new ADpi.AwarenessContext(ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Util.ADpi.AwarenessContext.#ctor(Au.Types.LPARAM)">
+            <summary>
+            Calls API <msdn>SetThreadDpiAwarenessContext</msdn> if available.
+            </summary>
+            <param name="dpiContext">One of <b>DPI_AWARENESS_CONTEXT_X</b> constants, for example <see cref="F:Au.Util.ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE"/>.</param>
+        </member>
+        <member name="M:Au.Util.ADpi.AwarenessContext.Dispose">
+            <summary>
+            Restores previous DPI awareness context.
+            </summary>
+        </member>
+        <member name="F:Au.Util.ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE">
+            
+        </member>
+        <member name="F:Au.Util.ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_SYSTEM_AWARE">
+            
+        </member>
+        <member name="F:Au.Util.ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE">
+            
+        </member>
+        <member name="F:Au.Util.ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2">
+            
+        </member>
+        <member name="F:Au.Util.ADpi.AwarenessContext.DPI_AWARENESS_CONTEXT_UNAWARE_GDISCALED">
+            
         </member>
         <member name="T:Au.Util.ADragDrop">
             <summary>
@@ -19166,64 +19204,6 @@
             The manifest is embedded in this dll, resource id 2.
             </summary>
         </member>
-        <member name="T:Au.Util.AFontsNonCached_">
-            <summary>
-            Provides various versions of standard font.
-            </summary>
-            <remarks>
-            Extends <see cref="T:System.Drawing.SystemFonts"/>. Much faster.
-            The properties return non-cached <b>Font</b> objects. It's safe to dispose them. It's OK to not dispose (GC will do; GDI+ fonts don't use much unmanaged memory). They are cloned from a single cached <see cref="P:System.Drawing.SystemFonts.MessageBoxFont"/>.
-            </remarks>
-        </member>
-        <member name="F:Au.Util.AFontsNonCached_._regularCached">
-            <summary>
-            The cached font from which are cloned other fonts.
-            Use carefully, to avoid accidental disposing.
-            </summary>
-        </member>
-        <member name="P:Au.Util.AFontsNonCached_.Regular">
-            <summary>
-            Standard font used by most windows and controls.
-            On Windows 10 it is "Segoe UI" 9 by default.
-            </summary>
-        </member>
-        <member name="P:Au.Util.AFontsNonCached_.Bold">
-            <summary>
-            Bold version of <see cref="P:Au.Util.AFontsNonCached_.Regular"/> font.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AFontsNonCached_.OfSize(System.Int32)">
-            <summary>
-            Different size version of <see cref="P:Au.Util.AFontsNonCached_.Regular"/> font.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AFontsNonCached_.OfStyle(System.Drawing.FontStyle)">
-            <summary>
-            Different style version of <see cref="P:Au.Util.AFontsNonCached_.Regular"/> font.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AFontsNonCached_.OfSizeStyle(System.Int32,System.Drawing.FontStyle)">
-            <summary>
-            Different style and size version of <see cref="P:Au.Util.AFontsNonCached_.Regular"/> font.
-            </summary>
-        </member>
-        <member name="T:Au.Util.AFontsCached_">
-            <summary>
-            Provides cached various versions of standard font.
-            Use carefully, to avoid accidental disposing.
-            </summary>
-        </member>
-        <member name="P:Au.Util.AFontsCached_.Regular">
-            <summary>
-            Standard font used by most windows and controls.
-            On Windows 10 it is "Segoe UI" 9 by default.
-            </summary>
-        </member>
-        <member name="P:Au.Util.AFontsCached_.Bold">
-            <summary>
-            Bold version of <see cref="P:Au.Util.AFontsCached_.Regular"/> font.
-            </summary>
-        </member>
         <member name="T:Au.Util.ArrayBuilder_`1">
             <summary>
             Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
@@ -19496,28 +19476,6 @@
             Uses API CreateCompatibleDC and DeleteDC.
             </summary>
         </member>
-        <member name="T:Au.Util.NativeFont_">
-            <summary>
-            Creates and manages native font handle.
-            </summary>
-        </member>
-        <member name="P:Au.Util.NativeFont_.RegularCached">
-            <summary>
-            Cached standard font used by most windows and controls.
-            On Windows 10 it is "Segoe UI" 9 by default.
-            </summary>
-        </member>
-        <member name="P:Au.Util.NativeFont_.BoldCached">
-            <summary>
-            Cached standard bold font used by most windows and controls.
-            </summary>
-        </member>
-        <member name="P:Au.Util.NativeFont_.Verdana9Cached">
-            <summary>
-            Cached font "Verdana" 9.
-            Used eg by ADialog for input Edit control.
-            </summary>
-        </member>
         <member name="T:Au.Util.IconsAsync_">
             <summary>
             Gets file icons asynchronously.
@@ -19534,7 +19492,7 @@
             <summary>
             Adds a file path to an internal collection.
             </summary>
-            <param name="file">File path etc. See <see cref="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
+            <param name="file">File path etc. See <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
             <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
         </member>
         <member name="M:Au.Util.IconsAsync_.AddRange(System.Collections.Generic.IEnumerable{Au.Util.IconsAsync_.Item})">
@@ -19559,7 +19517,7 @@
             <param name="flags"></param>
             <param name="objCommon">Something to pass to callback functions.</param>
             <remarks>
-            After this function returns, icons are asynchronously extracted with <see cref="M:Au.AIcon.GetFileIconHandle(System.String,System.Int32,Au.Types.IconGetFlags)"/>, and callback called with icon handle (or default(IntPtr) if failed).
+            After this function returns, icons are asynchronously extracted with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>, and callback called with icon handle (or default(IntPtr) if failed).
             The callback is called in this thread. This thread must have a message loop (eg Application.Run).
             If you'll need more icons, you can add more files and call this function again with the same <b>IconsAsync_</b> instance, even if getting old icons if still not finished.
             </remarks>
@@ -19598,8 +19556,8 @@
         <member name="F:Au.Util.IconsAsync_.Result.obj">
             <summary>obj passed to <see cref="M:Au.Util.IconsAsync_.Add(System.String,System.Object)"/>.</summary>
         </member>
-        <member name="F:Au.Util.IconsAsync_.Result.hIcon">
-            <summary>Icon handle. To get managed object from it, use <b>AIcon.HandleToX</b> functions; else finally call <see cref="M:Au.AIcon.DestroyIconHandle(System.IntPtr)"/>. Can be default(IntPtr).</summary>
+        <member name="F:Au.Util.IconsAsync_.Result.icon">
+            <summary>Icon handle. Will need to dispose. Can be empty.</summary>
         </member>
         <member name="M:Au.Util.IconsAsync_.Result.#ctor(System.String,System.Object)">
             <summary>Icon converted to Image object, if used IconGetFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
@@ -19808,6 +19766,28 @@
         <member name="T:Au.Util.NamespaceDoc">
             <summary>
             Rarely used classes of the automation library.
+            </summary>
+        </member>
+        <member name="T:Au.Util.NativeFont_">
+            <summary>
+            Creates and manages native font handle.
+            </summary>
+        </member>
+        <member name="M:Au.Util.NativeFont_.RegularCached(System.Int32)">
+            <summary>
+            Cached standard font used by most windows and controls.
+            On Windows 10 it is "Segoe UI" 9 by default.
+            </summary>
+        </member>
+        <member name="M:Au.Util.NativeFont_.BoldCached(System.Int32)">
+            <summary>
+            Cached standard bold font used by most windows and controls.
+            </summary>
+        </member>
+        <member name="M:Au.Util.NativeFont_.Verdana9Cached(System.Int32)">
+            <summary>
+            Cached font "Verdana" 9.
+            Used eg by ADialog for input Edit control.
             </summary>
         </member>
         <member name="M:Au.Util.ProcessStarter_.#ctor(System.String,System.String,System.String,System.String,System.Boolean,System.Boolean)">
@@ -22764,6 +22744,65 @@
             Triggers: hotkeys, autotext, mouse, window.
             </summary>
         </member>
+        <member name="T:Au.AIconCache">
+            <summary>
+            Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
+            </summary>
+            <threadsafety static="true" instance="true"/>
+        </member>
+        <member name="M:Au.AIconCache.#ctor(System.String,System.Int32)">
+            
+        </member>
+        <member name="M:Au.AIconCache.SaveCacheFileNow">
+            <summary>
+            Saves to the cache file now, if need.
+            Automatically called on process exit.
+            </summary>
+        </member>
+        <member name="M:Au.AIconCache.ClearCache">
+            <summary>
+            Clears the memory cache and deletes the cache file.
+            </summary>
+        </member>
+        <member name="M:Au.AIconCache.GetImage(System.String,System.Boolean,Au.Types.IconGetFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
+            <summary>
+            Gets file icon as <b>Bitmap</b>.
+            Returns null if the icon is not cached and failed to get it, eg file does not exist.
+            </summary>
+            <param name="file">Any file or folder.</param>
+            <param name="useExt">
+            Get file type icon, depending on filename extension. Use this to avoid getting separate image object for each file of same type.
+            This is ignored if filename extension is ".ico" or ".exe" or starts with ".exe," or ".dll,".
+            </param>
+            <param name="giFlags">Flags for <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
+            <param name="autoUpdate">
+            If not null, the cached image will be auto-updated when changed. Then will be called this function. It can update the image in UI.
+            How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
+            Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
+            </param>
+            <param name="auParam">Something to pass to the <i>autoUpdate</i> callback function.</param>
+            <remarks>
+            If the icon is in the memory cache, gets it from there.
+            Else if it is in the file cache, gets it from there and adds to the memory cache.
+            Else gets from file (uses <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/> and adds to the file cache and to the memory cache.
+            </remarks>
+        </member>
+        <member name="M:Au.AIconCache.GetImage(System.String,System.Func{System.Drawing.Bitmap},System.Action{System.Drawing.Bitmap,System.Object},System.Object,System.Boolean)">
+            <summary>
+            Gets any icon or image using callback function.
+            Returns null if the icon is not cached and the callback function returns null.
+            </summary>
+            <param name="name">Some unique name. It is used to identify this image in cache.</param>
+            <param name="callback">Called to get image. See <see cref="M:Au.AIcon.ToBitmap(System.Boolean)"/>.</param>
+            <param name="autoUpdate"></param>
+            <param name="auParam"></param>
+            <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
+            <remarks>
+            If the icon is in the memory cache, gets it from there.
+            Else if it is in the file cache, gets it from there and adds to the memory cache.
+            Else calls callback function, which should return image, and adds to the file cache and to the memory cache.
+            </remarks>
+        </member>
         <member name="T:Au.NamespaceDoc">
             <summary>
             Main classes of the automation library, except triggers.
@@ -22959,20 +22998,15 @@
         <member name="M:Au.AWnd.More.WindowRectFromClientRect(Au.Types.RECT@,Au.Types.WS,Au.Types.WS2,System.Boolean)">
             <summary>
             Calculates window rectangle from client area rectangle and style.
-            Calls API <msdn>AdjustWindowRectEx</msdn>.
             </summary>
             <param name="r">Input - client area rectangle in screen. Output - window rectangle in screen.</param>
             <param name="style"></param>
             <param name="exStyle"></param>
-            <param name="hasMenu"></param>
+            <param name="hasMenu">Has classic menu bar in non-client area.</param>
             <remarks>
             Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
+            Calls API <msdn>AdjustWindowRectEx</msdn> or <msdn>AdjustWindowRectExForDpi</msdn>.
             </remarks>
-        </member>
-        <member name="M:Au.AWnd.More.BorderWidth(Au.Types.WS,Au.Types.WS2)">
-            <summary>
-            Calculates window border width from style.
-            </summary>
         </member>
         <member name="M:Au.AWnd.More.BorderWidth(Au.AWnd)">
             <summary>
@@ -23069,20 +23103,12 @@
             </summary>
             <seealso cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Au.AWnd.More.IsMessageOnlyWindow(Au.AWnd)">
-            <summary>
-            Returns true if the window is a <msdn>message-only window</msdn>.
-            </summary>
-            <remarks>
-            To find message-only windows use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/>.
-            </remarks>
-        </member>
         <member name="M:Au.AWnd.More.SetFont(Au.AWnd,System.IntPtr)">
             <summary>
             Sets font.
             </summary>
             <param name="w"></param>
-            <param name="font">Native font handle. If default(IntPtr), sets font that is used by most windows and controls on this computer. Usually it is Segoe UI, 9.</param>
+            <param name="font">Native font handle. If default(IntPtr), sets font that is used by most windows and controls on this computer. Usually it is Segoe UI, 9. DPI-scales for w screen.</param>
             <remarks>
             Sends <msdn>WM_SETFONT</msdn> message.
             </remarks>
@@ -23155,6 +23181,141 @@
             Writes a Windows message as API <msdn>MSG</msdn> to the output.
             </summary>
         </member>
+        <member name="T:Au.AWnd.More.SavedRect">
+            <summary>
+            Helps to save and restore window rectangle and state. Ensures in screen, per-monitor-DPI-aware, etc.
+            </summary>
+            <example>
+            <code><![CDATA[
+            class Form9 : Form {
+            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Form9.Rect";
+            	
+            	public Form9() {
+            		this.StartPosition = FormStartPosition.Manual;
+            		if (AWnd.More.SavedRect.FromString(Registry.GetValue(c_rkey, c_rvalue, null) as string, out var v)) {
+            			this.Bounds = v.NormalizeRect();
+            			if(v.Maximize) this.WindowState = FormWindowState.Maximized;
+            		}
+            		//the same:
+            		//AWnd.More.SavedRect.Restore(this, Registry.GetValue(c_rkey, c_rvalue, null) as string);
+            	}
+            
+            	protected override void OnFormClosing(FormClosingEventArgs e) {
+            		Registry.SetValue(c_rkey, c_rvalue, new AWnd.More.SavedRect(this).ToString());
+            		base.OnFormClosing(e);
+            	}
+            }
+            ]]></code>
+            The same in 2 lines.
+            <code><![CDATA[
+            class Form8 : Form {
+            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Form8.Rect";
+            	
+            	public Form8() {
+            		AWnd.More.SavedRect.Restore(this, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1.ToString()));
+            	}
+            }
+            ]]></code>
+            WPF window created with <see cref="T:AGuiBuilder"/>.
+            <code><![CDATA[
+            const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Wpf7.Rect";
+            var b = new AGuiBuilder("Window").WinSize(400).R.AddOkCancel().End();
+            	
+            AWnd.More.SavedRect.Restore(b.Window, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
+            
+            //the same
+            //b.WinSaved(Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
+            
+            if (!b.ShowDialog()) return;
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.RawRect">
+            <summary>
+            Window rectangle in normal state (not maximized/minimized), as retrieved by API <msdn>GetWindowPlacement</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.Dpi">
+            <summary>
+            <see cref="M:Au.Util.ADpi.OfWindow(Au.AWnd)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.Maximize">
+            <summary>
+            The window should be maximized.
+            </summary>
+        </member>
+        <member name="P:Au.AWnd.More.SavedRect.IsToolWindow">
+            <summary>
+            <see cref="P:Au.AWnd.IsToolWindow"/>. If false, <see cref="P:Au.AWnd.More.SavedRect.RawRect"/> may have an offset that depends on work area.
+            </summary>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.ToString">
+            <summary>
+            Converts this object to string for saving.
+            The string is very simple, like "1 2 3 4 5 6".
+            </summary>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.FromString(System.String,Au.AWnd.More.SavedRect@)">
+            <summary>
+            Creates <b>SavedRect</b> from string created by <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
+            Returns false if the string is null or invalid.
+            </summary>
+            <param name="saved">String created by <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.</param>
+            <param name="x">Receives new <b>SavedRect</b> variable.</param>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.#ctor(Au.AWnd)">
+            <summary>
+            Gets window rectangle and state for saving. Usually called when closing the window.
+            See also <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.#ctor(System.Windows.Forms.Form)">
+            <summary>
+            Gets window rectangle and state for saving. Usually called when closing the window.
+            See also <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.#ctor(System.Windows.Window)">
+            <summary>
+            Gets window rectangle and state for saving. Usually called when closing the window.
+            See also <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.NormalizeRect(System.Boolean)">
+            <summary>
+            Gets real rectangle for restoring saved window rectangle.
+            </summary>
+            <param name="forWpf">If screen DPI is not 96 (100%), scale the rectangle for DPI 96. Use with WPF windows.</param>
+            <remarks>
+            It is recommended to call this before creating window, and create window with the returned rectangle. Also set maximized state if <see cref="P:Au.AWnd.More.SavedRect.Maximize"/>.
+            If it is not possible, can be called later, for example when window is created but still invisible. However then may need to set window rectangle two times, because the window may be for example DPI-scaled when moving to another screen etc.
+            
+            This function ensures the window is in screen, ensures correct size when screen DPI changed, etc.
+            </remarks>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.Restore(System.Windows.Forms.Form,System.String,System.Action{System.String})">
+            <summary>
+            Calls <see cref="M:Au.AWnd.More.SavedRect.FromString(System.String,Au.AWnd.More.SavedRect@)"/>. If it returns true, sets <i>form</i> bounds = <see cref="M:Au.AWnd.More.SavedRect.NormalizeRect(System.Boolean)"/>, maximizes if need, StartPosition=Manual, and returns true.
+            Call this function before showing form, for example in constructor.
+            </summary>
+            <param name="form"></param>
+            <param name="saved">String created by <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.</param>
+            <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
+        </member>
+        <member name="M:Au.AWnd.More.SavedRect.Restore(System.Windows.Window,System.String,System.Action{System.String},System.Boolean)">
+            <summary>
+            Calls <see cref="M:Au.AWnd.More.SavedRect.FromString(System.String,Au.AWnd.More.SavedRect@)"/>. If it returns true, sets <i>w</i> bounds = <see cref="M:Au.AWnd.More.SavedRect.NormalizeRect(System.Boolean)"/>, maximizes if need, StartPosition=Manual, and returns true.
+            Call this function before showing window.
+            </summary>
+            <param name="w"></param>
+            <param name="saved">String created by <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.</param>
+            <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
+            <param name="clearSizeToContent">Set <see cref="P:System.Windows.Window.SizeToContent"/> = <b>Manual</b>.</param>
+        </member>
         <member name="T:Au.AWnd.More.TaskbarButton">
             <summary>
             Taskbar button flash, progress, add/delete.
@@ -23167,7 +23328,7 @@
             <param name="w">Window.</param>
             <param name="count">The number of times to flash. If 0, stops flashing.</param>
         </member>
-        <member name="M:Au.AWnd.More.TaskbarButton.SetProgressState(Au.AWnd,Au.Types.TBProgressState)">
+        <member name="M:Au.AWnd.More.TaskbarButton.SetProgressState(Au.AWnd,Au.Types.WTBProgressState)">
             <summary>
             Sets the state of the progress indicator displayed on the taskbar button.
             Calls <msdn>ITaskbarList3.SetProgressState</msdn>.
@@ -23292,83 +23453,6 @@
             <summary>
             Calls API <msdn>ChangeWindowMessageFilter</msdn>(<b>WM_COPYDATA</b>). Then windows of this process can receive this message from lower [](xref:uac) integrity level processes.
             </summary>
-        </member>
-        <member name="T:Au.AWnd.More.SavedRect">
-            <summary>
-            Helps to save and restore window rectangle and state in correct way (ensure in screen, per-monitor-DPI-aware, etc).
-            </summary>
-            <example>
-            <code><![CDATA[
-            class Form9 : Form {
-            	const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test";
-            	const string c_rvalue = @"Form9.Rect";
-            	
-            	public Form9() {
-            		this.StartPosition = FormStartPosition.Manual;
-            		if(Registry.GetValue(c_rkey, c_rvalue, null) is string s1) {
-            			var v = AWnd.More.SavedRect.FromString(s1);
-            			this.Bounds = v.NormalizeRect();
-            			if(v.Maximize) this.WindowState = FormWindowState.Maximized;
-            		}
-            	}
-            
-            	protected override void OnFormClosing(FormClosingEventArgs e) {
-            		Registry.SetValue(c_rkey, c_rvalue, new AWnd.More.SavedRect(this.Hwnd()).ToString());
-            		base.OnFormClosing(e);
-            	}
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.AWnd.More.SavedRect.RawRect">
-            <summary>
-            Window rectangle in normal state (not maximized/minimized), as retrieved by API <msdn>GetWindowPlacement</msdn>.
-            </summary>
-        </member>
-        <member name="P:Au.AWnd.More.SavedRect.Dpi">
-            <summary>
-            <see cref="M:Au.Util.ADpi.OfWindow(Au.AWnd)"/>.
-            </summary>
-        </member>
-        <member name="P:Au.AWnd.More.SavedRect.Maximize">
-            <summary>
-            The window should be maximized.
-            </summary>
-        </member>
-        <member name="P:Au.AWnd.More.SavedRect.IsToolWindow">
-            <summary>
-            <see cref="P:Au.AWnd.IsToolWindow"/>. If false, <see cref="P:Au.AWnd.More.SavedRect.RawRect"/> may have an offset that depends on work area.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.More.SavedRect.ToString">
-            <summary>
-            Converts this object to string for saving.
-            The string is very simple, like "1 2 3 4 5 6".
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.More.SavedRect.FromString(System.String,Au.AWnd.More.SavedRect@)">
-            <summary>
-            Creates <b>SavedRect</b> from string created by <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
-            Returns false if the string is null or invalid.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.More.SavedRect.#ctor(Au.AWnd)">
-            <summary>
-            Gets window rectangle and state for saving. Usually called when closing the window.
-            See also <see cref="M:Au.AWnd.More.SavedRect.ToString"/>.
-            </summary>
-            <exception cref="T:Au.Types.AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
-        </member>
-        <member name="M:Au.AWnd.More.SavedRect.NormalizeRect">
-            <summary>
-            Gets real rectangle for restoring saved window rectangle.
-            </summary>
-            <remarks>
-            It is recommended to call this before creating window, and create window with the returned rectangle. Also set maximized state if <see cref="P:Au.AWnd.More.SavedRect.Maximize"/>.
-            If it is not possible, call this when window is already created but still invisible. However then may need to set window rectangle two times, because the window may be for example DPI-scaled when moving to another screen etc.
-            
-            This function ensures the window is in screen, ensures correct size when screen DPI changed, etc.
-            </remarks>
         </member>
         <member name="M:Au.AWnd.ThrowIf0">
             <summary>
@@ -24234,57 +24318,69 @@
         </member>
         <member name="M:Au.AWnd.ZorderAbove(Au.AWnd)">
             <summary>
-            Places this window before window w in the Z order.
+            Places this window above window w in the Z order.
+            </summary>
+            <remarks>
             Also can make this window topmost or non-topmost, depending on where w is in the Z order.
             This window and w can be both top-level windows or both controls of same parent.
-            May not work with top-level windows when it would move an inactive window above the active window.
             If w is default(AWnd), calls <see cref="M:Au.AWnd.ZorderBottom"/>.
-            </summary>
-            <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
+            Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; it depends on many documented and undocumented conditions; can even return true when failed.
+            Supports <see cref="T:Au.ALastError"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.ZorderBelow(Au.AWnd)">
             <summary>
-            Places this window after window w in the Z order.
+            Places this window below window w in the Z order.
+            </summary>
+            <remarks>
             Also can make this window topmost or non-topmost, depending on where w is in the Z order.
             This window and w can be both top-level windows or both controls of same parent.
-            May not work with top-level windows when it would move an inactive window above the active window.
             If w is default(AWnd), calls <see cref="M:Au.AWnd.ZorderTop"/>.
-            </summary>
-            <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
+            Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+            Supports <see cref="T:Au.ALastError"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.ZorderTop">
             <summary>
-            Places this window or control at the top of the Z order.
-            If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows (after topmost windows).
-            Does not activate.
-            In most cases does not work with top-level inactive windows, although returns true; instead use <see cref="M:Au.AWnd.ActivateLL"/>.
+            Places this window or control at the top of the Z order. Does not activate.
+            If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows.
             </summary>
-            <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
+            <remarks>
+            Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+            Supports <see cref="T:Au.ALastError"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.ZorderBottom">
             <summary>
             Places this window or control at the bottom of the Z order.
             If the window was topmost, makes it and its owner window non-topmost.
             </summary>
-            <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
+            <remarks>
+            Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+            Supports <see cref="T:Au.ALastError"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.ZorderTopmost">
             <summary>
-            Makes this window topmost (always on top of non-topmost windows in the Z order).
-            Does not activate.
-            If this window has an owner window, the owner does not become topmost.
-            This cannot be a control.
+            Makes this window topmost (always on top of non-topmost windows in the Z order). Does not activate.
             </summary>
-            <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
+            <remarks>
+            This cannot be a control.
+            Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+            Supports <see cref="T:Au.ALastError"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.ZorderNoTopmost(System.Boolean)">
             <summary>
             Makes this window non-topmost.
-            If this window has an owner window, makes the owner window non-topmost too.
-            This cannot be a control.
             </summary>
             <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is its owner.</param>
-            <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
+            <remarks>
+            If this window has an owner window, makes it non-topmost too.
+            This cannot be a control.
+            Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
+            Supports <see cref="T:Au.ALastError"/>.
+            </remarks>
         </member>
         <member name="P:Au.AWnd.IsTopmost">
             <summary>
@@ -24373,8 +24469,8 @@
             <summary>
             Calls API <msdn>GetWindowLongPtr</msdn>.
             </summary>
+            <param name="index">A constant from <see cref="T:Au.Types.Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
             <remarks>
-            For index can be used constants from <see cref="T:Au.Types.Native.GWL"/>.
             Supports <see cref="T:Au.ALastError"/>.
             In 32-bit process actually calls <b>GetWindowLong</b>, because <b>GetWindowLongPtr</b> is unavailable.
             </remarks>
@@ -24486,6 +24582,14 @@
             It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
             </summary>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
+        </member>
+        <member name="P:Au.AWnd.IsMessageOnly">
+            <summary>
+            Returns true if this is a <msdn>message-only window</msdn>.
+            </summary>
+            <remarks>
+            To find message-only windows use <see cref="M:Au.AWnd.FindFast(System.String,System.String,System.Boolean,Au.AWnd)"/>.
+            </remarks>
         </member>
         <member name="P:Au.AWnd.ClassName">
             <summary>
@@ -25241,11 +25345,20 @@
         </member>
         <member name="P:Au.AWnd.GetWnd.Top">
             <summary>
-            Gets the very first top-level window in the Z order.
+            Gets the first top-level window in the Z order.
             </summary>
             <remarks>
-            Probably it is a topmost window.
+            Probably it is a topmost window. To get the first non-topmost window, use <see cref="M:Au.AWnd.GetWnd.Top2(Au.AWnd@)"/>.
             Calls API <msdn>GetTopWindow</msdn>(default(AWnd)).
+            </remarks>
+        </member>
+        <member name="M:Au.AWnd.GetWnd.Top2(Au.AWnd@)">
+            <summary>
+            Finds and returns the first non-topmost window in the Z order.
+            </summary>
+            <param name="lastTopmost">Receives the last topmost window.</param>
+            <remarks>
+            This function is slower than <see cref="P:Au.AWnd.GetWnd.Top"/> etc. Enumerates windows, because there is no API to get directly.
             </remarks>
         </member>
         <member name="P:Au.AWnd.GetWnd.Root">
@@ -25311,102 +25424,20 @@
             This function is quite slow. Does not match the order of buttons in the Windows taskbar.
             </remarks>
         </member>
-        <member name="T:Au.AWnd.WButton">
-            <summary>
-            Like <see cref="T:Au.AWnd"/>, but has only button, check box and radio button functions - Click, Check etc.
-            </summary>
-        </member>
-        <member name="P:Au.AWnd.WButton.W">
-            <summary>
-            Button handle as AWnd.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.WButton.op_Implicit(Au.AWnd.WButton)~Au.AWnd">
-            <summary>
-            Implicit cast AWnd=WButton.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.WButton.op_Explicit(Au.AWnd)~Au.AWnd.WButton">
-            <summary>
-            Explicit cast WButton=(WButton)AWnd.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.WButton.ToString">
-            
-        </member>
-        <member name="M:Au.AWnd.WButton.Click(System.Boolean)">
-            <summary>
-            Sends a "click" message to this button control. Does not use the mouse.
-            </summary>
-            <param name="useAcc">Use <see cref="M:Au.AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
-            <exception cref="T:Au.Types.AuWndException">This window is invalid.</exception>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-            <remarks>
-            Works not with all button controls. Sometimes does not work if the window is inactive.
-            Check boxes and radio buttons also are buttons. This function can click them.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            AWnd.Find("Options").Child("Cancel").AsButton.Click();
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AWnd.WButton.Check(System.Boolean,System.Boolean)">
-            <summary>
-            Checks or unchecks this check box. Does not use the mouse.
-            Calls <see cref="M:Au.AWnd.WButton.SetCheckState(System.Int32,System.Boolean)"/> with state 0 or 1.
-            </summary>
-            <param name="on">Checks if true, unchecks if false.</param>
-            <param name="useAcc"></param>
-            <exception cref="T:Au.Types.AuWndException">This window is invalid.</exception>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-            <remarks>
-            Works not with all button controls. Sometimes does not work if the window is inactive.
-            If this is a radio button, does not uncheck other radio buttons in its group.
-            </remarks>
-        </member>
-        <member name="M:Au.AWnd.WButton.SetCheckState(System.Int32,System.Boolean)">
-            <summary>
-            Sets checkbox state. Does not use the mouse.
-            </summary>
-            <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-            <param name="useAcc">Use <see cref="M:Au.AAcc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid state.</exception>
-            <exception cref="T:Au.Types.AuWndException">This window is invalid.</exception>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
-            <remarks>
-            Does nothing if the check box already has the specified check state (if can get it).
-            Works not with all button controls. Sometimes does not work if the window is inactive.
-            If this is a radio button, does not uncheck other radio buttons in its group.
-            </remarks>
-        </member>
-        <member name="M:Au.AWnd.WButton.IsChecked(System.Boolean)">
-            <summary>
-            Gets check state of this check box or radio button.
-            Calls <see cref="M:Au.AWnd.WButton.GetCheckState(System.Boolean)"/> and returns true if it returns 1.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.WButton.GetCheckState(System.Boolean)">
-            <summary>
-            Gets check state of this check box or radio button.
-            Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
-            </summary>
-            <param name="useAcc">Use <see cref="P:Au.AAcc.State"/>. If false (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
-        </member>
         <member name="P:Au.AWnd.AsButton">
             <summary>
-            Casts this to <see cref="T:Au.AWnd.WButton"/>.
+            Casts this to <see cref="T:Au.Types.AWndButton"/>.
             </summary>
         </member>
         <member name="M:Au.AWnd.ButtonClick(System.Int32,System.Boolean)">
             <summary>
             Finds a child button by id and sends a "click" message. Does not use the mouse.
-            Calls <see cref="M:Au.AWnd.WButton.Click(System.Boolean)"/>.
+            Calls <see cref="M:Au.Types.AWndButton.Click(System.Boolean)"/>.
             </summary>
             <param name="buttonId">Control id of the button. This function calls <see cref="M:Au.AWnd.ChildById(System.Int32,Au.Types.WCFlags)"/> to find the button.</param>
             <param name="useAcc">Use <see cref="M:Au.AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Au.Types.NotFoundException">Button not found.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AWnd.ChildById(System.Int32,Au.Types.WCFlags)"/> and <see cref="M:Au.AWnd.WButton.Click(System.Boolean)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AWnd.ChildById(System.Int32,Au.Types.WCFlags)"/> and <see cref="M:Au.Types.AWndButton.Click(System.Boolean)"/>.</exception>
             <example>
             <code><![CDATA[
             AWnd.Find("Options").ButtonClick(2);
@@ -25416,13 +25447,13 @@
         <member name="M:Au.AWnd.ButtonClick(System.String,System.String,System.Boolean)">
             <summary>
             Finds a child button by name and sends a "click" message. Does not use the mouse.
-            Calls <see cref="M:Au.AWnd.WButton.Click(System.Boolean)"/>.
+            Calls <see cref="M:Au.Types.AWndButton.Click(System.Boolean)"/>.
             </summary>
             <param name="buttonName">Button name. This function calls <see cref="M:Au.AWnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.AWnd,System.Boolean},System.Int32)"/> to find the button.</param>
             <param name="cn">Button class name to pass to <see cref="M:Au.AWnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.AWnd,System.Boolean},System.Int32)"/>.</param>
             <param name="useAcc">Use <see cref="M:Au.AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
             <exception cref="T:Au.Types.NotFoundException">Button not found.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AWnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.AWnd,System.Boolean},System.Int32)"/> and <see cref="M:Au.AWnd.WButton.Click(System.Boolean)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AWnd.Child(System.String,System.String,Au.Types.WCFlags,System.Func{Au.AWnd,System.Boolean},System.Int32)"/> and <see cref="M:Au.Types.AWndButton.Click(System.Boolean)"/>.</exception>
             <example>
             <code><![CDATA[
             AWnd.Find("Options").ButtonClick("Cancel");
@@ -25906,22 +25937,6 @@
             </summary>
             <seealso cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="M:Au.AWnd.SaveRect(System.Boolean)">
-            <summary>
-            Gets window position, size and state stored in a string that can be used with <see cref="M:Au.AWnd.RestoreSavedRect(System.String,System.Boolean,System.Boolean)"/>.
-            Returns null if failed. Supports <see cref="T:Au.ALastError"/>.
-            </summary>
-            <param name="canBeMinimized">If now the window is minimized, let <see cref="M:Au.AWnd.RestoreSavedRect(System.String,System.Boolean,System.Boolean)"/> make it minimized. If false, RestorePlacement will restore it to the most recent non-minimized state.</param>
-        </member>
-        <member name="M:Au.AWnd.RestoreSavedRect(System.String,System.Boolean,System.Boolean)">
-            <summary>
-            Restores window position, size and state that is stored in a string created by <see cref="M:Au.AWnd.SaveRect(System.Boolean)"/>.
-            </summary>
-            <param name="s">The string. Can be null/"".</param>
-            <param name="ensureInScreen">Call <see cref="M:Au.AWnd.EnsureInScreen(Au.AScreen,System.Boolean)"/>. Even when s is null/"". Default true.</param>
-            <param name="showActivate">Call <see cref="M:Au.AWnd.Show(System.Boolean)"/>(true) and <see cref="M:Au.AWnd.ActivateLL"/>. Even when s is null/"".</param>
-            <exception cref="T:Au.Types.AuWndException"/>
-        </member>
         <member name="M:Au.AWnd.MinimalSleepIfOtherThread_">
             <summary>
             if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
@@ -26257,7 +26272,7 @@
             <remarks>
             Use WPF logical device-independent units, not real pixels.
             </remarks>
-            <seealso cref="M:AGuiBuilder.WinSaveRestore(System.Action{System.String},System.String)"/>
+            <seealso cref="M:AGuiBuilder.WinSaved(System.String,System.Action{System.String})"/>
         </member>
         <member name="M:AGuiBuilder.WinXY(Au.Types.Coord,Au.Types.Coord,Au.AScreen,System.Boolean,System.Boolean)">
             <summary>
@@ -26279,7 +26294,7 @@
             .WinXY(Coord.Max);
             ]]></code>
             </example>
-            <seealso cref="M:AGuiBuilder.WinSaveRestore(System.Action{System.String},System.String)"/>
+            <seealso cref="M:AGuiBuilder.WinSaved(System.String,System.Action{System.String})"/>
         </member>
         <member name="M:AGuiBuilder.WinXY(System.Windows.WindowStartupLocation)">
             <summary>
@@ -26288,16 +26303,13 @@
             <exception cref="T:System.InvalidOperationException">Container is not Window.</exception>
             <exception cref="T:System.NotSupportedException">Window is loaded.</exception>
         </member>
-        <member name="M:AGuiBuilder.WinSaveRestore(System.Action{System.String},System.String)">
+        <member name="M:AGuiBuilder.WinSaved(System.String,System.Action{System.String})">
             <summary>
             Saves window xy/size/state when closing and restores when opening.
             </summary>
-            <param name="save">Called when closing the window. Receives XML string containing window xy/size/state. Can save it in registry, file, anywhere.</param>
             <param name="saved">String that the <i>save</i> action received previously. Can be null or "", usually first time (still not saved).</param>
-            <exception cref="T:System.InvalidOperationException">
-            - Container is not Window.
-            - Cannot be after last End().
-            </exception>
+            <param name="save">Called when closing the window. Receives string containing window xy/size/state. Can save it in registry, file, anywhere.</param>
+            <exception cref="T:System.InvalidOperationException">Container is not Window.</exception>
             <remarks>
             If you use <see cref="M:AGuiBuilder.WinSize(System.Nullable{Au.Types.GBLength},System.Nullable{Au.Types.GBLength})"/>, call it before. It is used if size is still not saved. The same if you set window position or state.
             </remarks>
@@ -26305,7 +26317,7 @@
             <code><![CDATA[
             string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
             var b = new AGuiBuilder("Window").WinSize(300)
-            	.WinSaveRestore(o => Microsoft.Win32.Registry.SetValue(rk, rv, o), Microsoft.Win32.Registry.GetValue(rk, rv, null) as string)
+            	.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o))
             	.Row(0).Add("Text", out TextBox _)
             	.R.AddOkCancel()
             	.End();
@@ -26696,7 +26708,7 @@
             Tooltip with content created by another AGuiBuilder.
             <code><![CDATA[
             var btt = new AGuiBuilder() //creates tooltip content
-            	.R.Add<Image>().Image(AIcon.GetStockIconHandle(StockIcon.INFO))
+            	.R.Add<Image>().Image(AIcon.Stock(StockIcon.INFO))
             	.R.Add<TextBlock>().Text("Some ", "<b>text", ".")
             	.End();
             
@@ -26964,12 +26976,12 @@
             If fails to load, prints warning. See <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
             </remarks>
         </member>
-        <member name="M:AGuiBuilder.Image(System.IntPtr,System.Boolean,System.Windows.Media.Stretch,System.Windows.Controls.StretchDirection)">
+        <member name="M:AGuiBuilder.Image(Au.AIcon,System.Boolean,System.Windows.Media.Stretch,System.Windows.Controls.StretchDirection)">
             <summary>
-            Gets file/folder/etc icon with <see cref="M:Au.AIcon.GetFileIcon(System.String,System.Int32,Au.Types.IconGetFlags)"/> and sets <see cref="P:System.Windows.Controls.Image.Source"/> of the last added <see cref="T:System.Windows.Controls.Image"/>.
+            Creates image from native icon handle and loads into the last added <see cref="T:System.Windows.Controls.Image"/>.
             </summary>
-            <param name="hIcon">Native icon handle. See <see cref="T:Au.AIcon"/>, <see cref="T:System.Drawing.SystemIcons"/>. Does nothing if <c>default(IntPtr)</c>.</param>
-            <param name="dispose">Destroy the native icon object. Default true.</param>
+            <param name="icon">Native icon handle. Does nothing if empty.</param>
+            <param name="dispose">Destroy the native icon object. Default true. If false, caller can dispose it at any time.</param>
             <param name="stretch"><see cref="P:System.Windows.Controls.Image.Stretch"/>.</param>
             <param name="stretchDirection"><see cref="P:System.Windows.Controls.Image.StretchDirection"/>.</param>
             <exception cref="T:System.NotSupportedException">The last added element is not <b>Image</b>.</exception>

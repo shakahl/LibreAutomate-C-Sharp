@@ -58,6 +58,6 @@ namespace Au
 		}
 
 		static int _DefaultWidth => 150;
-		static int _DefaultHeight => Util.ADpi.ScaleInt(16) + 10;
+		static int _DefaultHeight => Util.ADpi.Scale(16) + 10;
 	}
 }

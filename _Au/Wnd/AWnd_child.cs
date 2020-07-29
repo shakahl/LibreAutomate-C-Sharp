@@ -517,214 +517,18 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Like <see cref="AWnd"/>, but has only button, check box and radio button functions - Click, Check etc.
+		/// Casts this to <see cref="AWndButton"/>.
 		/// </summary>
-		public struct WButton
-		{
-			/// <summary>
-			/// Button handle as AWnd.
-			/// </summary>
-			public AWnd W { get; }
-
-			WButton(AWnd w) { W = w; }
-
-			/// <summary>
-			/// Implicit cast AWnd=WButton.
-			/// </summary>
-			public static implicit operator AWnd(WButton b) => b.W;
-			/// <summary>
-			/// Explicit cast WButton=(WButton)AWnd.
-			/// </summary>
-			public static explicit operator WButton(AWnd w) => new WButton(w);
-
-			///
-			public override string ToString()
-			{
-				return W.ToString();
-			}
-
-			/// <summary>
-			/// Sends a "click" message to this button control. Does not use the mouse.
-			/// </summary>
-			/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
-			/// <exception cref="AuWndException">This window is invalid.</exception>
-			/// <exception cref="AuException">Failed.</exception>
-			/// <remarks>
-			/// Works not with all button controls. Sometimes does not work if the window is inactive.
-			/// Check boxes and radio buttons also are buttons. This function can click them.
-			/// </remarks>
-			/// <example>
-			/// <code><![CDATA[
-			/// AWnd.Find("Options").Child("Cancel").AsButton.Click();
-			/// ]]></code>
-			/// </example>
-			public void Click(bool useAcc = false)
-			{
-				W.ThrowIfInvalid();
-				if(useAcc) {
-					using var a = AAcc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
-					a.DoAction();
-				} else {
-					_PostBmClick(); //async if other thread, because may show a dialog.
-				}
-				W.MinimalSleepIfOtherThread_();
-				//FUTURE: sync better
-			}
-
-			void _PostBmClick()
-			{
-				var w = W.Window;
-				bool workaround = !w.IsActive;
-				if(workaround) w.Post(Api.WM_ACTIVATE, 1); //workaround for the documented BM_CLICK bug
-				W.Post(BM_CLICK); //it sends WM_LBUTTONDOWN/UP
-				if(workaround) w.Post(Api.WM_ACTIVATE, 0);
-			}
-
-			/// <summary>
-			/// Checks or unchecks this check box. Does not use the mouse.
-			/// Calls <see cref="SetCheckState"/> with state 0 or 1.
-			/// </summary>
-			/// <param name="on">Checks if true, unchecks if false.</param>
-			/// <param name="useAcc"></param>
-			/// <exception cref="AuWndException">This window is invalid.</exception>
-			/// <exception cref="AuException">Failed.</exception>
-			/// <remarks>
-			/// Works not with all button controls. Sometimes does not work if the window is inactive.
-			/// If this is a radio button, does not uncheck other radio buttons in its group.
-			/// </remarks>
-			public void Check(bool on, bool useAcc = false)
-			{
-				SetCheckState(on ? 1 : 0, useAcc);
-			}
-
-			/// <summary>
-			/// Sets checkbox state. Does not use the mouse.
-			/// </summary>
-			/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
-			/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
-			/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
-			/// <exception cref="AuWndException">This window is invalid.</exception>
-			/// <exception cref="AuException">Failed.</exception>
-			/// <remarks>
-			/// Does nothing if the check box already has the specified check state (if can get it).
-			/// Works not with all button controls. Sometimes does not work if the window is inactive.
-			/// If this is a radio button, does not uncheck other radio buttons in its group.
-			/// </remarks>
-			public void SetCheckState(int state, bool useAcc = false)
-			{
-				if(state < 0 || state > 2) throw new ArgumentOutOfRangeException();
-				W.ThrowIfInvalid();
-				int id;
-				if(useAcc || !_IsCheckbox() || (uint)((id = W.ControlId) - 1) >= 0xffff) {
-					using var a = AAcc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
-					int k = _GetAccCheckState(a);
-					if(k == state) return;
-					if(useAcc) a.DoAction(); else _PostBmClick();
-					bool clickAgain = false;
-					switch(state) {
-					case 0:
-						if(k == 1) {
-							W.MinimalSleepIfOtherThread_();
-							if(GetCheckState(true) == 2) clickAgain = true;
-							else return;
-						}
-						break;
-					case 1:
-						if(k == 2) clickAgain = true;
-						break;
-					case 2:
-						if(k == 0) clickAgain = true;
-						break;
-					}
-					if(clickAgain) {
-						if(useAcc) a.DoAction(); else _PostBmClick();
-					}
-				} else {
-					if(state == W.Send(BM_GETCHECK)) return;
-					W.Post(BM_SETCHECK, state);
-					W.Get.DirectParent.Post(Api.WM_COMMAND, id, (LPARAM)W);
-				}
-				W.MinimalSleepIfOtherThread_();
-			}
-
-			/// <summary>
-			/// Gets check state of this check box or radio button.
-			/// Calls <see cref="GetCheckState"/> and returns true if it returns 1.
-			/// </summary>
-			public bool IsChecked(bool useAcc = false)
-			{
-				return 1 == GetCheckState(useAcc);
-			}
-
-			/// <summary>
-			/// Gets check state of this check box or radio button.
-			/// Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
-			/// </summary>
-			/// <param name="useAcc">Use <see cref="AAcc.State"/>. If false (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
-			public int GetCheckState(bool useAcc = false)
-			{
-				if(useAcc || !_IsCheckbox()) {
-					//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.
-					try { //avoid exception in property-get functions
-						using var a = AAcc.FromWindow(W, AccOBJID.CLIENT, flags: AWFlags.NoThrow);
-						if(a == null) return 0;
-						return _GetAccCheckState(a);
-					}
-					catch(Exception ex) { ADebug.Print(ex); } //CONSIDER: if fails, show warning. In all AWnd property-get functions.
-					return 0;
-				} else {
-					return (int)W.Send(BM_GETCHECK);
-				}
-			}
-
-			int _GetAccCheckState(AAcc a)
-			{
-				var state = a.State;
-				if(state.Has(AccSTATE.INDETERMINATE)) return 2;
-				if(state.Has(AccSTATE.CHECKED)) return 1;
-				return 0;
-			}
-
-			bool _IsCheckbox()
-			{
-				switch((uint)W.Style & 15) {
-				case BS_CHECKBOX:
-				case BS_AUTOCHECKBOX:
-				case BS_RADIOBUTTON:
-				case BS_3STATE:
-				case BS_AUTO3STATE:
-				case BS_AUTORADIOBUTTON:
-					return true;
-				}
-				return false;
-			}
-
-			internal const int BM_CLICK = 0xF5;
-			internal const int BM_GETCHECK = 0xF0;
-			internal const int BM_SETCHECK = 0xF1;
-
-			internal const uint BS_CHECKBOX = 0x2;
-			internal const uint BS_AUTOCHECKBOX = 0x3;
-			internal const uint BS_RADIOBUTTON = 0x4;
-			internal const uint BS_3STATE = 0x5;
-			internal const uint BS_AUTO3STATE = 0x6;
-			internal const uint BS_AUTORADIOBUTTON = 0x9;
-
-		}
-
-		/// <summary>
-		/// Casts this to <see cref="WButton"/>.
-		/// </summary>
-		public WButton AsButton => (WButton)this;
+		public AWndButton AsButton => (AWndButton)this;
 
 		/// <summary>
 		/// Finds a child button by id and sends a "click" message. Does not use the mouse.
-		/// Calls <see cref="WButton.Click(bool)"/>.
+		/// Calls <see cref="AWndButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonId">Control id of the button. This function calls <see cref="ChildById"/> to find the button.</param>
 		/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="WButton.Click(bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="ChildById"/> and <see cref="AWndButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// AWnd.Find("Options").ButtonClick(2);
@@ -739,13 +543,13 @@ namespace Au
 
 		/// <summary>
 		/// Finds a child button by name and sends a "click" message. Does not use the mouse.
-		/// Calls <see cref="WButton.Click(bool)"/>.
+		/// Calls <see cref="AWndButton.Click(bool)"/>.
 		/// </summary>
 		/// <param name="buttonName">Button name. This function calls <see cref="Child"/> to find the button.</param>
 		/// <param name="cn">Button class name to pass to <see cref="Child"/>.</param>
 		/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
 		/// <exception cref="NotFoundException">Button not found.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="WButton.Click(bool)"/>.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="Child"/> and <see cref="AWndButton.Click(bool)"/>.</exception>
 		/// <example>
 		/// <code><![CDATA[
 		/// AWnd.Find("Options").ButtonClick("Cancel");
@@ -822,5 +626,191 @@ namespace Au.Types
 
 		/// <summary>Skip indirect descendant controls (children of children and so on).</summary>
 		DirectChild = 2,
+	}
+
+	/// <summary>
+	/// Like <see cref="AWnd"/>, but has only button, check box and radio button functions - <b>Click</b>, <b>Check</b> etc.
+	/// See also <see cref="AWnd.AsButton"/>.
+	/// </summary>
+	/// <example>
+	/// <code><![CDATA[
+	/// AWnd.Find("Options").Child("Cancel").AsButton.Click();
+	/// ]]></code>
+	/// </example>
+	public struct AWndButton
+	{
+		/// <summary>
+		/// Button handle as AWnd.
+		/// </summary>
+		public AWnd W { get; }
+
+		AWndButton(AWnd w) { W = w; }
+
+		///
+		public static implicit operator AWnd(AWndButton b) => b.W;
+		///
+		public static explicit operator AWndButton(AWnd w) => new AWndButton(w);
+		///
+		public override string ToString() => W.ToString();
+
+		/// <summary>
+		/// Sends a "click" message to this button control. Does not use the mouse.
+		/// </summary>
+		/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_CLICK</msdn> message.</param>
+		/// <exception cref="AuWndException">This window is invalid.</exception>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// Works not with all button controls. Sometimes does not work if the window is inactive.
+		/// Check boxes and radio buttons also are buttons. This function can click them.
+		/// </remarks>
+		/// <example>
+		/// <code><![CDATA[
+		/// AWnd.Find("Options").Child("Cancel").AsButton.Click();
+		/// ]]></code>
+		/// </example>
+		public void Click(bool useAcc = false) {
+			W.ThrowIfInvalid();
+			if (useAcc) {
+				using var a = AAcc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
+				a.DoAction();
+			} else {
+				_PostBmClick(); //async if other thread, because may show a dialog.
+			}
+			W.MinimalSleepIfOtherThread_();
+			//FUTURE: sync better
+		}
+
+		void _PostBmClick() {
+			var w = W.Window;
+			bool workaround = !w.IsActive;
+			if (workaround) w.Post(Api.WM_ACTIVATE, 1); //workaround for the documented BM_CLICK bug
+			W.Post(BM_CLICK); //it sends WM_LBUTTONDOWN/UP
+			if (workaround) w.Post(Api.WM_ACTIVATE, 0);
+		}
+
+		/// <summary>
+		/// Checks or unchecks this check box. Does not use the mouse.
+		/// Calls <see cref="SetCheckState"/> with state 0 or 1.
+		/// </summary>
+		/// <param name="on">Checks if true, unchecks if false.</param>
+		/// <param name="useAcc"></param>
+		/// <exception cref="AuWndException">This window is invalid.</exception>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// Works not with all button controls. Sometimes does not work if the window is inactive.
+		/// If this is a radio button, does not uncheck other radio buttons in its group.
+		/// </remarks>
+		public void Check(bool on, bool useAcc = false) {
+			SetCheckState(on ? 1 : 0, useAcc);
+		}
+
+		/// <summary>
+		/// Sets checkbox state. Does not use the mouse.
+		/// </summary>
+		/// <param name="state">0 unchecked, 1 checked, 2 indeterminate.</param>
+		/// <param name="useAcc">Use <see cref="AAcc.DoAction"/>. If false (default), posts <msdn>BM_SETCHECK</msdn> message and also BN_CLICKED notification to the parent window; if that is not possible, instead uses <msdn>BM_CLICK</msdn> message.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Invalid state.</exception>
+		/// <exception cref="AuWndException">This window is invalid.</exception>
+		/// <exception cref="AuException">Failed.</exception>
+		/// <remarks>
+		/// Does nothing if the check box already has the specified check state (if can get it).
+		/// Works not with all button controls. Sometimes does not work if the window is inactive.
+		/// If this is a radio button, does not uncheck other radio buttons in its group.
+		/// </remarks>
+		public void SetCheckState(int state, bool useAcc = false) {
+			if (state < 0 || state > 2) throw new ArgumentOutOfRangeException();
+			W.ThrowIfInvalid();
+			int id;
+			if (useAcc || !_IsCheckbox() || (uint)((id = W.ControlId) - 1) >= 0xffff) {
+				using var a = AAcc.FromWindow(W, AccOBJID.CLIENT); //throws if failed
+				int k = _GetAccCheckState(a);
+				if (k == state) return;
+				if (useAcc) a.DoAction(); else _PostBmClick();
+				bool clickAgain = false;
+				switch (state) {
+					case 0:
+						if (k == 1) {
+							W.MinimalSleepIfOtherThread_();
+							if (GetCheckState(true) == 2) clickAgain = true;
+							else return;
+						}
+						break;
+					case 1:
+						if (k == 2) clickAgain = true;
+						break;
+					case 2:
+						if (k == 0) clickAgain = true;
+						break;
+				}
+				if (clickAgain) {
+					if (useAcc) a.DoAction(); else _PostBmClick();
+				}
+			} else {
+				if (state == W.Send(BM_GETCHECK)) return;
+				W.Post(BM_SETCHECK, state);
+				W.Get.DirectParent.Post(Api.WM_COMMAND, id, (LPARAM)W);
+			}
+			W.MinimalSleepIfOtherThread_();
+		}
+
+		/// <summary>
+		/// Gets check state of this check box or radio button.
+		/// Calls <see cref="GetCheckState"/> and returns true if it returns 1.
+		/// </summary>
+		public bool IsChecked(bool useAcc = false) {
+			return 1 == GetCheckState(useAcc);
+		}
+
+		/// <summary>
+		/// Gets check state of this check box or radio button.
+		/// Returns 0 if unchecked, 1 if checked, 2 if indeterminate. Also returns 0 if this is not a button or if failed to get state.
+		/// </summary>
+		/// <param name="useAcc">Use <see cref="AAcc.State"/>. If false (default) and this button has a standard checkbox style, uses API <msdn>BM_GETCHECK</msdn>.</param>
+		public int GetCheckState(bool useAcc = false) {
+			if (useAcc || !_IsCheckbox()) {
+				//info: Windows Forms controls are user-drawn and don't have one of the styles, therefore BM_GETCHECK does not work.
+				try { //avoid exception in property-get functions
+					using var a = AAcc.FromWindow(W, AccOBJID.CLIENT, flags: AWFlags.NoThrow);
+					if (a == null) return 0;
+					return _GetAccCheckState(a);
+				}
+				catch (Exception ex) { ADebug.Print(ex); } //CONSIDER: if fails, show warning. In all AWnd property-get functions.
+				return 0;
+			} else {
+				return (int)W.Send(BM_GETCHECK);
+			}
+		}
+
+		int _GetAccCheckState(AAcc a) {
+			var state = a.State;
+			if (state.Has(AccSTATE.INDETERMINATE)) return 2;
+			if (state.Has(AccSTATE.CHECKED)) return 1;
+			return 0;
+		}
+
+		bool _IsCheckbox() {
+			switch ((uint)W.Style & 15) {
+				case BS_CHECKBOX:
+				case BS_AUTOCHECKBOX:
+				case BS_RADIOBUTTON:
+				case BS_3STATE:
+				case BS_AUTO3STATE:
+				case BS_AUTORADIOBUTTON:
+					return true;
+			}
+			return false;
+		}
+
+		internal const int BM_CLICK = 0xF5;
+		internal const int BM_GETCHECK = 0xF0;
+		internal const int BM_SETCHECK = 0xF1;
+
+		internal const uint BS_CHECKBOX = 0x2;
+		internal const uint BS_AUTOCHECKBOX = 0x3;
+		internal const uint BS_RADIOBUTTON = 0x4;
+		internal const uint BS_3STATE = 0x5;
+		internal const uint BS_AUTO3STATE = 0x6;
+		internal const uint BS_AUTORADIOBUTTON = 0x9;
+
 	}
 }

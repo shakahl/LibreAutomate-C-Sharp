@@ -114,6 +114,9 @@
     <PostBuildEvent>
       <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
     </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>"$(SolutionDir)Other\Programs\unload AuCpp dll.exe"</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -132,6 +135,9 @@
     <PostBuildEvent>
       <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
     </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>"$(SolutionDir)Other\Programs\unload AuCpp dll.exe"</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -156,6 +162,9 @@
     <PostBuildEvent>
       <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
     </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>"$(SolutionDir)Other\Programs\unload AuCpp dll.exe"</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -180,6 +189,9 @@
     <PostBuildEvent>
       <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
     </PostBuildEvent>
+    <PreLinkEvent>
+      <Command>"$(SolutionDir)Other\Programs\unload AuCpp dll.exe"</Command>
+    </PreLinkEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="acc bridge.cpp" />

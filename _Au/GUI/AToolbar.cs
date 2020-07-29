@@ -41,7 +41,7 @@ namespace Au
 	/// 	t.MenuButton("menu", m => {
 	/// 		m["item 1"] = o => AOutput.Write(o);
 	/// 		m["item 2"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
-	/// 	}, AIcon.GetStockIcon(StockIcon.FOLDER, 16));
+	/// 	}, StockIcon.FOLDER);
 	/// 	t["Notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
 	/// 	t.Show();
 	/// }
@@ -1065,7 +1065,7 @@ namespace Au
 			Debug.Assert(!_c.IsDisposed);
 
 			POINT p = AMouse.XY;
-			int dist = Util.ADpi.ScaleInt(30);
+			int dist = Util.ADpi.Scale(30);
 			var wa = AWnd.Active;
 
 			RECT ru = default;

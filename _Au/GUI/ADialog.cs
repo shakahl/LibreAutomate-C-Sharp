@@ -1210,6 +1210,8 @@ namespace Au
 
 		#region Edit control
 
+		//never mind: our edit control disappears when moving the dialog to a screen with different DPI
+
 		bool _IsEdit => _controls != null && _controls.EditType != DEdit.None;
 
 		void _EditControlInitBeforeShowDialog()
@@ -1219,10 +1221,6 @@ namespace Au
 			FlagShowProgressBar = false;
 			_c.pszContent ??= "";
 			if(_c.pszExpandedInformation != null && _controls.EditType == DEdit.Multiline) _SetFlag(TDF_.EXPAND_FOOTER_AREA, true);
-
-			//create or get cached font and calculate control height
-			//note: don't use system messagebox font. ADialog API does not depend on it.
-			_editFont = NativeFont_.Verdana9Cached;
 		}
 
 		void _EditControlUpdate(bool onlyZorder = false)
@@ -1247,6 +1245,10 @@ namespace Au
 		AWnd _EditControlGetPlace(out RECT r)
 		{
 			AWnd parent = _dlg; //don't use the DirectUIHWND control for it, it can create problems
+
+			//create or get cached font and calculate control height
+			//note: don't use system messagebox font. ADialog API does not depend on it.
+			_editFont = NativeFont_.Verdana9Cached(Util.ADpi.OfWindow(parent));
 
 			//We'll hide the progress bar control and create our Edit control in its place.
 			AWnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);

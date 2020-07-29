@@ -52,14 +52,12 @@ namespace Au.Controls
 		/// </summary>
 		public readonly SciText Z;
 
-		static AuScintilla()
-		{
+		static AuScintilla() {
 			AFile.More.LoadDll64or32Bit("SciLexer.dll");
 		}
 
 		///
-		public AuScintilla()
-		{
+		public AuScintilla() {
 			Z = new SciText(this);
 
 			base.SetStyle(ControlStyles.CacheText, true);
@@ -82,127 +80,122 @@ namespace Au.Controls
 				//this is like TextBoxBase does
 				cp.ExStyle &= ~(int)WS2.CLIENTEDGE;
 				cp.Style &= ~(int)WS.BORDER;
-				switch(ZInitBorderStyle) {
-				case BorderStyle.Fixed3D: cp.ExStyle |= (int)WS2.CLIENTEDGE; break;
-				case BorderStyle.FixedSingle: cp.Style |= (int)WS.BORDER; break;
+				switch (ZInitBorderStyle) {
+					case BorderStyle.Fixed3D: cp.ExStyle |= (int)WS2.CLIENTEDGE; break;
+					case BorderStyle.FixedSingle: cp.Style |= (int)WS.BORDER; break;
 				}
 
 				return cp;
 			}
 		}
 
-		protected override unsafe void OnHandleCreated(EventArgs e)
-		{
+		protected override unsafe void OnHandleCreated(EventArgs e) {
 			var hwnd = (AWnd)Handle;
 			_sciPtr = hwnd.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
 			bool hasImages = ZInitImagesStyle != ZImagesStyle.NoImages;
 			bool hasTags = ZInitTagsStyle != ZTagsStyle.NoTags;
-			if(ZInitReadOnlyAlways) {
+			if (ZInitReadOnlyAlways) {
 				MOD mask = 0;
-				if(hasImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
+				if (hasImages || hasTags) mask |= MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT;
 				Call(SCI_SETMODEVENTMASK, (int)mask);
 			}
 			_InitDocument();
 			Call(SCI_SETSCROLLWIDTHTRACKING, 1);
 			Call(SCI_SETSCROLLWIDTH, 100);
-			if(!ZInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
-			int cw = SystemInformation.CaretWidth; if(cw > 1) Call(SCI_SETCARETWIDTH, cw);
-			if(ZInitWrapVisuals) {
+			if (!ZInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
+			int cw = SystemInformation.CaretWidth; if (cw > 1) Call(SCI_SETCARETWIDTH, cw);
+			if (ZInitWrapVisuals) {
 				Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END);
 				Call(SCI_SETWRAPVISUALFLAGSLOCATION, SC_WRAPVISUALFLAGLOC_END_BY_TEXT);
 				Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT);
 			}
-			if(ZWrapLines) {
+			if (ZWrapLines) {
 				Call(SCI_SETWRAPMODE, SC_WRAP_WORD);
 			}
 
 			//note: cannot set styles here, because later inherited class will call StyleClearAll, which sets some special styles.
 
-			if(hasImages) ZImages = new SciImages(this, ZInitImagesStyle == ZImagesStyle.AnyString);
-			if(hasTags) ZTags = new SciTags(this);
+			if (hasImages) ZImages = new SciImages(this, ZInitImagesStyle == ZImagesStyle.AnyString);
+			if (hasTags) ZTags = new SciTags(this);
 
 			this.AccessibleRole = ZInitReadOnlyAlways ? AccessibleRole.StaticText : AccessibleRole.Text;
 
-			if(this.AllowDrop) Api.RevokeDragDrop(hwnd);
+			if (this.AllowDrop) Api.RevokeDragDrop(hwnd);
 
 			base.OnHandleCreated(e);
 		}
 
-		void _InitDocument()
-		{
+		void _InitDocument() {
 			//these must be set for each document of this Scintilla window
 
 			Call(SCI_SETCODEPAGE, Api.CP_UTF8);
 			Call(SCI_SETTABWIDTH, 4);
-			if(ZInitReadOnlyAlways) {
+			if (ZInitReadOnlyAlways) {
 				Call(SCI_SETREADONLY, 1);
 				Call(SCI_SETUNDOCOLLECTION);
 				Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //don't need style-needed notification, we'll set styles for whole text
 			}
 		}
 
-		protected override void WndProc(ref Message m)
-		{
+		protected override void WndProc(ref Message m) {
 			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 			//if(Focused) AWnd.More.PrintMsg(m, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
 			var hwnd = (AWnd)m.HWnd;
 			//LPARAM wParam = m.WParam, lParam = m.LParam;
 
-			switch(m.Msg) {
-			case Api.WM_SETCURSOR:
-			//case Api.WM_SETFOCUS: //no, it prevents changing default button etc. Don't remember why it was added here.
-			//case Api.WM_KILLFOCUS:
-			case Api.WM_LBUTTONUP:
-			case Api.WM_LBUTTONDBLCLK:
-				_DefWndProc(ref m);
-				return;
+			switch (m.Msg) {
+				case Api.WM_SETCURSOR:
+				//case Api.WM_SETFOCUS: //no, it prevents changing default button etc. Don't remember why it was added here.
+				//case Api.WM_KILLFOCUS:
+				case Api.WM_LBUTTONUP:
+				case Api.WM_LBUTTONDBLCLK:
+					_DefWndProc(ref m);
+					return;
 
-			case Api.WM_LBUTTONDOWN:
-				if(Api.GetFocus() != hwnd) {
-					bool setFocus = true;
-					ZTags?.OnLButtonDownWhenNotFocused_(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
-					if(setFocus && !ZNoMouseLeftSetFocus) Api.SetFocus(hwnd);
-				}
-				_DefWndProc(ref m);
-				return;
-			case Api.WM_RBUTTONDOWN:
-				if(!ZNoMouseRightSetFocus) Api.SetFocus(hwnd);
-				_DefWndProc(ref m);
-				return;
+				case Api.WM_LBUTTONDOWN:
+					if (Api.GetFocus() != hwnd) {
+						bool setFocus = true;
+						ZTags?.OnLButtonDownWhenNotFocused_(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
+						if (!setFocus || ZNoMouseLeftSetFocus) m.WParam = (IntPtr)((int)m.WParam | MK_SCI_NOFOCUS);
+					}
+					_DefWndProc(ref m);
+					return;
+				case Api.WM_RBUTTONDOWN:
+					if (ZNoMouseRightSetFocus) m.WParam = (IntPtr)((int)m.WParam | MK_SCI_NOFOCUS);
+					_DefWndProc(ref m);
+					return;
 			}
 
 			base.WndProc(ref m);
 
-			switch(m.Msg) {
-			case Api.WM_CREATE: //after inherited classes set styles etc
-				if(!_text.NE()) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
-				break;
+			switch (m.Msg) {
+				case Api.WM_CREATE: //after inherited classes set styles etc
+					if (!_text.NE()) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
+					break;
 			}
 		}
 
-		void _DefWndProc(ref Message m)
-		{
+		void _DefWndProc(ref Message m) {
 			m.Result = CallRetPtr(m.Msg, m.WParam, m.LParam);
 			//This is faster than base.DefWndProc, which calls CallWindowProc.
 			//Howewer cannot override DefWndProc with this. Then crashes.
 		}
 
-		unsafe void _NotifyCallback(void* cbParam, ref SCNotification n)
-		{
+		unsafe void _NotifyCallback(void* cbParam, ref SCNotification n) {
 			var code = n.nmhdr.code;
 			//if(code != NOTIF.SCN_PAINTED) AOutput.QM2.Write(code.ToString());
-			switch(code) {
-			case NOTIF.SCN_MODIFIED:
-				if((n.modificationType & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
-				_NotifyModified(n);
-				if(ZDisableModifiedNotifications) return;
-				break;
-			case NOTIF.SCN_HOTSPOTRELEASECLICK:
-				ZTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
-				break;
+			switch (code) {
+				case NOTIF.SCN_MODIFIED:
+					if ((n.modificationType & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
+					_NotifyModified(n);
+					if (ZDisableModifiedNotifications) return;
+					break;
+				case NOTIF.SCN_HOTSPOTRELEASECLICK:
+					ZTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
+					break;
 			}
 			ZOnSciNotify(ref n);
 		}
@@ -213,11 +206,10 @@ namespace Au.Controls
 		//	if(Name != "Status_text") AOutput.QM2.Write($"{t}: {text}");
 		//}
 
-		unsafe void _NotifyModified(in SCNotification n)
-		{
+		unsafe void _NotifyModified(in SCNotification n) {
 			var code = n.modificationType;
 			//if(this.Name!= "Output_text") AOutput.Write(code, n.position);
-			if(0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
+			if (0 != (code & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) {
 				_text = null;
 				_posState = default;
 				_aPos.Clear();
@@ -232,11 +224,10 @@ namespace Au.Controls
 		/// <summary>
 		/// Raises the <see cref="ZNotify"/> event.
 		/// </summary>
-		protected virtual void ZOnSciNotify(ref SCNotification n)
-		{
+		protected virtual void ZOnSciNotify(ref SCNotification n) {
 			ZNotify?.Invoke(this, ref n);
 			var e = ZTextChanged;
-			if(e != null && n.nmhdr.code == NOTIF.SCN_MODIFIED && 0 != (n.modificationType & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) e(this, EventArgs.Empty);
+			if (e != null && n.nmhdr.code == NOTIF.SCN_MODIFIED && 0 != (n.modificationType & (MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT))) e(this, EventArgs.Empty);
 		}
 
 		public delegate void ZEventHandler(AuScintilla c, ref SCNotification n);
@@ -263,12 +254,11 @@ namespace Au.Controls
 		/// Don't call this function from another thread.
 		/// </summary>
 		[DebuggerStepThrough]
-		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam = default, LPARAM lParam = default)
-		{
+		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) {
 #if DEBUG
-			if(ZDebugPrintMessages) _DebugPrintMessage(sciMessage);
+			if (ZDebugPrintMessages) _DebugPrintMessage(sciMessage);
 #endif
-			if(!IsHandleCreated) {
+			if (!IsHandleCreated) {
 				Debug.Assert(!Visible);
 				CreateHandle(); //because did not create handle if initially Visible is false
 			}
@@ -293,11 +283,11 @@ namespace Au.Controls
 		public override string Text {
 			get {
 				//AOutput.QM2.Write($"Text: cached={_text != null}");
-				if(_text == null && IsHandleCreated) _text = Z.GetText_(); //_NotifyModified sets _text=null
+				if (_text == null && IsHandleCreated) _text = Z.GetText_(); //_NotifyModified sets _text=null
 				return _text;
 			}
 			set {
-				if(IsHandleCreated) Z.SetText(value); //_NotifyModified sets _text=null. Control text can be != value, eg when tags parsed.
+				if (IsHandleCreated) Z.SetText(value); //_NotifyModified sets _text=null. Control text can be != value, eg when tags parsed.
 				else _text = value; //will set control text on WM_CREATE
 			}
 		}
@@ -313,9 +303,9 @@ namespace Au.Controls
 		/// </summary>
 		public int Len16 {
 			get {
-				if(_text != null) return _text.Length;
-				if(_posState == default) _CreatePosMap();
-				if(_posState == _PosState.Ok) return _len16;
+				if (_text != null) return _text.Length;
+				if (_posState == default) _CreatePosMap();
+				if (_posState == _PosState.Ok) return _len16;
 				return Pos16(Call(SCI_GETTEXTLENGTH));
 			}
 		}
@@ -325,20 +315,19 @@ namespace Au.Controls
 		/// Converts UTF-16 position to UTF-8 position. Fast.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">Negative or greater than <see cref="Len16"/>.</exception>
-		public int Pos8(int pos16)
-		{
+		public int Pos8(int pos16) {
 			Debug.Assert((uint)pos16 <= Len16);
-			if(pos16 < 0) throw new ArgumentOutOfRangeException();
-			if(_posState == default) _CreatePosMap();
-			if(_posState == _PosState.Ok) {
-				if(pos16 > _len16) throw new ArgumentOutOfRangeException();
+			if (pos16 < 0) throw new ArgumentOutOfRangeException();
+			if (_posState == default) _CreatePosMap();
+			if (_posState == _PosState.Ok) {
+				if (pos16 > _len16) throw new ArgumentOutOfRangeException();
 				//using binary search find max _aPos[r].i16 that is < pos16
 				int r = -1, from = 0, to = _aPos.Count;
-				while(to > from) {
+				while (to > from) {
 					int m = (from + to) / 2;
-					if(_aPos[m].i16 < pos16) from = (r = m) + 1; else to = m;
+					if (_aPos[m].i16 < pos16) from = (r = m) + 1; else to = m;
 				}
-				if(r < 0) return pos16; //_aPos is empty (ASCII text) or pos16 <= _aPos[0].i16 (before first non-ASCII character)
+				if (r < 0) return pos16; //_aPos is empty (ASCII text) or pos16 <= _aPos[0].i16 (before first non-ASCII character)
 				var p = _aPos[r];
 				return p.i8 + Math.Min(pos16 - p.i16, p.len16) * p.charLen + Math.Max(pos16 - (p.i16 + p.len16), 0); //p.i8 + utf + ascii
 			} else {
@@ -352,27 +341,26 @@ namespace Au.Controls
 		/// Converts UTF-8 position to UTF-16 position. Fast.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">Negative or greater than <see cref="Len8"/>.</exception>
-		public unsafe int Pos16(int pos8)
-		{
+		public unsafe int Pos16(int pos8) {
 			Debug.Assert((uint)pos8 <= Len8);
-			if(pos8 < 0) throw new ArgumentOutOfRangeException();
-			if(_posState == default) _CreatePosMap();
-			if(_posState == _PosState.Ok) {
-				if(pos8 > _len8) throw new ArgumentOutOfRangeException();
+			if (pos8 < 0) throw new ArgumentOutOfRangeException();
+			if (_posState == default) _CreatePosMap();
+			if (_posState == _PosState.Ok) {
+				if (pos8 > _len8) throw new ArgumentOutOfRangeException();
 				//using binary search find max _aPos[r].i8 that is < pos8
 				int r = -1, from = 0, to = _aPos.Count;
-				while(to > from) {
+				while (to > from) {
 					int m = (from + to) / 2;
-					if(_aPos[m].i8 < pos8) from = (r = m) + 1; else to = m;
+					if (_aPos[m].i8 < pos8) from = (r = m) + 1; else to = m;
 				}
-				if(r < 0) return pos8; //_aPos is empty (ASCII text) or pos8 <= _aPos[0].i8 (before first non-ASCII character)
+				if (r < 0) return pos8; //_aPos is empty (ASCII text) or pos8 <= _aPos[0].i8 (before first non-ASCII character)
 				var p = _aPos[r];
 				int len8 = p.len16 * p.charLen;
 				return p.i16 + Math.Min(pos8 - p.i8, len8) / p.charLen + Math.Max(pos8 - (p.i8 + len8), 0); //p.i16 + utf + ascii
 			} else {
 				int gap = Sci_Range(_sciPtr, 0, pos8, out var p1, out var p2);
 				int R = Encoding.UTF8.GetCharCount(p1, p2 == null ? pos8 : gap);
-				if(p2 != null) R += Encoding.UTF8.GetCharCount(p2, pos8 - gap);
+				if (p2 != null) R += Encoding.UTF8.GetCharCount(p2, pos8 - gap);
 				return R;
 				//note: don't use SCI_COUNTCODEUNITS, it is very slow.
 			}
@@ -385,8 +373,7 @@ namespace Au.Controls
 		//}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		unsafe void _CreatePosMap()
-		{
+		unsafe void _CreatePosMap() {
 			//This func is fast and garbageless. For code edit controls don't need to optimize to avoid calling it frequently, eg for each added character.
 			//Should not be used for output/log controls if called on each "append text". Or then need to optimize.
 			//AOutput.QM2.Write(this.Name);
@@ -397,29 +384,29 @@ namespace Au.Controls
 			int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
 			int to8 = p2 == null ? textLen : gap;
 			int i8 = 0, i16 = 0;
-			g1:
+		g1:
 			int asciiStart8 = i8;
 			i8 = _SkipAscii(p, i8, to8);
 			i16 += i8 - asciiStart8;
-			if(i8 < to8) {
+			if (i8 < to8) {
 				int utfStart8 = i8, utfStart16 = i16, c = p[i8];
-				if(c < 0xE0) { //2-byte UTF-8 chars
-					for(; i8 < to8 && (c = p[i8]) >= 0xC2 && c < 0xE0; i8 += 2) i16++;
-				} else if(c < 0xF0) { //3-byte UTF-8 chars
-					for(; i8 < to8 && (c = p[i8]) >= 0xE0 && c < 0xF0; i8 += 3) i16++;
+				if (c < 0xE0) { //2-byte UTF-8 chars
+					for (; i8 < to8 && (c = p[i8]) >= 0xC2 && c < 0xE0; i8 += 2) i16++;
+				} else if (c < 0xF0) { //3-byte UTF-8 chars
+					for (; i8 < to8 && (c = p[i8]) >= 0xE0 && c < 0xF0; i8 += 3) i16++;
 				} else { //4-byte UTF-8 chars
-					for(; i8 < to8 && (c = p[i8]) >= 0xF0 && c < 0xF8; i8 += 4) i16 += 2;
+					for (; i8 < to8 && (c = p[i8]) >= 0xF0 && c < 0xF8; i8 += 4) i16 += 2;
 				}
 				int len16 = i16 - utfStart16;
-				if(len16 > 0) _aPos.Add(new _PosUtfRange(utfStart8, utfStart16, len16, (i8 - utfStart8) / len16));
-				if(i8 < to8) {
-					if(c >= 0x80) { if(c < 0xC2 || c > 0xF8) goto ge; }
+				if (len16 > 0) _aPos.Add(new _PosUtfRange(utfStart8, utfStart16, len16, (i8 - utfStart8) / len16));
+				if (i8 < to8) {
+					if (c >= 0x80) { if (c < 0xC2 || c > 0xF8) goto ge; }
 					goto g1;
 				}
-				if(i8 > to8) goto ge;
+				if (i8 > to8) goto ge;
 			}
 
-			if(p2 != null) {
+			if (p2 != null) {
 				p = p2 - i8;
 				p2 = null;
 				to8 = textLen;
@@ -430,28 +417,26 @@ namespace Au.Controls
 			_len8 = textLen;
 			_len16 = i16;
 			return;
-			ge:
+		ge:
 			_posState = _PosState.Error;
 			_aPos.Clear();
 			ADebug.Print("Invalid UTF-8 text");
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		static unsafe int _SkipAscii(byte* bp, int i, int len)
-		{
-			for(; i < len && (i & 7) != 0; i++) if(bp[i] >= 0x80) return i;
+		static unsafe int _SkipAscii(byte* bp, int i, int len) {
+			for (; i < len && (i & 7) != 0; i++) if (bp[i] >= 0x80) return i;
 			var up = (ulong*)(bp + i);
 			int j = 0;
-			for(int n = (len - i) / 8; j < n; j++) if((up[j] & 0x8080808080808080) != 0) break;
-			for(i += j * 8; i < len; i++) if(bp[i] >= 0x80) break;
+			for (int n = (len - i) / 8; j < n; j++) if ((up[j] & 0x8080808080808080) != 0) break;
+			for (i += j * 8; i < len; i++) if (bp[i] >= 0x80) break;
 			return i;
 		}
 
 		struct _PosUtfRange
 		{
 			public int i8, i16, len16, charLen; //note: len16 is UTF-16 code units; if surrogate pairs, charLen is 2 (2 bytes for each UTF-16 code unit)
-			public _PosUtfRange(int i8, int i16, int len16, int charLen)
-			{
+			public _PosUtfRange(int i8, int i16, int len16, int charLen) {
 				this.i8 = i8; this.i16 = i16; this.len16 = len16; this.charLen = charLen;
 			}
 		}
@@ -582,39 +567,37 @@ namespace Au.Controls
 		int _len8, _len16;
 
 		//Enables tabstopping when ZInitReadOnlyAlways (scintilla would eat Tab). Implements AcceptsReturn.
-		protected override bool IsInputKey(Keys keyData)
-		{
-			switch(keyData & Keys.KeyCode) {
-			case Keys.Left: case Keys.Right: case Keys.Up: case Keys.Down: return true;
-			case Keys.Enter when ZAcceptsReturn != null: return ZAcceptsReturn.GetValueOrDefault();
+		protected override bool IsInputKey(Keys keyData) {
+			switch (keyData & Keys.KeyCode) {
+				case Keys.Left: case Keys.Right: case Keys.Up: case Keys.Down: return true;
+				case Keys.Enter when ZAcceptsReturn != null: return ZAcceptsReturn.GetValueOrDefault();
 			}
 			return !ZInitReadOnlyAlways;
 			//don't call base. It sends WM_GETDLGCODE, and scintilla always returns DLGC_WANTALLKEYS.
 		}
 
 #if DEBUG
-		void _DebugPrintMessage(int sciMessage)
-		{
-			if(sciMessage < Sci.SCI_START) return;
-			switch(sciMessage) {
-			case SCI_COUNTCODEUNITS:
-			case SCI_POSITIONRELATIVECODEUNITS:
-			case SCI_CANUNDO:
-			case SCI_CANREDO:
-			case SCI_GETREADONLY:
-			case SCI_GETSELECTIONEMPTY:
-				//case SCI_GETTEXTLENGTH:
-				return;
+		void _DebugPrintMessage(int sciMessage) {
+			if (sciMessage < Sci.SCI_START) return;
+			switch (sciMessage) {
+				case SCI_COUNTCODEUNITS:
+				case SCI_POSITIONRELATIVECODEUNITS:
+				case SCI_CANUNDO:
+				case SCI_CANREDO:
+				case SCI_GETREADONLY:
+				case SCI_GETSELECTIONEMPTY:
+					//case SCI_GETTEXTLENGTH:
+					return;
 			}
-			if(s_debugPM == null) {
+			if (s_debugPM == null) {
 				s_debugPM = new Dictionary<int, string>();
-				foreach(var v in typeof(Sci).GetFields()) {
+				foreach (var v in typeof(Sci).GetFields()) {
 					var s = v.Name;
 					//AOutput.Write(v.Name);
-					if(s.Starts("SCI_")) s_debugPM.Add((int)v.GetRawConstantValue(), s);
+					if (s.Starts("SCI_")) s_debugPM.Add((int)v.GetRawConstantValue(), s);
 				}
 			}
-			if(!s_debugPM.TryGetValue(sciMessage, out var k)) {
+			if (!s_debugPM.TryGetValue(sciMessage, out var k)) {
 				k = sciMessage.ToString();
 			}
 			AOutput.QM2.Write(k);
@@ -709,9 +692,9 @@ namespace Au.Controls
 		public virtual bool ZWrapLines {
 			get => _wrapLines;
 			set {
-				if(value != _wrapLines) {
+				if (value != _wrapLines) {
 					_wrapLines = value;
-					if(IsHandleCreated) Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : SC_WRAP_NONE);
+					if (IsHandleCreated) Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : SC_WRAP_NONE);
 				}
 			}
 		}
@@ -747,8 +730,7 @@ namespace Au.Controls
 
 		#region acc
 
-		protected override AccessibleObject CreateAccessibilityInstance()
-		{
+		protected override AccessibleObject CreateAccessibilityInstance() {
 			return _acc ??= new _Acc(this);
 		}
 		_Acc _acc;
