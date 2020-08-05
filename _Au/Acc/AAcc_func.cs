@@ -516,7 +516,7 @@ namespace Au
 			if(action == null) DoAction(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order, especially in Chrome.
-			var to = new AWaitFor.Loop(secondsTimeout, new OptWaitFor(period: 25));
+			var to = new AWaitFor.Loop(secondsTimeout, new AOptWaitFor(period: 25));
 			while(to.Sleep()) {
 				w.ThrowIfInvalid();
 				if(!wndOK) {

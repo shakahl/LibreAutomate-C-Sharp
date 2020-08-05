@@ -336,7 +336,7 @@ static class CiUtil
 			if (start > i && code[start - 1] == ' ') start--;
 			if (start > i) b.Append(code, i, start - i);
 			i = span.End;
-			if (b.Length == 0 || b[b.Length - 1] == '\n') {
+			if (b.Length == 0 || b[^1] == '\n') {
 				if (code.Eq(i, "\r\n")) i += 2;
 				else if (code.Eq(i, ' ')) i++;
 			}

@@ -452,7 +452,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Calls sqlite3_reset and/or sqlite3_clear_bindings. Returns self.
+		/// Calls sqlite3_reset and/or sqlite3_clear_bindings. Returns this.
 		/// </summary>
 		/// <param name="resetStatement">Call sqlite3_reset. Default true.</param>
 		/// <param name="clearBindings">Call sqlite3_clear_bindings. Default true.</param>
@@ -474,84 +474,84 @@ namespace Au
 			return r;
 		}
 
-		/// <summary>Calls sqlite3_bind_int. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_int. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, int value)
 			=> _Err(SLApi.sqlite3_bind_int(_st, _B(sqlParam), value), "sqlite3_bind_int");
 
-		/// <summary>Calls sqlite3_bind_int. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_int. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, uint value)
 			=> Bind(sqlParam, (int)value);
 
-		/// <summary>Calls sqlite3_bind_int64. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_int64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, long value)
 			=> _Err(SLApi.sqlite3_bind_int64(_st, _B(sqlParam), value), "sqlite3_bind_int64");
 
-		/// <summary>Calls sqlite3_bind_int64. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_int64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, ulong value)
 			=> Bind(sqlParam, (long)value);
 
-		/// <summary>Calls sqlite3_bind_int(value ? 1 : 0). Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_int(value ? 1 : 0). Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, bool value)
 			=> Bind(sqlParam, value ? 1 : 0);
 
-		/// <summary>Binds an enum value as int or long. Calls sqlite3_bind_int or sqlite3_bind_int64. Returns self.</summary>
+		/// <summary>Binds an enum value as int or long. Calls sqlite3_bind_int or sqlite3_bind_int64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining)] //ensure that value is copied to the parameter, because must not be smaller than int
 		public ASqliteStatement Bind<T>(SLIndexOrName sqlParam, T value) where T : unmanaged, Enum
 			=> Bind(sqlParam, sizeof(T) == 8 ? *(long*)&value : *(int*)&value);
 
-		/// <summary>Calls sqlite3_bind_double. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_double. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, double value)
 			=> _Err(SLApi.sqlite3_bind_double(_st, _B(sqlParam), value), "sqlite3_bind_double");
 
-		/// <summary>Calls sqlite3_bind_text16. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_text16. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, string value)
 			=> _Err(SLApi.sqlite3_bind_text16(_st, _B(sqlParam), value, (value?.Length ?? 0) * 2), "sqlite3_bind_text16");
 
-		/// <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind(SLIndexOrName sqlParam, void* blob, long nBytes)
 			=> _Err(SLApi.sqlite3_bind_blob64(_st, _B(sqlParam), blob, nBytes), "sqlite3_bind_blob64");
 
-		/// <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind<T>(SLIndexOrName sqlParam, T[] array) where T : unmanaged
 		{
 			fixed (T* p = array) return Bind(sqlParam, p, (array?.LongLength ?? 0) * sizeof(T));
 		}
 
-		/// <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		public ASqliteStatement Bind<T>(SLIndexOrName sqlParam, List<T> list) where T : unmanaged
 			=> Bind(sqlParam, list?.ToArray());
 
-		/// <summary>Binds a value as blob. Calls sqlite3_bind_blob64. Returns self.</summary>
+		/// <summary>Binds a value as blob. Calls sqlite3_bind_blob64. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		/// <remarks>Can be any value type that does not contain fields of reference types. Examples: Guid, Point, int, decimal.</remarks>
 		public ASqliteStatement BindStruct<T>(SLIndexOrName sqlParam, T value) where T : unmanaged
 			=> Bind(sqlParam, &value, sizeof(T));
 
-		/// <summary>Calls sqlite3_bind_null. Returns self.</summary>
+		/// <summary>Calls sqlite3_bind_null. Returns this.</summary>
 		/// <exception cref="SLException">Failed.</exception>
 		/// <remarks>Usually don't need to call this function. Unset parameter values are null. The Bind(string/void*/Array/List) functions set null too if the value is null.</remarks>
 		public ASqliteStatement BindNull(SLIndexOrName sqlParam)
 			=> _Err(SLApi.sqlite3_bind_null(_st, _B(sqlParam)), "sqlite3_bind_null");
 
 		//rejected. 1. Currently we don't have a Blob class. 2. Can do in SQL: zeroblob(nBytes).
-		///// <summary>Calls sqlite3_bind_zeroblob. Returns self.</summary>
+		///// <summary>Calls sqlite3_bind_zeroblob. Returns this.</summary>
 		///// <exception cref="SLException">Failed.</exception>
 		//public Statement BindZeroBlob(SLIndexOrName sqlParam, int nBytes)
 		//	=> _Err(SLApi.sqlite3_bind_zeroblob(_st, _B(sqlParam), nBytes), "sqlite3_bind_zeroblob");
 
 		//rejected. DateTime can be stored in many ways. Let users decide how they want to store it, and explicitly convert to long, string, etc.
-		///// <summary>Calls sqlite3_bind_int64(value.ToBinary()). Returns self.</summary>
+		///// <summary>Calls sqlite3_bind_int64(value.ToBinary()). Returns this.</summary>
 		///// <exception cref="SLException">Failed.</exception>
 		//public Statement Bind(SLIndexOrName sqlParam, DateTime value, bool convertToUtc = false)
 		//	=> Bind(sqlParam, (convertToUtc ? value.ToUniversalTime() : value).ToBinary());
@@ -601,7 +601,7 @@ namespace Au
 
 		/// <summary>
 		/// Binds multiple values of any supported types.
-		/// Returns self.
+		/// Returns this.
 		/// </summary>
 		/// <param name="values">
 		/// Values that will replace <c>?</c> characters in sql.

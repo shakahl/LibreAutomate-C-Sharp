@@ -1555,24 +1555,24 @@
         <member name="M:Au.Types.Cpp.Cpp_RegexMatch(System.Runtime.InteropServices.HandleRef,System.String,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.RXMatchFlags,Au.Types.Cpp.PcreCalloutT,Au.Types.Cpp.RegexMatch@,Au.Types.BSTR@)">
             <summary>This and related API are documented in the C++ dll project.</summary>
         </member>
-        <member name="T:Au.Types.OptWarnings">
+        <member name="T:Au.Types.AOptWarnings">
             <summary>
             Options for run-time warnings (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
             </summary>
         </member>
-        <member name="M:Au.Types.OptWarnings.#ctor(Au.Types.OptWarnings)">
+        <member name="M:Au.Types.AOptWarnings.#ctor(Au.Types.AOptWarnings)">
             <summary>
             Initializes this instance with default values or values copied from another instance.
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="P:Au.Types.OptWarnings.Verbose">
+        <member name="P:Au.Types.AOptWarnings.Verbose">
             <summary>
             If true, some library functions may display more warnings and other info.
             If not explicitly set, the default value depends on the build configuration of the entry assymbly: true if Debug, false if Release.
             </summary>
         </member>
-        <member name="M:Au.Types.OptWarnings.Disable(System.String[])">
+        <member name="M:Au.Types.AOptWarnings.Disable(System.String[])">
             <summary>
             Disables one or more run-time warnings.
             </summary>
@@ -1598,29 +1598,29 @@
             Don't use code <c>using(AOpt.Static.Warnings.Disable...</c>, it's not thread-safe.
             </example>
         </member>
-        <member name="M:Au.Types.OptWarnings.IsDisabled(System.String)">
+        <member name="M:Au.Types.AOptWarnings.IsDisabled(System.String)">
             <summary>
-            Returns true if the specified warning text matches a wildcard string added with <see cref="M:Au.Types.OptWarnings.Disable(System.String[])"/>.
+            Returns true if the specified warning text matches a wildcard string added with <see cref="M:Au.Types.AOptWarnings.Disable(System.String[])"/>.
             </summary>
             <param name="text">Warning text. Case-insensitive.</param>
         </member>
-        <member name="T:Au.Types.OptMouse">
+        <member name="T:Au.Types.AOptMouse">
             <summary>
             Options for functions of class <see cref="T:Au.AMouse"/>.
             </summary>
             <remarks>
-            Total <c>Click(x, y)</c> time is: mouse move + <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/> + button down + <see cref="P:Au.Types.OptMouse.ClickSpeed"/> + button down + <see cref="P:Au.Types.OptMouse.ClickSpeed"/> + <see cref="P:Au.Types.OptMouse.ClickSleepFinally"/>.
+            Total <c>Click(x, y)</c> time is: mouse move + <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/> + button down + <see cref="P:Au.Types.AOptMouse.ClickSpeed"/> + button down + <see cref="P:Au.Types.AOptMouse.ClickSpeed"/> + <see cref="P:Au.Types.AOptMouse.ClickSleepFinally"/>.
             </remarks>
             <seealso cref="P:Au.AOpt.Mouse"/>
             <seealso cref="P:Au.AOpt.Static.Mouse"/>
         </member>
-        <member name="M:Au.Types.OptMouse.#ctor(Au.Types.OptMouse)">
+        <member name="M:Au.Types.AOptMouse.#ctor(Au.Types.AOptMouse)">
             <summary>
             Initializes this instance with default values or values copied from another instance.
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="P:Au.Types.OptMouse.ClickSpeed">
+        <member name="P:Au.Types.AOptMouse.ClickSpeed">
             <summary>
             How long to wait (milliseconds) after sending each mouse button down or up event (2 events for click, 4 for double-click).
             Default: 20.
@@ -1628,7 +1628,7 @@
             <value>Valid values: 0 - 1000 (1 s). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100 (1 s).</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="P:Au.Types.OptMouse.MoveSpeed">
+        <member name="P:Au.Types.AOptMouse.MoveSpeed">
             <summary>
             If not 0, makes mouse movements slower, not instant.
             Default: 0.
@@ -1641,7 +1641,7 @@
             Value 0 (default) does not add intermediate mouse movements. Adds at least 1 if some mouse buttons are pressed. Value 1 adds at least 1 intermediate mouse movement. Values 10-50 are good for visually slow movements.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptMouse.ClickSleepFinally">
+        <member name="P:Au.Types.AOptMouse.ClickSleepFinally">
             <summary>
             How long to wait (milliseconds) before a 'mouse click' or 'mouse wheel' function returns.
             Default: 10.
@@ -1649,10 +1649,10 @@
             <value>Valid values: 0 - 10000 (10 s). Valid values for <see cref="P:Au.AOpt.Static.Mouse"/>: 0 - 100.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            The 'click' functions also sleep <see cref="P:Au.Types.OptMouse.ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
+            The 'click' functions also sleep <see cref="P:Au.Types.AOptMouse.ClickSpeed"/> ms after button down and up. Default <b>ClickSpeed</b> is 20, default <b>ClickSleepFinally</b> is 10, therefore default click time without mouse-move is 20+20+10=50.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptMouse.MoveSleepFinally">
+        <member name="P:Au.Types.AOptMouse.MoveSleepFinally">
             <summary>
             How long to wait (milliseconds) after moving the mouse cursor. Used in 'move+click' functions too.
             Default: 10.
@@ -1663,7 +1663,7 @@
             Used by <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (finally), <see cref="M:Au.AMouse.Click(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> (between moving and clicking) and other functions that generate mouse movement events.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptMouse.Relaxed">
+        <member name="P:Au.Types.AOptMouse.Relaxed">
             <summary>
             Make some functions less strict (throw less exceptions etc).
             Default: false.
@@ -1681,7 +1681,7 @@
             <br/>true - allow to click in another window. Don't activate the window and don't throw exception.
             </remarks>
         </member>
-        <member name="T:Au.Types.OptKey">
+        <member name="T:Au.Types.AOptKey">
             <summary>
             Options for functions of class <see cref="T:Au.AKeys"/>.
             Some options also are used with <see cref="T:Au.AClipboard"/> functions that send keys (Ctrl+V etc).
@@ -1689,46 +1689,46 @@
             <seealso cref="P:Au.AOpt.Key"/>
             <seealso cref="P:Au.AOpt.Static.Key"/>
         </member>
-        <member name="M:Au.Types.OptKey.#ctor(Au.Types.OptKey)">
+        <member name="M:Au.Types.AOptKey.#ctor(Au.Types.AOptKey)">
             <summary>
             Initializes this instance with default values or values copied from another instance.
             </summary>
             <param name="cloneOptions">If not null, copies its options into this variable.</param>
         </member>
-        <member name="M:Au.Types.OptKey.CopyOrDefault_(Au.Types.OptKey)">
+        <member name="M:Au.Types.AOptKey.CopyOrDefault_(Au.Types.AOptKey)">
             <summary>
             Copies options from o, or sets default if o==null. Like ctor does.
             </summary>
         </member>
-        <member name="M:Au.Types.OptKey.GetHookOptionsOrThis_(Au.AWnd)">
+        <member name="M:Au.Types.AOptKey.GetHookOptionsOrThis_(Au.AWnd)">
             <summary>
-            Returns this variable, or OptKey cloned from this variable and possibly modified by Hook.
+            Returns this variable, or AOptKey cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">The focused or active window. Use Lib.GetWndFocusedOrActive().</param>
         </member>
-        <member name="P:Au.Types.OptKey.TextSpeed">
+        <member name="P:Au.Types.AOptKey.TextSpeed">
             <summary>
-            How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="M:Au.AKeys.Text(System.String)"/>. Also by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions for <c>(KText)"text"</c> arguments.
+            How long to wait (milliseconds) between pressing and releasing each character key. Used by <see cref="M:Au.AKeys.Text(System.String,System.String)"/>. Also by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions for <c>"!text"</c> arguments.
             Default: 0.
             </summary>
             <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 10.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Not used for 'keys' arguments. See <see cref="P:Au.Types.OptKey.KeySpeed"/>.
+            Not used for 'keys' arguments. See <see cref="P:Au.Types.AOptKey.KeySpeed"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptKey.KeySpeed">
+        <member name="P:Au.Types.AOptKey.KeySpeed">
             <summary>
-            How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions, except for <c>(KText)"text"</c> arguments.
+            How long to wait (milliseconds) between pressing and releasing each key. Used by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions, except for <c>"!text"</c> arguments.
             Default: 1.
             </summary>
             <value>Valid values: 0 - 1000 (1 second). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 10.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Not used for 'text' arguments. See <see cref="P:Au.Types.OptKey.TextSpeed"/>.
+            Not used for 'text' arguments. See <see cref="P:Au.Types.AOptKey.TextSpeed"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptKey.KeySpeedClipboard">
+        <member name="P:Au.Types.AOptKey.KeySpeedClipboard">
             <summary>
             How long to wait (milliseconds) between sending Ctrl+V and Ctrl+C keys of clipboard functions (paste, copy).
             Default: 5.
@@ -1739,7 +1739,7 @@
             In most apps copy/paste works without this delay. Known apps that need it: Internet Explorer's address bar, BlueStacks.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptKey.SleepFinally">
+        <member name="P:Au.Types.AOptKey.SleepFinally">
             <summary>
             How long to wait (milliseconds) before a 'send keys or text' function returns.
             Default: 10.
@@ -1747,93 +1747,93 @@
             <value>Valid values: 0 - 10000 (10 seconds). Valid values for <see cref="P:Au.AOpt.Static.Key"/>: 0 - 100.</value>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
             <remarks>
-            Not used by <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.OptKey)"/>.
+            Not used by <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.AOptKey)"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptKey.TextOption">
+        <member name="P:Au.Types.AOptKey.TextHow">
             <summary>
-            How functions send text to the active window (keys, clipboard, etc).
-            Default: <see cref="F:Au.Types.KTextOption.Characters"/>.
+            How to send text to the active window (keys, characters or clipboard).
+            Default: <see cref="F:Au.Types.KTextHow.Characters"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.OptKey.PasteLength">
+        <member name="P:Au.Types.AOptKey.PasteLength">
             <summary>
-            To send text use clipboard (like with option <see cref="F:Au.Types.KTextOption.Paste"/>) if text length is &gt;= this value.
-            Default: 300.
+            To send text use clipboard (like with <see cref="F:Au.Types.KTextHow.Paste"/>) if text length is &gt;= this value.
+            Default: 200.
             </summary>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="P:Au.Types.OptKey.PasteEnter">
+        <member name="P:Au.Types.AOptKey.PasteWorkaround">
             <summary>
-            When pasting text that ends with newline characters, remove the last newline and after pasting send the Enter key.
+            When pasting text that ends with space, tab or/and newline characters, remove them and after pasting send them as keys.
             Default: false.
             </summary>
             <remarks>
-            Some apps remove the last newline when pasting. For example Word, WordPad, OpenOffice, LibreOffice, standard rich text controls. This option is a workaround.
+            Some apps trim these characters when pasting.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptKey.RestoreClipboard">
+        <member name="P:Au.Types.AOptKey.RestoreClipboard">
             <summary>
             Whether to restore clipboard data when copying or pasting text.
             Default: true.
-            By default restores only text. See also <see cref="P:Au.Types.OptKey.RestoreClipboardAllFormats"/>, <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>.
+            By default restores only text. See also <see cref="P:Au.Types.AOptKey.RestoreClipboardAllFormats"/>, <see cref="P:Au.Types.AOptKey.RestoreClipboardExceptFormats"/>.
             </summary>
         </member>
-        <member name="P:Au.Types.OptKey.RestoreClipboardAllFormats">
+        <member name="P:Au.Types.AOptKey.RestoreClipboardAllFormats">
             <summary>
             When copying or pasting text, restore clipboard data of all formats that are possible to restore.
             Default: false - restore only text.
             </summary>
             <remarks>
-            Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>.
+            Restoring data of all formats set by some apps can be slow or cause problems. More info: <see cref="P:Au.Types.AOptKey.RestoreClipboardExceptFormats"/>.
             
             This property is static, not thread-static. It should be set (if need) at the very start of script and not changed later.
             </remarks>
-            <seealso cref="P:Au.Types.OptKey.RestoreClipboard"/>
-            <seealso cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>
+            <seealso cref="P:Au.Types.AOptKey.RestoreClipboard"/>
+            <seealso cref="P:Au.Types.AOptKey.RestoreClipboardExceptFormats"/>
         </member>
-        <member name="P:Au.Types.OptKey.RestoreClipboardExceptFormats">
+        <member name="P:Au.Types.AOptKey.RestoreClipboardExceptFormats">
             <summary>
-            When copying or pasting text, and <see cref="P:Au.Types.OptKey.RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
+            When copying or pasting text, and <see cref="P:Au.Types.AOptKey.RestoreClipboardAllFormats"/> is true, do not restore clipboard data of these formats.
             Default: null.
             </summary>
             <remarks>
             To restore clipboard data, the copy/paste functions at first get clipboard data. Getting data of some formats set by some apps can be slow (100 ms or more) or cause problems (the app can change something in its window or even show a dialog).
             It also depends on whether this is the first time the data is being retrieved. The app can render data on demand, when some app is retrieving it from the clipboard first time; then can be slow etc.
             
-            You can use function <see cref="M:Au.Types.OptKey.PrintClipboard"/> to see format names and get-data times.
+            You can use function <see cref="M:Au.Types.AOptKey.PrintClipboard"/> to see format names and get-data times.
             
             There are several kinds of clipboard formats - registered, standard, private and display. Only registered formats have string names. For standard formats use API contant names, like "CF_WAVE". Private, display and metafile formats are never restored.
             These formats are never restored: CF_METAFILEPICT, CF_ENHMETAFILE, CF_PALETTE, CF_OWNERDISPLAY, CF_DSPx formats, CF_GDIOBJx formats, CF_PRIVATEx formats. Some other formats too, but they are automatically synthesized from other formats if need. Also does not restore if data size is 0 or &gt; 10 MB.
             
             This property is static, not thread-static. It should be set (if need) at the very start of script and not changed later.
             </remarks>
-            <seealso cref="P:Au.Types.OptKey.RestoreClipboard"/>
-            <seealso cref="M:Au.Types.OptKey.PrintClipboard"/>
+            <seealso cref="P:Au.Types.AOptKey.RestoreClipboard"/>
+            <seealso cref="M:Au.Types.AOptKey.PrintClipboard"/>
         </member>
-        <member name="M:Au.Types.OptKey.PrintClipboard">
+        <member name="M:Au.Types.AOptKey.PrintClipboard">
             <summary>
             Writes to the output some info about current clipboard data.
             </summary>
             <remarks>
-            Shows this info for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>).
-            <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.OptKey)"/> and don't call this function in loop. Else it shows small times.</note>
-            The time depends on app, etc. More info: <see cref="P:Au.Types.OptKey.RestoreClipboardExceptFormats"/>.
+            Shows this info for each clipboard format: format name, time spent to get data (microseconds), data size (bytes), and whether this format would be restored (depends on <see cref="P:Au.Types.AOptKey.RestoreClipboardExceptFormats"/>).
+            <note>Copy something to the clipboard each time before calling this function. Don't use <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.AOptKey)"/> and don't call this function in loop. Else it shows small times.</note>
+            The time depends on app, etc. More info: <see cref="P:Au.Types.AOptKey.RestoreClipboardExceptFormats"/>.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptKey.NoModOff">
+        <member name="P:Au.Types.AOptKey.NoModOff">
             <summary>
             When starting to send keys or text, don't release modifier keys.
             Default: false.
             </summary>
         </member>
-        <member name="P:Au.Types.OptKey.NoCapsOff">
+        <member name="P:Au.Types.AOptKey.NoCapsOff">
             <summary>
             When starting to send keys or text, don't turn off CapsLock.
             Default: false.
             </summary>
         </member>
-        <member name="P:Au.Types.OptKey.NoBlockInput">
+        <member name="P:Au.Types.AOptKey.NoBlockInput">
             <summary>
             While sending or pasting keys or text, don't block user-pressed keys.
             Default: false.
@@ -1842,19 +1842,19 @@
             If false (default), user-pressed keys are sent afterwards. If true, user-pressed keys can be mixed with script-pressed keys, which is particularly dangerous when modifier keys are mixed (and combined) with non-modifier keys.
             </remarks>
         </member>
-        <member name="P:Au.Types.OptKey.Hook">
+        <member name="P:Au.Types.AOptKey.Hook">
             <summary>
             Callback function that can modify options of 'send keys or text' functions depending on active window etc.
             Default: null.
             </summary>
             <remarks>
-            The callback function is called by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>, <see cref="M:Au.AKeys.Text(System.String)"/>, <see cref="M:Au.AKeys.Send(System.Boolean)"/>, <see cref="M:Au.AClipboard.Paste(System.String,Au.Types.OptKey)"/> and similar functions. Not called by <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.OptKey)"/>.
+            The callback function is called by <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>, <see cref="M:Au.AKeys.Text(System.String,System.String)"/>, <see cref="M:Au.AKeys.Send(System.Boolean)"/>, <see cref="M:Au.AClipboard.Paste(System.String,System.String,Au.Types.AOptKey)"/> and similar functions. Not called by <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.AOptKey)"/>.
             </remarks>
             <seealso cref="T:Au.Types.KOHookData"/>
         </member>
         <member name="T:Au.Types.KOHookData">
             <summary>
-            Parameter type of the <see cref="P:Au.Types.OptKey.Hook"/> callback function.
+            Parameter type of the <see cref="P:Au.Types.AOptKey.Hook"/> callback function.
             </summary>
         </member>
         <member name="F:Au.Types.KOHookData.opt">
@@ -1867,53 +1867,61 @@
             The focused control. If there is no focused control - the active window. Use <c>w.Window</c> to get top-level window; if <c>w.Window == w</c>, <b>w</b> is the active window, else the focused control. The callback function is not called if there is no active window.
             </summary>
         </member>
-        <member name="T:Au.Types.KTextOption">
+        <member name="T:Au.Types.KTextHow">
             <summary>
             How functions send text.
-            See <see cref="P:Au.Types.OptKey.TextOption"/>.
+            See <see cref="P:Au.Types.AOptKey.TextHow"/>.
             </summary>
             <remarks>
-            There are three ways to send text to the active app using keys: 1. Characters (default) - use special key code VK_PACKET. 2. Keys - press keybord keys. 3. Paste - use the clipboard and Ctrl+V.
-            Most but not all apps support all three ways. Most Unicode characters cannot be sent with <b>Keys</b>.
-            Depending on text, the 'send text' functions may use other method than specified. For some characters or for whole text. More info below.
-            Many apps don't support Unicode surrogate pairs sent as keys. If the text contains such characters, is used <b>Paste</b> instead of other options (implicitly). These characters are rarely used.
+            There are three ways to send text to the active app using keys:
+            - Characters (default) - use special key code VK_PACKET. Can send most characters.
+            - Keys - use virtual-key codes, with Shift etc where need. Can send only characters that can be simply entered with the keyboard using current keyboard layout.
+            - Paste - use the clipboard and Ctrl+V. Can send any text.
+            
+            Most but not all apps support all three ways.
             </remarks>
         </member>
-        <member name="F:Au.Types.KTextOption.Characters">
+        <member name="F:Au.Types.KTextHow.Characters">
             <summary>
             Send text characters using special key code VK_PACKET.
-            Few apps don't support it.
-            This option is default.
-            Supports most Unicode characters.
+            This option is default. Few apps don't support it.
             For newlines sends key Enter, because VK_PACKET often does not work well.
+            If text contains Unicode characters with Unicode code above 0xffff, clipboard-pastes whole text, because many apps don't support Unicode surrogates sent as WM_PACKET pairs.
             </summary>
         </member>
-        <member name="F:Au.Types.KTextOption.Keys">
+        <member name="F:Au.Types.KTextHow.KeysOrChar">
             <summary>
-            Send text keys, with Shift or other modifiers where need, depending on the keyboard layout of the active window. The numpad keys are not used.
+            Send virtual-key codes, with Shift etc where need.
             All apps support it.
-            Some characters cannot be easily typed using the keyboard. For example most non-ASCII characters. Sends these characters like with the <b>Characters</b> option.
+            If a character cannot be simply typed with the keyboard using current keyboard layout, sends it like with the <b>Characters</b> option.
             </summary>
         </member>
-        <member name="F:Au.Types.KTextOption.Paste">
+        <member name="F:Au.Types.KTextHow.KeysOrPaste">
+            <summary>
+            Send virtual-key codes, with Shift etc where need.
+            All apps support it.
+            If text contains characters that cannot be simply typed with the keyboard using current keyboard layout, clipboard-pastes whole text.
+            </summary>
+        </member>
+        <member name="F:Au.Types.KTextHow.Paste">
             <summary>
             Paste text using the clipboard and Ctrl+V.
             Few apps don't support it.
             This option is recommended for long text, because other ways then are too slow.
-            Other options are unreliable when text length is more than 4000 or 5000 and the target app is too slow to process sent characters. Then <see cref="P:Au.Types.OptKey.TextSpeed"/> can help.
-            Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete or auto-indent. However some apps modify even pasted text, for example trim the last newline.
-            When pasting text, previous clipboard data is lost. Only text is restored.
+            Other options are unreliable when text length is more than 4000 and the target app is too slow to process sent characters. Then <see cref="P:Au.Types.AOptKey.TextSpeed"/> can help.
+            Also, other options are unreliable when the target app modifies typed text, for example has such features as auto-complete, auto-indent or auto-correct. However some apps modify even pasted text, for example trim the last newline or space.
+            When pasting text, previous clipboard data of some formats is lost. Text is restored by default.
             </summary>
         </member>
-        <member name="T:Au.Types.OptWaitFor">
+        <member name="T:Au.Types.AOptWaitFor">
             <summary>
             Options for 'wait for' functions.
             </summary>
             <seealso cref="P:Au.AOpt.WaitFor"/>
-            <seealso cref="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/>
+            <seealso cref="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.AOptWaitFor)"/>
             <seealso cref="T:Au.AWaitFor.Loop"/>
         </member>
-        <member name="P:Au.Types.OptWaitFor.Period">
+        <member name="P:Au.Types.AOptWaitFor.Period">
             <summary>
             The sleep time between checking the wait condition. Milliseconds.
             Default: 10.
@@ -1930,7 +1938,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.Types.OptWaitFor.DoEvents">
+        <member name="P:Au.Types.AOptWaitFor.DoEvents">
             <summary>
             Use <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/> instead of <see cref="M:Au.ATime.Sleep(System.Int32)"/>.
             Default: false.
@@ -1945,7 +1953,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.Types.OptWaitFor.#ctor(System.Int32,System.Boolean)">
+        <member name="M:Au.Types.AOptWaitFor.#ctor(System.Int32,System.Boolean)">
             
         </member>
         <member name="T:Au.Types.NoDoc">
@@ -4795,6 +4803,20 @@
             This flag incluses flags <b>Keys</b>, <b>MouseClicks</b> and <b>MouseMoving</b>.
             </summary>
         </member>
+        <member name="T:Au.Types.PastingEventArgs">
+            <summary>
+            <see cref="E:Au.AKeys.Pasting"/> event data.
+            </summary>
+        </member>
+        <member name="P:Au.Types.PastingEventArgs.Text">
+            
+        </member>
+        <member name="P:Au.Types.PastingEventArgs.Options">
+            
+        </member>
+        <member name="P:Au.Types.PastingEventArgs.WndFocus">
+            
+        </member>
         <member name="T:Au.Types.KMod">
             <summary>
             Modifier keys as flags.
@@ -4899,26 +4921,10 @@
         <member name="F:Au.Types.KKey.Packet">
             <summary>VK_PACKET. Not a key.</summary>
         </member>
-        <member name="T:Au.Types.KText">
-            <summary>
-            Used as an argument type with <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions to send text instead of keys. See example.
-            </summary>
-            <example>
-            <code><![CDATA[
-            Key((KText)"user", "Tab", (KText)"password", "Enter");
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Types.KText.op_Implicit(System.String)~Au.Types.KText">
-            
-        </member>
-        <member name="M:Au.Types.KText.op_Implicit(Au.Types.KText)~System.String">
-            
-        </member>
         <member name="T:Au.Types.KKeysEtc">
             <summary>
             Parameter type of <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions.
-            Has implicit conversions from string, KText, KKey, int, Action, tuple (int, bool) and tuple (KKey, int, bool).
+            Has implicit conversions from string, AClipboardData, KKey, int, Action, tuple (int, bool) and tuple (KKey, int, bool).
             </summary>
         </member>
         <member name="P:Au.Types.KKeysEtc.Value">
@@ -4929,7 +4935,7 @@
         <member name="M:Au.Types.KKeysEtc.op_Implicit(System.String)~Au.Types.KKeysEtc">
             
         </member>
-        <member name="M:Au.Types.KKeysEtc.op_Implicit(Au.Types.KText)~Au.Types.KKeysEtc">
+        <member name="M:Au.Types.KKeysEtc.op_Implicit(Au.AClipboardData)~Au.Types.KKeysEtc">
             
         </member>
         <member name="M:Au.Types.KKeysEtc.op_Implicit(Au.Types.KKey)~Au.Types.KKeysEtc">
@@ -6514,7 +6520,7 @@
         </member>
         <member name="T:Au.AOpt.Static">
             <summary>
-            Default <see cref="T:Au.AOpt"/> properties of each thread.
+            Default <see cref="T:Au.AOpt"/> properties of a thread.
             </summary>
             <remarks>
             You can change these options at the start of your script/program. Don't change later.
@@ -6522,7 +6528,7 @@
         </member>
         <member name="P:Au.AOpt.Static.Key">
             <summary>
-            Default option values for <see cref="P:Au.AOpt.Key"/> of each thread.
+            Default option values for <see cref="P:Au.AOpt.Key"/> of a thread.
             </summary>
             <remarks>
             Also can be used when creating <see cref="T:Au.AKeys"/> instances. See the second example.
@@ -6536,14 +6542,14 @@
             Use an AKeys instance.
             <code><![CDATA[
             var k = new AKeys(AOpt.Static.Key); //create new AKeys instance and copy options from AOpt.Static.Key to it
-            k.Options.KeySpeed = 100; //changes option of k but not of AOpt.Static.Key
+            k.Options.KeySpeed = 100; //changes option of k
             k.Add("Tab Ctrl+V").Send(); //uses options of k
             ]]></code>
             </example>
         </member>
         <member name="P:Au.AOpt.Static.Mouse">
             <summary>
-            Default option values for <see cref="P:Au.AOpt.Mouse"/> of each thread.
+            Default option values for <see cref="P:Au.AOpt.Mouse"/> of a thread.
             </summary>
             <example>
             <code><![CDATA[
@@ -6555,7 +6561,7 @@
         </member>
         <member name="P:Au.AOpt.Static.Warnings">
             <summary>
-            Default option values for <see cref="P:Au.AOpt.Warnings"/> of each thread.
+            Default option values for <see cref="P:Au.AOpt.Warnings"/> of a thread.
             </summary>
             <example>
             <code><![CDATA[
@@ -7701,7 +7707,7 @@
             Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
             </remarks>
             <seealso cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>
-            <seealso cref="M:Au.Types.OptWarnings.Disable(System.String[])"/>
+            <seealso cref="M:Au.Types.AOptWarnings.Disable(System.String[])"/>
             <seealso cref="M:Au.AWnd.FindOrRun(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,System.Action,System.Double,System.Boolean)"/>
         </member>
         <member name="M:Au.AFile.RunConsole(System.String,System.String,System.String,System.Text.Encoding)">
@@ -9495,62 +9501,62 @@
         </member>
         <member name="M:Au.ASqliteStatement.Reset(System.Boolean,System.Boolean)">
             <summary>
-            Calls sqlite3_reset and/or sqlite3_clear_bindings. Returns self.
+            Calls sqlite3_reset and/or sqlite3_clear_bindings. Returns this.
             </summary>
             <param name="resetStatement">Call sqlite3_reset. Default true.</param>
             <param name="clearBindings">Call sqlite3_clear_bindings. Default true.</param>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.Int32)">
-            <summary>Calls sqlite3_bind_int. Returns self.</summary>
+            <summary>Calls sqlite3_bind_int. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.UInt32)">
-            <summary>Calls sqlite3_bind_int. Returns self.</summary>
+            <summary>Calls sqlite3_bind_int. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.Int64)">
-            <summary>Calls sqlite3_bind_int64. Returns self.</summary>
+            <summary>Calls sqlite3_bind_int64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.UInt64)">
-            <summary>Calls sqlite3_bind_int64. Returns self.</summary>
+            <summary>Calls sqlite3_bind_int64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.Boolean)">
-            <summary>Calls sqlite3_bind_int(value ? 1 : 0). Returns self.</summary>
+            <summary>Calls sqlite3_bind_int(value ? 1 : 0). Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind``1(Au.Types.SLIndexOrName,``0)">
-            <summary>Binds an enum value as int or long. Calls sqlite3_bind_int or sqlite3_bind_int64. Returns self.</summary>
+            <summary>Binds an enum value as int or long. Calls sqlite3_bind_int or sqlite3_bind_int64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.Double)">
-            <summary>Calls sqlite3_bind_double. Returns self.</summary>
+            <summary>Calls sqlite3_bind_double. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.String)">
-            <summary>Calls sqlite3_bind_text16. Returns self.</summary>
+            <summary>Calls sqlite3_bind_text16. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind(Au.Types.SLIndexOrName,System.Void*,System.Int64)">
-            <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+            <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind``1(Au.Types.SLIndexOrName,``0[])">
-            <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+            <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.Bind``1(Au.Types.SLIndexOrName,System.Collections.Generic.List{``0})">
-            <summary>Calls sqlite3_bind_blob64. Returns self.</summary>
+            <summary>Calls sqlite3_bind_blob64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
         </member>
         <member name="M:Au.ASqliteStatement.BindStruct``1(Au.Types.SLIndexOrName,``0)">
-            <summary>Binds a value as blob. Calls sqlite3_bind_blob64. Returns self.</summary>
+            <summary>Binds a value as blob. Calls sqlite3_bind_blob64. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
             <remarks>Can be any value type that does not contain fields of reference types. Examples: Guid, Point, int, decimal.</remarks>
         </member>
         <member name="M:Au.ASqliteStatement.BindNull(Au.Types.SLIndexOrName)">
-            <summary>Calls sqlite3_bind_null. Returns self.</summary>
+            <summary>Calls sqlite3_bind_null. Returns this.</summary>
             <exception cref="T:Au.Types.SLException">Failed.</exception>
             <remarks>Usually don't need to call this function. Unset parameter values are null. The Bind(string/void*/Array/List) functions set null too if the value is null.</remarks>
         </member>
@@ -9562,7 +9568,7 @@
         <member name="M:Au.ASqliteStatement.BindAll(System.Object[])">
             <summary>
             Binds multiple values of any supported types.
-            Returns self.
+            Returns this.
             </summary>
             <param name="values">
             Values that will replace <c>?</c> characters in sql.
@@ -11487,7 +11493,7 @@
             <remarks>
             This class is similar to the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class, which uses OLE API, works only in STA threads and does not work well in automation scripts. This class uses non-OLE API and works well in automation scripts and any threads.
             
-            To set/get clipboard data of non-text formats, use class <see cref="T:Au.AClipboardData"/>; to paste, use it with <see cref="M:Au.AClipboard.PasteData(Au.AClipboardData,Au.Types.OptKey)"/>; to copy (get from the active app), use it with <see cref="M:Au.AClipboard.CopyData(System.Action,System.Boolean,Au.Types.OptKey)"/>.
+            To set/get clipboard data of non-text formats, use class <see cref="T:Au.AClipboardData"/>; to paste, use it with <see cref="M:Au.AClipboard.PasteData(Au.AClipboardData,Au.Types.AOptKey)"/>; to copy (get from the active app), use it with <see cref="M:Au.AClipboard.CopyData(System.Action,System.Boolean,Au.Types.AOptKey)"/>.
             
             Don't copy/paste in windows of own thread. Call it from another thread. Example in <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>.
             </remarks>
@@ -11517,14 +11523,14 @@
             Tested apps that support it: Ditto, Clipdiary. Other 5 tested apps don't. Windows 10 Clipboard History doesn't.
             </summary>
         </member>
-        <member name="M:Au.AClipboard.Copy(System.Boolean,Au.Types.OptKey)">
+        <member name="M:Au.AClipboard.Copy(System.Boolean,Au.Types.AOptKey)">
             <summary>
             Gets the selected text from the focused app using the clipboard.
             </summary>
             <param name="cut">Use Ctrl+X.</param>
             <param name="options">
             Options. If null (default), uses <see cref="P:Au.AOpt.Key"/>.
-            Uses <see cref="P:Au.Types.OptKey.RestoreClipboard"/>, <see cref="P:Au.Types.OptKey.NoBlockInput"/>, <see cref="P:Au.Types.OptKey.KeySpeedClipboard"/>. Does not use <see cref="P:Au.Types.OptKey.Hook"/>.
+            Uses <see cref="P:Au.Types.AOptKey.RestoreClipboard"/>, <see cref="P:Au.Types.AOptKey.NoBlockInput"/>, <see cref="P:Au.Types.AOptKey.KeySpeedClipboard"/>. Does not use <see cref="P:Au.Types.AOptKey.Hook"/>.
             </param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
@@ -11534,13 +11540,13 @@
             Works with console windows too, even if they don't support Ctrl+C.
             </remarks>
         </member>
-        <member name="M:Au.AClipboard.CopyData(System.Action,System.Boolean,Au.Types.OptKey)">
+        <member name="M:Au.AClipboard.CopyData(System.Action,System.Boolean,Au.Types.AOptKey)">
             <summary>
             Gets data of any formats from the focused app using the clipboard and a callback function.
             </summary>
             <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="T:Au.AClipboardData"/> class or the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
             <param name="cut">Use Ctrl+X.</param>
-            <param name="options">See <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.OptKey)"/>.</param>
+            <param name="options">See <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.AOptKey)"/>.</param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <exception cref="T:System.Exception">Exceptions thrown by the callback function.</exception>
             <remarks>
@@ -11558,14 +11564,18 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AClipboard.Paste(System.String,Au.Types.OptKey)">
+        <member name="M:Au.AClipboard.Paste(System.String,System.String,Au.Types.AOptKey)">
             <summary>
-            Pastes text into the focused app using the clipboard.
+            Pastes text or HTML into the focused app using the clipboard.
             </summary>
-            <param name="text">Text.</param>
+            <param name="text">Text. Can be null if <i>html</i> used.</param>
+            <param name="html">
+            HTML. Can be full HTML or fragment. See <see cref="M:Au.AClipboardData.AddHtml(System.String)"/>. Can be null.
+            Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
+            </param>
             <param name="options">
             Options. If null (default), uses <see cref="P:Au.AOpt.Key"/>.
-            Uses <see cref="P:Au.Types.OptKey.RestoreClipboard"/>, <see cref="P:Au.Types.OptKey.PasteEnter"/>, <see cref="P:Au.Types.OptKey.NoBlockInput"/>, <see cref="P:Au.Types.OptKey.SleepFinally"/>, <see cref="P:Au.Types.OptKey.Hook"/>, <see cref="P:Au.Types.OptKey.KeySpeedClipboard"/>.
+            Uses <see cref="P:Au.Types.AOptKey.RestoreClipboard"/>, <see cref="P:Au.Types.AOptKey.PasteWorkaround"/>, <see cref="P:Au.Types.AOptKey.NoBlockInput"/>, <see cref="P:Au.Types.AOptKey.SleepFinally"/>, <see cref="P:Au.Types.AOptKey.Hook"/>, <see cref="P:Au.Types.AOptKey.KeySpeedClipboard"/>.
             </param>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <remarks>
@@ -11575,17 +11585,17 @@
             A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="P:Au.Types.ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a delay.
             Possible problems with some virtual PC programs. Either pasting does not work in their windows, or they use a hidden clipboard viewer that makes this function slower and less reliable.
             </remarks>
-            <seealso cref="M:Au.AKeys.Text(System.String)"/>
+            <seealso cref="M:Au.AKeys.Text(System.String,System.String)"/>
             <example>
             <code><![CDATA[
-            AClipboard.PasteText("Example\r\n");
+            AClipboard.Paste("Example\r\n");
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AClipboard.PasteData(Au.AClipboardData,Au.Types.OptKey)">
+        <member name="M:Au.AClipboard.PasteData(Au.AClipboardData,Au.Types.AOptKey)">
             <summary>
             Pastes data added to an <see cref="T:Au.AClipboardData"/> variable into the focused app using the clipboard.
-            More info: <see cref="M:Au.AClipboard.Paste(System.String,Au.Types.OptKey)"/>.
+            More info: <see cref="M:Au.AClipboard.Paste(System.String,System.String,Au.Types.AOptKey)"/>.
             </summary>
             <exception cref="T:Au.Types.AuException">Failed.</exception>
             <example>
@@ -11595,12 +11605,12 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AClipboard.Paste_(System.Object,Au.Types.OptKey,Au.AWnd)">
+        <member name="M:Au.AClipboard.Paste_(System.Object,Au.Types.AOptKey,Au.AWnd)">
             <summary>
             Used by AClipboard and AKeys.
             The caller should block user input (if need), release modifier keys, get opt/wFocus, sleep finally (if need).
             </summary>
-            <param name="data">string or Data.</param>
+            <param name="data">string or AClipboardData.</param>
             <param name="opt"></param>
             <param name="wFocus"></param>
         </member>
@@ -11678,7 +11688,7 @@
             Sets or gets clipboard data in multiple formats.
             </summary>
             <remarks>
-            The <b>AddX</b> functions add data to the variable (not to the clipboard). Then <see cref="M:Au.AClipboardData.SetClipboard"/> copies the added data to the clipboard. Also you can use the variable with <see cref="M:Au.AClipboard.PasteData(Au.AClipboardData,Au.Types.OptKey)"/>.
+            The <b>AddX</b> functions add data to the variable (not to the clipboard). Then <see cref="M:Au.AClipboardData.SetClipboard"/> copies the added data to the clipboard. Also you can use the variable with <see cref="M:Au.AClipboard.PasteData(Au.AClipboardData,Au.Types.AOptKey)"/>.
             The static <b>GetX</b> functions get data directly from the clipboard.
             </remarks>
             <example>
@@ -12415,20 +12425,20 @@
             Keyboard functions: send virtual keystrokes and text to the active window, get key states.
             </summary>
             <remarks>
-            The main function is <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>. Most documentation is there. See also <see cref="M:Au.AKeys.Text(System.String)"/>. These functions use <see cref="P:Au.AOpt.Key"/>. Alternatively can be used <b>AKeys</b> variables, see <see cref="M:Au.AKeys.#ctor(Au.Types.OptKey)"/>.
+            The main function is <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>. Most documentation is there. See also <see cref="M:Au.AKeys.Text(System.String,System.String)"/>. These functions use <see cref="P:Au.AOpt.Key"/>. Alternatively can be used <b>AKeys</b> variables, see <see cref="M:Au.AKeys.#ctor(Au.Types.AOptKey)"/>.
             </remarks>
             <example>
             <code><![CDATA[
             AKeys.Key("Ctrl+Shift+Left"); //press Ctrl+Shift+Left
             
             AOpt.Key.KeySpeed = 300; //set options for static functions
-            AKeys.Key("Ctrl+A Del Tab*3", (KText)"text", "Enter", 500); //press Ctrl+A, Del, Tab 3 times, send text, Enter, wait 500 ms
+            AKeys.Key("Ctrl+A Del Tab*3", "!text", "Enter", 500); //press Ctrl+A, Del, Tab 3 times, send text, Enter, wait 500 ms
             
             AKeys.Text("text\r\n"); //send text that ends with newline
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AKeys.#ctor(Au.Types.OptKey)">
+        <member name="M:Au.AKeys.#ctor(Au.Types.AOptKey)">
             <param name="cloneOptions">Options to be copied to <see cref="P:Au.AKeys.Options"/> of this variable. If null, uses default options.</param>
             <example>
             <code><![CDATA[
@@ -12436,7 +12446,7 @@
             k.Options.KeySpeed = 50;
             k.AddKeys("Tab // Space").AddRepeat(3).AddText("text").AddKey(KKey.Enter).AddSleep(500);
             k.Send(); //sends and clears the variable
-            k.Add("Tab // Space*3", (KText)"text", KKey.Enter, 500); //the same as the above k.AddKeys... line
+            k.Add("Tab // Space*3", "!text", KKey.Enter, 500); //the same as the above k.AddKeys... line
             for(int i = 0; i < 5; i++) k.Send(true); //does not clear the variable
             ]]></code>
             </example>
@@ -12449,15 +12459,19 @@
         <member name="M:Au.AKeys.AddKeys(System.String)">
             <summary>
             Adds keystrokes to the internal collection. They will be sent by <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
-            Returns self.
+            Returns this.
             </summary>
-            <param name="keys">Key names and operators. Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>. More info: <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>. Can be null or "".</param>
+            <param name="keys">
+            Key names and operators, like with <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>. Can be null or "".
+            Example: <c>"Tab Ctrl+V Alt+(E P) Left*3 Space a , 5 #5 $abc"</c>.
+            If has prefix "!" or "%", calls <see cref="M:Au.AKeys.AddText(System.String,System.String)"/>; "!" for text, "%" for HTML.
+            </param>
             <exception cref="T:System.ArgumentException">Error in <i>keys</i> string, for example an unknown key name.</exception>
         </member>
         <member name="M:Au.AKeys.AddKey(Au.Types.KKey,System.Nullable{System.Boolean})">
             <summary>
             Adds single key, specified as <see cref="T:Au.Types.KKey"/>, to the internal collection. It will be sent by <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
-            Returns self.
+            Returns this.
             </summary>
             <param name="key">Virtual-key code, as <see cref="T:Au.Types.KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255.</param>
             <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
@@ -12466,7 +12480,7 @@
         <member name="M:Au.AKeys.AddKey(Au.Types.KKey,System.Int32,System.Boolean,System.Nullable{System.Boolean})">
             <summary>
             Adds single key to the internal collection. Allows to specify scan code and whether it is an extended key. It will be sent by <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
-            Returns self.
+            Returns this.
             </summary>
             <param name="key">Virtual-key code, as <see cref="T:Au.Types.KKey"/> or int like <c>(KKey)200</c>. Valid values are 1-255. Can be 0.</param>
             <param name="scanCode">Scan code of the physical key. Scan code values are 1-127, but this function allows 1-0xffff. Can be 0.</param>
@@ -12490,20 +12504,39 @@
             </summary>
             <param name="onlyUp">Send only 'up' events.</param>
         </member>
-        <member name="M:Au.AKeys.AddText(System.String)">
+        <member name="M:Au.AKeys.AddText(System.String,System.String)">
             <summary>
-            Adds text. It will be sent by <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
-            Returns self.
+            Adds text or HTML. It will be sent by <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
+            Returns this.
             </summary>
             <param name="text">Text. Can be null.</param>
+            <param name="html">
+            HTML. Can be full HTML or fragment. See <see cref="M:Au.AClipboardData.AddHtml(System.String)"/>.
+            Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
+            </param>
             <remarks>
-            To send text can be used keys or clipboard, depending on <see cref="P:Au.AOpt.Key"/> and text.
+            To send text can use keys, characters or clipboard, depending on <see cref="P:Au.AOpt.Key"/> and text. If <i>html</i> not null, uses clipboard.
             </remarks>
+        </member>
+        <member name="M:Au.AKeys.AddText(System.String,Au.Types.KTextHow)">
+            <summary>
+            Adds text with explicitly specified sending method (keys, characters or paste).
+            Returns this.
+            </summary>
+            <param name="text">Text. Can be null.</param>
+            <param name="how">Overrides <see cref="P:Au.Types.AOptKey.TextHow"/>.</param>
+        </member>
+        <member name="M:Au.AKeys.AddClipboardData(Au.AClipboardData)">
+            <summary>
+            Adds clipboard data, for example several formats. It will be pasted by <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
+            Returns this.
+            </summary>
+            <param name="cd">Clipboard data.</param>
         </member>
         <member name="M:Au.AKeys.AddAction(System.Action)">
             <summary>
             Adds a callback function.
-            Returns self.
+            Returns this.
             </summary>
             <param name="a"></param>
             <remarks>
@@ -12513,7 +12546,7 @@
         <member name="M:Au.AKeys.AddRepeat(System.Int32)">
             <summary>
             Adds the repeat-key operator. Then <see cref="M:Au.AKeys.Send(System.Boolean)"/> will send the last added key the specified number of times.
-            Returns self.
+            Returns this.
             </summary>
             <param name="count">Repeat count.</param>
             <exception cref="T:System.ArgumentOutOfRangeException"><i>count</i> &gt;10000 or &lt;0.</exception>
@@ -12522,7 +12555,7 @@
         <member name="M:Au.AKeys.AddSleep(System.Int32)">
             <summary>
             Adds a short pause. Then <see cref="M:Au.AKeys.Send(System.Boolean)"/> will sleep (wait).
-            Returns self.
+            Returns this.
             </summary>
             <param name="timeMS">Time to sleep, milliseconds.</param>
             <exception cref="T:System.ArgumentOutOfRangeException"><i>timeMS</i> &gt;10000 (1 minute) or &lt;0.</exception>
@@ -12530,9 +12563,9 @@
         <member name="M:Au.AKeys.Add(Au.Types.KKeysEtc[])">
             <summary>
             Adds keystrokes, text, sleep and other events to the internal collection. They will be sent/executed by <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
-            Returns self.
+            Returns this.
             </summary>
-            <param name="keysEtc">Arguments. The same as with <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>.</param>
+            <param name="keysEtc">The same as with <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>.</param>
         </member>
         <member name="M:Au.AKeys.Send(System.Boolean)">
             <summary>
@@ -12540,6 +12573,11 @@
             </summary>
             <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
             <exception cref="T:System.ArgumentException"><i>canSendAgain</i> is true and keys end with + or (.</exception>
+        </member>
+        <member name="E:Au.AKeys.Pasting">
+            <summary>
+            Before pasting text through clipboard.
+            </summary>
         </member>
         <member name="T:Au.AKeys.UI">
             <summary>
@@ -12939,26 +12977,30 @@
             <param name="keysEtc">
             Arguments of these types:
             <list type="bullet">
-            <item><description>string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c> .
-            <br/>Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
+            <item><description>string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.
+            Tool: in <c>""</c> string press Ctrl+Space.
             </description></item>
-            <item><description><see cref="T:Au.Types.KText"/> - literal text, like function <see cref="M:Au.AKeys.Text(System.String)"/>.
-            <br/>Example: <c>AKeys.Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
+            <item><description>string with prefix "!" - literal text.
+            Example: <c>var p = "pass"; AKeys.Key("!user", "Tab", "!" + p, "Enter");</c>
+            </description></item>
+            <item><description>string with prefix "%" - HTML to paste. Full or fragment.
+            </description></item>
+            <item><description><see cref="T:Au.AClipboardData"/> - clipboard data to paste.
             </description></item>
             <item><description><see cref="T:Au.Types.KKey"/> - a single key.
-            <br/>Example: <c>AKeys.Key("Shift+", KKey.Left, "*3");</c> is the same as <c>AKeys.Key("Shift+Left*3");</c>.
+            Example: <c>AKeys.Key("Shift+", KKey.Left, "*3");</c> is the same as <c>AKeys.Key("Shift+Left*3");</c>.
             </description></item>
             <item><description>int - sleep milliseconds. Max 10000.
-            <br/>Example: <c>AKeys.Key("Left", 500, "Right");</c>
+            Example: <c>AKeys.Key("Left", 500, "Right");</c>
             </description></item>
             <item><description><see cref="T:System.Action"/> - callback function.
-            <br/>Example: <c>Action click = () => AMouse.Click(); AKeys.Key("Shift+", click);</c>
+            Example: <c>Action click = () => AMouse.Click(); AKeys.Key("Shift+", click);</c>
             </description></item>
             <item><description>(int, bool) - a single key, specified using scan code and extended-key flag.
-            <br/>Example: <c>AKeys.Key((0x3B, false)); //key F1</c>
+            Example: <c>AKeys.Key((0x3B, false)); //key F1</c>
             </description></item>
             <item><description>(KKey, int, bool) - a single key, specified using <see cref="T:Au.Types.KKey"/> and/or scan code and extended-key flag.
-            <br/>Example: <c>AKeys.Key((KKey.Enter, 0, true)); //numpad Enter</c>
+            Example: <c>AKeys.Key((KKey.Enter, 0, true)); //numpad Enter</c>
             </description></item>
             </list>
             </param>
@@ -13023,11 +13065,12 @@
             <tr>
             <td>Special characters</td>
             <td>
-            <b>Operator:</b> + * ( ) $
+            <b>Operator:</b> + * ( )
             <br/><b>Numpad key prefix:</b> #
-            <br/><b>Reserved:</b> ! @ % ^ &amp;
+            <br/><b>Text/HTML argument prefix:</b> ! %
+            <br/><b>Reserved:</b> @ $ ^ &amp;
             </td>
-            <td>These characters cannot be used as keys. Use = 8 9 0 4 3 1 2 5 6 7.</td>
+            <td>These characters cannot be used as keys. Instead use = 8 9 0 4 3 1 2 5 6 7.</td>
             </tr>
             </table>
             
@@ -13067,11 +13110,6 @@
             <br/>Inside () cannot be used + and +().
             </td>
             </tr>
-            <tr>
-            <td><c>$</c></td>
-            <td><c>"$text"</c></td>
-            <td>$ is the same as Shift+.</td>
-            </tr>
             </table>
             
             Operators and related keys can be in separate arguments. Examples: <c>AKeys.Key("Shift+", KKey.A); AKeys.Key(KKey.A, "*3");</c>.
@@ -13084,7 +13122,7 @@
             <th>Changed</th>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.NoBlockInput"/></td>
+            <td><see cref="P:Au.Types.AOptKey.NoBlockInput"/></td>
             <td>false.
             Blocks user-pressed keys. Sends them afterwards.
             <br/>If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</td>
@@ -13092,79 +13130,79 @@
             Does not block user-pressed keys.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.NoCapsOff"/></td>
+            <td><see cref="P:Au.Types.AOptKey.NoCapsOff"/></td>
             <td>false.
             If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</td>
             <td>true.
             Does not touch the CapsLock key.
-            <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="P:Au.Types.OptKey.TextOption"/> is <see cref="F:Au.Types.KTextOption.Keys"/>.</td>
+            <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="P:Au.Types.AOptKey.TextHow"/> is <b>KeysX</b>.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.NoModOff"/></td>
+            <td><see cref="P:Au.Types.AOptKey.NoModOff"/></td>
             <td>false.
             Releases modifier keys (Alt, Ctrl, Shift, Win).
-            <br/>Does it only at the start; later they cannot interfere, unless <see cref="P:Au.Types.OptKey.NoBlockInput"/> is true.</td>
+            <br/>Does it only at the start; later they cannot interfere, unless <see cref="P:Au.Types.AOptKey.NoBlockInput"/> is true.</td>
             <td>true.
             Does not touch modifier keys.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.TextSpeed"/></td>
+            <td><see cref="P:Au.Types.AOptKey.TextSpeed"/></td>
             <td>0 ms.</td>
             <td>0 - 1000.
             Changes the speed for "text" arguments (makes slower).</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.KeySpeed"/></td>
+            <td><see cref="P:Au.Types.AOptKey.KeySpeed"/></td>
             <td>1 ms.</td>
             <td>0 - 1000.
             Changes the speed for "keys" arguments (makes slower if &gt;1).</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.KeySpeedClipboard"/></td>
+            <td><see cref="P:Au.Types.AOptKey.KeySpeedClipboard"/></td>
             <td>5 ms.</td>
             <td>0 - 1000.
-            Changes the speed of Ctrl+V keys when text is pasted using the clipboard.</td>
+            Changes the speed of Ctrl+V keys when pasting text or HTML using clipboard.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.SleepFinally"/></td>
+            <td><see cref="P:Au.Types.AOptKey.SleepFinally"/></td>
             <td>10 ms.</td>
             <td>0 - 10000.
             <br/>Tip: to sleep finally, also can be used code like this: <c>AKeys.Key("keys", 1000);</c>.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.TextOption"/></td>
-            <td><see cref="F:Au.Types.KTextOption.Characters"/></td>
-            <td><see cref="F:Au.Types.KTextOption.Keys"/> (send keys and Shift) or <see cref="F:Au.Types.KTextOption.Paste"/> (use clipboard).</td>
+            <td><see cref="P:Au.Types.AOptKey.TextHow"/></td>
+            <td><see cref="F:Au.Types.KTextHow.Characters"/></td>
+            <td><b>KeysOrChar</b>, <b>KeysOrPaste</b> or <b>Paste</b>.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.PasteLength"/></td>
-            <td>300.
-            <br/>This option is used for "text" arguments. If text length &gt;= this value, uses the clipboard.</td>
+            <td><see cref="P:Au.Types.AOptKey.PasteLength"/></td>
+            <td>200.
+            <br/>This option is used for "text" arguments. If text length &gt;= this value, uses clipboard.</td>
             <td>&gt;=0.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.PasteEnter"/></td>
+            <td><see cref="P:Au.Types.AOptKey.PasteWorkaround"/></td>
             <td>false.
-            <br/>This option is used for "text" arguments when using the clipboard.
+            <br/>This option is used for "text" arguments when using clipboard.
             </td>
             <td>true.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.RestoreClipboard"/></td>
+            <td><see cref="P:Au.Types.AOptKey.RestoreClipboard"/></td>
             <td>true.
             Restore clipboard data (by default only text).
-            <br/>This option is used for "text" arguments when using the clipboard.</td>
+            <br/>This option is used for "text" and "HTML" arguments when using clipboard.</td>
             <td>false.
             Don't restore clipboard data.</td>
             </tr>
             <tr>
-            <td><see cref="P:Au.Types.OptKey.Hook"/></td>
+            <td><see cref="P:Au.Types.AOptKey.Hook"/></td>
             <td>null.</td>
             <td>Callback function that can modify options depending on active window etc.</td>
             </tr>
             </table>
             
-            This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="P:Au.Types.OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
+            This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="P:Au.Types.AOptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
             
             Don't use this function to automate windows of own thread. Call it from another thread. See the last example.
             
@@ -13172,9 +13210,9 @@
             
             Mouse button codes/names (eg <see cref="F:Au.Types.KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
             
-            When you don't want to use or modify <see cref="P:Au.AOpt.Key"/>, you can use an <see cref="T:Au.AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", (KText)"text").Send();</c>. More examples in <see cref="M:Au.AKeys.#ctor(Au.Types.OptKey)"/> topic.
+            You can use an <see cref="T:Au.AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="M:Au.AKeys.#ctor(Au.Types.AOptKey)"/> topic.
             
-            This function calls <see cref="M:Au.AKeys.Add(Au.Types.KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="M:Au.AKeys.AddKeys(System.String)"/>, <see cref="M:Au.AKeys.AddText(System.String)"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Nullable{System.Boolean})"/>, <see cref="M:Au.AKeys.AddSleep(System.Int32)"/>, <see cref="M:Au.AKeys.AddAction(System.Action)"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Int32,System.Boolean,System.Nullable{System.Boolean})"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Int32,System.Boolean,System.Nullable{System.Boolean})"/>. Then calls <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
+            This function calls <see cref="M:Au.AKeys.Add(Au.Types.KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="M:Au.AKeys.AddKeys(System.String)"/>, <see cref="M:Au.AKeys.AddText(System.String,System.String)"/>, <see cref="M:Au.AKeys.AddClipboardData(Au.AClipboardData)"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Nullable{System.Boolean})"/>, <see cref="M:Au.AKeys.AddSleep(System.Int32)"/>, <see cref="M:Au.AKeys.AddAction(System.Action)"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Int32,System.Boolean,System.Nullable{System.Boolean})"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Int32,System.Boolean,System.Nullable{System.Boolean})"/>. Then calls <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
             
             Uses API <msdn>SendInput</msdn>.
             </remarks>
@@ -13199,11 +13237,11 @@
             AKeys.Key("Alt*down E P Alt*up");
             
             //Press key End, key Backspace 3 times, send text "Text".
-            AKeys.Key("End Back*3", (KText)"Text");
+            AKeys.Key("End Back*3", "!Text");
             
             //Press Tab n times, send text "user", press Tab, send text "password", press Enter.
-            int n = 5;
-            AKeys.Key($"Tab*{n}", (KText)"user", "Tab", (KText)"password", "Enter");
+            int n = 5; string pw = "password";
+            AKeys.Key($"Tab*{n}", "!user", "Tab", "!" + pw, "Enter");
             
             //Send text "Example".
             AKeys.Text("Example");
@@ -13225,7 +13263,7 @@
             
             //Send keys and text slowly.
             AOpt.Key.KeySpeed = AOpt.Key.TextSpeed = 50;
-            AKeys.Key("keys$:Space 123456789 Space 123456789 ,Space", (KText)"text: 123456789 123456789\n");
+            AKeys.Key("keys Shift+: Space 123456789 Space 123456789 ,Space", "!text: 123456789 123456789\n");
             
             //Ctrl+click
             Action click = () => AMouse.Click();
@@ -13252,28 +13290,35 @@
             
             b.Click += async (_, _) =>
             {
-            	//AKeys.Key("Tab", (KText)"text", 2000, "Esc"); //no
-            	await Task.Run(() => { AKeys.Key("Tab", (KText)"text", 2000, "Esc"); }); //use other thread
+            	//AKeys.Key("Tab", "!text", 2000, "Esc"); //no
+            	await Task.Run(() => { AKeys.Key("Tab", "!text", 2000, "Esc"); }); //use other thread
             };
             
             f.ShowDialog();
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AKeys.Text(System.String)">
+        <member name="M:Au.AKeys.Text(System.String,System.String)">
             <summary>
-            Sends text to the active window, using virtual keystrokes or the clipboard.
+            Sends text to the active window, using virtual keystrokes or clipboard. Calls <see cref="M:Au.AKeys.AddText(System.String,System.String)"/>.
             </summary>
-            <param name="text">Text to send.</param>
+            <param name="text">Text. Can be null.</param>
+            <param name="html">
+            HTML. Can be full HTML or fragment. See <see cref="M:Au.AClipboardData.AddHtml(System.String)"/>.
+            Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
+            </param>
             <remarks>
-            Uses virtual keystrokes or the clipboard, depending on <see cref="P:Au.AOpt.Key"/> and text.
-            To send text and keys use function <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>.
+            To send text can use keys, characters or clipboard, depending on <see cref="P:Au.AOpt.Key"/> and text. If <i>html</i> not null, uses clipboard.
             </remarks>
-            <seealso cref="M:Au.AClipboard.Paste(System.String,Au.Types.OptKey)"/>
+            <seealso cref="M:Au.AClipboard.Paste(System.String,System.String,Au.Types.AOptKey)"/>
             <example>
             <code><![CDATA[
             AKeys.Text("Text.\r\n");
-            AKeys.Key((KText)"Send this text and press key", "Enter");
+            ]]></code>
+            Or use function <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and prefix "!". For HTML use prefix "%".
+            <code><![CDATA[
+            AKeys.Key("!Send this text and press key", "Enter");
+            AKeys.Key("%<b>bold</b> <i>italic</i>", "Enter");
             ]]></code>
             </example>
         </member>
@@ -13334,7 +13379,7 @@
             <param name="press"></param>
             <param name="mod">Modifier keys. Does nothing if 0.</param>
         </member>
-        <member name="M:Au.AKeys.Internal_.ReleaseModAndCapsLock(Au.Types.OptKey)">
+        <member name="M:Au.AKeys.Internal_.ReleaseModAndCapsLock(Au.Types.AOptKey)">
             <summary>
             Releases modifier keys if pressed and no option NoModOff. Turns off CapsLock if toggled and no option NoCapsOff.
             When releasing modifiers, if pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
@@ -13351,15 +13396,15 @@
         </member>
         <member name="T:Au.AKeys.Internal_.SendCopyPaste">
             <summary>
-            Sends Ctrl+V or Ctrl+C or Ctrl+X, and/or optionally Enter.
-            Caller gets opt and wFocus with _GetOptionsAndWndFocused (it may want to know some options too).
+            Sends Ctrl+V or Ctrl+C or Ctrl+X, and/or optionally one or more keys.
+            Caller gets opt and wFocus with GetOptionsAndWndFocused_ (it may want to know some options too).
             Caller calls Press, waits until the target app gets clipboard data, then calls Release.
             </summary>
         </member>
-        <member name="M:Au.AKeys.Internal_.SendCopyPaste.Press(Au.Types.KKey,Au.Types.OptKey,Au.AWnd,System.Boolean)">
+        <member name="M:Au.AKeys.Internal_.SendCopyPaste.Press(Au.Types.KKey,Au.Types.AOptKey,Au.AWnd,System.Collections.Generic.List{Au.Types.KKey})">
             <summary>
             Presses Ctrl+key. Does not release.
-            If enter is true, Release will press Enter.
+            If andKeys used, Release will press/relase them.
             </summary>
         </member>
         <member name="M:Au.AKeys.Internal_.SendCopyPaste.Release">
@@ -13368,23 +13413,24 @@
             Does nothing if already released.
             </summary>
         </member>
-        <member name="M:Au.AKeys.Internal_.SendCopyPaste.Enter(Au.Types.OptKey)">
+        <member name="M:Au.AKeys.Internal_.SendCopyPaste.AndSendKeys(System.Collections.Generic.List{Au.Types.KKey},Au.Types.AOptKey)">
             <summary>
-            Sends Enter.
+            Sends one or more keys.
+            Not used for keys whose scancode can depend on keyboard layout. To get scancode, uses keyboard layout of current thread.
             </summary>
         </member>
-        <member name="M:Au.AKeys._GetOptionsAndWndFocused(Au.AWnd@,System.Boolean)">
+        <member name="M:Au.AKeys.GetOptionsAndWndFocused_(Au.AWnd@,System.Boolean)">
             <summary>
-            Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
+            Returns AOptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
             <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(AWnd) if Hook is null.</param>
         </member>
-        <member name="M:Au.AKeys._GetOptions(Au.AWnd)">
+        <member name="M:Au.AKeys.GetOptions_(Au.AWnd)">
             <summary>
-            Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
+            Returns AOptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
             </summary>
-            <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use _GetOptionsAndWndFocused instead.</param>
+            <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use GetOptionsAndWndFocused_ instead.</param>
         </member>
         <member name="M:Au.AKeys.KeyTypes_.IsMod(Au.Types.KKey)">
             <summary>
@@ -13443,7 +13489,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y.</exception>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed"/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.OptMouse.Relaxed"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.MoveSpeed"/>, <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.AOptMouse.Relaxed"/>.
             </remarks>
         </member>
         <member name="M:Au.AMouse.Move(Au.Types.Coord,Au.Types.Coord)">
@@ -13456,7 +13502,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y.</exception>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed"/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.OptMouse.Relaxed"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.MoveSpeed"/>, <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.AOptMouse.Relaxed"/>.
             
             May fail to move the cursor to the specified x y. Some reasons:
             - Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc).
@@ -13475,7 +13521,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The specified x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move the cursor to the specified x y.</exception>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed"/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.OptMouse.Relaxed"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.MoveSpeed"/>, <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.AOptMouse.Relaxed"/>.
             </remarks>
             <example>
             Save-restore mouse position.
@@ -13500,7 +13546,7 @@
             Moves the mouse cursor where it was at the time of the last <see cref="M:Au.AMouse.Save"/> call in this thread. If it was not called - of the first 'mouse move' or 'mouse click' function call in this thread. Does nothing if these functions were not called.
             </summary>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.OptMouse.Relaxed"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.AOptMouse.Relaxed"/>.
             </remarks>
         </member>
         <member name="P:Au.AMouse.LastXY">
@@ -13519,7 +13565,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The calculated x y is not in screen. No exception if option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move the cursor to the calculated x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed"/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.OptMouse.Relaxed"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.MoveSpeed"/>, <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/>, <see cref="P:Au.Types.AOptMouse.Relaxed"/>.
             </remarks>
         </member>
         <member name="M:Au.AMouse.MoveRecorded(System.String,System.Double)">
@@ -13534,7 +13580,7 @@
             <exception cref="T:System.ArgumentOutOfRangeException">The last x y is not in screen. No exception option <b>Relaxed</b> is true (then moves to a screen edge).</exception>
             <exception cref="T:Au.Types.AuException">Failed to move to the last x y. Some reasons: 1. Another thread blocks or modifies mouse input (API BlockInput, mouse hooks, frequent API SendInput etc); 2. The active window belongs to a process of higher [](xref:uac) integrity level; 3. Some application called API ClipCursor. No exception option <b>Relaxed</b> is true (then final cursor position is undefined).</exception>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.Relaxed"/> (only for the last movement; always relaxed in intermediate movements).
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.Relaxed"/> (only for the last movement; always relaxed in intermediate movements).
             </remarks>
         </member>
         <member name="M:Au.AMouse._SendMove(Au.Types.POINT)">
@@ -13574,7 +13620,7 @@
             <exception cref="T:Au.Types.AuWndException">x y is not in the window (read more in Remarks).</exception>
             <remarks>
             To move the mouse cursor, calls <see cref="M:Au.AMouse.Move(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. More info there.
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed"/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="P:Au.Types.OptMouse.ClickSpeed"/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally"/>, <see cref="P:Au.Types.OptMouse.Relaxed"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.MoveSpeed"/>, <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="P:Au.Types.AOptMouse.ClickSpeed"/>, <see cref="P:Au.Types.AOptMouse.ClickSleepFinally"/>, <see cref="P:Au.Types.AOptMouse.Relaxed"/>.
             If after moving the cursor it is not in the window (or a window of its thread), activates the window (or its top-level parent window). Throws exception if then x y is still not in the window. Skips all this when just releasing button or if option <b>Relaxed</b> is true. Also, if it is a control, x y can be somewhere else in its top-level parent window.
             </remarks>
         </member>
@@ -13590,7 +13636,7 @@
             <exception cref="T:System.Exception">Exceptions of <see cref="M:Au.AMouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.</exception>
             <remarks>
             To move the mouse cursor, calls <see cref="M:Au.AMouse.Move(Au.Types.Coord,Au.Types.Coord)"/>.
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.MoveSpeed"/>, <see cref="P:Au.Types.OptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="P:Au.Types.OptMouse.ClickSpeed"/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally"/>, <see cref="P:Au.Types.OptMouse.Relaxed"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.MoveSpeed"/>, <see cref="P:Au.Types.AOptMouse.MoveSleepFinally"/> (between moving and clicking), <see cref="P:Au.Types.AOptMouse.ClickSpeed"/>, <see cref="P:Au.Types.AOptMouse.ClickSleepFinally"/>, <see cref="P:Au.Types.AOptMouse.Relaxed"/>.
             </remarks>
         </member>
         <member name="M:Au.AMouse.ClickEx(Au.Types.MButton,Au.Types.POINT)">
@@ -13631,7 +13677,7 @@
             </param>
             <exception cref="T:System.ArgumentException">Invalid button flags (multiple buttons or actions specified).</exception>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.ClickSpeed"/>, <see cref="P:Au.Types.OptMouse.ClickSleepFinally"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.ClickSpeed"/>, <see cref="P:Au.Types.AOptMouse.ClickSleepFinally"/>.
             </remarks>
         </member>
         <member name="M:Au.AMouse.Click(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)">
@@ -13841,7 +13887,7 @@
             <param name="ticks">Number of wheel ticks forward (positive) or backward (negative).</param>
             <param name="horizontal">Horizontal wheel.</param>
             <remarks>
-            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.OptMouse.ClickSleepFinally"/>.
+            Uses <see cref="P:Au.AOpt.Mouse"/>: <see cref="P:Au.Types.AOptMouse.ClickSleepFinally"/>.
             </remarks>
         </member>
         <member name="M:Au.AMouse.IsPressed(Au.Types.MButtons)">
@@ -14128,7 +14174,7 @@
             <remarks>
             The ADebug.PrintX functions write to the same output as <see cref="M:Au.AOutput.Write(System.String)"/>, not to the trace listeners like <see cref="M:System.Diagnostics.Debug.Print(System.String)"/> etc do. Also they add caller's name, file and line number.
             Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="T:System.Diagnostics.ConditionalAttribute"/>("DEBUG")].
-            Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AWarning.Write("text");</c>; see <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>, AOpt.Warnings.<see cref="P:Au.Types.OptWarnings.Verbose"/>.
+            Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AWarning.Write("text");</c>; see <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>, AOpt.Warnings.<see cref="P:Au.Types.AOptWarnings.Verbose"/>.
             </remarks>
         </member>
         <member name="M:Au.ADebug.Print(System.Object,System.String,System.Int32,System.String)">
@@ -14179,7 +14225,7 @@
             <param name="goodFlags">Valid flags.</param>
             <remarks>
             Can be used in functions that have an enum flags parameter but not all passed flags are valid for that function or object state.
-            Does nothing if AOpt.Warnings.<see cref="P:Au.Types.OptWarnings.Verbose"/> == false.
+            Does nothing if AOpt.Warnings.<see cref="P:Au.Types.AOptWarnings.Verbose"/> == false.
             When flags are valid, this function is fast.
             </remarks>
         </member>
@@ -15438,7 +15484,7 @@
             <summary>
             Writes warnings to the output.
             </summary>
-            <seealso cref="T:Au.Types.OptWarnings"/>
+            <seealso cref="T:Au.Types.AOptWarnings"/>
         </member>
         <member name="M:Au.AWarning.Write(System.String,System.Int32,System.String)">
             <summary>
@@ -15450,8 +15496,8 @@
             <param name="prefix">Text before <i>text</i>. Default <c>"&lt;&gt;Warning: "</c>.</param>
             <remarks>
             Calls <see cref="M:Au.AOutput.Write(System.String)"/>.
-            Does not show more than 1 warning/second, unless <b>AOpt.Warnings.Verbose</b> == true (see <see cref="P:Au.Types.OptWarnings.Verbose"/>).
-            To disable some warnings, use code <c>AOpt.Warnings.Disable("warning text wildcard");</c> (see <see cref="M:Au.Types.OptWarnings.Disable(System.String[])"/>).
+            Does not show more than 1 warning/second, unless <b>AOpt.Warnings.Verbose</b> == true (see <see cref="P:Au.Types.AOptWarnings.Verbose"/>).
+            To disable some warnings, use code <c>AOpt.Warnings.Disable("warning text wildcard");</c> (see <see cref="M:Au.Types.AOptWarnings.Disable(System.String[])"/>).
             </remarks>
         </member>
         <member name="T:Au.AWinImage">
@@ -19605,14 +19651,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -20848,7 +20886,7 @@
             
             All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="T:System.TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
             
-            While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="P:Au.Types.OptWaitFor.DoEvents"/>.
+            While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="P:Au.Types.AOptWaitFor.DoEvents"/>.
             </remarks>
             <seealso cref="T:Au.ATime"/>
             <example>
@@ -20876,7 +20914,7 @@
             <remarks>
             See examples. The code works like most 'wait for' functions of this library: on timeout throws exception, unless secondsTimeout is negative.
             Similar code is used by most 'wait for' functions of this library.
-            See also <see cref="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/>; usually it's easier; internally it uses similar code too.
+            See also <see cref="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.AOptWaitFor)"/>; usually it's easier; internally it uses similar code too.
             </remarks>
             <example>
             <code><![CDATA[
@@ -20901,7 +20939,7 @@
         <member name="P:Au.AWaitFor.Loop.Period">
             <summary>
             Current period (<see cref="M:Au.AWaitFor.Loop.Sleep"/> sleep time), milliseconds.
-            Initially it is <see cref="P:Au.Types.OptWaitFor.Period"/>, optionally multiplied by constructor's <i>options.Period</i>/10. Default 10 ms. Then each <see cref="M:Au.AWaitFor.Loop.Sleep"/> increments it until <see cref="P:Au.AWaitFor.Loop.MaxPeriod"/>.
+            Initially it is <see cref="P:Au.Types.AOptWaitFor.Period"/>, optionally multiplied by constructor's <i>options.Period</i>/10. Default 10 ms. Then each <see cref="M:Au.AWaitFor.Loop.Sleep"/> increments it until <see cref="P:Au.AWaitFor.Loop.MaxPeriod"/>.
             </summary>
         </member>
         <member name="P:Au.AWaitFor.Loop.MaxPeriod">
@@ -20915,7 +20953,7 @@
             Gets or sets the remaining time, milliseconds.
             </summary>
         </member>
-        <member name="M:Au.AWaitFor.Loop.#ctor(System.Double,Au.Types.OptWaitFor)">
+        <member name="M:Au.AWaitFor.Loop.#ctor(System.Double,Au.Types.AOptWaitFor)">
             <param name="secondsTimeout">
             The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval <see cref="M:Au.AWaitFor.Loop.Sleep"/> throws <see cref="T:System.TimeoutException"/>. If &lt;0, then <see cref="M:Au.AWaitFor.Loop.Sleep"/> returns false.
             </param>
@@ -20936,7 +20974,7 @@
             </summary>
             <exception cref="T:System.TimeoutException">The <i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
         </member>
-        <member name="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)">
+        <member name="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.AOptWaitFor)">
             <summary>
             Waits for a user-defined condition.
             </summary>
@@ -21015,7 +21053,7 @@
             <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
             While waiting, dispatches Windows messages etc, like <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/>. After dispatching one or more messages or other events (posted messages, messages sent by other threads, hooks, etc), calls the callback function. Stops waiting when it returns true.
-            Similar to <see cref="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.OptWaitFor)"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc.
+            Similar to <see cref="M:Au.AWaitFor.Condition(System.Double,System.Func{System.Boolean},Au.Types.AOptWaitFor)"/>. Differences: 1. Always dispatches messages etc. 2. Does not call the callback function when there are no messages etc.
             Does not use <see cref="P:Au.AOpt.WaitFor"/>.
             </remarks>
             <example>
@@ -21027,7 +21065,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AWaitFor.Variable(System.Double,System.Boolean@,Au.Types.OptWaitFor)">
+        <member name="M:Au.AWaitFor.Variable(System.Double,System.Boolean@,Au.Types.AOptWaitFor)">
             <summary>
             Waits until a variable is set = true.
             </summary>
@@ -21428,8 +21466,8 @@
             
             //how to set AOpt options for trigger actions
             
-            //AOpt.Key.TextOption = KTextOption.Paste; //no, it won't work. It sets AOpt for this thread, not for trigger actions.
-            Triggers.Options.BeforeAction = o => { AOpt.Key.TextOption = KTextOption.Paste; }; //the correct way. Sets AOpt before executing an action.
+            //AOpt.Key.TextHow = KTextHow.Paste; //no, it won't work. It sets AOpt for this thread, not for trigger actions.
+            Triggers.Options.BeforeAction = o => { AOpt.Key.TextHow = KTextHow.Paste; }; //the correct way. Sets AOpt before executing an action.
             ts["#p1"] = "text 1";
             ts["#p2"] = "text 2";
             Triggers.Options.BeforeAction = null;
@@ -21437,7 +21475,7 @@
             //another way to set AOpt options - use AOpt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
             
             AOpt.Static.Key.PasteLength = 50;
-            AOpt.Static.Key.Hook = h => { var w1 = h.w.Window; AOutput.Write(w1); if(w1.Name.Like("* Word")) h.opt.PasteEnter = true; };
+            AOpt.Static.Key.Hook = h => { var w1 = h.w.Window; AOutput.Write(w1); if(w1.Name.Like("* Word")) h.opt.PasteWorkaround = true; };
             ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
             
             //how to stop and disable/enable triggers
@@ -21827,7 +21865,7 @@
             Flags of autotext triggers.
             </summary>
             <remarks>
-            To avoid passing flags to each trigger as the <i>flags</i> parameter, use <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>; its initial value is 0, which means: case-insensitive, erase the typed text, modify the replacement text depending on the case of the typed text.
+            To avoid passing flags to each trigger as the <i>flags</i> parameter, use <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>; its initial value is 0, which means: case-insensitive, erase the typed text with Backspace, modify the replacement text depending on the case of the typed text.
             </remarks>
         </member>
         <member name="F:Au.Triggers.TAFlags.MatchCase">
@@ -21837,28 +21875,33 @@
         </member>
         <member name="F:Au.Triggers.TAFlags.DontErase">
             <summary>
-            Don't erase the user-typed text.
-            This flag is for <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])"/>. It erases text with the Backspace key. If you don't call it, text is not erased regardless of this flag.
+            Let <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> don't erase the user-typed text.
+            Without this flag it erases text with the Backspace key or selects with Shift+Left. If <b>Replace</b> not called, text is not erased/selected regardless of this flag.
             </summary>
         </member>
         <member name="F:Au.Triggers.TAFlags.ReplaceRaw">
             <summary>
-            Let <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])"/> don't modify the replacement text. Without this flag it:
-            1. If the first character of the typed text is uppercase, makes the first character of the replacement text uppercase.
-            2. If all typed text is uppercase, makes the replacement text uppercase.
+            Let <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> don't modify the replacement text. Without this flag it:
+            - If the first character of the typed text is uppercase, makes the first character of the replacement text uppercase.
+            - If all typed text is uppercase, makes the replacement text uppercase.
             
-            Flag <b>MatchCase</b> disables these modifications too.
+            Also does not modify if used flag <b>MatchCase</b> or HTML.
             </summary>
         </member>
         <member name="F:Au.Triggers.TAFlags.RemovePostfix">
             <summary>
-            Let <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])"/> remove the postfix delimiter character.
+            Let <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> remove the postfix delimiter character.
             </summary>
         </member>
         <member name="F:Au.Triggers.TAFlags.Confirm">
             <summary>
-            Don't run the action immediately. Show a menu containing 1 item. Let the user click it or press Enter or Tab. Other keys just close the menu.
-            See also: <see cref="M:Au.Triggers.AutotextTriggerArgs.Confirm(System.String)"/>.
+            Let <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> call <see cref="M:Au.Triggers.AutotextTriggerArgs.Confirm(System.String)"/> and do nothing if it returns false.
+            </summary>
+        </member>
+        <member name="F:Au.Triggers.TAFlags.ShiftLeft">
+            <summary>
+            Let <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> select text with Shift+Left instead of erasing with Backspace. Except in console windows.
+            See also <see cref="P:Au.Triggers.AutotextTriggerArgs.ShiftLeft"/>.
             </summary>
         </member>
         <member name="T:Au.Triggers.TAPostfix">
@@ -21906,7 +21949,7 @@
             Adds an autotext trigger.
             </summary>
             <param name="text">The action runs when the user types this text and a postfix character or key. By default case-insensitive.</param>
-            <param name="flags">Options. If omitted or null, uses <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>. Some flags are used by <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])"/>.</param>
+            <param name="flags">Options. If omitted or null, uses <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>. Some flags are used by <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/>.</param>
             <param name="postfixType">Postfix type (character, key, any or none). If omitted or null, uses <see cref="P:Au.Triggers.AutotextTriggers.DefaultPostfixType"/>; default - a non-word character or the Ctrl key.</param>
             <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or null, uses <see cref="P:Au.Triggers.AutotextTriggers.DefaultPostfixChars"/>; default - non-word characters.</param>
             <exception cref="T:System.ArgumentException">
@@ -21989,7 +22032,7 @@
         <member name="T:Au.Triggers.AutotextTriggerArgs">
             <summary>
             Arguments for actions of autotext triggers.
-            Use function <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])"/> to replace user-typed text.
+            Use function <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> to replace user-typed text.
             </summary>
         </member>
         <member name="P:Au.Triggers.AutotextTriggerArgs.Trigger">
@@ -22013,22 +22056,28 @@
             true if the autotext activated when the user typed a postfix delimiter character. Then it is the last character in <see cref="P:Au.Triggers.AutotextTriggerArgs.Text"/>.
             </summary>
         </member>
+        <member name="P:Au.Triggers.AutotextTriggerArgs.ShiftLeft">
+            <summary>
+            If true, <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> will select text with Shift+Left instead of erasing with Backspace. Except in console windows.
+            Initially true if flag <see cref="F:Au.Triggers.TAFlags.ShiftLeft"/> is set. Can be changed by a callback function, for example to use or not use Shift+Left only with some windows.
+            </summary>
+        </member>
         <member name="M:Au.Triggers.AutotextTriggerArgs.#ctor(Au.Triggers.AutotextTrigger,Au.AWnd,System.String,System.Boolean)">
             
         </member>
-        <member name="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])">
+        <member name="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)">
             <summary>
-            Replaces the user-typed text with the specified text.
+            Replaces the user-typed text with the specified text or/and HTML.
             </summary>
-            <param name="text">The replacement text.</param>
-            <param name="keysEtc">Optional arguments to send keys etc. The same as with <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>.</param>
-            <exception cref="T:System.ArgumentException">An argument in <i>keysEtc</i> has an invalid value, for example an unknown key name.</exception>
+            <param name="text">The replacement text. Can be null.</param>
+            <param name="html">
+            The replacement HTML. Can be full HTML or fragment. See <see cref="M:Au.AClipboardData.AddHtml(System.String)"/>.
+            Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
+            </param>
             <remarks>
-            Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>. Uses these flags: <see cref="F:Au.Triggers.TAFlags.DontErase"/> <see cref="F:Au.Triggers.TAFlags.RemovePostfix"/> <see cref="F:Au.Triggers.TAFlags.ReplaceRaw"/> <see cref="F:Au.Triggers.TAFlags.Confirm"/>.
+            Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>.
             
-            Erases the user-typed text with the Backspace key.
-            
-            If the replacement text contains substring "[[|]]", removes it and moves the text cursor (caret) there with the Left key. See example.
+            If the replacement text contains substring "[[|]]", removes it and moves the text cursor (caret) there with the Left key. See example. Not if <i>html</i> specified.
             </remarks>
             <example>
             <code><![CDATA[
@@ -22037,14 +22086,30 @@
             More examples: <see cref="T:Au.Triggers.ActionTriggers"/>.
             </example>
         </member>
+        <member name="M:Au.Triggers.AutotextTriggerArgs.Replace2(Au.Types.KKeysEtc[])">
+            <summary>
+            Replaces the user-typed text with the specified text, keys, cliboard data, etc.
+            </summary>
+            <param name="keysEtc">The same as with <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/>.</param>
+            <remarks>
+            Options for this function can be specified when adding triggers, in the <i>flags</i> parameter. Or before adding triggers, with <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>. This function uses <see cref="F:Au.Triggers.TAFlags.Confirm"/>, <see cref="F:Au.Triggers.TAFlags.DontErase"/>, <see cref="F:Au.Triggers.TAFlags.ShiftLeft"/>, <see cref="F:Au.Triggers.TAFlags.RemovePostfix"/>.
+            
+            If used flag <see cref="F:Au.Triggers.TAFlags.Confirm"/>, for label can be used first argument with prefix "!!"; else displays all string arguments.
+            </remarks>
+        </member>
+        <member name="M:Au.Triggers.AutotextTriggerArgs.SendPostfix">
+            <summary>
+            If <see cref="P:Au.Triggers.AutotextTriggerArgs.HasPostfixChar"/>==true, sends the postfix character (last character of <see cref="P:Au.Triggers.AutotextTriggerArgs.Text"/>) to the active window.
+            </summary>
+        </member>
         <member name="M:Au.Triggers.AutotextTriggerArgs.Confirm(System.String)">
             <summary>
             Shows a 1-item menu below the text cursor (caret) or mouse cursor.
             Returns true if the user selected the item with the mouse or Enter or Tab. Other keys just close the menu.
             </summary>
-            <param name="text">Item text. This function escapes it (replaces newlines with \r\n etc) and limits to 60 characters.</param>
+            <param name="text">Item text. This function escapes it (replaces newlines with \r\n etc) and limits to 60 characters. If null, uses "Autotext".</param>
             <remarks>
-            This function is used by <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])"/> when used flag <see cref="F:Au.Triggers.TAFlags.Confirm"/>.
+            This function is used by <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> when used flag <see cref="F:Au.Triggers.TAFlags.Confirm"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -22060,7 +22125,7 @@
         </member>
         <member name="P:Au.Triggers.TASimpleReplace.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)">
             <summary>
-            Adds an autotext trigger. Its action calls <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,Au.Types.KKeysEtc[])"/>.
+            Adds an autotext trigger. Its action calls <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/>.
             More info: <see cref="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)"/>.
             </summary>
             <exception cref="T:System.Exception">Exceptions of <see cref="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)"/>.</exception>
@@ -22096,7 +22161,7 @@
             <summary>
             Don't release modifier keys.
             Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="M:Au.AKeys.GetMod(Au.Types.KMod)"/> and <see cref="M:Au.AKeys.WaitForKey(System.Double,Au.Types.KKey,System.Boolean,System.Boolean)"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-            <note>Unreleased modifier keys will interfere with mouse functions like <see cref="M:Au.AMouse.Click(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>AOpt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>AOpt.Key.NoModOff</b> is true and <b>AOpt.Key.TextOption</b> is <b>KTextOption.Keys</b>.</note>.
+            <note>Unreleased modifier keys will interfere with mouse functions like <see cref="M:Au.AMouse.Click(Au.AWnd,Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>AOpt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>AOpt.Key.NoModOff</b> is true and <b>AOpt.Key.TextHow</b> is <b>KTextHow.KeysX</b>.</note>.
             Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
             </summary>
         </member>
@@ -25931,9 +25996,9 @@
             </summary>
             <seealso cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/>
         </member>
-        <member name="P:Au.AWnd.IsWindows10StoreApp">
+        <member name="P:Au.AWnd.IsUwpApp">
             <summary>
-            Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+            On Windows 10 and later returns non-zero if this is a UWP app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
             </summary>
             <seealso cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/>
         </member>

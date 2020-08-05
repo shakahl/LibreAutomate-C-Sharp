@@ -63,13 +63,13 @@ namespace Au
 		//Sets text (string) or multi-format data (Data). Clipboard must be open.
 		static void _SetClipboard(object data, bool renderLater) {
 			switch (data) {
-				case AClipboardData d:
-					d.SetOpenClipboard(renderLater);
-					break;
-				case string s:
-					if (renderLater) Api.SetClipboardData(Api.CF_UNICODETEXT, default);
-					else AClipboardData.SetText_(s);
-					break;
+			case AClipboardData d:
+				d.SetOpenClipboard(renderLater);
+				break;
+			case string s:
+				if (renderLater) Api.SetClipboardData(Api.CF_UNICODETEXT, default);
+				else AClipboardData.SetText_(s);
+				break;
 			}
 		}
 
@@ -89,7 +89,7 @@ namespace Au
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
-		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.KeySpeedClipboard"/>. Does not use <see cref="OptKey.Hook"/>.
+		/// Uses <see cref="AOptKey.RestoreClipboard"/>, <see cref="AOptKey.NoBlockInput"/>, <see cref="AOptKey.KeySpeedClipboard"/>. Does not use <see cref="AOptKey.Hook"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -98,7 +98,7 @@ namespace Au
 		/// Fails (exception) if the focused app does not set clipboard text or file paths, for example if there is no selected text/files.
 		/// Works with console windows too, even if they don't support Ctrl+C.
 		/// </remarks>
-		public static string Copy(bool cut = false, OptKey options = null) {
+		public static string Copy(bool cut = false, AOptKey options = null) {
 			return _Copy(cut, options, null);
 			//rejected: 'format' parameter. Not useful.
 		}
@@ -125,12 +125,12 @@ namespace Au
 		/// if(files == null) AOutput.Write("no files in clipboard"); else AOutput.Write(files);
 		/// ]]></code>
 		/// </example>
-		public static void CopyData(Action callback, bool cut = false, OptKey options = null) {
+		public static void CopyData(Action callback, bool cut = false, AOptKey options = null) {
 			if (callback == null) throw new ArgumentNullException();
 			_Copy(cut, options, callback);
 		}
 
-		static string _Copy(bool cut, OptKey options, Action callback) {
+		static string _Copy(bool cut, AOptKey options, Action callback) {
 			string R = null;
 			var opt = options ?? AOpt.Key;
 			bool restore = opt.RestoreClipboard;
@@ -194,12 +194,16 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Pastes text into the focused app using the clipboard.
+		/// Pastes text or HTML into the focused app using the clipboard.
 		/// </summary>
-		/// <param name="text">Text.</param>
+		/// <param name="text">Text. Can be null if <i>html</i> used.</param>
+		/// <param name="html">
+		/// HTML. Can be full HTML or fragment. See <see cref="AClipboardData.AddHtml"/>. Can be null.
+		/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
+		/// </param>
 		/// <param name="options">
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
-		/// Uses <see cref="OptKey.RestoreClipboard"/>, <see cref="OptKey.PasteEnter"/>, <see cref="OptKey.NoBlockInput"/>, <see cref="OptKey.SleepFinally"/>, <see cref="OptKey.Hook"/>, <see cref="OptKey.KeySpeedClipboard"/>.
+		/// Uses <see cref="AOptKey.RestoreClipboard"/>, <see cref="AOptKey.PasteWorkaround"/>, <see cref="AOptKey.NoBlockInput"/>, <see cref="AOptKey.SleepFinally"/>, <see cref="AOptKey.Hook"/>, <see cref="AOptKey.KeySpeedClipboard"/>.
 		/// </param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <remarks>
@@ -212,14 +216,16 @@ namespace Au
 		/// <seealso cref="AKeys.Text"/>
 		/// <example>
 		/// <code><![CDATA[
-		/// AClipboard.PasteText("Example\r\n");
+		/// AClipboard.Paste("Example\r\n");
 		/// ]]></code>
 		/// </example>
-		public static void Paste(string text, OptKey options = null) {
-			if (text.NE()) return;
-			_Paste(text, options);
+		public static void Paste(string text, string html = null, AOptKey options = null) {
+			if (text.NE() && html.NE()) return;
+			object data = text;
+			if (html != null) data = new AClipboardData().AddHtml(html).AddText(text ?? html);
+			_Paste(data, options);
 		}
-		//problem: fails to paste in VMware player. QM2 too. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
+		//problem: fails to paste in VMware player. Could add an option to not sync, but fails anyway because VMware gets clipboard with a big delay.
 
 		/// <summary>
 		/// Pastes data added to an <see cref="AClipboardData"/> variable into the focused app using the clipboard.
@@ -232,13 +238,13 @@ namespace Au
 		/// AClipboard.PasteData(new AClipboardData().AddHtml("<b>text</b>").AddText("text"));
 		/// ]]></code>
 		/// </example>
-		public static void PasteData(AClipboardData data, OptKey options = null) {
+		public static void PasteData(AClipboardData data, AOptKey options = null) {
 			if (data == null) throw new ArgumentNullException();
 			_Paste(data, options);
 		}
 
 		//rejected. Should use some UI-created/saved data containing all three formats.
-		//public static void PasteRichText(string text, string rtf, string html = null, OptKey options = null)
+		//public static void PasteRichText(string text, string rtf, string html = null, AOptKey options = null)
 		//{
 		//	var a = new List<(int, object)>();
 		//	if(!text.NE()) a.Add((0, text));
@@ -248,7 +254,7 @@ namespace Au
 		//	_Paste(a, options);
 		//}
 
-		static void _Paste(object data, OptKey options = null) {
+		static void _Paste(object data, AOptKey options = null) {
 			var wFocus = AKeys.Internal_.GetWndFocusedOrActive();
 			var opt = options ?? AOpt.Key;
 			using (var bi = new AInputBlocker { ResendBlockedKeys = true }) {
@@ -266,21 +272,27 @@ namespace Au
 		/// Used by AClipboard and AKeys.
 		/// The caller should block user input (if need), release modifier keys, get opt/wFocus, sleep finally (if need).
 		/// </summary>
-		/// <param name="data">string or Data.</param>
+		/// <param name="data">string or AClipboardData.</param>
 		/// <param name="opt"></param>
 		/// <param name="wFocus"></param>
-		internal static void Paste_(object data, OptKey opt, AWnd wFocus) {
-			bool isConsole = wFocus.IsConsole, enter = false;
+		internal static void Paste_(object data, AOptKey opt, AWnd wFocus) {
+			bool isConsole = wFocus.IsConsole;
+			List<KKey> andKeys = null;
 
-			if (opt.PasteEnter) {
-				string s = data as string;
-				if (enter = s != null && s.Ends('\n') && !isConsole) {
-					s = s.RemoveSuffix(s.Ends("\r\n") ? 2 : 1);
-					if (s.Length == 0) {
-						AKeys.Internal_.SendCopyPaste.Enter(opt);
+			if (opt.PasteWorkaround && data is string s && !isConsole) {
+				var s2 = s.TrimEnd("\r\n\t ");
+				if (s2 != s) {
+					andKeys = new List<KKey>();
+					for (int i = s2.Length; i < s.Length; i++) {
+						char ch = s[i];
+						if (ch == '\n') { if (i > 0 && s[i - 1] == '\r') continue; ch = '\r'; }
+						andKeys.Add((KKey)ch);
+					}
+					if (s2.Length == 0) {
+						AKeys.Internal_.SendCopyPaste.AndSendKeys(andKeys, opt);
 						return;
 					}
-					data = s;
+					data = s2;
 					//rejected: alternative workaround - convert to RTF.
 					//	It works in Word, WordPad, OO, LO.
 					//	But then eg Word for it uses default formatting instead of current formatting.
@@ -314,7 +326,7 @@ namespace Au
 						wFocus.Post(Api.WM_SYSCOMMAND, 65521);
 						//system menu -> &Edit -> &Paste; tested on all OS; Windows 10 supports Ctrl+V, but it can be disabled.
 					} else {
-						ctrlV.Press(KKey.V, opt, wFocus, enter);
+						ctrlV.Press(KKey.V, opt, wFocus, andKeys);
 					}
 
 					//wait until the app gets clipboard text
@@ -425,29 +437,29 @@ namespace Au
 				//AWnd.More.PrintMsg(w, message, wParam, lParam);
 
 				switch (message) {
-					//case Api.WM_DESTROY:
-					//	Api.ChangeClipboardChain(w, _wPrevClipViewer);
-					//	break;
-					case Api.WM_RENDERFORMAT:
-						if (_paste && !Success) {
-							IsBadWindow = !_IsTargetWindow();
+				//case Api.WM_DESTROY:
+				//	Api.ChangeClipboardChain(w, _wPrevClipViewer);
+				//	break;
+				case Api.WM_RENDERFORMAT:
+					if (_paste && !Success) {
+						IsBadWindow = !_IsTargetWindow();
 
-							//note: need to set clipboard data even if bad window.
-							//	Else the clipboard program may retry in loop. Eg Ditto. Then often pasting fails.
-							//	If IsBadWindow, we'll then sleep briefly.
-							//	Good clipboard programs get clipboard data with a delay. Therefore usually they don't interfere, unless the target app is very slow.
-							//		Eg Windows Clipboard History 200 ms. Eg Ditto default is 100 ms and can be changed.
-							//	Also, after setting clipboard data we cannot wait for good window, because we'll not receive second WM_RENDERFORMAT.
+						//note: need to set clipboard data even if bad window.
+						//	Else the clipboard program may retry in loop. Eg Ditto. Then often pasting fails.
+						//	If IsBadWindow, we'll then sleep briefly.
+						//	Good clipboard programs get clipboard data with a delay. Therefore usually they don't interfere, unless the target app is very slow.
+						//		Eg Windows Clipboard History 200 ms. Eg Ditto default is 100 ms and can be changed.
+						//	Also, after setting clipboard data we cannot wait for good window, because we'll not receive second WM_RENDERFORMAT.
 
-							try { _SetClipboard(_data, false); }
-							catch (Exception ex) { FailedToSetData = ex; } //cannot throw in wndproc, will throw later
-							waitVar = true;
-						}
-						return 0;
-					case Api.WM_CLIPBOARDUPDATE:
-						//posted, not sent. Once, not for each format. Added in WinVista. QM2 used SetClipboardViewer/WM_DRAWCLIPBOARD.
-						if (!_paste) waitVar = true;
-						return 0;
+						try { _SetClipboard(_data, false); }
+						catch (Exception ex) { FailedToSetData = ex; } //cannot throw in wndproc, will throw later
+						waitVar = true;
+					}
+					return 0;
+				case Api.WM_CLIPBOARDUPDATE:
+					//posted, not sent. Once, not for each format. Added in WinVista. QM2 used SetClipboardViewer/WM_DRAWCLIPBOARD.
+					if (!_paste) waitVar = true;
+					return 0;
 				}
 
 				return Api.DefWindowProc(w, message, wParam, lParam);
@@ -462,10 +474,11 @@ namespace Au
 					if (wOC == _wFocus) return true;
 					if (wOC.Is0) return true; //tested: none of tested apps calls OpenClipboard(0)
 					if (wOC.ProcessId == _wFocus.ProcessId) return true; //often classnamed "CLIPBRDWNDCLASS". Some clipboard managers too, eg Ditto.
-					if (AVersion.MinWin10 && 0 != _wFocus.Window.IsWindows10StoreApp) {
+					if (AVersion.MinWin10 && 0 != _wFocus.Window.IsUwpApp) {
 						var prog = wOC.ProgramName;
-						if (prog.Eqi("svchost.exe")) return true; //Store apps
-																  //if (prog.Eqi("RuntimeBroker.exe")) return true; //used to be Store apps
+						if (prog.Eqi("svchost.exe")) return true;
+						//if (prog.Eqi("RuntimeBroker.exe")) return true; //used to be Store apps
+						//tested: no problems on Win8.1
 					}
 
 					//CONSIDER: option to return true for user-known windows, eg using a callback. Print warning that includes wOC info.
@@ -518,7 +531,7 @@ namespace Au
 			/// <exception cref="AuException">Failed to open.</exception>
 			public bool Reopen(bool noThrow = false) {
 				Debug.Assert(!_isOpen);
-				var to = new AWaitFor.Loop(noThrow ? -1 : -10, new OptWaitFor(period: 1));
+				var to = new AWaitFor.Loop(noThrow ? -1 : -10, new AOptWaitFor(period: 1));
 				while (!Api.OpenClipboard(_w)) {
 					int ec = ALastError.Code;
 					if (!to.Sleep()) {
@@ -555,8 +568,8 @@ namespace Au
 
 			public void Save(bool debug = false) {
 				var p1 = new APerf.Local(); //will need if debug==true. Don't delete the APerf statements, they are used by a public function.
-				bool allFormats = OptKey.RestoreClipboardAllFormats || debug;
-				string[] exceptFormats = OptKey.RestoreClipboardExceptFormats;
+				bool allFormats = AOptKey.RestoreClipboardAllFormats || debug;
+				string[] exceptFormats = AOptKey.RestoreClipboardExceptFormats;
 
 				for (int format = 0; 0 != (format = Api.EnumClipboardFormats(format));) {
 					bool skip = false; string name = null;
@@ -566,15 +579,15 @@ namespace Au
 						//standard, private
 						if (format < Api.CF_MAX) { //standard
 							switch (format) {
-								case Api.CF_OEMTEXT: //synthesized from other text formats
-								case Api.CF_BITMAP: //synthesized from DIB formats
-								case Api.CF_PALETTE: //rare, never mind
-									skip = true;
-									break;
-								case Api.CF_METAFILEPICT:
-								case Api.CF_ENHMETAFILE:
-									skip = true; //never mind, maybe in the future
-									break;
+							case Api.CF_OEMTEXT: //synthesized from other text formats
+							case Api.CF_BITMAP: //synthesized from DIB formats
+							case Api.CF_PALETTE: //rare, never mind
+								skip = true;
+								break;
+							case Api.CF_METAFILEPICT:
+							case Api.CF_ENHMETAFILE:
+								skip = true; //never mind, maybe in the future
+								break;
 							}
 						} else if (format < 0xC000) { //CF_OWNERDISPLAY, DSP, GDI, private
 							skip = true; //never mind. Not auto-freed, etc. Rare.

@@ -238,8 +238,14 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern void GetSystemTimeAsFileTime(out long lpSystemTimeAsFileTime);
 
-		[DllImport("kernel32.dll")]
-		internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
+		//[DllImport("kernel32.dll", SetLastError = true)]
+		//internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
+
+		//[DllImport("kernel32.dll")]
+		//internal static extern bool GetProcessTimes(IntPtr hProcess, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
+
+		//[DllImport("kernel32.dll")]
+		//internal static extern bool QueryProcessCycleTime(IntPtr ProcessHandle, out long CycleTime);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool Wow64DisableWow64FsRedirection(out IntPtr OldValue);
@@ -643,9 +649,6 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern Handle_ OpenThread(uint dwDesiredAccess, bool bInheritHandle, int dwThreadId);
-
-		[DllImport("kernel32.dll", SetLastError = true)]
-		internal static extern bool GetThreadTimes(IntPtr hThread, out long lpCreationTime, out long lpExitTime, out long lpKernelTime, out long lpUserTime);
 
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern int SuspendThread(IntPtr hThread);

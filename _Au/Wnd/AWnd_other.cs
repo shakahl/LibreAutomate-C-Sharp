@@ -136,10 +136,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns non-zero if this window is a Windows 10 Store app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
+		/// On Windows 10 and later returns non-zero if this is a UWP app window: 1 if class name is "ApplicationFrameWindow", 2 if "Windows.UI.Core.CoreWindow".
 		/// </summary>
 		/// <seealso cref="More.GetWindowsStoreAppId"/>
-		public int IsWindows10StoreApp {
+		public int IsUwpApp {
 			get {
 				if (!AVersion.MinWin10) return 0;
 				if (!HasExStyle(WS2.NOREDIRECTIONBITMAP)) return 0;

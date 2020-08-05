@@ -727,7 +727,7 @@ namespace Au.Tools
 					_AppendIs(w.IsToolWindow, "IsToolWindow");
 					_AppendIs(w.IsTopmost, "IsTopmost");
 					_AppendIs(w.IsFullScreen, "IsFullScreen");
-					_AppendIs(0 != w.IsWindows10StoreApp, "IsWindows10StoreApp");
+					_AppendIs(0 != w.IsUwpApp, "IsUwpApp");
 					_AppendIs(w.IsWindows8MetroStyle, "IsWindows8MetroStyle");
 					b.AppendLine();
 				}
@@ -741,7 +741,7 @@ namespace Au.Tools
 
 				void _AppendIs(bool yes, string prop)
 				{
-					if(b[b.Length - 1] != ' ') b.Append(", ");
+					if(b[^1] != ' ') b.Append(", ");
 					if(!yes) b.Append('!');
 					b.Append(prop);
 				}

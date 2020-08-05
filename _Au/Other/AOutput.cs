@@ -43,8 +43,8 @@ namespace Au
 		/// </remarks>
 		public static bool IsWritingToConsole {
 			get {
-				if(!IsConsoleProcess || IgnoreConsole || LogFile != null) return false;
-				if(!_isVisibleConsole.HasValue) {
+				if (!IsConsoleProcess || IgnoreConsole || LogFile != null) return false;
+				if (!_isVisibleConsole.HasValue) {
 					Api.GetStartupInfo(out var x);
 					_isVisibleConsole = x.hStdOutput != default || 0 == (x.dwFlags & 1) || 0 != x.wShowWindow; //redirected stdout, or visible console window
 				}
@@ -63,13 +63,12 @@ namespace Au
 		/// <summary>
 		/// Clears the output window or console text (if <see cref="IsWritingToConsole"/>) or log file (if <see cref="LogFile"/> not null).
 		/// </summary>
-		public static void Clear()
-		{
-			if(LogFile != null) {
+		public static void Clear() {
+			if (LogFile != null) {
 				_ClearToLogFile();
-			} else if(IsWritingToConsole) {
+			} else if (IsWritingToConsole) {
 				try { Console.Clear(); } catch { } //exception if redirected, it is documented
-			} else if(QM2.UseQM2) {
+			} else if (QM2.UseQM2) {
 				QM2.Clear();
 			} else {
 				_ClearToOutputServer();
@@ -94,8 +93,7 @@ namespace Au
 		/// - Else if exists global <see cref="AOutputServer"/> (in any process), writes to it.
 		/// - Else nowhere.
 		/// </remarks>
-		public static void Write(string value)
-		{
+		public static void Write(string value) {
 			Writer.WriteLine(value);
 		}
 
@@ -110,50 +108,62 @@ namespace Au
 		/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
 		/// For ref struct types use <c>AOutput.Write(x.ToString());</c>.
 		/// </remarks>
-		public static void Write(object value)
-		{
+		public static void Write(object value) {
 			Write(ObjectToString_(value));
 		}
 
 		/// <summary>
 		/// Converts object to string like <see cref="Write(object)"/> does.
 		/// </summary>
-		internal static string ObjectToString_(object value)
-		{
-			string s;
-			switch(value) {
-			case null: s = "null"; break;
-			case string t: s = t; break;
-			case uint u: s = "0x" + u.ToString("X"); break;
-			case ulong u: s = "0x" + u.ToString("X"); break;
-			case ushort u: s = "0x" + u.ToString("X"); break;
-			case byte u: s = "0x" + u.ToString("X"); break;
-			case char[] t: s = new string(t); break;
-			case System.Collections.IEnumerable e: s = string.Join("\r\n", _Cast1(e)); break;
-			default: s = value.ToString(); break;
+		internal static string ObjectToString_(object value) {
+			switch (value) {
+				case null: return "null";
+				case string t: return t;
+				case ulong:
+				case uint:
+				case ushort:
+				case byte:
+				case nuint:
+				case System.Collections.IEnumerable:
+					using (new Util.StringBuilder_(out var b)) {
+						ObjectToString_(b, value, false);
+						return b.ToString();
+					}
+				default: return value.ToString();
 			}
-			//if(s.IndexOf('\0') >= 0) s = s.Escape(quote: true); //no
-			return s;
 		}
 
-		//replaces System.Linq.Enumerable.Cast<object>(e) to avoid loading System.Linq.dll
-		static IEnumerable<object> _Cast1(System.Collections.IEnumerable e)
-		{
-			foreach(var v in e) yield return v; //bad: if array or generic of struct, boxes all elements
-		}
+		internal static void ObjectToString_(StringBuilder b, object value, bool compact) {
+			switch (value) {
+				case null: b.Append("null"); break;
+				case string s: b.Append(s); break;
+				case ulong u: _Unsigned(b, u); break;
+				case uint u: _Unsigned(b, u); break;
+				case ushort u: _Unsigned(b, u); break;
+				case byte u: _Unsigned(b, u); break;
+				case nuint u: _Unsigned(b, u); break;
+				case char[] a:
+					b.Append("{ ");
+					foreach (var c in a) {
+						if (c < ' ') b.Append("0x").Append(((byte)c).ToString("X"));
+						else b.Append(c);
+						b.Append(' ');
+					}
+					b.Append('}');
+					break; //always compact
+				case System.Collections.IEnumerable e:
+					var eo = _Cast(e);
+					if (compact) b.Append("{ ").AppendJoin(", ", eo).Append(" }");
+					else b.AppendJoin("\r\n", eo);
+					break;
+				default: b.Append(value); break;
+			}
 
-		internal static void ObjectToString_(StringBuilder b, object value)
-		{
-			switch(value) {
-			case null: b.Append("null"); break;
-			case string s: b.Append(s); break;
-			case uint u: b.Append("0x").Append(u.ToString("X")); break;
-			case ulong u: b.Append("0x").Append(u.ToString("X")); break;
-			case ushort u: b.Append("0x").Append(u.ToString("X")); break;
-			case byte u: b.Append("0x").Append(u.ToString("X")); break;
-			case char[] t: b.Append(new string(t)); break;
-			case System.Collections.IEnumerable e: b.Append("{ ").AppendJoin(", ", _Cast1(e)).Append(" }"); break;
-			default: b.Append(value); break;
+			static void _Unsigned(StringBuilder b, ulong u) => b.Append("0x").Append(u.ToString("X"));
+
+			//replaces System.Linq.Enumerable.Cast<object>(e) to avoid loading System.Linq.dll
+			static IEnumerable<object> _Cast(System.Collections.IEnumerable e) {
+				foreach (var v in e) yield return v; //bad: if array or generic of struct, boxes all elements
 			}
 		}
 
@@ -164,9 +174,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="Write(string)"/>.
 		/// </remarks>
-		public static void Write<T>(IEnumerable<T> value)
-		{
-			Write(value switch { null => "null", char[] a => new string(a), _ => string.Join("\r\n", value) });
+		public static void Write<T>(IEnumerable<T> value) {
+			Write(value switch { null => "null", char[] a => ObjectToString_(a), _ => string.Join("\r\n", value) });
 		}
 
 		/// <summary>
@@ -177,13 +186,12 @@ namespace Au
 		/// If a value is null, writes "null".
 		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// </remarks>
-		public static void Write(object value1, object value2, params object[] more)
-		{
-			if(more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
-			using(new Util.StringBuilder_(out var b)) {
-				for(int i = 0, n = 2 + more.Length; i < n; i++) {
-					if(i > 0) b.Append(", ");
-					ObjectToString_(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]));
+		public static void Write(object value1, object value2, params object[] more) {
+			if (more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
+			using (new Util.StringBuilder_(out var b)) {
+				for (int i = 0, n = 2 + more.Length; i < n; i++) {
+					if (i > 0) b.Append(", ");
+					ObjectToString_(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]), compact: true);
 				}
 				Write(b.ToString());
 
@@ -233,28 +241,25 @@ namespace Au
 
 			public override Encoding Encoding => Encoding.Unicode;
 			public override void WriteLine(string value) { WriteDirectly(_PrependBuilder(value)); }
-			public override void Write(string value)
-			{
+			public override void Write(string value) {
 				//QM2.Write($"'{value}'");
-				if(value.NE()) return;
-				if(value.Ends('\n')) {
+				if (value.NE()) return;
+				if (value.Ends('\n')) {
 					WriteLine(value.RemoveSuffix(value.Ends("\r\n") ? 2 : 1));
 				} else {
 					(_b ??= new StringBuilder()).Append(value);
 				}
 			}
-			string _PrependBuilder(string value)
-			{
-				if(_b != null && _b.Length > 0) {
+			string _PrependBuilder(string value) {
+				if (_b != null && _b.Length > 0) {
 					value = _b.ToString() + value;
 					_b.Clear();
 				}
 				return value;
 			}
-			public override void Flush()
-			{
+			public override void Flush() {
 				var s = _PrependBuilder(null);
-				if(!s.NE()) WriteDirectly(s);
+				if (!s.NE()) WriteDirectly(s);
 			}
 		}
 
@@ -263,13 +268,12 @@ namespace Au
 		/// Unlike <see cref="Write"/>, the string is not passed to <see cref="Writer"/>.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace, used in _WriteToOutputServer
-		public static void WriteDirectly(string value)
-		{
-			if(value == null) value = "";
+		public static void WriteDirectly(string value) {
+			if (value == null) value = "";
 
-			if(LogFile != null) _WriteToLogFile(value);
-			else if(IsWritingToConsole) Console.WriteLine(value);
-			else if(QM2.UseQM2) QM2.Write(value);
+			if (LogFile != null) _WriteToLogFile(value);
+			else if (IsWritingToConsole) Console.WriteLine(value);
+			else if (QM2.UseQM2) QM2.Write(value);
 			else _WriteToOutputServer(value);
 		}
 
@@ -282,12 +286,12 @@ namespace Au
 		/// </remarks>
 		public static bool RedirectConsoleOutput {
 			set {
-				if(value) {
-					if(_prevConsoleOut != null || IsConsoleProcess) return;
+				if (value) {
+					if (_prevConsoleOut != null || IsConsoleProcess) return;
 					_prevConsoleOut = Console.Out;
 					Console.SetOut(Writer);
 					//speed: 870
-				} else if(_prevConsoleOut != null) {
+				} else if (_prevConsoleOut != null) {
 					Console.SetOut(_prevConsoleOut);
 					_prevConsoleOut = null;
 				}
@@ -304,12 +308,12 @@ namespace Au
 		/// </remarks>
 		public static bool RedirectDebugOutput {
 			set {
-				if(value) {
-					if(_traceListener != null) return;
+				if (value) {
+					if (_traceListener != null) return;
 					//Trace.Listeners.Add(IsWritingToConsole ? (new ConsoleTraceListener()) : (new TextWriterTraceListener(Writer)));
 					Trace.Listeners.Add(_traceListener = new TextWriterTraceListener(Writer));
 					//speed: 6100
-				} else if(_traceListener != null) {
+				} else if (_traceListener != null) {
 					Trace.Listeners.Remove(_traceListener);
 					_traceListener = null;
 				}
@@ -332,12 +336,12 @@ namespace Au
 		public static string LogFile {
 			get => _logFile;
 			set {
-				lock(_lockObj1) {
-					if(_hFile != null) {
+				lock (_lockObj1) {
+					if (_hFile != null) {
 						_hFile.Close();
 						_hFile = null;
 					}
-					if(value != null) {
+					if (value != null) {
 						_logFile = APath.Normalize(value);
 					} else _logFile = null;
 				}
@@ -354,17 +358,16 @@ namespace Au
 		/// </summary>
 		public static bool LogFileTimestamp { get; set; }
 
-		static void _WriteToLogFile(string s)
-		{
-			lock(_lockObj1) {
-				if(_hFile == null) {
+		static void _WriteToLogFile(string s) {
+			lock (_lockObj1) {
+				if (_hFile == null) {
 					g1:
 					_hFile = _LogFile.Open();
-					if(_hFile == null) {
+					if (_hFile == null) {
 						var e = ALastError.Code;
-						if(e == Api.ERROR_SHARING_VIOLATION) {
+						if (e == Api.ERROR_SHARING_VIOLATION) {
 							var u = APath.MakeUnique(_logFile, false);
-							if(u != _logFile) { _logFile = u; goto g1; }
+							if (u != _logFile) { _logFile = u; goto g1; }
 						}
 						var logf = _logFile;
 						_logFile = null;
@@ -377,10 +380,9 @@ namespace Au
 			}
 		}
 
-		static void _ClearToLogFile()
-		{
-			lock(_lockObj1) {
-				if(_hFile == null) {
+		static void _ClearToLogFile() {
+			lock (_lockObj1) {
+				if (_hFile == null) {
 					try { AFile.Delete(_logFile); } catch { }
 				} else {
 					_hFile.Clear();
@@ -401,11 +403,10 @@ namespace Au
 			/// Opens LogFile file handle for writing.
 			/// Uses CREATE_ALWAYS, GENERIC_WRITE, FILE_SHARE_READ.
 			/// </summary>
-			public static _LogFile Open()
-			{
+			public static _LogFile Open() {
 				var path = LogFile;
 				var h = CreateFile_(path, false);
-				if(h.Is0) return null;
+				if (h.Is0) return null;
 				return new _LogFile() { _h = h, _name = path };
 			}
 
@@ -415,18 +416,17 @@ namespace Au
 			/// <remarks>
 			/// If fails to write to file: Sets LogFile=null, which closes file handle. Writes a warning and s to the output window or console.
 			/// </remarks>
-			public bool WriteLine(string s)
-			{
+			public bool WriteLine(string s) {
 				bool ok;
 				int n = Encoding.UTF8.GetByteCount(s ??= "") + 1;
-				fixed(byte* b = Util.AMemoryArray.Byte_(n + 35)) {
-					if(LogFileTimestamp) {
+				fixed (byte* b = Util.AMemoryArray.Byte_(n + 35)) {
+					if (LogFileTimestamp) {
 						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
 						int nn = Util.BytePtr_.Length(b);
 						Encoding.UTF8.GetBytes(s, new Span<byte>(b + nn, n));
 						n += nn;
-						if(s.Starts("<>")) {
+						if (s.Starts("<>")) {
 							Api.memmove(b + 2, b, nn);
 							b[0] = (byte)'<'; b[1] = (byte)'>';
 						}
@@ -437,7 +437,7 @@ namespace Au
 
 					ok = Api.WriteFile(_h, b, n, out _);
 				}
-				if(!ok) {
+				if (!ok) {
 					string emsg = ALastError.Message;
 					LogFile = null;
 					AWarning.Write($"Failed to write to log file '{_name}'. {emsg}");
@@ -450,8 +450,7 @@ namespace Au
 			/// <summary>
 			/// Sets file size = 0.
 			/// </summary>
-			public bool Clear()
-			{
+			public bool Clear() {
 				bool ok = Api.SetFilePointerEx(_h, 0, null, Api.FILE_BEGIN) && Api.SetEndOfFile(_h);
 				Debug.Assert(ok);
 				return ok;
@@ -468,8 +467,7 @@ namespace Au
 		/// </summary>
 		/// <param name="name">File path or mailslot name.</param>
 		/// <param name="openExisting">Use OPEN_EXISTING. If false, uses CREATE_ALWAYS.</param>
-		internal static Handle_ CreateFile_(string name, bool openExisting)
-		{
+		internal static Handle_ CreateFile_(string name, bool openExisting) {
 			return Api.CreateFile(name, Api.GENERIC_WRITE, Api.FILE_SHARE_READ, default, openExisting ? Api.OPEN_EXISTING : Api.CREATE_ALWAYS);
 
 			//tested: CREATE_ALWAYS works with mailslot too. Does not erase messages. Undocumented what to use.
@@ -499,11 +497,10 @@ namespace Au
 			public static void Write(object o) => _WriteToQM2(o?.ToString() ?? "");
 
 			/// <param name="s">If null, clears output.</param>
-			static void _WriteToQM2(string s)
-			{
-				if(!_hwndQM2.IsAlive) {
+			static void _WriteToQM2(string s) {
+				if (!_hwndQM2.IsAlive) {
 					_hwndQM2 = Api.FindWindow("QM_Editor", null);
-					if(_hwndQM2.Is0) return;
+					if (_hwndQM2.Is0) return;
 				}
 				_hwndQM2.SendS(Api.WM_SETTEXT, -1, s);
 			}

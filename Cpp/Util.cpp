@@ -104,6 +104,13 @@ __declspec(allocate(".shared")) Perf_Inst Perf;
 
 #endif
 
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
+
+HMODULE GetCurrentModuleHandle()
+{
+	return (HMODULE)&__ImageBase;
+}
+
 bool IsOS64Bit()
 {
 #ifdef _WIN64

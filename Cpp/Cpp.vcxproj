@@ -199,7 +199,7 @@
     <ClCompile Include="acc java.cpp" />
     <ClCompile Include="acc func.cpp" />
     <ClCompile Include="acc web.cpp" />
-    <ClCompile Include="start process.cpp" />
+    <ClCompile Include="other.cpp" />
     <ClCompile Include="str.cpp" />
     <ClCompile Include="acc uia.cpp" />
     <ClCompile Include="in-proc.cpp" />

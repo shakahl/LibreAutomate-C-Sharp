@@ -170,7 +170,7 @@ namespace Au
 						var field = _a[r][c];
 						if(!field.NE()) {
 							bool hasQuote = field.IndexOf(quote) >= 0;
-							if(hasQuote || field.IndexOf(Separator) >= 0 || field[0] == ' ' || field[field.Length - 1] == ' ') {
+							if(hasQuote || field.IndexOf(Separator) >= 0 || field[0] == ' ' || field[^1] == ' ') {
 								if(hasQuote) {
 									if(sQuote1 == null) { sQuote1 = new string(quote, 1); sQuote2 = new string(quote, 2); }
 									field = field.Replace(sQuote1, sQuote2);

@@ -300,7 +300,7 @@ namespace Au
 		{
 			if(!s1.NE() && !s2.NE()) {
 				int k = 0;
-				if(IsSepChar_(s1[s1.Length - 1])) {
+				if(IsSepChar_(s1[^1])) {
 					if(s1.Length == 1) goto ge;
 					k |= 1;
 				}

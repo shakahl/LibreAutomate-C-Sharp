@@ -47,7 +47,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Don't release modifier keys.
 		/// Without this flag, for example if trigger is ["Ctrl+K"], when the user presses Ctrl and K down, the trigger sends Ctrl key-up event, making the key logically released, although it is still physically pressed. Then modifier keys don't interfer with the action. However functions like <see cref="AKeys.GetMod"/> and <see cref="AKeys.WaitForKey"/> (and any such functions in any app) will not know that the key is physically pressed; there is no API to get physical key state.
-		/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="AMouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>AOpt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>AOpt.Key.NoModOff</b> is true and <b>AOpt.Key.TextOption</b> is <b>KTextOption.Keys</b>.</note>.
+		/// <note>Unreleased modifier keys will interfere with mouse functions like <see cref="AMouse.Click"/>. Will not interfere with keyboard and clipboard functions of this library, because they release modifier keys, unless <b>AOpt.Key.NoModOff</b> is true. Will not interfere with functions that send text, unless <b>AOpt.Key.NoModOff</b> is true and <b>AOpt.Key.TextHow</b> is <b>KTextHow.KeysX</b>.</note>.
 		/// Other flags that prevent releasing modifier keys: <b>KeyUp</b>, <b>ShareEvent</b>. Then don't need this flag.
 		/// </summary>
 		NoModOff = 16,

@@ -178,7 +178,7 @@ namespace Au
 		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
 		/// <seealso cref="AWarning.Write"/>
-		/// <seealso cref="OptWarnings.Disable"/>
+		/// <seealso cref="AOptWarnings.Disable"/>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
 		public static RResult TryRun(string s, string args = null, RFlags flags = 0, ROptions curDirEtc = null)

@@ -21,12 +21,13 @@ void AutotextTriggers() {
 		tt.DefaultPostfixType = TAPostfix.None; //set some options for triggers added afterwards
 		tt["<b>"] = o => o.Replace("<b>[[|]]</b>");
 		
-		Triggers.Options.BeforeAction = o => { AOpt.Key.TextOption = KTextOption.Paste; }; //set AOpt options for trigger actions added afterwards
-		tt["#file"] = o => {
+		Triggers.Options.BeforeAction = o => { AOpt.Key.TextHow = KTextHow.Paste; }; //set AOpt options for trigger actions added afterwards
+		tt["#file", TAFlags.RemovePostfix] = o => {
 			o.Replace("");
 			using var fd = new System.Windows.Forms.OpenFileDialog { Title = "Autotext example" };
 			if (fd.ShowDialog() != System.Windows.Forms.DialogResult.OK) return;
 			AKeys.Text(fd.FileName);
+			o.SendPostfix();
 		};
 		
 		Triggers.Options.BeforeAction = null; tt.DefaultPostfixType = default; //reset some options

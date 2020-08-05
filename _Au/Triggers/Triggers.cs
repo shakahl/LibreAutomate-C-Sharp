@@ -126,8 +126,8 @@ namespace Au.Triggers
 	/// 
 	/// //how to set AOpt options for trigger actions
 	/// 
-	/// //AOpt.Key.TextOption = KTextOption.Paste; //no, it won't work. It sets AOpt for this thread, not for trigger actions.
-	/// Triggers.Options.BeforeAction = o => { AOpt.Key.TextOption = KTextOption.Paste; }; //the correct way. Sets AOpt before executing an action.
+	/// //AOpt.Key.TextHow = KTextHow.Paste; //no, it won't work. It sets AOpt for this thread, not for trigger actions.
+	/// Triggers.Options.BeforeAction = o => { AOpt.Key.TextHow = KTextHow.Paste; }; //the correct way. Sets AOpt before executing an action.
 	/// ts["#p1"] = "text 1";
 	/// ts["#p2"] = "text 2";
 	/// Triggers.Options.BeforeAction = null;
@@ -135,7 +135,7 @@ namespace Au.Triggers
 	/// //another way to set AOpt options - use AOpt.Static. It sets options for all actions in the script, not just for triggers added afterwards.
 	/// 
 	/// AOpt.Static.Key.PasteLength = 50;
-	/// AOpt.Static.Key.Hook = h => { var w1 = h.w.Window; AOutput.Write(w1); if(w1.Name.Like("* Word")) h.opt.PasteEnter = true; };
+	/// AOpt.Static.Key.Hook = h => { var w1 = h.w.Window; AOutput.Write(w1); if(w1.Name.Like("* Word")) h.opt.PasteWorkaround = true; };
 	/// ts["#p3"] = "/* " + new string('*', 60) + " */\r\n";
 	/// 
 	/// //how to stop and disable/enable triggers

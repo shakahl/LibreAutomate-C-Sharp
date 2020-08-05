@@ -255,7 +255,7 @@ namespace Au
 		/// <seealso cref="AMouse.WaitForNoButtonsPressed"/>
 		public static bool WaitForNoModifierKeysAndMouseButtons(double secondsTimeout = 0.0, KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win, MButtons buttons = MButtons.Left | MButtons.Right | MButtons.Middle | MButtons.X1 | MButtons.X2)
 		{
-			var to = new AWaitFor.Loop(secondsTimeout, new OptWaitFor(period: 2));
+			var to = new AWaitFor.Loop(secondsTimeout, new AOptWaitFor(period: 2));
 			for(; ; ) {
 				if(!IsMod(mod) && !AMouse.IsPressed(buttons)) return true;
 				if(!to.Sleep()) return false;
@@ -280,7 +280,7 @@ namespace Au
 			return AWaitFor.Condition(secondsTimeout, () => {
 				foreach(var k in keys) if(IsPressed(k)) return false;
 				return true;
-			}, new OptWaitFor(period: 2));
+			}, new AOptWaitFor(period: 2));
 		}
 
 		/// <summary>
@@ -612,26 +612,30 @@ namespace Au
 		/// <param name="keysEtc">
 		/// Arguments of these types:
 		/// <list type="bullet">
-		/// <item><description>string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c> .
-		/// <br/>Tip: in <c>""</c> string press Ctrl+Space to open a tool window.
+		/// <item><description>string - keys. Key names separated by spaces or operators, like <c>"Enter A Ctrl+A"</c>.
+		/// Tool: in <c>""</c> string press Ctrl+Space.
 		/// </description></item>
-		/// <item><description><see cref="KText"/> - literal text, like function <see cref="Text"/>.
-		/// <br/>Example: <c>AKeys.Key((KText)"user", "Tab", (KText)"password", "Enter");</c>
+		/// <item><description>string with prefix "!" - literal text.
+		/// Example: <c>var p = "pass"; AKeys.Key("!user", "Tab", "!" + p, "Enter");</c>
+		/// </description></item>
+		/// <item><description>string with prefix "%" - HTML to paste. Full or fragment.
+		/// </description></item>
+		/// <item><description><see cref="AClipboardData"/> - clipboard data to paste.
 		/// </description></item>
 		/// <item><description><see cref="KKey"/> - a single key.
-		/// <br/>Example: <c>AKeys.Key("Shift+", KKey.Left, "*3");</c> is the same as <c>AKeys.Key("Shift+Left*3");</c>.
+		/// Example: <c>AKeys.Key("Shift+", KKey.Left, "*3");</c> is the same as <c>AKeys.Key("Shift+Left*3");</c>.
 		/// </description></item>
 		/// <item><description>int - sleep milliseconds. Max 10000.
-		/// <br/>Example: <c>AKeys.Key("Left", 500, "Right");</c>
+		/// Example: <c>AKeys.Key("Left", 500, "Right");</c>
 		/// </description></item>
 		/// <item><description><see cref="Action"/> - callback function.
-		/// <br/>Example: <c>Action click = () => AMouse.Click(); AKeys.Key("Shift+", click);</c>
+		/// Example: <c>Action click = () => AMouse.Click(); AKeys.Key("Shift+", click);</c>
 		/// </description></item>
 		/// <item><description>(int, bool) - a single key, specified using scan code and extended-key flag.
-		/// <br/>Example: <c>AKeys.Key((0x3B, false)); //key F1</c>
+		/// Example: <c>AKeys.Key((0x3B, false)); //key F1</c>
 		/// </description></item>
 		/// <item><description>(KKey, int, bool) - a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
-		/// <br/>Example: <c>AKeys.Key((KKey.Enter, 0, true)); //numpad Enter</c>
+		/// Example: <c>AKeys.Key((KKey.Enter, 0, true)); //numpad Enter</c>
 		/// </description></item>
 		/// </list>
 		/// </param>
@@ -696,11 +700,12 @@ namespace Au
 		/// <tr>
 		/// <td>Special characters</td>
 		/// <td>
-		/// <b>Operator:</b> + * ( ) $
+		/// <b>Operator:</b> + * ( )
 		/// <br/><b>Numpad key prefix:</b> #
-		/// <br/><b>Reserved:</b> ! @ % ^ &amp;
+		/// <br/><b>Text/HTML argument prefix:</b> ! %
+		/// <br/><b>Reserved:</b> @ $ ^ &amp;
 		/// </td>
-		/// <td>These characters cannot be used as keys. Use = 8 9 0 4 3 1 2 5 6 7.</td>
+		/// <td>These characters cannot be used as keys. Instead use = 8 9 0 4 3 1 2 5 6 7.</td>
 		/// </tr>
 		/// </table>
 		/// 
@@ -740,11 +745,6 @@ namespace Au
 		/// <br/>Inside () cannot be used + and +().
 		/// </td>
 		/// </tr>
-		/// <tr>
-		/// <td><c>$</c></td>
-		/// <td><c>"$text"</c></td>
-		/// <td>$ is the same as Shift+.</td>
-		/// </tr>
 		/// </table>
 		/// 
 		/// Operators and related keys can be in separate arguments. Examples: <c>AKeys.Key("Shift+", KKey.A); AKeys.Key(KKey.A, "*3");</c>.
@@ -757,7 +757,7 @@ namespace Au
 		/// <th>Changed</th>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.NoBlockInput"/></td>
+		/// <td><see cref="AOptKey.NoBlockInput"/></td>
 		/// <td>false.
 		/// Blocks user-pressed keys. Sends them afterwards.
 		/// <br/>If the last argument is 'sleep', stops blocking before executing it; else stops blocking after executing all arguments.</td>
@@ -765,79 +765,79 @@ namespace Au
 		/// Does not block user-pressed keys.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.NoCapsOff"/></td>
+		/// <td><see cref="AOptKey.NoCapsOff"/></td>
 		/// <td>false.
 		/// If the CapsLock key is toggled, untoggles it temporarily (presses it before and after).</td>
 		/// <td>true.
 		/// Does not touch the CapsLock key.
-		/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="OptKey.TextOption"/> is <see cref="KTextOption.Keys"/>.</td>
+		/// <br/>Alphabetic keys of "keys" arguments can depend on CapsLock. Text of "text" arguments doesn't depend on CapsLock, unless <see cref="AOptKey.TextHow"/> is <b>KeysX</b>.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.NoModOff"/></td>
+		/// <td><see cref="AOptKey.NoModOff"/></td>
 		/// <td>false.
 		/// Releases modifier keys (Alt, Ctrl, Shift, Win).
-		/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="OptKey.NoBlockInput"/> is true.</td>
+		/// <br/>Does it only at the start; later they cannot interfere, unless <see cref="AOptKey.NoBlockInput"/> is true.</td>
 		/// <td>true.
 		/// Does not touch modifier keys.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.TextSpeed"/></td>
+		/// <td><see cref="AOptKey.TextSpeed"/></td>
 		/// <td>0 ms.</td>
 		/// <td>0 - 1000.
 		/// Changes the speed for "text" arguments (makes slower).</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.KeySpeed"/></td>
+		/// <td><see cref="AOptKey.KeySpeed"/></td>
 		/// <td>1 ms.</td>
 		/// <td>0 - 1000.
 		/// Changes the speed for "keys" arguments (makes slower if &gt;1).</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.KeySpeedClipboard"/></td>
+		/// <td><see cref="AOptKey.KeySpeedClipboard"/></td>
 		/// <td>5 ms.</td>
 		/// <td>0 - 1000.
-		/// Changes the speed of Ctrl+V keys when text is pasted using the clipboard.</td>
+		/// Changes the speed of Ctrl+V keys when pasting text or HTML using clipboard.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.SleepFinally"/></td>
+		/// <td><see cref="AOptKey.SleepFinally"/></td>
 		/// <td>10 ms.</td>
 		/// <td>0 - 10000.
 		/// <br/>Tip: to sleep finally, also can be used code like this: <c>AKeys.Key("keys", 1000);</c>.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.TextOption"/></td>
-		/// <td><see cref="KTextOption.Characters"/></td>
-		/// <td><see cref="KTextOption.Keys"/> (send keys and Shift) or <see cref="KTextOption.Paste"/> (use clipboard).</td>
+		/// <td><see cref="AOptKey.TextHow"/></td>
+		/// <td><see cref="KTextHow.Characters"/></td>
+		/// <td><b>KeysOrChar</b>, <b>KeysOrPaste</b> or <b>Paste</b>.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.PasteLength"/></td>
-		/// <td>300.
-		/// <br/>This option is used for "text" arguments. If text length &gt;= this value, uses the clipboard.</td>
+		/// <td><see cref="AOptKey.PasteLength"/></td>
+		/// <td>200.
+		/// <br/>This option is used for "text" arguments. If text length &gt;= this value, uses clipboard.</td>
 		/// <td>&gt;=0.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.PasteEnter"/></td>
+		/// <td><see cref="AOptKey.PasteWorkaround"/></td>
 		/// <td>false.
-		/// <br/>This option is used for "text" arguments when using the clipboard.
+		/// <br/>This option is used for "text" arguments when using clipboard.
 		/// </td>
 		/// <td>true.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.RestoreClipboard"/></td>
+		/// <td><see cref="AOptKey.RestoreClipboard"/></td>
 		/// <td>true.
 		/// Restore clipboard data (by default only text).
-		/// <br/>This option is used for "text" arguments when using the clipboard.</td>
+		/// <br/>This option is used for "text" and "HTML" arguments when using clipboard.</td>
 		/// <td>false.
 		/// Don't restore clipboard data.</td>
 		/// </tr>
 		/// <tr>
-		/// <td><see cref="OptKey.Hook"/></td>
+		/// <td><see cref="AOptKey.Hook"/></td>
 		/// <td>null.</td>
 		/// <td>Callback function that can modify options depending on active window etc.</td>
 		/// </tr>
 		/// </table>
 		/// 
-		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="OptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
+		/// This function does not wait until the target app receives and processes sent keystrokes and text; there is no reliable way to know it. It just adds small delays depending on options (<see cref="AOptKey.SleepFinally"/> etc). If need, change options or add 'sleep' arguments or wait after calling this function. Sending text through the clipboard normally does not have these problems.
 		/// 
 		/// Don't use this function to automate windows of own thread. Call it from another thread. See the last example.
 		/// 
@@ -845,9 +845,9 @@ namespace Au
 		/// 
 		/// Mouse button codes/names (eg <see cref="KKey.MouseLeft"/>) cannot be used to click. Instead use callback, like in the "Ctrl+click" example.
 		/// 
-		/// When you don't want to use or modify <see cref="AOpt.Key"/>, you can use an <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", (KText)"text").Send();</c>. More examples in <see cref="AKeys(OptKey)"/> topic.
+		/// You can use an <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="AKeys(AOptKey)"/> topic.
 		/// 
-		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>. Then calls <see cref="Send"/>.
+		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>. Then calls <see cref="Send"/>.
 		/// 
 		/// Uses API <msdn>SendInput</msdn>.
 		/// </remarks>
@@ -872,11 +872,11 @@ namespace Au
 		/// AKeys.Key("Alt*down E P Alt*up");
 		/// 
 		/// //Press key End, key Backspace 3 times, send text "Text".
-		/// AKeys.Key("End Back*3", (KText)"Text");
+		/// AKeys.Key("End Back*3", "!Text");
 		/// 
 		/// //Press Tab n times, send text "user", press Tab, send text "password", press Enter.
-		/// int n = 5;
-		/// AKeys.Key($"Tab*{n}", (KText)"user", "Tab", (KText)"password", "Enter");
+		/// int n = 5; string pw = "password";
+		/// AKeys.Key($"Tab*{n}", "!user", "Tab", "!" + pw, "Enter");
 		/// 
 		/// //Send text "Example".
 		/// AKeys.Text("Example");
@@ -898,7 +898,7 @@ namespace Au
 		/// 
 		/// //Send keys and text slowly.
 		/// AOpt.Key.KeySpeed = AOpt.Key.TextSpeed = 50;
-		/// AKeys.Key("keys$:Space 123456789 Space 123456789 ,Space", (KText)"text: 123456789 123456789\n");
+		/// AKeys.Key("keys Shift+: Space 123456789 Space 123456789 ,Space", "!text: 123456789 123456789\n");
 		/// 
 		/// //Ctrl+click
 		/// Action click = () => AMouse.Click();
@@ -925,8 +925,8 @@ namespace Au
 		/// 
 		/// b.Click += async (_, _) =>
 		/// {
-		/// 	//AKeys.Key("Tab", (KText)"text", 2000, "Esc"); //no
-		/// 	await Task.Run(() => { AKeys.Key("Tab", (KText)"text", 2000, "Esc"); }); //use other thread
+		/// 	//AKeys.Key("Tab", "!text", 2000, "Esc"); //no
+		/// 	await Task.Run(() => { AKeys.Key("Tab", "!text", 2000, "Esc"); }); //use other thread
 		/// };
 		/// 
 		/// f.ShowDialog();
@@ -938,26 +938,33 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sends text to the active window, using virtual keystrokes or the clipboard.
+		/// Sends text to the active window, using virtual keystrokes or clipboard. Calls <see cref="AddText"/>.
 		/// </summary>
-		/// <param name="text">Text to send.</param>
+		/// <param name="text">Text. Can be null.</param>
+		/// <param name="html">
+		/// HTML. Can be full HTML or fragment. See <see cref="AClipboardData.AddHtml"/>.
+		/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
+		/// </param>
 		/// <remarks>
-		/// Uses virtual keystrokes or the clipboard, depending on <see cref="AOpt.Key"/> and text.
-		/// To send text and keys use function <see cref="Key"/>.
+		/// To send text can use keys, characters or clipboard, depending on <see cref="AOpt.Key"/> and text. If <i>html</i> not null, uses clipboard.
 		/// </remarks>
 		/// <seealso cref="AClipboard.Paste"/>
 		/// <example>
 		/// <code><![CDATA[
 		/// AKeys.Text("Text.\r\n");
-		/// AKeys.Key((KText)"Send this text and press key", "Enter");
+		/// ]]></code>
+		/// Or use function <see cref="Key"/> and prefix "!". For HTML use prefix "%".
+		/// <code><![CDATA[
+		/// AKeys.Key("!Send this text and press key", "Enter");
+		/// AKeys.Key("%<b>bold</b> <i>italic</i>", "Enter");
 		/// ]]></code>
 		/// </example>
-		public static void Text(string text)
+		public static void Text(string text, string html = null)
 		{
-			new AKeys(AOpt.Key).AddText(text).Send();
+			new AKeys(AOpt.Key).AddText(text, html).Send();
 		}
 	}
 }
 
-//FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); AKeys.Key((KText)password, "Tab", (KText)user, "Enter");
+//FUTURE: instead of QM2 AutoPassword: FocusPasswordField(); AKeys.Key("!password", "Shift+Tab", "user", "Enter");
 //public static void FocusPasswordField()

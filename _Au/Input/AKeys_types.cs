@@ -256,26 +256,8 @@ namespace Au.Types
 #pragma warning restore 1591
 
 	/// <summary>
-	/// Used as an argument type with <see cref="AKeys.Key(KKeysEtc[])"/> and similar functions to send text instead of keys. See example.
-	/// </summary>
-	/// <example>
-	/// <code><![CDATA[
-	/// Key((KText)"user", "Tab", (KText)"password", "Enter");
-	/// ]]></code>
-	/// </example>
-	public struct KText
-	{
-		string _text;
-		KText(string s) => _text = s;
-		///
-		public static implicit operator KText(string s) => new KText(s);
-		///
-		public static implicit operator string(KText s) => s._text;
-	}
-
-	/// <summary>
 	/// Parameter type of <see cref="AKeys.Key"/> and similar functions.
-	/// Has implicit conversions from string, KText, KKey, int, Action, tuple (int, bool) and tuple (KKey, int, bool).
+	/// Has implicit conversions from string, AClipboardData, KKey, int, Action, tuple (int, bool) and tuple (KKey, int, bool).
 	/// </summary>
 	public struct KKeysEtc
 	{
@@ -291,7 +273,7 @@ namespace Au.Types
 		public static implicit operator KKeysEtc(string s)=>new KKeysEtc(s);
 
 		///
-		public static implicit operator KKeysEtc(KText s) => new KKeysEtc(s);
+		public static implicit operator KKeysEtc(AClipboardData cd)=>new KKeysEtc(cd);
 
 		///
 		public static implicit operator KKeysEtc(KKey k) => new KKeysEtc(k);

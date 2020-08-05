@@ -34,7 +34,8 @@ namespace Au.Tools
 			var pos8 = sci.Z.CurrentPos8;
 
 			switch(s) {
-			case "text": _AddParameter(sci, pos8, ", (KText)\"%\""); return;
+			case "text": _AddParameter(sci, pos8, ", \"!\b\""); return;
+			case "html": _AddParameter(sci, pos8, ", \"%\b\""); return;
 			case "sleepMs": _AddParameter(sci, pos8, ", 100"); return;
 			case "keyCode": _AddParameter(sci, pos8, ", KKey.Left"); return;
 			case "scanCode": _AddParameter(sci, pos8, ", (1, false)"); return;

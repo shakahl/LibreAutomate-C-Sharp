@@ -532,11 +532,11 @@ namespace Au
 			if(!s.NE()) {
 				bool makeUcase = !noUcase && Char.IsLower(s[0]);
 				if(t.Length > 0) {
-					if(makeUcase && t[t.Length - 1] != '.') makeUcase = false;
+					if(makeUcase && t[^1] != '.') makeUcase = false;
 					t.Append(' ');
 				}
 				if(makeUcase) { t.Append(Char.ToUpper(s[0])).Append(s, 1, s.Length - 1); } else t.Append(s);
-				switch(s[s.Length - 1]) {
+				switch(s[^1]) {
 				case '.': case ';': case ':': case ',': case '!': case '?': break;
 				default: t.Append('.'); break;
 				}

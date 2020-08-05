@@ -23,7 +23,7 @@ namespace Au
 	/// 
 	/// All 'wait for' functions have a <i>secondsTimeout</i> parameter. It is the maximal time to wait, seconds. If it is 0, waits infinitely. If &gt;0, after that time interval throws <see cref="TimeoutException"/>. If &lt;0, then stops waiting and returns default value of that type (false, etc).
 	/// 
-	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="OptWaitFor.DoEvents"/>.
+	/// While waiting, most functions by default don't dispatch Windows messages, events, hooks, timers, COM/RPC, etc. For example, if used in a Form/Control event handler, the form would stop responding. Use another thread, for example async/await/Task, like in the example. Or option <see cref="AOptWaitFor.DoEvents"/>.
 	/// </remarks>
 	/// <seealso cref="ATime"/>
 	/// <example>
@@ -80,7 +80,7 @@ namespace Au
 
 			/// <summary>
 			/// Current period (<see cref="Sleep"/> sleep time), milliseconds.
-			/// Initially it is <see cref="OptWaitFor.Period"/>, optionally multiplied by constructor's <i>options.Period</i>/10. Default 10 ms. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
+			/// Initially it is <see cref="AOptWaitFor.Period"/>, optionally multiplied by constructor's <i>options.Period</i>/10. Default 10 ms. Then each <see cref="Sleep"/> increments it until <see cref="MaxPeriod"/>.
 			/// </summary>
 			public float Period { get; set; }
 
@@ -99,7 +99,7 @@ namespace Au
 			/// The maximal time to wait, seconds. If 0, waits infinitely. If &gt;0, after that time interval <see cref="Sleep"/> throws <see cref="TimeoutException"/>. If &lt;0, then <see cref="Sleep"/> returns false.
 			/// </param>
 			/// <param name="options">Options. If null, uses <see cref="AOpt.WaitFor"/>, else combines with it.</param>
-			public Loop(double secondsTimeout, OptWaitFor options = null)
+			public Loop(double secondsTimeout, AOptWaitFor options = null)
 			{
 				var to = AOpt.WaitFor;
 				Period = to.Period;
@@ -177,7 +177,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>More info: <see cref="AWaitFor"/>.</remarks>
 		/// <example>See <see cref="AWaitFor"/>.</example>
-		public static bool Condition(double secondsTimeout, Func<bool> condition, OptWaitFor options = null)
+		public static bool Condition(double secondsTimeout, Func<bool> condition, AOptWaitFor options = null)
 		{
 			var to = new Loop(secondsTimeout, options);
 			for(; ; ) {
@@ -385,7 +385,7 @@ namespace Au
 		/// AOutput.Write(stop);
 		/// ]]></code>
 		/// </example>
-		public static bool Variable(double secondsTimeout, in bool variable, OptWaitFor options = null)
+		public static bool Variable(double secondsTimeout, in bool variable, AOptWaitFor options = null)
 		{
 			var to = new Loop(secondsTimeout, options);
 			for(; ; ) {

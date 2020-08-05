@@ -75,7 +75,7 @@
     <ClCompile Include="acc web.cpp">
       <Filter>Source Files\Acc</Filter>
     </ClCompile>
-    <ClCompile Include="start process.cpp">
+    <ClCompile Include="other.cpp">
       <Filter>Source Files\other</Filter>
     </ClCompile>
   </ItemGroup>

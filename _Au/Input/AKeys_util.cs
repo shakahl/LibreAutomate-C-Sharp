@@ -22,19 +22,18 @@ namespace Au
 		/// The substring should contain single key name, eg "Esc", "A", "=".
 		/// Returns 0 if invalid key name.
 		/// </summary>
-		static unsafe KKey _KeynameToKey(string s, int i, int len)
-		{
+		static unsafe KKey _KeynameToKey(string s, int i, int len) {
 			//AOutput.Write(s, i, len);
-			if(len < 1) return 0;
+			if (len < 1) return 0;
 
 			char c = s[i];
 
 			//character keys, like K, 9, -
-			if(len == 1) {
-				if(c >= 'a' && c <= 'z') return (KKey)(c - 32);
-				if(c >= 'A' && c <= 'Z') return (KKey)c;
-				if(c >= '0' && c <= '9') return (KKey)c;
-				switch(c) {
+			if (len == 1) {
+				if (c >= 'a' && c <= 'z') return (KKey)(c - 32);
+				if (c >= 'A' && c <= 'Z') return (KKey)c;
+				if (c >= '0' && c <= '9') return (KKey)c;
+				switch (c) {
 				case '=': return KKey.OemPlus;
 				case '`': case '~': return KKey.OemTilde;
 				case '-': case '_': return KKey.OemMinus;
@@ -62,9 +61,9 @@ namespace Au
 			}
 
 			//numpad keys
-			if(c == '#') {
-				if(len == 2) {
-					switch(s[i + 1]) {
+			if (c == '#') {
+				if (len == 2) {
+					switch (s[i + 1]) {
 					case '.': return KKey.Decimal;
 					case '+': return KKey.Add;
 					case '/': return KKey.Divide;
@@ -86,9 +85,9 @@ namespace Au
 			}
 
 			//F keys
-			if(c == 'F' && AChar.IsAsciiDigit(s[i + 1])) {
+			if (c == 'F' && AChar.IsAsciiDigit(s[i + 1])) {
 				int n = s.ToInt(i + 1, out int e, STIFlags.NoHex);
-				if(n > 0 && n <= 24 && e == i + len) return (KKey)(0x6F + n);
+				if (n > 0 && n <= 24 && e == i + len) return (KKey)(0x6F + n);
 			}
 
 			//named keys
@@ -99,87 +98,87 @@ namespace Au
 				c3 = len > 3 ? Char.ToLowerInvariant(s[i + 3]) : ' ',
 				c4 = len > 4 ? Char.ToLowerInvariant(s[i + 4]) : ' ';
 			uint u = (uint)c1 << 16 | c2;
-			switch(c) {
+			switch (c) {
 			case 'A':
-				if(_U('l', 't')) k = c3 == 'g' ? KKey.RAlt : KKey.Alt;
-				else if(_U('p', 'p')) k = KKey.Apps;
+				if (_U('l', 't')) k = c3 == 'g' ? KKey.RAlt : KKey.Alt;
+				else if (_U('p', 'p')) k = KKey.Apps;
 				break;
 			case 'B':
-				if(_U('a', 'c') || _U('s', ' ')) k = KKey.Back;
+				if (_U('a', 'c') || _U('s', ' ')) k = KKey.Back;
 				break;
 			case 'C':
-				if(_U('t', 'r')) k = KKey.Ctrl;
-				else if(_U('a', 'p') || _U('l', ' ')) k = KKey.CapsLock;
+				if (_U('t', 'r')) k = KKey.Ctrl;
+				else if (_U('a', 'p') || _U('l', ' ')) k = KKey.CapsLock;
 				break;
 			case 'D':
-				if(_U('e', 'l')) k = KKey.Delete;
-				else if(_U('o', 'w')) k = KKey.Down;
+				if (_U('e', 'l')) k = KKey.Delete;
+				else if (_U('o', 'w')) k = KKey.Down;
 				break;
 			case 'E':
-				if(_U('n', 't')) k = KKey.Enter;
-				else if(_U('n', 'd')) k = KKey.End;
-				else if(_U('s', 'c')) k = KKey.Escape;
+				if (_U('n', 't')) k = KKey.Enter;
+				else if (_U('n', 'd')) k = KKey.End;
+				else if (_U('s', 'c')) k = KKey.Escape;
 				break;
 			case 'H':
-				if(_U('o', 'm') || _U('m', ' ')) k = KKey.Home;
+				if (_U('o', 'm') || _U('m', ' ')) k = KKey.Home;
 				break;
 			case 'I':
-				if(_U('n', 's')) k = KKey.Insert;
+				if (_U('n', 's')) k = KKey.Insert;
 				break;
 			case 'L':
-				if(_U('e', 'f')) k = KKey.Left;
+				if (_U('e', 'f')) k = KKey.Left;
 				//don't need LShift etc
 				break;
 			case 'M':
-				if(_U('e', 'n')) k = KKey.Apps;
+				if (_U('e', 'n')) k = KKey.Apps;
 				break;
 			case 'N':
-				if(_U('u', 'm') || _U('l', ' ')) k = KKey.NumLock;
+				if (_U('u', 'm') || _U('l', ' ')) k = KKey.NumLock;
 				//for NumEnter use AKeys.Key((KKey.Enter, 0, true))
 				break;
 			case 'P':
-				if(_U('a', 'g') && c3 == 'e') k = c4 == 'u' ? KKey.PageUp : (c4 == 'd' ? KKey.PageDown : 0);
-				else if(_U('g', 'u') || _U('u', ' ')) k = KKey.PageUp;
-				else if(_U('g', 'd') || _U('d', ' ')) k = KKey.PageDown;
-				else if(_U('a', 'u') || _U('b', ' ')) k = KKey.Pause;
-				else if(_U('r', 'i') || _U('r', 't') || _U('s', ' ')) k = KKey.PrintScreen;
+				if (_U('a', 'g') && c3 == 'e') k = c4 == 'u' ? KKey.PageUp : (c4 == 'd' ? KKey.PageDown : 0);
+				else if (_U('g', 'u') || _U('u', ' ')) k = KKey.PageUp;
+				else if (_U('g', 'd') || _U('d', ' ')) k = KKey.PageDown;
+				else if (_U('a', 'u') || _U('b', ' ')) k = KKey.Pause;
+				else if (_U('r', 'i') || _U('r', 't') || _U('s', ' ')) k = KKey.PrintScreen;
 				break;
 			case 'R':
-				if(_U('i', 'g')) k = KKey.Right;
-				else if(_U('a', 'l')) k = KKey.RAlt;
-				else if(_U('c', 't')) k = KKey.RCtrl;
-				else if(_U('s', 'h')) k = KKey.RShift;
-				else if(_U('w', 'i')) k = KKey.RWin;
+				if (_U('i', 'g')) k = KKey.Right;
+				else if (_U('a', 'l')) k = KKey.RAlt;
+				else if (_U('c', 't')) k = KKey.RCtrl;
+				else if (_U('s', 'h')) k = KKey.RShift;
+				else if (_U('w', 'i')) k = KKey.RWin;
 				break;
 			case 'S':
-				if(_U('h', 'i')) k = KKey.Shift;
-				else if(_U('p', 'a')) k = KKey.Space;
-				else if(_U('c', 'r') || _U('l', ' ')) k = KKey.ScrollLock;
+				if (_U('h', 'i')) k = KKey.Shift;
+				else if (_U('p', 'a')) k = KKey.Space;
+				else if (_U('c', 'r') || _U('l', ' ')) k = KKey.ScrollLock;
 				//SysRq not used on Windows
 				break;
 			case 'T':
-				if(_U('a', 'b')) k = KKey.Tab;
+				if (_U('a', 'b')) k = KKey.Tab;
 				break;
 			case 'U':
-				if(c1 == 'p') k = KKey.Up;
+				if (c1 == 'p') k = KKey.Up;
 				break;
 			case 'V':
-				if(c1 == 'k') {
+				if (c1 == 'k') {
 					int v = s.ToInt(i + 2, out int end, STIFlags.DontSkipSpaces);
-					if(end != i + len || (uint)v > 255) v = 0;
+					if (end != i + len || (uint)v > 255) v = 0;
 					return (KKey)v;
 				}
 				break;
 			case 'W':
-				if(_U('i', 'n')) k = KKey.Win;
+				if (_U('i', 'n')) k = KKey.Win;
 				break;
 			}
-			if(k != 0) {
-				for(int i2 = i + len; i < i2; i++) if(!AChar.IsAsciiAlpha(s[i])) return 0;
+			if (k != 0) {
+				for (int i2 = i + len; i < i2; i++) if (!AChar.IsAsciiAlpha(s[i])) return 0;
 				return k;
 			}
 
-			if(c >= 'A' && c <= 'Z') {
+			if (c >= 'A' && c <= 'Z') {
 				var s1 = s.Substring(i, len);
 #if false
 				if(Enum.TryParse(s1, true, out KKey r1)) return r1;
@@ -202,12 +201,11 @@ namespace Au
 
 		static System.Collections.Hashtable s_htEnum; //with Dictionary much slower JIT
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		static KKey _FindKeyInEnums(string key)
-		{
-			if(s_htEnum == null) {
+		static KKey _FindKeyInEnums(string key) {
+			if (s_htEnum == null) {
 				var t = new System.Collections.Hashtable(160 /*220*/, StringComparer.OrdinalIgnoreCase);
 				var a1 = typeof(KKey).GetFields();
-				for(int j = 1; j < a1.Length; j++) { //note: start from 1 to skip the default value__, it gives exception
+				for (int j = 1; j < a1.Length; j++) { //note: start from 1 to skip the default value__, it gives exception
 					t.Add(a1[j].Name, a1[j].GetRawConstantValue());
 				}
 
@@ -227,14 +225,13 @@ namespace Au
 				s_htEnum = t;
 			}
 			var r = s_htEnum[key];
-			if(r == null) return 0;
-			if(r is byte) return (KKey)(byte)r;
+			if (r == null) return 0;
+			if (r is byte) return (KKey)(byte)r;
 			return (KKey)(int)r;
 			//note: GetRawConstantValue gets byte for KKey, int for Keys. GetValue(null) gets of enum type.
 		}
 
-		static ArgumentException _ArgumentException_ErrorInKeysString(string keys, int i, int len)
-		{
+		static ArgumentException _ArgumentException_ErrorInKeysString(string keys, int i, int len) {
 			return new ArgumentException($"Error in keys string: {keys.Remove(i)}<<<{keys.Substring(i, len)}>>>{keys.Substring(i + len)}");
 		}
 
@@ -246,9 +243,8 @@ namespace Au
 			/// <summary>
 			/// Calls ATime.SleepDoEvents.
 			/// </summary>
-			internal static void Sleep(int ms)
-			{
-				if(ms > 0) ATime.SleepDoEvents(ms);
+			internal static void Sleep(int ms) {
+				if (ms > 0) ATime.SleepDoEvents(ms);
 
 				//see comments in AMouse._Sleep.
 			}
@@ -262,9 +258,8 @@ namespace Au
 			/// If k is Shift, Ctrl, Alt or Win or their left/right versions, returns it as modifier flag, eg KMod.Shift.
 			/// Else returns 0.
 			/// </summary>
-			internal static KMod KeyToMod(KKey k)
-			{
-				switch(k) {
+			internal static KMod KeyToMod(KKey k) {
+				switch (k) {
 				case KKey.Shift: case KKey.LShift: case KKey.RShift: return KMod.Shift;
 				case KKey.Ctrl: case KKey.LCtrl: case KKey.RCtrl: return KMod.Ctrl;
 				case KKey.Alt: case KKey.LAlt: case KKey.RAlt: return KMod.Alt;
@@ -278,14 +273,13 @@ namespace Au
 			/// </summary>
 			/// <param name="vk"></param>
 			/// <param name="hkl">Keyboard layout. If default(LPARAM), uses of current thread.</param>
-			internal static ushort VkToSc(KKey vk, LPARAM hkl = default)
-			{
-				if(hkl == default) hkl = Api.GetKeyboardLayout(0);
+			internal static ushort VkToSc(KKey vk, LPARAM hkl = default) {
+				if (hkl == default) hkl = Api.GetKeyboardLayout(0);
 				uint sc = Api.MapVirtualKeyEx((uint)vk, 0, hkl); //MAPVK_VK_TO_VSC
 
 				//fix Windows bugs
-				if(vk == KKey.PrintScreen && sc == 0x54) sc = 0x37;
-				if(vk == KKey.Pause && sc == 0) sc = 0x45;
+				if (vk == KKey.PrintScreen && sc == 0x54) sc = 0x37;
+				if (vk == KKey.Pause && sc == 0) sc = 0x45;
 
 				return (ushort)sc;
 
@@ -296,8 +290,7 @@ namespace Au
 			/// Sends one key event.
 			/// Just calls API SendInput with raw parameters.
 			/// </summary>
-			internal static unsafe void SendKeyEventRaw(KKey vk, ushort scan, uint flags)
-			{
+			internal static unsafe void SendKeyEventRaw(KKey vk, ushort scan, uint flags) {
 				var ki = new Api.INPUTK(vk, scan, flags);
 				Api.SendInput(&ki);
 			}
@@ -308,14 +301,13 @@ namespace Au
 			/// </summary>
 			/// <param name="k"></param>
 			/// <param name="downUp">1 down, 2 up, 0 down-up.</param>
-			internal static void SendKey(KKey k, int downUp = 0)
-			{
+			internal static void SendKey(KKey k, int downUp = 0) {
 				uint f = 0;
-				if(KeyTypes_.IsExtended(k)) f |= Api.KEYEVENTF_EXTENDEDKEY;
+				if (KeyTypes_.IsExtended(k)) f |= Api.KEYEVENTF_EXTENDEDKEY;
 				ushort scan = VkToSc(k);
 
-				if(0 == (downUp & 2)) SendKeyEventRaw(k, scan, f);
-				if(0 == (downUp & 1)) SendKeyEventRaw(k, scan, f | Api.KEYEVENTF_KEYUP);
+				if (0 == (downUp & 2)) SendKeyEventRaw(k, scan, f);
+				if (0 == (downUp & 1)) SendKeyEventRaw(k, scan, f | Api.KEYEVENTF_KEYUP);
 			}
 
 			internal static void SendCtrl(bool down) => SendKeyEventRaw(KKey.Ctrl, 0x1D, down ? 0 : Api.KEYEVENTF_KEYUP);
@@ -331,15 +323,14 @@ namespace Au
 			/// </summary>
 			/// <param name="press"></param>
 			/// <param name="mod">Modifier keys. Does nothing if 0.</param>
-			internal static unsafe void ModPressRelease(bool press, KMod mod)
-			{
-				if(mod == 0) return;
+			internal static unsafe void ModPressRelease(bool press, KMod mod) {
+				if (mod == 0) return;
 				var a = stackalloc Api.INPUTK[4];
 				int n = 0; uint f = press ? 0 : Api.KEYEVENTF_KEYUP;
-				if(0 != (mod & KMod.Ctrl)) a[n++].Set(KKey.Ctrl, 0x1D, f);
-				if(0 != (mod & KMod.Alt)) a[n++].Set(KKey.Alt, 0x38, f);
-				if(0 != (mod & KMod.Shift)) a[n++].Set(KKey.Shift, 0x2A, f);
-				if(0 != (mod & KMod.Win)) a[n++].Set(KKey.Win, 0x5B, f);
+				if (0 != (mod & KMod.Ctrl)) a[n++].Set(KKey.Ctrl, 0x1D, f);
+				if (0 != (mod & KMod.Alt)) a[n++].Set(KKey.Alt, 0x38, f);
+				if (0 != (mod & KMod.Shift)) a[n++].Set(KKey.Shift, 0x2A, f);
+				if (0 != (mod & KMod.Win)) a[n++].Set(KKey.Win, 0x5B, f);
 				Api.SendInput(a, n);
 			}
 
@@ -349,15 +340,14 @@ namespace Au
 			/// Returns true if turned off CapsLock.
 			/// Does not sleep, blockinput, etc.
 			/// </summary>
-			internal static bool ReleaseModAndCapsLock(OptKey opt)
-			{
+			internal static bool ReleaseModAndCapsLock(AOptKey opt) {
 				//note: don't call Hook here, it does not make sense.
 
 				bool R = !opt.NoCapsOff && IsCapsLock;
-				if(R) {
-					if(IsPressed(KKey.CapsLock)) SendKey(KKey.CapsLock, 2); //never mind: in this case later may not restore CapsLock because of auto-repeat
+				if (R) {
+					if (IsPressed(KKey.CapsLock)) SendKey(KKey.CapsLock, 2); //never mind: in this case later may not restore CapsLock because of auto-repeat
 					SendKey(KKey.CapsLock);
-					if(IsCapsLock) {
+					if (IsCapsLock) {
 						//Probably Shift is set to turn off CapsLock in CP dialog "Text Services and Input Languages".
 						//	Win10: Settings -> Time & Language -> Language -> Input method -> Hot keys.
 						AHookWin.IgnoreLShiftCaps_(2000);
@@ -374,10 +364,10 @@ namespace Au
 
 						//speed: often ~15 ms. Without Shift max 5 ms.
 
-						//never mind: don't need to turn off CapsLock if there is only text, unless Options.TextOption == KTextOption.Keys.
+						//never mind: don't need to turn off CapsLock if there is only text, unless KTextHow.KeysX.
 					}
 				}
-				if(!opt.NoModOff) ReleaseModAndDisableModMenu();
+				if (!opt.NoModOff) ReleaseModAndDisableModMenu();
 				return R;
 			}
 
@@ -386,8 +376,7 @@ namespace Au
 			/// If pressed Alt or Win without Ctrl, presses-releases Ctrl to avoid menu mode.
 			/// Does not use options, sleep, blockinput, etc.
 			/// </summary>
-			internal static void ReleaseModAndDisableModMenu()
-			{
+			internal static void ReleaseModAndDisableModMenu() {
 				bool isLAlt = IsPressed(KKey.LAlt);
 				bool isRAlt = IsPressed(KKey.RAlt);
 				bool isLWin = IsPressed(KKey.Win);
@@ -395,37 +384,36 @@ namespace Au
 				bool isLCtrl = IsPressed(KKey.LCtrl);
 				bool isRCtrl = IsPressed(KKey.RCtrl);
 				bool menu = (isLAlt || isRAlt || isLWin || isRWin) && !(isLCtrl || isRCtrl);
-				if(menu) SendKey(KKey.Ctrl); //if Alt or Win pressed, send Ctrl to avoid menu mode or Start menu. For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
-				if(isLCtrl) SendCtrl(false);
-				if(isRCtrl) SendRCtrlUp();
-				if(IsPressed(KKey.LShift)) SendShift(false);
-				if(IsPressed(KKey.RShift)) SendRShiftUp();
-				if(isLAlt) SendAlt(false);
-				if(isRAlt) SendRAltUp();
-				if(isLWin) SendKey(KKey.Win, 2);
-				if(isRWin) SendKey(KKey.RWin, 2);
+				if (menu) SendKey(KKey.Ctrl); //if Alt or Win pressed, send Ctrl to avoid menu mode or Start menu. For Alt works Ctrl-up, but maybe not everywhere. For Win need Ctrl-down-up.
+				if (isLCtrl) SendCtrl(false);
+				if (isRCtrl) SendRCtrlUp();
+				if (IsPressed(KKey.LShift)) SendShift(false);
+				if (IsPressed(KKey.RShift)) SendRShiftUp();
+				if (isLAlt) SendAlt(false);
+				if (isRAlt) SendRAltUp();
+				if (isLWin) SendKey(KKey.Win, 2);
+				if (isRWin) SendKey(KKey.RWin, 2);
 			}
 
 			/// <summary>
-			/// Sends Ctrl+V or Ctrl+C or Ctrl+X, and/or optionally Enter.
-			/// Caller gets opt and wFocus with _GetOptionsAndWndFocused (it may want to know some options too).
+			/// Sends Ctrl+V or Ctrl+C or Ctrl+X, and/or optionally one or more keys.
+			/// Caller gets opt and wFocus with GetOptionsAndWndFocused_ (it may want to know some options too).
 			/// Caller calls Press, waits until the target app gets clipboard data, then calls Release.
 			/// </summary>
 			internal unsafe struct SendCopyPaste
 			{
 				ushort _scan;
 				KKey _vk;
-				bool _enter;
-				OptKey _opt;
+				AOptKey _opt;
+				List<KKey> _andKeys;
 
 				/// <summary>
 				/// Presses Ctrl+key. Does not release.
-				/// If enter is true, Release will press Enter.
+				/// If andKeys used, Release will press/relase them.
 				/// </summary>
-				public void Press(KKey key, OptKey opt, AWnd wFocus, bool enter = false)
-				{
+				public void Press(KKey key, AOptKey opt, AWnd wFocus, List<KKey> andKeys = null) {
 					_scan = VkToSc(_vk = key, Api.GetKeyboardLayout(wFocus.ThreadId));
-					_enter = enter;
+					_andKeys = andKeys;
 					_opt = opt;
 
 					SendCtrl(true);
@@ -437,23 +425,25 @@ namespace Au
 				/// Releases keys.
 				/// Does nothing if already released.
 				/// </summary>
-				public void Release()
-				{
-					if(_vk == 0) return;
+				public void Release() {
+					if (_vk == 0) return;
+					var vk = _vk; _vk = 0;
 
-					SendKeyEventRaw(_vk, _scan, Api.KEYEVENTF_KEYUP);
+					SendKeyEventRaw(vk, _scan, Api.KEYEVENTF_KEYUP);
 					SendCtrl(false);
-					_vk = 0;
-					if(_enter) Enter(_opt);
+					if (_andKeys != null) AndSendKeys(_andKeys, _opt);
 				}
 
 				/// <summary>
-				/// Sends Enter.
+				/// Sends one or more keys.
+				/// Not used for keys whose scancode can depend on keyboard layout. To get scancode, uses keyboard layout of current thread.
 				/// </summary>
-				public static void Enter(OptKey opt)
-				{
-					var e = new _KEvent(true, KKey.Enter, 0, 0x1C);
-					_SendKey2(e, default, true, opt);
+				public static void AndSendKeys(List<KKey> keys, AOptKey opt) {
+					foreach (var k in keys) {
+						var f = KeyTypes_.IsExtended(k) ? _KFlags.Extended : default;
+						var e = new _KEvent(true, k, f, VkToSc(k));
+						_SendKey2(e, default, true, opt);
+					}
 				}
 			}
 
@@ -461,20 +451,18 @@ namespace Au
 			{
 				public Api.INPUTK k0, k1;
 
-				public INPUTKEY2(KKey vk, ushort sc, uint flags = 0)
-				{
+				public INPUTKEY2(KKey vk, ushort sc, uint flags = 0) {
 					k0 = new Api.INPUTK(vk, sc, flags);
 					k1 = new Api.INPUTK(vk, sc, flags | Api.KEYEVENTF_KEYUP);
 				}
 			}
 
-			internal static AWnd GetWndFocusedOrActive()
-			{
-				for(int i = 0; i < 20; i++) {
+			internal static AWnd GetWndFocusedOrActive() {
+				for (int i = 0; i < 20; i++) {
 					AWnd.More.GetGUIThreadInfo(out var g);
 					//AOutput.Write(i, g.hwndFocus, g.hwndActive);
-					if(!g.hwndFocus.Is0) return g.hwndFocus;
-					if(!g.hwndActive.Is0) return g.hwndActive;
+					if (!g.hwndFocus.Is0) return g.hwndFocus;
+					if (!g.hwndActive.Is0) return g.hwndActive;
 					ATime.Sleep(1);
 				}
 				return default;
@@ -490,38 +478,35 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
+		/// Returns AOptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
 		/// <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
 		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(AWnd) if Hook is null.</param>
-		OptKey _GetOptionsAndWndFocused(out AWnd wFocus, bool getWndAlways)
-		{
-			if(Options.Hook == null && !getWndAlways) {
+		internal AOptKey GetOptionsAndWndFocused_(out AWnd wFocus, bool getWndAlways) {
+			if (Options.Hook == null && !getWndAlways) {
 				wFocus = default;
 				return Options;
 			}
-			return _GetOptions(wFocus = Internal_.GetWndFocusedOrActive());
+			return GetOptions_(wFocus = Internal_.GetWndFocusedOrActive());
 		}
 
 		/// <summary>
-		/// Returns OptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
+		/// Returns AOptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
 		/// </summary>
-		/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use _GetOptionsAndWndFocused instead.</param>
-		OptKey _GetOptions(AWnd wFocus)
-		{
+		/// <param name="wFocus">the focused or active window. The function uses it to avoid frequent calling of Hook. If you don't have it, use GetOptionsAndWndFocused_ instead.</param>
+		internal AOptKey GetOptions_(AWnd wFocus) {
 			var call = Options.Hook;
-			if(call == null || wFocus.Is0) return Options;
-			if(wFocus != _sstate.wFocus) {
+			if (call == null || wFocus.Is0) return Options;
+			if (wFocus != _sstate.wFocus) {
 				_sstate.wFocus = wFocus;
-				if(_sstate.options == null) _sstate.options = new OptKey(Options); else _sstate.options.CopyOrDefault_(Options);
+				if (_sstate.options == null) _sstate.options = new AOptKey(Options); else _sstate.options.CopyOrDefault_(Options);
 				call(new KOHookData(_sstate.options, wFocus));
 			}
 			return _sstate.options;
 		}
 
-		void _ThrowIfSending()
-		{
-			if(_sending) throw new InvalidOperationException();
+		void _ThrowIfSending() {
+			if (_sending) throw new InvalidOperationException();
 		}
 
 		internal static class KeyTypes_
@@ -558,8 +543,7 @@ namespace Au
 
 			static _KT[] _b;
 
-			static KeyTypes_()
-			{
+			static KeyTypes_() {
 				_b = new _KT[256];
 
 				_b[1] = _b[2] = _b[4] = _b[5] = _b[6]
@@ -585,7 +569,7 @@ namespace Au
 				_b[(int)KKey.Win] = _b[(int)KKey.RWin] = _b[(int)KKey.RCtrl] = _b[(int)KKey.RAlt]
 					= _KT.Mod | _KT.Extended | _KT.GksReliable;
 
-				for(int i = (int)KKey.BrowserBack; i <= (int)KKey.LaunchApp2; i++) _b[i] = _KT.Extended; //media/browser/launchapp keys
+				for (int i = (int)KKey.BrowserBack; i <= (int)KKey.LaunchApp2; i++) _b[i] = _KT.Extended; //media/browser/launchapp keys
 
 				//for(int i = 1; i < 256; i++) AOutput.Write((KKey)i, _b[i]);
 			}
