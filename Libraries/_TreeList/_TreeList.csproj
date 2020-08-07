@@ -47,7 +47,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\_Au\_Au.csproj" />
+    <ProjectReference Include="..\..\Au\Au.csproj" />
   </ItemGroup>
 
   <ItemGroup>

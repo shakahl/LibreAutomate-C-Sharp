@@ -195,7 +195,7 @@ class CiSignature
 		var rect1 = CiUtil.GetCaretRectFromPos(doc, r.ApplicableSpan.Start);
 		var rect2 = CiUtil.GetCaretRectFromPos(doc, cd.pos16);
 		var rect = doc.RectangleToScreen(Rectangle.Union(rect1, rect2));
-		rect.Width += Au.Util.ADpi.Scale(200);
+		rect.Width += ADpi.Scale(200);
 		rect.X -= 6;
 
 		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Signature, onHiddenOrDestroyed: _ => _data = null) {

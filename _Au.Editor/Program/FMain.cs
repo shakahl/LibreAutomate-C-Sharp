@@ -227,7 +227,7 @@ partial class FMain : Form
 	//	Probably this is by design, see Control.cs -> OnHandleCreated -> && !(typeof(Form).IsAssignableFrom(GetType())).
 	unsafe void _DpiWorkaround1(AWnd w) {
 		if (!AVersion.MinWin10_1607) return;
-		int dpi = Au.Util.ADpi.OfWindow(w), dpiNET = this.DeviceDpi;
+		int dpi = ADpi.OfWindow(w), dpiNET = this.DeviceDpi;
 		if (dpi == dpiNET) return;
 		var fi = typeof(Control).GetField("_deviceDpi", BindingFlags.Instance | BindingFlags.NonPublic);
 		Debug.Assert(fi != null);

@@ -112,7 +112,7 @@ class PanelEdit : UserControl
 				var c = sender as Control;
 				if(!c.FindForm().Hwnd().IsActive) return;
 				int dist = (int)AMath.Distance(Program.Model.TreeControl.Hwnd().Rect, AMouse.XY);
-				if(dist < Au.Util.ADpi.Scale(100)) return;
+				if(dist < ADpi.Scale(100)) return;
 				if(_openFocus.dist >= 0 && dist < _openFocus.dist + 20) { //if new file, don't focus until mouse is moving away from tree
 					if(dist < _openFocus.dist) _openFocus.dist = dist;
 					return;

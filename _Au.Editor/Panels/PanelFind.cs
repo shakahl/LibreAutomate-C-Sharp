@@ -281,7 +281,7 @@ class PanelFind : AuUserControlBase
 		if(_cRegex.Checked) {
 			_cWord.Checked = false;
 			if(_regexWindow == null) {
-				_regexWindow = new RegexWindow();
+				_regexWindow = new RegexWindow(sender as Control);
 			}
 		} else {
 			_regexWindow?.Dispose();

@@ -49,7 +49,7 @@ namespace Au.Tools
 
 		void _Regex(string _)
 		{
-			if(_regexWindow == null) _regexWindow = new RegexWindow();
+			if(_regexWindow == null) _regexWindow = new RegexWindow(_control);
 			if(!_regexWindow.Window.IsHandleCreated) _regexWindow.Show(_control);
 			else _regexWindow.Window.Show();
 		}

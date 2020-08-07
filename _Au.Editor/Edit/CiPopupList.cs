@@ -49,12 +49,12 @@ class CiPopupList
 
 	public CiPopupList(CiCompletion compl, SciCode docForDpi) {
 		_compl = compl;
-		_dpi = Au.Util.ADpi.OfWindow(docForDpi);
+		_dpi = ADpi.OfWindow(docForDpi);
 		_GetMiscImages();
 
 		_w = new _Window(this);
 		_w.SuspendLayout();
-		_w.Size = Au.Util.ADpi.ScaleSize((300, 360), _dpi);
+		_w.Size = ADpi.ScaleSize((300, 360), _dpi);
 
 		_list = new _FastListBox();
 		_list.SuspendLayout();
@@ -192,7 +192,7 @@ class CiPopupList
 		_groupsEnabled = _groups != null && _groupButton.Checked;
 		_doc = doc;
 
-		var dpi = Au.Util.ADpi.OfWindow(_doc);
+		var dpi = ADpi.OfWindow(_doc);
 		if (dpi != _dpi) {
 			Size z = _w.Size; z.Width = AMath.MulDiv(z.Width, dpi, _dpi); z.Height = AMath.MulDiv(z.Height, dpi, _dpi);
 			_w.Size = z;

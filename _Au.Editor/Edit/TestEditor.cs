@@ -169,24 +169,6 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 	{
 
 
-		Task.Run(() => {
-			var w = +AWnd.Find("* Notepad", "Notepad");
-			w.Activate();
-			100.ms();
-			
-			var hh = Cpp.Cpp_Clipboard(default);
-
-			//AClipboard.Text = "test";
-			//AClipboard.Paste("123");
-			try {
-				AClipboard.Copy();
-			}
-			catch (Exception e) { AOutput.Write(e.ToStringWithoutStack()); }
-
-			ATime.SleepDoEvents(100);
-
-			hh = Cpp.Cpp_Clipboard(hh);
-		});
 
 
 		//new System.Windows.Application();

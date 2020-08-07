@@ -317,10 +317,10 @@ class CiPopupListWPF
 	//	//draw images: kind, access, static/abstract
 	//	var imageKind = ci.KindImage;
 	//	if (imageKind != null) {
-	//		int imgX = r.X + Au.Util.ADpi.ScaleInt(18);
+	//		int imgX = r.X + ADpi.ScaleInt(18);
 	//		int imgY = (r.Y + r.Bottom + 1) / 2 - imageKind.Height / 2;
-	//		int overlayX = r.X + Au.Util.ADpi.ScaleInt(4);
-	//		int overlayY = imgY + Au.Util.ADpi.ScaleInt(4);
+	//		int overlayX = r.X + ADpi.ScaleInt(4);
+	//		int overlayY = imgY + ADpi.ScaleInt(4);
 	//		g.DrawImage(imageKind, imgX, imgY, imageKind.Width, imageKind.Height); //note: would be very slow, but is very fast if DoubleBuffered = true (the control sets it in ctor).
 	//		var imageAccess = ci.AccessImage;
 	//		if (imageAccess != null) g.DrawImage(imageAccess, overlayX, overlayY, imageAccess.Width, imageAccess.Height);
@@ -381,7 +381,7 @@ class CiPopupListWPF
 
 	//static Brush s_selectedBrush = new SolidBrush((Color)(ColorInt)0xc4d5ff);
 
-	static int _TextHorzOffset => Au.Util.ADpi.Scale( 38);
+	static int _TextHorzOffset => ADpi.Scale( 38);
 
 	//string _GreenSuffix(int visibleIndex) {
 	//	var ci = _VisibleItem(visibleIndex);
@@ -416,7 +416,7 @@ class CiPopupListWPF
 
 			this.Name = "Ci_PopupList";
 			//this.Text = "Au autocompletion list";
-			//this.MinimumSize = Au.Util.ADpi.ScaleSize((150, 150));
+			//this.MinimumSize = ADpi.ScaleSize((150, 150));
 		}
 
 		protected override void OnClosed(EventArgs e) {

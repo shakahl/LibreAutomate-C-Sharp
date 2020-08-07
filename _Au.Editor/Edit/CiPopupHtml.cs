@@ -102,10 +102,12 @@ class CiPopupHtml
 			if(_usedBy == UsedBy.Info) {
 
 			} else {
-				_w.MinimumSize = Au.Util.ADpi.ScaleSize((150, 150));
+				var owner = Program.MainForm;
+				int dpi = ADpi.OfWindow(owner);
+				_w.MinimumSize = ADpi.ScaleSize((150, 150), dpi);
 				_w.Size = new Size(
 					AScreen.Of(Program.MainForm).WorkArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
-					Au.Util.ADpi.Scale(_usedBy switch { UsedBy.PopupList => 360, UsedBy.Signature => 300, _ => 100 })
+					ADpi.Scale(_usedBy switch { UsedBy.PopupList => 360, UsedBy.Signature => 300, _ => 100 }, dpi)
 					);
 			}
 

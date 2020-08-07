@@ -9,9 +9,11 @@ namespace Au.Tools
 {
 	class RegexWindow : InfoWindow
 	{
-		public RegexWindow() : base(Util.ADpi.Scale(250))
+		public RegexWindow(Control ownerForDpi)
 		{
-			this.Size = Util.ADpi.ScaleSize((800, 220));
+			int dpi = ADpi.OfWindow(ownerForDpi);
+			base.InitTwoControlsSplitPos = ADpi.Scale(250, dpi);
+			this.Size = ADpi.ScaleSize((800, 220), dpi);
 			this.Caption = "Regex";
 		}
 

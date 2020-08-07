@@ -9,9 +9,9 @@ namespace Au.Tools
 {
 	class KeysWindow : InfoWindow
 	{
-		public KeysWindow()
+		public KeysWindow(Control ownerForDpi)
 		{
-			this.Size = Util.ADpi.ScaleSize((500, 300));
+			this.Size = ADpi.ScaleSize((500, 300), ownerForDpi);
 			this.Caption = "Keys";
 		}
 

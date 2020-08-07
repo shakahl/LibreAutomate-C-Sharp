@@ -10,8 +10,8 @@ namespace Aga.Controls.Tree.NodeControls
 {
 	internal class NodePlusMinus :NodeControl
 	{
-		public static int ImageSize { get { return Au.Util.ADpi.Scale(9); } }
-		public static int Width { get { return Au.Util.ADpi.Scale(16); } }
+		public static int ImageSize { get { return Au.ADpi.Scale(9); } }
+		public static int Width { get { return Au.ADpi.Scale(16); } }
 		private Bitmap _plus;
 		private Bitmap _minus;
 

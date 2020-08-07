@@ -18,8 +18,4 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
   </PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\..\_Au\_Au.csproj" />
-  </ItemGroup>
-
 </Project>

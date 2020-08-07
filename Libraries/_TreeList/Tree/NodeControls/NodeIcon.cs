@@ -19,7 +19,7 @@ namespace Aga.Controls.Tree.NodeControls
 		{
 			Image image = GetIcon(node);
 			if(image == null) return Size.Empty;
-			return DpiStretch ? (Size)Au.Util.ADpi.ImageSize(image) : image.Size;
+			return DpiStretch ? (Size)Au.ADpi.ImageSize(image) : image.Size;
 		}
 
 		public override void Draw(TreeNodeAdv node, DrawContext context)
