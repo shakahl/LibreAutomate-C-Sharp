@@ -18,8 +18,6 @@ using System.Text.Encodings.Web;
 
 using Au.Types;
 
-//FUTURE: public
-
 namespace Au.Util
 {
 	/// <summary>
@@ -32,7 +30,7 @@ namespace Au.Util
 	/// 
 	/// All functions are thread-safe, except when setting/getting non-atomic struct types (containing multiple fields, decimal, also long in 32-bit process).
 	/// </remarks>
-	class JSettings
+	public class JSettings
 	{
 		string _file;
 		bool _loaded;

@@ -129,8 +129,8 @@ namespace Au
 			SIZE z = image.Size;
 			int dpi = OfThisProcess;
 			if (dpi > 96) {
-				z.width = AMath.MulDiv(z.width, dpi, (int)Math.Round(image.HorizontalResolution));
-				z.height = AMath.MulDiv(z.height, dpi, (int)Math.Round(image.VerticalResolution));
+				z.width = AMath.MulDiv(z.width, dpi, image.HorizontalResolution.ToInt());
+				z.height = AMath.MulDiv(z.height, dpi, image.VerticalResolution.ToInt());
 			}
 			return z;
 		}
@@ -147,7 +147,7 @@ namespace Au
 			if (image != null) {
 				int dpi = OfThisProcess;
 				if (dpi > 96) {
-					int xRes = (int)Math.Round(image.HorizontalResolution), yRes = (int)Math.Round(image.VerticalResolution);
+					int xRes = image.HorizontalResolution.ToInt(), yRes = image.VerticalResolution.ToInt();
 					//AOutput.Write(xRes, yRes, dpi);
 					if (xRes != dpi || yRes != dpi) {
 						var z = image.Size;

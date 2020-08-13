@@ -13,7 +13,6 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 using System.Reflection.Emit;
-using Au.Util;
 
 namespace Au.Types
 {
@@ -484,9 +483,7 @@ namespace Au.Types
 		/// </summary>
 		internal void GoToEdit_(ToolStripItem item)
 		{
-			var wmsg = ATask.WndMsg_; if(wmsg.Is0) return;
-			Api.AllowSetForegroundWindow(wmsg.ProcessId);
-			AWnd.More.CopyDataStruct.SendString(wmsg, 4, _sourceFile, GetItemSourceLine_(item));
+			Util.AScriptEditor.GoToEdit(_sourceFile, GetItemSourceLine_(item));
 		}
 
 		internal static bool CanGoToEdit_ => !ATask.WndMsg_.Is0;

@@ -182,7 +182,7 @@ namespace Au
 			void _ContextMenu()
 			{
 				if(_m._name == null) return;
-				if(!CanGoToEdit_) return;
+				if(!Util.AScriptEditor.Available) return;
 				var p = this.MouseClientXY();
 				var contextItem = this.GetItemAt(p);
 				if(contextItem == null) { //maybe p is at the left or rigt of a textbox, label etc

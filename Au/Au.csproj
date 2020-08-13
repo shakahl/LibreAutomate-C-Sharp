@@ -26,7 +26,7 @@
   </PropertyGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle QM3" />
+    <Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle Aedit&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle QM3" />
   </Target>
 
   <ItemGroup>

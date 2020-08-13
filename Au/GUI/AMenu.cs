@@ -55,8 +55,7 @@ namespace Au
 		private protected override ToolStrip MainToolStrip => _c;
 
 		/// <summary>
-		/// Initializes this object.
-		/// Use this overload for various context menus of your app.
+		/// Use this constructor for various context menus of your app.
 		/// </summary>
 		/// <remarks>
 		/// Item actions run in this thread by default (see <see cref="MTBase.ActionThread"/>).
@@ -67,8 +66,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Initializes this object.
-		/// Use this overload for starting and/or automating other apps.
+		/// Use this constructor in automation scripts, for example if the menu is used for starting and/or automating other apps.
 		/// </summary>
 		/// <param name="name">Menu name. Must be valid filename. Currently only sets <see cref="Control"/>'s <b>Text</b> property.</param>
 		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
@@ -532,7 +530,7 @@ namespace Au
 		#region close
 
 		/// <summary>
-		/// Close the menu when the mouse cursor moves away from it to this distance. Only if the toolbar's thread is not the active UI thread.
+		/// Close the menu when the mouse cursor moves away from it to this distance and this thread is not the active UI thread.
 		/// </summary>
 		/// <remarks>
 		/// The value is pixels for DPI 96 (100%).

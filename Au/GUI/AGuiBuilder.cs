@@ -18,6 +18,7 @@ using System.Windows.Media.Imaging;
 using System.Windows.Media;
 using System.Xml.Linq;
 using System.Windows.Data;
+using System.Windows.Input;
 
 using Au;
 using Au.Types;
@@ -2347,4 +2348,81 @@ namespace Au.Types
 	//		/// </summary>
 	//		public static implicit operator bool(CheckBool c) => c.IsChecked.GetValueOrDefault();
 	//	}
+
+	/// <summary>
+	/// Extends <see cref="GridSplitter"/>. Can be used with not star-sized rows/columns.
+	/// </summary>
+	/// <remarks>
+	/// The WPF <see cref="GridSplitter"/> has this bug or undocumented limitation: incorrectly resizes if some rows or columns have fixed or auto size, unless star-sized rows/columns are at the end.
+	/// This flag applies this workaround: while moving the splitter with mouse or keyboard, it temporarily makes all rows or columns star-sized, and restores when ended resizing.
+	/// Important: all column or row definitions must be specified.
+	/// </remarks>
+	public class GridSplitter2 : GridSplitter
+	{
+		GridUnitType[] _units;
+		int _restore; //1 mouse, 2 keyboard
+
+		///
+		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e) {
+			_Stars(1);
+			base.OnPreviewMouseLeftButtonDown(e);
+		}
+
+		///
+		protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
+			if (_restore == 1) _Stars(0);
+			base.OnPreviewMouseLeftButtonDown(e);
+		}
+
+		///
+		protected override void OnPreviewKeyDown(KeyEventArgs e) {
+			if (e.Key == Key.Up || e.Key == Key.Down) _Stars(2);
+			base.OnPreviewKeyDown(e);
+		}
+
+		///
+		protected override void OnPreviewKeyUp(KeyEventArgs e) {
+			if (e.Key == Key.Up || e.Key == Key.Down) if (_restore == 2) _Stars(0);
+			base.OnPreviewKeyDown(e);
+		}
+
+		void _Stars(int action) {
+			var grid = this.Parent as Grid;
+			bool vertical = _IsVertical();
+			var cd = grid.ColumnDefinitions;
+			var rd = grid.RowDefinitions;
+			int n = vertical ? cd.Count : rd.Count;
+
+			if (action != 0) { //maybe all *
+				for (int i = 0; i < n; i++) if ((vertical ? cd[i].Width : rd[i].Height).GridUnitType != GridUnitType.Star) goto g1;
+				return; g1:;
+			}
+
+			_restore = action;
+
+			if (action != 0) {
+				if (_units == null || _units.Length != n) _units = new GridUnitType[n];
+			} else {
+				if (n != _units.Length) return;
+			}
+
+			for (int i = 0; i < n; i++) {
+				if (action != 0) _units[i] = (vertical ? cd[i].Width : rd[i].Height).GridUnitType;
+				var v = new GridLength(vertical ? cd[i].ActualWidth : rd[i].ActualHeight, action != 0 ? GridUnitType.Star : _units[i]);
+				if (vertical) cd[i].Width = v; else rd[i].Height = v;
+			}
+
+			//never mind: skip rows/columns containing just splitter. Now we set star width for them too.
+			//	Good: it does not change row/column height/width of splitters while moving the splitter.
+		}
+
+		bool _IsVertical() {
+			var dir = this.ResizeDirection;
+			if (dir != GridResizeDirection.Auto) return dir == GridResizeDirection.Columns;
+			//the algorithm is documented
+			if (this.HorizontalAlignment != HorizontalAlignment.Stretch) return true;
+			if (this.VerticalAlignment != VerticalAlignment.Stretch) return false;
+			return this.ActualWidth <= this.ActualHeight;
+		}
+	}
 }

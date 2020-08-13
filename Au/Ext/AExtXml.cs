@@ -103,6 +103,19 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Gets attribute value as enum type T.
+		/// If the attribute does not exist, sets value=default(T) and returns false.
+		/// If the attribute value is not a valid enum member name, sets value=default(T) and returns true.
+		/// </summary>
+		public static bool Attr<T>(this XElement t, out T value, XName name) where T : unmanaged, Enum
+		{
+			var x = t.Attribute(name);
+			if(x == null) { value = default; return false; }
+			Enum.TryParse(x.Value, out value);
+			return true;
+		}
+
+		/// <summary>
 		/// Returns true if this element has the specified attribute.
 		/// </summary>
 		public static bool HasAttr(this XElement t, XName name)

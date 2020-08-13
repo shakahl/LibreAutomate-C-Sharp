@@ -1,94 +1,98 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
 
-  <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
-    <UseWindowsForms>true</UseWindowsForms>
-    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <AssemblyName>Au.Controls</AssemblyName>
-    <RootNamespace>Au.Controls</RootNamespace>
-    <SignAssembly>true</SignAssembly>
-    <AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DocumentationFile>Au.Controls.xml</DocumentationFile>
-    <NoWarn>1701;1702;1591;0419</NoWarn>
-	<LangVersion>preview</LangVersion>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net5.0</TargetFramework>
+		<UseWPF>true</UseWPF>
+		<UseWindowsForms>true</UseWindowsForms>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AssemblyName>Au.Controls</AssemblyName>
+		<RootNamespace>Au.Controls</RootNamespace>
+		<SignAssembly>true</SignAssembly>
+		<AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<DocumentationFile>Au.Controls.xml</DocumentationFile>
+		<NoWarn>1701;1702;1591;0419</NoWarn>
+		<LangVersion>preview</LangVersion>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>DEBUG;TRACE</DefineConstants>
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-  </PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Compile Remove="Toolbars\**" />
-    <EmbeddedResource Remove="Toolbars\**" />
-    <None Remove="Toolbars\**" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Toolbars\**" />
+		<EmbeddedResource Remove="Toolbars\**" />
+		<None Remove="Toolbars\**" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Libraries\_SourceGrid\_SourceGrid.csproj" />
-    <ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Remove="WPF\AuPanels.Float.cs" />
+		<Compile Remove="WPF\AuPanels.Panel.cs" />
+		<Compile Remove="WPF\AuPanels.Stack.cs" />
+		<Compile Remove="WPF\AuPanels.Tab.cs" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Compile Update="Forms\AuDockPanel\AuDockPanel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\AuDockPanel\DP common.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\AuDockPanel\_Acc.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\AuDockPanel\_Float.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\AuDockPanel\_Panel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\AuDockPanel\_Split.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\AuDockPanel\_Tab.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\AuStripManager\FSMProperties.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\Other\DialogForm.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\Other\AuUserControlBase.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="Forms\Other\InactiveWindow.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="Forms\Other\ParamGrid.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Forms\Other\Simple.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Forms\Other\ToolStripSpringBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Forms\Sci\AuScintilla.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Forms\Sci\InfoBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Libraries\_SourceGrid\_SourceGrid.csproj" />
+		<ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="WPF\" />
-  </ItemGroup>
+	<ItemGroup>
+		<Compile Update="Forms\AuDockPanel\AuDockPanel.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\AuDockPanel\DP common.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\AuDockPanel\_Acc.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\AuDockPanel\_Float.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\AuDockPanel\_Panel.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\AuDockPanel\_Split.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\AuDockPanel\_Tab.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\AuStripManager\FSMProperties.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Forms\Other\DialogForm.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Forms\Other\AuUserControlBase.cs">
+			<SubType>UserControl</SubType>
+		</Compile>
+		<Compile Update="Forms\Other\InactiveWindow.cs">
+			<SubType>Form</SubType>
+		</Compile>
+		<Compile Update="Forms\Other\ParamGrid.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="Forms\Other\Simple.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="Forms\Other\ToolStripSpringBox.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="Forms\Sci\AuScintilla.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="Forms\Sci\InfoBox.cs">
+			<SubType>Component</SubType>
+		</Compile>
+	</ItemGroup>
 
-  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-    <Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle QM3" />
-  </Target>
+	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle Aedit&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle QM3" />
+	</Target>
 
 </Project>

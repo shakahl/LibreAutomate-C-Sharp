@@ -204,7 +204,7 @@ namespace Au
 					file = APath.Normalize_(file, fl, true);
 
 					//ShellExecuteEx supports long path prefix for exe but not for documents.
-					//Process.Run supports long path prefix, except when the exe is .NET.
+					//Process.Start supports long path prefix, except when the exe is .NET.
 					if(!runConsole) file = APath.UnprefixLongPath(file);
 
 					if(ADisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
@@ -212,7 +212,7 @@ namespace Au
 					}
 				} else if(!APath.IsUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
-					//Process.Run prefers current directory.
+					//Process.Start prefers current directory.
 					var s2 = AFile.SearchPath(file);
 					if(s2 != null) {
 						file = s2;

@@ -3841,6 +3841,28 @@
         <member name="F:Au.Types.GBBFlags.Validate">
             <summary>Perform validation like OK button. For example if it is Apply button.</summary>
         </member>
+        <member name="T:Au.Types.GridSplitter2">
+            <summary>
+            Extends <see cref="T:System.Windows.Controls.GridSplitter"/>. Can be used with not star-sized rows/columns.
+            </summary>
+            <remarks>
+            The WPF <see cref="T:System.Windows.Controls.GridSplitter"/> has this bug or undocumented limitation: incorrectly resizes if some rows or columns have fixed or auto size, unless star-sized rows/columns are at the end.
+            This flag applies this workaround: while moving the splitter with mouse or keyboard, it temporarily makes all rows or columns star-sized, and restores when ended resizing.
+            Important: all column or row definitions must be specified.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.GridSplitter2.OnPreviewMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs)">
+            
+        </member>
+        <member name="M:Au.Types.GridSplitter2.OnPreviewMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs)">
+            
+        </member>
+        <member name="M:Au.Types.GridSplitter2.OnPreviewKeyDown(System.Windows.Input.KeyEventArgs)">
+            
+        </member>
+        <member name="M:Au.Types.GridSplitter2.OnPreviewKeyUp(System.Windows.Input.KeyEventArgs)">
+            
+        </member>
         <member name="T:Au.Types.TBFlags">
             <summary>
             Used with <see cref="P:Au.AToolbar.MiscFlags"/>.
@@ -4512,6 +4534,11 @@
         <member name="P:Au.Types.HookData.Mouse.Event">
             <summary>
             What event it is (button, move, wheel).
+            </summary>
+        </member>
+        <member name="P:Au.Types.HookData.Mouse.IsMove">
+            <summary>
+            Is mouse-move event.
             </summary>
         </member>
         <member name="P:Au.Types.HookData.Mouse.IsButtonDown">
@@ -6726,6 +6753,24 @@
             Returns string containing exception type name and message.
             </summary>
         </member>
+        <member name="M:Au.AExtensions.ToInt(System.Double)">
+            <summary>
+            Converts to int with rounding.
+            Calls <see cref="M:System.Convert.ToInt32(System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.AExtensions.ToInt(System.Single)">
+            <summary>
+            Converts to int with rounding.
+            Calls <see cref="M:System.Convert.ToInt32(System.Boolean)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.AExtensions.ToInt(System.Decimal)">
+            <summary>
+            Converts to int with rounding.
+            Calls <see cref="M:System.Convert.ToInt32(System.Boolean)"/>.
+            </summary>
+        </member>
         <member name="M:Au.AExtensions.ToStringInvariant(System.Double,System.String)">
             <summary>
             Converts double to string.
@@ -7023,6 +7068,13 @@
             Gets attribute value converted to float number.
             If the attribute does not exist, sets value=0 and returns false.
             If the attribute value is empty or is not a valid number, sets value=0 and returns true.
+            </summary>
+        </member>
+        <member name="M:Au.AExtXml.Attr``1(System.Xml.Linq.XElement,``0@,System.Xml.Linq.XName)">
+            <summary>
+            Gets attribute value as enum type T.
+            If the attribute does not exist, sets value=default(T) and returns false.
+            If the attribute value is not a valid enum member name, sets value=default(T) and returns true.
             </summary>
         </member>
         <member name="M:Au.AExtXml.HasAttr(System.Xml.Linq.XElement,System.Xml.Linq.XName)">
@@ -10715,8 +10767,7 @@
         </member>
         <member name="M:Au.AMenu.#ctor">
             <summary>
-            Initializes this object.
-            Use this overload for various context menus of your app.
+            Use this constructor for various context menus of your app.
             </summary>
             <remarks>
             Item actions run in this thread by default (see <see cref="P:Au.Types.MTBase.ActionThread"/>).
@@ -10725,8 +10776,7 @@
         </member>
         <member name="M:Au.AMenu.#ctor(System.String,System.String,System.Int32)">
             <summary>
-            Initializes this object.
-            Use this overload for starting and/or automating other apps.
+            Use this constructor in automation scripts, for example if the menu is used for starting and/or automating other apps.
             </summary>
             <param name="name">Menu name. Must be valid filename. Currently only sets <see cref="P:Au.AMenu.Control"/>'s <b>Text</b> property.</param>
             <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
@@ -10962,7 +11012,7 @@
         </member>
         <member name="P:Au.AMenu.MouseClosingDistance">
             <summary>
-            Close the menu when the mouse cursor moves away from it to this distance. Only if the toolbar's thread is not the active UI thread.
+            Close the menu when the mouse cursor moves away from it to this distance and this thread is not the active UI thread.
             </summary>
             <remarks>
             The value is pixels for DPI 96 (100%).
@@ -18715,7 +18765,8 @@
         </member>
         <member name="T:Au.Util.AMessageLoop">
             <summary>
-            A message loop, alternative to Application.Run which does not support nested loops.
+            A message loop for non-WPF apps, alternative to <b>System.Windows.Forms.Application.Run</b> which does not support nested loops.
+            In WPF apps instead use <see cref="T:System.Windows.Threading.DispatcherFrame"/> in a similar way; instead of <b>Loop</b> and <b>Stop</b> use <see cref="M:System.Windows.Threading.Dispatcher.PushFrame(System.Windows.Threading.DispatcherFrame)"/> and <see cref="P:System.Windows.Threading.DispatcherFrame.Continue"/>.
             </summary>
         </member>
         <member name="M:Au.Util.AMessageLoop.Loop">
@@ -18776,6 +18827,24 @@
             Gets ResourceManager of the process entry assembly.
             Returns null if fails or if the assembly does not have resources.
             Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="P:Au.Util.AResources.AppResourcesName"/> before.
+            </summary>
+        </member>
+        <member name="T:Au.Util.AScriptEditor">
+            <summary>
+            Can be used in scripts to interact with the script editor, if available.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AScriptEditor.GoToEdit(System.String,System.Int32)">
+            <summary>
+            Opens the specified source file and goes to the specified line.
+            Does nothing if editor isn't running.
+            </summary>
+            <param name="sourceFile">Full path of the source file.</param>
+            <param name="line">1-based line index. If 0, just opens file.</param>
+        </member>
+        <member name="P:Au.Util.AScriptEditor.Available">
+            <summary>
+            Returns true if editor is running.
             </summary>
         </member>
         <member name="T:Au.Util.ASecurity">

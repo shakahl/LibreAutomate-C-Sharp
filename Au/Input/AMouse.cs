@@ -301,7 +301,7 @@ namespace Au
 			for(int i = 1; i < a.Length;) {
 				if(i > 1 && (isSleep || !withSleepTimes)) {
 					_SendMove(p);
-					if(!withSleepTimes) _Sleep((int)Math.Round(7 * speedFactor));
+					if(!withSleepTimes) _Sleep((7 * speedFactor).ToInt());
 				}
 
 				int v = a[i++], nbytes = (v & 3) + 1;
@@ -310,7 +310,7 @@ namespace Au
 				if(isSleep) {
 					//AOutput.Write($"nbytes={nbytes}    sleep={v}");
 
-					_Sleep((int)Math.Round(v * speedFactor));
+					_Sleep((v * speedFactor).ToInt());
 				} else {
 					int shift = nbytes * 4 - 1, mask = (1 << shift) - 1;
 					int x = v & mask, y = (v >> shift) & mask;

@@ -32,6 +32,24 @@ namespace Au
 		#region value types
 
 		/// <summary>
+		/// Converts to int with rounding.
+		/// Calls <see cref="Convert.ToInt32"/>.
+		/// </summary>
+		public static int ToInt(this double t) => Convert.ToInt32(t);
+
+		/// <summary>
+		/// Converts to int with rounding.
+		/// Calls <see cref="Convert.ToInt32"/>.
+		/// </summary>
+		public static int ToInt(this float t) => Convert.ToInt32(t);
+
+		/// <summary>
+		/// Converts to int with rounding.
+		/// Calls <see cref="Convert.ToInt32"/>.
+		/// </summary>
+		public static int ToInt(this decimal t) => Convert.ToInt32(t);
+
+		/// <summary>
 		/// Converts double to string.
 		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
 		/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.

@@ -426,7 +426,7 @@ namespace Au
 					_contextMenu = m;
 				}
 
-				bool canEdit = !no.Has(TBNoMenu.Edit) && CanGoToEdit_;
+				bool canEdit = !no.Has(TBNoMenu.Edit) && Util.AScriptEditor.Available;
 				_cmItems.edit.Visible = canEdit;
 				_cmItems.sepEdit.Visible = canEdit;
 				_cmItems.anchor.Visible = !no.Has(TBNoMenu.Anchor);

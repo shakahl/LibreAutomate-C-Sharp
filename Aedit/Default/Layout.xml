@@ -1,0 +1,54 @@
+﻿<!--
+Tags:
+stack - stack. Contains one or more panel, tab, toolbar, document and implicit splitters between them.
+tab - container for one or more panels. Has caption with text of active panel and icon-buttons for inactive panels. Can float.
+panel - container for a control. Can be in a tab. Has caption with text, unless is inactive in a tab. Can float.
+toolbar - container for a toolbar. Has small caption without text/icon. Can float. Can be docked anywhere except in a tab.
+document - container for documents. Single, no caption, no float, not in tab. If need multiple, let the program itself show other documents in floating windows.
+Attributes:
+o - stack orientation: v vertical, h horizontal.
+w - item width in a horizontal stack or height in vertical. Can be "pixels" or "star*" or "*" (1 star). Default auto.
+s - splitter width. Default 1 between toolbars, else 4. Min 1. Every stack item except the first has a splitter before it.
+captionAt - Left, Top, Right, Bottom. Default Left.
+state - Dock, Float, Hide. Default Dock.
+float - floating "x y width height". x y physical pixels.
+active - 0-based index of active panel in tab. Default 0.
+Attributes valid on:
+o - stack.
+w, s - stack, tab, panel not in a tab, toolbar.
+state, float - tab, panel, toolbar.
+captionAt - tab, panel not in a tab, toolbar.
+active - tab.
+-->
+<panels>
+	<stack o="v">
+		<stack o="h">
+			<toolbar name="Menu" />
+			<toolbar name="Help" />
+			<toolbar name="Tools" />
+			<toolbar name="Custom1" />
+		</stack>
+		<stack o="h" s="1">
+			<toolbar name="File" w="200"/>
+			<toolbar name="Run" />
+			<toolbar name="Edit" />
+			<toolbar name="Custom2" />
+		</stack>
+		<stack o="h" w="*" s="1">
+			<stack o="v" w="200">
+				<panel name="Files" w="400*" captionAt="Top" />
+				<panel name="Open" w="150*" />
+				<panel name="Running" w="100*" />
+				<panel name="Find" w="150" captionAt="Top" />
+			</stack>
+			<stack o="v" w="*">
+				<document w="*" />
+				<tab w="170">
+					<panel name="Output" />
+					<panel name="Info" />
+					<panel name="Found" />
+				</tab>
+			</stack>
+		</stack>
+	</stack>
+</panels>

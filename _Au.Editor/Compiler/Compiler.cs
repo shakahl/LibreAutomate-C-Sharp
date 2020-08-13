@@ -44,8 +44,7 @@ namespace Au.Compiler
 		///		If CompReason.Run, does not compile (just parses meta), sets r.role=classFile and returns false.
 		///		Else compiles but does not create output files.
 		/// </remarks>
-		public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null)
-		{
+		public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null) {
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 			r = null;
 			var cache = XCompiled.OfCollection(f.Model);
@@ -53,17 +52,17 @@ namespace Au.Compiler
 
 			//AOutput.Write("isCompiled=" + isCompiled);
 
-			if(!isCompiled) {
+			if (!isCompiled) {
 				bool ok = false;
 				try {
 					ok = _Compile(reason == ECompReason.Run, f, out r, projFolder);
 				}
-				catch(Exception ex) {
+				catch (Exception ex) {
 					//AOutput.Write($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
 					AOutput.Write($"Failed to compile '{f.Name}'. {ex}");
 				}
 
-				if(!ok) {
+				if (!ok) {
 					cache.Remove(f, false);
 					return false;
 				}
@@ -108,36 +107,34 @@ namespace Au.Compiler
 			/// Does not add if role is not miniProgram (it must be set before) or if path does not end with ".dll".
 			/// </summary>
 			/// <param name="path">Full path.</param>
-			public void AddToFullPathRefsIfNeed(string path)
-			{
+			public void AddToFullPathRefsIfNeed(string path) {
 				//AOutput.Write(path);
-				if(role != ERole.miniProgram) return;
+				if (role != ERole.miniProgram) return;
 				var ta = AFolders.ThisAppBS;
-				if(path.Starts(ta, true)) {
+				if (path.Starts(ta, true)) {
 					int i = ta.Length, j = path.IndexOf('\\', i);
-					if(j < 0) return;
-					if(j - i == 9 && path.Eq(i, "Libraries", true) && path.IndexOf('\\', j + 1) < 0) return;
+					if (j < 0) return;
+					if (j - i == 9 && path.Eq(i, "Libraries", true) && path.IndexOf('\\', j + 1) < 0) return;
 				}
-				if(!path.Ends(".dll", true)) return;
+				if (!path.Ends(".dll", true)) return;
 				//AOutput.Write("AddToFullPathRefsIfNeed", path);
 				fullPathRefs = fullPathRefs == null ? path : fullPathRefs + "|" + path;
 			}
 		}
 
-		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder)
-		{
+		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder) {
 			var p1 = APerf.Create();
 			r = new CompResults();
 
 			var m = new MetaComments();
-			if(!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
+			if (!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
 			var err = m.Errors;
 			p1.Next('m');
 
 			bool needOutputFiles = m.Role != ERole.classFile;
 
 			//if for run, don't compile if f role is classFile
-			if(forRun && !needOutputFiles) {
+			if (forRun && !needOutputFiles) {
 				r.role = ERole.classFile;
 				return false;
 			}
@@ -145,8 +142,8 @@ namespace Au.Compiler
 			XCompiled cache = XCompiled.OfCollection(f.Model);
 			string outPath = null, outFile = null, fileName = null;
 			bool notInCache = false;
-			if(needOutputFiles) {
-				if(notInCache = m.OutputPath != null) {
+			if (needOutputFiles) {
+				if (notInCache = m.OutputPath != null) {
 					outPath = m.OutputPath;
 					fileName = m.Name + ".dll";
 				} else {
@@ -157,11 +154,11 @@ namespace Au.Compiler
 				AFile.CreateDirectory(outPath);
 			}
 
-			if(m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
+			if (m.PreBuild.f != null && !_RunPrePostBuildScript(false, m, outFile)) return false;
 
 			var po = m.CreateParseOptions();
 			var trees = new CSharpSyntaxTree[m.CodeFiles.Count];
-			for(int i = 0; i < trees.Length; i++) {
+			for (int i = 0; i < trees.Length; i++) {
 				var f1 = m.CodeFiles[i];
 				trees[i] = CSharpSyntaxTree.ParseText(f1.code, po, f1.f.FilePath, Encoding.UTF8) as CSharpSyntaxTree;
 				//info: file path is used later in several places: in compilation error messages, run time stack traces (from PDB), Visual Studio debugger, etc.
@@ -170,7 +167,7 @@ namespace Au.Compiler
 			//p1.Next('t');
 
 			string asmName = m.Name;
-			if(m.Role == ERole.editorExtension) asmName = asmName + "|" + (++c_versionCounter).ToString(); //AssemblyLoadContext.Default cannot load multiple assemblies with same name
+			if (m.Role == ERole.editorExtension) asmName = asmName + "|" + (++c_versionCounter).ToString(); //AssemblyLoadContext.Default cannot load multiple assemblies with same name
 			var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, m.CreateCompilationOptions());
 			//p1.Next('c');
 
@@ -180,7 +177,7 @@ namespace Au.Compiler
 			ResourceDescription[] resMan = null;
 			EmitOptions eOpt = null;
 
-			if(needOutputFiles) {
+			if (needOutputFiles) {
 				_AddAttributes(ref compilation, m);
 
 				//Create debug info always. It is used for run-time error links.
@@ -188,13 +185,13 @@ namespace Au.Compiler
 				//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error after switching to .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
 				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 
-				if(m.XmlDocFile != null) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = APath.Normalize(m.XmlDocFile, outPath)));
+				if (m.XmlDocFile != null) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = APath.Normalize(m.XmlDocFile, outPath)));
 
 				resMan = _CreateManagedResources(m);
-				if(err.ErrorCount != 0) { err.PrintAll(); return false; }
+				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 
-				if(m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) resNat = _CreateNativeResources(m, compilation);
-				if(err.ErrorCount != 0) { err.PrintAll(); return false; }
+				if (m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) resNat = _CreateNativeResources(m, compilation);
+				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 
 				//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
 			}
@@ -203,34 +200,34 @@ namespace Au.Compiler
 			var asmStream = new MemoryStream(8000);
 			var emitResult = compilation.Emit(asmStream, null, xdStream, resNat, resMan, eOpt);
 
-			if(needOutputFiles) {
+			if (needOutputFiles) {
 				xdStream?.Dispose();
 				resNat?.Dispose(); //info: compiler disposes resMan
 			}
 			//p1.Next('e');
 
 			var diag = emitResult.Diagnostics;
-			if(!diag.IsEmpty) {
-				foreach(var d in diag) {
-					if(d.Severity == DiagnosticSeverity.Hidden) continue;
+			if (!diag.IsEmpty) {
+				foreach (var d in diag) {
+					if (d.Severity == DiagnosticSeverity.Hidden) continue;
 					err.AddErrorOrWarning(d, f);
-					if(d.Severity == DiagnosticSeverity.Error && d.Id == "CS0009") MetaReferences.RemoveBadReference(d.GetMessage());
+					if (d.Severity == DiagnosticSeverity.Error && d.Id == "CS0009") MetaReferences.RemoveBadReference(d.GetMessage());
 				}
 				err.PrintAll();
 			}
-			if(!emitResult.Success) {
-				if(needOutputFiles) {
+			if (!emitResult.Success) {
+				if (needOutputFiles) {
 					Api.DeleteFile(outFile);
-					if(xdFile != null) Api.DeleteFile(xdFile);
+					if (xdFile != null) Api.DeleteFile(xdFile);
 				}
 				return false;
 			}
 
-			if(needOutputFiles) {
+			if (needOutputFiles) {
 				//If there is no [STAThread], will need MTA thread.
-				if(m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
+				if (m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
 					bool hasSTAThread = compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.STAThreadAttribute") ?? false;
-					if(!hasSTAThread) r.mtaThread = true;
+					if (!hasSTAThread) r.mtaThread = true;
 				}
 
 				//create assembly file
@@ -238,13 +235,13 @@ namespace Au.Compiler
 				gSave:
 #if true
 				var hf = Api.CreateFile(outFile, Api.GENERIC_WRITE, 0, default, Api.CREATE_ALWAYS);
-				if(hf.Is0) {
+				if (hf.Is0) {
 					var ec = ALastError.Code;
-					if(ec == Api.ERROR_SHARING_VIOLATION && _RenameLockedFile(outFile, notInCache: notInCache)) goto gSave;
+					if (ec == Api.ERROR_SHARING_VIOLATION && _RenameLockedFile(outFile, notInCache: notInCache)) goto gSave;
 					throw new AuException(ec);
 				}
 				var b = asmStream.GetBuffer();
-				using(hf) if(!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
+				using (hf) if (!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
 #else //same speed, but I like code without exceptions
 				try {
 						using var fileStream = File.Create(outFile, (int)asmStream.Length);
@@ -260,14 +257,14 @@ namespace Au.Compiler
 				p1.Next('s'); //saving would be fast, but with AV can take half of time. Tested only with WD.
 				r.file = outFile;
 
-				if(m.Role == ERole.exeProgram) {
+				if (m.Role == ERole.exeProgram) {
 					bool need32 = m.Prefer32Bit || AVersion.Is32BitOS;
 					bool need64 = !need32 || m.Optimize;
 					need32 |= m.Optimize;
 
 					//copy Core app host template exe, add native resources, set assembly name, set console flag if need
-					if(need64) _AppHost(outFile, fileName, m, bit32: false);
-					if(need32) _AppHost(outFile, fileName, m, bit32: true);
+					if (need64) _AppHost(outFile, fileName, m, bit32: false);
+					if (need32) _AppHost(outFile, fileName, m, bit32: true);
 					p1.Next('h');
 
 					//copy dlls to the output directory
@@ -285,12 +282,12 @@ namespace Au.Compiler
 				}
 			}
 
-			if(m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
+			if (m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
 
-			if(needOutputFiles) {
+			if (needOutputFiles) {
 				cache.AddCompiled(f, outFile, m, r.mtaThread);
 
-				if(notInCache) AOutput.Write($"<>Output folder: <link>{m.OutputPath}<>");
+				if (notInCache) AOutput.Write($"<>Output folder: <link>{m.OutputPath}<>");
 			}
 
 			r.name = m.Name;
@@ -302,9 +299,9 @@ namespace Au.Compiler
 			r.prefer32bit = m.Prefer32Bit;
 			r.console = m.Console;
 			r.notInCache = notInCache;
-			if(m.Role == ERole.miniProgram) {
+			if (m.Role == ERole.miniProgram) {
 				var refs = m.References.Refs;
-				for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
+				for (int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
 			}
 
 #if TRACE
@@ -331,21 +328,20 @@ namespace Au.Compiler
 		/// Adds some attributes if not specified in code.
 		/// Adds: [module: DefaultCharSet(CharSet.Unicode)], [assembly: TargetFramework("...")]
 		/// </summary>
-		static void _AddAttributes(ref CSharpCompilation compilation, MetaComments m)
-		{
+		static void _AddAttributes(ref CSharpCompilation compilation, MetaComments m) {
 			int needAttr = 0x100;
 
-			foreach(var v in compilation.SourceModule.GetAttributes()) {
+			foreach (var v in compilation.SourceModule.GetAttributes()) {
 				//AOutput.Write(v.AttributeClass.Name);
-				switch(v.AttributeClass.Name) {
+				switch (v.AttributeClass.Name) {
 				case "DefaultCharSetAttribute": needAttr &= ~0x100; break;
 				}
 			}
-			if(m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) {
+			if (m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) {
 				needAttr |= 0x200; //need [TargetFramework] for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
-				foreach(var v in compilation.Assembly.GetAttributes()) {
+				foreach (var v in compilation.Assembly.GetAttributes()) {
 					//AOutput.Write(v.AttributeClass.Name);
-					switch(v.AttributeClass.Name) {
+					switch (v.AttributeClass.Name) {
 					case "TargetFrameworkAttribute": needAttr &= ~0x200; break;
 					}
 				}
@@ -365,11 +361,11 @@ namespace Au.Compiler
 			//	}
 			//}
 
-			if(needAttr != 0) {
-				using(new Util.StringBuilder_(out var sb)) {
+			if (needAttr != 0) {
+				using (new Util.StringBuilder_(out var sb)) {
 					sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
-					if(0 != (needAttr & 0x100)) sb.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]");
-					if(0 != (needAttr & 0x200)) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
+					if (0 != (needAttr & 0x100)) sb.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]");
+					if (0 != (needAttr & 0x200)) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
 					//if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\" \")]");
 					//if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
 					//if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
@@ -380,49 +376,49 @@ namespace Au.Compiler
 			}
 		}
 
-		static ResourceDescription[] _CreateManagedResources(MetaComments m)
-		{
+		static ResourceDescription[] _CreateManagedResources(MetaComments m) {
 			var a = m.Resources;
-			if(a == null || a.Count == 0) return null;
+			if (a.NE_()) return null;
 			var stream = new MemoryStream();
 			var rw = new ResourceWriter(stream);
 			FileNode curFile = null;
 			try {
-				foreach(var v in a) {
+				foreach (var v in a) {
 					curFile = v.f;
 					string name = curFile.Name, path = curFile.FilePath;
 					object o;
-					switch(v.s) {
+					switch (v.s) {
 					case null:
-						switch(APath.GetExtension(name).Lower()) {
-						case ".png":
-						case ".bmp":
-						case ".jpg":
-						case ".jpeg":
-						case ".gif":
-						case ".tif":
-						case ".tiff":
-							o = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);
-							break;
-						case ".ico":
-							//o = AIcon.OfFile(path, size); //adds 4-bit icon, distorted
-							o = new System.Drawing.Icon(path); //adds of all sizes. At run time: var icon=new Icon(GetResourceIcon(), 16, 16).
-							break;
-						//case ".cur":
-						//	o = Au.Util.ACursor.LoadCursorFromFile(path); //error: Stock cursors cannot be serialized
+						//switch(APath.GetExtension(name).Lower()) {
+						//case ".png":
+						//case ".bmp":
+						//case ".jpg":
+						//case ".jpeg":
+						//case ".gif":
+						//case ".tif":
+						//case ".tiff":
+						//	o = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);
 						//	break;
-						default:
-							o = AFile.LoadBytes(path);
-							break;
-						}
+						//case ".ico":
+						//	//o = AIcon.OfFile(path, size); //adds 4-bit icon, distorted
+						//	o = new System.Drawing.Icon(path); //adds of all sizes. At run time: var icon=new Icon(GetResourceIcon(), 16, 16).
+						//	break;
+						////case ".cur":
+						////	o = Au.Util.ACursor.LoadCursorFromFile(path); //error: Stock cursors cannot be serialized
+						////	break;
+						//default:
+						//	o = AFile.LoadBytes(path);
+						//	break;
+						//}
+						o = AFile.LoadBytes(path);
 						break;
 					case "string":
 						o = AFile.LoadText(path);
 						break;
 					case "strings":
 						var csv = ACsv.Load(path);
-						if(csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
-						foreach(var row in csv.Data) {
+						if (csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
+						foreach (var row in csv.Data) {
 							rw.AddResource(row[0], row[1]);
 						}
 						continue;
@@ -433,27 +429,25 @@ namespace Au.Compiler
 				curFile = null;
 				rw.Generate();
 			}
-			catch(Exception e) {
+			catch (Exception e) {
 				rw.Dispose();
 				_ResourceException(e, m, curFile);
 				return null;
 			}
 			//note: don't Close/Dispose rw. It closes stream. Compiler will close it. There is no other disposable data in rw.
 			stream.Position = 0;
-			return new ResourceDescription[] { new ResourceDescription("Project.Resources.resources", () => stream, false) };
+			return new ResourceDescription[] { new ResourceDescription(m.Name + ".g.resources", () => stream, false) };
 		}
 
-		static void _ResourceException(Exception e, MetaComments m, FileNode curFile)
-		{
+		static void _ResourceException(Exception e, MetaComments m, FileNode curFile) {
 			var em = e.ToStringWithoutStack();
 			var err = m.Errors;
 			var f = m.CodeFiles[0].f;
-			if(curFile == null) err.AddError(f, "Failed to add resources. " + em);
+			if (curFile == null) err.AddError(f, "Failed to add resources. " + em);
 			else err.AddError(f, $"Failed to add resource '{curFile.Name}'. " + em);
 		}
 
-		static Stream _CreateNativeResources(MetaComments m, CSharpCompilation compilation)
-		{
+		static Stream _CreateNativeResources(MetaComments m, CSharpCompilation compilation) {
 #if true
 			return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
 #else
@@ -481,8 +475,7 @@ namespace Au.Compiler
 #endif
 		}
 
-		static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32)
-		{
+		static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32) {
 			//A .NET Core exe actually is a managed dll hosted by a native exe file known as apphost.
 			//When creating an exe, VS copies template apphost from eg "C:\Program Files\dotnet\sdk\3.1.100\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
 			//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
@@ -490,9 +483,9 @@ namespace Au.Compiler
 			//var p1 = APerf.Create();
 			string exeFile = DllNameToAppHostExeName(outFile, bit32);
 
-			if(AFile.ExistsAsAny(exeFile) && !Api.DeleteFile(exeFile)) {
+			if (AFile.ExistsAsAny(exeFile) && !Api.DeleteFile(exeFile)) {
 				var ec = ALastError.Code;
-				if(!(ec == Api.ERROR_ACCESS_DENIED && _RenameLockedFile(exeFile, notInCache: true))) throw new AuException(ec);
+				if (!(ec == Api.ERROR_ACCESS_DENIED && _RenameLockedFile(exeFile, notInCache: true))) throw new AuException(ec);
 			}
 
 			var appHost = AFolders.ThisAppBS + (bit32 ? "32" : "64") + @"\Au.AppHost.exe";
@@ -501,7 +494,7 @@ namespace Au.Compiler
 				var b = File.ReadAllBytes(appHost);
 				//p1.Next();
 				//write assembly name in placeholder memory. In AppHost.cpp: char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
-				fixed(byte* p = b) {
+				fixed (byte* p = b) {
 					int i = Util.BytePtr_.AsciiFindString(p, b.Length, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
 					i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
 					b[i] = 0;
@@ -509,13 +502,13 @@ namespace Au.Compiler
 
 #if true
 				var res = new _Resources();
-				if(m.IconFile != null) res.AddIcon(m.IconFile.FilePath);
+				if (m.IconFile != null) res.AddIcon(m.IconFile.FilePath);
 				res.AddVersion(outFile);
 
 				string manifest = null;
-				if(m.ManifestFile != null) manifest = m.ManifestFile.FilePath;
-				else if(m.Role == ERole.exeProgram) manifest = AFolders.ThisAppBS + "default.exe.manifest"; //don't: uac
-				if(manifest != null) res.AddManifest(manifest);
+				if (m.ManifestFile != null) manifest = m.ManifestFile.FilePath;
+				else if (m.Role == ERole.exeProgram) manifest = AFolders.ThisAppBS + "default.exe.manifest"; //don't: uac
+				if (manifest != null) res.AddManifest(manifest);
 
 				res.WriteAll(exeFile, b, bit32, m.Console);
 
@@ -552,33 +545,31 @@ namespace Au.Compiler
 				//p1.NW();
 				done = true;
 			}
-			finally { if(!done) Api.DeleteFile(exeFile); }
+			finally { if (!done) Api.DeleteFile(exeFile); }
 
 			return exeFile;
 		}
 
-		static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32)
-		{
+		static void _CopyDlls(MetaComments m, Stream asmStream, bool need64, bool need32) {
 			asmStream.Position = 0;
 			using var pr = new PEReader(asmStream, PEStreamOptions.LeaveOpen);
 			var mr = pr.GetMetadataReader();
 			var usedRefs = mr.AssemblyReferences.Select(handle => mr.GetString(mr.GetAssemblyReference(handle).Name)).ToList();
 			//AOutput.Write(usedRefs); AOutput.Write("---");
 
-			bool _CopyRefIfNeed(string sFrom, string sTo)
-			{
-				if(!usedRefs.Contains(APath.GetNameNoExt(sFrom), StringComparer.OrdinalIgnoreCase)) return false;
+			bool _CopyRefIfNeed(string sFrom, string sTo) {
+				if (!usedRefs.Contains(APath.GetNameNoExt(sFrom), StringComparer.OrdinalIgnoreCase)) return false;
 				_CopyFileIfNeed(sFrom, sTo);
 				return true;
 			}
 
-			if(_CopyRefIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll")) {
-				if(need64) _CopyFileIfNeed(AFolders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
-				if(need32) _CopyFileIfNeed(AFolders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
+			if (_CopyRefIfNeed(typeof(AWnd).Assembly.Location, m.OutputPath + @"\Au.dll")) {
+				if (need64) _CopyFileIfNeed(AFolders.ThisAppBS + @"64\AuCpp.dll", m.OutputPath + @"\64\AuCpp.dll");
+				if (need32) _CopyFileIfNeed(AFolders.ThisAppBS + @"32\AuCpp.dll", m.OutputPath + @"\32\AuCpp.dll");
 			}
 
 			var refs = m.References.Refs;
-			for(int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
+			for (int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) {
 				var s1 = refs[i].FilePath;
 				var s2 = m.OutputPath + "\\" + APath.GetName(s1);
 				//AOutput.Write(s1, s2);
@@ -587,47 +578,44 @@ namespace Au.Compiler
 
 			//copy unmanaged dlls
 			bool usesSqlite = false;
-			foreach(var handle in mr.TypeReferences) {
+			foreach (var handle in mr.TypeReferences) {
 				var tr = mr.GetTypeReference(handle);
 				//AOutput.Write(mr.GetString(tr.Name), mr.GetString(tr.Namespace));
 				string type = mr.GetString(tr.Name);
-				if((type.Starts("ASqlite") && mr.GetString(tr.Namespace) == "Au") || (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) {
+				if ((type.Starts("ASqlite") && mr.GetString(tr.Namespace) == "Au") || (type.Starts("SL") && mr.GetString(tr.Namespace) == "Au.Types")) {
 					usesSqlite = true;
 					break;
 				}
 			}
 			//AOutput.Write(usesSqlite);
-			if(usesSqlite) {
-				if(need64) _CopyFileIfNeed(AFolders.ThisAppBS + @"64\sqlite3.dll", m.OutputPath + @"\64\sqlite3.dll");
-				if(need32) _CopyFileIfNeed(AFolders.ThisAppBS + @"32\sqlite3.dll", m.OutputPath + @"\32\sqlite3.dll");
+			if (usesSqlite) {
+				if (need64) _CopyFileIfNeed(AFolders.ThisAppBS + @"64\sqlite3.dll", m.OutputPath + @"\64\sqlite3.dll");
+				if (need32) _CopyFileIfNeed(AFolders.ThisAppBS + @"32\sqlite3.dll", m.OutputPath + @"\32\sqlite3.dll");
 			}
 		}
 
-		static void _CopyFileIfNeed(string sFrom, string sTo)
-		{
+		static void _CopyFileIfNeed(string sFrom, string sTo) {
 			//AOutput.Write(sFrom);
-			if(AFile.GetProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
+			if (AFile.GetProperties(sTo, out var p2, FAFlags.UseRawPath) //if exists
 				&& AFile.GetProperties(sFrom, out var p1, FAFlags.UseRawPath)
 				&& p2.LastWriteTimeUtc == p1.LastWriteTimeUtc
 				&& p2.Size == p1.Size) return;
 			AFile.Copy(sFrom, sTo, FIfExists.Delete);
 		}
 
-		static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile)
-		{
+		static bool _RunPrePostBuildScript(bool post, MetaComments m, string outFile) {
 			var x = post ? m.PostBuild : m.PreBuild;
 			string[] args;
-			if(x.s == null) {
+			if (x.s == null) {
 				args = new string[] { _OutputFile() };
 			} else {
 				args = Util.AStringUtil.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
 				var f = m.CodeFiles[0].f;
-				if(s_rx1 == null) s_rx1 = new ARegex(@"\$\((\w+)\)");
-				string _ReplFunc(RXMatch k)
-				{
-					switch(k[1].Value) {
+				if (s_rx1 == null) s_rx1 = new ARegex(@"\$\((\w+)\)");
+				string _ReplFunc(RXMatch k) {
+					switch (k[1].Value) {
 					case "outputFile": return _OutputFile();
 					case "outputPath": return m.OutputPath;
 					case "source": return f.ItemPath;
@@ -637,14 +625,14 @@ namespace Au.Compiler
 					default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
 					}
 				}
-				for(int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
+				for (int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
 			}
 
 			string _OutputFile() => m.Role == ERole.exeProgram ? DllNameToAppHostExeName(outFile, m.Prefer32Bit || AVersion.Is32BitOS) : outFile;
 
 			bool ok = Compile(ECompReason.Run, out var r, x.f);
-			if(r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
-			if(!ok) return false;
+			if (r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
+			if (!ok) return false;
 
 			RunAssembly.Run(r.file, args, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
 			return true;
@@ -657,26 +645,25 @@ namespace Au.Compiler
 		public static string DllNameToAppHostExeName(string dll, bool bit32)
 			=> dll.ReplaceAt(dll.Length - 4, 4, bit32 ? "-32.exe" : ".exe");
 
-		static bool _RenameLockedFile(string file, bool notInCache)
-		{
+		static bool _RenameLockedFile(string file, bool notInCache) {
 			//If the assembly file is currently loaded, we get ERROR_SHARING_VIOLATION. But we can rename the file.
 			//tested: can't rename if ERROR_USER_MAPPED_FILE or ERROR_LOCK_VIOLATION.
 			string renamed = null;
-			for(int i = 1; ; i++) {
+			for (int i = 1; ; i++) {
 				renamed = file + "'" + i.ToString();
-				if(Api.MoveFileEx(file, renamed, 0)) goto g1;
-				if(ALastError.Code != Api.ERROR_ALREADY_EXISTS) break;
-				if(Api.MoveFileEx(file, renamed, Api.MOVEFILE_REPLACE_EXISTING)) goto g1;
+				if (Api.MoveFileEx(file, renamed, 0)) goto g1;
+				if (ALastError.Code != Api.ERROR_ALREADY_EXISTS) break;
+				if (Api.MoveFileEx(file, renamed, Api.MOVEFILE_REPLACE_EXISTING)) goto g1;
 			}
 			return false;
 			g1:
-			if(notInCache) {
-				if(s_renamedFiles == null) {
+			if (notInCache) {
+				if (s_renamedFiles == null) {
 					s_renamedFiles = new List<string>();
 					AProcess.Exit += (_, _) => _DeleteRenamedLockedFiles(null);
 					s_rfTimer = new ATimer(_DeleteRenamedLockedFiles);
 				}
-				if(!s_rfTimer.IsRunning) s_rfTimer.Every(60_000);
+				if (!s_rfTimer.IsRunning) s_rfTimer.Every(60_000);
 				s_renamedFiles.Add(renamed);
 			}
 			return true;
@@ -684,13 +671,12 @@ namespace Au.Compiler
 		static List<string> s_renamedFiles;
 		static ATimer s_rfTimer;
 
-		static void _DeleteRenamedLockedFiles(ATimer timer)
-		{
+		static void _DeleteRenamedLockedFiles(ATimer timer) {
 			var a = s_renamedFiles;
-			for(int i = a.Count; --i >= 0;) {
-				if(Api.DeleteFile(a[i]) || ALastError.Code == Api.ERROR_FILE_NOT_FOUND) a.RemoveAt(i);
+			for (int i = a.Count; --i >= 0;) {
+				if (Api.DeleteFile(a[i]) || ALastError.Code == Api.ERROR_FILE_NOT_FOUND) a.RemoveAt(i);
 			}
-			if(a.Count == 0) timer?.Stop();
+			if (a.Count == 0) timer?.Stop();
 		}
 	}
 

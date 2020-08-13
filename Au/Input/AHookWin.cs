@@ -305,8 +305,7 @@ namespace Au
 					_ = ATime.PerfMilliseconds;
 					_ = AKeys.KeyTypes_.IsMod(KKey.Shift) && _IgnoreMod;
 				}
-			}
-			else {
+			} else {
 				_proc1 = _HookProc;
 			}
 			if (setNow) Hook(tid);
@@ -328,8 +327,7 @@ namespace Au
 			if (_hh != default) throw new InvalidOperationException("The hook is already set.");
 			if (_hookType == Api.WH_KEYBOARD_LL || _hookType == Api.WH_MOUSE_LL) {
 				if (threadId != 0) throw new ArgumentException("threadId must be 0");
-			}
-			else if (threadId == 0) {
+			} else if (threadId == 0) {
 				threadId = Api.GetCurrentThreadId();
 			}
 			_hh = Api.SetWindowsHookEx(_hookType, _proc1, default, threadId);
@@ -384,24 +382,24 @@ namespace Au
 					bool eat = false;
 
 					switch (_proc2) {
-						case Func<HookData.ThreadCbt, bool> p:
-							eat = p(new HookData.ThreadCbt(this, code, wParam, lParam));
-							break;
-						case Action<HookData.ThreadGetMessage> p:
-							p(new HookData.ThreadGetMessage(this, wParam, lParam));
-							break;
-						case Func<HookData.ThreadKeyboard, bool> p:
-							eat = p(new HookData.ThreadKeyboard(this, code, wParam, lParam));
-							break;
-						case Func<HookData.ThreadMouse, bool> p:
-							eat = p(new HookData.ThreadMouse(this, code, wParam, lParam));
-							break;
-						case Action<HookData.ThreadCallWndProc> p:
-							p(new HookData.ThreadCallWndProc(this, wParam, lParam));
-							break;
-						case Action<HookData.ThreadCallWndProcRet> p:
-							p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
-							break;
+					case Func<HookData.ThreadCbt, bool> p:
+						eat = p(new HookData.ThreadCbt(this, code, wParam, lParam));
+						break;
+					case Action<HookData.ThreadGetMessage> p:
+						p(new HookData.ThreadGetMessage(this, wParam, lParam));
+						break;
+					case Func<HookData.ThreadKeyboard, bool> p:
+						eat = p(new HookData.ThreadKeyboard(this, code, wParam, lParam));
+						break;
+					case Func<HookData.ThreadMouse, bool> p:
+						eat = p(new HookData.ThreadMouse(this, code, wParam, lParam));
+						break;
+					case Action<HookData.ThreadCallWndProc> p:
+						p(new HookData.ThreadCallWndProc(this, wParam, lParam));
+						break;
+					case Action<HookData.ThreadCallWndProcRet> p:
+						p(new HookData.ThreadCallWndProcRet(this, wParam, lParam));
+						break;
 					}
 
 					if (eat) return 1;
@@ -422,63 +420,61 @@ namespace Au
 					Func<LPARAM, LPARAM, bool> pm2;
 
 					switch (_proc2) {
-						case Action<HookData.Keyboard> p:
-							var kll = (Api.KBDLLHOOKSTRUCT*)lParam;
-							var vk = (KKey)kll->vkCode;
-							if (kll->IsInjected) {
-								if (kll->IsInjectedByAu) {
-									if (kll->vkCode == 0) goto gr; //used to enable activating windows
-									if (!kll->IsUp) Triggers.AutotextTriggers.ResetEverywhere = true;
-									if (_ignoreAuInjected) goto gr;
-								}
-								if (vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
+					case Action<HookData.Keyboard> p:
+						var kll = (Api.KBDLLHOOKSTRUCT*)lParam;
+						var vk = (KKey)kll->vkCode;
+						if (kll->IsInjected) {
+							if (kll->IsInjectedByAu) {
+								if (kll->vkCode == 0) goto gr; //used to enable activating windows
+								if (!kll->IsUp) Triggers.AutotextTriggers.ResetEverywhere = true;
+								if (_ignoreAuInjected) goto gr;
 							}
-							else {
-								//When AKeys.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
-								//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
-								//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
-								if ((vk == KKey.CapsLock || vk == KKey.LShift) && _ignoreAuInjected && _IgnoreLShiftCaps) goto gr;
+							if (vk == KKey.MouseX2 && kll->dwExtraInfo == 1354291109) goto gr; //QM2 sync code
+						} else {
+							//When AKeys.Lib.ReleaseModAndCapsLock sends Shift to turn off CapsLock,
+							//	hooks receive a non-injected LShift down, CapsLock down/up and injected LShift up.
+							//	Our triggers would recover, but cannot auto-repeat. Better don't call the hookproc.
+							if ((vk == KKey.CapsLock || vk == KKey.LShift) && _ignoreAuInjected && _IgnoreLShiftCaps) goto gr;
 
-								//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
-								//if(AKeys.IsScrollLock) {
-								//	//if(vk == KKey.LCtrl && !kll->IsUp) { AOutput.Write("lost Ctrl down"); goto gr; }
-								//	if(vk == KKey.LCtrl && kll->IsUp) { AOutput.Write("lost Ctrl up"); goto gr; }
-								//}
-							}
-							if (AKeys.KeyTypes_.IsMod(vk) && _IgnoreMod) goto gr;
-							t1 = ATime.PerfMilliseconds;
-							//p1.Next();
-							p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
-							if (eat = kll->BlockEvent) kll->BlockEvent = false;
-							break;
-						case Action<HookData.Mouse> p:
-							pm1 = p; pm2 = null;
+							//Test how our triggers recover when a modifier down or up event is lost. Or when triggers started while a modifier is down.
+							//if(AKeys.IsScrollLock) {
+							//	//if(vk == KKey.LCtrl && !kll->IsUp) { AOutput.Write("lost Ctrl down"); goto gr; }
+							//	if(vk == KKey.LCtrl && kll->IsUp) { AOutput.Write("lost Ctrl up"); goto gr; }
+							//}
+						}
+						if (AKeys.KeyTypes_.IsMod(vk) && _IgnoreMod) goto gr;
+						t1 = ATime.PerfMilliseconds;
+						//p1.Next();
+						p(new HookData.Keyboard(this, lParam)); //info: wParam is message, but it is not useful, everything is in lParam
+						if (eat = kll->BlockEvent) kll->BlockEvent = false;
+						break;
+					case Action<HookData.Mouse> p:
+						pm1 = p; pm2 = null;
 						gm1:
-							var mll = (Api.MSLLHOOKSTRUCT*)lParam;
-							switch ((int)wParam) {
-								case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: Triggers.AutotextTriggers.ResetEverywhere = true; break;
-							}
-							if (_ignoreAuInjected && mll->IsInjectedByAu) goto gr;
+						var mll = (Api.MSLLHOOKSTRUCT*)lParam;
+						switch ((int)wParam) {
+						case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: Triggers.AutotextTriggers.ResetEverywhere = true; break;
+						}
+						if (_ignoreAuInjected && mll->IsInjectedByAu) goto gr;
 
-							//API bug workaround. In DPI-scaled windows on click mhsLL->pt is logical, although on move/wheel is physical. Must be always physical.
-							//At first noticed only on Win10. But then noticed the same on Win7, although used to be correct. OK on Win8.1. Maybe depends on some other conditions, eg UAC IL, DPI, multimonitor.
-							//Now it seems the bug is fixed on Win10. Found on SO: "Microsoft fixed it in 10.0.14393"; it is version 1607, August 2, 2016; but I cannot confirm it.
-							//The wrong coords are the same as GetCursorPos. Only GetPhysicalCursorPos does not lie. Api.GetCursorPos is mapped to GetPhysicalCursorPos.
-							//Note: on WM_MOUSEMOVE Get[Physical]CursorPos returns previous coords. On other messages same as hook.
-							if (wParam != Api.WM_MOUSEMOVE /*&& AVersion.WinVer < AVersion.Win10*/) Api.GetCursorPos(out mll->pt);
+						//API bug workaround. In DPI-scaled windows on click mhsLL->pt is logical, although on move/wheel is physical. Must be always physical.
+						//At first noticed only on Win10. But then noticed the same on Win7, although used to be correct. OK on Win8.1. Maybe depends on some other conditions, eg UAC IL, DPI, multimonitor.
+						//Now it seems the bug is fixed on Win10. Found on SO: "Microsoft fixed it in 10.0.14393"; it is version 1607, August 2, 2016; but I cannot confirm it.
+						//The wrong coords are the same as GetCursorPos. Only GetPhysicalCursorPos does not lie. Api.GetCursorPos is mapped to GetPhysicalCursorPos.
+						//Note: on WM_MOUSEMOVE Get[Physical]CursorPos returns previous coords. On other messages same as hook.
+						if (wParam != Api.WM_MOUSEMOVE /*&& AVersion.WinVer < AVersion.Win10*/) Api.GetCursorPos(out mll->pt);
 
-							t1 = ATime.PerfMilliseconds;
-							if (pm2 != null) {
-								eat = pm2(wParam, lParam);
-							}
-							else {
-								pm1(new HookData.Mouse(this, wParam, lParam));
-								if (eat = mll->BlockEvent) mll->BlockEvent = false;
-							}
-							break;
-						case Func<LPARAM, LPARAM, bool> p: //raw mouse
-							pm2 = p; pm1 = null;
-							goto gm1;
+						t1 = ATime.PerfMilliseconds;
+						if (pm2 != null) {
+							eat = pm2(wParam, lParam);
+						} else {
+							pm1(new HookData.Mouse(this, wParam, lParam));
+							if (eat = mll->BlockEvent) mll->BlockEvent = false;
+						}
+						break;
+					case Func<LPARAM, LPARAM, bool> p: //raw mouse
+						pm2 = p; pm1 = null;
+						goto gm1;
 					}
 
 					//Prevent Windows disabling the low-level key/mouse hook.
@@ -507,7 +503,7 @@ namespace Au
 				}
 				catch (Exception ex) { OnException_(ex); }
 			}
-		gr:
+			gr:
 			return Api.CallNextHookEx(default, code, wParam, lParam);
 		}
 
@@ -644,10 +640,10 @@ namespace Au.Types
 				get {
 					var vk = (KKey)_x->vkCode;
 					switch (vk) {
-						case KKey.LShift: case KKey.RShift: return KKey.Shift;
-						case KKey.LCtrl: case KKey.RCtrl: return KKey.Ctrl;
-						case KKey.LAlt: case KKey.RAlt: return KKey.Alt;
-						case KKey.RWin: return KKey.Win;
+					case KKey.LShift: case KKey.RShift: return KKey.Shift;
+					case KKey.LCtrl: case KKey.RCtrl: return KKey.Ctrl;
+					case KKey.LAlt: case KKey.RAlt: return KKey.Alt;
+					case KKey.RWin: return KKey.Win;
 					}
 					return vk;
 				}
@@ -660,10 +656,10 @@ namespace Au.Types
 				var vk = (KKey)_x->vkCode;
 				if (key == vk) return true;
 				switch (key) {
-					case KKey.Shift: return vk == KKey.LShift || vk == KKey.RShift;
-					case KKey.Ctrl: return vk == KKey.LCtrl || vk == KKey.RCtrl;
-					case KKey.Alt: return vk == KKey.LAlt || vk == KKey.RAlt;
-					case KKey.Win: return vk == KKey.RWin;
+				case KKey.Shift: return vk == KKey.LShift || vk == KKey.RShift;
+				case KKey.Ctrl: return vk == KKey.LCtrl || vk == KKey.RCtrl;
+				case KKey.Alt: return vk == KKey.LAlt || vk == KKey.RAlt;
+				case KKey.Win: return vk == KKey.RWin;
 				}
 				return false;
 			}
@@ -717,26 +713,27 @@ namespace Au.Types
 			readonly MouseEvent _event;
 
 			internal Mouse(AHookWin hook, LPARAM wParam, LPARAM lParam) {
-				IsButtonDown = IsButtonUp = IsWheel = false;
+				IsMove = IsButtonDown = IsButtonUp = IsWheel = false;
 				this.hook = hook;
 				var p = (Api.MSLLHOOKSTRUCT*)lParam;
 				_x = p;
 				int e = (int)wParam;
 				switch (e) {
-					case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: case Api.WM_MBUTTONDOWN: IsButtonDown = true; break;
-					case Api.WM_LBUTTONUP: case Api.WM_RBUTTONUP: case Api.WM_MBUTTONUP: e--; IsButtonUp = true; break;
-					case Api.WM_XBUTTONUP: e--; IsButtonUp = true; goto g1;
-					case Api.WM_XBUTTONDOWN:
-						IsButtonDown = true;
+				case Api.WM_MOUSEMOVE: IsMove = true; break;
+				case Api.WM_LBUTTONDOWN: case Api.WM_RBUTTONDOWN: case Api.WM_MBUTTONDOWN: IsButtonDown = true; break;
+				case Api.WM_LBUTTONUP: case Api.WM_RBUTTONUP: case Api.WM_MBUTTONUP: e--; IsButtonUp = true; break;
+				case Api.WM_XBUTTONUP: e--; IsButtonUp = true; goto g1;
+				case Api.WM_XBUTTONDOWN:
+					IsButtonDown = true;
 					g1:
-						switch (p->mouseData >> 16) { case 1: e |= 0x1000; break; case 2: e |= 0x2000; break; }
-						break;
-					case Api.WM_MOUSEWHEEL:
-					case Api.WM_MOUSEHWHEEL:
-						IsWheel = true;
-						short wheel = (short)(p->mouseData >> 16);
-						if (wheel > 0) e |= 0x1000; else if (wheel < 0) e |= 0x2000;
-						break;
+					switch (p->mouseData >> 16) { case 1: e |= 0x1000; break; case 2: e |= 0x2000; break; }
+					break;
+				case Api.WM_MOUSEWHEEL:
+				case Api.WM_MOUSEHWHEEL:
+					IsWheel = true;
+					short wheel = (short)(p->mouseData >> 16);
+					if (wheel > 0) e |= 0x1000; else if (wheel < 0) e |= 0x2000;
+					break;
 				}
 				_event = (MouseEvent)e;
 			}
@@ -750,6 +747,11 @@ namespace Au.Types
 			/// What event it is (button, move, wheel).
 			/// </summary>
 			public MouseEvent Event => _event;
+
+			/// <summary>
+			/// Is mouse-move event.
+			/// </summary>
+			public bool IsMove { get; }
 
 			/// <summary>
 			/// Is button-down event.
@@ -772,11 +774,11 @@ namespace Au.Types
 			public MButtons Button {
 				get {
 					switch (_event) {
-						case MouseEvent.LeftButton: return MButtons.Left;
-						case MouseEvent.RightButton: return MButtons.Right;
-						case MouseEvent.MiddleButton: return MButtons.Middle;
-						case MouseEvent.X1Button: return MButtons.X1;
-						case MouseEvent.X2Button: return MButtons.X2;
+					case MouseEvent.LeftButton: return MButtons.Left;
+					case MouseEvent.RightButton: return MButtons.Right;
+					case MouseEvent.MiddleButton: return MButtons.Middle;
+					case MouseEvent.X1Button: return MButtons.X1;
+					case MouseEvent.X2Button: return MButtons.X2;
 					}
 					return 0;
 				}

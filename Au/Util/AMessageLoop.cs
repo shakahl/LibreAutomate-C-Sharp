@@ -11,15 +11,17 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Forms;
 //using System.Linq;
+using System.Windows.Threading; //for XML comments
 
 using Au.Types;
 
 namespace Au.Util
 {
 	/// <summary>
-	/// A message loop, alternative to Application.Run which does not support nested loops.
+	/// A message loop for non-WPF apps, alternative to <b>System.Windows.Forms.Application.Run</b> which does not support nested loops.
+	/// In WPF apps instead use <see cref="DispatcherFrame"/> in a similar way; instead of <b>Loop</b> and <b>Stop</b> use <see cref="Dispatcher.PushFrame"/> and <see cref="DispatcherFrame.Continue"/>.
 	/// </summary>
-	public class AMessageLoop
+	public class AMessageLoop //CONSIDER: make internal
 	{
 		Handle_ _loopEndEvent;
 

@@ -1158,16 +1158,27 @@ class Script : AScript
 		AOutput.Write(AFolders.NetRuntime);
 	}
 
-	//void TestWpfMainWindow() {
-	//	var w = new Au.Tests.MainWindow();
-	//	w.ShowDialog();
-	//}
+	void TestWpfMainWindow() {
+		var w = new Au.Tests.MainWindow();
+		w.ShowDialog();
+	}
+
+	[StructLayout(LayoutKind.Explicit, Size=500000)]
+	struct BIGBIG { public override string ToString() => "TEST"; }
+	void TestStringInterpolationBoxing() {
+		BIGBIG r = default;
+		ADebug.MemorySetAnchor_();
+		var s = $"a {r}?"; //result: boxes, although .ToString() causes an IDE suggestion to remove it
+		ADebug.MemoryPrint_();
+		AOutput.Write(s);
+	}
 
 	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
 
+		//TestStringInterpolationBoxing();
 		//TestWpfMainWindow();
 		//TestNetCoreVersion();
 	}

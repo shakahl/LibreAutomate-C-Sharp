@@ -17,6 +17,7 @@ using Au.Types;
 
 namespace Au.Util
 {
+	//TODO: broken
 	/// <summary>
 	/// Functions to work with managed resources.
 	/// </summary>
@@ -64,13 +65,14 @@ namespace Au.Util
 			if(_appResourceManager == null) {
 				culture = null;
 				var asm = Assembly.GetEntryAssembly();
-				var a = asm.GetManifestResourceNames(); if(a == null || a.Length == 0) return null; //no resources
+				var a = asm.GetManifestResourceNames(); if(a.NE_()) return null; //no resources
 				string s;
 				if(s_appResourcesName != null) {
 					s = a.FirstOrDefault(k => k == s_appResourcesName);
 				} else {
 					if(a.Length == 1 && a[0].Ends(".resources")) s = a[0];
 					else {
+						//TODO: "AssemblyName.*.Resources.resources"
 						s = a.FirstOrDefault(k => k.Ends(".Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
 						if(s == null) s = a.FirstOrDefault(k => k.Ends(".resources"));
 					}

@@ -1,0 +1,33 @@
+﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:local="clr-namespace:Au.Controls.WPF">
+    <Style x:Key='TabItemVerticalLeft' TargetType='{x:Type TabItem}' BasedOn='{StaticResource {x:Type TabItem}}'>
+        <Setter Property='HeaderTemplate'>
+            <Setter.Value>
+                <DataTemplate>
+                    <ContentPresenter Content='{TemplateBinding Content}'>
+                        <ContentPresenter.LayoutTransform>
+                            <RotateTransform Angle='90' />
+                        </ContentPresenter.LayoutTransform>
+                    </ContentPresenter>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property='Padding' Value='1,6,2,6' />
+    </Style>
+    <Style x:Key='TabItemVerticalRight' TargetType='{x:Type TabItem}' BasedOn='{StaticResource {x:Type TabItem}}'>
+        <Setter Property='HeaderTemplate'>
+            <Setter.Value>
+                <DataTemplate>
+                    <ContentPresenter Content='{TemplateBinding Content}'>
+                        <ContentPresenter.LayoutTransform>
+                            <RotateTransform Angle='270' />
+                        </ContentPresenter.LayoutTransform>
+                    </ContentPresenter>
+                </DataTemplate>
+            </Setter.Value>
+        </Setter>
+        <Setter Property='Padding' Value='2,6,1,6' />
+    </Style>
+
+</ResourceDictionary>

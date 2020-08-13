@@ -1504,6 +1504,7 @@ namespace Au
 		{
 			return 1 == Show(text1, text2, "Yes|No", flags, icon, owner, expandedText);
 		}
+		//TODO: add more parameters to all funcs like this.
 
 		#endregion Show
 
