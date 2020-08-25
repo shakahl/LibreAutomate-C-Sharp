@@ -16,6 +16,7 @@ using System.Net;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Controls;
 using Au.Editor.Resources;
 using System.Collections.Immutable;
@@ -145,7 +146,7 @@ static class CiUtil
 			switch (i) {
 				case 1: url = "C# strings"; break;
 				case 2: url = "C# string formatting"; break;
-				case 3: Au.Util.AHelp.AuHelp("articles/Wildcard expression"); break;
+				case 3: AHelp.AuHelp("articles/Wildcard expression"); break;
 				case 11: CiTools.CmdShowRegexWindow(); break;
 				case 12: CiTools.CmdShowKeysWindow(); break;
 			}
@@ -168,7 +169,7 @@ static class CiUtil
 			query = sym.QualifiedName();
 			bool au = metadata.Name == "Au.dll";
 			query = query.Replace("..ctor", au ? ".-ctor" : null);
-			if (au) return Au.Util.AHelp.AuHelpUrl(query);
+			if (au) return AHelp.AuHelpUrl(query);
 			if (metadata.Name.Starts("Au.")) return null;
 			string kind = (sym is INamedTypeSymbol ints) ? ints.TypeKind.ToString() : sym.Kind.ToString();
 			query = query + " " + kind.Lower();

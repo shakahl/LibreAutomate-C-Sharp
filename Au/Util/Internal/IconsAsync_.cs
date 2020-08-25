@@ -1,3 +1,4 @@
+using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,9 +11,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au.Util
 {
@@ -27,7 +25,7 @@ namespace Au.Util
 	/// At first call <see cref="Add"/> (for each file) or <see cref="AddRange"/>. Then call <see cref="GetAllAsync"/>.
 	/// Create a callback function of type <see cref="Callback"/> and pass its delegate to <b>GetAllAsync</b>.
 	/// </remarks>
-	/// <seealso cref="AIconCache"/>
+	/// <seealso cref="AIconCache_"/>
 	internal sealed class IconsAsync_ : IDisposable
 	{
 		//never mind:
@@ -113,7 +111,7 @@ namespace Au.Util
 				_objCommon = objCommon;
 				_counter = _host._files.Count;
 
-				using(new Util.EnsureWindowsFormsSynchronizationContext_()) {
+				using(new EnsureWindowsFormsSynchronizationContext_()) {
 					foreach(var v in _host._files) {
 						if(!v.file.NE()) _GetIconAsync(new Result(v.file, v.obj));
 					}
@@ -123,7 +121,7 @@ namespace Au.Util
 #if true
 			void _GetIconAsync(Result state)
 			{
-				Util.ThreadPoolSTA_.SubmitCallback(state, d => { //this code runs in a thread pool thread
+				ThreadPoolSTA_.SubmitCallback(state, d => { //this code runs in a thread pool thread
 					if(_canceled) {
 						d.completionCallback = null;
 						return;

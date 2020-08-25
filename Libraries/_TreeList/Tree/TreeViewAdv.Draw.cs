@@ -5,9 +5,6 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Aga.Controls.Tree.NodeControls;
 
-using Au;
-using Au.Types;
-
 namespace Aga.Controls.Tree
 {
 	public partial class TreeViewAdv

@@ -41,7 +41,7 @@ namespace Au
 			readonly AWildex _name;
 			readonly AWildex _className;
 			readonly Func<AWnd, bool> _also;
-			AWinFormsControlNames _wfControls;
+			AWinformsControlNames _wfControls;
 			readonly int _skipCount;
 			readonly WCFlags _flags;
 			readonly _NameIs _nameIs;
@@ -94,7 +94,7 @@ namespace Au
 				return _FindInList(wParent, k) >= 0;
 			}
 
-			Util.ArrayBuilder_<AWnd> _AllChildren(AWnd wParent)
+			ArrayBuilder_<AWnd> _AllChildren(AWnd wParent)
 			{
 				wParent.ThrowIfInvalid();
 				return Internal_.EnumWindows2(Internal_.EnumAPI.EnumChildWindows,
@@ -142,7 +142,7 @@ namespace Au
 			AWnd[] _FindAll(_WndList k, AWnd wParent)
 			{
 				using(k) {
-					using var ab = new Util.ArrayBuilder_<AWnd>();
+					using var ab = new ArrayBuilder_<AWnd>();
 					_FindInList(wParent, k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
 					return ab.ToArray();
 				}
@@ -199,7 +199,7 @@ namespace Au
 							case _NameIs.wfName:
 								if(_wfControls == null) {
 									try {
-										_wfControls = new AWinFormsControlNames(wParent.Is0 ? w : wParent);
+										_wfControls = new AWinformsControlNames(wParent.Is0 ? w : wParent);
 									}
 									catch(AuWndException) { //invalid parent window
 										return -1;
@@ -268,7 +268,7 @@ namespace Au
 		/// Can start with these prefix strings:
 		/// - <c>"***text "</c> - use <see cref="ControlText"/>. Slower and less reliable because can get editable text. If a character can be underlined with Alt, insert '&amp;' before it.
 		/// - <c>"***accName "</c> - use <see cref="NameAcc"/>. Slower.
-		/// - <c>"***wfName "</c> - use .NET Forms control name (see <see cref="AWinFormsControlNames"/>). Slower and can fail because of [](xref:uac).
+		/// - <c>"***wfName "</c> - use .NET Forms control name (see <see cref="AWinformsControlNames"/>). Slower and can fail because of [](xref:uac).
 		/// - <c>"***id "</c> like <c>"***id 15"</c> - use control id (<see cref="ControlId"/>). See also <see cref="ChildById"/>.
 		/// </param>
 		/// <param name="cn">
@@ -293,7 +293,7 @@ namespace Au
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find window or control".
 		/// </remarks>
 		public AWnd Child(
 			[ParamString(PSFormat.AWildex)] string name = null,
@@ -377,7 +377,7 @@ namespace Au
 		/// <param name="id">Control id.</param>
 		/// <param name="flags">This function supports flags DirectChild and HiddenToo. If both are set, it is much faster because uses API <msdn>GetDlgItem</msdn>. Else uses API <msdn>EnumChildWindows</msdn>, like <see cref="Child"/>.</param>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find window or control".
 		/// 
 		/// Not all controls have a useful id. If control id is not unique or is different in each window instance, this function is not useful.
 		/// </remarks>

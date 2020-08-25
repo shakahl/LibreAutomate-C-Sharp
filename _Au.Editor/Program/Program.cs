@@ -15,11 +15,16 @@ using System.Windows.Forms;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 static class Program
 {
 	static Program()
 	{
+#if !DEBUG
+		AProcess.CultureIsInvariant = true;
+#endif
+
 		//Api.GetProcessTimes(Api.GetCurrentProcess(), out long c, out _, out long k, out long u);
 		//Api.GetSystemTimeAsFileTime(out long t);
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
@@ -28,7 +33,7 @@ static class Program
 #if TRACE
 		APerf.First();
 #endif
-		Au.Util.AssertListener_.Setup();
+		AssertListener_.Setup();
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
 		//AOutput.LogFile = @"q:\Test\log.txt";

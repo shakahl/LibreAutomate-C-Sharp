@@ -13,9 +13,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
-using Au;
-using Au.Types;
-
 namespace Au.Controls
 {
 	public partial class AuDockPanel

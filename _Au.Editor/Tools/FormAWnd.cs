@@ -132,7 +132,7 @@ namespace Au.Tools
 				f.cName = _con.Name;
 				int iSel = f.cName.NE() ? -1 : 0;
 				var an = new List<string> { TUtil.EscapeWildex(f.cName) };
-				_ConNameAdd("***wfName ", f.cWF = _con.NameWinForms);
+				_ConNameAdd("***wfName ", f.cWF = _con.NameWinforms);
 				/*bool isAcc =*/
 				_ConNameAdd("***accName ", f.cAcc = _con.NameAcc);
 				//bool isLabel = _ConNameAdd("***label ", f.cLabel = _con.NameLabel);
@@ -649,7 +649,7 @@ namespace Au.Tools
 							cText = c.ControlText;
 							//cLabel = c.NameLabel;
 							cAcc = c.NameAcc;
-							cWF = c.NameWinForms;
+							cWF = c.NameWinforms;
 							cId = c.ControlId;
 						}
 						_Common(true, b, c, cName, cClass);

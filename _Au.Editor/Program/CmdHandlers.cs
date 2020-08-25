@@ -15,6 +15,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Controls;
 using Au.Tools;
 
@@ -422,7 +423,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Run_Recent()
 	{
-		Au.Util.Log_.Run.Show();
+		Log_.Run.Show();
 	}
 
 	#endregion
@@ -541,7 +542,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void TT_RecentTriggers()
 	{
-		Au.Util.Log_.Run.Show();
+		Log_.Run.Show();
 	}
 
 	public void TT_ActiveToobars()
@@ -686,12 +687,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Help_Program()
 	{
-		Au.Util.AHelp.AuHelp("");
+		AHelp.AuHelp("");
 	}
 
 	public void Help_Library()
 	{
-		Au.Util.AHelp.AuHelp("api/");
+		AHelp.AuHelp("api/");
 	}
 
 	public void Help_Context()

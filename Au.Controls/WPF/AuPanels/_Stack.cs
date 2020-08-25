@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -16,9 +17,6 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
-
-using Au;
-using Au.Types;
 using System.Windows.Input;
 
 namespace Au.Controls.WPF
@@ -30,7 +28,7 @@ namespace Au.Controls.WPF
 			Grid _grid = new();
 			List<_Node> _nodes = new();
 
-			public _Stack(AuPanels pm, _Stack parent, XElement x) : base(pm, parent, x) {
+			public _Stack(AuPanels pm, _Stack parent, XElement x) : base(pm, parent) {
 				pm._rootStack ??= this;
 				pm._aStack.Add(this);
 
@@ -51,6 +49,7 @@ namespace Au.Controls.WPF
 
 			public override FrameworkElement Elem => _grid;
 			public bool IsVertical { get; }
+			public List<_Node> Nodes => _nodes;
 
 			public override void Save(XmlWriter x) {
 				x.WriteStartElement("stack");
@@ -58,6 +57,17 @@ namespace Au.Controls.WPF
 				base._SaveAttributes(x);
 				foreach (var v in _nodes) v.Save(x);
 				x.WriteEndElement();
+			}
+
+			public void HideNode(_Node node) {
+				var sp = node.Splitter;
+				if (sp != null) sp.Visibility = Visibility.Collapsed;
+				var k = new _RowCol(node);
+				//k.Visible = false;
+
+				var e = node.Elem;
+				if (e.Parent == _grid) e.Visibility = Visibility.Collapsed;
+				k.SizeDef = new GridLength(k.SizeNow, GridUnitType.Auto);
 			}
 		}
 	}

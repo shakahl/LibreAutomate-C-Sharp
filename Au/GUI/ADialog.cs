@@ -77,23 +77,23 @@ namespace Au
 
 		//[DllImport("comctl32.dll")]
 		//static extern int TaskDialogIndirect(in TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
-		delegate int _tTaskDialogIndirect(in TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
-		static readonly _tTaskDialogIndirect TaskDialogIndirect = _GetTaskDialogIndirect();
+		delegate int _TaskDialogIndirectDelegate(in _Api.TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
+		static readonly _TaskDialogIndirectDelegate TaskDialogIndirect = _GetTaskDialogIndirect();
 
-		static _tTaskDialogIndirect _GetTaskDialogIndirect()
+		static _TaskDialogIndirectDelegate _GetTaskDialogIndirect()
 		{
 			//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
 			//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
 			using(ActCtx_.Activate()) {
 				//Also, don't use DllImport, because it uses v5 comctl32.dll if it is already loaded.
-				Api.GetDelegate(out _tTaskDialogIndirect R, "comctl32.dll", "TaskDialogIndirect");
+				Api.GetDelegate(out _TaskDialogIndirectDelegate R, "comctl32.dll", "TaskDialogIndirect");
 				return R;
 			}
 		}
 
 		//TASKDIALOGCONFIG flags.
 		[Flags]
-		enum TDF_
+		enum _TDF
 		{
 			ENABLE_HYPERLINKS = 0x0001,
 			USE_HICON_MAIN = 0x0002,
@@ -117,47 +117,50 @@ namespace Au
 
 		//TASKDIALOGCONFIG buttons.
 		[Flags]
-		enum TDCBF_
+		enum _TDCBF
 		{
 			OK = 1, Yes = 2, No = 4, Cancel = 8, Retry = 0x10, Close = 0x20,
 		}
 
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		unsafe struct TASKDIALOG_BUTTON
+		static class _Api
 		{
-			public int id;
-			public char* text;
-		}
+			[StructLayout(LayoutKind.Sequential, Pack = 1)]
+			internal unsafe struct TASKDIALOG_BUTTON
+			{
+				public int id;
+				public char* text;
+			}
 
-		delegate int TaskDialogCallbackProc(AWnd hwnd, Native.TDN notification, LPARAM wParam, LPARAM lParam, IntPtr data);
+			[StructLayout(LayoutKind.Sequential, Pack = 1)]
+			internal unsafe struct TASKDIALOGCONFIG
+			{
+				public int cbSize;
+				public AWnd hwndParent;
+				public IntPtr hInstance;
+				public _TDF dwFlags;
+				public _TDCBF dwCommonButtons;
+				public string pszWindowTitle;
+				public IntPtr hMainIcon;
+				public string pszMainInstruction;
+				public string pszContent;
+				public int cButtons;
+				public TASKDIALOG_BUTTON* pButtons;
+				public int nDefaultButton;
+				public int cRadioButtons;
+				public TASKDIALOG_BUTTON* pRadioButtons;
+				public int nDefaultRadioButton;
+				public string pszVerificationText;
+				public string pszExpandedInformation;
+				public string pszExpandedControlText;
+				public string pszCollapsedControlText;
+				public IntPtr hFooterIcon;
+				public string pszFooter;
+				public TaskDialogCallbackProc pfCallback;
+				public IntPtr lpCallbackData;
+				public int cxWidth;
+			}
 
-		[StructLayout(LayoutKind.Sequential, Pack = 1)]
-		unsafe struct TASKDIALOGCONFIG
-		{
-			public int cbSize;
-			public AWnd hwndParent;
-			public IntPtr hInstance;
-			public TDF_ dwFlags;
-			public TDCBF_ dwCommonButtons;
-			public string pszWindowTitle;
-			public IntPtr hMainIcon;
-			public string pszMainInstruction;
-			public string pszContent;
-			public int cButtons;
-			public TASKDIALOG_BUTTON* pButtons;
-			public int nDefaultButton;
-			public int cRadioButtons;
-			public TASKDIALOG_BUTTON* pRadioButtons;
-			public int nDefaultRadioButton;
-			public string pszVerificationText;
-			public string pszExpandedInformation;
-			public string pszExpandedControlText;
-			public string pszCollapsedControlText;
-			public IntPtr hFooterIcon;
-			public string pszFooter;
-			public TaskDialogCallbackProc pfCallback;
-			public IntPtr lpCallbackData;
-			public int cxWidth;
+			internal delegate int TaskDialogCallbackProc(AWnd hwnd, Native.TDN notification, LPARAM wParam, LPARAM lParam, IntPtr data);
 		}
 
 		#endregion private API
@@ -211,7 +214,7 @@ namespace Au
 
 		#endregion static options
 
-		TASKDIALOGCONFIG _c;
+		_Api.TASKDIALOGCONFIG _c;
 
 		///
 		public ADialog()
@@ -255,12 +258,12 @@ namespace Au
 
 		#region set properties
 
-		void _SetFlag(TDF_ flag, bool on)
+		void _SetFlag(_TDF flag, bool on)
 		{
 			if(on) _c.dwFlags |= flag; else _c.dwFlags &= ~flag;
 		}
 
-		bool _HasFlag(TDF_ flag)
+		bool _HasFlag(_TDF flag)
 		{
 			return (_c.dwFlags & flag) != 0;
 		}
@@ -292,7 +295,7 @@ namespace Au
 		public void SetIcon(DIcon icon)
 		{
 			_c.hMainIcon = (IntPtr)(int)icon;
-			_SetFlag(TDF_.USE_HICON_MAIN, false);
+			_SetFlag(_TDF.USE_HICON_MAIN, false);
 		}
 
 		/// <summary>
@@ -306,7 +309,7 @@ namespace Au
 		{
 			_iconGC = icon; //GC
 			_c.hMainIcon = (icon == null) ? default : icon.Handle;
-			_SetFlag(TDF_.USE_HICON_MAIN, _c.hMainIcon != default);
+			_SetFlag(_TDF.USE_HICON_MAIN, _c.hMainIcon != default);
 			//tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32.
 			//note: for App icon ShowDialog will execute more code. The same for footer icon.
 		}
@@ -346,7 +349,7 @@ namespace Au
 
 			bool _hasXButton;
 
-			internal TDCBF_ SetButtons(string buttons, DStringList customButtons)
+			internal _TDCBF SetButtons(string buttons, DStringList customButtons)
 			{
 				_customButtons = null;
 				_mapIdUserNative = null;
@@ -371,11 +374,11 @@ namespace Au
 				return _ParseStringList(buttons, false);
 			}
 
-			TDCBF_ _ParseStringList(string b, bool onlyCustom)
+			_TDCBF _ParseStringList(string b, bool onlyCustom)
 			{
 				if(b.NE()) return 0;
 
-				TDCBF_ commonButtons = 0;
+				_TDCBF commonButtons = 0;
 				int id = 0, nextNativeId = 100;
 
 				foreach(var v in b.SegSplit("|")) {
@@ -384,12 +387,12 @@ namespace Au
 					int nativeId = 0;
 					if(!onlyCustom) {
 						switch(s) {
-						case "OK": commonButtons |= TDCBF_.OK; nativeId = _idOK; break;
-						case "Yes": commonButtons |= TDCBF_.Yes; nativeId = _idYes; break;
-						case "No": commonButtons |= TDCBF_.No; nativeId = _idNo; break;
-						case "Cancel": commonButtons |= TDCBF_.Cancel; nativeId = _idCancel; break;
-						case "Retry": commonButtons |= TDCBF_.Retry; nativeId = _idRetry; break;
-						case "Close": commonButtons |= TDCBF_.Close; nativeId = _idClose; break;
+						case "OK": commonButtons |= _TDCBF.OK; nativeId = _idOK; break;
+						case "Yes": commonButtons |= _TDCBF.Yes; nativeId = _idYes; break;
+						case "No": commonButtons |= _TDCBF.No; nativeId = _idNo; break;
+						case "Cancel": commonButtons |= _TDCBF.Cancel; nativeId = _idCancel; break;
+						case "Retry": commonButtons |= _TDCBF.Retry; nativeId = _idRetry; break;
+						case "Close": commonButtons |= _TDCBF.Close; nativeId = _idClose; break;
 						}
 					}
 
@@ -465,18 +468,18 @@ namespace Au
 			/// Sets c.pButtons, c.cButtons, c.pRadioButtons and c.cRadioButtons.
 			/// Later call MarshalFreeButtons.
 			/// </summary>
-			internal unsafe void MarshalButtons(ref TASKDIALOGCONFIG c)
+			internal unsafe void MarshalButtons(ref _Api.TASKDIALOGCONFIG c)
 			{
 				c.pButtons = _MarshalButtons(false, out c.cButtons);
 				c.pRadioButtons = _MarshalButtons(true, out c.cRadioButtons);
 
-				_hasXButton = ((c.dwFlags & TDF_.ALLOW_DIALOG_CANCELLATION) != 0);
+				_hasXButton = ((c.dwFlags & _TDF.ALLOW_DIALOG_CANCELLATION) != 0);
 			}
 
 			/// <summary>
 			/// Frees memory allocated by MarshalButtons and sets the c members to null/0.
 			/// </summary>
-			internal unsafe void MarshalFreeButtons(ref TASKDIALOGCONFIG c)
+			internal unsafe void MarshalFreeButtons(ref _Api.TASKDIALOGCONFIG c)
 			{
 				AMemory.Free(c.pButtons);
 				AMemory.Free(c.pRadioButtons);
@@ -484,15 +487,15 @@ namespace Au
 				c.cButtons = 0; c.cRadioButtons = 0;
 			}
 
-			unsafe TASKDIALOG_BUTTON* _MarshalButtons(bool radio, out int nButtons)
+			unsafe _Api.TASKDIALOG_BUTTON* _MarshalButtons(bool radio, out int nButtons)
 			{
 				var a = radio ? _radioButtons : _customButtons;
 				int n = a == null ? 0 : a.Count;
 				nButtons = n;
 				if(n == 0) return null;
-				int nba = n * sizeof(TASKDIALOG_BUTTON), nb = nba;
+				int nba = n * sizeof(_Api.TASKDIALOG_BUTTON), nb = nba;
 				foreach(var v in a) nb += (v.s.Length + 1) * 2;
-				var r = (TASKDIALOG_BUTTON*)AMemory.Alloc(nb);
+				var r = (_Api.TASKDIALOG_BUTTON*)AMemory.Alloc(nb);
 				char* s = (char*)((byte*)r + nba);
 				for(int i = 0; i < n; i++) {
 					var v = a[i];
@@ -522,7 +525,7 @@ namespace Au
 		public void SetButtons(string buttons, bool asCommandLinks = false, DStringList customButtons = default)
 		{
 			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons);
-			_SetFlag(TDF_.USE_COMMAND_LINKS, asCommandLinks);
+			_SetFlag(_TDF.USE_COMMAND_LINKS, asCommandLinks);
 		}
 
 		/// <summary>
@@ -545,7 +548,7 @@ namespace Au
 			_controls ??= new DControls();
 			_buttons.SetRadioButtons(_controls.RadioButtons = buttons);
 			_c.nDefaultRadioButton = _controls.RadioId = defaultId;
-			_SetFlag(TDF_.NO_DEFAULT_RADIO_BUTTON, defaultId < 0);
+			_SetFlag(_TDF.NO_DEFAULT_RADIO_BUTTON, defaultId < 0);
 		}
 
 		#endregion buttons
@@ -560,7 +563,7 @@ namespace Au
 		{
 			_controls ??= new DControls();
 			_c.pszVerificationText = _controls.Checkbox = text;
-			_SetFlag(TDF_.VERIFICATION_FLAG_CHECKED, _controls.IsChecked = check);
+			_SetFlag(_TDF.VERIFICATION_FLAG_CHECKED, _controls.IsChecked = check);
 		}
 
 		/// <summary>
@@ -571,7 +574,7 @@ namespace Au
 		public void SetExpandedText(string text, bool showInFooter = false)
 		{
 			if(text.NE()) { text = null; showInFooter = false; }
-			_SetFlag(TDF_.EXPAND_FOOTER_AREA, showInFooter);
+			_SetFlag(_TDF.EXPAND_FOOTER_AREA, showInFooter);
 			_c.pszExpandedInformation = text;
 		}
 
@@ -583,7 +586,7 @@ namespace Au
 		/// <param name="expandedText"></param>
 		public void SetExpandControl(bool defaultExpanded, string collapsedText = null, string expandedText = null)
 		{
-			_SetFlag(TDF_.EXPANDED_BY_DEFAULT, defaultExpanded);
+			_SetFlag(_TDF.EXPANDED_BY_DEFAULT, defaultExpanded);
 			_c.pszCollapsedControlText = collapsedText;
 			_c.pszExpandedControlText = expandedText;
 		}
@@ -617,7 +620,7 @@ namespace Au
 		{
 			_c.pszFooter = text;
 			_c.hFooterIcon = (IntPtr)(int)icon;
-			_SetFlag(TDF_.USE_HICON_FOOTER, false);
+			_SetFlag(_TDF.USE_HICON_FOOTER, false);
 		}
 
 		/// <summary>
@@ -630,7 +633,7 @@ namespace Au
 			_c.pszFooter = text;
 			_iconFooterGC = icon; //GC
 			_c.hFooterIcon = (icon == null) ? default : icon.Handle;
-			_SetFlag(TDF_.USE_HICON_FOOTER, _c.hFooterIcon != default);
+			_SetFlag(_TDF.USE_HICON_FOOTER, _c.hFooterIcon != default);
 		}
 		Icon _iconFooterGC; //GC
 
@@ -674,7 +677,7 @@ namespace Au
 		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool doNotDisable = false)
 		{
 			_c.hwndParent = owner.IsEmpty ? default : owner.Wnd.Window;
-			_SetFlag(TDF_.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
+			_SetFlag(_TDF.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
 			_enableOwner = doNotDisable;
 		}
 		bool _enableOwner;
@@ -785,14 +788,14 @@ namespace Au
 
 			_SetPos(true); //get screen
 
-			_SetFlag(TDF_.SIZE_TO_CONTENT, true); //can make max 50% wider
-			_SetFlag(TDF_.ALLOW_DIALOG_CANCELLATION, FlagXCancel);
-			_SetFlag(TDF_.RTL_LAYOUT, FlagRtlLayout);
-			_SetFlag(TDF_.CAN_BE_MINIMIZED, FlagCanBeMinimized);
-			_SetFlag(TDF_.SHOW_PROGRESS_BAR, FlagShowProgressBar);
-			_SetFlag(TDF_.SHOW_MARQUEE_PROGRESS_BAR, FlagShowMarqueeProgressBar);
-			_SetFlag(TDF_.ENABLE_HYPERLINKS, HyperlinkClicked != null);
-			_SetFlag(TDF_.CALLBACK_TIMER, (_timeoutS > 0 || Timer != null));
+			_SetFlag(_TDF.SIZE_TO_CONTENT, true); //can make max 50% wider
+			_SetFlag(_TDF.ALLOW_DIALOG_CANCELLATION, FlagXCancel);
+			_SetFlag(_TDF.RTL_LAYOUT, FlagRtlLayout);
+			_SetFlag(_TDF.CAN_BE_MINIMIZED, FlagCanBeMinimized);
+			_SetFlag(_TDF.SHOW_PROGRESS_BAR, FlagShowProgressBar);
+			_SetFlag(_TDF.SHOW_MARQUEE_PROGRESS_BAR, FlagShowMarqueeProgressBar);
+			_SetFlag(_TDF.ENABLE_HYPERLINKS, HyperlinkClicked != null);
+			_SetFlag(_TDF.CALLBACK_TIMER, (_timeoutS > 0 || Timer != null));
 
 			_timeoutActive = false;
 			if(_timeoutS > 0) {
@@ -820,7 +823,7 @@ namespace Au
 				_threadIdInShow = Thread.CurrentThread.ManagedThreadId;
 
 				_buttons.MarshalButtons(ref _c);
-				if(_c.pButtons == null) _SetFlag(TDF_.USE_COMMAND_LINKS | TDF_.USE_COMMAND_LINKS_NO_ICON, false); //to avoid exception
+				if(_c.pButtons == null) _SetFlag(_TDF.USE_COMMAND_LINKS | _TDF.USE_COMMAND_LINKS_NO_ICON, false); //to avoid exception
 
 				if(_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
 					hook = AHookWin.ThreadGetMessage(_HookProc);
@@ -925,7 +928,7 @@ namespace Au
 		void _SetPos(bool before)
 		{
 			if(before) _screen = default;
-			if(_HasFlag(TDF_.POSITION_RELATIVE_TO_WINDOW)) return;
+			if(_HasFlag(_TDF.POSITION_RELATIVE_TO_WINDOW)) return;
 			bool isXY = !_x.IsEmpty || !_y.IsEmpty;
 			if(!_rawXY) {
 				if(before) {
@@ -1220,7 +1223,7 @@ namespace Au
 			FlagShowMarqueeProgressBar = true;
 			FlagShowProgressBar = false;
 			_c.pszContent ??= "";
-			if(_c.pszExpandedInformation != null && _controls.EditType == DEdit.Multiline) _SetFlag(TDF_.EXPAND_FOOTER_AREA, true);
+			if(_c.pszExpandedInformation != null && _controls.EditType == DEdit.Multiline) _SetFlag(_TDF.EXPAND_FOOTER_AREA, true);
 		}
 
 		void _EditControlUpdate(bool onlyZorder = false)
@@ -1281,8 +1284,7 @@ namespace Au
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
 			var pExStyle = WS2.NOPARENTNOTIFY; //not WS2.CONTROLPARENT
 			_editParent = AWnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
-			_editControlParentProcHolder = _EditControlParentProc;
-			_editParent.SetWindowLong(Native.GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder));
+			_editParent.SetWindowLong(Native.GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
 
 			//Create Edit or ComboBox control.
 			string cn = "Edit";
@@ -1333,7 +1335,7 @@ namespace Au
 		NativeFont_ _editFont;
 
 		//Dlgproc of our intermediate #32770 control, the parent of out Edit control.
-		int _EditControlParentProc(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam)
+		LPARAM _EditControlParentProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam)
 		{
 			//AOutput.Write(msg, wParam, lParam);
 			switch(msg) {
@@ -1353,8 +1355,7 @@ namespace Au
 			return 0;
 			//tested: WM_GETDLGCODE, no results.
 		}
-		DLGPROC _editControlParentProcHolder;
-		delegate int DLGPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
+		Native.WNDPROC _editControlParentProcHolder;
 
 		#endregion Edit control
 

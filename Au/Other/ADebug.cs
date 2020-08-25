@@ -37,7 +37,7 @@ namespace Au
 		/// Calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional arguments are not used explicitly.
-		/// If text starts with "&lt;&gt;", it can contain Print tags.
+		/// If text starts with "&lt;&gt;", it can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void Print(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
@@ -47,7 +47,7 @@ namespace Au
 		/// If condition is true, calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
 		/// Works only if DEBUG is defined. Read more in class help.
 		/// The 3 optional arguments are not used explicitly.
-		/// If text starts with "&lt;&gt;", it can contain Print tags.
+		/// If text starts with "&lt;&gt;", it can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void PrintIf(bool condition, object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)

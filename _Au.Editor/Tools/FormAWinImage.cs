@@ -169,7 +169,7 @@ namespace Au.Tools
 				case "windowPixels":
 					if(!_onceInfoWindowPixels && _image != null) {
 						_onceInfoWindowPixels = true;
-						_errorProvider.Icon = AIcon.Stock(StockIcon.INFO).ToIcon();
+						_errorProvider.Icon = AIcon.Stock(StockIcon.INFO).ToWinformsIcon();
 						_errorProvider.SetError(_bTest, "After changing 'Get window pixels' may need to capture again.\nClick Test. If not found, click Capture.");
 					}
 					break;

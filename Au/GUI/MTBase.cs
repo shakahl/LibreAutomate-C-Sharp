@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -12,7 +13,6 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-using System.Reflection.Emit;
 
 namespace Au.Types
 {
@@ -20,7 +20,7 @@ namespace Au.Types
 	{
 		//ToolStrip ToolStrip { get; } //currently not used; we use MainToolStrip instead.
 		bool PaintedOnce { get; }
-		List<Util.IconsAsync_.Item> SubmenuAsyncIcons => null;
+		List<IconsAsync_.Item> SubmenuAsyncIcons => null;
 	}
 
 	/// <summary>
@@ -217,7 +217,7 @@ namespace Au.Types
 				if(item is ToolStripSplitButton sb) sb.ButtonClick += _onClick; else item.Click += _onClick;
 
 				//APerf.First();
-				if(iconObj == null && ExtractIconPathFromCode) iconObj = _IconPathFromCode(onClick.Method);
+				if(iconObj == null && ExtractIconPathFromCode) iconObj = AContextMenu.IconPathFromCode_(onClick.Method);
 				//APerf.NW(); //ngened about 10 ms first time, then fast. Else 30-40 ms first time.
 				//AOutput.Write(iconObj);
 			}
@@ -243,15 +243,15 @@ namespace Au.Types
 						imageResult = ic.ToBitmap();
 						break;
 					case StockIcon ic:
-						imageResult = AIcon.Stock(ic, IconSize).ToBitmap();
+						imageResult = AIcon.Stock(ic, IconSize).ToWinformsBitmap();
 						break;
 					case string s when s.Length > 0:
-						if(Util.Image_.IsImageStringPrefix(s)) {
-							imageResult = Util.Image_.TryLoadImageFromString(s, warning: true);
+						if(AImageUtil.HasImageStringPrefix(s)) {
+							imageResult = AImageUtil.TryLoadWinformsImageFromString(s, warning: true);
 						} else if(s.Starts("key:")) {
 							item.ImageKey = s[4..];
 						} else if(useDefault != 0) {
-							imageResult = AIcon.OfFile(s, IconSize).ToBitmap();
+							imageResult = AIcon.OfFile(s, IconSize).ToWinformsBitmap();
 						} else {
 							_SetItemFileIcon(isTB, item, s); //async
 						}
@@ -285,7 +285,7 @@ namespace Au.Types
 			//var perf = APerf.Create();
 			//item.ImageScaling = ToolStripItemImageScaling.None; //we'll get icons of correct size, except if size is 256 and such icon is unavailable, then show smaller
 
-			_AsyncIcons ??= new Util.IconsAsync_(); //used by submenus too
+			_AsyncIcons ??= new IconsAsync_(); //used by submenus too
 			var submenuIcons = (item.Owner as _IAuToolStrip).SubmenuAsyncIcons;
 			bool isFirstImage;
 
@@ -294,7 +294,7 @@ namespace Au.Types
 				_AsyncIcons.Add(s, item);
 			} else {
 				isFirstImage = submenuIcons.Count == 0;
-				submenuIcons.Add(new Util.IconsAsync_.Item(s, item));
+				submenuIcons.Add(new IconsAsync_.Item(s, item));
 			}
 
 			//Reserve space for image.
@@ -310,10 +310,10 @@ namespace Au.Types
 		Image _imagePlaceholder;
 
 		//This is shared by toolbars and main menus. Submenus have their own.
-		Util.IconsAsync_ _AsyncIcons { get; set; }
+		IconsAsync_ _AsyncIcons { get; set; }
 
 		//list - used by submenus.
-		internal void GetIconsAsync_(ToolStrip ts, List<Util.IconsAsync_.Item> list = null)
+		internal void GetIconsAsync_(ToolStrip ts, List<IconsAsync_.Item> list = null)
 		{
 			if(_AsyncIcons == null) return;
 			if(list != null) _AsyncIcons.AddRange(list);
@@ -322,12 +322,12 @@ namespace Au.Types
 			_AsyncIcons.GetAllAsync(_AsyncCallback, IconSize, 0 /*IconFlags*/, ts);
 		}
 
-		void _AsyncCallback(Util.IconsAsync_.Result r, object objCommon, int nLeft)
+		void _AsyncCallback(IconsAsync_.Result r, object objCommon, int nLeft)
 		{
 			var ts = objCommon as ToolStrip;
 			var item = r.obj as ToolStripItem;
 
-			Image im = r.icon.ToBitmap(true);
+			Image im = r.icon.ToWinformsBitmap(true);
 			if(im != null) {
 				_SetItemImage(ts, item, im);
 
@@ -383,66 +383,6 @@ namespace Au.Types
 		IntPtr _region1, _region2;
 		List<Image> _images;
 
-		/// <summary>
-		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
-		/// Also supports code patterns like 'AFolders.System + "notepad.exe"' or 'AFolders.Virtual.RecycleBin'.
-		/// Returns null if no such string/pattern.
-		/// </summary>
-		static string _IconPathFromCode(MethodInfo mi)
-		{
-			//support code pattern like 'AFolders.System + "notepad.exe"'.
-			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
-			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
-			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
-			//also code pattern like 'AFile.TryRun("notepad.exe")'.
-			//AOutput.Write(mi.Name);
-			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
-			try {
-				var reader = new Util.ILReader(mi);
-				foreach(var instruction in reader.Instructions) {
-					if(++i > 100) break;
-					var op = instruction.Op;
-					//AOutput.Write(op);
-					if(op == OpCodes.Nop) {
-						i--;
-					} else if(op == OpCodes.Ldstr) {
-						var s = instruction.Data as string;
-						//AOutput.Write(s);
-						if(i == patternStart + 1) filename = s;
-						else {
-							if(APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AFile.TryRun(@"%AFolders.System%\notepad.exe");
-							if(APath.IsUrl(s) || APath.IsShellPath_(s)) return s;
-							filename = null; patternStart = -1;
-							if(i == 1) filename2 = s;
-						}
-					} else if(op == OpCodes.Call && instruction.Data is MethodInfo f && f.IsStatic) {
-						//AOutput.Write(f, f.DeclaringType, f.Name, f.MemberType, f.ReturnType, f.GetParameters().Length);
-						var dt = f.DeclaringType;
-						if(dt == typeof(AFolders) || dt == typeof(AFolders.Virtual)) {
-							if(f.ReturnType == typeof(FolderPath) && f.GetParameters().Length == 0) {
-								//AOutput.Write(1);
-								f1 = f;
-								patternStart = i;
-							}
-						} else if(dt == typeof(FolderPath)) {
-							if(i == patternStart + 2 && f.Name == "op_Addition") {
-								//AOutput.Write(2);
-								var fp = (FolderPath)f1.Invoke(null, null);
-								if((string)fp == null) return null;
-								return fp + filename;
-							} else if(i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
-								//AOutput.Write(3);
-								return (FolderPath)f1.Invoke(null, null);
-							}
-						}
-					}
-				}
-				if(filename2 != null && filename2.Ends(".exe", true)) return AFile.SearchPath(filename2);
-			}
-			catch(Exception ex) { ADebug.Print(ex); }
-			return null;
-		}
-
 		private protected void _Dispose(bool disposing)
 		{
 			//AOutput.Write("_Dispose", _isDisposed, this);
@@ -483,7 +423,7 @@ namespace Au.Types
 		/// </summary>
 		internal void GoToEdit_(ToolStripItem item)
 		{
-			Util.AScriptEditor.GoToEdit(_sourceFile, GetItemSourceLine_(item));
+			AScriptEditor.GoToEdit(_sourceFile, GetItemSourceLine_(item));
 		}
 
 		internal static bool CanGoToEdit_ => !ATask.WndMsg_.Is0;
@@ -492,7 +432,7 @@ namespace Au.Types
 		//{
 		//	var wmsg = ATask.WndMsg; if(wmsg.Is0) return;
 		//	Api.AllowSetForegroundWindow(wmsg.ProcessId);
-		//	var data = Util.Serializer_.Serialize(isTB ? 1 : 0, _sourceFile, _sourceLine, tsi?.Text);
+		//	var data = Serializer_.Serialize(isTB ? 1 : 0, _sourceFile, _sourceLine, tsi?.Text);
 		//	AWnd.More.CopyDataStruct.SendBytes(wmsg, 120, data);
 		//}
 	}
@@ -580,7 +520,7 @@ namespace Au.Types
 	/// - int - imagelist image index (<see cref="ToolStripItem.ImageIndex"/>).
 	/// - Image - image object.
 	/// - Icon - icon object.
-	/// - <see cref="AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="AIcon.ToBitmap"/> and disposes the native icon.
+	/// - <see cref="AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="AIcon.ToWinformsBitmap"/> and disposes the native icon.
 	/// - <see cref="StockIcon"/> - a shell icon.
 	/// - FolderPath - folder path.
 	/// - default - no icon. If <see cref="MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
@@ -601,7 +541,7 @@ namespace Au.Types
 		///
 		public static implicit operator MTImage(Icon icon) => new MTImage(icon);
 		///
-		public static implicit operator MTImage(AIcon icon) => new MTImage(icon.ToBitmap());
+		public static implicit operator MTImage(AIcon icon) => new MTImage(icon.ToWinformsBitmap());
 		///
 		public static implicit operator MTImage(StockIcon icon) => new MTImage(icon);
 		///

@@ -21,7 +21,7 @@ namespace Au.Util
 	/// Usually each control has a unique name. It's the Control.Name property. Useful to identify controls without a classic name/text.
 	/// The control id of these controls is not useful, it is not constant.
 	/// </remarks>
-	public sealed class AWinFormsControlNames : IDisposable
+	public sealed class AWinformsControlNames : IDisposable
 	{
 		AProcessMemory _pm;
 		AWnd _w;
@@ -41,7 +41,7 @@ namespace Au.Util
 		/// <param name="w">Any top-level or child window of that process.</param>
 		/// <exception cref="AuWndException">w invalid.</exception>
 		/// <exception cref="AuException">Failed to allocate process memory (see <see cref="AProcessMemory"/>) needed to get control names, usually because of [](xref:uac).</exception>
-		public AWinFormsControlNames(AWnd w)
+		public AWinformsControlNames(AWnd w)
 		{
 			_pm = new AProcessMemory(w, 4096); //throws
 			_w = w;
@@ -55,7 +55,7 @@ namespace Au.Util
 		public string GetControlName(AWnd c)
 		{
 			if(_pm == null) return null;
-			if(!IsWinFormsControl(c)) return null;
+			if(!IsWinformsControl(c)) return null;
 			if(!c.SendTimeout(5000, out var R, WM_GETCONTROLNAME, 4096, _pm.Mem) || (int)R < 1) return null;
 			int len = (int)R - 1;
 			if(len == 0) return "";
@@ -67,7 +67,7 @@ namespace Au.Util
 		/// Usually it means that we can get Windows Forms control name of w and its child controls.
 		/// </summary>
 		/// <param name="w">The window. Can be top-level or control.</param>
-		public static bool IsWinFormsControl(AWnd w)
+		public static bool IsWinformsControl(AWnd w)
 		{
 			return w.ClassNameIs("WindowsForms*");
 		}
@@ -77,12 +77,12 @@ namespace Au.Util
 		/// Returns null if it is not a Windows Forms control or if fails.
 		/// </summary>
 		/// <param name="c">The control. Can be top-level window too.</param>
-		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create an AWinFormsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
+		/// <remarks>This function is easy to use and does not throw excaptions. However, when you need names of multiple controls of a single window, better create an AWinformsControlNames instance (once) and for each control call its GetControlNameOrText method, it will be faster.</remarks>
 		public static string GetSingleControlName(AWnd c)
 		{
-			if(!IsWinFormsControl(c)) return null;
+			if(!IsWinformsControl(c)) return null;
 			try {
-				using(var x = new AWinFormsControlNames(c)) return x.GetControlName(c);
+				using(var x = new AWinformsControlNames(c)) return x.GetControlName(c);
 			}
 			catch { }
 			return null;
@@ -94,15 +94,15 @@ namespace Au.Util
 		///// Returns null if it is not a Windows Forms control or if fails.
 		///// </summary>
 		///// <param name="c">The control. Can be top-level window too.</param>
-		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating AWinFormsControlNames instance each time and calling its GetControlNameOrText method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
+		///// <remarks>When need to get control names repeatedly or quite often, this function can be faster than creating AWinformsControlNames instance each time and calling its GetControlNameOrText method, because this function remembers the last used process etc. Also it is easier to use and does not throw exceptions.</remarks>
 		//public static string GetSingleControlName(AWnd c)
 		//{
-		//	if(!IsWinFormsControl(c)) return null;
+		//	if(!IsWinformsControl(c)) return null;
 		//	uint pid = c.ProcessId; if(pid == 0) return null;
 		//	lock (_prevLock) {
 		//		if(pid != _prevPID || ATime.PerfMilliseconds - _prevTime > 1000) {
 		//			if(_prev != null) { _prev.Dispose(); _prev = null; }
-		//			try { _prev = new AWinFormsControlNames(c); } catch { }
+		//			try { _prev = new AWinformsControlNames(c); } catch { }
 		//			//AOutput.Write("new");
 		//		} //else AOutput.Write("cached");
 		//		_prevPID = pid; _prevTime = ATime.PerfMilliseconds;
@@ -110,6 +110,6 @@ namespace Au.Util
 		//		return _prev.GetControlNameOrText(c);
 		//	}
 		//}
-		//static AWinFormsControlNames _prev; static uint _prevPID; static long _prevTime; static object _prevLock = new object(); //cache
+		//static AWinformsControlNames _prev; static uint _prevPID; static long _prevTime; static object _prevLock = new object(); //cache
 	}
 }

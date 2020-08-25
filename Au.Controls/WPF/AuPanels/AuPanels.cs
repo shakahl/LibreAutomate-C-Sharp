@@ -77,6 +77,7 @@ namespace Au.Controls.WPF
 		/// Saves layout to XML file <i>xmlFileCustomized</i> specified when calling <see cref="Load"/>.
 		/// </summary>
 		public void Save() {
+			return; //TODO
 			try {
 				AFile.CreateDirectoryFor(_xmlFile);
 				var sett = new XmlWriterSettings() {
@@ -106,6 +107,9 @@ namespace Au.Controls.WPF
 		public FrameworkElement RootElem => _rootStack.Elem;
 
 		public IPanel this[string name] => _aPanel.Find(p => p.Name == name);
+
+		internal Window ContainerWindow => _window ??= Window.GetWindow(RootElem);
+		Window _window;
 
 		void _AutoUpdateXml(XElement rootStack, string xmlFileDefault) {
 			var defRootStack = AExtXml.LoadElem(xmlFileDefault).Element("stack");

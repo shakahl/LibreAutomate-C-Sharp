@@ -789,7 +789,7 @@ namespace Au
 		{
 			int n = ColumnCount;
 			if(n > 0 && !name.NE()) {
-				if(AStringUtil.IsAscii(name)) {
+				if(name.IsAscii()) {
 					for(int i = 0; i < n; i++) {
 						byte* b = SLApi.sqlite3_column_name(_st, i);
 						if(BytePtr_.AsciiEq(b, name)) return i;

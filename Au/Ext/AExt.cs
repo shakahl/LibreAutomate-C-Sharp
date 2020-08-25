@@ -80,6 +80,36 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Converts int to string.
+		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
+		/// Calls <see cref="int.ToString(string, IFormatProvider)"/>.
+		/// </summary>
+		public static string ToStringInvariant(this int t, string format = null)
+		{
+			return t.ToString(format, NumberFormatInfo.InvariantInfo);
+		}
+
+		/// <summary>
+		/// Converts long to string.
+		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
+		/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
+		/// </summary>
+		public static string ToStringInvariant(this long t, string format = null)
+		{
+			return t.ToString(format, NumberFormatInfo.InvariantInfo);
+		}
+
+		/// <summary>
+		/// Converts nint to string.
+		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
+		/// Calls <see cref="nint.ToString(string, IFormatProvider)"/>.
+		/// </summary>
+		public static string ToStringInvariant(this nint t, string format = null)
+		{
+			return t.ToString(format, NumberFormatInfo.InvariantInfo);
+		}
+
+		/// <summary>
 		/// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
 		/// Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
 		/// </summary>

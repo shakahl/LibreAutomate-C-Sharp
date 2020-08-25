@@ -1080,21 +1080,21 @@ namespace Au
 			IntPtr hcur = Api.LoadCursor(default, cursor);
 			if(hcur == default) throw new AuException(0, "*load cursor");
 
-			return AWaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentCursor(out var h) && h == hcur) ^ not);
+			return AWaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentVisibleCursor(out var c) && c == hcur) ^ not);
 		}
 
 		/// <summary>
 		/// Waits for a nonstandard mouse cursor (pointer) visible.
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-		/// <param name="cursorHash">Cursor hash, as returned by <see cref="ACursor.HashCursor"/>.</param>
+		/// <param name="cursorHash">Cursor hash, as returned by <see cref="ACursor.Hash"/>.</param>
 		/// <param name="not">Wait until this cursor disappears.</param>
 		/// <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false)
 		{
 			if(cursorHash == 0) throw new ArgumentException();
-			return AWaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentCursor(out var h) && ACursor.HashCursor(h) == cursorHash) ^ not);
+			return AWaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentVisibleCursor(out var c) && c.Hash() == cursorHash) ^ not);
 		}
 	}
 

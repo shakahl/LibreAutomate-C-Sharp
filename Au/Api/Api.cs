@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Util;
+using System;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Runtime.CompilerServices;
@@ -832,9 +833,9 @@ namespace Au.Types
 		///// <param name="dotExt"></param>
 		//internal static string AssocQueryString(string dotExt/*, ASSOCSTR what = ASSOCSTR.ASSOCSTR_EXECUTABLE*/)
 		//{
-		//	var b = Util.AMemoryArray.Char_(300, out var n);
+		//	var b = AMemoryArray.Char_(300, out var n);
 		//	int hr = AssocQueryString(0x20, 2, dotExt, null, b, ref n); //ASSOCF_NOTRUNCATE
-		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = Util.AMemoryArray.Char_(n), ref n);
+		//	if(hr == E_POINTER) hr = AssocQueryString(0x20, 2, dotExt, null, b = AMemoryArray.Char_(n), ref n);
 		//	return hr == 0 ? b.ToString(n) : null;
 		//}
 
@@ -1124,13 +1125,13 @@ namespace Au.Types
 		//info: NtSetTimerResolution can set min 0.5 ms resolution. timeBeginPeriod min 1.
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Init(out Util.AHash.MD5 context);
+		internal static extern void MD5Init(out AHash.MD5 context);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Update(ref Util.AHash.MD5 context, void* data, int dataLen);
+		internal static extern void MD5Update(ref AHash.MD5 context, void* data, int dataLen);
 
 		[DllImport("ntdll.dll")]
-		internal static extern void MD5Final(ref Util.AHash.MD5 context);
+		internal static extern void MD5Final(ref AHash.MD5 context);
 
 		internal struct SYSTEM_PROCESS_INFORMATION
 		{

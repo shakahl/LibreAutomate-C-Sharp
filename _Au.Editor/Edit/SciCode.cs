@@ -17,6 +17,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Controls;
 using static Au.Controls.Sci;
 
@@ -515,7 +516,7 @@ partial class SciCode : AuScintilla
 
 		if(!s.NE()) {
 			var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
-			var s8 = Au.Util.AConvert.ToUtf8(s);
+			var s8 = AConvert.ToUtf8(s);
 			fixed(byte* p8 = s8) {
 				z.text = p8;
 				z.len = s8.Length - 1;

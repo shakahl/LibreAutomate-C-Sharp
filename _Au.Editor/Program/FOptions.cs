@@ -16,6 +16,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Controls;
 using Microsoft.Win32;
 
@@ -239,7 +240,7 @@ partial class FOptions : DialogForm
 
 		var fontsMono = new List<string>();
 		var fontsVar = new List<string>();
-		using(var dc = new Au.Util.ScreenDC_(0)) {
+		using(var dc = new ScreenDC_(0)) {
 			EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
 				if(lf->lfFaceName[0] != '@') {
 					var fn = new string(lf->lfFaceName);

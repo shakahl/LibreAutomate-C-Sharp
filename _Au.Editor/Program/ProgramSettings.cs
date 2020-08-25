@@ -15,14 +15,15 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 /// <summary>
 /// Program settings.
 /// AFolders.ThisAppDocuments + @".settings\Settings.json"
 /// </summary>
-class ProgramSettings : Au.Util.JSettings
+class ProgramSettings : ASettings
 {
-	public static ProgramSettings Load() => _Load<ProgramSettings>(DirBS + "Settings.json");
+	public static ProgramSettings Load() => Load<ProgramSettings>(DirBS + "Settings.json");
 
 	public static readonly string DirBS = AFolders.ThisAppDocuments + @".settings\";
 
@@ -103,9 +104,9 @@ class ProgramSettings : Au.Util.JSettings
 /// Workspace settings.
 /// WorkspaceDirectory + @"\settings.json"
 /// </summary>
-class WorkspaceSettings : Au.Util.JSettings
+class WorkspaceSettings : ASettings
 {
-	public static WorkspaceSettings Load(string jsonFile) => _Load<WorkspaceSettings>(jsonFile);
+	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
 
 	public FilesModel.UserData[] users { get => _users; set => SetNoCmp(ref _users, value); }
 	FilesModel.UserData[] _users;

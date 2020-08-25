@@ -5,14 +5,13 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.ComponentModel;
 
-using Au;
-using Au.Types;
+//using Au;
 
 namespace Aga.Controls.Tree.NodeControls
 {
 	public abstract class EditableControl : InteractiveControl
 	{
-		private ATimer _timer;
+		private Au.ATimer _timer;
 		private bool _editFlag;
 
 		#region Properties
@@ -132,7 +131,7 @@ namespace Aga.Controls.Tree.NodeControls
 
 		void _StartTimer()
 		{
-			_timer ??= new ATimer(t => {
+			_timer ??= new Au.ATimer(t => {
 				if(_editFlag) BeginEdit();
 				_editFlag = false;
 			});

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -125,7 +125,7 @@ namespace Au
 				case byte:
 				case nuint:
 				case System.Collections.IEnumerable:
-					using (new Util.StringBuilder_(out var b)) {
+					using (new StringBuilder_(out var b)) {
 						ObjectToString_(b, value, false);
 						return b.ToString();
 					}
@@ -188,7 +188,7 @@ namespace Au
 		/// </remarks>
 		public static void Write(object value1, object value2, params object[] more) {
 			if (more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
-			using (new Util.StringBuilder_(out var b)) {
+			using (new StringBuilder_(out var b)) {
 				for (int i = 0, n = 2 + more.Length; i < n; i++) {
 					if (i > 0) b.Append(", ");
 					ObjectToString_(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]), compact: true);
@@ -419,11 +419,11 @@ namespace Au
 			public bool WriteLine(string s) {
 				bool ok;
 				int n = Encoding.UTF8.GetByteCount(s ??= "") + 1;
-				fixed (byte* b = Util.AMemoryArray.Byte_(n + 35)) {
+				fixed (byte* b = AMemoryArray.Byte_(n + 35)) {
 					if (LogFileTimestamp) {
 						Api.GetLocalTime(out var t);
 						Api.wsprintfA(b, "%i-%02i-%02i %02i:%02i:%02i.%03i   ", __arglist(t.wYear, t.wMonth, t.wDay, t.wHour, t.wMinute, t.wSecond, t.wMilliseconds));
-						int nn = Util.BytePtr_.Length(b);
+						int nn = BytePtr_.Length(b);
 						Encoding.UTF8.GetBytes(s, new Span<byte>(b + nn, n));
 						n += nn;
 						if (s.Starts("<>")) {

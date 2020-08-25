@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,10 +12,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Linq;
-
 using System.Text.RegularExpressions; //for XML doc links
-
-using Au.Types;
 
 namespace Au
 {
@@ -681,7 +680,7 @@ namespace Au
 		int _Replace(string s, out string result, string repl, Func<RXMatch, string> replFunc, int maxCount, Range? range, RXMatchFlags matchFlags)
 		{
 			StringBuilder b = null;
-			Util.StringBuilder_ bCache = default;
+			StringBuilder_ bCache = default;
 			int prevEnd = 0;
 			int replType = 0; //0 empty, 1 simple, 2 with $, 3 callback
 
@@ -689,7 +688,7 @@ namespace Au
 			while(e.Next()) {
 				//init variables
 				if(b == null) {
-					bCache = new Util.StringBuilder_(out b, s.Length + 100);
+					bCache = new StringBuilder_(out b, s.Length + 100);
 					if(replFunc != null) replType = 3; else if(!repl.NE()) replType = repl.IndexOf('$') < 0 ? 1 : 2;
 				}
 				//append s part before this match

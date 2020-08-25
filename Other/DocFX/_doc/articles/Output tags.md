@@ -58,11 +58,8 @@ Images are displayed below current line. Examples:
 
 `<image "c:\images\example.png">`
 `<image "c:\files\example.txt">`
-`<image "resource:ResourceName">`
 `<image "image:PngBase64">`
 
 Supports images of formats: png, bmp, jpg, gif, ico (only 16x16). For other file types and folders displays small file icon.
-
-Supports managed image resources of the entry assembly; not icons.
 
 Supports Base64-encoded png image file data. To create such string use dialog "Find image or color in window" or function **Au.Controls.ImageUtil.ImageToString** (in Au.Controls.dll).

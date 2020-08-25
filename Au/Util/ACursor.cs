@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -10,86 +11,111 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Drawing;
-using Forms = System.Windows.Forms;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au.Util
 {
-	//TODO: like AIcon
 	/// <summary>
 	/// Helps to load cursors, etc.
 	/// </summary>
-	public static class ACursor
+	/// <remarks>
+	/// To load cursors for winforms can be used <see cref="System.Windows.Forms.Cursor"/> constructors, but they don't support colors, ani cursors and custom size.
+	/// Don't use this class to load cursors for WPF. Its <b>Cursor</b> class loads cursors correctly.
+	/// </remarks>
+	public class ACursor
 	{
+		IntPtr _handle;
+
+		/// <summary>
+		/// Sets native cursor handle.
+		/// The cursor will be destroyed when disposing this variable or when converting to object of other type.
+		/// </summary>
+		public ACursor(IntPtr hcursor) { _handle = hcursor; }
+
+		/// <summary>
+		/// Destroys native cursor handle.
+		/// </summary>
+		public void Dispose() {
+			if (_handle != default) { Api.DestroyCursor(_handle); _handle = default; }
+		}
+
+		/// <summary>
+		/// Returns true if <b>Handle</b>==default(IntPtr).
+		/// </summary>
+		public bool Is0 => _handle == default;
+
+		/// <summary>
+		/// Gets native cursor handle.
+		/// </summary>
+		public IntPtr Handle => _handle;
+
+		/// <summary>
+		/// Gets native cursor handle.
+		/// </summary>
+		public static implicit operator IntPtr(ACursor cursor) => cursor._handle;
+
 		/// <summary>
 		/// Loads cursor from file.
-		/// Returns null if fails.
 		/// </summary>
+		/// <returns>Returns default(ACursor) if failed.</returns>
 		/// <param name="file">.cur or .ani file. If not full path, uses <see cref="AFolders.ThisAppImages"/>.</param>
-		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
-		/// <remarks>
-		/// This function exists because <see cref="Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
-		/// </remarks>
-		public static Forms.Cursor LoadCursorFromFile(string file, int size = 0)
+		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI.</param>
+		public static ACursor Load(string file, int size = 0)
 		{
 			file = APath.Normalize(file, AFolders.ThisAppImages);
 			if(file == null) return null;
 			uint fl = Api.LR_LOADFROMFILE; if(size == 0) fl |= Api.LR_DEFAULTSIZE;
-			var hCur = Api.LoadImage(default, file, Api.IMAGE_CURSOR, size, size, fl);
-			return HandleToCursor(hCur);
+			return new ACursor(Api.LoadImage(default, file, Api.IMAGE_CURSOR, size, size, fl));
 		}
 
 		/// <summary>
-		/// Converts unmanaged cursor to Cursor object.
-		/// Returns null if hCur is default(IntPtr).
+		/// Creates cursor from cursor file data in memory, for example from a managed resource.
 		/// </summary>
-		/// <param name="hCursor">Cursor handle.</param>
-		/// <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the unmanaged cursor and will not destroy; if need, the caller later should destroy it with API <msdn>DestroyCursor</msdn>.</param>
-		public static Forms.Cursor HandleToCursor(IntPtr hCursor, bool destroyCursor = true)
+		/// <returns>Returns default(ACursor) if failed.</returns>
+		/// <param name="cursorData">Data of .cur or .ani file.</param>
+		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI.</param>
+		/// <remarks>
+		/// This function creates/deletes a temporary file, because there is no good API to load cursor from memory.
+		/// </remarks>
+		public static ACursor Load(byte[] cursorData, int size = 0)
 		{
-			if(hCursor == default) return null;
-			var R = new Forms.Cursor(hCursor);
+			var s = AFolders.Temp + Guid.NewGuid().ToString();
+			File.WriteAllBytes(s, cursorData);
+			var c = Load(s, size);
+			AFile.Delete(s);
+			return c;
+
+			//If want to avoid temp file, can use:
+			//1. CreateIconFromResourceEx.
+			//	But quite much unsafe code (at first need to find cursor offset (of size) and set hotspot), less reliable (may fail for some .ani files), in some cases works not as well (may get wrong-size cursor).
+			//	The code moved to the Unused project.
+			//2. CreateIconIndirect. Not tested. No ani. Need to find cursor offset (of size).
+		}
+
+		/// <summary>
+		/// Converts native cursor to winforms cursor object.
+		/// Returns null if <i>Handle</i> is default(IntPtr).
+		/// </summary>
+		/// <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
+		public System.Windows.Forms.Cursor ToWinformsCursor(bool destroyCursor = true)
+		{
+			if(_handle == default) return null;
+			var R = new System.Windows.Forms.Cursor(_handle);
 			if(destroyCursor) AIcon.LetObjectDestroyIconOrCursor_(R);
 			return R;
 		}
 
 		/// <summary>
-		/// Creates cursor from cursor file data in memory, for example from a managed resource.
-		/// Returns null if fails.
-		/// </summary>
-		/// <param name="cursorData">Data of .cur or .ani file.</param>
-		/// <param name="size">Width and height. If 0, uses system default size, which depends on DPI (the "text size" system setting).</param>
-		/// <remarks>
-		/// This function exists because <see cref="Forms.Cursor"/> constructors don't support colors, ani cursors and custom size.
-		/// </remarks>
-		public static Forms.Cursor LoadCursorFromMemory(byte[] cursorData, int size = 0)
-		{
-			var s = AFolders.Temp + Guid.NewGuid().ToString();
-			File.WriteAllBytes(s, cursorData);
-			var c = LoadCursorFromFile(s, size);
-			AFile.Delete(s);
-			return c;
-
-			//If want to avoid temp file, can use CreateIconFromResourceEx.
-			//	But quite much unsafe code (at first need to find cursor offset and set hotspot), less reliable (may fail for some .ani files), in some cases works not as well (may get wrong-size cursor).
-			//	The code moved to the Unused project.
-		}
-
-		/// <summary>
-		/// Calculates 64-bit FNV1 hash of a mouse cursor's mask bitmap.
+		/// Calculates 64-bit FNV1 hash of cursor's mask bitmap.
 		/// Returns 0 if fails.
 		/// </summary>
-		/// <param name="hCursor">Native cursor handle. See <see cref="GetCurrentCursor"/>.</param>
-		public static unsafe long HashCursor(IntPtr hCursor)
+		public unsafe long Hash()
 		{
-			long R = 0; Api.BITMAP b;
-			if(!Api.GetIconInfo(hCursor, out var ii)) return 0;
+			if(!Api.GetIconInfo(_handle, out var ii)) return 0;
 			if(ii.hbmColor != default) Api.DeleteObject(ii.hbmColor);
 			var hb = Api.CopyImage(ii.hbmMask, Api.IMAGE_BITMAP, 0, 0, Api.LR_COPYDELETEORG | Api.LR_CREATEDIBSECTION);
 			if(hb == default) { Api.DeleteObject(ii.hbmMask); return 0; }
+			long R = 0; Api.BITMAP b;
 			if(0 != Api.GetObject(hb, sizeof(Api.BITMAP), &b) && b.bmBits != default)
 				R = AHash.Fnv1Long((byte*)b.bmBits, b.bmHeight * b.bmWidthBytes);
 			Api.DeleteObject(hb);
@@ -101,14 +127,13 @@ namespace Au.Util
 		/// Returns false if cursor is hidden.
 		/// </summary>
 		/// <remarks>
-		/// It is not the cursor of this thread (<see cref="Forms.Cursor.Current"/>).
 		/// Don't destroy the cursor.
 		/// </remarks>
-		public static bool GetCurrentCursor(out IntPtr hcursor)
+		public static bool GetCurrentVisibleCursor(out ACursor cursor)
 		{
 			Api.CURSORINFO ci = default; ci.cbSize = Api.SizeOf(ci);
-			if(Api.GetCursorInfo(ref ci) && ci.hCursor != default && 0 != (ci.flags & Api.CURSOR_SHOWING)) { hcursor = ci.hCursor; return true; }
-			hcursor = default; return false;
+			if(Api.GetCursorInfo(ref ci) && ci.hCursor != default && 0 != (ci.flags & Api.CURSOR_SHOWING)) { cursor = new ACursor(ci.hCursor); return true; }
+			cursor = default; return false;
 		}
 
 		/// <summary>
@@ -118,7 +143,7 @@ namespace Au.Util
 		/// </summary>
 		internal static void SetArrowCursor_()
 		{
-			var h = Forms.Cursors.Arrow.Handle;
+			var h = Api.LoadCursor(default, MCursor.Arrow);
 			if(Api.GetCursor() != h) Api.SetCursor(h);
 		}
 	}

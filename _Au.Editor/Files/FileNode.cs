@@ -17,10 +17,11 @@ using System.Xml.Linq;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Aga.Controls.Tree;
 using Au.Compiler;
 
-partial class FileNode : Au.Util.ATreeBase<FileNode>
+partial class FileNode : ATreeBase<FileNode>
 {
 	#region types
 
@@ -203,6 +204,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 
 	/// <summary>
 	/// true if script or class file.
+	/// false if folder or not a code file.
 	/// </summary>
 	public bool IsCodeFile => _type == EFileType.Script || _type == EFileType.Class;
 
@@ -311,7 +313,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 			if(f == null) { Debug.Assert(IsDeleted); return null; }
 			a.Push(f._name);
 		}
-		using(new Au.Util.StringBuilder_(out var b)) {
+		using(new StringBuilder_(out var b)) {
 			b.Append(prefix);
 			while(a.Count > 0) b.Append('\\').Append(a.Pop());
 			return b.ToString();
@@ -393,7 +395,7 @@ partial class FileNode : Au.Util.ATreeBase<FileNode>
 		return EdResources.GetImageUseCache(k);
 	}
 
-	public static AIconCache IconCache = new AIconCache(AFolders.ThisAppDataLocal + @"fileIconCache.xml", 16);
+	public static AIconCache_ IconCache = new AIconCache_(AFolders.ThisAppDataLocal + @"fileIconCache.xml", 16);
 
 	///// <summary>
 	///// Gets or sets 'has triggers' flag.

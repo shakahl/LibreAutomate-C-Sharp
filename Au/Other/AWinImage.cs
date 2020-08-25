@@ -29,35 +29,24 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// An image is any visible rectangular part of a window. A color is any visible pixel (the same as image of size 1x1).
-	/// A <b>AWinImage</b> variable holds results of <see cref="Find"/> and similar functions (rectangle etc).
+	/// An <b>AWinImage</b> variable holds results of <see cref="Find"/> and similar functions (rectangle etc).
 	/// </remarks>
 	public partial class AWinImage
 	{
 		#region load, save
 
 		/// <summary>
-		/// Loads image from file, string or resource.
+		/// Loads image from file, resource or string.
 		/// </summary>
-		/// <param name="image">See <see cref="Find"/>.</param>
-		/// <exception cref="FileNotFoundException">Image file does not exist.</exception>
-		/// <exception cref="ArgumentException">Bad image format (the image cannot be loaded as Bitmap). Or Invalid Base64 string.</exception>
-		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>.</exception>
+		/// <param name="image">See <see cref="WIImage"/>.</param>
+		/// <exception cref="FileNotFoundException">Cannot find image file or resource.</exception>
+		/// <exception cref="ArgumentException">Bad image or string format.</exception>
+		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, etc.</exception>
 		/// <remarks>
-		/// <see cref="Find"/> uses this function when <i>image</i> argument type is string. More info there.
+		/// Calls <see cref="AImageUtil.LoadWinformsImageFromFileOrResourceOrString"/>.
 		/// </remarks>
-		public static unsafe Bitmap LoadImage(string image)
-		{
-			if(Image_.IsImageStringPrefix(image)) { //Base64-encoded image. Prefix: "image:" png, "~:" zipped bmp.
-				return Image_.LoadImageFromString(image);
-			}
-
-			object o = null;
-			image = APath.Normalize(image, AFolders.ThisAppImages);
-			if(!AFile.ExistsAsFile(image, true))
-				o = AResources.GetAppResource(APath.GetNameNoExt(image));
-			if(o == null) o = Image.FromFile(image);
-			return (o as Bitmap) ?? throw new ArgumentException("Bad image format."); //Image but not Bitmap
-		}
+		public static Bitmap LoadImage(string image)
+			=> AImageUtil.LoadWinformsImageFromFileOrResourceOrString(image);
 
 		#endregion
 
@@ -223,7 +212,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of <see cref="LoadImage"/>.</exception>
 		/// <exception cref="AuException">Something failed.</exception>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find image or color in window". It is form <b>Au.Tools.FormAWinImage</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find image or color in window".
 		/// 
 		/// The speed mostly depends on:
 		/// 1. The size of the search area. Use the smallest possible area (control or accessible object or rectangle in window like <c>(w, rectangle)</c>).
@@ -325,7 +314,7 @@ namespace Au
 
 				public _Image(string file)
 				{
-					using var b = LoadImage(file);
+					using var b = AImageUtil.LoadWinformsImageFromFileOrResourceOrString(file);
 					_BitmapToData(b);
 				}
 
@@ -1069,12 +1058,11 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// Has implicit conversions from:
-	/// - <b>string</b> - path of .png or .bmp file.
-	/// <br/>If not full path, uses <see cref="AFolders.ThisAppImages"/>.
-	/// <br/>If the file does not exist, looks in resources of the entry assembly. For example, looks for Project.Properties.Resources.X if file <c>@"C:\X.png"</c> not found.
-	/// - string that starts with <c>"image:"</c> - Base64-encoded .png image embedded in script text.
+	/// - string - path of .png or .bmp file. If not full path, uses <see cref="AFolders.ThisAppImages"/>.
+	/// - string with prefix <c>"resource:"</c> - resource name; see <see cref="AResources.GetWinformsImage"/>.
+	/// - string with prefix <c>"image:"</c> - Base64-encoded .png image embedded in script text.
 	/// <br/>Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.ImageUtil.ImageToString</b> (in Au.Controls.dll).
-	/// - <b>ColorInt</b>, <b>int</b>, <b>Color</b> - color. Int must be in 0xRRGGBB format. Alpha isn't used.
+	/// - <see cref="ColorInt"/>, <b>int</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
 	/// - <see cref="Bitmap"/> - image object.
 	/// - <b>WIImage[]</b> - multiple images or/and colors. Action - find any. To create a different action can be used callback function (parameter <i>also</i>).
 	/// 

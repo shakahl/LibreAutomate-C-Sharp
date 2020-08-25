@@ -32,6 +32,7 @@ using DiffMatchPatch;
 using System.Runtime;
 using System.Globalization;
 using System.Windows.Media.Imaging;
+using System.Resources;
 
 #if TRACE
 
@@ -164,12 +165,41 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 	//	return Api.DefWindowProc(w, m, wp, lp);
 	//}
 
+	//TODO: recompile when a resource file in a folder renamed etc
+	//public class ResourceHelper
+	//{
+	//	ResourceManager _man;
+
+	//	public ResourceHelper(Assembly assembly = null) {
+	//		assembly ??= Assembly.GetCallingAssembly();
+	//		_man = new ResourceManager(assembly.GetName().Name + ".g", assembly); //TODO: no ResourceManager in completion list after new
+	//	}
+
+	//	//	public ResourceHelper(ResourceManager resMan) {
+	//	//		_man=resMan ?? throw new ArgumentNullException();
+	//	//	}
+
+	//	public ResourceManager Manager => _man;
+
+	//	public CultureInfo Culture { get; set; } = CultureInfo.InvariantCulture;
+
+	//	public string GetString(string name) => _man.GetString(name, Culture) ?? throw new NotFoundException("Resource not found: " + name);
+
+	//	public byte[] GetBytes(string name) => (_man.GetObject(name, Culture) as byte[]) ?? throw new NotFoundException("Resource not found: " + name);
+
+	//	public UnmanagedMemoryStream GetStream(string name) => _man.GetStream(name, Culture) ?? throw new NotFoundException("Resource not found: " + name);
+
+	//	public object GetObject(string name) => _man.GetObject(name, Culture) ?? throw new NotFoundException("Resource not found: " + name);
+	//}
+
 
 	public unsafe void TestEditor()
 	{
+		//var st = EdResources.GetObjectNoCache("Au");
+		//AOutput.Write(st.GetType());
 
-
-
+		//var m = new ResourceHelper();
+		//AOutput.Write(m.GetObject("resources/hacker.txt").GetType());
 
 		//new System.Windows.Application();
 		////var bitmapImage = new BitmapImage(new Uri("pack://application:,,,/Au.Editor;component/resources/png/folder.png"));

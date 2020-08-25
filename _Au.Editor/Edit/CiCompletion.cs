@@ -29,6 +29,8 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
+//Roslyn bug: no ResourceManager in completion list. In VS too. 
+
 class CiCompletion
 {
 #if WPF

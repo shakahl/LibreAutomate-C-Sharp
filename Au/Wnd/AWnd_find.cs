@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -74,7 +74,7 @@ namespace Au
 
 			public override string ToString()
 			{
-				using(new Util.StringBuilder_(out var b)) {
+				using(new StringBuilder_(out var b)) {
 					_Append("name", _name);
 					_Append("cn", _cn);
 					if(_program != null) _Append("program", _program); else if(_processId != 0) _Append("processId", _processId); else if(_threadId != 0) _Append("threadId", _threadId);
@@ -153,7 +153,7 @@ namespace Au
 				return _FindOrMatch(k) >= 0;
 			}
 
-			Util.ArrayBuilder_<AWnd> _AllWindows()
+			ArrayBuilder_<AWnd> _AllWindows()
 			{
 				//FUTURE: optimization: if cn not wildcard etc, at first find atom.
 				//	If not found, don't search. If found, compare atom, not class name string.
@@ -196,7 +196,7 @@ namespace Au
 			AWnd[] _FindAll(_WndList k)
 			{
 				using(k) {
-					using var ab = new Util.ArrayBuilder_<AWnd>();
+					using var ab = new ArrayBuilder_<AWnd>();
 					_FindOrMatch(k, w => ab.Add(w)); //CONSIDER: ab could be part of _WndList. Now the delegate creates garbage.
 					return ab.ToArray();
 				}
@@ -406,7 +406,7 @@ namespace Au
 		/// - Image(s) or color(s): <see cref="AWinImage.Finder"/> or string <c>"image:..."</c> (uses <b>AWinImage.Find</b> with flag <see cref="WIFlags.WindowDC"/>).
 		/// </param>
 		/// <remarks>
-		/// To create code for this function, use dialog "Find window or control". It is form <b>Au.Tools.FormAWnd</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find window or control".
 		/// 
 		/// If there are multiple matching windows, gets the first in the Z order matching window, preferring visible windows.
 		/// 
@@ -697,13 +697,13 @@ namespace Au
 			/// The caller must dispose the returned ArrayBuilder_, unless list is not null.
 			/// If list is not null, adds windows there (clears at first) and returns default(ArrayBuilder_).
 			/// </summary>
-			internal static Util.ArrayBuilder_<AWnd> EnumWindows2(EnumAPI api,
+			internal static ArrayBuilder_<AWnd> EnumWindows2(EnumAPI api,
 				bool onlyVisible, bool sortFirstVisible = false, AWnd wParent = default, bool directChild = false, int threadId = 0,
 				Func<AWnd, object, bool> predicate = null, object predParam = default, List<AWnd> list = null)
 			{
 				if(directChild && wParent == GetWnd.Root) { api = EnumAPI.EnumWindows; wParent = default; }
 
-				Util.ArrayBuilder_<AWnd> ab = default;
+				ArrayBuilder_<AWnd> ab = default;
 				bool disposeArray = true;
 				var d = new _EnumData { api = api, onlyVisible = onlyVisible, directChild = directChild, wParent = wParent };
 				try {
@@ -758,7 +758,7 @@ namespace Au
 					return ab;
 				}
 				finally {
-					Util.AMemory.Free(d.a);
+					AMemory.Free(d.a);
 					if(disposeArray) ab.Dispose();
 				}
 			}
@@ -781,8 +781,8 @@ namespace Au
 					} else {
 						if(!wParent.Is0 && w.OwnerWindow != wParent) return 1;
 					}
-					if(a == null) a = (int*)Util.AMemory.Alloc((_cap = onlyVisible ? 200 : 1000) * 4);
-					else if(len == _cap) a = (int*)Util.AMemory.ReAlloc(a, (_cap *= 2) * 4);
+					if(a == null) a = (int*)AMemory.Alloc((_cap = onlyVisible ? 200 : 1000) * 4);
+					else if(len == _cap) a = (int*)AMemory.ReAlloc(a, (_cap *= 2) * 4);
 					a[len++] = (int)w;
 					return 1;
 				}
@@ -804,8 +804,8 @@ namespace Au
 
 		/// <summary>
 		/// An enumerable list of AWnd for <see cref="Finder._FindOrMatch"/> and <see cref="ChildFinder._FindInList"/>.
-		/// Holds Util.ArrayBuilder_ or IEnumerator or single AWnd or none.
-		/// Must be disposed if it is Util.ArrayBuilder_ or IEnumerator, else disposing is optional.
+		/// Holds ArrayBuilder_ or IEnumerator or single AWnd or none.
+		/// Must be disposed if it is ArrayBuilder_ or IEnumerator, else disposing is optional.
 		/// </summary>
 		struct _WndList : IDisposable
 		{
@@ -815,9 +815,9 @@ namespace Au
 			int _i;
 			AWnd _w;
 			IEnumerator<AWnd> _en;
-			Util.ArrayBuilder_<AWnd> _ab;
+			ArrayBuilder_<AWnd> _ab;
 
-			internal _WndList(Util.ArrayBuilder_<AWnd> ab) : this()
+			internal _WndList(ArrayBuilder_<AWnd> ab) : this()
 			{
 				_ab = ab;
 				_t = ListType.ArrayBuilder;

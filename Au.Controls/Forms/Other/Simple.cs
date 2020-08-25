@@ -13,9 +13,6 @@ using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 using System.Windows.Forms.Design;
-
-using Au;
-using Au.Types;
 using System.Collections;
 using System.Drawing;
 

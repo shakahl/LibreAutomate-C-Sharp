@@ -10,9 +10,6 @@ using System.Collections;
 
 using Aga.Controls.Tree.NodeControls;
 
-using Au;
-using Au.Types;
-
 namespace Aga.Controls.Tree
 {
 	/// <summary>

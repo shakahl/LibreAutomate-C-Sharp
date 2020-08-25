@@ -43,6 +43,7 @@ using Au.Controls;
 
 using Au;
 using Au.Types;
+using System.Resources;
 
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
@@ -747,9 +748,9 @@ class Script : AScript
 	//	ADialog.Show(owner: f);
 	//}
 
-	class Se : Au.Util.JSettings
+	class Se : Au.Util.ASettings
 	{
-		public static Se Load() => _Load<Se>(@"q:\test\JSettings.json");
+		public static Se Load() => Load<Se>(@"q:\test\JSettings.json");
 
 		public string user { get => _user; set => Set(ref _user, value); }
 		string _user;
@@ -906,8 +907,8 @@ class Script : AScript
 		//c.BackColor = Color.Wheat;
 		//c.Font = new Font("Courier New", 20);
 
-		m.DefaultIcon = AIcon.OfFile(@"q:\app\macro.ico", 16).ToBitmap();
-		m.DefaultSubmenuIcon = AIcon.OfFile(@"q:\app\menu.ico", 16).ToBitmap();
+		m.DefaultIcon = AIcon.OfFile(@"q:\app\macro.ico", 16).ToWinformsBitmap();
+		m.DefaultSubmenuIcon = AIcon.OfFile(@"q:\app\menu.ico", 16).ToWinformsBitmap();
 		m.ExtractIconPathFromCode = true;
 		m["aa"] = null;
 		//m.LastMenuItem.ToolTipText = "TT";
@@ -1173,11 +1174,49 @@ class Script : AScript
 		AOutput.Write(s);
 	}
 
+	void TestMinusSign() {
+		AOutput.Clear();
+		var v = -5;
+		var s = v.ToString();
+		AOutput.Write((uint)s[0]);
+		AOutput.Write(Convert.ToInt32(s), int.Parse(s), s.ToInt());
+		s = "-6";
+		AOutput.Write((uint)s[0]);
+		AOutput.Write(Convert.ToInt32(s), int.Parse(s), s.ToInt());
+
+	}
+
+	unsafe void TestNint() {
+		//int i = -100;
+		//nint n = i;
+		//var s1 = n.ToString();
+		//var s2 = n.ToStringInvariant();
+		//AOutput.Write(n, s1, s2, (uint)s1[0], (uint)s2[0]);
+
+		////int i =unchecked((int) uint.MaxValue);
+		long i =long.MaxValue;
+		//nuint n = (nuint)i;
+
+		//IntPtr n = (IntPtr)i;
+		nint n = (nint)i;
+		int k = (int)n;
+		AOutput.Write(n, k);
+
+		//nint n = (uint)8;
+		//nint n = (IntPtr)5;
+		//IntPtr p = n;
+		//n = (nint)(void*)null;
+	}
+
 	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
 
+		//new ResourceManager
+
+		TestNint();
+		//TestMinusSign();
 		//TestStringInterpolationBoxing();
 		//TestWpfMainWindow();
 		//TestNetCoreVersion();

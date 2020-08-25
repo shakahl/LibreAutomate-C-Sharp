@@ -1,5 +1,7 @@
 //#define SUPPORT_RAW_HANDLE
 
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,9 +15,6 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Drawing;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au
 {
@@ -319,7 +318,7 @@ namespace Au
 					isb = isf; ieb = ief; //reuse these vars to calc UTF8 lengths
 				}
 				//correct isf/ief if html part lenghts are different in UTF8
-				if(!Util.AStringUtil.IsAscii(html)) {
+				if(!html.IsAscii()) {
 					fixed (char* p = html) {
 						int lenDiff1 = Encoding.UTF8.GetByteCount(p, isb) - isb;
 						int lenDiff2 = Encoding.UTF8.GetByteCount(p + isb, ieb - isb) - (ieb - isb);
@@ -398,7 +397,7 @@ EndFragment:0000000000
 
 				Encoding enc = ClipFormats.GetTextEncoding_(format, out bool unknown);
 				if(unknown) {
-					if((len & 1) != 0 || Util.BytePtr_.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect
+					if((len & 1) != 0 || BytePtr_.Length(b, len) > len - 2) enc = Encoding.Default; //autodetect
 				}
 
 				if(enc == null) {

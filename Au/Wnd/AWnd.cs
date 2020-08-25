@@ -69,7 +69,7 @@ namespace Au
 		//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when AWnd used.
 #endif
 
-		void* _h;
+		readonly void* _h;
 
 		#region constructors, operators, overrides
 
@@ -100,6 +100,7 @@ namespace Au
 		/// Should be called in control's thread. Calls <see cref="System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="System.Windows.Forms.Control.Handle"/>.
 		/// </remarks>
 		public static explicit operator AWnd(System.Windows.Forms.Control c) => c == null || !c.IsHandleCreated ? default : new AWnd(c.Handle);
+		//TODO: remove. Use Hwnd() everywhere.
 
 		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(AWnd w1, AWnd w2) => w1._h == w2._h;
@@ -1808,7 +1809,7 @@ namespace Au
 				Coord left, Coord top, bool useWindow, AWnd w, ref RECT r,
 				AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default) {
 				RECT rs;
-				AScreen.ScreenHandle scr;
+				ScreenHandle scr;
 				if (inRect.HasValue) {
 					Debug.Assert(!useWindow);
 					rs = inRect.GetValueOrDefault();
@@ -1931,11 +1932,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets <see cref="AScreen.ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
+		/// Gets <see cref="ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(AWnd) or invalid, gets the primary screen.
 		/// Calls <see cref="AScreen.Of(AWnd, SODefault)"/>.
 		/// </summary>
-		public AScreen.ScreenHandle Screen => AScreen.Of(this);
+		public ScreenHandle Screen => AScreen.Of(this);
 
 		#endregion
 
@@ -2437,7 +2438,7 @@ namespace Au
 		/// Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <remarks>
-		/// <note>It is not the .NET Control.Name property. To get it you can use <see cref="NameWinForms"/>.</note>
+		/// <note>It is not the .NET Control.Name property. To get it you can use <see cref="NameWinforms"/>.</note>
 		/// Top-level window name usually its title bar text.
 		/// Control name usually is its text that does not change, for example button or static (label) control text.
 		/// Unlike <see cref="ControlText"/>, this function usually does not get variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
@@ -2446,7 +2447,7 @@ namespace Au
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="ControlText"/>
 		/// <seealso cref="NameAcc"/>
-		/// <seealso cref="NameWinForms"/>
+		/// <seealso cref="NameWinforms"/>
 		public string Name => GetText(false, true);
 
 		/// <summary>
@@ -2488,7 +2489,7 @@ namespace Au
 		/// </param>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="NameAcc"/>
-		/// <seealso cref="NameWinForms"/>
+		/// <seealso cref="NameWinforms"/>
 		public string GetText(bool? getText = null, bool removeUnderlineAmpersand = true) {
 			string R = null;
 
@@ -2612,10 +2613,10 @@ namespace Au
 		/// <remarks>
 		/// <note>Use this with controls of other processes. Don't use with your controls, when you have a Control object.</note>
 		/// 
-		/// <note>Slow when getting names of multiple controls in a window. Instead create an <see cref="AWinFormsControlNames"/> instance and call its <see cref="AWinFormsControlNames.GetControlName"/> method for each control.</note>
+		/// <note>Slow when getting names of multiple controls in a window. Instead create an <see cref="AWinformsControlNames"/> instance and call its <see cref="AWinformsControlNames.GetControlName"/> method for each control.</note>
 		/// </remarks>
-		/// <seealso cref="AWinFormsControlNames.IsWinFormsControl"/>
-		public string NameWinForms => AWinFormsControlNames.GetSingleControlName(this);
+		/// <seealso cref="AWinformsControlNames.IsWinformsControl"/>
+		public string NameWinforms => AWinformsControlNames.GetSingleControlName(this);
 
 		/// <summary>
 		/// Gets filename of process executable file, like "notepad.exe".

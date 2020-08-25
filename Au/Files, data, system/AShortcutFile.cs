@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -176,7 +176,7 @@ namespace Au
 		/// <param name="iconIndex">Receives 0 or icon index or negative icon resource id.</param>
 		public string GetIconLocation(out int iconIndex)
 		{
-			var b = Util.AMemoryArray.Char_(300);
+			var b = AMemoryArray.Char_(300);
 			if(0 != _isl.GetIconLocation(b, 300, out iconIndex)) return null;
 			return _CorrectPath(b.ToString());
 		}
@@ -298,7 +298,7 @@ namespace Au
 		string _GetString(_WhatString what, int bufferSize)
 		{
 			int hr = 1;
-			var b = Util.AMemoryArray.Char_(bufferSize);
+			var b = AMemoryArray.Char_(bufferSize);
 			switch(what) {
 			case _WhatString.Path: hr = _isl.GetPath(b, bufferSize); break;
 			case _WhatString.Arguments: hr = _isl.GetArguments(b, bufferSize); break;
@@ -325,7 +325,7 @@ namespace Au
 				//	On my PC was 1 such shortcut - Microsoft Office Excel Viewer.lnk in start menu.
 				//	Could not find a workaround.
 
-				var b = Util.AMemoryArray.Char_(300, out int na);
+				var b = AMemoryArray.Char_(300, out int na);
 				int hr = Api.MsiGetComponentPath(product, component, b, ref na);
 				if(hr < 0) return null; //eg not installed, just advertised
 				R = b.ToString(na);

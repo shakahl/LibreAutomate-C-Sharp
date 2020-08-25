@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -164,12 +164,12 @@ namespace Au
 		{
 			if(Mem == default) return null;
 			int na = nChars; if(!ansiString) na *= 2;
-			var b = Util.AMemoryArray.Char_((na + 1) / 2);
+			var b = AMemoryArray.Char_((na + 1) / 2);
 			fixed (char* p = b.A) {
 				if(!Api.ReadProcessMemory(_HprocHR, Mem + offsetBytes, p, na, null)) return null;
 				if(findLength) {
-					if(ansiString) nChars = Util.BytePtr_.Length((byte*)p, nChars);
-					else nChars = Util.CharPtr_.Length(p, nChars);
+					if(ansiString) nChars = BytePtr_.Length((byte*)p, nChars);
+					else nChars = CharPtr_.Length(p, nChars);
 				}
 			}
 			if(ansiString) return b.ToStringFromAnsi_(nChars, enc);

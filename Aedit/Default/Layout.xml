@@ -10,45 +10,45 @@ o - stack orientation: v vertical, h horizontal.
 w - item width in a horizontal stack or height in vertical. Can be "pixels" or "star*" or "*" (1 star). Default auto.
 s - splitter width. Default 1 between toolbars, else 4. Min 1. Every stack item except the first has a splitter before it.
 captionAt - Left, Top, Right, Bottom. Default Left.
-state - Dock, Float, Hide. Default Dock.
-float - floating "x y width height". x y physical pixels.
+state - flags: 1 floating, 2 hidden.
+floatRect - floating rectangle etc. Don't set in initial XML.
 active - 0-based index of active panel in tab. Default 0.
 Attributes valid on:
 o - stack.
 w, s - stack, tab, panel not in a tab, toolbar.
-state, float - tab, panel, toolbar.
 captionAt - tab, panel not in a tab, toolbar.
+state, floatRect - tab, panel, toolbar.
 active - tab.
 -->
-<panels>
-	<stack o="v">
-		<stack o="h">
-			<toolbar name="Menu" />
-			<toolbar name="Help" />
-			<toolbar name="Tools" />
-			<toolbar name="Custom1" />
-		</stack>
-		<stack o="h" s="1">
-			<toolbar name="File" w="200"/>
-			<toolbar name="Run" />
-			<toolbar name="Edit" />
-			<toolbar name="Custom2" />
-		</stack>
-		<stack o="h" w="*" s="1">
-			<stack o="v" w="200">
+<stack o="v">
+	<stack o="h">
+		<toolbar name="Menu" />
+		<toolbar name="Help" />
+		<toolbar name="Tools" />
+		<toolbar name="Custom1" />
+	</stack>
+	<stack o="h" s="1">
+		<toolbar name="File" w="200"/>
+		<toolbar name="Run" />
+		<toolbar name="Edit" />
+		<toolbar name="Custom2" />
+	</stack>
+	<stack o="h" w="*" s="1">
+		<stack o="v" w="200">
+			<stack o="v" w="*">
 				<panel name="Files" w="400*" captionAt="Top" />
 				<panel name="Open" w="150*" />
 				<panel name="Running" w="100*" />
-				<panel name="Find" w="150" captionAt="Top" />
 			</stack>
-			<stack o="v" w="*">
-				<document w="*" />
-				<tab w="170">
-					<panel name="Output" />
-					<panel name="Info" />
-					<panel name="Found" />
-				</tab>
-			</stack>
+			<panel name="Find" w="170" captionAt="Top" />
+		</stack>
+		<stack o="v" w="*">
+			<document w="*" />
+			<tab w="170">
+				<panel name="Output" />
+				<panel name="Info" />
+				<panel name="Found" />
+			</tab>
 		</stack>
 	</stack>
-</panels>
+</stack>

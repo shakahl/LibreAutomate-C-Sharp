@@ -1,5 +1,7 @@
 ﻿//#define TEST_FINDFIRSTFILEEX
 
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,8 +14,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Linq;
-
-using Au.Types;
 using Microsoft.Win32;
 
 namespace Au
@@ -287,7 +287,7 @@ namespace Au
 			if(ExistsAsAny(s)) return APath.Normalize_(s, noExpandEV: true);
 
 			for(int na = 300; ;) {
-				var b = Util.AMemoryArray.Char_(ref na);
+				var b = AMemoryArray.Char_(ref na);
 				int nr = Api.SearchPath(null, path, null, na, b, null);
 				if(nr > na) na = nr; else if(nr > 0) return b.ToString(nr); else break;
 			}
@@ -358,7 +358,7 @@ namespace Au
 			bool isFirst = true;
 			FileAttributes attr = 0;
 			int basePathLength = path.Length;
-			var redir = new Util.ADisableFsRedirection();
+			var redir = new ADisableFsRedirection();
 
 			try {
 				if(0 != (flags & FEFlags.DisableRedirection)) redir.Disable();

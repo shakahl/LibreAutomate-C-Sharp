@@ -15,6 +15,7 @@ using System.Linq;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 partial class FilesModel
 {
@@ -170,7 +171,7 @@ partial class FilesModel
 				DB.Execute("REPLACE INTO _misc VALUES ('expanded',?)",
 					string.Join(" ", _control.AllNodes.Where(n => n.IsExpanded).Select(n => (n.Tag as FileNode).IdString)));
 
-				using(new Au.Util.StringBuilder_(out var b)) {
+				using(new StringBuilder_(out var b)) {
 					var a = OpenFiles;
 					b.Append(a.IndexOf(_currentFile));
 					foreach(var v in a) b.Append(' ').Append(v.IdString); //FUTURE: also save current position and scroll position, eg "id.pos.scroll"

@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,10 +15,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
 //using System.Linq;
-
-using Au;
-using Au.Types;
-using Au.Util;
 
 #pragma warning disable 649
 
@@ -146,9 +144,6 @@ namespace Au.Controls
 			/// <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
 			Base64PngGifJpg,
 
-			/// <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
-			Resource,
-
 			/// <summary>.bmp file path.</summary>
 			Bmp,
 
@@ -165,7 +160,11 @@ namespace Au.Controls
 			IconLib,
 
 			/// <summary>None of other image types, when <i>anyFile</i> is true.</summary>
-			ShellIcon
+			ShellIcon,
+
+			//rejected. Where it used, we cannot know the assembly; maybe it is script's assembly and in editor we cannot get its resources or it is difficult (need to use meta).
+			///// <summary>"resource:name". An image resource name from managed resources of the entry assembly. In Visual Studio use build action "Resource".</summary>
+			//Resource,
 		}
 
 		/// <summary>
@@ -184,7 +183,7 @@ namespace Au.Controls
 			switch(c1) {
 			case '~': return (c2 == ':') ? ImageType.Base64CompressedBmp : ImageType.None;
 			case 'i': if(BytePtr_.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
-			case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
+			//case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
 			}
 
 			//file path
@@ -255,8 +254,8 @@ namespace Au.Controls
 					using(var stream = new MemoryStream(Convert.FromBase64String(s), false)) {
 						return _ImageToBytes(Image.FromStream(stream));
 					}
-				case ImageType.Resource:
-					return _ImageToBytes(AResources.GetAppResource(s) as Image);
+				//case ImageType.Resource:
+				//	return _ImageToBytes(AResources.GetWinformsImage(s));
 				case ImageType.Bmp:
 					return File.ReadAllBytes(s);
 				case ImageType.PngGifJpg:
@@ -290,7 +289,7 @@ namespace Au.Controls
 					var old = im; im = t; old.Dispose();
 				}
 
-				using var m = new MemoryStream();
+				var m = new MemoryStream();
 				im.Save(m, ImageFormat.Bmp);
 				return m.ToArray();
 			}
@@ -376,7 +375,7 @@ namespace Au.Controls
 		/// Supports all <see cref="ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
 		/// Returns null if path is not a valid image string or the file does not exist or failed to load.
 		/// </summary>
-		/// <remarks>Supports environment variables etc. If not full path, searches in AFolders.ThisAppImages and standard directories.</remarks>
+		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="AFolders.ThisAppImages"/> and standard directories.</remarks>
 		public static string ImageToString(string path)
 		{
 			var t = ImageTypeFromString(true, path);
@@ -384,8 +383,8 @@ namespace Au.Controls
 			case ImageType.None: return null;
 			case ImageType.Base64CompressedBmp:
 			case ImageType.Base64PngGifJpg:
-			case ImageType.Resource:
-				return path;
+			//case ImageType.Resource:
+			//	return path;
 			case ImageType.PngGifJpg:
 				path = AFile.SearchPath(path, AFolders.ThisAppImages); if(path == null) return null;
 				try { return "image:" + Convert.ToBase64String(AFile.LoadBytes(path)); }

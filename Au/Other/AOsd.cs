@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,9 +14,6 @@ using System.Reflection;
 using System.Windows.Forms; //SHOULDDO: avoid loading Forms dll. Now from it uses TextRenderer.
 using System.Drawing;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au
 {
@@ -411,7 +410,7 @@ namespace Au
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
 		/// </remarks>
-		public AOsdFont Font { get; set; }
+		public OsdFont Font { get; set; }
 
 		/// <summary>
 		/// Text color.
@@ -789,13 +788,13 @@ namespace Au
 
 		/// <summary>Default font for <see cref="ShowText"/> and <b>AOsd</b>. Default: Segoe UI 12.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static AOsdFont DefaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
-		static AOsdFont s_smallFont = new AOsdFont(12);
+		public static OsdFont DefaultSmallFont { get => s_smallFont; set => s_smallFont = value ?? throw new ArgumentNullException(); }
+		static OsdFont s_smallFont = new OsdFont(12);
 
 		/// <summary>Default font for <see cref="ShowTransparentText"/>. Default: Default: Segoe UI 20.</summary>
 		/// <exception cref="ArgumentNullException"></exception>
-		public static AOsdFont DefaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
-		static AOsdFont s_bigFont = new AOsdFont(20);
+		public static OsdFont DefaultBigFont { get => s_bigFont; set => s_bigFont = value ?? throw new ArgumentNullException(); }
+		static OsdFont s_bigFont = new OsdFont(20);
 
 		/// <summary>Default text color for <see cref="ShowText"/> and <b>AOsd</b>. Default: 0xFF404040 (dark gray).</summary>
 		public static ColorInt DefaultTextColor { get; set; } = 0xFF404040;
@@ -831,7 +830,7 @@ namespace Au.Types
 
 		/// <summary>
 		/// Show the OSD window in this thread and don't wait.
-		/// Should not be used if this thread does not process messages and therefore cannot have windows.
+		/// Don't use if this thread does not process messages and therefore cannot have windows.
 		/// </summary>
 		ThisThread,
 
@@ -851,7 +850,7 @@ namespace Au.Types
 	/// <summary>
 	/// Font size and family name for OSD classes.
 	/// </summary>
-	public class AOsdFont { //FUTURE: could be record
+	public class OsdFont { //FUTURE: could be record
 		/// <summary>
 		/// Family name.
 		/// </summary>
@@ -871,7 +870,7 @@ namespace Au.Types
 
 		/// <param name="size">Sets <see cref="Size"/>.</param>
 		/// <param name="name">Sets <see cref="Name"/>. Default "Segoe UI".</param>
-		public AOsdFont(int size, string name = "Segoe UI") {
+		public OsdFont(int size, string name = "Segoe UI") {
 			Size = size;
 			Name = name ?? "Segoe UI";
 		}

@@ -1,5 +1,7 @@
 ﻿//#define CW_CBT
 
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,8 +15,6 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Linq;
 
-using Au.Types;
-
 namespace Au
 {
 	public partial struct AWnd
@@ -24,37 +24,6 @@ namespace Au
 		/// </summary>
 		public static partial class More
 		{
-			/// <summary>
-			/// Calculates window rectangle from client area rectangle and style.
-			/// </summary>
-			/// <param name="r">Input - client area rectangle in screen. Output - window rectangle in screen.</param>
-			/// <param name="style"></param>
-			/// <param name="exStyle"></param>
-			/// <param name="hasMenu">Has classic menu bar in non-client area.</param>
-			/// <remarks>
-			/// Ignores styles WS_VSCROLL, WS_HSCROLL and wrapped menu bar.
-			/// Calls API <msdn>AdjustWindowRectEx</msdn> or <msdn>AdjustWindowRectExForDpi</msdn>.
-			/// </remarks>
-			public static bool WindowRectFromClientRect(ref RECT r, WS style, WS2 exStyle, bool hasMenu = false)
-			{
-				if (AVersion.MinWin10_1607) {
-					int dpi = AScreen.Of(r).Dpi;
-					return Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpi);
-				}
-				return Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
-			}
-
-			//rejected. Does not support per-monitor DPI. Use WindowRectFromClientRect instead.
-			///// <summary>
-			///// Calculates window border width from style.
-			///// </summary>
-			//public static int BorderWidth(WS style, WS2 exStyle)
-			//{
-			//	RECT r = default;
-			//	Api.AdjustWindowRectEx(ref r, style, false, exStyle);
-			//	return r.right;
-			//}
-
 			/// <summary>
 			/// Gets window border width.
 			/// </summary>
@@ -285,7 +254,7 @@ namespace Au
 			/// </remarks>
 			public static void SetFont(AWnd w, IntPtr font = default)
 			{
-				w.Send(Api.WM_SETFONT, font != default ? font : Util.NativeFont_.RegularCached(ADpi.OfWindow(w)).Handle);
+				w.Send(Api.WM_SETFONT, font != default ? font : NativeFont_.RegularCached(ADpi.OfWindow(w)).Handle);
 			}
 
 			/// <summary>

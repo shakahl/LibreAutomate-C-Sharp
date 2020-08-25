@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -12,8 +14,6 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -74,7 +74,7 @@ namespace Au
 				switch(m.Msg) {
 				case Api.WM_CREATE:
 					_m._closing_allMenus.Add(this);
-					if(_isMain) Util.ACursor.SetArrowCursor_();
+					if(_isMain) ACursor.SetArrowCursor_();
 					break;
 				case Api.WM_DESTROY:
 					_m._closing_allMenus.Remove(this);
@@ -112,8 +112,8 @@ namespace Au
 				base.OnOpening(e);
 			}
 
-			List<Util.IconsAsync_.Item> _IAuToolStrip.SubmenuAsyncIcons => _isMain ? null : (_asyncIcons ??= new List<Util.IconsAsync_.Item>());
-			List<Util.IconsAsync_.Item> _asyncIcons;
+			List<IconsAsync_.Item> _IAuToolStrip.SubmenuAsyncIcons => _isMain ? null : (_asyncIcons ??= new List<IconsAsync_.Item>());
+			List<IconsAsync_.Item> _asyncIcons;
 
 			protected override void OnOpened(EventArgs e)
 			{
@@ -182,7 +182,7 @@ namespace Au
 			void _ContextMenu()
 			{
 				if(_m._name == null) return;
-				if(!Util.AScriptEditor.Available) return;
+				if(!AScriptEditor.Available) return;
 				var p = this.MouseClientXY();
 				var contextItem = this.GetItemAt(p);
 				if(contextItem == null) { //maybe p is at the left or rigt of a textbox, label etc
@@ -192,7 +192,7 @@ namespace Au
 					}
 				}
 #if true
-				using var m = new Util.ClassicPopupMenu_();
+				using var m = new ClassicPopupMenu_();
 				m.Add(100, "Edit");
 				_cancelClosing = true; //in some cases .NET installs a message hook to catch clicks
 				int r = m.Show(this.Hwnd());

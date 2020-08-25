@@ -1,3 +1,4 @@
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,10 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Diagnostics.CodeAnalysis;
 //using System.Linq;
-
 
 namespace Au.Types
 {
@@ -412,9 +410,9 @@ namespace Au.Types
 		{
 			get
 			{
-				int cy = Api.GetSystemMetrics(Api.SM_CYCURSOR);
 				var p = AMouse.XY;
-				if(Util.ACursor.GetCurrentCursor(out var hCursor) && Api.GetIconInfo(hCursor, out var u)) {
+				int cy = ADpi.GetSystemMetrics(Api.SM_CYCURSOR, p);
+				if(ACursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
 					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
 					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
 
@@ -427,9 +425,9 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets <see cref="AScreen.ScreenHandle"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
+		/// Gets <see cref="ScreenHandle"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
 		/// </summary>
-		public AScreen.ScreenHandle GetScreen()
+		public ScreenHandle GetScreen()
 		{
 			if(!screen.IsNull) return screen.GetScreenHandle();
 			POINT p = inRect ? Coord.NormalizeInRect(x, y, rect, centerIfEmpty: true) : Coord.Normalize(x, y, workArea);
@@ -439,7 +437,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Window handle.
-	/// Used for function parameters where the function needs a window handle as <see cref="Au.AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
+	/// Used for function parameters where the function needs a window handle as <see cref="AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
 	/// </summary>
 	[DebuggerStepThrough]
 	public struct AnyWnd
@@ -452,7 +450,7 @@ namespace Au.Types
 		/// <summary> Assignment of a window handle as IntPtr. </summary>
 		public static implicit operator AnyWnd(IntPtr hwnd) => new AnyWnd((AWnd)hwnd);
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
-		public static implicit operator AnyWnd(Control c) => new AnyWnd(c);
+		public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new AnyWnd(c);
 		/// <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
 		public static implicit operator AnyWnd(System.Windows.DependencyObject c) => new AnyWnd(new object[] { c });
 

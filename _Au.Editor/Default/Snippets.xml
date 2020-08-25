@@ -447,6 +447,10 @@ if (!b.ShowDialog()) return;]]>
 			<![CDATA[AOutput.Write($end$);]]>
 		</snippet>
 
+		<snippet name="oclearSnippet" info="Clears the output window.">
+			<![CDATA[AOutput.Clear();]]>
+		</snippet>
+
 		<snippet name="keySnippet" info="Generate virtual keystrokes (keys, text).">
 			<![CDATA[AKeys.Key("$end$");]]>
 		</snippet>

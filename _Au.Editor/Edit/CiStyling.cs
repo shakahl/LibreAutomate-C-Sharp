@@ -21,6 +21,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis.CSharp;
@@ -707,12 +708,12 @@ partial class SciCode
 	//}
 
 	int _savedTop, _savedPos;
-	Au.Util.AHash.MD5Result _savedLinesMD5;
+	AHash.MD5Result _savedLinesMD5;
 
-	static Au.Util.AHash.MD5Result _Hash(List<int> a)
+	static AHash.MD5Result _Hash(List<int> a)
 	{
 		if(a.Count == 0) return default;
-		Au.Util.AHash.MD5 md5 = default;
+		AHash.MD5 md5 = default;
 		foreach(var v in a) md5.Add(v);
 		return md5.Hash;
 	}

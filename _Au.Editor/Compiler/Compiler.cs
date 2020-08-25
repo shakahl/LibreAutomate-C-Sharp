@@ -174,7 +174,7 @@ namespace Au.Compiler
 			string xdFile = null;
 			Stream xdStream = null;
 			Stream resNat = null;
-			ResourceDescription[] resMan = null;
+			List<ResourceDescription> resMan = null;
 			EmitOptions eOpt = null;
 
 			if (needOutputFiles) {
@@ -376,67 +376,77 @@ namespace Au.Compiler
 			}
 		}
 
-		static ResourceDescription[] _CreateManagedResources(MetaComments m) {
+		static List<ResourceDescription> _CreateManagedResources(MetaComments m) {
 			var a = m.Resources;
 			if (a.NE_()) return null;
-			var stream = new MemoryStream();
-			var rw = new ResourceWriter(stream);
+			var R = new List<ResourceDescription>();
+			ResourceWriter rw = null;
+			MemoryStream stream = null;
+			string resourcesName = m.Name + ".g.resources";
 			FileNode curFile = null;
-			try {
-				foreach (var v in a) {
-					curFile = v.f;
-					string name = curFile.Name, path = curFile.FilePath;
-					object o;
-					switch (v.s) {
+
+			void _End() {
+				curFile = null;
+				if (rw == null) return;
+				rw.Generate();
+				var st = stream; stream = null; //to create new lambda delegate
+				st.Position = 0;
+				R.Add(new ResourceDescription(resourcesName, () => st, true));
+				rw = null;
+			}
+
+			void _Add(FileNode f, string resType, FileNode folder = null) {
+				curFile = f;
+				string name = f.Name, path = f.FilePath;
+				if (folder != null) for (var pa = f.Parent; pa != folder; pa = pa.Parent) name = pa.Name + "/" + name;
+				//AOutput.Write(f, resType, folder, name, path);
+				if (resType == "embedded") {
+					R.Add(new ResourceDescription(name, () => File.OpenRead(path), true));
+				} else {
+					name = name.Lower(); //else pack URI does not work
+					rw ??= new ResourceWriter(stream = new MemoryStream());
+					switch (resType) {
 					case null:
-						//switch(APath.GetExtension(name).Lower()) {
-						//case ".png":
-						//case ".bmp":
-						//case ".jpg":
-						//case ".jpeg":
-						//case ".gif":
-						//case ".tif":
-						//case ".tiff":
-						//	o = (System.Drawing.Bitmap)System.Drawing.Image.FromFile(path);
-						//	break;
-						//case ".ico":
-						//	//o = AIcon.OfFile(path, size); //adds 4-bit icon, distorted
-						//	o = new System.Drawing.Icon(path); //adds of all sizes. At run time: var icon=new Icon(GetResourceIcon(), 16, 16).
-						//	break;
-						////case ".cur":
-						////	o = Au.Util.ACursor.LoadCursorFromFile(path); //error: Stock cursors cannot be serialized
-						////	break;
-						//default:
-						//	o = AFile.LoadBytes(path);
-						//	break;
-						//}
-						o = AFile.LoadBytes(path);
+						//rw.AddResource(name, File.OpenRead(path), closeAfterWrite: true); //no, would not close on error
+						rw.AddResource(name, new MemoryStream(AFile.LoadBytes(path)));
+						break;
+					case "byte[]":
+						rw.AddResource(name, AFile.LoadBytes(path));
 						break;
 					case "string":
-						o = AFile.LoadText(path);
+						rw.AddResource(name, AFile.LoadText(path));
 						break;
 					case "strings":
 						var csv = ACsv.Load(path);
 						if (csv.ColumnCount != 2) throw new ArgumentException("CSV must contain 2 columns separated with ,");
-						foreach (var row in csv.Data) {
-							rw.AddResource(row[0], row[1]);
-						}
-						continue;
+						foreach (var row in csv.Data) rw.AddResource(row[0], row[1]);
+						break;
 					default: throw new ArgumentException("error in meta: Incorrect /suffix");
 					}
-					rw.AddResource(name, o);
 				}
-				curFile = null;
-				rw.Generate();
+			}
+
+			try {
+				foreach (var v in a) {
+					//if (v.f == null) { // /resources //rejected
+					//	_End();
+					//	resourcesName = v.s + ".resources";
+					//} else
+					if (v.f.IsFolder) {
+						foreach (var des in v.f.Descendants()) if (!des.IsFolder) _Add(des, v.s, v.f);
+					} else {
+						_Add(v.f, v.s);
+					}
+				}
+				_End();
 			}
 			catch (Exception e) {
-				rw.Dispose();
+				rw?.Dispose();
 				_ResourceException(e, m, curFile);
 				return null;
 			}
 			//note: don't Close/Dispose rw. It closes stream. Compiler will close it. There is no other disposable data in rw.
-			stream.Position = 0;
-			return new ResourceDescription[] { new ResourceDescription(m.Name + ".g.resources", () => stream, false) };
+			return R;
 		}
 
 		static void _ResourceException(Exception e, MetaComments m, FileNode curFile) {

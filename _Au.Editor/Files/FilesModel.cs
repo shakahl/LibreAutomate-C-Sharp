@@ -16,6 +16,7 @@ using System.Collections;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using System.Xml.Linq;
@@ -486,7 +487,7 @@ partial class FilesModel : ITreeModel
 		}
 		finally { _inContextMenu = false; }
 	}
-	Au.Util.AMessageLoop _msgLoop = new Au.Util.AMessageLoop();
+	AMessageLoop _msgLoop = new();
 	bool _inContextMenu;
 
 	//Called when editor control focused, etc.

@@ -30,7 +30,7 @@ namespace Au.Util
 		/// </summary>
 		public unsafe void Loop()
 		{
-			bool isForms = 0 != (1 & Assembly_.IsLoadedFormsWpf());
+			bool isForms = 0 != (1 & Assembly_.IsLoadedWinformsWpf());
 			using(isForms ? new EnsureWindowsFormsSynchronizationContext_(true) : null) {
 				_loopEndEvent = Api.CreateEvent(true);
 				try {

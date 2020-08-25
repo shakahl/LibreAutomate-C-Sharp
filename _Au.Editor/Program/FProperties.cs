@@ -28,8 +28,7 @@ partial class FProperties : DialogForm, IMessageFilter
 	bool _isClass;
 	ERole _role;
 
-	public FProperties(FileNode f)
-	{
+	public FProperties(FileNode f) {
 		InitializeComponent();
 
 		_f = f;
@@ -43,8 +42,7 @@ partial class FProperties : DialogForm, IMessageFilter
 		this.Location = new Point(p.X + 100, p.Y + 100); //note: this.StartPosition = FormStartPosition.CenterParent; does not work with Form.Show.
 	}
 
-	protected override void OnLoad(EventArgs e)
-	{
+	protected override void OnLoad(EventArgs e) {
 		base.OnLoad(e);
 
 		//Model.Save.TextNowIfNeed();
@@ -55,15 +53,13 @@ partial class FProperties : DialogForm, IMessageFilter
 		//_tSearch.SetCueBanner("List must contain");
 	}
 
-	protected override void OnFormClosed(FormClosedEventArgs e)
-	{
+	protected override void OnFormClosed(FormClosedEventArgs e) {
 		Application.RemoveMessageFilter(this);
 
 		base.OnFormClosed(e);
 	}
 
-	void _FillGrid()
-	{
+	void _FillGrid() {
 		var g = _grid;
 
 		_role = _meta.role switch
@@ -209,7 +205,7 @@ If role classLibrary, the dll file is named like the class file. It can be used 
 			SelectedPath = _GetOutputPath(getDefault: false, expandEnvVar: true),
 			ShowNewFolderButton = true,
 		};
-		if(f.ShowDialog(this) == DialogResult.OK) _SetEditCellText(f.SelectedPath);
+		if (f.ShowDialog(this) == DialogResult.OK) _SetEditCellText(f.SelectedPath);
 	};
 	m.Show(sender as Control);
 });
@@ -253,15 +249,14 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		g.ZValueChanged += _grid_ZValueChanged;
 
-		void _AddCombo(string name, string values, string select, string info = null, bool noCheckbox = false, int index = -1)
-		{
+		void _AddCombo(string name, string values, string select, string info = null, bool noCheckbox = false, int index = -1) {
 			var a = values.SegSplit("|");
 			bool isSpecified = select != null;
-			if(index < 0) {
+			if (index < 0) {
 				index = 0;
-				if(isSpecified) {
+				if (isSpecified) {
 					isSpecified = false;
-					for(int i = 0; i < a.Length; i++) if(a[i] == select) { index = i; isSpecified = true; break; }
+					for (int i = 0; i < a.Length; i++) if (a[i] == select) { index = i; isSpecified = true; break; }
 				}
 			}
 			g.ZAdd(null, name, values,
@@ -269,30 +264,27 @@ The file must be in this workspace. Can be path relative to this file (examples:
 				null, info,
 				etype: ParamGrid.EditType.ComboList,
 				comboIndex: index);
-			if(info != null) _infoDict.Add(name, info);
+			if (info != null) _infoDict.Add(name, info);
 		}
 
-		void _AddEdit(string name, string text, string info = null, bool noCheckbox = false, EventHandler buttonAction = null)
-		{
+		void _AddEdit(string name, string text, string info = null, bool noCheckbox = false, EventHandler buttonAction = null) {
 			g.ZAdd(null, name, text,
 				noCheckbox ? default(bool?) : text != null,
 				null, info,
 				etype: buttonAction != null ? ParamGrid.EditType.TextButton : ParamGrid.EditType.Text,
 				buttonAction: buttonAction);
-			if(info != null) _infoDict.Add(name, info);
+			if (info != null) _infoDict.Add(name, info);
 		}
 
-		void _SetEditCellText(string s)
-		{
-			if(!_grid.ZGetEditCell(out var cc)) return;
+		void _SetEditCellText(string s) {
+			if (!_grid.ZGetEditCell(out var cc)) return;
 			int row = cc.Position.Row;
 			_grid.ZSetCellText(row, 1, s);
 			_grid.ZCheck(row, true);
 		}
 	}
 
-	void _SelectRole()
-	{
+	void _SelectRole() {
 		var hide = _role switch
 		{
 			ERole.miniProgram => "testScript outputPath icon-xmlDoc",
@@ -305,18 +297,16 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		_bAddLibraryProject.Enabled = _role != ERole.classFile;
 	}
 
-	void _SelectRunMode()
-	{
+	void _SelectRunMode() {
 		_grid.ZShowRows(_Get("runMode") != "blue", "ifRunning2");
 	}
 
-	private void _grid_ZValueChanged(SourceGrid.CellContext cc)
-	{
+	private void _grid_ZValueChanged(SourceGrid.CellContext cc) {
 		var g = _grid;
 		var p = cc.Position;
 		int row = p.Row;
 
-		if(row == 0) { //role
+		if (row == 0) { //role
 			var cb = cc.Cell.Editor as SourceGrid.Cells.Editors.ComboBox;
 			_role = (ERole)cb.Control.SelectedIndex;
 			_SelectRole();
@@ -326,30 +316,30 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		//AOutput.Write(p.Column, p.Row, cc.IsEditing());
 
 		//uncheck if selected default value. The control checks when changed.
-		if(p.Column == 1 && cc.IsEditing()) {
+		if (p.Column == 1 && cc.IsEditing()) {
 			bool uncheck = false;
-			switch(cc.Cell.Editor) {
+			switch (cc.Cell.Editor) {
 			case SourceGrid.Cells.Editors.ComboBox cb:
-				if(cb.Control.SelectedIndex <= 0) uncheck = true;
+				if (cb.Control.SelectedIndex <= 0) uncheck = true;
 				break;
 			case SourceGrid.Cells.Editors.TextBox tb:
-				if((cc.Value as string).NE()) uncheck = true;
+				if ((cc.Value as string).NE()) uncheck = true;
 				break;
 			}
-			if(uncheck) g.ZCheck(row, false);
+			if (uncheck) g.ZCheck(row, false);
 		}
 
 		var rk = g.ZGetRowKey(row);
 
 		//AOutput.Write(p.Column, row, g.ZIsChecked(row));
 
-		switch(rk) {
+		switch (rk) {
 		case "runMode":
 			_SelectRunMode(); //show/hide ifRunning2
-			if(_IsRunGreen()) g.ZSetCellText("ifRunning", 1, "warn");
+			if (_IsRunGreen()) g.ZSetCellText("ifRunning", 1, "warn");
 			break;
 		case "ifRunning": //if runMode green, cannot be ifRunning run[_restart]
-			if(_IsRunGreen()) { g.ZSetCellText("runMode", 1, "blue"); g.ZCheck("runMode", true); }
+			if (_IsRunGreen()) { g.ZSetCellText("runMode", 1, "blue"); g.ZCheck("runMode", true); }
 			break;
 		}
 		bool _IsRunGreen() => cc.IsEditing() && (_Get("ifRunning")?.Starts("run") ?? false) && _Get("runMode") != "blue";
@@ -368,21 +358,19 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		//}
 	}
 
-	string _Get(string name)
-	{
-		if(_grid.ZGetValue(name, out var s1, false, true)) return s1 ?? "";
+	string _Get(string name) {
+		if (_grid.ZGetValue(name, out var s1, false, true)) return s1 ?? "";
 		return null;
 	}
 
-	bool _GetGrid()
-	{
+	bool _GetGrid() {
 		var g = _grid;
 
 		//test script
 		FileNode fts = null;
-		if(g.ZGetValue("testScript", out var sts, true, true)) {
+		if (g.ZGetValue("testScript", out var sts, true, true)) {
 			fts = _f.FindRelative(sts, false);
-			if(fts == null) { ADialog.ShowInfo("testScript file not found", "Must be path relative to this file or path in worspace like \\file or \\folder\\file.", owner: this); return false; }
+			if (fts == null) { ADialog.ShowInfo("testScript file not found", "Must be path relative to this file or path in worspace like \\file or \\folder\\file.", owner: this); return false; }
 		}
 		_f.TestScript = fts;
 
@@ -410,76 +398,73 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		_meta.xmlDoc = _Get("xmlDoc");
 
 		_meta.role = null;
-		if(_role != ERole.classFile) {
-			if(_isClass || _role != ERole.miniProgram) _meta.role = _role.ToString();
-			switch(_role) {
+		if (_role != ERole.classFile) {
+			if (_isClass || _role != ERole.miniProgram) _meta.role = _role.ToString();
+			switch (_role) {
 			case ERole.exeProgram:
 			case ERole.classLibrary:
 				_meta.outputPath = _GetOutputPath(getDefault: false);
 				break;
 			}
 			var name = APath.GetNameNoExt(_f.Name);
-			if(_meta.xmlDoc == "") _meta.xmlDoc = name + ".xml";
-			if(_meta.manifest == "") _meta.manifest = name + ".exe.manifest";
+			if (_meta.xmlDoc == "") _meta.xmlDoc = name + ".xml";
+			if (_meta.manifest == "") _meta.manifest = name + ".exe.manifest";
 		}
 
 		return true;
 	}
 
-	string _GetOutputPath(bool getDefault, bool expandEnvVar = false)
-	{
+	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
 		string r;
-		if(!getDefault) getDefault = _meta.outputPath.NE();
-		if(getDefault) {
+		if (!getDefault) getDefault = _meta.outputPath.NE();
+		if (getDefault) {
 			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
 		} else {
 			r = _meta.outputPath;
-			if(expandEnvVar) r = APath.ExpandEnvVar(r);
+			if (expandEnvVar) r = APath.ExpandEnvVar(r);
 		}
 		return r;
 	}
 
-	private void _bOK_Click(object sender, EventArgs e)
-	{
-		if(Program.Model.CurrentFile != _f && !Program.Model.SetCurrentFile(_f)) return;
+	private void _bOK_Click(object sender, EventArgs e) {
+		if (Program.Model.CurrentFile != _f && !Program.Model.SetCurrentFile(_f)) return;
 		var doc = Panels.Editor.ZActiveDoc;
 		var t = doc.Z;
 		var code = doc.Text;
 		int endOf = MetaComments.FindMetaComments(code);
 
-		if(!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
+		if (!_GetGrid()) { this.DialogResult = DialogResult.None; return; };
 
-		string append = null; if(endOf == 0) append = (_f.IsScript && code.Starts("//.\r")) ? " " : "\r\n";
+		string append = null; if (endOf == 0) append = (_f.IsScript && code.Starts("//.\r")) ? " " : "\r\n";
 		var s = _meta.Format(append);
 
-		if(s.Length == 0) {
-			if(endOf == 0) return;
-			while(endOf < code.Length && code[endOf] <= ' ') endOf++;
-		} else if(s.Length == endOf) {
-			if(s == t.RangeText(true, 0, endOf)) return; //did not change
+		if (s.Length == 0) {
+			if (endOf == 0) return;
+			while (endOf < code.Length && code[endOf] <= ' ') endOf++;
+		} else if (s.Length == endOf) {
+			if (s == t.RangeText(true, 0, endOf)) return; //did not change
 		}
 
 		t.ReplaceRange(true, 0, endOf, s);
 	}
 
-	private void _bAddNet_Click(object button, EventArgs e)
-	{
-		var dir = AFolders.ThisApp + "Libraries"; if(!AFile.ExistsAsDirectory(dir)) dir = AFolders.ThisApp;
+	private void _bAddNet_Click(object button, EventArgs e) {
+		var dir = AFolders.ThisApp + "Libraries"; if (!AFile.ExistsAsDirectory(dir)) dir = AFolders.ThisApp;
 		using var d = new OpenFileDialog { InitialDirectory = dir, Filter = "Dll|*.dll|All files|*.*", Multiselect = true };
-		if(d.ShowDialog(this) != DialogResult.OK) return;
+		if (d.ShowDialog(this) != DialogResult.OK) return;
 
 		var a = d.FileNames;
 
-		foreach(var v in a) {
-			if(MetaReferences.IsDotnetAssembly(v)) continue;
+		foreach (var v in a) {
+			if (MetaReferences.IsDotnetAssembly(v)) continue;
 			ADialog.ShowError("Not a .NET assembly.", v, owner: this);
 			return;
 		}
 
 		//remove path and ext if need
 		var thisApp = AFolders.ThisAppBS;
-		if(a[0].Starts(thisApp, true)) {
-			for(int i = 0; i < a.Length; i++) a[i] = a[i].Substring(thisApp.Length);
+		if (a[0].Starts(thisApp, true)) {
+			for (int i = 0; i < a.Length; i++) a[i] = a[i].Substring(thisApp.Length);
 		}
 
 		_meta.r.AddRange(a);
@@ -491,16 +476,14 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			f => (f != _f && f.GetClassFileRole() == FileNode.EClassFileRole.Library) ? f : null,
 			_meta.pr, sender);
 
-	private void _bAddClass_Click(object sender, EventArgs e)
-	{
+	private void _bAddClass_Click(object sender, EventArgs e) {
 		FileNode prFolder1 = null;
-		if(_f.IsScript && _f.FindProject(out prFolder1, out var prMain1, ofAnyScript: true) && _f == prMain1) prFolder1 = null;
+		if (_f.IsScript && _f.FindProject(out prFolder1, out var prMain1, ofAnyScript: true) && _f == prMain1) prFolder1 = null;
 
-		bool _Include(FileNode f)
-		{
-			if(!f.IsClass || f == _f) return false;
-			if(f.FindProject(out var prFolder, out var prMain) && !prFolder.Name.Starts("@@")) { //exclude class files that are in projects, except if project name starts with @@
-				if(prFolder != prFolder1) return false; //but if _f is a non-project script in a project folder, include local classes
+		bool _Include(FileNode f) {
+			if (!f.IsClass || f == _f) return false;
+			if (f.FindProject(out var prFolder, out var prMain) && !prFolder.Name.Starts("@@")) { //exclude class files that are in projects, except if project name starts with @@
+				if (prFolder != prFolder1) return false; //but if _f is a non-project script in a project folder, include local classes
 			}
 			return f.GetClassFileRole() == FileNode.EClassFileRole.Class;
 		}
@@ -508,23 +491,31 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		_AddFromWorkspace(f => _Include(f) ? f : null, _meta.c, sender);
 	}
 
-	private void _bAddResource_Click(object sender, EventArgs e)
-		=> _AddFromWorkspace(
-			f => !(f.IsFolder || f.IsCodeFile) ? f : null,
+	private void _bAddResource_Click(object sender, EventArgs e) {
+		_AddFromWorkspace(
+			f => {
+				if (f.IsCodeFile) return null;
+				if (f.IsFolder) { //add if contains non-code files and does not contain code files
+					bool hasRes = false;
+					foreach(var v in f.Descendants()) { if (v.IsCodeFile) return null; hasRes |= !v.IsFolder; }
+					if (!hasRes) return null;
+				}
+				return f;
+			},
 			_meta.resource, sender);
+	}
 
-	void _AddFromWorkspace(Func<FileNode, FileNode> filter, List<string> metaList, object button)
-	{
+	void _AddFromWorkspace(Func<FileNode, FileNode> filter, List<string> metaList, object button) {
 		var sFind = _tFindInList.Text;
 		var a = new List<string>();
-		foreach(var f in Program.Model.Root.Descendants()) {
+		foreach (var f in Program.Model.Root.Descendants()) {
 			var f2 = filter(f);
-			if(f2 == null) continue;
+			if (f2 == null) continue;
 			var path = f2.ItemPath;
-			if(sFind.Length > 0 && path.Find(sFind, true) < 0) continue;
-			if(!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add(path);
+			if (sFind.Length > 0 && path.Find(sFind, true) < 0) continue;
+			if (!metaList.Contains(path, StringComparer.OrdinalIgnoreCase)) a.Add(path);
 		}
-		if(a.Count == 0) { _NotFound(button, sFind); return; }
+		if (a.Count == 0) { _NotFound(button, sFind); return; }
 		a.Sort();
 		var dd = new PopupList {
 			Items = a.ToArray(),
@@ -536,54 +527,49 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		dd.Show(button as Control);
 	}
 
-	void _NotFound(object button, string sFind)
-	{
+	void _NotFound(object button, string sFind) {
 		var s = "The list is empty";
-		if(sFind.Length > 0) s = "The list contains 0 items containing " + sFind;
+		if (sFind.Length > 0) s = "The list contains 0 items containing " + sFind;
 		AOsd.ShowText(s, 3, _OsdXY(button));
 	}
 
-	void _Added(object button, List<string> metaList)
-	{
+	void _Added(object button, List<string> metaList) {
 		AOsd.ShowText(string.Join("\r\n", metaList) + "\r\n\r\nFinally click OK to save.", 5, _OsdXY(button));
 	}
 
-	static PopupXY _OsdXY(object button)
-	{
+	static PopupXY _OsdXY(object button) {
 		var c = button as Control;
 		return PopupXY.In(c.Hwnd().Rect, c.Width, 0);
 	}
 
 	#region COM
 
-	private void _bAddComBrowse_Click(object button, EventArgs e)
-	{
+	private void _bAddComBrowse_Click(object button, EventArgs e) {
 		using var ofd = new OpenFileDialog { Filter = "Type library|*.dll;*.tlb;*.olb;*.ocx;*.exe|All files|*.*" };
-		if(ofd.ShowDialog(this) == DialogResult.OK) _ConvertTypeLibrary(ofd.FileName, button);
+		if (ofd.ShowDialog(this) == DialogResult.OK) _ConvertTypeLibrary(ofd.FileName, button);
 	}
 
-	private void _bAddComRegistry_Click(object button, EventArgs e)
-	{
+	private void _bAddComRegistry_Click(object button, EventArgs e) {
 		//HKCU\TypeLib\typelibGuid\version\
 		var sFind = _tFindInList.Text;
 		var rx = new ARegex(@"(?i) (?:Type |Object )?Library[ \d\.]*$");
 		var a = new List<_RegTypelib>(1000);
-		using(var tlKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
-			foreach(var sGuid in tlKey.GetSubKeyNames()) {
-				if(sGuid.Length != 38) continue;
+		using (var tlKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey("TypeLib")) { //guids
+			foreach (var sGuid in tlKey.GetSubKeyNames()) {
+				if (sGuid.Length != 38) continue;
 				//AOutput.Write(sGuid);
 				using var guidKey = tlKey.OpenSubKey(sGuid);
-				foreach(var sVer in guidKey.GetSubKeyNames()) {
+				foreach (var sVer in guidKey.GetSubKeyNames()) {
 					using var verKey = guidKey.OpenSubKey(sVer);
-					if(verKey.GetValue("") is string description) {
-						if(rx.MatchG(description, out var g)) description = description.Remove(g.Start);
-						if(sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
+					if (verKey.GetValue("") is string description) {
+						if (rx.MatchG(description, out var g)) description = description.Remove(g.Start);
+						if (sFind.Length > 0 && description.Find(sFind, true) < 0) continue;
 						a.Add(new _RegTypelib { guid = sGuid, text = description + ", " + sVer, version = sVer });
 					} //else AOutput.Write(sGuid); //some Microsoft typelibs. VS does not show these too.
 				}
 			}
 		}
-		if(a.Count == 0) { _NotFound(button, sFind); return; }
+		if (a.Count == 0) { _NotFound(button, sFind); return; }
 		a.Sort((x, y) => string.Compare(x.text, y.text, true));
 
 		var dd = new PopupList { Items = a.ToArray(), SelectedAction = o => _ConvertTypeLibrary(o.ResultItem as _RegTypelib, button) };
@@ -607,22 +593,20 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		public override string ToString() => text;
 
-		public string GetPath(string locale)
-		{
+		public string GetPath(string locale) {
 			var k0 = $@"TypeLib\{guid}\{version}\{locale}\win";
-			for(int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2; i++) {
 				var bits = AVersion.Is32BitProcess == (i == 1) ? "32" : "64";
 				using var hk = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey(k0 + bits);
-				if(hk?.GetValue("") is string path) return path.Trim('\"');
+				if (hk?.GetValue("") is string path) return path.Trim('\"');
 			}
 			return null;
 		}
 	}
 
-	async void _ConvertTypeLibrary(object tlDef, object button)
-	{
+	async void _ConvertTypeLibrary(object tlDef, object button) {
 		string comDll = null;
-		switch(tlDef) {
+		switch (tlDef) {
 		case string path:
 			comDll = path;
 			break;
@@ -630,27 +614,27 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			//can be several locales
 			var aloc = new List<string>(); //registry keys like "0" or "409"
 			var aloc2 = new List<string>(); //locale names for display in the list dialog
-			using(var verKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
-				foreach(var s1 in verKey.GetSubKeyNames()) {
+			using (var verKey = Microsoft.Win32.Registry.ClassesRoot.OpenSubKey($@"TypeLib\{r.guid}\{r.version}")) {
+				foreach (var s1 in verKey.GetSubKeyNames()) {
 					int lcid = s1.ToInt(0, out int iEnd, STIFlags.IsHexWithout0x);
-					if(iEnd != s1.Length) continue; //"FLAGS" etc; must be hex number without 0x
+					if (iEnd != s1.Length) continue; //"FLAGS" etc; must be hex number without 0x
 					aloc.Add(s1);
 					var s2 = "Neutral";
-					if(lcid > 0) {
+					if (lcid > 0) {
 						try { s2 = new CultureInfo(lcid).DisplayName; } catch { s2 = s1; }
 					}
 					aloc2.Add(s2);
 				}
 			}
 			string locale;
-			if(aloc.Count == 1) locale = aloc[0];
+			if (aloc.Count == 1) locale = aloc[0];
 			else {
 				int i = ADialog.ShowList(aloc2, "Locale", owner: this);
-				if(i == 0) return;
+				if (i == 0) return;
 				locale = aloc[i - 1];
 			}
 			comDll = r.GetPath(locale);
-			if(comDll == null || !AFile.ExistsAsFile(comDll)) {
+			if (comDll == null || !AFile.ExistsAsFile(comDll)) {
 				ADialog.ShowError(comDll == null ? "Failed to get file path." : "File does not exist.", owner: this);
 				return;
 			}
@@ -661,26 +645,26 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			this.Enabled = false;
 			AOutput.Write($"Converting COM type library to .NET assembly.");
 			try {
-				if(_convertedDir == null) {
+				if (_convertedDir == null) {
 					_convertedDir = AFolders.Workspace + @".interop\";
 					AFile.CreateDirectory(_convertedDir);
 				}
 				List<string> converted = new List<string>();
 				Action<string> callback = s => {
 					AOutput.Write(s);
-					if(s.Starts("Converted: ")) {
+					if (s.Starts("Converted: ")) {
 						s.RegexMatch(@"""(.+?)"".$", 1, out s);
 						converted.Add(s);
 					}
 				};
 				int rr = AFile.RunConsole(callback, AFolders.ThisAppBS + "Au.Net45.exe", $"/typelib \"{_convertedDir}|{comDll}\"", encoding: Encoding.UTF8);
-				if(rr == 0) {
-					foreach(var v in converted) if(!_meta.com.Contains(v)) _meta.com.Add(v);
+				if (rr == 0) {
+					foreach (var v in converted) if (!_meta.com.Contains(v)) _meta.com.Add(v);
 					AOutput.Write(@"<>Converted and saved in <link>%AFolders.Workspace%\.interop<>.");
 					_Added(button, _meta.com);
 				}
 			}
-			catch(Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
+			catch (Exception ex) { ADialog.ShowError("Failed to convert type library", ex.ToStringWithoutStack(), owner: this); }
 			this.Enabled = true;
 		});
 	}
@@ -691,8 +675,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	Dictionary<string, string> _infoDict;
 
-	void _InfoInit()
-	{
+	void _InfoInit() {
 		const string c_script = @"This file is a C# script. There are several ways to run a script:
 1. Click the Run button or menu item.
 2. Add script name in Options -> General -> Run scripts when this workspace loaded.
@@ -715,7 +698,7 @@ Adds meta <c green>r FileName<>.
 
 Don't need to add Au.dll and .NET Core runtime dlls.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
-To remove, delete the line in the code editor.
+To remove this meta, edit the code.
 
 If the file is in <link>%AFolders.ThisApp%<> or its subfolders, use file name or relative path, else need full path. If role of the script is not miniProgram, at run time the file must be directly in AFolders.ThisApp or AFolders.ThisApp\Libraries. If role is editorExtension, may need to restart editor.
 ");
@@ -724,7 +707,7 @@ Adds meta <c green>com FileName.dll<>. Saves the assembly file in <link>%AFolder
 
 An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered native dll or exe file). Set prefer32bit true if 64-bit dll unavailable.
 
-To remove, delete the line in the code editor. Optionally delete unused interop assemblies.
+To remove this meta, edit the code. Optionally delete unused interop assemblies.
 ";
 		_Add(_bAddComRegistry,
 @"<b>COM<> - convert a registered" + c_com);
@@ -736,7 +719,7 @@ Adds meta <c green>pr File.cs<>. The compiler will compile it if need and use th
 
 The recommended outputPath of the library project is <link>%AFolders.ThisApp%\Libraries<>. Else may not find the dll at run time.
 
-To remove, delete the line in the code editor. Optionally delete unused dll files.
+To remove this meta, edit the code. Optionally delete unused dll files.
 ");
 		_Add(_bAddClass,
 @"<b>Class file<> - add a C# code file that contains some classes/functions used by this file.
@@ -745,25 +728,24 @@ Adds meta <c green>c File.cs<>. The compiler will compile all code files and cre
 If this file is in a project, don't need to add class files that are in the project folder.
 Can be added only files that are in this workspace. Import files if need, for example drag-drop.
 Can be path relative to this file (examples: Class5.cs, Folder\Class5.cs, ..\Folder\Class5.cs) or path in the workspace (examples: \Class5.cs, \Folder\Class5.cs).
-To remove, delete the line in the code editor.
+To remove this meta, edit the code.
 ");
 		_Add(_bAddResource,
-@"<b>Resource<> - add an image or other file as a managed resource.
-Adds meta <c green>resource File<>. The compiler will add the file to the output assembly.
+@"<b>Resource<> - add image etc file(s) as managed resources.
+Adds meta <c green>resource File<>. If folder, the compiler will add all files in it and subfolders.
 
-Resource type: .png, .bmp, .jpg, .jpeg, .gif, .tif, .tiff - Bitmap. .ico - Icon. Other - byte[].
-To add a text file as string, in the code editor edit like this: <c green>resource file.txt /string<>
-To add multiple strings, add a 2-column CSV file. Edit: <c green>resource file.csv /strings<>
+Default resource type is stream. In editor you can append space and <c green>/byte[]<>, <c green>/string<>, <c green>/strings<> or <c green>/embedded<>. Example: <c green>resource file.txt /string<>.
+/strings - CSV text file containing multiple strings as 2-column CSV (name, value).
+/embedded - separate stream. All others are in stream AssemblyName.g.resources.
 
-Need to add resource files even if they are in project folder.
 Can be added only files that are in this workspace. Import files if need, for example drag/drop.
 Can be path relative to this file (examples: File.png, Folder\File.png, ..\Folder\File.png) or path in the workspace (examples: \File.png, \Folder\File.png).
-To remove, delete the line in the code editor.
+To remove this meta, edit the code.
 
-Examples of loading resources at run time:
-<code>var bitmap = Au.Util.AResources.GetAppResource(""file.png"") as Bitmap;</code>
-<code>var icon = new Icon(Au.Util.AResources.GetAppResource(""file.ico"") as Icon, 16, 16);</code>
-<code>var cursor = Au.Util.ACursor.LoadCursorFromMemory(Au.Util.AResources.GetAppResource(""file.cur"") as byte[]);</code>
+To load resources directly, use <google>ResourceManager<>. To load WPF resources can be used ""pack:..."" URI.
+To load embedded resources, use <google>Assembly.GetManifestResourceStream<>.
+Compiled names of non-embedded resource files are lowercase, like ""file.png"" or ""subfolder/file.png"".
+To browse .NET assembly resources, types, etc can be used for example <google>ILSpy<>.
 ");
 		_Add(_tFindInList,
 @"<b>Find in lists<> - in the drop-down lists show only items containing this text.
@@ -775,45 +757,42 @@ Examples of loading resources at run time:
 		_infoTimer = new ATimer(_ => _SetInfoText(_infoText));
 		_grid.ZShowEditInfo += (cc, rowInfo) => { _SetInfoText(rowInfo); _gridEditMode = rowInfo != null; };
 
-		void _SetInfoText(string infoText)
-		{
-			if(infoText == null || _gridEditMode || infoText == _infoTextPrev) return;
+		void _SetInfoText(string infoText) {
+			if (infoText == null || _gridEditMode || infoText == _infoTextPrev) return;
 			_infoTextPrev = infoText;
 			_info.Z.SetText(infoText);
 		}
 	}
 
-	void _InfoOnMouseMove(AWnd w, LPARAM xy)
-	{
-		if(_gridEditMode) return;
+	void _InfoOnMouseMove(AWnd w, LPARAM xy) {
+		if (_gridEditMode) return;
 		AWnd wForm = (AWnd)this;
-		if(w == wForm || w.Get.Window != wForm) {
+		if (w == wForm || w.Get.Window != wForm) {
 			_infoWnd = default;
 			_infoRow = -1;
 			_infoText = null;
 			return;
 		}
 
-		if(w == (AWnd)_grid) {
+		if (w == (AWnd)_grid) {
 			var pp = _grid.PositionAtPoint(new Point(AMath.LoShort(xy), AMath.HiShort(xy)));
-			if(pp.Row != _infoRow) {
+			if (pp.Row != _infoRow) {
 				_infoText = null;
 				_infoRow = pp.Row;
-				if(_infoRow >= 0) _SetTimer(_grid.ZGetRowKey(_infoRow));
+				if (_infoRow >= 0) _SetTimer(_grid.ZGetRowKey(_infoRow));
 			}
 		} else {
 			_infoRow = -1;
-			if(w != _infoWnd) {
+			if (w != _infoWnd) {
 				_infoText = null;
 				_SetTimer(Control.FromHandle(w.Handle)?.Name);
 			}
 		}
 		_infoWnd = w;
 
-		void _SetTimer(string name)
-		{
+		void _SetTimer(string name) {
 			//AOutput.Write(name);
-			if(name.NE() || !_infoDict.TryGetValue(name, out _infoText)) return;
+			if (name.NE() || !_infoDict.TryGetValue(name, out _infoText)) return;
 			_infoTimer.After(700);
 		}
 	}
@@ -824,9 +803,8 @@ Examples of loading resources at run time:
 	string _infoText, _infoTextPrev;
 	bool _gridEditMode;
 
-	bool IMessageFilter.PreFilterMessage(ref Message m)
-	{
-		switch(m.Msg) {
+	bool IMessageFilter.PreFilterMessage(ref Message m) {
+		switch (m.Msg) {
 		case Api.WM_MOUSEMOVE:
 			_InfoOnMouseMove((AWnd)m.HWnd, m.LParam);
 			break;

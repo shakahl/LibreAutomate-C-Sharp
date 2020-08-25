@@ -5,8 +5,7 @@ using System.Windows.Forms;
 using Aga.Controls.Tree.NodeControls;
 using System.Drawing;
 
-using Au;
-using Au.Types;
+//using Au;
 
 namespace Aga.Controls.Tree
 {
@@ -94,7 +93,7 @@ namespace Aga.Controls.Tree
 			var c = CurrentEditor;
 			if(c != null && !ContainsFocus && c.TopLevelControl == Form.ActiveForm) {
 				//async to avoid a hard-to-debug ObjectDisposedException
-				ATimer.After(100, _ =>
+				Au.ATimer.After(100, _ =>
 				{
 					if(CurrentEditor != null && !ContainsFocus) {
 						CurrentEditorOwner.EndEdit(true);

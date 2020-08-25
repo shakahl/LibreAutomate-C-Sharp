@@ -360,10 +360,10 @@ namespace Au.Controls
 			switch(imType) {
 			case ImageUtil.ImageType.Base64CompressedBmp: i += 2; break; //~:
 			case ImageUtil.ImageType.Base64PngGifJpg: i += 6; break; //image:
-			case ImageUtil.ImageType.Resource: i += 9; break; //resource:
+			//case ImageUtil.ImageType.Resource: i += 9; break; //resource:
 			}
 
-			string path = new string((sbyte*)s, i, i2 - i, Encoding.UTF8); //CONSIDER: it this the fastest way to convert UTF8 to string?
+			string path = new string((sbyte*)s, i, i2 - i, Encoding.UTF8);
 
 			//load
 			long t1 = ATime.WinMillisecondsWithoutSleep;

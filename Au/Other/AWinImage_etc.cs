@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,10 +16,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
 //using System.Linq;
-
-using Au;
-using Au.Types;
-using Au.Util;
 
 namespace Au
 {
@@ -343,7 +341,7 @@ namespace Au
 				TopLevel = true; //optional
 				StartPosition = FormStartPosition.Manual;
 				Text = "Au.AWinImage.CaptureUI";
-				Cursor = _cursor = ACursor.LoadCursorFromMemory(Resources.Resources.red_cross_cursor, 32);
+				Cursor = _cursor = ACursor.Load(Resources.Resources.red_cross_cursor, 32).ToWinformsCursor();
 			}
 
 			protected override CreateParams CreateParams {

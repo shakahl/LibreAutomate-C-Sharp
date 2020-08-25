@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -80,7 +80,7 @@ namespace Au
 	///  <td>
 	///   <ol>
 	///    <li>Not supported on 32-bit OS.</li>
-	///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is disabled or does not work, the "Find accessible object" tool shows an "enable" link when you try to capture something in a Java window. The link calls Au.Tools.FormAAcc.Java.EnableDisableJabUI. Or you can enable JAB in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java AOs.</li>
+	///    <li>Must be enabled Java Access Bridge (JAB).<br/>If JAB is disabled or does not work, the "Find accessible object" tool shows an "enable" link when you try to capture something in a Java window. Or you can enable JAB in Control Panel -> Ease of Access Center -> Use the computer without a display. Or use jabswitch.exe. Then restart Java apps. Also may need to restart apps that tried to use Java AOs.</li>
 	///    <li>Your process must have the same 32/64 bitness as the installed Java. To remove this limitation, install Java 32-bit and 64-bit (they coexist).</li>
 	///   </ol>
 	///  </td>
@@ -170,7 +170,7 @@ namespace Au
 		//FUTURE: AAcc.More.EnableAccInJavaWindows (see JavaEnableJAB in QM2)
 		//FUTURE: add functions to marshal AO to another thread.
 
-		internal struct _Misc
+		internal struct Misc_
 		{
 			public AccMiscFlags flags;
 			public byte role; //for optimization. 0 if not set or failed to get or VT_BSTR or does not fit in BYTE.
@@ -182,7 +182,7 @@ namespace Au
 
 		internal IntPtr _iacc;
 		internal int _elem;
-		internal _Misc _misc;
+		internal Misc_ _misc;
 		//Real AAcc object memory size with header: 32 bytes on 64-bit.
 		//We don't use RCW<IAccessible>, which would add another 32 bytes.
 
@@ -210,7 +210,7 @@ namespace Au
 		/// Sets fields.
 		/// _iacc must be 0, iacc not 0.
 		/// </summary>
-		void _Set(IntPtr iacc, int elem = 0, _Misc misc = default, bool addRef = false)
+		void _Set(IntPtr iacc, int elem = 0, Misc_ misc = default, bool addRef = false)
 		{
 			Debug.Assert(_iacc == default);
 			Debug.Assert(iacc != default);
@@ -458,8 +458,8 @@ namespace Au
 		public static AAcc FromComObject(IntPtr x)
 		{
 			if(x == default) return null;
-			if(Util.AMarshal.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
-				|| Util.AMarshal.QueryService(x, out iacc, Api.IID_IAccessible)
+			if(AMarshal.QueryInterface(x, out IntPtr iacc, Api.IID_IAccessible)
+				|| AMarshal.QueryService(x, out iacc, Api.IID_IAccessible)
 				) return new AAcc(iacc);
 			return null;
 		}
@@ -564,7 +564,7 @@ namespace Au
 			if(_Disposed) return "<disposed>";
 			if(!GetProperties("Rnsvdarw@", out var k)) return "<failed>";
 
-			using(new Util.StringBuilder_(out var b)) {
+			using(new StringBuilder_(out var b)) {
 				if(Level > 0) b.Append(' ', Level);
 				b.Append(k.Role);
 				_Add('n', k.Name);

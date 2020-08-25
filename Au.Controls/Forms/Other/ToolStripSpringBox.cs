@@ -17,9 +17,6 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 
-using Au;
-using Au.Types;
-
 namespace Au.Controls
 {
 	public class ToolStripSpringTextBox : ToolStripTextBox

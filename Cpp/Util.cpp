@@ -233,7 +233,7 @@ HWND FindChildByClassName(HWND w, STR className, bool visible)
 	return R;
 }
 
-bool WinFormsNameIs(HWND w, STR name)
+bool WinformsNameIs(HWND w, STR name)
 {
 	static UINT WM_GETCONTROLNAME = RegisterWindowMessageW(L"WM_GETCONTROLNAME");
 	const int c_bufChars = 1024;

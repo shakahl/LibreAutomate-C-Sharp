@@ -687,9 +687,6 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int SleepEx(int dwMilliseconds, bool bAlertable);
 
-		//[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
-		//internal static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
-
 		[DllImport("kernel32.dll", EntryPoint = "GetStartupInfoW")]
 		internal static extern void GetStartupInfo(out STARTUPINFO lpStartupInfo);
 

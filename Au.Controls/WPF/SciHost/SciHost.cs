@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -14,10 +15,7 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 //using System.Linq;
 
-using Au;
-using Au.Types;
-
-namespace Au.Controls.WPF
+namespace Au.Controls
 {
 	public class SciHost : HwndHost
 	{

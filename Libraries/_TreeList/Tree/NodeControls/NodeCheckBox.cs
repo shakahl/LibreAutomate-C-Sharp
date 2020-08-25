@@ -12,7 +12,7 @@ namespace Aga.Controls.Tree.NodeControls
 {
 	public class NodeCheckBox :InteractiveControl
 	{
-		public static int ImageSize { get { return Au.ADpi.Scale(13); } }
+		public static int ImageSize { get { return Au.Util.ADpi.Scale(13); } }
 
 		private Bitmap _check;
 		private Bitmap _uncheck;

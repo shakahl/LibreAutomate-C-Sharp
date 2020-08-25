@@ -1,4 +1,7 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using Au.Triggers;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -12,9 +15,6 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
-
-using Au.Types;
-using Au.Triggers;
 
 namespace Au
 {

@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,9 +15,6 @@ using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
 using System.Windows.Forms.VisualStyles;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls
 {

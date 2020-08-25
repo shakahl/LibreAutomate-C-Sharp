@@ -8,9 +8,6 @@ using System.Drawing.Imaging;
 using System.Threading;
 using System.Diagnostics;
 
-using Au;
-using Au.Types;
-
 namespace Aga.Controls.Tree
 {
 	public partial class TreeViewAdv

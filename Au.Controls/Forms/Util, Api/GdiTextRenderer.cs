@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,9 +14,6 @@ using System.Reflection;
 //using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls
 {
@@ -37,7 +36,7 @@ namespace Au.Controls
 			_g = g;
 			_hdc = g.GetHdc();
 			_dpi = dpi;
-			_oldFont = Api.SelectObject(_hdc, Util.NativeFont_.RegularCached(_dpi));
+			_oldFont = Api.SelectObject(_hdc, NativeFont_.RegularCached(_dpi));
 			_oldAlign = 0xffffffff;
 			Api.SetBkMode(_hdc, 1);
 			_oldColor = Api.SetTextColor(_hdc, 0);
@@ -71,13 +70,13 @@ namespace Au.Controls
 			return p;
 		}
 
-		public void FontNormal() => Api.SelectObject(_hdc, Util.NativeFont_.RegularCached(_dpi));
+		public void FontNormal() => Api.SelectObject(_hdc, NativeFont_.RegularCached(_dpi));
 
-		public void FontBold() => Api.SelectObject(_hdc, Util.NativeFont_.BoldCached(_dpi));
+		public void FontBold() => Api.SelectObject(_hdc, NativeFont_.BoldCached(_dpi));
 
-		//public void FontItalic() => Api.SelectObject(_hdc, Au.Util.NativeFont_.ItalicCached);
+		//public void FontItalic() => Api.SelectObject(_hdc, NativeFont_.ItalicCached);
 
-		//public void FontBoldItalic() => Api.SelectObject(_hdc, Au.Util.NativeFont_.BoldItalicCached);
+		//public void FontBoldItalic() => Api.SelectObject(_hdc, NativeFont_.BoldItalicCached);
 
 		/// <summary>
 		/// Draws text at specified position. Does not use/update the current drawing position of the DC.

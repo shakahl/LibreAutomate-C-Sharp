@@ -153,7 +153,7 @@ namespace Au.Tools
 
 			//control
 			if(!isWeb && !_con.Is0 && !_useCon) {
-				string sId = TUtil.GetUsefulControlId(_con, _wnd, out int id) ? id.ToString() : _con.NameWinForms;
+				string sId = TUtil.GetUsefulControlId(_con, _wnd, out int id) ? id.ToString() : _con.NameWinforms;
 				if(sId != null) _Add("id", sId, sId.Length > 0, info: c_infoId);
 				_Add("class", TUtil.StripWndClassName(_con.ClassName, true), sId.NE(), info: c_infoClass);
 			}

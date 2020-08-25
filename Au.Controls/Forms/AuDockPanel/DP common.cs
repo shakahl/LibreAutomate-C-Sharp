@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -14,9 +16,6 @@ using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
 using System.Xml;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls
 {
@@ -407,7 +406,7 @@ namespace Au.Controls
 						rect.EnsureInScreen();
 					} else if(this.ParentSplit != null) {
 						rect = this.RectangleInScreen;
-						AWnd.More.WindowRectFromClientRect(ref rect, WS.POPUP | WS.THICKFRAME, WS2.TOOLWINDOW);
+						ADpi.AdjustWindowRectEx(_manager, ref rect, WS.POPUP | WS.THICKFRAME, WS2.TOOLWINDOW);
 					} else { //new panel, empty bounds
 						var mp = AMouse.XY;
 						rect = new RECT(mp.x - 15, mp.y - 15, 300, 150);

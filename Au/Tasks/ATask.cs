@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -95,12 +95,12 @@ namespace Au
 			using var tr = new _TaskResults();
 			if(needResult && !tr.Init()) throw new AuException("*get task results");
 
-			var data = Util.Serializer_.Serialize(script, args, tr.pipeName);
+			var data = Serializer_.Serialize(script, args, tr.pipeName);
 			int pid = (int)AWnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
-			switch((ERunResult)pid) {
-			case ERunResult.failed: return !waitMode ? - 1 : throw new AuException("*start task"); //don't throw, eg maibe cannot run because other green script is running
-			case ERunResult.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
-			case ERunResult.editorThread: case ERunResult.deferred: return 0;
+			switch((RunResult_)pid) {
+			case RunResult_.failed: return !waitMode ? - 1 : throw new AuException("*start task"); //don't throw, eg maibe cannot run because other green script is running
+			case RunResult_.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
+			case RunResult_.editorThread: case RunResult_.deferred: return 0;
 			}
 
 			if(waitMode) {
@@ -116,7 +116,7 @@ namespace Au
 			return pid;
 		}
 
-		internal enum ERunResult //note: sync with ERunResult in Au.CL.cpp.
+		internal enum RunResult_ //note: sync with ERunResult in Au.CL.cpp.
 		{
 			failed = 0,
 			deferred = -1,
@@ -161,7 +161,7 @@ namespace Au
 							}
 						}
 
-						if(b == null) b = (char*)Util.AMemory.Alloc(bLen);
+						if(b == null) b = (char*)AMemory.Alloc(bLen);
 						bool readOK;
 						while(((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (ALastError.Code == Api.ERROR_MORE_DATA)) && n > 0) {
 							n /= 2;
@@ -190,7 +190,7 @@ namespace Au
 				}
 				finally {
 					ev.Dispose();
-					Util.AMemory.Free(b);
+					AMemory.Free(b);
 				}
 				return R;
 			}

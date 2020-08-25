@@ -46,7 +46,6 @@
   <ItemGroup>
     <Content Include="Default\Panels.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
     </Content>
     <Content Include="Default\Snippets2.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
@@ -56,13 +55,12 @@
     </Content>
     <Content Include="Default\Strips.xml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      <SubType>Designer</SubType>
     </Content>
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="Tools\Keys.txt" />
-    <EmbeddedResource Include="Tools\Regex.txt" />
+    <Resource Include="Tools\Keys.txt" />
+    <Resource Include="Tools\Regex.txt" />
   </ItemGroup>
 
   <ItemGroup>
@@ -147,10 +145,6 @@
     <EmbeddedResource Update="Tools\FormAWnd.resx">
       <DependentUpon>FormAWnd.cs</DependentUpon>
     </EmbeddedResource>
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="Edit\CiPopupListWPF.cs" />
   </ItemGroup>
 
   <ItemGroup>

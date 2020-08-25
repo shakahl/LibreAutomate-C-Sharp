@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -161,7 +161,7 @@ namespace Au
 		{
 			if(RowCount == 0 || ColumnCount == 0) return "";
 
-			using(new Util.StringBuilder_(out var b)) {
+			using(new StringBuilder_(out var b)) {
 				char quote = Quote;
 				string sQuote1 = null, sQuote2 = null;
 

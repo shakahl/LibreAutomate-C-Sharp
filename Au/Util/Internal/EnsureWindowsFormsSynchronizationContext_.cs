@@ -20,7 +20,7 @@ namespace Au.Util
 	/// Constructor ensures that current SynchronizationContext of this thread is WindowsFormsSynchronizationContext.
 	/// Also sets WindowsFormsSynchronizationContext.AutoInstall=false to prevent Application.DoEvents etc setting wrong context.
 	/// Dispose() restores both if need. Does not restore context if was null.
-	/// Example: using(new Util.EnsureWindowsFormsSynchronizationContext_()) { ... }
+	/// Example: using(new EnsureWindowsFormsSynchronizationContext_()) { ... }
 	/// </summary>
 	class EnsureWindowsFormsSynchronizationContext_ : IDisposable
 	{

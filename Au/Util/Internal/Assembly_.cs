@@ -61,32 +61,32 @@ namespace Au.Util
 		/// <summary>
 		/// Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
 		/// </summary>
-		internal static int IsLoadedFormsWpf()
+		internal static int IsLoadedWinformsWpf()
 		{
-			if(s_isLoadedFormsWpf == 0) {
+			if(s_isLoadedWinformsWpf == 0) {
 				lock("zjm5R47f7UOmgyHUVZaf1w") {
-					if(s_isLoadedFormsWpf == 0) {
+					if(s_isLoadedWinformsWpf == 0) {
 						var ad = AppDomain.CurrentDomain;
 						var a = ad.GetAssemblies();
 						foreach(var v in a) {
 							_FlagFromName(v);
-							if(s_isLoadedFormsWpf == 3) return 3;
+							if(s_isLoadedWinformsWpf == 3) return 3;
 						}
 						ad.AssemblyLoad += (_, x) => _FlagFromName(x.LoadedAssembly);
-						s_isLoadedFormsWpf |= 0x100;
+						s_isLoadedWinformsWpf |= 0x100;
 					}
 				}
 			}
 
-			return s_isLoadedFormsWpf & 3;
+			return s_isLoadedWinformsWpf & 3;
 
 			void _FlagFromName(Assembly a)
 			{
 				string s = a.FullName; //fast, cached. GetName can be slow because not cached.
-				if(0 == (s_isLoadedFormsWpf & 1) && s.Starts("System.Windows.Forms,")) s_isLoadedFormsWpf |= 1;
-				else if(0 == (s_isLoadedFormsWpf & 2) && s.Starts("WindowsBase,")) s_isLoadedFormsWpf |= 2;
+				if(0 == (s_isLoadedWinformsWpf & 1) && s.Starts("System.Windows.Forms,")) s_isLoadedWinformsWpf |= 1;
+				else if(0 == (s_isLoadedWinformsWpf & 2) && s.Starts("WindowsBase,")) s_isLoadedWinformsWpf |= 2;
 			}
 		}
-		static volatile int s_isLoadedFormsWpf;
+		static volatile int s_isLoadedWinformsWpf;
 	}
 }

@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -95,7 +95,7 @@ namespace Au
 					case 1:
 						using(var p = Handle_.OpenProcess(w)) {
 							if(!p.Is0) {
-								var b = Util.AMemoryArray.Char_(1000, out int na);
+								var b = AMemoryArray.Char_(1000, out int na);
 								if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
 							}
 						}

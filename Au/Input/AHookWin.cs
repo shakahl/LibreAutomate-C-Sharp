@@ -865,7 +865,7 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Returns the window handle of the window being activated and gets some more info.
+			/// Gets <see cref="CbtEvent.ACTIVATE"/> event info. Returns the window handle.
 			/// </summary>
 			/// <param name="fMouse">true if the reason is the mouse.</param>
 			/// <param name="wPrevActive">The previously active window, or default(AWnd).</param>
@@ -879,26 +879,23 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Returns the window handle and gets more info about the created window.
+			/// Gets <see cref="CbtEvent.CREATEWND"/> event info. Returns the window handle.
 			/// </summary>
-			/// <param name="c">
-			/// API <msdn>CREATESTRUCT</msdn>.
-			/// You can modify x y cx cy.
-			/// </param>
-			/// <param name="wInsertAfter">Window whose position in the Z order precedes that of the window being created, or default(AWnd).</param>
+			/// <param name="c"><msdn>CREATESTRUCT</msdn>. You can modify x y cx cy.</param>
+			/// <param name="wInsertAfter"><msdn>CBT_CREATEWND</msdn>.hwndInsertAfter. You can modify it.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CREATEWND.</exception>
-			public unsafe AWnd CreationInfo(out Native.CREATESTRUCT* c, out AWnd wInsertAfter) {
+			public unsafe AWnd CreationInfo(out Native.CREATESTRUCT* c, out AWnd* wInsertAfter) {
 				if (code != CbtEvent.CREATEWND) throw new InvalidOperationException();
 				var t = (Api.CBT_CREATEWND*)lParam;
 				c = t->lpcs;
-				wInsertAfter = t->hwndInsertAfter;
+				wInsertAfter = &t->hwndInsertAfter;
 				return (AWnd)wParam;
 			}
 
 			/// <summary>
-			/// Returns the mouse message and gets some more info about the mouse event.
+			/// Gets <see cref="CbtEvent.CLICKSKIPPED"/> event info. Returns the mouse message.
 			/// </summary>
-			/// <param name="m">API <msdn>MOUSEHOOKSTRUCT</msdn>.</param>
+			/// <param name="m"><msdn>MOUSEHOOKSTRUCT</msdn>.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CLICKSKIPPED.</exception>
 			public unsafe uint MouseInfo(out Native.MOUSEHOOKSTRUCT* m) {
 				if (code != CbtEvent.CLICKSKIPPED) throw new InvalidOperationException();
@@ -907,7 +904,7 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Returns the key code and gets some more info about the keyboard event.
+			/// Gets <see cref="CbtEvent.KEYSKIPPED"/> event info. Returns the key code.
 			/// </summary>
 			/// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See API <msdn>WM_KEYDOWN</msdn>.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.KEYSKIPPED.</exception>
@@ -918,7 +915,7 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Returns the window handle and gets some more info about the focus event.
+			/// Gets <see cref="CbtEvent.SETFOCUS"/> event info. Returns the window handle.
 			/// </summary>
 			/// <param name="wLostFocus">The previously focused window, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.SETFOCUS.</exception>
@@ -929,7 +926,7 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Returns the window handle and gets some more info about the move-size event.
+			/// Gets <see cref="CbtEvent.MOVESIZE"/> event info. Returns the window handle.
 			/// </summary>
 			/// <param name="r">The new rectangle of the window.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MOVESIZE.</exception>
@@ -940,7 +937,7 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Returns the window handle and gets some more info about the minimize-maximize-restore event.
+			/// Gets <see cref="CbtEvent.MINMAX"/> event info. Returns the window handle.
 			/// </summary>
 			/// <param name="showState">The new show state. See API <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MINMAX.</exception>

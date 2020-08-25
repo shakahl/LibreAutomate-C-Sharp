@@ -2265,9 +2265,6 @@
         <member name="F:Au.Controls.ImageUtil.ImageType.Base64PngGifJpg">
             <summary>Base64-encoded .png/gif/jpg file data with "image:" prefix.</summary>
         </member>
-        <member name="F:Au.Controls.ImageUtil.ImageType.Resource">
-            <summary>"resource:name". An image resource name from managed resources of the entry assembly.</summary>
-        </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.Bmp">
             <summary>.bmp file path.</summary>
         </member>
@@ -2324,7 +2321,7 @@
             Supports all <see cref="T:Au.Controls.ImageUtil.ImageType"/> formats. For non-image files gets icon. Converts icons to bitmap.
             Returns null if path is not a valid image string or the file does not exist or failed to load.
             </summary>
-            <remarks>Supports environment variables etc. If not full path, searches in AFolders.ThisAppImages and standard directories.</remarks>
+            <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.AFolders.ThisAppImages"/> and standard directories.</remarks>
         </member>
         <member name="T:Au.Controls.WPF.AuPanels">
             <summary>
@@ -2366,19 +2363,44 @@
             Base of _Dragable (_Panel, _Tab) and _Stack.
             </summary>
         </member>
-        <member name="P:Au.Controls.WPF.AuPanels._Node.SplitterWidthInStack">
+        <member name="P:Au.Controls.WPF.AuPanels._Node.Elem">
             <summary>
-            Gets actual <see cref="P:Au.Controls.WPF.AuPanels._Node.Splitter"/> height in vertical stack or width in horizontal stack.
+            Grid if _Stack, DockPanel if _Panel, TabControl if _Tab.
             </summary>
         </member>
-        <member name="P:Au.Controls.WPF.AuPanels._Node.ElemWidthInStack">
+        <member name="P:Au.Controls.WPF.AuPanels._Node.IsPanel">
             <summary>
-            Gets actual <see cref="P:Au.Controls.WPF.AuPanels._Node.Elem"/> height in vertical stack or width in horizontal stack.
+            Not stack/toolbar/document.
             </summary>
         </member>
-        <member name="P:Au.Controls.WPF.AuPanels._Node.WidthInStack">
+        <member name="P:Au.Controls.WPF.AuPanels._Node.SplitterSize">
             <summary>
-            Gets actual row height/unit in vertical stack or column width/unit in horizontal stack. Also gets unit.
+            Gets or sets actual height of <see cref="P:Au.Controls.WPF.AuPanels._Node.Splitter"/> in vertical stack or width in horizontal stack.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.WPF.AuPanels._Node.ElemSize">
+            <summary>
+            Gets actual height of <see cref="P:Au.Controls.WPF.AuPanels._Node.Elem"/> in vertical stack or width in horizontal stack.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.WPF.AuPanels._Node.SizeDef">
+            <summary>
+            Gets defined row height in vertical stack or column width in horizontal stack. Also gets unit.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.WPF.AuPanels._Node.SizeNow">
+            <summary>
+            Gets actual row height in vertical stack or column width in horizontal stack.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.WPF.AuPanels._Node.SizeMin">
+            <summary>
+            Gets minimal row height in vertical stack or column width in horizontal stack.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.WPF.AuPanels._Node.SizeMax">
+            <summary>
+            Gets maximal row height in vertical stack or column width in horizontal stack.
             </summary>
         </member>
         <member name="M:Au.Controls.WPF.AuPanels._Node._SaveAttributes(System.Xml.XmlWriter)">

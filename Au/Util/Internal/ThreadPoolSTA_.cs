@@ -81,7 +81,7 @@ namespace Au.Util
 		/// </summary>
 		/// <example>
 		/// <code><![CDATA[
-		/// using(var work = Util.ThreadPoolSTA_.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
+		/// using(var work = ThreadPoolSTA_.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
 		/// 	work.Submit();
 		/// 	work.Wait();
 		/// }

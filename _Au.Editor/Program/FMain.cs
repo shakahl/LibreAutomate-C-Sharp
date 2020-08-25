@@ -9,6 +9,8 @@ using System.Runtime;
 using System.Threading;
 using System.Windows.Forms;
 
+using Au.Util;
+
 //TODO: on DPI change now moves/resizes controls incorrectly. Especially if DPI changed from 150% to 125%.
 
 partial class FMain : Form

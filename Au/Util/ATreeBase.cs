@@ -1,3 +1,4 @@
+using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,9 +13,6 @@ using System.Reflection;
 using System.Xml;
 //using System.Linq;
 
-using Au;
-using Au.Types;
-
 namespace Au.Util
 {
 	/// <summary>
@@ -27,10 +25,9 @@ namespace Au.Util
 	/// <example>
 	/// Shows how to declare an ATreeBase-derived class, load tree of nodes from an XML file, find descendant nodes, save the tree to an XML file.
 	/// <code><![CDATA[
-	/// /*/ r System.Xml */
 	/// using System.Xml;
 	/// 
-	/// class MyTree :Au.Util.ATreeBase<MyTree>
+	/// class MyTree : Au.Util.ATreeBase<MyTree>
 	/// {
 	/// 	public string Name { get; set; }
 	/// 	public int Id { get; private set; }
@@ -42,13 +39,13 @@ namespace Au.Util
 	/// 	MyTree(XmlReader x, MyTree parent)
 	/// 	{
 	/// 		if(parent == null) { //the root XML element
-	/// 			if(x.Name != "example") throw new ArgumentException("XML root element name must be example");
+	/// 			if(x.Name != "example") throw new ArgumentException("XML root element must be 'example'");
 	/// 			IsFolder = true;
 	/// 		} else {
 	/// 			switch(x.Name) {
 	/// 			case "e": break;
 	/// 			case "f": IsFolder = true; break;
-	/// 			default: throw new ArgumentException("XML element name must be e or f");
+	/// 			default: throw new ArgumentException("XML element must be 'e' or 'f'");
 	/// 			}
 	/// #if true //two ways of reading attributes
 	/// 			Name = x["name"];
@@ -62,8 +59,8 @@ namespace Au.Util
 	/// 				}
 	/// 			}
 	/// #endif
-	/// 			if(Name.NE()) throw new ArgumentException("no name attribute in XML");
-	/// 			if(Id == 0) throw new ArgumentException("no id attribute in XML");
+	/// 			if(Name.NE()) throw new ArgumentException("no 'name' attribute in XML");
+	/// 			if(Id == 0) throw new ArgumentException("no 'id' attribute in XML");
 	/// 		}
 	/// 	}
 	/// 
@@ -364,6 +361,20 @@ namespace Au.Util
 					n = n._next;
 					yield return n;
 				} while(n != _lastChild);
+			}
+		}
+
+		/// <summary>
+		/// Gets number of direct child nodes.
+		/// </summary>
+		public int ChildCount {
+			get {
+				int r = 0;
+				if (_lastChild != null) {
+					var n = _lastChild;
+					do { r++; } while ((n = n._next) != _lastChild);
+				}
+				return r;
 			}
 		}
 

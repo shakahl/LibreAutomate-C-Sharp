@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,9 +13,6 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 using System.Globalization;
-
-using Au;
-using Au.Types;
 using System.Collections;
 
 namespace Au.Triggers
@@ -104,7 +103,7 @@ namespace Au.Triggers
 			if (flags == 0 && postfixType == 0 && postfixChars == null) {
 				_paramsString = text;
 			} else {
-				using (new Util.StringBuilder_(out var b)) {
+				using (new StringBuilder_(out var b)) {
 					b.Append(text);
 					if (flags != 0) b.Append("  (").Append(flags.ToString()).Append(')');
 					if (postfixType != 0) b.Append("  postfixType=").Append(postfixType.ToString());
@@ -369,8 +368,8 @@ namespace Au.Triggers
 		}
 
 		internal static unsafe bool ResetEverywhere {
-			get => Util.SharedMemory_.Ptr->triggers.resetAutotext;
-			set => Util.SharedMemory_.Ptr->triggers.resetAutotext = value;
+			get => SharedMemory_.Ptr->triggers.resetAutotext;
+			set => SharedMemory_.Ptr->triggers.resetAutotext = value;
 		}
 
 		unsafe void _Trigger(char c, bool isPK, AWnd wFocus, TriggerHookContext thc) {
@@ -574,7 +573,7 @@ namespace Au.Triggers
 		}
 
 		internal static unsafe void JitCompile() {
-			Util.AJit.Compile(typeof(AutotextTriggers), nameof(HookProc), nameof(_Trigger), nameof(_KeyToChar));
+			AJit.Compile(typeof(AutotextTriggers), nameof(HookProc), nameof(_Trigger), nameof(_KeyToChar));
 		}
 
 		/// <summary>

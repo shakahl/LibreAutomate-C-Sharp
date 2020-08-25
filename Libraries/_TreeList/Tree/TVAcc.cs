@@ -1,3 +1,5 @@
+using Au;
+using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -14,9 +16,6 @@ using System.Drawing;
 using System.Linq;
 
 using Aga.Controls.Tree.NodeControls;
-
-using Au;
-using Au.Types;
 
 namespace Aga.Controls.Tree
 {

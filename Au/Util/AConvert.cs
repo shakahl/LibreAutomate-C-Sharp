@@ -19,8 +19,8 @@ namespace Au.Util
 	/// <summary>
 	/// Data conversion functions - compress, hex-encode, Base64, UTF8.
 	/// </summary>
-	/// <seealso cref="Util.AHash"/>
-	/// <seealso cref="Util.AHash.MD5"/>
+	/// <seealso cref="AHash"/>
+	/// <seealso cref="AHash.MD5"/>
 	public unsafe class AConvert
 	{
 		#region hex encode

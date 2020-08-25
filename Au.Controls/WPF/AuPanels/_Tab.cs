@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -17,9 +18,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Markup;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls.WPF
 {
@@ -40,7 +38,7 @@ namespace Au.Controls.WPF
 				foreach (var e in x.Elements()) {
 					var p = new _Panel(pm, this, e);
 					_panels.Add(p);
-					var tp = new TabItem { Header = p.Name, Content = p.Elem };
+					var tp = new TabItem { Header = p.Name, Content = p.Elem, Tag = p };
 					_tc.Items.Add(tp);
 				}
 				Debug.Assert(_panels.Count >= 2); //see _AutoUpdateXml
@@ -50,9 +48,12 @@ namespace Au.Controls.WPF
 				_tc.TabStripPlacement = this.CaptionAt;
 				_tc.SizeChanged += (_, e) => {
 					switch (_tc.TabStripPlacement) { case Dock.Top: case Dock.Bottom: return; }
-					bool bigger = e.NewSize.Height > e.PreviousSize.Height; if (bigger == _vertHeader) return;
-					_VerticalTabHeader(e.NewSize.Height);
+					bool bigger = e.NewSize.Height > e.PreviousSize.Height;
+					if (bigger != _vertHeader) _VerticalTabHeader(e.NewSize.Height);
 				};
+
+				_tc.ContextMenuOpening += _ContextMenu;
+				_tc.PreviewMouseDown += _OnMouseDown;
 			}
 
 			public override FrameworkElement Elem => _tc;
@@ -67,7 +68,6 @@ namespace Au.Controls.WPF
 				_vertHeader = vert2;
 				var dock = _tc.TabStripPlacement;
 				foreach (var v in tabs) v.Style = vert2 ? (dock == Dock.Left ? s_styleL : s_styleR) : null;
-
 			}
 
 			void _DockTabHeader(Dock dock) {
@@ -81,12 +81,52 @@ namespace Au.Controls.WPF
 				if (sides) _VerticalTabHeader(_tc.ActualHeight);
 			}
 
+			public override Dock CaptionAt {
+				set {
+					base.CaptionAt = value;
+					_DockTabHeader(value);
+				}
+			}
+
 			public override void Save(XmlWriter x) {
 				x.WriteStartElement("tab");
 				base._SaveAttributes(x);
 				x.WriteAttributeString("active", _active.ToString());
 				foreach (var v in _panels) v.Save(x);
 				x.WriteEndElement();
+			}
+
+			public static _Panel PanelFromTabItem(TabItem ti) => ti.Tag as _Panel;
+
+			//TODO
+			protected override void _OnSetDockState(bool before, _DockState state, _DockState oldState) {
+				if (before) {
+					if (oldState == 0) { //was docked; now hide or float
+
+					}
+
+				} else {
+
+				}
+
+			}
+
+			public void HideTabItem(TabItem ti) {
+				if (ti == _tc.SelectedItem) {
+					var a = _tc.Items;
+					TabItem tiSelect = null;
+					int iSel = _tc.SelectedIndex, n = a.Count;
+					for (int i = iSel + 1; i < n; i++) if (a[i] is TabItem v && v.Visibility == Visibility.Visible) { tiSelect = v; break; }
+					if (tiSelect == null) for (int i = iSel; --i >=0; ) if (a[i] is TabItem v && v.Visibility == Visibility.Visible) { tiSelect = v; break; }
+					if (tiSelect != null) {
+						_tc.SelectedItem = tiSelect;
+					} else {
+						_tc.Visibility = Visibility.Collapsed;
+						_stack.HideNode(this);
+					}
+
+				}
+				ti.Visibility = Visibility.Collapsed;
 			}
 		}
 	}

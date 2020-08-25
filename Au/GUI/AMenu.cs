@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -12,8 +14,6 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -481,7 +481,7 @@ namespace Au
 		bool _showedOnce;
 		bool _inOurShow; //to detect when ContextMenuStrip.Show called not through AMenu.Show
 		bool _isModal; //depends on ModalAlways or Application.MessageLoop
-		Util.AMessageLoop _msgLoop = new Util.AMessageLoop();
+		AMessageLoop _msgLoop = new AMessageLoop();
 
 		/// <summary>
 		/// If false, disposes the menu when it is closed.

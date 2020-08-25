@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -11,11 +13,8 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Drawing.Drawing2D;
+//using System.Drawing.Drawing2D;
 using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls
 {
@@ -39,7 +38,7 @@ namespace Au.Controls
 				var gp = _gc as _Panel;
 
 				//we'll use this to prevent window activation on click, for toolbar and menubar classes that support it
-				_hasToolbar = (gp != null && gp.HasToolbar && (gp.Content is Util.AToolStrip || gp.Content is Util.AMenuStrip));
+				_hasToolbar = (gp != null && gp.HasToolbar && (gp.Content is AToolStrip || gp.Content is AMenuStrip));
 
 				this.SuspendLayout();
 				this.Font = _manager.Font;
@@ -214,14 +213,12 @@ namespace Au.Controls
 					var g = e.Graphics;
 					g.Clear(Color.Yellow);
 					if(!_rect.IsEmpty) {
-						var brush = new SolidBrush(Color.DodgerBlue);
+						using var brush = new SolidBrush(Color.DodgerBlue);
 						g.FillRectangle(brush, _rect);
-						brush.Dispose();
 					}
 					if(!_rectTabButton.IsEmpty) {
-						var pen = new Pen(Color.Red, 3);
+						using var pen = new Pen(Color.Red, 3);
 						g.DrawRectangle(pen, _rectTabButton);
-						pen.Dispose();
 					}
 				}
 
@@ -372,7 +369,7 @@ namespace Au.Controls
 				AWnd w = (AWnd)this;
 				RECT r = w.Rect;
 				Point offs = new Point(p.X - r.left, p.Y - r.top);
-				bool ok = Au.Util.ADragDrop.SimpleDragDrop(w, MButtons.Left, d =>
+				bool ok = ADragDrop.SimpleDragDrop(w, MButtons.Left, d =>
 				  {
 					  if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 

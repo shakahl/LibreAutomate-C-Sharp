@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,8 +13,6 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 using System.Collections;
-
-using Au.Types;
 
 namespace Au.Triggers
 {
@@ -200,7 +200,7 @@ namespace Au.Triggers
 			bool noMod = modKeys.NE();
 
 			string ps;
-			using (new Util.StringBuilder_(out var b)) {
+			using (new StringBuilder_(out var b)) {
 				b.Append(kind.ToString()).Append(' ').Append(sData);
 				b.Append(" + ").Append(noMod ? "none" : (modKeys == "?" ? "any" : modKeys));
 				if (flags != 0) b.Append(" (").Append(flags.ToString()).Append(')');
@@ -447,7 +447,7 @@ namespace Au.Triggers
 		}
 
 		internal static void JitCompile() {
-			Util.AJit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
+			AJit.Compile(typeof(MouseTriggers), nameof(HookProcClickWheel), nameof(HookProcEdgeMove), nameof(_HookProc2));
 			AWnd.FromXY(default, WXYFlags.NeedWindow);
 		}
 

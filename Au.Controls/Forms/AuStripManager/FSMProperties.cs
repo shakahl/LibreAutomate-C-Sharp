@@ -3,6 +3,7 @@
 //	Workaround: set AuStripManagerPropertiesDialog.resx Build Action = None.
 //	But then next time cannot edit form in designer. Workaround: briefly set build action =Compile, then set =None again. Default action is Embedded Resource.
 
+using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -18,9 +19,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls
 {

@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -228,7 +228,7 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not Timeout.Infinite.</exception>
 		/// <seealso cref="AWaitFor.MessagesAndCondition"/>
 		/// <seealso cref="AWaitFor.PostedMessage"/>
-		/// <seealso cref="Util.AMessageLoop"/>
+		/// <seealso cref="AMessageLoop"/>
 		public static void SleepDoEvents(int timeMS)
 		{
 			SleepDoEvents_(timeMS);

@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au.Triggers
 {
@@ -323,10 +323,10 @@ namespace Au.Triggers
 							//using var p1 = APerf.Create();
 							new AWnd.Finder("*a").IsMatch(AWnd.GetWnd.Root); //if used window scopes etc
 							_ = AHookWin.LowLevelHooksTimeout; //slow JIT of registry functions
-							Util.AJit.Compile(typeof(ActionTriggers), nameof(_WndProc), nameof(_KeyMouseEvent));
-							Util.AJit.Compile(typeof(TriggerHookContext), nameof(TriggerHookContext.InitContext), nameof(TriggerHookContext.PerfEnd), nameof(TriggerHookContext.PerfWarn));
-							Util.AJit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
-							Util.AJit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
+							AJit.Compile(typeof(ActionTriggers), nameof(_WndProc), nameof(_KeyMouseEvent));
+							AJit.Compile(typeof(TriggerHookContext), nameof(TriggerHookContext.InitContext), nameof(TriggerHookContext.PerfEnd), nameof(TriggerHookContext.PerfWarn));
+							AJit.Compile(typeof(ActionTrigger), nameof(ActionTrigger.MatchScopeWindowAndFunc));
+							AJit.Compile(typeof(HotkeyTriggers), nameof(HotkeyTriggers.HookProc));
 							AutotextTriggers.JitCompile();
 							MouseTriggers.JitCompile();
 						}
@@ -530,10 +530,10 @@ namespace Au.Triggers
 		/// <seealso cref="Disabled"/>
 		/// <seealso cref="TriggerOptions.EnabledAlways"/>
 		public static unsafe bool DisabledEverywhere {
-			get => Util.SharedMemory_.Ptr->triggers.disabled;
+			get => SharedMemory_.Ptr->triggers.disabled;
 			set {
 				if(value == DisabledEverywhere) return;
-				Util.SharedMemory_.Ptr->triggers.disabled = value;
+				SharedMemory_.Ptr->triggers.disabled = value;
 				var w = ATask.WndMsg_; if(!w.Is0) w.SendNotify(Api.WM_USER, 20); //update tray icon etc
 			}
 		}

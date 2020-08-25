@@ -1,5 +1,7 @@
 ﻿#define PREPAREMETHOD
 
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,8 +14,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 //rejected: store the static instance in shared memory. This is how it was implemented initially.
 //	Then would be easy to measure speed of process startup.
@@ -42,11 +42,11 @@ namespace Au
 			static Local()
 			{
 				//Prevent JIT delay when calling Next etc if not ngened.
-				//if(!Util.Assembly_.IsAuNgened) { //unnecessary and makes slower
+				//if(!Assembly_.IsAuNgened) { //unnecessary and makes slower
 #if PREPAREMETHOD
-				Util.AJit.Compile(typeof(Local), "Next", "NW", "Dispose");
+				AJit.Compile(typeof(Local), "Next", "NW", "Dispose");
 #if DEBUG //else these methods are inlined
-				Util.AJit.Compile(typeof(APerf), "Next", "NW");
+				AJit.Compile(typeof(APerf), "Next", "NW");
 #endif
 #else //similar speed
 				APerf.Next(); APerf.NW(); APerf.First(); //JIT-compiles everything we need. s_enabled prevents calling AOutput.Write etc.
@@ -175,7 +175,7 @@ namespace Au
 			/// </summary>
 			public override string ToString()
 			{
-				using(new Util.StringBuilder_(out var b)) {
+				using(new StringBuilder_(out var b)) {
 					b.Append("speed:");
 					_Results(Math.Min(_counter, _nElem), b, null);
 					return b.ToString();
@@ -431,6 +431,6 @@ namespace Au
 		/// APerf.Shared.First();
 		/// ]]></code>
 		/// </example>
-		public static ref Local Shared => ref Util.SharedMemory_.Ptr->perf;
+		public static ref Local Shared => ref SharedMemory_.Ptr->perf;
 	}
 }

@@ -14,6 +14,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Compiler;
 using Au.Controls;
 
@@ -72,7 +73,7 @@ static class Run
 
 		if(r.role == ERole.editorExtension) {
 			RunAssembly.Run(r.file, args, RAFlags.InEditorThread);
-			return (int)ATask.ERunResult.editorThread;
+			return (int)ATask.RunResult_.editorThread;
 		}
 
 		return Program.Tasks.RunCompiled(f, r, args, noDefer, wrPipeName, runFromEditor: runFromEditor);
@@ -226,7 +227,7 @@ class RunningTasks
 		_wMain = (AWnd)Program.MainForm;
 		Program.Timer1sOr025s += _TimerUpdateUI;
 		ATask.Init_(ATRole.EditorExtension);
-		Au.Util.Log_.Run.Start();
+		Log_.Run.Start();
 	}
 
 	public void OnWorkspaceClosed()
@@ -492,7 +493,7 @@ class RunningTasks
 		bool bit32 = r.prefer32bit || AVersion.Is32BitOS;
 		if(r.notInCache) { //meta role exeProgram
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
-			argsString = args == null ? null : Au.Util.AStringUtil.CommandLineFromArray(args);
+			argsString = args == null ? null : AStringUtil.CommandLineFromArray(args);
 		} else {
 			exeFile = AFolders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 
@@ -500,7 +501,7 @@ class RunningTasks
 			int iFlags = 0;
 			if(r.mtaThread) iFlags |= 2;
 			if(r.console) iFlags |= 4;
-			taskArgs = Au.Util.Serializer_.Serialize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
+			taskArgs = Serializer_.Serialize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
 			wrPipeName = null;
 
 			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;
@@ -521,12 +522,12 @@ class RunningTasks
 			Api.AllowSetForegroundWindow(pid);
 
 			if(pre != null) {
-				if(taskArgs.Length > Au.Util.SharedMemory_.TasksDataSize_) throw new ArgumentException("Too long task arguments data."); //TODO
+				if(taskArgs.Length > SharedMemory_.TasksDataSize_) throw new ArgumentException("Too long task arguments data."); //TODO
 																																		 //AOutput.Write(taskArgs.Length);
-				var m = Au.Util.SharedMemory_.Ptr;
+				var m = SharedMemory_.Ptr;
 				m->tasks.size = taskArgs.Length;
 				//AOutput.Write(taskArgs.Length, taskArgs);
-				fixed(byte* p = taskArgs) Buffer.MemoryCopy(p, m->tasks.data, Au.Util.SharedMemory_.TasksDataSize_, taskArgs.Length);
+				fixed(byte* p = taskArgs) Buffer.MemoryCopy(p, m->tasks.data, SharedMemory_.TasksDataSize_, taskArgs.Length);
 				Api.SetEvent(pre.hEvent);
 				//500.ms();
 
@@ -600,7 +601,7 @@ class RunningTasks
 				break;
 			case EIfRunning.wait when !noDefer:
 				_q.Insert(0, new _WaitingTask(f, r, args));
-				return (int)ATask.ERunResult.deferred; //-1
+				return (int)ATask.RunResult_.deferred; //-1
 			case EIfRunning.restart when _EndTask(running):
 				goto g1;
 			default: //warn
@@ -649,7 +650,7 @@ class RunningTasks
 		bool bit32 = r.prefer32bit || AVersion.Is32BitOS;
 		if(r.notInCache) { //meta role exeProgram
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
-			argsString = args == null ? null : Au.Util.AStringUtil.CommandLineFromArray(args);
+			argsString = args == null ? null : AStringUtil.CommandLineFromArray(args);
 		} else {
 			exeFile = AFolders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 
@@ -657,7 +658,7 @@ class RunningTasks
 			int iFlags = 0;
 			if(r.mtaThread) iFlags |= 2;
 			if(r.console) iFlags |= 4;
-			taskParams = Au.Util.Serializer_.SerializeWithSize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
+			taskParams = Serializer_.SerializeWithSize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
 			wrPipeName = null;
 
 			if(bit32 && !AVersion.Is32BitOS) preIndex += 3;
@@ -766,8 +767,8 @@ class RunningTasks
 			//note: don't try to start task without UAC consent. It is not secure.
 			//	Normally Au editor runs as admin in admin user account, and don't need to go through this.
 		} else {
-			var ps = new Au.Util.ProcessStarter_(exeFile, args, "", envVar: wrPipeName, rawExe: true);
-			var need = Au.Util.ProcessStarter_.Result.Need.WaitHandle;
+			var ps = new ProcessStarter_(exeFile, args, "", envVar: wrPipeName, rawExe: true);
+			var need = ProcessStarter_.Result.Need.WaitHandle;
 			var psr = uac == _SpUac.userFromAdmin ? ps.StartUserIL(need) : ps.Start(need, inheritUiaccess: uac == _SpUac.uiAccess);
 			return (psr.pid, psr.waitHandle);
 		}

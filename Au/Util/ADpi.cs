@@ -15,7 +15,7 @@ using Au.Types;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 
-namespace Au
+namespace Au.Util
 {
 	/// <summary>
 	/// Functions for high-DPI screen support.
@@ -34,7 +34,7 @@ namespace Au
 		public static int OfThisProcess {
 			get {
 				if (_processDPI == 0) {
-					using var dcs = new Util.ScreenDC_(0);
+					using var dcs = new ScreenDC_(0);
 					_processDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
 				}
 				return _processDPI;
@@ -183,6 +183,30 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Calls API <msdn>GetSystemMetricsForDpi</msdn> if available, else <msdn>GetSystemMetrics</msdn>.
+		/// </summary>
+		public static int GetSystemMetrics(int nIndex, DpiOf dpiOf)
+			=> AVersion.MinWin10_1607
+			? Api.GetSystemMetricsForDpi(nIndex, dpiOf)
+			: Api.GetSystemMetrics(nIndex);
+
+		/// <summary>
+		/// Calls API <msdn>SystemParametersInfoForDpi</msdn> if available, else <msdn>SystemParametersInfo</msdn>.
+		/// </summary>
+		public static bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni, DpiOf dpiOf)
+			=> AVersion.MinWin10_1607
+			? Api.SystemParametersInfoForDpi(uiAction, uiParam, pvParam, fWinIni, dpiOf)
+			: Api.SystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
+
+		/// <summary>
+		/// Calls API <msdn>AdjustWindowRectExForDpi</msdn> if available, else <msdn>AdjustWindowRectEx</msdn>.
+		/// </summary>
+		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WS2 exStyle, bool hasMenu=false)
+			=> AVersion.MinWin10_1607
+			? Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpiOf)
+			: Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
+
+		/// <summary>
 		/// Can be used to temporarily change thread's DPI awareness context with API <msdn>SetThreadDpiAwarenessContext</msdn>.
 		/// Does nothing if the API is unavailable (added in Windows 10 version 1607).
 		/// </summary>
@@ -231,6 +255,8 @@ namespace Au
 
 namespace Au.Types
 {
+	using Au.Util;
+
 	/// <summary>
 	/// Used for <i>DPI</i> parameter of functions.
 	/// Has implicit conversions from int (DPI), AWnd (DPI of window), IntPtr (DPI of screen handle), POINT (DPI of screen containing point), RECT (DPI of screen containing rectangle), forms Control, WPF DependencyObject. The conversion operators set the <see cref="Dpi"/> property and the function can use it.

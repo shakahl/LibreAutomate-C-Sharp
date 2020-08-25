@@ -344,7 +344,7 @@ namespace Au
 		/// <exception cref="AuException">Failed. For example, window of a higher [](xref:uac) integrity level process.</exception>
 		/// 
 		/// <remarks>
-		/// To create code for this function, use dialog "Find accessible object". It is form <b>Au.Tools.FormAAcc</b> in Au.Tools.dll.
+		/// To create code for this function, use dialog "Find accessible object".
 		/// 
 		/// Walks the tree of accessible objects, until finds a matching AO.
 		/// 
@@ -388,7 +388,7 @@ namespace Au
 		/// 
 		/// - <c>"class"</c> - search only in child controls that have this class name (see <see cref="AWnd.ClassName"/>).
 		/// Cannot be used when searching in an AO.
-		/// - <c>"id"</c> - search only in child controls that have this id (see <see cref="AWnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="AWnd.NameWinForms"/>); case-sensitive, not wildcard.
+		/// - <c>"id"</c> - search only in child controls that have this id (see <see cref="AWnd.ControlId"/>). If the value is not a number - Windows Forms control name (see <see cref="AWnd.NameWinforms"/>); case-sensitive, not wildcard.
 		/// Cannot be used when searching in an AO.
 		/// - <c>"value"</c> - <see cref="Value"/>.
 		/// - <c>"description"</c> - <see cref="Description"/>.

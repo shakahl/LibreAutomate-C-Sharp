@@ -16,7 +16,7 @@ using Au.Types;
 namespace Au.Util
 {
 	/// <summary>
-	/// Gets item id, text and other info of a classic popup menu.
+	/// Gets item id, text and other info of a classic menu.
 	/// </summary>
 	public class AMenuItemInfo
 	{

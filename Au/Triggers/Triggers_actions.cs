@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au.Triggers
 {
@@ -223,7 +223,7 @@ namespace Au.Triggers
 					//APerf.Next();
 					if(ATask.Role == ATRole.MiniProgram) {
 						sTrigger = trigger.ToString();
-						Util.Log_.Run.Write("Action started. Trigger: " + sTrigger);
+						Log_.Run.Write("Action started. Trigger: " + sTrigger);
 						//APerf.Next();
 					}
 
@@ -243,10 +243,10 @@ namespace Au.Triggers
 						//APerf.NW();
 						trigger.Run(args);
 
-						if(sTrigger != null) Util.Log_.Run.Write("Action ended. Trigger: " + sTrigger);
+						if(sTrigger != null) Log_.Run.Write("Action ended. Trigger: " + sTrigger);
 					}
 					catch(Exception e1) {
-						if(sTrigger != null) Util.Log_.Run.Write($"Action failed. Trigger: {sTrigger}. Exception: {e1.ToStringWithoutStack()}");
+						if(sTrigger != null) Log_.Run.Write($"Action failed. Trigger: {sTrigger}. Exception: {e1.ToStringWithoutStack()}");
 
 						baArgs.Exception = e1;
 						AOutput.Write(e1);

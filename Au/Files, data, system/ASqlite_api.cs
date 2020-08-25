@@ -1,3 +1,4 @@
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,9 +11,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 //Most of these declarations are from System.Data.SQLite library. Modified.
 
@@ -632,7 +630,7 @@ namespace Au.Types
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern byte* sqlite3_errmsg(IntPtr db);
 
-		internal static string Errmsg(IntPtr db) => Util.AConvert.FromUtf8(sqlite3_errmsg(db));
+		internal static string Errmsg(IntPtr db) => AConvert.FromUtf8(sqlite3_errmsg(db));
 
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern SLError sqlite3_prepare16_v3(IntPtr db, char* sql, int nBytes, int prepFlags, ref IntPtr stmt, char** ptrRemain);
@@ -933,7 +931,7 @@ namespace Au.Types
 		[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		internal static extern byte* sqlite3_errstr(SLError rc);
 
-		internal static string Errstr(SLError r) => Util.AConvert.FromUtf8(sqlite3_errstr(r));
+		internal static string Errstr(SLError r) => AConvert.FromUtf8(sqlite3_errstr(r));
 
 		//[DllImport(SQLITE_DLL, CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern void sqlite3_log(SLError iErrCode, byte[] zFormat);

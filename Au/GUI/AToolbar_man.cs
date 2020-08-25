@@ -374,7 +374,7 @@ namespace Au
 			}
 		}
 
-		void _ManageFullScreen(AWnd wFore, AScreen.ScreenHandle screen)
+		void _ManageFullScreen(AWnd wFore, ScreenHandle screen)
 		{
 			if(_inMoveSize) return;
 			bool hide;

@@ -1,3 +1,4 @@
+using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,9 +11,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au
 {

@@ -157,7 +157,7 @@ namespace Au.Tools
 							cls = TUtil.StripWndClassName(cls, true);
 							string name = con.Name, prefix = null;
 							if(name.NE()) {
-								name = con.NameWinForms;
+								name = con.NameWinforms;
 								if(!name.NE()) prefix = "***wfName ";
 								else {
 									var nameAcc = con.NameAcc;

@@ -93,7 +93,7 @@ namespace Au
 			//named keys
 			//names start with an uppercase letter and must have at least 2 other anycase letters, except: Up, AltG (RAl), PageU (PgU), PageD (PgD), some alternative names (PU, PD, PB, PS, HM, SL, CL, NL, BS).
 			KKey k = 0;
-			char c1 = Char.ToLowerInvariant(s[i + 1]), //note: Util.Tables_.LowerCase would make startup slow
+			char c1 = Char.ToLowerInvariant(s[i + 1]), //note: Tables_.LowerCase would make startup slow
 				c2 = len > 2 ? Char.ToLowerInvariant(s[i + 2]) : ' ',
 				c3 = len > 3 ? Char.ToLowerInvariant(s[i + 3]) : ' ',
 				c4 = len > 4 ? Char.ToLowerInvariant(s[i + 4]) : ' ';

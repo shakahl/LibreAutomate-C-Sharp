@@ -19,11 +19,20 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <Prefer32Bit>false</Prefer32Bit>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="excluded\CiPopupListWPF.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="excluded\CiPopupListWPF.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Markdig" Version="0.18.3" />

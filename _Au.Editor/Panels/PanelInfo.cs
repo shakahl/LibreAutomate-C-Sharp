@@ -15,6 +15,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Controls;
 using TheArtOfDev.HtmlRenderer.WinForms;
 using TheArtOfDev.HtmlRenderer.Core.Entities;
@@ -22,7 +23,7 @@ using TheArtOfDev.HtmlRenderer.Core.Entities;
 class PanelInfo : AuUserControlBase
 {
 	HtmlPanel _html;
-	Au.Controls.AuScintilla _sci;
+	AuScintilla _sci;
 
 	public PanelInfo()
 	{
@@ -131,7 +132,7 @@ class PanelInfo : AuUserControlBase
 			_isCodeInfo = false;
 			_sci.BringToFront();
 		}
-		using(new Au.Util.StringBuilder_(out var b, 1000)) {
+		using(new StringBuilder_(out var b, 1000)) {
 			var cn = w.ClassName;
 			if(cn != null) {
 				var pc = p; w.MapScreenToClient(ref pc);
@@ -144,7 +145,7 @@ class PanelInfo : AuUserControlBase
 					var ct = c.Name;
 					if (!ct.NE()) b.Append("\r\n\t<b>name</b>  ").Append(ct.Escape(200));
 				} else if(cn == "#32768") {
-					var m = Au.Util.AMenuItemInfo.FromXY(p, w, 50);
+					var m = AMenuItemInfo.FromXY(p, w, 50);
 					if(m != null) {
 						b.AppendFormat("\r\n<b>Menu   id</b>  {0}", m.ItemId);
 						if(m.IsSystem) b.Append(" (system)");

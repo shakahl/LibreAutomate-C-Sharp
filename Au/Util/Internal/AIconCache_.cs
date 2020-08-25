@@ -16,7 +16,6 @@ using System.Drawing;
 using System.Drawing.Imaging;
 
 using Au.Types;
-using Au.Util;
 
 namespace Au
 {
@@ -24,7 +23,7 @@ namespace Au
 	/// Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
 	/// </summary>
 	/// <threadsafety static="true" instance="true"/>
-	internal sealed class AIconCache
+	internal sealed class AIconCache_
 	{
 		XElement _x;
 		Hashtable _table;
@@ -33,7 +32,7 @@ namespace Au
 		bool _dirty;
 
 		///
-		public AIconCache(string cacheFile, int iconSize)
+		public AIconCache_(string cacheFile, int iconSize)
 		{
 			_cacheFile = cacheFile;
 			_iconSize = iconSize;
@@ -114,7 +113,7 @@ namespace Au
 		/// Returns null if the icon is not cached and the callback function returns null.
 		/// </summary>
 		/// <param name="name">Some unique name. It is used to identify this image in cache.</param>
-		/// <param name="callback">Called to get image. See <see cref="AIcon.ToBitmap"/>.</param>
+		/// <param name="callback">Called to get image. See <see cref="AIcon.ToWinformsBitmap"/>.</param>
 		/// <param name="autoUpdate"></param>
 		/// <param name="auParam"></param>
 		/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
@@ -184,7 +183,7 @@ namespace Au
 		bool _LoadImage(out Bitmap b, string file, IconGetFlags giFlags, Func<Bitmap> callback)
 		{
 			if(callback != null) b = callback();
-			else b = AIcon.OfFile(file, _iconSize, giFlags).ToBitmap();
+			else b = AIcon.OfFile(file, _iconSize, giFlags).ToWinformsBitmap();
 			return b != null;
 		}
 
@@ -264,7 +263,7 @@ namespace Au
 
 		class _AUData
 		{
-			public AIconCache cache;
+			public AIconCache_ cache;
 			public Bitmap oldImage;
 			public string file;
 			public Func<Bitmap> callback;

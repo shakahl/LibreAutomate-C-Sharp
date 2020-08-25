@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,9 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au
 {
@@ -54,7 +53,7 @@ namespace Au
 			//info: we don't call .NET functions directly to avoid loading assemblies.
 
 			isWPF = false;
-			int f = Util.Assembly_.IsLoadedFormsWpf();
+			int f = Assembly_.IsLoadedWinformsWpf();
 			if(0 != (f & 1) && _HML_Forms()) return true;
 			if(0 != (f & 2) && _HML_Wpf()) return isWPF = true;
 			return false;

@@ -27,6 +27,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>SetLayeredWindowAttributes</msdn>.
 		/// On Windows 7 works only with top-level windows, on newer OS also with controls.
+		/// Does not work with WPF windows, class name "HwndWrapper*".
 		/// </remarks>
 		public void SetTransparency(bool allowTransparency, int? opacity = null, ColorInt? colorKey = null) {
 			var est = ExStyle;
@@ -49,7 +50,7 @@ namespace Au
 		/// </summary>
 		public bool IsFullScreen => IsFullScreen_(out _);
 
-		internal unsafe bool IsFullScreen_(out AScreen.ScreenHandle screen) {
+		internal unsafe bool IsFullScreen_(out ScreenHandle screen) {
 			screen = default;
 			if (Is0) return false;
 
@@ -86,17 +87,17 @@ namespace Au
 		/// Returns true if this belongs to GetShellWindow's thread (usually it is the desktop window).
 		/// </summary>
 		internal bool IsOfShellThread_ {
-			get => 1 == __isShellWindow.IsShellWindow(this);
+			get => 1 == s_isShellWindow.IsShellWindow(this);
 		}
 
 		/// <summary>
 		/// Returns true if this belongs to GetShellWindow's process (eg a folder window, desktop, taskbar).
 		/// </summary>
 		internal bool IsOfShellProcess_ {
-			get => 0 != __isShellWindow.IsShellWindow(this);
+			get => 0 != s_isShellWindow.IsShellWindow(this);
 		}
 
-		struct __ISSHELLWINDOW
+		struct _ISSHELLWINDOW
 		{
 			int _tidW, _tidD, _pidW, _pidD;
 			IntPtr _w, _wDesk; //not AWnd because then TypeLoadException
@@ -115,7 +116,7 @@ namespace Au
 				return 0;
 			}
 		}
-		static __ISSHELLWINDOW __isShellWindow;
+		static _ISSHELLWINDOW s_isShellWindow;
 
 		/// <summary>
 		/// Returns true if this window has Metro style, ie is not a classic desktop window.

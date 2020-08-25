@@ -156,14 +156,13 @@ namespace Au
 				/// <summary>
 				/// Gets real rectangle for restoring saved window rectangle.
 				/// </summary>
-				/// <param name="forWpf">If screen DPI is not 96 (100%), scale the rectangle for DPI 96. Use with WPF windows.</param>
 				/// <remarks>
 				/// It is recommended to call this before creating window, and create window with the returned rectangle. Also set maximized state if <see cref="Maximize"/>.
-				/// If it is not possible, can be called later, for example when window is created but still invisible. However then may need to set window rectangle two times, because the window may be for example DPI-scaled when moving to another screen etc.
+				/// If it is not possible, can be called later, for example when window is created but still invisible. However then possible various problems, for example may need to set window rectangle two times, because the window may be for example DPI-scaled when moving to another screen etc.
 				/// 
 				/// This function ensures the window is in screen, ensures correct size when screen DPI changed, etc.
 				/// </remarks>
-				public RECT NormalizeRect(bool forWpf = false) {
+				public RECT NormalizeRect() {
 					var r = _r;
 					var scr = AScreen.Of(r);
 					int dpi = scr.Dpi;
@@ -176,14 +175,7 @@ namespace Au
 						var v = scr.GetInfo();
 						r.Offset(v.workArea.left - v.bounds.left, v.workArea.top - v.bounds.top);
 					}
-					r.EnsureInScreen(new AScreen(scr), !IsToolWindow); //TODO: use simple rect adjust. Or add EnsureInRect.
-					if (forWpf && dpi != 96) {
-						int cx = r.Width, cy = r.Height;
-						r.left = AMath.MulDiv(r.left, 96, dpi);
-						r.top = AMath.MulDiv(r.top, 96, dpi);
-						r.Width = AMath.MulDiv(cx, 96, dpi);
-						r.Height = AMath.MulDiv(cy, 96, dpi);
-					}
+					r.EnsureInScreen(new AScreen(scr), !IsToolWindow); //SHOULDDO: use simple rect adjust. Or add EnsureInRect.
 					return r;
 				}
 
@@ -208,21 +200,20 @@ namespace Au
 				}
 
 				/// <summary>
-				/// Calls <see cref="FromString"/>. If it returns true, sets <i>w</i> bounds = <see cref="NormalizeRect"/>, maximizes if need, StartPosition=Manual, and returns true.
+				/// Calls <see cref="FromString"/>. If it returns true, calls <see cref="NormalizeRect"/>, <see cref="AExtWpf.SetRect"/>, maximizes if need and returns true.
 				/// Call this function before showing window.
 				/// </summary>
 				/// <param name="w"></param>
 				/// <param name="saved">String created by <see cref="ToString"/>.</param>
 				/// <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
-				/// <param name="clearSizeToContent">Set <see cref="System.Windows.Window.SizeToContent"/> = <b>Manual</b>.</param>
-				public static bool Restore(System.Windows.Window w, string saved, Action<string> save = null, bool clearSizeToContent = false) {
+				/// <exception cref="InvalidOperationException">Window is loaded.</exception>
+				public static bool Restore(System.Windows.Window w, string saved, Action<string> save = null) {
+					if (w.IsLoaded) throw new InvalidOperationException("Window is loaded.");
 					bool ret = FromString(saved, out var v);
 					if (ret) {
-						w.WindowStartupLocation = System.Windows.WindowStartupLocation.Manual;
-						if (clearSizeToContent || v.Maximize) w.SizeToContent = default;
-						var r = v.NormalizeRect(forWpf: true);
-						w.Left = r.left; w.Top = r.top; w.Width = r.Width; w.Height = r.Height;
+						var r = v.NormalizeRect();
 						if (v.Maximize) w.WindowState = System.Windows.WindowState.Maximized;
+						w.SetRect(r); //TODO: test
 					}
 					if (save != null) {
 						w.Closing += (o, _) => save(new SavedRect(o as System.Windows.Window).ToString());

@@ -111,16 +111,19 @@ namespace Au
 		//	}
 		//}
 
+		static class _Api
+		{
 #pragma warning disable 649
-		struct TOKEN_MANDATORY_LABEL { internal IntPtr Sid; internal uint Attributes; }
+			internal struct TOKEN_MANDATORY_LABEL { public IntPtr Sid; public uint Attributes; }
 #pragma warning restore 649
-		const uint SECURITY_MANDATORY_UNTRUSTED_RID = 0x00000000;
-		const uint SECURITY_MANDATORY_LOW_RID = 0x00001000;
-		const uint SECURITY_MANDATORY_MEDIUM_RID = 0x00002000;
-		const uint SECURITY_MANDATORY_MEDIUM_PLUS_RID = SECURITY_MANDATORY_MEDIUM_RID + 0x100;
-		const uint SECURITY_MANDATORY_HIGH_RID = 0x00003000;
-		const uint SECURITY_MANDATORY_SYSTEM_RID = 0x00004000;
-		const uint SECURITY_MANDATORY_PROTECTED_PROCESS_RID = 0x00005000;
+			internal const uint SECURITY_MANDATORY_UNTRUSTED_RID = 0x00000000;
+			internal const uint SECURITY_MANDATORY_LOW_RID = 0x00001000;
+			internal const uint SECURITY_MANDATORY_MEDIUM_RID = 0x00002000;
+			internal const uint SECURITY_MANDATORY_MEDIUM_PLUS_RID = SECURITY_MANDATORY_MEDIUM_RID + 0x100;
+			internal const uint SECURITY_MANDATORY_HIGH_RID = 0x00003000;
+			internal const uint SECURITY_MANDATORY_SYSTEM_RID = 0x00004000;
+			internal const uint SECURITY_MANDATORY_PROTECTED_PROCESS_RID = 0x00005000;
+		}
 
 		/// <summary>
 		/// Gets the [](xref:uac) integrity level (IL) of the process.
@@ -139,17 +142,17 @@ namespace Au
 					if(ALastError.Code != Api.ERROR_INSUFFICIENT_BUFFER) _haveIntegrityLevel = 2;
 					else {
 						var b = stackalloc byte[(int)siz];
-						var tml = (TOKEN_MANDATORY_LABEL*)b;
+						var tml = (_Api.TOKEN_MANDATORY_LABEL*)b;
 						if(!Api.GetTokenInformation(_HtokenHR, Api.TOKEN_INFORMATION_CLASS.TokenIntegrityLevel, tml, siz, out siz)) _haveIntegrityLevel = 2;
 						uint x = *Api.GetSidSubAuthority(tml->Sid, (uint)(*Api.GetSidSubAuthorityCount(tml->Sid) - 1));
 
-						if(x < SECURITY_MANDATORY_LOW_RID) _integrityLevel = UacIL.Untrusted;
-						else if(x < SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = UacIL.Low;
-						else if(x < SECURITY_MANDATORY_HIGH_RID) _integrityLevel = UacIL.Medium;
-						else if(x < SECURITY_MANDATORY_SYSTEM_RID) {
+						if(x < _Api.SECURITY_MANDATORY_LOW_RID) _integrityLevel = UacIL.Untrusted;
+						else if(x < _Api.SECURITY_MANDATORY_MEDIUM_RID) _integrityLevel = UacIL.Low;
+						else if(x < _Api.SECURITY_MANDATORY_HIGH_RID) _integrityLevel = UacIL.Medium;
+						else if(x < _Api.SECURITY_MANDATORY_SYSTEM_RID) {
 							if(IsUIAccess && Elevation != UacElevation.Full) _integrityLevel = UacIL.UIAccess; //fast. Note: don't use if(andUIAccess) here.
 							else _integrityLevel = UacIL.High;
-						} else if(x < SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = UacIL.System;
+						} else if(x < _Api.SECURITY_MANDATORY_PROTECTED_PROCESS_RID) _integrityLevel = UacIL.System;
 						else _integrityLevel = UacIL.Protected;
 					}
 				}

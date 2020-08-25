@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -14,9 +16,6 @@ using System.Drawing;
 //using System.Linq;
 using System.Xml.Linq;
 using System.Xml;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls
 {
@@ -261,7 +260,7 @@ namespace Au.Controls
 				bool vert = this.IsVerticalSplit;
 				var p = _manager.MouseClientXY();
 				var offset = vert ? (p.x - this.SplitterBounds.X) : (p.y - this.SplitterBounds.Y);
-				Au.Util.ADragDrop.SimpleDragDrop(_manager, MButtons.Left, d => {
+				ADragDrop.SimpleDragDrop(_manager, MButtons.Left, d => {
 					if(d.Msg.message != Api.WM_MOUSEMOVE) return;
 					p = _manager.MouseClientXY();
 					var b = this.Bounds;

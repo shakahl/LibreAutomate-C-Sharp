@@ -1,3 +1,4 @@
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,11 +11,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
 using System.Text.RegularExpressions; //for XML doc links
-
-using Au;
-using Au.Types;
 
 namespace Au.Types
 {
@@ -242,7 +239,7 @@ namespace Au.Types
 		public string ExpandReplacement(string repl)
 		{
 			if(repl.NE()) return repl;
-			using(new Util.StringBuilder_(out var b)) {
+			using(new StringBuilder_(out var b)) {
 				ARegex.ExpandReplacement_(this, repl, b);
 				return b.ToString();
 			}

@@ -334,7 +334,7 @@ public:
 				if(!(_flags & eAF::HiddenToo) && !wnd::IsVisibleInWindow(c, w)) return true; //not IsWindowVisible, because we want to find controls in invisible windows
 				if(!!(_flags2 & eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
 				if(_controlClass.Is() && !wnd::ClassNameIs(c, _controlClass)) return true;
-				if(_controlWF != null && !wnd::WinFormsNameIs(c, _controlWF)) return true;
+				if(_controlWF != null && !wnd::WinformsNameIs(c, _controlWF)) return true;
 				return (bool)_FindInWnd(c, true);
 			});
 		} else {

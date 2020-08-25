@@ -1,5 +1,7 @@
 ﻿//#define SYSTEM_RENDERER //good: button highlighting looks like of most toolbars. bad: alpha-blends button highlighting, almost invisible if dark background; highligted buttons are different than drop-down menu items.
 
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -15,8 +17,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 
-using Au.Types;
-
 namespace Au
 {
 	public partial class AToolbar
@@ -24,7 +24,7 @@ namespace Au
 		/// <summary>
 		/// The type of <see cref="Control"/>. Inherits from <see cref="ToolStrip"/>.
 		/// </summary>
-		public class ToolStripWindow : Util.AToolStrip, _IAuToolStrip
+		public class ToolStripWindow : AToolStrip, _IAuToolStrip
 		{
 			[ThreadStatic] static TBRenderer t_renderer;
 			AToolbar _tb;
@@ -98,7 +98,7 @@ namespace Au
 					WS s1 = w.Style, s2 = _BorderStyle(value);
 					if(s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2);
 					//preserve client size and position
-					AWnd.More.WindowRectFromClientRect(ref r, _BorderStyle(value), WS2.TOOLWINDOW);
+					ADpi.AdjustWindowRectEx(r, ref r, _BorderStyle(value), WS2.TOOLWINDOW);
 					w.MoveLL(r, Native.SWP.FRAMECHANGED);
 				}
 #else //this simpler code does not preserve client size and position
@@ -191,7 +191,7 @@ namespace Au
 
 			void _WmCreate()
 			{
-				Util.ACursor.SetArrowCursor_();
+				ACursor.SetArrowCursor_();
 				var tr = _tb._transparency;
 				if(tr != default) this.Hwnd().SetTransparency(true, tr.opacity, tr.colorKey);
 			}
@@ -233,7 +233,7 @@ namespace Au
 			//	try {
 			//		var w = (AWnd)this;
 			//		var pp = AMouse.XY;
-			//		Util.ADragDrop.SimpleDragDrop(w, MButtons.Left, o => {
+			//		ADragDrop.SimpleDragDrop(w, MButtons.Left, o => {
 			//			if(o.Msg.message != Api.WM_MOUSEMOVE) return;
 			//			var p = AMouse.XY; if(p == pp) return;
 			//			var r = w.Rect;
@@ -290,7 +290,7 @@ namespace Au
 			bool _WmNcpaint(AWnd w)
 			{
 				if(_tb.BorderColor == 0 || _tb._border < TBBorder.Width1 || _tb._border > TBBorder.Width4) return false;
-				using var dc = new Util.WindowDC_(Api.GetWindowDC(w), w);
+				using var dc = new WindowDC_(Api.GetWindowDC(w), w);
 				using var g = Graphics.FromHdc(dc);
 				var r = w.Rect; r.Offset(-r.left, -r.top);
 				ControlPaint.DrawBorder(g, r, (Color)_tb.BorderColor, ButtonBorderStyle.Solid);
@@ -426,7 +426,7 @@ namespace Au
 					_contextMenu = m;
 				}
 
-				bool canEdit = !no.Has(TBNoMenu.Edit) && Util.AScriptEditor.Available;
+				bool canEdit = !no.Has(TBNoMenu.Edit) && AScriptEditor.Available;
 				_cmItems.edit.Visible = canEdit;
 				_cmItems.sepEdit.Visible = canEdit;
 				_cmItems.anchor.Visible = !no.Has(TBNoMenu.Anchor);

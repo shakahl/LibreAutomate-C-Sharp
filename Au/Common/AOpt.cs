@@ -527,6 +527,12 @@ namespace Au.Types
 		public bool Relaxed { get => _o.Relaxed; set => _o.Relaxed = value; }
 	}
 
+	//CONSIDER: rename. Eg OpKey. Because Au.Types does not have more AName, only these. Also AccEVENT -> AcEVENT etc. Or AuOptKey, AuAccEVENT.
+	//	Or change autocompletion sorting: if there are Au.AName and Au.Types.NameEtc, when typing "name" select AName, not NameEtc.
+	//		But what if user actually wants to type the one from Au.Types?
+	//CONSIDER: for flags enums use FSomething instead of SFlags. Other enums - ESomething. Delegates DSomething. Other Au.Types types - TSomething.
+	//CONSIDER: rename AAcc -> AObj. But in autocompletion conflicts with AOpt and AOutput. No, better AAcc.
+
 	/// <summary>
 	/// Options for functions of class <see cref="AKeys"/>.
 	/// Some options also are used with <see cref="AClipboard"/> functions that send keys (Ctrl+V etc).

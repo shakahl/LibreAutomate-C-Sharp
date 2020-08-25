@@ -9,93 +9,189 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Linq;
+//using System.Linq;
 using System.Resources;
 using System.Globalization;
+using System.Windows.Media.Imaging;
+using System.Collections.Concurrent;
 
 using Au.Types;
 
 namespace Au.Util
 {
-	//TODO: broken
 	/// <summary>
-	/// Functions to work with managed resources.
+	/// Gets managed resources from a .NET assembly.
 	/// </summary>
+	/// <remarks>
+	/// Internally uses <see cref="ResourceManager"/>. Uses <see cref="CultureInfo.InvariantCulture"/>.
+	/// Loads resources from manifest resource "AssemblyName.g.resources". To add such resource files in Visual Studio, set file build action = Resource. Don't use .resx files and the Resources page in Project Properties.
+	/// By default loads resources from the app entry assembly. In script with role miniProgram - from the script's assembly. To specify other loaded assembly, use name like "&lt;AssemblyName&gt;file.txt".
+	/// Does not use caching. Creates new object even when loading the resource not the first time.
+	/// </remarks>
 	public static class AResources
 	{
 		/// <summary>
-		/// Gets an Image or other object from managed resources of the app assembly (exe file).
-		/// Returns null if not found.
+		/// Gets resource of any type.
 		/// </summary>
-		/// <param name="name">Resource name, like "example", not like "Project.Properties.Resources.example".</param>
+		/// <param name="name">Can be resource name like "file.txt" or "sub/file.txt" or "&lt;LoadedAssemblyName&gt;file.txt". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">The resource is of different type. This function does not convert.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		public static T Get<T>(string name) {
+			var o = _GetObject(ref name);
+			if (o is T r) return r;
+			throw new InvalidOperationException($"Resource '{name}' is not {typeof(T).Name}; it is {o.GetType().Name}.");
+		}
+
+		/// <summary>
+		/// Gets stream.
+		/// </summary>
+		/// <param name="name">Can be resource name like "file.png" or "sub/file.png" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		/// <remarks>
-		/// Uses <see cref="ResourceManager.GetObject(string, CultureInfo)"/>.
-		/// The Image is not cached. Each call returns new object. The caller should dispose it if need.
+		/// Don't need to dispose the stream.
 		/// </remarks>
-		public static object GetAppResource(string name)
-		{
-			try {
-				var rm = GetAppResourceManager_(out var culture);
-				return rm?.GetObject(name, culture);
-			}
-			catch { return null; }
-
-			//info: why need culture? Because much much faster if culture is set to invariant.
+		public static UnmanagedMemoryStream GetStream(string name) {
+			//if (name.Starts("pack:")) return _Pack(name); //rejected
+			return Get<UnmanagedMemoryStream>(name);
 		}
 
 		/// <summary>
-		/// Full name of embedded resources file, like "Project.Properties.Resources.resources".
-		/// Set this property once before calling <see cref="GetAppResource"/>.
-		/// If not set, it will look for resource where name ends with ".Resources.resources". If there is no such resources, uses the first.
-		/// To see embedded resource file names you can use this code: <c>AOutput.Write(System.Reflection.Assembly.GetEntryAssembly().GetManifestResourceNames()</c>.
+		/// Gets string.
 		/// </summary>
-		public static string AppResourcesName {
-			get => s_appResourcesName;
-			set { if(value != s_appResourcesName) { s_appResourcesName = value; _appResourceManager = null; } }
+		/// <param name="name">Can be resource name like "myString" or "file.txt" or "sub/file.txt" or "&lt;LoadedAssemblyName&gt;file.txt". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		/// <remarks>
+		/// Supports resources of type string, byte[] (UTF-8), stream (UTF-8).
+		/// </remarks>
+		public static string GetString(string name) {
+			var o = _GetObject(ref name);
+			switch (o) {
+			case string s: return s;
+			case byte[] a: return Encoding.UTF8.GetString(a);
+			case UnmanagedMemoryStream m: return new StreamReader(m, Encoding.UTF8).ReadToEnd();
+			}
+			throw new InvalidOperationException($"Resource '{name}' is not string, byte[] or stream; it is {o.GetType().Name}.");
 		}
-		static string s_appResourcesName;
 
 		/// <summary>
-		/// Gets ResourceManager of the process entry assembly.
-		/// Returns null if fails or if the assembly does not have resources.
-		/// Note: if the assembly contains multiple embedded .resource files, may need to set <see cref="AppResourcesName"/> before.
+		/// Gets byte[].
 		/// </summary>
-		internal static ResourceManager GetAppResourceManager_(out CultureInfo culture)
-		{
-			if(_appResourceManager == null) {
-				culture = null;
-				var asm = Assembly.GetEntryAssembly();
-				var a = asm.GetManifestResourceNames(); if(a.NE_()) return null; //no resources
-				string s;
-				if(s_appResourcesName != null) {
-					s = a.FirstOrDefault(k => k == s_appResourcesName);
-				} else {
-					if(a.Length == 1 && a[0].Ends(".resources")) s = a[0];
-					else {
-						//TODO: "AssemblyName.*.Resources.resources"
-						s = a.FirstOrDefault(k => k.Ends(".Resources.resources")); //eg "Project.Properties.Resources.resources". Skip those like "Form1.resources".
-						if(s == null) s = a.FirstOrDefault(k => k.Ends(".resources"));
-					}
-				}
-				if(s == null) return null;
-				s = s.RemoveSuffix(10); //remove ".resources"
-				var t = asm.GetType(s);
-				if(t != null) {
-					var fl = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static; //need NonPublic because default access is internal
-					if(t.GetProperty("ResourceManager", fl)?.GetValue(null) is ResourceManager rm) {
-						_appResourceCulture = t.GetProperty("Culture")?.GetValue(null) as CultureInfo;
-						_appResourceManager = rm;
-					}
-				}
-				if(_appResourceManager == null) {
-					//ADebug.Print("failed to get ResourceManager property"); //eg Au-compiled scripts don't have the type
-					_appResourceManager = new ResourceManager(s, asm);
-				}
+		/// <param name="name">Can be resource name like "file.txt" or "sub/file.txt" or "&lt;LoadedAssemblyName&gt;file.txt". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">Unsupported resource type.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		/// <remarks>
+		/// Supports resources of type byte[], string (gets UTF-8 bytes), stream.
+		/// </remarks>
+		public static byte[] GetBytes(string name) {
+			var o = _GetObject(ref name);
+			switch (o) {
+			case byte[] a: return a;
+			case string s: return Encoding.UTF8.GetBytes(s);
+			case UnmanagedMemoryStream m:
+				var b = new byte[m.Length];
+				m.Read(b);
+				return b;
 			}
-			culture = _appResourceCulture;
-			return _appResourceManager;
+			throw new InvalidOperationException($"Resource '{name}' is not byte[], string or stream; it is {o.GetType().Name}.");
 		}
-		static ResourceManager _appResourceManager;
-		static CultureInfo _appResourceCulture;
+
+		/// <summary>
+		/// Gets winforms image.
+		/// </summary>
+		/// <param name="name">Can be resource name like "file.png" or "sub/file.png" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		public static System.Drawing.Bitmap GetWinformsImage(string name) {
+			return new System.Drawing.Bitmap(GetStream(name));
+		}
+
+		/// <summary>
+		/// Gets winforms icon.
+		/// </summary>
+		/// <param name="name">Can be resource name like "file.ico" or "sub/file.ico" or "&lt;LoadedAssemblyName&gt;file.ico". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		public static System.Drawing.Icon GetWinformsIcon(string name) {
+			return new System.Drawing.Icon(GetStream(name));
+		}
+
+		/// <summary>
+		/// Gets WPF image or icon that can be used as <b>ImageSource</b>.
+		/// </summary>
+		/// <param name="name">Can be resource name like "file.png" or "sub/file.png" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		public static BitmapFrame GetWpfImage(string name) {
+			return BitmapFrame.Create(GetStream(name));
+		}
+
+		//probably not useful
+		///// <summary>
+		///// Gets WPF image as <b>BitmapImage</b>.
+		///// </summary>
+		///// <param name="name">Can be resource name like "file.png" or "sub/file.png" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
+		///// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		///// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		///// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		//public static BitmapImage GetWpfBitmapImage(string name) {
+		//	var st = GetStream(name);
+		//	var bi = new BitmapImage();
+		//	bi.BeginInit();
+		//	bi.CacheOption = BitmapCacheOption.OnLoad;
+		//	bi.StreamSource = st;
+		//	bi.EndInit();
+		//	return bi;
+		//}
+
+		/// <summary>
+		/// Returns true if string starts with "resource:".
+		/// </summary>
+		internal static bool HasResourcePrefix_(string s) {
+			return s.Starts("resource:")/* || s.Starts("pack:")*/;
+		}
+
+		//[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading WPF dlls if no "pack:"
+		//static UnmanagedMemoryStream _Pack(string name) {
+		//	if (ATask.Role == ATRole.MiniProgram && !name.Contains(";component/") && name.Starts("pack://application:,,,/")) name = name.Insert(23, ATask.Name + ";component/");
+		//	if (Application.Current == null) new Application();
+		//	return Application.GetResourceStream(new Uri(name)).Stream as UnmanagedMemoryStream;
+		//}
+
+		static object _GetObject(ref string name) {
+			return _RS(ref name).GetObject(name) ?? throw new FileNotFoundException($"Cannot find resource '{name}'.");
+		}
+
+		static ResourceSet _RS(ref string name) {
+			if (name.Starts("resource:")) name = name[9..];
+			string asmName = ""; int i;
+			if (name.Starts('<') && (i = name.IndexOf('>')) > 1) {
+				asmName = name[1..i];
+				name = name[++i..];
+			} else if (ATask.Role == ATRole.MiniProgram) asmName = ATask.Name;
+			name = name.Lower(); //first time 15-40 ms, the slowest part. Just calls ToLowerInvariant.
+
+			return s_dict.GetOrAdd(asmName, k => {
+				var asm = k == "" ? Assembly.GetEntryAssembly() : _FindAssembly(k);
+				if (asm == null) throw new FileNotFoundException($"Cannot find loaded resource assembly '{asmName}'.");
+				var rm = new ResourceManager(asm.GetName().Name + ".g", asm);
+				return rm.GetResourceSet(CultureInfo.InvariantCulture, true, false) ?? throw new FileNotFoundException($"Cannot find resources in assembly '{asmName}'.");
+			});
+		}
+
+		static ConcurrentDictionary<string, ResourceSet> s_dict = new(StringComparer.OrdinalIgnoreCase);
+
+		static Assembly _FindAssembly(string name) {
+			foreach (var v in AppDomain.CurrentDomain.GetAssemblies()) if (v.GetName().Name.Eqi(name)) return v;
+			return null;
+		}
 	}
 }

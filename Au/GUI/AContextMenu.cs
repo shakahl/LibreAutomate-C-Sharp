@@ -1,5 +1,5 @@
-﻿using Au;
-using Au.Types;
+﻿using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -15,6 +15,8 @@ using System.Windows.Interop;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Media.Imaging;
+using System.Reflection;
+using System.Reflection.Emit;
 
 namespace Au
 {
@@ -36,10 +38,11 @@ namespace Au
 	/// </example>
 	public class AContextMenu : ContextMenu
 	{
-		/// <param name="inScript">Sets <see cref="CanEditScript"/>.</param>
+		/// <param name="inScript">Sets <see cref="CanEditScript"/> and <see cref="ExtractIconPathFromCode"/>.</param>
 		/// <param name="actionThread">Sets <see cref="ActionThread"/>.</param>
 		public AContextMenu(bool inScript = false, bool actionThread = false) {
 			CanEditScript = inScript;
+			ExtractIconPathFromCode = inScript;
 			ActionThread = actionThread;
 		}
 
@@ -62,41 +65,8 @@ namespace Au
 		/// </example>
 		public MenuItem Add(object text, object icon = null, Action<CMActionArgs> click = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
 			var i = new _MenuItem(this) { action = click, sourceFile = f, sourceLine = l, exceptOpt = ExceptionHandling, startThread = ActionThread, Header = text };
-			if (icon != null) {
-				try {
-					ImageSource iso = null; bool other = false;
-					switch (icon) {
-					case string s:
-						iso = new BitmapImage(new Uri(APath.Normalize(s, AFolders.ThisAppImages)));
-						//TODO: only if png etc, else get icon. Maybe use prefix: "icon:path". Maybe allow to specify size.
-						//TODO: support "image:embedded in code".
-						break;
-					case Uri s:
-						iso = new BitmapImage(s);
-						//TODO: compiler cannot add png resources.
-						break;
-					case AIcon h:
-						iso = h.ToImageSource();
-						break;
-					case IntPtr h:
-						iso = new AIcon(h).ToImageSource(false);
-						break;
-					case ImageSource s:
-						iso = s;
-						break;
-					//TODO: extract from action code. Eg if int (string index in code).
-					default:
-						other = true;
-						break;
-					}
-					if (iso != null) icon = new Image { Source = iso };
-					else if (!other) icon = null;
-					i.Icon = icon;
-				}
-				catch (IOException ex) { AWarning.Write(ex.ToStringWithoutStack()); }
-			}
-			CurrentAddMenu.Items.Add(i);
-			LastItem = i;
+			i.Icon = MenuItemIcon_(icon, click, ExtractIconPathFromCode);
+			CurrentAddMenu.Items.Add(LastItem = i);
 			ItemAdded?.Invoke(i);
 			return i;
 		}
@@ -108,13 +78,15 @@ namespace Au
 		/// <param name="icon">
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
-		/// - string - image file path. Example: <c>@"%images%\fileClass.png"</c>. If not full path, looks in <see cref="AFolders.ThisAppImages"/>.
-		/// - <see cref="Uri"/> - image file path, resource or URL. Does not support environment variables and <see cref="AFolders.ThisAppImages"/>.
+		/// - string - image file path, or resource name with prefix "resource:", or png image as Base-64 string with prefix "image:". Supports environment variables. If not full path, looks in <see cref="AFolders.ThisAppImages"/>.
+		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="AFolders.ThisAppImages"/>.
 		/// - <see cref="AIcon"/> - icon handle. Example: <c>AIcon.Stock(StockIcon.DELETE)]</c>. This function disposes it.
 		/// - <b>IntPtr</b> - icon handle. This function does not dispose it. You can dispose at any time.
 		/// - <see cref="ImageSource"/> - a WPF image.
 		/// 
 		/// Prints warning if failed to find or load image file.
+		/// To create Base-64 string, use menu Code -> AWinImage.
+		/// To add resource in Visual Studio, use build action "Resource".
 		/// </param>
 		/// <param name="f">[CallerFilePath]</param>
 		/// <param name="l">[CallerLineNumber]</param>
@@ -278,6 +250,108 @@ namespace Au
 		/// </summary>
 		public static int DefaultMouseClosingDistance { get; set; } = 200;
 
+		/// <summary>
+		/// When adding items without explicitly specified icon, extract icon from item action code.
+		/// </summary>
+		/// <remarks>
+		/// This property is applied to items added afterwards.
+		/// </remarks>
+		public bool ExtractIconPathFromCode { get; set; }
+
+		/// <summary>
+		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
+		/// Also supports code patterns like 'AFolders.System + "notepad.exe"' or 'AFolders.Virtual.RecycleBin'.
+		/// Returns null if no such string/pattern.
+		/// </summary>
+		internal static string IconPathFromCode_(MethodInfo mi) {
+			//support code pattern like 'AFolders.System + "notepad.exe"'.
+			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
+			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
+			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
+			//also code pattern like 'AFile.TryRun("notepad.exe")'.
+			//AOutput.Write(mi.Name);
+			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
+			try {
+				var reader = new ILReader(mi);
+				foreach (var instruction in reader.Instructions) {
+					if (++i > 100) break;
+					var op = instruction.Op;
+					//AOutput.Write(op);
+					if (op == OpCodes.Nop) {
+						i--;
+					} else if (op == OpCodes.Ldstr) {
+						var s = instruction.Data as string;
+						//AOutput.Write(s);
+						if (i == patternStart + 1) filename = s;
+						else {
+							if (APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AFile.TryRun(@"%AFolders.System%\notepad.exe");
+							if (APath.IsUrl(s) || APath.IsShellPath_(s)) return s;
+							filename = null; patternStart = -1;
+							if (i == 1) filename2 = s;
+						}
+					} else if (op == OpCodes.Call && instruction.Data is MethodInfo f && f.IsStatic) {
+						//AOutput.Write(f, f.DeclaringType, f.Name, f.MemberType, f.ReturnType, f.GetParameters().Length);
+						var dt = f.DeclaringType;
+						if (dt == typeof(AFolders) || dt == typeof(AFolders.Virtual)) {
+							if (f.ReturnType == typeof(FolderPath) && f.GetParameters().Length == 0) {
+								//AOutput.Write(1);
+								f1 = f;
+								patternStart = i;
+							}
+						} else if (dt == typeof(FolderPath)) {
+							if (i == patternStart + 2 && f.Name == "op_Addition") {
+								//AOutput.Write(2);
+								var fp = (FolderPath)f1.Invoke(null, null);
+								if ((string)fp == null) return null;
+								return fp + filename;
+							} else if (i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
+								//AOutput.Write(3);
+								return (FolderPath)f1.Invoke(null, null);
+							}
+						}
+					}
+				}
+				if (filename2 != null && filename2.Ends(".exe", true)) return AFile.SearchPath(filename2);
+			}
+			catch (Exception ex) { ADebug.Print(ex); }
+			return null;
+		}
+
+		internal static object MenuItemIcon_(object icon, Delegate click, bool extractFromCode) {
+			if (icon == null && extractFromCode && click != null) {
+				var path = IconPathFromCode_(click.Method);
+				if (path != null) icon = AIcon.OfFile(path, 16, IconGetFlags.DontSearch);
+			}
+			if (icon == null) return null;
+			try {
+				ImageSource iso = null; bool other = false;
+				switch (icon) {
+				case string s:
+					iso = AImageUtil.LoadWpfImageFromFileOrResourceOrString(s);
+					break;
+				case Uri s:
+					iso = BitmapFrame.Create(s);
+					break;
+				case AIcon h:
+					iso = h.ToWpfImage();
+					break;
+				case IntPtr h:
+					iso = new AIcon(h).ToWpfImage(false);
+					break;
+				case ImageSource s:
+					iso = s;
+					break;
+				default:
+					other = true;
+					break;
+				}
+				if (iso != null) icon = new Image { Source = iso };
+				else if (!other) icon = null;
+			}
+			catch (Exception ex) { AWarning.Write(ex.ToStringWithoutStack()); }
+			return icon;
+		}
+
 		class _MenuItem : MenuItem
 		{
 			AContextMenu _m;
@@ -308,7 +382,7 @@ namespace Au
 					if (this.HasItems && e.Source != this) break; //workaround for: cannot edit submenu items because then this func at first called for parent item
 					e.Handled = true;
 					_m.IsOpen = false;
-					if (_m.CanEditScript && !sourceFile.NE()) Au.Util.AScriptEditor.GoToEdit(sourceFile, sourceLine);
+					if (_m.CanEditScript && !sourceFile.NE()) AScriptEditor.GoToEdit(sourceFile, sourceLine);
 					//could instead use a AContextMenu here, but: dangerous; closes this menu before showing it.
 					break;
 				case MouseButton.Middle:

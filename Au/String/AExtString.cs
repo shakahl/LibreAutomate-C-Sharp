@@ -24,6 +24,8 @@ namespace Au
 	/// Some .NET <see cref="String"/> methods use <see cref="StringComparison.CurrentCulture"/> by default, while others use ordinal or invariant comparison. It is confusing (difficult to remember), dangerous (easy to make bugs), slower and rarely useful.
 	/// Microsoft recommends to specify <b>StringComparison.Ordinal[IgnoreCase]</b> explicitly. See https://msdn.microsoft.com/en-us/library/ms973919.aspx.
 	/// This class adds ordinal comparison versions of these methods. Same or similar name, for example <b>Ends</b> for <b>EndsWith</b>.
+	/// See also <see cref="AProcess.CultureIsInvariant"/>.
+	/// 
 	/// This class also adds more methods.
 	/// You also can find string functions in other classes of this library, including <see cref="AStringUtil"/>, <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
 	/// </remarks>
@@ -40,8 +42,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="string.Compare"/>
 		/// <seealso cref="string.CompareOrdinal"/>
-		public static bool Eq(this string t, string s, bool ignoreCase = false)
-		{
+		public static bool Eq(this string t, string s, bool ignoreCase = false) {
 			return ignoreCase ? string.Equals(t, s, StringComparison.OrdinalIgnoreCase) : string.Equals(t, s);
 		}
 
@@ -55,9 +56,8 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Eq(this string t, bool ignoreCase, params string[] strings)
-		{
-			for(int i = 0; i < strings.Length; i++) if(Eq(t, strings[i], ignoreCase)) return i + 1;
+		public static int Eq(this string t, bool ignoreCase, params string[] strings) {
+			for (int i = 0; i < strings.Length; i++) if (Eq(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
@@ -74,12 +74,11 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="string.Compare"/>
 		/// <seealso cref="string.CompareOrdinal"/>
-		public static bool Eq(this string t, int startIndex, string s, bool ignoreCase = false)
-		{
+		public static bool Eq(this string t, int startIndex, string s, bool ignoreCase = false) {
 			int n = s?.Length ?? throw new ArgumentNullException();
-			if((uint)startIndex > t.Length || n > t.Length - startIndex) return false;
+			if ((uint)startIndex > t.Length || n > t.Length - startIndex) return false;
 			var span = t.AsSpan(startIndex, n);
-			if(!ignoreCase) return span.SequenceEqual(s);
+			if (!ignoreCase) return span.SequenceEqual(s);
 			return span.Equals(s, StringComparison.OrdinalIgnoreCase);
 			//Faster than string.Compare[Ordinal].
 			//With Tables_.LowerCase similar speed. Depends on whether match. 
@@ -97,9 +96,8 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Eq(this string t, int startIndex, bool ignoreCase = false, params string[] strings)
-		{
-			for(int i = 0; i < strings.Length; i++) if(Eq(t, startIndex, strings[i], ignoreCase)) return i + 1;
+		public static int Eq(this string t, int startIndex, bool ignoreCase = false, params string[] strings) {
+			for (int i = 0; i < strings.Length; i++) if (Eq(t, startIndex, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
@@ -116,14 +114,13 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="string.Compare"/>
 		/// <seealso cref="string.CompareOrdinal"/>
-		public static bool Eq(this string t, Range range, string s, bool ignoreCase = false)
-		{
+		public static bool Eq(this string t, Range range, string s, bool ignoreCase = false) {
 			int n = s?.Length ?? throw new ArgumentNullException();
 			try {
 				var (i, len) = range.GetOffsetAndLength(t.Length);
 				return n == len && Eq(t, i, s, ignoreCase);
 			}
-			catch(ArgumentOutOfRangeException) { return false; }
+			catch (ArgumentOutOfRangeException) { return false; }
 		}
 
 		/// <summary>
@@ -132,9 +129,8 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="index">Offset in this string. If invalid, returns false.</param>
 		/// <param name="c">The character.</param>
-		public static bool Eq(this string t, int index, char c)
-		{
-			if((uint)index >= t.Length) return false;
+		public static bool Eq(this string t, int index, char c) {
+			if ((uint)index >= t.Length) return false;
 			return t[index] == c;
 		}
 
@@ -161,13 +157,12 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static bool Ends(this string t, string s, bool ignoreCase = false)
-		{
+		public static bool Ends(this string t, string s, bool ignoreCase = false) {
 			//return t?.EndsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? false; //slower
 			int n = s?.Length ?? throw new ArgumentNullException();
-			if(n > t.Length) return false;
+			if (n > t.Length) return false;
 			var span = t.AsSpan(t.Length - n);
-			if(!ignoreCase) return span.SequenceEqual(s);
+			if (!ignoreCase) return span.SequenceEqual(s);
 			return span.Equals(s, StringComparison.OrdinalIgnoreCase);
 		}
 
@@ -182,9 +177,8 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Ends(this string t, bool ignoreCase, params string[] strings)
-		{
-			for(int i = 0; i < strings.Length; i++) if(Ends(t, strings[i], ignoreCase)) return i + 1;
+		public static int Ends(this string t, bool ignoreCase, params string[] strings) {
+			for (int i = 0; i < strings.Length; i++) if (Ends(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
@@ -193,8 +187,7 @@ namespace Au
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="c">The character.</param>
-		public static bool Ends(this string t, char c)
-		{
+		public static bool Ends(this string t, char c) {
 			int i = t.Length - 1;
 			return i >= 0 && t[i] == c;
 		}
@@ -209,13 +202,12 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static bool Starts(this string t, string s, bool ignoreCase = false)
-		{
+		public static bool Starts(this string t, string s, bool ignoreCase = false) {
 			//return t?.StartsWith(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal) ?? false; //slower
 			int n = s?.Length ?? throw new ArgumentNullException();
-			if(n > t.Length) return false;
+			if (n > t.Length) return false;
 			var span = t.AsSpan(0, n);
-			if(!ignoreCase) return span.SequenceEqual(s);
+			if (!ignoreCase) return span.SequenceEqual(s);
 			return span.Equals(s, StringComparison.OrdinalIgnoreCase);
 		}
 
@@ -230,9 +222,8 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Starts(this string t, bool ignoreCase, params string[] strings)
-		{
-			for(int i = 0; i < strings.Length; i++) if(Starts(t, strings[i], ignoreCase)) return i + 1;
+		public static int Starts(this string t, bool ignoreCase, params string[] strings) {
+			for (int i = 0; i < strings.Length; i++) if (Starts(t, strings[i], ignoreCase)) return i + 1;
 			return 0;
 		}
 
@@ -241,8 +232,7 @@ namespace Au
 		/// </summary>
 		/// <param name="t">This string.</param>
 		/// <param name="c">The character.</param>
-		public static bool Starts(this string t, char c)
-		{
+		public static bool Starts(this string t, char c) {
 			return t.Length > 0 && t[0] == c;
 		}
 
@@ -256,8 +246,7 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Find(this string t, string s, bool ignoreCase = false)
-		{
+		public static int Find(this string t, string s, bool ignoreCase = false) {
 			return t.IndexOf(s, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 		//FUTURE: if ignoreCase, maybe use our case table for Find, Eq, etc. Because now 12 times slower. But Find(ignoreCase: true) where speed is very important are rare.
@@ -274,8 +263,7 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Find(this string t, string s, int startIndex, bool ignoreCase = false)
-		{
+		public static int Find(this string t, string s, int startIndex, bool ignoreCase = false) {
 			return t.IndexOf(s, startIndex, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
 
@@ -291,8 +279,7 @@ namespace Au
 		/// <remarks>
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int Find(this string t, string s, Range range, bool ignoreCase = false)
-		{
+		public static int Find(this string t, string s, Range range, bool ignoreCase = false) {
 			var (start, count) = range.GetOffsetAndLength(t.Length);
 			return t.IndexOf(s, start, count, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
 		}
@@ -307,8 +294,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindAny(this string t, string chars, int startOfRange = 0, int endOfRange = -1)
-		{
+		public static int FindAny(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
 			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
 			int r = t.AsSpan(startOfRange, len).IndexOfAny(chars);
 			return r < 0 ? r : r + startOfRange;
@@ -327,8 +313,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindNot(this string t, string chars, int startOfRange = 0, int endOfRange = -1)
-		{
+		public static int FindNot(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
 			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
 			int r = t.AsSpan(startOfRange, len).IndexOfNot(chars);
 			return r < 0 ? r : r + startOfRange;
@@ -340,12 +325,11 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		public static int IndexOfNot(this ReadOnlySpan<char> t, string chars)
-		{
-			if(chars == null) throw new ArgumentNullException();
-			for(int i = 0; i < t.Length; i++) {
+		public static int IndexOfNot(this ReadOnlySpan<char> t, string chars) {
+			if (chars == null) throw new ArgumentNullException();
+			for (int i = 0; i < t.Length; i++) {
 				char c = t[i];
-				for(int j = 0; j < chars.Length; j++) if(chars[j] == c) goto g1;
+				for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
 				return i;
 				g1:;
 			}
@@ -358,12 +342,11 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="chars">Characters.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
-		public static int LastIndexOfNot(this ReadOnlySpan<char> t, string chars)
-		{
-			if(chars == null) throw new ArgumentNullException();
-			for(int i = t.Length; --i >= 0;) {
+		public static int LastIndexOfNot(this ReadOnlySpan<char> t, string chars) {
+			if (chars == null) throw new ArgumentNullException();
+			for (int i = t.Length; --i >= 0;) {
 				char c = t[i];
-				for(int j = 0; j < chars.Length; j++) if(chars[j] == c) goto g1;
+				for (int j = 0; j < chars.Length; j++) if (chars[j] == c) goto g1;
 				return i;
 				g1:;
 			}
@@ -380,8 +363,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindLastAny(this string t, string chars, int startOfRange = 0, int endOfRange = -1)
-		{
+		public static int FindLastAny(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
 			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
 			int r = t.AsSpan(startOfRange, len).LastIndexOfAny(chars);
 			return r < 0 ? r : r + startOfRange;
@@ -397,8 +379,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startOfRange</i> or <i>endOfRange</i>.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static int FindLastNot(this string t, string chars, int startOfRange = 0, int endOfRange = -1)
-		{
+		public static int FindLastNot(this string t, string chars, int startOfRange = 0, int endOfRange = -1) {
 			int len = (endOfRange >= 0 ? endOfRange : t.Length) - startOfRange;
 			int r = t.AsSpan(startOfRange, len).LastIndexOfNot(chars);
 			return r < 0 ? r : r + startOfRange;
@@ -412,8 +393,7 @@ namespace Au
 		/// <param name="chars">Characters to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static string Trim(this string t, string chars)
-		{
+		public static string Trim(this string t, string chars) {
 			var span = t.AsSpan().Trim(chars);
 			return span.Length == t.Length ? t : new string(span);
 		}
@@ -426,8 +406,7 @@ namespace Au
 		/// <param name="chars">Characters to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static string TrimStart(this string t, string chars)
-		{
+		public static string TrimStart(this string t, string chars) {
 			var span = t.AsSpan().TrimStart(chars);
 			return span.Length == t.Length ? t : new string(span);
 		}
@@ -440,8 +419,7 @@ namespace Au
 		/// <param name="chars">Characters to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>chars</i> is null.</exception>
 		[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
-		public static string TrimEnd(this string t, string chars)
-		{
+		public static string TrimEnd(this string t, string chars) {
 			var span = t.AsSpan().TrimEnd(chars);
 			return span.Length == t.Length ? t : new string(span);
 		}
@@ -462,37 +440,35 @@ namespace Au
 		/// Word characters are those for which <see cref="Char.IsLetterOrDigit"/> returns true plus those specified in <i>otherWordChars</i>.
 		/// Uses ordinal comparison (does not depend on current culture/locale).
 		/// </remarks>
-		public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null)
-		{
+		public static int FindWord(this string t, string s, Range? range = null, bool ignoreCase = false, string otherWordChars = null) {
 			var (start, end) = range.GetStartEnd(t.Length);
 			int lens = s?.Length ?? throw new ArgumentNullException();
-			if(lens == 0) return 0; //like IndexOf and Find
+			if (lens == 0) return 0; //like IndexOf and Find
 
 			bool wordStart = _IsWordChar(s, 0, false, otherWordChars),
 				wordEnd = _IsWordChar(s, lens - 1, true, otherWordChars);
 
-			for(int i = start, iMax = end - lens; i <= iMax; i++) {
+			for (int i = start, iMax = end - lens; i <= iMax; i++) {
 				i = t.IndexOf(s, i, end - i, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.Ordinal);
-				if(i < 0) break;
-				if(wordStart && i > 0 && _IsWordChar(t, i - 1, true, otherWordChars)) continue;
-				if(wordEnd && i < iMax && _IsWordChar(t, i + lens, false, otherWordChars)) continue;
+				if (i < 0) break;
+				if (wordStart && i > 0 && _IsWordChar(t, i - 1, true, otherWordChars)) continue;
+				if (wordEnd && i < iMax && _IsWordChar(t, i + lens, false, otherWordChars)) continue;
 				return i;
 			}
 			return -1;
 
-			static bool _IsWordChar(string s, int i, bool expandLeft, string otherWordChars)
-			{
+			static bool _IsWordChar(string s, int i, bool expandLeft, string otherWordChars) {
 				//SHOULDDO: use Rune
 				char c = s[i];
-				if(c >= '\uD800' && c <= '\uDFFF') { //Unicode surrogates
-					if(expandLeft) {
-						if(Char.IsLowSurrogate(s[i])) return i > 0 && Char.IsHighSurrogate(s[i - 1]) && Char.IsLetterOrDigit(s, i - 1);
+				if (c >= '\uD800' && c <= '\uDFFF') { //Unicode surrogates
+					if (expandLeft) {
+						if (Char.IsLowSurrogate(s[i])) return i > 0 && Char.IsHighSurrogate(s[i - 1]) && Char.IsLetterOrDigit(s, i - 1);
 					} else {
-						if(Char.IsHighSurrogate(s[i])) return i < s.Length - 1 && Char.IsLowSurrogate(s[i + 1]) && Char.IsLetterOrDigit(s, i);
+						if (Char.IsHighSurrogate(s[i])) return i < s.Length - 1 && Char.IsLowSurrogate(s[i + 1]) && Char.IsLetterOrDigit(s, i);
 					}
 				} else {
-					if(Char.IsLetterOrDigit(c)) return true;
-					if(otherWordChars?.Contains(c) ?? false) return true;
+					if (Char.IsLetterOrDigit(c)) return true;
+					if (otherWordChars?.Contains(c) ?? false) return true;
 				}
 				return false;
 			}
@@ -534,8 +510,7 @@ namespace Au
 		/// </example>
 		/// <seealso cref="SegSplit"/>
 		/// <seealso cref="SegLines"/>
-		public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null)
-		{
+		public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null) {
 			return new SegParser(t, separators, flags, range);
 		}
 
@@ -552,8 +527,7 @@ namespace Au
 		/// <seealso cref="SegParser"/>
 		/// <seealso cref="string.Split"/>
 		/// <seealso cref="string.Join"/>
-		public static string[] SegSplit(this string t, string separators, SegFlags flags = 0, int maxCount = -1, Range? range = null)
-		{
+		public static string[] SegSplit(this string t, string separators, SegFlags flags = 0, int maxCount = -1, Range? range = null) {
 			var x = new SegParser(t, separators, flags, range);
 			return x.ToStringArray(maxCount);
 		}
@@ -567,8 +541,7 @@ namespace Au
 		/// <param name="range">Part of this string to split.</param>
 		/// <seealso cref="Segments"/>
 		/// <seealso cref="SegSep.Line"/>
-		public static string[] SegLines(this string t, bool noEmptyLines = false, int maxCount = -1, Range? range = null)
-		{
+		public static string[] SegLines(this string t, bool noEmptyLines = false, int maxCount = -1, Range? range = null) {
 			return SegSplit(t, SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0, maxCount, range);
 		}
 
@@ -581,20 +554,19 @@ namespace Au
 		/// <param name="range">Part of this string or null (default).</param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
 		/// <seealso cref="AStringUtil.LineAndColumn"/>
-		public static int LineCount(this string t, bool preferMore = false, Range? range = null)
-		{
+		public static int LineCount(this string t, bool preferMore = false, Range? range = null) {
 			var (i, to) = range.GetStartEnd(t.Length);
-			if(to - i == 0) return preferMore ? 1 : 0;
+			if (to - i == 0) return preferMore ? 1 : 0;
 			int n = 1;
-			for(; i < to; i++) {
+			for (; i < to; i++) {
 				char c = t[i];
-				if(c > '\r') continue;
-				if(c == '\r') {
-					if(++i == to || t[i] != '\n') i--; //single \r ?
+				if (c > '\r') continue;
+				if (c == '\r') {
+					if (++i == to || t[i] != '\n') i--; //single \r ?
 					n++;
-				} else if(c == '\n') n++;
+				} else if (c == '\n') n++;
 			}
-			if(!preferMore) switch(t[i - 1]) { case '\n': case '\r': n--; break; }
+			if (!preferMore) switch (t[i - 1]) { case '\n': case '\r': n--; break; }
 			return n;
 		}
 
@@ -625,59 +597,63 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="how"></param>
 		/// <param name="culture">Culture, for example <c>CultureInfo.CurrentCulture</c>. If null (default) uses invariant culture.</param>
-		public static unsafe string Upper(this string t, SUpper how, CultureInfo culture = null)
-		{
-			if(how == SUpper.FirstChar) {
-				if(t.Length == 0 || !char.IsLower(t, 0)) return t;
+		public static unsafe string Upper(this string t, SUpper how, CultureInfo culture = null) {
+			if (how == SUpper.FirstChar) {
+				if (t.Length == 0 || !char.IsLower(t, 0)) return t;
 				var r = Rune.GetRuneAt(t, 0);
 				r = culture != null ? Rune.ToUpper(r, culture) : Rune.ToUpperInvariant(r);
 				int n = r.IsBmp ? 1 : 2;
 				var m = new Span<char>(&r, n);
-				if(n == 2) r.EncodeToUtf16(m);
+				if (n == 2) r.EncodeToUtf16(m);
 				return string.Concat(m, t.AsSpan(n));
 			}
 			var ti = (culture ?? CultureInfo.InvariantCulture).TextInfo;
 			t = t ?? throw new NullReferenceException();
-			if(how == SUpper.TitleCase) return ti.ToTitleCase(t);
+			if (how == SUpper.TitleCase) return ti.ToTitleCase(t);
 			return ti.ToUpper(t);
 		}
 
 		#region ToNumber
 
-		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags)
-		{
+		static long _ToInt(string t, int startIndex, out int numberEndIndex, bool toLong, STIFlags flags) {
 			numberEndIndex = 0;
 
 			int len = t.Lenn();
-			if((uint)startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
+			if ((uint)startIndex > len) throw new ArgumentOutOfRangeException("startIndex");
 			int i = startIndex;
 			char c;
 
 			//skip spaces
-			for(; ; i++) {
-				if(i == len) return 0;
+			for (; ; i++) {
+				if (i == len) return 0;
 				c = t[i];
-				if(c > ' ') break;
-				if(c == ' ') continue;
-				if(c < '\t' || c > '\r') break; //\t \n \v \f \r
+				if (c > ' ') break;
+				if (c == ' ') continue;
+				if (c < '\t' || c > '\r') break; //\t \n \v \f \r
 			}
-			if(i > startIndex && 0 != (flags & STIFlags.DontSkipSpaces)) return 0;
+			if (i > startIndex && 0 != (flags & STIFlags.DontSkipSpaces)) return 0;
+
+			//skip arabic letter mark etc
+			if (c >= '\x61C' && (c == '\x61C' || c == '\x200E' || c == '\x200F')) {
+				if (++i == len) return 0;
+				c = t[i];
+			}
 
 			//skip -+
 			bool minus = false;
-			if(c == '-' || c == '+') {
-				if(++i == len) return 0;
-				if(c == '-') minus = true;
+			if (c == '-' || c == '−' || c == '+') {
+				if (++i == len) return 0;
+				if (c != '+') minus = true;
 				c = t[i];
 			}
 
 			//is hex?
 			bool isHex = false;
-			switch(flags & (STIFlags.NoHex | STIFlags.IsHexWithout0x)) {
+			switch (flags & (STIFlags.NoHex | STIFlags.IsHexWithout0x)) {
 			case 0:
-				if(c == '0' && i <= len - 3) {
+				if (c == '0' && i <= len - 3) {
 					c = t[++i];
-					if(isHex = (c == 'x' || c == 'X')) i++; else i--;
+					if (isHex = (c == 'x' || c == 'X')) i++; else i--;
 				}
 				break;
 			case STIFlags.IsHexWithout0x:
@@ -687,49 +663,48 @@ namespace Au
 
 			//skip '0'
 			int i0 = i;
-			while(i < len && t[i] == '0') i++;
+			while (i < len && t[i] == '0') i++;
 
 			long R = 0; //result
 
 			int nDigits = 0, nMaxDigits;
-			if(isHex) {
+			if (isHex) {
 				nMaxDigits = toLong ? 16 : 8;
-				for(; i < len; i++) {
-					int k = _CharHexToDec(t[i]); if(k < 0) break;
-					if(++nDigits > nMaxDigits) return 0;
+				for (; i < len; i++) {
+					int k = _CharHexToDec(t[i]); if (k < 0) break;
+					if (++nDigits > nMaxDigits) return 0;
 					R = (R << 4) + k;
 				}
-				if(i == i0) i--; //0xNotHex (decimal 0)
+				if (i == i0) i--; //0xNotHex (decimal 0)
 
 			} else { //decimal or not a number
 				nMaxDigits = toLong ? 20 : 10;
-				for(; i < len; i++) {
-					int k = t[i] - '0'; if(k < 0 || k > 9) break;
+				for (; i < len; i++) {
+					int k = t[i] - '0'; if (k < 0 || k > 9) break;
 					R = R * 10 + k;
 					//is too long?
-					if(++nDigits >= nMaxDigits) {
-						if(nDigits > nMaxDigits) return 0;
-						if(toLong) {
-							if(string.CompareOrdinal(t, i + 1 - nDigits, "18446744073709551615", 0, nDigits) > 0) return 0;
+					if (++nDigits >= nMaxDigits) {
+						if (nDigits > nMaxDigits) return 0;
+						if (toLong) {
+							if (string.CompareOrdinal(t, i + 1 - nDigits, "18446744073709551615", 0, nDigits) > 0) return 0;
 						} else {
-							if(R > uint.MaxValue) return 0;
+							if (R > uint.MaxValue) return 0;
 						}
 					}
 				}
-				if(i == i0) return 0; //not a number
+				if (i == i0) return 0; //not a number
 			}
 
-			if(minus) R = -R;
+			if (minus) R = -R;
 			numberEndIndex = i;
 			return R;
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static int _CharHexToDec(char c)
-		{
-			if(c >= '0' && c <= '9') return c - '0';
-			if(c >= 'A' && c <= 'F') return c - ('A' - 10);
-			if(c >= 'a' && c <= 'f') return c - ('a' - 10);
+		static int _CharHexToDec(char c) {
+			if (c >= '0' && c <= '9') return c - '0';
+			if (c >= 'A' && c <= 'F') return c - ('A' - 10);
+			if (c >= 'a' && c <= 'f') return c - ('a' - 10);
 			return -1;
 		}
 
@@ -751,6 +726,7 @@ namespace Au
 		///		Gets the end of the number part.
 		///		No exception when cannot convert.
 		///		The number can be decimal (like <c>"123"</c>) or hexadecimal (like <c>"0x1A"</c>); don't need separate flags for each style.
+		///		Does not depend on current culture. As minus sign recognizes '-' and '−'.
 		///		Faster.
 		///	
 		/// The number in string can start with ASCII whitespace (spaces, newlines, etc), like <c>" 5"</c>.
@@ -759,8 +735,7 @@ namespace Au
 		/// The return value becomes negative if the number is greater than <b>int.MaxValue</b>, for example <c>"0xffffffff"</c> is -1, but it becomes correct if assigned to uint (need cast).
 		/// Does not support non-integer numbers; for example, for <c>"3.5E4"</c> returns 3 and sets <c>numberEndIndex=startIndex+1</c>.
 		/// </remarks>
-		public static int ToInt(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0)
-		{
+		public static int ToInt(this string t, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 			return (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 		}
 
@@ -769,8 +744,7 @@ namespace Au
 		/// Returns the number, or 0 if fails to convert.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static int ToInt(this string t, int startIndex = 0, STIFlags flags = 0)
-		{
+		public static int ToInt(this string t, int startIndex = 0, STIFlags flags = 0) {
 			return (int)_ToInt(t, startIndex, out _, false, flags);
 		}
 
@@ -784,8 +758,7 @@ namespace Au
 		/// <param name="numberEndIndex">Receives offset in this string where the number part ends. If fails to convert, receives 0.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToInt(this string t, out int result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
-		{
+		public static bool ToInt(this string t, out int result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 			result = (int)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 			return numberEndIndex != 0;
 		}
@@ -805,8 +778,7 @@ namespace Au
 		/// Returns false if fails.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToInt(this string t, out uint result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
-		{
+		public static bool ToInt(this string t, out uint result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 			result = (uint)_ToInt(t, startIndex, out numberEndIndex, false, flags);
 			return numberEndIndex != 0;
 		}
@@ -824,8 +796,7 @@ namespace Au
 		/// Returns false if fails.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToInt(this string t, out long result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
-		{
+		public static bool ToInt(this string t, out long result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 			result = _ToInt(t, startIndex, out numberEndIndex, true, flags);
 			return numberEndIndex != 0;
 		}
@@ -843,8 +814,7 @@ namespace Au
 		/// Returns false if fails.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException"><i>startIndex</i> is less than 0 or greater than string length.</exception>
-		public static bool ToInt(this string t, out ulong result, int startIndex, out int numberEndIndex, STIFlags flags = 0)
-		{
+		public static bool ToInt(this string t, out ulong result, int startIndex, out int numberEndIndex, STIFlags flags = 0) {
 			result = (ulong)_ToInt(t, startIndex, out numberEndIndex, true, flags);
 			return numberEndIndex != 0;
 		}
@@ -872,8 +842,7 @@ namespace Au
 		/// Fails if the string is null or "" or isn't a valid floating-point number.
 		/// Examples of valid numbers: "12", " -12.3 ", ".12", "12.", "12E3", "12.3e-45", "1,234.5" (with style <c>NumberStyles.Float | NumberStyles.AllowThousands</c>). String like "2text" is invalid, unless range is <c>0..1</c>.
 		/// </remarks>
-		public static double ToNumber(this string t, Range? range = null, NumberStyles style = NumberStyles.Float)
-		{
+		public static double ToNumber(this string t, Range? range = null, NumberStyles style = NumberStyles.Float) {
 			ToNumber(t, out double r, range, style);
 			return r;
 		}
@@ -891,9 +860,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="double.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out double)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 		/// </remarks>
-		public static bool ToNumber(this string t, out double result, Range? range = null, NumberStyles style = NumberStyles.Float)
-		{
-			return double.TryParse(_NumSpan(t, range), style, CultureInfo.InvariantCulture, out result);
+		public static bool ToNumber(this string t, out double result, Range? range = null, NumberStyles style = NumberStyles.Float) {
+			return double.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 		}
 
 		/// <summary>
@@ -909,9 +877,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="float.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out float)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 		/// </remarks>
-		public static bool ToNumber(this string t, out float result, Range? range = null, NumberStyles style = NumberStyles.Float)
-		{
-			return float.TryParse(_NumSpan(t, range), style, CultureInfo.InvariantCulture, out result);
+		public static bool ToNumber(this string t, out float result, Range? range = null, NumberStyles style = NumberStyles.Float) {
+			return float.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 		}
 
 		/// <summary>
@@ -927,9 +894,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="int.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out int)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 		/// </remarks>
-		public static bool ToNumber(this string t, out int result, Range? range = null, NumberStyles style = NumberStyles.Integer)
-		{
-			return int.TryParse(_NumSpan(t, range), style, CultureInfo.InvariantCulture, out result);
+		public static bool ToNumber(this string t, out int result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
+			return int.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 
 			//note: exception if NumberStyles.Integer | NumberStyles.AllowHexSpecifier.
 			//	Can parse either decimal or hex, not any.
@@ -949,9 +915,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="uint.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out uint)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 		/// </remarks>
-		public static bool ToNumber(this string t, out uint result, Range? range = null, NumberStyles style = NumberStyles.Integer)
-		{
-			return uint.TryParse(_NumSpan(t, range), style, CultureInfo.InvariantCulture, out result);
+		public static bool ToNumber(this string t, out uint result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
+			return uint.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 		}
 
 		/// <summary>
@@ -967,9 +932,8 @@ namespace Au
 		/// <remarks>
 		/// Calls <see cref="long.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out long)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
 		/// </remarks>
-		public static bool ToNumber(this string t, out long result, Range? range = null, NumberStyles style = NumberStyles.Integer)
-		{
-			return long.TryParse(_NumSpan(t, range), style, CultureInfo.InvariantCulture, out result);
+		public static bool ToNumber(this string t, out long result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
+			return long.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 		}
 
 		/// <summary>
@@ -983,17 +947,23 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>range</i>.</exception>
 		/// <exception cref="ArgumentException">Invalid <i>style</i>.</exception>
 		/// <remarks>
-		/// Calls <see cref="ulong.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out ulong)"/> with <see cref="CultureInfo"/> <b>InvariantCulture</b>.
+		/// Calls <see cref="ulong.TryParse(ReadOnlySpan{char}, NumberStyles, IFormatProvider, out ulong)"/>. Uses <see cref="CultureInfo.InvariantCulture"/> if the string range contains only ASCII characters, else uses current culture.
 		/// </remarks>
-		public static bool ToNumber(this string t, out ulong result, Range? range = null, NumberStyles style = NumberStyles.Integer)
-		{
-			return ulong.TryParse(_NumSpan(t, range), style, CultureInfo.InvariantCulture, out result);
+		public static bool ToNumber(this string t, out ulong result, Range? range = null, NumberStyles style = NumberStyles.Integer) {
+			return ulong.TryParse(_NumSpan(t, range, out var ci), style, ci, out result);
 		}
 
-		static ReadOnlySpan<char> _NumSpan(string t, Range? range)
-		{
-			if(t == null) return default;
+		static ReadOnlySpan<char> _NumSpan(string t, Range? range, out CultureInfo ci) {
+			ci = CultureInfo.InvariantCulture;
+			if (t == null) return default;
 			var (start, len) = range.GetOffsetAndLength(t.Length);
+
+			//Workaround for .NET 5 preview 7 bug: if current user culture is eg Norvegian or Lithuanian,
+			//	'number to/from string' functions use '−' (Unicode minus), not '-' (ASCII hyphen), even if in Control Panel is ASCII hyphen.
+			//	Tested: no bug in .NET Core 3.1.
+			//Also, in some cultures eg Arabic there are more chars.
+			if (!t.AsSpan(start, len).IsAscii()) ci = CultureInfo.CurrentCulture;
+
 			return t.AsSpan(start, len);
 		}
 #else
@@ -1137,8 +1107,7 @@ namespace Au
 		/// <param name="count">Count of characters to replace.</param>
 		/// <param name="s">The replacement string.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
-		public static string ReplaceAt(this string t, int startIndex, int count, string s)
-		{
+		public static string ReplaceAt(this string t, int startIndex, int count, string s) {
 			return string.Concat(t.AsSpan(0, startIndex), s, t.AsSpan(startIndex + count));
 		}
 
@@ -1159,9 +1128,8 @@ namespace Au
 		/// <param name="suffix">Substring to remove.</param>
 		/// <param name="ignoreCase">Case-insensitive.</param>
 		/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
-		public static string RemoveSuffix(this string t, string suffix, bool ignoreCase = false)
-		{
-			if(!t.Ends(suffix, ignoreCase)) return t;
+		public static string RemoveSuffix(this string t, string suffix, bool ignoreCase = false) {
+			if (!t.Ends(suffix, ignoreCase)) return t;
 			return RemoveSuffix(t, suffix.Length);
 		}
 
@@ -1172,9 +1140,8 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="suffix">Character to remove.</param>
 		/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
-		public static string RemoveSuffix(this string t, char suffix)
-		{
-			if(!t.Ends(suffix)) return t;
+		public static string RemoveSuffix(this string t, char suffix) {
+			if (!t.Ends(suffix)) return t;
 			return RemoveSuffix(t, 1);
 		}
 
@@ -1185,13 +1152,12 @@ namespace Au
 		/// <param name="t">This string.</param>
 		/// <param name="limit">Maximal length of the result string. If less than 1, is used 1.</param>
 		/// <param name="middle">Let "…" be in middle. For example it is useful when the string is a path, to avoid removing filename.</param>
-		public static string Limit(this string t, int limit, bool middle = false)
-		{
+		public static string Limit(this string t, int limit, bool middle = false) {
 			int k = t.Length;
-			if(limit < 1) limit = 1;
-			if(k <= limit) return t;
+			if (limit < 1) limit = 1;
+			if (k <= limit) return t;
 			limit--;
-			if(!middle) return t.Remove(limit) + "…";
+			if (!middle) return t.Remove(limit) + "…";
 			return t.ReplaceAt(limit / 2, k - limit, "…");
 		}
 
@@ -1205,45 +1171,44 @@ namespace Au
 		/// <remarks>
 		/// Replaces these characters: <c>'\\'</c>, <c>'\"'</c>, <c>'\t'</c>, <c>'\n'</c>, <c>'\r'</c> and all in range 0-31.
 		/// </remarks>
-		public static string Escape(this string t, int limit = 0, bool quote = false)
-		{
+		public static string Escape(this string t, int limit = 0, bool quote = false) {
 			int i, len = t.Length;
-			if(len == 0) return quote ? "\"\"" : t;
+			if (len == 0) return quote ? "\"\"" : t;
 
-			if(limit > 0) {
-				if(len > limit) len = limit - 1; else limit = 0;
+			if (limit > 0) {
+				if (len > limit) len = limit - 1; else limit = 0;
 			}
 
-			for(i = 0; i < len; i++) {
+			for (i = 0; i < len; i++) {
 				var c = t[i];
-				if(c < ' ' || c == '\\' || c == '\"') goto g1;
+				if (c < ' ' || c == '\\' || c == '\"') goto g1;
 				//tested: Unicode line-break chars in most controls don't break lines, therefore don't need to escape
 			}
-			if(limit > 0) t = Limit(t, limit);
-			if(quote) t = "\"" + t + "\"";
+			if (limit > 0) t = Limit(t, limit);
+			if (quote) t = "\"" + t + "\"";
 			return t;
 			g1:
-			using(new StringBuilder_(out var b, len + len / 16 + 100)) {
-				if(quote) b.Append('\"');
-				for(i = 0; i < len; i++) {
+			using (new StringBuilder_(out var b, len + len / 16 + 100)) {
+				if (quote) b.Append('\"');
+				for (i = 0; i < len; i++) {
 					var c = t[i];
-					if(c < ' ') {
-						switch(c) {
+					if (c < ' ') {
+						switch (c) {
 						case '\t': b.Append("\\t"); break;
 						case '\n': b.Append("\\n"); break;
 						case '\r': b.Append("\\r"); break;
 						case '\0': b.Append("\\0"); break;
 						default: b.Append("\\u").Append(((ushort)c).ToString("x4")); break;
 						}
-					} else if(c == '\\') b.Append("\\\\");
-					else if(c == '\"') b.Append("\\\"");
+					} else if (c == '\\') b.Append("\\\\");
+					else if (c == '\"') b.Append("\\\"");
 					else b.Append(c);
 
-					if(limit > 0 && b.Length - (quote ? 1 : 0) >= len) break;
+					if (limit > 0 && b.Length - (quote ? 1 : 0) >= len) break;
 				}
 
-				if(limit > 0) b.Append('…');
-				if(quote) b.Append('\"');
+				if (limit > 0) b.Append('…');
+				if (quote) b.Append('\"');
 				return b.ToString();
 			}
 		}
@@ -1258,20 +1223,19 @@ namespace Au
 		/// Supports all escape sequences of <see cref="Escape"/>: \\ \" \t \n \r \0 \uXXXX.
 		/// Does not support \a \b \f \v \' \xXXXX \UXXXXXXXX.
 		/// </remarks>
-		public static bool Unescape(this string t, out string result)
-		{
+		public static bool Unescape(this string t, out string result) {
 			result = t;
 			int i = t.IndexOf('\\');
-			if(i < 0) return true;
+			if (i < 0) return true;
 
-			using(new StringBuilder_(out var b, t.Length)) {
+			using (new StringBuilder_(out var b, t.Length)) {
 				b.Append(t, 0, i);
 
-				for(; i < t.Length; i++) {
+				for (; i < t.Length; i++) {
 					char c = t[i];
-					if(c == '\\') {
-						if(++i == t.Length) return false;
-						switch(c = t[i]) {
+					if (c == '\\') {
+						if (++i == t.Length) return false;
+						switch (c = t[i]) {
 						case '\\': case '\"': break;
 						case 't': c = '\t'; break;
 						case 'n': c = '\n'; break;
@@ -1284,7 +1248,7 @@ namespace Au
 						//case '\'': break;
 						//also we don't support U and x
 						case 'u':
-							if(!_Uni(t, ++i, 4, out int u)) return false;
+							if (!_Uni(t, ++i, 4, out int u)) return false;
 							c = (char)u;
 							i += 3;
 							break;
@@ -1298,12 +1262,11 @@ namespace Au
 				return true;
 			}
 
-			static bool _Uni(string t, int i, int maxLen, out int R)
-			{
+			static bool _Uni(string t, int i, int maxLen, out int R) {
 				R = 0;
-				int to = i + maxLen; if(to > t.Length) return false;
-				for(; i < to; i++) {
-					int k = _CharHexToDec(t[i]); if(k < 0) return false;
+				int to = i + maxLen; if (to > t.Length) return false;
+				for (; i < to; i++) {
+					int k = _CharHexToDec(t[i]); if (k < 0) return false;
 					R = (R << 4) + k;
 				}
 				return true;
@@ -1345,19 +1308,18 @@ namespace Au
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="raw">Ignore char sequences such as Unicode surrogates and grapheme clusters. Faster, but if the string contains these sequences, the result string is incorrect.</param>
-		public static unsafe string ReverseString(this string t, bool raw)
-		{
-			if(t.Length < 2) return t;
+		public static unsafe string ReverseString(this string t, bool raw) {
+			if (t.Length < 2) return t;
 			var r = new string('\0', t.Length);
-			fixed(char* p = r) {
-				if(raw || AStringUtil.IsAscii(t)) {
-					for(int i = 0, j = t.Length; i < t.Length; i++) {
+			fixed (char* p = r) {
+				if (raw || t.IsAscii()) {
+					for (int i = 0, j = t.Length; i < t.Length; i++) {
 						p[--j] = t[i];
 					}
 				} else {
 					var a = StringInfo.ParseCombiningCharacters(t); //speed: same as StringInfo.GetTextElementEnumerator+MoveNext+ElementIndex
-					for(int gTo = t.Length, j = 0, i = a.Length; --i >= 0; gTo = a[i]) {
-						for(int g = a[i]; g < gTo; g++) p[j++] = t[g];
+					for (int gTo = t.Length, j = 0, i = a.Length; --i >= 0; gTo = a[i]) {
+						for (int g = a[i]; g < gTo; g++) p[j++] = t[g];
 					}
 				}
 			}
@@ -1365,6 +1327,22 @@ namespace Au
 
 			//tested: string.Create slower.
 		}
+
+		/// <summary>
+		/// Returns true if specified part of string does not contain non-ASCII characters.
+		/// </summary>
+		/// <seealso cref="IsAscii(ReadOnlySpan{char})"/>
+		public static bool IsAscii(this string t) => t.AsSpan().IsAscii();
+
+		/// <summary>
+		/// Returns true if specified part of string does not contain non-ASCII characters.
+		/// </summary>
+		public static bool IsAscii(this ReadOnlySpan<char> t) {
+			foreach (char c in t) if (c > 0x7f) return false;
+			return true;
+		}
+		//TODO: add ReadOnlySpan<char> for others too. It's faster than with Range.
+		//	Then don't need CharPtr_ class.
 	}
 }
 

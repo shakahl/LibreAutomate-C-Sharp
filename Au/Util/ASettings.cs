@@ -30,13 +30,13 @@ namespace Au.Util
 	/// 
 	/// All functions are thread-safe, except when setting/getting non-atomic struct types (containing multiple fields, decimal, also long in 32-bit process).
 	/// </remarks>
-	public class JSettings
+	public class ASettings
 	{
 		string _file;
 		bool _loaded;
 		int _save;
 
-		static readonly List<JSettings> s_list = new List<JSettings>();
+		static readonly List<ASettings> s_list = new List<ASettings>();
 		static int s_loadedOnce;
 
 		/// <summary>
@@ -46,12 +46,12 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="file">Full path of .json file. If null, does not load and will not save.</param>
 		/// <param name="useDefault">Use default settings, don't load from file. Delete file if exists.</param>
-		protected static T _Load<T>(string file, bool useDefault = false) where T : JSettings
+		protected static T Load<T>(string file, bool useDefault = false) where T : ASettings
 			=> (T)_Load(file, typeof(T), useDefault);
 
-		static JSettings _Load(string file, Type type, bool useDefault)
+		static ASettings _Load(string file, Type type, bool useDefault)
 		{
-			JSettings R = null;
+			ASettings R = null;
 			if(file != null) {
 				if(AFile.ExistsAsAny(file)) {
 					try {
@@ -60,7 +60,7 @@ namespace Au.Util
 						} else {
 							var b = AFile.LoadBytes(file);
 							var opt = new JsonSerializerOptions { IgnoreNullValues = true, AllowTrailingCommas = true };
-							R = JsonSerializer.Deserialize(b, type, opt) as JSettings;
+							R = JsonSerializer.Deserialize(b, type, opt) as ASettings;
 						}
 					}
 					catch(Exception ex) {
@@ -79,7 +79,7 @@ namespace Au.Util
 				}
 			}
 
-			R ??= Activator.CreateInstance(type) as JSettings;
+			R ??= Activator.CreateInstance(type) as ASettings;
 			R._loaded = true;
 
 			if(file != null) {
@@ -146,7 +146,7 @@ namespace Au.Util
 		{
 #if TRACE_JS
 			//if(_save == 0)
-				AWarning.Write("JSettings.SaveLater", 1, "<>Trace: ");
+				AWarning.Write("ASettings.SaveLater", 1, "<>Trace: ");
 #endif
 			Interlocked.Exchange(ref _save, 1);
 		}

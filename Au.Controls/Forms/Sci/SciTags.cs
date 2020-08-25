@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,10 +14,6 @@ using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
 //using System.Linq;
-
-using Au;
-using Au.Types;
-using Au.Util;
 
 /*
 Most tags are like in QM2.
@@ -58,7 +56,6 @@ OTHER CHANGES:
 
 CHANGES IN <image>:
 	Don't need the closing tag (</image>).
-	Supports managed image resources of the entry assembly. Syntax: <image "resource:ResourceName". Does not support resources from forms or other assemblies.
 	Currently supports only 16x16 icons. Does not support icon resources.
 	Supports images embedded directly in text.
 	More info in help topic "Output tags". File "Output tags.md".

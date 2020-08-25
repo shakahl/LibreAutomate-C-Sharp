@@ -25,7 +25,6 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "PostThreadMessageW")]
 		internal static extern bool PostThreadMessage(int idThread, int Msg, LPARAM wParam, LPARAM lParam);
 
-
 		[DllImport("user32.dll", SetLastError = true)]
 		static extern LPARAM GetWindowLongW(AWnd hWnd, int nIndex);
 
@@ -62,7 +61,6 @@ namespace Au.Types
 
 		internal static LPARAM SetClassLongPtr(AWnd w, int nIndex, LPARAM dwNewLong)
 			=> IntPtr.Size == 8 ? SetClassLongPtrW(w, nIndex, dwNewLong) : SetClassLongW(w, nIndex, dwNewLong);
-
 
 		[DllImport("user32.dll", EntryPoint = "GetClassNameW", SetLastError = true)]
 		internal static extern int GetClassName(AWnd hWnd, char* lpClassName, int nMaxCount);
@@ -427,6 +425,31 @@ namespace Au.Types
 		//[DllImport("user32.dll", SetLastError = true), Obsolete("Undocumented API")]
 		//internal static extern bool IsTopLevelWindow(AWnd hWnd);
 
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromPoint(POINT pt, SODefault dwFlags);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromRect(in RECT lprc, SODefault dwFlags);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr MonitorFromWindow(AWnd hwnd, SODefault dwFlags);
+
+		internal struct MONITORINFO
+		{
+			public int cbSize;
+			public RECT rcMonitor;
+			public RECT rcWork;
+			public uint dwFlags;
+		}
+
+		[DllImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
+		internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
+
+		internal delegate bool MONITORENUMPROC(IntPtr hmon, IntPtr hdc, IntPtr r, LPARAM dwData);
+
+		[DllImport("user32.dll")]
+		internal static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MONITORENUMPROC lpfnEnum, LPARAM dwData);
+
 		#region GetSystemMetrics, SystemParametersInfo
 
 		internal const int SM_YVIRTUALSCREEN = 77;
@@ -527,6 +550,9 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int GetSystemMetrics(int nIndex);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern int GetSystemMetricsForDpi(int nIndex, int dpi);
 
 		internal const int SPI_SETWORKAREA = 47;
 		internal const int SPI_SETWHEELSCROLLLINES = 105;
@@ -704,9 +730,6 @@ namespace Au.Types
 
 		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
 		internal static extern bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni);
-
-		//[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
-		//internal static extern bool SystemParametersInfo(uint uiAction, uint uiParam, void* pvParam, uint fWinIni);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SystemParametersInfoForDpi(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni, int dpi);

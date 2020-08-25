@@ -1,5 +1,7 @@
 //#define TEST_STARTUP_SPEED
 
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -12,8 +14,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -76,7 +76,7 @@ namespace Au
 				}
 
 				//p1.Next('m');
-				if(!inEditorThread) Util.Log_.Run.Write("Task started.");
+				if(!inEditorThread) Log_.Run.Write("Task started.");
 				//p1.Next('n');
 
 				if(useArgs) {
@@ -85,13 +85,13 @@ namespace Au
 					entryPoint.Invoke(null, null);
 				}
 
-				//if(!inEditorThread) Util.Log_.Run.Write("Task ended."); //no, wait for other foreground threads
-				if(!inEditorThread) AProcess.Exit += (_, _) => Util.Log_.Run.Write("Task ended.");
+				//if(!inEditorThread) Log_.Run.Write("Task ended."); //no, wait for other foreground threads
+				if(!inEditorThread) AProcess.Exit += (_, _) => Log_.Run.Write("Task ended.");
 			}
 			catch(TargetInvocationException te) {
 				var e = te.InnerException;
 
-				if(!inEditorThread) Util.Log_.Run.Write($"Task failed. Exception: {e.ToStringWithoutStack()}");
+				if(!inEditorThread) Log_.Run.Write($"Task failed. Exception: {e.ToStringWithoutStack()}");
 
 				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//AOutput.Write(e);
@@ -157,6 +157,7 @@ namespace Au
 	/// 1. The static constructor subscribes to the <see cref="AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
 	/// 2. Provides virtual function <see cref="OnUnhandledException"/>. The script can override it.
 	/// 3. Provides property <see cref="Triggers"/>.
+	/// 4. Sets default culture of all threads = invariant. See <see cref="AProcess.CultureIsInvariant"/>.
 	/// 
 	/// More features may be added in the future.
 	/// </remarks>
@@ -177,6 +178,10 @@ namespace Au
 				//2. Exceptions thrown in non-hosted exe process.
 				//Other exceptions are handled by the host program with try/catch.
 			};
+
+#if !DEBUG
+			AProcess.CultureIsInvariant = true;
+#endif
 		}
 
 		static AScript s_instance;

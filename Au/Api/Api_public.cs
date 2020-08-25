@@ -66,18 +66,17 @@ namespace Au
 		/// <remarks>
 		/// The string always ends with ".".
 		/// </remarks>
-		public static unsafe string MessageFor(int errorCode)
-		{
-			if(errorCode == 0) return null;
-			if(errorCode == 1) return "The requested data or action is unavailable. (0x1)."; //or ERROR_INVALID_FUNCTION, but it's rare
+		public static unsafe string MessageFor(int errorCode) {
+			if (errorCode == 0) return null;
+			if (errorCode == 1) return "The requested data or action is unavailable. (0x1)."; //or ERROR_INVALID_FUNCTION, but it's rare
 			string s = "Unknown exception";
 			char* p = null;
 			const uint fl = Api.FORMAT_MESSAGE_FROM_SYSTEM | Api.FORMAT_MESSAGE_ALLOCATE_BUFFER | Api.FORMAT_MESSAGE_IGNORE_INSERTS;
 			int r = Api.FormatMessage(fl, default, errorCode, 0, &p, 0, default);
-			if(p != null) {
-				while(r > 0 && p[r - 1] <= ' ') r--;
-				if(r > 0) {
-					if(p[r - 1] == '.') r--;
+			if (p != null) {
+				while (r > 0 && p[r - 1] <= ' ') r--;
+				if (r > 0) {
+					if (p[r - 1] == '.') r--;
 					s = new string(p, 0, r);
 				}
 				Api.LocalFree(p);
@@ -150,11 +149,15 @@ namespace Au.Types
 			public int x;
 			public WS style;
 			LPARAM _lpszName;
-			/// <summary>Can be string or atom (ushort).</summary>
-			public LPARAM lpszClass;
+			LPARAM _lpszClass;
 			public WS2 dwExStyle;
 
 			public unsafe string lpszName => _lpszName == default ? null : new string((char*)_lpszName);
+
+			/// <summary>
+			/// If lpszClass was atom, returns string with # prefix and atom value, like "#32770".
+			/// </summary>
+			public unsafe string lpszClass => (nuint)_lpszClass < 0x10000 ? "#" + _lpszClass.ToString() : new string((char*)_lpszClass);
 
 			//tested and documented: hook can change only x y cx cy.
 		}

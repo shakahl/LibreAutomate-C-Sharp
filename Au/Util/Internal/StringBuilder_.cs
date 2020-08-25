@@ -17,7 +17,7 @@ namespace Au.Util
 {
 	/// <summary>
 	/// Provides a cached reusable instance of StringBuilder per thread. It's an optimisation that reduces the number of instances constructed and collected.
-	/// Used like <c>using(new Au.Util.StringBuilder_(out var b)) { b.Append("example"); var s = b.ToString(); }</c>.
+	/// Used like <c>using(new StringBuilder_(out var b)) { b.Append("example"); var s = b.ToString(); }</c>.
 	/// </summary>
 	/// <remarks>
 	/// This is a modified copy of the .NET internal StringBuilderCache class.

@@ -7,13 +7,13 @@
                 <DataTemplate>
                     <ContentPresenter Content='{TemplateBinding Content}'>
                         <ContentPresenter.LayoutTransform>
-                            <RotateTransform Angle='90' />
+                            <RotateTransform Angle='270' />
                         </ContentPresenter.LayoutTransform>
                     </ContentPresenter>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property='Padding' Value='1,6,2,6' />
+        <Setter Property='Padding' Value='2,6,2,6' />
     </Style>
     <Style x:Key='TabItemVerticalRight' TargetType='{x:Type TabItem}' BasedOn='{StaticResource {x:Type TabItem}}'>
         <Setter Property='HeaderTemplate'>
@@ -21,13 +21,13 @@
                 <DataTemplate>
                     <ContentPresenter Content='{TemplateBinding Content}'>
                         <ContentPresenter.LayoutTransform>
-                            <RotateTransform Angle='270' />
+                            <RotateTransform Angle='90' />
                         </ContentPresenter.LayoutTransform>
                     </ContentPresenter>
                 </DataTemplate>
             </Setter.Value>
         </Setter>
-        <Setter Property='Padding' Value='2,6,1,6' />
+        <Setter Property='Padding' Value='2,6,2,6' />
     </Style>
 
 </ResourceDictionary>

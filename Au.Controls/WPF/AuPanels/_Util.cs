@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -16,18 +17,14 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 
-using Au;
-using Au.Types;
-
 namespace Au.Controls.WPF
 {
 	public partial class AuPanels
 	{
 		static class _Util
 		{
-			public static GridLength GridLengthFromString(XElement x) {
+			public static GridLength GridLengthFromString(string s) {
 				double w = 0; var u = GridUnitType.Star;
-				string s = x.Attr("w");
 				if (s == null) u = GridUnitType.Auto;
 				else if (s.Ends("*")) w = s.Length > 1 ? s.ToNumber(..^1) : 1.0;
 				else { w = s.ToNumber(); u = GridUnitType.Pixel; }

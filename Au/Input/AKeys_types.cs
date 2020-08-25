@@ -11,9 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
-using Au;
-using Au.Types;
-
 namespace Au.Types
 {
 #pragma warning disable 1591 //missing doc

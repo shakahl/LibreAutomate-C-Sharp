@@ -10,7 +10,7 @@
 		<AssemblyOriginatorKeyFile>..\Au.snk</AssemblyOriginatorKeyFile>
 		<CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
 		<OutDir>$(SolutionDir)_</OutDir>
-		<NoWarn>1701;1702;3001,3002,3003,3009</NoWarn>
+		<NoWarn>1701;1702;3001,3002,3003,3009;169;649;</NoWarn>
 		<LangVersion>preview</LangVersion>
 		<NoWin32Manifest>true</NoWin32Manifest>
 	</PropertyGroup>

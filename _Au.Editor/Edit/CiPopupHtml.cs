@@ -15,6 +15,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Controls;
 
 //To render rich text for code info can be used 3 controls: Scintilla, WeBrowser, HtmlRenderer.

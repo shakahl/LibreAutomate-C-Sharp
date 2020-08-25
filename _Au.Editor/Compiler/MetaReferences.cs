@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Linq;
 
 using Au.Types;
+using Au.Util;
 
 using Microsoft.CodeAnalysis;
 using System.Collections.Immutable;
@@ -289,7 +290,7 @@ namespace Au.Compiler
 				if(!AFile.GetProperties(xmlPath, out var px)) return null;
 
 				if(px.Size >= 10_000) {
-					var md5 = new Au.Util.AHash.MD5(); md5.Add(xmlPath.Lower());
+					var md5 = new AHash.MD5(); md5.Add(xmlPath.Lower());
 					var dbPath = AFolders.ThisAppTemp + md5.Hash.ToString() + ".db";
 					try {
 						if(!AFile.GetProperties(dbPath, out var pd) || pd.LastWriteTimeUtc != px.LastWriteTimeUtc) {

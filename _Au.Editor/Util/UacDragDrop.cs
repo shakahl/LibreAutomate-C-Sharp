@@ -15,6 +15,7 @@ using System.Windows.Forms;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 class UacDragDrop
 {
@@ -109,8 +110,8 @@ class UacDragDrop
 				//AOutput.Write("drag");
 				_isProcess2 = true;
 				_wWindow = w;
-				new Au.Util.ProcessStarter_("Au.Editor.exe", "/dd " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
-				//new Au.Util.ProcessStarter_("Au.Editor.exe", $"/dd {CommandLine.MsgWnd.Handle.ToString()} {ATime.PerfMilliseconds}").StartUserIL(); //test process startup speed
+				new ProcessStarter_("Au.Editor.exe", "/dd " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
+				//new ProcessStarter_("Au.Editor.exe", $"/dd {CommandLine.MsgWnd.Handle.ToString()} {ATime.PerfMilliseconds}").StartUserIL(); //test process startup speed
 			} else if(w != _wTransparent) {
 				_wWindow = w;
 				_SetTransparentSizeZorder();
@@ -149,7 +150,7 @@ class UacDragDrop
 			DDEvent ev = (DDEvent)event_;
 			//if(ev != DDEvent.Over) AOutput.Write(ev);
 			if(ev == DDEvent.Enter) {
-				var a = Au.Util.Serializer_.Deserialize(b);
+				var a = Serializer_.Deserialize(b);
 				_allowedEffects = (DragDropEffects)(int)a[0];
 				_keyState = a[1];
 				_data = new DataObject();
@@ -315,7 +316,7 @@ class UacDragDrop
 
 			_DDData r = default;
 			if(r.GetData(e.Data)) {
-				var b = Au.Util.Serializer_.Serialize((int)e.AllowedEffect, e.KeyState, r.files, r.shell, r.text, r.linkName);
+				var b = Serializer_.Serialize((int)e.AllowedEffect, e.KeyState, r.files, r.shell, r.text, r.linkName);
 				e.Effect = (DragDropEffects)(int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b);
 			} else {
 				Hide();

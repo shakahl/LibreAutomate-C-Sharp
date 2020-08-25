@@ -15,6 +15,7 @@ using System.Net;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Shared.Extensions;
@@ -185,7 +186,7 @@ class CiGoTo
 				int i = _FindSourceSite(download: true);
 				if(i < 0) return;
 
-				Au.Util.AHash.MD5 md5 = default;
+				AHash.MD5 md5 = default;
 				md5.Add(_docId);
 				var hash = md5.Hash.ToString().Remove(16);
 
@@ -235,7 +236,7 @@ class CiGoTo
 
 	//public static void EditMenuOrToolbar(byte[] data)
 	//{
-	//	var a = Au.Util.Serializer_.Deserialize(data);
+	//	var a = Serializer_.Deserialize(data);
 	//	bool isTB = a[0] != 0;
 	//	string sourceFile = a[1];
 	//	int line = a[2]; //ctor line

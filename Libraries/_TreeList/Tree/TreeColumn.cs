@@ -7,9 +7,6 @@ using System.Drawing;
 using System.Windows.Forms.VisualStyles;
 using System.Drawing.Imaging;
 
-using Au;
-using Au.Types;
-
 namespace Aga.Controls.Tree
 {
 	[TypeConverter(typeof(TreeColumn.TreeColumnConverter)), DesignTimeVisible(false), ToolboxItem(false)]

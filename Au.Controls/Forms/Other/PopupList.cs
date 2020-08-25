@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -11,16 +13,11 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Windows.Forms;
 using System.Drawing;
-using System.Linq;
+//using System.Linq;
 
-using Au;
-using Au.Types;
-//using Au.Controls;
 using Aga.Controls.Tree;
 using Aga.Controls.Tree.NodeControls;
 using System.Collections;
-
-//SHOULDDO: add to Au. Now can't because uses TreeViewAdv.
 
 namespace Au.Controls
 {

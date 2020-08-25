@@ -1,3 +1,5 @@
+using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +12,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 //tested: System.IO.Path functions improved in Core.
 //	No exceptions if path contains invalid characters. Although the exceptions are still documented in MSDN.
@@ -63,7 +63,7 @@ namespace Au
 			}
 
 			for(int na = s.Length + 100; ;) {
-				var b = Util.AMemoryArray.Char_(ref na);
+				var b = AMemoryArray.Char_(ref na);
 				int nr = Api.ExpandEnvironmentStrings(s, b, na);
 				if(nr > na) na = nr;
 				else if(nr > 0) {
@@ -86,7 +86,7 @@ namespace Au
 		internal static string GetEnvVar_(string name)
 		{
 			for(int na = 300; ;) {
-				var b = Util.AMemoryArray.Char_(ref na);
+				var b = AMemoryArray.Char_(ref na);
 				int nr = Api.GetEnvironmentVariable(name, b, na);
 				if(nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
 			}
@@ -411,7 +411,7 @@ namespace Au
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath (tested before Core).
 				for(int na = 300; ;) {
-					var b = Util.AMemoryArray.Char_(ref na);
+					var b = AMemoryArray.Char_(ref na);
 					int nr = Api.GetFullPathName(s, na, b, null);
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}
@@ -463,7 +463,7 @@ namespace Au
 		{
 			if(!s.NE()) {
 				for(int na = 300; ;) {
-					var b = Util.AMemoryArray.Char_(ref na);
+					var b = AMemoryArray.Char_(ref na);
 					int nr = Api.GetLongPathName(s, b, na);
 					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
 				}

@@ -10,8 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 
-using Au;
-
 namespace Au.Types
 {
 	[DebuggerStepThrough]
@@ -33,7 +31,7 @@ namespace Au.Types
 		{
 			public IntPtr acc;
 			public int elem;
-			public AAcc._Misc misc;
+			public AAcc.Misc_ misc;
 
 			public Cpp_Acc(IntPtr iacc, int elem_) { acc = iacc; elem = elem_; misc = default; }
 			public Cpp_Acc(AAcc a) { acc = a._iacc; elem = a._elem; misc = a._misc; }

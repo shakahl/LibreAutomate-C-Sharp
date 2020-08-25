@@ -4,6 +4,7 @@ using System.Windows.Forms;
 
 using Au.Types;
 using Au.Controls;
+using Au.Util;
 
 namespace Au.Tools
 {
@@ -23,7 +24,7 @@ namespace Au.Tools
 			c.ZTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
 			c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
-			var s = EdResources.GetEmbeddedResourceString("Au.Editor.Tools.Keys.txt").RegexReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
+			var s = AResources.GetString("tools/keys.txt").RegexReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
 			var z = this.Window.ClientSize; z.Height = c.Z.LineHeight() * s.LineCount() + 6; this.Window.ClientSize = z;
 			this.Text = s;
 		}

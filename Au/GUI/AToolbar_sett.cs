@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -13,15 +15,13 @@ using System.Reflection;
 //using System.Drawing;
 //using System.Linq;
 
-using Au.Types;
-
 namespace Au
 {
 	public partial class AToolbar
 	{
-		class _Settings : Util.JSettings
+		class _Settings : ASettings
 		{
-			public static _Settings Load(string file, bool useDefault) => _Load<_Settings>(file, useDefault);
+			public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
 
 			public TBBorder border { get => _border; set => Set2(ref _border, value); }
 			TBBorder _border = TBBorder.Width2;

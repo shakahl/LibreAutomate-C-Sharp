@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -11,8 +13,6 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 using System.Text.RegularExpressions;
-
-using Au.Types;
 
 namespace Au
 {
@@ -73,7 +73,7 @@ namespace Au
 			if(t.Length == 0) return false;
 
 			fixed (char* str = t, pat = pattern) {
-				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Util.Tables_.LowerCase : null);
+				return _WildcardCmp(str, pat, t.Length, patLen, ignoreCase ? Tables_.LowerCase : null);
 			}
 
 			//info:

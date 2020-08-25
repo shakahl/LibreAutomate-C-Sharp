@@ -1,3 +1,4 @@
+using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -13,9 +14,6 @@ using System.Windows.Forms;
 using System.Drawing;
 using System.Linq;
 using System.Xml.Linq;
-
-using Au;
-using Au.Types;
 
 namespace Au.Controls
 {
@@ -329,7 +327,7 @@ namespace Au.Controls
 
 			Image im = null;
 			if(x.Attr(out s, "i2")) { //custom image as icon file
-				im = AIcon.OfFile(s).ToBitmap();
+				im = AIcon.OfFile(s).ToWinformsBitmap();
 				if(im == null) AOutput.Write($"Failed to get {(isMenu ? "menu item" : "toolbar button")} {x.Name} icon from file {s}\n\tTo fix this, right-click it and select Properties...");
 				//SHOULDDO: async or cache
 			}

@@ -10,6 +10,7 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
@@ -49,6 +50,10 @@ static unsafe class Program
 
 		if(args.Length != 1) return;
 
+#if !DEBUG
+		AProcess.CultureIsInvariant = true;
+#endif
+
 		string asmFile, fullPathRefs; int flags;
 
 #if false //use shared memory instead of pipe. Works, but unfinished, used only to compare speed. Same speed.
@@ -78,10 +83,10 @@ static unsafe class Program
 		APerf.Shared.Next('1');
 
 		//todo: mutex
-		var m = Au.Util.SharedMemory_.Ptr;
+		var m = SharedMemory_.Ptr;
 		var b = new ReadOnlySpan<byte>(m->tasks.data, m->tasks.size).ToArray();
 		//AOutput.Write(m->tasks.size, b);
-		var a = Au.Util.Serializer_.Deserialize(b);
+		var a = Serializer_.Deserialize(b);
 		ATask.Init_(ATRole.MiniProgram, a[0]);
 		asmFile = a[1]; flags = a[2]; args = a[3]; fullPathRefs = a[4];
 		string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
@@ -111,7 +116,7 @@ static unsafe class Program
 			if(!Api.ReadFileArr(pipe, out var b, size, out nr) || nr != size) return;
 			//APerf.Shared.Next('4');
 
-			var a = Au.Util.Serializer_.Deserialize(b);
+			var a = Serializer_.Deserialize(b);
 			ATask.Init_(ATRole.MiniProgram, a[0]);
 			asmFile = a[1]; flags = a[2]; args = a[3]; fullPathRefs = a[4];
 			string wrp = a[5]; if(wrp != null) Environment.SetEnvironmentVariable("ATask.WriteResult.pipe", wrp);
@@ -155,8 +160,8 @@ static unsafe class Program
 #endif
 
 		//JIT slowest-to-JIT methods. Makes faster even with profile optimization.
-		Au.Util.AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
-		Au.Util.AJit.Compile(typeof(Au.Util.Serializer_), "Deserialize");
+		AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
+		AJit.Compile(typeof(Serializer_), "Deserialize");
 
 		//_ = Assembly.GetExecutingAssembly().EntryPoint.GetParameters().Length;
 		var ep = Assembly.GetExecutingAssembly().EntryPoint;
@@ -172,9 +177,11 @@ static unsafe class Program
 		//_ = typeof(Stack<string>).Assembly; //System.Collections
 
 		ATask.Init_(ATRole.MiniProgram);
-		Au.Util.Log_.Run.Write(null);
+		Log_.Run.Write(null);
 
 		_Hook();
+
+		"Au".ToLowerInvariant(); //in .NET 5 preview would be first time 15-40 ms
 
 		APerf.Shared.Next();
 	}

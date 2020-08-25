@@ -66,16 +66,17 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Files to add to managed resources</h3>
 	/// <code><![CDATA[
-	/// resource file.png //can be filename or relative path, like with 'c'
-	/// resource file.txt /string //text file. Must be single space before /.
-	/// resource file.csv /strings //CSV file containing multiple strings as 2-column CSV (name, value)
+	/// resource file.png  //file as stream. Can be filename or relative path, like with 'c'.
+	/// resource file.ext /byte[]  //file as byte[]
+	/// resource file.txt /string  //text file as string
+	/// resource file.csv /strings  //CSV file containing multiple strings as 2-column CSV (name, value)
+	/// resource file.png /embedded  //file as embedded resource stream
+	/// resource folder  //all files in folder, as streams
+	/// resource folder /byte[]  //all files in folder, as byte[]
+	/// resource folder /string  //all files in folder, file as strings
+	/// resource folder /embedded  //all files in folder, as embedded resource streams
 	/// ]]></code>
-	/// Resource type depends on file extension and suffix:
-	/// Suffix /string or /strings - string. Extension .png, .bmp, .jpg, .jpeg, .gif, .tif or .tiff - Bitmap. Extension .ico - Icon. Other - byte[].
-	/// Examples of loading resources at run time:
-	/// In meta comments: <c>resource \images\file.png</c>. Code: <c>var bitmap = Au.Util.AResources.GetAppResource("file.png") as Bitmap;</c>
-	/// In meta comments: <c>resource file.ico</c>. Code: <c>var icon = new Icon(Au.Util.AResources.GetAppResource("file.ico") as Icon, 16, 16);</c>
-	/// In meta comments: <c>resource file.cur</c>. Code: <c>var cursor = Au.Util.ACursor.LoadCursorFromMemory(Au.Util.AResources.GetAppResource("file.cur") as byte[]);</c>
+	/// More info in .cs of the Properties window.
 	/// 
 	/// <h3>Settings used when compiling</h3>
 	/// <code><![CDATA[
@@ -203,7 +204,7 @@ namespace Au.Compiler
 		/// <summary>
 		/// Gets or sets default meta option 'noWarnings' value. Initially null.
 		/// </summary>
-		public static List<string> DefaultNoWarnings { get; set; } = new List<string> { "CS1701", "CS1702" };
+		public static List<string> DefaultNoWarnings { get; set; } = new() { "CS1701", "CS1702" };
 		//CS1702: eg Core 3.1 System.Drawing.Common references System.Runtime version of Core 3.0; VS does not show this warning; VS adds 1701,1702 to default project properties.
 
 		///// <summary>
@@ -356,42 +357,41 @@ namespace Au.Compiler
 		/// <param name="f">Main C# file. If projFolder not null, must be the main file of the project.</param>
 		/// <param name="projFolder">Project folder of the main file, or null if it is not in a project.</param>
 		/// <param name="flags"></param>
-		public bool Parse(FileNode f, FileNode projFolder, EMPFlags flags)
-		{
+		public bool Parse(FileNode f, FileNode projFolder, EMPFlags flags) {
 			Debug.Assert(Errors == null); //cannot be called multiple times
 			Errors = new ErrBuilder();
 			_flags = flags;
 
 			_ParseFile(f, true);
 
-			if(projFolder != null) {
-				foreach(var ff in projFolder.EnumProjectClassFiles(f)) _ParseFile(ff, false);
+			if (projFolder != null) {
+				foreach (var ff in projFolder.EnumProjectClassFiles(f)) _ParseFile(ff, false);
 			}
 
-			if(_filesC != null) {
-				foreach(var ff in _filesC) {
-					if(CodeFiles.Exists(o => o.f == ff)) continue;
+			if (_filesC != null) {
+				foreach (var ff in _filesC) {
+					if (CodeFiles.Exists(o => o.f == ff)) continue;
 					_ParseFile(ff, false);
 				}
 			}
 
 			//define d:DEBUG_ONLY, r:RELEASE_ONLY
-			for(int i = Defines.Count; --i >= 0;) {
-				var s = Defines[i]; if(s.Length < 3 || s[1] != ':') continue;
+			for (int i = Defines.Count; --i >= 0;) {
+				var s = Defines[i]; if (s.Length < 3 || s[1] != ':') continue;
 				bool? del = s[0] switch { 'r' => !Optimize, 'd' => Optimize, _ => null };
-				if(del == true) Defines.RemoveAt(i); else if(del == false) Defines[i] = s[2..];
+				if (del == true) Defines.RemoveAt(i); else if (del == false) Defines[i] = s[2..];
 			}
 
-			if(!Optimize) {
-				if(!Defines.Contains("DEBUG")) Defines.Add("DEBUG");
-				if(!Defines.Contains("TRACE")) Defines.Add("TRACE");
+			if (!Optimize) {
+				if (!Defines.Contains("DEBUG")) Defines.Add("DEBUG");
+				if (!Defines.Contains("TRACE")) Defines.Add("TRACE");
 			}
 			//if(Role == ERole.exeProgram && !Defines.Contains("EXE")) Defines.Add("EXE"); //rejected
 
 			_FinalCheckOptions(f);
 
-			if(Errors.ErrorCount > 0) {
-				if(flags.Has(EMPFlags.PrintErrors)) Errors.PrintAll();
+			if (Errors.ErrorCount > 0) {
+				if (flags.Has(EMPFlags.PrintErrors)) Errors.PrintAll();
 				return false;
 			}
 			return true;
@@ -402,25 +402,24 @@ namespace Au.Compiler
 		/// </summary>
 		/// <param name="f"></param>
 		/// <param name="isMain">If false, it is a file added through meta option 'c'.</param>
-		void _ParseFile(FileNode f, bool isMain)
-		{
+		void _ParseFile(FileNode f, bool isMain) {
 			//var p1 = APerf.Create();
 			string code = f.GetText(cache: true);
 			//p1.Next();
 			bool isScript = f.IsScript;
 
-			if(_isMain = isMain) {
+			if (_isMain = isMain) {
 				Name = APath.GetNameNoExt(f.Name);
 				IsScript = isScript;
 
 				Optimize = DefaultOptimize;
 				WarningLevel = DefaultWarningLevel;
 				NoWarnings = DefaultNoWarnings != null ? new List<string>(DefaultNoWarnings) : new List<string>();
-				Defines = new List<string>();
+				Defines = new ();
 				Role = DefaultRole(isScript);
 
-				CodeFiles = new List<MetaCodeFile>();
-				References = new MetaReferences();
+				CodeFiles = new ();
+				References = new ();
 			}
 
 			CodeFiles.Add(new MetaCodeFile(f, code));
@@ -429,10 +428,10 @@ namespace Au.Compiler
 			_code = code;
 
 			int endOf = FindMetaComments(code);
-			if(endOf > 0) {
-				if(isMain) EndOfMeta = endOf;
+			if (endOf > 0) {
+				if (isMain) EndOfMeta = endOf;
 
-				foreach(var t in EnumOptions(code, endOf)) {
+				foreach (var t in EnumOptions(code, endOf)) {
 					//var p1 = APerf.Create();
 					_ParseOption(t.Name(), t.Value(), t.nameStart, t.valueStart);
 					//p1.Next(); var t1 = p1.TimeTotal; if(t1 > 5) AOutput.Write(t1, t.Name(), t.Value());
@@ -445,64 +444,62 @@ namespace Au.Compiler
 		FileNode _fn;
 		string _code;
 
-		void _ParseOption(string name, string value, int iName, int iValue)
-		{
+		void _ParseOption(string name, string value, int iName, int iValue) {
 			//AOutput.Write(name, value);
 			_nameFrom = iName; _nameTo = iName + name.Length;
 			_valueFrom = iValue; _valueTo = iValue + value.Length;
 
-			if(value.Length == 0) { _ErrorV("value cannot be empty"); return; }
+			if (value.Length == 0) { _ErrorV("value cannot be empty"); return; }
 			bool forCodeInfo = _flags.Has(EMPFlags.ForCodeInfo);
 
-			switch(name) {
+			switch (name) {
 			case "r":
 			case "com":
 			case "pr" when _isMain:
-				if(name[0] == 'p') {
+				if (name[0] == 'p') {
 					Specified |= EMSpecified.pr;
-					if(!_PR(ref value) || forCodeInfo) return;
+					if (!_PR(ref value) || forCodeInfo) return;
 				}
 
 				try {
 					//var p1 = APerf.Create();
-					if(!References.Resolve(value, name[0] == 'c')) {
+					if (!References.Resolve(value, name[0] == 'c')) {
 						_ErrorV("reference assembly not found: " + value); //FUTURE: need more info, or link to Help
 					}
 					//p1.NW('r');
 				}
-				catch(Exception e) {
+				catch (Exception e) {
 					_ErrorV("exception: " + e.Message); //unlikely. If bad format, will be error later, without position info.
 				}
 				return;
 			case "c":
-				var ff = _GetFile(value); if(ff == null) return;
-				if(!ff.IsClass) { _ErrorV("must be a class file"); return; }
-				if(_filesC == null) _filesC = new List<FileNode>();
-				else if(_filesC.Contains(ff)) return;
-				_filesC.Add(ff);
+				var ff = _GetFile(value); if (ff == null) return;
+				if (!ff.IsClass) { _ErrorV("must be a class file"); return; }
+				_filesC ??= new();
+				if (!_filesC.Contains(ff)) _filesC.Add(ff);
 				return;
 			case "resource":
-				var fs1 = _GetFileAndString(value);
-				if(!forCodeInfo && fs1.f != null) {
-					if(Resources == null) Resources = new List<MetaFileAndString>();
-					else if(Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) return;
-					Resources.Add(fs1);
+				//if (value.Ends(" /resources")) { //add following resources in value.resources instead of in AssemblyName.g.resources. //rejected. Rarely used. Would need more code, because meta resource can be in multiple files.
+				//	if (!forCodeInfo) (Resources ??= new()).Add(new(null, value[..^11]));
+				//} else
+				{
+					var fs1 = _GetFileAndString(value, null);
+					if (!forCodeInfo && fs1.f != null) {
+						Resources ??= new();
+						if (!Resources.Exists(o => o.f == fs1.f && o.s == fs1.s)) Resources.Add(fs1);
+					}
 				}
 				return;
-				//FUTURE: support wildcard:
-				// resource *.png //add to managed resources all matching files in this C# file's folder.
-				// resource Resources\*.png //add to managed resources all matching files in a subfolder of this C# file's folder.
-				//Support folder (add all in folder).
 			}
-			if(!_isMain) {
+			if (!_isMain) {
 				_ErrorN($"in this file only these options can be used: 'r', 'c', 'resource', 'com'. Others only in the main file of the compilation - {CodeFiles[0].f.Name}.");
 				return;
 			}
 
-			switch(name) {
+			switch (name) {
 			case "optimize":
 				_Specified(EMSpecified.optimize);
-				if(_TrueFalse(out bool optim, value)) Optimize = optim;
+				if (_TrueFalse(out bool optim, value)) Optimize = optim;
 				break;
 			case "define":
 				Specified |= EMSpecified.define;
@@ -511,7 +508,7 @@ namespace Au.Compiler
 			case "warningLevel":
 				_Specified(EMSpecified.warningLevel);
 				int wl = value.ToInt();
-				if(wl >= 0 && wl <= 4) WarningLevel = wl;
+				if (wl >= 0 && wl <= 4) WarningLevel = wl;
 				else _ErrorV("must be 0 - 4");
 				break;
 			case "noWarnings":
@@ -520,9 +517,9 @@ namespace Au.Compiler
 				break;
 			case "role":
 				_Specified(EMSpecified.role);
-				if(_Enum(out ERole ro, value)) {
+				if (_Enum(out ERole ro, value)) {
 					Role = ro;
-					if(IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _ErrorV("role classFile and classLibrary can be only in class files");
+					if (IsScript && (ro == ERole.classFile || Role == ERole.classLibrary)) _ErrorV("role classFile and classLibrary can be only in class files");
 				}
 				break;
 			case "preBuild":
@@ -535,31 +532,31 @@ namespace Au.Compiler
 				break;
 			case "outputPath":
 				_Specified(EMSpecified.outputPath);
-				if(!forCodeInfo) OutputPath = _GetOutPath(value);
+				if (!forCodeInfo) OutputPath = _GetOutPath(value);
 				break;
 			case "runMode":
 				_Specified(EMSpecified.runMode);
-				if(_Enum(out ERunMode rm, value)) RunMode = rm;
+				if (_Enum(out ERunMode rm, value)) RunMode = rm;
 				break;
 			case "ifRunning":
 				_Specified(EMSpecified.ifRunning);
-				if(_Enum(out EIfRunning ifR, value)) IfRunning = ifR;
+				if (_Enum(out EIfRunning ifR, value)) IfRunning = ifR;
 				break;
 			case "ifRunning2":
 				_Specified(EMSpecified.ifRunning2);
-				if(_Enum(out EIfRunning2 ifR2, value)) IfRunning2 = ifR2;
+				if (_Enum(out EIfRunning2 ifR2, value)) IfRunning2 = ifR2;
 				break;
 			case "uac":
 				_Specified(EMSpecified.uac);
-				if(_Enum(out EUac uac, value)) Uac = uac;
+				if (_Enum(out EUac uac, value)) Uac = uac;
 				break;
 			case "prefer32bit":
 				_Specified(EMSpecified.prefer32bit);
-				if(_TrueFalse(out bool is32, value)) Prefer32Bit = is32;
+				if (_TrueFalse(out bool is32, value)) Prefer32Bit = is32;
 				break;
 			case "console":
 				_Specified(EMSpecified.console);
-				if(_TrueFalse(out bool con, value)) Console = con;
+				if (_TrueFalse(out bool con, value)) Console = con;
 				break;
 			//case "config":
 			//	_Specified(EMSpecified.config);
@@ -595,11 +592,10 @@ namespace Au.Compiler
 
 		int _nameFrom, _nameTo, _valueFrom, _valueTo;
 
-		bool _Error(string s, int from, int to)
-		{
-			if(!_flags.Has(EMPFlags.ForCodeInfo)) {
+		bool _Error(string s, int from, int to) {
+			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
 				Errors.AddError(_fn, _code, from, "error in meta: " + s);
-			} else if(_fn == Panels.Editor.ZActiveDoc.ZFile) {
+			} else if (_fn == Panels.Editor.ZActiveDoc.ZFile) {
 				CodeInfo._diag.AddMetaError(from, to, s);
 			}
 			return false;
@@ -611,16 +607,14 @@ namespace Au.Compiler
 
 		bool _ErrorM(string s) => _Error(s, 0, 3);
 
-		void _Specified(EMSpecified what)
-		{
-			if(Specified.Has(what)) _ErrorN("this meta comment option is already specified");
+		void _Specified(EMSpecified what) {
+			if (Specified.Has(what)) _ErrorN("this meta comment option is already specified");
 			Specified |= what;
 		}
 
-		bool _TrueFalse(out bool b, string s)
-		{
+		bool _TrueFalse(out bool b, string s) {
 			b = false;
-			switch(s) {
+			switch (s) {
 			case "true": b = true; break;
 			case "false": break;
 			default: return _ErrorV("must be true or false");
@@ -636,101 +630,95 @@ namespace Au.Compiler
 		//	_ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(typeof(T))));
 		//	return false;
 		//}
-		unsafe bool _Enum<T>(out T result, string s) where T : unmanaged, Enum
-		{
+		unsafe bool _Enum<T>(out T result, string s) where T : unmanaged, Enum {
 			Debug.Assert(sizeof(T) == 4);
 			bool R = _Enum2(typeof(T), out int v, s);
 			result = Unsafe.As<int, T>(ref v);
 			return R;
 		}
-		bool _Enum2(Type ty, out int result, string s)
-		{
+		bool _Enum2(Type ty, out int result, string s) {
 			result = default;
-			if(!s_enumCache.TryGetValue(ty, out var fields)) {
+			if (!s_enumCache.TryGetValue(ty, out var fields)) {
 				var names = Enum.GetNames(ty);
 				var values = Enum.GetValues(ty);
 				fields = new (string, int)[names.Length];
-				for(int i = 0; i < names.Length; i++) fields[i] = (names[i], (int)values.GetValue(i));
+				for (int i = 0; i < names.Length; i++) fields[i] = (names[i], (int)values.GetValue(i));
 				s_enumCache[ty] = fields;
 			}
-			foreach(var v in fields) if(v.name == s) { result = v.value; return true; }
+			foreach (var v in fields) if (v.name == s) { result = v.value; return true; }
 			return _ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(ty)));
 		}
-		static Dictionary<Type, (string name, int value)[]> s_enumCache = new Dictionary<Type, (string name, int value)[]>();
+		static Dictionary<Type, (string name, int value)[]> s_enumCache = new ();
 
-		FileNode _GetFile(string s)
-		{
-			var f = _fn.FindRelative(s, false);
-			if(f == null) { _ErrorV($"file '{s}' does not exist in this workspace"); return null; }
-			if(!AFile.ExistsAsFile(s = f.FilePath, true)) { _ErrorV("file does not exist: " + s); return null; }
+		FileNode _GetFile(string s, bool? folder = false) {
+			var f = _fn.FindRelative(s, folder);
+			if (f == null) { _ErrorV($"file '{s}' does not exist in this workspace"); return null; }
+			var v = AFile.ExistsAs(s = f.FilePath, true);
+			if (v != (f.IsFolder ? FileDir.Directory : FileDir.File)) { _ErrorV("file does not exist: " + s); return null; }
 			return f;
 		}
 
-		MetaFileAndString _GetFileAndString(string s)
-		{
+		MetaFileAndString _GetFileAndString(string s, bool? folder = false) {
 			string s2 = null;
 			int i = s.Find(" /");
-			if(i > 0) {
+			if (i > 0) {
 				s2 = s.Substring(i + 2);
 				s = s.Remove(i);
 			}
-			return new MetaFileAndString(_GetFile(s), s2);
+			return new (_GetFile(s, folder), s2);
 		}
 
-		string _GetOutPath(string s)
-		{
+		string _GetOutPath(string s) {
 			s = s.TrimEnd('\\');
-			if(!APath.IsFullPathExpandEnvVar(ref s)) {
-				if(s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
+			if (!APath.IsFullPathExpandEnvVar(ref s)) {
+				if (s.Starts('\\')) s = _fn.Model.FilesDirectory + s;
 				else s = APath.GetDirectory(_fn.FilePath, true) + s;
 			}
 			return APath.Normalize_(s, noExpandEV: true);
 		}
 
-		bool _PR(ref string value)
-		{
-			var f = _GetFile(value); if(f == null) return false;
-			if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
-			foreach(var v in CodeFiles) if(v.f == f) return _ErrorV("circular reference");
-			if(!_flags.Has(EMPFlags.ForCodeInfo)) {
-				if(!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
+		bool _PR(ref string value) {
+			var f = _GetFile(value); if (f == null) return false;
+			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
+			foreach (var v in CodeFiles) if (v.f == f) return _ErrorV("circular reference");
+			if (!_flags.Has(EMPFlags.ForCodeInfo)) {
+				if (!Compiler.Compile(ECompReason.CompileIfNeed, out var r, f, projFolder)) return _ErrorV("failed to compile library");
 				//AOutput.Write(r.role, r.file);
-				if(r.role != ERole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
+				if (r.role != ERole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
 				value = r.file;
 			}
-			(ProjectReferences ??= new List<FileNode>()).Add(f);
+			(ProjectReferences ??= new ()).Add(f);
 			return true;
 		}
 
-		bool _FinalCheckOptions(FileNode f)
-		{
+		bool _FinalCheckOptions(FileNode f) {
 			const EMSpecified c_spec1 = EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.ifRunning2
 				| EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
 			const string c_spec1S = "cannot use runMode, ifRunning, ifRunning2, uac, prefer32bit, manifest, icon, console";
 
 			bool needOP = false;
-			switch(Role) {
+			switch (Role) {
 			case ERole.miniProgram:
-				if(Specified.HasAny(EMSpecified.outputPath)) return _ErrorM("with role miniProgram cannot use outputPath");
+				if (Specified.HasAny(EMSpecified.outputPath)) return _ErrorM("with role miniProgram cannot use outputPath");
 				break;
 			case ERole.exeProgram:
 				needOP = true;
 				break;
 			case ERole.editorExtension:
-				if(Specified.HasAny(c_spec1 | EMSpecified.outputPath)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath");
+				if (Specified.HasAny(c_spec1 | EMSpecified.outputPath)) return _ErrorM($"with role editorExtension {c_spec1S}, outputPath");
 				break;
 			case ERole.classLibrary:
-				if(Specified.HasAny(c_spec1)) return _ErrorM("with role classLibrary " + c_spec1S);
+				if (Specified.HasAny(c_spec1)) return _ErrorM("with role classLibrary " + c_spec1S);
 				needOP = true;
 				break;
 			case ERole.classFile:
-				if(Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, r, resource, com");
+				if (Specified != 0) return _ErrorM("with role classFile (default role of class files) can be used only c, r, resource, com");
 				break;
 			}
-			if(needOP) OutputPath ??= GetDefaultOutputPath(f, Role, withEnvVar: false);
+			if (needOP) OutputPath ??= GetDefaultOutputPath(f, Role, withEnvVar: false);
 
-			if((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunMode == ERunMode.green) return _ErrorM("ifRunning run requires runMode blue");
-			if(Specified.Has(EMSpecified.ifRunning2) && RunMode == ERunMode.blue) return _ErrorM("with runMode blue cannot use ifRunning2");
+			if ((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunMode == ERunMode.green) return _ErrorM("ifRunning run requires runMode blue");
+			if (Specified.Has(EMSpecified.ifRunning2) && RunMode == ERunMode.blue) return _ErrorM("with runMode blue cannot use ifRunning2");
 
 			//if(ResFile != null) {
 			//	if(IconFile != null) return _ErrorM("cannot add both res file and icon");
@@ -740,22 +728,20 @@ namespace Au.Compiler
 			return true;
 		}
 
-		public static string GetDefaultOutputPath(FileNode f, ERole role, bool withEnvVar)
-		{
+		public static string GetDefaultOutputPath(FileNode f, ERole role, bool withEnvVar) {
 			Debug.Assert(role == ERole.exeProgram || role == ERole.classLibrary);
 			string r;
-			if(role == ERole.classLibrary) r = withEnvVar ? @"%AFolders.ThisApp%\Libraries" : AFolders.ThisApp + @"Libraries";
+			if (role == ERole.classLibrary) r = withEnvVar ? @"%AFolders.ThisApp%\Libraries" : AFolders.ThisApp + @"Libraries";
 			else r = (withEnvVar ? @"%AFolders.Workspace%\bin\" : AFolders.Workspace + @"bin\") + f.DisplayName;
 			return r;
 		}
 
-		public CSharpCompilationOptions CreateCompilationOptions()
-		{
+		public CSharpCompilationOptions CreateCompilationOptions() {
 			OutputKind oKind = OutputKind.WindowsApplication;
-			if(Role == ERole.classLibrary || Role == ERole.classFile) oKind = OutputKind.DynamicallyLinkedLibrary;
-			else if(Console) oKind = OutputKind.ConsoleApplication;
+			if (Role == ERole.classLibrary || Role == ERole.classFile) oKind = OutputKind.DynamicallyLinkedLibrary;
+			else if (Console) oKind = OutputKind.ConsoleApplication;
 
-			return new CSharpCompilationOptions(
+			return new (
 			   oKind,
 			   optimizationLevel: Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
 			   allowUnsafe: true,
@@ -767,9 +753,8 @@ namespace Au.Compiler
 			   );
 		}
 
-		public CSharpParseOptions CreateParseOptions()
-		{
-			return new CSharpParseOptions(LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
+		public CSharpParseOptions CreateParseOptions() {
+			return new (LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
 				_flags.Has(EMPFlags.ForCodeInfo) ? DocumentationMode.Diagnose : (XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None),
 				SourceCodeKind.Regular,
 				Defines);
@@ -779,10 +764,9 @@ namespace Au.Compiler
 		/// Returns the length of metacomments "/*/ ... /*/" at the start of code. Returns 0 if no metacomments.
 		/// </summary>
 		/// <param name="code">Code. Can be null.</param>
-		public static int FindMetaComments(string code)
-		{
-			if(code.Lenn() < 6 || !code.Starts("/*/")) return 0;
-			int iTo = code.Find("/*/", 3); if(iTo < 0) return 0;
+		public static int FindMetaComments(string code) {
+			if (code.Lenn() < 6 || !code.Starts("/*/")) return 0;
+			int iTo = code.Find("/*/", 3); if (iTo < 0) return 0;
 			return iTo + 3;
 		}
 
@@ -791,19 +775,18 @@ namespace Au.Compiler
 		/// </summary>
 		/// <param name="code">Code that starts with metacomments "/*/ ... /*/".</param>
 		/// <param name="endOfMetacomments">The very end of metacomments, returned by <see cref="FindMetaComments"/>.</param>
-		public static IEnumerable<Token> EnumOptions(string code, int endOfMetacomments)
-		{
-			for(int i = 3, iEnd = endOfMetacomments - 3; i < iEnd; i++) {
+		public static IEnumerable<Token> EnumOptions(string code, int endOfMetacomments) {
+			for (int i = 3, iEnd = endOfMetacomments - 3; i < iEnd; i++) {
 				Token t = default;
-				for(; i < iEnd; i++) if(code[i] > ' ') break; //find next option
-				if(i == iEnd) break;
+				for (; i < iEnd; i++) if (code[i] > ' ') break; //find next option
+				if (i == iEnd) break;
 				t.nameStart = i;
-				while(i < iEnd && code[i] > ' ') i++; //find separator after name
+				while (i < iEnd && code[i] > ' ') i++; //find separator after name
 				t.nameLen = i - t.nameStart;
-				while(i < iEnd && code[i] <= ' ') i++; //find value
+				while (i < iEnd && code[i] <= ' ') i++; //find value
 				t.valueStart = i;
-				for(; i < iEnd; i++) if(code[i] == ';') break; //find ; after value
-				int j = i; while(j > t.valueStart && code[j - 1] <= ' ') j--; //rtrim
+				for (; i < iEnd; i++) if (code[i] == ';') break; //find ; after value
+				int j = i; while (j > t.valueStart && code[j - 1] <= ' ') j--; //rtrim
 				t.valueLen = j - t.valueStart;
 				t.code = code;
 				yield return t;

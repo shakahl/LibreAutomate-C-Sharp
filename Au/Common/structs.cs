@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Drawing;
+using System.Globalization;
 //using System.Linq;
 
 
@@ -21,7 +22,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Unlike IntPtr:
 	/// - Has implicit casts from most integral types. And explicit casts to.
-	///	- Does not check overflow when casting from uint etc. IntPtr throws exception on overflow, which can create bugs.
+	///	- Does not check overflow when casting. IntPtr throws exception on overflow, which can create bugs.
 	///	
 	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
 	///	There is no cast operators for enum. When need, cast through int or uint. For AWnd cast through IntPtr.
@@ -30,9 +31,13 @@ namespace Au.Types
 	//[Serializable]
 	public unsafe struct LPARAM : IEquatable<LPARAM>, IComparable<LPARAM>
 	{
+		//TODO: remove and use nint/nuint.
+		//	They have more implicit converions than IntPtr. Eg nint=int, but nint=(nint)uint.
+		//	Tested: they don't throw overflow exceptions.
+
 #pragma warning disable 1591 //XML doc
 		//[NonSerialized]
-		void* _v; //Not IntPtr, because it throws exception on overflow when casting from uint etc.
+		readonly void* _v;
 
 		LPARAM(void* v) { _v = v; }
 
@@ -77,7 +82,7 @@ namespace Au.Types
 		public static LPARAM operator +(LPARAM a, int b) => (byte*)a._v + b;
 		public static LPARAM operator -(LPARAM a, int b) => (byte*)a._v - b;
 
-		public override string ToString() => ((IntPtr)_v).ToString();
+		public override string ToString() => ((IntPtr)_v).ToString(NumberFormatInfo.InvariantInfo);
 
 		public override int GetHashCode() => (int)_v;
 
@@ -160,7 +165,7 @@ namespace Au.Types
 
 		public void Deconstruct(out int x, out int y) { x = this.x; y = this.y; }
 
-		public override string ToString() => $"{{x={x} y={y}}}";
+		public override string ToString() => $"{{x={x.ToStringInvariant()} y={y.ToStringInvariant()}}}";
 
 		//properties for JSON serialization
 		[EditorBrowsable(EditorBrowsableState.Never)]
@@ -204,7 +209,7 @@ namespace Au.Types
 
 		public void Deconstruct(out int width, out int height) { width = this.width; height = this.height; }
 
-		public override string ToString() => $"{{cx={width} cy={height}}}";
+		public override string ToString() => $"{{cx={width.ToStringInvariant()} cy={height.ToStringInvariant()}}}";
 
 		//properties for JSON serialization
 		[EditorBrowsable(EditorBrowsableState.Never)]
@@ -214,12 +219,14 @@ namespace Au.Types
 #pragma warning restore 1591 //XML doc
 	}
 
+	//CONSIDER: rename to ARect, APoint, ASize. For case-insensitive languages like VB.NET.
+
 	/// <summary>
 	/// Rectangle coordinates left top right bottom.
 	/// </summary>
 	/// <remarks>
 	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
-	/// Has implicit conversions from/to <b>Rectangle</b> and <b>RectangleF</b>.
+	/// Has implicit conversions from/to <b>Rectangle</b>.
 	/// </remarks>
 	[DebuggerStepThrough]
 	[Serializable]
@@ -419,12 +426,50 @@ namespace Au.Types
 			AWnd.Internal_.MoveInScreen(true, default, default, false, default, ref this, screen, workArea, true);
 		}
 
+		/// <summary>
+		/// Converts to string "{L=left T=top W=width H=height}".
+		/// </summary>
+		/// <seealso cref="TryParse"/>
 		public override string ToString() {
-			return $"{{L={left} T={top} W={Width} H={Height}}}";
-			//note: don't change the format. Some functions parse it.
+			return $"{{L={left.ToStringInvariant()} T={top.ToStringInvariant()} W={Width.ToStringInvariant()} H={Height.ToStringInvariant()}}}";
+			//note: don't change the format. Some functions parse it, eg TryParse and acc in C++.
 
 			//don't need R B. Rarely useful, just makes more difficult to read W H.
 			//return $"{{L={left} T={top} R={right} B={bottom}  W={Width} H={Height}}}";
+		}
+
+		/// <summary>
+		/// Converts to string "left top width height".
+		/// </summary>
+		/// <seealso cref="TryParse"/>
+		public string ToStringSimple() {
+			return $"{left.ToStringInvariant()} {top.ToStringInvariant()} {Width.ToStringInvariant()} {Height.ToStringInvariant()}";
+		}
+
+		/// <summary>
+		/// Converts string to RECT.
+		/// Returns false if invalid string format.
+		/// </summary>
+		/// <param name="s">String in format "{L=left T=top W=width H=height}" (<see cref="ToString"/>) or "left top width height" (<see cref="ToStringSimple"/>).</param>
+		/// <param name="r"></param>
+		public static bool TryParse(string s, out RECT r) {
+			r = default;
+			bool ok;
+			if (s.Starts('{')) {
+				ok = s.Eq(1, "L=") && s.ToInt(out r.left, 3, out int e)
+					&& s.Eq(e, " T=") && s.ToInt(out r.top, e + 3, out e)
+					&& s.Eq(e, " W=") && s.ToInt(out r.right, e + 3, out e)
+					&& s.Eq(e, " H=") && s.ToInt(out r.bottom, e + 3, out e)
+					&& s.Length == e + 1 && s[e] == '}';
+				//tested: regex @"^\{L=(-?\d+) T=(-?\d+) W=(-?\d+) H=(-?\d+)\}$" 9 times slower.
+			} else {
+				ok = s.ToInt(out r.left, 0, out int e) && s.ToInt(out r.top, e, out e) && s.ToInt(out r.right, e, out e) && s.ToInt(out r.bottom, e);
+			}
+			if (ok) {
+				r.right += r.left;
+				r.bottom += r.top;
+			}
+			return ok;
 		}
 #pragma warning restore 1591 //XML doc
 	}
@@ -443,7 +488,7 @@ namespace Au.Types
 		public int color;
 
 		/// <summary>
-		/// Creates ColorInt from color value in 0xAARRGGBB format.
+		/// Converts from color value in 0xAARRGGBB format.
 		/// </summary>
 		/// <param name="colorARGB"></param>
 		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
@@ -453,30 +498,30 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Creates ColorInt from int color value in 0xRRGGBB format.
+		/// Converts from int color value in 0xRRGGBB format.
 		/// Makes opaque (alpha 0xFF).
 		/// </summary>
 		public static implicit operator ColorInt(int color) => new ColorInt(color, true);
 
 		/// <summary>
-		/// Creates ColorInt from uint color value in 0xRRGGBB format.
+		/// Converts from uint color value in 0xRRGGBB format.
 		/// Makes opaque (alpha 0xFF).
 		/// </summary>
 		public static implicit operator ColorInt(uint color) => new ColorInt((int)color, true);
 
 		/// <summary>
-		/// Creates ColorInt from <see cref="Color"/>.
+		/// Converts from <see cref="Color"/>.
 		/// </summary>
 		public static implicit operator ColorInt(Color color) => new ColorInt(color.ToArgb(), false);
 
 		/// <summary>
-		/// Creates ColorInt from <see cref="System.Windows.Media.Color"/>.
+		/// Converts from <see cref="System.Windows.Media.Color"/>.
 		/// </summary>
 		public static implicit operator ColorInt(System.Windows.Media.Color color)
 			=> new ColorInt((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B, false);
 
 		/// <summary>
-		/// Creates ColorInt from color name (<see cref="Color.FromName(string)"/>) or string "0xRRGGBB" or "#RRGGBB".
+		/// Converts from color name (<see cref="Color.FromName(string)"/>) or string "0xRRGGBB" or "#RRGGBB".
 		/// </summary>
 		/// <remarks>
 		/// If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
@@ -501,14 +546,14 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Creates ColorInt (0xRRGGBB) from Windows native COLORREF (0xBBGGRR).
+		/// Converts from Windows native COLORREF (0xBBGGRR to 0xRRGGBB).
 		/// </summary>
 		/// <param name="colorBGR">Color in 0xBBGGRR format.</param>
 		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
 		public static ColorInt FromBGR(int colorBGR, bool makeOpaque) => new ColorInt(SwapRB(colorBGR), makeOpaque);
 
 		/// <summary>
-		/// Creates Windows native COLORREF (0xBBGGRR) from ColorInt (0xRRGGBB).
+		/// Converts to Windows native COLORREF (0xBBGGRR from 0xRRGGBB).
 		/// Returns color in COLORREF format. Does not modify this variable.
 		/// </summary>
 		/// <param name="zeroAlpha">Set the alpha byte = 0.</param>
@@ -518,16 +563,16 @@ namespace Au.Types
 			return r;
 		}
 
-		/// <summary>Creates int from ColorInt.</summary>
+		/// <summary>Returns <c>c.color</c>.</summary>
 		public static explicit operator int(ColorInt c) => c.color;
 
-		/// <summary>Creates int from ColorInt.</summary>
+		/// <summary>Returns <c>(uint)c.color</c>.</summary>
 		public static explicit operator uint(ColorInt c) => (uint)c.color;
 
-		/// <summary>Creates <see cref="Color"/> from ColorInt.</summary>
+		/// <summary>Converts to <see cref="Color"/>.</summary>
 		public static explicit operator Color(ColorInt c) => Color.FromArgb(c.color);
 
-		/// <summary>Creates <see cref="System.Windows.Media.Color"/> from ColorInt.</summary>
+		/// <summary>Converts to <see cref="System.Windows.Media.Color"/>.</summary>
 		public static explicit operator System.Windows.Media.Color(ColorInt c) {
 			uint k = (uint)c.color;
 			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
@@ -634,9 +679,9 @@ namespace Au.Types
 
 		string _ToString() {
 			switch (vt) {
-				case Api.VARENUM.VT_BSTR: return value == default ? null : ValueBstr.ToString();
-				case Api.VARENUM.VT_I4: return value.ToString();
-				case 0: case Api.VARENUM.VT_NULL: return null;
+			case Api.VARENUM.VT_BSTR: return value == default ? null : ValueBstr.ToString();
+			case Api.VARENUM.VT_I4: return value.ToString();
+			case 0: case Api.VARENUM.VT_NULL: return null;
 			}
 			VARIANT v2 = default;
 			uint lcid = 0x409; //invariant
@@ -704,7 +749,7 @@ namespace Au.Types
 
 			//rejected:
 			//Some objects can return BSTR containing '\0's. Then probably the rest of string is garbage. I never noticed this but saw comments. Better allow '\0's, because in some cases it can be valid string. When invalid, it will not harm too much.
-			//int len2 = Util.CharPtr_.Length(p, len); ADebug.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
+			//int len2 = CharPtr_.Length(p, len); ADebug.PrintIf(len2 != len, "BSTR with '\\0'"); len = len2;
 
 			string r = len == 0 ? "" : new string(p, 0, len);
 			Dispose();

@@ -15,6 +15,7 @@ using System.Drawing;
 
 using Au;
 using Au.Types;
+using Au.Util;
 
 //FUTURE: /portable
 //	1. Set AFolders.ThisAppDocuments etc in AFolders.ThisApp\Portable.
@@ -202,19 +203,19 @@ static class CommandLine
 			int mode = (int)wParam; //1 - wait, 3 - wait and get ATask.WriteResult output
 			string script; string[] args; string pipeName = null;
 			if(action == 99) {
-				var a = Au.Util.AStringUtil.CommandLineToArray(s); if(a.Length == 0) return 0;
+				var a = AStringUtil.CommandLineToArray(s); if(a.Length == 0) return 0;
 				int nRemove = 0;
 				if(0 != (mode & 2)) pipeName = a[nRemove++];
 				script = a[nRemove++];
 				args = a.Length == nRemove ? null : a.RemoveAt(0, nRemove);
 			} else {
-				var d = Au.Util.Serializer_.Deserialize(b);
+				var d = Serializer_.Deserialize(b);
 				script = d[0]; args = d[1]; pipeName = d[2];
 			}
 			var f = Program.Model?.FindScript(script);
 			if(f == null) {
 				if(action == 99) AOutput.Write($"Command line: script '{script}' not found."); //else the caller script will throw exception
-				return (int)ATask.ERunResult.notFound;
+				return (int)ATask.RunResult_.notFound;
 			}
 			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		case 110: //received from our non-admin drop-target process on OnDragEnter

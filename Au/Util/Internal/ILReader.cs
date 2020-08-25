@@ -16,8 +16,6 @@ using System.Reflection;
 //using System.Linq;
 using System.Reflection.Emit;
 
-using Au;
-
 namespace Au.Util
 {
 	[StructLayout(LayoutKind.Sequential)]
