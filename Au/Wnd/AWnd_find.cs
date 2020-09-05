@@ -507,7 +507,7 @@ namespace Au
 		/// Supports <see cref="ALastError"/>.
 		/// It is not recommended to use this function in a loop to enumerate windows. It would be unreliable because window positions in the Z order can be changed while enumerating. Also then it would be slower than <b>Find</b> and <b>FindAll</b>.
 		/// </remarks>
-		public static AWnd FindFast(string name, string cn, bool messageOnly = false, AWnd wAfter = default)
+		public static AWnd FindFast(string name = null, string cn = null, bool messageOnly = false, AWnd wAfter = default)
 		{
 			return Api.FindWindowEx(messageOnly ? Native.HWND.MESSAGE : default, wAfter, cn, name);
 		}

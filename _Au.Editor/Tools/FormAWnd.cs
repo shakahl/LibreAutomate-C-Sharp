@@ -374,7 +374,7 @@ namespace Au.Tools
 			_con = c;
 			_uncheckControl = false;
 			_SetWnd(true);
-			var w = (AWnd)this;
+			var w = this.Hwnd();
 			if(w.IsMinimized) {
 				w.ShowNotMinMax();
 				w.ActivateLL();
@@ -440,7 +440,7 @@ namespace Au.Tools
 				var w = (AWnd)o;
 				var r = w.Rect;
 				if(w.IsMaximized && !w.IsChild) {
-					var k = w.Screen.Bounds; k.Inflate(-2, -2);
+					var k = w.Screen.Rect; k.Inflate(-2, -2);
 					r.Intersect(k);
 				}
 				return r;

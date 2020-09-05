@@ -1341,8 +1341,6 @@ namespace Au
 			foreach (char c in t) if (c > 0x7f) return false;
 			return true;
 		}
-		//TODO: add ReadOnlySpan<char> for others too. It's faster than with Range.
-		//	Then don't need CharPtr_ class.
 	}
 }
 

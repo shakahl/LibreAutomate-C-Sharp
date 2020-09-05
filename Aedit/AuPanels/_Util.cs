@@ -39,5 +39,26 @@ namespace Au.Controls
 				//GridLength.ToString is almost same, but: for Auto returns "Auto"; can return long string like "425.79999999999995" instead of "425.8".
 			}
 		}
+
+		partial class _Node
+		{
+			void _ShiftSiblingIndices(int n) {
+				for (var v = this; (v = v.Next) != null;) v._index += n;
+			}
+		}
+
+		class _DockPanelWithBorder : Border
+		{
+			public readonly DockPanel Panel;
+
+			public _DockPanelWithBorder() {
+				Child = Panel = new();
+				SnapsToDevicePixels = true;
+			}
+
+			public UIElementCollection Children => Panel.Children;
+
+			public bool LastChildFill { get => Panel.LastChildFill; set => Panel.LastChildFill = value; }
+		}
 	}
 }

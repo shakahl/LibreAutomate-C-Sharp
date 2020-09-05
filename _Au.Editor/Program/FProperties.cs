@@ -766,7 +766,7 @@ To browse .NET assembly resources, types, etc can be used for example <google>IL
 
 	void _InfoOnMouseMove(AWnd w, LPARAM xy) {
 		if (_gridEditMode) return;
-		AWnd wForm = (AWnd)this;
+		AWnd wForm = this.Hwnd();
 		if (w == wForm || w.Get.Window != wForm) {
 			_infoWnd = default;
 			_infoRow = -1;
@@ -774,7 +774,7 @@ To browse .NET assembly resources, types, etc can be used for example <google>IL
 			return;
 		}
 
-		if (w == (AWnd)_grid) {
+		if (w == _grid.Hwnd()) {
 			var pp = _grid.PositionAtPoint(new Point(AMath.LoShort(xy), AMath.HiShort(xy)));
 			if (pp.Row != _infoRow) {
 				_infoText = null;

@@ -229,11 +229,11 @@ namespace Au.Controls
 				case Editors.TextBoxButton ce: tb = ce.Control.TextBox; break;
 				}
 				if(tb != null) {
-					var wt = (AWnd)tb;
+					var wt = tb.Hwnd();
 					//tb.SelectionLength = 0; tb.SelectionStart = 0; tb.ScrollToCaret();
 					wt.Send(Api.WM_HSCROLL, Api.SB_TOP);
 					if(e.X < tb.Right) {
-						POINT p = (e.X, e.Y); ((AWnd)_grid).MapClientToClientOf(wt, ref p);
+						POINT p = (e.X, e.Y); _grid.Hwnd().MapClientToClientOf(wt, ref p);
 						wt.Post(Api.WM_LBUTTONDOWN, Api.MK_LBUTTON, AMath.MakeUint(p.x, p.y));
 					} else if(c.Cell is ComboCell cc) {
 						cc.ShowDropDown(); //clicked the drop-down button
@@ -348,7 +348,7 @@ namespace Au.Controls
 					//prevent showing drop-down again when the user clicks the drop-down button to close it
 					p.PopupWindow.VisibleChanged += (se1, sed) => {
 						if((se1 as Control).Visible) g._comboNoDD = true;
-						else ((AWnd)g).Post(Api.WM_USER + 10); //WndProc will set _comboNoDD = false
+						else g.Hwnd().Post(Api.WM_USER + 10); //WndProc will set _comboNoDD = false
 					};
 				}
 				p.Items = items;

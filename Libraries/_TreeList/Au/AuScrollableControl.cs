@@ -59,7 +59,7 @@ namespace Au.Controls
 			if(IsHandleCreated) {
 				k = default; unsafe { k.cbSize = sizeof(Api.SCROLLINFO); }
 				k.fMask = Api.SIF_TRACKPOS | Api.SIF_POS | Api.SIF_PAGE | Api.SIF_RANGE;
-				Api.GetScrollInfo((AWnd)this, vertical, ref k);
+				Api.GetScrollInfo(this.Hwnd(), vertical, ref k);
 			} else if(vertical) k = _v;
 			else k = _h;
 		}
@@ -76,7 +76,7 @@ namespace Au.Controls
 		{
 			Api.SCROLLINFO k = default; unsafe { k.cbSize = sizeof(Api.SCROLLINFO); }
 			k.fMask = Api.SIF_POS;
-			Api.GetScrollInfo((AWnd)this, vertical, ref k);
+			Api.GetScrollInfo(this.Hwnd(), vertical, ref k);
 			return k.nPos;
 		}
 
@@ -113,11 +113,11 @@ namespace Au.Controls
 		void _SetScrollInfo()
 		{
 			if(_v.fMask != 0) {
-				Api.SetScrollInfo((AWnd)this, true, _v, true);
+				Api.SetScrollInfo(this.Hwnd(), true, _v, true);
 				_v.fMask = 0;
 			}
 			if(_h.fMask != 0) {
-				Api.SetScrollInfo((AWnd)this, false, _h, true);
+				Api.SetScrollInfo(this.Hwnd(), false, _h, true);
 				_h.fMask = 0;
 			}
 		}
@@ -127,7 +127,7 @@ namespace Au.Controls
 			switch(m.Msg) {
 			case Api.WM_HSCROLL:
 			case Api.WM_VSCROLL:
-				_OnScroll(m.Msg == Api.WM_VSCROLL, (ScrollEventType)AMath.LoUshort(m.WParam));
+				_OnScroll(m.Msg == Api.WM_VSCROLL, (ScrollEventType)AMath.LoWord(m.WParam));
 				break;
 			case Api.WM_CREATE:
 				_SetScrollInfo();
@@ -141,7 +141,7 @@ namespace Au.Controls
 			if(code == ScrollEventType.EndScroll) return;
 			Api.SCROLLINFO k = default; unsafe { k.cbSize = sizeof(Api.SCROLLINFO); }
 			k.fMask = Api.SIF_TRACKPOS | Api.SIF_POS | Api.SIF_PAGE | Api.SIF_RANGE;
-			Api.GetScrollInfo((AWnd)this, vert, ref k);
+			Api.GetScrollInfo(this.Hwnd(), vert, ref k);
 			//AOutput.Write(k.nPos, k.nTrackPos, k.nPage, k.nMax);
 			int i = k.nPos;
 			switch(code) {
@@ -158,7 +158,7 @@ namespace Au.Controls
 			if(i < k.nMin) i = k.nMin;
 			k.nPos = i;
 			k.fMask = Api.SIF_POS;
-			Api.SetScrollInfo((AWnd)this, vert, k, true);
+			Api.SetScrollInfo(this.Hwnd(), vert, k, true);
 
 			//if(vert) _v = k; else _h = k;
 
@@ -192,7 +192,7 @@ namespace Au.Controls
 			//calc current client size + scrollbars
 			var z = this.ClientSize;
 			if(IsHandleCreated) {
-				var w = (AWnd)this;
+				var w = this.Hwnd();
 				Api.SCROLLBARINFO sbi = default; unsafe { sbi.cbSize = sizeof(Api.SCROLLBARINFO); }
 				Api.GetScrollBarInfo(w, AccOBJID.VSCROLL, ref sbi); z.Width += sbi.rcScrollBar.Width;
 				Api.GetScrollBarInfo(w, AccOBJID.HSCROLL, ref sbi); z.Height += sbi.rcScrollBar.Height;
@@ -230,7 +230,7 @@ namespace Au.Controls
 					//p1.Next();
 					if(resetPos) {
 						//workaround for Windows or .NET bug: sometimes then mouse behaves incorrectly: on scrollbar generates client messages (eg WM_MOUSEMOVE instead of WM_NCMOUSEMOVE). This workaround makes this func almost 2 times slower, but I don't know a better way.
-						((AWnd)this).SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOZORDER | Native.SWP.NOSENDCHANGING);
+						(this.Hwnd()).SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOZORDER | Native.SWP.NOSENDCHANGING);
 
 						Invalidate();
 					}

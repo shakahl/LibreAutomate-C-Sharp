@@ -240,10 +240,10 @@ namespace Au
 			//Activate window when a child control clicked, or something may not work, eg cannot enter text in Edit control.
 			if(item is ToolStripControlHost h && h.CanSelect) { //combo, edit, progress
 				h.GotFocus += (_, _) => { //info: before MouseDown, which does not work well with combo box
-					Api.SetForegroundWindow((AWnd)_c); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
+					Api.SetForegroundWindow(_c.Hwnd()); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 				};
 				h.KeyDown += (_, e) => {
-					if(e.KeyData == Keys.Escape && ((AWnd)_c).IsActive) _c.Focus();
+					if(e.KeyData == Keys.Escape && _c.Hwnd().IsActive) _c.Focus();
 				};
 			}
 		}
@@ -480,7 +480,7 @@ namespace Au
 		/// Shows the toolbar.
 		/// </summary>
 		/// <param name="screen">
-		/// Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on).
+		/// Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). Example: <c>AScreen.Index(1)</c>.
 		/// If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.
 		/// If not specified and this toolbar is created by <see cref="AutoHideScreenEdge"/>, uses its screen parameter.
 		/// </param>
@@ -489,7 +489,7 @@ namespace Au
 		/// The toolbar will be moved when the screen moved or resized.
 		/// </remarks>
 		public void Show(AScreen screen = default)
-			=> _Show(false, default, null, screen.IsNull ? _screen : screen);
+			=> _Show(false, default, null, screen.IsEmpty ? _screen : screen);
 
 		/// <summary>
 		/// Shows the toolbar and attaches to a window.
@@ -1204,7 +1204,7 @@ namespace Au
 		{
 			if(screen < 0) throw new NotSupportedException("screen");
 			var sh = AScreen.Index((int)screen);
-			var rs = sh.Bounds;
+			var rs = sh.Rect;
 
 			var se = edge.ToString(); char se0 = se[0];
 			bool vertical = se0 == 'L' || se0 == 'R';
@@ -1252,7 +1252,7 @@ namespace Au
 			planet.AutoSize = false;
 			planet.Border = TBBorder.Width1;
 			planet.NoMenu = TBNoMenu.Anchor | TBNoMenu.Border | TBNoMenu.Layout | TBNoMenu.Sizable | TBNoMenu.AutoSize;
-			planet._screen = (int)screen;
+			planet._screen = AScreen.Index((int)screen);
 
 			if(!this.SettingsModified) {
 				this.AutoSize = true;

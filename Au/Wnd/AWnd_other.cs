@@ -50,7 +50,7 @@ namespace Au
 		/// </summary>
 		public bool IsFullScreen => IsFullScreen_(out _);
 
-		internal unsafe bool IsFullScreen_(out ScreenHandle screen) {
+		internal unsafe bool IsFullScreen_(out AScreen screen) {
 			screen = default;
 			if (Is0) return false;
 
@@ -65,8 +65,8 @@ namespace Au
 			}
 
 			//covers whole monitor rect?
-			screen = AScreen.Of(this, SODefault.Zero); if (screen.Is0) return false;
-			rm = screen.Bounds;
+			screen = AScreen.Of(this, SODefault.Zero); if (screen.IsEmpty) return false;
+			rm = screen.Rect;
 
 			if (r.left > rm.left || r.top > rm.top || r.right < rm.right || r.bottom < rm.bottom - 1) return false; //info: -1 for inactive Chrome
 

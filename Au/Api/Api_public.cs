@@ -109,6 +109,8 @@ namespace Au.Types
 			public POINT pt;
 
 			public override string ToString() => System.Windows.Forms.Message.Create(hwnd.Handle, (int)message, wParam, lParam).ToString();
+
+			public static implicit operator MSG(in System.Windows.Interop.MSG m) => new MSG { hwnd = (AWnd)m.hwnd, message = m.message, wParam = m.wParam, lParam = m.lParam, time = m.time, pt = (m.pt_x, m.pt_y) };
 		}
 
 		/// <summary><see cref="GUITHREADINFO"/> flags.</summary>
@@ -208,7 +210,7 @@ namespace Au.Types
 		/// <summary>API <msdn>WNDPROC</msdn></summary>
 		public delegate LPARAM WNDPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 
-		//Native control subclassing isn't often useful in OO programming, but still there are some cases, eg to subclass nested controls like Edit of ComboBox.
+		//Native control subclassing isn't often useful in OO programming, but still there are some cases where need.
 		//	These are public to encourage using them instead of SetProp, because safer.
 
 		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>

@@ -341,7 +341,7 @@ namespace Au.Tools
 			if(!_AccFromMouse(out var acc)) return;
 			_acc = acc;
 			_SetAcc(true);
-			var w = (AWnd)this;
+			var w = this.Hwnd();
 			if(w.IsMinimized) {
 				w.ShowNotMinMax();
 				w.ActivateLL();

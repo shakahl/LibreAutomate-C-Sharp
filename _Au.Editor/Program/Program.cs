@@ -21,9 +21,9 @@ static class Program
 {
 	static Program()
 	{
-#if !DEBUG
+//#if !DEBUG
 		AProcess.CultureIsInvariant = true;
-#endif
+//#endif
 
 		//Api.GetProcessTimes(Api.GetCurrentProcess(), out long c, out _, out long k, out long u);
 		//Api.GetSystemTimeAsFileTime(out long t);

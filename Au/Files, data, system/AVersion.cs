@@ -27,13 +27,13 @@ namespace Au
 		static AVersion() {
 			Api.RTL_OSVERSIONINFOW x = default; x.dwOSVersionInfoSize = Api.SizeOf(x);
 			if (0 == Api.RtlGetVersion(ref x)) {
-				_winver = AMath.MakeUshort(x.dwMinorVersion, x.dwMajorVersion);
+				_winver = AMath.MakeWord(x.dwMinorVersion, x.dwMajorVersion);
 				_winbuild = (int)x.dwBuildNumber;
 				//use this because Environment.OSVersion.Version (GetVersionEx) lies, even if we have correct manifest when is debugger present
 			} else {
 				Debug.Fail("RtlGetVersion");
 				var v = Environment.OSVersion.Version;
-				_winver = AMath.MakeUshort(v.Minor, v.Major);
+				_winver = AMath.MakeWord(v.Minor, v.Major);
 				_winbuild = v.Build;
 			}
 

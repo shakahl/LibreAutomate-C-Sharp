@@ -367,7 +367,7 @@ namespace Au.Util
 		/// <summary>
 		/// Gets number of direct child nodes.
 		/// </summary>
-		public int ChildCount {
+		public int Count {
 			get {
 				int r = 0;
 				if (_lastChild != null) {

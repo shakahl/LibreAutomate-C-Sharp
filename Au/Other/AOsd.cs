@@ -646,8 +646,8 @@ namespace Au
 				}
 
 				if(!Text.NE()) {
-					var screen = XY?.GetScreen() ?? DefaultScreen.GetScreenHandle();
-					int dpi = ADpi.OfScreen(screen);
+					var screen = XY?.GetScreen() ?? DefaultScreen.Now;
+					int dpi = screen.Dpi;
 					_font = (Font ?? DefaultSmallFont).CreateFont(dpi);
 					var rs = screen.WorkArea; z = new Size(rs.Width - zi.Width - 10, rs.Height - 14);
 					var tff = TextFormatFlags;
@@ -810,8 +810,19 @@ namespace Au
 
 		/// <summary>
 		/// Default screen when <see cref="XY"/> is not set.
+		/// The <b>AScreen</b> must be lazy or empty.
 		/// </summary>
-		public static AScreen DefaultScreen { get; set; }
+		/// <exception cref="ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
+		/// <example>
+		/// <code><![CDATA[
+		/// AOsd.DefaultScreen = AScreen.Index(1, lazy: true);
+		/// ]]></code>
+		/// </example>
+		public static AScreen DefaultScreen {
+			get => _defaultScreen;
+			set => _defaultScreen = value.ThrowIfWithHandle_;
+		}
+		static AScreen _defaultScreen;
 	}
 }
 

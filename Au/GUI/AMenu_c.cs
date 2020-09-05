@@ -63,7 +63,7 @@ namespace Au
 				case Api.WM_RBUTTONUP:
 					_ContextMenu();
 					return;
-				case Api.WM_ACTIVATE when AMath.LoUshort(m.WParam) != 0:
+				case Api.WM_ACTIVATE when AMath.LoWord(m.WParam) != 0:
 					//Always activate when clicked a child control. Else cannot enter text in Edit control etc.
 					if(!this.Hwnd().IsActive) Api.SetForegroundWindow(this.Hwnd());
 					break;
@@ -139,7 +139,7 @@ namespace Au
 					switch(e.CloseReason) {
 					case ToolStripDropDownCloseReason.AppFocusChange:
 					case ToolStripDropDownCloseReason.Keyboard:
-						if(!_isMain && this.Hwnd().IsActive) Api.SetForegroundWindow((AWnd)this.OwnerItem.Owner.Handle); //prevent closing the parent menu
+						if(!_isMain && this.Hwnd().IsActive) Api.SetForegroundWindow(OwnerItem.Owner.Hwnd()); //prevent closing the parent menu
 						break;
 					}
 				}

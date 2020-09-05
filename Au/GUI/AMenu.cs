@@ -574,7 +574,7 @@ namespace Au
 				_closing_timer?.Stop(); _closing_timer = null;
 
 				//Close menu windows. Else they are just hidden and prevent GC until process ends.
-				foreach (var k in _closing_allMenus) ((AWnd)k.Handle).Post(Api.WM_CLOSE, c_wmCloseWparam);
+				foreach (var k in _closing_allMenus) k.Hwnd().Post(Api.WM_CLOSE, c_wmCloseWparam);
 
 				if (!MultiShow && !_isModal) ATimer.After(10, _ => Dispose()); //cannot dispose now, exception
 

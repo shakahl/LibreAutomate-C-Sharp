@@ -2298,7 +2298,7 @@
             <param name="x">X coordinate relative to the specified screen (default - primary).</param>
             <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
             <param name="workArea">x y are relative to the work area.</param>
-            <param name="screen">If used, x y are relative to this screen. Default - primary screen.</param>
+            <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>AScreen.Index(1)</c>.</param>
             <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
             <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
         </member>
@@ -2354,7 +2354,7 @@
             <param name="x">X relative to the screen or work area. Default - center.</param>
             <param name="y">X relative to the screen or work area. Default - center.</param>
             <param name="workArea">x y are relative to the work area of the screen.</param>
-            <param name="screen">Can be used to specify a screen. Default - primary.</param>
+            <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>AScreen.Index(1)</c>.</param>
             <remarks>
             Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
             </remarks>
@@ -2382,7 +2382,7 @@
         </member>
         <member name="M:Au.Types.PopupXY.GetScreen">
             <summary>
-            Gets <see cref="T:Au.Types.ScreenHandle"/> specified in <see cref="F:Au.Types.PopupXY.screen"/>. If not specified, gets that of the screen that contains the specified point.
+            Gets <see cref="F:Au.Types.PopupXY.screen"/>.Now if not empty, else screen that contains the specified point.
             </summary>
         </member>
         <member name="T:Au.Types.AnyWnd">
@@ -2614,7 +2614,7 @@
             </summary>
             <param name="x">X coordinate in the specified screen. If default(Coord) - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="y">Y coordinate in the specified screen. If default(Coord) - center. Can be <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="screen">Use this screen. If default, uses the primary screen.</param>
+            <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>AScreen.Index(1)</c>.</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
             <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
             <remarks>
@@ -3896,25 +3896,29 @@
         </member>
         <member name="T:Au.Types.GridSplitter2">
             <summary>
-            Extends <see cref="T:System.Windows.Controls.GridSplitter"/>. Can be used with not star-sized rows/columns.
+            Grid splitter control. Based on <see cref="T:System.Windows.Controls.GridSplitter"/>, changes its behavior.
             </summary>
             <remarks>
-            The WPF <see cref="T:System.Windows.Controls.GridSplitter"/> has this bug or undocumented limitation: incorrectly resizes if some rows or columns have fixed or auto size, unless star-sized rows/columns are at the end.
-            This flag applies this workaround: while moving the splitter with mouse or keyboard, it temporarily makes all rows or columns star-sized, and restores when ended resizing.
-            Important: all column or row definitions must be specified.
+            Try this class when <see cref="T:System.Windows.Controls.GridSplitter"/> does not work as you want.
+            
+            Limitations (bad or good):
+            - Splitters must be on own rows/columns. Throws exception if explicit or implicit <b>ResizeBehavior</b> is not <b>PreviousAndNext</b>.
+            - Throws exception is there are star-sized splitter rows.
+            - Does not resize auto-sized rows/columns. Only pixel-sized and star-sized.
+            - With UseLayoutRounding may flicker when resizing, especially when high DPI.
             </remarks>
         </member>
-        <member name="M:Au.Types.GridSplitter2.OnPreviewMouseLeftButtonDown(System.Windows.Input.MouseButtonEventArgs)">
+        <member name="M:Au.Types.GridSplitter2.#ctor">
             
         </member>
-        <member name="M:Au.Types.GridSplitter2.OnPreviewMouseLeftButtonUp(System.Windows.Input.MouseButtonEventArgs)">
+        <member name="M:Au.Types.GridSplitter2.OnKeyDown(System.Windows.Input.KeyEventArgs)">
             
         </member>
-        <member name="M:Au.Types.GridSplitter2.OnPreviewKeyDown(System.Windows.Input.KeyEventArgs)">
-            
-        </member>
-        <member name="M:Au.Types.GridSplitter2.OnPreviewKeyUp(System.Windows.Input.KeyEventArgs)">
-            
+        <member name="P:Au.Types.GridSplitter2.ResizeNearest">
+            <summary>
+            Always resize only the nearest resizable row/column at each side.
+            If false (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
+            </summary>
         </member>
         <member name="T:Au.Types.TBFlags">
             <summary>
@@ -5295,96 +5299,13 @@
         <member name="M:Au.Types.OutServMessage.ToString">
             
         </member>
-        <member name="T:Au.Types.ScreenHandle">
-            <summary>
-            Represents a screen device. Gets its rectangle etc.
-            To create, use <see cref="T:Au.AScreen"/> class.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ScreenHandle.#ctor(System.IntPtr)">
-            <param name="handle">A screen handle (HMONITOR).</param>
-        </member>
-        <member name="P:Au.Types.ScreenHandle.Handle">
-            <summary>
-            The screen handle (HMONITOR).
-            </summary>
-        </member>
-        <member name="P:Au.Types.ScreenHandle.Is0">
-            <summary>
-            True if the screen handle is 0.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ScreenHandle.op_Implicit(Au.Types.ScreenHandle)~System.IntPtr">
-            
-        </member>
-        <member name="P:Au.Types.ScreenHandle.Index">
-            <summary>
-            Gets index of this screen in the <see cref="P:Au.AScreen.AllScreens"/> array.
-            </summary>
-            <remarks>
-            Returns -1 if this screen is not in the array. It can happen after changing display settings, but is rare. Also if the screen handle is 0.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.ScreenHandle.GetInfo">
-            <summary>
-            Gets screen rectangle and other info.
-            </summary>
-            <returns>
-            Tuple containing:
-            - bounds - rectangle of the screen.
-            - workArea - rectangle of the work area of the screen.
-            - isPrimary - true if the info is of the primary screen.
-            - isAlive - true if the screen handle is valid. If invalid (eg 0), the function gets info of the primary screen.
-            </returns>
-        </member>
-        <member name="M:Au.Types.ScreenHandle.GetRect(System.Boolean)">
-            <summary>
-            Calls <see cref="M:Au.Types.ScreenHandle.GetInfo"/> and returns rectangle of the screen or its work area.
-            </summary>
-            <param name="workArea">Get work area rectangle.</param>
-        </member>
-        <member name="P:Au.Types.ScreenHandle.Bounds">
-            <summary>
-            Calls <see cref="M:Au.Types.ScreenHandle.GetInfo"/> and returns rectangle of the screen.
-            </summary>
-        </member>
-        <member name="P:Au.Types.ScreenHandle.WorkArea">
-            <summary>
-            Calls <see cref="M:Au.Types.ScreenHandle.GetInfo"/> and returns rectangle of the screen work area.
-            </summary>
-        </member>
-        <member name="P:Au.Types.ScreenHandle.Dpi">
-            <summary>
-            Gets DPI of this screen. See <see cref="M:Au.Util.ADpi.OfScreen(System.IntPtr)"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.ScreenHandle.IsAlive">
-            <summary>
-            True if the screen handle is valid.
-            </summary>
-        </member>
-        <member name="M:Au.Types.ScreenHandle.ToString">
-            
-        </member>
-        <member name="M:Au.Types.ScreenHandle.GetHashCode">
-            
-        </member>
-        <member name="M:Au.Types.ScreenHandle.Equals(Au.Types.ScreenHandle)">
-            
-        </member>
-        <member name="M:Au.Types.ScreenHandle.op_Equality(Au.Types.ScreenHandle,Au.Types.ScreenHandle)">
-            
-        </member>
-        <member name="M:Au.Types.ScreenHandle.op_Inequality(Au.Types.ScreenHandle,Au.Types.ScreenHandle)">
-            
-        </member>
         <member name="T:Au.Types.SODefault">
             <summary>
-            Used with <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)"/> to specify what screen to use if the function fails, for example if the window/point/etc is not in a screen or if the window handle is invalid.
+            Used with <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault,System.Boolean)"/> to specify what screen to return if the window/point/etc is not in a screen or if the window handle is invalid etc.
             </summary>
         </member>
         <member name="F:Au.Types.SODefault.Zero">
-            <summary>0 (<see cref="P:Au.Types.ScreenHandle.Is0"/> will return true).</summary>
+            <summary>Create empty variable.</summary>
         </member>
         <member name="F:Au.Types.SODefault.Primary">
             <summary>The primary screen.</summary>
@@ -7175,6 +7096,11 @@
             </summary>
             <param name="t"></param>
         </member>
+        <member name="M:Au.AExtWpf.RectInScreen(System.Windows.FrameworkElement)">
+            <summary>
+            Gets rectangle of this element in screen coordinates.
+            </summary>
+        </member>
         <member name="M:Au.AExtWpf.IsCheck(System.Windows.Controls.CheckBox)">
             <summary>
             Returns true if <see cref="P:System.Windows.Controls.Primitives.ToggleButton.IsChecked"/> == true.
@@ -7196,7 +7122,7 @@
             - Sets window location for normal state (not minimized/maximized).
             - Ensures that entire window or its top-left part is in screen that contains <i>x y</i> or is nearest.
             - Changes these window properties if need: <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>ShowActivated</b>.
-            - To set location etc uses the <b>Loaded</b> event. The event handler runs later.
+            - Sets location etc later, in <b>SourceInitialized</b> event.
             - All this happens while the window is still invisible.
             </remarks>
         </member>
@@ -7214,9 +7140,62 @@
             - Sets window rectangle for normal state (not minimized/maximized).
             - Ensures that entire window or its top-left part is in screen that contains the top-left of <i>r</i> or is nearest.
             - Changes these window properties if need: <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>, <b>ShowActivated</b>. Does not change <b>SizeToContent</b>, therefore may not change width or/and height.
-            - To set location etc uses the <b>Loaded</b> event. The event handler runs later.
+            - Sets location etc later, in <b>SourceInitialized</b> event.
             - All this happens while the window is still invisible.
             </remarks>
+        </member>
+        <member name="M:Au.AExtWpf.FindVisualDescendant(System.Windows.DependencyObject,System.Func{System.Windows.DependencyObject,System.Boolean})">
+            <summary>
+            Enumerates visual descendant objects, including control parts, and calls callback function <i>f</i> for each.
+            When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+            </summary>
+        </member>
+        <member name="M:Au.AExtWpf.InsertRow(System.Windows.Controls.Grid,System.Int32,System.Windows.Controls.RowDefinition)">
+            <summary>
+            Inserts row and adjusts row indices of children that are in other rows.
+            </summary>
+        </member>
+        <member name="M:Au.AExtWpf.InsertColumn(System.Windows.Controls.Grid,System.Int32,System.Windows.Controls.ColumnDefinition)">
+            <summary>
+            Inserts column and adjusts column indices of children that are in other columns.
+            </summary>
+        </member>
+        <member name="M:Au.AExtWpf.RemoveRow(System.Windows.Controls.Grid,System.Int32,System.Boolean)">
+            <summary>
+            Removes row and adjusts row indices of children that are in other rows.
+            </summary>
+            <param name="t"></param>
+            <param name="index"></param>
+            <param name="removeChildren">Remove children that are in that row.</param>
+        </member>
+        <member name="M:Au.AExtWpf.RemoveColumn(System.Windows.Controls.Grid,System.Int32,System.Boolean)">
+            <summary>
+            Removes column and adjusts column indices of children that are in other columns.
+            </summary>
+            <param name="t"></param>
+            <param name="index"></param>
+            <param name="removeChildren">Remove children that are in that column.</param>
+        </member>
+        <member name="M:Au.AExtWpf.RemoveRow(System.Windows.Controls.Grid,System.Windows.UIElement,System.Boolean)">
+            <summary>
+            Removes a child element and its row from this grid. Adjusts row indices of children that are in other rows.
+            </summary>
+            <param name="t"></param>
+            <param name="e"></param>
+            <param name="removeOtherElements">Also remove other elements that are in that row.</param>
+        </member>
+        <member name="M:Au.AExtWpf.RemoveColumn(System.Windows.Controls.Grid,System.Windows.UIElement,System.Boolean)">
+            <summary>
+            Removes a child element and its column from this grid. Adjusts column indices of children that are in other columns.
+            </summary>
+            <param name="t"></param>
+            <param name="e"></param>
+            <param name="removeOtherElements">Also remove other elements that are in that column.</param>
+        </member>
+        <member name="M:Au.AExtWpf.AddChild(System.Windows.Controls.Grid,System.Windows.UIElement,System.Int32,System.Int32)">
+            <summary>
+            Adds a child element in specified row/column.
+            </summary>
         </member>
         <member name="T:Au.AExtXml">
             <summary>
@@ -7363,12 +7342,31 @@
             Loads XML file in a safer way.
             Uses <see cref="M:System.Xml.Linq.XElement.Load(System.Xml.XmlReader,System.Xml.Linq.LoadOptions)"/> and <see cref="M:Au.AFile.WaitIfLocked(System.Action,System.Int32)"/>.
             </summary>
-            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
+            <param name="file">
+            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            If starts with '&lt;', loads from XML string instead.
+            </param>
             <param name="options"></param>
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XElement.Load(System.IO.Stream)"/>.</exception>
             <remarks>
             Unlike <see cref="M:System.Xml.Linq.XElement.Load(System.String,System.Xml.Linq.LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.AExtXml.LoadDoc(System.String,System.Xml.Linq.LoadOptions)">
+            <summary>
+            Loads XML file in a safer way.
+            Uses <see cref="M:System.Xml.Linq.XDocument.Load(System.Xml.XmlReader,System.Xml.Linq.LoadOptions)"/> and <see cref="M:Au.AFile.WaitIfLocked(System.Action,System.Int32)"/>.
+            </summary>
+            <param name="file">
+            File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.
+            If starts with '&lt;', loads from XML string instead.
+            </param>
+            <param name="options"></param>
+            <exception cref="T:System.ArgumentException">Not full path.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XDocument.Load(System.IO.Stream)"/>.</exception>
+            <remarks>
+            Unlike <see cref="M:System.Xml.Linq.XDocument.Load(System.String,System.Xml.Linq.LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
             </remarks>
         </member>
         <member name="M:Au.AExtXml.SaveElem(System.Xml.Linq.XElement,System.String,System.Boolean,System.Nullable{System.Xml.Linq.SaveOptions})">
@@ -7377,19 +7375,6 @@
             Uses <see cref="M:System.Xml.Linq.XElement.Save(System.String,System.Xml.Linq.SaveOptions)"/> and <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.
             </summary>
             <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XElement.Save(System.IO.Stream)"/> and <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.</exception>
-        </member>
-        <member name="M:Au.AExtXml.LoadDoc(System.String,System.Xml.Linq.LoadOptions)">
-            <summary>
-            Loads XML file in a safer way.
-            Uses <see cref="M:System.Xml.Linq.XDocument.Load(System.Xml.XmlReader,System.Xml.Linq.LoadOptions)"/> and <see cref="M:Au.AFile.WaitIfLocked(System.Action,System.Int32)"/>.
-            </summary>
-            <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>.</param>
-            <param name="options"></param>
-            <exception cref="T:System.ArgumentException">Not full path.</exception>
-            <exception cref="T:System.Exception">Exceptions of <see cref="M:System.Xml.Linq.XDocument.Load(System.IO.Stream)"/>.</exception>
-            <remarks>
-            Unlike <see cref="M:System.Xml.Linq.XDocument.Load(System.String,System.Xml.Linq.LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
-            </remarks>
         </member>
         <member name="M:Au.AExtXml.SaveDoc(System.Xml.Linq.XDocument,System.String,System.Boolean,System.Nullable{System.Xml.Linq.SaveOptions})">
             <summary>
@@ -10483,7 +10468,14 @@
         <member name="P:Au.ADialog.Options.DefaultScreen">
             <summary>
             Show dialogs on this screen when screen is not explicitly specified (<see cref="P:Au.ADialog.Screen"/>) and there is no owner window.
+            The <b>AScreen</b> must be lazy or empty.
             </summary>
+            <exception cref="T:System.ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
+            <example>
+            <code><![CDATA[
+            ADialog.Options.DefaultScreen = AScreen.Index(1, lazy: true);
+            ]]></code>
+            </example>
         </member>
         <member name="P:Au.ADialog.Options.UseAppIcon">
             <summary>
@@ -10667,7 +10659,7 @@
         <member name="P:Au.ADialog.Screen">
             <summary>
             Sets the screen (display monitor) where to show the dialog in multi-screen environment.
-            If null or not set, will be used owner window's screen or <see cref="P:Au.ADialog.Options.DefaultScreen"/>.
+            If not set, will be used owner window's screen or <see cref="P:Au.ADialog.Options.DefaultScreen"/>.
             More info: <see cref="T:Au.AScreen"/>, <see cref="M:Au.AWnd.MoveInScreen(Au.Types.Coord,Au.Types.Coord,Au.AScreen,System.Boolean,System.Boolean)"/>.
             </summary>
         </member>
@@ -11354,9 +11346,9 @@
             <code><![CDATA[
             string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
             var b = new AGuiBuilder("Window").WinSize(300)
-            	.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o))
             	.Row(0).Add("Text", out TextBox _)
             	.R.AddOkCancel()
+            	.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o))
             	.End();
             ]]></code>
             </example>
@@ -12692,7 +12684,7 @@
             Shows the toolbar.
             </summary>
             <param name="screen">
-            Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on).
+            Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). Example: <c>AScreen.Index(1)</c>.
             If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.
             If not specified and this toolbar is created by <see cref="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,Au.AToolbar.ToolStripWindow,System.String,System.Int32)"/>, uses its screen parameter.
             </param>
@@ -15825,19 +15817,19 @@
             Like C macro MAKELONG, MAKEWPARAM, MAKELPARAM, MAKELRESULT.
             </summary>
         </member>
-        <member name="M:Au.AMath.MakeUshort(System.UInt32,System.UInt32)">
+        <member name="M:Au.AMath.MakeWord(System.UInt32,System.UInt32)">
             <summary>
             Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
             Like C macro MAKEWORD.
             </summary>
         </member>
-        <member name="M:Au.AMath.MakeUshort(System.Int32,System.Int32)">
+        <member name="M:Au.AMath.MakeWord(System.Int32,System.Int32)">
             <summary>
             Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
             Like C macro MAKEWORD.
             </summary>
         </member>
-        <member name="M:Au.AMath.LoUshort(Au.Types.LPARAM)">
+        <member name="M:Au.AMath.LoWord(Au.Types.LPARAM)">
             <summary>
             Gets bits 1-16 as ushort.
             Like C macro LOWORD.
@@ -15846,7 +15838,7 @@
             The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
             </remarks>
         </member>
-        <member name="M:Au.AMath.HiUshort(Au.Types.LPARAM)">
+        <member name="M:Au.AMath.HiWord(Au.Types.LPARAM)">
             <summary>
             Gets bits 17-32 as ushort.
             Like C macro HIWORD.
@@ -16410,7 +16402,14 @@
         <member name="P:Au.AOsd.DefaultScreen">
             <summary>
             Default screen when <see cref="P:Au.AOsd.XY"/> is not set.
+            The <b>AScreen</b> must be lazy or empty.
             </summary>
+            <exception cref="T:System.ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
+            <example>
+            <code><![CDATA[
+            AOsd.DefaultScreen = AScreen.Index(1, lazy: true);
+            ]]></code>
+            </example>
         </member>
         <member name="T:Au.AOutput">
             <summary>
@@ -16782,145 +16781,137 @@
         </member>
         <member name="T:Au.AScreen">
             <summary>
-            From window/point/rectangle/index/etc gets <see cref="T:Au.Types.ScreenHandle"/> which gets screen properties such as bounds.
+            Represents a screen device. Gets its rectangle etc.
             </summary>
             <remarks>
-            A computer can have one or more screens (aka display devices, monitors) attached that extend desktop space. One of them is the <i>primary</i> screen; its top-left coordinate is 0 0.
+            A computer can have one or more screens (aka display devices, monitors). One of them is the <i>primary</i> screen; its top-left coordinate is 0 0.
             To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique integer identifier, known as screen handle or HMONITOR. But it is a random variable value and therefore cannot be specified directly in script etc. Instead can be used screen index or some object on that screen (window, point, rectangle).
             
-            There are two types (both are struct):
-            - a <see cref="T:Au.Types.ScreenHandle"/> variable contains a screen handle, aka HMONITOR. Its functions are used to quickly get properties of that screen, eg bounds.
-            - an <b>AScreen</b> variable contains a value that is used to get screen handle. It can be screen index, window, point, etc, and even a callback function.
+            An <b>AScreen</b> variable can contain either a screen handle or a callback function that returns a screen handle. If empty, most functions interpret it as the primary screen.
             
-            <b>AScreen</b> is used mostly in two ways:
-            - the static functions are used to get a screen handle as <see cref="T:Au.Types.ScreenHandle"/> using screen index, window, point, etc. Then the <b>ScreenHandle</b> gets screen properties. Example: <c>RECT r = AScreen.Of(AWnd.Active).Bounds; //get rectangle of screen that contains the active window</c>
-            - if a function parameter or some property etc is of <b>AScreen</b> type, callers can specify screen index, window, point, etc. Index can be passed directly; for other types use code like <c>new AScreen(window)</c>. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="M:Au.AScreen.GetScreenHandle"/> to get <see cref="T:Au.Types.ScreenHandle"/> corresponding that value at that time.
+            To create <b>AScreen</b> variables use static functions (like <c>AScreen.Index(1)</c> or <c>AScreen.Primary</c>) or constructors (like <c>new AScreen(()=>AScreen.Index(1))</c>). Then call non-static functions to get screen properties.
             
-            Why need two types? Why <b>AScreen</b> doesn't just get and store screen handle immediately when the variable is created? Because a handle cannot be reliably used for a long time. Reasons:
-            - screen handles may change when changing the configuration of multiple screens.
-            - the window etc that identifies the screen later may move to another screen.
+            A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="P:Au.AScreen.LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns <b>AScreen</b> with fresh handle.
             </remarks>
         </member>
-        <member name="P:Au.AScreen.Value">
+        <member name="M:Au.AScreen.#ctor(System.IntPtr)">
             <summary>
-            Gets the value as object.
+            Creates variable with screen handle, aka HMONITOR.
             </summary>
         </member>
-        <member name="P:Au.AScreen.IsNull">
-            <summary>
-            true if this variable does not have a value.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.#ctor(System.Int32)">
-            <summary>
-            Creates variable that holds screen index. Later will be called <see cref="M:Au.AScreen.Index(System.Int32)"/>.
-            Alternatively use implicit conversion from int, for example <c>1</c> instead of <c>new AScreen(1)</c>.
-            </summary>
-            <param name="screenIndex">0 primary screen, 1 first nonprimary, and so on. Does not match those in Windows Settings.</param>
-        </member>
-        <member name="M:Au.AScreen.op_Implicit(System.Int32)~Au.AScreen">
-            <summary>
-            Creates variable that holds screen index. Later will be called <see cref="M:Au.AScreen.Index(System.Int32)"/>.
-            </summary>
-            <param name="screenIndex">0 primary screen, 1 first nonprimary, and so on. Does not match those in Windows Settings.</param>
-        </member>
-        <member name="M:Au.AScreen.#ctor(Au.Types.POINT)">
-            <summary>
-            Creates variable that holds <see cref="T:Au.Types.POINT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SODefault)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.#ctor(Au.Types.RECT)">
-            <summary>
-            Creates variable that holds <see cref="T:Au.Types.RECT"/>. Later will be called <see cref="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SODefault)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.#ctor(Au.AWnd)">
-            <summary>
-            Creates variable that holds window handle. Later will be called <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.#ctor(System.Windows.Forms.Control)">
-            <summary>
-            Creates variable that holds a winforms control or form. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SODefault)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.#ctor(System.Windows.DependencyObject)">
-            <summary>
-            Creates variable that holds a WPF window/popup/control. Later will be called <see cref="M:Au.AScreen.Of(System.Windows.DependencyObject,Au.Types.SODefault)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.#ctor(System.Func{Au.Types.ScreenHandle})">
+        <member name="M:Au.AScreen.#ctor(System.Func{Au.AScreen})">
             <summary>
             Creates variable that calls your function to get screen when need.
             </summary>
-            <example>
-            <code><![CDATA[
-            new AScreen(() => AScreen.Of(AMouse.XY));
-            new AScreen(() => AScreen.Of(AWnd.Active));
-            ]]></code>
-            </example>
         </member>
-        <member name="M:Au.AScreen.#ctor(Au.Types.ScreenHandle)">
+        <member name="P:Au.AScreen.Handle">
             <summary>
-            Creates variable that holds <see cref="T:Au.Types.ScreenHandle"/>.
+            Gets screen handle, aka HMONITOR. Returns default(IntPtr) if it wasn't set; see <see cref="P:Au.AScreen.Now"/>.
             </summary>
+        </member>
+        <member name="P:Au.AScreen.LazyFunc">
+            <summary>
+            Gets callback function that gets screen when need. Returns null if it wasn't set.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.IsEmpty">
+            <summary>
+            Returns true if this variable has no screen handle and no callback function.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.Now">
+            <summary>
+            Returns a copy of this variable with <see cref="P:Au.AScreen.Handle"/>.
+            </summary>
+            <remarks>
+            If this variable has <see cref="P:Au.AScreen.Handle"/>, returns its clone. Else if has <see cref="P:Au.AScreen.LazyFunc"/>, calls it. Else gets the primary screen.
+            </remarks>
         </member>
         <member name="P:Au.AScreen.Primary">
             <summary>
             Gets the primary screen.
             </summary>
+            <remarks>
+            The returned variable has <see cref="P:Au.AScreen.Handle"/>. To create lazy variable (with <see cref="P:Au.AScreen.LazyFunc"/>), use <c>AScreen.Index(0, lazy: true)</c>.
+            </remarks>
         </member>
         <member name="P:Au.AScreen.OfMouse">
             <summary>
-            Gets <b>AScreen</b> variable that later will get the screen from the mouse cursor position at that time.
+            Gets lazy <b>AScreen</b> variable that later will get the screen from the mouse cursor position at that time.
             </summary>
+            <remarks>
+            If need non-lazy: <c>AScreen.Of(AMouse.XY)</c>.
+            </remarks>
         </member>
         <member name="P:Au.AScreen.OfActiveWindow">
             <summary>
-            Gets <b>AScreen</b> variable that later will get the screen of the active window at that time.
-            </summary>
-        </member>
-        <member name="P:Au.AScreen.AllScreens">
-            <summary>
-            Gets all screens.
+            Gets lazy <b>AScreen</b> variable that later will get the screen of the active window at that time.
             </summary>
             <remarks>
-            The order of array elements may be different than in Windows Settings (Control Panel). The primary screen is always at index 0.
-            The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
+            If need non-lazy: <c>AScreen.Of(AWnd.Active)</c>.
             </remarks>
         </member>
-        <member name="M:Au.AScreen.Index(System.Int32)">
-            <summary>
-            Gets screen at the specified index of the <see cref="P:Au.AScreen.AllScreens"/> array.
-            </summary>
-            <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
-        </member>
-        <member name="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)">
+        <member name="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault,System.Boolean)">
             <summary>
             Gets screen containing the biggest part of the specified window or nearest to it.
             </summary>
-            <param name="w">Window or control. Can be default(AWnd) or invalid.</param>
+            <param name="w">Window or control. If default(AWnd) or invalid, gets the primary screen.</param>
             <param name="defaultScreen"></param>
+            <param name="lazy">
+            Create variable with <see cref="P:Au.AScreen.LazyFunc"/> that later will get screen handle.
+            Other ways to create lazy:
+            - use <b>AWnd.Finder</b>. Example: <c>AScreen.Of(new AWnd.Finder("* Notepad"))</c>.
+            - use constructor. Example: <c>new AScreen(() => AScreen.Of(AWnd.FindFast(cn: "Notepad")))</c>.
+            </param>
         </member>
-        <member name="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SODefault)">
+        <member name="M:Au.AScreen.Of(Au.AWnd.Finder,Au.Types.SODefault,System.Boolean)">
             <summary>
-            Gets screen containing the biggest part of the specified winforms control or form or nearest to it.
+            Gets screen containing the biggest part of the specified window or nearest to it.
             </summary>
-            <param name="c">Control or form. Cannot be null. The handle can be created or not.</param>
+            <param name="f">Window finder. If window not found, gets the primary screen.</param>
             <param name="defaultScreen"></param>
+            <param name="lazy">Create variable with <see cref="P:Au.AScreen.LazyFunc"/> that later will find window and get screen handle. Default true.</param>
         </member>
-        <member name="M:Au.AScreen.Of(System.Windows.DependencyObject,Au.Types.SODefault)">
+        <member name="M:Au.AScreen.Of(System.Windows.Forms.Control,Au.Types.SODefault,System.Boolean)">
             <summary>
-            Gets screen containing the biggest part of the specified WPF window/popup/control or nearest to it.
+            Gets screen containing the biggest part of the specified winforms window or control or nearest to it.
             </summary>
-            <param name="w">WPF window, popup or a child object.</param>
+            <param name="c">Window or control. If handle not created, gets the primary screen. Cannot be null.</param>
             <param name="defaultScreen"></param>
+            <param name="lazy">Create variable with <see cref="P:Au.AScreen.LazyFunc"/> that later will get screen handle.</param>
+        </member>
+        <member name="M:Au.AScreen.Of(System.Windows.Window,Au.Types.SODefault,System.Boolean)">
+            <summary>
+            Gets screen containing the biggest part of the specified WPF window or nearest to it.
+            </summary>
+            <param name="w">WPF window. If handle not created, gets the primary screen. Cannot be null.</param>
+            <param name="defaultScreen"></param>
+            <param name="lazy">Create variable with <see cref="P:Au.AScreen.LazyFunc"/> that later will get screen handle.</param>
+        </member>
+        <member name="M:Au.AScreen.Of(System.Windows.FrameworkElement,Au.Types.SODefault,System.Boolean)">
+            <summary>
+            Gets screen containing the biggest part of the specified WPF element (of its rectangle) or nearest to it.
+            </summary>
+            <param name="elem">WPF element. If not loaded, gets the primary screen. Cannot be null.</param>
+            <param name="defaultScreen"></param>
+            <param name="lazy">Create variable with <see cref="P:Au.AScreen.LazyFunc"/> that later will get screen handle.</param>
         </member>
         <member name="M:Au.AScreen.Of(Au.Types.POINT,Au.Types.SODefault)">
             <summary>
-            Gets screen containing the specified coordinate or nearest to it.
+            Gets screen containing the specified point or nearest to it.
             </summary>
             <param name="p"></param>
+            <param name="defaultScreen"></param>
+            <remarks>
+            The returned variable has <see cref="P:Au.AScreen.Handle"/>. To create lazy variable (with <see cref="P:Au.AScreen.LazyFunc"/>), use constructor. Example: <c>new AScreen(() => AScreen.Of(500, AScreen.Primary.Rect.Height))</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.AScreen.Of(System.Int32,System.Int32,Au.Types.SODefault)">
+            <summary>
+            Gets screen containing the specified point or nearest to it.
+            </summary>
+            <param name="x"></param>
+            <param name="y"></param>
             <param name="defaultScreen"></param>
         </member>
         <member name="M:Au.AScreen.Of(Au.Types.RECT,Au.Types.SODefault)">
@@ -16929,6 +16920,94 @@
             </summary>
             <param name="r"></param>
             <param name="defaultScreen"></param>
+            <remarks>
+            The returned variable has <see cref="P:Au.AScreen.Handle"/>. To create lazy variable (with <see cref="P:Au.AScreen.LazyFunc"/>), use constructor. Example: <c>new AScreen(() => AScreen.Of(new RECT(...)))</c>.
+            </remarks>
+        </member>
+        <member name="P:Au.AScreen.All">
+            <summary>
+            Gets all screens.
+            </summary>
+            <remarks>
+            The order of array elements may be different than in Windows Settings (Control Panel). The primary screen is always at index 0.
+            The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.AScreen.Index(System.Int32,System.Boolean)">
+            <summary>
+            Gets screen at the specified index of the <see cref="P:Au.AScreen.All"/> array.
+            </summary>
+            <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
+            <param name="lazy">Create variable with <see cref="P:Au.AScreen.LazyFunc"/> that later will get screen handle.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative index.</exception>
+        </member>
+        <member name="P:Au.AScreen.ScreenIndex">
+            <summary>
+            Gets index of this screen in the <see cref="P:Au.AScreen.All"/> array.
+            </summary>
+            <remarks>
+            Returns 0 (index of primary screen) if this variable is empty. Returns -1 if the screen handle is invalid; it can happen after changing display settings, but is rare.
+            </remarks>
+        </member>
+        <member name="P:Au.AScreen.Info">
+            <summary>
+            Gets screen rectangle and other info.
+            </summary>
+            <returns>
+            Tuple containing:
+            - rect - screen rectangle.
+            - workArea - work area rectangle.
+            - isPrimary - true if it is the primary screen.
+            - isAlive - false if the screen handle is invalid; then the function gets info of the primary screen.
+            </returns>
+            <remarks>
+            If this variable holds a callback function, this function calls it to get screen handle. See also <see cref="P:Au.AScreen.Now"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.AScreen.GetRect(System.Boolean)">
+            <summary>
+            Calls <see cref="P:Au.AScreen.Info"/> and returns rectangle of the screen or its work area.
+            </summary>
+            <param name="workArea">Get work area rectangle.</param>
+        </member>
+        <member name="P:Au.AScreen.Rect">
+            <summary>
+            Calls <see cref="P:Au.AScreen.Info"/> and returns screen rectangle.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.WorkArea">
+            <summary>
+            Calls <see cref="P:Au.AScreen.Info"/> and returns work area rectangle.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.Dpi">
+            <summary>
+            Gets DPI of this screen.
+            Calls <see cref="M:Au.Util.ADpi.OfScreen(System.IntPtr)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.AScreen.IsAlive">
+            <summary>
+            True if the screen handle is valid.
+            </summary>
+            <remarks>
+            Don't use with variables that hold a callback function. This function does not call it and returns false.
+            </remarks>
+        </member>
+        <member name="M:Au.AScreen.ToString">
+            
+        </member>
+        <member name="M:Au.AScreen.GetHashCode">
+            
+        </member>
+        <member name="M:Au.AScreen.Equals(Au.AScreen)">
+            
+        </member>
+        <member name="M:Au.AScreen.op_Equality(Au.AScreen,Au.AScreen)">
+            
+        </member>
+        <member name="M:Au.AScreen.op_Inequality(Au.AScreen,Au.AScreen)">
+            
         </member>
         <member name="M:Au.AScreen.IsInAnyScreen(Au.Types.POINT)">
             <summary>
@@ -16943,12 +17022,6 @@
         <member name="M:Au.AScreen.IsInAnyScreen(Au.AWnd)">
             <summary>
             Returns true if rectangle of window w intersects with some screen.
-            </summary>
-        </member>
-        <member name="M:Au.AScreen.GetScreenHandle">
-            <summary>
-            Gets <see cref="T:Au.Types.ScreenHandle"/> from the value stored in this variable (screen index, window, etc).
-            If the value is null, gets the primary screen.
             </summary>
         </member>
         <member name="T:Au.AWarning">
@@ -19645,7 +19718,7 @@
             <remarks>
             Uses API <msdn>GetDpiForMonitor</msdn>.
             </remarks>
-            <seealso cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)"/>
+            <seealso cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault,System.Boolean)"/>
         </member>
         <member name="P:Au.Util.ADpi.SupportPMOnWin8_1">
             <summary>
@@ -20815,7 +20888,7 @@
             </summary>
             <param name="andSelf">Include this node. Default false.</param>
         </member>
-        <member name="P:Au.Util.ATreeBase`1.ChildCount">
+        <member name="P:Au.Util.ATreeBase`1.Count">
             <summary>
             Gets number of direct child nodes.
             </summary>
@@ -21127,14 +21200,6 @@
             </summary>
             <param name="p">'\0'-terminated string. Can be null.</param>
             <param name="max">Max length to scan. Returns max if does not find '\0'.</param>
-        </member>
-        <member name="M:Au.Util.CharPtr_.Eq(System.Char*,System.Int32,System.String)">
-            <summary>
-            Case-sensitive compares string with managed string and returns true if they are equal.
-            </summary>
-            <param name="p">Unmanaged string.</param>
-            <param name="len">p length. Returns false if it is != s.Length.</param>
-            <param name="s">Managed string.</param>
         </member>
         <member name="T:Au.Util.BytePtr_">
             <summary>
@@ -24013,7 +24078,7 @@
             <param name="screen">
             Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
             Default: <b>Primary</b>.
-            Uses <see cref="P:Au.AScreen.AllScreens"/> to get screen indices. They are different than in Windows Settings.
+            Uses <see cref="P:Au.AScreen.All"/> to get screen indices. They are different than in Windows Settings.
             </param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
@@ -24523,7 +24588,7 @@
             A variable of AWnd type represents a window or control. It is a window handle, also known as HWND.
             </summary>
             <remarks>
-            AWnd functions can be used with windows and controls of any process/thread. Also can be used with .NET form/control and WPF window class variables, like <c>AWnd w=(AWnd)form; w.Method(...);</c> or <c>((AWnd)form).Method(...);</c>.
+            AWnd functions can be used with windows and controls of any process/thread. Also can be used with .NET form/control and WPF window class variables, like <c>AWnd w=form.Hwnd(); w.Method(...);</c>.
             
             There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
             
@@ -24557,16 +24622,6 @@
             Converts from a special handle value.
             </summary>
             <param name="hwnd">See API <msdn>SetWindowPos</msdn>.</param>
-        </member>
-        <member name="M:Au.AWnd.op_Explicit(System.Windows.Forms.Control)~Au.AWnd">
-            <summary>
-            Gets the window handle as AWnd from a System.Windows.Forms.Control (or Form etc) variable.
-            Returns default(AWnd) if w is null or the handle is still not created.
-            </summary>
-            <remarks>
-            Like <see cref="M:Au.AExtForms.Hwnd(System.Windows.Forms.Control,System.Boolean)"/>, but does not throw exception if null.
-            Should be called in control's thread. Calls <see cref="P:System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="P:System.Windows.Forms.Control.Handle"/>.
-            </remarks>
         </member>
         <member name="M:Au.AWnd.op_Equality(Au.AWnd,Au.AWnd)">
             <summary>Compares window handles.</summary>
@@ -25935,7 +25990,7 @@
             <param name="width">Width. If default(Coord), does not change width.</param>
             <param name="height">Height. If default(Coord), does not change height.</param>
             <param name="workArea"><i>x y width height</i> are relative to the work area. Not used when this is a child window.</param>
-            <param name="screen"><i>x y width height</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window.</param>
+            <param name="screen"><i>x y width height</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>AScreen.Index(1)</c>.</param>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
             For top-level windows use screen coordinates. For controls - direct parent client area coordinates.
@@ -25950,7 +26005,7 @@
             <param name="x">Left. If default(Coord), does not move in X axis.</param>
             <param name="y">Top. If default(Coord), does not move in Y axis.</param>
             <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
-            <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window.</param>
+            <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>AScreen.Index(1)</c>.</param>
             <exception cref="T:Au.Types.AuWndException"/>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
@@ -25965,7 +26020,7 @@
             <param name="width">Width. If default(Coord), does not change width.</param>
             <param name="height">Height. If default(Coord), does not change height.</param>
             <param name="workArea">For <see cref="M:Au.Types.Coord.Fraction(System.Double)"/> etc use width/height of the work area. Not used when this is a child window.</param>
-            <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Not used when this is a child window.</param>
+            <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Not used when this is a child window. Example: <c>AScreen.Index(1)</c>.</param>
             <exception cref="T:Au.Types.AuWndException"/>
             <remarks>
             Also restores the visible top-level window if it is minimized or maximized.
@@ -25978,7 +26033,7 @@
             </summary>
             <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="screen">Move to this screen (see <see cref="T:Au.AScreen"/>). If default, uses screen of this window.</param>
+            <param name="screen">Move to this screen (see <see cref="T:Au.AScreen"/>). If default, uses screen of this window. Example: <c>AScreen.Index(1)</c>.</param>
             <param name="workArea">Use the work area, not whole screen. Default true.</param>
             <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
             <exception cref="T:Au.Types.AuWndException"/>
@@ -26010,9 +26065,9 @@
         </member>
         <member name="P:Au.AWnd.Screen">
             <summary>
-            Gets <see cref="T:Au.Types.ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
+            Gets <see cref="T:Au.AScreen"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
             If this window handle is default(AWnd) or invalid, gets the primary screen.
-            Calls <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault)"/>.
+            Calls <see cref="M:Au.AScreen.Of(Au.AWnd,Au.Types.SODefault,System.Boolean)"/>.
             </summary>
         </member>
         <member name="M:Au.AWnd.ZorderAbove(Au.AWnd)">

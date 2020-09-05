@@ -55,7 +55,7 @@ namespace Au.Controls
 		{
 			_wndProc = _WndProc;
 
-			_hwnd = (AWnd)_c;
+			_hwnd = _c.Hwnd();
 			//AOutput.Write(_hwnd);
 			Native.SetWindowSubclass(_hwnd, _wndProc, 40159885);
 			_Redraw(true); //need WM_NCCALCSIZE etc

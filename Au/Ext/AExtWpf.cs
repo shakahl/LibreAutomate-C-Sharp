@@ -16,6 +16,7 @@ using System.Windows;
 using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Controls;
+using System.Windows.Media;
 
 namespace Au
 {
@@ -60,7 +61,10 @@ namespace Au
 		//	return default;
 		//}
 
-		internal static RECT RectToScreen_(this FrameworkElement t) {
+		/// <summary>
+		/// Gets rectangle of this element in screen coordinates.
+		/// </summary>
+		public static RECT RectInScreen(this FrameworkElement t) {
 			Point p1 = t.PointToScreen(default), p2 = t.PointToScreen(new Point(t.ActualWidth, t.ActualHeight));
 			return new RECT(p1.X.ToInt(), p1.Y.ToInt(), p2.X.ToInt(), p2.Y.ToInt(), false);
 		}
@@ -86,19 +90,23 @@ namespace Au
 					x = r.left; y = r.top;
 					var stc = t.SizeToContent;
 					if (stc != SizeToContent.WidthAndHeight) {
-						double f = 96d / AScreen.Of(new POINT(x, y)).Dpi;
+						double f = 96d / AScreen.Of(x, y).Dpi;
 						if (!stc.Has(SizeToContent.Width)) t.Width = r.Width * f;
 						if (!stc.Has(SizeToContent.Height)) t.Height = r.Height * f;
 					}
 				}
 
 				t.WindowStartupLocation = WindowStartupLocation.Manual;
-				t.Left = 0; t.Top = 0;
+				t.Left = double.NaN; t.Top = double.NaN; //default location, somewhere near top-left of primary screen or owner's screen
 				if (wstate == WindowState.Minimized) t.ShowActivated = false;
 
-				t.Loaded += (_, _) => {
+				//The first events I know where window handle is already created are SourceInitialized and Loaded.
+				//	They can be in any order.
+				//	For example, if using SizeToContent, Loaded is before, and in both events the window is invisible.
+				//	Else Loaded is after, and then the window is already visible.
+				t.SourceInitialized += (_, _) => {
 					var w = t.Hwnd();
-					var v = AScreen.Of(new POINT(x, y)).GetInfo();
+					var v = AScreen.Of(x, y).Info;
 					var rs = v.workArea;
 					if (!v.isPrimary) {
 						using var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE); //workaround for WPF bug: activates window when DPI changes
@@ -163,7 +171,7 @@ namespace Au
 					using var h=AHookWin.ThreadCbt(d=> {
 						if(d.code== HookData.CbtEvent.CREATEWND) unsafe {
 							var w=d.CreationInfo(out var c, out _);
-							if(c->style!=0 && !c->style.Has(WS.CHILD)) {
+							if(c->style!=0 && !c->style.Has(WS.CHILD)) { //note: this does not work if ShowInTaskbar = false. Then WPF creates a "Hidden Window" before, even if owner specified.
 								AOutput.Write(c->x, c->y, c->cx, c->cy, c->hwndParent, c->style, c->lpszClass, c->lpszName);
 				//				d.hook.Unhook();
 								c->x=rs.left; c->y=rs.top;
@@ -195,7 +203,7 @@ namespace Au
 		/// - Sets window location for normal state (not minimized/maximized).
 		/// - Ensures that entire window or its top-left part is in screen that contains <i>x y</i> or is nearest.
 		/// - Changes these window properties if need: <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>ShowActivated</b>.
-		/// - To set location etc uses the <b>Loaded</b> event. The event handler runs later.
+		/// - Sets location etc later, in <b>SourceInitialized</b> event.
 		/// - All this happens while the window is still invisible.
 		/// </remarks>
 		public static void SetXY(this Window t, int x, int y) => _Move(t, x, y, default, false);
@@ -213,10 +221,122 @@ namespace Au
 		/// - Sets window rectangle for normal state (not minimized/maximized).
 		/// - Ensures that entire window or its top-left part is in screen that contains the top-left of <i>r</i> or is nearest.
 		/// - Changes these window properties if need: <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>, <b>ShowActivated</b>. Does not change <b>SizeToContent</b>, therefore may not change width or/and height.
-		/// - To set location etc uses the <b>Loaded</b> event. The event handler runs later.
+		/// - Sets location etc later, in <b>SourceInitialized</b> event.
 		/// - All this happens while the window is still invisible.
 		/// </remarks>
 		public static void SetRect(this Window t, RECT r) => _Move(t, 0, 0, r, true);
+
+		/// <summary>
+		/// Enumerates visual descendant objects, including control parts, and calls callback function <i>f</i> for each.
+		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+		/// </summary>
+		public static DependencyObject FindVisualDescendant(this DependencyObject t, Func<DependencyObject, bool> f) {
+			for (int i = 0, n = VisualTreeHelper.GetChildrenCount(t); i < n; i++) {
+				var v = VisualTreeHelper.GetChild(t, i);
+				if (f(v)) return v;
+				v = FindVisualDescendant(v, f);
+				if (v != null) return v;
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Inserts row and adjusts row indices of children that are in other rows.
+		/// </summary>
+		public static void InsertRow(this Grid t, int index, RowDefinition d) {
+			_GridShift(t, true, index, 1);
+			t.RowDefinitions.Insert(index, d);
+		}
+
+		/// <summary>
+		/// Inserts column and adjusts column indices of children that are in other columns.
+		/// </summary>
+		public static void InsertColumn(this Grid t, int index, ColumnDefinition d) {
+			_GridShift(t, false, index, 1);
+			t.ColumnDefinitions.Insert(index, d);
+		}
+
+		/// <summary>
+		/// Removes row and adjusts row indices of children that are in other rows.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="index"></param>
+		/// <param name="removeChildren">Remove children that are in that row.</param>
+		public static void RemoveRow(this Grid t, int index, bool removeChildren) {
+			if (removeChildren) _GridRemoveRowColChildren(t, true, index);
+			t.RowDefinitions.RemoveAt(index);
+			_GridShift(t, true, index, -1);
+		}
+
+		/// <summary>
+		/// Removes column and adjusts column indices of children that are in other columns.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="index"></param>
+		/// <param name="removeChildren">Remove children that are in that column.</param>
+		public static void RemoveColumn(this Grid t, int index, bool removeChildren) {
+			if (removeChildren) _GridRemoveRowColChildren(t, false, index);
+			t.ColumnDefinitions.RemoveAt(index);
+			_GridShift(t, false, index, -1);
+		}
+
+		/// <summary>
+		/// Removes a child element and its row from this grid. Adjusts row indices of children that are in other rows.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="e"></param>
+		/// <param name="removeOtherElements">Also remove other elements that are in that row.</param>
+		public static void RemoveRow(this Grid t, UIElement e, bool removeOtherElements) {
+			int i = Grid.GetRow(e);
+			_GridRemoveChild(t, e);
+			RemoveRow(t, i, removeOtherElements);
+		}
+
+		/// <summary>
+		/// Removes a child element and its column from this grid. Adjusts column indices of children that are in other columns.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="e"></param>
+		/// <param name="removeOtherElements">Also remove other elements that are in that column.</param>
+		public static void RemoveColumn(this Grid t, UIElement e, bool removeOtherElements) {
+			int i = Grid.GetColumn(e);
+			_GridRemoveChild(t, e);
+			RemoveColumn(t, i, removeOtherElements);
+		}
+
+		static void _GridShift(Grid g, bool rows, int startIndex, int shift) {
+			if (startIndex >= (rows ? g.RowDefinitions.Count : g.ColumnDefinitions.Count)) return;
+			foreach (UIElement e in g.Children) {
+				int k = rows ? Grid.GetRow(e) : Grid.GetColumn(e);
+				if (k < startIndex) continue;
+				k += shift;
+				if (rows) Grid.SetRow(e, k); else Grid.SetColumn(e, k);
+			}
+		}
+
+		static void _GridRemoveRowColChildren(Grid g, bool row, int index) {
+			var cc = g.Children;
+			for (int i = cc.Count; --i >= 0;) {
+				var e = cc[i];
+				int rc = row ? Grid.GetRow(e) : Grid.GetColumn(e);
+				if (rc == index) _GridRemoveChild(g, e);
+			}
+		}
+
+		static void _GridRemoveChild(Grid g, UIElement e) {
+			g.Children.Remove(e);
+			Grid.SetRow(e, 0);
+			Grid.SetColumn(e, 0);
+		}
+
+		/// <summary>
+		/// Adds a child element in specified row/column.
+		/// </summary>
+		public static void AddChild(this Grid g, UIElement e, int row, int column) {
+			Grid.SetRow(e, row);
+			Grid.SetColumn(e, column);
+			g.Children.Add(e);
+		}
 	}
 }
 

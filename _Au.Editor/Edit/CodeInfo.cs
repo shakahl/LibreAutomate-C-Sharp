@@ -476,7 +476,7 @@ AOutput.Write(""t"" + 'c' + 1);
 
 		//cancel if changed the screen rectangle of the document window
 		if(_compl.IsVisibleUI || _signature.IsVisibleUI || _phVisible) {
-			var r = ((AWnd)Panels.Editor.ZActiveDoc).Rect;
+			var r = Panels.Editor.ZActiveDoc.Hwnd().Rect;
 			if(!_isUI) {
 				_isUI = true;
 				_sciRect = r;

@@ -164,7 +164,7 @@ partial class FMain : Form
 				_DpiWorkaround1((AWnd)m.HWnd);
 				break;
 			case Api.WM_ACTIVATE:
-				int isActive = AMath.LoUshort(wParam); //0 inactive, 1 active, 2 click-active
+				int isActive = AMath.LoWord(wParam); //0 inactive, 1 active, 2 click-active
 				if (isActive == 1 && !w.IsActive && !Api.SetForegroundWindow(w)) {
 					//Normally at startup always inactive, because started as admin from task scheduler. SetForegroundWindow sometimes works, sometimes not.
 					//workaround for: If clicked a window after our app started but before w activated, w is at Z bottom and in some cases without taskbar button.
@@ -296,7 +296,7 @@ partial class FMain : Form
 
 	public void ZShowAndActivate() {
 		Show();
-		var w = (AWnd)Program.MainForm;
+		var w = Program.MainForm.Hwnd();
 		w.ShowNotMinimized(true);
 		w.ActivateLL();
 	}

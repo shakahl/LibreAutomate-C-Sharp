@@ -147,12 +147,12 @@ namespace Au.Controls
 			_owner = owner;
 
 			if(_owner != null) {
-				var zorderAbove = ((AWnd)_owner).Get.EnabledOwned(orThis: changedOwner);
+				var zorderAbove = _owner.Hwnd().Get.EnabledOwned(orThis: changedOwner);
 				Show(_owner);
-				if(!zorderAbove.Is0) ((AWnd)this).ZorderAbove(zorderAbove);
+				if(!zorderAbove.Is0) this.Hwnd().ZorderAbove(zorderAbove);
 			} else {
 				Show(); //note: not the same as Show(null)
-				if(changedOwner) ((AWnd)this).ZorderTopmost();
+				if(changedOwner) this.Hwnd().ZorderTopmost();
 			}
 		}
 

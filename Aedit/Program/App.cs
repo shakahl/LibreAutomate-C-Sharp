@@ -15,13 +15,18 @@ public class Program
 
 	[STAThread]
 	static void Main(string[] args) {
-#if !DEBUG
+		//#if !DEBUG
 		AProcess.CultureIsInvariant = true;
-#endif
+		//#endif
 
+#if true
+		AppDomain.CurrentDomain.UnhandledException += (ad, e) => AOutput.Write(e.ExceptionObject);
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
+#else
+		AppDomain.CurrentDomain.UnhandledException += (ad, e) => ADialog.ShowError("Exception", e.ExceptionObject.ToString());
+#endif
 
 		//ATime.SleepDoEvents(5000);
 		_LoadUI();

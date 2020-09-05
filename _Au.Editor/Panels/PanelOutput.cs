@@ -181,7 +181,7 @@ class PanelOutput : AuUserControlBase
 
 	void _SetTopmost(bool on)
 	{
-		var w = ((AWnd)this).Window;
+		var w = this.Hwnd().Window;
 		if(on) {
 			w.OwnerWindow = default;
 			w.ZorderTopmost();
@@ -189,7 +189,7 @@ class PanelOutput : AuUserControlBase
 			//AWnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
-			w.OwnerWindow = (AWnd)Program.MainForm;
+			w.OwnerWindow = Program.MainForm.Hwnd();
 		}
 	}
 

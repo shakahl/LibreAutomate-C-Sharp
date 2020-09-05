@@ -299,7 +299,7 @@ class PanelFind : AuUserControlBase
 		if(_regexWindow.UserClosed) { if(!F1) return; _regexWindow.UserClosed = false; }
 
 		if(!_regexWindow.Window.IsHandleCreated) {
-			var r = ((AWnd)this).Rect;
+			var r = this.Hwnd().Rect;
 			r.Offset(0, -20);
 			_regexWindow.Show(Program.MainForm, r, true);
 		} else _regexWindow.Window.Show();
@@ -653,6 +653,7 @@ class PanelFind : AuUserControlBase
 		int searchIn = names ? 0 : _SearchIn;
 
 		foreach(var v in Program.Model.Root.Descendants()) {
+			//using var perf = new _Perf();
 			string text = null, path = null;
 			if(names) {
 				text = v.Name;
@@ -670,6 +671,7 @@ class PanelFind : AuUserControlBase
 					if(0 != v.Name.Ends(true, _aSkipImages)) continue;
 				}
 				var sw = _SkipWildcards; if(sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
+				//perf.Start(v.Name);
 				text = v.GetText();
 				if(text.Length == 0) continue;
 				if(text.Contains('\0')) continue;
@@ -746,6 +748,24 @@ class PanelFind : AuUserControlBase
 		ip.Visible = true;
 	}
 
+	//struct _Perf : IDisposable
+	//{
+	//	long _t;
+	//	string _file;
+
+	//	public void Start(string file) {
+	//		_t = ATime.PerfMicroseconds;
+	//		_file = file;
+	//	}
+
+	//	public void Dispose() {
+	//		if (_t == 0) return;
+	//		long t=ATime.PerfMicroseconds-_t;
+	//		if (t < 20000) return;
+	//		AOutput.Write(t, _file);
+	//	}
+	//}
+
 	//rejected: replace in files. Rarely used, dangerous, need much work to make more useful. It's easy to click each file in results and click 'Replace' or 'all'.
 	//private void _bReplaceIF_Click(object sender, EventArgs e)
 	//{
@@ -758,7 +778,7 @@ class PanelFind : AuUserControlBase
 
 		public _TempDisableControl(Control c, int enableAfter = 0)
 		{
-			_w = (AWnd)c;
+			_w = c.Hwnd();
 			_enableAfter = enableAfter;
 			_w.Enable(false);
 			Api.UpdateWindow(_w);

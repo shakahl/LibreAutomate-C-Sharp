@@ -123,7 +123,7 @@ namespace Au.Controls
 		public void Show(Control anchor)
 		{
 			_ = anchor?.IsHandleCreated ?? throw new ArgumentException();
-			_Show(anchor, ((AWnd)anchor).Rect);
+			_Show(anchor, anchor.Hwnd().Rect);
 		}
 
 		/// <summary>
@@ -180,8 +180,8 @@ namespace Au.Controls
 				}
 			}
 
-			var si = AScreen.Of(ra).GetInfo();
-			var rs = si.workArea; if(ra.Width > 0 && (ra.Right <= rs.left || ra.Left >= rs.right)) rs = si.bounds;
+			var si = AScreen.Of(ra).Info;
+			var rs = si.workArea; if(ra.Width > 0 && (ra.Right <= rs.left || ra.Left >= rs.right)) rs = si.rect;
 			rs.Inflate(-1, -5);
 			int heiSB = SystemInformation.HorizontalScrollBarHeight;
 			int heiAbove = ra.Top - rs.top - heiSB, heiBelow = rs.bottom - ra.Bottom - heiSB;
@@ -269,7 +269,7 @@ namespace Au.Controls
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_MBUTTONDOWN:
 			case Api.WM_NCMBUTTONDOWN:
-				if(((AWnd)m.HWnd).Window != (AWnd)_w) _Close(); //SHOULDDO: support owned windows of _w
+				if(((AWnd)m.HWnd).Window != _w.Hwnd()) _Close(); //SHOULDDO: support owned windows of _w
 				break;
 			}
 			return false;
@@ -413,10 +413,10 @@ namespace Au.Controls
 
 				if(_owner != null) {
 					Show(_owner);
-					if(changedOwner) ((AWnd)this).ZorderAbove((AWnd)_owner);
+					if(changedOwner) this.Hwnd().ZorderAbove(_owner.Hwnd());
 				} else {
 					Show(); //note: not the same as Show(null)
-					if(changedOwner) ((AWnd)this).ZorderTopmost();
+					if(changedOwner) this.Hwnd().ZorderTopmost();
 				}
 				_showedOnce = true;
 
@@ -466,7 +466,7 @@ namespace Au.Controls
 					//show with standard combobox animation
 					if(_p.ComboBoxAnimation && SystemInformation.IsComboBoxAnimationEnabled) {
 						Api.SetCursor(Cursors.Arrow.Handle);
-						Api.AnimateWindow((AWnd)this, 0, Api.AnimationFlags.Slide | (_up ? Api.AnimationFlags.VerticalNegative : Api.AnimationFlags.VerticalPositive));
+						Api.AnimateWindow(this.Hwnd(), 0, Api.AnimationFlags.Slide | (_up ? Api.AnimationFlags.VerticalNegative : Api.AnimationFlags.VerticalPositive));
 					}
 				}
 			}

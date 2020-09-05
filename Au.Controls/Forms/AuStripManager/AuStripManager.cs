@@ -558,7 +558,7 @@ To reset:  exit this application and delete the file."
 			string s;
 			XElement x = item.Tag as XElement, xtbTo = tsTo?.Tag as XElement;
 
-			switch(AMath.LoUshort(action)) {
+			switch(AMath.LoWord(action)) {
 			case 1: //copy from menu or standard toolbar to custom toolbar
 				var xNew = new XElement(x.Name, x.Attributes()); //copy without descendants but with attributes
 				if(item is ToolStripDropDownItem ddi && ddi.HasDropDownItems) {
@@ -655,7 +655,7 @@ To reset:  exit this application and delete the file."
 				if(k.Msg.message != Api.WM_MOUSEMOVE) return;
 				target = ts.GetItemAt(ts.MouseClientXY());
 				//AOutput.Write(target);
-				isOutside = (target == null && AWnd.FromMouse() != (AWnd)ts);
+				isOutside = (target == null && AWnd.FromMouse() != ts.Hwnd());
 				k.Cursor = isOutside ? Cursors.No : Cursors.Hand;
 			}) || isOutside) return;
 			_Strips_Customize(2, item, ts, target);

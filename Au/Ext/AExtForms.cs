@@ -41,7 +41,6 @@ namespace Au
 		/// </remarks>
 		public static AWnd Hwnd(this Control t, bool create = false)
 			=> create || t.IsHandleCreated ? new AWnd(t.Handle) : default;
-		//SHOULDDO: use this in most places instead of the (AWnd) cast. Except where null allowed.
 
 		/// <summary>
 		/// Creates handle of this control/form and descendant controls.
@@ -81,7 +80,7 @@ namespace Au
 		/// </summary>
 		public static POINT MouseClientXY(this Control t)
 		{
-			return ((AWnd)t).MouseClientXY;
+			return t.Hwnd().MouseClientXY;
 		}
 
 		/// <summary>
@@ -119,7 +118,7 @@ namespace Au
 		static void _SetCueBanner(Control c, int message, bool focusedToo, string text)
 		{
 			if(c.IsHandleCreated) {
-				((AWnd)c).SendS(message, focusedToo, text);
+				c.Hwnd().SendS(message, focusedToo, text);
 			} else if(!text.NE()) {
 				c.HandleCreated += (_, _) => _SetCueBanner(c, message, focusedToo, text);
 			}

@@ -80,11 +80,10 @@ namespace Au
 		delegate int _TaskDialogIndirectDelegate(in _Api.TASKDIALOGCONFIG c, out int pnButton, out int pnRadioButton, out int pChecked);
 		static readonly _TaskDialogIndirectDelegate TaskDialogIndirect = _GetTaskDialogIndirect();
 
-		static _TaskDialogIndirectDelegate _GetTaskDialogIndirect()
-		{
+		static _TaskDialogIndirectDelegate _GetTaskDialogIndirect() {
 			//Activate manifest that tells to use comctl32.dll version 6. The API is unavailable in version 5.
 			//Need this if the host app does not have such manifest, eg if uses the default manifest added by Visual Studio.
-			using(ActCtx_.Activate()) {
+			using (ActCtx_.Activate()) {
 				//Also, don't use DllImport, because it uses v5 comctl32.dll if it is already loaded.
 				Api.GetDelegate(out _TaskDialogIndirectDelegate R, "comctl32.dll", "TaskDialogIndirect");
 				return R;
@@ -197,8 +196,19 @@ namespace Au
 
 			/// <summary>
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
+			/// The <b>AScreen</b> must be lazy or empty.
 			/// </summary>
-			public static AScreen DefaultScreen { get; set; }
+			/// <exception cref="ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
+			/// <example>
+			/// <code><![CDATA[
+			/// ADialog.Options.DefaultScreen = AScreen.Index(1, lazy: true);
+			/// ]]></code>
+			/// </example>
+			public static AScreen DefaultScreen {
+				get => _defaultScreen;
+				set => _defaultScreen = value.ThrowIfWithHandle_;
+			}
+			static AScreen _defaultScreen;
 
 			/// <summary>
 			/// If icon not specified, use <see cref="DIcon.App"/>.
@@ -217,8 +227,7 @@ namespace Au
 		_Api.TASKDIALOGCONFIG _c;
 
 		///
-		public ADialog()
-		{
+		public ADialog() {
 			_c.cbSize = Api.SizeOf(_c);
 			FlagRtlLayout = Options.RtlLayout;
 		}
@@ -231,21 +240,20 @@ namespace Au
 			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
-			) : this()
-		{
-			if(0 != (flags & DFlags.Topmost)) FlagTopmost = true; //else use Options.TopmostIfNoOwnerWindow if no owner
+			) : this() {
+			if (0 != (flags & DFlags.Topmost)) FlagTopmost = true; //else use Options.TopmostIfNoOwnerWindow if no owner
 			FlagXCancel = 0 != (flags & DFlags.XCancel);
-			if(0 != (flags & DFlags.Wider)) Width = 700;
+			if (0 != (flags & DFlags.Wider)) Width = 700;
 			//FlagKeyboardShortcutsVisible=0 != (flags&DFlags.KeyboardShortcutsVisible);
 
 			SetText(text1, text2);
 			SetIcon(icon);
 			SetButtons(buttons, 0 != (flags & DFlags.CommandLinks));
-			if(defaultButton != 0) DefaultButton = defaultButton;
-			if(controls != null) {
+			if (defaultButton != 0) DefaultButton = defaultButton;
+			if (controls != null) {
 				_controls = controls;
-				if(controls.Checkbox != null) SetCheckbox(controls.Checkbox, controls.IsChecked);
-				if(controls.RadioButtons != null) SetRadioButtons(controls.RadioButtons, controls.RadioId);
+				if (controls.Checkbox != null) SetCheckbox(controls.Checkbox, controls.IsChecked);
+				if (controls.RadioButtons != null) SetRadioButtons(controls.RadioButtons, controls.RadioId);
 			}
 			SetOwnerWindow(owner, 0 != (flags & DFlags.OwnerCenter));
 			SetXY(x, y, 0 != (flags & DFlags.RawXY));
@@ -253,18 +261,16 @@ namespace Au
 			SetExpandedText(expandedText, 0 != (flags & DFlags.ExpandDown));
 			SetFooterText(footerText);
 			SetTitleBarText(title);
-			if(onLinkClick != null) HyperlinkClicked += onLinkClick;
+			if (onLinkClick != null) HyperlinkClicked += onLinkClick;
 		}
 
 		#region set properties
 
-		void _SetFlag(_TDF flag, bool on)
-		{
-			if(on) _c.dwFlags |= flag; else _c.dwFlags &= ~flag;
+		void _SetFlag(_TDF flag, bool on) {
+			if (on) _c.dwFlags |= flag; else _c.dwFlags &= ~flag;
 		}
 
-		bool _HasFlag(_TDF flag)
-		{
+		bool _HasFlag(_TDF flag) {
 			return (_c.dwFlags & flag) != 0;
 		}
 
@@ -272,8 +278,7 @@ namespace Au
 		/// Changes title bar text.
 		/// If you don't call this method or title is null or "", dialogs will use <see cref="Options.DefaultTitle"/>.
 		/// </summary>
-		public void SetTitleBarText(string title)
-		{
+		public void SetTitleBarText(string title) {
 			_c.pszWindowTitle = title.NE() ? Options.DefaultTitle : title;
 			//info: if "", API uses "ProcessName.exe".
 		}
@@ -283,8 +288,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text1">Main instruction. Bigger font.</param>
 		/// <param name="text2">Text below main instruction.</param>
-		public void SetText(string text1 = null, string text2 = null)
-		{
+		public void SetText(string text1 = null, string text2 = null) {
 			_c.pszMainInstruction = text1;
 			_c.pszContent = text2;
 		}
@@ -292,8 +296,7 @@ namespace Au
 		/// <summary>
 		/// Sets common icon.
 		/// </summary>
-		public void SetIcon(DIcon icon)
-		{
+		public void SetIcon(DIcon icon) {
 			_c.hMainIcon = (IntPtr)(int)icon;
 			_SetFlag(_TDF.USE_HICON_MAIN, false);
 		}
@@ -305,8 +308,7 @@ namespace Au
 		/// Icon of size 32 or 16.
 		/// Don't dispose it until the dialog is closed.
 		/// </param>
-		public void SetIcon(Icon icon)
-		{
+		public void SetIcon(Icon icon) {
 			_iconGC = icon; //GC
 			_c.hMainIcon = (icon == null) ? default : icon.Handle;
 			_SetFlag(_TDF.USE_HICON_MAIN, _c.hMainIcon != default);
@@ -349,20 +351,19 @@ namespace Au
 
 			bool _hasXButton;
 
-			internal _TDCBF SetButtons(string buttons, DStringList customButtons)
-			{
+			internal _TDCBF SetButtons(string buttons, DStringList customButtons) {
 				_customButtons = null;
 				_mapIdUserNative = null;
 				_defaultButtonUserId = 0;
 				_isDefaultButtonSet = false;
 
-				switch(customButtons.Value) {
+				switch (customButtons.Value) {
 				case string s:
 					_ParseStringList(s, true);
 					break;
 				case IEnumerable<string> e:
 					int id = 0;
-					foreach(var v in e) {
+					foreach (var v in e) {
 						_customButtons ??= new List<_Button>();
 						string s = _ParseSingleString(v, ref id, true);
 						_customButtons.Add(new _Button(id, s));
@@ -374,19 +375,18 @@ namespace Au
 				return _ParseStringList(buttons, false);
 			}
 
-			_TDCBF _ParseStringList(string b, bool onlyCustom)
-			{
-				if(b.NE()) return 0;
+			_TDCBF _ParseStringList(string b, bool onlyCustom) {
+				if (b.NE()) return 0;
 
 				_TDCBF commonButtons = 0;
 				int id = 0, nextNativeId = 100;
 
-				foreach(var v in b.SegSplit("|")) {
+				foreach (var v in b.SegSplit("|")) {
 					string s = _ParseSingleString(v, ref id, onlyCustom);
 
 					int nativeId = 0;
-					if(!onlyCustom) {
-						switch(s) {
+					if (!onlyCustom) {
+						switch (s) {
 						case "OK": commonButtons |= _TDCBF.OK; nativeId = _idOK; break;
 						case "Yes": commonButtons |= _TDCBF.Yes; nativeId = _idYes; break;
 						case "No": commonButtons |= _TDCBF.No; nativeId = _idNo; break;
@@ -396,39 +396,37 @@ namespace Au
 						}
 					}
 
-					if(nativeId == 0) { //custom button
+					if (nativeId == 0) { //custom button
 						_customButtons ??= new List<_Button>();
 						_customButtons.Add(new _Button(id, s));
-						if(id < 0) nativeId = nextNativeId++; //need to map, because native ids of positive user ids are minus user ids
+						if (id < 0) nativeId = nextNativeId++; //need to map, because native ids of positive user ids are minus user ids
 					}
-					if(nativeId != 0) {
+					if (nativeId != 0) {
 						_mapIdUserNative ??= new List<_IdMapItem>();
 						_mapIdUserNative.Add(new _IdMapItem(id, nativeId));
 					}
 
-					if(!_isDefaultButtonSet) DefaultButtonUserId = id;
+					if (!_isDefaultButtonSet) DefaultButtonUserId = id;
 				}
 
 				return commonButtons;
 			}
 
-			static string _ParseSingleString(string s, ref int id, bool dontSplit)
-			{
-				if(!dontSplit && AStringUtil.ParseIntAndString(s, out var i, out string r)) id = i; else { r = s; id++; }
+			static string _ParseSingleString(string s, ref int id, bool dontSplit) {
+				if (!dontSplit && AStringUtil.ParseIntAndString(s, out var i, out string r)) id = i; else { r = s; id++; }
 				r = r.Trim("\r\n"); //API does not like newline at start, etc
-				if(r.Length == 0) r = " "; //else API exception
+				if (r.Length == 0) r = " "; //else API exception
 				else r = r.Replace("\r\n", "\n"); //API adds 2 newlines for \r\n. Only for custom buttons, not for other controls/parts.
 				return r;
 			}
 
-			internal void SetRadioButtons(string buttons)
-			{
+			internal void SetRadioButtons(string buttons) {
 				_radioButtons = null;
-				if(buttons.NE()) return;
+				if (buttons.NE()) return;
 
 				_radioButtons = new List<_Button>();
 				int id = 0;
-				foreach(var v in buttons.SegSplit("|")) {
+				foreach (var v in buttons.SegSplit("|")) {
 					string s = _ParseSingleString(v, ref id, false);
 					_radioButtons.Add(new _Button(id, s));
 				}
@@ -443,23 +441,21 @@ namespace Au
 
 			List<_IdMapItem> _mapIdUserNative;
 
-			internal int MapIdUserToNative(int userId)
-			{
-				if(userId == _idTimeout) return userId; //0x80000000
-				if(_mapIdUserNative != null) { //common buttons, and custom buttons with negative user id
-					foreach(var v in _mapIdUserNative) if(v.userId == userId) return v.nativeId;
+			internal int MapIdUserToNative(int userId) {
+				if (userId == _idTimeout) return userId; //0x80000000
+				if (_mapIdUserNative != null) { //common buttons, and custom buttons with negative user id
+					foreach (var v in _mapIdUserNative) if (v.userId == userId) return v.nativeId;
 				}
 				return -userId; //custom button with positive user id
 			}
 
-			internal int MapIdNativeToUser(int nativeId)
-			{
-				if(nativeId == _idTimeout) return nativeId; //0x80000000
-				if(nativeId <= 0) return -nativeId; //custom button with positive user id
-				if(_mapIdUserNative != null) { //common buttons, and custom buttons with negative user id
-					foreach(var v in _mapIdUserNative) if(v.nativeId == nativeId) return v.userId;
+			internal int MapIdNativeToUser(int nativeId) {
+				if (nativeId == _idTimeout) return nativeId; //0x80000000
+				if (nativeId <= 0) return -nativeId; //custom button with positive user id
+				if (_mapIdUserNative != null) { //common buttons, and custom buttons with negative user id
+					foreach (var v in _mapIdUserNative) if (v.nativeId == nativeId) return v.userId;
 				}
-				if(nativeId == _idOK) return nativeId; //single OK button auto-added when no buttons specified
+				if (nativeId == _idOK) return nativeId; //single OK button auto-added when no buttons specified
 				Debug.Assert(nativeId == _idCancel && _hasXButton);
 				return 0;
 			}
@@ -468,8 +464,7 @@ namespace Au
 			/// Sets c.pButtons, c.cButtons, c.pRadioButtons and c.cRadioButtons.
 			/// Later call MarshalFreeButtons.
 			/// </summary>
-			internal unsafe void MarshalButtons(ref _Api.TASKDIALOGCONFIG c)
-			{
+			internal unsafe void MarshalButtons(ref _Api.TASKDIALOGCONFIG c) {
 				c.pButtons = _MarshalButtons(false, out c.cButtons);
 				c.pRadioButtons = _MarshalButtons(true, out c.cRadioButtons);
 
@@ -479,25 +474,23 @@ namespace Au
 			/// <summary>
 			/// Frees memory allocated by MarshalButtons and sets the c members to null/0.
 			/// </summary>
-			internal unsafe void MarshalFreeButtons(ref _Api.TASKDIALOGCONFIG c)
-			{
+			internal unsafe void MarshalFreeButtons(ref _Api.TASKDIALOGCONFIG c) {
 				AMemory.Free(c.pButtons);
 				AMemory.Free(c.pRadioButtons);
 				c.pButtons = null; c.pRadioButtons = null;
 				c.cButtons = 0; c.cRadioButtons = 0;
 			}
 
-			unsafe _Api.TASKDIALOG_BUTTON* _MarshalButtons(bool radio, out int nButtons)
-			{
+			unsafe _Api.TASKDIALOG_BUTTON* _MarshalButtons(bool radio, out int nButtons) {
 				var a = radio ? _radioButtons : _customButtons;
 				int n = a == null ? 0 : a.Count;
 				nButtons = n;
-				if(n == 0) return null;
+				if (n == 0) return null;
 				int nba = n * sizeof(_Api.TASKDIALOG_BUTTON), nb = nba;
-				foreach(var v in a) nb += (v.s.Length + 1) * 2;
+				foreach (var v in a) nb += (v.s.Length + 1) * 2;
 				var r = (_Api.TASKDIALOG_BUTTON*)AMemory.Alloc(nb);
 				char* s = (char*)((byte*)r + nba);
-				for(int i = 0; i < n; i++) {
+				for (int i = 0; i < n; i++) {
 					var v = a[i];
 					r[i].id = radio ? v.id : MapIdUserToNative(v.id);
 					int len = v.s.Length + 1;
@@ -522,8 +515,7 @@ namespace Au
 		/// Button ids will be 1, 2, ... .
 		/// <see cref="DefaultButton"/> will be 1. You can change it later.
 		/// </param>
-		public void SetButtons(string buttons, bool asCommandLinks = false, DStringList customButtons = default)
-		{
+		public void SetButtons(string buttons, bool asCommandLinks = false, DStringList customButtons = default) {
 			_c.dwCommonButtons = _buttons.SetButtons(buttons, customButtons);
 			_SetFlag(_TDF.USE_COMMAND_LINKS, asCommandLinks);
 		}
@@ -543,8 +535,7 @@ namespace Au
 		/// <remarks>
 		/// To get selected radio button id after closing the dialog, use <see cref="Controls"/>.
 		/// </remarks>
-		public void SetRadioButtons(string buttons, int defaultId = 0)
-		{
+		public void SetRadioButtons(string buttons, int defaultId = 0) {
 			_controls ??= new DControls();
 			_buttons.SetRadioButtons(_controls.RadioButtons = buttons);
 			_c.nDefaultRadioButton = _controls.RadioId = defaultId;
@@ -559,8 +550,7 @@ namespace Au
 		/// <remarks>
 		/// To get check box state after closing the dialog, use <see cref="Controls"/>.
 		/// </remarks>
-		public void SetCheckbox(string text, bool check = false)
-		{
+		public void SetCheckbox(string text, bool check = false) {
 			_controls ??= new DControls();
 			_c.pszVerificationText = _controls.Checkbox = text;
 			_SetFlag(_TDF.VERIFICATION_FLAG_CHECKED, _controls.IsChecked = check);
@@ -571,9 +561,8 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="showInFooter">Show the text at the bottom of the dialog.</param>
-		public void SetExpandedText(string text, bool showInFooter = false)
-		{
-			if(text.NE()) { text = null; showInFooter = false; }
+		public void SetExpandedText(string text, bool showInFooter = false) {
+			if (text.NE()) { text = null; showInFooter = false; }
 			_SetFlag(_TDF.EXPAND_FOOTER_AREA, showInFooter);
 			_c.pszExpandedInformation = text;
 		}
@@ -584,8 +573,7 @@ namespace Au
 		/// <param name="defaultExpanded"></param>
 		/// <param name="collapsedText"></param>
 		/// <param name="expandedText"></param>
-		public void SetExpandControl(bool defaultExpanded, string collapsedText = null, string expandedText = null)
-		{
+		public void SetExpandControl(bool defaultExpanded, string collapsedText = null, string expandedText = null) {
 			_SetFlag(_TDF.EXPANDED_BY_DEFAULT, defaultExpanded);
 			_c.pszCollapsedControlText = collapsedText;
 			_c.pszExpandedControlText = expandedText;
@@ -595,11 +583,10 @@ namespace Au
 		/// Adds text and common icon at the bottom of the dialog.
 		/// </summary>
 		/// <param name="text">Text, optionally preceded by an icon character and |, like "i|Text". Icons: x error, ! warning, i info, v shield, a app.</param>
-		public void SetFooterText(string text)
-		{
+		public void SetFooterText(string text) {
 			DIcon icon = 0;
-			if(text != null && text.Length >= 2 && text[1] == '|') {
-				switch(text[0]) {
+			if (text != null && text.Length >= 2 && text[1] == '|') {
+				switch (text[0]) {
 				case 'x': icon = DIcon.Error; break;
 				case '!': icon = DIcon.Warning; break;
 				case 'i': icon = DIcon.Info; break;
@@ -616,8 +603,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon"></param>
-		public void SetFooterText(string text, DIcon icon)
-		{
+		public void SetFooterText(string text, DIcon icon) {
 			_c.pszFooter = text;
 			_c.hFooterIcon = (IntPtr)(int)icon;
 			_SetFlag(_TDF.USE_HICON_FOOTER, false);
@@ -628,8 +614,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text.</param>
 		/// <param name="icon">Icon of size 16. Read more: <see cref="SetIcon(Icon)"/>.</param>
-		public void SetFooterText(string text, Icon icon)
-		{
+		public void SetFooterText(string text, Icon icon) {
 			_c.pszFooter = text;
 			_iconFooterGC = icon; //GC
 			_c.hFooterIcon = (icon == null) ? default : icon.Handle;
@@ -648,8 +633,7 @@ namespace Au
 		/// 
 		/// Dialogs with an input field cannot have a progress bar.
 		/// </remarks>
-		public void SetEditControl(DEdit editType, string editText = null, IEnumerable<string> comboItems = null)
-		{
+		public void SetEditControl(DEdit editType, string editText = null, IEnumerable<string> comboItems = null) {
 			_controls ??= new DControls();
 			_controls.EditType = editType;
 			_controls.EditText = editText;
@@ -674,8 +658,7 @@ namespace Au
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
 		/// <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="Options.AutoOwnerWindow"/>
-		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool doNotDisable = false)
-		{
+		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool doNotDisable = false) {
 			_c.hwndParent = owner.IsEmpty ? default : owner.Wnd.Window;
 			_SetFlag(_TDF.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
 			_enableOwner = doNotDisable;
@@ -688,8 +671,7 @@ namespace Au
 		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure that entire window is in screen.</param>
-		public void SetXY(Coord x, Coord y, bool rawXY = false)
-		{
+		public void SetXY(Coord x, Coord y, bool rawXY = false) {
 			_x = x; _y = y;
 			_rawXY = rawXY;
 		}
@@ -698,7 +680,7 @@ namespace Au
 
 		/// <summary>
 		/// Sets the screen (display monitor) where to show the dialog in multi-screen environment.
-		/// If null or not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
+		/// If not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
 		/// More info: <see cref="AScreen"/>, <see cref="AWnd.MoveInScreen"/>.
 		/// </summary>
 		public AScreen Screen { set; private get; }
@@ -707,8 +689,7 @@ namespace Au
 		/// Let the dialog close itself after <i>closeAfterS</i> seconds. Then <see cref="ShowDialog"/> returns <see cref="Timeout"/>.
 		/// Example: <c>d.SetTimeout(30, "OK");</c>
 		/// </summary>
-		public void SetTimeout(int closeAfterS, string timeoutActionText = null, bool noInfo = false)
-		{
+		public void SetTimeout(int closeAfterS, string timeoutActionText = null, bool noInfo = false) {
 			_timeoutS = closeAfterS;
 			_timeoutActionText = timeoutActionText;
 			_timeoutNoInfo = noInfo;
@@ -770,8 +751,7 @@ namespace Au
 		/// Call this method after setting text and other properties.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public unsafe int ShowDialog()
-		{
+		public unsafe int ShowDialog() {
 			//info: named ShowDialog, not Show, to not confuse with the static Show() which is used almost everywhere in documentation.
 
 			_result = 0;
@@ -780,10 +760,10 @@ namespace Au
 			SetTitleBarText(_c.pszWindowTitle); //if not set, sets default
 			_EditControlInitBeforeShowDialog(); //don't reorder, must be before flags
 
-			if(_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = AWnd.ThisThread.Active; //info: MessageBox.Show also does it, but it also disables all thread windows
-			if(_c.hwndParent.IsAlive) {
-				if(!_enableOwner && !_c.hwndParent.IsOfThisThread) _enableOwner = true;
-				if(_enableOwner && !_c.hwndParent.IsEnabled(false)) _enableOwner = false;
+			if (_c.hwndParent.Is0 && Options.AutoOwnerWindow) _c.hwndParent = AWnd.ThisThread.Active; //info: MessageBox.Show also does it, but it also disables all thread windows
+			if (_c.hwndParent.IsAlive) {
+				if (!_enableOwner && !_c.hwndParent.IsOfThisThread) _enableOwner = true;
+				if (_enableOwner && !_c.hwndParent.IsEnabled(false)) _enableOwner = false;
 			}
 
 			_SetPos(true); //get screen
@@ -798,17 +778,17 @@ namespace Au
 			_SetFlag(_TDF.CALLBACK_TIMER, (_timeoutS > 0 || Timer != null));
 
 			_timeoutActive = false;
-			if(_timeoutS > 0) {
+			if (_timeoutS > 0) {
 				_timeoutActive = true;
-				if(!_timeoutNoInfo) {
+				if (!_timeoutNoInfo) {
 					_timeoutFooterText = _c.pszFooter;
 					_c.pszFooter = _TimeoutFooterText(_timeoutS);
-					if(_c.hFooterIcon == default) _c.hFooterIcon = (IntPtr)DIcon.Info;
+					if (_c.hFooterIcon == default) _c.hFooterIcon = (IntPtr)DIcon.Info;
 				}
 			}
 
-			if(_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
-			if(_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AProcess.ExeModuleHandle;
+			if (_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
+			if (_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AProcess.ExeModuleHandle;
 			//info: DIcon.App is IDI_APPLICATION (32512).
 			//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
 			//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.
@@ -823,15 +803,15 @@ namespace Au
 				_threadIdInShow = Thread.CurrentThread.ManagedThreadId;
 
 				_buttons.MarshalButtons(ref _c);
-				if(_c.pButtons == null) _SetFlag(_TDF.USE_COMMAND_LINKS | _TDF.USE_COMMAND_LINKS_NO_ICON, false); //to avoid exception
+				if (_c.pButtons == null) _SetFlag(_TDF.USE_COMMAND_LINKS | _TDF.USE_COMMAND_LINKS_NO_ICON, false); //to avoid exception
 
-				if(_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
+				if (_timeoutActive) { //Need mouse/key messages to stop countdown on click or key.
 					hook = AHookWin.ThreadGetMessage(_HookProc);
 				}
 
 				AWnd.Internal_.EnableActivate(true);
 
-				for(int i = 0; i < 10; i++) { //see the API bug workaround comment below
+				for (int i = 0; i < 10; i++) { //see the API bug workaround comment below
 					_LockUnlock(true); //see the API bug workaround comment below
 
 					hr = _CallTDI(out rNativeButton, out rRadioButton, out rIsChecked);
@@ -843,7 +823,7 @@ namespace Au
 					//	2. Retry. Now used only for other unexpected errors, eg out-of-memory.
 
 					//if(hr != 0) AOutput.Write("0x" + hr.ToString("X"), !_dlg.Is0);
-					if(hr == 0 //succeeded
+					if (hr == 0 //succeeded
 						|| hr == Api.E_INVALIDARG //will never succeed
 						|| hr == unchecked((int)0x8007057A) //invalid cursor handle (custom icon disposed)
 						|| !_dlg.Is0 //_dlg is set if our callback function was called; then don't retry, because the dialog was possibly shown, and only then error.
@@ -851,9 +831,9 @@ namespace Au
 					Thread.Sleep(30);
 				}
 
-				if(hr == 0) {
+				if (hr == 0) {
 					_result = _buttons.MapIdNativeToUser(rNativeButton);
-					if(_controls != null) {
+					if (_controls != null) {
 						_controls.IsChecked = rIsChecked != 0;
 						_controls.RadioId = rRadioButton;
 					}
@@ -868,7 +848,7 @@ namespace Au
 				//But on exception it is not called and the dialog is still alive and visible.
 				//Therefore Windows shows its annoying "stopped working" UI (cannot reproduce it now with Core).
 				//To avoid it, destroy the dialog now. Also to avoid possible memory leaks etc.
-				if(!_dlg.Is0) Api.DestroyWindow(_dlg);
+				if (!_dlg.Is0) Api.DestroyWindow(_dlg);
 
 				_SetClosed();
 				_threadIdInShow = 0;
@@ -876,13 +856,12 @@ namespace Au
 				_buttons.MarshalFreeButtons(ref _c);
 			}
 
-			if(hr != 0) throw new Win32Exception(hr);
+			if (hr != 0) throw new Win32Exception(hr);
 
 			return _result;
 		}
 
-		int _CallTDI(out int pnButton, out int pnRadioButton, out int pChecked)
-		{
+		int _CallTDI(out int pnButton, out int pnRadioButton, out int pChecked) {
 #if DEBUG
 			//ADebug.PrintIf("1" != Environment.GetEnvironmentVariable("COMPlus_legacyCorruptedStateExceptionsPolicy"), "no env var COMPlus_legacyCorruptedStateExceptionsPolicy=1");
 			pnButton = pnRadioButton = pChecked = 0;
@@ -891,7 +870,7 @@ namespace Au
 				return TaskDialogIndirect(in _c, out pnButton, out pnRadioButton, out pChecked);
 #if DEBUG
 			}
-			catch(Exception e) {
+			catch (Exception e) {
 				throw new Win32Exception("_CallTDI: " + e.Message); //note: not just throw;, and don't add inner exception
 			}
 
@@ -909,14 +888,13 @@ namespace Au
 #endif
 		}
 
-		void _LockUnlock(bool on)
-		{
+		void _LockUnlock(bool on) {
 			var obj = "/0p4oSiwoE+7Saqf30udQQ";
-			if(on) {
+			if (on) {
 				Debug.Assert(!_locked);
 				_locked = false;
 				Monitor.Enter(obj, ref _locked);
-			} else if(_locked) {
+			} else if (_locked) {
 				Monitor.Exit(obj);
 				_locked = false;
 			}
@@ -925,31 +903,30 @@ namespace Au
 		//Need to call this twice:
 		//	1. Before showing dialog, to get AScreen while the dialog still isn't the active window.
 		//	2. On TDN.CREATED, to move dialog if need.
-		void _SetPos(bool before)
-		{
-			if(before) _screen = default;
-			if(_HasFlag(_TDF.POSITION_RELATIVE_TO_WINDOW)) return;
+		void _SetPos(bool before) {
+			if (before) _screen = default;
+			if (_HasFlag(_TDF.POSITION_RELATIVE_TO_WINDOW)) return;
 			bool isXY = !_x.IsEmpty || !_y.IsEmpty;
-			if(!_rawXY) {
-				if(before) {
-					_screen = Screen; if(_screen.IsNull && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
-					if(_screen.Value is Delegate) _screen = new AScreen(_screen.GetScreenHandle());
-				} else if(isXY || !_screen.IsNull) {
+			if (!_rawXY) {
+				if (before) {
+					_screen = Screen;
+					if (_screen.IsEmpty && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
+					if (_screen.LazyFunc != null) _screen = _screen.Now;
+				} else if (isXY || !_screen.IsEmpty) {
 					_dlg.MoveInScreen(_x, _y, _screen);
 				}
-			} else if(isXY && !before) {
+			} else if (isXY && !before) {
 				_dlg.Move(_x, _y);
 			}
 		}
 		AScreen _screen;
 
-		int _CallbackProc(AWnd w, Native.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data)
-		{
+		int _CallbackProc(AWnd w, Native.TDN message, LPARAM wParam, LPARAM lParam, IntPtr data) {
 			Action<DEventArgs> e = null;
 			int R = 0;
 
 			//AOutput.Write(message);
-			switch(message) {
+			switch (message) {
 			case Native.TDN.DIALOG_CONSTRUCTED:
 				_LockUnlock(false);
 				Send = new DSend(this); //note: must be before setting _dlg, because another thread may call if(d.IsOpen) d.Send.Message(..).
@@ -960,17 +937,17 @@ namespace Au
 				e = Destroyed;
 				break;
 			case Native.TDN.CREATED:
-				if(_enableOwner) _c.hwndParent.Enable(true);
+				if (_enableOwner) _c.hwndParent.Enable(true);
 				_SetPos(false);
 
 				bool topmost = false;
-				if(FlagTopmost != null) topmost = FlagTopmost.GetValueOrDefault();
-				else if(_c.hwndParent.Is0) topmost = Options.TopmostIfNoOwnerWindow;
-				if(topmost) w.ZorderTopmost();
+				if (FlagTopmost != null) topmost = FlagTopmost.GetValueOrDefault();
+				else if (_c.hwndParent.Is0) topmost = Options.TopmostIfNoOwnerWindow;
+				if (topmost) w.ZorderTopmost();
 
 				//w.SetStyleAdd(WS.THICKFRAME); //does not work
 
-				if(_IsEdit) _EditControlCreate();
+				if (_IsEdit) _EditControlCreate();
 
 				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002);
 
@@ -980,10 +957,10 @@ namespace Au
 				e = Created;
 				break;
 			case Native.TDN.TIMER:
-				if(_timeoutActive) {
+				if (_timeoutActive) {
 					int timeElapsed = (int)wParam / 1000;
-					if(timeElapsed < _timeoutS) {
-						if(!_timeoutNoInfo) Send.ChangeFooterText(_TimeoutFooterText(_timeoutS - timeElapsed - 1), false);
+					if (timeElapsed < _timeoutS) {
+						if (!_timeoutNoInfo) Send.ChangeFooterText(_TimeoutFooterText(_timeoutS - timeElapsed - 1), false);
 					} else {
 						_timeoutActive = false;
 						Send.Close(_idTimeout);
@@ -1007,15 +984,15 @@ namespace Au
 				break;
 			}
 
-			if(_IsEdit) _EditControlOnMessage(message);
+			if (_IsEdit) _EditControlOnMessage(message);
 
-			if(e != null) {
+			if (e != null) {
 				var ed = new DEventArgs(this, _dlg, message, wParam, lParam);
 				e(ed);
 				R = ed.returnValue;
 			}
 
-			if(message == Native.TDN.DESTROYED) _SetClosed();
+			if (message == Native.TDN.DESTROYED) _SetClosed();
 
 			return R;
 		}
@@ -1036,10 +1013,9 @@ namespace Au
 		/// More info: <see cref="ShowNoWait"/>
 		/// </remarks>
 		/// <exception cref="AggregateException">Failed to show dialog.</exception>
-		public void ShowDialogNoWait()
-		{
+		public void ShowDialogNoWait() {
 			var t = Task.Run(() => ShowDialog());
-			if(!ThreadWaitForOpen()) throw t.Exception ?? new AggregateException();
+			if (!ThreadWaitForOpen()) throw t.Exception ?? new AggregateException();
 		}
 
 		/// <summary>
@@ -1054,7 +1030,7 @@ namespace Au
 		/// </remarks>
 		public int Result {
 			get {
-				if(!_WaitWhileInShow()) return 0;
+				if (!_WaitWhileInShow()) return 0;
 				return _result;
 			}
 		}
@@ -1067,11 +1043,10 @@ namespace Au
 		public DControls Controls => _controls;
 		DControls _controls;
 
-		bool _WaitWhileInShow()
-		{
-			if(_threadIdInShow != 0) {
-				if(_threadIdInShow == Thread.CurrentThread.ManagedThreadId) return false;
-				while(_threadIdInShow != 0) Thread.Sleep(15);
+		bool _WaitWhileInShow() {
+			if (_threadIdInShow != 0) {
+				if (_threadIdInShow == Thread.CurrentThread.ManagedThreadId) return false;
+				while (_threadIdInShow != 0) Thread.Sleep(15);
 			}
 			return true;
 		}
@@ -1081,11 +1056,10 @@ namespace Au
 		/// If returns true, the dialog is open and you can send messages to it.
 		/// If returns false, the dialog is already closed or failed to show.
 		/// </summary>
-		public bool ThreadWaitForOpen()
-		{
+		public bool ThreadWaitForOpen() {
 			_AssertIsOtherThread();
-			while(!IsOpen) {
-				if(_isClosed) return false;
+			while (!IsOpen) {
+				if (_isClosed) return false;
 				Thread.Sleep(15); //need ~3 loops if 15
 				ATime.DoEvents(); //without it this func hangs if a form is the dialog owner
 			}
@@ -1095,18 +1069,16 @@ namespace Au
 		/// <summary>
 		/// Can be used by other threads to wait until the dialog is closed.
 		/// </summary>
-		public void ThreadWaitForClosed()
-		{
+		public void ThreadWaitForClosed() {
 			_AssertIsOtherThread();
-			while(!_isClosed) {
+			while (!_isClosed) {
 				Thread.Sleep(30);
 			}
 			_WaitWhileInShow();
 		}
 
-		void _AssertIsOtherThread()
-		{
-			if(_threadIdInShow != 0 && _threadIdInShow == Thread.CurrentThread.ManagedThreadId)
+		void _AssertIsOtherThread() {
+			if (_threadIdInShow != 0 && _threadIdInShow == Thread.CurrentThread.ManagedThreadId)
 				throw new AuException("wrong thread");
 		}
 
@@ -1115,10 +1087,9 @@ namespace Au
 		/// </summary>
 		public bool IsOpen => !_dlg.Is0;
 
-		void _SetClosed()
-		{
+		void _SetClosed() {
 			_isClosed = true;
-			if(_dlg.Is0) return;
+			if (_dlg.Is0) return;
 			_dlg = default;
 			Send.Clear_();
 		}
@@ -1148,9 +1119,8 @@ namespace Au
 		public DSend Send { get; private set; }
 
 		//called by DSend
-		internal int SendMessage_(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default)
-		{
-			switch(message) {
+		internal int SendMessage_(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
+			switch (message) {
 			case Native.TDM.CLICK_BUTTON:
 			case Native.TDM.ENABLE_BUTTON:
 			case Native.TDM.SET_BUTTON_ELEVATION_REQUIRED_STATE:
@@ -1162,16 +1132,15 @@ namespace Au
 		}
 
 		//called by DSend
-		internal void SetText_(bool resizeDialog, Native.TDE partId, string text)
-		{
-			if(partId == Native.TDE.CONTENT && (_controls?.EditType ?? default) == DEdit.Multiline) {
+		internal void SetText_(bool resizeDialog, Native.TDE partId, string text) {
+			if (partId == Native.TDE.CONTENT && (_controls?.EditType ?? default) == DEdit.Multiline) {
 				text = _c.pszContent = text + c_multilineString;
 			}
 
 			_dlg.SendS((int)(resizeDialog ? Native.TDM.SET_ELEMENT_TEXT : Native.TDM.UPDATE_ELEMENT_TEXT), (int)partId, text ?? "");
 			//info: null does not change text.
 
-			if(_IsEdit) _EditControlUpdateAsync(!resizeDialog);
+			if (_IsEdit) _EditControlUpdateAsync(!resizeDialog);
 			//info: sometimes even UPDATE_ELEMENT_TEXT sends our control to the bottom of the Z order.
 		}
 
@@ -1180,16 +1149,15 @@ namespace Au
 		#region hookProc, timeoutText
 
 		//Disables timeout on click or key.
-		unsafe void _HookProc(HookData.ThreadGetMessage d)
-		{
-			switch(d.msg->message) {
+		unsafe void _HookProc(HookData.ThreadGetMessage d) {
+			switch (d.msg->message) {
 			case Api.WM_LBUTTONDOWN:
 			case Api.WM_NCLBUTTONDOWN:
 			case Api.WM_RBUTTONDOWN:
 			case Api.WM_NCRBUTTONDOWN:
 			case Api.WM_KEYDOWN:
 			case Api.WM_SYSKEYDOWN:
-				if(_timeoutActive && d.msg->hwnd.Window == _dlg) {
+				if (_timeoutActive && d.msg->hwnd.Window == _dlg) {
 					_timeoutActive = false;
 					//_TimeoutFooterTextHide();
 					Send.ChangeFooterText(_timeoutFooterText, false);
@@ -1198,13 +1166,12 @@ namespace Au
 			}
 		}
 
-		string _TimeoutFooterText(int timeLeft)
-		{
-			using(new StringBuilder_(out var b)) {
+		string _TimeoutFooterText(int timeLeft) {
+			using (new StringBuilder_(out var b)) {
 				b.Append("This dialog will disappear if not clicked in ").Append(timeLeft).Append(" s.");
-				if(!_timeoutActionText.NE()) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
-				if(FlagRtlLayout) b.Replace(".", "");
-				if(!_timeoutFooterText.NE()) b.Append('\n').Append(_timeoutFooterText);
+				if (!_timeoutActionText.NE()) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
+				if (FlagRtlLayout) b.Replace(".", "");
+				if (!_timeoutFooterText.NE()) b.Append('\n').Append(_timeoutFooterText);
 				return b.ToString();
 			}
 		}
@@ -1217,19 +1184,17 @@ namespace Au
 
 		bool _IsEdit => _controls != null && _controls.EditType != DEdit.None;
 
-		void _EditControlInitBeforeShowDialog()
-		{
-			if(!_IsEdit) return;
+		void _EditControlInitBeforeShowDialog() {
+			if (!_IsEdit) return;
 			FlagShowMarqueeProgressBar = true;
 			FlagShowProgressBar = false;
 			_c.pszContent ??= "";
-			if(_c.pszExpandedInformation != null && _controls.EditType == DEdit.Multiline) _SetFlag(_TDF.EXPAND_FOOTER_AREA, true);
+			if (_c.pszExpandedInformation != null && _controls.EditType == DEdit.Multiline) _SetFlag(_TDF.EXPAND_FOOTER_AREA, true);
 		}
 
-		void _EditControlUpdate(bool onlyZorder = false)
-		{
-			if(_editWnd.Is0) return;
-			if(!onlyZorder) {
+		void _EditControlUpdate(bool onlyZorder = false) {
+			if (_editWnd.Is0) return;
+			if (!onlyZorder) {
 				_EditControlGetPlace(out RECT r);
 				_editParent.MoveLL(r);
 				_editWnd.MoveLL(0, 0, r.Width, r.Height);
@@ -1237,16 +1202,14 @@ namespace Au
 			_editParent.ZorderTop();
 		}
 
-		void _EditControlUpdateAsync(bool onlyZorder = false)
-		{
+		void _EditControlUpdateAsync(bool onlyZorder = false) {
 			_editParent.Post(Api.WM_APP + 111, onlyZorder);
 		}
 
 		//to reserve space for multiline Edit control we append this to text2
 		const string c_multilineString = "\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n ";
 
-		AWnd _EditControlGetPlace(out RECT r)
-		{
+		AWnd _EditControlGetPlace(out RECT r) {
 			AWnd parent = _dlg; //don't use the DirectUIHWND control for it, it can create problems
 
 			//create or get cached font and calculate control height
@@ -1257,14 +1220,14 @@ namespace Au
 			AWnd prog = parent.Child(cn: "msctls_progress32", flags: WCFlags.HiddenToo);
 			prog.GetRectIn(parent, out r);
 
-			if(_controls.EditType == DEdit.Multiline) {
+			if (_controls.EditType == DEdit.Multiline) {
 				int top = r.top;
-				if(!_c.pszContent.Ends(c_multilineString)) {
+				if (!_c.pszContent.Ends(c_multilineString)) {
 					_c.pszContent += c_multilineString;
 					_dlg.SendS((int)Native.TDM.SET_ELEMENT_TEXT, (int)Native.TDE.CONTENT, _c.pszContent);
 					prog.GetRectIn(parent, out r); //used to calculate Edit control height: after changing text, prog is moved down, and we know its previous location...
 				}
-				if(_editMultilineHeight == 0) { _editMultilineHeight = r.bottom - top; } else top = r.bottom - _editMultilineHeight;
+				if (_editMultilineHeight == 0) { _editMultilineHeight = r.bottom - top; } else top = r.bottom - _editMultilineHeight;
 				r.top = top;
 			} else {
 				r.top = r.bottom - (_editFont.HeightOnScreen + 8);
@@ -1275,8 +1238,7 @@ namespace Au
 		}
 		int _editMultilineHeight;
 
-		void _EditControlCreate()
-		{
+		void _EditControlCreate() {
 			AWnd parent = _EditControlGetPlace(out RECT r);
 
 			//Create an intermediate "#32770" to be direct parent of the Edit control.
@@ -1289,7 +1251,7 @@ namespace Au
 			//Create Edit or ComboBox control.
 			string cn = "Edit";
 			var style = WS.CHILD | WS.VISIBLE; //don't need WS_TABSTOP
-			switch(_controls.EditType) {
+			switch (_controls.EditType) {
 			case DEdit.Text: style |= (WS)Api.ES_AUTOHSCROLL; break;
 			case DEdit.Password: style |= (WS)(Api.ES_PASSWORD | Api.ES_AUTOHSCROLL); break;
 			case DEdit.Number: style |= (WS)(Api.ES_NUMBER | Api.ES_AUTOHSCROLL); break;
@@ -1301,9 +1263,9 @@ namespace Au
 
 			//Init the control.
 			_editWnd.SetText(_controls.EditText);
-			if(_controls.EditType == DEdit.Combo) {
-				if(_controls.ComboboxValues != null) {
-					foreach(var s in _controls.ComboboxValues) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s);
+			if (_controls.EditType == DEdit.Combo) {
+				if (_controls.ComboboxValues != null) {
+					foreach (var s in _controls.ComboboxValues) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s);
 				}
 				RECT cbr = _editWnd.Rect;
 				_editParent.ResizeLL(cbr.Width, cbr.Height); //because ComboBox resizes itself
@@ -1314,9 +1276,8 @@ namespace Au
 			AWnd.ThisThread.Focus(_editWnd);
 		}
 
-		void _EditControlOnMessage(Native.TDN message)
-		{
-			switch(message) {
+		void _EditControlOnMessage(Native.TDN message) {
+			switch (message) {
 			case Native.TDN.BUTTON_CLICKED:
 				_controls.EditText = _editWnd.ControlText;
 				break;
@@ -1335,10 +1296,9 @@ namespace Au
 		NativeFont_ _editFont;
 
 		//Dlgproc of our intermediate #32770 control, the parent of out Edit control.
-		LPARAM _EditControlParentProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam)
-		{
+		LPARAM _EditControlParentProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 			//AOutput.Write(msg, wParam, lParam);
-			switch(msg) {
+			switch (msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
 				AWnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
 				return 1;
@@ -1446,8 +1406,7 @@ namespace Au
 			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
-			)
-		{
+			) {
 			var d = new ADialog(text1, text2, buttons, flags, icon, owner,
 				expandedText, footerText, title, controls,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
@@ -1459,8 +1418,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
-		{
+		public static int ShowInfo(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
 			return Show(text1, text2, buttons, flags, DIcon.Info, owner, expandedText);
 		}
 
@@ -1469,8 +1427,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
-		{
+		public static int ShowWarning(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
 			return Show(text1, text2, buttons, flags, DIcon.Warning, owner, expandedText);
 		}
 
@@ -1479,8 +1436,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null)
-		{
+		public static int ShowError(string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, AnyWnd owner = default, string expandedText = null) {
 			return Show(text1, text2, buttons, flags, DIcon.Error, owner, expandedText);
 		}
 
@@ -1490,8 +1446,7 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowOkCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
-		{
+		public static bool ShowOkCancel(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null) {
 			return 1 == Show(text1, text2, "OK|Cancel", flags, icon, owner, expandedText);
 		}
 
@@ -1501,11 +1456,10 @@ namespace Au
 		/// Calls <see cref="Show"/>.
 		/// </summary>
 		/// <exception cref="Win32Exception">Failed to show dialog.</exception>
-		public static bool ShowYesNo(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null)
-		{
+		public static bool ShowYesNo(string text1 = null, string text2 = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default, string expandedText = null) {
 			return 1 == Show(text1, text2, "Yes|No", flags, icon, owner, expandedText);
 		}
-		//TODO: add more parameters to all funcs like this.
+		//CONSIDER: add more parameters to all funcs like this.
 
 		#endregion Show
 
@@ -1585,16 +1539,15 @@ namespace Au
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null,
 			string buttons = "1 OK|2 Cancel", Action<DEventArgs> onButtonClick = null
-			)
-		{
-			if(buttons.NE()) buttons = "1 OK|2 Cancel";
+			) {
+			if (buttons.NE()) buttons = "1 OK|2 Cancel";
 
 			var d = new ADialog(text1, text2, buttons, flags, 0, owner,
 				expandedText, footerText, title, controls,
 				0, x, y, secondsTimeout, onLinkClick);
 
 			d.SetEditControl(editType == DEdit.None ? DEdit.Text : editType, editText, comboItems);
-			if(onButtonClick != null) d.ButtonClicked += onButtonClick;
+			if (onButtonClick != null) d.ButtonClicked += onButtonClick;
 
 			bool r = 1 == d.ShowDialog();
 			s = r ? d._controls.EditText : null;
@@ -1625,10 +1578,9 @@ namespace Au
 		public static bool ShowInputNumber(out int i,
 			string text1 = null, string text2 = null, int? editText = null,
 			DFlags flags = 0, AnyWnd owner = default
-			)
-		{
+			) {
 			i = 0;
-			if(!ShowInput(out string s, text1, text2, DEdit.Number, editText?.ToString(), null, flags, owner)) return false;
+			if (!ShowInput(out string s, text1, text2, DEdit.Number, editText?.ToString(), null, flags, owner)) return false;
 			i = s.ToInt();
 			return true;
 		}
@@ -1672,8 +1624,7 @@ namespace Au
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null
-			)
-		{
+			) {
 			var d = new ADialog(text1, text2, null, flags, 0, owner,
 				expandedText, footerText, title, controls,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
@@ -1715,19 +1666,18 @@ namespace Au
 			string text1 = null, string text2 = null, string buttons = "0 Cancel", DFlags flags = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
-		)
-		{
-			if(buttons.NE()) buttons = "0 Cancel";
+		) {
+			if (buttons.NE()) buttons = "0 Cancel";
 
 			var d = new ADialog(text1, text2, buttons, flags, 0, owner,
 				expandedText, footerText, title, controls,
 				0, x, y, secondsTimeout, onLinkClick);
 
-			if(marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
+			if (marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
 
 			d.ShowDialogNoWait();
 
-			if(marquee) d.Send.Message(Native.TDM.SET_PROGRESS_BAR_MARQUEE, true);
+			if (marquee) d.Send.Message(Native.TDM.SET_PROGRESS_BAR_MARQUEE, true);
 
 			return d;
 		}
@@ -1761,8 +1711,7 @@ namespace Au
 			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
-			)
-		{
+			) {
 			var d = new ADialog(text1, text2, buttons, flags, icon, owner,
 				expandedText, footerText, title, controls,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
@@ -1918,8 +1867,7 @@ namespace Au.Types
 	/// </remarks>
 	public class DEventArgs : EventArgs
 	{
-		internal DEventArgs(ADialog obj_, AWnd hwnd_, Native.TDN message_, LPARAM wParam_, LPARAM lParam_)
-		{
+		internal DEventArgs(ADialog obj_, AWnd hwnd_, Native.TDN message_, LPARAM wParam_, LPARAM lParam_) {
 			dialog = obj_; hwnd = hwnd_; message = message_; wParam = wParam_;
 			LinkHref = (message_ == Native.TDN.HYPERLINK_CLICKED) ? Marshal.PtrToStringUni(lParam_) : null;
 		}
@@ -1986,13 +1934,11 @@ namespace Au.Types
 		/// Reference: <msdn>task dialog messages</msdn>.
 		/// NAVIGATE_PAGE currently not supported.
 		/// </remarks>
-		public int Message(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default)
-		{
+		public int Message(Native.TDM message, LPARAM wParam = default, LPARAM lParam = default) {
 			return _tdo?.SendMessage_(message, wParam, lParam) ?? 0;
 		}
 
-		void _SetText(bool resizeDialog, Native.TDE partId, string text)
-		{
+		void _SetText(bool resizeDialog, Native.TDE partId, string text) {
 			_tdo?.SetText_(resizeDialog, partId, text);
 		}
 
@@ -2002,8 +1948,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
-		public void ChangeText1(string text, bool resizeDialog)
-		{
+		public void ChangeText1(string text, bool resizeDialog) {
 			_SetText(resizeDialog, Native.TDE.MAIN_INSTRUCTION, text);
 		}
 
@@ -2013,8 +1958,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
-		public void ChangeText2(string text, bool resizeDialog)
-		{
+		public void ChangeText2(string text, bool resizeDialog) {
 			_SetText(resizeDialog, Native.TDE.CONTENT, text);
 		}
 
@@ -2024,8 +1968,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
-		public void ChangeFooterText(string text, bool resizeDialog)
-		{
+		public void ChangeFooterText(string text, bool resizeDialog) {
 			_SetText(resizeDialog, Native.TDE.FOOTER, text);
 		}
 
@@ -2035,8 +1978,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// </remarks>
-		public void ChangeExpandedText(string text, bool resizeDialog)
-		{
+		public void ChangeExpandedText(string text, bool resizeDialog) {
 			_SetText(resizeDialog, Native.TDE.EXPANDED_INFORMATION, text);
 		}
 
@@ -2063,8 +2005,7 @@ namespace Au.Types
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// Sends message Native.TDM.CLICK_BUTTON.
 		/// </remarks>
-		public bool Close(int buttonId = 0)
-		{
+		public bool Close(int buttonId = 0) {
 			return 0 != Message(Native.TDM.CLICK_BUTTON, buttonId);
 		}
 
@@ -2076,8 +2017,7 @@ namespace Au.Types
 		/// Example: <c>d.Created += e => { e.dialog.Send.EnableButton(4, false); };</c>
 		/// Sends message Native.TDM.ENABLE_BUTTON.
 		/// </remarks>
-		public void EnableButton(int buttonId, bool enable)
-		{
+		public void EnableButton(int buttonId, bool enable) {
 			Message(Native.TDM.ENABLE_BUTTON, buttonId, enable);
 		}
 
@@ -2088,8 +2028,7 @@ namespace Au.Types
 		/// Call this method while the dialog is open, eg in an event handler.
 		/// Sends message Native.TDM.SET_PROGRESS_BAR_POS.
 		/// </remarks>
-		public int Progress(int percent)
-		{
+		public int Progress(int percent) {
 			return Message(Native.TDM.SET_PROGRESS_BAR_POS, percent);
 		}
 	}

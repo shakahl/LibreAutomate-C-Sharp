@@ -179,9 +179,9 @@ namespace Au
 				//Other exceptions are handled by the host program with try/catch.
 			};
 
-#if !DEBUG
+//#if !DEBUG
 			AProcess.CultureIsInvariant = true;
-#endif
+//#endif
 		}
 
 		static AScript s_instance;

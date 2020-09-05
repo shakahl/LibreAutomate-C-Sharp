@@ -99,7 +99,7 @@ namespace Au.Controls
 		public void Show(Control c, PopupAlignment align = 0, POINT? anchor = null)
 		{
 			_ = c?.IsHandleCreated ?? throw new ArgumentException();
-			_Show(c, ((AWnd)c).Rect, align, anchor);
+			_Show(c, c.Hwnd().Rect, align, anchor);
 		}
 
 		/// <summary>

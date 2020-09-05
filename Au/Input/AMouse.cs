@@ -385,7 +385,7 @@ namespace Au
 		{
 			if(0 != (flags & Api.IMFlags.Move)) {
 				flags |= Api.IMFlags.Absolute;
-				var psr = AScreen.Primary.Bounds;
+				var psr = AScreen.Primary.Rect;
 				x <<= 16; x += (x >= 0) ? 0x8000 : -0x8000; x /= psr.Width;
 				y <<= 16; y += (y >= 0) ? 0x8000 : -0x8000; y /= psr.Height;
 			}

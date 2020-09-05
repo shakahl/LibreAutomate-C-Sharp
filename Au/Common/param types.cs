@@ -168,6 +168,7 @@ namespace Au.Types
 		///
 		[Obsolete("The value must be of type int or float.", error: true), NoDoc]
 		public static implicit operator Coord(ulong f) => default;
+		//tested: compiler does not allow to assign nint.
 
 		/// <summary>
 		/// Creates Coord of Reverse type.
@@ -287,7 +288,7 @@ namespace Au.Types
 		/// <param name="x">X coordinate relative to the specified screen (default - primary).</param>
 		/// <param name="y">Y coordinate relative to the specified screen (default - primary).</param>
 		/// <param name="workArea">x y are relative to the work area.</param>
-		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen.</param>
+		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
 		public static POINT Normalize(Coord x, Coord y, bool workArea = false, AScreen screen = default, bool widthHeight = false, bool centerIfEmpty = false)
@@ -299,8 +300,8 @@ namespace Au.Types
 			POINT p = default;
 			if(!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
-				if(workArea || !screen.IsNull || _NeedRect(x, y)) {
-					r = screen.GetScreenHandle().GetRect(workArea);
+				if(workArea || !screen.IsEmpty || _NeedRect(x, y)) {
+					r = screen.GetRect(workArea);
 					if(widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
 				p.x = x.NormalizeInRange(r.left, r.right);
@@ -375,7 +376,7 @@ namespace Au.Types
 		/// <param name="x">X relative to the screen or work area. Default - center.</param>
 		/// <param name="y">X relative to the screen or work area. Default - center.</param>
 		/// <param name="workArea">x y are relative to the work area of the screen.</param>
-		/// <param name="screen">Can be used to specify a screen. Default - primary.</param>
+		/// <param name="screen">Can be used to specify a screen. Default - primary. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <remarks>
 		/// Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
 		/// </remarks>
@@ -425,11 +426,11 @@ namespace Au.Types
 		}
 
 		/// <summary>
-		/// Gets <see cref="ScreenHandle"/> specified in <see cref="screen"/>. If not specified, gets that of the screen that contains the specified point.
+		/// Gets <see cref="screen"/>.Now if not empty, else screen that contains the specified point.
 		/// </summary>
-		public ScreenHandle GetScreen()
+		public AScreen GetScreen()
 		{
-			if(!screen.IsNull) return screen.GetScreenHandle();
+			if(!screen.IsEmpty) return screen.Now;
 			POINT p = inRect ? Coord.NormalizeInRect(x, y, rect, centerIfEmpty: true) : Coord.Normalize(x, y, workArea);
 			return AScreen.Of(p);
 		}

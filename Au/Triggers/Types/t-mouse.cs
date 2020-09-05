@@ -168,7 +168,7 @@ namespace Au.Triggers
 		/// <param name="screen">
 		/// Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
 		/// Default: <b>Primary</b>.
-		/// Uses <see cref="AScreen.AllScreens"/> to get screen indices. They are different than in Windows Settings.
+		/// Uses <see cref="AScreen.All"/> to get screen indices. They are different than in Windows Settings.
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
@@ -340,7 +340,7 @@ namespace Au.Triggers
 						var screen = x.ScreenIndex == TMScreen.OfActiveWindow
 							? AScreen.Of(AWnd.Active)
 							: AScreen.Index((int)x.ScreenIndex);
-						if (!screen.Bounds.Contains(pt)) continue;
+						if (!screen.Rect.Contains(pt)) continue;
 					}
 
 					if (v.DisabledThisOrAll) continue;
@@ -498,12 +498,12 @@ namespace Au.Triggers
 				//AOutput.Write(pt, AMouse.XY);
 				//var screen = AScreen.Of(pt); //problem with empty corners between 2 unaligned screens: when mouse tries to quickly diagonally cut such a corner, may activate a wrong trigger
 				var screen = AScreen.Of(AMouse.XY); //smaller problem: AMouse.XY gets previous coordinates
-				var r = screen.Bounds;
+				var r = screen.Rect;
 				_xmin = r.left; _ymin = r.top; _xmax = r.right - 1; _ymax = r.bottom - 1;
 				_x = Math.Clamp(pt.x, _xmin, _xmax);
 				_y = Math.Clamp(pt.y, _ymin, _ymax);
 				//AOutput.Write(pt, _x, _y, r);
-				_sens = ADpi.OfScreen(screen) / 4;
+				_sens = screen.Dpi / 4;
 
 				result = default;
 				result.pt = (_x, _y);

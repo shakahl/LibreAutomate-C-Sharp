@@ -64,10 +64,10 @@ namespace Au.Controls
 			if(ZIsPopup && !Modal) {
 				var fo = Owner;
 				if(fo != null) {
-					var w = (AWnd)this;
+					var w = this.Hwnd();
 					if(w.IsActive) {
 						Owner = null;
-						w.OwnerWindow = (AWnd)fo;
+						w.OwnerWindow = fo.Hwnd();
 					}
 				}
 			}

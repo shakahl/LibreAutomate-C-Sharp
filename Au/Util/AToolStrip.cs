@@ -55,7 +55,7 @@ namespace Au.Util
 			if (x == _ttX && y == _ttY) return;
 			_ttX = x; _ttY = y;
 
-			var w = (AWnd)TopLevelControl;
+			var w = TopLevelControl.Hwnd();
 			if (!w.HasExStyle(WS2.NOACTIVATE) && !w.IsActive) return;
 
 			if (inControl != null) (x, y) = this.MouseClientXY();
@@ -69,7 +69,7 @@ namespace Au.Util
 			}
 
 			if (_tt.Is0) {
-				_tt = AWnd.More.CreateWindow("tooltips_class32", null, WS.POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, WS2.TOOLWINDOW | WS2.NOACTIVATE | WS2.TOPMOST, parent: (AWnd)this);
+				_tt = AWnd.More.CreateWindow("tooltips_class32", null, WS.POPUP | TTS_NOPREFIX | TTS_ALWAYSTIP, WS2.TOOLWINDOW | WS2.NOACTIVATE | WS2.TOPMOST, parent: this.Hwnd());
 				_tt.Send(TTM_SETMAXTIPWIDTH, 0, 1000);
 			}
 
@@ -172,7 +172,7 @@ namespace Au.Util
 		protected override void WndProc(ref Message m) {
 			switch (m.Msg) {
 			case Api.WM_MOUSEACTIVATE:
-				m.Result = (IntPtr)(((AWnd)TopLevelControl).HasExStyle(WS2.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
+				m.Result = (IntPtr)(TopLevelControl.Hwnd().HasExStyle(WS2.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;
 			case Api.WM_DESTROY:
 				//dispose tooltip and prepare to work again if recreating handle
@@ -210,7 +210,7 @@ namespace Au.Util
 
 			switch (m.Msg) {
 			case Api.WM_MOUSEACTIVATE:
-				m.Result = (IntPtr)(((AWnd)this.TopLevelControl).HasExStyle(WS2.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
+				m.Result = (IntPtr)(TopLevelControl.Hwnd().HasExStyle(WS2.NOACTIVATE) ? Api.MA_NOACTIVATE : Api.MA_ACTIVATE);
 				return;
 			}
 

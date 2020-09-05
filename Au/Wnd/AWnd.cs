@@ -20,7 +20,7 @@ namespace Au
 	/// A variable of AWnd type represents a window or control. It is a window handle, also known as HWND.
 	/// </summary>
 	/// <remarks>
-	/// AWnd functions can be used with windows and controls of any process/thread. Also can be used with .NET form/control and WPF window class variables, like <c>AWnd w=(AWnd)form; w.Method(...);</c> or <c>((AWnd)form).Method(...);</c>.
+	/// AWnd functions can be used with windows and controls of any process/thread. Also can be used with .NET form/control and WPF window class variables, like <c>AWnd w=form.Hwnd(); w.Method(...);</c>.
 	/// 
 	/// There are two main types of windows - top-level windows and controls. Controls are child windows of top-level windows.
 	/// 
@@ -90,17 +90,6 @@ namespace Au
 		/// </summary>
 		/// <param name="hwnd">See API <msdn>SetWindowPos</msdn>.</param>
 		public static implicit operator AWnd(Native.HWND hwnd) => new AWnd((void*)(int)hwnd);
-
-		/// <summary>
-		/// Gets the window handle as AWnd from a System.Windows.Forms.Control (or Form etc) variable.
-		/// Returns default(AWnd) if w is null or the handle is still not created.
-		/// </summary>
-		/// <remarks>
-		/// Like <see cref="AExtForms.Hwnd"/>, but does not throw exception if null.
-		/// Should be called in control's thread. Calls <see cref="System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="System.Windows.Forms.Control.Handle"/>.
-		/// </remarks>
-		public static explicit operator AWnd(System.Windows.Forms.Control c) => c == null || !c.IsHandleCreated ? default : new AWnd(c.Handle);
-		//TODO: remove. Use Hwnd() everywhere.
 
 		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(AWnd w1, AWnd w2) => w1._h == w2._h;
@@ -212,6 +201,7 @@ namespace Au
 			fixed (char* p = lParam)
 				return Api.SendMessage(this, message, wParam, p);
 		}
+		//rejected: Span<char> lParam instead of char[]. Can use Send(pointer).
 
 		/// <summary>
 		/// Calls API <msdn>SendMessageTimeout</msdn>.
@@ -721,9 +711,9 @@ namespace Au
 		void _Wp1(ref Api.WINDOWPLACEMENT wp, bool set) {
 			if (!IsToolWindow) {
 				var s = set ? AScreen.Of(wp.rcNormalPosition) : AScreen.Of(this);
-				var v = s.GetInfo();
+				var v = s.Info;
 				int i = set ? -1 : 1;
-				wp.rcNormalPosition.Offset((v.workArea.left - v.bounds.left) * i, (v.workArea.top - v.bounds.top) * i);
+				wp.rcNormalPosition.Offset((v.workArea.left - v.rect.left) * i, (v.workArea.top - v.rect.top) * i);
 			}
 		}
 
@@ -1720,7 +1710,7 @@ namespace Au
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
 		/// <param name="workArea"><i>x y width height</i> are relative to the work area. Not used when this is a child window.</param>
-		/// <param name="screen"><i>x y width height</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window.</param>
+		/// <param name="screen"><i>x y width height</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client area coordinates.
@@ -1769,7 +1759,7 @@ namespace Au
 		/// <param name="x">Left. If default(Coord), does not move in X axis.</param>
 		/// <param name="y">Top. If default(Coord), does not move in Y axis.</param>
 		/// <param name="workArea"><i>x y</i> are relative to the work area. Not used when this is a child window.</param>
-		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window.</param>
+		/// <param name="screen"><i>x y</i> are relative to this screen or its work area. Default - primary. Not used when this is a child window. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
@@ -1786,7 +1776,7 @@ namespace Au
 		/// <param name="width">Width. If default(Coord), does not change width.</param>
 		/// <param name="height">Height. If default(Coord), does not change height.</param>
 		/// <param name="workArea">For <see cref="Coord.Fraction"/> etc use width/height of the work area. Not used when this is a child window.</param>
-		/// <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Not used when this is a child window.</param>
+		/// <param name="screen">For <b>Coord.Fraction</b> etc use width/height of this screen. Default - primary. Not used when this is a child window. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
@@ -1809,13 +1799,13 @@ namespace Au
 				Coord left, Coord top, bool useWindow, AWnd w, ref RECT r,
 				AScreen screen, bool bWorkArea, bool bEnsureInScreen, RECT? inRect = default) {
 				RECT rs;
-				ScreenHandle scr;
+				AScreen scr;
 				if (inRect.HasValue) {
 					Debug.Assert(!useWindow);
 					rs = inRect.GetValueOrDefault();
 					scr = default;
 				} else {
-					if (!screen.IsNull) scr = screen.GetScreenHandle();
+					if (!screen.IsEmpty) scr = screen.Now;
 					else if (useWindow) scr = AScreen.Of(w);
 					else if (bEnsureMethod) scr = AScreen.Of(r);
 					else scr = AScreen.Primary;
@@ -1891,7 +1881,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window.</param>
+		/// <param name="screen">Move to this screen (see <see cref="AScreen"/>). If default, uses screen of this window. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of window is not in screen, move and/or resize it so that entire window would be in screen. Default true.</param>
 		/// <exception cref="AuWndException"/>
@@ -1932,11 +1922,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets <see cref="ScreenHandle"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
+		/// Gets <see cref="AScreen"/> of the screen that contains this window (the biggest part of it) or is nearest to it.
 		/// If this window handle is default(AWnd) or invalid, gets the primary screen.
-		/// Calls <see cref="AScreen.Of(AWnd, SODefault)"/>.
+		/// Calls <see cref="AScreen.Of"/>.
 		/// </summary>
-		public ScreenHandle Screen => AScreen.Of(this);
+		public AScreen Screen => AScreen.Of(this);
 
 		#endregion
 

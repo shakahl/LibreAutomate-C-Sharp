@@ -131,7 +131,7 @@ namespace Au
 			public _OwnerScreen(AToolbar tb, AScreen screen)
 			{
 				_tb = tb;
-				_screen = (_isAuto = screen.IsNull) ? _tb._sett.screen : screen;
+				_screen = (_isAuto = screen.IsEmpty) ? AScreen.Index(_tb._sett.screen) : screen.Now;
 				UpdateRect(out _);
 			}
 
@@ -143,7 +143,7 @@ namespace Au
 
 			public bool UpdateRect(out bool changed)
 			{
-				RECT r = _screen.GetScreenHandle().Bounds;
+				RECT r = _screen.Rect;
 				if(changed = r != cachedRect) {
 					prevSize = (cachedRect.Width, cachedRect.Height);
 					cachedRect = r;
@@ -155,10 +155,10 @@ namespace Au
 			{
 				if(!_isAuto) return;
 				var k = AScreen.Of(_tb.Control);
-				int i = k.Index;
+				int i = k.ScreenIndex;
 				//AOutput.Write(_tb._sett.screen, i);
 				if(i != _tb._sett.screen) {
-					_screen = i;
+					_screen = AScreen.Index(i);
 					_tb._sett.screen = i;
 					UpdateRect(out _);
 				}
@@ -374,11 +374,11 @@ namespace Au
 			}
 		}
 
-		void _ManageFullScreen(AWnd wFore, ScreenHandle screen)
+		void _ManageFullScreen(AWnd wFore, AScreen screen)
 		{
 			if(_inMoveSize) return;
 			bool hide;
-			if(screen.Is0) hide = false;
+			if(screen.IsEmpty) hide = false;
 			else if(IsOwned) hide = OwnerWindow == wFore;
 			else hide = AScreen.Of(_c, SODefault.Zero) == screen;
 

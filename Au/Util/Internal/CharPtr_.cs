@@ -43,20 +43,21 @@ namespace Au.Util
 			return max;
 		}
 
-		/// <summary>
-		/// Case-sensitive compares string with managed string and returns true if they are equal.
-		/// </summary>
-		/// <param name="p">Unmanaged string.</param>
-		/// <param name="len">p length. Returns false if it is != s.Length.</param>
-		/// <param name="s">Managed string.</param>
-		public static bool Eq(char* p, int len, string s)
-		{
-			if(p == null) return s == null; if(s == null) return false;
-			if(len != s.Length) return false;
-			int i;
-			for(i = 0; i < s.Length; i++) if(s[i] != p[i]) break;
-			return i == s.Length;
-		}
+		//not used. Now could be replaced with ReadOnlySpan<char>.Equals.
+		///// <summary>
+		///// Case-sensitive compares string with managed string and returns true if they are equal.
+		///// </summary>
+		///// <param name="p">Unmanaged string.</param>
+		///// <param name="len">p length. Returns false if it is != s.Length.</param>
+		///// <param name="s">Managed string.</param>
+		//public static bool Eq(char* p, int len, string s)
+		//{
+		//	if(p == null) return s == null; if(s == null) return false;
+		//	if(len != s.Length) return false;
+		//	int i;
+		//	for(i = 0; i < s.Length; i++) if(s[i] != p[i]) break;
+		//	return i == s.Length;
+		//}
 	}
 
 	/// <summary>

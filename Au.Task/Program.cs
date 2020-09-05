@@ -50,9 +50,9 @@ static unsafe class Program
 
 		if(args.Length != 1) return;
 
-#if !DEBUG
+//#if !DEBUG
 		AProcess.CultureIsInvariant = true;
-#endif
+//#endif
 
 		string asmFile, fullPathRefs; int flags;
 

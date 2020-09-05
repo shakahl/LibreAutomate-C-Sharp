@@ -54,7 +54,7 @@ namespace Au.Util
 			int R = 0;
 			if (!w.Is0) {
 				if (AVersion.MinWin10_1607) R = Api.GetDpiForWindow(w);
-				else if (SupportPMOnWin8_1 && AVersion.MinWin8_1) return OfScreen(AScreen.Of(w.Window));
+				else if (SupportPMOnWin8_1 && AVersion.MinWin8_1) return AScreen.Of(w.Window).Dpi;
 			}
 			return R != 0 ? R : OfThisProcess;
 		}

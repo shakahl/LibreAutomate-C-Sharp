@@ -37,13 +37,13 @@ namespace Au
 		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
 		/// Like C macro MAKEWORD.
 		/// </summary>
-		public static ushort MakeUshort(uint loByte, uint hiByte) => (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
+		public static ushort MakeWord(uint loByte, uint hiByte) => (ushort)(((hiByte & 0xff) << 8) | (loByte & 0xff));
 		
 		/// <summary>
 		/// Creates ushort by placing (byte)loByte in bits 1-8 and (byte)hiByte in bits 9-16.
 		/// Like C macro MAKEWORD.
 		/// </summary>
-		public static ushort MakeUshort(int loByte, int hiByte) => MakeUshort((uint)loByte, (uint)hiByte);
+		public static ushort MakeWord(int loByte, int hiByte) => MakeWord((uint)loByte, (uint)hiByte);
 
 		/// <summary>
 		/// Gets bits 1-16 as ushort.
@@ -52,7 +52,7 @@ namespace Au
 		/// <remarks>
 		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
 		/// </remarks>
-		public static ushort LoUshort(LPARAM x) => (ushort)((uint)x & 0xFFFF);
+		public static ushort LoWord(LPARAM x) => (ushort)((uint)x & 0xFFFF);
 
 		/// <summary>
 		/// Gets bits 17-32 as ushort.
@@ -61,7 +61,7 @@ namespace Au
 		/// <remarks>
 		/// The parameter is interpreted as uint. Its declared type is LPARAM because it allows to avoid explicit casting from other integer types and IntPtr (casting from IntPtr to uint could throw OverflowException).
 		/// </remarks>
-		public static ushort HiUshort(LPARAM x) => (ushort)((uint)x >> 16);
+		public static ushort HiWord(LPARAM x) => (ushort)((uint)x >> 16);
 
 		/// <summary>
 		/// Gets bits 1-16 as short.

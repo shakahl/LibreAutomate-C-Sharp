@@ -224,7 +224,7 @@ class RunningTasks
 	{
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
-		_wMain = (AWnd)Program.MainForm;
+		_wMain = Program.MainForm.Hwnd();
 		Program.Timer1sOr025s += _TimerUpdateUI;
 		ATask.Init_(ATRole.EditorExtension);
 		Log_.Run.Start();

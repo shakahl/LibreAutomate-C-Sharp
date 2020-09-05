@@ -392,7 +392,7 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="x">X coordinate in the specified screen. If default(Coord) - center. Can be <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y coordinate in the specified screen. If default(Coord) - center. Can be <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="screen">Use this screen. If default, uses the primary screen.</param>
+		/// <param name="screen">Use this screen. If default, uses the primary screen. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <param name="workArea">Use the work area, not whole screen. Default true.</param>
 		/// <param name="ensureInScreen">If part of rectangle is not in screen, move and/or resize it so that entire rectangle would be in screen. Default true.</param>
 		/// <remarks>

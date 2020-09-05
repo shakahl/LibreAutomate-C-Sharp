@@ -215,7 +215,7 @@ namespace Au.Tools
 			var osr = CreateOsdRect();
 			r.Inflate(2, 2); //2 pixels inside, 2 outside
 			if(limitToScreen) {
-				var k = AScreen.Of(r).Bounds;
+				var k = AScreen.Of(r).Rect;
 				r.Intersect(k);
 			}
 			osr.Rect = r;
@@ -269,7 +269,7 @@ namespace Au.Tools
 			public void StartStop(bool start)
 			{
 				if(start == Capturing) return;
-				var wForm = (AWnd)_form;
+				var wForm = _form.Hwnd();
 				if(start) {
 					//let other forms stop capturing
 					wForm.Prop.Set(c_propName, 1);
@@ -445,7 +445,7 @@ namespace Au.Tools
 				TUtil.ShowOsdRect(re);
 
 				//if form or its visible owners cover the found object, temporarily activate object's window
-				foreach(var ow in ((AWnd)form).Get.OwnersAndThis(true)) {
+				foreach(var ow in form.Hwnd().Get.OwnersAndThis(true)) {
 					if(re.IntersectsWith(ow.Rect)) {
 						r.wnd.Window.ActivateLL();
 						ATime.SleepDoEvents(1500);
@@ -459,7 +459,7 @@ namespace Au.Tools
 				ATimer.After(700, _ => lSpeed.Text = sTime);
 			}
 
-			((AWnd)form).ActivateLL();
+			form.Hwnd().ActivateLL();
 
 			if(r.wnd != wnd && !r.wnd.Is0) {
 				ADialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),

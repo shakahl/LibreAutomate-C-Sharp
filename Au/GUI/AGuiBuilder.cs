@@ -404,7 +404,7 @@ namespace Au
 						}
 					}
 					_window.SnapsToDevicePixels = true; //workaround for black line at bottom, for example when there is single CheckBox in Grid.
-														//				_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid. OK if in _Add (for each non-panel element).
+														//				_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid, etc. Maybe OK if in _Add (for each non-panel element).
 					_window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 					if (WinTopmost) _window.Topmost = true;
 					if (!WinWhite) _window.Background = SystemColors.ControlBrush;
@@ -460,10 +460,10 @@ namespace Au
 		}
 
 		void _ThrowIfWasWinRectXY([CallerMemberName] string c = null) {
-			if (_wasWinXY!=0) throw new InvalidOperationException(c + " cannot be after WinXY, WinRect or WinSaved.");
+			if (_wasWinXY != 0) throw new InvalidOperationException(c + " cannot be after WinXY, WinRect or WinSaved.");
 		}
 		void _ThrowIfWasWinRect([CallerMemberName] string c = null) {
-			if (_wasWinXY==2) throw new InvalidOperationException(c + " cannot be after WinRect or WinSaved.");
+			if (_wasWinXY == 2) throw new InvalidOperationException(c + " cannot be after WinRect or WinSaved.");
 		}
 		byte _wasWinXY; //1 xy, 2 rect
 
@@ -2333,80 +2333,239 @@ namespace Au.Types
 	//		public static implicit operator bool(CheckBool c) => c.IsChecked.GetValueOrDefault();
 	//	}
 
+
 	/// <summary>
-	/// Extends <see cref="GridSplitter"/>. Can be used with not star-sized rows/columns.
+	/// Grid splitter control. Based on <see cref="GridSplitter"/>, changes its behavior.
 	/// </summary>
 	/// <remarks>
-	/// The WPF <see cref="GridSplitter"/> has this bug or undocumented limitation: incorrectly resizes if some rows or columns have fixed or auto size, unless star-sized rows/columns are at the end.
-	/// This flag applies this workaround: while moving the splitter with mouse or keyboard, it temporarily makes all rows or columns star-sized, and restores when ended resizing.
-	/// Important: all column or row definitions must be specified.
+	/// Try this class when <see cref="GridSplitter"/> does not work as you want.
+	/// 
+	/// Limitations (bad or good):
+	/// - Splitters must be on own rows/columns. Throws exception if explicit or implicit <b>ResizeBehavior</b> is not <b>PreviousAndNext</b>.
+	/// - Throws exception is there are star-sized splitter rows.
+	/// - Does not resize auto-sized rows/columns. Only pixel-sized and star-sized.
+	/// - With UseLayoutRounding may flicker when resizing, especially when high DPI.
 	/// </remarks>
 	public class GridSplitter2 : GridSplitter
 	{
-		GridUnitType[] _units;
-		int _restore; //1 mouse, 2 keyboard
-
 		///
-		protected override void OnPreviewMouseLeftButtonDown(MouseButtonEventArgs e) {
-			_Stars(1);
-			base.OnPreviewMouseLeftButtonDown(e);
+		public GridSplitter2() {
+			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragStartedEvent, new DragStartedEventHandler(_OnDragStarted));
+			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragCompletedEvent, new DragCompletedEventHandler(_OnDragCompleted));
+			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragDeltaEvent, new DragDeltaEventHandler(_OnDragDelta));
 		}
 
-		///
-		protected override void OnPreviewMouseLeftButtonUp(MouseButtonEventArgs e) {
-			if (_restore == 1) _Stars(0);
-			base.OnPreviewMouseLeftButtonDown(e);
+		static void _OnDragStarted(object sender, DragStartedEventArgs e) => (sender as GridSplitter2)._OnDragStarted(e);
+
+		void _OnDragStarted(DragStartedEventArgs e) {
+			if (!ShowsPreview) e.Handled = true;
+			if (!_Init()) base.CancelDrag();
 		}
 
-		///
-		protected override void OnPreviewKeyDown(KeyEventArgs e) {
-			if (e.Key == Key.Up || e.Key == Key.Down) _Stars(2);
-			base.OnPreviewKeyDown(e);
-		}
+		static void _OnDragCompleted(object sender, DragCompletedEventArgs e) => (sender as GridSplitter2)._OnDragCompleted(e);
 
-		///
-		protected override void OnPreviewKeyUp(KeyEventArgs e) {
-			if (e.Key == Key.Up || e.Key == Key.Down) if (_restore == 2) _Stars(0);
-			base.OnPreviewKeyDown(e);
-		}
-
-		void _Stars(int action) {
-			var grid = this.Parent as Grid;
-			bool vertical = _IsVertical();
-			var cd = grid.ColumnDefinitions;
-			var rd = grid.RowDefinitions;
-			int n = vertical ? cd.Count : rd.Count;
-
-			if (action != 0) { //maybe all *
-				for (int i = 0; i < n; i++) if ((vertical ? cd[i].Width : rd[i].Height).GridUnitType != GridUnitType.Star) goto g1;
-				return; g1:;
+		void _OnDragCompleted(DragCompletedEventArgs e) {
+			e.Handled = true;
+			if (ShowsPreview) {
+				base.OnKeyDown(new KeyEventArgs(Keyboard.PrimaryDevice, Keyboard.PrimaryDevice.ActiveSource, 0, Key.Escape) { RoutedEvent = UIElement.KeyDownEvent });
+				_MoveSplitter();
 			}
+		}
 
-			_restore = action;
+		static void _OnDragDelta(object sender, DragDeltaEventArgs e) => (sender as GridSplitter2)._OnDragDelta(e);
 
-			if (action != 0) {
-				if (_units == null || _units.Length != n) _units = new GridUnitType[n];
+		void _OnDragDelta(DragDeltaEventArgs e) {
+			_delta = _isVertical ? e.HorizontalChange : e.VerticalChange;
+			var di = DragIncrement; _delta = Math.Round(_delta / di) * di;
+			if (ShowsPreview) return;
+			e.Handled = true;
+			_MoveSplitter();
+		}
+
+		///
+		protected override void OnKeyDown(KeyEventArgs e) {
+			if (e.Key == Key.Up || e.Key == Key.Down || e.Key == Key.Left || e.Key == Key.Right) {
+				e.Handled = true;
+				if (!_Init()) return;
+				_delta = KeyboardIncrement * ((e.Key == Key.Up || e.Key == Key.Right) ? -1 : 1);
+				if (_isVertical && FlowDirection == FlowDirection.RightToLeft) _delta = -_delta;
+				_MoveSplitter();
+			} else base.OnPreviewKeyDown(e);
+		}
+
+		bool _Init(Key key = default) {
+			_a = null;
+			_isVertical = _IsVertical();
+			if (key != default && _isVertical != (key == Key.Left || key == Key.Right)) return false;
+			//		_resizeBehavior=_GetResizeBehavior(_isVertical);
+			if (_GetResizeBehavior(_isVertical) != GridResizeBehavior.PreviousAndNext) throw new NotSupportedException("ResizeBehavior must be PreviousAndNext.");
+			_delta = 0;
+			_grid = Parent as Grid;
+			_a = new List<_RowCol>();
+			_index = 0;
+			var splitters = _grid.Children.OfType<GridSplitter>().Select(o => _IndexInGrid(o)).ToArray();
+			int index = _IndexInGrid(this);
+			for (int i = 0, n = (_isVertical ? _grid.ColumnDefinitions.Count : _grid.RowDefinitions.Count); i < n; i++) {
+				var v = new _RowCol(_isVertical ? (DefinitionBase)_grid.ColumnDefinitions[i] : _grid.RowDefinitions[i]);
+				if (splitters.Contains(i)) {
+					if (v.IsStar) throw new InvalidOperationException("Splitter row/column cannot be star-sized.");
+					if (i == index) _index = _a.Count;
+				} else {
+					if (v.Unit == GridUnitType.Auto) continue;
+					if (v.IsStar) v.SetSize(v.ActualSize);
+					_a.Add(v);
+				}
+			}
+			if (_index == 0 || _index == _a.Count) { //no resizable items before or after
+				_a = null;
+				return false;
+			}
+			return true;
+		}
+
+		Grid _grid;
+		bool _isVertical;
+		//	GridResizeBehavior _resizeBehavior;
+		List<_RowCol> _a; //resizable rows/columns, ie those without splitters and not auto-sized
+		int _index; //index of first _a item after this splitter
+		double _delta;
+
+		void _MoveSplitter() {
+			if (_a == null || _delta == 0) return;
+
+			_Side before = default, after = default;
+
+			//resize multiple star-sized items at that side?
+			if (ResizeNearest || Keyboard.Modifiers == ModifierKeys.Control) {
+				before.single = after.single = true;
 			} else {
-				if (n != _units.Length) return;
+				int stars = 0; //flags: 1 stars before, 2 stars after
+				for (int i = 0; i < _a.Count; i++) if (_a[i].IsStar) stars |= i < _index ? 1 : 2;
+				before.single = _index == 1 || 0 == (stars & 1) || _a[_index - 1].ActualSize < 4 || (stars == 3 && !_a[_index - 1].IsStar); //without the last || subexpression would be impossible to resize fixed-sized items if there are star-sized items at both sides
+				after.single = _index == _a.Count - 1 || 0 == (stars & 2) || _a[_index].ActualSize < 4 || (stars == 3 && !_a[_index].IsStar);
 			}
 
-			for (int i = 0; i < n; i++) {
-				if (action != 0) _units[i] = (vertical ? cd[i].Width : rd[i].Height).GridUnitType;
-				var v = new GridLength(vertical ? cd[i].ActualWidth : rd[i].ActualHeight, action != 0 ? GridUnitType.Star : _units[i]);
-				if (vertical) cd[i].Width = v; else rd[i].Height = v;
+			for (int i = 0; i < _a.Count; i++) {
+				if (!_IsResizable(i)) continue;
+				if (i < _index) before.Add(_a[i]); else after.Add(_a[i]);
 			}
 
-			//never mind: skip rows/columns containing just splitter. Now we set star width for them too.
-			//	Good: it does not change row/column height/width of splitters while moving the splitter.
+			double v1 = Math.Clamp(before.size + _delta, before.min, before.max), v2 = Math.Clamp(after.size - _delta, after.min, after.max);
+			if (v1 == before.min || v1 == before.max) v2 = before.size + after.size - v1; else if (v2 == after.min || v2 == after.max) v1 = before.size + after.size - v2;
+
+			_ResizeSide(before, true, v1);
+			_ResizeSide(after, false, v2);
+
+			void _ResizeSide(_Side side, bool isBefore, double size) {
+				if (side.single) {
+					_a[_index - (isBefore ? 1 : 0)].SetSize(size);
+				} else {
+					for (int i = isBefore ? 0 : _index, to = isBefore ? _index : _a.Count; i < to; i++) {
+						if (!_IsResizable(i)) continue;
+						var v = _a[i];
+						var k = size * v.ActualSize; if (side.size > 0.1) k /= side.size; else k = 0.1;
+						v.SetSize(k);
+					}
+				}
+			}
+
+			bool _IsResizable(int index) {
+				if (index < _index) return before.single ? index == _index - 1 : _a[index].IsStar;
+				return after.single ? index == _index : _a[index].IsStar;
+			}
 		}
 
-		bool _IsVertical() {
+		struct _Side
+		{
+			public double size, min, max;
+			public bool single;
+			public int stars;
+
+			public void Add(_RowCol v) {
+				size += v.ActualSize;
+				min += v.Min;
+				double x = v.Max;
+				if (max != double.PositiveInfinity) { if (x == double.PositiveInfinity) max = x; else max += x; }
+				if (!single && v.IsStar) stars++;
+			}
+		}
+
+		/// <summary>
+		/// Always resize only the nearest resizable row/column at each side.
+		/// If false (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
+		/// </summary>
+		public bool ResizeNearest { get; set; }
+
+		#region util
+
+		bool _IsVertical() { //see code of GridSplitter.GetEffectiveResizeDirection. The algorithm is documented.
 			var dir = this.ResizeDirection;
 			if (dir != GridResizeDirection.Auto) return dir == GridResizeDirection.Columns;
-			//the algorithm is documented
 			if (this.HorizontalAlignment != HorizontalAlignment.Stretch) return true;
 			if (this.VerticalAlignment != VerticalAlignment.Stretch) return false;
 			return this.ActualWidth <= this.ActualHeight;
 		}
+
+		GridResizeBehavior _GetResizeBehavior(bool vertical) { //see code of GridSplitter.GetEffectiveResizeBehavior
+			var r = ResizeBehavior;
+			if (r == GridResizeBehavior.BasedOnAlignment) {
+				if (vertical) r = HorizontalAlignment switch
+				{
+					HorizontalAlignment.Left => GridResizeBehavior.PreviousAndCurrent,
+					HorizontalAlignment.Right => GridResizeBehavior.CurrentAndNext,
+					_ => GridResizeBehavior.PreviousAndNext,
+				};
+				else r = VerticalAlignment switch
+				{
+					VerticalAlignment.Top => GridResizeBehavior.PreviousAndCurrent,
+					VerticalAlignment.Bottom => GridResizeBehavior.CurrentAndNext,
+					_ => GridResizeBehavior.PreviousAndNext,
+				};
+			}
+			return r;
+		}
+
+		int _IndexInGrid(UIElement e) => _isVertical ? Grid.GetColumn(e) : Grid.GetRow(e);
+
+		class _RowCol
+		{
+			RowDefinition _row;
+			ColumnDefinition _col;
+
+			public _RowCol(DefinitionBase def) {
+				_row = def as RowDefinition;
+				_col = def as ColumnDefinition;
+				Min = _row?.MinHeight ?? _col.MinWidth;
+				Max = _row?.MaxHeight ?? _col.MaxWidth;
+				Unit = DefSizeGL.GridUnitType;
+			}
+
+			public double ActualSize => _row?.ActualHeight ?? _col.ActualWidth;
+
+			public double DefSize {
+				get => _row?.Height.Value ?? _col.Width.Value;
+				//			set { DefSizeGL = new GridLength(value, Unit); }
+			}
+
+			GridLength DefSizeGL {
+				get => _row?.Height ?? _col.Width;
+				//			set { if(_row!=null) _row.Height=value; else _col.Width=value; }
+			}
+
+			public void SetSize(double size) {
+				var z = new GridLength(size, Unit);
+				if (_row != null) _row.Height = z; else _col.Width = z;
+			}
+
+			public GridUnitType Unit { get; private set; }
+
+			public bool IsStar => Unit == GridUnitType.Star;
+
+			public double Min { get; private set; }
+
+			public double Max { get; private set; }
+		}
+
+		#endregion
 	}
 }

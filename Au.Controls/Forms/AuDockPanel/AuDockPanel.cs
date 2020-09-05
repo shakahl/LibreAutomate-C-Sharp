@@ -542,8 +542,8 @@ namespace Au.Controls
 		/// <param name="enable">Enable or disable.</param>
 		public void ZEnableDisableAllFloatingWindows(bool enable)
 		{
-			foreach(var v in _aPanel) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
-			foreach(var v in _aTab) if(v.IsFloating) ((AWnd)v.ParentControl).Enable(enable);
+			foreach(var v in _aPanel) if(v.IsFloating) v.ParentControl.Hwnd().Enable(enable);
+			foreach(var v in _aTab) if(v.IsFloating) v.ParentControl.Hwnd().Enable(enable);
 		}
 
 		/// <summary>

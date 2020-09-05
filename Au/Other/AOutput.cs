@@ -145,7 +145,7 @@ namespace Au
 				case char[] a:
 					b.Append("{ ");
 					foreach (var c in a) {
-						if (c < ' ') b.Append("0x").Append(((byte)c).ToString("X"));
+						if (c < ' ') b.Append("x").Append(((byte)c).ToString("X"));
 						else b.Append(c);
 						b.Append(' ');
 					}

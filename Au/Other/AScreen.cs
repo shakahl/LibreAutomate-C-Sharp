@@ -1,5 +1,3 @@
-//#define CACHE_ALLSCREENS
-
 using Au.Types;
 using Au.Util;
 using System;
@@ -13,171 +11,198 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
 //using System.Linq;
-
-//TODO: ScreenHandle -> AScreen; AScreen -> AScreen.Finder.
-//	In most places use AScreen. Use AScreen.Finder in places like ADialog.Options.
-//	Maybe even don't use AScreen.Finder but instead a delegate.
-//TODO: GetInfo() -> Info (property). Bounds -> Rect. Maybe remove GetRect(), or make internal.
 
 namespace Au
 {
 	/// <summary>
-	/// From window/point/rectangle/index/etc gets <see cref="ScreenHandle"/> which gets screen properties such as bounds.
+	/// Represents a screen device. Gets its rectangle etc.
 	/// </summary>
 	/// <remarks>
-	/// A computer can have one or more screens (aka display devices, monitors) attached that extend desktop space. One of them is the <i>primary</i> screen; its top-left coordinate is 0 0.
+	/// A computer can have one or more screens (aka display devices, monitors). One of them is the <i>primary</i> screen; its top-left coordinate is 0 0.
 	/// To show or find a window or some object in a particular screen, need to identify the screen somehow. At Windows API level each screen has a unique integer identifier, known as screen handle or HMONITOR. But it is a random variable value and therefore cannot be specified directly in script etc. Instead can be used screen index or some object on that screen (window, point, rectangle).
 	/// 
-	/// There are two types (both are struct):
-	/// - a <see cref="ScreenHandle"/> variable contains a screen handle, aka HMONITOR. Its functions are used to quickly get properties of that screen, eg bounds.
-	/// - an <b>AScreen</b> variable contains a value that is used to get screen handle. It can be screen index, window, point, etc, and even a callback function.
+	/// An <b>AScreen</b> variable can contain either a screen handle or a callback function that returns a screen handle. If empty, most functions interpret it as the primary screen.
 	/// 
-	/// <b>AScreen</b> is used mostly in two ways:
-	/// - the static functions are used to get a screen handle as <see cref="ScreenHandle"/> using screen index, window, point, etc. Then the <b>ScreenHandle</b> gets screen properties. Example: <c>RECT r = AScreen.Of(AWnd.Active).Bounds; //get rectangle of screen that contains the active window</c>
-	/// - if a function parameter or some property etc is of <b>AScreen</b> type, callers can specify screen index, window, point, etc. Index can be passed directly; for other types use code like <c>new AScreen(window)</c>. The <b>AScreen</b> variable holds the specified value. When the function needs screen properties, it calls <see cref="GetScreenHandle"/> to get <see cref="ScreenHandle"/> corresponding that value at that time.
+	/// To create <b>AScreen</b> variables use static functions (like <c>AScreen.Index(1)</c> or <c>AScreen.Primary</c>) or constructors (like <c>new AScreen(()=>AScreen.Index(1))</c>). Then call non-static functions to get screen properties.
 	/// 
-	/// Why need two types? Why <b>AScreen</b> doesn't just get and store screen handle immediately when the variable is created? Because a handle cannot be reliably used for a long time. Reasons:
-	/// - screen handles may change when changing the configuration of multiple screens.
-	/// - the window etc that identifies the screen later may move to another screen.
+	/// A screen handle cannot be reliably used for a long time. Screen handles may change when changing the configuration of multiple screens. Consider a "lazy" variable, ie with callback function <see cref="LazyFunc"/>. Then, whenever a function needs a screen handle, it calls the callback function which returns <b>AScreen</b> with fresh handle.
 	/// </remarks>
-	public struct AScreen
+	public struct AScreen : IEquatable<AScreen>
 	{
-		readonly object _o;
+		readonly IntPtr _h;
+		readonly Func<AScreen> _func;
 
 		/// <summary>
-		/// Gets the value as object.
+		/// Creates variable with screen handle, aka HMONITOR.
 		/// </summary>
-		public object Value => _o;
-
-		/// <summary>
-		/// true if this variable does not have a value.
-		/// </summary>
-		public bool IsNull => _o == null;
-
-		/// <summary>
-		/// Creates variable that holds screen index. Later will be called <see cref="Index(int)"/>.
-		/// Alternatively use implicit conversion from int, for example <c>1</c> instead of <c>new AScreen(1)</c>.
-		/// </summary>
-		/// <param name="screenIndex">0 primary screen, 1 first nonprimary, and so on. Does not match those in Windows Settings.</param>
-		public AScreen(int screenIndex) => _o = screenIndex;
-
-		/// <summary>
-		/// Creates variable that holds screen index. Later will be called <see cref="Index(int)"/>.
-		/// </summary>
-		/// <param name="screenIndex">0 primary screen, 1 first nonprimary, and so on. Does not match those in Windows Settings.</param>
-		public static implicit operator AScreen(int screenIndex) => new AScreen(screenIndex);
-
-		/// <summary>
-		/// Creates variable that holds <see cref="POINT"/>. Later will be called <see cref="Of(POINT, SODefault)"/>.
-		/// </summary>
-		public AScreen(POINT p) => _o = p;
-
-		/// <summary>
-		/// Creates variable that holds <see cref="RECT"/>. Later will be called <see cref="Of(RECT, SODefault)"/>.
-		/// </summary>
-		public AScreen(RECT r) => _o = r;
-
-		/// <summary>
-		/// Creates variable that holds window handle. Later will be called <see cref="Of(AWnd, SODefault)"/>.
-		/// </summary>
-		public AScreen(AWnd w) => _o = w;
-
-		/// <summary>
-		/// Creates variable that holds a winforms control or form. Later will be called <see cref="Of(Control, SODefault)"/>.
-		/// </summary>
-		public AScreen(Control w) => _o = w;
-
-		/// <summary>
-		/// Creates variable that holds a WPF window/popup/control. Later will be called <see cref="Of(System.Windows.DependencyObject, SODefault)"/>.
-		/// </summary>
-		public AScreen(System.Windows.DependencyObject w) => _o = new object[] { w };
+		public AScreen(IntPtr handle) { _h = handle; _func = null; }
 
 		/// <summary>
 		/// Creates variable that calls your function to get screen when need.
 		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// new AScreen(() => AScreen.Of(AMouse.XY));
-		/// new AScreen(() => AScreen.Of(AWnd.Active));
-		/// ]]></code>
-		/// </example>
-		public AScreen(Func<ScreenHandle> f) => _o = f;
+		public AScreen(Func<AScreen> f) { _h = default; _func = f; }
 
 		/// <summary>
-		/// Creates variable that holds <see cref="ScreenHandle"/>.
+		/// Gets screen handle, aka HMONITOR. Returns default(IntPtr) if it wasn't set; see <see cref="Now"/>.
 		/// </summary>
-		public AScreen(ScreenHandle screen) => _o = screen;
+		public IntPtr Handle => _h;
 
-		//no
-		///// <summary>
-		///// Creates variable that holds <see cref="ScreenHandle"/>.
-		///// </summary>
-		//public static implicit operator AScreen(ScreenHandle screen) => new AScreen(screen);
+		/// <summary>
+		/// Gets callback function that gets screen when need. Returns null if it wasn't set.
+		/// </summary>
+		public Func<AScreen> LazyFunc => _func;
+
+		/// <summary>
+		/// Returns true if this variable has no screen handle and no callback function.
+		/// </summary>
+		public bool IsEmpty => _h == default && _func == null;
+
+		IntPtr _Handle() {
+			if (_h != default) return _h;
+			if (_func != null) return _func()._Handle();
+			return Primary._h;
+		}
+
+		/// <summary>
+		/// Returns a copy of this variable with <see cref="Handle"/>.
+		/// </summary>
+		/// <remarks>
+		/// If this variable has <see cref="Handle"/>, returns its clone. Else if has <see cref="LazyFunc"/>, calls it. Else gets the primary screen.
+		/// </remarks>
+		public AScreen Now => new AScreen(_Handle());
 
 		/// <summary>
 		/// Gets the primary screen.
 		/// </summary>
-		public static ScreenHandle Primary => new ScreenHandle(Api.MonitorFromWindow(default, SODefault.Primary)); //fast
+		/// <remarks>
+		/// The returned variable has <see cref="Handle"/>. To create lazy variable (with <see cref="LazyFunc"/>), use <c>AScreen.Index(0, lazy: true)</c>.
+		/// </remarks>
+		public static AScreen Primary => new(Api.MonitorFromWindow(default, SODefault.Primary)); //fast
 
 		/// <summary>
-		/// Gets <b>AScreen</b> variable that later will get the screen from the mouse cursor position at that time.
-		/// </summary>
-		public static AScreen OfMouse { get; } = new AScreen(() => Of(AMouse.XY));
-
-		/// <summary>
-		/// Gets <b>AScreen</b> variable that later will get the screen of the active window at that time.
-		/// </summary>
-		public static AScreen OfActiveWindow { get; } = new AScreen(() => Of(AWnd.Active));
-
-#if CACHE_ALLSCREENS
-		//This version uses a cached array that is updated like in Screen class code, on SystemEvents.DisplaySettingsChanging (wm_displaychanged).
-		//Index functions are faster, but less reliable when changing display settings, because the array is updated with a delay.
-		//In other version index functions are fast enough. Faster than EnumWindows which is used much more often.
-
-		/// <summary>
-		/// Gets screen at the specified index of the <see cref="AllScreens"/> array.
-		/// </summary>
-		/// <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
-		public static ScreenHandle Index(int index)
-		{
-			if(index < 0) throw new ArgumentOutOfRangeException();
-			if(index > 0) {
-				var a = AllScreens;
-				if(index < a.Length) return a[index];
-				//AWarning.Write("Invalid screen index.");
-			}
-			return Primary;
-		}
-
-		/// <summary>
-		/// Gets all screens.
+		/// Gets lazy <b>AScreen</b> variable that later will get the screen from the mouse cursor position at that time.
 		/// </summary>
 		/// <remarks>
-		/// To get screens is used API <msdn>EnumDisplayMonitors</msdn>. Its results are cached in a static array. The array is auto-updated after changing display settings, on <see cref="SystemEvents.DisplaySettingsChanging"/> event. This property returns that array. Don't modify it.
-		/// The order of array elements is different than in Windows Settings (Control Panel). The primary screen is always at index 0.
+		/// If need non-lazy: <c>AScreen.Of(AMouse.XY)</c>.
 		/// </remarks>
-		public static ScreenHandle[] AllScreens => s_screens ??= _GetScreens();
-		static ScreenHandle[] s_screens;
-		static bool s_haveEvent;
+		public static AScreen OfMouse { get; } = new(() => Of(AMouse.XY));
 
-		static ScreenHandle[] _GetScreens()
-		{
-			if(!s_haveEvent) {
-				s_haveEvent = true;
-				//ThreadPool.QueueUserWorkItem(_ => SystemEvents.DisplaySettingsChanging += (_, _) => s_screens = null); //slower if used first time. Task.Run much slower.
-				new Thread(() => SystemEvents.DisplaySettingsChanging += (_, _) => s_screens = null).Start();
-				//async because very slow first time, eg 30 ms if cold CPU. Unless SystemEvents was already used by some code.
-			}
-			var a = new List<ScreenHandle> { Primary };
-			EnumDisplayMonitors(default, default, (hmon, _1, _2, _3) => { //not very fast
-				if(hmon != a[0].Handle) a.Add(new ScreenHandle(hmon));
-				return true;
-			}, default);
-			return a.ToArray();
-		}
-#else
+		/// <summary>
+		/// Gets lazy <b>AScreen</b> variable that later will get the screen of the active window at that time.
+		/// </summary>
+		/// <remarks>
+		/// If need non-lazy: <c>AScreen.Of(AWnd.Active)</c>.
+		/// </remarks>
+		public static AScreen OfActiveWindow { get; } = new(() => Of(AWnd.Active));
+
+		/// <summary>
+		/// Gets screen containing the biggest part of the specified window or nearest to it.
+		/// </summary>
+		/// <param name="w">Window or control. If default(AWnd) or invalid, gets the primary screen.</param>
+		/// <param name="defaultScreen"></param>
+		/// <param name="lazy">
+		/// Create variable with <see cref="LazyFunc"/> that later will get screen handle.
+		/// Other ways to create lazy:
+		/// - use <b>AWnd.Finder</b>. Example: <c>AScreen.Of(new AWnd.Finder("* Notepad"))</c>.
+		/// - use constructor. Example: <c>new AScreen(() => AScreen.Of(AWnd.FindFast(cn: "Notepad")))</c>.
+		/// </param>
+		public static AScreen Of(AWnd w, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
+			=> lazy
+			? new AScreen(() => Of(w, defaultScreen))
+			: new AScreen(Api.MonitorFromWindow(w, defaultScreen));
+
+		/// <summary>
+		/// Gets screen containing the biggest part of the specified window or nearest to it.
+		/// </summary>
+		/// <param name="f">Window finder. If window not found, gets the primary screen.</param>
+		/// <param name="defaultScreen"></param>
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will find window and get screen handle. Default true.</param>
+		public static AScreen Of(AWnd.Finder f, SODefault defaultScreen = SODefault.Nearest, bool lazy = true)
+			=> lazy
+			? new AScreen(() => Of(f, defaultScreen, false))
+			: Of(f.Find() ? f.Result : default, defaultScreen);
+
+		/// <summary>
+		/// Gets screen containing the biggest part of the specified winforms window or control or nearest to it.
+		/// </summary>
+		/// <param name="c">Window or control. If handle not created, gets the primary screen. Cannot be null.</param>
+		/// <param name="defaultScreen"></param>
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
+		public static AScreen Of(System.Windows.Forms.Control c, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
+			=> lazy
+			? new AScreen(() => Of(c, defaultScreen))
+			: Of(c.Hwnd(), defaultScreen);
+
+		/// <summary>
+		/// Gets screen containing the biggest part of the specified WPF window or nearest to it.
+		/// </summary>
+		/// <param name="w">WPF window. If handle not created, gets the primary screen. Cannot be null.</param>
+		/// <param name="defaultScreen"></param>
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
+		public static AScreen Of(System.Windows.Window w, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
+			=> lazy
+			? new AScreen(() => Of(w, defaultScreen))
+			: Of(w.Hwnd(), defaultScreen);
+
+		/// <summary>
+		/// Gets screen containing the biggest part of the specified WPF element (of its rectangle) or nearest to it.
+		/// </summary>
+		/// <param name="elem">WPF element. If not loaded, gets the primary screen. Cannot be null.</param>
+		/// <param name="defaultScreen"></param>
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
+		public static AScreen Of(System.Windows.FrameworkElement elem, SODefault defaultScreen = SODefault.Nearest, bool lazy = false)
+			=> lazy
+			? new AScreen(() => Of(elem, defaultScreen))
+			: Of(elem.RectInScreen(), defaultScreen);
+
+		/// <summary>
+		/// Gets screen containing the specified point or nearest to it.
+		/// </summary>
+		/// <param name="p"></param>
+		/// <param name="defaultScreen"></param>
+		/// <remarks>
+		/// The returned variable has <see cref="Handle"/>. To create lazy variable (with <see cref="LazyFunc"/>), use constructor. Example: <c>new AScreen(() => AScreen.Of(500, AScreen.Primary.Rect.Height))</c>.
+		/// </remarks>
+		public static AScreen Of(POINT p, SODefault defaultScreen = SODefault.Nearest)
+			=> new AScreen(Api.MonitorFromPoint(p, defaultScreen));
+
+		///// <summary>
+		///// Creates lazy <b>AScreen</b> variable that later will get screen containing a point or nearest to it.
+		///// </summary>
+		///// <param name="p">Function that returns point at that time. Example: <c>() => (500, AScreen.Primary.Rect.Height)</c>.</param>
+		///// <param name="defaultScreen"></param>
+		//public static AScreen Of(Func<POINT> p, SODefault defaultScreen = SODefault.Nearest)
+		//	=> new AScreen(() => Of(p(), defaultScreen));
+
+		/// <summary>
+		/// Gets screen containing the specified point or nearest to it.
+		/// </summary>
+		/// <param name="x"></param>
+		/// <param name="y"></param>
+		/// <param name="defaultScreen"></param>
+		public static AScreen Of(int x, int y, SODefault defaultScreen = SODefault.Nearest)
+			=> Of((x, y), defaultScreen);
+
+		/// <summary>
+		/// Gets screen containing the biggest part of the specified rectangle or nearest to it.
+		/// </summary>
+		/// <param name="r"></param>
+		/// <param name="defaultScreen"></param>
+		/// <remarks>
+		/// The returned variable has <see cref="Handle"/>. To create lazy variable (with <see cref="LazyFunc"/>), use constructor. Example: <c>new AScreen(() => AScreen.Of(new RECT(...)))</c>.
+		/// </remarks>
+		public static AScreen Of(RECT r, SODefault defaultScreen = SODefault.Nearest)
+			=> new AScreen(Api.MonitorFromRect(r, defaultScreen));
+
+		///// <summary>
+		///// Creates lazy <b>AScreen</b> variable that later will get screen containing the biggest part of a rectangle or nearest to it.
+		///// </summary>
+		///// <param name="r">Function that returns rectangle at that time.</param>
+		///// <param name="defaultScreen"></param>
+		//public static AScreen Of(Func<RECT> r, SODefault defaultScreen = SODefault.Nearest)
+		//	=> new AScreen(() => Of(r(), defaultScreen));
+
 		/// <summary>
 		/// Gets all screens.
 		/// </summary>
@@ -185,74 +210,140 @@ namespace Au
 		/// The order of array elements may be different than in Windows Settings (Control Panel). The primary screen is always at index 0.
 		/// The array is not cached. Each time calls API <msdn>EnumDisplayMonitors</msdn>.
 		/// </remarks>
-		public static ScreenHandle[] AllScreens => _AllScreens().ToArray();
+		public static AScreen[] All => _All().ToArray();
 
-		internal static List<ScreenHandle> _AllScreens() {
-			t_a ??= new List<ScreenHandle>();
+		internal static List<AScreen> _All() {
+			t_a ??= new();
 			t_a.Clear();
 			t_a.Add(Primary); //2 mcs with cold CPU
 			Api.EnumDisplayMonitors(default, default, (hmon, _1, _2, param) => { //50-100 mcs with cold CPU
-				if (hmon != t_a[0].Handle) t_a.Add(new ScreenHandle(hmon));
+				if (hmon != t_a[0]._h) t_a.Add(new AScreen(hmon));
 				return true;
 			}, default);
 			return t_a;
 		}
-		[ThreadStatic] static List<ScreenHandle> t_a;
+		[ThreadStatic] static List<AScreen> t_a;
 
 		/// <summary>
-		/// Gets screen at the specified index of the <see cref="AllScreens"/> array.
+		/// Gets screen at the specified index of the <see cref="All"/> array.
 		/// </summary>
 		/// <param name="index">0-based screen index. Index 0 is the primary screen. If index too big, gets the primary screen.</param>
-		public static ScreenHandle Index(int index) {
+		/// <param name="lazy">Create variable with <see cref="LazyFunc"/> that later will get screen handle.</param>
+		/// <exception cref="ArgumentOutOfRangeException">Negative index.</exception>
+		public static AScreen Index(int index, bool lazy = false) {
 			if (index < 0) throw new ArgumentOutOfRangeException();
+			if (lazy) return new AScreen(() => Index(index));
 			if (index > 0) {
-				var a = _AllScreens();
+				var a = _All();
 				if (index < a.Count) return a[index];
 				//AWarning.Write("Invalid screen index.");
 			}
 			return Primary;
 		}
-#endif
+		//We don't use a cached array that is updated like in Screen class code, eg on SystemEvents.DisplaySettingsChanging (wm_displaychanged).
+		//	Then index functions are faster, but less reliable when changing display settings, because the array is updated with a delay.
+		//	Now index functions are fast enough. Faster than EnumWindows which is used much more often.
 
 		/// <summary>
-		/// Gets screen containing the biggest part of the specified window or nearest to it.
+		/// Gets index of this screen in the <see cref="All"/> array.
 		/// </summary>
-		/// <param name="w">Window or control. Can be default(AWnd) or invalid.</param>
-		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(AWnd w, SODefault defaultScreen = SODefault.Nearest)
-			=> new ScreenHandle(Api.MonitorFromWindow(w, defaultScreen));
+		/// <remarks>
+		/// Returns 0 (index of primary screen) if this variable is empty. Returns -1 if the screen handle is invalid; it can happen after changing display settings, but is rare.
+		/// </remarks>
+		public int ScreenIndex {
+			get {
+				if (_h == default && _func == null) return 0;
+				var h = _Handle();
+				var a = _All();
+				for (int i = 0; i < a.Count; i++) if (a[i]._h == h) return i;
+				return -1;
+			}
+		}
 
 		/// <summary>
-		/// Gets screen containing the biggest part of the specified winforms control or form or nearest to it.
+		/// Gets screen rectangle and other info.
 		/// </summary>
-		/// <param name="c">Control or form. Cannot be null. The handle can be created or not.</param>
-		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(Control c, SODefault defaultScreen = SODefault.Nearest)
-			=> Of(c.Hwnd(), defaultScreen);
+		/// <returns>
+		/// Tuple containing:
+		/// - rect - screen rectangle.
+		/// - workArea - work area rectangle.
+		/// - isPrimary - true if it is the primary screen.
+		/// - isAlive - false if the screen handle is invalid; then the function gets info of the primary screen.
+		/// </returns>
+		/// <remarks>
+		/// If this variable holds a callback function, this function calls it to get screen handle. See also <see cref="Now"/>.
+		/// </remarks>
+		public unsafe (RECT rect, RECT workArea, bool isPrimary, bool isAlive) Info {
+			get {
+				var h = _func != null ? _Handle() : _h;
+				var m = new Api.MONITORINFO { cbSize = sizeof(Api.MONITORINFO) };
+				for (int i = h != default ? 0 : 1; i < 10; i++, h = Primary._h) { //retry if fails
+					if (Api.GetMonitorInfo(h, ref m)) //fast
+						return (m.rcMonitor, m.rcWork, 0 != (m.dwFlags & 1), i == 0);
+				}
+				return default;
+			}
+		}
 
 		/// <summary>
-		/// Gets screen containing the biggest part of the specified WPF window/popup/control or nearest to it.
+		/// Calls <see cref="Info"/> and returns rectangle of the screen or its work area.
 		/// </summary>
-		/// <param name="w">WPF window, popup or a child object.</param>
-		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(System.Windows.DependencyObject w, SODefault defaultScreen = SODefault.Nearest)
-			=> Of(w.Hwnd(), defaultScreen);
+		/// <param name="workArea">Get work area rectangle.</param>
+		public RECT GetRect(bool workArea = false) {
+			var v = Info;
+			return workArea ? v.workArea : v.rect;
+		}
 
 		/// <summary>
-		/// Gets screen containing the specified coordinate or nearest to it.
+		/// Calls <see cref="Info"/> and returns screen rectangle.
 		/// </summary>
-		/// <param name="p"></param>
-		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(POINT p, SODefault defaultScreen = SODefault.Nearest)
-			=> new ScreenHandle(Api.MonitorFromPoint(p, defaultScreen));
+		public RECT Rect => Info.rect;
 
 		/// <summary>
-		/// Gets screen containing the biggest part of the specified rectangle or nearest to it.
+		/// Calls <see cref="Info"/> and returns work area rectangle.
 		/// </summary>
-		/// <param name="r"></param>
-		/// <param name="defaultScreen"></param>
-		public static ScreenHandle Of(RECT r, SODefault defaultScreen = SODefault.Nearest)
-			=> new ScreenHandle(Api.MonitorFromRect(r, defaultScreen));
+		public RECT WorkArea => Info.workArea;
+
+		/// <summary>
+		/// Gets DPI of this screen.
+		/// Calls <see cref="ADpi.OfScreen"/>.
+		/// </summary>
+		public int Dpi => ADpi.OfScreen(_Handle());
+
+		/// <summary>
+		/// True if the screen handle is valid.
+		/// </summary>
+		/// <remarks>
+		/// Don't use with variables that hold a callback function. This function does not call it and returns false.
+		/// </remarks>
+		public unsafe bool IsAlive {
+			get {
+				if (_h == default) return false;
+				var m = new Api.MONITORINFO { cbSize = sizeof(Api.MONITORINFO) };
+				return Api.GetMonitorInfo(_h, ref m);
+			}
+		}
+
+		///
+		public override string ToString() => _h.ToString() + " " + Rect.ToString();
+
+		///
+		public override int GetHashCode() => (int)_Handle();
+
+		///
+		public bool Equals(AScreen other) => other._Handle() == _Handle();
+
+		///
+		public static bool operator ==(AScreen a, AScreen b) => a.Equals(b);
+		///
+		public static bool operator !=(AScreen a, AScreen b) => !a.Equals(b);
+
+		//rejected. GetHashCode gets hmonitor but is undocumented. Rarely used.
+		///// <summary>Converts from <see cref="Screen"/>.</summary>
+		//public static implicit operator AScreen(Screen screen) => new AScreen((IntPtr)screen.GetHashCode());
+
+		///// <summary>Converts to <see cref="Screen"/>. Returns null if fails.</summary>
+		//public static implicit operator Screen(AScreen screen) { int h=(int)screen._Handle(); return Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == h);
 
 		/// <summary>
 		/// Returns true if point p is in some screen.
@@ -269,167 +360,18 @@ namespace Au
 		/// </summary>
 		public static bool IsInAnyScreen(AWnd w) => Api.MonitorFromWindow(w, SODefault.Zero) != default;
 
-		//no
-		///// <summary>Converts to <see cref="ScreenHandle"/> (calls <see cref="GetScreenHandle"/>).</summary>
-		//public static implicit operator ScreenHandle(AScreen screen) => screen.GetScreenHandle();
-
-		/// <summary>
-		/// Gets <see cref="ScreenHandle"/> from the value stored in this variable (screen index, window, etc).
-		/// If the value is null, gets the primary screen.
-		/// </summary>
-		public ScreenHandle GetScreenHandle() => _o switch
-		{
-			null => Primary,
-			int k => Index(k),
-			POINT k => Of(k),
-			RECT k => Of(k),
-			ScreenHandle k => k,
-			Func<ScreenHandle> k => k(),
-			_ => Of(AWnd.Internal_.FromObject(_o)),
-		};
+		internal AScreen ThrowIfWithHandle_ => _h == default ? this : throw new ArgumentException("AScreen with Handle. Must be lazy (with LazyFunc) or empty.");
 	}
 }
 
 namespace Au.Types
 {
 	/// <summary>
-	/// Represents a screen device. Gets its rectangle etc.
-	/// To create, use <see cref="AScreen"/> class.
-	/// </summary>
-	public unsafe struct ScreenHandle : IEquatable<ScreenHandle>
-	{
-		//This type is similar to the .NET class Screen. We don't use it mostly because some functions are too slow.
-
-		readonly IntPtr _h;
-
-		/// <param name="handle">A screen handle (HMONITOR).</param>
-		public ScreenHandle(IntPtr handle) => _h = handle;
-
-		/// <summary>
-		/// The screen handle (HMONITOR).
-		/// </summary>
-		public IntPtr Handle => _h;
-
-		/// <summary>
-		/// True if the screen handle is 0.
-		/// </summary>
-		public bool Is0 => _h == default;
-
-		///
-		public static implicit operator IntPtr(ScreenHandle screen) => screen._h;
-
-#if CACHE_ALLSCREENS
-			/// <summary>
-			/// Gets index of this screen in the <see cref="AllScreens"/> array.
-			/// </summary>
-			/// <remarks>
-			/// Returns -1 if this screen is not in the array. It can happen after changing display settings, when this variable is older or newer than the array. Also if the screen handle is 0.
-			/// </remarks>
-			public int Index {
-				get {
-					var a = AllScreens;
-					for(int i = 0; i < a.Length; i++) if(a[i]._h == _h) return i;
-					return -1;
-				}
-			}
-#else
-		/// <summary>
-		/// Gets index of this screen in the <see cref="AScreen.AllScreens"/> array.
-		/// </summary>
-		/// <remarks>
-		/// Returns -1 if this screen is not in the array. It can happen after changing display settings, but is rare. Also if the screen handle is 0.
-		/// </remarks>
-		public int Index {
-			get {
-				var a = AScreen._AllScreens();
-				for (int i = 0; i < a.Count; i++) if (a[i]._h == _h) return i;
-				return -1;
-			}
-		}
-#endif
-
-		/// <summary>
-		/// Gets screen rectangle and other info.
-		/// </summary>
-		/// <returns>
-		/// Tuple containing:
-		/// - bounds - rectangle of the screen.
-		/// - workArea - rectangle of the work area of the screen.
-		/// - isPrimary - true if the info is of the primary screen.
-		/// - isAlive - true if the screen handle is valid. If invalid (eg 0), the function gets info of the primary screen.
-		/// </returns>
-		public (RECT bounds, RECT workArea, bool isPrimary, bool isAlive) GetInfo() {
-			var m = new Api.MONITORINFO { cbSize = sizeof(Api.MONITORINFO) };
-			for (int i = _h != default ? 0 : 1; i < 10; i++) {
-				if (Api.GetMonitorInfo(i == 0 ? _h : AScreen.Primary._h, ref m)) //fast
-					return (m.rcMonitor, m.rcWork, 0 != (m.dwFlags & 1), i == 0);
-			}
-			return default;
-		}
-
-		/// <summary>
-		/// Calls <see cref="GetInfo"/> and returns rectangle of the screen or its work area.
-		/// </summary>
-		/// <param name="workArea">Get work area rectangle.</param>
-		public RECT GetRect(bool workArea = false) {
-			var v = GetInfo();
-			return workArea ? v.workArea : v.bounds;
-		}
-
-		/// <summary>
-		/// Calls <see cref="GetInfo"/> and returns rectangle of the screen.
-		/// </summary>
-		public RECT Bounds => GetRect();
-
-		/// <summary>
-		/// Calls <see cref="GetInfo"/> and returns rectangle of the screen work area.
-		/// </summary>
-		public RECT WorkArea => GetRect(true);
-
-		/// <summary>
-		/// Gets DPI of this screen. See <see cref="ADpi.OfScreen"/>.
-		/// </summary>
-		public int Dpi => ADpi.OfScreen(_h);
-
-		/// <summary>
-		/// True if the screen handle is valid.
-		/// </summary>
-		public bool IsAlive {
-			get {
-				if (_h == default) return false;
-				var m = new Api.MONITORINFO { cbSize = sizeof(Api.MONITORINFO) };
-				return Api.GetMonitorInfo(_h, ref m);
-			}
-		}
-
-		///
-		public override string ToString() => _h.ToString() + " " + Bounds.ToString();
-
-		///
-		public override int GetHashCode() => (int)_h;
-
-		///
-		public bool Equals(ScreenHandle other) => other._h == _h;
-
-		///
-		public static bool operator ==(ScreenHandle a, ScreenHandle b) => a._h == b._h;
-		///
-		public static bool operator !=(ScreenHandle a, ScreenHandle b) => a._h != b._h;
-
-		//rejected. GetHashCode gets hmonitor but is undocumented. Rarely used.
-		///// <summary>Converts from <see cref="Screen"/>.</summary>
-		//public static implicit operator ScreenHandle(Screen screen) => new ScreenHandle((IntPtr)screen.GetHashCode());
-
-		///// <summary>Converts to <see cref="Screen"/>. Returns null if fails.</summary>
-		//public static implicit operator Screen(ScreenHandle screen) => Screen.AllScreens.FirstOrDefault(o => o.GetHashCode() == (int)screen._h);
-	}
-
-	/// <summary>
-	/// Used with <see cref="AScreen.Of"/> to specify what screen to use if the function fails, for example if the window/point/etc is not in a screen or if the window handle is invalid.
+	/// Used with <see cref="AScreen.Of"/> to specify what screen to return if the window/point/etc is not in a screen or if the window handle is invalid etc.
 	/// </summary>
 	public enum SODefault
 	{
-		/// <summary>0 (<see cref="ScreenHandle.Is0"/> will return true).</summary>
+		/// <summary>Create empty variable.</summary>
 		Zero, //MONITOR_DEFAULTTONULL
 
 		/// <summary>The primary screen.</summary>

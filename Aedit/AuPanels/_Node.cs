@@ -19,24 +19,32 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Shapes;
+using Au.Controls.WPF;
 
 namespace Au.Controls
 {
 	public partial class AuPanels
 	{
-		partial class _Node : Util.ATreeBase<_Node>, IPanel
+		partial class _Node : ATreeBase<_Node>, IPanel
 		{
 			readonly AuPanels _pm;
 			readonly _StackFields _stack;
 			readonly _TabFields _tab;
 			readonly _PanelFields _panel;
-			readonly _FloatableFields _float; //_tab, _panel or null
 			readonly FrameworkElement _elem; //_stack.grid or _tab.tc or _panel.panel
-			GridSplitter _splitter; //null if in tab or first in stack
-			readonly _PType _ptype;
-			int _indexInParent;
-			double _dockedSize;
-			GridUnitType _dockedUnit;
+			GridSplitter2 _splitter; //null if in tab or first in stack
+			readonly PanelType _ptype;
+			int _index; //index in parent stack or tab. Grid row/column index is _index*2, because at _index*2-1 is splitter if _index>0.
+			GridLength _dockedSize;
+			Dock _captionAt;
+			_DockState _state, _savedDockState;
+			_Floating _floatWindow;
+			string _floatSavedRect;
+			//_Flags _flags;
+
+			static readonly Brush s_toolbarCaptionBrush = SystemColors.ControlBrush;
+			const int c_minSize = 4;
+			const int c_defaultSplitterSize = 4;
 
 			class _StackFields
 			{
@@ -44,50 +52,44 @@ namespace Au.Controls
 				public bool isVertical;
 			}
 
-			class _TabFields : _FloatableFields
+			class _TabFields
 			{
 				public TabControl tc;
 				public bool isVerticalHeader;
 			}
 
-			class _PanelFields : _FloatableFields
+			class _PanelFields
 			{
-				public DockPanel panel;
+				public _DockPanelWithBorder panel;
 				public FrameworkElement content; //app sets it = any control
-				public FrameworkElement caption; //TextBlock if panel not in tab, Rectangle if toolbar not in tab, else null
+				public FrameworkElement caption; //TextBlock if panel not in tab, Rectangle if toolbar/document not in tab, else null
 				public string name; //used by the indexer to find it, also as caption/tabitem text
 				public TabItem ti;
+				public bool isDocumentPlaceholder;
 			}
 
-			abstract class _FloatableFields
-			{
-				public Dock captionAt;
-				public _DockState dockState;
-				public _Float flo;
-				public RECT rect;
-				public string savedRect;
-			}
+			[Flags]
+			enum _Flags { Splitter_ResizeNearest = 1 }
 
+			/// <summary>
+			/// Used to create root node when loading from XML.
+			/// </summary>
 			public _Node(AuPanels pm, XElement x) : this(pm, x, null, 0) { }
 
-			public _Node(AuPanels pm, XElement x, _Node parent, int index) {
+			/// <summary>
+			/// Used to create nodes when loading from XML.
+			/// </summary>
+			_Node(AuPanels pm, XElement x, _Node parent, int index) {
 				_pm = pm;
-				_indexInParent = index;
+				_index = index;
 
 				string tag = x.Name.LocalName;
-				Grid parentGrid = null;
-				TabControl parentTab = null;
 
 				if (parent == null) { //the root XML element
 					if (tag != "stack") throw new ArgumentException("XML root element must be 'stack'");
 					_pm._rootStack = this;
 				} else {
 					parent.AddChild(this);
-					if (parent._IsTab) {
-						parentTab = parent._tab.tc;
-					} else {
-						parentGrid = parent._stack.grid;
-					}
 				}
 
 				switch (tag) {
@@ -96,90 +98,51 @@ namespace Au.Controls
 					_elem = _stack.grid = new Grid();
 					break;
 				case "tab":
-					_float = _tab = new();
+					_tab = new();
 					_elem = _tab.tc = new TabControl();
 					break;
 				case "panel":
 				case "toolbar":
 				case "document":
 					_panel = new();
-					_elem = _panel.panel = new DockPanel();
-					_ptype = tag[0] switch { 'p' => _PType.Panel, 't' => _PType.Toolbar, _ => _PType.Document };
-					if (_IsDocument) {
-						_panel.name = "Document";
-					} else {
-						_panel.name = x.Attr("name") ?? throw new ArgumentException("XML element without 'name'");
-						_float = _panel;
-					}
-					_pm._aContent.Add(this);
+					_elem = _panel.panel = new();
+					_ptype = tag[0] switch { 'p' => PanelType.Panel, 't' => PanelType.Toolbar, _ => PanelType.Document };
+					_panel.name = x.Attr("name") ?? throw new ArgumentException("XML element without 'name'");
+					if (_IsDocumentHost) _panel.isDocumentPlaceholder = true;
+					_pm._dictContent.Add(_panel.name, this);
 					break;
 				default: throw new ArgumentException("unknown XML tag");
 				}
+				_elem.Tag = this;
 
-				if (parentGrid != null) {
-					bool inVerticalStack = parent._stack.isVertical;
+				if (parent != null) {
+					if (!_IsDocumentHost) {
+						_savedDockState = (_DockState)(x.Attr("state", 0) & 3);
+						_floatSavedRect = x.Attr("floatRect");
+					}
+					if (!_IsStack) x.Attr(out _captionAt, "captionAt");
 
-					//set height in vertical stack or width in horizontal stack
-					var k = _Util.GridLengthFromString(x.Attr("w"));
-					if (inVerticalStack) {
-						parentGrid.RowDefinitions.Add(new RowDefinition { Height = k });
+					if (_ParentIsStack) {
+						_dockedSize = _Util.GridLengthFromString(x.Attr("z")); //height in vertical stack or width in horizontal stack
+						_AddToStack(moving: false, _index == 0 ? 0 : x.Attr("s", c_defaultSplitterSize));
+
+						var flags = (_Flags)x.Attr("flags", 0);
+						if (flags.Has(_Flags.Splitter_ResizeNearest) && _splitter != null) _splitter.ResizeNearest = true;
+
+						if (_IsTab) _InitTabControl();
 					} else {
-						parentGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = k });
+						_AddToTab(moving: false);
 					}
-
-					//splitter
-					if (_indexInParent > 0) {
-						_splitter = new GridSplitter2 { ResizeBehavior = GridResizeBehavior.PreviousAndCurrent };
-						if (inVerticalStack) { //horz splitter
-							_splitter.ResizeDirection = GridResizeDirection.Rows;
-							_splitter.VerticalAlignment = VerticalAlignment.Top;
-							_splitter.HorizontalAlignment = HorizontalAlignment.Stretch;
-						} else { //vert splitter
-							_splitter.ResizeDirection = GridResizeDirection.Columns;
-							_splitter.HorizontalAlignment = HorizontalAlignment.Left;
-							//default stretch
-						}
-						_SplitterSize = x.Attr("s", c_defaultSplitterWidth);
-						if (inVerticalStack) Grid.SetRow(_splitter, _indexInParent); else Grid.SetColumn(_splitter, _indexInParent);
-						_splitter.ContextMenuOpening += _SplitterContextMenu;
-						parentGrid.Children.Add(_splitter);
-					}
-
-					if (inVerticalStack) Grid.SetRow(_elem, _indexInParent); else Grid.SetColumn(_elem, _indexInParent);
-					parentGrid.Children.Add(_elem);
-
-					if (_CanFloat) {
-						x.Attr(out _float.captionAt, "captionAt");
-						//_dockState = (_DockState)(x.Attr("state", 0) & 3); //TODO
-						if (!_IsTab) _AddRemoveCaption();
-						_float.savedRect = x.Attr("floatRect");
-					}
-
-					if (_IsTab) {
-						var tc = _tab.tc;
-						tc.Padding = default;
-						tc.TabStripPlacement = _float.captionAt;
-						tc.SizeChanged += (_, e) => {
-							switch (tc.TabStripPlacement) { case Dock.Top: case Dock.Bottom: return; }
-							bool bigger = e.NewSize.Height > e.PreviousSize.Height;
-							if (bigger != _tab.isVerticalHeader) _VerticalTabHeader(e.NewSize.Height);
-						};
-						tc.ContextMenuOpening += _FloatableContextMenu;
-						tc.PreviewMouseDown += _OnMouseDown;
-					}
-				} else if (parentTab != null) {
-					var ti = new TabItem { Header = _panel.name, Content = _elem, Tag = this };
-					_panel.ti = ti;
-					parentTab.Items.Add(ti);
 				}
 
-				if (!_IsContent) {
-					if (parentTab != null) throw new ArgumentException(tag + " in 'tab'");
+				if (!_IsContent) { //stack or tab
+					if (_ParentIsTab) throw new ArgumentException(tag + " in 'tab'");
 					int i = 0;
 					foreach (var e in x.Elements()) {
 						new _Node(_pm, e, this, i++);
 					}
-					Debug.Assert(i >= 2); //see _AutoUpdateXml
+					//Debug.Assert(i >= (_IsTab ? 1 : 2)); //see _AutoUpdateXml
+					Debug.Assert(i >= 1); //see _AutoUpdateXml
 
 					if (_IsTab) {
 						_tab.tc.SelectedIndex = Math.Clamp(x.Attr("active", 0), 0, i - 1);
@@ -187,59 +150,132 @@ namespace Au.Controls
 				}
 
 				//AOutput.Write(new string('\t', parent?.Level ?? 0) + _ntype, _ptype, Name, _indexInParent);
+
+				if (parent == null) { //the root XML element
+					int nVisible = 0; _Node firstHidden = null;
+					foreach (var v in Descendants()) {
+						//if (v._IsStack) continue;
+						if (!v._IsStack) if (v._IsVisibleReally(true)) nVisible++; else firstHidden ??= v;
+						if (v._savedDockState != 0) _SetState(v);
+					}
+					if (nVisible == 0 && firstHidden != null) { //if all non-stack hidden, unhide one, else user cannot unhide any because there are no captions to show the context menu
+						firstHidden._savedDockState = 0;
+						_SetState(firstHidden);
+					}
+
+					void _SetState(_Node node) {
+						if (node._savedDockState != _DockState.Float) node._SetDockState(node._savedDockState);
+						else _stack.grid.Dispatcher.InvokeAsync(() => node._SetDockState(node._savedDockState));
+					}
+
+					//ATimer.After(1000, _ => _Test(5));
+					////ATimer.After(5000, _ => _Test(0));
+					//void _Test(int margin) {
+					//	foreach (var v in Descendants(true)) {
+					//		//if (v._IsStack) v._stack.grid.Background = (v.Level & 3) switch { 1 => Brushes.CornflowerBlue, 2 => Brushes.Khaki, 3 => Brushes.YellowGreen, _ => Brushes.Peru };
+					//		if (v._IsStack) v._stack.grid.Background = (v.Level & 3) switch { 0 => Brushes.CornflowerBlue, 1 => Brushes.Khaki, 2 => Brushes.YellowGreen, _ => Brushes.LightYellow };
+					//		if(v!=this) v._elem.Margin = new Thickness(margin);
+					//		if (v._splitter != null) v._splitter.Visibility = Visibility.Collapsed;
+					//		//if (!v._IsStack) continue;
+					//		//v._stack.grid.Background = (v.Level & 3) switch { 1 => Brushes.CornflowerBlue, 2 => Brushes.Khaki, 3 => Brushes.YellowGreen, _ => Brushes.Peru };
+					//		//v._elem.Margin = new Thickness(margin);
+					//	}
+					//}
+
+					//_stack.grid.PreviewMouseMove += _RootGrid_PreviewMouseMove;
+				}
+			}
+
+			/// <summary>
+			/// Used when moving a node, when need to create new parent (this) stack or tab for it and target.
+			/// </summary>
+			_Node(_Node target, bool isTab, bool verticalStack = false) {
+				_pm = target._pm;
+
+				bool targetIsRoot = !isTab && target.Parent == null;
+				if (targetIsRoot) {
+					_pm._rootStack = this;
+				} else {
+					_index = target._index;
+					target.AddSibling(this, after: false);
+					target.Remove();
+					target._index = 0;
+				}
+				AddChild(target);
+
+				if (isTab) {
+					_tab = new();
+					_elem = _tab.tc = new TabControl();
+				} else {
+					_stack = new _StackFields { isVertical = verticalStack };
+					_elem = _stack.grid = new Grid();
+				}
+				_elem.Tag = this;
+
+				if (targetIsRoot) {
+					target._dockedSize = new GridLength(verticalStack ? target._stack.grid.ActualHeight : target._stack.grid.ActualWidth, GridUnitType.Star);
+					_pm._setContainer(_stack.grid);
+				} else {
+					_ReplaceInStack(target);
+					if (isTab) {
+						_captionAt = target._captionAt;
+						_InitTabControl();
+					}
+				}
 			}
 
 			public void Save(XmlWriter x) {
-				x.WriteStartElement(_IsStack ? "stack" : (_IsTab ? "tab" : (_IsPanel ? "panel" : (_IsToolbar ? "toolbar" : "document"))));
+				x.WriteStartElement(_IsStack ? "stack" : (_IsTab ? "tab" : (_IsToolbarHost ? "toolbar" : (_IsDocumentHost ? "document" : "panel"))));
 
 				if (_IsStack) x.WriteAttributeString("o", _stack.isVertical ? "v" : "h");
 
-				if (Parent?._IsStack ?? false) {
-					var k = new _RowCol(this);
-					var w = k.SizeDef;
-					if (!w.IsAuto) {
-						//if (k.Visible) //TODO
-						w = new GridLength(k.SizeNow, w.GridUnitType);
-						x.WriteAttributeString("w", _Util.GridLengthToString(w));
+				if (Parent != null) {
+					if (_IsContent) x.WriteAttributeString("name", _panel.name);
+
+					if (_ParentIsStack) {
+						if (!_dockedSize.IsAuto) {
+							if (_IsDockedInStack) _dockedSize = _SizeDef; //update _dockedSize
+							x.WriteAttributeString("z", _Util.GridLengthToString(_dockedSize));//TODO: update when splitters moved
+						}
+
+						var z = _SplitterSize;
+						if (z > 0 && z != c_defaultSplitterSize) x.WriteAttributeString("s", z.ToString());
+
+						if (_splitter != null && _splitter.ResizeNearest) x.WriteAttributeString("flags", ((int)_Flags.Splitter_ResizeNearest).ToString());
 					}
 
-					var s = _SplitterSize;
-					if (s > 0 && s != c_defaultSplitterWidth) x.WriteAttributeString("s", s.ToString());
+					if (_IsTab) {
+						int i = _tab.tc.SelectedIndex;
+						if (i > 0) x.WriteAttributeString("active", i.ToString());
+					}
+
+					if (_captionAt != 0) x.WriteAttributeString("captionAt", _captionAt.ToString());
+					if (!_IsDocumentHost) {
+						if (_state != 0) x.WriteAttributeString("state", ((int)_state).ToString());
+						_floatWindow?.Save();
+						if (_floatSavedRect != null) x.WriteAttributeString("floatRect", _floatSavedRect);
+					}
 				}
 
-				if (_IsPanel) {
-					if (!_IsDocument) x.WriteAttributeString("name", _panel.name);
-				} else if (_IsTab) {
-					int i = _tab.tc.SelectedIndex;
-					if (i > 0) x.WriteAttributeString("active", i.ToString());
-				}
-
-				if (_CanFloat) {
-					if (_float.captionAt != default) x.WriteAttributeString("captionAt", _float.captionAt.ToString());
-					if (_float.dockState != default) x.WriteAttributeString("state", ((int)_float.dockState).ToString());
-					//TODO: if _IsFloating, update _float.savedRect now.
-					if (_float.savedRect != null) x.WriteAttributeString("floatRect", _float.savedRect);
-				}
-
-				if (!_IsPanel) foreach (var v in Children()) v.Save(x);
+				if (!_IsContent) foreach (var v in Children()) v.Save(x);
 
 				x.WriteEndElement();
 			}
 
-			/// <summary>_Node type.</summary>
-			enum _NType { Stack, Tab, Content }
-
-			/// <summary>_Node panel type.</summary>
-			enum _PType { None, Panel, Toolbar, Document }
-
 			bool _IsStack => _stack != null;
 			bool _IsTab => _tab != null;
-			bool _IsContent => _panel != null;
-			bool _IsPanel => _ptype == _PType.Panel;
-			bool _IsToolbar => _ptype == _PType.Toolbar;
-			bool _IsDocument => _ptype == _PType.Document;
-			bool _IsPanelOrToolbar => _ptype == _PType.Panel || _ptype == _PType.Toolbar;
-			bool _CanFloat => _float != null;
+			bool _IsContent => _panel != null; //name could be _IsPanel, but then can be confused with _IsPanelPanel
+			bool _IsPanelHost => _ptype == PanelType.Panel;
+			bool _IsToolbarHost => _ptype == PanelType.Toolbar;
+			bool _IsDocumentHost => _ptype == PanelType.Document;
+			//bool _IsPanelOrToolbarHost => _ptype == _PType.Panel || _ptype == _PType.Toolbar;
+			bool _ParentIsStack => Parent?._IsStack ?? false;
+			bool _ParentIsTab => Parent?._IsTab ?? false;
+
+			/// <summary>
+			/// true if this is toolbar or this is stack/tab containing only toolbars.
+			/// </summary>
+			bool _IsToolbarsNode => Descendants(andSelf: true).All(o => o._IsToolbarHost);
 
 			/// <summary>
 			/// Gets name of panel/toolbar/document. Else exception.
@@ -250,6 +286,33 @@ namespace Au.Controls
 			/// Gets the UI element of this node. It is Grid if this is stack, or TabControl if tab, else DockPanel.
 			/// </summary>
 			public FrameworkElement Elem => _elem;
+
+			public override string ToString() {
+				string s;
+				if (_IsContent) {
+					s = Name;
+					if (_IsToolbarHost) s = "tb " + Name;
+					return s;
+				}
+				if (Parent == null) return "Root stack";
+				var a = Descendants().Where(o => o._IsContent).ToArray();
+				s = a.Length switch
+				{
+					0 => "",
+					1 => a[0].ToString(),
+					2 => a[0].ToString() + ", " + a[1].ToString(),
+					_ => a[0].ToString() + " ... " + a[^1].ToString()
+				};
+				return (_IsTab ? "Tabs {" : "Stack {") + s + "}";
+			}
+
+			//string _ToStringWithoutTB() {
+			//	var s = ToString();
+			//	if (_IsToolbarHost) s = s[3..];
+			//	return s;
+			//}
+
+			#region IPanel
 
 			/// <summary>
 			/// Gets or sets content control of panel/toolbar/document. Else exception.
@@ -262,59 +325,58 @@ namespace Au.Controls
 				}
 			}
 
-			const int c_defaultSplitterWidth = 5;
-
 			/// <summary>
-			/// Gets or sets actual height of <see cref="_splitter"/> in vertical stack or width in horizontal stack.
+			/// true if visible, either floating or docked.
+			/// The 'get' function returns true even if inactive tab item. The 'set' function makes tab item active.
 			/// </summary>
-			int _SplitterSize {
-				get {
-					if (_splitter == null) return 0;
-					return (Parent._stack.isVertical ? _splitter.ActualHeight : _splitter.ActualWidth).ToInt();
-				}
-				set {
-					if (_splitter == null) return;
-					double d = value;
-					if (Parent._stack.isVertical) {
-						_splitter.Height = d;
-						_elem.Margin = new Thickness(0, d, 0, 0);
-					} else {
-						_splitter.Width = d;
-						_elem.Margin = new Thickness(d, 0, 0, 0);
-					}
-				}
+			public bool Visible {
+				get => _IsVisibleReally();
+				set => _SetDockState(value ? _state & ~_DockState.Hide : _DockState.Hide); //TODO: activate tab item
 			}
 
-			static Style
+			/// <summary>
+			/// Returns true if this node does not have hidden state and is not docked in hidden tab.
+			/// </summary>
+			bool _IsVisibleReally(bool useSavedState = false) {
+				var state = useSavedState ? _savedDockState : _state;
+				if (state.Has(_DockState.Hide)) return false;
+				if (state == 0 && _ParentIsTab) return Parent._IsVisibleReally(useSavedState);
+				return true;
+			}
+
+			/// <summary>
+			/// true if floating and visible.
+			/// false if docked or hidden.
+			/// </summary>
+			public bool Floating {
+				get => _state == _DockState.Float;
+				set => _SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
+			}
+			//TODO: test how when hiding tab wnen its child is floating
+
+			public event Action<bool> VisibleChanged;
+
+			#endregion
+
+			static readonly Style
 				s_styleL = WPF.XamlResources.Dictionary["TabItemVerticalLeft"] as Style,
 				s_styleR = WPF.XamlResources.Dictionary["TabItemVerticalRight"] as Style;
 
-			void _VerticalTabHeader(double height) {
-				var tc = _tab.tc;
-				var tabs = tc.Items.Cast<TabItem>();
-				bool vert2 = _tab.isVerticalHeader ? tabs.Sum(o => o.ActualHeight) <= height - 15 : tabs.Sum(o => o.ActualWidth) <= height;
-				if (vert2 == _tab.isVerticalHeader) return;
-				_tab.isVerticalHeader = vert2;
-				var dock = tc.TabStripPlacement;
-				foreach (var v in tabs) v.Style = vert2 ? (dock == Dock.Left ? s_styleL : s_styleR) : null;
-			}
-
 			void _SetCaptionAt(Dock ca, bool firstTime = false) {
-				Dock old = firstTime ? Dock.Top : _float.captionAt;
-				_float.captionAt = ca;
+				Dock old = firstTime ? Dock.Top : _captionAt;
+				_captionAt = ca;
 				if (_IsTab) {
 					var tc = _tab.tc;
 					if (ca == tc.TabStripPlacement) return;
-					bool sides = ca == Dock.Left || ca == Dock.Right;
 					if (_tab.isVerticalHeader) {
 						_tab.isVerticalHeader = false;
 						foreach (var v in tc.Items.Cast<TabItem>()) v.Style = null;
 					}
 					tc.TabStripPlacement = ca;
-					if (sides) _VerticalTabHeader(tc.ActualHeight);
+					_VerticalTabHeader();
 				} else if (_panel.caption != null) {
 					DockPanel.SetDock(_panel.caption, ca);
-					if (ca == old || !_IsPanel) return;
+					if (ca == old || !_IsPanelHost) return;
 					if (ca == Dock.Top || ca == Dock.Bottom) {
 						if (old == Dock.Left || old == Dock.Right) _panel.caption.LayoutTransform = null;
 					} else {
@@ -323,178 +385,63 @@ namespace Au.Controls
 				}
 			}
 
-			void _AddRemoveCaption() {
-				Debug.Assert(_IsPanelOrToolbar);
-				if (Parent._IsTab && !_IsFloating) {
+			void _AddRemoveCaptionAndBorder() {
+				if (!_IsContent) return;
+				if (_ParentIsTab && !_state.Has(_DockState.Float)) {
 					if (_panel.caption != null) {
 						_panel.panel.Children.Remove(_panel.caption);
 						_panel.caption = null;
+
+						_panel.panel.BorderThickness = default;
 					}
 				} else {
 					if (_panel.caption == null) {
-						if (_IsToolbar) {
-							var c = new Rectangle {
-								MinHeight = 8,
-								MinWidth = 8,
-								Fill = Brushes.Transparent //note: without Fill there are no events
-							};
-							c.MouseEnter += (_, _) => c.Fill = s_captionBrush;
-							c.MouseLeave += (_, _) => c.Fill = Brushes.Transparent;
-							_panel.caption = c;
-						} else {
+						if (_IsPanelHost) {
 							_panel.caption = new TextBlock {
 								Text = Name,
 								TextAlignment = TextAlignment.Center,
-								Padding = new Thickness(2, 1, 2, 2),
-								Background = s_captionBrush,
+								Padding = new Thickness(2, 1, 2, 3),
+								Margin = new Thickness(-0.3), //workaround for: some captions sometimes look smaller by 1 pixel, unless window background color is similar.
+								Background = _pm.CaptionBrush,
 								TextTrimming = TextTrimming.CharacterEllipsis
+							};
+						} else if (_IsToolbarHost) {
+							var c = new Rectangle {
+								MinHeight = 5,
+								MinWidth = 5,
+								Fill = s_toolbarCaptionBrush,
+								//note: without Fill there are no events
+							};
+							c.MouseEnter += (_, _) => c.Fill = _pm.CaptionBrush;
+							c.MouseLeave += (_, _) => c.Fill = s_toolbarCaptionBrush;
+							_panel.caption = c;
+						} else { //document
+							var c = new Rectangle {
+								MinHeight = 5,
+								MinWidth = 5,
+								Fill = _pm.CaptionBrush,
+							};
+							_panel.caption = c;
+
+							_panel.panel.LastChildFill = false;
+							bool hasDoc = false;
+							c.SizeChanged += (_, e) => {
+								bool has = _panel.panel.Children.Count > 1;
+								if (has != hasDoc) _panel.panel.LastChildFill = hasDoc = has;
 							};
 						}
 						_panel.panel.Children.Insert(0, _panel.caption);
-						_SetCaptionAt(_float.captionAt, true);
-						_panel.caption.ContextMenuOpening += _FloatableContextMenu;
+						_SetCaptionAt(_captionAt, true);
+						_panel.caption.ContextMenuOpening += _CaptionContextMenu;
 						_panel.caption.MouseDown += _OnMouseDown;
+
+						if (_pm.BorderBrush != null && !_IsToolbarHost) {
+							_panel.panel.BorderBrush = _pm.BorderBrush;
+							_panel.panel.BorderThickness = new Thickness(1);
+						}
 					}
 				}
 			}
-			static readonly Brush s_captionBrush = Brushes.LightSteelBlue;
-
-			void _SplitterContextMenu(object sender, ContextMenuEventArgs e) {
-				e.Handled = true;
-				var parentStack = Parent._stack;
-				var m = new AContextMenu();
-				using (m.Submenu("Splitter size")) {
-					int z = _SplitterSize;
-					for (int i = 1; i <= 10; i++) {
-						m[i.ToString()] = o => _SplitterSize = (o.Item.Header as string).ToInt();
-						if (i == z) m.LastItem.IsChecked = true;
-					}
-				}
-				_UnitSubmenu(true);
-				_UnitSubmenu(false);
-				m.IsOpen = true;
-
-				void _UnitSubmenu(bool before) {
-					var node = before ? Previous : this;
-					var unitNow = node._SizeDef.GridUnitType;
-					bool disableNonstar = unitNow == GridUnitType.Star && Parent.Children().Count(o => o._SizeDef.GridUnitType == GridUnitType.Star) < 2;
-#if true
-					m.Separator();
-					m.Add(parentStack.isVertical ? (before ? "- Height Above -" : "- Height Below -") : (before ? "- Width Left -" : "- Width Right -")).IsEnabled = false;
-#else
-					using (m.Submenu(parentStack.isVertical ? (before ? "Height above" : "Height below") : (before ? "Width left" : "Width right")))
-#endif
-					{
-						_UnitItem("Variable", GridUnitType.Star);
-						_UnitItem("Fixed", GridUnitType.Pixel);
-						_UnitItem("Auto", GridUnitType.Auto);
-					}
-
-					void _UnitItem(string text, GridUnitType unit) {
-						m[text] = o => _SetUnit(before, unit);
-						if (unit == unitNow) m.LastItem.IsChecked = true;
-						if (disableNonstar && unit != GridUnitType.Star) m.LastItem.IsEnabled = false;
-					}
-				}
-
-				void _SetUnit(bool before, GridUnitType unit) {
-					var grid = parentStack.grid;
-					int i = _indexInParent; if (before) i--;
-					if (parentStack.isVertical) {
-						var a = grid.RowDefinitions;
-						a[i].Height = new GridLength(a[i].ActualHeight, unit);
-						if (unit == GridUnitType.Star) //update other stars, else the splitter may jump
-							for (int j = 0; j < a.Count; j++)
-								if (j != i && a[j].Height.GridUnitType == GridUnitType.Star)
-									a[j].Height = new GridLength(a[j].ActualHeight, unit);
-					} else {
-						var a = grid.ColumnDefinitions;
-						a[i].Width = new GridLength(a[i].ActualWidth, unit);
-						if (unit == GridUnitType.Star)
-							for (int j = 0; j < a.Count; j++)
-								if (j != i && a[j].Width.GridUnitType == GridUnitType.Star)
-									a[j].Width = new GridLength(a[j].ActualWidth, unit);
-					}
-				}
-			}
-
-			#region row/col, size
-
-			/// <summary>
-			/// Gets actual height of _elem in vertical stack or width in horizontal stack.
-			/// </summary>
-			double _ElemSize {
-				get {
-					var stack = Parent._stack;
-					return stack.isVertical ? _elem.ActualHeight : _elem.ActualWidth;
-				}
-			}
-
-			/// <summary>
-			/// Gets defined row height/unit in vertical stack or column width/unit in horizontal stack.
-			/// </summary>
-			GridLength _SizeDef {
-				get => new _RowCol(this).SizeDef;
-				set => new _RowCol(this) { SizeDef = value };
-			}
-
-			/// <summary>
-			/// Gets actual row height in vertical stack or column width in horizontal stack.
-			/// </summary>
-			double _SizeNow => new _RowCol(this).SizeNow;
-
-			/// <summary>
-			/// Gets minimal row height in vertical stack or column width in horizontal stack.
-			/// </summary>
-			double _SizeMin {
-				get => new _RowCol(this).SizeMin;
-				set => new _RowCol(this) { SizeMin = value };
-			}
-
-			/// <summary>
-			/// Gets maximal row height in vertical stack or column width in horizontal stack.
-			/// </summary>
-			double _SizeMax {
-				get => new _RowCol(this).SizeMax;
-				set => new _RowCol(this) { SizeMax = value };
-			}
-
-			struct _RowCol
-			{
-				DefinitionBase _d;
-
-				public _RowCol(_Node node) {
-					var stack = node.Parent._stack;
-					if (stack.isVertical) _d = stack.grid.RowDefinitions[node._indexInParent];
-					else _d = stack.grid.ColumnDefinitions[node._indexInParent];
-				}
-
-				public object Def => _d;
-
-				public GridLength SizeDef {
-					get => (_d is RowDefinition rd) ? rd.Height : (_d as ColumnDefinition).Width;
-					set { if (_d is RowDefinition rd) rd.Height = value; else (_d as ColumnDefinition).Width = value; }
-				}
-
-				public double SizeNow => (_d is RowDefinition rd) ? rd.ActualHeight : (_d as ColumnDefinition).ActualWidth;
-
-				public double SizeMin {
-					get => (_d is RowDefinition rd) ? rd.MinHeight : (_d as ColumnDefinition).MinWidth;
-					set { if (_d is RowDefinition rd) rd.MinHeight = value; else (_d as ColumnDefinition).MinWidth = value; }
-				}
-
-				public double SizeMax {
-					get => (_d is RowDefinition rd) ? rd.MaxHeight : (_d as ColumnDefinition).MaxWidth;
-					set { if (_d is RowDefinition rd) rd.MaxHeight = value; else (_d as ColumnDefinition).MaxWidth = value; }
-				}
-
-				//public bool Visible {
-				//	get => SizeMax != 0;
-				//	set { SizeDef = new GridLength(SizeNow, SizeDef.GridUnitType); SizeMax = 0; }
-				//}
-			}
-
-			#endregion
 		}
 	}
 }

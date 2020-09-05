@@ -172,10 +172,10 @@ namespace Au
 						//don't change xy. Anyway we cannot cover all cases, eg changed DPI of another monitor that could affect xy of the window in this monitor.
 					}
 					if (!IsToolWindow) {
-						var v = scr.GetInfo();
-						r.Offset(v.workArea.left - v.bounds.left, v.workArea.top - v.bounds.top);
+						var v = scr.Info;
+						r.Offset(v.workArea.left - v.rect.left, v.workArea.top - v.rect.top);
 					}
-					r.EnsureInScreen(new AScreen(scr), !IsToolWindow); //SHOULDDO: use simple rect adjust. Or add EnsureInRect.
+					r.EnsureInScreen(scr, !IsToolWindow); //SHOULDDO: use simple rect adjust. Or add EnsureInRect.
 					return r;
 				}
 
@@ -213,7 +213,7 @@ namespace Au
 					if (ret) {
 						var r = v.NormalizeRect();
 						if (v.Maximize) w.WindowState = System.Windows.WindowState.Maximized;
-						w.SetRect(r); //TODO: test
+						w.SetRect(r);
 					}
 					if (save != null) {
 						w.Closing += (o, _) => save(new SavedRect(o as System.Windows.Window).ToString());

@@ -366,7 +366,7 @@ namespace Au.Controls
 				bool canDock = false;
 				DockTarget target = null;
 
-				AWnd w = (AWnd)this;
+				AWnd w = this.Hwnd();
 				RECT r = w.Rect;
 				Point offs = new Point(p.X - r.left, p.Y - r.top);
 				bool ok = ADragDrop.SimpleDragDrop(w, MButtons.Left, d =>
@@ -379,7 +379,7 @@ namespace Au.Controls
 					  if(!canDock && ModifierKeys.HasFlag(Keys.Alt)) {
 						  canDock = true;
 						  //this.AllowTransparency = true; this.Opacity = 0.5; //exception
-						  ((AWnd)this).SetTransparency(true, 128);
+						  this.Hwnd().SetTransparency(true, 128);
 						  _dockIndic = new _DockIndicator(_manager, this);
 						  _dockIndic.Show(this);
 					  }
@@ -387,7 +387,7 @@ namespace Au.Controls
 				  });
 
 				if(canDock) {
-					((AWnd)this).SetTransparency(false);
+					this.Hwnd().SetTransparency(false);
 					_dockIndic.Close();
 					if(ok) {
 						target = _dockIndic.OnFloatDropped();

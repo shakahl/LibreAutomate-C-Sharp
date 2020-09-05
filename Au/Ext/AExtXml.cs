@@ -258,11 +258,26 @@ namespace Au
 			return null;
 		}
 
+		static XContainer _Load(string file, LoadOptions options, bool doc) {
+			if (file.Starts('<')) return _Load2(file, options, doc, true);
+			file = APath.NormalizeForNET_(file);
+			return AFile.WaitIfLocked(() => _Load2(file, options, doc, false));
+
+			static XContainer _Load2(string file, LoadOptions options, bool doc, bool isString) {
+				using var r = isString ? new XmlTextReader(new StringReader(file)) : new XmlTextReader(file); //to preserve \r\n
+				if (0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant; //to save correctly formatted. Default of XElement.Load(string).
+				return doc ? (XContainer)XDocument.Load(r, options) : XElement.Load(r, options);
+			}
+		}
+
 		/// <summary>
 		/// Loads XML file in a safer way.
 		/// Uses <see cref="XElement.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
 		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <param name="file">
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.
+		/// If starts with '&lt;', loads from XML string instead.
+		/// </param>
 		/// <param name="options"></param>
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="Exception">Exceptions of <see cref="XElement.Load"/>.</exception>
@@ -270,15 +285,24 @@ namespace Au
 		/// Unlike <see cref="XElement.Load(string, LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
 		/// </remarks>
 		public static XElement LoadElem(string file, LoadOptions options = default)
-		{
-			file = APath.NormalizeForNET_(file);
-			return AFile.WaitIfLocked(() => {
-				using var r = new XmlTextReader(file); //to preserve \r\n
-				if(0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant; //to save correctly formatted. Default of XElement.Load(string).
-				return XElement.Load(r, options);
-			});
-			//tested: XElement.Load(string) uses XmlReader.Create. It replaces \r\n with \n and does not have an option to preserve \r\n.
-		}
+			=> _Load(file, options, false) as XElement;
+
+		/// <summary>
+		/// Loads XML file in a safer way.
+		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
+		/// </summary>
+		/// <param name="file">
+		/// File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.
+		/// If starts with '&lt;', loads from XML string instead.
+		/// </param>
+		/// <param name="options"></param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Load"/>.</exception>
+		/// <remarks>
+		/// Unlike <see cref="XDocument.Load(string, LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
+		/// </remarks>
+		public static XDocument LoadDoc(string file, LoadOptions options = default)
+			=> _Load(file, options, true) as XDocument;
 
 		/// <summary>
 		/// Saves XML to a file in a safer way.
@@ -290,27 +314,6 @@ namespace Au
 			AFile.Save(file, temp => {
 				if(options.HasValue) t.Save(temp, options.GetValueOrDefault()); else t.Save(temp);
 			}, backup);
-		}
-
-		/// <summary>
-		/// Loads XML file in a safer way.
-		/// Uses <see cref="XDocument.Load(XmlReader, LoadOptions)"/> and <see cref="AFile.WaitIfLocked"/>.
-		/// </summary>
-		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
-		/// <param name="options"></param>
-		/// <exception cref="ArgumentException">Not full path.</exception>
-		/// <exception cref="Exception">Exceptions of <see cref="XDocument.Load"/>.</exception>
-		/// <remarks>
-		/// Unlike <see cref="XDocument.Load(string, LoadOptions)"/>, does not replace <c>\r\n</c> with <c>\n</c>.
-		/// </remarks>
-		public static XDocument LoadDoc(string file, LoadOptions options = default)
-		{
-			file = APath.NormalizeForNET_(file);
-			return AFile.WaitIfLocked(() => {
-				using var r = new XmlTextReader(file);
-				if(0 == (options & LoadOptions.PreserveWhitespace)) r.WhitespaceHandling = WhitespaceHandling.Significant;
-				return XDocument.Load(r, options);
-			});
 		}
 
 		/// <summary>
