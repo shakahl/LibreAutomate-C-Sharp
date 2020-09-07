@@ -32,14 +32,20 @@ namespace Au.Controls
 			enum _DockState { Hide = 1, Float = 2, }
 
 			void _CaptionContextMenu(object sender, ContextMenuEventArgs e) {
-				//AOutput.Write(sender, e.Source, e.OriginalSource);
 				if (!_IsGoodMouseEvent(sender, e, out var target)) return;
 				e.Handled = true;
-				if (_IsDocumentHost && _panel.isDocumentPlaceholder) return;
-				var m = new AContextMenu();
-				_DockStateItem(_DockState.Hide, target._IsDocumentHost ? "Close" : "Hide", "M-click");
+				target._CaptionContextMenu(this);
+			}
 
-				if (_state.Has(_DockState.Float)) _DockStateItem(0, "Dock", "D-click, Alt+drag");
+			void _CaptionContextMenu(_Node thisOrParentTab) {
+				if (_IsDocument && !_leaf.addedLater) return;
+				var m = new AContextMenu();
+
+				bool canClose = _leaf?.canClose ?? false;
+				if (canClose) m.Add("Close", click: o => _UserClosing()).InputGestureText = "M-click";
+				_DockStateItem(_DockState.Hide, "Hide", canClose ? null : "M-click");
+
+				if (_state.Has(_DockState.Float)) _DockStateItem(0, "Dock", "D-click");
 				else _DockStateItem(_DockState.Float, "Float", "D-click, drag");
 
 				using (m.Submenu("Caption At")) {
@@ -48,18 +54,21 @@ namespace Au.Controls
 					_CaptionAtItem(Dock.Right);
 					_CaptionAtItem(Dock.Bottom);
 				}
-				target._ContextMenu_Move(m);
+				_ContextMenu_Move(m);
 				_ShowSubmenus();
+
+				ContextMenuOpening?.Invoke(this, m);
+
 				m.IsOpen = true;
 
 				void _DockStateItem(_DockState state, string s1, string s2) {
-					m[s1] = o => target._SetDockState(state);
+					m[s1] = o => _SetDockState(state);
 					m.LastItem.InputGestureText = s2;
 				}
 
 				void _CaptionAtItem(Dock ca) {
-					m[ca.ToString()] = o => _SetCaptionAt(ca);
-					if (ca == _captionAt) m.LastItem.IsChecked = true;
+					m[ca.ToString()] = o => thisOrParentTab._SetCaptionAt(ca);
+					if (ca == thisOrParentTab._captionAt) m.LastItem.IsChecked = true;
 				}
 
 				void _ShowSubmenus() {
@@ -72,35 +81,60 @@ namespace Au.Controls
 					if (a.Count == 0) return;
 					m.Separator();
 					a.Sort((x, y) => {
-						if (x._IsToolbarHost && !y._IsToolbarHost) return -1;
-						if (y._IsToolbarHost && !x._IsToolbarHost) return 1;
+						if (x._IsToolbar && !y._IsToolbar) return -1;
+						if (y._IsToolbar && !x._IsToolbar) return 1;
 						return string.Compare(x.ToString(), y.ToString(), true);
 					});
 					using (m.Submenu("Show")) {
 						int i = 0;
 						foreach (var v in a) {
-							if (i > 0 && a[i - 1]._IsToolbarHost != a[i]._IsToolbarHost) m.Separator();
+							if (i > 0 && a[i - 1]._IsToolbar != a[i]._IsToolbar) m.Separator();
 							i++;
-							m[v.ToString()] = o => v._SetDockState(v._state & ~_DockState.Hide);
+							m[v.ToString()] = o => v._Unhide();
 						}
 #if DEBUG
 						if (a.Count > 1) {
 							m.Separator();
 							m["Show All (debug)"] = _ => {
-								foreach (var v in a) v._SetDockState(v._state & ~_DockState.Hide);
+								foreach (var v in a) v._Unhide();
 							};
 						}
 #endif
 					}
 				}
+#if DEBUG
+				//SHOULDDO: floating windows used to start black/white sometimes. Now cannot reproduce. Maybe need to auto-redraw float after opening, eg use timer.
+				//Also sometimes used to draw a horz scrollbar in WPF area of main window. Probably of Scintilla. I guess it is now fixed: removed WS_VISIBLE and size in CreateWindow call in SciHost.
+				m.Separator();
+				using (m.Submenu("Debug")) {
+					m["Invalidate window"] = _ => _Invalidate(_pm._ContainerWindow);
+					m["Invalidate floats"] = _ => {
+						foreach (var v in RootAncestor.Descendants()) {
+							if (v._floatWindow != null) _Invalidate(v._floatWindow);
+						}
+					};
+					m.Add("Toggle ScrollLock if does not work").IsEnabled = false;
+				}
+
+				void _Invalidate(Window w) {
+					//if (AKeys.IsScrollLock) Api.InvalidateRect(w.Hwnd(), IntPtr.Zero, true); //works
+					////else w.UpdateLayout(); //no
+					//else w.InvalidateVisual(); //no
+
+					Api.InvalidateRect(w.Hwnd(), IntPtr.Zero, AKeys.IsScrollLock);
+				}
+#endif
 			}
 
 			protected private void _OnMouseDown(object sender, MouseButtonEventArgs e) {
 				switch (e.ChangedButton) { case MouseButton.Left: case MouseButton.Middle: break; default: return; }
-				if (!_IsGoodMouseEvent(sender, e, out var target)) return;
-				if (target._IsStack) {
+				if (_IsGoodMouseEvent(sender, e, out var target)) target._OnMouseDown(e);
+			}
+
+			void _OnMouseDown(MouseButtonEventArgs e) {
+				if (_IsStack) {
 					if (!(e.ChangedButton == MouseButton.Left && e.ClickCount == 1 && Keyboard.Modifiers == ModifierKeys.Alt)) return;
-					if (target.Parent == null) { e.Handled = true; return; }
+					if (Parent == null) { e.Handled = true; return; }
 				}
 				e.Handled = true;
 				if (e.ChangedButton == MouseButton.Left) {
@@ -109,16 +143,16 @@ namespace Au.Controls
 						ATimer.After(1, _ => { //Dispatcher.InvokeAsync does not work
 							POINT p = AMouse.XY;
 							if (Api.DragDetect(_elem.Hwnd(), p)) {
-								target._SetDockState(_DockState.Float, onDrag: true);
-								target._floatWindow?.Drag(p);
+								_SetDockState(_DockState.Float, onDrag: true);
+								_floatWindow?.Drag(p);
 							}
 						});
 					} else if (e.ClickCount == 2) {
-						target._SetDockState(target._state ^ _DockState.Float);
+						_SetDockState(_state ^ _DockState.Float);
 					}
 				} else {
-					//TODO: if document, close. Or let the app on event close it. The same from menu. Let _SetDockState do it.
-					target._SetDockState(_DockState.Hide);
+					if (_leaf?.canClose ?? false) _UserClosing();
+					else _Hide();
 				}
 			}
 
@@ -130,10 +164,24 @@ namespace Au.Controls
 				return true;
 			}
 
+			void _UserClosing() {
+				if (Closing != null) {
+					var e = new CancelEventArgs();
+					Closing(this, e);
+					if (e.Cancel) return;
+				}
+				Delete();
+			}
+
+			void _Hide() => _SetDockState(_DockState.Hide);
+			void _Unhide() => _SetDockState(_state & ~_DockState.Hide);
+
 			void _SetDockState(_DockState state, bool onDrag = false) {
 				if (state == _DockState.Hide) state |= _state & _DockState.Float;
-				//AOutput.Write(this, state);//TODO
-				if (state == _state) return;
+				if (state == _state) {
+					if (state == 0 && Parent._state.Has(_DockState.Hide)) Parent._Unhide(); //in hidden tab
+					return;
+				}
 
 				var oldState = _state;
 				_state = state;
@@ -164,54 +212,57 @@ namespace Au.Controls
 					}
 				}
 
-				if ((state ^ oldState).Has(_DockState.Hide)) VisibleChanged?.Invoke(oldState.Has(_DockState.Hide));
+				if ((state ^ oldState).Has(_DockState.Hide)) VisibleChanged?.Invoke(this, oldState.Has(_DockState.Hide));
 			}
-			//TODO: redraw grid and float. WPF sometimes does not draw correctly.
 
 			void _ContextMenu_Move(AContextMenu m) {
 				using (m.Submenu("Move To")) {
 					string sThis = ToString();
 					foreach (var target in RootAncestor.Descendants(andSelf: true)) {
-						if (target._ParentIsTab) continue;
+						bool targetInTab = target._ParentIsTab;
+						if (targetInTab) {
+							if (!_IsLeaf || target._IsDocument != _IsDocument) continue;
+						} else if (_IsDocument && _ParentIsTab) {
+							//allow only beside parent tab or in/besides another document or doc tab. Elsewhere probably not useful, just adds many menu items.
+							if (target != Parent && !target._IsDocumentsNode) continue;
+						}
 						if (target.Ancestors(andSelf: true).Contains(this)) continue;
-						if (_IsDocumentHost && !_panel.isDocumentPlaceholder) { //TODO: test, maybe add more filters
-							if (!target._IsDocumentHost) continue;
-						}
-						if (target._IsDocumentHost && !target._panel.isDocumentPlaceholder) { //TODO: test, maybe add more filters
-							if (!_IsDocumentHost) continue;
-						}
+
 						string sTarget = target.ToString();
 						using (m.Submenu(new string(' ', target.Level * 4) + sTarget + (target._state switch { 0 => null, _DockState.Float => " (floating)", _ => " (hidden)" }))) {
-							if (target._IsStack || (target._IsTab && _IsContent)) {
-								int i = 0;
-								foreach (var u in target.Children()) {
-									m[i++ == 0 ? "First" : ($"Before '{u.ToString()}'")] = o => _MoveTo(u, _HowToMove.BeforeTarget);
+							bool sep = false;
+							//this would be duplicate of before/after
+							//if (target._IsStack || (target._IsTab && _IsLeaf && (target.FirstChild?._IsDocument ?? false) == _IsDocument)) {
+							//	int i = 0;
+							//	foreach (var u in target.Children()) {
+							//		m[i++ == 0 ? "First" : ($"Before '{u}'")] = o => _MoveTo(u, _HowToMove.BeforeTarget);
+							//	}
+							//	m["Last"] = o => _MoveTo(target.LastChild, _HowToMove.AfterTarget);
+							//	sep = true;
+							//}
+							if (target.Parent != null) {
+								//if (sep) m.Separator();
+								if (target.Previous != this) m[$"Before '{sTarget}'"] = o => _MoveTo(target, _HowToMove.BeforeTarget);
+								if (target.Next != this) m[$"After '{sTarget}'"] = o => _MoveTo(target, _HowToMove.AfterTarget);
+								sep = true;
+							}
+							if (!targetInTab) {
+								if (sep) m.Separator();
+								if (target._IsLeaf && _IsLeaf && target._IsDocument == _IsDocument) {
+									m.Add($"Create tabs and add '{sThis}' as:").IsEnabled = false;
+									m[$"- First tab (before '{sTarget}')"] = o => _MoveTo(target, _HowToMove.FirstInNewTab);
+									m[$"- Last tab (after '{sTarget}')"] = o => _MoveTo(target, _HowToMove.LastInNewTab);
+									m.Separator();
 								}
-								m["Last"] = o => _MoveTo(target.LastChild, _HowToMove.AfterTarget);
-								m.Separator();
+								m.Add($"Create stack and add '{sThis}' at:").IsEnabled = false;
+								m["- Left"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Left);
+								m["- Right"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Right);
+								m["- Top"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Top);
+								m["- Bottom"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Bottom);
 							}
-							if (target._ParentIsStack /*|| (v._ParentIsTab && _IsContent)*/) {
-								m[$"Before '{sTarget}'"] = o => _MoveTo(target, _HowToMove.BeforeTarget);
-								m[$"After '{sTarget}'"] = o => _MoveTo(target, _HowToMove.AfterTarget);
-								m.Separator();
-							}
-							if (target._IsContent && _IsContent) {
-								m.Add($"Create tabs and add '{sThis}' as:").IsEnabled = false;
-								m[$"- First tab (before '{sTarget}')"] = o => _MoveTo(target, _HowToMove.FirstInNewTab);
-								m[$"- Last tab (after '{sTarget}')"] = o => _MoveTo(target, _HowToMove.LastInNewTab);
-								m.Separator();
-							}
-							m.Add($"Create stack and add '{sThis}' at:").IsEnabled = false;
-							m["- Left"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Left);
-							m["- Right"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Right);
-							m["- Top"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Top);
-							m["- Bottom"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Bottom);
 						}
 					}
 				}
-				//#if DEBUG
-				//				m["Debug test move"] = o => _MoveTo(RootAncestor, _HowToMove.NewStack, Dock.Bottom);
-				//#endif
 			}
 
 			enum _HowToMove
@@ -225,13 +276,20 @@ namespace Au.Controls
 
 			void _MoveTo(_Node target, _HowToMove how, Dock dock = default) {
 				if (target == this) return;
+				bool beforeAfter = how <= _HowToMove.AfterTarget;
 				if (_state != 0) _SetDockState(0);
-				if (target._state != 0 && how >= _HowToMove.FirstInNewTab) target._SetDockState(0);
+				if (target._state != 0 && !beforeAfter) target._SetDockState(0);
 
 				bool after = how == _HowToMove.AfterTarget;
 				var targetParent = target.Parent;
 				var oldParent = Parent;
-				_RemoveFromParent();
+
+				if (beforeAfter && targetParent == oldParent && oldParent._IsTab) { //just reorder buttons
+					_ReorderInTab(target, after);
+					return;
+				}
+
+				_RemoveFromParentWhenMovingOrDeleting();
 
 				switch (how) {
 				case _HowToMove.NewStack:
@@ -241,7 +299,6 @@ namespace Au.Controls
 					break;
 				case _HowToMove.FirstInNewTab:
 				case _HowToMove.LastInNewTab:
-					var sp = target._splitter;
 					targetParent = new _Node(target, isTab: true);
 					target._AddToTab(moving: false);
 					after = how == _HowToMove.LastInNewTab;
@@ -249,16 +306,7 @@ namespace Au.Controls
 					//default: //before/after target in parent stack or tab
 				}
 
-				target.AddSibling(this, after);
-				_index = target._index + (after ? 1 : 0);
-				if (targetParent._IsTab) {
-					_AddToTab(moving: true);
-					_AddRemoveCaptionAndBorder();
-					targetParent._tab.tc.SelectedIndex = _index;
-				} else {
-					if (_dockedSize.IsAuto && !_IsToolbarsNode) _dockedSize = new GridLength(100, GridUnitType.Star);
-					_AddToStack(moving: true, c_defaultSplitterSize);
-				}
+				_AddToParentWhenMovingOrAddingLater(target, after);
 
 #if false //debug print
 				int i = 0;
@@ -272,32 +320,53 @@ namespace Au.Controls
 				}
 #endif
 
-				int n = oldParent.Count;
-				if (n == 0) {
-					oldParent._RemoveFromParent();
-				} else if (n == 1) {
-					oldParent.FirstChild._MoveTo(oldParent, _HowToMove.BeforeTarget);
-				} else if (oldParent._IsTab && Parent != oldParent) {
-					oldParent._VerticalTabHeader(onMove: true);
-				}
-
-				//TODO: if fixed size>0.8 of stack size, make star.
-
-				//TODO: support only document placeholder(s). For real documents use nested AuPanels or simple TabControl.
+				_RemoveParentIfNeedAfterMovingOrDeleting(oldParent);
 			}
 
-			void _RemoveFromParent() {
+			void _AddToParentWhenMovingOrAddingLater(_Node target, bool after) {
+				target.AddSibling(this, after);
+				_index = target._index + (after ? 1 : 0);
+				if (_ParentIsTab) {
+					_AddToTab(moving: true);
+					_AddRemoveCaptionAndBorder();
+					//if(select) Parent._tab.tc.SelectedIndex = _index;
+				} else {
+					if (!(_dockedSize.IsAuto && _IsToolbarsNode)) _dockedSize = new GridLength(100, GridUnitType.Star);
+					if (Parent.Count == 2) target._SizeDef = target._dockedSize = new GridLength(100, GridUnitType.Star);
+
+					_AddToStack(moving: true, c_defaultSplitterSize);
+				}
+			}
+
+			void _RemoveFromParentWhenMovingOrDeleting() {
 				if (Parent._IsStack) {
 					_RemoveGridRowCol(_elem);
 					_RemoveSplitter();
 					if (_index == 0) Next?._RemoveSplitter();
 				} else {
-					var ti = _elem.Parent as TabItem;
-					ti.Content = null;
-					Parent._tab.tc.Items.Remove(ti);
+					if (_elem.Parent is TabItem ti) { //null if hidden or floating
+						ti.Content = null;
+						Parent._tab.tc.Items.Remove(ti);
+					}
 				}
 				_ShiftSiblingIndices(-1);
 				Remove();
+			}
+
+			void _RemoveParentIfNeedAfterMovingOrDeleting(_Node oldParent) {
+				bool isDoc = _IsDocument;
+				int n = oldParent.Count;
+				if (n == 0) {
+					oldParent._RemoveFromParentWhenMovingOrDeleting();
+				} else if (n == 1) {
+					if (!isDoc) oldParent.FirstChild._MoveTo(oldParent, _HowToMove.BeforeTarget);
+				} else if (oldParent._IsTab && Parent != oldParent) {
+					oldParent._VerticalTabHeader(onMove: true);
+				}
+			}
+
+			void _ShiftSiblingIndices(int n) {
+				for (var v = this; (v = v.Next) != null;) v._index += n;
 			}
 		}
 	}

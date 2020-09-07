@@ -40,10 +40,17 @@ namespace Au.Controls
 		#region HwndHost
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
-			_w = AWnd.More.CreateWindow("Scintilla", null, WS.CHILD | WS.VISIBLE, 0, 0, 0, 200, 100, (AWnd)hwndParent.Handle);
+			_w = AWnd.More.CreateWindow("Scintilla", null, WS.CHILD, 0, 0, 0, 0, 0, (AWnd)hwndParent.Handle);
+			//note: no WS_VISIBLE, no initial size. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area.
 
 			_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
+
+			//var v = (IKeyboardInputSink)this;
+			//AOutput.Write(v.);
+
+			var wpf = (Window)HwndSource.FromHwnd(hwndParent.Handle).RootVisual;
+			if (this == FocusManager.GetFocusedElement(wpf)) Api.SetFocus(_w);
 
 			return new HandleRef(this, _w.Handle);
 		}
@@ -70,6 +77,20 @@ namespace Au.Controls
 				return true;
 			}
 			return base.TranslateAcceleratorCore(ref msg, modifiers);
+		}
+
+		//Sets focus when tabbed to this or when clicked the parent tab item. Like eg WPF TextBox.
+		protected override bool TabIntoCore(TraversalRequest request) {
+			if (!base.Focusable) return false;
+			Focus();
+			return true;
+			//base.TabIntoCore(request); //empty func, returns false
+		}
+
+		//Makes _w focused when Focus() called.
+		protected override void OnGotFocus(RoutedEventArgs e) {
+			Api.SetFocus(_w);
+			base.OnGotFocus(e);
 		}
 
 		#endregion

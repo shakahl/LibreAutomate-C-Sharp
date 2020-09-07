@@ -28,6 +28,10 @@ namespace Au.Controls
 	{
 		partial class _Node
 		{
+			static readonly Style
+				s_styleTabLeft = WPF.XamlResources.Dictionary["TabItemVerticalLeft"] as Style,
+				s_tyleTabRight = WPF.XamlResources.Dictionary["TabItemVerticalRight"] as Style;
+
 			void _InitTabControl() {
 				var tc = _tab.tc;
 				tc.Padding = default;
@@ -49,32 +53,23 @@ namespace Au.Controls
 				if (height < 0) height = tc.ActualHeight;
 				var tabs = tc.Items.Cast<TabItem>();
 
-				//APerf.First();
-				var d = _CalcHeight();
-				//APerf.NW();
-				//AOutput.Write(d, height);
+				var d = _CalcHeight(); //not too slow
 				bool vert2 = d < height - 10;
 				if (vert2 == _tab.isVerticalHeader && !onMove) return;
 				_tab.isVerticalHeader = vert2;
 				var dock = tc.TabStripPlacement;
-				foreach (var v in tabs) v.Style = vert2 ? (dock == Dock.Left ? s_styleL : s_styleR) : null;
-
-				//if (vert2) foreach (var v in tabs) v.Height = 50;
+				foreach (var v in tabs) v.Style = vert2 ? (dock == Dock.Left ? s_styleTabLeft : s_tyleTabRight) : null;
 
 				double _CalcHeight() {
 					var cult = CultureInfo.InvariantCulture;
 					var fdir = tc.FlowDirection;
-					//AOutput.Write(tc.FontFamily.FamilyTypefaces);
-					//var ffam = tc.FontFamily.FamilyTypefaces[0];
 					var font = new Typeface(tc.FontFamily, tc.FontStyle, tc.FontWeight, tc.FontStretch);
 					var fsize = tc.FontSize;
 					var brush = SystemColors.ControlTextBrush;
 					//var ppd = VisualTreeHelper.GetDpi(tc).PixelsPerDip; AOutput.Write(ppd); //ignored, and we don't need it
-					//APerf.Next();
 					double r = 4;
 					foreach (var v in tabs) {
 						var f = new FormattedText(v.Header.ToString(), cult, fdir, font, fsize, brush, 1);
-						//AOutput.Write(f.Width + 11);
 						r += f.Width + 11;
 					}
 					return r;
@@ -86,9 +81,8 @@ namespace Au.Controls
 			/// Caller before must call AddChild (or AddSibling) and set _index.
 			/// </summary>
 			void _AddToTab(bool moving) {
-				_panel.ti = new TabItem { Header = _panel.name, Content = _elem, Tag = this };
-				var tc = Parent._tab.tc;
-				tc.Items.Insert(_index, _panel.ti);
+				var ti = new TabItem { Header = _leaf.name, Content = _elem, Tag = this };
+				Parent._tab.tc.Items.Insert(_index, ti);
 				if (moving) {
 					_ShiftSiblingIndices(1);
 					Parent._VerticalTabHeader(onMove: true);
@@ -99,16 +93,16 @@ namespace Au.Controls
 				var tc = Parent._tab.tc;
 				var ti = tc.Items[_index] as TabItem;
 				if (!show) {
-					if (ti == tc.SelectedItem) {
-						var a = tc.Items.OfType<TabItem>().Where(o => o.IsVisible).ToArray();
-						if (a.Length > 1) {
+					var a = tc.Items.OfType<TabItem>().Where(o => o.IsVisible).ToArray();
+					if (a.Length > 1) {
+						if (ti == tc.SelectedItem) {
 							int i = Array.IndexOf(a, ti);
 							if (++i == a.Length) i -= 2;
 							tc.SelectedItem = a[i];
-						} else if (!_IsDocumentHost) {
-							if (Parent._state == _DockState.Float) Parent._SetDockState(_DockState.Hide);
-							else Parent._ShowHideInStack(show);
 						}
+					} else if (!_IsDocument) {
+						if (Parent._state == _DockState.Float) Parent._Hide();
+						else if (!Parent._state.Has(_DockState.Hide)) Parent._ShowHideInStack(show);
 					}
 					ti.Visibility = Visibility.Collapsed;
 					ti.Content = null;
@@ -122,6 +116,19 @@ namespace Au.Controls
 					ti.Visibility = Visibility.Visible;
 					tc.SelectedItem = ti;
 				}
+			}
+
+			void _ReorderInTab(_Node target, bool after) {
+				if (target == this || (after && target.Next == this) || (!after && target.Previous == this)) return;
+				Remove(); target.AddSibling(this, after);
+				int index = 0; foreach (var v in Parent.Children()) v._index = index++;
+				//to avoid auto-selecting next item when removed active item, we remove all inactive items and then add in new order.
+				var tc = Parent._tab.tc;
+				var sel = tc.SelectedItem;
+				var a = tc.Items.OfType<TabItem>().ToArray();
+				for (int i = a.Length; --i >= 0;) if (a[i] != sel) tc.Items.RemoveAt(i);
+				Array.Sort(a, (x, y) => (x.Tag as _Node)._index - (y.Tag as _Node)._index);
+				for (int i = 0; i < a.Length; i++) if (a[i] != sel) tc.Items.Insert(i, a[i]);
 			}
 
 			static _Node _NodeFromTabItem(TabItem ti) => ti.Tag as _Node;

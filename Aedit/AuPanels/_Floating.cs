@@ -137,7 +137,7 @@ namespace Au.Controls
 							} else if (!_node._IsStack) { //activate if clicked not panel caption and not tab header
 								FrameworkElement e;
 								if (_node._IsTab) e = (_node._tab.tc.SelectedItem as TabItem)?.Content as FrameworkElement;
-								else e = _node._panel.content;
+								else e = _node._leaf.content;
 								no = e != null && !e.RectInScreen().Contains(AMouse.XY);
 							}
 						}
@@ -154,10 +154,11 @@ namespace Au.Controls
 					return default;
 				}
 
-				public _DockTarget Drag(POINT p) {
+				//Currently supports only moving but not docking. Docking is implemented in _ContextMenu_Move+_MoveTo.
+				public void Drag(POINT p) {
 
-					bool canDock = false;
-					_DockTarget target = null;
+					//bool canDock = false;
+					//_DockTarget target = null;
 					var w = this.Hwnd();
 					RECT r = w.Rect;
 					POINT offs = (p.x - r.left, p.y - r.top);
@@ -167,13 +168,13 @@ namespace Au.Controls
 						p = AMouse.XY;
 						w.MoveLL(p.x - offs.x, p.y - offs.y);
 
-						if (!canDock && AKeys.UI.IsAlt) {
-							canDock = true;
-							//w.SetTransparency(true, 128);
-							//_dockIndic = new _DockIndicator(_manager, this);
-							//_dockIndic.Show(this);
-						}
-						//if (canDock) _dockIndic.OnFloatMoved(_manager.PointToClient(p));
+						//if (!canDock && AKeys.UI.IsAlt) {
+						//	canDock = true;
+						//	//w.SetTransparency(true, 128);
+						//	//_dockIndic = new _DockIndicator(_manager, this);
+						//	//_dockIndic.Show(this);
+						//}
+						////if (canDock) _dockIndic.OnFloatMoved(_manager.PointToClient(p));
 					});
 
 					//if (canDock) {
@@ -185,17 +186,17 @@ namespace Au.Controls
 					//	_dockIndic = null;
 					//}
 
-					return target;
+					//return target;
 				}
 			}
 
-			class _DockTarget
-			{
-				public _Node node;
-				public Dock dock;
-				//public bool tabAfter;
-				public TabItem tabItem;
-			}
+			//class _DockTarget
+			//{
+			//	public _Node node;
+			//	public Dock dock;
+			//	//public bool tabAfter;
+			//	public TabItem tabItem;
+			//}
 
 		}
 	}

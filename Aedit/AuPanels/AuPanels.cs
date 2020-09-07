@@ -24,21 +24,22 @@ namespace Au.Controls
 {
 	/// <summary>
 	/// Creates and manages window layout like in Visual Studio.
-	/// Multiple docked movable/sizable/tabable/floatable/hidable/savable panels with splitters where you can add controls and toolbars.
+	/// Multiple docked movable/sizable/tabable/floatable/hidable/savable panels/toolbars/documents with splitters.
 	/// </summary>
 	/// <remarks>
 	/// Layout is defined in default XML file, then saved in other XML file. See Layout.xml in Aedit project.
-	/// If new app version adds/removes/renames panels/toolbars, this class automatically updates the saved layout.
+	/// If new app version adds/removes/renames panels etc, this class automatically updates the saved layout.
 	/// 
 	/// Let your window's ctor:
 	/// - call <see cref="Load"/>;
-	/// - set content of all panels/toolbars like <c>_panels["Files"].Content = new TreeView();</c>;
+	/// - set content of all leaf items (panels, toolbars, document placeholder) like <c>_panels["Files"].Content = new TreeView();</c>;
 	/// - set <see cref="Container"/> like <c>_panels.Container = g => this.Content = g;</c>. The action is called immediately and also may be called later if need to create new root element when moving a panel etc.
 	/// If want to save user-customized layout, call <see cref="Save"/> when closing window or at any time before it.
 	/// </remarks>
 	public partial class AuPanels
 	{
-		readonly Dictionary<string, _Node> _dictContent = new();
+		readonly Dictionary<string, _Node> _dictLeaf = new();
+		readonly Dictionary<string, _Node> _dictUserDoc = new();
 		_Node _rootStack;
 		string _xmlFile;
 		bool _loaded;
@@ -78,7 +79,7 @@ namespace Au.Controls
 				} else {
 					AWarning.Write(sErr, -1);
 				}
-				_dictContent.Clear(); _rootStack = null;
+				_dictLeaf.Clear(); _rootStack = null;
 				useDefaultXML = true; goto gRetry;
 			}
 		}
@@ -115,7 +116,7 @@ namespace Au.Controls
 		//}
 
 		/// <summary>
-		/// Action that adds the root panel (Grid) to a container (for example Window), like <c>_panels.Container = g => this.Content = g;</c>.
+		/// Action that adds the root node (Grid) to a container (for example Window), like <c>_panels.Container = g => this.Content = g;</c>.
 		/// The action is called immediately and also may be called later if need to create new root element when moving a panel etc.
 		/// </summary>
 		public Action<Grid> Container {
@@ -130,9 +131,15 @@ namespace Au.Controls
 
 		//public Grid RootElem => _rootStack.Elem as Grid;
 
-		public IPanel this[string name] => _dictContent[name];
+		/// <summary>
+		/// Gets interface of a leaf item (panel, toolbar or document).
+		/// </summary>
+		/// <param name="name"></param>
+		/// <param name="userDocument">It is a document (not panel/toolbar) added with <see cref="ILeaf.AddSibling"/>. User documents are in a separate dictionary, to avoid name conflicts.</param>
+		/// <exception cref="KeyNotFoundException"></exception>
+		public ILeaf this[string name, bool userDocument = false] => (userDocument ? _dictUserDoc : _dictLeaf)[name];
 
-		//rejected. Rarely used. Can set in 
+		//rejected. Rarely used. Can set in Container action.
 		///// <summary>
 		///// Background brush of the root grid.
 		///// Set before <see cref="Load"/>.
@@ -143,7 +150,7 @@ namespace Au.Controls
 		//}
 
 		/// <summary>
-		/// Background brush of panel captions. Default Brushes.LightSteelBlue.
+		/// Background brush of panel/document/tab captions. Default Brushes.LightSteelBlue.
 		/// Set before <see cref="Load"/>.
 		/// </summary>
 		public Brush CaptionBrush { get; set; } = Brushes.LightSteelBlue;
@@ -155,7 +162,7 @@ namespace Au.Controls
 		public Brush SplitterBrush { get; set; }
 
 		/// <summary>
-		/// Border color of panels, except toolbars.
+		/// Border color of panels and documents.
 		/// Set before <see cref="Load"/>.
 		/// If not set, no borders will be added.
 		/// </summary>
@@ -214,24 +221,25 @@ namespace Au.Controls
 			//fast, same as with XName _name.
 		}
 
-		public interface IPanel
+		/// <summary>
+		/// Interface for a leaf item (panel, toolbar or document).
+		/// </summary>
+		public interface ILeaf
 		{
 			FrameworkElement Content { get; set; }
+			//DockPanel Panel { get; }
 			bool Visible { get; set; }
 			bool Floating { get; set; }
+			ILeaf AddSibling(bool after, LeafType type, string name, bool canClose);
+			void Delete();
+			void Rename(string name);
 
-			event Action<bool> VisibleChanged;
+			event EventHandler<bool> VisibleChanged;
+			event CancelEventHandler Closing;
+			event EventHandler<AContextMenu> ContextMenuOpening;
 		}
 
-		/// <summary>Content panel type.</summary>
-		public enum PanelType { None, Panel, Toolbar, Document }
-
-		//IPanel AddDocument(string name) {
-		//	return null;
-		//}
-
-		//void RemoveDocument(IPanel document) {
-
-		//}
+		/// <summary>Leaf item type.</summary>
+		public enum LeafType { None, Panel, Toolbar, Document }
 	}
 }

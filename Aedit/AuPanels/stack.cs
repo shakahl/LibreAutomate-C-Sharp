@@ -95,7 +95,7 @@ namespace Au.Controls
 			/// Does not add/remove tree nodes.
 			/// </summary>
 			void _ReplaceInStack(_Node target) {
-				if(target._splitter != null) {
+				if (target._splitter != null) {
 					target._SetSplitterEvents(false);
 					_splitter = target._splitter; target._splitter = null;
 					_SetSplitterEvents(true);
@@ -136,7 +136,7 @@ namespace Au.Controls
 
 					a.Remove(this);
 					if (a.Count == 0) {
-						if (Parent._state == _DockState.Float) Parent._SetDockState(_DockState.Hide);
+						if (Parent._state == _DockState.Float) Parent._Hide();
 						else Parent._ShowHideInStack(show);
 					} else if (_dockedSize.IsStar && !a.Any(o => o._SizeDef.IsStar)) { //if hiding last star-sized, make the last visible fixed node star-sized
 						a.LastOrDefault(o => o._SizeDef.IsAbsolute)?._ChangeSizeUnit(GridUnitType.Star, false);
@@ -257,8 +257,7 @@ namespace Au.Controls
 					using (m.Submenu("Stack")) {
 						bool isFloating = Parent._state.Has(_DockState.Float);
 						m[isFloating ? "Dock" : "Float"] = o => Parent._SetDockState(isFloating ? 0 : _DockState.Float);
-						m.LastItem.InputGestureText = "Alt+drag";
-						//m[vert ? "Horizontal" : "Vertical"]=o=> ...
+						if (!isFloating) m.LastItem.InputGestureText = "Alt+drag";
 						Parent._ContextMenu_Move(m);
 					}
 				}
@@ -291,7 +290,7 @@ namespace Au.Controls
 
 			#region row/col, size
 
-			//void _NormalizeChildStars(bool percent) {//TODO: remove if unused
+			//void _NormalizeChildStars(bool percent) {//FUTURE: remove if unused. Not sure it is finished.
 			//	var e = Children();
 			//	double sizeOfStars = percent ? e.Sum(v => !v._dockedSize.IsStar ? 0 : v._SizeNowDockedOrNot) : 0;
 			//	foreach (var v in e) {
@@ -325,10 +324,10 @@ namespace Au.Controls
 				//}
 			}
 
-			/// <summary>
-			/// Gets GridLength with actual row height in vertical stack or column width in horizontal stack.
-			/// </summary>
-			GridLength _SizeDefNow => new _RowCol(this).SizeDefNow;
+			///// <summary>
+			///// Gets GridLength with actual row height in vertical stack or column width in horizontal stack.
+			///// </summary>
+			//GridLength _SizeDefNow => new _RowCol(this).SizeDefNow;
 
 			/// <summary>
 			/// Gets or sets minimal row height in vertical stack or column width in horizontal stack.
@@ -391,11 +390,22 @@ namespace Au.Controls
 				}
 
 				public GridLength ChangeUnit(GridUnitType unit) { var r = new GridLength(SizeNow, unit); SizeDef = r; return r; }
+			}
 
-				//public bool Visible {
-				//	get => SizeMax != 0;
-				//	set { SizeDef = new GridLength(SizeNow, SizeDef.GridUnitType); SizeMax = 0; }
-				//}
+			static GridLength _GridLengthFromString(string s) {
+				double w = 0; var u = GridUnitType.Star;
+				if (s == null) u = GridUnitType.Auto;
+				else if (s.Ends("*")) w = s.Length > 1 ? s.ToNumber(..^1) : 1.0;
+				else { w = s.ToNumber(); u = GridUnitType.Pixel; }
+				return new GridLength(w, u);
+				//also tested GridLengthConverter
+			}
+
+			static string _GridLengthToString(GridLength k) {
+				if (k.IsAuto) return null;
+				var s = Math.Round(k.Value, 10).ToStringInvariant();
+				return k.IsStar ? s + "*" : s;
+				//GridLength.ToString is almost same, but: for Auto returns "Auto"; can return long string like "425.79999999999995" instead of "425.8".
 			}
 
 			#endregion

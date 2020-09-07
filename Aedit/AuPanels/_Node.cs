@@ -19,21 +19,20 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Shapes;
-using Au.Controls.WPF;
 
 namespace Au.Controls
 {
 	public partial class AuPanels
 	{
-		partial class _Node : ATreeBase<_Node>, IPanel
+		partial class _Node : ATreeBase<_Node>, ILeaf
 		{
 			readonly AuPanels _pm;
 			readonly _StackFields _stack;
 			readonly _TabFields _tab;
-			readonly _PanelFields _panel;
-			readonly FrameworkElement _elem; //_stack.grid or _tab.tc or _panel.panel
-			GridSplitter2 _splitter; //null if in tab or first in stack
-			readonly PanelType _ptype;
+			readonly _LeafFields _leaf;
+			readonly FrameworkElement _elem; //_stack.grid or _tab.tc or _leaf.panel
+			GridSplitter2 _splitter; //splitter before this node in stack. null if in tab or first in stack
+			readonly LeafType _leafType;
 			int _index; //index in parent stack or tab. Grid row/column index is _index*2, because at _index*2-1 is splitter if _index>0.
 			GridLength _dockedSize;
 			Dock _captionAt;
@@ -49,23 +48,23 @@ namespace Au.Controls
 			class _StackFields
 			{
 				public Grid grid;
-				public bool isVertical;
+				public bool isVertical; //vertical stack with horizontal splitters
 			}
 
 			class _TabFields
 			{
 				public TabControl tc;
-				public bool isVerticalHeader;
+				public bool isVerticalHeader; //vertical buttons at left/right
 			}
 
-			class _PanelFields
+			class _LeafFields
 			{
 				public _DockPanelWithBorder panel;
-				public FrameworkElement content; //app sets it = any control
-				public FrameworkElement caption; //TextBlock if panel not in tab, Rectangle if toolbar/document not in tab, else null
+				public FrameworkElement content; //app sets it = any element
+				public FrameworkElement caption; //TextBlock if panel/userdocument, Rectangle if toolbar/documentplaceholder. null if in tab.
 				public string name; //used by the indexer to find it, also as caption/tabitem text
-				public TabItem ti;
-				public bool isDocumentPlaceholder;
+				public bool addedLater; //added with AddSibling
+				public bool canClose; //AddSibling(canClose). Adds context menu item "Close".
 			}
 
 			[Flags]
@@ -104,26 +103,25 @@ namespace Au.Controls
 				case "panel":
 				case "toolbar":
 				case "document":
-					_panel = new();
-					_elem = _panel.panel = new();
-					_ptype = tag[0] switch { 'p' => PanelType.Panel, 't' => PanelType.Toolbar, _ => PanelType.Document };
-					_panel.name = x.Attr("name") ?? throw new ArgumentException("XML element without 'name'");
-					if (_IsDocumentHost) _panel.isDocumentPlaceholder = true;
-					_pm._dictContent.Add(_panel.name, this);
+					_leaf = new();
+					_elem = _leaf.panel = new();
+					_leafType = tag[0] switch { 'p' => LeafType.Panel, 't' => LeafType.Toolbar, _ => LeafType.Document };
+					_leaf.name = x.Attr("name") ?? throw new ArgumentException("XML element without 'name'");
+					_Dictionary.Add(_leaf.name, this);
 					break;
 				default: throw new ArgumentException("unknown XML tag");
 				}
 				_elem.Tag = this;
 
 				if (parent != null) {
-					if (!_IsDocumentHost) {
+					if (!_IsDocument) {
 						_savedDockState = (_DockState)(x.Attr("state", 0) & 3);
 						_floatSavedRect = x.Attr("floatRect");
 					}
 					if (!_IsStack) x.Attr(out _captionAt, "captionAt");
 
 					if (_ParentIsStack) {
-						_dockedSize = _Util.GridLengthFromString(x.Attr("z")); //height in vertical stack or width in horizontal stack
+						_dockedSize = _GridLengthFromString(x.Attr("z")); //height in vertical stack or width in horizontal stack
 						_AddToStack(moving: false, _index == 0 ? 0 : x.Attr("s", c_defaultSplitterSize));
 
 						var flags = (_Flags)x.Attr("flags", 0);
@@ -135,14 +133,13 @@ namespace Au.Controls
 					}
 				}
 
-				if (!_IsContent) { //stack or tab
+				if (!_IsLeaf) { //stack or tab
 					if (_ParentIsTab) throw new ArgumentException(tag + " in 'tab'");
 					int i = 0;
 					foreach (var e in x.Elements()) {
 						new _Node(_pm, e, this, i++);
 					}
-					//Debug.Assert(i >= (_IsTab ? 1 : 2)); //see _AutoUpdateXml
-					Debug.Assert(i >= 1); //see _AutoUpdateXml
+					if (i == 0) throw new ArgumentException("empty stack or tab");
 
 					if (_IsTab) {
 						_tab.tc.SelectedIndex = Math.Clamp(x.Attr("active", 0), 0, i - 1);
@@ -172,17 +169,13 @@ namespace Au.Controls
 					////ATimer.After(5000, _ => _Test(0));
 					//void _Test(int margin) {
 					//	foreach (var v in Descendants(true)) {
-					//		//if (v._IsStack) v._stack.grid.Background = (v.Level & 3) switch { 1 => Brushes.CornflowerBlue, 2 => Brushes.Khaki, 3 => Brushes.YellowGreen, _ => Brushes.Peru };
 					//		if (v._IsStack) v._stack.grid.Background = (v.Level & 3) switch { 0 => Brushes.CornflowerBlue, 1 => Brushes.Khaki, 2 => Brushes.YellowGreen, _ => Brushes.LightYellow };
 					//		if(v!=this) v._elem.Margin = new Thickness(margin);
 					//		if (v._splitter != null) v._splitter.Visibility = Visibility.Collapsed;
-					//		//if (!v._IsStack) continue;
-					//		//v._stack.grid.Background = (v.Level & 3) switch { 1 => Brushes.CornflowerBlue, 2 => Brushes.Khaki, 3 => Brushes.YellowGreen, _ => Brushes.Peru };
-					//		//v._elem.Margin = new Thickness(margin);
 					//	}
 					//}
 
-					//_stack.grid.PreviewMouseMove += _RootGrid_PreviewMouseMove;
+					////_stack.grid.PreviewMouseMove += _RootGrid_PreviewMouseMove;
 				}
 			}
 
@@ -213,7 +206,7 @@ namespace Au.Controls
 				_elem.Tag = this;
 
 				if (targetIsRoot) {
-					target._dockedSize = new GridLength(verticalStack ? target._stack.grid.ActualHeight : target._stack.grid.ActualWidth, GridUnitType.Star);
+					//target._dockedSize = ...; //_AddToParentWhenMovingOrAddingLater will set it for target and this
 					_pm._setContainer(_stack.grid);
 				} else {
 					_ReplaceInStack(target);
@@ -224,18 +217,32 @@ namespace Au.Controls
 				}
 			}
 
+			/// <summary>
+			/// Used when creating new leaf node later (after loading).
+			/// </summary>
+			_Node(_Node target, bool after, LeafType type, string name, bool canClose) {
+				_pm = target._pm;
+				_leaf = new() { addedLater = true, name = name, canClose = canClose };
+				_elem = _leaf.panel = new() { Tag = this };
+				_leafType = type;
+				_Dictionary.Add(name, this);
+				_AddToParentWhenMovingOrAddingLater(target, after);
+			}
+
 			public void Save(XmlWriter x) {
-				x.WriteStartElement(_IsStack ? "stack" : (_IsTab ? "tab" : (_IsToolbarHost ? "toolbar" : (_IsDocumentHost ? "document" : "panel"))));
+				if (_leaf?.addedLater ?? false) return;
+
+				x.WriteStartElement(_IsStack ? "stack" : (_IsTab ? "tab" : (_IsToolbar ? "toolbar" : (_IsDocument ? "document" : "panel"))));
 
 				if (_IsStack) x.WriteAttributeString("o", _stack.isVertical ? "v" : "h");
 
 				if (Parent != null) {
-					if (_IsContent) x.WriteAttributeString("name", _panel.name);
+					if (_IsLeaf) x.WriteAttributeString("name", _leaf.name);
 
 					if (_ParentIsStack) {
 						if (!_dockedSize.IsAuto) {
 							if (_IsDockedInStack) _dockedSize = _SizeDef; //update _dockedSize
-							x.WriteAttributeString("z", _Util.GridLengthToString(_dockedSize));//TODO: update when splitters moved
+							x.WriteAttributeString("z", _GridLengthToString(_dockedSize));
 						}
 
 						var z = _SplitterSize;
@@ -250,37 +257,43 @@ namespace Au.Controls
 					}
 
 					if (_captionAt != 0) x.WriteAttributeString("captionAt", _captionAt.ToString());
-					if (!_IsDocumentHost) {
+					if (!_IsDocument) {
 						if (_state != 0) x.WriteAttributeString("state", ((int)_state).ToString());
 						_floatWindow?.Save();
 						if (_floatSavedRect != null) x.WriteAttributeString("floatRect", _floatSavedRect);
 					}
 				}
 
-				if (!_IsContent) foreach (var v in Children()) v.Save(x);
+				if (!_IsLeaf) foreach (var v in Children()) v.Save(x);
 
 				x.WriteEndElement();
 			}
 
 			bool _IsStack => _stack != null;
 			bool _IsTab => _tab != null;
-			bool _IsContent => _panel != null; //name could be _IsPanel, but then can be confused with _IsPanelPanel
-			bool _IsPanelHost => _ptype == PanelType.Panel;
-			bool _IsToolbarHost => _ptype == PanelType.Toolbar;
-			bool _IsDocumentHost => _ptype == PanelType.Document;
-			//bool _IsPanelOrToolbarHost => _ptype == _PType.Panel || _ptype == _PType.Toolbar;
+			bool _IsLeaf => _leaf != null;
+			bool _IsPanel => _leafType == LeafType.Panel;
+			bool _IsToolbar => _leafType == LeafType.Toolbar;
+			bool _IsDocument => _leafType == LeafType.Document;
 			bool _ParentIsStack => Parent?._IsStack ?? false;
 			bool _ParentIsTab => Parent?._IsTab ?? false;
 
 			/// <summary>
 			/// true if this is toolbar or this is stack/tab containing only toolbars.
 			/// </summary>
-			bool _IsToolbarsNode => Descendants(andSelf: true).All(o => o._IsToolbarHost);
+			bool _IsToolbarsNode => _IsToolbar || (!_IsLeaf && Descendants().All(o => o._IsToolbar));
 
 			/// <summary>
-			/// Gets name of panel/toolbar/document. Else exception.
+			/// true if this is document or this is tab containing documents (or tab with 0 children, which normally is not possible).
 			/// </summary>
-			public string Name => _panel.name;
+			bool _IsDocumentsNode => _IsDocument || (_IsTab && (FirstChild?._IsDocument ?? true));
+
+			Dictionary<string, _Node> _Dictionary => (_leaf.addedLater && _IsDocument) ? _pm._dictUserDoc : _pm._dictLeaf;
+
+			/// <summary>
+			/// Gets name of panel/toolbar/document. Exception if not leaf.
+			/// </summary>
+			public string Name => _leaf.name;
 
 			/// <summary>
 			/// Gets the UI element of this node. It is Grid if this is stack, or TabControl if tab, else DockPanel.
@@ -289,13 +302,13 @@ namespace Au.Controls
 
 			public override string ToString() {
 				string s;
-				if (_IsContent) {
+				if (_IsLeaf) {
 					s = Name;
-					if (_IsToolbarHost) s = "tb " + Name;
+					if (_IsToolbar) s = "tb " + Name;
 					return s;
 				}
 				if (Parent == null) return "Root stack";
-				var a = Descendants().Where(o => o._IsContent).ToArray();
+				var a = Descendants().Where(o => o._IsLeaf).ToArray();
 				s = a.Length switch
 				{
 					0 => "",
@@ -308,30 +321,149 @@ namespace Au.Controls
 
 			//string _ToStringWithoutTB() {
 			//	var s = ToString();
-			//	if (_IsToolbarHost) s = s[3..];
+			//	if (_IsToolbar) s = s[3..];
 			//	return s;
 			//}
 
-			#region IPanel
-
 			/// <summary>
-			/// Gets or sets content control of panel/toolbar/document. Else exception.
+			/// true if _IsPanel or (_IsDocument and _leaf.addedLater).
 			/// </summary>
-			public FrameworkElement Content {
-				get => _panel.content;
-				set {
-					if (_panel.content != null) _panel.panel.Children.Remove(_panel.content);
-					_panel.panel.Children.Add(_panel.content = value);
+			bool _CanHaveCaptionWithText => _IsPanel || (_IsDocument && _leaf.addedLater);
+
+			void _SetCaptionAt(Dock ca, bool firstTime = false) {
+				//if (_ParentIsTab) {
+				//	Parent._SetCaptionAt(ca, firstTime);
+				//	return;
+				//}
+				Dock old = firstTime ? Dock.Top : _captionAt;
+				_captionAt = ca;
+				if (_IsTab) {
+					var tc = _tab.tc;
+					if (ca == tc.TabStripPlacement) return;
+					if (_tab.isVerticalHeader) {
+						_tab.isVerticalHeader = false;
+						foreach (var v in tc.Items.Cast<TabItem>()) v.Style = null;
+					}
+					tc.TabStripPlacement = ca;
+					_VerticalTabHeader();
+				} else if (_leaf.caption != null) {
+					DockPanel.SetDock(_leaf.caption, ca);
+					if (ca == old || !_CanHaveCaptionWithText) return;
+					if (ca == Dock.Top || ca == Dock.Bottom) {
+						if (old == Dock.Left || old == Dock.Right) _leaf.caption.LayoutTransform = null;
+					} else {
+						_leaf.caption.LayoutTransform = new RotateTransform(ca == Dock.Left ? 270d : 90d);
+					}
 				}
 			}
+
+			void _AddRemoveCaptionAndBorder() {
+				if (!_IsLeaf) return;
+				if (_ParentIsTab && !_state.Has(_DockState.Float)) {
+					if (_leaf.caption != null) {
+						_leaf.panel.Children.Remove(_leaf.caption);
+						_leaf.caption = null;
+
+						_leaf.panel.BorderThickness = default;
+					}
+				} else {
+					if (_leaf.caption == null) {
+						if (_CanHaveCaptionWithText) {
+							_leaf.caption = new TextBlock {
+								Text = Name,
+								TextAlignment = TextAlignment.Center,
+								Padding = new Thickness(2, 1, 2, 3),
+								Margin = new Thickness(-0.3), //workaround for: some captions sometimes look smaller by 1 pixel, unless window background color is similar.
+								Background = _pm.CaptionBrush,
+								TextTrimming = TextTrimming.CharacterEllipsis
+							};
+						} else if (_IsToolbar) {
+							var c = new Rectangle {
+								MinHeight = 5,
+								MinWidth = 5,
+								Fill = s_toolbarCaptionBrush,
+								//note: without Fill there are no events
+							};
+							c.MouseEnter += (_, _) => c.Fill = _pm.CaptionBrush;
+							c.MouseLeave += (_, _) => c.Fill = s_toolbarCaptionBrush;
+							_leaf.caption = c;
+						} else { //document placeholder
+							var c = new Rectangle {
+								MinHeight = 5,
+								MinWidth = 5,
+								Fill = _pm.CaptionBrush,
+							};
+							_leaf.caption = c;
+
+							_leaf.panel.LastChildFill = false;
+							bool hasDoc = false;
+							c.SizeChanged += (_, e) => {
+								bool has = _leaf.panel.Children.Count > 1;
+								if (has != hasDoc) _leaf.panel.LastChildFill = hasDoc = has;
+							};
+						}
+						_leaf.panel.Children.Insert(0, _leaf.caption);
+						_SetCaptionAt(_captionAt, true);
+						_leaf.caption.ContextMenuOpening += _CaptionContextMenu;
+						_leaf.caption.MouseDown += _OnMouseDown;
+
+						if (_pm.BorderBrush != null && !_IsToolbar) {
+							_leaf.panel.BorderBrush = _pm.BorderBrush;
+							_leaf.panel.BorderThickness = new Thickness(1);
+						}
+					}
+				}
+			}
+
+			class _DockPanelWithBorder : Border
+			{
+				public readonly DockPanel Panel;
+
+				public _DockPanelWithBorder() {
+					Child = Panel = new();
+					SnapsToDevicePixels = true;
+				}
+
+				public UIElementCollection Children => Panel.Children;
+
+				public bool LastChildFill { get => Panel.LastChildFill; set => Panel.LastChildFill = value; }
+
+				public new object Tag {
+					get => base.Tag;
+					set { base.Tag = value; Panel.Tag = value; }
+				}
+			}
+
+			#region ILeaf
+
+			/// <summary>
+			/// Gets or sets content of panel/toolbar/document.
+			/// </summary>
+			FrameworkElement ILeaf.Content {
+				get => _leaf.content;
+				set {
+					if (_leaf.content != null) _leaf.panel.Children.Remove(_leaf.content);
+					_leaf.panel.Children.Add(_leaf.content = value);
+				}
+			}
+
+			//rejected. Probably not useful. Can get through Content. Maybe in the future.
+			///// <summary>
+			///// Gets parent of <see cref="Content"/>.
+			///// It's a <b>DockPanel</b>. The first child is caption, and is <b>TextBlock</b> or <b>Rectangle</b>. The second child is <see cref="Content"/> (if set).
+			///// </summary>
+			//DockPanel ILeaf.Panel => _leaf.panel.Panel;
 
 			/// <summary>
 			/// true if visible, either floating or docked.
 			/// The 'get' function returns true even if inactive tab item. The 'set' function makes tab item active.
 			/// </summary>
-			public bool Visible {
+			bool ILeaf.Visible {
 				get => _IsVisibleReally();
-				set => _SetDockState(value ? _state & ~_DockState.Hide : _DockState.Hide); //TODO: activate tab item
+				set {
+					if (value) _Unhide(); else _Hide();
+					if (value && _ParentIsTab) Parent._tab.tc.SelectedIndex = _index;
+				}
 			}
 
 			/// <summary>
@@ -348,100 +480,78 @@ namespace Au.Controls
 			/// true if floating and visible.
 			/// false if docked or hidden.
 			/// </summary>
-			public bool Floating {
+			bool ILeaf.Floating {
 				get => _state == _DockState.Float;
 				set => _SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
 			}
-			//TODO: test how when hiding tab wnen its child is floating
 
-			public event Action<bool> VisibleChanged;
+			/// <summary>
+			/// Adds new leaf item (panel, toolbar or document) before or after this.
+			/// </summary>
+			/// <param name="after"></param>
+			/// <param name="type"></param>
+			/// <param name="name"></param>
+			/// <param name="canClose">Add "Close    M-click" item in context menu. It will fire <see cref="Closing"/> event and call <see cref="Delete"/> if not cancelled.</param>
+			/// <param name="select">Select the new tab item.</param>
+			/// <returns>Returns interface of the new item.</returns>
+			/// <exception cref="ArgumentException"><i>type</i> is not Panel/Toolbar/Document, or <i>name</i> is null, or <i>name</i> panel already exists.</exception>
+			/// <remarks>
+			/// Added items can be deleted with <see cref="Delete"/>. Will not be saved.
+			/// Add documents only by the document placeholder or by added documents. Don't add other nodes by documents.
+			/// </remarks>
+			ILeaf ILeaf.AddSibling(bool after, LeafType type, string name, bool canClose) {
+				if (name == null || (type != LeafType.Panel && type != LeafType.Toolbar && type != LeafType.Document)) throw new ArgumentException();
+				return new _Node(this, after, type, name, canClose);
+			}
+
+			/// <summary>
+			/// Deletes this leaf item added with <see cref="AddSibling"/>.
+			/// </summary>
+			/// <exception cref="InvalidOperationException">Added not with <b>AddSibling</b>.</exception>
+			public void Delete() {
+				if (!_leaf.addedLater) throw new InvalidOperationException();
+				if (_state == _DockState.Float) _SetDockState(0);
+				var oldParent = Parent;
+				_RemoveFromParentWhenMovingOrDeleting();
+				_RemoveParentIfNeedAfterMovingOrDeleting(oldParent);
+				_Dictionary.Remove(_leaf.name);
+			}
+
+			/// <summary>
+			/// Renames this document.
+			/// </summary>
+			/// <param name="name"></param>
+			void ILeaf.Rename(string name) {
+				//if (!_IsLeaf) throw new InvalidOperationException(); //impossible, unless called from this class
+				if (name == null) throw new ArgumentException();
+				_Dictionary.Remove(_leaf.name);
+				_Dictionary.Add(_leaf.name = name, this);
+				if (_leaf.caption is TextBlock t) t.Text = name;
+				if (_ParentIsTab) {
+					(Parent._tab.tc.Items[_index] as TabItem).Header = name;
+					Parent._VerticalTabHeader(onMove: true);
+				}
+				if (_floatWindow != null) _floatWindow.Title = name;
+			}
+
+			/// <summary>
+			/// After hiding or showing this leaf item.
+			/// </summary>
+			public event EventHandler<bool> VisibleChanged;
+
+			/// <summary>
+			/// When user tries to close this leaf item.
+			/// Only if added with <see cref="AddSibling"/> with <i>canClose</i> true.
+			/// </summary>
+			public event CancelEventHandler Closing;
+
+			/// <summary>
+			/// When opening context menu of this leaf item.
+			/// You can add menu items. All default items are already added.
+			/// </summary>
+			public event EventHandler<AContextMenu> ContextMenuOpening;
 
 			#endregion
-
-			static readonly Style
-				s_styleL = WPF.XamlResources.Dictionary["TabItemVerticalLeft"] as Style,
-				s_styleR = WPF.XamlResources.Dictionary["TabItemVerticalRight"] as Style;
-
-			void _SetCaptionAt(Dock ca, bool firstTime = false) {
-				Dock old = firstTime ? Dock.Top : _captionAt;
-				_captionAt = ca;
-				if (_IsTab) {
-					var tc = _tab.tc;
-					if (ca == tc.TabStripPlacement) return;
-					if (_tab.isVerticalHeader) {
-						_tab.isVerticalHeader = false;
-						foreach (var v in tc.Items.Cast<TabItem>()) v.Style = null;
-					}
-					tc.TabStripPlacement = ca;
-					_VerticalTabHeader();
-				} else if (_panel.caption != null) {
-					DockPanel.SetDock(_panel.caption, ca);
-					if (ca == old || !_IsPanelHost) return;
-					if (ca == Dock.Top || ca == Dock.Bottom) {
-						if (old == Dock.Left || old == Dock.Right) _panel.caption.LayoutTransform = null;
-					} else {
-						_panel.caption.LayoutTransform = new RotateTransform(ca == Dock.Left ? 270d : 90d);
-					}
-				}
-			}
-
-			void _AddRemoveCaptionAndBorder() {
-				if (!_IsContent) return;
-				if (_ParentIsTab && !_state.Has(_DockState.Float)) {
-					if (_panel.caption != null) {
-						_panel.panel.Children.Remove(_panel.caption);
-						_panel.caption = null;
-
-						_panel.panel.BorderThickness = default;
-					}
-				} else {
-					if (_panel.caption == null) {
-						if (_IsPanelHost) {
-							_panel.caption = new TextBlock {
-								Text = Name,
-								TextAlignment = TextAlignment.Center,
-								Padding = new Thickness(2, 1, 2, 3),
-								Margin = new Thickness(-0.3), //workaround for: some captions sometimes look smaller by 1 pixel, unless window background color is similar.
-								Background = _pm.CaptionBrush,
-								TextTrimming = TextTrimming.CharacterEllipsis
-							};
-						} else if (_IsToolbarHost) {
-							var c = new Rectangle {
-								MinHeight = 5,
-								MinWidth = 5,
-								Fill = s_toolbarCaptionBrush,
-								//note: without Fill there are no events
-							};
-							c.MouseEnter += (_, _) => c.Fill = _pm.CaptionBrush;
-							c.MouseLeave += (_, _) => c.Fill = s_toolbarCaptionBrush;
-							_panel.caption = c;
-						} else { //document
-							var c = new Rectangle {
-								MinHeight = 5,
-								MinWidth = 5,
-								Fill = _pm.CaptionBrush,
-							};
-							_panel.caption = c;
-
-							_panel.panel.LastChildFill = false;
-							bool hasDoc = false;
-							c.SizeChanged += (_, e) => {
-								bool has = _panel.panel.Children.Count > 1;
-								if (has != hasDoc) _panel.panel.LastChildFill = hasDoc = has;
-							};
-						}
-						_panel.panel.Children.Insert(0, _panel.caption);
-						_SetCaptionAt(_captionAt, true);
-						_panel.caption.ContextMenuOpening += _CaptionContextMenu;
-						_panel.caption.MouseDown += _OnMouseDown;
-
-						if (_pm.BorderBrush != null && !_IsToolbarHost) {
-							_panel.panel.BorderBrush = _pm.BorderBrush;
-							_panel.panel.BorderThickness = new Thickness(1);
-						}
-					}
-				}
-			}
 		}
 	}
 }

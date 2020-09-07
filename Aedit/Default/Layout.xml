@@ -1,26 +1,26 @@
 ﻿<!--
+The layout is a tree with 3 main types of nodes: stack, tab and leaf. Leaf has 3 subtypes: panel, toolbar and document.
+All nodes can be docked (default), floating or hidden. Stacks are hidden only implicitly, when there are no more docked nodes.
 Tags:
-stack - stack. Contains one or more panel, toolbar, tab and implicit splitters between them.
-tab - container for one or more panels. Has caption with text of active panel and icon-buttons for inactive panels. Can float.
-panel - container for a control. Can be in a tab. Can be floating, hidden. Has caption with text, unless is in a tab.
-toolbar - container for a toolbar. Like panel, but caption is small without text, etc.
-document - placeholder for documents. Like panel, but caption is small without text, etc. If in tab, documents are added as tab items.
+stack - stack. Contains 2 or more nodes (stack, tab, leaf) and implicit splitters between them.
+tab - container for 1 or more leaf nodes displayed one at a time, with buttons to select the active node.
+panel - container for a control that often has child controls. Has caption with text, unless is in a tab.
+toolbar - container for a toolbar. Like panel, but caption is small without text, and behavior is slightly different.
+document - placeholder for real document nodes that are added/removed later. Like panel, but caption is small without text, and behavior is slightly different.
 Attributes:
 o - stack orientation: v vertical, h horizontal.
-z - item size (width in horizontal stack or height in vertical). Star-sized if like "100*". Default for toolbar and stack: auto-sized. For others must be specified, cannot be auto.
-s - splitter size. Default 4. Min 1. Every stack item except the first has a splitter before it.
-flags - misc flags: 1 - splitter cannot resize more than 1 item at each side.
+z - node size (width in horizontal stack or height in vertical). Star-sized if like "100*". Default for toolbar and stack: auto-sized. For others must be specified, cannot be auto.
+s - splitter size. Default 4. Min 1. Every node in stack except the first has a splitter before it.
 captionAt - Left, Top, Right, Bottom. Default Left.
 state - flags: 1 floating, 2 hidden.
-floatRect - floating rectangle etc. Don't set in initial XML.
-active - 0-based index of active panel in tab. Default 0.
-Attributes valid on:
+flags - misc flags: 1 - splitter resizes the nearest node at each side instead of all star-sized nodes.
+active - 0-based index of active node in tab. Default 0.
+Attributes valid in:
 o - stack.
 z, s - any. Not used if in tab.
 captionAt - any except stack. Not used if in tab.
-state, floatRect - any except stack and document.
+state, flags - any.
 active - tab.
-flags - any.
 -->
 <stack o="v">
 	<stack o="h">
@@ -43,8 +43,7 @@ flags - any.
 				<toolbar name="Edit" />
 				<toolbar name="Custom2" z="100*" />
 			</stack>
-			<!--Placeholder for documents. Can be in tab or not.-->
-			<!--<document name="Document" z="400*" s="1" captionAt="Right" />-->
+			<!--<document name="documents not as tabs" z="400*" s="1" captionAt="Right" />-->
 			<tab z="400*" s="1" captionAt="Top">
 				<document name="" />
 			</tab>
