@@ -31,6 +31,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Page Remove="Resources\Property_16x.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
     <None Include="excluded\CiPopupListWPF.cs" />
   </ItemGroup>
 
@@ -43,6 +47,10 @@
     <ProjectReference Include="..\Au\Au.csproj" />
     <ProjectReference Include="..\Libraries\_HtmlRenderer\_HtmlRenderer.csproj" />
     <ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Resource Include="Resources\Property_16x.xaml" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

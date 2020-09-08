@@ -40,6 +40,7 @@ namespace Au.Controls
 			_Floating _floatWindow;
 			string _floatSavedRect;
 			//_Flags _flags;
+			bool _dontSave;
 
 			static readonly Brush s_toolbarCaptionBrush = SystemColors.ControlBrush;
 			const int c_minSize = 4;
@@ -139,9 +140,9 @@ namespace Au.Controls
 					foreach (var e in x.Elements()) {
 						new _Node(_pm, e, this, i++);
 					}
-					if (i == 0) throw new ArgumentException("empty stack or tab");
+					Debug.Assert(i > 0);
 
-					if (_IsTab) {
+					if (_IsTab && i > 0) {
 						_tab.tc.SelectedIndex = Math.Clamp(x.Attr("active", 0), 0, i - 1);
 					}
 				}
@@ -180,7 +181,8 @@ namespace Au.Controls
 			}
 
 			/// <summary>
-			/// Used when moving a node, when need to create new parent (this) stack or tab for it and target.
+			/// Used when moving a node, to create new parent (this) stack or tab for it and target.
+			/// Also when moving a node, to create new parent (this) tab for it (target).
 			/// </summary>
 			_Node(_Node target, bool isTab, bool verticalStack = false) {
 				_pm = target._pm;
@@ -225,12 +227,25 @@ namespace Au.Controls
 				_leaf = new() { addedLater = true, name = name, canClose = canClose };
 				_elem = _leaf.panel = new() { Tag = this };
 				_leafType = type;
+				_dontSave = true;
 				_Dictionary.Add(name, this);
 				_AddToParentWhenMovingOrAddingLater(target, after);
 			}
 
 			public void Save(XmlWriter x) {
-				if (_leaf?.addedLater ?? false) return;
+				if (Parent == null) { //mark to not save stack/tab nodes without savable leaf descendants
+					_Children(this);
+					static bool _Children(_Node p) {
+						bool R = false;
+						foreach (var v in p.Children()) {
+							if (!v._IsLeaf) v._dontSave = !_Children(v);
+							R |= !v._dontSave;
+						}
+						return R;
+					}
+				} else {
+					if (_dontSave) return;
+				}
 
 				x.WriteStartElement(_IsStack ? "stack" : (_IsTab ? "tab" : (_IsToolbar ? "toolbar" : (_IsDocument ? "document" : "panel"))));
 
@@ -447,13 +462,6 @@ namespace Au.Controls
 				}
 			}
 
-			//rejected. Probably not useful. Can get through Content. Maybe in the future.
-			///// <summary>
-			///// Gets parent of <see cref="Content"/>.
-			///// It's a <b>DockPanel</b>. The first child is caption, and is <b>TextBlock</b> or <b>Rectangle</b>. The second child is <see cref="Content"/> (if set).
-			///// </summary>
-			//DockPanel ILeaf.Panel => _leaf.panel.Panel;
-
 			/// <summary>
 			/// true if visible, either floating or docked.
 			/// The 'get' function returns true even if inactive tab item. The 'set' function makes tab item active.
@@ -484,6 +492,11 @@ namespace Au.Controls
 				get => _state == _DockState.Float;
 				set => _SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
 			}
+
+			/// <summary>
+			/// Gets parent elements and index.
+			/// </summary>
+			ParentInfo ILeaf.Parent => new ParentInfo(_leaf.panel.Panel, Parent._elem, _index);
 
 			/// <summary>
 			/// Adds new leaf item (panel, toolbar or document) before or after this.
@@ -550,6 +563,16 @@ namespace Au.Controls
 			/// You can add menu items. All default items are already added.
 			/// </summary>
 			public event EventHandler<AContextMenu> ContextMenuOpening;
+
+			/// <summary>
+			/// When this tab item selected (becomes the active item).
+			/// </summary>
+			public event EventHandler TabSelected;
+
+			/// <summary>
+			/// When moved to other tab or stack.
+			/// </summary>
+			public event EventHandler ParentChanged;
 
 			#endregion
 		}

@@ -25,17 +25,17 @@ active - tab.
 <stack o="v">
 	<stack o="h">
 		<toolbar name="Menu" />
-		<toolbar name="Help" />
 		<toolbar name="Tools" />
+		<toolbar name="Help" />
 		<toolbar name="Custom1" z="100*" />
 	</stack>
 	<stack o="h" z="600*" s="1">
 		<stack o="v" z="200">
 			<toolbar name="File" />
 			<panel name="Files" z="300*" s="1" captionAt="Top" />
-			<panel name="Open" z="80*" />
+			<!--<panel name="Open" z="80*" />-->
 			<panel name="Running" z="80*" flags="1" />
-			<panel name="Find" z="140" captionAt="Top" />
+			<panel name="Find" z="160" captionAt="Top" />
 		</stack>
 		<stack o="v" z="600*">
 			<stack o="h">
@@ -45,9 +45,9 @@ active - tab.
 			</stack>
 			<!--<document name="documents not as tabs" z="400*" s="1" captionAt="Right" />-->
 			<tab z="400*" s="1" captionAt="Top">
-				<document name="" />
+				<document name="documents" />
 			</tab>
-			<tab z="170">
+			<tab z="160">
 				<panel name="Output" />
 				<panel name="Info" />
 				<panel name="Found" />

@@ -20,6 +20,24 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Page Remove="Resources\Images\BuildSelection_16x.xaml" />
+	  <Page Remove="Resources\Images\Copy_16x.xaml" />
+	  <Page Remove="Resources\Images\Cut_16x.xaml" />
+	  <Page Remove="Resources\Images\FindInFile_16x.xaml" />
+	  <Page Remove="Resources\Images\Image_16x.xaml" />
+	  <Page Remove="Resources\Images\Paste_16x.xaml" />
+	  <Page Remove="Resources\Images\Redo_16x.xaml" />
+	  <Page Remove="Resources\Images\SaveAll_16x.xaml" />
+	  <Page Remove="Resources\Images\SettingsGroup_16x.xaml" />
+	  <Page Remove="Resources\Images\StartWithoutDebug_16x.xaml" />
+	  <Page Remove="Resources\Images\StatusHelp_16x.xaml" />
+	  <Page Remove="Resources\Images\Stop_16x.xaml" />
+	  <Page Remove="Resources\Images\test.xaml" />
+	  <Page Remove="Resources\Images\Undo_16x.xaml" />
+	  <Page Remove="Resources\Images\WordWrap_16x.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<Content Include="Default\Layout.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<SubType>Designer</SubType>
@@ -27,8 +45,33 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\Images\test.xaml" />
+	  <Resource Include="Resources\Images\BuildSelection_16x.xaml" />
+	  <Resource Include="Resources\Images\Copy_16x.xaml" />
+	  <Resource Include="Resources\Images\Cut_16x.xaml" />
+	  <Resource Include="Resources\Images\FindInFile_16x.xaml">
+	    <Generator>MSBuild:Compile</Generator>
+	  </Resource>
+	  <Resource Include="Resources\Images\Image_16x.xaml" />
+	  <Resource Include="Resources\Images\Paste_16x.xaml" />
+	  <Resource Include="Resources\Images\Redo_16x.xaml" />
+	  <Resource Include="Resources\Images\SaveAll_16x.xaml" />
+	  <Resource Include="Resources\Images\SettingsGroup_16x.xaml" />
+	  <Resource Include="Resources\Images\StartWithoutDebug_16x.xaml" />
+	  <Resource Include="Resources\Images\StatusHelp_16x.xaml" />
+	  <Resource Include="Resources\Images\Stop_16x.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
 	  <ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
 	  <ProjectReference Include="..\Au\Au.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Resource Include="Resources\Images\NewFile_16x.xaml" />
+	  <Resource Include="Resources\Images\Property_16x.xaml" />
+	  <Resource Include="Resources\Images\Undo_16x.xaml" />
+	  <Resource Include="Resources\Images\WordWrap_16x.xaml" />
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

@@ -108,6 +108,45 @@ namespace Au.Controls
 			catch (Exception ex) { AOutput.QM2.Write(ex); }
 		}
 
+		void _AutoUpdateXml(XElement rootStack, string xmlFileDefault) {
+			var defRootStack = AExtXml.LoadElem(xmlFileDefault);
+			var eOld = rootStack.Descendants("panel").Concat(rootStack.Descendants("toolbar"))/*.Concat(rootStack.Descendants("document"))*/; //same speed as with .Where(cached delegate)
+			var eNew = defRootStack.Descendants("panel").Concat(defRootStack.Descendants("toolbar"))/*.Concat(defRootStack.Descendants("document"))*/;
+			var cmp = new _XmlNameAttrComparer();
+			var added = eNew.Except(eOld, cmp);
+			var removed = eOld.Except(eNew, cmp);
+			if (removed.Any()) {
+				foreach (var x in removed.ToArray()) {
+					_Remove(x);
+					AOutput.Write($"Info: {x.Name} {x.Attr("name")} has been removed in this app version.");
+				}
+				//removes x and ancestor stacks/tabs that would then have <= 1 child
+				static void _Remove(XElement x) {
+					var pa = x.Parent;
+					x.Remove();
+					var a = pa.Elements();
+					int n = a.Count();
+					if (n > 1) return;
+					if (n == 1) {
+						var f = a.First();
+						f.SetAttributeValue("z", pa.Attr("z"));
+						f.SetAttributeValue("s", pa.Attr("s"));
+						f.Remove();
+						pa.AddAfterSelf(f);
+					}
+					_Remove(pa);
+				}
+			}
+			if (added.Any()) {
+				foreach (var x in added) {
+					x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
+					rootStack.Add(x);
+					AOutput.Write($"Info: {x.Name} {x.Attr("name")} has been added in this app version. You can right-click caption and move it to a better place.");
+				}
+			}
+			//AOutput.Write(rootStack);
+		}
+
 		///// <summary>
 		///// Deletes the user's saved layout file. Then next time will use the default file.
 		///// </summary>
@@ -150,10 +189,17 @@ namespace Au.Controls
 		//}
 
 		/// <summary>
-		/// Background brush of panel/document/tab captions. Default Brushes.LightSteelBlue.
+		/// Background brush of panel/document caption and tab strip. Default Brushes.LightSteelBlue.
 		/// Set before <see cref="Load"/>.
 		/// </summary>
 		public Brush CaptionBrush { get; set; } = Brushes.LightSteelBlue;
+
+		//rejected. Looks ugly when different color, unless white.
+		///// <summary>
+		///// Background brush of tab strip. Default Brushes.LightSteelBlue.
+		///// Set before <see cref="Load"/>.
+		///// </summary>
+		//public Brush TabBrush { get; set; } = Brushes.LightSteelBlue;
 
 		/// <summary>
 		/// Background brush of splitters.
@@ -175,45 +221,6 @@ namespace Au.Controls
 		Window _ContainerWindow => _window ??= Window.GetWindow(_rootStack.Elem);
 		Window _window;
 
-		void _AutoUpdateXml(XElement rootStack, string xmlFileDefault) {
-			var defRootStack = AExtXml.LoadElem(xmlFileDefault);
-			var eOld = rootStack.Descendants("panel").Concat(rootStack.Descendants("toolbar")); //same speed as with .Where(cached delegate)
-			var eNew = defRootStack.Descendants("panel").Concat(defRootStack.Descendants("toolbar"));
-			var cmp = new _XmlNameAttrComparer();
-			var added = eNew.Except(eOld, cmp);
-			var removed = eOld.Except(eNew, cmp);
-			if (removed.Any()) {
-				foreach (var x in removed.ToArray()) {
-					_Remove(x);
-					AOutput.Write($"Info: {x.Name} {x.Attr("name")} has been removed in this app version.");
-				}
-				//removes x and ancestor stacks/tabs that would then have <= 1 child
-				static void _Remove(XElement x) {
-					var pa = x.Parent;
-					x.Remove();
-					var a = pa.Elements();
-					int n = a.Count();
-					if (n > 1) return;
-					if (n == 1) {
-						var f = a.First();
-						f.SetAttributeValue("z", pa.Attr("z"));
-						f.SetAttributeValue("s", pa.Attr("s"));
-						f.Remove();
-						pa.AddAfterSelf(f);
-					}
-					_Remove(pa);
-				}
-			}
-			if (added.Any()) {
-				foreach (var x in added) {
-					x.SetAttributeValue("z", 50); //note: set even if was no "z", because maybe was in a tab
-					rootStack.Add(x);
-					AOutput.Write($"Info: {x.Name} {x.Attr("name")} has been added in this app version. You can drag and Alt+drop it in a better place.");
-				}
-			}
-			//AOutput.Write(rootStack);
-		}
-
 		class _XmlNameAttrComparer : IEqualityComparer<XElement>
 		{
 			public bool Equals(XElement x, XElement y) => x.Attr("name") == y.Attr("name");
@@ -227,19 +234,59 @@ namespace Au.Controls
 		public interface ILeaf
 		{
 			FrameworkElement Content { get; set; }
-			//DockPanel Panel { get; }
 			bool Visible { get; set; }
 			bool Floating { get; set; }
 			ILeaf AddSibling(bool after, LeafType type, string name, bool canClose);
 			void Delete();
 			void Rename(string name);
+			ParentInfo Parent { get; }
 
 			event EventHandler<bool> VisibleChanged;
 			event CancelEventHandler Closing;
 			event EventHandler<AContextMenu> ContextMenuOpening;
+			event EventHandler TabSelected;
+			event EventHandler ParentChanged;
 		}
 
 		/// <summary>Leaf item type.</summary>
 		public enum LeafType { None, Panel, Toolbar, Document }
+
+		public struct ParentInfo
+		{
+			readonly DockPanel _panel;
+			readonly FrameworkElement _elem;
+			readonly int _index;
+
+			internal ParentInfo(DockPanel panel, FrameworkElement elem, int index) {
+				_panel = panel; _elem = elem; _index = index;
+			}
+
+			/// <summary>
+			/// Gets <b>DockPanel</b> that contains or will contain <see cref="ILeaf.Content"/>.
+			/// The first child is caption, and is <b>TextBlock</b> or <b>Rectangle</b>. The second child is <b>Content</b> (if set) or none.
+			/// </summary>
+			public DockPanel Panel => _panel;
+
+			/// <summary>
+			/// Gets parent <b>Grid</b> if in stack, else null.
+			/// </summary>
+			public Grid Grid => _elem as Grid;
+
+			/// <summary>
+			/// Gets parent <b>TabControl</b> if in tab, else null.
+			/// </summary>
+			public TabControl TabControl => _elem as TabControl;
+
+			/// <summary>
+			/// Gets parent <b>TabItem</b> if in tab, else null.
+			/// Its <b>Tag</b> is this <b>ILeaf</b>.
+			/// </summary>
+			public TabItem TabItem => TabControl?.Items[_index] as TabItem;
+
+			/// <summary>
+			/// Gets node index in parent node. If in tab, it is also tab item index.
+			/// </summary>
+			public int Index => _index;
+		}
 	}
 }

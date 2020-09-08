@@ -29,14 +29,20 @@ namespace Au.Controls
 		partial class _Node
 		{
 			static readonly Style
+				s_styleTabControl = WPF.XamlResources.Dictionary["AuPanelsTabControlStyle"] as Style,
+				s_styleTabItem = WPF.XamlResources.Dictionary["AuPanelsTabItemStyle"] as Style,
 				s_styleTabLeft = WPF.XamlResources.Dictionary["TabItemVerticalLeft"] as Style,
 				s_tyleTabRight = WPF.XamlResources.Dictionary["TabItemVerticalRight"] as Style;
 
 			void _InitTabControl() {
 				var tc = _tab.tc;
+				tc.Style = s_styleTabControl;
+				if (_pm.CaptionBrush != Brushes.LightSteelBlue) {
+					tc.ApplyTemplate();
+					if (VisualTreeHelper.GetChild(tc, 0) is Grid tg) tg.Background = _pm.CaptionBrush; //note: tc must have a parent.
+				}
 				tc.Padding = default;
 				tc.TabStripPlacement = _captionAt;
-				tc.ApplyTemplate(); if (VisualTreeHelper.GetChild(tc, 0) is Grid tg) tg.Background = _pm.CaptionBrush; //note: tc must have a parent.
 				tc.SizeChanged += (_, e) => {
 					switch (tc.TabStripPlacement) { case Dock.Top: case Dock.Bottom: return; }
 					bool bigger = e.NewSize.Height > e.PreviousSize.Height;
@@ -44,6 +50,11 @@ namespace Au.Controls
 				};
 				tc.ContextMenuOpening += _CaptionContextMenu;
 				tc.PreviewMouseDown += _OnMouseDown;
+				tc.SelectionChanged += (_, e) => {
+					if (e.AddedItems.Count == 0) return;
+					var v = (e.AddedItems[0] as TabItem).Tag as _Node;
+					v.TabSelected?.Invoke(v, EventArgs.Empty);
+				};
 			}
 
 			void _VerticalTabHeader(double height = -1, bool onMove = false) {
@@ -58,7 +69,7 @@ namespace Au.Controls
 				if (vert2 == _tab.isVerticalHeader && !onMove) return;
 				_tab.isVerticalHeader = vert2;
 				var dock = tc.TabStripPlacement;
-				foreach (var v in tabs) v.Style = vert2 ? (dock == Dock.Left ? s_styleTabLeft : s_tyleTabRight) : null;
+				foreach (var v in tabs) v.Style = vert2 ? (dock == Dock.Left ? s_styleTabLeft : s_tyleTabRight) : s_styleTabItem;
 
 				double _CalcHeight() {
 					var cult = CultureInfo.InvariantCulture;
@@ -81,7 +92,7 @@ namespace Au.Controls
 			/// Caller before must call AddChild (or AddSibling) and set _index.
 			/// </summary>
 			void _AddToTab(bool moving) {
-				var ti = new TabItem { Header = _leaf.name, Content = _elem, Tag = this };
+				var ti = new TabItem { Style = s_styleTabItem, Header = _leaf.name, Content = _elem, Tag = this };
 				Parent._tab.tc.Items.Insert(_index, ti);
 				if (moving) {
 					_ShiftSiblingIndices(1);

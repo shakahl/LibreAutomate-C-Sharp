@@ -260,18 +260,23 @@ namespace Au.Controls
 								m["- Top"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Top);
 								m["- Bottom"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Bottom);
 							}
+							if (target._IsStack || (target._IsTab && _IsLeaf) && target.FirstChild == null) { //empty
+								m.Separator();
+								m[$"- Into '{sTarget}'"] = o => _MoveTo(target, _HowToMove.Child);
+							}
 						}
 					}
 				}
 			}
 
-			enum _HowToMove
+			enum _HowToMove //don't reorder
 			{
 				BeforeTarget, //before target in parent stack or tab
 				AfterTarget, //after target in parent stack or tab
+				NewStack, //create new stack in place of target; add target and this to it; use dock to set orientation of new stack and index ot this and target
 				FirstInNewTab, //create new tab in place of target; add this (first) and target to it
 				LastInNewTab, //create new tab in place of target; add target and this (last) to it
-				NewStack, //create new stack in place of target; add target and this to it; use dock to set orientation of new stack and index ot this and target
+				Child, //add as child of target (target is empty stack or tab)
 			}
 
 			void _MoveTo(_Node target, _HowToMove how, Dock dock = default) {
@@ -281,10 +286,9 @@ namespace Au.Controls
 				if (target._state != 0 && !beforeAfter) target._SetDockState(0);
 
 				bool after = how == _HowToMove.AfterTarget;
-				var targetParent = target.Parent;
 				var oldParent = Parent;
 
-				if (beforeAfter && targetParent == oldParent && oldParent._IsTab) { //just reorder buttons
+				if (beforeAfter && target.Parent == oldParent && oldParent._IsTab) { //just reorder buttons
 					_ReorderInTab(target, after);
 					return;
 				}
@@ -293,20 +297,20 @@ namespace Au.Controls
 
 				switch (how) {
 				case _HowToMove.NewStack:
-					targetParent = new _Node(target, isTab: false, verticalStack: dock == Dock.Top || dock == Dock.Bottom);
+					new _Node(target, isTab: false, verticalStack: dock == Dock.Top || dock == Dock.Bottom);
 					target._AddToStack(moving: false, c_defaultSplitterSize);
 					after = dock == Dock.Right || dock == Dock.Bottom;
 					break;
 				case _HowToMove.FirstInNewTab:
 				case _HowToMove.LastInNewTab:
-					targetParent = new _Node(target, isTab: true);
+					new _Node(target, isTab: true);
 					target._AddToTab(moving: false);
 					after = how == _HowToMove.LastInNewTab;
 					break;
-					//default: //before/after target in parent stack or tab
 				}
 
-				_AddToParentWhenMovingOrAddingLater(target, after);
+				if (how == _HowToMove.Child) _AddToParentWhenMoving(target);
+				else _AddToParentWhenMovingOrAddingLater(target, after);
 
 #if false //debug print
 				int i = 0;
@@ -321,6 +325,14 @@ namespace Au.Controls
 #endif
 
 				_RemoveParentIfNeedAfterMovingOrDeleting(oldParent);
+
+				if (how <= _HowToMove.NewStack && _IsDocument && oldParent._IsTab && !_ParentIsTab) {
+					_captionAt = oldParent._captionAt;
+					new _Node(this, isTab: true);
+					_AddToTab(moving: false);
+				}
+
+				if (Parent != oldParent) ParentChanged?.Invoke(this, EventArgs.Empty);
 			}
 
 			void _AddToParentWhenMovingOrAddingLater(_Node target, bool after) {
@@ -333,6 +345,20 @@ namespace Au.Controls
 				} else {
 					if (!(_dockedSize.IsAuto && _IsToolbarsNode)) _dockedSize = new GridLength(100, GridUnitType.Star);
 					if (Parent.Count == 2) target._SizeDef = target._dockedSize = new GridLength(100, GridUnitType.Star);
+
+					_AddToStack(moving: true, c_defaultSplitterSize);
+				}
+			}
+
+			void _AddToParentWhenMoving(_Node parent) {
+				parent.AddChild(this, first: true);
+				_index = 0;
+				if (_ParentIsTab) {
+					_AddToTab(moving: true);
+					_AddRemoveCaptionAndBorder();
+					Parent._tab.tc.SelectedIndex = _index;
+				} else {
+					if (!(_dockedSize.IsAuto && _IsToolbarsNode)) _dockedSize = new GridLength(100, GridUnitType.Star);
 
 					_AddToStack(moving: true, c_defaultSplitterSize);
 				}
@@ -354,12 +380,13 @@ namespace Au.Controls
 			}
 
 			void _RemoveParentIfNeedAfterMovingOrDeleting(_Node oldParent) {
-				bool isDoc = _IsDocument;
 				int n = oldParent.Count;
 				if (n == 0) {
+					var pp = oldParent.Parent;
 					oldParent._RemoveFromParentWhenMovingOrDeleting();
+					oldParent._RemoveParentIfNeedAfterMovingOrDeleting(pp);
 				} else if (n == 1) {
-					if (!isDoc) oldParent.FirstChild._MoveTo(oldParent, _HowToMove.BeforeTarget);
+					if (!_IsDocument) oldParent.FirstChild._MoveTo(oldParent, _HowToMove.BeforeTarget);
 				} else if (oldParent._IsTab && Parent != oldParent) {
 					oldParent._VerticalTabHeader(onMove: true);
 				}

@@ -974,8 +974,9 @@ class Script : AScript
 		AOutput.Write(AFolders.NetRuntime);
 	}
 
-	void TestWpfMainWindow() {
-		var w = new Au.Tests.MainWindow();
+	void TestWpfWindow() {
+		//var w = new Au.Tests.MainWindow();
+		var w = new Au.Tests.Window1();
 		w.ShowDialog();
 	}
 
@@ -1032,10 +1033,10 @@ class Script : AScript
 
 		//new ResourceManager
 
-		TestNint();
+		//TestNint();
 		//TestMinusSign();
 		//TestStringInterpolationBoxing();
-		//TestWpfMainWindow();
+		TestWpfWindow();
 		//TestNetCoreVersion();
 	}
 
