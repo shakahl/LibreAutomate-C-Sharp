@@ -364,13 +364,15 @@ namespace Au
 			public _MenuItem(AContextMenu m) { _m = m; }
 
 			protected override void OnClick() {
-				if (startThread) AThread.Start(() => _ExecItem(), background: false); else _ExecItem();
-				void _ExecItem() {
-					try {
-						action(new CMActionArgs(this));
-					}
-					catch (Exception ex) when (exceptOpt != CMExceptions.Exception) {
-						if (exceptOpt == CMExceptions.Warning) AWarning.Write(ex.ToString(), -1);
+				if (action != null) {
+					if (startThread) AThread.Start(() => _ExecItem(), background: false); else _ExecItem();
+					void _ExecItem() {
+						try {
+							action(new CMActionArgs(this));
+						}
+						catch (Exception ex) when (exceptOpt != CMExceptions.Exception) {
+							if (exceptOpt == CMExceptions.Warning) AWarning.Write(ex.ToString(), -1);
+						}
 					}
 				}
 				base.OnClick();

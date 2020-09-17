@@ -401,7 +401,7 @@ namespace Au.Compiler
 				if (folder != null) for (var pa = f.Parent; pa != folder; pa = pa.Parent) name = pa.Name + "/" + name;
 				//AOutput.Write(f, resType, folder, name, path);
 				if (resType == "embedded") {
-					R.Add(new ResourceDescription(name, () => File.OpenRead(path), true));
+					R.Add(new ResourceDescription(name, () => AFile.LoadStream(path), true));
 				} else {
 					name = name.Lower(); //else pack URI does not work
 					rw ??= new ResourceWriter(stream = new MemoryStream());

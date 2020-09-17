@@ -598,9 +598,7 @@ namespace Au.Types
 		/// ARGB is used in .NET, GDI+ and HTML/CSS.
 		/// ABGR is used by most Windows API.
 		/// </summary>
-		public static int SwapRB(int color) {
-			return (color & unchecked((int)0xff00ff00)) | ((color << 16) & 0xff0000) | ((color >> 16) & 0xff);
-		}
+		public static int SwapRB(int color) => (color & unchecked((int)0xff00ff00)) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
 
 		/// <summary>
 		/// Calculates color's perceived brightness.

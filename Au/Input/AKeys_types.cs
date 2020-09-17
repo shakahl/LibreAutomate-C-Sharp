@@ -21,8 +21,8 @@ namespace Au.Types
 	/// <remarks>
 	/// The values don't match those in the .NET enum <see cref="System.Windows.Forms.Keys"/>. This library does not use the .NET enum for modifier keys, mostly because it: does not have Win as modifier flag; confusing names, for example Alt and Menu.
 	/// </remarks>
-	/// <seealso cref="AKeys.More.KModToKeys"/>
-	/// <seealso cref="AKeys.More.KModFromKeys"/>
+	/// <seealso cref="AKeys.More.KModToWinforms"/>
+	/// <seealso cref="AKeys.More.KModFromWinforms"/>
 	/// <seealso cref="KKey"/>
 	[Flags]
 	public enum KMod :byte
@@ -322,10 +322,10 @@ namespace Au.Types
 		public static implicit operator KHotkey(KKey key) => new KHotkey(0, key);
 
 		/// <summary>Implicit conversion from <see cref="System.Windows.Forms.Keys"/> like <c>Keys.Ctrl|Keys.B</c>.</summary>
-		public static implicit operator KHotkey(System.Windows.Forms.Keys hotkey) => new KHotkey(AKeys.More.KModFromKeys(hotkey), (KKey)(byte)hotkey);
+		public static implicit operator KHotkey(System.Windows.Forms.Keys hotkey) => new KHotkey(AKeys.More.KModFromWinforms(hotkey), (KKey)(byte)hotkey);
 
 		/// <summary>Explicit conversion to <see cref="System.Windows.Forms.Keys"/>.</summary>
-		public static explicit operator System.Windows.Forms.Keys(KHotkey hk) => AKeys.More.KModToKeys(hk.Mod) | (System.Windows.Forms.Keys)hk.Key;
+		public static explicit operator System.Windows.Forms.Keys(KHotkey hk) => AKeys.More.KModToWinforms(hk.Mod) | (System.Windows.Forms.Keys)hk.Key;
 
 		/// <summary>Allows to split a <b>KHotkey</b> variable like <c>var (mod, key) = hotkey;</c></summary>
 		public void Deconstruct(out KMod mod, out KKey key) { mod = Mod; key = Key; }

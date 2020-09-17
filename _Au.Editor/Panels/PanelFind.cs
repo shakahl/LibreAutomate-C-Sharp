@@ -324,7 +324,7 @@ class PanelFind : AuUserControlBase
 			ATimer.After(70, _ => { if(tb.Focused) _ShowRegexInfo(tb, false); });
 		} else {
 			if(_regexWindow.Window.Visible) {
-				var c = AWnd.ThisThread.FocusedControl;
+				var c = AWnd.ThisThread.FocusedWinformsControl;
 				if(c == null || (c != _tFind && c != _tReplace && c != _regexWindow.Window && c.TopLevelControl != _regexWindow.Window)) {
 					_regexWindow.Hide();
 				}
@@ -584,7 +584,7 @@ class PanelFind : AuUserControlBase
 	/// <summary>
 	/// Makes visible and sets find text = selected text of focused control.
 	/// </summary>
-	public void ZCtrlF() => ZCtrlF(AWnd.ThisThread.FocusedControl);
+	public void ZCtrlF() => ZCtrlF(AWnd.ThisThread.FocusedWinformsControl);
 
 	#endregion
 

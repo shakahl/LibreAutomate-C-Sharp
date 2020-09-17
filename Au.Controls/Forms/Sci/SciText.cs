@@ -882,7 +882,7 @@ namespace Au.Controls
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 				}
 
-				using var fr = AFile.WaitIfLocked(() => File.OpenRead(file));
+				using var fr = AFile.LoadStream(file);
 				var fileSize = fr.Length;
 				if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
 				int trySize = (int)Math.Min(fileSize, 65_000);

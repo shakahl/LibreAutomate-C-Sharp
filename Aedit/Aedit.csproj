@@ -15,7 +15,12 @@
 		<NoWin32Manifest>true</NoWin32Manifest>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+	  <DefineConstants>DEBUG;TRACE</DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
+		<None Remove="Default\Commands.xml" />
 		<None Remove="Default\Layout.xml" />
 	</ItemGroup>
 
@@ -38,6 +43,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<Content Include="Default\Commands.xml">
+		  <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 		<Content Include="Default\Layout.xml">
 			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
 			<SubType>Designer</SubType>
@@ -81,5 +89,7 @@
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">
 		<Exec Command="cd $(TargetDir)&#xD;&#xA;del &quot;$(TargetName).exe&quot;&#xD;&#xA;&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker.txt&quot;&#xD;&#xA;::&quot;$(SolutionDir)Other\Programs\ResourceHacker.exe&quot; -script &quot;$(ProjectDir)Resources\hacker32.txt&quot;&#xD;&#xA;del &quot;$(TargetName).*.json&quot;&#xD;&#xA;" />
 	</Target>
+
+	<ProjectExtensions><VisualStudio><UserProperties default_4commands_1json__JsonSchema="" /></VisualStudio></ProjectExtensions>
 
 </Project>

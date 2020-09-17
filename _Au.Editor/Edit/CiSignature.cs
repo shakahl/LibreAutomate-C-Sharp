@@ -188,6 +188,8 @@ class CiSignature
 
 		string html = _FormatHtml(iSel, userSelected: false);
 
+		//TODO: once process crashed at the following line. No exception info, only call stack. It seems like async-related.
+
 		doc.ZTempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
 			if (doc.ZTempRanges_Enum(doc.Z.CurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();

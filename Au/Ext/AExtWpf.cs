@@ -62,6 +62,63 @@ namespace Au
 		//}
 
 		/// <summary>
+		/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
+		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+		/// </summary>
+		public static DependencyObject FindVisualDescendant(this DependencyObject t, Func<DependencyObject, bool> f) {
+			for (int i = 0, n = VisualTreeHelper.GetChildrenCount(t); i < n; i++) {
+				var v = VisualTreeHelper.GetChild(t, i);
+				if (f(v)) return v;
+				v = FindVisualDescendant(v, f);
+				if (v != null) return v;
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Finds object in chain of visual tree objects that includes <see cref="RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+		/// </summary>
+		/// <param name="t">The event arguments parameter of an event handler.</param>
+		/// <param name="sender">The <i>sender</i> parameter of the event handler.</param>
+		/// <param name="f">Function that returns true for the wanted object.</param>
+		public static DependencyObject SourceOrAncestor(this RoutedEventArgs t, object sender, Func<DependencyObject, bool> f) {
+			for (var v = t.Source as DependencyObject; v != null; v = VisualTreeHelper.GetParent(v)) {
+				if (f(v)) return v;
+				if (v == sender) break;
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Finds object of type T (or inherited) in chain of visual tree objects that includes <see cref="RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+		/// </summary>
+		/// <param name="t">The event arguments parameter of an event handler.</param>
+		/// <param name="sender">The <i>sender</i> parameter of the event handler.</param>
+		/// <param name="orSender">If object of type T not found, return <i>sender</i>. If false (default), returns null.</param>
+		public static DependencyObject SourceOfType<T>(this RoutedEventArgs t, object sender, bool orSender = false) where T : DependencyObject {
+			for (var v = t.Source as DependencyObject; v != null; v = VisualTreeHelper.GetParent(v)) {
+				if (v is T r1) return r1;
+				if (v == sender) return orSender ? v : null;
+			}
+			return null;
+		}
+
+		/// <summary>
+		/// Finds object of type T1 or T2 (or inherited) in chain of visual tree objects that includes <see cref="RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+		/// </summary>
+		/// <param name="t">The event arguments parameter of an event handler.</param>
+		/// <param name="sender">The <i>sender</i> parameter of the event handler.</param>
+		/// <param name="orSender">If object of type T1 or T2 not found, return <i>sender</i>. If false (default), returns null.</param>
+		public static DependencyObject SourceOfType<T1, T2>(this RoutedEventArgs t, object sender, bool orSender = false) where T1 : DependencyObject where T2 : DependencyObject {
+			for (var v = t.Source as DependencyObject; v != null; v = VisualTreeHelper.GetParent(v)) {
+				if (v is T1 r1) return r1;
+				if (v is T2 r2) return r2;
+				if (v == sender) return orSender ? v : null;
+			}
+			return null;
+		}
+
+		/// <summary>
 		/// Gets rectangle of this element in screen coordinates.
 		/// </summary>
 		public static RECT RectInScreen(this FrameworkElement t) {
@@ -225,20 +282,6 @@ namespace Au
 		/// - All this happens while the window is still invisible.
 		/// </remarks>
 		public static void SetRect(this Window t, RECT r) => _Move(t, 0, 0, r, true);
-
-		/// <summary>
-		/// Enumerates visual descendant objects, including control parts, and calls callback function <i>f</i> for each.
-		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
-		/// </summary>
-		public static DependencyObject FindVisualDescendant(this DependencyObject t, Func<DependencyObject, bool> f) {
-			for (int i = 0, n = VisualTreeHelper.GetChildrenCount(t); i < n; i++) {
-				var v = VisualTreeHelper.GetChild(t, i);
-				if (f(v)) return v;
-				v = FindVisualDescendant(v, f);
-				if (v != null) return v;
-			}
-			return null;
-		}
 
 		/// <summary>
 		/// Inserts row and adjusts row indices of children that are in other rows.

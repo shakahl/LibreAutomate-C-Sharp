@@ -29,13 +29,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Remove="WPF\AuPanels.Float.cs" />
-		<Compile Remove="WPF\AuPanels.Panel.cs" />
-		<Compile Remove="WPF\AuPanels.Stack.cs" />
-		<Compile Remove="WPF\AuPanels.Tab.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
 		<ProjectReference Include="..\Libraries\_SourceGrid\_SourceGrid.csproj" />
 		<ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
 	</ItemGroup>
@@ -92,7 +85,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Folder Include="WPF\Simple\" />
+	  <Folder Include="Simple\" />
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

@@ -697,7 +697,7 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Help_Context()
 	{
-		var c = AWnd.ThisThread.FocusedControl;
+		var c = AWnd.ThisThread.FocusedWinformsControl;
 		if(c == null) return;
 		if(c == Panels.Editor.ZActiveDoc) {
 			CiUtil.OpenSymbolOrKeywordFromPosHelp();

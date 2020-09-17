@@ -1166,7 +1166,7 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>GetFocus</msdn> and <see cref="System.Windows.Forms.Control.FromHandle"/>.
 			/// </remarks>
-			public static System.Windows.Forms.Control FocusedControl => System.Windows.Forms.Control.FromHandle(Api.GetFocus().Handle);
+			public static System.Windows.Forms.Control FocusedWinformsControl => System.Windows.Forms.Control.FromHandle(Api.GetFocus().Handle);
 
 			/// <summary>
 			/// Returns true if w is the focused control or window of this thread.
@@ -2475,7 +2475,7 @@ namespace Au
 		/// <param name="removeUnderlineAmpersand">
 		/// Remove the invisible '&amp;' characters that are used to underline keyboard shortcuts with the Alt key.
 		/// Removes only if this is a control (has style WS.CHILD).
-		/// Calls <see cref="AStringUtil.RemoveUnderlineAmpersand"/>.
+		/// Calls <see cref="AStringUtil.RemoveUnderlineChar"/>.
 		/// </param>
 		/// <seealso cref="SetText"/>
 		/// <seealso cref="NameAcc"/>
@@ -2491,7 +2491,7 @@ namespace Au
 				&& !R.NE()
 				//&& R.IndexOf('&') >= 0 //slower than HasStyle if the string is longer than 20
 				&& HasStyle(WS.CHILD)
-				) R = AStringUtil.RemoveUnderlineAmpersand(R);
+				) R = AStringUtil.RemoveUnderlineChar(R);
 
 			return R;
 		}

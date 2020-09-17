@@ -1216,6 +1216,19 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Loads file in a safer way.
+		/// Uses <see cref="File.OpenRead(string)"/> and <see cref="WaitIfLocked{T}(Func{T}, int)"/>.
+		/// </summary>
+		/// <param name="file">File. Must be full path. Can contain environment variables etc, see <see cref="APath.ExpandEnvVar"/>.</param>
+		/// <exception cref="ArgumentException">Not full path.</exception>
+		/// <exception cref="Exception">Exceptions of <see cref="File.OpenRead(string)"/>.</exception>
+		public static FileStream LoadStream(string file)
+		{
+			file = APath.NormalizeForNET_(file);
+			return WaitIfLocked(() => File.OpenRead(file));
+		}
+
+		/// <summary>
 		/// Writes any data to a file in a safe way, using a callback function.
 		/// </summary>
 		/// <param name="file">

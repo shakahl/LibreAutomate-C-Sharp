@@ -4,6 +4,648 @@
         <name>Au.Controls</name>
     </assembly>
     <members>
+        <member name="T:Au.Controls.AuMenuCommands">
+            <summary>
+            Builds a WPF window menu with submenus and items that execute static methods defined in a class and nested classes.
+            Supports xaml/png/etc images, key/mouse shortcuts, auto-Alt-underline, easy creating of toolbar buttons and context menus with same/synchronized properties (command, text, image, enabled, checked, etc).
+            </summary>
+            <remarks>
+            Creates submenus from public static nested types with <see cref="T:Au.Controls.CommandAttribute"/>. Creates executable menu items from public static methods with <see cref="T:Au.Controls.CommandAttribute"/>.
+            From each such type and method creates a <see cref="T:Au.Controls.AuMenuCommands.Command"/> object that you can access through indexer.
+            Supports methods <c>public static void Method()</c> and <c>public static void Method(object)</c>.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            var cmd=new AuMenuCommands(typeof(Commands), menu);
+            cmd[nameof(Commands.Edit.Paste)].Enabled = false;
+            cmd[nameof(Commands.File.Rename)].SetKeys("F12", _window);
+            ]]></code>
+            
+            <code><![CDATA[
+            static class Commands {
+            	[Command('F')]
+            	public static class File {
+            		[Command('R')]
+            		public static void Rename() {  }
+            		
+            		[Command('D')]
+            		public static void Delete() {  }
+            		
+            		[Command("_Properties...", image = "properties.xaml")]
+            		public static void Properties() {  }
+            		
+            		[Command('N')]
+            		public static class New {
+            			[Command('D')]
+            			public static void Document() {  }
+            			
+            			[Command('F')]
+            			public static void Folder() {  }
+            		}
+            		
+            		[Command('x', separator = true)]
+            		public static void Exit(object param) {  }
+            	}
+            	
+            	[Command('E')]
+            	public static class Edit {
+            		[Command('t')]
+            		public static void Cut() {  }
+            		
+            		[Command('C')]
+            		public static void Copy() {  }
+            		
+            		[Command('P')]
+            		public static void Paste() {  }
+            		
+            		[Command('D', name = "Edit-Delete")]
+            		public static void Delete() {  }
+            		
+            		[Command('a')]
+            		public static void Select_all() {  }
+            	}	
+            }
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.#ctor(System.Type,System.Windows.Controls.Menu,System.Windows.UIElement,System.Boolean,System.Action{Au.Controls.AuMenuCommands.FactoryParams})">
+            <summary>
+            Builds a WPF window menu with submenus and items that execute static methods defined in a class and nested classes.
+            See example in class help.
+            </summary>
+            <param name="commands">A type that contains nested types with methods. Must be in single source file (not partial class).</param>
+            <param name="menu">An empty <b>Menu</b> object. This function adds items to it.</param>
+            <param name="keysTarget">Window or other element where will work keyboard shortcuts specified in attributes.</param>
+            <param name="autoUnderline">Automatically insert _ in item text for Alt-underlining where not specified explicitly.</param>
+            <param name="itemFactory">Optional callback function that is called for each menu item. Can create menu items, set properties, create toolbar buttons, etc.</param>
+            <exception cref="T:System.ArgumentException">Duplicate name. Use <see cref="F:Au.Controls.CommandAttribute.name"/>.</exception>
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Item(System.String)">
+            <summary>
+            Gets a <b>Command</b> by name.
+            </summary>
+            <param name="command">Method name, for example "Select_all". Or nested type name if it's a submenu-item.</param>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.TryFind(System.String,Au.Controls.AuMenuCommands.Command@)">
+            <summary>
+            Tries to find a <b>Command</b> by name. Returns false if not found.
+            Same as the indexer, but does not throw exception when not found.
+            </summary>
+            <param name="command">Method name, for example "Select_all". Or nested type name if it's a submenu-item.</param>
+            <param name="c"></param>
+        </member>
+        <member name="T:Au.Controls.AuMenuCommands.Command">
+            <summary>
+            Contains a method delegate and a menu item that executes it. Implements <see cref="T:System.Windows.Input.ICommand"/> and can have one or more attached buttons etc and key/mouse shortcuts that execute it. All can be disabled/enabled with single function call.
+            Also used for submenu-items (created from nested types); it allows for example to enable/disable all descendants with single function call.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.MenuItem">
+            
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.IsSubmenu">
+            <summary>
+            true if this is a submenu-item.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.Name">
+            <summary>
+            Method name. If submenu-item - type name. Or <see cref="F:Au.Controls.CommandAttribute.name"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.Command.ToString">
+            
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.ButtonText">
+            <summary>
+            Button text or tooltip. Same as menu item text but without _ for Alt-underline.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.ButtonTooltip">
+            <summary>
+            <see cref="F:Au.Controls.CommandAttribute.tooltip"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.Tag">
+            <summary>
+            Something to attach to this object. Not used by this class.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.Command.CopyToButton(System.Windows.Controls.Primitives.ButtonBase,System.Nullable{System.Windows.Controls.Dock},System.Windows.UIElement,System.String,System.Boolean)">
+            <summary>
+            Sets properties of a button to match properties of this menu item.
+            </summary>
+            <param name="b">Button or checkbox etc.</param>
+            <param name="imageAt">If menu item has image, set <b>Content</b> = <b>DockPanel</b> with image and text and dock image at this side. If null (default), sets image without text. Not used if there is no image.</param>
+            <param name="image">Button image element, if different than menu item image. Must not be a child of something.</param>
+            <param name="text">Button text, if different than menu item text.</param>
+            <param name="skipImage">Don't change image.</param>
+            <exception cref="T:System.InvalidOperationException">This is a submenu. Or called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
+            <remarks>
+            Sets these properties:
+            - <b>Content</b> (image or/and text),
+            - <b>ToolTip</b>,
+            - <b>Foreground</b>,
+            - <b>Command</b> (to execute same method and automatically enable/disable together),
+            - Automation Name (if with image),
+            - if checkable, synchronizes checked state (the button should be a ToggleButton (CheckBox or RadioButton)).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.Command.CopyToMenu(System.Windows.Controls.MenuItem,System.Windows.UIElement,System.Object)">
+            <summary>
+            Sets properties of another menu item (not in this menu) to match properties of this menu item.
+            If this is a submenu-item, copies with descendants.
+            </summary>
+            <param name="m"></param>
+            <param name="image">Image element (<see cref="P:System.Windows.Controls.MenuItem.Icon"/>), if different. Must not be a child of something.</param>
+            <param name="text">Text (<see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>), if different.</param>
+            <exception cref="T:System.InvalidOperationException">Called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
+            <remarks>
+            Sets these properties:
+            - <b>Header</b> (if string),
+            - <b>Icon</b> (if possible),
+            - <b>InputGestureText</b>,
+            - <b>ToolTip</b>,
+            - <b>Foreground</b>,
+            - <b>Command</b> (to execute same method and automatically enable/disable together),
+            - <b>IsCheckable</b> (and synchronizes checked state).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.Command.CopyToMenu(System.Windows.Controls.ContextMenu)">
+            <summary>
+            Copies descendants of this submenu to a context menu.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">This is not a submenu. Or called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
+            <remarks>
+            For each new item sets the same properties as other overload.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.Command.CopyImage">
+            <summary>
+            Copies menu item image element. Returns null if no image or cannot copy.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
+        </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.Enabled">
+            <summary>
+            Gets or sets enabled/disabled state of this command, menu item and all controls with <b>Command</b> property = this (see <see cref="M:Au.Controls.AuMenuCommands.Command.CopyToButton(System.Windows.Controls.Primitives.ButtonBase,System.Nullable{System.Windows.Controls.Dock},System.Windows.UIElement,System.String,System.Boolean)"/>, <see cref="M:Au.Controls.AuMenuCommands.Command.CopyToMenu(System.Windows.Controls.MenuItem,System.Windows.UIElement,System.Object)"/>).
+            If submenu-item, the 'set' function also enables/disables all descendants.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.Command.SetKeys(System.String,System.Windows.UIElement,System.Boolean)">
+            <summary>
+            Sets keyboard or/and mouse shortcut.
+            </summary>
+            <param name="keys">
+            One or more keyboard or/and mouse shortcuts separated by ", ". Examples: <c>"Ctrl+K"</c>, <c>"F4, D-click"</c>. See <see cref="M:Au.AKeys.More.ParseHotkeyString(System.String,Au.Types.KMod@,Au.Types.KKey@)"/>.
+            If null, removes shortcuts for this command.
+            </param>
+            <param name="target">Window or an element in it where the shortcut will work.</param>
+            <param name="addMouseBinding">Add mouse shortcut to input bindings. If false (default), only displays in menu item.</param>
+            <exception cref="T:System.InvalidOperationException">This is a submenu. Or called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
+            <exception cref="T:System.ArgumentException">Invalid key or mouse shortcut.</exception>
+            <exception cref="T:System.NotSupportedException">Not supported key and modifier combination, for example a letter without modifiers.</exception>
+            <remarks>
+            Adds to <see cref="P:System.Windows.UIElement.InputBindings"/> of <i>target</i>. Also sets <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/> = <i>keys</i>.
+            If <i>keys</i> invalid, calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
+            </remarks>
+        </member>
+        <member name="E:Au.Controls.AuMenuCommands.Command.CanExecuteChanged">
+            <summary>
+            When disabled or enabled with <see cref="P:Au.Controls.AuMenuCommands.Command.Enabled"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.InitToolbarsAndCustomize(System.String,System.String,System.Windows.Controls.ToolBar[])">
+            <summary>
+            Adds toolbar buttons specified in <i>xmlFileCustomized</i> or <i>xmlFileDefault</i>. Applies customizations specified there.
+            </summary>
+            <param name="xmlFileDefault">XML file containing default toolbar buttons. See Default\Commands.xml in editor project.</param>
+            <param name="xmlFileCustomized">XML file containing user-modified commands and toolbar buttons. Can be null.</param>
+            <param name="toolbars">Empty toolbars where to add buttons. XML tag = <b>Name</b> property.</param>
+        </member>
+        <member name="T:Au.Controls.AuMenuCommands.FactoryParams">
+            <summary>
+            Parameters for factory action of <see cref="T:Au.Controls.AuMenuCommands"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.AuMenuCommands.FactoryParams.command">
+            <summary>
+            The new command.
+            <see cref="P:Au.Controls.AuMenuCommands.Command.MenuItem"/> is still null and you can call <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.AuMenuCommands.FactoryParams.member">
+            <summary>
+            <see cref="T:System.Reflection.MethodInfo"/> of method or <see cref="T:System.Reflection.TypeInfo"/> of nested class.
+            For example allows to get attributes of any type.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.AuMenuCommands.FactoryParams.text">
+            <summary>
+            Text or a WPF element to add to the text part of the menu item. In/out parameter.
+            Text may contain _ for Alt-underline, whereas <c>command.Text</c> is without it.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.AuMenuCommands.FactoryParams.image">
+            <summary><see cref="F:Au.Controls.CommandAttribute.image"/>. In/out parameter.</summary>
+        </member>
+        <member name="F:Au.Controls.AuMenuCommands.FactoryParams.keys">
+            <summary><see cref="F:Au.Controls.CommandAttribute.keys"/>. In/out parameter.</summary>
+        </member>
+        <member name="F:Au.Controls.AuMenuCommands.FactoryParams.param">
+            <summary><see cref="F:Au.Controls.CommandAttribute.param"/>. In/out parameter. This class does not use it.</summary>
+        </member>
+        <member name="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)">
+            <summary>
+            Sets <see cref="P:Au.Controls.AuMenuCommands.Command.MenuItem"/> property.
+            If your factory action does not call this function, the menu item will be created after it returns.
+            </summary>
+            <param name="mi">Your created menu item. If null, this function creates standard menu item.</param>
+            <remarks>
+            Uses the <i>text</i> and <i>image</i> fields; you can change them before. Sets menu item's <b>Icon</b> property if image!=null and mi?.Image==null. Sets <b>Header</b> property only if creates new item.
+            The menu item will be added to the parent menu after your factory action returns.
+            </remarks>
+        </member>
+        <member name="T:Au.Controls.CommandAttribute">
+            <summary>
+            Used with <see cref="T:Au.Controls.AuMenuCommands"/>.
+            Allows to add menu items in the same order as methods and nested types, and optionally specify menu item text etc.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.name">
+            <summary>
+            Command name to use instead of method/type name. Use to resolve duplicate name conflict.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.text">
+            <summary>
+            Menu item text. Use _ to Alt-underline a character. If "...", appends it to default text.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.underlined">
+            <summary>
+            Alt-underlined character in menu item text.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.separator">
+            <summary>
+            Add separator before the menu item.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.checkable">
+            <summary>
+            Checkable menu item.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.keys">
+            <summary>
+            Hotkey etc. See <see cref="M:Au.Controls.AuMenuCommands.Command.SetKeys(System.String,System.Windows.UIElement,System.Boolean)"/>.
+            To make it work, either specify <i>keysTarget</i> or let your factory function call <see cref="M:Au.Controls.AuMenuCommands.Command.SetKeys(System.String,System.Windows.UIElement,System.Boolean)"/> and pass this string.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.keysText">
+            <summary>
+            Text for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>. If not set, will use <b>keys</b>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.image">
+            <summary>
+            Image string.
+            The factory action receives this string in parameters. It can load image and set menu item's <b>Icon</b> property.
+            If factory action not used or does not set <b>Image</b> property and does not set image=null, this class loads image from exe or script resources and sets <b>Icon</b> property. The resource file can be xaml (for example converted from svg) or png etc. If using Visual Studio, to add an image to resources set its build action = Resource. More info: <see cref="T:Au.Util.AResources"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.tooltip">
+            <summary>
+            Let <see cref="M:Au.Controls.AuMenuCommands.Command.CopyToButton(System.Windows.Controls.Primitives.ButtonBase,System.Nullable{System.Windows.Controls.Dock},System.Windows.UIElement,System.String,System.Boolean)"/> use this text for tooltip.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.param">
+            <summary>
+            A string or other value to pass to the factory action.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.CommandAttribute.hide">
+            <summary>
+            Don't add the <b>MenuItem</b> to menu.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.CommandAttribute.#ctor(System.Int32)">
+            <summary>
+            Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
+            </summary>
+            <param name="l">Don't use.</param>
+        </member>
+        <member name="M:Au.Controls.CommandAttribute.#ctor(System.String,System.Int32)">
+            <summary>
+            Specifies menu item text.
+            </summary>
+            <param name="text">Menu item text. Use _ to Alt-underline a character, like "_Copy".</param>
+            <param name="l">Don't use.</param>
+        </member>
+        <member name="M:Au.Controls.CommandAttribute.#ctor(System.Char,System.Int32)">
+            <summary>
+            Specifies Alt-underlined character. Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
+            </summary>
+            <param name="underlined">Character to underline.</param>
+            <param name="l">Don't use.</param>
+        </member>
+        <member name="T:Au.Controls.AuPanels">
+            <summary>
+            Creates and manages window layout like in Visual Studio.
+            Multiple docked movable/sizable/tabable/floatable/hidable/savable panels/toolbars/documents with splitters.
+            </summary>
+            <remarks>
+            Layout is defined in default XML file, then saved in other XML file. See Layout.xml in Aedit project.
+            If new app version adds/removes/renames panels etc, this class automatically updates the saved layout.
+            
+            Let your window's ctor:
+            - call <see cref="M:Au.Controls.AuPanels.Load(System.String,System.String)"/>;
+            - set content of all leaf items (panels, toolbars, document placeholder) like <c>_panels["Files"].Content = new TreeView();</c>;
+            - set <see cref="P:Au.Controls.AuPanels.Container"/> like <c>_panels.Container = g => this.Content = g;</c>. The action is called immediately and also may be called later if need to create new root element when moving a panel etc.
+            If want to save user-customized layout, call <see cref="M:Au.Controls.AuPanels.Save"/> when closing window or at any time before it.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.AuPanels.Load(System.String,System.String)">
+            <summary>
+            Loads layout from XML file.
+            </summary>
+            <param name="xmlFileDefault">
+            XML file containing default layout. See Default\Layout.xml in editor project.
+            If starts with '&lt;', loads from XML string instead.
+            </param>
+            <param name="xmlFileCustomized">XML file containing user-modified layout. It will be created or updated by <see cref="M:Au.Controls.AuPanels.Save"/>. If null, will not save.</param>
+        </member>
+        <member name="M:Au.Controls.AuPanels.Save">
+            <summary>
+            Saves layout to XML file <i>xmlFileCustomized</i> specified when calling <see cref="M:Au.Controls.AuPanels.Load(System.String,System.String)"/>.
+            Can be called at any time. When closing window, should be called in OnClosing override after calling base.OnClosing.
+            Does nothing if <i>xmlFileCustomized</i> was null.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.Container">
+            <summary>
+            Action that adds the root node (Grid) to a container (for example Window), like <c>_panels.Container = g => this.Content = g;</c>.
+            The action is called immediately and also may be called later if need to create new root element when moving a panel etc.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.Item(System.String,System.Boolean)">
+            <summary>
+            Gets interface of a leaf item (panel, toolbar or document).
+            </summary>
+            <param name="name"></param>
+            <param name="userDocument">It is a document (not panel/toolbar) added with <see cref="M:Au.Controls.AuPanels.ILeaf.AddSibling(System.Boolean,Au.Controls.AuPanels.LeafType,System.String,System.Boolean)"/>. User documents are in a separate dictionary, to avoid name conflicts.</param>
+            <exception cref="T:System.Collections.Generic.KeyNotFoundException"></exception>
+        </member>
+        <member name="P:Au.Controls.AuPanels.CaptionBrush">
+            <summary>
+            Background brush of panel/document caption and tab strip. Default Brushes.LightSteelBlue.
+            Set before <see cref="M:Au.Controls.AuPanels.Load(System.String,System.String)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.SplitterBrush">
+            <summary>
+            Background brush of splitters.
+            Set before <see cref="M:Au.Controls.AuPanels.Load(System.String,System.String)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.BorderBrush">
+            <summary>
+            Border color of panels and documents.
+            Set before <see cref="M:Au.Controls.AuPanels.Load(System.String,System.String)"/>.
+            If not set, no borders will be added.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._ContainerWindow">
+            <summary>
+            Gets top-level window, for example to use as owner of menus/dialogs.
+            Note: it may not be direct container of the root element.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._Stack_DockedNodes">
+            <summary>
+            Gets nodes docked and really visible in this stack (not in tab, not floating, not hidden).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._IsDockedInStack">
+            <summary>
+            true if parent is stack and this is docked and not floating/hidden.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node._AddToStack(System.Boolean,System.Int32)">
+            <summary>
+            Adds elements of this to parent stack. Creates splitter if need, adds row/column, sets element properties (caption etc).
+            </summary>
+            <param name="moving">Called when moving this. Inserts, shifts sibling indices, etc. If false, adds as last item in stack.</param>
+            <param name="splitterSize"></param>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node._ReplaceInStack(Au.Controls.AuPanels._Node)">
+            <summary>
+            Replaces target with this in parent stack.
+            Used when moving, to create new parent (this) tab or stack for target and the moved node.
+            Does not add/remove tree nodes.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node._RemoveGridRowCol(System.Windows.FrameworkElement)">
+            <summary>
+            Removes an element of this from parent stack grid. Removes its row/column and shifts sibling indices.
+            </summary>
+            <param name="e">_elem or _splitter</param>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node._Stack_UpdateSplittersVisibility">
+            <summary>
+            This must be stack. Hides splitter of first visible child and shows splitters of other visible children.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._SplitterSize">
+            <summary>
+            Gets or sets actual height of <see cref="F:Au.Controls.AuPanels._Node._splitter"/> in vertical stack or width in horizontal stack.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._SizeDef">
+            <summary>
+            Gets or sets defined row height/unit in vertical stack or column width/unit in horizontal stack.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._SizeMin">
+            <summary>
+            Gets or sets minimal row height in vertical stack or column width in horizontal stack.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node._ChangeSizeUnit(System.Windows.GridUnitType,System.Boolean)">
+            <summary>
+            Sets size = actual size and new unit.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node._AddToTab(System.Boolean)">
+            <summary>
+            Adds this to parent tab at startup or when moving.
+            Caller before must call AddChild (or AddSibling) and set _index.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node.#ctor(Au.Controls.AuPanels,System.Xml.Linq.XElement)">
+            <summary>
+            Used to create root node when loading from XML.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node.#ctor(Au.Controls.AuPanels,System.Xml.Linq.XElement,Au.Controls.AuPanels._Node,System.Int32)">
+            <summary>
+            Used to create nodes when loading from XML.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node.#ctor(Au.Controls.AuPanels._Node,System.Boolean,System.Boolean)">
+            <summary>
+            Used when moving a node, to create new parent (this) stack or tab for it and target.
+            Also when moving a node, to create new parent (this) tab for it (target).
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node.#ctor(Au.Controls.AuPanels._Node,System.Boolean,Au.Controls.AuPanels.LeafType,System.String,System.Boolean)">
+            <summary>
+            Used when creating new leaf node later (after loading).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._IsToolbarsNode">
+            <summary>
+            true if this is toolbar or this is stack/tab containing only toolbars.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._IsDocumentsNode">
+            <summary>
+            true if this is document or this is tab containing documents (or tab with 0 children, which normally is not possible).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node.Name">
+            <summary>
+            Gets name of panel/toolbar/document. Exception if not leaf.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node.Elem">
+            <summary>
+            Gets the UI element of this node. It is Grid if this is stack, or TabControl if tab, else DockPanel.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels._Node._CanHaveCaptionWithText">
+            <summary>
+            true if _IsPanel or (_IsDocument and _leaf.addedLater).
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels._Node._IsVisibleReally(System.Boolean)">
+            <summary>
+            Returns true if this node does not have hidden state and is not docked in hidden tab.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.AuPanels.ILeaf">
+            <summary>
+            Interface for a leaf item (panel, toolbar or document).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ILeaf.Content">
+            <summary>
+            Gets or sets content of panel/toolbar/document.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ILeaf.Visible">
+            <summary>
+            true if visible, either floating or docked.
+            The 'get' function returns true even if inactive tab item. The 'set' function makes tab item active.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ILeaf.Floating">
+            <summary>
+            true if floating and visible.
+            false if docked or hidden.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuPanels.ILeaf.AddSibling(System.Boolean,Au.Controls.AuPanels.LeafType,System.String,System.Boolean)">
+            <summary>
+            Adds new leaf item (panel, toolbar or document) before or after this.
+            </summary>
+            <param name="after"></param>
+            <param name="type"></param>
+            <param name="name"></param>
+            <param name="canClose">Add "Close    M-click" item in context menu. It will fire <see cref="E:Au.Controls.AuPanels.ILeaf.Closing"/> event and call <see cref="M:Au.Controls.AuPanels.ILeaf.Delete"/> if not cancelled.</param>
+            <returns>Returns interface of the new item.</returns>
+            <exception cref="T:System.ArgumentException"><i>type</i> is not Panel/Toolbar/Document, or <i>name</i> is null, or <i>name</i> panel already exists.</exception>
+            <remarks>
+            Added items can be deleted with <see cref="M:Au.Controls.AuPanels.ILeaf.Delete"/>. Will not be saved.
+            Add documents only by the document placeholder or by added documents. Don't add other nodes by documents.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.AuPanels.ILeaf.Delete">
+            <summary>
+            Deletes this leaf item added with <see cref="M:Au.Controls.AuPanels.ILeaf.AddSibling(System.Boolean,Au.Controls.AuPanels.LeafType,System.String,System.Boolean)"/>.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Added not with <b>AddSibling</b>.</exception>
+        </member>
+        <member name="M:Au.Controls.AuPanels.ILeaf.Rename(System.String)">
+            <summary>
+            Renames this document.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ILeaf.Parent">
+            <summary>
+            Gets parent elements and index.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.AuPanels.ILeaf.VisibleChanged">
+            <summary>
+            After hiding or showing this leaf item.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.AuPanels.ILeaf.Closing">
+            <summary>
+            When user tries to close this leaf item.
+            Only if added with <see cref="M:Au.Controls.AuPanels.ILeaf.AddSibling(System.Boolean,Au.Controls.AuPanels.LeafType,System.String,System.Boolean)"/> with <i>canClose</i> true.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.AuPanels.ILeaf.ContextMenuOpening">
+            <summary>
+            When opening context menu of this leaf item.
+            You can add menu items. All default items are already added.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.AuPanels.ILeaf.TabSelected">
+            <summary>
+            When this tab item selected (becomes the active item).
+            </summary>
+        </member>
+        <member name="E:Au.Controls.AuPanels.ILeaf.ParentChanged">
+            <summary>
+            When moved to other tab or stack.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.AuPanels.LeafType">
+            <summary>Leaf item type.</summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ParentInfo.Panel">
+            <summary>
+            Gets <b>DockPanel</b> that contains or will contain <see cref="P:Au.Controls.AuPanels.ILeaf.Content"/>.
+            The first child is caption, and is <b>TextBlock</b> or <b>Rectangle</b>. The second child is <b>Content</b> (if set) or none.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ParentInfo.Grid">
+            <summary>
+            Gets parent <b>Grid</b> if in stack, else null.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ParentInfo.TabControl">
+            <summary>
+            Gets parent <b>TabControl</b> if in tab, else null.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ParentInfo.TabItem">
+            <summary>
+            Gets parent <b>TabItem</b> if in tab, else null.
+            Its <b>Tag</b> is this <b>ILeaf</b>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuPanels.ParentInfo.Index">
+            <summary>
+            Gets node index in parent node. If in tab, it is also tab item index.
+            </summary>
+        </member>
         <member name="M:Au.Controls.AuDockPanel.ZCreate(System.String,System.String,System.Windows.Forms.Control[])">
             <summary>
             Loads UI layout from XML file and adds controls (panels, toolbars) to this control.

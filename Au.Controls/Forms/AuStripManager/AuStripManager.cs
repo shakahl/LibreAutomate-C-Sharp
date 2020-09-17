@@ -349,7 +349,7 @@ namespace Au.Controls
 				if(x.Attr(out s, "hk")) {
 					bool ok = AKeys.More.ParseHotkeyString(s, out var hk);
 					if(ok) try { mi.ShortcutKeys = hk; } catch { ok = false; }
-					if(!ok) ADebug.Print("Invalid hotkey: " + s);
+					ADebug.PrintIf(!ok, "Invalid hotkey: " + s);
 				}
 				if(x.Attr(out string ss, "hkText")) mi.ShortcutKeyDisplayString = (s == null) ? ss : s + ", " + ss;
 			} else {

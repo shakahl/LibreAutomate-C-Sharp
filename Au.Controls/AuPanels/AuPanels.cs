@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -17,8 +18,6 @@ using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Markup;
-
-using Au.Types;
 
 namespace Au.Controls
 {
@@ -48,7 +47,7 @@ namespace Au.Controls
 		/// Loads layout from XML file.
 		/// </summary>
 		/// <param name="xmlFileDefault">
-		/// XML file containing default layout. It eg can be in AFolders.ThisApp.
+		/// XML file containing default layout. See Default\Layout.xml in editor project.
 		/// If starts with '&lt;', loads from XML string instead.
 		/// </param>
 		/// <param name="xmlFileCustomized">XML file containing user-modified layout. It will be created or updated by <see cref="Save"/>. If null, will not save.</param>
@@ -226,67 +225,6 @@ namespace Au.Controls
 			public bool Equals(XElement x, XElement y) => x.Attr("name") == y.Attr("name");
 			public int GetHashCode(XElement obj) => obj.Attr("name").GetHashCode();
 			//fast, same as with XName _name.
-		}
-
-		/// <summary>
-		/// Interface for a leaf item (panel, toolbar or document).
-		/// </summary>
-		public interface ILeaf
-		{
-			FrameworkElement Content { get; set; }
-			bool Visible { get; set; }
-			bool Floating { get; set; }
-			ILeaf AddSibling(bool after, LeafType type, string name, bool canClose);
-			void Delete();
-			void Rename(string name);
-			ParentInfo Parent { get; }
-
-			event EventHandler<bool> VisibleChanged;
-			event CancelEventHandler Closing;
-			event EventHandler<AContextMenu> ContextMenuOpening;
-			event EventHandler TabSelected;
-			event EventHandler ParentChanged;
-		}
-
-		/// <summary>Leaf item type.</summary>
-		public enum LeafType { None, Panel, Toolbar, Document }
-
-		public struct ParentInfo
-		{
-			readonly DockPanel _panel;
-			readonly FrameworkElement _elem;
-			readonly int _index;
-
-			internal ParentInfo(DockPanel panel, FrameworkElement elem, int index) {
-				_panel = panel; _elem = elem; _index = index;
-			}
-
-			/// <summary>
-			/// Gets <b>DockPanel</b> that contains or will contain <see cref="ILeaf.Content"/>.
-			/// The first child is caption, and is <b>TextBlock</b> or <b>Rectangle</b>. The second child is <b>Content</b> (if set) or none.
-			/// </summary>
-			public DockPanel Panel => _panel;
-
-			/// <summary>
-			/// Gets parent <b>Grid</b> if in stack, else null.
-			/// </summary>
-			public Grid Grid => _elem as Grid;
-
-			/// <summary>
-			/// Gets parent <b>TabControl</b> if in tab, else null.
-			/// </summary>
-			public TabControl TabControl => _elem as TabControl;
-
-			/// <summary>
-			/// Gets parent <b>TabItem</b> if in tab, else null.
-			/// Its <b>Tag</b> is this <b>ILeaf</b>.
-			/// </summary>
-			public TabItem TabItem => TabControl?.Items[_index] as TabItem;
-
-			/// <summary>
-			/// Gets node index in parent node. If in tab, it is also tab item index.
-			/// </summary>
-			public int Index => _index;
 		}
 	}
 }

@@ -5,17 +5,21 @@ using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
-
+using System.Windows.Controls;
 using Au;
+using Au.Controls;
 using Au.Types;
 
-class Program
+class App
 {
-	internal static AOutputServer OutputServer;
-	public static MainWindow Wnd;
-	public static ProgramSettings Settings;
-	public static string UserGuid;
 	public const string AppName = "QM3";
+	public static string UserGuid;
+	internal static AOutputServer OutputServer;
+	public static AppSettings Settings;
+	public static MainWindow Wnd;
+	public static AuPanels Panels;
+	public static AuMenuCommands Commands;
+	public static ToolBar[] Toolbars;
 	//public static FilesModel Model;
 	//public static RunningTasks Tasks;
 
@@ -38,8 +42,8 @@ class Program
 
 		//if (CommandLine.OnProgramStarted(args)) return;
 
-		OutputServer = new AOutputServer(true) { NoNewline = true };
-		OutputServer.Start();
+		//OutputServer = new AOutputServer(true) { NoNewline = true };
+		//OutputServer.Start();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
@@ -48,7 +52,7 @@ class Program
 		//System.Windows.Forms.Application.EnableVisualStyles(); //no, we have manifest
 		//System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
 
-		Settings = ProgramSettings.Load();
+		Settings = AppSettings.Load();
 
 		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
@@ -62,21 +66,28 @@ class Program
 		//ATimer.After(5000, _ => Wnd.Hide());
 		//ATimer.After(7000, _ => Wnd.Show());
 
-		OutputServer.Stop();
+		//OutputServer.Stop();
 	}
 
 	static void _LoadUI() {
-		var app = new App();
+		var app = new WpfApp();
+		app.InitializeComponent();
 		Wnd = new MainWindow();
+		app.DispatcherUnhandledException += (_, e) => {
+			e.Handled = 1 == ADialog.ShowError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wnd, e.Exception.ToString());
+		};
 		app.Run(Wnd);
+	}
+
+	private static void App_DispatcherUnhandledException(object sender, System.Windows.Threading.DispatcherUnhandledExceptionEventArgs e) {
+		AOutput.Write(e.Exception);
+		e.Handled = true;
 	}
 }
 
 /// <summary>
 /// Interaction logic for App.xaml
 /// </summary>
-partial class App : Application
+partial class WpfApp : Application
 {
-	//static MainWindow _mainWindow;
-
 }

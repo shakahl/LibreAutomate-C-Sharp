@@ -21,9 +21,9 @@ using Au.Util;
 /// Program settings.
 /// AFolders.ThisAppDocuments + @".settings\Settings.json"
 /// </summary>
-class ProgramSettings : ASettings
+class AppSettings : ASettings
 {
-	public static ProgramSettings Load() => Load<ProgramSettings>(DirBS + "Settings.json");
+	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json");
 
 	public static readonly string DirBS = AFolders.ThisAppDocuments + @".settings\";
 

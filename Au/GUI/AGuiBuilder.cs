@@ -1790,7 +1790,7 @@ namespace Au
 				case WebBrowser u: u.Source = new Uri(source); break;
 				case Frame u: u.Source = new Uri(source); break;
 				case RichTextBox u when source.Ends(".rtf", true):
-					using (var fs = File.OpenRead(source)) { u.Selection.Load(fs, DataFormats.Rtf); }
+					using (var fs = AFile.LoadStream(source)) { u.Selection.Load(fs, DataFormats.Rtf); }
 					//also supports DataFormats.Text,Xaml,XamlPackage. If need HTML, download and try HtmlToXamlConverter. See https://www.codeproject.com/Articles/1097390/Displaying-HTML-in-a-WPF-RichTextBox
 					break;
 				default: bad = true; break;

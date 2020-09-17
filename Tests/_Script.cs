@@ -1033,6 +1033,10 @@ class Script : AScript
 
 		//new ResourceManager
 
+		//switch (5) {
+		//case 5 or 6: break;
+		//}
+
 		//TestNint();
 		//TestMinusSign();
 		//TestStringInterpolationBoxing();

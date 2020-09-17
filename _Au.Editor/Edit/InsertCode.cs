@@ -79,7 +79,7 @@ static class InsertCode
 	/// <param name="s">If contains '%', removes it and moves caret there. Alternatively use '\b', then does not touch '%'.</param>
 	public static void TextSimplyInControl(System.Windows.Forms.Control c, string s) {
 		if (c == null) {
-			c = AWnd.ThisThread.FocusedControl;
+			c = AWnd.ThisThread.FocusedWinformsControl;
 			if (c == null) return;
 		} else c.Focus();
 

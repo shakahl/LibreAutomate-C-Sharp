@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Au.Types;
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -14,8 +15,9 @@ using System.Resources;
 using System.Globalization;
 using System.Windows.Media.Imaging;
 using System.Collections.Concurrent;
-
-using Au.Types;
+using System.Windows.Markup;
+using System.Windows;
+using System.Windows.Controls;
 
 namespace Au.Util
 {
@@ -132,6 +134,33 @@ namespace Au.Util
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
 		public static BitmapFrame GetWpfImage(string name) {
 			return BitmapFrame.Create(GetStream(name));
+		}
+
+		/// <summary>
+		/// Gets WPF object from XAML resource, for example image converted from SVG format.
+		/// Returns object of type of the XAML root object, for example Viewbox if image.
+		/// </summary>
+		/// <param name="name">Can be resource name like "file.xaml" or "sub/file.xaml" or "&lt;LoadedAssemblyName&gt;file.xaml". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		public static object GetXamlObject(string name) {
+			return XamlReader.Load(GetStream(name));
+		}
+
+		/// <summary>
+		/// Gets WPF image element from xaml or other image resource.
+		/// </summary>
+		/// <param name="name">Can be resource name like "file.png" or "sub/file.xaml" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
+		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		/// <remarks>
+		/// If <i>name</i> ends with ".xaml" (case-insensitive), calls <see cref="GetXamlObject"/>. Else returns <see cref="Image"/> with <b>Source</b> = <see cref="GetWpfImage"/>.
+		/// </remarks>
+		public static UIElement GetWpfImageElement(string name) {
+			if (name.Ends(".xaml", true)) return (UIElement)GetXamlObject(name);
+			return new Image { Source = GetWpfImage(name) };
 		}
 
 		//probably not useful

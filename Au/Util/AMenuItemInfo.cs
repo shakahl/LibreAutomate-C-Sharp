@@ -89,7 +89,7 @@ namespace Au.Util
 		/// Returns null if failed.
 		/// </summary>
 		/// <param name="removeHotkey">If contains '\t' character, get substring before it.</param>
-		/// <param name="removeAmp">Call <see cref="AStringUtil.RemoveUnderlineAmpersand"/>.</param>
+		/// <param name="removeAmp">Call <see cref="AStringUtil.RemoveUnderlineChar"/>.</param>
 		public string GetText(bool removeHotkey, bool removeAmp) => GetText(_hm, _id, false, removeHotkey, removeAmp);
 
 		/// <summary>
@@ -100,7 +100,7 @@ namespace Au.Util
 		/// <param name="id"></param>
 		/// <param name="byIndex">id is 0-based index. For example you can use it to get text of a submenu-item, because such items usually don't have id.</param>
 		/// <param name="removeHotkey">If contains '\t' character, get substring before it.</param>
-		/// <param name="removeAmp">Call <see cref="AStringUtil.RemoveUnderlineAmpersand"/>.</param>
+		/// <param name="removeAmp">Call <see cref="AStringUtil.RemoveUnderlineChar"/>.</param>
 		public static unsafe string GetText(IntPtr menuHandle, int id, bool byIndex, bool removeHotkey, bool removeAmp)
 		{
 			Api.MENUITEMINFO mi = default;
@@ -116,7 +116,7 @@ namespace Au.Util
 			}
 			var s = b.ToString();
 			if(removeHotkey) { int i = s.IndexOf('\t'); if(i >= 0) s = s.Remove(i); }
-			if(removeAmp) s = AStringUtil.RemoveUnderlineAmpersand(s);
+			if(removeAmp) s = AStringUtil.RemoveUnderlineChar(s);
 			return s;
 		}
 	}

@@ -42,25 +42,22 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Removes '&amp;' characters from string.
-		/// Replaces "&amp;&amp;" with "&amp;".
-		/// Returns new string if s has '&amp;' characters, else returns s.
+		/// Removes characters used to underline next character when the text is displayed in UI. Replaces two such caracters with single.
 		/// </summary>
+		/// <param name="s">Can be null.</param>
+		/// <param name="underlineChar"></param>
 		/// <remarks>
-		/// Character '&amp;' is used to underline next character in displayed text of dialog controls and menu items. Two '&amp;' are used to display single '&amp;'.
-		/// The underline is displayed when using the keyboard (eg Alt key) to select dialog controls and menu items.
+		/// Character '&amp;' (in WPF '_') is used to underline next character in displayed text of dialog controls and menu items. Two such characters are used to display single.
+		/// The underline is displayed when using the keyboard with Alt key to select dialog controls and menu items.
 		/// </remarks>
-		public static string RemoveUnderlineAmpersand(string s) {
-			if (!s.NE()) {
-				for (int i = 0; i < s.Length; i++) if (s[i] == '&') goto g1;
-				return s;
-				g1:
+		public static string RemoveUnderlineChar(string s, char underlineChar = '&') {
+			if (s != null && s.Contains(underlineChar)) {
 				var b = AMemoryArray.Char_(s.Length);
-				int j = 0;
+				int j = 0; bool was = false;
 				for (int i = 0; i < s.Length; i++) {
-					if (s[i] == '&') {
-						if (i < s.Length - 1 && s[i + 1] == '&') i++;
-						else continue;
+					if (s[i] == underlineChar) {
+						if (i < s.Length - 1 && s[i + 1] == underlineChar) i++;
+						else if (!was) { was = underlineChar == '_'; continue; } //WPF removes only first single _
 					}
 					b.A[j++] = s[i];
 				}

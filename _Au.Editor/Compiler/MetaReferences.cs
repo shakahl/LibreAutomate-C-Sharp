@@ -254,7 +254,7 @@ namespace Au.Compiler
 
 		public static bool IsDotnetAssembly(string path)
 		{
-			using var stream = AFile.WaitIfLocked(() => File.OpenRead(path));
+			using var stream = AFile.LoadStream(path);
 			using var pr = new System.Reflection.PortableExecutable.PEReader(stream);
 			return pr.HasMetadata;
 		}

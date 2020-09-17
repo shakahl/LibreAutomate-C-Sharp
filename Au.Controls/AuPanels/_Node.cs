@@ -451,9 +451,6 @@ namespace Au.Controls
 
 			#region ILeaf
 
-			/// <summary>
-			/// Gets or sets content of panel/toolbar/document.
-			/// </summary>
 			FrameworkElement ILeaf.Content {
 				get => _leaf.content;
 				set {
@@ -462,10 +459,6 @@ namespace Au.Controls
 				}
 			}
 
-			/// <summary>
-			/// true if visible, either floating or docked.
-			/// The 'get' function returns true even if inactive tab item. The 'set' function makes tab item active.
-			/// </summary>
 			bool ILeaf.Visible {
 				get => _IsVisibleReally();
 				set {
@@ -484,43 +477,18 @@ namespace Au.Controls
 				return true;
 			}
 
-			/// <summary>
-			/// true if floating and visible.
-			/// false if docked or hidden.
-			/// </summary>
 			bool ILeaf.Floating {
 				get => _state == _DockState.Float;
 				set => _SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
 			}
 
-			/// <summary>
-			/// Gets parent elements and index.
-			/// </summary>
 			ParentInfo ILeaf.Parent => new ParentInfo(_leaf.panel.Panel, Parent._elem, _index);
 
-			/// <summary>
-			/// Adds new leaf item (panel, toolbar or document) before or after this.
-			/// </summary>
-			/// <param name="after"></param>
-			/// <param name="type"></param>
-			/// <param name="name"></param>
-			/// <param name="canClose">Add "Close    M-click" item in context menu. It will fire <see cref="Closing"/> event and call <see cref="Delete"/> if not cancelled.</param>
-			/// <param name="select">Select the new tab item.</param>
-			/// <returns>Returns interface of the new item.</returns>
-			/// <exception cref="ArgumentException"><i>type</i> is not Panel/Toolbar/Document, or <i>name</i> is null, or <i>name</i> panel already exists.</exception>
-			/// <remarks>
-			/// Added items can be deleted with <see cref="Delete"/>. Will not be saved.
-			/// Add documents only by the document placeholder or by added documents. Don't add other nodes by documents.
-			/// </remarks>
 			ILeaf ILeaf.AddSibling(bool after, LeafType type, string name, bool canClose) {
 				if (name == null || (type != LeafType.Panel && type != LeafType.Toolbar && type != LeafType.Document)) throw new ArgumentException();
 				return new _Node(this, after, type, name, canClose);
 			}
 
-			/// <summary>
-			/// Deletes this leaf item added with <see cref="AddSibling"/>.
-			/// </summary>
-			/// <exception cref="InvalidOperationException">Added not with <b>AddSibling</b>.</exception>
 			public void Delete() {
 				if (!_leaf.addedLater) throw new InvalidOperationException();
 				if (_state == _DockState.Float) _SetDockState(0);
@@ -530,10 +498,6 @@ namespace Au.Controls
 				_Dictionary.Remove(_leaf.name);
 			}
 
-			/// <summary>
-			/// Renames this document.
-			/// </summary>
-			/// <param name="name"></param>
 			void ILeaf.Rename(string name) {
 				//if (!_IsLeaf) throw new InvalidOperationException(); //impossible, unless called from this class
 				if (name == null) throw new ArgumentException();
@@ -547,31 +511,14 @@ namespace Au.Controls
 				if (_floatWindow != null) _floatWindow.Title = name;
 			}
 
-			/// <summary>
-			/// After hiding or showing this leaf item.
-			/// </summary>
 			public event EventHandler<bool> VisibleChanged;
 
-			/// <summary>
-			/// When user tries to close this leaf item.
-			/// Only if added with <see cref="AddSibling"/> with <i>canClose</i> true.
-			/// </summary>
 			public event CancelEventHandler Closing;
 
-			/// <summary>
-			/// When opening context menu of this leaf item.
-			/// You can add menu items. All default items are already added.
-			/// </summary>
 			public event EventHandler<AContextMenu> ContextMenuOpening;
 
-			/// <summary>
-			/// When this tab item selected (becomes the active item).
-			/// </summary>
 			public event EventHandler TabSelected;
 
-			/// <summary>
-			/// When moved to other tab or stack.
-			/// </summary>
 			public event EventHandler ParentChanged;
 
 			#endregion
