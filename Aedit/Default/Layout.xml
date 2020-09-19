@@ -25,8 +25,8 @@ active - tab.
 <stack o="v">
 	<stack o="h">
 		<toolbar name="Menu" />
+		<toolbar name="Help" z="200" />
 		<toolbar name="Tools" />
-		<toolbar name="Help" />
 		<toolbar name="Custom1" z="100*" />
 	</stack>
 	<stack o="h" z="600*" s="1">

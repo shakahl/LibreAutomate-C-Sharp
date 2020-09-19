@@ -83,7 +83,7 @@
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">
-		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close etitle Aedit" />
+		<Exec Command="&quot;$(SolutionDir)Other\Programs\nircmd.exe&quot; win close class Aedit.TrayNotify" />
 	</Target>
 
 	<Target Name="PostBuild" AfterTargets="PostBuildEvent">

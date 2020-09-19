@@ -239,7 +239,7 @@ namespace Au.Controls
 					int z = _SplitterSize;
 					for (int i = 1; i <= 10; i++) {
 						m[i.ToString()] = o => _SplitterSize = (o.Item.Header as string).ToInt();
-						if (i == z) m.LastItem.IsChecked = true;
+						if (i == z) m.Last.IsChecked = true;
 					}
 				}
 				m.Separator();
@@ -249,15 +249,15 @@ namespace Au.Controls
 				if ((parentStack.isVertical ? parentStack.grid.RowDefinitions.Where(o => !o.Height.IsAuto).Count() : parentStack.grid.ColumnDefinitions.Where(o => !o.Width.IsAuto).Count()) > 2) {
 					//m.Separator();
 					m["Resize Nearest"] = o => _splitter.ResizeNearest ^= true;
-					m.LastItem.IsChecked = _splitter.ResizeNearest;
-					m.LastItem.InputGestureText = "Ctrl";
+					m.Last.IsChecked = _splitter.ResizeNearest;
+					m.Last.InputGestureText = "Ctrl";
 				}
 				if (Parent.Parent != null) {
 					m.Separator();
 					using (m.Submenu("Stack")) {
 						bool isFloating = Parent._state.Has(_DockState.Float);
 						m[isFloating ? "Dock" : "Float"] = o => Parent._SetDockState(isFloating ? 0 : _DockState.Float);
-						if (!isFloating) m.LastItem.InputGestureText = "Alt+drag";
+						if (!isFloating) m.Last.InputGestureText = "Alt+drag";
 						Parent._ContextMenu_Move(m);
 					}
 				}
@@ -276,8 +276,8 @@ namespace Au.Controls
 
 				void _UnitItem(string text, GridUnitType unit) {
 					m[text] = o => _SetUnit(unit);
-					if (unit == unitNow) m.LastItem.IsChecked = true;
-					if (disableFixed && unit == GridUnitType.Pixel) m.LastItem.IsEnabled = false; //CONSIDER: don't need this. Maybe user wants to set row A fixed and then row B star, not vice versa. But if forgets and makes window smaller, some panels and splitters may become invisible.
+					if (unit == unitNow) m.Last.IsChecked = true;
+					if (disableFixed && unit == GridUnitType.Pixel) m.Last.IsEnabled = false; //CONSIDER: don't need this. Maybe user wants to set row A fixed and then row B star, not vice versa. But if forgets and makes window smaller, some panels and splitters may become invisible.
 				}
 
 				void _SetUnit(GridUnitType unit) {

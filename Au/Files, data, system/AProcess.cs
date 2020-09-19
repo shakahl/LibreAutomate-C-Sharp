@@ -512,6 +512,17 @@ namespace Au
 				}
 			}
 		}
+
+		/// <summary>
+		/// After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
+		/// </summary>
+		internal static void MinimizePhysicalMemory_(int afterMS) {
+			Task.Delay(afterMS).ContinueWith(_ => {
+				GC.Collect();
+				GC.WaitForPendingFinalizers();
+				Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
+			});
+		}
 	}
 }
 

@@ -49,7 +49,10 @@ namespace Au
 		/// <summary>
 		/// Creates new <see cref="MenuItem"/> and adds to the menu. Returns it.
 		/// </summary>
-		/// <param name="text">Label. See <see cref="HeaderedItemsControl.Header"/>.</param>
+		/// <param name="text">
+		/// Label. See <see cref="HeaderedItemsControl.Header"/>.
+		/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
+		/// </param>
 		/// <param name="icon">See <see cref="this[string, object, string, int]"/>.</param>
 		/// <param name="click">Action called on click.</param>
 		/// <param name="f">[CallerFilePath]</param>
@@ -60,21 +63,38 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// m["Example"] = o => AOutput.Write(o);
-		/// m.LastItem.IsChecked=true;
+		/// m.Last.IsChecked=true;
 		/// ]]></code>
 		/// </example>
 		public MenuItem Add(object text, object icon = null, Action<CMActionArgs> click = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
-			var i = new _MenuItem(this) { action = click, sourceFile = f, sourceLine = l, exceptOpt = ExceptionHandling, startThread = ActionThread, Header = text };
-			i.Icon = MenuItemIcon_(icon, click, ExtractIconPathFromCode);
-			CurrentAddMenu.Items.Add(LastItem = i);
-			ItemAdded?.Invoke(i);
-			return i;
+			string gest = null;
+			if (text is string s && s.Contains('\0')) {
+				int j = s.IndexOf('\0');
+				text = s[0..j];
+				gest = s[++j..];
+			}
+			var item = new _MenuItem(this) {
+				action = click,
+				sourceFile = f,
+				sourceLine = l,
+				exceptOpt = ExceptionHandling,
+				startThread = ActionThread,
+				Header = text
+			};
+			if (gest != null) item.InputGestureText = gest;
+			item.Icon = MenuItemIcon_(icon, click, ExtractIconPathFromCode);
+			CurrentAddMenu.Items.Add(Last = item);
+			ItemAdded?.Invoke(item);
+			return item;
 		}
 
 		/// <summary>
 		/// Creates new <see cref="MenuItem"/> and adds to the menu.
 		/// </summary>
-		/// <param name="text">Label. See <see cref="HeaderedItemsControl.Header"/>.</param>
+		/// <param name="text">
+		/// Label. See <see cref="HeaderedItemsControl.Header"/>.
+		/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
+		/// </param>
 		/// <param name="icon">
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
@@ -97,7 +117,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// m["Example"] = o => AOutput.Write(o);
-		/// m.LastItem.IsChecked=true;
+		/// m.Last.IsChecked=true;
 		/// ]]></code>
 		/// </example>
 		public Action<CMActionArgs> this[string text, object icon = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0] { set => Add(text, icon, value, f, l); }
@@ -137,7 +157,7 @@ namespace Au
 		/// <summary>
 		/// Gets the last added <see cref="MenuItem"/>.
 		/// </summary>
-		public MenuItem LastItem { get; private set; }
+		public MenuItem Last { get; private set; }
 
 		/// <summary>
 		/// Called when added a non-separator item.

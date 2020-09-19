@@ -40,12 +40,26 @@ partial class MainWindow : Window
 
 		var atb = App.Toolbars = new ToolBar[7];
 		for (int i = 0; i < atb.Length; i++) {
-			string name = i switch { 0 => "Custom1", 1 => "Custom2", 2 => "Tools", 3 => "Help", 4 => "File", 5 => "Run", _ => "Edit" };
-			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
+			string name = i switch { 0 => "Custom1", 1 => "Custom2", 2 => "Help", 3 => "Tools", 4 => "File", 5 => "Run", _ => "Edit" };
 			var c = new ToolBar { Name = name };
-			tt.ToolBars.Add(atb[i] = c);
-
+			atb[i] = c;
+			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
+			tt.ToolBars.Add(c);
+#if true
+			if (name == "Help") {
+				var p = new DockPanel { Background = tt.Background };
+				DockPanel.SetDock(tt, Dock.Right);
+				p.Children.Add(tt);
+				var box = new TextBox { Height = 20, Margin = new Thickness(3, 1, 3, 2), Padding = new Thickness(1, 1, 1, 0) };
+				p.Children.Add(box);
+				_panels[name].Content = p;
+			} else {
+				_panels[name].Content = tt;
+			}
+#else
 			if (name == "Help") c.Items.Add(new TextBox { Width = 150, Padding = new Thickness(1, 0, 1, 0) });
+			_panels[name].Content = tt;
+#endif
 		}
 
 		App.Commands.InitToolbarsAndCustomize(AFolders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
@@ -62,6 +76,17 @@ partial class MainWindow : Window
 	protected override void OnClosing(CancelEventArgs e) {
 		base.OnClosing(e);
 		_panels.Save();
+		if (App.Settings.runHidden) {
+			e.Cancel = true;
+			Hide();
+			AProcess.MinimizePhysicalMemory_(1000);
+		}
+	}
+
+	protected override void OnActivated(EventArgs e) {
+		//var w = this.Hwnd(); if (AWnd.Active != w) w.ActivateLL(); //activates window, but this is a bad place for it, eg does not set focus correctly
+		var w = this.Hwnd(); if (AWnd.Active != w) Dispatcher.InvokeAsync(() => w.ActivateLL());
+		base.OnActivated(e);
 	}
 
 	void _OpenDocuments() {

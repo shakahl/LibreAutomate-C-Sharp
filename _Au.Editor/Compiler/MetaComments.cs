@@ -298,6 +298,7 @@ namespace Au.Compiler
 		/// Meta option 'icon'.
 		/// </summary>
 		public FileNode IconFile { get; private set; }
+		//SHOULDDO: support multiple native icons. Eg for per-monitor-DPI-aware tray icons must be used only icons from native resources.
 
 		/// <summary>
 		/// Meta option 'manifest'.

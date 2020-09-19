@@ -63,12 +63,12 @@ namespace Au.Controls
 
 				void _DockStateItem(_DockState state, string s1, string s2) {
 					m[s1] = o => _SetDockState(state);
-					m.LastItem.InputGestureText = s2;
+					m.Last.InputGestureText = s2;
 				}
 
 				void _CaptionAtItem(Dock ca) {
 					m[ca.ToString()] = o => thisOrParentTab._SetCaptionAt(ca);
-					if (ca == thisOrParentTab._captionAt) m.LastItem.IsChecked = true;
+					if (ca == thisOrParentTab._captionAt) m.Last.IsChecked = true;
 				}
 
 				void _ShowSubmenus() {

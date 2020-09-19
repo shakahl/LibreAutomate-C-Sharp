@@ -9273,6 +9273,11 @@
             In automation scripts this property is implicitly set = true, unless script's role is exeProgram and it does not use <see cref="T:Au.AScript"/> as base class.
             </remarks>
         </member>
+        <member name="M:Au.AProcess.MinimizePhysicalMemory_(System.Int32)">
+            <summary>
+            After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
+            </summary>
+        </member>
         <member name="T:Au.AProcessMemory">
             <summary>
             Allocates, writes and reads memory in other process.
@@ -10278,7 +10283,10 @@
             <summary>
             Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu. Returns it.
             </summary>
-            <param name="text">Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.</param>
+            <param name="text">
+            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
+            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
+            </param>
             <param name="icon">See <see cref="P:Au.AContextMenu.Item(System.String,System.Object,System.String,System.Int32)"/>.</param>
             <param name="click">Action called on click.</param>
             <param name="f">[CallerFilePath]</param>
@@ -10289,7 +10297,7 @@
             <example>
             <code><![CDATA[
             m["Example"] = o => AOutput.Write(o);
-            m.LastItem.IsChecked=true;
+            m.Last.IsChecked=true;
             ]]></code>
             </example>
         </member>
@@ -10297,7 +10305,10 @@
             <summary>
             Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu.
             </summary>
-            <param name="text">Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.</param>
+            <param name="text">
+            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
+            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
+            </param>
             <param name="icon">
             Can be:
             - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
@@ -10320,7 +10331,7 @@
             <example>
             <code><![CDATA[
             m["Example"] = o => AOutput.Write(o);
-            m.LastItem.IsChecked=true;
+            m.Last.IsChecked=true;
             ]]></code>
             </example>
         </member>
@@ -10348,7 +10359,7 @@
             Gets <see cref="T:System.Windows.Controls.ItemsControl"/> of the menu or submenu where new items currently would be added.
             </summary>
         </member>
-        <member name="P:Au.AContextMenu.LastItem">
+        <member name="P:Au.AContextMenu.Last">
             <summary>
             Gets the last added <see cref="T:System.Windows.Controls.MenuItem"/>.
             </summary>

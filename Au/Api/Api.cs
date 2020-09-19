@@ -504,52 +504,14 @@ namespace Au.Types
 		[DllImport("shell32.dll")]
 		internal static extern char** CommandLineToArgvW(string lpCmdLine, out int pNumArgs);
 
-		internal struct NOTIFYICONDATA
-		{
-			public int cbSize;
-			public AWnd hWnd;
-			public int uID;
-			public uint uFlags;
-			public int uCallbackMessage;
-			public IntPtr hIcon;
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)]
-			public string szTip;
-			public uint dwState;
-			public uint dwStateMask;
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)]
-			public string szInfo;
+		[DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
+		internal static extern bool Shell_NotifyIcon(uint dwMessage, in NOTIFYICONDATA lpData);
 
-			[StructLayout(LayoutKind.Explicit)]
-			internal struct TYPE_1
-			{
-				[FieldOffset(0)]
-				public int uTimeout;
-				[FieldOffset(0)]
-				public uint uVersion;
-			}
-			public TYPE_1 _11;
-			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)]
-			public string szInfoTitle;
-			public uint dwInfoFlags;
-			public Guid guidItem;
-			public IntPtr hBalloonIcon;
-		}
-
-		internal const uint NIN_SELECT = 0x400;
-		internal const uint NINF_KEY = 0x1;
-		internal const uint NIN_KEYSELECT = 0x401;
-		internal const uint NIN_BALLOONSHOW = 0x402;
-		internal const uint NIN_BALLOONHIDE = 0x403;
-		internal const uint NIN_BALLOONTIMEOUT = 0x404;
-		internal const uint NIN_BALLOONUSERCLICK = 0x405;
-		internal const uint NIN_POPUPOPEN = 0x406;
-		internal const uint NIN_POPUPCLOSE = 0x407;
 		internal const uint NIM_ADD = 0x0;
 		internal const uint NIM_MODIFY = 0x1;
 		internal const uint NIM_DELETE = 0x2;
 		internal const uint NIM_SETFOCUS = 0x3;
 		internal const uint NIM_SETVERSION = 0x4;
-		internal const int NOTIFYICON_VERSION = 3;
 		internal const int NOTIFYICON_VERSION_4 = 4;
 		internal const uint NIF_MESSAGE = 0x1;
 		internal const uint NIF_ICON = 0x2;
@@ -560,29 +522,31 @@ namespace Au.Types
 		internal const uint NIF_REALTIME = 0x40;
 		internal const uint NIF_SHOWTIP = 0x80;
 		internal const uint NIS_HIDDEN = 0x1;
-		internal const uint NIS_SHAREDICON = 0x2;
-		internal const uint NIIF_NONE = 0x0;
-		internal const uint NIIF_INFO = 0x1;
-		internal const uint NIIF_WARNING = 0x2;
-		internal const uint NIIF_ERROR = 0x3;
-		internal const uint NIIF_USER = 0x4;
-		internal const uint NIIF_ICON_MASK = 0xF;
-		internal const uint NIIF_NOSOUND = 0x10;
-		internal const uint NIIF_LARGE_ICON = 0x20;
-		internal const uint NIIF_RESPECT_QUIET_TIME = 0x80;
 
-		[DllImport("shell32.dll", EntryPoint = "Shell_NotifyIconW")]
-		internal static extern bool Shell_NotifyIcon(int dwMessage, in NOTIFYICONDATA lpData);
+		internal struct NOTIFYICONDATA
+		{
+			public NOTIFYICONDATA(AWnd wNotify, uint nifFlags = 0) : this() {
+				cbSize = Api.SizeOf<Api.NOTIFYICONDATA>();
+				hWnd = wNotify;
+				uFlags = nifFlags;
+			}
 
-		//internal struct SHSTOCKICONINFO
-		//{
-		//	public int cbSize;
-		//	public IntPtr hIcon;
-		//	public int iSysImageIndex;
-		//	public int iIcon;
-		//	[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 260)]
-		//	public string szPath;
-		//}
+			public int cbSize;
+			public AWnd hWnd;
+			public uint uID;
+			public uint uFlags;
+			public uint uCallbackMessage;
+			public IntPtr hIcon;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 128)] public string szTip;
+			public uint dwState;
+			public uint dwStateMask;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 256)] public string szInfo;
+			public uint uVersion;
+			[MarshalAs(UnmanagedType.ByValTStr, SizeConst = 64)] public string szInfoTitle;
+			public uint dwInfoFlags;
+			public Guid guidItem;
+			public IntPtr hBalloonIcon;
+		}
 
 		internal struct SHSTOCKICONINFO
 		{
@@ -872,6 +836,9 @@ namespace Au.Types
 
 		[DllImport("comctl32.dll", EntryPoint = "_TrackMouseEvent")]
 		internal static extern bool TrackMouseEvent(ref TRACKMOUSEEVENT lpEventTrack);
+
+		[DllImport("comctl32.dll", EntryPoint = "#380", PreserveSig = true)]
+		internal static extern int LoadIconMetric(IntPtr hinst, LPARAM pszName, int lims, out AIcon phico);
 
 
 

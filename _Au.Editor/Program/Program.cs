@@ -73,6 +73,15 @@ static class Program
 		Directory.SetCurrentDirectory(AFolders.ThisApp); //because it is c:\windows\system32 when restarted as admin
 
 		_Main(args);
+
+		//MainForm = null;
+		//Model = null;
+		//Tasks = null;
+		//AThread.Start(() => {
+		//	EdUtil.MinimizeProcessPhysicalMemory(2000);
+		//	Api.MessageBox(default, "", "", 0);
+		//}).Join();
+		////90->4 (4/100/8)
 	}
 
 	static void _Main(string[] args)
@@ -97,13 +106,14 @@ static class Program
 
 		UserGuid = Settings.user; if(UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
-		ATimer.Every(1000, t => _TimerProc(t));
+		var timer = ATimer.Every(1000, t => _TimerProc(t));
 		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
 		//Timer1s += () => AOutput.Write("1 s");
 		//Timer1sOr025s += () => AOutput.Write("0.25 s");
 
 		FMain.ZRunApplication();
 
+		timer.Stop();
 		OutputServer.Stop();
 	}
 
