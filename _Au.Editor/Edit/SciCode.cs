@@ -970,7 +970,9 @@ partial class SciCode : AuScintilla
 	{
 		int fromUtf16 = from;
 		Z.NormalizeRange(true, ref from, ref to);
-		Debug.Assert(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to));
+		//AOutput.Write(fromUtf16, from, to, Z.CurrentPos8);//TODO
+		//Debug.Assert(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to));
+		ADebug.PrintIf(!(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to)), "bad");
 
 		if(flags.Has(ZTempRangeFlags.NoDuplicate)) {
 			for(int i = _tempRanges.Count - 1; i >= 0; i--) {

@@ -217,13 +217,7 @@ class UacDragDrop
 			}
 
 			var e = new DragEventArgs(_data, _keyState, p.x, p.y, _allowedEffects, DragDropEffects.None);
-			MethodInfo mi;
-			switch(ev) {
-			case DDEvent.Enter: mi = _miEnter; break;
-			case DDEvent.Over: mi = _miOver; break;
-			default: mi = _miDrop; break;
-			}
-			_Invoke(mi, e);
+			_Invoke(ev switch { DDEvent.Enter => _miEnter, DDEvent.Over => _miOver, _ => _miDrop }, e);
 			return e.Effect;
 
 			void _Invoke(MethodInfo method, object arg)
@@ -312,10 +306,9 @@ class UacDragDrop
 				OnDragOver(e);
 				return;
 			}
-			_enteredOnce = true;
 
 			_DDData r = default;
-			if(r.GetData(e.Data)) {
+			if(_enteredOnce = r.GetData(e.Data)) {
 				var b = Serializer_.Serialize((int)e.AllowedEffect, e.KeyState, r.files, r.shell, r.text, r.linkName);
 				e.Effect = (DragDropEffects)(int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b);
 			} else {
@@ -325,18 +318,20 @@ class UacDragDrop
 
 		protected override void OnDragOver(DragEventArgs e)
 		{
-			e.Effect = (DragDropEffects)(int)_msgWnd.Send(Api.WM_USER, (int)DDEvent.Over, e.KeyState);
+			e.Effect = _enteredOnce ? (DragDropEffects)(int)_msgWnd.Send(Api.WM_USER, (int)DDEvent.Over, e.KeyState) : default;
+			//somehow this is called 1 time after OnDragEnter calls Hide
 		}
 
 		protected override void OnDragDrop(DragEventArgs e)
 		{
+			if (!_enteredOnce) return;
 			Hide();
 			e.Effect = (DragDropEffects)(int)_msgWnd.Send(Api.WM_USER, (int)DDEvent.Drop, e.KeyState);
 		}
 
 		protected override void OnDragLeave(EventArgs e)
 		{
-			_msgWnd.Send(Api.WM_USER, (int)DDEvent.Leave);
+			if(_enteredOnce) _msgWnd.Send(Api.WM_USER, (int)DDEvent.Leave);
 		}
 	}
 

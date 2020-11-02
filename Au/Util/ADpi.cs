@@ -102,7 +102,7 @@ namespace Au.Util
 		//internal static SIZE SmallIconSize_ { get { var t = OfThisProcess / 6; return new SIZE(t, t); } } //same as AIcon.SizeSmall
 
 		/// <summary>
-		/// If <i>dpiOf.Dpi</i> isn't 96 (100%), returns scaled i. Else returns i.
+		/// Scales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
 		/// </summary>
 		public static int Scale(int i, DpiOf dpiOf) => AMath.MulDiv(i, dpiOf, 96);
 
@@ -112,12 +112,32 @@ namespace Au.Util
 		public static int Scale(int i) => AMath.MulDiv(i, OfThisProcess, 96);//TODO: remove
 
 		/// <summary>
-		/// If <i>dpiOf.Dpi</i> isn't 96 (100%), returns scaled z. Else returns z.
+		/// Scales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
 		/// </summary>
 		public static SIZE ScaleSize(SIZE z, DpiOf dpiOf) {
-			z.width = AMath.MulDiv(z.width, dpiOf, 96);
-			z.height = AMath.MulDiv(z.height, dpiOf, 96);
+			int dpi = dpiOf;
+			z.width = AMath.MulDiv(z.width, dpi, 96);
+			z.height = AMath.MulDiv(z.height, dpi, 96);
 			return z;
+		}
+		//rejected. Unscaling may be used with WPF, but then resut is often incorrect, instead must unscale to double, not to int.
+		//public static SIZE ScaleSize(SIZE z, DpiOf dpiOf, bool unscale = false) {
+		//	int i = dpiOf, j = 96; if (unscale) { j = i; i = 96; }
+		//	z.width = AMath.MulDiv(z.width, i, j);
+		//	z.height = AMath.MulDiv(z.height, i, j);
+		//	return z;
+		//}
+
+		/// <summary>
+		/// Scales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// </summary>
+		public static RECT ScaleRect(RECT r, DpiOf dpiOf) {
+			int dpi = dpiOf;
+			r.left = AMath.MulDiv(r.left, dpi, 96);
+			r.top = AMath.MulDiv(r.top, dpi, 96);
+			r.right = AMath.MulDiv(r.right, dpi, 96);
+			r.bottom = AMath.MulDiv(r.bottom, dpi, 96);
+			return r;
 		}
 
 		/// <summary>
@@ -201,7 +221,7 @@ namespace Au.Util
 		/// <summary>
 		/// Calls API <msdn>AdjustWindowRectExForDpi</msdn> if available, else <msdn>AdjustWindowRectEx</msdn>.
 		/// </summary>
-		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WS2 exStyle, bool hasMenu=false)
+		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WS2 exStyle, bool hasMenu = false)
 			=> AVersion.MinWin10_1607
 			? Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpiOf)
 			: Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);

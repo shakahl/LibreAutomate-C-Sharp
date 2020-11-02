@@ -3,8 +3,8 @@
 
 
 LRESULT CALLBACK ClipboardHook(int code, WPARAM wParam, LPARAM lParam) {
-	if(code < 0) goto g1;
 	auto m = (MSG*)lParam;
+	if(code < 0) goto g1;
 	if(m->message == WM_CLIPBOARDUPDATE) {
 		//Print("WM_CLIPBOARDUPDATE");
 		char cn[256];

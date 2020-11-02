@@ -120,6 +120,10 @@ namespace Au.Types
 		[DllImport("gdi32.dll", EntryPoint = "TextOutW")]
 		internal static extern bool TextOut(IntPtr hdc, int x, int y, char* lpString, int c);
 
+		[DllImport("gdi32.dll", EntryPoint = "ExtTextOutW")]
+		internal static extern bool ExtTextOut(IntPtr hdc, int x, int y, uint options, in RECT lprect, char* lpString, int c, int* lpDx = null);
+		internal const uint ETO_CLIPPED = 0x4;
+
 		[DllImport("gdi32.dll")]
 		internal static extern bool MoveToEx(IntPtr hdc, int x, int y, out POINT lppt);
 
@@ -180,26 +184,26 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern int GetDIBits(IntPtr hdc, IntPtr hbm, int start, int cLines, void* lpvBits, BITMAPINFOHEADER* lpbmi, uint usage);
 
-		internal const int WHITE_BRUSH = 0;
-		internal const int LTGRAY_BRUSH = 1;
-		internal const int GRAY_BRUSH = 2;
-		internal const int DKGRAY_BRUSH = 3;
-		internal const int BLACK_BRUSH = 4;
-		internal const int NULL_BRUSH = 5;
-		internal const int HOLLOW_BRUSH = 5;
-		internal const int WHITE_PEN = 6;
-		internal const int BLACK_PEN = 7;
-		internal const int NULL_PEN = 8;
-		internal const int OEM_FIXED_FONT = 10;
-		internal const int ANSI_FIXED_FONT = 11;
-		internal const int ANSI_VAR_FONT = 12;
-		internal const int SYSTEM_FONT = 13;
-		internal const int DEVICE_DEFAULT_FONT = 14;
-		internal const int DEFAULT_PALETTE = 15;
-		internal const int SYSTEM_FIXED_FONT = 16;
-		internal const int DEFAULT_GUI_FONT = 17;
-		internal const int DC_BRUSH = 18;
-		internal const int DC_PEN = 19;
+		//internal const int WHITE_BRUSH = 0;
+		//internal const int LTGRAY_BRUSH = 1;
+		//internal const int GRAY_BRUSH = 2;
+		//internal const int DKGRAY_BRUSH = 3;
+		//internal const int BLACK_BRUSH = 4;
+		//internal const int NULL_BRUSH = 5;
+		//internal const int HOLLOW_BRUSH = 5;
+		//internal const int WHITE_PEN = 6;
+		//internal const int BLACK_PEN = 7;
+		//internal const int NULL_PEN = 8;
+		//internal const int OEM_FIXED_FONT = 10;
+		//internal const int ANSI_FIXED_FONT = 11;
+		//internal const int ANSI_VAR_FONT = 12;
+		//internal const int SYSTEM_FONT = 13;
+		//internal const int DEVICE_DEFAULT_FONT = 14;
+		//internal const int DEFAULT_PALETTE = 15;
+		//internal const int SYSTEM_FIXED_FONT = 16;
+		//internal const int DEFAULT_GUI_FONT = 17;
+		//internal const int DC_BRUSH = 18;
+		//internal const int DC_PEN = 19;
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr GetStockObject(int i);
@@ -903,7 +907,7 @@ namespace Au.Types
 		//internal static Guid IID_IAccessible2 = new Guid(0xE89F726E, 0xC4F4, 0x4c19, 0xBB, 0x19, 0xB6, 0x47, 0xD7, 0xFA, 0x84, 0x78);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int AccessibleObjectFromWindow(AWnd hwnd, AccOBJID dwId, in Guid riid, out IntPtr ppvObject);
+		//internal static extern int AccessibleObjectFromWindow(AWnd hwnd, AccOBJID dwId, in Guid riid, out IAccessible ppvObject);
 
 		//[DllImport("oleacc.dll", PreserveSig = true)]
 		//internal static extern int WindowFromAccessibleObject(IntPtr iacc, out AWnd phwnd);
@@ -916,13 +920,6 @@ namespace Au.Types
 
 		[DllImport("oleacc.dll")]
 		internal static extern Handle_ GetProcessHandleFromHwnd(AWnd hwnd);
-
-		//[DllImport("oleacc.dll")]
-		////internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, [MarshalAs(UnmanagedType.IUnknown)] Object punk);
-		//internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, IntPtr punk);
-
-		//[DllImport("oleacc.dll", PreserveSig = true)]
-		//internal static extern int AccessibleObjectFromWindow(AWnd hwnd, int dwId, in Guid riid, out IAccessible ppvObject);
 
 
 		#endregion

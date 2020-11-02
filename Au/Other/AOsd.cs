@@ -53,7 +53,7 @@ namespace Au
 		protected void Redraw()
 		{
 			if(!Visible) return;
-			Api.InvalidateRect(_w, default, false);
+			Api.InvalidateRect(_w);
 			Api.UpdateWindow(_w);
 		}
 
@@ -64,7 +64,7 @@ namespace Au
 		protected void Invalidate()
 		{
 			if(!Visible) return;
-			Api.InvalidateRect(_w, default, false);
+			Api.InvalidateRect(_w);
 		}
 
 		/// <summary>
@@ -162,7 +162,7 @@ namespace Au
 			string cn; byte regMask;
 			if(Shadow) { cn = "Au.OSD2"; regMask = 2; } else { cn = "Au.OSD"; regMask = 1; }
 			if((s_isWinClassRegistered & regMask) == 0) {
-				var ce = new RWCEtc() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, hbrBackground = default(IntPtr) };
+				var ce = new RWCEtc() { style = Api.CS_HREDRAW | Api.CS_VREDRAW, mCursor=MCursor.Arrow };
 				if(Shadow) ce.style |= Api.CS_DROPSHADOW;
 				AWnd.More.RegisterWindowClass(cn, null, ce);
 				s_isWinClassRegistered |= regMask;

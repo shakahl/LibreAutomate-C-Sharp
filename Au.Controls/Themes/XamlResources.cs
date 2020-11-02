@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Markup;
 
-namespace Au.Controls.WPF
+namespace Au.Controls
 {
 	public class XamlResources
 	{

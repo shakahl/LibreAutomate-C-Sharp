@@ -647,16 +647,10 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 #pragma warning restore]]>
 		</snippet>
 
-		<snippet name="ifDirectiveSnippet" info="Enable code if the specified preprocessor expression is true (symbol exists, etc)." more="Snippet 1: compile code if true. Snippet 2: compile code before #else if true; else compile code after #else. The preprocessor expression can be literal true, false or a preprocessor symbol or symbols with ||, &amp;&amp;, !. To define symbols use #define or the Properties dialog. For 'else if' use #elif otherExpression.">
-			<list item="#if">
-				<![CDATA[#if $end$true$end$
-#endif]]>
-			</list>
-			<list item="#if #else">
-				<![CDATA[#if $end$true$end$
+		<snippet name="ifDirectiveSnippet" info="Enables or disables code depending on a preprocessor expression." more="If expression is true, compiles code before #else, else after. Expression can be literal true, false or a preprocessor symbol (true if exists). Can be expression with operators !, ||, &amp;&amp;. To define symbols use #define or the Properties dialog. For 'else if' use #elif otherExpression.">
+			<![CDATA[#if $end$true$end$
 #else
 #endif]]>
-			</list>
 		</snippet>
 
 		<snippet name="regionSnippet" info="Fold (hide) code lines.">

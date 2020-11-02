@@ -134,9 +134,9 @@ namespace Au.Triggers
 			_new.flags = single ? TOFlags.Single : 0;
 		}
 
-		//rejected: Green - don't run simultaneously with a green script or another green action.
-		//	For key/autotext/mouse triggers it has no sense. If user uses kyboard/mouse while a green script is running, then why action can't.
-		//	For window triggers usually has no sense too. If an unwanted window appears during a green script, it usually breaks the script anyway. And it is rare.
+		//rejected: RunSingle - don't run simultaneously with a "runSingle" script or another such action.
+		//	For key/autotext/mouse triggers it has no sense. If user uses kyboard/mouse while a runSingle script is running, then why action can't.
+		//	For window triggers usually has no sense too. If an unwanted window appears during a runSingle script, it usually breaks the script anyway. And it is rare.
 		//	Trigger actions should be short/fast. For long code let use scripts.
 
 		/// <summary>

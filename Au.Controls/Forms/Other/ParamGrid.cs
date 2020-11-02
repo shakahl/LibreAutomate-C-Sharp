@@ -546,7 +546,7 @@ namespace Au.Controls
 					default: { //combo
 						string[] a = null; Func<string[]> callback = null;
 						switch(value) {
-						case string s: a = s.SegSplit("|"); break;
+						case string s: a = s.Split('|'); break;
 						case string[] sa: a = sa; break;
 						case List<string> sl: a = sl.ToArray(); break;
 						case Func<string[]> callb: callback = callb; break;
@@ -902,7 +902,7 @@ namespace Au.Controls
 			g1:
 			int prevRow = -1;
 			foreach(var v in rows.Segments(" -", SegFlags.NoEmpty)) {
-				string rowKey = rows[v.start..v.end];
+				string rowKey = rows[v.Range];
 				int row = ZFindRow(rowKey); if(row < 0) throw new ArgumentException("invalid row " + rowKey);
 				if(v.start > 0 && rows[v.start - 1] == '-') _ShowRange(row);
 				Rows.ShowRow(row, visible);

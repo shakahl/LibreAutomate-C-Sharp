@@ -461,7 +461,7 @@ partial class FileNode : ATreeBase<FileNode>
 		var f = this; int lastSegEnd = -1;
 		foreach(var v in name.Segments(@"\", SegFlags.NoEmpty)) {
 			var e = f.Children();
-			var s = name[v.start..v.end];
+			var s = name[v.Range];
 			if((lastSegEnd = v.end) == name.Length) {
 				f = _FindIn(e, s, folder, false);
 			} else {

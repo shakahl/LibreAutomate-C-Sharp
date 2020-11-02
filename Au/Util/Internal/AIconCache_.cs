@@ -17,13 +17,14 @@ using System.Drawing.Imaging;
 
 using Au.Types;
 
+//FUTURE: merge with IconImageCache (let it support optional file cache). Then remove.
 namespace Au
 {
 	/// <summary>
 	/// Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
 	/// </summary>
 	/// <threadsafety static="true" instance="true"/>
-	internal sealed class AIconCache_
+	sealed class AIconCache_
 	{
 		XElement _x;
 		Hashtable _table;

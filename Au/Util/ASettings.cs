@@ -49,13 +49,12 @@ namespace Au.Util
 		protected static T Load<T>(string file, bool useDefault = false) where T : ASettings
 			=> (T)_Load(file, typeof(T), useDefault);
 
-		static ASettings _Load(string file, Type type, bool useDefault)
-		{
+		static ASettings _Load(string file, Type type, bool useDefault) {
 			ASettings R = null;
-			if(file != null) {
-				if(AFile.ExistsAsAny(file)) {
+			if (file != null) {
+				if (AFile.ExistsAsAny(file)) {
 					try {
-						if(useDefault) {
+						if (useDefault) {
 							AFile.Delete(file);
 						} else {
 							var b = AFile.LoadBytes(file);
@@ -63,9 +62,9 @@ namespace Au.Util
 							R = JsonSerializer.Deserialize(b, type, opt) as ASettings;
 						}
 					}
-					catch(Exception ex) {
+					catch (Exception ex) {
 						string es = ex.ToStringWithoutStack();
-						if(useDefault) {
+						if (useDefault) {
 							AOutput.Write($"Failed to delete settings file '{file}'. {es}");
 						} else {
 							string backup = file + ".backup";
@@ -82,13 +81,13 @@ namespace Au.Util
 			R ??= Activator.CreateInstance(type) as ASettings;
 			R._loaded = true;
 
-			if(file != null) {
+			if (file != null) {
 				R._file = file;
 
 				//autosave
-				if(Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
+				if (Interlocked.Exchange(ref s_loadedOnce, 1) == 0) {
 					AThread.Start(() => {
-						for(; ; ) {
+						for (; ; ) {
 							Thread.Sleep(2000);
 							_SaveAllIfNeed();
 						}
@@ -96,24 +95,22 @@ namespace Au.Util
 
 					AProcess.Exit += (_, _) => _SaveAllIfNeed(); //info: Core does not call finalizers when process exits
 				}
-				lock(s_list) s_list.Add(R);
+				lock (s_list) s_list.Add(R);
 			}
 
 			return R;
 		}
 
-		static void _SaveAllIfNeed()
-		{
-			lock(s_list) foreach(var v in s_list) v.SaveIfNeed();
+		static void _SaveAllIfNeed() {
+			lock (s_list) foreach (var v in s_list) v.SaveIfNeed();
 		}
 
 		/// <summary>
 		/// Call this when finished using the settings. Saves now if need, and stops autosaving.
 		/// Don't need to call if the settings are used until process exit.
 		/// </summary>
-		public void Dispose()
-		{
-			lock(s_list) s_list.Remove(this);
+		public void Dispose() {
+			lock (s_list) s_list.Remove(this);
 			SaveIfNeed();
 		}
 
@@ -121,18 +118,17 @@ namespace Au.Util
 		/// Saves now if need.
 		/// Don't need to call explicitly. Autosaving is every 2 s, also on process exit and <b>Dispose</b>.
 		/// </summary>
-		public void SaveIfNeed()
-		{
-			if(_file == null) return;
+		public void SaveIfNeed() {
+			if (_file == null) return;
 			//AOutput.QM2.Write(_save);
-			if(Interlocked.Exchange(ref _save, 0) != 0) {
+			if (Interlocked.Exchange(ref _save, 0) != 0) {
 				try {
 					var opt = new JsonSerializerOptions { IgnoreNullValues = true, IgnoreReadOnlyProperties = true, WriteIndented = true, Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping };
 					var b = JsonSerializer.SerializeToUtf8Bytes(this, GetType(), opt);
 					AFile.SaveBytes(_file, b);
 					//AOutput.QM2.Write(GetType().Name + " saved");
 				}
-				catch(Exception ex) {
+				catch (Exception ex) {
 					SaveLater();
 					AOutput.Write($"Failed to save settings to '{_file}'. {ex.ToStringWithoutStack()}");
 				}
@@ -142,8 +138,7 @@ namespace Au.Util
 		/// <summary>
 		/// Call this when changed an array element etc directly without assigning the array etc to a property. Else changes may be not saved.
 		/// </summary>
-		public void SaveLater()
-		{
+		public void SaveLater() {
 #if TRACE_JS
 			//if(_save == 0)
 				AWarning.Write("ASettings.SaveLater", 1, "<>Trace: ");
@@ -158,75 +153,48 @@ namespace Au.Util
 		public bool Modified => _save != 0 || (_file != null && AFile.ExistsAsAny(_file));
 
 		/// <summary>
-		/// Sets a string property value and will save later if need.
+		/// Sets a property value and will save later if need.
 		/// If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
+		/// To compare, uses <see cref="EqualityComparer{T}"/>; it compares value types and string by value, but most other reference types (eg arrays) by reference.
 		/// </summary>
 		/// <param name="prop">Property.</param>
 		/// <param name="value">New value.</param>
-		protected void Set(ref string prop, string value)
-		{
-			if(!_loaded) {
+		protected void Set<T>(ref T prop, T value) {
+			if (!_loaded) {
 				prop = value;
-			} else if(value != prop) {
+			} else if (!EqualityComparer<T>.Default.Equals(prop, value)) {
 				prop = value;
 				SaveLater();
 			}
+			//faster than with IEquatable<T>. Tested with int, bool, enum, string, null string. Tested with string[], compares pointer, not elements.
 		}
 
 		/// <summary>
-		/// Sets an int, bool or other IEquatable type property value and will save later if need.
-		/// If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
+		/// Sets a property value and will save later if need.
+		/// If !_loaded, sets prop = value. Else if value != prop (<i>comparer</i> returns false), sets prop = value and _save = true.
 		/// </summary>
 		/// <param name="prop">Property.</param>
 		/// <param name="value">New value.</param>
-		protected void Set<T>(ref T prop, T value) where T : IEquatable<T>
-		{
-			if(!_loaded) {
+		/// <param name="comparer">Called by this method to compare prop and value. Return true if equal.</param>
+		protected void Set<T>(ref T prop, T value, Func<T, T, bool> comparer) {
+			if (!_loaded) {
 				prop = value;
-			} else if(!value.Equals(prop)) { //speed: usually same or faster than Set2
-				prop = value;
-				SaveLater();
-			}
-		}
-
-		/// <summary>
-		/// Sets an enum or other unmanaged type property value and will save later if need.
-		/// If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
-		/// </summary>
-		/// <param name="prop">Property.</param>
-		/// <param name="value">New value.</param>
-		protected unsafe void Set2<T>(ref T prop, T value) where T : unmanaged
-		{
-			if(!_loaded) {
-				prop = value;
-			} else {
-				if(0 == (sizeof(T) & 3)) {
-					var p1 = (int*)Unsafe.AsPointer(ref prop);
-					var p2 = (int*)Unsafe.AsPointer(ref value);
-					for(int i = 0; i < sizeof(T) / 4; i++) if(p1[i] != p2[i]) goto g1;
-				} else {
-					var p1 = (byte*)Unsafe.AsPointer(ref prop);
-					var p2 = (byte*)Unsafe.AsPointer(ref value);
-					for(int i = 0; i < sizeof(T); i++) if(p1[i] != p2[i]) goto g1;
-				}
-				return;
-				g1:
+			} else if (!comparer(prop, value)) {
 				prop = value;
 				SaveLater();
 			}
+			//slower than with EqualityComparer<T> and slightly slower than with IEquatable<T>
 		}
 
 		/// <summary>
 		/// Sets a property value and will save later if need.
 		/// Unlike <b>Set</b>, always sets _save = true if _loaded.
-		/// Use for non-umanaged non-IEquatable types, eg arrays.
 		/// </summary>
 		/// <param name="prop">Property.</param>
 		/// <param name="value">New value.</param>
-		protected void SetNoCmp<T>(ref T prop, T value)
-		{
+		protected void SetNoCmp<T>(ref T prop, T value) {
 			prop = value;
-			if(_loaded) SaveLater();
+			if (_loaded) SaveLater();
 		}
 	}
 }

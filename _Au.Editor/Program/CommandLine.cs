@@ -112,7 +112,9 @@ static class CommandLine
 
 	public static void OnProgramLoaded()
 	{
-		AWnd.More.UacEnableMessages(Api.WM_COPYDATA, Api.WM_USER, Api.WM_CLOSE);
+		AWnd.More.UacEnableMessages(Api.WM_COPYDATA, /*Api.WM_DROPFILES, 0x0049,*/ Api.WM_USER, Api.WM_CLOSE);
+		//WM_COPYDATA, WM_DROPFILES and undocumented WM_COPYGLOBALDATA=0x0049 should enable drag/drop from lower UAC IL processes, but only through WM_DROPFILES/DragAcceptFiles, not OLE D&D.
+
 		AWnd.More.RegisterWindowClass("Au.Editor.Msg", _WndProc);
 		_msgWnd = AWnd.More.CreateMessageOnlyWindow("Au.Editor.Msg");
 
@@ -191,7 +193,7 @@ static class CommandLine
 			break;
 		case 3:
 			Api.ReplyMessage(1); //avoid 'wait' cursor while we'll show task dialog
-			Program.Model.ImportFiles(s.SegSplit("\0"));
+			Program.Model.ImportFiles(s.Split('\0'));
 			break;
 		case 4:
 			var f1 = Program.Model.FindByFilePath(s);

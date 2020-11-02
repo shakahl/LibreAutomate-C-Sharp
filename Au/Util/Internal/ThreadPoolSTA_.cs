@@ -13,8 +13,8 @@ using System.Reflection;
 
 using Au.Types;
 
-//CONSIDER: instead use standard C# STA pool code.
-//	Initially I rejected it because each apppdomain that uses it creates 4 threads. But now we don't support multiple apppdomains.
+//TODO: instead use StaTaskScheduler_.
+//	Initially I rejected it because each apppdomain that uses it creates 4 threads. But now there are no multiple apppdomains.
 //	Initially automation tasks by default were executed in apppdomains. Later apppdomains were completely rejected because unstable.
 
 namespace Au.Util

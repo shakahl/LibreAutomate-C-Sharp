@@ -45,7 +45,7 @@ static class InsertCode
 				s += "\r\n";
 			} else {
 				var b = new StringBuilder();
-				foreach (var v in s.SegLines()) b.Append('\t', indent).AppendLine(v);
+				foreach (var v in s.Lines()) b.Append('\t', indent).AppendLine(v);
 				s = b.ToString();
 			}
 
@@ -109,10 +109,10 @@ static class InsertCode
 	/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
 	/// Returns true if inserted.
 	/// </summary>
-	/// <param name="ns">Namespace, eg "System.Diagnostics". Can be multiple, separated with semicolon, colon or space.</param>
+	/// <param name="ns">Namespace, eg "System.Diagnostics". Can be multiple, separated with colon or semicolon.</param>
 	public static bool UsingDirective(string ns) {
 		if (!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return false;
-		var namespaces = ns.SegSplit(";, ", SegFlags.NoEmpty);
+		var namespaces = ns.Split(new char[] { ';', ',' }, StringSplitOptions.TrimEntries);
 		var (_, end) = _FindUsings(k, namespaces);
 		if (!namespaces.Any(o => o != null)) return false;
 		var doc = k.sciDoc;

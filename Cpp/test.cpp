@@ -7,6 +7,11 @@
 #if _DEBUG
 //#if 1
 
+
+
+
+
+
 __interface __declspec(uuid("3AB5235E-2768-47A2-909A-B5852A9D1868"))
 	IInterface : IUnknown
 {
@@ -132,7 +137,7 @@ EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh)
 //	}
 //};
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //IThreadExitEvent* Cpp_ThreadExitEvent(FARPROC callback)
 //{
 //	return new ThreadExitEvent(callback);
@@ -140,7 +145,7 @@ EXPORT HHOOK Cpp_InputSync(int action, int tid, HHOOK hh)
 //
 //FARPROC s_callback;
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void Cpp_ThreadExitEvent2(FARPROC callback)
 //{
 //	s_callback = callback;
@@ -332,13 +337,13 @@ EXPORT void Cpp_TestPCRE(STR s, STR p, DWORD flags)
 //};
 //ENABLE_BITMASK_OPERATORS(eKKK);
 
-extern "C" __declspec(dllexport)
+EXPORT
 int Cpp_TestInt(int a)
 {
-	return 1;
+	return sizeof(VARIANT);
 }
 
-extern "C" __declspec(dllexport)
+EXPORT
 int Cpp_TestString(STR a)
 {
 	return 1;
@@ -372,7 +377,7 @@ public:
 	}
 };
 
-extern "C" __declspec(dllexport)
+EXPORT
 ICppTest* Cpp_Interface()
 {
 	return new CppTest();
@@ -382,7 +387,7 @@ ICppTest* Cpp_Interface()
 //#include <DispEx.h>
 //
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void TestSimple()
 //{
 //	//throw 5;
@@ -390,13 +395,13 @@ ICppTest* Cpp_Interface()
 //	Print(*p);
 //}
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void TestUnmanaged(int& k, int& g)
 //{
 ////MessageBox(0, L"", L"bb", 0);
 //}
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void TestStructBlit(POINT& p)
 //{
 //	Print(p.x);
@@ -409,7 +414,7 @@ ICppTest* Cpp_Interface()
 //	LPWSTR s;
 //};
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void TestStructString(STSTR& p)
 //{
 //	Print(p.s);
@@ -422,14 +427,14 @@ ICppTest* Cpp_Interface()
 //	Print(L"returning");
 //}
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void TestArray(int* p)
 //{
 //	Print(p[0]);
 //	p[0] = 5;
 //}
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void TestArrayStr(LPWSTR* p)
 //{
 //	Print(p[0]);
@@ -518,7 +523,7 @@ ICppTest* Cpp_Interface()
 //	}
 //};
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //ITest* CreateTestInterface()
 //{
 //	return new CTest();
@@ -539,7 +544,7 @@ ICppTest* Cpp_Interface()
 //#pragma comment(lib, "oleacc.lib")
 //
 //
-//extern "C" __declspec(dllexport)
+//EXPORT
 //void DllTestAcc()
 //{
 //	POINT p = { 257, 1138 };

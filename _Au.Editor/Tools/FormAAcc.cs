@@ -24,6 +24,7 @@ using Microsoft.Win32;
 
 //SHOULDDO: if checked state, activate window before test. Else different FOCUSED etc.
 //SHOULDDO: update window name in code when capturing new AO.
+//TODO: when capturing, if fails to get element from point, try UIA. Eg now htmlhelp tree. Maybe also if gets CLIENT.
 
 namespace Au.Tools
 {

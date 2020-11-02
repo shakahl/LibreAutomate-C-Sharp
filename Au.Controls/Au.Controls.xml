@@ -646,6 +646,601 @@
             Gets node index in parent node. If in tab, it is also tab item index.
             </summary>
         </member>
+        <member name="M:Au.Controls.AuTreeView.#ctor">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnApplyTemplate">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnDpiChanged(System.Windows.DpiScale,System.Windows.DpiScale)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnRenderSizeChanged(System.Windows.SizeChangedInfo)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnPropertyChanged(System.Windows.DependencyPropertyChangedEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.SetItems(System.Collections.Generic.IEnumerable{Au.Controls.ITreeViewItem},System.Boolean)">
+            <summary>
+            Sets (adds, replaces or removes) all items.
+            </summary>
+            <param name="items">Items at tree root. Can be null.</param>
+            <param name="modified">true when adding/removing one or more items in same tree/list. Preserves selection, scroll position, etc.</param>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.CountVisible">
+            <summary>
+            Gets the number of visible items.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.IndexOf(Au.Controls.ITreeViewItem)">
+            <summary>
+            Gets item index in visible items.
+            Returns -1 if not found.
+            </summary>
+            <param name="item">Can be null.</param>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.Item(System.Int32)">
+            <summary>
+            Gets visible item at index.
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+            <exception cref="T:System.NullReferenceException">Items not added.</exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnMouseWheel(System.Windows.Input.MouseWheelEventArgs)">
+            
+        </member>
+        <member name="P:Au.Controls.AuTreeView.TopIndex">
+            <summary>
+            Gets index of the first item in the scroll view; it is the value of the vertical scrollbar.
+            The 'set' function scrolls if need to make the item first in the scroll view.
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Expand(System.Int32,System.Nullable{System.Boolean})">
+            <summary>
+            Expands or collapses folder.
+            </summary>
+            <param name="index"></param>
+            <param name="expand">If null, toggles.</param>
+            <exception cref="T:System.InvalidOperationException">Not folder. Or control not created.</exception>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Expand(Au.Controls.ITreeViewItem,System.Nullable{System.Boolean})">
+            <summary>
+            Expands or collapses folder.
+            </summary>
+            <param name="item"></param>
+            <param name="expand">If null, toggles.</param>
+            <exception cref="T:System.InvalidOperationException">Not folder. Or control not created.</exception>
+            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control.</exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.EnsureVisible(System.Int32)">
+            <summary>
+            Scrolls if need to make item actually visible.
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.EnsureVisible(Au.Controls.ITreeViewItem)">
+            <summary>
+            Expands descendant folders and scrolls if need to make item actually visible.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.HitTestCore(System.Windows.Media.PointHitTestParameters)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnMouseDown(System.Windows.Input.MouseButtonEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnLostMouseCapture(System.Windows.Input.MouseEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnMouseUp(System.Windows.Input.MouseButtonEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnMouseMove(System.Windows.Input.MouseEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnMouseLeave(System.Windows.Input.MouseEventArgs)">
+            
+        </member>
+        <member name="P:Au.Controls.AuTreeView.SingleClickActivate">
+            <summary>
+            Whether to activate an item on single click instead of double click.
+            </summary>
+            <seealso cref="E:Au.Controls.AuTreeView.ItemActivated"/>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.HotTrack">
+            <summary>
+            Whether to higlight an item when mouse is over.
+            </summary>
+            <seealso cref="E:Au.Controls.AuTreeView.ItemActivated"/>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.ShowLabelTip">
+            <summary>
+            Whether to show a tooltip with full item text when mouse is over an item with partially visible text.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnKeyDown(System.Windows.Input.KeyEventArgs)">
+            
+        </member>
+        <member name="E:Au.Controls.AuTreeView.ItemActivated">
+            <summary>
+            When an item double-clicked. Or clicked, if <see cref="P:Au.Controls.AuTreeView.SingleClickActivate"/>. Also on Enter key if focused.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.AuTreeView.ItemClick">
+            <summary>
+            When an item clicked or double-clicked with the left, right or middle mouse button.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.AuTreeView.ItemDragStart">
+            <summary>
+            When drag start detected.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.MultiSelect">
+            <summary>
+            Whether can select multiple items, for example with Ctrl or Shift key.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Select(System.Int32,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Selects or unselects item.
+            </summary>
+            <param name="index"></param>
+            <param name="select">true to select, false to unselect.</param>
+            <param name="unselectOther">Unselect other items. Used only if <see cref="P:Au.Controls.AuTreeView.MultiSelect"/> true, else always unselects other items.</param>
+            <param name="focus">Set <see cref="P:Au.Controls.AuTreeView.FocusedIndex"/>=<i>index</i>.</param>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Select(Au.Controls.ITreeViewItem,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Selects or unselects item.
+            </summary>
+            <param name="item"></param>
+            <param name="select">true to select, false to unselect.</param>
+            <param name="unselectOther">Unselect other items. Used only if <see cref="P:Au.Controls.AuTreeView.MultiSelect"/> true, else always unselects other items.</param>
+            <param name="focus">Set <see cref="P:Au.Controls.AuTreeView.FocusedIndex"/>=<i>index</i>.</param>
+            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control.</exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Select(System.Range,System.Boolean,System.Boolean)">
+            <summary>
+            Selects or unselects range of items.
+            </summary>
+            <param name="range">Range of item indices. For example <c>..</c> means all.</param>
+            <param name="select">true to select, false to unselect.</param>
+            <param name="unselectOther">Unselect other items. Used only if <see cref="P:Au.Controls.AuTreeView.MultiSelect"/> true, else always unselects other items.</param>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.IsSelected(System.Int32)">
+            <summary>
+            Returns true if the item is selected.
+            </summary>
+            <seealso cref="P:Au.Controls.AuTreeView.MultiSelect"/>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.SelectedIndices">
+            <summary>
+            Gets selected items. Returns empty list if none selected.
+            </summary>
+            <seealso cref="P:Au.Controls.AuTreeView.MultiSelect"/>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.SelectedItems">
+            <summary>
+            Gets selected items. Returns empty list if none selected.
+            </summary>
+            <seealso cref="P:Au.Controls.AuTreeView.MultiSelect"/>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.FocusedIndex">
+            <summary>
+            Gets or sets index of item that has logical focus within the control. Can be -1.
+            Used with keyboard actions (Enter-activate, arrows, page down/up) and range selection (Shift+click when <see cref="P:Au.Controls.AuTreeView.MultiSelect"/> true).
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+            <remarks>
+            The 'set' function calls <see cref="M:Au.Controls.AuTreeView.EnsureVisible(System.Int32)"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.FocusedItem">
+            <summary>
+            Gets or sets item that has logical focus within the control. Can be null.
+            Used with keyboard actions (Enter-activate, arrows, page down/up) and range selection (Shift+click when <see cref="P:Au.Controls.AuTreeView.MultiSelect"/> true).
+            </summary>
+            <exception cref="T:System.ArgumentException">Setter throws if the item is not a visible item in this control.</exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnGotKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnLostKeyboardFocus(System.Windows.Input.KeyboardFocusChangedEventArgs)">
+            
+        </member>
+        <member name="P:Au.Controls.AuTreeView.HasCheckboxes">
+            <summary>
+            Has checkboxes.
+            </summary>
+            <remarks>
+            To get checkbox states the control calls <see cref="P:Au.Controls.ITreeViewItem.CheckState"/>.
+            The control does not automatically set checkbox states. You can do it in <see cref="E:Au.Controls.AuTreeView.ItemClick"/> event handler like in the example.
+            </remarks>
+            <example>
+            Event handler.
+            <code><![CDATA[
+            _tv.ItemClick+=(_,e)=>{
+            	var v=e.Item as TvItem; //TvItem is your class that implements ITreeViewItem interface
+            	if(e.ClickedPart==AuTreeView.TVParts.Checkbox && !v.IsDisabled) v.CheckState=v.CheckState==default ? AuTreeView.TVCheck.Checked : default;
+            };
+            ]]></code>
+            Property of your TvItem class that implements ITreeViewItem interface.
+            <code><![CDATA[
+            public AuTreeView.TVCheck CheckState {
+            	get => _checkState;
+            	set { if(value!=_checkState) { _checkState=value; _tv.Redraw(this); } }
+            }
+            AuTreeView.TVCheck _checkState;
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.CheckedIndices">
+            <summary>
+            Gets checked items (<see cref="F:Au.Controls.TVCheck.Checked"/>). Returns empty list if none checked.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.CheckedItems">
+            <summary>
+            Gets checked items (<see cref="F:Au.Controls.TVCheck.Checked"/>). Returns empty list if none checked.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.EditLabel(Au.Controls.ITreeViewItem)">
+            <summary>
+            Starts item text editing.
+            </summary>
+            <exception cref="T:System.ArgumentException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.EditLabel(System.Int32)">
+            <summary>
+            Starts item text editing.
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.EndEditLabel(System.Boolean)">
+            <summary>
+            Ends item text editing.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnDragLeave(System.Windows.DragEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnDrop(System.Windows.DragEventArgs)">
+            
+        </member>
+        <member name="M:Au.Controls.AuTreeView.OnDragOver2(System.Boolean)">
+            <summary>
+            Can be called from "drag over" override or event handler to show/hide insertion mark, expand/collapse folder and scroll if need.
+            </summary>
+            <param name="canDrop">Can drop here. If false, hides insertion mark and returns.</param>
+            <remarks>
+            Draws black line between nearest items. If mouse is on a folder image, draws rectangle.
+            When mouse is on a folder, expands it if pressed key Right and collapses if Left.
+            Scrolls when mouse is near top or bottom or pressed key Down, Up, PageDown, PageUp, Home or End.
+            </remarks>
+            <seealso cref="M:Au.Controls.AuTreeView.GetDropInfo(Au.Controls.TVDropInfo@)"/>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.GetDropInfo(Au.Controls.TVDropInfo@)">
+            <summary>
+            Can be called from "drag over" and "drop" overrides or event handlers to get drop info.
+            This overload uses mouse position (<see cref="P:Au.AWnd.MouseClientXY"/>).
+            </summary>
+            <param name="d"></param>
+            <seealso cref="M:Au.Controls.AuTreeView.OnDragOver2(System.Boolean)"/>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.GetDropInfo(Au.Types.POINT,Au.Controls.TVDropInfo@)">
+            <summary>
+            Can be called from "drag over" and "drop" overrides or event handlers to get drop info.
+            </summary>
+            <param name="xy">A point relative to the top-left of the control without border. Physical pixels.</param>
+            <param name="d"></param>
+            <seealso cref="M:Au.Controls.AuTreeView.OnDragOver2(System.Boolean)"/>
+        </member>
+        <member name="M:Au.Controls.AuTreeView._ItemFromY(System.Int32)">
+            <summary>
+            Returns item index, or -1 if not on item.
+            </summary>
+            <param name="y">In control coord, physical.</param>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.GetRectPhysical(System.Int32,Au.Controls.TVParts,System.Boolean,System.Boolean)">
+            <summary>
+            Gets item rectangle in physical pixel units.
+            Horizontally the rectangle is limited to the visible area.
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.GetRectLogical(System.Int32,Au.Controls.TVParts,System.Boolean,System.Boolean)">
+            <summary>
+            Gets item rectangle in WPF logical pixel units.
+            </summary>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.HitTest(Au.Types.POINT,Au.Controls.TVHitTest@)">
+            <summary>
+            Gets item from point, and its part.
+            Returns false if not on an item.
+            </summary>
+            <param name="p">Point in control coordinates. Physical pixels.</param>
+            <param name="h">Results.</param>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.HitTest(Au.Controls.TVHitTest@)">
+            <summary>
+            Gets item from mouse, and its part.
+            Returns false if not on an item.
+            </summary>
+            <param name="h">Results.</param>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Redraw(System.Int32)">
+            <summary>
+            Asynchronously redraws item.
+            Does nothing if the control is not created.
+            </summary>
+            <param name="index"></param>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Redraw(Au.Controls.ITreeViewItem)">
+            <summary>
+            Asynchronously redraws item.
+            Does nothing if the control is not created or <i>item</i> is not a visible item in this control.
+            </summary>
+            <param name="item"></param>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Redraw">
+            <summary>
+            Asynchronously redraws all items.
+            Does nothing if the control is not created.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Remeasure(System.Int32)">
+            <summary>
+            Remeasures item width and redraws. My need this when changed text or text style.
+            Does nothing if the control is not created.
+            </summary>
+            <param name="index"></param>
+            <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Remeasure(Au.Controls.ITreeViewItem)">
+            <summary>
+            Remeasures item width and redraws. My need this when changed text or text style.
+            Does nothing if the control is not created or <i>item</i> is not a visible item in this control.
+            </summary>
+            <param name="item"></param>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.Remeasure">
+            <summary>
+            Remeasures and redraws all items.
+            Does nothing if the control is not created.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.ImageCache">
+            <summary>
+            Gets or sets image cache.
+            For example you can use single cache for all controls.
+            If not set, the 'get' function auto-creates new instance when called first time.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.ItemMarginLeft">
+            <summary>
+            Width of custom-draw area before image. For example for state images.
+            Use WPF logical units, not physical pixels.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.ItemMarginRight">
+            <summary>
+            Width of custom-draw area after item text.
+            Use WPF logical units, not physical pixels.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.CustomDraw">
+            <summary>
+            Custom-draw interface.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.AuTreeView.Wnd">
+            <summary>
+            Gets native control handle.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.ITreeViewItem">
+            <summary>
+            Interface for <see cref="T:Au.Controls.AuTreeView"/> items. Provides text and other properties.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.Items">
+            <summary>
+            Folder's child items. Return null if not folder.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.IsFolder">
+            <summary>
+            Is folder.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.IsExpanded">
+            <summary>
+            Is expanded folder.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.DisplayText">
+            <summary>
+            Text to display.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.ImageSource">
+            <summary>
+            Png/bmp/jpg/gif/tif or xaml image to display. Can be file path, resource with prefix "resource:", etc.
+            Or return null and use <see cref="P:Au.Controls.ITreeViewItem.IconSource"/> instead.
+            </summary>
+            <remarks>
+            To load image the control calls <see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            </remarks>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.IconSource">
+            <summary>
+            Can be used instead of <see cref="P:Au.Controls.ITreeViewItem.ImageSource"/>. Path of any file, folder, etc. See <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.CheckState">
+            <summary>
+            How to draw checkbox when <see cref="P:Au.Controls.AuTreeView.HasCheckboxes"/> true. Default <b>Unchecked</b>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.IsDisabled">
+            <summary>
+            Draw text and checkbox like disabled (usually gray).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.IsBold">
+            <summary>
+            Draw bold text.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.IsSelectable">
+            <summary>
+            Can be selected. Default true.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.Color">
+            <summary>
+            Background color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, selected, hot).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.TextColor">
+            <summary>
+            Text color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, disabled).
+            </summary>
+        </member>
+        <member name="T:Au.Controls.TVCheck">
+            <summary>
+            <see cref="T:Au.Controls.AuTreeView"/> checkbox state.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.TVParts">
+            <summary>
+            <see cref="T:Au.Controls.AuTreeView"/> item parts.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.TVParts.Left">
+            <summary>Empty area at the left (indentation).</summary>
+        </member>
+        <member name="F:Au.Controls.TVParts.Checkbox">
+            <summary>Get checkbox rectangle.</summary>
+        </member>
+        <member name="F:Au.Controls.TVParts.MarginLeft">
+            <summary>Get left margin rectangle.</summary>
+        </member>
+        <member name="F:Au.Controls.TVParts.Image">
+            <summary>Get image rectangle.</summary>
+        </member>
+        <member name="F:Au.Controls.TVParts.Text">
+            <summary>Get text rectangle, including area to the right. Can be combined with <b>Image</b>.</summary>
+        </member>
+        <member name="F:Au.Controls.TVParts.MarginRight">
+            <summary>Get left margin rectangle.</summary>
+        </member>
+        <member name="F:Au.Controls.TVParts.Right">
+            <summary>Empty area at the right.</summary>
+        </member>
+        <member name="T:Au.Controls.TVHitTest">
+            <summary>
+            <see cref="M:Au.Controls.AuTreeView.HitTest(Au.Types.POINT,Au.Controls.TVHitTest@)"/> results.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.TVHitTest.item">
+            <summary>Item, or null if not on an item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVHitTest.index">
+            <summary>Item index, or -1 if not on an item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVHitTest.part">
+            <summary>Item part.</summary>
+        </member>
+        <member name="P:Au.Controls.TVItemEventArgs.ModifierKeys">
+            <summary>
+            Keyboard modifier keys.
+            On click it is keys that were pressed at mouse button down event time.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.TVItemEventArgs.XY">
+            <summary>
+            Mouse position in control at mouse button down event time.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.ITVCustomDraw">
+            <summary>
+            Custom-draw interface used with <see cref="P:Au.Controls.AuTreeView.CustomDraw"/>.
+            </summary>
+            <remarks>
+            When drawing the control, the first and last called functions are <b>Begin</b> and <b>End</b>. For each actually visible item are called functions in this order: <b>DrawBackground</b>, <b>DrawCheckbox</b>, <b>DrawImage</b>, <b>DrawText</b>, <b>DrawMarginLeft</b>, <b>DrawMarginRight</b>. If a bool function returns false, the control draws that part of the item.
+            </remarks>
+        </member>
+        <member name="T:Au.Controls.TVDrawInfo">
+            <summary>
+            Custom-draw info passed to <see cref="T:Au.Controls.ITVCustomDraw"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.dc">
+            <summary>GDI device context handle.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.index">
+            <summary>Index of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.item">
+            <summary>Current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.rect">
+            <summary>Background drawing rectangle of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.imageRect">
+            <summary>Image drawing rectangle of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.xText">
+            <summary>Text drawing X offset of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.yText">
+            <summary>Text drawing Y offset of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.xLeft">
+            <summary>Left margin drawing X offset of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.xRight">
+            <summary>Right margin drawing X offset of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.marginLeft">
+            <summary>Left margin width of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.marginRight">
+            <summary>Right margin width of current item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDrawInfo.checkSize">
+            <summary>Checkbox size.</summary>
+        </member>
+        <member name="T:Au.Controls.TVDropInfo">
+            <summary>See <see cref="M:Au.Controls.AuTreeView.GetDropInfo(Au.Controls.TVDropInfo@)"/>.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDropInfo.xy">
+            <summary>Point relative to the top-left of the control without border. Physical pixels.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDropInfo.targetItem">
+            <summary>Item at <b>targetIndex</b>, or null if the control is empty.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDropInfo.targetIndex">
+            <summary>Drop target item index, or index of the last item if <b>xy</b> is not on an item, or -1 if the control is empty.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDropInfo.rawIndex">
+            <summary>Index of item from <b>xy</b>, or -1 if <b>xy</b> is not on an item.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDropInfo.insertAfter">
+            <summary>If true, should insert after the drop target item. Else before. Not used if <b>intoFolder</b> is true.</summary>
+        </member>
+        <member name="F:Au.Controls.TVDropInfo.intoFolder">
+            <summary><b>xy</b> is on a folder image, therefore should move to the folder.</summary>
+        </member>
         <member name="M:Au.Controls.AuDockPanel.ZCreate(System.String,System.String,System.Windows.Forms.Control[])">
             <summary>
             Loads UI layout from XML file and adds controls (panels, toolbars) to this control.
@@ -2853,13 +3448,32 @@
             NoUndo | NoNotify.
             </summary>
         </member>
+        <member name="M:Au.Controls.SciHost.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Sends a Scintilla message to the control and returns int.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.SciHost.CallRetPtr(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Sends a Scintilla message to the control and returns LPARAM.
+            Don't call this function from another thread.
+            </summary>
+        </member>
         <member name="T:Au.Controls.GdiTextRenderer">
             <summary>
-            Draws text using GDI API such as TextOut using standard UI font.
+            Draws text using fastest GDI API such as TextOut and standard UI font.
             Can easily draw string parts with different colors/styles without measuring.
-            Faster than TextRenderer.
             Must be disposed.
             </summary>
+        </member>
+        <member name="M:Au.Controls.GdiTextRenderer.#ctor(System.IntPtr,System.Int32)">
+            <summary>Object created with this ctor can draw and measure.</summary>
+            <param name="hdc">Device context handle. <b>Dispose</b> will not release it.</param>
+            <param name="dpi"></param>
+        </member>
+        <member name="M:Au.Controls.GdiTextRenderer.#ctor(System.Int32)">
+            <summary>Object created with this ctor can measure only. Uses screen DC.</summary>
         </member>
         <member name="M:Au.Controls.GdiTextRenderer.MoveTo(System.Int32,System.Int32)">
             <summary>
@@ -2872,14 +3486,19 @@
             Gets the current drawing position of the DC.
             </summary>
         </member>
-        <member name="M:Au.Controls.GdiTextRenderer.DrawText(System.String,System.Int32,System.Int32,Au.Types.ColorInt,System.Int32,System.Int32)">
+        <member name="M:Au.Controls.GdiTextRenderer.DrawText(System.String,System.Int32,System.Nullable{System.Range})">
+            <summary>
+            Draws text at the current drawing position of the DC, and updates it.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.GdiTextRenderer.DrawText(System.String,Au.Types.POINT,System.Int32,System.Nullable{System.Range})">
             <summary>
             Draws text at specified position. Does not use/update the current drawing position of the DC.
             </summary>
         </member>
-        <member name="M:Au.Controls.GdiTextRenderer.DrawText(System.String,Au.Types.ColorInt,System.Int32,System.Int32)">
+        <member name="M:Au.Controls.GdiTextRenderer.DrawText(System.String,Au.Types.RECT@,System.Int32,System.Nullable{System.Range})">
             <summary>
-            Draws text at the current drawing position of the DC, and updates it.
+            Draws text clipped in specified rectangle. Does not use/update the current drawing position of the DC.
             </summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.BitmapFileInfo_.biHeader">
@@ -2964,18 +3583,6 @@
             Returns null if path is not a valid image string or the file does not exist or failed to load.
             </summary>
             <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.AFolders.ThisAppImages"/> and standard directories.</remarks>
-        </member>
-        <member name="M:Au.Controls.SciHost.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>
-            Sends a Scintilla message to the control and returns int.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciHost.CallRetPtr(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>
-            Sends a Scintilla message to the control and returns LPARAM.
-            Don't call this function from another thread.
-            </summary>
         </member>
     </members>
 </doc>

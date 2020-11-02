@@ -275,7 +275,7 @@ private:
 public:
 	Wildex() { ZEROTHIS; }
 	~Wildex();
-	bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString = false, out BSTR* errStr = null);
+	bool Parse(STR w, size_t lenW, bool doNotCopyString = false, out BSTR* errStr = null);
 	bool Match(STR s, size_t lenS) const;
 	//Returns true if not null.
 	bool Is() const { return _text != null; }

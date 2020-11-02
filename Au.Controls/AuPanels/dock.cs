@@ -121,7 +121,7 @@ namespace Au.Controls
 					////else w.UpdateLayout(); //no
 					//else w.InvalidateVisual(); //no
 
-					Api.InvalidateRect(w.Hwnd(), IntPtr.Zero, AKeys.IsScrollLock);
+					Api.InvalidateRect(w.Hwnd(), AKeys.IsScrollLock);
 				}
 #endif
 			}

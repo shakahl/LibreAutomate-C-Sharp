@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<OutputType>WinExe</OutputType>
-		<TargetFramework>net5.0</TargetFramework>
+		<TargetFramework>net5.0-windows</TargetFramework>
 		<UseWPF>true</UseWPF>
 		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
 		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -40,6 +40,11 @@
 	  <Page Remove="Resources\Images\test.xaml" />
 	  <Page Remove="Resources\Images\Undo_16x.xaml" />
 	  <Page Remove="Resources\Images\WordWrap_16x.xaml" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <Compile Include="..\..\..\Test\ok\files\Fast tree list view\@Native control\Native control.cs" Link="_test\Native control.cs" />
+	  <Compile Include="..\..\..\Test\ok\files\Fast tree list view\@Native control\TvItem.cs" Link="_test\TvItem.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

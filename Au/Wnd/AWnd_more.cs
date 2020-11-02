@@ -63,11 +63,7 @@ namespace Au
 			/// Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="CreateMessageOnlyWindow(Native.WNDPROC, string)"/>.
 			/// If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
 			/// </param>
-			/// <param name="etc">
-			/// Can be used to specify more fields of <msdn>WNDCLASSEX</msdn> that is passed to API <msdn>RegisterClassEx</msdn>.
-			/// Defaults: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; style = CS_GLOBALCLASS; others = 0/null/default.
-			/// This function also adds CS_GLOBALCLASS style.
-			/// </param>
+			/// <param name="etc">Can be used to specify API <msdn>WNDCLASSEX</msdn> fields. If null, this function sets arrow cursor; else to set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).</param>
 			/// <exception cref="ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="CreateWindow"/>.</exception>
 			/// <exception cref="InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
 			/// <exception cref="Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
@@ -457,8 +453,9 @@ namespace Au.Types
 		public int cbClsExtra;
 		public int cbWndExtra;
 		public IntPtr hIcon;
-		public IntPtr? hCursor;
-		public IntPtr? hbrBackground;
+		public IntPtr hCursor;
+		public MCursor mCursor;
+		public IntPtr hbrBackground;
 		public IntPtr hIconSm;
 #pragma warning restore 1591 //XML doc
 	}

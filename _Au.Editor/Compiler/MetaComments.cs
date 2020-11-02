@@ -49,6 +49,7 @@ namespace Au.Compiler
 	/// c \folder\file.cs //path relative to the workspace folder
 	/// ]]></code>
 	/// The file must be in this workspace. Or it can be a link (in workspace) to an external file. The same is true with most other options.
+	/// If folder, compiles all its descendant class files.
 	/// 
 	/// <h3>References to libraries created in this workspace</h3>
 	/// <code><![CDATA[
@@ -84,6 +85,7 @@ namespace Au.Compiler
 	/// define SYMBOL1,SYMBOL2,d:DEBUG_ONLY,r:RELEASE_ONLY //define preprocessor symbols that can be used with #if etc. If no optimize true, DEBUG and TRACE are added implicitly.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 4 (all). Default: 4.
 	/// noWarnings 3009,162 //don't show these compiler warnings
+	/// testInternal Assembly1,Assembly2 //access internal and protected symbols of specified assemblies
 	/// preBuild file /arguments //run this script before compiling. More info below.
 	/// postBuild file /arguments //run this script after compiled successfully. More info below.
 	/// ]]></code>
@@ -94,31 +96,30 @@ namespace Au.Compiler
 	/// 
 	/// <h3>Settings used to run the compiled script</h3>
 	/// <code><![CDATA[
-	/// runMode green|blue - whether tasks can run simultaneously, etc. Default: green. More info below.
+	/// runSingle false|true - whether to allow single running task, etc. Default: false. More info below.
 	/// ifRunning warn|warn_restart|cancel|cancel_restart|wait|wait_restart|run|run_restart|restart //what to do if this script is already running. Default: warn. More info below.
-	/// ifRunning2 same|warn|cancel|wait //what to do if another green script is running. Default: same. More info below.
+	/// ifRunning2 same|warn|cancel|wait //what to do if another "runSingle" script is running. Default: same. More info below.
 	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
 	/// prefer32bit false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
 	/// ]]></code>
 	/// Here word "task" is used for "script that is running or should start".
-	/// Options 'runMode', 'ifRunning', 'ifRunning2' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
+	/// Options 'runSingle', 'ifRunning', 'ifRunning2' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
 	/// 
-	/// About runMode:
-	/// Multiple green tasks cannot run simultaneously. Multiple blue tasks can run simultaneously. See also option 'ifRunning'.
-	/// The task also is green or blue in the "Running" pane. Green tasks change the tray icon and use the "End task" hotkey; blue tasks don't.
-	/// Blue tasks are used: to run simultaneously with any tasks (green, blue, other instances of self); to protect the task from the "End task" hotkey; as background tasks that wait for some event or watch for some condition; contain multiple methods that can be executed with method triggers, toolbars and autotexts.
+	/// About runSingle:
+	/// Multiple "runSingle" tasks cannot run simultaneously. Other tasks can run simultaneously. See also option 'ifRunning'.
+	/// The task also is green (if true) or blue (if false) in the "Running" pane. "runSingle" tasks change the tray icon and use the "End task" hotkey; other tasks don't.
 	/// 
 	/// About ifRunning:
 	/// When trying to start this script, what to do if it is already running. Values:
 	/// warn - print warning and don't run.
 	/// cancel - don't run.
 	/// wait - run later, when that task ends.
-	/// run - run simultaneously. Requires runMode blue.
+	/// run - run simultaneously.
 	/// restart - end it and run.
 	/// If ends with _restart, the Run button/menu will restart. Useful for quick edit-test.
 	/// 
 	/// About ifRunning2:
-	/// When trying to start this green script, what to do if another green script is running. Not used with runMode blue.
+	/// When trying to start this "runSingle" script, what to do if another "runSingle" script is running.
 	/// If same (default), inherits from ifRunning, or uses warn if unavailable. Other values (warn, cancel, wait) are like ifRunning.
 	/// 
 	/// About uac:
@@ -207,6 +208,12 @@ namespace Au.Compiler
 		public static List<string> DefaultNoWarnings { get; set; } = new() { "CS1701", "CS1702" };
 		//CS1702: eg Core 3.1 System.Drawing.Common references System.Runtime version of Core 3.0; VS does not show this warning; VS adds 1701,1702 to default project properties.
 
+		/// <summary>
+		/// Meta 'testInternal'.
+		/// Default: null.
+		/// </summary>
+		public string[] TestInternal { get; private set; }
+
 		///// <summary>
 		///// Meta option 'config'.
 		///// </summary>
@@ -259,10 +266,10 @@ namespace Au.Compiler
 		public MetaFileAndString PostBuild { get; private set; }
 
 		/// <summary>
-		/// Meta option 'runMode'.
-		/// Default: green.
+		/// Meta option 'runSingle'.
+		/// Default: false.
 		/// </summary>
-		public ERunMode RunMode { get; private set; }
+		public bool RunSingle { get; private set; }
 
 		/// <summary>
 		/// Meta option 'ifRunning'.
@@ -416,11 +423,11 @@ namespace Au.Compiler
 				Optimize = DefaultOptimize;
 				WarningLevel = DefaultWarningLevel;
 				NoWarnings = DefaultNoWarnings != null ? new List<string>(DefaultNoWarnings) : new List<string>();
-				Defines = new ();
+				Defines = new();
 				Role = DefaultRole(isScript);
 
-				CodeFiles = new ();
-				References = new ();
+				CodeFiles = new();
+				References = new();
 			}
 
 			CodeFiles.Add(new MetaCodeFile(f, code));
@@ -458,7 +465,7 @@ namespace Au.Compiler
 			case "com":
 			case "pr" when _isMain:
 				if (name[0] == 'p') {
-					Specified |= EMSpecified.pr;
+					//Specified |= EMSpecified.pr;
 					if (!_PR(ref value) || forCodeInfo) return;
 				}
 
@@ -474,10 +481,19 @@ namespace Au.Compiler
 				}
 				return;
 			case "c":
-				var ff = _GetFile(value); if (ff == null) return;
-				if (!ff.IsClass) { _ErrorV("must be a class file"); return; }
-				_filesC ??= new();
-				if (!_filesC.Contains(ff)) _filesC.Add(ff);
+				var ff = _GetFile(value, null);
+				if (ff != null) {
+					if (ff.IsFolder) {
+						foreach (var v in ff.Descendants()) if (v.IsClass) _AddC(v);
+					} else {
+						if (!ff.IsClass) { _ErrorV("must be a class file"); return; }
+						_AddC(ff);
+					}
+					void _AddC(FileNode ff) {
+						_filesC ??= new();
+						if (!_filesC.Contains(ff)) _filesC.Add(ff);
+					}
+				}
 				return;
 			case "resource":
 				//if (value.Ends(" /resources")) { //add following resources in value.resources instead of in AssemblyName.g.resources. //rejected. Rarely used. Would need more code, because meta resource can be in multiple files.
@@ -503,8 +519,8 @@ namespace Au.Compiler
 				if (_TrueFalse(out bool optim, value)) Optimize = optim;
 				break;
 			case "define":
-				Specified |= EMSpecified.define;
-				Defines.AddRange(value.SegSplit(", ", SegFlags.NoEmpty));
+				_Specified(EMSpecified.define);
+				Defines.AddRange(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
 				break;
 			case "warningLevel":
 				_Specified(EMSpecified.warningLevel);
@@ -513,8 +529,12 @@ namespace Au.Compiler
 				else _ErrorV("must be 0 - 4");
 				break;
 			case "noWarnings":
-				Specified |= EMSpecified.noWarnings;
-				NoWarnings.AddRange(value.SegSplit(", ", SegFlags.NoEmpty));
+				_Specified(EMSpecified.noWarnings);
+				NoWarnings.AddRange(value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries));
+				break;
+			case "testInternal":
+				_Specified(EMSpecified.testInternal);
+				TestInternal = value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 				break;
 			case "role":
 				_Specified(EMSpecified.role);
@@ -535,9 +555,9 @@ namespace Au.Compiler
 				_Specified(EMSpecified.outputPath);
 				if (!forCodeInfo) OutputPath = _GetOutPath(value);
 				break;
-			case "runMode":
-				_Specified(EMSpecified.runMode);
-				if (_Enum(out ERunMode rm, value)) RunMode = rm;
+			case "runSingle":
+				_Specified(EMSpecified.runSingle);
+				if (_TrueFalse(out bool rs, value)) RunSingle = rs;
 				break;
 			case "ifRunning":
 				_Specified(EMSpecified.ifRunning);
@@ -649,7 +669,7 @@ namespace Au.Compiler
 			foreach (var v in fields) if (v.name == s) { result = v.value; return true; }
 			return _ErrorV("must be one of: " + string.Join(", ", Enum.GetNames(ty)));
 		}
-		static Dictionary<Type, (string name, int value)[]> s_enumCache = new ();
+		static Dictionary<Type, (string name, int value)[]> s_enumCache = new();
 
 		FileNode _GetFile(string s, bool? folder = false) {
 			var f = _fn.FindRelative(s, folder);
@@ -666,7 +686,7 @@ namespace Au.Compiler
 				s2 = s.Substring(i + 2);
 				s = s.Remove(i);
 			}
-			return new (_GetFile(s, folder), s2);
+			return new(_GetFile(s, folder), s2);
 		}
 
 		string _GetOutPath(string s) {
@@ -688,14 +708,14 @@ namespace Au.Compiler
 				if (r.role != ERole.classLibrary) return _ErrorV("it is not a class library (no meta role classLibrary)");
 				value = r.file;
 			}
-			(ProjectReferences ??= new ()).Add(f);
+			(ProjectReferences ??= new()).Add(f);
 			return true;
 		}
 
 		bool _FinalCheckOptions(FileNode f) {
-			const EMSpecified c_spec1 = EMSpecified.runMode | EMSpecified.ifRunning | EMSpecified.ifRunning2
+			const EMSpecified c_spec1 = EMSpecified.runSingle | EMSpecified.ifRunning | EMSpecified.ifRunning2
 				| EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
-			const string c_spec1S = "cannot use runMode, ifRunning, ifRunning2, uac, prefer32bit, manifest, icon, console";
+			const string c_spec1S = "cannot use runSingle, ifRunning, ifRunning2, uac, prefer32bit, manifest, icon, console";
 
 			bool needOP = false;
 			switch (Role) {
@@ -718,8 +738,8 @@ namespace Au.Compiler
 			}
 			if (needOP) OutputPath ??= GetDefaultOutputPath(f, Role, withEnvVar: false);
 
-			if ((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunMode == ERunMode.green) return _ErrorM("ifRunning run requires runMode blue");
-			if (Specified.Has(EMSpecified.ifRunning2) && RunMode == ERunMode.blue) return _ErrorM("with runMode blue cannot use ifRunning2");
+			if ((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunSingle) return _ErrorM("ifRunning run with runSingle true");
+			if (Specified.Has(EMSpecified.ifRunning2) && !RunSingle) return _ErrorM("ifRunning2 without runSingle true");
 
 			//if(ResFile != null) {
 			//	if(IconFile != null) return _ErrorM("cannot add both res file and icon");
@@ -742,7 +762,7 @@ namespace Au.Compiler
 			if (Role == ERole.classLibrary || Role == ERole.classFile) oKind = OutputKind.DynamicallyLinkedLibrary;
 			else if (Console) oKind = OutputKind.ConsoleApplication;
 
-			return new (
+			var r = new CSharpCompilationOptions(
 			   oKind,
 			   optimizationLevel: Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
 			   allowUnsafe: true,
@@ -750,12 +770,25 @@ namespace Au.Compiler
 			   warningLevel: WarningLevel,
 			   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(AChar.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
 			   cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
-			   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider()
+			   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider(),
+			   metadataImportOptions: TestInternal != null ? MetadataImportOptions.Internal : MetadataImportOptions.Public
 			   );
+
+			if (TestInternal != null) {
+				//TODO: modify Roslyn source instead.
+				//TODO: in completion list don't show members of other assemblies.
+				//Allow to use internal/protected of assemblies specified using IgnoresAccessChecksToAttribute.
+				//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
+				//Part of code is in this func, other part in Compiler._AddAttributes.
+				var pi = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
+				pi.SetValue(r, (uint)1 << 22);
+			}
+
+			return r;
 		}
 
 		public CSharpParseOptions CreateParseOptions() {
-			return new (LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
+			return new(LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
 				_flags.Has(EMPFlags.ForCodeInfo) ? DocumentationMode.Diagnose : (XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None),
 				SourceCodeKind.Regular,
 				Defines);
@@ -829,8 +862,6 @@ namespace Au.Compiler
 
 	enum EUac { inherit, user, admin }
 
-	enum ERunMode { green, blue }
-
 	enum EIfRunning { warn, warn_restart, cancel, cancel_restart, wait, wait_restart, run, run_restart, restart, _restartFlag = 1 }
 	enum EIfRunning2 { same, warn, cancel, wait }
 
@@ -860,25 +891,25 @@ namespace Au.Compiler
 	[Flags]
 	enum EMSpecified
 	{
-		runMode = 1,
-		ifRunning = 2,
-		ifRunning2 = 4,
-		uac = 8,
-		prefer32bit = 0x10,
-		optimize = 0x20,
-		define = 0x40,
-		noWarnings = 0x80,
-		warningLevel = 0x100,
-		preBuild = 0x200,
-		postBuild = 0x400,
-		outputPath = 0x800,
-		role = 0x1000,
-		icon = 0x2000,
-		manifest = 0x4000,
-		//resFile = 0x8000,
-		sign = 0x10000,
-		xmlDoc = 0x20000,
-		console = 0x40000,
-		pr = 0x80000,
+		runSingle = 1,
+		ifRunning = 1 << 1,
+		ifRunning2 = 1 << 2,
+		uac = 1 << 3,
+		prefer32bit = 1 << 4,
+		optimize = 1 << 5,
+		define = 1 << 6,
+		warningLevel = 1 << 7,
+		noWarnings = 1 << 8,
+		testInternal = 1 << 9,
+		preBuild = 1 << 10,
+		postBuild = 1 << 11,
+		outputPath = 1 << 12,
+		role = 1 << 13,
+		icon = 1 << 14,
+		manifest = 1 << 15,
+		sign = 1 << 16,
+		xmlDoc = 1 << 17,
+		console = 1 << 18,
+		//resFile = 1<<,
 	}
 }

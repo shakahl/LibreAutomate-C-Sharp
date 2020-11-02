@@ -214,29 +214,29 @@ class CiCompletion
 								ExpressionSyntax nodeL = null; //node at left of . etc
 								bool canBeNamespace = false;
 								switch (node) {
-									case MemberAccessExpressionSyntax s1: // . or ->
-										nodeL = s1.Expression;
-										canBeNamespace = true;
-										break;
-									case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae:
-										// ?. //OperatorToken is '.', GetPreviousToken is '?'
-										//nodeL = cae.Expression;
-										break;
-									case QualifiedNameSyntax s1: // eg . outside functions
-										nodeL = s1.Left;
-										canBeNamespace = true;
-										break;
-									case AliasQualifiedNameSyntax s1: // ::
-										canGroup = false;
-										//nodeL = s1.Alias;
-										break;
-									case ExplicitInterfaceSpecifierSyntax s1:
-										//nodeL = s1.Name;
-										break;
-									default:
-										isDot = false;
-										ADebug.Print(node.GetType());
-										break;
+								case MemberAccessExpressionSyntax s1: // . or ->
+									nodeL = s1.Expression;
+									canBeNamespace = true;
+									break;
+								case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae:
+									// ?. //OperatorToken is '.', GetPreviousToken is '?'
+									//nodeL = cae.Expression;
+									break;
+								case QualifiedNameSyntax s1: // eg . outside functions
+									nodeL = s1.Left;
+									canBeNamespace = true;
+									break;
+								case AliasQualifiedNameSyntax s1: // ::
+									canGroup = false;
+									//nodeL = s1.Alias;
+									break;
+								case ExplicitInterfaceSpecifierSyntax s1:
+									//nodeL = s1.Name;
+									break;
+								default:
+									isDot = false;
+									ADebug.Print(node.GetType());
+									break;
 								}
 
 								if (canBeNamespace && tk == SyntaxKind.DotToken && nodeL is IdentifierNameSyntax) {
@@ -246,16 +246,14 @@ class CiCompletion
 						}
 					}
 					//p1.Next('M');
-				}
-				else if (isCommand) {
+				} else if (isCommand) {
 					if (CiUtil.IsInString(ref node, position)) {
 						stringSpan = node.Span;
 						stringFormat = CiUtil.GetParameterStringFormat(node, model, true);
 						if (stringFormat == PSFormat.AWildex) { //is regex in wildex?
 							if (code.RegexMatch(@"[\$@]*""(?:\*\*\*\w+ )?\*\*c?rc? ", 0, out RXGroup rg, RXFlags.ANCHORED, stringSpan.Start..stringSpan.End)
 								&& position >= stringSpan.Start + rg.Length) stringFormat = PSFormat.ARegex;
-						}
-						else if (stringFormat == PSFormat.None) stringFormat = (PSFormat)100;
+						} else if (stringFormat == PSFormat.None) stringFormat = (PSFormat)100;
 					}
 				}
 				return r1;
@@ -310,82 +308,81 @@ class CiCompletion
 				//why cref provider adds internals from other assemblies?
 				if (provider == CiComplProvider.Cref && sym != null) {
 					switch (sym.Kind) {
-						case SymbolKind.NamedType when v.access == CiItemAccess.Internal && !sym.IsInSource() && !model.IsAccessible(0, sym):
-							//AOutput.Write(sym);
+					case SymbolKind.NamedType when v.access == CiItemAccess.Internal && !sym.IsInSource() && !model.IsAccessible(0, sym):
+						//AOutput.Write(sym);
+						continue;
+					case SymbolKind.Namespace:
+						//AOutput.Write(sym, sym.ContainingAssembly?.Name);
+						switch (sym.Name) {
+						case "Internal" when sym.ContainingAssembly?.Name == "System.Core":
+						case "Windows" when sym.ContainingAssembly?.Name == "mscorlib":
 							continue;
-						case SymbolKind.Namespace:
-							//AOutput.Write(sym, sym.ContainingAssembly?.Name);
-							switch (sym.Name) {
-								case "Internal" when sym.ContainingAssembly?.Name == "System.Core":
-								case "Windows" when sym.ContainingAssembly?.Name == "mscorlib":
-									continue;
-							}
-							break;
+						}
+						break;
 					}
 				}
 
 				switch (v.kind) {
-					case CiItemKind.Method:
-						if (sym != null) {
-							if (sym.IsStatic) {
-								switch (ci.DisplayText) {
-									case "Equals":
-									case "ReferenceEquals":
-										//hide static members inherited from Object
-										if (sym.ContainingType.BaseType == null) { //Object
-											if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue;
-											v.moveDown = CiItemMoveDownBy.Name;
-										}
-										break;
-									case "Main" when _IsOurScriptClass(sym.ContainingType):
-										v.moveDown = CiItemMoveDownBy.Name;
-										break;
+				case CiItemKind.Method:
+					if (sym != null) {
+						if (sym.IsStatic) {
+							switch (ci.DisplayText) {
+							case "Equals":
+							case "ReferenceEquals":
+								//hide static members inherited from Object
+								if (sym.ContainingType.BaseType == null) { //Object
+									if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue;
+									v.moveDown = CiItemMoveDownBy.Name;
 								}
-							}
-							else {
-								switch (ci.DisplayText) {
-									case "Equals":
-									case "GetHashCode":
-									case "GetType":
-									case "ToString":
-									case "MemberwiseClone":
-									case "GetEnumerator": //IEnumerable
-									case "CompareTo": //IComparable
-									case "GetTypeCode": //IConvertible
-									case "CreateObjRef": //MarshalByRefObject
-									case "GetLifetimeService": //MarshalByRefObject
-									case "InitializeLifetimeService": //MarshalByRefObject
-									case "Clone" when sym.ContainingType.Name == "String": //this useless method would be the first in the list
-									case "OnUnhandledException" when sym.ContainingType.Name == "AScript":
-										v.moveDown = CiItemMoveDownBy.Name;
-										break;
-								}
-								//var ct = sym.ContainingType;
-								//AOutput.Write(ct.ToString(), ct.Name, ct.ContainingNamespace.ToString(), ct.BaseType);
-							}
-						}
-						break;
-					case CiItemKind.Namespace:
-						switch (ci.DisplayText) {
-							case "Accessibility":
-							case "UIAutomationClientsideProviders":
+								break;
+							case "Main" when _IsOurScriptClass(sym.ContainingType):
 								v.moveDown = CiItemMoveDownBy.Name;
 								break;
+							}
+						} else {
+							switch (ci.DisplayText) {
+							case "Equals":
+							case "GetHashCode":
+							case "GetType":
+							case "ToString":
+							case "MemberwiseClone":
+							case "GetEnumerator": //IEnumerable
+							case "CompareTo": //IComparable
+							case "GetTypeCode": //IConvertible
+							case "CreateObjRef": //MarshalByRefObject
+							case "GetLifetimeService": //MarshalByRefObject
+							case "InitializeLifetimeService": //MarshalByRefObject
+							case "Clone" when sym.ContainingType.Name == "String": //this useless method would be the first in the list
+							case "OnUnhandledException" when sym.ContainingType.Name == "AScript":
+								v.moveDown = CiItemMoveDownBy.Name;
+								break;
+							}
+							//var ct = sym.ContainingType;
+							//AOutput.Write(ct.ToString(), ct.Name, ct.ContainingNamespace.ToString(), ct.BaseType);
 						}
+					}
+					break;
+				case CiItemKind.Namespace:
+					switch (ci.DisplayText) {
+					case "Accessibility":
+					case "UIAutomationClientsideProviders":
+						v.moveDown = CiItemMoveDownBy.Name;
 						break;
-					case CiItemKind.TypeParameter:
-						if (sym == null && ci.DisplayText == "T") continue;
-						break;
-					case CiItemKind.Class:
-						if (!isDot && sym is INamedTypeSymbol ins && _IsOurScriptClass(ins)) v.moveDown = CiItemMoveDownBy.Name;
-						break;
-					case CiItemKind.EnumMember:
-					case CiItemKind.Label:
-						canGroup = false;
-						break;
-					case CiItemKind.LocalVariable:
-						if (isDot) continue; //see the bug comments below
-						break;
+					}
+					break;
+				case CiItemKind.TypeParameter:
+					if (sym == null && ci.DisplayText == "T") continue;
+					break;
+				case CiItemKind.Class:
+					if (!isDot && sym is INamedTypeSymbol ins && _IsOurScriptClass(ins)) v.moveDown = CiItemMoveDownBy.Name;
+					break;
+				case CiItemKind.EnumMember:
+				case CiItemKind.Label:
+					canGroup = false;
+					break;
+				case CiItemKind.LocalVariable:
+					if (isDot) continue; //see the bug comments below
+					break;
 				}
 
 				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script" && t.BaseType?.Name == "AScript";
@@ -413,8 +410,7 @@ class CiCompletion
 						if (v.kind == CiItemKind.Keyword) (keywordsGroup ??= new List<int>()).Add(i);
 						else if (v.kind == CiItemKind.Snippet) (snippetsGroup ??= new List<int>()).Add(i);
 						else (etcGroup ??= new List<int>()).Add(i);
-					}
-					else {
+					} else {
 						INamespaceOrTypeSymbol nts;
 						if (!isDot) nts = sym.ContainingNamespace;
 						//else if(sym is ReducedExtensionMethodSymbol em) nts = em.ReceiverType; //rejected. Didn't work well, eg with linq.
@@ -443,10 +439,25 @@ class CiCompletion
 						int diff = em1 - em2;
 						if (diff != 0) return diff;
 						if (em1 == 1) return string.Compare(k1.Key.Name, k2.Key.Name, StringComparison.OrdinalIgnoreCase);
+#if true
+						//sort non-extension members by inheritance base interface
+						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
+						if (t1.InheritsFromOrImplementsOrEqualsIgnoringConstruction(t2)) return -1;
+						if (t2.InheritsFromOrImplementsOrEqualsIgnoringConstruction(t1)) return 1;
+						//interface and object? For both, BaseType returns null and InheritsFromOrImplementsOrEqualsIgnoringConstruction returns false.
+						var tk1 = t1.TypeKind; var tk2 = t2.TypeKind;
+						if (tk1 == TypeKind.Class && t1.BaseType == null) return 1; //t1 is object
+						if (tk2 == TypeKind.Class && t2.BaseType == null) return -1; //t2 is object
+						ADebug.Print($"{t1}, {t2},    {t1.BaseType}, {t2.BaseType},    {tk1}, {tk2}");
+#else
 						//sort non-extension members by inheritance
 						var t1 = k1.Key as INamedTypeSymbol; var t2 = k2.Key as INamedTypeSymbol;
 						if (_IsBase(t1, t2)) return -1;
 						if (_IsBase(t2, t1)) return 1;
+						static bool _IsBase(INamedTypeSymbol t, INamedTypeSymbol tBase) {
+							for (t = t.BaseType; t != null; t = t.BaseType) if (t == tBase) return true;
+							return false;
+						}
 						//can be both interfaces, or interface and object. For object and interfaces BaseType returns null.
 						var tk1 = t1.TypeKind; var tk2 = t2.TypeKind;
 						if (tk1 == TypeKind.Class && t1.BaseType == null) return 1; //t1 is object
@@ -455,7 +466,9 @@ class CiCompletion
 							if (t2.AllInterfaces.Contains(t1)) return 1;
 							if (t1.AllInterfaces.Contains(t2)) return -1;
 						}
+						//fails for eg ObservableCollection<>. Uses 2 variables for t2 and t1.BaseType although it is the same type.
 						ADebug.Print($"{t1}, {t2}, {k1.Value.Count}, {k2.Value.Count}, {tk1}, {tk2}, {t1.BaseType}, {t2.BaseType}"); //usually because of Roslyn bugs
+#endif
 
 						//SHOULDDO: workaround for Roslyn bug: in argument-lambda, on dot after lambda parameter, also adds members of types of parameter at that position of other overloads.
 						return 0;
@@ -488,13 +501,7 @@ class CiCompletion
 #endif
 
 					g = gs.Select(o => (o.Key.Name, o.Value)).ToList(); //list<(itype, list)> -> list<typeName, list>
-
-					static bool _IsBase(INamedTypeSymbol t, INamedTypeSymbol tBase) {
-						for (t = t.BaseType; t != null; t = t.BaseType) if (t == tBase) return true;
-						return false;
-					}
-				}
-				else {
+				} else {
 					g = groups.Select(o => (o.Key.QualifiedName(), o.Value)).ToList(); //dictionary<inamespace, list> -> list<namespaceName, list>
 					for (int i = g.Count - 1; i > 0; i--) { //join duplicate namespace names. If n assemblies have the same namespace, there are n namespace objects.
 						var nsName = g[i].Item1;
@@ -563,16 +570,14 @@ class CiCompletion
 				if (iFirst >= 0) {
 					if (filterText.Length == 1) {
 						_HiliteChar(iFirst);
-					}
-					else {
+					} else {
 						while (!s.Eq(iFirst, filterText, true)) {
 							iFirst = _FilterFindChar(s, iFirst + 1, c0Lower, c0Upper);
 							if (iFirst < 0) break;
 						}
 						if (iFirst >= 0) {
 							_HiliteSubstring(iFirst);
-						}
-						else { //has all uppercase chars? Eg add OneTwoThree if text is "ott" or "ot" or "tt".
+						} else { //has all uppercase chars? Eg add OneTwoThree if text is "ott" or "ot" or "tt".
 							_HiliteChar(iFirstFirst);
 							for (int i = 1, j = iFirstFirst + 1; i < filterText.Length; i++, j++) {
 								j = _FilterFindChar(s, j, textLower[i], textUpper[i], camel: true);
@@ -598,8 +603,7 @@ class CiCompletion
 					if (filterText.Length > 1 && (iFirst = s.Find(filterText, true)) >= 0) {
 						v.moveDown |= CiItemMoveDownBy.FilterText; //sort bottom
 						_HiliteSubstring(iFirst);
-					}
-					else v.hidden |= CiItemHiddenBy.FilterText;
+					} else v.hidden |= CiItemHiddenBy.FilterText;
 				}
 
 				//if DisplayText != FilterText, correct or clear hilites. Eg cref.
@@ -666,9 +670,9 @@ class CiCompletion
 	public string GetDescriptionHtml(CiComplItem ci, int iSelect) {
 		if (_data == null) return null;
 		switch (ci.kind) {
-			case CiItemKind.Keyword: return CiHtml.KeywordToHtml(ci.DisplayText);
-			case CiItemKind.Label: return CiHtml.LabelToHtml(ci.DisplayText);
-			case CiItemKind.Snippet: return CiSnippets.GetDescriptionHtml(ci);
+		case CiItemKind.Keyword: return CiHtml.KeywordToHtml(ci.DisplayText);
+		case CiItemKind.Label: return CiHtml.LabelToHtml(ci.DisplayText);
+		case CiItemKind.Snippet: return CiSnippets.GetDescriptionHtml(ci);
 		}
 		var symbols = ci.ci.Symbols;
 		if (symbols != null) return CiHtml.SymbolsToHtml(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
@@ -711,20 +715,20 @@ class CiCompletion
 			//ci.DebugPrint();
 			int newPos = change.NewPosition ?? (i + len);
 			switch (APath.GetExtension(ci.ProviderName)) {
-				case ".OverrideCompletionProvider":
-					newPos = -1; //difficult to calculate and not useful
+			case ".OverrideCompletionProvider":
+				newPos = -1; //difficult to calculate and not useful
 
-					//Replace 4 spaces with tab. Make { in same line.
-					s = s.Replace("    ", "\t").RegexReplace(@"\R\t*\{", " {", 1);
-					//Correct indentation. 
-					int indent = 0, indent2 = z.LineIndentationFromPos(true, _data.tempRange.CurrentFrom);
-					for (int j = s.IndexOf('\t'); (uint)j < s.Length && s[j] == '\t'; j++) indent++;
-					if (indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
-					break;
-				case ".XmlDocCommentCompletionProvider" when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
-					if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos++;
-					s += "></" + tag + ">";
-					break;
+				//Replace 4 spaces with tab. Make { in same line.
+				s = s.Replace("    ", "\t").RegexReplace(@"\R\t*\{", " {", 1);
+				//Correct indentation. 
+				int indent = 0, indent2 = z.LineIndentationFromPos(true, _data.tempRange.CurrentFrom);
+				for (int j = s.IndexOf('\t'); (uint)j < s.Length && s[j] == '\t'; j++) indent++;
+				if (indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
+				break;
+			case ".XmlDocCommentCompletionProvider" when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
+				if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos++;
+				s += "></" + tag + ">";
+				break;
 			}
 			z.ReplaceRange(true, i, i + len, s);
 			if (newPos >= 0) z.Select(true, newPos, newPos, makeVisible: true);
@@ -742,66 +746,66 @@ class CiCompletion
 			if (ch == default) { //completed with Enter, Tab, Space or click
 				string s2 = null;
 				switch (item.kind) {
-					case CiItemKind.Method:
-					case CiItemKind.ExtensionMethod:
+				case CiItemKind.Method:
+				case CiItemKind.ExtensionMethod:
+					ch = '(';
+					break;
+				case CiItemKind.Keyword:
+					string name = item.DisplayText;
+					switch (name) {
+					case "nameof":
+					case "sizeof":
+					case "typeof":
 						ch = '(';
 						break;
-					case CiItemKind.Keyword:
-						string name = item.DisplayText;
-						switch (name) {
-							case "nameof":
-							case "sizeof":
-							case "typeof":
-								ch = '(';
-								break;
-							case "for":
-							case "foreach":
-							case "while":
-							case "lock":
-							case "catch":
-							case "if" when !_IsDirective():
-							case "fixed" when _IsInFunction(): //else probably a fixed array field
-							case "using" when isEnter && _IsInFunction(): //else directive or without ()
-							case "when" when _IsInAncestorNode(i, n => (n is CatchClauseSyntax, n is SwitchSectionSyntax)): //catch(...) when
-								ch = '(';
-								s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
-								break;
-							case "try":
-							case "finally":
-							case "get" when isEnter:
-							case "set" when isEnter:
-							case "add" when isEnter:
-							case "remove" when isEnter:
-							case "do" when isEnter:
-							case "unsafe" when isEnter:
-							case "else" when isEnter && !_IsDirective():
-								ch = '{';
-								break;
-							case "checked":
-							case "unchecked":
-								ch = isEnter ? '{' : '(';
-								break;
-							case "switch":
-								//is it switch statement or switch expression? Difficult to detect. Detect some common cases.
-								if (i > 0 && CodeInfo.GetContextWithoutDocument(out var cd, i)) {
-									if (cd.code[i - 1] == ' ' && cd.GetDocument()) {
-										var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
-										//AOutput.Write(node.Kind(), i, node.Span, node);
-										if (node.SpanStart < i) switch (node) { case ExpressionSyntax _: case BaseArgumentListSyntax _: ch = '{'; break; } //expression
-									}
-									if (ch == default) goto case "for";
-								}
-								break;
-							default:
-								if (0 != name.Eq(false, s_kwType)) _NewExpression();
-								break;
+					case "for":
+					case "foreach":
+					case "while":
+					case "lock":
+					case "catch":
+					case "if" when !_IsDirective():
+					case "fixed" when _IsInFunction(): //else probably a fixed array field
+					case "using" when isEnter && _IsInFunction(): //else directive or without ()
+					case "when" when _IsInAncestorNode(i, n => (n is CatchClauseSyntax, n is SwitchSectionSyntax)): //catch(...) when
+						ch = '(';
+						s2 = " ()"; //users may prefer space, like 'if (i<1)'. If not, let they type '(' instead.
+						break;
+					case "try":
+					case "finally":
+					case "get" when isEnter:
+					case "set" when isEnter:
+					case "add" when isEnter:
+					case "remove" when isEnter:
+					case "do" when isEnter:
+					case "unsafe" when isEnter:
+					case "else" when isEnter && !_IsDirective():
+						ch = '{';
+						break;
+					case "checked":
+					case "unchecked":
+						ch = isEnter ? '{' : '(';
+						break;
+					case "switch":
+						//is it switch statement or switch expression? Difficult to detect. Detect some common cases.
+						if (i > 0 && CodeInfo.GetContextWithoutDocument(out var cd, i)) {
+							if (cd.code[i - 1] == ' ' && cd.GetDocument()) {
+								var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
+								//AOutput.Write(node.Kind(), i, node.Span, node);
+								if (node.SpanStart < i) switch (node) { case ExpressionSyntax _: case BaseArgumentListSyntax _: ch = '{'; break; } //expression
+							}
+							if (ch == default) goto case "for";
 						}
 						break;
-					case CiItemKind.Class:
-					case CiItemKind.Structure:
-						if (ci.DisplayTextSuffix == "<>") ch = '<';
-						else _NewExpression();
+					default:
+						if (0 != name.Eq(false, s_kwType)) _NewExpression();
 						break;
+					}
+					break;
+				case CiItemKind.Class:
+				case CiItemKind.Structure:
+					if (ci.DisplayTextSuffix == "<>") ch = '<';
+					else _NewExpression();
+					break;
 				}
 
 				bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
@@ -828,32 +832,28 @@ class CiCompletion
 							b.Append("\r\n").Append('\t', indent).Append('}');
 							s2 = b.ToString();
 							positionBack = indent + 3;
-						}
-						else {
+						} else {
 							s2 = " {  }";
 							positionBack = 2;
 						}
 						bracesFrom = i + s.Length + 2;
 						bracesLen = s2.Length - 3;
-					}
-					else if ((isSpace || !Program.Settings.ci_complParenSpace) && !_data.noAutoSelect && !doc.Text.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
+					} else if ((isSpace || !Program.Settings.ci_complParenSpace) && !_data.noAutoSelect && !doc.Text.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
 						s2 ??= ch == '(' ? "()" : "<>";
 						positionBack = 1;
 						bracesFrom = i + s.Length + s2.Length - 1;
-					}
-					else {
+					} else {
 						ch = default;
 						s2 = null;
 					}
 					s += s2;
 				}
-			}
-			else if (!(ch == '(' || ch == '<' || _data.noAutoSelect)) { //completed with ';' or ',' or '.' or '?' or '-' or any other non-identifier char space, Tab, Enter
+			} else if (!(ch == '(' || ch == '<' || _data.noAutoSelect)) { //completed with ';' or ',' or '.' or '?' or '-' or any other non-identifier char space, Tab, Enter
 				switch (item.kind) {
-					case CiItemKind.Method:
-					case CiItemKind.ExtensionMethod:
-						s += "()";
-						break;
+				case CiItemKind.Method:
+				case CiItemKind.ExtensionMethod:
+					s += "()";
+					break;
 				}
 			}
 		}
@@ -951,8 +951,7 @@ class CiComplItem
 		Debug.Assert(i > 0);
 		s = s.Substring(i);
 		//AOutput.Write(s);
-		return s switch
-		{
+		return s switch {
 			"SymbolCompletionProvider" => CiComplProvider.Symbol,
 			"KeywordCompletionProvider" => CiComplProvider.Keyword,
 			"ObjectInitializerCompletionProvider" => CiComplProvider.ObjectInitializer,

@@ -83,7 +83,7 @@ namespace Au.Compiler
 							r.role = (ERole)value.ToInt(offs);
 							break;
 						case 'a':
-							r.runMode = (ERunMode)value.ToInt(offs);
+							r.runSingle = true;
 							break;
 						case 'n':
 							r.ifRunning = (EIfRunning)value.ToInt(offs);
@@ -189,7 +189,7 @@ namespace Au.Compiler
 	IDmain|=path.exe|tN|aN|nN|NN|uN|b|q|z|dN|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
 	= - outFile
 	t - role
-	a - runMode
+	a - runSingle
 	n - ifRunning
 	N - ifRunning2
 	u - uac
@@ -214,7 +214,7 @@ namespace Au.Compiler
 				using(new Util.StringBuilder_(out var b)) {
 					if(m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
 					if(m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
-					if(m.RunMode != default) b.Append("|a").Append((int)m.RunMode);
+					if(m.RunSingle) b.Append("|a");
 					if(m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
 					if(m.IfRunning2 != default) b.Append("|N").Append((int)m.IfRunning2);
 					if(m.Uac != default) b.Append("|u").Append((int)m.Uac);
@@ -287,7 +287,7 @@ namespace Au.Compiler
 				foreach(var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
 					if(_data == null) {
 						//first line contains .NET Core version and Au.dll version, like 3.1.0|1.2.3.4
-						if(sData[v.start..v.end] != s_coreAuVersions) goto g1;
+						if(sData[v.Range] != s_coreAuVersions) goto g1;
 						_data = new Dictionary<uint, string>(sData.LineCount());
 						continue;
 					}

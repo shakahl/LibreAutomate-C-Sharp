@@ -57,7 +57,7 @@ List of files open in the code editor.
 Click a file to activate in the code editor. Middle-click to close.
 
 #### Running
-Running scripts. The color is green or blue depending on the runMode property.
+Running scripts. The color depends on the runSingle property: blue if false, green if true.
 
 Right-click an item to end the process. Click to open and activate in the code editor.
 
@@ -105,5 +105,5 @@ Click to show and activate editor window. Right-click to show context menu. Midd
 
 Colors:
 - blue - default.
-- green - a script task is running. Only if its runMode property is green.
+- green - a script task is running. Only if its runSingle property is true.
 - gray - triggers are disabled.

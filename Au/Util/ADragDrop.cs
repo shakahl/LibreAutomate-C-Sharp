@@ -26,7 +26,7 @@ namespace Au.Util
 		/// Returns true if dropped, false if cancelled.
 		/// </summary>
 		/// <param name="window">Window or control that owns the drag operation.</param>
-		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
+		/// <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
 		/// <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
 		public static bool SimpleDragDrop(AnyWnd window, MButtons mouseButton = MButtons.Left, Action<MsgArgs> onMouseKeyMessage = null)
 		{
@@ -46,9 +46,11 @@ namespace Au.Util
 				int m = x.Msg.message;
 				if(m >= Api.WM_MOUSEFIRST && m <= Api.WM_MOUSELAST) {
 					if(m == Api.WM_LBUTTONUP) {
-						if(R = (mouseButton & MButtons.Left) != 0) break;
+						if(R = mouseButton.Has(MButtons.Left)) break;
 					} else if(m == Api.WM_RBUTTONUP) {
-						if(R = (mouseButton & MButtons.Right) != 0) break;
+						if(R = mouseButton.Has(MButtons.Right)) break;
+					} else if(m == Api.WM_MBUTTONUP) {
+						if(R = mouseButton.Has(MButtons.Middle)) break;
 					}
 					call = true;
 				} else if(m == Api.WM_KEYDOWN || m == Api.WM_KEYUP || m == Api.WM_SYSKEYDOWN || m == Api.WM_SYSKEYUP) {

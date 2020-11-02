@@ -137,17 +137,17 @@ class RunningTask
 	public readonly FileNode f;
 	public readonly int taskId;
 	//public readonly int processId;
-	public readonly bool isBlue;
+	public readonly bool isRunSingle;
 
 	static int s_taskId;
 
-	public RunningTask(FileNode f, WaitHandle hProcess, bool isBlue)
+	public RunningTask(FileNode f, WaitHandle hProcess, bool isRunSingle)
 	{
 		taskId = ++s_taskId;
 		this.f = f;
 		_process = hProcess;
 		//processId = Api.GetProcessId(hProcess.SafeWaitHandle.DangerousGetHandle());
-		this.isBlue = isBlue;
+		this.isRunSingle = isRunSingle;
 
 		RegisteredWaitHandle rwh = null;
 		rwh = ThreadPool.RegisterWaitForSingleObject(_process, (context, wasSignaled) => {
@@ -305,7 +305,7 @@ class RunningTasks
 	void _TimerUpdateUI()
 	{
 		if(!_updateUI) return;
-		EdTrayIcon.Running = GetGreenTask() != null;
+		EdTrayIcon.Running = GetRunsingleTask() != null;
 		if(!Program.MainForm.Visible) return;
 		_UpdatePanels();
 	}
@@ -332,13 +332,13 @@ class RunningTasks
 	}
 
 	/// <summary>
-	/// Gets the "green" running task (meta runMode green or unspecified). Returns null if no such task.
+	/// Gets the "runSingle" running task (meta runSingle). Returns null if no such task.
 	/// </summary>
-	public RunningTask GetGreenTask()
+	public RunningTask GetRunsingleTask()
 	{
 		for(int i = 0; i < _a.Count; i++) {
 			var r = _a[i];
-			if(!r.isBlue && r.IsRunning) return r;
+			if(r.isRunSingle && r.IsRunning) return r;
 		}
 		return null;
 	}
@@ -378,11 +378,11 @@ class RunningTasks
 
 	/// <summary>
 	/// Ends single task, if still running.
-	/// If rt==null, ends the green task, if running.
+	/// If rt==null, ends the "runSingle" task, if running.
 	/// </summary>
 	public void EndTask(RunningTask rt = null)
 	{
-		if(rt == null) { rt = Program.Tasks.GetGreenTask(); if(rt == null) return; }
+		if(rt == null) { rt = Program.Tasks.GetRunsingleTask(); if(rt == null) return; }
 		if(_a.Contains(rt)) _EndTask(rt);
 	}
 
@@ -395,11 +395,11 @@ class RunningTasks
 	bool _CanRunNow(FileNode f, Compiler.CompResults r, out RunningTask running, bool runFromEditor = false)
 	{
 		running = null;
-		switch(r.runMode) {
-		case ERunMode.green:
-			running = GetGreenTask();
+		switch(r.runSingle) {
+		case true:
+			running = GetRunsingleTask();
 			break;
-		case ERunMode.blue when !(r.ifRunning == EIfRunning.run || (r.ifRunning == EIfRunning.run_restart && !runFromEditor)):
+		case false when !(r.ifRunning == EIfRunning.run || (r.ifRunning == EIfRunning.run_restart && !runFromEditor)):
 			running = _GetRunning(f);
 			break;
 		default: return true;
@@ -449,7 +449,7 @@ class RunningTasks
 				goto g1;
 			default: //warn
 				string s1 = same ? "it" : $"{running.f.SciLink}";
-				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runMode<>.");
+				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
 				break;
 			}
 			return 0;
@@ -545,7 +545,7 @@ class RunningTasks
 			return 0;
 		}
 
-		var rt = new RunningTask(f, hProcess, r.runMode != ERunMode.green);
+		var rt = new RunningTask(f, hProcess, r.runSingle);
 		_Add(rt);
 		return pid;
 	}
@@ -606,7 +606,7 @@ class RunningTasks
 				goto g1;
 			default: //warn
 				string s1 = same ? "it" : $"{running.f.SciLink}";
-				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runMode<>.");
+				AOutput.Write($"<>Cannot start {f.SciLink} because {s1} is running. You may want to <+properties \"{f.IdStringWithWorkspace}\">change<> <c green>ifRunning<>, <c green>ifRunning2<>, <c green>runSingle<>.");
 				break;
 			}
 			return 0;
@@ -709,7 +709,7 @@ class RunningTasks
 			return 0;
 		}
 
-		var rt = new RunningTask(f, hProcess, r.runMode != ERunMode.green);
+		var rt = new RunningTask(f, hProcess, r.runSingle);
 		_Add(rt);
 		return pid;
 	}

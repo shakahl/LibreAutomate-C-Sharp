@@ -381,7 +381,7 @@ namespace Au
 				_TDCBF commonButtons = 0;
 				int id = 0, nextNativeId = 100;
 
-				foreach (var v in b.SegSplit("|")) {
+				foreach (var v in b.Split('|')) {
 					string s = _ParseSingleString(v, ref id, onlyCustom);
 
 					int nativeId = 0;
@@ -426,7 +426,7 @@ namespace Au
 
 				_radioButtons = new List<_Button>();
 				int id = 0;
-				foreach (var v in buttons.SegSplit("|")) {
+				foreach (var v in buttons.Split('|')) {
 					string s = _ParseSingleString(v, ref id, false);
 					_radioButtons.Add(new _Button(id, s));
 				}

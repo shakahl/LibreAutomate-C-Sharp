@@ -345,6 +345,8 @@ namespace Au.Controls
 			//is it an image string?
 			var imType = ImageUtil.ImageTypeFromString(!_isEditor, s + i, i2 - i);
 			if(imType == ImageUtil.ImageType.None) goto g1;
+			//SHOULDDO: support XAML. But most XAML are not images.
+			//FUTURE: support SVG. Tested several best SVG libraries. None of C# libs support >50% tested .svg files. Librsvg (C) supports all.
 
 			var d = t_data;
 

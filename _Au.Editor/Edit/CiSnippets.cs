@@ -27,6 +27,8 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Tags;
 
+//TODO: no snippets after label: Method() { ... g1: noSnippetsHere }
+
 static class CiSnippets
 {
 	class _CiComplItemSnippet : CiComplItem
@@ -140,7 +142,7 @@ static class CiSnippets
 						if(sc == "Function") context = _Context.Function; //many
 						else { //few, eg Type or Namespace|Type
 							foreach(var seg in sc.Segments("|")) {
-								switch(sc[seg.start..seg.end]) {
+								switch(sc[seg.Range]) {
 								case "Function": context |= _Context.Function; break;
 								case "Type": context |= _Context.Type; break;
 								case "Namespace": context |= _Context.Namespace; break;

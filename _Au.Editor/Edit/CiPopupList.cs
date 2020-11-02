@@ -315,17 +315,18 @@ class CiPopupList
 		var s = ci.DisplayText;
 		ADebug.PrintIf(!ci.ci.DisplayTextPrefix.NE(), s); //we don't support prefix; never seen.
 		int xEndOfText = 0;
-		using (var tr = new GdiTextRenderer(g, _dpi)) {
-			ColorInt color = ci.moveDown.HasAny(CiItemMoveDownBy.Name | CiItemMoveDownBy.FilterText) ? 0x808080 : 0;
+		var tr = new GdiTextRenderer(g.GetHdc(), _dpi);
+		try {
+			int color = ci.moveDown.HasAny(CiItemMoveDownBy.Name | CiItemMoveDownBy.FilterText) ? 0x808080 : 0;
 			tr.MoveTo(r.X, r.Y);
 			if (ci.hilite != 0) {
 				ulong h = ci.hilite;
 				for (int normalFrom = 0, boldFrom, boldTo, to = s.Length; normalFrom < to; normalFrom = boldTo) {
 					for (boldFrom = normalFrom; boldFrom < to && 0 == (h & 1); boldFrom++) h >>= 1;
-					tr.DrawText(s, color, normalFrom, boldFrom);
+					tr.DrawText(s, color, normalFrom..boldFrom);
 					if (boldFrom == to) break;
 					for (boldTo = boldFrom; boldTo < to && 0 != (h & 1); boldTo++) h >>= 1;
-					tr.FontBold(); tr.DrawText(s, color, boldFrom, boldTo); tr.FontNormal();
+					tr.FontBold(); tr.DrawText(s, color, boldFrom..boldTo); tr.FontNormal();
 				}
 			} else {
 				tr.DrawText(s, color);
@@ -334,8 +335,9 @@ class CiPopupList
 			if (ci.moveDown.Has(CiItemMoveDownBy.Obsolete)) xEndOfText = tr.GetCurrentPosition().x;
 
 			string green = _GreenSuffix(e.index);
-			if (green != null) tr.DrawText(green, 0x40A000);
+			if (green != null) tr.DrawText(green, 0x00A040);
 		}
+		finally { g.ReleaseHdc(); tr.Dispose(); }
 
 		//draw red line over obsolete items
 		if (ci.moveDown.Has(CiItemMoveDownBy.Obsolete)) {
@@ -376,15 +378,15 @@ class CiPopupList
 	public bool OnCmdKey(Keys keyData) {
 		if (_w.Visible) {
 			switch (keyData) {
-				case Keys.Escape:
-					Hide();
-					return true;
-				case Keys.Down:
-				case Keys.Up:
-				case Keys.PageDown:
-				case Keys.PageUp:
-					_list.ZKeyboardNavigation(keyData);
-					return true;
+			case Keys.Escape:
+				Hide();
+				return true;
+			case Keys.Down:
+			case Keys.Up:
+			case Keys.PageDown:
+			case Keys.PageUp:
+				_list.ZKeyboardNavigation(keyData);
+				return true;
 			}
 		}
 		return false;
@@ -404,12 +406,12 @@ class CiPopupList
 		protected override unsafe void WndProc(ref Message m) {
 			//AWnd.More.PrintMsg(m, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_NCMOUSEMOVE);
 			switch (m.Msg) {
-				case Api.WM_DESTROY:
-					Program.Settings.ci_complGroup = _p._groupButton.Checked;
-					break;
-					//case Api.WM_DPICHANGED:
-					//	AOutput.Write("WM_DPICHANGED");
-					//	break;
+			case Api.WM_DESTROY:
+				Program.Settings.ci_complGroup = _p._groupButton.Checked;
+				break;
+				//case Api.WM_DPICHANGED:
+				//	AOutput.Write("WM_DPICHANGED");
+				//	break;
 			}
 
 			base.WndProc(ref m);

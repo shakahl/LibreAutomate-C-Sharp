@@ -1,4 +1,5 @@
-﻿using Au;
+﻿
+using Au;
 using Au.Types;
 using Au.Controls;
 using System;
@@ -15,6 +16,8 @@ using System.Reflection;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
+using System.Runtime;
+using System.Windows.Interop;
 
 partial class MainWindow : Window
 {
@@ -22,17 +25,21 @@ partial class MainWindow : Window
 	Menu _menu;
 
 	public MainWindow() {
+		//_StartProfileOptimization();
+		
 		Title = "Aedit";
 
+		App.Panels = _panels;
 		_panels.BorderBrush = SystemColors.ActiveBorderBrush;
 		//_panels.Load(AFolders.ThisAppBS + @"Default\Layout.xml", null);
 		_panels.Load(AFolders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");
 
-		_panels["Files"].Content = new TreeView { BorderThickness = default };
+		_panels["Files"].Content = new Script().Create();
+		_panels["Running"].Content = new Script().Create();
+
 		_panels["Output"].Content = new SciHost() { Focusable = false };
 		_panels["Info"].Content = new TextBlock();
 		_panels["Found"].Content = new SciHost() { Focusable = false };
-		_panels["Running"].Content = new ListBox { BorderThickness = default };
 		_panels["Find"].Content = new PanelFind();
 
 		_panels["Menu"].Content = _menu = new Menu();
@@ -89,6 +96,30 @@ partial class MainWindow : Window
 		base.OnActivated(e);
 	}
 
+	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
+		base.OnDpiChanged(oldDpi, newDpi);
+		//workaround for WPF bug: on DPI change activates window
+		var w = this.Hwnd();
+		if (AWnd.Active != w) {
+			bool wasVisible = w.IsVisible; //allow to activate when opening window in non-primary screen
+			var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE && (AWnd)k.wParam == w && (wasVisible || !w.IsVisible));
+			Dispatcher.InvokeAsync(() => h.Dispose());
+		}
+	}
+
+	//protected override void OnSourceInitialized(EventArgs e) {
+	//	var hs = PresentationSource.FromVisual(this) as HwndSource;
+	//	hs.AddHook(_WndProc);
+
+	//	base.OnSourceInitialized(e);
+	//}
+
+	//unsafe IntPtr _WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+	//	var w = (AWnd)hwnd;
+
+	//	return default;
+	//}
+
 	void _OpenDocuments() {
 		var docLeaf = _AddDoc("Document 1");
 		_AddDoc("Document 2");
@@ -117,6 +148,15 @@ partial class MainWindow : Window
 			if (leaf.Content != null) return;
 			leaf.Content = new SciHost();
 		}
+	}
+
+	static void _StartProfileOptimization() {
+#if !DEBUG
+		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
+		AFile.CreateDirectory(fProfile);
+		ProfileOptimization.SetProfileRoot(fProfile);
+		ProfileOptimization.StartProfile("Aedit.startup");
+#endif
 	}
 }
 

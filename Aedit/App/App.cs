@@ -28,6 +28,7 @@ static class App
 #if TRACE
 	static App() {
 		APerf.First();
+		ATimer.After(1, _ => APerf.NW());
 
 		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
@@ -125,7 +126,7 @@ static class App
 			if (_icons == null) {
 				_icons = new AIcon[3];
 
-				s_msgTaskbarCreated = Api.RegisterWindowMessage("TaskbarCreated"); //TODO: test on Win7, maybe need ChangeWindowMessageFilter. On Win10 works without.
+				s_msgTaskbarCreated = AWnd.More.RegisterMessage("TaskbarCreated", uacEnable: true);
 
 				AWnd.More.RegisterWindowClass("Aedit.TrayNotify", _WndProc);
 				_wNotify = AWnd.More.CreateWindow("Aedit.TrayNotify", null, WS.POPUP, WS2.NOACTIVATE);

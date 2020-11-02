@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>Au.Editor</AssemblyName>
@@ -72,12 +72,8 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Controls\ListControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Edit\PanelEdit.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
+    <Compile Update="Controls\ListControl.cs" />
+    <Compile Update="Edit\PanelEdit.cs" />
     <Compile Update="Edit\SciCode.cs" />
     <Compile Update="Files\PanelFiles.cs" />
     <Compile Update="Panels\etc\FFindOptions.cs" />
@@ -87,9 +83,7 @@
     <Compile Update="Panels\PanelOpen.cs" />
     <Compile Update="Panels\PanelOutput.cs" />
     <Compile Update="Panels\PanelRunning.cs" />
-    <Compile Update="Program\FMain.cs">
-      <SubType>Form</SubType>
-    </Compile>
+    <Compile Update="Program\FMain.cs" />
     <Compile Update="Program\FOptions.cs" />
     <Compile Update="Program\FOptions.Designer.cs">
       <DependentUpon>FOptions.cs</DependentUpon>

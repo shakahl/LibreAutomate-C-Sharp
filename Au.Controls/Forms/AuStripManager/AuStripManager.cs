@@ -397,7 +397,7 @@ namespace Au.Controls
 				//reorder toolbar buttons
 				if(xtsCust.Attr(out string s, "order")) {
 					xtsDef.Elements("sep").Remove(); //remove all default <sep/>, because all separators now are in the 'order' attribute
-					var a = s.SegSplit(" ");
+					var a = s.Split(' ');
 					for(int i = a.Length - 1; i >= 0; i--) {
 						if(a[i] == "sep") {
 							xtsDef.AddFirst(new XElement("sep"));

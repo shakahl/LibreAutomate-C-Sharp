@@ -59,22 +59,23 @@ g1:
 
 	//Algorithm by Alessandro Felice Cantatore, http://xoomer.virgilio.it/acantato/dev/wildcard/wildmatch.html
 	//Changes: supports '\0' in string; case-sensitive or not; restructured, in many cases faster.
+	{
+		size_t i = 0;
+		gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
+		w += i + 1;
+		if(w == we) return true;
+		s += i;
 
-	size_t i = 0;
-gStar: //info: goto used because C# compiler makes the loop faster when it contains less code
-	w += i + 1;
-	if(w == we) return true;
-	s += i;
+		for(i = 0; s + i < se; i++) {
+			size_t sW = w[i];
+			if(sW == '*') goto gStar;
+			if(sW == s[i] || sW == '?') continue;
+			if((table != null) && (table[sW] == table[s[i]])) continue;
+			s++; i = -1;
+		}
 
-	for(i = 0; s + i < se; i++) {
-		size_t sW = w[i];
-		if(sW == '*') goto gStar;
-		if(sW == s[i] || sW == '?') continue;
-		if((table != null) && (table[sW] == table[s[i]])) continue;
-		s++; i = -1;
+		w += i;
 	}
-
-	w += i;
 gr:
 	while(w < we && *w == '*') w++;
 	return w == we;

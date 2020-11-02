@@ -1,4 +1,4 @@
-/*/ runMode blue; ifRunning warn_restart; /*/ //.
+/*/ ifRunning warn_restart; /*/ //.
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
 using Au.Triggers;
 using System.Reflection;

@@ -237,6 +237,10 @@ namespace Au.Types
 		internal const int WM_NCMOUSEHOVER = 0x02A0;
 		internal const int WM_NCMOUSELEAVE = 0x02A2;
 		internal const int WM_WTSSESSION_CHANGE = 0x02B1;
+		internal const int WM_DPICHANGED = 0x2E0;
+		internal const int WM_DPICHANGED_BEFOREPARENT = 0x2E2;
+		internal const int WM_DPICHANGED_AFTERPARENT = 0x02E3;
+		internal const int WM_GETDPISCALEDSIZE = 0x02E4;
 		internal const int WM_CUT = 0x0300;
 		internal const int WM_COPY = 0x0301;
 		internal const int WM_PASTE = 0x0302;

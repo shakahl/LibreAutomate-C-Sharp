@@ -374,7 +374,7 @@ namespace Au.Compiler
 			{
 				try {
 					_db = EdDatabases.OpenDoc(); //never mind: we don't dispose it on process exit
-					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.SegSplit("\n"));
+					if(_db.Get(out string s, "SELECT xml FROM doc WHERE name='.'")) _refs = new HashSet<string>(s.Split('\n'));
 				}
 				catch(SLException ex) { ADebug.Print(ex.Message); }
 			}

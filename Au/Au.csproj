@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <UseWpf>true</UseWpf>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
@@ -35,9 +35,7 @@
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
-    <Compile Update="Util\AToolStrip.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="Util\AToolStrip.cs" />
   </ItemGroup>
 
   <ItemGroup>

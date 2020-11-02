@@ -112,6 +112,7 @@ namespace Au.Controls
 					break;
 				default: throw new ArgumentException("unknown XML tag");
 				}
+				_elem.UseLayoutRounding = true;
 				_elem.Tag = this;
 
 				if (parent != null) {
@@ -225,7 +226,7 @@ namespace Au.Controls
 			_Node(_Node target, bool after, LeafType type, string name, bool canClose) {
 				_pm = target._pm;
 				_leaf = new() { addedLater = true, name = name, canClose = canClose };
-				_elem = _leaf.panel = new() { Tag = this };
+				_elem = _leaf.panel = new() { Tag = this, UseLayoutRounding = true };
 				_leafType = type;
 				_dontSave = true;
 				_Dictionary.Add(name, this);
@@ -363,6 +364,7 @@ namespace Au.Controls
 					_VerticalTabHeader();
 				} else if (_leaf.caption != null) {
 					DockPanel.SetDock(_leaf.caption, ca);
+					if (_leaf.content != null) _SetToolbarOrientation();
 					if (ca == old || !_CanHaveCaptionWithText) return;
 					if (ca == Dock.Top || ca == Dock.Bottom) {
 						if (old == Dock.Left || old == Dock.Right) _leaf.caption.LayoutTransform = null;
@@ -388,7 +390,6 @@ namespace Au.Controls
 								Text = Name,
 								TextAlignment = TextAlignment.Center,
 								Padding = new Thickness(2, 1, 2, 3),
-								Margin = new Thickness(-0.3), //workaround for: some captions sometimes look smaller by 1 pixel, unless window background color is similar.
 								Background = _pm.CaptionBrush,
 								TextTrimming = TextTrimming.CharacterEllipsis
 							};
@@ -430,6 +431,13 @@ namespace Au.Controls
 				}
 			}
 
+			void _SetToolbarOrientation() {
+				if (_IsToolbar && _leaf.content is ToolBarTray t) {
+					var ori = _captionAt == Dock.Top || _captionAt == Dock.Bottom ? Orientation.Vertical : Orientation.Horizontal;
+					if (t.Orientation != ori) t.Orientation = ori;
+				}
+			}
+
 			class _DockPanelWithBorder : Border
 			{
 				public readonly DockPanel Panel;
@@ -456,6 +464,7 @@ namespace Au.Controls
 				set {
 					if (_leaf.content != null) _leaf.panel.Children.Remove(_leaf.content);
 					_leaf.panel.Children.Add(_leaf.content = value);
+					_SetToolbarOrientation();
 				}
 			}
 

@@ -171,7 +171,7 @@ namespace Au.Types
 	/// Used with <see cref="AAcc.FromWindow"/>
 	/// </summary>
 	/// <remarks>
-	/// The names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_". Except Java and UIA.
+	/// Most names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_".
 	/// </remarks>
 	public enum AccOBJID
 	{
@@ -187,14 +187,12 @@ namespace Au.Types
 		CURSOR = -9,
 		ALERT = -10,
 		SOUND = -11,
-		/// <summary>
-		/// Can be used with API <msdn>WM_GETOBJECT</msdn>, not with <see cref="AAcc.FromWindow"/>.
-		/// </summary>
+		/// <summary>Not uses with <see cref="AAcc.FromWindow"/>.</summary>
 		QUERYCLASSNAMEIDX = -12,
-		/// <summary>
-		/// Can be used with API <msdn>AccessibleObjectFromWindow</msdn>, not with <see cref="AAcc.FromWindow"/>.
-		/// </summary>
+		/// <summary>Not uses with <see cref="AAcc.FromWindow"/>.</summary>
 		NATIVEOM = -16,
+		/// <summary>Not uses with <see cref="AAcc.FromWindow"/>.</summary>
+		UiaRootObjectId = -25,
 
 		//ours
 
@@ -301,8 +299,7 @@ namespace Au.Types
 		FOCUSED = 0x4,
 		PRESSED = 0x8,
 		CHECKED = 0x10,
-		//MIXED = 0x20,
-		INDETERMINATE = 0x20,
+		MIXED = 0x20,
 		READONLY = 0x40,
 		HOTTRACKED = 0x80,
 		DEFAULT = 0x100,
@@ -347,6 +344,7 @@ namespace Au.Types
 		REMOVESELECTION = 0x10,
 	}
 
+	//TODO: rename AccEVENT etc. In intellisense selected when typing Acc; must select AAcc.
 	//CONSIDER: remove the SYSTEM_/OBJECT_ prefixes.
 	/// <summary>
 	/// Event constants for <see cref="AHookAcc"/>.

@@ -292,13 +292,13 @@ struct AccRaw : public Cpp_Acc
 			hr = ao::IDispatchToIAccessible(v.pdispVal, out acc);
 			break;
 		case VT_I4:
+		//case VT_UI4: //.NET 5 RC1 bug
 			assert(v.lVal != 0);
 			if(v.lVal == 0) hr = E_FAIL;
 			else if(tryGetObjectFromId && 0 == ao::get_accChild(parent, v.lVal, out acc));
 			else { acc = parent; elem = v.lVal; }
 			break;
 		default:
-			assert(false);
 			VariantClear(&v);
 			hr = E_FAIL;
 			break;

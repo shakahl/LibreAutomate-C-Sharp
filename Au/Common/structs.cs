@@ -578,6 +578,11 @@ namespace Au.Types
 			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
 		}
 
+		///// <summary>
+		///// <c>FromBGR(GetSysColor)</c>.
+		///// </summary>
+		//internal static ColorInt FromSysColor_(int colorIndex, bool makeOpaque) => FromBGR(Api.GetSysColor(colorIndex), makeOpaque);
+
 #pragma warning disable 1591 //XML doc
 		public static bool operator ==(ColorInt a, ColorInt b) => a.color == b.color;
 		public static bool operator !=(ColorInt a, ColorInt b) => a.color != b.color;
@@ -599,6 +604,13 @@ namespace Au.Types
 		/// ABGR is used by most Windows API.
 		/// </summary>
 		public static int SwapRB(int color) => (color & unchecked((int)0xff00ff00)) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
+
+		/// <summary>
+		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
+		/// ARGB is used in .NET, GDI+ and HTML/CSS.
+		/// ABGR is used by most Windows API.
+		/// </summary>
+		public static uint SwapRB(uint color) => (color & 0xff00ff00) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
 
 		/// <summary>
 		/// Calculates color's perceived brightness.

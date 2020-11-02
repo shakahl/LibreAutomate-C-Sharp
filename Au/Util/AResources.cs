@@ -184,7 +184,7 @@ namespace Au.Util
 		/// <summary>
 		/// Returns true if string starts with "resource:".
 		/// </summary>
-		internal static bool HasResourcePrefix_(string s) {
+		public static bool HasResourcePrefix(string s) {
 			return s.Starts("resource:")/* || s.Starts("pack:")*/;
 		}
 

@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <AssemblyName>SdkConverter</AssemblyName>
     <RootNamespace>SdkConverter</RootNamespace>
@@ -17,5 +17,9 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
   </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Au\Au.csproj" />
+  </ItemGroup>
 
 </Project>

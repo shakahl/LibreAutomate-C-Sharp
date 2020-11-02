@@ -29,10 +29,10 @@ namespace Au.Controls
 		partial class _Node
 		{
 			static readonly Style
-				s_styleTabControl = WPF.XamlResources.Dictionary["AuPanelsTabControlStyle"] as Style,
-				s_styleTabItem = WPF.XamlResources.Dictionary["AuPanelsTabItemStyle"] as Style,
-				s_styleTabLeft = WPF.XamlResources.Dictionary["TabItemVerticalLeft"] as Style,
-				s_tyleTabRight = WPF.XamlResources.Dictionary["TabItemVerticalRight"] as Style;
+				s_styleTabControl = XamlResources.Dictionary["AuPanelsTabControlStyle"] as Style,
+				s_styleTabItem = XamlResources.Dictionary["AuPanelsTabItemStyle"] as Style,
+				s_styleTabLeft = XamlResources.Dictionary["TabItemVerticalLeft"] as Style,
+				s_tyleTabRight = XamlResources.Dictionary["TabItemVerticalRight"] as Style;
 
 			void _InitTabControl() {
 				var tc = _tab.tc;

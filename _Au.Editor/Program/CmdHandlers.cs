@@ -410,7 +410,7 @@ class CmdHandlers : IGStripManagerCallbacks
 			if(f.FindProject(out _, out var fMain)) f = fMain;
 			if(Program.Tasks.EndTasksOf(f)) return;
 		}
-		var t = Program.Tasks.GetGreenTask(); if(t == null) return;
+		var t = Program.Tasks.GetRunsingleTask(); if(t == null) return;
 		var m = new AMenu();
 		m["End task  " + t.f.DisplayName] = o => Program.Tasks.EndTask(t);
 		m.Show(Program.MainForm);

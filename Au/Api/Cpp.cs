@@ -166,7 +166,7 @@ namespace Au.Types
 		//internal static extern void Cpp_TestWildex(string s, string w);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern int Cpp_TestInt(int a, int b, int c);
+		//internal static extern int Cpp_TestInt(int a);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern int Cpp_TestString(string a, int b, int c);

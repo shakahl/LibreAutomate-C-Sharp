@@ -1228,18 +1228,17 @@
             Used with <see cref="M:Au.AAcc.FromWindow(Au.AWnd,Au.Types.AccOBJID,Au.Types.AWFlags)"/>
             </summary>
             <remarks>
-            The names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_". Except Java and UIA.
+            Most names are as in API <msdn>AccessibleObjectFromWindow</msdn> documentation but without prefix "OBJID_".
             </remarks>
         </member>
         <member name="F:Au.Types.AccOBJID.QUERYCLASSNAMEIDX">
-            <summary>
-            Can be used with API <msdn>WM_GETOBJECT</msdn>, not with <see cref="M:Au.AAcc.FromWindow(Au.AWnd,Au.Types.AccOBJID,Au.Types.AWFlags)"/>.
-            </summary>
+            <summary>Not uses with <see cref="M:Au.AAcc.FromWindow(Au.AWnd,Au.Types.AccOBJID,Au.Types.AWFlags)"/>.</summary>
         </member>
         <member name="F:Au.Types.AccOBJID.NATIVEOM">
-            <summary>
-            Can be used with API <msdn>AccessibleObjectFromWindow</msdn>, not with <see cref="M:Au.AAcc.FromWindow(Au.AWnd,Au.Types.AccOBJID,Au.Types.AWFlags)"/>.
-            </summary>
+            <summary>Not uses with <see cref="M:Au.AAcc.FromWindow(Au.AWnd,Au.Types.AccOBJID,Au.Types.AWFlags)"/>.</summary>
+        </member>
+        <member name="F:Au.Types.AccOBJID.UiaRootObjectId">
+            <summary>Not uses with <see cref="M:Au.AAcc.FromWindow(Au.AWnd,Au.Types.AccOBJID,Au.Types.AWFlags)"/>.</summary>
         </member>
         <member name="F:Au.Types.AccOBJID.Java">
             <summary>
@@ -2743,6 +2742,13 @@
             ABGR is used by most Windows API.
             </summary>
         </member>
+        <member name="M:Au.Types.ColorInt.SwapRB(System.UInt32)">
+            <summary>
+            Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
+            ARGB is used in .NET, GDI+ and HTML/CSS.
+            ABGR is used by most Windows API.
+            </summary>
+        </member>
         <member name="M:Au.Types.ColorInt.GetPerceivedBrightness">
             <summary>
             Calculates color's perceived brightness.
@@ -3902,7 +3908,7 @@
             Try this class when <see cref="T:System.Windows.Controls.GridSplitter"/> does not work as you want.
             
             Limitations (bad or good):
-            - Splitters must be on own rows/columns. Throws exception if explicit or implicit <b>ResizeBehavior</b> is not <b>PreviousAndNext</b>.
+            - Splitters must be on own rows/columns. Throws exception if <b>ResizeBehavior</b> is not <b>PreviousAndNext</b> (which is default).
             - Throws exception is there are star-sized splitter rows.
             - Does not resize auto-sized rows/columns. Only pixel-sized and star-sized.
             - With UseLayoutRounding may flicker when resizing, especially when high DPI.
@@ -4767,6 +4773,11 @@
         <member name="F:Au.Types.HookData.ThreadKeyboard.lParam">
             <summary>
             <i>lParam</i> of the key message. Specifies the key state, scan code, etc. See API <msdn>KeyboardProc</msdn>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.HookData.ThreadKeyboard.IsUp">
+            <summary>
+            Is key-up event.
             </summary>
         </member>
         <member name="T:Au.Types.HookData.ThreadMouse">
@@ -5902,13 +5913,45 @@
             For example, is string is "one  two " and separators is " ", return {"one", "two"} instead of {"one", "", "two", ""}.
             </summary>
         </member>
+        <member name="T:Au.Types.StartEnd">
+            <summary>
+            struct with fields int start and int end.
+            </summary>
+        </member>
+        <member name="F:Au.Types.StartEnd.start">
+            
+        </member>
+        <member name="F:Au.Types.StartEnd.end">
+            
+        </member>
+        <member name="M:Au.Types.StartEnd.#ctor(System.Int32,System.Int32)">
+            
+        </member>
+        <member name="P:Au.Types.StartEnd.Length">
+            <summary>
+            Returns <c>end - start</c>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.StartEnd.Range">
+            <summary>
+            Converts this to <see cref="P:Au.Types.StartEnd.Range"/>.
+            Can be used to get substring, like <c>s[x.Range]</c> instead of <c>s[x.start..x.end]</c>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.StartEnd.Span(System.String)">
+            <summary>
+            Gets string span.
+            </summary>
+        </member>
+        <member name="M:Au.Types.StartEnd.ToString">
+            
+        </member>
         <member name="T:Au.Types.SegParser">
             <summary>
             Splits a string into substrings as start/end offsets or strings.
             </summary>
             <remarks>
             Can be used with foreach. Normally you don't create <b>SegParser</b> instances explicitly; instead use <see cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/> with foreach.
-            Also used by <see cref="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags,System.Int32,System.Nullable{System.Range})"/> and <see cref="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})"/>.
             </remarks>
         </member>
         <member name="M:Au.Types.SegParser.#ctor(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})">
@@ -8430,8 +8473,8 @@
             Can be:
             - Path of any file or folder. Supports environment variables.
             - Any shell object, like <c>":: ITEMIDLIST"</c>, <c>@"::{CLSID-1}\::{CLSID-2}"</c>, <c>@"shell:AppsFolder\WinStoreAppId"</c>.
-            - File type or protocol, like <c>".txt"</c>, <c>"http:"</c>.
-            - Icon resource index or negative id, like "c:\file.dll,4", "c:\file.dll,-4".
+            - File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get forder icon.
+            - Path with icon resource index or negative id, like "c:\file.dll,4", "c:\file.exe,-4".
             - URL.
             </param>
             <param name="size">Icon width and height. Default 16.</param>
@@ -8523,14 +8566,17 @@
             If false, later will need to dispose this variable.
             </param>
         </member>
-        <member name="M:Au.AIcon.ParseIconLocation(System.String@,System.Int32@)">
+        <member name="M:Au.AIcon.ParsePathIndex(System.String,System.String@,System.Int32@)">
             <summary>
             Parses icon location string.
             Returns true if it includes icon index or resource id.
             </summary>
-            <param name="s">Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path. Receives path.</param>
-            <param name="index">Receives the number or 0.</param>
-            <remarks>Also supports path enclosed in double quotes like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.</remarks>
+            <param name="s">
+            Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path.
+            Supports path enclosed in "" like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.
+            </param>
+            <param name="path">Receives path without index and without "". Can be same variable as <i>s</i>.</param>
+            <param name="index">Receives index/id or 0.</param>
         </member>
         <member name="T:Au.APath">
             <summary>
@@ -16015,6 +16061,24 @@
             Swaps values of variables a and b: <c>T t = a; a = b; b = t;</c>
             </summary>
         </member>
+        <member name="M:Au.AMath.SwapBits(System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Swaps two ranges of bits.
+            </summary>
+            <param name="value"></param>
+            <param name="i">Position of first range of bits.</param>
+            <param name="j">Position of second range of bits.</param>
+            <param name="n">Number of bits in each range.</param>
+        </member>
+        <member name="M:Au.AMath.SwapBits(System.UInt32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            Swaps two ranges of bits.
+            </summary>
+            <param name="value"></param>
+            <param name="i">Position of first range of bits.</param>
+            <param name="j">Position of second range of bits.</param>
+            <param name="n">Number of bits in each range.</param>
+        </member>
         <member name="M:Au.AMath.AngleFromXY(System.Int32,System.Int32)">
             <summary>
             Calculates angle degrees from coordinates x and y.
@@ -16569,7 +16633,6 @@
             Writes multiple arguments of any type to the output, using separator ", ".
             </summary>
             <remarks>
-            Calls <see cref="M:System.Object.ToString"/> and <see cref="M:Au.AOutput.Write(System.String)"/>.
             If a value is null, writes "null".
             If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
             </remarks>
@@ -16697,6 +16760,15 @@
             <summary>
             Writes line to QM2.
             </summary>
+        </member>
+        <member name="M:Au.AOutput.QM2.Write(System.Object,System.Object,System.Object[])">
+            <summary>
+            Writes multiple arguments of any type to the output, using separator ", ".
+            </summary>
+            <remarks>
+            If a value is null, writes "null".
+            If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
+            </remarks>
         </member>
         <member name="M:Au.AOutput.QM2._WriteToQM2(System.String)">
             <param name="s">If null, clears output.</param>
@@ -18054,32 +18126,24 @@
             foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(s[t.start..t.end]);
             ]]></code>
             </example>
-            <seealso cref="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags,System.Int32,System.Nullable{System.Range})"/>
-            <seealso cref="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})"/>
+            <seealso cref="M:Au.AExtString.Lines(System.String,System.Boolean)"/>
         </member>
-        <member name="M:Au.AExtString.SegSplit(System.String,System.String,Au.Types.SegFlags,System.Int32,System.Nullable{System.Range})">
+        <member name="M:Au.AExtString.Lines(System.String,System.Boolean)">
             <summary>
-            Splits this string into substrings using the specified separators.
+            Splits this string using newline separators "\r\n", "\n", "\r".
             </summary>
             <param name="t">This string.</param>
-            <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="T:Au.Types.SegSep"/> constants.</param>
-            <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="M:System.String.Split(System.Char,System.Int32,System.StringSplitOptions)"/>.</param>
-            <param name="flags"></param>
-            <param name="range">Part of this string to split.</param>
+            <param name="noEmpty">Don't need empty lines.</param>
             <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
-            <seealso cref="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})"/>
-            <seealso cref="T:Au.Types.SegParser"/>
-            <seealso cref="M:System.String.Split(System.Char,System.Int32,System.StringSplitOptions)"/>
-            <seealso cref="M:System.String.Join(System.Char,System.Object[])"/>
+            <seealso cref="F:Au.Types.SegSep.Line"/>
         </member>
-        <member name="M:Au.AExtString.SegLines(System.String,System.Boolean,System.Int32,System.Nullable{System.Range})">
+        <member name="M:Au.AExtString.Lines(System.String,System.Int32,System.StringSplitOptions)">
             <summary>
             Splits this string into lines using separators "\r\n", "\n", "\r".
             </summary>
             <param name="t">This string.</param>
-            <param name="noEmptyLines">Don't need empty lines.</param>
-            <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more lines, the last element will contain single line, unlike with <see cref="M:System.String.Split(System.Char,System.Int32,System.StringSplitOptions)"/></param>
-            <param name="range">Part of this string to split.</param>
+            <param name="maxCount">The maximal number of substrings to get.</param>
+            <param name="options"></param>
             <seealso cref="M:Au.AExtString.Segments(System.String,System.String,Au.Types.SegFlags,System.Nullable{System.Range})"/>
             <seealso cref="F:Au.Types.SegSep.Line"/>
         </member>
@@ -19804,7 +19868,7 @@
         </member>
         <member name="M:Au.Util.ADpi.Scale(System.Int32,Au.Types.DpiOf)">
             <summary>
-            If <i>dpiOf.Dpi</i> isn't 96 (100%), returns scaled i. Else returns i.
+            Scales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
             </summary>
         </member>
         <member name="M:Au.Util.ADpi.Scale(System.Int32)">
@@ -19814,7 +19878,12 @@
         </member>
         <member name="M:Au.Util.ADpi.ScaleSize(Au.Types.SIZE,Au.Types.DpiOf)">
             <summary>
-            If <i>dpiOf.Dpi</i> isn't 96 (100%), returns scaled z. Else returns z.
+            Scales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+            </summary>
+        </member>
+        <member name="M:Au.Util.ADpi.ScaleRect(Au.Types.RECT,Au.Types.DpiOf)">
+            <summary>
+            Scales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
             </summary>
         </member>
         <member name="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)">
@@ -19899,7 +19968,7 @@
             Returns true if dropped, false if cancelled.
             </summary>
             <param name="window">Window or control that owns the drag operation.</param>
-            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right.</param>
+            <param name="mouseButton">Mouse button that is used for the drag operation: Left, Right, Middle.</param>
             <param name="onMouseKeyMessage">Callback function, called on each received mouse/key message. Optional.</param>
         </member>
         <member name="T:Au.Util.ADragDrop.MsgArgs">
@@ -20126,6 +20195,32 @@
             Gets URL of an Au library help topic.
             </summary>
             <param name="topic">Topic file name, like "Au.AAcc.Find" or "AAcc.Find" or "articles/Wildcard expression".</param>
+        </member>
+        <member name="T:Au.Util.AIconImageCache">
+            <summary>
+            Loads <see cref="T:System.Drawing.Bitmap"/> images of size 16x16 from files/resources/strings. Also can get file icons.
+            Uses memory cache to avoid loading same image multiple times.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AIconImageCache.Get(System.String,System.Int32,System.Boolean,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
+            <summary>
+            Gets image from memory cache or file.
+            </summary>
+            <param name="imageSource">File path, or resource path with prefix "resource:", etc.</param>
+            <param name="dpi">DPI of window that will display the image.</param>
+            <param name="isImage">
+            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            false - get file icon with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
+            <param name="asyncCompletion">If not null, <b>Get</b> returns null and loads the image/icon asynchronously in other thread. When loaded, calls the callback function in this thread. Can be used to avoid slow startup when need to get many file icons.</param>
+            <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function.</param>
+            <remarks>
+            When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AIconImageCache.Dispose">
+            <summary>
+            Disposes all image objects.
+            </summary>
         </member>
         <member name="T:Au.Util.AImageUtil">
             <summary>
@@ -20657,7 +20752,7 @@
             If <i>name</i> ends with ".xaml" (case-insensitive), calls <see cref="M:Au.Util.AResources.GetXamlObject(System.String)"/>. Else returns <see cref="T:System.Windows.Controls.Image"/> with <b>Source</b> = <see cref="M:Au.Util.AResources.GetWpfImage(System.String)"/>.
             </remarks>
         </member>
-        <member name="M:Au.Util.AResources.HasResourcePrefix_(System.String)">
+        <member name="M:Au.Util.AResources.HasResourcePrefix(System.String)">
             <summary>
             Returns true if string starts with "resource:".
             </summary>
@@ -20736,35 +20831,28 @@
             <c>_save || AFile.ExistsAsAny(_file)</c>
             </summary>
         </member>
-        <member name="M:Au.Util.ASettings.Set(System.String@,System.String)">
-            <summary>
-            Sets a string property value and will save later if need.
-            If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
-            </summary>
-            <param name="prop">Property.</param>
-            <param name="value">New value.</param>
-        </member>
         <member name="M:Au.Util.ASettings.Set``1(``0@,``0)">
             <summary>
-            Sets an int, bool or other IEquatable type property value and will save later if need.
+            Sets a property value and will save later if need.
             If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
+            To compare, uses <see cref="T:System.Collections.Generic.EqualityComparer`1"/>; it compares value types and string by value, but most other reference types (eg arrays) by reference.
             </summary>
             <param name="prop">Property.</param>
             <param name="value">New value.</param>
         </member>
-        <member name="M:Au.Util.ASettings.Set2``1(``0@,``0)">
+        <member name="M:Au.Util.ASettings.Set``1(``0@,``0,System.Func{``0,``0,System.Boolean})">
             <summary>
-            Sets an enum or other unmanaged type property value and will save later if need.
-            If !_loaded, sets prop = value. Else if value != prop, sets prop = value and _save = true.
+            Sets a property value and will save later if need.
+            If !_loaded, sets prop = value. Else if value != prop (<i>comparer</i> returns false), sets prop = value and _save = true.
             </summary>
             <param name="prop">Property.</param>
             <param name="value">New value.</param>
+            <param name="comparer">Called by this method to compare prop and value. Return true if equal.</param>
         </member>
         <member name="M:Au.Util.ASettings.SetNoCmp``1(``0@,``0)">
             <summary>
             Sets a property value and will save later if need.
             Unlike <b>Set</b>, always sets _save = true if _loaded.
-            Use for non-umanaged non-IEquatable types, eg arrays.
             </summary>
             <param name="prop">Property.</param>
             <param name="value">New value.</param>
@@ -21785,6 +21873,47 @@
             Once the memory is created, it is alive at least until this process ends. Other processes can keep the memory alive even after that.
             There is no Close function to close the native shared memory object handle. The OS closes it when this process ends.
             </remarks>
+        </member>
+        <member name="T:Au.Util.StaTaskScheduler_">
+            <summary>Provides a scheduler that uses STA threads.</summary>
+        </member>
+        <member name="P:Au.Util.StaTaskScheduler_.Default">
+            <summary>
+            Static auto-created <b>StaTaskScheduler_</b> instance with 4 threads.
+            </summary>
+        </member>
+        <member name="F:Au.Util.StaTaskScheduler_._tasks">
+            <summary>Stores the queued tasks to be executed by our pool of STA threads.</summary>
+        </member>
+        <member name="F:Au.Util.StaTaskScheduler_._threads">
+            <summary>The STA threads used by the scheduler.</summary>
+        </member>
+        <member name="M:Au.Util.StaTaskScheduler_.#ctor(System.Int32)">
+            <summary>Initializes a new instance of the StaTaskScheduler class with the specified concurrency level.</summary>
+            <param name="numberOfThreads">The number of threads that should be created and used by this scheduler.</param>
+        </member>
+        <member name="M:Au.Util.StaTaskScheduler_.QueueTask(System.Threading.Tasks.Task)">
+            <summary>Queues a Task to be executed by this scheduler.</summary>
+            <param name="task">The task to be executed.</param>
+        </member>
+        <member name="M:Au.Util.StaTaskScheduler_.GetScheduledTasks">
+            <summary>Provides a list of the scheduled tasks for the debugger to consume.</summary>
+            <returns>An enumerable of all tasks currently scheduled.</returns>
+        </member>
+        <member name="M:Au.Util.StaTaskScheduler_.TryExecuteTaskInline(System.Threading.Tasks.Task,System.Boolean)">
+            <summary>Determines whether a Task may be inlined.</summary>
+            <param name="task">The task to be executed.</param>
+            <param name="taskWasPreviouslyQueued">Whether the task was previously queued.</param>
+            <returns>true if the task was successfully inlined; otherwise, false.</returns>
+        </member>
+        <member name="P:Au.Util.StaTaskScheduler_.MaximumConcurrencyLevel">
+            <summary>Gets the maximum concurrency level supported by this scheduler.</summary>
+        </member>
+        <member name="M:Au.Util.StaTaskScheduler_.Dispose">
+            <summary>
+            Cleans up the scheduler by indicating that no more tasks will be queued.
+            This method blocks until all threads successfully shutdown.
+            </summary>
         </member>
         <member name="T:Au.Util.StringBuilder_">
             <summary>
@@ -23200,7 +23329,7 @@
             Finally call <see cref="M:Au.Triggers.ActionTriggers.Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
             
             Recommended properties for scripts containing triggers:
-            - <c>runMode blue</c> - allows other scripts to start while this script is running.
+            - <c>runSingle false</c> (default) - allows other scripts to start while this script is running.
             - <c>ifRunning warn_restart</c> - to quickly restart the script when editing: just click the Run button.
             
             Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="M:Au.ATask.Run(System.String,System.String[])"/> to run other scripts in new process; see example.
@@ -24893,11 +25022,7 @@
             Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
             If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
             </param>
-            <param name="etc">
-            Can be used to specify more fields of <msdn>WNDCLASSEX</msdn> that is passed to API <msdn>RegisterClassEx</msdn>.
-            Defaults: hCursor = arrow; hbrBackground = COLOR_BTNFACE+1; style = CS_GLOBALCLASS; others = 0/null/default.
-            This function also adds CS_GLOBALCLASS style.
-            </param>
+            <param name="etc">Can be used to specify API <msdn>WNDCLASSEX</msdn> fields. If null, this function sets arrow cursor; else to set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).</param>
             <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/>.</exception>
             <exception cref="T:System.InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>

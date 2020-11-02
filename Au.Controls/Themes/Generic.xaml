@@ -1,6 +1,6 @@
 ﻿<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:local="clr-namespace:Au.Controls.WPF">
+                    xmlns:local="clr-namespace:Au.Controls">
     <SolidColorBrush x:Key="TabItem.Selected.Background" Color="#FFFFFF"/>
     <SolidColorBrush x:Key="TabItem.Selected.Border" Color="#ACACAC"/>
     <Style x:Key="AuPanelsTabControlStyle" TargetType="{x:Type TabControl}">
@@ -300,5 +300,31 @@
             </Setter.Value>
         </Setter>
         <Setter Property='Padding' Value='2,6,2,6' />
+    </Style>
+
+    <Style x:Key='AuTreeView' TargetType='{x:Type local:AuTreeView}'>
+        <Setter Property='Template'>
+            <Setter.Value>
+                <ControlTemplate TargetType='{x:Type local:AuTreeView}'>
+                    <Border Background='{TemplateBinding Background}'
+                            BorderBrush='{TemplateBinding BorderBrush}'
+                            BorderThickness='{TemplateBinding BorderThickness}'>
+                        <Grid x:Name='_grid'>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height='*' />
+                                <RowDefinition Height='Auto' />
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width='*' />
+                                <ColumnDefinition Width='Auto' />
+                            </Grid.ColumnDefinitions>
+
+                            <ScrollBar x:Name='_vscroll' Orientation='Vertical' Grid.Column='1' Grid.Row='0' SmallChange='1' Visibility='Collapsed' />
+                            <ScrollBar x:Name='_hscroll' Orientation='Horizontal' Grid.Column='0' Grid.Row='1' Visibility='Collapsed' />
+                        </Grid>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 </ResourceDictionary>

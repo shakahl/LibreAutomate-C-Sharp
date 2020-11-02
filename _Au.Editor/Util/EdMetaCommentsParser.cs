@@ -18,8 +18,8 @@ using Au.Compiler;
 class EdMetaCommentsParser
 {
 	FileNode _fn;
-	public string role, runMode, ifRunning, ifRunning2, uac, prefer32bit,
-		optimize, warningLevel, noWarnings, define, preBuild, postBuild,
+	public string role, runSingle, ifRunning, ifRunning2, uac, prefer32bit,
+		optimize, warningLevel, noWarnings, testInternal, define, preBuild, postBuild,
 		outputPath, console, icon, manifest, /*resFile,*/ sign, xmlDoc;
 	List<string> _r, _pr, _c, _resource, _com;
 
@@ -46,7 +46,7 @@ class EdMetaCommentsParser
 		switch(name) {
 		case "role": role = value; break;
 		case "outputPath": outputPath = value; break;
-		case "runMode": runMode = value; break;
+		case "runSingle": runSingle = value; break;
 		case "ifRunning": ifRunning = value; break;
 		case "ifRunning2": ifRunning2 = value; break;
 		case "uac": uac = value; break;
@@ -54,6 +54,7 @@ class EdMetaCommentsParser
 		case "optimize": optimize = value; break;
 		case "warningLevel": warningLevel = value; break;
 		case "noWarnings": noWarnings = value; break;
+		case "testInternal": testInternal = value; break;
 		case "define": define = value; break;
 		case "preBuild": preBuild = value; break;
 		case "postBuild": postBuild = value; break;
@@ -88,15 +89,16 @@ class EdMetaCommentsParser
 		var b = new StringBuilder("/*/ ");
 		_Append("role", role);
 		_Append("outputPath", outputPath);
-		_Append("runMode", runMode);
+		_Append("runSingle", runSingle);
 		_Append("ifRunning", ifRunning);
 		_Append("ifRunning2", ifRunning2);
 		_Append("uac", uac);
 		_Append("prefer32bit", prefer32bit);
 		_Append("optimize", optimize);
+		_Append("define", define);
 		_Append("warningLevel", warningLevel);
 		_Append("noWarnings", noWarnings);
-		_Append("define", define);
+		_Append("testInternal", testInternal);
 		_Append("preBuild", preBuild, true);
 		_Append("postBuild", postBuild, true);
 		_Append("console", console);

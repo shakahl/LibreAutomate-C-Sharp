@@ -21,8 +21,7 @@ using Au.Tools;
 
 class PanelFind : AuUserControlBase
 {
-	private void InitializeComponent()
-	{
+	private void InitializeComponent() {
 		this.components = new System.ComponentModel.Container();
 		this.tableLayoutPanel1 = new System.Windows.Forms.TableLayoutPanel();
 		this._tFind = new PanelFind._SciTextBox();
@@ -245,8 +244,7 @@ class PanelFind : AuUserControlBase
 
 	ComboWrapper _comboFind, _comboReplace;
 
-	public PanelFind()
-	{
+	public PanelFind() {
 		InitializeComponent();
 		this.AccessibleName = this.Name = "Find"; //note: VS designer bug: changes Name to be = the class name.
 
@@ -260,27 +258,23 @@ class PanelFind : AuUserControlBase
 
 	#region control events
 
-	private void _tFind_TextChanged(object sender, EventArgs e)
-	{
+	private void _tFind_TextChanged(object sender, EventArgs e) {
 		ZUpdateQuickResults(false);
 	}
 
-	private void _cCase_CheckedChanged(object sender, EventArgs e)
-	{
+	private void _cCase_CheckedChanged(object sender, EventArgs e) {
 		ZUpdateQuickResults(false);
 	}
 
-	private void _cWord_CheckedChanged(object sender, EventArgs e)
-	{
-		if(_cWord.Checked) _cRegex.Checked = false;
+	private void _cWord_CheckedChanged(object sender, EventArgs e) {
+		if (_cWord.Checked) _cRegex.Checked = false;
 		ZUpdateQuickResults(false);
 	}
 
-	private void _cRegex_CheckedChanged(object sender, EventArgs e)
-	{
-		if(_cRegex.Checked) {
+	private void _cRegex_CheckedChanged(object sender, EventArgs e) {
+		if (_cRegex.Checked) {
 			_cWord.Checked = false;
-			if(_regexWindow == null) {
+			if (_regexWindow == null) {
 				_regexWindow = new RegexWindow(sender as Control);
 			}
 		} else {
@@ -293,12 +287,11 @@ class PanelFind : AuUserControlBase
 	RegexWindow _regexWindow;
 	string _regexTopic;
 
-	void _ShowRegexInfo(_SciTextBox tb, bool F1)
-	{
-		if(_regexWindow == null || !_cRegex.Checked) return;
-		if(_regexWindow.UserClosed) { if(!F1) return; _regexWindow.UserClosed = false; }
+	void _ShowRegexInfo(_SciTextBox tb, bool F1) {
+		if (_regexWindow == null || !_cRegex.Checked) return;
+		if (_regexWindow.UserClosed) { if (!F1) return; _regexWindow.UserClosed = false; }
 
-		if(!_regexWindow.Window.IsHandleCreated) {
+		if (!_regexWindow.Window.IsHandleCreated) {
 			var r = this.Hwnd().Rect;
 			r.Offset(0, -20);
 			_regexWindow.Show(Program.MainForm, r, true);
@@ -308,71 +301,65 @@ class PanelFind : AuUserControlBase
 
 		bool replace = tb == _tReplace;
 		var s = _regexWindow.CurrentTopic;
-		if(s == "replace") {
-			if(!replace) _regexWindow.CurrentTopic = _regexTopic;
-		} else if(replace) {
+		if (s == "replace") {
+			if (!replace) _regexWindow.CurrentTopic = _regexTopic;
+		} else if (replace) {
 			_regexTopic = s;
 			_regexWindow.CurrentTopic = "replace";
 		}
 	}
 
-	void _OnGotLostFocus(bool got, _SciTextBox tb)
-	{
-		if(!_cRegex.Checked) return;
-		if(got) {
+	void _OnGotLostFocus(bool got, _SciTextBox tb) {
+		if (!_cRegex.Checked) return;
+		if (got) {
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window
-			ATimer.After(70, _ => { if(tb.Focused) _ShowRegexInfo(tb, false); });
+			ATimer.After(70, _ => { if (tb.Focused) _ShowRegexInfo(tb, false); });
 		} else {
-			if(_regexWindow.Window.Visible) {
+			if (_regexWindow.Window.Visible) {
 				var c = AWnd.ThisThread.FocusedWinformsControl;
-				if(c == null || (c != _tFind && c != _tReplace && c != _regexWindow.Window && c.TopLevelControl != _regexWindow.Window)) {
+				if (c == null || (c != _tFind && c != _tReplace && c != _regexWindow.Window && c.TopLevelControl != _regexWindow.Window)) {
 					_regexWindow.Hide();
 				}
 			}
 		}
 	}
 
-	private void _bFind_Click(object sender, EventArgs e)
-	{
+	private void _bFind_Click(object sender, EventArgs e) {
 		_cName.Checked = false;
-		if(!_GetTextToFind(out var f, false)) return;
+		if (!_GetTextToFind(out var f, false)) return;
 		_FindNextInEditor(f, false);
 	}
 
-	private void _bFindIF_Click(object sender, EventArgs e)
-	{
+	private void _bFindIF_Click(object sender, EventArgs e) {
 		_cName.Checked = false;
 		using var _ = new _TempDisableControl(_bFindIF);
 		_FindAllInFiles(false);
 	}
 
-	private void _cName_CheckedChanged(object sender, EventArgs e)
-	{
+	private void _cName_CheckedChanged(object sender, EventArgs e) {
 		Panels.Found.ZControl.Z.ClearText();
-		if(_cName.Checked) {
+		if (_cName.Checked) {
 			_aEditor.Clear();
 			Panels.Editor.ZActiveDoc?.InicatorsFind_(null);
 		}
 		ZUpdateQuickResults(false);
 	}
 
-	private void _bReplace_Click(object sender, EventArgs e)
-	{
+	private void _bReplace_Click(object sender, EventArgs e) {
 		_cName.Checked = false;
-		if(!_GetTextToFind(out var f, true)) return;
+		if (!_GetTextToFind(out var f, true)) return;
 		_FindNextInEditor(f, true);
 	}
 
-	private void _bOptions_Click(object sender, EventArgs e)
-	{
+	private void _bOptions_Click(object sender, EventArgs e) {
 		using var f = new FFindOptions();
 		f._tSkip.Text = string.Join("\r\n", _SkipWildcards);
 		f._cbSearchIn.SelectedIndex = _SearchIn;
 
-		if(f.ShowDialog(this) != DialogResult.OK) return;
+		if (f.ShowDialog(this) != DialogResult.OK) return;
 
-		Program.Settings.find_skip = f._tSkip.Text; _searchIn = -1;
-		Program.Settings.find_searchIn = f._cbSearchIn.SelectedIndex; _aSkipWildcards = null;
+		Program.Settings.find_searchIn = _searchIn = f._cbSearchIn.SelectedIndex;
+		Program.Settings.find_skip = f._tSkip.Text; _aSkipWildcards = null;
 	}
 
 	#endregion
@@ -383,14 +370,13 @@ class PanelFind : AuUserControlBase
 	/// Called when changed find text or options. Also when activated another document.
 	/// Async-updates find-hiliting in editor or 'find name' results.
 	/// </summary>
-	public void ZUpdateQuickResults(bool onlyEditor)
-	{
-		if(!Visible) return;
-		if(onlyEditor && _cName.Checked) return;
+	public void ZUpdateQuickResults(bool onlyEditor) {
+		if (!Visible) return;
+		if (onlyEditor && _cName.Checked) return;
 		//AOutput.Write("UpdateQuickResults", Visible);
 
 		_timerUE ??= new ATimer(_ => {
-			if(_cName.Checked) {
+			if (_cName.Checked) {
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
@@ -411,52 +397,49 @@ class PanelFind : AuUserControlBase
 		public bool matchCase;
 	}
 
-	bool _GetTextToFind(out _TextToFind f, bool forReplace, bool noRecent = false)
-	{
+	bool _GetTextToFind(out _TextToFind f, bool forReplace, bool noRecent = false) {
 		_errorProvider.Clear();
 		f = default;
 		f.findText = _tFind.Text;
-		if(f.findText.Length == 0) return false;
+		if (f.findText.Length == 0) return false;
 		f.matchCase = _cCase.Checked;
-		if(_cRegex.Checked) {
+		if (_cRegex.Checked) {
 			try {
 				var fl = RXFlags.MULTILINE;
-				if(!f.matchCase) fl |= RXFlags.CASELESS;
+				if (!f.matchCase) fl |= RXFlags.CASELESS;
 				f.rx = new ARegex(f.findText, flags: fl);
 			}
-			catch(ArgumentException e) {
+			catch (ArgumentException e) {
 				_SetErrorProvider(_tFind, e.Message);
 				return false;
 			}
 		} else f.wholeWord = _cWord.Checked;
-		if(forReplace) f.replaceText = _tReplace.Text;
+		if (forReplace) f.replaceText = _tReplace.Text;
 
 		_AddToRecent(f, noRecent);
 
-		if(forReplace && (Panels.Editor.ZActiveDoc?.Z.IsReadonly ?? true)) return false;
+		if (forReplace && (Panels.Editor.ZActiveDoc?.Z.IsReadonly ?? true)) return false;
 		return true;
 	}
 
-	void _FindAllInString(string text, in _TextToFind f, List<Range> a, bool one = false)
-	{
+	void _FindAllInString(string text, in _TextToFind f, List<Range> a, bool one = false) {
 		a.Clear();
-		if(f.rx != null) {
-			foreach(var g in f.rx.FindAllG(text)) {
+		if (f.rx != null) {
+			foreach (var g in f.rx.FindAllG(text)) {
 				a.Add(g.Start..g.End);
-				if(one) break;
+				if (one) break;
 			}
 		} else {
-			for(int i = 0; i < text.Length; i += f.findText.Length) {
+			for (int i = 0; i < text.Length; i += f.findText.Length) {
 				i = f.wholeWord ? text.FindWord(f.findText, i.., !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
-				if(i < 0) break;
+				if (i < 0) break;
 				a.Add(i..(i + f.findText.Length));
-				if(one) break;
+				if (one) break;
 			}
 		}
 	}
 
-	void _SetErrorProvider(Control c, string text)
-	{
+	void _SetErrorProvider(Control c, string text) {
 		_errorProvider.SetIconAlignment(c, ErrorIconAlignment.BottomRight);
 		_errorProvider.SetIconPadding(c, -16);
 		_errorProvider.SetError(c, text);
@@ -466,42 +449,41 @@ class PanelFind : AuUserControlBase
 
 	#region in editor
 
-	void _FindNextInEditor(in _TextToFind f, bool replace)
-	{
-		var doc = Panels.Editor.ZActiveDoc; if(doc == null) return;
+	void _FindNextInEditor(in _TextToFind f, bool replace) {
+		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
 		var z = doc.Z;
-		var text = doc.Text; if(text.Length == 0) return;
+		var text = doc.Text; if (text.Length == 0) return;
 		int i, len = 0, from8 = replace ? z.SelectionStart8 : z.SelectionEnd8, from = doc.Pos16(from8);
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
 		g1:
-		if(f.rx != null) {
-			if(f.rx.Match(text, out rm, from..)) {
+		if (f.rx != null) {
+			if (f.rx.Match(text, out rm, from..)) {
 				i = rm.Start;
 				len = rm.Length;
-				if(i == from && len == 0 && !(replace | retryRx | retryFromStart)) {
-					if(++i > text.Length) i = -1;
+				if (i == from && len == 0 && !(replace | retryRx | retryFromStart)) {
+					if (++i > text.Length) i = -1;
 					else {
-						if(i < text.Length) if(text.Eq(i - 1, "\r\n") || char.IsSurrogatePair(text, i - 1)) i++;
+						if (i < text.Length) if (text.Eq(i - 1, "\r\n") || char.IsSurrogatePair(text, i - 1)) i++;
 						from = i; retryRx = true; goto g1;
 					}
 				}
-				if(len == 0) doc.Focus();
+				if (len == 0) doc.Focus();
 			} else i = -1;
 		} else {
 			i = f.wholeWord ? text.FindWord(f.findText, from.., !f.matchCase, "_") : text.Find(f.findText, from, !f.matchCase);
 			len = f.findText.Length;
 		}
 		//AOutput.Write(from, i, len);
-		if(i < 0) {
-			if(retryFromStart || from8 == 0) return;
+		if (i < 0) {
+			if (retryFromStart || from8 == 0) return;
 			from = 0; retryFromStart = true; replace = false; goto g1;
 		}
 		int to = doc.Pos8(i + len);
 		i = doc.Pos8(i);
-		if(replace && i == from8 && to == z.SelectionEnd8) {
+		if (replace && i == from8 && to == z.SelectionEnd8) {
 			var repl = f.replaceText;
-			if(rm != null) repl = rm.ExpandReplacement(repl);
+			if (rm != null) repl = rm.ExpandReplacement(repl);
 			//z.ReplaceRange(i, to, repl); //also would need to set caret pos = to
 			z.ReplaceSel(repl);
 			_FindNextInEditor(f, false);
@@ -510,22 +492,20 @@ class PanelFind : AuUserControlBase
 		}
 	}
 
-	private void _bReplace_MouseUp(object sender, MouseEventArgs e)
-	{
-		if(e.Button == MouseButtons.Right) _bFind_Click(sender, e);
+	private void _bReplace_MouseUp(object sender, MouseEventArgs e) {
+		if (e.Button == MouseButtons.Right) _bFind_Click(sender, e);
 	}
 
-	private void _bReplaceAll_Click(object sender, EventArgs e)
-	{
+	private void _bReplaceAll_Click(object sender, EventArgs e) {
 		_cName.Checked = false;
-		if(!_GetTextToFind(out var f, true)) return;
+		if (!_GetTextToFind(out var f, true)) return;
 		var doc = Panels.Editor.ZActiveDoc;
 		var text = doc.Text;
 		var repl = f.replaceText;
-		if(f.rx != null) {
-			if(!f.rx.FindAll(text, out var ma)) return;
+		if (f.rx != null) {
+			if (!f.rx.FindAll(text, out var ma)) return;
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
-			for(int i = ma.Length - 1; i >= 0; i--) {
+			for (int i = ma.Length - 1; i >= 0; i--) {
 				var m = ma[i];
 				doc.Z.ReplaceRange(true, m.Start, m.End, m.ExpandReplacement(repl));
 			}
@@ -533,9 +513,9 @@ class PanelFind : AuUserControlBase
 		} else {
 			var a = _aEditor;
 			_FindAllInString(text, f, a);
-			if(a.Count == 0) return;
+			if (a.Count == 0) return;
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
-			for(int i = a.Count - 1; i >= 0; i--) {
+			for (int i = a.Count - 1; i >= 0; i--) {
 				var v = a[i];
 				doc.Z.ReplaceRange(true, v.Start.Value, v.End.Value, repl);
 			}
@@ -546,28 +526,25 @@ class PanelFind : AuUserControlBase
 
 	List<Range> _aEditor = new List<Range>(); //all found in editor text
 
-	void _FindAllInEditor()
-	{
+	void _FindAllInEditor() {
 		_aEditor.Clear();
-		if(!_GetTextToFind(out var f, false, noRecent: true)) return;
-		var text = Panels.Editor.ZActiveDoc?.Text; if(text.NE()) return;
+		if (!_GetTextToFind(out var f, false, noRecent: true)) return;
+		var text = Panels.Editor.ZActiveDoc?.Text; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
-	protected override void OnVisibleChanged(EventArgs e)
-	{
+	protected override void OnVisibleChanged(EventArgs e) {
 		base.OnVisibleChanged(e);
-		if(!_cName.Checked) Panels.Editor.ZActiveDoc?.InicatorsFind_(Visible ? _aEditor : null);
+		if (!_cName.Checked) Panels.Editor.ZActiveDoc?.InicatorsFind_(Visible ? _aEditor : null);
 	}
 
 	/// <summary>
 	/// Makes visible and sets find text = selected text of c (can be null).
 	/// </summary>
-	public void ZCtrlF(Control c)
-	{
-		if(!Visible) Panels.PanelManager.ZGetPanel(this).Visible = true;
+	public void ZCtrlF(Control c) {
+		if (!Visible) Panels.PanelManager.ZGetPanel(this).Visible = true;
 		string s = "";
-		switch(c) {
+		switch (c) {
 		case AuScintilla k:
 			s = k.Z.SelectedText();
 			break;
@@ -576,7 +553,7 @@ class PanelFind : AuUserControlBase
 			break;
 		}
 		_tFind.Focus();
-		if(s.Length == 0) return;
+		if (s.Length == 0) return;
 		_tFind.Text = s;
 		_tFind.Call(Sci.SCI_SELECTALL);
 	}
@@ -593,20 +570,19 @@ class PanelFind : AuUserControlBase
 	int _SearchIn => _searchIn >= 0 ? _searchIn : (_searchIn = Program.Settings.find_searchIn);
 	int _searchIn = -1;
 
-	string[] _SkipWildcards => _aSkipWildcards ??= (Program.Settings.find_skip ?? "").SegSplit("\r\n", SegFlags.NoEmpty);
+	string[] _SkipWildcards => _aSkipWildcards ??= (Program.Settings.find_skip ?? "").Lines(true);
 	string[] _aSkipWildcards;
-	string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
+	readonly string[] _aSkipImages = new string[] { ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani" };
 	bool _init1;
 	const int c_indic = 0;
 
-	void _FindAllInFiles(bool names/*, bool forReplace*/)
-	{
-		if(!_GetTextToFind(out var f, false, noRecent: names)) {
+	void _FindAllInFiles(bool names/*, bool forReplace*/) {
+		if (!_GetTextToFind(out var f, false, noRecent: names)) {
 			Panels.Found.ZControl.Z.ClearText();
 			return;
 		}
 
-		if(!_init1) {
+		if (!_init1) {
 			_init1 = true;
 			var c = Panels.Found.ZControl;
 			c.Hwnd(create: true);
@@ -616,25 +592,24 @@ class PanelFind : AuUserControlBase
 				_OpenLinkClicked(s);
 			});
 			c.ZTags.AddLinkTag("+ra", s => {
-				if(!_OpenLinkClicked(s)) return;
+				if (!_OpenLinkClicked(s)) return;
 				ATimer.After(10, _ => _bReplaceAll_Click(null, null));
 				//info: without timer sometimes does not set cursor pos correctly
 			});
 			c.ZTags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
-				if(!_OpenLinkClicked(a[0])) return;
+				if (!_OpenLinkClicked(a[0])) return;
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
 				ATimer.After(10, _ => doc.Z.Select(true, from, to, true));
 				//info: scrolling works better with async when now opened the file
 			});
-			bool _OpenLinkClicked(string file)
-			{
+			bool _OpenLinkClicked(string file) {
 				var f = Program.Model.Find(file, null); //<id>
-				if(f == null) return false;
-				if(f.IsFolder) f.SelectSingle();
-				else if(!Program.Model.SetCurrentFile(f)) return false;
+				if (f == null) return false;
+				if (f.IsFolder) f.SelectSingle();
+				else if (!Program.Model.SetCurrentFile(f)) return false;
 				//add indicator to make it easier to find later
 				var z = Panels.Found.ZControl.Z;
 				z.IndicatorClear(c_indic);
@@ -652,29 +627,29 @@ class PanelFind : AuUserControlBase
 		bool jited = false;
 		int searchIn = names ? 0 : _SearchIn;
 
-		foreach(var v in Program.Model.Root.Descendants()) {
+		foreach (var v in Program.Model.Root.Descendants()) {
 			//using var perf = new _Perf();
 			string text = null, path = null;
-			if(names) {
+			if (names) {
 				text = v.Name;
 			} else {
 				//APerf.First();
-				if(v.IsCodeFile) {
-					switch(searchIn) { //0 all, 1 C#, 2 script, 3 class, 4 other
+				if (v.IsCodeFile) {
+					switch (searchIn) { //0 all, 1 C#, 2 script, 3 class, 4 other
 					case 4: continue;
 					case 2 when !v.IsScript: continue;
 					case 3 when !v.IsClass: continue;
 					}
 				} else {
-					if(searchIn >= 1 && searchIn <= 3) continue;
-					if(v.IsFolder) continue;
-					if(0 != v.Name.Ends(true, _aSkipImages)) continue;
+					if (searchIn >= 1 && searchIn <= 3) continue;
+					if (v.IsFolder) continue;
+					if (0 != v.Name.Ends(true, _aSkipImages)) continue;
 				}
-				var sw = _SkipWildcards; if(sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
+				var sw = _SkipWildcards; if (sw.Length != 0 && 0 != (path = v.ItemPath).Like(true, sw)) continue;
 				//perf.Start(v.Name);
 				text = v.GetText();
-				if(text.Length == 0) continue;
-				if(text.Contains('\0')) continue;
+				if (text.Length == 0) continue;
+				if (text.Contains('\0')) continue;
 				//APerf.NW();
 			}
 
@@ -682,16 +657,16 @@ class PanelFind : AuUserControlBase
 
 			_FindAllInString(text, f, a, one: names);
 
-			if(a.Count != 0) {
-				if(!names) b.Append("<Z 0xC0E0C0>");
+			if (a.Count != 0) {
+				if (!names) b.Append("<Z 0xC0E0C0>");
 				path ??= v.ItemPath;
 				string link = v.IdStringWithWorkspace;
-				if(v.IsFolder) {
+				if (v.IsFolder) {
 					b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><>    <c 0x008000>//folder<>", link, path);
 				} else {
 					int i1 = path.LastIndexOf('\\') + 1;
 					string s1 = path.Remove(i1), s2 = path.Substring(i1);
-					if(names) {
+					if (names) {
 						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<>{2}<>", link, s1, s2);
 					} else {
 						int ns = 120 - path.Length * 7 / 4;
@@ -704,19 +679,19 @@ class PanelFind : AuUserControlBase
 #endif
 					}
 				}
-				if(!names) b.Append("<>");
+				if (!names) b.Append("<>");
 				b.AppendLine();
-				if(names) {
+				if (names) {
 					//FUTURE: icon; maybe hilite.
 				} else {
-					if(b.Length < 10_000_000) {
-						for(int i = 0; i < a.Count; i++) {
+					if (b.Length < 10_000_000) {
+						for (int i = 0; i < a.Count; i++) {
 							var range = a[i];
 							int start = range.Start.Value, end = range.End.Value, lineStart = start, lineEnd = end;
 							int lsMax = Math.Max(lineStart - 100, 0), leMax = Math.Min(lineEnd + 200, text.Length); //start/end limits like in VS
-							for(; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if(c == '\n' || c == '\r') break; }
+							for (; lineStart > lsMax; lineStart--) { char c = text[lineStart - 1]; if (c == '\n' || c == '\r') break; }
 							bool limitStart = lineStart == lsMax && lineStart > 0;
-							for(; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if(c == '\r' || c == '\n') break; }
+							for (; lineEnd < leMax; lineEnd++) { char c = text[lineEnd]; if (c == '\r' || c == '\n') break; }
 							bool limitEnd = lineEnd == leMax && lineEnd < text.Length;
 							b.AppendFormat("<+f \"{0} {1} {2}\">", link, start.ToString(), end.ToString())
 								.Append(limitStart ? "…<\a>" : "<\a>").Append(text, lineStart, start - lineStart).Append("</\a>")
@@ -728,19 +703,19 @@ class PanelFind : AuUserControlBase
 				}
 			}
 
-			if(bSlow != null) {
+			if (bSlow != null) {
 				time = ATime.PerfMilliseconds - time;
-				if(!jited) jited = true;
-				else if(time >= 100) {
-					if(bSlow.Length == 0) bSlow.AppendLine("<Z orange>Slow in these files<>");
+				if (!jited) jited = true;
+				else if (time >= 100) {
+					if (bSlow.Length == 0) bSlow.AppendLine("<Z orange>Slow in these files<>");
 					bSlow.Append(time).Append(" ms in <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
 				}
 			}
 		}
 
-		if(searchIn > 0) b.Append("<Z orange>Note: searched only in ")
-			.Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
-			.AppendLine(" files. It is set in Find options (the ... button).<>");
+		if (searchIn > 0) b.Append("<Z orange>Note: searched only in ")
+			 .Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
+			 .AppendLine(" files. It is set in Find options (the ... button).<>");
 		b.Append(bSlow);
 
 		Panels.Found.ZControl.Z.SetText(b.ToString());
@@ -776,8 +751,7 @@ class PanelFind : AuUserControlBase
 		AWnd _w;
 		int _enableAfter;
 
-		public _TempDisableControl(Control c, int enableAfter = 0)
-		{
+		public _TempDisableControl(Control c, int enableAfter = 0) {
 			_w = c.Hwnd();
 			_enableAfter = enableAfter;
 			_w.Enable(false);
@@ -785,9 +759,8 @@ class PanelFind : AuUserControlBase
 			//note: this does not work correctly: c.Enabled=false; c.Update();
 		}
 
-		public void Dispose()
-		{
-			if(_enableAfter == 0) _w.Enable(true);
+		public void Dispose() {
+			if (_enableAfter == 0) _w.Enable(true);
 			else { var w = _w; ATimer.After(_enableAfter, _ => w.Enable(true)); }
 		}
 	}
@@ -808,41 +781,38 @@ class PanelFind : AuUserControlBase
 	int _recentPrevOptions;
 
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
-	void _AddToRecent(in _TextToFind f, bool temp)
-	{
-		if(temp) return; //not implemented. Was implemented, but was not perfect and probably not useful. Adds too many intermediate garbage, although filtered.
+	void _AddToRecent(in _TextToFind f, bool temp) {
+		if (temp) return; //not implemented. Was implemented, but was not perfect and probably not useful. Adds too many intermediate garbage, although filtered.
 
-		int k = f.matchCase ? 1 : 0; if(f.wholeWord) k |= 2; else if(f.rx != null) k |= 4;
+		int k = f.matchCase ? 1 : 0; if (f.wholeWord) k |= 2; else if (f.rx != null) k |= 4;
 
-		if(f.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = f.findText, _recentPrevOptions = k);
-		if(!f.replaceText.NE() && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
+		if (f.findText != _recentPrevFind || k != _recentPrevOptions) _Add(false, _recentPrevFind = f.findText, _recentPrevOptions = k);
+		if (!f.replaceText.NE() && f.replaceText != _recentPrevReplace) _Add(true, _recentPrevReplace = f.replaceText, 0);
 
-		static void _Add(bool replace, string text, int options)
-		{
-			if(text.Length > 1000) {
+		static void _Add(bool replace, string text, int options) {
+			if (text.Length > 1000) {
 				//if(0 != (options & 4)) AWarning.Write("The find text of length > 1000 will not be saved to 'recent'.", -1);
 				return;
 			}
 			var a = (replace ? Program.Settings.find_recentReplace : Program.Settings.find_recent) ?? new RecentItem[0];
-			for(int i = a.Length - 1; i >= 0; i--) if(a[i].t == text) a = a.RemoveAt(i); //avoid duplicates
-			if(a.Length >= 20) a = a[0..19]; //limit count
+			for (int i = a.Length - 1; i >= 0; i--) if (a[i].t == text) a = a.RemoveAt(i); //avoid duplicates
+			if (a.Length >= 20) a = a[0..19]; //limit count
 			a = a.InsertAt(0, new RecentItem { t = text, o = options });
-			if(replace) Program.Settings.find_recentReplace = a; else Program.Settings.find_recent = a;
+			if (replace) Program.Settings.find_recentReplace = a; else Program.Settings.find_recent = a;
 		}
 	}
 
-	private void _comboFindReplace_ArrowButtonPressed(object sender, EventArgs e)
-	{
+	private void _comboFindReplace_ArrowButtonPressed(object sender, EventArgs e) {
 		bool replace = sender == _comboReplace;
 		var a = (replace ? Program.Settings.find_recentReplace : Program.Settings.find_recent) ?? new RecentItem[0];
-		if(a == null) return;
+		if (a == null) return;
 		var c = replace ? _tReplace : _tFind;
 		var m = new PopupList { IsModal = true, ComboBoxAnimation = true };
 		m.Items = a;
 		m.SelectedAction = o => {
 			var r = o.ResultItem as RecentItem;
 			c.Text = r.t;
-			if(!replace) {
+			if (!replace) {
 				int k = r.o;
 				_cCase.Checked = 0 != (k & 1);
 				_cWord.Checked = 0 != (k & 2);
@@ -860,35 +830,30 @@ class PanelFind : AuUserControlBase
 	{
 		internal PanelFind _f; //caller sets this, because the forms designer does not support ctor with parameters
 
-		protected override void OnHandleCreated(EventArgs e)
-		{
+		protected override void OnHandleCreated(EventArgs e) {
 			base.OnHandleCreated(e);
 			Z.MarginWidth(1, 0);
 			Call(Sci.SCI_SETHSCROLLBAR);
 		}
 
-		protected override bool IsInputKey(Keys keyData)
-		{
-			switch(keyData & Keys.KeyCode) {
+		protected override bool IsInputKey(Keys keyData) {
+			switch (keyData & Keys.KeyCode) {
 			case Keys.Tab: return false;
 			}
 			return base.IsInputKey(keyData);
 		}
 
-		protected override void OnGotFocus(EventArgs e)
-		{
+		protected override void OnGotFocus(EventArgs e) {
 			base.OnGotFocus(e);
 			_f._OnGotLostFocus(true, this);
 		}
 
-		protected override void OnLostFocus(EventArgs e)
-		{
+		protected override void OnLostFocus(EventArgs e) {
 			base.OnLostFocus(e);
 			_f._OnGotLostFocus(false, this);
 		}
 
-		protected override void OnHelpRequested(HelpEventArgs he)
-		{
+		protected override void OnHelpRequested(HelpEventArgs he) {
 			he.Handled = true;
 			_f._ShowRegexInfo(this, true);
 			base.OnHelpRequested(he);

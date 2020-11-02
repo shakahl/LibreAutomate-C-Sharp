@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>SourceGrid</AssemblyName>
@@ -59,90 +59,34 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ColorPicker.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeMaskedTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeNumericUpDown.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeTextBoxButton.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DropDown.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DropDownButton.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\EditableControlBase.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ErrorDialog.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ErrorDialogDetails.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\FormBase.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\HeaderGroupBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ImageNavigator.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\Line.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\LinkLabel.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="DevAge.Windows.Forms\Windows\Forms\TextBoxUITypeEditor.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="SourceGrid.Extensions\ArrayGrid.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid.Extensions\DataGrid.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid.Extensions\ListEditor.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="SourceGrid.Extensions\PingGrids\PingGrid.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid.Extensions\PlanningGrid.cs">
-      <SubType>UserControl</SubType>
-    </Compile>
-    <Compile Update="SourceGrid\Common\CustomScrollControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid\Exporter\GridPrintDocument.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid\Grids\Grid.Accessibility.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid\Grids\Grid.Columns.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid\Grids\Grid.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="SourceGrid\Grids\GridVirtual.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ColorPicker.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeComboBox.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeMaskedTextBox.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeNumericUpDown.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeTextBox.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DevAgeTextBoxButton.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DropDown.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\DropDownButton.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\EditableControlBase.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ErrorDialog.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ErrorDialogDetails.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\FormBase.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\HeaderGroupBox.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\ImageNavigator.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\Line.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\LinkLabel.cs" />
+    <Compile Update="DevAge.Windows.Forms\Windows\Forms\TextBoxUITypeEditor.cs" />
+    <Compile Update="SourceGrid.Extensions\ArrayGrid.cs" />
+    <Compile Update="SourceGrid.Extensions\DataGrid.cs" />
+    <Compile Update="SourceGrid.Extensions\ListEditor.cs" />
+    <Compile Update="SourceGrid.Extensions\PingGrids\PingGrid.cs" />
+    <Compile Update="SourceGrid.Extensions\PlanningGrid.cs" />
+    <Compile Update="SourceGrid\Common\CustomScrollControl.cs" />
+    <Compile Update="SourceGrid\Exporter\GridPrintDocument.cs" />
+    <Compile Update="SourceGrid\Grids\Grid.Accessibility.cs" />
+    <Compile Update="SourceGrid\Grids\Grid.Columns.cs" />
+    <Compile Update="SourceGrid\Grids\Grid.cs" />
+    <Compile Update="SourceGrid\Grids\GridVirtual.cs" />
   </ItemGroup>
 
   <ItemGroup>

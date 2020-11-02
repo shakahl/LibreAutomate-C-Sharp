@@ -119,25 +119,25 @@ namespace Au.Types
 			public IntPtr hIcon;
 			public IntPtr hCursor;
 			public IntPtr hbrBackground;
-			public IntPtr lpszMenuName;
+#pragma warning disable 169
+			IntPtr lpszMenuName;
+#pragma warning restore 169
 			public char* lpszClassName; //not string because CLR would call CoTaskMemFree
 			public IntPtr hIconSm;
 
-			public WNDCLASSEX(RWCEtc ex = null) : this()
-			{
-				this.cbSize = SizeOf<WNDCLASSEX>();
-				if(ex == null) {
+			public WNDCLASSEX(RWCEtc ex = null) : this() {
+				cbSize = sizeof(WNDCLASSEX);
+				if (ex == null) {
 					hCursor = LoadCursor(default, MCursor.Arrow);
-					hbrBackground = (IntPtr)(COLOR_BTNFACE + 1);
 				} else {
-					this.style = ex.style;
-					this.cbClsExtra = ex.cbClsExtra;
-					this.cbWndExtra = ex.cbWndExtra;
-					//this.hInstance = ex.hInstance;
-					this.hIcon = ex.hIcon;
-					this.hCursor = ex.hCursor ?? LoadCursor(default, MCursor.Arrow);
-					this.hbrBackground = ex.hbrBackground ?? (IntPtr)(COLOR_BTNFACE + 1);
-					this.hIconSm = ex.hIconSm;
+					style = ex.style;
+					cbClsExtra = ex.cbClsExtra;
+					cbWndExtra = ex.cbWndExtra;
+					//hInstance = ex.hInstance;
+					hIcon = ex.hIcon;
+					if (ex.hCursor != default) hCursor = ex.hCursor; else if (ex.mCursor != default) hCursor = LoadCursor(default, ex.mCursor);
+					hbrBackground = ex.hbrBackground;
+					hIconSm = ex.hIconSm;
 				}
 			}
 		}
@@ -759,21 +759,18 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		static extern int MapWindowPoints(AWnd hWndFrom, AWnd hWndTo, void* lpPoints, int cPoints);
 
-		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, void* points, int cPoints, out int ret)
-		{
+		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, void* points, int cPoints, out int ret) {
 			ALastError.Clear();
 			ret = MapWindowPoints(wFrom, wTo, points, cPoints);
 			return ret != 0 ? true : ALastError.Code == 0;
 		}
 
-		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, ref RECT r, out int ret)
-		{
-			fixed(void* u = &r) return MapWindowPoints(wFrom, wTo, u, 2, out ret);
+		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, ref RECT r, out int ret) {
+			fixed (void* u = &r) return MapWindowPoints(wFrom, wTo, u, 2, out ret);
 		}
 
-		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, ref POINT p, out int ret)
-		{
-			fixed(void* u = &p) return MapWindowPoints(wFrom, wTo, u, 1, out ret);
+		internal static bool MapWindowPoints(AWnd wFrom, AWnd wTo, ref POINT p, out int ret) {
+			fixed (void* u = &p) return MapWindowPoints(wFrom, wTo, u, 1, out ret);
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
@@ -799,16 +796,14 @@ namespace Au.Types
 			int _u1, _u2; //need INPUT size
 #pragma warning restore 414
 
-			public INPUTK(KKey vk, ushort sc, uint flags = 0)
-			{
+			public INPUTK(KKey vk, ushort sc, uint flags = 0) {
 				_type = INPUT_KEYBOARD; dwExtraInfo = AuExtraInfo;
 				wVk = (ushort)vk; wScan = sc; dwFlags = flags;
 				time = 0; _u2 = _u1 = 0;
 				Debug.Assert(sizeof(INPUTK) == sizeof(INPUTM));
 			}
 
-			public void Set(KKey vk, ushort sc, uint flags = 0)
-			{
+			public void Set(KKey vk, ushort sc, uint flags = 0) {
 				_type = INPUT_KEYBOARD; dwExtraInfo = AuExtraInfo;
 				wVk = (ushort)vk; wScan = sc; dwFlags = flags;
 			}
@@ -848,8 +843,7 @@ namespace Au.Types
 			public int time;
 			public LPARAM dwExtraInfo;
 
-			public INPUTM(IMFlags flags, int x = 0, int y = 0, int data = 0)
-			{
+			public INPUTM(IMFlags flags, int x = 0, int y = 0, int data = 0) {
 				_type = INPUT_MOUSE;
 				dx = x; dy = y; dwFlags = flags; mouseData = data;
 				time = 0; dwExtraInfo = AuExtraInfo;
@@ -941,20 +935,12 @@ namespace Au.Types
 		internal static extern bool EndMenu();
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool InvalidateRect(AWnd hWnd, in RECT lpRect, bool bErase);
+		internal static extern bool InvalidateRect(AWnd hWnd, RECT* lpRect, bool bErase);
+		internal static bool InvalidateRect(AWnd hWnd, bool bErase = false) => InvalidateRect(hWnd, null, bErase);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool InvalidateRect(AWnd hWnd, IntPtr lpRect, bool bErase);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ValidateRect(AWnd hWnd, in RECT lpRect);
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool ValidateRect(AWnd hWnd, LPARAM zero = default);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool GetUpdateRect(AWnd hWnd, out RECT lpRect, bool bErase);
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool GetUpdateRect(AWnd hWnd, LPARAM zero, bool bErase);
+		internal static extern bool ValidateRect(AWnd hWnd, RECT* lpRect);
+		internal static bool ValidateRect(AWnd hWnd) => ValidateRect(hWnd, null);
 
 		internal const int ERROR = 0;
 		internal const int NULLREGION = 1;
@@ -1179,7 +1165,7 @@ namespace Au.Types
 			/// </summary>
 			public bool BlockEvent {
 				get => 0 != (flags & 0x80000000);
-				set { if(value) flags |= 0x80000000; else flags &= ~0x80000000; }
+				set { if (value) flags |= 0x80000000; else flags &= ~0x80000000; }
 			}
 		}
 
@@ -1209,7 +1195,7 @@ namespace Au.Types
 			/// </summary>
 			public bool BlockEvent {
 				get => 0 != (flags & 0x80000000);
-				set { if(value) flags |= 0x80000000; else flags &= ~0x80000000; }
+				set { if (value) flags |= 0x80000000; else flags &= ~0x80000000; }
 			}
 		}
 
@@ -1394,6 +1380,10 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern LPARAM SetThreadDpiAwarenessContext(LPARAM dpiContext);
+
+		[DllImport("user32.dll")]
+		internal static extern int GetSysColor(int nIndex);
+
 	}
 
 }

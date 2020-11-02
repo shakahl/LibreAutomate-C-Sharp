@@ -145,7 +145,7 @@ class CiGoTo
 		if(linkData == null) return;
 		bool inSource = !linkData.Starts("||");
 		var g = new CiGoTo(inSource);
-		var a = linkData.SegSplit("|");
+		var a = linkData.Split('|');
 		if(inSource) {
 			g._sourceLocations = new List<_SourceLocation>();
 			for(int i = 1; i < a.Length; i++) {

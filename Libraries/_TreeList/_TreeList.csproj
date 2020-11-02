@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.WindowsDesktop">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>net5.0-windows</TargetFramework>
     <UseWindowsForms>true</UseWindowsForms>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <AssemblyName>TreeList</AssemblyName>
@@ -51,77 +51,33 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Au\AuScrollableControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="Au\AuScrollableControl.cs" />
     <Compile Update="Properties\Resources.Designer.cs">
       <DependentUpon>Resources.resx</DependentUpon>
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
     </Compile>
-    <Compile Update="Tree\NodeControls\BaseTextControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\BindableControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\EditableControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\InteractiveControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeCheckBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeComboBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeControl.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeDecimalTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeIcon.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeIntegerTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeNumericUpDown.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodePlusMinus.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NodeTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\NodeControls\NumericTextBox.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\TreeColumn.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\TreeViewAdv.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\TreeViewAdv.Draw.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\TreeViewAdv.Editor.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\TreeViewAdv.Input.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\TreeViewAdv.Properties.cs">
-      <SubType>Component</SubType>
-    </Compile>
-    <Compile Update="Tree\TVAcc.cs">
-      <SubType>Component</SubType>
-    </Compile>
+    <Compile Update="Tree\NodeControls\BaseTextControl.cs" />
+    <Compile Update="Tree\NodeControls\BindableControl.cs" />
+    <Compile Update="Tree\NodeControls\EditableControl.cs" />
+    <Compile Update="Tree\NodeControls\InteractiveControl.cs" />
+    <Compile Update="Tree\NodeControls\NodeCheckBox.cs" />
+    <Compile Update="Tree\NodeControls\NodeComboBox.cs" />
+    <Compile Update="Tree\NodeControls\NodeControl.cs" />
+    <Compile Update="Tree\NodeControls\NodeDecimalTextBox.cs" />
+    <Compile Update="Tree\NodeControls\NodeIcon.cs" />
+    <Compile Update="Tree\NodeControls\NodeIntegerTextBox.cs" />
+    <Compile Update="Tree\NodeControls\NodeNumericUpDown.cs" />
+    <Compile Update="Tree\NodeControls\NodePlusMinus.cs" />
+    <Compile Update="Tree\NodeControls\NodeTextBox.cs" />
+    <Compile Update="Tree\NodeControls\NumericTextBox.cs" />
+    <Compile Update="Tree\TreeColumn.cs" />
+    <Compile Update="Tree\TreeViewAdv.cs" />
+    <Compile Update="Tree\TreeViewAdv.Draw.cs" />
+    <Compile Update="Tree\TreeViewAdv.Editor.cs" />
+    <Compile Update="Tree\TreeViewAdv.Input.cs" />
+    <Compile Update="Tree\TreeViewAdv.Properties.cs" />
+    <Compile Update="Tree\TVAcc.cs" />
   </ItemGroup>
 
   <ItemGroup>

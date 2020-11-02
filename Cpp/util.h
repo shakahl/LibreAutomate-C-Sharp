@@ -151,17 +151,17 @@ public:
 	}
 	Smart(_Inout_opt_ T* lp, bool addRef) throw()
 	{
-		p = lp;
-		if(addRef) p->AddRef();
+		this->p = lp;
+		if(addRef) this->p->AddRef();
 	}
 	Smart(_Inout_ const Smart<T>& lp) throw() : CComPtr<T>(lp.p)
 	{
 	}
 
-	void Swap(CComPtrBase& other)
+	void Swap(CComPtrBase<T>& other)
 	{
-		T* pTemp = p;
-		p = other.p;
+		T* pTemp = this->p;
+		this->p = other.p;
 		other.p = pTemp;
 	}
 

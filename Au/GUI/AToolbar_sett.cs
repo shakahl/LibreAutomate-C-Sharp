@@ -23,16 +23,16 @@ namespace Au
 		{
 			public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
 
-			public TBBorder border { get => _border; set => Set2(ref _border, value); }
+			public TBBorder border { get => _border; set => Set(ref _border, value); }
 			TBBorder _border = TBBorder.Width2;
 
 			public int borderColor { get => _borderColor; set => Set(ref _borderColor, value); }
 			int _borderColor; //not ColorInt because in JSON it is saved as struct
 
-			public TBLayout layout { get => _layout; set => Set2(ref _layout, value); }
+			public TBLayout layout { get => _layout; set => Set(ref _layout, value); }
 			TBLayout _layout = TBLayout.Flow;
 
-			public TBAnchor anchor { get => _anchor; set => Set2(ref _anchor, value); }
+			public TBAnchor anchor { get => _anchor; set => Set(ref _anchor, value); }
 			TBAnchor _anchor = TBAnchor.TopLeft;
 
 			public TBOffsets offsets { get => _location; set => Set(ref _location, value); }
@@ -53,7 +53,7 @@ namespace Au
 			public int screen { get => _screen; set => Set(ref _screen, value); }
 			int _screen;
 
-			public TBFlags miscFlags { get => _miscFlags; set => Set2(ref _miscFlags, value); }
+			public TBFlags miscFlags { get => _miscFlags; set => Set(ref _miscFlags, value); }
 			TBFlags _miscFlags;
 		}
 	}

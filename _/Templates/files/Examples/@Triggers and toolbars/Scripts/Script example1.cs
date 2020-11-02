@@ -1,4 +1,4 @@
-/*/ c \@Triggers and toolbars\Functions\Class1.cs; /*/ //.
+/*/ c ..\Functions\Class1.cs; /*/ //.
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
 partial class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 

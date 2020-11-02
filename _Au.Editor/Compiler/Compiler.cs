@@ -81,7 +81,7 @@ namespace Au.Compiler
 			public string file;
 
 			public ERole role;
-			public ERunMode runMode;
+			public bool runSingle;
 			public EIfRunning ifRunning;
 			public EIfRunning2 ifRunning2;
 			public EUac uac;
@@ -238,7 +238,7 @@ namespace Au.Compiler
 				if (hf.Is0) {
 					var ec = ALastError.Code;
 					if (ec == Api.ERROR_SHARING_VIOLATION && _RenameLockedFile(outFile, notInCache: notInCache)) goto gSave;
-					throw new AuException(ec);
+					throw new AuException(ec, outFile);
 				}
 				var b = asmStream.GetBuffer();
 				using (hf) if (!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
@@ -292,7 +292,7 @@ namespace Au.Compiler
 
 			r.name = m.Name;
 			r.role = m.Role;
-			r.runMode = m.RunMode;
+			r.runSingle = m.RunSingle;
 			r.ifRunning = m.IfRunning;
 			r.ifRunning2 = m.IfRunning2;
 			r.uac = m.Uac;
@@ -326,7 +326,7 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Adds some attributes if not specified in code.
-		/// Adds: [module: DefaultCharSet(CharSet.Unicode)], [assembly: TargetFramework("...")]
+		/// Adds: [module: DefaultCharSet(CharSet.Unicode)], [assembly: TargetFramework("...")], [assembly: IgnoresAccessChecksTo("...")]
 		/// </summary>
 		static void _AddAttributes(ref CSharpCompilation compilation, MetaComments m) {
 			int needAttr = 0x100;
@@ -347,6 +347,8 @@ namespace Au.Compiler
 				}
 			}
 
+			if (m.TestInternal != null) needAttr |= 0x400;
+
 			//rejected. Now we don't load from byte[].
 			///// If miniProgram or exeProgram, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. It is to avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
 			//if(m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
@@ -363,12 +365,22 @@ namespace Au.Compiler
 
 			if (needAttr != 0) {
 				using (new Util.StringBuilder_(out var sb)) {
-					sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
-					if (0 != (needAttr & 0x100)) sb.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]");
+					//sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
+					if (0 != (needAttr & 0x100)) sb.AppendLine("[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]");
 					if (0 != (needAttr & 0x200)) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
 					//if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\" \")]");
 					//if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
 					//if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
+					if (0 != (needAttr & 0x400)) {
+						foreach(var v in m.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
+						sb.Append(@"
+namespace System.Runtime.CompilerServices {
+[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+public class IgnoresAccessChecksToAttribute : Attribute {
+	public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
+	public string AssemblyName { get; }
+}}");
+					}
 
 					var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
 					compilation = compilation.AddSyntaxTrees(tree);

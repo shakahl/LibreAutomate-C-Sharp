@@ -144,7 +144,7 @@ using System.Resources;
 
 #else
 
-class Script : AScript
+partial class TestScript : AScript
 {
 
 	class TestGC
@@ -974,13 +974,7 @@ class Script : AScript
 		AOutput.Write(AFolders.NetRuntime);
 	}
 
-	void TestWpfWindow() {
-		//var w = new Au.Tests.MainWindow();
-		var w = new Au.Tests.Window1();
-		w.ShowDialog();
-	}
-
-	[StructLayout(LayoutKind.Explicit, Size=500000)]
+	[StructLayout(LayoutKind.Explicit, Size = 500000)]
 	struct BIGBIG { public override string ToString() => "TEST"; }
 	void TestStringInterpolationBoxing() {
 		BIGBIG r = default;
@@ -1010,7 +1004,7 @@ class Script : AScript
 		//AOutput.Write(n, s1, s2, (uint)s1[0], (uint)s2[0]);
 
 		////int i =unchecked((int) uint.MaxValue);
-		long i =long.MaxValue;
+		long i = long.MaxValue;
 		//nuint n = (nuint)i;
 
 		//IntPtr n = (IntPtr)i;
@@ -1026,6 +1020,13 @@ class Script : AScript
 		//Coord c = 6;
 	}
 
+	void TestWpfWindow() {
+		//var w = new Au.Tests.MainWindow();
+		//var w = new Au.Tests.Window1();
+		var w = new Window();
+		w.ShowDialog();
+	}
+
 	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
@@ -1037,15 +1038,19 @@ class Script : AScript
 		//case 5 or 6: break;
 		//}
 
+		(int i, string s) t = (5, "");
+
+		//new Script().Test();
+		//TestSvg();
+		//TestWpfWindow();
 		//TestNint();
 		//TestMinusSign();
 		//TestStringInterpolationBoxing();
-		TestWpfWindow();
 		//TestNetCoreVersion();
 	}
 
-	[STAThread] static void Main(string[] args) { new Script(args); }
-	Script(string[] args) {
+	[STAThread] static void Main(string[] args) { new TestScript(args); }
+	TestScript(string[] args) {
 		AOutput.QM2.UseQM2 = true;
 		//AOutput.Clear();
 		Au.Util.AssertListener_.Setup();

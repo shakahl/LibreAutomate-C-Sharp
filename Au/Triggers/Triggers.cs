@@ -40,7 +40,7 @@ namespace Au.Triggers
 	/// Finally call <see cref="Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
 	/// 
 	/// Recommended properties for scripts containing triggers:
-	/// - <c>runMode blue</c> - allows other scripts to start while this script is running.
+	/// - <c>runSingle false</c> (default) - allows other scripts to start while this script is running.
 	/// - <c>ifRunning warn_restart</c> - to quickly restart the script when editing: just click the Run button.
 	/// 
 	/// Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="ATask.Run"/> to run other scripts in new process; see example.

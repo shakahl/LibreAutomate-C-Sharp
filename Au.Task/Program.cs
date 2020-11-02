@@ -38,7 +38,7 @@ static unsafe class Program
 		//300.ms(); //give time to preload new task process
 		//for (int i = 0; i < 4; i++) {
 		//	APerf.Shared.First();
-		//	ATask.Run(@"\blue script that contains APerf.Shared.NW();.cs");
+		//	ATask.Run(@"script that contains APerf.Shared.NW();.cs");
 		//	600.ms(); //give time for the process to exit
 		//}
 		//Results should be:

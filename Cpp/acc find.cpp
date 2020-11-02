@@ -135,7 +135,7 @@ class AccFinder
 	{
 		for(LPWSTR start = s; s <= eos; ) {
 			if(*s == ',' || s == eos) {
-				bool not; if(*start == '!') { start++; not = true; } else not = false;
+				bool nott = false; if(*start == '!') { start++; nott = true; }
 				int state;
 				if(s > start&&* start >= '0' && *start <= '9') {
 					LPWSTR se;
@@ -145,7 +145,7 @@ class AccFinder
 					state = ao::StateFromString(start, s - start);
 					if(state == 0) return _Error(L"Unknown state name.");
 				}
-				if(not) _stateNo |= state; else _stateYes |= state;
+				if(nott) _stateNo |= state; else _stateYes |= state;
 				if(*++s == ' ') s++;
 				start = s;
 			} else s++;
@@ -452,83 +452,82 @@ private:
 
 		STR roleNeeded = _path != null ? _path[level].role : _role;
 
-		if(level < _minLevel) goto gr;
-
+		if(level >= _minLevel) {
 		//If eAF::Mark, the caller is getting all AO using callback, and wants us to add eAccMiscFlags::Marked to AOs that match role, rect, name and state.
 		//	If some of these props does not match, we set mark = -1, to avoid comparing other props.
-		int mark = !!(_flags & eAF::Mark) ? 1 : 0;
-		if(mark && !!(_flags & eAF::Marked_)) {
-			//Currently the caller needs single marked object. Used internally.
-			//	To make faster, don't compare properties of other objects. Some AO are very slow, eg .NET DataGridView with 10 columns and 1000 rows.
-			mark = -1;
-		}
+			int mark = !!(_flags & eAF::Mark) ? 1 : 0;
+			if(mark && !!(_flags & eAF::Marked_)) {
+				//Currently the caller needs single marked object. Used internally.
+				//	To make faster, don't compare properties of other objects. Some AO are very slow, eg .NET DataGridView with 10 columns and 1000 rows.
+				mark = -1;
+			}
 
-		if(mark >= 0) {
-			if(roleNeeded != null) {
-				if(!roleString) roleString = ao::RoleToString(ref varRole);
-				if(wcscmp(roleNeeded, roleString)) {
-					if(mark) mark = -1;
-					else if(_path != null) return _eMatchResult::SkipChildren;
-					else goto gr;
+			if(mark >= 0) {
+				if(roleNeeded != null) {
+					if(!roleString) roleString = ao::RoleToString(ref varRole);
+					if(wcscmp(roleNeeded, roleString)) {
+						if(mark) mark = -1;
+						else if(_path != null) return _eMatchResult::SkipChildren;
+						else goto gr;
+					}
+				}
+				if(_path != null) {
+					if(level < _pathCount - 1) goto gr;
+					skipChildren = true;
 				}
 			}
-			if(_path != null) {
-				if(level < _pathCount - 1) goto gr;
-				skipChildren = true;
-			}
-		}
 
-		if(!!(_flags2 & eAF2::IsElem) && a.elem != _elem) goto gr;
+			if(!!(_flags2 & eAF2::IsElem) && a.elem != _elem) goto gr;
 
-		if(mark > 0 && !_MatchRect(ref a)) mark = -1;
+			if(mark > 0 && !_MatchRect(ref a)) mark = -1;
 
-		if(_name.Is() && mark >= 0 && !a.MatchStringProp(L"name", ref _name)) {
-			if(mark) mark = -1; else goto gr;
-		}
-
-		if(!hiddenToo) {
-			switch(state.IsInvisible()) {
-			case 2: //INVISISBLE and OFFSCREEN
-				if(!_IsRoleToSkipIfInvisible(role)) break; //eg prevents finding a background DOCUMENT in Firefox
-			case 1: //only INVISIBLE
-				if(_IsRoleTopLevelClient(role, level)) break; //rare
-				skipChildren = true; goto gr;
-			}
-		}
-
-		if(!!(_stateYes | _stateNo) && mark >= 0) {
-			auto k = state.State();
-			if((k & _stateYes) != _stateYes || !!(k & _stateNo)) {
+			if(_name.Is() && mark >= 0 && !a.MatchStringProp(L"name", ref _name)) {
 				if(mark) mark = -1; else goto gr;
 			}
-		}
 
-		if(!mark && !_MatchRect(ref a))  goto gr;
-
-		if(_propCount) {
-			bool hasHTML = false;
-			for(int i = 0; i < _propCount; i++) {
-				NameValue& p = _prop[i];
-				if(p.name[0] == '@') hasHTML = true;
-				else if(!a.MatchStringProp(p.name, ref p.value)) goto gr;
+			if(!hiddenToo) {
+				switch(state.IsInvisible()) {
+				case 2: //INVISISBLE and OFFSCREEN
+					if(!_IsRoleToSkipIfInvisible(role)) break; //eg prevents finding a background DOCUMENT in Firefox
+				case 1: //only INVISIBLE
+					if(_IsRoleTopLevelClient(role, level)) break; //rare
+					skipChildren = true; goto gr;
+				}
 			}
-			if(hasHTML) {
-				if(a.elem || !AccMatchHtmlAttributes(a.acc, _prop, _propCount)) goto gr;
+
+			if(!!(_stateYes | _stateNo) && mark >= 0) {
+				auto k = state.State();
+				if((k & _stateYes) != _stateYes || !!(k & _stateNo)) {
+					if(mark) mark = -1; else goto gr;
+				}
 			}
-		}
 
-		if(mark > 0) {
-			a.misc.flags |= eAccMiscFlags::Marked;
-			_flags |= eAF::Marked_;
-		}
+			if(!mark && !_MatchRect(ref a))  goto gr;
 
-		switch((*_callback)(a)) {
-		case eAccFindCallbackResult::Continue: goto gr;
-		case eAccFindCallbackResult::StopFound: _found = true;
-		//case eAccFindCallbackResult::StopNotFound: break;
-		}
-		return _eMatchResult::Stop;
+			if(_propCount) {
+				bool hasHTML = false;
+				for(int i = 0; i < _propCount; i++) {
+					NameValue& p = _prop[i];
+					if(p.name[0] == '@') hasHTML = true;
+					else if(!a.MatchStringProp(p.name, ref p.value)) goto gr;
+				}
+				if(hasHTML) {
+					if(a.elem || !AccMatchHtmlAttributes(a.acc, _prop, _propCount)) goto gr;
+				}
+			}
 
+			if(mark > 0) {
+				a.misc.flags |= eAccMiscFlags::Marked;
+				_flags |= eAF::Marked_;
+			}
+
+			switch((*_callback)(a)) {
+			case eAccFindCallbackResult::Continue: goto gr;
+			case eAccFindCallbackResult::StopFound: _found = true;
+			//case eAccFindCallbackResult::StopNotFound: break;
+			}
+			return _eMatchResult::Stop;
+		}
 	gr:
 		if(!skipChildren) {
 			//depending on flags, skip children of AO that often have many descendants (eg MENUITEM, LIST, TREE)

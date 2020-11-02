@@ -2341,18 +2341,24 @@ namespace Au.Types
 	/// Try this class when <see cref="GridSplitter"/> does not work as you want.
 	/// 
 	/// Limitations (bad or good):
-	/// - Splitters must be on own rows/columns. Throws exception if explicit or implicit <b>ResizeBehavior</b> is not <b>PreviousAndNext</b>.
+	/// - Splitters must be on own rows/columns. Throws exception if <b>ResizeBehavior</b> is not <b>PreviousAndNext</b> (which is default).
 	/// - Throws exception is there are star-sized splitter rows.
 	/// - Does not resize auto-sized rows/columns. Only pixel-sized and star-sized.
 	/// - With UseLayoutRounding may flicker when resizing, especially when high DPI.
 	/// </remarks>
 	public class GridSplitter2 : GridSplitter
 	{
-		///
-		public GridSplitter2() {
+		static GridSplitter2() {
 			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragStartedEvent, new DragStartedEventHandler(_OnDragStarted));
 			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragCompletedEvent, new DragCompletedEventHandler(_OnDragCompleted));
 			EventManager.RegisterClassHandler(typeof(GridSplitter2), Thumb.DragDeltaEvent, new DragDeltaEventHandler(_OnDragDelta));
+		}
+
+		///
+		public GridSplitter2() {
+			ResizeBehavior = GridResizeBehavior.PreviousAndNext;
+			SnapsToDevicePixels = true;
+			Focusable = false;
 		}
 
 		static void _OnDragStarted(object sender, DragStartedEventArgs e) => (sender as GridSplitter2)._OnDragStarted(e);
@@ -2365,11 +2371,10 @@ namespace Au.Types
 		static void _OnDragCompleted(object sender, DragCompletedEventArgs e) => (sender as GridSplitter2)._OnDragCompleted(e);
 
 		void _OnDragCompleted(DragCompletedEventArgs e) {
-			e.Handled = true;
-			if (ShowsPreview) {
-				base.OnKeyDown(new KeyEventArgs(Keyboard.PrimaryDevice, Keyboard.PrimaryDevice.ActiveSource, 0, Key.Escape) { RoutedEvent = UIElement.KeyDownEvent });
-				_MoveSplitter();
-			}
+			if (!ShowsPreview) e.Handled = true; //else somehow GridSplitter does not resize, just removes the adorner
+			if (_a == null) return; //two events if called CancelDrag
+			if (!e.Canceled) _MoveSplitter();
+			_a = null;
 		}
 
 		static void _OnDragDelta(object sender, DragDeltaEventArgs e) => (sender as GridSplitter2)._OnDragDelta(e);
@@ -2379,8 +2384,11 @@ namespace Au.Types
 			var di = DragIncrement; _delta = Math.Round(_delta / di) * di;
 			if (ShowsPreview) return;
 			e.Handled = true;
+			if (_working) return; _working = true; //avoid too much CPU and delayed repainting of hwndhosts
+			Dispatcher.InvokeAsync(() => _working = false, System.Windows.Threading.DispatcherPriority.ApplicationIdle);
 			_MoveSplitter();
 		}
+		bool _working;
 
 		///
 		protected override void OnKeyDown(KeyEventArgs e) {
@@ -2390,7 +2398,11 @@ namespace Au.Types
 				_delta = KeyboardIncrement * ((e.Key == Key.Up || e.Key == Key.Right) ? -1 : 1);
 				if (_isVertical && FlowDirection == FlowDirection.RightToLeft) _delta = -_delta;
 				_MoveSplitter();
-			} else base.OnPreviewKeyDown(e);
+				_a = null;
+			} else if (e.Key == Key.Escape && _a != null) {
+				e.Handled = true;
+				CancelDrag();
+			}
 		}
 
 		bool _Init(Key key = default) {
@@ -2451,6 +2463,7 @@ namespace Au.Types
 			}
 
 			double v1 = Math.Clamp(before.size + _delta, before.min, before.max), v2 = Math.Clamp(after.size - _delta, after.min, after.max);
+			_delta = 0;
 			if (v1 == before.min || v1 == before.max) v2 = before.size + after.size - v1; else if (v2 == after.min || v2 == after.max) v1 = before.size + after.size - v2;
 
 			_ResizeSide(before, true, v1);

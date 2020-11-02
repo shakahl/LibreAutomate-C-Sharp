@@ -60,7 +60,7 @@ class PanelRunning : AuUserControlBase, ITreeModel
 	private void _ccName_DrawText(object sender, DrawEventArgs e)
 	{
 		var t = e.Node.Tag as RunningTask;
-		e.TextColor = t.isBlue ? Color.Blue : Color.Green;
+		e.TextColor = t.isRunSingle ? Color.Green : Color.Blue;
 	}
 
 	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }

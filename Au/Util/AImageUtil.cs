@@ -94,7 +94,7 @@ namespace Au.Util
 		public static System.Drawing.Bitmap LoadWinformsImageFromFileOrResourceOrString(string image) {
 			if (HasImageStringPrefix(image))
 				return LoadWinformsImageFromString(image);
-			if (AResources.HasResourcePrefix_(image))
+			if (AResources.HasResourcePrefix(image))
 				return AResources.GetWinformsImage(image);
 			image = APath.Normalize(image, AFolders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
 			return System.Drawing.Image.FromFile(image) as System.Drawing.Bitmap ?? throw new ArgumentException("Bad image format.");
@@ -107,7 +107,7 @@ namespace Au.Util
 		/// <exception cref="Exception"></exception>
 		public static BitmapFrame LoadWpfImageFromFileOrResourceOrString(string image) {
 			if (HasImageStringPrefix(image)) return LoadWpfImageFromString(image);
-			if (AResources.HasResourcePrefix_(image)) return AResources.GetWpfImage(image);
+			if (AResources.HasResourcePrefix(image)) return AResources.GetWpfImage(image);
 			image = APath.Normalize(image, AFolders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
 			return BitmapFrame.Create(new Uri(image));
 		}
@@ -129,7 +129,7 @@ namespace Au.Util
 		public static UIElement LoadWpfImageElementFromFileOrResourceOrString(string image) {
 			if (image.Starts('<')) return (UIElement)XamlReader.Parse(image);
 			if(image.Ends(".xaml", true)) {
-				if (AResources.HasResourcePrefix_(image)) return (UIElement)AResources.GetXamlObject(image);
+				if (AResources.HasResourcePrefix(image)) return (UIElement)AResources.GetXamlObject(image);
 				using var stream = AFile.LoadStream(image);
 				return (UIElement)XamlReader.Load(stream);
 			} else {

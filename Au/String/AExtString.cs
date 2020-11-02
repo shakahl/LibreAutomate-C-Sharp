@@ -484,15 +484,7 @@ namespace Au
 		/// Returns true if this string is null or empty ("").
 		/// </summary>
 		/// <param name="t">This string.</param>
-		public static bool NE(this string t) => t == null ? true : t.Length == 0;
-
-		//rejected. Too simple. Not so often used. Could name AsSpan, then in completion lists it is joined with the .NET extension method, but then in our editor it is the first in the list.
-		///// <summary>
-		///// Creates a new read-only span of this string using tuple (int start, int end).
-		///// Can be used with <see cref="Segments"/>, which returns such tuples in foreach.
-		///// </summary>
-		//public static ReadOnlySpan<char> SegAsSpan(this string t, (int start, int end) se) => t.AsSpan(se.start, se.end - se.start);
-		///// <seealso cref="SegAsSpan"/>
+		public static bool NE(this string t) => t == null || t.Length == 0;
 
 		/// <summary>
 		/// This function can be used with foreach to split this string into substrings as start/end offsets.
@@ -508,42 +500,98 @@ namespace Au
 		/// foreach(var t in s.Segments(SegSep.Word, SegFlags.NoEmpty)) AOutput.Write(s[t.start..t.end]);
 		/// ]]></code>
 		/// </example>
-		/// <seealso cref="SegSplit"/>
-		/// <seealso cref="SegLines"/>
+		/// <seealso cref="Lines"/>
 		public static SegParser Segments(this string t, string separators, SegFlags flags = 0, Range? range = null) {
 			return new SegParser(t, separators, flags, range);
 		}
 
+		//rejected. Usually Split is good. In .NET Core it also has option to trim spaces and in most cases is faster.
+		///// <summary>
+		///// Splits this string into substrings using the specified separators.
+		///// </summary>
+		///// <param name="t">This string.</param>
+		///// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
+		///// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
+		///// <param name="flags"></param>
+		///// <param name="range">Part of this string to split.</param>
+		///// <seealso cref="Segments"/>
+		///// <seealso cref="Lines"/>
+		///// <seealso cref="SegParser"/>
+		///// <seealso cref="string.Split"/>
+		///// <seealso cref="string.Join"/>
+		//public static string[] SegSplit(this string t, string separators, SegFlags flags = 0, int maxCount = -1, Range? range = null) {
+		//	var x = new SegParser(t, separators, flags, range);
+		//	return x.ToStringArray(maxCount);
+		//}
+
+		//rejected. 30% slower than the fast Lines() overload. The slow overload rarely used. Range rarely used; can use SegSplit instead.
+		///// <summary>
+		///// Splits this string into lines using separators "\r\n", "\n", "\r".
+		///// </summary>
+		///// <param name="t">This string.</param>
+		///// <param name="noEmptyLines">Don't need empty lines.</param>
+		///// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more lines, the last element will contain single line, unlike with <see cref="String.Split"/></param>
+		///// <param name="range">Part of this string to split.</param>
+		///// <seealso cref="Segments"/>
+		///// <seealso cref="SegSep.Line"/>
+		//public static string[] SegLines(this string t, bool noEmptyLines = false, int maxCount = -1, Range? range = null) {
+		//	return SegSplit(t, SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0, maxCount, range);
+		//}
+
 		/// <summary>
-		/// Splits this string into substrings using the specified separators.
+		/// Splits this string using newline separators "\r\n", "\n", "\r".
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="separators">A string containing characters that delimit substrings. Or one of <see cref="SegSep"/> constants.</param>
-		/// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more substrings, the last element will contain single substring, unlike with <see cref="String.Split"/>.</param>
-		/// <param name="flags"></param>
-		/// <param name="range">Part of this string to split.</param>
+		/// <param name="noEmpty">Don't need empty lines.</param>
 		/// <seealso cref="Segments"/>
-		/// <seealso cref="SegLines"/>
-		/// <seealso cref="SegParser"/>
-		/// <seealso cref="string.Split"/>
-		/// <seealso cref="string.Join"/>
-		public static string[] SegSplit(this string t, string separators, SegFlags flags = 0, int maxCount = -1, Range? range = null) {
-			var x = new SegParser(t, separators, flags, range);
-			return x.ToStringArray(maxCount);
+		/// <seealso cref="SegSep.Line"/>
+		public static string[] Lines(this string t, bool noEmpty = false) {
+			int n = 0, from = 0;
+			for (int i = 0; i < t.Length; i++) {
+				char c = t[i];
+				if (c <= '\r') {
+					if (c == '\r' || c == '\n') {
+						if (i > from || !noEmpty) n++;
+						if (c == '\r') if (++i == t.Length || t[i] != '\n') i--;
+						from = i + 1;
+					}
+				}
+			}
+			if (from < t.Length || !noEmpty) n++;
+			var a = new string[n];
+			if (n == 1) {
+				a[0] = t;
+			} else if (n > 1) {
+				n = 0; from = 0;
+				for (int i = 0; i < t.Length; i++) {
+					char c = t[i];
+					if (c <= '\r') {
+						if (c == '\r' || c == '\n') {
+							if (i > from || !noEmpty) a[n++] = t[from..i];
+							if (c == '\r') if (++i == t.Length || t[i] != '\n') i--;
+							from = i + 1;
+						}
+					}
+				}
+				if (n < a.Length) a[n] = t[from..];
+			}
+			return a;
 		}
 
 		/// <summary>
 		/// Splits this string into lines using separators "\r\n", "\n", "\r".
 		/// </summary>
 		/// <param name="t">This string.</param>
-		/// <param name="noEmptyLines">Don't need empty lines.</param>
-		/// <param name="maxCount">The maximal number of substrings to get. If negative, gets all. Else if there are more lines, the last element will contain single line, unlike with <see cref="String.Split"/></param>
-		/// <param name="range">Part of this string to split.</param>
+		/// <param name="maxCount">The maximal number of substrings to get.</param>
+		/// <param name="options"></param>
 		/// <seealso cref="Segments"/>
 		/// <seealso cref="SegSep.Line"/>
-		public static string[] SegLines(this string t, bool noEmptyLines = false, int maxCount = -1, Range? range = null) {
-			return SegSplit(t, SegSep.Line, noEmptyLines ? SegFlags.NoEmpty : 0, maxCount, range);
+		public static string[] Lines(this string t, int maxCount, StringSplitOptions options=0) {
+			if (options.Has(StringSplitOptions.RemoveEmptyEntries)) return t.Split(s_rn, maxCount, options); //30% slower than above
+			return t.Split(s_rns, maxCount, options); //60% slower than above
 		}
+		static readonly char[] s_rn = new char[] { '\r', '\n' };
+		static readonly string[] s_rns = new string[] { "\r\n", "\n", "\r" };
 
 		/// <summary>
 		/// Returns the number of lines.

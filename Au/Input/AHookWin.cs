@@ -1019,6 +1019,11 @@ namespace Au.Types
 			/// </summary>
 			public readonly uint lParam;
 
+			/// <summary>
+			/// Is key-up event.
+			/// </summary>
+			public bool IsUp => 0 != (lParam & 0x80000000);
+
 			internal ThreadKeyboard(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = code == Api.HC_NOREMOVE;

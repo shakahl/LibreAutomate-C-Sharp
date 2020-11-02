@@ -93,12 +93,10 @@ Usually it is used to test this class file or class library. It can contain meta
 
 Unlike most other options, this option is saved not in meta comments. It is saved in file files.xml.
 ");
-		_AddCombo("runMode", "green|blue", _meta.runMode,
-@"<b>runMode</b> - whether tasks can run simultaneously, etc.
- • <i>green</i> (default) - multiple green tasks cannot run simultaneously.
- • <i>blue</i> - multiple blue tasks can run simultaneously (see ifRunning).
-
-Green tasks change the tray icon and obey the ""End task"" hotkey; blue tasks don't.
+		_AddCombo("runSingle", "false|true", _meta.runSingle,
+@"<b>runSingle</b> - whether tasks can run simultaneously, etc.
+ • <i>false</i> (default) - multiple tasks can run simultaneously (see ifRunning).
+ • <i>true</i> - multiple such tasks cannot run simultaneously. When a task is running, the tray icon is green; also green in the ""Running"" pane. Can be ended with the ""End task"" hotkey.
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
@@ -107,7 +105,7 @@ This option is ignored when the task runs as .exe program started not from edito
  • <i>warn</i> (default) - write warning in output and don't run.
  • <i>cancel</i> - don't run.
  • <i>wait</i> - run later, when it ends.
- • <i>run</i> - run simultaneously. Requires runMode blue.
+ • <i>run</i> - run simultaneously.
  • <i>restart</i> - end it and run.
 
 Suffix _restart means restart if starting the script with the Run button/menu.
@@ -115,7 +113,7 @@ Suffix _restart means restart if starting the script with the Run button/menu.
 This option is ignored when the task runs as .exe program started not from editor.
 ");
 		_AddCombo("ifRunning2", "same|warn|cancel|wait", _meta.ifRunning2,
-@"<b>ifRunning2</b> - when trying to start this green script, what to do if another green script is running.
+@"<b>ifRunning2</b> - when trying to start this ""runSingle"" script, what to do if another ""runSingle"" script is running.
  • <i>same</i> (default) - same as of ifRunning: cancel if cancel[_restart], wait if wait[_restart], else warn.
  • <i>warn</i> - write warning in output and don't run.
  • <i>cancel</i> - don't run.
@@ -149,7 +147,7 @@ This option is also applied to class files compiled together, eg as part of proj
 ");
 		_AddEdit("define", _meta.define,
 @"<b>define</b> - symbols that can be used with #if.
-List separated by comma, semicolon or space. Example: ONE,TWO,d:THREE,r:FOUR
+Example: ONE,TWO,d:THREE,r:FOUR
 Can be used prefix r: or d: to define the symbol only if optimize true or false.
 If no optimize true, DEBUG and TRACE are added implicitly.
 These symbols also are visible in class files compiled together, eg as part of project.
@@ -167,10 +165,16 @@ This option is also applied to class files compiled together, eg as part of proj
  ");
 		_AddEdit("noWarnings", _meta.noWarnings,
 @"<b>noWarnings</b> - don't show these warnings.
-List separated by comma, semicolon or space. Example: 151,3001,120
+Example: 151,3001,120
 
 This option is also applied to class files compiled together, eg as part of project.
 See also <google C# #pragma warning>#pragma warning<>.
+");
+		_AddEdit("testInternal", _meta.testInternal,
+@"<b>testInternal</b> - access internal and protected symbols of these assemblies.
+Example: Assembly1,Assembly2
+
+This option is also applied to class files compiled together, eg as part of project.
 ");
 		_AddEdit("preBuild", _meta.preBuild,
 @"<b>preBuild</b> - a script to run before compiling this code file.
@@ -250,7 +254,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		g.ZValueChanged += _grid_ZValueChanged;
 
 		void _AddCombo(string name, string values, string select, string info = null, bool noCheckbox = false, int index = -1) {
-			var a = values.SegSplit("|");
+			var a = values.Split('|');
 			bool isSpecified = select != null;
 			if (index < 0) {
 				index = 0;
@@ -290,15 +294,15 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			ERole.miniProgram => "testScript outputPath icon-xmlDoc",
 			ERole.exeProgram => "testScript",
 			ERole.editorExtension => "Run-prefer32bit outputPath-xmlDoc",
-			ERole.classLibrary => "runMode-prefer32bit console icon manifest",
-			_ => "runMode-",
+			ERole.classLibrary => "runSingle-prefer32bit console icon manifest",
+			_ => "runSingle-",
 		};
 		_grid.ZShowRows(true, "Run-", hide);
 		_bAddLibraryProject.Enabled = _role != ERole.classFile;
 	}
 
 	void _SelectRunMode() {
-		_grid.ZShowRows(_Get("runMode") != "blue", "ifRunning2");
+		_grid.ZShowRows(_Get("runSingle") == "true", "ifRunning2");
 	}
 
 	private void _grid_ZValueChanged(SourceGrid.CellContext cc) {
@@ -334,15 +338,15 @@ The file must be in this workspace. Can be path relative to this file (examples:
 		//AOutput.Write(p.Column, row, g.ZIsChecked(row));
 
 		switch (rk) {
-		case "runMode":
+		case "runSingle":
 			_SelectRunMode(); //show/hide ifRunning2
-			if (_IsRunGreen()) g.ZSetCellText("ifRunning", 1, "warn");
+			if (_IsRunSingle()) g.ZSetCellText("ifRunning", 1, "warn");
 			break;
-		case "ifRunning": //if runMode green, cannot be ifRunning run[_restart]
-			if (_IsRunGreen()) { g.ZSetCellText("runMode", 1, "blue"); g.ZCheck("runMode", true); }
+		case "ifRunning": //if runSingle true, cannot be ifRunning run[_restart]
+			if (_IsRunSingle()) { g.ZSetCellText("runSingle", 1, "false"); g.ZCheck("runSingle", false); }
 			break;
 		}
-		bool _IsRunGreen() => cc.IsEditing() && (_Get("ifRunning")?.Starts("run") ?? false) && _Get("runMode") != "blue";
+		bool _IsRunSingle() => cc.IsEditing() && (_Get("ifRunning")?.Starts("run") ?? false) && _Get("runSingle") == "true";
 
 		//if(p.Column == 0 && g.ZIsChecked(row)) {
 		//	switch(rk) {
@@ -376,16 +380,17 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 		//info: _Get returns null if hidden
 
-		_meta.runMode = _Get("runMode");
+		_meta.runSingle = _Get("runSingle");
 		_meta.ifRunning = _Get("ifRunning");
 		_meta.ifRunning2 = _Get("ifRunning2");
 		_meta.uac = _Get("uac");
 		_meta.prefer32bit = _Get("prefer32bit");
 
 		_meta.optimize = _Get("optimize");
+		_meta.define = _Get("define");
 		_meta.warningLevel = _Get("warningLevel");
 		_meta.noWarnings = _Get("noWarnings");
-		_meta.define = _Get("define");
+		_meta.testInternal = _Get("testInternal");
 		_meta.preBuild = _Get("preBuild");
 		_meta.postBuild = _Get("postBuild");
 
@@ -725,9 +730,10 @@ To remove this meta, edit the code. Optionally delete unused dll files.
 @"<b>Class file<> - add a C# code file that contains some classes/functions used by this file.
 Adds meta <c green>c File.cs<>. The compiler will compile all code files and create single assembly.
 
-If this file is in a project, don't need to add class files that are in the project folder.
+If this file is in a project, don't add class files that are in the project folder.
 Can be added only files that are in this workspace. Import files if need, for example drag-drop.
 Can be path relative to this file (examples: Class5.cs, Folder\Class5.cs, ..\Folder\Class5.cs) or path in the workspace (examples: \Class5.cs, \Folder\Class5.cs).
+If folder, adds all its descendant class files.
 To remove this meta, edit the code.
 ");
 		_Add(_bAddResource,

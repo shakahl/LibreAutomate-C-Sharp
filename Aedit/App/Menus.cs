@@ -17,6 +17,10 @@ using Au;
 using Au.Types;
 using Au.Controls;
 using System.Windows.Controls;
+using System.Windows.Markup;
+using System.Windows.Media.Imaging;
+using System.Windows.Media;
+using System.Collections.ObjectModel;
 
 static class Menus
 {
@@ -199,6 +203,24 @@ static class Menus
 #if TRACE
 	[Command]
 	public static void TEST() {
+		//_TestLV();
+		_TestNat();
+
+		//var tv = new ListBox { BorderThickness = default, SelectionMode = SelectionMode.Extended };
+		//VirtualizingPanel.SetVirtualizationMode(tv, VirtualizationMode.Recycling);
+		//var a = new string[900];
+		//for (int i = 0; i < a.Length; i++) a[i] = "Texthjhjhjhjhjh " + i;
+		//tv.ItemsSource = a;
+		//App.Panels["Files"].Content = tv;
+
+
+
+		//APerf.First();
+		//App.Panels["Files"].Content = new Nstest.Script().Test();
+		////App.Panels["Files"].Content = new Nstest.WriteableBitmap_and_GDI_text().Test();
+		//APerf.Next();
+		//ATimer.After(1, _ => APerf.NW());
+
 		//if (_testCM == null) {
 		//	_testCM = new AContextMenu();
 		//	//Program.Commands["Wrap_lines"].CopyToMenu(_testCM.Add(null));
@@ -222,5 +244,98 @@ static class Menus
 		//App.Toolbars[0].Items.Add(p);
 	}
 	//static AContextMenu _testCM;
+
+	static void _TestLV() {
+		var k=new ListBox { BorderThickness = default, SelectionMode = SelectionMode.Extended };
+		k.UseLayoutRounding = true;
+
+		string xaml2 = @"<Style TargetType='{x:Type ListBoxItem}' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
+			<Setter Property='Height' Value='18' />
+			<Setter Property='Padding' Value='0' />
+            <Setter Property='IsSelected' Value='{Binding IsSelected, Mode=TwoWay}' />
+            <Setter Property='FontWeight' Value='Normal' />
+            <Style.Triggers>
+                <Trigger Property='IsSelected' Value='True'>
+                    <Setter Property='FontWeight' Value='Bold' />
+                </Trigger>
+            </Style.Triggers>
+        </Style>";
+		k.ItemContainerStyle = XamlReader.Parse(xaml2) as Style;
+
+		string xaml1 = @"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>
+<StackPanel Orientation='Horizontal'>
+<Image Source='{Binding Image}' Stretch='None' Height='16' Width='16'/>
+<TextBlock Text='{Binding Text}' Margin='6,-1,0,0'/>
+</StackPanel>
+</DataTemplate>";
+		k.ItemTemplate = XamlReader.Parse(xaml1) as DataTemplate;
+
+		VirtualizingPanel.SetVirtualizationMode(k, VirtualizationMode.Recycling);
+		VirtualizingPanel.SetScrollUnit(k, ScrollUnit.Item);
+
+		var im = BitmapFrame.Create(new Uri(@"Q:\app\Au\_Au.Editor\Resources\png\fileClass.png"));
+		int n = 1000;
+		var a = new List<TextImage>(n);
+		for (int i = 0; i < n; i++) {
+			a.Add(new TextImage("Abcdefghij " + i.ToString(), im));
+		}
+		APerf.Next('d');
+		k.ItemsSource = a;
+
+		App.Panels["Files"].Content = k;
+	}
+
+	public class TextImage : INotifyPropertyChanged
+	{
+		public string Text { get; set; }
+		public ImageSource Image { get; set; }
+		//	public List<TextImage> Items { get;set; }
+		public ObservableCollection<TextImage> Items { get; set; }
+		//	public bool IsExpanded { get;set; }
+
+		bool _isExpanded;
+		public bool IsExpanded {
+			get => _isExpanded;
+			set {
+				//			AOutput.Write(_isExpanded, value);
+				if (value != _isExpanded) {
+					_isExpanded = value;
+					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
+				}
+			}
+		}
+
+		bool _isSelected;
+		public bool IsSelected {
+			get => _isSelected;
+			set {
+				//			AOutput.Write(_isSelected, value);
+				if (value != _isSelected) {
+					_isSelected = value;
+					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsSelected"));
+				}
+			}
+		}
+
+		public TextImage(string text, ImageSource image) {
+			Text = text; Image = image;
+		}
+
+		#region INotifyPropertyChanged
+
+		public event PropertyChangedEventHandler PropertyChanged;
+
+		#endregion
+	}
+
+	static void _TestNat() {
+		//App.Panels["Files"].Content = new Nstest.Script().Test();
+
+	}
+
+	[Command]
+	public static void gc() {
+		GC.Collect();
+	}
 #endif
 }

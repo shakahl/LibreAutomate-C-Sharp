@@ -64,8 +64,8 @@ namespace Au
 		/// Can be:
 		/// - Path of any file or folder. Supports environment variables.
 		/// - Any shell object, like <c>":: ITEMIDLIST"</c>, <c>@"::{CLSID-1}\::{CLSID-2}"</c>, <c>@"shell:AppsFolder\WinStoreAppId"</c>.
-		/// - File type or protocol, like <c>".txt"</c>, <c>"http:"</c>.
-		/// - Icon resource index or negative id, like "c:\file.dll,4", "c:\file.dll,-4".
+		/// - File type like <c>".txt"</c>, or protocol like <c>"http:"</c>. Use <c>"."</c> to get forder icon.
+		/// - Path with icon resource index or negative id, like "c:\file.dll,4", "c:\file.exe,-4".
 		/// - URL.
 		/// </param>
 		/// <param name="size">Icon width and height. Default 16.</param>
@@ -112,7 +112,7 @@ namespace Au
 				if(isFileType || isURL || (isShellPath = (file[0] == ':'))) isPath = false;
 				if(isPath) {
 					//get icon index from "path,index" and remove ",index"
-					extractFromFile = ParseIconLocation(ref file, out index);
+					extractFromFile = ParsePathIndex(file, out file, out index);
 
 					if(!searchPath) {
 						if(!APath.IsFullPath(file)) file = AFolders.ThisAppImages + file;
@@ -131,7 +131,7 @@ namespace Au
 
 			if(isPath /*&& (extractFromFile || 0==(flags&IconGetFlags.Shell))*/) {
 				int ext = 0;
-				if(!extractFromFile && file.Length > 4) ext = file.Ends(true, ".exe", ".scr", ".ico", ".cur", ".ani");
+				if(!extractFromFile && file.Length > 4) ext = file.Ends(true, ".ico", ".exe", ".scr"/*, ".cur", ".ani"*/);
 				if(extractFromFile || ext > 0) {
 					R = Load(file, index, size);
 					if(R != default || extractFromFile) return R;
@@ -139,9 +139,7 @@ namespace Au
 					case FileDir.NotFound:
 						return default;
 					case FileDir.File:
-						var siid = StockIcon.DOCNOASSOC;
-						if(ext >= 1 && ext <= 2) siid = StockIcon.APPLICATION;
-						return Stock(siid, size);
+						return Stock(ext == 2 || ext == 3 ? StockIcon.APPLICATION : StockIcon.DOCNOASSOC, size);
 						//case FileDir.Directory: //folder name ends with .ico etc
 					}
 				} else if(file.Ends(".lnk", true)) {
@@ -543,19 +541,22 @@ namespace Au
 		/// Parses icon location string.
 		/// Returns true if it includes icon index or resource id.
 		/// </summary>
-		/// <param name="s">Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path. Receives path.</param>
-		/// <param name="index">Receives the number or 0.</param>
-		/// <remarks>Also supports path enclosed in double quotes like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.</remarks>
-		public static bool ParseIconLocation(ref string s, out int index)
+		/// <param name="s">
+		/// Icon location. Can be <c>"path,index"</c> or <c>"path,-id"</c> or just path.
+		/// Supports path enclosed in "" like <c>"\"path\",index"</c>, and spaces between comma and index like <c>"path, index"</c>.
+		/// </param>
+		/// <param name="path">Receives path without index and without "". Can be same variable as <i>s</i>.</param>
+		/// <param name="index">Receives index/id or 0.</param>
+		public static bool ParsePathIndex(string s, out string path, out int index)
 		{
-			index = 0;
+			path = s; index = 0;
 			if(s.NE()) return false;
-			if(s[0] == '\"') s = s.Replace("\"", ""); //can be eg "path",index
+			if(s[0] == '\"') path = s = s.Replace("\"", ""); //can be eg "path",index
 			if(s.Length < 3) return false;
 			if(!AChar.IsAsciiDigit(s[^1])) return false;
 			int i = s.LastIndexOf(','); if(i < 1) return false;
 			index = s.ToInt(i + 1, out int e); if(e != s.Length) return false;
-			s = s.Remove(i);
+			path = s.Remove(i);
 			return true;
 
 			//note: API PathParseIconLocation has bugs. Eg splits "path,5moreText". Or from "path, 5" removes ", 5" and returns 0.

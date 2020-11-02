@@ -390,7 +390,7 @@ namespace Au.Tools
 			b.AppendLine(@"static object[] __TestFunc__() {");
 			if(activateWindow) b.Append("((AWnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
 			b.AppendLine("var _p_ = APerf.Create();");
-			var lines = code.SegLines(true);
+			var lines = code.Lines(true);
 			int lastLine = lines.Length - 1;
 			for(int i = 0; i < lastLine; i++) b.AppendLine(lines[i]);
 			b.AppendLine("_p_.Next(); var _a_ =");

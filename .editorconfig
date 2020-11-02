@@ -2,3 +2,6 @@
 
 # IDE0032: Use auto property
 dotnet_style_prefer_auto_properties = false:silent
+
+# CA1416: Validate platform compatibility
+dotnet_diagnostic.CA1416.severity = none

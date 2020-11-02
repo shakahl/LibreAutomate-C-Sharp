@@ -24,6 +24,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.CodeAnalysis.CSharp;
 
 //FUTURE: show for lambda parameters. Currently VS does not show too.
 
@@ -125,6 +126,7 @@ class CiSignature
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
 					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, cancelToken).ConfigureAwait(false);
+					//TODO: support meta testInternal (now all null)
 					if (cancelToken.IsCancellationRequested) { /*AOutput.Write("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
@@ -159,11 +161,33 @@ class CiSignature
 
 		//get span of the arglist. r.ApplicableSpan.Start is of the statement, not of the arglist. In chained methods it is the chain start.
 		var root = cd.document.GetSyntaxRootAsync().Result;
-		var node = root.FindToken(r.ApplicableSpan.End).Parent;
-		int asStart = Math.Max(r.ApplicableSpan.Start, node.SpanStart);
-		var argSpan = new TextSpan(asStart, r.ApplicableSpan.End - asStart);
+		var aspan = r.ApplicableSpan;
+		var start = aspan.Start;
+		bool aspanStart = cd.code[aspan.Start] == '('; //normally End is at ')' and Start is < '(', but for tuple End is after ')' and Start is at '('
+		var toke = root.FindToken(aspanStart ? aspan.Start : aspan.End);
+		//CiUtil.HiliteRange(aspan); //return;
+
+		SyntaxNode node;
+		if (aspanStart) {
+			node = toke.Parent;
+		} else {
+			switch (toke.Kind()) {
+			case SyntaxKind.CloseParenToken:
+			case SyntaxKind.CloseBracketToken:
+				node = toke.Parent;
+				break;
+			default: //no closing ) or ]
+				toke = toke.GetPreviousToken();
+				node = toke.Parent.FirstAncestorOrSelf<SyntaxNode>(o => _IsArglistNode(o), false);
+				if (node == null || node.SpanStart < start) { ADebug.Print("TODO"); return; }
+				break;
+			}
+		}
+		bool _IsArglistNode(SyntaxNode sn) => sn is BaseArgumentListSyntax || sn is AttributeArgumentListSyntax || sn is TypeArgumentListSyntax; //includes ArgumentListSyntax and BracketedArgumentListSyntax
+
+		start = Math.Max(aspan.Start, node.SpanStart);
+		var argSpan = new TextSpan(start, aspan.End - start);
 		//CiUtil.PrintNode(node); CiUtil.HiliteRange(argSpan); AOutput.Write(argSpan);
-		//CiUtil.HiliteRange(r.ApplicableSpan);
 
 		var span = new _Span(argSpan, cd.code);
 		int iSel = _data?.GetUserSelectedItemIfSameSpan(span, r) ?? -1; //preserve user selection in same session
@@ -188,14 +212,12 @@ class CiSignature
 
 		string html = _FormatHtml(iSel, userSelected: false);
 
-		//TODO: once process crashed at the following line. No exception info, only call stack. It seems like async-related.
-
 		doc.ZTempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
 			if (doc.ZTempRanges_Enum(doc.Z.CurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 
-		var rect1 = CiUtil.GetCaretRectFromPos(doc, r.ApplicableSpan.Start);
+		var rect1 = CiUtil.GetCaretRectFromPos(doc, aspan.Start);
 		var rect2 = CiUtil.GetCaretRectFromPos(doc, cd.pos16);
 		var rect = doc.RectangleToScreen(Rectangle.Union(rect1, rect2));
 		rect.Width += ADpi.Scale(200);
@@ -262,8 +284,7 @@ class CiSignature
 				string b1 = "(", b2 = ")";
 				if (nt != null) {
 					if (nt.IsGenericType && isTuple != 2) { b1 = "&lt;"; b2 = "&gt;"; }
-				}
-				else if (sym is IPropertySymbol) {
+				} else if (sym is IPropertySymbol) {
 					b1 = "["; b2 = "]";
 				}
 				b.Append(b1);
@@ -282,8 +303,7 @@ class CiSignature
 				b.Append(b2);
 #endif
 				if (i != iSel) b.Append("</a>"); else if (selParam >= 0) currentParameter = sh.Parameters[selParam];
-			}
-			else {
+			} else {
 				ADebug.Print(sh);
 			}
 		}
@@ -337,20 +357,19 @@ class CiSignature
 	public bool OnCmdKey(Keys keyData) {
 		if (_data != null) {
 			switch (keyData) {
-				case Keys.Escape:
-					Cancel();
-					return true;
-				case Keys.Down:
-				case Keys.Up:
-					int i = _data.iSelected, n = _data.r.Items.Count;
-					if (keyData == Keys.Down) {
-						if (++i >= n) i = 0;
-					}
-					else {
-						if (--i < 0) i = n - 1;
-					}
-					if (i != _data.iSelected) _popupHtml.Html = _FormatHtml(i, userSelected: true);
-					return true;
+			case Keys.Escape:
+				Cancel();
+				return true;
+			case Keys.Down:
+			case Keys.Up:
+				int i = _data.iSelected, n = _data.r.Items.Count;
+				if (keyData == Keys.Down) {
+					if (++i >= n) i = 0;
+				} else {
+					if (--i < 0) i = n - 1;
+				}
+				if (i != _data.iSelected) _popupHtml.Html = _FormatHtml(i, userSelected: true);
+				return true;
 			}
 		}
 		return false;

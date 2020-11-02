@@ -748,7 +748,7 @@ namespace Au.Controls
 				return;
 			}
 
-			var a = attr.SegSplit("|", maxCount: 2);
+			var a = attr.Split('|');
 			bool one = a.Length == 1;
 			string s1 = a[0], s2 = one ? null : a[1];
 

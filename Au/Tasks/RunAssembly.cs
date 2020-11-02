@@ -47,7 +47,7 @@ namespace Au
 				//p1.Next('L'); //1.5-3 ms, depending on AV. LoadFromStream 30-100 ms, depending on AV.
 
 				if(fullPathRefs != null) {
-					var fpr = fullPathRefs.SegSplit("|");
+					var fpr = fullPathRefs.Split('|');
 					alc.Resolving += (System.Runtime.Loader.AssemblyLoadContext alc, AssemblyName an) => {
 						//AOutput.Write(an, an.Name, an.FullName);
 						foreach(var v in fpr) {
@@ -99,7 +99,7 @@ namespace Au
 			}
 
 			//never mind: although Script.Main starts fast, but the process ends slowly, because of .NET.
-			//	Eg if starting an empty green script every <70 ms, cannot start eg every 2-nd time.
+			//	Eg if starting an empty "runSingle" script every <70 ms, cannot start eg every 2-nd time.
 			//	This func could notify when Script.Main ended, but it cannot know when other foreground threads end, plus process exit event handlers etc.
 
 			//see also: TaskScheduler.UnobservedTaskException event.

@@ -178,6 +178,28 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Swaps two ranges of bits.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="i">Position of first range of bits.</param>
+		/// <param name="j">Position of second range of bits.</param>
+		/// <param name="n">Number of bits in each range.</param>
+		public static int SwapBits(int value, int i, int j, int n) => (int)SwapBits((uint)value, i, j, n);
+
+		/// <summary>
+		/// Swaps two ranges of bits.
+		/// </summary>
+		/// <param name="value"></param>
+		/// <param name="i">Position of first range of bits.</param>
+		/// <param name="j">Position of second range of bits.</param>
+		/// <param name="n">Number of bits in each range.</param>
+		public static uint SwapBits(uint value, int i, int j, int n) {
+			// http://graphics.stanford.edu/~seander/bithacks.html#SwappingBitsXOR
+			uint x = ((value >> i) ^ (value >> j)) & ((1U << n) - 1); // XOR temporary
+			return value ^ ((x << i) | (x << j));
+		}
+
+		/// <summary>
 		/// Calculates angle degrees from coordinates x and y.
 		/// </summary>
 		public static double AngleFromXY(int x, int y) => Math.Atan2(y, x) * (180 / Math.PI);

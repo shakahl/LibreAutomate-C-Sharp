@@ -98,7 +98,7 @@ namespace Au
 			var data = Serializer_.Serialize(script, args, tr.pipeName);
 			int pid = (int)AWnd.More.CopyDataStruct.SendBytes(w, 100, data, mode);
 			switch((RunResult_)pid) {
-			case RunResult_.failed: return !waitMode ? - 1 : throw new AuException("*start task"); //don't throw, eg maibe cannot run because other green script is running
+			case RunResult_.failed: return !waitMode ? - 1 : throw new AuException("*start task"); //don't throw, eg maybe cannot run because other "runSingle" script is running
 			case RunResult_.notFound: throw new FileNotFoundException($"Script '{script}' not found.");
 			case RunResult_.editorThread: case RunResult_.deferred: return 0;
 			}

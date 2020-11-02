@@ -783,7 +783,7 @@ namespace Au.Types
 
 		int _GetAccCheckState(AAcc a) {
 			var state = a.State;
-			if (state.Has(AccSTATE.INDETERMINATE)) return 2;
+			if (state.Has(AccSTATE.MIXED)) return 2;
 			if (state.Has(AccSTATE.CHECKED)) return 1;
 			return 0;
 		}

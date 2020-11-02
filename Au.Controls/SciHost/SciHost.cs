@@ -38,7 +38,8 @@ namespace Au.Controls
 		#region HwndHost
 
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
-			_w = AWnd.More.CreateWindow("Scintilla", null, WS.CHILD, 0, 0, 0, 100, 100, (AWnd)hwndParent.Handle);
+			var wParent = (AWnd)hwndParent.Handle;
+			_w = AWnd.More.CreateWindow("Scintilla", null, WS.CHILD, 0, 0, 0, 100, 100, wParent);
 			//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area. Maybe also should be size = 0, but then eg invisible in aguibuilder.
 
 			_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
@@ -46,9 +47,11 @@ namespace Au.Controls
 
 			if (_isReadOnly) Call(SCI_SETREADONLY, 1);
 
-			var hwndSource = HwndSource.FromHwnd(hwndParent.Handle);
-			var wpf = (Window)hwndSource.RootVisual;
-			if (this == FocusManager.GetFocusedElement(wpf)) Api.SetFocus(_w);
+			//var hwndSource = HwndSource.FromHwnd(hwndParent.Handle);
+			//var wpf = (Window)hwndSource.RootVisual;
+			//if (this == FocusManager.GetFocusedElement(wpf) && Api.GetFocus() == wParent) Api.SetFocus(_w);
+			if (FocusManager.GetFocusScope(this) is Window fs && FocusManager.GetFocusedElement(fs) == this && Api.GetFocus() == wParent)
+				Api.SetFocus(_w);
 
 			return new HandleRef(this, _w.Handle);
 		}
@@ -56,13 +59,15 @@ namespace Au.Controls
 		protected override void DestroyWindowCore(HandleRef hwnd) {
 			//AOutput.Write("DESTROY");
 			AWnd.More.DestroyWindow((AWnd)hwnd.Handle);
-			_w = default;
 		}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
 			//AWnd.More.PrintMsg((AWnd)hwnd, msg, wParam, lParam);
 
 			switch (msg) {
+			case Api.WM_DESTROY:
+				_w = default;
+				break;
 			case Api.WM_LBUTTONDOWN:
 			case Api.WM_RBUTTONDOWN:
 			case Api.WM_MBUTTONDOWN:
@@ -114,7 +119,6 @@ namespace Au.Controls
 
 		//Sets focus when tabbed to this or when clicked the parent tab item. Like eg WPF TextBox.
 		protected override bool TabIntoCore(TraversalRequest request) {
-			if (!base.Focusable) return false;
 			Focus();
 			return true;
 			//base.TabIntoCore(request); //empty func, returns false

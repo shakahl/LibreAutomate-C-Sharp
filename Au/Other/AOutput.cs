@@ -117,46 +117,46 @@ namespace Au
 		/// </summary>
 		internal static string ObjectToString_(object value) {
 			switch (value) {
-				case null: return "null";
-				case string t: return t;
-				case ulong:
-				case uint:
-				case ushort:
-				case byte:
-				case nuint:
-				case System.Collections.IEnumerable:
-					using (new StringBuilder_(out var b)) {
-						ObjectToString_(b, value, false);
-						return b.ToString();
-					}
-				default: return value.ToString();
+			case null: return "null";
+			case string t: return t;
+			case ulong:
+			case uint:
+			case ushort:
+			case byte:
+			case nuint:
+			case System.Collections.IEnumerable:
+				using (new StringBuilder_(out var b)) {
+					ObjectToString_(b, value, false);
+					return b.ToString();
+				}
+			default: return value.ToString();
 			}
 		}
 
 		internal static void ObjectToString_(StringBuilder b, object value, bool compact) {
 			switch (value) {
-				case null: b.Append("null"); break;
-				case string s: b.Append(s); break;
-				case ulong u: _Unsigned(b, u); break;
-				case uint u: _Unsigned(b, u); break;
-				case ushort u: _Unsigned(b, u); break;
-				case byte u: _Unsigned(b, u); break;
-				case nuint u: _Unsigned(b, u); break;
-				case char[] a:
-					b.Append("{ ");
-					foreach (var c in a) {
-						if (c < ' ') b.Append("x").Append(((byte)c).ToString("X"));
-						else b.Append(c);
-						b.Append(' ');
-					}
-					b.Append('}');
-					break; //always compact
-				case System.Collections.IEnumerable e:
-					var eo = _Cast(e);
-					if (compact) b.Append("{ ").AppendJoin(", ", eo).Append(" }");
-					else b.AppendJoin("\r\n", eo);
-					break;
-				default: b.Append(value); break;
+			case null: b.Append("null"); break;
+			case string s: b.Append(s); break;
+			case ulong u: _Unsigned(b, u); break;
+			case uint u: _Unsigned(b, u); break;
+			case ushort u: _Unsigned(b, u); break;
+			case byte u: _Unsigned(b, u); break;
+			case nuint u: _Unsigned(b, u); break;
+			case char[] a:
+				b.Append("{ ");
+				foreach (var c in a) {
+					if (c < ' ') b.Append("x").Append(((byte)c).ToString("X"));
+					else b.Append(c);
+					b.Append(' ');
+				}
+				b.Append('}');
+				break; //always compact
+			case System.Collections.IEnumerable e:
+				var eo = _Cast(e);
+				if (compact) b.Append("{ ").AppendJoin(", ", eo).Append(" }");
+				else b.AppendJoin("\r\n", eo);
+				break;
+			default: b.Append(value); break;
 			}
 
 			static void _Unsigned(StringBuilder b, ulong u) => b.Append("0x").Append(u.ToString("X"));
@@ -182,18 +182,22 @@ namespace Au
 		/// Writes multiple arguments of any type to the output, using separator ", ".
 		/// </summary>
 		/// <remarks>
-		/// Calls <see cref="object.ToString"/> and <see cref="Write(string)"/>.
 		/// If a value is null, writes "null".
 		/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// </remarks>
 		public static void Write(object value1, object value2, params object[] more) {
+			Write(MultiToString_(value1, value2, more));
+		}
+		static readonly object[] s_oaNull = { null };
+
+		internal static string MultiToString_(object value1, object value2, params object[] more) {
 			if (more == null) more = s_oaNull; //workaround for: if third argument is null, we receive null and not array containing null
 			using (new StringBuilder_(out var b)) {
 				for (int i = 0, n = 2 + more.Length; i < n; i++) {
 					if (i > 0) b.Append(", ");
 					ObjectToString_(b, i == 0 ? value1 : (i == 1 ? value2 : more[i - 2]), compact: true);
 				}
-				Write(b.ToString());
+				return b.ToString();
 
 				//rejected: escape strings (eg if contains characters "\r\n,\0"):
 				//	it can damage formatting tags etc;
@@ -202,7 +206,6 @@ namespace Au
 				//	let the caller escape it if wants, it's easy.
 			}
 		}
-		static readonly object[] s_oaNull = { null };
 
 		/// <summary>
 		/// Gets or sets object that actually writes text when is called <see cref="Write"/>.
@@ -495,6 +498,17 @@ namespace Au
 			/// Writes line to QM2.
 			/// </summary>
 			public static void Write(object o) => _WriteToQM2(o?.ToString() ?? "");
+
+			/// <summary>
+			/// Writes multiple arguments of any type to the output, using separator ", ".
+			/// </summary>
+			/// <remarks>
+			/// If a value is null, writes "null".
+			/// If a value is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
+			/// </remarks>
+			public static void Write(object value1, object value2, params object[] more) {
+				Write(MultiToString_(value1, value2, more));
+			}
 
 			/// <param name="s">If null, clears output.</param>
 			static void _WriteToQM2(string s) {

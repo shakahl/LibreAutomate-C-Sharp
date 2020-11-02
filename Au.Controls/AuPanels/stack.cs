@@ -159,11 +159,7 @@ namespace Au.Controls
 
 			void _CreateSplitter(int size) {
 				bool verticalStack = Parent._stack.isVertical;
-				var c = new GridSplitter2 {
-					ResizeBehavior = GridResizeBehavior.PreviousAndNext,
-					Focusable = false,
-					SnapsToDevicePixels = true
-				};
+				var c = new GridSplitter2();
 				if (verticalStack) { //horz splitter
 					c.ResizeDirection = GridResizeDirection.Rows;
 					c.VerticalAlignment = VerticalAlignment.Top;
