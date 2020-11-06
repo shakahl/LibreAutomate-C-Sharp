@@ -203,7 +203,7 @@ namespace Au
 		/// <summary>
 		/// Finds editor's message-only window used with WM_COPYDATA etc.
 		/// </summary>
-		internal static AWnd WndMsg_ => s_wndMsg.FindFastCached_(ref s_wmTime, null, "Au.Editor.Msg", true);
+		internal static AWnd WndMsg_ => s_wndMsg.FindFastCached_(ref s_wmTime, null, "Au.Editor.Msg", true);//TODO: "Aedit.2923751562"
 		static AWnd s_wndMsg;
 		static long s_wmTime;
 

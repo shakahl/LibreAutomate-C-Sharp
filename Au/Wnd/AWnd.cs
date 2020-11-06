@@ -69,34 +69,35 @@ namespace Au
 		//note: don't use :IWin32Window, because it loads System.Windows.Forms.dll always when AWnd used.
 #endif
 
-		readonly void* _h;
+		readonly nint _h;
 
 		#region constructors, operators, overrides
 
 #pragma warning disable 1591 //XML doc
-		AWnd(void* hwnd) { _h = hwnd; }
-		internal AWnd(IntPtr hwnd) { _h = (void*)hwnd; }
+		public AWnd(nint hwnd) { _h = hwnd; }
 
 		//note: don't need implicit conversions. It creates more problems than is useful.
 
-		public static explicit operator AWnd(IntPtr hwnd) => new AWnd(hwnd);
-		public static explicit operator IntPtr(AWnd w) => w.Handle;
-		public static explicit operator AWnd(LPARAM hwnd) => new AWnd((void*)hwnd);
+		public static explicit operator AWnd(nint hwnd) => new AWnd(hwnd);
+		public static explicit operator nint(AWnd w) => w.Handle;
+		public static explicit operator AWnd(LPARAM hwnd) => new AWnd(hwnd);
 		public static explicit operator LPARAM(AWnd w) => w._h;
-		public static explicit operator AWnd(int hwnd) => new AWnd((void*)hwnd);
+		public static explicit operator AWnd(int hwnd) => new AWnd(hwnd);
 		public static explicit operator int(AWnd w) => (int)w._h;
+
 		/// <summary>
 		/// Converts from a special handle value.
 		/// </summary>
 		/// <param name="hwnd">See API <msdn>SetWindowPos</msdn>.</param>
-		public static implicit operator AWnd(Native.HWND hwnd) => new AWnd((void*)(int)hwnd);
+		public static implicit operator AWnd(Native.HWND hwnd) => new AWnd((int)hwnd);
 
 		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(AWnd w1, AWnd w2) => w1._h == w2._h;
+
 		/// <summary>Compares window handles.</summary>
 		public static bool operator !=(AWnd w1, AWnd w2) => w1._h != w2._h;
 
-		//Prevent accidental usage AWnd==null. The C# compiler allows it without a warning. As a side effect, the above also disables AWnd==AWnd?.
+		//Prevent accidental usage AWnd==null. The C# compiler allowed it without a warning; level-5 warning since C# 9. Bad: disables AWnd==AWnd?.
 		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
 		public static bool operator ==(AWnd w1, AWnd? w2) => false;
 		[Obsolete("Replace AWnd==AWnd? with AWnd.Equals(AWnd?). Replace AWnd==null with AWnd.Is0.", true), NoDoc]
@@ -121,17 +122,12 @@ namespace Au
 		/// <summary>
 		/// Returns true if w != null and w.Value == this.
 		/// </summary>
-		public bool Equals(AWnd? w) {
-			return w != null && w.GetValueOrDefault() == this;
-		}
+		public bool Equals(AWnd? w) => w != null && w.GetValueOrDefault() == this;
 
 		/// <summary>
 		/// Returns true if obj is AWnd and contains the same window handle.
 		/// </summary>
-		public override bool Equals(object obj) {
-			//return obj is AWnd w && this == w; //compiler creates slow and big code if 'is ValueType variable'
-			return obj is AWnd && this == (AWnd)obj;
-		}
+		public override bool Equals(object obj) => obj is AWnd w && this == w;
 
 		/// <summary>
 		/// Returns true if other == this.
@@ -142,18 +138,17 @@ namespace Au
 		/// <summary>
 		/// Implements IComparable. It allows to sort a collection.
 		/// </summary>
-		public int CompareTo(AWnd other) => _h == other._h ? 0 : (_h < other._h ? -1 : 1);
+		public int CompareTo(AWnd other) => _h.CompareTo(other);
 
 		///
 		public override int GetHashCode() => (int)_h;
 		//window handles are always 32-bit int, although in a 64-bit process stored in 64-bit variables.
-		//IntPtr.GetHashCode also returns this.
 
 		/// <summary>
 		/// Gets window handle as IntPtr.
 		/// Code <c>w.Handle</c> is the same as <c>(IntPtr)w</c> .
 		/// </summary>
-		public IntPtr Handle => new IntPtr(_h);
+		public IntPtr Handle => _h;
 
 		/// <summary>
 		/// Formats string <c>$"{handle}  {ClassName}  \"{Name}\"  {ProgramName}  {Rect}"</c>.
@@ -284,7 +279,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
 		public void ThrowIf0() {
-			if (_h == null) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			if (Is0) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		/// <summary>
@@ -292,7 +287,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="AuWndException"></exception>
 		public void ThrowIfInvalid() {
-			if (_h == null || !Api.IsWindow(this)) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+			if (Is0 || !Api.IsWindow(this)) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		}
 
 		///// <summary>
@@ -301,7 +296,7 @@ namespace Au
 		///// <exception cref="AuWndException"></exception>
 		//public bool IsInvalidThrowIf0()
 		//{
-		//	if(_h == null) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
+		//	if(Is0) throw new AuWndException(this, Api.ERROR_INVALID_WINDOW_HANDLE);
 		//	return !Api.IsWindow(this);
 		//}
 		//CONSIDER: in many places replace ThrowIfInvalid with ThrowIf0 or IsInvalidThrowIf0.
@@ -352,7 +347,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="IsAlive"/>
-		public bool Is0 => _h == null;
+		public bool Is0 => _h == default;
 
 		/// <summary>
 		/// Returns true if the window exists (the window handle is valid).

@@ -132,7 +132,7 @@ class CiCompletion
 		_ShowList(default);
 	}
 
-	static bool s_workaround1;
+	//static bool s_workaround1;
 
 	//SHOULDDO: delay
 	async void _ShowList(char ch) {
@@ -189,12 +189,11 @@ class CiCompletion
 
 				if (ch == '[' && node is AttributeListSyntax) ch = default; //else GetCompletionsAsync does not work
 
-				//This is a temporary workaround for exception in new Roslyn version, in AbstractEmbeddedLanguageCompletionProvider.GetLanguageProviders().
-				//	FUTURE: After some time try a newer version.
-				if (!s_workaround1 && ch != default) {
-					_ = completionService.GetCompletionsAsync(document, position).Result;
-					s_workaround1 = true;
-				}
+				//This was a temporary workaround for exception in one Roslyn version, in AbstractEmbeddedLanguageCompletionProvider.GetLanguageProviders().
+				//if (!s_workaround1 && ch != default) {
+				//	_ = completionService.GetCompletionsAsync(document, position).Result;
+				//	s_workaround1 = true;
+				//}
 
 				var trigger = ch == default ? default : CompletionTrigger.CreateInsertionTrigger(ch);
 				var r1 = await completionService.GetCompletionsAsync(document, position, trigger, cancellationToken: cancelToken).ConfigureAwait(false);

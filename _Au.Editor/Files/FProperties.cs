@@ -153,13 +153,15 @@ If no optimize true, DEBUG and TRACE are added implicitly.
 These symbols also are visible in class files compiled together, eg as part of project.
 See also <google C# #define>#define<>.
 ");
-		_AddCombo("warningLevel", "4|3|2|1|0", _meta.warningLevel,
+		_AddCombo("warningLevel", "5|4|3|2|1|0", _meta.warningLevel,
 @"<b>warningLevel</b> - how many warnings to show.
 0 - no warnings.
 1 - only severe warnings.
 2 - level 1 warnings plus certain, less-severe warnings.
 3 - most warnings.
-4 (default) all warnings.
+4 - all warnings except warnings added in C# 9+.
+5 (default) - all warnings.
+6 to 9999 - warnings added in future C# versions.
 
 This option is also applied to class files compiled together, eg as part of project.
  ");

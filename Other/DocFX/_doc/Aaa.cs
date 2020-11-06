@@ -101,7 +101,7 @@ namespace Au
 		/// switch this throw true try typeof uint ulong unchecked unsafe ushort using virtual void volatile while
 		/// add alias ascending async await by descending dynamic equals from get global group into join let nameof on orderby partial remove select set value var
 		/// when where yield
-		/// unmanaged
+		/// unmanaged notnull record init nint nuint not and or
 		/// ]]></code>
 		/// </example>
 		public int TestMeth(string s)

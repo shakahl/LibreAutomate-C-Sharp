@@ -88,8 +88,8 @@
     <Compile Update="Program\FOptions.Designer.cs">
       <DependentUpon>FOptions.cs</DependentUpon>
     </Compile>
-    <Compile Update="Program\FProperties.cs" />
-    <Compile Update="Program\FProperties.Designer.cs">
+    <Compile Update="Files\FProperties.cs" />
+    <Compile Update="Files\FProperties.Designer.cs">
       <DependentUpon>FProperties.cs</DependentUpon>
     </Compile>
     <Compile Update="Resources\Resources.Designer.cs">

@@ -1,16 +1,16 @@
-﻿using System;
+﻿using Au;
+using Au.Controls;
+using Au.Types;
+using Au.Util;
+using System;
 using System.Collections.Generic;
-using System.Configuration;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using Au;
-using Au.Controls;
-using Au.Types;
-using Au.Util;
 
 static class App
 {
@@ -19,19 +19,14 @@ static class App
 	internal static AOutputServer OutputServer;
 	public static AppSettings Settings;
 	public static MainWindow Wnd;
-	public static AuPanels Panels;
 	public static AuMenuCommands Commands;
-	public static ToolBar[] Toolbars;
-	//public static FilesModel Model;
-	//public static RunningTasks Tasks;
+	public static FilesModel Model;
+	public static RunningTasks Tasks;
 
 #if TRACE
 	static App() {
 		APerf.First();
 		ATimer.After(1, _ => APerf.NW());
-
-		//AOutput.QM2.UseQM2 = true; AOutput.Clear();
-		//ADebug.PrintLoadedAssemblies(true, true);
 	}
 #endif
 
@@ -53,33 +48,43 @@ static class App
 
 		AFolders.ThisAppDocuments = (FolderPath)(AFolders.Documents + "Aedit");
 
-		//if (CommandLine.OnProgramStarted(args)) return;
+		if (CommandLine.OnProgramStarted(args)) return;
 
-		//OutputServer = new AOutputServer(true) { NoNewline = true };
-		//OutputServer.Start();
+		//OutputServer = new AOutputServer(true) { NoNewline = true }; //TODO
+		OutputServer = new AOutputServer(false) { NoNewline = true };
+		OutputServer.Start();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
-		//System.Windows.Forms.Application.SetHighDpiMode(HighDpiMode.SystemAware); //no, we have manifest
-		//System.Windows.Forms.Application.EnableVisualStyles(); //no, we have manifest
-		//System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false);
-
 		Settings = AppSettings.Load();
-
 		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
+		//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs e) => {
+		//	//AOutput.Write(e.LoadedAssembly.GetName().Name);
+		//	;
+		//};
+
+		AOutput.Write(CommandLine.MsgWnd);
+		Tasks = new RunningTasks();
+		//return;
+
+		//FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
+		//CommandLine.OnProgramLoaded();
+		//Loaded = EProgramState.LoadedWorkspace;
+		//Model.RunStartupScripts();
+
 		//ATimer.Every(1000, t => _TimerProc(t));
-		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
-		//Timer1s += () => AOutput.Write("1 s");
-		//Timer1sOr025s += () => AOutput.Write("0.25 s");
+		////note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
+		////Timer1s += () => AOutput.Write("1 s");
+		////Timer1sOr025s += () => AOutput.Write("0.25 s");
 
-		TrayIcon.Update(false, false);
+		//TrayIcon.Update_();
 
-		App.Settings.runHidden = false; //TODO
-		if (!App.Settings.runHidden /*|| CommandLine.StartVisible*/ || TrayIcon.WaitForShow_()) {
-			_LoadUI();
-		}
+		//if (!App.Settings.runHidden /*|| CommandLine.StartVisible*/ || TrayIcon.WaitForShow_()) {
+		//	AOutput.Write("-- loading UI --");
+		//	_LoadUI();
+		//}
 
 		//OutputServer.Stop();
 
@@ -103,26 +108,91 @@ static class App
 	static void _LoadUI() {
 		var app = new WpfApp();
 		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
-		Wnd = new MainWindow();
+		new MainWindow();
 		app.DispatcherUnhandledException += (_, e) => {
 			e.Handled = 1 == ADialog.ShowError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wnd, e.Exception.ToString());
 		};
 		app.Run(Wnd);
 	}
 
-	static class TrayIcon
+	/// <summary>
+	/// Timer with 1 s period.
+	/// </summary>
+	public static event Action Timer1s;
+
+	/// <summary>
+	/// Timer with 1 s period when main window hidden and 0.25 s period when visible.
+	/// </summary>
+	public static event Action Timer1sOr025s;
+
+	/// <summary>
+	/// Timer with 0.25 s period, only when main window visible.
+	/// </summary>
+	public static event Action Timer025sWhenVisible;
+
+	/// <summary>
+	/// True if Timer1sOr025s period is 0.25 s (when main window visible), false if 1 s (when hidden).
+	/// </summary>
+	public static bool IsTimer025 => s_timerCounter > 0;
+	static uint s_timerCounter;
+
+	static void _TimerProc(ATimer t) {
+		Timer1sOr025s?.Invoke();
+		bool needFast = Wnd.IsVisible;
+		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
+		if (needFast) {
+			Timer025sWhenVisible?.Invoke();
+			s_timerCounter++;
+			if (MousePosChangedWhenProgramVisible != null) {
+				var p = AMouse.XY;
+				if (p != s_mousePos) {
+					s_mousePos = p;
+					MousePosChangedWhenProgramVisible(p);
+				}
+			}
+		} else s_timerCounter = 0;
+		if (0 == (s_timerCounter & 3)) Timer1s?.Invoke();
+	}
+	static POINT s_mousePos;
+
+	/// <summary>
+	/// When cursor position changed while the main window is visible.
+	/// Called at max 0.25 s rate, not for each change.
+	/// Cursor can be in any window. Does not depend on UAC.
+	/// Receives cursor position in screen.
+	/// </summary>
+	public static event Action<POINT> MousePosChangedWhenProgramVisible;
+
+	public static EProgramState Loaded;
+
+	static bool _RestartAsAdmin(string[] args) {
+		if (Debugger.IsAttached) return false; //very fast
+		try {
+			bool isAuHomePC = Api.GetEnvironmentVariable("Au.Home<PC>", null, 0) > 0;
+			//int pid = 
+			WinTaskScheduler.RunTask("Au",
+				isAuHomePC ? "_Au.Editor" : "Au.Editor", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
+				true, args);
+			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
+		}
+		catch (Exception ex) { //probably this program is not installed (no scheduled task)
+			AOutput.QM2.Write(ex);
+			return false;
+		}
+		return true;
+	}
+
+	public static class TrayIcon
 	{
 		static AIcon[] _icons;
-		static int _state; //0 normal, 1 disabled, 2 running
+		static bool _disabled, _running;
 		static AWnd _wNotify;
 
 		const int c_msgBreakMessageLoop = Api.WM_APP;
 		const int c_msgNotify = Api.WM_APP + 1;
 		static int s_msgTaskbarCreated;
 
-		public static void Update(bool disabled, bool running) {
-			var oldState = _state;
-			_state = running ? 2 : (disabled ? 1 : 0);
+		internal static void Update_() {
 			if (_icons == null) {
 				_icons = new AIcon[3];
 
@@ -138,7 +208,7 @@ static class App
 				};
 
 				_Add();
-			} else if (_state != oldState) {
+			} else {
 				var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_ICON) { hIcon = _GetIcon() };
 				bool ok = Api.Shell_NotifyIcon(Api.NIM_MODIFY, d);
 				ADebug.PrintIf(!ok, ALastError.Message);
@@ -167,8 +237,9 @@ static class App
 		}
 
 		static AIcon _GetIcon() {
-			ref AIcon icon = ref _icons[_state];
-			if (icon.Is0) Api.LoadIconMetric(AProcess.ExeModuleHandle, Api.IDI_APPLICATION + _state, 0, out icon);
+			int i = _running ? 2 : (_disabled ? 1 : 0);
+			ref AIcon icon = ref _icons[i];
+			if (icon.Is0) Api.LoadIconMetric(AProcess.ExeModuleHandle, Api.IDI_APPLICATION + i, 0, out icon);
 			return icon;
 			//Windows 10 on DPI change automatically displays correct non-scaled icon if it is from native icon group resource.
 			//	I guess then it calls GetIconInfoEx to get module/resource and extracts new icon from same resource.
@@ -251,10 +322,52 @@ static class App
 				Api.PostMessage(default, c_msgBreakMessageLoop, 0, 0);
 			}
 		}
+
+		public static bool Disabled {
+			get => _disabled;
+			set { if (value == _disabled) return; _disabled = value; if(!_running) Update_(); }
+		}
+
+		public static bool Running {
+			get => _running;
+			set { if (value == _running) return; _running = value; Update_(); }
+		}
 	}
 }
 
 //enum TrayIcon
+
+enum EProgramState
+{
+	/// <summary>
+	/// Before the first workspace fully loaded.
+	/// </summary>
+	Loading,
+
+	/// <summary>
+	/// When fully loaded first workspace etc and created main form handle.
+	/// Main form invisible; control handles not created.
+	/// </summary>
+	LoadedWorkspace,
+
+	/// <summary>
+	/// Control handles created.
+	/// Main form is either visible now or was visible and now hidden.
+	/// </summary>
+	LoadedUI,
+
+	/// <summary>
+	/// Executing OnFormClosed of main form.
+	/// Unloading workspace; stopping everything.
+	/// </summary>
+	Unloading,
+
+	/// <summary>
+	/// After OnFormClosed of main form.
+	/// Workspace unloaded; everything stopped.
+	/// </summary>
+	Unloaded,
+}
 
 /// <summary>
 /// Interaction logic for App.xaml

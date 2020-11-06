@@ -39,20 +39,39 @@ static class Menus
 		[Command("Open, close")]
 		public static class OpenClose
 		{
+			[Command]
+			public static void Open() { }
 
+			[Command]
+			public static void Open_in_default_app() { }
+
+			[Command]
+			public static void Select_in_explorer() { }
+
+			[Command(separator = true)]
+			public static void Close() { }
+
+			[Command]
+			public static void Cloase_all() { }
+
+			[Command]
+			public static void Collapse_folders() { }
+
+			[Command(separator = true)]
+			public static void Previous_document() { }
 		}
 
 		[Command]
 		public static class More
 		{
-			[Command('t', keysText = "Ctrl+X", name = "File-Cut")]
-			public static void Cut() { }
+			[Command("Cu_t", keysText = "Ctrl+X")]
+			public static void Cut_file() { }
 
-			[Command(keysText = "Ctrl+C", name = "File-Copy")]
-			public static void Copy() { }
+			[Command("Copy", keysText = "Ctrl+C")]
+			public static void Copy_file() { }
 
-			[Command(keysText = "Ctrl+V", name = "File-Paste")]
-			public static void Paste() { }
+			[Command("Paste", keysText = "Ctrl+V")]
+			public static void Paste_file() { }
 
 			[Command('r', separator = true)]
 			public static void Copy_relative_path() { }
@@ -73,13 +92,36 @@ static class Menus
 		[Command("Export, import", separator = true)]
 		public static class ExportImport
 		{
+			[Command("Export as .zip...")]
+			public static void Export_as_zip() { }
 
+			[Command("...")]
+			public static void Export_as_workspace() { }
+
+			[Command("Import .zip...", separator = true)]
+			public static void Import_zip() { }
+
+			[Command("...")]
+			public static void Import_workspace() { }
+
+			[Command("...")]
+			public static void Import_files() { }
 		}
 
 		[Command]
 		public static class Workspace
 		{
+			[Command]
+			public static class Recent_workspaces
+			{
 
+			}
+
+			[Command("...")]
+			public static void Open_workspace() { FilesModel.OpenWorkspaceUI(); }
+
+			[Command("...")]
+			public static void New_workspace() { FilesModel.NewWorkspaceUI(); }
 		}
 
 		[Command(separator = true, keysText = "Alt+F4")]
@@ -92,17 +134,19 @@ static class Menus
 	[Command]
 	public static class New
 	{
+		static void _New(string name) { App.Model.NewItem(name, beginRenaming: true); }
+
 		[Command('s', keys = "Ctrl+N", image = "resources/images/newfile_16x.xaml")]
-		public static void New_script() { }
+		public static void New_script() { _New("Script.cs"); }
 
 		[Command('c')]
-		public static void New_class() { }
+		public static void New_class() { _New("Class.cs"); }
 
 		[Command('p')]
-		public static void New_partial() { }
+		public static void New_partial() { _New("Partial.cs"); }
 
 		[Command('f')]
-		public static void New_folder() { }
+		public static void New_folder() { _New(null); }
 	}
 
 	[Command]
@@ -123,14 +167,38 @@ static class Menus
 		[Command(keysText = "Ctrl+V", image = "resources/images/paste_16x.xaml")]
 		public static void Paste() { }
 
+		[Command()]
+		public static void Forum_copy() { }
+
 		[Command(separator = true, keys = "Ctrl+F", image = "resources/images/findinfile_16x.xaml")]
 		public static void Find() { }
+
+		[Command(separator = true, keys = "Ctrl+Space")]
+		public static void Autocompletion_list() { }
+
+		[Command(keys = "Ctrl+Shift+Space")]
+		public static void Parameter_info() { }
+
+		[Command(keys = "F12", keysText = "F12, Ctrl+click")]
+		public static void Go_to_definition() { }
 
 		[Command(separator = true)]
 		public static class Selection
 		{
 			[Command]
+			public static void Comment() { }
+
+			[Command]
+			public static void Uncomment() { }
+
+			[Command]
 			public static void Indent() { }
+
+			[Command]
+			public static void Unindent() { }
+
+			[Command]
+			public static void Select_all() { }
 		}
 
 		[Command]
@@ -149,6 +217,21 @@ static class Menus
 	{
 		[Command('W')]
 		public static void AWnd() { }
+
+		[Command('A')]
+		public static void AAcc() { }
+
+		[Command('I')]
+		public static void AWinImage() { }
+
+		[Command(separator = true, keysText = "Ctrl+Space in string")]
+		public static void Keys() { }
+
+		[Command(keysText = "Ctrl+Space in string")]
+		public static void Regex() { }
+
+		[Command(separator = true)]
+		public static void Windows_API() { }
 	}
 
 	[Command]
@@ -176,8 +259,44 @@ static class Menus
 	[Command]
 	public static class TT
 	{
-		[Command('k')]
+		[Command("...")]
+		public static void Add_trigger() { }
+
+		[Command("...")]
+		public static void Add_toolbar() { }
+
+		[Command('k', separator = true)]
 		public static void Edit_hotkey_triggers() { }
+
+		[Command('a')]
+		public static void Edit_autotext_triggers() { }
+
+		[Command('m')]
+		public static void Edit_mouse_triggers() { }
+
+		[Command('w')]
+		public static void Edit_window_triggers() { }
+
+		[Command(separator = true)]
+		public static void Edit_common_toolbars() { }
+
+		[Command()]
+		public static void Edit_window_toolbars() { }
+
+		[Command(separator = true)]
+		public static void Edit_TT_script() { }
+
+		[Command()]
+		public static void Restart_TT_script() { }
+
+		[Command(separator = true)]
+		public static void Disable_triggers() { }
+
+		[Command("...")]
+		public static void Active_triggers() { }
+
+		[Command("...")]
+		public static void Active_toolbars() { }
 	}
 
 	[Command]
@@ -185,6 +304,31 @@ static class Menus
 	{
 		[Command(image = "resources/images/settingsgroup_16x.xaml")]
 		public static void Options() { }
+
+		[Command(separator = true)]
+		public static class Output
+		{
+			[Command(keysText = "M-click")]
+			public static void Clear() { }
+
+			[Command("Copy", keysText = "Ctrl+C")]
+			public static void Copy_output() { }
+
+			[Command(keysText = "Ctrl+F")]
+			public static void Find_selected_text() { }
+
+			[Command()]
+			public static void History() { }
+
+			[Command("Wrap lines", separator = true, checkable = true)]
+			public static void Wrap_lines_in_output() { }
+
+			[Command("White space", checkable = true)]
+			public static void White_space_in_output() { }
+
+			[Command(checkable = true)]
+			public static void Topmost_when_floating() { }
+		}
 	}
 
 	[Command]
@@ -198,13 +342,22 @@ static class Menus
 
 		[Command(keys = "F1", image = "resources/images/statushelp_16x.xaml")]
 		public static void Context_help() { }
+
+		//[Command(separator = true)]
+		//public static void Forum() { }
+
+		[Command]
+		public static void Email() { }
+
+		//[Command(separator = true)]
+		//public static void About() { }
 	}
 
 #if TRACE
 	[Command]
 	public static void TEST() {
 		//_TestLV();
-		_TestNat();
+		//_TestNat();
 
 		//var tv = new ListBox { BorderThickness = default, SelectionMode = SelectionMode.Extended };
 		//VirtualizingPanel.SetVirtualizationMode(tv, VirtualizationMode.Recycling);
@@ -223,8 +376,8 @@ static class Menus
 
 		//if (_testCM == null) {
 		//	_testCM = new AContextMenu();
-		//	//Program.Commands["Wrap_lines"].CopyToMenu(_testCM.Add(null));
-		//	Program.Commands["View"].CopyToMenu(_testCM);
+		//	//App.Commands["Wrap_lines"].CopyToMenu(_testCM.Add(null));
+		//	App.Commands["View"].CopyToMenu(_testCM);
 		//}
 		//_testCM.IsOpen = true;
 
@@ -232,9 +385,9 @@ static class Menus
 		//var b = new MenuItem();
 		//App.Commands["View"].CopyToMenu(b);
 		//m.Items.Add(b);
-		////Program.Toolbars[0].Items.Add(m);
-		////(Program.Toolbars[0].Parent as ToolBarTray).ToolBars.Add(m);
-		////var p = (Program.Toolbars[0].Parent as ToolBarTray).Parent as DockPanel;
+		////App.Toolbars[0].Items.Add(m);
+		////(App.Toolbars[0].Parent as ToolBarTray).ToolBars.Add(m);
+		////var p = (App.Toolbars[0].Parent as ToolBarTray).Parent as DockPanel;
 
 		////var p = new DockPanel();
 		////p.Children.Add(m);
@@ -245,93 +398,93 @@ static class Menus
 	}
 	//static AContextMenu _testCM;
 
-	static void _TestLV() {
-		var k=new ListBox { BorderThickness = default, SelectionMode = SelectionMode.Extended };
-		k.UseLayoutRounding = true;
+//	static void _TestLV() {
+//		var k=new ListBox { BorderThickness = default, SelectionMode = SelectionMode.Extended };
+//		k.UseLayoutRounding = true;
 
-		string xaml2 = @"<Style TargetType='{x:Type ListBoxItem}' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
-			<Setter Property='Height' Value='18' />
-			<Setter Property='Padding' Value='0' />
-            <Setter Property='IsSelected' Value='{Binding IsSelected, Mode=TwoWay}' />
-            <Setter Property='FontWeight' Value='Normal' />
-            <Style.Triggers>
-                <Trigger Property='IsSelected' Value='True'>
-                    <Setter Property='FontWeight' Value='Bold' />
-                </Trigger>
-            </Style.Triggers>
-        </Style>";
-		k.ItemContainerStyle = XamlReader.Parse(xaml2) as Style;
+//		string xaml2 = @"<Style TargetType='{x:Type ListBoxItem}' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
+//			<Setter Property='Height' Value='18' />
+//			<Setter Property='Padding' Value='0' />
+//            <Setter Property='IsSelected' Value='{Binding IsSelected, Mode=TwoWay}' />
+//            <Setter Property='FontWeight' Value='Normal' />
+//            <Style.Triggers>
+//                <Trigger Property='IsSelected' Value='True'>
+//                    <Setter Property='FontWeight' Value='Bold' />
+//                </Trigger>
+//            </Style.Triggers>
+//        </Style>";
+//		k.ItemContainerStyle = XamlReader.Parse(xaml2) as Style;
 
-		string xaml1 = @"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>
-<StackPanel Orientation='Horizontal'>
-<Image Source='{Binding Image}' Stretch='None' Height='16' Width='16'/>
-<TextBlock Text='{Binding Text}' Margin='6,-1,0,0'/>
-</StackPanel>
-</DataTemplate>";
-		k.ItemTemplate = XamlReader.Parse(xaml1) as DataTemplate;
+//		string xaml1 = @"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>
+//<StackPanel Orientation='Horizontal'>
+//<Image Source='{Binding Image}' Stretch='None' Height='16' Width='16'/>
+//<TextBlock Text='{Binding Text}' Margin='6,-1,0,0'/>
+//</StackPanel>
+//</DataTemplate>";
+//		k.ItemTemplate = XamlReader.Parse(xaml1) as DataTemplate;
 
-		VirtualizingPanel.SetVirtualizationMode(k, VirtualizationMode.Recycling);
-		VirtualizingPanel.SetScrollUnit(k, ScrollUnit.Item);
+//		VirtualizingPanel.SetVirtualizationMode(k, VirtualizationMode.Recycling);
+//		VirtualizingPanel.SetScrollUnit(k, ScrollUnit.Item);
 
-		var im = BitmapFrame.Create(new Uri(@"Q:\app\Au\_Au.Editor\Resources\png\fileClass.png"));
-		int n = 1000;
-		var a = new List<TextImage>(n);
-		for (int i = 0; i < n; i++) {
-			a.Add(new TextImage("Abcdefghij " + i.ToString(), im));
-		}
-		APerf.Next('d');
-		k.ItemsSource = a;
+//		var im = BitmapFrame.Create(new Uri(@"Q:\app\Au\_Au.Editor\Resources\png\fileClass.png"));
+//		int n = 1000;
+//		var a = new List<TextImage>(n);
+//		for (int i = 0; i < n; i++) {
+//			a.Add(new TextImage("Abcdefghij " + i.ToString(), im));
+//		}
+//		APerf.Next('d');
+//		k.ItemsSource = a;
 
-		App.Panels["Files"].Content = k;
-	}
+//		App.Panels["Files"].Content = k;
+//	}
 
-	public class TextImage : INotifyPropertyChanged
-	{
-		public string Text { get; set; }
-		public ImageSource Image { get; set; }
-		//	public List<TextImage> Items { get;set; }
-		public ObservableCollection<TextImage> Items { get; set; }
-		//	public bool IsExpanded { get;set; }
+	//public class TextImage : INotifyPropertyChanged
+	//{
+	//	public string Text { get; set; }
+	//	public ImageSource Image { get; set; }
+	//	//	public List<TextImage> Items { get;set; }
+	//	public ObservableCollection<TextImage> Items { get; set; }
+	//	//	public bool IsExpanded { get;set; }
 
-		bool _isExpanded;
-		public bool IsExpanded {
-			get => _isExpanded;
-			set {
-				//			AOutput.Write(_isExpanded, value);
-				if (value != _isExpanded) {
-					_isExpanded = value;
-					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
-				}
-			}
-		}
+	//	bool _isExpanded;
+	//	public bool IsExpanded {
+	//		get => _isExpanded;
+	//		set {
+	//			//			AOutput.Write(_isExpanded, value);
+	//			if (value != _isExpanded) {
+	//				_isExpanded = value;
+	//				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
+	//			}
+	//		}
+	//	}
 
-		bool _isSelected;
-		public bool IsSelected {
-			get => _isSelected;
-			set {
-				//			AOutput.Write(_isSelected, value);
-				if (value != _isSelected) {
-					_isSelected = value;
-					PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsSelected"));
-				}
-			}
-		}
+	//	bool _isSelected;
+	//	public bool IsSelected {
+	//		get => _isSelected;
+	//		set {
+	//			//			AOutput.Write(_isSelected, value);
+	//			if (value != _isSelected) {
+	//				_isSelected = value;
+	//				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsSelected"));
+	//			}
+	//		}
+	//	}
 
-		public TextImage(string text, ImageSource image) {
-			Text = text; Image = image;
-		}
+	//	public TextImage(string text, ImageSource image) {
+	//		Text = text; Image = image;
+	//	}
 
-		#region INotifyPropertyChanged
+	//	#region INotifyPropertyChanged
 
-		public event PropertyChangedEventHandler PropertyChanged;
+	//	public event PropertyChangedEventHandler PropertyChanged;
 
-		#endregion
-	}
+	//	#endregion
+	//}
 
-	static void _TestNat() {
-		//App.Panels["Files"].Content = new Nstest.Script().Test();
+	//static void _TestNat() {
+	//	//App.Panels["Files"].Content = new Nstest.Script().Test();
 
-	}
+	//}
 
 	[Command]
 	public static void gc() {

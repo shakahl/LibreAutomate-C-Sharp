@@ -194,6 +194,12 @@
             </summary>
             <exception cref="T:System.InvalidOperationException">Called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
         </member>
+        <member name="P:Au.Controls.AuMenuCommands.Command.Checked">
+            <summary>
+            Gets or sets checked state of this checkable menu item and all checkable controls with <b>Command</b> property = this (see <see cref="M:Au.Controls.AuMenuCommands.Command.CopyToButton(System.Windows.Controls.Primitives.ButtonBase,System.Nullable{System.Windows.Controls.Dock},System.Windows.UIElement,System.String,System.Boolean)"/>, <see cref="M:Au.Controls.AuMenuCommands.Command.CopyToMenu(System.Windows.Controls.MenuItem,System.Windows.UIElement,System.Object)"/>).
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Called from factory action before <see cref="M:Au.Controls.AuMenuCommands.FactoryParams.SetMenuItem(System.Windows.Controls.MenuItem)"/>.</exception>
+        </member>
         <member name="M:Au.Controls.AuMenuCommands.Command.SetKeys(System.String,System.Windows.UIElement,System.Boolean)">
             <summary>
             Sets keyboard or/and mouse shortcut.
@@ -888,6 +894,11 @@
         <member name="P:Au.Controls.AuTreeView.CheckedItems">
             <summary>
             Gets checked items (<see cref="F:Au.Controls.TVCheck.Checked"/>). Returns empty list if none checked.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.EditLabel">
+            <summary>
+            Starts focused item text editing.
             </summary>
         </member>
         <member name="M:Au.Controls.AuTreeView.EditLabel(Au.Controls.ITreeViewItem)">

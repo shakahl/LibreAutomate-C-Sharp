@@ -37,8 +37,8 @@ namespace Au.Controls
 				return true;
 			}
 		}
-	
-	#if SCRIPT
+
+#if SCRIPT
 			static AuTreeView() {
 				var xaml=@"<ResourceDictionary
 		    xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'
@@ -75,15 +75,15 @@ namespace Au.Controls
 				s_resources=XamlReader.Parse(xaml) as ResourceDictionary;
 			}
 			static ResourceDictionary s_resources;
-	#endif
+#endif
 
 		///
 		public AuTreeView() {
-	#if SCRIPT
+#if SCRIPT
 			Resources=s_resources;
-	#else
+#else
 			Style = XamlResources.Dictionary["AuTreeView"] as Style;
-	#endif
+#endif
 			UseLayoutRounding = true;
 			Focusable = true;
 			FocusVisualStyle = null;
@@ -802,6 +802,11 @@ namespace Au.Controls
 		#endregion
 
 		#region edit label
+
+		/// <summary>
+		/// Starts focused item text editing.
+		/// </summary>
+		public void EditLabel() { int i = _focusedIndex; if (i >= 0) EditLabel(i); }
 
 		/// <summary>
 		/// Starts item text editing.

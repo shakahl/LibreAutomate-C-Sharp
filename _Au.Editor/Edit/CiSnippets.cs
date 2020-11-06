@@ -69,6 +69,12 @@ static class CiSnippets
 	{
 		//AOutput.Clear(); AOutput.Write(++s_test);
 
+		//AOutput.Clear();
+		//foreach (var v in root.ChildNodes()) {
+		//	CiUtil.PrintNode(v);
+		//}
+		//AOutput.Write("---");
+
 		_Context context = _Context.Unknown;
 		int pos = span.Start;
 
@@ -76,11 +82,14 @@ static class CiSnippets
 		var token = root.FindToken(pos);
 		var node = token.Parent;
 		//CiUtil.PrintNode(node); //AOutput.Write("--");
+		//return;
 
 		//find ancestor/self that contains pos inside
 		while(node != null && !node.Span.ContainsInside(pos)) node = node.Parent;
 		//CiUtil.PrintNode(node);
 		//for(var v = node; v != null; v = v.Parent) AOutput.Write(v.GetType().Name, v is ExpressionSyntax, v is ExpressionStatementSyntax);
+
+		//AOutput.Write(SyntaxFacts.IsTopLevelStatement);
 
 		switch(node) {
 		case BlockSyntax _:
@@ -102,7 +111,7 @@ static class CiSnippets
 		case NamespaceDeclarationSyntax ns when pos > ns.OpenBraceToken.Span.Start:
 		case CompilationUnitSyntax _:
 		case null:
-			context = _Context.Namespace;
+			context = _Context.Namespace|_Context.Function; //Function for C# 9 top-level statements. //FUTURE: only if in correct place.
 			break;
 		case LambdaExpressionSyntax _:
 		case ArrowExpressionClauseSyntax _: //like void F() =>here
@@ -138,25 +147,25 @@ static class CiSnippets
 					var xroot = AExtXml.LoadElem(file);
 					foreach(var xg in xroot.Elements("group")) {
 						if(!xg.Attr(out string sc, "context")) continue;
-						_Context context = default;
-						if(sc == "Function") context = _Context.Function; //many
+						_Context con = default;
+						if(sc == "Function") con = _Context.Function; //many
 						else { //few, eg Type or Namespace|Type
 							foreach(var seg in sc.Segments("|")) {
 								switch(sc[seg.Range]) {
-								case "Function": context |= _Context.Function; break;
-								case "Type": context |= _Context.Type; break;
-								case "Namespace": context |= _Context.Namespace; break;
-								case "Arrow": context |= _Context.Arrow; break;
-								case "Parameters": context |= _Context.Parameters; break;
-								case "Any": context |= _Context.Any; break;
-								case "Line": context |= _Context.Line; break;
+								case "Function": con |= _Context.Function; break;
+								case "Type": con |= _Context.Type; break;
+								case "Namespace": con |= _Context.Namespace; break;
+								case "Arrow": con |= _Context.Arrow; break;
+								case "Parameters": con |= _Context.Parameters; break;
+								case "Any": con |= _Context.Any; break;
+								case "Line": con |= _Context.Line; break;
 								}
 							}
 						}
-						if(context == default) continue;
+						if(con == default) continue;
 						foreach(var xs in xg.Elements("snippet")) {
 							var ci = CompletionItem.Create(xs.Attr("name"), tags: s_tags);
-							a.Add(new _CiComplItemSnippet(ci, xs, context, custom));
+							a.Add(new _CiComplItemSnippet(ci, xs, con, custom));
 						}
 					}
 				}

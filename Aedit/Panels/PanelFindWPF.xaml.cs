@@ -13,9 +13,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
-	public partial class PanelFind : UserControl
+	public partial class PanelFindWPF : UserControl
 	{
-		public PanelFind() {
+		public PanelFindWPF() {
 			InitializeComponent();
 		}
 	}

@@ -2440,15 +2440,11 @@
         </member>
         <member name="T:Au.Types.LPARAM">
             <summary>
-            Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg WPARAM/LPARAM/LRESULT of API SendMessage.
+            Pointer-sized integer. Same as C/C++ LPARAM. Same as C# nint, but has more implicit conversions.
             </summary>
             <remarks>
-            Unlike IntPtr:
-            - Has implicit casts from most integral types. And explicit casts to.
-            - Does not check overflow when casting. IntPtr throws exception on overflow, which can create bugs.
-            
-            There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
-            There is no cast operators for enum. When need, cast through int or uint. For AWnd cast through IntPtr.
+            There is no struct WPARAM (unsigned). Use LPARAM instead, it is the same in most cases.
+            There is no cast operators for enum. When need, cast through int or uint.
             </remarks>
         </member>
         <member name="M:Au.Types.LPARAM.Equals(Au.Types.LPARAM)">
@@ -20211,8 +20207,8 @@
             <param name="isImage">
             true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
             false - get file icon with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
-            <param name="asyncCompletion">If not null, <b>Get</b> returns null and loads the image/icon asynchronously in other thread. When loaded, calls the callback function in this thread. Can be used to avoid slow startup when need to get many file icons.</param>
-            <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function.</param>
+            <param name="asyncCompletion">If not null, if the image is still not in cache, <b>Get</b> returns null and loads it asynchronously in other thread. When loaded, calls <i>asyncCompletion</i> in this thread. Can be used to avoid slow startup when need to get many file icons.</param>
+            <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
             <remarks>
             When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk.
             </remarks>

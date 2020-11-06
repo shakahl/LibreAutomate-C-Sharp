@@ -51,11 +51,11 @@ class AppSettings : ASettings
 	public string tools_AWinImage_wndPos { get => _tools_AWinImage_wndPos; set => Set(ref _tools_AWinImage_wndPos, value); }
 	string _tools_AWinImage_wndPos;
 
-	//public PanelFind.RecentItem[] find_recent { get => _find_recent; set => SetNoCmp(ref _find_recent, value); }
-	//PanelFind.RecentItem[] _find_recent;
+	public PanelFind.RecentItem[] find_recent { get => _find_recent; set => SetNoCmp(ref _find_recent, value); }
+	PanelFind.RecentItem[] _find_recent;
 
-	//public PanelFind.RecentItem[] find_recentReplace { get => _find_recentReplace; set => SetNoCmp(ref _find_recentReplace, value); }
-	//PanelFind.RecentItem[] _find_recentReplace;
+	public PanelFind.RecentItem[] find_recentReplace { get => _find_recentReplace; set => SetNoCmp(ref _find_recentReplace, value); }
+	PanelFind.RecentItem[] _find_recentReplace;
 
 	public string find_skip { get => _find_skip; set => Set(ref _find_skip, value); }
 	string _find_skip;
@@ -78,8 +78,8 @@ class AppSettings : ASettings
 	public bool output_topmost { get => _output_topmost; set => Set(ref _output_topmost, value); }
 	bool _output_topmost;
 
-	//public FileNode.ETempl templ_use { get => (FileNode.ETempl)_templ_use; set => Set(ref _templ_use, (int)value); }
-	//int _templ_use;
+	public FileNode.ETempl templ_use { get => (FileNode.ETempl)_templ_use; set => Set(ref _templ_use, (int)value); }
+	int _templ_use;
 
 	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
 	bool _ci_complGroup = true;
@@ -100,15 +100,15 @@ class AppSettings : ASettings
 	string _db_winapi;
 }
 
-///// <summary>
-///// Workspace settings.
-///// WorkspaceDirectory + @"\settings.json"
-///// </summary>
-//class WorkspaceSettings : ASettings
-//{
-//	public static WorkspaceSettings Load(string jsonFile) => _Load<WorkspaceSettings>(jsonFile);
+/// <summary>
+/// Workspace settings.
+/// WorkspaceDirectory + @"\settings.json"
+/// </summary>
+class WorkspaceSettings : ASettings
+{
+	public static WorkspaceSettings Load(string jsonFile) => Load<WorkspaceSettings>(jsonFile);
 
-//	public FilesModel.UserData[] users { get => _users; set => SetNoCmp(ref _users, value); }
-//	FilesModel.UserData[] _users;
+	public FilesModel.UserData[] users { get => _users; set => SetNoCmp(ref _users, value); }
+	FilesModel.UserData[] _users;
 
-//}
+}

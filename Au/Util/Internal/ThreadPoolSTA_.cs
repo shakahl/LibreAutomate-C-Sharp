@@ -13,9 +13,9 @@ using System.Reflection;
 
 using Au.Types;
 
-//TODO: instead use StaTaskScheduler_.
+//FUTURE: instead use StaTaskScheduler_.
 //	Initially I rejected it because each apppdomain that uses it creates 4 threads. But now there are no multiple apppdomains.
-//	Initially automation tasks by default were executed in apppdomains. Later apppdomains were completely rejected because unstable.
+//	Initially automation tasks by default were executed in apppdomains.
 
 namespace Au.Util
 {

@@ -33,7 +33,7 @@ active - tab.
 		<stack o="v" z="200">
 			<toolbar name="File" />
 			<panel name="Files" z="300*" s="1" captionAt="Top" />
-			<!--<panel name="Open" z="80*" />-->
+			<panel name="Open" z="80*" />
 			<panel name="Running" z="80*" flags="1" />
 			<panel name="Find" z="160" captionAt="Top" />
 		</stack>

@@ -10,6 +10,7 @@
     <AssemblyOriginatorKeyFile>..\..\Au.snk</AssemblyOriginatorKeyFile>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	  <LangVersion>preview</LangVersion>
+	  <StartupObject></StartupObject>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

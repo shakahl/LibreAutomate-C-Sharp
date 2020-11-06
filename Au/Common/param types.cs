@@ -174,8 +174,7 @@ namespace Au.Types
 		/// Creates Coord of Reverse type.
 		/// Value 0 is at the right or bottom, and does not belong to the rectangle. Positive values are towards left or top.
 		/// </summary>
-		public static Coord Reverse(int v)
-		{
+		public static Coord Reverse(int v) {
 			return new Coord(CoordType.Reverse, v);
 		}
 
@@ -184,8 +183,7 @@ namespace Au.Types
 		/// Value 0.0 is the left or top of the rectangle. Value 1.0 is the right or bottom of the rectangle. Values &lt;0.0 and &gt;=1.0 are outside of the rectangle.
 		/// Instead can be used implicit conversion from float, for example argument <c>Coord.Fraction(0.5)</c> can be replaced with <c>0.5f</c>.
 		/// </summary>
-		public static unsafe Coord Fraction(double v)
-		{
+		public static unsafe Coord Fraction(double v) {
 			float f = (float)v;
 			return new Coord(CoordType.Fraction, *(int*)&f);
 		}
@@ -213,8 +211,7 @@ namespace Au.Types
 		//rejected: this could be used like Coord.Max + 1. Too limited usage.
 		//public static Coord operator +(Coord c, int i) { return ...; }
 
-		static bool _NeedRect(Coord x, Coord y)
-		{
+		static bool _NeedRect(Coord x, Coord y) {
 			return (x.Type > CoordType.Normal) || (y.Type > CoordType.Normal);
 		}
 
@@ -223,10 +220,8 @@ namespace Au.Types
 		/// </summary>
 		/// <param name="start">Start of range.</param>
 		/// <param name="end">End of range.</param>
-		public int NormalizeInRange(int start, int end)
-		{
-			return Type switch
-			{
+		public int NormalizeInRange(int start, int end) {
+			return Type switch {
 				CoordType.Normal => start + Value,
 				CoordType.Reverse => end - Value,
 				CoordType.Fraction => start + (int)((end - start) * FractionValue),
@@ -242,12 +237,11 @@ namespace Au.Types
 		/// <param name="r">The rectangle.</param>
 		/// <param name="widthHeight">Use only width and height of r. If false (default), the function adds r offset (left and top).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
-		public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false)
-		{
-			if(widthHeight) r.Offset(-r.left, -r.top);
-			else if(centerIfEmpty) {
-				if(x.IsEmpty) x = Center;
-				if(y.IsEmpty) y = Center;
+		public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false) {
+			if (widthHeight) r.Offset(-r.left, -r.top);
+			else if (centerIfEmpty) {
+				if (x.IsEmpty) x = Center;
+				if (y.IsEmpty) y = Center;
 			}
 			return (x.NormalizeInRange(r.left, r.right), y.NormalizeInRange(r.top, r.bottom));
 		}
@@ -260,20 +254,19 @@ namespace Au.Types
 		/// <param name="w">The window.</param>
 		/// <param name="nonClient">x y are relative to the entire w rectangle, not to its client area.</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static POINT NormalizeInWindow(Coord x, Coord y, AWnd w, bool nonClient = false, bool centerIfEmpty = false)
-		{
+		public static POINT NormalizeInWindow(Coord x, Coord y, AWnd w, bool nonClient = false, bool centerIfEmpty = false) {
 			//info: don't need widthHeight parameter because client area left/top are 0. With non-client don't need in this library and probably not useful. But if need, caller can explicitly offset the rect before calling this func.
 
-			if(centerIfEmpty) {
-				if(x.IsEmpty) x = Center;
-				if(y.IsEmpty) y = Center;
+			if (centerIfEmpty) {
+				if (x.IsEmpty) x = Center;
+				if (y.IsEmpty) y = Center;
 			}
 			POINT p = default;
-			if(!x.IsEmpty || !y.IsEmpty) {
+			if (!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
-				if(nonClient) {
+				if (nonClient) {
 					w.GetRectIn(w, out r);
-				} else if(_NeedRect(x, y)) {
+				} else if (_NeedRect(x, y)) {
 					r = w.ClientRect;
 				} else r = default;
 				p.x = x.NormalizeInRange(r.left, r.right);
@@ -291,18 +284,17 @@ namespace Au.Types
 		/// <param name="screen">If used, x y are relative to this screen. Default - primary screen. Example: <c>AScreen.Index(1)</c>.</param>
 		/// <param name="widthHeight">Use only width and height of the screen rectangle. If false, the function adds its offset (left and top, which can be nonzero if using the work area or a non-primary screen).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center.</param>
-		public static POINT Normalize(Coord x, Coord y, bool workArea = false, AScreen screen = default, bool widthHeight = false, bool centerIfEmpty = false)
-		{
-			if(centerIfEmpty) {
-				if(x.IsEmpty) x = Center;
-				if(y.IsEmpty) y = Center;
+		public static POINT Normalize(Coord x, Coord y, bool workArea = false, AScreen screen = default, bool widthHeight = false, bool centerIfEmpty = false) {
+			if (centerIfEmpty) {
+				if (x.IsEmpty) x = Center;
+				if (y.IsEmpty) y = Center;
 			}
 			POINT p = default;
-			if(!x.IsEmpty || !y.IsEmpty) {
+			if (!x.IsEmpty || !y.IsEmpty) {
 				RECT r;
-				if(workArea || !screen.IsEmpty || _NeedRect(x, y)) {
+				if (workArea || !screen.IsEmpty || _NeedRect(x, y)) {
 					r = screen.GetRect(workArea);
-					if(widthHeight) r.Offset(-r.left, -r.top);
+					if (widthHeight) r.Offset(-r.left, -r.top);
 				} else r = default;
 				p.x = x.NormalizeInRange(r.left, r.right);
 				p.y = y.NormalizeInRange(r.top, r.bottom);
@@ -311,9 +303,8 @@ namespace Au.Types
 		}
 
 		///
-		public override string ToString()
-		{
-			switch(Type) {
+		public override string ToString() {
+			switch (Type) {
 			case CoordType.Normal: return Value.ToString() + ", Normal";
 			case CoordType.Reverse: return Value.ToString() + ", Reverse";
 			case CoordType.Fraction: return FractionValue.ToStringInvariant() + ", Fraction";
@@ -380,8 +371,7 @@ namespace Au.Types
 		/// <remarks>
 		/// Also there is are implicit conversions from tuple (x, y) and POINT. Instead of <c>new PopupXY(x, y)</c> you can use <c>(x, y)</c>. Instead of <c>new PopupXY(p.x, p.y, false)</c> you can use <c>p</c> or <c>(POINT)p</c> .
 		/// </remarks>
-		public PopupXY(Coord x = default, Coord y = default, bool workArea = true, AScreen screen = default)
-		{
+		public PopupXY(Coord x = default, Coord y = default, bool workArea = true, AScreen screen = default) {
 			this.x = x; this.y = y; this.workArea = workArea; this.screen = screen;
 		}
 
@@ -407,15 +397,13 @@ namespace Au.Types
 		/// <summary>
 		/// Gets point coordinates below mouse cursor, for showing a tooltip-like popup.
 		/// </summary>
-		public static POINT Mouse
-		{
-			get
-			{
+		public static POINT Mouse {
+			get {
 				var p = AMouse.XY;
 				int cy = ADpi.GetSystemMetrics(Api.SM_CYCURSOR, p);
-				if(ACursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
-					if(u.hbmColor != default) Api.DeleteObject(u.hbmColor);
-					if(u.hbmMask != default) Api.DeleteObject(u.hbmMask);
+				if (ACursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
+					if (u.hbmColor != default) Api.DeleteObject(u.hbmColor);
+					if (u.hbmMask != default) Api.DeleteObject(u.hbmMask);
 
 					//AOutput.Write(u.xHotspot, u.yHotspot);
 					p.y += cy - u.yHotspot - 1; //not perfect, but better than just to add SM_CYCURSOR or some constant value.
@@ -428,9 +416,8 @@ namespace Au.Types
 		/// <summary>
 		/// Gets <see cref="screen"/>.Now if not empty, else screen that contains the specified point.
 		/// </summary>
-		public AScreen GetScreen()
-		{
-			if(!screen.IsEmpty) return screen.Now;
+		public AScreen GetScreen() {
+			if (!screen.IsEmpty) return screen.Now;
 			POINT p = inRect ? Coord.NormalizeInRect(x, y, rect, centerIfEmpty: true) : Coord.Normalize(x, y, workArea);
 			return AScreen.Of(p);
 		}
@@ -453,7 +440,7 @@ namespace Au.Types
 		/// <summary> Assignment of a value of type System.Windows.Forms.Control (Form or any control class). </summary>
 		public static implicit operator AnyWnd(System.Windows.Forms.Control c) => new AnyWnd(c);
 		/// <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
-		public static implicit operator AnyWnd(System.Windows.DependencyObject c) => new AnyWnd(new object[] { c });
+		public static implicit operator AnyWnd(System.Windows.DependencyObject c) => c != null ? new AnyWnd(new object[] { c }) : default;
 
 		/// <summary>
 		/// Gets the window or control handle as AWnd.
@@ -494,10 +481,8 @@ namespace Au.Types
 		/// <summary>
 		/// Converts the value to string[].
 		/// </summary>
-		public string[] ToArray()
-		{
-			return _o switch
-			{
+		public string[] ToArray() {
+			return _o switch {
 				string s => s.Split('|'),
 				string[] a => a,
 				List<string> a => a.ToArray(),

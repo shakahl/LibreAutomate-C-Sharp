@@ -221,7 +221,7 @@ namespace Au.Controls
 				if (image != null && miFactory?.Icon == null) _SetImage(image);
 			}
 
-			MenuItem _Mi() => _mi ?? throw new InvalidOperationException("Call FactoryParams.SetMenuItem before.");
+			MenuItem _Mi => _mi ?? throw new InvalidOperationException("Call FactoryParams.SetMenuItem before.");
 
 			///
 			public MenuItem MenuItem => _mi;
@@ -274,6 +274,7 @@ namespace Au.Controls
 			/// </remarks>
 			public void CopyToButton(ButtonBase b, Dock? imageAt = null, UIElement image = null, string text = null, bool skipImage = false) {
 				if (IsSubmenu) throw new InvalidOperationException("Submenu. Use CopyToMenu.");
+				_ = _Mi;
 				text ??= ButtonText;
 
 				if (skipImage) {
@@ -339,7 +340,7 @@ namespace Au.Controls
 			/// - <b>Command</b> (to execute same method and automatically enable/disable together),
 			/// - <b>IsCheckable</b> (and synchronizes checked state).
 			/// </remarks>
-			public void CopyToMenu(MenuItem m, UIElement image = null, object text = null) => _CopyToMenu(_Mi(), m, image, text);
+			public void CopyToMenu(MenuItem m, UIElement image = null, object text = null) => _CopyToMenu(_Mi, m, image, text);
 
 			static void _CopyToMenu(MenuItem from, MenuItem to, UIElement image = null, object text = null) {
 				to.Icon = image ?? _CopyImage(from);
@@ -388,14 +389,14 @@ namespace Au.Controls
 			/// </remarks>
 			public void CopyToMenu(ContextMenu cm) {
 				if (!IsSubmenu) throw new InvalidOperationException("Not submenu");
-				_CopyDescendants(_Mi(), cm);
+				_CopyDescendants(_Mi, cm);
 			}
 
 			/// <summary>
 			/// Copies menu item image element. Returns null if no image or cannot copy.
 			/// </summary>
 			/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-			public UIElement CopyImage() => _CopyImage(_Mi());
+			public UIElement CopyImage() => _CopyImage(_Mi);
 
 			static UIElement _CopyImage(MenuItem from) {
 				switch (from.Icon) {
@@ -433,11 +434,21 @@ namespace Au.Controls
 			public bool Enabled {
 				get => _enabled;
 				set {
+					_ = _Mi;
 					if (value == _enabled) return;
 					_enabled = value;
 					CanExecuteChanged?.Invoke(this, EventArgs.Empty); //enables/disables this menu item and all buttons etc with Command=this
 					if (IsSubmenu) foreach (var v in _mi.Items) if (v is MenuItem m && m.Command is Command c) c.Enabled = value;
 				}
+			}
+
+			/// <summary>
+			/// Gets or sets checked state of this checkable menu item and all checkable controls with <b>Command</b> property = this (see <see cref="CopyToButton"/>, <see cref="CopyToMenu"/>).
+			/// </summary>
+			/// <exception cref="InvalidOperationException">Called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
+			public bool Checked {
+				get => _Mi.IsChecked;
+				set { if (value != _Mi.IsChecked) _mi.IsChecked = value; }
 			}
 
 			/// <summary>
@@ -459,7 +470,7 @@ namespace Au.Controls
 			public void SetKeys(string keys, UIElement target, bool addMouseBinding = false) {
 				if (target == null) throw new ArgumentNullException();
 				if (IsSubmenu) throw new InvalidOperationException("Submenu");
-				_Mi();
+				_ = _Mi;
 				if (keys == null) {
 					foreach (var v in target.InputBindings.Cast<InputBinding>().Where(o => o.Command == this).ToArray()) target.InputBindings.Remove(v);
 				} else {

@@ -157,9 +157,6 @@ partial class FMain : Form
 		//AWnd.More.PrintMsg(m, Api.WM_ENTERIDLE, Api.WM_SETCURSOR, Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_GETICON, Api.WM_NCMOUSEMOVE);
 
 		switch (m.Msg) {
-			case RunningTasks.WM_TASK_ENDED: //WM_USER+900
-				Program.Tasks.TaskEnded2(m.WParam);
-				return;
 			case Api.WM_NCCREATE:
 				_DpiWorkaround1((AWnd)m.HWnd);
 				break;
@@ -296,7 +293,7 @@ partial class FMain : Form
 
 	public void ZShowAndActivate() {
 		Show();
-		var w = Program.MainForm.Hwnd();
+		var w = this.Hwnd();
 		w.ShowNotMinimized(true);
 		w.ActivateLL();
 	}

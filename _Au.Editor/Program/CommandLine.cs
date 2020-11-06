@@ -172,6 +172,9 @@ static class CommandLine
 				break;
 			}
 			return 0;
+		case RunningTasks.WM_TASK_ENDED: //WM_USER+900
+			Program.Tasks.TaskEnded2(wParam);
+			return 0;
 		}
 
 		return Api.DefWindowProc(w, message, wParam, lParam);

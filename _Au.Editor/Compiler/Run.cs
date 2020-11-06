@@ -216,7 +216,6 @@ class RunningTasks
 	readonly List<_WaitingTask> _q; //not Queue because may need to remove item at any index
 	bool _updateUI;
 	volatile bool _disposed;
-	AWnd _wMain;
 
 	public IEnumerable<RunningTask> Items => _a;
 
@@ -224,7 +223,6 @@ class RunningTasks
 	{
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
-		_wMain = Program.MainForm.Hwnd();
 		Program.Timer1sOr025s += _TimerUpdateUI;
 		ATask.Init_(ATRole.EditorExtension);
 		Log_.Run.Start();
@@ -268,7 +266,7 @@ class RunningTasks
 	internal void TaskEnded1(int taskId)
 	{
 		if(_disposed) return;
-		_wMain.Post(WM_TASK_ENDED, taskId);
+		CommandLine.MsgWnd.Post(WM_TASK_ENDED, taskId);
 	}
 
 	/// <summary>
@@ -278,7 +276,7 @@ class RunningTasks
 
 	/// <summary>
 	/// Removes an ended task from the 'running' list. If a task is queued and can run, starts it.
-	/// When task ended, TaskEnded1 posts to MainForm message WM_TASK_ENDED with task id in wParam. MainForm calls this function.
+	/// When task ended, TaskEnded1 posts message WM_TASK_ENDED with task id in wParam to the message window, which calls this function.
 	/// </summary>
 	internal void TaskEnded2(IntPtr wParam)
 	{

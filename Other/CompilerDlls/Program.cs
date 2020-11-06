@@ -8,7 +8,7 @@ using System.IO;
 //This small program modifies the Roslyn solution.
 //Setup:
 //Download Roslyn solution to Q:\Downloads\roslyn-master.
-//Open the Roslyn project.
+//Open Roslyn.sln.
 //To make VS not so slow, select all folders and unload projects. Then load only the 6 projects we need:
 //	In folder Compilers: Core\Microsoft.CodeAnalysis, CSharp\Microsoft.CodeAnalysis.CSharp.
 //	In folder Features: Microsoft.CodeAnalysis.CSharp.Features, Microsoft.CodeAnalysis.Features.
@@ -42,12 +42,15 @@ using System.IO;
 //4. Below the method add property: internal System.Collections.Generic.IReadOnlyList<ISymbol> Symbols { get; set; } //au
 //5. Open Features\Core\Portable\Completion\Providers\SymbolCompletionItem.cs.
 //6. In method CreateWorker find: tags: tags);
-//7. Add property: item.Symbols = symbols; //au
+//7. Below add: item.Symbols = symbols; //au
 
-//Add Symbol property to the SymbolKeySignatureHelpItem class.
+//Add Symbol property to the SymbolKeySignatureHelpItem class:
 //1. Open Features\Core\Portable\SignatureHelp\AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem.cs.
 //2. Add property: internal ISymbol Symbol { get; } //au
 //3. In ctor add:  Symbol = symbol; //au
+
+//Let it don't try to load VB assemblies, because then exception when debugging:
+//In MefHostServices.cs, in s_defaultAssemblyNames init list, remove the 2 VB assemblies.
 
 //In all 6 projects add link to Au.InternalsVisible.cs. It is in this project.
 

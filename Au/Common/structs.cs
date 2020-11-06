@@ -17,60 +17,53 @@ using System.Globalization;
 namespace Au.Types
 {
 	/// <summary>
-	/// Similar to IntPtr (can be 32-bit or 64-bit), but more useful for usually-non-pointer values, eg WPARAM/LPARAM/LRESULT of API SendMessage.
+	/// Pointer-sized integer. Same as C/C++ LPARAM. Same as C# nint, but has more implicit conversions.
 	/// </summary>
 	/// <remarks>
-	/// Unlike IntPtr:
-	/// - Has implicit casts from most integral types. And explicit casts to.
-	///	- Does not check overflow when casting. IntPtr throws exception on overflow, which can create bugs.
-	///	
-	///	There is no struct WPARAM. Use LPARAM instead, because it is the same in all cases except when casting to long or ulong (ambigous signed/unsigned).
-	///	There is no cast operators for enum. When need, cast through int or uint. For AWnd cast through IntPtr.
+	///	There is no struct WPARAM (unsigned). Use LPARAM instead, it is the same in most cases.
+	///	There is no cast operators for enum. When need, cast through int or uint.
 	/// </remarks>
 	[DebuggerStepThrough]
-	//[Serializable]
 	public unsafe struct LPARAM : IEquatable<LPARAM>, IComparable<LPARAM>
 	{
-		//TODO: remove and use nint/nuint.
-		//	They have more implicit converions than IntPtr. Eg nint=int, but nint=(nint)uint.
-		//	Tested: they don't throw overflow exceptions.
+		//In C# 9 could use nint instead. But then need too many explicit casts.
+		//	Eg to pass a pointer to SendMessage need (nint)(&v); for bool need v ? 1 : 0.
 
 #pragma warning disable 1591 //XML doc
-		//[NonSerialized]
-		readonly void* _v;
+		readonly nint _v;
 
-		LPARAM(void* v) { _v = v; }
+		LPARAM(nint v) { _v = v; }
 
 		//LPARAM = int etc
-		public static implicit operator LPARAM(void* x) => new LPARAM(x);
-		public static implicit operator LPARAM(IntPtr x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(UIntPtr x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(int x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(uint x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(sbyte x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(byte x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(short x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(ushort x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(char x) => new LPARAM((void*)(ushort)x);
-		public static implicit operator LPARAM(long x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(ulong x) => new LPARAM((void*)x);
-		public static implicit operator LPARAM(bool x) => new LPARAM((void*)(x ? 1 : 0));
+		public static implicit operator LPARAM(void* x) => new LPARAM((nint)x);
+		public static implicit operator LPARAM(nint x) => new LPARAM(x);
+		public static implicit operator LPARAM(nuint x) => new LPARAM((nint)x);
+		public static implicit operator LPARAM(int x) => new LPARAM(x);
+		public static implicit operator LPARAM(uint x) => new LPARAM((nint)x);
+		public static implicit operator LPARAM(sbyte x) => new LPARAM(x);
+		public static implicit operator LPARAM(byte x) => new LPARAM(x);
+		public static implicit operator LPARAM(short x) => new LPARAM(x);
+		public static implicit operator LPARAM(ushort x) => new LPARAM(x);
+		public static implicit operator LPARAM(char x) => new LPARAM(x);
+		public static implicit operator LPARAM(long x) => new LPARAM((nint)x);
+		public static implicit operator LPARAM(ulong x) => new LPARAM((nint)x);
+		public static implicit operator LPARAM(bool x) => new LPARAM(x ? 1 : 0);
 		//also would be good to have LPARAM(Enum x), but C# does not allow generic operators.
 
 		//int etc = LPARAM
-		public static implicit operator void*(LPARAM x) => x._v;
-		public static implicit operator IntPtr(LPARAM x) => (IntPtr)x._v;
-		public static explicit operator UIntPtr(LPARAM x) => (UIntPtr)x._v;
+		public static implicit operator void*(LPARAM x) => (void*)x._v;
+		public static implicit operator nint(LPARAM x) => x._v;
+		public static explicit operator nuint(LPARAM x) => (nuint)x._v;
 		public static explicit operator int(LPARAM x) => (int)x._v;
 		public static explicit operator uint(LPARAM x) => (uint)x._v;
 		public static explicit operator sbyte(LPARAM x) => (sbyte)x._v;
 		public static explicit operator byte(LPARAM x) => (byte)x._v;
 		public static explicit operator short(LPARAM x) => (short)x._v;
 		public static explicit operator ushort(LPARAM x) => (ushort)x._v;
-		public static explicit operator char(LPARAM x) => (char)(ushort)x._v;
-		public static explicit operator long(LPARAM x) => (long)x._v;
+		public static explicit operator char(LPARAM x) => (char)x._v;
+		public static explicit operator long(LPARAM x) => x._v;
 		public static explicit operator ulong(LPARAM x) => (ulong)x._v;
-		public static implicit operator bool(LPARAM x) => x._v != null;
+		public static implicit operator bool(LPARAM x) => x._v != default;
 		//note: don't use implicit. It's unsafe. Eg arithmetic and other operators then implicitly convert LPARAM operands to int, although must be long.
 
 		public static bool operator ==(LPARAM a, LPARAM b) => a._v == b._v;
@@ -79,14 +72,14 @@ namespace Au.Types
 		public static bool operator >(LPARAM a, LPARAM b) => a._v > b._v;
 		public static bool operator <=(LPARAM a, LPARAM b) => a._v <= b._v;
 		public static bool operator >=(LPARAM a, LPARAM b) => a._v >= b._v;
-		public static LPARAM operator +(LPARAM a, int b) => (byte*)a._v + b;
-		public static LPARAM operator -(LPARAM a, int b) => (byte*)a._v - b;
+		public static LPARAM operator +(LPARAM a, int b) => a._v + b;
+		public static LPARAM operator -(LPARAM a, int b) => a._v - b;
 
-		public override string ToString() => ((IntPtr)_v).ToString(NumberFormatInfo.InvariantInfo);
+		public override string ToString() => _v.ToString(NumberFormatInfo.InvariantInfo);
 
 		public override int GetHashCode() => (int)_v;
 
-		public override bool Equals(object obj) => obj is LPARAM && (LPARAM)obj == this;
+		public override bool Equals(object obj) => obj is LPARAM k && k == this;
 
 		/// <summary>
 		/// Returns true if other == this.
@@ -97,14 +90,7 @@ namespace Au.Types
 		/// <summary>
 		/// Implements IComparable. It allows to sort a collection.
 		/// </summary>
-		public int CompareTo(LPARAM other) => _v == other._v ? 0 : (_v < other._v ? -1 : 1);
-
-		//ISerializable implementation.
-		//Need it because default serialization: 1. Gets only public members. 2. Exception if void*. 3. If would work, would format like <...><_v>value</_v></...>, but we need <...>value</...>.
-		//Rejected, because it loads System.Xml.dll and 2 more dlls. Rarely used.
-		//public XmlSchema GetSchema() => null;
-		//public void ReadXml(XmlReader reader) { _v = (void*)reader.ReadElementContentAsLong(); }
-		//public void WriteXml(XmlWriter writer) { writer.WriteValue((long)_v); }
+		public int CompareTo(LPARAM other) => _v.CompareTo(other._v);
 #pragma warning restore 1591 //XML doc
 	}
 

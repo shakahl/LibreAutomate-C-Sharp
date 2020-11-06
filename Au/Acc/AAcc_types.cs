@@ -344,8 +344,6 @@ namespace Au.Types
 		REMOVESELECTION = 0x10,
 	}
 
-	//TODO: rename AccEVENT etc. In intellisense selected when typing Acc; must select AAcc.
-	//CONSIDER: remove the SYSTEM_/OBJECT_ prefixes.
 	/// <summary>
 	/// Event constants for <see cref="AHookAcc"/>.
 	/// </summary>
