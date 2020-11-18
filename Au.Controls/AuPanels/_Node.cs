@@ -524,7 +524,7 @@ namespace Au.Controls
 
 			public event CancelEventHandler Closing;
 
-			public event EventHandler<AContextMenu> ContextMenuOpening;
+			public event EventHandler<AWpfMenu> ContextMenuOpening;
 
 			public event EventHandler TabSelected;
 

@@ -770,14 +770,6 @@ class PanelFind : AuUserControlBase
 
 	#region recent
 
-	public class RecentItem //not struct because used with PopupList
-	{
-		public string t { get; set; } //not fields because used with JsonSerializer
-		public int o { get; set; }
-
-		public override string ToString() => t.Limit(100); //PopupList item display text
-	}
-
 	string _recentPrevFind, _recentPrevReplace;
 	int _recentPrevOptions;
 
@@ -795,23 +787,23 @@ class PanelFind : AuUserControlBase
 				//if(0 != (options & 4)) AWarning.Write("The find text of length > 1000 will not be saved to 'recent'.", -1);
 				return;
 			}
-			var a = (replace ? App.Settings.find_recentReplace : App.Settings.find_recent) ?? new RecentItem[0];
+			var a = (replace ? App.Settings.find_recentReplace : App.Settings.find_recent) ?? new FRRecentItem[0];
 			for (int i = a.Length - 1; i >= 0; i--) if (a[i].t == text) a = a.RemoveAt(i); //avoid duplicates
 			if (a.Length >= 20) a = a[0..19]; //limit count
-			a = a.InsertAt(0, new RecentItem { t = text, o = options });
+			a = a.InsertAt(0, new FRRecentItem { t = text, o = options });
 			if (replace) App.Settings.find_recentReplace = a; else App.Settings.find_recent = a;
 		}
 	}
 
 	private void _comboFindReplace_ArrowButtonPressed(object sender, EventArgs e) {
 		bool replace = sender == _comboReplace;
-		var a = (replace ? App.Settings.find_recentReplace : App.Settings.find_recent) ?? new RecentItem[0];
+		var a = (replace ? App.Settings.find_recentReplace : App.Settings.find_recent) ?? new FRRecentItem[0];
 		if (a == null) return;
 		var c = replace ? _tReplace : _tFind;
 		var m = new PopupList { IsModal = true, ComboBoxAnimation = true };
 		m.Items = a;
 		m.SelectedAction = o => {
-			var r = o.ResultItem as RecentItem;
+			var r = o.ResultItem as FRRecentItem;
 			c.Text = r.t;
 			if (!replace) {
 				int k = r.o;
@@ -862,4 +854,12 @@ class PanelFind : AuUserControlBase
 	}
 
 	#endregion
+}
+
+class FRRecentItem //not struct because used with PopupList. Not nested in PanelFind because used with ASettings (would load UI dlls).
+{
+	public string t { get; set; } //not fields because used with JsonSerializer
+	public int o { get; set; }
+
+	public override string ToString() => t.Limit(100); //PopupList item display text
 }

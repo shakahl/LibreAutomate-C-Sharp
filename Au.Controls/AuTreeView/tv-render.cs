@@ -17,7 +17,6 @@ namespace Au.Controls
 {
 	unsafe partial class AuTreeView
 	{
-
 		//Called on resize, scroll, set visible items (replace, clear, expand/collapse, add/remove/move).
 		void _Measure(bool onScroll = false) {
 			EndEditLabel();
@@ -32,7 +31,7 @@ namespace Au.Controls
 			}
 			var range = _GetViewRange(onScroll ? _height : (int)Math.Ceiling(height));
 
-			//		AOutput.Write("_Measure", range.from, range.to, _scrollTopIndex);
+			//AOutput.Write("_Measure", range.from, range.to, _scrollTopIndex);
 			int maxWidth = _itemsW;
 			GdiTextRenderer tr = null;
 			for (int i = range.from; i < range.to; i++) {
@@ -53,7 +52,7 @@ namespace Au.Controls
 			double itemsH = _avi.Length * _itemH;
 			bool needH = _itemsW > width && height >= _imageSize + sb; if (needH) height -= sb;
 			bool needV = itemsH > height && _avi.Length > 1 && width > sb; if (needV) { width -= sb; if (!needH) if (needH = _itemsW > width && height >= _imageSize + sb) height -= sb; }
-			//		AOutput.Write(needH, needV);
+			//AOutput.Write(needH, needV);
 			if (needH) {
 				_hscroll.Visibility = Visibility.Visible;
 				_hscroll.ViewportSize = width;
@@ -112,10 +111,21 @@ namespace Au.Controls
 		/// Does nothing if the control is not created.
 		/// </summary>
 		/// <param name="index"></param>
+		/// <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
 		/// <exception cref="IndexOutOfRangeException"></exception>
-		public void Redraw(int index) {
+		public void Redraw(int index, bool remeasure = false) {
 			if (_grid == null) return;
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
+			if (remeasure) {
+				//if this was the widest measured item, need to remeasure all, else would not update horz scrollbar if this item become narrower
+				int max = 0; for (int i = 0; i < _avi.Length; i++) max = Math.Max(max, _avi[i].measured);
+				if (max == _avi[index].measured) {
+					_MeasureClear(updateNow: true);
+					return;
+				}
+				_avi[index].measured = 0;
+				_Measure();
+			}
 			_Invalidate(index);
 		}
 
@@ -124,51 +134,24 @@ namespace Au.Controls
 		/// Does nothing if the control is not created or <i>item</i> is not a visible item in this control.
 		/// </summary>
 		/// <param name="item"></param>
-		public void Redraw(ITreeViewItem item) {
+		/// <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
+		public void Redraw(ITreeViewItem item, bool remeasure = false) {
 			if (_grid == null) return;
 			int i = IndexOf(item);
-			if (i >= 0) _Invalidate(i);
+			if (i >= 0) Redraw(i, remeasure);
 		}
 
 		/// <summary>
 		/// Asynchronously redraws all items.
 		/// Does nothing if the control is not created.
 		/// </summary>
-		public void Redraw() {
+		/// <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
+		public void Redraw(bool remeasure = false) {
 			if (_grid == null) return;
-			_Invalidate();
+			if(remeasure) _MeasureClear(updateNow: true);
+			else _Invalidate();
 		}
 
-		/// <summary>
-		/// Remeasures item width and redraws. My need this when changed text or text style.
-		/// Does nothing if the control is not created.
-		/// </summary>
-		/// <param name="index"></param>
-		/// <exception cref="IndexOutOfRangeException"></exception>
-		public void Remeasure(int index) {
-			if (_grid == null) return;
-			if (!_IsValid(index)) throw new IndexOutOfRangeException();
-			_avi[index].measured = 0;
-			_Measure();
-			_Invalidate(index);
-		}
-
-		/// <summary>
-		/// Remeasures item width and redraws. My need this when changed text or text style.
-		/// Does nothing if the control is not created or <i>item</i> is not a visible item in this control.
-		/// </summary>
-		/// <param name="item"></param>
-		public void Remeasure(ITreeViewItem item) {
-			if (_grid == null) return;
-			int i = IndexOf(item);
-			if (i >= 0) Remeasure(i);
-		}
-
-		/// <summary>
-		/// Remeasures and redraws all items.
-		/// Does nothing if the control is not created.
-		/// </summary>
-		public void Remeasure() => _MeasureClear(updateNow: true);
 		//	
 		//	/// <summary>
 		//	/// Remeasure item widths and redraws. My need this when changed text or text style.
@@ -280,18 +263,20 @@ namespace Au.Controls
 						}
 
 						//image
-						var imageSource = item.ImageSource;
-						bool isImage = imageSource != null;
-						if (!isImage) imageSource = item.IconSource;
-						if (!imageSource.NE()) {
-							//bool mayNeedAsync=!(isImage && (AResources.HasResourcePrefix(imageSource) || AImageUtil.HasImageStringPrefix(imageSource)));
-							bool mayNeedAsync = !isImage;
-							if (mayNeedAsync) _imageAsyncCompletion ??= _ImageAsyncCompletion;
-							var b = ImageCache.Get(imageSource, _dpi, isImage, mayNeedAsync ? _imageAsyncCompletion : null, item);
-							if (b != null) {
-								if (cd == null || !cd.DrawImage(b)) {
-									graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));
-								}
+						var b = item.Image;
+						if (b == null) {
+							var imageSource = item.ImageSource;
+							if (!imageSource.NE()) {
+								bool isImage = 0 != imageSource.Starts(false, "resource:", "imagefile:", "image:", "~:");
+								//bool mayNeedAsync=!(isImage && (AResources.HasResourcePrefix(imageSource) || AImageUtil.HasImageStringPrefix(imageSource)));
+								bool mayNeedAsync = !isImage;
+								if (mayNeedAsync) _imageAsyncCompletion ??= _ImageAsyncCompletion;
+								b = ImageCache.Get(imageSource, _dpi, isImage, mayNeedAsync ? _imageAsyncCompletion : null, item);
+							}
+						}
+						if (b != null) {
+							if (cd == null || !cd.DrawImage(b)) {
+								graphics.DrawImage(b, new System.Drawing.Rectangle(xImage, yImage, _imageSize, _imageSize));
 							}
 						}
 

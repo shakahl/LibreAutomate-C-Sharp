@@ -108,9 +108,10 @@ namespace Au.Types
 			public int time;
 			public POINT pt;
 
-			public override string ToString() => System.Windows.Forms.Message.Create(hwnd.Handle, (int)message, wParam, lParam).ToString();
+			public override string ToString() => System.Windows.Forms.Message.Create(hwnd.Handle, message, wParam, lParam).ToString();
 
-			public static implicit operator MSG(in System.Windows.Interop.MSG m) => new MSG { hwnd = (AWnd)m.hwnd, message = m.message, wParam = m.wParam, lParam = m.lParam, time = m.time, pt = (m.pt_x, m.pt_y) };
+			public static implicit operator MSG(in System.Windows.Interop.MSG m)
+				=> new MSG { hwnd = (AWnd)m.hwnd, message = m.message, wParam = m.wParam, lParam = m.lParam, time = m.time, pt = (m.pt_x, m.pt_y) };
 		}
 
 		/// <summary><see cref="GUITHREADINFO"/> flags.</summary>
@@ -141,55 +142,31 @@ namespace Au.Types
 		/// <summary>API <msdn>CREATESTRUCT</msdn></summary>
 		public struct CREATESTRUCT
 		{
-			public IntPtr lpCreateParams;
-			public IntPtr hInstance;
-			public IntPtr hMenu;
+			public nint lpCreateParams;
+			public nint hInstance;
+			public nint hMenu;
 			public AWnd hwndParent;
 			public int cy;
 			public int cx;
 			public int y;
 			public int x;
 			public WS style;
-			LPARAM _lpszName;
-			LPARAM _lpszClass;
+			public char* lpszName;
+			public char* lpszClass;
 			public WS2 dwExStyle;
 
-			public unsafe string lpszName => _lpszName == default ? null : new string((char*)_lpszName);
+			public ReadOnlySpan<char> Name => lpszName == default ? default
+				: new ReadOnlySpan<char>(lpszName, Util.CharPtr_.Length(lpszName));
+			//public string Name => lpszName == default ? null : new string(lpszName);
 
 			/// <summary>
-			/// If lpszClass was atom, returns string with # prefix and atom value, like "#32770".
+			/// If lpszClass is atom, returns string with # prefix and atom value, like "#32770".
 			/// </summary>
-			public unsafe string lpszClass => (nuint)_lpszClass < 0x10000 ? "#" + _lpszClass.ToString() : new string((char*)_lpszClass);
+			public ReadOnlySpan<char> ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToStringInvariant()
+				: new ReadOnlySpan<char>(lpszClass, Util.CharPtr_.Length(lpszClass));
+			//public string ClassName => (nuint)lpszClass < 0x10000 ? "#" + ((int)lpszClass).ToStringInvariant() : new string(lpszClass);
 
-			//tested and documented: hook can change only x y cx cy.
-		}
-
-		/// <summary>API <msdn>MOUSEHOOKSTRUCT</msdn></summary>
-		public struct MOUSEHOOKSTRUCT
-		{
-			public POINT pt;
-			public AWnd hwnd;
-			public int wHitTestCode;
-			public LPARAM dwExtraInfo;
-		}
-
-		/// <summary>API <msdn>CWPSTRUCT</msdn></summary>
-		public struct CWPSTRUCT
-		{
-			public LPARAM lParam;
-			public LPARAM wParam;
-			public int message;
-			public AWnd hwnd;
-		}
-
-		/// <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
-		public struct CWPRETSTRUCT
-		{
-			public LPARAM lResult;
-			public LPARAM lParam;
-			public LPARAM wParam;
-			public int message;
-			public AWnd hwnd;
+			//tested and documented: CBT hook can change only x y cx cy.
 		}
 
 		/// <summary>API <msdn>SIGDN</msdn></summary>
@@ -209,28 +186,6 @@ namespace Au.Types
 
 		/// <summary>API <msdn>WNDPROC</msdn></summary>
 		public delegate LPARAM WNDPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
-
-		//Native control subclassing isn't often useful in OO programming, but still there are some cases where need.
-		//	These are public to encourage using them instead of SetProp, because safer.
-
-		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
-		[DllImport("comctl32.dll", EntryPoint = "#410")]
-		public static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, IntPtr dwRefData = default);
-
-		/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
-		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-		public static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out IntPtr pdwRefData);
-
-		/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
-		[DllImport("comctl32.dll", EntryPoint = "#412")]
-		public static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
-
-		/// <summary>API <msdn>DefSubclassProc</msdn></summary>
-		[DllImport("comctl32.dll", EntryPoint = "#413")]
-		public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
-
-		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
-		public delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, IntPtr dwRefData);
 
 		/// <summary>API <msdn>SetWindowPos</msdn> flags. Can be used with <see cref="AWnd.SetWindowPos"/>.</summary>
 		/// <remarks>The _X flags are undocumented.</remarks>
@@ -273,9 +228,8 @@ namespace Au.Types
 
 		/// <summary>
 		/// Window long constants. Used with <see cref="AWnd.GetWindowLong"/> and <see cref="AWnd.SetWindowLong"/>.
-		/// See API <msdn>GetWindowLong</msdn>.
+		/// See API <msdn>GetWindowLong</msdn>. See also API <msdn>SetWindowSubclass</msdn>.
 		/// </summary>
-		/// <seealso cref="SetWindowSubclass"/>
 		public static class GWL
 		{
 			public const int WNDPROC = -4;

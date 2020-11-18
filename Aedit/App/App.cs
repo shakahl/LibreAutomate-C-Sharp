@@ -5,6 +5,7 @@ using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -19,74 +20,109 @@ static class App
 	internal static AOutputServer OutputServer;
 	public static AppSettings Settings;
 	public static MainWindow Wnd;
+	public static AWnd Hwnd; //of Wnd
 	public static AuMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
+	public static AIconImageCache ImageCache;
 
 #if TRACE
 	static App() {
 		APerf.First();
 		ATimer.After(1, _ => APerf.NW());
+		AOutput.QM2.UseQM2 = true;
+		AOutput.Clear();
 	}
 #endif
 
 	[STAThread]
 	static void Main(string[] args) {
+		if(args.Length > 0) {
+			switch(args[0]) {
+			case "/dd":
+				UacDragDrop.NonAdminProcess.MainDD(args);
+				return;
+				//case "/si":
+				//	SetupHelpers.Install();
+				//	return;
+				//case "/su":
+				//	SetupHelpers.Uninstall();
+				//	return;
+			}
+		}
+
+		//restart as admin if started as non-admin on admin user account
+		if(args.Length > 0 && args[0] == "/n") {
+			args = args.RemoveAt(0);
+		} else if(AUac.OfThisProcess.Elevation == UacElevation.Limited) {
+#if !DEBUG
+			if(_RestartAsAdmin(args)) return;
+#endif
+		}
+		//speed with restarting is the same as when runs as non-admin. The fastest is when started as admin. Because faster when runs as admin.
+
+		_Main(args);
+	}
+
+	static void _Main(string[] args)
+	{
 		//#if !DEBUG
 		AProcess.CultureIsInvariant = true;
 		//#endif
 		AssertListener_.Setup();
+		AFolders.ThisAppDocuments = (FolderPath)(AFolders.Documents + "Aedit");
+		Directory.SetCurrentDirectory(AFolders.ThisApp); //because it is c:\windows\system32 when restarted as admin
 
 #if true
 		AppDomain.CurrentDomain.UnhandledException += (ad, e) => AOutput.Write(e.ExceptionObject);
-		AOutput.QM2.UseQM2 = true;
-		AOutput.Clear();
 		//ADebug.PrintLoadedAssemblies(true, true);
 #else
 		AppDomain.CurrentDomain.UnhandledException += (ad, e) => ADialog.ShowError("Exception", e.ExceptionObject.ToString());
 #endif
 
-		AFolders.ThisAppDocuments = (FolderPath)(AFolders.Documents + "Aedit");
-
 		if (CommandLine.OnProgramStarted(args)) return;
 
-		//OutputServer = new AOutputServer(true) { NoNewline = true }; //TODO
-		OutputServer = new AOutputServer(false) { NoNewline = true };
+		OutputServer = new AOutputServer(true) { NoNewline = true }; //TODO
+		//OutputServer = new AOutputServer(false) { NoNewline = true };
 		OutputServer.Start();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
 		Api.SetSearchPathMode(Api.BASE_SEARCH_PATH_ENABLE_SAFE_SEARCHMODE); //let SearchPath search in current directory after system directories
 
-		Settings = AppSettings.Load();
+		APerf.Next('o');
+		Settings = AppSettings.Load(); //the slowest part, >37 ms. Loads many dlls used in JSON deserialization.
+		APerf.Next('s');
 		UserGuid = Settings.user; if (UserGuid == null) Settings.user = UserGuid = Guid.NewGuid().ToString();
 
-		//AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs e) => {
-		//	//AOutput.Write(e.LoadedAssembly.GetName().Name);
-		//	;
-		//};
-
-		AOutput.Write(CommandLine.MsgWnd);
 		Tasks = new RunningTasks();
+		APerf.Next('t');
+
+		FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
+		APerf.Next('W');
+		CommandLine.OnProgramLoaded();
+		APerf.Next('c');
+		Loaded = EProgramState.LoadedWorkspace;
+		Model.RunStartupScripts();
+
+		ATimer.Every(1000, t => _TimerProc(t));
+		//note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
+		//Timer1s += () => AOutput.Write("1 s");
+		//Timer1sOr025s += () => AOutput.Write("0.25 s");
+
+		TrayIcon.Update_();
+		APerf.Next('i');
+		//APerf.Write();
 		//return;
 
-		//FilesModel.LoadWorkspace(CommandLine.WorkspaceDirectory);
-		//CommandLine.OnProgramLoaded();
-		//Loaded = EProgramState.LoadedWorkspace;
-		//Model.RunStartupScripts();
+		if (!App.Settings.runHidden /*|| CommandLine.StartVisible*/ || TrayIcon.WaitForShow_()) {
+			//AOutput.Write("-- loading UI --");
+#if TRACE
+			AOutput.QM2.UseQM2 = false;
+#endif
+			_LoadUI();
+		}
 
-		//ATimer.Every(1000, t => _TimerProc(t));
-		////note: timer can make Process Hacker/Explorer show CPU usage, even if we do nothing. Eg 0.02 if 250, 0.01 if 500, <0.01 if 1000.
-		////Timer1s += () => AOutput.Write("1 s");
-		////Timer1sOr025s += () => AOutput.Write("0.25 s");
-
-		//TrayIcon.Update_();
-
-		//if (!App.Settings.runHidden /*|| CommandLine.StartVisible*/ || TrayIcon.WaitForShow_()) {
-		//	AOutput.Write("-- loading UI --");
-		//	_LoadUI();
-		//}
-
-		//OutputServer.Stop();
+		OutputServer.Stop();
 
 		//#if TRACE
 		//		//50 -> 36 -> 5 (5/40/9)
@@ -108,6 +144,7 @@ static class App
 	static void _LoadUI() {
 		var app = new WpfApp();
 		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
+		ImageCache = new AIconImageCache();
 		new MainWindow();
 		app.DispatcherUnhandledException += (_, e) => {
 			e.Handled = 1 == ADialog.ShowError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wnd, e.Exception.ToString());
@@ -171,7 +208,7 @@ static class App
 			bool isAuHomePC = Api.GetEnvironmentVariable("Au.Home<PC>", null, 0) > 0;
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
-				isAuHomePC ? "_Au.Editor" : "Au.Editor", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
+				isAuHomePC ? "_Aedit" : "Aedit", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe
 				true, args);
 			//Api.AllowSetForegroundWindow(pid); //fails and has no sense, because it's Au.CL.exe running as SYSTEM
 		}
@@ -280,7 +317,7 @@ static class App
 		}
 
 		static void _ContextMenu() {
-			//Don't use AContextMenu. Slow, adds +24 MB (6->30), don't work keys etc.
+			//Don't use AWpfMenu. Slow, adds +24 MB (6->30), no per-monitor DPI, no keys, etc.
 			using var m = new ClassicPopupMenu_();
 			m.Add(1, "End green task\tSleep");
 			m.Add(2, "Disable triggers\tM-click");

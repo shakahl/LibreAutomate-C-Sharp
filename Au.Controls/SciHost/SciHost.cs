@@ -40,7 +40,7 @@ namespace Au.Controls
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 			var wParent = (AWnd)hwndParent.Handle;
 			_w = AWnd.More.CreateWindow("Scintilla", null, WS.CHILD, 0, 0, 0, 100, 100, wParent);
-			//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area. Maybe also should be size = 0, but then eg invisible in aguibuilder.
+			//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area. Maybe also should be size = 0, but then eg invisible in awpfbuilder.
 
 			_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));

@@ -81,11 +81,6 @@ class CmdHandlers : IGStripManagerCallbacks
 		Program.Model.NewItem("Class.cs", beginRenaming: true);
 	}
 
-	public void File_NewPartial()
-	{
-		Program.Model.NewItem("Partial.cs", beginRenaming: true);
-	}
-
 	public void File_NewFolder()
 	{
 		Program.Model.NewItemX(null, beginRenaming: true);
@@ -395,12 +390,12 @@ class CmdHandlers : IGStripManagerCallbacks
 
 	public void Run_Compile()
 	{
-		Run.CompileAndRun(false, Program.Model.CurrentFile);
+		CompileRun.CompileAndRun(false, Program.Model.CurrentFile);
 	}
 
 	public void Run_Run()
 	{
-		Run.CompileAndRun(true, Program.Model.CurrentFile, runFromEditor: true);
+		CompileRun.CompileAndRun(true, Program.Model.CurrentFile, runFromEditor: true);
 	}
 
 	public void Run_EndTask()

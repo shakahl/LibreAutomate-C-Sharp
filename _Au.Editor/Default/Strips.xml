@@ -39,7 +39,6 @@
 			<File_New>
 				<File_NewScript i="fileScript"/>
 				<File_NewClass i="fileClass"/>
-				<File_NewPartial i="fileClass"/>
 				<File_NewFolder i="folder"/>
 			</File_New>
 			<sep/>

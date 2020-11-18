@@ -39,7 +39,7 @@ namespace Au.Controls
 
 			void _CaptionContextMenu(_Node thisOrParentTab) {
 				if (_IsDocument && !_leaf.addedLater) return;
-				var m = new AContextMenu();
+				var m = new AWpfMenu();
 
 				bool canClose = _leaf?.canClose ?? false;
 				if (canClose) m.Add("Close", click: o => _UserClosing()).InputGestureText = "M-click";
@@ -215,7 +215,7 @@ namespace Au.Controls
 				if ((state ^ oldState).Has(_DockState.Hide)) VisibleChanged?.Invoke(this, oldState.Has(_DockState.Hide));
 			}
 
-			void _ContextMenu_Move(AContextMenu m) {
+			void _ContextMenu_Move(AWpfMenu m) {
 				using (m.Submenu("Move To")) {
 					string sThis = ToString();
 					foreach (var target in RootAncestor.Descendants(andSelf: true)) {

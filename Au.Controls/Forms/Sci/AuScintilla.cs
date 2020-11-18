@@ -488,7 +488,7 @@ namespace Au.Controls
 			}
 		}
 
-		public void TestCreatePosMap()//TODO
+		public void TestCreatePosMap()//_TODO
 		{
 			_CreatePosMap();
 			//foreach(var v in _aPos) AOutput.Write(v.i8, v.i16);

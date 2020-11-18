@@ -12,19 +12,16 @@ partial class PanelFiles : DockPanel
 {
 	//idea: when file clicked, open it and show AMenu of its functions (if > 1).
 
-	FilesModel.FilesView _c;
-	FilesModel _model;
+	FilesModel.FilesView _tv;
 
 	public PanelFiles()
 	{
-		_c = new FilesModel.FilesView();
-		//_c.AccessibleName = _c.Name = "Files_list"; //TODO
-		//this.AccessibleName = this.Name = "Files";
-		this.Children.Add(_c);
+		_tv = new FilesModel.FilesView { Name = "Files_list" };
+		//System.Windows.Automation.AutomationProperties.SetName(this, "Files");
+		this.Children.Add(_tv);
 	}
 
-	public FilesModel.FilesView ZControl => _c;
+	public FilesModel.FilesView TreeControl => _tv;
 
-	public FilesModel ZModel => _model;
 
 }

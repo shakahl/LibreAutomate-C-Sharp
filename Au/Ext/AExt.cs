@@ -149,6 +149,12 @@ namespace Au
 		public static (int Offset, int Length) GetOffsetAndLength(this Range? t, int length)
 			=> t?.GetOffsetAndLength(length) ?? (0, length);
 
+		//currently not used. Creates shorter string than ToString.
+		///// <summary>
+		///// Converts this <b>Guid</b> to Base-64 string.
+		///// </summary>
+		//public static string ToBase64(this Guid t) => Convert.ToBase64String(new ReadOnlySpan<byte>((byte*)&t, sizeof(Guid)));
+
 		//rejected: too simple. We have AOutput.Write(uint), also can use $"0x{t:X}" or "0x" + t.ToString("X").
 		///// <summary>
 		///// Converts int to hexadecimal string like "0x3A".

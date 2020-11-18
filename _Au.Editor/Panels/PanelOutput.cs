@@ -22,7 +22,6 @@ class PanelOutput : AuUserControlBase
 {
 	_SciOutput _c;
 	Queue<OutServMessage> _history;
-	StringBuilder _sb;
 
 	public AuScintilla ZOutput => _c;
 
@@ -35,90 +34,7 @@ class PanelOutput : AuUserControlBase
 		this.Controls.Add(_c);
 
 		_history = new Queue<OutServMessage>();
-		Program.OutputServer.SetNotifications(_GetServerMessages, this);
 	}
-
-	void _GetServerMessages()
-	{
-		_c.ZTags.OutputServerProcessMessages(Program.OutputServer, m => {
-			if(m.Type != OutServMessageType.Write) return;
-
-			//create links in compilation errors/warnings or run-time stack trace
-			var s = m.Text; int i;
-			if(s.Length >= 22) {
-				if(s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
-					if(s_rx1 == null) s_rx1 = new ARegex(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
-					m.Text = s_rx1.Replace(s, x => {
-						var f = Program.Model.FindByFilePath(x[1].Value);
-						if(f == null) return x[0].Value;
-						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
-					});
-				} else if((i = s.Find("\n   at ") + 1) > 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
-					if(_sb == null) _sb = new StringBuilder(s.Length + 2000); else _sb.Clear();
-					var b = _sb;
-					//AOutput.QM2.Write("'" + s + "'");
-					int iLiteral = 0;
-					if(!s.Starts("<>")) b.Append("<>");
-					else {
-						iLiteral = i - 1; if(s[iLiteral - 1] == '\r') iLiteral--;
-						if(0 == s.Eq(iLiteral -= 3, false, "<_>", "<\a>")) iLiteral = 0;
-					}
-					if(iLiteral > 0) b.Append(s, 0, iLiteral).AppendLine(); else b.Append(s, 0, i);
-					var rx = s_rx2; if(rx == null) s_rx2 = rx = new ARegex(@" in (.+?):line (?=\d+$)");
-					bool replaced = false, isMain = false;
-					int stackEnd = s.Length/*, stackEnd2 = 0*/;
-					foreach(var k in s.Segments(SegSep.Line, range: i..)) {
-						//AOutput.QM2.Write("'"+k+"'");
-						if(s.Eq(k.start, "   at ")) {
-							if(isMain) {
-								//if(stackEnd2 == 0 && s.Eq(k.start, "   at Script.Main(String[] args) in ")) stackEnd2 = k.start; //rejected. In some cases may cut something important.
-								continue;
-							}
-							if(!rx.MatchG(s, out var g, 1, (k.start + 6)..k.end)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
-							var f = Program.Model.FindByFilePath(g.Value); if(f == null) continue;
-							int i1 = g.End + 6, len1 = k.end - i1;
-							b.Append("   at ")
-							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
-							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
-
-							isMain = s.Eq(k.start, "   at Script..ctor(String[] args) in ");
-							if(!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
-							b.AppendLine();
-
-							replaced = true;
-						} else if(!(s.Eq(k.start, "   ---") || s.Eq(k.start, "---"))) {
-							stackEnd = k.start;
-							break;
-						}
-					}
-					if(replaced) {
-						int j = stackEnd; //int j = stackEnd2 > 0 ? stackEnd2 : stackEnd;
-						if(s[j - 1] == '\n') { if(s[--j - 1] == '\r') j--; }
-						b.Append("   <fold><\a>   --- Raw stack trace ---\r\n").Append(s, i, j - i).Append("</\a></fold>");
-						if(iLiteral > 0 && 0 != s.Eq(stackEnd, false, "</_>", "</\a")) stackEnd += 4;
-						int more = s.Length - stackEnd;
-						if(more > 0) {
-							if(!s.Eq(stackEnd, "</fold>")) b.AppendLine();
-							b.Append(s, stackEnd, more);
-						}
-						m.Text = b.ToString();
-						//AOutput.QM2.Write("'" + m.Text + "'");
-					}
-					if(_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
-				}
-			}
-
-			if(s.Length <= 10_000) { //* 50 = 1 MB
-				if(!ReferenceEquals(s, m.Text)) m = new OutServMessage(OutServMessageType.Write, s, m.TimeUtc, m.Caller);
-				_history.Enqueue(m);
-				if(_history.Count > 50) _history.Dequeue();
-			}
-
-			(_iPanel ??= Panels.PanelManager.ZGetPanel(this)).Visible = true;
-		});
-	}
-	static ARegex s_rx1, s_rx2;
-	AuDockPanel.IPanel _iPanel;
 
 	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
@@ -203,6 +119,7 @@ class PanelOutput : AuUserControlBase
 	class _SciOutput : AuScintilla
 	{
 		PanelOutput _p;
+		StringBuilder _sb;
 
 		public _SciOutput(PanelOutput panel)
 		{
@@ -232,6 +149,8 @@ class PanelOutput : AuUserControlBase
 				if(f == null || !Program.Model.SetCurrentFile(f)) return;
 				Strips.Cmd.File_Properties();
 			});
+
+			Program.OutputServer.SetNotifications(this.Hwnd(), Api.WM_APP);
 		}
 
 		protected override void WndProc(ref Message m)
@@ -243,9 +162,93 @@ class PanelOutput : AuUserControlBase
 			case Api.WM_CONTEXTMENU:
 				Strips.ddOutput.ZShowAsContextMenu((int)m.LParam == -1);
 				return;
+			case Api.WM_APP:
+				ZTags.OutputServerProcessMessages(Program.OutputServer, _onServerMessage ??= _OnServerMessage);
+				break;
 			}
 			base.WndProc(ref m);
 		}
+
+		Action<OutServMessage> _onServerMessage;
+		void _OnServerMessage(OutServMessage m) {
+			if (m.Type != OutServMessageType.Write) return;
+
+			//create links in compilation errors/warnings or run-time stack trace
+			var s = m.Text; int i;
+			if (s.Length >= 22) {
+				if (s.Starts("<><Z #") && s.Eq(12, ">Compilation: ")) { //compilation
+					s_rx1 ??= new ARegex(@"(?m)^\[(.+?)(\((\d+),(\d+)\))?\]: ");
+					m.Text = s_rx1.Replace(s, x => {
+						var f = Program.Model.FindByFilePath(x[1].Value);
+						if (f == null) return x[0].Value;
+						return $"<open \"{f.IdStringWithWorkspace}|{x[3].Value}|{x[4].Value}\">{f.Name}{x[2].Value}<>: ";
+					});
+				} else if ((i = s.Find("\n   at ") + 1) > 0 && s.Find(":line ", i) > 0) { //stack trace with source file info
+					var b = _sb ??= new StringBuilder(s.Length + 2000);
+					b.Clear();
+					//AOutput.QM2.Write("'" + s + "'");
+					int iLiteral = 0;
+					if (!s.Starts("<>")) b.Append("<>");
+					else {
+						iLiteral = i - 1; if (s[iLiteral - 1] == '\r') iLiteral--;
+						if (0 == s.Eq(iLiteral -= 3, false, "<_>", "<\a>")) iLiteral = 0;
+					}
+					if (iLiteral > 0) b.Append(s, 0, iLiteral).AppendLine(); else b.Append(s, 0, i);
+					s_rx2 ??= new ARegex(@" in (.+?):line (?=\d+$)");
+					bool replaced = false, isMain = false;
+					int stackEnd = s.Length/*, stackEnd2 = 0*/;
+					foreach (var k in s.Segments(SegSep.Line, range: i..)) {
+						//AOutput.QM2.Write("'"+k+"'");
+						if (s.Eq(k.start, "   at ")) {
+							if (isMain) {
+								//if(stackEnd2 == 0 && s.Eq(k.start, "   at Script.Main(String[] args) in ")) stackEnd2 = k.start; //rejected. In some cases may cut something important.
+								continue;
+							}
+							if (!s_rx2.MatchG(s, out var g, 1, (k.start + 6)..k.end)) continue; //note: no "   at " if this is an inner exception marker. Also in aggregate exception stack trace.
+							var f = Program.Model.FindByFilePath(g.Value); if (f == null) continue;
+							int i1 = g.End + 6, len1 = k.end - i1;
+							b.Append("   at ")
+							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
+							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
+
+							isMain = s.Eq(k.start, "   at Script..ctor(String[] args) in ");
+							if (!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
+							b.AppendLine();
+
+							replaced = true;
+						} else if (!(s.Eq(k.start, "   ---") || s.Eq(k.start, "---"))) {
+							stackEnd = k.start;
+							break;
+						}
+					}
+					if (replaced) {
+						int j = stackEnd; //int j = stackEnd2 > 0 ? stackEnd2 : stackEnd;
+						if (s[j - 1] == '\n') { if (s[--j - 1] == '\r') j--; }
+						b.Append("   <fold><\a>   --- Raw stack trace ---\r\n").Append(s, i, j - i).Append("</\a></fold>");
+						if (iLiteral > 0 && 0 != s.Eq(stackEnd, false, "</_>", "</\a")) stackEnd += 4;
+						int more = s.Length - stackEnd;
+						if (more > 0) {
+							if (!s.Eq(stackEnd, "</fold>")) b.AppendLine();
+							b.Append(s, stackEnd, more);
+						}
+						m.Text = b.ToString();
+						//AOutput.QM2.Write("'" + m.Text + "'");
+					}
+					if (_sb.Capacity > 10_000) _sb = null; //let GC free it. Usually < 4000.
+				}
+			}
+
+			if (s.Length <= 10_000) { //* 50 = 1 MB
+				if (!ReferenceEquals(s, m.Text)) m = new OutServMessage(OutServMessageType.Write, s, m.TimeUtc, m.Caller);
+				var h = _p._history;
+				h.Enqueue(m);
+				if (h.Count > 50) h.Dequeue();
+			}
+
+			(_iPanel ??= Panels.PanelManager.ZGetPanel(_p)).Visible = true;
+		}
+		static ARegex s_rx1, s_rx2;
+		AuDockPanel.IPanel _iPanel;
 
 		void _OpenLink(string s)
 		{
@@ -258,7 +261,7 @@ class PanelOutput : AuUserControlBase
 		{
 			var a = s.Split('|');
 			var f = Program.Model.FindScript(a[0]); if(f == null) return;
-			Run.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
+			CompileRun.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));
 		}
 	}
 }

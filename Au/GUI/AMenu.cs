@@ -692,7 +692,7 @@ namespace Au
 		/// </param>
 		/// <param name="owner">Owner control/form or null.</param>
 		/// <param name="position">Position in screen or owner's client area. If null (default), uses the mouse cursor position.</param>
-		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
+		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>position</i> is offset.</param>
 		/// <param name="direction">Menu drop direction.</param>
 		/// <remarks>
 		/// The menu is modal; the function returns when it is closed.

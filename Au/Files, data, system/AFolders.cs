@@ -295,7 +295,12 @@ namespace Au
 
 		static void _SetOnce(ref string propVar, string value, bool create, [CallerMemberName] string propName = null) {
 			lock (_lock) {
-				if (propVar != null) throw new InvalidOperationException("AFolders." + propName + " is already set.");
+				if (propVar != null) {
+#if DEBUG
+					if (!Debugger.IsAttached) //debugger may get the property. Then _SetAuto sets default value.
+#endif
+						throw new InvalidOperationException("AFolders." + propName + " is already set.");
+				}
 				if (create) AFile.CreateDirectory(value);
 				propVar = value;
 			}

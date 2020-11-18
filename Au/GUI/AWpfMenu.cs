@@ -1,4 +1,8 @@
-﻿using Au.Types;
+﻿#define REJECTED //some features rejected because of WPF bugs
+
+//TODO: try System.Windows.Media.VisualTreeHelper.SetRootDpi(menu)
+
+using Au.Types;
 using Au.Util;
 using System;
 using System.Collections.Generic;
@@ -25,7 +29,7 @@ namespace Au
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// var m = new AContextMenu(inScript: true);
+	/// var m = new AWpfMenu(inScript: true);
 	/// m["One"] = o => AOutput.Write(o);
 	/// using(m.Submenu("Sub")) {
 	/// 	m["Three"] = o => AOutput.Write(o);
@@ -36,11 +40,11 @@ namespace Au
 	/// m.Show(); //or m.IsOpen=true;
 	/// ]]></code>
 	/// </example>
-	public class AContextMenu : ContextMenu
+	public class AWpfMenu : ContextMenu
 	{
 		/// <param name="inScript">Sets <see cref="CanEditScript"/> and <see cref="ExtractIconPathFromCode"/>.</param>
 		/// <param name="actionThread">Sets <see cref="ActionThread"/>.</param>
-		public AContextMenu(bool inScript = false, bool actionThread = false) {
+		public AWpfMenu(bool inScript = false, bool actionThread = false) {
 			CanEditScript = inScript;
 			ExtractIconPathFromCode = inScript;
 			ActionThread = actionThread;
@@ -138,7 +142,7 @@ namespace Au
 		/// <remarks>
 		/// Then the add-item functions will add items to the submenu, until the returned variable is disposed.
 		/// </remarks>
-		/// <example><see cref="AContextMenu"/></example>
+		/// <example><see cref="AWpfMenu"/></example>
 		public UsingEndAction Submenu(object text, object icon = null, Action<CMActionArgs> click = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
 			var mi = Add(text, icon, click, f, l);
 			_submenuStack.Push(mi);
@@ -186,13 +190,15 @@ namespace Au
 		public CMExceptions ExceptionHandling { get; set; }
 
 		/// <summary>
-		/// Sets <see cref="ContextMenu.IsOpen"/> = true, waits until closed, closes on Esc or mouse click/far.
+		/// Sets <see cref="ContextMenu.IsOpen"/> = true and waits until closed.
 		/// </summary>
-		/// <remarks>
-		/// Use this function when <see cref="ContextMenu.IsOpen"/> would not work well, for example if this thread does not have an active WPF window. Else use the standard ways - set <b>IsOpen</b> = true or assign this object to a WPF control.
-		/// </remarks>
+
 		public void Show() {
 			IsOpen = true;
+#if REJECTED
+			_dispFrame = new DispatcherFrame();
+			Dispatcher.PushFrame(_dispFrame);
+#else
 			AHookWin kh = null, mh = null;
 			var wa = AWnd.ThisThread.Active;
 			bool wpfInactive = wa.Is0 || null == HwndSource.FromHwnd(wa.Handle);
@@ -239,20 +245,30 @@ namespace Au
 				kh?.Dispose();
 				mh?.Dispose();
 			}
+#endif
 		}
 		DispatcherFrame _dispFrame;
+#if !REJECTED
+		/// <remarks>
+		/// Use this function when <see cref="ContextMenu.IsOpen"/> would not work well, for example if this thread does not have an active WPF window. Else use the standard ways - set <b>IsOpen</b> = true or assign this object to a WPF control.
+		/// </remarks>
 		bool _mouseWasNear;
+#endif
 
-		///
-		protected override void OnClosed(RoutedEventArgs e) {
+		void _EndModal() {
 			if (_dispFrame != null) {
 				_dispFrame.Continue = false;
 				_dispFrame = null;
 			}
-			base.OnClosed(e);
-			//small problem: OnClose called with 160 ms delay. Same with native message loop.
 		}
 
+		///
+		protected override void OnClosed(RoutedEventArgs e) {
+			_EndModal();
+			base.OnClosed(e);
+		}
+
+#if !REJECTED
 		/// <summary>
 		/// Let <see cref="Show"/> close the menu when the mouse cursor moves away from it to this distance.
 		/// </summary>
@@ -269,6 +285,7 @@ namespace Au
 		/// Default <see cref="MouseClosingDistance"/> value. Default 200.
 		/// </summary>
 		public static int DefaultMouseClosingDistance { get; set; } = 200;
+#endif
 
 		/// <summary>
 		/// When adding items without explicitly specified icon, extract icon from item action code.
@@ -370,20 +387,70 @@ namespace Au
 			}
 			catch (Exception ex) { AWarning.Write(ex.ToStringWithoutStack()); }
 			return icon;
+			//TODO: support xaml and cache
+		}
+
+		/// <summary>
+		/// Creates and shows popup menu where items use ids instead of actions.
+		/// Returns selected item id, or 0 if cancelled.
+		/// </summary>
+		/// <param name="items">
+		/// Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+		/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+		/// For separators use null or empty strings: "One|Two||Three|Four".
+		/// </param>
+		/// <param name="owner"><see cref="ContextMenu.PlacementTarget"/>. The menu uses its DPI. Can be null, but not recommended because then uses DPI of primary screen (WPF bug).</param>
+		/// <param name="beforeShow">Called after adding menu items, before showing the menu. For example can set placement properties.</param>
+		/// <remarks>
+		/// The menu is modal; the function returns when closed.
+		/// </remarks>
+		/// <seealso cref="ADialog.ShowList"/>
+		public static int ShowSimple(DStringList items, UIElement owner, Action<AWpfMenu> beforeShow = null) {
+			var a = items.ToArray();
+			var m = new AWpfMenu();
+			//	var dispFrame = new DispatcherFrame();
+			//	m.Closed+=(_,_)=>dispFrame.Continue=false;
+			int result = 0, autoId = 0;
+			foreach (var v in a) {
+				var s = v;
+				if (s.NE()) {
+					m.Separator();
+				} else {
+					if (s.ToInt(out int id, 0, out int end)) {
+						if (s.Eq(end, ' ')) end++;
+						s = s[end..];
+						autoId = id;
+					} else {
+						id = ++autoId;
+					}
+					m.Add(s, null, o => result = (int)o.Item.Tag).Tag = id;
+					//			m.Add(s, null, o => {
+					//				result = (int)o.Item.Tag;
+					//				dispFrame.Continue=false;
+					//			}).Tag = id;
+				}
+			}
+			if (owner != null) m.PlacementTarget = owner;
+			beforeShow?.Invoke(m);
+			m.Show();
+			//	m.IsOpen=true;
+			//	Dispatcher.PushFrame(dispFrame);
+			return result;
 		}
 
 		class _MenuItem : MenuItem
 		{
-			AContextMenu _m;
+			AWpfMenu _m;
 			public Action<CMActionArgs> action;
 			public CMExceptions exceptOpt;
 			public bool startThread;
 			public string sourceFile;
 			public int sourceLine;
 
-			public _MenuItem(AContextMenu m) { _m = m; }
+			public _MenuItem(AWpfMenu m) { _m = m; }
 
 			protected override void OnClick() {
+				_m._EndModal(); //workaround for: OnClosed called with 160 ms delay. Same with native message loop.
 				if (action != null) {
 					if (startThread) AThread.Start(() => _ExecItem(), background: false); else _ExecItem();
 					void _ExecItem() {
@@ -405,7 +472,7 @@ namespace Au
 					e.Handled = true;
 					_m.IsOpen = false;
 					if (_m.CanEditScript && !sourceFile.NE()) AScriptEditor.GoToEdit(sourceFile, sourceLine);
-					//could instead use a AContextMenu here, but: dangerous; closes this menu before showing it.
+					//could instead use a AWpfMenu here, but: dangerous; closes this menu before showing it.
 					break;
 				case MouseButton.Middle:
 					_m.IsOpen = false;
@@ -421,7 +488,7 @@ namespace Au.Types
 {
 
 	/// <summary>
-	/// Used with <see cref="AContextMenu.ExceptionHandling"/>;
+	/// Used with <see cref="AWpfMenu.ExceptionHandling"/>;
 	/// </summary>
 	public enum CMExceptions
 	{
@@ -436,7 +503,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Arguments for <see cref="AContextMenu"/> item actions.
+	/// Arguments for <see cref="AWpfMenu"/> item actions.
 	/// </summary>
 	public class CMActionArgs
 	{
@@ -445,9 +512,10 @@ namespace Au.Types
 
 		/// <summary>
 		/// The menu item object.
-		/// If <see cref="AContextMenu.ActionThread"/> true, it cannot be used directly. A workaround is <c>o.Item.Dispatcher.Invoke(()=>...);</c>.
+		/// If <see cref="AWpfMenu.ActionThread"/> true, it cannot be used directly. A workaround is <c>o.Item.Dispatcher.Invoke(()=>...);</c>.
 		/// </summary>
 		public MenuItem Item { get; }
+
 		///
 		public override string ToString() {
 			var d = Item.Dispatcher;

@@ -2179,7 +2179,9 @@ namespace Au
 		/// <param name="index">A constant from <see cref="Native.GWL"/>, or an offset in window memory reserved when registering window class.</param>
 		/// <param name="newValue">New value.</param>
 		/// <exception cref="AuWndException"/>
-		/// <seealso cref="Native.SetWindowSubclass"/>
+		/// <remarks>
+		/// See also API <msdn>SetWindowSubclass</msdn>.
+		/// </remarks>
 		public LPARAM SetWindowLong(int index, LPARAM newValue) {
 			ALastError.Clear();
 			var prev = Api.SetWindowLongPtr(this, index, newValue);

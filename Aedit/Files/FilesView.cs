@@ -15,20 +15,23 @@ using System.Reflection;
 using System.Drawing;
 using System.Linq;
 using System.Windows.Input;
+using System.Windows;
 
 partial class FilesModel
 {
 	public class FilesView : AuTreeView
 	{
-		public FilesView()
-		{
-			this.MultiSelect = true;
-			this.AllowDrop = true;
-
-			App.Model.TreeControl = this;
+		public FilesView() {
+			MultiSelect = true;
+			AllowDrop = true;
+			ImageCache = App.ImageCache;
 
 			ItemActivated += _ItemActivated;
 			ItemClick += _ItemClick;
+
+			ItemDragStart += _ItemDragStart;
+
+			FilesModel.NeedRedraw += v => { if (v.f != null) Redraw(v.f, v.remeasure); else Redraw(v.remeasure); };
 		}
 
 		public void SetItems() {
@@ -55,109 +58,92 @@ partial class FilesModel
 
 		protected override void OnKeyDown(KeyEventArgs e) {
 			base.OnKeyDown(e);
-			App.Model._OnKeyDown(e);
+			var m = App.Model;
+			switch ((e.KeyboardDevice.Modifiers, e.Key)) {
+			case (0, Key.Enter): m.OpenSelected(1); break;
+			case (0, Key.Delete): m.DeleteSelected(); break;
+			case (ModifierKeys.Control, Key.X): m.CutCopySelected(true); break;
+			case (ModifierKeys.Control, Key.C): m.CutCopySelected(false); break;
+			case (ModifierKeys.Control, Key.V): m.Paste(); break;
+			case (0, Key.Escape): m.Uncut(); break;
+			case (0, Key.F2): m.RenameSelected(); break;
+			default: return;
+			}
+			e.Handled = true;
 		}
 
-		//#region drag-drop
+		public new FileNode[] SelectedItems => base.SelectedItems.Cast<FileNode>().ToArray();
 
-		//bool _drag;
-		//TreeNodeAdv[] _dragNodes;
+		#region drag-drop
 
-		//protected override void OnItemDrag(MouseButtons buttons, object item)
-		//{
-		//	if(buttons == MouseButtons.Left) DoDragDropSelectedNodes(DragDropEffects.Move | DragDropEffects.Copy);
-		//	base.OnItemDrag(buttons, item);
-		//}
+		private void _ItemDragStart(object sender, TVItemEventArgs e) {
+			//if(e.Item.IsFolder && e.Item.IsExpanded) Expand(e.Index, false);
+			var a = IsSelected(e.Index) ? SelectedItems : new FileNode[] { e.Item as FileNode };
+			DragDrop.DoDragDrop(this, new DataObject(typeof(FileNode[]), a), DragDropEffects.Move | DragDropEffects.Copy);
+		}
 
-		//protected override void OnDragEnter(DragEventArgs e)
-		//{
-		//	_drag = false; _dragNodes = null;
-		//	e.Effect = 0;
+		protected override void OnDragOver(DragEventArgs e) {
+			e.Handled = true;
+			bool can = _DragDrop(e, false);
+			OnDragOver2(can);
+			base.OnDragOver(e);
+		}
 
-		//	//can drop TreeNodeAdv and files
-		//	TreeNodeAdv[] nodes = null;
-		//	if(e.Data.GetDataPresent(typeof(TreeNodeAdv[]))) {
-		//		nodes = e.Data.GetData(typeof(TreeNodeAdv[])) as TreeNodeAdv[];
-		//		if(nodes[0].Tree != this) return;
-		//	} else if(e.Data.GetDataPresent(DataFormats.FileDrop, false)) {
-		//	} else return;
+		protected override void OnDrop(DragEventArgs e) {
+			e.Handled = true;
+			_DragDrop(e, true);
+			base.OnDrop(e);
+		}
 
-		//	var effect = _GetEffect(e, nodes != null); if(effect == 0) return;
-		//	e.Effect = effect;
+		bool _DragDrop(DragEventArgs e, bool drop) {
+			bool can;
+			FileNode[] nodes = null;
+			if (can = e.Data.GetDataPresent(typeof(FileNode[]))) {
+				nodes = e.Data.GetData(typeof(FileNode[])) as FileNode[];
+				GetDropInfo(out var d);
+				if (d.targetItem is FileNode target) {
+					bool no = false;
+					foreach (FileNode v in nodes) {
+						if (d.intoFolder) {
+							no = v == target;
+						} else {
+							no = target.IsDescendantOf(v);
+						}
+						if (no) break;
+					}
+					can = !no;
+				}
+			} else {
+				can = e.Data.GetDataPresent(DataFormats.FileDrop);
+			}
 
-		//	_drag = true; _dragNodes = nodes;
+			if (can) {
+				//convert multiple effects to single
+				switch (e.KeyStates & (DragDropKeyStates.ControlKey | DragDropKeyStates.ShiftKey)) {
+				case DragDropKeyStates.ControlKey: e.Effects &= DragDropEffects.Copy; break;
+				case DragDropKeyStates.ShiftKey: e.Effects &= DragDropEffects.Move; break;
+				case DragDropKeyStates.ControlKey | DragDropKeyStates.ShiftKey: e.Effects &= DragDropEffects.Link; break;
+				default:
+					if (e.Effects.Has(DragDropEffects.Move)) e.Effects = DragDropEffects.Move;
+					else if (e.Effects.Has(DragDropEffects.Link)) e.Effects = DragDropEffects.Link;
+					else if (e.Effects.Has(DragDropEffects.Copy)) e.Effects = DragDropEffects.Copy;
+					else e.Effects = 0;
+					break;
+				}
+			} else {
+				e.Effects = 0;
+			}
+			if (e.Effects == 0) return false;
 
-		//	base.OnDragEnter(e);
-		//}
+			if (drop) {
+				var files = nodes == null ? e.Data.GetData(DataFormats.FileDrop) as string[] : null;
+				GetDropInfo(out var d);
+				var pos = d.intoFolder ? FNPosition.Inside : (d.insertAfter ? FNPosition.After : FNPosition.Before);
+				App.Model._DroppedOrPasted(nodes, files, e.Effects == DragDropEffects.Copy, d.targetItem as FileNode, pos);
+			}
+			return true;
+		}
 
-		//static DragDropEffects _GetEffect(DragEventArgs e, bool nodes)
-		//{
-		//	var effect = e.AllowedEffect;
-		//	bool copy = 0 != (e.KeyState & 8);
-		//	if(nodes) effect &= copy ? DragDropEffects.Copy : DragDropEffects.Move;
-		//	else if(copy) effect &= DragDropEffects.Copy;
-		//	return effect;
-		//}
-
-		//protected override void OnDragOver(DragEventArgs e)
-		//{
-		//	if(!_drag) return;
-		//	//ADebug.PrintFunc();
-
-		//	base.OnDragOver(e); //set drop position, auto-scroll
-
-		//	e.Effect = 0;
-		//	var effect = _GetEffect(e, _dragNodes != null); if(effect == 0) return;
-		//	bool copy = 0 != (e.KeyState & 8);
-
-		//	var nTarget = this.DropPosition.Node; if(nTarget == null) return;
-		//	var fTarget = nTarget.Tag as FileNode;
-		//	bool isFolder = fTarget.IsFolder;
-		//	bool isInside = this.DropPosition.Position == NodePosition.Inside;
-
-		//	//prevent selecting whole non-folder item. Make either above or below.
-		//	if(isFolder) this.DragDropBottomEdgeSensivity = this.DragDropTopEdgeSensivity = 0.3f; //default
-		//	else this.DragDropBottomEdgeSensivity = this.DragDropTopEdgeSensivity = 0.51f;
-
-		//	//can drop here?
-		//	if(!copy && _dragNodes != null) {
-		//		foreach(TreeNodeAdv n in _dragNodes) {
-		//			var f = n.Tag as FileNode;
-		//			if(!f.CanMove(fTarget, (FNPosition)this.DropPosition.Position)) return;
-		//		}
-		//	}
-
-		//	//expand-collapse folder on right-click. However this does not work when dragging files, because Explorer then ends the drag-drop.
-		//	if(isFolder && isInside) {
-		//		var ks = e.KeyState & 3;
-		//		if(ks == 3 && _dragKeyStateForFolderExpand != 3) {
-		//			if(nTarget.IsExpanded) nTarget.Collapse(); else nTarget.Expand();
-		//		}
-		//		_dragKeyStateForFolderExpand = ks;
-		//	}
-
-		//	e.Effect = effect;
-		//}
-
-		//int _dragKeyStateForFolderExpand;
-
-		//protected override void OnDragDrop(DragEventArgs e)
-		//{
-		//	if(!_drag) return;
-		//	base.OnDragDrop(e);
-		//	string[] files = null;
-		//	if(_dragNodes == null) {
-		//		files = e.Data.GetData(DataFormats.FileDrop, false) as string[]; if(files == null) return;
-		//	}
-		//	_model._OnDragDrop(_dragNodes, files, 0 != (e.KeyState & 8), DropPosition);
-		//}
-
-		//protected override void OnDragLeave(EventArgs e)
-		//{
-		//	if(!_drag) return;
-		//	base.OnDragLeave(e);
-		//}
-
-		//#endregion
+		#endregion
 	}
 }

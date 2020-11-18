@@ -90,7 +90,8 @@ public unsafe partial class AuTreeView {
 
 		public string get_accName(VarInt varChild) {
 			var k=_Item(varChild);
-			if(k==null) return _sao.get_accName(varChild);
+			//if(k==null) return _sao.get_accName(varChild);
+			if(k==null) return _tv.Name;
 			return k.DisplayText;
 		}
 

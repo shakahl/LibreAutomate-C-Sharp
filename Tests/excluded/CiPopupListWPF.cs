@@ -53,7 +53,7 @@ class CiPopupListWPF
 		_compl = compl;
 
 		_p = new _Popup(this);
-		var b = new AGuiBuilder(_p)//.WinSize(300, 360)
+		var b = new AWpfBuilder(_p)//.WinSize(300, 360)
 			.R.Add(out ToolBarTray tt)
 			.Add(out _list)
 			.End();

@@ -34,10 +34,9 @@ namespace Au.Types
 		/// Gets dll module handle (Api.GetModuleHandle) or loads dll (Api.LoadLibrary), and returns unmanaged exported function address (Api.GetProcAddress).
 		/// See also: GetDelegate.
 		/// </summary>
-		internal static IntPtr GetProcAddress(string dllName, string funcName)
-		{
+		internal static IntPtr GetProcAddress(string dllName, string funcName) {
 			IntPtr hmod = GetModuleHandle(dllName);
-			if(hmod == default) { hmod = LoadLibrary(dllName); if(hmod == default) return hmod; }
+			if (hmod == default) { hmod = LoadLibrary(dllName); if (hmod == default) return hmod; }
 
 			return GetProcAddress(hmod, funcName);
 		}
@@ -45,9 +44,8 @@ namespace Au.Types
 		/// <summary>
 		/// Calls <see cref="GetProcAddress(string, string)"/> (loads dll or gets handle) and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
 		/// </summary>
-		internal static bool GetDelegate<T>(out T deleg, string dllName, string funcName) where T : class
-		{
-			IntPtr fa = GetProcAddress(dllName, funcName); if(fa == default) { deleg = null; return false; }
+		internal static bool GetDelegate<T>(out T deleg, string dllName, string funcName) where T : class {
+			IntPtr fa = GetProcAddress(dllName, funcName); if (fa == default) { deleg = null; return false; }
 			deleg = Marshal.GetDelegateForFunctionPointer<T>(fa);
 			return deleg != null;
 		}
@@ -55,10 +53,9 @@ namespace Au.Types
 		/// <summary>
 		/// Calls API <see cref="GetProcAddress(IntPtr, string)"/> and <see cref="Marshal.GetDelegateForFunctionPointer{TDelegate}(IntPtr)"/>.
 		/// </summary>
-		internal static bool GetDelegate<T>(out T deleg, IntPtr hModule, string funcName) where T : class
-		{
+		internal static bool GetDelegate<T>(out T deleg, IntPtr hModule, string funcName) where T : class {
 			deleg = null;
-			IntPtr fa = GetProcAddress(hModule, funcName); if(fa == default) return false;
+			IntPtr fa = GetProcAddress(hModule, funcName); if (fa == default) return false;
 			deleg = Marshal.GetDelegateForFunctionPointer<T>(fa);
 			return deleg != null;
 		}
@@ -66,9 +63,8 @@ namespace Au.Types
 		/// <summary>
 		/// If o is not null, calls <see cref="Marshal.ReleaseComObject"/>.
 		/// </summary>
-		internal static void ReleaseComObject<T>(T o) where T : class
-		{
-			if(o != null) Marshal.ReleaseComObject(o);
+		internal static void ReleaseComObject<T>(T o) where T : class {
+			if (o != null) Marshal.ReleaseComObject(o);
 		}
 
 		#endregion
@@ -390,7 +386,7 @@ namespace Au.Types
 		internal static extern bool AdjustTokenPrivileges(IntPtr TokenHandle, bool DisableAllPrivileges, in TOKEN_PRIVILEGES NewState, uint BufferLength, [Out] TOKEN_PRIVILEGES[] PreviousState, IntPtr ReturnLength);
 
 		[StructLayout(LayoutKind.Sequential)]
-		internal sealed class SECURITY_ATTRIBUTES :IDisposable
+		internal sealed class SECURITY_ATTRIBUTES : IDisposable
 		{
 			public int nLength;
 			public void* lpSecurityDescriptor;
@@ -400,15 +396,13 @@ namespace Au.Types
 			/// Creates SECURITY_ATTRIBUTES from string security descriptor.
 			/// securityDescriptor can be null; then lpSecurityDescriptor will be null;
 			/// </summary>
-			public SECURITY_ATTRIBUTES(string securityDescriptor)
-			{
+			public SECURITY_ATTRIBUTES(string securityDescriptor) {
 				nLength = IntPtr.Size * 3;
-				if(securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
+				if (securityDescriptor != null && !ConvertStringSecurityDescriptorToSecurityDescriptor(securityDescriptor, 1, out lpSecurityDescriptor)) throw new AuException(0, "SECURITY_ATTRIBUTES");
 			}
 
-			public void Dispose()
-			{
-				if(lpSecurityDescriptor != null) {
+			public void Dispose() {
+				if (lpSecurityDescriptor != null) {
 					LocalFree(lpSecurityDescriptor);
 					lpSecurityDescriptor = null;
 				}
@@ -829,8 +823,7 @@ namespace Au.Types
 			public AWnd hwndTrack;
 			public int dwHoverTime;
 
-			public TRACKMOUSEEVENT(AWnd w, uint flags, int hoverTime = 0)
-			{
+			public TRACKMOUSEEVENT(AWnd w, uint flags, int hoverTime = 0) {
 				cbSize = sizeof(TRACKMOUSEEVENT);
 				hwndTrack = w;
 				dwFlags = flags;
@@ -843,6 +836,25 @@ namespace Au.Types
 
 		[DllImport("comctl32.dll", EntryPoint = "#380", PreserveSig = true)]
 		internal static extern int LoadIconMetric(IntPtr hinst, LPARAM pszName, int lims, out AIcon phico);
+
+		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#410")]
+		public static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, nint dwRefData = default);
+
+		/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
+		public static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out nint pdwRefData);
+
+		/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#412")]
+		public static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
+
+		/// <summary>API <msdn>DefSubclassProc</msdn></summary>
+		[DllImport("comctl32.dll", EntryPoint = "#413")]
+		public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
+
+		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
+		public delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, nint dwRefData);
 
 
 
@@ -895,7 +907,28 @@ namespace Au.Types
 		//internal static extern int OleInitialize(IntPtr pvReserved);
 
 		[DllImport("ole32.dll", PreserveSig = true)]
+		internal static extern int OleInitialize(nint pvReserved);
+
+		[DllImport("ole32.dll")]
+		internal static extern void OleUninitialize();
+
+		[ComImport, Guid("00000122-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
+		internal interface IDropTarget
+		{
+			void DragEnter(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect);
+			void DragOver(int grfKeyState, POINT pt, ref int effect);
+			void DragLeave();
+			void Drop(System.Runtime.InteropServices.ComTypes.IDataObject d, int grfKeyState, POINT pt, ref int effect);
+		}
+
+		[DllImport("ole32.dll", PreserveSig = true)]
+		internal static extern int RegisterDragDrop(AWnd hwnd, IDropTarget pDropTarget);
+
+		[DllImport("ole32.dll", PreserveSig = true)]
 		internal static extern int RevokeDragDrop(AWnd hwnd);
+
+		[DllImport("ole32.dll")]
+		internal static extern void ReleaseStgMedium(ref System.Runtime.InteropServices.ComTypes.STGMEDIUM medium);
 
 
 		#endregion
@@ -949,14 +982,12 @@ namespace Au.Types
 		//internal static extern long strtoui64(byte* s, byte** endPtr = null, int radix = 0);
 
 		//This is used when working with char*. With C# strings use AExtString.ToInt32 etc.
-		internal static int strtoi(char* s, char** endPtr = null, int radix = 0)
-		{
+		internal static int strtoi(char* s, char** endPtr = null, int radix = 0) {
 			return (int)strtoi64(s, endPtr, radix);
 		}
 
 		//This is used with UTF-8 text.
-		internal static int strtoi(byte* s, byte** endPtr = null, int radix = 0)
-		{
+		internal static int strtoi(byte* s, byte** endPtr = null, int radix = 0) {
 			return (int)strtoi64(s, endPtr, radix);
 		}
 

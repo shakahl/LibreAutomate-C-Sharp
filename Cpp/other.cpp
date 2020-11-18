@@ -1,7 +1,8 @@
 #include "stdafx.h"
 #include "cpp.h"
 
-
+namespace other
+{
 LRESULT CALLBACK ClipboardHook(int code, WPARAM wParam, LPARAM lParam) {
 	auto m = (MSG*)lParam;
 	if(code < 0) goto g1;
@@ -31,6 +32,17 @@ EXPORT HHOOK Cpp_Clipboard(HHOOK hh)
 		UnhookWindowsHookEx(hh);
 	}
 	return NULL;
+}
+
+//enum DDEvent { Enter, Over, Drop, Leave }
+EXPORT HRESULT Cpp_CallIDroptarget(IDropTarget* dt, int ddEvent, IDataObject* d, DWORD keyState, POINTL pt, DWORD* pdwEffect) {
+	switch(ddEvent) {
+	case 0: return dt->DragEnter(d, keyState, pt, pdwEffect);
+	case 1: return dt->DragOver(keyState, pt, pdwEffect);
+	case 2: return dt->Drop(d, keyState, pt, pdwEffect);
+	default: return dt->DragLeave();
+	}
+}
 }
 
 namespace outproc

@@ -29,6 +29,10 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Compile Remove="Forms\excluded\ComboBox_.cs" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<ProjectReference Include="..\Libraries\_SourceGrid\_SourceGrid.csproj" />
 		<ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
 	</ItemGroup>
@@ -54,6 +58,12 @@
 
 	<ItemGroup>
 	  <Folder Include="Simple\" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <None Include="Forms\excluded\ComboBox_.cs">
+	    <SubType>Component</SubType>
+	  </None>
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

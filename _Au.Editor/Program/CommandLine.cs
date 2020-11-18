@@ -222,7 +222,7 @@ static class CommandLine
 				if(action == 99) AOutput.Write($"Command line: script '{script}' not found."); //else the caller script will throw exception
 				return (int)ATask.RunResult_.notFound;
 			}
-			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
+			return CompileRun.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		case 110: //received from our non-admin drop-target process on OnDragEnter
 			return (int)UacDragDrop.AdminProcess.OnDragEvent(0, 0, b);
 		//case 120: //go to edit user-defined menu or toolbar source code

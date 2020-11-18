@@ -87,7 +87,7 @@ partial class FOptions : DialogForm
 
 	void _InitGeneral()
 	{
-		_cRunAtStartup.Checked = _initRunAtStartup = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Au.Editor", null) is string;
+		_cRunAtStartup.Checked = _initRunAtStartup = Registry.GetValue(@"HKEY_CURRENT_USER\" + c_rkRun, "Aedit", null) is string;
 		_cRunHidden.Checked = App.Settings.runHidden;
 		_eStartupScripts.Text = App.Model.StartupScriptsCsv;
 
@@ -98,8 +98,8 @@ partial class FOptions : DialogForm
 		if(_cRunAtStartup.Checked != _initRunAtStartup) {
 			try {
 				using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
-				if(_initRunAtStartup) rk.DeleteValue("Au.Editor");
-				else rk.SetValue("Au.Editor", "\"" + AFolders.ThisAppBS + "Au.CL.exe\" /e");
+				if(_initRunAtStartup) rk.DeleteValue("Aedit");
+				else rk.SetValue("Aedit", "\"" + AFolders.ThisAppBS + "Au.CL.exe\" /e");
 			}
 			catch(Exception ex) { AOutput.Write("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 		}
@@ -184,11 +184,11 @@ partial class FOptions : DialogForm
 
 	void _InitTemplates()
 	{
-		_comboTemplate.Items.AddRange(new string[] { "Script", "Class", "Partial" });
+		_comboTemplate.Items.AddRange(new string[] { "Script", "Class" });
 		_comboTemplate.SelectedIndex = 0;
 		_comboTemplate.SelectionChangeCommitted += _TemplCombo_Changed;
 		_comboUseTemplate.Items.AddRange(new string[] { "Default", "Custom" });
-		_templUseCustom = App.Settings.templ_use;
+		_templUseCustom = (FileNode.ETempl)App.Settings.templ_use;
 		_comboUseTemplate.SelectionChangeCommitted += _TemplCombo_Changed;
 		_TemplCombo_Changed(_comboTemplate, null);
 		_sciTemplate.ZTextChanged += (_, _) => _templCustomText[_comboTemplate.SelectedIndex] = _sciTemplate.Text;
@@ -197,7 +197,7 @@ partial class FOptions : DialogForm
 	private void _TemplCombo_Changed(object sender, EventArgs e)
 	{
 		int i = _comboTemplate.SelectedIndex;
-		FileNode.ETempl tt = i switch { 1 => FileNode.ETempl.Class, 2 => FileNode.ETempl.Partial, _ => FileNode.ETempl.Script, };
+		FileNode.ETempl tt = i switch { 1 => FileNode.ETempl.Class, _ => FileNode.ETempl.Script, };
 		if(sender == _comboTemplate) _comboUseTemplate.SelectedIndex = _templUseCustom.Has(tt) ? 1 : 0;
 		bool custom = _comboUseTemplate.SelectedIndex > 0;
 		string text = null;
@@ -226,7 +226,7 @@ partial class FOptions : DialogForm
 			}
 			catch(Exception ex) { AOutput.Write(ex.ToStringWithoutStack()); }
 		}
-		App.Settings.templ_use = _templUseCustom;
+		App.Settings.templ_use = (int)_templUseCustom;
 	}
 
 	#endregion

@@ -31,11 +31,11 @@ namespace Au
 	/// <remarks>
 	/// This class uses WPF (Windows Presentation Foundation). It is in .NET. Creates window at run time. No designer. No WPF and XAML knowledge required, unless you want something advanced.
 	/// 
-	/// To start, use snippet guiBuilderSnippet.
+	/// To start, use snippet wpfSnippet.
 	/// 
 	/// Most functions return <c>this</c>, to enable method chaining, aka fluent interface, like with <b>StringBuilder</b>. See example.
 	/// 
-	/// An <b>AGuiBuilder</b> object can be used to create whole window or some window part, for example a tab page.
+	/// An <b>AWpfBuilder</b> object can be used to create whole window or some window part, for example a tab page.
 	/// 
 	/// The size/position unit in WPF is about 1/96 inch, regardless of screen DPI. For example, if DPI is 96 (100%), 1 unit = 1 physical pixel; if 150% - 1.5 pixel; if 200% - 2 pixels. WPF windows are DPI-scaled automatically when need. Your program's manifest should contain dpiAware=true/PM and dpiAwareness=PerMonitorV2; it is default for scripts/programs created with the script editor of this library.
 	/// 
@@ -46,9 +46,9 @@ namespace Au
 	/// By default don't need XAML. When need, you can load XAML strings and files with <see cref="System.Windows.Markup.XamlReader"/>. For example when you want to apply a theme from a library or add something to resources. See examples.
 	/// </remarks>
 	/// <example>
-	/// Dialog window with several controls for data input (code from guiBuilderSnippet).
+	/// Dialog window with several controls for data input (code from wpfSnippet).
 	/// <code><![CDATA[
-	/// var b = new AGuiBuilder("Example").WinSize(400) //create Window object with Grid control; set window width 400
+	/// var b = new AWpfBuilder("Example").WinSize(400) //create Window object with Grid control; set window width 400
 	/// 	.R.Add("Text", out TextBox text1).Focus() //add label and text box control in first row
 	/// 	.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three") //in second row add label and combo box control with items
 	/// 	.R.Add(out CheckBox c1, "Check") //in third row add check box control
@@ -57,16 +57,16 @@ namespace Au
 	/// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
 	/// AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck()); //get user input from control variables
 	/// ]]></code>
-	/// Dialog window with TabControl (code from guiBuilderSnippet).
+	/// Dialog window with TabControl (code from wpfSnippet).
 	/// <code><![CDATA[
-	/// var b = new AGuiBuilder("Window").WinSize(400)
+	/// var b = new AWpfBuilder("Window").WinSize(400)
 	/// 	.Row(-1).Add(out TabControl tc).Height(300..)
 	/// 	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).Disabled().End();
 	/// 
-	/// AGuiBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
+	/// AWpfBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
 	/// 	var tp = new TabItem { Header = name };
 	/// 	tc.Items.Add(tp);
-	/// 	return new AGuiBuilder(tp, panelType);
+	/// 	return new AWpfBuilder(tp, panelType);
 	/// }
 	/// 
 	/// _Page("Page1")
@@ -99,10 +99,10 @@ namespace Au
 	/// 
 	/// System.Windows.Markup.XamlReader.Parse(xaml); //creates and sets Application object for this process. Its resources will be used by WPF windows.
 	/// 
-	/// new AGuiBuilder("Example").AddOkCancel().ShowDialog();
+	/// new AWpfBuilder("Example").AddOkCancel().ShowDialog();
 	/// ]]></code>
 	/// </example>
-	public class AGuiBuilder
+	public class AWpfBuilder
 	{
 		//readonly FrameworkElement _container; //now used only in ctor
 		readonly Window _window; //= _container or null
@@ -110,13 +110,13 @@ namespace Au
 
 		abstract class _PanelBase
 		{
-			protected readonly AGuiBuilder _b;
+			protected readonly AWpfBuilder _b;
 			public readonly _PanelBase parent;
 			public Panel panel; //or Grid etc
 			public FrameworkElement lastAdded;
 			public bool ended;
 
-			protected _PanelBase(AGuiBuilder b, Panel p) {
+			protected _PanelBase(AWpfBuilder b, Panel p) {
 				_b = b;
 				parent = b._p;
 				lastAdded = panel = p;
@@ -146,7 +146,7 @@ namespace Au
 
 		class _Canvas : _PanelBase
 		{
-			public _Canvas(AGuiBuilder b) : base(b, new Canvas()) {
+			public _Canvas(AWpfBuilder b) : base(b, new Canvas()) {
 				panel.HorizontalAlignment = HorizontalAlignment.Left;
 				panel.VerticalAlignment = VerticalAlignment.Top;
 			}
@@ -154,13 +154,13 @@ namespace Au
 
 		class _DockPanel : _PanelBase
 		{
-			public _DockPanel(AGuiBuilder b) : base(b, new DockPanel()) {
+			public _DockPanel(AWpfBuilder b) : base(b, new DockPanel()) {
 			}
 		}
 
 		class _StackPanel : _PanelBase
 		{
-			public _StackPanel(AGuiBuilder b, bool vertical) : base(b, new StackPanel { Orientation = vertical ? Orientation.Vertical : Orientation.Horizontal }) {
+			public _StackPanel(AWpfBuilder b, bool vertical) : base(b, new StackPanel { Orientation = vertical ? Orientation.Vertical : Orientation.Horizontal }) {
 			}
 		}
 
@@ -171,7 +171,7 @@ namespace Au
 			bool _isSpan;
 			double? _andWidth;
 
-			public _Grid(AGuiBuilder b) : base(b, new Grid()) {
+			public _Grid(AWpfBuilder b) : base(b, new Grid()) {
 				_grid = panel as Grid;
 				if (GridLines) _grid.ShowGridLines = true;
 			}
@@ -263,7 +263,7 @@ namespace Au
 		/// <remarks>
 		/// Always call this method to end a nested panel. For root panel it is optional if using <see cref="ShowDialog"/>.
 		/// </remarks>
-		public AGuiBuilder End() {
+		public AWpfBuilder End() {
 			if (!_p.ended) {
 				_p.End();
 				if (_p.parent != null) {
@@ -292,7 +292,7 @@ namespace Au
 		/// 
 		/// If there are star-sized columns, grid width should be defined. Call <see cref="Width"/> or <see cref="Size"/>. But it the grid is in a cell of another grid, usually it's better to set column width of that grid to a non-zero value, ie let it be not auto-sized.
 		/// </remarks>
-		public AGuiBuilder Columns(params GBGridLength[] widths) {
+		public AWpfBuilder Columns(params GBGridLength[] widths) {
 			var g = Last as Grid ?? throw new InvalidOperationException("Columns() in wrong place");
 			g.ColumnDefinitions.Clear();
 			foreach (var v in widths) g.ColumnDefinitions.Add(v.Column);
@@ -315,7 +315,7 @@ namespace Au
 		/// 
 		/// If there are star-sized rows, grid height should be defined. Call <see cref="Height"/> or <see cref="Size"/>. But it the grid is in a cell of another grid, usually it's better to set row height of that grid to a non-zero value, ie let it be not auto-sized.
 		/// </remarks>
-		public AGuiBuilder Row(GBGridLength height) {
+		public AWpfBuilder Row(GBGridLength height) {
 			if (_p.ended) throw new InvalidOperationException("Row() after End()");
 			var g = _p as _Grid ?? throw new InvalidOperationException("Row() in non-grid panel");
 			g.Row(height);
@@ -326,14 +326,14 @@ namespace Au
 		/// Starts new auto-sized row in current grid. The same as <c>Row(0)</c>. See <see cref="Row"/>.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">In non-grid panel.</exception>
-		public AGuiBuilder R => Row(0);
+		public AWpfBuilder R => Row(0);
 
 		#endregion
 
 		#region ctors, window
 
-		//	static readonly DependencyProperty _AGuiBuilderProperty = DependencyProperty.RegisterAttached("_AGuiBuilder", typeof(AGuiBuilder), typeof(Panel));
-		static ConditionalWeakTable<Panel, AGuiBuilder> s_cwt = new ConditionalWeakTable<Panel, AGuiBuilder>();
+		//	static readonly DependencyProperty _AWpfBuilderProperty = DependencyProperty.RegisterAttached("_AWpfBuilder", typeof(AWpfBuilder), typeof(Panel));
+		static ConditionalWeakTable<Panel, AWpfBuilder> s_cwt = new ConditionalWeakTable<Panel, AWpfBuilder>();
 		//which is better? Both fast.
 
 		/// <summary>
@@ -341,7 +341,7 @@ namespace Au
 		/// </summary>
 		/// <param name="windowTitle">Window title bar text.</param>
 		/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
-		public AGuiBuilder(string windowTitle, GBPanelType panelType = GBPanelType.Grid) {
+		public AWpfBuilder(string windowTitle, GBPanelType panelType = GBPanelType.Grid) {
 			/*_container=*/
 			_window = new Window() { Title = windowTitle };
 			_AddRootPanel(_window, false, panelType, true);
@@ -362,7 +362,7 @@ namespace Au
 		/// - <b>WindowStartupLocation</b> = Center.
 		/// - <b>Topmost</b> and <b>Background</b> depending on static properties <see cref="WinTopmost"/> and <see cref="WinWhite"/>.
 		/// </param>
-		public AGuiBuilder(FrameworkElement container = null, GBPanelType panelType = GBPanelType.Grid, bool setProperties = true) {
+		public AWpfBuilder(FrameworkElement container = null, GBPanelType panelType = GBPanelType.Grid, bool setProperties = true) {
 			//_container=container; // ?? throw new ArgumentNullException("container"); //can be null
 			_window = container as Window;
 			_AddRootPanel(container, true, panelType, setProperties);
@@ -448,7 +448,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="WinRect"/>
 		/// <seealso cref="WinSaved"/>
-		public AGuiBuilder WinSize(GBLength? width = null, GBLength? height = null) {
+		public AWpfBuilder WinSize(GBLength? width = null, GBLength? height = null) {
 			_ThrowIfNotWindow();
 			_ThrowIfWasWinRect();
 			if (_IsWindowEnded) throw new InvalidOperationException("WinSize() cannot be after last End()"); //although currently could be anywhere
@@ -482,7 +482,7 @@ namespace Au
 		/// Calls <see cref="AExtWpf.SetXY"/>.
 		/// </remarks>
 		/// <seealso cref="WinSaved"/>
-		public AGuiBuilder WinXY(int x, int y) {
+		public AWpfBuilder WinXY(int x, int y) {
 			_ThrowIfNotWindow();
 			_ThrowIfWasWinRectXY(); _wasWinXY = 1;
 			_window.SetXY(x, y);
@@ -503,7 +503,7 @@ namespace Au
 		/// Calls <see cref="AExtWpf.SetRect"/>.
 		/// </remarks>
 		/// <seealso cref="WinSaved"/>
-		public AGuiBuilder WinRect(RECT r) {
+		public AWpfBuilder WinRect(RECT r) {
 			_ThrowIfNotWindow();
 			_ThrowIfWasWinRectXY(); _wasWinXY = 2;
 			_window.SetRect(r);
@@ -528,14 +528,14 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// string rk = @"HKEY_CURRENT_USER\Software\Au\Test", rv = "winSR";
-		/// var b = new AGuiBuilder("Window").WinSize(300)
+		/// var b = new AWpfBuilder("Window").WinSize(300)
 		/// 	.Row(0).Add("Text", out TextBox _)
 		/// 	.R.AddOkCancel()
 		/// 	.WinSaved(Microsoft.Win32.Registry.GetValue(rk, rv, null) as string, o => Microsoft.Win32.Registry.SetValue(rk, rv, o))
 		/// 	.End();
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder WinSaved(string saved, Action<string> save) {
+		public AWpfBuilder WinSaved(string saved, Action<string> save) {
 			_ThrowIfNotWindow();
 			_ThrowIfWasWinRectXY(); _wasWinXY = 2;
 			AWnd.More.SavedRect.Restore(_window, saved, save);
@@ -562,7 +562,7 @@ namespace Au
 		/// The function uses only non-null parameters.
 		/// Or you can change <see cref="Window"/> properties directly, for example <c>.Also(b => { b.Window.Topmost = true; })</c>.
 		/// </remarks>
-		public AGuiBuilder WinProperties(WindowStartupLocation? startLocation = null, ResizeMode? resizeMode = null, bool? showActivated = null, bool? showInTaskbar = null, bool? topmost = null, WindowState? state = null, WindowStyle? style = null, ImageSource icon = null, bool? whiteBackground = null) {
+		public AWpfBuilder WinProperties(WindowStartupLocation? startLocation = null, ResizeMode? resizeMode = null, bool? showActivated = null, bool? showInTaskbar = null, bool? topmost = null, WindowState? state = null, WindowStyle? style = null, ImageSource icon = null, bool? whiteBackground = null) {
 			_ThrowIfNotWindow();
 			if (startLocation.HasValue) { _ThrowIfWasWinRectXY("WinProperties(startLocation)"); _window.WindowStartupLocation = startLocation.Value; }
 			if (resizeMode.HasValue) _window.ResizeMode = resizeMode.Value;
@@ -645,7 +645,7 @@ namespace Au
 		/// <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align better when using default theme. Default value of this option depends on application's theme.</param>
 		/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 		/// <param name="margin">Default margin of elements. If not set, default marging is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
-		public AGuiBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null) {
+		public AWpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null) {
 			if (modifyPadding != null) _opt_modifyPadding = modifyPadding.Value;
 			if (rightAlignLabels != null) _opt_rightAlignLabels = rightAlignLabels.Value;
 			if (margin != null) _opt_margin = margin.Value;
@@ -676,7 +676,7 @@ namespace Au
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-		public AGuiBuilder Add<T>(out T variable, object text = null, GBAdd flags = 0) where T : FrameworkElement, new() {
+		public AWpfBuilder Add<T>(out T variable, object text = null, GBAdd flags = 0) where T : FrameworkElement, new() {
 			_p.BeforeAdd(flags);
 			variable = new T();
 			_Add(variable, text, flags, true);
@@ -787,7 +787,7 @@ namespace Au
 		/// <param name="text">Text, header or other content. More info - see other overload.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-		public AGuiBuilder Add<T>(object text = null, GBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
+		public AWpfBuilder Add<T>(object text = null, GBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
 
 		/// <summary>
 		/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
@@ -796,7 +796,7 @@ namespace Au
 		/// <param name="variable">Receives element's variable. More info - see other overload.</param>
 		/// <param name="text">Text, header or other content. More info - see other overload.</param>
 		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-		public AGuiBuilder Add<T>(string label, out T variable, object text = null) where T : FrameworkElement, new() {
+		public AWpfBuilder Add<T>(string label, out T variable, object text = null) where T : FrameworkElement, new() {
 			Add(out Label la, label);
 			Add(out variable, text); //note: no flags
 			System.Windows.Automation.AutomationProperties.SetLabeledBy(variable, la);
@@ -809,7 +809,7 @@ namespace Au
 		/// <param name="element"></param>
 		/// <param name="flags"></param>
 		/// <exception cref="NotSupportedException">The function does not support flag <i>childOfLast</i> for this element type.</exception>
-		public AGuiBuilder Add(FrameworkElement element, GBAdd flags = 0) {
+		public AWpfBuilder Add(FrameworkElement element, GBAdd flags = 0) {
 			_p.BeforeAdd(flags);
 			_Add(element, null, flags, true);
 			return this;
@@ -824,7 +824,7 @@ namespace Au
 		/// <remarks>
 		/// If <i>flags</i> contains <b>OK</b> or <b>Validate</b> and this window contains elements for which was called <see cref="Validation"/>, on click performs validation; if fails, does not call the <i>click</i> action and does not close the window.
 		/// </remarks>
-		public AGuiBuilder AddButton(object text, Action<GBButtonClickArgs> click, GBBFlags flags = 0/*, Action<GBButtonClickArgs> clickSplit = null*/) {
+		public AWpfBuilder AddButton(object text, Action<GBButtonClickArgs> click, GBBFlags flags = 0/*, Action<GBButtonClickArgs> clickSplit = null*/) {
 			Add(out Button c, text);
 			if (flags.Has(GBBFlags.OK)) c.IsDefault = true;
 			if (flags.Has(GBBFlags.Cancel)) c.IsCancel = true;
@@ -856,7 +856,7 @@ namespace Au
 		/// <remarks>
 		/// When clicked, sets <see cref="ResultButton"/> = <i>result</i>, closes the window, and <see cref="ShowDialog"/> returns true.
 		/// </remarks>
-		public AGuiBuilder AddButton(object text, int result/*, Action<GBButtonClickArgs> clickSplit = null*/) {
+		public AWpfBuilder AddButton(object text, int result/*, Action<GBButtonClickArgs> clickSplit = null*/) {
 			Add(out Button c, text);
 			c.Click += (_, _) => { _resultButton = result; _FindWindow(c).DialogResult = true; };
 			//		if(clickSplit!=null) c.ClickSplit+=clickSplit;
@@ -885,7 +885,7 @@ namespace Au
 		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If <i>ok</i> or <i>cancel</i> is null, adds single button without panel.
 		/// Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
 		/// </remarks>
-		public AGuiBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", Action<GBButtonClickArgs> clickOk = null) {
+		public AWpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", Action<GBButtonClickArgs> clickOk = null) {
 			int n = 0; if (ok != null) n++; if (cancel != null) n++;
 			if (n == 0) throw new ArgumentNullException(null, "AddOkCancel(null, null)");
 			bool stack = n > 1 && !(_p is _StackPanel);
@@ -903,7 +903,7 @@ namespace Au
 		/// <remarks>
 		/// In <b>Canvas</b> panel separator's default size is 1x1. Need to set size, like <c>.AddSeparator()[0, 50, 100, 1]</c>.
 		/// </remarks>
-		public AGuiBuilder AddSeparator(bool? vertical = null) {
+		public AWpfBuilder AddSeparator(bool? vertical = null) {
 			Add(out Separator c);
 			if (vertical ?? (_p.panel is StackPanel p && p.Orientation == Orientation.Horizontal)) {
 				c.Style = _style_VertSep ??= c.FindResource(ToolBar.SeparatorStyleKey) as Style;
@@ -920,7 +920,7 @@ namespace Au
 		/// <remarks>
 		/// Actually just changes column index where next element will be added.
 		/// </remarks>
-		public AGuiBuilder Skip(int span = 1) {
+		public AWpfBuilder Skip(int span = 1) {
 			if (span < 0) throw new ArgumentException();
 			var g = _p as _Grid ?? throw new InvalidOperationException("Skip() in non-grid panel");
 			g.Skip(span);
@@ -941,7 +941,7 @@ namespace Au
 		/// .Add("File", out TextBox _).And(70).AddButton("Browse...", null)
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder And(double width) {
+		public AWpfBuilder And(double width) {
 			var g = _p as _Grid ?? throw new InvalidOperationException("And() in non-grid panel");
 			g.And(width);
 			return this;
@@ -959,7 +959,7 @@ namespace Au
 		/// <remarks>
 		/// Also there is an indexer for it. For example, instead of code <c>.Span(2)</c> use code <c>[2]</c>.
 		/// </remarks>
-		public AGuiBuilder Span(int columns) {
+		public AWpfBuilder Span(int columns) {
 			_ParentOfLastAsOrThrow<_Grid>().Span(columns);
 			return this;
 		}
@@ -969,7 +969,7 @@ namespace Au
 		/// </summary>
 		/// <param name="spanColumns">Column count. If -1, all remaining columns.</param>
 		/// <exception cref="InvalidOperationException">In non-grid panel.</exception>
-		public AGuiBuilder this[int spanColumns] => Span(spanColumns);
+		public AWpfBuilder this[int spanColumns] => Span(spanColumns);
 
 		/// <summary>
 		/// Sets row span of the last added element.
@@ -980,7 +980,7 @@ namespace Au
 		/// In next row(s) use <see cref="Skip"/> to skip cells occupied by this element.
 		/// Often it's better to add a nested panel instead. See <see cref="StartGrid"/>.
 		/// </remarks>
-		public AGuiBuilder SpanRows(int rows) {
+		public AWpfBuilder SpanRows(int rows) {
 			var c = _ParentOfLastAsOrThrow<_Grid>().LastDirect;
 			Grid.SetRowSpan(c, rows);
 			return this;
@@ -990,7 +990,7 @@ namespace Au
 		/// Calls your callback function.
 		/// </summary>
 		/// <param name="action"></param>
-		public AGuiBuilder Also(Action<AGuiBuilder> action) {
+		public AWpfBuilder Also(Action<AWpfBuilder> action) {
 			action(this);
 			return this;
 		}
@@ -1006,11 +1006,11 @@ namespace Au
 		/// })
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder AlsoAll(Action<AGuiBuilder, GBAlsoAllArgs> action) {
+		public AWpfBuilder AlsoAll(Action<AWpfBuilder, GBAlsoAllArgs> action) {
 			_alsoAll = action;
 			return this;
 		}
-		Action<AGuiBuilder, GBAlsoAllArgs> _alsoAll;
+		Action<AWpfBuilder, GBAlsoAllArgs> _alsoAll;
 		GBAlsoAllArgs _alsoAllArgs;
 
 		/// <summary>
@@ -1021,7 +1021,7 @@ namespace Au
 		/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 		/// <param name="alignY">Vertical alignment.</param>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AGuiBuilder Size(GBLength width, GBLength height, string alignX = null, string alignY = null) {
+		public AWpfBuilder Size(GBLength width, GBLength height, string alignX = null, string alignY = null) {
 			var c = Last;
 			width.ApplyTo(c, false);
 			height.ApplyTo(c, true);
@@ -1035,7 +1035,7 @@ namespace Au
 		/// <param name="width">Width or/and min/max width.</param>
 		/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AGuiBuilder Width(GBLength width, string alignX = null) {
+		public AWpfBuilder Width(GBLength width, string alignX = null) {
 			width.ApplyTo(Last, false);
 			if (alignX != null) Align(alignX);
 			return this;
@@ -1047,7 +1047,7 @@ namespace Au
 		/// <param name="height">Height or/and min/max height.</param>
 		/// <param name="alignY">Vertical alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AGuiBuilder Height(GBLength height, string alignY = null) {
+		public AWpfBuilder Height(GBLength height, string alignY = null) {
 			height.ApplyTo(Last, true);
 			if (alignY != null) Align(null, alignY);
 			return this;
@@ -1064,7 +1064,7 @@ namespace Au
 		/// <remarks>
 		/// Only in <see cref="Canvas"/> panel you can set position explicitly. In other panel types it is set automatically and can be adjusted with <see cref="Margin"/>, <see cref="Align"/>, container's <see cref="AlignContent"/>, etc.
 		/// </remarks>
-		public AGuiBuilder XY(double x, double y, GBLength? width = null, GBLength? height = null) {
+		public AWpfBuilder XY(double x, double y, GBLength? width = null, GBLength? height = null) {
 			var c = _ParentOfLastAsOrThrow<_Canvas>().LastDirect;
 			Canvas.SetLeft(c, x);
 			Canvas.SetTop(c, y);
@@ -1076,14 +1076,14 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="XY"/>.
 		/// </summary>
-		public AGuiBuilder this[double x, double y, GBLength? width = null, GBLength? height = null] => XY(x, y, width, height);
+		public AWpfBuilder this[double x, double y, GBLength? width = null, GBLength? height = null] => XY(x, y, width, height);
 
 		/// <summary>
 		/// Docks the last added element in <see cref="DockPanel"/>.
 		/// </summary>
 		/// <param name="dock"></param>
 		/// <exception cref="InvalidOperationException">Current panel is not <b>DockPanel</b>.</exception>
-		public AGuiBuilder Dock(Dock dock) {
+		public AWpfBuilder Dock(Dock dock) {
 			var c = _ParentOfLastAsOrThrow<_DockPanel>().LastDirect;
 			DockPanel.SetDock(c, dock);
 			return this;
@@ -1095,7 +1095,7 @@ namespace Au
 		/// <param name="x">Horizontal alignment.</param>
 		/// <param name="y">Vertical alignment.</param>
 		/// <exception cref="InvalidOperationException">Current panel is <b>Canvas</b>.</exception>
-		public AGuiBuilder Align(HorizontalAlignment? x = null, VerticalAlignment? y = null) {
+		public AWpfBuilder Align(HorizontalAlignment? x = null, VerticalAlignment? y = null) {
 			var c = Last;
 			if (c.Parent is Canvas) throw new InvalidOperationException("Align() in Canvas panel.");
 			if (x != null) c.HorizontalAlignment = x.Value;
@@ -1110,7 +1110,7 @@ namespace Au
 		/// <param name="y">Vertical alignment. String that starts with one of these letters, uppercase or lowercase: T (top), B (bottom), C (center), S (stretch).</param>
 		/// <exception cref="InvalidOperationException">Current panel is <b>Canvas</b>.</exception>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AGuiBuilder Align(string x = null, string y = null) => Align(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
+		public AWpfBuilder Align(string x = null, string y = null) => Align(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
 
 		HorizontalAlignment? _AlignmentFromStringX(string s, [CallerMemberName] string caller = null)
 			=> s.NE() ? default(HorizontalAlignment?) : (char.ToUpperInvariant(s[0]) switch { 'L' => HorizontalAlignment.Left, 'C' => HorizontalAlignment.Center, 'R' => HorizontalAlignment.Right, 'S' => HorizontalAlignment.Stretch, _ => throw new ArgumentException(caller + "(x)") });
@@ -1124,7 +1124,7 @@ namespace Au
 		/// <param name="x">Horizontal alignment.</param>
 		/// <param name="y">Vertical alignment.</param>
 		/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
-		public AGuiBuilder AlignContent(HorizontalAlignment? x = null, VerticalAlignment? y = null) {
+		public AWpfBuilder AlignContent(HorizontalAlignment? x = null, VerticalAlignment? y = null) {
 			var c = _LastAsControlOrThrow();
 			if (x != null) c.HorizontalContentAlignment = x.Value;
 			if (y != null) c.VerticalContentAlignment = y.Value;
@@ -1138,12 +1138,12 @@ namespace Au
 		/// <param name="y">Vertical alignment.</param>
 		/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AGuiBuilder AlignContent(string x = null, string y = null) => AlignContent(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
+		public AWpfBuilder AlignContent(string x = null, string y = null) => AlignContent(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
 
 		/// <summary>
 		/// Sets margin of the last added element.
 		/// </summary>
-		public AGuiBuilder Margin(Thickness margin) {
+		public AWpfBuilder Margin(Thickness margin) {
 			Last.Margin = margin;
 			return this;
 		}
@@ -1151,7 +1151,7 @@ namespace Au
 		/// <summary>
 		/// Sets margin of the last added element.
 		/// </summary>
-		public AGuiBuilder Margin(double? left = null, double? top = null, double? right = null, double? bottom = null) {
+		public AWpfBuilder Margin(double? left = null, double? top = null, double? right = null, double? bottom = null) {
 			var c = Last;
 			var p = c.Margin;
 			left ??= p.Left;
@@ -1170,7 +1170,7 @@ namespace Au
 		/// Examples: "tb" (top 0, bottom 0), "L5 R15" (left 5, right 15), "2" (all sides 2).
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid string.</exception>
-		public AGuiBuilder Margin(string margin) {
+		public AWpfBuilder Margin(string margin) {
 			var c = Last;
 			var m = c.Margin;
 			_ThicknessFromString(ref m, margin);
@@ -1202,7 +1202,7 @@ namespace Au
 		/// Sets padding of the last added control.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
-		public AGuiBuilder Padding(Thickness thickness) {
+		public AWpfBuilder Padding(Thickness thickness) {
 			_LastAsControlOrThrow().Padding = thickness;
 			return this;
 		}
@@ -1211,7 +1211,7 @@ namespace Au
 		/// Sets padding of the last added control.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
-		public AGuiBuilder Padding(double? left = null, double? top = null, double? right = null, double? bottom = null) {
+		public AWpfBuilder Padding(double? left = null, double? top = null, double? right = null, double? bottom = null) {
 			var c = _LastAsControlOrThrow();
 			var p = c.Padding;
 			left ??= p.Left;
@@ -1231,7 +1231,7 @@ namespace Au
 		/// </param>
 		/// <exception cref="InvalidOperationException">The last added element is not <b>Control</b>.</exception>
 		/// <exception cref="ArgumentException">Invalid string.</exception>
-		public AGuiBuilder Padding(string padding) {
+		public AWpfBuilder Padding(string padding) {
 			var c = _LastAsControlOrThrow();
 			var p = c.Padding;
 			_ThicknessFromString(ref p, padding);
@@ -1243,7 +1243,7 @@ namespace Au
 		/// Sets <see cref="UIElement.IsEnabled"/> of the last added element.
 		/// </summary>
 		/// <param name="disabled">If true (default), sets IsEnabled=false, else sets IsEnabled=true.</param>
-		public AGuiBuilder Disabled(bool disabled = true) {
+		public AWpfBuilder Disabled(bool disabled = true) {
 			Last.IsEnabled = !disabled;
 			return this;
 		}
@@ -1252,7 +1252,7 @@ namespace Au
 		/// Sets <see cref="UIElement.Visibility"/> of the last added element.
 		/// </summary>
 		/// <param name="hidden">If true (default), sets <see cref="Visibility"/> <b>Hiden</b>; if false - <b>Visible</b>; if null - <b>Collapsed</b>.</param>
-		public AGuiBuilder Hidden(bool? hidden = true) {
+		public AWpfBuilder Hidden(bool? hidden = true) {
 			Last.Visibility = hidden switch { true => Visibility.Hidden, false => Visibility.Visible, _ => Visibility.Collapsed };
 			return this;
 		}
@@ -1265,21 +1265,21 @@ namespace Au
 		/// .R.Add("Example", out TextBox _).Tooltip("Tooltip text")
 		/// ]]></code>
 		/// <example>
-		/// Tooltip with content created by another AGuiBuilder.
+		/// Tooltip with content created by another AWpfBuilder.
 		/// <code><![CDATA[
-		/// var btt = new AGuiBuilder() //creates tooltip content
+		/// var btt = new AWpfBuilder() //creates tooltip content
 		/// 	.R.Add<Image>().Image(AIcon.Stock(StockIcon.INFO))
 		/// 	.R.Add<TextBlock>().Text("Some ", "<b>text", ".")
 		/// 	.End();
 		/// 
-		/// var b = new AGuiBuilder("Window").WinSize(300) //creates dialog
+		/// var b = new AWpfBuilder("Window").WinSize(300) //creates dialog
 		/// 	.R.AddButton("Example", null).Tooltip(btt.Panel)
 		/// 	.R.AddOkCancel()
 		/// 	.End();
 		/// if (!b.ShowDialog()) return;
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder Tooltip(object tooltip) {
+		public AWpfBuilder Tooltip(object tooltip) {
 			Last.ToolTip = tooltip;
 			return this;
 		}
@@ -1298,7 +1298,7 @@ namespace Au
 		/// .R.Add<Label>("Example2").Brush(new LinearGradientBrush(Colors.Chocolate, Colors.White, 0))
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder Brush(Brush background = null, Brush foreground = null) { //named not Colors because: 1. Can set other brush than color, eg gradient. 2. Rarely used and in autocompletion lists is above Columns.
+		public AWpfBuilder Brush(Brush background = null, Brush foreground = null) { //named not Colors because: 1. Can set other brush than color, eg gradient. 2. Rarely used and in autocompletion lists is above Columns.
 			var last = Last;
 			if (foreground != null) {
 				switch (last) {
@@ -1334,7 +1334,7 @@ namespace Au
 		/// .R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", GBAdd.ChildOfLast)
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder Border(Brush color, double thickness, Thickness? padding = null, double? cornerRadius = null) {
+		public AWpfBuilder Border(Brush color, double thickness, Thickness? padding = null, double? cornerRadius = null) {
 			var thick = new Thickness(thickness);
 			switch (Last) {
 			case Control c:
@@ -1361,7 +1361,7 @@ namespace Au
 		/// <param name="size"></param>
 		/// <param name="bold"></param>
 		/// <param name="italic"></param>
-		public AGuiBuilder Font(string name = null, double? size = null, bool? bold = null, bool? italic = null) {
+		public AWpfBuilder Font(string name = null, double? size = null, bool? bold = null, bool? italic = null) {
 			var c = Last;
 			if (name != null) TextElement.SetFontFamily(c, new FontFamily(name));
 			if (size != null) TextElement.SetFontSize(c, size.Value);
@@ -1376,7 +1376,7 @@ namespace Au
 		/// <summary>
 		/// Attempts to set focus to the last added element when it'll become visible.
 		/// </summary>
-		public AGuiBuilder Focus() {
+		public AWpfBuilder Focus() {
 			Last.Focus();
 			return this;
 		}
@@ -1386,7 +1386,7 @@ namespace Au
 		/// Then with <see cref="Bind"/> of this and descendant elements don't need to specify data source object because it is set by this function.
 		/// </summary>
 		/// <param name="source">Data source object.</param>
-		public AGuiBuilder BindingContext(object source) {
+		public AWpfBuilder BindingContext(object source) {
 			Last.DataContext = source;
 			return this;
 		}
@@ -1396,7 +1396,7 @@ namespace Au
 		/// </summary>
 		/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 		/// <param name="path">Source property name or path, for example <c>nameof(MyData.Property)</c>. Source object should be set with <see cref="BindingContext"/>.</param>
-		public AGuiBuilder Bind(DependencyProperty property, string path) {
+		public AWpfBuilder Bind(DependencyProperty property, string path) {
 			Last.SetBinding(property, path);
 			return this;
 		}
@@ -1406,7 +1406,7 @@ namespace Au
 		/// </summary>
 		/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 		/// <param name="binding">A binding object, for example <c>new Binding(nameof(MyData.Property))</c> or <c>new Binding(nameof(MyData.Property)) { Source = dataObject }</c>. In the first case, source object should be set with <see cref="BindingContext"/>.</param>
-		public AGuiBuilder Bind(DependencyProperty property, BindingBase binding) {
+		public AWpfBuilder Bind(DependencyProperty property, BindingBase binding) {
 			Last.SetBinding(property, binding);
 			return this;
 		}
@@ -1417,7 +1417,7 @@ namespace Au
 		/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 		/// <param name="binding">A binding object.</param>
 		///	<param name="r">The return value of <b>SetBinding</b>.</param>
-		public AGuiBuilder Bind(DependencyProperty property, BindingBase binding, out BindingExpressionBase r) {
+		public AWpfBuilder Bind(DependencyProperty property, BindingBase binding, out BindingExpressionBase r) {
 			r = Last.SetBinding(property, binding);
 			return this;
 		}
@@ -1428,7 +1428,7 @@ namespace Au
 		/// <param name="property">Element's dependency property, for example <c>TextBox.TextProperty</c>.</param>
 		/// <param name="source">Data source object.</param>
 		/// <param name="path">Source property name or path, for example <c>nameof(MyData.Property)</c>.</param>
-		public AGuiBuilder Bind(DependencyProperty property, object source, string path) {
+		public AWpfBuilder Bind(DependencyProperty property, object source, string path) {
 			var binding = new Binding(path) { Source = source };
 			Last.SetBinding(property, binding);
 			return this;
@@ -1444,7 +1444,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
-		/// var b = new AGuiBuilder("Window").WinSize(300)
+		/// var b = new AWpfBuilder("Window").WinSize(300)
 		/// 	.R.Add("Name", out TextBox tName).Validation(o => string.IsNullOrWhiteSpace(tName.Text) ? "Name cannot be empty" : null)
 		/// 	.R.Add("Count", out TextBox tCount).Validation(o => int.TryParse(tCount.Text, out int i1) && i1 >= 0 && i1 <= 100 ? null : "Count must be 0-100")
 		/// 	.R.AddOkCancel()
@@ -1453,7 +1453,7 @@ namespace Au
 		/// AOutput.Write(tName.Text, tCount.Text.ToInt());
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder Validation(Func<FrameworkElement, string> func/*, DependencyProperty property=null*/) {
+		public AWpfBuilder Validation(Func<FrameworkElement, string> func/*, DependencyProperty property=null*/) {
 			var c = Last;
 			//validate on click of OK or some other button. Often eg text fields initially are empty and must be filled.
 			(_validations ??= new List<_Validation>()).Add(new _Validation { e = c, func = func });
@@ -1478,7 +1478,7 @@ namespace Au
 
 		bool _Validate(Window w, Button b) {
 			TextBlock tb = null;
-			foreach (var gb in _GetAllGuiBuilders(w)) { //find all AGuiBuilders used to build this window
+			foreach (var gb in _GetAllWpfBuilders(w)) { //find all AWpfBuilder used to build this window
 				if (gb._validations == null) continue;
 				foreach (var v in gb._validations) {
 					var e = v.e;
@@ -1507,8 +1507,8 @@ namespace Au
 			return false;
 		}
 
-		static List<AGuiBuilder> _GetAllGuiBuilders(DependencyObject root) {
-			var a = new List<AGuiBuilder>();
+		static List<AWpfBuilder> _GetAllWpfBuilders(DependencyObject root) {
+			var a = new List<AWpfBuilder>();
 			_Enum(root, 0);
 			void _Enum(DependencyObject parent, int level) {
 				foreach (var o in LogicalTreeHelper.GetChildren(parent).OfType<DependencyObject>()) {
@@ -1537,7 +1537,7 @@ namespace Au
 		//	/// <summary>
 		//	/// Sets name of the last added element.  See <see cref="FrameworkElement.Name"/>.
 		//	/// </summary>
-		//	public AGuiBuilder Name(string name) {
+		//	public AWpfBuilder Name(string name) {
 		//		Last.Name = name;
 		//		return this;
 		//	}
@@ -1552,7 +1552,7 @@ namespace Au
 		/// <param name="check"></param>
 		/// <param name="threeState"></param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>ToggleButton</b>.</exception>
-		public AGuiBuilder Checked(bool? check = true, bool threeState = false) {
+		public AWpfBuilder Checked(bool? check = true, bool threeState = false) {
 			var c = Last as ToggleButton ?? throw new NotSupportedException("Checked(): Last added element must be CheckBox or RadioButton");
 			c.IsThreeState = threeState;
 			c.IsChecked = check;
@@ -1567,7 +1567,7 @@ namespace Au
 		/// <remarks>
 		/// Unlike other similar functions, does not use <see cref="Last"/>.
 		/// </remarks>
-		public AGuiBuilder Checked(bool check, RadioButton control) {
+		public AWpfBuilder Checked(bool check, RadioButton control) {
 			control.IsChecked = check;
 			return this;
 		}
@@ -1577,7 +1577,7 @@ namespace Au
 		/// </summary>
 		/// <param name="readOnly"></param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>TextBoxBase</b> or <b>ComboBox</b>.</exception>
-		public AGuiBuilder Readonly(bool readOnly = true) { //rejected: , bool caretVisible=false. Not useful.
+		public AWpfBuilder Readonly(bool readOnly = true) { //rejected: , bool caretVisible=false. Not useful.
 			switch (Last) {
 			case TextBoxBase c:
 				c.IsReadOnly = readOnly;
@@ -1597,7 +1597,7 @@ namespace Au
 		/// <param name="height">If not null, sets height or/and min/max height.</param>
 		/// <param name="wrap"><see cref="TextBox.TextWrapping"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>TextBox</b>.</exception>
-		public AGuiBuilder Multiline(GBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow) {
+		public AWpfBuilder Multiline(GBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow) {
 			var c = Last as TextBox ?? throw new NotSupportedException("Multiline(): Last added must be TextBox");
 			c.AcceptsReturn = true;
 			c.TextWrapping = wrap;
@@ -1611,7 +1611,7 @@ namespace Au
 		/// Makes the last added <see cref="ComboBox"/> editable.
 		/// </summary>
 		/// <exception cref="NotSupportedException">The last added element is not <b>ComboBox</b>.</exception>
-		public AGuiBuilder Editable() {
+		public AWpfBuilder Editable() {
 			var c = Last as ComboBox ?? throw new NotSupportedException("Editable(): Last added must be ComboBox");
 			c.IsEditable = true;
 			if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 2, 2); //default (2) or set by _Add() for non-editable
@@ -1626,7 +1626,7 @@ namespace Au
 		/// <remarks>
 		/// If it is a non-editable <b>ComboBox</b>, selects the first item. See also <see cref="Select"/>.
 		/// </remarks>
-		public AGuiBuilder Items(string items) => _Items(items.Split('|'), null);
+		public AWpfBuilder Items(string items) => _Items(items.Split('|'), null);
 
 		/// <summary>
 		/// Adds items of any type to the last added <see cref="ItemsControl"/> (<see cref="ComboBox"/>, etc).
@@ -1636,9 +1636,9 @@ namespace Au
 		/// <remarks>
 		/// If it is a non-editable <b>ComboBox</b>, selects the first item. See also <see cref="Select"/>.
 		/// </remarks>
-		public AGuiBuilder Items(params object[] items) => _Items(items, null);
+		public AWpfBuilder Items(params object[] items) => _Items(items, null);
 
-		AGuiBuilder _Items(object[] a, System.Collections.IEnumerable e) {
+		AWpfBuilder _Items(object[] a, System.Collections.IEnumerable e) {
 			var ic = Last as ItemsControl ?? throw new NotSupportedException("Items(): Last added must be ItemsControl, for example ComboBox");
 			if (a != null) {
 				ic.Items.Clear();
@@ -1659,7 +1659,7 @@ namespace Au
 		/// - The last added element is not <b>ItemsControl</b>.
 		/// - <i>lazy</i> is true and the last added element is not <b>ComboBox</b>.
 		/// </exception>
-		public AGuiBuilder Items(System.Collections.IEnumerable items, bool lazy = false) => lazy ? Items(true, o => o.ItemsSource = items) : _Items(null, items);
+		public AWpfBuilder Items(System.Collections.IEnumerable items, bool lazy = false) => lazy ? Items(true, o => o.ItemsSource = items) : _Items(null, items);
 
 		/// <summary>
 		/// Sets callback function that should add items to the last added <see cref="ComboBox"/> later.
@@ -1667,7 +1667,7 @@ namespace Au
 		/// <param name="once">Call the function once. If false, calls on each drop down.</param>
 		/// <param name="onDropDown">Callback function that should add items. Called when (if) showing the dropdown part of the <b>ComboBox</b> first time. Don't need to clear old items.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>ComboBox</b>.</exception>
-		public AGuiBuilder Items(bool once, Action<ComboBox> onDropDown) {
+		public AWpfBuilder Items(bool once, Action<ComboBox> onDropDown) {
 			var c = Last as ComboBox ?? throw new NotSupportedException("Items(): Last added must be ComboBox");
 			EventHandler d = null;
 			d = (_, _) => {
@@ -1685,7 +1685,7 @@ namespace Au
 		/// <param name="index">0-based item index</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Selector</b>.</exception>
 		/// <seealso cref="Items"/>.
-		public AGuiBuilder Select(int index) {
+		public AWpfBuilder Select(int index) {
 			var c = Last as Selector ?? throw new NotSupportedException("Items(): Last added must be Selector, for example ComboBox or ListBox");
 			c.SelectedIndex = index;
 			return this;
@@ -1697,7 +1697,7 @@ namespace Au
 		/// <param name="item">An added item.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Selector</b>.</exception>
 		/// <seealso cref="Items"/>.
-		public AGuiBuilder Select(object item) {
+		public AWpfBuilder Select(object item) {
 			var c = Last as Selector ?? throw new NotSupportedException("Items(): Last added must be Selector, for example ComboBox or ListBox");
 			c.SelectedItem = item;
 			return this;
@@ -1724,7 +1724,7 @@ namespace Au
 		/// .R.Add<TextBlock>().Text("Text ", "<b>bold ", "<a>link", new Action(() => AOutput.Write("click")), " ", new Run("color") { Foreground=Brushes.Blue, Background=Brushes.Cornsilk, FontSize=20 }, ".")
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder Text(params object[] inlines) {
+		public AWpfBuilder Text(params object[] inlines) {
 			var c = Last as TextBlock ?? throw new NotSupportedException("Text(): Last added must be TextBlock");
 			var k = c.Inlines;
 			k.Clear();
@@ -1781,7 +1781,7 @@ namespace Au
 		/// <remarks>
 		/// If fails to load, prints warning. See <see cref="AWarning.Write"/>.
 		/// </remarks>
-		public AGuiBuilder Load(string source) {
+		public AWpfBuilder Load(string source) {
 			var c = Last;
 			bool bad = false;
 			try {
@@ -1808,10 +1808,10 @@ namespace Au
 		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
 		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
-		public AGuiBuilder Image(ImageSource source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
+		public AWpfBuilder Image(ImageSource source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 			 => _Image(source, null, stretch, stretchDirection);
 
-		AGuiBuilder _Image(ImageSource source, string file, Stretch stretch, StretchDirection stretchDirection) {
+		AWpfBuilder _Image(ImageSource source, string file, Stretch stretch, StretchDirection stretchDirection) {
 			var c = Last as Image ?? throw new NotSupportedException("Image(): Last added must be Image");
 			if (file != null) try { source = new BitmapImage(_Uri(file)); } catch (Exception ex) { AWarning.Write(ex.ToString(), -1); }
 			c.Stretch = stretch; //default Uniform
@@ -1830,7 +1830,7 @@ namespace Au
 		/// <remarks>
 		/// If fails to load, prints warning. See <see cref="AWarning.Write"/>.
 		/// </remarks>
-		public AGuiBuilder Image(string source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
+		public AWpfBuilder Image(string source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 			=> _Image(null, source, stretch, stretchDirection);
 
 		/// <summary>
@@ -1844,7 +1844,7 @@ namespace Au
 		/// <remarks>
 		/// If fails to convert icon to image, prints warning. See <see cref="AWarning.Write"/>.
 		/// </remarks>
-		public AGuiBuilder Image(AIcon icon, bool dispose = true, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly) {
+		public AWpfBuilder Image(AIcon icon, bool dispose = true, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly) {
 			var source = icon.ToWpfImage(dispose);
 			if (source == null) return this;
 			return _Image(source, null, stretch, stretchDirection);
@@ -1861,7 +1861,7 @@ namespace Au
 		/// <example>
 		/// Vertical splitter.
 		/// <code><![CDATA[
-		/// var b = new AGuiBuilder("Window").WinSize(400)
+		/// var b = new AWpfBuilder("Window").WinSize(400)
 		/// 	.Columns(30.., 0, -1) //the middle column is for splitter; the 30 is minimal width
 		/// 	.R.Add(out TextBox _)
 		/// 	.Add<GridSplitter>().Splitter(true, 2).Brush(Brushes.Orange) //add splitter in the middle column
@@ -1873,7 +1873,7 @@ namespace Au
 		/// ]]></code>
 		/// Horizontal splitter.
 		/// <code><![CDATA[
-		/// var b = new AGuiBuilder("Window").WinSize(300, 300)
+		/// var b = new AWpfBuilder("Window").WinSize(300, 300)
 		/// 	.Row(27..).Add("Row", out TextBox _)
 		/// 	.Add<GridSplitter>().Splitter(false, 2).Brush(Brushes.Orange)
 		/// 	.Row(-1).Add("Row", out TextBox _)
@@ -1882,7 +1882,7 @@ namespace Au
 		/// if (!b.ShowDialog()) return;
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder Splitter(bool vertical, int span = 1, double thickness = 4) {
+		public AWpfBuilder Splitter(bool vertical, int span = 1, double thickness = 4) {
 			var g = _ParentOfLastAsOrThrow<_Grid>();
 			var c = Last as GridSplitter ?? throw new NotSupportedException("Splitter(): Last added must be GridSplitter");
 			if (vertical) {
@@ -1903,7 +1903,7 @@ namespace Au
 		}
 
 		//FUTURE: need a numeric input control. This code is for WinForms NumericUpDown.
-		//	public AGuiBuilder Number(decimal? value = null, decimal? min = null, decimal? max=null, decimal? increment=null, int? decimalPlaces=null, bool? thousandsSeparator=null, bool? hex =null) {
+		//	public AWpfBuilder Number(decimal? value = null, decimal? min = null, decimal? max=null, decimal? increment=null, int? decimalPlaces=null, bool? thousandsSeparator=null, bool? hex =null) {
 		//		var c = Last as NumericUpDown ?? throw new NotSupportedException("Number(): Last added must be NumericUpDown");
 		//		if(min!=null) c.Minimum=min.Value;
 		//		if(max!=null) c.Maximum=max.Value;
@@ -1919,14 +1919,14 @@ namespace Au
 
 		#region nested panel
 
-		AGuiBuilder _Start(_PanelBase p, bool childOfLast) {
+		AWpfBuilder _Start(_PanelBase p, bool childOfLast) {
 			_p.BeforeAdd(childOfLast ? GBAdd.ChildOfLast : 0);
 			_AddToParent(p.panel, childOfLast);
 			_p = p;
 			return this;
 		}
 
-		AGuiBuilder _Start<T>(_PanelBase p, out T container, object header) where T : HeaderedContentControl, new() {
+		AWpfBuilder _Start<T>(_PanelBase p, out T container, object header) where T : HeaderedContentControl, new() {
 			Add(out container, header);
 			container.Content = p.panel;
 			if (container is GroupBox) p.panel.Margin = new Thickness(0, 2, 0, 0);
@@ -1941,7 +1941,7 @@ namespace Au
 		/// <remarks>
 		/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <b>End</b> it is the grid if <i>childOfLast</i> false, else its parent. The same with all <b>StartX</b> functions.
 		/// </remarks>
-		public AGuiBuilder StartGrid(bool childOfLast = false) => _Start(new _Grid(this), childOfLast);
+		public AWpfBuilder StartGrid(bool childOfLast = false) => _Start(new _Grid(this), childOfLast);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -1955,7 +1955,7 @@ namespace Au
 		/// .StartGrid<GroupBox>("Group")
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder StartGrid<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out T _, header);
+		public AWpfBuilder StartGrid<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out T _, header);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -1967,7 +1967,7 @@ namespace Au
 		/// .StartGrid(out Expander g, "Expander").Also(_=> { g.IsExpanded=true; })
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder StartGrid<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out container, header);
+		public AWpfBuilder StartGrid<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Grid(this), out container, header);
 
 		/// <summary>
 		/// Adds <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -1976,20 +1976,20 @@ namespace Au
 		/// <remarks>
 		/// For each added control call <see cref="XY"/> or use indexer like <c>[x, y]</c> or <c>[x, y, width, height]</c>.
 		/// </remarks>
-		public AGuiBuilder StartCanvas(bool childOfLast = false) => _Start(new _Canvas(this), childOfLast);
+		public AWpfBuilder StartCanvas(bool childOfLast = false) => _Start(new _Canvas(this), childOfLast);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="header">Header text/content.</param>
-		public AGuiBuilder StartCanvas<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out T _, header);
+		public AWpfBuilder StartCanvas<T>(object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out T _, header);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
 		/// <param name="header">Header text/content.</param>
-		public AGuiBuilder StartCanvas<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out container, header);
+		public AWpfBuilder StartCanvas<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _Canvas(this), out container, header);
 
 		/// <summary>
 		/// Adds <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -1998,34 +1998,34 @@ namespace Au
 		/// <remarks>
 		/// For added elements call <see cref="Dock"/>, maybe except for the last element that fills remaining space.
 		/// </remarks>
-		public AGuiBuilder StartDock(bool childOfLast = false) => _Start(new _DockPanel(this), childOfLast);
+		public AWpfBuilder StartDock(bool childOfLast = false) => _Start(new _DockPanel(this), childOfLast);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="header">Header text/content.</param>
-		public AGuiBuilder StartDock<T>(object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out T _, header);
+		public AWpfBuilder StartDock<T>(object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out T _, header);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
 		/// <param name="header">Header text/content.</param>
-		public AGuiBuilder StartDock<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out container, header);
+		public AWpfBuilder StartDock<T>(out T container, object header) where T : HeaderedContentControl, new() => _Start(new _DockPanel(this), out container, header);
 
 		/// <summary>
 		/// Adds <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="vertical"></param>
 		/// <param name="childOfLast">See <see cref="GBAdd.ChildOfLast"/>.</param>
-		public AGuiBuilder StartStack(bool vertical = false, bool childOfLast = false) => _Start(new _StackPanel(this, vertical), childOfLast);
+		public AWpfBuilder StartStack(bool vertical = false, bool childOfLast = false) => _Start(new _StackPanel(this, vertical), childOfLast);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="header">Header text/content.</param>
 		/// <param name="vertical"></param>
-		public AGuiBuilder StartStack<T>(object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out T _, header);
+		public AWpfBuilder StartStack<T>(object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out T _, header);
 
 		/// <summary>
 		/// Adds a headered content control (<see cref="GroupBox"/>, <see cref="Expander"/>, etc) with child <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
@@ -2033,7 +2033,7 @@ namespace Au
 		/// <param name="container">Receives content control's variable. The function creates new control of the type.</param>
 		/// <param name="header">Header text/content.</param>
 		/// <param name="vertical"></param>
-		public AGuiBuilder StartStack<T>(out T container, object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out container, header);
+		public AWpfBuilder StartStack<T>(out T container, object header, bool vertical = false) where T : HeaderedContentControl, new() => _Start(new _StackPanel(this, vertical), out container, header);
 
 		/// <summary>
 		/// Adds right-bottom-aligned horizontal stack panel (<see cref="StartStack"/>) for adding OK, Cancel and more buttons.
@@ -2044,7 +2044,7 @@ namespace Au
 		/// .StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).End()
 		/// ]]></code>
 		/// </example>
-		public AGuiBuilder StartOkCancel() {
+		public AWpfBuilder StartOkCancel() {
 			var pa = _p;
 			StartStack();
 			if (!(pa is _Canvas)) {
@@ -2063,7 +2063,7 @@ namespace Au
 
 		bool _IsWindowEnded => _p.ended && _p.parent == null;
 
-		Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c);
+		Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c); //TODO: support HwndSource
 
 		void _ThrowIfNotWindow([CallerMemberName] string func = null) {
 			if (_window == null) throw new InvalidOperationException(func + "(): Container is not Window");
@@ -2103,7 +2103,7 @@ namespace Au.Types
 {
 
 	/// <summary>
-	/// Used with <see cref="AGuiBuilder"/> constructor to specify the type of the root panel.
+	/// Used with <see cref="AWpfBuilder"/> constructor to specify the type of the root panel.
 	/// </summary>
 	public enum GBPanelType
 	{
@@ -2120,26 +2120,26 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="AGuiBuilder.Add"/>.
+	/// Flags for <see cref="AWpfBuilder.Add"/>.
 	/// </summary>
 	[Flags]
 	public enum GBAdd
 	{
 		/// <summary>
-		/// Add as child of <see cref="AGuiBuilder.Last"/>, which can be of type (or base type):
+		/// Add as child of <see cref="AWpfBuilder.Last"/>, which can be of type (or base type):
 		/// - <see cref="ContentControl"/>. Adds as its <see cref="ContentControl.Content"/> property. For example you can add a <b>CheckBox</b> in a <b>Button</b>.
 		/// - <see cref="Decorator"/>, for example <see cref="Border"/>. Adds as its <see cref="Decorator.Child"/> property.
 		/// </summary>
 		ChildOfLast = 1,
 
 		/// <summary>
-		/// Don't adjust some properties (padding, specified in <see cref="AGuiBuilder.Options"/>, etc) of some control types. Just set default margin, except if <i>ChildOfLast</i>.
+		/// Don't adjust some properties (padding, specified in <see cref="AWpfBuilder.Options"/>, etc) of some control types. Just set default margin, except if <i>ChildOfLast</i>.
 		/// </summary>
 		DontSetProperties = 2,
 	}
 
 	/// <summary>
-	/// Used with <see cref="AGuiBuilder"/> functions for width/height parameters. Allows to specify minimal and/or maximal values too.
+	/// Used with <see cref="AWpfBuilder"/> functions for width/height parameters. Allows to specify minimal and/or maximal values too.
 	/// </summary>
 	/// <remarks>
 	/// Has implicit conversions from double, Range and tuple (double length, Range minMax).
@@ -2205,7 +2205,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AGuiBuilder"/> functions to specify width/height of columns and rows. Allows to specify minimal and/or maximal values too.
+	/// Used with <see cref="AWpfBuilder"/> functions to specify width/height of columns and rows. Allows to specify minimal and/or maximal values too.
 	/// Like <see cref="GBLength"/>, but has functions to create <see cref="ColumnDefinition"/> and <see cref="RowDefinition"/>. Also has implicit conversion from these types.
 	/// </summary>
 	public struct GBGridLength
@@ -2267,7 +2267,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Arguments for <see cref="AGuiBuilder.AlsoAll"/> callback function.
+	/// Arguments for <see cref="AWpfBuilder.AlsoAll"/> callback function.
 	/// </summary>
 	public class GBAlsoAllArgs
 	{
@@ -2283,7 +2283,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Arguments for <see cref="AGuiBuilder.AddButton"/> callback function.
+	/// Arguments for <see cref="AWpfBuilder.AddButton"/> callback function.
 	/// </summary>
 	public class GBButtonClickArgs : CancelEventArgs
 	{
@@ -2299,7 +2299,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="AGuiBuilder.AddButton"/>.
+	/// Flags for <see cref="AWpfBuilder.AddButton"/>.
 	/// </summary>
 	[Flags]
 	public enum GBBFlags

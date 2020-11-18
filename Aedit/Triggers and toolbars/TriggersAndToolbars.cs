@@ -87,7 +87,7 @@ static class TriggersAndToolbars
 	public static void Restart()
 	{
 		var f = _GetFile(@"Triggers and toolbars.cs", create: false);
-		if(f != null) Run.CompileAndRun(true, f, runFromEditor: true);
+		if(f != null) CompileRun.CompileAndRun(true, f, runFromEditor: true);
 	}
 
 	/// <summary>

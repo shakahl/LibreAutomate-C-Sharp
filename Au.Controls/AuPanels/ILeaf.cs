@@ -91,7 +91,7 @@ namespace Au.Controls
 			/// When opening context menu of this leaf item.
 			/// You can add menu items. All default items are already added.
 			/// </summary>
-			event EventHandler<AContextMenu> ContextMenuOpening;
+			event EventHandler<AWpfMenu> ContextMenuOpening;
 
 			/// <summary>
 			/// When this tab item selected (becomes the active item).

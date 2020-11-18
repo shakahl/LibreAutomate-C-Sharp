@@ -806,7 +806,7 @@ partial class FilesModel : ITreeModel
 	/// <param name="template">
 	/// Relative path of a file or folder in the Templates\files folder. Case-sensitive, as in workspace.
 	/// Examples: "File.cs", "File.txt", "Subfolder", "Subfolder\File.cs".
-	/// Special names: null (creates folder), "Script.cs", "Class.cs", "Partial.cs".
+	/// Special names: null (creates folder), "Script.cs", "Class.cs".
 	/// If folder and not null, adds descendants too; removes '!' from the start of template folder name.
 	/// </param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
@@ -927,7 +927,7 @@ partial class FilesModel : ITreeModel
 			} else {
 				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
 				if(text.Length < 20 && text.Starts("//#")) { //load default or custom template?
-					tt = text switch { "//#script" => FileNode.ETempl.Script, "//#class" => FileNode.ETempl.Class, "//#partial" => FileNode.ETempl.Partial, _ => 0 };
+					tt = text switch { "//#script" => FileNode.ETempl.Script, "//#class" => FileNode.ETempl.Class, _ => 0 };
 					if(tt != 0) text = FileNode.Templates.Load(tt);
 				}
 			}
@@ -1356,7 +1356,7 @@ partial class FilesModel : ITreeModel
 					if(delay < 10) delay = 10;
 				}
 				ATimer.After(delay, t => {
-					Run.CompileAndRun(true, f);
+					CompileRun.CompileAndRun(true, f);
 				});
 			}
 		}

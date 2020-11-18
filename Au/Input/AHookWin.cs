@@ -127,28 +127,12 @@ namespace Au
 		/// 	AOutput.Write(x.code);
 		/// 	switch(x.code) {
 		/// 	case HookData.CbtEvent.ACTIVATE:
-		/// 		AOutput.Write(x.ActivationInfo(out _, out _));
+		/// 		AOutput.Write(x.Hwnd);
 		/// 		break;
 		/// 	case HookData.CbtEvent.CREATEWND:
-		/// 		AOutput.Write(x.CreationInfo(out var c, out _), c->x, c->lpszName);
-		/// 		break;
-		/// 	case HookData.CbtEvent.CLICKSKIPPED:
-		/// 		AOutput.Write(x.MouseInfo(out var m), m->pt, m->hwnd);
-		/// 		break;
-		/// 	case HookData.CbtEvent.KEYSKIPPED:
-		/// 		AOutput.Write(x.KeyInfo(out _));
-		/// 		break;
-		/// 	case HookData.CbtEvent.SETFOCUS:
-		/// 		AOutput.Write(x.FocusInfo(out AWnd wPrev), wPrev);
-		/// 		break;
-		/// 	case HookData.CbtEvent.MOVESIZE:
-		/// 		AOutput.Write(x.MoveSizeInfo(out var r), r->ToString());
-		/// 		break;
-		/// 	case HookData.CbtEvent.MINMAX:
-		/// 		AOutput.Write(x.MinMaxInfo(out var state), state);
-		/// 		break;
-		/// 	case HookData.CbtEvent.DESTROYWND:
-		/// 		AOutput.Write((AWnd)x.wParam);
+		/// 		var c=x.CreationInfo->lpcs;
+		/// 		AOutput.Write(x.Hwnd, c->x, c->lpszName);
+		/// 		c->x=500;
 		/// 		break;
 		/// 	}
 		/// 	return false;
@@ -857,6 +841,9 @@ namespace Au.Types
 			/// <summary>API <msdn>CBTProc</msdn></summary>
 			public readonly LPARAM lParam;
 
+			/// <summary>Window handle.</summary>
+			public AWnd Hwnd => code switch { CbtEvent.ACTIVATE or CbtEvent.CREATEWND or CbtEvent.DESTROYWND or CbtEvent.MINMAX or CbtEvent.MOVESIZE or CbtEvent.SETFOCUS => (AWnd)wParam, _ => default };
+
 			internal ThreadCbt(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				this.code = (CbtEvent)code;
@@ -865,87 +852,85 @@ namespace Au.Types
 			}
 
 			/// <summary>
-			/// Gets <see cref="CbtEvent.ACTIVATE"/> event info. Returns the window handle.
+			/// Gets <see cref="CbtEvent.ACTIVATE"/> event info.
 			/// </summary>
-			/// <param name="fMouse">true if the reason is the mouse.</param>
-			/// <param name="wPrevActive">The previously active window, or default(AWnd).</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.ACTIVATE.</exception>
-			public unsafe AWnd ActivationInfo(out bool fMouse, out AWnd wPrevActive) {
-				if (code != CbtEvent.ACTIVATE) throw new InvalidOperationException();
-				var t = (Api.CBTACTIVATESTRUCT*)lParam;
-				fMouse = t->fMouse;
-				wPrevActive = t->hWndActive;
-				return (AWnd)wParam;
+			public unsafe CBTACTIVATESTRUCT* ActivationInfo => code == CbtEvent.ACTIVATE ? (CBTACTIVATESTRUCT*)lParam : throw new InvalidOperationException();
+
+			/// <summary>
+			/// API <msdn>CBTACTIVATESTRUCT</msdn>.
+			/// </summary>
+			public struct CBTACTIVATESTRUCT
+			{
+				///
+				public bool fMouse;
+				///
+				public AWnd hWndActive;
 			}
 
 			/// <summary>
-			/// Gets <see cref="CbtEvent.CREATEWND"/> event info. Returns the window handle.
+			/// Gets <see cref="CbtEvent.CREATEWND"/> event info.
+			/// You can modify x, y, cx, cy, and hwndInsertAfter.
 			/// </summary>
-			/// <param name="c"><msdn>CREATESTRUCT</msdn>. You can modify x y cx cy.</param>
-			/// <param name="wInsertAfter"><msdn>CBT_CREATEWND</msdn>.hwndInsertAfter. You can modify it.</param>
 			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CREATEWND.</exception>
-			public unsafe AWnd CreationInfo(out Native.CREATESTRUCT* c, out AWnd* wInsertAfter) {
-				if (code != CbtEvent.CREATEWND) throw new InvalidOperationException();
-				var t = (Api.CBT_CREATEWND*)lParam;
-				c = t->lpcs;
-				wInsertAfter = &t->hwndInsertAfter;
-				return (AWnd)wParam;
-			}
+			public unsafe CBT_CREATEWND* CreationInfo => code == CbtEvent.CREATEWND ? (CBT_CREATEWND*)lParam : throw new InvalidOperationException();
 
 			/// <summary>
-			/// Gets <see cref="CbtEvent.CLICKSKIPPED"/> event info. Returns the mouse message.
+			/// API <msdn>CBT_CREATEWND</msdn>.
 			/// </summary>
-			/// <param name="m"><msdn>MOUSEHOOKSTRUCT</msdn>.</param>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CLICKSKIPPED.</exception>
-			public unsafe uint MouseInfo(out Native.MOUSEHOOKSTRUCT* m) {
-				if (code != CbtEvent.CLICKSKIPPED) throw new InvalidOperationException();
-				m = (Native.MOUSEHOOKSTRUCT*)lParam;
-				return (uint)wParam;
+			public unsafe struct CBT_CREATEWND
+			{
+				///
+				public Native.CREATESTRUCT* lpcs;
+				///
+				public AWnd hwndInsertAfter;
 			}
 
-			/// <summary>
-			/// Gets <see cref="CbtEvent.KEYSKIPPED"/> event info. Returns the key code.
-			/// </summary>
-			/// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See API <msdn>WM_KEYDOWN</msdn>.</param>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.KEYSKIPPED.</exception>
-			public KKey KeyInfo(out uint lParam) {
-				if (code != CbtEvent.KEYSKIPPED) throw new InvalidOperationException();
-				lParam = (uint)this.lParam;
-				return (KKey)(uint)wParam;
-			}
+			//rejected. Rarely used or too simple.
+			///// <summary>
+			///// Gets <see cref="CbtEvent.CLICKSKIPPED"/> event info. Returns the mouse message.
+			///// </summary>
+			///// <param name="m"><msdn>MOUSEHOOKSTRUCT</msdn>.</param>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.CLICKSKIPPED.</exception>
+			//public unsafe uint MouseInfo(out MOUSEHOOKSTRUCT* m) {
+			//	if (code != CbtEvent.CLICKSKIPPED) throw new InvalidOperationException();
+			//	m = (MOUSEHOOKSTRUCT*)lParam;
+			//	return (uint)wParam;
+			//}
 
-			/// <summary>
-			/// Gets <see cref="CbtEvent.SETFOCUS"/> event info. Returns the window handle.
-			/// </summary>
-			/// <param name="wLostFocus">The previously focused window, or default(AWnd).</param>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.SETFOCUS.</exception>
-			public AWnd FocusInfo(out AWnd wLostFocus) {
-				if (code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
-				wLostFocus = (AWnd)lParam;
-				return (AWnd)wParam;
-			}
+			///// <summary>
+			///// Gets <see cref="CbtEvent.KEYSKIPPED"/> event info. Returns the key code.
+			///// </summary>
+			///// <param name="lParam"><i>lParam</i> of the key message. Specifies the repeat count, scan code, etc. See API <msdn>WM_KEYDOWN</msdn>.</param>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.KEYSKIPPED.</exception>
+			//public KKey KeyInfo(out uint lParam) {
+			//	if (code != CbtEvent.KEYSKIPPED) throw new InvalidOperationException();
+			//	lParam = (uint)this.lParam;
+			//	return (KKey)(uint)wParam;
+			//}
 
-			/// <summary>
-			/// Gets <see cref="CbtEvent.MOVESIZE"/> event info. Returns the window handle.
-			/// </summary>
-			/// <param name="r">The new rectangle of the window.</param>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MOVESIZE.</exception>
-			public unsafe AWnd MoveSizeInfo(out RECT* r) {
-				if (code != CbtEvent.MOVESIZE) throw new InvalidOperationException();
-				r = (RECT*)lParam;
-				return (AWnd)wParam;
-			}
+			///// <summary>
+			///// Gets <see cref="CbtEvent.SETFOCUS"/> event info. Returns the window handle.
+			///// </summary>
+			///// <param name="wLostFocus">The previously focused window, or default(AWnd).</param>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.SETFOCUS.</exception>
+			//public AWnd FocusInfo(out AWnd wLostFocus) {
+			//	if (code != CbtEvent.SETFOCUS) throw new InvalidOperationException();
+			//	wLostFocus = (AWnd)lParam;
+			//	return (AWnd)wParam;
+			//}
 
-			/// <summary>
-			/// Gets <see cref="CbtEvent.MINMAX"/> event info. Returns the window handle.
-			/// </summary>
-			/// <param name="showState">The new show state. See API <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.</param>
-			/// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MINMAX.</exception>
-			public AWnd MinMaxInfo(out int showState) {
-				if (code != CbtEvent.MINMAX) throw new InvalidOperationException();
-				showState = (int)lParam & 0xffff;
-				return (AWnd)wParam;
-			}
+			///// <summary>
+			///// Gets <see cref="CbtEvent.MOVESIZE"/> event info.
+			///// </summary>
+			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MOVESIZE.</exception>
+			//public unsafe RECT* MoveSizeInfo => code == CbtEvent.MOVESIZE ? (RECT*)lParam : throw new InvalidOperationException();
+
+			///// <summary>
+			///// Gets <see cref="CbtEvent.MINMAX"/> event info.
+			///// Returns the new show state. See API <msdn>ShowWindow</msdn>. Minimized 6, maximized 3, restored 9.
+			///// <exception cref="InvalidOperationException"><b>code</b> is not CbtEvent.MINMAX.</exception>
+			//public int MinMaxInfo => code == CbtEvent.MINMAX ? (int)lParam & 0xffff : throw new InvalidOperationException();
 		}
 
 		/// <summary>
@@ -1055,15 +1040,45 @@ namespace Au.Types
 			/// More info about the mouse message.
 			/// API <msdn>MOUSEHOOKSTRUCT</msdn>.
 			/// </summary>
-			public readonly Native.MOUSEHOOKSTRUCT* m;
+			public readonly MOUSEHOOKSTRUCT* m;
 
 			internal ThreadMouse(AHookWin hook, int code, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				PM_NOREMOVE = code == Api.HC_NOREMOVE;
 				message = (uint)wParam;
-				m = (Native.MOUSEHOOKSTRUCT*)lParam;
+				m = (MOUSEHOOKSTRUCT*)lParam;
 			}
 		}
+
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+		/// <summary>API <msdn>MOUSEHOOKSTRUCT</msdn></summary>
+		public struct MOUSEHOOKSTRUCT
+		{
+			public POINT pt;
+			public AWnd hwnd;
+			public int wHitTestCode;
+			public LPARAM dwExtraInfo;
+		}
+
+		/// <summary>API <msdn>CWPSTRUCT</msdn></summary>
+		public struct CWPSTRUCT
+		{
+			public LPARAM lParam;
+			public LPARAM wParam;
+			public int message;
+			public AWnd hwnd;
+		}
+
+		/// <summary>API <msdn>CWPRETSTRUCT</msdn></summary>
+		public struct CWPRETSTRUCT
+		{
+			public LPARAM lResult;
+			public LPARAM lParam;
+			public LPARAM wParam;
+			public int message;
+			public AWnd hwnd;
+		}
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 		/// <summary>
 		/// Hook data for the hook procedure set by <see cref="AHookWin.ThreadCallWndProc"/>.
@@ -1083,12 +1098,12 @@ namespace Au.Types
 			/// Message parameters.
 			/// API <msdn>CWPSTRUCT</msdn>.
 			/// </summary>
-			public readonly Native.CWPSTRUCT* msg;
+			public readonly CWPSTRUCT* msg;
 
 			internal ThreadCallWndProc(AHookWin hook, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				sentByOtherThread = wParam;
-				msg = (Native.CWPSTRUCT*)lParam;
+				msg = (CWPSTRUCT*)lParam;
 			}
 		}
 
@@ -1110,12 +1125,12 @@ namespace Au.Types
 			/// Message parameters and the return value.
 			/// API <msdn>CWPRETSTRUCT</msdn>.
 			/// </summary>
-			public readonly Native.CWPRETSTRUCT* msg;
+			public readonly CWPRETSTRUCT* msg;
 
 			internal ThreadCallWndProcRet(AHookWin hook, LPARAM wParam, LPARAM lParam) {
 				this.hook = hook;
 				sentByOtherThread = wParam;
-				msg = (Native.CWPRETSTRUCT*)lParam;
+				msg = (CWPRETSTRUCT*)lParam;
 			}
 		}
 

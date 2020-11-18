@@ -14,8 +14,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -54,8 +52,6 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	string _iconOrLinkTarget;
 	uint _testScriptId;
 
-	//public Microsoft.CodeAnalysis.DocumentId CaDocumentId;
-
 	void _CtorMisc(string linkTarget) {
 		if (!IsFolder) {
 			if (!linkTarget.NE()) {
@@ -79,7 +75,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	//sourcePath is used to get file text to detect type when !isFolder.
 	public FileNode(FilesModel model, string name, string sourcePath, bool isFolder, string linkTarget = null) {
 		_model = model;
-		_type = isFolder ? EFileType.Folder : DetectFileType(sourcePath);
+		_type = isFolder ? EFileType.Folder : _DetectFileType(sourcePath);
 		_name = name;
 		_id = _model.AddGetId(this);
 		_CtorMisc(linkTarget);
@@ -160,20 +156,19 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	#region properties
 
 	/// <summary>
+	/// Panels.Files.TreeControl.
+	/// </summary>
+	public static AuTreeView TreeControl => Panels.Files.TreeControl;
+
+	/// <summary>
 	/// Gets workspace that contains this file.
 	/// </summary>
 	public FilesModel Model => _model;
 
 	/// <summary>
-	/// Gets the root node. It is <see cref="Model"/>.Root.
+	/// Gets the root node (Model.Root).
 	/// </summary>
 	public FileNode Root => _model.Root;
-
-	/// <summary>
-	/// Gets treeview control that displays this file.
-	/// Returns null if this workspace is unloaded.
-	/// </summary>
-	public AuTreeView TreeControl => _model.TreeControl;
 
 	/// <summary>
 	/// File type.
@@ -202,13 +197,17 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	public bool IsCodeFile => _type == EFileType.Script || _type == EFileType.Class;
 
 	/// <summary>
+	/// true if not script/class/folder.
+	/// </summary>
+	public bool IsNotCodeFile => _type == EFileType.NotCodeFile;
+
+	/// <summary>
 	/// File name with extension.
 	/// </summary>
 	public string Name => _name;
 
 	/// <summary>
-	/// File name with or without extension.
-	/// If ends with ".cs", returns without extension.
+	/// File name. Without extension if ends with ".cs".
 	/// </summary>
 	public string DisplayName => _displayName ??= _name.RemoveSuffix(".cs", true);
 
@@ -255,7 +254,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 			Debug.Assert(!IsLink);
 			_iconOrLinkTarget = value;
 			_model.Save.WorkspaceLater();
-			//FUTURE: call event to update other controls. It probably will be event of FilesModel.
+			FilesModel.Redraw(this);
 		}
 	}
 
@@ -298,20 +297,23 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	/// </summary>
 	public string ItemPath => _ItemPath();
 
-	string _ItemPath(string prefix = null) {
-		var a = t_pathStack ??= new Stack<string>();
-		a.Clear();
-		for (FileNode f = this, root = Root; f != root; f = f.Parent) {
+	[SkipLocalsInit]
+	unsafe string _ItemPath(string prefix = null) {
+		int len = prefix.Lenn();
+		var root = Root;
+		for (var f = this; f != root; f = f.Parent) {
 			if (f == null) { Debug.Assert(IsDeleted); return null; }
-			a.Push(f._name);
+			len += f._name.Length + 1;
 		}
-		using (new StringBuilder_(out var b)) {
-			b.Append(prefix);
-			while (a.Count > 0) b.Append('\\').Append(a.Pop());
-			return b.ToString();
+		var p = stackalloc char[len];
+		char* e = p + len;
+		for (var f = this; f != root; f = f.Parent) {
+			f._name.CopyTo_(e -= f._name.Length);
+			*(--e) = '\\';
 		}
+		if (e > p) prefix.CopyTo_(p);
+		return new string(p, 0, len);
 	}
-	[ThreadStatic] static Stack<string> t_pathStack;
 
 	/// <summary>
 	/// Gets full path of the file.
@@ -365,26 +367,10 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		if (fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?._FileModifiedExternally();
 	}
 
-	public Bitmap GetIcon(bool expandedFolder = false) {
-		string k;
-		if (IsDeleted) {
-			k = "delete";
-		} else {
-			switch (_type) {
-			case EFileType.Script: k = nameof(Aedit.Resources.Resources.fileScript); break;
-			case EFileType.Class: k = nameof(Aedit.Resources.Resources.fileClass); break;
-			case EFileType.Folder:
-				//if(IsProjectFolder()) k = nameof(Aedit.Resources.Resources.project); else //rejected. Name starts with '@' character, it's visible without a different icon.
-				k = expandedFolder ? nameof(Aedit.Resources.Resources.folderOpen) : nameof(Aedit.Resources.Resources.folder);
-				break;
-			default: //_Type.NotCodeFile
-				return IconCache.GetImage(FilePath, useExt: true);
-			}
-		}
-		return EdResources.GetImageUseCache(k);
+	public System.Drawing.Bitmap GetIcon() {//TODO: remove when not used. Or will need WPF ImageSource instead.
+		string source = (this as ITreeViewItem).ImageSource;
+		return App.ImageCache.Get(source, TreeControl.Dpi, !IsNotCodeFile);
 	}
-
-	public static AIconCache_ IconCache = new AIconCache_(AFolders.ThisAppDataLocal + @"fileIconCache.xml", 16);
 
 	///// <summary>
 	///// Gets or sets 'has triggers' flag.
@@ -415,37 +401,25 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	/// Gets or sets expanded state.
 	/// The setter sets to save later but does not update control (for it use <see cref="AuTreeView.Expand"/> instead, it calls the setter).
 	/// </summary>
-	public bool IsExpanded {
-		get => _isExpanded;
-		set { if (value != _isExpanded) { _isExpanded = value; _model.Save.StateLater(); } }
-	}
+	public bool IsExpanded => _isExpanded;
 	bool _isExpanded;
 
-	string ITreeViewItem.DisplayText {
-		get => DisplayName;
-		set { FileRename(value, true); }
-	}
+	public void SetIsExpanded(bool yes) { if (yes != _isExpanded) { _isExpanded = yes; _model.Save.StateLater(); } }
+
+	string ITreeViewItem.DisplayText => DisplayName;
+
+	void ITreeViewItem.SetNewText(string text) { FileRename(text); }
+
+	public static string GetFileTypeImageSource(EFileType ft, bool expanded = false)
+		=> ft switch {
+			EFileType.Script => "resource:resources/images/csfile_16x.xaml",
+			EFileType.Class => "resource:resources/images/csclassfile_16x.xaml",
+			EFileType.Folder => expanded ? "resource:resources/images/folderopened_16x.xaml" : "resource:resources/images/folderclosed_16x.xaml",
+			_ => null
+		};
 
 	//has default implementation
-	string ITreeViewItem.ImageSource {
-		get {
-			string s = null;
-
-
-			return s;
-		}
-	}
-	//private object _ccIcon_ValueNeeded(TreeNodeAdv node) {
-	//	var f = node.Tag as FileNode;
-	//	//AOutput.Write(f);
-	//	Debug.Assert(node.IsLeaf != f.IsFolder);
-
-	//	if (_model.IsInPrivateClipboard(f, out bool cut)) return EdResources.GetImageUseCache(cut ? nameof(Aedit.Resources.Resources.cut) : nameof(Aedit.Resources.Resources.copy));
-	//	return f.GetIcon(node.IsExpanded);
-	//}
-
-	//has default implementation
-	string ITreeViewItem.IconSource { get; }
+	string ITreeViewItem.ImageSource => IsNotCodeFile ? FilePath : GetFileTypeImageSource(FileType, _isExpanded);
 
 	//has default implementation
 	//TVCheck ITreeViewItem.CheckState { get; }
@@ -454,44 +428,46 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	//bool ITreeViewItem.IsDisabled { get; }
 
 	//has default implementation
-	bool ITreeViewItem.IsBold => this == _model.CurrentFile;
+	//bool ITreeViewItem.IsBold => this == _model.CurrentFile;
+	//bool ITreeViewItem.IsBold => TreeControl.FocusedItem == this;
 
 	//has default implementation
 	//bool ITreeViewItem.IsSelectable { get; }
 
 	//has default implementation
-	//int ITreeViewItem.Color { get; }
+	int ITreeViewItem.TextColor => _model.IsCut(this) ? 0xff : (this == _model.CurrentFile ? 0x8000 : -1);
 
 	//has default implementation
-	//int ITreeViewItem.TextColor { get; }
+	int ITreeViewItem.Color => !IsFolder && !IsSelected && _model.OpenFiles.Contains(this) && _IsTextBlack ? 0xd2fafa : -1;
 
-	//private void _ccName_DrawText(object sender, DrawEventArgs e) {
-	//	var f = e.Node.Tag as FileNode;
-	//	if (f.IsFolder) return;
-	//	if (f == _model.CurrentFile) {
-	//		//e.TextColor = Color.DarkBlue;
-	//		if (e.Node.IsSelected && e.Context.DrawSelection == DrawSelectionMode.None && _IsTextBlack)
-	//			e.BackgroundBrush = Brushes.LightGoldenrodYellow; //yellow text rect in selected-inactive
-	//	}
-	//}
+	static bool _IsTextBlack => (uint)Api.GetSysColor(Api.COLOR_WINDOWTEXT) == 0; //if not high-contrast theme
 
-	//protected override void OnRowDraw(PaintEventArgs e, TreeNodeAdv node, ref DrawContext context, int row, Rectangle rowRect) {
-	//	var f = node.Tag as FileNode;
-	//	if (f.IsFolder) return;
-	//	if (!node.IsSelected && _model.OpenFiles.Contains(f)) { //draw yellow background for open files
-	//		var g = e.Graphics;
-	//		var r = rowRect; //why width 0?
-	//		r.X = OffsetX; r.Width = ClientSize.Width;
-	//		if (_IsTextBlack) g.FillRectangle(Brushes.LightGoldenrodYellow, r);
-	//		//if(f == _model.CurrentFile) {
-	//		//	r.Width--; r.Height--;
-	//		//	g.DrawRectangle(SystemPens.ControlDark, r);
-	//		//}
-	//	}
-	//	base.OnRowDraw(e, node, ref context, row, rowRect);
+	#endregion
 
-	//	static bool _IsTextBlack => (uint)SystemColors.WindowText.ToArgb() == 0xFF000000; //if not high-contrast theme
-	//}
+	#region tree view
+
+	/// <summary>
+	/// Unselects all and selects this. Ensures visible. Does not open document.
+	/// If this is root, just unselects all.
+	/// </summary>
+	public void SelectSingle() {
+		if (this == Root) TreeControl.Select(.., false);
+		else if (!IsAlien) {
+			TreeControl.EnsureVisible(this);
+			TreeControl.Select(this, unselectOther: true, focus: true);
+		}
+	}
+
+	public bool IsSelected {
+		get => TreeControl.IsSelected(this);
+		set => TreeControl.Select(this, value);
+	}
+
+	/// <summary>
+	/// Call this to update/redraw control row view when changed its data (text, image, checked, color, etc).
+	/// Redraws only this control; to updtae all, call <see cref="FilesModel.Redraw"/> instead.
+	/// </summary>
+	public void UpdateControlRow() => TreeControl.Redraw(this);
 
 	#endregion
 
@@ -659,76 +635,23 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 
 	#endregion
 
-	#region tree
-
-	///// <summary>
-	///// Gets control's object of this item.
-	///// </summary>
-	//public TreeNodeAdv TreeNodeAdv {
-	//	get {
-	//		var c = TreeControl;
-	//		if(this == Root) return c.Root;
-	//		var tp = TreePath;
-	//		if(tp == null) return null; //deleted node
-	//		return c.FindNode(tp, true);
-
-	//		//CONSIDER: cache in a field. But can be difficult to manage. Currently this func is not called frequently.
-	//		//note: don't use c.FindNodeByTag. It does not find in never-expanded folders, unless c.LoadOnDemand is false. And slower.
-	//	}
-	//}
-
-	///// <summary>
-	///// Creates TreePath used to communicate with the control.
-	///// </summary>
-	//internal TreePath TreePath {
-	//	get {
-	//		var r = Root;
-	//		if(this == r) return TreePath.Empty;
-	//		var a = AncestorsReverse(true, true);
-	//		if(a[0].Parent != r) { Debug.Assert(IsDeleted); return null; }
-	//		return new TreePath(a);
-	//	}
-	//}
-
-	/// <summary>
-	/// Unselects all and selects this. Does not open document.
-	/// If this is root, just unselects all.
-	/// </summary>
-	public void SelectSingle() {
-		var c = TreeControl;
-		//TODO
-		//if(this == Root) c.ClearSelection();
-		//else if(!IsAlien) c.SelectedNode = TreeNodeAdv;
-	}
-
-	public bool IsSelected {
-		//TODO
-		get; set;
-		//get => TreeNodeAdv?.IsSelected ?? false; //shoulddo: test: maybe faster _model.SelectedItems.Contains(this);
-		//set => TreeNodeAdv.IsSelected = value;
-	}
-
-	/// <summary>
-	/// Call this to update/redraw control row view when changed node data (text, image, checked, color, etc) and don't need to change row height.
-	/// </summary>
-	public void UpdateControlRow() => TreeControl.Redraw(this);
-
-	#endregion
-
 	#region new item
 
 	public static string CreateNameUniqueInFolder(FileNode folder, string fromName, bool forFolder) {
 		if (!_Exists(fromName)) return fromName;
 
-		string ext = null;
+		string oldName = fromName, ext = null;
 		if (!forFolder) {
 			int i = fromName.LastIndexOf('.');
-			if (i >= 0) { ext = fromName.Substring(i); fromName = fromName.Remove(i); }
+			if (i >= 0) { ext = fromName[i..]; fromName = fromName[..i]; }
 		}
 		fromName = fromName.RegexReplace(@"\d+$", "");
 		for (int i = 2; ; i++) {
 			var s = fromName + i + ext;
-			if (!_Exists(s)) return s;
+			if (!_Exists(s)) {
+				AOutput.Write($"Info: name \"{oldName}\" has been changed to \"{s}\", to make it unique in the folder.");
+				return s;
+			}
 		}
 
 		bool _Exists(string s) {
@@ -743,12 +666,12 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		public static readonly string DefaultDirBS = AFolders.ThisAppBS + @"Templates\files\";
 		public static readonly string UserDirBS = AppSettings.DirBS + @"Templates\";
 
-		public static string FileName(ETempl templ) => templ switch { ETempl.Class => "Class.cs", ETempl.Partial => "Partial.cs", _ => "Script.cs" };
+		public static string FileName(ETempl templ) => templ switch { ETempl.Class => "Class.cs", _ => "Script.cs" };
 
 		public static string FilePathRaw(ETempl templ, bool user) => (user ? UserDirBS : DefaultDirBS) + FileName(templ);
 
 		public static string FilePathReal(ETempl templ, bool? user = null) {
-			bool u = user ?? App.Settings.templ_use.Has(templ);
+			bool u = user ?? ((ETempl)App.Settings.templ_use).Has(templ);
 			var file = FilePathRaw(templ, u);
 			if (u && !AFile.ExistsAsFile(file, true)) file = FilePathRaw(templ, false);
 			return file;
@@ -765,7 +688,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 			return true;
 		}
 
-		static string[] s_names = { "Script.cs", "Class.cs", "Partial.cs" };
+		readonly static string[] s_names = { "Script.cs", "Class.cs" };
 
 		/// <summary>
 		/// Loads Templates\files.xml and optionally finds a template in it.
@@ -798,7 +721,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	}
 
 	[Flags]
-	public enum ETempl { Script = 1, Class = 2, Partial = 4 }
+	public enum ETempl { Script = 1, Class = 2 }
 
 	#endregion
 
@@ -813,14 +736,14 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	/// If not folder, adds previous extension if no extension or changed code file extension.
 	/// If invalid filename, replaces invalid characters etc.
 	/// </param>
-	/// <param name="userEdited">true if called from the control edit notification.</param>
-	public bool FileRename(string name, bool userEdited = false) {
+	public bool FileRename(string name) {
 		name = APath.CorrectName(name);
 		if (!IsFolder) {
 			var ext = APath.GetExtension(_name);
 			if (ext.Length > 0) if (name.IndexOf('.') < 0 || (IsCodeFile && !name.Ends(ext, true))) name += ext;
 		}
 		if (name == _name) return true;
+		name = CreateNameUniqueInFolder(Parent, name, IsFolder);
 
 		if (!IsLink) {
 			if (!_model.TryFileOperation(() => AFile.Rename(this.FilePath, name, FIfExists.Fail))) return false;
@@ -829,7 +752,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		_name = name;
 		_displayName = null;
 		_model.Save.WorkspaceLater();
-		if (!userEdited) UpdateControlRow();
+		FilesModel.Redraw(this, remeasure: true);
 		CodeInfo.FilesChanged();
 		return true;
 	}
@@ -867,19 +790,21 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	public bool FileMove(FileNode target, FNPosition pos) {
 		if (!CanMove(target, pos)) return false;
 
-		//move file or directory
-		if (!IsLink) {
-			var oldParent = Parent;
-			var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
-			if (newParent != oldParent) {
-				if (!_model.TryFileOperation(() => AFile.Move(this.FilePath, newParent.FilePath + "\\" + _name, FIfExists.Fail))) return false;
+		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
+		if (newParent != Parent) {
+			var name = CreateNameUniqueInFolder(newParent, _name, IsFolder);
+
+			if (!IsLink) {
+				if (!_model.TryFileOperation(() => AFile.Move(this.FilePath, newParent.FilePath + "\\" + name, FIfExists.Fail))) return false;
 			}
+
+			if (name != _name) { _name = name; _displayName = null; }
 		}
 
 		//move tree node
 		Remove();
 		Common_MoveCopyNew(target, pos);
-		_model.UpdateControlItems();
+
 		return true;
 	}
 
@@ -940,6 +865,12 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 
 	#region util
 
+	//public bool ContainsName(string name, bool printInfo = false) {
+	//	if (null == _FindIn(Children(), name, null, false)) return false;
+	//	if (printInfo) AOutput.Write(name + " exists in this folder.");
+	//	return true;
+	//}
+
 	/// <summary>
 	/// Gets file type from XML tag which should be "d", "s", "c" or "n".
 	/// If none, throws ArgumentException if canThrow, else returns EFileType.NotCodeFile.
@@ -953,16 +884,19 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	};
 
 	/// <summary>
-	/// Detects file type from extension or text.
-	/// If .cs, uses text.
+	/// Detects file type from extension.
+	/// If .cs, returns Class, else NotCodeFile.
 	/// Must be not folder.
 	/// </summary>
-	public static EFileType DetectFileType(string path) {
+	static EFileType _DetectFileType(string path) {
 		var type = EFileType.NotCodeFile;
 		if (path.Ends(".cs", true)) {
 			type = EFileType.Class;
-			try { if (AFile.LoadText(path).RegexIsMatch(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }
-			catch (Exception ex) { ADebug.Print(ex); }
+			//rejected. Unreliable and rarely useful. Does not detect scripts with top-level statements.
+			//try { if (AFile.LoadText(path).RegexIsMatch(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }
+			//catch (Exception ex) { ADebug.Print(ex); }
+
+			//FUTURE: later allow to change file type script from/to class. Eg in Properties.
 		}
 		return type;
 	}

@@ -106,11 +106,12 @@ namespace Au
 		/// If the type is unsigned integer (uint, ulong, ushort, byte), writes in hexadecimal format with prefix "0x".
 		/// 
 		/// This overload is used for all types except: strings, arrays, generic collections. They have own overloads; to use this function need to cast to object.
-		/// For ref struct types use <c>AOutput.Write(x.ToString());</c>.
+		/// For <b>Span</b> and other ref struct types use <c>AOutput.Write(x.ToString());</c>.
 		/// </remarks>
 		public static void Write(object value) {
 			Write(ObjectToString_(value));
 		}
+		//FUTURE: support Span<T>, eg ReadOnlySpan<char>
 
 		/// <summary>
 		/// Converts object to string like <see cref="Write(object)"/> does.

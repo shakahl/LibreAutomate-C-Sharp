@@ -140,10 +140,13 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern char* Cpp_LowercaseTable();
 
-		// CLIPBOARD
+		// OTHER
 
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern IntPtr Cpp_Clipboard(IntPtr hh);
+
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern int Cpp_CallIDroptarget(IntPtr dt, int ddEvent, [MarshalAs(UnmanagedType.IUnknown)] object d, int keyState, POINT pt, ref int pdwEffect);
 
 		// PROCESS
 

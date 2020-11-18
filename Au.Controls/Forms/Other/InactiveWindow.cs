@@ -85,7 +85,7 @@ namespace Au.Controls
 				var wa = AWnd.ThisThread.Active;
 				if(wa != default && wa.Handle != m.HWnd) {
 					var h = m.HWnd;
-					using(AHookWin.ThreadCbt(d => d.code == HookData.CbtEvent.ACTIVATE && d.ActivationInfo(out _, out _).Handle == h))
+					using(AHookWin.ThreadCbt(d => d.code == HookData.CbtEvent.ACTIVATE && d.Hwnd.Handle == h))
 						base.WndProc(ref m);
 					return;
 				}

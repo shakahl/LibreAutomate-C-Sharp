@@ -118,7 +118,7 @@ namespace Au.Types
 			public IntPtr hInstance;
 			public IntPtr hIcon;
 			public IntPtr hCursor;
-			public IntPtr hbrBackground;
+			public nint hbrBackground;
 #pragma warning disable 169
 			IntPtr lpszMenuName;
 #pragma warning restore 169
@@ -1045,6 +1045,9 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern AWnd GetOpenClipboardWindow();
 
+		[DllImport("user32.dll")]
+		internal static extern uint GetClipboardSequenceNumber();
+
 		[DllImport("user32.dll", EntryPoint = "RegisterClipboardFormatW")]
 		internal static extern int RegisterClipboardFormat(string lpszFormat);
 
@@ -1197,18 +1200,6 @@ namespace Au.Types
 				get => 0 != (flags & 0x80000000);
 				set { if (value) flags |= 0x80000000; else flags &= ~0x80000000; }
 			}
-		}
-
-		internal struct CBTACTIVATESTRUCT
-		{
-			public bool fMouse;
-			public AWnd hWndActive;
-		}
-
-		internal unsafe struct CBT_CREATEWND
-		{
-			public Native.CREATESTRUCT* lpcs;
-			public AWnd hwndInsertAfter;
 		}
 
 		internal const int HC_NOREMOVE = 3;

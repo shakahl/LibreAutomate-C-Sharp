@@ -46,7 +46,7 @@ static class Panels
 		pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");
 
 		pm["Files"].Content = Files = new PanelFiles();
-		pm["Running"].Content = new WindowsFormsHost { Child = Running = new PanelRunning() };
+		pm["Running"].Content = Running = new PanelRunning();
 
 		pm["Output"].Content = new WindowsFormsHost { Child = Output = new PanelOutput() };
 		pm["Info"].Content = new WindowsFormsHost { Child = Info = new PanelInfo() };

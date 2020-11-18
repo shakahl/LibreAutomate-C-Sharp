@@ -660,7 +660,7 @@ namespace Au.Controls
 			if (_GetCommandFromMouseEventArgs(sender, e, out var command, out var control)) {
 				e.Handled = true;
 				if (sender is ToolBar tb) tb.IsOverflowOpen = false; //last step of the workaround. Need to close when showing context menu, or later will not autoclose.
-				var m = new AContextMenu();
+				var m = new AWpfMenu();
 				m["Edit commands file"] = o => _Customize();
 				m["View default commands file"] = o => AFile.SelectInExplorer(_defaultFile);
 				m.IsOpen = true;

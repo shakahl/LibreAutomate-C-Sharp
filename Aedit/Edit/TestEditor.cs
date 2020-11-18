@@ -202,7 +202,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		//AOutput.Write(m.GetObject("resources/hacker.txt").GetType());
 
 		//new System.Windows.Application();
-		////var bitmapImage = new BitmapImage(new Uri("pack://application:,,,/Au.Editor;component/resources/png/folder.png"));
+		////var bitmapImage = new BitmapImage(new Uri("pack://application:,,,/Aedit;component/resources/png/folder.png"));
 		////var bitmapImage = new BitmapImage(new Uri("pack://application:,,,/resources/png/folder.png"));
 		//var bitmapImage = new BitmapImage(new Uri("/resources/png/folder.png", UriKind.Relative));
 		//AOutput.Write(bitmapImage);

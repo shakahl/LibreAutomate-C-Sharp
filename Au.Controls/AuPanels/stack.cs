@@ -230,7 +230,7 @@ namespace Au.Controls
 			void _SplitterContextMenu(object sender, ContextMenuEventArgs e) {
 				e.Handled = true;
 				var parentStack = Parent._stack;
-				var m = new AContextMenu();
+				var m = new AWpfMenu();
 				using (m.Submenu("Splitter Size")) {
 					int z = _SplitterSize;
 					for (int i = 1; i <= 10; i++) {
@@ -260,7 +260,7 @@ namespace Au.Controls
 				m.IsOpen = true;
 			}
 
-			void _SplitterContextMenu_Unit(AContextMenu m, string s1) {
+			void _SplitterContextMenu_Unit(AWpfMenu m, string s1) {
 				var unitNow = _SizeDef.GridUnitType;
 				//var unitNow = _dockedSize.GridUnitType;
 				//AOutput.Write(this, unitNow);

@@ -125,7 +125,7 @@ finally {  }]]>
 
 		<!-- call functions -->
 
-		<snippet name="dialogSnippet" info="Standard dialog window." more="See also: guiBuilderSnippet.">
+		<snippet name="dialogSnippet" info="Standard dialog window." more="See also: wpfSnippet.">
 			<list item="OK button">ADialog.Show("$end$");</list>
 			<list item="OK button and info icon">ADialog.ShowInfo("$end$");</list>
 			<list item="OK button and warning icon">ADialog.ShowWarning("$end$");</list>
@@ -358,9 +358,9 @@ if (s == null) return;]]>
 			</list>
 		</snippet>
 
-		<snippet name="guiBuilderSnippet" info="Create window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Media" more="See also: dialogSnippet.">
+		<snippet name="wpfSnippet" info="Create window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Media" more="See also: dialogSnippet.">
 			<list item="Simple">
-				<![CDATA[var b = new AGuiBuilder("Window").WinSize(400)
+				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400)
 	.R.Add("Text", out TextBox text1).Focus()
 	.R.Add("Combo", out ComboBox combo1, true).Items("One|Two|Three")
 	.R.Add(out CheckBox c1, "Check")
@@ -370,14 +370,14 @@ if (!b.ShowDialog()) return;
 //AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck());]]>
 			</list>
 			<list item="Tabs">
-				<![CDATA[var b = new AGuiBuilder("Window").WinSize(400)
+				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400)
 	.Row(-1).Add(out TabControl tc).Height(300..)
 	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70..).Disabled().End();
 
-AGuiBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
+AWpfBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
 	var tp = new TabItem { Header = name };
 	tc.Items.Add(tp);
-	return new AGuiBuilder(tp, panelType);
+	return new AWpfBuilder(tp, panelType);
 }
 
 _Page("Page1")
@@ -397,7 +397,7 @@ if (!b.ShowDialog()) return;]]>
 			<list item="With my window class">
 				<![CDATA[//class Window1 : Window {  }
 var w = new Window1 { Title = "Window", Width = 400 };
-var b = new AGuiBuilder(w)
+var b = new AWpfBuilder(w)
 	.R.Add("Text", out TextBox _).Focus()
 	.R.AddOkCancel()
 	.End();
@@ -406,14 +406,14 @@ if (!b.ShowDialog()) return;]]>
 			<list item="Tabs and my class">
 				<![CDATA[//class Window1 : Window {  }
 var w = new Window1 { Title = "Window", Width = 400 };
-var b = new AGuiBuilder(w)
+var b = new AWpfBuilder(w)
 	.Row(-1).Add(out TabControl tc).Height(300..)
 	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70..).Disabled().End();
 
-AGuiBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
+AWpfBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
 	var tp = new TabItem { Header = name };
 	tc.Items.Add(tp);
-	return new AGuiBuilder(tp, panelType);
+	return new AWpfBuilder(tp, panelType);
 }
 
 _Page("Page1")

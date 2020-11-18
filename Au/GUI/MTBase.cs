@@ -217,7 +217,7 @@ namespace Au.Types
 				if(item is ToolStripSplitButton sb) sb.ButtonClick += _onClick; else item.Click += _onClick;
 
 				//APerf.First();
-				if(iconObj == null && ExtractIconPathFromCode) iconObj = AContextMenu.IconPathFromCode_(onClick.Method);
+				if(iconObj == null && ExtractIconPathFromCode) iconObj = AWpfMenu.IconPathFromCode_(onClick.Method);
 				//APerf.NW(); //ngened about 10 ms first time, then fast. Else 30-40 ms first time.
 				//AOutput.Write(iconObj);
 			}

@@ -23,6 +23,10 @@ using Au.Util;
 /// </summary>
 class AppSettings : ASettings
 {
+	//This is loaded at startup and therefore must be fast.
+	//	Don't use types that would cause to load UI dlls (WPF etc). Eg when it is a nested type and its parent class is a WPF etc control.
+	//	Tested with .NET 5: first time takes ~40 ms. Mostly to load/jit/etc dlls used in JSON deserialization, which then is fast regardless of data size.
+
 	public static AppSettings Load() => Load<AppSettings>(DirBS + "Settings.json");
 
 	public static readonly string DirBS = AFolders.ThisAppDocuments + @".settings\";
@@ -51,11 +55,11 @@ class AppSettings : ASettings
 	public string tools_AWinImage_wndPos { get => _tools_AWinImage_wndPos; set => Set(ref _tools_AWinImage_wndPos, value); }
 	string _tools_AWinImage_wndPos;
 
-	public PanelFind.RecentItem[] find_recent { get => _find_recent; set => SetNoCmp(ref _find_recent, value); }
-	PanelFind.RecentItem[] _find_recent;
+	public FRRecentItem[] find_recent { get => _find_recent; set => SetNoCmp(ref _find_recent, value); }
+	FRRecentItem[] _find_recent;
 
-	public PanelFind.RecentItem[] find_recentReplace { get => _find_recentReplace; set => SetNoCmp(ref _find_recentReplace, value); }
-	PanelFind.RecentItem[] _find_recentReplace;
+	public FRRecentItem[] find_recentReplace { get => _find_recentReplace; set => SetNoCmp(ref _find_recentReplace, value); }
+	FRRecentItem[] _find_recentReplace;
 
 	public string find_skip { get => _find_skip; set => Set(ref _find_skip, value); }
 	string _find_skip;
@@ -78,7 +82,7 @@ class AppSettings : ASettings
 	public bool output_topmost { get => _output_topmost; set => Set(ref _output_topmost, value); }
 	bool _output_topmost;
 
-	public FileNode.ETempl templ_use { get => (FileNode.ETempl)_templ_use; set => Set(ref _templ_use, (int)value); }
+	public int templ_use { get => _templ_use; set => Set(ref _templ_use, value); }
 	int _templ_use;
 
 	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }

@@ -1,11 +1,11 @@
-﻿<files max-i="65">
+﻿<files max-i="67">
   <s n="Script.cs" i="1" />
   <c n="Class.cs" i="2" />
-  <c n="Partial.cs" i="3" />
-  <d n="New File" i="4">
-    <n n="TextFile.txt" i="5" />
+  <d n="More" i="66">
+    <c n="Partial.cs" i="3" />
+    <n n="Text file.txt" i="67" />
   </d>
-  <d n="New Project" i="6">
+  <d n="New project" i="6">
     <d n="@Script" i="7">
       <s n="Script.cs" i="8" />
     </d>

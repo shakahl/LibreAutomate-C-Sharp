@@ -681,7 +681,7 @@ partial class FileNode : ATreeBase<FileNode>
 		public static readonly string DefaultDirBS = AFolders.ThisAppBS + @"Templates\files\";
 		public static readonly string UserDirBS = ProgramSettings.DirBS + @"Templates\";
 
-		public static string FileName(ETempl templ) => templ switch { ETempl.Class => "Class.cs", ETempl.Partial => "Partial.cs", _ => "Script.cs" };
+		public static string FileName(ETempl templ) => templ switch { ETempl.Class => "Class.cs", _ => "Script.cs" };
 
 		public static string FilePathRaw(ETempl templ, bool user) => (user ? UserDirBS : DefaultDirBS) + FileName(templ);
 
@@ -706,7 +706,7 @@ partial class FileNode : ATreeBase<FileNode>
 			return true;
 		}
 
-		static string[] s_names = { "Script.cs", "Class.cs", "Partial.cs" };
+		static string[] s_names = { "Script.cs", "Class.cs" };
 
 		/// <summary>
 		/// Loads Templates\files.xml and optionally finds a template in it.
@@ -740,7 +740,7 @@ partial class FileNode : ATreeBase<FileNode>
 	}
 
 	[Flags]
-	public enum ETempl { Script = 1, Class = 2, Partial = 4 }
+	public enum ETempl { Script = 1, Class = 2 }
 
 	#endregion
 

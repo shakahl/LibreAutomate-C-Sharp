@@ -128,6 +128,9 @@ namespace Au.Controls
 		}
 
 		///
+		public int Dpi => _dpi;
+
+		///
 		protected override void OnRenderSizeChanged(SizeChangedInfo e) {
 			//		AOutput.Write("OnRenderSizeChanged");
 			_Measure();
@@ -326,7 +329,7 @@ namespace Au.Controls
 			bool exp = expand == null ? !wasExp : expand.Value;
 			if (exp == wasExp) return;
 			if (!exp && _focusedIndex > index && _IsInside(index, _focusedIndex)) _avi[_focusedIndex = index].Select(true); //select/focus item if a descendant is focused
-			item.IsExpanded = exp;
+			item.SetIsExpanded(exp);
 			_SetVisibleItems(init: false);
 		}
 
@@ -362,7 +365,7 @@ namespace Au.Controls
 					foreach (var v in a) {
 						if ((object)v == item) return true;
 						if (v.IsFolder && _Find(v.Items, item)) {
-							v.IsExpanded = true;
+							v.SetIsExpanded(true);
 							return true;
 						}
 					}
@@ -381,7 +384,7 @@ namespace Au.Controls
 
 		///
 		protected override void OnMouseDown(MouseButtonEventArgs e) {
-			//		AOutput.Write("down", e.ClickCount, Keyboard.Modifiers, e.Timestamp);
+			//AOutput.Write("down", e.ClickCount, Keyboard.Modifiers, e.Timestamp);
 			var b = e.ChangedButton;
 			if (b == MouseButton.Left || b == MouseButton.Right || b == MouseButton.Middle) {
 				if (b != MouseButton.Middle && Focusable) Focus();
@@ -392,35 +395,31 @@ namespace Au.Controls
 						Expand(h.index, null);
 					} else {
 						var mk = Keyboard.Modifiers;
-						if (MultiSelect && b == MouseButton.Left && e.ClickCount == 1 && (mk == ModifierKeys.Control || mk == ModifierKeys.Shift)) {
-							if (mk == ModifierKeys.Shift) _ShiftSelect(h.index); else Select(h.index, !IsSelected(h.index), unselectOther: false);
-							_focusedIndex = h.index;
-						} else {
-							bool unselectOnUp = false, checkbox = h.part == TVParts.Checkbox;
-							if (b == MouseButton.Left && !checkbox) {
-								unselectOnUp = MultiSelect && IsSelected(h.index); //unselect other on up, else could not drag multiple
-								Select(h.index, true, unselectOther: !unselectOnUp, focus: true);
-							}
-							bool clickEvent = false, activateEvent = false;
-							if (checkbox) {
-								clickEvent = true;
-							} else if (e.ClickCount == 1) {
-								if (CaptureMouse()) _mouse = (e, h, xy, mk, unselectOnUp);
-								//cannot detect click/drag here with ADragDrop etc because it captures mouse which closes parent Popup. Also then mouse events are not good.
-							} else {
-								//							AOutput.Write("double", h.item);
-								if (b == MouseButton.Left && h.part == TVParts.Text && h.item.IsFolder) Expand(h.index, null);
-								clickEvent = true;
-								activateEvent = !SingleClickActivate;
-							}
-							if (clickEvent || activateEvent) _MouseEvents(clickEvent, activateEvent, false, e, h, xy, mk);
+						bool multiSelect = MultiSelect && b == MouseButton.Left && e.ClickCount == 1 && (mk == ModifierKeys.Control || mk == ModifierKeys.Shift);
+						bool unselectOnUp = false, checkbox = h.part == TVParts.Checkbox && !multiSelect;
+						if (b == MouseButton.Left && !multiSelect && !checkbox) {
+							unselectOnUp = MultiSelect && IsSelected(h.index); //unselect other on up, else could not drag multiple
+							Select(h.index, true, unselectOther: !unselectOnUp, focus: true);
 						}
+						bool clickEvent = false, activateEvent = false;
+						if (checkbox) {
+							clickEvent = true;
+						} else if (e.ClickCount == 1) {
+							if (CaptureMouse()) _mouse = (e, h, xy, mk, multiSelect, unselectOnUp);
+							//cannot detect click/drag here with ADragDrop etc because it captures mouse which closes parent Popup. Also then mouse events are not good.
+						} else {
+							//AOutput.Write("double", h.item);
+							if (b == MouseButton.Left && h.part == TVParts.Text && h.item.IsFolder) Expand(h.index, null);
+							clickEvent = true;
+							activateEvent = !SingleClickActivate;
+						}
+						if (clickEvent || activateEvent) _MouseEvents(clickEvent, activateEvent, false, e, h, xy, mk);
 					}
 				}
 			}
 			base.OnMouseDown(e);
 		}
-		(MouseButtonEventArgs e, TVHitTest h, POINT xy, ModifierKeys mk, bool unselect) _mouse; //active when e!=null
+		(MouseButtonEventArgs e, TVHitTest h, POINT xy, ModifierKeys mk, bool multiSelect, bool unselect) _mouse; //active when e!=null
 
 		void _MouseEvents(bool click, bool activate, bool drag, MouseButtonEventArgs e, in TVHitTest h, POINT xy, ModifierKeys mk) {
 			var v = new TVItemEventArgs(h.item, h.index, h.part, e.ChangedButton, e.ClickCount, xy, mk);
@@ -447,9 +446,15 @@ namespace Au.Controls
 				e.Handled = true;
 				var eDown = _MouseEnd();
 				if (e.OriginalSource == this) {
-					//				AOutput.Write("click", eDown.ChangedButton);
-					if (_mouse.unselect) Select(_mouse.h.index, true, unselectOther: true);
-					_MouseEvents(true, SingleClickActivate, false, eDown, _mouse.h, _mouse.xy, _mouse.mk);
+					if (_mouse.multiSelect) { //extend selection on up. If on down, interferes with drag.
+						int i = _mouse.h.index;
+						if (_mouse.mk == ModifierKeys.Shift) _ShiftSelect(i); else Select(i, !IsSelected(i), unselectOther: false);
+						_focusedIndex = i;
+					} else {
+						//AOutput.Write("click", eDown.ChangedButton);
+						if (_mouse.unselect) Select(_mouse.h.index, true, unselectOther: true);
+						_MouseEvents(true, SingleClickActivate, false, eDown, _mouse.h, _mouse.xy, _mouse.mk);
+					}
 				}
 			}
 			base.OnMouseUp(e);
@@ -459,9 +464,11 @@ namespace Au.Controls
 		protected override void OnMouseMove(MouseEventArgs e) {
 			if (_mouse.e != null) {
 				if (_Pressed(_mouse.e.ChangedButton)) {
-					//			AOutput.Write("move");
+					//AOutput.Write("move");
 					if (AMath.Distance(_hh.Wnd.MouseClientXY, _mouse.xy) > _itemH / 4) {
-						//					AOutput.Write("drag");
+						//AOutput.Write("drag");
+						int i = _mouse.h.index;
+						if (!IsSelected(i)) Select(i, true, unselectOther: true, focus: true);
 						var eDown = _MouseEnd();
 						_MouseEvents(false, false, true, eDown, _mouse.h, _mouse.xy, _mouse.mk);
 					}
@@ -513,9 +520,9 @@ namespace Au.Controls
 		public bool HotTrack { get; set; }
 
 		/// <summary>
-		/// Whether to show a tooltip with full item text when mouse is over an item with partially visible text.
+		/// Whether to show a tooltip with full item text when mouse is over an item with partially visible text. Default true.
 		/// </summary>
-		public bool ShowLabelTip { get; set; }
+		public bool ShowLabelTip { get; set; } = true;
 
 		///
 		protected override void OnKeyDown(KeyEventArgs e) {
@@ -657,6 +664,13 @@ namespace Au.Controls
 		/// <seealso cref="MultiSelect"/>
 		/// <exception cref="IndexOutOfRangeException"></exception>
 		public bool IsSelected(int index) => _avi[index].isSelected;
+
+		/// <summary>
+		/// Returns true if the item is selected.
+		/// </summary>
+		/// <seealso cref="MultiSelect"/>
+		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control.</exception>
+		public bool IsSelected(ITreeViewItem item) => _avi[_IndexOfOrThrow(item)].isSelected;
 
 		/// <summary>
 		/// Gets selected items. Returns empty list if none selected.
@@ -867,17 +881,17 @@ namespace Au.Controls
 			if (_lePopup == null) return;
 			int index = cancel ? -1 : IndexOf(_leItem);
 			if (!cancel) cancel = index < 0 || !IsVisible;
-			//		AOutput.Write("EndEditLabel, cancel=", cancel);
+			//AOutput.Write("EndEditLabel, cancel=", cancel);
 			bool focus = Keyboard.FocusedElement == _leTB;
 			var text = cancel ? null : _leTB.Text; _leTB = null;
 			var item = _leItem; _leItem = null;
 			var p = _lePopup; _lePopup = null;
 			p.IsOpen = false;
 			if (focus) Focus();
-			if (!cancel) {
-				item.DisplayText = text;
-				//			Remeasure(index);
-				_MeasureClear(updateNow: true);
+			if (!cancel && text != item.DisplayText) {
+				int meas = _avi[index].measured;
+				item.SetNewText(text);
+				if (_avi[index].measured == meas) Redraw(index, remeasure: true); //SetNewText (app) should do it, but may forget
 			}
 		}
 

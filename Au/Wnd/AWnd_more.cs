@@ -27,8 +27,7 @@ namespace Au
 			/// <summary>
 			/// Gets window border width.
 			/// </summary>
-			public static int BorderWidth(AWnd w)
-			{
+			public static int BorderWidth(AWnd w) {
 				w.GetWindowInfo_(out var x);
 				return x.cxWindowBorders;
 			}
@@ -38,8 +37,7 @@ namespace Au
 			/// </summary>
 			/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
 			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>.</param>
-			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0)
-			{
+			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0) {
 				g = new Native.GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
 				return Api.GetGUIThreadInfo(idThread, ref g);
 			}
@@ -74,37 +72,42 @@ namespace Au
 			/// Thread-safe.
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// </remarks>
-			public static unsafe void RegisterWindowClass(string className, Native.WNDPROC wndProc = null, RWCEtc etc = null)
-			{
-				if(wndProc?.Target != null) throw new ArgumentException("wndProc must be static method or null. Use non-static wndProc with CreateWindow.");
+			public static unsafe void RegisterWindowClass(string className, Native.WNDPROC wndProc = null, RWCEtc etc = null) {
+				if (wndProc?.Target != null) throw new ArgumentException("wndProc must be static method or null. Use non-static wndProc with CreateWindow.");
 
-				lock(s_classes) {
-					if(s_classes.TryGetValue(className, out var wpPrev)) {
-						if(wpPrev != wndProc) throw new InvalidOperationException("Window class already registered"); //another method or another target object
+				lock (s_classes) {
+					if (s_classes.TryGetValue(className, out var wpPrev)) {
+						if (wpPrev != wndProc) throw new InvalidOperationException("Window class already registered"); //another method or another target object
 						return;
 					}
 					var x = new Api.WNDCLASSEX(etc);
 
-					fixed(char* pCN = className) {
+					fixed (char* pCN = className) {
 						x.lpszClassName = pCN;
-						if(wndProc != null) {
+						if (wndProc != null) {
 							x.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
 						} else {
 #if CW_CBT
 							if(s_defWindowProc == default) s_defWindowProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");
 							x.lpfnWndProc = s_defWindowProc;
 #else
-							if(s_cwProcFP == default) s_cwProcFP = Marshal.GetFunctionPointerForDelegate(s_cwProc);
+							if (s_cwProcFP == default) s_cwProcFP = Marshal.GetFunctionPointerForDelegate(s_cwProc);
 							x.lpfnWndProc = s_cwProcFP;
 #endif
 						}
 						x.style |= Api.CS_GLOBALCLASS;
 
-						if(0 == Api.RegisterClassEx(x)) throw new Win32Exception();
+						if (0 == Api.RegisterClassEx(x)) throw new Win32Exception();
 						//note: we don't return atom because: 1. Rarely used. 2. If assigned to an unused field, compiler may remove the function call.
 
 						s_classes.Add(className, wndProc);
 					}
+				}
+			}
+
+			internal static bool IsClassRegistered_(string name, out Native.WNDPROC wndProc) {
+				lock (s_classes) {
+					return s_classes.TryGetValue(name, out wndProc);
 				}
 			}
 
@@ -114,11 +117,10 @@ namespace Au
 #if CW_CBT
 			static IntPtr s_defWindowProc;
 #else
-			static LPARAM _CWProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam)
-			{
+			static LPARAM _CWProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 				//PrintMsg(w, msg, wParam, lParam);
 				var wndProc = t_cwProc;
-				if(wndProc == null) return Api.DefWindowProc(w, msg, wParam, lParam); //creating not with our CreateWindow(wndProc, ...)
+				if (wndProc == null) return Api.DefWindowProc(w, msg, wParam, lParam); //creating not with our CreateWindow(wndProc, ...)
 				t_cwProc = null;
 				w.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 				return wndProc(w, msg, wParam, lParam);
@@ -138,14 +140,11 @@ namespace Au
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </remarks>
-			public static AWnd CreateWindow(Native.WNDPROC wndProc, string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
-			{
+			public static AWnd CreateWindow(Native.WNDPROC wndProc, string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
 				var a = t_windows ??= new List<(AWnd w, Native.WNDPROC p)>();
-				for(int i = a.Count; --i >= 0;) if(!a[i].w.IsAlive) a.RemoveAt(i);
+				for (int i = a.Count; --i >= 0;) if (!a[i].w.IsAlive) a.RemoveAt(i);
 
-				lock(s_classes) {
-					if(!s_classes.TryGetValue(className, out var wp) || wp != null) throw new ArgumentException("Window class must be registered with RegisterWindowClass with null wndProc");
-				}
+				if (!IsClassRegistered_(className, out var wp) || wp != null) throw new ArgumentException("Window class must be registered with AWnd.More.RegisterWindowClass with null wndProc");
 
 				AWnd w;
 				//need to cubclass the new window. But not after CreateWindowEx, because wndProc must receive all messages.
@@ -172,7 +171,7 @@ namespace Au
 				finally { t_cwProc = null; } //if CreateWindowEx failed and _CWProc not called
 #endif
 
-				if(w.Is0) throw new AuException(0);
+				if (w.Is0) throw new AuException(0);
 				a.Add((w, wndProc));
 				return w;
 			}
@@ -186,10 +185,9 @@ namespace Au
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </remarks>
 			/// <seealso cref="RegisterWindowClass"/>
-			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default)
-			{
+			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
 				var w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
-				if(w.Is0) throw new AuException(0);
+				if (w.Is0) throw new AuException(0);
 				return w;
 			}
 
@@ -202,8 +200,7 @@ namespace Au
 			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </remarks>
-			public static AWnd CreateMessageOnlyWindow(string className)
-			{
+			public static AWnd CreateMessageOnlyWindow(string className) {
 				return CreateWindow(className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
@@ -220,8 +217,7 @@ namespace Au
 			/// Protects the <i>wndProc</i> delegate from GC.
 			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
 			/// </remarks>
-			public static AWnd CreateMessageOnlyWindow(Native.WNDPROC wndProc, string className)
-			{
+			public static AWnd CreateMessageOnlyWindow(Native.WNDPROC wndProc, string className) {
 				return CreateWindow(wndProc, className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
 				//note: WS_EX_NOACTIVATE is important.
 			}
@@ -232,8 +228,7 @@ namespace Au
 			/// Returns false if failed. Supports <see cref="ALastError"/>.
 			/// </summary>
 			/// <seealso cref="Close"/>
-			public static bool DestroyWindow(AWnd w)
-			{
+			public static bool DestroyWindow(AWnd w) {
 				return Api.DestroyWindow(w);
 			}
 
@@ -248,8 +243,7 @@ namespace Au
 			/// <remarks>
 			/// Sends <msdn>WM_SETFONT</msdn> message.
 			/// </remarks>
-			public static void SetFont(AWnd w, IntPtr font = default)
-			{
+			public static void SetFont(AWnd w, IntPtr font = default) {
 				w.Send(Api.WM_SETFONT, font != default ? font : NativeFont_.RegularCached(ADpi.OfWindow(w)).Handle);
 			}
 
@@ -263,9 +257,8 @@ namespace Au
 			/// <remarks>
 			/// Windows Store app window class name can be "Windows.UI.Core.CoreWindow" or "ApplicationFrameWindow".
 			/// </remarks>
-			public static string GetWindowsStoreAppId(AWnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
-			{
-				if(0 != Internal_.GetWindowsStoreAppId(w, out var R, prependShellAppsFolder, getExePathIfNotWinStoreApp)) return R;
+			public static string GetWindowsStoreAppId(AWnd w, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false) {
+				if (0 != Internal_.GetWindowsStoreAppId(w, out var R, prependShellAppsFolder, getExePathIfNotWinStoreApp)) return R;
 				return null;
 			}
 
@@ -346,10 +339,9 @@ namespace Au
 			/// </summary>
 			/// <param name="name">Message name. Can be any unique string.</param>
 			/// <param name="uacEnable">Also call API <msdn>ChangeWindowMessageFilter</msdn> for the message. More info: <see cref="UacEnableMessages"/>.</param>
-			public static int RegisterMessage(string name, bool uacEnable = false)
-			{
+			public static int RegisterMessage(string name, bool uacEnable = false) {
 				var m = Api.RegisterWindowMessage(name);
-				if(uacEnable && m != 0) Api.ChangeWindowMessageFilter(m, 1);
+				if (uacEnable && m != 0) Api.ChangeWindowMessageFilter(m, 1);
 				return m;
 			}
 
@@ -357,33 +349,31 @@ namespace Au
 			/// Calls API <msdn>ChangeWindowMessageFilter</msdn> for each message in the list of messages.
 			/// It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
 			/// </summary>
-			public static void UacEnableMessages(params int[] messages)
-			{
-				foreach(var m in messages) Api.ChangeWindowMessageFilter(m, 1);
+			public static void UacEnableMessages(params int[] messages) {
+				foreach (var m in messages) Api.ChangeWindowMessageFilter(m, 1);
 			}
 
 			/// <summary>
 			/// Writes a Windows message to a string.
 			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
-			{
-				if(options?.Skip?.Contains(m.Msg) ?? false) { s = null; return false; }
+			public static bool PrintMsg(out string s, in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
+				if (options?.Skip?.Contains(m.Msg) ?? false) { s = null; return false; }
 
 				var sm = m.ToString();
 
 				int i = 0;
-				if(options?.Indent ?? true) { //makes 5-10 times slower, but not too slow
+				if (options?.Indent ?? true) { //makes 5-10 times slower, but not too slow
 					MethodBase m0 = null;
-					foreach(var f in new StackTrace(1).GetFrames()) {
+					foreach (var f in new StackTrace(1).GetFrames()) {
 						var m1 = f.GetMethod();
-						if(m1.Name != caller) continue;
-						if(m0 == null) m0 = m1; else if((object)m1 == m0) i++;
+						if (m1.Name != caller) continue;
+						if (m0 == null) m0 = m1; else if ((object)m1 == m0) i++;
 					}
 				}
 				string si = i == 0 ? null : new string('\t', i);
 
-				if(options?.Number ?? true) {
+				if (options?.Number ?? true) {
 					AWnd w = (AWnd)m.HWnd;
 					uint counter = (uint)w.Prop["PrintMsg"]; w.Prop.Set("PrintMsg", ++counter);
 					s = si + counter.ToString() + ", " + sm;
@@ -397,8 +387,7 @@ namespace Au
 			/// Writes a Windows message to a string.
 			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
-			{
+			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
 				var m = System.Windows.Forms.Message.Create(w.Handle, msg, wParam, lParam);
 				return PrintMsg(out s, in m, options, caller);
 			}
@@ -407,24 +396,21 @@ namespace Au
 			/// Writes a Windows message to a string.
 			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
-			{
+			public static bool PrintMsg(out string s, in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
 				return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, options, caller);
 			}
 
 			/// <summary>
 			/// Writes a Windows message to the output.
 			/// </summary>
-			public static void PrintMsg(in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
-			{
-				if(PrintMsg(out var s, in m, options, caller)) AOutput.Write(s);
+			public static void PrintMsg(in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
+				if (PrintMsg(out var s, in m, options, caller)) AOutput.Write(s);
 			}
 
 			/// <summary>
 			/// Writes a Windows message to the output.
 			/// </summary>
-			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
-			{
+			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
 				var m = System.Windows.Forms.Message.Create(w.Handle, msg, wParam, lParam);
 				PrintMsg(in m, options, caller);
 			}
@@ -432,8 +418,7 @@ namespace Au
 			/// <summary>
 			/// Writes a Windows message as API <msdn>MSG</msdn> to the output.
 			/// </summary>
-			public static void PrintMsg(in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null)
-			{
+			public static void PrintMsg(in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
 				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, options, caller);
 			}
 		}
@@ -455,7 +440,7 @@ namespace Au.Types
 		public IntPtr hIcon;
 		public IntPtr hCursor;
 		public MCursor mCursor;
-		public IntPtr hbrBackground;
+		public nint hbrBackground;
 		public IntPtr hIconSm;
 #pragma warning restore 1591 //XML doc
 	}

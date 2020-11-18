@@ -19,6 +19,7 @@ using System.IO.Compression;
 using System.Windows.Input;
 using Microsoft.Win32;
 using System.Windows;
+using System.Windows.Controls;
 
 partial class FilesModel
 {
@@ -32,12 +33,11 @@ partial class FilesModel
 	public readonly string TempDirectory;
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
-	public readonly List<FileNode> OpenFiles;
+	public List<FileNode> OpenFiles;
 	readonly string _dbFile;
 	public readonly ASqlite DB;
 	public readonly string SettingsFile;
 	public readonly WorkspaceSettings WSSett;
-	//readonly TriggersUI _triggers;
 	readonly bool _importing;
 	readonly bool _initedFully;
 	public object CompilerContext;
@@ -80,11 +80,6 @@ partial class FilesModel
 				AOutput.Write($"Failed to open file '{_dbFile}'. Will not load/save workspace state: lists of open files, expanded folders, markers, folding, etc.\r\n\t{ex.ToStringWithoutStack()}");
 			}
 
-			OpenFiles = new List<FileNode>();
-			//_InitClickSelect(true);
-			_InitWatcher();
-			//_triggers = new TriggersUI(this);
-
 			AFolders.Workspace = new FolderPath(WorkspaceDirectory);
 		}
 		_initedFully = true;
@@ -93,27 +88,37 @@ partial class FilesModel
 	public void Dispose() {
 		if (_importing) return;
 		if (_initedFully) {
-			//_triggers.Dispose();
 			App.Tasks.OnWorkspaceClosed();
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
 		}
 		Save?.Dispose();
-		if (_initedFully) {
-			_UninitWatcher();
-			DB?.Dispose();
-		}
+		_InitWatcher(false);
+		DB?.Dispose();
 		WSSett?.Dispose();
-		_control = null;
 	}
 
-	public FilesView TreeControl {
-		get => _control;
-		private set {
-			_control = value;
-			_control.SetItems();
-		}
-	}
-	FilesView _control;
+	#region tree control
+
+	public static FilesView TreeControl => Panels.Files.TreeControl;
+
+	/// <summary>
+	/// Updates control when changed number or order of visible items (added, removed, moved, etc).
+	/// </summary>
+	public void UpdateControlItems() { TreeControl.SetItems(Root.Children(), true); }
+
+	/// <summary>
+	/// When need to redraw an item in controls that display it.
+	/// If the parameter is null, redraw all items.
+	/// </summary>
+	public static event Action<(FileNode f, bool remeasure)> NeedRedraw;
+
+	/// <summary>
+	/// Raises <see cref="NeedRedraw"/> event.
+	/// </summary>
+	/// <param name="f"></param>
+	public static void Redraw(FileNode f = null, bool remeasure=false) { NeedRedraw?.Invoke((f, remeasure)); }
+
+	#endregion
 
 	#region load workspace
 
@@ -141,12 +146,12 @@ partial class FilesModel
 			//AOutput.Write($"Failed to load '{wsDir}'. {ex.Message}");
 			switch (ADialog.ShowError("Failed to load workspace", wsDir,
 				"1 Retry|2 Load another|3 Create new|0 Cancel",
-				owner: App.Wnd, expandedText: ex.ToString())) {
+				owner: App.Hwnd, expandedText: ex.ToString())) {
 			case 1: goto g1;
 			case 2: OpenWorkspaceUI(); break;
 			case 3: NewWorkspaceUI(); break;
 			}
-			if(App.Model==null) Environment.Exit(1);
+			if (App.Model == null) Environment.Exit(1);
 			return;
 		}
 
@@ -163,21 +168,25 @@ partial class FilesModel
 			App.Settings.workspace = wsDir;
 		}
 
-		if (App.Loaded == EProgramState.LoadedUI) {
-			m._control.SetItems();
-			m.OpenDocuments();
-			m.RunStartupScripts();
-		}
+		if (App.Loaded == EProgramState.LoadedUI) m.WorkspaceLoadedWithUI(onUiLoaded: false);
 	}
 
-	public void OpenDocuments() {
+	[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading WPF at startup before loading UI
+	public void WorkspaceLoadedWithUI(bool onUiLoaded) {
+		if (!s_isNewWorkspace) LoadState(expandFolders: true);
+		TreeControl.SetItems();
+		OpenFiles = new List<FileNode>();
 		if (s_isNewWorkspace) {
 			s_isNewWorkspace = false;
 			SetCurrentFile(Root.FirstChild, newFile: true);
-		} else LoadState();
-
+		} else {
+			LoadState(openFiles: true);
+		}
+		_InitWatcher(true);
 		WorkspaceLoadedAndDocumentsOpened?.Invoke();
+		if (!onUiLoaded) RunStartupScripts();
 	}
+
 	static bool s_isNewWorkspace;
 
 	public event Action WorkspaceLoadedAndDocumentsOpened;
@@ -346,7 +355,7 @@ partial class FilesModel
 		if (!of.Remove(f)) return false;
 
 		Panels.Editor.ZClose(f);
-		SelectDeselectItem(f, false);
+		f.IsSelected = false;
 
 		if (f == _currentFile) {
 			if (activateOther && of.Count > 0 && _SetCurrentFile(of[0])) return true; //and don't select
@@ -444,45 +453,27 @@ partial class FilesModel
 		return true;
 	}
 
-	public FileNode[] SelectedItems => _control.SelectedItems.Cast<FileNode>().ToArray();
-
-	/// <summary>
-	/// Selects or deselects item in treeview. Does not set current file etc. Does not deselect others.
-	/// </summary>
-	/// <param name="f"></param>
-	/// <param name="select"></param>
-	public void SelectDeselectItem(FileNode f, bool select) {
-		if (IsAlien(f)) return;
-		f.IsSelected = select;
-	}
-
 	void _ItemRightClicked(FileNode f) {
-		//TODO
-		//if(IsAlien(f)) return;
-		//var m = Strips.ddFile;
+		if (IsAlien(f)) return;
 
-		//ToolStripDropDownClosedEventHandler onClosed = null;
-		//onClosed = (sender, e) => {
-		//	(sender as ToolStripDropDownMenu).Closed -= onClosed;
-		//	_msgLoop.Stop();
-		//};
-		//m.Closed += onClosed;
-
-		//_inContextMenu = true;
-		//try {
-		//	m.ZShowAsContextMenu();
-		//	_msgLoop.Loop();
-		//	if(_control == null) return; //loaded another workspace
-		//	if(f != _currentFile && _control.SelectedNodes.Count < 2) {
-		//		if(_currentFile == null) _control.ClearSelection();
-		//		//else if(_control.SelectedNode == f.TreeNodeAdv) _currentFile.SelectSingle(); //no. Breaks renaming, etc. We'll do it on editor focused.
-		//		//else the action selected another file or folder
-		//	}
-		//}
-		//finally { _inContextMenu = false; }
+		if (!f.IsSelected) f.SelectSingle();
+		//m.ItemsSource = App.Commands[nameof(Menus.File)].MenuItem.Items; //shows menu but then closes on mouse over
+		if (s_contextMenu == null) {
+			var m = new ContextMenu { PlacementTarget = TreeControl };
+			var mn = new MenuItem { Header = "New" };
+			App.Commands[nameof(Menus.New)].CopyToMenu(mn);
+			m.Items.Add(mn);
+			mn.SubmenuOpened += (_, e) => FillMenuNew(mn);
+			m.Items.Add(new Separator());
+			App.Commands[nameof(Menus.File)].CopyToMenu(m);
+			m.Closed += (_, _) => s_inContextMenu = false;
+			s_contextMenu = m;
+		}
+		s_contextMenu.IsOpen = true;
+		s_inContextMenu = true;
 	}
-	AMessageLoop _msgLoop = new();
-	bool _inContextMenu;
+	static ContextMenu s_contextMenu;
+	bool s_inContextMenu;
 
 	//Called when editor control focused, etc.
 	public void EnsureCurrentSelected() {
@@ -549,31 +540,20 @@ partial class FilesModel
 
 	#endregion
 
-	#region hotkeys, rename, delete, open/close (menu commands), cut/copy/paste, properties
-
-	void _OnKeyDown(KeyEventArgs e) {
-		switch ((e.KeyboardDevice.Modifiers, e.Key)) {
-		case (0, Key.Enter): OpenSelected(1); break;
-		case (0, Key.Delete): DeleteSelected(); break;
-		case (ModifierKeys.Control, Key.X): CutCopySelected(true); break;
-		case (ModifierKeys.Control, Key.C): CutCopySelected(false); break;
-		case (ModifierKeys.Control, Key.V): Paste(); break;
-		case (0, Key.Escape): _myClipboard.Clear(); break;
-		}
-	}
+	#region rename, delete, open/close (menu commands), properties
 
 	public void RenameSelected() {
-		_control.EditLabel();
+		TreeControl.EditLabel();
 	}
 
 	public void DeleteSelected() {
-		var a = SelectedItems; if (a.Length < 1) return;
+		var a = TreeControl.SelectedItems; if (a.Length < 1) return;
 
 		//confirmation
 		var text = string.Join("\n", a.Select(f => f.Name));
 		var expandedText = "The file will be deleted, unless it is external.\r\nWill use Recycle Bin, if possible.";
 		var con = new DControls { Checkbox = "Don't delete file" };
-		var r = ADialog.Show("Deleting", text, "1 OK|0 Cancel", owner: _control, controls: con, expandedText: expandedText);
+		var r = ADialog.Show("Deleting", text, "1 OK|0 Cancel", owner: TreeControl, controls: con, expandedText: expandedText);
 		if (r == 0) return;
 
 		foreach (var f in a) {
@@ -585,6 +565,7 @@ partial class FilesModel
 		var e = f.Descendants(true);
 
 		CloseFiles(e);
+		Uncut();
 
 		if (!doNotDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
 			if (!TryFileOperation(() => AFile.Delete(f.FilePath, tryRecycleBin), deletion: true)) return false;
@@ -595,7 +576,6 @@ partial class FilesModel
 		}
 
 		foreach (var k in e) {
-			if (_myClipboard.Contains(k)) _myClipboard.Clear();
 			try { DB?.Execute("DELETE FROM _editor WHERE id=?", k.Id); } catch (SLException ex) { ADebug.Print(ex); }
 			Au.Compiler.Compiler.OnFileDeleted(this, k);
 			_idMap[k.Id] = null;
@@ -611,64 +591,16 @@ partial class FilesModel
 		return true;
 	}
 
-	public void CutCopySelected(bool cut) {
-		if (!_myClipboard.Set(SelectedItems, cut)) return;
-		//var d = new DataObject(string.Join("\r\n", _cutCopyNodes.Select(f => f.Name)));
-		//Clipboard.SetDataObject(d);
-		Clipboard.SetText(string.Join("\r\n", _myClipboard.nodes.Select(f => f.Name)));
-	}
-
-	struct _MyClipboard
-	{
-		public FileNode[] nodes;
-		public bool cut;
-
-		public bool Set(FileNode[] nodes, bool cut) {
-			if (nodes.NE_()) { Clear(); return false; }
-			this.nodes = nodes;
-			this.cut = cut;
-			nodes[0].TreeControl.Redraw(); //draw "cut" state
-			return true;
-		}
-
-		public void Clear() {
-			if (!nodes.NE_()) nodes[0].TreeControl.Redraw(); //was "cut" state
-			nodes = null;
-		}
-
-		public bool IsEmpty => nodes == null;
-
-		public bool Contains(FileNode f) { return !IsEmpty && nodes.Contains(f); }
-	}
-	_MyClipboard _myClipboard;
-
-	public bool IsInPrivateClipboard(FileNode f, out bool cut) {
-		if (_myClipboard.Contains(f)) { cut = _myClipboard.cut; return true; }
-		return cut = false;
-	}
-
-	public void Paste() {
-		if (_myClipboard.IsEmpty) return;
-		var (target, pos) = _GetInsertPos(true);
-		_MultiCopyMove(!_myClipboard.cut, _myClipboard.nodes, target, pos);
-		_myClipboard.Clear();
-	}
-
-	public void SelectedCopyPath(bool full) {
-		var a = SelectedItems; if (a.Length == 0) return;
-		Clipboard.SetText(string.Join("\r\n", a.Select(f => full ? f.FilePath : f.ItemPath)));
-	}
-
 	/// <summary>
 	/// Opens the selected item(s) in our editor or in default app or selects in Explorer.
 	/// </summary>
 	/// <param name="how">1 open, 2 open in new window (not impl), 3 open in default app, 4 select in Explorer.</param>
 	public void OpenSelected(int how) {
-		var a = SelectedItems; if (a.Length == 0) return;
+		var a = TreeControl.SelectedItems; if (a.Length == 0) return;
 		foreach (var f in a) {
 			switch (how) {
 			case 1:
-				if (f.IsFolder) f.TreeControl.Expand(f, true);
+				if (f.IsFolder) TreeControl.Expand(f, true);
 				else SetCurrentFile(f);
 				break;
 			//case 2:
@@ -692,14 +624,14 @@ partial class FilesModel
 	public void CloseEtc(ECloseCmd how, FileNode dontClose = null) {
 		switch (how) {
 		case ECloseCmd.CloseSelectedOrCurrent:
-			var a = SelectedItems;
+			var a = TreeControl.SelectedItems;
 			if (a.Length > 0) CloseFiles(a);
 			else CloseFile(_currentFile, true);
 			break;
 		case ECloseCmd.CloseAll:
 			CloseFiles(OpenFiles, dontClose);
 			_CollapseAll();
-			if (dontClose != null) _control.EnsureVisible(dontClose);
+			if (dontClose != null) TreeControl.EnsureVisible(dontClose);
 			break;
 		case ECloseCmd.CollapseFolders:
 			_CollapseAll();
@@ -710,7 +642,7 @@ partial class FilesModel
 	void _CollapseAll() {
 		bool update = false;
 		foreach (var v in Root.Descendants()) {
-			if (v.IsExpanded) { update = true; v.IsExpanded = false; }
+			if (v.IsExpanded) { update = true; v.SetIsExpanded(false); }
 		}
 		if (update) UpdateControlItems();
 	}
@@ -727,8 +659,8 @@ partial class FilesModel
 
 	public void Properties() {
 		FileNode f = null;
-		if (_inContextMenu) {
-			var a = SelectedItems;
+		if (s_inContextMenu) {
+			var a = TreeControl.SelectedItems;
 			if (a.Length == 1) f = a[0];
 		} else {
 			EnsureCurrentSelected();
@@ -754,25 +686,24 @@ partial class FilesModel
 	(FileNode target, FNPosition pos) _GetInsertPos(bool atSelection = false) {
 		FileNode target; FNPosition pos = FNPosition.Before;
 
-		//TODO
-		//if (atSelection || _inContextMenu) {
-		//	target = _control.FocusedItem as FileNode;
-		//	if (target == null) return (Root, FNPosition.Inside);
+		if (atSelection || s_inContextMenu) {
+			target = TreeControl.FocusedItem as FileNode;
+			if (target == null) return (Root, FNPosition.Inside);
 
-		//	int i;
-		//	bool isFolder = target.IsFolder && target.IsSelected && _control.SelectedIndices.Count == 1;
-		//	if (isFolder && !target.HasChildren) pos = FNPosition.Inside;
-		//	else if (isFolder && (i = AMenu.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", owner: _control)) > 0) {
-		//		switch (i) {
-		//		case 1: target = target.FirstChild; break;
-		//		case 2: pos = FNPosition.Inside; break;
-		//		case 4: pos = FNPosition.After; break;
-		//		}
-		//	} else if (target.Next == null) pos = FNPosition.After; //usually users want to add after the last, not before
-		//} else { //top
+			int i;
+			bool isFolder = target.IsFolder && target.IsSelected && TreeControl.SelectedIndices.Count == 1;
+			if (isFolder && !target.HasChildren) pos = FNPosition.Inside;
+			else if (isFolder && (i = AWpfMenu.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", owner: TreeControl)) > 0) {
+				switch (i) {
+				case 1: target = target.FirstChild; break;
+				case 2: pos = FNPosition.Inside; break;
+				case 4: pos = FNPosition.After; break;
+				}
+			} else if (target.Next == null) pos = FNPosition.After; //usually users want to add after the last, not before
+		} else { //top
 			target = Root.FirstChild;
 			if (target == null) { target = Root; pos = FNPosition.Inside; }
-		//}
+		}
 
 		return (target, pos);
 	}
@@ -785,7 +716,7 @@ partial class FilesModel
 	/// <param name="template">
 	/// Relative path of a file or folder in the Templates\files folder. Case-sensitive, as in workspace.
 	/// Examples: "File.cs", "File.txt", "Subfolder", "Subfolder\File.cs".
-	/// Special names: null (creates folder), "Script.cs", "Class.cs", "Partial.cs".
+	/// Special names: null (creates folder), "Script.cs", "Class.cs".
 	/// If folder and not null, adds descendants too; removes '!' from the start of template folder name.
 	/// </param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
@@ -901,7 +832,7 @@ partial class FilesModel
 			} else {
 				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
 				if (text.Length < 20 && text.Starts("//#")) { //load default or custom template?
-					tt = text switch { "//#script" => FileNode.ETempl.Script, "//#class" => FileNode.ETempl.Class, "//#partial" => FileNode.ETempl.Partial, _ => 0 };
+					tt = text switch { "//#script" => FileNode.ETempl.Script, "//#class" => FileNode.ETempl.Class, _ => 0 };
 					if (tt != 0) text = FileNode.Templates.Load(tt);
 				}
 			}
@@ -928,25 +859,80 @@ partial class FilesModel
 
 	#endregion
 
+	#region clipboard
+
+	struct _Clipboard
+	{
+		public FileNode[] items;
+		public bool cut;
+		public uint clipSN;
+
+		public bool IsCut(FileNode f) => cut && items.Contains(f);
+	}
+	_Clipboard _clipboard;
+
+	public void CutCopySelected(bool cut) {
+		Uncut();
+		var a = TreeControl.SelectedItems; if (a.NE_()) return;
+		_clipboard = new _Clipboard { items = a, cut = cut };
+		if (cut) {
+			//we don't support cut to outside this workspace. Much work, rarely used, can copy/delete.
+			//	The same with copy/paste between workspaces.
+			AClipboard.Clear();
+			TreeControl.Redraw();
+		} else {
+			var d = new AClipboardData();
+			d.AddFiles(a.Select(o => o.FilePath).ToArray());
+			d.AddText(string.Join("\r\n", a.Select(o => o.Name)));
+			d.SetClipboard();
+		}
+		_clipboard.clipSN=Api.GetClipboardSequenceNumber();
+	}
+
+	public void Paste() {
+		if (_clipboard.items != null && _clipboard.clipSN != Api.GetClipboardSequenceNumber()) Uncut();
+		var (target, pos) = _GetInsertPos(true);
+		if (_clipboard.items != null) {
+			_MultiCopyMove(!_clipboard.cut, _clipboard.items, target, pos);
+			Uncut();
+		} else {
+			var a = AClipboardData.GetFiles();
+			if (a != null) _DroppedOrPasted(null, a, false, target, pos);
+		}
+	}
+
+	public void Uncut() {
+		bool cut = _clipboard.cut;
+		if (!cut && _clipboard.items != null && _clipboard.clipSN == Api.GetClipboardSequenceNumber()) AClipboard.Clear();
+		_clipboard = default;
+		if (cut) TreeControl.Redraw();
+	}
+
+	public bool IsCut(FileNode f) => _clipboard.IsCut(f);
+
+	public void SelectedCopyPath(bool full) {
+		var a = TreeControl.SelectedItems; if (a.Length == 0) return;
+		AClipboard.Text = string.Join("\r\n", a.Select(f => full ? f.FilePath : f.ItemPath));
+	}
+
+	#endregion
+
 	#region import, move, copy
 
-	//void _OnDragDrop(TreeNodeAdv[] nodes, string[] files, bool copy, DropPosition dropPos) {
-	//	var pos = (FNPosition)dropPos.Position;
-	//	var target = dropPos.Node.Tag as FileNode;
-	//	if (nodes != null) {
-	//		var a = nodes.Select(tn => tn.Tag as FileNode).ToArray();
-	//		_MultiCopyMove(copy, a, target, pos);
-	//	} else {
-	//		if (files.Length == 1 && IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(files[0], out int dialogResult)) {
-	//			switch (dialogResult) {
-	//			case 1: ATimer.After(1, _ => Panels.Files.ZLoadWorkspace(files[0])); break;
-	//			case 2: ImportWorkspace(files[0], (target, pos)); break;
-	//			}
-	//			return;
-	//		}
-	//		_ImportFiles(files, target, pos, copySilently: copy);
-	//	}
-	//}
+	void _DroppedOrPasted(FileNode[] nodes, string[] files, bool copy, FileNode target, FNPosition pos) {
+		if (nodes != null) {
+			_MultiCopyMove(copy, nodes, target, pos);
+		} else {
+			if (files.Length == 1 && IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(files[0], out int dialogResult)) {
+				switch (dialogResult) {
+				case 1: ATimer.After(1, _ => LoadWorkspace(files[0])); break;
+				case 2: ImportWorkspace(files[0], (target, pos)); break;
+				}
+				return;
+			}
+			_ImportFiles(files, target, pos, copySilently: copy);
+		}
+	}
 
 	/// <summary>
 	/// Imports one or more files into the workspace.
@@ -1005,7 +991,7 @@ partial class FilesModel
 	}
 
 	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, FNPosition pos, bool importingWorkspace = false) {
-		_control.Select(.., false);
+		if (copy) TreeControl.Select(.., false);
 		try {
 			bool movedCurrentFile = false;
 			var a2 = new List<FileNode>(a.Length);
@@ -1016,15 +1002,18 @@ partial class FilesModel
 					if (fCopied != null) a2.Add(fCopied);
 				} else {
 					if (!f.FileMove(target, pos)) continue;
-					a2.Add(f);
 					if (!movedCurrentFile && _currentFile != null) {
 						if (f == _currentFile || (f.IsFolder && _currentFile.IsDescendantOf(f))) movedCurrentFile = true;
 					}
 				}
 			}
-			if (movedCurrentFile) _control.EnsureVisible(_currentFile);
-			if (pos != FNPosition.Inside || target.IsExpanded) {
-				foreach (var f in a2) f.IsSelected = true;
+			if (movedCurrentFile) TreeControl.EnsureVisible(_currentFile);
+			if (copy && pos != FNPosition.Inside || target.IsExpanded) {
+				bool focus = true;
+				foreach (var f in a2) {
+					f.IsSelected = true;
+					if (focus) { focus = false; TreeControl.FocusedItem = f; }
+				}
 			}
 		}
 		catch (Exception ex) { AOutput.Write(ex.Message); }
@@ -1038,7 +1027,7 @@ partial class FilesModel
 			var s = a[i] = APath.Normalize(a[i]);
 			if (s.Find(@"\$RECYCLE.BIN\", true) > 0) {
 				ADialog.Show("Files from Recycle Bin", $"At first restore the file to the <a href=\"{FilesDirectory}\">workspace folder</a> or other normal folder.",
-					icon: DIcon.Info, owner: _control, onLinkClick: e => AFile.TryRun(e.LinkHref));
+					icon: DIcon.Info, owner: TreeControl, onLinkClick: e => AFile.TryRun(e.LinkHref));
 				return;
 			}
 			var fd = FilesDirectory;
@@ -1058,15 +1047,15 @@ partial class FilesModel
 			r = 3; //move
 		} else {
 			string buttons = (dirsDropped ? null : "1 Add as a link to the external file|") + "2 Copy to the workspace folder|3 Move to the workspace folder|0 Cancel";
-			r = ADialog.Show("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: _control, footerText: GetSecurityInfo("v|"));
+			r = ADialog.Show("Import files", string.Join("\n", a), buttons, DFlags.CommandLinks, owner: TreeControl, footerText: GetSecurityInfo("v|"));
 			if (r == 0) return;
 		}
 
 		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
-		bool select = pos != FNPosition.Inside || target.IsExpanded;
-		if (select) _control.Select(.., false);
+		bool select = pos != FNPosition.Inside || target.IsExpanded, focus = select;
+		if (select) TreeControl.Select(.., false);
 		try {
-			var newParentPath = newParent.FilePath;
+			var newParentPath = newParent.FilePath + "\\";
 			var (nf1, nd1, nc1) = _CountFilesFolders();
 
 			foreach (var path in a) {
@@ -1076,29 +1065,35 @@ partial class FilesModel
 				else if (itIs == FileDir2.Directory && r != 1) isDir = true;
 				else continue; //skip symlinks or if does not exist
 
+				if (fromWorkspaceDir) {
+					var relPath = path[FilesDirectory.Length..];
+					var fExists = this.Find(relPath, null);
+					if (fExists != null) {
+						fExists.FileMove(target, pos);
+						continue;
+					}
+				}
+
 				FileNode k;
 				var name = APath.GetName(path);
+				name = FileNode.CreateNameUniqueInFolder(newParent, name, isDir);
+
 				if (r == 1) { //add as link
 					k = new FileNode(this, name, path, false, path); //CONSIDER: unexpand
 				} else {
-					//var newPath = newParentPath + "\\" + name;
-					if (fromWorkspaceDir) { //already exists?
-						var relPath = path.Substring(FilesDirectory.Length);
-						var fExists = this.Find(relPath, null);
-						if (fExists != null) {
-							fExists.FileMove(target, pos);
-							continue;
-						}
-					}
 					k = new FileNode(this, name, path, isDir);
 					if (isDir) _AddDir(path, k);
 					if (!TryFileOperation(() => {
-						if (r == 2) AFile.CopyTo(path, newParentPath, FIfExists.Fail);
-						else AFile.MoveTo(path, newParentPath, FIfExists.Fail);
+						var newPath = newParentPath + name;
+						if (r == 2) AFile.Copy(path, newPath, FIfExists.Fail);
+						else AFile.Move(path, newPath, FIfExists.Fail);
 					})) continue;
 				}
 				target.AddChildOrSibling(k, pos, false);
-				if (select) k.IsSelected = true;
+				if (select) {
+					k.IsSelected = true;
+					if (focus) { focus = false; TreeControl.FocusedItem = k; }
+				}
 			}
 
 			var (nf2, nd2, nc2) = _CountFilesFolders();
@@ -1145,7 +1140,7 @@ partial class FilesModel
 	}
 
 	public bool ExportSelected(string location = null, bool zip = false) {
-		var a = SelectedItems; if (a.Length < 1) return false;
+		var a = TreeControl.SelectedItems; if (a.Length < 1) return false;
 
 		string name = a[0].Name; if (!a[0].IsFolder) name = APath.GetNameNoExt(name);
 
@@ -1201,29 +1196,26 @@ partial class FilesModel
 
 	public bool IsWatchingFileChanges => _watcher != null;
 
-	void _InitWatcher() {
-		//return;
-		try {
-			_watcher = new FileSystemWatcher(FilesDirectory) {
-				IncludeSubdirectories = true,
-				NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
-				//,SynchronizingObject = _control //no, we call BeginInvoke eplicitly, for better performance etc
-			};
-			_watcher.Changed += _watcher_Event;
-			_watcher.Created += _watcher_Event;
-			//_watcher.Deleted += _watcher_Event;
-			_watcher.Renamed += _watcher_Event;
-			_watcher.EnableRaisingEvents = true;
+	void _InitWatcher(bool init) {
+		if (init) {
+			try {
+				_watcher = new FileSystemWatcher(FilesDirectory) {
+					IncludeSubdirectories = true,
+					NotifyFilter = NotifyFilters.FileName | NotifyFilters.DirectoryName | NotifyFilters.LastWrite
+					//,SynchronizingObject = _control //no, we call BeginInvoke eplicitly, for better performance etc
+				};
+				_watcher.Changed += _watcher_Event;
+				_watcher.Created += _watcher_Event;
+				//_watcher.Deleted += _watcher_Event;
+				_watcher.Renamed += _watcher_Event;
+				_watcher.EnableRaisingEvents = true;
+			}
+			catch (Exception ex) { init = false; ADebug.Print(ex); }
 		}
-		catch (Exception ex) {
-			_UninitWatcher();
-			ADebug.Print(ex);
+		if (!init) {
+			_watcher?.Dispose(); //disables raising events and sets all events = null
+			_watcher = null;
 		}
-	}
-
-	void _UninitWatcher() {
-		_watcher?.Dispose(); //disables raising events and sets all events = null
-		_watcher = null;
 	}
 
 	private void _watcher_Event(object sender, FileSystemEventArgs e) //in thread pool
@@ -1231,7 +1223,7 @@ partial class FilesModel
 		//if(e.Name.Ends("~temp") || e.Name.Ends("~backup")) return; //no such events, because we use other directory for temp files
 		if (e.ChangeType == WatcherChangeTypes.Changed && AFile.ExistsAs(e.FullPath, true) != FileDir.File) return; //we receive 'directory changed' after every 'file changed' etc
 
-		try { _control?.Dispatcher.InvokeAsync(()=> _watcher_Event2(e)); }
+		try { TreeControl?.Dispatcher.InvokeAsync(() => _watcher_Event2(e)); }
 		catch (Exception ex) { ADebug.Print(ex); }
 	}
 
@@ -1262,6 +1254,78 @@ partial class FilesModel
 		catch (Exception ex) { AOutput.Write(ex.ToStringWithoutStack()); return false; }
 		finally { if (pause) _watcher.EnableRaisingEvents = true; } //fast
 		return true;
+	}
+
+	#endregion
+
+	#region fill menu
+
+	/// <summary>
+	/// Fills submenu File -> Workspace -> Recent.
+	/// </summary>
+	public static void FillMenuRecentWorkspaces(MenuItem sub) {
+		void _Add(string path, bool bold) {
+			var mi = new MenuItem { Header = path };
+			if (bold) mi.FontWeight = FontWeights.Bold;
+			mi.Click += (_, _) => LoadWorkspace(path);
+			sub.Items.Add(mi);
+		}
+
+		sub.Items.Clear();
+		_Add(App.Settings.workspace, true);
+		var ar = App.Settings.recentWS;
+		int nRemoved = 0;
+		for (int i = 0, n = ar?.Length ?? 0; i < n; i++) {
+			var path = ar[i];
+			if (sub.Items.Count >= 20 || !AFile.ExistsAsDirectory(path)) {
+				ar[i] = null;
+				nRemoved++;
+			} else _Add(path, false);
+		}
+		if (nRemoved > 0) {
+			var an = new string[ar.Length - nRemoved];
+			for (int i = 0, j = 0; i < ar.Length; i++) if (ar[i] != null) an[j++] = ar[i];
+			App.Settings.recentWS = an;
+		}
+	}
+
+	/// <summary>
+	/// Adds templates to File -> New.
+	/// </summary>
+	public static void FillMenuNew(MenuItem sub) {
+		var (xroot, cached) = FileNode.Templates.LoadXml();
+		if (sub.Items.Count > 4) { //not first time
+			if (cached) return; //else rebuild menu because Templates\files.xml modified
+			for (int i = sub.Items.Count; --i >= 4;) sub.Items.RemoveAt(i);
+		}
+
+		var templDir = FileNode.Templates.DefaultDirBS;
+		_CreateMenu(sub, xroot, null, 0);
+
+		void _CreateMenu(MenuItem mParent, XElement xParent, string dir, int level) {
+			foreach (var x in xParent.Elements()) {
+				string tag = x.Name.LocalName, name = x.Attr("n");
+				int isFolder = tag == "d" ? 1 : 0;
+				if (isFolder == 1) {
+					isFolder = name[0] switch { '@' => 2, '!' => 3, _ => 1 }; //@ project, ! simple folder
+				} else {
+					if (level == 0 && FileNode.Templates.IsStandardTemplateName(name, out _)) continue;
+				}
+				string relPath = dir + name;
+				if (isFolder == 3) name = name[1..];
+				var item = new MenuItem { Header = name };
+				if (isFolder == 1) {
+					_CreateMenu(item, x, relPath + "\\", level + 1);
+				} else {
+					item.Click += (_, e) => App.Model.NewItemX(x, beginRenaming: true);
+					var ft = FileNode.XmlTagToFileType(tag, canThrow: false);
+					item.Icon = ft == EFileType.NotCodeFile
+						? new Image { Source = AIcon.OfFile(templDir + relPath).ToWpfImage() }
+						: AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(FileNode.GetFileTypeImageSource(ft));
+				}
+				mParent.Items.Add(item);
+			}
+		}
 	}
 
 	#endregion
@@ -1309,7 +1373,7 @@ partial class FilesModel
 					if (delay < 10) delay = 10;
 				}
 				ATimer.After(delay, t => {
-					Run.CompileAndRun(true, f);
+					CompileRun.CompileAndRun(true, f);
 				});
 			}
 		}
@@ -1319,11 +1383,6 @@ partial class FilesModel
 	#endregion
 
 	#region util
-
-	/// <summary>
-	/// Updates control when changed number or order of visible items (added, removed, moved, etc).
-	/// </summary>
-	public void UpdateControlItems() { _control.SetItems(Root.Children(), true); }
 
 	/// <summary>
 	/// Returns true if FileNode f is not null and belongs to this FilesModel and is not deleted.

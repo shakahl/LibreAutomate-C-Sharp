@@ -388,7 +388,7 @@ EndFragment:0000000000
 			if(format == 0) format = Api.CF_UNICODETEXT;
 			else {
 				h = Api.GetClipboardData(format); if(h == default) return null;
-				if(format == Api.CF_HDROP) return string.Join("\r\n", _HdropToFiles(h));
+				if(format == Api.CF_HDROP) return string.Join("\r\n", HdropToFiles_(h));
 			}
 
 			using(new _GlobalLock(h, out var mem, out int len)) {
@@ -560,7 +560,7 @@ EndFragment:0000000000
 		{
 			using(new AClipboard.OpenClipboard_(false)) {
 				var h = Api.GetClipboardData(Api.CF_HDROP); if(h == default) return null;
-				return _HdropToFiles(h);
+				return HdropToFiles_(h);
 			}
 		}
 
@@ -568,7 +568,7 @@ EndFragment:0000000000
 		/// Gets file paths from HDROP.
 		/// Returns array of 0 or more non-null elements.
 		/// </summary>
-		static unsafe string[] _HdropToFiles(IntPtr hdrop)
+		internal static unsafe string[] HdropToFiles_(IntPtr hdrop)
 		{
 			int n = Api.DragQueryFile(hdrop, -1, null, 0);
 			var a = new string[n];
@@ -633,6 +633,12 @@ namespace Au.Types
 
 		/// <summary>The RTF format. Registered, name "Rich Text Format". Used by <see cref="AClipboardData"/> add/get RTF functions.</summary>
 		public static int Rtf { get; } = Api.RegisterClipboardFormat("Rich Text Format");
+
+		/// <summary>Registered "Shell IDList Array" format.</summary>
+		internal static int ShellIDListArray_ { get; } = Api.RegisterClipboardFormat("Shell IDList Array");
+
+		/// <summary>Registered "FileGroupDescriptorW" format.</summary>
+		internal static int FileGroupDescriptorW_ { get; } = Api.RegisterClipboardFormat("FileGroupDescriptorW");
 
 		/// <summary>
 		/// The "Clipboard Viewer Ignore" registered format.

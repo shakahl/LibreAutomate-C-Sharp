@@ -163,7 +163,7 @@ namespace Au.Controls
 
 						if(_onlyIcons && gp.Image != null) {
 							//var z = gp.Image.Size;
-							//var z = ADpi.SmallIconSize_; //TODO
+							//var z = ADpi.SmallIconSize_; //_TODO
 							SIZE z = (16, 16);
 							if(z.width > r.Width) z.width = r.Width;
 							if(z.height > r.Height) z.height = r.Height;

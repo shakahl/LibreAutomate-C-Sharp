@@ -21,7 +21,7 @@ namespace Au.Controls
 
 	public unsafe class ComboWrapper
 	{
-		Native.SUBCLASSPROC _wndProc; //keeps delegate from GC; also for RemoveWindowSubclass
+		Api.SUBCLASSPROC _wndProc; //keeps delegate from GC; also for RemoveWindowSubclass
 		EventHandler _handleCreated; //keeps this instance from GC
 		Control _c;
 		AWnd _hwnd;
@@ -57,7 +57,7 @@ namespace Au.Controls
 
 			_hwnd = _c.Hwnd();
 			//AOutput.Write(_hwnd);
-			Native.SetWindowSubclass(_hwnd, _wndProc, 40159885);
+			Api.SetWindowSubclass(_hwnd, _wndProc, 40159885);
 			_Redraw(true); //need WM_NCCALCSIZE etc
 		}
 
@@ -77,11 +77,11 @@ namespace Au.Controls
 			case Api.WM_SYSKEYDOWN: if(_OnSysKeyDown(wParam)) return 0; break;
 			}
 
-			var R = Native.DefSubclassProc(w, msg, wParam, lParam);
+			var R = Api.DefSubclassProc(w, msg, wParam, lParam);
 
 			if(msg == Api.WM_NCDESTROY) {
 				//AOutput.Write("WM_NCDESTROY");
-				Native.RemoveWindowSubclass(w, _wndProc, 40159885);
+				Api.RemoveWindowSubclass(w, _wndProc, 40159885);
 				if(!_c.RecreatingHandle) _c.HandleCreated -= _handleCreated; //allow GC-collect _c and this
 			}
 
@@ -93,7 +93,7 @@ namespace Au.Controls
 		{
 			ref RECT r = ref *(RECT*)lParam;
 			RECT p = r;
-			Native.DefSubclassProc(w, msg, wParam, lParam);
+			Api.DefSubclassProc(w, msg, wParam, lParam);
 			_border.left = r.left - p.left; _border.top = r.top - p.top; _border.right = p.right - r.right; _border.bottom = p.bottom - r.bottom;
 			if(_border.right > _border.left) _border.right = _border.left; //vert scrollbar is inside
 
@@ -134,7 +134,7 @@ namespace Au.Controls
 					baseRgnType = Api.CombineRgn(hrgn, hrgn, hrButton, Api.RGN_DIFF);
 					Api.DeleteObject(hrButton);
 				}
-				if(baseRgnType != NULLREGION) Native.DefSubclassProc(w, msg, wParam, lParam);
+				if(baseRgnType != NULLREGION) Api.DefSubclassProc(w, msg, wParam, lParam);
 				//AOutput.Write(baseRgnType, buttonRgnType, hrgn);
 				if(buttonRgnType == NULLREGION) return true; //our buttons excluded
 			}

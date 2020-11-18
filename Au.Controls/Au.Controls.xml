@@ -661,6 +661,9 @@
         <member name="M:Au.Controls.AuTreeView.OnDpiChanged(System.Windows.DpiScale,System.Windows.DpiScale)">
             
         </member>
+        <member name="P:Au.Controls.AuTreeView.Dpi">
+            
+        </member>
         <member name="M:Au.Controls.AuTreeView.OnRenderSizeChanged(System.Windows.SizeChangedInfo)">
             
         </member>
@@ -764,7 +767,7 @@
         </member>
         <member name="P:Au.Controls.AuTreeView.ShowLabelTip">
             <summary>
-            Whether to show a tooltip with full item text when mouse is over an item with partially visible text.
+            Whether to show a tooltip with full item text when mouse is over an item with partially visible text. Default true.
             </summary>
         </member>
         <member name="M:Au.Controls.AuTreeView.OnKeyDown(System.Windows.Input.KeyEventArgs)">
@@ -824,6 +827,13 @@
             </summary>
             <seealso cref="P:Au.Controls.AuTreeView.MultiSelect"/>
             <exception cref="T:System.IndexOutOfRangeException"></exception>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.IsSelected(Au.Controls.ITreeViewItem)">
+            <summary>
+            Returns true if the item is selected.
+            </summary>
+            <seealso cref="P:Au.Controls.AuTreeView.MultiSelect"/>
+            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control.</exception>
         </member>
         <member name="P:Au.Controls.AuTreeView.SelectedIndices">
             <summary>
@@ -986,47 +996,29 @@
             </summary>
             <param name="h">Results.</param>
         </member>
-        <member name="M:Au.Controls.AuTreeView.Redraw(System.Int32)">
+        <member name="M:Au.Controls.AuTreeView.Redraw(System.Int32,System.Boolean)">
             <summary>
             Asynchronously redraws item.
             Does nothing if the control is not created.
             </summary>
             <param name="index"></param>
+            <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
             <exception cref="T:System.IndexOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.Controls.AuTreeView.Redraw(Au.Controls.ITreeViewItem)">
+        <member name="M:Au.Controls.AuTreeView.Redraw(Au.Controls.ITreeViewItem,System.Boolean)">
             <summary>
             Asynchronously redraws item.
             Does nothing if the control is not created or <i>item</i> is not a visible item in this control.
             </summary>
             <param name="item"></param>
+            <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
         </member>
-        <member name="M:Au.Controls.AuTreeView.Redraw">
+        <member name="M:Au.Controls.AuTreeView.Redraw(System.Boolean)">
             <summary>
             Asynchronously redraws all items.
             Does nothing if the control is not created.
             </summary>
-        </member>
-        <member name="M:Au.Controls.AuTreeView.Remeasure(System.Int32)">
-            <summary>
-            Remeasures item width and redraws. My need this when changed text or text style.
-            Does nothing if the control is not created.
-            </summary>
-            <param name="index"></param>
-            <exception cref="T:System.IndexOutOfRangeException"></exception>
-        </member>
-        <member name="M:Au.Controls.AuTreeView.Remeasure(Au.Controls.ITreeViewItem)">
-            <summary>
-            Remeasures item width and redraws. My need this when changed text or text style.
-            Does nothing if the control is not created or <i>item</i> is not a visible item in this control.
-            </summary>
-            <param name="item"></param>
-        </member>
-        <member name="M:Au.Controls.AuTreeView.Remeasure">
-            <summary>
-            Remeasures and redraws all items.
-            Does nothing if the control is not created.
-            </summary>
+            <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
         </member>
         <member name="P:Au.Controls.AuTreeView.ImageCache">
             <summary>
@@ -1077,24 +1069,43 @@
             Is expanded folder.
             </summary>
         </member>
+        <member name="M:Au.Controls.ITreeViewItem.SetIsExpanded(System.Boolean)">
+            <summary>
+            Called after expanding or collapsing this folder.
+            </summary>
+        </member>
         <member name="P:Au.Controls.ITreeViewItem.DisplayText">
             <summary>
             Text to display.
             </summary>
         </member>
+        <member name="M:Au.Controls.ITreeViewItem.SetNewText(System.String)">
+            <summary>
+            Called after label editing.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.Image">
+            <summary>
+            Image to display.
+            Alternatively use <see cref="P:Au.Controls.ITreeViewItem.ImageSource"/>.
+            </summary>
+            <remarks>
+            If image's DPI does not match control's DPI (<see cref="P:Au.Controls.AuTreeView.Dpi"/>), draws it auto-scaled.
+            </remarks>
+        </member>
         <member name="P:Au.Controls.ITreeViewItem.ImageSource">
             <summary>
-            Png/bmp/jpg/gif/tif or xaml image to display. Can be file path, resource with prefix "resource:", etc.
-            Or return null and use <see cref="P:Au.Controls.ITreeViewItem.IconSource"/> instead.
+            Where to find image or icon to display.
+            Can have prefix:
+            "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
+            "resource:" - path of png/bmp/jpg/gif/tif or xaml resource, like "resources/file.png".
+            "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
+            If without prefix, gets file icon; see <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             </summary>
             <remarks>
             To load image the control calls <see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            The control uses <see cref="T:Au.Util.AIconImageCache"/>; see <see cref="P:Au.Controls.AuTreeView.ImageCache"/>.
             </remarks>
-        </member>
-        <member name="P:Au.Controls.ITreeViewItem.IconSource">
-            <summary>
-            Can be used instead of <see cref="P:Au.Controls.ITreeViewItem.ImageSource"/>. Path of any file, folder, etc. See <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
-            </summary>
         </member>
         <member name="P:Au.Controls.ITreeViewItem.CheckState">
             <summary>
@@ -3371,7 +3382,7 @@
             Messages with tags must have prefix "&lt;&gt;".
             Limits text length to about 4 MB (removes oldest text when exceeded).
             </remarks>
-            <seealso cref="M:Au.AOutputServer.SetNotifications(System.Action,System.Windows.Forms.Control)"/>
+            <seealso cref="M:Au.AOutputServer.SetNotifications(Au.AWnd,System.Int32)"/>
         </member>
         <member name="M:Au.Controls.SciTags.AddText(System.String,System.Boolean,System.Boolean)">
             <summary>

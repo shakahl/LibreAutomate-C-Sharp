@@ -183,7 +183,7 @@ partial class FOptions : DialogForm
 
 	void _InitTemplates()
 	{
-		_comboTemplate.Items.AddRange(new string[] { "Script", "Class", "Partial" });
+		_comboTemplate.Items.AddRange(new string[] { "Script", "Class" });
 		_comboTemplate.SelectedIndex = 0;
 		_comboTemplate.SelectionChangeCommitted += _TemplCombo_Changed;
 		_comboUseTemplate.Items.AddRange(new string[] { "Default", "Custom" });
@@ -196,7 +196,7 @@ partial class FOptions : DialogForm
 	private void _TemplCombo_Changed(object sender, EventArgs e)
 	{
 		int i = _comboTemplate.SelectedIndex;
-		FileNode.ETempl tt = i switch { 1 => FileNode.ETempl.Class, 2 => FileNode.ETempl.Partial, _ => FileNode.ETempl.Script, };
+		FileNode.ETempl tt = i switch { 1 => FileNode.ETempl.Class, _ => FileNode.ETempl.Script, };
 		if(sender == _comboTemplate) _comboUseTemplate.SelectedIndex = _templUseCustom.Has(tt) ? 1 : 0;
 		bool custom = _comboUseTemplate.SelectedIndex > 0;
 		string text = null;

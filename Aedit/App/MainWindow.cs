@@ -37,6 +37,12 @@ partial class MainWindow : Window
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
 		App.Commands.InitToolbarsAndCustomize(AFolders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
 
+		var mi1 = App.Commands[nameof(Menus.New)].MenuItem;
+		mi1.SubmenuOpened += (_, e) => FilesModel.FillMenuNew(mi1);
+		var mi2 = App.Commands[nameof(Menus.File.Workspace.Recent_workspaces)].MenuItem;
+		mi2.Items.Add(new Separator());
+		mi2.SubmenuOpened += (_, e) => FilesModel.FillMenuRecentWorkspaces(mi2);
+
 		Panels.PanelManager.Container = g => {
 			this.Content = g;
 		};
@@ -57,24 +63,30 @@ partial class MainWindow : Window
 	}
 
 	protected override void OnClosed(EventArgs e) {
-		FilesModel.UnloadOnWindowClosed();
+		App.Loaded = EProgramState.Unloading;
 		base.OnClosed(e);
+		UacDragDrop.AdminProcess.Enable(false);
+		CodeInfo.Stop();
+		FilesModel.UnloadOnWindowClosed();
+		App.Loaded = EProgramState.Unloaded;
 	}
 
 	protected override void OnSourceInitialized(EventArgs e) {
 		base.OnSourceInitialized(e);
+		var hs = PresentationSource.FromVisual(this) as HwndSource;
+		App.Hwnd = (AWnd)hs.Handle;
 
 		//TODO
 		//Panels.PanelManager.ZGetPanel(Panels.Output).Visible = true; //else AOutput.Write would not auto set visible until the user makes it visible, because handle not created if invisible
 
-		App.Model.OpenDocuments();
+		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
 
 		App.Loaded = EProgramState.LoadedUI;
 		//Load?.Invoke(this, EventArgs.Empty);
 
 		CodeInfo.UiLoaded();
+		UacDragDrop.AdminProcess.Enable(true); //TODO: disable when hiding, like in old version. And CodeInfo too.
 
-		var hs = PresentationSource.FromVisual(this) as HwndSource;
 		hs.AddHook(_WndProc);
 	}
 

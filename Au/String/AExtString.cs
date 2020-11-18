@@ -1389,6 +1389,8 @@ namespace Au
 			foreach (char c in t) if (c > 0x7f) return false;
 			return true;
 		}
+
+		internal static void CopyTo_(this string t, char* p) => t.AsSpan().CopyTo(new Span<char>(p, t.Length));
 	}
 }
 

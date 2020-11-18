@@ -133,58 +133,67 @@ namespace Au
 		public static bool IsCheck(this CheckBox t) => t.IsChecked.GetValueOrDefault();
 
 #if true
-		static void _Move(Window t, int x, int y, in RECT r, bool andSize) {
+		static unsafe void _Move(Window t, int x, int y, in RECT r, bool andSize) {
 			var wstate = t.WindowState;
-			if (wstate != WindowState.Normal) t.WindowState = WindowState.Normal;
 			if (t.IsLoaded) {
 				var w = t.Hwnd();
 				if (w.Is0) throw new ObjectDisposedException("Window");
+				if (wstate != WindowState.Normal) t.WindowState = WindowState.Normal;
 				if (andSize) w.MoveLL(r); else w.MoveLL(x, y);
 			} else {
 				//tested: don't need this for Popup. Its PlacementRectangle uses physical pixels.
 
-				if (andSize) {
-					x = r.left; y = r.top;
-					var stc = t.SizeToContent;
-					if (stc != SizeToContent.WidthAndHeight) {
-						double f = 96d / AScreen.Of(x, y).Dpi;
-						if (!stc.Has(SizeToContent.Width)) t.Width = r.Width * f;
-						if (!stc.Has(SizeToContent.Height)) t.Height = r.Height * f;
-					}
-				}
-
 				t.WindowStartupLocation = WindowStartupLocation.Manual;
-				t.Left = double.NaN; t.Top = double.NaN; //default location, somewhere near top-left of primary screen or owner's screen
 				if (wstate == WindowState.Minimized) t.ShowActivated = false;
 
-				//The first events I know where window handle is already created are SourceInitialized and Loaded.
-				//	They can be in any order.
-				//	For example, if using SizeToContent, Loaded is before, and in both events the window is invisible.
-				//	Else Loaded is after, and then the window is already visible.
-				t.SourceInitialized += (_, _) => {
-					var w = t.Hwnd();
-					var v = AScreen.Of(x, y).Info;
-					var rs = v.workArea;
-					if (!v.isPrimary) {
-						using var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE); //workaround for WPF bug: activates window when DPI changes
-						w.MoveLL(rs.left, rs.top); //let DPI-scale
+				t_cbt ??= AHookWin.ThreadCbt(k => {
+					if (k.code == HookData.CbtEvent.CREATEWND) {
+						var c = k.CreationInfo->lpcs;
+						if (!c->style.Has(WS.CHILD)) {
+							var name = c->Name;
+							if (name.Length > 25 && name.StartsWith("m8KFOuCJOUmjziONcXEi3A ")) {
+								var s = name[23..].ToString();
+								if (name[^1] == ';') {
+									c->x = s.ToInt(0, out int e); c->y = s.ToInt(e);
+								} else if (RECT.TryParse(s, out var r)) {
+									c->x = r.left; c->y = r.top; c->cx = r.Width; c->cy = r.Height;
+								}
+							}
+						}
 					}
-					var rw = w.Rect;
-					x = Math.Clamp(x, rs.left, Math.Max(rs.right - rw.Width, rs.left));
-					y = Math.Clamp(y, rs.top, Math.Max(rs.bottom - rw.Height, rs.top));
-					w.MoveLL(x, y);
-					//speed: when moving to a screen with different DPI, total time is same.
+					return false;
+				});
 
-					if (wstate != WindowState.Normal) {
-						if (wstate == WindowState.Maximized) t.SizeToContent = SizeToContent.Manual;
-						t.WindowState = wstate;
-					} else if (!t.ShowActivated) {
-						w.ZorderTop();
-					}
+				t.Left = double.NaN;
+				t.Top = double.NaN;
+				if (andSize) {
+					t.Width = double.NaN;
+					t.Height = double.NaN;
+				}
+
+				//temporarily change Title. I didn't find other ways to recognize the window in the hook proc. Also in title we can pass r or x y.
+				string title = t.Title, s;
+				if (andSize) s = "m8KFOuCJOUmjziONcXEi3A " + r.ToStringSimple(); else s = $"m8KFOuCJOUmjziONcXEi3A {x} {y};";
+				t.Title = s;
+				//Need to restore Title ASAP.
+				//	In CBT hook cannot change window name in any way.
+				//	The first opportunity is WM_CREATE, it's before WPF events, but cannot set Title property there.
+				//	The sequence of .NET events depends on Window properties etc:
+				//		Default: IsVisibleChanged, HwndSource.AddSourceChangedHandler, SourceInitialized, Loaded. And several unreliable events inbetween.
+				//		SizeToContent: IsVisibleChanged, HwndSource.AddSourceChangedHandler, Loaded, SourceInitialized.
+				//		WindowInteropHelper(w).EnsureHandle(): SourceInitialized (before ShowX), IsVisibleChanged, HwndSource.AddSourceChangedHandler, Loaded.
+				//		Window without controls: Initialized, ....
+				SourceChangedEventHandler eh = null;
+				eh = (_, _) => {
+					HwndSource.RemoveSourceChangedHandler(t, eh);
+					t.Title = title;
+					//if (wstate == WindowState.Normal && !t.ShowActivated) t.Hwnd().ZorderTop(); //it seems don't need it
 				};
+				HwndSource.AddSourceChangedHandler(t, eh);
 			}
 		}
-#else //slightly faster when moved to a different-dpi screen, but dirtier, I don't like creating window handle before showing window
+		[ThreadStatic] static AHookWin t_cbt;
+#elif true //does not change Title, but I don't like creating window handle before showing window
 		static void _Move(Window t, int x, int y, in RECT r, bool andSize) {
 			var wstate=t.WindowState;
 			if(wstate!=WindowState.Normal) t.WindowState=WindowState.Normal;
@@ -244,10 +253,58 @@ namespace Au
 				}
 			}
 		}
+#else //does not work well when maximized, per-monitor DPI, etc
+		static void _Move(Window t, int x, int y, in RECT r, bool andSize) {
+			var wstate = t.WindowState;
+			if (wstate != WindowState.Normal) t.WindowState = WindowState.Normal;
+			if (t.IsLoaded) {
+				var w = t.Hwnd();
+				if (w.Is0) throw new ObjectDisposedException("Window");
+				if (andSize) w.MoveLL(r); else w.MoveLL(x, y);
+			} else {
+				//tested: don't need this for Popup. Its PlacementRectangle uses physical pixels.
+
+				if (andSize) {
+					x = r.left; y = r.top;
+					var stc = t.SizeToContent;
+					if (stc != SizeToContent.WidthAndHeight) {
+						double f = 96d / AScreen.Of(x, y).Dpi;
+						if (!stc.Has(SizeToContent.Width)) t.Width = r.Width * f;
+						if (!stc.Has(SizeToContent.Height)) t.Height = r.Height * f;
+					}
+				}
+
+				t.WindowStartupLocation = WindowStartupLocation.Manual;
+				t.Left = double.NaN; t.Top = double.NaN; //default location, somewhere near top-left of primary screen or owner's screen
+				if (wstate == WindowState.Minimized) t.ShowActivated = false;
+
+				t.SourceInitialized += (_, _) => {
+					var w = t.Hwnd();
+					var v = AScreen.Of(x, y).Info;
+					var rs = v.workArea;
+					if (!v.isPrimary) {
+						using var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE); //workaround for WPF bug: activates window when DPI changes
+						w.MoveLL(rs.left, rs.top); //let DPI-scale
+					}
+					var rw = w.Rect;
+					x = Math.Clamp(x, rs.left, Math.Max(rs.right - rw.Width, rs.left));
+					y = Math.Clamp(y, rs.top, Math.Max(rs.bottom - rw.Height, rs.top));
+					w.MoveLL(x, y);
+					//speed: when moving to a screen with different DPI, total time is same.
+
+					if (wstate != WindowState.Normal) {
+						if (wstate == WindowState.Maximized) t.SizeToContent = SizeToContent.Manual;
+						t.WindowState = wstate;
+					} else if (!t.ShowActivated) {
+						w.ZorderTop();
+					}
+				};
+			}
+		}
 #endif
 
 		/// <summary>
-		/// Sets window startup location before showing it for first time. Also can move already loaded window.
+		/// Sets window startup location before showing it first time. Also can move already loaded window.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="x">X coordinate in screen. Physical pixels.</param>
@@ -256,17 +313,13 @@ namespace Au
 		/// The unit is physical pixels. WPF provides <b>Left</b> and <b>Top</b> properties, but the unit is logical pixels, therefore cannot set exact location on high DPI screens, especially if there are mutiple screens with different DPI.
 		/// 
 		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveLL"/>.
-		/// Else:
-		/// - Sets window location for normal state (not minimized/maximized).
-		/// - Ensures that entire window or its top-left part is in screen that contains <i>x y</i> or is nearest.
-		/// - Changes these window properties if need: <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>ShowActivated</b>.
-		/// - Sets location etc later, in <b>SourceInitialized</b> event.
-		/// - All this happens while the window is still invisible.
+		/// 
+		/// Else sets window location for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 		/// </remarks>
 		public static void SetXY(this Window t, int x, int y) => _Move(t, x, y, default, false);
 
 		/// <summary>
-		/// Sets window startup rectangle (location and size) before showing it for first time. Also can move/resize already loaded window.
+		/// Sets window startup rectangle (location and size) before showing it first time. Also can move/resize already loaded window.
 		/// </summary>
 		/// <param name="t"></param>
 		/// <param name="r">Rectangle in screen. Physical pixels.</param>
@@ -274,12 +327,8 @@ namespace Au
 		/// The unit is physical pixels. WPF provides <b>Left</b>, <b>Top</b>, <b>Width</b> and <b>Height</b> properties, but the unit is logical pixels, therefore cannot set exact rectangle on high DPI screens, especially if there are mutiple screens with different DPI.
 		/// 
 		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveLL"/>.
-		/// Else:
-		/// - Sets window rectangle for normal state (not minimized/maximized).
-		/// - Ensures that entire window or its top-left part is in screen that contains the top-left of <i>r</i> or is nearest.
-		/// - Changes these window properties if need: <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>, <b>ShowActivated</b>. Does not change <b>SizeToContent</b>, therefore may not change width or/and height.
-		/// - Sets location etc later, in <b>SourceInitialized</b> event.
-		/// - All this happens while the window is still invisible.
+		/// 
+		/// Else sets window rectangle for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 		/// </remarks>
 		public static void SetRect(this Window t, RECT r) => _Move(t, 0, 0, r, true);
 

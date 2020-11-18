@@ -250,7 +250,6 @@ The file must be in this workspace. Can be path relative to this file (examples:
 ");
 
 		_SelectRole();
-		_SelectRunMode();
 
 		g.ZAutoSize(false, true); //and _SelectRole autosizes rows through ZShowRows
 
@@ -301,6 +300,7 @@ The file must be in this workspace. Can be path relative to this file (examples:
 			_ => "runSingle-",
 		};
 		_grid.ZShowRows(true, "Run-", hide);
+		_SelectRunMode();
 		_bAddLibraryProject.Enabled = _role != ERole.classFile;
 	}
 

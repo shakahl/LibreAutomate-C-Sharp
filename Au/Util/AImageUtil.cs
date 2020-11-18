@@ -89,13 +89,19 @@ namespace Au.Util
 		/// <summary>
 		/// Loads winforms image or icon from file, resource or string.
 		/// </summary>
-		/// <param name="image">File path, or string with prefix "resource:" (<see cref="AResources.GetWinformsImage"/>) or "image:"/"~:" (<see cref="LoadWinformsImageFromString"/>).</param>
+		/// <param name="image">
+		/// Can be:
+		/// - file path. Can have prefix "imagefile:".
+		/// - resource path with prefix "resource:" (<see cref="AResources.GetWinformsImage"/>)
+		/// - Base-64 image with prefix "image:" (<see cref="LoadWinformsImageFromString"/>).
+		/// </param>
 		/// <exception cref="Exception"></exception>
 		public static System.Drawing.Bitmap LoadWinformsImageFromFileOrResourceOrString(string image) {
 			if (HasImageStringPrefix(image))
 				return LoadWinformsImageFromString(image);
 			if (AResources.HasResourcePrefix(image))
 				return AResources.GetWinformsImage(image);
+			if (image.Starts("imagefile:")) image = image[..10];
 			image = APath.Normalize(image, AFolders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
 			return System.Drawing.Image.FromFile(image) as System.Drawing.Bitmap ?? throw new ArgumentException("Bad image format.");
 		}
@@ -103,11 +109,17 @@ namespace Au.Util
 		/// <summary>
 		/// Loads WPF image or icon from file, resource or string.
 		/// </summary>
-		/// <param name="image">File path, or string with prefix "resource:" (<see cref="AResources.GetWpfImage"/>) or "image:"/"~:" (<see cref="LoadWpfImageFromString"/>).</param>
+		/// <param name="image">
+		/// Can be:
+		/// - file path. Can have prefix "imagefile:".
+		/// - resource path with prefix "resource:" (<see cref="AResources.GetWpfImage"/>)
+		/// - Base-64 image with prefix "image:" (<see cref="LoadWpfImageFromString"/>).
+		/// </param>
 		/// <exception cref="Exception"></exception>
 		public static BitmapFrame LoadWpfImageFromFileOrResourceOrString(string image) {
 			if (HasImageStringPrefix(image)) return LoadWpfImageFromString(image);
 			if (AResources.HasResourcePrefix(image)) return AResources.GetWpfImage(image);
+			if (image.Starts("imagefile:")) image = image[..10];
 			image = APath.Normalize(image, AFolders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
 			return BitmapFrame.Create(new Uri(image));
 		}
@@ -117,9 +129,9 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
-		/// - full path of image file (.xaml, .png etc, supports environment variables etc, see <see cref="APath.ExpandEnvVar"/>);
-		/// - string with prefix "resource:" (uses <see cref="AResources.GetXamlObject"/> if ends with ".xaml", else <see cref="AResources.GetWpfImage"/>);
-		/// - "image:" (<see cref="LoadWpfImageFromString"/>);
+		/// - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="APath.ExpandEnvVar"/>; can have prefix "imagefile:".
+		/// - resource path with prefix "resource:"; uses <see cref="AResources.GetXamlObject"/> if ends with ".xaml", else <see cref="AResources.GetWpfImage"/>.
+		/// - Base-64 image with prefix "image:"; uses<see cref="LoadWpfImageFromString"/>.
 		/// - XAML string that starts with "&lt;".
 		/// </param>
 		/// <exception cref="Exception">Failed.</exception>
@@ -130,6 +142,7 @@ namespace Au.Util
 			if (image.Starts('<')) return (UIElement)XamlReader.Parse(image);
 			if(image.Ends(".xaml", true)) {
 				if (AResources.HasResourcePrefix(image)) return (UIElement)AResources.GetXamlObject(image);
+				if (image.Starts("imagefile:")) image = image[..10];
 				using var stream = AFile.LoadStream(image);
 				return (UIElement)XamlReader.Load(stream);
 			} else {

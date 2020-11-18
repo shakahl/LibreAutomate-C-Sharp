@@ -57,10 +57,10 @@ namespace Au
 			/// 	}
 			/// }
 			/// ]]></code>
-			/// WPF window created with <see cref="AGuiBuilder"/>.
+			/// WPF window created with <see cref="AWpfBuilder"/>.
 			/// <code><![CDATA[
 			/// const string c_rkey = @"HKEY_CURRENT_USER\Software\Au\Test", c_rvalue = @"Wpf7.Rect";
-			/// var b = new AGuiBuilder("Window").WinSize(400).R.AddOkCancel().End();
+			/// var b = new AWpfBuilder("Window").WinSize(400).R.AddOkCancel().End();
 			/// 	
 			/// AWnd.More.SavedRect.Restore(b.Window, Registry.GetValue(c_rkey, c_rvalue, null) as string, s1 => Registry.SetValue(c_rkey, c_rvalue, s1));
 			/// 

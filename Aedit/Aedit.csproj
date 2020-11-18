@@ -32,8 +32,12 @@
 	<ItemGroup>
 	  <Page Remove="Resources\Images\BuildSelection_16x.xaml" />
 	  <Page Remove="Resources\Images\Copy_16x.xaml" />
+	  <Page Remove="Resources\Images\CSClassFile_16x.xaml" />
+	  <Page Remove="Resources\Images\CSFile_16x.xaml" />
 	  <Page Remove="Resources\Images\Cut_16x.xaml" />
 	  <Page Remove="Resources\Images\FindInFile_16x.xaml" />
+	  <Page Remove="Resources\Images\FolderClosed_16x.xaml" />
+	  <Page Remove="Resources\Images\FolderOpened_16x.xaml" />
 	  <Page Remove="Resources\Images\Image_16x.xaml" />
 	  <Page Remove="Resources\Images\Paste_16x.xaml" />
 	  <Page Remove="Resources\Images\Redo_16x.xaml" />
@@ -69,6 +73,18 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\Images\CSClassFile_16x.xaml">
+	    <Generator></Generator>
+	  </Resource>
+	  <Resource Include="Resources\Images\CSFile_16x.xaml">
+	    <Generator></Generator>
+	  </Resource>
+	  <Resource Include="Resources\Images\FolderClosed_16x.xaml">
+	    <Generator></Generator>
+	  </Resource>
+	  <Resource Include="Resources\Images\FolderOpened_16x.xaml">
+	    <Generator></Generator>
+	  </Resource>
 	  <Resource Include="Resources\Images\test.xaml" />
 	  <Resource Include="Resources\Images\BuildSelection_16x.xaml" />
 	  <Resource Include="Resources\Images\Copy_16x.xaml" />
@@ -168,9 +184,7 @@
 	  <Compile Update="Panels\PanelOutput.cs">
 	    <SubType>UserControl</SubType>
 	  </Compile>
-	  <Compile Update="Panels\PanelRunning.cs">
-	    <SubType>UserControl</SubType>
-	  </Compile>
+	  <Compile Update="Panels\PanelRunning.cs" />
 	  <Compile Update="Resources\Resources.Designer.cs">
 	    <DependentUpon>Resources.resx</DependentUpon>
 	    <DesignTime>True</DesignTime>

@@ -102,7 +102,7 @@ namespace Au.Controls
 				catch(Exception e) { AOutput.Write("Failed to load file", _xmlFileCustom, e.Message); }
 			}
 
-			//Size imageScalingSize = ADpi.SmallIconSize_; //if high DPI, auto scale images //TODO
+			//Size imageScalingSize = ADpi.SmallIconSize_; //if high DPI, auto scale images //_TODO
 
 			//create top-level toolstrips (menu bar and toolbars), and call _AddChildItems to add items and create drop-down menus and submenus
 			_inBuildAll = true;

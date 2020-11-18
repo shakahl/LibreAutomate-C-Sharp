@@ -1,3 +1,6 @@
+using Au;
+using Au.Types;
+using Au.Controls;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -9,121 +12,54 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
+using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
 //using System.Linq;
 
-using Au;
-using Au.Types;
-using Au.Controls;
-
-using Aga.Controls.Tree;
-using Aga.Controls.Tree.NodeControls;
-using System.Collections;
-
-class PanelRunning : AuUserControlBase, ITreeModel
+class PanelRunning : DockPanel
 {
-	_TreeViewAdv _c;
-	NodeIcon _ccIcon;
-	NodeTextBox _ccName;
+	AuTreeView _tv;
+	bool _updatedOnce;
 
-	public PanelRunning()
-	{
-		this.AccessibleName = this.Name = "Running";
-		_c = new _TreeViewAdv();
-		_c.AccessibleName = _c.Name = "Running_list";
-		_c.BorderStyle = BorderStyle.None;
-		_c.Dock = DockStyle.Fill;
-
-		_c.ShowLines = false;
-		_c.ShowPlusMinus = false;
-		_c.ShowNodeToolTips = true;
-		_c.FullRowSelect = true;
-
-		_ccIcon = new NodeIcon();
-		_c.NodeControls.Add(_ccIcon);
-		_ccIcon.ScaleMode = ImageScaleMode.ScaleUp;
-		_ccIcon.DpiStretch = true;
-		_ccIcon.ValueNeeded = node => (node.Tag as RunningTask).f.GetIcon();
-
-		_ccName = new NodeTextBox();
-		_c.NodeControls.Add(_ccName);
-		//_ccName.Trimming = StringTrimming.EllipsisCharacter;
-		_ccName.ValueNeeded = node => (node.Tag as RunningTask).f.DisplayName;
-		_ccName.DrawText += _ccName_DrawText;
-
-		_c.NodeMouseClick += _c_NodeMouseClick;
-
-		this.Controls.Add(_c);
+	public PanelRunning() {
+		_tv = new AuTreeView { Name = "Running_list", ImageCache = App.ImageCache };
+		//System.Windows.Automation.AutomationProperties.SetName(this, "Running");
+		this.Children.Add(_tv);
 	}
 
-	private void _ccName_DrawText(object sender, DrawEventArgs e)
-	{
-		var t = e.Node.Tag as RunningTask;
-		e.TextColor = t.isRunSingle ? Color.Green : Color.Blue;
+	public void ZUpdateList() {
+		_tv.SetItems(App.Tasks.Items, _updatedOnce);
+		if (!_updatedOnce) {
+			_updatedOnce = true;
+			FilesModel.NeedRedraw += v => { _tv.Redraw(v.remeasure); };
+			_tv.ItemClick += _tv_ItemClick;
+		}
 	}
 
-	protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
-
-	public void ZUpdateList()
-	{
-		if(_c.Model == null) _c.Model = this; else StructureChanged?.Invoke(this, new TreePathEventArgs(TreePath.Empty));
-	}
-
-	#region ITreeModel
-
-	public IEnumerable GetChildren(object nodeTag)
-	{
-		//ADebug.PrintFunc();
-		Debug.Assert(nodeTag == null);
-		return App.Tasks.Items;
-		//FUTURE: also add folder with queed items.
-	}
-
-	public bool IsLeaf(object nodeTag)
-	{
-		return true;
-	}
-
-#pragma warning disable 67
-	public event EventHandler<TreeModelEventArgs> NodesChanged;
-	public event EventHandler<TreeModelEventArgs> NodesInserted;
-	public event EventHandler<TreeModelEventArgs> NodesRemoved;
-	public event EventHandler<TreePathEventArgs> StructureChanged;
-#pragma warning restore 67
-
-	#endregion
-
-	private void _c_NodeMouseClick(object sender, TreeNodeAdvMouseEventArgs e)
-	{
-		if(e.ModifierKeys != 0) return;
-		var t = e.Node.Tag as RunningTask;
+	private void _tv_ItemClick(object sender, TVItemEventArgs e) {
+		if (e.ModifierKeys != 0 || e.ClickCount != 1) return;
+		var t = e.Item as RunningTask;
 		var f = t.f;
-		switch(e.Button) {
-		case MouseButtons.Left:
+		switch (e.MouseButton) {
+		case MouseButton.Left:
 			App.Model.SetCurrentFile(f);
 			break;
-		case MouseButtons.Right:
+		case MouseButton.Right:
+			_tv.Select(t);
 			var name = f.DisplayName;
-			var m = new AMenu();
+			var m = new AWpfMenu();
 			m["End task  " + name] = o => App.Tasks.EndTask(t);
 			m["End all  " + name] = o => App.Tasks.EndTasksOf(f);
 			m.Separator();
 			m["Close\tM-click"] = o => App.Model.CloseFile(f, true);
-			if(null == Panels.Editor.ZGetOpenDocOf(f)) m.LastMenuItem.Enabled = false;
-			m.Show(_c);
+			if (null == Panels.Editor.ZGetOpenDocOf(f)) m.Last.IsEnabled = false;
+			m.PlacementTarget = _tv;
+			m.Show();
 			break;
-		case MouseButtons.Middle:
+		case MouseButton.Middle:
 			App.Model.CloseFile(f, true);
 			break;
-		}
-	}
-
-	class _TreeViewAdv : TreeViewAdv
-	{
-		public _TreeViewAdv()
-		{
-			this.SetStyle(ControlStyles.Selectable, false);
 		}
 	}
 }

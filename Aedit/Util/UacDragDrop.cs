@@ -9,13 +9,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
 //using System.Drawing;
 //using System.Linq;
 
 using Au;
 using Au.Types;
 using Au.Util;
+using System.Runtime.InteropServices.ComTypes;
 
 class UacDragDrop
 {
@@ -31,11 +31,10 @@ class UacDragDrop
 
 		//Called with on=true when main form becomes visible.
 		//Called with on=false when hidden or closed.
-		public static void Enable(bool on)
-		{
-			if(on == (s_inst != null)) return;
-			if(on) {
-				if(AUac.OfThisProcess.Elevation != UacElevation.Full) return;
+		public static void Enable(bool on) {
+			if (on == (s_inst != null)) return;
+			if (on) {
+				if (AUac.OfThisProcess.Elevation != UacElevation.Full) return;
 				s_inst = new AdminProcess();
 			} else {
 				s_inst._Dispose();
@@ -43,14 +42,13 @@ class UacDragDrop
 			}
 		}
 
-		AdminProcess()
-		{
+		AdminProcess() {
 			_timer = new ATimer(_ => _Timer());
 
 			//use hook to detect when drag-drop started
 			_hook = new AHookAcc(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
 				_EndedDragMode();
-				if(0 == d.wnd.ClassNameIs("CLIPBRDWNDCLASS", "DragWindow")) return;
+				if (0 == d.wnd.ClassNameIs("CLIPBRDWNDCLASS", "DragWindow")) return;
 				_StartedDragMode();
 			}, flags: AccHookFlags.SKIPOWNPROCESS);
 
@@ -60,15 +58,12 @@ class UacDragDrop
 			//rejected: int pid = d.wnd.ProcessId; using(var u = AUac.OfProcess(pid)) { if(u == null || u.Elevation == UacElevation.Full) return; }
 		}
 
-		void _Dispose()
-		{
+		void _Dispose() {
 			_hook.Dispose();
 			_EndedDragMode();
 		}
 
-		void _StartedDragMode()
-		{
-			//AOutput.Write("START");
+		void _StartedDragMode() {
 			_isDragMode = true;
 			_endCounter = 0;
 			_wTransparent = default;
@@ -78,41 +73,36 @@ class UacDragDrop
 			_timer.Every(30);
 		}
 
-		void _EndedDragMode()
-		{
-			if(!_isDragMode) return;
-			//AOutput.Write("END");
+		void _EndedDragMode() {
+			if (!_isDragMode) return;
 			_isDragMode = _isProcess2 = false;
 			_timer.Stop();
-			if(!_wTransparent.Is0) _wTransparent.Post(Api.WM_USER); //let it close self
+			if (!_wTransparent.Is0) _wTransparent.Post(Api.WM_USER); //let it close self
 		}
 
 		//Every 30 ms while in drag mode.
-		void _Timer()
-		{
-			if(!_isDragMode) return;
+		void _Timer() {
+			if (!_isDragMode) return;
 
 			//when mouse released, end drag mode with ~100 ms delay
-			if(!AMouse.IsPressed(MButtons.Left | MButtons.Right)) { //calls GetKeyStateAsync. GetKeyState somehow unreliable when in drag mode.
-				if(++_endCounter == 4) _EndedDragMode();
+			if (!AMouse.IsPressed(MButtons.Left | MButtons.Right)) { //calls GetKeyStateAsync. GetKeyState somehow unreliable when in drag mode.
+				if (++_endCounter == 4) _EndedDragMode();
 				return;
 			}
 			_endCounter = 0;
 			//end drag mode if _wTransparent died, eg did not find useful data on drag enter
-			if(!_wTransparent.Is0 && !_wTransparent.IsAlive) {
+			if (!_wTransparent.Is0 && !_wTransparent.IsAlive) {
 				_EndedDragMode();
 				return;
 			}
 
 			var w = AWnd.FromMouse(WXYFlags.NeedWindow);
-			if(!_isProcess2) {
-				if(!w.IsOfThisProcess) return;
-				//AOutput.Write("drag");
+			if (!_isProcess2) {
+				if (!w.IsOfThisProcess) return;
 				_isProcess2 = true;
 				_wWindow = w;
-				new ProcessStarter_("Au.Editor.exe", "/dd " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
-				//new ProcessStarter_("Au.Editor.exe", $"/dd {CommandLine.MsgWnd.Handle.ToString()} {ATime.PerfMilliseconds}").StartUserIL(); //test process startup speed
-			} else if(w != _wTransparent) {
+				new ProcessStarter_("Aedit.exe", "/dd " + CommandLine.MsgWnd.Handle.ToString()).StartUserIL();
+			} else if (w != _wTransparent) {
 				_wWindow = w;
 				_SetTransparentSizeZorder();
 			}
@@ -122,9 +112,8 @@ class UacDragDrop
 		AWnd _wWindow; //current our top-level admin window covered by _wTransparent
 
 		//Called in admin process. Non-admin process may not be able to zorder its window above admin windows.
-		void _SetTransparentSizeZorder()
-		{
-			if(_wWindow.IsOfThisProcess) {
+		void _SetTransparentSizeZorder() {
+			if (_wWindow.IsOfThisProcess) {
 				var r = _wWindow.Rect;
 				_wTransparent.MoveLL(r.left, r.top, r.Width, r.Height);
 				_wTransparent.ZorderAbove(_wWindow);
@@ -134,204 +123,164 @@ class UacDragDrop
 		}
 
 		//SendMessage from _wTransparent on WM_CREATE.
-		public static void OnTransparentWindowCreated(AWnd wTransparent)
-		{
+		public static void OnTransparentWindowCreated(AWnd wTransparent) {
 			var x = s_inst;
-			if(x?._isDragMode ?? false) {
+			if (x?._isDragMode ?? false) {
 				x._wTransparent = wTransparent;
 				x._SetTransparentSizeZorder();
 			} else wTransparent.Post(Api.WM_USER); //let it close self
 		}
 
-		public static DragDropEffects OnDragEvent(int event_, int keyState, byte[] b = null) => s_inst?._OnDragEvent(event_, keyState, b) ?? 0;
-		DragDropEffects _OnDragEvent(int event_, int keyState, byte[] b)
-		{
-			if(!_isDragMode) return 0;
-			DDEvent ev = (DDEvent)event_;
-			//if(ev != DDEvent.Over) AOutput.Write(ev);
-			if(ev == DDEvent.Enter) {
-				var a = Serializer_.Deserialize(b);
-				_allowedEffects = (DragDropEffects)(int)a[0];
-				_keyState = a[1];
-				_data = new DataObject();
-				var t = new _DDData { files = a[2], shell = a[3], text = a[4], linkName = a[5] };
-				if(t.files != null) _data.SetData("FileDrop", t.files);
-				if(t.shell != null) _data.SetData("Shell IDList Array", t.shell);
-				if(t.text != null) _data.SetData("UnicodeText", t.text);
-				if(t.linkName != null) _data.SetData("FileGroupDescriptorW", t.linkName);
-			} else {
-				_keyState = keyState;
-			}
+		public static int DragEvent(int event_, byte[] b) => s_inst?._DragEvent(event_, b) ?? 0;
 
-			DragDropEffects ef = 0;
-			if(ev != DDEvent.Leave) {
-				var p = AMouse.XY;
-				var w = _wWindow.ChildFromXY(p, WXYCFlags.ScreenXY);
-				if(w.Is0) w = _wWindow;
-				if(w != _wTargetControl && !_wTargetControl.Is0) {
-					_InvokeDDHandler(_wTargetControl, DDEvent.Leave);
+		int _DragEvent(int event_, byte[] b) {
+			if (!_isDragMode) return 0;
+			DDEvent ev = (DDEvent)event_;
+			if (ev == DDEvent.Leave) {
+				if (!_wTargetControl.Is0) {
+					_InvokeDT(_wTargetControl, ev, 0, 0, default);
 					_wTargetControl = default;
 				}
-				if(!w.Is0 && w.IsOfThisProcess && w.IsEnabled(true)) {
-					if(ev != 0 && _wTargetControl.Is0) {
-						if(ev == DDEvent.Over) ev = 0;
-						else _InvokeDDHandler(w, DDEvent.Enter, p);
-					}
-					ef = _InvokeDDHandler(_wTargetControl = w, ev, p);
-				}
-			} else if(!_wTargetControl.Is0) {
-				_InvokeDDHandler(_wTargetControl, ev);
+				return 0;
+			}
+			var a = Serializer_.Deserialize(b);
+			int effect = a[0], keyState = a[1]; POINT pt = new POINT(a[2], a[3]);
+			if (ev == DDEvent.Enter) {
+				_data = new System.Windows.DataObject();
+				var t = new _DDData { files = a[4], shell = a[5], text = a[6], linkName = a[7] };
+				if (t.files != null) _data.SetData("FileDrop", t.files);
+				if (t.shell != null) _data.SetData("Shell IDList Array", t.shell);
+				if (t.text != null) _data.SetData("UnicodeText", t.text);
+				if (t.linkName != null) _data.SetData("FileGroupDescriptorW", t.linkName);
 			}
 
-			if(ev >= DDEvent.Drop) { _wTargetControl = default; }
+			int ef = 0;
+			var w = _wWindow.ChildFromXY(pt, WXYCFlags.ScreenXY);
+			if (w.Is0) w = _wWindow;
+			if (w != _wTargetControl && !_wTargetControl.Is0) {
+				_InvokeDT(_wTargetControl, DDEvent.Leave, 0, 0, default);
+				_wTargetControl = default;
+			}
+			if (!w.Is0 && w.IsOfThisProcess && w.IsEnabled(true)) {
+				if (ev != 0 && _wTargetControl.Is0) {
+					if (ev == DDEvent.Over) ev = 0;
+					else _InvokeDT(w, DDEvent.Enter, effect, keyState, pt);
+				}
+				ef = _InvokeDT(_wTargetControl = w, ev, effect, keyState, pt);
+			}
+
+			if (ev == DDEvent.Drop) { _wTargetControl = default; }
+
+			int _InvokeDT(AWnd w, DDEvent ev, int effect, int keyState, POINT pt) {
+				if (w.IsOfThisThread) return _InvokeDropTarget(w, ev, effect, keyState, pt);
+				return System.Windows.Application.Current.Dispatcher.Invoke(() => _InvokeDropTarget(w, ev, effect, keyState, pt));
+			}
 
 			return ef;
 		}
 
 		//data etc sent by _wTransparent on OnDragEnter. Then used here on enter/over/drop.
-		DataObject _data;
-		DragDropEffects _allowedEffects;
-		int _keyState; //set on enter, then updated on over/drop
+		System.Windows.DataObject _data;
+		AWnd _wTargetControl; //control or window from mouse
 
-		AWnd _wTargetControl; //control or form from mouse
-
-		//If the control alows drop, calls its OnDragEnter/Over/Drop/Leave through reflection.
-		DragDropEffects _InvokeDDHandler(AWnd w, DDEvent ev, POINT p = default)
-		{
-			//AOutput.Write(ev, w);
-			var c = Control.FromHandle(w.Handle); //is it thread-safe? It seems yes.
-			if(c == null || !c.AllowDrop) return 0; //thread-safe
-
-			if(_miEnter == null) {
-				var t = typeof(Control);
-				var bf = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.InvokeMethod;
-				_miEnter = t.GetMethod("OnDragEnter", bf);
-				_miOver = t.GetMethod("OnDragOver", bf);
-				_miDrop = t.GetMethod("OnDragDrop", bf);
-				_miLeave = t.GetMethod("OnDragLeave", bf);
+		int _InvokeDropTarget(AWnd w, DDEvent ev, int effect, int keyState, POINT p) {
+			nint prop = w.Prop["OleDropTargetInterface"];
+			if (prop == 0 && w != _wWindow) { //if w is of a HwndHost that does not register drop target, use that of the main window
+				w = _wWindow;
+				prop = w.Prop["OleDropTargetInterface"];
 			}
+			if (prop == 0) return 0;
 
-			if(ev == DDEvent.Leave) {
-				_Invoke(_miLeave, EventArgs.Empty);
-				return 0;
-			}
-
-			var e = new DragEventArgs(_data, _keyState, p.x, p.y, _allowedEffects, DragDropEffects.None);
-			_Invoke(ev switch { DDEvent.Enter => _miEnter, DDEvent.Over => _miOver, _ => _miDrop }, e);
-			return e.Effect;
-
-			void _Invoke(MethodInfo method, object arg)
-			{
-				if(c.InvokeRequired) {
-					c.Invoke(new MethodInvoker(() => method.Invoke(c, new object[] { arg })));
-				} else {
-					method.Invoke(c, new object[] { arg });
-				}
-			}
+			var data = ev == DDEvent.Enter || ev == DDEvent.Drop ? _data : null;
+			int hr = Cpp.Cpp_CallIDroptarget(prop, (int)ev, data, keyState, p, ref effect);
+			if (hr != 0) effect = 0;
+			return effect;
+			//working with COM in C# often is difficult. Cannot call IDropTarget methods.
 		}
-		MethodInfo _miEnter, _miOver, _miDrop, _miLeave; //MethodInfo cache
 	}
 
 	//Drag-drop events.
-	public enum DDEvent { Enter, Over, Drop, Leave }
+	public enum DDEvent { Enter, Over, Drop, Leave } //don't change, used in C++
 
-	//A form in non-admin process that accepts drag-drop events and relays to the admin process.
+	//A window in non-admin process that accepts drag-drop events and relays to the admin process.
 	//Covers our admin window. Almost transparent.
-	public class NonAdminProcess : Form
+	public static class NonAdminProcess
 	{
+		static AWnd _w; //our transparent window
+		static AWnd _msgWnd; //message-only IPC window in admin process
+		static _DropTarget _dt; //GC
+		static bool _enteredOnce;
+
 		//Called from Main() in non-admin process when command line starts with /dd.
-		public static void MainDD(string[] args)
-		{
-			//AOutput.Write("NonAdminProcess");
-			var msgWnd = (AWnd)args[1].ToInt();
+		public static void MainDD(string[] args) {
+			_msgWnd = (AWnd)args[1].ToInt();
 
-			var f = new NonAdminProcess(msgWnd);
-			f.ShowDialog();
-			f.Dispose();
-			//AOutput.Write("exit");
+			AWnd.More.RegisterWindowClass("Aedit.DD", _WndProc);
+			_w = AWnd.More.CreateWindow("Aedit.DD", null, WS.POPUP | WS.DISABLED, WS2.LAYERED | WS2.NOACTIVATE | WS2.TOOLWINDOW | WS2.TOPMOST);
+			Api.SetLayeredWindowAttributes(_w, 0, 1, 2);
+
+			Api.OleInitialize(0);
+			Api.RegisterDragDrop(_w, _dt = new _DropTarget());
+			_msgWnd.Send(Api.WM_USER, 10, (LPARAM)_w);
+			Api.SetTimer(_w, 1, 1000, null);
+
+			_w.ShowLL(true);
+			while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
+			Api.OleUninitialize();
 		}
 
-		AWnd _msgWnd; //message-only IPC window in admin process
-
-		NonAdminProcess(AWnd msgWnd)
-		{
-			_msgWnd = msgWnd;
-			Text = "Au.DropTarget";
-			AllowDrop = true;
-			AutoScaleMode = AutoScaleMode.None;
-			FormBorderStyle = FormBorderStyle.None;
-			StartPosition = FormStartPosition.Manual;
-			Opacity = 0.05;
-			//Opacity = 0.7;
-			Bounds = default; //on WM_CREATE we'll send message to the admin process, let it set size and Z order
-		}
-
-		protected override CreateParams CreateParams {
-			get {
-				CreateParams k = base.CreateParams;
-				k.ExStyle = (int)(WS2.LAYERED | WS2.NOACTIVATE | WS2.TOOLWINDOW | WS2.TOPMOST);
-				k.Style = unchecked((int)(WS.POPUP | WS.DISABLED));
-				return k;
-			}
-		}
-
-		protected override bool ShowWithoutActivation => true;
-
-		protected override void WndProc(ref Message m)
-		{
-			switch(m.Msg) {
-			case Api.WM_CREATE:
-				_msgWnd.Send(Api.WM_USER, 10, m.HWnd);
-				Api.SetTimer((AWnd)m.HWnd, 1, 1000, null);
+		static LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+			switch (msg) {
+			case Api.WM_DESTROY:
+				Api.RevokeDragDrop(w);
+				Api.PostQuitMessage(0);
 				break;
 			case Api.WM_TIMER:
-				if(!_msgWnd.IsAlive) Hide();
+				if (!_msgWnd.IsAlive) _Exit();
 				break;
 			case Api.WM_USER: //admin posts it when ended drag mode
-				Hide();
-				//AOutput.Write("WM_USER");
+				_Exit();
 				break;
 			}
-			base.WndProc(ref m);
 
-			//test process startup speed. About 300 ms. Ngened slower.
-			//if(m.Msg == Api.WM_SHOWWINDOW && m.WParam != default) AOutput.Write(ATime.PerfMilliseconds - Environment.GetCommandLineArgs()[3].ToInt64());
+			return Api.DefWindowProc(w, msg, wParam, lParam);
 		}
 
-		bool _enteredOnce;
+		static void _Exit() { Api.DestroyWindow(_w); }
 
-		protected override void OnDragEnter(DragEventArgs e)
+		class _DropTarget : Api.IDropTarget
 		{
-			if(_enteredOnce) {
-				OnDragOver(e);
-				return;
+			void Api.IDropTarget.DragEnter(IDataObject d, int grfKeyState, POINT pt, ref int effect) {
+				if (_enteredOnce) {
+					(this as Api.IDropTarget).DragOver(grfKeyState, pt, ref effect);
+					return;
+				}
+
+				_DDData r = default;
+				if (_enteredOnce = r.GetData(d)) {
+					var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y, r.files, r.shell, r.text, r.linkName);
+					effect = (int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b, (int)DDEvent.Enter);
+				} else {
+					_Exit();
+				}
 			}
 
-			_DDData r = default;
-			if(_enteredOnce = r.GetData(e.Data)) {
-				var b = Serializer_.Serialize((int)e.AllowedEffect, e.KeyState, r.files, r.shell, r.text, r.linkName);
-				e.Effect = (DragDropEffects)(int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b);
-			} else {
-				Hide();
+			void Api.IDropTarget.DragOver(int grfKeyState, POINT pt, ref int effect) {
+				if (!_enteredOnce) { effect = 0; return; }
+				var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y);
+				effect = (int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b, (int)DDEvent.Over);
 			}
-		}
 
-		protected override void OnDragOver(DragEventArgs e)
-		{
-			e.Effect = _enteredOnce ? (DragDropEffects)(int)_msgWnd.Send(Api.WM_USER, (int)DDEvent.Over, e.KeyState) : default;
-			//somehow this is called 1 time after OnDragEnter calls Hide
-		}
+			void Api.IDropTarget.Drop(IDataObject d, int grfKeyState, POINT pt, ref int effect) {
+				if (!_enteredOnce) { effect = 0; return; }
+				_Exit();
+				var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y);
+				effect = (int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b, (int)DDEvent.Drop);
+			}
 
-		protected override void OnDragDrop(DragEventArgs e)
-		{
-			if (!_enteredOnce) return;
-			Hide();
-			e.Effect = (DragDropEffects)(int)_msgWnd.Send(Api.WM_USER, (int)DDEvent.Drop, e.KeyState);
-		}
-
-		protected override void OnDragLeave(EventArgs e)
-		{
-			if(_enteredOnce) _msgWnd.Send(Api.WM_USER, (int)DDEvent.Leave);
+			void Api.IDropTarget.DragLeave() {
+				if (_enteredOnce) AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, Serializer_.Serialize(), (int)DDEvent.Leave);
+			}
 		}
 	}
 
@@ -341,28 +290,51 @@ class UacDragDrop
 		public byte[] shell, linkName;
 		public string text;
 
-		public bool GetData(IDataObject d)
-		{
-			//foreach(var v in d.GetFormats()) AOutput.Write(v, d.GetData(v, false)?.GetType()); AOutput.Write("--");
+		public unsafe bool GetData(IDataObject d) {
 			try {
-				if(d.GetDataPresent(DataFormats.FileDrop, false)) { //files
-					files = d.GetData(DataFormats.FileDrop, false) as string[]; if(files == null) return false;
-				} else if(d.GetDataPresent("Shell IDList Array", false)) { //any shell objects
-					if(!(d.GetData("Shell IDList Array", false) is MemoryStream m)) return false;
-					shell = m.ToArray();
-				} else if(d.GetDataPresent("UnicodeText", false)) { //text or URL
-					text = d.GetData("UnicodeText", false) as string; if(text == null) return false;
-					if(d.GetDataPresent("FileGroupDescriptorW", true)) { //link text. All browsers.
-						if(!(d.GetData("FileGroupDescriptorW", false) is MemoryStream m)) return false;
-						linkName = m.ToArray();
-					}
+				FORMATETC fHdrop = default, fShell = default, fText = default, fDesc = default;
+				var afe = new FORMATETC[1]; var fe = new int[1];
+				var e = d.EnumFormatEtc(DATADIR.DATADIR_GET);
+				while (e.Next(1, afe, fe) == 0 && fe[0] == 1) {
+					if (afe[0].tymed != TYMED.TYMED_HGLOBAL) continue;
+					int cf = (ushort)afe[0].cfFormat;
+					if (cf == Api.CF_HDROP) fHdrop = afe[0];
+					else if (cf == ClipFormats.ShellIDListArray_) fShell = afe[0];
+					else if (cf == Api.CF_UNICODETEXT) fText = afe[0];
+					else if (cf == ClipFormats.FileGroupDescriptorW_) fDesc = afe[0];
+				}
+				if (fHdrop.cfFormat != 0) files = _GetFiles(ref fHdrop);
+				else if (fShell.cfFormat != 0) shell = _GetBytes(ref fShell);
+				else if (fText.cfFormat != 0) {
+					text = _GetText(ref fText);
+					if (fDesc.cfFormat != 0) linkName = _GetBytes(ref fDesc); //text is URL
 				} else return false;
 				return true;
-			}
-			catch(Exception ex) { ADebug.Print(ex); return false; }
 
-			//note: MemoryStream.GetBuffer says "UnauthorizedAccessException: MemoryStream's internal buffer cannot be accessed"
-			//info: if from IE, GetData returns null for all formats.
+				byte[] _GetBytes(ref FORMATETC fe) {
+					d.GetData(ref fe, out var m);
+					int n = (int)Api.GlobalSize(m.unionmember);
+					var t = Api.GlobalLock(m.unionmember);
+					try { return new Span<byte>((void*)t, n).ToArray(); }
+					finally { Api.GlobalUnlock(m.unionmember); Api.ReleaseStgMedium(ref m); }
+				}
+
+				string _GetText(ref FORMATETC fe) {
+					d.GetData(ref fe, out var m);
+					var t = (char*)Api.GlobalLock(m.unionmember);
+					int n = (int)Api.GlobalSize(m.unionmember) / 2; if (n > 0 && t[--n] != 0) n++;
+					try { return new string(t, 0, n); }
+					finally { Api.GlobalUnlock(m.unionmember); Api.ReleaseStgMedium(ref m); }
+				}
+
+				string[] _GetFiles(ref FORMATETC fe) {
+					d.GetData(ref fe, out var m);
+					try { return AClipboardData.HdropToFiles_(m.unionmember); }
+					finally { Api.ReleaseStgMedium(ref m); }
+				}
+			}
+			catch (Exception ex) { ADebug.Print(ex); } //info: if from IE, IDataObject.GetData fails for all formats.
+			return false;
 		}
 	}
 

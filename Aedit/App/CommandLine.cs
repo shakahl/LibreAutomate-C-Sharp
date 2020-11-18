@@ -73,8 +73,8 @@ static class CommandLine
 		}
 
 		//single instance
-		//TODO: Api.CreateMutex()
-		new Mutex(true, "Aedit.Mutex.2923751562", out bool createdNew);
+		//SHOULDDO: Api.CreateMutex()
+		s_mutex = new Mutex(true, "Aedit.Mutex.m3gVxcTJN02pDrHiQ00aSQ", out bool createdNew);
 		if(createdNew) return false;
 
 		var w = AWnd.FindFast(null, c_msgWndClassName, true);
@@ -98,6 +98,7 @@ static class CommandLine
 		}
 		return true;
 	}
+	static Mutex s_mutex; //GC
 
 	/// <summary>
 	/// null or argument after "/test".
@@ -138,7 +139,7 @@ static class CommandLine
 	static string[] _importFiles;
 
 	static AWnd _msgWnd;
-	const string c_msgWndClassName = "Aedit.2923751562"; //TODO: in ATask.cs replace "Au.Editor.Msg" with this
+	const string c_msgWndClassName = "Aedit.m3gVxcTJN02pDrHiQ00aSQ"; //TODO: in ATask.cs replace "Au.Editor.Msg" with this
 
 	/// <summary>
 	/// The message-only window.
@@ -159,11 +160,7 @@ static class CommandLine
 			int i = (int)wParam;
 			switch(i) {
 			case 0:
-				return App.Wnd.Hwnd().Handle;
-			case 1:
-			case 2:
-			case 3: //received from our non-admin drop-target process on OnDragOver/Drop/Leave
-				return (int)UacDragDrop.AdminProcess.OnDragEvent(i, (int)lParam);
+				return App.Hwnd.Handle;
 			case 10:
 				UacDragDrop.AdminProcess.OnTransparentWindowCreated((AWnd)lParam);
 				break;
@@ -222,9 +219,9 @@ static class CommandLine
 				if(action == 99) AOutput.Write($"Command line: script '{script}' not found."); //else the caller script will throw exception
 				return (int)ATask.RunResult_.notFound;
 			}
-			return Run.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
+			return CompileRun.CompileAndRun(true, f, args, noDefer: 0 != (mode & 1), wrPipeName: pipeName);
 		case 110: //received from our non-admin drop-target process on OnDragEnter
-			return (int)UacDragDrop.AdminProcess.OnDragEvent(0, 0, b);
+			return UacDragDrop.AdminProcess.DragEvent((int)wParam, b);
 		//case 120: //go to edit user-defined menu or toolbar source code
 		//	CiGoTo.EditMenuOrToolbar(b);
 		//	break;
