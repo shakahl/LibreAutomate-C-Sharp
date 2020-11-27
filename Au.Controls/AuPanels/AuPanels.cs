@@ -177,6 +177,21 @@ namespace Au.Controls
 		/// <exception cref="KeyNotFoundException"></exception>
 		public ILeaf this[string name, bool userDocument = false] => (userDocument ? _dictUserDoc : _dictLeaf)[name];
 
+		/// <summary>
+		/// Gets interface of container leaf item (panel, toolbar or document).
+		/// </summary>
+		/// <param name="e">Leaf's <b>Content</b> or any descendant.</param>
+		/// <exception cref="NotFoundException"></exception>
+		public ILeaf this[DependencyObject e] {
+			get {
+				while (e != null) {
+					if (e is _DockPanelWithBorder d && d.Tag is ILeaf f) return f;
+					e = VisualTreeHelper.GetParent(e); //same with LogicalTreeHelper
+				}
+				throw new NotFoundException();
+			}
+		}
+
 		//rejected. Rarely used. Can set in Container action.
 		///// <summary>
 		///// Background brush of the root grid.

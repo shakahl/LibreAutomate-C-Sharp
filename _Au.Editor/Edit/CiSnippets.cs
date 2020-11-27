@@ -92,9 +92,9 @@ static class CiSnippets
 		//AOutput.Write(SyntaxFacts.IsTopLevelStatement);
 
 		switch(node) {
-		case BlockSyntax _:
-		case SwitchSectionSyntax _: //between case: and break;
-		case ElseClauseSyntax _:
+		case BlockSyntax:
+		case SwitchSectionSyntax: //between case: and break;
+		case ElseClauseSyntax:
 		case IfStatementSyntax s1 when pos > s1.CloseParenToken.SpanStart:
 		case WhileStatementSyntax s2 when pos > s2.CloseParenToken.SpanStart:
 		case DoStatementSyntax s3 when pos < s3.WhileKeyword.SpanStart:
@@ -109,15 +109,15 @@ static class CiSnippets
 			context = _Context.Type;
 			break;
 		case NamespaceDeclarationSyntax ns when pos > ns.OpenBraceToken.Span.Start:
-		case CompilationUnitSyntax _:
+		case CompilationUnitSyntax:
 		case null:
 			context = _Context.Namespace|_Context.Function; //Function for C# 9 top-level statements. //FUTURE: only if in correct place.
 			break;
-		case LambdaExpressionSyntax _:
-		case ArrowExpressionClauseSyntax _: //like void F() =>here
+		case LambdaExpressionSyntax:
+		case ArrowExpressionClauseSyntax: //like void F() =>here
 			context = _Context.Arrow;
 			break;
-		case ParameterListSyntax _:
+		case ParameterListSyntax:
 			context = _Context.Parameters;
 			break;
 		default:

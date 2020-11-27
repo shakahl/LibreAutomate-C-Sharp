@@ -388,7 +388,7 @@ namespace Au.Controls
 			var b = e.ChangedButton;
 			if (b == MouseButton.Left || b == MouseButton.Right || b == MouseButton.Middle) {
 				if (b != MouseButton.Middle && Focusable) Focus();
-				var xy = _hh.Wnd.MouseClientXY;
+				var xy = _hh.Hwnd.MouseClientXY;
 				if (HitTest(xy, out var h) && e.ButtonState == MouseButtonState.Pressed && !IsMouseCaptured) {
 					e.Handled = true;
 					if (b == MouseButton.Left && h.part == TVParts.Image && h.item.IsFolder) {
@@ -465,10 +465,10 @@ namespace Au.Controls
 			if (_mouse.e != null) {
 				if (_Pressed(_mouse.e.ChangedButton)) {
 					//AOutput.Write("move");
-					if (AMath.Distance(_hh.Wnd.MouseClientXY, _mouse.xy) > _itemH / 4) {
+					if (AMath.Distance(_hh.Hwnd.MouseClientXY, _mouse.xy) > _itemH / 4) {
 						//AOutput.Write("drag");
 						int i = _mouse.h.index;
-						if (!IsSelected(i)) Select(i, true, unselectOther: true, focus: true);
+						if (!IsSelected(i)) SelectSingle(i, andFocus: true);
 						var eDown = _MouseEnd();
 						_MouseEvents(false, false, true, eDown, _mouse.h, _mouse.xy, _mouse.mk);
 					}
@@ -485,7 +485,7 @@ namespace Au.Controls
 
 		void _OnMouseMoveOrWheel(MouseEventArgs e) {
 			if (HotTrack || ShowLabelTip) {
-				int i = e.OriginalSource == this ? _ItemFromY(_hh.Wnd.MouseClientXY.y) : -1; //e.OriginalSource!=this when scrolling
+				int i = e.OriginalSource == this ? _ItemFromY(_hh.Hwnd.MouseClientXY.y) : -1; //e.OriginalSource!=this when scrolling
 				if (i != _hotIndex) {
 					if (HotTrack) {
 						if (_hotIndex >= 0) _Invalidate(_hotIndex);
@@ -572,7 +572,7 @@ namespace Au.Controls
 				if (selIndex >= 0 && (mod == 0 || (mod == ModifierKeys.Shift && MultiSelect))) {
 					e.Handled = true;
 					if (selIndex != _focusedIndex) {
-						if (mod == 0) Select(selIndex, true, unselectOther: true); else _ShiftSelect(selIndex);
+						if (mod == 0) SelectSingle(selIndex, andFocus: false); else _ShiftSelect(selIndex);
 						FocusedIndex = selIndex;
 					}
 				}
@@ -653,6 +653,16 @@ namespace Au.Controls
 			if (invalidate) _Invalidate();
 		}
 
+		/// <summary>
+		/// Selects item, unselects others, optionally makes the focused.
+		/// </summary>
+		public void SelectSingle(int index, bool andFocus) => Select(index, true, true, andFocus);
+
+		/// <summary>
+		/// Selects item, unselects others, optionally makes the focused.
+		/// </summary>
+		public void SelectSingle(ITreeViewItem item, bool andFocus) => Select(item, true, true, andFocus);
+
 		void _ShiftSelect(int last) {
 			int from; if (last >= _focusedIndex) from = Math.Max(_focusedIndex, 0); else { from = last; last = _focusedIndex; }
 			Select(from..++last, true, unselectOther: false);
@@ -693,6 +703,25 @@ namespace Au.Controls
 				var a = new List<ITreeViewItem>();
 				for (int i = 0; i < _avi.Length; i++) if (_avi[i].isSelected) a.Add(_avi[i].item);
 				return a;
+			}
+		}
+
+		/// <summary>
+		/// Returns index of first selected item, or -1 if no selection.
+		/// </summary>
+		public int SelectedIndex {
+			get {
+				for (int i = 0; i < _avi.Length; i++) if (_avi[i].isSelected) return i;
+				return -1;
+			}
+		}
+
+		/// <summary>
+		/// Returns first selected item, or null if no selection.
+		/// </summary>
+		public ITreeViewItem SelectedItem {
+			get {
+				int i = SelectedIndex; return i >= 0 ? _avi[i].item : null;
 			}
 		}
 
@@ -930,7 +959,7 @@ namespace Au.Controls
 		public void OnDragOver2(bool canDrop) {
 			if (!canDrop || _avi.NE_()) { _dd?.ClearInsertMark(); return; }
 			_dd ??= new _DragDrop(this);
-			var p = _hh.Wnd.MouseClientXY;
+			var p = _hh.Hwnd.MouseClientXY;
 			GetDropInfo(p, out var d);
 			bool noMark = false;
 			Key key = 0;
@@ -1015,7 +1044,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="d"></param>
 		/// <seealso cref="OnDragOver2"/>
-		public void GetDropInfo(out TVDropInfo d) => GetDropInfo(_hh.Wnd.MouseClientXY, out d);
+		public void GetDropInfo(out TVDropInfo d) => GetDropInfo(_hh.Hwnd.MouseClientXY, out d);
 
 		/// <summary>
 		/// Can be called from "drag over" and "drop" overrides or event handlers to get drop info.

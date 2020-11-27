@@ -19,7 +19,7 @@ namespace Au.Controls
 {
 	/// <summary>
 	/// Scintilla-based control to show formatted information text.
-	/// To set text use the <see cref="AuScintilla.Text"/> property. For formatting and links use tags: <see cref="SciTags"/>.
+	/// To set text use the <see cref="AuScintilla.Text"/> property. For formatting and links use tags: <see cref="SciTagsF"/>.
 	/// </summary>
 	public class InfoBox :AuScintilla
 	{

@@ -14,14 +14,18 @@ using System.ComponentModel;
 using System.Reflection;
 using Microsoft.Win32;
 using Au.Util;
+using Au.Tools;
+using System.Windows.Input;
 //using System.Linq;
+
+//TODO: now keys works only when main window active, not when eg a floating panel active.
 
 static class Menus
 {
-	[Command]
+	[Command(target = "Files")]
 	public static class File
 	{
-		[Command(keysText = "F2")]
+		[Command(keys = "F2")]
 		public static void Rename() { App.Model.RenameSelected(); }
 
 		[Command(keysText = "Delete")]
@@ -64,16 +68,16 @@ static class Menus
 			[Command]
 			public static void Select_in_explorer() { App.Model.OpenSelected(4); }
 
-			[Command(separator = true)]
+			[Command(separator = true, target = "", keysText = "M-click")]
 			public static void Close() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseSelectedOrCurrent); }
 
-			[Command]
-			public static void Cloase_all() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll); }
+			[Command(target = "")]
+			public static void Close_all() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll); }
 
-			[Command]
+			[Command(target = "")]
 			public static void Collapse_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseFolders); }
 
-			[Command(separator = true, keys = "Ctrl+Tab")]
+			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
 			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
 		}
 
@@ -99,14 +103,14 @@ static class Menus
 			[Command("Import .zip...", separator = true)]
 			public static void Import_zip() {
 				var d = new OpenFileDialog { Title = "Import .zip", Filter = "Zip files|*.zip" };
-				if (d.ShowDialog(App.Wnd) != true) return;
+				if (d.ShowDialog(App.Wmain) != true) return;
 				App.Model.ImportWorkspace(d.FileName);
 			}
 
 			[Command("...")]
 			public static void Import_workspace() {
 				var d = new OpenFileDialog { Title = "Import workspace", Filter = "files.xml|files.xml" };
-				if (d.ShowDialog(App.Wnd) != true) return;
+				if (d.ShowDialog(App.Wmain) != true) return;
 				App.Model.ImportWorkspace(APath.GetDirectory(d.FileName));
 			}
 
@@ -114,7 +118,7 @@ static class Menus
 			public static void Import_files() { App.Model.ImportFiles(); }
 		}
 
-		[Command]
+		[Command(target = "")]
 		public static class Workspace
 		{
 			[Command]
@@ -130,17 +134,17 @@ static class Menus
 			public static void Save_now() { App.Model?.Save.AllNowIfNeed(); }
 		}
 
-		[Command(separator = true, keysText = "Alt+F4")]
-		public static void Close_window() { App.Wnd.Close(); }
+		[Command(separator = true, target = "", keysText = "Alt+F4")]
+		public static void Close_window() { App.Wmain.Close(); }
 
-		[Command]
+		[Command(target = "")]
 		public static void Exit() {
-			App.Wnd.Hide();
-			App.Wnd.Close();
+			App.Wmain.Hide();
+			App.Wmain.Close();
 		}
 	}
 
-	[Command]
+	[Command(target = "")]
 	public static class New
 	{
 		static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
@@ -156,66 +160,73 @@ static class Menus
 		public static void New_folder() { _New(null); }
 	}
 
-	[Command]
+	[Command(target = "Edit")]//TODO
 	public static class Edit
 	{
 		[Command(keysText = "Ctrl+Z", image = "resources/images/undo_16x.xaml")]
-		public static void Undo() { }
+		public static void Undo() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_UNDO); }
 
 		[Command(keysText = "Ctrl+Y", image = "resources/images/redo_16x.xaml")]
-		public static void Redo() { }
+		public static void Redo() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_REDO); }
 
 		[Command('t', separator = true, keysText = "Ctrl+X", image = "resources/images/cut_16x.xaml")]
-		public static void Cut() { }
+		public static void Cut() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_CUT); }
 
 		[Command(keysText = "Ctrl+C", image = "resources/images/copy_16x.xaml")]
-		public static void Copy() { }
+		public static void Copy() {
+			var doc = Panels.Editor.ZActiveDoc;
+			doc.ZForumCopy(onlyInfo: true);
+			doc.Call(Sci.SCI_COPY);
+		}
 
 		[Command(keysText = "Ctrl+V", image = "resources/images/paste_16x.xaml")]
-		public static void Paste() { }
+		public static void Paste() {
+			var doc = Panels.Editor.ZActiveDoc;
+			if (!doc.ZForumPaste()) doc.Call(Sci.SCI_PASTE);
+		}
 
 		[Command()]
-		public static void Forum_copy() { }
+		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ZForumCopy(); }
 
 		[Command(separator = true, keys = "Ctrl+F", image = "resources/images/findinfile_16x.xaml")]
-		public static void Find() { }
+		public static void Find() { Panels.Find.ZCtrlF(); }
 
 		[Command(separator = true, keysText = "Ctrl+Space")]
-		public static void Autocompletion_list() { }
+		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.ZActiveDoc); }
 
 		[Command(keysText = "Ctrl+Shift+Space")]
-		public static void Parameter_info() { }
+		public static void Parameter_info() { CodeInfo.ShowSignature(); }
 
 		[Command(keysText = "F12, Ctrl+click")]
-		public static void Go_to_definition() { }
+		public static void Go_to_definition() { CiGoTo.GoToSymbolFromPos(); }
 
 		[Command(separator = true)]
 		public static class Selection
 		{
 			[Command]
-			public static void Comment() { }
+			public static void Comment() { Panels.Editor.ZActiveDoc.ZCommentLines(true); }
 
 			[Command]
-			public static void Uncomment() { }
+			public static void Uncomment() { Panels.Editor.ZActiveDoc.ZCommentLines(false); }
 
 			[Command]
-			public static void Indent() { }
+			public static void Indent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_TAB); }
 
 			[Command]
-			public static void Unindent() { }
+			public static void Unindent() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_BACKTAB); }
 
 			[Command]
-			public static void Select_all() { }
+			public static void Select_all() { Panels.Editor.ZActiveDoc.Call(Sci.SCI_SELECTALL); }
 		}
 
 		[Command]
 		public static class View
 		{
 			[Command(checkable = true, keysText = "Ctrl+W", image = "resources/images/wordwrap_16x.xaml")]
-			public static void Wrap_lines() { }
+			public static void Wrap_lines() { Panels.Editor.ZActiveDoc.ZToggleView(SciCode.EView.Wrap); }
 
 			[Command(checkable = true, image = "resources/images/image_16x.xaml")]
-			public static void Images_in_code() { }
+			public static void Images_in_code() { Panels.Editor.ZActiveDoc.ZToggleView(SciCode.EView.Images); }
 		}
 	}
 
@@ -223,22 +234,22 @@ static class Menus
 	public static class Code
 	{
 		[Command('W')]
-		public static void AWnd() { }
+		public static void AWnd() { new FormAWnd().ZShow(); }
 
 		[Command('A')]
-		public static void AAcc() { }
+		public static void AAcc() { new FormAAcc().ZShow(); }
 
 		[Command('I')]
-		public static void AWinImage() { }
+		public static void AWinImage() { new FormAWinImage().ZShow(); }
 
 		[Command(separator = true, keysText = "Ctrl+Space in string")]
-		public static void Keys() { }
+		public static void Keys() { CiTools.CmdShowKeysWindow(); }
 
 		[Command(keysText = "Ctrl+Space in string")]
-		public static void Regex() { }
+		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 
 		[Command(separator = true)]
-		public static void Windows_API() { }
+		public static void Windows_API() { FormWinapi.ZShowDialog(); }
 	}
 
 	[Command]
@@ -257,7 +268,7 @@ static class Menus
 			var t = App.Tasks.GetRunsingleTask(); if (t == null) return;
 			var m = new AWpfMenu();
 			m["End task  " + t.f.DisplayName] = o => App.Tasks.EndTask(t);
-			m.PlacementTarget = App.Wnd;
+			m.PlacementTarget = App.Wmain;
 			m.Show();
 		}
 
@@ -277,78 +288,78 @@ static class Menus
 		}
 	}
 
-	[Command]
+	[Command/*(tooltip = "Triggers and toolbars")*/] //FUTURE: support tooltip for menu items. Now implemented only for toolbar buttons.
 	public static class TT
 	{
 		[Command("...")]
-		public static void Add_trigger() { }
+		public static void Add_trigger() { TriggersAndToolbars.AddTrigger(); }
 
 		[Command("...")]
-		public static void Add_toolbar() { }
+		public static void Add_toolbar() { TriggersAndToolbars.AddToolbar(); }
 
 		[Command('k', separator = true)]
-		public static void Edit_hotkey_triggers() { }
+		public static void Edit_hotkey_triggers() { TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs"); }
 
 		[Command('a')]
-		public static void Edit_autotext_triggers() { }
+		public static void Edit_autotext_triggers() { TriggersAndToolbars.Edit(@"Triggers\Autotext triggers.cs"); }
 
 		[Command('m')]
-		public static void Edit_mouse_triggers() { }
+		public static void Edit_mouse_triggers() { TriggersAndToolbars.Edit(@"Triggers\Mouse triggers.cs"); }
 
 		[Command('w')]
-		public static void Edit_window_triggers() { }
+		public static void Edit_window_triggers() { TriggersAndToolbars.Edit(@"Triggers\Window triggers.cs"); }
 
 		[Command(separator = true)]
-		public static void Edit_common_toolbars() { }
+		public static void Edit_common_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Common toolbars.cs"); }
 
 		[Command()]
-		public static void Edit_window_toolbars() { }
+		public static void Edit_window_toolbars() { TriggersAndToolbars.Edit(@"Toolbars\Window toolbars.cs"); }
 
 		[Command(separator = true)]
-		public static void Edit_TT_script() { }
+		public static void Edit_TT_script() { TriggersAndToolbars.Edit(@"Triggers and toolbars.cs"); }
 
 		[Command()]
-		public static void Restart_TT_script() { }
+		public static void Restart_TT_script() { TriggersAndToolbars.Restart(); }
 
 		[Command(separator = true)]
-		public static void Disable_triggers() { }
+		public static void Disable_triggers() { TriggersAndToolbars.DisableTriggers(null); }
 
 		[Command("...")]
-		public static void Active_triggers() { }
+		public static void Active_triggers() { Log_.Run.Show(); }
 
 		[Command("...")]
-		public static void Active_toolbars() { }
+		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }
 	}
 
 	[Command]
 	public static class Tools
 	{
 		[Command(image = "resources/images/settingsgroup_16x.xaml")]
-		public static void Options() { }
+		public static void Options() { FOptions.ZShow(); }
 
 		[Command(separator = true)]
 		public static class Output
 		{
 			[Command(keysText = "M-click")]
-			public static void Clear() { }
+			public static void Clear() { Panels.Output.ZClear(); }
 
 			[Command("Copy", keysText = "Ctrl+C")]
-			public static void Copy_output() { }
+			public static void Copy_output() { Panels.Output.ZCopy(); }
 
-			[Command(keysText = "Ctrl+F")]
-			public static void Find_selected_text() { }
+			[Command(keys = "Ctrl+F")]
+			public static void Find_selected_text() { Panels.Output.ZFind(); }
 
-			[Command()]
-			public static void History() { }
+			[Command]
+			public static void History() { Panels.Output.ZHistory(); }
 
 			[Command("Wrap lines", separator = true, checkable = true)]
-			public static void Wrap_lines_in_output() { }
+			public static void Wrap_lines_in_output() { Panels.Output.ZWrapLines ^= true; }
 
 			[Command("White space", checkable = true)]
-			public static void White_space_in_output() { }
+			public static void White_space_in_output() { Panels.Output.ZWhiteSpace ^= true; }
 
 			[Command(checkable = true)]
-			public static void Topmost_when_floating() { }
+			public static void Topmost_when_floating() { Panels.Output.ZTopmost ^= true; }
 		}
 	}
 
@@ -356,13 +367,19 @@ static class Menus
 	public static class Help
 	{
 		[Command]
-		public static void Program_help() { }
+		public static void Program_help() { AHelp.AuHelp(""); }
 
 		[Command]
-		public static void Library_help() { }
+		public static void Library_help() { AHelp.AuHelp("api/"); }
 
 		[Command(keys = "F1", image = "resources/images/statushelp_16x.xaml")]
-		public static void Context_help() { }
+		public static void Context_help() {//TODO: test
+			var c = FocusManager.GetFocusedElement(App.Wmain);
+			if (c == null) return;
+			if (c == Panels.Editor.ZActiveDoc) {
+				CiUtil.OpenSymbolOrKeywordFromPosHelp();
+			}
+		}
 
 		//[Command(separator = true)]
 		//public static void Forum() { }
@@ -378,7 +395,11 @@ static class Menus
 	[Command]
 	public static void TEST() {
 
-		AOutput.Write(Panels.Files.TreeControl.FocusedItem);
+		//AOutput.Write(Panels.Files.TreeControl.FocusedItem);
+		AOutput.Write("---");
+		AOutput.Write(Keyboard.FocusedElement);
+		AOutput.Write(FocusManager.GetFocusedElement(App.Wmain));
+		AOutput.Write(Api.GetFocus());
 
 		//foreach(var f in App.Model.Root.Descendants()) {
 		//	using var p1 = APerf.Create();

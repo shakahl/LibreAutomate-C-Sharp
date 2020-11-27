@@ -78,9 +78,8 @@ namespace Au.Controls
 	/// </example>
 	public class AuMenuCommands
 	{
-		readonly Dictionary<string, Command> _d = new Dictionary<string, Command>(200);
+		readonly Dictionary<string, Command> _d = new(200);
 		readonly Action<FactoryParams> _itemFactory;
-		readonly UIElement _keysTarget;
 		readonly bool _autoUnderline;
 		string _defaultFile, _customizedFile;
 
@@ -90,69 +89,65 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="commands">A type that contains nested types with methods. Must be in single source file (not partial class).</param>
 		/// <param name="menu">An empty <b>Menu</b> object. This function adds items to it.</param>
-		/// <param name="keysTarget">Window or other element where will work keyboard shortcuts specified in attributes.</param>
 		/// <param name="autoUnderline">Automatically insert _ in item text for Alt-underlining where not specified explicitly.</param>
 		/// <param name="itemFactory">Optional callback function that is called for each menu item. Can create menu items, set properties, create toolbar buttons, etc.</param>
 		/// <exception cref="ArgumentException">Duplicate name. Use <see cref="CommandAttribute.name"/>.</exception>
-		public AuMenuCommands(Type commands, Menu menu, UIElement keysTarget = null, bool autoUnderline = true, Action<FactoryParams> itemFactory = null) {
+		public AuMenuCommands(Type commands, Menu menu, bool autoUnderline = true, Action<FactoryParams> itemFactory = null) {
 			if (commands == null || menu == null) throw new ArgumentNullException();
 			_itemFactory = itemFactory;
-			_keysTarget = keysTarget;
 			_autoUnderline = autoUnderline;
 
-			_Menu(commands, menu);
+			_Menu(commands, menu, null);
 
-			void _Menu(Type type, ItemsControl parentMenu) {
+			void _Menu(Type type, ItemsControl parentMenu, string inheritTarget) {
 				var am = type.GetMembers(BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly);
 				var list = new List<(MemberInfo mi, CommandAttribute a)>(am.Length);
 				foreach (var mi in am) {
-					var a = mi.GetCustomAttribute<CommandAttribute>(false);
-					//var a = mi.GetCustomAttributes().OfType<CommandAttribute>().FirstOrDefault(); //CommandAttribute and inherited. Similar speed. Don't need because factory action receives MemberInfo an can get other attributes from it.
-					if (a != null) list.Add((mi, a));
+					var ca = mi.GetCustomAttribute<CommandAttribute>(false);
+					//var ca = mi.GetCustomAttributes().OfType<CommandAttribute>().FirstOrDefault(); //CommandAttribute and inherited. Similar speed. Don't need because factory action receives MemberInfo an can get other attributes from it.
+					if (ca != null) list.Add((mi, ca));
 				}
 
 				var au = new List<char>();
 
-				foreach (var (mi, a) in list.OrderBy(o => o.a.order_)) {
-					string name = a.name ?? mi.Name;
-					var c = new Command(name, mi);
+				foreach (var (mi, ca) in list.OrderBy(o => o.a.order_)) {
+					string name = ca.name ?? mi.Name;
+					var c = new Command(name, mi, ca);
 					_d.Add(name, c);
 
-					if (a.separator && !a.hide) parentMenu.Items.Add(new Separator());
+					if (ca.separator && !ca.hide) parentMenu.Items.Add(new Separator());
 
-					string text = a.text, dots = null; //menu item text, possibly with _ for Alt-underline
+					ca.target ??= inheritTarget;
+
+					string text = ca.text, dots = null; //menu item text, possibly with _ for Alt-underline
 					if (text == "...") { dots = text; text = null; }
 					if (text != null) {
 						c.ButtonText = AStringUtil.RemoveUnderlineChar(text, '_');
 					} else {
 						text = mi.Name.Replace('_', ' ') + dots;
 						c.ButtonText = text;
-						char u = a.underlined;
+						char u = ca.underlined;
 						if (u != default) {
 							int i = text.IndexOf(u);
 							if (i >= 0) text = text.Insert(i, "_"); else AOutput.Write($"Alt-underline character '{u}' not found in \"{text}\"");
 						}
 					}
-					c.ButtonTooltip = a.tooltip;
+					c.ButtonTooltip = ca.tooltip;
 
 					FactoryParams f = null;
-					string keys = null;
 					if (_itemFactory != null) {
-						f = new FactoryParams(c, mi) { text = text, image = a.image, keys = a.keys, param = a.param };
+						f = new FactoryParams(c, mi) { text = text, image = ca.image, param = ca.param };
 						_itemFactory(f);
 						if (c.MenuItem == null) c.SetMenuItem_(f.text, f.image); //did not call SetMenuItem
-						if (f.keys != null && c.MenuItem.InputGestureText.NE()) keys = f.keys;
 					} else {
-						if (c.MenuItem == null) c.SetMenuItem_(text, a.image);
-						keys = a.keys;
+						if (c.MenuItem == null) c.SetMenuItem_(text, ca.image);
 					}
-					if (keys != null && _keysTarget != null) c.SetKeys(keys, _keysTarget);
-					if (!a.keysText.NE()) c.MenuItem.InputGestureText = a.keysText;
+					if (!ca.keysText.NE()) c.MenuItem.InputGestureText = ca.keysText;
 					if (_autoUnderline && c.MenuItem.Header is string s && _FindUnderlined(s, out char uc)) au.Add(char.ToLower(uc));
-					if (a.checkable) c.MenuItem.IsCheckable = true;
+					if (ca.checkable) c.MenuItem.IsCheckable = true;
 
-					if (!a.hide) parentMenu.Items.Add(c.MenuItem);
-					if (mi is TypeInfo ti) _Menu(ti, c.MenuItem);
+					if (!ca.hide) parentMenu.Items.Add(c.MenuItem);
+					if (mi is TypeInfo ti) _Menu(ti, c.MenuItem, ca.target);
 				}
 
 				if (_autoUnderline) {
@@ -200,18 +195,59 @@ namespace Au.Controls
 		public bool TryFind(string command, out Command c) => _d.TryGetValue(command, out c);
 
 		/// <summary>
+		/// Adds to <i>target</i>'s <b>InputBindings</b> all keys etc where <b>CommandAttribute.target</b> == <i>name</i>.
+		/// </summary>
+		/// <param name="target"></param>
+		/// <param name="name"></param>
+		public void BindKeysTarget(UIElement target, string name) {
+			//AOutput.Write($"---- {name} = {target}");
+			foreach (var c in _d.Values) {
+				var ca = c.Attribute;
+				var keys = ca.keys;
+				if (keys != null && ca.target == name) {
+					//AOutput.Write(c, keys);
+					int i = keys.IndexOf(", ");
+					if (i < 0) _Add(keys); else foreach (var v in keys.Split(", ")) _Add(v);
+					void _Add(string s) {
+						if (!AKeys.More.ParseHotkeyString(s, out var mod, out var key, out var mouse)) {
+							AWarning.Write("Invalid key or mouse shortcut: " + s);
+							return;
+						}
+						if (key != default) target.InputBindings.Add(new KeyBinding(c, key, mod));
+						else if (target is System.Windows.Interop.HwndHost) AWarning.Write(s + ": mouse shortcuts don't work with HwndHost controls");
+						else target.InputBindings.Add(new MouseBinding(c, new MouseGesture(mouse, mod)));
+
+						//FUTURE: support mouse shortcuts in HwndHost
+						//if (target is System.Windows.Interop.HwndHost hh) {
+						//	hh.MessageHook += _Hh_MessageHook;
+						//	//or use native mouse hook
+						//} else {
+						//	target.InputBindings.Add(new MouseBinding(this, new MouseGesture(mouse, mod)));
+						//}
+					}
+					var mi = c.MenuItem;
+					var s = mi.InputGestureText;
+					if (s.NE()) s = keys; else s = s + ", " + keys;
+					mi.InputGestureText = s;
+				}
+			}
+		}
+
+		/// <summary>
 		/// Contains a method delegate and a menu item that executes it. Implements <see cref="ICommand"/> and can have one or more attached buttons etc and key/mouse shortcuts that execute it. All can be disabled/enabled with single function call.
 		/// Also used for submenu-items (created from nested types); it allows for example to enable/disable all descendants with single function call.
 		/// </summary>
 		public class Command : ICommand
 		{
 			readonly Delegate _del; //null if submenu
+			readonly CommandAttribute _ca;
 			MenuItem _mi;
 			bool _enabled;
 
-			internal Command(string name, MemberInfo mi) {
+			internal Command(string name, MemberInfo mi, CommandAttribute ca) {
 				_enabled = true;
 				Name = name;
+				_ca = ca;
 				if (mi is MethodInfo k) _del = k.CreateDelegate(k.GetParameters().Length == 0 ? typeof(Action) : typeof(Action<object>));
 			}
 
@@ -238,6 +274,8 @@ namespace Au.Controls
 
 			///
 			public override string ToString() => Name;
+
+			public CommandAttribute Attribute => _ca;
 
 			/// <summary>
 			/// Button text or tooltip. Same as menu item text but without _ for Alt-underline.
@@ -353,8 +391,11 @@ namespace Au.Controls
 				bool checkable = from.IsCheckable;
 				to.IsCheckable = checkable;
 				if (checkable) {
-					from.Checked += (_, _) => to.IsChecked = true;
-					from.Unchecked += (_, _) => to.IsChecked = false;
+					if (from.IsChecked) to.IsChecked = true;
+					RoutedEventHandler eh1, eh2;
+					from.Checked += eh1 = (_, _) => to.IsChecked = true;
+					from.Unchecked += eh2 = (_, _) => to.IsChecked = false;
+					to.Unloaded += (_, _) => { from.Checked -= eh1; from.Unchecked -= eh2; }; //to avoid memory leak when temp context menu closed
 					to.Checked += (_, _) => from.IsChecked = true;
 					to.Unchecked += (_, _) => from.IsChecked = false;
 				}
@@ -451,41 +492,6 @@ namespace Au.Controls
 				set { if (value != _Mi.IsChecked) _mi.IsChecked = value; }
 			}
 
-			/// <summary>
-			/// Sets keyboard or/and mouse shortcut.
-			/// </summary>
-			/// <param name="keys">
-			/// One or more keyboard or/and mouse shortcuts separated by ", ". Examples: <c>"Ctrl+K"</c>, <c>"F4, D-click"</c>. See <see cref="AKeys.More.ParseHotkeyString"/>.
-			/// If null, removes shortcuts for this command.
-			/// </param>
-			/// <param name="target">Window or an element in it where the shortcut will work.</param>
-			/// <param name="addMouseBinding">Add mouse shortcut to input bindings. If false (default), only displays in menu item.</param>
-			/// <exception cref="InvalidOperationException">This is a submenu. Or called from factory action before <see cref="FactoryParams.SetMenuItem"/>.</exception>
-			/// <exception cref="ArgumentException">Invalid key or mouse shortcut.</exception>
-			/// <exception cref="NotSupportedException">Not supported key and modifier combination, for example a letter without modifiers.</exception>
-			/// <remarks>
-			/// Adds to <see cref="UIElement.InputBindings"/> of <i>target</i>. Also sets <see cref="MenuItem.InputGestureText"/> = <i>keys</i>.
-			/// If <i>keys</i> invalid, calls <see cref="AWarning.Write"/>.
-			/// </remarks>
-			public void SetKeys(string keys, UIElement target, bool addMouseBinding = false) {
-				if (target == null) throw new ArgumentNullException();
-				if (IsSubmenu) throw new InvalidOperationException("Submenu");
-				_ = _Mi;
-				if (keys == null) {
-					foreach (var v in target.InputBindings.Cast<InputBinding>().Where(o => o.Command == this).ToArray()) target.InputBindings.Remove(v);
-				} else {
-					if (!_mi.InputGestureText.NE()) SetKeys(null, target);
-					int i = keys.IndexOf(", ");
-					if (i < 0) _Add(keys); else foreach (var v in keys.Split(", ")) _Add(v);
-					void _Add(string s) {
-						if (!AKeys.More.ParseHotkeyString(s, out var mod, out var key, out var mouse)) throw new ArgumentException("Invalid key or mouse shortcut: " + s);
-						if (key != default) target.InputBindings.Add(new KeyBinding(this, key, mod));
-						else if (addMouseBinding) target.InputBindings.Add(new MouseBinding(this, new MouseGesture(mouse, mod)));
-					}
-				}
-				_mi.InputGestureText = keys;
-			}
-
 			#region ICommand
 
 			bool ICommand.CanExecute(object parameter) => _enabled;
@@ -511,7 +517,7 @@ namespace Au.Controls
 			//	}
 			//}
 
-			internal void Customize_(XElement x, ToolBar toolbar, UIElement keysTarget, _CustomizeContext context) {
+			internal void Customize_(XElement x, ToolBar toolbar, _CustomizeContext context) {
 				context.command = this;
 
 				OverflowMode hide = default;
@@ -524,7 +530,7 @@ namespace Au.Controls
 					try {
 						switch (an) {
 						case "keys":
-							if (keysTarget != null) SetKeys(av, keysTarget);
+							_ca.keys = av;
 							break;
 						case "color":
 							_mi.Foreground = new SolidColorBrush((Color)ColorConverter.ConvertFromString(av));
@@ -622,7 +628,7 @@ namespace Au.Controls
 					}
 					foreach (var v in xtb.Elements()) {
 						var name = v.Name.LocalName;
-						if (_d.TryGetValue(name, out var c)) c.Customize_(v, tb, _keysTarget, context);
+						if (_d.TryGetValue(name, out var c)) c.Customize_(v, tb, context);
 						else AOutput.Write($"{xmlFile}: unknown command '{name}'. Commands: {string.Join(", ", _d.Keys)}.");
 					}
 				}
@@ -703,9 +709,6 @@ namespace Au.Controls
 			/// <summary><see cref="CommandAttribute.image"/>. In/out parameter.</summary>
 			public string image;
 
-			/// <summary><see cref="CommandAttribute.keys"/>. In/out parameter.</summary>
-			public string keys;
-
 			/// <summary><see cref="CommandAttribute.param"/>. In/out parameter. This class does not use it.</summary>
 			public object param;
 
@@ -757,10 +760,16 @@ namespace Au.Controls
 		public bool checkable;
 
 		/// <summary>
-		/// Hotkey etc. See <see cref="AuMenuCommands.Command.SetKeys"/>.
-		/// To make it work, either specify <i>keysTarget</i> or let your factory function call <see cref="AuMenuCommands.Command.SetKeys"/> and pass this string.
+		/// Default hotkey etc. See <see cref="AuMenuCommands.BindKeysTarget"/>.
 		/// </summary>
 		public string keys;
+
+		/// <summary>
+		/// Element where the hotkey etc (default or customized) will work. See <see cref="AuMenuCommands.BindKeysTarget"/>.
+		/// If this property applied to a class (submenu), all descendant commands without this property inherit it from the ancestor class.
+		/// If "" or not set, will work in entire main window.
+		/// </summary>
+		public string target;
 
 		/// <summary>
 		/// Text for <see cref="MenuItem.InputGestureText"/>. If not set, will use <b>keys</b>.

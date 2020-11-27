@@ -37,7 +37,7 @@ partial class FProperties : DialogForm, IMessageFilter
 
 		this.Text = _f.Name + " Properties";
 
-		var owner = App.Wnd;
+		var owner = App.Wmain;
 		//TODO
 		//var p = owner.PointToScreen(owner.ClientRectangle.Location);
 		//this.Location = new Point(p.X + 100, p.Y + 100); //note: this.StartPosition = FormStartPosition.CenterParent; does not work with Form.Show.

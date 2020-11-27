@@ -107,6 +107,12 @@ namespace Au.Util
 		public static int Scale(int i, DpiOf dpiOf) => AMath.MulDiv(i, dpiOf, 96);
 
 		/// <summary>
+		/// Unscales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// </summary>
+		public static double Unscale(int i, DpiOf dpiOf) => i * (96d / dpiOf);
+		//Unscaling sometimes useful with WPF. Unscale to double, not int, else result often incorrect.
+
+		/// <summary>
 		/// If DPI <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
 		/// </summary>
 		public static int Scale(int i) => AMath.MulDiv(i, OfThisProcess, 96);//TODO: remove
@@ -114,30 +120,39 @@ namespace Au.Util
 		/// <summary>
 		/// Scales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
 		/// </summary>
-		public static SIZE ScaleSize(SIZE z, DpiOf dpiOf) {
+		public static SIZE Scale(SIZE z, DpiOf dpiOf) {
 			int dpi = dpiOf;
 			z.width = AMath.MulDiv(z.width, dpi, 96);
 			z.height = AMath.MulDiv(z.height, dpi, 96);
 			return z;
 		}
-		//rejected. Unscaling may be used with WPF, but then resut is often incorrect, instead must unscale to double, not to int.
-		//public static SIZE ScaleSize(SIZE z, DpiOf dpiOf, bool unscale = false) {
-		//	int i = dpiOf, j = 96; if (unscale) { j = i; i = 96; }
-		//	z.width = AMath.MulDiv(z.width, i, j);
-		//	z.height = AMath.MulDiv(z.height, i, j);
-		//	return z;
-		//}
+
+		/// <summary>
+		/// Unscales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// </summary>
+		public static System.Windows.Size Unscale(SIZE z, DpiOf dpiOf) {
+			double f = 96d / dpiOf;
+			return new System.Windows.Size(z.width * f, z.height * f);
+		}
 
 		/// <summary>
 		/// Scales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
 		/// </summary>
-		public static RECT ScaleRect(RECT r, DpiOf dpiOf) {
+		public static RECT Scale(RECT r, DpiOf dpiOf) {
 			int dpi = dpiOf;
 			r.left = AMath.MulDiv(r.left, dpi, 96);
 			r.top = AMath.MulDiv(r.top, dpi, 96);
 			r.right = AMath.MulDiv(r.right, dpi, 96);
 			r.bottom = AMath.MulDiv(r.bottom, dpi, 96);
 			return r;
+		}
+
+		/// <summary>
+		/// Unscales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// </summary>
+		public static System.Windows.Rect Unscale(RECT r, DpiOf dpiOf) {
+			double f = 96d / dpiOf;
+			return new System.Windows.Rect(r.left * f, r.top * f, r.Width * f, r.Height * f);
 		}
 
 		/// <summary>

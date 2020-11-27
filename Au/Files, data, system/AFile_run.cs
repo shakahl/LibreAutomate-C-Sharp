@@ -96,7 +96,7 @@ namespace Au
 				x.lpVerb = more.Verb;
 				var cd = more.CurrentDirectory; if(cd != null) { if(cd.Length == 0) curDirFromFile = true; else cd = APath.ExpandEnvVar(cd); }
 				x.lpDirectory = cd;
-				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Wnd.Window;
+				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Hwnd.Window;
 				switch(more.WindowState) {
 				case ProcessWindowStyle.Hidden: x.nShow = Api.SW_HIDE; break;
 				case ProcessWindowStyle.Minimized: x.nShow = Api.SW_SHOWMINIMIZED; break;

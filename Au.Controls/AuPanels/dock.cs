@@ -42,7 +42,7 @@ namespace Au.Controls
 				var m = new AWpfMenu();
 
 				bool canClose = _leaf?.canClose ?? false;
-				if (canClose) m.Add("Close", click: o => _UserClosing()).InputGestureText = "M-click";
+				if (canClose) m.Add("Close", o => _UserClosing()).InputGestureText = "M-click";
 				_DockStateItem(_DockState.Hide, "Hide", canClose ? null : "M-click");
 
 				if (_state.Has(_DockState.Float)) _DockStateItem(0, "Dock", "D-click");
@@ -177,6 +177,7 @@ namespace Au.Controls
 			void _Unhide() => _SetDockState(_state & ~_DockState.Hide);
 
 			void _SetDockState(_DockState state, bool onDrag = false) {
+				_savedDockState = 0;
 				if (state == _DockState.Hide) state |= _state & _DockState.Float;
 				if (state == _state) {
 					if (state == 0 && Parent._state.Has(_DockState.Hide)) Parent._Unhide(); //in hidden tab
@@ -213,6 +214,7 @@ namespace Au.Controls
 				}
 
 				if ((state ^ oldState).Has(_DockState.Hide)) VisibleChanged?.Invoke(this, oldState.Has(_DockState.Hide));
+				if ((state ^ oldState).Has(_DockState.Float)) FloatingChanged?.Invoke(this, state.Has(_DockState.Float));
 			}
 
 			void _ContextMenu_Move(AWpfMenu m) {

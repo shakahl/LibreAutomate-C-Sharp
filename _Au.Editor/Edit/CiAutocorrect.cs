@@ -395,7 +395,7 @@ class CiAutocorrect
 					block = k;
 					canExitBlock = block != null;
 					break;
-				case EnumMemberDeclarationSyntax _:
+				case EnumMemberDeclarationSyntax:
 					canCorrect = false;
 					break;
 				case BaseMethodDeclarationSyntax k: //method, operator, constructor, destructor
@@ -454,7 +454,7 @@ class CiAutocorrect
 					}
 					canCorrect2 = true;
 					break;
-				case SwitchSectionSyntax _:
+				case SwitchSectionSyntax:
 					canCorrect = false;
 					if(!onSemicolon) canAutoindent = true;
 					break;
@@ -465,8 +465,8 @@ class CiAutocorrect
 					if(k.ExpressionBody != null) needSemicolon = true;
 					else block = k.Body;
 					break;
-				case UsingDirectiveSyntax _:
-				case ExternAliasDirectiveSyntax _:
+				case UsingDirectiveSyntax:
+				case ExternAliasDirectiveSyntax:
 					needSemicolon = true;
 					break;
 				default: continue;
@@ -504,9 +504,9 @@ class CiAutocorrect
 		if(node == null) {
 #if DEBUG
 			switch(nodeFromPos) {
-			case CompilationUnitSyntax _:
-			case UsingDirectiveSyntax _:
-			case ExternAliasDirectiveSyntax _:
+			case CompilationUnitSyntax:
+			case UsingDirectiveSyntax:
+			case ExternAliasDirectiveSyntax:
 				break;
 			default:
 				ADebug.Print($"{nodeFromPos.Kind()}, '{nodeFromPos}'");
@@ -631,26 +631,26 @@ class CiAutocorrect
 						indent--;
 					}
 					switch(v) {
-					case SwitchStatementSyntax _: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
-					case AccessorListSyntax _:
-					case ElseClauseSyntax _:
-					case CatchClauseSyntax _:
-					case FinallyClauseSyntax _:
-					case LabeledStatementSyntax _:
-					case AttributeListSyntax _:
-					case NamespaceDeclarationSyntax _: //don't indent namespaces
+					case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
+					case AccessorListSyntax:
+					case ElseClauseSyntax:
+					case CatchClauseSyntax:
+					case FinallyClauseSyntax:
+					case LabeledStatementSyntax:
+					case AttributeListSyntax:
+					case NamespaceDeclarationSyntax: //don't indent namespaces
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
 						//AOutput.Write("-" + v.GetType().Name, v.Span, pos);
 						continue;
-					case ExpressionSyntax _:
-					case BaseArgumentListSyntax _:
-					case ArgumentSyntax _:
-					case EqualsValueClauseSyntax _:
-					case VariableDeclaratorSyntax _:
-					case VariableDeclarationSyntax _:
+					case ExpressionSyntax:
+					case BaseArgumentListSyntax:
+					case ArgumentSyntax:
+					case EqualsValueClauseSyntax:
+					case VariableDeclaratorSyntax:
+					case VariableDeclarationSyntax:
 						//AOutput.Write("--" + v.GetType().Name, v.Span, pos);
 						continue; //these can be if we are in a lambda block. And maybe more, nevermind.
-					case CompilationUnitSyntax _:
+					case CompilationUnitSyntax:
 					case ClassDeclarationSyntax k1 when k1.Identifier.Text == "Script": //don't indent script class content
 					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text == "Script": //don't indent script constructor content
 						goto endLoop1;

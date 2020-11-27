@@ -11,8 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
+using System.Windows;
+using System.Windows.Controls;
 //using System.Linq;
 
 using Au;
@@ -20,35 +20,30 @@ using Au.Types;
 using Au.Util;
 using Au.Controls;
 using static Au.Controls.Sci;
+using System.Windows.Input;
 
-class PanelEdit : UserControl
+class PanelEdit : DockPanel
 {
 	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
 	SciCode _activeDoc;
+
+	public PanelEdit()
+	{
+		this.Background = SystemColors.AppWorkspaceBrush;
+	}
+
+	//protected override void OnHandleCreated(EventArgs e)
+	//{
+	//	base.OnHandleCreated(e);
+	//	_UpdateUI_IsOpen();
+	//	_UpdateUI_EditView();
+	//}
 
 	public SciCode ZActiveDoc => _activeDoc;
 
 	public event Action ZActiveDocChanged;
 
 	public bool ZIsOpen => _activeDoc != null;
-
-	public PanelEdit()
-	{
-		this.AccessibleName = this.Name = "Code";
-		this.TabStop = false;
-		this.BackColor = SystemColors.AppWorkspace;
-	}
-
-	protected override void OnHandleCreated(EventArgs e)
-	{
-		base.OnHandleCreated(e);
-		_UpdateUI_IsOpen();
-		_UpdateUI_EditView();
-	}
-
-	//protected override void OnGotFocus(EventArgs e) { _activeDoc?.Focus(); }
-
-	//public SciControl SC => _activeDoc;
 
 	public IReadOnlyList<SciCode> ZOpenDocs => _docs;
 
@@ -71,13 +66,13 @@ class PanelEdit : UserControl
 		Debug.Assert(!App.Model.IsAlien(f));
 
 		if(f == _activeDoc?.ZFile) return true;
-		bool wasFocused = _activeDoc?.Focused ?? false;
+		bool wasFocused = _activeDoc?.IsFocused ?? false;
 
 		var doc = ZGetOpenDocOf(f);
 		if(doc != null) {
-			if(_activeDoc != null) _activeDoc.Visible = false;
+			if(_activeDoc != null) _activeDoc.Visibility = Visibility.Hidden; //TODO
 			_activeDoc = doc;
-			_activeDoc.Visible = true;
+			_activeDoc.Visibility = Visibility.Visible; //TODO
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
 		} else {
@@ -88,13 +83,13 @@ class PanelEdit : UserControl
 			catch(Exception ex) { AOutput.Write("Failed to open file. " + ex.Message); }
 			if(text == null) return false;
 
-			if(_activeDoc != null) _activeDoc.Visible = false;
+			if(_activeDoc != null) _activeDoc.Visibility = Visibility.Hidden; //TODO
 			doc = new SciCode(f, fls);
-			doc.AccessibleName = f.Name;
-			doc.AccessibleDescription = path;
+			//doc.AccessibleName = f.Name; //TODO
+			//doc.AccessibleDescription = path;
 			_docs.Add(doc);
 			_activeDoc = doc;
-			this.Controls.Add(doc);
+			this.Children.Add(doc);
 			doc._Init(text, newFile);
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
@@ -196,7 +191,7 @@ class PanelEdit : UserControl
 		if(enable != _uiDisabled_IsOpen) return;
 
 		if(asynchronously) {
-			BeginInvoke(new Action(() => _UpdateUI_IsOpen(false)));
+			Dispatcher.InvokeAsync(() => _UpdateUI_IsOpen(false));
 			return;
 		}
 		_uiDisabled_IsOpen = !enable;

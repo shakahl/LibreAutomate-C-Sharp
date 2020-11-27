@@ -23,7 +23,7 @@ public class FormWinapi : DialogForm
 	{
 		var f = new FormWinapi();
 		f._eName.Text = name ?? Panels.Editor.ZActiveDoc.Z.SelectedText();
-		//f.Show(App.Wnd); //TODO
+		//f.Show(App.Wmain); //TODO
 		f.Show();
 	}
 	ASqlite _db;

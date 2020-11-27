@@ -57,8 +57,8 @@ namespace Au
 		/// Label. See <see cref="HeaderedItemsControl.Header"/>.
 		/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
 		/// </param>
-		/// <param name="icon">See <see cref="this[string, object, string, int]"/>.</param>
 		/// <param name="click">Action called on click.</param>
+		/// <param name="icon">See <see cref="this[string, bool, object, string, int]"/>.</param>
 		/// <param name="f">[CallerFilePath]</param>
 		/// <param name="l">[CallerLineNumber]</param>
 		/// <remarks>
@@ -70,7 +70,7 @@ namespace Au
 		/// m.Last.IsChecked=true;
 		/// ]]></code>
 		/// </example>
-		public MenuItem Add(object text, object icon = null, Action<CMActionArgs> click = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+		public MenuItem Add(object text, Action<CMActionArgs> click = null, object icon = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
 			string gest = null;
 			if (text is string s && s.Contains('\0')) {
 				int j = s.IndexOf('\0');
@@ -99,6 +99,7 @@ namespace Au
 		/// Label. See <see cref="HeaderedItemsControl.Header"/>.
 		/// If contains '\0' character, uses text before it for label and text after it for <see cref="MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
 		/// </param>
+		/// <param name="enabled">Disabled if false. Default true.</param>
 		/// <param name="icon">
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
@@ -116,7 +117,7 @@ namespace Au
 		/// <param name="l">[CallerLineNumber]</param>
 		/// <value>Action called on click.</value>
 		/// <remarks>
-		/// Calls <see cref="Add(object, object, Action{CMActionArgs}, string, int)"/>.
+		/// Calls <see cref="Add(object, Action{CMActionArgs}, object, string, int)"/>.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -124,7 +125,12 @@ namespace Au
 		/// m.Last.IsChecked=true;
 		/// ]]></code>
 		/// </example>
-		public Action<CMActionArgs> this[string text, object icon = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0] { set => Add(text, icon, value, f, l); }
+		public Action<CMActionArgs> this[string text, bool enabled = true, object icon = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0] {
+			set {
+				var v = Add(text, value, icon, f, l);
+				if (!enabled) v.IsEnabled = false;
+			}
+		}
 
 		/// <summary>
 		/// Adds separator.
@@ -144,7 +150,7 @@ namespace Au
 		/// </remarks>
 		/// <example><see cref="AWpfMenu"/></example>
 		public UsingEndAction Submenu(object text, object icon = null, Action<CMActionArgs> click = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
-			var mi = Add(text, icon, click, f, l);
+			var mi = Add(text, click, icon, f, l);
 			_submenuStack.Push(mi);
 			return new UsingEndAction(() => _submenuStack.Pop());
 			//CONSIDER: copy some properties of current menu. Or maybe WPF copies automatically, need to test.
@@ -423,8 +429,8 @@ namespace Au
 					} else {
 						id = ++autoId;
 					}
-					m.Add(s, null, o => result = (int)o.Item.Tag).Tag = id;
-					//			m.Add(s, null, o => {
+					m.Add(s, o => result = (int)o.Item.Tag).Tag = id;
+					//			m.Add(s, o => {
 					//				result = (int)o.Item.Tag;
 					//				dispFrame.Continue=false;
 					//			}).Tag = id;

@@ -2033,14 +2033,14 @@
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.Int32)">
             <summary>
-            Sets Message = "Failed. " + ALastError.MessageFor(winApiErrorCode).
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code.
+            Sets Message = "Failed. " + ALastError.MessageFor(errorCode).
+            Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
             </summary>
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String)">
             <summary>
-            Sets Message = message + " " + ALastError.MessageFor(winApiErrorCode).
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code.
+            Sets Message = message + " " + ALastError.MessageFor(errorCode).
+            Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
             </summary>
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.String,System.Exception)">
@@ -2051,8 +2051,8 @@
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String,System.Exception)">
             <summary>
-            Sets Message = message + " " + ALastError.MessageFor(winApiErrorCode) + "\r\n\t" + innerException.Message.
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code.
+            Sets Message = message + " " + ALastError.MessageFor(errorCode) + "\r\n\t" + innerException.Message.
+            Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
             </summary>
         </member>
         <member name="P:Au.Types.AuException.NativeErrorCode">
@@ -2105,7 +2105,7 @@
             <remarks>
             Some constructors support Windows API error code. Then Message also will contain its error description.
             If error code ERROR_INVALID_WINDOW_HANDLE, Message also depends on whether the window handle is 0.
-            If parameter <i>winApiErrorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
+            If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
             If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
             </remarks>
         </member>
@@ -2122,13 +2122,13 @@
         </member>
         <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.Int32)">
             <summary>
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
             Sets Message = "Failed.".
             </summary>
         </member>
         <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.Int32,System.String)">
             <summary>
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
             </summary>
         </member>
         <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.String,System.Exception)">
@@ -2138,7 +2138,7 @@
         </member>
         <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.Int32,System.String,System.Exception)">
             <summary>
-            Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+            Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
             </summary>
         </member>
         <member name="P:Au.Types.AuWndException.Window">
@@ -2392,7 +2392,7 @@
         <member name="M:Au.Types.AnyWnd.op_Implicit(System.Windows.DependencyObject)~Au.Types.AnyWnd">
             <summary> Assignment of a value of type System.Windows.DependencyObject (WPF window or control). </summary>
         </member>
-        <member name="P:Au.Types.AnyWnd.Wnd">
+        <member name="P:Au.Types.AnyWnd.Hwnd">
             <summary>
             Gets the window or control handle as AWnd.
             Returns default(AWnd) if not assigned.
@@ -6833,19 +6833,19 @@
         <member name="M:Au.AExtensions.ToInt(System.Double)">
             <summary>
             Converts to int with rounding.
-            Calls <see cref="M:System.Convert.ToInt32(System.Boolean)"/>.
+            Calls <see cref="M:System.Convert.ToInt32(System.Double)"/>.
             </summary>
         </member>
         <member name="M:Au.AExtensions.ToInt(System.Single)">
             <summary>
             Converts to int with rounding.
-            Calls <see cref="M:System.Convert.ToInt32(System.Boolean)"/>.
+            Calls <see cref="M:System.Convert.ToInt32(System.Single)"/>.
             </summary>
         </member>
         <member name="M:Au.AExtensions.ToInt(System.Decimal)">
             <summary>
             Converts to int with rounding.
-            Calls <see cref="M:System.Convert.ToInt32(System.Boolean)"/>.
+            Calls <see cref="M:System.Convert.ToInt32(System.Decimal)"/>.
             </summary>
         </member>
         <member name="M:Au.AExtensions.ToStringInvariant(System.Double,System.String)">
@@ -12944,7 +12944,7 @@
             <param name="inScript">Sets <see cref="P:Au.AWpfMenu.CanEditScript"/> and <see cref="P:Au.AWpfMenu.ExtractIconPathFromCode"/>.</param>
             <param name="actionThread">Sets <see cref="P:Au.AWpfMenu.ActionThread"/>.</param>
         </member>
-        <member name="M:Au.AWpfMenu.Add(System.Object,System.Object,System.Action{Au.Types.CMActionArgs},System.String,System.Int32)">
+        <member name="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.CMActionArgs},System.Object,System.String,System.Int32)">
             <summary>
             Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu. Returns it.
             </summary>
@@ -12952,8 +12952,8 @@
             Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
             If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
             </param>
-            <param name="icon">See <see cref="P:Au.AWpfMenu.Item(System.String,System.Object,System.String,System.Int32)"/>.</param>
             <param name="click">Action called on click.</param>
+            <param name="icon">See <see cref="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object,System.String,System.Int32)"/>.</param>
             <param name="f">[CallerFilePath]</param>
             <param name="l">[CallerLineNumber]</param>
             <remarks>
@@ -12966,7 +12966,7 @@
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.AWpfMenu.Item(System.String,System.Object,System.String,System.Int32)">
+        <member name="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object,System.String,System.Int32)">
             <summary>
             Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu.
             </summary>
@@ -12974,6 +12974,7 @@
             Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
             If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
             </param>
+            <param name="enabled">Disabled if false. Default true.</param>
             <param name="icon">
             Can be:
             - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
@@ -12991,7 +12992,7 @@
             <param name="l">[CallerLineNumber]</param>
             <value>Action called on click.</value>
             <remarks>
-            Calls <see cref="M:Au.AWpfMenu.Add(System.Object,System.Object,System.Action{Au.Types.CMActionArgs},System.String,System.Int32)"/>.
+            Calls <see cref="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.CMActionArgs},System.Object,System.String,System.Int32)"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -19845,19 +19846,34 @@
             Scales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
             </summary>
         </member>
+        <member name="M:Au.Util.ADpi.Unscale(System.Int32,Au.Types.DpiOf)">
+            <summary>
+            Unscales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+            </summary>
+        </member>
         <member name="M:Au.Util.ADpi.Scale(System.Int32)">
             <summary>
             If DPI <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
             </summary>
         </member>
-        <member name="M:Au.Util.ADpi.ScaleSize(Au.Types.SIZE,Au.Types.DpiOf)">
+        <member name="M:Au.Util.ADpi.Scale(Au.Types.SIZE,Au.Types.DpiOf)">
             <summary>
             Scales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
             </summary>
         </member>
-        <member name="M:Au.Util.ADpi.ScaleRect(Au.Types.RECT,Au.Types.DpiOf)">
+        <member name="M:Au.Util.ADpi.Unscale(Au.Types.SIZE,Au.Types.DpiOf)">
+            <summary>
+            Unscales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+            </summary>
+        </member>
+        <member name="M:Au.Util.ADpi.Scale(Au.Types.RECT,Au.Types.DpiOf)">
             <summary>
             Scales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+            </summary>
+        </member>
+        <member name="M:Au.Util.ADpi.Unscale(Au.Types.RECT,Au.Types.DpiOf)">
+            <summary>
+            Unscales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
             </summary>
         </member>
         <member name="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)">

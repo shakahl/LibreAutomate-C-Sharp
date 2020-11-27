@@ -790,7 +790,7 @@ class CiCompletion
 							if (cd.code[i - 1] == ' ' && cd.GetDocument()) {
 								var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
 								//AOutput.Write(node.Kind(), i, node.Span, node);
-								if (node.SpanStart < i) switch (node) { case ExpressionSyntax _: case BaseArgumentListSyntax _: ch = '{'; break; } //expression
+								if (node.SpanStart < i) switch (node) { case ExpressionSyntax: case BaseArgumentListSyntax: ch = '{'; break; } //expression
 							}
 							if (ch == default) goto case "for";
 						}

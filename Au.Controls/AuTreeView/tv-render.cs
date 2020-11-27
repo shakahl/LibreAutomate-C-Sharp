@@ -98,12 +98,12 @@ namespace Au.Controls
 		(int from, int to) _GetViewRange() => _GetViewRange(_height);
 
 		void _Invalidate(RECT* r = null) {
-			Api.InvalidateRect(_hh.Wnd, r, false);
+			Api.InvalidateRect(_hh.Hwnd, r, false);
 		}
 
 		void _Invalidate(int index) {
 			var r = GetRectPhysical(index, clampX: true);
-			if (r.bottom > 0 && r.top < _height) Api.InvalidateRect(_hh.Wnd, &r, false);
+			if (r.bottom > 0 && r.top < _height) Api.InvalidateRect(_hh.Hwnd, &r, false);
 		}
 
 		/// <summary>
@@ -185,7 +185,7 @@ namespace Au.Controls
 
 				var graphics = System.Drawing.Graphics.FromHdc(dc);
 				var tr = new GdiTextRenderer(dc, _dpi);
-				IntPtr checkTheme = HasCheckboxes ? api2.OpenThemeData(_hh.Wnd, "Button") : default;
+				IntPtr checkTheme = HasCheckboxes ? api2.OpenThemeData(_hh.Hwnd, "Button") : default;
 				try {
 					graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != api2.GetThemePartSize(checkTheme, dc, 3, 1, null, api2.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = ADpi.Scale(13, _dpi);

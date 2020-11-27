@@ -244,7 +244,7 @@ namespace Au
 			AWnd[] aw = null; AWnd wTool = default;
 			try {
 				if (!toolWindow.IsEmpty) {
-					wTool = toolWindow.Wnd;
+					wTool = toolWindow.Hwnd;
 					aw = wTool.Get.OwnersAndThis(true);
 					foreach (var w in aw) w.ShowLL(false);
 					using (new AInputBlocker(BIEvents.MouseClicks)) ATime.SleepDoEvents(300); //time for animations

@@ -19,7 +19,7 @@ static class App
 	public static string UserGuid;
 	internal static AOutputServer OutputServer;
 	public static AppSettings Settings;
-	public static MainWindow Wnd;
+	public static MainWindow Wmain;
 	public static AWnd Hwnd; //of Wnd
 	public static AuMenuCommands Commands;
 	public static FilesModel Model;
@@ -147,9 +147,9 @@ static class App
 		ImageCache = new AIconImageCache();
 		new MainWindow();
 		app.DispatcherUnhandledException += (_, e) => {
-			e.Handled = 1 == ADialog.ShowError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wnd, e.Exception.ToString());
+			e.Handled = 1 == ADialog.ShowError("Exception", e.Exception.ToStringWithoutStack(), "1 Continue|2 Exit", DFlags.Wider, Wmain, e.Exception.ToString());
 		};
-		app.Run(Wnd);
+		app.Run(Wmain);
 	}
 
 	/// <summary>
@@ -175,7 +175,7 @@ static class App
 
 	static void _TimerProc(ATimer t) {
 		Timer1sOr025s?.Invoke();
-		bool needFast = Wnd.IsVisible;
+		bool needFast = Wmain.IsVisible;
 		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
 		if (needFast) {
 			Timer025sWhenVisible?.Invoke();
@@ -343,7 +343,7 @@ static class App
 		}
 
 		static void _ShowWindow() {
-			var w = App.Wnd;
+			var w = App.Wmain;
 			if (w != null) {
 				w.Show();
 				w.Activate();
@@ -353,7 +353,7 @@ static class App
 		}
 
 		static void _Exit() {
-			if (App.Wnd != null) {
+			if (App.Wmain != null) {
 				Application.Current.Shutdown();
 			} else {
 				Api.PostMessage(default, c_msgBreakMessageLoop, 0, 0);

@@ -77,33 +77,36 @@ static class InsertCode
 	/// </summary>
 	/// <param name="c">If null, uses the focused control, else sets focus.</param>
 	/// <param name="s">If contains '%', removes it and moves caret there. Alternatively use '\b', then does not touch '%'.</param>
-	public static void TextSimplyInControl(System.Windows.Forms.Control c, string s) {
-		if (c == null) {
-			c = AWnd.ThisThread.FocusedWinformsControl;
-			if (c == null) return;
-		} else c.Focus();
-
-		int i = s.IndexOf('\b');
-		if (i < 0) i = s.IndexOf('%');
-		if (i >= 0) {
-			Debug.Assert(!s.Contains('\r'));
-			s = s.Remove(i, 1);
-			i = s.Length - i;
-		}
-
-		if (c is AuScintilla sci) {
-			if (sci.Z.IsReadonly) return;
-			sci.Z.ReplaceSel(s);
-			while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
-		} else {
-			Task.Run(() => {
-				var k = new AKeys(null);
-				k.AddText(s);
-				if (i > 0) k.AddKey(KKey.Left).AddRepeat(i);
-				k.Send();
-			});
-		}
+	public static void TextSimplyInControl(object c, string s) {
 	}
+	//TODO
+	//public static void TextSimplyInControl(System.Windows.Forms.Control c, string s) {
+	//	if (c == null) {
+	//		c = AWnd.ThisThread.FocusedWinformsControl;
+	//		if (c == null) return;
+	//	} else c.Focus();
+
+	//	int i = s.IndexOf('\b');
+	//	if (i < 0) i = s.IndexOf('%');
+	//	if (i >= 0) {
+	//		Debug.Assert(!s.Contains('\r'));
+	//		s = s.Remove(i, 1);
+	//		i = s.Length - i;
+	//	}
+
+	//	if (c is AuScintilla sci) {
+	//		if (sci.Z.IsReadonly) return;
+	//		sci.Z.ReplaceSel(s);
+	//		while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
+	//	} else {
+	//		Task.Run(() => {
+	//			var k = new AKeys(null);
+	//			k.AddText(s);
+	//			if (i > 0) k.AddKey(KKey.Left).AddRepeat(i);
+	//			k.Send();
+	//		});
+	//	}
+	//}
 
 	/// <summary>
 	/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.
@@ -150,7 +153,7 @@ static class InsertCode
 				if (start < 0) start = v.SpanStart;
 				end = v.FullSpan.End;
 				break;
-			case ExternAliasDirectiveSyntax _:
+			case ExternAliasDirectiveSyntax:
 				end2 = v.FullSpan.End;
 				break;
 			default: goto gr;
@@ -244,7 +247,7 @@ static class InsertCode
 						if (ips.SetMethod != null && ips.SetMethod.DeclaredAccessibility != acc.Public) expl = true;
 					}
 					break;
-				case IEventSymbol _:
+				case IEventSymbol:
 					append = !expl ? ";" : @" {
 	add {  }
 	remove {  }

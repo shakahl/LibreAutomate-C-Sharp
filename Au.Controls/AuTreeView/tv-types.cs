@@ -188,13 +188,13 @@ namespace Au.Controls
 	public interface ITVCustomDraw
 	{
 		void Begin(TVDrawInfo cd, GdiTextRenderer tr);
-		bool DrawBackground();
-		bool DrawCheckbox();
-		bool DrawImage(System.Drawing.Bitmap image);
-		bool DrawText();
-		void DrawMarginLeft();
-		void DrawMarginRight();
-		void End();
+		bool DrawBackground() => false;
+		bool DrawCheckbox() => false;
+		bool DrawImage(System.Drawing.Bitmap image) => false;
+		bool DrawText() => false;
+		void DrawMarginLeft() { }
+		void DrawMarginRight() { }
+		void End() { }
 	}
 
 	/// <summary>

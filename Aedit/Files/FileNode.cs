@@ -454,7 +454,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		if (this == Root) TreeControl.Select(.., false);
 		else if (!IsAlien) {
 			TreeControl.EnsureVisible(this);
-			TreeControl.Select(this, unselectOther: true, focus: true);
+			TreeControl.SelectSingle(this, andFocus: true);
 		}
 	}
 

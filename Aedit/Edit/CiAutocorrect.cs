@@ -9,9 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-//using System.Drawing;
 using System.Linq;
+using System.Windows.Input;
 
 using Au;
 using Au.Types;
@@ -65,24 +64,24 @@ class CiAutocorrect
 	/// Backspace: If inside an empty temp range, selects the '()' etc to erase and returns false.
 	/// Delete, Backspace: If after deleting newline would be tabs after caret, deletes newline with tabs and returns true.
 	/// </summary>
-	public bool SciBeforeKey(SciCode doc, Keys keyData)
+	public bool SciBeforeKey(SciCode doc, KKey key, ModifierKeys mod)
 	{
-		switch(keyData) {
-		case Keys.Enter:
+		switch((key, mod)) {
+		case (KKey.Enter,0):
 			return _OnEnterOrSemicolon(anywhere: false, onSemicolon: false, out _);
-		case Keys.Enter | Keys.Shift:
-		case Keys.Enter | Keys.Control:
+		case (KKey.Enter, ModifierKeys.Shift):
+		case (KKey.Enter, ModifierKeys.Control):
 			_OnEnterOrSemicolon(anywhere: true, onSemicolon: false, out _);
 			return true;
-		case Keys.OemSemicolon | Keys.Control:
+		case (KKey.OemSemicolon, ModifierKeys.Control):
 			_OnEnterOrSemicolon(anywhere: true, onSemicolon: true, out _);
 			return true;
-		case Keys.Back:
-			return _OnBackspaceOrDelete(doc, true) || SciBeforeCharAdded(doc, (char)keyData, out _);
-		case Keys.Delete:
+		case (KKey.Back,0):
+			return _OnBackspaceOrDelete(doc, true) || SciBeforeCharAdded(doc, (char)key, out _);
+		case (KKey.Delete,0):
 			return _OnBackspaceOrDelete(doc, false);
-		case Keys.Tab:
-			return SciBeforeCharAdded(doc, (char)keyData, out _);
+		case (KKey.Tab,0):
+			return SciBeforeCharAdded(doc, (char)key, out _);
 		default:
 			Debug.Assert(false);
 			return false;
@@ -102,8 +101,8 @@ class CiAutocorrect
 
 		switch(ch) {
 		case ';': return _OnEnterOrSemicolon(anywhere: false, onSemicolon: true, out c);
-		case '\"': case '\'': case ')': case ']': case '}': case '>': case (char)Keys.Tab: break; //skip auto-added char
-		case (char)Keys.Back: isBackspace = true; break; //delete auto-added char too
+		case '\"': case '\'': case ')': case ']': case '}': case '>': case (char)KKey.Tab: break; //skip auto-added char
+		case (char)KKey.Back: isBackspace = true; break; //delete auto-added char too
 		case '[': case '{': case '(': case '<': isOpenBrac = true; break; //replace auto-added '()' when completing 'new Type' with '[]' or '{}'. Also ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion.
 		default: return false;
 		}
@@ -117,8 +116,8 @@ class CiAutocorrect
 		if(isBackspace || isOpenBrac) {
 			if(pos != from) return false;
 		} else {
-			if(ch != (char)Keys.Tab && ch != (char)doc.Call(Sci.SCI_GETCHARAT, to)) return false; //info: '\0' if posUtf8 invalid
-			if(ch == (char)Keys.Tab && doc.Call(Sci.SCI_GETCHARAT, pos - 1) < 32) return false; //don't exit temp range if pos is after tab or newline
+			if(ch != (char)KKey.Tab && ch != (char)doc.Call(Sci.SCI_GETCHARAT, to)) return false; //info: '\0' if posUtf8 invalid
+			if(ch == (char)KKey.Tab && doc.Call(Sci.SCI_GETCHARAT, pos - 1) < 32) return false; //don't exit temp range if pos is after tab or newline
 		}
 		for(int i = pos; i < to; i++) switch((char)doc.Call(Sci.SCI_GETCHARAT, i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
 
@@ -137,7 +136,7 @@ class CiAutocorrect
 		}
 
 		to++;
-		if(ch == (char)Keys.Tab) doc.Z.CurrentPos8 = to;
+		if(ch == (char)KKey.Tab) doc.Z.CurrentPos8 = to;
 		else c = new BeforeCharContext { oldPosUtf8 = pos, newPosUtf8 = to };
 		return true;
 	}
@@ -395,7 +394,7 @@ class CiAutocorrect
 					block = k;
 					canExitBlock = block != null;
 					break;
-				case EnumMemberDeclarationSyntax _:
+				case EnumMemberDeclarationSyntax:
 					canCorrect = false;
 					break;
 				case BaseMethodDeclarationSyntax k: //method, operator, constructor, destructor
@@ -454,7 +453,7 @@ class CiAutocorrect
 					}
 					canCorrect2 = true;
 					break;
-				case SwitchSectionSyntax _:
+				case SwitchSectionSyntax:
 					canCorrect = false;
 					if(!onSemicolon) canAutoindent = true;
 					break;
@@ -465,8 +464,8 @@ class CiAutocorrect
 					if(k.ExpressionBody != null) needSemicolon = true;
 					else block = k.Body;
 					break;
-				case UsingDirectiveSyntax _:
-				case ExternAliasDirectiveSyntax _:
+				case UsingDirectiveSyntax:
+				case ExternAliasDirectiveSyntax:
 					needSemicolon = true;
 					break;
 				default: continue;
@@ -504,9 +503,9 @@ class CiAutocorrect
 		if(node == null) {
 #if DEBUG
 			switch(nodeFromPos) {
-			case CompilationUnitSyntax _:
-			case UsingDirectiveSyntax _:
-			case ExternAliasDirectiveSyntax _:
+			case CompilationUnitSyntax:
+			case UsingDirectiveSyntax:
+			case ExternAliasDirectiveSyntax:
 				break;
 			default:
 				ADebug.Print($"{nodeFromPos.Kind()}, '{nodeFromPos}'");
@@ -631,26 +630,26 @@ class CiAutocorrect
 						indent--;
 					}
 					switch(v) {
-					case SwitchStatementSyntax _: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
-					case AccessorListSyntax _:
-					case ElseClauseSyntax _:
-					case CatchClauseSyntax _:
-					case FinallyClauseSyntax _:
-					case LabeledStatementSyntax _:
-					case AttributeListSyntax _:
-					case NamespaceDeclarationSyntax _: //don't indent namespaces
+					case SwitchStatementSyntax: //don't indent 'case' in 'switch'. If node is a switch section, it will indent its child statements and 'break.
+					case AccessorListSyntax:
+					case ElseClauseSyntax:
+					case CatchClauseSyntax:
+					case FinallyClauseSyntax:
+					case LabeledStatementSyntax:
+					case AttributeListSyntax:
+					case NamespaceDeclarationSyntax: //don't indent namespaces
 					case IfStatementSyntax k3 when k3.Parent is ElseClauseSyntax:
 						//AOutput.Write("-" + v.GetType().Name, v.Span, pos);
 						continue;
-					case ExpressionSyntax _:
-					case BaseArgumentListSyntax _:
-					case ArgumentSyntax _:
-					case EqualsValueClauseSyntax _:
-					case VariableDeclaratorSyntax _:
-					case VariableDeclarationSyntax _:
+					case ExpressionSyntax:
+					case BaseArgumentListSyntax:
+					case ArgumentSyntax:
+					case EqualsValueClauseSyntax:
+					case VariableDeclaratorSyntax:
+					case VariableDeclarationSyntax:
 						//AOutput.Write("--" + v.GetType().Name, v.Span, pos);
 						continue; //these can be if we are in a lambda block. And maybe more, nevermind.
-					case CompilationUnitSyntax _:
+					case CompilationUnitSyntax:
 					case ClassDeclarationSyntax k1 when k1.Identifier.Text == "Script": //don't indent script class content
 					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text == "Script": //don't indent script constructor content
 						goto endLoop1;

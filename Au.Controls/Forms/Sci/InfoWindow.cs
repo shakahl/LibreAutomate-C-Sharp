@@ -23,7 +23,7 @@ namespace Au.Controls
 	/// You can set text, resize and show/hide/dispose it many times.
 	/// User can middle-click to hide.
 	/// </summary>
-	public partial class InfoWindow /*: IMessageFilter*/
+	public class InfoWindow /*: IMessageFilter*/
 	{
 		_Window _w;
 		_Control _c, _c2;
@@ -83,7 +83,7 @@ namespace Au.Controls
 		/// If visible, does not ensure correct position. Usually it's better to hide, set size and show again.
 		/// </remarks>
 		public SIZE Size {
-			get => _size != default ? _size : ADpi.ScaleSize((300, 200), _w); //_TODO: possibly incorrect, currently not used
+			get => _size != default ? _size : ADpi.Scale((300, 200), _w); //_TODO: possibly incorrect, currently not used
 			set { _size = value; if(_w?.IsHandleCreated ?? false) _w.Size = _size; }
 		}
 		SIZE _size;

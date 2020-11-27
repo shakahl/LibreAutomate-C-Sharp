@@ -12,8 +12,6 @@ using System.Reflection;
 //using System.Linq;
 using System.Runtime.Serialization;
 
-using Au.Types;
-
 namespace Au.Types
 {
 	/// <summary>
@@ -33,6 +31,11 @@ namespace Au.Types
 		/// </summary>
 		public AuException() : base("Failed.") { }
 
+		//TODO: Now ctors are confusing (which sets last error?).
+		//	Maybe add inherited class AuExceptionLE that uses last error, and remove last error from AuException.
+		//	Or add non-optional parameter bool setLastError.
+		//	Or int? errorCode.
+
 		/// <summary>
 		/// Sets Message = message.
 		/// Sets NativeErrorCode = 0.
@@ -40,18 +43,18 @@ namespace Au.Types
 		public AuException(string message) : base(message ?? "Failed.") { }
 
 		/// <summary>
-		/// Sets Message = "Failed. " + ALastError.MessageFor(winApiErrorCode).
-		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code.
+		/// Sets Message = "Failed. " + ALastError.MessageFor(errorCode).
+		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
 		/// </summary>
-		public AuException(int winApiErrorCode) : this(winApiErrorCode, "Failed.") { }
+		public AuException(int errorCode) : this(errorCode, "Failed.") { }
 
 		/// <summary>
-		/// Sets Message = message + " " + ALastError.MessageFor(winApiErrorCode).
-		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code.
+		/// Sets Message = message + " " + ALastError.MessageFor(errorCode).
+		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
 		/// </summary>
-		public AuException(int winApiErrorCode, string message) : base(message ?? "Failed.")
+		public AuException(int errorCode, string message) : base(message ?? "Failed.")
 		{
-			NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code;
+			NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code;
 		}
 
 		/// <summary>
@@ -61,12 +64,12 @@ namespace Au.Types
 		public AuException(string message, Exception innerException) : base(message ?? "Failed.", innerException) { }
 
 		/// <summary>
-		/// Sets Message = message + " " + ALastError.MessageFor(winApiErrorCode) + "\r\n\t" + innerException.Message.
-		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code.
+		/// Sets Message = message + " " + ALastError.MessageFor(errorCode) + "\r\n\t" + innerException.Message.
+		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
 		/// </summary>
-		public AuException(int winApiErrorCode, string message, Exception innerException) : base(message ?? "Failed.", innerException)
+		public AuException(int errorCode, string message, Exception innerException) : base(message ?? "Failed.", innerException)
 		{
-			NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : ALastError.Code;
+			NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code;
 		}
 
 		/// <summary> Gets the Windows API error code. </summary>
@@ -156,7 +159,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Some constructors support Windows API error code. Then Message also will contain its error description.
 	/// If error code ERROR_INVALID_WINDOW_HANDLE, Message also depends on whether the window handle is 0.
-	/// If parameter <i>winApiErrorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
+	/// If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
 	/// </remarks>
 	[Serializable]
@@ -179,17 +182,17 @@ namespace Au.Types
 			: base(message) { Window = w; NativeErrorCode = _Code(0, w); }
 
 		/// <summary>
-		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
 		/// Sets Message = "Failed.".
 		/// </summary>
-		public AuWndException(AWnd w, int winApiErrorCode)
-			: base(_Code(winApiErrorCode, w)) { Window = w; }
+		public AuWndException(AWnd w, int errorCode)
+			: base(_Code(errorCode, w)) { Window = w; }
 
 		/// <summary>
-		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
 		/// </summary>
-		public AuWndException(AWnd w, int winApiErrorCode, string message)
-			: base(_Code(winApiErrorCode, w), message) { Window = w; }
+		public AuWndException(AWnd w, int errorCode, string message)
+			: base(_Code(errorCode, w), message) { Window = w; }
 
 		/// <summary>
 		/// Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
@@ -198,10 +201,10 @@ namespace Au.Types
 			: base(message, innerException) { Window = w; NativeErrorCode = _Code(0, w); }
 
 		/// <summary>
-		/// Sets NativeErrorCode = (winApiErrorCode != 0) ? winApiErrorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
 		/// </summary>
-		public AuWndException(AWnd w, int winApiErrorCode, string message, Exception innerException)
-			: base(_Code(winApiErrorCode, w), message, innerException) { Window = w; }
+		public AuWndException(AWnd w, int errorCode, string message, Exception innerException)
+			: base(_Code(errorCode, w), message, innerException) { Window = w; }
 
 		static int _Code(int code, AWnd w)
 		{

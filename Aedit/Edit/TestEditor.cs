@@ -130,7 +130,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 			if(AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
 			AOutput.Write("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
 			//ATimer.After(1, _ => new TestGC());
-			//var f = App.Wnd; if(!f.IsHandleCreated) return;
+			//var f = App.Wmain; if(!f.IsHandleCreated) return;
 			//f.BeginInvoke(new Action(() => new TestGC()));
 			new TestGC();
 		}
@@ -255,7 +255,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 		//	m["C"] = o => AOutput.Write(o);
 		//	m.Add(new ToolStripTextBox());
 		//}
-		//m.Show(App.Wnd);
+		//m.Show(App.Wmain);
 
 		//var task = "_Au.Editor";
 		//bool exists = WinTaskScheduler.TaskExists("Au", task);
@@ -332,7 +332,7 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 	{
 		_hook = AHookWin.ThreadCallWndProcRet(x => {
 			if(x.msg->message == Api.WM_CREATE) {
-				if(App.Wnd.IsVisible) return;
+				if(App.Wmain.IsVisible) return;
 				var w = x.msg->hwnd;
 				var p = w.Get.DirectParent; if(p.Is0) p = w.OwnerWindow;
 				var c = Control.FromHandle(w.Handle); //always null in CBT hook proc

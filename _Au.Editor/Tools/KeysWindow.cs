@@ -12,7 +12,7 @@ namespace Au.Tools
 	{
 		public KeysWindow(Control ownerForDpi)
 		{
-			this.Size = ADpi.ScaleSize((500, 300), ownerForDpi);
+			this.Size = ADpi.Scale((500, 300), ownerForDpi);
 			this.Caption = "Keys";
 		}
 
@@ -22,7 +22,7 @@ namespace Au.Tools
 			//c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
 			//c.ZTags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
 			c.ZTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
-			c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
+			c.ZTags.SetLinkStyle(new SciTagsF.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
 			var s = AResources.GetString("tools/keys.txt").RegexReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
 			var z = this.Window.ClientSize; z.Height = c.Z.LineHeight() * s.LineCount() + 6; this.Window.ClientSize = z;

@@ -951,7 +951,7 @@ namespace Au.Types
 				tid = (int)i;
 				break;
 			case AnyWnd aw:
-				var w = aw.Wnd;
+				var w = aw.Hwnd;
 				if(w.Is0) throw new ArgumentException("0 window handle");
 				owner = w;
 				break;

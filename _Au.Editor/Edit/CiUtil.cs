@@ -107,7 +107,7 @@ static class CiUtil
 		foreach (var v in si.GetSymbols(includeType: true)) {
 			bool gen = false;
 			switch (v) {
-				case IErrorTypeSymbol _: continue;
+				case IErrorTypeSymbol: continue;
 				case INamedTypeSymbol ints when ints.IsGenericType:
 				case IMethodSymbol ims when ims.IsGenericMethod:
 					gen = true;

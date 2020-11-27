@@ -37,30 +37,14 @@ static class Panels
 	//public static ToolBar[] Toolbars;
 	public static ToolBar TFile, TEdit, TRun, TTools, THelp, TCustom1, TCustom2;
 
-	public static void Init() {
-		var pm = new AuPanels();
-		PanelManager = pm;
+	public static void LoadAndCreateToolbars() {
+		var pm = PanelManager = new AuPanels();
 
 		pm.BorderBrush = SystemColors.ActiveBorderBrush;
 		//pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", null);
 		pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");
 
-		pm["Files"].Content = Files = new PanelFiles();
-		pm["Running"].Content = Running = new PanelRunning();
-
-		pm["Output"].Content = new WindowsFormsHost { Child = Output = new PanelOutput() };
-		pm["Info"].Content = new WindowsFormsHost { Child = Info = new PanelInfo() };
-		pm["Found"].Content = new WindowsFormsHost { Child = Found = new PanelFound() };
-		pm["Find"].Content = new WindowsFormsHost { Child = Find = new PanelFind() };
-
-		pm["Open"].Content = new WindowsFormsHost { Child = Open = new PanelOpen() };
-		Open = new PanelOpen();
-
-		pm["documents"].Content = new WindowsFormsHost { Child = Editor = new PanelEdit() };
-		DocPlaceholder_ = pm["documents"];
-
 		pm["Menu"].Content = Menu = new Menu();
-
 		TFile = _TB("File");
 		TEdit = _TB("Edit");
 		TRun = _TB("Run");
@@ -69,7 +53,7 @@ static class Panels
 		TCustom1 = _TB("Custom1");
 		TCustom2 = _TB("Custom2");
 
-		ToolBar _TB(string name, bool isHelp=false) {
+		ToolBar _TB(string name, bool isHelp = false) {
 			var c = new ToolBar { Name = name };
 			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
 			tt.ToolBars.Add(c);
@@ -91,74 +75,22 @@ static class Panels
 			return c;
 		}
 	}
+
+	public static void CreatePanels() {
+		var pm = PanelManager;
+
+		pm["Files"].Content = Files = new PanelFiles();
+		pm["Running"].Content = Running = new PanelRunning();
+
+		pm["Output"].Content = Output = new PanelOutput();
+		pm["Info"].Content = new WindowsFormsHost { Child = Info = new PanelInfo() };
+		pm["Found"].Content = Found = new PanelFound();
+		pm["Find"].Content = Find = new PanelFind();
+
+		pm["Open"].Content = new WindowsFormsHost { Child = Open = new PanelOpen() };
+		Open = new PanelOpen();
+
+		pm["documents"].Content = Editor = new PanelEdit();
+		DocPlaceholder_ = pm["documents"];
+	}
 }
-
-//static class Panels
-//{
-//	public static AuPanels PanelManager;
-//	internal static AuPanels.ILeaf DocPlaceholder_;
-//	//panels
-//	public static SciHost Editor;
-//	public static AuTreeView Files;
-//	//public static PanelOpen Open;
-//	public static ListBox Running;
-//	public static SciHost Output;
-//	public static PanelFind Find;
-//	public static SciHost Found;
-//	public static TextBlock Info;
-//	//menu and toolbars
-//	public static Menu Menu;
-//	//public static ToolBar[] Toolbars;
-//	public static ToolBar TFile, TEdit, TRun, TTools, THelp, TCustom1, TCustom2;
-
-//	public static void Init() {
-//		var pm = new AuPanels();
-//		PanelManager = pm;
-
-//		pm.BorderBrush = SystemColors.ActiveBorderBrush;
-//		//pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", null);
-//		pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");
-
-//		pm["Files"].Content = Files = new Script().Create();
-//		pm["Running"].Content = Running = new ListBox();
-
-//		pm["Output"].Content = Output = new SciHost() { Focusable = false };
-//		pm["Info"].Content = Info = new TextBlock();
-//		pm["Found"].Content = Found = new SciHost() { Focusable = false };
-//		pm["Find"].Content = Find = new PanelFind();
-
-//		DocPlaceholder_ = pm["documents"];
-
-//		pm["Menu"].Content = Menu = new Menu();
-
-//		TFile = _TB("File");
-//		TEdit = _TB("Edit");
-//		TRun = _TB("Run");
-//		TTools = _TB("Tools");
-//		THelp = _TB("Help", true);
-//		TCustom1 = _TB("Custom1");
-//		TCustom2 = _TB("Custom2");
-
-//		ToolBar _TB(string name, bool isHelp=false) {
-//			var c = new ToolBar { Name = name };
-//			var tt = new ToolBarTray { IsLocked = true }; //because ToolBar looks bad if parent is not ToolBarTray
-//			tt.ToolBars.Add(c);
-//#if true
-//			if (isHelp) {
-//				var p = new DockPanel { Background = tt.Background };
-//				DockPanel.SetDock(tt, Dock.Right);
-//				p.Children.Add(tt);
-//				var box = new TextBox { Height = 20, Margin = new Thickness(3, 1, 3, 2), Padding = new Thickness(1, 1, 1, 0) };
-//				p.Children.Add(box);
-//				pm[name].Content = p;
-//			} else {
-//				pm[name].Content = tt;
-//			}
-//#else
-//			if (name == "Help") c.Items.Add(new TextBox { Width = 150, Padding = new Thickness(1, 0, 1, 0) });
-//			pm[name].Content = tt;
-//#endif
-//			return c;
-//		}
-//	}
-//}

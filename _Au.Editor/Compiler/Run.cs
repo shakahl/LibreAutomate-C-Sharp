@@ -79,7 +79,7 @@ static class CompileRun
 	}
 
 	static void _OnRunClassFile(FileNode f, FileNode projFolder) {
-		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTags.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
+		if (!s_isRegisteredLinkRCF) { s_isRegisteredLinkRCF = true; SciTagsF.AddCommonLinkTag("+runClass", _SciLink_RunClassFile); }
 		var ids = f.IdStringWithWorkspace;
 		var s2 = projFolder != null ? "" : $", project (<+runClass \"2|{ids}\">create<>) or role exeProgram (<+runClass \"1|{ids}\">add<>)";
 		AOutput.Write($"<>Cannot run '{f.Name}'. It is a class file without a test script (<+runClass \"3|{ids}\">create<>){s2}.");

@@ -103,11 +103,11 @@ class CiPopupHtml
 			if(_usedBy == UsedBy.Info) {
 
 			} else {
-				var owner = App.Wnd;
+				var owner = App.Wmain;
 				int dpi = ADpi.OfWindow(owner);
-				_w.MinimumSize = ADpi.ScaleSize((150, 150), dpi);
+				_w.MinimumSize = ADpi.Scale((150, 150), dpi);
 				_w.Size = new Size(
-					AScreen.Of(App.Wnd).WorkArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
+					AScreen.Of(App.Wmain).WorkArea.Width / (_usedBy == UsedBy.PopupList ? 3 : 2),
 					ADpi.Scale(_usedBy switch { UsedBy.PopupList => 360, UsedBy.Signature => 300, _ => 100 }, dpi)
 					);
 			}
@@ -150,7 +150,7 @@ class CiPopupHtml
 		using var g = _c.CreateGraphics();
 		var zf = HtmlRender.Measure(g, html, 0, _c.BaseCssData, imageLoad: OnLoadImage);
 		int wid = (int)zf.Width;
-		int waWid = AScreen.Of(App.Wnd).WorkArea.Width * 2 / 3 - sbWid;
+		int waWid = AScreen.Of(App.Wmain).WorkArea.Width * 2 / 3 - sbWid;
 		if(wid > waWid) { //remeasure, because HtmlRender.Measure returns maxWidth parameter if it is > text width
 			zf = HtmlRender.Measure(g, html, waWid, _c.BaseCssData, imageLoad: OnLoadImage);
 			wid = (int)zf.Width;
@@ -167,29 +167,30 @@ class CiPopupHtml
 	/// <param name="hideIfOutside">Hide when mouse moved outside anchorRect unless is in the popup window.</param>
 	public void Show(SciCode ownerControl, Rectangle anchorRect, PopupAlignment align = 0, bool hideIfOutside = false)
 	{
-		_CreateOrGet();
-		_w.ZCalculateAndSetPosition(anchorRect, align, _usedBy == UsedBy.Info ? _MeasureHtml(_html) : default(Size?));
-		_c.Text = _html;
-		_w.ZShow(ownerControl);
+		//TODO
+		//_CreateOrGet();
+		//_w.ZCalculateAndSetPosition(anchorRect, align, _usedBy == UsedBy.Info ? _MeasureHtml(_html) : default(Size?));
+		//_c.Text = _html;
+		//_w.ZShow(ownerControl);
 
-		if(hideIfOutside) {
-			ATimer.Every(100, t => {
-				if(IsVisible) {
-					Point p = AMouse.XY;
-					if(anchorRect.Contains(p) || _w.Bounds.Contains(p) || _w.Capture || _c.Capture) return;
-					Hide();
-				}
-				t.Stop();
-			});
-		}
+		//if(hideIfOutside) {
+		//	ATimer.Every(100, t => {
+		//		if(IsVisible) {
+		//			Point p = AMouse.XY;
+		//			if(anchorRect.Contains(p) || _w.Bounds.Contains(p) || _w.Capture || _c.Capture) return;
+		//			Hide();
+		//		}
+		//		t.Stop();
+		//	});
+		//}
 	}
 
 	public void Show(SciCode ownerControl, int pos16, bool hideIfOutside = false, bool above = false)
 	{
-		var r = CiUtil.GetCaretRectFromPos(ownerControl, pos16);
-		r.X -= 50; r.Width += 100;
+		var r = CiUtil.GetCaretRectFromPos(ownerControl, pos16, inScreen: true);
+		r.Inflate(50, 0);
 		PopupAlignment pa = PopupAlignment.TPM_VERTICAL; if(above) pa |= PopupAlignment.TPM_BOTTOMALIGN;
-		Show(ownerControl, ownerControl.RectangleToScreen(r), pa, hideIfOutside);
+		Show(ownerControl, r, pa, hideIfOutside);
 	}
 
 	public void Hide()

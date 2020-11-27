@@ -55,9 +55,9 @@ partial class CiStyling
 		doc.ZFoldScriptHeader(setCaret: newFile);
 
 		if(CodeInfo.IsReadyForStyling) {
-			doc.BeginInvoke(new Action(() => _DocChanged(doc, true)));
+			doc.Dispatcher.InvokeAsync(() => _DocChanged(doc, true));
 		} else { //at program startup
-			CodeInfo.ReadyForStyling += () => { if(doc.IsHandleCreated) _DocChanged(doc, true); };
+			CodeInfo.ReadyForStyling += () => { if(!doc.Hwnd.Is0) _DocChanged(doc, true); };
 		}
 	}
 

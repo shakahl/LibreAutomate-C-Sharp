@@ -31,7 +31,7 @@ partial class FOptions : DialogForm
 	{
 		if(s_form == null) {
 			s_form = new FOptions();
-			//s_form.Show(App.Wnd);//TODO
+			//s_form.Show(App.Wmain);//TODO
 			s_form.Show();
 		} else {
 			s_form.Activate();
@@ -266,7 +266,7 @@ partial class FOptions : DialogForm
 		//styles
 
 		_sciStyles.Z.MarginWidth(1, 0);
-		styles.ToScintilla(_sciStyles);
+		//styles.ToScintilla(_sciStyles);//TODO
 		bool ignoreColorEvents = false;
 		int backColor = styles.BackgroundColor;
 		PopupList listColors = null;
@@ -489,19 +489,19 @@ To apply changes after deleting etc, restart this application.
 	[DllImport("shlwapi.dll")]
 	internal static extern int ColorHLSToRGB(ushort wHue, ushort wLuminance, ushort wSaturation);
 
-	void _ApplyFont()
+	void _ApplyFont()//TODO
 	{
-		var styles = new CiStyling.TStyles(_sciStyles); //gets colors and bold
-		var fname = _comboFont.Text; if(fname == "" || fname.Starts("[ ")) fname = "Consolas";
-		styles.FontName = fname;
-		int fsize = _UpDownValue(_nFontSize);
-		styles.FontSize = fsize;
+		//var styles = new CiStyling.TStyles(_sciStyles); //gets colors and bold
+		//var fname = _comboFont.Text; if(fname == "" || fname.Starts("[ ")) fname = "Consolas";
+		//styles.FontName = fname;
+		//int fsize = _UpDownValue(_nFontSize);
+		//styles.FontSize = fsize;
 
-		if(!styles.Equals(CiStyling.TStyles.Settings)) {
-			CiStyling.TStyles.Settings = styles;
-			App.Settings.SaveLater();
-			foreach(var v in Panels.Editor.ZOpenDocs) styles.ToScintilla(v);
-		}
+		//if(!styles.Equals(CiStyling.TStyles.Settings)) {
+		//	CiStyling.TStyles.Settings = styles;
+		//	App.Settings.SaveLater();
+		//	foreach(var v in Panels.Editor.ZOpenDocs) styles.ToScintilla(v);
+		//}
 
 	}
 

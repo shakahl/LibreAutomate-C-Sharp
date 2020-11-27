@@ -21,9 +21,9 @@ namespace Au.Controls
 	//Why don't use ScintillaNET:
 	// 1. Delays to update for the newest Scintilla version.
 	// 2. Possibly will be abandoned some day.
-	// 3. Adds yet another layer of bugs, and I found some.
+	// 3. Adds yet another layer of bugs.
 	// 4. I don't like some things how it is implemented. Eg aggressively uses "clamping", creates much garbage, eg new Line object for each line-related Scintilla message call.
-	// 5. For me it does not make much easier because I used Scintilla in QM2 (C++) and am familiar with its API (which is well documented). When using ScintillaNET, I often search its source code just to find which function calls the API I need. Now I can simply convert much of QM2 code to C#.
+	// 5. For me it does not make easier because I used Scintilla in QM2 (C++) and am familiar with its API (which is well documented). When using ScintillaNET, I often search its source code just to find which function calls the API I need. Now I can simply convert much of QM2 code to C#.
 	// 6. I use modified Scintilla. Would need to synchronize some modifications with ScintillaNET. For example I use a callback function instead of WM_NOTIFY/WM_REFLECT.
 
 	/// <summary>
@@ -40,23 +40,24 @@ namespace Au.Controls
 		public LPARAM SciPtr => _sciPtr;
 
 		[Browsable(false)]
-		public SciImages ZImages { get; private set; }
+		public SciImagesF ZImages { get; private set; }
 
 		[Browsable(false)]
-		public SciTags ZTags { get; private set; }
+		public SciTagsF ZTags { get; private set; }
 
 		/// <summary>
 		/// Gets the SciText object that contains most Scintilla-related functions.
 		/// </summary>
-		public readonly SciText Z;
+		public readonly SciTextF Z;
 
 		static AuScintilla() {
-			AFile.More.LoadDll64or32Bit("SciLexer.dll");
+			if (default == Api.GetModuleHandle("SciLexer.dll"))
+				AFile.More.LoadDll64or32Bit("SciLexer.dll");
 		}
 
 		///
 		public AuScintilla() {
-			Z = new SciText(this);
+			Z = new SciTextF(this);
 
 			base.SetStyle(ControlStyles.CacheText, true);
 
@@ -79,8 +80,8 @@ namespace Au.Controls
 				cp.ExStyle &= ~(int)WS2.CLIENTEDGE;
 				cp.Style &= ~(int)WS.BORDER;
 				switch (ZInitBorderStyle) {
-					case BorderStyle.Fixed3D: cp.ExStyle |= (int)WS2.CLIENTEDGE; break;
-					case BorderStyle.FixedSingle: cp.Style |= (int)WS.BORDER; break;
+				case BorderStyle.Fixed3D: cp.ExStyle |= (int)WS2.CLIENTEDGE; break;
+				case BorderStyle.FixedSingle: cp.Style |= (int)WS.BORDER; break;
 				}
 
 				return cp;
@@ -115,8 +116,8 @@ namespace Au.Controls
 
 			//note: cannot set styles here, because later inherited class will call StyleClearAll, which sets some special styles.
 
-			if (hasImages) ZImages = new SciImages(this, ZInitImagesStyle == ZImagesStyle.AnyString);
-			if (hasTags) ZTags = new SciTags(this);
+			if (hasImages) ZImages = new SciImagesF(this, ZInitImagesStyle == ZImagesStyle.AnyString);
+			if (hasTags) ZTags = new SciTagsF(this);
 
 			this.AccessibleRole = ZInitReadOnlyAlways ? AccessibleRole.StaticText : AccessibleRole.Text;
 
@@ -145,34 +146,34 @@ namespace Au.Controls
 			//LPARAM wParam = m.WParam, lParam = m.LParam;
 
 			switch (m.Msg) {
-				case Api.WM_SETCURSOR:
-				//case Api.WM_SETFOCUS: //no, it prevents changing default button etc. Don't remember why it was added here.
-				//case Api.WM_KILLFOCUS:
-				case Api.WM_LBUTTONUP:
-				case Api.WM_LBUTTONDBLCLK:
-					_DefWndProc(ref m);
-					return;
+			case Api.WM_SETCURSOR:
+			//case Api.WM_SETFOCUS: //no, it prevents changing default button etc. Don't remember why it was added here.
+			//case Api.WM_KILLFOCUS:
+			case Api.WM_LBUTTONUP:
+			case Api.WM_LBUTTONDBLCLK:
+				_DefWndProc(ref m);
+				return;
 
-				case Api.WM_LBUTTONDOWN:
-					if (Api.GetFocus() != hwnd) {
-						bool setFocus = true;
-						ZTags?.OnLButtonDownWhenNotFocused_(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
-						if (!setFocus || ZNoMouseLeftSetFocus) m.WParam = (IntPtr)((int)m.WParam | MK_SCI_NOFOCUS);
-					}
-					_DefWndProc(ref m);
-					return;
-				case Api.WM_RBUTTONDOWN:
-					if (ZNoMouseRightSetFocus) m.WParam = (IntPtr)((int)m.WParam | MK_SCI_NOFOCUS);
-					_DefWndProc(ref m);
-					return;
+			case Api.WM_LBUTTONDOWN:
+				if (Api.GetFocus() != hwnd) {
+					bool setFocus = true;
+					ZTags?.OnLButtonDownWhenNotFocused_(ref m, ref setFocus); //Tags may not want to set focus eg when a hotspot clicked
+					if (!setFocus || ZNoMouseLeftSetFocus) m.WParam = (IntPtr)((int)m.WParam | MK_SCI_NOFOCUS);
+				}
+				_DefWndProc(ref m);
+				return;
+			case Api.WM_RBUTTONDOWN:
+				if (ZNoMouseRightSetFocus) m.WParam = (IntPtr)((int)m.WParam | MK_SCI_NOFOCUS);
+				_DefWndProc(ref m);
+				return;
 			}
 
 			base.WndProc(ref m);
 
 			switch (m.Msg) {
-				case Api.WM_CREATE: //after inherited classes set styles etc
-					if (!_text.NE()) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
-					break;
+			case Api.WM_CREATE: //after inherited classes set styles etc
+				if (!_text.NE()) Z.SetText(_text, SciSetTextFlags.NoUndoNoNotify);
+				break;
 			}
 		}
 
@@ -186,14 +187,14 @@ namespace Au.Controls
 			var code = n.nmhdr.code;
 			//if(code != NOTIF.SCN_PAINTED) AOutput.QM2.Write(code.ToString());
 			switch (code) {
-				case NOTIF.SCN_MODIFIED:
-					if ((n.modificationType & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
-					_NotifyModified(n);
-					if (ZDisableModifiedNotifications) return;
-					break;
-				case NOTIF.SCN_HOTSPOTRELEASECLICK:
-					ZTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
-					break;
+			case NOTIF.SCN_MODIFIED:
+				if ((n.modificationType & (MOD.SC_MULTISTEPUNDOREDO | MOD.SC_LASTSTEPINUNDOREDO)) == MOD.SC_MULTISTEPUNDOREDO) return;
+				_NotifyModified(n);
+				if (ZDisableModifiedNotifications) return;
+				break;
+			case NOTIF.SCN_HOTSPOTRELEASECLICK:
+				ZTags?.OnLinkClick_(n.position, 0 != (n.modifiers & SCMOD_CTRL));
+				break;
 			}
 			ZOnSciNotify(ref n);
 		}
@@ -275,7 +276,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <remarks>
 		/// The 'get' function gets cached text if called not the first time after setting or modifying control text.
-		/// The 'set' function calls <see cref="SciText.SetText"/> when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
+		/// The 'set' function calls <see cref="SciTextF.SetText"/> when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
 		/// Unlike the above methods, this property can be used before creating handle.
 		/// </remarks>
 		public override string Text {
@@ -382,7 +383,7 @@ namespace Au.Controls
 			int gap = Sci_Range(_sciPtr, 0, -1, out var p, out var p2, &textLen);
 			int to8 = p2 == null ? textLen : gap;
 			int i8 = 0, i16 = 0;
-		g1:
+			g1:
 			int asciiStart8 = i8;
 			i8 = _SkipAscii(p, i8, to8);
 			i16 += i8 - asciiStart8;
@@ -415,7 +416,7 @@ namespace Au.Controls
 			_len8 = textLen;
 			_len16 = i16;
 			return;
-		ge:
+			ge:
 			_posState = _PosState.Error;
 			_aPos.Clear();
 			ADebug.Print("Invalid UTF-8 text");
@@ -567,8 +568,8 @@ namespace Au.Controls
 		//Enables tabstopping when ZInitReadOnlyAlways (scintilla would eat Tab). Implements AcceptsReturn.
 		protected override bool IsInputKey(Keys keyData) {
 			switch (keyData & Keys.KeyCode) {
-				case Keys.Left: case Keys.Right: case Keys.Up: case Keys.Down: return true;
-				case Keys.Enter when ZAcceptsReturn != null: return ZAcceptsReturn.GetValueOrDefault();
+			case Keys.Left: case Keys.Right: case Keys.Up: case Keys.Down: return true;
+			case Keys.Enter when ZAcceptsReturn != null: return ZAcceptsReturn.GetValueOrDefault();
 			}
 			return !ZInitReadOnlyAlways;
 			//don't call base. It sends WM_GETDLGCODE, and scintilla always returns DLGC_WANTALLKEYS.
@@ -578,14 +579,14 @@ namespace Au.Controls
 		void _DebugPrintMessage(int sciMessage) {
 			if (sciMessage < Sci.SCI_START) return;
 			switch (sciMessage) {
-				case SCI_COUNTCODEUNITS:
-				case SCI_POSITIONRELATIVECODEUNITS:
-				case SCI_CANUNDO:
-				case SCI_CANREDO:
-				case SCI_GETREADONLY:
-				case SCI_GETSELECTIONEMPTY:
-					//case SCI_GETTEXTLENGTH:
-					return;
+			case SCI_COUNTCODEUNITS:
+			case SCI_POSITIONRELATIVECODEUNITS:
+			case SCI_CANUNDO:
+			case SCI_CANREDO:
+			case SCI_GETREADONLY:
+			case SCI_GETSELECTIONEMPTY:
+				//case SCI_GETTEXTLENGTH:
+				return;
 			}
 			if (s_debugPM == null) {
 				s_debugPM = new Dictionary<int, string>();

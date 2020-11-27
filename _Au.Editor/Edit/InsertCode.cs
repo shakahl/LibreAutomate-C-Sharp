@@ -150,7 +150,7 @@ static class InsertCode
 				if (start < 0) start = v.SpanStart;
 				end = v.FullSpan.End;
 				break;
-			case ExternAliasDirectiveSyntax _:
+			case ExternAliasDirectiveSyntax:
 				end2 = v.FullSpan.End;
 				break;
 			default: goto gr;
@@ -244,7 +244,7 @@ static class InsertCode
 						if (ips.SetMethod != null && ips.SetMethod.DeclaredAccessibility != acc.Public) expl = true;
 					}
 					break;
-				case IEventSymbol _:
+				case IEventSymbol:
 					append = !expl ? ";" : @" {
 	add {  }
 	remove {  }

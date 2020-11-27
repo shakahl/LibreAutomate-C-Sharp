@@ -690,18 +690,18 @@ namespace Au
 					//rejected: modify padding etc through XAML. Not better than this.
 					//rejected: use _opt_modifyPadding only if font Segoe UI. Tested with several fonts.
 					switch (c) {
-					case Label _:
+					case Label:
 						if (_opt_modifyPadding) c.Padding = new Thickness(1, 2, 1, 1); //default 5
 						if (_opt_rightAlignLabels) c.HorizontalAlignment = HorizontalAlignment.Right;
 						break;
-					case TextBox _:
-					case PasswordBox _:
+					case TextBox:
+					case PasswordBox:
 						if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 1, 2); //default padding 0, height 18
 						break;
-					case Button _:
+					case Button:
 						if (_opt_modifyPadding) c.Padding = new Thickness(5, 1, 5, 2); //default 1
 						break;
-					case ToggleButton _:
+					case ToggleButton:
 						c.HorizontalAlignment = HorizontalAlignment.Left; //default stretch
 
 						//partial workaround for squint CheckBox/RadioButton when High DPI.

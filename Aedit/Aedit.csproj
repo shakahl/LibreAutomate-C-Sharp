@@ -30,6 +30,30 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Page Remove="Resources\ci\Class.xaml" />
+	  <Page Remove="Resources\ci\Constant.xaml" />
+	  <Page Remove="Resources\ci\Delegate.xaml" />
+	  <Page Remove="Resources\ci\Enum.xaml" />
+	  <Page Remove="Resources\ci\EnumMember.xaml" />
+	  <Page Remove="Resources\ci\Event.xaml" />
+	  <Page Remove="Resources\ci\ExtensionMethod.xaml" />
+	  <Page Remove="Resources\ci\Field.xaml" />
+	  <Page Remove="Resources\ci\GroupBy.xaml" />
+	  <Page Remove="Resources\ci\Interface.xaml" />
+	  <Page Remove="Resources\ci\Keyword.xaml" />
+	  <Page Remove="Resources\ci\Label.xaml" />
+	  <Page Remove="Resources\ci\LocalVariable.xaml" />
+	  <Page Remove="Resources\ci\Method.xaml" />
+	  <Page Remove="Resources\ci\Namespace.xaml" />
+	  <Page Remove="Resources\ci\OverlayAbstract.xaml" />
+	  <Page Remove="Resources\ci\OverlayInternal.xaml" />
+	  <Page Remove="Resources\ci\OverlayPrivate.xaml" />
+	  <Page Remove="Resources\ci\OverlayProtected.xaml" />
+	  <Page Remove="Resources\ci\OverlayStatic.xaml" />
+	  <Page Remove="Resources\ci\Property.xaml" />
+	  <Page Remove="Resources\ci\Snippet.xaml" />
+	  <Page Remove="Resources\ci\Structure.xaml" />
+	  <Page Remove="Resources\ci\TypeParameter.xaml" />
 	  <Page Remove="Resources\Images\BuildSelection_16x.xaml" />
 	  <Page Remove="Resources\Images\Copy_16x.xaml" />
 	  <Page Remove="Resources\Images\CSClassFile_16x.xaml" />
@@ -73,6 +97,30 @@
 	</ItemGroup>
 
 	<ItemGroup>
+	  <Resource Include="Resources\ci\Class.xaml" />
+	  <Resource Include="Resources\ci\Constant.xaml" />
+	  <Resource Include="Resources\ci\Delegate.xaml" />
+	  <Resource Include="Resources\ci\Enum.xaml" />
+	  <Resource Include="Resources\ci\EnumMember.xaml" />
+	  <Resource Include="Resources\ci\Event.xaml" />
+	  <Resource Include="Resources\ci\ExtensionMethod.xaml" />
+	  <Resource Include="Resources\ci\Field.xaml" />
+	  <Resource Include="Resources\ci\GroupBy.xaml" />
+	  <Resource Include="Resources\ci\Interface.xaml" />
+	  <Resource Include="Resources\ci\Keyword.xaml" />
+	  <Resource Include="Resources\ci\Label.xaml" />
+	  <Resource Include="Resources\ci\LocalVariable.xaml" />
+	  <Resource Include="Resources\ci\Method.xaml" />
+	  <Resource Include="Resources\ci\Namespace.xaml" />
+	  <Resource Include="Resources\ci\OverlayAbstract.xaml" />
+	  <Resource Include="Resources\ci\OverlayInternal.xaml" />
+	  <Resource Include="Resources\ci\OverlayPrivate.xaml" />
+	  <Resource Include="Resources\ci\OverlayProtected.xaml" />
+	  <Resource Include="Resources\ci\OverlayStatic.xaml" />
+	  <Resource Include="Resources\ci\Property.xaml" />
+	  <Resource Include="Resources\ci\Snippet.xaml" />
+	  <Resource Include="Resources\ci\Structure.xaml" />
+	  <Resource Include="Resources\ci\TypeParameter.xaml" />
 	  <Resource Include="Resources\Images\CSClassFile_16x.xaml">
 	    <Generator></Generator>
 	  </Resource>
@@ -150,15 +198,9 @@
 	  <Compile Update="Controls\ListControl.cs">
 	    <SubType>Component</SubType>
 	  </Compile>
-	  <Compile Update="Edit\ModifyCode.cs">
-	    <SubType>Component</SubType>
-	  </Compile>
-	  <Compile Update="Edit\PanelEdit.cs">
-	    <SubType>UserControl</SubType>
-	  </Compile>
-	  <Compile Update="Edit\SciCode.cs">
-	    <SubType>Component</SubType>
-	  </Compile>
+	  <Compile Update="Edit\ModifyCode.cs" />
+	  <Compile Update="Edit\PanelEdit.cs" />
+	  <Compile Update="Edit\SciCode.cs" />
 	  <Compile Update="Files\FProperties.cs">
 	    <SubType>Form</SubType>
 	  </Compile>
@@ -166,24 +208,14 @@
 	    <DependentUpon>FProperties.cs</DependentUpon>
 	  </Compile>
 	  <Compile Update="Files\PanelFiles.cs" />
-	  <Compile Update="Panels\etc\FFindOptions.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Panels\PanelFind.cs">
-	    <SubType>UserControl</SubType>
-	  </Compile>
-	  <Compile Update="Panels\PanelFound.cs">
-	    <SubType>UserControl</SubType>
-	  </Compile>
+	  <Compile Update="Panels\PanelFound.cs" />
 	  <Compile Update="Panels\PanelInfo.cs">
 	    <SubType>UserControl</SubType>
 	  </Compile>
 	  <Compile Update="Panels\PanelOpen.cs">
 	    <SubType>UserControl</SubType>
 	  </Compile>
-	  <Compile Update="Panels\PanelOutput.cs">
-	    <SubType>UserControl</SubType>
-	  </Compile>
+	  <Compile Update="Panels\PanelOutput.cs" />
 	  <Compile Update="Panels\PanelRunning.cs" />
 	  <Compile Update="Resources\Resources.Designer.cs">
 	    <DependentUpon>Resources.resx</DependentUpon>
@@ -219,12 +251,6 @@
 	<ItemGroup>
 	  <EmbeddedResource Update="App\FOptions.resx">
 	    <DependentUpon>FOptions.cs</DependentUpon>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Panels\etc\FFindOptions.resx">
-	    <DependentUpon>FFindOptions.cs</DependentUpon>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Panels\PanelFind.resx">
-	    <DependentUpon>PanelFind.cs</DependentUpon>
 	  </EmbeddedResource>
 	  <EmbeddedResource Update="Resources\Resources.resx">
 	    <SubType>Designer</SubType>

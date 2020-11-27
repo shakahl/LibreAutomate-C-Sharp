@@ -121,7 +121,7 @@ static class CommandLine
 		if(_importWorkspace != null || _importFiles != null) {
 			ATimer.After(10, _ => {
 				try {
-					App.Wnd.ZShowAndActivate();
+					App.Wmain.ZShowAndActivate();
 					if(_importWorkspace != null) App.Model.ImportWorkspace(_importWorkspace);
 					else App.Model.ImportFiles(_importFiles);
 				}

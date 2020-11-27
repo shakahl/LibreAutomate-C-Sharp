@@ -362,7 +362,7 @@ if (s == null) return;]]>
 			<list item="Simple">
 				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400)
 	.R.Add("Text", out TextBox text1).Focus()
-	.R.Add("Combo", out ComboBox combo1, true).Items("One|Two|Three")
+	.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three")
 	.R.Add(out CheckBox c1, "Check")
 	.R.AddOkCancel()
 	.End();

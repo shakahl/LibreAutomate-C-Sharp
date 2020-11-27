@@ -29,15 +29,12 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
-//Roslyn bug: no ResourceManager in completion list. In VS too. 
+//Roslyn bug: no ResourceManager in completion list. In VS too. Not tested with newest version.
+//TODO: now in 'new Class { here }' groups properties by namespace.
 
 class CiCompletion
 {
-#if WPF
-	CiPopupListWPF _popupList;
-#else
 	CiPopupList _popupList;
-#endif
 	_Data _data; //not null while the popup list window is visible
 	CancellationTokenSource _cancelTS;
 
@@ -72,7 +69,7 @@ class CiCompletion
 	}
 
 	void _CancelUI(bool popupListHidden = false, bool tempRangeRemoved = false) {
-		//AOutput.Write("_CancelList", _data != null);
+		//AOutput.Write("_CancelUI", _data != null);
 		if (_data == null) return;
 		if (!tempRangeRemoved) _data.tempRange.Remove();
 		_data = null;
@@ -266,7 +263,7 @@ class CiCompletion
 					var m = new AMenu { Modal = true };
 					m["Regex"] = o => stringFormat = PSFormat.ARegex;
 					m["Keys"] = o => stringFormat = PSFormat.AKeys;
-					m.Show(doc, byCaret: true);
+					//m.Show(doc, byCaret: true);//TODO
 				}
 				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringSpan);
 				return;
@@ -529,12 +526,8 @@ class CiCompletion
 
 			_data = d;
 			if (_popupList == null) {
-#if WPF
-				_popupList = new CiPopupListWPF(this);
-#else
 				_popupList = new CiPopupList(this, doc);
-				_popupList.PopupWindow.ZHiddenOrDestroyed += destroyed => _CancelUI(popupListHidden: true);
-#endif
+				//_popupList.PopupWindow.ZHiddenOrDestroyed += destroyed => _CancelUI(popupListHidden: true);//TODO
 			}
 			_popupList.Show(doc, span.Start, _data.items, groupsList); //and calls SelectBestMatch
 		}
@@ -685,9 +678,9 @@ class CiCompletion
 	/// ch == default if clicked or pressed Enter or Tab or a hotkey eg Ctrl+Enter.
 	/// key == default if clicked or typed a character (except Tab and Enter). Does not include hotkey modifiers.
 	/// </summary>
-	CiComplResult _Commit(SciCode doc, CiComplItem item, char ch, Keys key) {
+	CiComplResult _Commit(SciCode doc, CiComplItem item, char ch, KKey key) {
 		if (item.IsRegex) { //can complete only on click or Tab
-			if (ch != default || !(key == default || key == Keys.Tab)) return CiComplResult.None;
+			if (ch != default || !(key == default || key == KKey.Tab)) return CiComplResult.None;
 		}
 		bool isSpace; if (isSpace = ch == ' ') ch = default;
 		int codeLenDiff = doc.Len16 - _data.codeLength;
@@ -739,7 +732,7 @@ class CiCompletion
 		//if typed space after method or keyword 'if' etc, replace the space with '(' etc. Also add if pressed Tab or Enter.
 		CiAutocorrect.EBraces bracesOperation = default;
 		int positionBack = 0, bracesFrom = 0, bracesLen = 0;
-		bool isEnter = key == Keys.Enter;
+		bool isEnter = key == KKey.Enter;
 		//ci.DebugPrint();
 		if (s.FindAny("({[<") < 0) {
 			if (ch == default) { //completed with Enter, Tab, Space or click
@@ -790,7 +783,7 @@ class CiCompletion
 							if (cd.code[i - 1] == ' ' && cd.GetDocument()) {
 								var node = cd.document.GetSyntaxRootAsync().Result.FindToken(i - 1).Parent;
 								//AOutput.Write(node.Kind(), i, node.Span, node);
-								if (node.SpanStart < i) switch (node) { case ExpressionSyntax _: case BaseArgumentListSyntax _: ch = '{'; break; } //expression
+								if (node.SpanStart < i) switch (node) { case ExpressionSyntax: case BaseArgumentListSyntax: ch = '{'; break; } //expression
 							}
 							if (ch == default) goto case "for";
 						}
@@ -894,13 +887,13 @@ class CiCompletion
 	/// <summary>
 	/// Tab, Enter, Shift+Enter, Ctrl+Enter, Ctrl+;.
 	/// </summary>
-	public CiComplResult OnCmdKey_Commit(SciCode doc, Keys keyData) {
+	public CiComplResult OnCmdKey_Commit(SciCode doc, KKey key) {
 		var R = CiComplResult.None;
 		if (_data != null) {
 			var ci = _popupList.SelectedItem;
 			if (ci != null) {
-				R = _Commit(doc, ci, default, keyData & Keys.KeyCode);
-				if (R == CiComplResult.None && keyData == Keys.Tab) R = CiComplResult.Simple; //always suppress Tab
+				R = _Commit(doc, ci, default, key);
+				if (R == CiComplResult.None && key == KKey.Tab) R = CiComplResult.Simple; //always suppress Tab
 			}
 			_CancelUI();
 		}
@@ -910,11 +903,7 @@ class CiCompletion
 	/// <summary>
 	/// Esc, Arrow, Page.
 	/// </summary>
-#if WPF
-	public bool OnCmdKey_SelectOrHide(Keys keyData) => false;
-#else
-	public bool OnCmdKey_SelectOrHide(Keys keyData) => _data == null ? false : _popupList.OnCmdKey(keyData);
-#endif
+	public bool OnCmdKey_SelectOrHide(KKey key) => _data == null ? false : _popupList.OnCmdKey(key);
 }
 
 [Flags]
@@ -923,7 +912,7 @@ enum CiItemHiddenBy : byte { FilterText = 1, Kind = 2 }
 [Flags]
 enum CiItemMoveDownBy : sbyte { Name = 1, Obsolete = 2, FilterText = 4 }
 
-class CiComplItem
+class CiComplItem :ITreeViewItem
 {
 	public readonly CompletionItem ci;
 	public readonly CiItemKind kind;
@@ -935,6 +924,40 @@ class CiComplItem
 	string _text;
 
 	public string DisplayText => _text ??= ci.DisplayText + ci.DisplayTextSuffix;
+
+	string ITreeViewItem.ImageSource => ImageResource(kind);
+
+	public static string ImageResource(CiItemKind kind)	=> kind switch {
+		CiItemKind.Class => "resource:resources/ci/class.xaml",
+		CiItemKind.Constant => "resource:resources/ci/constant.xaml",
+		CiItemKind.Delegate => "resource:resources/ci/delegate.xaml",
+		CiItemKind.Enum => "resource:resources/ci/enum.xaml",
+		CiItemKind.EnumMember => "resource:resources/ci/enummember.xaml",
+		CiItemKind.Event => "resource:resources/ci/event.xaml",
+		CiItemKind.ExtensionMethod => "resource:resources/ci/extensionmethod.xaml",
+		CiItemKind.Field => "resource:resources/ci/field.xaml",
+		CiItemKind.Interface => "resource:resources/ci/interface.xaml",
+		CiItemKind.Keyword => "resource:resources/ci/keyword.xaml",
+		CiItemKind.Label => "resource:resources/ci/label.xaml",
+		CiItemKind.LocalVariable => "resource:resources/ci/localvariable.xaml",
+		CiItemKind.Method => "resource:resources/ci/method.xaml",
+		CiItemKind.Namespace => "resource:resources/ci/namespace.xaml",
+		CiItemKind.Property => "resource:resources/ci/property.xaml",
+		CiItemKind.Snippet => "resource:resources/ci/snippet.xaml",
+		CiItemKind.Structure => "resource:resources/ci/structure.xaml",
+		CiItemKind.TypeParameter => "resource:resources/ci/typeparameter.xaml",
+		_ => null
+	};
+
+	public string AccessImageSource => AccessImageResource(access);
+
+	public static string AccessImageResource(CiItemAccess access)	=> access switch {
+		CiItemAccess.Private => "resource:resources/ci/overlayprivate.xaml",
+		CiItemAccess.Protected => "resource:resources/ci/overlayprotected.xaml",
+		CiItemAccess.Internal => "resource:resources/ci/overlayinternal.xaml",
+		_ => null
+	};
+
 
 	//public Bitmap KindImage => CiUtil.GetKindImage(kind);
 
@@ -948,7 +971,7 @@ class CiComplItem
 		var s = ci.ProviderName;
 		int i = s.LastIndexOf('.') + 1;
 		Debug.Assert(i > 0);
-		s = s.Substring(i);
+		s = s[i..];
 		//AOutput.Write(s);
 		return s switch {
 			"SymbolCompletionProvider" => CiComplProvider.Symbol,

@@ -11,8 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 /*
@@ -48,10 +46,10 @@ DIFFERENT SYNTAX:
 	Link tag attribute parts now are separated with "|". In QM2 was " /".
 
 OTHER CHANGES:
-	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
+	Supports user-defined link tags. Need to provide delegates of functions that implement them. Use SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.
 	These link tags are not implemented by this class, but you can provide delegates of functions that implement them:
 		<open>, <script>.
-	<help> by default calls Au.Util.AHelp.AuHelp, which opens a topic in web browser. You can override it with SciTags.AddCommonLinkTag or SciTags.AddLinkTag.
+	<help> by default calls Au.Util.AHelp.AuHelp, which opens a topic in web browser. You can override it with SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.
 	<code> attributes are not used. Currently supports only C# code; for it uses the C++ lexer.
 
 CHANGES IN <image>:
@@ -66,7 +64,7 @@ namespace Au.Controls
 	using static Sci;
 
 	/// <summary>
-	/// Adds links and text formatting to an <see cref="AuScintilla"/> control.
+	/// Adds links and text formatting to an <see cref="SciHost"/> control.
 	/// </summary>
 	/// <remarks>
 	/// Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
@@ -78,7 +76,7 @@ namespace Au.Controls
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <see cref="AOutput.Write"/>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.ZInitTagsStyle"/> and optionally <see cref="AuScintilla.ZInitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="SciHost"/>. In the Au editor it is the output (use <see cref="AOutput.Write"/>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="SciHost"/> controls, use <see cref="SciHost.ZInitTagsStyle"/> and optionally <see cref="SciHost.ZInitImagesStyle"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -149,12 +147,12 @@ namespace Au.Controls
 			public bool bold, italic, underline, eolFilled, monospace;
 		}
 
-		AuScintilla _c;
+		SciHost _c;
 		SciText _t;
 		List<_TagStyle> _styles = new List<_TagStyle>();
 		List<int> _stack = new List<int>();
 
-		internal SciTags(AuScintilla c)
+		internal SciTags(SciHost c)
 		{
 			_c = c;
 			_t = c.Z;
@@ -229,7 +227,7 @@ namespace Au.Controls
 				onMessage?.Invoke(m);
 				switch(m.Type) {
 				case OutServMessageType.Clear:
-					_c.Z.ClearText();
+					_t.ClearText();
 					s = null;
 					b?.Clear();
 					break;
@@ -265,17 +263,17 @@ namespace Au.Controls
 
 			//if(sb!=null) s += " >>>> " + sb.Capacity.ToString();
 
-			//_c.Z.AppendText(s, true, true, true); return;
+			//_t.AppendText(s, true, true, true); return;
 
 			//limit
 			int len = _c.Len8;
 			if(len > 4 * 1024 * 1024) {
-				len = _c.Z.LineStartFromPos(false, len / 2);
-				if(len > 0) _c.Z.ReplaceRange(false, 0, len, "...\r\n");
+				len = _t.LineStartFromPos(false, len / 2);
+				if(len > 0) _t.ReplaceRange(false, 0, len, "...\r\n");
 			}
 
 			if(hasTags) AddText(s, true, true);
-			else _c.Z.AppendText(s, true, true, true);
+			else _t.AppendText(s, true, true, true);
 
 			//test slow client
 			//Thread.Sleep(500);
@@ -439,7 +437,7 @@ namespace Au.Controls
 					if(AChar.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
 					else if(*attr == '#') color = Api.strtoi(attr + 1, radix: 16);
 					else {
-						var c = Color.FromName(new string((sbyte*)attr, 0, attrLen));
+						var c = System.Drawing.Color.FromName(new string((sbyte*)attr, 0, attrLen));
 						if(c.A == 0) break; //invalid color name
 						color = c.ToArgb() & 0xffffff;
 					}
@@ -735,7 +733,7 @@ namespace Au.Controls
 			//AOutput.Write($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
 			//process it async, because bad things happen if now we remove focus or change control text etc
-			_c.BeginInvoke(new Action(() => _OnLinkClick(tag, attr)));
+			_c.Dispatcher.InvokeAsync(() => _OnLinkClick(tag, attr));
 		}
 
 		//note: attr can be ""
@@ -768,7 +766,7 @@ namespace Au.Controls
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '+' (others are displayed as text).
-				if(AOpt.Warnings.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags.AddCommonLinkTag or SciTags.AddLinkTag.");
+				if(AOpt.Warnings.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.");
 				break;
 			}
 		}
@@ -802,7 +800,7 @@ namespace Au.Controls
 		/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 		/// </param>
 		/// <remarks>
-		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.ZTags"/> returns null.
+		/// Call this function when control handle is already created. Until that <see cref="SciHost.ZTags"/> returns null.
 		/// </remarks>
 		/// <seealso cref="AddCommonLinkTag"/>
 		public void AddLinkTag(string name, Action<string> a)
@@ -841,7 +839,7 @@ namespace Au.Controls
 		/// <exception cref="ArgumentException">name does not start with '.'.</exception>
 		/// <exception cref="InvalidOperationException">Trying to add more than 100 styles.</exception>
 		/// <remarks>
-		/// Call this function when control handle is already created. Until that <see cref="AuScintilla.ZTags"/> returns null.
+		/// Call this function when control handle is already created. Until that <see cref="SciHost.ZTags"/> returns null.
 		/// </remarks>
 		public void AddStyleTag(string name, UserDefinedStyle style)
 		{
@@ -852,10 +850,10 @@ namespace Au.Controls
 		}
 		Dictionary<string, _TagStyle> _userStyles;
 
-		internal void OnLButtonDownWhenNotFocused_(ref Message m, ref bool setFocus)
+		internal void OnLButtonDownWhenNotFocused_(nint wParam, nint lParam, ref bool setFocus)
 		{
 			if(setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
-				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
+				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(lParam), AMath.HiShort(lParam));
 				//AOutput.Write(pos);
 				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;
 			}

@@ -111,7 +111,7 @@ unsafe partial class AuTreeView {
 			r.left=-_scrollX;
 			r.right=Math.Max(_width, _itemsW-_scrollX);
 		}
-		if(inScreen) _hh.Wnd.MapClientToScreen(ref r);
+		if(inScreen) _hh.Hwnd.MapClientToScreen(ref r);
 		return r;
 	}
 	
@@ -159,7 +159,7 @@ unsafe partial class AuTreeView {
 	/// Returns false if not on an item.
 	/// </summary>
 	/// <param name="h">Results.</param>
-	public bool HitTest(out TVHitTest h) => HitTest(_hh.Wnd.MouseClientXY, out h);
+	public bool HitTest(out TVHitTest h) => HitTest(_hh.Hwnd.MouseClientXY, out h);
 	
 	_LabelTip _labeltip;
 	

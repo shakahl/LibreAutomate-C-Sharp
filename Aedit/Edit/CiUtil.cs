@@ -107,7 +107,7 @@ static class CiUtil
 		foreach (var v in si.GetSymbols(includeType: true)) {
 			bool gen = false;
 			switch (v) {
-				case IErrorTypeSymbol _: continue;
+				case IErrorTypeSymbol: continue;
 				case INamedTypeSymbol ints when ints.IsGenericType:
 				case IMethodSymbol ims when ims.IsGenericMethod:
 					gen = true;
@@ -142,15 +142,16 @@ static class CiUtil
 			//AOutput.Write(s); return;
 			url = _GoogleURL(s);
 		} else if (helpKind == HelpKind.String) {
-			int i = AMenu.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", owner: Panels.Editor.ZActiveDoc, byCaret: true);
-			switch (i) {
-				case 1: url = "C# strings"; break;
-				case 2: url = "C# string formatting"; break;
-				case 3: AHelp.AuHelp("articles/Wildcard expression"); break;
-				case 11: CiTools.CmdShowRegexWindow(); break;
-				case 12: CiTools.CmdShowKeysWindow(); break;
-			}
-			if (url != null) url = _GoogleURL(url);
+			//TODO
+			//int i = AMenu.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", owner: Panels.Editor.ZActiveDoc, byCaret: true);
+			//switch (i) {
+			//	case 1: url = "C# strings"; break;
+			//	case 2: url = "C# string formatting"; break;
+			//	case 3: AHelp.AuHelp("articles/Wildcard expression"); break;
+			//	case 11: CiTools.CmdShowRegexWindow(); break;
+			//	case 12: CiTools.CmdShowKeysWindow(); break;
+			//}
+			//if (url != null) url = _GoogleURL(url);
 		}
 		if (url != null) AFile.TryRun(url);
 	}
@@ -194,11 +195,11 @@ static class CiUtil
 	/// Gets rectangle of caret if it was at the specified UTF-16 position.
 	/// If <i>pos16</i> less than 0, uses current caret position.
 	/// </summary>
-	public static Rectangle GetCaretRectFromPos(SciCode doc, int pos16 = -1, bool inScreen = false) {
+	public static RECT GetCaretRectFromPos(SciCode doc, int pos16 = -1, bool inScreen = false) {
 		if (pos16 < 0) pos16 = doc.Z.CurrentPos8; else pos16 = doc.Pos8(pos16);
 		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, pos16), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, pos16);
-		var r = new Rectangle(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.Z.LineFromPos(false, pos16)) + 2);
-		if (inScreen) r = doc.RectangleToScreen(r);
+		var r = new RECT(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.Z.LineFromPos(false, pos16)) + 2);
+		if (inScreen) doc.Hwnd.MapClientToScreen(ref r);
 		return r;
 	}
 
@@ -479,6 +480,10 @@ static class CiUtil
 		int i = c_nKinds - 1 + (int)access;
 		return a[i] ??= _ResImage(i, dpi);
 	}
+
+	//public static System.Windows.UIElement GetKindImageWpf(CiItemKind kind) {
+	//	return null;
+	//}
 
 	public static string[] ItemKindNames { get; } = new string[] { "Class", "Structure", "Enum", "Delegate", "Interface", "Method", "ExtensionMethod", "Property", "Event", "Field", "LocalVariable", "Constant", "EnumMember", "Namespace", "Keyword", "Label", "Snippet", "TypeParameter" }; //must match enum CiItemKind
 }

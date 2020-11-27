@@ -10,15 +10,13 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 namespace Au.Controls
 {
 	using static Sci;
 
-	unsafe partial class SciText
+	unsafe partial class SciTextF
 	{
 		#region styles
 
@@ -39,7 +37,7 @@ namespace Au.Controls
 		}
 
 		/// <remarks>Uses only font name and size. Not style etc.</remarks>
-		public void StyleFont(int style, Font f)
+		public void StyleFont(int style, System.Drawing.Font f)
 		{
 			StyleFont(style, f.Name, (int)f.Size);
 		}

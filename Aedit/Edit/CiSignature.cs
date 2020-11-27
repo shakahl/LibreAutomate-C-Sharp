@@ -9,8 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 
 using Au;
@@ -217,11 +215,10 @@ class CiSignature
 			_CancelUI();
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 
-		var rect1 = CiUtil.GetCaretRectFromPos(doc, aspan.Start);
-		var rect2 = CiUtil.GetCaretRectFromPos(doc, cd.pos16);
-		var rect = doc.RectangleToScreen(Rectangle.Union(rect1, rect2));
+		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, aspan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
+		doc.Hwnd.MapClientToScreen(ref rect);
 		rect.Width += ADpi.Scale(200);
-		rect.X -= 6;
+		rect.left -= 6;
 
 		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Signature, onHiddenOrDestroyed: _ => _data = null) {
 			OnLinkClick = (ph, e) => ph.Html = _FormatHtml(e.Link.ToInt(1), userSelected: true)
@@ -354,16 +351,16 @@ class CiSignature
 	List<ISignatureHelpProvider> _SignatureHelpProviders => _shp ??= _GetSignatureHelpProviders();
 	List<ISignatureHelpProvider> _shp;
 
-	public bool OnCmdKey(Keys keyData) {
+	public bool OnCmdKey(KKey key) {
 		if (_data != null) {
-			switch (keyData) {
-			case Keys.Escape:
+			switch (key) {
+			case KKey.Escape:
 				Cancel();
 				return true;
-			case Keys.Down:
-			case Keys.Up:
+			case KKey.Down:
+			case KKey.Up:
 				int i = _data.iSelected, n = _data.r.Items.Count;
-				if (keyData == Keys.Down) {
+				if (key == KKey.Down) {
 					if (++i >= n) i = 0;
 				} else {
 					if (--i < 0) i = n - 1;

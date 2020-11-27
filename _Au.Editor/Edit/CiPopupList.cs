@@ -55,7 +55,7 @@ class CiPopupList
 
 		_w = new _Window(this);
 		_w.SuspendLayout();
-		_w.Size = ADpi.ScaleSize((300, 360), _dpi);
+		_w.Size = ADpi.Scale((300, 360), _dpi);
 
 		_list = new _FastListBox();
 		_list.SuspendLayout();

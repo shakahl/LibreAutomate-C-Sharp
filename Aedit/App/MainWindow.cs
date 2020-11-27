@@ -24,18 +24,23 @@ partial class MainWindow : Window
 	public MainWindow() {
 		//_StartProfileOptimization();
 
-		App.Wnd = this;
+		App.Wmain = this;
 		Title = App.AppName; //will not append document name etc
 
 		AWnd.More.SavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
 
 		System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false); //FUTURE: remove when forms not used
 
-		Panels.Init();
+		Panels.LoadAndCreateToolbars();
 
-		App.Commands = new AuMenuCommands(typeof(Menus), Panels.Menu, this);
+		App.Commands = new AuMenuCommands(typeof(Menus), Panels.Menu);
+
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
 		App.Commands.InitToolbarsAndCustomize(AFolders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
+
+		Panels.CreatePanels();
+
+		App.Commands.BindKeysTarget(this, "");
 
 		var mi1 = App.Commands[nameof(Menus.New)].MenuItem;
 		mi1.SubmenuOpened += (_, e) => FilesModel.FillMenuNew(mi1);
@@ -43,9 +48,7 @@ partial class MainWindow : Window
 		mi2.Items.Add(new Separator());
 		mi2.SubmenuOpened += (_, e) => FilesModel.FillMenuRecentWorkspaces(mi2);
 
-		Panels.PanelManager.Container = g => {
-			this.Content = g;
-		};
+		Panels.PanelManager.Container = g => { this.Content = g; };
 	}
 
 	protected override void OnClosing(CancelEventArgs e) {
@@ -76,8 +79,7 @@ partial class MainWindow : Window
 		var hs = PresentationSource.FromVisual(this) as HwndSource;
 		App.Hwnd = (AWnd)hs.Handle;
 
-		//TODO
-		//Panels.PanelManager.ZGetPanel(Panels.Output).Visible = true; //else AOutput.Write would not auto set visible until the user makes it visible, because handle not created if invisible
+		Panels.PanelManager["Output"].Visible = true;
 
 		App.Model.WorkspaceLoadedWithUI(onUiLoaded: true);
 

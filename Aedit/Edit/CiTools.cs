@@ -51,7 +51,7 @@ class CiTools
 			ADialog.ShowInfo(null, "Regular expression string should be like @\"text\", not like \"text\". The Regex tool will not escape \\ when inserting text.");
 
 		if(_regexWindow == null) {
-			_regexWindow = new RegexWindow(doc);
+			_regexWindow = new RegexWindow(doc.Hwnd());
 			_regexWindow.Window.Name = "Ci.Regex"; //prevent hiding when activated
 		}
 
@@ -76,13 +76,14 @@ class CiTools
 
 	public void KeysWindowShow(SciCode doc, string code, int pos16, TextSpan stringSpan, Form dontCover = null)
 	{
-		if(_keysWindow == null) {
-			_keysWindow = new KeysWindow(doc);
-			_keysWindow.Window.Name = "Ci.Keys"; //prevent hiding when activated
-		}
-		_ShowWindow(_keysWindow, doc, pos16, dontCover);
-		int vi = _StringPrefixLength(code, stringSpan.Start);
-		doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _keysWindow.Hide());
+		//TODO
+		//if(_keysWindow == null) {
+		//	_keysWindow = new KeysWindow(doc);
+		//	_keysWindow.Window.Name = "Ci.Keys"; //prevent hiding when activated
+		//}
+		//_ShowWindow(_keysWindow, doc, pos16, dontCover);
+		//int vi = _StringPrefixLength(code, stringSpan.Start);
+		//doc.ZTempRanges_Add(this, stringSpan.Start + vi + 1, stringSpan.End - 1, onLeave: () => _keysWindow.Hide());
 	}
 
 	#endregion
@@ -95,19 +96,20 @@ class CiTools
 	}
 
 	static void _ShowWindow(InfoWindow w, SciCode doc, int position, Form dontCover) {
-		bool above = dontCover != null;
-		if (w.Window.Visible) w.Window.Hwnd().ZorderTop();
-		var r = CiUtil.GetCaretRectFromPos(doc, position, inScreen: true);
-		int i = ADpi.Scale(100);
-		r.Width = i;
-		r.Inflate(i, 0);
-		if(dontCover != null) {
-			r = Rectangle.Union(r, dontCover.Bounds);
-		}
-		var align = above ? PopupAlignment.TPM_BOTTOMALIGN : 0;
-		var anchor = new POINT(r.Left, above ? r.Top : r.Bottom);
-		w.Show(doc, r, true, align | PopupAlignment.TPM_VERTICAL, anchor);
-		w.InsertInControl = doc;
+		//TODO
+		//bool above = dontCover != null;
+		//if (w.Window.Visible) w.Window.Hwnd().ZorderTop();
+		//var r = CiUtil.GetCaretRectFromPos(doc, position, inScreen: true);
+		//int i = ADpi.Scale(100);
+		//r.Width = i;
+		//r.Inflate(i, 0);
+		//if(dontCover != null) {
+		//	r = Rectangle.Union(r, dontCover.Bounds);
+		//}
+		//var align = above ? PopupAlignment.TPM_BOTTOMALIGN : 0;
+		//var anchor = new POINT(r.Left, above ? r.Top : r.Bottom);
+		//w.Show(doc, r, true, align | PopupAlignment.TPM_VERTICAL, anchor);
+		//w.InsertInControl = doc;
 	}
 
 	public static void CmdShowRegexWindow() => _ShowRegexOrKeysWindow(true);

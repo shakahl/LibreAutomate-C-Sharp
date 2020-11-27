@@ -9,8 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -22,20 +20,22 @@ namespace Au.Controls
 
 	/// <summary>
 	/// Functions to work with Scintilla control text, code, etc.
-	/// A SciText object is created by AuScintilla which is the C property.
+	/// A SciText object is created by SciHost which is the C property.
 	/// </summary>
 	/// <remarks>
 	/// Most functions throw ArgumentOutOfRangeException when: 1. A position or line index argument is negative. 2. Scintilla returned a negative position or line index.
 	/// If a position or line index argument is greater than text length or the number of lines, some functions return the text length or the last line, and it is documented; for other functions the behaviour is undefined, eg ArgumentOutOfRangeException or Scintilla's return value or like of the documented methods.
 	/// 
-	/// Some frequently used functions are in <see cref="AuScintilla"/>, not here, eg to get/set all text or to get/convert UTF-8/16 text length/position.
+	/// Some frequently used functions are in <see cref="SciHost"/>, not here, eg to get/set all text or to get/convert UTF-8/16 text length/position.
 	/// </remarks>
 	public unsafe partial class SciText
 	{
+		SciHost _c;
+
 		/// <summary>
-		/// The host AuScintilla control.
+		/// The host SciHost control.
 		/// </summary>
-		public AuScintilla C { get; private set; }
+		public SciHost C => _c;
 
 		[ThreadStatic] static WeakReference<byte[]> t_byte;
 
@@ -45,9 +45,9 @@ namespace Au.Controls
 		//internal static AMemoryArray.ByteBuffer Byte_(int n, out int nHave) { var r = AMemoryArray.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 
-		internal SciText(AuScintilla sc)
+		internal SciText(SciHost sc)
 		{
-			C = sc;
+			_c = sc;
 		}
 
 		#region low level
@@ -57,14 +57,14 @@ namespace Au.Controls
 		/// Don't call this function from another thread.
 		/// </summary>
 		[DebuggerStepThrough]
-		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => C.CallRetPtr(sciMessage, wParam, lParam);
+		public LPARAM CallRetPtr(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => _c.CallRetPtr(sciMessage, wParam, lParam);
 
 		/// <summary>
 		/// Sends a Scintilla message to the control and returns int.
 		/// Don't call this function from another thread.
 		/// </summary>
 		[DebuggerStepThrough]
-		public int Call(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => C.Call(sciMessage, wParam, lParam);
+		public int Call(int sciMessage, LPARAM wParam = default, LPARAM lParam = default) => _c.Call(sciMessage, wParam, lParam);
 
 		/// <summary>
 		/// Calls a Scintilla message that sets a string which is passed using lParam.
@@ -76,7 +76,7 @@ namespace Au.Controls
 		{
 			fixed(byte* s = _ToUtf8(lParam, out var len)) {
 				if(useUtf8LengthForWparam) wParam = len;
-				return C.Call(sciMessage, wParam, s);
+				return _c.Call(sciMessage, wParam, s);
 			}
 		}
 
@@ -89,7 +89,7 @@ namespace Au.Controls
 		public int SetString(int sciMessage, string wParam, LPARAM lParam)
 		{
 			fixed(byte* s = _ToUtf8(wParam)) {
-				return C.Call(sciMessage, lParam, s);
+				return _c.Call(sciMessage, lParam, s);
 			}
 		}
 
@@ -104,7 +104,7 @@ namespace Au.Controls
 			fixed(byte* s = _ToUtf8(wParam0lParam, out var len)) {
 				int i = BytePtr_.Length(s);
 				Debug.Assert(i < len);
-				return C.Call(sciMessage, s, s + i + 1);
+				return _c.Call(sciMessage, s, s + i + 1);
 			}
 		}
 
@@ -180,9 +180,9 @@ namespace Au.Controls
 		string _RangeText(int start8, int end8)
 		{
 			Debug.Assert(end8 >= start8);
-			Debug.Assert((uint)end8 <= C.Len8);
+			Debug.Assert((uint)end8 <= _c.Len8);
 			if(end8 == start8) return "";
-			int gap = Sci_Range(C.SciPtr, start8, end8, out var p1, out var p2);
+			int gap = Sci_Range(_c.SciPtr, start8, end8, out var p1, out var p2);
 			if(p2 != null) {
 				int n1 = gap - start8, n2 = end8 - gap;
 				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
@@ -207,13 +207,13 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="utf16">Input values are UTF-16.</param>
 		/// <param name="from"></param>
-		/// <param name="to">If -1, uses <see cref="AuScintilla.Len8"/>.</param>
+		/// <param name="to">If -1, uses <see cref="SciHost.Len8"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg greater than text length or <i>to</i> less than <i>from</i>.</exception>
 		public void NormalizeRange(bool utf16, ref int from, ref int to)
 		{
 			if(from < 0 || (to < from && to != -1)) throw new ArgumentOutOfRangeException();
-			if(utf16) from = C.Pos8(from);
-			if(to < 0) to = C.Len8; else if(utf16) to = C.Pos8(to);
+			if(utf16) from = _c.Pos8(from);
+			if(to < 0) to = _c.Len8; else if(utf16) to = _c.Pos8(to);
 		}
 
 		/// <summary>
@@ -226,10 +226,10 @@ namespace Au.Controls
 		{
 			int from, to;
 			if(r.Start.IsFromEnd || r.End.IsFromEnd) {
-				(from, to) = r.GetStartEnd(utf16 ? C.Len16 : C.Len8);
+				(from, to) = r.GetStartEnd(utf16 ? _c.Len16 : _c.Len8);
 				if(utf16) {
-					from = C.Pos8(from);
-					to = C.Pos8(to);
+					from = _c.Pos8(from);
+					to = _c.Pos8(to);
 				}
 			} else {
 				from = r.Start.Value;
@@ -256,18 +256,18 @@ namespace Au.Controls
 		/// => utf16 ? C.Pos8(pos) : pos;
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
-		int _ParamPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? C.Pos8(pos) : pos) : throw new ArgumentOutOfRangeException();
+		int _ParamPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? _c.Pos8(pos) : pos) : throw new ArgumentOutOfRangeException();
 
 		/// <summary>
 		/// => utf16 ? C.Pos16(pos) : pos;
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">Negative.</exception>
-		int _ReturnPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : throw new ArgumentOutOfRangeException();
+		int _ReturnPos(bool utf16, int pos) => pos >= 0 ? (utf16 ? _c.Pos16(pos) : pos) : throw new ArgumentOutOfRangeException();
 
 		/// <summary>
 		/// pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : pos;
 		/// </summary>
-		int _ReturnPosCanBeNegative(bool utf16, int pos) => pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : pos;
+		int _ReturnPosCanBeNegative(bool utf16, int pos) => pos >= 0 ? (utf16 ? _c.Pos16(pos) : pos) : pos;
 
 		/// <summary>
 		/// => line;
@@ -283,13 +283,13 @@ namespace Au.Controls
 			public _NoReadonly(SciText t)
 			{
 				_t = t;
-				_ro = _t.C.ZInitReadOnlyAlways || _t.IsReadonly;
-				if(_ro) _t.C.Call(SCI_SETREADONLY, 0);
+				_ro = _t._c.ZInitReadOnlyAlways || _t.IsReadonly;
+				if(_ro) _t._c.Call(SCI_SETREADONLY, 0);
 			}
 
 			public void Dispose()
 			{
-				if(_ro) _t.C.Call(SCI_SETREADONLY, 1);
+				if(_ro) _t._c.Call(SCI_SETREADONLY, 1);
 			}
 		}
 
@@ -300,11 +300,11 @@ namespace Au.Controls
 
 			public _NoUndoNotif(SciText t, SciSetTextFlags flags)
 			{
-				if(t.C.ZInitReadOnlyAlways) flags = 0;
+				if(t._c.ZInitReadOnlyAlways) flags = 0;
 				_t = t;
 				_noUndo = flags.Has(SciSetTextFlags.NoUndo) && 0 != _t.Call(SCI_GETUNDOCOLLECTION);
 				_noNotif = flags.Has(SciSetTextFlags.NoNotify);
-				if(_noNotif) _t.C.ZDisableModifiedNotifications = true;
+				if(_noNotif) _t._c.ZDisableModifiedNotifications = true;
 				if(_noUndo) _t.Call(SCI_SETUNDOCOLLECTION, false);
 			}
 
@@ -314,7 +314,7 @@ namespace Au.Controls
 					_t.Call(SCI_EMPTYUNDOBUFFER);
 					_t.Call(SCI_SETUNDOCOLLECTION, true);
 				}
-				if(_noNotif) _t.C.ZDisableModifiedNotifications = false;
+				if(_noNotif) _t._c.ZDisableModifiedNotifications = false;
 			}
 		}
 
@@ -343,7 +343,7 @@ namespace Au.Controls
 			using(new _NoUndoNotif(this, flags)) {
 				if(!ignoreTags && _CanParseTags(s)) {
 					ClearText();
-					C.ZTags.AddText(s, false, C.ZInitTagsStyle == AuScintilla.ZTagsStyle.AutoWithPrefix);
+					_c.ZTags.AddText(s, false, _c.ZInitTagsStyle == SciHost.ZTagsStyle.AutoWithPrefix);
 				} else {
 					using(new _NoReadonly(this))
 						SetString(SCI_SETTEXT, 0, s ?? "");
@@ -354,10 +354,10 @@ namespace Au.Controls
 		bool _CanParseTags(string s)
 		{
 			if(s.NE()) return false;
-			return C.ZInitTagsStyle switch
+			return _c.ZInitTagsStyle switch
 			{
-				AuScintilla.ZTagsStyle.AutoAlways => s.IndexOf('<') >= 0,
-				AuScintilla.ZTagsStyle.AutoWithPrefix => s.Starts("<>"),
+				SciHost.ZTagsStyle.AutoAlways => s.IndexOf('<') >= 0,
+				SciHost.ZTagsStyle.AutoWithPrefix => s.Starts("<>"),
 				_ => false,
 			};
 		}
@@ -412,7 +412,7 @@ namespace Au.Controls
 		{
 			s ??= "";
 			if(!ignoreTags && _CanParseTags(s)) {
-				C.ZTags.AddText(s, true, C.ZInitTagsStyle == AuScintilla.ZTagsStyle.AutoWithPrefix);
+				_c.ZTags.AddText(s, true, _c.ZInitTagsStyle == SciHost.ZTagsStyle.AutoWithPrefix);
 				return;
 			}
 
@@ -420,7 +420,7 @@ namespace Au.Controls
 			using(new _NoReadonly(this))
 				fixed(byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
 
-			if(scroll) Call(SCI_GOTOPOS, C.Len8);
+			if(scroll) Call(SCI_GOTOPOS, _c.Len8);
 		}
 
 		/// <summary>
@@ -433,7 +433,7 @@ namespace Au.Controls
 				if(append) Call(SCI_APPENDTEXT, lenToAppend, s);
 				else Call(SCI_SETTEXT, 0, s);
 
-			if(append) Call(SCI_GOTOPOS, C.Len8);
+			if(append) Call(SCI_GOTOPOS, _c.Len8);
 		}
 
 		//not used now
@@ -456,9 +456,9 @@ namespace Au.Controls
 
 		/// <summary>
 		/// Gets all text directly from Scintilla.
-		/// Does not use caching like AuScintilla.Text.
+		/// Does not use caching like SciHost.Text.
 		/// </summary>
-		internal string GetText_() => _RangeText(0, C.Len8);
+		internal string GetText_() => _RangeText(0, _c.Len8);
 
 		/// <summary>
 		/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
@@ -470,7 +470,7 @@ namespace Au.Controls
 		/// Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-16 chars.
 		/// The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
 		/// </summary>
-		public int CurrentPos16 { get => C.Pos16(CurrentPos8); set => Call(SCI_SETEMPTYSELECTION, C.Pos8(value)); }
+		public int CurrentPos16 { get => _c.Pos16(CurrentPos8); set => Call(SCI_SETEMPTYSELECTION, _c.Pos8(value)); }
 
 		/// <summary>
 		/// SCI_GETSELECTIONSTART UTF-8.
@@ -480,7 +480,7 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_GETSELECTIONSTART UTF-16.
 		/// </summary>
-		public int SelectionStar16 => C.Pos16(SelectionStart8);
+		public int SelectionStar16 => _c.Pos16(SelectionStart8);
 
 		/// <summary>
 		/// SCI_GETSELECTIONEND UTF-8.
@@ -492,7 +492,7 @@ namespace Au.Controls
 		/// SCI_GETSELECTIONEND UTF-16.
 		/// Always greater or equal than SelectionStartChars.
 		/// </summary>
-		public int SelectionEnd16 => C.Pos16(SelectionEnd8);
+		public int SelectionEnd16 => _c.Pos16(SelectionEnd8);
 
 		/// <summary>
 		/// true if there is selected text.
@@ -518,7 +518,7 @@ namespace Au.Controls
 		{
 			if(line < 0) throw new ArgumentOutOfRangeException();
 			int R = Call(SCI_POSITIONFROMLINE, _ParamLine(line));
-			return R >= 0 ? R : C.Len8;
+			return R >= 0 ? R : _c.Len8;
 			//If line < 0, Scintilla returns line start from selection start.
 			//If line > number of lines, Scintilla returns -1.
 		}
@@ -637,7 +637,7 @@ namespace Au.Controls
 		/// Gets annotation text of line.
 		/// Returns "" if the line does not contain annotation or is invalid line index.
 		/// </summary>
-		public string AnnotationText(int line) => C.ZImages?.AnnotationText_(line) ?? AnnotationText_(line);
+		public string AnnotationText(int line) => _c.ZImages?.AnnotationText_(line) ?? AnnotationText_(line);
 
 		/// <summary>
 		/// Gets raw annotation text which can contain image info.
@@ -654,7 +654,7 @@ namespace Au.Controls
 		/// </summary>
 		public void AnnotationText(int line, string s)
 		{
-			if(C.ZImages != null) C.ZImages.AnnotationText_(line, s);
+			if(_c.ZImages != null) _c.ZImages.AnnotationText_(line, s);
 			else AnnotationText_(line, s);
 		}
 
@@ -750,10 +750,10 @@ namespace Au.Controls
 		{
 			bool reverse = NormalizeRangeCanBeReverse(utf16, ref from, ref to, swapFromTo: true);
 			using(new _NoReadonly(this)) {
-				int fromEnd = !moveCurrentPos || reverse ? 0 : C.Len8 - to;
+				int fromEnd = !moveCurrentPos || reverse ? 0 : _c.Len8 - to;
 				Call(SCI_SETTARGETRANGE, from, to);
 				SetString(SCI_REPLACETARGET, 0, s ??= "", true);
-				if(moveCurrentPos) CurrentPos8 = reverse ? from : C.Len8 - fromEnd;
+				if(moveCurrentPos) CurrentPos8 = reverse ? from : _c.Len8 - fromEnd;
 			}
 		}
 
@@ -1005,7 +1005,7 @@ namespace Au.Controls
 
 				//_enc = _Encoding.Utf32BOM; //test
 
-				int len = z.C.Len8;
+				int len = z._c.Len8;
 				int bom = (int)_enc >> 4;
 				if(bom == 2 || bom == 4) bom = 1; //1 UTF16 or UTF32 character
 				var b = Byte_(len + bom);
@@ -1036,8 +1036,8 @@ namespace Au.Controls
 
 		public int MarginFromPoint(POINT p, bool screenCoord)
 		{
-			if(screenCoord) p = C.PointToClient(p);
-			if(C.ClientRectangle.Contains(p)) {
+			if(screenCoord) _c.Hwnd.MapScreenToClient(ref p);
+			if(_c.Hwnd.ClientRect.Contains(p)) {
 				for(int i = 0, w = 0; i < 5; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if(w >= p.x) return i; }
 			}
 			return -1;
@@ -1069,10 +1069,10 @@ namespace Au.Controls
 			x.linesEnd = end;
 			x.text = _RangeText(x.linesStart, end);
 			if(utf16) {
-				x.linesStart = C.Pos16(x.linesStart);
-				x.linesEnd = C.Pos16(x.linesEnd);
-				x.selStart = C.Pos16(x.selStart);
-				x.selEnd = C.Pos16(x.selEnd);
+				x.linesStart = _c.Pos16(x.linesStart);
+				x.linesEnd = _c.Pos16(x.linesEnd);
+				x.selStart = _c.Pos16(x.selStart);
+				x.selEnd = _c.Pos16(x.selEnd);
 			}
 			return true;
 		}

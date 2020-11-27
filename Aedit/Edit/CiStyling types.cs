@@ -232,7 +232,7 @@ partial class CiStyling
 		/// <summary>
 		/// Gets colors, bold, but not font properties.
 		/// </summary>
-		public TStyles(AuScintilla sci)
+		public TStyles(SciHost sci)
 		{
 			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
 
@@ -265,7 +265,7 @@ partial class CiStyling
 			LineNumber = _Get(EToken.LineNumber);
 		}
 
-		public void ToScintilla(AuScintilla sci)
+		public void ToScintilla(SciHost sci)
 		{
 			var z = sci.Z;
 

@@ -99,7 +99,7 @@ namespace Au.Controls
 					break;
 				case "tab":
 					_tab = new();
-					_elem = _tab.tc = new TabControl();
+					_elem = _tab.tc = new _TabControl();
 					break;
 				case "panel":
 				case "toolbar":
@@ -152,19 +152,26 @@ namespace Au.Controls
 
 				if (parent == null) { //the root XML element
 					int nVisible = 0; _Node firstHidden = null;
+					List<_Node> aFloat = null;
 					foreach (var v in Descendants()) {
 						//if (v._IsStack) continue;
 						if (!v._IsStack) if (v._IsVisibleReally(true)) nVisible++; else firstHidden ??= v;
-						if (v._savedDockState != 0) _SetState(v);
+						var ds = v._savedDockState;
+						if (ds == _DockState.Float) (aFloat ??= new()).Add(v);
+						else if (ds != 0) v._SetDockState(ds);
 					}
 					if (nVisible == 0 && firstHidden != null) { //if all non-stack hidden, unhide one, else user cannot unhide any because there are no captions to show the context menu
-						firstHidden._savedDockState = 0;
-						_SetState(firstHidden);
+						firstHidden._SetDockState(0);
 					}
-
-					void _SetState(_Node node) {
-						if (node._savedDockState != _DockState.Float) node._SetDockState(node._savedDockState);
-						else _stack.grid.Dispatcher.InvokeAsync(() => node._SetDockState(node._savedDockState));
+					if (aFloat != null) {
+						DependencyPropertyChangedEventHandler eh = null;
+						eh = (_, e) => {
+							if (e.NewValue is bool visible && visible) {
+								_stack.grid.IsVisibleChanged -= eh;
+								_stack.grid.Dispatcher.InvokeAsync(() => { foreach (var v in aFloat) v._SetDockState(_DockState.Float); });
+							}
+						};
+						_stack.grid.IsVisibleChanged += eh;
 					}
 
 					//ATimer.After(1000, _ => _Test(5));
@@ -201,7 +208,7 @@ namespace Au.Controls
 
 				if (isTab) {
 					_tab = new();
-					_elem = _tab.tc = new TabControl();
+					_elem = _tab.tc = new _TabControl();
 				} else {
 					_stack = new _StackFields { isVertical = verticalStack };
 					_elem = _stack.grid = new Grid();
@@ -293,6 +300,7 @@ namespace Au.Controls
 			bool _IsDocument => _leafType == LeafType.Document;
 			bool _ParentIsStack => Parent?._IsStack ?? false;
 			bool _ParentIsTab => Parent?._IsTab ?? false;
+			bool _ParentIsTabAndNotFloating => _ParentIsTab && _state != _DockState.Float;
 
 			/// <summary>
 			/// true if this is toolbar or this is stack/tab containing only toolbars.
@@ -325,8 +333,7 @@ namespace Au.Controls
 				}
 				if (Parent == null) return "Root stack";
 				var a = Descendants().Where(o => o._IsLeaf).ToArray();
-				s = a.Length switch
-				{
+				s = a.Length switch {
 					0 => "",
 					1 => a[0].ToString(),
 					2 => a[0].ToString() + ", " + a[1].ToString(),
@@ -438,25 +445,6 @@ namespace Au.Controls
 				}
 			}
 
-			class _DockPanelWithBorder : Border
-			{
-				public readonly DockPanel Panel;
-
-				public _DockPanelWithBorder() {
-					Child = Panel = new();
-					SnapsToDevicePixels = true;
-				}
-
-				public UIElementCollection Children => Panel.Children;
-
-				public bool LastChildFill { get => Panel.LastChildFill; set => Panel.LastChildFill = value; }
-
-				public new object Tag {
-					get => base.Tag;
-					set { base.Tag = value; Panel.Tag = value; }
-				}
-			}
-
 			#region ILeaf
 
 			FrameworkElement ILeaf.Content {
@@ -471,8 +459,9 @@ namespace Au.Controls
 			bool ILeaf.Visible {
 				get => _IsVisibleReally();
 				set {
+					if (value && _savedDockState == _DockState.Float) return; //will make float async
 					if (value) _Unhide(); else _Hide();
-					if (value && _ParentIsTab) Parent._tab.tc.SelectedIndex = _index;
+					if (value && _ParentIsTabAndNotFloating) Parent._tab.tc.SelectedIndex = _index;
 				}
 			}
 
@@ -488,7 +477,10 @@ namespace Au.Controls
 
 			bool ILeaf.Floating {
 				get => _state == _DockState.Float;
-				set => _SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
+				set {
+					if (value && _savedDockState == _DockState.Float) return; //will make float async
+					_SetDockState(value ? _DockState.Float : _state & ~_DockState.Float);
+				}
 			}
 
 			ParentInfo ILeaf.Parent => new ParentInfo(_leaf.panel.Panel, Parent._elem, _index);
@@ -522,6 +514,8 @@ namespace Au.Controls
 
 			public event EventHandler<bool> VisibleChanged;
 
+			public event EventHandler<bool> FloatingChanged;
+
 			public event CancelEventHandler Closing;
 
 			public event EventHandler<AWpfMenu> ContextMenuOpening;
@@ -531,6 +525,25 @@ namespace Au.Controls
 			public event EventHandler ParentChanged;
 
 			#endregion
+		}
+
+		class _DockPanelWithBorder : Border
+		{
+			public readonly DockPanel Panel;
+
+			public _DockPanelWithBorder() {
+				Child = Panel = new();
+				SnapsToDevicePixels = true;
+			}
+
+			public UIElementCollection Children => Panel.Children;
+
+			public bool LastChildFill { get => Panel.LastChildFill; set => Panel.LastChildFill = value; }
+
+			public new object Tag {
+				get => base.Tag;
+				set { base.Tag = value; Panel.Tag = value; }
+			}
 		}
 	}
 }

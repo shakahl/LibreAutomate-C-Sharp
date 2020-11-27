@@ -144,5 +144,15 @@ namespace Au.Controls
 
 			static _Node _NodeFromTabItem(TabItem ti) => ti.Tag as _Node;
 		}
+
+		class _TabControl : TabControl
+		{
+			protected override void OnKeyDown(KeyEventArgs e) {
+				//Apps often use Ctrl+Tab and Ctrl+Shift+Tab eg to switch documents, but TabControl would steal them for switching tabs.
+				//	To swith TabControl tabs also can be used Shift+Tab (makes tab item focused) then arrows.
+				if (e.Key == Key.Tab && Keyboard.Modifiers is ModifierKeys.Control or (ModifierKeys.Control | ModifierKeys.Shift)) return;
+				base.OnKeyDown(e);
+			}
+		}
 	}
 }

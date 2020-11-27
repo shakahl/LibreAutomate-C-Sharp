@@ -129,8 +129,8 @@ class PanelOutput : AuUserControlBase
 			ZInitTagsStyle = ZTagsStyle.AutoWithPrefix;
 			ZInitImagesStyle = ZImagesStyle.ImageTag;
 
-			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
-			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
+			SciTagsF.AddCommonLinkTag("open", s => _OpenLink(s));
+			SciTagsF.AddCommonLinkTag("script", s => _RunScript(s));
 		}
 
 		protected override void OnHandleCreated(EventArgs e)

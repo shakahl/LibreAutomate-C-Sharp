@@ -388,6 +388,7 @@ namespace Au
 			AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
 		}
+		//TODO: rename. Eg Execute or Invoke. Or DoDefaultAction. It seems in UIA it is Invoke.
 
 		//void _MinimalSleep()
 		//{

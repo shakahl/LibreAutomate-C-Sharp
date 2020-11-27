@@ -659,7 +659,7 @@ namespace Au
 		/// <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="Options.AutoOwnerWindow"/>
 		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool doNotDisable = false) {
-			_c.hwndParent = owner.IsEmpty ? default : owner.Wnd.Window;
+			_c.hwndParent = owner.IsEmpty ? default : owner.Hwnd.Window;
 			_SetFlag(_TDF.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
 			_enableOwner = doNotDisable;
 		}

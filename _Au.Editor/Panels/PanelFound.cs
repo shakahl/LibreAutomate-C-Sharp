@@ -43,7 +43,7 @@ class PanelFound : AuUserControlBase
 		z.MarginWidth(1, 0);
 		z.StyleFont(Sci.STYLE_DEFAULT, Font);
 		z.StyleClearAll();
-		_c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle(), (false, default), false);
+		_c.ZTags.SetLinkStyle(new SciTagsF.UserDefinedStyle(), (false, default), false);
 	}
 
 	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }

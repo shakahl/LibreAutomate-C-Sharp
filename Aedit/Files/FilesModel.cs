@@ -203,7 +203,7 @@ partial class FilesModel
 	/// </summary>
 	public static void OpenWorkspaceUI() {
 		var d = new OpenFileDialog { Title = "Open workspace", Filter = "files.xml|files.xml" };
-		if (d.ShowDialog(App.Wnd) != true) return;
+		if (d.ShowDialog(App.Wmain) != true) return;
 		var filesXml = d.FileName;
 		if (!APath.GetName(filesXml).Eqi("files.xml")) ADialog.ShowError("Must be files.xml");
 		else LoadWorkspace(APath.GetDirectory(filesXml));
@@ -489,7 +489,7 @@ partial class FilesModel
 	/// <param name="line">If not negative, goes to this 0-based line.</param>
 	/// <param name="columnOrPos">If not negative, goes to this 0-based position in text (if line negative) or to this 0-based column in line.</param>
 	public bool OpenAndGoTo(FileNode f, int line = -1, int columnOrPos = -1) {
-		App.Wnd.ZShowAndActivate();
+		App.Wmain.ZShowAndActivate();
 		bool wasOpen = _currentFile == f;
 		if (!SetCurrentFile(f)) return false;
 		var doc = Panels.Editor.ZActiveDoc;
@@ -667,7 +667,7 @@ partial class FilesModel
 			f = _currentFile;
 		}
 		if (f == null) return;
-		//if(f.IsCodeFile) new FProperties(f).Show(App.Wnd); //TODO
+		//if(f.IsCodeFile) new FProperties(f).Show(App.Wmain); //TODO
 		if (f.IsCodeFile) new FProperties(f).Show();
 
 		//these were not impl in winforms version
@@ -941,7 +941,7 @@ partial class FilesModel
 	public void ImportFiles(string[] a = null) {
 		if (a == null) {
 			var d = new OpenFileDialog { Multiselect = true, Title = "Import files" };
-			if (d.ShowDialog(App.Wnd) != true) return;
+			if (d.ShowDialog(App.Wmain) != true) return;
 			a = d.FileNames;
 		}
 

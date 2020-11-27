@@ -86,7 +86,7 @@ namespace Au
 			var m = mod & ~(KMod.Alt | KMod.Shift);
 			if(mod.Has(KMod.Alt)) m |= KMod.Shift;
 			if(mod.Has(KMod.Shift)) m |= KMod.Alt;
-			var w = window.Wnd;
+			var w = window.Hwnd;
 			if(!Api.RegisterHotKey(w, id, (uint)m, key)) return false;
 			_w = w; _id = id;
 			//Hotkey = hotkey;

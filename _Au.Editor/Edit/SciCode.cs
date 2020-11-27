@@ -23,7 +23,7 @@ using static Au.Controls.Sci;
 
 partial class SciCode : AuScintilla
 {
-	readonly SciText.FileLoaderSaver _fls;
+	readonly SciTextF.FileLoaderSaver _fls;
 	readonly FileNode _fn;
 
 	public FileNode ZFile => _fn;
@@ -40,7 +40,7 @@ partial class SciCode : AuScintilla
 	//indicators. We can use 8-31. Lexers use 0-7. Draws indicators from smaller to bigger, eg error on warning.
 	public const int c_indicFind = 8, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20;
 
-	internal SciCode(FileNode file, SciText.FileLoaderSaver fls)
+	internal SciCode(FileNode file, SciTextF.FileLoaderSaver fls)
 	{
 		//_edit = edit;
 		_fn = file;

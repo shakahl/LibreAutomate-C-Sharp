@@ -82,6 +82,11 @@ namespace Au.Controls
 			event EventHandler<bool> VisibleChanged;
 
 			/// <summary>
+			/// After made floating or non-floating this leaf item.
+			/// </summary>
+			event EventHandler<bool> FloatingChanged;
+
+			/// <summary>
 			/// When user tries to close this leaf item.
 			/// Only if added with <see cref="AddSibling"/> with <i>canClose</i> true.
 			/// </summary>

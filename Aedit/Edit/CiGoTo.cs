@@ -221,7 +221,7 @@ class CiGoTo
 		if(sym != null) {
 			//AOutput.Write(sym);
 			var g = new CiGoTo(sym, onlyIfInSource: onCtrlClick);
-			if(g.CanGoTo) g.GoTo(cd.sciDoc);
+			//if(g.CanGoTo) g.GoTo(cd.sciDoc);//TODO
 		} else if(helpKind == CiUtil.HelpKind.String && token.IsKind(SyntaxKind.StringLiteralToken)) {
 			var s = token.ValueText;
 			if(s.Ends(".cs", true)) App.Model.OpenAndGoTo(s);

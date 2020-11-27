@@ -33,19 +33,19 @@ namespace Au
 
 		/// <summary>
 		/// Converts to int with rounding.
-		/// Calls <see cref="Convert.ToInt32"/>.
+		/// Calls <see cref="Convert.ToInt32(double)"/>.
 		/// </summary>
 		public static int ToInt(this double t) => Convert.ToInt32(t);
 
 		/// <summary>
 		/// Converts to int with rounding.
-		/// Calls <see cref="Convert.ToInt32"/>.
+		/// Calls <see cref="Convert.ToInt32(float)"/>.
 		/// </summary>
 		public static int ToInt(this float t) => Convert.ToInt32(t);
 
 		/// <summary>
 		/// Converts to int with rounding.
-		/// Calls <see cref="Convert.ToInt32"/>.
+		/// Calls <see cref="Convert.ToInt32(decimal)"/>.
 		/// </summary>
 		public static int ToInt(this decimal t) => Convert.ToInt32(t);
 

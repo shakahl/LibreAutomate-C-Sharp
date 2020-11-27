@@ -9,8 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
@@ -23,7 +21,7 @@ namespace Au.Controls
 	using static Sci;
 
 	/// <summary>
-	/// Gets image file paths etc from <see cref="AuScintilla"/> control text and displays the images below that lines.
+	/// Gets image file paths etc from <see cref="SciHost"/> control text and displays the images below that lines.
 	/// </summary>
 	/// <remarks>
 	/// Draws images in annotation areas.
@@ -42,7 +40,7 @@ namespace Au.Controls
 			public int width, height;
 		}
 
-		AuScintilla _c;
+		SciHost _c;
 		SciText _t;
 		IntPtr _callbackPtr;
 		bool _isEditor;
@@ -92,7 +90,7 @@ namespace Au.Controls
 			public int MaxCacheSize { get; set; } = 4 * 1024 * 1024;
 		}
 
-		//All SciImages of a thread share single cache etc.
+		//All SciImages2 of a thread share single cache etc.
 		[ThreadStatic] static _ThreadSharedData t_data;
 
 		/// <summary>
@@ -101,7 +99,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="c">The control.</param>
 		/// <param name="isEditor">Display images that are not in "&lt;image "path etc"&gt; tag. Then does not display icons of files that don't contain images. Then limits image height to 10 lines.</param>
-		internal SciImages(AuScintilla c, bool isEditor = false)
+		internal SciImages(SciHost c, bool isEditor = false)
 		{
 			if(t_data == null) t_data = new _ThreadSharedData();
 			_c = c;
@@ -486,11 +484,11 @@ namespace Au.Controls
 					int xx = x + q.width;
 					if(isFirstLine != 0) y--;
 					if(yy > y) {
-						MoveToEx(hdc, x - 1, y); LineTo(hdc, x - 1, yy); //left |
-						MoveToEx(hdc, xx, y); LineTo(hdc, xx, yy); //right |
-						if(isFirstLine != 0) { MoveToEx(hdc, x, y); LineTo(hdc, xx, y); } //top _
+						Api.MoveToEx(hdc, x - 1, y, out _); LineTo(hdc, x - 1, yy); //left |
+						Api.MoveToEx(hdc, xx, y, out _); LineTo(hdc, xx, yy); //right |
+						if(isFirstLine != 0) { Api.MoveToEx(hdc, x, y, out _); LineTo(hdc, xx, y); } //top _
 					}
-					if(yy >= y && yy < hLine) { MoveToEx(hdc, x - 1, yy); LineTo(hdc, xx + 1, yy); } //bottom _
+					if(yy >= y && yy < hLine) { Api.MoveToEx(hdc, x - 1, yy, out _); LineTo(hdc, xx + 1, yy); } //bottom _
 
 					x += u.width + 30;
 				}
@@ -503,7 +501,7 @@ namespace Au.Controls
 			if(!hasImages && c.annotLine == 0) {
 				int line = c.line; var annot = AnnotationText_(line);
 				//_t.AnnotationText_(line, annot); //dangerous
-				_c.BeginInvoke(new Action(() => { _t.AnnotationText_(line, annot); }));
+				_c.Dispatcher.InvokeAsync(() => { _t.AnnotationText_(line, annot); });
 				return 1;
 			}
 
@@ -519,9 +517,6 @@ namespace Au.Controls
 
 		[DllImport("gdi32.dll")]
 		internal static extern IntPtr CreatePen(int iStyle, int cWidth, uint color);
-
-		[DllImport("gdi32.dll")]
-		internal static extern bool MoveToEx(IntPtr hdc, int x, int y, Point* lppt = null);
 
 		[DllImport("gdi32.dll")]
 		internal static extern bool LineTo(IntPtr hdc, int x, int y);
@@ -645,26 +640,5 @@ namespace Au.Controls
 			}
 		}
 		AnnotationsVisible _visible;
-
-		//[Flags]
-		//enum _TimerTasks
-		//{
-		//	UpdateScrollBars = 1
-		//}
-
-		//void _SetTimer(_TimerTasks task)
-		//{
-		//	if(_timer10 == null) _timer10 = new ATimer(t =>
-		//	{
-		//		APerf.First();
-		//		if(0 != (_timerTasks & _TimerTasks.UpdateScrollBars)) _c.Call(SCI_UPDATESCROLLBARS);
-		//		APerf.NW();
-		//		_timerTasks = 0;
-		//	});
-		//	if(_timerTasks == 0) _timer10.After(10);
-		//	_timerTasks |= task;
-		//}
-		//ATimer _timer10;
-		//_TimerTasks _timerTasks;
 	}
 }

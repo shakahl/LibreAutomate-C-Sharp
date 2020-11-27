@@ -23,6 +23,7 @@ using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
+using System.Windows.Input;
 
 static class CodeInfo
 {
@@ -44,8 +45,7 @@ static class CodeInfo
 	static bool _isUI;
 	static RECT _sciRect;
 
-	public static void UiLoaded()
-	{
+	public static void UiLoaded() {
 		//warm up
 		//Task.Delay(100).ContinueWith(_1 => {
 		Task.Run(() => {
@@ -70,7 +70,7 @@ AOutput.Write(""t"" + 'c' + 1);
 				//p1.Next();
 				//_ = document.GetSemanticModelAsync().Result;
 				//p1.Next();
-				App.Wnd.Dispatcher.InvokeAsync(() => {
+				App.Wmain.Dispatcher.InvokeAsync(() => {
 					//APerf.Next('w');
 					_isWarm = true;
 					ReadyForStyling?.Invoke();
@@ -86,7 +86,7 @@ AOutput.Write(""t"" + 'c' + 1);
 
 				//EdUtil.MinimizeProcessPhysicalMemory(500); //with this later significantly slower
 			}
-			catch(Exception ex) {
+			catch (Exception ex) {
 				ADebug.Print(ex);
 			}
 		});
@@ -103,17 +103,15 @@ AOutput.Write(""t"" + 'c' + 1);
 	/// </summary>
 	public static event Action ReadyForStyling;
 
-	static bool _CanWork(SciCode doc)
-	{
-		if(!_isWarm) return false;
-		if(doc == null) return false;
-		if(!doc.ZFile.IsCodeFile) return false;
-		if(doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
+	static bool _CanWork(SciCode doc) {
+		if (!_isWarm) return false;
+		if (doc == null) return false;
+		if (!doc.ZFile.IsCodeFile) return false;
+		if (doc != Panels.Editor.ZActiveDoc) { _Uncache(); return false; } //maybe changed an inactive file that participates in current compilation //FUTURE: what if isn't open?
 		return true;
 	}
 
-	static void _Uncache()
-	{
+	static void _Uncache() {
 		//AOutput.Write("_Uncache");
 		CurrentWorkspace = null;
 		_solution = null;
@@ -124,14 +122,12 @@ AOutput.Write(""t"" + 'c' + 1);
 		_metaText = null;
 	}
 
-	public static void Stop()
-	{
+	public static void Stop() {
 		Cancel();
 		_Uncache();
 	}
 
-	public static void Cancel()
-	{
+	public static void Cancel() {
 		_compl.Cancel();
 		_signature.Cancel();
 		_tools.HideTempWindows();
@@ -142,103 +138,97 @@ AOutput.Write(""t"" + 'c' + 1);
 	/// Called when files added, deleted, moved, copied, imported.
 	/// Eg need to update styling when a meta c file became [un]available or when project folder structure changed.
 	/// </summary>
-	public static void FilesChanged()
-	{
+	public static void FilesChanged() {
 		Stop();
 		_styling.Update();
 	}
 
-	public static void SciKillFocus(SciCode doc)
-	{
-		if(!_CanWork(doc)) return;
+	public static void SciKillFocus(SciCode doc) {
+		if (!_CanWork(doc)) return;
 #if DEBUG
-		if(Debugger.IsAttached) return;
+		if (Debugger.IsAttached) return;
 #endif
 		//hide code info windows, except when a code info window is focused. Code info window names start with "Ci.".
 		var aw = AWnd.ThisThread.Active;
-		if(aw.Is0) Stop(); else if(!(Control.FromHandle(aw.Handle) is Form f && f.Name.Starts("Ci."))) Cancel();
+		if (aw.Is0) Stop(); else if (!(Control.FromHandle(aw.Handle) is Form f && f.Name.Starts("Ci."))) Cancel();
 	}
 
-	public static bool SciCmdKey(SciCode doc, Keys keyData)
-	{
+	public static bool SciCmdKey(SciCode doc, KKey key, ModifierKeys mod) {
 #if NO_COMPL_CORR_SIGN
 		return false;
 #endif
-		if(!_CanWork(doc)) return false;
-		switch(keyData) {
-		case Keys.Control | Keys.Space:
+		if (!_CanWork(doc)) return false;
+		switch ((key, mod)) {
+		case (KKey.Space, ModifierKeys.Control):
 			ShowCompletionList(doc);
 			return true;
-		case Keys.Control | Keys.Shift | Keys.Space:
+		case (KKey.Space, ModifierKeys.Control | ModifierKeys.Shift):
 			ShowSignature(doc);
 			return true;
-		case Keys.Escape:
-		case Keys.Down:
-		case Keys.Up:
-		case Keys.PageDown:
-		case Keys.PageUp:
-			if(_compl.OnCmdKey_SelectOrHide(keyData)) return true;
-			if(_signature.OnCmdKey(keyData)) return true;
+		case (KKey.Escape, 0):
+		case (KKey.Down, 0):
+		case (KKey.Up, 0):
+		case (KKey.PageDown, 0):
+		case (KKey.PageUp, 0):
+			if (_compl.OnCmdKey_SelectOrHide(key)) return true;
+			if (_signature.OnCmdKey(key)) return true;
 			break;
-		case Keys.Tab:
-		case Keys.Enter:
-			return _compl.OnCmdKey_Commit(doc, keyData) != CiComplResult.None || _correct.SciBeforeKey(doc, keyData);
-		case Keys.Enter | Keys.Shift:
-		case Keys.Enter | Keys.Control:
-		case Keys.OemSemicolon | Keys.Control:
-			var complResult = _compl.OnCmdKey_Commit(doc, keyData);
-			//if(complResult == CiComplResult.Complex && !keyData.HasAny(Keys.Modifiers)) return true;
-			return _correct.SciBeforeKey(doc, keyData) | (complResult != CiComplResult.None);
-		case Keys.Back:
-		case Keys.Delete:
-			return _correct.SciBeforeKey(doc, keyData);
+		case (KKey.Tab, 0):
+		case (KKey.Enter, 0):
+			return _compl.OnCmdKey_Commit(doc, key) != CiComplResult.None || _correct.SciBeforeKey(doc, key, mod);
+		case (KKey.Enter, ModifierKeys.Shift):
+		case (KKey.Enter, ModifierKeys.Control):
+		case (KKey.OemSemicolon, ModifierKeys.Control):
+			var complResult = _compl.OnCmdKey_Commit(doc, key);
+			//if(complResult == CiComplResult.Complex && mod==0) return true;
+			return _correct.SciBeforeKey(doc, key, mod) | (complResult != CiComplResult.None);
+		case (KKey.Back, 0):
+		case (KKey.Delete, 0):
+			return _correct.SciBeforeKey(doc, key, mod);
 		}
 		return false;
 	}
 
-	public static bool SciBeforeCharAdded(SciCode doc, char ch)
-	{
+	public static bool SciBeforeCharAdded(SciCode doc, char ch) {
 #if NO_COMPL_CORR_SIGN
 		return false;
 #endif
-		if(!_CanWork(doc)) return false;
+		if (!_CanWork(doc)) return false;
 
-		if(_correct.SciBeforeCharAdded(doc, ch, out var b)) {
-			if(b == null) return true;
+		if (_correct.SciBeforeCharAdded(doc, ch, out var b)) {
+			if (b == null) return true;
 
-			if(_compl.IsVisibleUI) {
+			if (_compl.IsVisibleUI) {
 				int diff = b.newPosUtf8 - b.oldPosUtf8;
 				_compl.SciCharAdding_Commit(doc, ch);
 				b.newPosUtf8 = doc.Z.CurrentPos8 + diff;
 			}
 
 			doc.Z.CurrentPos8 = b.newPosUtf8;
-			if(!b.dontSuppress) return true;
-		} else if(_compl.IsVisibleUI) {
-			if(CiComplResult.Complex == _compl.SciCharAdding_Commit(doc, ch)) return true;
+			if (!b.dontSuppress) return true;
+		} else if (_compl.IsVisibleUI) {
+			if (CiComplResult.Complex == _compl.SciCharAdding_Commit(doc, ch)) return true;
 		}
 		return false;
 	}
 
-	public static void SciModified(SciCode doc, in Sci.SCNotification n)
-	{
-		if(!_CanWork(doc)) return;
+	public static void SciModified(SciCode doc, in Sci.SCNotification n) {
+		if (!_CanWork(doc)) return;
 		_document = null;
 		_compl.SciModified(doc, in n);
 		_styling.SciModified(doc, in n);
 		_diag.SciModified();
 	}
 
-	public static void SciCharAdded(SciCode doc, char ch)
-	{
+	public static void SciCharAdded(SciCode doc, char ch) {
 #if NO_COMPL_CORR_SIGN
 		return;
 #endif
-		if(!_CanWork(doc)) return;
+		if (!_CanWork(doc)) return;
 
 		using var c = new CharContext(doc, ch);
 		_correct.SciCharAdded(c); //sync adds or removes ')' etc if need.
-		if(!c.ignoreChar) {
+		if (!c.ignoreChar) {
 			_compl.SciCharAdded_ShowList(c); //async gets completions and shows popup list. If already showing, filters/selects items.
 			_signature.SciCharAdded(c.doc, c.ch); //async shows signature help. Faster than _compl.
 
@@ -261,48 +251,43 @@ AOutput.Write(""t"" + 'c' + 1);
 		//		_correct on ';' moves caret after ')', and finally we have 'Write(true);', and caret after ';'.
 	}
 
-	public static void SciUpdateUI(SciCode doc, int updated)
-	{
+	public static void SciUpdateUI(SciCode doc, int updated) {
 #if NO_COMPL_CORR_SIGN
 		return;
 #endif
 		//AOutput.Write("SciUpdateUI", modified, _tempNoAutoComplete);
-		if(!_CanWork(doc)) return;
+		if (!_CanWork(doc)) return;
 
-		if(0 != (updated & 3)) { //text (1), selection/click (2)
+		if (0 != (updated & 3)) { //text (1), selection/click (2)
 			_compl.SciUpdateUI(doc);
 			_signature.SciPositionChanged(doc);
-		} else if(0 != (updated & 12)) { //scrolled
+		} else if (0 != (updated & 12)) { //scrolled
 			Cancel();
-			if(0 != (updated & 4)) { //vertically
-									 //_styling.Timer250msWhenVisibleAndWarm(doc); //rejected. Uses much CPU. The 250 ms timer is OK.
+			if (0 != (updated & 4)) { //vertically
+									  //_styling.Timer250msWhenVisibleAndWarm(doc); //rejected. Uses much CPU. The 250 ms timer is OK.
 			}
 		}
 	}
 
-	public static void ShowCompletionList(SciCode doc)
-	{
-		if(!_CanWork(doc)) return;
+	public static void ShowCompletionList(SciCode doc) {
+		if (!_CanWork(doc)) return;
 		_compl.ShowList();
 	}
 
-	public static void ShowSignature(SciCode doc = null)
-	{
+	public static void ShowSignature(SciCode doc = null) {
 		doc ??= Panels.Editor.ZActiveDoc;
-		if(!_CanWork(doc)) return;
+		if (!_CanWork(doc)) return;
 		_signature.ShowSignature(doc);
 	}
 
-	public static void SciMouseDwellStarted(SciCode doc, int pos8)
-	{
-		if(!_CanWork(doc)) return;
+	public static void SciMouseDwellStarted(SciCode doc, int pos8) {
+		if (!_CanWork(doc)) return;
 		bool isDiag = _diag.SciMouseDwellStarted(doc, pos8);
 		_quickInfo.SciMouseDwellStarted(doc, pos8, isDiag);
 	}
 
-	public static void SciMouseDwellEnded(SciCode doc)
-	{
-		if(!_CanWork(doc)) return;
+	public static void SciMouseDwellEnded(SciCode doc) {
+		if (!_CanWork(doc)) return;
 		//_diag.SciMouseDwellEnded(doc);
 	}
 
@@ -324,14 +309,13 @@ AOutput.Write(""t"" + 'c' + 1);
 		/// Initializes all fields except document.
 		/// For sciDoc uses Panels.Editor.ZActiveDoc.
 		/// </summary>
-		public Context(int pos)
-		{
+		public Context(int pos) {
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 
 			document = null;
 			sciDoc = Panels.Editor.ZActiveDoc;
 			code = sciDoc.Text;
-			if(pos == -1) pos = sciDoc.Z.CurrentPos16; else if(pos == -2) pos = sciDoc.Z.SelectionStar16;
+			if (pos == -1) pos = sciDoc.Z.CurrentPos16; else if (pos == -2) pos = sciDoc.Z.SelectionStar16;
 			pos16 = pos;
 			metaEnd = MetaComments.FindMetaComments(code);
 		}
@@ -341,27 +325,26 @@ AOutput.Write(""t"" + 'c' + 1);
 		/// Creates or updates Solution if need.
 		/// Returns false if fails, unlikely.
 		/// </summary>
-		public bool GetDocument()
-		{
-			if(_document != null) {
+		public bool GetDocument() {
+			if (_document != null) {
 				document = _document;
 				return true;
 			}
 
-			if(_solution != null && !(metaEnd == _metaText.Length && code.Starts(_metaText))) {
+			if (_solution != null && !(metaEnd == _metaText.Length && code.Starts(_metaText))) {
 				_Uncache();
 				_styling.Update();
 			}
-			if(_solution == null) _metaText = metaEnd > 0 ? code.Remove(metaEnd) : "";
+			if (_solution == null) _metaText = metaEnd > 0 ? code.Remove(metaEnd) : "";
 
 			try {
-				if(_solution == null) {
+				if (_solution == null) {
 					_CreateSolution(sciDoc.ZFile);
 				} else {
 					_solution = _solution.WithDocumentText(_documentId, SourceText.From(code, Encoding.UTF8));
 				}
 			}
-			catch(Exception ex) {
+			catch (Exception ex) {
 				ADebug.Print(ex);
 				return false;
 			}
@@ -393,9 +376,8 @@ AOutput.Write(""t"" + 'c' + 1);
 	/// </summary>
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
-	public static bool GetContextAndDocument(out Context r, int position = -1, bool metaToo = false)
-	{
-		if(!GetContextWithoutDocument(out r, position, metaToo)) return false;
+	public static bool GetContextAndDocument(out Context r, int position = -1, bool metaToo = false) {
+		if (!GetContextWithoutDocument(out r, position, metaToo)) return false;
 		return r.GetDocument();
 	}
 
@@ -405,10 +387,9 @@ AOutput.Write(""t"" + 'c' + 1);
 	/// </summary>
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
-	public static bool GetContextWithoutDocument(out Context r, int position = -1, bool metaToo = false)
-	{
+	public static bool GetContextWithoutDocument(out Context r, int position = -1, bool metaToo = false) {
 		r = new Context(position);
-		if(!r.sciDoc.ZFile.IsCodeFile) { r.metaEnd = 0; return false; }
+		if (!r.sciDoc.ZFile.IsCodeFile) { r.metaEnd = 0; return false; }
 		return r.pos16 >= r.metaEnd || metaToo;
 	}
 
@@ -417,9 +398,8 @@ AOutput.Write(""t"" + 'c' + 1);
 	/// </summary>
 	/// <param name="position">If -1, gets current position. If -2, gets selection start.</param>
 	/// <param name="metaToo">Don't return false if position is in meta comments.</param>
-	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1, bool metaToo = false)
-	{
-		if(!GetContextAndDocument(out r, position, metaToo)) { node = null; return false; }
+	public static bool GetDocumentAndFindNode(out Context r, out SyntaxNode node, int position = -1, bool metaToo = false) {
+		if (!GetContextAndDocument(out r, position, metaToo)) { node = null; return false; }
 		node = r.document.GetSyntaxRootAsync().Result.FindToken(r.pos16).Parent;
 		return true;
 	}
@@ -428,29 +408,27 @@ AOutput.Write(""t"" + 'c' + 1);
 
 	public static MetaComments Meta => _meta;
 
-	static void _CreateSolution(FileNode f)
-	{
+	static void _CreateSolution(FileNode f) {
 		_diag.ClearMetaErrors();
 		CurrentWorkspace = new AdhocWorkspace();
 		_solution = CurrentWorkspace.CurrentSolution;
 		_projectId = _AddProject(f, true);
 
-		static ProjectId _AddProject(FileNode f, bool isMain)
-		{
+		static ProjectId _AddProject(FileNode f, bool isMain) {
 			var f0 = f;
-			if(f.FindProject(out var projFolder, out var projMain)) f = projMain;
+			if (f.FindProject(out var projFolder, out var projMain)) f = projMain;
 
 			var m = new MetaComments();
 			m.Parse(f, projFolder, EMPFlags.ForCodeInfo);
-			if(isMain) _meta = m;
+			if (isMain) _meta = m;
 
 			var projectId = ProjectId.CreateNewId();
 			var adi = new List<DocumentInfo>();
-			foreach(var f1 in m.CodeFiles) {
+			foreach (var f1 in m.CodeFiles) {
 				var docId = DocumentId.CreateNewId(projectId);
 				var tav = TextAndVersion.Create(SourceText.From(f1.code, Encoding.UTF8), VersionStamp.Default, f1.f.FilePath);
 				adi.Add(DocumentInfo.Create(docId, f1.f.Name, null, SourceCodeKind.Regular, TextLoader.From(tav), f1.f.ItemPath));
-				if(f1.f == f0 && isMain) {
+				if (f1.f == f0 && isMain) {
 					_documentId = docId;
 				}
 			}
@@ -469,22 +447,21 @@ AOutput.Write(""t"" + 'c' + 1);
 		}
 	}
 
-	private static void _Timer025sWhenVisible()
-	{
+	private static void _Timer025sWhenVisible() {
 		var doc = Panels.Editor.ZActiveDoc;
-		if(doc == null || !doc.ZFile.IsCodeFile) return;
+		if (doc == null || !doc.ZFile.IsCodeFile) return;
 
 		//cancel if changed the screen rectangle of the document window
-		if(_compl.IsVisibleUI || _signature.IsVisibleUI || _phVisible) {
+		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _phVisible) {
 			var r = Panels.Editor.ZActiveDoc.Hwnd().Rect;
-			if(!_isUI) {
+			if (!_isUI) {
 				_isUI = true;
 				_sciRect = r;
-			} else if(r != _sciRect) { //moved/resized top-level window or eg moved some splitter
+			} else if (r != _sciRect) { //moved/resized top-level window or eg moved some splitter
 				_isUI = false;
 				Cancel();
 			}
-		} else if(_isUI) {
+		} else if (_isUI) {
 			_isUI = false;
 		}
 
@@ -494,8 +471,7 @@ AOutput.Write(""t"" + 'c' + 1);
 	static CiPopupHtml _popupHtml;
 	static bool _phVisible;
 
-	internal static void ShowHtmlPopup(SciCode doc, int pos16, string html, Action<CiPopupHtml, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs> onLinkClick = null, bool above = false)
-	{
+	internal static void ShowHtmlPopup(SciCode doc, int pos16, string html, Action<CiPopupHtml, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs> onLinkClick = null, bool above = false) {
 		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Info, onHiddenOrDestroyed: _ => _phVisible = false) {
 			OnLoadImage = OnHtmlImageLoad,
 		};
@@ -505,16 +481,14 @@ AOutput.Write(""t"" + 'c' + 1);
 		_phVisible = true;
 	}
 
-	internal static void HideHtmlPopup()
-	{
-		if(_phVisible) _popupHtml.Hide();
+	internal static void HideHtmlPopup() {
+		if (_phVisible) _popupHtml.Hide();
 	}
 
-	internal static void OnHtmlImageLoad(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlImageLoadEventArgs e)
-	{
+	internal static void OnHtmlImageLoad(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlImageLoadEventArgs e) {
 		var s = e.Src;
 		//AOutput.Write(s);
-		if(s.Starts("@")) {
+		if (s.Starts("@")) {
 			e.Handled = true;
 			int dpi = ADpi.OfWindow(sender as Control);
 			int i = s.ToInt(2);
@@ -530,8 +504,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		public bool ignoreChar;
 		//bool _undoStarted;
 
-		public CharContext(SciCode doc, char ch)
-		{
+		public CharContext(SciCode doc, char ch) {
 			this.doc = doc;
 			this.ch = ch;
 		}
@@ -544,8 +517,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		//	}
 		//}
 
-		public void Dispose()
-		{
+		public void Dispose() {
 			//if(_undoStarted) {
 			//	_undoStarted = false;
 			//	doc.Call(Sci.SCI_ENDUNDOACTION);

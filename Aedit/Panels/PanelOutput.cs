@@ -9,52 +9,50 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
+using System.Windows;
+using System.Windows.Controls;
 //using System.Linq;
 
 using Au;
 using Au.Types;
 using Au.Controls;
 using static Au.Controls.Sci;
+using System.Windows.Interop;
+using System.Windows.Input;
 
-class PanelOutput : AuUserControlBase
+class PanelOutput : DockPanel
 {
 	_SciOutput _c;
 	Queue<OutServMessage> _history;
 
-	public AuScintilla ZOutput => _c;
+	public SciHost ZOutput => _c;
 
 	public PanelOutput() {
-		this.AccessibleName = this.Name = "Output";
-		_c = new _SciOutput(this);
-		_c.AccessibleName = _c.Name = "Output_text";
-		_c.Dock = DockStyle.Fill;
-		this.Controls.Add(_c);
-
+		_c = new _SciOutput(this) { Name = "Output_text" };
+		this.Children.Add(_c);
 		_history = new Queue<OutServMessage>();
 	}
-
-	//protected override void OnGotFocus(EventArgs e) { _c.Focus(); }
 
 	public void ZClear() { _c.Z.ClearText(); }
 
 	public void ZCopy() { _c.Call(SCI_COPY); }
 
-	public void ZFind() { Panels.Find.ZCtrlF(_c); }
+	public void ZFind() { Panels.Find.ZCtrlF(_c.Z.SelectedText()); }
 
 	public void ZHistory() {
-		var dd = new PopupList { Items = _history.ToArray() };
-		dd.SelectedAction = o => AOutput.Write((o.ResultItem as OutServMessage).Text);
-		dd.Show(new Rectangle(AMouse.XY, default));
+		var p = new PopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+		p.Control.ItemsSource = _history;
+		p.OK += o => AOutput.Write((o as OutServMessage).Text);
+		Dispatcher.InvokeAsync(() => p.IsOpen = true);
 	}
 
-	private void _c_HandleCreated() {
+	void _c_HandleCreated() {
 		_inInitSettings = true;
 		if (ZWrapLines) ZWrapLines = true;
 		if (ZWhiteSpace) ZWhiteSpace = true;
 		if (ZTopmost) App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = true; //see also OnParentChanged, below
 		_inInitSettings = false;
+		Panels.PanelManager["Output"].FloatingChanged += (_, floating) => { if (floating && ZTopmost) _SetTopmost(true); };
 	}
 	bool _inInitSettings;
 
@@ -84,10 +82,7 @@ class PanelOutput : AuUserControlBase
 	public bool ZTopmost {
 		get => App.Settings.output_topmost;
 		set {
-			//TODO
-			//var p = Panels.PanelManager.ZGetPanel(this);
-			////if(value) p.Floating = true;
-			//if(p.Floating) _SetTopmost(value);
+			if (Panels.PanelManager["Output"].Floating) _SetTopmost(value);
 			App.Settings.output_topmost = value;
 			App.Commands[nameof(Menus.Tools.Output.Topmost_when_floating)].Checked = value;
 		}
@@ -102,17 +97,11 @@ class PanelOutput : AuUserControlBase
 			//AWnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
-			w.OwnerWindow = App.Wnd.Hwnd();
+			w.OwnerWindow = App.Wmain.Hwnd();
 		}
 	}
 
-	protected override void OnParentChanged(EventArgs e) {
-		if (Parent is Form && ZTopmost) ATimer.After(1, _ => _SetTopmost(true));
-
-		base.OnParentChanged(e);
-	}
-
-	class _SciOutput : AuScintilla
+	class _SciOutput : SciHost
 	{
 		PanelOutput _p;
 		StringBuilder _sb;
@@ -124,13 +113,10 @@ class PanelOutput : AuUserControlBase
 			ZInitTagsStyle = ZTagsStyle.AutoWithPrefix;
 			ZInitImagesStyle = ZImagesStyle.ImageTag;
 
-			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
-			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
+			//App.Commands[nameof(Menus.Tools.Output)].SetKeysTarget(this);
 		}
 
-		protected override void OnHandleCreated(EventArgs e) {
-			base.OnHandleCreated(e);
-
+		protected override void OnHandleCreated(AWnd w) {
 			_p._c_HandleCreated();
 			Z.MarginWidth(1, 3);
 			Z.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
@@ -138,28 +124,35 @@ class PanelOutput : AuUserControlBase
 			Z.StyleFont(STYLE_DEFAULT, "Consolas", 9);
 			Z.StyleClearAll();
 
+			SciTagsF.AddCommonLinkTag("open", s => _OpenLink(s));
+			SciTagsF.AddCommonLinkTag("script", s => _RunScript(s));
 			ZTags.AddLinkTag("+properties", fid => {
 				var f = App.Model.FindScript(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;
 				Menus.File.Properties();
 			});
 
-			App.OutputServer.SetNotifications(this.Hwnd(), Api.WM_APP);
+			App.OutputServer.SetNotifications(w, Api.WM_APP);
+
+			base.OnHandleCreated(w);
 		}
 
-		protected override void WndProc(ref Message m) {
-			switch (m.Msg) {
-			case Api.WM_MBUTTONDOWN:
-				Z.ClearText();
-				return;
-			case Api.WM_CONTEXTMENU:
-				//Strips.ddOutput.ZShowAsContextMenu((int)m.LParam == -1); //TODO
-				return;
+		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
+			//AWnd.More.PrintMsg(out var s, default, msg, wParam, lParam); AOutput.QM2.Write(s);
+			switch (msg) {
 			case Api.WM_APP:
 				ZTags.OutputServerProcessMessages(App.OutputServer, _onServerMessage ??= _OnServerMessage);
-				break;
+				return default;
+			case Api.WM_MBUTTONDOWN:
+				Z.ClearText();
+				return default;
+			case Api.WM_CONTEXTMENU:
+				var m = new ContextMenu { PlacementTarget = this };
+				App.Commands[nameof(Menus.Tools.Output)].CopyToMenu(m);
+				m.IsOpen = true;
+				return default;
 			}
-			base.WndProc(ref m);
+			return base.WndProc(hwnd, msg, wParam, lParam, ref handled);
 		}
 
 		Action<OutServMessage> _onServerMessage;
@@ -238,18 +231,18 @@ class PanelOutput : AuUserControlBase
 				if (h.Count > 50) h.Dequeue();
 			}
 
-			//(_iPanel ??= Panels.PanelManager.ZGetPanel(_p)).Visible = true; //TODO
+			(_iPanel ??= Panels.PanelManager["Output"]).Visible = true; //SHOULDDO: if(App.Win.IsVisible) ?
 		}
 		static ARegex s_rx1, s_rx2;
-		//AuDockPanel.IPanel _iPanel;
+		AuPanels.ILeaf _iPanel;
 
-		void _OpenLink(string s) {
+		static void _OpenLink(string s) {
 			//AOutput.Write(s);
 			var a = s.Split('|');
 			App.Model.OpenAndGoTo2(a[0], a.Length > 1 ? a[1] : null, a.Length > 2 ? a[2] : null);
 		}
 
-		void _RunScript(string s) {
+		static void _RunScript(string s) {
 			var a = s.Split('|');
 			var f = App.Model.FindScript(a[0]); if (f == null) return;
 			CompileRun.CompileAndRun(true, f, a.Length == 1 ? null : a.RemoveAt(0));

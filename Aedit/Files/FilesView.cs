@@ -32,6 +32,8 @@ partial class FilesModel
 			ItemDragStart += _ItemDragStart;
 
 			FilesModel.NeedRedraw += v => { if (v.f != null) Redraw(v.f, v.remeasure); else Redraw(v.remeasure); };
+
+			App.Commands.BindKeysTarget(this, "Files");
 		}
 
 		public void SetItems() {
@@ -66,7 +68,6 @@ partial class FilesModel
 			case (ModifierKeys.Control, Key.C): m.CutCopySelected(false); break;
 			case (ModifierKeys.Control, Key.V): m.Paste(); break;
 			case (0, Key.Escape): m.Uncut(); break;
-			case (0, Key.F2): m.RenameSelected(); break;
 			default: return;
 			}
 			e.Handled = true;

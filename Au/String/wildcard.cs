@@ -193,7 +193,7 @@ namespace Au
 
 		readonly object _o; //string, ARegex, Regex or AWildex[]. Tested: getting string etc with '_obj as string' is fast.
 		readonly WXType _type;
-		readonly bool _ignoreCase;
+		readonly bool _ignoreCase; //CONSIDER: default true. In find-window class/program ignore and use false.
 		readonly bool _not;
 
 		/// <param name="wildcardExpression">

@@ -1126,6 +1126,9 @@ namespace Au
 		/// <seealso cref="Focus"/>
 		public bool IsFocused => !this.Is0 && this == Focused;
 
+		//TODO: try to incorporate in AWnd. Now this is too obscure. Eg name FocusLL or FocusT.
+		//TODO: rename all XxxLL (low-level) to XxxL (lightweight).
+
 		/// <summary>
 		/// Functions that can be used only with windows/controls of this thread.
 		/// </summary>
@@ -1161,7 +1164,7 @@ namespace Au
 			/// <remarks>
 			/// Calls API <msdn>GetFocus</msdn> and <see cref="System.Windows.Forms.Control.FromHandle"/>.
 			/// </remarks>
-			public static System.Windows.Forms.Control FocusedWinformsControl => System.Windows.Forms.Control.FromHandle(Api.GetFocus().Handle);
+			public static System.Windows.Forms.Control FocusedWinformsControl => System.Windows.Forms.Control.FromHandle(Api.GetFocus().Handle); //TODO: remove when winforms rejected
 
 			/// <summary>
 			/// Returns true if w is the focused control or window of this thread.
@@ -1175,7 +1178,7 @@ namespace Au
 			/// Gets the active window of this thread.
 			/// Calls API <msdn>GetActiveWindow</msdn>.
 			/// </summary>
-			public static AWnd Active => Api.GetActiveWindow();
+			public static AWnd Active => Api.GetActiveWindow(); //TODO: move to More and rename to ActiveOfThisThread
 		}
 
 		#endregion

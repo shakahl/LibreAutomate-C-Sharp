@@ -83,7 +83,7 @@ class PanelEdit : UserControl
 		} else {
 			var path = f.FilePath;
 			byte[] text = null;
-			SciText.FileLoaderSaver fls = default;
+			SciTextF.FileLoaderSaver fls = default;
 			try { text = fls.Load(path); }
 			catch(Exception ex) { AOutput.Write("Failed to open file. " + ex.Message); }
 			if(text == null) return false;

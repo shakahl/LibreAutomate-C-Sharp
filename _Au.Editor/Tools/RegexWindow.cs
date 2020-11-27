@@ -14,7 +14,7 @@ namespace Au.Tools
 		{
 			int dpi = ADpi.OfWindow(ownerForDpi);
 			base.InitTwoControlsSplitPos = ADpi.Scale(250, dpi);
-			this.Size = ADpi.ScaleSize((800, 220), dpi);
+			this.Size = ADpi.Scale((800, 220), dpi);
 			this.Caption = "Regex";
 		}
 
@@ -22,12 +22,12 @@ namespace Au.Tools
 		{
 			for(int i = 0; i < 2; i++) {
 				var c = i == 0 ? this.Control1 : this.Control2;
-				c.ZTags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 }); //red regex
+				c.ZTags.AddStyleTag(".r", new SciTagsF.UserDefinedStyle { textColor = 0xf08080 }); //red regex
 				c.ZTags.AddLinkTag("+p", o => CurrentTopic = o); //link to a local info topic
-				c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
+				c.ZTags.SetLinkStyle(new SciTagsF.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 				c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
 			}
-			this.Control2.ZTags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
+			this.Control2.ZTags.AddStyleTag(".h", new SciTagsF.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
 			this.Control2.ZTags.AddLinkTag("+a", o => InsertCode.TextSimplyInControl(InsertInControl, o)); //link that inserts a regex token
 
 			_SetTocText();

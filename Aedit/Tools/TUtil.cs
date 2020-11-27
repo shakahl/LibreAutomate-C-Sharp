@@ -497,7 +497,7 @@ namespace Au.Tools
 					InsertCode.Statements(ZResultCode);
 				}
 			};
-			//Show(App.Wnd); //no, changes mainform's Z order when this for activated, and then main form may cover target window
+			//Show(App.Wmain); //no, changes mainform's Z order when this for activated, and then main form may cover target window
 			Show();
 		}
 	}
