@@ -991,7 +991,7 @@ partial class FilesModel
 	}
 
 	void _MultiCopyMove(bool copy, FileNode[] a, FileNode target, FNPosition pos, bool importingWorkspace = false) {
-		if (copy) TreeControl.Select(.., false);
+		if (copy) TreeControl.UnselectAll();
 		try {
 			bool movedCurrentFile = false;
 			var a2 = new List<FileNode>(a.Length);
@@ -1053,7 +1053,7 @@ partial class FilesModel
 
 		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
 		bool select = pos != FNPosition.Inside || target.IsExpanded, focus = select;
-		if (select) TreeControl.Select(.., false);
+		if (select) TreeControl.UnselectAll();
 		try {
 			var newParentPath = newParent.FilePath + "\\";
 			var (nf1, nd1, nc1) = _CountFilesFolders();

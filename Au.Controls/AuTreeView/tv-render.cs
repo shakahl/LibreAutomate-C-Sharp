@@ -98,10 +98,11 @@ namespace Au.Controls
 		(int from, int to) _GetViewRange() => _GetViewRange(_height);
 
 		void _Invalidate(RECT* r = null) {
-			Api.InvalidateRect(_hh.Hwnd, r, false);
+			if(_hh!=null) Api.InvalidateRect(_hh.Hwnd, r, false);
 		}
 
 		void _Invalidate(int index) {
+			if (_hh == null) return;
 			var r = GetRectPhysical(index, clampX: true);
 			if (r.bottom > 0 && r.top < _height) Api.InvalidateRect(_hh.Hwnd, &r, false);
 		}

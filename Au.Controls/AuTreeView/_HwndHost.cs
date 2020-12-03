@@ -19,7 +19,6 @@ using System.Threading;
 using System.Windows.Media;
 using System.Diagnostics;
 
-
 namespace Au.Controls
 {
 	public unsafe partial class AuTreeView
@@ -27,7 +26,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets native control handle.
 		/// </summary>
-		public AWnd Wnd => _hh.Hwnd;
+		public AWnd Wnd => _hh?.Hwnd ?? default;
 
 		partial class _HwndHost : HwndHost
 		{
@@ -48,7 +47,7 @@ namespace Au.Controls
 			protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 				var wParent = (AWnd)hwndParent.Handle;
 #if true
-				_w = AWnd.More.CreateWindow(_WndProc, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+				AWnd.More.CreateWindow(_WndProc, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 #else //the below code works, but not on Win7. The above code works if WS.DISABLED or WM_NCHITTEST returns HTTRANSPARENT. WPF can remove WS.DISABLED.
 			_w=AWnd.More.CreateWindow(_WndProc, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WS2.TRANSPARENT|WS2.LAYERED, 0, 0, 10, 10, wParent);
 	//		_w.SetTransparency(true, 255);
@@ -66,10 +65,13 @@ namespace Au.Controls
 			}
 
 			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
-				//		var pmo=new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-				//		if(AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>"+s+"<>");
+				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
+				//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
 
 				switch (msg) {
+				case Api.WM_NCCREATE:
+					_w = w;
+					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
 #if BUFFERED_API
@@ -102,6 +104,9 @@ namespace Au.Controls
 					}
 					finally { Api.EndPaint(w, ps); }
 					return default;
+				case Api.WM_SHOWWINDOW when wParam == 1:
+					if (_tv._ensureVisibleIndex > 0) _tv.EnsureVisible(_tv._ensureVisibleIndex);
+					break;
 				}
 
 				var R = Api.DefWindowProc(w, msg, wParam, lParam);
@@ -142,7 +147,7 @@ namespace Au.Controls
 				public int cbSize;
 				public uint dwFlags;
 				public RECT* prcExclude;
-				//	public BLENDFUNCTION* pBlendFunction;
+				//public BLENDFUNCTION* pBlendFunction;
 				uint pBlendFunction;
 			}
 			//internal struct BLENDFUNCTION {
@@ -154,7 +159,7 @@ namespace Au.Controls
 #endif
 
 			protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
-				//			AOutput.Write(e.Property);
+				//AOutput.Write(e.Property);
 				if (_tv?._lePopup != null && e.Property.Name == "IsVisible" && e.NewValue is bool y && !y) _tv.EndEditLabel(true);
 				base.OnPropertyChanged(e);
 			}

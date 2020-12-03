@@ -7244,6 +7244,18 @@
             Adds a child element in specified row/column.
             </summary>
         </member>
+        <member name="M:Au.AExtWpf.DpiChangedWorkaround(System.Windows.Window)">
+            <summary>
+            Workaround for WPF bug: on DPI change tries to activate window.
+            Call on WM_DPICHANED message or in OnDpiChanged override.
+            </summary>
+        </member>
+        <member name="M:Au.AExtWpf.DpiChangedWorkaround(System.Windows.Interop.HwndSource)">
+            <summary>
+            Workaround for WPF bug: on DPI change tries to activate window.
+            Call on WM_DPICHANED message or in OnDpiChanged override. Only if top-level window.
+            </summary>
+        </member>
         <member name="T:Au.AExtXml">
             <summary>
             Adds extension methods and some static functions for <see cref="T:System.Xml.Linq.XElement"/> and <see cref="T:System.Xml.Linq.XDocument"/>.
@@ -13056,10 +13068,13 @@
             Applied to menu items added afterwards.
             </summary>
         </member>
-        <member name="M:Au.AWpfMenu.Show">
+        <member name="M:Au.AWpfMenu.Show(System.Windows.UIElement,System.Boolean,System.Boolean)">
             <summary>
-            Sets <see cref="P:System.Windows.Controls.ContextMenu.IsOpen"/> = true and waits until closed.
+            Sets <see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/> = <i>owner</i> and <see cref="P:System.Windows.Controls.ContextMenu.IsOpen"/> = true.
             </summary>
+            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
+            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
+            <param name="modal">Wait until closed.</param>
         </member>
         <member name="M:Au.AWpfMenu.OnClosed(System.Windows.RoutedEventArgs)">
             
@@ -13079,7 +13094,7 @@
             Returns null if no such string/pattern.
             </summary>
         </member>
-        <member name="M:Au.AWpfMenu.ShowSimple(Au.Types.DStringList,System.Windows.UIElement,System.Action{Au.AWpfMenu})">
+        <member name="M:Au.AWpfMenu.ShowSimple(Au.Types.DStringList,System.Windows.UIElement,System.Boolean,System.Action{Au.AWpfMenu})">
             <summary>
             Creates and shows popup menu where items use ids instead of actions.
             Returns selected item id, or 0 if cancelled.
@@ -13089,7 +13104,8 @@
             Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
             For separators use null or empty strings: "One|Two||Three|Four".
             </param>
-            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. Can be null, but not recommended because then uses DPI of primary screen (WPF bug).</param>
+            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
+            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
             <param name="beforeShow">Called after adding menu items, before showing the menu. For example can set placement properties.</param>
             <remarks>
             The menu is modal; the function returns when closed.
@@ -25457,6 +25473,13 @@
             </summary>
             <exception cref="T:Au.Types.AuWndException"></exception>
         </member>
+        <member name="M:Au.AWnd.ThrowUseNative(System.Int32)">
+            <summary>
+            Throws <see cref="T:Au.Types.AuWndException"/> that uses the specified Windows API error code and its message.
+            Also the message depends on whether the window handle is 0/invalid.
+            </summary>
+            <exception cref="T:Au.Types.AuWndException"></exception>
+        </member>
         <member name="M:Au.AWnd.ThrowUseNative(System.String)">
             <summary>
             Throws <see cref="T:Au.Types.AuWndException"/> that uses mainMessage and the last Windows API error (code and message).
@@ -27083,6 +27106,12 @@
             Gets top-level windows of a thread.
             </summary>
             <remarks>This overload can be used to avoid much garbage when caling frequently.</remarks>
+        </member>
+        <member name="M:Au.AWnd.GetWnd.TopThreadWindow_(System.Boolean)">
+            <summary>
+            Gets the first in Z order window of this thread.
+            </summary>
+            <param name="onlyVisible"></param>
         </member>
         <member name="M:Au.AWnd.GetWnd.#ctor(Au.AWnd)">
             

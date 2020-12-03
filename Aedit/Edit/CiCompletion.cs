@@ -260,10 +260,10 @@ class CiCompletion
 			if (r == null) {
 				if (stringFormat == (PSFormat)100) {
 					stringFormat = default;
-					var m = new AMenu { Modal = true };
+					var m = new AWpfMenu();
 					m["Regex"] = o => stringFormat = PSFormat.ARegex;
 					m["Keys"] = o => stringFormat = PSFormat.AKeys;
-					//m.Show(doc, byCaret: true);//TODO
+					m.Show(doc, byCaret: true);
 				}
 				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringSpan);
 				return;
@@ -364,6 +364,7 @@ class CiCompletion
 					case "UIAutomationClientsideProviders":
 						v.moveDown = CiItemMoveDownBy.Name;
 						break;
+					case "XamlGeneratedNamespace": continue;
 					}
 					break;
 				case CiItemKind.TypeParameter:
@@ -526,8 +527,8 @@ class CiCompletion
 
 			_data = d;
 			if (_popupList == null) {
-				_popupList = new CiPopupList(this, doc);
-				//_popupList.PopupWindow.ZHiddenOrDestroyed += destroyed => _CancelUI(popupListHidden: true);//TODO
+				_popupList = new CiPopupList(this);
+				_popupList.PopupWindow.Hidden += (_, _) => _CancelUI(popupListHidden: true);
 			}
 			_popupList.Show(doc, span.Start, _data.items, groupsList); //and calls SelectBestMatch
 		}
@@ -912,7 +913,7 @@ enum CiItemHiddenBy : byte { FilterText = 1, Kind = 2 }
 [Flags]
 enum CiItemMoveDownBy : sbyte { Name = 1, Obsolete = 2, FilterText = 4 }
 
-class CiComplItem :ITreeViewItem
+class CiComplItem : ITreeViewItem
 {
 	public readonly CompletionItem ci;
 	public readonly CiItemKind kind;
@@ -921,13 +922,25 @@ class CiComplItem :ITreeViewItem
 	public CiItemMoveDownBy moveDown;
 	public int group;
 	public ulong hilite; //bits for max 64 characters
+	public int commentOffset;
 	string _text;
 
-	public string DisplayText => _text ??= ci.DisplayText + ci.DisplayTextSuffix;
+	#region ITreeViewItem
+	public string DisplayText => _text;
 
 	string ITreeViewItem.ImageSource => ImageResource(kind);
 
-	public static string ImageResource(CiItemKind kind)	=> kind switch {
+	#endregion
+
+	public void SetDisplayText(string comment) {
+		var desc = ci.InlineDescription; if (desc.NE()) desc = comment;
+		bool isComment = !desc.NE();
+		if (_text != null && !isComment && commentOffset == 0) return;
+		_text = ci.DisplayText + ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
+		commentOffset = isComment ? _text.Length - desc.Length - 6 : 0;
+	}
+
+	public static string ImageResource(CiItemKind kind) => kind switch {
 		CiItemKind.Class => "resource:resources/ci/class.xaml",
 		CiItemKind.Constant => "resource:resources/ci/constant.xaml",
 		CiItemKind.Delegate => "resource:resources/ci/delegate.xaml",
@@ -951,7 +964,7 @@ class CiComplItem :ITreeViewItem
 
 	public string AccessImageSource => AccessImageResource(access);
 
-	public static string AccessImageResource(CiItemAccess access)	=> access switch {
+	public static string AccessImageResource(CiItemAccess access) => access switch {
 		CiItemAccess.Private => "resource:resources/ci/overlayprivate.xaml",
 		CiItemAccess.Protected => "resource:resources/ci/overlayprotected.xaml",
 		CiItemAccess.Internal => "resource:resources/ci/overlayinternal.xaml",

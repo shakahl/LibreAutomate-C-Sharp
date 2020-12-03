@@ -208,6 +208,8 @@ namespace Au.Types
 			DEFERERASE = 0x2000,
 			ASYNCWINDOWPOS = 0x4000,
 			_STATECHANGED = 0x8000,
+			//_10000000 = 0x10000000,
+			_KNOWNFLAGS = 0xffff,
 
 			//the undocumented flags would break ToString() if not defined
 		}

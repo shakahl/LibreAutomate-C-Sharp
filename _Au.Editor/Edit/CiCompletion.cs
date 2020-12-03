@@ -367,6 +367,7 @@ class CiCompletion
 					case "UIAutomationClientsideProviders":
 						v.moveDown = CiItemMoveDownBy.Name;
 						break;
+					case "XamlGeneratedNamespace": continue;
 					}
 					break;
 				case CiItemKind.TypeParameter:

@@ -16,6 +16,8 @@ using Microsoft.Win32;
 using Au.Util;
 using Au.Tools;
 using System.Windows.Input;
+using System.Windows.Controls;
+using System.Windows.Media;
 //using System.Linq;
 
 //TODO: now keys works only when main window active, not when eg a floating panel active.
@@ -266,10 +268,10 @@ static class Menus
 				if (App.Tasks.EndTasksOf(f)) return;
 			}
 			var t = App.Tasks.GetRunsingleTask(); if (t == null) return;
+			//TODO: show all running, because runSingle now not default
 			var m = new AWpfMenu();
 			m["End task  " + t.f.DisplayName] = o => App.Tasks.EndTask(t);
-			m.PlacementTarget = App.Wmain;
-			m.Show();
+			m.Show(App.Wmain);
 		}
 
 		//[Command(image = "resources/images/pause_16x.xaml")]
@@ -392,14 +394,34 @@ static class Menus
 	}
 
 #if TRACE
+	static KPopup _test;
+
 	[Command]
 	public static void TEST() {
+		if (_test == null) {
+			var p = new KPopup { Size = (200, 300) };
+			//var p = new KPopup(WS.CAPTION|WS.MAXIMIZEBOX|WS.MINIMIZEBOX|WS.SYSMENU|WS.THICKFRAME, 0) { Size = (200, 300) };
+			var c = new Label { Background = Brushes.Wheat, Content = "Test" };
+			p.Content = c;
+			//p.HwndSource.SizeToContent = default;
+			_test = p;
+		}
+		//_test.ShowByRect(Panels.Running, Dock.Bottom);
+		//_test.ShowByRect(Panels.Running, Dock.Bottom, (100, 100, 100, 100));
+		_test.ShowByRect((KPopup)null, Dock.Bottom, (700, 1100, 100, 1));
+
+		//ATimer.After(2000, _ => _test.Hide());
+
+		//var m = new AWpfMenu();
+		//m["aaaa"] = null;
+		//m.Show(App.Wmain, byCaret: true);
+		//m.Show(null, byCaret: true);
 
 		//AOutput.Write(Panels.Files.TreeControl.FocusedItem);
-		AOutput.Write("---");
-		AOutput.Write(Keyboard.FocusedElement);
-		AOutput.Write(FocusManager.GetFocusedElement(App.Wmain));
-		AOutput.Write(Api.GetFocus());
+		//AOutput.Write("---");
+		//AOutput.Write(Keyboard.FocusedElement);
+		//AOutput.Write(FocusManager.GetFocusedElement(App.Wmain));
+		//AOutput.Write(Api.GetFocus());
 
 		//foreach(var f in App.Model.Root.Descendants()) {
 		//	using var p1 = APerf.Create();

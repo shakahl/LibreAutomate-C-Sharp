@@ -40,7 +40,7 @@ class PanelOutput : DockPanel
 	public void ZFind() { Panels.Find.ZCtrlF(_c.Z.SelectedText()); }
 
 	public void ZHistory() {
-		var p = new PopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
+		var p = new KPopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
 		p.Control.ItemsSource = _history;
 		p.OK += o => AOutput.Write((o as OutServMessage).Text);
 		Dispatcher.InvokeAsync(() => p.IsOpen = true);
@@ -116,7 +116,7 @@ class PanelOutput : DockPanel
 			//App.Commands[nameof(Menus.Tools.Output)].SetKeysTarget(this);
 		}
 
-		protected override void OnHandleCreated(AWnd w) {
+		protected override void OnHandleCreated() {
 			_p._c_HandleCreated();
 			Z.MarginWidth(1, 3);
 			Z.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
@@ -132,9 +132,9 @@ class PanelOutput : DockPanel
 				Menus.File.Properties();
 			});
 
-			App.OutputServer.SetNotifications(w, Api.WM_APP);
+			App.OutputServer.SetNotifications(Hwnd, Api.WM_APP);
 
-			base.OnHandleCreated(w);
+			base.OnHandleCreated();
 		}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {

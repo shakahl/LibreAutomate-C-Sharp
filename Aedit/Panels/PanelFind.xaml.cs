@@ -607,7 +607,7 @@ public partial class PanelFind : UserControl
 		bool replace = tb == _tReplace;
 		var a = replace ? App.Settings.find_recentReplace : App.Settings.find_recent;
 		if (a == null) return;
-		var p = new PopupListBox { PlacementTarget = tb };
+		var p = new KPopupListBox { PlacementTarget = tb };
 		var k = p.Control;
 		foreach (var v in a) k.Items.Add(v);
 		p.OK += o => {

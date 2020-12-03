@@ -101,6 +101,12 @@ partial class MainWindow : Window
 	unsafe nint _WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
 		var w = (AWnd)hwnd;
 
+		switch (msg) {
+		case Api.WM_DPICHANGED:
+			this.DpiChangedWorkaround();
+			break;
+		}
+
 		return default;
 	}
 
@@ -108,17 +114,6 @@ partial class MainWindow : Window
 		//var w = this.Hwnd(); if (AWnd.Active != w) w.ActivateLL(); //activates window, but this is a bad place for it, eg does not set focus correctly
 		var w = this.Hwnd(); if (AWnd.Active != w) Dispatcher.InvokeAsync(() => w.ActivateLL());
 		base.OnActivated(e);
-	}
-
-	protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
-		base.OnDpiChanged(oldDpi, newDpi);
-		//workaround for WPF bug: on DPI change activates window
-		var w = this.Hwnd();
-		if (AWnd.Active != w) {
-			bool wasVisible = w.IsVisible; //allow to activate when opening window in non-primary screen
-			var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE && (AWnd)k.wParam == w && (wasVisible || !w.IsVisible));
-			Dispatcher.InvokeAsync(() => h.Dispose());
-		}
 	}
 
 	void _OpenDocuments() { //TODO

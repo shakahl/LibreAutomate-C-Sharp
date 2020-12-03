@@ -222,9 +222,7 @@
 	    <DesignTime>True</DesignTime>
 	    <AutoGen>True</AutoGen>
 	  </Compile>
-	  <Compile Update="Tools\CodeBox.cs">
-	    <SubType>Component</SubType>
-	  </Compile>
+	  <Compile Update="Tools\CodeBox.cs" />
 	  <Compile Update="Tools\FormAAcc.cs">
 	    <SubType>Form</SubType>
 	  </Compile>

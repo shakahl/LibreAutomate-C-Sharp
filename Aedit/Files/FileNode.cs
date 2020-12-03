@@ -451,7 +451,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	/// If this is root, just unselects all.
 	/// </summary>
 	public void SelectSingle() {
-		if (this == Root) TreeControl.Select(.., false);
+		if (this == Root) TreeControl.UnselectAll();
 		else if (!IsAlien) {
 			TreeControl.EnsureVisible(this);
 			TreeControl.SelectSingle(this, andFocus: true);

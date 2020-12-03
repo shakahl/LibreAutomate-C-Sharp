@@ -311,6 +311,15 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Throws <see cref="AuWndException"/> that uses the specified Windows API error code and its message.
+		/// Also the message depends on whether the window handle is 0/invalid.
+		/// </summary>
+		/// <exception cref="AuWndException"></exception>
+		public void ThrowUseNative(int errorCode) {
+			throw new AuWndException(this, errorCode);
+		}
+
+		/// <summary>
 		/// Throws <see cref="AuWndException"/> that uses mainMessage and the last Windows API error (code and message).
 		/// Also the message depends on whether the window handle is 0/invalid.
 		/// </summary>
@@ -601,18 +610,18 @@ namespace Au
 			bool ok = false, wasMinimized = IsMinimized;
 
 			switch (state) {
-				case Api.SW_MINIMIZE:
-					ok = wasMinimized;
-					break;
-				case Api.SW_RESTORE:
-					ok = !wasMinimized;
-					break;
-				case Api.SW_SHOWNORMAL:
-					ok = !wasMinimized && !IsMaximized; //info: if invalid handle, Show() will return false, don't need to check here.
-					break;
-				case Api.SW_SHOWMAXIMIZED:
-					ok = IsMaximized;
-					break;
+			case Api.SW_MINIMIZE:
+				ok = wasMinimized;
+				break;
+			case Api.SW_RESTORE:
+				ok = !wasMinimized;
+				break;
+			case Api.SW_SHOWNORMAL:
+				ok = !wasMinimized && !IsMaximized; //info: if invalid handle, Show() will return false, don't need to check here.
+				break;
+			case Api.SW_SHOWMAXIMIZED:
+				ok = IsMaximized;
+				break;
 			}
 
 			if (ok) {
@@ -626,12 +635,12 @@ namespace Au
 				} else if (ok = GetWindowPlacement_(out var p, false)) {
 					int state2 = state;
 					switch (state) {
-						case Api.SW_MINIMIZE:
-							if (p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
-							break;
-						case Api.SW_RESTORE:
-							if ((p.showCmd == Api.SW_SHOWMINIMIZED) && (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state2 = Api.SW_SHOWMAXIMIZED; //without this would make normal
-							break;
+					case Api.SW_MINIMIZE:
+						if (p.showCmd == Api.SW_SHOWMAXIMIZED) p.flags |= Api.WPF_RESTORETOMAXIMIZED; else p.flags &= ~Api.WPF_RESTORETOMAXIMIZED; //Windows forgets to remove the flag
+						break;
+					case Api.SW_RESTORE:
+						if ((p.showCmd == Api.SW_SHOWMINIMIZED) && (p.flags & Api.WPF_RESTORETOMAXIMIZED) != 0) state2 = Api.SW_SHOWMAXIMIZED; //without this would make normal
+						break;
 					}
 
 					//if(wasMinimized) p.flags|=Api.WPF_ASYNCWINDOWPLACEMENT; //fixes Windows bug: if window of another thread, deactivates currently active window and does not activate this window. However then animates window. If we set this while the window is not minimized, it would set blinking caret in inactive window. Instead we use another workaround, see below.
@@ -645,9 +654,9 @@ namespace Au
 						//However does not allow to maximize with WM_SYSCOMMAND.
 						uint cmd;
 						switch (state) {
-							case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
-							case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
-							default: cmd = Api.SC_RESTORE; break;
+						case Api.SW_MINIMIZE: cmd = Api.SC_MINIMIZE; break;
+						case Api.SW_SHOWMAXIMIZED: cmd = Api.SC_MAXIMIZE; break;
+						default: cmd = Api.SC_RESTORE; break;
 						}
 						ok = Send(Api.WM_SYSCOMMAND, cmd);
 						//if was minimized, now can be maximized, need to restore if SW_SHOWNORMAL
@@ -735,7 +744,7 @@ namespace Au
 				}
 
 				var wFore = Active; bool retry = false;
-			g1: _EnableActivate_MinRes();
+				g1: _EnableActivate_MinRes();
 				if (!_EnableActivate_AllowSetFore()) return false;
 				if (!wFore.Is0 && !retry) {
 					Api.SetForegroundWindow(wFore);
@@ -1089,10 +1098,10 @@ namespace Au
 
 			MinimalSleepNoCheckThread_();
 			return;
-		gDisabled: //SetFocus fails if disabled
+			gDisabled: //SetFocus fails if disabled
 			ThrowIfInvalid();
 			ThrowNoNative("*set focus. Disabled");
-		gFailed:
+			gFailed:
 			ThrowUseNative("*set focus");
 		}
 
@@ -2000,6 +2009,7 @@ namespace Au
 		/// </remarks>
 		public bool ZorderTopmost() {
 			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOPMOST);
+			//TODO: it seems fails (QM2 fails, here not tested) if has non-topmost owned windows (hidden when tested)
 		}
 
 		/// <summary>
@@ -2135,8 +2145,8 @@ namespace Au
 		void _SetStyle(bool ex, int style, WSFlags flags) {
 			var gwl = ex ? Native.GWL.EXSTYLE : Native.GWL.STYLE;
 			switch (flags & (WSFlags.Add | WSFlags.Remove)) {
-				case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
-				case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
+			case WSFlags.Add: style = (int)GetWindowLong(gwl) | style; break;
+			case WSFlags.Remove: style = (int)GetWindowLong(gwl) & ~style; break;
 			}
 			SetWindowLong(gwl, style);
 
@@ -2188,7 +2198,11 @@ namespace Au
 		public LPARAM SetWindowLong(int index, LPARAM newValue) {
 			ALastError.Clear();
 			var prev = Api.SetWindowLongPtr(this, index, newValue);
-			if (prev == 0 && ALastError.Code != 0) ThrowUseNative();
+			if (prev == 0) {
+				var e = ALastError.Code;
+				if (e != 0 && (Api.GetWindowLongPtr(this, index) != newValue || !IsAlive)) ThrowUseNative(e);
+				//if GWL_HWNDPARENT(0), last error "invalid window handle"
+			}
 			return prev;
 		}
 
@@ -2368,7 +2382,7 @@ namespace Au
 					if (!s_messageOnlyParent.IsAlive) {
 						if (AKeys.IsScrollLock) {
 							var w = More.CreateMessageOnlyWindow("Static");
-							s_messageOnlyParent=w.ParentGWL_;
+							s_messageOnlyParent = w.ParentGWL_;
 							Api.DestroyWindow(w);
 						} else {
 							for (int i = 0; i < 5; i++) {

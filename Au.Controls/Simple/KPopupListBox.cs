@@ -19,12 +19,12 @@ namespace Au.Controls
 	/// When an item clicked, closes the popup and fires <see cref="OK"/> event. Also when pressed Enter key when an item is selected.
 	/// Closes the popup without the event when clicked outside or pressed Esc key.
 	/// </remarks>
-	public class PopupListBox : Popup
+	public class KPopupListBox : Popup
 	{
 		readonly ListBox _lb;
 
 		///
-		public PopupListBox() {
+		public KPopupListBox() {
 			Child = _lb = new ListBox();
 			StaysOpen = false;
 		}

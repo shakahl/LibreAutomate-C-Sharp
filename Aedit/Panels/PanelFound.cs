@@ -34,7 +34,7 @@ class PanelFound : DockPanel
 		this.Children.Add(_c);
 	}
 
-	private void _c_ZHandleCreated(AWnd w) {
+	private void _c_ZHandleCreated() {
 		var z = _c.Z;
 		z.MarginWidth(1, 0);
 		z.StyleFont(Sci.STYLE_DEFAULT, App.Wmain);

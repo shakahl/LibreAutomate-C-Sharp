@@ -676,6 +676,20 @@ namespace Au
 				if(threadId == 0) throw new ArgumentException("0 threadId.");
 				Internal_.EnumWindows2(Internal_.EnumAPI.EnumThreadWindows, onlyVisible, sortFirstVisible, threadId: threadId, list: a ??= new List<AWnd>());
 			}
+
+			/// <summary>
+			/// Gets the first in Z order window of this thread.
+			/// </summary>
+			/// <param name="onlyVisible"></param>
+			internal static AWnd TopThreadWindow_(bool onlyVisible) {
+				AWnd r = default;
+				Api.EnumThreadWindows(Api.GetCurrentThreadId(), (w, _) => {
+					if (onlyVisible && !w.IsVisible) return 1;
+					r = w;
+					return 0;
+				});
+				return r;
+			}
 		}
 
 		/// <summary>

@@ -40,13 +40,15 @@ partial class SciCode : SciHost
 	//indicators. We can use 8-31. Lexers use 0-7. Draws indicators from smaller to bigger, eg error on warning.
 	public const int c_indicFind = 8, c_indicDiagHidden = 17, c_indicInfo = 18, c_indicWarning = 19, c_indicError = 20;
 
+	//static int _test;
+
 	internal SciCode(FileNode file, SciText.FileLoaderSaver fls) {
+		//if(_test++==1) Tag = "test";
+
 		//_edit = edit;
 		_fn = file;
 		_fls = fls;
 
-		this.Name = "Code_text";
-		//this.AccessibleRole = AccessibleRole.Document; //TODO
 		this.AllowDrop = true;
 
 		ZInitImagesStyle = ZImagesStyle.AnyString;
@@ -55,7 +57,7 @@ partial class SciCode : SciHost
 		ZHandleCreated += _ZHandleCreated;
 	}
 
-	void _ZHandleCreated(AWnd w) {
+	void _ZHandleCreated() {
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/));
 
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
@@ -102,7 +104,9 @@ partial class SciCode : SciHost
 
 	//Called by PanelEdit.ZOpen.
 	internal void _Init(byte[] text, bool newFile) {
-		//if(!IsHandleCreated) CreateHandle(); //TODO
+		//if(Hwnd.Is0) CreateHandle(); //TODO
+		Debug.Assert(!Hwnd.Is0);
+
 		bool editable = _fls.SetText(Z, text);
 		if (newFile) _openState = _EOpenState.NewFile; else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
@@ -1006,6 +1010,16 @@ partial class SciCode : SciHost
 
 	[Conditional("TRACE_TEMP_RANGES")]
 	static void _TraceTempRange(string action, object owner) => AOutput.Write(action, owner);
+
+	#endregion
+
+	#region acc
+
+	protected override AccROLE ZAccessibleRole => AccROLE.DOCUMENT;
+
+	protected override string ZAccessibleName => _fn.DisplayName;
+
+	protected override string ZAccessibleDescription => _fn.FilePath;
 
 	#endregion
 }

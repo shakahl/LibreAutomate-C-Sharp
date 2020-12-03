@@ -17,6 +17,7 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Interop;
 using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Threading;
 
 namespace Au
 {
@@ -34,7 +35,7 @@ namespace Au
 			switch (t) {
 			case null: return default;
 			case Window w: return (AWnd)new WindowInteropHelper(w).Handle; //FromDependencyObject works too, but this is usually slightly faster
-			case Popup p: t = p.Child; if (t == null) return default; break; //FromVisual(Popup) returns null; or maybe owner window, not tested.
+			case Popup p: t = p.Child; if (t == null) return default; break; //FromVisual(Popup) returns null, FromDependencyObject too
 			}
 			if (PresentationSource.FromDependencyObject(t) is HwndSource hs) return (AWnd)hs.Handle;
 			return default;
@@ -122,6 +123,7 @@ namespace Au
 		/// Gets rectangle of this element in screen coordinates.
 		/// </summary>
 		public static RECT RectInScreen(this FrameworkElement t) {
+			if (t is Window w) return w.Hwnd().Rect; //else would be incorrect: x/y of client area, width/height of window
 			Point p1 = t.PointToScreen(default), p2 = t.PointToScreen(new Point(t.ActualWidth, t.ActualHeight));
 			return new RECT(p1.X.ToInt(), p1.Y.ToInt(), p2.X.ToInt(), p2.Y.ToInt(), false);
 		}
@@ -428,6 +430,26 @@ namespace Au
 			Grid.SetRow(e, row);
 			Grid.SetColumn(e, column);
 			g.Children.Add(e);
+		}
+
+		/// <summary>
+		/// Workaround for WPF bug: on DPI change tries to activate window.
+		/// Call on WM_DPICHANED message or in OnDpiChanged override.
+		/// </summary>
+		public static void DpiChangedWorkaround(this Window t) => _DCW(t.Dispatcher, t.Hwnd());
+
+		/// <summary>
+		/// Workaround for WPF bug: on DPI change tries to activate window.
+		/// Call on WM_DPICHANED message or in OnDpiChanged override. Only if top-level window.
+		/// </summary>
+		public static void DpiChangedWorkaround(this HwndSource t) => _DCW(t.Dispatcher, (AWnd)t.Handle);
+
+		static void _DCW(Dispatcher d, AWnd w) {
+			if (AWnd.Active != w) {
+				bool wasVisible = w.IsVisible; //allow to activate when opening window in non-primary screen
+				var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE && (AWnd)k.wParam == w && (wasVisible || !w.IsVisible));
+				d.InvokeAsync(() => h.Dispose());
+			}
 		}
 	}
 }

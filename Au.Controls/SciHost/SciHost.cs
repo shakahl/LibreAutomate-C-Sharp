@@ -37,7 +37,7 @@ namespace Au.Controls
 	/// Creates and initializes the control. Also used to set/change control properties.
 	/// The Z property returns a SciText object that can be used to work with text, code styling etc.
 	/// </summary>
-	public unsafe class SciHost : HwndHost
+	public unsafe class SciHost : HwndHost //named not Scintilla, to avoid confusion with native Scintilla control //TODO: rename to AuScintilla when the winforms version removed
 	{
 		AWnd _w;
 		LPARAM _sciPtr;
@@ -73,10 +73,10 @@ namespace Au.Controls
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 			var wParent = (AWnd)hwndParent.Handle;
 			_dpi = ADpi.OfWindow(wParent);
-			int dpi100 = ADpi.Scale(100, _dpi);
 			WS style = WS.CHILD; if (ZInitBorder) style |= WS.BORDER;
 			//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area.
-			_w = AWnd.More.CreateWindow("Scintilla", null, style, 0, 0, 0, dpi100, dpi100, wParent);
+			_w = AWnd.More.CreateWindow("Scintilla", null, style, 0, 0, 0, 0, 0, wParent);
+			//size 0 0 is not the best, but it is a workaround for WPF bugs
 
 			_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
@@ -90,7 +90,7 @@ namespace Au.Controls
 			}
 			_InitDocument();
 			Call(SCI_SETSCROLLWIDTHTRACKING, 1);
-			Call(SCI_SETSCROLLWIDTH, dpi100);
+			Call(SCI_SETSCROLLWIDTH, ADpi.Scale(100, _dpi));
 			if (!ZInitUseDefaultContextMenu) Call(SCI_USEPOPUP);
 			Call(SCI_SETCARETWIDTH, ADpi.Scale(2, _dpi));
 			if (ZInitWrapVisuals) {
@@ -112,14 +112,14 @@ namespace Au.Controls
 			if (FocusManager.GetFocusScope(this) is Window fs && FocusManager.GetFocusedElement(fs) == this && Api.GetFocus() == wParent)
 				Api.SetFocus(_w);
 
-			OnHandleCreated(_w);
+			OnHandleCreated();
 
 			return new HandleRef(this, _w.Handle);
 		}
 
-		protected virtual void OnHandleCreated(AWnd w) => ZHandleCreated?.Invoke(w);
+		protected virtual void OnHandleCreated() => ZHandleCreated?.Invoke();
 
-		public event Action<AWnd> ZHandleCreated;
+		public event Action ZHandleCreated;
 
 		void _InitDocument() {
 			//these must be set for each document of this Scintilla window
@@ -139,13 +139,12 @@ namespace Au.Controls
 		}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParamIP, IntPtr lParam, ref bool handled) {
-			//C# compiler bug: if using nint instead of IntPtr, inherited classes cannot override this method.
+			nint wParam = wParamIP; //C# compiler bug: if using nint parameters instead of IntPtr, inherited classes cannot override this method.
 
-			//AWnd.More.PrintMsg(_w, msg, wParam, lParam);
+			//if(Tag is string s1 && s1 == "test") AWnd.More.PrintMsg(_w, msg, wParam, lParam);
 			//if(this.Parent?.Name == "Output") AWnd.More.PrintMsg(_w, msg, wParam, lParam, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 			//if(IsFocused) AWnd.More.PrintMsg(_w, msg, wParam, lParam, Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_SETCURSOR, Api.WM_NCHITTEST, Api.WM_PAINT, Api.WM_IME_SETCONTEXT, Api.WM_IME_NOTIFY);
 
-			nint wParam = wParamIP;
 			bool call = false;
 			switch (msg) {
 			case Api.WM_DESTROY:
@@ -801,36 +800,34 @@ namespace Au.Controls
 
 		class _Accessible : HwndHostAccessibleBase_
 		{
-			SciHost _sci;
+			readonly SciHost _sci;
 
 			internal _Accessible(SciHost sci) : base(sci, sci.Hwnd) {
 				_sci = sci;
 			}
 
-			//public override AccROLE Role(int child) => _sci.ZInitReadOnlyAlways ? AccROLE.STATICTEXT : AccROLE.TEXT;
-			public override AccROLE Role(int child) => AccROLE.TEXT;
+			public override AccROLE Role(int child) => _sci.ZAccessibleRole;
+
+			public override string Name(int child) => _sci.ZAccessibleName;
+
+			public override string Description(int child) => _sci.ZAccessibleDescription;
+
+			public override string Value(int child) => _sci.ZAccessibleValue;
 
 			public override AccSTATE State(int child) {
 				var r = base.State(child);
 				if (_sci.Z.IsReadonly) r |= AccSTATE.READONLY;
 				return r;
 			}
-
-			public override string Value(int child) => _sci.Text?.Limit(0xffff);
 		}
 
-		//class _Acc : ControlAccessibleObject
-		//{
-		//	SciHost _control;
+		protected virtual AccROLE ZAccessibleRole => AccROLE.TEXT; //_sci.ZInitReadOnlyAlways ? AccROLE.STATICTEXT : AccROLE.TEXT;
 
-		//	public _Acc(SciHost ownerControl) : base(ownerControl) => _control = ownerControl;
+		protected virtual string ZAccessibleName => Name;
 
-		//	public override string Name => _control.ZInitReadOnlyAlways ? _control.Text?.Limit(0xffff) : _control.Name;
+		protected virtual string ZAccessibleDescription => null;
 
-		//	public override AccessibleStates State => base.State | (_control.Z.IsReadonly ? AccessibleStates.ReadOnly : 0);
-		//}
-
-		//this.AccessibleRole = ZInitReadOnlyAlways ? AccessibleRole.StaticText : AccessibleRole.Text;
+		protected virtual string ZAccessibleValue => ZInitReadOnlyAlways ? Text?.Limit(0xffff) : null;
 
 		#endregion
 	}

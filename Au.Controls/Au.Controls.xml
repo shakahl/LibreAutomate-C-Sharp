@@ -725,7 +725,7 @@
             <param name="item"></param>
             <param name="expand">If null, toggles.</param>
             <exception cref="T:System.InvalidOperationException">Not folder. Or control not created.</exception>
-            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control.</exception>
+            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>expand</i> == false.</exception>
         </member>
         <member name="M:Au.Controls.AuTreeView.EnsureVisible(System.Int32)">
             <summary>
@@ -776,6 +776,12 @@
         <member name="M:Au.Controls.AuTreeView.OnKeyDown(System.Windows.Input.KeyEventArgs)">
             
         </member>
+        <member name="M:Au.Controls.AuTreeView.ProcessKey(System.Windows.Input.Key)">
+            <summary>
+            Processes keys such as arrow, page, Enter, Ctrl+A.
+            Returns true if handled.
+            </summary>
+        </member>
         <member name="E:Au.Controls.AuTreeView.ItemActivated">
             <summary>
             When an item double-clicked. Or clicked, if <see cref="P:Au.Controls.AuTreeView.SingleClickActivate"/>. Also on Enter key if focused.
@@ -814,7 +820,7 @@
             <param name="select">true to select, false to unselect.</param>
             <param name="unselectOther">Unselect other items. Used only if <see cref="P:Au.Controls.AuTreeView.MultiSelect"/> true, else always unselects other items.</param>
             <param name="focus">Set <see cref="P:Au.Controls.AuTreeView.FocusedIndex"/>=<i>index</i>.</param>
-            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control.</exception>
+            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>select</i> false.</exception>
         </member>
         <member name="M:Au.Controls.AuTreeView.Select(System.Range,System.Boolean,System.Boolean)">
             <summary>
@@ -823,6 +829,11 @@
             <param name="range">Range of item indices. For example <c>..</c> means all.</param>
             <param name="select">true to select, false to unselect.</param>
             <param name="unselectOther">Unselect other items. Used only if <see cref="P:Au.Controls.AuTreeView.MultiSelect"/> true, else always unselects other items.</param>
+        </member>
+        <member name="M:Au.Controls.AuTreeView.UnselectAll">
+            <summary>
+            Unselects all.
+            </summary>
         </member>
         <member name="M:Au.Controls.AuTreeView.SelectSingle(System.Int32,System.Boolean)">
             <summary>
@@ -843,10 +854,9 @@
         </member>
         <member name="M:Au.Controls.AuTreeView.IsSelected(Au.Controls.ITreeViewItem)">
             <summary>
-            Returns true if the item is selected.
+            Returns true if the item is visible and selected.
             </summary>
             <seealso cref="P:Au.Controls.AuTreeView.MultiSelect"/>
-            <exception cref="T:System.ArgumentException"><i>item</i> is not a visible item in this control.</exception>
         </member>
         <member name="P:Au.Controls.AuTreeView.SelectedIndices">
             <summary>
@@ -933,18 +943,21 @@
             <summary>
             Starts focused item text editing.
             </summary>
+            <exception cref="T:System.InvalidOperationException">Control not created.</exception>
         </member>
         <member name="M:Au.Controls.AuTreeView.EditLabel(Au.Controls.ITreeViewItem)">
             <summary>
             Starts item text editing.
             </summary>
             <exception cref="T:System.ArgumentException"></exception>
+            <exception cref="T:System.InvalidOperationException">Control not created.</exception>
         </member>
         <member name="M:Au.Controls.AuTreeView.EditLabel(System.Int32)">
             <summary>
             Starts item text editing.
             </summary>
             <exception cref="T:System.IndexOutOfRangeException"></exception>
+            <exception cref="T:System.InvalidOperationException">Control not created.</exception>
         </member>
         <member name="M:Au.Controls.AuTreeView.EndEditLabel(System.Boolean)">
             <summary>
@@ -997,6 +1010,7 @@
             Horizontally the rectangle is limited to the visible area.
             </summary>
             <exception cref="T:System.IndexOutOfRangeException"></exception>
+            <exception cref="T:System.InvalidOperationException">Control not created.</exception>
         </member>
         <member name="M:Au.Controls.AuTreeView.GetRectLogical(System.Int32,Au.Controls.TVParts,System.Boolean,System.Boolean)">
             <summary>
@@ -4442,39 +4456,50 @@
             NoUndo | NoNotify.
             </summary>
         </member>
-        <member name="T:Au.Controls.PopupListBox">
+        <member name="P:Au.Controls.KPopup.Content">
+            <summary>
+            Gets or sets <see cref="P:System.Windows.Interop.HwndSource.RootVisual"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.Size">
+            <summary>
+            Desired window size. WPF logical pixels.
+            Actual size can be smaller if would not fit in screen.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.KPopupListBox">
             <summary>
             Simple <see cref="T:System.Windows.Controls.Primitives.Popup"/> with child <see cref="T:System.Windows.Controls.ListBox"/>.
             </summary>
             <remarks>
-            The <see cref="P:Au.Controls.PopupListBox.Control"/> property gets the <b>ListBox</b>. Add items to it.
+            The <see cref="P:Au.Controls.KPopupListBox.Control"/> property gets the <b>ListBox</b>. Add items to it.
             Show the popup as usually (set <b>PlacementTarget</b> etc and <b>IsOpen</b>=true).
             
-            When an item clicked, closes the popup and fires <see cref="E:Au.Controls.PopupListBox.OK"/> event. Also when pressed Enter key when an item is selected.
+            When an item clicked, closes the popup and fires <see cref="E:Au.Controls.KPopupListBox.OK"/> event. Also when pressed Enter key when an item is selected.
             Closes the popup without the event when clicked outside or pressed Esc key.
             </remarks>
         </member>
-        <member name="M:Au.Controls.PopupListBox.#ctor">
+        <member name="M:Au.Controls.KPopupListBox.#ctor">
             
         </member>
-        <member name="P:Au.Controls.PopupListBox.Control">
+        <member name="P:Au.Controls.KPopupListBox.Control">
             <summary>
             Gets the <b>ListBox</b>.
             </summary>
         </member>
-        <member name="E:Au.Controls.PopupListBox.OK">
+        <member name="E:Au.Controls.KPopupListBox.OK">
             <summary>
             When an item clicked, or pressed Enter key and there is a selected item.
             The popup is already closed.
             </summary>
         </member>
-        <member name="M:Au.Controls.PopupListBox.OnOpened(System.EventArgs)">
+        <member name="M:Au.Controls.KPopupListBox.OnOpened(System.EventArgs)">
             
         </member>
-        <member name="M:Au.Controls.PopupListBox.OnKeyDown(System.Windows.Input.KeyEventArgs)">
+        <member name="M:Au.Controls.KPopupListBox.OnKeyDown(System.Windows.Input.KeyEventArgs)">
             
         </member>
-        <member name="M:Au.Controls.PopupListBox.OnMouseUp(System.Windows.Input.MouseButtonEventArgs)">
+        <member name="M:Au.Controls.KPopupListBox.OnMouseUp(System.Windows.Input.MouseButtonEventArgs)">
             
         </member>
         <member name="T:Au.Controls.GdiTextRenderer">

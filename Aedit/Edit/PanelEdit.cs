@@ -22,13 +22,12 @@ using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows.Input;
 
-class PanelEdit : DockPanel
+class PanelEdit : Grid
 {
-	List<SciCode> _docs = new List<SciCode>(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
+	readonly List<SciCode> _docs = new(); //documents that are actually open currently. Note: FilesModel.OpenFiles contains not only these.
 	SciCode _activeDoc;
 
-	public PanelEdit()
-	{
+	public PanelEdit() {
 		this.Background = SystemColors.AppWorkspaceBrush;
 	}
 
@@ -50,7 +49,10 @@ class PanelEdit : DockPanel
 	/// <summary>
 	/// If f is open (active or not), returns its SciCode, else null.
 	/// </summary>
-	public SciCode ZGetOpenDocOf(FileNode f) => _docs.Find(v => v.ZFile == f);
+	public SciCode ZGetOpenDocOf(FileNode f) {
+		foreach (var v in _docs) if (v.ZFile == f) return v;
+		return null;
+	}
 
 	/// <summary>
 	///	If f is already open, unhides its control.
@@ -61,18 +63,27 @@ class PanelEdit : DockPanel
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
-	public bool ZOpen(FileNode f, bool newFile)
-	{
+	public bool ZOpen(FileNode f, bool newFile) {
 		Debug.Assert(!App.Model.IsAlien(f));
 
-		if(f == _activeDoc?.ZFile) return true;
+		if (f == _activeDoc?.ZFile) return true;
 		bool wasFocused = _activeDoc?.IsFocused ?? false;
 
+		void _ShowHideActiveDoc(bool show) {
+			if (show) {
+				_activeDoc.Visibility = Visibility.Visible;
+				//Children.Add(_activeDoc);
+			} else if (_activeDoc != null) {
+				_activeDoc.Visibility = Visibility.Hidden;
+				//Children.Remove(_activeDoc);
+			}
+		}
+
 		var doc = ZGetOpenDocOf(f);
-		if(doc != null) {
-			if(_activeDoc != null) _activeDoc.Visibility = Visibility.Hidden; //TODO
+		if (doc != null) {
+			_ShowHideActiveDoc(false);
 			_activeDoc = doc;
-			_activeDoc.Visibility = Visibility.Visible; //TODO
+			_ShowHideActiveDoc(true);
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
 		} else {
@@ -80,23 +91,21 @@ class PanelEdit : DockPanel
 			byte[] text = null;
 			SciText.FileLoaderSaver fls = default;
 			try { text = fls.Load(path); }
-			catch(Exception ex) { AOutput.Write("Failed to open file. " + ex.Message); }
-			if(text == null) return false;
+			catch (Exception ex) { AOutput.Write("Failed to open file. " + ex.Message); }
+			if (text == null) return false;
 
-			if(_activeDoc != null) _activeDoc.Visibility = Visibility.Hidden; //TODO
+			_ShowHideActiveDoc(false);
 			doc = new SciCode(f, fls);
-			//doc.AccessibleName = f.Name; //TODO
-			//doc.AccessibleDescription = path;
 			_docs.Add(doc);
 			_activeDoc = doc;
-			this.Children.Add(doc);
+			Children.Add(doc);
 			doc._Init(text, newFile);
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
 		}
 
-		if(wasFocused && !newFile) {
+		if (wasFocused && !newFile) {
 			_activeDoc.Focus();
 		} else {
 			//Don't focus now, or then cannot select treeview items with keyboard etc. Focus on mouse move in editor control.
@@ -138,18 +147,17 @@ class PanelEdit : DockPanel
 	/// Does not show another document when closed the active document.
 	/// </summary>
 	/// <param name="f"></param>
-	public void ZClose(FileNode f)
-	{
+	public void ZClose(FileNode f) {
 		Debug.Assert(f != null);
 		SciCode doc;
-		if(f == _activeDoc?.ZFile) {
+		if (f == _activeDoc?.ZFile) {
 			App.Model.Save.TextNowIfNeed();
 			doc = _activeDoc;
 			_activeDoc = null;
 			ZActiveDocChanged?.Invoke();
 		} else {
 			doc = ZGetOpenDocOf(f);
-			if(doc == null) return;
+			if (doc == null) return;
 		}
 		//CodeInfo.FileClosed(doc);
 		doc.Dispose();
@@ -160,23 +168,20 @@ class PanelEdit : DockPanel
 	/// <summary>
 	/// Closes all documents and destroys controls.
 	/// </summary>
-	public void ZCloseAll(bool saveTextIfNeed)
-	{
-		if(saveTextIfNeed) App.Model.Save.TextNowIfNeed();
+	public void ZCloseAll(bool saveTextIfNeed) {
+		if (saveTextIfNeed) App.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
 		ZActiveDocChanged?.Invoke();
-		foreach(var doc in _docs) doc.Dispose();
+		foreach (var doc in _docs) doc.Dispose();
 		_docs.Clear();
 		_UpdateUI_IsOpen();
 	}
 
-	public bool ZSaveText()
-	{
+	public bool ZSaveText() {
 		return _activeDoc?._SaveText() ?? true;
 	}
 
-	public void ZSaveEditorData()
-	{
+	public void ZSaveEditorData() {
 		_activeDoc?._SaveEditorData();
 	}
 
@@ -185,12 +190,11 @@ class PanelEdit : DockPanel
 	/// <summary>
 	/// Enables/disables Edit and Run toolbars/menus and some other UI parts depending on whether a document is open in editor.
 	/// </summary>
-	void _UpdateUI_IsOpen(bool asynchronously = true)
-	{
+	void _UpdateUI_IsOpen(bool asynchronously = true) {
 		bool enable = _activeDoc != null;
-		if(enable != _uiDisabled_IsOpen) return;
+		if (enable != _uiDisabled_IsOpen) return;
 
-		if(asynchronously) {
+		if (asynchronously) {
 			Dispatcher.InvokeAsync(() => _UpdateUI_IsOpen(false));
 			return;
 		}
@@ -207,33 +211,31 @@ class PanelEdit : DockPanel
 	/// Enables/disables commands (toolbar buttons, menu items) depending on document state such as "can undo".
 	/// Called on SCN_UPDATEUI.
 	/// </summary>
-	internal void _UpdateUI_EditEnabled()
-	{
+	internal void _UpdateUI_EditEnabled() {
 		_EUpdateUI disable = 0;
 		var d = _activeDoc;
-		if(d == null) return; //we disable the toolbar and menu
-		if(0 == d.Call(SCI_CANUNDO)) disable |= _EUpdateUI.Undo;
-		if(0 == d.Call(SCI_CANREDO)) disable |= _EUpdateUI.Redo;
-		if(0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= _EUpdateUI.Copy;
-		if(disable.Has(_EUpdateUI.Copy) || d.Z.IsReadonly) disable |= _EUpdateUI.Cut;
+		if (d == null) return; //we disable the toolbar and menu
+		if (0 == d.Call(SCI_CANUNDO)) disable |= _EUpdateUI.Undo;
+		if (0 == d.Call(SCI_CANREDO)) disable |= _EUpdateUI.Redo;
+		if (0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= _EUpdateUI.Copy;
+		if (disable.Has(_EUpdateUI.Copy) || d.Z.IsReadonly) disable |= _EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
-		var dif = disable ^ _editDisabled; if(dif == 0) return;
+		var dif = disable ^ _editDisabled; if (dif == 0) return;
 
 		//AOutput.Write(dif);
 		_editDisabled = disable;
-		if(dif.Has(_EUpdateUI.Undo)) App.Commands[nameof(Menus.Edit.Undo)].Enabled = !disable.Has(_EUpdateUI.Undo);
-		if(dif.Has(_EUpdateUI.Redo)) App.Commands[nameof(Menus.Edit.Redo)].Enabled = !disable.Has(_EUpdateUI.Redo);
-		if(dif.Has(_EUpdateUI.Cut)) App.Commands[nameof(Menus.Edit.Cut)].Enabled = !disable.Has(_EUpdateUI.Cut);
-		if(dif.Has(_EUpdateUI.Copy)) App.Commands[nameof(Menus.Edit.Copy)].Enabled = !disable.Has(_EUpdateUI.Copy);
+		if (dif.Has(_EUpdateUI.Undo)) App.Commands[nameof(Menus.Edit.Undo)].Enabled = !disable.Has(_EUpdateUI.Undo);
+		if (dif.Has(_EUpdateUI.Redo)) App.Commands[nameof(Menus.Edit.Redo)].Enabled = !disable.Has(_EUpdateUI.Redo);
+		if (dif.Has(_EUpdateUI.Cut)) App.Commands[nameof(Menus.Edit.Cut)].Enabled = !disable.Has(_EUpdateUI.Cut);
+		if (dif.Has(_EUpdateUI.Copy)) App.Commands[nameof(Menus.Edit.Copy)].Enabled = !disable.Has(_EUpdateUI.Copy);
 		//if(dif.Has(EUpdateUI.Paste)) App.Commands[nameof(Menus.Edit.Paste)].Enabled = !disable.Has(EUpdateUI.Paste);
 
 	}
 
 	_EUpdateUI _editDisabled;
 
-	internal void _UpdateUI_EditView()
-	{
+	internal void _UpdateUI_EditView() {
 		App.Commands[nameof(Menus.Edit.View.Wrap_lines)].Checked = App.Settings.edit_wrap;
 		App.Commands[nameof(Menus.Edit.View.Images_in_code)].Checked = !App.Settings.edit_noImages;
 	}

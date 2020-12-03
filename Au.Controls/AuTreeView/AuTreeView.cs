@@ -21,7 +21,7 @@ namespace Au.Controls
 		Grid _grid;
 		_HwndHost _hh;
 		ScrollBar _vscroll, _hscroll;
-		int _width, _height, _itemH, _imageSize, _imageMarginX, _marginLeft, _marginRight, _dpi, _itemsW, _scrollX, _scrollTopIndex, _focusedIndex, _hotIndex;
+		int _width, _height, _itemH, _imageSize, _imageMarginX, _marginLeft, _marginRight, _dpi, _itemsW, _scrollX, _scrollTopIndex, _focusedIndex, _hotIndex, _ensureVisibleIndex, _ensureVisibleIndex2;
 		_VisibleItem[] _avi;
 		Dictionary<ITreeViewItem, int> _dvi; //for IndexOf
 
@@ -87,7 +87,7 @@ namespace Au.Controls
 			UseLayoutRounding = true;
 			Focusable = true;
 			FocusVisualStyle = null;
-			_focusedIndex = _hotIndex = -1;
+			_focusedIndex = _hotIndex = _ensureVisibleIndex = _ensureVisibleIndex2 = -1;
 		}
 
 		///
@@ -98,7 +98,7 @@ namespace Au.Controls
 			_hh = new _HwndHost(this);
 			_grid.Children.Add(_hh);
 
-			_SetDpiAndItemSize();
+			_SetDpiAndItemSize(ADpi.OfWindow(this));
 
 			_vscroll.Scroll += _Vscroll_Scroll;
 			_hscroll.Scroll += _Hscroll_Scroll;
@@ -111,8 +111,8 @@ namespace Au.Controls
 
 		#region size, dpi, set visible items, root/index/count properties
 
-		void _SetDpiAndItemSize() {
-			_dpi = ADpi.OfWindow(this);
+		void _SetDpiAndItemSize(int dpi) {
+			_dpi = dpi;
 			_imageSize = _dpi / 6;
 			_imageMarginX = _DpiScale(3);
 			_marginLeft = _DpiScale(ItemMarginLeft);
@@ -122,7 +122,7 @@ namespace Au.Controls
 
 		///
 		protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
-			_SetDpiAndItemSize();
+			_SetDpiAndItemSize(newDpi.PixelsPerInchY.ToInt()); //don't use ADpi.OfWindow(this), it's invalid when reparenting
 			_MeasureClear(false);
 			base.OnDpiChanged(oldDpi, newDpi);
 		}
@@ -132,24 +132,41 @@ namespace Au.Controls
 
 		///
 		protected override void OnRenderSizeChanged(SizeChangedInfo e) {
-			//		AOutput.Write("OnRenderSizeChanged");
+			//AOutput.Write("OnRenderSizeChanged");
 			_Measure();
 			base.OnRenderSizeChanged(e);
 		}
 
 		///
 		protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
-			//		AOutput.Write(e.Property);
-			//remeasure when border thickness changes. Tried _grid.SizeChanged event, but it is after _imgrid.SizeChanged.
-			if (_grid != null && e.Property.Name == "BorderThickness") _Measure();
+			//AOutput.Write(e.Property);
+			if (_grid != null) {
+				switch (e.Property.Name) {
+				case "BorderThickness": //remeasure when border thickness changes. Tried _grid.SizeChanged event, but it is after _imgrid.SizeChanged.
+					_Measure();
+					break;
+				}
+			}
 			base.OnPropertyChanged(e);
 		}
 
 		void _SetVisibleItems(bool init) {
 			bool wasEmpty = _avi.NE_();
 			_hotIndex = -1;
-			if (_itemsSource == null) {
-				_avi = new _VisibleItem[0];
+			_ensureVisibleIndex = _ensureVisibleIndex2 = -1;
+
+			int n = _itemsSource == null ? 0 : _CountVisible(_itemsSource);
+			static int _CountVisible(IEnumerable<ITreeViewItem> a) {
+				int r = 0;
+				foreach (var v in a) {
+					r++;
+					if (v.IsExpanded) r += _CountVisible(v.Items);
+				}
+				return r;
+			}
+
+			if (n == 0) {
+				_avi = Array.Empty<_VisibleItem>();
 				_dvi = null;
 				_focusedIndex = -1;
 				_scrollTopIndex = -1;
@@ -158,26 +175,13 @@ namespace Au.Controls
 				if (wasEmpty) return;
 			} else {
 				List<ITreeViewItem> selected = null; ITreeViewItem focused = null;
-				if (!wasEmpty) {
-					if (init) {
-						if (_scrollTopIndex >= 0) _scrollTopIndex = 0;
-					} else {
-						selected = SelectedItems;
-						focused = FocusedItem;
-					}
+				if (init || wasEmpty) _scrollTopIndex = 0;
+				else {
+					selected = SelectedItems;
+					focused = FocusedItem;
 				}
 				_focusedIndex = -1;
 				_itemsW = 0;
-
-				int n = _CountVisible(_itemsSource);
-				static int _CountVisible(IEnumerable<ITreeViewItem> a) {
-					int r = 0;
-					foreach (var v in a) {
-						r++;
-						if (v.IsExpanded) r += _CountVisible(v.Items);
-					}
-					return r;
-				}
 
 				_avi = new _VisibleItem[n];
 				_dvi = new Dictionary<ITreeViewItem, int>(n);
@@ -339,8 +343,11 @@ namespace Au.Controls
 		/// <param name="item"></param>
 		/// <param name="expand">If null, toggles.</param>
 		/// <exception cref="InvalidOperationException">Not folder. Or control not created.</exception>
-		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control.</exception>
-		public void Expand(ITreeViewItem item, bool? expand) => Expand(_IndexOfOrThrow(item), expand);
+		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>expand</i> == false.</exception>
+		public void Expand(ITreeViewItem item, bool? expand) {
+			if (!_IndexOfOrThrowIfImportant(expand != false, item, out int i)) return;
+			Expand(i, expand);
+		}
 
 		/// <summary>
 		/// Scrolls if need to make item actually visible.
@@ -348,8 +355,21 @@ namespace Au.Controls
 		/// <exception cref="IndexOutOfRangeException"></exception>
 		public void EnsureVisible(int index) {
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
-			var r = GetRectPhysical(index);
-			if (r.top < 0 || r.bottom > _height) _ScrollTo((r.top < 0 || _height < _itemH) ? index : index - _height / _itemH + 1);
+			if (_hh == null || !_hh.IsVisible) { _ensureVisibleIndex = index; return; }
+			_Scroll(index, false);
+			void _Scroll(int index, bool step2) {
+				_ensureVisibleIndex = _ensureVisibleIndex2 = -1;
+				var r = GetRectPhysical(index);
+				if (r.top < 0 || r.bottom > _height) {
+					_ScrollTo((r.top < 0 || _height < _itemH) ? index : index - _height / _itemH + 1);
+					//WPF may add horz scrollbar async later (_height will be updated then), and it may cover the item
+					if (step2) return;
+					_ensureVisibleIndex2 = index;
+					Dispatcher.InvokeAsync(() => {
+						if (_ensureVisibleIndex2 >= 0) _Scroll(_ensureVisibleIndex2, true);
+					}, System.Windows.Threading.DispatcherPriority.Render);
+				}
+			}
 		}
 
 		/// <summary>
@@ -526,15 +546,24 @@ namespace Au.Controls
 
 		///
 		protected override void OnKeyDown(KeyEventArgs e) {
-			//		AOutput.Write(e.Key, _focusedIndex);
+			//AOutput.Write(e.Key, _focusedIndex);
+			e.Handled = ProcessKey(e.Key);
+			base.OnKeyDown(e);
+		}
+
+		/// <summary>
+		/// Processes keys such as arrow, page, Enter, Ctrl+A.
+		/// Returns true if handled.
+		/// </summary>
+		public bool ProcessKey(Key k) {
+			bool handled = false;
 			if (!_avi.NE_()) {
-				var k = e.Key;
 				var mod = Keyboard.Modifiers;
 				bool isFocus = _IsValid(_focusedIndex);
 				int selIndex = -1, selAdd = 0;
 				switch (k) {
 				case Key.Enter:
-					e.Handled = true;
+					handled = true;
 					if (isFocus) ItemActivated?.Invoke(this, new TVItemEventArgs(_IndexToItem(_focusedIndex), _focusedIndex, mk: mod));
 					break;
 				case Key.Down: selAdd = 1; break;
@@ -546,7 +575,7 @@ namespace Au.Controls
 				case Key.Left:
 				case Key.Right:
 					if (mod != 0) break;
-					e.Handled = true;
+					handled = true;
 					if (isFocus) {
 						var v = _avi[_focusedIndex];
 						if (v.item.IsFolder) {
@@ -563,21 +592,21 @@ namespace Au.Controls
 					}
 					break;
 				case Key.A when mod == ModifierKeys.Control && MultiSelect:
-					e.Handled = true;
+					handled = true;
 					Select(.., true);
 					break;
 				}
 
 				if (selAdd != 0) selIndex = Math.Clamp((isFocus ? _focusedIndex : (selAdd > 0 ? -1 : _avi.Length)) + selAdd, 0, _avi.Length - 1);
 				if (selIndex >= 0 && (mod == 0 || (mod == ModifierKeys.Shift && MultiSelect))) {
-					e.Handled = true;
+					handled = true;
 					if (selIndex != _focusedIndex) {
 						if (mod == 0) SelectSingle(selIndex, andFocus: false); else _ShiftSelect(selIndex);
 						FocusedIndex = selIndex;
 					}
 				}
 			}
-			base.OnKeyDown(e);
+			return handled;
 		}
 
 		/// <summary>
@@ -616,6 +645,7 @@ namespace Au.Controls
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
 			if (focus) FocusedIndex = index;
 			Select(index..++index, select, unselectOther);
+			if (select && unselectOther) SelectedSingle?.Invoke(this, index);
 		}
 
 		/// <summary>
@@ -625,9 +655,10 @@ namespace Au.Controls
 		/// <param name="select">true to select, false to unselect.</param>
 		/// <param name="unselectOther">Unselect other items. Used only if <see cref="MultiSelect"/> true, else always unselects other items.</param>
 		/// <param name="focus">Set <see cref="FocusedIndex"/>=<i>index</i>.</param>
-		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control.</exception>
+		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>select</i> false.</exception>
 		public void Select(ITreeViewItem item, bool select = true, bool unselectOther = false, bool focus = false) {
-			Select(_IndexOfOrThrow(item), select, unselectOther, focus);
+			if(!_IndexOfOrThrowIfImportant(select, item, out int i)) return; //ok if tries to unselect an already unselected item in a collapsed folder
+			Select(i, select, unselectOther, focus);
 		}
 
 		/// <summary>
@@ -651,7 +682,17 @@ namespace Au.Controls
 			}
 			for (; from < to; from++) if (select != IsSelected(from)) invalidate |= _avi[from].Select(select);
 			if (invalidate) _Invalidate();
+
+			SelectionChanged?.Invoke(this, EventArgs.Empty);
 		}
+
+		/// <summary>
+		/// Unselects all.
+		/// </summary>
+		public void UnselectAll() => Select(.., select: false);
+
+		public event EventHandler SelectionChanged;
+		public event EventHandler<int> SelectedSingle;
 
 		/// <summary>
 		/// Selects item, unselects others, optionally makes the focused.
@@ -676,11 +717,13 @@ namespace Au.Controls
 		public bool IsSelected(int index) => _avi[index].isSelected;
 
 		/// <summary>
-		/// Returns true if the item is selected.
+		/// Returns true if the item is visible and selected.
 		/// </summary>
 		/// <seealso cref="MultiSelect"/>
-		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control.</exception>
-		public bool IsSelected(ITreeViewItem item) => _avi[_IndexOfOrThrow(item)].isSelected;
+		public bool IsSelected(ITreeViewItem item) {
+			int i = IndexOf(item); //if not found, probably it is an unselected item in a collapsed folder
+			return i >= 0 && _avi[i].isSelected;
+		}
 
 		/// <summary>
 		/// Gets selected items. Returns empty list if none selected.
@@ -849,18 +892,21 @@ namespace Au.Controls
 		/// <summary>
 		/// Starts focused item text editing.
 		/// </summary>
+		/// <exception cref="InvalidOperationException">Control not created.</exception>
 		public void EditLabel() { int i = _focusedIndex; if (i >= 0) EditLabel(i); }
 
 		/// <summary>
 		/// Starts item text editing.
 		/// </summary>
 		/// <exception cref="ArgumentException"></exception>
+		/// <exception cref="InvalidOperationException">Control not created.</exception>
 		public void EditLabel(ITreeViewItem item) => _EditLabel(item, _IndexOfOrThrow(item));
 
 		/// <summary>
 		/// Starts item text editing.
 		/// </summary>
 		/// <exception cref="IndexOutOfRangeException"></exception>
+		/// <exception cref="InvalidOperationException">Control not created.</exception>
 		public void EditLabel(int index) {
 			if (!_IndexToItem(index, out var item)) throw new IndexOutOfRangeException();
 			_EditLabel(item, index);

@@ -196,62 +196,73 @@ namespace Au
 		public CMExceptions ExceptionHandling { get; set; }
 
 		/// <summary>
-		/// Sets <see cref="ContextMenu.IsOpen"/> = true and waits until closed.
+		/// Sets <see cref="ContextMenu.PlacementTarget"/> = <i>owner</i> and <see cref="ContextMenu.IsOpen"/> = true.
 		/// </summary>
-
-		public void Show() {
-			IsOpen = true;
-#if REJECTED
-			_dispFrame = new DispatcherFrame();
-			Dispatcher.PushFrame(_dispFrame);
-#else
-			AHookWin kh = null, mh = null;
-			var wa = AWnd.ThisThread.Active;
-			bool wpfInactive = wa.Is0 || null == HwndSource.FromHwnd(wa.Handle);
-			if (wpfInactive)
-				kh = AHookWin.Keyboard(k => {
-					if (k.IsUp) return;
-					//how to enable standard keyboard navigation?
-					//			AOutput.Write(k.Key);
-					//			switch(k.Key) {
-					//			case KKey.Escape: case KKey.Down: case KKey.Up: case KKey.Right: case KKey.Left: case KKey.End: case KKey.Home: case KKey.Enter:
-					//				AWnd.More.PostThreadMessage(AThread.NativeId, 0x100, (int)k.Key, 0); //WM_KEYDOWN //does not work, althoug works for an active WPF window.
-					//				//var key = Key.Down; RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(this), 0, key) { RoutedEvent = Keyboard.KeyDownEvent }); //does not work
-					//				k.BlockEvent();
-					//				break;
-					//			}
-					switch (k.Key) {
-					case KKey.Escape:
-						IsOpen = false;
-						k.BlockEvent();
-						break;
-					}
-				});
-			_mouseWasNear = false;
-			if (wpfInactive || MouseClosingDistance > 0)
-				mh = AHookWin.Mouse(k => {
-					if (k.IsButtonDown && wpfInactive) {
-						var w = this.Hwnd();
-						var z = AWnd.FromMouse(WXYFlags.NeedWindow);
-						if (z == w) return;
-						if (z.IsOfThisThread && z.ZorderIsAbove(w)) return; //eg a submenu
-						IsOpen = false;
-					} else if (k.IsMove && MouseClosingDistance > 0) {
-						var w = this.Hwnd(); if (!w.IsAlive) return;
-						var r = w.Rect;
-						foreach (var t in AWnd.GetWnd.ThreadWindows(AThread.NativeId, true)) if (t.ZorderIsAbove(w)) r.Union(t.Rect); //submenus etc
-						var p = AMouse.XY;
-						int d = (int)AMath.Distance(r, p), d2 = ADpi.Scale(MouseClosingDistance, w);
-						if (!_mouseWasNear) _mouseWasNear = d <= d2 / 2; else if (d > d2) IsOpen = false;
-					}
-				});
-			_dispFrame = new DispatcherFrame();
-			try { Dispatcher.PushFrame(_dispFrame); }
-			finally {
-				kh?.Dispose();
-				mh?.Dispose();
+		/// <param name="owner"><see cref="ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
+		/// <param name="byCaret">Show by caret (text cursor) position if possible.</param>
+		/// <param name="modal">Wait until closed.</param>
+		public void Show(UIElement owner, bool byCaret = false, bool modal = false) {
+			if (byCaret && AKeys.More.GetTextCursorRect(out RECT cr, out _)) {
+				var r = owner == null ? cr : new Rect(owner.PointFromScreen(new Point(cr.left, cr.top)), owner.PointFromScreen(new Point(cr.right, cr.bottom)));
+				r.Inflate(30, 2);
+				PlacementRectangle = r;
+				Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
 			}
+			PlacementTarget = owner;
+			IsOpen = true;
+			if (modal) {
+#if REJECTED
+				_dispFrame = new DispatcherFrame();
+				Dispatcher.PushFrame(_dispFrame);
+#else
+				AHookWin kh = null, mh = null;
+				var wa = AWnd.ThisThread.Active;
+				bool wpfInactive = wa.Is0 || null == HwndSource.FromHwnd(wa.Handle);
+				if (wpfInactive)
+					kh = AHookWin.Keyboard(k => {
+						if (k.IsUp) return;
+						//how to enable standard keyboard navigation?
+						//			AOutput.Write(k.Key);
+						//			switch(k.Key) {
+						//			case KKey.Escape: case KKey.Down: case KKey.Up: case KKey.Right: case KKey.Left: case KKey.End: case KKey.Home: case KKey.Enter:
+						//				AWnd.More.PostThreadMessage(AThread.NativeId, 0x100, (int)k.Key, 0); //WM_KEYDOWN //does not work, althoug works for an active WPF window.
+						//				//var key = Key.Down; RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(this), 0, key) { RoutedEvent = Keyboard.KeyDownEvent }); //does not work
+						//				k.BlockEvent();
+						//				break;
+						//			}
+						switch (k.Key) {
+						case KKey.Escape:
+							IsOpen = false;
+							k.BlockEvent();
+							break;
+						}
+					});
+				_mouseWasNear = false;
+				if (wpfInactive || MouseClosingDistance > 0)
+					mh = AHookWin.Mouse(k => {
+						if (k.IsButtonDown && wpfInactive) {
+							var w = this.Hwnd();
+							var z = AWnd.FromMouse(WXYFlags.NeedWindow);
+							if (z == w) return;
+							if (z.IsOfThisThread && z.ZorderIsAbove(w)) return; //eg a submenu
+							IsOpen = false;
+						} else if (k.IsMove && MouseClosingDistance > 0) {
+							var w = this.Hwnd(); if (!w.IsAlive) return;
+							var r = w.Rect;
+							foreach (var t in AWnd.GetWnd.ThreadWindows(AThread.NativeId, true)) if (t.ZorderIsAbove(w)) r.Union(t.Rect); //submenus etc
+							var p = AMouse.XY;
+							int d = (int)AMath.Distance(r, p), d2 = ADpi.Scale(MouseClosingDistance, w);
+							if (!_mouseWasNear) _mouseWasNear = d <= d2 / 2; else if (d > d2) IsOpen = false;
+						}
+					});
+				_dispFrame = new DispatcherFrame();
+				try { Dispatcher.PushFrame(_dispFrame); }
+				finally {
+					kh?.Dispose();
+					mh?.Dispose();
+				}
 #endif
+			}
 		}
 		DispatcherFrame _dispFrame;
 #if !REJECTED
@@ -405,13 +416,14 @@ namespace Au
 		/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
 		/// For separators use null or empty strings: "One|Two||Three|Four".
 		/// </param>
-		/// <param name="owner"><see cref="ContextMenu.PlacementTarget"/>. The menu uses its DPI. Can be null, but not recommended because then uses DPI of primary screen (WPF bug).</param>
+		/// <param name="owner"><see cref="ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
+		/// <param name="byCaret">Show by caret (text cursor) position if possible.</param>
 		/// <param name="beforeShow">Called after adding menu items, before showing the menu. For example can set placement properties.</param>
 		/// <remarks>
 		/// The menu is modal; the function returns when closed.
 		/// </remarks>
 		/// <seealso cref="ADialog.ShowList"/>
-		public static int ShowSimple(DStringList items, UIElement owner, Action<AWpfMenu> beforeShow = null) {
+		public static int ShowSimple(DStringList items, UIElement owner, bool byCaret = false, Action<AWpfMenu> beforeShow = null) {
 			var a = items.ToArray();
 			var m = new AWpfMenu();
 			//	var dispFrame = new DispatcherFrame();
@@ -436,9 +448,8 @@ namespace Au
 					//			}).Tag = id;
 				}
 			}
-			if (owner != null) m.PlacementTarget = owner;
 			beforeShow?.Invoke(m);
-			m.Show();
+			m.Show(owner, byCaret: byCaret, modal: true);
 			//	m.IsOpen=true;
 			//	Dispatcher.PushFrame(dispFrame);
 			return result;

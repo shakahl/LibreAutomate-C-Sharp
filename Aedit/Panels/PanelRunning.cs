@@ -54,8 +54,7 @@ class PanelRunning : DockPanel
 			m.Separator();
 			m["Close\tM-click"] = o => App.Model.CloseFile(f, true);
 			if (null == Panels.Editor.ZGetOpenDocOf(f)) m.Last.IsEnabled = false;
-			m.PlacementTarget = _tv;
-			m.Show();
+			m.Show(_tv);
 			break;
 		case MouseButton.Middle:
 			App.Model.CloseFile(f, true);
