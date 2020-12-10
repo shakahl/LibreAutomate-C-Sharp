@@ -9,11 +9,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
 using System.Xml.Linq;
-using System.Net;
 
 using Au;
 using Au.Types;
@@ -37,8 +34,7 @@ static class CiSnippets
 		public readonly _Context context;
 		public readonly bool custom;
 
-		public _CiComplItemSnippet(CompletionItem ci, XElement x, _Context context, bool custom) : base(ci)
-		{
+		public _CiComplItemSnippet(CompletionItem ci, XElement x, _Context context, bool custom) : base(ci) {
 			this.x = x;
 			this.context = context;
 			this.custom = custom;
@@ -65,8 +61,7 @@ static class CiSnippets
 	static _Context s_context;
 
 	//static int s_test;
-	public static void AddSnippets(List<CiComplItem> items, TextSpan span, SyntaxNode root, string code)
-	{
+	public static void AddSnippets(List<CiComplItem> items, TextSpan span, SyntaxNode root, string code) {
 		//AOutput.Clear(); AOutput.Write(++s_test);
 
 		//AOutput.Clear();
@@ -85,13 +80,13 @@ static class CiSnippets
 		//return;
 
 		//find ancestor/self that contains pos inside
-		while(node != null && !node.Span.ContainsInside(pos)) node = node.Parent;
+		while (node != null && !node.Span.ContainsInside(pos)) node = node.Parent;
 		//CiUtil.PrintNode(node);
 		//for(var v = node; v != null; v = v.Parent) AOutput.Write(v.GetType().Name, v is ExpressionSyntax, v is ExpressionStatementSyntax);
 
 		//AOutput.Write(SyntaxFacts.IsTopLevelStatement);
 
-		switch(node) {
+		switch (node) {
 		case BlockSyntax:
 		case SwitchSectionSyntax: //between case: and break;
 		case ElseClauseSyntax:
@@ -111,7 +106,7 @@ static class CiSnippets
 		case NamespaceDeclarationSyntax ns when pos > ns.OpenBraceToken.Span.Start:
 		case CompilationUnitSyntax:
 		case null:
-			context = _Context.Namespace|_Context.Function; //Function for C# 9 top-level statements. //FUTURE: only if in correct place.
+			context = _Context.Namespace | _Context.Function; //Function for C# 9 top-level statements. //FUTURE: only if in correct place.
 			break;
 		case LambdaExpressionSyntax:
 		case ArrowExpressionClauseSyntax: //like void F() =>here
@@ -121,37 +116,36 @@ static class CiSnippets
 			context = _Context.Parameters;
 			break;
 		default:
-			if(span.IsEmpty) { //if '=> here;' or '=> here)' etc, use =>
+			if (span.IsEmpty) { //if '=> here;' or '=> here)' etc, use =>
 				var t2 = token.GetPreviousToken();
-				if(t2.IsKind(SyntaxKind.EqualsGreaterThanToken) && t2.Parent is LambdaExpressionSyntax) context = _Context.Arrow;
+				if (t2.IsKind(SyntaxKind.EqualsGreaterThanToken) && t2.Parent is LambdaExpressionSyntax) context = _Context.Arrow;
 			}
 			break;
 		}
 		//AOutput.Write(context);
 		s_context = context;
 
-		if(s_items == null) {
+		if (s_items == null) {
 			var a = new List<_CiComplItemSnippet>();
-			if(!AFile.ExistsAsFile(CustomFile)) {
+			if (!AFile.ExistsAsFile(CustomFile)) {
 				try { AFile.Copy(AFolders.ThisAppBS + @"Default\Snippets2.xml", CustomFile); }
 				catch { goto g1; }
 			}
 			_LoadFile(CustomFile, true);
 			g1: _LoadFile(DefaultFile, false);
-			if(a.Count == 0) return;
+			if (a.Count == 0) return;
 			s_items = a;
 
-			void _LoadFile(string file, bool custom)
-			{
+			void _LoadFile(string file, bool custom) {
 				try {
 					var xroot = AExtXml.LoadElem(file);
-					foreach(var xg in xroot.Elements("group")) {
-						if(!xg.Attr(out string sc, "context")) continue;
+					foreach (var xg in xroot.Elements("group")) {
+						if (!xg.Attr(out string sc, "context")) continue;
 						_Context con = default;
-						if(sc == "Function") con = _Context.Function; //many
+						if (sc == "Function") con = _Context.Function; //many
 						else { //few, eg Type or Namespace|Type
-							foreach(var seg in sc.Segments("|")) {
-								switch(sc[seg.Range]) {
+							foreach (var seg in sc.Segments("|")) {
+								switch (sc[seg.Range]) {
 								case "Function": con |= _Context.Function; break;
 								case "Type": con |= _Context.Type; break;
 								case "Namespace": con |= _Context.Namespace; break;
@@ -162,26 +156,26 @@ static class CiSnippets
 								}
 							}
 						}
-						if(con == default) continue;
-						foreach(var xs in xg.Elements("snippet")) {
+						if (con == default) continue;
+						foreach (var xs in xg.Elements("snippet")) {
 							var ci = CompletionItem.Create(xs.Attr("name"), tags: s_tags);
 							a.Add(new _CiComplItemSnippet(ci, xs, con, custom));
 						}
 					}
 				}
-				catch(Exception ex) { AOutput.Write("Failed to load snippets from " + file + "\r\n\t" + ex.ToStringWithoutStack()); }
+				catch (Exception ex) { AOutput.Write("Failed to load snippets from " + file + "\r\n\t" + ex.ToStringWithoutStack()); }
 			}
 			//FUTURE: support $selection$. Add menu Edit -> Surround -> Snippet1|Snippet2|....
 			//FUTURE: snippet editor, maybe like in Eclipse.
 		}
 
 		bool isLineStart = false;
-		int i = pos; while(--i >= 0 && (code[i] == ' ' || code[i] == '\t')) { }
+		int i = pos; while (--i >= 0 && (code[i] == ' ' || code[i] == '\t')) { }
 		isLineStart = i < 0 || code[i] == '\n';
 
-		foreach(var v in s_items) {
-			if(!v.context.HasAny(context)) continue;
-			if(v.context.Has(_Context.Line) && !isLineStart) continue;
+		foreach (var v in s_items) {
+			if (!v.context.HasAny(context)) continue;
+			if (v.context.Has(_Context.Line) && !isLineStart) continue;
 			v.group = 0; v.hidden = 0; v.hilite = 0; v.moveDown = 0;
 			v.ci.Span = span;
 			items.Add(v);
@@ -189,75 +183,68 @@ static class CiSnippets
 
 		items.Sort((i1, i2) => {
 			var r = string.Compare(i1.DisplayText, i2.DisplayText, StringComparison.OrdinalIgnoreCase);
-			if(r == 0) {
+			if (r == 0) {
 				r = i1.kind - i2.kind;
-				if(r == 0 && i1 is _CiComplItemSnippet s1 && i2 is _CiComplItemSnippet s2) {
-					if(!s1.custom) r = 1; else if(!s2.custom) r = -1; //sort custom first
+				if (r == 0 && i1 is _CiComplItemSnippet s1 && i2 is _CiComplItemSnippet s2) {
+					if (!s1.custom) r = 1; else if (!s2.custom) r = -1; //sort custom first
 				}
 			}
 			return r;
 		});
 	}
 
-	public static string GetDescriptionHtml(CiComplItem item)
-	{
+	public static string GetDescriptionXaml(CiComplItem item) {
 		var snippet = item as _CiComplItemSnippet;
-		var b = new StringBuilder("<body><div>Snippet <b>");
-		b.Append(item.DisplayText).Append("</b>.");
+		var m = new CiXaml();
+		m.StartParagraph();
+		m.AppendFormat("Snippet <Bold>{0}</Bold>.", item.ci.DisplayText);
 		_AppendInfo(snippet.x);
 		bool isList = snippet.x.HasElements;
-		if(isList) {
-			foreach(var v in snippet.x.Elements("list")) {
-				b.Append("<hr><div>").Append(v.Attr("item"));
+		if (isList) {
+			foreach (var v in snippet.x.Elements("list")) {
+				m.Separator();
+				m.StartParagraph();
+				m.Append(v.Attr("item"));
 				_AppendInfo(v);
 				_AppendCode(v);
 			}
 		} else {
 			_AppendCode(snippet.x);
 		}
-		if(snippet.x.Attr(out string more, "more")) {
-			if(isList) b.Append("<hr>");
-			b.Append("<p>").Append(more).Append("</p>");
+		if (snippet.x.Attr(out string more, "more")) {
+			if (isList) m.Separator();
+			m.StartParagraph(); m.Append(more, escape: true); m.EndParagraph();
 		}
-		b.Append("</body>");
-		return b.ToString();
+		return m.End();
 
-		void _AppendInfo(XElement x)
-		{
-			if(x.Attr(out string info, "info")) b.Append(' ').Append(info);
-			b.Append("</div>");
+		void _AppendInfo(XElement x) {
+			if (x.Attr(out string info, "info")) { m.Append(' '); m.Append(info, escape: true); }
+			m.EndParagraph();
 		}
 
-		void _AppendCode(XElement x)
-		{
-			var s = x.Value;
-			s = s.Replace("$end$", "");
-			s = WebUtility.HtmlEncode(s);
-			b.Append("<code><pre>").Append(s);
-			if(!s.Ends('\n')) b.AppendLine();
-			b.Append("</pre></code>");
+		void _AppendCode(XElement x) {
+			m.CodeBlock(x.Value.Replace("$end$", ""));
 		}
 	}
 
-	public static void Commit(SciCode doc, CiComplItem item, int codeLenDiff)
-	{
+	public static void Commit(SciCode doc, CiComplItem item, int codeLenDiff) {
 		var snippet = item as _CiComplItemSnippet;
 		string s, usingDir = null;
 		var ci = item.ci;
 		int pos = ci.Span.Start, endPos = pos + ci.Span.Length + codeLenDiff;
 
 		//if docSnippet above method, add parameters
-		if(snippet.DisplayText == "docSnippet") {
+		if (snippet.DisplayText == "docSnippet") {
 			s = snippet.x.Value;
 			int j = s.Find("$param$");
-			if(j >= 0) {
+			if (j >= 0) {
 				string sig = null;
-				if(CodeInfo.GetContextAndDocument(out var cd, pos)) {
+				if (CodeInfo.GetContextAndDocument(out var cd, pos)) {
 					var code2 = cd.code.RegexReplace(@"\w+\s+", "", 1, RXFlags.ANCHORED, pos..);
 					var doc2 = cd.document.WithText(SourceText.From(code2));
 					var node = doc2.GetSyntaxRootAsync().Result.FindToken(pos).Parent;
-					for(; node != null && node.Span.Start >= pos; node = node.Parent) {
-						if(node is MethodDeclarationSyntax md) {
+					for (; node != null && node.Span.Start >= pos; node = node.Parent) {
+						if (node is MethodDeclarationSyntax md) {
 							sig = CiUtil.FormatSignatureXmlDoc(md, code2);
 							break;
 						}
@@ -268,44 +255,44 @@ static class CiSnippets
 		} else {
 			//list of snippets?
 			var x = snippet.x;
-			if(x.HasElements) {
+			if (x.HasElements) {
 				x = null;
 				var m = new AMenu { Modal = true };
-				foreach(var v in snippet.x.Elements("list")) {
+				foreach (var v in snippet.x.Elements("list")) {
 					m[v.Attr("item")] = o => x = v;
 				}
 				m.Control.Items[0].Select();
 				//m.Show(doc, byCaret: true);//TODO
-				if(x == null) return;
+				if (x == null) return;
 			}
 			s = x.Value;
 
 			//##directive -> #directive
-			if(s.Starts('#') && doc.Text.Eq(pos - 1, '#')) s = s[1..];
+			if (s.Starts('#') && doc.Text.Eq(pos - 1, '#')) s = s[1..];
 
 			//maybe need more code before
-			if(x.Attr(out string before, "before") || snippet.x.Attr(out before, "before")) {
-				if(doc.Text.Find(before, 0..pos) < 0) s = before + "\r\n" + s;
+			if (x.Attr(out string before, "before") || snippet.x.Attr(out before, "before")) {
+				if (doc.Text.Find(before, 0..pos) < 0) s = before + "\r\n" + s;
 			}
 
 			//replace $guid$ and $random$. Note: can be in the 'before' code.
 			int j = s.Find("$guid$");
-			if(j >= 0) s = s.ReplaceAt(j, 6, Guid.NewGuid().ToString());
+			if (j >= 0) s = s.ReplaceAt(j, 6, Guid.NewGuid().ToString());
 			j = s.Find("$random$");
-			if(j >= 0) s = s.ReplaceAt(j, 8, new Random().Next().ToString());
+			if (j >= 0) s = s.ReplaceAt(j, 8, new Random().Next().ToString());
 
 			//remove ';' if in =>
-			if(s.Ends(';') && s_context == _Context.Arrow) {
-				if(doc.Text.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
+			if (s.Ends(';') && s_context == _Context.Arrow) {
+				if (doc.Text.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
 			}
 
 			usingDir = x.Attr("using") ?? snippet.x.Attr("using");
 		}
 
 		//if multiline, add indentation
-		if(s.Contains('\n')) {
+		if (s.Contains('\n')) {
 			int indent = doc.Z.LineIndentationFromPos(true, pos);
-			if(indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
+			if (indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
 		}
 
 		//$end$ sets final position. Or $end$select_text$end$. Show signature if like Method($end$.
@@ -313,22 +300,22 @@ static class CiSnippets
 		bool showSignature = false;
 		(int from, int to) tempRange = default;
 		int i = s.Find("$end$");
-		if(i >= 0) {
+		if (i >= 0) {
 			s = s.Remove(i, 5);
 			int j = s.Find("$end$", i);
-			if(j >= i) { s = s.Remove(j, 5); selectLength = j - i; }
+			if (j >= i) { s = s.Remove(j, 5); selectLength = j - i; }
 
 			showSignature = s.RegexIsMatch(@"\w[([][^)\]]*""?$", range: 0..i);
-			if(selectLength == 0) {
-				if(s.Eq(i - 1, "()") || s.Eq(i - 1, "[]") || s.Eq(i - 1, "\"\"")) tempRange = (i, i);
-				else if(s.Eq(i - 2, "{  }")) tempRange = (i - 1, i + 1);
+			if (selectLength == 0) {
+				if (s.Eq(i - 1, "()") || s.Eq(i - 1, "[]") || s.Eq(i - 1, "\"\"")) tempRange = (i, i);
+				else if (s.Eq(i - 2, "{  }")) tempRange = (i - 1, i + 1);
 			}
 		}
 
 		//maybe need using directives
-		if(usingDir != null) {
+		if (usingDir != null) {
 			int len1 = doc.Len16;
-			if(InsertCode.UsingDirective(usingDir)) {
+			if (InsertCode.UsingDirective(usingDir)) {
 				int lenDiff = doc.Len16 - len1;
 				pos += lenDiff;
 				endPos += lenDiff;
@@ -338,11 +325,11 @@ static class CiSnippets
 		var z = doc.Z;
 		z.ReplaceRange(true, pos, endPos, s);
 
-		if(i >= 0) {
+		if (i >= 0) {
 			int newPos = pos + i;
 			z.Select(true, newPos, newPos + selectLength, makeVisible: true);
-			if(tempRange != default) CodeInfo._correct.BracesAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
-			if(showSignature) CodeInfo.ShowSignature();
+			if (tempRange != default) CodeInfo._correct.BracesAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
+			if (showSignature) CodeInfo.ShowSignature();
 		}
 	}
 

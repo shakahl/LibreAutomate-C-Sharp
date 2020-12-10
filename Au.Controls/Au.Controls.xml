@@ -1135,7 +1135,7 @@
             Where to find image or icon to display.
             Can have prefix:
             "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
-            "resource:" - path of png/bmp/jpg/gif/tif or xaml resource, like "resources/file.png".
+            "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
             "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
             If without prefix, gets file icon; see <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             </summary>
@@ -4456,15 +4456,79 @@
             NoUndo | NoNotify.
             </summary>
         </member>
+        <member name="M:Au.Controls.KPopup.#ctor(Au.Types.WS,Au.Types.WS2,System.Boolean,System.Windows.SizeToContent)">
+            
+        </member>
+        <member name="P:Au.Controls.KPopup.Hwnd">
+            <summary>
+            Gets popup window handle. Returns default(AWnd) if not created (also after destroying).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.WindowName">
+            <summary>
+            Gets or sets window name.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.Name">
+            <summary>
+            Gets or sets this <b>KPopup</b> object name. It is not window name.
+            </summary>
+        </member>
         <member name="P:Au.Controls.KPopup.Content">
             <summary>
-            Gets or sets <see cref="P:System.Windows.Interop.HwndSource.RootVisual"/>.
+            Gets or sets WPF content. It is child of <see cref="P:Au.Controls.KPopup.Border"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.Border">
+            <summary>
+            Gets the WPF root object (<see cref="P:System.Windows.Interop.HwndSource.RootVisual"/>) of the popup window. Its child is <see cref="P:Au.Controls.KPopup.Content"/>.
             </summary>
         </member>
         <member name="P:Au.Controls.KPopup.Size">
             <summary>
             Desired window size. WPF logical pixels.
             Actual size can be smaller if would not fit in screen.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KPopup.ShowByRect(System.Object,System.Windows.Controls.Dock,System.Nullable{Au.Types.RECT},System.Boolean,System.Boolean)">
+            <summary>
+            Shows the popup window by a window, WPF element or rectangle.
+            </summary>
+            <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>AWnd</b> or null.</param>
+            <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen.</param>
+            <param name="rScreen">Rectangle in screen (physical pixels). If null, uses owner's rectangle. Cannot be both null.</param>
+            <param name="exactSize">If does not fit in screen, cover part of rectangle but don't make smaller.</param>
+            <param name="exactSide">Never show at opposite side.</param>
+            <exception cref="T:System.NotSupportedException">Unsupported <i>owner</i> type.</exception>
+            <exception cref="T:System.ArgumentException">Both owner and rScreen are null. Or owner handle not created.</exception>
+            <exception cref="T:System.InvalidOperationException"><see cref="P:Au.Controls.KPopup.Size"/> not set.</exception>
+            <remarks>
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KPopup.Close">
+            <summary>
+            Destroys or hides the popup window, depending on <see cref="P:Au.Controls.KPopup.CloseHides"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.CloseHides">
+            <summary>
+            Don't destroy the popup window when closing, but just hide.
+            In any case, if destroyed, <b>ShowX</b> will create new window.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.IsVisible">
+            <summary>
+            Whether the popup window is currently visible.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.KPopup.Hidden">
+            <summary>
+            When the popup window becomes invisible. It also happend when destroying.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.KPopup.Destroyed">
+            <summary>
+            When destroying the popup window (WM_NCDESTROY).
             </summary>
         </member>
         <member name="T:Au.Controls.KPopupListBox">
@@ -4719,6 +4783,36 @@
             Returns null if path is not a valid image string or the file does not exist or failed to load.
             </summary>
             <remarks>Supports environment variables etc. If not full path, searches in <see cref="P:Au.AFolders.ThisAppImages"/> and standard directories.</remarks>
+        </member>
+        <member name="T:XamlGeneratedNamespace.GeneratedInternalTypeHelper">
+            <summary>
+            GeneratedInternalTypeHelper
+            </summary>
+        </member>
+        <member name="M:XamlGeneratedNamespace.GeneratedInternalTypeHelper.CreateInstance(System.Type,System.Globalization.CultureInfo)">
+            <summary>
+            CreateInstance
+            </summary>
+        </member>
+        <member name="M:XamlGeneratedNamespace.GeneratedInternalTypeHelper.GetPropertyValue(System.Reflection.PropertyInfo,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            GetPropertyValue
+            </summary>
+        </member>
+        <member name="M:XamlGeneratedNamespace.GeneratedInternalTypeHelper.SetPropertyValue(System.Reflection.PropertyInfo,System.Object,System.Object,System.Globalization.CultureInfo)">
+            <summary>
+            SetPropertyValue
+            </summary>
+        </member>
+        <member name="M:XamlGeneratedNamespace.GeneratedInternalTypeHelper.CreateDelegate(System.Type,System.Object,System.String)">
+            <summary>
+            CreateDelegate
+            </summary>
+        </member>
+        <member name="M:XamlGeneratedNamespace.GeneratedInternalTypeHelper.AddEventHandler(System.Reflection.EventInfo,System.Object,System.Delegate)">
+            <summary>
+            AddEventHandler
+            </summary>
         </member>
     </members>
 </doc>

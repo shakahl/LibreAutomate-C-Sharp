@@ -54,8 +54,7 @@ namespace Au
 		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
 		/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this double t, string format = null)
-		{
+		public static string ToStringInvariant(this double t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -64,8 +63,7 @@ namespace Au
 		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
 		/// Calls <see cref="float.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this float t, string format = null)
-		{
+		public static string ToStringInvariant(this float t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -74,8 +72,7 @@ namespace Au
 		/// Uses invariant culture, therefore decimal point is always '.', not ',' etc.
 		/// Calls <see cref="decimal.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this decimal t, string format = null)
-		{
+		public static string ToStringInvariant(this decimal t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -84,8 +81,7 @@ namespace Au
 		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
 		/// Calls <see cref="int.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this int t, string format = null)
-		{
+		public static string ToStringInvariant(this int t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -94,8 +90,7 @@ namespace Au
 		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
 		/// Calls <see cref="double.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this long t, string format = null)
-		{
+		public static string ToStringInvariant(this long t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -104,8 +99,7 @@ namespace Au
 		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
 		/// Calls <see cref="nint.ToString(string, IFormatProvider)"/>.
 		/// </summary>
-		public static string ToStringInvariant(this nint t, string format = null)
-		{
+		public static string ToStringInvariant(this nint t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
 
@@ -114,8 +108,7 @@ namespace Au
 		/// Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
 		/// </summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsEmptyRect(this System.Drawing.Rectangle t)
-		{
+		public static bool IsEmptyRect(this System.Drawing.Rectangle t) {
 			return t.Width <= 0 || t.Height <= 0;
 		}
 
@@ -125,8 +118,7 @@ namespace Au
 		/// <param name="t"></param>
 		/// <param name="length"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static (int start, int end) GetStartEnd(this Range t, int length)
-		{
+		public static (int start, int end) GetStartEnd(this Range t, int length) {
 			var v = t.GetOffsetAndLength(length);
 			return (v.Offset, v.Offset + v.Length);
 		}
@@ -219,11 +211,10 @@ namespace Au
 		#region enum
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static long _ToLong<T>(T v) where T : unmanaged, Enum
-		{
-			if(sizeof(T) == 4) return *(int*)&v;
-			if(sizeof(T) == 8) return *(long*)&v;
-			if(sizeof(T) == 2) return *(short*)&v;
+		static long _ToLong<T>(T v) where T : unmanaged, Enum {
+			if (sizeof(T) == 4) return *(int*)&v;
+			if (sizeof(T) == 8) return *(long*)&v;
+			if (sizeof(T) == 2) return *(short*)&v;
 			return *(byte*)&v;
 			//Compiler removes the if(sizeof(T) == n) and code that is unused with that size, because sizeof(T) is const.
 			//Faster than with switch(sizeof(T)). It seems the switch code is considered too big to be inlined.
@@ -248,8 +239,7 @@ namespace Au
 		/// The same as code <c>(t &amp; flag) == flag</c> or <b>Enum.HasFlag</b>.
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool Has<T>(this T t, T flag) where T : unmanaged, Enum
-		{
+		public static bool Has<T>(this T t, T flag) where T : unmanaged, Enum {
 #if false //Enum.HasFlag used to be slow, but now compiler for it creates the same code as with operator
 			return t.HasFlag(flag);
 			//However cannot use this because of JIT compiler bug: in some cases Has returns true when no flag.
@@ -293,8 +283,7 @@ namespace Au
 		/// <param name="t"></param>
 		/// <param name="flags">One or more flags.</param>
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool HasAny<T>(this T t, T flags) where T : unmanaged, Enum
-		{
+		public static bool HasAny<T>(this T t, T flags) where T : unmanaged, Enum {
 			return (_ToLong(t) & _ToLong(flags)) != 0;
 		}
 
@@ -315,10 +304,9 @@ namespace Au
 		/// <param name="flag">One or more flags to add or remove.</param>
 		/// <param name="add">If true, adds flag, else removes flag.</param>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static void SetFlag<T>(ref this T t, T flag, bool add) where T : unmanaged, Enum
-		{
+		public static void SetFlag<T>(ref this T t, T flag, bool add) where T : unmanaged, Enum {
 			long a = _ToLong(t), b = _ToLong(flag);
-			if(add) a |= b; else a &= ~b;
+			if (add) a |= b; else a &= ~b;
 			t = *(T*)&a;
 		}
 
@@ -332,16 +320,14 @@ namespace Au
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn<T>(this T t, T v1, T v2, T v3) where T : unmanaged, Enum
-		{
+		public static bool IsIn<T>(this T t, T v1, T v2, T v3) where T : unmanaged, Enum {
 			var a = _ToLong(t);
 			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3);
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4) where T : unmanaged, Enum
-		{
+		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4) where T : unmanaged, Enum {
 			//return t.Equals(v1) || t.Equals(v2) || t.Equals(v3) || t.Equals(v4); //very slow, slower than with params
 			var a = _ToLong(t);
 			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4);
@@ -349,44 +335,39 @@ namespace Au
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5) where T : unmanaged, Enum
-		{
+		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5) where T : unmanaged, Enum {
 			var a = _ToLong(t);
 			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5);
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6) where T : unmanaged, Enum
-		{
+		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6) where T : unmanaged, Enum {
 			var a = _ToLong(t);
 			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6);
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7) where T : unmanaged, Enum
-		{
+		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7) where T : unmanaged, Enum {
 			var a = _ToLong(t);
 			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7);
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7, T v8) where T : unmanaged, Enum
-		{
+		public static bool IsIn<T>(this T t, T v1, T v2, T v3, T v4, T v5, T v6, T v7, T v8) where T : unmanaged, Enum {
 			var a = _ToLong(t);
 			return a == _ToLong(v1) || a == _ToLong(v2) || a == _ToLong(v3) || a == _ToLong(v4) || a == _ToLong(v5) || a == _ToLong(v6) || a == _ToLong(v7) || a == _ToLong(v8);
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn<T>(this T t, params T[] values) where T : unmanaged, Enum
-		{
+		public static bool IsIn<T>(this T t, params T[] values) where T : unmanaged, Enum {
 #if true //slightly faster, especially with multitiered JIT. The slow part is creating the params array.
 			var a = _ToLong(t);
-			for(int i = 0; i < values.Length; i++) {
-				if(a == _ToLong(values[i])) return true;
+			for (int i = 0; i < values.Length; i++) {
+				if (a == _ToLong(values[i])) return true;
 			}
 			return false;
 #else
@@ -398,59 +379,51 @@ namespace Au
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, int v1, int v2)
-		{
+		public static bool IsIn(int t, int v1, int v2) {
 			return t == v1 || t == v2;
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, int v1, int v2, int v3)
-		{
+		public static bool IsIn(int t, int v1, int v2, int v3) {
 			return t == v1 || t == v2 || t == v3;
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, int v1, int v2, int v3, int v4)
-		{
+		public static bool IsIn(int t, int v1, int v2, int v3, int v4) {
 			return t == v1 || t == v2 || t == v3 || t == v4;
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5)
-		{
+		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5) {
 			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5;
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6)
-		{
+		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6) {
 			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6;
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7)
-		{
+		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7) {
 			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7;
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8)
-		{
+		public static bool IsIn(int t, int v1, int v2, int v3, int v4, int v5, int v6, int v7, int v8) {
 			return t == v1 || t == v2 || t == v3 || t == v4 || t == v5 || t == v6 || t == v7 || t == v8;
 		}
 
 		/// <summary>Returns true if this is equal to a value in list.</summary>
 		[MethodImpl(MethodImplOptions.AggressiveOptimization)]
-		public static bool IsIn(int t, params int[] values)
-		{
-			for(int i = 0; i < values.Length; i++) {
-				if(t == values[i]) return true;
+		public static bool IsIn(int t, params int[] values) {
+			for (int i = 0; i < values.Length; i++) {
+				if (t == values[i]) return true;
 			}
 			return false;
 		}
@@ -467,13 +440,12 @@ namespace Au
 		/// <param name="index"></param>
 		/// <param name="count"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static T[] RemoveAt<T>(this T[] t, int index, int count = 1)
-		{
-			if((uint)index > t.Length || count < 0 || index + count > t.Length) throw new ArgumentOutOfRangeException();
+		public static T[] RemoveAt<T>(this T[] t, int index, int count = 1) {
+			if ((uint)index > t.Length || count < 0 || index + count > t.Length) throw new ArgumentOutOfRangeException();
 			int n = t.Length - count;
 			var r = new T[n];
-			for(int i = 0; i < index; i++) r[i] = t[i];
-			for(int i = index; i < n; i++) r[i] = t[i + count];
+			for (int i = 0; i < index; i++) r[i] = t[i];
+			for (int i = index; i < n; i++) r[i] = t[i + count];
 			return r;
 		}
 
@@ -485,12 +457,11 @@ namespace Au
 		/// <param name="index"></param>
 		/// <param name="value"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static T[] InsertAt<T>(this T[] t, int index, T value = default)
-		{
-			if((uint)index > t.Length) throw new ArgumentOutOfRangeException();
+		public static T[] InsertAt<T>(this T[] t, int index, T value = default) {
+			if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
 			var r = new T[t.Length + 1];
-			for(int i = 0; i < index; i++) r[i] = t[i];
-			for(int i = index; i < t.Length; i++) r[i + 1] = t[i];
+			for (int i = 0; i < index; i++) r[i] = t[i];
+			for (int i = index; i < t.Length; i++) r[i + 1] = t[i];
 			r[index] = value;
 			return r;
 		}
@@ -503,28 +474,25 @@ namespace Au
 		/// <param name="index"></param>
 		/// <param name="values"></param>
 		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static T[] InsertAt<T>(this T[] t, int index, params T[] values)
-		{
-			if((uint)index > t.Length) throw new ArgumentOutOfRangeException();
-			int n = values?.Length ?? 0; if(n == 0) return t;
+		public static T[] InsertAt<T>(this T[] t, int index, params T[] values) {
+			if ((uint)index > t.Length) throw new ArgumentOutOfRangeException();
+			int n = values?.Length ?? 0; if (n == 0) return t;
 
 			var r = new T[t.Length + n];
-			for(int i = 0; i < index; i++) r[i] = t[i];
-			for(int i = index; i < t.Length; i++) r[i + n] = t[i];
-			for(int i = 0; i < n; i++) r[i + index] = values[i];
+			for (int i = 0; i < index; i++) r[i] = t[i];
+			for (int i = index; i < t.Length; i++) r[i + n] = t[i];
+			for (int i = 0; i < n; i++) r[i + index] = values[i];
 			return r;
 		}
 
-		internal static void WriteInt(this byte[] t, int x, int index)
-		{
-			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
-			fixed(byte* p = t) *(int*)(p + index) = x;
+		internal static void WriteInt(this byte[] t, int x, int index) {
+			if (index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
+			fixed (byte* p = t) *(int*)(p + index) = x;
 		}
 
-		internal static int ReadInt(this byte[] t, int index)
-		{
-			if(index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
-			fixed(byte* p = t) return *(int*)(p + index);
+		internal static int ReadInt(this byte[] t, int index) {
+			if (index < 0 || index > t.Length - 4) throw new ArgumentOutOfRangeException();
+			fixed (byte* p = t) return *(int*)(p + index);
 		}
 
 		#endregion
@@ -538,9 +506,8 @@ namespace Au
 		/// <typeparam name="TValue"></typeparam>
 		/// <param name="t"></param>
 		/// <param name="predicate"></param>
-		public static void RemoveWhere<TKey, TValue>(this Dictionary<TKey, TValue> t, Func<KeyValuePair<TKey, TValue>, bool> predicate)
-		{
-			foreach(var k in t.Where(predicate).Select(kv => kv.Key).ToList()) { t.Remove(k); }
+		public static void RemoveWhere<TKey, TValue>(this Dictionary<TKey, TValue> t, Func<KeyValuePair<TKey, TValue>, bool> predicate) {
+			foreach (var k in t.Where(predicate).Select(kv => kv.Key).ToList()) { t.Remove(k); }
 		}
 
 		/// <summary>
@@ -564,6 +531,75 @@ namespace Au
 		/// </summary>
 		internal static bool NE_<T>(this List<T> t) => (t?.Count ?? 0) == 0;
 
+		/// <summary>
+		/// Efficiently recursively gets descendants of this tree.
+		/// <see href="https://stackoverflow.com/a/30441479/2547338"/>
+		/// </summary>
+		/// <typeparam name="T"></typeparam>
+		/// <param name="t"></param>
+		/// <param name="childSelector"></param>
+		internal static IEnumerable<T> Descendants_<T>(this IEnumerable<T> t, Func<T, IEnumerable<T>> childSelector) {
+			var stack = new Stack<IEnumerator<T>>();
+			var enumerator = t.GetEnumerator();
+
+			try {
+				while (true) {
+					if (enumerator.MoveNext()) {
+						T element = enumerator.Current;
+						yield return element;
+
+						var e = childSelector(element)?.GetEnumerator();
+						if (e != null) {
+							stack.Push(enumerator);
+							enumerator = e;
+						}
+					} else if (stack.Count > 0) {
+						enumerator.Dispose();
+						enumerator = stack.Pop();
+					} else {
+						yield break;
+					}
+				}
+			}
+			finally {
+				enumerator.Dispose();
+
+				while (stack.Count > 0) // Clean up in case of an exception.
+				{
+					enumerator = stack.Pop();
+					enumerator.Dispose();
+				}
+			}
+		}
+
+		/// <summary>
+		/// Efficiently recursively gets descendants of this tree.
+		/// <see href="https://stackoverflow.com/a/30441479/2547338"/>
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="childSelector"></param>
+		internal static System.Collections.IEnumerable Descendants_(this System.Collections.IEnumerable t, Func<object, System.Collections.IEnumerable> childSelector) {
+			var stack = new Stack<System.Collections.IEnumerator>();
+			var enumerator = t.GetEnumerator();
+
+			while (true) {
+				if (enumerator.MoveNext()) {
+					object element = enumerator.Current;
+					yield return element;
+
+					var e = childSelector(element)?.GetEnumerator();
+					if (e != null) {
+						stack.Push(enumerator);
+						enumerator = e;
+					}
+				} else if (stack.Count > 0) {
+					enumerator = stack.Pop();
+				} else {
+					yield break;
+				}
+			}
+		}
+
 		#endregion
 
 		#region StringBuilder
@@ -581,16 +617,15 @@ namespace Au
 		/// If s starts with a lowercase character, makes it uppercase, unless this ends with a character other than '.'.
 		/// Appends '.' if s does not end with '.', ';', ':', ',', '!' or '?'.
 		/// </remarks>
-		public static StringBuilder AppendSentence(this StringBuilder t, string s, bool noUcase = false)
-		{
-			if(!s.NE()) {
+		public static StringBuilder AppendSentence(this StringBuilder t, string s, bool noUcase = false) {
+			if (!s.NE()) {
 				bool makeUcase = !noUcase && Char.IsLower(s[0]);
-				if(t.Length > 0) {
-					if(makeUcase && t[^1] != '.') makeUcase = false;
+				if (t.Length > 0) {
+					if (makeUcase && t[^1] != '.') makeUcase = false;
 					t.Append(' ');
 				}
-				if(makeUcase) { t.Append(Char.ToUpper(s[0])).Append(s, 1, s.Length - 1); } else t.Append(s);
-				switch(s[^1]) {
+				if (makeUcase) { t.Append(Char.ToUpper(s[0])).Append(s, 1, s.Length - 1); } else t.Append(s);
+				switch (s[^1]) {
 				case '.': case ';': case ':': case ',': case '!': case '?': break;
 				default: t.Append('.'); break;
 				}

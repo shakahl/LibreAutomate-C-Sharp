@@ -11,8 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-//using System.Drawing;
 using System.Linq;
 
 using Au;
@@ -27,13 +25,13 @@ using System.Windows.Input;
 
 static class CodeInfo
 {
-	internal static readonly CiCompletion _compl = new CiCompletion();
-	internal static readonly CiSignature _signature = new CiSignature();
-	internal static readonly CiAutocorrect _correct = new CiAutocorrect();
-	internal static readonly CiQuickInfo _quickInfo = new CiQuickInfo();
-	internal static readonly CiStyling _styling = new CiStyling();
-	internal static readonly CiErrors _diag = new CiErrors();
-	internal static readonly CiTools _tools = new CiTools();
+	internal static readonly CiCompletion _compl = new();
+	internal static readonly CiSignature _signature = new();
+	internal static readonly CiAutocorrect _correct = new();
+	internal static readonly CiQuickInfo _quickInfo = new();
+	internal static readonly CiStyling _styling = new();
+	internal static readonly CiErrors _diag = new();
+	internal static readonly CiTools _tools = new();
 
 	static Solution _solution;
 	static ProjectId _projectId;
@@ -128,10 +126,10 @@ AOutput.Write(""t"" + 'c' + 1);
 	}
 
 	public static void Cancel() {
+		HideXamlPopup();
 		_compl.Cancel();
 		_signature.Cancel();
 		_tools.HideTempWindows();
-		HideHtmlPopup();
 	}
 
 	/// <summary>
@@ -150,7 +148,7 @@ AOutput.Write(""t"" + 'c' + 1);
 #endif
 		//hide code info windows, except when a code info window is focused. Code info window names start with "Ci.".
 		var aw = AWnd.ThisThread.Active;
-		if (aw.Is0) Stop(); else if (!(Control.FromHandle(aw.Handle) is Form f && f.Name.Starts("Ci."))) Cancel();
+		if (aw.Is0) Stop(); else if (!(KPopup.FromHwnd(aw) is KPopup p && p.Name.Starts("Ci."))) Cancel();
 	}
 
 	public static bool SciCmdKey(SciCode doc, KKey key, ModifierKeys mod) {
@@ -166,13 +164,15 @@ AOutput.Write(""t"" + 'c' + 1);
 			ShowSignature(doc);
 			return true;
 		case (KKey.Escape, 0):
+			//never mind: if several popups, should hide the top popup.
+			//	We instead hide less-priority popups when showing a popup, so that Escape will hide the correct popup.
+			return HideXamlPopup() || _compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key);
 		case (KKey.Down, 0):
 		case (KKey.Up, 0):
 		case (KKey.PageDown, 0):
 		case (KKey.PageUp, 0):
-			if (_compl.OnCmdKey_SelectOrHide(key)) return true;
-			if (_signature.OnCmdKey(key)) return true;
-			break;
+			HideXamlPopup();
+			return _compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key);
 		case (KKey.Tab, 0):
 		case (KKey.Enter, 0):
 			return _compl.OnCmdKey_Commit(doc, key) != CiComplResult.None || _correct.SciBeforeKey(doc, key, mod);
@@ -452,7 +452,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		if (doc == null || !doc.ZFile.IsCodeFile) return;
 
 		//cancel if changed the screen rectangle of the document window
-		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _phVisible) {
+		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _xpVisible) {
 			var r = Panels.Editor.ZActiveDoc.Hwnd().Rect;
 			if (!_isUI) {
 				_isUI = true;
@@ -468,33 +468,20 @@ AOutput.Write(""t"" + 'c' + 1);
 		_styling.Timer250msWhenVisibleAndWarm(doc);
 	}
 
-	static CiPopupHtml _popupHtml;
-	static bool _phVisible;
+	static CiPopupXaml _xamlPopup;
+	static bool _xpVisible;
 
-	internal static void ShowHtmlPopup(SciCode doc, int pos16, string html, Action<CiPopupHtml, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlLinkClickedEventArgs> onLinkClick = null, bool above = false) {
-		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Info, onHiddenOrDestroyed: _ => _phVisible = false) {
-			OnLoadImage = OnHtmlImageLoad,
-		};
-		_popupHtml.Html = html;
-		_popupHtml.OnLinkClick = onLinkClick;
-		_popupHtml.Show(doc, pos16, hideIfOutside: true, above: above);
-		_phVisible = true;
+	internal static void ShowXamlPopup(SciCode doc, int pos16, string xaml, Action<CiPopupXaml, string> onLinkClick = null, bool above = false) {
+		_xamlPopup ??= new CiPopupXaml(CiPopupXaml.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _xpVisible = false);
+		_xamlPopup.Xaml = xaml;
+		_xamlPopup.OnLinkClick = onLinkClick;
+		_xamlPopup.Show(doc, pos16, hideIfOutside: true, above: above);
+		_xpVisible = true;
 	}
 
-	internal static void HideHtmlPopup() {
-		if (_phVisible) _popupHtml.Hide();
-	}
-
-	internal static void OnHtmlImageLoad(object sender, TheArtOfDev.HtmlRenderer.Core.Entities.HtmlImageLoadEventArgs e) {
-		var s = e.Src;
-		//AOutput.Write(s);
-		if (s.Starts("@")) {
-			e.Handled = true;
-			int dpi = ADpi.OfWindow(sender as Control);
-			int i = s.ToInt(2);
-			var b = s[1] switch { 'k' => CiUtil.GetKindImage((CiItemKind)i, dpi), 'a' => CiUtil.GetAccessImage((CiItemAccess)i, dpi), _ => null };
-			e.Callback(b);
-		}
+	internal static bool HideXamlPopup() {
+		if (_xpVisible) { _xamlPopup.Hide(); return true; }
+		return false;
 	}
 
 	public class CharContext : IDisposable

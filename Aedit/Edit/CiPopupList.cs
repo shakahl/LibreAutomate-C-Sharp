@@ -16,12 +16,9 @@ using Au.Types;
 using Au.Util;
 using Au.Controls;
 using System.Windows.Controls;
-using System.Windows.Media;
 using System.Windows;
 using System.Windows.Controls.Primitives;
-using System.Windows.Interop;
 using System.Windows.Automation;
-using System.Windows.Input;
 
 class CiPopupList
 {
@@ -29,7 +26,6 @@ class CiPopupList
 	DockPanel _panel;
 	AuTreeView _tv;
 	StackPanel _tb;
-	int _dpi;
 
 	SciCode _doc;
 	CiCompletion _compl;
@@ -39,8 +35,8 @@ class CiPopupList
 	CheckBox _groupButton;
 	bool _groupsEnabled;
 	List<string> _groups;
-	CiPopupHtml _popupHtml;
-	ATimer _popupTimer;
+	CiPopupXaml _xamlPopup;
+	ATimer _xpTimer;
 
 	public KPopup PopupWindow => _popup;
 
@@ -74,9 +70,9 @@ class CiPopupList
 		_groupButton.Click += _GroupButton_Click;
 		if (App.Settings.ci_complGroup) _groupButton.IsChecked = true;
 
-		var options = new Button();
-		options.Click += _Options_Click;
-		_AddButton(options, "Options", "resources/images/settingsgroup_16x.xaml");
+		//var options = new Button();
+		//options.Click += _Options_Click;
+		//_AddButton(options, "Options", "resources/images/settingsgroup_16x.xaml");
 
 		void _AddButton(ButtonBase b, string text, string image) {
 			b.Style = (b is CheckBox) ? cstyle : bstyle;
@@ -91,10 +87,16 @@ class CiPopupList
 		DockPanel.SetDock(_tb, Dock.Left);
 		_panel.Children.Add(_tb);
 		_panel.Children.Add(_tv);
-		_popup = new KPopup { Size = (240, 360), Content = _panel };
+		_popup = new KPopup {
+			Size = (240, 360),
+			Content = _panel,
+			CloseHides = true,
+			Name = "Ci.Completion",
+			WindowName = "Au completion list"
+		};
 
-		_popupHtml = new CiPopupHtml(CiPopupHtml.UsedBy.PopupList);
-		_popupTimer = new ATimer(_ShowPopupHtml);
+		_xamlPopup = new CiPopupXaml(CiPopupXaml.UsedBy.PopupList);
+		_xpTimer = new ATimer(_ShowXamlPopup);
 	}
 
 	private void _KindButton_Click(object sender, RoutedEventArgs e) {
@@ -121,12 +123,12 @@ class CiPopupList
 		App.Settings.ci_complGroup = _groupButton.IsCheck();
 	}
 
-	private void _Options_Click(object sender, RoutedEventArgs e) {
-		var m = new AWpfMenu();
-		//m[""] = o => ;
-		m.PlacementTarget = sender as Button;
-		m.IsOpen = true;
-	}
+	//private void _Options_Click(object sender, RoutedEventArgs e) {
+	//	var m = new AWpfMenu();
+	//	//m[""] = o => ;
+	//	m.PlacementTarget = sender as Button;
+	//	m.IsOpen = true;
+	//}
 
 	private void _tv_ItemActivated(object sender, TVItemEventArgs e) {
 		_compl.Commit(_doc, _av[e.Index]);
@@ -135,22 +137,21 @@ class CiPopupList
 
 	private void _tv_SelectedSingle(object sender, int index) {
 		if ((uint)index < _av.Count) {
-			_popupTimer.After(300, _av[index]);
-			_popupHtml.Html = null;
+			_xpTimer.After(300, _av[index]);
+			_xamlPopup.Xaml = null;
 		} else {
-			_popupHtml.Hide();
-			_popupTimer.Stop();
+			_xamlPopup.Hide();
+			_xpTimer.Stop();
 		}
 	}
 
-	void _ShowPopupHtml(ATimer t) {
+	void _ShowXamlPopup(ATimer t) {
 		var ci = t.Tag as CiComplItem;
-		var html = _compl.GetDescriptionHtml(ci, 0);
-		AOutput.Write(html);
-		if (html == null) return;
-		_popupHtml.Html = html;
-		_popupHtml.OnLinkClick = (ph, e) => ph.Html = _compl.GetDescriptionHtml(ci, e.Link.ToInt(1));
-		_popupHtml.Show(Panels.Editor.ZActiveDoc, _popup.Hwnd.Rect);
+		var xaml = _compl.GetDescriptionDoc(ci, 0);
+		if (xaml == null) return;
+		_xamlPopup.Xaml = xaml;
+		_xamlPopup.OnLinkClick = (ph, e) => ph.Xaml = _compl.GetDescriptionDoc(ci, e.ToInt(1));
+		_xamlPopup.Show(Panels.Editor.ZActiveDoc, _popup.Hwnd.Rect, Dock.Right);
 	}
 
 	void _SortAndSetControlItems() {
@@ -203,14 +204,13 @@ class CiPopupList
 		_groups = groups;
 		_groupsEnabled = _groups != null && _groupButton.IsCheck();
 		_doc = doc;
-		_dpi = ADpi.OfWindow(_doc);
 
 		foreach (var v in _kindButtons) v.IsChecked = false;
 		_groupButton.Visibility = _groups != null ? Visibility.Visible : Visibility.Collapsed;
 		UpdateVisibleItems();
 
 		var r = CiUtil.GetCaretRectFromPos(_doc, position, inScreen: true);
-		r.left -= _Scale(50);
+		r.left -= ADpi.Scale(50, _doc);
 
 		_popup.ShowByRect(_doc, Dock.Bottom, r);
 	}
@@ -218,9 +218,9 @@ class CiPopupList
 	public void Hide() {
 		if (_a == null) return;
 		_tv.SetItems(null, false);
-		_popup.Hide();
-		_popupHtml.Hide();
-		_popupTimer.Stop();
+		_popup.Close();
+		_xamlPopup.Hide();
+		_xpTimer.Stop();
 		_a = null;
 		_av = null;
 		_groups = null;
@@ -249,34 +249,14 @@ class CiPopupList
 			case KKey.Up:
 			case KKey.PageDown:
 			case KKey.PageUp:
-			//case KKey.Home:
-			//case KKey.End:
+				//case KKey.Home:
+				//case KKey.End:
 				_tv.ProcessKey(AKeys.More.KKeyToWpf(key));
 				return true;
 			}
 		}
 		return false;
 	}
-
-	int _Scale(int i) => AMath.MulDiv(i, _dpi, 96);
-
-	//void _SetRect(RECT anchor) {
-	//	var ra = _doc.RectangleToScreen(anchor);
-	//	var rs = AScreen.Of(ra).WorkArea;
-	//	rs.Inflate(-1, -5);
-	//	int heiAbove = ra.Top - rs.top, heiBelow = rs.bottom - ra.Bottom;
-	//	int maxHeight = Math.Max(heiAbove, heiBelow); if (maxHeight < 200) maxHeight = 200;
-
-	//	var r = _w.Bounds;
-	//	int width = r.Width, height = r.Height;
-	//	if (height > maxHeight) { _height = height; height = maxHeight; } else if (_height > 0 && _height <= maxHeight) { height = _height; _height = 0; }
-	//	r.Height = height;
-
-	//	r.X = ra.Left + width <= rs.right ? ra.Left : rs.right - width; r.X = Math.Max(r.X, rs.left);
-	//	bool down = height <= heiBelow || heiAbove <= heiBelow;
-	//	r.Y = down ? ra.Bottom : ra.Top - height;
-	//	_w.Bounds = r;
-	//}
 
 	class _CustomDraw : ITVCustomDraw
 	{
@@ -352,8 +332,8 @@ class CiPopupList
 			var sym = ci.FirstSymbol;
 			if (sym != null) {
 				s = null;
-				if (sym.IsStatic && ci.kind != CiItemKind.Constant && ci.kind != CiItemKind.EnumMember && ci.kind != CiItemKind.Namespace) s = "resource:resources/ci/overlaystatic.xaml";
-				else if (ci.kind == CiItemKind.Class && sym.IsAbstract) s = "resource:resources/ci/overlayabstract.xaml";
+				if (sym.IsStatic && ci.kind != CiItemKind.Constant && ci.kind != CiItemKind.EnumMember && ci.kind != CiItemKind.Namespace) s = "resources/ci/overlaystatic.xaml";
+				else if (ci.kind == CiItemKind.Class && sym.IsAbstract) s = "resources/ci/overlayabstract.xaml";
 				if (s != null) g.DrawImage(App.ImageCache.Get(s, _cd.dpi, true), ri);
 			}
 

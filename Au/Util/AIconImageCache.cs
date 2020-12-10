@@ -23,7 +23,7 @@ namespace Au.Util
 		/// <summary>
 		/// Gets image from memory cache or file.
 		/// </summary>
-		/// <param name="imageSource">File path, or resource path with prefix "resource:", etc.</param>
+		/// <param name="imageSource">File path, or resource path that starts with "resources/" or has prefix "resource:", etc.</param>
 		/// <param name="dpi">DPI of window that will display the image.</param>
 		/// <param name="isImage">
 		/// true - load image from xaml/png/etc file, resource or string with <see cref="AImageUtil.LoadWinformsImageFromFileOrResourceOrString"/> or <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.

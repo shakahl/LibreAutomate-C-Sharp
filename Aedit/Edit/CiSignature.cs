@@ -14,11 +14,9 @@ using System.Linq;
 using Au;
 using Au.Types;
 using Au.Util;
-using Au.Controls;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.Text;
-using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.SignatureHelp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
@@ -28,15 +26,12 @@ using Microsoft.CodeAnalysis.CSharp;
 
 class CiSignature
 {
-	CiPopupHtml _popupHtml;
+	CiPopupXaml _xamlPopup;
 	_Data _data; //not null while the popup window is visible
 	CancellationTokenSource _cancelTS;
 
 	class _Data
 	{
-		//public Compilation compilation;
-		//public ISignatureHelpProvider provider;
-		//public string code;
 		public SignatureHelpItems r;
 		public _Span span;
 		public int iSelected, iUserSelected;
@@ -77,7 +72,7 @@ class CiSignature
 		if (_data == null) return;
 		foreach (var r in _data.sciDoc.ZTempRanges_Enum(this)) r.Remove();
 		_data = null;
-		_popupHtml?.Hide();
+		_xamlPopup?.Hide();
 	}
 
 	public void SciPositionChanged(SciCode doc) {
@@ -101,9 +96,9 @@ class CiSignature
 		//APerf.First();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return; //returns false if position is in meta comments
 
-		//AOutput.Write(new StackTrace(true));
+		CodeInfo.HideXamlPopup();
+		CodeInfo._compl.Cancel();
 
-		//Cancel();
 		_cancelTS?.Cancel();
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
@@ -208,7 +203,7 @@ class CiSignature
 			}
 		}
 
-		string html = _FormatHtml(iSel, userSelected: false);
+		string xaml = _FormatXaml(iSel, userSelected: false);
 
 		doc.ZTempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
 			if (doc.ZTempRanges_Enum(doc.Z.CurrentPos8, this, utf8: true).Any()) return;
@@ -220,11 +215,11 @@ class CiSignature
 		rect.Width += ADpi.Scale(200);
 		rect.left -= 6;
 
-		_popupHtml ??= new CiPopupHtml(CiPopupHtml.UsedBy.Signature, onHiddenOrDestroyed: _ => _data = null) {
-			OnLinkClick = (ph, e) => ph.Html = _FormatHtml(e.Link.ToInt(1), userSelected: true)
+		_xamlPopup ??= new CiPopupXaml(CiPopupXaml.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
+			OnLinkClick = (ph, e) => ph.Xaml = _FormatXaml(e.ToInt(1), userSelected: true)
 		};
-		_popupHtml.Html = html;
-		_popupHtml.Show(Panels.Editor.ZActiveDoc, rect, PopupAlignment.TPM_VERTICAL);
+		_xamlPopup.Xaml = xaml;
+		_xamlPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
 		//APerf.NW();
 
 		//also show Keys/Regex tool?
@@ -235,28 +230,28 @@ class CiSignature
 			node = root.FindToken(cd.pos16).Parent;
 			var stringFormat = CiUtil.GetParameterStringFormat(node, semo, false);
 			//AOutput.Write(stringFormat);
-			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, node.Span, _popupHtml.PopupWindow);
+			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, node.Span, _xamlPopup.PopupWindow.Hwnd);
 		}
 	}
 
-	string _FormatHtml(int iSel, bool userSelected) {
+	string _FormatXaml(int iSel, bool userSelected) {
 		_data.iSelected = iSel;
 		if (userSelected) _data.iUserSelected = iSel;
 
 		var r = _data.r;
 		ISymbol currentItem = null;
 		SignatureHelpParameter currentParameter = null;
-		var b = new StringBuilder("<body>");
+		var x = new CiXaml();
 
 		//AOutput.Clear();
 		for (int i = 0; i < r.Items.Count; i++) {
 			var sh = r.Items[i];
 			if (sh is AbstractSignatureHelpProvider.SymbolKeySignatureHelpItem kk) {
 				var sym = kk.Symbol;
-				using var li = new CiHtml.HtmlListItem(b, i == iSel);
-				if (i != iSel) b.AppendFormat("<a href='^{0}'>", i); else currentItem = sym;
+				if (i == iSel) currentItem = sym;
+				x.StartOverload(i == iSel, i);
 #if false
-				CiHtml.TaggedPartsToHtml(b, sh.PrefixDisplayParts); //works, but formats not as I like (too much garbage). Has bugs with tuples.
+				x.AppendTaggedParts(sh.PrefixDisplayParts); //works, but formats not as I like (too much garbage). Has bugs with tuples.
 #else
 				//if(nt != null) {
 				//	AOutput.Write(1, nt.IsGenericType, nt.IsTupleType, nt.IsUnboundGenericType, nt.Arity, nt.CanBeReferencedByName);
@@ -276,15 +271,15 @@ class CiSignature
 				var nt = sym as INamedTypeSymbol;
 				if (nt != null && nt.IsTupleType) isTuple = nt.IsDefinition ? 1 : 2;
 
-				if (isTuple == 1) b.Append("ValueTuple"); //SymbolWithoutParametersToHtml formats incorrectly
-				else if (isTuple == 0) CiHtml.SymbolWithoutParametersToHtml(b, sym);
+				if (isTuple == 1) x.Append("ValueTuple"); //AppendSymbolWithoutParameters formats incorrectly
+				else if (isTuple == 0) x.AppendSymbolWithoutParameters(sym);
 				string b1 = "(", b2 = ")";
 				if (nt != null) {
 					if (nt.IsGenericType && isTuple != 2) { b1 = "&lt;"; b2 = "&gt;"; }
 				} else if (sym is IPropertySymbol) {
 					b1 = "["; b2 = "]";
 				}
-				b.Append(b1);
+				x.Append(b1);
 #endif
 				int iArg = r.ArgumentIndex, lastParam = sh.Parameters.Length - 1;
 				int selParam = iArg <= lastParam ? iArg : (sh.IsVariadic ? lastParam : -1);
@@ -292,14 +287,15 @@ class CiSignature
 					var pa = sh.Parameters;
 					for (int pi = 0; pi < pa.Length; pi++) if (pa[pi].Name == r.ArgumentName) { selParam = pi; break; }
 				}
-				CiHtml.ParametersToHtml(b, sym, selParam, sh);
-				//CiHtml.ParametersToHtml(b, sh, selParam); //works, but formats not as I like (too much garbage)
+				x.AppendParameters(sym, selParam, sh);
+				//x.AppendParameters(sh, selParam); //works, but formats not as I like (too much garbage)
 #if false
-				CiHtml.TaggedPartsToHtml(b, sh.SuffixDisplayParts);
+				x.AppendTaggedParts(sh.SuffixDisplayParts);
 #else
-				b.Append(b2);
+				x.Append(b2);
 #endif
-				if (i != iSel) b.Append("</a>"); else if (selParam >= 0) currentParameter = sh.Parameters[selParam];
+				if (i == iSel && selParam >= 0) currentParameter = sh.Parameters[selParam];
+				x.EndOverload(i == iSel);
 			} else {
 				ADebug.Print(sh);
 			}
@@ -312,22 +308,25 @@ class CiSignature
 			string sourceUrl = CiGoTo.GetLinkData(currentItem);
 			bool haveLinks = helpUrl != null || sourceUrl != null;
 			if (haveDoc || haveLinks) {
-				b.Append("<p>");
-				if (haveDoc) CiHtml.TaggedPartsToHtml(b, tt);
-				if (haveLinks) CiHtml.SymbolLinksToHtml(b, helpUrl, sourceUrl, haveDoc ? " " : "", ".");
-				b.Append("</p>");
+				x.StartParagraph();
+				if (haveDoc) x.AppendTaggedParts(tt);
+				if (haveLinks) {
+					if (haveDoc) x.Append(' ');
+					x.AppendSymbolLinks(helpUrl, sourceUrl);
+					x.Append('.');
+				}
+				x.EndParagraph();
 			}
 		}
 
 		if (currentParameter != null && !currentParameter.Name.NE()) { //if tuple, Name is "" and then would be exception
-			b.Append("<p class='parameter'><b>").Append(currentParameter.Name).Append(":</b> &nbsp;");
-			CiHtml.TaggedPartsToHtml(b, currentParameter.DocumentationFactory?.Invoke(default));
-			b.Append("</p>");
+			x.StartParagraph("parameter");
+			x.Bold(currentParameter.Name); x.Append(":  ");
+			x.AppendTaggedParts(currentParameter.DocumentationFactory?.Invoke(default));
+			x.EndParagraph();
 		}
 
-		b.Append("</body>");
-		//AOutput.Write(b.ToString());
-		return b.ToString();
+		return x.End();
 	}
 
 	static List<ISignatureHelpProvider> _GetSignatureHelpProviders() {
@@ -365,7 +364,7 @@ class CiSignature
 				} else {
 					if (--i < 0) i = n - 1;
 				}
-				if (i != _data.iSelected) _popupHtml.Html = _FormatHtml(i, userSelected: true);
+				if (i != _data.iSelected) _xamlPopup.Xaml = _FormatXaml(i, userSelected: true);
 				return true;
 			}
 		}

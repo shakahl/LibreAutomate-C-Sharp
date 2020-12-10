@@ -1022,8 +1022,8 @@ partial class TestScript : AScript
 
 	void TestWpfWindow() {
 		//var w = new Au.Tests.MainWindow();
-		//var w = new Au.Tests.Window1();
-		var w = new Window();
+		var w = new Au.Tests.Window1();
+		//var w = new Window();
 		w.ShowDialog();
 	}
 
@@ -1032,17 +1032,10 @@ partial class TestScript : AScript
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
 
-		//new ResourceManager
-
-		//switch (5) {
-		//case 5 or 6: break;
-		//}
-
-		(int i, string s) t = (5, "");
 
 		//new Script().Test();
 		//TestSvg();
-		//TestWpfWindow();
+		TestWpfWindow();
 		//TestNint();
 		//TestMinusSign();
 		//TestStringInterpolationBoxing();

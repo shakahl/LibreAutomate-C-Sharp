@@ -92,7 +92,7 @@ namespace Au.Util
 		/// <param name="image">
 		/// Can be:
 		/// - file path. Can have prefix "imagefile:".
-		/// - resource path with prefix "resource:" (<see cref="AResources.GetWinformsImage"/>)
+		/// - resource path that starts with "resources/" or has prefix "resource:" (<see cref="AResources.GetWinformsImage"/>)
 		/// - Base-64 image with prefix "image:" (<see cref="LoadWinformsImageFromString"/>).
 		/// </param>
 		/// <exception cref="Exception"></exception>
@@ -112,7 +112,7 @@ namespace Au.Util
 		/// <param name="image">
 		/// Can be:
 		/// - file path. Can have prefix "imagefile:".
-		/// - resource path with prefix "resource:" (<see cref="AResources.GetWpfImage"/>)
+		/// - resource path that starts with "resources/" or has prefix "resource:" (<see cref="AResources.GetWpfImage"/>)
 		/// - Base-64 image with prefix "image:" (<see cref="LoadWpfImageFromString"/>).
 		/// </param>
 		/// <exception cref="Exception"></exception>
@@ -130,7 +130,7 @@ namespace Au.Util
 		/// <param name="image">
 		/// Can be:
 		/// - file path; can be .xaml, .png etc; supports environment variables etc, see <see cref="APath.ExpandEnvVar"/>; can have prefix "imagefile:".
-		/// - resource path with prefix "resource:"; uses <see cref="AResources.GetXamlObject"/> if ends with ".xaml", else <see cref="AResources.GetWpfImage"/>.
+		/// - resource path that starts with "resources/" or has prefix "resource:"; uses <see cref="AResources.GetXamlObject"/> if ends with ".xaml", else <see cref="AResources.GetWpfImage"/>.
 		/// - Base-64 image with prefix "image:"; uses<see cref="LoadWpfImageFromString"/>.
 		/// - XAML string that starts with "&lt;".
 		/// </param>

@@ -77,6 +77,34 @@ namespace Au
 		}
 
 		/// <summary>
+		/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
+		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+		/// </summary>
+		public static IEnumerable<DependencyObject> VisualDescendants(this DependencyObject t) {
+			for (int i = 0, n = VisualTreeHelper.GetChildrenCount(t); i < n; i++) {
+				var v = VisualTreeHelper.GetChild(t, i);
+				yield return v;
+				foreach (var k in VisualDescendants(v)) yield return k;
+				//SHOULDDO: now creates much garbage if tree is big.
+				//	See https://stackoverflow.com/a/30441479/2547338.
+				//	See AExt.Descendants. But it cannot be used here because VisualTreeHelper does not give an IEnumerable.
+			}
+		}
+
+		/// <summary>
+		/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
+		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
+		/// </summary>
+		public static System.Collections.IEnumerable LogicalDescendants(this DependencyObject t) {
+			//foreach (var v in LogicalTreeHelper.GetChildren(t)) {
+			//	yield return v;
+			//	if (v is DependencyObject d)
+			//		foreach (var k in LogicalDescendants(d)) yield return k;
+			//}
+			return LogicalTreeHelper.GetChildren(t).Descendants_(o => o is DependencyObject d ? LogicalTreeHelper.GetChildren(d) : null);
+		}
+
+		/// <summary>
 		/// Finds object in chain of visual tree objects that includes <see cref="RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
 		/// </summary>
 		/// <param name="t">The event arguments parameter of an event handler.</param>

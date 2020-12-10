@@ -443,7 +443,7 @@ namespace Au.Controls
 				switch (from.Icon) {
 				case Image im: return new Image { Source = im.Source };
 				case UIElement e when e.Uid is string res: //see _SetImage
-					if (res.Starts("resource:")) return AResources.GetXamlObject(res) as UIElement;
+					if (AResources.HasResourcePrefix(res)) return AResources.GetXamlObject(res) as UIElement;
 					if (res.Starts("source:")) return AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(res[7..]);
 					break;
 				}

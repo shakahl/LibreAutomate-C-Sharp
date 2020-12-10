@@ -182,10 +182,10 @@ namespace Au.Util
 		//}
 
 		/// <summary>
-		/// Returns true if string starts with "resource:".
+		/// Returns true if string starts with "resource:" or "resources/".
 		/// </summary>
 		public static bool HasResourcePrefix(string s) {
-			return s.Starts("resource:")/* || s.Starts("pack:")*/;
+			return s.Starts("resource:") || s.Starts("resources/")/* || s.Starts("pack:")*/;
 		}
 
 		//[MethodImpl(MethodImplOptions.NoInlining)] //avoid loading WPF dlls if no "pack:"

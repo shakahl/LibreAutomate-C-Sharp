@@ -13,25 +13,26 @@ using System.Reflection;
 
 using Au;
 using Au.Types;
-using Au.Compiler;
 
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.CSharp.QuickInfo;
-using Au.Controls;
 
 class CiQuickInfo
 {
-	public async void SciMouseDwellStarted(SciCode doc, int pos8, bool isDiag)
-	{
+	public async void SciMouseDwellStarted(SciCode doc, int pos8, bool isDiag) {
 		var pi = Panels.Info;
-		if(!pi.Visible) pi = null;
-		if(isDiag && pi == null) return;
+		if (!pi.IsVisible) pi = null;
+		if (isDiag && pi == null) return;
 
-		if(pos8 <= 0) { pi?.ZSetAboutInfo(); return; }
+		if (pos8 <= 0) { pi?.ZSetAboutInfo(); return; }
 
 		//APerf.First();
 		int pos16 = doc.Pos16(pos8);
-		if(!CodeInfo.GetContextAndDocument(out var cd, pos16)) { pi?.ZSetAboutInfo(cd.metaEnd > 0); return; }
+		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) {
+			//pi?.ZSetAboutInfo(cd.metaEnd > 0 ? PanelInfo.About.Metacomments : PanelInfo.About.Minimal);
+			pi?.ZSetAboutInfo(PanelInfo.About.Minimal);
+			return;
+		}
 
 		//APerf.Next();
 		var context = new QuickInfoContext(cd.document, pos16, default);
@@ -42,53 +43,56 @@ class CiQuickInfo
 		//var r = await provider.GetQuickInfoAsync(context); //not async
 		var r = await Task.Run(async () => await provider.GetQuickInfoAsync(context));
 		//APerf.Next();
-		if(r == null) { pi?.ZSetAboutInfo(); return; }
+		if (r == null) { pi?.ZSetAboutInfo(); return; }
 
 		//AOutput.Write(r.Span, r.RelatedSpans);
 		//AOutput.Write(r.Tags);
 
-		var b = new StringBuilder("<body><div>");
+		var x = new CiXaml();
+		x.StartParagraph();
 
 		//image
 		CiUtil.TagsToKindAndAccess(r.Tags, out var kind, out var access);
-		if(kind != CiItemKind.None) {
-			if(access != default) b.AppendFormat("<img src='@a{0}' style='padding-top: 6px' />", (int)access);
-			b.AppendFormat("<img src='@k{0}' style='padding-top: 2px' />", (int)kind);
+		if (kind != CiItemKind.None) {
+			//if(access != default) b.AppendFormat("<img src='@a{0}' style='padding-top: 6px' />", (int)access);
+			//b.AppendFormat("<img src='@k{0}' style='padding-top: 2px' />", (int)kind);
+			//TODO
+			if (access != default) x.Image("@a" + (int)access);
+			x.Image("@k" + (int)kind);
+			x.Append(" ");
 		}
 
 		//bool hasDocComm = false;
 		//QuickInfoSection descr = null;
 		POINT excRange = default, retRange = default;
 		var a = r.Sections;
-		for(int i = 0; i < a.Length; i++) {
+		for (int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//AOutput.Write(se.Kind, se.Text);
-			if(i > 0) b.Append("<p>");
-			int from = b.Length;
-			CiHtml.TaggedPartsToHtml(b, se.TaggedParts);
-			int to = b.Length;
-			switch(se.Kind) {
+			if (i > 0) x.StartParagraph();
+			int from = x.SB.Length;
+			x.AppendTaggedParts(se.TaggedParts);
+			int to = x.SB.Length;
+			switch (se.Kind) {
 			case QuickInfoSectionKinds.ReturnsDocumentationComments: retRange = (from, to); break;
 			case QuickInfoSectionKinds.Exception: excRange = (from, to); break;
 			}
-			b.Append(i > 0 ? "</p>" : "</div>");
+			x.EndParagraph();
 		}
 
-		b.Append("</body>");
-		var html = b.ToString();
+		var xaml = x.End();
 
 		//join lines
-		if(retRange.x > 0) html = html.RegexReplace(":<br>", ": ", 1, 0, retRange.x..retRange.y);
-		if(excRange.x > 0) html = html.RegexReplace(":<br>", ": ", 1, 0, excRange.x..excRange.y).RegexReplace("><br>", ">, ", range: excRange.x..excRange.y);
+		if (retRange.x > 0) xaml = xaml.RegexReplace(":\n", ": ", 1, 0, retRange.x..retRange.y);
+		if (excRange.x > 0) xaml = xaml.RegexReplace(":\n", ": ", 1, 0, excRange.x..excRange.y).RegexReplace(">\n *", ">, ", range: excRange.x..excRange.y);
 
-		//AOutput.Write(html);
-		html = html.Replace("<p><br>", "<p>");
-		html = html.Replace("><br>", ">&nbsp;<br>"); //workaround for HtmlRenderer bug: adds 2 lines.
-													 //APerf.Next();
-		if(pi != null) {
-			pi.ZSetText(html);
+		xaml = xaml.Replace("<Paragraph>\n", "<Paragraph>");
+		//xaml = xaml.Replace(">\n", ">&#160;\n"); //workaround for HtmlRenderer bug: adds 2 lines.
+		//APerf.Next();
+		if (pi != null) {
+			pi.ZSetXaml(xaml);
 		} else {
-			CodeInfo.ShowHtmlPopup(doc, pos16, html);
+			CodeInfo.ShowXamlPopup(doc, pos16, xaml);
 		}
 		//APerf.NW();
 	}

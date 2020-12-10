@@ -9,14 +9,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Windows.Forms;
-//using System.Drawing;
 //using System.Linq;
-using System.Text.RegularExpressions;
 
 using Au;
 using Au.Types;
-using static Au.Controls.Sci;
 
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
@@ -109,7 +105,7 @@ class CiErrors
 			try {
 				switch (format) {
 				case PSFormat.Regex:
-					new Regex(s); //never mind: may have 'options' argument, eg ECMAScript or Compiled
+					new System.Text.RegularExpressions.Regex(s); //never mind: may have 'options' argument, eg ECMAScript or Compiled
 					break;
 				case PSFormat.ARegex:
 					new ARegex(s);
@@ -152,11 +148,14 @@ class CiErrors
 	public bool SciMouseDwellStarted(SciCode doc, int pos8) {
 		if (_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return false;
 		if (pos8 < 0) return false;
-		int all = doc.Call(SCI_INDICATORALLONFOR, pos8);
+		int all = doc.Call(Au.Controls.Sci.SCI_INDICATORALLONFOR, pos8);
 		//AOutput.Write(all);
 		if (0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return false;
 		int pos16 = doc.Pos16(pos8);
-		var b = new StringBuilder("<body>");
+
+		var x = new CiXaml();
+		x.StartParagraph();
+		x.LineBreakIfLonger = x.SB.Length;
 
 		ErrorCode ecPrev = 0;
 		int implPos = -1; bool implInterface = false;
@@ -166,7 +165,8 @@ class CiErrors
 			var d = v.d;
 			var s1 = d.Severity switch { DiagnosticSeverity.Error => "Error", DiagnosticSeverity.Warning => "Warning", _ => "Info" };
 			var s2 = System.Web.HttpUtility.HtmlEncode(d.GetMessage());
-			b.AppendFormat("\r\n<div>{0}: {1}</div>", s1, s2);
+			x.LineBreak();
+			x.AppendFormat("{0}: {1}", s1, s2);
 
 			if (d.Severity == DiagnosticSeverity.Error) {
 				if (_semo == null) continue;
@@ -182,7 +182,7 @@ class CiErrors
 				case ErrorCode.ERR_SingleTypeNameNotFound:
 					if (ec == ecPrev) continue; //probably "not found 'AbcAttribute'" followed by "not found 'Abc'"
 					ecPrev = ec;
-					_UsingsEtc(b, v, doc, extMethod);
+					_UsingsEtc(x, v, doc, extMethod);
 					break;
 				case ErrorCode.ERR_UnimplementedInterfaceMember:
 				case ErrorCode.ERR_UnimplementedAbstractMethod:
@@ -194,31 +194,30 @@ class CiErrors
 			} else if (d.Severity == DiagnosticSeverity.Warning) {
 				switch ((ErrorCode)d.Code) {
 				case ErrorCode.WRN_MissingXMLComment:
-					_XmlComment(b/*, v*/);
+					_XmlComment(x/*, v*/);
 					break;
 				}
 			}
 		}
-		if (implPos >= 0) _Implement(b, implPos, implInterface, doc);
+		if (implPos >= 0) _Implement(x, implPos, implInterface);
 
 		_Also(_metaErrors, "Error: ");
 		_Also(_stringErrors, null);
 		void _Also(List<(int from, int to, string s)> a, string prefix) {
 			foreach (var v in a) {
 				if (pos16 < v.from || pos16 > v.to) continue;
-				if (b.Length > 0) b.Append('\n');
-				b.Append(prefix).Append(v.s);
+				x.LineBreak(prefix); x.Append(v.s);
 			}
 		}
 
-		b.Append("</body>");
-		var html = b.ToString();
+		x.EndParagraph();
+		var xaml = x.End();
 
-		CodeInfo.ShowHtmlPopup(doc, pos16, html, onLinkClick: (ph, e) => _LinkClicked(e.Link), above: true);
+		CodeInfo.ShowXamlPopup(doc, pos16, xaml, onLinkClick: (ph, e) => _LinkClicked(e), above: true);
 		return true;
 	}
 
-	void _UsingsEtc(StringBuilder b, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod) {
+	void _UsingsEtc(CiXaml x, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod) {
 		string code = doc.Text;
 		bool isGeneric = false;
 		int end2 = code.IndexOf('<', v.start, v.end - v.start);
@@ -274,30 +273,28 @@ class CiErrors
 
 		if (usings.Count > 0) {
 			var sstart = doc.Pos8(v.start).ToString();
-			b.Append("\r\n<div>Add using ");
+			x.Append("\nAdd using ");
 			for (int i = 0; i < usings.Count; i++) {
 				var u = usings[i];
-				if (i > 0) b.Append(" or ");
-				b.AppendFormat("<a href='^u{0}{1}'>{1}</a>", sstart, u);
+				if (i > 0) x.Append(" or ");
+				x.Hyperlink("^u" + sstart + u, u);
 			}
-			b.Append("</div>");
 			if (!extMethod) {
-				b.Append("\r\n<div>Or prefix ");
+				x.Append("\nOr prefix ");
 				for (int i = 0; i < usings.Count; i++) {
 					var u = usings[i];
-					if (i > 0) b.Append(" or ");
-					b.AppendFormat("<a href='^p{0}{1}'>{1}</a>", sstart, u);
+					if (i > 0) x.Append(" or ");
+					x.Hyperlink("^p" + sstart + u, u);
 				}
-				b.Append("</div>");
 			}
 		} else {
-			b.Append("\r\n<div><a href='^r'>Add assembly reference...</a></div>");
-			if (!(extMethod | isGeneric | isAttribute)) b.AppendFormat("\r\n<div><a href='^w{0}'>Find Windows API...</a></div>", errName);
+			x.Hyperlink("^r", "\nAdd assembly reference...");
+			if (!(extMethod | isGeneric | isAttribute)) x.Hyperlink("^w" + errName, "\nFind Windows API...");
 		}
 	}
 
 	void _LinkClicked(string s) {
-		CodeInfo.HideHtmlPopup();
+		CodeInfo.HideXamlPopup();
 		char action = s[1];
 		if (action == 'u' || action == 'p') { //add 'using', prefix namespace
 			int pos8 = s.ToInt(2, out int i);
@@ -319,16 +316,16 @@ class CiErrors
 		}
 	}
 
-	void _Implement(StringBuilder b, int pos, bool isInterface, SciCode doc) {
-		b.AppendFormat("\r\n<div><a href='^ii{0}'>Implement {1}</a></div>", pos, isInterface ? "interface" : "abstract class");
-		if (isInterface) b.AppendFormat("\r\n<div><a href='^ie{0}'>Implement explicitly</a></div>", pos);
+	static void _Implement(CiXaml x, int pos, bool isInterface) {
+		x.Hyperlink("^ii" + pos, "\nImplement " + (isInterface ? "interface" : "abstract class"));
+		if (isInterface) x.Hyperlink("^ie" + pos, "\nImplement explicitly");
 	}
 
-	void _XmlComment(StringBuilder b/*, in (Diagnostic d, int start, int end) v*/) {
-		//b.AppendFormat("\r\n<div><a href='^xa{0}'>Add XML comment</a></div>", v.start);
-		//b.AppendFormat("\r\n<div><a href='^xd{0}'>Disable warning</a></div>", v.start);
+	static void _XmlComment(CiXaml x/*, in (Diagnostic d, int start, int end) v*/) {
+		//x.Hyperlink("^xa+v.start, "\nAdd XML comment");
+		//x.Hyperlink("^xd+v.start, "\nDisable warning");
 
-		b.Append("\r\n<div>To add XML comment, use docSnippet. Type <b>doc</b> above, and select docSnippet from the completion list.</div>");
-		b.Append("\r\n<div>To disable warning, add <b>///</b> above or disable warning 1591 (warningDisableSnippet) or make non-public.</div>");
+		x.Append("\nTo add XML comment, use docSnippet. Type <Bold>doc</Bold> above, and select docSnippet from the completion list.");
+		x.Append("\nTo disable warning, add <Bold>///</Bold> above or disable warning 1591 (warningDisableSnippet) or make non-public.");
 	}
 }

@@ -644,7 +644,7 @@ namespace Au.Controls
 		public void Select(int index, bool select = true, bool unselectOther = false, bool focus = false) {
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
 			if (focus) FocusedIndex = index;
-			Select(index..++index, select, unselectOther);
+			Select(index..(index + 1), select, unselectOther);
 			if (select && unselectOther) SelectedSingle?.Invoke(this, index);
 		}
 
@@ -657,7 +657,7 @@ namespace Au.Controls
 		/// <param name="focus">Set <see cref="FocusedIndex"/>=<i>index</i>.</param>
 		/// <exception cref="ArgumentException"><i>item</i> is not a visible item in this control. No exception if <i>select</i> false.</exception>
 		public void Select(ITreeViewItem item, bool select = true, bool unselectOther = false, bool focus = false) {
-			if(!_IndexOfOrThrowIfImportant(select, item, out int i)) return; //ok if tries to unselect an already unselected item in a collapsed folder
+			if (!_IndexOfOrThrowIfImportant(select, item, out int i)) return; //ok if tries to unselect an already unselected item in a collapsed folder
 			Select(i, select, unselectOther, focus);
 		}
 

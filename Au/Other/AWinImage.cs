@@ -1059,7 +1059,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Has implicit conversions from:
 	/// - string - path of .png or .bmp file. If not full path, uses <see cref="AFolders.ThisAppImages"/>.
-	/// - string with prefix <c>"resource:"</c> - resource name; see <see cref="AResources.GetWinformsImage"/>.
+	/// - string that starts with "resources/" or has prefix <c>"resource:"</c> - resource name; see <see cref="AResources.GetWinformsImage"/>.
 	/// - string with prefix <c>"image:"</c> - Base64-encoded .png image embedded in script text.
 	/// <br/>Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.ImageUtil.ImageToString</b> (in Au.Controls.dll).
 	/// - <see cref="ColorInt"/>, <b>int</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.

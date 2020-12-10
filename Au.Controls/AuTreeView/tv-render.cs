@@ -268,8 +268,7 @@ namespace Au.Controls
 						if (b == null) {
 							var imageSource = item.ImageSource;
 							if (!imageSource.NE()) {
-								bool isImage = 0 != imageSource.Starts(false, "resource:", "imagefile:", "image:", "~:");
-								//bool mayNeedAsync=!(isImage && (AResources.HasResourcePrefix(imageSource) || AImageUtil.HasImageStringPrefix(imageSource)));
+								bool isImage = AResources.HasResourcePrefix(imageSource) || 0 != imageSource.Starts(false, "imagefile:", "image:", "~:");
 								bool mayNeedAsync = !isImage;
 								if (mayNeedAsync) _imageAsyncCompletion ??= _ImageAsyncCompletion;
 								b = ImageCache.Get(imageSource, _dpi, isImage, mayNeedAsync ? _imageAsyncCompletion : null, item);

@@ -13,8 +13,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 
 using Au;
@@ -149,6 +147,8 @@ class CiCompletion
 			if (!wasBusy) return;
 			ch = default;
 		}
+
+		CodeInfo.HideXamlPopup();
 
 		//using var nogcr = AKeys.IsScrollLock ? new NoGcRegion(50_000_000) : default;
 
@@ -660,18 +660,18 @@ class CiCompletion
 		_popupList.SelectedItem = ci;
 	}
 
-	public string GetDescriptionHtml(CiComplItem ci, int iSelect) {
+	public string GetDescriptionDoc(CiComplItem ci, int iSelect) {
 		if (_data == null) return null;
 		switch (ci.kind) {
-		case CiItemKind.Keyword: return CiHtml.KeywordToHtml(ci.DisplayText);
-		case CiItemKind.Label: return CiHtml.LabelToHtml(ci.DisplayText);
-		case CiItemKind.Snippet: return CiSnippets.GetDescriptionHtml(ci);
+		case CiItemKind.Keyword: return CiXaml.FromKeyword(ci.DisplayText);
+		case CiItemKind.Label: return CiXaml.FromLabel(ci.DisplayText);
+		case CiItemKind.Snippet: return CiSnippets.GetDescriptionXaml(ci);
 		}
 		var symbols = ci.ci.Symbols;
-		if (symbols != null) return CiHtml.SymbolsToHtml(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
+		if (symbols != null) return CiXaml.FromSymbols(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
 		ADebug.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
 		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
-		return r == null ? null : CiHtml.TaggedPartsToHtml(r.TaggedParts);
+		return r == null ? null : CiXaml.FromTaggedParts(r.TaggedParts);
 	}
 
 	/// <summary>
@@ -864,10 +864,10 @@ class CiCompletion
 		return CiComplResult.Simple;
 	}
 
-	bool _IsInAncestorNodeOfType<T>(int pos) where T : SyntaxNode
+	static bool _IsInAncestorNodeOfType<T>(int pos) where T : SyntaxNode
 		=> CodeInfo.GetDocumentAndFindNode(out _, out var node, pos) && null != node.GetAncestor<T>();
 
-	bool _IsInAncestorNode(int pos, Func<SyntaxNode, (bool yes, bool no)> f) {
+	static bool _IsInAncestorNode(int pos, Func<SyntaxNode, (bool yes, bool no)> f) {
 		if (!CodeInfo.GetDocumentAndFindNode(out _, out var node, pos)) return false;
 		while ((node = node.Parent) != null) {
 			//CiUtil.PrintNode(node);
@@ -941,40 +941,35 @@ class CiComplItem : ITreeViewItem
 	}
 
 	public static string ImageResource(CiItemKind kind) => kind switch {
-		CiItemKind.Class => "resource:resources/ci/class.xaml",
-		CiItemKind.Constant => "resource:resources/ci/constant.xaml",
-		CiItemKind.Delegate => "resource:resources/ci/delegate.xaml",
-		CiItemKind.Enum => "resource:resources/ci/enum.xaml",
-		CiItemKind.EnumMember => "resource:resources/ci/enummember.xaml",
-		CiItemKind.Event => "resource:resources/ci/event.xaml",
-		CiItemKind.ExtensionMethod => "resource:resources/ci/extensionmethod.xaml",
-		CiItemKind.Field => "resource:resources/ci/field.xaml",
-		CiItemKind.Interface => "resource:resources/ci/interface.xaml",
-		CiItemKind.Keyword => "resource:resources/ci/keyword.xaml",
-		CiItemKind.Label => "resource:resources/ci/label.xaml",
-		CiItemKind.LocalVariable => "resource:resources/ci/localvariable.xaml",
-		CiItemKind.Method => "resource:resources/ci/method.xaml",
-		CiItemKind.Namespace => "resource:resources/ci/namespace.xaml",
-		CiItemKind.Property => "resource:resources/ci/property.xaml",
-		CiItemKind.Snippet => "resource:resources/ci/snippet.xaml",
-		CiItemKind.Structure => "resource:resources/ci/structure.xaml",
-		CiItemKind.TypeParameter => "resource:resources/ci/typeparameter.xaml",
+		CiItemKind.Class => "resources/ci/class.xaml",
+		CiItemKind.Constant => "resources/ci/constant.xaml",
+		CiItemKind.Delegate => "resources/ci/delegate.xaml",
+		CiItemKind.Enum => "resources/ci/enum.xaml",
+		CiItemKind.EnumMember => "resources/ci/enummember.xaml",
+		CiItemKind.Event => "resources/ci/event.xaml",
+		CiItemKind.ExtensionMethod => "resources/ci/extensionmethod.xaml",
+		CiItemKind.Field => "resources/ci/field.xaml",
+		CiItemKind.Interface => "resources/ci/interface.xaml",
+		CiItemKind.Keyword => "resources/ci/keyword.xaml",
+		CiItemKind.Label => "resources/ci/label.xaml",
+		CiItemKind.LocalVariable => "resources/ci/localvariable.xaml",
+		CiItemKind.Method => "resources/ci/method.xaml",
+		CiItemKind.Namespace => "resources/ci/namespace.xaml",
+		CiItemKind.Property => "resources/ci/property.xaml",
+		CiItemKind.Snippet => "resources/ci/snippet.xaml",
+		CiItemKind.Structure => "resources/ci/structure.xaml",
+		CiItemKind.TypeParameter => "resources/ci/typeparameter.xaml",
 		_ => null
 	};
 
 	public string AccessImageSource => AccessImageResource(access);
 
 	public static string AccessImageResource(CiItemAccess access) => access switch {
-		CiItemAccess.Private => "resource:resources/ci/overlayprivate.xaml",
-		CiItemAccess.Protected => "resource:resources/ci/overlayprotected.xaml",
-		CiItemAccess.Internal => "resource:resources/ci/overlayinternal.xaml",
+		CiItemAccess.Private => "resources/ci/overlayprivate.xaml",
+		CiItemAccess.Protected => "resources/ci/overlayprotected.xaml",
+		CiItemAccess.Internal => "resources/ci/overlayinternal.xaml",
 		_ => null
 	};
-
-
-	//public Bitmap KindImage => CiUtil.GetKindImage(kind);
-
-	//public Bitmap AccessImage => CiUtil.GetAccessImage(access);
 
 	public ISymbol FirstSymbol => ci.Symbols?[0];
 

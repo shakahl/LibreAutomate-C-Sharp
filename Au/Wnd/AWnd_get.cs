@@ -607,10 +607,10 @@ namespace Au
 			get => Api.GetWindow(this, Api.GW_OWNER);
 			set {
 				SetWindowLong(Native.GWL.HWNDPARENT, (LPARAM)value);
-				//if (!value.Is0 && !ZorderIsAbove(value)) ZorderAbove(value);
 				if(!value.Is0) {
 					bool tm = value.IsTopmost;
 					if (tm != IsTopmost) { if (tm) ZorderTopmost(); else ZorderNoTopmost(); }
+					if (!ZorderIsAbove(value)) ZorderAbove(value);
 				}
 			}
 		}

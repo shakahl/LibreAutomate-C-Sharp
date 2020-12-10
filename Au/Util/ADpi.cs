@@ -128,6 +128,16 @@ namespace Au.Util
 		}
 
 		/// <summary>
+		/// Scales <b>System.Windows.Size</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// </summary>
+		public static SIZE Scale(System.Windows.Size z, DpiOf dpiOf) {
+			double f = (int)dpiOf / 96d;
+			z.Width *= f;
+			z.Height *= f;
+			return (SIZE)z;
+		}
+
+		/// <summary>
 		/// Unscales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
 		/// </summary>
 		public static System.Windows.Size Unscale(SIZE z, DpiOf dpiOf) {

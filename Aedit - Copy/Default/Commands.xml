@@ -1,0 +1,64 @@
+﻿<!--
+If this is the customized commands file, you can edit it to customize menu commands and toolbars. Then restart the program.
+	To add a command to a toolbar, add command's XML element to the toolbar's XML element.
+	To reset everything, delete this file. To reset some toolbars, delete all commands in their XML elements.
+If this is the default commands file, please don't edit/delete it.
+
+Most command names are like default menu item text, with _ instead of space and without ....
+	For example, if text in menu is "Open file...", command is Open_file.
+	The program prints all available command names if this file contains unknown commands. The same for toolbar names.
+
+Command XML attributes:
+color - text color. Value: .NET color name or #RRGGBB or #RGB.
+text - menu item text. Also button text, if btext not specified. Insert _ before Alt-underlined character.
+image - image file. Can be xaml, png or other format supported by WPF. Path can start with %EnvVariable% or %AFolders.Folder%.
+keys - keyboard or/and mouse shortcut(s), like "Ctrl+E, Shift+M-click". Mouse can be: Click, D-click, R-click, M-click, Wheel.
+
+These attributes are used only for toolbar buttons:
+separator - add separator before. Value: none.
+hide - overflow mode. Value: always, never, asNeeded (default).
+imageAt - show image + text; image at this side. Value: left, top, right, bottom. For submenu-items always left.
+btext - button text.
+
+All attributes are optional. The Example command contains all.
+<Example color="green" text="Text1" image="c:\m\n.png" keys="Ctrl+H" separator="1" hide="1" imageAt="left" btext="Text2"/>
+-->
+<commands>
+	<!-- Customized commands that don't have a toolbar button. -->
+	<menu>
+		
+	</menu>
+	<!-- Toolbars. Commands added here will have a toolbar button. -->
+	<File>
+		<New_script />
+		<Properties />
+		<Save_now />
+	</File>
+	<Run>
+		<Compile />
+		<Start />
+		<End />
+	</Run>
+	<Edit>
+		<Find />
+		<Undo separator="" />
+		<Redo />
+		<Cut separator="" />
+		<Copy />
+		<Paste />
+		<Wrap_lines separator="" />
+		<Images_in_code />
+	</Edit>
+	<Tools>
+		<Options />
+	</Tools>
+	<Help>
+		<Context_help />
+	</Help>
+	<Custom1>
+
+	</Custom1>
+	<Custom2>
+
+	</Custom2>
+</commands>

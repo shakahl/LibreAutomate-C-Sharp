@@ -62,7 +62,7 @@ namespace Au.Controls
 		/// Where to find image or icon to display.
 		/// Can have prefix:
 		/// "imagefile:" - path of png/bmp/jpg/gif/tif or xaml file.
-		/// "resource:" - path of png/bmp/jpg/gif/tif or xaml resource, like "resources/file.png".
+		/// "resource:" - path of png/bmp/jpg/gif/tif or xaml resource. Don't need prefix if starts with "resources/", like "resources/file.png".
 		/// "image:" - Base-64 encoded png/bmp/jpg/gif/tif image.
 		/// If without prefix, gets file icon; see <see cref="AIcon.OfFile"/>.
 		/// </summary>

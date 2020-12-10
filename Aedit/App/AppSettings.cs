@@ -94,6 +94,15 @@ class AppSettings : ASettings
 	public byte ci_correctStringEnter { get => _ci_correctStringEnter; set => Set(ref _ci_correctStringEnter, value); }
 	byte _ci_correctStringEnter;
 
+	//public SIZE ci_sizeSignXaml { get => _ci_sizeSignXaml; set => Set(ref _ci_sizeSignXaml, value); }
+	//SIZE _ci_sizeSignXaml;
+
+	//public SIZE ci_sizeComplXaml { get => _ci_sizeComplXaml; set => Set(ref _ci_sizeComplXaml, value); }
+	//SIZE _ci_sizeComplXaml;
+
+	//public SIZE ci_sizeComplList { get => _ci_sizeComplList; set => Set(ref _ci_sizeComplList, value); }
+	//SIZE _ci_sizeComplList;
+
 	public string db_copy_ref { get => _db_copy_ref; set => Set(ref _db_copy_ref, value); }
 	string _db_copy_ref;
 
