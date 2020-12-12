@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Windows.Forms;
 
 using Au.Types;
 using Au.Controls;
@@ -8,41 +7,39 @@ using Au.Util;
 
 namespace Au.Tools
 {
-	class RegexWindow : InfoWindow
+	class RegexWindow : InfoWindow //KPopup
 	{
-		public RegexWindow(AWnd ownerForDpi)
-		{
-			int dpi = ADpi.OfWindow(ownerForDpi);
-			base.InitTwoControlsSplitPos = ADpi.Scale(250, dpi);
-			this.Size = ADpi.Scale((800, 220), dpi);
-			this.Caption = "Regex";
+		public RegexWindow() : base(250) {
+			Size = (800, 220);
+			WindowName = "Regex";
+			Name = "Ci.Regex"; //prevent hiding when activated
+			CloseHides = true;
 		}
 
-		protected override void OnLoad(EventArgs e)
-		{
-			for(int i = 0; i < 2; i++) {
+		protected override void OnHandleCreated() {
+			for (int i = 0; i < 2; i++) {
 				var c = i == 0 ? this.Control1 : this.Control2;
-				c.ZTags.AddStyleTag(".r", new SciTagsF.UserDefinedStyle { textColor = 0xf08080 }); //red regex
+				c.ZTags.AddStyleTag(".r", new SciTags.UserDefinedStyle { textColor = 0xf08080 }); //red regex
 				c.ZTags.AddLinkTag("+p", o => CurrentTopic = o); //link to a local info topic
-				c.ZTags.SetLinkStyle(new SciTagsF.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
+				c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 				c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
 			}
-			this.Control2.ZTags.AddStyleTag(".h", new SciTagsF.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
+			this.Control2.ZTags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
 			this.Control2.ZTags.AddLinkTag("+a", o => InsertCode.TextSimplyInControl(InsertInControl, o)); //link that inserts a regex token
 
 			_SetTocText();
 			CurrentTopic = "help";
+
+			base.OnHandleCreated();
 		}
 
-		string _GetContentText()
-		{
+		string _GetContentText() {
 			var s = ContentText ?? AResources.GetString("tools/regex.txt");
-			if(!s.Contains('\n')) s = File.ReadAllText(s);
+			if (!s.Contains('\n')) s = File.ReadAllText(s);
 			return s;
 		}
 
-		void _SetTocText()
-		{
+		void _SetTocText() {
 			var s = _GetContentText();
 			s = s.Remove(s.Find("\r\n\r\n-- "));
 			this.Text = s;
@@ -54,17 +51,16 @@ namespace Au.Tools
 		public string CurrentTopic {
 			get => _topic;
 			set {
-				if(value == _topic) return;
+				if (value == _topic) return;
 				_topic = value;
 				var s = _GetContentText();
-				if(!s.RegexMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
+				if (!s.RegexMatch($@"(?ms)^-- {_topic} --\R\R(.+?)\R-- ", 1, out s)) s = "";
 				this.Text2 = s;
 			}
 		}
 		string _topic;
 
-		public void Refresh()
-		{
+		public void Refresh() {
 			_SetTocText();
 			var s = _topic;
 			_topic = null;

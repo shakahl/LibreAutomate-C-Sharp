@@ -96,7 +96,7 @@ class CiSignature
 		//APerf.First();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return; //returns false if position is in meta comments
 
-		CodeInfo.HideXamlPopup();
+		CodeInfo.HideXamlPopupAndTempWindows();
 		CodeInfo._compl.Cancel();
 
 		_cancelTS?.Cancel();
@@ -311,9 +311,9 @@ class CiSignature
 				x.StartParagraph();
 				if (haveDoc) x.AppendTaggedParts(tt);
 				if (haveLinks) {
-					if (haveDoc) x.Append(' ');
+					if (haveDoc) x.Append(" ");
 					x.AppendSymbolLinks(helpUrl, sourceUrl);
-					x.Append('.');
+					x.Append(".");
 				}
 				x.EndParagraph();
 			}

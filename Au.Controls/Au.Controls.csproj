@@ -53,7 +53,7 @@
 		<Compile Update="Forms\Other\Simple.cs" />
 		<Compile Update="Forms\Other\ToolStripSpringBox.cs" />
 		<Compile Update="Forms\Sci\AuScintilla.cs" />
-		<Compile Update="Forms\Sci\InfoBox.cs" />
+		<Compile Update="Forms\Sci\InfoBoxF.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

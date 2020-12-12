@@ -91,10 +91,10 @@ public partial class PanelFind : UserControl
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
 			ATimer.After(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, false); });
 		} else {
-			if (_regexWindow.Window.Visible) {
+			if (_regexWindow.IsVisible) {
 				var c = Keyboard.FocusedElement;
-				if (c == null || (c != _tFind && c != _tReplace /*&& c != _regexWindow.Window && c.TopLevelControl != _regexWindow.Window*/)) {//TODO
-					_regexWindow.Hide();
+				if (c == null || (c != _tFind && c != _tReplace && !AWnd.ThisThread.IsFocused(_regexWindow.Hwnd))) {
+					_regexWindow.Hwnd.ShowLL(false);
 				}
 			}
 		}
@@ -107,10 +107,10 @@ public partial class PanelFind : UserControl
 			if (_cRegex.IsCheck()) {
 				_cWord.IsChecked = false;
 				if (_regexWindow == null) {
-					_regexWindow = new RegexWindow(this.Hwnd());
+					_regexWindow = new RegexWindow();
 				}
 			} else {
-				_regexWindow?.Dispose();
+				_regexWindow?.Close();
 				_regexWindow = null;
 			}
 		} else if (sender == _cName) {
@@ -127,25 +127,25 @@ public partial class PanelFind : UserControl
 	string _regexTopic;
 
 	void _ShowRegexInfo(TextBox tb, bool F1) {
-		//if (_regexWindow == null || !_cRegex.IsCheck()) return;
-		//if (_regexWindow.UserClosed) { if (!F1) return; _regexWindow.UserClosed = false; }
+		if (_regexWindow == null || !_cRegex.IsCheck()) return;
+		if (_regexWindow.UserClosed) { if (!F1) return; _regexWindow.UserClosed = false; }
 
-		//if (!_regexWindow.Window.IsHandleCreated) {
-		//	var r = this.Hwnd().Rect;
-		//	r.Offset(0, -20);
-		//	_regexWindow.Show(App.Wmain, r, true);
-		//} else _regexWindow.Window.Show();
+		if (_regexWindow.Hwnd.Is0) {
+			var r = this.RectInScreen();
+			r.Offset(0, -20);
+			_regexWindow.ShowByRect(App.Wmain, Dock.Right, r, true);
+		} else _regexWindow.Hwnd.ShowLL(true);
 
-		//_regexWindow.InsertInControl = tb;
+		_regexWindow.InsertInControl = tb;
 
-		//bool replace = tb == _tReplace;
-		//var s = _regexWindow.CurrentTopic;
-		//if (s == "replace") {
-		//	if (!replace) _regexWindow.CurrentTopic = _regexTopic;
-		//} else if (replace) {
-		//	_regexTopic = s;
-		//	_regexWindow.CurrentTopic = "replace";
-		//}
+		bool replace = tb == _tReplace;
+		var s = _regexWindow.CurrentTopic;
+		if (s == "replace") {
+			if (!replace) _regexWindow.CurrentTopic = _regexTopic;
+		} else if (replace) {
+			_regexTopic = s;
+			_regexWindow.CurrentTopic = "replace";
+		}
 	}
 
 	private void _bFind_Click(object sender, RoutedEventArgs e) {

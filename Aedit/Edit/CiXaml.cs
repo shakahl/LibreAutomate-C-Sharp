@@ -53,12 +53,11 @@ class CiXaml
 		_b.Append(text);
 	}
 
-	//TODO: review all callers, maybe need Escape
 	public static string Escape(string text) => new XElement("a", text).ToString()[3..^4];
 
-	public void Append(char c) => _b.Append(c);
+	//public void Append(char c) => _b.Append(c);
 
-	public void AppendFormat(string text, params object[] a) => _b.AppendFormat(text, a);
+	//public void AppendFormat(string text, params object[] a) => _b.AppendFormat(text, a);
 
 	public void Style(string style, bool gt) {
 		_b.Append(" Style='{StaticResource ").Append(style).Append("}'");
@@ -80,9 +79,9 @@ class CiXaml
 
 	public void EndDiv() => _b.Append("</Paragraph>");
 
-	public void Header(string text) {
+	public void Header(string text, bool escape = false) {
 		StartParagraph("header");
-		_b.Append(text);
+		Append(text, escape);
 		EndParagraph();
 	}
 
@@ -90,10 +89,10 @@ class CiXaml
 		_b.Append("\n<BlockUIContainer><Separator Margin='4'></Separator></BlockUIContainer>");
 	}
 
-	public void LineBreak(string append = null) {
+	public void LineBreak(string append = null, bool escape = false) {
 		int i = LineBreakIfLonger;
 		if (!(i > 0 && _b.Length <= i)) _b.Append('\n');
-		if (append != null) _b.Append(append);
+		if (append != null) Append(append, escape);
 	}
 
 	/// <summary>
@@ -113,9 +112,13 @@ class CiXaml
 		_b.Append("</Paragraph>");
 	}
 
+	/// <summary>
+	/// Appends codeBlock paragraph with text.
+	/// </summary>
+	/// <param name="code">Non-escaped text.</param>
 	public void CodeBlock(string code) {
 		StartParagraph("codeBlock");
-		Append(code, true);
+		Append(code, escape: true);
 		EndParagraph();
 	}
 
@@ -132,37 +135,41 @@ class CiXaml
 
 	public void EndSpan() => _b.Append("</Span>");
 
-	/// <summary>
-	/// Calls <see cref="StartSpan"/>, <see cref="Append"/>, <see cref="EndSpan"/> and optionally <b>Append</b>.
-	/// </summary>
-	public void Span(string style, string text, string append = null) {
-		StartSpan(style);
-		Append(text);
-		EndSpan();
-		if (append != null) _b.Append(append);
-	}
+	//not used
+	///// <summary>
+	///// Calls <see cref="StartSpan"/>, <see cref="Append"/>, <see cref="EndSpan"/> and optionally <b>Append</b>.
+	///// </summary>
+	//public void Span(string style, string text, string append = null, bool escapeText = false, bool escapeAppend = false) {
+	//	StartSpan(style);
+	//	Append(text, escapeText);
+	//	EndSpan();
+	//	if (append != null) Append(append, escapeAppend);
+	//}
 
-	public void Run(string style, string text, string append = null) {
+	public void Run(string style, string text, string append = null, bool escapeText = false, bool escapeAppend = false) {
 		_b.Append("<Run");
 		Style(style, true);
-		Append(text);
+		Append(text, escapeText);
 		_b.Append("</Run>");
-		if (append != null) _b.Append(append);
+		if (append != null) Append(append, escapeAppend);
 	}
 
 	public void StartBold() => _b.Append("<Bold>");
 
 	public void EndBold() => _b.Append("</Bold>");
 
+	/// <param name="text">Escaped text.</param>
 	public void Bold(string text) => _b.Append("<Bold>").Append(text).Append("</Bold>");
 
 	public void StartItalic() => _b.Append("<Italic>");
 
 	public void EndItalic() => _b.Append("</Italic>");
 
-	public void Italic(string text) {
-		_b.Append("<Italic>").Append(text).Append("</Italic>");
-	}
+	//not used
+	///// <param name="text">Escaped text.</param>
+	//public void Italic(string text) {
+	//	_b.Append("<Italic>").Append(text).Append("</Italic>");
+	//}
 
 	public void StartHyperlink(string uri, bool gt = true) {
 		_b.Append("<Hyperlink NavigateUri=\"").Append(uri).Append('\"');
@@ -171,11 +178,11 @@ class CiXaml
 
 	public void EndHyperlink() => _b.Append("</Hyperlink>");
 
-	public void Hyperlink(string uri, string text, string append = null) {
+	public void Hyperlink(string uri, string text, string append = null, bool escapeText = false, bool escapeAppend = false) {
 		StartHyperlink(uri);
-		_b.Append(text);
+		Append(text, escapeText);
 		EndHyperlink();
-		if (append != null) _b.Append(append);
+		if (append != null) Append(append, escapeAppend);
 	}
 
 	/// <summary>
@@ -202,7 +209,7 @@ class CiXaml
 	//public Section Parse() => Parse(_b.ToString());
 
 	public static Section Parse(string xaml) {
-		AOutput.Write(xaml);//TODO
+		//AOutput.Write(xaml);
 
 		//var a = new List<(InlineUIContainer uc, UIElement e)>(); //need if used for images, because cannot modify collection while enumerating
 		var sec = XamlReader.Parse(xaml) as Section;

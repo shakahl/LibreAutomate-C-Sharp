@@ -21,9 +21,9 @@ namespace Au.Controls
 	/// Scintilla-based control to show formatted information text.
 	/// To set text use the <see cref="AuScintilla.Text"/> property. For formatting and links use tags: <see cref="SciTagsF"/>.
 	/// </summary>
-	public class InfoBox :AuScintilla
+	public class InfoBoxF :AuScintilla
 	{
-		public InfoBox()
+		public InfoBoxF()
 		{
 			ZInitReadOnlyAlways = true;
 			ZInitTagsStyle = ZTagsStyle.AutoAlways;

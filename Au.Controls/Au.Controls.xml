@@ -2557,56 +2557,56 @@
             Don't set focus on mouse right button down.
             </summary>
         </member>
-        <member name="T:Au.Controls.InfoBox">
+        <member name="T:Au.Controls.InfoBoxF">
             <summary>
             Scintilla-based control to show formatted information text.
             To set text use the <see cref="P:Au.Controls.AuScintilla.Text"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTagsF"/>.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoBox.ZInitUseControlFont">
+        <member name="P:Au.Controls.InfoBoxF.ZInitUseControlFont">
             <summary>
             Use control's <b>Font</b> instead of the default font Verdana 8.
             </summary>
         </member>
-        <member name="T:Au.Controls.InfoWindow">
+        <member name="T:Au.Controls.InfoWindowF">
             <summary>
             An info window, similar to tooltips but persistent, normally at the right side of a form/control/rectangle.
-            Supports output tags etc. Actually it is a floating <see cref="T:Au.Controls.InfoBox"/>.
+            Supports output tags etc. Actually it is a floating <see cref="T:Au.Controls.InfoBoxF"/>.
             You can set text, resize and show/hide/dispose it many times.
             User can middle-click to hide.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.InitTwoControlsSplitPos">
+        <member name="P:Au.Controls.InfoWindowF.InitTwoControlsSplitPos">
             <summary>
-            If > 0 when creating <see cref="P:Au.Controls.InfoWindow.Window"/>, creates second <see cref="T:Au.Controls.InfoBox"/> control.
+            If > 0 when creating <see cref="P:Au.Controls.InfoWindowF.Window"/>, creates second <see cref="T:Au.Controls.InfoBoxF"/> control.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.Window">
+        <member name="P:Au.Controls.InfoWindowF.Window">
             <summary>
-            The top-level info window. Contains <see cref="P:Au.Controls.InfoWindow.Control1"/>.
+            The top-level info window. Contains <see cref="P:Au.Controls.InfoWindowF.Control1"/>.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.Control1">
+        <member name="P:Au.Controls.InfoWindowF.Control1">
             <summary>
-            The child control of <see cref="P:Au.Controls.InfoWindow.Window"/>. Displays text.
+            The child control of <see cref="P:Au.Controls.InfoWindowF.Window"/>. Displays text.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.Control2">
+        <member name="P:Au.Controls.InfoWindowF.Control2">
             <summary>
-            The second child control of <see cref="P:Au.Controls.InfoWindow.Window"/>. Displays text.
+            The second child control of <see cref="P:Au.Controls.InfoWindowF.Window"/>. Displays text.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.Text">
+        <member name="P:Au.Controls.InfoWindowF.Text">
             <summary>
             Text with output tags.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.Text2">
+        <member name="P:Au.Controls.InfoWindowF.Text2">
             <summary>
             Text of second control with output tags.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.Size">
+        <member name="P:Au.Controls.InfoWindowF.Size">
             <summary>
             Window size.
             Default: (300, 200) dpi-scaled.
@@ -2615,7 +2615,7 @@
             If visible, does not ensure correct position. Usually it's better to hide, set size and show again.
             </remarks>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Show(System.Windows.Forms.Control,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
+        <member name="M:Au.Controls.InfoWindowF.Show(System.Windows.Forms.Control,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
             <summary>
             Shows the info window by the control.
             </summary>
@@ -2625,7 +2625,7 @@
             <exception cref="T:System.ArgumentException">c is null or its handle is not created.</exception>
             <exception cref="T:System.InvalidOperationException">Exceptions of <see cref="M:System.Windows.Forms.Form.Show(System.Windows.Forms.IWin32Window)"/>.</exception>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Show(System.Windows.Forms.Control,System.Drawing.Rectangle,System.Boolean,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
+        <member name="M:Au.Controls.InfoWindowF.Show(System.Windows.Forms.Control,System.Drawing.Rectangle,System.Boolean,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
             <summary>
             Shows the info window by the control and rectangle.
             </summary>
@@ -2637,7 +2637,7 @@
             <exception cref="T:System.ArgumentException">c is null or its handle is not created.</exception>
             <exception cref="T:System.InvalidOperationException">Exceptions of <see cref="M:System.Windows.Forms.Form.Show(System.Windows.Forms.IWin32Window)"/>.</exception>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Show(System.Drawing.Rectangle,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
+        <member name="M:Au.Controls.InfoWindowF.Show(System.Drawing.Rectangle,Au.Controls.PopupAlignment,System.Nullable{Au.Types.POINT})">
             <summary>
             Shows the info window by the rectangle.
             </summary>
@@ -2648,35 +2648,35 @@
             The info window is top-most.
             </remarks>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Hide">
+        <member name="M:Au.Controls.InfoWindowF.Hide">
             <summary>
             Hides the info window.
             Does not dispose.
             </summary>
         </member>
-        <member name="M:Au.Controls.InfoWindow.Dispose">
+        <member name="M:Au.Controls.InfoWindowF.Dispose">
             <summary>
             Destroys the info window.
             Later can be shown again.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.Caption">
+        <member name="P:Au.Controls.InfoWindowF.Caption">
             <summary>
             If set to a non-null string before creating the info window, the window will be with caption and resizable.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.InsertInControl">
+        <member name="P:Au.Controls.InfoWindowF.InsertInControl">
             <summary>
             A text control in which to insert the link text when clicked.
             If null, uses the focused control.
             </summary>
         </member>
-        <member name="P:Au.Controls.InfoWindow.UserClosed">
+        <member name="P:Au.Controls.InfoWindowF.UserClosed">
             <summary>
             true if hidden when the user clicked the x button.
             </summary>
         </member>
-        <member name="M:Au.Controls.InfoWindow.OnLoad(System.EventArgs)">
+        <member name="M:Au.Controls.InfoWindowF.OnLoad(System.EventArgs)">
             <summary>
             Called when window loaded but still invisible.
             InfoWindow.OnLoad does nothing. This function is just for overriding.
@@ -3370,7 +3370,7 @@
             Also you can register custom link tags that call your callback functions.
             See <see cref="M:Au.Controls.SciTagsF.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTagsF.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
             
-            Tags are supported by some existing controls based on <see cref="T:Au.Controls.AuScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.AOutput.Write(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.InfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.AuScintilla"/> controls, use <see cref="P:Au.Controls.AuScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.AuScintilla.ZInitImagesStyle"/>.
+            Tags are supported by some existing controls based on <see cref="T:Au.Controls.AuScintilla"/>. In the Au editor it is the output (use <see cref="M:Au.AOutput.Write(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.InfoBoxF"/> control. To enable tags in other <see cref="T:Au.Controls.AuScintilla"/> controls, use <see cref="P:Au.Controls.AuScintilla.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.AuScintilla.ZInitImagesStyle"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -4336,7 +4336,7 @@
             Also you can register custom link tags that call your callback functions.
             See <see cref="M:Au.Controls.SciTags.AddLinkTag(System.String,System.Action{System.String})"/>, <see cref="M:Au.Controls.SciTags.AddCommonLinkTag(System.String,System.Action{System.String})"/>.
             
-            Tags are supported by some existing controls based on <see cref="T:Au.Controls.SciHost"/>. In the Au editor it is the output (use <see cref="M:Au.AOutput.Write(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.InfoBox"/> control. To enable tags in other <see cref="T:Au.Controls.SciHost"/> controls, use <see cref="P:Au.Controls.SciHost.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.SciHost.ZInitImagesStyle"/>.
+            Tags are supported by some existing controls based on <see cref="T:Au.Controls.SciHost"/>. In the Au editor it is the output (use <see cref="M:Au.AOutput.Write(System.String)"/>, like in the example below). In this library - the <see cref="T:Au.Controls.InfoBoxF"/> control. To enable tags in other <see cref="T:Au.Controls.SciHost"/> controls, use <see cref="P:Au.Controls.SciHost.ZInitTagsStyle"/> and optionally <see cref="P:Au.Controls.SciHost.ZInitImagesStyle"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -4514,6 +4514,11 @@
             <summary>
             Don't destroy the popup window when closing, but just hide.
             In any case, if destroyed, <b>ShowX</b> will create new window.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.UserClosed">
+            <summary>
+            true if closed (or hidden if <see cref="P:Au.Controls.KPopup.CloseHides"/>) when the user clicked the x button.
             </summary>
         </member>
         <member name="P:Au.Controls.KPopup.IsVisible">

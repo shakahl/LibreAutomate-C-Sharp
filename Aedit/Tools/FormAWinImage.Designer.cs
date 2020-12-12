@@ -28,7 +28,7 @@
 		private void InitializeComponent()
 		{
 			this.components = new System.ComponentModel.Container();
-			this._info = new Au.Controls.InfoBox();
+			this._info = new Au.Controls.InfoBoxF();
 			this._lSpeed = new System.Windows.Forms.Label();
 			this._bTest = new Au.Controls.AuButton();
 			this._bOK = new Au.Controls.AuButtonOK();
@@ -39,7 +39,7 @@
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bEtc = new Au.Controls.AuButton();
 			this.panel1 = new System.Windows.Forms.Panel();
-			this._code = new Au.Tools.CodeBox();
+			this._code = new Au.Tools.CodeBoxF();
 			this._errorProvider = new System.Windows.Forms.ErrorProvider(this.components);
 			((System.ComponentModel.ISupportInitialize)(this._pict)).BeginInit();
 			this.panel1.SuspendLayout();
@@ -200,7 +200,7 @@
 
 		#endregion
 
-		private Controls.InfoBox _info;
+		private Controls.InfoBoxF _info;
 		private System.Windows.Forms.Label _lSpeed;
 		private Au.Controls.AuButton _bTest;
 		private Au.Controls.AuButtonOK _bOK;
@@ -210,7 +210,7 @@
 		private System.Windows.Forms.PictureBox _pict;
 		private System.Windows.Forms.ToolTip _toolTip;
 		private Au.Controls.AuButton _bEtc;
-		private CodeBox _code;
+		private CodeBoxF _code;
 		private System.Windows.Forms.Panel panel1;
 		private System.Windows.Forms.ErrorProvider _errorProvider;
 	}

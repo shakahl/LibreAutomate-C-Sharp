@@ -22,10 +22,10 @@ namespace Au.Tools
 	{
 		InfoBox _control;
 
-		public CommonInfos(InfoBox control)
+		public CommonInfos(InfoBoxF control)//TODO
 		{
-			_control = control;
-			_control.ZTags.AddLinkTag("+regex", o => _Regex(o));
+			//_control = control;
+			//_control.ZTags.AddLinkTag("+regex", o => _Regex(o));
 		}
 
 		/// <summary>
@@ -49,9 +49,10 @@ namespace Au.Tools
 
 		void _Regex(string _)
 		{
-			if(_regexWindow == null) _regexWindow = new RegexWindow(_control.Hwnd());
-			if(!_regexWindow.Window.IsHandleCreated) _regexWindow.Show(_control);
-			else _regexWindow.Window.Show();
+			_regexWindow ??= new RegexWindow();
+			//TODO
+			//if(_regexWindow.Hwnd.Is0) _regexWindow.Show(_control);
+			//else _regexWindow.Hwnd.ShowLL(true);
 		}
 
 		RegexWindow _regexWindow;

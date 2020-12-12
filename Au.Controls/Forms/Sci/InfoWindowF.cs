@@ -19,17 +19,17 @@ namespace Au.Controls
 {
 	/// <summary>
 	/// An info window, similar to tooltips but persistent, normally at the right side of a form/control/rectangle.
-	/// Supports output tags etc. Actually it is a floating <see cref="InfoBox"/>.
+	/// Supports output tags etc. Actually it is a floating <see cref="InfoBoxF"/>.
 	/// You can set text, resize and show/hide/dispose it many times.
 	/// User can middle-click to hide.
 	/// </summary>
-	public class InfoWindow /*: IMessageFilter*/
+	public class InfoWindowF /*: IMessageFilter*/
 	{
 		_Window _w;
 		_Control _c, _c2;
 
 		/// <summary>
-		/// If > 0 when creating <see cref="Window"/>, creates second <see cref="InfoBox"/> control.
+		/// If > 0 when creating <see cref="Window"/>, creates second <see cref="InfoBoxF"/> control.
 		/// </summary>
 		public int InitTwoControlsSplitPos { get; set; }
 
@@ -52,12 +52,12 @@ namespace Au.Controls
 		/// <summary>
 		/// The child control of <see cref="Window"/>. Displays text.
 		/// </summary>
-		public InfoBox Control1 { get { _ = _W; return _c; } }
+		public InfoBoxF Control1 { get { _ = _W; return _c; } }
 
 		/// <summary>
 		/// The second child control of <see cref="Window"/>. Displays text.
 		/// </summary>
-		public InfoBox Control2 { get { _ = _W; return _c2; } }
+		public InfoBoxF Control2 { get { _ = _W; return _c2; } }
 
 		/// <summary>
 		/// Text with output tags.
@@ -208,9 +208,9 @@ namespace Au.Controls
 
 		class _Window : InactiveWindow
 		{
-			InfoWindow _t;
+			InfoWindowF _t;
 
-			public _Window(InfoWindow t) : base(t.Caption == null ? WS.POPUP : WS.POPUP | WS.CAPTION | WS.SYSMENU | WS.THICKFRAME, shadow: t.Caption == null)
+			public _Window(InfoWindowF t) : base(t.Caption == null ? WS.POPUP : WS.POPUP | WS.CAPTION | WS.SYSMENU | WS.THICKFRAME, shadow: t.Caption == null)
 			{
 				_t = t;
 
@@ -254,11 +254,11 @@ namespace Au.Controls
 			}
 		}
 
-		class _Control : InfoBox
+		class _Control : InfoBoxF
 		{
-			InfoWindow _t;
+			InfoWindowF _t;
 
-			public _Control(InfoWindow t, int left, int splitPos)
+			public _Control(InfoWindowF t, int left, int splitPos)
 			{
 				_t = t;
 				this.ZInitUseControlFont = true;

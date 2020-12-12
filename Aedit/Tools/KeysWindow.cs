@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Drawing;
-using System.Windows.Forms;
 
 using Au.Types;
 using Au.Controls;
@@ -8,72 +6,73 @@ using Au.Util;
 
 namespace Au.Tools
 {
-	class KeysWindow : InfoWindow
+	class KeysWindow : InfoWindow //KPopup
 	{
-		public KeysWindow(Control ownerForDpi)
-		{
-			this.Size = ADpi.Scale((500, 300), ownerForDpi);
-			this.Caption = "Keys";
+		public KeysWindow() : base(0) {
+			Size = (500, 280);
+			WindowName = "Keys";
+			Name = "Ci.Keys"; //prevent hiding when activated
+			CloseHides = true;
 		}
 
-		protected override void OnLoad(EventArgs e)
-		{
-			var c = this.Control1;
-			//c.Call(Sci.SCI_SETWRAPSTARTINDENT, 4);
-			//c.ZTags.AddStyleTag(".h", new SciTags.UserDefinedStyle { backColor = 0xC0E0C0, bold = true, eolFilled = true }); //topic header
+		protected override void OnHandleCreated() {
+			var c = Control1;
 			c.ZTags.AddLinkTag("+a", o => _Insert(o)); //link that inserts a key etc
-			c.ZTags.SetLinkStyle(new SciTagsF.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
+			c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle { textColor = 0x0080FF, underline = false }); //remove underline from links
 
 			var s = AResources.GetString("tools/keys.txt").RegexReplace(@"\{(.+?)\}(?!\})", "<+a>$1<>");
-			var z = this.Window.ClientSize; z.Height = c.Z.LineHeight() * s.LineCount() + 6; this.Window.ClientSize = z;
 			this.Text = s;
+
+			base.OnHandleCreated();
 		}
 
-		void _Insert(string s)
-		{
-			var sci = InsertInControl;
+		void _Insert(string s) {
+			var sci = InsertInControl as SciHost;
 			var pos8 = sci.Z.CurrentPos8;
 
-			switch(s) {
-			case "text": _AddParameter(sci, pos8, ", \"!\b\""); return;
-			case "html": _AddParameter(sci, pos8, ", \"%\b\""); return;
-			case "sleepMs": _AddParameter(sci, pos8, ", 100"); return;
-			case "keyCode": _AddParameter(sci, pos8, ", KKey.Left"); return;
-			case "scanCode": _AddParameter(sci, pos8, ", (1, false)"); return;
-			case "action": _AddParameter(sci, pos8, ", new Action(() => { AMouse.RightClick(); })"); return;
+			switch (s) {
+			case "text": _AddArg(sci, pos8, ", \"!\b\""); return;
+			case "html": _AddArg(sci, pos8, ", \"%\b\""); return;
+			case "sleepMs": _AddArg(sci, pos8, ", 100"); return;
+			case "keyCode": _AddArg(sci, pos8, ", KKey.Left"); return;
+			case "scanCode": _AddArg(sci, pos8, ", new KKeyScan(1, false)"); return;
+			case "action": _AddArg(sci, pos8, ", new Action(() => { AMouse.RightClick(); })"); return;
 			}
 
-			if(s.Length == 2 && s[0] != '#' && !AChar.IsAsciiAlpha(s[0])) s = s[0] == '\\' ? "|" : s[..1]; //eg 2@ or /? or \|
+			static void _AddArg(SciHost sci, int pos8, string s) {
+				pos8 = sci.Z.FindText(false, "\"", pos8) + 1; if (pos8 == 0) return;
+				sci.Z.GoToPos(false, pos8);
+				InsertCode.TextSimplyInControl(sci, s);
+			}
+
+			if (s.Length == 2 && s[0] != '#' && !AChar.IsAsciiAlpha(s[0])) s = s[0] == '\\' ? "|" : s[..1]; //eg 2@ or /? or \|
 
 			char _CharAt(int pos) => (char)sci.Call(Sci.SCI_GETCHARAT, pos);
 
 			string prefix = null, suffix = null;
 			char k = _CharAt(pos8 - 1), k2 = _CharAt(pos8);
-			if(s[0] == '*' || s[0] == '+') {
-				if(k == '*' || k == '+') sci.Z.Select(false, pos8 - 1, pos8); //eg remove + from Alt+ if now selected *down
+			if (s[0] == '*' || s[0] == '+') {
+				if (k == '*' || k == '+') sci.Z.Select(false, pos8 - 1, pos8); //eg remove + from Alt+ if now selected *down
 			} else {
-				if(k > ' ' && k != '\"' && k != '(' && k != '$' && !(k == '+' && _CharAt(pos8 - 2) != '#')) prefix = " ";
+				if (k > ' ' && k != '\"' && k != '(' && k != '$' && !(k == '+' && _CharAt(pos8 - 2) != '#')) prefix = " ";
 			}
-			if(0 != s.Ends(false, "Alt", "Ctrl", "Shift", "Win")) suffix = "+";
-			else if(k2 > ' ' && k2 != '\"' && k2 != ')' && k2 != '+' && k2 != '*') suffix = " ";
+			if (0 != s.Ends(false, "Alt", "Ctrl", "Shift", "Win")) suffix = "+";
+			else if (k2 > ' ' && k2 != '\"' && k2 != ')' && k2 != '+' && k2 != '*') suffix = " ";
 
-			if(s == "name") {
+			if (s == "name") {
 				//var a = typeof(KKey).GetEnumNames().Where(o => !(o.Length==1 ||(o.Length==2&& o[0]=='D') || o.Starts("Mouse"))).ToArray();
 				//Array.Sort(a);
-				var m = new PopupList { Items = s_keys };
-				m.SelectedAction = m => {
-					var s = m.ResultItem as string;
-					int i = s.IndexOf(' '); if(i > 0) s = s[0..i];
-					InsertCode.TextSimplyInControl(sci, prefix + s + suffix);
-				};
-				var p = AMouse.XY;
-				m.Show(new Rectangle(p.x, p.y, 0, 0));
-			} else {
-				s = prefix + s + suffix;
-				InsertCode.TextSimplyInControl(sci, s);
-			}
 
-			if(suffix == " ") sci.Call(Sci.SCI_CHARLEFT);
+				using var m = new ClassicPopupMenu_();
+				for (int i = 0; i < s_keys.Length; i++) m.Add(i + 1, s_keys[i]);
+				int j = m.Show(Hwnd) - 1;
+				if (j < 0) return;
+				s = s_keys[j];
+				j = s.IndexOf(' '); if (j > 0) s = s[..j];
+			}
+			s = prefix + s + suffix;
+			InsertCode.TextSimplyInControl(sci, s);
+			if (suffix == " ") sci.Call(Sci.SCI_CHARLEFT);
 		}
 
 		static string[] s_keys = {
@@ -83,14 +82,7 @@ namespace Au.Tools
 "VolumeMute", "VolumeDown", "VolumeUp",
 "IMEKanaMode", "IMEHangulMode", "IMEJunjaMode", "IMEFinalMode", "IMEHanjaMode", "IMEKanjiMode", "IMEConvert", "IMENonconvert", "IMEAccept", "IMEModeChange", "IMEProcessKey",
 "Break  //Ctrl+Pause", "Clear  //Shift+#5", "Sleep",
-"F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24",
+//"F13", "F14", "F15", "F16", "F17", "F18", "F19", "F20", "F21", "F22", "F23", "F24", //rejected
   };
-
-		void _AddParameter(AuScintilla sci, int pos8, string s)
-		{
-			pos8 = sci.Z.FindText(false, "\"", pos8) + 1; if(pos8 == 0) return;
-			sci.Z.GoToPos(false, pos8);
-			InsertCode.TextSimplyInControl(sci, s);
-		}
 	}
 }

@@ -661,11 +661,9 @@ namespace Au
 		/// <item><description><see cref="Action"/> - callback function.
 		/// Example: <c>Action click = () => AMouse.Click(); AKeys.Key("Shift+", click);</c>
 		/// </description></item>
-		/// <item><description>(int, bool) - a single key, specified using scan code and extended-key flag.
-		/// Example: <c>AKeys.Key((0x3B, false)); //key F1</c>
-		/// </description></item>
-		/// <item><description>(KKey, int, bool) - a single key, specified using <see cref="KKey"/> and/or scan code and extended-key flag.
-		/// Example: <c>AKeys.Key((KKey.Enter, 0, true)); //numpad Enter</c>
+		/// <item><description><see cref="KKeyScan"/> - a single key, specified using scan code and/or virtual-key code and extended-key flag.
+		/// Example: <c>AKeys.Key(new KKeyScan(0x3B, false)); //key F1</c>
+		/// Example: <c>AKeys.Key(new KKeyScan(KKey.Enter, true)); //numpad Enter</c>
 		/// </description></item>
 		/// </list>
 		/// </param>
@@ -877,7 +875,7 @@ namespace Au
 		/// 
 		/// You can use an <see cref="AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="AKeys(AOptKey)"/> topic.
 		/// 
-		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>. Then calls <see cref="Send"/>.
+		/// This function calls <see cref="Add(KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="AddKeys"/>, <see cref="AddText"/>, <see cref="AddClipboardData"/>, <see cref="AddKey(KKey, bool?)"/>, <see cref="AddKey(KKey, int, bool, bool?)"/>, <see cref="AddSleep"/>, <see cref="AddAction"/>. Then calls <see cref="Send"/>.
 		/// 
 		/// Uses API <msdn>SendInput</msdn>.
 		/// </remarks>

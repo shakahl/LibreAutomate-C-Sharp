@@ -16,13 +16,13 @@ using Au.Controls;
 namespace Au.Tools
 {
 	/// <summary>
-	/// Can be used by tool dialogs to display common info in <see cref="InfoBox"/> control.
+	/// Can be used by tool dialogs to display common info in <see cref="InfoBoxF"/> control.
 	/// </summary>
 	internal class CommonInfos
 	{
-		InfoBox _control;
+		InfoBoxF _control;
 
-		public CommonInfos(InfoBox control)
+		public CommonInfos(InfoBoxF control)
 		{
 			_control = control;
 			_control.ZTags.AddLinkTag("+regex", o => _Regex(o));

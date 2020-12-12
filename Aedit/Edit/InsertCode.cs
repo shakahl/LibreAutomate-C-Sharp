@@ -19,6 +19,9 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using acc = Microsoft.CodeAnalysis.Accessibility;
+using System.Windows;
+using System.Windows.Input;
+using System.Windows.Controls;
 
 /// <summary>
 /// Inserts various code in code editor. With correct indentation etc.
@@ -61,7 +64,7 @@ static class InsertCode
 	}
 
 	/// <summary>
-	/// Inserts text at current position, not as new line, replaces selection.
+	/// Inserts text in code editor at current position, not as new line, replaces selection.
 	/// If editor is null or readonly, does nothing.
 	/// </summary>
 	/// <param name="s">If contains '%', removes it and moves caret there.</param>
@@ -77,36 +80,41 @@ static class InsertCode
 	/// </summary>
 	/// <param name="c">If null, uses the focused control, else sets focus.</param>
 	/// <param name="s">If contains '%', removes it and moves caret there. Alternatively use '\b', then does not touch '%'.</param>
-	public static void TextSimplyInControl(object c, string s) {
+	public static void TextSimplyInControl(FrameworkElement c, string s) {
+		if (c == null) {
+			c = Keyboard.FocusedElement as FrameworkElement;
+			if (c == null) return;
+		} else {
+			if (!c.IsFocused) //be careful with HwndHost
+				c.Focus();
+		}
+
+		int i = s.IndexOf('\b');
+		if (i < 0) i = s.IndexOf('%');
+		if (i >= 0) {
+			Debug.Assert(!s.Contains('\r'));
+			s = s.Remove(i, 1);
+			i = s.Length - i;
+		}
+
+		if (c is SciHost sci) {
+			if (sci.Z.IsReadonly) return;
+			sci.Z.ReplaceSel(s);
+			while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
+		} else if (c is TextBox tb) {
+			if (tb.IsReadOnly) return;
+			tb.SelectedText = s;
+			tb.CaretIndex = tb.SelectionStart + tb.SelectionLength - Math.Max(i, 0);
+		} else {
+			ADebug.Print(c);
+			Task.Run(() => {
+				var k = new AKeys(null);
+				k.AddText(s);
+				if (i > 0) k.AddKey(KKey.Left).AddRepeat(i);
+				k.Send();
+			});
+		}
 	}
-	//TODO
-	//public static void TextSimplyInControl(System.Windows.Forms.Control c, string s) {
-	//	if (c == null) {
-	//		c = AWnd.ThisThread.FocusedWinformsControl;
-	//		if (c == null) return;
-	//	} else c.Focus();
-
-	//	int i = s.IndexOf('\b');
-	//	if (i < 0) i = s.IndexOf('%');
-	//	if (i >= 0) {
-	//		Debug.Assert(!s.Contains('\r'));
-	//		s = s.Remove(i, 1);
-	//		i = s.Length - i;
-	//	}
-
-	//	if (c is AuScintilla sci) {
-	//		if (sci.Z.IsReadonly) return;
-	//		sci.Z.ReplaceSel(s);
-	//		while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
-	//	} else {
-	//		Task.Run(() => {
-	//			var k = new AKeys(null);
-	//			k.AddText(s);
-	//			if (i > 0) k.AddKey(KKey.Left).AddRepeat(i);
-	//			k.Send();
-	//		});
-	//	}
-	//}
 
 	/// <summary>
 	/// Inserts code 'using ns;\r\n' in correct place in editor text, unless it is already exists.

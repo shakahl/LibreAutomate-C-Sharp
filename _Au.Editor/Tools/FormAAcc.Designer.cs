@@ -42,7 +42,7 @@ namespace Au.Tools
 			this._bCancel = new Au.Controls.AuButtonCancel();
 			this._bTest = new Au.Controls.AuButton();
 			this._lSpeed = new System.Windows.Forms.Label();
-			this._info = new Au.Controls.InfoBox();
+			this._info = new Au.Controls.InfoBoxF();
 			this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 			this._bEtc = new Au.Controls.AuButton();
 			((System.ComponentModel.ISupportInitialize)(this.splitContainer1)).BeginInit();
@@ -301,7 +301,7 @@ namespace Au.Tools
 		private Au.Controls.ParamGrid _grid;
 		private Au.Controls.ParamGrid _grid2;
 		private Aga.Controls.Tree.TreeViewAdv _tree;
-		private Controls.InfoBox _info;
+		private Controls.InfoBoxF _info;
 		private ToolTip _toolTip;
 		private CodeBox _code;
 		private SplitContainer splitContainer3;

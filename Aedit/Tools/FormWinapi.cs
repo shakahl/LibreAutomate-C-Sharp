@@ -82,7 +82,7 @@ public class FormWinapi : DialogForm
 	private AuButtonCancel _bCancel;
 	private AuLabel auLabel1;
 	private System.Windows.Forms.TextBox _eName;
-	private Au.Tools.CodeBox _code;
+	private Au.Tools.CodeBoxF _code;
 	private ToolTip _toolTip;
 
 	/// <summary>
@@ -116,7 +116,7 @@ public class FormWinapi : DialogForm
 		this._bCancel = new Au.Controls.AuButtonCancel();
 		this.auLabel1 = new Au.Controls.AuLabel();
 		this._eName = new System.Windows.Forms.TextBox();
-		this._code = new Au.Tools.CodeBox();
+		this._code = new Au.Tools.CodeBoxF();
 		this._toolTip = new System.Windows.Forms.ToolTip(this.components);
 		this.SuspendLayout();
 		// 

@@ -164,9 +164,7 @@ class CiErrors
 			if (pos16 < v.start || pos16 > v.end) continue;
 			var d = v.d;
 			var s1 = d.Severity switch { DiagnosticSeverity.Error => "Error", DiagnosticSeverity.Warning => "Warning", _ => "Info" };
-			var s2 = System.Web.HttpUtility.HtmlEncode(d.GetMessage());
-			x.LineBreak();
-			x.AppendFormat("{0}: {1}", s1, s2);
+			x.LineBreak(s1); x.Append(": "); x.Append(d.GetMessage(), escape: true);
 
 			if (d.Severity == DiagnosticSeverity.Error) {
 				if (_semo == null) continue;
@@ -206,7 +204,7 @@ class CiErrors
 		void _Also(List<(int from, int to, string s)> a, string prefix) {
 			foreach (var v in a) {
 				if (pos16 < v.from || pos16 > v.to) continue;
-				x.LineBreak(prefix); x.Append(v.s);
+				x.LineBreak(prefix); x.Append(v.s, escape: true);
 			}
 		}
 

@@ -40,7 +40,7 @@
 			this._comboUseTemplate = new System.Windows.Forms.ComboBox();
 			this._comboTemplate = new System.Windows.Forms.ComboBox();
 			this.auLabel2 = new Au.Controls.AuLabel();
-			this._sciTemplate = new Au.Tools.CodeBox();
+			this._sciTemplate = new Au.Tools.CodeBoxF();
 			this.auLabel1 = new Au.Controls.AuLabel();
 			this._tabFont = new System.Windows.Forms.TabPage();
 			this._bFontInfo = new Au.Controls.AuButton();
@@ -719,7 +719,7 @@
 	private System.Windows.Forms.GroupBox groupBox1;
 	private Au.Controls.AuCheckBox _cComplParenSpace;
 	private System.Windows.Forms.TabPage _tabTemplates;
-	private Au.Tools.CodeBox _sciTemplate;
+	private Au.Tools.CodeBoxF _sciTemplate;
 	private Au.Controls.AuLabel auLabel1;
 	private System.Windows.Forms.ComboBox _comboUseTemplate;
 	private System.Windows.Forms.ComboBox _comboTemplate;

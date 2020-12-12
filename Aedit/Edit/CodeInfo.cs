@@ -126,10 +126,9 @@ AOutput.Write(""t"" + 'c' + 1);
 	}
 
 	public static void Cancel() {
-		HideXamlPopup();
+		HideXamlPopupAndTempWindows();
 		_compl.Cancel();
 		_signature.Cancel();
-		_tools.HideTempWindows();
 	}
 
 	/// <summary>
@@ -164,14 +163,13 @@ AOutput.Write(""t"" + 'c' + 1);
 			ShowSignature(doc);
 			return true;
 		case (KKey.Escape, 0):
-			//never mind: if several popups, should hide the top popup.
-			//	We instead hide less-priority popups when showing a popup, so that Escape will hide the correct popup.
-			return HideXamlPopup() || _compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key);
 		case (KKey.Down, 0):
 		case (KKey.Up, 0):
 		case (KKey.PageDown, 0):
 		case (KKey.PageUp, 0):
-			HideXamlPopup();
+			if ((HideXamlPopup() || _tools.HideTempWindows()) && key == KKey.Escape) return true;
+			//never mind: on Esc, if several popups, should hide the top popup.
+			//	We instead hide less-priority popups when showing a popup, so that Escape will hide the correct popup in most cases.
 			return _compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key);
 		case (KKey.Tab, 0):
 		case (KKey.Enter, 0):
@@ -482,6 +480,11 @@ AOutput.Write(""t"" + 'c' + 1);
 	internal static bool HideXamlPopup() {
 		if (_xpVisible) { _xamlPopup.Hide(); return true; }
 		return false;
+	}
+
+	internal static void HideXamlPopupAndTempWindows() {
+		HideXamlPopup();
+		_tools.HideTempWindows();
 	}
 
 	public class CharContext : IDisposable

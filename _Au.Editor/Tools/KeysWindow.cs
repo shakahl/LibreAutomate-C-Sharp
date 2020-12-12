@@ -8,7 +8,7 @@ using Au.Util;
 
 namespace Au.Tools
 {
-	class KeysWindow : InfoWindow
+	class KeysWindow : InfoWindowF
 	{
 		public KeysWindow(Control ownerForDpi)
 		{

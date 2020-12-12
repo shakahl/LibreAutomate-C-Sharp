@@ -273,9 +273,8 @@ namespace Au
 		/// <param name="extendedKey">true if the key is an extended key.</param>
 		/// <param name="down">true - key down; false - key up; null (default) - key down-up.</param>
 		/// <exception cref="ArgumentException">Invalid scan code.</exception>
-		public AKeys AddKey(KKey key, int scanCode, bool extendedKey, bool? down = null) {
+		public AKeys AddKey(KKey key, ushort scanCode, bool extendedKey, bool? down = null) {
 			_ThrowIfSending();
-			if ((uint)scanCode > 0xffff) throw new ArgumentException("Invalid value.", nameof(scanCode));
 			bool isPair; _KFlags f = 0;
 			if (key == 0) f = _KFlags.Scancode;
 			else {
@@ -285,7 +284,7 @@ namespace Au
 			if (!(isPair = (down == null)) && !down.GetValueOrDefault()) f |= _KFlags.Up;
 			if (extendedKey) f |= _KFlags.Extended;
 
-			return _AddKey(new _KEvent(isPair, key, f, (ushort)scanCode));
+			return _AddKey(new _KEvent(isPair, key, f, scanCode));
 		}
 
 		/// <summary>
@@ -463,11 +462,8 @@ namespace Au
 					case Action g:
 						AddAction(g);
 						break;
-					case ValueTuple<int, bool> t:
-						AddKey(0, t.Item1, t.Item2);
-						break;
-					case ValueTuple<KKey, int, bool> t:
-						AddKey(t.Item1, t.Item2, t.Item3);
+					case KKeyScan t:
+						AddKey(t.vk, t.scanCode, t.extendedKey);
 						break;
 					}
 				}

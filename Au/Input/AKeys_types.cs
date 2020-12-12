@@ -25,7 +25,7 @@ namespace Au.Types
 	/// <seealso cref="AKeys.More.KModFromWinforms"/>
 	/// <seealso cref="KKey"/>
 	[Flags]
-	public enum KMod :byte
+	public enum KMod : byte
 	{
 		Shift = 1,
 		Ctrl = 2,
@@ -43,7 +43,7 @@ namespace Au.Types
 	/// This library does not use the .NET <b>Keys</b> enum, mostly because it includes modifier key flags and it's easy to confuse eg Shift (flag) with ShiftKey (key). Also this library does not use the WPF <b>Key</b> enum; its values don't match the native VK_ constants that must be used with API functions.
 	/// </remarks>
 	/// <seealso cref="KMod"/>
-	public enum KKey :byte
+	public enum KKey : byte
 	{
 		MouseLeft = 0x01,
 		MouseRight = 0x02,
@@ -250,11 +250,25 @@ namespace Au.Types
 		//OemClear = 0xFE,
 	}
 
-#pragma warning restore 1591
+	/// <summary>
+	/// Virtual-key code (optional), scan code and extended-key flag for <see cref="AKeys.Key"/> and similar functions.
+	/// </summary>
+	public struct KKeyScan
+	{
+		public KKey vk;
+		public bool extendedKey;
+		public ushort scanCode;
+
+		public KKeyScan(KKey vk, ushort scanCode, bool extendedKey) { this.vk = vk; this.scanCode = scanCode; this.extendedKey = extendedKey; }
+
+		public KKeyScan(ushort scanCode, bool extendedKey) { vk = 0; this.scanCode = scanCode; this.extendedKey = extendedKey; }
+
+		public KKeyScan(KKey vk, bool extendedKey) { this.vk = vk; this.scanCode = 0; this.extendedKey = extendedKey; }
+	}
 
 	/// <summary>
 	/// Parameter type of <see cref="AKeys.Key"/> and similar functions.
-	/// Has implicit conversions from string, AClipboardData, KKey, int, Action, tuple (int, bool) and tuple (KKey, int, bool).
+	/// Has implicit conversions from string, AClipboardData, KKey, KKeyScan, int (sleep time) and Action.
 	/// </summary>
 	public struct KKeysEtc
 	{
@@ -266,27 +280,15 @@ namespace Au.Types
 		/// </summary>
 		public object Value => _o;
 
-		///
-		public static implicit operator KKeysEtc(string s)=>new KKeysEtc(s);
-
-		///
-		public static implicit operator KKeysEtc(AClipboardData cd)=>new KKeysEtc(cd);
-
-		///
-		public static implicit operator KKeysEtc(KKey k) => new KKeysEtc(k);
-
-		///
-		public static implicit operator KKeysEtc(int ms) => new KKeysEtc(ms);
-
-		///
-		public static implicit operator KKeysEtc(Action a) => new KKeysEtc(a);
-
-		///
-		public static implicit operator KKeysEtc((int scan, bool ext) t) => new KKeysEtc(t);
-
-		///
-		public static implicit operator KKeysEtc((KKey k, int scan, bool ext) t) => new KKeysEtc(t);
+		public static implicit operator KKeysEtc(string s) => new (s);
+		public static implicit operator KKeysEtc(AClipboardData cd) => new (cd);
+		public static implicit operator KKeysEtc(KKey k) => new (k);
+		public static implicit operator KKeysEtc(KKeyScan t) => new (t);
+		public static implicit operator KKeysEtc(int ms) => new (ms);
+		public static implicit operator KKeysEtc(Action a) => new (a);
 	}
+
+#pragma warning restore 1591
 
 	/// <summary>
 	/// Defines a hotkey as <see cref="KMod"/> and <see cref="KKey"/>.
@@ -309,9 +311,8 @@ namespace Au.Types
 
 		/// <summary>Implicit conversion from string like "Ctrl+Shift+K".</summary>
 		/// <exception cref="ArgumentException">"Error in hotkey."</exception>
-		public static implicit operator KHotkey(string hotkey)
-		{
-			if(!AKeys.More.ParseHotkeyString(hotkey, out var mod, out var key)) throw new ArgumentException("Error in hotkey.");
+		public static implicit operator KHotkey(string hotkey) {
+			if (!AKeys.More.ParseHotkeyString(hotkey, out var mod, out var key)) throw new ArgumentException("Error in hotkey.");
 			return new KHotkey(mod, key);
 		}
 

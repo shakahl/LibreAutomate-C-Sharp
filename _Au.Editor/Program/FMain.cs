@@ -345,31 +345,21 @@ static class Panels
 		Info = new PanelInfo();
 		//p1.Next('i');
 		//p1.Write();
-		//#if TRACE
-		//		var c = new RichTextBox();
-		//		c.Name = "Test";
-		//#endif
 
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
 		m.ZCreate(AFolders.ThisAppBS + @"Default\Panels.xml", ProgramSettings.DirBS + "Panels.xml",
 			Editor, Files, Find, Found, Output, Open, Running, Info,
-			//#if TRACE
-			//			c,
-			//#endif
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);
 		//info: would be easier to specify these in default XML, but then cannot change in new app versions.
 		m.ZGetPanel(Files).Init("Files - all files of this workspace", focusable: true);
 		m.ZGetPanel(Open).Init("Open - currently open files"/*, EdResources.GetImageUseCache("open")*/);
 		m.ZGetPanel(Running).Init("Running - running script tasks");
-		m.ZGetPanel(Find).Init("Find - find text, files"/*, EdResources.GetImageUseCache("find")*/, focusable: true);
+		m.ZGetPanel(Find).Init("Find - find text, files", focusable: true);
 		m.ZGetPanel(Output).Init("Output - errors and other information", EdResources.GetImageUseCache("output"));
 		m.ZGetPanel(Info).Init("Info - quick info about object from mouse", EdResources.GetImageUseCache("info"));
 		m.ZGetPanel(Found).Init("Found - results of 'Find in files'", EdResources.GetImageUseCache("found"));
 		m.ZFocusControlOnUndockEtc = Editor;
-		//#if TRACE
-		//		m.GetPanel(c).Init("New panel", EdResources.GetImageUseCache("paste"));
-		//#endif
 	}
 }

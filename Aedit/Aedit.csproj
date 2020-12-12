@@ -216,7 +216,7 @@
 	  </Compile>
 	  <Compile Update="Panels\PanelOutput.cs" />
 	  <Compile Update="Panels\PanelRunning.cs" />
-	  <Compile Update="Tools\CodeBox.cs" />
+	  <Compile Update="Tools\CodeBoxF.cs" />
 	  <Compile Update="Tools\FormAAcc.cs">
 	    <SubType>Form</SubType>
 	  </Compile>
@@ -238,6 +238,7 @@
 	  <Compile Update="Tools\FormWinapi.cs">
 	    <SubType>Form</SubType>
 	  </Compile>
+	  <Compile Update="Tools\InfoBox.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

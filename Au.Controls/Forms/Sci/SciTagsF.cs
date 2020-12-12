@@ -78,7 +78,7 @@ namespace Au.Controls
 	/// Also you can register custom link tags that call your callback functions.
 	/// See <see cref="AddLinkTag"/>, <see cref="AddCommonLinkTag"/>.
 	/// 
-	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <see cref="AOutput.Write"/>, like in the example below). In this library - the <see cref="InfoBox"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.ZInitTagsStyle"/> and optionally <see cref="AuScintilla.ZInitImagesStyle"/>.
+	/// Tags are supported by some existing controls based on <see cref="AuScintilla"/>. In the Au editor it is the output (use <see cref="AOutput.Write"/>, like in the example below). In this library - the <see cref="InfoBoxF"/> control. To enable tags in other <see cref="AuScintilla"/> controls, use <see cref="AuScintilla.ZInitTagsStyle"/> and optionally <see cref="AuScintilla.ZInitImagesStyle"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[

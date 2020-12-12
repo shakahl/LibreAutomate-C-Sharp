@@ -148,6 +148,7 @@ class CiCompletion
 			ch = default;
 		}
 
+		//CodeInfo.HideXamlPopupAndTempWindows(); //no
 		CodeInfo.HideXamlPopup();
 
 		//using var nogcr = AKeys.IsScrollLock ? new NoGcRegion(50_000_000) : default;
@@ -259,11 +260,8 @@ class CiCompletion
 
 			if (r == null) {
 				if (stringFormat == (PSFormat)100) {
-					stringFormat = default;
-					var m = new AWpfMenu();
-					m["Regex"] = o => stringFormat = PSFormat.ARegex;
-					m["Keys"] = o => stringFormat = PSFormat.AKeys;
-					m.Show(doc, byCaret: true);
+					int i = AWpfMenu.ShowSimple("Regex|Keys", doc, byCaret: true);
+					stringFormat = i switch { 1 => PSFormat.ARegex, 2 => PSFormat.AKeys, _ => default };
 				}
 				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringSpan);
 				return;

@@ -398,17 +398,18 @@ static class Menus
 
 	[Command]
 	public static void TEST() {
-		if (_test == null) {
-			var p = new KPopup { Size = (200, 300) };
-			//var p = new KPopup(WS.CAPTION|WS.MAXIMIZEBOX|WS.MINIMIZEBOX|WS.SYSMENU|WS.THICKFRAME, 0) { Size = (200, 300) };
-			var c = new Label { Background = Brushes.Wheat, Content = "Test" };
-			p.Content = c;
-			//p.HwndSource.SizeToContent = default;
-			_test = p;
-		}
-		//_test.ShowByRect(Panels.Running, Dock.Bottom);
-		//_test.ShowByRect(Panels.Running, Dock.Bottom, (100, 100, 100, 100));
-		_test.ShowByRect(null, Dock.Bottom, (700, 1100, 100, 1));
+
+		//if (_test == null) {
+		//	var p = new KPopup { Size = (200, 300) };
+		//	//var p = new KPopup(WS.CAPTION|WS.MAXIMIZEBOX|WS.MINIMIZEBOX|WS.SYSMENU|WS.THICKFRAME, 0) { Size = (200, 300) };
+		//	var c = new Label { Background = Brushes.Wheat, Content = "Test" };
+		//	p.Content = c;
+		//	//p.HwndSource.SizeToContent = default;
+		//	_test = p;
+		//}
+		////_test.ShowByRect(Panels.Running, Dock.Bottom);
+		////_test.ShowByRect(Panels.Running, Dock.Bottom, (100, 100, 100, 100));
+		//_test.ShowByRect(null, Dock.Bottom, (700, 1100, 100, 1));
 
 		//ATimer.After(2000, _ => _test.Hide());
 

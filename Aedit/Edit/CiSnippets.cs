@@ -197,7 +197,7 @@ static class CiSnippets
 		var snippet = item as _CiComplItemSnippet;
 		var m = new CiXaml();
 		m.StartParagraph();
-		m.AppendFormat("Snippet <Bold>{0}</Bold>.", item.ci.DisplayText);
+		m.Append("Snippet "); m.Bold(item.ci.DisplayText); m.Append(".");
 		_AppendInfo(snippet.x);
 		bool isList = snippet.x.HasElements;
 		if (isList) {
@@ -218,7 +218,7 @@ static class CiSnippets
 		return m.End();
 
 		void _AppendInfo(XElement x) {
-			if (x.Attr(out string info, "info")) { m.Append(' '); m.Append(info, escape: true); }
+			if (x.Attr(out string info, "info")) { m.Append(" "); m.Append(info, escape: true); }
 			m.EndParagraph();
 		}
 

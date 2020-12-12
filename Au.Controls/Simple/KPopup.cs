@@ -51,6 +51,8 @@ namespace Au.Controls
 				_border ??= new Border { Child = _content }; //workaround for: if content is eg FlowDocumentScrollViewer, it has focus problems if it is RootVisual. Eg context menu items disabled. Need a container, eg Border or Panel.
 				_hs = new _HwndSource(p) { kpopup = this, RootVisual = _border, SizeToContent = default };
 				//AOutput.Write(_hs.AcquireHwndFocusInMenuMode, _hs.RestoreFocusMode, p.TreatAsInputRoot); //True, Auto, True
+
+				OnHandleCreated();
 			}
 			return _hs;
 		}
@@ -60,6 +62,9 @@ namespace Au.Controls
 			public _HwndSource(HwndSourceParameters p) : base(p) { }
 			public KPopup kpopup;
 		}
+
+		protected virtual void OnHandleCreated() { HandleCreated?.Invoke(); }
+		public event Action HandleCreated;
 
 		public static KPopup FromHwnd(AWnd w) {
 			if (w.IsAlive && HwndSource.FromHwnd(w.Handle) is _HwndSource hs) return hs.kpopup;
@@ -249,6 +254,7 @@ namespace Au.Controls
 		/// Destroys or hides the popup window, depending on <see cref="CloseHides"/>.
 		/// </summary>
 		public void Close() {
+			if (_hs == null) return;
 			if (CloseHides) _w.ShowLL(false);
 			else _hs.Dispose();
 		}
@@ -258,6 +264,11 @@ namespace Au.Controls
 		/// In any case, if destroyed, <b>ShowX</b> will create new window.
 		/// </summary>
 		public bool CloseHides { get; set; }
+
+		/// <summary>
+		/// true if closed (or hidden if <see cref="CloseHides"/>) when the user clicked the x button.
+		/// </summary>
+		public bool UserClosed { get; set; }
 
 		/// <summary>
 		/// Whether the popup window is currently visible.
@@ -299,6 +310,7 @@ namespace Au.Controls
 				//AOutput.Write(wp->flags & Native.SWP._KNOWNFLAGS, IsVisible);
 				if (wp->flags.Has(Native.SWP.HIDEWINDOW)) Hidden?.Invoke(this, EventArgs.Empty);
 				if (!wp->flags.Has(Native.SWP.NOSIZE) && _inSizeMove) _size = (SIZE)ADpi.Unscale((wp->cx, wp->cy), w);
+				if (wp->flags.Has(Native.SWP.SHOWWINDOW)) UserClosed = false;
 				break;
 			case Api.WM_ENTERSIZEMOVE:
 				_inSizeMove = true;
@@ -328,6 +340,16 @@ namespace Au.Controls
 						return 0;
 					}
 				}
+				break;
+			case Api.WM_SYSCOMMAND:
+				switch ((uint)wParam & 0xFFF0) {
+				case Api.SC_CLOSE:
+					UserClosed = true;
+					break;
+				}
+				break;
+			case Api.WM_CLOSE:
+				if (CloseHides) { _w.ShowLL(false); return 0; }
 				break;
 			case Api.WM_DPICHANGED:
 				_hs.DpiChangedWorkaround();

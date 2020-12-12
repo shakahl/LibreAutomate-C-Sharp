@@ -22,9 +22,9 @@ namespace Au.Tools
 	/// Scintilla-based control that shows colored C# code created by its parent form (a code tool dialog).
 	/// Also can be used anywhere to edit partially styled C# code. To make editable and set text use <see cref="ZSetText"/> with readonlyFrom=-1.
 	/// </summary>
-	class CodeBox : AuScintilla
+	class CodeBoxF : AuScintilla
 	{
-		public CodeBox()
+		public CodeBoxF()
 		{
 			ZInitUseDefaultContextMenu = true;
 			ZInitBorderStyle = BorderStyle.FixedSingle;

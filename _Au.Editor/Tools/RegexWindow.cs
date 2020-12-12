@@ -8,7 +8,7 @@ using Au.Util;
 
 namespace Au.Tools
 {
-	class RegexWindow : InfoWindow
+	class RegexWindow : InfoWindowF
 	{
 		public RegexWindow(Control ownerForDpi)
 		{

@@ -1,9 +1,0 @@
-﻿[FILENAMES]
-Exe=    32\Au.AppHost.exe
-SaveAs= Aedit32.exe
-Log= CONSOLE
-[COMMANDS]
--add ..\Aedit\Resources\ico\app.ico, ICONGROUP,32512,0
--add ..\Aedit\Resources\ico\app_disabled.ico, ICONGROUP,32513,0
--add ..\Aedit\Resources\ico\app_running.ico, ICONGROUP,32514,0
--addoverwrite ..\Aedit\Resources\Au.manifest, MANIFEST,1,0

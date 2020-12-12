@@ -94,7 +94,7 @@ class CiTools
 		return R;
 	}
 
-	static void _ShowWindow(InfoWindow w, SciCode doc, int position, Form dontCover) {
+	static void _ShowWindow(InfoWindowF w, SciCode doc, int position, Form dontCover) {
 		bool above = dontCover != null;
 		if (w.Window.Visible) w.Window.Hwnd().ZorderTop();
 		var r = CiUtil.GetCaretRectFromPos(doc, position, inScreen: true);
