@@ -317,7 +317,7 @@ class RunningTasks
 
 	void _UpdatePanels() {
 		_updateUI = false;
-		Panels.Running.ZUpdateList();
+		Panels.Tasks.ZUpdateList();
 	}
 
 	/// <summary>

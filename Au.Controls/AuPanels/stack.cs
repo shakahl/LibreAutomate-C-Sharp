@@ -230,37 +230,34 @@ namespace Au.Controls
 			void _SplitterContextMenu(object sender, ContextMenuEventArgs e) {
 				e.Handled = true;
 				var parentStack = Parent._stack;
-				var m = new AWpfMenu();
+				var m = new ClassicMenu_();
 				using (m.Submenu("Splitter Size")) {
 					int z = _SplitterSize;
 					for (int i = 1; i <= 10; i++) {
-						m[i.ToString()] = o => _SplitterSize = (o.Item.Header as string).ToInt();
-						if (i == z) m.Last.IsChecked = true;
+						m[i.ToString(), check: i == z] = o => _SplitterSize = o.ToInt();
 					}
 				}
 				m.Separator();
 				bool vert = parentStack.isVertical;
 				_PreviousDockedInStack._SplitterContextMenu_Unit(m, vert ? "Top" : "Left");
-				this._SplitterContextMenu_Unit(m, vert ? "Bottom" : "Right");
+				_SplitterContextMenu_Unit(m, vert ? "Bottom" : "Right");
 				if ((parentStack.isVertical ? parentStack.grid.RowDefinitions.Where(o => !o.Height.IsAuto).Count() : parentStack.grid.ColumnDefinitions.Where(o => !o.Width.IsAuto).Count()) > 2) {
 					//m.Separator();
-					m["Resize Nearest"] = o => _splitter.ResizeNearest ^= true;
-					m.Last.IsChecked = _splitter.ResizeNearest;
-					m.Last.InputGestureText = "Ctrl";
+					m["Resize Nearest\tCtrl", check: _splitter.ResizeNearest] = _ => _splitter.ResizeNearest ^= true;
 				}
 				if (Parent.Parent != null) {
 					m.Separator();
 					using (m.Submenu("Stack")) {
 						bool isFloating = Parent._state.Has(_DockState.Float);
-						m[isFloating ? "Dock" : "Float"] = o => Parent._SetDockState(isFloating ? 0 : _DockState.Float);
-						if (!isFloating) m.Last.InputGestureText = "Alt+drag";
+						m[isFloating ? "Dock" : "Float\tAlt+drag"] = o => Parent._SetDockState(isFloating ? 0 : _DockState.Float);
 						Parent._ContextMenu_Move(m);
 					}
 				}
-				m.IsOpen = true;
+				ATimer.After(100, _ => Mouse.SetCursor(Cursors.Arrow)); //workaround. 30 too small, 50 ok
+				m.Show(_elem);
 			}
 
-			void _SplitterContextMenu_Unit(AWpfMenu m, string s1) {
+			void _SplitterContextMenu_Unit(ClassicMenu_ m, string s1) {
 				var unitNow = _SizeDef.GridUnitType;
 				//var unitNow = _dockedSize.GridUnitType;
 				//AOutput.Write(this, unitNow);
@@ -271,9 +268,8 @@ namespace Au.Controls
 				if (allToolbars) _UnitItem(s1 + " Auto", GridUnitType.Auto);
 
 				void _UnitItem(string text, GridUnitType unit) {
-					m[text] = o => _SetUnit(unit);
-					if (unit == unitNow) m.Last.IsChecked = true;
-					if (disableFixed && unit == GridUnitType.Pixel) m.Last.IsEnabled = false; //CONSIDER: don't need this. Maybe user wants to set row A fixed and then row B star, not vice versa. But if forgets and makes window smaller, some panels and splitters may become invisible.
+					m[text, check: unit == unitNow, disable: disableFixed && unit == GridUnitType.Pixel] = o => _SetUnit(unit);
+					//CONSIDER: don't disable. Maybe user wants to set row A fixed and then row B star, not vice versa. But if forgets and makes window smaller, some panels and splitters may become invisible.
 				}
 
 				void _SetUnit(GridUnitType unit) {

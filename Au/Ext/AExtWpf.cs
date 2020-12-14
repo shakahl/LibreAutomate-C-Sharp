@@ -105,44 +105,50 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Finds object in chain of visual tree objects that includes <see cref="RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+		/// Gets visual ancestors (<see cref="VisualTreeHelper.GetParent"/>).
 		/// </summary>
-		/// <param name="t">The event arguments parameter of an event handler.</param>
-		/// <param name="sender">The <i>sender</i> parameter of the event handler.</param>
-		/// <param name="f">Function that returns true for the wanted object.</param>
-		public static DependencyObject SourceOrAncestor(this RoutedEventArgs t, object sender, Func<DependencyObject, bool> f) {
-			for (var v = t.Source as DependencyObject; v != null; v = VisualTreeHelper.GetParent(v)) {
+		/// <param name="t"></param>
+		/// <param name="andThis">Include this object.</param>
+		/// <param name="last">Last ancestor to get.</param>
+		public static IEnumerable<DependencyObject> VisualAncestors(this DependencyObject t, bool andThis = false, object last = null) {
+			for (var v = t; v != null; v = VisualTreeHelper.GetParent(v)) {
+				if (!andThis) { andThis = true; continue; }
+				yield return v;
+				if (v == last) yield break;
+			}
+		}
+
+		/// <summary>
+		/// Calls callback function <i>f</i> for each visual ancestor (<see cref="VisualTreeHelper.GetParent"/>).
+		/// Returns ancestor for which <i>f</i> returns true. Also can return <i>last</i> or null.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="andThis">Include this object.</param>
+		/// <param name="f"></param>
+		/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> true or null if false.</param>
+		/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of null.</param>
+		public static DependencyObject FindVisualAncestor(this DependencyObject t, bool andThis, Func<DependencyObject, bool> f, object last, bool andLast) {
+			for (var v = t; v != null; v = VisualTreeHelper.GetParent(v)) {
+				if (!andThis) { andThis = true; continue; }
 				if (f(v)) return v;
-				if (v == sender) break;
+				if (v == last) return andLast ? v : null;
 			}
 			return null;
 		}
 
 		/// <summary>
-		/// Finds object of type T (or inherited) in chain of visual tree objects that includes <see cref="RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+		/// Returns visual ancestor (<see cref="VisualTreeHelper.GetParent"/>) of type <i>T</i>.
+		/// Also can return <i>last</i> or null.
 		/// </summary>
-		/// <param name="t">The event arguments parameter of an event handler.</param>
-		/// <param name="sender">The <i>sender</i> parameter of the event handler.</param>
-		/// <param name="orSender">If object of type T not found, return <i>sender</i>. If false (default), returns null.</param>
-		public static DependencyObject SourceOfType<T>(this RoutedEventArgs t, object sender, bool orSender = false) where T : DependencyObject {
-			for (var v = t.Source as DependencyObject; v != null; v = VisualTreeHelper.GetParent(v)) {
+		/// <param name="t"></param>
+		/// <param name="andThis">Include this object.</param>
+		/// <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> true or null if false.</param>
+		/// <param name="andLast">If <i>last</i> found, return <i>last</i> instead of null.</param>
+		public static DependencyObject FindVisualAncestor<T>(this DependencyObject t, bool andThis, object last, bool andLast) where T : DependencyObject {
+			for (var v = t; v != null; v = VisualTreeHelper.GetParent(v)) {
+				if (!andThis) { andThis = true; continue; }
 				if (v is T r1) return r1;
-				if (v == sender) return orSender ? v : null;
-			}
-			return null;
-		}
-
-		/// <summary>
-		/// Finds object of type T1 or T2 (or inherited) in chain of visual tree objects that includes <see cref="RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
-		/// </summary>
-		/// <param name="t">The event arguments parameter of an event handler.</param>
-		/// <param name="sender">The <i>sender</i> parameter of the event handler.</param>
-		/// <param name="orSender">If object of type T1 or T2 not found, return <i>sender</i>. If false (default), returns null.</param>
-		public static DependencyObject SourceOfType<T1, T2>(this RoutedEventArgs t, object sender, bool orSender = false) where T1 : DependencyObject where T2 : DependencyObject {
-			for (var v = t.Source as DependencyObject; v != null; v = VisualTreeHelper.GetParent(v)) {
-				if (v is T1 r1) return r1;
-				if (v is T2 r2) return r2;
-				if (v == sender) return orSender ? v : null;
+				if (v == last) return andLast ? v : null;
 			}
 			return null;
 		}

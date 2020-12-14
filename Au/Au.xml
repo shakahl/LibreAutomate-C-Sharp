@@ -7146,29 +7146,34 @@
             When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
             </summary>
         </member>
-        <member name="M:Au.AExtWpf.SourceOrAncestor(System.Windows.RoutedEventArgs,System.Object,System.Func{System.Windows.DependencyObject,System.Boolean})">
+        <member name="M:Au.AExtWpf.VisualAncestors(System.Windows.DependencyObject,System.Boolean,System.Object)">
             <summary>
-            Finds object in chain of visual tree objects that includes <see cref="P:System.Windows.RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+            Gets visual ancestors (<see cref="M:System.Windows.Media.VisualTreeHelper.GetParent(System.Windows.DependencyObject)"/>).
             </summary>
-            <param name="t">The event arguments parameter of an event handler.</param>
-            <param name="sender">The <i>sender</i> parameter of the event handler.</param>
-            <param name="f">Function that returns true for the wanted object.</param>
+            <param name="t"></param>
+            <param name="andThis">Include this object.</param>
+            <param name="last">Last ancestor to get.</param>
         </member>
-        <member name="M:Au.AExtWpf.SourceOfType``1(System.Windows.RoutedEventArgs,System.Object,System.Boolean)">
+        <member name="M:Au.AExtWpf.FindVisualAncestor(System.Windows.DependencyObject,System.Boolean,System.Func{System.Windows.DependencyObject,System.Boolean},System.Object,System.Boolean)">
             <summary>
-            Finds object of type T (or inherited) in chain of visual tree objects that includes <see cref="P:System.Windows.RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+            Calls callback function <i>f</i> for each visual ancestor (<see cref="M:System.Windows.Media.VisualTreeHelper.GetParent(System.Windows.DependencyObject)"/>).
+            Returns ancestor for which <i>f</i> returns true. Also can return <i>last</i> or null.
             </summary>
-            <param name="t">The event arguments parameter of an event handler.</param>
-            <param name="sender">The <i>sender</i> parameter of the event handler.</param>
-            <param name="orSender">If object of type T not found, return <i>sender</i>. If false (default), returns null.</param>
+            <param name="t"></param>
+            <param name="andThis">Include this object.</param>
+            <param name="f"></param>
+            <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> true or null if false.</param>
+            <param name="andLast">If <i>last</i> found, return <i>last</i> instead of null.</param>
         </member>
-        <member name="M:Au.AExtWpf.SourceOfType``2(System.Windows.RoutedEventArgs,System.Object,System.Boolean)">
+        <member name="M:Au.AExtWpf.FindVisualAncestor``1(System.Windows.DependencyObject,System.Boolean,System.Object,System.Boolean)">
             <summary>
-            Finds object of type T1 or T2 (or inherited) in chain of visual tree objects that includes <see cref="P:System.Windows.RoutedEventArgs.Source"/> and its ancestors until <i>sender</i> (including).
+            Returns visual ancestor (<see cref="M:System.Windows.Media.VisualTreeHelper.GetParent(System.Windows.DependencyObject)"/>) of type <i>T</i>.
+            Also can return <i>last</i> or null.
             </summary>
-            <param name="t">The event arguments parameter of an event handler.</param>
-            <param name="sender">The <i>sender</i> parameter of the event handler.</param>
-            <param name="orSender">If object of type T1 or T2 not found, return <i>sender</i>. If false (default), returns null.</param>
+            <param name="t"></param>
+            <param name="andThis">Include this object.</param>
+            <param name="last">When found this ancestor, stop and return <i>last</i> if <i>andLast</i> true or null if false.</param>
+            <param name="andLast">If <i>last</i> found, return <i>last</i> instead of null.</param>
         </member>
         <member name="M:Au.AExtWpf.RectInScreen(System.Windows.FrameworkElement)">
             <summary>
@@ -14861,7 +14866,7 @@
             
             You can use an <see cref="T:Au.AKeys"/> variable instead of this function. Example: <c>new AKeys(null).Add("keys", "!text").Send();</c>. More examples in <see cref="M:Au.AKeys.#ctor(Au.Types.AOptKey)"/> topic.
             
-            This function calls <see cref="M:Au.AKeys.Add(Au.Types.KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="M:Au.AKeys.AddKeys(System.String)"/>, <see cref="M:Au.AKeys.AddText(System.String,System.String)"/>, <see cref="M:Au.AKeys.AddClipboardData(Au.AClipboardData)"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Nullable{System.Boolean})"/>, <see cref="!:AddKey(KKey, int, bool, bool?)"/>, <see cref="M:Au.AKeys.AddSleep(System.Int32)"/>, <see cref="M:Au.AKeys.AddAction(System.Action)"/>. Then calls <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
+            This function calls <see cref="M:Au.AKeys.Add(Au.Types.KKeysEtc[])"/>, which calls these functions depending on argument type: <see cref="M:Au.AKeys.AddKeys(System.String)"/>, <see cref="M:Au.AKeys.AddText(System.String,System.String)"/>, <see cref="M:Au.AKeys.AddClipboardData(Au.AClipboardData)"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.Nullable{System.Boolean})"/>, <see cref="M:Au.AKeys.AddKey(Au.Types.KKey,System.UInt16,System.Boolean,System.Nullable{System.Boolean})"/>, <see cref="M:Au.AKeys.AddSleep(System.Int32)"/>, <see cref="M:Au.AKeys.AddAction(System.Action)"/>. Then calls <see cref="M:Au.AKeys.Send(System.Boolean)"/>.
             
             Uses API <msdn>SendInput</msdn>.
             </remarks>
@@ -21501,6 +21506,23 @@
             <param name="p"></param>
             <param name="len">Length of p to search in.</param>
             <param name="s">Substring to find. Must contain only ASCII characters.</param>
+        </member>
+        <member name="M:Au.Util.ClassicMenu_.ShowSimple(Au.Types.DStringList,Au.Types.AnyWnd,System.Boolean)">
+            <summary>
+            Creates and shows popup menu.
+            Returns selected item id, or 0 if cancelled.
+            </summary>
+            <param name="items">
+            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
+            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
+            For separators use null or empty strings: "One|Two||Three|Four".
+            </param>
+            <param name="owner">Owner window.</param>
+            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
+            <remarks>
+            The menu is modal; the function returns when closed.
+            </remarks>
+            <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
         </member>
         <member name="T:Au.Util.EnsureWindowsFormsSynchronizationContext_">
             <summary>

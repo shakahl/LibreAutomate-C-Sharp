@@ -45,8 +45,7 @@ namespace Au.Controls
 		//internal static AMemoryArray.ByteBuffer Byte_(int n, out int nHave) { var r = AMemoryArray.Get(n, ref t_byte); nHave = r.Length - 1; return r; }
 
 
-		internal SciText(SciHost sc)
-		{
+		internal SciText(SciHost sc) {
 			_c = sc;
 		}
 
@@ -72,10 +71,9 @@ namespace Au.Controls
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public int SetString(int sciMessage, LPARAM wParam, string lParam, bool useUtf8LengthForWparam = false)
-		{
-			fixed(byte* s = _ToUtf8(lParam, out var len)) {
-				if(useUtf8LengthForWparam) wParam = len;
+		public int SetString(int sciMessage, LPARAM wParam, string lParam, bool useUtf8LengthForWparam = false) {
+			fixed (byte* s = _ToUtf8(lParam, out var len)) {
+				if (useUtf8LengthForWparam) wParam = len;
 				return _c.Call(sciMessage, wParam, s);
 			}
 		}
@@ -86,9 +84,8 @@ namespace Au.Controls
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public int SetString(int sciMessage, string wParam, LPARAM lParam)
-		{
-			fixed(byte* s = _ToUtf8(wParam)) {
+		public int SetString(int sciMessage, string wParam, LPARAM lParam) {
+			fixed (byte* s = _ToUtf8(wParam)) {
 				return _c.Call(sciMessage, lParam, s);
 			}
 		}
@@ -99,9 +96,8 @@ namespace Au.Controls
 		/// If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
 		/// Don't call this function from another thread.
 		/// </summary>
-		public int SetStringString(int sciMessage, string wParam0lParam)
-		{
-			fixed(byte* s = _ToUtf8(wParam0lParam, out var len)) {
+		public int SetStringString(int sciMessage, string wParam0lParam) {
+			fixed (byte* s = _ToUtf8(wParam0lParam, out var len)) {
 				int i = BytePtr_.Length(s);
 				Debug.Assert(i < len);
 				return _c.Call(sciMessage, s, s + i + 1);
@@ -121,11 +117,10 @@ namespace Au.Controls
 		/// If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
 		/// The function allocates bufferSize+1 bytes and sets that last byte = 0. If Scintilla overwrites it, asserts and calls Environment.FailFast.
 		/// </param>
-		public string GetString(int sciMessage, LPARAM wParam, int bufferSize = -1)
-		{
-			if(bufferSize < 0) return GetStringOfLength(sciMessage, wParam, Call(sciMessage, wParam));
-			if(bufferSize == 0) return "";
-			fixed(byte* b = Byte_(bufferSize)) {
+		public string GetString(int sciMessage, LPARAM wParam, int bufferSize = -1) {
+			if (bufferSize < 0) return GetStringOfLength(sciMessage, wParam, Call(sciMessage, wParam));
+			if (bufferSize == 0) return "";
+			fixed (byte* b = Byte_(bufferSize)) {
 				b[bufferSize] = 0;
 				Call(sciMessage, wParam, b);
 				Debug.Assert(b[bufferSize] == 0);
@@ -146,10 +141,9 @@ namespace Au.Controls
 		/// <remarks>
 		/// This function can get binary string (with '\0' characters).
 		/// </remarks>
-		public string GetStringOfLength(int sciMessage, LPARAM wParam, int utf8Length)
-		{
-			if(utf8Length == 0) return "";
-			fixed(byte* b = Byte_(utf8Length)) {
+		public string GetStringOfLength(int sciMessage, LPARAM wParam, int utf8Length) {
+			if (utf8Length == 0) return "";
+			fixed (byte* b = Byte_(utf8Length)) {
 				b[utf8Length] = 0;
 				Call(sciMessage, wParam, b);
 				Debug.Assert(b[utf8Length] == 0);
@@ -161,8 +155,7 @@ namespace Au.Controls
 
 		static byte[] _ToUtf8(string s) => AConvert.ToUtf8(s);
 
-		static byte[] _ToUtf8(string s, out int utf8Length)
-		{
+		static byte[] _ToUtf8(string s, out int utf8Length) {
 			var r = AConvert.ToUtf8(s);
 			utf8Length = r.Length - 1;
 			return r;
@@ -177,13 +170,12 @@ namespace Au.Controls
 		/// Does not create an intermediate byte[].
 		/// Gets big text 5 times faster than GetStringOfLength. Tested with text 31K length, 1K lines.
 		/// </remarks>
-		string _RangeText(int start8, int end8)
-		{
+		string _RangeText(int start8, int end8) {
 			Debug.Assert(end8 >= start8);
 			Debug.Assert((uint)end8 <= _c.Len8);
-			if(end8 == start8) return "";
+			if (end8 == start8) return "";
 			int gap = Sci_Range(_c.SciPtr, start8, end8, out var p1, out var p2);
-			if(p2 != null) {
+			if (p2 != null) {
 				int n1 = gap - start8, n2 = end8 - gap;
 				int len1 = Encoding.UTF8.GetCharCount(p1, n1);
 				int len2 = Encoding.UTF8.GetCharCount(p2, n2);
@@ -209,11 +201,10 @@ namespace Au.Controls
 		/// <param name="from"></param>
 		/// <param name="to">If -1, uses <see cref="SciHost.Len8"/>.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg greater than text length or <i>to</i> less than <i>from</i>.</exception>
-		public void NormalizeRange(bool utf16, ref int from, ref int to)
-		{
-			if(from < 0 || (to < from && to != -1)) throw new ArgumentOutOfRangeException();
-			if(utf16) from = _c.Pos8(from);
-			if(to < 0) to = _c.Len8; else if(utf16) to = _c.Pos8(to);
+		public void NormalizeRange(bool utf16, ref int from, ref int to) {
+			if (from < 0 || (to < from && to != -1)) throw new ArgumentOutOfRangeException();
+			if (utf16) from = _c.Pos8(from);
+			if (to < 0) to = _c.Len8; else if (utf16) to = _c.Pos8(to);
 		}
 
 		/// <summary>
@@ -222,12 +213,11 @@ namespace Au.Controls
 		/// <param name="utf16">Input values are UTF-16.</param>
 		/// <param name="r">Range. Can be spacified from start or/and from end.</param>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg <i>to</i> less than <i>from</i>.</exception>
-		public (int from, int to) NormalizeRange(bool utf16, Range r)
-		{
+		public (int from, int to) NormalizeRange(bool utf16, Range r) {
 			int from, to;
-			if(r.Start.IsFromEnd || r.End.IsFromEnd) {
+			if (r.Start.IsFromEnd || r.End.IsFromEnd) {
 				(from, to) = r.GetStartEnd(utf16 ? _c.Len16 : _c.Len8);
-				if(utf16) {
+				if (utf16) {
 					from = _c.Pos8(from);
 					to = _c.Pos8(to);
 				}
@@ -243,12 +233,11 @@ namespace Au.Controls
 		/// Same as <see cref="NormalizeRange(bool, ref int, ref int)"/>, but can be <i>to</i> less than <i>from</i>. If so, returns true.
 		/// </summary>
 		/// <exception cref="ArgumentOutOfRangeException">Invalid argument, eg greater than text length.</exception>
-		public bool NormalizeRangeCanBeReverse(bool utf16, ref int from, ref int to, bool swapFromTo)
-		{
+		public bool NormalizeRangeCanBeReverse(bool utf16, ref int from, ref int to, bool swapFromTo) {
 			bool reverse = to >= 0 && to < from;
-			if(reverse) AMath.Swap(ref from, ref to);
+			if (reverse) AMath.Swap(ref from, ref to);
 			NormalizeRange(utf16, ref from, ref to);
-			if(reverse && !swapFromTo) AMath.Swap(ref from, ref to);
+			if (reverse && !swapFromTo) AMath.Swap(ref from, ref to);
 			return reverse;
 		}
 
@@ -280,16 +269,14 @@ namespace Au.Controls
 			SciText _t;
 			bool _ro;
 
-			public _NoReadonly(SciText t)
-			{
+			public _NoReadonly(SciText t) {
 				_t = t;
 				_ro = _t._c.ZInitReadOnlyAlways || _t.IsReadonly;
-				if(_ro) _t._c.Call(SCI_SETREADONLY, 0);
+				if (_ro) _t._c.Call(SCI_SETREADONLY, 0);
 			}
 
-			public void Dispose()
-			{
-				if(_ro) _t._c.Call(SCI_SETREADONLY, 1);
+			public void Dispose() {
+				if (_ro) _t._c.Call(SCI_SETREADONLY, 1);
 			}
 		}
 
@@ -298,23 +285,21 @@ namespace Au.Controls
 			SciText _t;
 			bool _noUndo, _noNotif;
 
-			public _NoUndoNotif(SciText t, SciSetTextFlags flags)
-			{
-				if(t._c.ZInitReadOnlyAlways) flags = 0;
+			public _NoUndoNotif(SciText t, SciSetTextFlags flags) {
+				if (t._c.ZInitReadOnlyAlways) flags = 0;
 				_t = t;
 				_noUndo = flags.Has(SciSetTextFlags.NoUndo) && 0 != _t.Call(SCI_GETUNDOCOLLECTION);
 				_noNotif = flags.Has(SciSetTextFlags.NoNotify);
-				if(_noNotif) _t._c.ZDisableModifiedNotifications = true;
-				if(_noUndo) _t.Call(SCI_SETUNDOCOLLECTION, false);
+				if (_noNotif) _t._c.ZDisableModifiedNotifications = true;
+				if (_noUndo) _t.Call(SCI_SETUNDOCOLLECTION, false);
 			}
 
-			public void Dispose()
-			{
-				if(_noUndo) {
+			public void Dispose() {
+				if (_noUndo) {
 					_t.Call(SCI_EMPTYUNDOBUFFER);
 					_t.Call(SCI_SETUNDOCOLLECTION, true);
 				}
-				if(_noNotif) _t._c.ZDisableModifiedNotifications = false;
+				if (_noNotif) _t._c.ZDisableModifiedNotifications = false;
 			}
 		}
 
@@ -324,10 +309,10 @@ namespace Au.Controls
 		/// Removes all text (SCI_CLEARALL).
 		/// </summary>
 		/// <param name="flags"></param>
-		public void ClearText(SciSetTextFlags flags = 0)
-		{
-			using(new _NoUndoNotif(this, flags))
-			using(new _NoReadonly(this))
+		public void ClearText(SciSetTextFlags flags = 0) {
+			if (_c.Hwnd.Is0) return;
+			using (new _NoUndoNotif(this, flags))
+			using (new _NoReadonly(this))
 				Call(SCI_CLEARALL);
 		}
 
@@ -338,24 +323,21 @@ namespace Au.Controls
 		/// <param name="s">Text.</param>
 		/// <param name="flags"></param>
 		/// <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
-		public void SetText(string s, SciSetTextFlags flags = 0, bool ignoreTags = false)
-		{
-			using(new _NoUndoNotif(this, flags)) {
-				if(!ignoreTags && _CanParseTags(s)) {
+		public void SetText(string s, SciSetTextFlags flags = 0, bool ignoreTags = false) {
+			using (new _NoUndoNotif(this, flags)) {
+				if (!ignoreTags && _CanParseTags(s)) {
 					ClearText();
 					_c.ZTags.AddText(s, false, _c.ZInitTagsStyle == SciHost.ZTagsStyle.AutoWithPrefix);
 				} else {
-					using(new _NoReadonly(this))
+					using (new _NoReadonly(this))
 						SetString(SCI_SETTEXT, 0, s ?? "");
 				}
 			}
 		}
 
-		bool _CanParseTags(string s)
-		{
-			if(s.NE()) return false;
-			return _c.ZInitTagsStyle switch
-			{
+		bool _CanParseTags(string s) {
+			if (s.NE()) return false;
+			return _c.ZInitTagsStyle switch {
 				SciHost.ZTagsStyle.AutoAlways => s.IndexOf('<') >= 0,
 				SciHost.ZTagsStyle.AutoWithPrefix => s.Starts("<>"),
 				_ => false,
@@ -383,20 +365,18 @@ namespace Au.Controls
 		/// Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 		/// s must end with 0. Asserts.
 		/// </remarks>
-		internal void SetText_(byte[] s, int startIndex)
-		{
+		internal void SetText_(byte[] s, int startIndex) {
 			Debug.Assert(s.Length > 0 && s[^1] == 0);
 			Debug.Assert((uint)startIndex < s.Length);
-			fixed(byte* p = s) SetText_(p + startIndex);
+			fixed (byte* p = s) SetText_(p + startIndex);
 		}
 
 		/// <summary>
 		/// Sets UTF-8 text.
 		/// Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
 		/// </summary>
-		internal void SetText_(byte* s)
-		{
-			using(new _NoReadonly(this))
+		internal void SetText_(byte* s) {
+			using (new _NoReadonly(this))
 				Call(SCI_SETTEXT, 0, s);
 		}
 
@@ -408,32 +388,30 @@ namespace Au.Controls
 		/// <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
 		/// <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
 		/// <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
-		public void AppendText(string s, bool andRN, bool scroll, bool ignoreTags = false)
-		{
+		public void AppendText(string s, bool andRN, bool scroll, bool ignoreTags = false) {
 			s ??= "";
-			if(!ignoreTags && _CanParseTags(s)) {
+			if (!ignoreTags && _CanParseTags(s)) {
 				_c.ZTags.AddText(s, true, _c.ZInitTagsStyle == SciHost.ZTagsStyle.AutoWithPrefix);
 				return;
 			}
 
 			var a = AConvert.ToUtf8(s, andRN ? "\r\n" : "");
-			using(new _NoReadonly(this))
-				fixed(byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
+			using (new _NoReadonly(this))
+				fixed (byte* b = a) Call(SCI_APPENDTEXT, a.Length, b);
 
-			if(scroll) Call(SCI_GOTOPOS, _c.Len8);
+			if (scroll) Call(SCI_GOTOPOS, _c.Len8);
 		}
 
 		/// <summary>
 		/// Sets or appends UTF-8 text of specified length.
 		/// Does not parse tags. Moves current position and scrolls to the end.
 		/// </summary>
-		internal void AddText_(bool append, byte* s, int lenToAppend)
-		{
-			using(new _NoReadonly(this))
-				if(append) Call(SCI_APPENDTEXT, lenToAppend, s);
+		internal void AddText_(bool append, byte* s, int lenToAppend) {
+			using (new _NoReadonly(this))
+				if (append) Call(SCI_APPENDTEXT, lenToAppend, s);
 				else Call(SCI_SETTEXT, 0, s);
 
-			if(append) Call(SCI_GOTOPOS, _c.Len8);
+			if (append) Call(SCI_GOTOPOS, _c.Len8);
 		}
 
 		//not used now
@@ -514,9 +492,8 @@ namespace Au.Controls
 		/// <param name="line">0-based line index. Returns text length if too big.</param>
 		public int LineStart(bool utf16, int line) => _ReturnPos(utf16, _LineStart(line));
 
-		int _LineStart(int line)
-		{
-			if(line < 0) throw new ArgumentOutOfRangeException();
+		int _LineStart(int line) {
+			if (line < 0) throw new ArgumentOutOfRangeException();
 			int R = Call(SCI_POSITIONFROMLINE, _ParamLine(line));
 			return R >= 0 ? R : _c.Len8;
 			//If line < 0, Scintilla returns line start from selection start.
@@ -529,8 +506,7 @@ namespace Au.Controls
 		/// <param name="utf16">Return UTF-16.</param>
 		/// <param name="line">0-based line index. Returns text length if too big.</param>
 		/// <param name="withRN">Include \r\n.</param>
-		public int LineEnd(bool utf16, int line, bool withRN = false)
-		{
+		public int LineEnd(bool utf16, int line, bool withRN = false) {
 			line = _ParamLine(line);
 			return _ReturnPos(utf16, withRN ? _LineStart(line + 1) : Call(SCI_GETLINEENDPOSITION, line));
 		}
@@ -560,12 +536,11 @@ namespace Au.Controls
 		/// <param name="pos">A position in document text. Returns text length if too big.</param>
 		/// <param name="withRN">Include \r\n.</param>
 		/// <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
-		public int LineEndFromPos(bool utf16, int pos, bool withRN = false, bool lineStartIsLineEnd = false)
-		{
+		public int LineEndFromPos(bool utf16, int pos, bool withRN = false, bool lineStartIsLineEnd = false) {
 			int pos0 = pos;
 			pos = _ParamPos(utf16, pos);
-			if(lineStartIsLineEnd) {
-				if(pos == 0 || Call(SCI_GETCHARAT, pos - 1) == '\n') return pos0;
+			if (lineStartIsLineEnd) {
+				if (pos == 0 || Call(SCI_GETCHARAT, pos - 1) == '\n') return pos0;
 			}
 			return LineEnd(utf16, LineFromPos(false, pos), withRN);
 		}
@@ -577,8 +552,7 @@ namespace Au.Controls
 		/// <param name="pos">A position in document text. Uses the last line if too big.</param>
 		/// <param name="withRN">Include \r\n.</param>
 		/// <param name="utf16Return">If not null, overrides <i>utf16</i> for return values.</param>
-		public (int line, int start, int end) LineStartEndFromPos(bool utf16, int pos, bool withRN = false, bool? utf16Return = null)
-		{
+		public (int line, int start, int end) LineStartEndFromPos(bool utf16, int pos, bool withRN = false, bool? utf16Return = null) {
 			int startPos = LineStartFromPos(false, _ParamPos(utf16, pos), out int line);
 			int endPos = LineEnd(false, line, withRN);
 			utf16 = utf16Return ?? utf16;
@@ -609,8 +583,7 @@ namespace Au.Controls
 		/// <param name="utf16"></param>
 		/// <param name="pos">A position in document text.</param>
 		/// <param name="extraSpaces">Receives the number of extra spaces, 0 to 3.</param>
-		public int LineIndentationFromPos(bool utf16, int pos, out int extraSpaces)
-		{
+		public int LineIndentationFromPos(bool utf16, int pos, out int extraSpaces) {
 			int line = LineFromPos(utf16, pos);
 			int i = Call(SCI_GETLINEINDENTATION, line), r = i / 4;
 			extraSpaces = i - r;
@@ -652,9 +625,8 @@ namespace Au.Controls
 		/// If s is null or "", removes annotation.
 		/// Preserves existing image info.
 		/// </summary>
-		public void AnnotationText(int line, string s)
-		{
-			if(_c.ZImages != null) _c.ZImages.AnnotationText_(line, s);
+		public void AnnotationText(int line, string s) {
+			if (_c.ZImages != null) _c.ZImages.AnnotationText_(line, s);
 			else AnnotationText_(line, s);
 		}
 
@@ -662,9 +634,8 @@ namespace Au.Controls
 		/// Sets raw annotation text which can contain image info.
 		/// If s is null or "", removes annotation.
 		/// </summary>
-		internal void AnnotationText_(int line, string s)
-		{
-			if(s.NE()) s = null;
+		internal void AnnotationText_(int line, string s) {
+			if (s.NE()) s = null;
 			SetString(SCI_ANNOTATIONSETTEXT, line, s);
 		}
 
@@ -676,8 +647,7 @@ namespace Au.Controls
 		/// <param name="from">Start index.</param>
 		/// <param name="to">End index.</param>
 		/// <param name="withRN">Include "\r\n".</param>
-		public void RangeToFullLines(bool utf16, ref int from, ref int to, bool withRN = false)
-		{
+		public void RangeToFullLines(bool utf16, ref int from, ref int to, bool withRN = false) {
 			Debug.Assert(from <= to);
 			from = _ReturnPos(utf16, LineStartFromPos(utf16, from));
 			to = _ReturnPos(utf16, LineEndFromPos(utf16, to, withRN, true));
@@ -694,11 +664,10 @@ namespace Au.Controls
 		/// Does not parse tags.
 		/// Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="ReplaceSel"/> or <see cref="ReplaceRange"/>.
 		/// </remarks>
-		public void InsertText(bool utf16, int pos, string s, bool addUndoPoint = false)
-		{
-			using(new _NoReadonly(this))
+		public void InsertText(bool utf16, int pos, string s, bool addUndoPoint = false) {
+			using (new _NoReadonly(this))
 				SetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
-			if(addUndoPoint) AddUndoPoint();
+			if (addUndoPoint) AddUndoPoint();
 		}
 
 		///// <summary>
@@ -723,10 +692,9 @@ namespace Au.Controls
 		/// Does not parse tags.
 		/// Does not change current selection, unless it is in the range (including <i>to</i>); for it use <see cref="ReplaceSel"/> or <see cref="ReplaceRange"/>.
 		/// </remarks>
-		public void DeleteRange(bool utf16, int from, int to)
-		{
+		public void DeleteRange(bool utf16, int from, int to) {
 			NormalizeRange(utf16, ref from, ref to);
-			using(new _NoReadonly(this))
+			using (new _NoReadonly(this))
 				Call(SCI_DELETERANGE, from, to - from);
 		}
 
@@ -746,14 +714,13 @@ namespace Au.Controls
 		/// Does not parse tags.
 		/// By default does not change current selection, unless it is in the range (including <i>to</i>).
 		/// </remarks>
-		public void ReplaceRange(bool utf16, int from, int to, string s, bool moveCurrentPos = false)
-		{
+		public void ReplaceRange(bool utf16, int from, int to, string s, bool moveCurrentPos = false) {
 			bool reverse = NormalizeRangeCanBeReverse(utf16, ref from, ref to, swapFromTo: true);
-			using(new _NoReadonly(this)) {
+			using (new _NoReadonly(this)) {
 				int fromEnd = !moveCurrentPos || reverse ? 0 : _c.Len8 - to;
 				Call(SCI_SETTARGETRANGE, from, to);
 				SetString(SCI_REPLACETARGET, 0, s ??= "", true);
-				if(moveCurrentPos) CurrentPos8 = reverse ? from : _c.Len8 - fromEnd;
+				if (moveCurrentPos) CurrentPos8 = reverse ? from : _c.Len8 - fromEnd;
 			}
 		}
 
@@ -763,8 +730,7 @@ namespace Au.Controls
 		/// <param name="utf16"></param>
 		/// <param name="from">Start index.</param>
 		/// <param name="to">End index. If -1, uses control text length.</param>
-		public string RangeText(bool utf16, int from, int to)
-		{
+		public string RangeText(bool utf16, int from, int to) {
 			NormalizeRange(utf16, ref from, ref to);
 			return _RangeText(from, to);
 		}
@@ -777,8 +743,7 @@ namespace Au.Controls
 		/// Does not parse tags.
 		/// If read-only, asserts and fails (unlike most other functions that change text).
 		/// </remarks>
-		public void ReplaceSel(string s)
-		{
+		public void ReplaceSel(string s) {
 			Debug.Assert(!IsReadonly);
 			SetString(SCI_REPLACESEL, 0, s ?? "");
 		}
@@ -793,8 +758,7 @@ namespace Au.Controls
 		/// Does not parse tags.
 		/// If read-only, asserts and fails (unlike most other functions that change text).
 		/// </remarks>
-		public void ReplaceSel(bool utf16, int pos, string s)
-		{
+		public void ReplaceSel(bool utf16, int pos, string s) {
 			Debug.Assert(!IsReadonly);
 			GoToPos(utf16, pos);
 			SetString(SCI_REPLACESEL, 0, s ?? "");
@@ -811,8 +775,7 @@ namespace Au.Controls
 		/// Does not parse tags.
 		/// If read-only, asserts and fails (unlike most other functions that change text).
 		/// </remarks>
-		public void SetAndReplaceSel(bool utf16, int from, int to, string s)
-		{
+		public void SetAndReplaceSel(bool utf16, int from, int to, string s) {
 			Debug.Assert(!IsReadonly);
 			Select(utf16, from, to);
 			SetString(SCI_REPLACESEL, 0, s ?? "");
@@ -821,8 +784,7 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_GOTOPOS and ensures visible.
 		/// </summary>
-		public void GoToPos(bool utf16, int pos)
-		{
+		public void GoToPos(bool utf16, int pos) {
 			pos = _ParamPos(utf16, pos);
 			int line = Call(SCI_LINEFROMPOSITION, pos);
 			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
@@ -832,8 +794,7 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_GOTOLINE and ensures visible.
 		/// </summary>
-		public void GoToLine(int line)
-		{
+		public void GoToLine(int line) {
 			Call(SCI_ENSUREVISIBLEENFORCEPOLICY, line);
 			Call(SCI_GOTOLINE, line);
 		}
@@ -845,10 +806,9 @@ namespace Au.Controls
 		/// <param name="from"></param>
 		/// <param name="to">If -1, uses text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.</param>
 		/// <param name="makeVisible">Ensure line visible and selection visible. Without it in some cases selection to the left of the caret may be invisible.</param>
-		public void Select(bool utf16, int from, int to, bool makeVisible = false)
-		{
+		public void Select(bool utf16, int from, int to, bool makeVisible = false) {
 			NormalizeRangeCanBeReverse(utf16, ref from, ref to, swapFromTo: false);
-			if(makeVisible) GoToPos(false, from);
+			if (makeVisible) GoToPos(false, from);
 			Call(SCI_SETSEL, from, to);
 		}
 
@@ -874,38 +834,36 @@ namespace Au.Controls
 			/// If UTF-8 with BOM, the returned array contains BOM (to avoid copying), and <b>SetText</b> knows it.
 			/// If file data is binary or file size is more than 100_000_000, the returned text shows error message or image. Then <b>SetText</b> makes the control read-only; <b>Save</b> throws exception.
 			/// </remarks>
-			public byte[] Load(string file)
-			{
+			public byte[] Load(string file) {
 				_enc = _Encoding.Binary;
-				if(0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
-					if(!AFile.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
+				if (0 != file.Ends(true, ".png", ".bmp", ".jpg", ".jpeg", ".gif", ".tif", ".tiff", ".ico", ".cur", ".ani")) {
+					if (!AFile.ExistsAsFile(file)) throw new FileNotFoundException($"Could not find file '{file}'.");
 					return Encoding.UTF8.GetBytes($"//Image file @\"{file}\"\0");
 				}
 
 				using var fr = AFile.LoadStream(file);
 				var fileSize = fr.Length;
-				if(fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
+				if (fileSize > 100_000_000) return Encoding.UTF8.GetBytes("//Cannot edit. The file is too big, more than 100_000_000 bytes.\0");
 				int trySize = (int)Math.Min(fileSize, 65_000);
 				var b = new byte[trySize + 4];
 				trySize = fr.Read(b, 0, trySize);
-				fixed(byte* p = b) _enc = _DetectEncoding(p, trySize);
-				if(_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
+				fixed (byte* p = b) _enc = _DetectEncoding(p, trySize);
+				if (_enc == _Encoding.Binary) return Encoding.UTF8.GetBytes("//Cannot edit. The file is binary, not text.\0");
 				int bomLength = (int)_enc >> 4;
 				//AOutput.Write(_enc, bomLength, fileSize);
 
-				if(fileSize > trySize) {
+				if (fileSize > trySize) {
 					var old = b; b = new byte[fileSize + 4]; Array.Copy(old, b, trySize);
 					fr.Read(b, trySize, (int)fileSize - trySize);
 				}
 
 				Encoding e = _NetEncoding();
-				if(e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + e.GetByteCount("\0"));
+				if (e != null) b = Encoding.Convert(e, Encoding.UTF8, b, bomLength, (int)fileSize - bomLength + e.GetByteCount("\0"));
 				return b;
 			}
 
-			Encoding _NetEncoding()
-			{
-				switch(_enc) {
+			Encoding _NetEncoding() {
+				switch (_enc) {
 				case _Encoding.Ansi: return Encoding.Default;
 				case _Encoding.Utf16BOM: case _Encoding.Utf16NoBOM: return Encoding.Unicode;
 				case _Encoding.Utf16BE: return Encoding.BigEndianUnicode;
@@ -915,28 +873,27 @@ namespace Au.Controls
 				return null;
 			}
 
-			static unsafe _Encoding _DetectEncoding(byte* s, int len)
-			{
-				if(len == 0) return _Encoding.Utf8NoBOM;
-				if(len == 1) return s[0] == 0 ? _Encoding.Binary : (s[0] < 128 ? _Encoding.Utf8NoBOM : _Encoding.Ansi);
-				if(len >= 3 && s[0] == 0xEF && s[1] == 0xBB && s[2] == 0xBF) return _Encoding.Utf8BOM;
+			static unsafe _Encoding _DetectEncoding(byte* s, int len) {
+				if (len == 0) return _Encoding.Utf8NoBOM;
+				if (len == 1) return s[0] == 0 ? _Encoding.Binary : (s[0] < 128 ? _Encoding.Utf8NoBOM : _Encoding.Ansi);
+				if (len >= 3 && s[0] == 0xEF && s[1] == 0xBB && s[2] == 0xBF) return _Encoding.Utf8BOM;
 				//bool canBe16 = 0 == (fileSize & 1), canBe32 = 0 == (fileSize & 3); //rejected. .NET ignores it too.
-				if(s[0] == 0xFF && s[1] == 0xFE) {
-					if(len >= 4 && s[2] == 0 && s[3] == 0) return _Encoding.Utf32BOM;
+				if (s[0] == 0xFF && s[1] == 0xFE) {
+					if (len >= 4 && s[2] == 0 && s[3] == 0) return _Encoding.Utf32BOM;
 					return _Encoding.Utf16BOM;
 				}
-				if(s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
-				if(len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
+				if (s[0] == 0xFE && s[1] == 0xFF) return _Encoding.Utf16BE;
+				if (len >= 4 && *(uint*)s == 0xFFFE0000) return _Encoding.Utf32BE;
 				int zeroAt = BytePtr_.Length(s, len);
-				if(zeroAt == len - 1) len--; //WordPad saves .rtf files with '\0' at the end
-				if(zeroAt == len) { //no '\0'
-					byte* p = s, pe = s + len; for(; p < pe; p++) if(*p >= 128) break; //is ASCII?
-					if(p < pe && 0 == Api.MultiByteToWideChar(Api.CP_UTF8, Api.MB_ERR_INVALID_CHARS, s, len, null, 0)) return _Encoding.Ansi;
+				if (zeroAt == len - 1) len--; //WordPad saves .rtf files with '\0' at the end
+				if (zeroAt == len) { //no '\0'
+					byte* p = s, pe = s + len; for (; p < pe; p++) if (*p >= 128) break; //is ASCII?
+					if (p < pe && 0 == Api.MultiByteToWideChar(Api.CP_UTF8, Api.MB_ERR_INVALID_CHARS, s, len, null, 0)) return _Encoding.Ansi;
 					return _Encoding.Utf8NoBOM;
 				}
 				var u = (char*)s; len /= 2;
-				if(CharPtr_.Length(u, len) == len) //no '\0'
-					if(0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0, default, null)) return _Encoding.Utf16NoBOM;
+				if (CharPtr_.Length(u, len) == len) //no '\0'
+					if (0 != Api.WideCharToMultiByte(Api.CP_UTF8, Api.WC_ERR_INVALID_CHARS, u, len, null, 0, default, null)) return _Encoding.Utf16NoBOM;
 				return _Encoding.Binary;
 			}
 
@@ -981,12 +938,11 @@ namespace Au.Controls
 			/// </summary>
 			/// <param name="z">Control's Z.</param>
 			/// <param name="text">Returned by <b>Load</b>.</param>
-			public unsafe bool SetText(SciText z, byte[] text)
-			{
-				using(new _NoUndoNotif(z, SciSetTextFlags.NoUndoNoNotify)) {
+			public unsafe bool SetText(SciText z, byte[] text) {
+				using (new _NoUndoNotif(z, SciSetTextFlags.NoUndoNoNotify)) {
 					z.SetText_(text, _enc == _Encoding.Utf8BOM ? 3 : 0);
 				}
-				if(_enc != _Encoding.Binary) return true;
+				if (_enc != _Encoding.Binary) return true;
 				z.Call(SCI_SETREADONLY, 1);
 				return false;
 			}
@@ -999,30 +955,29 @@ namespace Au.Controls
 			/// <param name="tempDirectory">To pass to AFile.Save.</param>
 			/// <exception cref="Exception">Exceptions of AFile.Save.</exception>
 			/// <exception cref="InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
-			public unsafe void Save(SciText z, string file, string tempDirectory = null)
-			{
-				if(_enc == _Encoding.Binary) throw new InvalidOperationException();
+			public unsafe void Save(SciText z, string file, string tempDirectory = null) {
+				if (_enc == _Encoding.Binary) throw new InvalidOperationException();
 
 				//_enc = _Encoding.Utf32BOM; //test
 
 				int len = z._c.Len8;
 				int bom = (int)_enc >> 4;
-				if(bom == 2 || bom == 4) bom = 1; //1 UTF16 or UTF32 character
+				if (bom == 2 || bom == 4) bom = 1; //1 UTF16 or UTF32 character
 				var b = Byte_(len + bom);
 
-				fixed(byte* p = b) z.Call(SCI_GETTEXT, len + 1, p + bom);
+				fixed (byte* p = b) z.Call(SCI_GETTEXT, len + 1, p + bom);
 
 				Encoding e = _NetEncoding();
-				if(e != null) {
-					if(bom != 0) b[0] = 0; //clear BOM placeholder
+				if (e != null) {
+					if (bom != 0) b[0] = 0; //clear BOM placeholder
 					b = Encoding.Convert(Encoding.UTF8, e, b, 0, len + bom);
 					len = b.Length;
-					switch(_enc) {
+					switch (_enc) {
 					case _Encoding.Utf16BOM: case _Encoding.Utf32BOM: b[0] = 0xFF; b[1] = 0xFE; break;
 					case _Encoding.Utf16BE: b[0] = 0xFE; b[1] = 0xFF; break;
 					case _Encoding.Utf32BE: b[2] = 0xFE; b[3] = 0xFF; break;
 					}
-				} else if(bom == 3) {
+				} else if (bom == 3) {
 					len += 3;
 					b[0] = 0xEF; b[1] = 0xBB; b[2] = 0xBF;
 				} //else bom 0
@@ -1034,11 +989,10 @@ namespace Au.Controls
 			}
 		}
 
-		public int MarginFromPoint(POINT p, bool screenCoord)
-		{
-			if(screenCoord) _c.Hwnd.MapScreenToClient(ref p);
-			if(_c.Hwnd.ClientRect.Contains(p)) {
-				for(int i = 0, w = 0; i < 5; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if(w >= p.x) return i; }
+		public int MarginFromPoint(POINT p, bool screenCoord) {
+			if (screenCoord) _c.Hwnd.MapScreenToClient(ref p);
+			if (_c.Hwnd.ClientRect.Contains(p)) {
+				for (int i = 0, w = 0; i < 5; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if (w >= p.x) return i; }
 			}
 			return -1;
 		}
@@ -1051,24 +1005,23 @@ namespace Au.Controls
 		/// <param name="x">Results.</param>
 		/// <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
 		/// <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
-		public bool GetSelectionLines(bool utf16, out (int selStart, int selEnd, int linesStart, int linesEnd, string text) x, bool ifFullLines = false, bool oneMore = false)
-		{
+		public bool GetSelectionLines(bool utf16, out (int selStart, int selEnd, int linesStart, int linesEnd, string text) x, bool ifFullLines = false, bool oneMore = false) {
 			x = default;
 			x.selStart = SelectionStart8; x.selEnd = SelectionEnd8;
-			if(ifFullLines && x.selEnd == x.selStart) return false;
+			if (ifFullLines && x.selEnd == x.selStart) return false;
 			var (_, start, end) = LineStartEndFromPos(false, x.selStart);
-			if(ifFullLines && start != x.selStart) return false;
+			if (ifFullLines && start != x.selStart) return false;
 			x.linesStart = start;
 
-			if(x.selEnd > x.selStart) {
+			if (x.selEnd > x.selStart) {
 				(_, start, end) = LineStartEndFromPos(false, x.selEnd);
-				if(!oneMore && start == x.selEnd) end = start; //selection end is at line start. We need the line only if oneMore.
-				if(ifFullLines && x.selEnd < end) return false;
+				if (!oneMore && start == x.selEnd) end = start; //selection end is at line start. We need the line only if oneMore.
+				if (ifFullLines && x.selEnd < end) return false;
 			}
 
 			x.linesEnd = end;
 			x.text = _RangeText(x.linesStart, end);
-			if(utf16) {
+			if (utf16) {
 				x.linesStart = _c.Pos16(x.linesStart);
 				x.linesEnd = _c.Pos16(x.linesEnd);
 				x.selStart = _c.Pos16(x.selStart);
@@ -1086,10 +1039,9 @@ namespace Au.Controls
 		/// <param name="s"></param>
 		/// <param name="start"></param>
 		/// <param name="end">If -1, text length.</param>
-		public unsafe int FindText(bool utf16, string s, int start = 0, int end = -1)
-		{
+		public unsafe int FindText(bool utf16, string s, int start = 0, int end = -1) {
 			NormalizeRange(utf16, ref start, ref end);
-			fixed(byte* b = _ToUtf8(s)) {
+			fixed (byte* b = _ToUtf8(s)) {
 				var k = new Sci_TextToFind { cpMin = start, cpMax = end, lpstrText = b, chrgText = default };
 				return _ReturnPosCanBeNegative(utf16, Call(SCI_FINDTEXT, SCFIND_MATCHCASE, &k));
 			}
@@ -1098,22 +1050,19 @@ namespace Au.Controls
 
 		public void IndicatorClear(int indic) => IndicatorClear(false, indic, ..);
 
-		public void IndicatorClear(bool utf16, int indic, Range r)
-		{
+		public void IndicatorClear(bool utf16, int indic, Range r) {
 			var (from, to) = NormalizeRange(utf16, r);
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_INDICATORCLEARRANGE, from, to - from);
 		}
 
-		public void IndicatorAdd(bool utf16, int indic, Range r)
-		{
+		public void IndicatorAdd(bool utf16, int indic, Range r) {
 			var (from, to) = NormalizeRange(utf16, r);
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_INDICATORFILLRANGE, from, to - from);
 		}
 
-		public void IndicatorAdd(bool utf16, int indic, Range r, int _value)
-		{
+		public void IndicatorAdd(bool utf16, int indic, Range r, int _value) {
 			var (from, to) = NormalizeRange(utf16, r);
 			Call(SCI_SETINDICATORCURRENT, indic);
 			Call(SCI_SETINDICATORVALUE, _value);
@@ -1123,8 +1072,7 @@ namespace Au.Controls
 		/// <summary>
 		/// SCI_BEGINUNDOACTION, SCI_ENDUNDOACTION.
 		/// </summary>
-		public void AddUndoPoint()
-		{
+		public void AddUndoPoint() {
 			Call(SCI_BEGINUNDOACTION);
 			Call(SCI_ENDUNDOACTION);
 		}

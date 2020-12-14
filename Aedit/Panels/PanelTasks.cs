@@ -15,16 +15,16 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Au.Util;
 //using System.Linq;
 
-class PanelRunning : DockPanel
+class PanelTasks : DockPanel
 {
 	AuTreeView _tv;
 	bool _updatedOnce;
 
-	public PanelRunning() {
-		_tv = new AuTreeView { Name = "Running_list", ImageCache = App.ImageCache };
-		//System.Windows.Automation.AutomationProperties.SetName(this, "Running");
+	public PanelTasks() {
+		_tv = new AuTreeView { Name = "Tasks_list", ImageCache = App.ImageCache };
 		this.Children.Add(_tv);
 	}
 
@@ -48,16 +48,19 @@ class PanelRunning : DockPanel
 		case MouseButton.Right:
 			_tv.Select(t);
 			var name = f.DisplayName;
-			var m = new AWpfMenu();
-			m["End task  " + name] = o => App.Tasks.EndTask(t);
-			m["End all  " + name] = o => App.Tasks.EndTasksOf(f);
+			var m = new ClassicMenu_();
+			m.Add(1, "End task  " + name);
+			m.Add(2, "End all  " + name);
 			m.Separator();
-			m["Close\tM-click"] = o => App.Model.CloseFile(f, true);
-			if (null == Panels.Editor.ZGetOpenDocOf(f)) m.Last.IsEnabled = false;
-			m.Show(_tv);
+			m.Add(3, "Close\tM-click", disable: null == Panels.Editor.ZGetOpenDocOf(f)); 
+			switch (m.Show(_tv)) {
+			case 1: App.Tasks.EndTask(t); break;
+			case 2: App.Tasks.EndTasksOf(f); break;
+			case 3: App.Model.CloseFile(f, selectOther: true); break;
+			}
 			break;
 		case MouseButton.Middle:
-			App.Model.CloseFile(f, true);
+			App.Model.CloseFile(f, selectOther: true);
 			break;
 		}
 	}

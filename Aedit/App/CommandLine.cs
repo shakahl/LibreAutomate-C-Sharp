@@ -139,7 +139,7 @@ static class CommandLine
 	static string[] _importFiles;
 
 	static AWnd _msgWnd;
-	const string c_msgWndClassName = "Aedit.m3gVxcTJN02pDrHiQ00aSQ"; //TODO: in ATask.cs replace "Au.Editor.Msg" with this
+	const string c_msgWndClassName = "Aedit.m3gVxcTJN02pDrHiQ00aSQ";
 
 	/// <summary>
 	/// The message-only window.

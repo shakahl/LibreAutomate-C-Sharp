@@ -1,8 +1,8 @@
 ﻿<!--
+If this is the default commands file, please don't edit/delete it.
 If this is the customized commands file, you can edit it to customize menu commands and toolbars. Then restart the program.
 	To add a command to a toolbar, add command's XML element to the toolbar's XML element.
 	To reset everything, delete this file. To reset some toolbars, delete all commands in their XML elements.
-If this is the default commands file, please don't edit/delete it.
 
 Most command names are like default menu item text, with _ instead of space and without ....
 	For example, if text in menu is "Open file...", command is Open_file.

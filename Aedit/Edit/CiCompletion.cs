@@ -26,6 +26,7 @@ using System.Collections.Immutable;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
+using Au.Util;
 
 //Roslyn bug: no ResourceManager in completion list. In VS too. Not tested with newest version.
 //TODO: now in 'new Class { here }' groups properties by namespace.
@@ -260,7 +261,7 @@ class CiCompletion
 
 			if (r == null) {
 				if (stringFormat == (PSFormat)100) {
-					int i = AWpfMenu.ShowSimple("Regex|Keys", doc, byCaret: true);
+					int i = ClassicMenu_.ShowSimple("Regex|Keys", doc, byCaret: true);
 					stringFormat = i switch { 1 => PSFormat.ARegex, 2 => PSFormat.AKeys, _ => default };
 				}
 				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringSpan);

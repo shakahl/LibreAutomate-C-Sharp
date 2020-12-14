@@ -101,6 +101,11 @@ namespace Au.Controls
 		/// Text color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, disabled).
 		/// </summary>
 		int TextColor => -1;
+
+		/// <summary>
+		/// Border color in 0xBBGGRR format. No border if -1 (default).
+		/// </summary>
+		int BorderColor => -1;
 	}
 
 	/// <summary>

@@ -663,13 +663,13 @@ namespace Au.Controls
 
 		void _ContextMenu(object sender, ContextMenuEventArgs e) {
 			if (_customizedFile == null) return;
-			if (_GetCommandFromMouseEventArgs(sender, e, out var command, out var control)) {
+			if (_GetCommandFromMouseEventArgs(sender, e, out _, out _)) {
 				e.Handled = true;
-				if (sender is ToolBar tb) tb.IsOverflowOpen = false; //last step of the workaround. Need to close when showing context menu, or later will not autoclose.
-				var m = new AWpfMenu();
-				m["Edit commands file"] = o => _Customize();
-				m["View default commands file"] = o => AFile.SelectInExplorer(_defaultFile);
-				m.IsOpen = true;
+				if (sender is ToolBar tb) tb.IsOverflowOpen = false; //this was some workaround when using WPF menu, now don't know
+				switch(ClassicMenu_.ShowSimple("Edit commands file|Find default commands file", sender as UIElement)) {
+				case 1: _Customize(); break;
+				case 2: AFile.SelectInExplorer(_defaultFile); break;
+				}
 			}
 		}
 

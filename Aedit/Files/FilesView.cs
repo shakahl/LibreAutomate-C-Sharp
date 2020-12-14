@@ -12,7 +12,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Drawing;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows;
@@ -53,7 +52,7 @@ partial class FilesModel
 				Dispatcher.InvokeAsync(() => App.Model._ItemRightClicked(f));
 				break;
 			case MouseButton.Middle:
-				if (!f.IsFolder) App.Model.CloseFile(f, true);
+				if (!f.IsFolder) App.Model.CloseFile(f);
 				break;
 			}
 		}

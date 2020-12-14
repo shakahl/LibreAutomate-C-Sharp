@@ -1287,12 +1287,26 @@ namespace Au.Types
 			public char* dwTypeData;
 			public int cch;
 			public IntPtr hbmpItem;
+
+			public MENUITEMINFO(uint miim) : this() {
+				cbSize = sizeof(MENUITEMINFO);
+				fMask = miim;
+			}
 		}
 
+		internal const uint MIIM_STATE = 0x1;
 		internal const uint MIIM_TYPE = 0x10;
+
+		internal const uint MFS_DISABLED = 0x3;
+		internal const uint MFS_CHECKED = 0x8;
+		//internal const uint MFS_HILITE = 0x80;
+		internal const uint MFS_DEFAULT = 0x1000;
 
 		[DllImport("user32.dll", EntryPoint = "GetMenuItemInfoW")]
 		internal static extern bool GetMenuItemInfo(IntPtr hmenu, int item, bool fByPosition, ref MENUITEMINFO lpmii);
+
+		[DllImport("user32.dll", EntryPoint = "SetMenuItemInfoW")]
+		internal static extern bool SetMenuItemInfo(IntPtr hmenu, int item, bool fByPositon, in MENUITEMINFO lpmii);
 
 		[DllImport("user32.dll")]
 		internal static extern IntPtr GetSystemMenu(AWnd hWnd, bool bRevert);
@@ -1306,8 +1320,15 @@ namespace Au.Types
 		internal const uint TPM_RETURNCMD = 0x100;
 
 		[DllImport("user32.dll")]
-		internal static extern int TrackPopupMenuEx(IntPtr hMenu, uint uFlags, int x, int y, AWnd hwnd, IntPtr lptpm = default);
+		internal static extern int TrackPopupMenuEx(IntPtr hMenu, uint uFlags, int x, int y, AWnd hwnd, TPMPARAMS* lptpm = null);
 
+		internal struct TPMPARAMS
+		{
+			public int cbSize;
+			public RECT rcExclude;
+		}
+
+		internal const uint MF_POPUP = 0x10;
 		internal const uint MF_SEPARATOR = 0x800;
 
 		[DllImport("user32.dll", EntryPoint = "AppendMenuW")]

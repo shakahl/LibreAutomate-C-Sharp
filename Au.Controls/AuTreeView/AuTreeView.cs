@@ -893,30 +893,32 @@ namespace Au.Controls
 		/// Starts focused item text editing.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Control not created.</exception>
-		public void EditLabel() { int i = _focusedIndex; if (i >= 0) EditLabel(i); }
+		public void EditLabel(Action<bool> ended = null) { int i = _focusedIndex; if (i >= 0) EditLabel(i, ended); }
 
 		/// <summary>
 		/// Starts item text editing.
 		/// </summary>
 		/// <exception cref="ArgumentException"></exception>
 		/// <exception cref="InvalidOperationException">Control not created.</exception>
-		public void EditLabel(ITreeViewItem item) => _EditLabel(item, _IndexOfOrThrow(item));
+		public void EditLabel(ITreeViewItem item, Action<bool> ended = null) => _EditLabel(item, _IndexOfOrThrow(item), ended);
 
 		/// <summary>
 		/// Starts item text editing.
 		/// </summary>
 		/// <exception cref="IndexOutOfRangeException"></exception>
 		/// <exception cref="InvalidOperationException">Control not created.</exception>
-		public void EditLabel(int index) {
+		public void EditLabel(int index, Action<bool> ended = null) {
 			if (!_IndexToItem(index, out var item)) throw new IndexOutOfRangeException();
-			_EditLabel(item, index);
+			_EditLabel(item, index, ended);
 		}
 
-		void _EditLabel(ITreeViewItem item, int index) {
+		void _EditLabel(ITreeViewItem item, int index, Action<bool> ended) {
 			EndEditLabel();
 			EnsureVisible(index);
+			if (!IsFocused) Focus();
 
 			_leItem = item;
+			_leEnded = ended;
 			var r = GetRectPhysical(index, TVParts.Text, inScreen: true);
 			r.left -= _imageMarginX;
 			double f = 96d / _dpi;
@@ -948,6 +950,7 @@ namespace Au.Controls
 		Popup _lePopup;
 		TextBox _leTB;
 		ITreeViewItem _leItem;
+		Action<bool> _leEnded;
 
 		/// <summary>
 		/// Ends item text editing.
@@ -961,6 +964,7 @@ namespace Au.Controls
 			var text = cancel ? null : _leTB.Text; _leTB = null;
 			var item = _leItem; _leItem = null;
 			var p = _lePopup; _lePopup = null;
+			var ended = _leEnded; _leEnded = null;
 			p.IsOpen = false;
 			if (focus) Focus();
 			if (!cancel && text != item.DisplayText) {
@@ -968,6 +972,7 @@ namespace Au.Controls
 				item.SetNewText(text);
 				if (_avi[index].measured == meas) Redraw(index, remeasure: true); //SetNewText (app) should do it, but may forget
 			}
+			ended?.Invoke(!cancel);
 		}
 
 		#endregion

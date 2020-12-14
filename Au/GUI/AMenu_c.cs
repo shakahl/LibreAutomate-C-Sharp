@@ -192,13 +192,11 @@ namespace Au
 					}
 				}
 #if true
-				using var m = new ClassicPopupMenu_();
-				m.Add(100, "Edit");
 				_cancelClosing = true; //in some cases .NET installs a message hook to catch clicks
-				int r = m.Show(this.Hwnd());
+				int r = ClassicMenu_.ShowSimple("Edit", this);
 				_cancelClosing = false;
 				switch(r) {
-				case 100:
+				case 1:
 					_m.Close();
 					_m.GoToEdit_(contextItem);
 					break;

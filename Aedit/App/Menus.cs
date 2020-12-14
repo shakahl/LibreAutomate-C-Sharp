@@ -269,9 +269,9 @@ static class Menus
 			}
 			var t = App.Tasks.GetRunsingleTask(); if (t == null) return;
 			//TODO: show all running, because runSingle now not default
-			var m = new AWpfMenu();
-			m["End task  " + t.f.DisplayName] = o => App.Tasks.EndTask(t);
-			m.Show(App.Wmain);
+			switch (ClassicMenu_.ShowSimple("End task  " + t.f.DisplayName, App.Wmain)) {
+			case 1: App.Tasks.EndTask(t); break;
+			}
 		}
 
 		//[Command(image = "resources/images/pause_16x.xaml")]
@@ -394,10 +394,33 @@ static class Menus
 	}
 
 #if TRACE
-	static KPopup _test;
+	//static KPopup _test;
+	//static AHookWin _hook;
 
 	[Command]
 	public static void TEST() {
+		//_hook = AHookWin.ThreadCbt(k => {
+		//	if (k.code == HookData.CbtEvent.SETFOCUS) {
+		//		AOutput.Write(k.Hwnd);
+		//	if (k.Hwnd == App.Hwnd) AOutput.Write(new StackTrace());
+		//	}
+		//	return false;
+		//});
+
+
+
+		//var m = new ClassicMenu_();
+		//m.Add(1, "One");
+		//using (m.Submenu("Sub")) {
+		//	m.Add(11, "Eleven");
+		//	m.Add(12, "Twelve");
+		//}
+		//m.Add(2, "Two");
+		//m.Separator();
+		//m["Three"]=_=>AOutput.Write("Three");
+		//AOutput.Write(m.Show(App.Wmain));
+
+
 
 		//if (_test == null) {
 		//	var p = new KPopup { Size = (200, 300) };

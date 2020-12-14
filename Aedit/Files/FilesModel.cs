@@ -116,7 +116,7 @@ partial class FilesModel
 	/// Raises <see cref="NeedRedraw"/> event.
 	/// </summary>
 	/// <param name="f"></param>
-	public static void Redraw(FileNode f = null, bool remeasure=false) { NeedRedraw?.Invoke((f, remeasure)); }
+	public static void Redraw(FileNode f = null, bool remeasure = false) { NeedRedraw?.Invoke((f, remeasure)); }
 
 	#endregion
 
@@ -349,7 +349,9 @@ partial class FilesModel
 	/// </summary>
 	/// <param name="f">Can be any item or null. Does nothing if it is null, folder or not open.</param>
 	/// <param name="activateOther">When closing current file, if there are more open files, activate another open file.</param>
-	public bool CloseFile(FileNode f, bool activateOther) {
+	/// <param name="selectOther">Select the activated file.</param>
+	/// <param name="focusEditor">If <i>activateOther</i> true, focus code editor.</param>
+	public bool CloseFile(FileNode f, bool activateOther = true, bool selectOther = false, bool focusEditor = false) {
 		if (IsAlien(f)) return false;
 		var of = OpenFiles;
 		if (!of.Remove(f)) return false;
@@ -358,13 +360,16 @@ partial class FilesModel
 		f.IsSelected = false;
 
 		if (f == _currentFile) {
-			if (activateOther && of.Count > 0 && _SetCurrentFile(of[0])) return true; //and don't select
+			if (activateOther && of.Count > 0) {
+				var ff = of[0];
+				if (selectOther) ff.SelectSingle();
+				if (_SetCurrentFile(ff, dontFocusEditor: !focusEditor)) return true;
+			}
 			_currentFile = null;
 		}
 		f.UpdateControlRow();
 
-		Panels.Open.ZUpdateList();
-		Panels.Open.ZUpdateCurrent(_currentFile);
+		_UpdateOpenFiles(_currentFile);
 		Save.StateLater();
 
 		return true;
@@ -379,10 +384,24 @@ partial class FilesModel
 		bool closeCurrent = false;
 		foreach (var f in files) {
 			if (f == dontClose) continue;
-			if (f == _currentFile) closeCurrent = true; else CloseFile(f, false);
+			if (f == _currentFile) closeCurrent = true; else CloseFile(f, activateOther: false);
 		}
-		if (closeCurrent) CloseFile(_currentFile, true);
+		if (closeCurrent) CloseFile(_currentFile);
 	}
+
+	/// <summary>
+	/// Updates PanelOpen, enables/disables Previous command.
+	/// </summary>
+	void _UpdateOpenFiles(FileNode current) {
+		Panels.Open.ZUpdateList();
+
+		bool cmdPrevDisable = OpenFiles.Count < 2;
+		if (cmdPrevDisable != _cmdPrevDisabled) {
+			_cmdPrevDisabled = cmdPrevDisable;
+			App.Commands[nameof(Menus.File.OpenClose.Previous_document)].Enabled = !cmdPrevDisable;
+		}
+	}
+	bool _cmdPrevDisabled;
 
 	/// <summary>
 	/// Called by <see cref="PanelFiles.ZLoadWorkspace"/> before opening another workspace and disposing this.
@@ -393,7 +412,7 @@ partial class FilesModel
 		_currentFile = null;
 		Panels.Editor.ZCloseAll(saveTextIfNeed: false);
 		OpenFiles.Clear();
-		Panels.Open.ZUpdateList();
+		_UpdateOpenFiles(null);
 	}
 
 	/// <summary>
@@ -406,12 +425,10 @@ partial class FilesModel
 	/// Selects the node and opens its file in the code editor.
 	/// Returns false if failed to select, for example if f is a folder.
 	/// </summary>
-	/// <param name="f"></param>
-	/// <param name="doNotChangeSelection"></param>
-	public bool SetCurrentFile(FileNode f, bool doNotChangeSelection = false, bool newFile = false) {
+	public bool SetCurrentFile(FileNode f, bool doNotChangeSelection = false, bool newFile = false, bool dontFocusEditor = false) {
 		if (IsAlien(f)) return false;
 		if (!doNotChangeSelection) f.SelectSingle();
-		if (_currentFile != f) _SetCurrentFile(f, newFile);
+		if (_currentFile != f) _SetCurrentFile(f, newFile, dontFocusEditor);
 		return _currentFile == f;
 	}
 
@@ -423,7 +440,7 @@ partial class FilesModel
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
-	bool _SetCurrentFile(FileNode f, bool newFile = false) {
+	bool _SetCurrentFile(FileNode f, bool newFile = false, bool dontFocusEditor = false) {
 		Debug.Assert(!IsAlien(f));
 		if (f == _currentFile) return true;
 		//AOutput.Write(f);
@@ -434,9 +451,9 @@ partial class FilesModel
 		var fPrev = _currentFile;
 		_currentFile = f;
 
-		if (!Panels.Editor.ZOpen(f, newFile)) {
+		if (!Panels.Editor.ZOpen(f, newFile, dontFocusEditor)) {
 			_currentFile = fPrev;
-			if (OpenFiles.Contains(f)) Panels.Open.ZUpdateCurrent(_currentFile);
+			if (OpenFiles.Contains(f)) _UpdateOpenFiles(_currentFile); //?
 			return false;
 		}
 
@@ -446,8 +463,7 @@ partial class FilesModel
 		var of = OpenFiles;
 		of.Remove(f);
 		of.Insert(0, f);
-		Panels.Open.ZUpdateList();
-		Panels.Open.ZUpdateCurrent(f);
+		_UpdateOpenFiles(f);
 		Save.StateLater();
 
 		return true;
@@ -492,9 +508,8 @@ partial class FilesModel
 		App.Wmain.ZShowAndActivate();
 		bool wasOpen = _currentFile == f;
 		if (!SetCurrentFile(f)) return false;
-		var doc = Panels.Editor.ZActiveDoc;
-		doc.Focus();
 		if (line >= 0 || columnOrPos >= 0) {
+			var doc = Panels.Editor.ZActiveDoc;
 			var z = doc.Z;
 			if (line >= 0) {
 				int i = z.LineStart(false, line);
@@ -542,8 +557,8 @@ partial class FilesModel
 
 	#region rename, delete, open/close (menu commands), properties
 
-	public void RenameSelected() {
-		TreeControl.EditLabel();
+	public void RenameSelected(bool newFile = false) {
+		TreeControl.EditLabel(ended: newFile ? ok => { if (ok && Keyboard.IsKeyDown(Key.Enter)) Panels.Editor.ZActiveDoc?.Focus(); } : null);
 	}
 
 	public void DeleteSelected() {
@@ -626,7 +641,7 @@ partial class FilesModel
 		case ECloseCmd.CloseSelectedOrCurrent:
 			var a = TreeControl.SelectedItems;
 			if (a.Length > 0) CloseFiles(a);
-			else CloseFile(_currentFile, true);
+			else CloseFile(_currentFile);
 			break;
 		case ECloseCmd.CloseAll:
 			CloseFiles(OpenFiles, dontClose);
@@ -693,7 +708,7 @@ partial class FilesModel
 			int i;
 			bool isFolder = target.IsFolder && target.IsSelected && TreeControl.SelectedIndices.Count == 1;
 			if (isFolder && !target.HasChildren) pos = FNPosition.Inside;
-			else if (isFolder && (i = AWpfMenu.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", owner: TreeControl)) > 0) {
+			else if (isFolder && (i = ClassicMenu_.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", owner: TreeControl)) > 0) {
 				switch (i) {
 				case 1: target = target.FirstChild; break;
 				case 2: pos = FNPosition.Inside; break;
@@ -780,7 +795,7 @@ partial class FilesModel
 			Panels.Editor.ZActiveDoc.Z.SetText(s);
 		}
 
-		if (beginRenaming && f.IsSelected) RenameSelected();
+		if (beginRenaming && f.IsSelected) RenameSelected(newFile: true);
 		return f;
 	}
 
@@ -813,7 +828,7 @@ partial class FilesModel
 				if (!isFolder && (i = name.LastIndexOf('.')) > 0) name = name.Insert(i, "1"); else name += "1";
 			}
 		}
-		name = FileNode.CreateNameUniqueInFolder(newParent, name, isFolder);
+		name = FileNode.CreateNameUniqueInFolder(newParent, name, isFolder, autoGenerated: true);
 
 		return _NewItem(target, pos, template, name);
 	}
@@ -886,7 +901,7 @@ partial class FilesModel
 			d.AddText(string.Join("\r\n", a.Select(o => o.Name)));
 			d.SetClipboard();
 		}
-		_clipboard.clipSN=Api.GetClipboardSequenceNumber();
+		_clipboard.clipSN = Api.GetClipboardSequenceNumber();
 	}
 
 	public void Paste() {

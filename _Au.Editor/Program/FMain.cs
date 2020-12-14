@@ -191,9 +191,6 @@ partial class FMain : Form
 					}
 				}
 				break;
-			case Api.WM_POWERBROADCAST:
-				if (wParam == 4) Program.Tasks.EndTask(); //PBT_APMSUSPEND
-				break;
 			case Api.WM_WINDOWPOSCHANGING:
 				var p = (Api.WINDOWPOS*)lParam;
 				//AOutput.Write(p->flags);
@@ -205,7 +202,10 @@ partial class FMain : Form
 					return;
 				}
 				break;
-			case Api.WM_DISPLAYCHANGE:
+			case Api.WM_POWERBROADCAST: //info: in Aedit added in the tray notify window proc
+				if (wParam == 4) Program.Tasks.EndTask(); //PBT_APMSUSPEND
+				break;
+			case Api.WM_DISPLAYCHANGE: //info: in Aedit added in the tray notify window proc
 				Program.Tasks.OnWM_DISPLAYCHANGE();
 				break;
 		}

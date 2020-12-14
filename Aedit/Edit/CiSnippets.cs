@@ -9,7 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Linq;
+using System.Linq;
 using System.Xml.Linq;
 
 using Au;
@@ -23,6 +23,7 @@ using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Tags;
+using Au.Util;
 
 //TODO: no snippets after label: Method() { ... g1: noSnippetsHere }
 
@@ -257,13 +258,12 @@ static class CiSnippets
 			var x = snippet.x;
 			if (x.HasElements) {
 				x = null;
-				var m = new AMenu { Modal = true };
-				foreach (var v in snippet.x.Elements("list")) {
-					m[v.Attr("item")] = o => x = v;
-				}
-				m.Control.Items[0].Select();
-				//m.Show(doc, byCaret: true);//TODO
-				if (x == null) return;
+				var a = snippet.x.Elements("list").ToArray();
+				//SHOULDDO: need a better way. Now eg cannot select with Tab or Space, only with Enter.
+				Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Down, 0); //select first item. But does not work on d-click (mouse button pressed).
+				int g = ClassicMenu_.ShowSimple(a.Select(o => o.Attr("item")).ToArray(), doc, byCaret: true);
+				if (g == 0) return;
+				x = a[g - 1];
 			}
 			s = x.Value;
 

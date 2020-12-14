@@ -210,6 +210,9 @@ namespace Au
 			}
 			PlacementTarget = owner;
 			IsOpen = true;
+
+			//TODO: no keyboard if focused Scintilla. Maybe temporarily remove focus. Or don't use WPF context menus; use native.
+
 			if (modal) {
 #if REJECTED
 				_dispFrame = new DispatcherFrame();

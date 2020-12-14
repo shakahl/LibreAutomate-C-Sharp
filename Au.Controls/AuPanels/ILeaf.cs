@@ -21,7 +21,7 @@ using System.Windows.Markup;
 
 namespace Au.Controls
 {
-	partial class AuPanels
+	public partial class AuPanels
 	{
 		/// <summary>
 		/// Interface for a leaf item (panel, toolbar or document).
@@ -92,11 +92,12 @@ namespace Au.Controls
 			/// </summary>
 			event CancelEventHandler Closing;
 
-			/// <summary>
-			/// When opening context menu of this leaf item.
-			/// You can add menu items. All default items are already added.
-			/// </summary>
-			event EventHandler<AWpfMenu> ContextMenuOpening;
+			///// <summary>
+			///// When opening context menu of this leaf item.
+			///// You can add menu items. All default items are already added.
+			///// </summary>
+			//event EventHandler<AWpfMenu> ContextMenuOpening;
+			//FUTURE: reenable this if useful when ContextMenu_ will be public
 
 			/// <summary>
 			/// When this tab item selected (becomes the active item).

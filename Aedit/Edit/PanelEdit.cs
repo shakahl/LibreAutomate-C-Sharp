@@ -63,11 +63,13 @@ class PanelEdit : Grid
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
-	public bool ZOpen(FileNode f, bool newFile) {
+	/// <param name="dontFocusEditor">Don't focus editor, unless was focused. Also does not focus if <i>newFile</i> true.</param>
+	public bool ZOpen(FileNode f, bool newFile, bool dontFocusEditor = false) {
 		Debug.Assert(!App.Model.IsAlien(f));
 
 		if (f == _activeDoc?.ZFile) return true;
-		bool wasFocused = _activeDoc?.IsFocused ?? false;
+
+		bool focus = !newFile && (!dontFocusEditor || (_activeDoc?.IsFocused ?? false));
 
 		void _ShowHideActiveDoc(bool show) {
 			if (show) {
@@ -105,31 +107,7 @@ class PanelEdit : Grid
 			//CodeInfo.FileOpened(doc);
 		}
 
-		if (wasFocused && !newFile) {
-			_activeDoc.Focus();
-		} else {
-			//Don't focus now, or then cannot select treeview items with keyboard etc. Focus on mouse move in editor control.
-			//But often would focus when user does not want it. Instead can middle-click or Esc.
-			//But need to somehow focus after opening. It is not problem eg in VS, because it opens on double-click.
-			//OK, focus only when at some distance from treeview.
-#if !true //TODO
-			_openFocus.onMM ??= (object sender, MouseEventArgs e) => {
-				var c = sender as Control;
-				if(!c.FindForm().Hwnd().IsActive) return;
-				int dist = (int)AMath.Distance(App.Model.TreeControl.Hwnd().Rect, AMouse.XY);
-				if(dist < ADpi.Scale(100)) return;
-				if(_openFocus.dist >= 0 && dist < _openFocus.dist + 20) { //if new file, don't focus until mouse is moving away from tree
-					if(dist < _openFocus.dist) _openFocus.dist = dist;
-					return;
-				}
-				c.MouseMove -= _openFocus.onMM;
-				if(App.Model.TreeControl.SelectedNodes.Count > 1) return;
-				c.Focus();
-			};
-			_activeDoc.MouseMove += _openFocus.onMM;
-			_openFocus.dist = newFile ? int.MaxValue - 10000 : -1;
-#endif
-		}
+		if (focus) _activeDoc.Focus();
 
 		_activeDoc.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap); //fast and does nothing if already is in that wrap state
 		_activeDoc.ZImages.Visible = App.Settings.edit_noImages ? AnnotationsVisible.ANNOTATION_HIDDEN : AnnotationsVisible.ANNOTATION_STANDARD;
@@ -138,7 +116,6 @@ class PanelEdit : Grid
 		Panels.Find.ZUpdateQuickResults(true);
 		return true;
 	}
-	(MouseEventHandler onMM, int dist) _openFocus;
 
 	/// <summary>
 	/// If f is open, closes its document and destroys its control.

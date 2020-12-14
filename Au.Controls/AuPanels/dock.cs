@@ -12,15 +12,9 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Linq;
-using System.Xml.Linq;
-using System.Xml;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Windows.Media;
-using System.Windows.Shapes;
 using System.Windows.Input;
-using System.Globalization;
 
 namespace Au.Controls
 {
@@ -32,6 +26,7 @@ namespace Au.Controls
 			enum _DockState { Hide = 1, Float = 2, }
 
 			void _CaptionContextMenu(object sender, ContextMenuEventArgs e) {
+				//TODO: now no menu when r-clicked inactive tab button
 				if (!_IsGoodMouseEvent(sender, e, out var target)) return;
 				e.Handled = true;
 				target._CaptionContextMenu(this);
@@ -39,14 +34,14 @@ namespace Au.Controls
 
 			void _CaptionContextMenu(_Node thisOrParentTab) {
 				if (_IsDocument && !_leaf.addedLater) return;
-				var m = new AWpfMenu();
+				var m = new ClassicMenu_();
 
 				bool canClose = _leaf?.canClose ?? false;
-				if (canClose) m.Add("Close", o => _UserClosing()).InputGestureText = "M-click";
-				_DockStateItem(_DockState.Hide, "Hide", canClose ? null : "M-click");
+				if (canClose) m["Close\tM-click"] = _ => _UserClosing();
+				_DockStateItem(_DockState.Hide, canClose ? "Hide" : "Hide\tM-click");
 
-				if (_state.Has(_DockState.Float)) _DockStateItem(0, "Dock", "D-click");
-				else _DockStateItem(_DockState.Float, "Float", "D-click, drag");
+				if (_state.Has(_DockState.Float)) _DockStateItem(0, "Dock\tD-click");
+				else _DockStateItem(_DockState.Float, "Float\tD-click, drag");
 
 				using (m.Submenu("Caption At")) {
 					_CaptionAtItem(Dock.Left);
@@ -57,18 +52,16 @@ namespace Au.Controls
 				_ContextMenu_Move(m);
 				_ShowSubmenus();
 
-				ContextMenuOpening?.Invoke(this, m);
+				//ContextMenuOpening?.Invoke(this, m);
 
-				m.IsOpen = true;
+				m.Show(_elem);
 
-				void _DockStateItem(_DockState state, string s1, string s2) {
-					m[s1] = o => _SetDockState(state);
-					m.Last.InputGestureText = s2;
+				void _DockStateItem(_DockState state, string text) {
+					m[text] = o => _SetDockState(state);
 				}
 
 				void _CaptionAtItem(Dock ca) {
-					m[ca.ToString()] = o => thisOrParentTab._SetCaptionAt(ca);
-					if (ca == thisOrParentTab._captionAt) m.Last.IsChecked = true;
+					m[ca.ToString(), check: ca == thisOrParentTab._captionAt] = o => thisOrParentTab._SetCaptionAt(ca);
 				}
 
 				void _ShowSubmenus() {
@@ -90,7 +83,7 @@ namespace Au.Controls
 						foreach (var v in a) {
 							if (i > 0 && a[i - 1]._IsToolbar != a[i]._IsToolbar) m.Separator();
 							i++;
-							m[v.ToString()] = o => v._Unhide();
+							m[v.ToString()] = _ => v._Unhide();
 						}
 #if DEBUG
 						if (a.Count > 1) {
@@ -113,7 +106,7 @@ namespace Au.Controls
 							if (v._floatWindow != null) _Invalidate(v._floatWindow);
 						}
 					};
-					m.Add("Toggle ScrollLock if does not work").IsEnabled = false;
+					m.Add(0, "info: toggle ScrollLock if does not work", disable: true);
 				}
 
 				void _Invalidate(Window w) {
@@ -217,7 +210,7 @@ namespace Au.Controls
 				if ((state ^ oldState).Has(_DockState.Float)) FloatingChanged?.Invoke(this, state.Has(_DockState.Float));
 			}
 
-			void _ContextMenu_Move(AWpfMenu m) {
+			void _ContextMenu_Move(ClassicMenu_ m) {
 				using (m.Submenu("Move To")) {
 					string sThis = ToString();
 					foreach (var target in RootAncestor.Descendants(andSelf: true)) {
@@ -251,12 +244,12 @@ namespace Au.Controls
 							if (!targetInTab) {
 								if (sep) m.Separator();
 								if (target._IsLeaf && _IsLeaf && target._IsDocument == _IsDocument) {
-									m.Add($"Create tabs and add '{sThis}' as:").IsEnabled = false;
+									m.Add(0, $"Create tabs and add '{sThis}' as:", disable: true);
 									m[$"- First tab (before '{sTarget}')"] = o => _MoveTo(target, _HowToMove.FirstInNewTab);
 									m[$"- Last tab (after '{sTarget}')"] = o => _MoveTo(target, _HowToMove.LastInNewTab);
 									m.Separator();
 								}
-								m.Add($"Create stack and add '{sThis}' at:").IsEnabled = false;
+								m.Add(0, $"Create stack and add '{sThis}' at:", disable: true);
 								m["- Left"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Left);
 								m["- Right"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Right);
 								m["- Top"] = o => _MoveTo(target, _HowToMove.NewStack, Dock.Top);

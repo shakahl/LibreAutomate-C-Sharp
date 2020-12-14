@@ -98,7 +98,7 @@ namespace Au.Controls
 		(int from, int to) _GetViewRange() => _GetViewRange(_height);
 
 		void _Invalidate(RECT* r = null) {
-			if(_hh!=null) Api.InvalidateRect(_hh.Hwnd, r, false);
+			if (_hh != null) Api.InvalidateRect(_hh.Hwnd, r, false);
 		}
 
 		void _Invalidate(int index) {
@@ -149,7 +149,7 @@ namespace Au.Controls
 		/// <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
 		public void Redraw(bool remeasure = false) {
 			if (_grid == null) return;
-			if(remeasure) _MeasureClear(updateNow: true);
+			if (remeasure) _MeasureClear(updateNow: true);
 			else _Invalidate();
 		}
 
@@ -240,6 +240,12 @@ namespace Au.Controls
 								}
 							} else { //probably high contrast
 								if (v.isSelected) Api.FillRect(dc, r, (IntPtr)(Api.COLOR_HIGHLIGHT + 1));
+							}
+
+							color = item.BorderColor;
+							if (color != -1) {
+								using var pen = new System.Drawing.Pen(System.Drawing.Color.FromArgb(color & 0xff, color >> 8 & 0xff, color >> 16 & 0xff));
+								graphics.DrawRectangle(pen, r.left, r.top, r.Width - 1, r.Height - 1);
 							}
 						}
 

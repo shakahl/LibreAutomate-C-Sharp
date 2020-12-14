@@ -609,12 +609,6 @@
             Only if added with <see cref="M:Au.Controls.AuPanels.ILeaf.AddSibling(System.Boolean,Au.Controls.AuPanels.LeafType,System.String,System.Boolean)"/> with <i>canClose</i> true.
             </summary>
         </member>
-        <member name="E:Au.Controls.AuPanels.ILeaf.ContextMenuOpening">
-            <summary>
-            When opening context menu of this leaf item.
-            You can add menu items. All default items are already added.
-            </summary>
-        </member>
         <member name="E:Au.Controls.AuPanels.ILeaf.TabSelected">
             <summary>
             When this tab item selected (becomes the active item).
@@ -939,20 +933,20 @@
             Gets checked items (<see cref="F:Au.Controls.TVCheck.Checked"/>). Returns empty list if none checked.
             </summary>
         </member>
-        <member name="M:Au.Controls.AuTreeView.EditLabel">
+        <member name="M:Au.Controls.AuTreeView.EditLabel(System.Action{System.Boolean})">
             <summary>
             Starts focused item text editing.
             </summary>
             <exception cref="T:System.InvalidOperationException">Control not created.</exception>
         </member>
-        <member name="M:Au.Controls.AuTreeView.EditLabel(Au.Controls.ITreeViewItem)">
+        <member name="M:Au.Controls.AuTreeView.EditLabel(Au.Controls.ITreeViewItem,System.Action{System.Boolean})">
             <summary>
             Starts item text editing.
             </summary>
             <exception cref="T:System.ArgumentException"></exception>
             <exception cref="T:System.InvalidOperationException">Control not created.</exception>
         </member>
-        <member name="M:Au.Controls.AuTreeView.EditLabel(System.Int32)">
+        <member name="M:Au.Controls.AuTreeView.EditLabel(System.Int32,System.Action{System.Boolean})">
             <summary>
             Starts item text editing.
             </summary>
@@ -1172,6 +1166,11 @@
         <member name="P:Au.Controls.ITreeViewItem.TextColor">
             <summary>
             Text color in 0xBBGGRR format. If -1 (default), uses default colors, depending on state (normal, disabled).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.ITreeViewItem.BorderColor">
+            <summary>
+            Border color in 0xBBGGRR format. No border if -1 (default).
             </summary>
         </member>
         <member name="T:Au.Controls.TVCheck">

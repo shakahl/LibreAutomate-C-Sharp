@@ -195,7 +195,7 @@ partial class FilesModel
 						if (i == iActive) fnActive = fn;
 					}
 					//APerf.Next();
-					if (fnActive == null || !SetCurrentFile(fnActive)) Panels.Open.ZUpdateList();
+					if (fnActive == null || !SetCurrentFile(fnActive)) _UpdateOpenFiles(null); //disable Previous command
 					//APerf.NW();
 				}
 			}

@@ -473,6 +473,8 @@ namespace Au.Types
 		/// <summary> Assignment of a value of type List&lt;string&gt;. </summary>
 		public static implicit operator DStringList(List<string> e) => new DStringList(e);
 
+		//note: C# does not allow DStringList(IEnumerable<string> e), because it is interface. Callers can use .ToArray().
+
 		/// <summary>
 		/// The raw value.
 		/// </summary>

@@ -211,9 +211,6 @@
 	  <Compile Update="Panels\PanelInfo.cs">
 	    <SubType>UserControl</SubType>
 	  </Compile>
-	  <Compile Update="Panels\PanelOpen.cs">
-	    <SubType>UserControl</SubType>
-	  </Compile>
 	  <Compile Update="Panels\PanelOutput.cs" />
 	  <Compile Update="Panels\PanelRunning.cs" />
 	  <Compile Update="Tools\CodeBoxF.cs" />

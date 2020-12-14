@@ -97,7 +97,7 @@ Unlike most other options, this option is saved not in meta comments. It is save
 		_AddCombo("runSingle", "false|true", _meta.runSingle,
 @"<b>runSingle</b> - whether tasks can run simultaneously, etc.
  • <i>false</i> (default) - multiple tasks can run simultaneously (see ifRunning).
- • <i>true</i> - multiple such tasks cannot run simultaneously. When a task is running, the tray icon is green; also green in the ""Running"" pane. Can be ended with the ""End task"" hotkey.
+ • <i>true</i> - multiple such tasks cannot run simultaneously. When a task is running, the tray icon is green; also green in the ""Tasks"" pane. Can be ended with the ""End task"" hotkey.
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");

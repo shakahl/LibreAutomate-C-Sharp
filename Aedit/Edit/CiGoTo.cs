@@ -167,9 +167,8 @@ class CiGoTo
 			if (_sourceLocations.Count == 1) {
 				_GoTo(_sourceLocations[0]);
 			} else {
-				var m = new AWpfMenu();
-				foreach (var v in _sourceLocations) m[v.file + ", line " + v.line.ToString()] = o => _GoTo(v);
-				m.Show(menuOwner);
+				int i = ClassicMenu_.ShowSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray(), menuOwner);
+				if (i > 0) _GoTo(_sourceLocations[i - 1]);
 			}
 
 			static void _GoTo(_SourceLocation v) => App.Model.OpenAndGoTo(v.file, v.line, v.column);

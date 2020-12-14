@@ -116,35 +116,36 @@ partial class MainWindow : Window
 		base.OnActivated(e);
 	}
 
-	void _OpenDocuments() { //TODO
-		var docLeaf = _AddDoc("Document 1");
-		_AddDoc("Document 2");
-		_AddDoc("Document 3");
-		_AddDoc("Document 4");
-		docLeaf.Visible = true;
-		//Panels.DocPlaceholder_.Visible = false; //TODO
-		docLeaf.Content.Focus();
+	//this was for testing document tabs. Now we don't use document tabs. All documents now are in single pane.
+	//void _OpenDocuments() {
+	//	var docLeaf = _AddDoc("Document 1");
+	//	_AddDoc("Document 2");
+	//	_AddDoc("Document 3");
+	//	_AddDoc("Document 4");
+	//	docLeaf.Visible = true;
+	//	//Panels.DocPlaceholder_.Visible = false;
+	//	docLeaf.Content.Focus();
 
-		AuPanels.ILeaf _AddDoc(string name) {
-			//var docPlaceholder = App.Panels["Open"]; //in stack
-			var docPlaceholder = Panels.DocPlaceholder_; //in tab
-			var v = docPlaceholder.AddSibling(false, AuPanels.LeafType.Document, name, true);
-			v.Closing += (_, e) => { e.Cancel = !ADialog.ShowOkCancel("Close?"); };
-			v.ContextMenuOpening += (o, m) => {
-				var k = o as AuPanels.ILeaf;
-				m.Separator();
-				m["Close 2"] = o => k.Delete();
-			};
-			v.TabSelected += (_, _) => _OpenDoc(v);
+	//	AuPanels.ILeaf _AddDoc(string name) {
+	//		//var docPlaceholder = App.Panels["Open"]; //in stack
+	//		var docPlaceholder = Panels.DocPlaceholder_; //in tab
+	//		var v = docPlaceholder.AddSibling(false, AuPanels.LeafType.Document, name, true);
+	//		v.Closing += (_, e) => { e.Cancel = !ADialog.ShowOkCancel("Close?"); };
+	//		v.ContextMenuOpening += (o, m) => {
+	//			var k = o as AuPanels.ILeaf;
+	//			m.Separator();
+	//			m["Close 2"] = o => k.Delete();
+	//		};
+	//		v.TabSelected += (_, _) => _OpenDoc(v);
 
-			return v;
-		}
+	//		return v;
+	//	}
 
-		static void _OpenDoc(AuPanels.ILeaf leaf) {
-			if (leaf.Content != null) return;
-			leaf.Content = new SciHost();
-		}
-	}
+	//	static void _OpenDoc(AuPanels.ILeaf leaf) {
+	//		if (leaf.Content != null) return;
+	//		leaf.Content = new SciHost();
+	//	}
+	//}
 
 	static void _StartProfileOptimization() {
 #if !DEBUG

@@ -37,8 +37,8 @@ static class App
 
 	[STAThread]
 	static void Main(string[] args) {
-		if(args.Length > 0) {
-			switch(args[0]) {
+		if (args.Length > 0) {
+			switch (args[0]) {
 			case "/dd":
 				UacDragDrop.NonAdminProcess.MainDD(args);
 				return;
@@ -52,9 +52,9 @@ static class App
 		}
 
 		//restart as admin if started as non-admin on admin user account
-		if(args.Length > 0 && args[0] == "/n") {
+		if (args.Length > 0 && args[0] == "/n") {
 			args = args.RemoveAt(0);
-		} else if(AUac.OfThisProcess.Elevation == UacElevation.Limited) {
+		} else if (AUac.OfThisProcess.Elevation == UacElevation.Limited) {
 #if !DEBUG
 			if(_RestartAsAdmin(args)) return;
 #endif
@@ -64,8 +64,7 @@ static class App
 		_Main(args);
 	}
 
-	static void _Main(string[] args)
-	{
+	static void _Main(string[] args) {
 		//#if !DEBUG
 		AProcess.CultureIsInvariant = true;
 		//#endif
@@ -83,7 +82,7 @@ static class App
 		if (CommandLine.OnProgramStarted(args)) return;
 
 		OutputServer = new AOutputServer(true) { NoNewline = true }; //TODO
-		//OutputServer = new AOutputServer(false) { NoNewline = true };
+																	 //OutputServer = new AOutputServer(false) { NoNewline = true };
 		OutputServer.Start();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
@@ -293,18 +292,23 @@ static class App
 				_ContextMenu();
 				break;
 			case Api.WM_MBUTTONDOWN:
-
+				TriggersAndToolbars.DisableTriggers(null);
 				break;
 			}
 		}
 
-		static LPARAM _WndProc(AWnd w, int message, LPARAM wParam, LPARAM lParam) {
-			//AWnd.More.PrintMsg(w, message, wParam, lParam);
-			if (message == c_msgNotify) _Notified(wParam, lParam);
-			else if (message == s_msgTaskbarCreated) _Add(); //when explorer restarted or taskbar DPI changed
-			else if (message == Api.WM_DESTROY) _Exit();
+		static LPARAM _WndProc(AWnd w, int m, LPARAM wParam, LPARAM lParam) {
+			//AWnd.More.PrintMsg(w, m, wParam, lParam);
+			if (m == c_msgNotify) _Notified(wParam, lParam);
+			else if (m == s_msgTaskbarCreated) _Add(); //when explorer restarted or taskbar DPI changed
+			else if (m == Api.WM_DESTROY) _Exit();
+			else if (m == Api.WM_POWERBROADCAST) {
+				if (wParam == 4) Tasks.EndTask(); //PBT_APMSUSPEND
+			} else if (m == Api.WM_DISPLAYCHANGE) {
+				Tasks.OnWM_DISPLAYCHANGE();
+			}
 
-			return Api.DefWindowProc(w, message, wParam, lParam);
+			return Api.DefWindowProc(w, m, wParam, lParam);
 		}
 
 		internal static bool WaitForShow_() {
@@ -318,9 +322,9 @@ static class App
 
 		static void _ContextMenu() {
 			//Don't use AWpfMenu. Slow, adds +24 MB (6->30), no per-monitor DPI, no keys, etc.
-			using var m = new ClassicPopupMenu_();
-			m.Add(1, "End green task\tSleep");
-			m.Add(2, "Disable triggers\tM-click");
+			var m = new ClassicMenu_();
+			m.Add(1, "End runSingle task\tSleep", disable: Tasks.GetRunsingleTask() == null);
+			m.Add(2, "Disable triggers\tM-click", check: _disabled);
 			m.Separator();
 			m.Add(10, "Exit");
 
@@ -329,8 +333,10 @@ static class App
 			int r = m.Show(_wNotify);
 			switch (r) {
 			case 1:
+				Tasks.EndTask();
 				break;
 			case 2:
+				TriggersAndToolbars.DisableTriggers(null);
 				break;
 			case 10:
 				_Exit();
@@ -343,7 +349,7 @@ static class App
 		}
 
 		static void _ShowWindow() {
-			var w = App.Wmain;
+			var w = Wmain;
 			if (w != null) {
 				w.Show();
 				w.Activate();
@@ -362,7 +368,7 @@ static class App
 
 		public static bool Disabled {
 			get => _disabled;
-			set { if (value == _disabled) return; _disabled = value; if(!_running) Update_(); }
+			set { if (value == _disabled) return; _disabled = value; if (!_running) Update_(); }
 		}
 
 		public static bool Running {

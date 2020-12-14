@@ -20,14 +20,6 @@ using Au.Types;
 /// </summary>
 static class EdUtil
 {
-	//public static void MinimizeProcessPhysicalMemory(int afterMS)
-	//{
-	//	Task.Delay(afterMS).ContinueWith(_ => {
-	//		GC.Collect();
-	//		GC.WaitForPendingFinalizers();
-	//		Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
-	//	});
-	//}
 }
 
 #if DEBUG

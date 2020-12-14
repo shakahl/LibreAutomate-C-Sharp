@@ -17,17 +17,15 @@ using System.Windows.Controls;
 using System.Windows;
 //using System.Linq;
 
-using System.Windows.Forms.Integration;//TODO
-
 static class Panels
 {
 	public static AuPanels PanelManager;
-	internal static AuPanels.ILeaf DocPlaceholder_;
+	//internal static AuPanels.ILeaf DocPlaceholder_;
 	//panels
 	public static PanelEdit Editor;
 	public static PanelFiles Files;
 	public static PanelOpen Open;
-	public static PanelRunning Running;
+	public static PanelTasks Tasks;
 	public static PanelOutput Output;
 	public static PanelFind Find;
 	public static PanelFound Found;
@@ -80,17 +78,14 @@ static class Panels
 		var pm = PanelManager;
 
 		pm["Files"].Content = Files = new PanelFiles();
-		pm["Running"].Content = Running = new PanelRunning();
-
+		pm["Open"].Content = Open = new PanelOpen();
+		pm["Tasks"].Content = Tasks = new PanelTasks();
+		pm["Find"].Content = Find = new PanelFind();
 		pm["Output"].Content = Output = new PanelOutput();
 		pm["Info"].Content = Info = new PanelInfo();
 		pm["Found"].Content = Found = new PanelFound();
-		pm["Find"].Content = Find = new PanelFind();
-
-		pm["Open"].Content = new WindowsFormsHost { Child = Open = new PanelOpen() };
-		Open = new PanelOpen();
 
 		pm["documents"].Content = Editor = new PanelEdit();
-		DocPlaceholder_ = pm["documents"];
+		//DocPlaceholder_ = pm["documents"];
 	}
 }
