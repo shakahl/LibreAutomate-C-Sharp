@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Drawing;
 //using System.Linq;
 
 using Au;
@@ -147,11 +146,14 @@ class UacDragDrop
 			int effect = a[0], keyState = a[1]; POINT pt = new POINT(a[2], a[3]);
 			if (ev == DDEvent.Enter) {
 				_data = new System.Windows.DataObject();
-				var t = new _DDData { files = a[4], shell = a[5], text = a[6], linkName = a[7] };
+				var t = new DDData { files = a[4], shell = a[5], text = a[6], linkName = a[7] };
 				if (t.files != null) _data.SetData("FileDrop", t.files);
-				if (t.shell != null) _data.SetData("Shell IDList Array", t.shell);
+				if (t.shell != null) _SetDataBytes("Shell IDList Array", t.shell);
 				if (t.text != null) _data.SetData("UnicodeText", t.text);
-				if (t.linkName != null) _data.SetData("FileGroupDescriptorW", t.linkName);
+				if (t.linkName != null) _SetDataBytes("FileGroupDescriptorW", t.linkName);
+
+				//workaround for: SetData writes byte[] in wrong format, probably serialized
+				void _SetDataBytes(string name, byte[] a) => _data.SetData(name, new MemoryStream(a), false);
 			}
 
 			int ef = 0;
@@ -256,7 +258,7 @@ class UacDragDrop
 					return;
 				}
 
-				_DDData r = default;
+				DDData r = default;
 				if (_enteredOnce = r.GetData(d)) {
 					var b = Serializer_.Serialize(effect, grfKeyState, pt.x, pt.y, r.files, r.shell, r.text, r.linkName);
 					effect = (int)AWnd.More.CopyDataStruct.SendBytes(_msgWnd, 110, b, (int)DDEvent.Enter);
@@ -284,58 +286,60 @@ class UacDragDrop
 		}
 	}
 
-	struct _DDData
-	{
-		public string[] files;
-		public byte[] shell, linkName;
-		public string text;
+}
 
-		public unsafe bool GetData(IDataObject d) {
-			try {
-				FORMATETC fHdrop = default, fShell = default, fText = default, fDesc = default;
-				var afe = new FORMATETC[1]; var fe = new int[1];
-				var e = d.EnumFormatEtc(DATADIR.DATADIR_GET);
-				while (e.Next(1, afe, fe) == 0 && fe[0] == 1) {
-					if (afe[0].tymed != TYMED.TYMED_HGLOBAL) continue;
-					int cf = (ushort)afe[0].cfFormat;
-					if (cf == Api.CF_HDROP) fHdrop = afe[0];
-					else if (cf == ClipFormats.ShellIDListArray_) fShell = afe[0];
-					else if (cf == Api.CF_UNICODETEXT) fText = afe[0];
-					else if (cf == ClipFormats.FileGroupDescriptorW_) fDesc = afe[0];
-				}
-				if (fHdrop.cfFormat != 0) files = _GetFiles(ref fHdrop);
-				else if (fShell.cfFormat != 0) shell = _GetBytes(ref fShell);
-				else if (fText.cfFormat != 0) {
-					text = _GetText(ref fText);
-					if (fDesc.cfFormat != 0) linkName = _GetBytes(ref fDesc); //text is URL
-				} else return false;
-				return true;
+struct DDData
+{
+	public string[] files;
+	public byte[] shell, linkName;
+	public string text;
+	public bool scripts;
 
-				byte[] _GetBytes(ref FORMATETC fe) {
-					d.GetData(ref fe, out var m);
-					int n = (int)Api.GlobalSize(m.unionmember);
-					var t = Api.GlobalLock(m.unionmember);
-					try { return new Span<byte>((void*)t, n).ToArray(); }
-					finally { Api.GlobalUnlock(m.unionmember); Api.ReleaseStgMedium(ref m); }
-				}
-
-				string _GetText(ref FORMATETC fe) {
-					d.GetData(ref fe, out var m);
-					var t = (char*)Api.GlobalLock(m.unionmember);
-					int n = (int)Api.GlobalSize(m.unionmember) / 2; if (n > 0 && t[--n] != 0) n++;
-					try { return new string(t, 0, n); }
-					finally { Api.GlobalUnlock(m.unionmember); Api.ReleaseStgMedium(ref m); }
-				}
-
-				string[] _GetFiles(ref FORMATETC fe) {
-					d.GetData(ref fe, out var m);
-					try { return AClipboardData.HdropToFiles_(m.unionmember); }
-					finally { Api.ReleaseStgMedium(ref m); }
-				}
+	public unsafe bool GetData(IDataObject d, bool getFileNodes = false) {
+		try {
+			FORMATETC fHdrop = default, fShell = default, fText = default, fDesc = default;
+			var afe = new FORMATETC[1]; var fe = new int[1];
+			var e = d.EnumFormatEtc(DATADIR.DATADIR_GET);
+			while (e.Next(1, afe, fe) == 0 && fe[0] == 1) {
+				if (afe[0].tymed != TYMED.TYMED_HGLOBAL) continue;
+				int cf = (ushort)afe[0].cfFormat;
+				if (cf == Api.CF_HDROP) fHdrop = afe[0];
+				else if (cf == ClipFormats.ShellIDListArray_) fShell = afe[0];
+				else if (cf == Api.CF_UNICODETEXT) fText = afe[0];
+				else if (cf == ClipFormats.FileGroupDescriptorW_) fDesc = afe[0];
+				else if(getFileNodes && cf >= 0xC000 && AClipboard.GetFormatName_(cf) == "FileNode[]") return scripts = true;
 			}
-			catch (Exception ex) { ADebug.Print(ex); } //info: if from IE, IDataObject.GetData fails for all formats.
-			return false;
-		}
-	}
+			if (fHdrop.cfFormat != 0) files = _GetFiles(ref fHdrop);
+			else if (fShell.cfFormat != 0) shell = _GetBytes(ref fShell);
+			else if (fText.cfFormat != 0) {
+				text = _GetText(ref fText);
+				if (fDesc.cfFormat != 0) linkName = _GetBytes(ref fDesc); //text is URL
+			} else return false;
+			return true;
 
+			byte[] _GetBytes(ref FORMATETC fe) {
+				d.GetData(ref fe, out var m);
+				int n = (int)Api.GlobalSize(m.unionmember);
+				var t = Api.GlobalLock(m.unionmember);
+				try { return new Span<byte>((void*)t, n).ToArray(); }
+				finally { Api.GlobalUnlock(m.unionmember); Api.ReleaseStgMedium(ref m); }
+			}
+
+			string _GetText(ref FORMATETC fe) {
+				d.GetData(ref fe, out var m);
+				var t = (char*)Api.GlobalLock(m.unionmember);
+				int n = (int)Api.GlobalSize(m.unionmember) / 2; if (n > 0 && t[--n] != 0) n++;
+				try { return new string(t, 0, n); }
+				finally { Api.GlobalUnlock(m.unionmember); Api.ReleaseStgMedium(ref m); }
+			}
+
+			string[] _GetFiles(ref FORMATETC fe) {
+				d.GetData(ref fe, out var m);
+				try { return AClipboardData.HdropToFiles_(m.unionmember); }
+				finally { Api.ReleaseStgMedium(ref m); }
+			}
+		}
+		catch (Exception ex) { ADebug.Print(ex); } //info: if from IE, IDataObject.GetData fails for all formats.
+		return false;
+	}
 }

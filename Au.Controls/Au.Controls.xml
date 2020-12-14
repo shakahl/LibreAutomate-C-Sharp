@@ -3488,7 +3488,7 @@
         <member name="T:Au.Controls.SciHost">
             <summary>
             This .NET control wraps native Scintilla control.
-            This is not a universal Scintilla wrapper class. Designed just for purposes of this library and related software.
+            It is not a universal Scintilla wrapper class. Just for this library and related software.
             Creates and initializes the control. Also used to set/change control properties.
             The Z property returns a SciText object that can be used to work with text, code styling etc.
             </summary>

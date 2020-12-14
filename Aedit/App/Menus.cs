@@ -399,6 +399,14 @@ static class Menus
 
 	[Command]
 	public static void TEST() {
+		//var h = Panels.Editor.ZActiveDoc.Hwnd;
+		//AOutput.Write(h);
+		////h.ShowLL(false);
+		////h.ResizeLL(0, 0);
+		////h.SetWindowPos(Native.SWP.HIDEWINDOW | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOSENDCHANGING);
+		////h.Enable(false);
+		//h.SetTransparency(true, 0);
+
 		//_hook = AHookWin.ThreadCbt(k => {
 		//	if (k.code == HookData.CbtEvent.SETFOCUS) {
 		//		AOutput.Write(k.Hwnd);

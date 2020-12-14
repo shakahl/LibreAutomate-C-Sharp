@@ -20,6 +20,7 @@ using Au.Controls;
 using static Au.Controls.Sci;
 using System.Windows.Input;
 using System.Windows.Interop;
+using System.Windows;
 
 partial class SciCode : SciHost
 {
@@ -48,8 +49,6 @@ partial class SciCode : SciHost
 		//_edit = edit;
 		_fn = file;
 		_fls = fls;
-
-		this.AllowDrop = true;
 
 		ZInitImagesStyle = ZImagesStyle.AnyString;
 		if (fls.IsBinary) ZInitReadOnlyAlways = true;
@@ -100,6 +99,8 @@ partial class SciCode : SciHost
 		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
 
 		//Call(SCI_SETVIEWWS, 1); Call(SCI_SETWHITESPACEFORE, 1, 0xcccccc);
+
+		_InitDragDrop();
 	}
 
 	//Called by PanelEdit.ZOpen.
@@ -364,246 +365,6 @@ partial class SciCode : SciHost
 		Call(SCI_SETSAVEPOINT);
 		if (this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
 	}
-
-	//#region drag drop
-
-	//enum _DD_DataType { None, Text, Files, Shell, Link, Script };
-	//_DD_DataType _drag;
-
-	//protected override void OnDragEnter(DragEventArgs e) {
-	//	var d = e.Data;
-	//	//foreach(var v in d.GetFormats()) AOutput.Write(v, d.GetData(v, false)?.GetType()); AOutput.Write("--");
-	//	_drag = 0;
-	//	if (d.GetDataPresent("Aga.Controls.Tree.TreeNodeAdv[]", false)) _drag = _DD_DataType.Script;
-	//	else if (d.GetDataPresent("FileDrop", false)) _drag = _DD_DataType.Files;
-	//	else if (d.GetDataPresent("Shell IDList Array", false)) _drag = _DD_DataType.Shell;
-	//	else if (d.GetDataPresent("UnicodeText", false))
-	//		_drag = d.GetDataPresent("FileGroupDescriptorW", false) ? _DD_DataType.Link : _DD_DataType.Text;
-	//	e.Effect = _DD_GetEffect(e);
-	//	CodeInfo.Cancel();
-	//	base.OnDragEnter(e);
-	//}
-
-	//protected override unsafe void OnDragOver(DragEventArgs e) {
-	//	if ((e.Effect = _DD_GetEffect(e)) != 0) {
-	//		var p = _DD_GetDropPos(e, out _);
-	//		var z = new Sci_DragDropData { x = p.X, y = p.Y };
-	//		Call(SCI_DRAGDROP, 1, &z);
-	//		//FUTURE: upgrade Scintilla. Version 4.3.1 supports auto-scroll when dragging.
-	//	}
-	//	base.OnDragOver(e);
-	//}
-
-	//protected override void OnDragDrop(DragEventArgs e) {
-	//	if ((e.Effect = _DD_GetEffect(e)) != 0) _DD_Drop(e);
-	//	_drag = 0;
-	//	base.OnDragDrop(e);
-	//}
-
-	//protected override void OnDragLeave(EventArgs e) {
-	//	if (_drag != 0) {
-	//		_drag = 0;
-	//		Call(SCI_DRAGDROP, 3);
-	//	}
-	//	base.OnDragLeave(e);
-	//}
-
-	//Point _DD_GetDropPos(DragEventArgs e, out int pos) {
-	//	var p = this.PointToClient(new Point(e.X, e.Y));
-	//	if (_drag != _DD_DataType.Text) { //if files etc, drop as lines, not anywhere
-	//		pos = Call(SCI_POSITIONFROMPOINT, p.X, p.Y);
-	//		pos = Z.LineStartFromPos(false, pos);
-	//		p.X = Call(SCI_POINTXFROMPOSITION, 0, pos);
-	//		p.Y = Call(SCI_POINTYFROMPOSITION, 0, pos);
-	//	} else pos = 0;
-	//	return p;
-	//}
-
-	//unsafe void _DD_Drop(DragEventArgs e) {
-	//	var xy = _DD_GetDropPos(e, out int pos8);
-	//	string s = null;
-	//	var b = new StringBuilder();
-	//	int what = 0;
-
-	//	if (_drag != _DD_DataType.Text) {
-	//		if (_fn.IsCodeFile) {
-	//			var text = this.Text;
-	//			int endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
-	//			if (endOfMeta > 0 && Pos16(pos8) < endOfMeta) return;
-
-	//			var m = new AMenu { Modal = true };
-	//			if (_drag == _DD_DataType.Script) {
-	//				m["var s = name;"] = o => what = 1;
-	//				m["var s = path;"] = o => what = 2;
-	//				m["ATask.Run(path);"] = o => what = 3;
-	//				m["t[name] = o => ATask.Run(path);"] = o => what = 4;
-	//			} else {
-	//				m["var s = path;"] = o => what = 11;
-	//				m["AFile.Run(path);"] = o => what = 12;
-	//				m["t[name] = o => AFile.Run(path);"] = o => what = 13;
-	//				//FUTURE: also add same items with unexpanded path.
-	//			}
-	//			m.Show(this);
-	//			if (what == 0) return;
-	//		}
-	//	}
-
-	//	var d = e.Data;
-	//	switch (_drag) {
-	//	case _DD_DataType.Text:
-	//		s = d.GetData("UnicodeText", false) as string;
-	//		break;
-	//	case _DD_DataType.Files:
-	//		if (d.GetData("FileDrop", false) is string[] paths) {
-	//			foreach (var path in paths) {
-	//				bool isLnk = path.Ends(".lnk", true);
-	//				if (isLnk) b.Append("//");
-	//				var name = APath.GetNameNoExt(path);
-	//				_AppendFile(path, name);
-	//				if (isLnk) {
-	//					try {
-	//						var g = AShortcutFile.Open(path);
-	//						string target = g.TargetAnyType, args = null;
-	//						if (target.Starts("::")) {
-	//							using var pidl = APidl.FromString(target);
-	//							name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
-	//						} else {
-	//							args = g.Arguments;
-	//							if (!target.Ends(".exe", true) || name.Find("Shortcut") >= 0)
-	//								name = APath.GetNameNoExt(target);
-	//						}
-	//						_AppendFile(target, name, args);
-	//					}
-	//					catch (AuException) { break; }
-	//				}
-	//			}
-	//			s = b.ToString();
-	//		}
-	//		break;
-	//	case _DD_DataType.Shell:
-	//		_DD_GetShell(d, out var shells, out var names);
-	//		if (shells != null) {
-	//			for (int i = 0; i < shells.Length; i++) {
-	//				_AppendFile(shells[i], names[i]);
-	//			}
-	//			s = b.ToString();
-	//		}
-	//		break;
-	//	case _DD_DataType.Link:
-	//		_DD_GetLink(d, out s, out var s2);
-	//		if (s != null) {
-	//			_AppendFile(s, s2);
-	//			s = b.ToString();
-	//		}
-	//		break;
-	//	case _DD_DataType.Script:
-	//		if (d.GetData("Aga.Controls.Tree.TreeNodeAdv[]", false) is Aga.Controls.Tree.TreeNodeAdv[] nodes) {
-	//			foreach (var tn in nodes) {
-	//				var fn = tn.Tag as FileNode;
-	//				_AppendFile(fn.ItemPath, fn.Name, null, fn);
-	//			}
-	//			s = b.ToString();
-	//		}
-	//		break;
-	//	}
-
-	//	if (!s.NE()) {
-	//		var z = new Sci_DragDropData { x = xy.X, y = xy.Y };
-	//		var s8 = AConvert.ToUtf8(s);
-	//		fixed (byte* p8 = s8) {
-	//			z.text = p8;
-	//			z.len = s8.Length - 1;
-	//			if (_drag != _DD_DataType.Text || 0 == (e.Effect & DragDropEffects.Move)) z.copy = 1;
-	//			Call(SCI_DRAGDROP, 2, &z);
-	//		}
-	//		if (!Focused && FindForm().Hwnd().IsActive) { //note: don't activate window; let the drag source do it, eg Explorer activates on drag-enter.
-	//			_noModelEnsureCurrentSelected = true; //don't scroll treeview to currentfile
-	//			Focus();
-	//			_noModelEnsureCurrentSelected = false;
-	//		}
-	//	} else {
-	//		Call(SCI_DRAGDROP, 3);
-	//	}
-
-	//	void _AppendFile(string path, string name, string args = null, FileNode fn = null) {
-	//		b.Append('\t', Z.LineIndentationFromPos(false, pos8));
-	//		if (what == 0) {
-	//			b.Append(path);
-	//		} else {
-	//			name = name.Escape();
-	//			switch (what) {
-	//			case 1: case 2: case 11: b.Append("var s = "); break;
-	//			case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
-	//			}
-	//			if (what == 12 || what == 13) b.Append("AFile.Run(");
-	//			if ((what == 11 || what == 12) && path.Starts(":: ")) b.AppendFormat("/* {0} */ ", name);
-	//			switch (what) {
-	//			case 1: b.AppendFormat("\"{0}\";", name); break;
-	//			case 2: case 11: b.AppendFormat("@\"{0}\";", path); break;
-	//			case 3: case 4: b.AppendFormat("ATask.Run(@\"{0}\");", path); break;
-	//			case 12:
-	//			case 13:
-	//				b.AppendFormat("@\"{0}", path);
-	//				if (!args.NE()) b.Append("\", \"").Append(args.Escape());
-	//				b.Append("\");");
-	//				break;
-	//			}
-	//		}
-	//		b.AppendLine();
-	//	}
-	//}
-
-	//DragDropEffects _DD_GetEffect(DragEventArgs e) {
-	//	if (_drag == 0) return 0;
-	//	if (Z.IsReadonly) return 0;
-	//	var ae = e.AllowedEffect;
-	//	DragDropEffects r;
-	//	switch (e.KeyState & (4 | 8 | 32)) { case 0: r = DragDropEffects.Move; break; case 8: r = DragDropEffects.Copy; break; default: return 0; }
-	//	if (_drag == _DD_DataType.Text) return 0 != (ae & r) ? r : ae;
-	//	if (0 != (ae & DragDropEffects.Link)) r = DragDropEffects.Link;
-	//	else if (0 != (ae & DragDropEffects.Copy)) r = DragDropEffects.Copy;
-	//	else r = ae;
-	//	return r;
-	//}
-
-	//static unsafe void _DD_GetShell(IDataObject d, out string[] shells, out string[] names) {
-	//	shells = names = null;
-	//	var b = _DD_GetByteArray(d, "Shell IDList Array"); if (b == null) return;
-	//	fixed (byte* p = b) {
-	//		int* pi = (int*)p;
-	//		int n = *pi++; if (n < 1) return;
-	//		shells = new string[n]; names = new string[n];
-	//		IntPtr pidlFolder = (IntPtr)(p + *pi++);
-	//		for (int i = 0; i < n; i++) {
-	//			using (var pidl = new APidl(pidlFolder, (IntPtr)(p + pi[i]))) {
-	//				shells[i] = pidl.ToString();
-	//				names[i] = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
-	//			}
-	//		}
-	//	}
-	//}
-
-	//static unsafe void _DD_GetLink(IDataObject d, out string url, out string text) {
-	//	url = text = null;
-	//	var b = _DD_GetByteArray(d, "FileGroupDescriptorW"); if (b == null) return;
-	//	fixed (byte* p = b) { //FILEGROUPDESCRIPTORW
-	//		if (*(int*)p != 1) return; //count of FILEDESCRIPTORW
-	//		var s = new string((char*)(p + 76));
-	//		if (!s.Ends(".url", true)) return;
-	//		url = d.GetData("UnicodeText", false) as string;
-	//		if (url != null) text = s.RemoveSuffix(4);
-	//	}
-	//}
-
-	//static byte[] _DD_GetByteArray(IDataObject d, string format) {
-	//	switch (d.GetData(format, false)) {
-	//	case byte[] b: return b; //when d is created from data transferred from non-admin process to this admin process by UacDragDrop
-	//	case MemoryStream m: return m.ToArray(); //original .NET DataObject. Probably this process is non-admin.
-	//	}
-	//	return null;
-	//}
-
-	//#endregion
 
 	#region copy paste
 

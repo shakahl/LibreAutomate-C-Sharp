@@ -79,8 +79,12 @@ partial class FilesModel
 		private void _ItemDragStart(object sender, TVItemEventArgs e) {
 			//if(e.Item.IsFolder && e.Item.IsExpanded) Expand(e.Index, false);
 			var a = IsSelected(e.Index) ? SelectedItems : new FileNode[] { e.Item as FileNode };
+			DragDropFiles = a;
 			DragDrop.DoDragDrop(this, new DataObject(typeof(FileNode[]), a), DragDropEffects.Move | DragDropEffects.Copy);
+			DragDropFiles = null;
 		}
+
+		public FileNode[] DragDropFiles { get; private set; }
 
 		protected override void OnDragOver(DragEventArgs e) {
 			e.Handled = true;

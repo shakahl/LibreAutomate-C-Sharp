@@ -79,5 +79,14 @@
         </Style>
 
         <conv:XamlImageResourceConverter x:Key="imageConverter"/>
+
+        <Style TargetType="Viewbox">
+            <Style.Triggers>
+                <Trigger Property="IsEnabled" Value="False">
+                    <Setter Property="Opacity" Value="0.4" />
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
     </Application.Resources>
 </Application>

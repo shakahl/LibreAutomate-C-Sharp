@@ -993,10 +993,6 @@ namespace Au.Controls
 			_dd = null;
 		}
 
-		protected override void OnQueryContinueDrag(QueryContinueDragEventArgs e) {
-			base.OnQueryContinueDrag(e);
-		}
-
 		/// <summary>
 		/// Can be called from "drag over" override or event handler to show/hide insertion mark, expand/collapse folder and scroll if need.
 		/// </summary>

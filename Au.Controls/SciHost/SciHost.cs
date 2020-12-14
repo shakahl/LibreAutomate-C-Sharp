@@ -15,25 +15,15 @@ using System.Windows.Controls;
 using System.Windows.Interop;
 using System.Windows.Input;
 using Au.Util;
-using System.Windows.Automation.Peers;
-using System.Windows.Automation;
 //using System.Linq;
 
 namespace Au.Controls
 {
 	using static Sci;
 
-	//Why don't use ScintillaNET:
-	// 1. Delays to update for the newest Scintilla version.
-	// 2. Possibly will be abandoned some day.
-	// 3. Adds yet another layer of bugs.
-	// 4. I don't like some things how it is implemented. Eg aggressively uses "clamping", creates much garbage, eg new Line object for each line-related Scintilla message call.
-	// 5. For me it does not make easier because I used Scintilla in QM2 (C++) and am familiar with its API (which is well documented). When using ScintillaNET, I often search its source code just to find which function calls the API I need. Now I can simply convert much of QM2 code to C#.
-	// 6. I use modified Scintilla. Would need to synchronize some modifications with ScintillaNET. For example I use a callback function instead of WM_NOTIFY/WM_REFLECT.
-
 	/// <summary>
 	/// This .NET control wraps native Scintilla control.
-	/// This is not a universal Scintilla wrapper class. Designed just for purposes of this library and related software.
+	/// It is not a universal Scintilla wrapper class. Just for this library and related software.
 	/// Creates and initializes the control. Also used to set/change control properties.
 	/// The Z property returns a SciText object that can be used to work with text, code styling etc.
 	/// </summary>
@@ -106,8 +96,6 @@ namespace Au.Controls
 
 			if (hasImages) ZImages = new SciImages(this, ZInitImagesStyle == ZImagesStyle.AnyString);
 			if (hasTags) ZTags = new SciTags(this);
-
-			if (this.AllowDrop) Api.RevokeDragDrop(_w);//TODO
 
 			if (FocusManager.GetFocusScope(this) is Window fs && FocusManager.GetFocusedElement(fs) == this && Api.GetFocus() == wParent)
 				Api.SetFocus(_w);

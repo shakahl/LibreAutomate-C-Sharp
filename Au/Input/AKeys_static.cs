@@ -19,6 +19,8 @@ namespace Au
 	{
 		#region get key state
 
+		//TODO: instead of class AKeys.UI add property AKeys.IsUIThread. If true, let its functions work like now AKeys.UI.
+
 		/// <summary>
 		/// Gets key states for using in UI code (forms, WPF).
 		/// </summary>
