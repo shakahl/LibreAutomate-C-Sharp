@@ -505,7 +505,7 @@ namespace Au
 			return new SegParser(t, separators, flags, range);
 		}
 
-		//rejected. Usually Split is good. In .NET Core it also has option to trim spaces and in most cases is faster.
+		//rejected. Usually Split is good. In .NET Core/5 it also has option to trim spaces and in most cases is faster.
 		///// <summary>
 		///// Splits this string into substrings using the specified separators.
 		///// </summary>
@@ -1137,7 +1137,7 @@ namespace Au
 			end = i;
 			return true;
 
-			//from .NET Core source
+			//from .NET source
 			static bool _IsWhite(int ch) => ch == 0x20 || (uint)(ch - 0x09) <= (0x0D - 0x09) ? true : false;
 			static bool _IsDigit(int ch) => ((uint)ch - '0') <= 9;
 		}

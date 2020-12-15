@@ -55,19 +55,19 @@ When you type a function name and `(`, editor shows a tooltip-like window with i
 While the Info pane is visible, whenever the mouse dwells on a symbol etc in the editor, the Info pane displays some info about the symbol, including documented exceptions the function may throw.
 
 #### XML documentation comments
-Editor gets data for quick info, parameter info and other info about symbols from their assemblies and XML documentation comments. You can write XML documentation comments for your functions and types; look for how to on the internet. Documentation of the automation library and .NET Core is installed with the program. Documentation of other assemblies comes from their assembly.dll + assembly.xml files.
+Editor gets data for quick info, parameter info and other info about symbols from their assemblies and XML documentation comments. You can write XML documentation comments for your functions and types; look for how to on the internet. Documentation of the automation library and .NET is installed with the program. Documentation of other assemblies comes from their assembly.dll + assembly.xml files.
 
 Editor also helps to write XML documentation comments. Adds `///` on Enter, shows list of tags, autocompletes tags, color-highlights tags, text and see references.
 
 #### Go to symbol documentation
 To show symbol documentation if available, press F1 when the text cursor is in it. Or click the "more info" link in the autocompletion item info or parameter info window.
 
-If the symbol is from the automation library, it opens the online documentation page in your web browser. If the symbol is from .NET Core or other assembly or unmanaged code (DllImport or ComImport), it opens the Google search page.
+If the symbol is from the automation library, it opens the online documentation page in your web browser. If the symbol is from .NET runtime or other assembly or unmanaged code (DllImport or ComImport), it opens the Google search page.
 
 #### Go to symbol definition (source code)
 Ctrl+click a symbol or press F12. Or click the "source code" link in the autocompletion item info or parameter info window.
 
-If the symbol is defined in your code, it opens that file and moves the text cursor. If the symbol is from .NET Core, it opens the source code web page.
+If the symbol is defined in your code, it opens that file and moves the text cursor. If the symbol is from .NET runtime, it opens the source code web page.
 
 #### Error info
 Errors are detected in editor, as well as when compiling the code. Code parts with errors have red squiggly underlines, warnings green. A tooltip shows error/warning description. Also can contain links to fix the error: add missing `using namespace` or Windows API declaration.

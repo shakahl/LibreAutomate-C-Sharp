@@ -20,7 +20,8 @@ using System.Windows.Controls;
 using System.Windows.Media;
 //using System.Linq;
 
-//TODO: now keys works only when main window active, not when eg a floating panel active.
+//TODO: now global keys (target="") works only when main window active, not when eg a floating panel active.
+//TODO: Esc = focus editor; Shift+Esc = focus last focused non-editor control. It is documented.
 
 static class Menus
 {
@@ -162,7 +163,7 @@ static class Menus
 		public static void New_folder() { _New(null); }
 	}
 
-	[Command(target = "Edit")]//TODO
+	[Command(target = "Edit")]
 	public static class Edit
 	{
 		[Command(keysText = "Ctrl+Z", image = "resources/images/undo_16x.xaml")]
@@ -191,7 +192,7 @@ static class Menus
 		public static void Forum_copy() { Panels.Editor.ZActiveDoc.ZForumCopy(); }
 
 		[Command(separator = true, keys = "Ctrl+F", image = "resources/images/findinfile_16x.xaml")]
-		public static void Find() { Panels.Find.ZCtrlF(); }
+		public static void Find() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc); }
 
 		[Command(separator = true, keysText = "Ctrl+Space")]
 		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.ZActiveDoc); }
@@ -232,7 +233,7 @@ static class Menus
 		}
 	}
 
-	[Command]
+	[Command(target = "Edit")]
 	public static class Code
 	{
 		[Command('W')]
@@ -254,7 +255,7 @@ static class Menus
 		public static void Windows_API() { FormWinapi.ZShowDialog(); }
 	}
 
-	[Command]
+	[Command(target = "Edit")]
 	public static class Run
 	{
 		[Command(keys = "F5", image = "resources/images/startwithoutdebug_16x.xaml")]
@@ -290,7 +291,7 @@ static class Menus
 		}
 	}
 
-	[Command/*(tooltip = "Triggers and toolbars")*/] //FUTURE: support tooltip for menu items. Now implemented only for toolbar buttons.
+	[Command(target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items. Now implemented only for toolbar buttons.
 	public static class TT
 	{
 		[Command("...")]
@@ -333,13 +334,13 @@ static class Menus
 		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }
 	}
 
-	[Command]
+	[Command(target = "")]
 	public static class Tools
 	{
 		[Command(image = "resources/images/settingsgroup_16x.xaml")]
 		public static void Options() { FOptions.ZShow(); }
 
-		[Command(separator = true)]
+		[Command(separator = true, target = "Output")]
 		public static class Output
 		{
 			[Command(keysText = "M-click")]
@@ -365,7 +366,7 @@ static class Menus
 		}
 	}
 
-	[Command]
+	[Command(target = "")]
 	public static class Help
 	{
 		[Command]
@@ -375,7 +376,7 @@ static class Menus
 		public static void Library_help() { AHelp.AuHelp("api/"); }
 
 		[Command(keys = "F1", image = "resources/images/statushelp_16x.xaml")]
-		public static void Context_help() {//TODO: test
+		public static void Context_help() {
 			var c = FocusManager.GetFocusedElement(App.Wmain);
 			if (c == null) return;
 			if (c == Panels.Editor.ZActiveDoc) {
@@ -387,7 +388,8 @@ static class Menus
 		//public static void Forum() { }
 
 		[Command]
-		public static void Email() { }
+		//public static void Email() { AFile.TryRun("mailto:support@quickmacros.com?subject=" + App.AppName); }
+		public static void Email() { AFile.TryRun("mailto:support@quickmacros.com?subject=QM3"); } //FUTURE: use the above
 
 		//[Command(separator = true)]
 		//public static void About() { }
@@ -438,8 +440,8 @@ static class Menus
 		//	//p.HwndSource.SizeToContent = default;
 		//	_test = p;
 		//}
-		////_test.ShowByRect(Panels.Running, Dock.Bottom);
-		////_test.ShowByRect(Panels.Running, Dock.Bottom, (100, 100, 100, 100));
+		////_test.ShowByRect(Panels.Tasks, Dock.Bottom);
+		////_test.ShowByRect(Panels.Tasks, Dock.Bottom, (100, 100, 100, 100));
 		//_test.ShowByRect(null, Dock.Bottom, (700, 1100, 100, 1));
 
 		//ATimer.After(2000, _ => _test.Hide());

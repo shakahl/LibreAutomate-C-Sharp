@@ -20,12 +20,12 @@ namespace Au.Tools
 	/// </summary>
 	internal class CommonInfos
 	{
-		InfoBox _control;
+		InfoBoxF _control;
 
-		public CommonInfos(InfoBoxF control)//TODO
+		public CommonInfos(InfoBoxF control)
 		{
-			//_control = control;
-			//_control.ZTags.AddLinkTag("+regex", o => _Regex(o));
+			_control = control;
+			_control.ZTags.AddLinkTag("+regex", o => _Regex(o));
 		}
 
 		/// <summary>
@@ -37,7 +37,7 @@ namespace Au.Tools
 			string wild = c_infoWildex;
 			if(text.Ends('$')) {
 				text = text.RemoveSuffix(1);
-				wild = wild.Substring(10);
+				wild = wild[10..];
 			}
 			_SetInfoText(text + wild);
 		}
@@ -50,9 +50,10 @@ namespace Au.Tools
 		void _Regex(string _)
 		{
 			_regexWindow ??= new RegexWindow();
-			//TODO
-			//if(_regexWindow.Hwnd.Is0) _regexWindow.Show(_control);
-			//else _regexWindow.Hwnd.ShowLL(true);
+			if (_regexWindow.Hwnd.Is0) {
+				//TODO: now it is a hybrid of winforms (_control) and WPF (_regexWindow). Eg toolwindow links don't insert text in the focused winforms control.
+				_regexWindow.ShowByRect(_control.Hwnd().Window, System.Windows.Controls.Dock.Bottom);
+			} else _regexWindow.Hwnd.ShowLL(true);
 		}
 
 		RegexWindow _regexWindow;

@@ -380,7 +380,7 @@ unsafe class Program
 		var path = docDir + name;
 		using(var client = new WebClient()) {
 			client.Credentials = new NetworkCredential(user, pass);
-			client.UploadFile("ftp://ftp.quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
+			client.UploadFile("ftp://ftpdisabled.quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 		}
 		AFile.Delete(path);
 		AOutput.Write("Uploaded");

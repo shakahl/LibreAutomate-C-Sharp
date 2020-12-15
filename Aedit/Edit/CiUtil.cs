@@ -138,16 +138,15 @@ static class CiUtil
 			//AOutput.Write(s); return;
 			url = _GoogleURL(s);
 		} else if (helpKind == HelpKind.String) {
-			//TODO
-			//int i = AMenu.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", owner: Panels.Editor.ZActiveDoc, byCaret: true);
-			//switch (i) {
-			//	case 1: url = "C# strings"; break;
-			//	case 2: url = "C# string formatting"; break;
-			//	case 3: AHelp.AuHelp("articles/Wildcard expression"); break;
-			//	case 11: CiTools.CmdShowRegexWindow(); break;
-			//	case 12: CiTools.CmdShowKeysWindow(); break;
-			//}
-			//if (url != null) url = _GoogleURL(url);
+			int i = ClassicMenu_.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", owner: Panels.Editor.ZActiveDoc, byCaret: true);
+			switch (i) {
+			case 1: url = "C# strings"; break;
+			case 2: url = "C# string formatting"; break;
+			case 3: AHelp.AuHelp("articles/Wildcard expression"); break;
+			case 11: CiTools.CmdShowRegexWindow(); break;
+			case 12: CiTools.CmdShowKeysWindow(); break;
+			}
+			if (url != null) url = _GoogleURL(url);
 		}
 		if (url != null) AFile.TryRun(url);
 	}

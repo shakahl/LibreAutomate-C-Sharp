@@ -348,7 +348,7 @@ static class Panels
 
 		var m = PanelManager = new AuDockPanel();
 		m.Name = "Panels";
-		m.ZCreate(AFolders.ThisAppBS + @"Default\Panels.xml", ProgramSettings.DirBS + "Panels.xml",
+		m.ZCreate(AFolders.ThisAppBS + @"DefaultF\Panels.xml", ProgramSettings.DirBS + "Panels.xml",
 			Editor, Files, Find, Found, Output, Open, Running, Info,
 			Strips.Menubar, Strips.tbFile, Strips.tbEdit, Strips.tbRun, Strips.tbTools, Strips.tbHelp, Strips.tbCustom1, Strips.tbCustom2
 			);

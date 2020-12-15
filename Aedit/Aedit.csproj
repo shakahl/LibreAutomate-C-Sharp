@@ -20,6 +20,10 @@
 	  <DefineConstants>DEBUG;TRACE</DefineConstants>
 	</PropertyGroup>
 
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	  <DefineConstants></DefineConstants>
+	</PropertyGroup>
+
 	<ItemGroup>
 		<None Remove="Default\Commands.xml" />
 		<None Remove="Default\Layout.xml" />
@@ -73,11 +77,6 @@
 	  <Page Remove="Resources\Images\test.xaml" />
 	  <Page Remove="Resources\Images\Undo_16x.xaml" />
 	  <Page Remove="Resources\Images\WordWrap_16x.xaml" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <Compile Include="..\..\..\Test\ok\files\Fast tree list view\@Native control\Native control.cs" Link="_test\Native control.cs" />
-	  <Compile Include="..\..\..\Test\ok\files\Fast tree list view\@Native control\TvItem.cs" Link="_test\TvItem.cs" />
 	</ItemGroup>
 
 	<ItemGroup>

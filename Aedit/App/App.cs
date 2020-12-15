@@ -11,7 +11,6 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
 
 static class App
 {
@@ -81,8 +80,7 @@ static class App
 
 		if (CommandLine.OnProgramStarted(args)) return;
 
-		OutputServer = new AOutputServer(true) { NoNewline = true }; //TODO
-																	 //OutputServer = new AOutputServer(false) { NoNewline = true };
+		OutputServer = new AOutputServer(true) { NoNewline = true };
 		OutputServer.Start();
 
 		Api.SetErrorMode(Api.GetErrorMode() | Api.SEM_FAILCRITICALERRORS); //disable some error message boxes, eg when removable media not found; MSDN recommends too.
@@ -113,7 +111,7 @@ static class App
 		//APerf.Write();
 		//return;
 
-		if (!App.Settings.runHidden /*|| CommandLine.StartVisible*/ || TrayIcon.WaitForShow_()) {
+		if (!App.Settings.runHidden || CommandLine.StartVisible || TrayIcon.WaitForShow_()) {
 			//AOutput.Write("-- loading UI --");
 #if TRACE
 			AOutput.QM2.UseQM2 = false;
@@ -174,7 +172,7 @@ static class App
 
 	static void _TimerProc(ATimer t) {
 		Timer1sOr025s?.Invoke();
-		bool needFast = Wmain.IsVisible;
+		bool needFast = Wmain?.IsVisible ?? false;
 		if (needFast != (s_timerCounter > 0)) t.Every(needFast ? 250 : 1000);
 		if (needFast) {
 			Timer025sWhenVisible?.Invoke();

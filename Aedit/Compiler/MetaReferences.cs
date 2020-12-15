@@ -25,7 +25,7 @@ namespace Au.Compiler
 	/// For each compilation create a MetaReferences variable, call Resolve if need non-default references, then use Refs list.
 	/// </summary>
 	/// <remarks>
-	/// Temporarily keeps PortableExecutableReference objects in a cache. Except Au and Core reference assemblies; Core assemblies are small (without code).
+	/// Temporarily keeps PortableExecutableReference objects in a cache. Except Au and .NET design-time assemblies (they are small, without code).
 	/// Single static cache is used by all MetaReferences variables.
 	/// Cache may require many MB of unmanaged memory, therefore PortableExecutableReference objects are removed and GC-collected when not used anywhere for some time. Reloading is quite fast.
 	///		A reference to a PortableExecutableReference variable prevents removing it from cache and GC-collecting.
@@ -134,7 +134,7 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// These references are added when compiling any script/library.
-		/// Au.dll and all .NET Core design-time assemblies.
+		/// Au.dll and all .NET design-time assemblies.
 		/// </summary>
 		public static readonly Dictionary<string, PortableExecutableReference> DefaultReferences;
 
@@ -362,7 +362,7 @@ namespace Au.Compiler
 		}
 
 		/// <summary>
-		/// Gets XML documentation for .NET Core assemblies.
+		/// Gets XML documentation for .NET runtime assemblies.
 		/// Uses a 2-column SQLite database created from XML files by <see cref="EdDatabases.CreateRefAndDoc"/>.
 		/// Not XML files directly because it uses about 150 MB of memory.
 		/// </summary>

@@ -54,9 +54,6 @@ class CiQuickInfo
 		//image
 		CiUtil.TagsToKindAndAccess(r.Tags, out var kind, out var access);
 		if (kind != CiItemKind.None) {
-			//if(access != default) b.AppendFormat("<img src='@a{0}' style='padding-top: 6px' />", (int)access);
-			//b.AppendFormat("<img src='@k{0}' style='padding-top: 2px' />", (int)kind);
-			//TODO
 			if (access != default) x.Image("@a" + (int)access);
 			x.Image("@k" + (int)kind);
 			x.Append(" ");

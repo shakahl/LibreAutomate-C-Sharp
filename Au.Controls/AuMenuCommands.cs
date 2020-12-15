@@ -767,7 +767,6 @@ namespace Au.Controls
 		/// <summary>
 		/// Element where the hotkey etc (default or customized) will work. See <see cref="AuMenuCommands.BindKeysTarget"/>.
 		/// If this property applied to a class (submenu), all descendant commands without this property inherit it from the ancestor class.
-		/// If "" or not set, will work in entire main window.
 		/// </summary>
 		public string target;
 

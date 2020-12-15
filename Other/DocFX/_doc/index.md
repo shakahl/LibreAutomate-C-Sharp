@@ -14,7 +14,7 @@ Written mostly in C#, it is a .NET library.
 Free, open-source, MIT license.
 
 #### Editor
-Au editor program is an integrated scripting environment for creating and executing automation scripts that use the Au automation library which is installed together.
+The editor program is an integrated scripting environment for creating and executing automation scripts that use the Au automation library which is installed together.
 
 The programming language for writing scripts is C#. To use the library with VB.NET and other .NET languages you need Visual Studio.
 
@@ -25,16 +25,16 @@ Free, open-source.
 #### Where can run
 Editor and library can run on Windows 7, 8, 8.1, 10. Currently editor is 64-bit only.
 
-Also need .NET Core Desktop Runtime 3.1 or later. Download x64. It is a collection of libraries from Microsoft.
+Also need .NET 5 Runtime. Download x64. It is a collection of libraries from Microsoft. Need only Runtime, not SDK.
 
 #### Unfinished
 Currently both editor and library are unfinished. The most important parts are finished and can be used, but some classes/functions/etc will be changed in the future, which can break your scripts, clear settings, etc.
 
-Currently the editor program still does not have a real name and can be called "Au editor" or "QM3" (version 3 of Quick Macros).
+Currently the editor program still does not have a real name and can be called "QM3" (version 3 of Quick Macros).
 
 #### Links
 - [Download](https://www.quickmacros.com/au/qm3setup.exe)
-- [.NET Core Runtime](https://dotnet.microsoft.com/download)
+- [.NET 5 Runtime](https://dotnet.microsoft.com/download)
 - [Source code](https://github.com/qmgindi/Au)
 - [Forum](https://www.quickmacros.com/forum/forumdisplay.php?fid=19)
 - [Email](mailto:support@quickmacros.com)

@@ -11,9 +11,9 @@ Editor window
 ![window](https://www.quickmacros.com/au/help/images/window.png "Editor window")
 
 ### How to build
-Need Visual Studio 2019 with C#, C++, .NET 5.0 SDK and Windows 10 SDK. For .NET 5 currently need Visual Studio Preview.
+Need Visual Studio 2019 with C#, C++, .NET 5.0 SDK and Windows 10 SDK.
 
 1. Open Au.sln in Visual Studio. Ignore "failed to load project" errors.
 2. Build solution (not just the startup project).
 3. Switch to platform x86, build solution, switch back to AnyCPU.
-4. Run _Au.Editor project. It should open the editor window.
+4. Run Aedit project. It should open the editor window.

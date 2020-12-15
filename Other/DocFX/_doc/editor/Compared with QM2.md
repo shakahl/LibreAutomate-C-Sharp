@@ -3,7 +3,7 @@ uid: qm2
 ---
 
 # Compared with Quick Macros 2
-This program is the new major version of Quick Macros 2 (QM). Let's call it QM3. It has or will have most of QM features. But also it is very different.
+This program is the new major version of Quick Macros 2 (QM). Let's call it QM3. It has or will have most of QM features. But it is very different.
 
 The script language now is C#. It is one of most popular programming languages and has many libraries.
 
@@ -11,7 +11,7 @@ QM3 cannot execute or convert QM scripts. If you have many active QM scripts, pr
 
 QM3 is free and open-source. Its open-source automation library can be used in other programs too.
 
-QM3 can run on Windows 7-10 with .NET Core runtime 3.1. More info [here](xref:index).
+QM3 can run on Windows 7-10 with .NET runtime 5. More info [here](xref:index).
 
 QM3 and its library are still unfinished. The most important parts are finished and can be used, but some classes and functions can be changed in the future, which can break your scripts, clear settings, etc.
 
@@ -85,4 +85,4 @@ Most of these will be added in the future.
 - Unlock computer. Maybe in distant future.
 
 #### Portable
-QM3 should be able to run as a portable app, but it is not tested and there is no tool to create a portable app folder like in QM. Copy all files from the installed QM3 folder and run Au.Editor.exe. Portable QM3 does not modify the Registry, but writes files in folders like Temp and Documents. Runs not as administrator and therefore cannot automate windows of admin processes without invoking the UAC consent screen.
+QM3 should be able to run as a portable app, but it is not tested and there is no tool to create a portable app folder like in QM. Copy all files from the installed QM3 folder and run Aedit.exe. Portable QM3 does not modify the Registry, but writes files in folders like Temp and Documents. Runs not as administrator and therefore cannot automate windows of admin processes without invoking the UAC consent screen.

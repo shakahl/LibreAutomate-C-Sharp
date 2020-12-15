@@ -43,7 +43,7 @@ static class Strips
 
 		//ADebug.MemorySetAnchor_();
 		_strips = new AuStripManager(Program.MainForm, _cmd);
-		_strips.BuildAll(AFolders.ThisAppBS + @"Default\Strips.xml", ProgramSettings.DirBS + "Strips.xml", new AuDockPanel.ZDockedToolStripRenderer());
+		_strips.BuildAll(AFolders.ThisAppBS + @"DefaultF\Strips.xml", ProgramSettings.DirBS + "Strips.xml", new AuDockPanel.ZDockedToolStripRenderer());
 		//ADebug.MemoryPrint_();
 		//p.Next();
 

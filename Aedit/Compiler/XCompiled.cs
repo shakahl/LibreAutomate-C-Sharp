@@ -286,7 +286,7 @@ namespace Au.Compiler
 				string sData = AFile.LoadText(_file);
 				foreach(var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
 					if(_data == null) {
-						//first line contains .NET Core version and Au.dll version, like 3.1.0|1.2.3.4
+						//first line contains .NET version and Au.dll version, like 3.1.0|1.2.3.4
 						if(sData[v.Range] != s_coreAuVersions) goto g1;
 						_data = new Dictionary<uint, string>(sData.LineCount());
 						continue;

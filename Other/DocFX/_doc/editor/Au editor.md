@@ -4,7 +4,7 @@ uid: au_editor
 
 # Au editor
 
-Au editor is an integrated scripting environment (ISE) for creating and executing automation scripts using the Au automation library which is installed together.
+Au editor (Aedit.exe) is an integrated scripting environment (ISE) for creating and executing automation scripts using the Au automation library which is installed together.
 
 ![window](../images/window.png "Editor window")
 
@@ -19,12 +19,12 @@ Multiple files can be open, but only one is visible. The list of open files is i
 All changes are saved automatically after some time and also when closing etc. The Save button saves all changes immediately.
 
 ### Panels
-Panels and bars can be docked, floating or hidden.
+Panels and toolbars can be docked, floating or hidden.
 
 #### Files
 All files and folders of current workspace.
 
-Click an item to open in the code editor. Right-click to show File menu. Middle-click to close. Drag and drop to reorder or add new files.
+Click an item to open in the code editor. Right-click to show context menu. Middle-click to close. Drag and drop to reorder or add new files.
 
 All changes are saved automatically.
 
@@ -54,17 +54,17 @@ The collection of files and folders is a *workspace*. It is a folder on disk. In
 #### Open
 List of files open in the code editor.
 
-Click a file to activate in the code editor. Middle-click to close.
+Right-click - context menu. Middle-click - close.
 
-#### Running
+#### Tasks
 Running scripts. The color depends on the runSingle property: blue if false, green if true.
 
-Right-click an item to end the process. Click to open and activate in the code editor.
+Right-click - context menu (end process etc). Middle-click - close.
 
 #### Find
 Find and replace text in the code editor. Find files and text in files.
 
-Middle-click to clear edit field text.
+Right-click an edit field - context menu. Middle-click - clear text; if empty - recent.
 
 #### Found
 Results of "Find in text". Displays files and text lines containing the text. With links to found text instances and to replace all found in a file. 
@@ -72,25 +72,27 @@ Results of "Find in text". Displays files and text lines containing the text. Wi
 #### Output
 The program writes various info here. For example script compilation errors. Scripts use [AOutput.Write]() for it.
 
-Right-click to show context menu. Middle-click to clear.
+Right-click - context menu. Middle-click - clear.
 
 #### Info
 Quick info about object from mouse. In code editor - function, class etc. In other windows - mouse x y, window name/class/program, control id/class, menu item id.
 
 ### Menus
-Currently many menu commands are not implemented. These menu items have white invisible text.
 
-#### File
-File and workspace management commands.
+#### File, New
+File and workspace management.
 
 #### Edit
-Code editing commands.
+Code editing.
 
 #### Code
 Code creation tools.
 
 #### Run
-Commands to execute current script.
+Execute current script.
+
+#### TT
+Triggers and toolbars.
 
 #### Tools
 Various tool windows.
@@ -101,7 +103,7 @@ Program help and library reference.
 ### Tray icon
 Shows program status.
 
-Click to show and activate editor window. Right-click to show context menu. Middle-click to disable/enable triggers.
+Click - show and activate editor window. Right-click - show context menu. Middle-click - disable/enable triggers.
 
 Colors:
 - blue - default.

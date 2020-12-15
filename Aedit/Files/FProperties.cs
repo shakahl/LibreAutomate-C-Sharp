@@ -37,10 +37,9 @@ partial class FProperties : DialogForm, IMessageFilter
 
 		this.Text = _f.Name + " Properties";
 
-		var owner = App.Wmain;
-		//TODO
-		//var p = owner.PointToScreen(owner.ClientRectangle.Location);
-		//this.Location = new Point(p.X + 100, p.Y + 100); //note: this.StartPosition = FormStartPosition.CenterParent; does not work with Form.Show.
+		var owner = App.Hwnd;
+		var r = owner.ClientRectInScreen;
+		this.Location = new Point(r.left + 100, r.top + 100); //note: this.StartPosition = FormStartPosition.CenterParent; does not work with Form.Show.
 	}
 
 	protected override void OnLoad(EventArgs e) {
@@ -586,14 +585,14 @@ The file must be in this workspace. Can be path relative to this file (examples:
 
 	static string _convertedDir;
 
-	//To convert a COM type library we use TypeLibConverter class. However .NET Core does not have it.
+	//To convert a COM type library we use TypeLibConverter class. However .NET Core does not have it (not tested .NET 5).
 	//Workaround: the code is in Au.Net45.exe. It uses .NET Framework 4.5. We call it through RunConsole.
 	//We don't use tlbimp.exe:
-	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in Core app.
+	//	1. If some used interop assemblies are in GAC (eg MS Office PIA), does not create files for them. But we cannot use GAC in Core/5 app.
 	//	2. Does not tell what files created.
 	//	3. My PC somehow has MS Office PIA installed and there is no uninstaller. After deleting the GAC files tlbimp.exe created all files, but it took several minutes.
 	//Tested: impossible to convert .NET Framework TypeLibConverter code. Part of it is in extern methods.
-	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core assemblies, and they don't have the class. Need exe.
+	//Tested: cannot use .NET Framework dll for it. Fails at run time because uses Core/5 assemblies, and they don't have the class. Need exe.
 
 	class _RegTypelib
 	{
@@ -704,7 +703,7 @@ In script code you can add <help Au.Triggers.ActionTriggers>triggers<> (hotkey e
 @"<b>Assembly<> - add one or more .NET assemblies (.dll files) as references.
 Adds meta <c green>r FileName<>.
 
-Don't need to add Au.dll and .NET Core runtime dlls.
+Don't need to add Au.dll and .NET runtime dlls.
 To use 'extern alias', edit in the code editor like this: <c green>r Alias=Assembly<>
 To remove this meta, edit the code.
 

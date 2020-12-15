@@ -5,7 +5,7 @@
 #define MyAppVersion "0"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
-#define MyAppExeName "Au.Editor.exe"
+#define MyAppExeName "Aedit.exe"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -30,7 +30,7 @@ ArchitecturesAllowed=x64
 ;ArchitecturesAllowed=x64 x86
 MinVersion=0,6.1
 DisableProgramGroupPage=yes
-AppMutex=Au.Mutex.1
+AppMutex=Aedit.Mutex.m3gVxcTJN02pDrHiQ00aSQ
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
@@ -39,20 +39,22 @@ Name: "english"; MessagesFile: "compiler:Default.isl"
 ;Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{cm:AdditionalIcons}"; Flags: unchecked
 
 [Files]
-Source: "Q:\app\Au\_\Au.Editor.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Aedit.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Default\*"; DestDir: "{app}\Default"; Excludes: ".*"; Flags: ignoreversion recursesubdirs createallsubdirs
 Source: "Q:\app\Au\_\Templates\files\*"; DestDir: "{app}\Templates\files"; Flags: ignoreversion recursesubdirs
 Source: "Q:\app\Au\_\Templates\files.xml"; DestDir: "{app}\Templates"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.CL.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Aedit.dll"; DestDir: "{app}"; Flags: ignoreversion
+;Source: "Q:\app\Au\_\Aedit32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Au.Editor.dll"; DestDir: "{app}"; Flags: ignoreversion
-;Source: "Q:\app\Au\_\Au.Editor32.exe"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Au.Controls.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task32.exe"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\HtmlRenderer.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\SourceGrid.dll"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\TreeList.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.Features.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.Workspaces.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -61,17 +63,13 @@ Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Features.dll"; DestDir: "{app}"; Fla
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.FlowAnalysis.Utilities.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.Workspaces.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.DiaSymReader.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.AttributedModel.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.Hosting.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.Runtime.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\System.Composition.TypedParts.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\SourceGrid.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\TreeList.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\HtmlRenderer.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\SourceGrid.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\TreeList.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion

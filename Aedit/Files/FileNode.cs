@@ -367,11 +367,6 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		if (fromWatcher) Panels.Editor.ZGetOpenDocOf(this)?._FileModifiedExternally();
 	}
 
-	public System.Drawing.Bitmap GetIcon() {//TODO: remove when not used. Or will need WPF ImageSource instead.
-		string source = (this as ITreeViewItem).ImageSource;
-		return App.ImageCache.Get(source, TreeControl.Dpi, !IsNotCodeFile);
-	}
-
 	///// <summary>
 	///// Gets or sets 'has triggers' flag.
 	///// The setter will save workspace.

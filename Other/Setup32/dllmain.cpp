@@ -120,7 +120,7 @@ HRESULT CreateSchedulerTask(LPCWSTR dir)
 	HRESULT hr = _GetTS(ts); if(hr != 0) return hr;
 
 	_bstr_t folder = L"Au";
-	_bstr_t task = L"Au.Editor";
+	_bstr_t task = L"Aedit";
 	_variant_t sddl = L"D:AI(A;;FA;;;SY)(A;;FA;;;BA)(A;;GRGX;;;WD)"; //everyone read execute
 	VARIANT vd = {}; vd.vt = VT_ERROR; vd.scode = DISP_E_PARAMNOTFOUND;
 
@@ -148,7 +148,7 @@ HRESULT DeleteSchedulerTask()
 
 	ComPointer<ITaskFolder> tf;
 	hr = ts->GetFolder(_bstr_t(L"Au"), &tf);
-	if(hr == 0) hr = tf->DeleteTask(_bstr_t(L"Au.Editor"), 0);
+	if(hr == 0) hr = tf->DeleteTask(_bstr_t(L"Aedit"), 0);
 	return hr == 0x80070002 ? 0 : hr; //0x80070002 if file or folder does not exists
 }
 

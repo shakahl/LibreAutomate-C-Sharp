@@ -21,6 +21,7 @@ using static Au.Controls.Sci;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows;
+using System.Windows.Controls;
 
 partial class SciCode : SciHost
 {
@@ -62,8 +63,7 @@ partial class SciCode : SciHost
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
 
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
-		//Z.MarginWidth(c_marginLineNumbers, 40 * ADpi.OfThisProcess / 96);//TODO
-		Z.MarginWidth(c_marginLineNumbers, 40);
+		Z.MarginWidth(c_marginLineNumbers, ADpi.Scale(40, Hwnd));//TODO: measure font; also when line count changes; also when DPI changes; also for all SciHost controls.
 
 		_InicatorsInit();
 
@@ -105,7 +105,7 @@ partial class SciCode : SciHost
 
 	//Called by PanelEdit.ZOpen.
 	internal void _Init(byte[] text, bool newFile) {
-		//if(Hwnd.Is0) CreateHandle(); //TODO
+		//if(Hwnd.Is0) CreateHandle();
 		Debug.Assert(!Hwnd.Is0);
 
 		bool editable = _fls.SetText(Z, text);
@@ -249,7 +249,7 @@ partial class SciCode : SciHost
 				}
 			}
 			break;
-		case Api.WM_KEYDOWN: //TODO: test, maybe move to TranslateAccelerator
+		case Api.WM_KEYDOWN: //SHOULDDO: test, maybe move to TranslateAccelerator
 			if ((KKey)wParam == KKey.Insert) return true;
 			break;
 		case Api.WM_MBUTTONDOWN:
@@ -275,7 +275,10 @@ partial class SciCode : SciHost
 				int margin = kbd ? -1 : Z.MarginFromPoint((AMath.LoShort(lParam), AMath.HiShort(lParam)), true);
 				switch (margin) {
 				case -1:
-					//Strips.ddEdit.ZShowAsContextMenu(kbd);//TODO
+					var m = new AWpfMenu();
+					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
+					m.Show(this, byCaret: kbd);
+					//TODO: in menu don't not work keys (Esc, arrows, etc). Try to change focused control temporarily.
 					break;
 				case c_marginLineNumbers:
 				case c_marginMarkers:
@@ -290,16 +293,26 @@ partial class SciCode : SciHost
 
 		//base.WndProc(ref m);
 
-		//TODO
+		//in winforms version this was after base.WndProc. Now in hook cannot do it, therefore using async.
+		//SHOULDDO: superclass and use normal wndproc instead of hook. Now possible various anomalies because of async.
 		switch (msg) {
 		//case Api.WM_MOUSEMOVE:
 		//	CodeInfo.SciMouseMoved(this, AMath.LoShort(m.LParam), AMath.HiShort(m.LParam));
 		//	break;
 		case Api.WM_KILLFOCUS:
+			//Dispatcher.InvokeAsync(() => CodeInfo.SciKillFocus(this));//no, dangerous
 			CodeInfo.SciKillFocus(this);
 			break;
+		//case Api.WM_LBUTTONDOWN:
+		//	if (Keyboard.Modifiers == ModifierKeys.Control) {
+		//		//CiGoTo.GoToSymbolFromPos(onCtrlClick: true);
+		//		return true;
+		//	}
+		//	break;
 		case Api.WM_LBUTTONUP:
-			if (Keyboard.Modifiers == ModifierKeys.Control) CiGoTo.GoToSymbolFromPos(onCtrlClick: true);
+			if (Keyboard.Modifiers == ModifierKeys.Control) {
+				Dispatcher.InvokeAsync(() => CiGoTo.GoToSymbolFromPos(onCtrlClick: true));
+			}
 			break;
 		}
 

@@ -38,7 +38,7 @@ namespace Au.Compiler
 	/// r C:\X\Y\Assembly.dll //assembly reference using full path. If relative path, must be in AFolders.ThisApp.
 	/// r Alias=Assembly //assembly reference that can be used with C# keyword 'extern alias'.
 	/// ]]></code>
-	/// Don't need to add Au.dll and .NET Core runtime assemblies.
+	/// Don't need to add Au.dll and .NET runtime assemblies.
 	/// 
 	/// <h3>Other C# files to compile together</h3>
 	/// <code><![CDATA[

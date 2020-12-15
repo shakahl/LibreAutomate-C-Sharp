@@ -51,7 +51,7 @@ static class EdDatabases
 	#region create ref and doc
 
 	/// <summary>
-	/// Creates SQLite databases containing design-time assemblies and XML documentation files of a .NET Core runtime. The SDK must be installed.
+	/// Creates SQLite databases containing design-time assemblies and XML documentation files of a .NET runtime. The SDK must be installed.
 	/// </summary>
 	/// <remarks>
 	/// Shows a list dialog.
@@ -64,12 +64,12 @@ static class EdDatabases
 	///			1. They are big and may add 100 MB of process memory. We need to load all, because cannot know which are actually used in various stages of compilation.
 	///			2. When loading from dll files, Windows Defender makes it as slow as 2.5 s or more, unless the files already are in OS file buffers.
 	///			3. Better compatibility. See https://github.com/dotnet/standard/blob/master/docs/history/evolution-of-design-time-assemblies.md
-	///	doc.db contains XML documentation files of .NET Core assemblies. From the same 'dotnet\packs' folder.
+	///	doc.db contains XML documentation files of .NET runtime assemblies. From the same 'dotnet\packs' folder.
 	///		Why need it:
-	///			1. Else users would have to download whole .NET Core SDK. Now need only runtimes.
+	///			1. Else users would have to download whole .NET SDK. Now need only runtimes.
 	///			2. Parsed XML files can use eg 200 MB of process memory. Now we get doc of a single type/method/etc from database only when need; all other data is not in memory.
 	///			
-	/// Need to run this after changing Core version of C# projects (<TargetFramework>netcoreapp3.1</TargetFramework>). Also update COREVER2 etc in AppHost.cpp.
+	/// Need to run this after changing .NET version of C# projects (<TargetFramework>...</TargetFramework>). Also update COREVER2 etc in AppHost.cpp.
 	/// </remarks>
 	public static void CreateRefAndDoc(string dataDir = @"Q:\app\Au\Other\Data") {
 		Cursor.Current = Cursors.WaitCursor;
@@ -98,8 +98,7 @@ static class EdDatabases
 	}
 
 	static void _CreateRefAndDoc(string dirPacks, string dirCore, string version, bool all, string dataDir) {
-		//string subdirRN = @"\ref\netcoreapp" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1); //Core 3.x
-		string subdirRN = @"\ref\net" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1); //.NET 5
+		string subdirRN = @"\ref\net" + version.RegexReplace(@"^\d+\.\d+\K.+", @"\", 1);
 
 		var dir1 = dirCore + version + subdirRN;
 		if (!AFile.ExistsAsDirectory(dir1, true)) throw new DirectoryNotFoundException("Not found: " + dir1);

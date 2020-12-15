@@ -39,7 +39,7 @@ partial class PanelFiles : AuUserControlBase
 	/// Workspace's directory. The directory should contain file "files.xml" and subdirectory "files".
 	/// If null, loads the last used workspace (its path is in settings).
 	/// If the setting does not exist, uses AFolders.ThisAppDocuments + @"Main".
-	/// If the file does not exist, copies from AFolders.ThisApp + @"Default\Workspace".
+	/// If the file does not exist, copies from AFolders.ThisApp + @"DefaultF\Workspace".
 	/// </param>
 	public FilesModel ZLoadWorkspace(string wsDir = null)
 	{
@@ -54,7 +54,7 @@ partial class PanelFiles : AuUserControlBase
 			//SHOULDDO: if editor runs as admin, the workspace directory should be write-protected from non-admin processes.
 
 			if(_isNewWorkspace = !AFile.ExistsAsFile(xmlFile)) {
-				AFile.Copy(AFolders.ThisAppBS + @"Default\Workspace", wsDir);
+				AFile.Copy(AFolders.ThisAppBS + @"DefaultF\Workspace", wsDir);
 			}
 
 			_model?.UnloadingWorkspace(); //saves all, closes documents, sets current file = null

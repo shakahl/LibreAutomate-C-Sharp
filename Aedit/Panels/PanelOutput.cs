@@ -17,8 +17,6 @@ using Au;
 using Au.Types;
 using Au.Controls;
 using static Au.Controls.Sci;
-using System.Windows.Interop;
-using System.Windows.Input;
 
 class PanelOutput : DockPanel
 {
@@ -31,13 +29,14 @@ class PanelOutput : DockPanel
 		_c = new _SciOutput(this) { Name = "Output_text" };
 		this.Children.Add(_c);
 		_history = new Queue<OutServMessage>();
+		App.Commands.BindKeysTarget(this, "Output");
 	}
 
 	public void ZClear() { _c.Z.ClearText(); }
 
 	public void ZCopy() { _c.Call(SCI_COPY); }
 
-	public void ZFind() { Panels.Find.ZCtrlF(_c.Z.SelectedText()); }
+	public void ZFind() { Panels.Find.ZCtrlF(_c); }
 
 	public void ZHistory() {
 		var p = new KPopupListBox { PlacementTarget = this, Placement = System.Windows.Controls.Primitives.PlacementMode.MousePoint };
@@ -124,8 +123,8 @@ class PanelOutput : DockPanel
 			Z.StyleFont(STYLE_DEFAULT, "Consolas", 9);
 			Z.StyleClearAll();
 
-			SciTagsF.AddCommonLinkTag("open", s => _OpenLink(s));
-			SciTagsF.AddCommonLinkTag("script", s => _RunScript(s));
+			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
+			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
 			ZTags.AddLinkTag("+properties", fid => {
 				var f = App.Model.FindScript(fid);
 				if (f == null || !App.Model.SetCurrentFile(f)) return;

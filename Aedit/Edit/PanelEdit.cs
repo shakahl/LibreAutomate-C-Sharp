@@ -29,6 +29,7 @@ class PanelEdit : Grid
 
 	public PanelEdit() {
 		this.Background = SystemColors.AppWorkspaceBrush;
+		App.Commands.BindKeysTarget(this, "Edit");
 	}
 
 	//protected override void OnHandleCreated(EventArgs e)

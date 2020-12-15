@@ -8,7 +8,7 @@ To automate something, you create a script. It is a text file containg C# code. 
 
 C# is a programming language, one of the most popular. You'll have to learn it a bit. For example [here](https://docs.microsoft.com/en-us/dotnet/csharp/).
 
-A script is a small C# program. See script "Script syntax and examples" in folder "Examples".
+A script is a small C# program. Examples: menu New -> Examples.
 
 In the [code editor](xref:code_editor) you can press Ctrl+Space to show a list of available functions, classes etc.
 

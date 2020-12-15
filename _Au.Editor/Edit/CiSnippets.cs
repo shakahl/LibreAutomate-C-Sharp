@@ -133,7 +133,7 @@ static class CiSnippets
 		if(s_items == null) {
 			var a = new List<_CiComplItemSnippet>();
 			if(!AFile.ExistsAsFile(CustomFile)) {
-				try { AFile.Copy(AFolders.ThisAppBS + @"Default\Snippets2.xml", CustomFile); }
+				try { AFile.Copy(AFolders.ThisAppBS + @"DefaultF\Snippets2.xml", CustomFile); }
 				catch { goto g1; }
 			}
 			_LoadFile(CustomFile, true);
@@ -346,6 +346,6 @@ static class CiSnippets
 		}
 	}
 
-	public static readonly string DefaultFile = AFolders.ThisApp + @"Default\Snippets.xml";
+	public static readonly string DefaultFile = AFolders.ThisApp + @"DefaultF\Snippets.xml";
 	public static readonly string CustomFile = ProgramSettings.DirBS + "Snippets.xml";
 }

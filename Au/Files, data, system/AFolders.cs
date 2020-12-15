@@ -431,25 +431,25 @@ namespace Au
 		//The normal retrieving method for these folders is broken. Fails even on 64-bit OS if process is 32-bit.
 
 		/// <summary>
-		/// Gets .NET Core runtime folder, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0</c>.
+		/// Gets .NET runtime folder, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0</c>.
 		/// </summary>
 		public static FolderPath NetRuntime => new FolderPath(__netRuntime ??= NetRuntimeBS.TrimEnd('\\'));
 		static string __netRuntime;
 
 		/// <summary>
-		/// Gets .NET Core runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0\</c>.
+		/// Gets .NET runtime folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.NETCore.App\3.1.0\</c>.
 		/// </summary>
 		public static string NetRuntimeBS => __netRuntimeBS ??= RuntimeEnvironment.GetRuntimeDirectory();
 		static string __netRuntimeBS;
 
 		/// <summary>
-		/// Gets .NET Core runtime desktop folder, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0</c>.
+		/// Gets .NET runtime desktop folder, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0</c>.
 		/// </summary>
 		public static FolderPath NetRuntimeDesktop => new FolderPath(__netRuntimeDesktop ??= NetRuntimeDesktopBS.TrimEnd('\\'));
 		static string __netRuntimeDesktop;
 
 		/// <summary>
-		/// Gets .NET Core runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
+		/// Gets .NET runtime desktop folder with <c>'\\'</c> at the end, like <c>C:\Program Files\dotnet\shared\Microsoft.WindowsDesktop.App\3.1.0\</c>.
 		/// </summary>
 		public static string NetRuntimeDesktopBS => __netRuntimeDesktopBS ??= NetRuntimeBS.RegexReplace(@"(?i)\\Microsoft\.\KNETCore(?=\.App\\[^\\]+\\$)", "WindowsDesktop", 1);
 		static string __netRuntimeDesktopBS;

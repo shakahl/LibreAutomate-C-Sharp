@@ -165,14 +165,14 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 	//	return Api.DefWindowProc(w, m, wp, lp);
 	//}
 
-	//TODO: recompile when a resource file in a folder renamed etc
+	//_TODO: recompile when a resource file in a folder renamed etc
 	//public class ResourceHelper
 	//{
 	//	ResourceManager _man;
 
 	//	public ResourceHelper(Assembly assembly = null) {
 	//		assembly ??= Assembly.GetCallingAssembly();
-	//		_man = new ResourceManager(assembly.GetName().Name + ".g", assembly); //TODO: no ResourceManager in completion list after new
+	//		_man = new ResourceManager(assembly.GetName().Name + ".g", assembly); //_TODO: no ResourceManager in completion list after new
 	//	}
 
 	//	//	public ResourceHelper(ResourceManager resMan) {

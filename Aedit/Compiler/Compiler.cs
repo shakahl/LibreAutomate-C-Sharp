@@ -262,7 +262,7 @@ namespace Au.Compiler
 					bool need64 = !need32 || m.Optimize;
 					need32 |= m.Optimize;
 
-					//copy Core app host template exe, add native resources, set assembly name, set console flag if need
+					//copy app host template exe, add native resources, set assembly name, set console flag if need
 					if (need64) _AppHost(outFile, fileName, m, bit32: false);
 					if (need32) _AppHost(outFile, fileName, m, bit32: true);
 					p1.Next('h');
@@ -498,8 +498,8 @@ public class IgnoresAccessChecksToAttribute : Attribute {
 		}
 
 		static unsafe string _AppHost(string outFile, string fileName, MetaComments m, bool bit32) {
-			//A .NET Core exe actually is a managed dll hosted by a native exe file known as apphost.
-			//When creating an exe, VS copies template apphost from eg "C:\Program Files\dotnet\sdk\3.1.100\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
+			//A .NET Core/5 exe actually is a managed dll hosted by a native exe file known as apphost.
+			//When creating an exe, VS copies template apphost from "C:\Program Files\dotnet\sdk\version\AppHostTemplate\apphost.exe" and modifies it, eg copies native resources from the dll.
 			//We have own apphost exe created by the Au.AppHost project. This function copies it and modifies in a similar way like VS does.
 
 			//var p1 = APerf.Create();

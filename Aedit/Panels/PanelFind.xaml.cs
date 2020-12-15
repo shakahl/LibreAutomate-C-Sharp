@@ -369,9 +369,27 @@ public partial class PanelFind : UserControl
 	}
 
 	/// <summary>
-	/// Makes visible and sets find text = selected text of focused control.
+	/// Makes visible and sets find text = selected text of e.
+	/// Supports SciHost and TextBox. If other type or null or no selected text, just makes visible etc.
 	/// </summary>
-	public void ZCtrlF() { if (Keyboard.FocusedElement is TextBox t) ZCtrlF(t.SelectedText); }
+	public void ZCtrlF(FrameworkElement e) {
+		string s = null;
+		switch (e) {
+		case SciHost c:
+			s = c.Z.SelectedText();
+			break;
+		case TextBox c:
+			s = c.SelectedText;
+			break;
+		}
+		ZCtrlF(s);
+	}
+
+	//rejected. Could be used for global keyboard shortcuts, but currently they work only if the main window is active.
+	///// <summary>
+	///// Makes visible and sets find text = selected text of focused control.
+	///// </summary>
+	//public void ZCtrlF() => ZCtrlF(FocusManager.GetFocusedElement(App.Wmain));
 
 	#endregion
 
