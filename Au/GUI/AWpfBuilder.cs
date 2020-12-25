@@ -63,7 +63,7 @@ namespace Au
 	/// 	.Row(-1).Add(out TabControl tc).Height(300..)
 	/// 	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).Disabled().End();
 	/// 
-	/// AWpfBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
+	/// AWpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
 	/// 	var tp = new TabItem { Header = name };
 	/// 	tc.Items.Add(tp);
 	/// 	return new AWpfBuilder(tp, panelType);
@@ -122,9 +122,9 @@ namespace Au
 				lastAdded = panel = p;
 			}
 
-			public virtual void BeforeAdd(GBAdd flags = 0) {
+			public virtual void BeforeAdd(WBAdd flags = 0) {
 				if (ended) throw new InvalidOperationException("Cannot add after End()");
-				if (flags.Has(GBAdd.ChildOfLast) && (object)lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
+				if (flags.Has(WBAdd.ChildOfLast) && (object)lastAdded == panel) throw new ArgumentException("Last element is panel.", "flag ChildOfLast");
 			}
 
 			public virtual void Add(FrameworkElement c) {
@@ -176,7 +176,7 @@ namespace Au
 				if (GridLines) _grid.ShowGridLines = true;
 			}
 
-			public void Row(GBGridLength height) {
+			public void Row(WBGridLength height) {
 				if (_andWidth != null) throw new InvalidOperationException("And().Row()");
 				if (_row >= 0) {
 					_SetLastSpan();
@@ -189,9 +189,9 @@ namespace Au
 				_grid.RowDefinitions.Add(height.Row);
 			}
 
-			public override void BeforeAdd(GBAdd flags = 0) {
+			public override void BeforeAdd(WBAdd flags = 0) {
 				base.BeforeAdd(flags);
-				if (flags.Has(GBAdd.ChildOfLast)) return;
+				if (flags.Has(WBAdd.ChildOfLast)) return;
 				if (_row < 0 || _col >= _grid.ColumnDefinitions.Count) Row(0);
 				_isSpan = false;
 			}
@@ -292,7 +292,7 @@ namespace Au
 		/// 
 		/// If there are star-sized columns, grid width should be defined. Call <see cref="Width"/> or <see cref="Size"/>. But it the grid is in a cell of another grid, usually it's better to set column width of that grid to a non-zero value, ie let it be not auto-sized.
 		/// </remarks>
-		public AWpfBuilder Columns(params GBGridLength[] widths) {
+		public AWpfBuilder Columns(params WBGridLength[] widths) {
 			var g = Last as Grid ?? throw new InvalidOperationException("Columns() in wrong place");
 			g.ColumnDefinitions.Clear();
 			foreach (var v in widths) g.ColumnDefinitions.Add(v.Column);
@@ -315,7 +315,7 @@ namespace Au
 		/// 
 		/// If there are star-sized rows, grid height should be defined. Call <see cref="Height"/> or <see cref="Size"/>. But it the grid is in a cell of another grid, usually it's better to set row height of that grid to a non-zero value, ie let it be not auto-sized.
 		/// </remarks>
-		public AWpfBuilder Row(GBGridLength height) {
+		public AWpfBuilder Row(WBGridLength height) {
 			if (_p.ended) throw new InvalidOperationException("Row() after End()");
 			var g = _p as _Grid ?? throw new InvalidOperationException("Row() in non-grid panel");
 			g.Row(height);
@@ -341,7 +341,7 @@ namespace Au
 		/// </summary>
 		/// <param name="windowTitle">Window title bar text.</param>
 		/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
-		public AWpfBuilder(string windowTitle, GBPanelType panelType = GBPanelType.Grid) {
+		public AWpfBuilder(string windowTitle, WBPanelType panelType = WBPanelType.Grid) {
 			/*_container=*/
 			_window = new Window() { Title = windowTitle };
 			_AddRootPanel(_window, false, panelType, true);
@@ -362,25 +362,25 @@ namespace Au
 		/// - <b>WindowStartupLocation</b> = Center.
 		/// - <b>Topmost</b> and <b>Background</b> depending on static properties <see cref="WinTopmost"/> and <see cref="WinWhite"/>.
 		/// </param>
-		public AWpfBuilder(FrameworkElement container = null, GBPanelType panelType = GBPanelType.Grid, bool setProperties = true) {
+		public AWpfBuilder(FrameworkElement container = null, WBPanelType panelType = WBPanelType.Grid, bool setProperties = true) {
 			//_container=container; // ?? throw new ArgumentNullException("container"); //can be null
 			_window = container as Window;
 			_AddRootPanel(container, true, panelType, setProperties);
 		}
 
-		void _AddRootPanel(FrameworkElement container, bool externalContainer, GBPanelType panelType, bool setProperties) {
+		void _AddRootPanel(FrameworkElement container, bool externalContainer, WBPanelType panelType, bool setProperties) {
 			switch (panelType) {
-			case GBPanelType.Grid:
+			case WBPanelType.Grid:
 				_p = new _Grid(this);
 				break;
-			case GBPanelType.Canvas:
+			case WBPanelType.Canvas:
 				_p = new _Canvas(this);
 				break;
-			case GBPanelType.Dock:
+			case WBPanelType.Dock:
 				_p = new _DockPanel(this);
 				break;
 			default:
-				_p = new _StackPanel(this, panelType == GBPanelType.VerticalStack);
+				_p = new _StackPanel(this, panelType == WBPanelType.VerticalStack);
 				break;
 			}
 			if (_window != null) _p.panel.Margin = new Thickness(3);
@@ -396,7 +396,7 @@ namespace Au
 			}
 			if (setProperties) {
 				if (_window != null) {
-					if (panelType != GBPanelType.Canvas) {
+					if (panelType != WBPanelType.Canvas) {
 						if (externalContainer) {
 							_window.SizeToContent = (double.IsNaN(_window.Width) ? SizeToContent.Width : 0) | (double.IsNaN(_window.Height) ? SizeToContent.Height : 0);
 						} else {
@@ -448,7 +448,7 @@ namespace Au
 		/// </remarks>
 		/// <seealso cref="WinRect"/>
 		/// <seealso cref="WinSaved"/>
-		public AWpfBuilder WinSize(GBLength? width = null, GBLength? height = null) {
+		public AWpfBuilder WinSize(WBLength? width = null, WBLength? height = null) {
 			_ThrowIfNotWindow();
 			_ThrowIfWasWinRect();
 			if (_IsWindowEnded) throw new InvalidOperationException("WinSize() cannot be after last End()"); //although currently could be anywhere
@@ -578,7 +578,7 @@ namespace Au
 
 		#endregion
 
-		#region properties
+		#region properties, events
 
 		/// <summary>
 		/// Gets the top-level window.
@@ -604,6 +604,41 @@ namespace Au
 		//	/// Gets the last direct child element added in current panel. Before that returns current panel or its parent <b>GroupBox</b>.
 		//	/// </summary>
 		//	public FrameworkElement LastDirect => _p.LastDirect;
+
+		/// <summary>
+		/// When root panel loaded and visible. Once.
+		/// </summary>
+		/// <remarks>
+		/// If the panel is in a <b>TabControl</b>, this event is fired when the tab page is selected/loaded first time.
+		/// When this event is fired, handles of visible <b>HwndHost</b>-based controls are already created.
+		/// </remarks>
+		public event Action Loaded {
+			add {
+				if (!_loadedEvent2) { _loadedEvent2 = true; Panel.Loaded += _Panel_Loaded; }
+				_loadedEvent += value;
+			}
+			remove {
+				_loadedEvent -= value;
+			}
+		}
+		Action _loadedEvent;
+		bool _loadedEvent2;
+
+		private void _Panel_Loaded(object sender, RoutedEventArgs e) {
+			var p = sender as Panel;
+			if (!p.IsVisible) return;
+			p.Loaded -= _Panel_Loaded;
+			_loadedEvent?.Invoke();
+		}
+
+		/// <summary>
+		/// When clicked OK or Apply button.
+		/// </summary>
+		/// <remarks>
+		/// <see cref="Button.IsDefault"/> is true if it is OK button.
+		/// The parameter's property <b>Cancel</b> can be used to prevent closing the window.
+		/// </remarks>
+		public event Action<WBButtonClickArgs> OkApply;
 
 		#endregion
 
@@ -653,7 +688,7 @@ namespace Au
 		}
 		bool _opt_modifyPadding = !_IsCustomTheme();
 		bool _opt_rightAlignLabels;
-		Thickness _opt_margin = new Thickness(3);
+		Thickness _opt_margin = new(3);
 		//string _opt_radioGroup; //rejected. Radio buttons have problems with high DPI and should not be used. Or can put groups in panels.
 		//	double _opt_checkMargin=3; //rejected
 
@@ -672,20 +707,20 @@ namespace Au
 		/// <see cref="PasswordBox"/> - sets <b>Password</b> property.
 		/// <see cref="HeaderedContentControl"/>, <see cref="HeaderedItemsControl"/> - sets <b>Header</b> property.
 		/// <see cref="ContentControl"/> except above two - sets <b>Content</b> property (can be string, other element, etc).
-		/// <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="Load"/>).
+		/// <see cref="RichTextBox"/> - calls <b>AppendText</b> (see also <see cref="LoadFile"/>).
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-		public AWpfBuilder Add<T>(out T variable, object text = null, GBAdd flags = 0) where T : FrameworkElement, new() {
+		public AWpfBuilder Add<T>(out T variable, object text = null, WBAdd flags = 0) where T : FrameworkElement, new() {
 			_p.BeforeAdd(flags);
 			variable = new T();
 			_Add(variable, text, flags, true);
 			return this;
 		}
 
-		void _Add(FrameworkElement e, object text, GBAdd flags, bool add) {
-			bool childOfLast = flags.Has(GBAdd.ChildOfLast);
-			if (!flags.Has(GBAdd.DontSetProperties)) {
+		void _Add(FrameworkElement e, object text, WBAdd flags, bool add) {
+			bool childOfLast = flags.Has(WBAdd.ChildOfLast);
+			if (!flags.Has(WBAdd.DontSetProperties)) {
 				if (e is Control c) {
 					//rejected: modify padding etc through XAML. Not better than this.
 					//rejected: use _opt_modifyPadding only if font Segoe UI. Tested with several fonts.
@@ -754,7 +789,7 @@ namespace Au
 			if (add) {
 				_AddToParent(e, childOfLast);
 				if (_alsoAll != null) {
-					_alsoAllArgs ??= new GBAlsoAllArgs();
+					_alsoAllArgs ??= new WBAlsoAllArgs();
 					if (_p is _Grid g) {
 						var v = g.NextCell;
 						_alsoAllArgs.Column = v.column - 1;
@@ -787,7 +822,7 @@ namespace Au
 		/// <param name="text">Text, header or other content. More info - see other overload.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-		public AWpfBuilder Add<T>(object text = null, GBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
+		public AWpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
 
 		/// <summary>
 		/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
@@ -809,7 +844,7 @@ namespace Au
 		/// <param name="element"></param>
 		/// <param name="flags"></param>
 		/// <exception cref="NotSupportedException">The function does not support flag <i>childOfLast</i> for this element type.</exception>
-		public AWpfBuilder Add(FrameworkElement element, GBAdd flags = 0) {
+		public AWpfBuilder Add(FrameworkElement element, WBAdd flags = 0) {
 			_p.BeforeAdd(flags);
 			_Add(element, null, flags, true);
 			return this;
@@ -818,28 +853,35 @@ namespace Au
 		/// <summary>
 		/// Adds button with <see cref="ButtonBase.Click"/> event handler.
 		/// </summary>
+		/// <param name="variable">Receives button's variable.</param>
 		/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
 		/// <param name="click">Action to call when the button clicked. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this OK button. Not called if validation fails.</param>
 		/// <param name="flags"></param>
 		/// <remarks>
-		/// If <i>flags</i> contains <b>OK</b> or <b>Validate</b> and this window contains elements for which was called <see cref="Validation"/>, on click performs validation; if fails, does not call the <i>click</i> action and does not close the window.
+		/// If <i>flags</i> contains <b>OK</b> or <b>Apply</b> or <b>Validate</b> and this window contains elements for which was called <see cref="Validation"/>, on click performs validation; if fails, does not call the <i>click</i> action and does not close the window.
 		/// </remarks>
-		public AWpfBuilder AddButton(object text, Action<GBButtonClickArgs> click, GBBFlags flags = 0/*, Action<GBButtonClickArgs> clickSplit = null*/) {
-			Add(out Button c, text);
-			if (flags.Has(GBBFlags.OK)) c.IsDefault = true;
-			if (flags.Has(GBBFlags.Cancel)) c.IsCancel = true;
-			if (flags.HasAny(GBBFlags.OK | GBBFlags.Cancel)) { c.MinWidth = 70; c.MinHeight = 21; }
-			if (click != null || flags.HasAny(GBBFlags.OK | GBBFlags.Validate)) c.Click += (_, _) => {
+		public AWpfBuilder AddButton(out Button variable, object text, Action<WBButtonClickArgs> click, WBBFlags flags = 0/*, Action<WBButtonClickArgs> clickSplit = null*/) {
+			Add(out variable, text);
+			var c = variable;
+			if (flags.Has(WBBFlags.OK)) c.IsDefault = true;
+			if (flags.Has(WBBFlags.Cancel)) c.IsCancel = true;
+			if (flags.HasAny(WBBFlags.OK | WBBFlags.Cancel | WBBFlags.Apply)) { c.MinWidth = 70; c.MinHeight = 21; }
+			if (click != null || flags.HasAny(WBBFlags.OK | WBBFlags.Apply | WBBFlags.Validate)) c.Click += (_, _) => {
 				var w = _FindWindow(c);
-				if (flags.HasAny(GBBFlags.OK | GBBFlags.Validate) && !_Validate(w, c)) return;
-				if (click != null) {
-					var e = new GBButtonClickArgs { Button = c, Window = w };
-					click.Invoke(e);
+				if (flags.HasAny(WBBFlags.OK | WBBFlags.Apply | WBBFlags.Validate) && !_Validate(w, c)) return;
+				bool needEvent = flags.HasAny(WBBFlags.OK | WBBFlags.Apply) && OkApply != null;
+				var e = (needEvent || click != null) ? new WBButtonClickArgs { Button = c, Window = w } : null;
+				if (needEvent) {
+					OkApply(e);
 					if (e.Cancel) return;
 				}
-				if (flags.Has(GBBFlags.OK)) w.DialogResult = true;
+				if (click != null) {
+					click(e);
+					if (e.Cancel) return;
+				}
+				if (flags.Has(WBBFlags.OK)) w.DialogResult = true;
 			};
-			//		if(clickSplit!=null) c.ClickSplit+=clickSplit;
+			//if(clickSplit!=null) c.ClickSplit+=clickSplit;
 			//FUTURE: split-button.
 			return this;
 		}
@@ -849,6 +891,19 @@ namespace Au
 		//	/// </param>
 
 		/// <summary>
+		/// Adds button with <see cref="ButtonBase.Click"/> event handler.
+		/// </summary>
+		/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
+		/// <param name="click">Action to call when the button clicked. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this OK button. Not called if validation fails.</param>
+		/// <param name="flags"></param>
+		/// <remarks>
+		/// If <i>flags</i> contains <b>OK</b> or <b>Apply</b> or <b>Validate</b> and this window contains elements for which was called <see cref="Validation"/>, on click performs validation; if fails, does not call the <i>click</i> action and does not close the window.
+		/// </remarks>
+		public AWpfBuilder AddButton(object text, Action<WBButtonClickArgs> click, WBBFlags flags = 0/*, Action<WBButtonClickArgs> clickSplit = null*/) {
+			return AddButton(out _, text, click, flags);
+		}
+
+		/// <summary>
 		/// Adds button that closes the window and sets <see cref="ResultButton"/>.
 		/// </summary>
 		/// <param name="text">Text/content (<see cref="ContentControl.Content"/>).</param>
@@ -856,7 +911,7 @@ namespace Au
 		/// <remarks>
 		/// When clicked, sets <see cref="ResultButton"/> = <i>result</i>, closes the window, and <see cref="ShowDialog"/> returns true.
 		/// </remarks>
-		public AWpfBuilder AddButton(object text, int result/*, Action<GBButtonClickArgs> clickSplit = null*/) {
+		public AWpfBuilder AddButton(object text, int result/*, Action<WBButtonClickArgs> clickSplit = null*/) {
 			Add(out Button c, text);
 			c.Click += (_, _) => { _resultButton = result; _FindWindow(c).DialogResult = true; };
 			//		if(clickSplit!=null) c.ClickSplit+=clickSplit;
@@ -874,24 +929,26 @@ namespace Au
 		int _resultButton;
 
 		/// <summary>
-		/// Adds OK and/or Cancel buttons that will close the window.
+		/// Adds OK and/or Cancel and/or Apply buttons.
 		/// </summary>
 		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
 		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
-		/// <param name="clickOk">Action to call when clicked OK button. Its parameter's property <b>Cancel</b> can be used to prevent closing the window when clicked this OK button.</param>
+		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
 		/// <remarks>
-		/// Sets properties of OK/Cancel buttons so that on button click or Enter/Esc the window is closed and <see cref="ShowDialog"/> returns true on OK, false on Cancel.
+		/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
+		/// See also event <see cref="OkApply"/>.
 		/// 
-		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If <i>ok</i> or <i>cancel</i> is null, adds single button without panel.
+		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If 1 button, adds single button without panel.
 		/// Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
 		/// </remarks>
-		public AWpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", Action<GBButtonClickArgs> clickOk = null) {
+		public AWpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null) {
 			int n = 0; if (ok != null) n++; if (cancel != null) n++;
-			if (n == 0) throw new ArgumentNullException(null, "AddOkCancel(null, null)");
+			if (n == 0) throw new ArgumentNullException();
 			bool stack = n > 1 && !(_p is _StackPanel);
 			if (stack) StartOkCancel();
-			if (ok != null) AddButton(ok, clickOk, GBBFlags.OK);
-			if (cancel != null) AddButton(cancel, null, GBBFlags.Cancel);
+			if (ok != null) AddButton(ok, null, WBBFlags.OK);
+			if (cancel != null) AddButton(cancel, null, WBBFlags.Cancel);
+			if (apply != null) AddButton(apply, null, WBBFlags.Apply);
 			if (stack) End();
 			return this;
 		}
@@ -1006,12 +1063,12 @@ namespace Au
 		/// })
 		/// ]]></code>
 		/// </example>
-		public AWpfBuilder AlsoAll(Action<AWpfBuilder, GBAlsoAllArgs> action) {
+		public AWpfBuilder AlsoAll(Action<AWpfBuilder, WBAlsoAllArgs> action) {
 			_alsoAll = action;
 			return this;
 		}
-		Action<AWpfBuilder, GBAlsoAllArgs> _alsoAll;
-		GBAlsoAllArgs _alsoAllArgs;
+		Action<AWpfBuilder, WBAlsoAllArgs> _alsoAll;
+		WBAlsoAllArgs _alsoAllArgs;
 
 		/// <summary>
 		/// Sets width and height of the last added element. Optionally sets alignment.
@@ -1021,7 +1078,7 @@ namespace Au
 		/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 		/// <param name="alignY">Vertical alignment.</param>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AWpfBuilder Size(GBLength width, GBLength height, string alignX = null, string alignY = null) {
+		public AWpfBuilder Size(WBLength width, WBLength height, string alignX = null, string alignY = null) {
 			var c = Last;
 			width.ApplyTo(c, false);
 			height.ApplyTo(c, true);
@@ -1035,7 +1092,7 @@ namespace Au
 		/// <param name="width">Width or/and min/max width.</param>
 		/// <param name="alignX">Horizontal alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AWpfBuilder Width(GBLength width, string alignX = null) {
+		public AWpfBuilder Width(WBLength width, string alignX = null) {
 			width.ApplyTo(Last, false);
 			if (alignX != null) Align(alignX);
 			return this;
@@ -1047,7 +1104,7 @@ namespace Au
 		/// <param name="height">Height or/and min/max height.</param>
 		/// <param name="alignY">Vertical alignment. If not null, calls <see cref="Align(string, string)"/>.</param>
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
-		public AWpfBuilder Height(GBLength height, string alignY = null) {
+		public AWpfBuilder Height(WBLength height, string alignY = null) {
 			height.ApplyTo(Last, true);
 			if (alignY != null) Align(null, alignY);
 			return this;
@@ -1064,7 +1121,7 @@ namespace Au
 		/// <remarks>
 		/// Only in <see cref="Canvas"/> panel you can set position explicitly. In other panel types it is set automatically and can be adjusted with <see cref="Margin"/>, <see cref="Align"/>, container's <see cref="AlignContent"/>, etc.
 		/// </remarks>
-		public AWpfBuilder XY(double x, double y, GBLength? width = null, GBLength? height = null) {
+		public AWpfBuilder XY(double x, double y, WBLength? width = null, WBLength? height = null) {
 			var c = _ParentOfLastAsOrThrow<_Canvas>().LastDirect;
 			Canvas.SetLeft(c, x);
 			Canvas.SetTop(c, y);
@@ -1076,7 +1133,7 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="XY"/>.
 		/// </summary>
-		public AWpfBuilder this[double x, double y, GBLength? width = null, GBLength? height = null] => XY(x, y, width, height);
+		public AWpfBuilder this[double x, double y, WBLength? width = null, WBLength? height = null] => XY(x, y, width, height);
 
 		/// <summary>
 		/// Docks the last added element in <see cref="DockPanel"/>.
@@ -1331,7 +1388,7 @@ namespace Au
 		/// <example>
 		/// <code><![CDATA[
 		/// .R.Add<Label>("Example1").Border(Brushes.BlueViolet, 1, new Thickness(5)).Brush(Brushes.Cornsilk, Brushes.Green)
-		/// .R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", GBAdd.ChildOfLast)
+		/// .R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", WBAdd.ChildOfLast)
 		/// ]]></code>
 		/// </example>
 		public AWpfBuilder Border(Brush color, double thickness, Thickness? padding = null, double? cornerRadius = null) {
@@ -1439,7 +1496,7 @@ namespace Au
 		/// </summary>
 		/// <param name="func">Function that returns an error string if element's value is invalid, else returns null.</param>
 		/// <remarks>
-		/// The callback function will be called when clicked button OK or a button added with flag <see cref="GBBFlags.Validate"/>.
+		/// The callback function will be called when clicked button OK or Apply or a button added with flag <see cref="WBBFlags.Validate"/>.
 		/// If it returns a non-null string, the window stays open and button's <i>click</i> callback not called. The string is displayed in a tooltip.
 		/// </remarks>
 		/// <example>
@@ -1597,7 +1654,7 @@ namespace Au
 		/// <param name="height">If not null, sets height or/and min/max height.</param>
 		/// <param name="wrap"><see cref="TextBox.TextWrapping"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>TextBox</b>.</exception>
-		public AWpfBuilder Multiline(GBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow) {
+		public AWpfBuilder Multiline(WBLength? height = null, TextWrapping wrap = TextWrapping.WrapWithOverflow) {
 			var c = Last as TextBox ?? throw new NotSupportedException("Multiline(): Last added must be TextBox");
 			c.AcceptsReturn = true;
 			c.TextWrapping = wrap;
@@ -1781,7 +1838,7 @@ namespace Au
 		/// <remarks>
 		/// If fails to load, prints warning. See <see cref="AWarning.Write"/>.
 		/// </remarks>
-		public AWpfBuilder Load(string source) {
+		public AWpfBuilder LoadFile(string source) {
 			var c = Last;
 			bool bad = false;
 			try {
@@ -1797,7 +1854,7 @@ namespace Au
 				}
 			}
 			catch (Exception ex) { AWarning.Write(ex.ToString(), -1); }
-			if (bad) throw new NotSupportedException($"Load(): Unsupported type of element or source.");
+			if (bad) throw new NotSupportedException("LoadFile(): Unsupported type of element or source.");
 			return this;
 		}
 
@@ -1920,7 +1977,7 @@ namespace Au
 		#region nested panel
 
 		AWpfBuilder _Start(_PanelBase p, bool childOfLast) {
-			_p.BeforeAdd(childOfLast ? GBAdd.ChildOfLast : 0);
+			_p.BeforeAdd(childOfLast ? WBAdd.ChildOfLast : 0);
 			_AddToParent(p.panel, childOfLast);
 			_p = p;
 			return this;
@@ -1937,7 +1994,7 @@ namespace Au
 		/// <summary>
 		/// Adds <see cref="Grid"/> panel (table) that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
-		/// <param name="childOfLast">See <see cref="GBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
 		/// <remarks>
 		/// How <see cref="Last"/> changes: after calling this function it is the grid (<see cref="Panel"/>); after adding an element it is the element; finally, after calling <b>End</b> it is the grid if <i>childOfLast</i> false, else its parent. The same with all <b>StartX</b> functions.
 		/// </remarks>
@@ -1972,7 +2029,7 @@ namespace Au
 		/// <summary>
 		/// Adds <see cref="Canvas"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
-		/// <param name="childOfLast">See <see cref="GBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
 		/// <remarks>
 		/// For each added control call <see cref="XY"/> or use indexer like <c>[x, y]</c> or <c>[x, y, width, height]</c>.
 		/// </remarks>
@@ -1994,7 +2051,7 @@ namespace Au
 		/// <summary>
 		/// Adds <see cref="DockPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
-		/// <param name="childOfLast">See <see cref="GBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
 		/// <remarks>
 		/// For added elements call <see cref="Dock"/>, maybe except for the last element that fills remaining space.
 		/// </remarks>
@@ -2017,7 +2074,7 @@ namespace Au
 		/// Adds <see cref="StackPanel"/> panel that will contain elements added with <see cref="Add"/> etc. Finally call <see cref="End"/> to return to current panel.
 		/// </summary>
 		/// <param name="vertical"></param>
-		/// <param name="childOfLast">See <see cref="GBAdd.ChildOfLast"/>.</param>
+		/// <param name="childOfLast">See <see cref="WBAdd.ChildOfLast"/>.</param>
 		public AWpfBuilder StartStack(bool vertical = false, bool childOfLast = false) => _Start(new _StackPanel(this, vertical), childOfLast);
 
 		/// <summary>
@@ -2105,7 +2162,7 @@ namespace Au.Types
 	/// <summary>
 	/// Used with <see cref="AWpfBuilder"/> constructor to specify the type of the root panel.
 	/// </summary>
-	public enum GBPanelType
+	public enum WBPanelType
 	{
 		///
 		Grid,
@@ -2123,7 +2180,7 @@ namespace Au.Types
 	/// Flags for <see cref="AWpfBuilder.Add"/>.
 	/// </summary>
 	[Flags]
-	public enum GBAdd
+	public enum WBAdd
 	{
 		/// <summary>
 		/// Add as child of <see cref="AWpfBuilder.Last"/>, which can be of type (or base type):
@@ -2149,24 +2206,24 @@ namespace Au.Types
 	/// To specify minimal and maximal values, pass a range like <c>100..500</c>.
 	/// To specify width or height and minimal or/and maximal values, pass a tuple like <c>(100, 50..)</c> or <c>(100, ..200)</c> or <c>(100, 50..200)</c>.
 	/// </remarks>
-	public struct GBLength
+	public struct WBLength
 	{
 		double _v;
 		Range _r;
 
-		GBLength(double v, Range r) {
+		WBLength(double v, Range r) {
 			if (r.Start.IsFromEnd || (r.End.IsFromEnd && r.End.Value != 0)) throw new ArgumentException();
 			_v = v; _r = r;
 		}
 
 		///
-		public static implicit operator GBLength(double v) => new GBLength { _v = v, _r = .. };
+		public static implicit operator WBLength(double v) => new WBLength { _v = v, _r = .. };
 
 		///
-		public static implicit operator GBLength(Range v) => new GBLength(double.NaN, v);
+		public static implicit operator WBLength(Range v) => new WBLength(double.NaN, v);
 
 		///
-		public static implicit operator GBLength((double length, Range minMax) v) => new GBLength(v.length, v.minMax);
+		public static implicit operator WBLength((double length, Range minMax) v) => new WBLength(v.length, v.minMax);
 
 		/// <summary>
 		/// Gets the width or height value. Returns false if not set.
@@ -2206,30 +2263,30 @@ namespace Au.Types
 
 	/// <summary>
 	/// Used with <see cref="AWpfBuilder"/> functions to specify width/height of columns and rows. Allows to specify minimal and/or maximal values too.
-	/// Like <see cref="GBLength"/>, but has functions to create <see cref="ColumnDefinition"/> and <see cref="RowDefinition"/>. Also has implicit conversion from these types.
+	/// Like <see cref="WBLength"/>, but has functions to create <see cref="ColumnDefinition"/> and <see cref="RowDefinition"/>. Also has implicit conversion from these types.
 	/// </summary>
-	public struct GBGridLength
+	public struct WBGridLength
 	{
 		double _v;
 		Range _r;
 		DefinitionBase _def;
 
-		GBGridLength(double v, Range r) {
+		WBGridLength(double v, Range r) {
 			if (r.Start.IsFromEnd || (r.End.IsFromEnd && r.End.Value != 0)) throw new ArgumentException();
 			_v = v; _r = r; _def = null;
 		}
 
 		///
-		public static implicit operator GBGridLength(double v) => new GBGridLength { _v = v, _r = .. };
+		public static implicit operator WBGridLength(double v) => new WBGridLength { _v = v, _r = .. };
 
 		///
-		public static implicit operator GBGridLength((double length, Range minMax) v) => new GBGridLength(v.length, v.minMax);
+		public static implicit operator WBGridLength((double length, Range minMax) v) => new WBGridLength(v.length, v.minMax);
 
 		///
-		public static implicit operator GBGridLength(Range v) => new GBGridLength(-1, v);
+		public static implicit operator WBGridLength(Range v) => new WBGridLength(-1, v);
 
 		///
-		public static implicit operator GBGridLength(DefinitionBase v) => new GBGridLength { _def = v };
+		public static implicit operator WBGridLength(DefinitionBase v) => new WBGridLength { _def = v };
 
 		/// <summary>
 		/// Creates column definition object from assigned width or/and min/max width values. Or just returns the assigned or previously created object.
@@ -2269,7 +2326,7 @@ namespace Au.Types
 	/// <summary>
 	/// Arguments for <see cref="AWpfBuilder.AlsoAll"/> callback function.
 	/// </summary>
-	public class GBAlsoAllArgs
+	public class WBAlsoAllArgs
 	{
 		/// <summary>
 		/// Gets 0-based column index of last added control, or -1 if not in grid.
@@ -2285,7 +2342,7 @@ namespace Au.Types
 	/// <summary>
 	/// Arguments for <see cref="AWpfBuilder.AddButton"/> callback function.
 	/// </summary>
-	public class GBButtonClickArgs : CancelEventArgs
+	public class WBButtonClickArgs : CancelEventArgs
 	{
 		/// <summary>
 		/// Gets the button.
@@ -2302,16 +2359,19 @@ namespace Au.Types
 	/// Flags for <see cref="AWpfBuilder.AddButton"/>.
 	/// </summary>
 	[Flags]
-	public enum GBBFlags
+	public enum WBBFlags
 	{
-		/// <summary>It is OK button (<see cref="Button.IsDefault"/>, closes window, validates, etc).</summary>
+		/// <summary>It is OK button (<see cref="Button.IsDefault"/>, closes window, validates, <see cref="AWpfBuilder.OkApply"/> event).</summary>
 		OK = 1,
 
 		/// <summary>It is Cancel button (<see cref="Button.IsCancel"/>, closes window).</summary>
 		Cancel = 2,
 
-		/// <summary>Perform validation like OK button. For example if it is Apply button.</summary>
-		Validate = 4,
+		/// <summary>It is Apply button (size like OK/Cancel, validates, <see cref="AWpfBuilder.OkApply"/> event).</summary>
+		Apply = 4,
+
+		/// <summary>Perform validation like OK and Apply buttons.</summary>
+		Validate = 8,
 	}
 
 	//rejected. Unsafe etc. For example, when assigning to object, uses CheckBool whereas the user may expect bool.
@@ -2522,14 +2582,12 @@ namespace Au.Types
 		GridResizeBehavior _GetResizeBehavior(bool vertical) { //see code of GridSplitter.GetEffectiveResizeBehavior
 			var r = ResizeBehavior;
 			if (r == GridResizeBehavior.BasedOnAlignment) {
-				if (vertical) r = HorizontalAlignment switch
-				{
+				if (vertical) r = HorizontalAlignment switch {
 					HorizontalAlignment.Left => GridResizeBehavior.PreviousAndCurrent,
 					HorizontalAlignment.Right => GridResizeBehavior.CurrentAndNext,
 					_ => GridResizeBehavior.PreviousAndNext,
 				};
-				else r = VerticalAlignment switch
-				{
+				else r = VerticalAlignment switch {
 					VerticalAlignment.Top => GridResizeBehavior.PreviousAndCurrent,
 					VerticalAlignment.Bottom => GridResizeBehavior.CurrentAndNext,
 					_ => GridResizeBehavior.PreviousAndNext,

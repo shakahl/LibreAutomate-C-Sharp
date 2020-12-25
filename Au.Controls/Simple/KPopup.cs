@@ -242,12 +242,7 @@ namespace Au.Controls
 			_inSizeMove = false;
 			_w.MoveLL(r);
 			if (_w.OwnerWindow != ow) _w.OwnerWindow = ow;
-			if (!ow.Is0) {
-				var op = ow.Get.EnabledOwned(false);
-				if (!op.Is0 && op != _w) _w.ZorderAbove(op);
-			} //else should be topmost
-			if (IsVisible) return;
-			_w.ShowLL(true);
+			if (!IsVisible) _w.SetWindowPos(Native.SWP.SHOWWINDOW | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOOWNERZORDER);
 		}
 
 		/// <summary>

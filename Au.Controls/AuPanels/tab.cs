@@ -104,7 +104,7 @@ namespace Au.Controls
 				var tc = Parent._tab.tc;
 				var ti = tc.Items[_index] as TabItem;
 				if (!show) {
-					var a = tc.Items.OfType<TabItem>().Where(o => o.IsVisible).ToArray();
+					var a = tc.Items.OfType<TabItem>().Where(o => o.Visibility == Visibility.Visible).ToArray();
 					if (a.Length > 1) {
 						if (ti == tc.SelectedItem) {
 							int i = Array.IndexOf(a, ti);

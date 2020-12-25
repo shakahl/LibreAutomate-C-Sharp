@@ -139,7 +139,7 @@ static class App
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _LoadUI() {
-		var app = new WpfApp();
+		var app = new Aedit.WpfApp();
 		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
 		ImageCache = new AIconImageCache();
 		new MainWindow();
@@ -410,6 +410,9 @@ enum EProgramState
 	Unloaded,
 }
 
-partial class WpfApp : Application
+namespace Aedit
 {
+	partial class WpfApp : Application
+	{
+	}
 }

@@ -2,7 +2,7 @@
 ; SEE THE DOCUMENTATION FOR DETAILS ON CREATING INNO SETUP SCRIPT FILES!
 
 #define MyAppName "QM3"
-#define MyAppVersion "0"
+#define MyAppVersion "2020.12.25"
 #define MyAppPublisher "Gintaras Didžgalvis"
 #define MyAppURL "https://www.quickmacros.com/au/help/"
 #define MyAppExeName "Aedit.exe"
@@ -89,6 +89,7 @@ Source: "Q:\app\Au\Other\Data\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
 ;TODO: remove this code after some time
 [InstallDelete]
 Type: filesandordirs; Name: "{app}\Default"
+Type: files; Name: "{app}\Au.Editor.*"
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"

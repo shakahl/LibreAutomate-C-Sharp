@@ -358,77 +358,52 @@ if (s == null) return;]]>
 			</list>
 		</snippet>
 
-		<snippet name="wpfSnippet" info="Create window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Media" more="See also: dialogSnippet.">
+		<snippet name="wpfSnippet" info="Create dialog window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Media" more="See also: dialogSnippet, menu New -> Templates.">
 			<list item="Simple">
-				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400)
-	.R.Add("Text", out TextBox text1).Focus()
-	.R.Add("Combo", out ComboBox combo1).Items("One|Two|Three")
-	.R.Add(out CheckBox c1, "Check")
-	.R.AddOkCancel()
-	.End();
+				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400);
+b.R.Add("Text", out TextBox text1).Focus();
+b.R.Add("Combo", out ComboBox combo1).Items("Zero|One|Two");
+b.R.Add(out CheckBox c1, "Check");
+b.R.AddOkCancel();
+b.End();
 if (!b.ShowDialog()) return;
-//AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck());]]>
+//AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck());
+
+//See also: menu New -> Templates.]]>
 			</list>
 			<list item="Tabs">
-				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400)
-	.Row(-1).Add(out TabControl tc).Height(300..)
-	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70..).Disabled().End();
+				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400);
+b.Row(-1).Add(out TabControl tc).Height(300..);
+b.R.AddOkCancel(apply: "_Apply");
+var bMain=b;
 
-AWpfBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
+AWpfBuilder _Page(string name, WBPanelType panelType = WBPanelType.Grid) {
 	var tp = new TabItem { Header = name };
 	tc.Items.Add(tp);
 	return new AWpfBuilder(tp, panelType);
 }
 
-_Page("Page1")
-	.R.Add("Text", out TextBox _)
-	.End();
+//--------------------------------
 
-_Page("Page2")
-	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
-	.R.Add(out CheckBox _, "Check")
-	.End();
+b = _Page("Page1");
+b.R.Add("Text", out TextBox _);
+b.End();
+
+//--------------------------------
+
+b = _Page("Page2");
+b.R.Add("Combo", out ComboBox _).Editable().Items("Zero|One|Two");
+b.R.Add(out CheckBox _, "Check");
+b.End();
+
+//--------------------------------
 
 //tc.SelectedIndex = 1;
 
-b.End();
-if (!b.ShowDialog()) return;]]>
-			</list>
-			<list item="With my window class">
-				<![CDATA[//class Window1 : Window {  }
-var w = new Window1 { Title = "Window", Width = 400 };
-var b = new AWpfBuilder(w)
-	.R.Add("Text", out TextBox _).Focus()
-	.R.AddOkCancel()
-	.End();
-if (!b.ShowDialog()) return;]]>
-			</list>
-			<list item="Tabs and my class">
-				<![CDATA[//class Window1 : Window {  }
-var w = new Window1 { Title = "Window", Width = 400 };
-var b = new AWpfBuilder(w)
-	.Row(-1).Add(out TabControl tc).Height(300..)
-	.R.StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70..).Disabled().End();
+b = bMain.End();
+if (!b.ShowDialog()) return;
 
-AWpfBuilder _Page(string name, GBPanelType panelType = GBPanelType.Grid) {
-	var tp = new TabItem { Header = name };
-	tc.Items.Add(tp);
-	return new AWpfBuilder(tp, panelType);
-}
-
-_Page("Page1")
-	.R.Add("Text", out TextBox _)
-	.End();
-
-_Page("Page2")
-	.R.Add("Combo", out ComboBox _).Editable().Items("One|Two|Three")
-	.R.Add(out CheckBox _, "Check")
-	.End();
-
-//tc.SelectedIndex = 1;
-
-b.End();
-if (!b.ShowDialog()) return;]]>
+//See also: menu New -> Templates.]]>
 			</list>
 		</snippet>
 

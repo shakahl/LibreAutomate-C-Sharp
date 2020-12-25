@@ -52,7 +52,7 @@ When you press Enter in a non-verbatim string, editor splits it into 2 lines lik
 When you type a function name and `(`, editor shows a tooltip-like window with info about the function and current parameter. To show the window from anywhere in an argument list, press Ctrl+Shift+Space. You can select oveloads with arrow keys or the mouse.
 
 #### Quick info
-While the Info pane is visible, whenever the mouse dwells on a symbol etc in the editor, the Info pane displays some info about the symbol, including documented exceptions the function may throw.
+While the Info panel is visible, whenever the mouse dwells on a symbol etc in the editor, the Info panel displays some info about the symbol, including documented exceptions the function may throw.
 
 #### XML documentation comments
 Editor gets data for quick info, parameter info and other info about symbols from their assemblies and XML documentation comments. You can write XML documentation comments for your functions and types; look for how to on the internet. Documentation of the automation library and .NET is installed with the program. Documentation of other assemblies comes from their assembly.dll + assembly.xml files.

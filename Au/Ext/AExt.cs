@@ -97,11 +97,12 @@ namespace Au
 		/// <summary>
 		/// Converts nint to string.
 		/// Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
-		/// Calls <see cref="nint.ToString(string, IFormatProvider)"/>.
+		/// Calls <see cref="IntPtr.ToString(string, IFormatProvider)"/>.
 		/// </summary>
 		public static string ToStringInvariant(this nint t, string format = null) {
 			return t.ToString(format, NumberFormatInfo.InvariantInfo);
 		}
+		//cref not nint.ToString because DocFX does not support it.
 
 		/// <summary>
 		/// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.

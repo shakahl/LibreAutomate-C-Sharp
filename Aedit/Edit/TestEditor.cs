@@ -268,9 +268,6 @@ class Script : AScript { [STAThread] static void Main(string[] a) => new Script(
 
 
 
-		//EdDatabases.CreateRefAndDoc();
-		//EdDatabases.CreateWinapi();
-
 		//AOutput.Write(doc.Z.CurrentPos16);
 
 		//z.Select(false, 300, 295);

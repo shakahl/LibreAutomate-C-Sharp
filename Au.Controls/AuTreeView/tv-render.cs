@@ -186,10 +186,10 @@ namespace Au.Controls
 
 				var graphics = System.Drawing.Graphics.FromHdc(dc);
 				var tr = new GdiTextRenderer(dc, _dpi);
-				IntPtr checkTheme = HasCheckboxes ? api2.OpenThemeData(_hh.Hwnd, "Button") : default;
+				IntPtr checkTheme = HasCheckboxes ? KApi.OpenThemeData(_hh.Hwnd, "Button") : default;
 				try {
 					graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != api2.GetThemePartSize(checkTheme, dc, 3, 1, null, api2.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = ADpi.Scale(13, _dpi);
+					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != KApi.GetThemePartSize(checkTheme, dc, 3, 1, null, KApi.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = ADpi.Scale(13, _dpi);
 
 					var cd = CustomDraw;
 					var cdi = cd == null ? null : new TVDrawInfo(this, dc, graphics, _dpi) {
@@ -259,11 +259,11 @@ namespace Au.Controls
 								if (checkTheme != default) {
 									int state = ch switch { TVCheck.Checked => 5, TVCheck.RadioChecked => 5, TVCheck.Mixed => 9, TVCheck.Excluded => 17, _ => 1 }; //CBS_x,RBS_x
 									if (item.IsDisabled) state += 3; else if (index == _hotIndex) state += 1;
-									api2.DrawThemeBackground(checkTheme, dc, (ch == TVCheck.RadioChecked || ch == TVCheck.RadioUnchecked) ? 2 : 3, state, rr); //BP_RADIOBUTTON,BP_CHECKBOX
+									KApi.DrawThemeBackground(checkTheme, dc, (ch == TVCheck.RadioChecked || ch == TVCheck.RadioUnchecked) ? 2 : 3, state, rr); //BP_RADIOBUTTON,BP_CHECKBOX
 								} else if (ch != TVCheck.Excluded) {
 									int state = ch switch { TVCheck.Checked => 0x400, TVCheck.Mixed => 0x408, TVCheck.RadioUnchecked => 0x4, TVCheck.RadioChecked => 0x404, _ => 0 }; //DFCS_x
 									if (item.IsDisabled) state |= 0x100; else if (index == _hotIndex) state |= 0x1000;
-									api2.DrawFrameControl(dc, rr, 4, state); //DFC_BUTTON
+									KApi.DrawFrameControl(dc, rr, 4, state); //DFC_BUTTON
 								}
 								//cannot use .NET CheckBoxRenderer etc because no per-monitor DPI.
 							}
@@ -319,7 +319,7 @@ namespace Au.Controls
 				finally {
 					graphics.Dispose();
 					tr.Dispose();
-					if (checkTheme != default) api2.CloseThemeData(checkTheme);
+					if (checkTheme != default) KApi.CloseThemeData(checkTheme);
 				}
 			}
 		}

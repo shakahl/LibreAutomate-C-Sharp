@@ -20,6 +20,8 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
+//TODO: document should be without caption bar while docked. Now user accidentally makes floating when trying to scroll.
+
 namespace Au.Controls
 {
 	public partial class AuPanels
@@ -154,7 +156,6 @@ namespace Au.Controls
 					int nVisible = 0; _Node firstHidden = null;
 					List<_Node> aFloat = null;
 					foreach (var v in Descendants()) {
-						//if (v._IsStack) continue;
 						if (!v._IsStack) if (v._IsVisibleReally(true)) nVisible++; else firstHidden ??= v;
 						var ds = v._savedDockState;
 						if (ds == _DockState.Float) (aFloat ??= new()).Add(v);
@@ -461,7 +462,10 @@ namespace Au.Controls
 				set {
 					if (value && _savedDockState == _DockState.Float) return; //will make float async
 					if (value) _Unhide(); else _Hide();
-					if (value && _ParentIsTabAndNotFloating) Parent._tab.tc.SelectedIndex = _index;
+					if (value && _ParentIsTabAndNotFloating) {
+						Parent._tab.tc.SelectedIndex = _index;
+						if(value && !_elem.IsLoaded) _elem.UpdateLayout(); //workaround: WPF creates HwndHost control handle async. Let's create now.
+					}
 				}
 			}
 

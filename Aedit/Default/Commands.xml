@@ -30,7 +30,7 @@ All attributes are optional. The Example command contains all.
 	</menu>
 	<!-- Toolbars. Commands added here will have a toolbar button. -->
 	<File>
-		<New_script />
+		<New />
 		<Properties />
 		<Save_now />
 	</File>

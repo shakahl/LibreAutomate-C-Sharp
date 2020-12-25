@@ -264,14 +264,11 @@ namespace Au.Controls
 		/// <summary>Point relative to the top-left of the control without border. Physical pixels.</summary>
 		public POINT xy;
 
-		/// <summary>Item at <b>targetIndex</b>, or null if the control is empty.</summary>
+		/// <summary>Item at <b>targetIndex</b>, or null if <b>xy</b> is not on an item.</summary>
 		public ITreeViewItem targetItem;
 
-		/// <summary>Drop target item index, or index of the last item if <b>xy</b> is not on an item, or -1 if the control is empty.</summary>
-		public int targetIndex;
-
 		/// <summary>Index of item from <b>xy</b>, or -1 if <b>xy</b> is not on an item.</summary>
-		public int rawIndex;
+		public int targetIndex;
 
 		/// <summary>If true, should insert after the drop target item. Else before. Not used if <b>intoFolder</b> is true.</summary>
 		public bool insertAfter;

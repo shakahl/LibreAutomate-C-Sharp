@@ -476,11 +476,6 @@ partial class FilesModel
 		//m.ItemsSource = App.Commands[nameof(Menus.File)].MenuItem.Items; //shows menu but then closes on mouse over
 		if (s_contextMenu == null) {
 			var m = new ContextMenu { PlacementTarget = TreeControl };
-			var mn = new MenuItem { Header = "New" };
-			App.Commands[nameof(Menus.New)].CopyToMenu(mn);
-			m.Items.Add(mn);
-			mn.SubmenuOpened += (_, e) => FillMenuNew(mn);
-			m.Items.Add(new Separator());
 			App.Commands[nameof(Menus.File)].CopyToMenu(m);
 			m.Closed += (_, _) => s_inContextMenu = false;
 			s_contextMenu = m;
@@ -739,7 +734,7 @@ partial class FilesModel
 	public FileNode NewItem(string template, (FileNode target, FNPosition pos)? where = null, string name = null, bool beginRenaming = false, EdNewFileText text = null) {
 		XElement x = null;
 		if (template != null) {
-			x = FileNode.Templates.LoadXml(template).x; if (x == null) return null;
+			x = FileNode.Templates.LoadXml(template); if (x == null) return null;
 		}
 		return NewItemX(x, where, name, beginRenaming, text);
 	}
@@ -755,7 +750,7 @@ partial class FilesModel
 	public FileNode NewItemLL(string template, (FileNode target, FNPosition pos)? where = null, string name = null) {
 		XElement x = null;
 		if (template != null) {
-			x = FileNode.Templates.LoadXml(template).x; if (x == null) return null;
+			x = FileNode.Templates.LoadXml(template); if (x == null) return null;
 		}
 		return NewItemLLX(x, where, name);
 	}
@@ -938,6 +933,7 @@ partial class FilesModel
 		if (nodes != null) {
 			_MultiCopyMove(copy, nodes, target, pos);
 		} else {
+			if (target == null) { target = Root; pos = FNPosition.Inside; }
 			if (files.Length == 1 && IsWorkspaceDirectoryOrZip_ShowDialogOpenImport(files[0], out int dialogResult)) {
 				switch (dialogResult) {
 				case 1: ATimer.After(1, _ => LoadWorkspace(files[0])); break;
@@ -1023,7 +1019,7 @@ partial class FilesModel
 				}
 			}
 			if (movedCurrentFile) TreeControl.EnsureVisible(_currentFile);
-			if (copy && pos != FNPosition.Inside || target.IsExpanded) {
+			if (copy && (pos != FNPosition.Inside || target.IsExpanded)) {
 				bool focus = true;
 				foreach (var f in a2) {
 					f.IsSelected = true;
@@ -1308,11 +1304,12 @@ partial class FilesModel
 	/// Adds templates to File -> New.
 	/// </summary>
 	public static void FillMenuNew(MenuItem sub) {
-		var (xroot, cached) = FileNode.Templates.LoadXml();
-		if (sub.Items.Count > 4) { //not first time
-			if (cached) return; //else rebuild menu because Templates\files.xml modified
-			for (int i = sub.Items.Count; --i >= 4;) sub.Items.RemoveAt(i);
+		var xroot = FileNode.Templates.LoadXml();
+		if (sub.Items.Count > c_menuNewDefItems) { //not first time
+			if (xroot == sub.Tag) return; //else rebuild menu because Templates\files.xml modified
+			for (int i = sub.Items.Count; --i >= c_menuNewDefItems;) sub.Items.RemoveAt(i);
 		}
+		sub.Tag = xroot;
 
 		var templDir = FileNode.Templates.DefaultDirBS;
 		_CreateMenu(sub, xroot, null, 0);
@@ -1342,6 +1339,7 @@ partial class FilesModel
 			}
 		}
 	}
+	const int c_menuNewDefItems = 3;
 
 	#endregion
 

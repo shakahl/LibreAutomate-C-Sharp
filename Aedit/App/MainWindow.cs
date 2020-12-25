@@ -35,18 +35,15 @@ partial class MainWindow : Window
 
 		App.Commands = new AuMenuCommands(typeof(Menus), Panels.Menu);
 
+		App.Commands[nameof(Menus.File.New)].SubmenuOpened = (o, _) => FilesModel.FillMenuNew(o as MenuItem);
+		App.Commands[nameof(Menus.File.Workspace.Recent_workspaces)].SubmenuOpened = (o, _) => FilesModel.FillMenuRecentWorkspaces(o as MenuItem);
+
 		var atb = new ToolBar[7] { Panels.THelp, Panels.TTools, Panels.TFile, Panels.TRun, Panels.TEdit, Panels.TCustom1, Panels.TCustom2 };
 		App.Commands.InitToolbarsAndCustomize(AFolders.ThisAppBS + @"Default\Commands.xml", AppSettings.DirBS + "Commands.xml", atb);
 
 		Panels.CreatePanels();
 
 		App.Commands.BindKeysTarget(this, "");
-
-		var mi1 = App.Commands[nameof(Menus.New)].MenuItem;
-		mi1.SubmenuOpened += (_, e) => FilesModel.FillMenuNew(mi1);
-		var mi2 = App.Commands[nameof(Menus.File.Workspace.Recent_workspaces)].MenuItem;
-		mi2.Items.Add(new Separator());
-		mi2.SubmenuOpened += (_, e) => FilesModel.FillMenuRecentWorkspaces(mi2);
 
 		Panels.PanelManager.Container = g => { this.Content = g; };
 	}
@@ -58,7 +55,7 @@ partial class MainWindow : Window
 		App.Model.Save.AllNowIfNeed();
 		Panels.PanelManager.Save();
 
-		if (App.Settings.runHidden) {
+		if (App.Settings.runHidden && IsVisible) {
 			e.Cancel = true;
 			Hide();
 			AProcess.MinimizePhysicalMemory_(1000);

@@ -183,7 +183,7 @@ static class CiSnippets
 		}
 
 		items.Sort((i1, i2) => {
-			var r = string.Compare(i1.DisplayText, i2.DisplayText, StringComparison.OrdinalIgnoreCase);
+			var r = string.Compare(i1.ci.DisplayText, i2.ci.DisplayText, StringComparison.OrdinalIgnoreCase);
 			if (r == 0) {
 				r = i1.kind - i2.kind;
 				if (r == 0 && i1 is _CiComplItemSnippet s1 && i2 is _CiComplItemSnippet s2) {
@@ -235,7 +235,7 @@ static class CiSnippets
 		int pos = ci.Span.Start, endPos = pos + ci.Span.Length + codeLenDiff;
 
 		//if docSnippet above method, add parameters
-		if (snippet.DisplayText == "docSnippet") {
+		if (snippet.ci.DisplayText == "docSnippet") {
 			s = snippet.x.Value;
 			int j = s.Find("$param$");
 			if (j >= 0) {

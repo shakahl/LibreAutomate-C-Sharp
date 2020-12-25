@@ -20,7 +20,7 @@ using System.Windows.Controls;
 using System.Windows.Media;
 //using System.Linq;
 
-//TODO: now global keys (target="") works only when main window active, not when eg a floating panel active.
+//TODO: now global keys (target="") work only when main window active, not when eg a floating panel active.
 //TODO: Esc = focus editor; Shift+Esc = focus last focused non-editor control. It is documented.
 
 static class Menus
@@ -28,7 +28,22 @@ static class Menus
 	[Command(target = "Files")]
 	public static class File
 	{
-		[Command(keys = "F2")]
+		[Command(target = "", image = "resources/images/newfile_16x.xaml")]
+		public static class New
+		{
+			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
+
+			[Command('s', keys = "Ctrl+N", image = "resources/images/csfile_16x.xaml")]
+			public static void New_script() { _New("Script.cs"); }
+
+			[Command('c', image = "resources/images/csclassfile_16x.xaml")]
+			public static void New_class() { _New("Class.cs"); }
+
+			[Command('f', image = "resources/images/folderclosed_16x.xaml")]
+			public static void New_folder() { _New(null); }
+		}
+
+		[Command(separator = true, keys = "F2")]
 		public static void Rename() { App.Model.RenameSelected(); }
 
 		[Command(keysText = "Delete")]
@@ -40,7 +55,10 @@ static class Menus
 		[Command("Copy, paste")]
 		public static class CopyPaste
 		{
-			[Command("Cu_t", keysText = "Ctrl+X")]
+			[Command("Multi-select", checkable = true)]
+			public static void MultiSelect_files() { Panels.Files.TreeControl.SetMultiSelect(toggle: true); }
+
+			[Command("Cu_t", separator = true, keysText = "Ctrl+X")]
 			public static void Cut_file() { App.Model.CutCopySelected(true); }
 
 			[Command("Copy", keysText = "Ctrl+C")]
@@ -145,22 +163,6 @@ static class Menus
 			App.Wmain.Hide();
 			App.Wmain.Close();
 		}
-	}
-
-	[Command(target = "")]
-	public static class New
-	{
-		static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
-
-		[Command('s', keys = "Ctrl+N", image = "resources/images/newfile_16x.xaml")]
-		//[Command('s', keys = "Ctrl+N", image = "resources/images/csfile_16x.xaml")]
-		public static void New_script() { _New("Script.cs"); }
-
-		[Command('c', image = "resources/images/csclassfile_16x.xaml")]
-		public static void New_class() { _New("Class.cs"); }
-
-		[Command('f', image = "resources/images/folderclosed_16x.xaml")]
-		public static void New_folder() { _New(null); }
 	}
 
 	[Command(target = "Edit")]
@@ -338,7 +340,14 @@ static class Menus
 	public static class Tools
 	{
 		[Command(image = "resources/images/settingsgroup_16x.xaml")]
-		public static void Options() { FOptions.ZShow(); }
+		//public static void Options() { Aedit.DOptions.ZShow(); }
+		public static void Options() { //TODO
+#if DEBUG
+			Aedit.DOptions.ZShow();
+#else
+			FOptions.ZShow();
+#endif
+		}
 
 		[Command(separator = true, target = "Output")]
 		public static class Output
@@ -401,6 +410,13 @@ static class Menus
 
 	[Command]
 	public static void TEST() {
+
+		EdDatabases.CreateRefAndDoc();
+		EdDatabases.CreateWinapi();
+
+
+
+
 		//var h = Panels.Editor.ZActiveDoc.Hwnd;
 		//AOutput.Write(h);
 		////h.ShowLL(false);

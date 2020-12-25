@@ -196,7 +196,8 @@ class PanelOutput : DockPanel
 							.Append("<open \"").Append(f.IdStringWithWorkspace).Append('|').Append(s, i1, len1).Append("\">")
 							.Append("line ").Append(s, i1, len1).Append("<> in <z 0xFAFAD2>").Append(f.Name).Append("<>");
 
-							isMain = s.Eq(k.start, "   at Script..ctor(String[] args) in ");
+							isMain = s.Eq(k.start, "   at Script..ctor(String[] args) in ")
+								|| s.Eq(k.start, "   at <Program>$.<Main>$(String[] args) in "); //top-level statements
 							if (!isMain || !f.IsScript) b.Append(", <\a>").Append(s, k.start + 6, g.Start - k.start - 10).Append("</\a>");
 							b.AppendLine();
 

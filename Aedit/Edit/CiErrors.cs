@@ -286,7 +286,7 @@ class CiErrors
 				}
 			}
 		} else {
-			x.Hyperlink("^r", "\nAdd assembly reference...");
+			x.Hyperlink("^r", "\nAdd assembly reference or class file...");
 			if (!(extMethod | isGeneric | isAttribute)) x.Hyperlink("^w" + errName, "\nFind Windows API...");
 		}
 	}

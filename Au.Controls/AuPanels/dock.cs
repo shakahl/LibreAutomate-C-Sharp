@@ -26,7 +26,6 @@ namespace Au.Controls
 			enum _DockState { Hide = 1, Float = 2, }
 
 			void _CaptionContextMenu(object sender, ContextMenuEventArgs e) {
-				//TODO: now no menu when r-clicked inactive tab button
 				if (!_IsGoodMouseEvent(sender, e, out var target)) return;
 				e.Handled = true;
 				target._CaptionContextMenu(this);
@@ -54,7 +53,7 @@ namespace Au.Controls
 
 				//ContextMenuOpening?.Invoke(this, m);
 
-				m.Show(_elem);
+				m.Show(thisOrParentTab._elem);
 
 				void _DockStateItem(_DockState state, string text) {
 					m[text] = o => _SetDockState(state);
@@ -170,6 +169,7 @@ namespace Au.Controls
 			void _Unhide() => _SetDockState(_state & ~_DockState.Hide);
 
 			void _SetDockState(_DockState state, bool onDrag = false) {
+				//AOutput.QM2.Write(this, state, "                    ", _state);
 				_savedDockState = 0;
 				if (state == _DockState.Hide) state |= _state & _DockState.Float;
 				if (state == _state) {

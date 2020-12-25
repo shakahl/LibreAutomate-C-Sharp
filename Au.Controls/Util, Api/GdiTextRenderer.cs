@@ -88,9 +88,11 @@ namespace Au.Controls
 
 		//public void FontBoldItalic() => Api.SelectObject(_dc, NativeFont_.BoldItalicCached(_dpi));
 
+#pragma warning disable CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 		/// <summary>
 		/// Draws text at the current drawing position of the DC, and updates it.
 		/// </summary>
+		/// <param name="color">0xBBGGRR</param>
 		public void DrawText(string s, int color = 0, Range? range = null) {
 			var (from, len) = range.GetOffsetAndLength(s.Length); if (len == 0) return;
 			if (_oldAlign == 0xffffffff) _oldAlign = Api.SetTextAlign(_dc, 1); //TA_UPDATECP
@@ -100,6 +102,7 @@ namespace Au.Controls
 		/// <summary>
 		/// Draws text at specified position. Does not use/update the current drawing position of the DC.
 		/// </summary>
+		/// <param name="color">0xBBGGRR</param>
 		public void DrawText(string s, POINT p, int color = 0, Range? range = null) {
 			var (from, len) = range.GetOffsetAndLength(s.Length); if (len == 0) return;
 			if (_oldAlign != 0xffffffff) { Api.SetTextAlign(_dc, _oldAlign); _oldAlign = 0xffffffff; }
@@ -109,11 +112,13 @@ namespace Au.Controls
 		/// <summary>
 		/// Draws text clipped in specified rectangle. Does not use/update the current drawing position of the DC.
 		/// </summary>
+		/// <param name="color">0xBBGGRR</param>
 		public void DrawText(string s, in RECT r, int color = 0, Range? range = null) {
 			var (from, len) = range.GetOffsetAndLength(s.Length); if (len == 0) return;
 			if (_oldAlign != 0xffffffff) { Api.SetTextAlign(_dc, _oldAlign); _oldAlign = 0xffffffff; }
 			_DrawText(s, r, color, from, len);
 		}
+#pragma warning restore CS1573 // Parameter has no matching param tag in the XML comment (but other parameters do)
 
 		unsafe void _DrawText(string s, int x, int y, int color, int from, int len) {
 			if (color != _color) Api.SetTextColor(_dc, _color = color);

@@ -38,6 +38,14 @@ static class Panels
 	public static void LoadAndCreateToolbars() {
 		var pm = PanelManager = new AuPanels();
 
+		//TODO: later remove this code. Now need to delete old custom Layout.xml. It uses wrong document etc.
+		var s1 = AppSettings.DirBS + "Layout.xml";
+		if (AFile.ExistsAsFile(s1)) {
+			var s2 = AFile.LoadText(s1);
+			//AOutput.Write(s2);
+			if (s2.RegexIsMatch(@"<document name=""documents"" ?/>\s*</tab>")) AFile.Delete(s1);
+		}
+
 		pm.BorderBrush = SystemColors.ActiveBorderBrush;
 		//pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", null);
 		pm.Load(AFolders.ThisAppBS + @"Default\Layout.xml", AppSettings.DirBS + "Layout.xml");

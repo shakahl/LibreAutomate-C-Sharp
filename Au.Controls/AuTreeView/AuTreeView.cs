@@ -473,7 +473,8 @@ namespace Au.Controls
 					} else {
 						//AOutput.Write("click", eDown.ChangedButton);
 						if (_mouse.unselect) Select(_mouse.h.index, true, unselectOther: true);
-						_MouseEvents(true, SingleClickActivate, false, eDown, _mouse.h, _mouse.xy, _mouse.mk);
+						bool activateEvent = SingleClickActivate && eDown.ChangedButton == MouseButton.Left;
+						_MouseEvents(true, activateEvent, false, eDown, _mouse.h, _mouse.xy, _mouse.mk);
 					}
 				}
 			}
@@ -1009,10 +1010,10 @@ namespace Au.Controls
 			var p = _hh.Hwnd.MouseClientXY;
 			GetDropInfo(p, out var d);
 			bool noMark = false;
-			Key key = 0;
+			Key key;
 			//expand/collapse folder
 			if (Keyboard.IsKeyDown(key = Key.Right) || Keyboard.IsKeyDown(key = Key.Left)) {
-				if (d.rawIndex >= 0 && _avi[d.rawIndex].item.IsFolder) Expand(d.rawIndex, key == Key.Right);
+				if (d.targetItem?.IsFolder ?? false) Expand(d.targetIndex, key == Key.Right);
 				return;
 			}
 			//scroll. When not moving mouse, this is called every 64 ms.
@@ -1103,24 +1104,22 @@ namespace Au.Controls
 			d = default;
 			d.xy = xy;
 			if (_avi.NE_()) {
-				d.targetIndex = d.rawIndex = -1;
+				d.targetIndex = -1;
 				return;
 			}
 			if (HitTest(d.xy, out var h)) {
-				d.targetIndex = d.rawIndex = h.index;
+				d.targetIndex = h.index;
 				bool folder = h.item.IsFolder, image = h.part == TVParts.Image, bottom = d.xy.y >= _ItemTop(h.index) + (_itemH + 1) / 2;
 				if (folder && bottom && !image && h.index < _avi.Length - 1 && _avi[h.index + 1].level > _avi[h.index].level) { //between folder and its first child
 					d.targetIndex++;
-					folder = false;
+					//folder = false;
 				} else {
 					if (!(d.intoFolder = folder & image)) d.insertAfter = bottom;
 				}
+				d.targetItem = _avi[d.targetIndex].item;
 			} else {
-				d.targetIndex = _avi.Length - 1;
-				d.insertAfter = true;
-				d.rawIndex = -1;
+				d.targetIndex = -1;
 			}
-			d.targetItem = _avi[d.targetIndex].item;
 		}
 
 		#endregion

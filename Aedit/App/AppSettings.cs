@@ -46,6 +46,9 @@ class AppSettings : ASettings
 	public string wndPos { get => _wndpos; set => Set(ref _wndpos, value); }
 	string _wndpos;
 
+	public bool files_multiSelect { get => _files_multiSelect; set => Set(ref _files_multiSelect, value); }
+	bool _files_multiSelect;
+
 	public string tools_AWnd_wndPos { get => _tools_AWnd_wndPos; set => Set(ref _tools_AWnd_wndPos, value); }
 	string _tools_AWnd_wndPos;
 

@@ -3,9 +3,9 @@
     {
       "src": [
         {
-		  "src": "../../../_Au/",
+		  "src": "../../../Au/",
           "files": [
-            "_Au.csproj"
+            "Au.csproj"
           ]
         }
       ],

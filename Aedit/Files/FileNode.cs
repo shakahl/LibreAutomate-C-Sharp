@@ -694,11 +694,10 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		/// Uses caching to avoid loading file each time, but reloads if file modified; don't modify the XML DOM.
 		/// </summary>
 		/// <param name="template">null or relative path of template in Templates\files. Case-sensitive.</param>
-		public static (XElement x, bool cached) LoadXml(string template = null) {
+		public static XElement LoadXml(string template = null) {
 			//load files.xml first time, or reload if file modified
 			AFile.GetProperties(s_xmlFilePath, out var fp, FAFlags.UseRawPath);
-			bool cached = s_xml != null && fp.LastWriteTimeUtc == s_xmlFileTime;
-			if (!cached) {
+			if (s_xml == null || fp.LastWriteTimeUtc != s_xmlFileTime) {
 				s_xml = AExtXml.LoadElem(s_xmlFilePath);
 				s_xmlFileTime = fp.LastWriteTimeUtc;
 			}
@@ -709,7 +708,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 				for (int i = 0; i < a.Length; i++) x = x?.Elem(i < a.Length - 1 ? "d" : null, "n", a[i]);
 				Debug.Assert(x != null);
 			}
-			return (x, cached);
+			return x;
 		}
 		static XElement s_xml;
 		static readonly string s_xmlFilePath = AFolders.ThisAppBS + @"Templates\files.xml";
@@ -786,6 +785,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	/// <param name="target"></param>
 	/// <param name="pos"></param>
 	public bool FileMove(FileNode target, FNPosition pos) {
+		if (target == null) { target = Root; pos = FNPosition.Inside; }
 		if (!CanMove(target, pos)) return false;
 
 		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;
@@ -830,6 +830,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	/// <param name="newModel">Used when importing workspace.</param>
 	internal FileNode FileCopy(FileNode target, FNPosition pos, FilesModel newModel = null) {
 		_model.Save?.TextNowIfNeed(true);
+		if (target == null) { target = Root; pos = FNPosition.Inside; }
 
 		//create unique name
 		var newParent = (pos == FNPosition.Inside) ? target : target.Parent;

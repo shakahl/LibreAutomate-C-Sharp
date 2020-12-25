@@ -256,6 +256,7 @@ partial class CiStyling
 				//ClassificationTypeNames.PreprocessorText => EStyle.None,
 				ClassificationTypeNames.PropertyName => EToken.Function,
 				ClassificationTypeNames.Punctuation => EToken.Punctuation,
+				ClassificationTypeNames.RecordName => EToken.Type,
 				ClassificationTypeNames.StringEscapeCharacter => EToken.StringEscape,
 				ClassificationTypeNames.StringLiteral => EToken.String,
 				ClassificationTypeNames.StructName => EToken.Type,

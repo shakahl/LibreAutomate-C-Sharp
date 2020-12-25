@@ -85,7 +85,7 @@ static class EdDatabases
 			a.Add(s);
 		}
 		a.Add("All");
-		int i = ADialog.ShowList(a, "Create database", "For runtime") - 1;
+		int i = ADialog.ShowList(a, "Create database", "For runtime", footerText: "Note: These are .NET SDK reference assembly directories. Versions may not match versions of runtime and even SDK.") - 1;
 		if (i < 0) return;
 		int n = a.Count - 1;
 		if (i < n) {

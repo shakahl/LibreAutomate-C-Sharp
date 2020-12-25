@@ -285,7 +285,7 @@ class CiPopupList
 		public bool DrawText() {
 			var ci = _cd.item as CiComplItem;
 
-			var s = ci.DisplayText;
+			var s = _cd.item.DisplayText;
 			Range black, green;
 			if (ci.commentOffset == 0) { black = ..s.Length; green = default; } else { black = ..ci.commentOffset; green = ci.commentOffset..; }
 

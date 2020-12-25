@@ -1,22 +1,10 @@
-#define BUFFERED_API
-//#define BUFFERED_NET //similar speed and memory
-//without buffered flickers and slower
-
-using Au;
 using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using Au.Util;
 using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
-using System.Windows.Input;
-using System.Windows.Controls;
-using System.Windows.Controls.Primitives;
-using System.Threading;
-using System.Windows.Media;
 using System.Diagnostics;
 
 namespace Au.Controls
@@ -53,9 +41,6 @@ namespace Au.Controls
 	//		_w.SetTransparency(true, 255);
 			Api.SetLayeredWindowAttributes(_w, 0, 0, 0);
 #endif
-#if BUFFERED_API
-				BufferedPaintInit(); //fast
-#endif
 
 				return new HandleRef(this, _w.Handle);
 			}
@@ -71,48 +56,25 @@ namespace Au.Controls
 				switch (msg) {
 				case Api.WM_NCCREATE:
 					_w = w;
+					BufferedPaint.Init();
 					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
-#if BUFFERED_API
-					BufferedPaintUnInit();
-#endif
+					BufferedPaint.Uninit();
 					break;
 				case Api.WM_NCHITTEST:
-					return Api.HTTRANSPARENT;
+					return Api.HTTRANSPARENT; //workaround for focus problems and closing parent Popup on click
 				case Api.WM_PAINT:
-					var r = w.ClientRect; //never mind: should draw only the invalidated rect (ps.rcPaint). It saves ~1% CPU.
-					Api.BeginPaint(w, out var ps);
-					try {
-#if BUFFERED_NET
-					using var bg = System.Drawing.BufferedGraphicsManager.Current.Allocate(ps.hdc, r);
-					var g = bg.Graphics;
-					var dc=g.GetHdc();
-					try { _tv._Render(dc, r); }
-					finally { g.ReleaseHdc(dc); }
-					bg.Render();
-#elif BUFFERED_API
-						BP_PAINTPARAMS pp = default; pp.cbSize = sizeof(BP_PAINTPARAMS);
-						var hb = BeginBufferedPaint(ps.hdc, r, BP_BUFFERFORMAT.BPBF_TOPDOWNDIB, ref pp, out var hdc); //BPBF_COMPATIBLEBITMAP slower //tested: works with 16 and 8 bit colors too
-						if (hb != default) {
-							try { _tv._Render(hdc, r); }
-							finally { EndBufferedPaint(hb, true); }
-						}
-#else
-					_tv._Render(ps.hdc, r);
-#endif
-					}
-					finally { Api.EndPaint(w, ps); }
+					//never mind: should draw only the invalidated rect (ps.rcPaint). It saves ~1% CPU.
+					//without buffered flickers and slower. Tested .NET buffered paint, similar speed and memory.
+					using (var bp = new BufferedPaint(w, true)) _tv._Render(bp.DC, bp.Rect);
 					return default;
 				case Api.WM_SHOWWINDOW when wParam == 1:
 					if (_tv._ensureVisibleIndex > 0) _tv.EnsureVisible(_tv._ensureVisibleIndex);
 					break;
 				}
 
-				var R = Api.DefWindowProc(w, msg, wParam, lParam);
-
-
-				return R;
+				return Api.DefWindowProc(w, msg, wParam, lParam);
 			}
 
 			protected override nint WndProc(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
@@ -125,38 +87,6 @@ namespace Au.Controls
 
 			//protected override System.Windows.Automation.Peers.AutomationPeer OnCreateAutomationPeer() => null; //removes unused object from MSAA tree, but then no UIA
 			_Accessible _acc;
-
-#if BUFFERED_API
-			[DllImport("uxtheme.dll", PreserveSig = true)]
-			internal static extern int BufferedPaintInit();
-			[DllImport("uxtheme.dll", PreserveSig = true)]
-			internal static extern int BufferedPaintUnInit();
-			[DllImport("uxtheme.dll")]
-			internal static extern IntPtr BeginBufferedPaint(IntPtr hdcTarget, in RECT prcTarget, BP_BUFFERFORMAT dwFormat, ref BP_PAINTPARAMS pPaintParams, out IntPtr phdc);
-			[DllImport("uxtheme.dll", PreserveSig = true)]
-			internal static extern int EndBufferedPaint(IntPtr hBufferedPaint, bool fUpdateTarget);
-			internal enum BP_BUFFERFORMAT
-			{
-				BPBF_COMPATIBLEBITMAP,
-				BPBF_DIB,
-				BPBF_TOPDOWNDIB,
-				BPBF_TOPDOWNMONODIB
-			}
-			internal struct BP_PAINTPARAMS
-			{
-				public int cbSize;
-				public uint dwFlags;
-				public RECT* prcExclude;
-				//public BLENDFUNCTION* pBlendFunction;
-				uint pBlendFunction;
-			}
-			//internal struct BLENDFUNCTION {
-			//	public byte BlendOp;
-			//	public byte BlendFlags;
-			//	public byte SourceConstantAlpha;
-			//	public byte AlphaFormat;
-			//}
-#endif
 
 			protected override void OnPropertyChanged(DependencyPropertyChangedEventArgs e) {
 				//AOutput.Write(e.Property);

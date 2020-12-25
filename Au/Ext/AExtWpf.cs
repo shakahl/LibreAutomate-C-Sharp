@@ -32,13 +32,15 @@ namespace Au
 		/// </summary>
 		/// <param name="t"></param>
 		public static AWnd Hwnd(this DependencyObject t) {
+			bool isPopup = false;
 			switch (t) {
 			case null: return default;
 			case Window w: return (AWnd)new WindowInteropHelper(w).Handle; //FromDependencyObject works too, but this is usually slightly faster
-			case Popup p: t = p.Child; if (t == null) return default; break; //FromVisual(Popup) returns null, FromDependencyObject too
+			case Popup p: t = p.Child; if (t == null) return default; isPopup = true; break; //FromVisual(Popup) returns null, FromDependencyObject too
 			}
 			if (PresentationSource.FromDependencyObject(t) is HwndSource hs) return (AWnd)hs.Handle;
-			return default;
+			if (isPopup) return default;
+			return Hwnd(LogicalTreeHelper.GetParent(t));
 		}
 		//rejected: notPopup. Not useful.
 		///// <summary>

@@ -96,9 +96,6 @@ class CiSignature
 		//APerf.First();
 		if (!CodeInfo.GetContextAndDocument(out var cd, -2)) return; //returns false if position is in meta comments
 
-		CodeInfo.HideXamlPopupAndTempWindows();
-		CodeInfo._compl.Cancel();
-
 		_cancelTS?.Cancel();
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
@@ -219,6 +216,12 @@ class CiSignature
 			OnLinkClick = (ph, e) => ph.Xaml = _FormatXaml(e.ToInt(1), userSelected: true)
 		};
 		_xamlPopup.Xaml = xaml;
+
+		if (!_xamlPopup.IsVisible) {
+			CodeInfo.HideXamlPopupAndTempWindows();
+			CodeInfo._compl.Cancel();
+		}
+
 		_xamlPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
 		//APerf.NW();
 

@@ -235,6 +235,10 @@ partial class FOptions : DialogForm
 
 	unsafe void _InitFont()
 	{
+#if !DEBUG
+		this.tabControl1.Controls.Remove(_tabFont);
+		return;
+#endif
 		var styles = CiStyling.TStyles.Settings;
 
 		//font
@@ -370,7 +374,7 @@ Line number";
 		{
 			if(ignoreColorEvents) return;
 			int H = _UpDownValue(_nHue), L = _UpDownValue(_nLum), S = _UpDownValue(_nSat);
-			int color = ColorInt.SwapRB(ColorHLSToRGB((ushort)H, (ushort)L, (ushort)S));
+			int color = ColorInt.SwapRB(KApi.ColorHLSToRGB((ushort)H, (ushort)L, (ushort)S));
 			_SetColorControls(color, _EColorControls.Hex | _EColorControls.RGB);
 			_UpdateSci();
 		}
@@ -384,7 +388,7 @@ Line number";
 				_nBlue.Value = color & 0xff;
 			}
 			if(ctl.Has(_EColorControls.HLS)) {
-				ColorRGBToHLS(ColorInt.SwapRB(color), out var H, out var L, out var S);
+				KApi.ColorRGBToHLS(ColorInt.SwapRB(color), out var H, out var L, out var S);
 				_nHue.Value = H;
 				_nLum.Value = L;
 				_nSat.Value = S;
@@ -482,12 +486,6 @@ To apply changes after deleting etc, restart this application.
 	[DllImport("gdi32.dll", EntryPoint = "EnumFontFamiliesExW")]
 	internal static extern int EnumFontFamiliesEx(IntPtr hdc, in Api.LOGFONT lpLogfont, FONTENUMPROC lpProc, LPARAM lParam, uint dwFlags);
 	internal unsafe delegate int FONTENUMPROC(Api.LOGFONT* lf, IntPtr tm, uint fontType, LPARAM lParam);
-
-	[DllImport("shlwapi.dll")]
-	internal static extern void ColorRGBToHLS(int clrRGB, out ushort pwHue, out ushort pwLuminance, out ushort pwSaturation);
-
-	[DllImport("shlwapi.dll")]
-	internal static extern int ColorHLSToRGB(ushort wHue, ushort wLuminance, ushort wSaturation);
 
 	void _ApplyFont()//TODO
 	{

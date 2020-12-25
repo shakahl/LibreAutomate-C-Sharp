@@ -1,4 +1,7 @@
-﻿using System;
+﻿//#define SERVE
+#define SSH
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -13,6 +16,7 @@ using Au.Types;
 using YamlDotNet.RepresentationModel;
 using System.Net;
 using Microsoft.Win32;
+using Renci.SshNet;
 
 [module: DefaultCharSet(CharSet.Unicode)]
 
@@ -25,18 +29,18 @@ using Microsoft.Win32;
 //	The Google site search does it much better, and often faster.
 //	info: To enable it, add "_enableSearch": true in "globalMetadata".
 
+//note: uses msbuild from VS2019, not from VS2019 preview. It must be up to date.
+
 unsafe class Program
 {
-	static void Main(string[] args)
-	{
+	static void Main(string[] args) {
 		try { _Main(); }
-		catch(Exception e) { AOutput.Write(e); }
+		catch (Exception e) { AOutput.Write(e); }
 	}
 
-	static void _Main()
-	{
+	static void _Main() {
 		bool isConsole = AOutput.IsConsoleProcess;
-		if(!isConsole) {
+		if (!isConsole) {
 			AOutput.QM2.UseQM2 = true;
 			AOutput.Clear();
 		}
@@ -55,10 +59,10 @@ unsafe class Program
 		//Upload(docDir); return;
 		//CompressAndUpload(docDir); return;
 
-		foreach(var v in Process.GetProcessesByName("docfx")) v.Kill();
-		if(isConsole) {
+		foreach (var v in Process.GetProcessesByName("docfx")) v.Kill();
+		if (isConsole) {
 			int k = 0;
-			foreach(var v in AWnd.FindAll(@"C:\WINDOWS\system32\cmd.exe", "ConsoleWindowClass")) { if(k++ > 0) v.Close(); }
+			foreach (var v in AWnd.FindAll(@"C:\WINDOWS\system32\cmd.exe", "ConsoleWindowClass")) { if (k++ > 0) v.Close(); }
 		}
 
 		AFile.Delete(siteDir);
@@ -66,27 +70,38 @@ unsafe class Program
 
 		var t1 = ATime.PerfMilliseconds;
 
-		using(var fw = new FileSystemWatcher(apiDir, "*.yml")) {
+		using (var fw = new FileSystemWatcher(apiDir, "*.yml")) {
 			fw.Changed += (sen, e) => {
 				//AOutput.Write(e.Name);
-				if(e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false);
+				if (e.Name.Starts("Au.", true)) ProcessYamlFile(e.FullPath, false);
 			};
 			fw.EnableRaisingEvents = true;
 			fw.NotifyFilter = NotifyFilters.LastWrite;
 
+#if SERVE
 			bool serving = false;
 			try {
-				AFile.RunConsole(o => {
-					AOutput.Write(o);
-					if(o.Starts("Serving")) throw new OperationCanceledException();
-				}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"" --serve");
-				// --force
+#endif
+			int r = AFile.RunConsole(o => {
+				AOutput.Write(o);
+				if (o.Starts("Serving")) throw new OperationCanceledException();
+			}, docfx, $@"docfx.json --intermediateFolder ""{objDir}"""
+				//+ " --force"
+#if SERVE
+				+ " --serve"
+#endif
+				);
+#if SERVE
 			}
 			catch(OperationCanceledException) {
 				serving = true;
 			}
 			//if(!serving) { ADialog.Show("error?"); return; } //need if this process is not hosted
 			if(!serving) return;
+#else
+			//AOutput.Write(r);
+			if (r != 0) return;
+#endif
 		}
 
 		var t2 = ATime.PerfMilliseconds;
@@ -99,10 +114,10 @@ unsafe class Program
 		//AKeys.Key("F5");
 
 		1.s();
-		if(1 == ADialog.Show("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
+		if (1 == ADialog.Show("Upload?", null, "1 Yes|2 No"/*, secondsTimeout: 5*/)) CompressAndUpload(docDir);
 
 		//Delete obj folder if big. Each time it grows by 10 MB, and after a day or two can be > 1 GB. After deleting builds slower by ~50%.
-		if(AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { AOutput.Write("Deleting obj folder."); AFile.Delete(objDir); }
+		if (AFile.More.CalculateDirectorySize(objDir) / 1024 / 1024 > 500) { AOutput.Write("Deleting obj folder."); AFile.Delete(objDir); }
 		//info: if DocFX starts throwing stack overflow exception, delete the obj folder manually. It is likely to happen after many refactorings in the project.
 	}
 
@@ -110,73 +125,71 @@ unsafe class Program
 	/// Workaround for DocFX bug: applies markdown in inline code. It can damage whole text.
 	/// Also something more.
 	/// </summary>
-	static void ProcessYamlFile(string path, bool test)
-	{
+	static void ProcessYamlFile(string path, bool test) {
 		//AOutput.Write(path);
 		try {
 			//var text = File.ReadAllText(path);
 			var yaml = new YamlStream();
-			using(var fs = File.OpenText(path)) yaml.Load(fs);
+			using (var fs = File.OpenText(path)) yaml.Load(fs);
 
 			var root = (YamlMappingNode)yaml.Documents[0].RootNode;
 
 			var mark = new YamlScalarNode("au");
-			if(root.Children.ContainsKey(mark)) return;
+			if (root.Children.ContainsKey(mark)) return;
 
 			bool save = false;
-			foreach(YamlMappingNode item in (YamlSequenceNode)root.Children[new YamlScalarNode("items")]) {
-				foreach(var name in s_names) {
-					if(!item.Children.TryGetValue(name, out var node)) continue;
+			foreach (YamlMappingNode item in (YamlSequenceNode)root.Children[new YamlScalarNode("items")]) {
+				foreach (var name in s_names) {
+					if (!item.Children.TryGetValue(name, out var node)) continue;
 					//AOutput.Write("----", name, node.NodeType);
-					if(node is YamlScalarNode scalar) { //summary, remarks
-						if(ProcessYamlValue(scalar)) save = true;
-					} else if(node is YamlMappingNode map) { //syntax
-						if(map.Children.TryGetValue("parameters", out node)) {
-							foreach(YamlMappingNode par in node as YamlSequenceNode) {
-								if(!par.Children.TryGetValue("description", out node)) continue;
-								if(ProcessYamlValue(node as YamlScalarNode)) save = true;
+					if (node is YamlScalarNode scalar) { //summary, remarks
+						if (ProcessYamlValue(scalar)) save = true;
+					} else if (node is YamlMappingNode map) { //syntax
+						if (map.Children.TryGetValue("parameters", out node)) {
+							foreach (YamlMappingNode par in node as YamlSequenceNode) {
+								if (!par.Children.TryGetValue("description", out node)) continue;
+								if (ProcessYamlValue(node as YamlScalarNode)) save = true;
 							}
 						}
-						if(map.Children.TryGetValue("return", out node)) {
-							if(!(node as YamlMappingNode).Children.TryGetValue("description", out node)) continue;
-							if(ProcessYamlValue(node as YamlScalarNode)) save = true;
+						if (map.Children.TryGetValue("return", out node)) {
+							if (!(node as YamlMappingNode).Children.TryGetValue("description", out node)) continue;
+							if (ProcessYamlValue(node as YamlScalarNode)) save = true;
 						}
-					} else if(node is YamlSequenceNode seq) { //exceptions, example
-						switch(name) {
+					} else if (node is YamlSequenceNode seq) { //exceptions, example
+						switch (name) {
 						case "example":
-							foreach(var v in seq) {
-								if(ProcessYamlValue(v as YamlScalarNode)) save = true;
+							foreach (var v in seq) {
+								if (ProcessYamlValue(v as YamlScalarNode)) save = true;
 							}
 							break;
 						case "exceptions":
-							foreach(YamlMappingNode v in seq) {
-								if(!v.Children.TryGetValue("description", out node)) continue;
-								if(ProcessYamlValue(node as YamlScalarNode)) save = true;
+							foreach (YamlMappingNode v in seq) {
+								if (!v.Children.TryGetValue("description", out node)) continue;
+								if (ProcessYamlValue(node as YamlScalarNode)) save = true;
 							}
 							break;
 						}
 					}
 				}
 			}
-			if(!save) return;
+			if (!save) return;
 			root.Add(mark, "true");
 			var tmp = path + ".tmp";
-			using(var sw = File.CreateText(tmp)) {
+			using (var sw = File.CreateText(tmp)) {
 				sw.WriteLine("### YamlMime:ManagedReference");
 				yaml.Save(sw, false);
 			}
-			if(test) {
+			if (test) {
 				//AOutput.Write(File.ReadAllText(tmp));
 			} else {
 				AFile.Move(tmp, path, FIfExists.Delete);
 			}
 		}
-		catch(Exception e) { AOutput.Write(e); }
+		catch (Exception e) { AOutput.Write(e); }
 	}
 	static string[] s_names = { "summary", "remarks", "example", "syntax", "exceptions" };
 
-	static bool ProcessYamlValue(YamlScalarNode scalar)
-	{
+	static bool ProcessYamlValue(YamlScalarNode scalar) {
 		//return false;
 		var s = scalar.Value;
 		int R = 0;
@@ -186,21 +199,20 @@ unsafe class Program
 		//	Markdown is not applied inside any <...>, including HTML comment. Also add <au>, else may not add <p> etc.
 		//	Will remove the enclosing later, when processing HTML.
 		//	Another way - escape markdown characters in <c>...</c> (prepend \). Problem: markdown is not applied in HTML blocks, eg HTML tables, except in certain parts.
-		if(0 != s.RegexReplace(@"(?s)(?<!<pre>)<code>.+?</code>", @"<au><!--$0--></au>", out s)) R |= 1;
+		if (0 != s.RegexReplace(@"(?s)(?<!<pre>)<code>.+?</code>", @"<au><!--$0--></au>", out s)) R |= 1;
 
 		//Use C# colors in code blocks. Without it the javascript would guess, often incorrectly.
-		if(0 != s.RegexReplace(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
+		if (0 != s.RegexReplace(@"<pre><code>", @"<pre><code class=""cs"">", out s)) R |= 2;
 
-		if(R == 0) return false;
+		if (R == 0) return false;
 		//if(0 != (R & 2)) AOutput.Write(s);
 		scalar.Value = s;
 		return true;
 	}
 
-	static void ProcessHtmlFiles(string siteDir, bool test)
-	{
+	static void ProcessHtmlFiles(string siteDir, bool test) {
 		string files = "*.html";
-		if(test) {
+		if (test) {
 			//files = @"\api\Au.AaaDocFX*";
 			//files = @"\api\Au.ARegex.Replace";
 			files = @"\api\Au.AAcc.Find";
@@ -208,24 +220,23 @@ unsafe class Program
 			files = @"\articles\Wildcard expression";
 			files += ".html";
 		}
-		foreach(var f in AFile.Enumerate(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
-			if(f.IsDirectory) continue;
-			var name = f.Name; if(!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
+		foreach (var f in AFile.Enumerate(siteDir, FEFlags.AndSubdirectories | FEFlags.NeedRelativePaths)) {
+			if (f.IsDirectory) continue;
+			var name = f.Name; if (!name.Like(files, true) || name.Ends(@"\toc.html")) continue;
 			var file = f.FullPath;
 			//if(test) AOutput.Write($"<><c 0xff>{file}</c>");
 			var s = File.ReadAllText(file);
 			bool modified = ProcessHtmlFile(ref s, name.Starts(@"\api"), siteDir);
-			if(modified) File.WriteAllText(!test ? file : file.Remove(file.Length - 1), s);
+			if (modified) File.WriteAllText(!test ? file : file.Remove(file.Length - 1), s);
 		}
 
 		ProcessJs(siteDir);
 	}
 
-	static bool ProcessHtmlFile(ref string s, bool isApi, string siteDir)
-	{
+	static bool ProcessHtmlFile(ref string s, bool isApi, string siteDir) {
 		int nr = 0;
 
-		if(isApi) {
+		if (isApi) {
 			//Remove the <au><!--<code>*xml*</code>--></au> enclosing.
 			nr += s.RegexReplace(@"<au><!--(<code>.+?</code>)--></au>", @"$1", out s);
 
@@ -244,19 +255,19 @@ unsafe class Program
 			nr += s.RegexReplace(@"(</h1>\s*<hr class=""overload"") id="".+?"" data-uid="".+?""", @"$1", out s);
 
 			//Add "(+ n overloads)" link in h1 and "(next/top)" links in h2 if need.
-			if(s.RegexFindAll(@"<h2 class=""overload"" id=""(.+?)"".*?>Overload", out var a) && a.Length > 1) {
+			if (s.RegexFindAll(@"<h2 class=""overload"" id=""(.+?)"".*?>Overload", out var a) && a.Length > 1) {
 				var b = new StringBuilder();
 				int jPrev = 0;
-				for(int i = 0; i < a.Length; i++) {
+				for (int i = 0; i < a.Length; i++) {
 					bool first = i == 0, last = i == a.Length - 1;
 					int j = first ? s.Find("</h1>") : a[i].End;
 					b.Append(s, jPrev, j - jPrev);
 					jPrev = j;
 					b.Append("<span style='font-size:14px; font-weight: 400; margin-left:20px;'>(");
-					if(first) b.Append("+ ").Append(a.Length - 1).Append(" ");
+					if (first) b.Append("+ ").Append(a.Length - 1).Append(" ");
 					var href = last ? "top" : a[i + 1][1].Value;
 					b.Append("<a href='#").Append(href).Append("'>");
-					if(first) b.Append("overload").Append(a.Length == 2 ? "" : "s");
+					if (first) b.Append("overload").Append(a.Length == 2 ? "" : "s");
 					else b.Append(last ? "back to top" : "next");
 					b.Append("</a>)</span>");
 				}
@@ -272,13 +283,13 @@ unsafe class Program
 			nr += s.RegexReplace(@"<a href="""">(.+?)</a>", m => {
 				var k = m[1].Value;
 				string href = null;
-				foreach(var ns in s_ns) {
-					if(AFile.ExistsAsFile(siteDir + "/api/" + ns + k + ".html")) {
+				foreach (var ns in s_ns) {
+					if (AFile.ExistsAsFile(siteDir + "/api/" + ns + k + ".html")) {
 						href = "../api/" + ns + k + ".html";
 						break;
 					}
 				}
-				if(href == null) { AOutput.Write($"cannot resolve link: [{k}]()"); return m.Value; }
+				if (href == null) { AOutput.Write($"cannot resolve link: [{k}]()"); return m.Value; }
 				return m.ExpandReplacement($@"<a href=""{href}"">$1</a>");
 			}, out s);
 		}
@@ -292,7 +303,7 @@ unsafe class Program
 		//the same for renderAlerts
 		nr += s.RegexReplace(@"<div class=""(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\b",
 			o => {
-				string k = "info"; switch(o[1].Value[0]) { case 'W': k = "warning"; break; case 'I': case 'C': k = "danger"; break; }
+				string k = "info"; switch (o[1].Value[0]) { case 'W': k = "warning"; break; case 'I': case 'C': k = "danger"; break; }
 				return o.Value + " alert alert-" + k;
 			},
 			out s);
@@ -326,8 +337,7 @@ unsafe class Program
 	//	//File.WriteAllText(file, s);
 	//}
 
-	static void ProcessJs(string siteDir)
-	{
+	static void ProcessJs(string siteDir) {
 		var file = siteDir + @"\styles\docfx.js";
 		var s = File.ReadAllText(file);
 
@@ -344,12 +354,75 @@ unsafe class Program
 		File.WriteAllText(file, s);
 	}
 
-	static void CompressAndUpload(string docDir)
-	{
+	static void CompressAndUpload(string docDir) {
 		Compress(docDir);
 		Upload(docDir);
 	}
 
+#if SSH //extracting with ssh is much faster than than with php script, although it seems the host makes it much slower that should be (tested ssh in powershell, the same)
+	static void Compress(string docDir) {
+		var sevenZip = @"C:\Program Files\7-Zip\7z.exe";
+
+		AFile.Delete(docDir + @"\_site.tar");
+		AFile.Delete(docDir + @"\_site.tar.gz");
+
+		int r1 = AFile.RunConsole(out var s, sevenZip, $@"a _site.tar .\_site", docDir);
+		if (r1 != 0) { AOutput.Write(s); return; }
+		int r2 = AFile.RunConsole(out s, sevenZip, $@"a _site.tar.gz _site.tar", docDir);
+		if (r2 != 0) { AOutput.Write(s); return; }
+
+		AFile.Delete(docDir + @"\_site.tar");
+
+		AOutput.Write("Compressed");
+	}
+
+	static void Upload(string docDir) {
+		var rk = @"HKEY_CURRENT_USER\Software\Au\Help";
+		var ip = Registry.GetValue(rk, "kur", null) as string;
+		var port = (int)Registry.GetValue(rk, "kur2", null);
+		var user = Registry.GetValue(rk, "kas", null) as string;
+		var pass = Registry.GetValue(rk, "kaip", null) as string;
+		if (ip == null || user == null || pass == null) throw new FileNotFoundException("connection info not found in registry");
+
+		//upload. Use SFTP. Maybe possible with SSH, but I tried scp command and failed.
+		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); //to encode: AOutput.Write(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)));
+		var name = @"\_site.tar.gz";
+		var path = docDir + name;
+		using (var client = new WebClient()) {
+			client.Credentials = new NetworkCredential(user, pass);
+			//client.UploadFile("ftp://quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
+			client.UploadFile("ftp://185.224.138.106/au" + name, WebRequestMethods.Ftp.UploadFile, path); //public_html is default at hostinger
+		}
+		AFile.Delete(path);
+		AOutput.Write("Uploaded");
+
+		//extract
+		//APerf.First();
+		using (var client = new SshClient(ip, port, user, pass)) {
+			client.Connect();
+			//_Cmd("cd public_html/test"); _Cmd("pwd"); //cd does not work when separate command. Not tested: ShellStream.
+			//_Cmd("cd public_html/test && pwd"); //ok
+			//APerf.Next();
+			_Cmd2("tar -zxf _site.tar.gz");
+			_Cmd2("rm -r help", silent: true);
+			_Cmd2("mv _site help");
+			_Cmd2("rm _site.tar.gz", silent: true);
+			//APerf.NW(); //tar ~20 s, others fast
+			client.Disconnect();
+
+			void _Cmd(string s, bool silent = false) {
+				var c = client.RunCommand(s);
+				//AOutput.Write($"ec={c.ExitStatus}, result={c.Result}, error={c.Error}");
+				if (!silent && c.ExitStatus != 0) throw new Exception(c.Error);
+			}
+
+			void _Cmd2(string s, bool silent = false) => _Cmd("cd public_html/au && " + s, silent);
+		}
+		AOutput.Write("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
+	}
+
+}
+#else
 	static void Compress(string docDir)
 	{
 		var sevenZip = @"C:\Program Files\7-Zip\7z.exe";
@@ -375,12 +448,13 @@ unsafe class Program
 		if(user == null || pass == null || pass2 == null) throw new FileNotFoundException("user or password not found in registry");
 
 		//upload
-		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass));
+		pass = Encoding.UTF8.GetString(Convert.FromBase64String(pass)); //to encode: AOutput.Write(Convert.ToBase64String(Encoding.UTF8.GetBytes(pass)));
 		var name = @"\_site.tar.bz2";
 		var path = docDir + name;
 		using(var client = new WebClient()) {
 			client.Credentials = new NetworkCredential(user, pass);
-			client.UploadFile("ftp://ftpdisabled.quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
+			//client.UploadFile("ftp://quickmacros.com/public_html/au" + name, WebRequestMethods.Ftp.UploadFile, path);
+			client.UploadFile("ftp://185.224.138.106/au" + name, WebRequestMethods.Ftp.UploadFile, path);
 		}
 		AFile.Delete(path);
 		AOutput.Write("Uploaded");
@@ -389,6 +463,8 @@ unsafe class Program
 		using(var client = new WebClient()) {
 			string r1 = client.DownloadString($"https://www.quickmacros.com/au/extract_help.php?kaip={pass2}");
 			if(r1 != "done") { AOutput.Write(r1); return; }
+			//extracting used to be few seconds, but now with Hostinger maybe several minutes, and sometimes WebException: The operation has timed out.
+			//	The slowness is not in rrmdir, because first time was slow too. Or maybe partially in rrmdir.
 		}
 		AOutput.Write("<>Extracted to <link>https://www.quickmacros.com/au/help/</link>");
 	}
@@ -399,7 +475,7 @@ unsafe class Program
 
 <?php
 
-if($_REQUEST['kaip'] != '{pass2}') die('invalid data'); //replace {pass2} with the registry value
+if($_REQUEST['kaip'] != 'pass2') die('invalid data'); //replace pass2 with the registry value
 
 $bz2=__DIR__ . '/_site.tar.bz2';
 $help=__DIR__ . '/help';
@@ -433,6 +509,7 @@ function rrmdir($src) {
 
 ?>
 
+#endif
 #endif
 
 #if Disqus //add this to the bottom of help pages

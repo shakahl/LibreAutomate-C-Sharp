@@ -72,7 +72,8 @@ class CiGoTo
 			//	private ISymbol GetSymbol(SyntaxNode node)
 			if (sym is IMethodSymbol ims) sym = ims.ReducedFrom ?? sym; //extension method
 			if (!sym.IsDefinition) sym = sym.OriginalDefinition; //generic
-			_docId = sym.GetDocumentationCommentId().Replace("#ctor", "ctor");
+			_docId = sym.GetDocumentationCommentId()?.Replace("#ctor", "ctor");
+			if (_docId == null) return; //operator?
 
 			//get type name to resolve forwarded type later. For generic must be like "Namespace.Type`1".
 			for (var ct = sym.ContainingType; ct != null; ct = ct.ContainingType) sym = ct;

@@ -33,7 +33,7 @@ static class TriggersAndToolbars
 				fProject = App.Model.NewItemLL(s_templPath);
 				AOutput.Write("Info: project \"@Triggers and toolbars\" has been created.");
 			} else { //create missing files. Note: don't cache, because files can be deleted at any time. Fast enough.
-				var xTempl = FileNode.Templates.LoadXml(s_templPath).x; //fast, does not load the xml file each time
+				var xTempl = FileNode.Templates.LoadXml(s_templPath); //fast, does not load the xml file each time
 				_Folder(xTempl, fProject);
 				void _Folder(XElement xParent, FileNode fParent)
 				{

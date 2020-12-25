@@ -211,8 +211,15 @@ class CiXaml
 	public static Section Parse(string xaml) {
 		//AOutput.Write(xaml);
 
-		//var a = new List<(InlineUIContainer uc, UIElement e)>(); //need if used for images, because cannot modify collection while enumerating
+//var a = new List<(InlineUIContainer uc, UIElement e)>(); //need if used for images, because cannot modify collection while enumerating
+#if DEBUG
+		Section sec;
+		try { sec = XamlReader.Parse(xaml) as Section; }
+		catch { AOutput.Write(xaml); throw; }
+#else
 		var sec = XamlReader.Parse(xaml) as Section;
+#endif
+
 		foreach (var v in sec.LogicalDescendants()) {
 			if (v is Hyperlink h) {
 				h.RequestNavigate += (o, e) => FlowDocumentControl.OnLinkClicked_(o as Hyperlink, e);
@@ -245,6 +252,7 @@ class CiXaml
 			case TextTags.Interface:
 			case TextTags.Delegate:
 			case TextTags.TypeParameter:
+			case TextTags.Record:
 				c = "type";
 				break;
 			case TextTags.Keyword:
@@ -317,7 +325,9 @@ class CiXaml
 
 	public static string FromTaggedParts(IEnumerable<TaggedText> tags) {
 		var x = new CiXaml();
+		x.StartParagraph();
 		x.AppendTaggedParts(tags);
+		x.EndParagraph();
 		return x.End();
 	}
 
@@ -566,7 +576,7 @@ class CiXaml
 					var ac = att.AttributeClass; if (ac == null) continue;
 					//if(!_IsAccessible(ac)) continue; //no, would not show attributes if code does not have 'using' for the attribute
 					string aname = ac.Name.RemoveSuffix("Attribute");
-					if (aname == "CompilerGenerated") continue;
+					if (aname == "CompilerGenerated" || aname == "IteratorStateMachine") continue;
 					//att.ToString(); //similar, but too much noise
 					if (isParameter) {
 						if (!paramAdded) {
@@ -591,11 +601,12 @@ class CiXaml
 						bool paramComma = false;
 						foreach (var v in ca) {
 							_AppendComma(ref paramComma);
-							_b.Append(v.ToCSharpString()); //never mind: enum with namespace
+							Append(v.ToCSharpString(), escape: true); //never mind: enum with namespace
 						}
 						foreach (var v in na) {
 							_AppendComma(ref paramComma);
-							_b.Append(v.Key).Append(" = ").Append(v.Value.ToCSharpString());
+							_b.Append(v.Key).Append(" = ");
+							Append(v.Value.ToCSharpString(), escape: true);
 						}
 						_b.Append(')');
 					}

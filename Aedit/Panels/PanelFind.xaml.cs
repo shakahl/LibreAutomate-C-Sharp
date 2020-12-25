@@ -4,19 +4,11 @@ using Au.Controls;
 using Au.Tools;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+//using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using System.Windows.Controls.Primitives;
 
 public partial class PanelFind : UserControl
 {
@@ -50,6 +42,7 @@ public partial class PanelFind : UserControl
 		_bFind.Click += _bFind_Click;
 		_bFindIF.Click += _bFindIF_Click;
 		_bReplace.Click += _bReplace_Click;
+		_bReplaceAll.Click += _bReplaceAll_Click;
 		_bOptions.Click += _bOptions_Click;
 	}
 

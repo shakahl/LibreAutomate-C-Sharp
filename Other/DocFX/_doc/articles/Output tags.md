@@ -4,7 +4,7 @@ uid: output_tags
 
 # Output tags
 
-Function [AOutput.Write]() supports links, colors, images, etc. For it use tags in text. Similar to HTML tags. Also text must start with `<>`. It works only when text is displayed in the editor's output pane, not when in console.
+Function [AOutput.Write]() supports links, colors, images, etc. For it use tags in text. Similar to HTML tags. Also text must start with `<>`. It works only when text is displayed in the editor's output panel, not when in console.
 
 For most tags use this format: `<tag>text<>` or `<tag attribute>text<>`.
 

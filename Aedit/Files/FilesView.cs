@@ -21,7 +21,7 @@ partial class FilesModel
 	public class FilesView : AuTreeView
 	{
 		public FilesView() {
-			MultiSelect = true;
+			SetMultiSelect(toggle: false);
 			AllowDrop = true;
 			ImageCache = App.ImageCache;
 
@@ -37,6 +37,14 @@ partial class FilesModel
 
 		public void SetItems() {
 			base.SetItems(App.Model.Root.Children(), false);
+		}
+
+		public void SetMultiSelect(bool toggle) {
+			bool multi = App.Settings.files_multiSelect;
+			if (toggle) App.Settings.files_multiSelect = (multi ^= true);
+			MultiSelect = multi;
+			SingleClickActivate = !multi;
+			App.Commands[nameof(Menus.File.CopyPaste.MultiSelect_files)].Checked = multi;
 		}
 
 		private void _ItemActivated(object sender, TVItemEventArgs e) {
@@ -77,6 +85,7 @@ partial class FilesModel
 		#region drag-drop
 
 		private void _ItemDragStart(object sender, TVItemEventArgs e) {
+			if (e.MouseButton != MouseButton.Left) return;
 			//if(e.Item.IsFolder && e.Item.IsExpanded) Expand(e.Index, false);
 			var a = IsSelected(e.Index) ? SelectedItems : new FileNode[] { e.Item as FileNode };
 			DragDropFiles = a;

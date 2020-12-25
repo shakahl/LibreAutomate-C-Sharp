@@ -28,9 +28,6 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 using Au.Util;
 
-//Roslyn bug: no ResourceManager in completion list. In VS too. Not tested with newest version.
-//TODO: now in 'new Class { here }' groups properties by namespace.
-
 class CiCompletion
 {
 	CiPopupList _popupList;
@@ -200,45 +197,50 @@ class CiCompletion
 				if (r1 != null) {
 					canGroup = true;
 					//is it member access?
-					int i = r1.Span.Start - 1;
-					if (i > 0) {
-						var token = root.FindToken(i); //fast
-						if (position >= token.Span.End) {
-							var tk = token.Kind();
-							isDot = tk == SyntaxKind.DotToken || tk == SyntaxKind.MinusGreaterThanToken || tk == SyntaxKind.ColonColonToken;
-							if (isDot) {
-								node = token.Parent;
+					if (node is InitializerExpressionSyntax) {
+						isDot = canGroup = true;
+					} else {
+						int i = r1.Span.Start - 1;
+						if (i > 0) {
+							var token = root.FindToken(i); //fast
+							if (position >= token.Span.End) {
+								var tk = token.Kind();
+								//AOutput.Write(tk);
 								//CiUtil.PrintNode(node);
-								ExpressionSyntax nodeL = null; //node at left of . etc
-								bool canBeNamespace = false;
-								switch (node) {
-								case MemberAccessExpressionSyntax s1: // . or ->
-									nodeL = s1.Expression;
-									canBeNamespace = true;
-									break;
-								case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae:
-									// ?. //OperatorToken is '.', GetPreviousToken is '?'
-									//nodeL = cae.Expression;
-									break;
-								case QualifiedNameSyntax s1: // eg . outside functions
-									nodeL = s1.Left;
-									canBeNamespace = true;
-									break;
-								case AliasQualifiedNameSyntax s1: // ::
-									canGroup = false;
-									//nodeL = s1.Alias;
-									break;
-								case ExplicitInterfaceSpecifierSyntax s1:
-									//nodeL = s1.Name;
-									break;
-								default:
-									isDot = false;
-									ADebug.Print(node.GetType());
-									break;
-								}
+								isDot = tk == SyntaxKind.DotToken || tk == SyntaxKind.MinusGreaterThanToken || tk == SyntaxKind.ColonColonToken;
+								if (isDot) {
+									node = token.Parent;
+									ExpressionSyntax nodeL = null; //node at left of . etc
+									bool canBeNamespace = false;
+									switch (node) {
+									case MemberAccessExpressionSyntax s1: // . or ->
+										nodeL = s1.Expression;
+										canBeNamespace = true;
+										break;
+									case MemberBindingExpressionSyntax s1 when s1.OperatorToken.GetPreviousToken().Parent is ConditionalAccessExpressionSyntax cae:
+										// ?. //OperatorToken is '.', GetPreviousToken is '?'
+										//nodeL = cae.Expression;
+										break;
+									case QualifiedNameSyntax s1: // eg . outside functions
+										nodeL = s1.Left;
+										canBeNamespace = true;
+										break;
+									case AliasQualifiedNameSyntax s1: // ::
+										canGroup = false;
+										//nodeL = s1.Alias;
+										break;
+									case ExplicitInterfaceSpecifierSyntax s1:
+										//nodeL = s1.Name;
+										break;
+									default:
+										isDot = false;
+										ADebug.Print(node.GetType());
+										break;
+									}
 
-								if (canBeNamespace && tk == SyntaxKind.DotToken && nodeL is IdentifierNameSyntax) {
-									if (model.GetSymbolInfo(nodeL).Symbol is INamespaceSymbol) canGroup = false;
+									if (canBeNamespace && tk == SyntaxKind.DotToken && nodeL is IdentifierNameSyntax) {
+										if (model.GetSymbolInfo(nodeL).Symbol is INamespaceSymbol) canGroup = false;
+									}
 								}
 							}
 						}
@@ -273,7 +275,7 @@ class CiCompletion
 			p1.Next('T');
 
 			var provider = CiComplItem.Provider(r.Items[0]);
-			if (!isDot) isDot = provider == CiComplProvider.ObjectInitializer || provider == CiComplProvider.Override;
+			if (!isDot) isDot = provider == CiComplProvider.Override;
 			//AOutput.Write(provider, isDot, canGroup);
 
 			var span = r.Span;
@@ -326,7 +328,7 @@ class CiCompletion
 							case "ReferenceEquals":
 								//hide static members inherited from Object
 								if (sym.ContainingType.BaseType == null) { //Object
-									if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue;
+									if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue; //TODO: symL always null
 									v.moveDown = CiItemMoveDownBy.Name;
 								}
 								break;
@@ -662,8 +664,8 @@ class CiCompletion
 	public string GetDescriptionDoc(CiComplItem ci, int iSelect) {
 		if (_data == null) return null;
 		switch (ci.kind) {
-		case CiItemKind.Keyword: return CiXaml.FromKeyword(ci.DisplayText);
-		case CiItemKind.Label: return CiXaml.FromLabel(ci.DisplayText);
+		case CiItemKind.Keyword: return CiXaml.FromKeyword(ci.ci.DisplayText);
+		case CiItemKind.Label: return CiXaml.FromLabel(ci.ci.DisplayText);
 		case CiItemKind.Snippet: return CiSnippets.GetDescriptionXaml(ci);
 		}
 		var symbols = ci.ci.Symbols;
@@ -743,7 +745,7 @@ class CiCompletion
 					ch = '(';
 					break;
 				case CiItemKind.Keyword:
-					string name = item.DisplayText;
+					string name = ci.DisplayText;
 					switch (name) {
 					case "nameof":
 					case "sizeof":
@@ -922,10 +924,10 @@ class CiComplItem : ITreeViewItem
 	public int group;
 	public ulong hilite; //bits for max 64 characters
 	public int commentOffset;
-	string _text;
+	string _dtext;
 
 	#region ITreeViewItem
-	public string DisplayText => _text;
+	string ITreeViewItem.DisplayText => _dtext;
 
 	string ITreeViewItem.ImageSource => ImageResource(kind);
 
@@ -934,9 +936,9 @@ class CiComplItem : ITreeViewItem
 	public void SetDisplayText(string comment) {
 		var desc = ci.InlineDescription; if (desc.NE()) desc = comment;
 		bool isComment = !desc.NE();
-		if (_text != null && !isComment && commentOffset == 0) return;
-		_text = ci.DisplayText + ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
-		commentOffset = isComment ? _text.Length - desc.Length - 6 : 0;
+		if (_dtext != null && !isComment && commentOffset == 0) return;
+		_dtext = ci.DisplayText + ci.DisplayTextSuffix + (isComment ? "    //" : null) + desc;
+		commentOffset = isComment ? _dtext.Length - desc.Length - 6 : 0;
 	}
 
 	public static string ImageResource(CiItemKind kind) => kind switch {
@@ -983,7 +985,7 @@ class CiComplItem : ITreeViewItem
 		return s switch {
 			"SymbolCompletionProvider" => CiComplProvider.Symbol,
 			"KeywordCompletionProvider" => CiComplProvider.Keyword,
-			"ObjectInitializerCompletionProvider" => CiComplProvider.ObjectInitializer,
+			//"ObjectAndWithInitializerCompletionProvider" => CiComplProvider.ObjectAndWithInitializer,
 			//"AttributeNamedParameterCompletionProvider" => CiComplProvider.AttributeNamedParameter, //don't use because can be mixed with other symbols
 			"CrefCompletionProvider" => CiComplProvider.Cref,
 			"EmbeddedLanguageCompletionProvider" => CiComplProvider.Regex,
@@ -1004,7 +1006,7 @@ enum CiComplProvider
 	Other,
 	Symbol,
 	Keyword,
-	ObjectInitializer,
+	//ObjectAndWithInitializer,
 	//AttributeNamedParameter,
 	Cref,
 	Regex,
