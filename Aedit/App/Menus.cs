@@ -100,6 +100,7 @@ static class Menus
 
 			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
 			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
+			//TODO: once Ctrl+Tab stopped working until restart. Did not test click menu item.
 		}
 
 		//[Command]
@@ -340,14 +341,7 @@ static class Menus
 	public static class Tools
 	{
 		[Command(image = "resources/images/settingsgroup_16x.xaml")]
-		//public static void Options() { Aedit.DOptions.ZShow(); }
-		public static void Options() { //TODO
-#if DEBUG
-			Aedit.DOptions.ZShow();
-#else
-			FOptions.ZShow();
-#endif
-		}
+		public static void Options() { DOptions.ZShow(); }
 
 		[Command(separator = true, target = "Output")]
 		public static class Output
@@ -411,10 +405,10 @@ static class Menus
 	[Command]
 	public static void TEST() {
 
-		EdDatabases.CreateRefAndDoc();
-		EdDatabases.CreateWinapi();
+		//Console.WriteLine("console");
 
-
+		//EdDatabases.CreateRefAndDoc();
+		//EdDatabases.CreateWinapi();
 
 
 		//var h = Panels.Editor.ZActiveDoc.Hwnd;

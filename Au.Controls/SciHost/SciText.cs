@@ -813,9 +813,12 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// SCI_GETREADONLY.
+		/// SCI_GETREADONLY, SCI_SETREADONLY.
 		/// </summary>
-		public bool IsReadonly => 0 != Call(SCI_GETREADONLY);
+		public bool IsReadonly {
+			get => 0 != Call(SCI_GETREADONLY);
+			set => Call(SCI_SETREADONLY, value);
+		}
 
 		public struct FileLoaderSaver
 		{

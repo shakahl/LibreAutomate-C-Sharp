@@ -46,6 +46,8 @@ partial class MainWindow : Window
 		App.Commands.BindKeysTarget(this, "");
 
 		Panels.PanelManager.Container = g => { this.Content = g; };
+
+		//ATimer.After(100, _ => DOptions.ZShow());
 	}
 
 	protected override void OnClosing(CancelEventArgs e) {

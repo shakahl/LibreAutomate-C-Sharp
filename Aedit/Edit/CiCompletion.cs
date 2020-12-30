@@ -161,7 +161,7 @@ class CiCompletion
 		CompletionService completionService = null;
 		SemanticModel model = null;
 		SyntaxNode root = null;
-		ISymbol symL = null; //symbol at left of . etc
+		//ISymbol symL = null; //symbol at left of . etc
 
 		_cancelTS = new CancellationTokenSource();
 		var cancelTS = _cancelTS;
@@ -293,6 +293,13 @@ class CiCompletion
 
 			//ADebug.PrintIf(r.SuggestionModeItem != null && r.SuggestionModeItem.ToString() != "<lambda expression>" && !r.SuggestionModeItem.ToString().NE(), r.SuggestionModeItem); //in '#if X' non-nul but empty text
 
+			//ISymbol enclosing = null;
+			//bool _IsAccessible(ISymbol symbol) {
+			//	enclosing ??= model.GetEnclosingNamedTypeOrAssembly(position, default);
+			//	return enclosing != null && symbol.IsAccessibleWithin(enclosing);
+			//}
+
+			//var testInternal = CodeInfo.Meta.TestInternal;
 			var groups = canGroup ? new Dictionary<INamespaceOrTypeSymbol, List<int>>() : null;
 			List<int> keywordsGroup = null, etcGroup = null, snippetsGroup = null;
 			foreach (var ci in r.Items) {
@@ -302,20 +309,22 @@ class CiCompletion
 
 				//AOutput.Write(ci.Flags); //a new internal property. Always None.
 
-				//why cref provider adds internals from other assemblies?
-				if (provider == CiComplProvider.Cref && sym != null) {
-					switch (sym.Kind) {
-					case SymbolKind.NamedType when v.access == CiItemAccess.Internal && !sym.IsInSource() && !model.IsAccessible(0, sym):
-						//AOutput.Write(sym);
-						continue;
-					case SymbolKind.Namespace:
-						//AOutput.Write(sym, sym.ContainingAssembly?.Name);
-						switch (sym.Name) {
-						case "Internal" when sym.ContainingAssembly?.Name == "System.Core":
-						case "Windows" when sym.ContainingAssembly?.Name == "mscorlib":
+				if (sym != null) {
+					//why cref provider adds internals from other assemblies?
+					if (provider == CiComplProvider.Cref) {
+						switch (sym.Kind) {
+						case SymbolKind.NamedType when v.access == CiItemAccess.Internal && !sym.IsInSource() && !model.IsAccessible(0, sym):
+							//AOutput.Write(sym);
 							continue;
+						case SymbolKind.Namespace:
+							//AOutput.Write(sym, sym.ContainingAssembly?.Name);
+							switch (sym.Name) {
+							case "Internal" when sym.ContainingAssembly?.Name == "System.Core":
+							case "Windows" when sym.ContainingAssembly?.Name == "mscorlib":
+								continue;
+							}
+							break;
 						}
-						break;
 					}
 				}
 
@@ -328,7 +337,8 @@ class CiCompletion
 							case "ReferenceEquals":
 								//hide static members inherited from Object
 								if (sym.ContainingType.BaseType == null) { //Object
-									if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue; //TODO: symL always null
+									//if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue; //never mind, now symL always null
+									if (isDot) continue;
 									v.moveDown = CiItemMoveDownBy.Name;
 								}
 								break;

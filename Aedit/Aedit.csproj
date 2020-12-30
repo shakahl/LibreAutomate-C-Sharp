@@ -187,15 +187,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="App\FOptions.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="App\FOptions.Designer.cs">
-	    <DependentUpon>FOptions.cs</DependentUpon>
-	  </Compile>
-	  <Compile Update="Controls\ListControl.cs">
-	    <SubType>Component</SubType>
-	  </Compile>
+	  <Compile Update="Controls\CodeBox.cs" />
 	  <Compile Update="Edit\ModifyCode.cs" />
 	  <Compile Update="Edit\PanelEdit.cs" />
 	  <Compile Update="Edit\SciCode.cs" />
@@ -212,7 +204,7 @@
 	  </Compile>
 	  <Compile Update="Panels\PanelOutput.cs" />
 	  <Compile Update="Panels\PanelRunning.cs" />
-	  <Compile Update="Tools\CodeBoxF.cs" />
+	  <Compile Update="Controls\CodeBoxF.cs" />
 	  <Compile Update="Tools\FormAAcc.cs">
 	    <SubType>Form</SubType>
 	  </Compile>
@@ -238,9 +230,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <EmbeddedResource Update="App\FOptions.resx">
-	    <DependentUpon>FOptions.cs</DependentUpon>
-	  </EmbeddedResource>
 	  <EmbeddedResource Update="Tools\FormAAcc.resx">
 	    <DependentUpon>FormAAcc.cs</DependentUpon>
 	  </EmbeddedResource>

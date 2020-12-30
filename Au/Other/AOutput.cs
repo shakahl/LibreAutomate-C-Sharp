@@ -54,7 +54,7 @@ namespace Au
 		static bool? _isVisibleConsole;
 
 		/// <summary>
-		/// If true, Write and related functions in console process don't not use the console window. Then everything is like in non-console process.
+		/// If true, Write and related functions in console process don't use the console window. Then everything is like in non-console process.
 		/// </summary>
 		/// <seealso cref="RedirectConsoleOutput"/>
 		/// <seealso cref="RedirectDebugOutput"/>
@@ -285,7 +285,7 @@ namespace Au
 		/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="Write"/> etc.
 		/// </summary>
 		/// <remarks>
-		/// <b>Console.Write</b> will write line, like <b>Console.WriteLine</b>.
+		/// If <b>Console.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Console.WriteLine</b>.
 		/// <b>Console.Clear</b> will not clear output; it will throw exception.
 		/// </remarks>
 		public static bool RedirectConsoleOutput {
@@ -308,6 +308,8 @@ namespace Au
 		/// Let <b>Debug.WriteX</b> and <b>Trace.WriteX</b> methods write to the same destination as <see cref="Write"/> etc.
 		/// </summary>
 		/// <remarks>
+		/// If <b>Debug/Trace.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Debug/Trace.WriteLine</b>.
+		/// 
 		/// Tip: To write to the output window even in console process, set <c>AOutput.IgnoreConsole=true;</c> before calling this method first time.
 		/// </remarks>
 		public static bool RedirectDebugOutput {

@@ -16599,7 +16599,7 @@
         </member>
         <member name="P:Au.AOutput.IgnoreConsole">
             <summary>
-            If true, Write and related functions in console process don't not use the console window. Then everything is like in non-console process.
+            If true, Write and related functions in console process don't use the console window. Then everything is like in non-console process.
             </summary>
             <seealso cref="P:Au.AOutput.RedirectConsoleOutput"/>
             <seealso cref="P:Au.AOutput.RedirectDebugOutput"/>
@@ -16709,7 +16709,7 @@
             Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="M:Au.AOutput.Write(System.String)"/> etc.
             </summary>
             <remarks>
-            <b>Console.Write</b> will write line, like <b>Console.WriteLine</b>.
+            If <b>Console.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Console.WriteLine</b>.
             <b>Console.Clear</b> will not clear output; it will throw exception.
             </remarks>
         </member>
@@ -16718,6 +16718,8 @@
             Let <b>Debug.WriteX</b> and <b>Trace.WriteX</b> methods write to the same destination as <see cref="M:Au.AOutput.Write(System.String)"/> etc.
             </summary>
             <remarks>
+            If <b>Debug/Trace.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Debug/Trace.WriteLine</b>.
+            
             Tip: To write to the output window even in console process, set <c>AOutput.IgnoreConsole=true;</c> before calling this method first time.
             </remarks>
         </member>
@@ -28160,6 +28162,15 @@
             <remarks>
             If the window is already closed, immediately returns true.
             </remarks>
+        </member>
+        <member name="T:System.Runtime.CompilerServices.IgnoresAccessChecksToAttribute">
+            
+        </member>
+        <member name="M:System.Runtime.CompilerServices.IgnoresAccessChecksToAttribute.#ctor(System.String)">
+            
+        </member>
+        <member name="P:System.Runtime.CompilerServices.IgnoresAccessChecksToAttribute.AssemblyName">
+            
         </member>
     </members>
 </doc>

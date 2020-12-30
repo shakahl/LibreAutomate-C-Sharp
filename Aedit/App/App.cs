@@ -31,6 +31,7 @@ static class App
 		ATimer.After(1, _ => APerf.NW());
 		AOutput.QM2.UseQM2 = true;
 		AOutput.Clear();
+		AOutput.RedirectConsoleOutput = true;
 	}
 #endif
 
@@ -202,7 +203,7 @@ static class App
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		try {
-			bool isAuHomePC = Api.GetEnvironmentVariable("Au.Home<PC>", null, 0) > 0;
+			bool isAuHomePC = Api.GetEnvironmentVariable("Au.Home<PC>", null, 0) > 0 && !AFolders.ThisAppBS.Starts(@"C:\Program Files", true);
 			//int pid = 
 			WinTaskScheduler.RunTask("Au",
 				isAuHomePC ? "_Aedit" : "Aedit", //run Q:\app\Au\_\Au.CL.exe or <installed path>\Au.CL.exe

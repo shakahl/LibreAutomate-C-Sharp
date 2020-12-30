@@ -7,7 +7,7 @@ partial class Script : AScript { [STAThread] static void Main(string[] a) => new
 The programming language is C#.
 
 In scripts you can use classes/functions of the automation library provided by
-this program, as well as of .NET Core and everything that can be used in C#.
+this program, as well as of .NET and everything that can be used in C#.
 Also you can create and use new functions, classes, libraries and .exe programs.
 
 Script properties are saved in /*/ /*/ comments at the very start of script.

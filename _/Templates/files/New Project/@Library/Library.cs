@@ -17,7 +17,7 @@ using System.Reflection;
 /*
 When you compile this, .dll and other required files are created in the output directory (outputPath).
 Before deploying the files, in Properties set optimize true and compile.
-The library can be used on computers with installed .NET Core Runtime 5. Download: https://dotnet.microsoft.com/download
+The library can be used on computers with installed .NET 5 Runtime. Download: https://dotnet.microsoft.com/download
 */
 
 namespace Library {

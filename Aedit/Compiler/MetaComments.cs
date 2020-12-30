@@ -85,7 +85,7 @@ namespace Au.Compiler
 	/// define SYMBOL1,SYMBOL2,d:DEBUG_ONLY,r:RELEASE_ONLY //define preprocessor symbols that can be used with #if etc. If no optimize true, DEBUG and TRACE are added implicitly.
 	/// warningLevel 1 //compiler warning level, 0 (none) to 5 (all). Default: 5.
 	/// noWarnings 3009,162 //don't show these compiler warnings
-	/// testInternal Assembly1,Assembly2 //access internal and protected symbols of specified assemblies
+	/// testInternal Assembly1,Assembly2 //access internal symbols of specified assemblies, like with InternalsVisibleToAttribute
 	/// preBuild file /arguments //run this script before compiling. More info below.
 	/// postBuild file /arguments //run this script after compiled successfully. More info below.
 	/// ]]></code>
@@ -345,6 +345,7 @@ namespace Au.Compiler
 		/// Default: null.
 		/// </summary>
 		public string XmlDocFile { get; private set; }
+		//TODO: should be bool? Because, to be useful, probably must match assembly name and must be in same folder.
 
 		/// <summary>
 		/// Which options are specified.
@@ -770,25 +771,24 @@ namespace Au.Compiler
 			   warningLevel: WarningLevel,
 			   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(AChar.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
 			   cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
-			   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider(),
-			   metadataImportOptions: TestInternal != null ? MetadataImportOptions.Internal : MetadataImportOptions.Public
+			   strongNameProvider: SignFile == null ? null : new DesktopStrongNameProvider()
+			   //,metadataImportOptions: TestInternal != null ? MetadataImportOptions.Internal : MetadataImportOptions.Public
 			   );
 
-			if (TestInternal != null) {
-				//TODO: modify Roslyn source instead.
-				//TODO: in completion list don't show members of other assemblies.
-				//Allow to use internal/protected of assemblies specified using IgnoresAccessChecksToAttribute.
-				//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
-				//Part of code is in this func, other part in Compiler._AddAttributes.
-				var pi = typeof(CSharpCompilationOptions).GetProperty("TopLevelBinderFlags", BindingFlags.Instance | BindingFlags.NonPublic);
-				pi.SetValue(r, (uint)1 << 22);
-			}
+			//Allow to use internal/protected of assemblies specified using IgnoresAccessChecksToAttribute.
+			//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
+			//This code (the above and below commented code) is for compiler. Also Compiler._AddAttributes adds attribute for run time.
+			//if (TestInternal != null) {
+			//	r = r.WithTopLevelBinderFlags(BinderFlags.IgnoreAccessibility);
+			//}
+			//But if using this code, code info has problems. Completion list contains internal/protected from all assemblies, and difficult to filter out. No signature info.
+			//We instead modify Roslyn code in 2 places. Look in project CompilerDlls here. Also add class Au.Compiler.InternalsVisible and use it in CodeInfo._CreateSolution and Compiler._Compile.
 
 			return r;
 		}
 
 		public CSharpParseOptions CreateParseOptions() {
-			return new(LanguageVersion.Preview, //CONSIDER: maybe later use .Latest, when C# 8 final available. In other place too.
+			return new(LanguageVersion.Preview,
 				_flags.Has(EMPFlags.ForCodeInfo) ? DocumentationMode.Diagnose : (XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None),
 				SourceCodeKind.Regular,
 				Defines);

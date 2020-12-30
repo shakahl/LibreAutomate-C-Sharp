@@ -19,6 +19,7 @@ using Microsoft.CodeAnalysis.Emit;
 using System.Resources;
 using System.Reflection.Metadata;
 using System.Reflection.PortableExecutable;
+using System.Collections.Concurrent;
 
 namespace Au.Compiler
 {
@@ -54,12 +55,16 @@ namespace Au.Compiler
 
 			if (!isCompiled) {
 				bool ok = false;
+				Action aFinally = null;
 				try {
-					ok = _Compile(reason == ECompReason.Run, f, out r, projFolder);
+					ok = _Compile(reason == ECompReason.Run, f, out r, projFolder, out aFinally);
 				}
 				catch (Exception ex) {
 					//AOutput.Write($"Failed to compile '{f.Name}'. {ex.ToStringWithoutStack()}");
 					AOutput.Write($"Failed to compile '{f.Name}'. {ex}");
+				}
+				finally {
+					aFinally?.Invoke();
 				}
 
 				if (!ok) {
@@ -122,9 +127,10 @@ namespace Au.Compiler
 			}
 		}
 
-		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder) {
+		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally) {
 			var p1 = APerf.Create();
 			r = new CompResults();
+			aFinally = null;
 
 			var m = new MetaComments();
 			if (!m.Parse(f, projFolder, EMPFlags.PrintErrors)) return false;
@@ -168,6 +174,12 @@ namespace Au.Compiler
 
 			string asmName = m.Name;
 			if (m.Role == ERole.editorExtension) asmName = asmName + "|" + (++c_versionCounter).ToString(); //AssemblyLoadContext.Default cannot load multiple assemblies with same name
+
+			if (m.TestInternal is string[] testInternal) {
+				InternalsVisible.Add(asmName, testInternal);
+				aFinally += () => InternalsVisible.Remove(asmName); //this func is called from try/catch/finally which calls aFinally
+			}
+
 			var compilation = CSharpCompilation.Create(asmName, trees, m.References.Refs, m.CreateCompilationOptions());
 			//p1.Next('c');
 
@@ -349,7 +361,7 @@ namespace Au.Compiler
 
 			if (m.TestInternal != null) needAttr |= 0x400;
 
-			//rejected. Now we don't load from byte[].
+			//rejected. Now we don't load from byte[], it is very slow because of AV.
 			///// If miniProgram or exeProgram, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. It is to avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
 			//if(m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
 			//	needAttr |= 7;
@@ -372,14 +384,18 @@ namespace Au.Compiler
 					//if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
 					//if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
 					if (0 != (needAttr & 0x400)) {
-						foreach(var v in m.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
-						sb.Append(@"
-namespace System.Runtime.CompilerServices {
-[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-public class IgnoresAccessChecksToAttribute : Attribute {
-	public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
-	public string AssemblyName { get; }
-}}");
+						//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
+						//IgnoresAccessChecksToAttribute is defined in Au assembly.
+						//	Could define here, but then warning "already defined in assembly X" when compiling 2 projects (meta pr) with that attribute.
+						//	never mind: Au.dll must exist by the compiled assembly, even if not used for other purposes.
+						foreach (var v in m.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
+						//						sb.Append(@"
+						//namespace System.Runtime.CompilerServices {
+						//[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+						//public class IgnoresAccessChecksToAttribute : Attribute {
+						//	public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
+						//	public string AssemblyName { get; }
+						//}}");
 					}
 
 					var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
@@ -703,4 +719,42 @@ public class IgnoresAccessChecksToAttribute : Attribute {
 	}
 
 	public enum ECompReason { Run, CompileAlways, CompileIfNeed }
+
+	public static class InternalsVisible
+	{
+		static ConcurrentDictionary<string, string[]> _d = new();
+
+		static InternalsVisible() {
+			PEAssembly.AuInternalsVisible = _Callback;
+		}
+
+		//called from any thread
+		static bool _Callback(string thisName, string toName, bool source) {
+			if (_d.TryGetValue(toName, out var a)) {
+				if (!source) {
+					foreach (var v in a)
+						if (v == thisName)
+							return true;
+				} else if (thisName.EndsWith(".cs", StringComparison.OrdinalIgnoreCase)) {
+					foreach (var v in a)
+						if (v.Length == thisName.Length - 3 && thisName.StartsWith(v, StringComparison.Ordinal))
+							return true;
+				}
+
+			}
+			return false;
+		}
+
+		public static void Add(string asmName, string[] testInternals) {
+			_d[asmName] = testInternals;
+		}
+
+		public static void Remove(string asmName) {
+			_d.TryRemove(asmName, out _);
+		}
+
+		public static void Clear() {
+			_d.Clear();
+		}
+	}
 }

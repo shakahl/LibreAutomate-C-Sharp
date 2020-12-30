@@ -173,7 +173,7 @@ This option is also applied to class files compiled together, eg as part of proj
 See also <google C# #pragma warning>#pragma warning<>.
 ");
 		_AddEdit("testInternal", _meta.testInternal,
-@"<b>testInternal</b> - access internal and protected symbols of these assemblies.
+@"<b>testInternal</b> - access internal symbols of these assemblies, like with InternalsVisibleToAttribute.
 Example: Assembly1,Assembly2
 
 This option is also applied to class files compiled together, eg as part of project.

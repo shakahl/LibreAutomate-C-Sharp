@@ -22,7 +22,7 @@ When you compile or run the script, .exe and other required files are created in
 To run the .exe program, you can click the Run button. Or run it like any other program.
 If antivirus blocks new .exe files or makes compiling slow, add the output directory to its list of exclusions.
 Before deploying the files, in Properties set optimize true and compile. It also creates 64-bit and 32-bit versions.
-The program can run on computers with installed .NET Core Runtime 5. Download: https://dotnet.microsoft.com/download
+The program can run on computers with installed .NET 5 Runtime. Download: https://dotnet.microsoft.com/download
 To add version info, use attributes like the examples above.
 */
 

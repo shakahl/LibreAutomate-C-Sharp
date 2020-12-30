@@ -11,7 +11,6 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
-
 namespace Au.Types
 {
 	/// <summary>
@@ -97,4 +96,18 @@ namespace Au.Types
 	//	/// <summary>Toggle the specified flags, don't change others.</summary>
 	//	Xor = 3,
 	//}
+}
+
+namespace System.Runtime.CompilerServices //the attribute must be in this namespace
+{
+	///
+	[Au.Types.NoDoc]
+	[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+	public class IgnoresAccessChecksToAttribute : Attribute
+	{
+		///
+		public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
+		///
+		public string AssemblyName { get; }
+	}
 }

@@ -14,7 +14,7 @@ namespace Au.Controls
 	/// <summary>
 	/// WPF control for selecting color.
 	/// </summary>
-	public unsafe class KColorPicker : UserControl
+	public class KColorPicker : UserControl
 	{
 		TextBox _tColor;
 		_Palette _pal;
@@ -99,7 +99,7 @@ namespace Au.Controls
 			base.Content = p1;
 		}
 
-		unsafe class _Palette : HwndHost
+		class _Palette : HwndHost
 		{
 			const string c_winClassName = "KColorPicker";
 			KColorPicker _cp;
@@ -271,7 +271,7 @@ namespace Au.Controls
 				Invalidate();
 			}
 
-			public void Invalidate() {
+			public unsafe void Invalidate() {
 				var w = Hwnd;
 				if (w.IsVisible) Api.InvalidateRect(w, null, false);
 			}

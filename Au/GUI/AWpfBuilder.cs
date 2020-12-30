@@ -866,21 +866,28 @@ namespace Au
 			if (flags.Has(WBBFlags.OK)) c.IsDefault = true;
 			if (flags.Has(WBBFlags.Cancel)) c.IsCancel = true;
 			if (flags.HasAny(WBBFlags.OK | WBBFlags.Cancel | WBBFlags.Apply)) { c.MinWidth = 70; c.MinHeight = 21; }
-			if (click != null || flags.HasAny(WBBFlags.OK | WBBFlags.Apply | WBBFlags.Validate)) c.Click += (_, _) => {
-				var w = _FindWindow(c);
-				if (flags.HasAny(WBBFlags.OK | WBBFlags.Apply | WBBFlags.Validate) && !_Validate(w, c)) return;
-				bool needEvent = flags.HasAny(WBBFlags.OK | WBBFlags.Apply) && OkApply != null;
-				var e = (needEvent || click != null) ? new WBButtonClickArgs { Button = c, Window = w } : null;
-				if (needEvent) {
-					OkApply(e);
-					if (e.Cancel) return;
-				}
-				if (click != null) {
-					click(e);
-					if (e.Cancel) return;
-				}
-				if (flags.Has(WBBFlags.OK)) w.DialogResult = true;
-			};
+			if (click != null || flags.HasAny(WBBFlags.OK | WBBFlags.Cancel | WBBFlags.Apply | WBBFlags.Validate)) {
+				c.Click += (_, _) => {
+					var w = _FindWindow(c);
+					if (flags.HasAny(WBBFlags.OK | WBBFlags.Apply | WBBFlags.Validate) && !_Validate(w, c)) return;
+					bool needEvent = flags.HasAny(WBBFlags.OK | WBBFlags.Apply) && OkApply != null;
+					var e = (needEvent || click != null) ? new WBButtonClickArgs { Button = c, Window = w } : null;
+					if (needEvent) {
+						OkApply(e);
+						if (e.Cancel) return;
+					}
+					if (click != null) {
+						click(e);
+						if (e.Cancel) return;
+					}
+					if (flags.Has(WBBFlags.OK)) {
+						try { w.DialogResult = true; }
+						catch (InvalidOperationException) { w.Close(); } //nonmodal
+					} else if (flags.Has(WBBFlags.Cancel)) {
+						w.Close(); //because IsCancel ignored if nonmodal
+					}
+				};
+			}
 			//if(clickSplit!=null) c.ClickSplit+=clickSplit;
 			//FUTURE: split-button.
 			return this;

@@ -3887,7 +3887,7 @@
         </member>
         <member name="P:Au.Controls.SciText.IsReadonly">
             <summary>
-            SCI_GETREADONLY.
+            SCI_GETREADONLY, SCI_SETREADONLY.
             </summary>
         </member>
         <member name="M:Au.Controls.SciText.FileLoaderSaver.Load(System.String)">
@@ -4466,6 +4466,12 @@
         <member name="P:Au.Controls.KColorPicker.BGR">
             <summary>
             With public functions and events use color format 0xBBGGRR. If false (default), uses 0xRRGGBB.
+            </summary>
+        </member>
+        <member name="T:Au.Controls.KDialogWindow">
+            <summary>
+            Can be used as base class for WPF windows used as dialogs.
+            Adds WS_POPUP style, which prevents activating an unrelated window when closing this active owned nonmodal window (OS bug).
             </summary>
         </member>
         <member name="M:Au.Controls.KPopup.#ctor(Au.Types.WS,Au.Types.WS2,System.Boolean,System.Windows.SizeToContent)">
