@@ -133,7 +133,7 @@ namespace Au
 
 			public bool Init()
 			{
-				var tid = AThread.NativeId;
+				var tid = AThread.Id;
 				pipeName = @"\\.\pipe\Au.CL-" + tid.ToString();
 				_hPipe = Api.CreateNamedPipe(pipeName,
 					Api.PIPE_ACCESS_INBOUND | Api.FILE_FLAG_OVERLAPPED, //use async pipe because also need to wait for task process exit

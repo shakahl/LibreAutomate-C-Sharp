@@ -1167,13 +1167,14 @@ namespace Au
 			/// </remarks>
 			public static AWnd Focused => Api.GetFocus();
 
-			/// <summary>
-			/// Gets the focused control or form of this thread.
-			/// </summary>
-			/// <remarks>
-			/// Calls API <msdn>GetFocus</msdn> and <see cref="System.Windows.Forms.Control.FromHandle"/>.
-			/// </remarks>
-			public static System.Windows.Forms.Control FocusedWinformsControl => System.Windows.Forms.Control.FromHandle(Api.GetFocus().Handle); //TODO: remove when winforms rejected
+			//rejected.
+			///// <summary>
+			///// Gets the focused control or form of this thread.
+			///// </summary>
+			///// <remarks>
+			///// Calls API <msdn>GetFocus</msdn> and <see cref="System.Windows.Forms.Control.FromHandle"/>.
+			///// </remarks>
+			//public static System.Windows.Forms.Control FocusedWinformsControl => System.Windows.Forms.Control.FromHandle(Api.GetFocus().Handle);
 
 			/// <summary>
 			/// Returns true if w is the focused control or window of this thread.
@@ -2339,9 +2340,11 @@ namespace Au
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
 		public bool IsUacAccessDenied {
 			get {
+				if (AUac.IsAdmin) return false;
 				ALastError.Clear();
-				Api.RemoveProp(this, 0);
-				return ALastError.Code == Api.ERROR_ACCESS_DENIED; //documented
+				//Api.RemoveProp(this, 0); //documented ERROR_ACCESS_DENIED, and used to work, but on latest Win10 GetLastError always returns 0.
+				Api.SetWindowLongPtr(this, -1111, 0); //ERROR_INVALID_INDEX or ERROR_ACCESS_DENIED
+				return ALastError.Code == Api.ERROR_ACCESS_DENIED;
 			}
 		}
 

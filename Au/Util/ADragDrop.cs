@@ -9,7 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
 //using System.Linq;
 
 using Au.Types;
@@ -62,9 +61,9 @@ namespace Au.Util
 				if(call && onMouseKeyMessage != null) {
 					onMouseKeyMessage(x);
 					if(x._stopped) break;
-					if(x.Cursor != null) {
-						Api.SetCursor(x.Cursor.Handle);
-						x.Cursor = null;
+					if(x.Cursor != default) {
+						Api.SetCursor(x.Cursor);
+						x.Cursor = default;
 					}
 				}
 
@@ -87,9 +86,9 @@ namespace Au.Util
 			public Native.MSG Msg;
 
 			/// <summary>
-			/// The callback function can set this to temporarily set cursor.
+			/// Native cursor handle. The callback function can set this to temporarily set cursor.
 			/// </summary>
-			public Cursor Cursor;
+			public IntPtr Cursor;
 
 			/// <summary>
 			/// The callback function can call this to end the operation.

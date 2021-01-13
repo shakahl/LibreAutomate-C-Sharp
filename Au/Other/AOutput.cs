@@ -249,7 +249,7 @@ namespace Au
 				//QM2.Write($"'{value}'");
 				if (value.NE()) return;
 				if (value.Ends('\n')) {
-					WriteLine(value.RemoveSuffix(value.Ends("\r\n") ? 2 : 1));
+					WriteLine(value[..^(value.Ends("\r\n") ? 2 : 1)]);
 				} else {
 					(_b ??= new StringBuilder()).Append(value);
 				}

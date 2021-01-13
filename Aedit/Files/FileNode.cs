@@ -158,7 +158,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	/// <summary>
 	/// Panels.Files.TreeControl.
 	/// </summary>
-	public static AuTreeView TreeControl => Panels.Files.TreeControl;
+	public static KTreeView TreeControl => Panels.Files.TreeControl;
 
 	/// <summary>
 	/// Gets workspace that contains this file.
@@ -394,7 +394,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 
 	/// <summary>
 	/// Gets or sets expanded state.
-	/// The setter sets to save later but does not update control (for it use <see cref="AuTreeView.Expand"/> instead, it calls the setter).
+	/// The setter sets to save later but does not update control (for it use <see cref="KTreeView.Expand"/> instead, it calls the setter).
 	/// </summary>
 	public bool IsExpanded => _isExpanded;
 	bool _isExpanded;

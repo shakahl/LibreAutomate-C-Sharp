@@ -10,8 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Drawing;
-using Forms = System.Windows.Forms;
 //using System.Linq;
 
 namespace Au.Util
@@ -20,7 +18,7 @@ namespace Au.Util
 	/// Creates and manages native bitmap handle and memory DC (GDI device context).
 	/// The bitmap is selected in the DC.
 	/// </summary>
-	public class AMemoryBitmap : IDisposable, IDeviceContext
+	public class AMemoryBitmap : IDisposable, System.Drawing.IDeviceContext
 	{
 		IntPtr _dc, _bm, _oldbm;
 		bool _disposed;
@@ -113,7 +111,7 @@ namespace Au.Util
 		public bool Create(int width, int height)
 		{
 			if(_disposed) throw new ObjectDisposedException(nameof(AMemoryBitmap));
-			using var dcs = new ScreenDC_(0);
+			using var dcs = new ScreenDC_();
 			Attach(Api.CreateCompatibleBitmap(dcs, width, height));
 			return _bm != default;
 		}

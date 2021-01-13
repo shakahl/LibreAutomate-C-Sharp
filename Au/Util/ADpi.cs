@@ -34,7 +34,7 @@ namespace Au.Util
 		public static int OfThisProcess {
 			get {
 				if (_processDPI == 0) {
-					using var dcs = new ScreenDC_(0);
+					using var dcs = new ScreenDC_();
 					_processDPI = Api.GetDeviceCaps(dcs, 90); //LOGPIXELSY
 				}
 				return _processDPI;
@@ -116,6 +116,14 @@ namespace Au.Util
 		/// If DPI <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
 		/// </summary>
 		public static int Scale(int i) => AMath.MulDiv(i, OfThisProcess, 96);//TODO: remove
+
+		/// <summary>
+		/// Scales two int if <i>dpiOf.Dpi</i> isn't 96 (100%).
+		/// </summary>
+		public static (int, int) Scale(int i1, int i2, DpiOf dpiOf) {
+			int dpi = dpiOf;
+			return (AMath.MulDiv(i1, dpi, 96), AMath.MulDiv(i2, dpi, 96));
+		}
 
 		/// <summary>
 		/// Scales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).

@@ -310,7 +310,7 @@ namespace Au.Triggers
 				AWnd.More.RegisterWindowClass(c_cn);
 			}
 			_wMsg = AWnd.More.CreateMessageOnlyWindow(_WndProc, c_cn);
-			_mainThreadId = AThread.NativeId;
+			_mainThreadId = AThread.Id;
 			_winTimerPeriod = 0;
 			_winTimerLastTime = 0;
 
@@ -501,7 +501,7 @@ namespace Au.Triggers
 		/// </summary>
 		internal void ThrowIfNotMainThread_()
 		{
-			if(AThread.NativeId != _mainThreadId) throw new InvalidOperationException("Must be in thread of Triggers.Run, for example in a FuncOf function.");
+			if(AThread.Id != _mainThreadId) throw new InvalidOperationException("Must be in thread of Triggers.Run, for example in a FuncOf function.");
 		}
 
 		/// <summary>

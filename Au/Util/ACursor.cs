@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Drawing;
 //using System.Linq;
 
 namespace Au.Util
@@ -93,11 +92,11 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Converts native cursor to winforms cursor object.
+		/// Converts native cursor to GDI+ cursor object.
 		/// Returns null if <i>Handle</i> is default(IntPtr).
 		/// </summary>
 		/// <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
-		public System.Windows.Forms.Cursor ToWinformsCursor(bool destroyCursor = true)
+		public System.Windows.Forms.Cursor ToGdipCursor(bool destroyCursor = true)
 		{
 			if(_handle == default) return null;
 			var R = new System.Windows.Forms.Cursor(_handle);

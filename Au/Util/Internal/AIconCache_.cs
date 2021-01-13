@@ -114,7 +114,7 @@ namespace Au
 		/// Returns null if the icon is not cached and the callback function returns null.
 		/// </summary>
 		/// <param name="name">Some unique name. It is used to identify this image in cache.</param>
-		/// <param name="callback">Called to get image. See <see cref="AIcon.ToWinformsBitmap"/>.</param>
+		/// <param name="callback">Called to get image. See <see cref="AIcon.ToGdipBitmap"/>.</param>
 		/// <param name="autoUpdate"></param>
 		/// <param name="auParam"></param>
 		/// <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
@@ -184,7 +184,7 @@ namespace Au
 		bool _LoadImage(out Bitmap b, string file, IconGetFlags giFlags, Func<Bitmap> callback)
 		{
 			if(callback != null) b = callback();
-			else b = AIcon.OfFile(file, _iconSize, giFlags).ToWinformsBitmap();
+			else b = AIcon.OfFile(file, _iconSize, giFlags).ToGdipBitmap();
 			return b != null;
 		}
 

@@ -78,7 +78,7 @@ public partial class PanelFind : UserControl
 	}
 
 	private void _tFindReplace_KeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
-		if (!_cRegex.IsCheck()) return;
+		if (!_cRegex.True()) return;
 		var tb = sender as TextBox;
 		if (e.NewFocus == tb) {
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
@@ -95,9 +95,9 @@ public partial class PanelFind : UserControl
 
 	private void _CheckedChanged(object sender, RoutedEventArgs e) {
 		if (sender == _cWord) {
-			if (_cWord.IsCheck()) _cRegex.IsChecked = false;
+			if (_cWord.True()) _cRegex.IsChecked = false;
 		} else if (sender == _cRegex) {
-			if (_cRegex.IsCheck()) {
+			if (_cRegex.True()) {
 				_cWord.IsChecked = false;
 				if (_regexWindow == null) {
 					_regexWindow = new RegexWindow();
@@ -108,7 +108,7 @@ public partial class PanelFind : UserControl
 			}
 		} else if (sender == _cName) {
 			Panels.Found.ZControl.Z.ClearText();
-			if (_cName.IsCheck()) {
+			if (_cName.True()) {
 				_aEditor.Clear();
 				Panels.Editor.ZActiveDoc?.InicatorsFind_(null);
 			}
@@ -120,7 +120,7 @@ public partial class PanelFind : UserControl
 	string _regexTopic;
 
 	void _ShowRegexInfo(TextBox tb, bool F1) {
-		if (_regexWindow == null || !_cRegex.IsCheck()) return;
+		if (_regexWindow == null || !_cRegex.True()) return;
 		if (_regexWindow.UserClosed) { if (!F1) return; _regexWindow.UserClosed = false; }
 
 		if (_regexWindow.Hwnd.Is0) {
@@ -185,11 +185,11 @@ public partial class PanelFind : UserControl
 	/// </summary>
 	public void ZUpdateQuickResults(bool onlyEditor) {
 		if (!IsVisible) return;
-		if (onlyEditor && _cName.IsCheck()) return;
+		if (onlyEditor && _cName.True()) return;
 		//AOutput.Write("UpdateQuickResults", Visible);
 
 		_timerUE ??= new ATimer(_ => {
-			if (_cName.IsCheck()) {
+			if (_cName.True()) {
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
@@ -215,8 +215,8 @@ public partial class PanelFind : UserControl
 		f = default;
 		f.findText = _tFind.Text;
 		if (f.findText.Length == 0) return false;
-		f.matchCase = _cCase.IsCheck();
-		if (_cRegex.IsCheck()) {
+		f.matchCase = _cCase.True();
+		if (_cRegex.True()) {
 			try {
 				var fl = RXFlags.MULTILINE;
 				if (!f.matchCase) fl |= RXFlags.CASELESS;
@@ -226,7 +226,7 @@ public partial class PanelFind : UserControl
 				_SetErrorProvider(_tFind, e.Message);
 				return false;
 			}
-		} else f.wholeWord = _cWord.IsCheck();
+		} else f.wholeWord = _cWord.True();
 		if (forReplace) f.replaceText = _tReplace.Text;
 
 		_AddToRecent(f, noRecent);
@@ -347,7 +347,7 @@ public partial class PanelFind : UserControl
 	}
 
 	void _IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
-		if (!_cName.IsCheck()) Panels.Editor.ZActiveDoc?.InicatorsFind_(IsVisible ? _aEditor : null);
+		if (!_cName.True()) Panels.Editor.ZActiveDoc?.InicatorsFind_(IsVisible ? _aEditor : null);
 	}
 
 	/// <summary>
@@ -363,12 +363,12 @@ public partial class PanelFind : UserControl
 
 	/// <summary>
 	/// Makes visible and sets find text = selected text of e.
-	/// Supports SciHost and TextBox. If other type or null or no selected text, just makes visible etc.
+	/// Supports KScintilla and TextBox. If other type or null or no selected text, just makes visible etc.
 	/// </summary>
 	public void ZCtrlF(FrameworkElement e) {
 		string s = null;
 		switch (e) {
-		case SciHost c:
+		case KScintilla c:
 			s = c.Z.SelectedText();
 			break;
 		case TextBox c:

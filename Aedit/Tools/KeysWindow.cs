@@ -27,7 +27,7 @@ namespace Au.Tools
 		}
 
 		void _Insert(string s) {
-			var sci = InsertInControl as SciHost;
+			var sci = InsertInControl as KScintilla;
 			var pos8 = sci.Z.CurrentPos8;
 
 			switch (s) {
@@ -39,7 +39,7 @@ namespace Au.Tools
 			case "action": _AddArg(sci, pos8, ", new Action(() => { AMouse.RightClick(); })"); return;
 			}
 
-			static void _AddArg(SciHost sci, int pos8, string s) {
+			static void _AddArg(KScintilla sci, int pos8, string s) {
 				pos8 = sci.Z.FindText(false, "\"", pos8) + 1; if (pos8 == 0) return;
 				sci.Z.GoToPos(false, pos8);
 				InsertCode.TextSimplyInControl(sci, s);

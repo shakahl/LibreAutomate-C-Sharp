@@ -20,7 +20,7 @@ static class App
 	public static AppSettings Settings;
 	public static MainWindow Wmain;
 	public static AWnd Hwnd; //of Wnd
-	public static AuMenuCommands Commands;
+	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
 	public static AIconImageCache ImageCache;
@@ -140,7 +140,7 @@ static class App
 
 	[MethodImpl(MethodImplOptions.NoInlining)]
 	static void _LoadUI() {
-		var app = new Aedit.WpfApp();
+		var app = new Aedit.WpfApp { ShutdownMode = ShutdownMode.OnMainWindowClose };
 		app.InitializeComponent(); //FUTURE: remove if not used. Adds 2 MB (10->12) when running hidden at startup.
 		ImageCache = new AIconImageCache();
 		new MainWindow();

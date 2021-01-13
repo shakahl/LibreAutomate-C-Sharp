@@ -1,4 +1,5 @@
 ﻿using System;
+using Au.Util;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -433,6 +434,20 @@ namespace Au.Types
 		}
 
 		/// <summary>
+		/// Formats string from RECT main fields and properties.
+		/// </summary>
+		/// <param name="format">
+		/// <see cref="StringBuilder.AppendFormat"/> format string. Example: <c>"({0}, {1}, {4}, {5})"</c>.
+		/// This function passes to AppendFormat 6 values in this order: <b>left</b>, <b>top</b>, <b>right</b>, <b>bottom</b>, <b>Width</b>, <b>Height</b>.
+		/// </param>
+		public string ToStringFormat(string format) {
+			using (new StringBuilder_(out var b)) {
+				b.AppendFormat(format, left.ToStringInvariant(), top.ToStringInvariant(), right.ToStringInvariant(), bottom.ToStringInvariant(), Width.ToStringInvariant(), Height.ToStringInvariant());
+				return b.ToString();
+			}
+		}
+
+		/// <summary>
 		/// Converts string to RECT.
 		/// Returns false if invalid string format.
 		/// </summary>
@@ -462,7 +477,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Color, as int in 0xAARRGGBB format.
-	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows native COLORREF (0xBBGGRR), string.
+	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
 	/// </summary>
 	[DebuggerStepThrough]
 	[Serializable]
@@ -471,130 +486,134 @@ namespace Au.Types
 		/// <summary>
 		/// Color value in 0xAARRGGBB format.
 		/// </summary>
-		public int color;
+		public int argb;
 
-		/// <summary>
-		/// Converts from color value in 0xAARRGGBB format.
-		/// </summary>
-		/// <param name="colorARGB"></param>
+		/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
 		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
 		public ColorInt(int colorARGB, bool makeOpaque) {
-			if (makeOpaque) colorARGB |= unchecked((int)0xFF000000);
-			this.color = colorARGB;
+			if (makeOpaque) colorARGB |= 0xFF << 24;
+			argb = colorARGB;
 		}
 
-		/// <summary>
-		/// Converts from int color value in 0xRRGGBB format.
-		/// Makes opaque (alpha 0xFF).
-		/// </summary>
-		public static implicit operator ColorInt(int color) => new ColorInt(color, true);
+		/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
+		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
+		public ColorInt(uint colorARGB, bool makeOpaque) : this((int)colorARGB, makeOpaque) { }
 
 		/// <summary>
-		/// Converts from uint color value in 0xRRGGBB format.
-		/// Makes opaque (alpha 0xFF).
+		/// Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+		/// Sets alpha 0xFF.
 		/// </summary>
-		public static implicit operator ColorInt(uint color) => new ColorInt((int)color, true);
+		//[Obsolete] //to find all references
+		public static implicit operator ColorInt(int color) => new(color, true);
+
+		/// <summary>
+		/// Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+		/// Sets alpha 0xFF.
+		/// </summary>
+		//[Obsolete] //to find all references
+		public static implicit operator ColorInt(uint color) => new((int)color, true);
 
 		/// <summary>
 		/// Converts from <see cref="Color"/>.
 		/// </summary>
-		public static implicit operator ColorInt(Color color) => new ColorInt(color.ToArgb(), false);
+		public static implicit operator ColorInt(Color color) => new(color.ToArgb(), false);
 
 		/// <summary>
 		/// Converts from <see cref="System.Windows.Media.Color"/>.
 		/// </summary>
 		public static implicit operator ColorInt(System.Windows.Media.Color color)
-			=> new ColorInt((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B, false);
+			=> new((color.A << 24) | (color.R << 16) | (color.G << 8) | color.B, false);
 
 		/// <summary>
 		/// Converts from color name (<see cref="Color.FromName(string)"/>) or string "0xRRGGBB" or "#RRGGBB".
 		/// </summary>
 		/// <remarks>
 		/// If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
-		/// If s is null or invalid, sets c.color = 0 and returns false.
+		/// If s is null or invalid, sets c.argb = 0 and returns false.
 		/// </remarks>
 		public static bool FromString(string s, out ColorInt c) {
-			c.color = 0;
+			c.argb = 0;
 			if (s == null || s.Length < 2) return false;
 			if (s[0] == '0' && s[1] == 'x') {
-				c.color = s.ToInt(0, out int end);
+				c.argb = s.ToInt(0, out int end);
 				if (end < 3) return false;
-				if (end <= 8) c.color |= unchecked((int)0xFF000000);
+				if (end <= 8) c.argb |= unchecked((int)0xFF000000);
 			} else if (s[0] == '#') {
-				c.color = s.ToInt(1, out int end, STIFlags.IsHexWithout0x);
+				c.argb = s.ToInt(1, out int end, STIFlags.IsHexWithout0x);
 				if (end < 2) return false;
-				if (end <= 7) c.color |= unchecked((int)0xFF000000);
+				if (end <= 7) c.argb |= unchecked((int)0xFF000000);
 			} else {
-				c.color = Color.FromName(s).ToArgb();
-				if (c.color == 0) return false; //invalid is 0, black is 0xFF000000
+				c.argb = Color.FromName(s).ToArgb();
+				if (c.argb == 0) return false; //invalid is 0, black is 0xFF000000
 			}
 			return true;
 		}
 
 		/// <summary>
-		/// Converts from Windows native COLORREF (0xBBGGRR to 0xRRGGBB).
+		/// Converts from Windows native COLORREF (0xBBGGRR to 0xAARRGGBB).
 		/// </summary>
 		/// <param name="colorBGR">Color in 0xBBGGRR format.</param>
-		/// <param name="makeOpaque">Set alpha = 0xFF.</param>
-		public static ColorInt FromBGR(int colorBGR, bool makeOpaque) => new ColorInt(SwapRB(colorBGR), makeOpaque);
+		/// <param name="makeOpaque">If true, sets alpha = 0xFF. If null, sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
+		public static ColorInt FromBGR(int colorBGR, bool makeOpaque = true) => new(SwapRB(colorBGR), makeOpaque);
 
 		/// <summary>
-		/// Converts to Windows native COLORREF (0xBBGGRR from 0xRRGGBB).
+		/// Converts to Windows native COLORREF (0xBBGGRR from 0xAARRGGBB).
 		/// Returns color in COLORREF format. Does not modify this variable.
 		/// </summary>
 		/// <param name="zeroAlpha">Set the alpha byte = 0.</param>
 		public int ToBGR(bool zeroAlpha = true) {
-			var r = SwapRB(color);
+			var r = SwapRB(argb);
 			if (zeroAlpha) r &= 0xFFFFFF;
 			return r;
 		}
 
-		/// <summary>Returns <c>c.color</c>.</summary>
-		public static explicit operator int(ColorInt c) => c.color;
+		//rejected. Easy to create bugs when actually need BGR. Let use ToBGR() when need BGR, or argb field when need ARGB.
+		///// <summary>Returns <c>c.argb</c>.</summary>
+		//public static explicit operator int(ColorInt c) => c.argb;
 
-		/// <summary>Returns <c>(uint)c.color</c>.</summary>
-		public static explicit operator uint(ColorInt c) => (uint)c.color;
+		///// <summary>Returns <c>(uint)c.argb</c>.</summary>
+		//public static explicit operator uint(ColorInt c) => (uint)c.argb;
 
 		/// <summary>Converts to <see cref="Color"/>.</summary>
-		public static explicit operator Color(ColorInt c) => Color.FromArgb(c.color);
+		public static explicit operator Color(ColorInt c) => Color.FromArgb(c.argb);
 
 		/// <summary>Converts to <see cref="System.Windows.Media.Color"/>.</summary>
 		public static explicit operator System.Windows.Media.Color(ColorInt c) {
-			uint k = (uint)c.color;
+			uint k = (uint)c.argb;
 			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
 		}
 
 		///// <summary>
 		///// <c>FromBGR(GetSysColor)</c>.
 		///// </summary>
-		//internal static ColorInt FromSysColor_(int colorIndex, bool makeOpaque) => FromBGR(Api.GetSysColor(colorIndex), makeOpaque);
+		//internal static ColorInt FromSysColor_(int colorIndex) => FromBGR(Api.GetSysColor(colorIndex), true);
 
 #pragma warning disable 1591 //XML doc
-		public static bool operator ==(ColorInt a, ColorInt b) => a.color == b.color;
-		public static bool operator !=(ColorInt a, ColorInt b) => a.color != b.color;
+		public static bool operator ==(ColorInt a, ColorInt b) => a.argb == b.argb;
+		public static bool operator !=(ColorInt a, ColorInt b) => a.argb != b.argb;
 
-		public bool Equals(ColorInt other) => other.color == color;
+		public bool Equals(ColorInt other) => other.argb == argb;
 
 		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
-		public override int GetHashCode() => color;
-		public override string ToString() => "#" + color.ToString("X8");
+		public override int GetHashCode() => argb;
+		public override string ToString() => "#" + argb.ToString("X8");
 
 		//property for JSON serialization
 		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _C { get => color; set { color = value; } }
+		public int _C { get => argb; set { argb = value; } }
 #pragma warning restore 1591 //XML doc
 
 		/// <summary>
 		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
 		/// ARGB is used in .NET, GDI+ and HTML/CSS.
-		/// ABGR is used by most Windows API.
+		/// ABGR is used by most Windows API; aka COLORREF.
 		/// </summary>
 		public static int SwapRB(int color) => (color & unchecked((int)0xff00ff00)) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
 
 		/// <summary>
 		/// Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
 		/// ARGB is used in .NET, GDI+ and HTML/CSS.
-		/// ABGR is used by most Windows API.
+		/// ABGR is used by most Windows API; aka COLORREF.
 		/// </summary>
 		public static uint SwapRB(uint color) => (color & 0xff00ff00) | (color << 16 & 0xff0000) | (color >> 16 & 0xff);
 
@@ -608,7 +627,7 @@ namespace Au.Types
 		/// </remarks>
 		internal float GetPerceivedBrightness() //FUTURE: make public if really useful
 		{
-			uint u = (uint)color;
+			uint u = (uint)argb;
 			uint R = u >> 16 & 0xff, G = u >> 8 & 0xff, B = u & 0xff;
 			return (float)(Math.Sqrt(R * R * .299 + G * G * .587 + B * B * .114) / 255);
 		}
@@ -624,9 +643,9 @@ namespace Au.Types
 		/// Does not change hue and saturation. Does not use alpha.
 		/// </remarks>
 		internal ColorInt AdjustLuminance(int n, bool totalRange = false) {
-			uint u = (uint)color;
+			uint u = (uint)argb;
 			u = Api.ColorAdjustLuma(u & 0xffffff, n, !totalRange) | (u & 0xFF000000);
-			return new ColorInt((int)u, false);
+			return new((int)u, false);
 			//tested: with SwapRB the same.
 		}
 		//FUTURE: make public if really useful.

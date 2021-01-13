@@ -1396,6 +1396,28 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern int GetSysColor(int nIndex);
 
+		//internal struct DRAWTEXTPARAMS
+		//{
+		//	public int cbSize;
+		//	public int iTabLength;
+		//	public int iLeftMargin;
+		//	public int iRightMargin;
+		//	public int uiLengthDrawn;
+		//}
+
+		//[DllImport("user32.dll", SetLastError = true)]
+		//static extern int DrawTextExW(IntPtr hdc, char* lpchText, int cchText, ref RECT lprc, Native.DT format, DRAWTEXTPARAMS* lpdtp);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		static extern int DrawTextExW(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, Native.DT format, void* lpdtp);
+
+		internal static int DrawText(IntPtr hdc, string lpchText, int cchText, ref RECT lprc, Native.DT format) {
+			if (format.Has(Native.DT.MODIFYSTRING)) throw new NotSupportedException("MODIFYSTRING");
+			return DrawTextExW(hdc, lpchText, cchText, ref lprc, format, null);
+
+			//DRAWTEXTPARAMS doc incorrect. Left nad right margin fields are in pixels, not average char widths. Not tested tab width.
+		}
+
 	}
 
 }

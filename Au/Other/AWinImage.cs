@@ -43,10 +43,10 @@ namespace Au
 		/// <exception cref="ArgumentException">Bad image or string format.</exception>
 		/// <exception cref="Exception">Depending on <i>image</i> string format, exceptions of <see cref="Image.FromFile(string)"/>, <see cref="Bitmap(Stream)"/>, etc.</exception>
 		/// <remarks>
-		/// Calls <see cref="AImageUtil.LoadWinformsImageFromFileOrResourceOrString"/>.
+		/// Calls <see cref="AImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/>.
 		/// </remarks>
 		public static Bitmap LoadImage(string image)
-			=> AImageUtil.LoadWinformsImageFromFileOrResourceOrString(image);
+			=> AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(image);
 
 		#endregion
 
@@ -314,7 +314,7 @@ namespace Au
 
 				public _Image(string file)
 				{
-					using var b = AImageUtil.LoadWinformsImageFromFileOrResourceOrString(file);
+					using var b = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(file);
 					_BitmapToData(b);
 				}
 
@@ -340,7 +340,7 @@ namespace Au
 				public _Image(ColorInt color)
 				{
 					width = height = 1;
-					pixels = new uint[1] { (uint)color | 0xff000000 };
+					pixels = new uint[1] { (uint)color.argb | 0xff000000 };
 				}
 
 				public _Image() { }
@@ -1059,7 +1059,7 @@ namespace Au.Types
 	/// <remarks>
 	/// Has implicit conversions from:
 	/// - string - path of .png or .bmp file. If not full path, uses <see cref="AFolders.ThisAppImages"/>.
-	/// - string that starts with "resources/" or has prefix <c>"resource:"</c> - resource name; see <see cref="AResources.GetWinformsImage"/>.
+	/// - string that starts with "resources/" or has prefix <c>"resource:"</c> - resource name; see <see cref="AResources.GetGdipBitmap"/>.
 	/// - string with prefix <c>"image:"</c> - Base64-encoded .png image embedded in script text.
 	/// <br/>Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.ImageUtil.ImageToString</b> (in Au.Controls.dll).
 	/// - <see cref="ColorInt"/>, <b>int</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.

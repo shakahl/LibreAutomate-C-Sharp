@@ -139,11 +139,11 @@ namespace Au.Controls
 				switch (msg) {
 				case Api.WM_NCCREATE:
 					_w = w;
-					BufferedPaint.Init();
+					BufferedPaint_.Init();
 					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
-					BufferedPaint.Uninit();
+					BufferedPaint_.Uninit();
 					break;
 				//			case Api.WM_NCHITTEST: //SHOULDDO: test in Popup, probably click closes. Currently not using in popups.
 				//				return Api.HTTRANSPARENT;
@@ -151,7 +151,7 @@ namespace Au.Controls
 					_WmLbuttondown(lParam);
 					break;
 				case Api.WM_PAINT:
-					using (var bp = new BufferedPaint(w, true)) _Paint(bp.DC);
+					using (var bp = new BufferedPaint_(w, true)) _Paint(bp.DC);
 					return default;
 				}
 

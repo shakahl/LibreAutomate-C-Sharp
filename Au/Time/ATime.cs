@@ -228,7 +228,6 @@ namespace Au
 		/// <exception cref="ArgumentOutOfRangeException"><i>timeMS</i> is negative and not Timeout.Infinite.</exception>
 		/// <seealso cref="AWaitFor.MessagesAndCondition"/>
 		/// <seealso cref="AWaitFor.PostedMessage"/>
-		/// <seealso cref="AMessageLoop"/>
 		public static void SleepDoEvents(int timeMS)
 		{
 			SleepDoEvents_(timeMS);

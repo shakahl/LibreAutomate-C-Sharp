@@ -63,6 +63,8 @@
 	  <Page Remove="Resources\Images\CSClassFile_16x.xaml" />
 	  <Page Remove="Resources\Images\CSFile_16x.xaml" />
 	  <Page Remove="Resources\Images\Cut_16x.xaml" />
+	  <Page Remove="Resources\Images\ExpandDown_16x.xaml" />
+	  <Page Remove="Resources\Images\ExpandRight_16x.xaml" />
 	  <Page Remove="Resources\Images\FindInFile_16x.xaml" />
 	  <Page Remove="Resources\Images\FolderClosed_16x.xaml" />
 	  <Page Remove="Resources\Images\FolderOpened_16x.xaml" />
@@ -126,6 +128,12 @@
 	  <Resource Include="Resources\Images\CSFile_16x.xaml">
 	    <Generator></Generator>
 	  </Resource>
+	  <Resource Include="Resources\Images\ExpandDown_16x.xaml">
+	    <Generator></Generator>
+	  </Resource>
+	  <Resource Include="Resources\Images\ExpandRight_16x.xaml">
+	    <Generator></Generator>
+	  </Resource>
 	  <Resource Include="Resources\Images\FolderClosed_16x.xaml">
 	    <Generator></Generator>
 	  </Resource>
@@ -152,8 +160,6 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\Au.Controls\Au.Controls.csproj" />
 	  <ProjectReference Include="..\Au\Au.csproj" />
-	  <ProjectReference Include="..\Libraries\_SourceGrid\_SourceGrid.csproj" />
-	  <ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -187,16 +193,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Update="Controls\CodeBox.cs" />
 	  <Compile Update="Edit\ModifyCode.cs" />
 	  <Compile Update="Edit\PanelEdit.cs" />
 	  <Compile Update="Edit\SciCode.cs" />
-	  <Compile Update="Files\FProperties.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Files\FProperties.Designer.cs">
-	    <DependentUpon>FProperties.cs</DependentUpon>
-	  </Compile>
 	  <Compile Update="Files\PanelFiles.cs" />
 	  <Compile Update="Panels\PanelFound.cs" />
 	  <Compile Update="Panels\PanelInfo.cs">
@@ -204,41 +203,6 @@
 	  </Compile>
 	  <Compile Update="Panels\PanelOutput.cs" />
 	  <Compile Update="Panels\PanelRunning.cs" />
-	  <Compile Update="Controls\CodeBoxF.cs" />
-	  <Compile Update="Tools\FormAAcc.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Tools\FormAAcc.Designer.cs">
-	    <DependentUpon>FormAAcc.cs</DependentUpon>
-	  </Compile>
-	  <Compile Update="Tools\FormAWinImage.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Tools\FormAWinImage.Designer.cs">
-	    <DependentUpon>FormAWinImage.cs</DependentUpon>
-	  </Compile>
-	  <Compile Update="Tools\FormAWnd.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Tools\FormAWnd.Designer.cs">
-	    <DependentUpon>FormAWnd.cs</DependentUpon>
-	  </Compile>
-	  <Compile Update="Tools\FormWinapi.cs">
-	    <SubType>Form</SubType>
-	  </Compile>
-	  <Compile Update="Tools\InfoBox.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <EmbeddedResource Update="Tools\FormAAcc.resx">
-	    <DependentUpon>FormAAcc.cs</DependentUpon>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Tools\FormAWinImage.resx">
-	    <DependentUpon>FormAWinImage.cs</DependentUpon>
-	  </EmbeddedResource>
-	  <EmbeddedResource Update="Tools\FormAWnd.resx">
-	    <DependentUpon>FormAWnd.cs</DependentUpon>
-	  </EmbeddedResource>
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

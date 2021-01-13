@@ -47,7 +47,7 @@ If Regex is checked in the Find pane, this window is visible when a text field h
 <+a>(?s)<>  -  <.r>.<> matches newlines (<.r>\r<>, <.r>\n<>) too. Known as "single-line" or "dotall".
 <+a>(?n)<>  -  unnamed <.r>(...)<> groups are non-capturing, like <.r>(?:...)<>. Named still capturing: <.r>(?'name'...)<>.
 <+a>(?x)<>  -  extended. Support <.r>#comments<> and ignore spaces/newlines, except in <.r>[...]<> and after <.r>\<>.
-<+a>(?xx)<>  -  extended more. As <.r>(?x)<> but also ignore spaces in <.r>[...]<> (but not newlines).
+<+a>(?xx)<>  -  extended more. Like <.r>(?x)<> but also ignore spaces in <.r>[...]<> (but not newlines).
 <+a>(?U)<>  -  ungreedy (lazy) quantifiers <.r>+ * ? {n}<> etc. For example makes <.r>.+<> the same as <.r>.+?<>.
 <+a>(?J)<>  -  allow duplicate group names.
 

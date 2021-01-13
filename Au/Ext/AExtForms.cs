@@ -42,14 +42,14 @@ namespace Au
 		public static AWnd Hwnd(this Control t, bool create = false)
 			=> create || t.IsHandleCreated ? new AWnd(t.Handle) : default;
 
-		/// <summary>
-		/// Creates handle of this control/form and descendant controls.
-		/// Unlike Control.CreateHandle, works when invisible.
-		/// </summary>
-		internal static void CreateControlNow_(this Control t/*, int level = 0*/)
-		{
-			typeof(Control).InvokeMember("CreateControl", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod, null, t, new object[] { true });
-		}
+		///// <summary>
+		///// Creates handle of this control/form and descendant controls.
+		///// Unlike Control.CreateHandle, works when invisible.
+		///// </summary>
+		//internal static void CreateControlNow_(this Control t/*, int level = 0*/)
+		//{
+		//	typeof(Control).InvokeMember("CreateControl", BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.InvokeMethod, null, t, new object[] { true });
+		//}
 		//rejected. Sometimes creates problems, difficult to debug.
 		//	Eg the assertion started failing twice, but then started working again. It seems it happens after ngening and then editing.
 		///// <summary>

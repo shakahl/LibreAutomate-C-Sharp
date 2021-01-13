@@ -23,7 +23,7 @@ using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
 
-partial class SciCode : SciHost
+partial class SciCode : KScintilla
 {
 	readonly SciText.FileLoaderSaver _fls;
 	readonly FileNode _fn;
@@ -63,7 +63,7 @@ partial class SciCode : SciHost
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
 
 		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
-		Z.MarginWidth(c_marginLineNumbers, ADpi.Scale(40, Hwnd));//TODO: measure font; also when line count changes; also when DPI changes; also for all SciHost controls.
+		Z.MarginWidth(c_marginLineNumbers, ADpi.Scale(40, Hwnd));//TODO: measure font; also when line count changes; also when DPI changes; also for all KScintilla controls.
 
 		_InicatorsInit();
 
@@ -554,7 +554,7 @@ partial class SciCode : SciHost
 	[Flags]
 	public enum EView { Wrap = 1, Images = 2 }
 
-	public void ZToggleView(EView what) {
+	internal void ZToggleView_call_from_menu_only_(EView what) {
 		if (what.Has(EView.Wrap)) {
 			bool on = !App.Settings.edit_wrap;
 			App.Settings.edit_wrap = on;
@@ -565,7 +565,7 @@ partial class SciCode : SciHost
 			App.Settings.edit_noImages = !on;
 			ZImages.Visible = on ? AnnotationsVisible.ANNOTATION_STANDARD : AnnotationsVisible.ANNOTATION_HIDDEN;
 		}
-		Panels.Editor._UpdateUI_EditView();
+		//Panels.Editor._UpdateUI_EditView(); //don't need this, because this func called from menu commands only
 	}
 
 	#endregion

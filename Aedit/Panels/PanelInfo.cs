@@ -25,7 +25,7 @@ class PanelInfo : Grid
 	_Scintilla _sci;
 
 	public PanelInfo() {
-		_sci = new _Scintilla { ZInitReadOnlyAlways = true, ZInitTagsStyle = SciHost.ZTagsStyle.AutoAlways, Visibility = Visibility.Hidden };
+		_sci = new _Scintilla { ZInitReadOnlyAlways = true, ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways, Visibility = Visibility.Hidden };
 		_sci.ZHandleCreated += _sci_ZHandleCreated;
 		this.Children.Add(_sci);
 
@@ -35,7 +35,7 @@ class PanelInfo : Grid
 		this.Children.Add(_xaml);
 	}
 
-	class _Scintilla : SciHost
+	class _Scintilla : KScintilla
 	{
 		protected override string ZAccessibleName => "Info_mouse";
 	}

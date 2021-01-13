@@ -26,7 +26,7 @@ namespace Au.Util
 		/// <param name="imageSource">File path, or resource path that starts with "resources/" or has prefix "resource:", etc.</param>
 		/// <param name="dpi">DPI of window that will display the image.</param>
 		/// <param name="isImage">
-		/// true - load image from xaml/png/etc file, resource or string with <see cref="AImageUtil.LoadWinformsImageFromFileOrResourceOrString"/> or <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.
+		/// true - load image from xaml/png/etc file, resource or string with <see cref="AImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.
 		/// false - get file icon with <see cref="AIcon.OfFile"/>.</param>
 		/// <param name="asyncCompletion">If not null, if the image is still not in cache, <b>Get</b> returns null and loads it asynchronously in other thread. When loaded, calls <i>asyncCompletion</i> in this thread. Can be used to avoid slow startup when need to get many file icons.</param>
 		/// <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
@@ -90,9 +90,9 @@ namespace Au.Util
 			Bitmap _Load() {
 				Bitmap b = null;
 				try {
-					if (!isImage) b = AIcon.OfFile(imageSource).ToWinformsBitmap();
+					if (!isImage) b = AIcon.OfFile(imageSource).ToGdipBitmap();
 					else if (isXaml) b = _LoadXamlBitmap(imageSource, _imageSize, dpi);
-					else b = AImageUtil.LoadWinformsImageFromFileOrResourceOrString(imageSource);
+					else b = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(imageSource);
 				}
 				catch (Exception ex) { AWarning.Write(ex.ToStringWithoutStack()); }
 				return b;

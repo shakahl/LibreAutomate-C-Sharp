@@ -409,9 +409,9 @@ Wildex::~Wildex()
 
 //Parses wildcard expression and initializes this variable.
 //On error sets errStr (if not null) and returns false.
-//doNotCopyString - don't allocate/free own copy of w. The caller keeps w valid while using this variable.
+//dontCopyString - don't allocate/free own copy of w. The caller keeps w valid while using this variable.
 //Call once (asserts).
-bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString/* = false*/, out BSTR* errStr/* = null*/)
+bool Wildex::Parse(STR w, size_t lenW, bool dontCopyString/* = false*/, out BSTR* errStr/* = null*/)
 {
 	//if(w == null) return false;
 	assert(_text == null); //_text = null; _not = _freeText = false;
@@ -469,7 +469,7 @@ bool Wildex::Parse(STR w, size_t lenW, bool doNotCopyString/* = false*/, out BST
 	}
 
 	if(_type == WildType::Wildcard && !HasWildcards(w, lenW)) _type = WildType::Text;
-	if(doNotCopyString) _text = (LPWSTR)w;
+	if(dontCopyString) _text = (LPWSTR)w;
 	else {
 		_text = (LPWSTR)malloc((lenW + 1) * 2); memcpy(_text, w, lenW * 2); _text[lenW] = 0;
 		_freeText = true;

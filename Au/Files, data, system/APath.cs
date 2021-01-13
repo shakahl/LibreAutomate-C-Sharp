@@ -712,7 +712,7 @@ namespace Au
 		public static string GetExtension(string path, out string pathWithoutExtension)
 		{
 			var ext = GetExtension(path);
-			if(ext != null && ext.Length > 0) pathWithoutExtension = path.RemoveSuffix(ext.Length);
+			if(ext != null && ext.Length > 0) pathWithoutExtension = path[..^ext.Length];
 			else pathWithoutExtension = path;
 			return ext;
 		}

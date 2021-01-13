@@ -390,7 +390,7 @@ namespace Au
 		/// null means 'can be any'. Cannot be "". Cannot be path.
 		/// 
 		/// Or <see cref="WOwner.Process"/>(process id), <see cref="WOwner.Thread"/>(thread id), <see cref="WOwner.Window"/>(owner window).
-		/// See <see cref="ProcessId"/>, <see cref="AProcess.ProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>, <see cref="OwnerWindow"/>.
+		/// See <see cref="ProcessId"/>, <see cref="AProcess.ProcessId"/>, <see cref="ThreadId"/>, <see cref="AThread.Id"/>, <see cref="OwnerWindow"/>.
 		/// </param>
 		/// <param name="flags"></param>
 		/// <param name="also">
@@ -651,7 +651,7 @@ namespace Au
 			/// </summary>
 			/// <param name="threadId">
 			/// Unmanaged thread id.
-			/// See <see cref="AThread.NativeId"/>, <see cref="ThreadId"/>.
+			/// See <see cref="AThread.Id"/>, <see cref="ThreadId"/>.
 			/// If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="ALastError"/>.
 			/// </param>
 			/// <param name="onlyVisible">Need only visible windows.</param>
@@ -934,7 +934,7 @@ namespace Au.Types
 		public static WOwner Thread(int threadId) => new WOwner((uint)threadId);
 
 		/// <summary>Thread id of this thread.</summary>
-		public static WOwner ThisThread => new WOwner((uint)AThread.NativeId);
+		public static WOwner ThisThread => new WOwner((uint)AThread.Id);
 
 		/// <summary>Owner window. See <see cref="AWnd.OwnerWindow"/>.</summary>
 		public static WOwner Window(AnyWnd ownerWindow) => new WOwner(ownerWindow);

@@ -11,7 +11,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 using System.Drawing;
-using Forms = System.Windows.Forms;
 //using System.Linq;
 
 namespace Au.Util
@@ -20,21 +19,25 @@ namespace Au.Util
 	/// Helps to get and release screen DC with the 'using(...){...}' pattern.
 	/// Uses API GetDC and ReleaseDC.
 	/// </summary>
-	internal struct ScreenDC_ : IDisposable
+	sealed class ScreenDC_ : IDisposable
 	{
 		IntPtr _dc;
 
-		public ScreenDC_(int unused) => _dc = Api.GetDC(default);
+		public ScreenDC_() => _dc = Api.GetDC(default);
 		public static implicit operator IntPtr(ScreenDC_ dc) => dc._dc;
-		public void Dispose() { Api.ReleaseDC(default, _dc); _dc = default; }
+		public void Dispose() {
+			if (_dc != default) {
+				Api.ReleaseDC(default, _dc);
+				_dc = default;
+			}
+		}
 	}
 
 	/// <summary>
 	/// Helps to get and release window DC with the 'using(...){...}' pattern.
 	/// Uses API GetDC and ReleaseDC.
-	/// If w is default(AWnd), gets screen DC.
 	/// </summary>
-	internal struct WindowDC_ : IDisposable, IDeviceContext
+	sealed class WindowDC_ : IDisposable, IDeviceContext
 	{
 		IntPtr _dc;
 		AWnd _w;
@@ -47,74 +50,94 @@ namespace Au.Util
 
 		public bool Is0 => _dc == default;
 
-		public void Dispose() => ReleaseHdc();
-
-		public IntPtr GetHdc() => _dc;
-
-		public void ReleaseHdc() {
-			Api.ReleaseDC(_w, _dc);
-			_w = default; _dc = default;
+		public void Dispose() {
+			if (_dc != default) {
+				Api.ReleaseDC(_w, _dc);
+				_dc = default;
+			}
 		}
+
+		IntPtr IDeviceContext.GetHdc() => _dc;
+
+		void IDeviceContext.ReleaseHdc() => Dispose();
 	}
 
 	/// <summary>
-	/// Helps to create and delete screen DC with the 'using(...){...}' pattern.
+	/// Helps to create and delete compatible DC (memory DC) with the 'using(...){...}' pattern.
 	/// Uses API CreateCompatibleDC and DeleteDC.
 	/// </summary>
-	internal struct CompatibleDC_ : IDisposable, IDeviceContext
+	class MemoryDC_ : IDisposable, IDeviceContext
 	{
-		IntPtr _dc;
+		protected IntPtr _dc;
 
-		public CompatibleDC_(IntPtr dc) => _dc = Api.CreateCompatibleDC(dc);
-		public static implicit operator IntPtr(CompatibleDC_ dc) => dc._dc;
+		/// <summary>
+		/// Creates memory DC compatible with screen.
+		/// </summary>
+		public MemoryDC_() : this(default) { }
+
+		public MemoryDC_(IntPtr dc) => _dc = Api.CreateCompatibleDC(dc);
+
+		public static implicit operator IntPtr(MemoryDC_ dc) => dc._dc;
+
 		public bool Is0 => _dc == default;
 
-		public void Dispose() => ReleaseHdc();
+		public void Dispose() => Dispose(true);
 
-		public IntPtr GetHdc() => _dc;
-
-		public void ReleaseHdc() {
-			Api.DeleteDC(_dc);
-			_dc = default;
+		protected virtual void Dispose(bool disposing) {
+			if (_dc != default) {
+				Api.DeleteDC(_dc);
+				_dc = default;
+			}
 		}
+
+		IntPtr IDeviceContext.GetHdc() => _dc;
+
+		void IDeviceContext.ReleaseHdc() => Dispose();
 	}
 
-	///// <summary>
-	///// Misc GDI util.
-	///// </summary>
-	//internal static class Gdi_
-	//{
-	//	//rejected: now we use BufferedGraphics. Same speed. With BufferedGraphics no TextRenderer problems.
-	//	///// <summary>
-	//	///// Copies a .NET Bitmap to a native DC in a fast way.
-	//	///// </summary>
-	//	///// <remarks>
-	//	///// Can be used for double-buffering: create Bitmap and Graphics from it, draw in that Graphics, then call this func.
-	//	///// The bitmap should be PixelFormat.Format32bppArgb (normal), else slower etc. Must be top-down (normal).
-	//	///// </remarks>
-	//	//public static unsafe void CopyNetBitmapToDC(Bitmap b, IntPtr dc)
-	//	//{
-	//	//	var r = new Rectangle(0, 0, b.Width, b.Height);
-	//	//	var d = b.LockBits(r, System.Drawing.Imaging.ImageLockMode.ReadOnly, System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-	//	//	try {
-	//	//		Api.BITMAPINFOHEADER h = default;
-	//	//		h.biSize = sizeof(Api.BITMAPINFOHEADER);
-	//	//		h.biWidth = d.Width;
-	//	//		h.biHeight = -d.Height;
-	//	//		h.biPlanes = 1;
-	//	//		h.biBitCount = 32;
-	//	//		int k = Api.SetDIBitsToDevice(dc, 0, 0, d.Width, d.Height, 0, 0, 0, d.Height, (void*)d.Scan0, &h, 0);
-	//	//		Debug.Assert(k > 0);
-	//	//	}
-	//	//	finally { b.UnlockBits(d); }
+	/// <summary>
+	/// Memory DC with selected font.
+	/// Can be used for font measurement.
+	/// </summary>
+	sealed class FontDC_ : MemoryDC_
+	{
+		IntPtr _oldFont;
 
-	//	//	//speed: 6-7 times faster than Graphics.FromHdc/DrawImageUnscaled. When testing, the dc was from BeginPaint.
-	//	//}
-	//	//public static unsafe void CopyNetBitmapToDC2(Bitmap b, IntPtr dc)
-	//	//{
-	//	//	using(var g = Graphics.FromHdc(dc)) {
-	//	//		g.DrawImageUnscaled(b, 0, 0);
-	//	//	}
-	//	//}
-	//}
+		public FontDC_(IntPtr font) {
+			_oldFont = Api.SelectObject(_dc, font);
+		}
+
+		/// <summary>
+		/// Selects standard UI font for specified DPI.
+		/// </summary>
+		/// <param name="dpi"></param>
+		public FontDC_(DpiOf dpi) : this(NativeFont_.RegularCached(dpi)) { }
+
+		protected override void Dispose(bool disposing) {
+			if (_oldFont != default) {
+				Api.SelectObject(_dc, _oldFont);
+				_oldFont = default;
+			}
+			base.Dispose(disposing);
+		}
+
+		/// <summary>
+		/// Measures text with API <msdn>GetTextExtentPoint32</msdn>.
+		/// Should be single line without tabs. For drawing with API <msdn>TextOut</msdn> or <msdn>ExtTextOut</msdn>.
+		/// </summary>
+		public SIZE Measure(string s) {
+			Api.GetTextExtentPoint32(_dc, s, s.Length, out var z);
+			return z;
+		}
+
+		/// <summary>
+		/// Measures text with API <msdn>DrawText</msdn>.
+		/// Can be multiline. For drawing with API <msdn>DrawText</msdn>.
+		/// </summary>
+		public SIZE Measure(string s, int wrapWidth, Native.DT format) {
+			RECT r = new(0, 0, wrapWidth, 0);
+			Api.DrawText(_dc, s, s.Length, ref r, format | Native.DT.CALCRECT);
+			return new(r.Width, r.Height);
+		}
+	}
 }

@@ -20,11 +20,11 @@ using System.Linq;
 
 class PanelOpen : DockPanel
 {
-	AuTreeView _tv;
+	KTreeView _tv;
 	bool _updatedOnce;
 
 	public PanelOpen() {
-		_tv = new AuTreeView { Name = "Open_list", ImageCache = App.ImageCache };
+		_tv = new KTreeView { Name = "Open_list", ImageCache = App.ImageCache };
 		this.Children.Add(_tv);
 	}
 

@@ -92,7 +92,7 @@ namespace Au
 		public AToolbar(string name, TBCtor flags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
 			: base(f, l)
 		{
-			_threadId = AThread.NativeId;
+			_threadId = AThread.Id;
 			if(s_treadId == 0) s_treadId = _threadId; else if(_threadId != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
 
 			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
@@ -611,7 +611,7 @@ namespace Au
 			else _Close(true);
 		}
 
-		bool _IsOtherThread => _threadId != AThread.NativeId;
+		bool _IsOtherThread => _threadId != AThread.Id;
 
 		void _CheckThread() //SHOULDDO: call everywhere
 		{
@@ -730,8 +730,8 @@ namespace Au
 		public ColorInt BorderColor {
 			get => _sett.borderColor;
 			set {
-				if(value == _sett.borderColor) return;
-				_sett.borderColor = (int)value;
+				if(value.argb == _sett.borderColor) return;
+				_sett.borderColor = value.argb;
 				var w = _c.Hwnd();
 				if(!w.Is0) unsafe { Api.RedrawWindow(w, flags: Api.RDW_FRAME | Api.RDW_INVALIDATE); }
 			}

@@ -202,7 +202,7 @@ namespace Au
 		/// <exception cref="Exception">Exceptions of Bitmap(int, int, PixelFormat) constructor.</exception>
 		public static unsafe Bitmap BitmapFromHbitmap(IntPtr hbitmap) {
 			var bh = new Api.BITMAPINFOHEADER() { biSize = sizeof(Api.BITMAPINFOHEADER) };
-			using (var dcs = new ScreenDC_(0)) {
+			using (var dcs = new ScreenDC_()) {
 				if (0 == Api.GetDIBits(dcs, hbitmap, 0, 0, null, &bh, 0)) goto ge;
 				int wid = bh.biWidth, hei = bh.biHeight;
 				if (hei > 0) bh.biHeight = -bh.biHeight; else hei = -hei;
@@ -313,7 +313,7 @@ namespace Au
 				//try { AKeys.WaitForHotkey(0, KKey.F3); }
 				//catch(AuException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
 
-				AKeys.WaitForKey(0, KKey.F3, up: true, block: true);
+				AKeys.WaitForKey(0, KKey.F3, up: true, block: true); //SHOULDDO: exit on Esc. Now closes dialog but not tooltip.
 			}
 			return true;
 		}
@@ -341,7 +341,7 @@ namespace Au
 				TopLevel = true; //optional
 				StartPosition = FormStartPosition.Manual;
 				Text = "Au.AWinImage.CaptureUI";
-				Cursor = _cursor = ACursor.Load(Resources.Resources.red_cross_cursor, 32).ToWinformsCursor();
+				Cursor = _cursor = ACursor.Load(Resources.Resources.red_cross_cursor, 32).ToGdipCursor();
 			}
 
 			protected override CreateParams CreateParams {

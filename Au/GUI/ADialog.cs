@@ -656,12 +656,12 @@ namespace Au
 		/// </summary>
 		/// <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or AWnd (window handle). Can be null.</param>
 		/// <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="SetXY"/> and <see cref="Screen"/> are ignored.</param>
-		/// <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
+		/// <param name="dontDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
 		/// <seealso cref="Options.AutoOwnerWindow"/>
-		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool doNotDisable = false) {
+		public void SetOwnerWindow(AnyWnd owner, bool ownerCenter = false, bool dontDisable = false) {
 			_c.hwndParent = owner.IsEmpty ? default : owner.Hwnd.Window;
 			_SetFlag(_TDF.POSITION_RELATIVE_TO_WINDOW, ownerCenter);
-			_enableOwner = doNotDisable;
+			_enableOwner = dontDisable;
 		}
 		bool _enableOwner;
 

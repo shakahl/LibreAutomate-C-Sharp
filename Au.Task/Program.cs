@@ -183,7 +183,7 @@ static unsafe class Program
 
 		"Au".ToLowerInvariant(); //in .NET 5 preview would be first time 15-40 ms
 
-		APerf.Shared.Next();
+		//APerf.Shared.Next();
 	}
 
 	[MethodImpl(MethodImplOptions.NoInlining)]

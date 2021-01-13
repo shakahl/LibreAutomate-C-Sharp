@@ -97,7 +97,7 @@ static class InsertCode
 			i = s.Length - i;
 		}
 
-		if (c is SciHost sci) {
+		if (c is KScintilla sci) {
 			if (sci.Z.IsReadonly) return;
 			sci.Z.ReplaceSel(s);
 			while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);

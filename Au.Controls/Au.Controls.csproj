@@ -29,37 +29,7 @@
 	</ItemGroup>
 
 	<ItemGroup>
-	  <Compile Remove="Forms\excluded\ComboBox_.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<ProjectReference Include="..\Libraries\_SourceGrid\_SourceGrid.csproj" />
-		<ProjectReference Include="..\Libraries\_TreeList\_TreeList.csproj" />
-	</ItemGroup>
-
-	<ItemGroup>
-		<Compile Update="Forms\AuDockPanel\AuDockPanel.cs" />
-		<Compile Update="Forms\AuDockPanel\DP common.cs" />
-		<Compile Update="Forms\AuDockPanel\_Acc.cs" />
-		<Compile Update="Forms\AuDockPanel\_Float.cs" />
-		<Compile Update="Forms\AuDockPanel\_Panel.cs" />
-		<Compile Update="Forms\AuDockPanel\_Split.cs" />
-		<Compile Update="Forms\AuDockPanel\_Tab.cs" />
-		<Compile Update="Forms\AuStripManager\FSMProperties.cs" />
-		<Compile Update="Forms\Other\DialogForm.cs" />
-		<Compile Update="Forms\Other\AuUserControlBase.cs" />
-		<Compile Update="Forms\Other\InactiveWindow.cs" />
-		<Compile Update="Forms\Other\ParamGrid.cs" />
-		<Compile Update="Forms\Other\Simple.cs" />
-		<Compile Update="Forms\Other\ToolStripSpringBox.cs" />
-		<Compile Update="Forms\Sci\AuScintilla.cs" />
-		<Compile Update="Forms\Sci\InfoBoxF.cs" />
-	</ItemGroup>
-
-	<ItemGroup>
-	  <None Include="Forms\excluded\ComboBox_.cs">
-	    <SubType>Component</SubType>
-	  </None>
+	  <ProjectReference Include="..\Au\Au.csproj" />
 	</ItemGroup>
 
 	<Target Name="PreBuild" BeforeTargets="PreBuildEvent">

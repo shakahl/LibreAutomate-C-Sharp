@@ -40,9 +40,8 @@ namespace Au.Util
 		/// </summary>
 		/// <param name="file">File path etc. See <see cref="AIcon.OfFile"/>.</param>
 		/// <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
-		public void Add(string file, object obj)
-		{
-			if(file.NE()) return;
+		public void Add(string file, object obj) {
+			if (file.NE()) return;
 			_files.Add(new Item(file, obj));
 		}
 
@@ -51,9 +50,8 @@ namespace Au.Util
 		/// The same as calling <see cref="Add"/> multiple times.
 		/// This function copies the list.
 		/// </summary>
-		public void AddRange(IEnumerable<Item> files)
-		{
-			if(files != null) _files.AddRange(files);
+		public void AddRange(IEnumerable<Item> files) {
+			if (files != null) _files.AddRange(files);
 		}
 
 		/// <summary>
@@ -74,9 +72,8 @@ namespace Au.Util
 		/// The callback is called in this thread. This thread must have a message loop (eg Application.Run).
 		/// If you'll need more icons, you can add more files and call this function again with the same <b>IconsAsync_</b> instance, even if getting old icons if still not finished.
 		/// </remarks>
-		public void GetAllAsync(Callback callback, int iconSize, IconGetFlags flags = 0, object objCommon = null)
-		{
-			if(_files.Count == 0) return;
+		public void GetAllAsync(Callback callback, int iconSize, IconGetFlags flags = 0, object objCommon = null) {
+			if (_files.Count == 0) return;
 			var work = new _AsyncWork();
 			_works.Add(work);
 			work.GetAllAsync(this, callback, iconSize, flags, objCommon);
@@ -100,8 +97,7 @@ namespace Au.Util
 			volatile int _nPending;
 			bool _canceled;
 
-			internal void GetAllAsync(IconsAsync_ host, Callback callback, int iconSize, IconGetFlags flags, object objCommon)
-			{
+			internal void GetAllAsync(IconsAsync_ host, Callback callback, int iconSize, IconGetFlags flags, object objCommon) {
 				Debug.Assert(_callback == null); //must be called once
 
 				_host = host;
@@ -111,18 +107,18 @@ namespace Au.Util
 				_objCommon = objCommon;
 				_counter = _host._files.Count;
 
-				using(new EnsureWindowsFormsSynchronizationContext_()) {
-					foreach(var v in _host._files) {
-						if(!v.file.NE()) _GetIconAsync(new Result(v.file, v.obj));
+				bool isForms = 0 != (1 & Assembly_.IsLoadedWinformsWpf());
+				using (isForms ? new EnsureWindowsFormsSynchronizationContext_() : null) {
+					foreach (var v in _host._files) {
+						if (!v.file.NE()) _GetIconAsync(new Result(v.file, v.obj));
 					}
 				}
 			}
 
 #if true
-			void _GetIconAsync(Result state)
-			{
+			void _GetIconAsync(Result state) {
 				ThreadPoolSTA_.SubmitCallback(state, d => { //this code runs in a thread pool thread
-					if(_canceled) {
+					if (_canceled) {
 						d.completionCallback = null;
 						return;
 					}
@@ -133,7 +129,7 @@ namespace Au.Util
 					//Prevent overflowing the message queue and the number of icon handles.
 					//Because bad things start when eg toolbar icon count is more than 3000 and they are extracted faster than consumed.
 					//But don't make the threshold too low, because then may need to wait unnecessarily, and it makes slower.
-					if(Interlocked.Increment(ref _nPending) >= 900) {
+					if (Interlocked.Increment(ref _nPending) >= 900) {
 						//AOutput.Write(_nPending);
 						//var perf = APerf.Create();
 						Thread.Sleep(10);
@@ -146,11 +142,11 @@ namespace Au.Util
 					//AOutput.Write("2");
 
 					var k = o as Result;
-					if(_canceled) {
+					if (_canceled) {
 						k.icon.Dispose();
 					} else {
 						_callback(k, _objCommon, --_counter); //even if hIcon == default, it can be useful
-						if(_counter == 0) {
+						if (_counter == 0) {
 							_host._works.Remove(this);
 							_host = null;
 							Debug.Assert(_nPending == 0);
@@ -212,8 +208,7 @@ namespace Au.Util
 				}
 #endif
 
-			internal void Cancel()
-			{
+			internal void Cancel() {
 				_canceled = true;
 			}
 		}
@@ -221,27 +216,24 @@ namespace Au.Util
 		/// <summary>
 		/// Clears the internal collection of file paths added with Add().
 		/// </summary>
-		public void Clear()
-		{
+		public void Clear() {
 			_files.Clear();
 		}
 
 		/// <summary>
 		/// Stops getting icons and calling callback functions.
 		/// </summary>
-		public void Cancel()
-		{
+		public void Cancel() {
 			//AOutput.Write(_works.Count);
-			if(_works.Count == 0) return;
-			foreach(var work in _works) work.Cancel();
+			if (_works.Count == 0) return;
+			foreach (var work in _works) work.Cancel();
 			_works.Clear();
 		}
 
 		/// <summary>
 		/// Calls <see cref="Cancel"/>.
 		/// </summary>
-		public void Dispose()
-		{
+		public void Dispose() {
 			Cancel();
 			GC.SuppressFinalize(this);
 		}

@@ -178,9 +178,14 @@ class CiErrors
 					goto case ErrorCode.ERR_NameNotInContext;
 				case ErrorCode.ERR_NameNotInContext:
 				case ErrorCode.ERR_SingleTypeNameNotFound:
+					//not tested: ERR_GlobalSingleTypeNameNotFound, ERR_DottedTypeNameNotFoundInAgg, ERR_AliasNotFound, ERR_TypeNotFound
 					if (ec == ecPrev) continue; //probably "not found 'AbcAttribute'" followed by "not found 'Abc'"
 					ecPrev = ec;
 					_UsingsEtc(x, v, doc, extMethod);
+					break;
+				case ErrorCode.ERR_DottedTypeNameNotFoundInNS: //using Namespace.NotFound;
+					ecPrev = ec;
+					x.Hyperlink("^r", "\nAdd assembly reference or class file...");
 					break;
 				case ErrorCode.ERR_UnimplementedInterfaceMember:
 				case ErrorCode.ERR_UnimplementedAbstractMethod:
@@ -305,8 +310,7 @@ class CiErrors
 				InsertCode.UsingDirective(s);
 			}
 		} else if (action == 'w') { //Windows API
-			s = s[2..];
-			FormWinapi.ZShowDialog(s);
+			new Au.Tools.DWinapi(s[2..]).Show();
 		} else if (action == 'r') { //Add reference
 			Menus.File.Properties();
 		} else if (action == 'i') { //implement interface or abstract class

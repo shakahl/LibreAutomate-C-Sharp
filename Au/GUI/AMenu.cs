@@ -22,7 +22,7 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// Based on <see cref="ContextMenuStrip"/>.
-	/// Can be used everywhere, not only in forms.
+	/// Can be used in winforms windows and everywhere in scripts. In WPF windows instead use <see cref="AWpfMenu"/>.
 	/// Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
 	/// </remarks>
 	/// <example>
@@ -481,7 +481,7 @@ namespace Au
 		bool _showedOnce;
 		bool _inOurShow; //to detect when ContextMenuStrip.Show called not through AMenu.Show
 		bool _isModal; //depends on ModalAlways or Application.MessageLoop
-		AMessageLoop _msgLoop = new AMessageLoop();
+		AMessageLoop_ _msgLoop = new();
 
 		/// <summary>
 		/// If false, disposes the menu when it is closed.
@@ -598,7 +598,7 @@ namespace Au
 
 			//is/was classic context menu active?
 			bool wasClassicMenu = _closing_classicMenu;
-			_closing_classicMenu = AWnd.More.GetGUIThreadInfo(out var g, AThread.NativeId) && !g.hwndMenuOwner.Is0;
+			_closing_classicMenu = AWnd.More.GetGUIThreadInfo(out var g, AThread.Id) && !g.hwndMenuOwner.Is0;
 			if (wasClassicMenu && !_closing_classicMenu) return;
 
 			//close if Esc key

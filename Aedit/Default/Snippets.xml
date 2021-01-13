@@ -358,7 +358,7 @@ if (s == null) return;]]>
 			</list>
 		</snippet>
 
-		<snippet name="wpfSnippet" info="Create dialog window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Media" more="See also: dialogSnippet, menu New -> Templates.">
+		<snippet name="wpfSnippet" info="Create dialog window with controls." using="System.Windows;System.Windows.Controls;System.Windows.Controls.Primitives;System.Windows.Media" more="See also: dialogSnippet, menu File -> New -> Templates.">
 			<list item="Simple">
 				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400);
 b.R.Add("Text", out TextBox text1).Focus();
@@ -367,9 +367,9 @@ b.R.Add(out CheckBox c1, "Check");
 b.R.AddOkCancel();
 b.End();
 if (!b.ShowDialog()) return;
-//AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck());
+//AOutput.Write(text1.Text, combo1.SelectedIndex, c1.True());
 
-//See also: menu New -> Templates.]]>
+//See also: menu File -> New -> Templates.]]>
 			</list>
 			<list item="Tabs">
 				<![CDATA[var b = new AWpfBuilder("Window").WinSize(400);
@@ -403,7 +403,7 @@ b.End();
 b = bMain.End();
 if (!b.ShowDialog()) return;
 
-//See also: menu New -> Templates.]]>
+//See also: menu File -> New -> Templates.]]>
 			</list>
 		</snippet>
 

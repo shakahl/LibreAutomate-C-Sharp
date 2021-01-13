@@ -23,7 +23,7 @@ class PanelOutput : DockPanel
 	_SciOutput _c;
 	Queue<OutServMessage> _history;
 
-	public SciHost ZOutput => _c;
+	public KScintilla ZOutput => _c;
 
 	public PanelOutput() {
 		_c = new _SciOutput(this) { Name = "Output_text" };
@@ -100,7 +100,7 @@ class PanelOutput : DockPanel
 		}
 	}
 
-	class _SciOutput : SciHost
+	class _SciOutput : KScintilla
 	{
 		PanelOutput _p;
 		StringBuilder _sb;
@@ -234,7 +234,7 @@ class PanelOutput : DockPanel
 			(_iPanel ??= Panels.PanelManager["Output"]).Visible = true; //SHOULDDO: if(App.Win.IsVisible) ?
 		}
 		static ARegex s_rx1, s_rx2;
-		AuPanels.ILeaf _iPanel;
+		KPanels.ILeaf _iPanel;
 
 		static void _OpenLink(string s) {
 			//AOutput.Write(s);

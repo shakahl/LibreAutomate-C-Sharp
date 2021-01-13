@@ -74,7 +74,7 @@ namespace Au.Triggers
 
 		void _Thread()
 		{
-			_tid = AThread.NativeId;
+			_tid = AThread.Id;
 
 			AHookWin hookK = null, hookM = null;
 			if(_usedEvents.Has(UsedEvents.Keyboard)) {

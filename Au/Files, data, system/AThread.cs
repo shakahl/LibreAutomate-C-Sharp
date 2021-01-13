@@ -28,7 +28,7 @@ namespace Au
 		/// It is not the same as <see cref="Thread.ManagedThreadId"/>.
 		/// </remarks>
 		/// <seealso cref="AWnd.ThreadId"/>
-		public static int NativeId => Api.GetCurrentThreadId();
+		public static int Id => Api.GetCurrentThreadId();
 		//speed: fast, but several times slower than Thread.CurrentThread.ManagedThreadId. Caching in a ThreadStatic variable makes even slower.
 
 		/// <summary>

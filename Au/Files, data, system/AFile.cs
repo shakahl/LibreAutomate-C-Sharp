@@ -664,7 +664,7 @@ namespace Au
 			/// <summary>
 			/// note: path must be normalized.
 			/// </summary>
-			internal bool Rename(string path, bool doNotDelete = false)
+			internal bool Rename(string path, bool dontDelete = false)
 			{
 				if(path.Length > APath.MaxDirectoryPathLength - 10) path = APath.PrefixLongPath(path);
 				string tempPath = null;
@@ -675,7 +675,7 @@ namespace Au
 					if(!ExistsAsAny(tempPath, true)) break;
 				}
 				if(!Api.MoveFileEx(path, tempPath, 0)) return false;
-				_oldPath = path; _tempPath = tempPath; _dontDelete = doNotDelete;
+				_oldPath = path; _tempPath = tempPath; _dontDelete = dontDelete;
 				return true;
 			}
 

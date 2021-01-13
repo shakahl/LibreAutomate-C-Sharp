@@ -73,7 +73,7 @@ namespace Au
 	/// using System.Threading.Tasks;
 	/// using System.Runtime.InteropServices;
 	/// 
-	/// class OutputFormExample :Form
+	/// class OutputFormExample : Form
 	/// {
 	/// 	TextBox _tb;
 	/// 

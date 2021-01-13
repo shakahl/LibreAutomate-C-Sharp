@@ -230,7 +230,7 @@ partial class CiStyling
 		/// <summary>
 		/// Gets colors, bold, but not font properties.
 		/// </summary>
-		public TStyles(SciHost sci)
+		public TStyles(KScintilla sci)
 		{
 			BackgroundColor = ColorInt.SwapRB(sci.Call(SCI_STYLEGETBACK));
 
@@ -263,7 +263,7 @@ partial class CiStyling
 			LineNumber = _Get(EToken.LineNumber);
 		}
 
-		public void ToScintilla(SciHost sci)
+		public void ToScintilla(KScintilla sci)
 		{
 			var z = sci.Z;
 

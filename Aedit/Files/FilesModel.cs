@@ -400,6 +400,8 @@ partial class FilesModel
 			_cmdPrevDisabled = cmdPrevDisable;
 			App.Commands[nameof(Menus.File.OpenClose.Previous_document)].Enabled = !cmdPrevDisable;
 		}
+		//TODO: sometimes Previous_document command (Ctrl+Tab) stops working until restart. The menu item then is disabled.
+		//	Possibly after opening other workspace.
 	}
 	bool _cmdPrevDisabled;
 
@@ -425,9 +427,9 @@ partial class FilesModel
 	/// Selects the node and opens its file in the code editor.
 	/// Returns false if failed to select, for example if f is a folder.
 	/// </summary>
-	public bool SetCurrentFile(FileNode f, bool doNotChangeSelection = false, bool newFile = false, bool dontFocusEditor = false) {
+	public bool SetCurrentFile(FileNode f, bool dontChangeSelection = false, bool newFile = false, bool dontFocusEditor = false) {
 		if (IsAlien(f)) return false;
-		if (!doNotChangeSelection) f.SelectSingle();
+		if (!dontChangeSelection) f.SelectSingle();
 		if (_currentFile != f) _SetCurrentFile(f, newFile, dontFocusEditor);
 		return _currentFile == f;
 	}
@@ -567,21 +569,21 @@ partial class FilesModel
 		if (r == 0) return;
 
 		foreach (var f in a) {
-			_Delete(f, doNotDeleteFile: con.IsChecked); //info: and saves everything, now and/or later
+			_Delete(f, dontDeleteFile: con.IsChecked); //info: and saves everything, now and/or later
 		}
 	}
 
-	bool _Delete(FileNode f, bool doNotDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false) {
+	bool _Delete(FileNode f, bool dontDeleteFile = false, bool tryRecycleBin = true, bool canDeleteLinkTarget = false) {
 		var e = f.Descendants(true);
 
 		CloseFiles(e);
 		Uncut();
 
-		if (!doNotDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
+		if (!dontDeleteFile && (canDeleteLinkTarget || !f.IsLink)) {
 			if (!TryFileOperation(() => AFile.Delete(f.FilePath, tryRecycleBin), deletion: true)) return false;
 			//FUTURE: move to folder 'deleted'. Moving to RB is very slow. No RB if in removable drive etc.
 		} else {
-			string s1 = doNotDeleteFile ? "File not deleted:" : "The deleted item was a link to";
+			string s1 = dontDeleteFile ? "File not deleted:" : "The deleted item was a link to";
 			AOutput.Write($"<>Info: {s1} <explore>{f.FilePath}<>");
 		}
 
@@ -677,12 +679,9 @@ partial class FilesModel
 			f = _currentFile;
 		}
 		if (f == null) return;
-		//if(f.IsCodeFile) new FProperties(f).Show(App.Wmain); //TODO
-		if (f.IsCodeFile) new FProperties(f).Show();
-
-		//these were not impl in winforms version
-		//else if(f.IsFolder) new EdFolderProperties(f).Show(MainForm);
-		//else new EdOtherFileProperties(f).Show(MainForm);
+		if (f.IsCodeFile) new DProperties(f).Show();
+		//else if(f.IsFolder) new DFolderProperties(f).Show();
+		//else new DOtherFileProperties(f).Show();
 	}
 
 	#endregion
@@ -1143,11 +1142,9 @@ partial class FilesModel
 	/// <param name="name">Default name of the workspace.</param>
 	/// <param name="location">Default parent directory of the main directory of the workspace.</param>
 	public static string GetDirectoryPathForNewWorkspace(string name = null, string location = null) {
-		using var f = new FNewWorkspace();
-		f.textName.Text = name;
-		f.textLocation.Text = location ?? AFolders.ThisAppDocuments;
-		if (f.ShowDialog() != System.Windows.Forms.DialogResult.OK) return null;
-		return f.textPath.Text;
+		var d = new DNewWorkspace(name, location ?? AFolders.ThisAppDocuments);
+		if (d.ShowDialog() != true) return null;
+		return d.ResultPath;
 	}
 
 	public bool ExportSelected(string location = null, bool zip = false) {

@@ -20,11 +20,11 @@ using Au.Util;
 
 class PanelTasks : DockPanel
 {
-	AuTreeView _tv;
+	KTreeView _tv;
 	bool _updatedOnce;
 
 	public PanelTasks() {
-		_tv = new AuTreeView { Name = "Tasks_list", ImageCache = App.ImageCache };
+		_tv = new KTreeView { Name = "Tasks_list", ImageCache = App.ImageCache };
 		this.Children.Add(_tv);
 	}
 

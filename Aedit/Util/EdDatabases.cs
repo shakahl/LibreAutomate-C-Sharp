@@ -9,8 +9,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
-//using System.Drawing;
 using System.Linq;
 
 using Au;
@@ -72,7 +70,6 @@ static class EdDatabases
 	/// Need to run this after changing .NET version of C# projects (<TargetFramework>...</TargetFramework>). Also update COREVER2 etc in AppHost.cpp.
 	/// </remarks>
 	public static void CreateRefAndDoc(string dataDir = @"Q:\app\Au\Other\Data") {
-		Cursor.Current = Cursors.WaitCursor;
 		string dirPacks = APath.Normalize_(AFolders.NetRuntimeBS + @"..\..\..\packs");
 		string dirCore = dirPacks + @"\Microsoft.NETCore.App.Ref\";
 		var a = new List<string>();
@@ -94,7 +91,6 @@ static class EdDatabases
 			for (i = 0; i < n; i++) _CreateRefAndDoc(dirPacks, dirCore, a[i], true, dataDir);
 		}
 		AOutput.Write("CreateRefAndDoc done.");
-		Cursor.Current = Cursors.Arrow;
 	}
 
 	static void _CreateRefAndDoc(string dirPacks, string dirCore, string version, bool all, string dataDir) {
@@ -153,7 +149,7 @@ static class EdDatabases
 			foreach (var f in AFile.Enumerate(dir)) {
 				if (f.IsDirectory) continue;
 				if (!f.Name.Ends(".dll", true)) continue;
-				var asmName = f.Name.RemoveSuffix(4);
+				var asmName = f.Name[..^4];
 				if (skip.Contains(asmName)) continue;
 				_AddFile(asmName, f.FullPath);
 				//break;
@@ -195,7 +191,7 @@ static class EdDatabases
 			foreach (var f in AFile.Enumerate(dir)) {
 				if (f.IsDirectory) continue;
 				if (!f.Name.Ends(".xml", true)) continue;
-				var asmName = f.Name.RemoveSuffix(4);
+				var asmName = f.Name[..^4];
 				if (skip.Contains(asmName)) continue;
 				if (!AFile.ExistsAsFile(dir + asmName + ".dll")) {
 					AOutput.Write("<><c 0x808080>" + f.Name + "</c>");
@@ -244,7 +240,6 @@ static class EdDatabases
 	/// Creates SQLite database containing Windows API declarations.
 	/// </summary>
 	public static void CreateWinapi(string csDir = @"Q:\app\Au\Other\Api", string dataDir = @"Q:\app\Au\Other\Data") {
-		Cursor.Current = Cursors.WaitCursor;
 		string dbFile = dataDir + @"\winapi.db";
 		AFile.Delete(dbFile);
 
@@ -276,6 +271,5 @@ static class EdDatabases
 		App.Settings.db_copy_winapi = dbFile;
 
 		AOutput.Write("CreateWinapi done.");
-		Cursor.Current = Cursors.Arrow;
 	}
 }

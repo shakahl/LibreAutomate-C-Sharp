@@ -424,6 +424,25 @@ namespace Au.Types
 	}
 
 	/// <summary>
+	/// Font name, size and style.
+	/// If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
+	/// On high-DPI screen the font size will be scaled.
+	/// </summary>
+#pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
+	public record FontSizeEtc(int Size = 0, string Name = null, bool Bold = false, bool Italic = false)
+	{
+#pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
+		/// <summary>
+		/// Creates font.
+		/// </summary>
+		/// <param name="dpi">DPI for scaling.</param>
+		internal NativeFont_ CreateFont(DpiOf dpi) {
+			if (Name == null) return new(dpi, Bold, Italic, Size);
+			return new(dpi, Name, Size, Bold, Italic);
+		}
+	}
+
+	/// <summary>
 	/// Window handle.
 	/// Used for function parameters where the function needs a window handle as <see cref="AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
 	/// </summary>

@@ -171,7 +171,7 @@ namespace Au
 		/// </summary>
 		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
 		/// <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
-		/// <param name="doNotThrowIfClosed">
+		/// <param name="dontThrowIfClosed">
 		/// Do not throw exception when the window handle is invalid or the window was closed while waiting.
 		/// In such case the callback function must return false, like in the examples with <see cref="IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
 		/// </param>
@@ -205,14 +205,14 @@ namespace Au
 		/// AOutput.Write("control focused");
 		/// ]]></code>
 		/// </example>
-		public bool WaitForCondition(double secondsTimeout, Func<AWnd, bool> condition, bool doNotThrowIfClosed = false)
+		public bool WaitForCondition(double secondsTimeout, Func<AWnd, bool> condition, bool dontThrowIfClosed = false)
 		{
 			bool wasInvalid = false;
 			var to = new AWaitFor.Loop(secondsTimeout);
 			for(; ; ) {
-				if(!doNotThrowIfClosed) ThrowIfInvalid();
+				if(!dontThrowIfClosed) ThrowIfInvalid();
 				if(condition(this)) return true;
-				if(doNotThrowIfClosed) {
+				if(dontThrowIfClosed) {
 					if(wasInvalid) ThrowIfInvalid();
 					wasInvalid = !IsAlive;
 				}

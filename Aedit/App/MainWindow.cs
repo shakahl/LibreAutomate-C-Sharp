@@ -13,10 +13,9 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Linq;
+//using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
-using System.Runtime;
 using System.Windows.Interop;
 
 partial class MainWindow : Window
@@ -29,11 +28,11 @@ partial class MainWindow : Window
 
 		AWnd.More.SavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
 
-		System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false); //FUTURE: remove when forms not used
+		System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false); //TODO: remove when forms not used. Or in assembly load event handler.
 
 		Panels.LoadAndCreateToolbars();
 
-		App.Commands = new AuMenuCommands(typeof(Menus), Panels.Menu);
+		App.Commands = new KMenuCommands(typeof(Menus), Panels.Menu);
 
 		App.Commands[nameof(Menus.File.New)].SubmenuOpened = (o, _) => FilesModel.FillMenuNew(o as MenuItem);
 		App.Commands[nameof(Menus.File.Workspace.Recent_workspaces)].SubmenuOpened = (o, _) => FilesModel.FillMenuRecentWorkspaces(o as MenuItem);
@@ -48,6 +47,27 @@ partial class MainWindow : Window
 		Panels.PanelManager.Container = g => { this.Content = g; };
 
 		//ATimer.After(100, _ => DOptions.ZShow());
+		//ATimer.After(100, _ => App.Model.Properties());
+		//ATimer.After(100, _ => Menus.File.Workspace.New_workspace());
+
+//		ATimer.After(100, _ => {
+//#if !true
+//			//var w = +AWnd.Find("Quick Macros -*");
+//			//w = +w.ChildById(2212);
+//			var w = +AWnd.Find("Character Map");
+//			w = +w.ChildById(103);
+//			//AOutput.Write(w);
+//			//new Au.Tools.DAWnd(w).Show();
+//			//new Au.Tools.DAWnd(w, uncheckControl: true).Show();
+//			new Au.Tools.DAAcc(AAcc.FromWindow(w, AccOBJID.CLIENT)).Show();
+//#elif true
+//			new Au.Tools.DAWinImage().Show();
+//#else
+//			var w = +AWnd.Find("Untitled Document - Google Chrome", "Chrome_WidgetWin_1");
+//			var a = +AAcc.Find(w, "web:BUTTON", "PayPal - The safer, easier way to pay online!");
+//			new Au.Tools.DAAcc(a).Show();
+//#endif
+//		});
 	}
 
 	protected override void OnClosing(CancelEventArgs e) {
@@ -125,13 +145,13 @@ partial class MainWindow : Window
 	//	//Panels.DocPlaceholder_.Visible = false;
 	//	docLeaf.Content.Focus();
 
-	//	AuPanels.ILeaf _AddDoc(string name) {
+	//	KPanels.ILeaf _AddDoc(string name) {
 	//		//var docPlaceholder = App.Panels["Open"]; //in stack
 	//		var docPlaceholder = Panels.DocPlaceholder_; //in tab
-	//		var v = docPlaceholder.AddSibling(false, AuPanels.LeafType.Document, name, true);
+	//		var v = docPlaceholder.AddSibling(false, KPanels.LeafType.Document, name, true);
 	//		v.Closing += (_, e) => { e.Cancel = !ADialog.ShowOkCancel("Close?"); };
 	//		v.ContextMenuOpening += (o, m) => {
-	//			var k = o as AuPanels.ILeaf;
+	//			var k = o as KPanels.ILeaf;
 	//			m.Separator();
 	//			m["Close 2"] = o => k.Delete();
 	//		};
@@ -140,9 +160,9 @@ partial class MainWindow : Window
 	//		return v;
 	//	}
 
-	//	static void _OpenDoc(AuPanels.ILeaf leaf) {
+	//	static void _OpenDoc(KPanels.ILeaf leaf) {
 	//		if (leaf.Content != null) return;
-	//		leaf.Content = new SciHost();
+	//		leaf.Content = new KScintilla();
 	//	}
 	//}
 
@@ -150,8 +170,8 @@ partial class MainWindow : Window
 #if !DEBUG
 		var fProfile = AFolders.ThisAppDataLocal + "ProfileOptimization";
 		AFile.CreateDirectory(fProfile);
-		ProfileOptimization.SetProfileRoot(fProfile);
-		ProfileOptimization.StartProfile("Aedit.startup");
+		System.Runtime.ProfileOptimization.SetProfileRoot(fProfile);
+		System.Runtime.ProfileOptimization.StartProfile("Aedit.startup");
 #endif
 	}
 

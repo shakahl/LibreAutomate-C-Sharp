@@ -36,7 +36,7 @@ namespace Au
 			/// Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
 			/// </summary>
 			/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
-			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>, <see cref="AThread.NativeId"/>.</param>
+			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>, <see cref="AThread.Id"/>.</param>
 			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0) {
 				g = new Native.GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
 				return Api.GetGUIThreadInfo(idThread, ref g);

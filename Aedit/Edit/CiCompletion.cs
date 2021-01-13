@@ -274,7 +274,7 @@ class CiCompletion
 			if (position != doc.Z.CurrentPos16 || (object)code != doc.Text) return; //we are async, so these changes are possible
 			p1.Next('T');
 
-			var provider = CiComplItem.Provider(r.Items[0]);
+			var provider = CiComplItem.GetProvider(r.Items[0]);
 			if (!isDot) isDot = provider == CiComplProvider.Override;
 			//AOutput.Write(provider, isDot, canGroup);
 
@@ -337,7 +337,7 @@ class CiCompletion
 							case "ReferenceEquals":
 								//hide static members inherited from Object
 								if (sym.ContainingType.BaseType == null) { //Object
-									//if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue; //never mind, now symL always null
+																		   //if (isDot && !(symL is INamedTypeSymbol ints1 && ints1.BaseType == null)) continue; //never mind, now symL always null
 									if (isDot) continue;
 									v.moveDown = CiItemMoveDownBy.Name;
 								}
@@ -718,8 +718,8 @@ class CiCompletion
 			if (ch != default) return CiComplResult.None;
 			//ci.DebugPrint();
 			int newPos = change.NewPosition ?? (i + len);
-			switch (APath.GetExtension(ci.ProviderName)) {
-			case ".OverrideCompletionProvider":
+			switch (item.Provider) {
+			case CiComplProvider.Override:
 				newPos = -1; //difficult to calculate and not useful
 
 				//Replace 4 spaces with tab. Make { in same line.
@@ -729,7 +729,7 @@ class CiCompletion
 				for (int j = s.IndexOf('\t'); (uint)j < s.Length && s[j] == '\t'; j++) indent++;
 				if (indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
 				break;
-			case ".XmlDocCommentCompletionProvider" when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
+			case CiComplProvider.XmlDoc when !s.Ends('>') && s.RegexMatch(@"^<?(\w+)", 1, out string tag):
 				if (s == tag || (ci.Properties.TryGetValue("AfterCaretText", out var s1) && s1.NE())) newPos++;
 				s += "></" + tag + ">";
 				break;
@@ -936,6 +936,12 @@ class CiComplItem : ITreeViewItem
 	public int commentOffset;
 	string _dtext;
 
+	public CiComplItem(CompletionItem ci) {
+		this.ci = ci;
+		CiUtil.TagsToKindAndAccess(ci.Tags, out kind, out access);
+		//ci.DebugPrint();
+	}
+
 	#region ITreeViewItem
 	string ITreeViewItem.DisplayText => _dtext;
 
@@ -984,31 +990,26 @@ class CiComplItem : ITreeViewItem
 
 	public ISymbol FirstSymbol => ci.Symbols?[0];
 
-	public bool IsRegex => kind == CiItemKind.None && Provider(ci) == CiComplProvider.Regex;
-
-	public static CiComplProvider Provider(CompletionItem ci) {
+	public static CiComplProvider GetProvider(CompletionItem ci) {
 		var s = ci.ProviderName;
+		if (s == null) return CiComplProvider.None;
 		int i = s.LastIndexOf('.') + 1;
 		Debug.Assert(i > 0);
-		s = s[i..];
-		//AOutput.Write(s);
-		return s switch {
-			"SymbolCompletionProvider" => CiComplProvider.Symbol,
-			"KeywordCompletionProvider" => CiComplProvider.Keyword,
-			//"ObjectAndWithInitializerCompletionProvider" => CiComplProvider.ObjectAndWithInitializer,
-			//"AttributeNamedParameterCompletionProvider" => CiComplProvider.AttributeNamedParameter, //don't use because can be mixed with other symbols
-			"CrefCompletionProvider" => CiComplProvider.Cref,
-			"EmbeddedLanguageCompletionProvider" => CiComplProvider.Regex,
-			"OverrideCompletionProvider" => CiComplProvider.Override,
-			_ => CiComplProvider.Other
-		};
+		//AOutput.Write(s[i..]);
+		if (s.Eq(i, "Symbol")) return CiComplProvider.Symbol;
+		if (s.Eq(i, "Keyword")) return CiComplProvider.Keyword;
+		if (s.Eq(i, "Cref")) return CiComplProvider.Cref; //TODO: maybe replaced with "XmlDoc"
+		if (s.Eq(i, "XmlDoc")) return CiComplProvider.XmlDoc;
+		if (s.Eq(i, "EmbeddedLanguage")) return CiComplProvider.Regex;
+		if (s.Eq(i, "Override")) return CiComplProvider.Override;
+		//if (s.Eq(i, "ObjectAndWith")) return CiComplProvider.ObjectAndWithInitializer;
+		//if (s.Eq(i, "AttributeNamedParameter")) return CiComplProvider.AttributeNamedParameter; //don't use because can be mixed with other symbols
+		return CiComplProvider.Other;
 	}
 
-	public CiComplItem(CompletionItem ci) {
-		this.ci = ci;
-		CiUtil.TagsToKindAndAccess(ci.Tags, out kind, out access);
-		//ci.DebugPrint();
-	}
+	public CiComplProvider Provider => GetProvider(ci);
+
+	public bool IsRegex => kind == CiItemKind.None && Provider == CiComplProvider.Regex;
 }
 
 enum CiComplProvider
@@ -1016,11 +1017,13 @@ enum CiComplProvider
 	Other,
 	Symbol,
 	Keyword,
-	//ObjectAndWithInitializer,
-	//AttributeNamedParameter,
 	Cref,
+	XmlDoc,
 	Regex,
 	Override,
+	//ObjectAndWithInitializer,
+	//AttributeNamedParameter,
+	None, //our added, eg snippet
 }
 
 enum CiComplResult

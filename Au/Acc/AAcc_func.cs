@@ -660,7 +660,7 @@ namespace Au
 			//Workaround for Windows controls bugs, part 1.
 			AWnd w = default, wTL = default; bool focusingControl = false;
 			if(how.Has(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
-				//if(!w.IsEnabled(true)) throw new AuException("*set focus. Disabled"); //accSelect would not fail //rejected. In some cases the AO may be focusable although window disabled, eg AuTreeView.
+				//if(!w.IsEnabled(true)) throw new AuException("*set focus. Disabled"); //accSelect would not fail //rejected. In some cases the AO may be focusable although window disabled, eg KTreeView.
 				wTL = w.Window;
 				wTL.Activate();
 				if(focusingControl = (w != wTL))

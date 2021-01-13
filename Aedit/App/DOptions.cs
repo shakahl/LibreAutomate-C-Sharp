@@ -18,12 +18,7 @@ public class DOptions : KDialogWindow
 {
 	public static void ZShow() {
 		if (s_dialog == null) {
-			s_dialog = new DOptions {
-				Title = "Options",
-				Owner = App.Wmain,
-				ShowInTaskbar = false,
-				WindowStartupLocation = WindowStartupLocation.CenterOwner,
-			};
+			s_dialog = new DOptions();
 			s_dialog.Show();
 		} else {
 			s_dialog.Activate();
@@ -40,7 +35,10 @@ public class DOptions : KDialogWindow
 	TabControl _tc;
 
 	public DOptions() {
+		Title = "Options";
+		Owner = App.Wmain;
 		_b = new AWpfBuilder(this).WinSize(540);
+		_b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		_b.Row(-1).Add(out _tc).Height(300..);
 		_b.R.AddOkCancel(apply: "_Apply");
 
@@ -90,7 +88,7 @@ public class DOptions : KDialogWindow
 		startupScripts.Text = init_startupScripts;
 
 		_b.OkApply += e => {
-			if (startWithWin.IsCheck() != init_startWithWin) {
+			if (startWithWin.True() != init_startWithWin) {
 				try {
 					using var rk = Registry.CurrentUser.OpenSubKey(c_rkRun, true);
 					if (init_startWithWin) rk.DeleteValue("Aedit");
@@ -98,7 +96,7 @@ public class DOptions : KDialogWindow
 				}
 				catch (Exception ex) { AOutput.Write("Failed to change 'Start with Windows'. " + ex.ToStringWithoutStack()); }
 			}
-			App.Settings.runHidden = startHidden.IsCheck();
+			App.Settings.runHidden = startHidden.True();
 
 			var s = startupScripts.Text;
 			if (s != init_startupScripts) App.Model.StartupScriptsCsv = s;
@@ -152,7 +150,7 @@ public class DOptions : KDialogWindow
 		var b = _Page("Templates").Columns(0, 100, -1, 0, 100);
 		b.R.Add("Template", out ComboBox template).Items("Script|Class")
 			.Skip().Add("Use", out ComboBox use).Items("Default|Custom");
-		b.Row(-1).Add(out CodeBox sci).Span(5); sci.ZInitBorder = true;
+		b.Row(-1).Add(out KSciCodeBoxAWnd sci).Span(5); sci.ZInitBorder = true;
 		b.End();
 
 		string[] customText = new string[2];
@@ -203,7 +201,7 @@ public class DOptions : KDialogWindow
 
 	void _Font() {
 		var b = _Page("Font", WBPanelType.Dock);
-		b.Add(out SciHost sciStyles).Width(150); sciStyles.ZInitBorder = true;
+		b.Add(out KScintilla sciStyles).Width(150); sciStyles.ZInitBorder = true;
 		b.StartGrid().Columns(-1).Margin(20);
 		b.R.StartGrid();
 		var pFont = b.Panel as Grid;
@@ -229,7 +227,7 @@ public class DOptions : KDialogWindow
 
 			var fontsMono = new List<string>();
 			var fontsVar = new List<string>();
-			using (var dc = new ScreenDC_(0)) {
+			using (var dc = new ScreenDC_()) {
 				unsafe {
 					EnumFontFamiliesEx(dc, default, (lf, tm, fontType, lParam) => {
 						if (lf->lfFaceName[0] != '@') {
@@ -295,7 +293,7 @@ Line number";
 			}
 			//when selected line changed
 			int currentLine = -1;
-			sciStyles.ZNotify += (SciHost c, ref Sci.SCNotification n) => {
+			sciStyles.ZNotify += (KScintilla c, ref Sci.SCNotification n) => {
 				switch (n.nmhdr.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
 					int line = c.Z.LineFromPos(false, c.Z.CurrentPos8);
@@ -350,7 +348,7 @@ Line number";
 				int tok = _SciStylesLineToTok(z.LineFromPos(false, z.CurrentPos8));
 				int col = color.Color;
 				if (tok >= 0) {
-					if (control == bold) z.StyleBold(tok, bold.IsCheck());
+					if (control == bold) z.StyleBold(tok, bold.True());
 					else z.StyleForeColor(tok, col);
 				} else if (tok == -1) {
 					backColor = col;
@@ -420,8 +418,8 @@ To apply changes after deleting etc, restart this application.
 		correctStringEnter.IsChecked = 0 == App.Settings.ci_correctStringEnter;
 
 		_b.OkApply += e => {
-			App.Settings.ci_complParenSpace = complParenSpace.IsCheck();
-			App.Settings.ci_correctStringEnter = (byte)(correctStringEnter.IsCheck() ? 0 : 1);
+			App.Settings.ci_complParenSpace = complParenSpace.True();
+			App.Settings.ci_correctStringEnter = (byte)(correctStringEnter.True() ? 0 : 1);
 		};
 	}
 

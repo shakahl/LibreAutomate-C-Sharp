@@ -10,7 +10,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-using System.Drawing;
 using System.Collections.Concurrent;
 
 using Au.Types;
@@ -58,12 +57,9 @@ namespace Au.Util
 		public int HeightOnScreen {
 			get {
 				if (_heightOnScreen == 0) {
-					using var dcs = new ScreenDC_(0);
-					using var dcMem = new CompatibleDC_(dcs);
-					var old = Api.SelectObject(dcMem, _h);
-					Api.GetTextExtentPoint32(dcMem, "A", 1, out var z);
+					using var dc = new FontDC_(_h);
+					Api.GetTextExtentPoint32(dc, "A", 1, out var z);
 					_heightOnScreen = z.height;
-					Api.SelectObject(dcMem, old);
 				}
 				return _heightOnScreen;
 			}
@@ -78,7 +74,7 @@ namespace Au.Util
 			return new NativeFont_(dpi, bold, italic);
 		}
 
-		static readonly ConcurrentDictionary<int, NativeFont_> _d = new ConcurrentDictionary<int, NativeFont_>();
+		static readonly ConcurrentDictionary<int, NativeFont_> _d = new();
 
 		/// <summary>
 		/// Cached standard font used by most windows and controls.

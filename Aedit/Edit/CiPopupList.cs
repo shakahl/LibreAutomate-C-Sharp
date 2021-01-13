@@ -24,7 +24,7 @@ class CiPopupList
 {
 	KPopup _popup;
 	DockPanel _panel;
-	AuTreeView _tv;
+	KTreeView _tv;
 	StackPanel _tb;
 
 	SciCode _doc;
@@ -43,12 +43,12 @@ class CiPopupList
 	///// <summary>
 	///// The child list control.
 	///// </summary>
-	//public AuTreeView Control => _tv;
+	//public KTreeView Control => _tv;
 
 	public CiPopupList(CiCompletion compl) {
 		_compl = compl;
 
-		_tv = new AuTreeView { ImageCache = App.ImageCache, ItemMarginLeft = 20, HotTrack = true, CustomDraw = new _CustomDraw(this) };
+		_tv = new KTreeView { ImageCache = App.ImageCache, ItemMarginLeft = 20, HotTrack = true, CustomDraw = new _CustomDraw(this) };
 		_tv.ItemActivated += _tv_ItemActivated;
 		_tv.SelectedSingle += _tv_SelectedSingle;
 
@@ -88,7 +88,7 @@ class CiPopupList
 		_panel.Children.Add(_tb);
 		_panel.Children.Add(_tv);
 		_popup = new KPopup {
-			Size = (240, 360),
+			Size = (300, 360),
 			Content = _panel,
 			CloseHides = true,
 			Name = "Ci.Completion",
@@ -105,7 +105,7 @@ class CiPopupList
 			var v = _kindButtons[i];
 			if (v.IsVisible) {
 				kindsVisible |= 1 << i;
-				if (v.IsCheck()) kindsChecked |= 1 << i;
+				if (v.True()) kindsChecked |= 1 << i;
 			}
 		}
 		if (kindsChecked == 0) kindsChecked = kindsVisible;
@@ -116,11 +116,11 @@ class CiPopupList
 	}
 
 	private void _GroupButton_Click(object sender, RoutedEventArgs e) {
-		_groupsEnabled = (sender as CheckBox).IsCheck() && _groups != null;
+		_groupsEnabled = (sender as CheckBox).True() && _groups != null;
 		_SortAndSetControlItems();
 		this.SelectedItem = null;
 		_tv.Redraw(true);
-		App.Settings.ci_complGroup = _groupButton.IsCheck();
+		App.Settings.ci_complGroup = _groupButton.True();
 	}
 
 	//private void _Options_Click(object sender, RoutedEventArgs e) {
@@ -137,7 +137,10 @@ class CiPopupList
 
 	private void _tv_SelectedSingle(object sender, int index) {
 		if ((uint)index < _av.Count) {
-			_xpTimer.After(300, _av[index]);
+			var ci = _av[index];
+			//AOutput.Write(ci.ci.ProviderName, ci.Provider);
+			if(ci.Provider == CiComplProvider.XmlDoc) return;
+			_xpTimer.After(300, ci);
 			_xamlPopup.Xaml = null;
 		} else {
 			_xamlPopup.Hide();
@@ -202,7 +205,7 @@ class CiPopupList
 
 		_a = a;
 		_groups = groups;
-		_groupsEnabled = _groups != null && _groupButton.IsCheck();
+		_groupsEnabled = _groups != null && _groupButton.True();
 		_doc = doc;
 
 		foreach (var v in _kindButtons) v.IsChecked = false;

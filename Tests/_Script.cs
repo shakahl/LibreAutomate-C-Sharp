@@ -10,8 +10,6 @@ using System.Runtime.InteropServices;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Drawing;
 using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
@@ -22,20 +20,13 @@ using Microsoft.Win32;
 using System.Runtime.InteropServices.ComTypes;
 using System.Numerics;
 using System.Globalization;
-//using AutoItX3Lib;
 using System.Runtime.Intrinsics;
 using System.Runtime.Intrinsics.X86;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Text.Encodings.Web;
-using System.Windows.Forms.VisualStyles;
 using System.Windows;
-using System.Drawing.Imaging;
 using System.Collections;
-
-using TheArtOfDev.HtmlRenderer.WinForms;
-using TheArtOfDev.HtmlRenderer.Core.Entities;
-using System.Diagnostics.CodeAnalysis;
 
 using Au.Triggers;
 using Au.Controls;
@@ -722,8 +713,8 @@ partial class TestScript : AScript
 		//c.BackColor = Color.Wheat;
 		//c.Font = new Font("Courier New", 20);
 
-		m.DefaultIcon = AIcon.OfFile(@"q:\app\macro.ico", 16).ToWinformsBitmap();
-		m.DefaultSubmenuIcon = AIcon.OfFile(@"q:\app\menu.ico", 16).ToWinformsBitmap();
+		m.DefaultIcon = AIcon.OfFile(@"q:\app\macro.ico", 16).ToGdipBitmap();
+		m.DefaultSubmenuIcon = AIcon.OfFile(@"q:\app\menu.ico", 16).ToGdipBitmap();
 		m.ExtractIconPathFromCode = true;
 		m["aa"] = null;
 		//m.LastMenuItem.ToolTipText = "TT";

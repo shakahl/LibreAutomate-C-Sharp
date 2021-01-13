@@ -1493,6 +1493,9 @@
         <member name="T:Au.Types.Native.SMTO">
             <summary>API <msdn>SendMessageTimeout</msdn> flags. Used with <see cref="M:Au.AWnd.SendTimeout(System.Int32,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.Native.SMTO)"/>.</summary>
         </member>
+        <member name="T:Au.Types.Native.DT">
+            <summary>API <msdn>DrawTextEx</msdn> format flags.</summary>
+        </member>
         <member name="T:Au.Types.Native.TDM">
             <summary>
             Messages that your <see cref="T:Au.ADialog"/> event handler can send to the dialog.
@@ -2374,6 +2377,26 @@
             Gets <see cref="F:Au.Types.PopupXY.screen"/>.Now if not empty, else screen that contains the specified point.
             </summary>
         </member>
+        <member name="T:Au.Types.FontSizeEtc">
+            <summary>
+            Font name, size and style.
+            If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
+            On high-DPI screen the font size will be scaled.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FontSizeEtc.#ctor(System.Int32,System.String,System.Boolean,System.Boolean)">
+            <summary>
+            Font name, size and style.
+            If <b>Name</b> not set, will be used standard GUI font; then <b>Size</b> can be 0 to use size of standard GUI font.
+            On high-DPI screen the font size will be scaled.
+            </summary>
+        </member>
+        <member name="M:Au.Types.FontSizeEtc.CreateFont(Au.Types.DpiOf)">
+            <summary>
+            Creates font.
+            </summary>
+            <param name="dpi">DPI for scaling.</param>
+        </member>
         <member name="T:Au.Types.AnyWnd">
             <summary>
             Window handle.
@@ -2638,6 +2661,15 @@
             </summary>
             <seealso cref="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)"/>
         </member>
+        <member name="M:Au.Types.RECT.ToStringFormat(System.String)">
+            <summary>
+            Formats string from RECT main fields and properties.
+            </summary>
+            <param name="format">
+            <see cref="M:System.Text.StringBuilder.AppendFormat(System.IFormatProvider,System.String,System.Object)"/> format string. Example: <c>"({0}, {1}, {4}, {5})"</c>.
+            This function passes to AppendFormat 6 values in this order: <b>left</b>, <b>top</b>, <b>right</b>, <b>bottom</b>, <b>Width</b>, <b>Height</b>.
+            </param>
+        </member>
         <member name="M:Au.Types.RECT.TryParse(System.String,Au.Types.RECT@)">
             <summary>
             Converts string to RECT.
@@ -2649,31 +2681,32 @@
         <member name="T:Au.Types.ColorInt">
             <summary>
             Color, as int in 0xAARRGGBB format.
-            Can convert from/to <see cref="T:System.Drawing.Color"/>, <see cref="T:System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows native COLORREF (0xBBGGRR), string.
+            Can convert from/to <see cref="T:System.Drawing.Color"/>, <see cref="T:System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
             </summary>
         </member>
-        <member name="F:Au.Types.ColorInt.color">
+        <member name="F:Au.Types.ColorInt.argb">
             <summary>
             Color value in 0xAARRGGBB format.
             </summary>
         </member>
         <member name="M:Au.Types.ColorInt.#ctor(System.Int32,System.Boolean)">
-            <summary>
-            Converts from color value in 0xAARRGGBB format.
-            </summary>
-            <param name="colorARGB"></param>
+            <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
+            <param name="makeOpaque">Set alpha = 0xFF.</param>
+        </member>
+        <member name="M:Au.Types.ColorInt.#ctor(System.UInt32,System.Boolean)">
+            <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
             <param name="makeOpaque">Set alpha = 0xFF.</param>
         </member>
         <member name="M:Au.Types.ColorInt.op_Implicit(System.Int32)~Au.Types.ColorInt">
             <summary>
-            Converts from int color value in 0xRRGGBB format.
-            Makes opaque (alpha 0xFF).
+            Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+            Sets alpha 0xFF.
             </summary>
         </member>
         <member name="M:Au.Types.ColorInt.op_Implicit(System.UInt32)~Au.Types.ColorInt">
             <summary>
-            Converts from uint color value in 0xRRGGBB format.
-            Makes opaque (alpha 0xFF).
+            Converts from int color value in 0xRRGGBB or 0xAARRGGBB format.
+            Sets alpha 0xFF.
             </summary>
         </member>
         <member name="M:Au.Types.ColorInt.op_Implicit(System.Drawing.Color)~Au.Types.ColorInt">
@@ -2692,28 +2725,22 @@
             </summary>
             <remarks>
             If s is a hex number that contains 6 or less hex digits, makes opaque (alpha 0xFF).
-            If s is null or invalid, sets c.color = 0 and returns false.
+            If s is null or invalid, sets c.argb = 0 and returns false.
             </remarks>
         </member>
         <member name="M:Au.Types.ColorInt.FromBGR(System.Int32,System.Boolean)">
             <summary>
-            Converts from Windows native COLORREF (0xBBGGRR to 0xRRGGBB).
+            Converts from Windows native COLORREF (0xBBGGRR to 0xAARRGGBB).
             </summary>
             <param name="colorBGR">Color in 0xBBGGRR format.</param>
-            <param name="makeOpaque">Set alpha = 0xFF.</param>
+            <param name="makeOpaque">If true, sets alpha = 0xFF. If null, sets alpha = 0xFF if it is 0 in <i>colorBGR</i>.</param>
         </member>
         <member name="M:Au.Types.ColorInt.ToBGR(System.Boolean)">
             <summary>
-            Converts to Windows native COLORREF (0xBBGGRR from 0xRRGGBB).
+            Converts to Windows native COLORREF (0xBBGGRR from 0xAARRGGBB).
             Returns color in COLORREF format. Does not modify this variable.
             </summary>
             <param name="zeroAlpha">Set the alpha byte = 0.</param>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.Int32">
-            <summary>Returns <c>c.color</c>.</summary>
-        </member>
-        <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.UInt32">
-            <summary>Returns <c>(uint)c.color</c>.</summary>
         </member>
         <member name="M:Au.Types.ColorInt.op_Explicit(Au.Types.ColorInt)~System.Drawing.Color">
             <summary>Converts to <see cref="T:System.Drawing.Color"/>.</summary>
@@ -2725,14 +2752,14 @@
             <summary>
             Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
             ARGB is used in .NET, GDI+ and HTML/CSS.
-            ABGR is used by most Windows API.
+            ABGR is used by most Windows API; aka COLORREF.
             </summary>
         </member>
         <member name="M:Au.Types.ColorInt.SwapRB(System.UInt32)">
             <summary>
             Converts color from ARGB (0xAARRGGBB) to ABGR (0xAABBGGRR) or vice versa (swaps the red and blue bytes).
             ARGB is used in .NET, GDI+ and HTML/CSS.
-            ABGR is used by most Windows API.
+            ABGR is used by most Windows API; aka COLORREF.
             </summary>
         </member>
         <member name="M:Au.Types.ColorInt.GetPerceivedBrightness">
@@ -4365,7 +4392,7 @@
             - int - imagelist image index (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             - Image - image object.
             - Icon - icon object.
-            - <see cref="T:Au.AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="M:Au.AIcon.ToWinformsBitmap(System.Boolean)"/> and disposes the native icon.
+            - <see cref="T:Au.AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/> and disposes the native icon.
             - <see cref="T:Au.Types.StockIcon"/> - a shell icon.
             - FolderPath - folder path.
             - default - no icon. If <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
@@ -5179,7 +5206,7 @@
         <member name="F:Au.Types.MCursor.Help">
             <summary>Arrow and question mark.</summary>
         </member>
-        <member name="T:Au.Types.OsdShowMode">
+        <member name="T:Au.Types.OsdMode">
             <summary>
             Whether <see cref="M:Au.AOsd.Show"/> waits or shows the OSD window in this or new thread.
             </summary>
@@ -5187,52 +5214,26 @@
             If this thread has windows, any value can be used, but usually <b>Auto</b> (default) or <b>ThisThread</b> is the best.
             </remarks>
         </member>
-        <member name="F:Au.Types.OsdShowMode.Auto">
+        <member name="F:Au.Types.OsdMode.Auto">
             <summary>Depends on <see cref="M:Au.AThread.HasMessageLoop(System.Boolean@)"/>. If it is true, uses <b>ThisThread</b>, else <b>StrongThread</b>. Does not wait.</summary>
         </member>
-        <member name="F:Au.Types.OsdShowMode.ThisThread">
+        <member name="F:Au.Types.OsdMode.ThisThread">
             <summary>
             Show the OSD window in this thread and don't wait.
             Don't use if this thread does not process messages and therefore cannot have windows.
             </summary>
         </member>
-        <member name="F:Au.Types.OsdShowMode.WeakThread">
+        <member name="F:Au.Types.OsdMode.WeakThread">
             <summary>Show the OSD window in new thread and don't wait. Set <see cref="P:System.Threading.Thread.IsBackground"/>=true, so that the OSD is closed when other threads of this app end.</summary>
         </member>
-        <member name="F:Au.Types.OsdShowMode.StrongThread">
+        <member name="F:Au.Types.OsdMode.StrongThread">
             <summary>Show the OSD window in new thread and don't wait. Set <see cref="P:System.Threading.Thread.IsBackground"/>=false, so that the OSD is not closed when other threads of this app end.</summary>
         </member>
-        <member name="F:Au.Types.OsdShowMode.Wait">
+        <member name="F:Au.Types.OsdMode.Wait">
             <summary>
             Show the OSD window in this thread and wait until it disappears.
             Waits <see cref="P:Au.AOsd.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/>.
             </summary>
-        </member>
-        <member name="T:Au.Types.OsdFont">
-            <summary>
-            Font size and family name for OSD classes.
-            </summary>
-        </member>
-        <member name="P:Au.Types.OsdFont.Name">
-            <summary>
-            Family name.
-            </summary>
-        </member>
-        <member name="P:Au.Types.OsdFont.Size">
-            <summary>
-            Size.
-            On high-DPI screen the font size will be scaled.
-            </summary>
-        </member>
-        <member name="M:Au.Types.OsdFont.CreateFont(System.Int32)">
-            <summary>
-            Creates font.
-            </summary>
-            <param name="dpi">DPI for scaling.</param>
-        </member>
-        <member name="M:Au.Types.OsdFont.#ctor(System.Int32,System.String)">
-            <param name="size">Sets <see cref="P:Au.Types.OsdFont.Size"/>.</param>
-            <param name="name">Sets <see cref="P:Au.Types.OsdFont.Name"/>. Default "Segoe UI".</param>
         </member>
         <member name="T:Au.Types.OutServMessageType">
             <summary>
@@ -5317,7 +5318,7 @@
             <remarks>
             Has implicit conversions from:
             - string - path of .png or .bmp file. If not full path, uses <see cref="P:Au.AFolders.ThisAppImages"/>.
-            - string that starts with "resources/" or has prefix <c>"resource:"</c> - resource name; see <see cref="M:Au.Util.AResources.GetWinformsImage(System.String)"/>.
+            - string that starts with "resources/" or has prefix <c>"resource:"</c> - resource name; see <see cref="M:Au.Util.AResources.GetGdipBitmap(System.String)"/>.
             - string with prefix <c>"image:"</c> - Base64-encoded .png image embedded in script text.
             <br/>Can be created with dialog "Find image or color in window" or with function <b>Au.Controls.ImageUtil.ImageToString</b> (in Au.Controls.dll).
             - <see cref="T:Au.Types.ColorInt"/>, <b>int</b> in 0xRRGGBB color format, <b>Color</b> - color. Alpha isn't used.
@@ -7089,12 +7090,6 @@
             Should be called in control's thread. Calls <see cref="P:System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="P:System.Windows.Forms.Control.Handle"/>.
             </remarks>
         </member>
-        <member name="M:Au.AExtForms.CreateControlNow_(System.Windows.Forms.Control)">
-            <summary>
-            Creates handle of this control/form and descendant controls.
-            Unlike Control.CreateHandle, works when invisible.
-            </summary>
-        </member>
         <member name="M:Au.AExtForms.MouseClientXY(System.Windows.Forms.Control)">
             <summary>
             Gets mouse cursor position in client area coordinates.
@@ -7183,7 +7178,7 @@
             Gets rectangle of this element in screen coordinates.
             </summary>
         </member>
-        <member name="M:Au.AExtWpf.IsCheck(System.Windows.Controls.CheckBox)">
+        <member name="M:Au.AExtWpf.True(System.Windows.Controls.CheckBox)">
             <summary>
             Returns true if <see cref="P:System.Windows.Controls.Primitives.ToggleButton.IsChecked"/> == true.
             </summary>
@@ -8346,8 +8341,15 @@
         <member name="P:Au.AFolders.Workspace">
             <summary>
             Gets folder of current workspace.
-            Available in the Au editor process. In script process available if role is miniProgram or editorExtension. Elsewhere null.
+            Available in editor process. In script process available if role is miniProgram or editorExtension. Elsewhere null.
             </summary>
+        </member>
+        <member name="M:Au.AFolders.SourceCode(System.String)">
+            <summary>
+            Gets folder path of caller's source code file.
+            It is set by compiler (<see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/>).
+            </summary>
+            <param name="f">Don't use.</param>
         </member>
         <member name="P:Au.AFolders.SystemX64">
             <summary>
@@ -8447,7 +8449,7 @@
             Gets icons for files etc. Contains native icon handle.
             </summary>
             <remarks>
-            Native icons must be destroyed, it is very important. An <b>AIcon</b> variable destroys its native icon when disposing it. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Note: it's not a reference type and does not have a finalizer that could be called by GC. But usually you need not native handle but <b>Icon</b>, <b>Bitmap</b> or <b>ImageSource</b>. Then use <see cref="M:Au.AIcon.ToWinformsIcon(System.Boolean)"/>, <see cref="M:Au.AIcon.ToWinformsBitmap(System.Boolean)"/> or <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>. By default they dispose the native icon and clear the <b>AIcon</b> variable; then don't need to dispose it.
+            Native icons must be destroyed, it is very important. An <b>AIcon</b> variable destroys its native icon when disposing it. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Note: it's not a reference type and does not have a finalizer that could be called by GC. But usually you need not native handle but <b>Icon</b>, <b>Bitmap</b> or <b>ImageSource</b>. Then use <see cref="M:Au.AIcon.ToGdipIcon(System.Boolean)"/>, <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/> or <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>. By default they dispose the native icon and clear the <b>AIcon</b> variable; then don't need to dispose it.
             </remarks>
         </member>
         <member name="M:Au.AIcon.#ctor(System.IntPtr)">
@@ -8549,9 +8551,9 @@
             <param name="height"></param>
             <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
         </member>
-        <member name="M:Au.AIcon.ToWinformsIcon(System.Boolean)">
+        <member name="M:Au.AIcon.ToGdipIcon(System.Boolean)">
             <summary>
-            Converts native icon to winforms icon object.
+            Converts native icon to GDI+ icon object.
             Returns null if <i>Handle</i> is default(IntPtr).
             </summary>
             <param name="destroyNative">
@@ -8559,9 +8561,9 @@
             If false, the returned variable just uses the native icon handle of this variable and will not destroy; later will need to dispose this variable.
             </param>
         </member>
-        <member name="M:Au.AIcon.ToWinformsBitmap(System.Boolean)">
+        <member name="M:Au.AIcon.ToGdipBitmap(System.Boolean)">
             <summary>
-            Converts native icon to winforms bitmap object.
+            Converts native icon to GDI+ bitmap object.
             Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
             </summary>
             <param name="destroyNative">
@@ -10078,7 +10080,7 @@
             Thread functions. Extends <see cref="T:System.Threading.Thread"/>.
             </summary>
         </member>
-        <member name="P:Au.AThread.NativeId">
+        <member name="P:Au.AThread.Id">
             <summary>
             Gets native thread id of this thread.
             Calls API <msdn>GetCurrentThreadId</msdn>.
@@ -10572,7 +10574,7 @@
             </summary>
             <param name="owner">Owner window, or one of its child/descendant controls. Can be Control (eg Form) or AWnd (window handle). Can be null.</param>
             <param name="ownerCenter">Show the dialog in the center of the owner window. <see cref="M:Au.ADialog.SetXY(Au.Types.Coord,Au.Types.Coord,System.Boolean)"/> and <see cref="P:Au.ADialog.Screen"/> are ignored.</param>
-            <param name="doNotDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
+            <param name="dontDisable">Don't disable the owner window. If false, disables if it belongs to this thread.</param>
             <seealso cref="P:Au.ADialog.Options.AutoOwnerWindow"/>
         </member>
         <member name="M:Au.ADialog.SetXY(Au.Types.Coord,Au.Types.Coord,System.Boolean)">
@@ -11041,7 +11043,7 @@
             </summary>
             <remarks>
             Based on <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
-            Can be used everywhere, not only in forms.
+            Can be used in winforms windows and everywhere in scripts. In WPF windows instead use <see cref="T:Au.AWpfMenu"/>.
             Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
             </remarks>
             <example>
@@ -11927,7 +11929,7 @@
             	.R.AddOkCancel() //finally add standard OK and Cancel buttons
             	.End();
             if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
-            AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck()); //get user input from control variables
+            AOutput.Write(text1.Text, combo1.SelectedIndex, c1.True()); //get user input from control variables
             ]]></code>
             Dialog window with TabControl (code from wpfSnippet).
             <code><![CDATA[
@@ -12038,8 +12040,8 @@
             This constructor creates panel of specified type (default is <see cref="T:System.Windows.Controls.Grid"/>) and optionally adds to a container.
             </summary>
             <param name="container">
-            Window or some other element that will contain the panel. Should be empty, unless the type supports multiple immediate child elements. Can be null.
-            If the type (or base type) is <see cref="T:System.Windows.Controls.ContentControl"/> (<see cref="P:Au.AWpfBuilder.Window"/>, <see cref="T:System.Windows.Controls.TabItem"/>, ToolTip, etc) or <see cref="T:System.Windows.Controls.Primitives.Popup"/>, this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
+            Window or some other element that will contain the panel. Should be empty, unless the type supports multiple direct child elements. Can be null.
+            If the type (or base type) is <see cref="T:System.Windows.Controls.ContentControl"/> (<see cref="P:Au.AWpfBuilder.Window"/>, <see cref="T:System.Windows.Controls.TabItem"/>, ToolTip, etc), <see cref="T:System.Windows.Controls.Primitives.Popup"/> or <see cref="T:System.Windows.Controls.Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
             </param>
             <param name="panelType">Panel type. Default is <see cref="T:System.Windows.Controls.Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
             <param name="setProperties">
@@ -12223,7 +12225,7 @@
             <summary>
             Changes some options for elements added afterwards.
             </summary>
-            <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align better when using default theme. Default value of this option depends on application's theme.</param>
+            <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align content better when using default theme. Default value of this option depends on application's theme.</param>
             <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
             <param name="margin">Default margin of elements. If not set, default marging is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
         </member>
@@ -12256,14 +12258,24 @@
             <param name="flags"></param>
             <exception cref="T:System.NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
         </member>
+        <member name="M:Au.AWpfBuilder.Add``2(``0@,System.Object,``1@,System.Object)">
+            <summary>
+            Adds 2 elements. One of type <i>T1</i>, other of type <i>T2</i>.
+            </summary>
+            <param name="var1">Variable of first element. More info - see other overload.</param>
+            <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
+            <param name="var2">Variable of second element. More info - see other overload.</param>
+            <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
+            <exception cref="T:System.NotSupportedException">The function does not support non-null <i>text</i> for an element type.</exception>
+        </member>
         <member name="M:Au.AWpfBuilder.Add``1(System.String,``0@,System.Object)">
             <summary>
             Adds 2 elements: <see cref="T:System.Windows.Controls.Label"/> and element of type <i>T</i> (control etc of any type).
             </summary>
             <param name="label">Label text.</param>
-            <param name="variable">Receives element's variable. More info - see other overload.</param>
-            <param name="text">Text, header or other content. More info - see other overload.</param>
-            <exception cref="T:System.NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
+            <param name="variable">Variable of second element. More info - see other overload.</param>
+            <param name="text">Text, header or other content of second element. More info - see other overload.</param>
+            <exception cref="T:System.NotSupportedException">The function does not support non-null <i>text</i> for this element type.</exception>
         </member>
         <member name="M:Au.AWpfBuilder.Add(System.Windows.FrameworkElement,Au.Types.WBAdd)">
             <summary>
@@ -12310,6 +12322,24 @@
             <summary>
             If the window closed with an <see cref="M:Au.AWpfBuilder.AddButton(System.Object,System.Int32)"/> button, returns its <i>result</i>. Else returns 0.
             </summary>
+        </member>
+        <member name="M:Au.AWpfBuilder.AddOkCancel(System.Windows.Controls.Button@,System.Windows.Controls.Button@,System.Windows.Controls.Button@,System.String,System.String,System.String)">
+            <summary>
+            Adds OK and/or Cancel and/or Apply buttons.
+            </summary>
+            <param name="bOK">Variable of OK button.</param>
+            <param name="bCancel">Variable of Cancel button.</param>
+            <param name="bApply">Variable of Apply button.</param>
+            <param name="ok">Text of OK button. If null, does not add the button.</param>
+            <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
+            <param name="apply">Text of Apply button. If null, does not add the button.</param>
+            <remarks>
+            Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="M:Au.AWpfBuilder.ShowDialog(System.Windows.Window)"/> returns true on OK, false on Cancel.
+            See also event <see cref="E:Au.AWpfBuilder.OkApply"/>.
+            
+            By default adds a right-bottom aligned <see cref="T:System.Windows.Controls.StackPanel"/> and adds buttons in it. If 1 button, adds single button without panel.
+            Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="M:Au.AWpfBuilder.StartOkCancel"/>.
+            </remarks>
         </member>
         <member name="M:Au.AWpfBuilder.AddOkCancel(System.String,System.String,System.String)">
             <summary>
@@ -12601,6 +12631,12 @@
             .R.Add<Border>().Border(Brushes.Blue, 2, cornerRadius: 3).Add<Label>("Example2", WBAdd.ChildOfLast)
             ]]></code>
             </example>
+        </member>
+        <member name="M:Au.AWpfBuilder.Border">
+            <summary>
+            Sets standard border properties of the last added element.
+            Thickness 1, color SystemColors.ActiveBorderBrush.
+            </summary>
         </member>
         <member name="M:Au.AWpfBuilder.Font(System.String,System.Nullable{System.Double},System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
             <summary>
@@ -12978,7 +13014,7 @@
         <member name="M:Au.AWpfBuilder.StartOkCancel">
             <summary>
             Adds right-bottom-aligned horizontal stack panel (<see cref="M:Au.AWpfBuilder.StartStack(System.Boolean,System.Boolean)"/>) for adding OK, Cancel and more buttons.
-            When don't need more buttons, use just <see cref="M:Au.AWpfBuilder.AddOkCancel(System.String,System.String,System.String)"/>.
+            When don't need more buttons, use just <see cref="M:Au.AWpfBuilder.AddOkCancel(System.Windows.Controls.Button@,System.Windows.Controls.Button@,System.Windows.Controls.Button@,System.String,System.String,System.String)"/>.
             </summary>
             <example>
             <code><![CDATA[
@@ -16137,7 +16173,7 @@
         <member name="M:Au.AOsdWindow.Close">
             <summary>Destroys the OSD window.</summary>
         </member>
-        <member name="P:Au.AOsdWindow.Handle">
+        <member name="P:Au.AOsdWindow.Hwnd">
             <summary>OSD window handle or default(AWnd).</summary>
         </member>
         <member name="P:Au.AOsdWindow.IsHandleCreated">
@@ -16209,7 +16245,7 @@
             If your derived class overrides this function, it must call base.WndProc and return its return value, except when don't need default processing.
             </summary>
         </member>
-        <member name="M:Au.AOsdWindow.OnPaint(System.Drawing.Graphics,System.Drawing.Rectangle)">
+        <member name="M:Au.AOsdWindow.OnPaint(System.IntPtr,System.Drawing.Graphics,System.Drawing.Rectangle)">
             <summary>
             Called when the OSD window must be drawn or redrawn.
             Derived classes should override this function and draw anything. Don't need to call base.OnPaint of <see cref="T:Au.AOsdWindow"/>, it does nothing.
@@ -16299,9 +16335,9 @@
             This property can be changed after creating OSD window.
             </remarks>
         </member>
-        <member name="M:Au.AOsdRect.OnPaint(System.Drawing.Graphics,System.Drawing.Rectangle)">
+        <member name="M:Au.AOsdRect.OnPaint(System.IntPtr,System.Drawing.Graphics,System.Drawing.Rectangle)">
             <summary>
-            Called when the OSD window must be drawn or redrawn. Draws rectangle. More info: <see cref="M:Au.AOsdWindow.OnPaint(System.Drawing.Graphics,System.Drawing.Rectangle)"/>.
+            Called when the OSD window must be drawn or redrawn. Draws rectangle. More info: <see cref="M:Au.AOsdWindow.OnPaint(System.IntPtr,System.Drawing.Graphics,System.Drawing.Rectangle)"/>.
             </summary>
         </member>
         <member name="T:Au.AOsd">
@@ -16312,6 +16348,9 @@
             Creates a temporary partially transparent window, and draws text in it.
             Most properties cannot be changed after creating OSD window.
             </remarks>
+        </member>
+        <member name="M:Au.AOsd.Dispose(System.Boolean)">
+            
         </member>
         <member name="P:Au.AOsd.XY">
             <summary>
@@ -16421,7 +16460,7 @@
         <member name="P:Au.AOsd.TextFormatFlags">
             <summary>
             Gets or sets text format flags.
-            Default: TextFormatFlags.NoPrefix | TextFormatFlags.WordBreak | TextFormatFlags.ExpandTabs.
+            Default: Native.DT.NOPREFIX | Native.DT.WORDBREAK | Native.DT.EXPANDTABS.
             </summary>
             <remarks>
             This property cannot be changed after creating OSD window.
@@ -16430,10 +16469,11 @@
         <member name="P:Au.AOsd.Icon">
             <summary>
             Icon at the left of text.
-            For example SystemIcons.Information.
+            For example <i>System.Drawing.SystemIcons.Information</i> or <c>AIcon.Stock(StockIcon.INFO, 32).ToGdipIcon()</c>.
             </summary>
             <remarks>
             This property cannot be changed after creating OSD window.
+            This class does not copy and does not dispose the icon.
             </remarks>
         </member>
         <member name="P:Au.AOsd.Shadow">
@@ -16464,7 +16504,7 @@
         </member>
         <member name="P:Au.AOsd.ShowMode">
             <summary>
-            See <see cref="T:Au.Types.OsdShowMode"/>.
+            See <see cref="T:Au.Types.OsdMode"/>.
             </summary>
             <remarks>
             This property cannot be changed after creating OSD window.
@@ -16483,7 +16523,7 @@
             If the OSD window is already created, just shows it if hidden. Many properties can be changed only before creating OSD window; call <see cref="M:Au.AOsdWindow.Close"/> if need.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.OnPaint(System.Drawing.Graphics,System.Drawing.Rectangle)">
+        <member name="M:Au.AOsd.OnPaint(System.IntPtr,System.Drawing.Graphics,System.Drawing.Rectangle)">
             <summary>
             Draws OSD text etc.
             </summary>
@@ -16494,7 +16534,7 @@
             Can be called before showing OSD.
             </summary>
         </member>
-        <member name="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)">
+        <member name="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
             <summary>
             Shows a tooltip-like OSD window with text and optionally icon.
             </summary>
@@ -16504,15 +16544,16 @@
             <param name="icon"><see cref="P:Au.AOsd.Icon"/></param>
             <param name="textColor"><see cref="P:Au.AOsd.TextColor"/></param>
             <param name="backColor"><see cref="P:Au.AOsd.BackColor"/></param>
+            <param name="font">Font. If null, uses <see cref="P:Au.AOsd.DefaultSmallFont"/>.</param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
             <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="doNotShow">Don't call <see cref="M:Au.AOsd.Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
+            <param name="dontShow">Don't call <see cref="M:Au.AOsd.Show"/>. The caller can use the return value to set some other properties and call <b>Show</b>.</param>
             <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
             Also sets these properties: <see cref="P:Au.AOsd.ClickToClose"/>=true, <see cref="P:Au.AOsd.Shadow"/>=true.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)">
+        <member name="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
             <summary>
             Shows a big-font text with transparent background.
             </summary>
@@ -16520,15 +16561,16 @@
             <param name="secondsTimeout"><see cref="P:Au.AOsd.SecondsTimeout"/></param>
             <param name="xy"><see cref="P:Au.AOsd.XY"/></param>
             <param name="color"><see cref="P:Au.AOsd.TextColor"/>. Default: <see cref="P:Au.AOsd.DefaultTransparentTextColor"/>.</param>
+            <param name="font">Font. If null, uses <see cref="P:Au.AOsd.DefaultBigFont"/>.</param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
             <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="doNotShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>.</param>
+            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
             <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
-            Also sets these properties: <see cref="P:Au.AOsd.Font"/>=<see cref="P:Au.AOsd.DefaultBigFont"/>, <see cref="P:Au.AOsdWindow.Opacity"/>=0.
+            Also sets these properties: <see cref="P:Au.AOsdWindow.Opacity"/>=0.
             </remarks>
         </member>
-        <member name="M:Au.AOsd.ShowImage(System.Drawing.Image,System.Int32,Au.Types.PopupXY,System.String,Au.Types.OsdShowMode,System.Boolean)">
+        <member name="M:Au.AOsd.ShowImage(System.Drawing.Image,System.Int32,Au.Types.PopupXY,System.String,Au.Types.OsdMode,System.Boolean)">
             <summary>
             Shows on-screen image.
             </summary>
@@ -16537,31 +16579,31 @@
             <param name="xy"><see cref="P:Au.AOsd.XY"/></param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
             <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="doNotShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>.</param>
+            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
             <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
             Also sets these properties: <see cref="P:Au.AOsd.IsOfImageSize"/>=true, <see cref="P:Au.AOsdWindow.Opacity"/>=0, <see cref="P:Au.AOsd.ClickToClose"/>=true.
             </remarks>
         </member>
         <member name="P:Au.AOsd.DefaultSmallFont">
-            <summary>Default font for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: Segoe UI 12.</summary>
+            <summary>Default font for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
             <exception cref="T:System.ArgumentNullException"></exception>
         </member>
         <member name="P:Au.AOsd.DefaultBigFont">
-            <summary>Default font for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>. Default: Default: Segoe UI 20.</summary>
+            <summary>Default font for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>. Default: standard GUI font (usually Segoe UI), size 24.</summary>
             <exception cref="T:System.ArgumentNullException"></exception>
         </member>
         <member name="P:Au.AOsd.DefaultTextColor">
-            <summary>Default text color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFF404040 (dark gray).</summary>
+            <summary>Default text color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x(dark gray).</summary>
         </member>
         <member name="P:Au.AOsd.DefaultBorderColor">
-            <summary>Default border color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFF404040 (dark gray).</summary>
+            <summary>Default border color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x404040 (dark gray).</summary>
         </member>
         <member name="P:Au.AOsd.DefaultBackColor">
-            <summary>Default background color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,Au.Types.ColorInt,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFFFFFFF0 (light yellow).</summary>
+            <summary>Default background color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFFFFF0 (light yellow).</summary>
         </member>
         <member name="P:Au.AOsd.DefaultTransparentTextColor">
-            <summary>Default text color for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,Au.Types.ColorInt,System.String,Au.Types.OsdShowMode,System.Boolean)"/>. Default: 0xFF8A2BE2 (Color.BlueViolet).</summary>
+            <summary>Default text color for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>. Default: 0x8A2BE2 (Color.BlueViolet).</summary>
         </member>
         <member name="P:Au.AOsd.DefaultScreen">
             <summary>
@@ -16828,7 +16870,7 @@
             using System.Threading.Tasks;
             using System.Runtime.InteropServices;
             
-            class OutputFormExample :Form
+            class OutputFormExample : Form
             {
             	TextBox _tb;
             
@@ -17249,7 +17291,7 @@
             <exception cref="T:System.ArgumentException">Bad image or string format.</exception>
             <exception cref="T:System.Exception">Depending on <i>image</i> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, etc.</exception>
             <remarks>
-            Calls <see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromFileOrResourceOrString(System.String)"/>.
+            Calls <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String)"/>.
             </remarks>
         </member>
         <member name="P:Au.AWinImage.Rect">
@@ -18443,15 +18485,6 @@
             <param name="count">Count of characters to replace.</param>
             <param name="s">The replacement string.</param>
             <exception cref="T:System.ArgumentOutOfRangeException">Invalid <i>startIndex</i> or <i>count</i>.</exception>
-        </member>
-        <member name="M:Au.AExtString.RemoveSuffix(System.String,System.Int32)">
-            <summary>
-            Removes <i>count</i> characters from the end of this string.
-            Returns the result string.
-            </summary>
-            <param name="t">This string.</param>
-            <param name="count">Count of characters to remove.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
         <member name="M:Au.AExtString.RemoveSuffix(System.String,System.String,System.Boolean)">
             <summary>
@@ -19787,9 +19820,9 @@
             This function creates/deletes a temporary file, because there is no good API to load cursor from memory.
             </remarks>
         </member>
-        <member name="M:Au.Util.ACursor.ToWinformsCursor(System.Boolean)">
+        <member name="M:Au.Util.ACursor.ToGdipCursor(System.Boolean)">
             <summary>
-            Converts native cursor to winforms cursor object.
+            Converts native cursor to GDI+ cursor object.
             Returns null if <i>Handle</i> is default(IntPtr).
             </summary>
             <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
@@ -19924,6 +19957,11 @@
             If DPI <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
             </summary>
         </member>
+        <member name="M:Au.Util.ADpi.Scale(System.Int32,System.Int32,Au.Types.DpiOf)">
+            <summary>
+            Scales two int if <i>dpiOf.Dpi</i> isn't 96 (100%).
+            </summary>
+        </member>
         <member name="M:Au.Util.ADpi.Scale(Au.Types.SIZE,Au.Types.DpiOf)">
             <summary>
             Scales <b>SIZE</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
@@ -20047,7 +20085,7 @@
         </member>
         <member name="F:Au.Util.ADragDrop.MsgArgs.Cursor">
             <summary>
-            The callback function can set this to temporarily set cursor.
+            Native cursor handle. The callback function can set this to temporarily set cursor.
             </summary>
         </member>
         <member name="M:Au.Util.ADragDrop.MsgArgs.Stop">
@@ -20272,7 +20310,7 @@
             <param name="imageSource">File path, or resource path that starts with "resources/" or has prefix "resource:", etc.</param>
             <param name="dpi">DPI of window that will display the image.</param>
             <param name="isImage">
-            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
             false - get file icon with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
             <param name="asyncCompletion">If not null, if the image is still not in cache, <b>Get</b> returns null and loads it asynchronously in other thread. When loaded, calls <i>asyncCompletion</i> in this thread. Can be used to avoid slow startup when need to get many file icons.</param>
             <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
@@ -20287,7 +20325,7 @@
         </member>
         <member name="T:Au.Util.AImageUtil">
             <summary>
-            Loads WPF and winforms images from file, resource or string.
+            Loads WPF and GDI+/winforms images from file, resource or string.
             </summary>
             <seealso cref="T:Au.Util.AResources"/>
         </member>
@@ -20304,9 +20342,9 @@
             <exception cref="T:System.ArgumentException">String does not start with "image:"/"~:" or is invalid Base-64.</exception>
             <exception cref="T:System.Exception"><see cref="M:Au.Util.AConvert.Decompress(System.Byte[],System.Int32,System.Int32)"/> exceptions (when prefix "~:").</exception>
         </member>
-        <member name="M:Au.Util.AImageUtil.LoadWinformsImageFromString(System.String)">
+        <member name="M:Au.Util.AImageUtil.LoadGdipBitmapFromString(System.String)">
             <summary>
-            Loads winforms image from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
+            Loads GDI+ image from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
             </summary>
             <param name="s">Base-64 string with prefix "image:" or "~:".</param>
             <exception cref="T:System.ArgumentException">String does not start with "image:"/"~:" or is invalid Base-64.</exception>
@@ -20320,9 +20358,9 @@
             <exception cref="T:System.ArgumentException">String does not start with "image:"/"~:" or is invalid Base-64.</exception>
             <exception cref="T:System.Exception"></exception>
         </member>
-        <member name="M:Au.Util.AImageUtil.TryLoadWinformsImageFromString(System.String,System.Boolean)">
+        <member name="M:Au.Util.AImageUtil.TryLoadGdipBitmapFromString(System.String,System.Boolean)">
             <summary>
-            Calls <see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromString(System.String)"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
+            Calls <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromString(System.String)"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
             </summary>
         </member>
         <member name="M:Au.Util.AImageUtil.TryLoadWpfImageFromString(System.String,System.Boolean)">
@@ -20330,15 +20368,15 @@
             Calls <see cref="M:Au.Util.AImageUtil.LoadWpfImageFromString(System.String)"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
             </summary>
         </member>
-        <member name="M:Au.Util.AImageUtil.LoadWinformsImageFromFileOrResourceOrString(System.String)">
+        <member name="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String)">
             <summary>
-            Loads winforms image or icon from file, resource or string.
+            Loads GDI+ image or icon from file, resource or string.
             </summary>
             <param name="image">
             Can be:
             - file path. Can have prefix "imagefile:".
-            - resource path that starts with "resources/" or has prefix "resource:" (<see cref="M:Au.Util.AResources.GetWinformsImage(System.String)"/>)
-            - Base-64 image with prefix "image:" (<see cref="M:Au.Util.AImageUtil.LoadWinformsImageFromString(System.String)"/>).
+            - resource path that starts with "resources/" or has prefix "resource:" (<see cref="M:Au.Util.AResources.GetGdipBitmap(System.String)"/>)
+            - Base-64 image with prefix "image:" (<see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromString(System.String)"/>).
             </param>
             <exception cref="T:System.Exception"></exception>
         </member>
@@ -20685,22 +20723,6 @@
             <param name="removeHotkey">If contains '\t' character, get substring before it.</param>
             <param name="removeAmp">Call <see cref="M:Au.Util.AStringUtil.RemoveUnderlineChar(System.String,System.Char)"/>.</param>
         </member>
-        <member name="T:Au.Util.AMessageLoop">
-            <summary>
-            A message loop for non-WPF apps, alternative to <b>System.Windows.Forms.Application.Run</b> which does not support nested loops.
-            In WPF apps instead use <see cref="T:System.Windows.Threading.DispatcherFrame"/> in a similar way; instead of <b>Loop</b> and <b>Stop</b> use <see cref="M:System.Windows.Threading.Dispatcher.PushFrame(System.Windows.Threading.DispatcherFrame)"/> and <see cref="P:System.Windows.Threading.DispatcherFrame.Continue"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AMessageLoop.Loop">
-            <summary>
-            Runs a message loop.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AMessageLoop.Stop">
-            <summary>
-            Ends the message loop, causing <see cref="M:Au.Util.AMessageLoop.Loop"/> to return.
-            </summary>
-        </member>
         <member name="T:Au.Util.ARecording">
             <summary>
             Functions for keyboard/mouse/etc recorder tools.
@@ -20776,18 +20798,18 @@
             Supports resources of type byte[], string (gets UTF-8 bytes), stream.
             </remarks>
         </member>
-        <member name="M:Au.Util.AResources.GetWinformsImage(System.String)">
+        <member name="M:Au.Util.AResources.GetGdipBitmap(System.String)">
             <summary>
-            Gets winforms image.
+            Gets GDI+ image.
             </summary>
             <param name="name">Can be resource name like "file.png" or "sub/file.png" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
             <exception cref="T:System.IO.FileNotFoundException">Cannot find assembly or resource.</exception>
             <exception cref="T:System.InvalidOperationException">The resource type is not stream.</exception>
             <exception cref="T:System.Exception">Other exceptions that may be thrown by used .NET functions.</exception>
         </member>
-        <member name="M:Au.Util.AResources.GetWinformsIcon(System.String)">
+        <member name="M:Au.Util.AResources.GetGdipIcon(System.String)">
             <summary>
-            Gets winforms icon.
+            Gets GDI+ icon.
             </summary>
             <param name="name">Can be resource name like "file.ico" or "sub/file.ico" or "&lt;LoadedAssemblyName&gt;file.ico". Can have prefix "resource:".</param>
             <exception cref="T:System.IO.FileNotFoundException">Cannot find assembly or resource.</exception>
@@ -21324,6 +21346,22 @@
             The manifest is embedded in this dll, resource id 2.
             </summary>
         </member>
+        <member name="T:Au.Util.AMessageLoop_">
+            <summary>
+            A message loop for non-WPF apps, alternative to <b>System.Windows.Forms.Application.Run</b> which does not support nested loops.
+            In WPF apps instead use <see cref="T:System.Windows.Threading.DispatcherFrame"/> in a similar way; instead of <b>Loop</b> and <b>Stop</b> use <see cref="M:System.Windows.Threading.Dispatcher.PushFrame(System.Windows.Threading.DispatcherFrame)"/> and <see cref="P:System.Windows.Threading.DispatcherFrame.Continue"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMessageLoop_.Loop">
+            <summary>
+            Runs a message loop.
+            </summary>
+        </member>
+        <member name="M:Au.Util.AMessageLoop_.Stop">
+            <summary>
+            Ends the message loop, causing <see cref="M:Au.Util.AMessageLoop_.Loop"/> to return.
+            </summary>
+        </member>
         <member name="T:Au.Util.ArrayBuilder_`1">
             <summary>
             Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
@@ -21451,6 +21489,46 @@
         <member name="P:Au.Util.AttachThreadInput_.IsAttached">
             <summary>
             Returns true if AttachThreadInput succeeded and this variable is not disposed.
+            </summary>
+        </member>
+        <member name="T:Au.Util.BufferedPaint_">
+            <summary>
+            Wraps buffered paint API <msdn>BeginBufferedPaint</msdn> etc.
+            </summary>
+        </member>
+        <member name="M:Au.Util.BufferedPaint_.Init">
+            <summary>
+            Calls API BufferedPaintInit.
+            </summary>
+        </member>
+        <member name="M:Au.Util.BufferedPaint_.Uninit">
+            <summary>
+            Calls API BufferedPaintUnInit.
+            </summary>
+        </member>
+        <member name="P:Au.Util.BufferedPaint_.NonBufferedDC">
+            
+        </member>
+        <member name="P:Au.Util.BufferedPaint_.DC">
+            <summary>
+            Gets the buffered DC. Returns <see cref="P:Au.Util.BufferedPaint_.NonBufferedDC"/> if API BeginBufferedPaint failed.
+            </summary>
+        </member>
+        <member name="P:Au.Util.BufferedPaint_.Rect">
+            <summary>
+            Gets buffered bitmap rectangle (== client rectangle).
+            </summary>
+        </member>
+        <member name="M:Au.Util.BufferedPaint_.#ctor(Au.AWnd,System.Boolean)">
+            <summary>
+            Gets nonbuffered DC with API BeginPaint or GetDC. Then gets buffered DC with API BeginBufferedPaint for entire client area.
+            </summary>
+            <param name="w"></param>
+            <param name="wmPaint">Use API BeginPaint/EndPaint. If false, uses GetDC/ReleaseDC.</param>
+        </member>
+        <member name="M:Au.Util.BufferedPaint_.Dispose">
+            <summary>
+            Calls API EndBufferedPaint and EndPaint or ReleaseDC.
             </summary>
         </member>
         <member name="T:Au.Util.CharPtr_">
@@ -21591,13 +21669,41 @@
             <summary>
             Helps to get and release window DC with the 'using(...){...}' pattern.
             Uses API GetDC and ReleaseDC.
-            If w is default(AWnd), gets screen DC.
             </summary>
         </member>
-        <member name="T:Au.Util.CompatibleDC_">
+        <member name="T:Au.Util.MemoryDC_">
             <summary>
-            Helps to create and delete screen DC with the 'using(...){...}' pattern.
+            Helps to create and delete compatible DC (memory DC) with the 'using(...){...}' pattern.
             Uses API CreateCompatibleDC and DeleteDC.
+            </summary>
+        </member>
+        <member name="M:Au.Util.MemoryDC_.#ctor">
+            <summary>
+            Creates memory DC compatible with screen.
+            </summary>
+        </member>
+        <member name="T:Au.Util.FontDC_">
+            <summary>
+            Memory DC with selected font.
+            Can be used for font measurement.
+            </summary>
+        </member>
+        <member name="M:Au.Util.FontDC_.#ctor(Au.Types.DpiOf)">
+            <summary>
+            Selects standard UI font for specified DPI.
+            </summary>
+            <param name="dpi"></param>
+        </member>
+        <member name="M:Au.Util.FontDC_.Measure(System.String)">
+            <summary>
+            Measures text with API <msdn>GetTextExtentPoint32</msdn>.
+            Should be single line without tabs. For drawing with API <msdn>TextOut</msdn> or <msdn>ExtTextOut</msdn>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.FontDC_.Measure(System.String,System.Int32,Au.Types.Native.DT)">
+            <summary>
+            Measures text with API <msdn>DrawText</msdn>.
+            Can be multiline. For drawing with API <msdn>DrawText</msdn>.
             </summary>
         </member>
         <member name="T:Au.Util.IconsAsync_">
@@ -22707,7 +22813,6 @@
             <exception cref="T:System.ArgumentOutOfRangeException"><i>timeMS</i> is negative and not Timeout.Infinite.</exception>
             <seealso cref="M:Au.AWaitFor.MessagesAndCondition(System.Double,System.Func{System.Boolean})"/>
             <seealso cref="M:Au.AWaitFor.PostedMessage(System.Double,Au.Types.WPMCallback)"/>
-            <seealso cref="T:Au.Util.AMessageLoop"/>
         </member>
         <member name="M:Au.ATime.SleepDoEvents_(System.Int32,System.Boolean)">
             <summary>SleepDoEvents + noSetPrecision.</summary>
@@ -24892,7 +24997,7 @@
             Returns null if the icon is not cached and the callback function returns null.
             </summary>
             <param name="name">Some unique name. It is used to identify this image in cache.</param>
-            <param name="callback">Called to get image. See <see cref="M:Au.AIcon.ToWinformsBitmap(System.Boolean)"/>.</param>
+            <param name="callback">Called to get image. See <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/>.</param>
             <param name="autoUpdate"></param>
             <param name="auParam"></param>
             <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
@@ -25094,7 +25199,7 @@
             Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
             </summary>
             <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
-            <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.NativeId"/>.</param>
+            <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.Id"/>.</param>
         </member>
         <member name="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)">
             <summary>
@@ -25945,14 +26050,6 @@
             </summary>
             <remarks>
             Calls API <msdn>GetFocus</msdn>.
-            </remarks>
-        </member>
-        <member name="P:Au.AWnd.ThisThread.FocusedWinformsControl">
-            <summary>
-            Gets the focused control or form of this thread.
-            </summary>
-            <remarks>
-            Calls API <msdn>GetFocus</msdn> and <see cref="M:System.Windows.Forms.Control.FromHandle(System.IntPtr)"/>.
             </remarks>
         </member>
         <member name="M:Au.AWnd.ThisThread.IsFocused(Au.AWnd)">
@@ -27164,7 +27261,7 @@
             </summary>
             <param name="threadId">
             Unmanaged thread id.
-            See <see cref="P:Au.AThread.NativeId"/>, <see cref="P:Au.AWnd.ThreadId"/>.
+            See <see cref="P:Au.AThread.Id"/>, <see cref="P:Au.AWnd.ThreadId"/>.
             If 0, throws exception. If other invalid value (ended thread?), returns empty list. Supports <see cref="T:Au.ALastError"/>.
             </param>
             <param name="onlyVisible">Need only visible windows.</param>
@@ -27675,7 +27772,7 @@
             null means 'can be any'. Cannot be "". Cannot be path.
             
             Or <see cref="M:Au.Types.WOwner.Process(System.Int32)"/>(process id), <see cref="M:Au.Types.WOwner.Thread(System.Int32)"/>(thread id), <see cref="M:Au.Types.WOwner.Window(Au.Types.AnyWnd)"/>(owner window).
-            See <see cref="P:Au.AWnd.ProcessId"/>, <see cref="P:Au.AProcess.ProcessId"/>, <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.NativeId"/>, <see cref="P:Au.AWnd.OwnerWindow"/>.
+            See <see cref="P:Au.AWnd.ProcessId"/>, <see cref="P:Au.AProcess.ProcessId"/>, <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.Id"/>, <see cref="P:Au.AWnd.OwnerWindow"/>.
             </param>
             <param name="flags"></param>
             <param name="also">
@@ -28101,7 +28198,7 @@
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
             <param name="condition">Callback function (eg lambda). It is called repeatedly, until returns true.</param>
-            <param name="doNotThrowIfClosed">
+            <param name="dontThrowIfClosed">
             Do not throw exception when the window handle is invalid or the window was closed while waiting.
             In such case the callback function must return false, like in the examples with <see cref="P:Au.AWnd.IsAlive"/>. Else exception is thrown (with a small delay) to prevent infinite waiting.
             </param>

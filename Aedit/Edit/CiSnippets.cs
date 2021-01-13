@@ -259,7 +259,9 @@ static class CiSnippets
 			if (x.HasElements) {
 				x = null;
 				var a = snippet.x.Elements("list").ToArray();
-				//SHOULDDO: need a better way. Now eg cannot select with Tab or Space, only with Enter.
+				//SHOULDDO: need a better way.
+				//	Now eg cannot select with Tab or Space, only with Enter.
+				//	Idea: add links in info popup. On Tab etc would insert the first.
 				Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Down, 0); //select first item. But does not work on d-click (mouse button pressed).
 				int g = ClassicMenu_.ShowSimple(a.Select(o => o.Attr("item")).ToArray(), doc, byCaret: true);
 				if (g == 0) return;

@@ -23,6 +23,11 @@ using System.Windows.Input;
 
 //Problem: Roslyn/VS on exception in a chained method gives line number of the chain start, not of the method.
 
+//SHOULDDO: sometimes a dialog window or part of window is white, until invalidating.
+//	It started recently, maybe when started using KDialogWindow (changes style).
+//	If 1 or 2 days noticed for 2 dialogs, once for each.
+//	Maybe set timer that invalidates window.
+
 namespace Au
 {
 	/// <summary>
@@ -55,7 +60,7 @@ namespace Au
 	/// 	.R.AddOkCancel() //finally add standard OK and Cancel buttons
 	/// 	.End();
 	/// if (!b.ShowDialog()) return; //show the dialog and wait until closed; return if closed not with OK button
-	/// AOutput.Write(text1.Text, combo1.SelectedIndex, c1.IsCheck()); //get user input from control variables
+	/// AOutput.Write(text1.Text, combo1.SelectedIndex, c1.True()); //get user input from control variables
 	/// ]]></code>
 	/// Dialog window with TabControl (code from wpfSnippet).
 	/// <code><![CDATA[
@@ -199,7 +204,14 @@ namespace Au
 			public override void Add(FrameworkElement c) {
 				if (_andWidth != null) {
 					var width = _andWidth.Value; _andWidth = null;
-					if (width < 0) { var m = c.Margin; m.Left += -width + 3; c.Margin = m; } else { c.Width = width; c.HorizontalAlignment = HorizontalAlignment.Right; }
+					if (width < 0) {
+						var m = c.Margin;
+						m.Left += -width + 3;
+						c.Margin = m;
+					} else {
+						c.Width = width;
+						c.HorizontalAlignment = HorizontalAlignment.Right;
+					}
 					var last = LastDirect;
 					Grid.SetColumn(c, Grid.GetColumn(last));
 					Grid.SetColumnSpan(c, Grid.GetColumnSpan(last));
@@ -215,7 +227,13 @@ namespace Au
 			public void And(double width) {
 				if (_col == 0 || _andWidth != null) throw new InvalidOperationException("And()");
 				var c = LastDirect;
-				if (width < 0) { c.Width = -width; c.HorizontalAlignment = HorizontalAlignment.Left; } else { var m = c.Margin; m.Right += width + 3; c.Margin = m; }
+				if (width < 0) {
+					c.Width = -width;
+					c.HorizontalAlignment = HorizontalAlignment.Left;
+				} else {
+					var m = c.Margin;
+					m.Right += width + 3; c.Margin = m;
+				}
 				_andWidth = width;
 				_col--;
 			}
@@ -351,8 +369,8 @@ namespace Au
 		/// This constructor creates panel of specified type (default is <see cref="Grid"/>) and optionally adds to a container.
 		/// </summary>
 		/// <param name="container">
-		/// Window or some other element that will contain the panel. Should be empty, unless the type supports multiple immediate child elements. Can be null.
-		/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="Window"/>, <see cref="TabItem"/>, ToolTip, etc) or <see cref="Popup"/>, this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
+		/// Window or some other element that will contain the panel. Should be empty, unless the type supports multiple direct child elements. Can be null.
+		/// If the type (or base type) is <see cref="ContentControl"/> (<see cref="Window"/>, <see cref="TabItem"/>, ToolTip, etc), <see cref="Popup"/> or <see cref="Decorator"/> (eg <b>Border</b>), this function adds the panel to it. If <i>container</i> is null or an element of some other type, need to explicitly add the panel to it, like <c>.Also(b => container.Child = b.Panel)</c> or <c>.Also(b => container.Children.Add(b.Panel))</c> or <c>.Tooltip(btt.Panel)</c> or <c>hwndSource.RootVisual = btt.Panel</c> (the code depends on container type).
 		/// </param>
 		/// <param name="panelType">Panel type. Default is <see cref="Grid"/>. Later you also can add nested panels of various types with <b>StartX</b> functions.</param>
 		/// <param name="setProperties">
@@ -387,8 +405,8 @@ namespace Au
 			switch (container) {
 			case ContentControl c: c.Content = _p.panel; break;
 			case Popup c: c.Child = _p.panel; break;
+			case Decorator c: c.Child=_p.panel; break;
 				//rejected. Rare. Let users add explicitly, like .Also(b => container.Child = b.Panel).
-				//		case Decorator c: c.Child=_p.panel; break;
 				//		case Panel c: c.Children.Add(_p.panel); break;
 				//		case ItemsControl c: c.Items.Add(_p.panel); break;
 				//		case TextBlock c: c.Inlines.Add(_p.panel); break;
@@ -677,7 +695,7 @@ namespace Au
 		/// <summary>
 		/// Changes some options for elements added afterwards.
 		/// </summary>
-		/// <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align better when using default theme. Default value of this option depends on application's theme.</param>
+		/// <param name="modifyPadding">Let <b>Add</b> adjust the <b>Padding</b> property of some controls to align content better when using default theme. Default value of this option depends on application's theme.</param>
 		/// <param name="rightAlignLabels">Right-align <b>Label</b> controls in grid cells.</param>
 		/// <param name="margin">Default margin of elements. If not set, default marging is 3 in all sides. Default margin of nested panels is 0; this option is not used.</param>
 		public AWpfBuilder Options(bool? modifyPadding = null, bool? rightAlignLabels = null, Thickness? margin = null) {
@@ -825,18 +843,29 @@ namespace Au
 		public AWpfBuilder Add<T>(object text = null, WBAdd flags = 0) where T : FrameworkElement, new() => Add(out T _, text, flags);
 
 		/// <summary>
+		/// Adds 2 elements. One of type <i>T1</i>, other of type <i>T2</i>.
+		/// </summary>
+		/// <param name="var1">Variable of first element. More info - see other overload.</param>
+		/// <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
+		/// <param name="var2">Variable of second element. More info - see other overload.</param>
+		/// <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
+		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> for an element type.</exception>
+		public AWpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
+			Add(out var1, text1);
+			Add(out var2, text2); //note: no flags
+			System.Windows.Automation.AutomationProperties.SetLabeledBy(var2, var1); //eg first is Label and second is TextBox
+			return this;
+		}
+
+		/// <summary>
 		/// Adds 2 elements: <see cref="Label"/> and element of type <i>T</i> (control etc of any type).
 		/// </summary>
 		/// <param name="label">Label text.</param>
-		/// <param name="variable">Receives element's variable. More info - see other overload.</param>
-		/// <param name="text">Text, header or other content. More info - see other overload.</param>
-		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> or flag <i>childOfLast</i> for this element type.</exception>
-		public AWpfBuilder Add<T>(string label, out T variable, object text = null) where T : FrameworkElement, new() {
-			Add(out Label la, label);
-			Add(out variable, text); //note: no flags
-			System.Windows.Automation.AutomationProperties.SetLabeledBy(variable, la);
-			return this;
-		}
+		/// <param name="variable">Variable of second element. More info - see other overload.</param>
+		/// <param name="text">Text, header or other content of second element. More info - see other overload.</param>
+		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> for this element type.</exception>
+		public AWpfBuilder Add<T>(string label, out T variable, object text = null) where T : FrameworkElement, new()
+			=> Add(out Label _, label, out variable, text);
 
 		/// <summary>
 		/// Adds an existing element (control etc of any type).
@@ -938,6 +967,9 @@ namespace Au
 		/// <summary>
 		/// Adds OK and/or Cancel and/or Apply buttons.
 		/// </summary>
+		/// <param name="bOK">Variable of OK button.</param>
+		/// <param name="bCancel">Variable of Cancel button.</param>
+		/// <param name="bApply">Variable of Apply button.</param>
 		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
 		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
 		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
@@ -948,17 +980,33 @@ namespace Au
 		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If 1 button, adds single button without panel.
 		/// Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
 		/// </remarks>
-		public AWpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null) {
+		public AWpfBuilder AddOkCancel(out Button bOK, out Button bCancel, out Button bApply, string ok = "OK", string cancel = "Cancel", string apply = null) {
 			int n = 0; if (ok != null) n++; if (cancel != null) n++;
 			if (n == 0) throw new ArgumentNullException();
 			bool stack = n > 1 && !(_p is _StackPanel);
 			if (stack) StartOkCancel();
-			if (ok != null) AddButton(ok, null, WBBFlags.OK);
-			if (cancel != null) AddButton(cancel, null, WBBFlags.Cancel);
-			if (apply != null) AddButton(apply, null, WBBFlags.Apply);
+			if (ok != null) AddButton(out bOK, ok, null, WBBFlags.OK); else bOK = null;
+			if (cancel != null) AddButton(out bCancel, cancel, null, WBBFlags.Cancel); else bCancel = null;
+			if (apply != null) AddButton(out bApply, apply, null, WBBFlags.Apply); else bApply = null;
 			if (stack) End();
 			return this;
 		}
+
+		/// <summary>
+		/// Adds OK and/or Cancel and/or Apply buttons.
+		/// </summary>
+		/// <param name="ok">Text of OK button. If null, does not add the button.</param>
+		/// <param name="cancel">Text of Cancel button. If null, does not add the button.</param>
+		/// <param name="apply">Text of Apply button. If null, does not add the button.</param>
+		/// <remarks>
+		/// Sets properties of OK/Cancel buttons so that click and Enter/Esc close the window; then <see cref="ShowDialog"/> returns true on OK, false on Cancel.
+		/// See also event <see cref="OkApply"/>.
+		/// 
+		/// By default adds a right-bottom aligned <see cref="StackPanel"/> and adds buttons in it. If 1 button, adds single button without panel.
+		/// Also does not add panel if already in a stack panel; it can be used to add more buttons. See <see cref="StartOkCancel"/>.
+		/// </remarks>
+		public AWpfBuilder AddOkCancel(string ok = "OK", string cancel = "Cancel", string apply = null)
+			=> AddOkCancel(out _, out _, out _, ok, cancel, apply);
 
 		/// <summary>
 		/// Adds <see cref="Separator"/> control.
@@ -972,6 +1020,7 @@ namespace Au
 			if (vertical ?? (_p.panel is StackPanel p && p.Orientation == Orientation.Horizontal)) {
 				c.Style = _style_VertSep ??= c.FindResource(ToolBar.SeparatorStyleKey) as Style;
 			}
+			c.UseLayoutRounding = true; //workaround: separators of different thickness when high DPI
 			return this;
 		}
 		Style _style_VertSep;
@@ -1417,6 +1466,12 @@ namespace Au
 			}
 			return this;
 		}
+
+		/// <summary>
+		/// Sets standard border properties of the last added element.
+		/// Thickness 1, color SystemColors.ActiveBorderBrush.
+		/// </summary>
+		public AWpfBuilder Border() => Border(SystemColors.ActiveBorderBrush, 1);
 
 		/// <summary>
 		/// Sets font properties of the last added element and its descendants.

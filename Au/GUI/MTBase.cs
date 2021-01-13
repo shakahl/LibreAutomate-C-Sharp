@@ -243,15 +243,15 @@ namespace Au.Types
 						imageResult = ic.ToBitmap();
 						break;
 					case StockIcon ic:
-						imageResult = AIcon.Stock(ic, IconSize).ToWinformsBitmap();
+						imageResult = AIcon.Stock(ic, IconSize).ToGdipBitmap();
 						break;
 					case string s when s.Length > 0:
 						if(AImageUtil.HasImageStringPrefix(s)) {
-							imageResult = AImageUtil.TryLoadWinformsImageFromString(s, warning: true);
+							imageResult = AImageUtil.TryLoadGdipBitmapFromString(s, warning: true);
 						} else if(s.Starts("key:")) {
 							item.ImageKey = s[4..];
 						} else if(useDefault != 0) {
-							imageResult = AIcon.OfFile(s, IconSize).ToWinformsBitmap();
+							imageResult = AIcon.OfFile(s, IconSize).ToGdipBitmap();
 						} else {
 							_SetItemFileIcon(isTB, item, s); //async
 						}
@@ -327,7 +327,7 @@ namespace Au.Types
 			var ts = objCommon as ToolStrip;
 			var item = r.obj as ToolStripItem;
 
-			Image im = r.icon.ToWinformsBitmap(true);
+			Image im = r.icon.ToGdipBitmap(true);
 			if(im != null) {
 				_SetItemImage(ts, item, im);
 
@@ -520,7 +520,7 @@ namespace Au.Types
 	/// - int - imagelist image index (<see cref="ToolStripItem.ImageIndex"/>).
 	/// - Image - image object.
 	/// - Icon - icon object.
-	/// - <see cref="AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="AIcon.ToWinformsBitmap"/> and disposes the native icon.
+	/// - <see cref="AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="AIcon.ToGdipBitmap"/> and disposes the native icon.
 	/// - <see cref="StockIcon"/> - a shell icon.
 	/// - FolderPath - folder path.
 	/// - default - no icon. If <see cref="MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
@@ -541,7 +541,7 @@ namespace Au.Types
 		///
 		public static implicit operator MTImage(Icon icon) => new MTImage(icon);
 		///
-		public static implicit operator MTImage(AIcon icon) => new MTImage(icon.ToWinformsBitmap());
+		public static implicit operator MTImage(AIcon icon) => new MTImage(icon.ToGdipBitmap());
 		///
 		public static implicit operator MTImage(StockIcon icon) => new MTImage(icon);
 		///

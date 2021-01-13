@@ -19,15 +19,15 @@ using Au.Controls;
 
 class PanelFound : DockPanel
 {
-	SciHost _c;
+	KScintilla _c;
 
-	public SciHost ZControl => _c;
+	public KScintilla ZControl => _c;
 
 	public PanelFound()
 	{
-		_c = new SciHost { Name = "Found_list" };
+		_c = new KScintilla { Name = "Found_list" };
 		_c.ZInitReadOnlyAlways = true;
-		_c.ZInitTagsStyle = SciHost.ZTagsStyle.AutoAlways;
+		_c.ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways;
 		_c.ZAcceptsEnter = true;
 		_c.ZHandleCreated += _c_ZHandleCreated;
 

@@ -41,7 +41,7 @@ namespace Au.Compiler
 				var b = new StringBuilder();
 				b.AppendLine(c_defaultUsings);
 				b.AppendLine("[module: DefaultCharSet(CharSet.Unicode)]\r\npublic class __script__ {\r\n#line 1");
-				b.AppendLine(code).Append("}");
+				b.AppendLine(code).Append('}');
 				code = b.ToString();
 			}
 
@@ -70,7 +70,7 @@ namespace Au.Compiler
 			return true;
 		}
 
-		const string c_defaultUsings = @"using Au; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Windows.Forms; using System.Drawing; using System.Linq;";
+		const string c_defaultUsings = @"using Au; using Au.Types; using System; using System.Collections.Generic; using System.Text; using System.Text.RegularExpressions; using System.Diagnostics; using System.Runtime.InteropServices; using System.IO; using System.Threading; using System.Threading.Tasks; using System.Linq;";
 
 		public class Result
 		{

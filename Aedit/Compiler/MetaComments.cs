@@ -136,7 +136,7 @@ namespace Au.Compiler
 	/// manifest file.manifest //manifest file of the .exe file. Can be filename or relative path, like with 'c'.
 	/// (rejected) resFile file.res //file containing native resources to add to the .exe/.dll file. Can be filename or relative path, like with 'c'.
 	/// sign file.snk //sign the output assembly with a strong name using this .snk file. Can be filename or relative path, like with 'c'. 
-	/// xmlDoc file.xml //create this XML documentation file from XML comments. If not full path, creates in the 'outputPath' directory.
+	/// xmlDoc false|true //create XML documentation file from XML comments. Creates in the 'outputPath' directory.
 	/// ]]></code>
 	/// 
 	/// About role:
@@ -145,7 +145,7 @@ namespace Au.Compiler
 	/// If role is 'classFile' (default for class files) does not create any output files from this C# file. Its purpose is to be compiled together with other C# code files.
 	/// If role is 'editorExtension', the task runs in the main UI thread of the editor process. Rarely used. Can be used to create editor extensions. The user cannot see and end the task. Creates memory leaks when executing recompiled assemblies (eg after editing the script), because old assembly versions cannot be unloaded until process exits.
 	/// 
-	/// Full path can be used with 'r', 'com', 'outputPath' and 'xmlDoc'. It can start with an environment variable or special folder name, like <c>%AFolders.ThisAppDocuments%\file.exe</c>.
+	/// Full path can be used with 'r', 'com', 'outputPath'. It can start with an environment variable or special folder name, like <c>%AFolders.ThisAppDocuments%\file.exe</c>.
 	/// Files used with other options ('c', 'resource' etc) must be in this workspace.
 	/// 
 	/// About native resources:
@@ -342,10 +342,9 @@ namespace Au.Compiler
 
 		/// <summary>
 		/// Meta 'xmlDoc'.
-		/// Default: null.
+		/// Default: false.
 		/// </summary>
-		public string XmlDocFile { get; private set; }
-		//TODO: should be bool? Because, to be useful, probably must match assembly name and must be in same folder.
+		public bool XmlDoc { get; private set; }
 
 		/// <summary>
 		/// Which options are specified.
@@ -602,7 +601,7 @@ namespace Au.Compiler
 				break;
 			case "xmlDoc":
 				_Specified(EMSpecified.xmlDoc);
-				XmlDocFile = value;
+				if (_TrueFalse(out bool xmlDOc, value)) XmlDoc = xmlDOc;
 				break;
 			//case "version": //will be auto-created from [assembly: AssemblyVersion] etc
 			//	break;
@@ -789,7 +788,7 @@ namespace Au.Compiler
 
 		public CSharpParseOptions CreateParseOptions() {
 			return new(LanguageVersion.Preview,
-				_flags.Has(EMPFlags.ForCodeInfo) ? DocumentationMode.Diagnose : (XmlDocFile != null ? DocumentationMode.Parse : DocumentationMode.None),
+				_flags.Has(EMPFlags.ForCodeInfo) ? DocumentationMode.Diagnose : (XmlDoc ? DocumentationMode.Parse : DocumentationMode.None),
 				SourceCodeKind.Regular,
 				Defines);
 		}

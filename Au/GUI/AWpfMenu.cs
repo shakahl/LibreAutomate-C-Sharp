@@ -228,7 +228,7 @@ namespace Au
 						//			AOutput.Write(k.Key);
 						//			switch(k.Key) {
 						//			case KKey.Escape: case KKey.Down: case KKey.Up: case KKey.Right: case KKey.Left: case KKey.End: case KKey.Home: case KKey.Enter:
-						//				AWnd.More.PostThreadMessage(AThread.NativeId, 0x100, (int)k.Key, 0); //WM_KEYDOWN //does not work, althoug works for an active WPF window.
+						//				AWnd.More.PostThreadMessage(AThread.Id, 0x100, (int)k.Key, 0); //WM_KEYDOWN //does not work, althoug works for an active WPF window.
 						//				//var key = Key.Down; RaiseEvent(new KeyEventArgs(Keyboard.PrimaryDevice, PresentationSource.FromVisual(this), 0, key) { RoutedEvent = Keyboard.KeyDownEvent }); //does not work
 						//				k.BlockEvent();
 						//				break;
@@ -252,7 +252,7 @@ namespace Au
 						} else if (k.IsMove && MouseClosingDistance > 0) {
 							var w = this.Hwnd(); if (!w.IsAlive) return;
 							var r = w.Rect;
-							foreach (var t in AWnd.GetWnd.ThreadWindows(AThread.NativeId, true)) if (t.ZorderIsAbove(w)) r.Union(t.Rect); //submenus etc
+							foreach (var t in AWnd.GetWnd.ThreadWindows(AThread.Id, true)) if (t.ZorderIsAbove(w)) r.Union(t.Rect); //submenus etc
 							var p = AMouse.XY;
 							int d = (int)AMath.Distance(r, p), d2 = ADpi.Scale(MouseClosingDistance, w);
 							if (!_mouseWasNear) _mouseWasNear = d <= d2 / 2; else if (d > d2) IsOpen = false;
@@ -470,6 +470,8 @@ namespace Au
 			public _MenuItem(AWpfMenu m) { _m = m; }
 
 			protected override void OnClick() {
+				base.OnClick(); //must be first, because changes IsChecked (if IsCheckable)
+
 				_m._EndModal(); //workaround for: OnClosed called with 160 ms delay. Same with native message loop.
 				if (action != null) {
 					if (startThread) AThread.Start(() => _ExecItem(), background: false); else _ExecItem();
@@ -482,7 +484,6 @@ namespace Au
 						}
 					}
 				}
-				base.OnClick();
 			}
 
 			protected override void OnPreviewMouseUp(MouseButtonEventArgs e) {

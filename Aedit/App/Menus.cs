@@ -16,8 +16,6 @@ using Microsoft.Win32;
 using Au.Util;
 using Au.Tools;
 using System.Windows.Input;
-using System.Windows.Controls;
-using System.Windows.Media;
 //using System.Linq;
 
 //TODO: now global keys (target="") work only when main window active, not when eg a floating panel active.
@@ -29,7 +27,7 @@ static class Menus
 	public static class File
 	{
 		[Command(target = "", image = "resources/images/newfile_16x.xaml")]
-		public static class New
+		public static class New //TODO: no tooltip of toolbar button
 		{
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
@@ -100,7 +98,6 @@ static class Menus
 
 			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
 			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
-			//TODO: once Ctrl+Tab stopped working until restart. Did not test click menu item.
 		}
 
 		//[Command]
@@ -229,10 +226,10 @@ static class Menus
 		public static class View
 		{
 			[Command(checkable = true, keysText = "Ctrl+W", image = "resources/images/wordwrap_16x.xaml")]
-			public static void Wrap_lines() { Panels.Editor.ZActiveDoc.ZToggleView(SciCode.EView.Wrap); }
+			public static void Wrap_lines() { Panels.Editor.ZActiveDoc.ZToggleView_call_from_menu_only_(SciCode.EView.Wrap); }
 
 			[Command(checkable = true, image = "resources/images/image_16x.xaml")]
-			public static void Images_in_code() { Panels.Editor.ZActiveDoc.ZToggleView(SciCode.EView.Images); }
+			public static void Images_in_code() { Panels.Editor.ZActiveDoc.ZToggleView_call_from_menu_only_(SciCode.EView.Images); }
 		}
 	}
 
@@ -240,13 +237,13 @@ static class Menus
 	public static class Code
 	{
 		[Command('W')]
-		public static void AWnd() { new FormAWnd().ZShow(); }
+		public static void AWnd() { new DAWnd().Show(); }
 
 		[Command('A')]
-		public static void AAcc() { new FormAAcc().ZShow(); }
+		public static void AAcc() { new DAAcc().Show(); }
 
 		[Command('I')]
-		public static void AWinImage() { new FormAWinImage().ZShow(); }
+		public static void AWinImage() { new DAWinImage().Show(); }
 
 		[Command(separator = true, keysText = "Ctrl+Space in string")]
 		public static void Keys() { CiTools.CmdShowKeysWindow(); }
@@ -255,7 +252,7 @@ static class Menus
 		public static void Regex() { CiTools.CmdShowRegexWindow(); }
 
 		[Command(separator = true)]
-		public static void Windows_API() { FormWinapi.ZShowDialog(); }
+		public static void Windows_API() { new DWinapi().Show(); }
 	}
 
 	[Command(target = "Edit")]
@@ -399,211 +396,8 @@ static class Menus
 	}
 
 #if TRACE
-	//static KPopup _test;
-	//static AHookWin _hook;
-
 	[Command]
-	public static void TEST() {
-
-		//Console.WriteLine("console");
-
-		//EdDatabases.CreateRefAndDoc();
-		//EdDatabases.CreateWinapi();
-
-
-		//var h = Panels.Editor.ZActiveDoc.Hwnd;
-		//AOutput.Write(h);
-		////h.ShowLL(false);
-		////h.ResizeLL(0, 0);
-		////h.SetWindowPos(Native.SWP.HIDEWINDOW | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOSENDCHANGING);
-		////h.Enable(false);
-		//h.SetTransparency(true, 0);
-
-		//_hook = AHookWin.ThreadCbt(k => {
-		//	if (k.code == HookData.CbtEvent.SETFOCUS) {
-		//		AOutput.Write(k.Hwnd);
-		//	if (k.Hwnd == App.Hwnd) AOutput.Write(new StackTrace());
-		//	}
-		//	return false;
-		//});
-
-
-
-		//var m = new ClassicMenu_();
-		//m.Add(1, "One");
-		//using (m.Submenu("Sub")) {
-		//	m.Add(11, "Eleven");
-		//	m.Add(12, "Twelve");
-		//}
-		//m.Add(2, "Two");
-		//m.Separator();
-		//m["Three"]=_=>AOutput.Write("Three");
-		//AOutput.Write(m.Show(App.Wmain));
-
-
-
-		//if (_test == null) {
-		//	var p = new KPopup { Size = (200, 300) };
-		//	//var p = new KPopup(WS.CAPTION|WS.MAXIMIZEBOX|WS.MINIMIZEBOX|WS.SYSMENU|WS.THICKFRAME, 0) { Size = (200, 300) };
-		//	var c = new Label { Background = Brushes.Wheat, Content = "Test" };
-		//	p.Content = c;
-		//	//p.HwndSource.SizeToContent = default;
-		//	_test = p;
-		//}
-		////_test.ShowByRect(Panels.Tasks, Dock.Bottom);
-		////_test.ShowByRect(Panels.Tasks, Dock.Bottom, (100, 100, 100, 100));
-		//_test.ShowByRect(null, Dock.Bottom, (700, 1100, 100, 1));
-
-		//ATimer.After(2000, _ => _test.Hide());
-
-		//var m = new AWpfMenu();
-		//m["aaaa"] = null;
-		//m.Show(App.Wmain, byCaret: true);
-		//m.Show(null, byCaret: true);
-
-		//AOutput.Write(Panels.Files.TreeControl.FocusedItem);
-		//AOutput.Write("---");
-		//AOutput.Write(Keyboard.FocusedElement);
-		//AOutput.Write(FocusManager.GetFocusedElement(App.Wmain));
-		//AOutput.Write(Api.GetFocus());
-
-		//foreach(var f in App.Model.Root.Descendants()) {
-		//	using var p1 = APerf.Create();
-		//	var s = f.ItemPath;
-		//	//AOutput.Write(s);
-		//}
-
-		//App.Model.NewItem(@"More\Text file.txt", name: "find.bmp");
-
-		//_TestLV();
-		//_TestNat();
-
-		//var tv = new ListBox { BorderThickness = default, SelectionMode = SelectionMode.Extended };
-		//VirtualizingPanel.SetVirtualizationMode(tv, VirtualizationMode.Recycling);
-		//var a = new string[900];
-		//for (int i = 0; i < a.Length; i++) a[i] = "Texthjhjhjhjhjh " + i;
-		//tv.ItemsSource = a;
-		//App.Panels["Files"].Content = tv;
-
-
-
-		//APerf.First();
-		//App.Panels["Files"].Content = new Nstest.Script().Test();
-		////App.Panels["Files"].Content = new Nstest.WriteableBitmap_and_GDI_text().Test();
-		//APerf.Next();
-		//ATimer.After(1, _ => APerf.NW());
-
-		//if (_testCM == null) {
-		//	_testCM = new AWpfMenu();
-		//	//App.Commands["Wrap_lines"].CopyToMenu(_testCM.Add(null));
-		//	App.Commands["View"].CopyToMenu(_testCM);
-		//}
-		//_testCM.IsOpen = true;
-
-		//var m = new Menu();
-		//var b = new MenuItem();
-		//App.Commands["View"].CopyToMenu(b);
-		//m.Items.Add(b);
-		////App.Toolbars[0].Items.Add(m);
-		////(App.Toolbars[0].Parent as ToolBarTray).ToolBars.Add(m);
-		////var p = (App.Toolbars[0].Parent as ToolBarTray).Parent as DockPanel;
-
-		////var p = new DockPanel();
-		////p.Children.Add(m);
-
-		//var p = new Border();
-		//p.Child = m;
-		//App.Toolbars[0].Items.Add(p);
-	}
-	//static AWpfMenu _testCM;
-
-	//	static void _TestLV() {
-	//		var k=new ListBox { BorderThickness = default, SelectionMode = SelectionMode.Extended };
-	//		k.UseLayoutRounding = true;
-
-	//		string xaml2 = @"<Style TargetType='{x:Type ListBoxItem}' xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation' xmlns:x='http://schemas.microsoft.com/winfx/2006/xaml'>
-	//			<Setter Property='Height' Value='18' />
-	//			<Setter Property='Padding' Value='0' />
-	//            <Setter Property='IsSelected' Value='{Binding IsSelected, Mode=TwoWay}' />
-	//            <Setter Property='FontWeight' Value='Normal' />
-	//            <Style.Triggers>
-	//                <Trigger Property='IsSelected' Value='True'>
-	//                    <Setter Property='FontWeight' Value='Bold' />
-	//                </Trigger>
-	//            </Style.Triggers>
-	//        </Style>";
-	//		k.ItemContainerStyle = XamlReader.Parse(xaml2) as Style;
-
-	//		string xaml1 = @"<DataTemplate xmlns='http://schemas.microsoft.com/winfx/2006/xaml/presentation'>
-	//<StackPanel Orientation='Horizontal'>
-	//<Image Source='{Binding Image}' Stretch='None' Height='16' Width='16'/>
-	//<TextBlock Text='{Binding Text}' Margin='6,-1,0,0'/>
-	//</StackPanel>
-	//</DataTemplate>";
-	//		k.ItemTemplate = XamlReader.Parse(xaml1) as DataTemplate;
-
-	//		VirtualizingPanel.SetVirtualizationMode(k, VirtualizationMode.Recycling);
-	//		VirtualizingPanel.SetScrollUnit(k, ScrollUnit.Item);
-
-	//		var im = BitmapFrame.Create(new Uri(@"Q:\app\Au\_Au.Editor\Resources\png\fileClass.png"));
-	//		int n = 1000;
-	//		var a = new List<TextImage>(n);
-	//		for (int i = 0; i < n; i++) {
-	//			a.Add(new TextImage("Abcdefghij " + i.ToString(), im));
-	//		}
-	//		APerf.Next('d');
-	//		k.ItemsSource = a;
-
-	//		App.Panels["Files"].Content = k;
-	//	}
-
-	//public class TextImage : INotifyPropertyChanged
-	//{
-	//	public string Text { get; set; }
-	//	public ImageSource Image { get; set; }
-	//	//	public List<TextImage> Items { get;set; }
-	//	public ObservableCollection<TextImage> Items { get; set; }
-	//	//	public bool IsExpanded { get;set; }
-
-	//	bool _isExpanded;
-	//	public bool IsExpanded {
-	//		get => _isExpanded;
-	//		set {
-	//			//			AOutput.Write(_isExpanded, value);
-	//			if (value != _isExpanded) {
-	//				_isExpanded = value;
-	//				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsExpanded"));
-	//			}
-	//		}
-	//	}
-
-	//	bool _isSelected;
-	//	public bool IsSelected {
-	//		get => _isSelected;
-	//		set {
-	//			//			AOutput.Write(_isSelected, value);
-	//			if (value != _isSelected) {
-	//				_isSelected = value;
-	//				PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("IsSelected"));
-	//			}
-	//		}
-	//	}
-
-	//	public TextImage(string text, ImageSource image) {
-	//		Text = text; Image = image;
-	//	}
-
-	//	#region INotifyPropertyChanged
-
-	//	public event PropertyChangedEventHandler PropertyChanged;
-
-	//	#endregion
-	//}
-
-	//static void _TestNat() {
-	//	//App.Panels["Files"].Content = new Nstest.Script().Test();
-
-	//}
+	public static void TEST() { Test.FromMenubar(); }
 
 	[Command]
 	public static void gc() {

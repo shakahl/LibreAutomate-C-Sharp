@@ -1159,14 +1159,15 @@ namespace Au
 			return string.Concat(t.AsSpan(0, startIndex), s, t.AsSpan(startIndex + count));
 		}
 
-		/// <summary>
-		/// Removes <i>count</i> characters from the end of this string.
-		/// Returns the result string.
-		/// </summary>
-		/// <param name="t">This string.</param>
-		/// <param name="count">Count of characters to remove.</param>
-		/// <exception cref="ArgumentOutOfRangeException"></exception>
-		public static string RemoveSuffix(this string t, int count) => t.Remove(t.Length - count);
+		//rejected. Use [..^count].
+		///// <summary>
+		///// Removes <i>count</i> characters from the end of this string.
+		///// Returns the result string.
+		///// </summary>
+		///// <param name="t">This string.</param>
+		///// <param name="count">Count of characters to remove.</param>
+		///// <exception cref="ArgumentOutOfRangeException"></exception>
+		//public static string RemoveSuffix(this string t, int count) => t.Remove(t.Length - count);
 
 		/// <summary>
 		/// Removes <i>suffix</i> string from the end.
@@ -1178,7 +1179,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
 		public static string RemoveSuffix(this string t, string suffix, bool ignoreCase = false) {
 			if (!t.Ends(suffix, ignoreCase)) return t;
-			return RemoveSuffix(t, suffix.Length);
+			return t[..^suffix.Length];
 		}
 
 		/// <summary>
@@ -1190,7 +1191,7 @@ namespace Au
 		/// <exception cref="ArgumentNullException"><i>suffix</i> is null.</exception>
 		public static string RemoveSuffix(this string t, char suffix) {
 			if (!t.Ends(suffix)) return t;
-			return RemoveSuffix(t, 1);
+			return t[..^1];
 		}
 
 		/// <summary>

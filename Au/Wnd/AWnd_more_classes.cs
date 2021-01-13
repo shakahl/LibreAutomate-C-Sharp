@@ -15,7 +15,6 @@ using System.Reflection;
 
 using Au.Types;
 using Au.Util;
-using System.Windows.Forms;
 
 namespace Au
 {
@@ -138,7 +137,7 @@ namespace Au
 				/// See also <see cref="ToString"/>.
 				/// </summary>
 				/// <exception cref="AuWndException">Failed to get rectangle, probably invalid window handle.</exception>
-				public SavedRect(Form form) : this(form.Hwnd()) { }
+				public SavedRect(System.Windows.Forms.Form form) : this(form.Hwnd()) { }
 				//public SavedRect(Form form) { //rejected
 				//	_r = form.RestoreBounds;
 				//	Dpi = AScreen.Of(RawRect).Dpi;
@@ -186,15 +185,15 @@ namespace Au
 				/// <param name="form"></param>
 				/// <param name="saved">String created by <see cref="ToString"/>.</param>
 				/// <param name="save">If not null, called when closing the window. Receives string for saving. Can save it in registry, file, anywhere.</param>
-				public static bool Restore(Form form, string saved, Action<string> save = null) {
+				public static bool Restore(System.Windows.Forms.Form form, string saved, Action<string> save = null) {
 					bool ret = FromString(saved, out var v);
 					if (ret) {
-						form.StartPosition = FormStartPosition.Manual;
+						form.StartPosition = System.Windows.Forms.FormStartPosition.Manual;
 						form.Bounds = v.NormalizeRect();
-						if (v.Maximize) form.WindowState = FormWindowState.Maximized;
+						if (v.Maximize) form.WindowState = System.Windows.Forms.FormWindowState.Maximized;
 					}
 					if (save != null) {
-						form.FormClosing += (o, _) => save(new SavedRect(o as Form).ToString());
+						form.FormClosing += (o, _) => save(new SavedRect(o as System.Windows.Forms.Form).ToString());
 					}
 					return ret;
 				}

@@ -19,7 +19,7 @@ using System.Windows;
 namespace Au.Tools
 {
 	/// <summary>
-	/// <see cref="KPopup"/>-based info window with 1 or 2 scintilla controls (<see cref="InfoBox"/>) with output tags etc.
+	/// <see cref="KPopup"/>-based info window with 1 or 2 scintilla controls (<see cref="KSciInfoBox"/>) with output tags etc.
 	/// You can set text, resize and show/hide/dispose it many times.
 	/// User can middle-click to hide.
 	/// </summary>
@@ -42,12 +42,12 @@ namespace Au.Tools
 		/// <summary>
 		/// The child control. Displays text.
 		/// </summary>
-		public InfoBox Control1 => _c;
+		public KSciInfoBox Control1 => _c;
 
 		/// <summary>
 		/// The second child control. Displays text.
 		/// </summary>
-		public InfoBox Control2 => _c2;
+		public KSciInfoBox Control2 => _c2;
 
 		/// <summary>
 		/// Text with output tags.
@@ -71,23 +71,22 @@ namespace Au.Tools
 		/// </summary>
 		public FrameworkElement InsertInControl { get; set; }
 
-		class _InfoBox : InfoBox
+		class _InfoBox : KSciInfoBox
 		{
 			//InfoWindow _t;
 
 			//public _Control(InfoWindow t) {
 			public _InfoBox() {
 				//_t = t;
-				this.ZInitUseControlFont = true;
+				this.ZInitUseControlFont = App.Wmain;
+				this.ZInitBlankMargins = (4, 4);
 			}
 
-			protected override void OnHandleCreated() {
-				base.OnHandleCreated();
-				Call(Sci.SCI_SETMARGINLEFT, 0, 4);
-				Call(Sci.SCI_SETMARGINRIGHT, 0, 4);
-				//base.NoMouseLeftSetFocus = true; //no, then cannot scroll with wheel on Win7-8.1
-				//base.NoMouseRightSetFocus = true;
-			}
+			//protected override void OnHandleCreated() {
+			//	base.OnHandleCreated();
+			//	//base.NoMouseLeftSetFocus = true; //no, then cannot scroll with wheel on Win7-8.1
+			//	//base.NoMouseRightSetFocus = true;
+			//}
 		}
 	}
 }

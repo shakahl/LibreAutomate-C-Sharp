@@ -14,4 +14,4 @@ partial class Script : AScript { [STAThread] static void Main(string[] a) => new
 }
 }
 
-//Examples, triggers, toolbars: menu New -> Examples.
+//Examples, triggers, toolbars: menu File -> New -> Examples.

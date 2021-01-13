@@ -31,36 +31,6 @@ namespace Au.Controls
 		[DllImport("user32.dll")]
 		internal static extern bool DrawFrameControl(IntPtr hdc, in RECT r, int type, int state);
 
-		[DllImport("uxtheme.dll", PreserveSig = true)]
-		internal static extern int BufferedPaintInit();
-		[DllImport("uxtheme.dll", PreserveSig = true)]
-		internal static extern int BufferedPaintUnInit();
-		[DllImport("uxtheme.dll")]
-		internal static extern IntPtr BeginBufferedPaint(IntPtr hdcTarget, in RECT prcTarget, BP_BUFFERFORMAT dwFormat, ref BP_PAINTPARAMS pPaintParams, out IntPtr phdc);
-		[DllImport("uxtheme.dll", PreserveSig = true)]
-		internal static extern int EndBufferedPaint(IntPtr hBufferedPaint, bool fUpdateTarget);
-		internal enum BP_BUFFERFORMAT
-		{
-			BPBF_COMPATIBLEBITMAP,
-			BPBF_DIB,
-			BPBF_TOPDOWNDIB,
-			BPBF_TOPDOWNMONODIB
-		}
-		internal struct BP_PAINTPARAMS
-		{
-			public int cbSize;
-			public uint dwFlags;
-			public RECT* prcExclude;
-			//public BLENDFUNCTION* pBlendFunction;
-			uint pBlendFunction;
-		}
-		//internal struct BLENDFUNCTION {
-		//	public byte BlendOp;
-		//	public byte BlendFlags;
-		//	public byte SourceConstantAlpha;
-		//	public byte AlphaFormat;
-		//}
-
 		[DllImport("shlwapi.dll")]
 		internal static extern void ColorRGBToHLS(int clrRGB, out ushort pwHue, out ushort pwLuminance, out ushort pwSaturation);
 

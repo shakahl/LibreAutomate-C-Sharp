@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
 //using System.Linq;
@@ -101,23 +100,22 @@ namespace Au.Controls
 		/// Gets some info from BITMAPINFOHEADER or BITMAPCOREHEADER.
 		/// Checks if it is valid bitmap file header. Returns false if invalid.
 		/// </summary>
-		internal static bool GetBitmapFileInfo_(byte[] mem, out BitmapFileInfo_ x)
-		{
+		internal static bool GetBitmapFileInfo_(byte[] mem, out BitmapFileInfo_ x) {
 			x = new BitmapFileInfo_();
 			fixed (byte* bp = mem) {
 				BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)bp;
 				int minHS = sizeof(BITMAPFILEHEADER) + sizeof(BITMAPCOREHEADER);
-				if(mem.Length <= minHS || f->bfType != (((byte)'M' << 8) | (byte)'B') || f->bfOffBits >= mem.Length || f->bfOffBits < minHS)
+				if (mem.Length <= minHS || f->bfType != (((byte)'M' << 8) | (byte)'B') || f->bfOffBits >= mem.Length || f->bfOffBits < minHS)
 					return false;
 
 				Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
 				int siz = h->biSize;
-				if(siz >= sizeof(Api.BITMAPINFOHEADER) && siz <= sizeof(BITMAPV5HEADER) * 2) {
+				if (siz >= sizeof(Api.BITMAPINFOHEADER) && siz <= sizeof(BITMAPV5HEADER) * 2) {
 					x.width = h->biWidth;
 					x.height = h->biHeight;
 					x.bitCount = h->biBitCount;
 					x.isCompressed = h->biCompression != 0;
-				} else if(siz == sizeof(BITMAPCOREHEADER)) {
+				} else if (siz == sizeof(BITMAPCOREHEADER)) {
 					BITMAPCOREHEADER* ch = (BITMAPCOREHEADER*)h;
 					x.width = ch->bcWidth;
 					x.height = ch->bcHeight;
@@ -173,39 +171,38 @@ namespace Au.Controls
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		/// <param name="length">If -1, calls CharPtr_.Length(s).</param>
-		internal static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1)
-		{
-			if(length < 0) length = BytePtr_.Length(s);
-			if(length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
+		internal static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1) {
+			if (length < 0) length = BytePtr_.Length(s);
+			if (length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
 
 			//special strings
-			switch(c1) {
+			switch (c1) {
 			case '~': return (c2 == ':') ? ImageType.Base64CompressedBmp : ImageType.None;
-			case 'i': if(BytePtr_.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
-			//case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
+			case 'i': if (BytePtr_.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
+				//case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
 			}
 
 			//file path
-			if(length >= 8 && (c1 == '%' || (c2 == ':' && AChar.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
+			if (length >= 8 && (c1 == '%' || (c2 == ':' && AChar.IsAsciiAlpha(c1)) || (c1 == '\\' && c2 == '\\'))) { //is image file path?
 				byte* ext = s + length - 3;
-				if(ext[-1] == '.') {
-					if(BytePtr_.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
-					if(BytePtr_.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
-					if(BytePtr_.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
-					if(BytePtr_.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
-					if(BytePtr_.AsciiStartsi(ext, "ico")) return ImageType.Ico;
-					if(BytePtr_.AsciiStartsi(ext, "cur")) return ImageType.Cur;
-					if(BytePtr_.AsciiStartsi(ext, "ani")) return ImageType.Cur;
-				} else if(AChar.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
+				if (ext[-1] == '.') {
+					if (BytePtr_.AsciiStartsi(ext, "bmp")) return ImageType.Bmp;
+					if (BytePtr_.AsciiStartsi(ext, "png")) return ImageType.PngGifJpg;
+					if (BytePtr_.AsciiStartsi(ext, "gif")) return ImageType.PngGifJpg;
+					if (BytePtr_.AsciiStartsi(ext, "jpg")) return ImageType.PngGifJpg;
+					if (BytePtr_.AsciiStartsi(ext, "ico")) return ImageType.Ico;
+					if (BytePtr_.AsciiStartsi(ext, "cur")) return ImageType.Cur;
+					if (BytePtr_.AsciiStartsi(ext, "ani")) return ImageType.Cur;
+				} else if (AChar.IsAsciiDigit(ext[2])) { //can be like C:\x.dll,10
 					byte* k = ext + 1, k2 = s + 8;
-					for(; k > k2; k--) if(!AChar.IsAsciiDigit(*k)) break;
-					if(*k == '-') k--;
-					if(*k == ',' && k[-4] == '.' && AChar.IsAsciiAlpha(k[-1])) return ImageType.IconLib;
+					for (; k > k2; k--) if (!AChar.IsAsciiDigit(*k)) break;
+					if (*k == '-') k--;
+					if (*k == ',' && k[-4] == '.' && AChar.IsAsciiAlpha(k[-1])) return ImageType.IconLib;
 				}
 			}
 
-			if(anyFile) return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
+			if (anyFile) return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
 			return ImageType.None;
 		}
 
@@ -214,8 +211,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
-		public static ImageType ImageTypeFromString(bool anyFile, string s)
-		{
+		public static ImageType ImageTypeFromString(bool anyFile, string s) {
 			var b = AConvert.ToUtf8(s);
 			fixed (byte* p = b) return ImageTypeFromString(true, p, b.Length - 1);
 		}
@@ -228,34 +224,33 @@ namespace Au.Controls
 		/// <param name="t">Image type and string format.</param>
 		/// <param name="searchPath">Use <see cref="AFile.SearchPath"/></param>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="AFolders.ThisAppImages"/>.</remarks>
-		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false)
-		{
+		public static byte[] BmpFileDataFromString(string s, ImageType t, bool searchPath = false) {
 			//AOutput.Write(t, s);
 			try {
-				switch(t) {
+				switch (t) {
 				case ImageType.Bmp:
 				case ImageType.PngGifJpg:
 				case ImageType.Cur:
-					if(searchPath) {
+					if (searchPath) {
 						s = AFile.SearchPath(s, AFolders.ThisAppImages);
-						if(s == null) return null;
+						if (s == null) return null;
 					} else {
-						if(!APath.IsFullPathExpandEnvVar(ref s)) return null;
+						if (!APath.IsFullPathExpandEnvVar(ref s)) return null;
 						s = APath.Normalize(s, AFolders.ThisAppImages);
-						if(!AFile.ExistsAsFile(s)) return null;
+						if (!AFile.ExistsAsFile(s)) return null;
 					}
 					break;
 				}
 
-				switch(t) {
+				switch (t) {
 				case ImageType.Base64CompressedBmp:
 					return AConvert.Decompress(Convert.FromBase64String(s));
 				case ImageType.Base64PngGifJpg:
-					using(var stream = new MemoryStream(Convert.FromBase64String(s), false)) {
+					using (var stream = new MemoryStream(Convert.FromBase64String(s), false)) {
 						return _ImageToBytes(Image.FromStream(stream));
 					}
 				//case ImageType.Resource:
-				//	return _ImageToBytes(AResources.GetWinformsImage(s));
+				//	return _ImageToBytes(AResources.GetGdipBitmap(s));
 				case ImageType.Bmp:
 					return File.ReadAllBytes(s);
 				case ImageType.PngGifJpg:
@@ -267,21 +262,20 @@ namespace Au.Controls
 					return _IconToBytes(s, t == ImageType.Cur, searchPath);
 				}
 			}
-			catch(Exception ex) { ADebug.Print(ex.Message + "    " + s); }
+			catch (Exception ex) { ADebug.Print(ex.Message + "    " + s); }
 			return null;
 		}
 
-		static byte[] _ImageToBytes(Image im)
-		{
-			if(im == null) return null;
+		static byte[] _ImageToBytes(Image im) {
+			if (im == null) return null;
 			try {
 				//workaround for the black alpha problem. Does not make slower.
 				var flags = (ImageFlags)im.Flags;
-				if(0 != (flags & ImageFlags.HasAlpha)) { //most png have it
+				if (0 != (flags & ImageFlags.HasAlpha)) { //most png have it
 					var t = new Bitmap(im.Width, im.Height);
 					t.SetResolution(im.HorizontalResolution, im.VerticalResolution);
 
-					using(var g = Graphics.FromImage(t)) {
+					using (var g = Graphics.FromImage(t)) {
 						g.Clear(Color.White);
 						g.DrawImageUnscaled(im, 0, 0);
 					}
@@ -296,14 +290,13 @@ namespace Au.Controls
 			finally { im.Dispose(); }
 		}
 
-		static byte[] _IconToBytes(string s, bool isCursor, bool searchPath)
-		{
+		static byte[] _IconToBytes(string s, bool isCursor, bool searchPath) {
 			//info: would be much easier with Icon.ToBitmap(), but it creates bitmap that is displayed incorrectly when we draw it in Scintilla.
 			//	Mask or alpha areas then are black.
 			//	Another way - draw it like in the png case. Not tested. Maybe would not work with cursors. Probably slower.
 
 			IntPtr hi; int siz;
-			if(isCursor) {
+			if (isCursor) {
 				hi = Api.LoadImage(default, s, Api.IMAGE_CURSOR, 0, 0, Api.LR_LOADFROMFILE | Api.LR_DEFAULTSIZE);
 				siz = Api.GetSystemMetrics(Api.SM_CXCURSOR);
 				//note: if LR_DEFAULTSIZE, uses SM_CXCURSOR, normally 32. It may be not what Explorer displays eg in Cursors folder. But without it gets the first cursor, which often is large, eg 128.
@@ -311,28 +304,28 @@ namespace Au.Controls
 				hi = AIcon.OfFile(s, 16, searchPath ? 0 : IconGetFlags.DontSearch);
 				siz = 16;
 			}
-			if(hi == default) return null;
+			if (hi == default) return null;
 			try {
 				using var m = new AMemoryBitmap(siz, siz);
 				RECT r = new RECT(0, 0, siz, siz);
 				Api.FillRect(m.Hdc, r, Api.GetStockObject(0)); //WHITE_BRUSH
-				if(!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
+				if (!Api.DrawIconEx(m.Hdc, 0, 0, hi, siz, siz)) return null;
 
 				int headersSize = sizeof(BITMAPFILEHEADER) + sizeof(Api.BITMAPINFOHEADER);
 				var a = new byte[headersSize + siz * siz * 3];
-				fixed(byte* p = a) {
+				fixed (byte* p = a) {
 					BITMAPFILEHEADER* f = (BITMAPFILEHEADER*)p;
 					Api.BITMAPINFOHEADER* h = (Api.BITMAPINFOHEADER*)(f + 1);
-					for(int i = 0; i < headersSize; i++) p[i] = 0;
+					for (int i = 0; i < headersSize; i++) p[i] = 0;
 					byte* bits = p + headersSize;
 					h->biSize = sizeof(Api.BITMAPINFOHEADER); h->biBitCount = 24; h->biWidth = siz; h->biHeight = siz; h->biPlanes = 1;
-					if(0 == Api.GetDIBits(m.Hdc, m.Hbitmap, 0, siz, bits, h, 0)) return null; //DIB_RGB_COLORS
+					if (0 == Api.GetDIBits(m.Hdc, m.Hbitmap, 0, siz, bits, h, 0)) return null; //DIB_RGB_COLORS
 					f->bfType = ((byte)'M' << 8) | (byte)'B'; f->bfOffBits = headersSize; f->bfSize = a.Length;
 				}
 				return a;
 			}
 			finally {
-				if(isCursor) Api.DestroyCursor(hi); else Api.DestroyIcon(hi);
+				if (isCursor) Api.DestroyCursor(hi); else Api.DestroyIcon(hi);
 			}
 		}
 
@@ -363,9 +356,8 @@ namespace Au.Controls
 		/// Compresses .bmp file data (<see cref="AConvert.Compress"/>) and Base64-encodes.
 		/// Returns string with "~:" prefix.
 		/// </summary>
-		public static string BmpFileDataToString(byte[] bmpFileData)
-		{
-			if(bmpFileData == null) return null;
+		public static string BmpFileDataToString(byte[] bmpFileData) {
+			if (bmpFileData == null) return null;
 			return "~:" + Convert.ToBase64String(AConvert.Compress(bmpFileData));
 		}
 
@@ -376,21 +368,43 @@ namespace Au.Controls
 		/// Returns null if path is not a valid image string or the file does not exist or failed to load.
 		/// </summary>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="AFolders.ThisAppImages"/> and standard directories.</remarks>
-		public static string ImageToString(string path)
-		{
+		public static string ImageToString(string path) {
 			var t = ImageTypeFromString(true, path);
-			switch(t) {
+			switch (t) {
 			case ImageType.None: return null;
 			case ImageType.Base64CompressedBmp:
 			case ImageType.Base64PngGifJpg:
 			//case ImageType.Resource:
 			//	return path;
 			case ImageType.PngGifJpg:
-				path = AFile.SearchPath(path, AFolders.ThisAppImages); if(path == null) return null;
+				path = AFile.SearchPath(path, AFolders.ThisAppImages); if (path == null) return null;
 				try { return "image:" + Convert.ToBase64String(AFile.LoadBytes(path)); }
-				catch(Exception ex) { ADebug.Print(ex.Message); return null; }
+				catch (Exception ex) { ADebug.Print(ex.Message); return null; }
 			}
 			return BmpFileDataToString(BmpFileDataFromString(path, t, true));
 		}
+
+		//currently not used.
+		//	When tried to display the WPF image in Image control, was blurry when high DPI, although size is correct (because bitmap's DPI is correct).
+		//	UseLayoutRounding did not help. It seems WPF scales/unscales the image don't know how many times.
+		///// <summary>
+		///// Converts GDI+ bitmap to WPF bitmap image.
+		///// </summary>
+		//public static System.Windows.Media.Imaging.BitmapSource WinformsBitmapToWpf(Bitmap bmp, bool dispose, int? dpi = null) {
+		//	var size = bmp.Size;
+		//	var bd = bmp.LockBits(new Rectangle(default, size), ImageLockMode.ReadOnly, PixelFormat.Format32bppArgb);
+		//	try {
+		//		return System.Windows.Media.Imaging.BitmapSource.Create(
+		//			size.Width, size.Height,
+		//			dpi ?? bmp.HorizontalResolution.ToInt(),
+		//			dpi ?? bmp.VerticalResolution.ToInt(),
+		//			pixelFormat: System.Windows.Media.PixelFormats.Bgra32,
+		//			null, bd.Scan0, bd.Height * bd.Stride, bd.Stride);
+		//	}
+		//	finally {
+		//		bmp.UnlockBits(bd);
+		//		if (dispose) bmp.Dispose();
+		//	}
+		//}
 	}
 }

@@ -197,7 +197,7 @@ namespace Au.Compiler
 				//Don't use classic pdb file. It is 14 KB, 2 times slower compiling, slower loading; error after switching to .NET Core: Unexpected error writing debug information -- 'The version of Windows PDB writer is older than required: 'diasymreader.dll''.
 				eOpt = new EmitOptions(debugInformationFormat: DebugInformationFormat.Embedded);
 
-				if (m.XmlDocFile != null) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = APath.Normalize(m.XmlDocFile, outPath)));
+				if (m.XmlDoc) xdStream = AFile.WaitIfLocked(() => File.Create(xdFile = outPath + "\\" + m.Name + ".xml"));
 
 				resMan = _CreateManagedResources(m);
 				if (err.ErrorCount != 0) { err.PrintAll(); return false; }

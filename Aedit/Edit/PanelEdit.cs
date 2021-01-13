@@ -20,7 +20,6 @@ using Au.Types;
 using Au.Util;
 using Au.Controls;
 using static Au.Controls.Sci;
-using System.Windows.Input;
 
 class PanelEdit : Grid
 {
@@ -30,14 +29,9 @@ class PanelEdit : Grid
 	public PanelEdit() {
 		this.Background = SystemColors.AppWorkspaceBrush;
 		App.Commands.BindKeysTarget(this, "Edit");
+		_UpdateUI_IsOpen();
+		_UpdateUI_EditView();
 	}
-
-	//protected override void OnHandleCreated(EventArgs e)
-	//{
-	//	base.OnHandleCreated(e);
-	//	_UpdateUI_IsOpen();
-	//	_UpdateUI_EditView();
-	//}
 
 	public SciCode ZActiveDoc => _activeDoc;
 
@@ -87,6 +81,7 @@ class PanelEdit : Grid
 			_ShowHideActiveDoc(false);
 			_activeDoc = doc;
 			_ShowHideActiveDoc(true);
+			_UpdateUI_IsOpen();
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
 		} else {
@@ -103,6 +98,7 @@ class PanelEdit : Grid
 			_activeDoc = doc;
 			Children.Add(doc);
 			doc._Init(text, newFile);
+			_UpdateUI_IsOpen();
 			_UpdateUI_EditEnabled();
 			ZActiveDocChanged?.Invoke();
 			//CodeInfo.FileOpened(doc);
@@ -113,7 +109,6 @@ class PanelEdit : Grid
 		_activeDoc.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap); //fast and does nothing if already is in that wrap state
 		_activeDoc.ZImages.Visible = App.Settings.edit_noImages ? AnnotationsVisible.ANNOTATION_HIDDEN : AnnotationsVisible.ANNOTATION_STANDARD;
 
-		_UpdateUI_IsOpen();
 		Panels.Find.ZUpdateQuickResults(true);
 		return true;
 	}
@@ -168,15 +163,11 @@ class PanelEdit : Grid
 	/// <summary>
 	/// Enables/disables Edit and Run toolbars/menus and some other UI parts depending on whether a document is open in editor.
 	/// </summary>
-	void _UpdateUI_IsOpen(bool asynchronously = true) {
+	void _UpdateUI_IsOpen() {
 		bool enable = _activeDoc != null;
 		if (enable != _uiDisabled_IsOpen) return;
-
-		if (asynchronously) {
-			Dispatcher.InvokeAsync(() => _UpdateUI_IsOpen(false));
-			return;
-		}
 		_uiDisabled_IsOpen = !enable;
+		_editDisabled = 0;
 
 		App.Commands[nameof(Menus.Edit)].Enabled = enable;
 		App.Commands[nameof(Menus.Code)].Enabled = enable;
@@ -199,9 +190,10 @@ class PanelEdit : Grid
 		if (disable.Has(_EUpdateUI.Copy) || d.Z.IsReadonly) disable |= _EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
-		var dif = disable ^ _editDisabled; if (dif == 0) return;
-
+		var dif = disable ^ _editDisabled;
 		//AOutput.Write(dif);
+		if (dif == 0) return;
+
 		_editDisabled = disable;
 		if (dif.Has(_EUpdateUI.Undo)) App.Commands[nameof(Menus.Edit.Undo)].Enabled = !disable.Has(_EUpdateUI.Undo);
 		if (dif.Has(_EUpdateUI.Redo)) App.Commands[nameof(Menus.Edit.Redo)].Enabled = !disable.Has(_EUpdateUI.Redo);
@@ -210,7 +202,6 @@ class PanelEdit : Grid
 		//if(dif.Has(EUpdateUI.Paste)) App.Commands[nameof(Menus.Edit.Paste)].Enabled = !disable.Has(EUpdateUI.Paste);
 
 	}
-
 	_EUpdateUI _editDisabled;
 
 	internal void _UpdateUI_EditView() {

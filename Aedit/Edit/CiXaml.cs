@@ -199,6 +199,7 @@ class CiXaml
 			_b.Append("<InlineUIContainer BaselineAlignment=\"Center\"><ContentControl Content=\"{Binding Source=")
 				.Append(source)
 				.Append(", Converter={StaticResource imageConverter}}\"/></InlineUIContainer>");
+			XamlImageResourceConverter.AddToAppResources();
 		} else {
 			_b.Append("<Image Source=\"").Append(source).Append("\" Stretch=\"None\"/>");
 		}
@@ -211,7 +212,7 @@ class CiXaml
 	public static Section Parse(string xaml) {
 		//AOutput.Write(xaml);
 
-//var a = new List<(InlineUIContainer uc, UIElement e)>(); //need if used for images, because cannot modify collection while enumerating
+		//var a = new List<(InlineUIContainer uc, UIElement e)>(); //need if used for images, because cannot modify collection while enumerating
 #if DEBUG
 		Section sec;
 		try { sec = XamlReader.Parse(xaml) as Section; }
@@ -836,18 +837,25 @@ class FlowDocumentControl : FlowDocumentScrollViewer
 	}
 }
 
-namespace XamlConverters
+//[ValueConversion(typeof(string), typeof(UIElement))]
+public class XamlImageResourceConverter : IValueConverter
 {
-	[ValueConversion(typeof(string), typeof(UIElement))]
-	public class XamlImageResourceConverter : IValueConverter
-	{
-		public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
-			return AResources.GetWpfImageElement(value as string);
-			//CONSIDER: cache? Speed 1500 mcs. Not frequent. GC is frequent.
-		}
-
-		public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
-			return DependencyProperty.UnsetValue;
-		}
+	public object Convert(object value, Type targetType, object parameter, CultureInfo culture) {
+		return AResources.GetWpfImageElement(value as string);
+		//CONSIDER: cache? Speed 1500 mcs. Not frequent. GC is frequent.
 	}
+
+	public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture) {
+		return DependencyProperty.UnsetValue;
+	}
+
+	/// <summary>
+	/// If not already done, creates XamlImageResourceConverter instance and adds to Application.Current.Resources with key "imageConverter".
+	/// Why not to do it in XAML? Because then VS compiles project twice.
+	/// </summary>
+	public static void AddToAppResources() {
+		if (s_added) return; s_added = true;
+		Application.Current.Resources["imageConverter"] = new XamlImageResourceConverter();
+	}
+	static bool s_added;
 }

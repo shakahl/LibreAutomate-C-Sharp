@@ -19,8 +19,8 @@ using System.Windows;
 
 static class Panels
 {
-	public static AuPanels PanelManager;
-	//internal static AuPanels.ILeaf DocPlaceholder_;
+	public static KPanels PanelManager;
+	//internal static KPanels.ILeaf DocPlaceholder_;
 	//panels
 	public static PanelEdit Editor;
 	public static PanelFiles Files;
@@ -36,7 +36,7 @@ static class Panels
 	public static ToolBar TFile, TEdit, TRun, TTools, THelp, TCustom1, TCustom2;
 
 	public static void LoadAndCreateToolbars() {
-		var pm = PanelManager = new AuPanels();
+		var pm = PanelManager = new KPanels();
 
 		//TODO: later remove this code. Now need to delete old custom Layout.xml. It uses wrong document etc.
 		var s1 = AppSettings.DirBS + "Layout.xml";

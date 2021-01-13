@@ -280,6 +280,34 @@ namespace Au.Types
 			NOTIMEOUTIFNOTHUNG = 0x0008,
 			ERRORONEXIT = 0x0020,
 		}
+
+		/// <summary>API <msdn>DrawTextEx</msdn> format flags.</summary>
+		[Flags]
+		public enum DT
+		{
+			CENTER = 0x1,
+			RIGHT = 0x2,
+			VCENTER = 0x4,
+			BOTTOM = 0x8,
+			WORDBREAK = 0x10,
+			SINGLELINE = 0x20,
+			EXPANDTABS = 0x40,
+			TABSTOP = 0x80,
+			NOCLIP = 0x100,
+			EXTERNALLEADING = 0x200,
+			CALCRECT = 0x400,
+			NOPREFIX = 0x800,
+			INTERNAL = 0x1000,
+			EDITCONTROL = 0x2000,
+			PATH_ELLIPSIS = 0x4000,
+			END_ELLIPSIS = 0x8000,
+			MODIFYSTRING = 0x10000,
+			RTLREADING = 0x20000,
+			WORD_ELLIPSIS = 0x40000,
+			NOFULLWIDTHCHARBREAK = 0x80000,
+			HIDEPREFIX = 0x100000,
+			PREFIXONLY = 0x200000
+		}
 	}
 
 	//These are too often used to be in Native class.

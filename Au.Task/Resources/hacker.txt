@@ -3,5 +3,5 @@ Exe=    64\Au.AppHost.exe
 SaveAs= Au.Task.exe
 Log= CONSOLE
 [COMMANDS]
--add ..\_Au.Editor\Resources\ico\app_native.ico, ICONGROUP,32512,0
--addoverwrite ..\_Au.Editor\Resources\Au.manifest, MANIFEST,1,0
+-add ..\Aedit\Resources\ico\app.ico, ICONGROUP,32512,0
+-addoverwrite ..\Aedit\Resources\Au.manifest, MANIFEST,1,0

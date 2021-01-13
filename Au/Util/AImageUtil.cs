@@ -19,7 +19,7 @@ using System.Windows.Controls;
 namespace Au.Util
 {
 	/// <summary>
-	/// Loads WPF and winforms images from file, resource or string.
+	/// Loads WPF and GDI+/winforms images from file, resource or string.
 	/// </summary>
 	/// <seealso cref="AResources"/>
 	public static class AImageUtil
@@ -49,12 +49,12 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Loads winforms image from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
+		/// Loads GDI+ image from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
 		/// </summary>
 		/// <param name="s">Base-64 string with prefix "image:" or "~:".</param>
 		/// <exception cref="ArgumentException">String does not start with "image:"/"~:" or is invalid Base-64.</exception>
 		/// <exception cref="Exception"></exception>
-		public static System.Drawing.Bitmap LoadWinformsImageFromString(string s)
+		public static System.Drawing.Bitmap LoadGdipBitmapFromString(string s)
 			=> new System.Drawing.Bitmap(LoadImageStreamFromString(s));
 
 		/// <summary>
@@ -67,11 +67,11 @@ namespace Au.Util
 			=> BitmapFrame.Create(LoadImageStreamFromString(s));
 
 		/// <summary>
-		/// Calls <see cref="LoadWinformsImageFromString"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
+		/// Calls <see cref="LoadGdipBitmapFromString"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
 		/// </summary>
-		public static System.Drawing.Bitmap TryLoadWinformsImageFromString(string s, bool warning)
+		public static System.Drawing.Bitmap TryLoadGdipBitmapFromString(string s, bool warning)
 		{
-			try { return LoadWinformsImageFromString(s); }
+			try { return LoadGdipBitmapFromString(s); }
 			catch(Exception ex) { if(warning) AWarning.Write(ex.ToStringWithoutStack()); }
 			return null;
 		}
@@ -87,21 +87,21 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Loads winforms image or icon from file, resource or string.
+		/// Loads GDI+ image or icon from file, resource or string.
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
 		/// - file path. Can have prefix "imagefile:".
-		/// - resource path that starts with "resources/" or has prefix "resource:" (<see cref="AResources.GetWinformsImage"/>)
-		/// - Base-64 image with prefix "image:" (<see cref="LoadWinformsImageFromString"/>).
+		/// - resource path that starts with "resources/" or has prefix "resource:" (<see cref="AResources.GetGdipBitmap"/>)
+		/// - Base-64 image with prefix "image:" (<see cref="LoadGdipBitmapFromString"/>).
 		/// </param>
 		/// <exception cref="Exception"></exception>
-		public static System.Drawing.Bitmap LoadWinformsImageFromFileOrResourceOrString(string image) {
+		public static System.Drawing.Bitmap LoadGdipBitmapFromFileOrResourceOrString(string image) {
 			if (HasImageStringPrefix(image))
-				return LoadWinformsImageFromString(image);
+				return LoadGdipBitmapFromString(image);
 			if (AResources.HasResourcePrefix(image))
-				return AResources.GetWinformsImage(image);
-			if (image.Starts("imagefile:")) image = image[..10];
+				return AResources.GetGdipBitmap(image);
+			if (image.Starts("imagefile:")) image = image[10..];
 			image = APath.Normalize(image, AFolders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
 			return System.Drawing.Image.FromFile(image) as System.Drawing.Bitmap ?? throw new ArgumentException("Bad image format.");
 		}

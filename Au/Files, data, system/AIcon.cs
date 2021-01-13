@@ -21,7 +21,7 @@ namespace Au
 	/// Gets icons for files etc. Contains native icon handle.
 	/// </summary>
 	/// <remarks>
-	/// Native icons must be destroyed, it is very important. An <b>AIcon</b> variable destroys its native icon when disposing it. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Note: it's not a reference type and does not have a finalizer that could be called by GC. But usually you need not native handle but <b>Icon</b>, <b>Bitmap</b> or <b>ImageSource</b>. Then use <see cref="ToWinformsIcon"/>, <see cref="ToWinformsBitmap"/> or <see cref="ToWpfImage"/>. By default they dispose the native icon and clear the <b>AIcon</b> variable; then don't need to dispose it.
+	/// Native icons must be destroyed, it is very important. An <b>AIcon</b> variable destroys its native icon when disposing it. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Note: it's not a reference type and does not have a finalizer that could be called by GC. But usually you need not native handle but <b>Icon</b>, <b>Bitmap</b> or <b>ImageSource</b>. Then use <see cref="ToGdipIcon"/>, <see cref="ToGdipBitmap"/> or <see cref="ToWpfImage"/>. By default they dispose the native icon and clear the <b>AIcon</b> variable; then don't need to dispose it.
 	/// </remarks>
 	public struct AIcon :IDisposable
 	{
@@ -469,14 +469,14 @@ namespace Au
 		//}
 
 		/// <summary>
-		/// Converts native icon to winforms icon object.
+		/// Converts native icon to GDI+ icon object.
 		/// Returns null if <i>Handle</i> is default(IntPtr).
 		/// </summary>
 		/// <param name="destroyNative">
 		/// If true (default), the returned variable owns the native icon and destroys it when disposing; also clears this variable and don't need to dispose it.
 		/// If false, the returned variable just uses the native icon handle of this variable and will not destroy; later will need to dispose this variable.
 		/// </param>
-		public Icon ToWinformsIcon(bool destroyNative = true)
+		public Icon ToGdipIcon(bool destroyNative = true)
 		{
 			if(_handle == default) return null;
 			var R = Icon.FromHandle(_handle);
@@ -501,14 +501,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Converts native icon to winforms bitmap object.
+		/// Converts native icon to GDI+ bitmap object.
 		/// Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
 		/// </summary>
 		/// <param name="destroyNative">
 		/// If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
 		/// If false, later will need to dispose this variable.
 		/// </param>
-		public Bitmap ToWinformsBitmap(bool destroyNative = true)
+		public Bitmap ToGdipBitmap(bool destroyNative = true)
 		{
 			//note: don't use Bitmap.FromHicon. It just calls GdipCreateBitmapFromHICON which does not support alpha etc.
 

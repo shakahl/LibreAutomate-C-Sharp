@@ -104,24 +104,24 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Gets winforms image.
+		/// Gets GDI+ image.
 		/// </summary>
 		/// <param name="name">Can be resource name like "file.png" or "sub/file.png" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
-		public static System.Drawing.Bitmap GetWinformsImage(string name) {
+		public static System.Drawing.Bitmap GetGdipBitmap(string name) {
 			return new System.Drawing.Bitmap(GetStream(name));
 		}
 
 		/// <summary>
-		/// Gets winforms icon.
+		/// Gets GDI+ icon.
 		/// </summary>
 		/// <param name="name">Can be resource name like "file.ico" or "sub/file.ico" or "&lt;LoadedAssemblyName&gt;file.ico". Can have prefix "resource:".</param>
 		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
 		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
 		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
-		public static System.Drawing.Icon GetWinformsIcon(string name) {
+		public static System.Drawing.Icon GetGdipIcon(string name) {
 			return new System.Drawing.Icon(GetStream(name));
 		}
 

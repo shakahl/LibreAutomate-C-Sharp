@@ -168,7 +168,7 @@ namespace Au
 		/// Returns true if <see cref="ToggleButton.IsChecked"/> == true.
 		/// </summary>
 		/// <param name="t"></param>
-		public static bool IsCheck(this CheckBox t) => t.IsChecked.GetValueOrDefault();
+		public static bool True(this CheckBox t) => t.IsChecked.GetValueOrDefault();
 
 #if true
 		static unsafe void _Move(Window t, int x, int y, in RECT r, bool andSize) {

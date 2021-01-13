@@ -18,7 +18,7 @@ using System.Windows;
 
 partial class FilesModel
 {
-	public class FilesView : AuTreeView
+	public class FilesView : KTreeView
 	{
 		public FilesView() {
 			SetMultiSelect(toggle: false);
