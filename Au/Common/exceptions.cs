@@ -26,48 +26,16 @@ namespace Au.Types
 	public class AuException :Exception, ISerializable
 	{
 		/// <summary>
-		/// Sets Message = "Failed.".
-		/// Sets NativeErrorCode = 0.
+		/// Sets <b>Message</b> = <i>message</i> (default "Failed.").
+		/// Sets <b>NativeErrorCode</b> = 0.
 		/// </summary>
-		public AuException() : base("Failed.") { }
-
-		//TODO: Now ctors are confusing (which sets last error?).
-		//	Maybe add inherited class AuExceptionLE that uses last error, and remove last error from AuException.
-		//	Or add non-optional parameter bool setLastError.
-		//	Or int? errorCode.
+		public AuException(string message = "Failed.", Exception innerException = null) : base(message, innerException) { }
 
 		/// <summary>
-		/// Sets Message = message.
-		/// Sets NativeErrorCode = 0.
+		/// Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : ALastError.Code</c>.
+		/// Sets <b>Message</b> = <c>message + " " + ALastError.MessageFor(NativeErrorCode)</c>.
 		/// </summary>
-		public AuException(string message) : base(message ?? "Failed.") { }
-
-		/// <summary>
-		/// Sets Message = "Failed. " + ALastError.MessageFor(errorCode).
-		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
-		/// </summary>
-		public AuException(int errorCode) : this(errorCode, "Failed.") { }
-
-		/// <summary>
-		/// Sets Message = message + " " + ALastError.MessageFor(errorCode).
-		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
-		/// </summary>
-		public AuException(int errorCode, string message) : base(message ?? "Failed.")
-		{
-			NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code;
-		}
-
-		/// <summary>
-		/// Sets Message = message + "\r\n\t" + innerException.Message.
-		/// Sets NativeErrorCode = 0.
-		/// </summary>
-		public AuException(string message, Exception innerException) : base(message ?? "Failed.", innerException) { }
-
-		/// <summary>
-		/// Sets Message = message + " " + ALastError.MessageFor(errorCode) + "\r\n\t" + innerException.Message.
-		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
-		/// </summary>
-		public AuException(int errorCode, string message, Exception innerException) : base(message ?? "Failed.", innerException)
+		public AuException(int errorCode, string message = "Failed.", Exception innerException = null) : base(message, innerException)
 		{
 			NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code;
 		}
@@ -169,41 +137,17 @@ namespace Au.Types
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
 
 		/// <summary>
-		/// Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
-		/// Sets Message = "Failed.".
+		/// Sets <b>Message</b> = <i>message</i> (default "Failed.").
+		/// Sets <b>NativeErrorCode</b> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
 		/// </summary>
-		public AuWndException(AWnd w)
-			: base() { Window = w; NativeErrorCode = _Code(0, w); }
-
-		/// <summary>
-		/// Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
-		/// </summary>
-		public AuWndException(AWnd w, string message)
-			: base(message) { Window = w; NativeErrorCode = _Code(0, w); }
-
-		/// <summary>
-		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
-		/// Sets Message = "Failed.".
-		/// </summary>
-		public AuWndException(AWnd w, int errorCode)
-			: base(_Code(errorCode, w)) { Window = w; }
-
-		/// <summary>
-		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
-		/// </summary>
-		public AuWndException(AWnd w, int errorCode, string message)
-			: base(_Code(errorCode, w), message) { Window = w; }
-
-		/// <summary>
-		/// Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
-		/// </summary>
-		public AuWndException(AWnd w, string message, Exception innerException)
+		public AuWndException(AWnd w, string message = "Failed.", Exception innerException = null)
 			: base(message, innerException) { Window = w; NativeErrorCode = _Code(0, w); }
 
 		/// <summary>
-		/// Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+		/// Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE)</c>.
+		/// Sets <b>Message</b> = <c>message + " " + ALastError.MessageFor(NativeErrorCode)</c>.
 		/// </summary>
-		public AuWndException(AWnd w, int errorCode, string message, Exception innerException)
+		public AuWndException(AWnd w, int errorCode, string message = "Failed.", Exception innerException = null)
 			: base(_Code(errorCode, w), message, innerException) { Window = w; }
 
 		static int _Code(int code, AWnd w)

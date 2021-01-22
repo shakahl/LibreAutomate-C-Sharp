@@ -293,69 +293,6 @@ partial class TestScript : AScript
 	//static extern int Cpp_Uninstall();
 
 
-	void TestMenu() {
-		var m = new AMenu();
-		m["One"] = o => AOutput.Write(o);
-		m["Two"] = o => AOutput.Write(o);
-		m.LazySubmenu("Submenu 1", _ => {
-			AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-			m["Three"] = o => AOutput.Write(o);
-			m["Four"] = o => AOutput.Write(o);
-			m.LazySubmenu("Submenu 2", _ => {
-				AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-				m["Five"] = o => AOutput.Write(o);
-				m["Six"] = o => AOutput.Write(o);
-			});
-			m["Seven"] = o => AOutput.Write(o);
-		});
-		m["Eight"] = o => AOutput.Write(o);
-		m.Show();
-
-	}
-
-	//void TestMenu2()
-	//{
-	//	var m = new AMenu();
-	//	m["One"] = o => AOutput.Write(o);
-	//	m["Two"] = o => AOutput.Write(o);
-	//	m.LazySubmenu("Submenu 1").Fill = _ => {
-	//		AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-	//		m["Three"] = o => AOutput.Write(o);
-	//		m["Four"] = o => AOutput.Write(o);
-	//		m.LazySubmenu("Submenu 2", _ => {
-	//			AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-	//			m["Five"] = o => AOutput.Write(o);
-	//			m["Six"] = o => AOutput.Write(o);
-	//		});
-	//		m["Seven"] = o => AOutput.Write(o);
-	//	};
-	//	m["Eight"] = o => AOutput.Write(o);
-	//	m.Show();
-
-	//}
-
-	//void TestMenu2()
-	//{
-	//	var m = new AMenu();
-	//	m["One"] = o => AOutput.Write(o);
-	//	m["Two"] = o => AOutput.Write(o);
-	//	m.LazySubmenu("Submenu 1");
-	//	m.LazyFill = _ => {
-	//		AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-	//		m["Three"] = o => AOutput.Write(o);
-	//		m["Four"] = o => AOutput.Write(o);
-	//		m.LazySubmenu("Submenu 2", _ => {
-	//			AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-	//			m["Five"] = o => AOutput.Write(o);
-	//			m["Six"] = o => AOutput.Write(o);
-	//		});
-	//		m["Seven"] = o => AOutput.Write(o);
-	//	};
-	//	m["Eight"] = o => AOutput.Write(o);
-	//	m.Show();
-
-	//}
-
 #if false
 	void TestToolbar()
 	{
@@ -704,31 +641,6 @@ partial class TestScript : AScript
 	//		}
 	//	}
 
-	void TestMenuDefaultIcon() {
-		var m = new AMenu();
-		var c = m.Control;
-
-		//AOutput.Write(c.ShowItemToolTips);
-		c.ShowItemToolTips = false;
-		//c.BackColor = Color.Wheat;
-		//c.Font = new Font("Courier New", 20);
-
-		m.DefaultIcon = AIcon.OfFile(@"q:\app\macro.ico", 16).ToGdipBitmap();
-		m.DefaultSubmenuIcon = AIcon.OfFile(@"q:\app\menu.ico", 16).ToGdipBitmap();
-		m.ExtractIconPathFromCode = true;
-		m["aa"] = null;
-		//m.LastMenuItem.ToolTipText = "TT";
-		using (m.Submenu("sub")) {
-			m["bb"] = null;
-			m["dd", @"q:\app\copy.ico"] = null;
-			m["notepad"] = o => AFile.Run("notepad.exe");
-		}
-		m.Separator();
-		m["cc", ""] = null;
-		m.Show();
-
-	}
-
 	[MethodImpl(MethodImplOptions.NoInlining | MethodImplOptions.AggressiveOptimization)]
 	bool TestArrayExt(string[] a) {
 		return a.NE_();
@@ -814,44 +726,6 @@ partial class TestScript : AScript
 	//		100.ms();
 	//	}
 	//}
-	void TestMenuDropdownBug() {
-		bool test = AKeys.IsScrollLock;
-		{
-			var m = new AMenu();
-			m["0"] = o => AOutput.Write(o);
-			ATimer.After(30, _ => m.Close());
-			m.Show();
-		}
-		for (int j = 0; j < 1; j++) {
-			ADebug.MemorySetAnchor_();
-
-			APerf.First();
-			var m = new AMenu();
-			if (test) m.Control.ShowItemToolTips = false;
-
-			for (int i = 0; i < 100; i++) {
-				m["1"] = o => AOutput.Write(o);
-			}
-			APerf.Next();
-			//foreach(ToolStripMenuItem v in m.Control.Items) {
-			//	if(v.HasDropDown) AOutput.Write("has");
-			//}
-			//APerf.Next();
-			//if(test) {
-			//	m.Control.ShowItemToolTips = true;
-			//	APerf.Next();
-			//}
-
-			ADebug.MemoryPrint_();
-			APerf.Write();
-
-			//m.Show();
-
-			//ADebug.MemoryPrint_();
-
-			100.ms();
-		}
-	}
 
 	//class Implement : IDisposable
 	//{

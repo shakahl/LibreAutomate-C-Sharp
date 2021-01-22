@@ -49,7 +49,7 @@ class PanelOpen : DockPanel
 			break;
 		case MouseButton.Right:
 			_tv.Select(e.Item);
-			switch (ClassicMenu_.ShowSimple("Close\tM-click|Close all other|Close all", this)) {
+			switch (AMenu.ShowSimple("Close\tM-click|Close all other|Close all", this)) {
 			case 1:
 				_CloseFile();
 				break;

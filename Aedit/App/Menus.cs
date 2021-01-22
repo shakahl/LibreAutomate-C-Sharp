@@ -270,7 +270,7 @@ static class Menus
 			}
 			var t = App.Tasks.GetRunsingleTask(); if (t == null) return;
 			//TODO: show all running, because runSingle now not default
-			switch (ClassicMenu_.ShowSimple("End task  " + t.f.DisplayName, App.Wmain)) {
+			switch (AMenu.ShowSimple("End task  " + t.f.DisplayName, App.Hwnd)) {
 			case 1: App.Tasks.EndTask(t); break;
 			}
 		}

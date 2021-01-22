@@ -265,7 +265,7 @@ AOpt.Mouse.MoveSleepFinally = 10;]]>
 			<list item ="Static">
 				<![CDATA[APerf.First();$end$
 APerf.Next();
-APerf.Write();]]>
+APerf.NW();]]>
 			</list>
 			<list item ="Local">
 				<![CDATA[var p1 = APerf.Create();$end$
@@ -322,15 +322,6 @@ case 2:  break;
 case 3:  break;
 default: return;
 }]]>
-			</list>
-			<list item="Menu with switch expression">
-				<![CDATA[var s = AMenu.ShowSimple("1 One|2 Two|3 Three||0 Cancel") switch {
-	1 => "one",
-	2 => "two",
-	3 => "three",
-	_ => null
-};
-if (s == null) return;]]>
 			</list>
 		</snippet>
 

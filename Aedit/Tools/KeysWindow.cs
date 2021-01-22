@@ -63,7 +63,7 @@ namespace Au.Tools
 				//var a = typeof(KKey).GetEnumNames().Where(o => !(o.Length==1 ||(o.Length==2&& o[0]=='D') || o.Starts("Mouse"))).ToArray();
 				//Array.Sort(a);
 
-				int j = ClassicMenu_.ShowSimple(s_keys, Hwnd) - 1;
+				int j = AMenu.ShowSimple(s_keys, Hwnd) - 1;
 				if (j < 0) return;
 				s = s_keys[j];
 				j = s.IndexOf(' '); if (j > 0) s = s[..j];

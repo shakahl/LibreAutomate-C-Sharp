@@ -136,8 +136,7 @@ class CiGoTo
 	/// If need to open website, runs async task.
 	/// </summary>
 	/// <param name="linkData">String returned by <see cref="GetLinkData"/>.</param>
-	/// <param name="menuOwner">Owner for context menu. Need it when there are multiple locations.</param>
-	public static void LinkGoTo(string linkData, UIElement menuOwner) {
+	public static void LinkGoTo(string linkData) {
 		if (linkData == null) return;
 		bool inSource = !linkData.Starts("||");
 		var g = new CiGoTo(inSource);
@@ -154,21 +153,20 @@ class CiGoTo
 			g._docId = a[3];
 			if (!a[4].NE()) g._typeName = a[4];
 		}
-		g.GoTo(menuOwner);
+		g.GoTo();
 	}
 
 	/// <summary>
 	/// Opens symbol source file/line/position or website.
 	/// If need to open website, runs async task.
 	/// </summary>
-	/// <param name="menuOwner">Owner for context menu. Need it when there are multiple locations.</param>
-	public void GoTo(UIElement menuOwner) {
+	public void GoTo() {
 		if (!_canGoTo) return;
 		if (_inSource) {
 			if (_sourceLocations.Count == 1) {
 				_GoTo(_sourceLocations[0]);
 			} else {
-				int i = ClassicMenu_.ShowSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray(), menuOwner);
+				int i = AMenu.ShowSimple(_sourceLocations.Select(v => v.file + ", line " + v.line.ToString()).ToArray());
 				if (i > 0) _GoTo(_sourceLocations[i - 1]);
 			}
 
@@ -209,11 +207,11 @@ class CiGoTo
 	}
 
 	public static void GoToSymbolFromPos(bool onCtrlClick = false) {
-		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out var cd);
+		var (sym, _, helpKind, token) = CiUtil.GetSymbolEtcFromPos(out _);
 		if (sym != null) {
 			//AOutput.Write(sym);
 			var g = new CiGoTo(sym, onlyIfInSource: onCtrlClick);
-			if (g.CanGoTo) g.GoTo(cd.sciDoc);
+			if (g.CanGoTo) g.GoTo();
 		} else if (helpKind == CiUtil.HelpKind.String && token.IsKind(SyntaxKind.StringLiteralToken)) {
 			var s = token.ValueText;
 			if (s.Ends(".cs", true)) App.Model.OpenAndGoTo(s);

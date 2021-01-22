@@ -19,7 +19,7 @@ static class App
 	internal static AOutputServer OutputServer;
 	public static AppSettings Settings;
 	public static MainWindow Wmain;
-	public static AWnd Hwnd; //of Wnd
+	public static AWnd Hwnd; //of Wmain
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
@@ -256,6 +256,7 @@ static class App
 				hIcon = _GetIcon(),
 				szTip = App.AppName
 			};
+			ALastError.Clear();
 			if (Api.Shell_NotifyIcon(Api.NIM_ADD, d)) {
 				//d.uFlags = 0;
 				//d.uVersion = Api.NOTIFYICON_VERSION_4;
@@ -320,10 +321,9 @@ static class App
 		}
 
 		static void _ContextMenu() {
-			//Don't use AWpfMenu. Slow, adds +24 MB (6->30), no per-monitor DPI, no keys, etc.
-			var m = new ClassicMenu_();
+			var m = new AMenu();
 			m.Add(1, "End runSingle task\tSleep", disable: Tasks.GetRunsingleTask() == null);
-			m.Add(2, "Disable triggers\tM-click", check: _disabled);
+			m.Add(2, "Disable triggers\tM-click").IsChecked = _disabled;
 			m.Separator();
 			m.Add(10, "Exit");
 

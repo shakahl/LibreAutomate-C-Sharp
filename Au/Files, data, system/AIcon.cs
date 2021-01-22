@@ -9,6 +9,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Drawing;
 //using System.Linq;
 
@@ -585,6 +586,65 @@ namespace Au
 
 		//tested: shell imagelist icon sizes match these.
 		//note: don't use GetSystemMetrics(SM_CXSMICON/SM_CXICON). They are for other purposes, eg window title bar, tray icon. On Win7 they can be different because can be changed in Control Panel. Used by SystemInformation.SmallIconSize etc.
+
+		/// <summary>
+		/// Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
+		/// Also supports code patterns like <c>AFolders.System + "notepad.exe"</c> or <c>AFolders.Virtual.RecycleBin</c>.
+		/// Returns null if no such string/pattern.
+		/// </summary>
+		internal static string IconPathFromCode_(MethodInfo mi) {
+			//support code pattern like 'AFolders.System + "notepad.exe"'.
+			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
+			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
+			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
+			//also code pattern like 'AFile.TryRun("notepad.exe")'.
+			//AOutput.Write(mi.Name);
+			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
+			try {
+				var reader = new ILReader(mi);
+				foreach (var instruction in reader.Instructions) {
+					if (++i > 100) break;
+					var op = instruction.Op;
+					//AOutput.Write(op);
+					if (op == OpCodes.Nop) {
+						i--;
+					} else if (op == OpCodes.Ldstr) {
+						var s = instruction.Data as string;
+						//AOutput.Write(s);
+						if (i == patternStart + 1) filename = s;
+						else {
+							if (APath.IsFullPathExpandEnvVar(ref s)) return s; //eg AFile.TryRun(@"%AFolders.System%\notepad.exe");
+							if (APath.IsUrl(s) || APath.IsShellPath_(s)) return s;
+							filename = null; patternStart = -1;
+							if (i == 1) filename2 = s;
+						}
+					} else if (op == OpCodes.Call && instruction.Data is MethodInfo f && f.IsStatic) {
+						//AOutput.Write(f, f.DeclaringType, f.Name, f.MemberType, f.ReturnType, f.GetParameters().Length);
+						var dt = f.DeclaringType;
+						if (dt == typeof(AFolders) || dt == typeof(AFolders.Virtual)) {
+							if (f.ReturnType == typeof(FolderPath) && f.GetParameters().Length == 0) {
+								//AOutput.Write(1);
+								f1 = f;
+								patternStart = i;
+							}
+						} else if (dt == typeof(FolderPath)) {
+							if (i == patternStart + 2 && f.Name == "op_Addition") {
+								//AOutput.Write(2);
+								var fp = (FolderPath)f1.Invoke(null, null);
+								if ((string)fp == null) return null;
+								return fp + filename;
+							} else if (i == patternStart + 1 && f.Name == "op_Implicit" && f.ReturnType == typeof(string)) {
+								//AOutput.Write(3);
+								return (FolderPath)f1.Invoke(null, null);
+							}
+						}
+					}
+				}
+				if (filename2 != null && filename2.Ends(".exe", true)) return AFile.SearchPath(filename2);
+			}
+			catch (Exception ex) { ADebug.Print(ex); }
+			return null;
+		}
 	}
 }
 

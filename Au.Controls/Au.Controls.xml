@@ -1811,7 +1811,7 @@
             If without prefix, gets file icon; see <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             </summary>
             <remarks>
-            To load image the control calls <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            To load image the control calls <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
             The control uses <see cref="T:Au.Util.AIconImageCache"/>; see <see cref="P:Au.Controls.KTreeView.ImageCache"/>.
             </remarks>
         </member>

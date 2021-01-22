@@ -116,7 +116,6 @@ class CiSignature
 				var trigger = new SignatureHelpTriggerInfo(ch == default ? SignatureHelpTriggerReason.InvokeSignatureHelpCommand : SignatureHelpTriggerReason.TypeCharCommand, ch);
 				foreach (var p in providers) {
 					var r2 = await p.GetItemsAsync(cd.document, cd.pos16, trigger, cancelToken).ConfigureAwait(false);
-					//TODO: support meta testInternal (now all null)
 					if (cancelToken.IsCancellationRequested) { /*AOutput.Write("IsCancellationRequested");*/ return null; } //often
 					if (r2 == null) continue;
 					if (r == null || r2.ApplicableSpan.Start > r.ApplicableSpan.Start) {
@@ -155,7 +154,8 @@ class CiSignature
 		var start = aspan.Start;
 		bool aspanStart = cd.code[aspan.Start] == '('; //normally End is at ')' and Start is < '(', but for tuple End is after ')' and Start is at '('
 		var toke = root.FindToken(aspanStart ? aspan.Start : aspan.End);
-		//CiUtil.HiliteRange(aspan); //return;
+		//CiUtil.HiliteRange(aspan);
+		//return;
 
 		SyntaxNode node;
 		if (aspanStart) {
@@ -166,14 +166,17 @@ class CiSignature
 			case SyntaxKind.CloseBracketToken:
 				node = toke.Parent;
 				break;
-			default: //no closing ) or ]
-				toke = toke.GetPreviousToken();
+			default: //no closing )]>
+				toke = toke.GetPreviousToken(); //toke = root.FindToken(cd.pos16); //both don't work for eg List< (no closing >), because there is BinaryExpressionSyntax instead of TypeArgumentListSyntax
 				node = toke.Parent.FirstAncestorOrSelf<SyntaxNode>(o => _IsArglistNode(o), false);
-				if (node == null || node.SpanStart < start) { ADebug.Print("TODO"); return; }
+				if (node == null || node.SpanStart < start) { /*ADebug.Print("todo");*/ return; } //eg List< (no closing >), difficult to detect. Never mind.
 				break;
 			}
 		}
-		bool _IsArglistNode(SyntaxNode sn) => sn is BaseArgumentListSyntax || sn is AttributeArgumentListSyntax || sn is TypeArgumentListSyntax; //includes ArgumentListSyntax and BracketedArgumentListSyntax
+		bool _IsArglistNode(SyntaxNode sn) {
+			//AOutput.Write(sn.GetType());
+			return sn is BaseArgumentListSyntax || sn is AttributeArgumentListSyntax || sn is TypeArgumentListSyntax; //includes ArgumentListSyntax and BracketedArgumentListSyntax
+		}
 
 		start = Math.Max(aspan.Start, node.SpanStart);
 		var argSpan = new TextSpan(start, aspan.End - start);
@@ -209,7 +212,7 @@ class CiSignature
 
 		var rect = RECT.Union(CiUtil.GetCaretRectFromPos(doc, aspan.Start), CiUtil.GetCaretRectFromPos(doc, cd.pos16));
 		doc.Hwnd.MapClientToScreen(ref rect);
-		rect.Width += ADpi.Scale(200);
+		rect.Width += ADpi.Scale(200, doc.Hwnd);
 		rect.left -= 6;
 
 		_xamlPopup ??= new CiPopupXaml(CiPopupXaml.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {

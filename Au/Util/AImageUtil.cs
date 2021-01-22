@@ -30,6 +30,11 @@ namespace Au.Util
 		public static bool HasImageStringPrefix(string s) => s.Starts("image:") || s.Starts("~:");
 
 		/// <summary>
+		/// Returns true if string starts with "resource:" or "resources/" or "imagefile:" or "image:" or "~:".
+		/// </summary>
+		public static bool HasImageOrResourcePrefix(string s) => AResources.HasResourcePrefix(s) || 0 != s.Starts(false, "imagefile:", "image:", "~:");
+
+		/// <summary>
 		/// Loads image as stream from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
 		/// </summary>
 		/// <param name="s">Base-64 string with prefix "image:" or "~:".</param>
@@ -87,7 +92,7 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Loads GDI+ image or icon from file, resource or string.
+		/// Loads GDI+ image from file, resource or string.
 		/// </summary>
 		/// <param name="image">
 		/// Can be:
@@ -95,10 +100,13 @@ namespace Au.Util
 		/// - resource path that starts with "resources/" or has prefix "resource:" (<see cref="AResources.GetGdipBitmap"/>)
 		/// - Base-64 image with prefix "image:" (<see cref="LoadGdipBitmapFromString"/>).
 		/// </param>
+		/// <param name="xaml">If not null, supports XAML images. See <see cref="LoadGdipBitmapFromXaml"/>.</param>
 		/// <exception cref="Exception"></exception>
-		public static System.Drawing.Bitmap LoadGdipBitmapFromFileOrResourceOrString(string image) {
+		public static System.Drawing.Bitmap LoadGdipBitmapFromFileOrResourceOrString(string image, (SIZE size, int dpi)? xaml = null) {
 			if (HasImageStringPrefix(image))
 				return LoadGdipBitmapFromString(image);
+			if (xaml != null && (image.Ends(".xaml", true) || image.Starts('<')))
+				return LoadGdipBitmapFromXaml(image, xaml.Value.size, xaml.Value.dpi);
 			if (AResources.HasResourcePrefix(image))
 				return AResources.GetGdipBitmap(image);
 			if (image.Starts("imagefile:")) image = image[10..];
@@ -119,7 +127,7 @@ namespace Au.Util
 		public static BitmapFrame LoadWpfImageFromFileOrResourceOrString(string image) {
 			if (HasImageStringPrefix(image)) return LoadWpfImageFromString(image);
 			if (AResources.HasResourcePrefix(image)) return AResources.GetWpfImage(image);
-			if (image.Starts("imagefile:")) image = image[..10];
+			if (image.Starts("imagefile:")) image = image[10..];
 			image = APath.Normalize(image, AFolders.ThisAppImages, flags: PNFlags.CanBeUrlOrShell); //CanBeUrlOrShell: support "pack:"
 			return BitmapFrame.Create(new Uri(image));
 		}
@@ -142,7 +150,7 @@ namespace Au.Util
 			if (image.Starts('<')) return (UIElement)XamlReader.Parse(image);
 			if(image.Ends(".xaml", true)) {
 				if (AResources.HasResourcePrefix(image)) return (UIElement)AResources.GetXamlObject(image);
-				if (image.Starts("imagefile:")) image = image[..10];
+				if (image.Starts("imagefile:")) image = image[10..];
 				using var stream = AFile.LoadStream(image);
 				return (UIElement)XamlReader.Load(stream);
 			} else {
@@ -151,6 +159,40 @@ namespace Au.Util
 			}
 			//Could set UseLayoutRounding=true as a workaround for blurry images, but often it does not work and have to be set on parent element.
 			//	Then does not work even if wrapped eg in a Border with UseLayoutRounding.
+		}
+
+		/// <summary>
+		/// Loads GDI+ image from WPF XAML file or string.
+		/// </summary>
+		/// <param name="image">XAML file, resource or string. See <see cref="LoadWpfImageElementFromFileOrResourceOrString"/>.</param>
+		/// <param name="size">Final image size. Use logical pixels, ie not DPI-scaled.</param>
+		/// <param name="dpi">DPI of window that will display the image.</param>
+		/// <remarks>
+		/// Calls <see cref="LoadWpfImageElementFromFileOrResourceOrString"/> and converts to GDI+ image.
+		/// </remarks>
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, SIZE size, int dpi) {
+			var e = AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(image);
+			e.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
+			e.Arrange(new System.Windows.Rect(e.DesiredSize));
+			var (wid, hei) = ADpi.Scale(size, dpi);
+			var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap(wid, hei, dpi, dpi, System.Windows.Media.PixelFormats.Pbgra32);
+			rtb.Render(e);
+			int stride = wid * 4;
+			int msize = hei * stride;
+			var m = new _BitmapMemory(msize);
+			rtb.CopyPixels(new System.Windows.Int32Rect(0, 0, wid, hei), m.pixels, msize, stride);
+			var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, m.pixels) { Tag = m }; //only this Bitmap creation method preserves alpha
+			b.SetResolution(dpi, dpi);
+			return b;
+		}
+
+		//Holds memory of System.Drawing.Bitmap created with the scan ctor. Such Bitmap does not own/free the memory. We attach _BitmapMemory to Bitmap.Tag, let GC dispose it.
+		unsafe class _BitmapMemory
+		{
+			public readonly IntPtr pixels;
+			public _BitmapMemory(int size) { pixels = (IntPtr)AMemory.Alloc(size); }
+			~_BitmapMemory() { AMemory.Free((void*)pixels); }
 		}
 	}
 }

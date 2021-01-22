@@ -13,6 +13,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Drawing;
 using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
 //using System.Linq;
 
 #pragma warning disable 649
@@ -405,6 +406,62 @@ namespace Au.Controls
 		//		bmp.UnlockBits(bd);
 		//		if (dispose) bmp.Dispose();
 		//	}
+		//}
+
+		///// <summary>
+		///// If <i>dpi</i> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
+		///// </summary>
+		//public static SIZE ImageSize(Image image, int dpi) {
+		//	if (image == null) return default;
+		//	SIZE z = image.Size;
+		//	if (dpi > 96) {
+		//		z.width = AMath.MulDiv(z.width, dpi, image.HorizontalResolution.ToInt());
+		//		z.height = AMath.MulDiv(z.height, dpi, image.VerticalResolution.ToInt());
+		//	}
+		//	return z;
+		//}
+
+		///// <summary>
+		///// If <i>dpi</i> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
+		///// </summary>
+		///// <param name="image"></param>
+		///// <param name="dpi"></param>
+		///// <param name="disposeOld">If performed scaling (it means created new image), dispose old image.</param>
+		///// <remarks>
+		///// Unlike <see cref="System.Windows.Forms.Control.ScaleBitmapLogicalToDevice"/>, returns same object if don't need scaling.
+		///// </remarks>
+		//public static Image ScaleImage(Image image, int dpi, bool disposeOld) {
+		//	if (image != null && dpi > 96) {
+		//		int xRes = image.HorizontalResolution.ToInt(), yRes = image.VerticalResolution.ToInt();
+		//		//AOutput.Write(xRes, yRes, dpi);
+		//		if (xRes != dpi || yRes != dpi) {
+		//			var z = image.Size;
+		//			var r = _ScaleBitmap(image, AMath.MulDiv(z.Width, dpi, xRes), AMath.MulDiv(z.Height, dpi, yRes), z);
+		//			if (disposeOld) image.Dispose();
+		//			image = r;
+		//		}
+		//	}
+		//	return image;
+		//}
+
+		////From .NET DpiHelper.ScaleBitmapToSize, which is used by Control.ScaleBitmapLogicalToDevice.
+		//private static Bitmap _ScaleBitmap(Image oldImage, int width, int height, Size oldSize) {
+		//	//note: could simply return new Bitmap(oldImage, width, height). It uses similar code, but lower quality.
+
+		//	var r = new Bitmap(width, height, oldImage.PixelFormat);
+
+		//	using var graphics = Graphics.FromImage(r);
+		//	var mode = InterpolationMode.HighQualityBicubic;
+		//	//if(width % oldSize.Width == 0 && height % oldSize.Height == 0) mode = InterpolationMode.NearestNeighbor; //DpiHelper does it, but maybe it isn't a good idea
+		//	graphics.InterpolationMode = mode;
+		//	graphics.CompositingQuality = CompositingQuality.HighQuality;
+
+		//	var sourceRect = new RectangleF(-0.5f, -0.5f, oldSize.Width, oldSize.Height);
+		//	var destRect = new RectangleF(0, 0, width, height);
+
+		//	graphics.DrawImage(oldImage, destRect, sourceRect, GraphicsUnit.Pixel);
+
+		//	return r;
 		//}
 	}
 }

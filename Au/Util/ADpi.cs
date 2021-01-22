@@ -12,8 +12,6 @@ using System.Reflection;
 //using System.Linq;
 
 using Au.Types;
-using System.Drawing;
-using System.Drawing.Drawing2D;
 
 namespace Au.Util
 {
@@ -26,7 +24,7 @@ namespace Au.Util
 	public static class ADpi
 	{
 		/// <summary>
-		/// Gets DPI of the primary screen that was at the time this process started.
+		/// Gets DPI of the primary screen at the time this process started.
 		/// </summary>
 		/// <remarks>
 		/// Used by API that aren't per-monitor DPI aware.
@@ -113,11 +111,6 @@ namespace Au.Util
 		//Unscaling sometimes useful with WPF. Unscale to double, not int, else result often incorrect.
 
 		/// <summary>
-		/// If DPI <see cref="OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
-		/// </summary>
-		public static int Scale(int i) => AMath.MulDiv(i, OfThisProcess, 96);//TODO: remove
-
-		/// <summary>
 		/// Scales two int if <i>dpiOf.Dpi</i> isn't 96 (100%).
 		/// </summary>
 		public static (int, int) Scale(int i1, int i2, DpiOf dpiOf) {
@@ -171,68 +164,6 @@ namespace Au.Util
 		public static System.Windows.Rect Unscale(RECT r, DpiOf dpiOf) {
 			double f = 96d / dpiOf;
 			return new System.Windows.Rect(r.left * f, r.top * f, r.Width * f, r.Height * f);
-		}
-
-		/// <summary>
-		/// If <see cref="OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
-		/// </summary>
-		/// <param name="image"></param>
-		public static SIZE ImageSize(Image image) {
-			if (image == null) return default;
-			SIZE z = image.Size;
-			int dpi = OfThisProcess;
-			if (dpi > 96) {
-				z.width = AMath.MulDiv(z.width, dpi, image.HorizontalResolution.ToInt());
-				z.height = AMath.MulDiv(z.height, dpi, image.VerticalResolution.ToInt());
-			}
-			return z;
-		}
-
-		/// <summary>
-		/// If <see cref="OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
-		/// </summary>
-		/// <param name="image"></param>
-		/// <param name="disposeOld">If performed scaling (it means created new image), dispose old image.</param>
-		/// <remarks>
-		/// Unlike <see cref="System.Windows.Forms.Control.ScaleBitmapLogicalToDevice"/>, returns same object if don't need scaling.
-		/// </remarks>
-		public static Image ScaleImage(Image image, bool disposeOld) {
-			if (image != null) {
-				int dpi = OfThisProcess;
-				if (dpi > 96) {
-					int xRes = image.HorizontalResolution.ToInt(), yRes = image.VerticalResolution.ToInt();
-					//AOutput.Write(xRes, yRes, dpi);
-					if (xRes != dpi || yRes != dpi) {
-						var z = image.Size;
-						var r = _ScaleBitmap(image, AMath.MulDiv(z.Width, dpi, xRes), AMath.MulDiv(z.Height, dpi, yRes), z);
-						if (disposeOld) image.Dispose();
-						image = r;
-					}
-				}
-			}
-			return image;
-		}
-
-		//From .NET DpiHelper.ScaleBitmapToSize, which is used by Control.ScaleBitmapLogicalToDevice.
-		private static Bitmap _ScaleBitmap(Image oldImage, int width, int height, Size oldSize) {
-			//note: could simply return new Bitmap(oldImage, width, height). It uses similar code, but lower quality.
-
-			var r = new Bitmap(width, height, oldImage.PixelFormat);
-
-			Debug.Assert(r.HorizontalResolution == OfThisProcess); //if fails, need r.SetResolution
-
-			using var graphics = Graphics.FromImage(r);
-			var mode = InterpolationMode.HighQualityBicubic;
-			//if(width % oldSize.Width == 0 && height % oldSize.Height == 0) mode = InterpolationMode.NearestNeighbor; //DpiHelper does it, but maybe it isn't a good idea
-			graphics.InterpolationMode = mode;
-			graphics.CompositingQuality = CompositingQuality.HighQuality;
-
-			var sourceRect = new RectangleF(-0.5f, -0.5f, oldSize.Width, oldSize.Height);
-			var destRect = new RectangleF(0, 0, width, height);
-
-			graphics.DrawImage(oldImage, destRect, sourceRect, GraphicsUnit.Pixel);
-
-			return r;
 		}
 
 		/// <summary>

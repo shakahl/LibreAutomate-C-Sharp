@@ -48,16 +48,12 @@ class PanelTasks : DockPanel
 		case MouseButton.Right:
 			_tv.Select(t);
 			var name = f.DisplayName;
-			var m = new ClassicMenu_();
-			m.Add(1, "End task  " + name);
-			m.Add(2, "End all  " + name);
+			var m = new AMenu();
+			m["End task  " + name] = _ => App.Tasks.EndTask(t);
+			m["End all  " + name] = _ => App.Tasks.EndTasksOf(f);
 			m.Separator();
-			m.Add(3, "Close\tM-click", disable: null == Panels.Editor.ZGetOpenDocOf(f)); 
-			switch (m.Show(_tv)) {
-			case 1: App.Tasks.EndTask(t); break;
-			case 2: App.Tasks.EndTasksOf(f); break;
-			case 3: App.Model.CloseFile(f, selectOther: true); break;
-			}
+			m["Close\tM-click", disable: null == Panels.Editor.ZGetOpenDocOf(f)] = _ => App.Model.CloseFile(f, selectOther: true);
+			m.Show(_tv);
 			break;
 		case MouseButton.Middle:
 			App.Model.CloseFile(f, selectOther: true);

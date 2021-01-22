@@ -35,8 +35,7 @@ namespace Au
 			_Settings _sett => _tb._sett;
 
 			///
-			public ToolStripWindow()
-			{
+			public ToolStripWindow() {
 				//like in ctors of Form and ToolStripDropDown
 				this.Visible = false; //else SetTopLevel(true) creates handle and tries to activate
 				this.SetTopLevel(true);
@@ -52,8 +51,7 @@ namespace Au
 				this.Name = "AToolbar.Control";
 			}
 
-			internal void Ctor2_(AToolbar tb)
-			{
+			internal void Ctor2_(AToolbar tb) {
 				_tb = tb;
 				this.Text = tb._name;
 			}
@@ -62,10 +60,10 @@ namespace Au
 			protected override CreateParams CreateParams {
 				get {
 					var p = base.CreateParams;
-					if(_tb != null) {
+					if (_tb != null) {
 						var es = WS2.TOOLWINDOW | WS2.NOACTIVATE;
-						if(_tb._topmost) es |= WS2.TOPMOST;
-						if(_tb._transparency != default) es |= WS2.LAYERED;
+						if (_tb._topmost) es |= WS2.TOPMOST;
+						if (_tb._transparency != default) es |= WS2.LAYERED;
 						p.ExStyle = (int)es;
 
 						var style = ((WS)p.Style & ~(WS.CHILD | WS.CLIPSIBLINGS | WS.VISIBLE)) | WS.POPUP | _BorderStyle(_sett.border);
@@ -75,8 +73,7 @@ namespace Au
 				}
 			}
 
-			WS _BorderStyle(TBBorder b) => b switch
-			{
+			WS _BorderStyle(TBBorder b) => b switch {
 				TBBorder.None => 0,
 				TBBorder.ThreeD => WS.DLGFRAME,
 				TBBorder.Thick => WS.THICKFRAME,
@@ -85,18 +82,17 @@ namespace Au
 				_ => WS.BORDER
 			};
 
-			internal void SetBorder(TBBorder value)
-			{
+			internal void SetBorder(TBBorder value) {
 				static int _Pad(TBBorder b) => b >= TBBorder.Width2 && b <= TBBorder.Width4 ? (int)b - 1 : 0;
 #if true
 				int pOld = _Pad(_tb._border), pNew = _Pad(value), pDif = pNew - pOld;
-				if(pDif != 0) this.Padding = new Padding(pNew);
+				if (pDif != 0) this.Padding = new Padding(pNew);
 				var w = this.Hwnd();
-				if(!w.Is0) {
+				if (!w.Is0) {
 					RECT r = w.ClientRectInScreen; r.Inflate(pDif, pDif); r.Normalize(false);
 					const WS mask = WS.CAPTION | WS.THICKFRAME | WS.SYSMENU;
 					WS s1 = w.Style, s2 = _BorderStyle(value);
-					if(s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2);
+					if (s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2);
 					//preserve client size and position
 					ADpi.AdjustWindowRectEx(r, ref r, _BorderStyle(value), WS2.TOOLWINDOW);
 					w.MoveLL(r, Native.SWP.FRAMECHANGED);
@@ -115,12 +111,11 @@ namespace Au
 			}
 
 			///
-			protected override unsafe void WndProc(ref Message m)
-			{
+			protected override unsafe void WndProc(ref Message m) {
 				//if(_tb.Name=="ddd") AWnd.More.PrintMsg(m, new PrintMsgOptions(Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH, Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_NCMOUSEMOVE, Api.WM_MOUSEMOVE));
 				//AWnd.More.PrintMsg(m, new PrintMsgOptions(Api.WM_GETTEXT, Api.WM_GETTEXTLENGTH));
 
-				switch(m.Msg) {
+				switch (m.Msg) {
 				case Api.WM_CREATE:
 					_WmCreate();
 					break;
@@ -128,10 +123,10 @@ namespace Au
 					_WmDestroy();
 					break;
 				case Api.WM_NCPAINT:
-					if(_WmNcpaint((AWnd)m.HWnd)) return; //draws border if need
+					if (_WmNcpaint((AWnd)m.HWnd)) return; //draws border if need
 					break;
 				case Api.WM_NCHITTEST:
-					if(_WmNchittest(ref m)) return; //returns a hittest code to move or resize if need
+					if (_WmNchittest(ref m)) return; //returns a hittest code to move or resize if need
 					break;
 				case Api.WM_NCLBUTTONDOWN:
 					//workaround for: Windows tries to activate this window when moving or sizing it, unless this process is not allowed to activate windows.
@@ -139,8 +134,8 @@ namespace Au
 					//	tested: LockSetForegroundWindow does not work.
 					//	This code better would be under WM_SYSCOMMAND, but then works only when sizing. When moving, activates before WM_SYSCOMMAND.
 					int ht = (int)m.WParam;
-					if(ht == Api.HTCAPTION || (ht >= Api.HTSIZEFIRST && ht <= Api.HTSIZELAST)) {
-						using(AHookWin.ThreadCbt(d => d.code == HookData.CbtEvent.ACTIVATE))
+					if (ht == Api.HTCAPTION || (ht >= Api.HTSIZEFIRST && ht <= Api.HTSIZELAST)) {
+						using (AHookWin.ThreadCbt(d => d.code == HookData.CbtEvent.ACTIVATE))
 							base.WndProc(ref m);
 						return;
 					}
@@ -155,7 +150,7 @@ namespace Au
 				case Api.WM_RBUTTONDOWN:
 				case Api.WM_MBUTTONDOWN:
 					var tb1 = _tb._SatPlanetOrThis;
-					if(tb1.IsOwned && !tb1.MiscFlags.Has(TBFlags.DontActivateOwner)) {
+					if (tb1.IsOwned && !tb1.MiscFlags.Has(TBFlags.DontActivateOwner)) {
 						tb1.OwnerWindow.ActivateLL();
 						//never mind: sometimes flickers. Here tb1._Zorder() does not help. The OBJECT_REORDER hook zorders when need. This feature is rarely used.
 					}
@@ -171,7 +166,7 @@ namespace Au
 
 				base.WndProc(ref m);
 
-				switch(m.Msg) {
+				switch (m.Msg) {
 				case Api.WM_WINDOWPOSCHANGED:
 					_tb._OnWindowPosChanged(in *(Api.WINDOWPOS*)m.LParam);
 					break;
@@ -189,21 +184,25 @@ namespace Au
 				}
 			}
 
-			void _WmCreate()
-			{
+			void _WmCreate() {
 				ACursor.SetArrowCursor_();
 				var tr = _tb._transparency;
-				if(tr != default) this.Hwnd().SetTransparency(true, tr.opacity, tr.colorKey);
+
+				//AOutput.Write(Bounds);
+				//TODO: create where should be, not at 0 0, because wrong DPI.
+				//	Then set ImageScalingSize like in _ContextMenuStrip.OnOpening.
+				//TODO: on DPI changed scale images and text.
+
+				if (tr != default) this.Hwnd().SetTransparency(true, tr.opacity, tr.colorKey);
 			}
 
-			void _WmDestroy()
-			{
-				if(RecreatingHandle) {
+			void _WmDestroy() {
+				if (RecreatingHandle) {
 					ADebug.Print("RecreateHandle not supported. Will not work satellite etc.");
 					return;
 				}
 				_destroyed = true;
-				if(!Disposing) Dispose();
+				if (!Disposing) Dispose();
 				_tb._SatDestroying();
 				_sett.Dispose();
 				//PROBLEM: not called if thread ends without closing the toolbar window.
@@ -214,14 +213,12 @@ namespace Au
 			bool _destroyed;
 
 			///
-			protected override void DestroyHandle()
-			{
-				if(!_destroyed) base.DestroyHandle();
+			protected override void DestroyHandle() {
+				if (!_destroyed) base.DestroyHandle();
 			}
 
 			///
-			protected override void Dispose(bool disposing)
-			{
+			protected override void Dispose(bool disposing) {
 				_tb._Dispose(disposing);
 				base.Dispose(disposing);
 			}
@@ -244,19 +241,18 @@ namespace Au
 			//	finally { _tb._InMoveSize(false); }
 			//}
 
-			bool _WmNchittest(ref Message m)
-			{
+			bool _WmNchittest(ref Message m) {
 				int h;
-				if(ModifierKeys == Keys.Shift) { //move
+				if (ModifierKeys == Keys.Shift) { //move
 					h = Api.HTCAPTION;
 				} else { //resize?
-					if(_tb._border == TBBorder.None || (!_tb.Sizable && _tb._border < TBBorder.Thick)) return false;
+					if (_tb._border == TBBorder.None || (!_tb.Sizable && _tb._border < TBBorder.Thick)) return false;
 					var w = this.Hwnd();
 					LPARAM xy = m.LParam;
 					int x = AMath.LoShort(xy), y = AMath.HiShort(xy);
-					if(_tb.Sizable) {
+					if (_tb.Sizable) {
 						RECT r; int b;
-						if(_tb._border < TBBorder.ThreeD) {
+						if (_tb._border < TBBorder.ThreeD) {
 							b = (int)_tb._border;
 							r = w.Rect;
 						} else {
@@ -266,20 +262,20 @@ namespace Au
 						}
 						int bx = Math.Min(b, r.Width / 2), by = Math.Min(b, r.Height / 2);
 						int x1 = r.left + bx, x2 = r.right - bx - 1, y1 = r.top + by, y2 = r.bottom - by - 1;
-						if(x < x1) {
+						if (x < x1) {
 							h = y < y1 ? Api.HTTOPLEFT : (y > y2 ? Api.HTBOTTOMLEFT : Api.HTLEFT);
-						} else if(x > x2) {
+						} else if (x > x2) {
 							h = y < y1 ? Api.HTTOPRIGHT : (y > y2 ? Api.HTBOTTOMRIGHT : Api.HTRIGHT);
-						} else if(y < y1) {
+						} else if (y < y1) {
 							h = Api.HTTOP;
-						} else if(y > y2) {
+						} else if (y > y2) {
 							h = Api.HTBOTTOM;
 						} else return false;
 					} else { //disable resizing if border is natively sizable
-						if(_tb._border < TBBorder.Thick) return false;
+						if (_tb._border < TBBorder.Thick) return false;
 						w.GetWindowInfo_(out var k);
 						k.rcWindow.Inflate(-k.cxWindowBorders, -k.cyWindowBorders);
-						if(k.rcWindow.Contains(x, y)) return false;
+						if (k.rcWindow.Contains(x, y)) return false;
 						h = Api.HTBORDER;
 					}
 				}
@@ -287,9 +283,8 @@ namespace Au
 				return true;
 			}
 
-			bool _WmNcpaint(AWnd w)
-			{
-				if(_tb.BorderColor == 0 || _tb._border < TBBorder.Width1 || _tb._border > TBBorder.Width4) return false;
+			bool _WmNcpaint(AWnd w) {
+				if (_tb.BorderColor == 0 || _tb._border < TBBorder.Width1 || _tb._border > TBBorder.Width4) return false;
 				using var dc = new WindowDC_(Api.GetWindowDC(w), w);
 				using var g = Graphics.FromHdc(dc);
 				var r = w.Rect; r.Offset(-r.left, -r.top);
@@ -304,41 +299,17 @@ namespace Au
 			/// Called on right-click. Shows context menu.
 			/// </summary>
 			/// <param name="ts">This control or the overflow dropdown.</param>
-			protected virtual void OnContextMenu(ToolStrip ts)
-			{
+			protected virtual void OnContextMenu(ToolStrip ts) {
 				var no = _tb.NoMenu;
-				if(no.Has(TBNoMenu.Menu)) return;
-				if(_contextMenu == null) {
-					var m = new AMenu { MultiShow = true, Modal = false };
-					m.Control.RenderMode = ToolStripRenderMode.System;
-					_cmItems = new _CMItems();
+				if (no.Has(TBNoMenu.Menu)) return;
+				var m = new AMenu();
 
-					_cmItems.edit = m.Add("Edit", o => _tb.GoToEdit_(_cmItem));
-					_cmItems.sepEdit = m.Separator();
-					using(m.Submenu("Anchor")) {
-						_cmItems.anchor = m.LastMenuItem;
-						m.LastMenuItem.DropDown.Opening += (sender, _) => {
-							var dd = sender as ToolStripDropDownMenu;
-							foreach(var v in dd.Items.OfType<ToolStripMenuItem>()) {
-								if(v.Tag is TBAnchor an) {
-									if(an < TBAnchor.OppositeEdgeX) {
-										v.Checked = _tb._anchor.WithoutFlags() == an;
-									} else {
-										v.Checked = _tb._anchor.Has(an);
-										v.Enabled = !_GetInvalidAnchorFlags(_tb._anchor).Has(an);
-									}
-								}
-							}
-						};
-						void _AddAnchor(TBAnchor an)
-						{
-							m.Add(an.ToString(), _ => {
-								var anchor = _tb.Anchor;
-								if(an < TBAnchor.OppositeEdgeX) anchor = (anchor & ~TBAnchor.All) | an; else anchor ^= an;
-								_tb.Anchor = anchor;
-							}).Tag = an;
-							if(_tb._IsSatellite) m.LastMenuItem.ToolTipText = "Note: You may want to set anchor of the owner toolbar instead. Anchor of this auto-hide toolbar is relative to the owner toolbar.";
-						}
+				if (!no.Has(TBNoMenu.Edit) && AScriptEditor.Available) {
+					m["Edit"] = o => _tb.GoToEdit_(_cmItem);
+					m.Separator();
+				}
+				if (!no.Has(TBNoMenu.Anchor)) {
+					using (m.Submenu("Anchor")) {
 						_AddAnchor(TBAnchor.None);
 						_AddAnchor(TBAnchor.TopLeft);
 						_AddAnchor(TBAnchor.TopRight);
@@ -352,26 +323,36 @@ namespace Au
 						m.Separator();
 						_AddAnchor(TBAnchor.OppositeEdgeX);
 						_AddAnchor(TBAnchor.OppositeEdgeY);
+
+						void _AddAnchor(TBAnchor an) {
+							var k = m.Add(an.ToString(), _ => {
+								var ta = _tb.Anchor;
+								if (an < TBAnchor.OppositeEdgeX) ta = (ta & ~TBAnchor.All) | an; else ta ^= an;
+								_tb.Anchor = ta;
+							});
+							if (an < TBAnchor.OppositeEdgeX) {
+								k.IsChecked = _tb._anchor.WithoutFlags() == an;
+							} else {
+								k.IsChecked = _tb._anchor.Has(an);
+								k.IsDisabled = _GetInvalidAnchorFlags(_tb._anchor).Has(an);
+							}
+							//if(_tb._IsSatellite) k.ToolTipText = "Note: You may want to set anchor of the owner toolbar instead. Anchor of this auto-hide toolbar is relative to the owner toolbar.";
+						}
 					}
-					using(m.Submenu("Layout")) {
-						_cmItems.layout = m.LastMenuItem;
-						m.LastMenuItem.DropDown.Opening += (sender, _) => {
-							var dd = sender as ToolStripDropDownMenu;
-							var layout = _tb.Layout;
-							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBLayout tl) v.Checked = tl == layout;
-						};
-						void _AddLayout(TBLayout tl) => m.Add(tl.ToString(), _ => _tb.Layout = tl).Tag = tl;
+				}
+				if (!no.Has(TBNoMenu.Layout) && _tb.Layout != TBLayout.Table) {
+					using (m.Submenu("Layout")) {
 						_AddLayout(TBLayout.Flow);
-						if(!_tb._hasGroups) _AddLayout(TBLayout.Horizontal);
+						if (!_tb._hasGroups) _AddLayout(TBLayout.Horizontal);
 						_AddLayout(TBLayout.Vertical);
+
+						void _AddLayout(TBLayout tl) {
+							m.Add(tl.ToString(), _ => _tb.Layout = tl).IsChecked = tl == _tb.Layout;
+						}
 					}
-					using(m.Submenu("Border")) {
-						_cmItems.border = m.LastMenuItem;
-						m.LastMenuItem.DropDown.Opening += (sender, _) => {
-							var dd = sender as ToolStripDropDownMenu;
-							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBBorder b) v.Checked = b == _tb._border;
-						};
-						void _AddBorder(TBBorder b) => m.Add(b.ToString(), _ => _tb.Border = b).Tag = b;
+				}
+				if (!no.Has(TBNoMenu.Border)) {
+					using (m.Submenu("Border")) {
 						_AddBorder(TBBorder.None);
 						_AddBorder(TBBorder.Width1);
 						_AddBorder(TBBorder.Width2);
@@ -381,88 +362,55 @@ namespace Au
 						_AddBorder(TBBorder.Thick);
 						_AddBorder(TBBorder.Caption);
 						_AddBorder(TBBorder.CaptionX);
+
+						void _AddBorder(TBBorder b) {
+							m.Add(b.ToString(), _ => _tb.Border = b).IsChecked = b == _tb._border;
+						}
 					}
-					_cmItems.sizable = m.Add("Sizable", _ => _tb.Sizable ^= true);
-					_cmItems.autosize = m.Add("AutoSize", _ => _tb.AutoSize ^= true);
-					m.Control.Opening += (sender, _) => {
-						var dd = sender as ToolStripDropDownMenu;
-						_cmItems.sizable.Checked = _tb.Sizable;
-						_cmItems.autosize.Checked = _tb.AutoSize;
-					};
-					using(m.Submenu("More")) {
-						_cmItems.more = m.LastMenuItem;
-						m.LastMenuItem.DropDown.Opening += (sender, _) => {
-							var dd = sender as ToolStripDropDownMenu;
-							foreach(ToolStripMenuItem v in dd.Items) if(v.Tag is TBFlags f) v.Checked = _tb._SatPlanetOrThis.MiscFlags.Has(f);
-						};
-						void _AddFlag(TBFlags f) => m.Add(_EnumToString(f), _ => _tb._SatPlanetOrThis.MiscFlags ^= f).Tag = f;
-						if(_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
+				}
+				if (!no.Has(TBNoMenu.Sizable)) m.Add("Sizable", _ => _tb.Sizable ^= true).IsChecked = _tb.Sizable;
+				if (!no.Has(TBNoMenu.AutoSize)) m.Add("AutoSize", _ => _tb.AutoSize ^= true).IsChecked = _tb.AutoSize;
+				if (!no.Has(TBNoMenu.More)) {
+					using (m.Submenu("More")) {
+						if (_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
 						_AddFlag(TBFlags.HideIfFullScreen);
+
+						void _AddFlag(TBFlags f) {
+							var tb = _tb._SatPlanetOrThis;
+							m.Add(_EnumToString(f), _ => tb.MiscFlags ^= f).IsChecked = tb.MiscFlags.Has(f);
+						}
+
+						static string _EnumToString(Enum e) {
+							var s = e.ToString().RegexReplace(@"(?<=[^A-Z])(?=[A-Z])", " ");
+							s = s.Replace("Dont", "Don't");
+							return s;
+						}
 					}
-					_cmItems.toolbars = m.Add("Toolbars...", o => new _Form().Show());
-
-					//this is an example of a form-like sumenu
-					//m.LazySubmenu("AutoSize", m => {
-					//	var ddm = m.CurrentAddMenu;
-					//	ddm.ShowImageMargin = false;
-					//	new AFormBuilder(ddm)
-					//		.Row.Add("Text", out TextBox text1)
-					//		.Row.AddButton("OK", _ => { AOutput.Write("OK"); ddm.Close(); })
-					//		.End();
-					//});
-
-					static string _EnumToString(Enum e)
-					{
-						var s = e.ToString().RegexReplace(@"(?<=[^A-Z])(?=[A-Z])", " ");
-						s = s.Replace("Dont", "Don't");
-						return s;
-					}
-
-					_cmItems.sepClose = m.Separator();
-					_cmItems.close = m.Add("Close", o => _tb._Close(true));
-
-					//m["test RecreateHandle"] = o => this.RecreateHandle();
-
-					_contextMenu = m;
 				}
 
-				bool canEdit = !no.Has(TBNoMenu.Edit) && AScriptEditor.Available;
-				_cmItems.edit.Visible = canEdit;
-				_cmItems.sepEdit.Visible = canEdit;
-				_cmItems.anchor.Visible = !no.Has(TBNoMenu.Anchor);
-				_cmItems.layout.Visible = !no.Has(TBNoMenu.Layout) && _tb.Layout != TBLayout.Table;
-				_cmItems.border.Visible = !no.Has(TBNoMenu.Border);
-				_cmItems.sizable.Visible = !no.Has(TBNoMenu.Sizable);
-				_cmItems.autosize.Visible = !no.Has(TBNoMenu.AutoSize);
-				_cmItems.more.Visible = !no.Has(TBNoMenu.More);
-				_cmItems.toolbars.Visible = !no.Has(TBNoMenu.Toolbars);
-				_cmItems.sepClose.Visible = !no.Has(TBNoMenu.Close);
-				_cmItems.close.Visible = !no.Has(TBNoMenu.Close);
+				if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars...", o => new _Form().Show());
+				if (!no.Has(TBNoMenu.Close)) {
+					m.Separator();
+					m.Add("Close", o => _tb._Close(true));
+				}
+
+				//m["test RecreateHandle"] = o => this.RecreateHandle();
 
 				_cmItem = ts.GetItemAt(ts.MouseClientXY());
-				_contextMenu.Show(ts);
+				m.Show(ts);
 			}
-			AMenu _contextMenu;
 			ToolStripItem _cmItem;
-			_CMItems _cmItems;
 
-			class _CMItems
-			{
-				public ToolStripMenuItem edit, anchor, layout, border, sizable, autosize, more, toolbars, close;
-				public ToolStripSeparator sepEdit, sepClose;
-			}
-
-			internal ContextMenuStrip ContextMenu_ => _contextMenu?.Control;
+			internal bool ContextMenuVisible_ { get; private set; }
 
 			#region overflow
 
 			///
-			protected override void OnLayoutStyleChanged(EventArgs e)
-			{
-				if(_tb?._constructed ?? false) {
+			protected override void OnLayoutStyleChanged(EventArgs e) {
+				if (_tb?._constructed ?? false) {
 					_tb._OnLayoutStyleChanged();
-					if(_overflow == null) {
-						switch(LayoutStyle) {
+					if (_overflow == null) {
+						switch (LayoutStyle) {
 						case ToolStripLayoutStyle.HorizontalStackWithOverflow:
 						case ToolStripLayoutStyle.VerticalStackWithOverflow:
 							var ob = this.OverflowButton;
@@ -492,9 +440,8 @@ namespace Au
 					}
 				}
 
-				protected override unsafe void WndProc(ref Message m)
-				{
-					switch(m.Msg) {
+				protected override unsafe void WndProc(ref Message m) {
+					switch (m.Msg) {
 					case Api.WM_MOUSEACTIVATE:
 						m.Result = (IntPtr)Api.MA_NOACTIVATE;
 						return;

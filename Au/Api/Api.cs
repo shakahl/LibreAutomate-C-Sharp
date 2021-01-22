@@ -839,22 +839,22 @@ namespace Au.Types
 
 		/// <summary>API <msdn>SetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#410")]
-		public static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, nint dwRefData = default);
+		internal static extern bool SetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, nint dwRefData = default);
 
 		/// <summary>API <msdn>GetWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#411")] //this is exported only by ordinal
-		public static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out nint pdwRefData);
+		internal static extern bool GetWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass, out nint pdwRefData);
 
 		/// <summary>API <msdn>RemoveWindowSubclass</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#412")]
-		public static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
+		internal static extern bool RemoveWindowSubclass(AWnd w, SUBCLASSPROC pfnSubclass, LPARAM uIdSubclass);
 
 		/// <summary>API <msdn>DefSubclassProc</msdn></summary>
 		[DllImport("comctl32.dll", EntryPoint = "#413")]
-		public static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
+		internal static extern LPARAM DefSubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam);
 
 		/// <summary>API <msdn>SUBCLASSPROC</msdn></summary>
-		public delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, nint dwRefData);
+		internal delegate LPARAM SUBCLASSPROC(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, nint dwRefData);
 
 
 

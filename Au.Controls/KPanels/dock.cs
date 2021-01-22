@@ -33,7 +33,7 @@ namespace Au.Controls
 
 			void _CaptionContextMenu(_Node thisOrParentTab) {
 				if (_IsDocument && !_leaf.addedLater) return;
-				var m = new ClassicMenu_();
+				var m = new AMenu();
 
 				bool canClose = _leaf?.canClose ?? false;
 				if (canClose) m["Close\tM-click"] = _ => _UserClosing();
@@ -60,7 +60,7 @@ namespace Au.Controls
 				}
 
 				void _CaptionAtItem(Dock ca) {
-					m[ca.ToString(), check: ca == thisOrParentTab._captionAt] = o => thisOrParentTab._SetCaptionAt(ca);
+					m.Add(ca.ToString(), o => thisOrParentTab._SetCaptionAt(ca)).IsChecked = ca == thisOrParentTab._captionAt;
 				}
 
 				void _ShowSubmenus() {
@@ -210,7 +210,7 @@ namespace Au.Controls
 				if ((state ^ oldState).Has(_DockState.Float)) FloatingChanged?.Invoke(this, state.Has(_DockState.Float));
 			}
 
-			void _ContextMenu_Move(ClassicMenu_ m) {
+			void _ContextMenu_Move(AMenu m) {
 				using (m.Submenu("Move To")) {
 					string sThis = ToString();
 					foreach (var target in RootAncestor.Descendants(andSelf: true)) {

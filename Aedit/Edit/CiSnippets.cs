@@ -263,7 +263,7 @@ static class CiSnippets
 				//	Now eg cannot select with Tab or Space, only with Enter.
 				//	Idea: add links in info popup. On Tab etc would insert the first.
 				Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Down, 0); //select first item. But does not work on d-click (mouse button pressed).
-				int g = ClassicMenu_.ShowSimple(a.Select(o => o.Attr("item")).ToArray(), doc, byCaret: true);
+				int g = AMenu.ShowSimple(a.Select(o => o.Attr("item")).ToArray(), doc, MSFlags.ByCaret);
 				if (g == 0) return;
 				x = a[g - 1];
 			}

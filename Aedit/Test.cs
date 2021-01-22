@@ -49,6 +49,8 @@ static class Test
 	//}
 
 	public static void FromMenubar() {
+
+
 		//var m = new Menu1();
 		////m["Test"] = null;
 		//App.Commands[nameof(Menus.Edit.View)].CopyToMenu(m);
@@ -77,20 +79,6 @@ static class Test
 		//	}
 		//	return false;
 		//});
-
-
-
-		//var m = new ClassicMenu_();
-		//m.Add(1, "One");
-		//using (m.Submenu("Sub")) {
-		//	m.Add(11, "Eleven");
-		//	m.Add(12, "Twelve");
-		//}
-		//m.Add(2, "Two");
-		//m.Separator();
-		//m["Three"]=_=>AOutput.Write("Three");
-		//AOutput.Write(m.Show(App.Wmain));
-
 
 
 		//if (_test == null) {

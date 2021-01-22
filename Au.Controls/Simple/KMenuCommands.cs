@@ -688,7 +688,7 @@ namespace Au.Controls
 			if (_GetCommandFromMouseEventArgs(sender, e, out _, out _)) {
 				e.Handled = true;
 				if (sender is ToolBar tb) tb.IsOverflowOpen = false; //this was some workaround when using WPF menu, now don't know
-				switch (ClassicMenu_.ShowSimple("Edit commands file|Find default commands file", sender as UIElement)) {
+				switch (AMenu.ShowSimple("Edit commands file|Find default commands file", sender as UIElement)) {
 				case 1: _Customize(); break;
 				case 2: AFile.SelectInExplorer(_defaultFile); break;
 				}

@@ -254,7 +254,7 @@ namespace Au
 		/// </summary>
 		/// <seealso cref="More.PostThreadMessage(int, int, LPARAM, LPARAM)"/>
 		public bool Post(int message, LPARAM wParam = default, LPARAM lParam = default) {
-			Debug.Assert(!Is0);
+			//Debug.Assert(!Is0); //no, can be used for "post thread message"
 			return Api.PostMessage(this, message, wParam, lParam);
 		}
 

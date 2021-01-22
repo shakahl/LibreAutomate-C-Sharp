@@ -46,8 +46,9 @@ class PanelInfo : Grid
 		z.StyleFont(Sci.STYLE_DEFAULT, App.Wmain);
 		z.MarginWidth(1, 4);
 		z.StyleClearAll();
-		//_sci.Call(Sci.SCI_SETHSCROLLBAR);
+		_sci.Call(Sci.SCI_SETHSCROLLBAR);
 		_sci.Call(Sci.SCI_SETVSCROLLBAR);
+		_sci.Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
 
 		App.MousePosChangedWhenProgramVisible += _MouseInfo;
 		ATimer.After(50, _ => ZSetAboutInfo());
@@ -136,6 +137,26 @@ In other windows - x, y, window, control.");
 		using (new StringBuilder_(out var b, 1000)) {
 			var cn = w.ClassName;
 			if (cn != null) {
+#if true
+				var pc = p; w.MapScreenToClient(ref pc);
+				b.AppendFormat("<b>xy</b> {0,5} {1,5}  .  <b>window xy</b> {2,5} {3,5}  .  <b>program</b>  {4}\r\n<b>Window   ",
+					p.x, p.y, pc.x, pc.y, w.ProgramName?.Escape());
+				var name = w.Name?.Escape(200); if (!name.NE()) b.AppendFormat("name</b>  {0}  .  <b>", name);
+				b.Append("cn</b>  ").Append(cn.Escape());
+				if (c != w) {
+					b.AppendFormat("\r\n<b>Control   id</b>  {0}  .  <b>cn</b>  {1}",
+						c.ControlId, c.ClassName?.Escape());
+					var ct = c.Name;
+					if (!ct.NE()) b.Append("  .  <b>name</b>  ").Append(ct.Escape(200));
+				} else if (cn == "#32768") {
+					var m = AMenuItemInfo.FromXY(p, w, 50);
+					if (m != null) {
+						b.AppendFormat("\r\n<b>Menu   id</b>  {0}", m.ItemId);
+						if (m.IsSystem) b.Append(" (system)");
+						//AOutput.Write(m.GetText(true, true));
+					}
+				}
+#else //old version. Too many lines; part invisible if control height is smaller.
 				var pc = p; w.MapScreenToClient(ref pc);
 				b.AppendFormat("<b>xy</b> {0,5} {1,5},   <b>client</b> {2,5} {3,5}\r\n<b>Window</b>  {4}\r\n\t<b>cn</b>  {5}\r\n\t<b>program</b>  {6}",
 					p.x, p.y, pc.x, pc.y,
@@ -153,6 +174,7 @@ In other windows - x, y, window, control.");
 						//AOutput.Write(m.GetText(true, true));
 					}
 				}
+#endif
 			}
 
 			_sci.Z.SetText(b.ToString());

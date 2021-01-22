@@ -2182,7 +2182,7 @@ namespace Au
 
 		bool _IsWindowEnded => _p.ended && _p.parent == null;
 
-		Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c); //TODO: support HwndSource
+		Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c); //CONSIDER: support top-level HwndSource window
 
 		void _ThrowIfNotWindow([CallerMemberName] string func = null) {
 			if (_window == null) throw new InvalidOperationException(func + "(): Container is not Window");

@@ -103,7 +103,7 @@ namespace Au.Util
 		/// <param name="removeAmp">Call <see cref="AStringUtil.RemoveUnderlineChar"/>.</param>
 		public static unsafe string GetText(IntPtr menuHandle, int id, bool byIndex, bool removeHotkey, bool removeAmp)
 		{
-			var mi = new Api.MENUITEMINFO(Api.MIIM_TYPE);
+			var mi = new Api.MENUITEMINFO(Api.MIIM_STRING);
 			if(!Api.GetMenuItemInfo(menuHandle, id, byIndex, ref mi)) return null; //get required buffer size
 			if(mi.cch == 0) return "";
 			mi.cch++; //string length -> buffer length

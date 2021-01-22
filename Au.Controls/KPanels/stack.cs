@@ -230,11 +230,11 @@ namespace Au.Controls
 			void _SplitterContextMenu(object sender, ContextMenuEventArgs e) {
 				e.Handled = true;
 				var parentStack = Parent._stack;
-				var m = new ClassicMenu_();
+				var m = new AMenu();
 				using (m.Submenu("Splitter Size")) {
 					int z = _SplitterSize;
 					for (int i = 1; i <= 10; i++) {
-						m[i.ToString(), check: i == z] = o => _SplitterSize = o.ToInt();
+						m.Add(i.ToString(), o => _SplitterSize = o.Text.ToInt()).IsChecked = i == z;
 					}
 				}
 				m.Separator();
@@ -243,7 +243,7 @@ namespace Au.Controls
 				_SplitterContextMenu_Unit(m, vert ? "Bottom" : "Right");
 				if ((parentStack.isVertical ? parentStack.grid.RowDefinitions.Where(o => !o.Height.IsAuto).Count() : parentStack.grid.ColumnDefinitions.Where(o => !o.Width.IsAuto).Count()) > 2) {
 					//m.Separator();
-					m["Resize Nearest\tCtrl", check: _splitter.ResizeNearest] = _ => _splitter.ResizeNearest ^= true;
+					m.Add("Resize Nearest\tCtrl", _ => _splitter.ResizeNearest ^= true).IsChecked = _splitter.ResizeNearest;
 				}
 				if (Parent.Parent != null) {
 					m.Separator();
@@ -257,7 +257,7 @@ namespace Au.Controls
 				m.Show(_elem);
 			}
 
-			void _SplitterContextMenu_Unit(ClassicMenu_ m, string s1) {
+			void _SplitterContextMenu_Unit(AMenu m, string s1) {
 				var unitNow = _SizeDef.GridUnitType;
 				//var unitNow = _dockedSize.GridUnitType;
 				//AOutput.Write(this, unitNow);
@@ -268,7 +268,7 @@ namespace Au.Controls
 				if (allToolbars) _UnitItem(s1 + " Auto", GridUnitType.Auto);
 
 				void _UnitItem(string text, GridUnitType unit) {
-					m[text, check: unit == unitNow, disable: disableFixed && unit == GridUnitType.Pixel] = o => _SetUnit(unit);
+					m.Add(text, o => _SetUnit(unit), disable: disableFixed && unit == GridUnitType.Pixel).IsChecked = unit == unitNow;
 					//CONSIDER: don't disable. Maybe user wants to set row A fixed and then row B star, not vice versa. But if forgets and makes window smaller, some panels and splitters may become invisible.
 				}
 

@@ -228,6 +228,7 @@ partial class FilesModel
 	/// Can be:
 	/// Name, like "name.cs".
 	/// Relative path like @"\name.cs" or @"\subfolder\name.cs".
+	/// Full path in this workspace or of a linked external file.
 	/// &lt;id&gt; - enclosed <see cref="FileNode.IdString"/>, or <see cref="FileNode.IdStringWithWorkspace"/>.
 	/// 
 	/// Case-insensitive. If enclosed in &lt;&gt;, can be followed by any text.
@@ -235,8 +236,14 @@ partial class FilesModel
 	/// <param name="folder">true - folder, false - file, null - any (prefer file if not id and not relative).</param>
 	public FileNode Find(string name, bool? folder) {
 		if (name.NE()) return null;
-		if (name[0] == '<') { name.ToInt(out long id, 1); return FindById(id); }
-		return Root.FindDescendant(name, folder);
+		if (name[0] == '<') {
+			name.ToInt(out long id, 1);
+			return FindById(id);
+		}
+		var d = FilesDirectory; if (name.Starts(d, true) && name.Eq(d.Length, '\\')) name = name[d.Length..];
+		var f = Root.FindDescendant(name, folder);
+		if (f == null && APath.IsFullPath(name)) f = FindByFilePath(name, folder);
+		return f;
 		//rejected: support name without extension.
 	}
 
@@ -317,11 +324,12 @@ partial class FilesModel
 	/// Finds file or folder by its file path (<see cref="FileNode.FilePath"/>).
 	/// </summary>
 	/// <param name="path">Full path of a file in this workspace or of a linked external file.</param>
-	public FileNode FindByFilePath(string path) {
+	/// <param name="folder">true - folder, false - file, null - any.</param>
+	public FileNode FindByFilePath(string path, bool? folder = null) {
 		var d = FilesDirectory;
 		if (path.Length > d.Length && path.Starts(d, true) && path[d.Length] == '\\') //is in workspace folder
-			return Root.FindDescendant(path.Substring(d.Length), null);
-		foreach (var f in Root.Descendants()) if (f.IsLink && path.Eqi(f.LinkTarget)) return f;
+			return Root.FindDescendant(path[d.Length..], folder);
+		if (folder != true) foreach (var f in Root.Descendants()) if (f.IsLink && path.Eqi(f.LinkTarget)) return f;
 		return null;
 	}
 
@@ -702,7 +710,7 @@ partial class FilesModel
 			int i;
 			bool isFolder = target.IsFolder && target.IsSelected && TreeControl.SelectedIndices.Count == 1;
 			if (isFolder && !target.HasChildren) pos = FNPosition.Inside;
-			else if (isFolder && (i = ClassicMenu_.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", owner: TreeControl)) > 0) {
+			else if (isFolder && (i = AMenu.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", TreeControl)) > 0) {
 				switch (i) {
 				case 1: target = target.FirstChild; break;
 				case 2: pos = FNPosition.Inside; break;

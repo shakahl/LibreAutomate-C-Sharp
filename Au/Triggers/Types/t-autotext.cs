@@ -789,7 +789,7 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// Shows a 1-item menu below the text cursor (caret) or mouse cursor.
-		/// Returns true if the user selected the item with the mouse or Enter or Tab. Other keys just close the menu.
+		/// Returns true if the user selected the item with the mouse or arrow keys + Enter or Tab. Other keys just close the menu.
 		/// </summary>
 		/// <param name="text">Item text. This function escapes it (replaces newlines with \r\n etc) and limits to 60 characters. If null, uses "Autotext".</param>
 		/// <remarks>
@@ -805,10 +805,10 @@ namespace Au.Triggers
 		/// </example>
 		public bool Confirm(string text = "Autotext") {
 			text ??= "Autotext";
+			var m = new AMenu(); //FUTURE: need something better.
+			m.Add(1, text.Replace("&", "&&").Escape(limit: 60));
 			bool ok = false;
-			var m = new AMenu { Modal = true }; //FUTURE: need something better. Creates much garbage etc.
-			m[text.Escape(limit: 60)] = u => ok = true;
-			using (AHookWin.Keyboard(x => {
+			using var hook = AHookWin.Keyboard(x => {
 				if (x.IsUp) return;
 				switch (x.vkCode) {
 				case KKey.Escape: break;
@@ -817,10 +817,9 @@ namespace Au.Triggers
 				}
 				x.BlockEvent();
 				m.Close();
-			})) {
-				m.Show(byCaret: true);
-				return ok;
-			}
+			});
+			return 1 == m.Show(flags: MSFlags.ByCaret | AMenu.MSFlags_NoKeyHook_) || ok;
+			//SHOULDDO: one QM2 user wanted, if cannot show at caret, option to show in screen center
 		}
 
 		//FUTURE: Menu.

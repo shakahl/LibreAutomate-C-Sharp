@@ -138,7 +138,7 @@ static class CiUtil
 			//AOutput.Write(s); return;
 			url = _GoogleURL(s);
 		} else if (helpKind == HelpKind.String) {
-			int i = ClassicMenu_.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", owner: Panels.Editor.ZActiveDoc, byCaret: true);
+			int i = AMenu.ShowSimple("1 C# strings|2 String formatting|3 Wildcard expression|11 Regex tool (Ctrl+Space)|12 Keys tool (Ctrl+Space)", Panels.Editor.ZActiveDoc, MSFlags.ByCaret);
 			switch (i) {
 			case 1: url = "C# strings"; break;
 			case 2: url = "C# string formatting"; break;

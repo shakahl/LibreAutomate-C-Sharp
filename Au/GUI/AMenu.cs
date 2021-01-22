@@ -1,4 +1,4 @@
-﻿using Au.Types;
+using Au.Types;
 using Au.Util;
 using System;
 using System.Collections.Generic;
@@ -11,9 +11,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
+using System.Linq;
 using System.Drawing;
-//using System.Linq;
 
 namespace Au
 {
@@ -21,13 +20,12 @@ namespace Au
 	/// Popup menu.
 	/// </summary>
 	/// <remarks>
-	/// Based on <see cref="ContextMenuStrip"/>.
-	/// Can be used in winforms windows and everywhere in scripts. In WPF windows instead use <see cref="AWpfMenu"/>.
-	/// Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
+	/// Can be used everywhere: in automation scripts, WPF apps, Winforms apps, etc.
+	/// Uses Windows native menu API (<msdn>TrackPopupMenuEx</msdn>, etc).
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// var m = new AMenu();
+	/// var m = new AMenu(); //TODO
 	/// m["One"] = o => AOutput.Write(o);
 	/// m["Two", icon: AFolders.System + "shell32.dll,15"] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
 	/// m.LastItem.ToolTipText = "tooltip";
@@ -40,649 +38,575 @@ namespace Au
 	/// m.Show();
 	/// ]]></code>
 	/// </example>
-	public partial class AMenu : MTBase
+	public unsafe class AMenu : MTBase
 	{
-		//The main wrapped object. The class is derived from ContextMenuStrip.
-		_ContextMenuStrip _c;
-		string _name;
-
 		/// <summary>
-		/// Gets the main drop-down menu <see cref="ContextMenuStrip"/> control.
-		/// You can use all its properties, methods and events. You can assign it to a control or toolstrip's drop-down button etc.
+		/// Represents a menu item in <see cref="AMenu"/>.
 		/// </summary>
-		public ContextMenuStrip Control => _c;
+		public class MenuItem : MTItem
+		{
+			/// <summary>Gets the menu item action.</summary>
+			public Action<MenuItem> Clicked => base.clicked as Action<MenuItem>;
 
-		private protected override ToolStrip MainToolStrip => _c;
+			/// <summary>Gets the menu item id.</summary>
+			public int Id { get; init; }
+
+			/// <summary>Gets or sets checked state.</summary>
+			public bool IsChecked { get; set; }
+
+			/// <summary>Gets or sets disabled state.</summary>
+			public bool IsDisabled { get; set; }
+
+			/// <summary>Gets or sets whether to use bold font.</summary>
+			public bool IsBold { get; set; }
+
+			/// <summary>true if is a submenu-item.</summary>
+			internal bool IsSubmenu { get; init; }
+
+			internal int level; //0 or level of parent submenu
+			internal bool submenuFilled; //submenu is filled once and don't do it again until reopening
+			internal bool column; //add MFT_MENUBARBREAK
+			internal byte checkType; //1 checkbox, 2 radio
+			internal IntPtr hbitmap; //item bitmap; disposed when menu closed
+			internal Action<AMenu> submenuOpening; //for lazy submenu
+		}
+
+		readonly List<MenuItem> _a = new(); //we'll convert it to native menu items in Show() and WM_INITMENUPOPUP (for submenus). In Show() we'll finally destroy the native popup menu.
+		readonly Dictionary<IntPtr, int> _dSub = new(); //HMENU and its submenu-item index in _a; -1 for the main menu. To recognize our HMENUs in WM_INITMENUPOPUP etc.
+		int _level; //0 or level of current submenu
+		int _lastId; //to auto-generate item ids
 
 		/// <summary>
 		/// Use this constructor for various context menus of your app.
 		/// </summary>
 		/// <remarks>
-		/// Item actions run in this thread by default (see <see cref="MTBase.ActionThread"/>).
-		/// Users cannot right-click a menu item to open/select it in editor.
+		/// Item actions run in the menu's thread by default (see <see cref="MTBase.ActionThread"/>).
+		/// Users cannot right-click a menu item and open/select it in editor.
 		/// </remarks>
-		public AMenu() : base(null, 0) {
-			_c = new _ContextMenuStrip(this, isMain: true);
-		}
+		public AMenu() { }
 
 		/// <summary>
 		/// Use this constructor in automation scripts, for example if the menu is used for starting and/or automating other apps.
 		/// </summary>
-		/// <param name="name">Menu name. Must be valid filename. Currently only sets <see cref="Control"/>'s <b>Text</b> property.</param>
-		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <param name="name">Menu name. Must be a unique valid filename. Currently not used.</param>
+		/// <param name="f">Don't use.</param>
+		/// <param name="l">Don't use.</param>
 		/// <remarks>
-		/// This overload sets properties:
-		/// - <see cref="MTBase.ActionThread"/> = <see cref="MTThread.StaThread"/>.
-		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
+		/// This overload sets <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// 
-		/// Users can right-click a menu item to open/select it in editor.
+		/// Users can right-click an item to open/select it in editor. To disable this feature, explicitly set <i>f</i> = null; or use other overload.
 		/// </remarks>
-		public AMenu(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(f, l) {
-			if (name.NE()) throw new ArgumentException("Empty name");
-			_name = name;
-
-			_c = new _ContextMenuStrip(this, isMain: true);
-
-			ExtractIconPathFromCode = true;
-			ActionThread = MTThread.StaThread;
+		public AMenu(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(name, f, l) {
 		}
 
 		/// <summary>
-		/// Disposes <see cref="Control"/>, submenus, images, etc.
-		/// Rarely used. Don't need when <see cref="MultiShow"/> is false.
+		/// Gets the last added menu item.
 		/// </summary>
-		public void Dispose() {
-			if (!_c.IsDisposed) _c.Dispose();
-			//AOutput.Write(_c.Items.Count); //0
-			//tested: ContextMenuStrip disposes its items but not their ToolStripDropDownMenu. And not their Image, therefore base._Dispose disposes images.
-			if (_submenusToDispose != null) {
-				foreach (var dd in _submenusToDispose) {
-					Debug.Assert(!dd.IsDisposed);
-					if (!dd.IsDisposed) dd.Dispose();
-				}
-				_submenusToDispose = null;
-			}
-			base._Dispose(true);
-		}
+		public MenuItem Last { get; private set; }
 
-		///
-		public bool IsDisposed => _c.IsDisposed;
-
-		void _CheckDisposed() {
-			if (IsDisposed) throw new ObjectDisposedException(nameof(AMenu), "Disposed. Use MultiShow=true.");
-		}
-
-		#region add
-
-		/*
-		CONSIDER:
-		Specialized AddX methods.
-		
-		For example, instead of
-		m["Label"] = o => AFile.TryRun("notepad.exe");
-		can use
-		m.AddRun("notepad.exe", "label"); //label is optional
-		Then can auto-get icon without disassembling the callback.
-
-		Another example: instead of
-		m["Label"] = o => AClipboard.Paste("notepad.exe");
-		can use
-		m.Paste("notepad.exe", "label"); //label is optional
-
-		Can use extension methods for this. Example:
-		public static void AddRun(this AMenu m, string path, string label = null)
-		{
-			m[label ?? path, path] = o => AFile.TryRun(path);
-		}
-
-		*/
-
-		/// <summary>
-		/// Adds new item.
-		/// The same as <see cref="Add(string, Action{MTClickArgs}, MTImage, int)"/>.
-		/// </summary>
-		/// <example>
-		/// <code><![CDATA[
-		/// var m = new AMenu();
-		/// m["One"] = o => AOutput.Write(o);
-		/// m["Two", @"icon file path"] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
-		/// m.LastItem.ToolTipText = "tooltip";
-		/// m["Three"] = o => { AOutput.Write(o.MenuItem.Checked); };
-		/// m.LastMenuItem.Checked = true;
-		/// m.ExtractIconPathFromCode = true;
-		/// m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
-		/// m.Show();
-		/// ]]></code>
-		/// </example>
-		public Action<MTClickArgs> this[string text, MTImage icon = default, [CallerLineNumber] int l = 0] {
-			set { Add(text, value, icon, l); }
-		}
-
-		/// <summary>
-		/// Adds new item as <see cref="ToolStripMenuItem"/>.
-		/// </summary>
-		/// <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
-		/// <param name="onClick">Callback function. Called when clicked the menu item.</param>
-		/// <param name="icon"></param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		/// <remarks>
-		/// Sets menu item text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
-		/// 
-		/// Code <c>m.Add("text", o => AOutput.Write(o));</c> is the same as <c>m["text"] = o => AOutput.Write(o);</c>. See <see cref="this[string, MTImage, int]"/>.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// var m = new AMenu();
-		/// m.Add("One", o => AOutput.Write(o), icon: AFolders.System + "shell32.dll,9");
-		/// var mi = m.Add("Two", o => { AOutput.Write(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
-		/// mi.Checked = true;
-		/// m.ExtractIconPathFromCode = true;
-		/// m.Add("notepad", o => AFile.TryRun(AFolders.System + "notepad.exe"));
-		/// m.Show();
-		/// ]]></code>
-		/// </example>
-		public ToolStripMenuItem Add(string text, Action<MTClickArgs> onClick, MTImage icon = default, [CallerLineNumber] int l = 0) {
-			string sk = null;
-			if (!text.NE()) {
-				int i = text.IndexOf('\t');
-				if (i >= 0) { sk = text.Substring(i + 1); text = text.Remove(i); }
-			}
-
-			var item = new ToolStripMenuItem(text);
-
-			if (sk != null) item.ShortcutKeyDisplayString = sk;
-
-			_Add(false, item, icon, onClick, l);
-			return item;
-		}
-
-		/// <summary>
-		/// Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
-		/// </summary>
-		/// <param name="item">An already created item of any supported type.</param>
-		/// <param name="icon"></param>
-		/// <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		public void Add(ToolStripItem item, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
-			=> _Add(false, item, icon, onClick, l);
-
-		void _Add(bool isSub, ToolStripItem item, MTImage icon, Action<MTClickArgs> onClick, int l) {
-			var dd = CurrentAddMenu;
-			dd.SuspendLayout(); //makes adding items much faster. It's OK to suspend/resume when already suspended; .NET uses a layoutSuspendCount.
-			dd.Items.Add(item);
-			_SetItemProp(false, isSub, item, onClick, icon, l);
-			_OnItemAdded(item);
-			dd.ResumeLayout(false);
-		}
-
-		/// <summary>
-		/// Adds separator.
-		/// </summary>
-		public ToolStripSeparator Separator() {
-			var item = new ToolStripSeparator();
-			_Add(false, item, default, null, 0);
-			return item;
-		}
-
-		/// <summary>
-		/// Adds new item (<see cref="ToolStripMenuItem"/>) that will open a submenu.
-		/// Then the add-item functions will add items to the submenu.
-		/// </summary>
-		/// <param name="text">Text.</param>
-		/// <param name="icon"></param>
-		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		/// <remarks>
-		/// Can be used in 2 ways:
-		/// - <c>using(m.Submenu(...)) { add items; }</c>. See example.
-		/// - <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="EndSubmenu"/>.
-		/// 
-		/// Submenus inherit these properties of the main menu, set before adding submenus (see example):
-		/// <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
-		/// </remarks>
-		/// <seealso cref="LazySubmenu"/>
-		/// <example>
-		/// <code><![CDATA[
-		/// var m = new AMenu();
-		/// m.Control.BackColor = Color.PaleGoldenrod;
-		/// m["One"] = o => AOutput.Write(o);
-		/// m["Two"] = o => AOutput.Write(o);
-		/// using(m.Submenu("Submenu")) {
-		/// 	m["Three"] = o => AOutput.Write(o);
-		/// 	m["Four"] = o => AOutput.Write(o);
-		/// 	using(m.Submenu("Submenu2")) {
-		/// 		m["Five"] = o => AOutput.Write(o);
-		/// 		m["Six"] = o => AOutput.Write(o);
-		/// 	}
-		/// 	m["Seven"] = o => AOutput.Write(o);
-		/// }
-		/// m["Eight"] = o => AOutput.Write(o);
-		/// m.Show();
-		/// ]]></code>
-		/// </example>
-		public UsingEndAction Submenu(string text, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0) {
-			var item = _Submenu(out var dd, text, onClick, icon, l);
-			_submenuStack.Push(dd);
-			return new UsingEndAction(() => EndSubmenu());
-		}
-
-		ToolStripMenuItem _Submenu(out _ContextMenuStrip dd, string text, Action<MTClickArgs> onClick, MTImage icon, int sourceLine) {
-			var item = new ToolStripMenuItem(text);
-
-			dd = new _ContextMenuStrip(this, isMain: false);
-			//var t = APerf.Create();
-			dd.SuspendLayout();
-			if (_c._changedBackColor) dd.BackColor = _c.BackColor; //because by default gives 0xf0f0f0, although actually white, and then submenus would be gray
-			dd.BackgroundImage = _c.BackgroundImage;
-			dd.BackgroundImageLayout = _c.BackgroundImageLayout;
-			dd.Cursor = _c.Cursor;
-			dd.Font = _c.Font;
-			if (_c._changedForeColor) dd.ForeColor = _c.ForeColor;
-			dd.ImageList = _c.ImageList;
-			dd.ImageScalingSize = _c.ImageScalingSize;
-			dd.Renderer = _c.Renderer;
-			dd.ShowCheckMargin = _c.ShowCheckMargin;
-			dd.ShowImageMargin = _c.ShowImageMargin;
-			dd.ResumeLayout(false);
-			//t.NW();
-			item.DropDown = dd;
-			//never mind: should be 'dd=item.DropDown' (auto-created).
-			//	Because now eg hotkeys don't work.
-			//	But then cannot be ToolStripDropDownMenu_.
-			//	It is important only if using in menu bar.
-
-			_Add(true, item, icon, onClick, sourceLine);
-
-			//Workaround for ToolStripDropDown bug: sometimes does not show 3-rd level submenu.
-			//	It happens when the mouse moves from the 1-level menu to the 2-nd level submenu-item over an unrelated item of 1-st level menu.
-			if (_AddingSubmenuItems) item.MouseHover += (sender, e) => {
-				var k = sender as ToolStripMenuItem;
-				if (k.HasDropDownItems && !k.DropDown.Visible) k.ShowDropDown();
-
-				//Note: submenus are shown not on hover.
-				//The hover time is SPI_GETMOUSEHOVERTIME, and submenu delay is SPI_GETMENUSHOWDELAY.
-				//This usually works well because both times are equal, 400 ms.
-				//If they are different, it is not important, because don't need and we don't use this workaround for direct submenus. Indirect submenus are rarely used.
+		MenuItem _Add(int id, string text, MTImage image, bool disable, int l, Action<MenuItem> clicked = null, byte checkType = 0, bool submenu = false) {
+			MenuItem r = new() {
+				clicked = clicked,
+				Id = clicked == null && checkType == 0 ? id : -_a.Count - 1,
+				Text = text ?? "",
+				checkType = checkType,
+				IsDisabled = disable,
+				IsSubmenu = submenu,
+				level = _level,
+				column = _column,
+				extractIconPath = ExtractIconPathFromCode,
+				actionThread = ActionThread,
+				actionException = ActionException,
+				sourceLine = l
 			};
-
-			_submenusToDispose ??= new List<_ContextMenuStrip>();
-			_submenusToDispose.Add(dd);
-
-			return item;
+			_column = false;
+			r.SetImage_(image);
+			_a.Add(r);
+			Last = r;
+			return r;
 		}
 
-		List<_ContextMenuStrip> _submenusToDispose;
+		/// <summary>
+		/// Adds menu item with explicitly specified id.
+		/// </summary>
+		/// <param name="id">Item id that <see cref="Show"/> will return if clicked this item. Cannot be negative.</param>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="l">Don't use.</param>
+		/// <exception cref="ArgumentException">Negative id.</exception>
+		public MenuItem Add(int id, string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0) {
+			if (id < 0) throw new ArgumentException(); //we use negative ids for action items and check/radio items
+			return _Add(_lastId = id, text, image, disable, l);
+		}
 
 		/// <summary>
-		/// Call this to end adding items to the current submenu if <see cref="Submenu"/> was called without 'using' and without a callback function that adds submenu items.
+		/// Adds menu item with auto-generated id.
 		/// </summary>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="l">Don't use.</param>
+		/// <remarks>
+		/// Assigns id = the last specified or auto-generated id + 1. If not using explicitly specified ids, auto-generated ids are 1, 2, 3... Submenu-items, separators and items with action don't auto-generate ids.
+		/// </remarks>
+		public MenuItem Add(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
+			=> _Add(++_lastId, text, image, disable, l);
+
+		/// <summary>
+		/// Adds menu item with action (callback function) that is executed on click.
+		/// </summary>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="clicked">Callback function that is executed on click.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="l">Don't use.</param>
+		/// <remarks>
+		/// This function is the same as the indexer. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
+		/// </remarks>
+		public MenuItem Add(string text, Action<MenuItem> clicked, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
+			=> _Add(0, text, image, disable, l, clicked);
+
+		/// <summary>
+		/// Adds menu item with action (callback function) that is executed on click.
+		/// </summary>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="l">Don't use.</param>
+		/// <value>Callback function that is executed on click.</value>
+		/// <remarks>
+		/// This function is the same as <see cref="Add(string, Action{MenuItem}, MTImage, bool, int)"/>. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
+		/// </remarks>
+		public Action<MenuItem> this[string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0] {
+			set { _Add(0, text, image, disable, l, value); }
+		}
+
+		/// <summary>
+		/// Adds menu item to be used as a checkbox.
+		/// </summary>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="check">Checked state.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="clicked">Callback function that is executed on click.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="l">Don't use.</param>
+		/// <remarks>
+		/// When clicked, <see cref="MenuItem.IsChecked"/> state is changed.
+		/// </remarks>
+		public MenuItem AddCheck(string text, bool check = false, bool disable = false, Action<MenuItem> clicked = null, MTImage image = default, [CallerLineNumber] int l = 0) {
+			var r = _Add(0, text, image, disable, l, clicked, 1);
+			r.IsChecked = check;
+			return r;
+		}
+
+		/// <summary>
+		/// Adds menu item to be used as a radio button in a group of such items.
+		/// </summary>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="check">Checked state.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="clicked">Callback function that is executed on click.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="l">Don't use.</param>
+		/// <remarks>
+		/// When clicked an unchecked radio item, its <see cref="MenuItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
+		/// </remarks>
+		public MenuItem AddRadio(string text, bool check = false, bool disable = false, Action<MenuItem> clicked = null, MTImage image = default, [CallerLineNumber] int l = 0) {
+			var r = _Add(0, text, image, disable, l, clicked, 2);
+			r.IsChecked = check;
+			return r;
+		}
+
+		/// <summary>
+		/// Adds menu item that opens a submenu.
+		/// Used like <c>using (m.Submenu("Example")) { /* add submenu items */ }</c>.
+		/// </summary>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="l">Don't use.</param>
+		public UsingEndAction Submenu(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0) {
+			_Add(0, text, image, disable, l, submenu: true);
+			_level++;
+			return new UsingEndAction(() => _level--);
+		}
+
+		/// <summary>
+		/// Adds menu item that opens a submenu that will be filled by a callback function when opening the submenu.
+		/// Used like <c>m.Submenu("Example", m=> { /* add submenu items */ });</c>.
+		/// </summary>
+		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="opening">Callback function that is called when opening the submenu and should add items to it.</param>
+		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
+		/// <param name="disable">Disabled state.</param>
+		/// <param name="l">Don't use.</param>
 		/// <example>
 		/// <code><![CDATA[
-		/// var m = new AMenu();
-		/// m["One"] = o => AOutput.Write(o);
-		/// m["Two"] = o => AOutput.Write(o);
-		/// m.Submenu("Submenu");
-		/// 	m["Three"] = o => AOutput.Write(o);
-		/// 	m["Four"] = o => AOutput.Write(o);
-		/// 	m.EndSubmenu();
-		/// m["Five"] = o => AOutput.Write(o);
+		/// var m=new AMenu();
+		/// _Dir(new DirectoryInfo(@"C:\"));
 		/// m.Show();
+		/// 
+		/// void _Dir(DirectoryInfo dir) {
+		/// 	foreach (var v in dir.EnumerateFileSystemInfos()) {
+		/// 		if(v.Attributes.Has(FileAttributes.System|FileAttributes.Hidden)) continue;
+		/// 		if(v.Attributes.Has(FileAttributes.Directory)) {
+		/// 			m.Submenu(v.Name, m=> _Dir(v as DirectoryInfo), v.FullName);
+		/// 		} else {
+		/// 			m[v.Name, v.FullName]=o=>AOutput.Write(v.FullName);
+		/// 		}
+		/// 	}
+		/// }
 		/// ]]></code>
 		/// </example>
-		public void EndSubmenu() => _submenuStack.Pop();
-
-		/// <summary>
-		/// Adds new item (<see cref="ToolStripMenuItem"/>) that will open a submenu.
-		/// When showing the submenu first time, your callback function will be called and can add submenu items.
-		/// </summary>
-		/// <param name="text">Text.</param>
-		/// <param name="onOpening">Callback function that should add submenu items.</param>
-		/// <param name="icon"></param>
-		/// <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		/// <example>
-		/// <code><![CDATA[
-		/// var m = new AMenu();
-		/// m["One"] = o => AOutput.Write(o);
-		/// m["Two"] = o => AOutput.Write(o);
-		/// m.LazySubmenu("Submenu", _ => {
-		/// 	AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-		/// 	m["Three"] = o => AOutput.Write(o);
-		/// 	m["Four"] = o => AOutput.Write(o);
-		/// 	m.LazySubmenu("Submenu2", _ => {
-		/// 		AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-		/// 		m["Five"] = o => AOutput.Write(o);
-		/// 		m["Six"] = o => AOutput.Write(o);
-		/// 	});
-		/// 	m["Seven"] = o => AOutput.Write(o);
-		/// });
-		/// m["Eight"] = o => AOutput.Write(o);
-		/// m.Show();
-		/// ]]></code>
-		/// </example>
-		public ToolStripMenuItem LazySubmenu(string text, Action<AMenu> onOpening, MTImage icon = default, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0) {
-			var item = _Submenu(out var dd, text, onClick, icon, l);
-			dd._submenu_lazyDelegate = onOpening;
-
-			//add one visible item, or will not draw the submenu arrow
-			dd.SuspendLayout();
-			dd.Items.Add(new ToolStripSeparator());
-			dd.ResumeLayout(false);
-
-			return item;
-		}
-
-		Stack<ToolStripDropDownMenu> _submenuStack = new Stack<ToolStripDropDownMenu>();
-
-		bool _AddingSubmenuItems => _submenuStack.Count > 0;
-
-		/// <summary>
-		/// Gets <see cref="ToolStripDropDownMenu"/> of the main menu or submenu where new items currently would be added.
-		/// </summary>
-		public ToolStripDropDownMenu CurrentAddMenu {
-			get {
-				_CheckDisposed(); //used by all Add(), Submenu()
-				return _submenuStack.Count > 0 ? _submenuStack.Peek() : _c;
-			}
+		public MenuItem Submenu(string text, Action<AMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0) {
+			var v = _Add(0, text, image, disable, l, submenu: true);
+			v.submenuOpening = opening;
+			return v;
 		}
 
 		/// <summary>
-		/// Gets the last added item as <see cref="ToolStripMenuItem"/>.
-		/// Returns null if it is not a <b>ToolStripMenuItem</b>.
+		/// Adds horizontal or vertical separator.
 		/// </summary>
+		/// <param name="vertical">Add other items in new column.</param>
 		/// <remarks>
-		/// You can instead use <see cref="MTBase.LastItem"/>, which gets <see cref="ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
+		/// Menus with vertical separators look differently.
 		/// </remarks>
-		public ToolStripMenuItem LastMenuItem => LastItem as ToolStripMenuItem;
-
-		#endregion
-
-		#region show
-
-		/// <summary>
-		/// Shows the menu unowned.
-		/// </summary>
-		/// <param name="xy">Position in screen. If null (default), uses the mouse cursor or caret position.</param>
-		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
-		/// <param name="direction">Menu drop direction.</param>
-		/// <seealso cref="ShowSimple"/>
-		public void Show(POINT? xy = null, bool byCaret = false, ToolStripDropDownDirection? direction = null) {
-			if (byCaret) {
-				_Show(true, xy ?? default, direction);
-			} else {
-				_Show(false, xy ?? AMouse.XY, direction);
-			}
+		public void Separator(bool vertical = false) {
+			if (vertical) _column = true;
+			else _a.Add(new() { separator = true, level = _level });
 		}
+		bool _column;
+
+		//rejected. Menu items without icon are OK. Need only for toolbars.
+		//	/// <summary>
+		//	/// Image for items that don't have an image specified or auto-extracted from code.
+		//	/// </summary>
+		//	public MTImage DefaultImage { get; set; }
+		//	
+		//	/// <summary>
+		//	/// Image for submenu-items that don't have an image specified.
+		//	/// </summary>
+		//	public MTImage DefaultSubmenuImage { get; set; }
 
 		/// <summary>
-		/// Shows the menu owned by a control or form.
+		/// Shows the menu and waits until closed.
+		/// Returns id of the selected item when closed, or 0 if cancelled.
 		/// </summary>
-		/// <param name="owner">A control or form that will own the menu.</param>
-		/// <param name="xy">Position in control's client area. If null (default), uses the mouse cursor or caret position.</param>
-		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
-		/// <param name="direction">Menu drop direction.</param>
-		/// <exception cref="ArgumentNullException"><i>owner</i> is null.</exception>
+		/// <param name="owner">Owner window. Optional. Receives menu messages (rarely useful). Also, closing it will close the menu too. Must belong to this thread.</param>
+		/// <param name="flags"></param>
+		/// <param name="xy">Menu position. If null (default), uses mouse position by default. It depends on flags.</param>
+		/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
+		/// <exception cref="ArgumentException"><i>owner</i> does not belong to this thread or is invalid window handle.</exception>
 		/// <remarks>
-		/// Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="Control"/> property, which gets <see cref="ContextMenuStrip"/>.
+		/// To show menu, uses API <msdn>TrackPopupMenuEx</msdn>. It fails if this thread is in menu mode (showing any standard Windows menu), unless called with flag <see cref="MSFlags.Recurse"/>. Therefore, if in menu mode and no flag, this function just calls API <msdn>EndMenu</msdn> and returns 0.
 		/// </remarks>
-		/// <seealso cref="ShowSimple"/>
-		public void Show(Control owner, POINT? xy = null, bool byCaret = false, ToolStripDropDownDirection? direction = null) {
-			if (owner == null) throw new ArgumentNullException();
-			if (byCaret) {
-				_Show(true, xy ?? default, direction, owner);
-			} else {
-				_Show(false, xy ?? owner.MouseClientXY(), direction, owner);
-			}
-		}
-
-		void _Show(bool byCaret, POINT p, ToolStripDropDownDirection? direction, Control control = null) {
-			_CheckDisposed();
-			if (_c.Items.Count == 0) return;
-
-			_isModal = Modal ?? !AThread.HasMessageLoop();
-
-			if (byCaret) {
-				bool caretOK = AKeys.More.GetTextCursorRect(out RECT cr, out _, orMouse: true);
-				var p2 = new Point(cr.left - 32, cr.bottom + 2);
-				if (caretOK) p2.Offset(p);
-				p = control?.PointToClient(p2) ?? p2;
-			}
-
-			_inOurShow = true;
-			if (control != null) {
-				if (direction == null) _c.Show(control, p); else _c.Show(control, p, direction.GetValueOrDefault());
-			} else {
-				if (direction == null) _c.Show(p); else _c.Show(p, direction.GetValueOrDefault());
-			}
-			_inOurShow = false;
-
-			if (_isModal) {
-				_msgLoop.Loop();
-				if (!MultiShow) Dispose();
-			}
-		}
-
-		void _OnOpeningMain() {
-			//Support showing not through our Show, for example when assigned to a control or toolstrip's drop-down button.
-			if (!_inOurShow) {
-				_isModal = false;
-				MultiShow = true; //programmers would forget it
-			}
-
-			if (!_showedOnce) {
-				_showedOnce = true;
-				_c.PerformLayout();
-			}
-
-			GetIconsAsync_(_c);
-		}
-
-		bool _showedOnce;
-		bool _inOurShow; //to detect when ContextMenuStrip.Show called not through AMenu.Show
-		bool _isModal; //depends on ModalAlways or Application.MessageLoop
-		AMessageLoop_ _msgLoop = new();
-
-		/// <summary>
-		/// If false, disposes the menu when it is closed.
-		/// If true, does not dispose. Then you can call <b>Show</b> again and again.
-		/// Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control's <b>ContextMenuStrip</b>.
-		/// </summary>
-		/// <seealso cref="DefaultMultiShow"/>
-		public bool MultiShow { get; set; } = DefaultMultiShow;
-
-		/// <summary>
-		/// Default <see cref="MultiShow"/> value for new <b>AMenu</b> instances.
-		/// </summary>
-		public static bool DefaultMultiShow { get; set; }
-
-		/// <summary>
-		/// If true, <b>Show</b> waits until the menu is closed. If false, does not wait (this thread must have a message loop).
-		/// If null (default), does not wait if the thread has a .NET message loop (<see cref="AThread.HasMessageLoop"/>).
-		/// </summary>
-		/// <remarks>
-		/// <note>If false, this thread must have a message loop, either already running or started soon after showing the menu. Without it the menu will not work.</note>
-		/// </remarks>
-		public bool? Modal { get; set; }
-
-		/// <summary>
-		/// Activate the menu window.
-		/// It enables selecting menu items with the keyboard (arrows, Tab, Enter, etc).
-		/// If false, only Esc works, it closes the menu.
-		/// If the menu is owned by a control or toolbar button, keyboard navigation works in any case, don't need this property to enable it.
-		/// </summary>
-		public bool ActivateMenuWindow { get; set; }// = DefaultActivateMenuWindow;
-
-		//rejected
-		///// <summary>
-		///// Default <see cref="ActivateMenuWindow"/> value for new <b>AMenu</b> instances.
-		///// </summary>
-		//public static bool DefaultActivateMenuWindow { get; set; }
-		///// <seealso cref="DefaultActivateMenuWindow"/>
-
-		WS2 _ExStyle => ActivateMenuWindow ? WS2.TOOLWINDOW | WS2.TOPMOST : WS2.TOOLWINDOW | WS2.TOPMOST | WS2.NOACTIVATE;
-		//WS2.NOACTIVATE is a workaround for 2 .NET bugs:
-		//1. In inactive thread the menu window may have a taskbar button.
-		//2. In inactive thread, when clicked a menu item, temporarily activates some window of this thread.
-
-		#endregion
-
-		#region close
-
-		/// <summary>
-		/// Close the menu when the mouse cursor moves away from it to this distance and this thread is not the active UI thread.
-		/// </summary>
-		/// <remarks>
-		/// The value is pixels for DPI 96 (100%).
-		/// Default is <see cref="DefaultMouseClosingDistance"/>, default 200.
-		/// At first the mouse must be or move at less than half of the distance.
-		/// </remarks>
-		/// <seealso cref="DefaultMouseClosingDistance"/>
-		public int MouseClosingDistance { get; set; } = DefaultMouseClosingDistance;
-
-		/// <summary>
-		/// Default <see cref="MouseClosingDistance"/> value of <b>AMenu</b> instances for DPI 96 (100%). Default 200.
-		/// </summary>
-		public static int DefaultMouseClosingDistance { get; set; } = 200;
-
-		const int c_wmCloseWparam = 827549482;
-		List<ToolStripDropDown> _closing_allMenus = new List<ToolStripDropDown>(); //all menu windows, including hidden submenus
-		ToolStripDropDown _closing_lastVisibleMenu;
-		ATimer _closing_timer;
-		bool _closing_escKey;
-		byte _closing_mouseState;
-		bool _closing_mouseWasIn;
-		bool _closing_classicMenu;
-		bool _closing;
-
-		void _OnOpened(ToolStripDropDown m, bool isMain) {
-			if (isMain) {
-				if (Api.GetFocus() == default) {
-					_closing_timer = ATimer.Every(100, _ClosingTimer);
-					_closing_escKey = AKeys.UI.IsToggled(KKey.Escape);
-					_closing_mouseState = _GetMouseState();
-					_closing_mouseWasIn = _closing_classicMenu = false;
-				}
-			}
-			_closing_lastVisibleMenu = m;
-			if (isMain && ActivateMenuWindow) m.Hwnd().ActivateLL();
-		}
-
-		void _OnClosed(ToolStripDropDown m, bool isMain) {
-			_closing_lastVisibleMenu = m.OwnerItem?.Owner as ToolStripDropDown;
-			if (isMain) {
-				_closing_timer?.Stop(); _closing_timer = null;
-
-				//Close menu windows. Else they are just hidden and prevent GC until process ends.
-				foreach (var k in _closing_allMenus) k.Hwnd().Post(Api.WM_CLOSE, c_wmCloseWparam);
-
-				if (!MultiShow && !_isModal) ATimer.After(10, _ => Dispose()); //cannot dispose now, exception
-
-				if (_isModal) _msgLoop.Stop();
-			}
-		}
-
-		//100 ms
-		void _ClosingTimer(ATimer timer) {
-			Debug.Assert(!IsDisposed);
-			if (IsDisposed) { timer.Stop(); return; }
-
-			bool escState = AKeys.UI.IsToggled(KKey.Escape);
-			byte mouseState = _GetMouseState();
-			bool escPressed = escState != _closing_escKey, mouseClicked = mouseState != _closing_mouseState;
-			_closing_escKey = escState;
-			_closing_mouseState = mouseState;
-
-			if (Api.GetFocus() != default) return;
-			var closeReason = ToolStripDropDownCloseReason.AppClicked;
-
-			//is/was classic context menu active?
-			bool wasClassicMenu = _closing_classicMenu;
-			_closing_classicMenu = AWnd.More.GetGUIThreadInfo(out var g, AThread.Id) && !g.hwndMenuOwner.Is0;
-			if (wasClassicMenu && !_closing_classicMenu) return;
-
-			//close if Esc key
-			if (escPressed) {
-				closeReason = ToolStripDropDownCloseReason.Keyboard;
-				goto g1;
-			}
-
-			//close if mouse clicked an alien window
-			if (mouseClicked) {
-				//AOutput.Write(_IsMenuWindow());
-				if (!AWnd.FromMouse(WXYFlags.NeedWindow).IsOfThisThread) {
-					goto g1;
-				}
-			}
-
-			//close if mouse is far
-			if (_closing_classicMenu) return;
-			POINT p = AMouse.XY;
-			int dist = ADpi.Scale(MouseClosingDistance, p);
-			for (var v = _closing_lastVisibleMenu; v != null; v = v.OwnerItem?.Owner as ToolStripDropDown) {
-				RECT r = v.Bounds;
-				if (!_closing_mouseWasIn) {
-					int half = dist / 2;
-					r.Inflate(half, half);
-					_closing_mouseWasIn = r.Contains(p);
-					r.Inflate(-half, -half);
-				}
-				r.Inflate(dist, dist);
-				if (r.Contains(p)) return;
-			}
-
-			if (!_closing_mouseWasIn) return;
-			g1:
-			if (_closing_classicMenu) {
+		public int Show(AnyWnd owner = default, MSFlags flags = 0, POINT? xy = null, RECT? excludeRect = null) {
+			if (IsVisible || (!flags.Has(MSFlags.Recurse) && (AWnd.More.GetGUIThreadInfo(out var gti, AThread.Id) && gti.flags.Has(Native.GUI.INMENUMODE)))) {
+				//TPM fails, unless with TPM_RECURSE
+#if false
+			//this works, but after 30 times the process hangs and cannot be terminated, need to reboot. Maybe stack overflow. Removing hook/timer/subclass does not help.
+			Api.EndMenu();
+			_Clear();
+			flags|=MSFlags.Recurse;
+#else
+				//throw new InvalidOperationException("thread is in menu mode");
 				Api.EndMenu();
-				if (closeReason == ToolStripDropDownCloseReason.Keyboard) return;
+				return 0;
+#endif
 			}
-			_Close(closeReason);
-		}
 
-		byte _GetMouseState() => (byte)(
-			(AKeys.UI.GetKeyState(KKey.MouseLeft) & 1)
-			| ((AKeys.UI.GetKeyState(KKey.MouseRight) & 1) << 1)
-			| ((AKeys.UI.GetKeyState(KKey.MouseMiddle) & 1) << 2)
-			);
-
-		//bool _IsMenuWindow()
-		//{
-		//	var w = AWnd.FromMouse(WXYFlags.NeedWindow);
-		//	if(w.IsOfThisThread) {
-		//		if(w == _c.Hwnd()) return true;
-		//		foreach(var v in _visibleSubmenus) if(w == v.Hwnd()) return true;
-		//		//if()
-		//	}
-		//	return false;
-		//}
-
-		void _Close(ToolStripDropDownCloseReason reason = ToolStripDropDownCloseReason.CloseCalled) {
-			if (IsDisposed) return;
-
-			for (var v = _closing_lastVisibleMenu; v != null;) {
-				var v2 = v.OwnerItem?.Owner as ToolStripDropDown;
-				_closing = true;
-				v.Close(reason);
-				_closing = false;
-				if (reason == ToolStripDropDownCloseReason.Keyboard) break;
-				v = v2;
+			Api.TPMPARAMS* tpp = null;
+			var tp = new Api.TPMPARAMS { cbSize = sizeof(Api.TPMPARAMS) };
+			if (excludeRect != null) {
+				tp.rcExclude = excludeRect.Value;
+				tpp = &tp;
 			}
+
+			POINT p;
+			if (flags.Has(MSFlags.ByCaret) && AKeys.More.GetTextCursorRect(out RECT cr, out _)) {
+				//p = new POINT(cr.left - ADpi.Scale(32, AScreen.Of(cr).Dpi), cr.bottom); //no, menu margins are not DPI-scaled. Its width depends on dpi-scaled image width, but only if using images.
+				p = new POINT(cr.left - 32, cr.bottom);
+				if (tpp == null) {
+					cr.Inflate(4, 0);
+					tp.rcExclude = cr;
+					tpp = &tp;
+				}
+			} else {
+				p = xy ?? AMouse.XY;
+				if (flags.Has(MSFlags.ScreenCenter)) {
+					var rs = AScreen.Of(p).WorkArea;
+					p = new(rs.CenterX, rs.CenterY);
+				}
+			}
+
+			_dpi = AScreen.Of(p).Dpi;
+
+			var ow = owner.Hwnd;
+			bool noOwner = ow.Is0;
+			if (noOwner) ow = AWnd.More.CreateMessageOnlyWindow("#32770");
+			else if (!ow.IsOfThisThread) throw new ArgumentException("menu owner must be in current thread");
+
+			AHookWin hKey = null;
+			ATimer timer = null;
+			Api.SUBCLASSPROC subclassProc = null;
+			var hmenu = Api.CreatePopupMenu();
+			int resultId = 0; MenuItem resultItem = null;
+			try {
+				_dSub.Add(hmenu, -1);
+				_FillPopupMenu(hmenu, 0, 0);
+
+				if (!flags.Has(MSFlags_Raw_)) {
+					//SHOULDDO: (flag) if pressed a key not used for the menu, close the menu and don't eat the key.
+					//	Also let Tab work like Enter. Let Enter and Tab, if no item selected, execute first item.
+					//	Would be useful for autotext confirm.
+					//	But &underlined chars make it difficult.
+
+					if (!AWnd.Active.IsOfThisThread) {
+						//never mind: hooks don't work if active window has higher UAC IL. Then use timer and mouse/Esc toggle state.
+						if (!flags.Has(MSFlags_NoKeyHook_)) {
+							hKey = AHookWin.Keyboard(g => {
+								g.BlockEvent();
+								Api.PostMessage(default, g.IsUp ? Api.WM_KEYUP : Api.WM_KEYDOWN, (int)g.Key, default);
+								if (!g.IsUp) Api.TranslateMessage(new() { hwnd = ow, message = Api.WM_KEYDOWN, wParam = (int)g.Key });
+							});
+						}
+
+						//to close with mouse use timer. Mouse hook may not work because of UAC.
+						byte mouseState = _GetMouseState();
+						timer = new(t => {
+							//close if mouse clicked a window of another thread
+							byte ms = _GetMouseState();
+							bool clicked = ms != mouseState;
+							mouseState = ms;
+							if (AWnd.Active.IsOfThisThread) return;
+							if (clicked && !AWnd.FromMouse(WXYFlags.NeedWindow).IsOfThisThread) Close();
+
+						});
+						timer.Every(30);
+
+						static byte _GetMouseState() => (byte)(
+							(AKeys.UI.GetKeyState(KKey.MouseLeft) & 1)
+							| ((AKeys.UI.GetKeyState(KKey.MouseRight) & 1) << 1)
+							| ((AKeys.UI.GetKeyState(KKey.MouseMiddle) & 1) << 2)
+							);
+						//} else {
+						//	rejected. Rare. May not work if a mouse button is pressed, for example on double click.
+						//	if (focusFirst) Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Down, 0);
+					}
+
+					if (timer != null || _sourceFile != null || _dSub.Count > 1)
+						Api.SetWindowSubclass(ow, subclassProc = _SubclassProc, 1);
+				}
+
+				//never mind: by default does not draw underlines. Users can set it in Windows Settings -> Ease of Access -> Keyboard.
+				//	Tested: can underline with SendInput(Alt), but SetKeyboardState doesn't work.
+
+				resultId = Api.TrackPopupMenuEx(hmenu, ((uint)flags & 0xffffff) | Api.TPM_RETURNCMD, p.x, p.y, ow, tpp);
+				//CONSIDER: if 0, throw exception if failed
+
+				if (resultId < 0) { //has action or/and is check/radio
+					int i = -resultId - 1;
+					var v = resultItem = _a[i];
+
+					if (v.checkType == 1) {
+						v.IsChecked ^= true;
+					} else if (v.checkType == 2) { //radio
+						int level = v.level;
+						bool _SameGroup(int j) => (uint)j < _a.Count && _a[j].checkType == 2 && _a[j].level == level;
+						for (int j = i; _SameGroup(--j);) _a[j].IsChecked = false;
+						for (int j = i; _SameGroup(++j);) _a[j].IsChecked = false;
+						v.IsChecked = true;
+					}
+				}
+			}
+			finally {
+				hKey?.Dispose();
+				timer?.Stop();
+				Api.DestroyMenu(hmenu);
+				if (subclassProc != null) Api.RemoveWindowSubclass(ow, subclassProc, 1);
+				if (noOwner) Api.DestroyWindow(ow);
+
+				int lazyFrom = 0;
+				for (int i = 0; i < _a.Count; i++) {
+					var v = _a[i];
+					if (v.hbitmap != default) { Api.DeleteObject(v.hbitmap); v.hbitmap = default; }
+					v.submenuFilled = false;
+					if (v.level < 0 && lazyFrom == 0) lazyFrom = i;
+				}
+				if (lazyFrom > 0) _a.RemoveRange(lazyFrom, _a.Count - lazyFrom);
+				_dSub.Clear();
+			}
+
+			if (resultItem?.Clicked != null) {
+				if (resultItem.actionThread) AThread.Start(() => _ExecItem(), background: false); else _ExecItem();
+				void _ExecItem() {
+					try { resultItem.Clicked(resultItem); }
+					catch (Exception ex) when (!resultItem.actionException) { AWarning.Write(ex.ToString(), -1); }
+				}
+			}
+			return resultId;
 		}
 
 		/// <summary>
-		/// Closes the menu and its submenus.
+		/// Adds native menu items to the main menu or to a submenu (on WM_INITMENUPOPUP).
+		/// Loads images etc.
+		/// </summary>
+		/// <param name="h">Menu handle (main or submenu).</param>
+		/// <param name="level">0 or submenu level.</param>
+		/// <param name="i">First item index in _a.</param>
+		void _FillPopupMenu(IntPtr h, int level, int i) {
+			AMemoryBitmap mb = null;
+			Graphics gr = null;
+			int imageSize = ADpi.Scale(16, _dpi);
+			//bool hasColumns=false, hasCheck=false;
+			try {
+				for (; i < _a.Count; i++) {
+					var v = _a[i];
+					if (v.level < level) break;
+					if (v.level > level) continue;
+					if (v.separator) {
+						Api.AppendMenu(h);
+					} else {
+						uint state = 0;
+						if (v.IsDisabled) state |= Api.MFS_DISABLED;
+						if (v.IsChecked) state |= Api.MFS_CHECKED;
+						//if (v.IsHilited) state |= Api.MFS_HILITE; //hilites but does not make focused. Also tested HiliteMenuItem, but it works only with menubar.
+						if (v.IsBold) state |= Api.MFS_DEFAULT;
+						var x = new Api.MENUITEMINFO(Api.MIIM_ID | Api.MIIM_DATA | Api.MIIM_FTYPE | Api.MIIM_STRING | Api.MIIM_STATE) { wID = v.Id, dwItemData = i + 1, fState = state };
+						if (v.checkType == 2) x.fType |= Api.MFT_RADIOCHECK;
+						if (v.column) x.fType |= Api.MFT_MENUBARBREAK;
+						//if(v.column) hasColumns=true;
+						//if(v.checkType!=0) hasCheck=true;
+						if (v.IsSubmenu) {
+							x.fMask |= Api.MIIM_SUBMENU;
+							x.hSubMenu = Api.CreatePopupMenu();
+							_dSub.Add(x.hSubMenu, i);
+						}
+
+						//APerf.First();
+						var (im, dispose) = _GetImage(v);
+						//APerf.Next();
+						if (im != null) {
+							if (mb == null) {
+								mb = new Au.Util.AMemoryBitmap(imageSize, imageSize);
+								gr = Graphics.FromHdc(mb.Hdc);
+								gr.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+							}
+							gr.Clear(Color.Transparent);
+							gr.DrawImage(im, 0, 0, imageSize, imageSize);
+							if (dispose) im.Dispose();
+							//x.hbmpItem=(IntPtr)Api.HBMMENU_CALLBACK; //no theme
+							v.hbitmap = Api.CopyImage(mb.Hbitmap, 0, 0, 0, Api.LR_CREATEDIBSECTION); //LR_CREATEDIBSECTION with alpha
+							if (v.hbitmap != default) {
+								x.fMask |= Api.MIIM_BITMAP;
+								x.hbmpItem = v.hbitmap;
+							}
+						}
+
+						fixed (char* pt = v.Text) {
+							x.dwTypeData = pt;
+							Api.InsertMenuItem(h, -1, true, x);
+						}
+						//APerf.Next(); AOutput.Write(APerf.ToString(), v);
+					}
+				}
+			}
+			finally {
+				gr?.Dispose();
+				mb?.Dispose();
+			}
+
+			//not good anyway:
+			//if(hasColumns && !hasCheck) api.SetMenuInfo(h, new() { cbSize=sizeof(api.MENUINFO), fMask=api.MIM_STYLE, dwStyle=api.MNS_NOCHECK });
+			//if(hasColumns && !hasCheck) api.SetMenuInfo(h, new() { cbSize=sizeof(api.MENUINFO), fMask=api.MIM_STYLE, dwStyle=api.MNS_CHECKORBMP});
+		}
+
+		LPARAM _SubclassProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam, LPARAM uIdSubclass, nint dwRefData) {
+			//AWnd.More.PrintMsg(w, msg, wParam, lParam);
+
+			switch (msg) {
+			case Api.WM_INITMENUPOPUP:
+				if (_dSub.TryGetValue(wParam, out int i) && i >= 0) {
+					var v = _a[i];
+					if (!v.submenuFilled) {
+						v.submenuFilled = true;
+						if (v.submenuOpening != null) {
+							i = _a.Count;
+							_a.Add(new() { level = -1 }); //1. Mark to remove lazily added items. 2. Separate this group from other items.
+							_level = v.level + 1;
+							try { v.submenuOpening(this); }
+							finally { _level = 0; }
+						}
+						_FillPopupMenu(wParam, v.level + 1, i + 1);
+					}
+				}
+				break;
+			case Api.WM_MENURBUTTONUP:
+				//AOutput.Write("WM_MENURBUTTONUP"); //missing for expanded submenu-item, but user can press Esc and then works
+				if (_sourceFile != null && _dSub.ContainsKey(lParam) && AScriptEditor.Available) {
+					var v = new Api.MENUITEMINFO(Api.MIIM_DATA);
+					if (Api.GetMenuItemInfo(lParam, (int)wParam, true, ref v)) {
+						int j = (int)v.dwItemData - 1;
+						if ((uint)j < _a.Count) { //not a separator
+							int k = AMenu.ShowSimple("&Edit menu item", w, MSFlags.Recurse | MSFlags_Raw_);
+							if (k == 1) {
+								AScriptEditor.GoToEdit(_sourceFile, _a[j].sourceLine);
+								msg = Api.WM_CANCELMODE; wParam = 0; lParam = 0;
+							}
+						}
+					}
+				}
+				break;
+			case Api.WM_ENTERIDLE when wParam == 2: //MSGF_MENU
+				var w1 = (AWnd)lParam; //popup menu window
+				if (!w1.HasExStyle(WS2.NOACTIVATE)) w1.SetExStyle(WS2.NOACTIVATE, WSFlags.Add); //prevent activating the menu window on click when current thread isn't the foreground thread
+				break;
+			}
+
+			return Api.DefSubclassProc(w, msg, wParam, lParam);
+		}
+
+		/// <summary>
+		/// Closes this popup menu, including submenus.
 		/// </summary>
 		public void Close() {
-			_Close();
+			Api.EndMenu();
 		}
 
-		#endregion
-
-		#region static
+		/// <summary>
+		/// true if this thread is in <b>Show</b> function of this menu.
+		/// </summary>
+		public bool IsVisible => _dSub.Count > 0;
 
 		/// <summary>
-		/// Creates and shows popup menu where items use ids instead of actions.
+		/// Gets added items.
+		/// </summary>
+		/// <param name="submenu">Get only items of this submenu.</param>
+		/// <param name="skipSubmenus">Skip items in submenus.</param>
+		/// <exception cref="ArgumentException"><i>submenu</i> isn't in this menu.</exception>
+		/// <remarks>
+		/// Skips separators and items in submenus filled by <see cref="Submenu(string, Action{AMenu}, MTImage, bool, int)"/> callback function.
+		/// </remarks>
+		public IEnumerable<MenuItem> Items(MenuItem submenu = null, bool skipSubmenus = false) {
+			int i = 0, level = 0;
+			if (submenu != null) {
+				i = _a.IndexOf(submenu);
+				if (i++ < 0) throw new ArgumentException();
+				if (submenu.submenuOpening != null) yield break;
+				level = submenu.level + 1;
+			}
+			for (; i < _a.Count; i++) {
+				var v = _a[i];
+				if (v.level < level) break;
+				if (v.level > level && skipSubmenus) continue;
+				if (v.separator) continue;
+				yield return v;
+			}
+		}
+
+		/// <summary>
+		/// Creates and shows simple popup menu. Without images, actions, submenus.
 		/// Returns selected item id, or 0 if cancelled.
 		/// </summary>
 		/// <param name="items">
@@ -690,18 +614,18 @@ namespace Au
 		/// Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
 		/// For separators use null or empty strings: "One|Two||Three|Four".
 		/// </param>
-		/// <param name="owner">Owner control/form or null.</param>
-		/// <param name="position">Position in screen or owner's client area. If null (default), uses the mouse cursor position.</param>
-		/// <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>position</i> is offset.</param>
-		/// <param name="direction">Menu drop direction.</param>
+		/// <param name="owner">Owner window. Optional.</param>
+		/// <param name="flags"></param>
+		/// <param name="xy">Menu position. If null (default), uses mouse position by default. It depends on flags.</param>
+		/// <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
+		/// <exception cref="ArgumentException"><i>owner</i> does not belong to this thread or is invalid window handle.</exception>
 		/// <remarks>
-		/// The menu is modal; the function returns when it is closed.
+		/// The function adds menu items and calls <see cref="Show"/>. Returns when menu closed. The last 4 parameters are same as of <b>Show</b>.
 		/// </remarks>
 		/// <seealso cref="ADialog.ShowList"/>
-		public static int ShowSimple(DStringList items, Control owner = null, POINT? position = null, bool byCaret = false, ToolStripDropDownDirection direction = ToolStripDropDownDirection.Default) {
+		public static int ShowSimple(DStringList items, AnyWnd owner = default, MSFlags flags = 0, POINT? xy = null, RECT? excludeRect = null) {
 			var a = items.ToArray();
-			var m = new AMenu { Modal = true };
-			int result = 0, autoId = 0;
+			var m = new AMenu();
 			foreach (var v in a) {
 				var s = v;
 				if (s.NE()) {
@@ -710,21 +634,66 @@ namespace Au
 					if (s.ToInt(out int id, 0, out int end)) {
 						if (s.Eq(end, ' ')) end++;
 						s = s[end..];
-						autoId = id;
+						m.Add(id, s);
 					} else {
-						id = ++autoId;
+						m.Add(s);
 					}
-					m.Add(s, o => result = (int)o.MenuItem.Tag).Tag = id;
 				}
 			}
-			if (owner != null) {
-				m.Show(owner, position, byCaret, direction);
-			} else {
-				m.Show(position, byCaret, direction);
-			}
-			return result;
+			return m.Show(owner, flags, xy, excludeRect);
 		}
 
-		#endregion
+		/// <summary>
+		/// No hook/timer/subclass.
+		/// </summary>
+		internal const MSFlags MSFlags_Raw_ = (MSFlags)0x40000000;
+		internal const MSFlags MSFlags_NoKeyHook_ = (MSFlags)0x20000000;
+	}
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Flags for <see cref="AMenu"/> <b>ShowX</b> methods.
+	/// </summary>
+	/// <remarks>
+	/// Most flags are for API <msdn>TrackPopupMenuEx</msdn>.
+	/// </remarks>
+	[Flags]
+	public enum MSFlags
+	{
+		/// <summary>Show by caret (text cursor) position. If not possible, depends on flag <b>ScreenCenter</b> or parameter <i>xy</i>.</summary>
+		ByCaret = 0x1000000,
+
+		/// <summary>Show in center of screen containing mouse pointer.</summary>
+		ScreenCenter = 0x2000000,
+
+		//private: const MSFlags_Raw_ = 0x40000000 - no hook/subclass
+
+		//TPM_ flags
+
+		/// <summary>Let <b>ShowX</b> show menu when this thread is showing another menu. Without this flag then closes that menu and returns 0. Note: avoid multi-level recursion; the process may hang etc.</summary>
+		Recurse = 0x1,
+
+		/// <summary>Horizontally align the menu so that the show position would be in its center.</summary>
+		AlignCenterH = 0x4,
+
+		/// <summary>Horizontally align the menu so that the show position would be at its right side.</summary>
+		AlignRight = 0x8,
+
+		/// <summary>Vertically align the menu so that the show position would be in its center.</summary>
+		AlignCenterV = 0x10,
+
+		/// <summary>Vertically align the menu so that the show position would at in its bottom.</summary>
+		AlignBottom = 0x20,
+
+		/// <summary>Show at bottom or top of <i>excludeRect</i>, not at righ/left.</summary>
+		AlignRectBottomTop = 0x40,
+
+		/// <summary>Displays menu without animation.</summary>
+		NoAnimation = 0x4000,
+
+		/// <summary>Text layout from right-to-left.</summary>
+		LayoutRtl = 0x8000,
 	}
 }

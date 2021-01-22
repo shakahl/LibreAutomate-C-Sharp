@@ -48,7 +48,12 @@ class CiPopupList
 	public CiPopupList(CiCompletion compl) {
 		_compl = compl;
 
-		_tv = new KTreeView { ImageCache = App.ImageCache, ItemMarginLeft = 20, HotTrack = true, CustomDraw = new _CustomDraw(this) };
+		_tv = new KTreeView {
+			ImageCache = App.ImageCache,
+			ItemMarginLeft = 20,
+			//HotTrack = true, //no
+			CustomDraw = new _CustomDraw(this)
+		};
 		_tv.ItemActivated += _tv_ItemActivated;
 		_tv.SelectedSingle += _tv_SelectedSingle;
 
@@ -139,7 +144,7 @@ class CiPopupList
 		if ((uint)index < _av.Count) {
 			var ci = _av[index];
 			//AOutput.Write(ci.ci.ProviderName, ci.Provider);
-			if(ci.Provider == CiComplProvider.XmlDoc) return;
+			if (ci.Provider == CiComplProvider.XmlDoc) return;
 			_xpTimer.After(300, ci);
 			_xamlPopup.Xaml = null;
 		} else {

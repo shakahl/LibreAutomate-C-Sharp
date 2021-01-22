@@ -1,5 +1,6 @@
-﻿//This class is used in 1 place in this library: in AMenu when modal.
-#define FORMS //FUTURE: remove if AMenu reimplemented without forms
+﻿//FUTURE: remove if not used.
+
+//#define FORMS
 
 using System;
 using System.Collections.Generic;
@@ -59,7 +60,6 @@ namespace Au.Util
 			void _DoEvents() {
 				if (isForms) _DoEventsForms();
 				else ATime.DoEvents();
-				//info: with ATime.DoEvents something with forms does not work, eg keys/mouse with modal AMenu.
 			}
 #else
 			void _DoEvents() => ATime.DoEvents();

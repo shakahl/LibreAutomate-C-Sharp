@@ -30,6 +30,7 @@ using System.Windows.Media;
 using System.Windows.Controls;
 using System.Windows.Navigation;
 
+//TODO: instead of formatting/parsing XAML, append objects directly. Now errors sometimes. Eg even type name can contain <> and need to escape.
 //SHOULDDO: test whether are displayed ref and readonly modifiers of types, functions and fields. Now functions can be readonly, which means they don't modify state.
 
 class CiXaml
@@ -261,6 +262,7 @@ class CiXaml
 				break;
 			case TextTags.StringLiteral:
 				c = "string";
+				s = Escape(s);
 				break;
 			case TextTags.NumericLiteral:
 				c = "number";

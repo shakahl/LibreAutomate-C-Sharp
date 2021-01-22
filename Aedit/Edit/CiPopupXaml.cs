@@ -77,7 +77,7 @@ class CiPopupXaml
 				if (s.Starts('^')) {
 					OnLinkClick?.Invoke(this, s);
 				} else if (s.Starts('|')) { //go to symbol source file/position or web page
-					CiGoTo.LinkGoTo(s, _c);
+					CiGoTo.LinkGoTo(s);
 				} else {
 					AFile.TryRun(s);
 				}

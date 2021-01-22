@@ -24,18 +24,15 @@ namespace Au
 		/// All objects must support this property, but some have bugs and can fail or return a wrong window.
 		/// Uses API <msdn>WindowFromAccessibleObject</msdn>.
 		/// </remarks>
-		public AWnd WndContainer
-		{
-			get
-			{
+		public AWnd WndContainer {
+			get {
 				ThrowIfDisposed_();
 				_Hresult(_FuncId.container_window, _GetWnd(out var w));
 				return w;
 			}
 		}
 
-		int _GetWnd(out AWnd w)
-		{
+		int _GetWnd(out AWnd w) {
 			int hr = Cpp.Cpp_AccGetInt(this, 'w', out var i);
 			GC.KeepAlive(this);
 			w = (AWnd)i;
@@ -72,8 +69,7 @@ namespace Au
 		/// Most but not all objects support this property.
 		/// Uses <msdn>IAccessible.accLocation</msdn>.
 		/// </remarks>
-		public bool GetRect(out RECT r)
-		{
+		public bool GetRect(out RECT r) {
 			ThrowIfDisposed_();
 			var hr = _Hresult(_FuncId.rectangle, Cpp.Cpp_AccGetRect(this, out r));
 			GC.KeepAlive(this);
@@ -90,8 +86,7 @@ namespace Au
 		/// Most but not all objects support this property.
 		/// Uses <msdn>IAccessible.accLocation</msdn> and <see cref="AWnd.MapScreenToClient(ref RECT)"/>.
 		/// </remarks>
-		public bool GetRect(out RECT r, AWnd w)
-		{
+		public bool GetRect(out RECT r, AWnd w) {
 			return GetRect(out r) && w.MapScreenToClient(ref r);
 		}
 
@@ -104,12 +99,10 @@ namespace Au
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
-		public AccROLE RoleInt
-		{
-			get
-			{
+		public AccROLE RoleInt {
+			get {
 				ThrowIfDisposed_();
-				if(_misc.role != 0) return (AccROLE)_misc.role; //SHOULDDO: use AccMiscFlags.RoleIsString
+				if (_misc.role != 0) return (AccROLE)_misc.role; //SHOULDDO: use AccMiscFlags.RoleIsString
 				_Hresult(_FuncId.role, _GetRole(out var role, out _, dontNeedStr: true));
 				return role;
 			}
@@ -125,15 +118,13 @@ namespace Au
 		/// All objects must support this property. If failed, probably the object is invalid, for example its window was closed.
 		/// Uses <msdn>IAccessible.get_accRole</msdn>.
 		/// </remarks>
-		public string Role
-		{
-			get
-			{
+		public string Role {
+			get {
 				ThrowIfDisposed_();
 				var role = (AccROLE)_misc.role;
-				if(role == 0) {
-					if(0 != _Hresult(_FuncId.role, _GetRole(out role, out var roleStr, dontNeedStr: false))) return "";
-					if(roleStr != null) return roleStr;
+				if (role == 0) {
+					if (0 != _Hresult(_FuncId.role, _GetRole(out role, out var roleStr, dontNeedStr: false))) return "";
+					if (roleStr != null) return roleStr;
 				}
 				var a = s_roles; uint u = (uint)role;
 				return (u < a.Length) ? a[u] : ((int)role).ToString();
@@ -143,22 +134,20 @@ namespace Au
 		static readonly string[] s_roles = { "0", "TITLEBAR", "MENUBAR", "SCROLLBAR", "GRIP", "SOUND", "CURSOR", "CARET", "ALERT", "WINDOW", "CLIENT", "MENUPOPUP", "MENUITEM", "TOOLTIP", "APPLICATION", "DOCUMENT", "PANE", "CHART", "DIALOG", "BORDER", "GROUPING", "SEPARATOR", "TOOLBAR", "STATUSBAR", "TABLE", "COLUMNHEADER", "ROWHEADER", "COLUMN", "ROW", "CELL", "LINK", "HELPBALLOON", "CHARACTER", "LIST", "LISTITEM", "TREE", "TREEITEM", "PAGETAB", "PROPERTYPAGE", "INDICATOR", "IMAGE", "STATICTEXT", "TEXT", "BUTTON", "CHECKBOX", "RADIOBUTTON", "COMBOBOX", "DROPLIST", "PROGRESSBAR", "DIAL", "HOTKEYFIELD", "SLIDER", "SPINBUTTON", "DIAGRAM", "ANIMATION", "EQUATION", "BUTTONDROPDOWN", "BUTTONMENU", "BUTTONDROPDOWNGRID", "WHITESPACE", "PAGETABLIST", "CLOCK", "SPLITBUTTON", "IPADDRESS", "TREEBUTTON" };
 
 		//Returns HRESULT.
-		int _GetRole(out AccROLE roleInt, out string roleStr, bool dontNeedStr)
-		{
+		int _GetRole(out AccROLE roleInt, out string roleStr, bool dontNeedStr) {
 			roleStr = null;
-			if(_misc.role != 0) { roleInt = (AccROLE)_misc.role; return 0; }
+			if (_misc.role != 0) { roleInt = (AccROLE)_misc.role; return 0; }
 			var hr = Cpp.Cpp_AccGetRole(this, out roleInt, out var b);
 			GC.KeepAlive(this);
-			if(hr == 0) {
-				if(b.Is0) _misc.SetRole(roleInt);
-				else if(dontNeedStr) b.Dispose();
+			if (hr == 0) {
+				if (b.Is0) _misc.SetRole(roleInt);
+				else if (dontNeedStr) b.Dispose();
 				else roleStr = b.ToStringAndDispose();
 			}
 			return hr;
 		}
 
-		int _GetState(out AccSTATE state)
-		{
+		int _GetState(out AccSTATE state) {
 			int hr = Cpp.Cpp_AccGetInt(this, 's', out int i);
 			GC.KeepAlive(this);
 			state = (AccSTATE)i;
@@ -178,10 +167,8 @@ namespace Au
 		/// if(a.IsInvisible) AOutput.Write("invisible");
 		/// ]]></code>
 		/// </example>
-		public AccSTATE State
-		{
-			get
-			{
+		public AccSTATE State {
+			get {
 				ThrowIfDisposed_();
 				_Hresult(_FuncId.state, _GetState(out var state));
 				return state;
@@ -205,11 +192,10 @@ namespace Au
 		/// </remarks>
 		public bool IsInvisible => IsInvisible_(State);
 
-		internal bool IsInvisible_(AccSTATE state)
-		{
-			if(!state.Has(AccSTATE.INVISIBLE)) return false;
-			if(!state.Has(AccSTATE.OFFSCREEN)) return true;
-			switch(RoleInt) {
+		internal bool IsInvisible_(AccSTATE state) {
+			if (!state.Has(AccSTATE.INVISIBLE)) return false;
+			if (!state.Has(AccSTATE.OFFSCREEN)) return true;
+			switch (RoleInt) {
 			case AccROLE.WINDOW:
 			case AccROLE.DOCUMENT:
 			case AccROLE.PROPERTYPAGE:
@@ -242,14 +228,12 @@ namespace Au
 		/// Converts BSTR to string and disposes the BSTR.
 		/// If hr is not 0, returns "" (never null).
 		/// </summary>
-		static string _BstrToString(int hr, BSTR b)
-		{
-			if(hr == 0) return b.ToStringAndDispose() ?? "";
+		static string _BstrToString(int hr, BSTR b) {
+			if (hr == 0) return b.ToStringAndDispose() ?? "";
 			return "";
 		}
 
-		string _GetStringProp(char prop)
-		{
+		string _GetStringProp(char prop) {
 			ThrowIfDisposed_();
 			int hr = Cpp.Cpp_AccGetProp(this, prop, out var b);
 			GC.KeepAlive(this);
@@ -266,8 +250,7 @@ namespace Au
 		/// Returns "" if name is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accName</msdn>.
 		/// </remarks>
-		public string Name
-		{
+		public string Name {
 			get => _GetStringProp('n');
 
 			//note: bug of standard toolbar buttons: fails to get name if all these are true:
@@ -280,9 +263,8 @@ namespace Au
 		/// Gets <see cref="Name"/> of window/control w.
 		/// Returns null if w invalid. Returns "" if failed to get name.
 		/// </summary>
-		internal static string NameOfWindow_(AWnd w)
-		{
-			if(!w.IsAlive) return null;
+		internal static string NameOfWindow_(AWnd w) {
+			if (!w.IsAlive) return null;
 			var hr = Cpp.Cpp_AccFromWindow(1 | 2, w, 0, out _, out var b);
 			return _BstrToString(hr, b);
 
@@ -299,11 +281,9 @@ namespace Au
 		/// Most objects don't support 'set'.
 		/// Uses <msdn>IAccessible.get_accValue</msdn> or <msdn>IAccessible.put_accValue</msdn>.
 		/// </remarks>
-		public string Value
-		{
+		public string Value {
 			get => _GetStringProp('v');
-			set
-			{
+			set {
 				ThrowIfDisposed_();
 				AuException.ThrowIfHresultNot0(Cpp.Cpp_AccAction(this, 'v', value));
 				GC.KeepAlive(this);
@@ -317,8 +297,7 @@ namespace Au
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accDescription</msdn>.
 		/// </remarks>
-		public string Description
-		{
+		public string Description {
 			get => _GetStringProp('d');
 		}
 
@@ -329,8 +308,7 @@ namespace Au
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accHelp</msdn>.
 		/// </remarks>
-		public string Help
-		{
+		public string Help {
 			get => _GetStringProp('h');
 		}
 
@@ -341,8 +319,7 @@ namespace Au
 		/// Only objects found with flag <see cref="AFFlags.UIA"/> can have this property.
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public string UiaId
-		{
+		public string UiaId {
 			get => _GetStringProp('u');
 		}
 
@@ -353,21 +330,20 @@ namespace Au
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// Uses <msdn>IAccessible.get_accKeyboardShortcut</msdn>.
 		/// </remarks>
-		public string KeyboardShortcut
-		{
+		public string KeyboardShortcut {
 			get => _GetStringProp('k');
 		}
 
 		/// <summary>
 		/// Gets default action.
+		/// See <see cref="DoAction"/>.
 		/// </summary>
 		/// <remarks>
 		/// Returns "" if this property is unavailable or if failed. Supports <see cref="ALastError"/>.
 		/// If this is a Java accessible object, returns all actions that can be used with <see cref="DoJavaAction"/>, like "action1, action2, action3", from which the first is considered default and is used by <see cref="DoAction"/>.
 		/// Uses <msdn>IAccessible.get_accDefaultAction</msdn>.
 		/// </remarks>
-		public string DefaultAction
-		{
+		public string DefaultAction {
 			get => _GetStringProp('a');
 		}
 
@@ -380,15 +356,13 @@ namespace Au
 		/// The action can take long time, for example show a dialog. This function normally does not wait. It allows the caller to automate the dialog. If it waits, try <see cref="DoJavaAction"/> or one of the above functions (MouseClick etc).
 		/// Uses <msdn>IAccessible.accDoDefaultAction</msdn>.
 		/// </remarks>
-		public void DoAction()
-		{
+		public void DoAction() { //sorry, I did not find a better name. Alternatives: DoDefaultAction, Invoke, Execute.
 			ThrowIfDisposed_();
 			var hr = Cpp.Cpp_AccAction(this, 'a');
 			GC.KeepAlive(this);
 			AuException.ThrowIfHresultNot0(hr);
 			//_MinimalSleep(); //don't need. It does not make more reliable.
 		}
-		//TODO: rename. Eg Execute or Invoke. Or DoDefaultAction. It seems in UIA it is Invoke.
 
 		//void _MinimalSleep()
 		//{
@@ -406,8 +380,7 @@ namespace Au
 		/// Works not with all objects.
 		/// Use (try) this function when the object does not support <see cref="DoAction"/>. When both don't work, use MouseClick.
 		/// </remarks>
-		public void VirtualClick()
-		{
+		public void VirtualClick() {
 			_VirtualClick(false);
 		}
 
@@ -420,20 +393,18 @@ namespace Au
 		/// Does not wait until the target application finishes processing the message.
 		/// Works not with all objects. When does not work, use MouseClick.
 		/// </remarks>
-		public void VirtualRightClick()
-		{
+		public void VirtualRightClick() {
 			_VirtualClick(true);
 		}
 
-		void _VirtualClick(bool right)
-		{
+		void _VirtualClick(bool right) {
 			var w = WndContainer;
-			if(!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
-			if(r.IsEmpty || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
+			if (!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
+			if (r.IsEmpty || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
 			var xy = AMath.MakeUint(r.CenterX, r.CenterY);
-			uint b = 0; if(AKeys.IsCtrl) b |= Api.MK_CONTROL; if(AKeys.IsShift) b |= Api.MK_SHIFT;
+			uint b = 0; if (AKeys.IsCtrl) b |= Api.MK_CONTROL; if (AKeys.IsShift) b |= Api.MK_SHIFT;
 			uint b1 = b | (right ? Api.MK_RBUTTON : Api.MK_LBUTTON);
 			w.Post(right ? Api.WM_RBUTTONDOWN : Api.WM_LBUTTONDOWN, b1, xy);
 			w.Post(Api.WM_MOUSEMOVE, b1, xy);
@@ -455,8 +426,7 @@ namespace Au
 		/// 
 		/// Problem: if the action opens a dialog, DoAction/DoJavaAction do not return until the dialog is closed (or fail after some time). The caller then waits and cannot automate the dialog. Also then this process cannot exit until the dialog is closed. If the action parameter is null and the object is focusable, this function tries a workaround: it makes the object (button etc) focused and posts Space key message, which should press the button; then this function does not wait.
 		/// </remarks>
-		public void DoJavaAction(string action = null)
-		{
+		public void DoJavaAction(string action = null) {
 			//problem: if the button click action opens a modal dialog, doAccessibleActions waits until closed.
 			//	Waits 8 s and then returns true. Somehow in QM2 returns false.
 			//	During that time any JAB calls (probably from another thread) are blocked and fail. Tried various combinations.
@@ -465,7 +435,7 @@ namespace Au
 
 			ThrowIfDisposed_();
 
-			if(action == null
+			if (action == null
 				&& 0 == _GetState(out var state)
 				&& (state & (AccSTATE.FOCUSABLE | AccSTATE.SELECTABLE)) == AccSTATE.FOCUSABLE //must be only focusable. If SELECTABLE, probably don't need this workaround.
 				&& 0 == _GetWnd(out var w)
@@ -503,34 +473,33 @@ namespace Au
 		/// This function does not wait until the new page is completely loaded. There is no reliable/universal way for it. Instead, after calling it you can call a 'wait for object' function which waits for a known object that must be in the new page.
 		/// This function cannot be used when the new page has the same title as current page. Then it waits until <i>secondsTimeout</i> time or forever. The same if the action does not open a web page.
 		/// </remarks>
-		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<AAcc> action = null)
-		{
-			AWnd w = WndTopLevel; if(w.Is0) throw new AuException("*get window");
-			AAcc doc = AAcc.Wait(-1, w, "web:"); if(doc == null) throw new AuException("*find web page");
+		public bool DoActionAndWaitForNewWebPage(double secondsTimeout = 60, Action<AAcc> action = null) {
+			AWnd w = WndTopLevel; if (w.Is0) throw new AuException("*get window");
+			AAcc doc = AAcc.Wait(-1, w, "web:"); if (doc == null) throw new AuException("*find web page");
 
 			string wndName = w.NameTL_, docName = doc.Name; Debug.Assert(!wndName.NE() && !docName.NE());
 			bool wndOK = false, docOK = false;
 			AAcc.Finder f = null;
 
-			if(action == null) DoAction(); else action(this);
+			if (action == null) DoAction(); else action(this);
 
 			//wait until window name and document name both are changed. They can change in any order, especially in Chrome.
 			var to = new AWaitFor.Loop(secondsTimeout, new AOptWaitFor(period: 25));
-			while(to.Sleep()) {
+			while (to.Sleep()) {
 				w.ThrowIfInvalid();
-				if(!wndOK) {
+				if (!wndOK) {
 					var s = w.NameTL_;
-					if(s == null) continue; //probably invalid, will throw in next loop
+					if (s == null) continue; //probably invalid, will throw in next loop
 					wndOK = s != wndName;
 				}
-				if(wndOK && !docOK) {
+				if (wndOK && !docOK) {
 					f ??= new AAcc.Finder("web:") { ResultGetProperty = 'n' };
-					if(!f.Find(w)) continue; //eg in Firefox for some time there is no DOCUMENT
-					var s = f.ResultProperty as string; if(s == null) continue;
+					if (!f.Find(w)) continue; //eg in Firefox for some time there is no DOCUMENT
+					var s = f.ResultProperty as string; if (s == null) continue;
 					docOK = s != docName;
 					//if(!docOK) AOutput.Write("doc is late");
 				}
-				if(wndOK && docOK) {
+				if (wndOK && docOK) {
 					w.ThrowIfInvalid();
 					return true;
 				}
@@ -653,36 +622,35 @@ namespace Au
 		/// Not all objects support it. Most objects support not all flags. It depends on <see cref="AccSTATE"/> FOCUSABLE, SELECTABLE, MULTISELECTABLE, EXTSELECTABLE, DISABLED.
 		/// Many object have bugs, especially with flag TAKEFOCUS. More bugs when the object found with flag <see cref="AFFlags.NotInProc"/>.
 		/// </remarks>
-		public void Select(AccSELFLAG how = AccSELFLAG.TAKESELECTION)
-		{
+		public void Select(AccSELFLAG how = AccSELFLAG.TAKESELECTION) {
 			ThrowIfDisposed_();
 
 			//Workaround for Windows controls bugs, part 1.
 			AWnd w = default, wTL = default; bool focusingControl = false;
-			if(how.Has(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
+			if (how.Has(AccSELFLAG.TAKEFOCUS) && 0 == _GetWnd(out w)) {
 				//if(!w.IsEnabled(true)) throw new AuException("*set focus. Disabled"); //accSelect would not fail //rejected. In some cases the AO may be focusable although window disabled, eg KTreeView.
 				wTL = w.Window;
 				wTL.Activate();
-				if(focusingControl = (w != wTL))
-					if(w.IsEnabled()) //see above. Would be exception if disabled.
+				if (focusingControl = (w != wTL))
+					if (w.IsEnabled()) //see above. Would be exception if disabled.
 						w.Focus();
-				if(IsFocused) how &= ~AccSELFLAG.TAKEFOCUS;
-				if(how == 0) return;
+				if (IsFocused) how &= ~AccSELFLAG.TAKEFOCUS;
+				if (how == 0) return;
 			}
 
-			for(int i = 0; i < 2; i++) {
+			for (int i = 0; i < 2; i++) {
 				var hr = Cpp.Cpp_AccSelect(this, how);
 				GC.KeepAlive(this);
-				if(hr == 0) break;
-				if(hr == 1) continue; //some objects return S_FALSE even if did what asked. Eg combobox (focuses the child Edit), slider. Or may need to retry, eg when trying to focus a listitem in a non-focused listbox.
-				if(hr == Api.DISP_E_MEMBERNOTFOUND) throw new AuException("This object does not support this state");
+				if (hr == 0) break;
+				if (hr == 1) continue; //some objects return S_FALSE even if did what asked. Eg combobox (focuses the child Edit), slider. Or may need to retry, eg when trying to focus a listitem in a non-focused listbox.
+				if (hr == Api.DISP_E_MEMBERNOTFOUND) throw new AuException("This object does not support this state");
 				AuException.ThrowIfHresultNegative(hr);
 			}
 
-			if(!w.Is0) w.MinimalSleepIfOtherThread_(); //sleep only when focusing. Assume selection is sync. Also need for the bug, because the control may be activated a millisecond later.
+			if (!w.Is0) w.MinimalSleepIfOtherThread_(); //sleep only when focusing. Assume selection is sync. Also need for the bug, because the control may be activated a millisecond later.
 
 			//Workaround for Windows controls bugs, part 2.
-			if(focusingControl && w.IsActive) {
+			if (focusingControl && w.IsActive) {
 				//ADebug.Print("activated control");
 				wTL.Activate();
 			}
@@ -712,10 +680,9 @@ namespace Au
 		/// Calls <see cref="Select"/> with flag TAKEFOCUS and optionally TAKESELECTION.
 		/// Not all objects support this action and not all work correctly. More info in Select documentation.
 		/// </remarks>
-		public void Focus(bool andSelect = false)
-		{
+		public void Focus(bool andSelect = false) {
 			var how = AccSELFLAG.TAKEFOCUS;
-			if(andSelect) how |= AccSELFLAG.TAKESELECTION;
+			if (andSelect) how |= AccSELFLAG.TAKESELECTION;
 			Select(how);
 		}
 
@@ -723,18 +690,16 @@ namespace Au
 		/// Gets selected direct child items.
 		/// Returns empty array if there are no selected items of if failed. Supports <see cref="ALastError"/>.
 		/// </summary>
-		public AAcc[] SelectedChildren
-		{
-			get
-			{
+		public AAcc[] SelectedChildren {
+			get {
 				ThrowIfDisposed_();
-				if(_elem != 0) { ALastError.Clear(); return Array.Empty<AAcc>(); }
+				if (_elem != 0) { ALastError.Clear(); return Array.Empty<AAcc>(); }
 				//return _iacc.get_accSelection();
-				if(0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<AAcc>();
+				if (0 != _Hresult(_FuncId.selection, Cpp.Cpp_AccGetSelection(this, out var b)) || b.Is0) return Array.Empty<AAcc>();
 				GC.KeepAlive(this);
 				var p = (Cpp.Cpp_Acc*)b.Ptr; int n = b.Length / sizeof(Cpp.Cpp_Acc);
 				var r = new AAcc[n];
-				for(int i = 0; i < n; i++) r[i] = new AAcc(p[i]);
+				for (int i = 0; i < n; i++) r[i] = new AAcc(p[i]);
 				b.Dispose();
 				return r;
 			}
@@ -746,12 +711,10 @@ namespace Au
 		/// <remarks>
 		/// Uses <msdn>IAccessible.get_accChildCount</msdn>.
 		/// </remarks>
-		public int ChildCount
-		{
-			get
-			{
+		public int ChildCount {
+			get {
 				ThrowIfDisposed_();
-				if(_elem != 0) { ALastError.Clear(); return 0; }
+				if (_elem != 0) { ALastError.Clear(); return 0; }
 				_Hresult(_FuncId.child_count, Cpp.Cpp_AccGetInt(this, 'c', out int cc));
 				GC.KeepAlive(this);
 				return cc;
@@ -787,33 +750,32 @@ namespace Au
 		/// 
 		/// Returns false if fails, for example when the object's window is closed. Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool GetProperties(string props, out AccProperties result)
-		{
+		public bool GetProperties(string props, out AccProperties result) {
 			//SHOULDDO: use cached role. Or not, because now can help to catch bugs where the cached role is incorrect.
 
 			result = default;
 			ThrowIfDisposed_();
-			if(props.Length == 0) return true;
+			if (props.Length == 0) return true;
 			int hr = Cpp.Cpp_AccGetProps(this, props, out var b);
 			GC.KeepAlive(this);
-			if(hr != 0) {
-				if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Unknown property character.");
+			if (hr != 0) {
+				if (hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Unknown property character.");
 				ALastError.Code = hr;
 				return false;
 			}
-			using(b) {
+			using (b) {
 				var offsets = (int*)b.Ptr;
-				for(int i = 0; i < props.Length; i++) {
+				for (int i = 0; i < props.Length; i++) {
 					int offs = offsets[i], len = ((i == props.Length - 1) ? b.Length : offsets[i + 1]) - offs;
 					var p = b.Ptr + offs;
-					switch(props[i]) {
+					switch (props[i]) {
 					case 'r': result.Rect = len > 0 ? *(RECT*)p : default; break;
 					case 's': result.State = len > 0 ? *(AccSTATE*)p : default; break;
 					case 'w': result.WndContainer = len > 0 ? (AWnd)(*(int*)p) : default; break;
 					case '@': result.HtmlAttributes = _AttributesToDictionary(p, len); break;
 					default:
 						var s = (len == 0) ? "" : new string(p, 0, len);
-						switch(props[i]) {
+						switch (props[i]) {
 						case 'R': result.Role = s; break;
 						case 'n': result.Name = s; break;
 						case 'v': result.Value = s; break;
@@ -832,18 +794,17 @@ namespace Au
 			return true;
 		}
 
-		static Dictionary<string, string> _AttributesToDictionary(char* p, int len)
-		{
+		static Dictionary<string, string> _AttributesToDictionary(char* p, int len) {
 			var d = new Dictionary<string, string>();
 			int ik = 0, iv = 0;
-			for(int i = 0; i < len; i++) {
+			for (int i = 0; i < len; i++) {
 				var c = p[i];
-				if(c == '\0' && iv > ik) {
+				if (c == '\0' && iv > ik) {
 					string sk = new string(p, ik, iv - ik - 1);
 					string sv = new string(p, iv, i - iv);
 					d[sk] = sv;
 					ik = i + 1;
-				} else if(c == '=' && iv <= ik) {
+				} else if (c == '=' && iv <= ik) {
 					iv = i + 1;
 				}
 			}
@@ -881,19 +842,18 @@ namespace Au
 		/// a = a.Navigate("parent next ch3", true);
 		/// ]]></code>
 		/// </example>
-		public AAcc Navigate(string navig, double secondsToWait = 0)
-		{
+		public AAcc Navigate(string navig, double secondsToWait = 0) {
 			ThrowIfDisposed_();
 			int hr; Cpp.Cpp_Acc ca;
-			if(secondsToWait == 0) {
+			if (secondsToWait == 0) {
 				hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
 			} else {
 				var to = new AWaitFor.Loop(secondsToWait > 0 ? -secondsToWait : 0.0);
 				do hr = Cpp.Cpp_AccNavigate(this, navig, out ca);
-				while(hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
+				while (hr != 0 && hr != (int)Cpp.EError.InvalidParameter && to.Sleep());
 			}
 			GC.KeepAlive(this);
-			if(hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Invalid navig string.");
+			if (hr == (int)Cpp.EError.InvalidParameter) throw new ArgumentException("Invalid navig string.");
 			ALastError.Code = hr;
 			return hr == 0 ? new AAcc(ca) : null;
 
@@ -911,8 +871,7 @@ namespace Au
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// If this is the root of web page (role DOCUMENT or PANE), gets web page body HTML.
 		/// </remarks>
-		public string Html(bool outer)
-		{
+		public string Html(bool outer) {
 			ThrowIfDisposed_();
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, outer ? "'o" : "'i", out BSTR s));
 			GC.KeepAlive(this);
@@ -928,10 +887,9 @@ namespace Au
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// </remarks>
 		/// <exception cref="ArgumentException">name is null/""/invalid.</exception>
-		public string HtmlAttribute(string name)
-		{
+		public string HtmlAttribute(string name) {
 			ThrowIfDisposed_();
-			if(name.NE() || name[0] == '\'') throw new ArgumentException("Invalid name.");
+			if (name.NE() || name[0] == '\'') throw new ArgumentException("Invalid name.");
 			int hr = _Hresult(_FuncId.html, Cpp.Cpp_AccWeb(this, name, out BSTR s));
 			GC.KeepAlive(this);
 			return _BstrToString(hr, s);
@@ -944,14 +902,13 @@ namespace Au
 		/// Returns empty dictionary if this is not a HTML element or does not have attributes or failed. Supports <see cref="ALastError"/>.
 		/// Works with Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, web browser controls...). This object must be found without flag NotInProc.
 		/// </remarks>
-		public Dictionary<string, string> HtmlAttributes()
-		{
+		public Dictionary<string, string> HtmlAttributes() {
 			ThrowIfDisposed_();
 			int hr = Cpp.Cpp_AccWeb(this, "'a", out BSTR s);
 			GC.KeepAlive(this);
 			_Hresult(_FuncId.html, hr);
-			if(hr != 0) return new Dictionary<string, string>();
-			using(s) return _AttributesToDictionary(s.Ptr, s.Length);
+			if (hr != 0) return new Dictionary<string, string>();
+			using (s) return _AttributesToDictionary(s.Ptr, s.Length);
 		}
 
 		/// <summary>
@@ -963,12 +920,11 @@ namespace Au
 		/// - Web page objects in Firefox, Chrome, Internet Explorer and apps that use their code (Thunderbird, Opera, Edge, web browser controls...). With Find use role prefix "web:", "firefox:" or "chrome:", and don't use flag <see cref="AFFlags.NotInProc"/>.
 		/// - Objects standard treeview and listview controls, some other. With <b>Find</b> use flag <see cref="AFFlags.UIA"/>.
 		/// </remarks>
-		public void ScrollTo()
-		{
+		public void ScrollTo() {
 			ThrowIfDisposed_();
 
 			int hr;
-			if(_misc.flags.Has(AccMiscFlags.UIA)) hr = Cpp.Cpp_AccAction(this, 's');
+			if (_misc.flags.Has(AccMiscFlags.UIA)) hr = Cpp.Cpp_AccAction(this, 's');
 			else hr = Cpp.Cpp_AccWeb(this, "'s", out _);
 			GC.KeepAlive(this);
 

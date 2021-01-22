@@ -873,6 +873,7 @@
         <member name="P:Au.AAcc.DefaultAction">
             <summary>
             Gets default action.
+            See <see cref="M:Au.AAcc.DoAction"/>.
             </summary>
             <remarks>
             Returns "" if this property is unavailable or if failed. Supports <see cref="T:Au.ALastError"/>.
@@ -1388,7 +1389,7 @@
             </remarks>
         </member>
         <member name="F:Au.Types.Api.WINDOWPLACEMENT.flags">
-            <summary> WPF_ </summary>//TODO: don't use prefix WPF
+            <summary> WPF_ </summary>
         </member>
         <member name="M:Au.Types.Api.WindowFromPoint(Au.Types.POINT)">
             <summary>
@@ -1958,7 +1959,7 @@
         <member name="T:Au.Types.UsingEndAction">
             <summary>
             Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
-            Usually returned by functions. Examples: <see cref="M:Au.AOpt.Scope.Mouse(System.Boolean)"/>, <see cref="M:Au.AMenu.Submenu(System.String,Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)"/>.
+            Usually returned by functions. Examples: <see cref="M:Au.AOpt.Scope.Mouse(System.Boolean)"/>, <see cref="M:Au.AMenu.Submenu(System.String,Au.Types.MTImage,System.Boolean,System.Int32)"/>.
             </summary>
         </member>
         <member name="M:Au.Types.UsingEndAction.#ctor(System.Action)">
@@ -2022,40 +2023,16 @@
             If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
             </remarks>
         </member>
-        <member name="M:Au.Types.AuException.#ctor">
-            <summary>
-            Sets Message = "Failed.".
-            Sets NativeErrorCode = 0.
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuException.#ctor(System.String)">
-            <summary>
-            Sets Message = message.
-            Sets NativeErrorCode = 0.
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuException.#ctor(System.Int32)">
-            <summary>
-            Sets Message = "Failed. " + ALastError.MessageFor(errorCode).
-            Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String)">
-            <summary>
-            Sets Message = message + " " + ALastError.MessageFor(errorCode).
-            Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
-            </summary>
-        </member>
         <member name="M:Au.Types.AuException.#ctor(System.String,System.Exception)">
             <summary>
-            Sets Message = message + "\r\n\t" + innerException.Message.
-            Sets NativeErrorCode = 0.
+            Sets <b>Message</b> = <i>message</i> (default "Failed.").
+            Sets <b>NativeErrorCode</b> = 0.
             </summary>
         </member>
         <member name="M:Au.Types.AuException.#ctor(System.Int32,System.String,System.Exception)">
             <summary>
-            Sets Message = message + " " + ALastError.MessageFor(errorCode) + "\r\n\t" + innerException.Message.
-            Sets NativeErrorCode = (errorCode != 0) ? errorCode : ALastError.Code.
+            Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : ALastError.Code</c>.
+            Sets <b>Message</b> = <c>message + " " + ALastError.MessageFor(NativeErrorCode)</c>.
             </summary>
         </member>
         <member name="P:Au.Types.AuException.NativeErrorCode">
@@ -2112,36 +2089,16 @@
             If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
             </remarks>
         </member>
-        <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd)">
-            <summary>
-            Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
-            Sets Message = "Failed.".
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.String)">
-            <summary>
-            Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.Int32)">
-            <summary>
-            Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
-            Sets Message = "Failed.".
-            </summary>
-        </member>
-        <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.Int32,System.String)">
-            <summary>
-            Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
-            </summary>
-        </member>
         <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.String,System.Exception)">
             <summary>
-            Sets NativeErrorCode = w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE.
+            Sets <b>Message</b> = <i>message</i> (default "Failed.").
+            Sets <b>NativeErrorCode</b> = <c>w.IsAlive ? 0 : ERROR_INVALID_WINDOW_HANDLE</c>.
             </summary>
         </member>
         <member name="M:Au.Types.AuWndException.#ctor(Au.AWnd,System.Int32,System.String,System.Exception)">
             <summary>
-            Sets NativeErrorCode = (errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE).
+            Sets <b>NativeErrorCode</b> = <c>(errorCode != 0) ? errorCode : (w.IsAlive ? ALastError.Code : ERROR_INVALID_WINDOW_HANDLE)</c>.
+            Sets <b>Message</b> = <c>message + " " + ALastError.MessageFor(NativeErrorCode)</c>.
             </summary>
         </member>
         <member name="P:Au.Types.AuWndException.Window">
@@ -3729,6 +3686,44 @@
             Sends message Native.TDM.SET_PROGRESS_BAR_POS.
             </remarks>
         </member>
+        <member name="T:Au.Types.MSFlags">
+            <summary>
+            Flags for <see cref="T:Au.AMenu"/> <b>ShowX</b> methods.
+            </summary>
+            <remarks>
+            Most flags are for API <msdn>TrackPopupMenuEx</msdn>.
+            </remarks>
+        </member>
+        <member name="F:Au.Types.MSFlags.ByCaret">
+            <summary>Show by caret (text cursor) position. If not possible, depends on flag <b>ScreenCenter</b> or parameter <i>xy</i>.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.ScreenCenter">
+            <summary>Show in center of screen containing mouse pointer.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.Recurse">
+            <summary>Let <b>ShowX</b> show menu when this thread is showing another menu. Without this flag then closes that menu and returns 0. Note: avoid multi-level recursion; the process may hang etc.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.AlignCenterH">
+            <summary>Horizontally align the menu so that the show position would be in its center.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.AlignRight">
+            <summary>Horizontally align the menu so that the show position would be at its right side.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.AlignCenterV">
+            <summary>Vertically align the menu so that the show position would be in its center.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.AlignBottom">
+            <summary>Vertically align the menu so that the show position would at in its bottom.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.AlignRectBottomTop">
+            <summary>Show at bottom or top of <i>excludeRect</i>, not at righ/left.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.NoAnimation">
+            <summary>Displays menu without animation.</summary>
+        </member>
+        <member name="F:Au.Types.MSFlags.LayoutRtl">
+            <summary>Text layout from right-to-left.</summary>
+        </member>
         <member name="T:Au.Types.TBFlags">
             <summary>
             Used with <see cref="P:Au.AToolbar.MiscFlags"/>.
@@ -4170,49 +4165,34 @@
             If false (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
             </summary>
         </member>
-        <member name="T:Au.Types.CMExceptions">
-            <summary>
-            Used with <see cref="P:Au.AWpfMenu.ExceptionHandling"/>;
-            </summary>
-        </member>
-        <member name="F:Au.Types.CMExceptions.Warning">
-            <summary>Handle exceptions. On exception call <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>. This is default.</summary>
-        </member>
-        <member name="F:Au.Types.CMExceptions.Exception">
-            <summary>Don't handle exceptions.</summary>
-        </member>
-        <member name="F:Au.Types.CMExceptions.Silent">
-            <summary>Handle exceptions. On exception do nothing.</summary>
-        </member>
-        <member name="T:Au.Types.CMActionArgs">
+        <member name="T:Au.Types.WpfMenuActionArgs">
             <summary>
             Arguments for <see cref="T:Au.AWpfMenu"/> item actions.
             </summary>
         </member>
-        <member name="M:Au.Types.CMActionArgs.#ctor(System.Windows.Controls.MenuItem)">
+        <member name="M:Au.Types.WpfMenuActionArgs.#ctor(System.Windows.Controls.MenuItem)">
             
         </member>
-        <member name="P:Au.Types.CMActionArgs.Item">
+        <member name="P:Au.Types.WpfMenuActionArgs.Item">
             <summary>
             The menu item object.
-            If <see cref="P:Au.AWpfMenu.ActionThread"/> true, it cannot be used directly. A workaround is <c>o.Item.Dispatcher.Invoke(()=>...);</c>.
             </summary>
         </member>
-        <member name="M:Au.Types.CMActionArgs.ToString">
+        <member name="M:Au.Types.WpfMenuActionArgs.ToString">
             
         </member>
-        <member name="T:Au.Types.MTBase">
+        <member name="T:Au.Types.MTBase_old">
             <summary>
-            Base class of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
+            Base class of <see cref="T:Au.AToolbar"/>.
             </summary>
         </member>
-        <member name="M:Au.Types.MTBase.OnClick_(System.Object,System.EventArgs)">
+        <member name="M:Au.Types.MTBase_old.OnClick_(System.Object,System.EventArgs)">
             <summary>
             Common Click even handler of all items.
             Calls the true item's onClick callback if need. Calls it in correct thread.
             </summary>
         </member>
-        <member name="P:Au.Types.MTBase.ActionThread">
+        <member name="P:Au.Types.MTBase_old.ActionThread">
             <summary>
             In what thread to execute item actions (callback functions).
             Default: <see cref="F:Au.Types.MTThread.Current"/> for <b>AMenu</b> created with the parameterless constructor, else <see cref="F:Au.Types.MTThread.StaThread"/>.
@@ -4222,27 +4202,27 @@
             This property is applied to items added afterwards.
             </remarks>
         </member>
-        <member name="P:Au.Types.MTBase.ExceptionHandling">
+        <member name="P:Au.Types.MTBase_old.ExceptionHandling">
             <summary>
             Whether/how to handle unhandled exceptions in item action code.
-            Default: <see cref="F:Au.Types.MTExcept.Exception"/> (don't handle exceptions if <see cref="P:Au.Types.MTBase.ActionThread"/> is <see cref="F:Au.Types.MTThread.Current"/> (default), else show warning).
+            Default: <see cref="F:Au.Types.MTExcept.Exception"/> (don't handle exceptions if <see cref="P:Au.Types.MTBase_old.ActionThread"/> is <see cref="F:Au.Types.MTThread.Current"/> (default), else show warning).
             </summary>
             <remarks>
             This property is applied to items added afterwards.
             </remarks>
             <seealso cref="E:System.Windows.Forms.Application.ThreadException"/>
         </member>
-        <member name="P:Au.Types.MTBase.MainToolStrip">
+        <member name="P:Au.Types.MTBase_old.MainToolStrip">
             <summary>
             Gets ToolStrip of AMenu and AToolbar, which override this.
             </summary>
         </member>
-        <member name="P:Au.Types.MTBase.LastItem">
+        <member name="P:Au.Types.MTBase_old.LastItem">
             <summary>
             Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripItem"/>, which is the base type of <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>, <see cref="T:System.Windows.Forms.ToolStripButton"/> and other supported types.
             </summary>
         </member>
-        <member name="E:Au.Types.MTBase.ItemAdded">
+        <member name="E:Au.Types.MTBase_old.ItemAdded">
             <summary>
             Occurs when added a non-separator item.
             </summary>
@@ -4251,7 +4231,7 @@
             For example, the event handler can set item properties common to all items.
             </remarks>
         </member>
-        <member name="P:Au.Types.MTBase.IconSize">
+        <member name="P:Au.Types.MTBase_old.IconSize">
             <summary>
             Image width and height. Default 16.
             </summary>
@@ -4261,27 +4241,27 @@
             To set different icon size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
             </remarks>
         </member>
-        <member name="P:Au.Types.MTBase.CommonIcon">
+        <member name="P:Au.Types.MTBase_old.CommonIcon">
             <summary>
-            Gets "invoke method" image from Au library resources. Can be used for <see cref="P:Au.Types.MTBase.DefaultIcon"/> of toolbars and menus. Common to <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
+            Gets "invoke method" image from Au library resources. Can be used for <see cref="P:Au.Types.MTBase_old.DefaultIcon"/> of toolbars.
             </summary>
         </member>
-        <member name="P:Au.Types.MTBase.CommonSubmenuIcon">
+        <member name="P:Au.Types.MTBase_old.CommonSubmenuIcon">
             <summary>
-            Gets "drop-down menu" image from Au library resources. Can be used for <see cref="P:Au.Types.MTBase.DefaultSubmenuIcon"/> of toolbars and menus. Common to <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
+            Gets "drop-down menu" image from Au library resources. Can be used for <see cref="P:Au.Types.MTBase_old.DefaultSubmenuIcon"/> of toolbars.
             </summary>
         </member>
-        <member name="P:Au.Types.MTBase.DefaultIcon">
+        <member name="P:Au.Types.MTBase_old.DefaultIcon">
             <summary>
             Image for items that don't have an icon specified or auto-extracted from code.
             </summary>
         </member>
-        <member name="P:Au.Types.MTBase.DefaultSubmenuIcon">
+        <member name="P:Au.Types.MTBase_old.DefaultSubmenuIcon">
             <summary>
             Image for submenu-items that don't have an icon specified.
             </summary>
         </member>
-        <member name="P:Au.Types.MTBase.ExtractIconPathFromCode">
+        <member name="P:Au.Types.MTBase_old.ExtractIconPathFromCode">
             <summary>
             When adding items without explicitly specified icon, extract icon from item action code.
             </summary>
@@ -4289,25 +4269,25 @@
             This property is applied to items added afterwards.
             </remarks>
         </member>
-        <member name="M:Au.Types.MTBase._SetItemProp(System.Boolean,System.Boolean,System.Windows.Forms.ToolStripItem,System.Action{Au.Types.MTClickArgs},Au.Types.MTImage,System.Int32)">
+        <member name="M:Au.Types.MTBase_old._SetItemProp(System.Boolean,System.Boolean,System.Windows.Forms.ToolStripItem,System.Action{Au.Types.MTClickArgs},Au.Types.MTImage,System.Int32)">
             <summary>
             Sets onClick delegate, image and some properties.
             </summary>
         </member>
-        <member name="M:Au.Types.MTBase._OnItemAdded(System.Windows.Forms.ToolStripItem)">
+        <member name="M:Au.Types.MTBase_old._OnItemAdded(System.Windows.Forms.ToolStripItem)">
             <summary>
             Sets LastItem and calls ItemAdded event handlers.
             </summary>
         </member>
-        <member name="M:Au.Types.MTBase.Finalize">
+        <member name="M:Au.Types.MTBase_old.Finalize">
             
         </member>
-        <member name="M:Au.Types.MTBase.GetItemSourceLine_(System.Windows.Forms.ToolStripItem)">
+        <member name="M:Au.Types.MTBase_old.GetItemSourceLine_(System.Windows.Forms.ToolStripItem)">
             <summary>
             If item not null, gets its 1-based source line. Else gets that of ctor.
             </summary>
         </member>
-        <member name="M:Au.Types.MTBase.GoToEdit_(System.Windows.Forms.ToolStripItem)">
+        <member name="M:Au.Types.MTBase_old.GoToEdit_(System.Windows.Forms.ToolStripItem)">
             <summary>
             If item not null, goes to its source line in editor. Else goes to that of ctor.
             Does nothing if editor process not found.
@@ -4315,7 +4295,7 @@
         </member>
         <member name="T:Au.Types.MTClickArgs">
             <summary>
-            Data passed to <b>Click</b> event handler functions of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
+            Data passed to <b>Click</b> event handler functions of <see cref="T:Au.AToolbar"/>.
             </summary>
         </member>
         <member name="P:Au.Types.MTClickArgs.Item">
@@ -4336,7 +4316,7 @@
         </member>
         <member name="T:Au.Types.MTThread">
             <summary>
-            Used with <see cref="P:Au.Types.MTBase.ActionThread"/>.
+            Used with <see cref="P:Au.Types.MTBase_old.ActionThread"/>.
             </summary>
         </member>
         <member name="F:Au.Types.MTThread.Current">
@@ -4364,13 +4344,13 @@
         </member>
         <member name="T:Au.Types.MTExcept">
             <summary>
-            Used with <see cref="P:Au.Types.MTBase.ExceptionHandling"/>.
+            Used with <see cref="P:Au.Types.MTBase_old.ExceptionHandling"/>.
             </summary>
         </member>
         <member name="F:Au.Types.MTExcept.Exception">
             <summary>
             Don't handle exceptions. This is default.
-            However if <see cref="P:Au.Types.MTBase.ActionThread"/> is not <see cref="F:Au.Types.MTThread.Current"/>, handles exceptions and shows warning.
+            However if <see cref="P:Au.Types.MTBase_old.ActionThread"/> is not <see cref="F:Au.Types.MTThread.Current"/>, handles exceptions and shows warning.
             On unhandled exception .NET probably will show an unhandled exception dialog with exception info and "Continue" button, unless your app uses <see cref="E:System.Windows.Forms.Application.ThreadException"/> event.
             </summary>
         </member>
@@ -4388,27 +4368,18 @@
             Has implicit conversions from:
             - string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
             - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
-            - string with prefix "key:" - imagelist image key (<see cref="P:System.Windows.Forms.ToolStripItem.ImageKey"/>).
-            - int - imagelist image index (<see cref="P:System.Windows.Forms.ToolStripItem.ImageIndex"/>).
             - Image - image object.
-            - Icon - icon object.
             - <see cref="T:Au.AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/> and disposes the native icon.
             - <see cref="T:Au.Types.StockIcon"/> - a shell icon.
             - FolderPath - folder path.
-            - default - no icon. If <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
+            - default - no icon. If <see cref="P:Au.Types.MTBase_old.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
             - "" - no icon.
             </remarks>
         </member>
         <member name="M:Au.Types.MTImage.op_Implicit(System.String)~Au.Types.MTImage">
             
         </member>
-        <member name="M:Au.Types.MTImage.op_Implicit(System.Int32)~Au.Types.MTImage">
-            
-        </member>
         <member name="M:Au.Types.MTImage.op_Implicit(System.Drawing.Image)~Au.Types.MTImage">
-            
-        </member>
-        <member name="M:Au.Types.MTImage.op_Implicit(System.Drawing.Icon)~Au.Types.MTImage">
             
         </member>
         <member name="M:Au.Types.MTImage.op_Implicit(Au.AIcon)~Au.Types.MTImage">
@@ -4422,7 +4393,7 @@
         </member>
         <member name="P:Au.Types.MTImage.Value">
             <summary>
-            Gets the raw value stored in this variable. Can be string, int, Image, Icon, StockIcon, null.
+            Gets the raw value stored in this variable. Can be string, Image, StockIcon or null.
             </summary>
         </member>
         <member name="T:Au.Types.ClipFormats">
@@ -6933,54 +6904,6 @@
             <param name="flag">One or more flags to add or remove.</param>
             <param name="add">If true, adds flag, else removes flag.</param>
         </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0,``0)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0,``0,``0)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0,``0,``0,``0)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0,``0,``0,``0,``0)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0,``0,``0,``0,``0,``0)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0,``0,``0,``0,``0,``0,``0)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0,``0,``0,``0,``0,``0,``0,``0)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn``1(``0,``0[])">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32,System.Int32)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
-        <member name="M:Au.AExtensions.IsIn(System.Int32,System.Int32[])">
-            <summary>Returns true if this is equal to a value in list.</summary>
-        </member>
         <member name="M:Au.AExtensions.RemoveAt``1(``0[],System.Int32,System.Int32)">
             <summary>
             Creates a copy of this array with one or more removed elements.
@@ -8592,6 +8515,13 @@
             </param>
             <param name="path">Receives path without index and without "". Can be same variable as <i>s</i>.</param>
             <param name="index">Receives index/id or 0.</param>
+        </member>
+        <member name="M:Au.AIcon.IconPathFromCode_(System.Reflection.MethodInfo)">
+            <summary>
+            Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
+            Also supports code patterns like <c>AFolders.System + "notepad.exe"</c> or <c>AFolders.Virtual.RecycleBin</c>.
+            Returns null if no such string/pattern.
+            </summary>
         </member>
         <member name="T:Au.APath">
             <summary>
@@ -10988,7 +10918,7 @@
             ]]></code>
             </example>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed to show dialog.</exception>
-            <seealso cref="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)"/>
+            <seealso cref="M:Au.AMenu.ShowSimple(Au.Types.DStringList,Au.Types.AnyWnd,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT})"/>
         </member>
         <member name="M:Au.ADialog.ShowProgress(System.Boolean,System.String,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
@@ -11042,13 +10972,12 @@
             Popup menu.
             </summary>
             <remarks>
-            Based on <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
-            Can be used in winforms windows and everywhere in scripts. In WPF windows instead use <see cref="T:Au.AWpfMenu"/>.
-            Not thread-safe. All functions must be called from the same thread that created the <b>AMenu</b> object, except where documented otherwise.
+            Can be used everywhere: in automation scripts, WPF apps, Winforms apps, etc.
+            Uses Windows native menu API (<msdn>TrackPopupMenuEx</msdn>, etc).
             </remarks>
             <example>
             <code><![CDATA[
-            var m = new AMenu();
+            var m = new AMenu(); //TODO
             m["One"] = o => AOutput.Write(o);
             m["Two", icon: AFolders.System + "shell32.dll,15"] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
             m.LastItem.ToolTipText = "tooltip";
@@ -11062,281 +10991,228 @@
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.AMenu.Control">
+        <member name="T:Au.AMenu.MenuItem">
             <summary>
-            Gets the main drop-down menu <see cref="T:System.Windows.Forms.ContextMenuStrip"/> control.
-            You can use all its properties, methods and events. You can assign it to a control or toolstrip's drop-down button etc.
+            Represents a menu item in <see cref="T:Au.AMenu"/>.
             </summary>
+        </member>
+        <member name="P:Au.AMenu.MenuItem.Clicked">
+            <summary>Gets the menu item action.</summary>
+        </member>
+        <member name="P:Au.AMenu.MenuItem.Id">
+            <summary>Gets the menu item id.</summary>
+        </member>
+        <member name="P:Au.AMenu.MenuItem.IsChecked">
+            <summary>Gets or sets checked state.</summary>
+        </member>
+        <member name="P:Au.AMenu.MenuItem.IsDisabled">
+            <summary>Gets or sets disabled state.</summary>
+        </member>
+        <member name="P:Au.AMenu.MenuItem.IsBold">
+            <summary>Gets or sets whether to use bold font.</summary>
+        </member>
+        <member name="P:Au.AMenu.MenuItem.IsSubmenu">
+            <summary>true if is a submenu-item.</summary>
         </member>
         <member name="M:Au.AMenu.#ctor">
             <summary>
             Use this constructor for various context menus of your app.
             </summary>
             <remarks>
-            Item actions run in this thread by default (see <see cref="P:Au.Types.MTBase.ActionThread"/>).
-            Users cannot right-click a menu item to open/select it in editor.
+            Item actions run in the menu's thread by default (see <see cref="P:Au.MTBase.ActionThread"/>).
+            Users cannot right-click a menu item and open/select it in editor.
             </remarks>
         </member>
         <member name="M:Au.AMenu.#ctor(System.String,System.String,System.Int32)">
             <summary>
             Use this constructor in automation scripts, for example if the menu is used for starting and/or automating other apps.
             </summary>
-            <param name="name">Menu name. Must be valid filename. Currently only sets <see cref="P:Au.AMenu.Control"/>'s <b>Text</b> property.</param>
-            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <param name="name">Menu name. Must be a unique valid filename. Currently not used.</param>
+            <param name="f">Don't use.</param>
+            <param name="l">Don't use.</param>
             <remarks>
-            This overload sets properties:
-            - <see cref="P:Au.Types.MTBase.ActionThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
-            - <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> = true.
+            This overload sets <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> = true.
             
-            Users can right-click a menu item to open/select it in editor.
+            Users can right-click an item to open/select it in editor. To disable this feature, explicitly set <i>f</i> = null; or use other overload.
             </remarks>
         </member>
-        <member name="M:Au.AMenu.Dispose">
+        <member name="P:Au.AMenu.Last">
             <summary>
-            Disposes <see cref="P:Au.AMenu.Control"/>, submenus, images, etc.
-            Rarely used. Don't need when <see cref="P:Au.AMenu.MultiShow"/> is false.
+            Gets the last added menu item.
             </summary>
         </member>
-        <member name="P:Au.AMenu.IsDisposed">
-            
-        </member>
-        <member name="P:Au.AMenu.Item(System.String,Au.Types.MTImage,System.Int32)">
+        <member name="M:Au.AMenu.Add(System.Int32,System.String,Au.Types.MTImage,System.Boolean,System.Int32)">
             <summary>
-            Adds new item.
-            The same as <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},Au.Types.MTImage,System.Int32)"/>.
+            Adds menu item with explicitly specified id.
             </summary>
+            <param name="id">Item id that <see cref="M:Au.AMenu.Show(Au.Types.AnyWnd,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT})"/> will return if clicked this item. Cannot be negative.</param>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="l">Don't use.</param>
+            <exception cref="T:System.ArgumentException">Negative id.</exception>
+        </member>
+        <member name="M:Au.AMenu.Add(System.String,Au.Types.MTImage,System.Boolean,System.Int32)">
+            <summary>
+            Adds menu item with auto-generated id.
+            </summary>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="l">Don't use.</param>
+            <remarks>
+            Assigns id = the last specified or auto-generated id + 1. If not using explicitly specified ids, auto-generated ids are 1, 2, 3... Submenu-items, separators and items with action don't auto-generate ids.
+            </remarks>
+        </member>
+        <member name="M:Au.AMenu.Add(System.String,System.Action{Au.AMenu.MenuItem},Au.Types.MTImage,System.Boolean,System.Int32)">
+            <summary>
+            Adds menu item with action (callback function) that is executed on click.
+            </summary>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="clicked">Callback function that is executed on click.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="l">Don't use.</param>
+            <remarks>
+            This function is the same as the indexer. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="P:Au.AMenu.Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
+            </remarks>
+        </member>
+        <member name="P:Au.AMenu.Item(System.String,Au.Types.MTImage,System.Boolean,System.Int32)">
+            <summary>
+            Adds menu item with action (callback function) that is executed on click.
+            </summary>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="l">Don't use.</param>
+            <value>Callback function that is executed on click.</value>
+            <remarks>
+            This function is the same as <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.AMenu.MenuItem},Au.Types.MTImage,System.Boolean,System.Int32)"/>. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="P:Au.AMenu.Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.AMenu.AddCheck(System.String,System.Boolean,System.Boolean,System.Action{Au.AMenu.MenuItem},Au.Types.MTImage,System.Int32)">
+            <summary>
+            Adds menu item to be used as a checkbox.
+            </summary>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="check">Checked state.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="clicked">Callback function that is executed on click.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="l">Don't use.</param>
+            <remarks>
+            When clicked, <see cref="P:Au.AMenu.MenuItem.IsChecked"/> state is changed.
+            </remarks>
+        </member>
+        <member name="M:Au.AMenu.AddRadio(System.String,System.Boolean,System.Boolean,System.Action{Au.AMenu.MenuItem},Au.Types.MTImage,System.Int32)">
+            <summary>
+            Adds menu item to be used as a radio button in a group of such items.
+            </summary>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="check">Checked state.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="clicked">Callback function that is executed on click.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="l">Don't use.</param>
+            <remarks>
+            When clicked an unchecked radio item, its <see cref="P:Au.AMenu.MenuItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
+            </remarks>
+        </member>
+        <member name="M:Au.AMenu.Submenu(System.String,Au.Types.MTImage,System.Boolean,System.Int32)">
+            <summary>
+            Adds menu item that opens a submenu.
+            Used like <c>using (m.Submenu("Example")) { /* add submenu items */ }</c>.
+            </summary>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="l">Don't use.</param>
+        </member>
+        <member name="M:Au.AMenu.Submenu(System.String,System.Action{Au.AMenu},Au.Types.MTImage,System.Boolean,System.Int32)">
+            <summary>
+            Adds menu item that opens a submenu that will be filled by a callback function when opening the submenu.
+            Used like <c>m.Submenu("Example", m=> { /* add submenu items */ });</c>.
+            </summary>
+            <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+            <param name="opening">Callback function that is called when opening the submenu and should add items to it.</param>
+            <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
+            <param name="disable">Disabled state.</param>
+            <param name="l">Don't use.</param>
             <example>
             <code><![CDATA[
-            var m = new AMenu();
-            m["One"] = o => AOutput.Write(o);
-            m["Two", @"icon file path"] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
-            m.LastItem.ToolTipText = "tooltip";
-            m["Three"] = o => { AOutput.Write(o.MenuItem.Checked); };
-            m.LastMenuItem.Checked = true;
-            m.ExtractIconPathFromCode = true;
-            m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
+            var m=new AMenu();
+            _Dir(new DirectoryInfo(@"C:\"));
             m.Show();
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AMenu.Add(System.String,System.Action{Au.Types.MTClickArgs},Au.Types.MTImage,System.Int32)">
-            <summary>
-            Adds new item as <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>.
-            </summary>
-            <param name="text">Text. If contains a tab character, like "Open\tCtrl+O", displays text after it as shortcut keys (right-aligned).</param>
-            <param name="onClick">Callback function. Called when clicked the menu item.</param>
-            <param name="icon"></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <remarks>
-            Sets menu item text, icon and <b>Click</b> event handler. Other properties can be specified later. See example.
             
-            Code <c>m.Add("text", o => AOutput.Write(o));</c> is the same as <c>m["text"] = o => AOutput.Write(o);</c>. See <see cref="P:Au.AMenu.Item(System.String,Au.Types.MTImage,System.Int32)"/>.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            var m = new AMenu();
-            m.Add("One", o => AOutput.Write(o), icon: AFolders.System + "shell32.dll,9");
-            var mi = m.Add("Two", o => { AOutput.Write(o.MenuItem.Checked); ADialog.Show(o.ToString()); });
-            mi.Checked = true;
-            m.ExtractIconPathFromCode = true;
-            m.Add("notepad", o => AFile.TryRun(AFolders.System + "notepad.exe"));
-            m.Show();
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AMenu.Add(System.Windows.Forms.ToolStripItem,Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)">
-            <summary>
-            Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
-            </summary>
-            <param name="item">An already created item of any supported type.</param>
-            <param name="icon"></param>
-            <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-        </member>
-        <member name="M:Au.AMenu.Separator">
-            <summary>
-            Adds separator.
-            </summary>
-        </member>
-        <member name="M:Au.AMenu.Submenu(System.String,Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)">
-            <summary>
-            Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
-            Then the add-item functions will add items to the submenu.
-            </summary>
-            <param name="text">Text.</param>
-            <param name="icon"></param>
-            <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <remarks>
-            Can be used in 2 ways:
-            - <c>using(m.Submenu(...)) { add items; }</c>. See example.
-            - <c>m.Submenu(...); add items; m.EndSubmenu();</c>. See <see cref="M:Au.AMenu.EndSubmenu"/>.
-            
-            Submenus inherit these properties of the main menu, set before adding submenus (see example):
-            <b>BackgroundImage</b>, <b>BackgroundImageLayout</b>, <b>Cursor</b>, <b>Font</b>, <b>ForeColor</b>, <b>ImageList</b>, <b>ImageScalingSize</b>, <b>Renderer</b>, <b>ShowCheckMargin</b>, <b>ShowImageMargin</b>.
-            </remarks>
-            <seealso cref="M:Au.AMenu.LazySubmenu(System.String,System.Action{Au.AMenu},Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)"/>
-            <example>
-            <code><![CDATA[
-            var m = new AMenu();
-            m.Control.BackColor = Color.PaleGoldenrod;
-            m["One"] = o => AOutput.Write(o);
-            m["Two"] = o => AOutput.Write(o);
-            using(m.Submenu("Submenu")) {
-            	m["Three"] = o => AOutput.Write(o);
-            	m["Four"] = o => AOutput.Write(o);
-            	using(m.Submenu("Submenu2")) {
-            		m["Five"] = o => AOutput.Write(o);
-            		m["Six"] = o => AOutput.Write(o);
+            void _Dir(DirectoryInfo dir) {
+            	foreach (var v in dir.EnumerateFileSystemInfos()) {
+            		if(v.Attributes.Has(FileAttributes.System|FileAttributes.Hidden)) continue;
+            		if(v.Attributes.Has(FileAttributes.Directory)) {
+            			m.Submenu(v.Name, m=> _Dir(v as DirectoryInfo), v.FullName);
+            		} else {
+            			m[v.Name, v.FullName]=o=>AOutput.Write(v.FullName);
+            		}
             	}
-            	m["Seven"] = o => AOutput.Write(o);
             }
-            m["Eight"] = o => AOutput.Write(o);
-            m.Show();
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AMenu.EndSubmenu">
+        <member name="M:Au.AMenu.Separator(System.Boolean)">
             <summary>
-            Call this to end adding items to the current submenu if <see cref="M:Au.AMenu.Submenu(System.String,Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)"/> was called without 'using' and without a callback function that adds submenu items.
+            Adds horizontal or vertical separator.
             </summary>
-            <example>
-            <code><![CDATA[
-            var m = new AMenu();
-            m["One"] = o => AOutput.Write(o);
-            m["Two"] = o => AOutput.Write(o);
-            m.Submenu("Submenu");
-            	m["Three"] = o => AOutput.Write(o);
-            	m["Four"] = o => AOutput.Write(o);
-            	m.EndSubmenu();
-            m["Five"] = o => AOutput.Write(o);
-            m.Show();
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AMenu.LazySubmenu(System.String,System.Action{Au.AMenu},Au.Types.MTImage,System.Action{Au.Types.MTClickArgs},System.Int32)">
-            <summary>
-            Adds new item (<see cref="T:System.Windows.Forms.ToolStripMenuItem"/>) that will open a submenu.
-            When showing the submenu first time, your callback function will be called and can add submenu items.
-            </summary>
-            <param name="text">Text.</param>
-            <param name="onOpening">Callback function that should add submenu items.</param>
-            <param name="icon"></param>
-            <param name="onClick">Callback function. Called when the item clicked. Rarely used.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <example>
-            <code><![CDATA[
-            var m = new AMenu();
-            m["One"] = o => AOutput.Write(o);
-            m["Two"] = o => AOutput.Write(o);
-            m.LazySubmenu("Submenu", _ => {
-            	AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-            	m["Three"] = o => AOutput.Write(o);
-            	m["Four"] = o => AOutput.Write(o);
-            	m.LazySubmenu("Submenu2", _ => {
-            		AOutput.Write("adding items of " + m.CurrentAddMenu.OwnerItem);
-            		m["Five"] = o => AOutput.Write(o);
-            		m["Six"] = o => AOutput.Write(o);
-            	});
-            	m["Seven"] = o => AOutput.Write(o);
-            });
-            m["Eight"] = o => AOutput.Write(o);
-            m.Show();
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.AMenu.CurrentAddMenu">
-            <summary>
-            Gets <see cref="T:System.Windows.Forms.ToolStripDropDownMenu"/> of the main menu or submenu where new items currently would be added.
-            </summary>
-        </member>
-        <member name="P:Au.AMenu.LastMenuItem">
-            <summary>
-            Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>.
-            Returns null if it is not a <b>ToolStripMenuItem</b>.
-            </summary>
+            <param name="vertical">Add other items in new column.</param>
             <remarks>
-            You can instead use <see cref="P:Au.Types.MTBase.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
+            Menus with vertical separators look differently.
             </remarks>
         </member>
-        <member name="M:Au.AMenu.Show(System.Nullable{Au.Types.POINT},System.Boolean,System.Nullable{System.Windows.Forms.ToolStripDropDownDirection})">
+        <member name="M:Au.AMenu.Show(Au.Types.AnyWnd,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT})">
             <summary>
-            Shows the menu unowned.
+            Shows the menu and waits until closed.
+            Returns id of the selected item when closed, or 0 if cancelled.
             </summary>
-            <param name="xy">Position in screen. If null (default), uses the mouse cursor or caret position.</param>
-            <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
-            <param name="direction">Menu drop direction.</param>
-            <seealso cref="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)"/>
-        </member>
-        <member name="M:Au.AMenu.Show(System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Nullable{System.Windows.Forms.ToolStripDropDownDirection})">
-            <summary>
-            Shows the menu owned by a control or form.
-            </summary>
-            <param name="owner">A control or form that will own the menu.</param>
-            <param name="xy">Position in control's client area. If null (default), uses the mouse cursor or caret position.</param>
-            <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>xy</i> is offset.</param>
-            <param name="direction">Menu drop direction.</param>
-            <exception cref="T:System.ArgumentNullException"><i>owner</i> is null.</exception>
+            <param name="owner">Owner window. Optional. Receives menu messages (rarely useful). Also, closing it will close the menu too. Must belong to this thread.</param>
+            <param name="flags"></param>
+            <param name="xy">Menu position. If null (default), uses mouse position by default. It depends on flags.</param>
+            <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
+            <exception cref="T:System.ArgumentException"><i>owner</i> does not belong to this thread or is invalid window handle.</exception>
             <remarks>
-            Alternatively you can assign the context menu to a control or toolstrip's drop-down button etc, then don't need to call <b>Show</b>. Use the <see cref="P:Au.AMenu.Control"/> property, which gets <see cref="T:System.Windows.Forms.ContextMenuStrip"/>.
-            </remarks>
-            <seealso cref="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)"/>
-        </member>
-        <member name="P:Au.AMenu.MultiShow">
-            <summary>
-            If false, disposes the menu when it is closed.
-            If true, does not dispose. Then you can call <b>Show</b> again and again.
-            Default is false, but is automatically set to true when showing the menu not with <b>Show</b>, eg when assigned to a control's <b>ContextMenuStrip</b>.
-            </summary>
-            <seealso cref="P:Au.AMenu.DefaultMultiShow"/>
-        </member>
-        <member name="P:Au.AMenu.DefaultMultiShow">
-            <summary>
-            Default <see cref="P:Au.AMenu.MultiShow"/> value for new <b>AMenu</b> instances.
-            </summary>
-        </member>
-        <member name="P:Au.AMenu.Modal">
-            <summary>
-            If true, <b>Show</b> waits until the menu is closed. If false, does not wait (this thread must have a message loop).
-            If null (default), does not wait if the thread has a .NET message loop (<see cref="M:Au.AThread.HasMessageLoop(System.Boolean@)"/>).
-            </summary>
-            <remarks>
-            <note>If false, this thread must have a message loop, either already running or started soon after showing the menu. Without it the menu will not work.</note>
+            To show menu, uses API <msdn>TrackPopupMenuEx</msdn>. It fails if this thread is in menu mode (showing any standard Windows menu), unless called with flag <see cref="F:Au.Types.MSFlags.Recurse"/>. Therefore, if in menu mode and no flag, this function just calls API <msdn>EndMenu</msdn> and returns 0.
             </remarks>
         </member>
-        <member name="P:Au.AMenu.ActivateMenuWindow">
+        <member name="M:Au.AMenu._FillPopupMenu(System.IntPtr,System.Int32,System.Int32)">
             <summary>
-            Activate the menu window.
-            It enables selecting menu items with the keyboard (arrows, Tab, Enter, etc).
-            If false, only Esc works, it closes the menu.
-            If the menu is owned by a control or toolbar button, keyboard navigation works in any case, don't need this property to enable it.
+            Adds native menu items to the main menu or to a submenu (on WM_INITMENUPOPUP).
+            Loads images etc.
             </summary>
-        </member>
-        <member name="P:Au.AMenu.MouseClosingDistance">
-            <summary>
-            Close the menu when the mouse cursor moves away from it to this distance and this thread is not the active UI thread.
-            </summary>
-            <remarks>
-            The value is pixels for DPI 96 (100%).
-            Default is <see cref="P:Au.AMenu.DefaultMouseClosingDistance"/>, default 200.
-            At first the mouse must be or move at less than half of the distance.
-            </remarks>
-            <seealso cref="P:Au.AMenu.DefaultMouseClosingDistance"/>
-        </member>
-        <member name="P:Au.AMenu.DefaultMouseClosingDistance">
-            <summary>
-            Default <see cref="P:Au.AMenu.MouseClosingDistance"/> value of <b>AMenu</b> instances for DPI 96 (100%). Default 200.
-            </summary>
+            <param name="h">Menu handle (main or submenu).</param>
+            <param name="level">0 or submenu level.</param>
+            <param name="i">First item index in _a.</param>
         </member>
         <member name="M:Au.AMenu.Close">
             <summary>
-            Closes the menu and its submenus.
+            Closes this popup menu, including submenus.
             </summary>
         </member>
-        <member name="M:Au.AMenu.ShowSimple(Au.Types.DStringList,System.Windows.Forms.Control,System.Nullable{Au.Types.POINT},System.Boolean,System.Windows.Forms.ToolStripDropDownDirection)">
+        <member name="P:Au.AMenu.IsVisible">
             <summary>
-            Creates and shows popup menu where items use ids instead of actions.
+            true if this thread is in <b>Show</b> function of this menu.
+            </summary>
+        </member>
+        <member name="M:Au.AMenu.Items(Au.AMenu.MenuItem,System.Boolean)">
+            <summary>
+            Gets added items.
+            </summary>
+            <param name="submenu">Get only items of this submenu.</param>
+            <param name="skipSubmenus">Skip items in submenus.</param>
+            <exception cref="T:System.ArgumentException"><i>submenu</i> isn't in this menu.</exception>
+            <remarks>
+            Skips separators and items in submenus filled by <see cref="M:Au.AMenu.Submenu(System.String,System.Action{Au.AMenu},Au.Types.MTImage,System.Boolean,System.Int32)"/> callback function.
+            </remarks>
+        </member>
+        <member name="M:Au.AMenu.ShowSimple(Au.Types.DStringList,Au.Types.AnyWnd,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT})">
+            <summary>
+            Creates and shows simple popup menu. Without images, actions, submenus.
             Returns selected item id, or 0 if cancelled.
             </summary>
             <param name="items">
@@ -11344,14 +11220,20 @@
             Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
             For separators use null or empty strings: "One|Two||Three|Four".
             </param>
-            <param name="owner">Owner control/form or null.</param>
-            <param name="position">Position in screen or owner's client area. If null (default), uses the mouse cursor position.</param>
-            <param name="byCaret">Show at the text cursor (caret) position, if available. Then <i>position</i> is offset.</param>
-            <param name="direction">Menu drop direction.</param>
+            <param name="owner">Owner window. Optional.</param>
+            <param name="flags"></param>
+            <param name="xy">Menu position. If null (default), uses mouse position by default. It depends on flags.</param>
+            <param name="excludeRect">The menu should not overlap this rectangle in screen.</param>
+            <exception cref="T:System.ArgumentException"><i>owner</i> does not belong to this thread or is invalid window handle.</exception>
             <remarks>
-            The menu is modal; the function returns when it is closed.
+            The function adds menu items and calls <see cref="M:Au.AMenu.Show(Au.Types.AnyWnd,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT})"/>. Returns when menu closed. The last 4 parameters are same as of <b>Show</b>.
             </remarks>
             <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+        </member>
+        <member name="F:Au.AMenu.MSFlags_Raw_">
+            <summary>
+            No hook/timer/subclass.
+            </summary>
         </member>
         <member name="T:Au.AToolbar">
             <summary>
@@ -11360,7 +11242,7 @@
             </summary>
             <remarks>
             Based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
-            Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="P:Au.Types.MTBase.ActionThread"/>.
+            Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="P:Au.Types.MTBase_old.ActionThread"/>.
             </remarks>
             <example>
             <code><![CDATA[
@@ -11409,10 +11291,10 @@
             Creates <see cref="P:Au.AToolbar.Control"/> object or uses <i>control</i>. Its window handle will be created in <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
             
             Sets properties:
-            - <see cref="P:Au.Types.MTBase.ActionThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
-            - <see cref="P:Au.Types.MTBase.ExtractIconPathFromCode"/> = true.
-            - <see cref="P:Au.Types.MTBase.DefaultIcon"/> = <see cref="P:Au.Types.MTBase.CommonIcon"/>.
-            - <see cref="P:Au.Types.MTBase.DefaultSubmenuIcon"/> = <see cref="P:Au.Types.MTBase.CommonSubmenuIcon"/>.
+            - <see cref="P:Au.Types.MTBase_old.ActionThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
+            - <see cref="P:Au.Types.MTBase_old.ExtractIconPathFromCode"/> = true.
+            - <see cref="P:Au.Types.MTBase_old.DefaultIcon"/> = <see cref="P:Au.Types.MTBase_old.CommonIcon"/>.
+            - <see cref="P:Au.Types.MTBase_old.DefaultSubmenuIcon"/> = <see cref="P:Au.Types.MTBase_old.CommonSubmenuIcon"/>.
             </remarks>
         </member>
         <member name="P:Au.AToolbar.Control">
@@ -11522,7 +11404,7 @@
             Adds new button as <see cref="T:System.Windows.Forms.ToolStripDropDownButton"/> with a drop-down menu.
             </summary>
             <param name="text">Text.</param>
-            <param name="menu">Callback function that adds menu items. Called when opening the menu first time. If sets <see cref="P:Au.AMenu.MultiShow"/> = false, called each time.</param>
+            <param name="menu">Callback function that adds menu items.</param>
             <param name="icon"></param>
             <param name="tooltip">Tooltip text.</param>
             <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
@@ -11533,7 +11415,7 @@
             Adds new button as <see cref="T:System.Windows.Forms.ToolStripSplitButton"/> with a drop-down menu.
             </summary>
             <param name="text">Text.</param>
-            <param name="menu">Callback function that adds menu items. Called when need the menu first time (when opening it, or when clicked the button if <i>onClick</i> null). If sets <see cref="P:Au.AMenu.MultiShow"/> = false, called each time.</param>
+            <param name="menu">Callback function that adds menu items.</param>
             <param name="icon"></param>
             <param name="tooltip">Tooltip text.</param>
             <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
@@ -11546,7 +11428,7 @@
             Returns null if it is not a <b>ToolStripButton</b>.
             </summary>
             <remarks>
-            You can instead use <see cref="P:Au.Types.MTBase.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
+            You can instead use <see cref="P:Au.Types.MTBase_old.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
             </remarks>
         </member>
         <member name="M:Au.AToolbar.Show(Au.AScreen)">
@@ -11612,7 +11494,7 @@
             <exception cref="T:System.InvalidOperationException">
             - The toolbar was never shown (<see cref="M:Au.AToolbar.Show(Au.AScreen)"/> not called).
             - It is a satellite toolbar.
-            - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="P:Au.Types.MTBase.ActionThread"/>.
+            - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="P:Au.Types.MTBase_old.ActionThread"/>.
             </exception>
             <exception cref="T:System.ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="F:Au.Types.TBHide.User"/>.</exception>
             <remarks>
@@ -13028,7 +12910,7 @@
             </summary>
             <example>
             <code><![CDATA[
-            var m = new AWpfMenu(inScript: true);
+            var m = new AWpfMenu();
             m["One"] = o => AOutput.Write(o);
             using(m.Submenu("Sub")) {
             	m["Three"] = o => AOutput.Write(o);
@@ -13040,11 +12922,10 @@
             ]]></code>
             </example>
         </member>
-        <member name="M:Au.AWpfMenu.#ctor(System.Boolean,System.Boolean)">
-            <param name="inScript">Sets <see cref="P:Au.AWpfMenu.CanEditScript"/> and <see cref="P:Au.AWpfMenu.ExtractIconPathFromCode"/>.</param>
-            <param name="actionThread">Sets <see cref="P:Au.AWpfMenu.ActionThread"/>.</param>
+        <member name="M:Au.AWpfMenu.#ctor">
+            
         </member>
-        <member name="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.CMActionArgs},System.Object,System.String,System.Int32)">
+        <member name="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.WpfMenuActionArgs},System.Object)">
             <summary>
             Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu. Returns it.
             </summary>
@@ -13053,20 +12934,18 @@
             If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
             </param>
             <param name="click">Action called on click.</param>
-            <param name="icon">See <see cref="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object,System.String,System.Int32)"/>.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
+            <param name="icon">See <see cref="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object)"/>.</param>
             <remarks>
             Usually it's easier to use the indexer instead. It just calls this function. See example.
             </remarks>
             <example>
             <code><![CDATA[
             m["Example"] = o => AOutput.Write(o);
-            m.Last.IsChecked=true;
+            m.Last.IsChecked = true;
             ]]></code>
             </example>
         </member>
-        <member name="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object,System.String,System.Int32)">
+        <member name="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object)">
             <summary>
             Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu.
             </summary>
@@ -13084,20 +12963,18 @@
             - <b>IntPtr</b> - icon handle. This function does not dispose it. You can dispose at any time.
             - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image.
             
-            Prints warning if failed to find or load image file.
+            If failed to find or load image file, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
             To create Base-64 string, use menu Code -> AWinImage.
-            To add resource in Visual Studio, use build action "Resource".
+            To add an image resource in Visual Studio, use build action "Resource" for the image file.
             </param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
             <value>Action called on click.</value>
             <remarks>
-            Calls <see cref="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.CMActionArgs},System.Object,System.String,System.Int32)"/>.
+            Calls <see cref="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.WpfMenuActionArgs},System.Object)"/>.
             </remarks>
             <example>
             <code><![CDATA[
             m["Example"] = o => AOutput.Write(o);
-            m.Last.IsChecked=true;
+            m.Last.IsChecked = true;
             ]]></code>
             </example>
         </member>
@@ -13106,15 +12983,13 @@
             Adds separator.
             </summary>
         </member>
-        <member name="M:Au.AWpfMenu.Submenu(System.Object,System.Object,System.Action{Au.Types.CMActionArgs},System.String,System.Int32)">
+        <member name="M:Au.AWpfMenu.Submenu(System.Object,System.Object,System.Action{Au.Types.WpfMenuActionArgs})">
             <summary>
             Creates new <see cref="T:System.Windows.Controls.MenuItem"/> for a submenu and adds to the menu.
             </summary>
             <param name="text">Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.</param>
             <param name="icon"><see cref="P:System.Windows.Controls.MenuItem.Icon"/>.</param>
             <param name="click">Action called on click. Rarely used.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
             <remarks>
             Then the add-item functions will add items to the submenu, until the returned variable is disposed.
             </remarks>
@@ -13135,24 +13010,9 @@
             Called when added a non-separator item.
             </summary>
         </member>
-        <member name="P:Au.AWpfMenu.CanEditScript">
+        <member name="P:Au.AWpfMenu.ActionException">
             <summary>
-            On menu item right-click open the source file and line in editor, if possible.
-            Recommended for automation scripts.
-            </summary>
-        </member>
-        <member name="P:Au.AWpfMenu.ActionThread">
-            <summary>
-            Execute item actions asynchronously in new threads.
-            Applied to menu items added afterwards.
-            </summary>
-            <remarks>
-            If current thread is a UI thread (has windows etc) or has triggers or hooks, and item action functions execute some long automations etc in current thread, current thread probably is hung during that time. Set this property = true to avoid it.
-            </remarks>
-        </member>
-        <member name="P:Au.AWpfMenu.ExceptionHandling">
-            <summary>
-            Whether/how to handle exceptions in menu item action code. Default: <b>Warning</b>.
+            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
             Applied to menu items added afterwards.
             </summary>
         </member>
@@ -13166,21 +13026,6 @@
         </member>
         <member name="M:Au.AWpfMenu.OnClosed(System.Windows.RoutedEventArgs)">
             
-        </member>
-        <member name="P:Au.AWpfMenu.ExtractIconPathFromCode">
-            <summary>
-            When adding items without explicitly specified icon, extract icon from item action code.
-            </summary>
-            <remarks>
-            This property is applied to items added afterwards.
-            </remarks>
-        </member>
-        <member name="M:Au.AWpfMenu.IconPathFromCode_(System.Reflection.MethodInfo)">
-            <summary>
-            Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
-            Also supports code patterns like 'AFolders.System + "notepad.exe"' or 'AFolders.Virtual.RecycleBin'.
-            Returns null if no such string/pattern.
-            </summary>
         </member>
         <member name="M:Au.AWpfMenu.ShowSimple(Au.Types.DStringList,System.Windows.UIElement,System.Boolean,System.Action{Au.AWpfMenu})">
             <summary>
@@ -13199,6 +13044,88 @@
             The menu is modal; the function returns when closed.
             </remarks>
             <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
+        </member>
+        <member name="T:Au.MTBase">
+             <summary>
+             Base class of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
+             </summary>
+             <remarks>
+             <i>image</i> argument of "add item" functions can be:
+             - file/folder path (string) - the "show" function calls <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/> to get its icon. It also supports file type icons like ".txt", etc.
+             - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
+             - <see cref="T:Au.Types.FolderPath"/> - same as folder path string.
+             - <see cref="T:System.Drawing.Image"/> - image object.
+             - <see cref="T:Au.AIcon"/> - variable containing native icon handle. The "add item" function disposes it.
+             - <see cref="T:Au.Types.StockIcon"/> - the "show" function calls <see cref="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)"/>.
+             - null - if <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>. Else no image.
+             - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
+             
+             Item images should be of size 16x16 (small icon size). If high DPI, will scale images automatically, which makes them slightly blurred. To avoid scaling, can be used XAML images, but then slower.
+            
+             Images are loaded on demand, when showing the menu or submenu etc. If fails to load, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
+             
+             For icon/image files use full path, unless they are in <see cref="P:Au.AFolders.ThisAppImages"/>
+             
+             To add an image resource in Visual Studio, use build action "Resource" for the image file.
+             </remarks>
+        </member>
+        <member name="P:Au.MTBase.ExtractIconPathFromCode">
+            <summary>
+            When adding items without explicitly specified image, extract file path from item action code (for example <see cref="M:Au.AFile.Run(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/> argument) and use icon of that file.
+            This property is applied to items added afterwards.
+            </summary>
+            <remarks>
+            Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
+            Also supports code patterns like <c>AFolders.System + "notepad.exe"</c> or <c>AFolders.Virtual.RecycleBin</c>.
+            </remarks>
+        </member>
+        <member name="P:Au.MTBase.ImageCache">
+            <summary>
+            Gets or sets image cache.
+            </summary>
+            <remarks>
+            Use if there are many same images. Then makes faster.
+            
+            The <b>AIconImageCache</b> object can be shared with other code (menus etc).
+            </remarks>
+        </member>
+        <member name="P:Au.MTBase.ActionThread">
+            <summary>
+            Execute item actions asynchronously in new threads.
+            This property is applied to items added afterwards.
+            </summary>
+            <remarks>
+            If current thread is a UI thread (has windows etc) or has triggers or hooks, and item action functions execute some long automations etc in current thread, current thread probably is hung during that time. Set this property = true to avoid it.
+            </remarks>
+        </member>
+        <member name="P:Au.MTBase.ActionException">
+            <summary>
+            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
+            This property is applied to items added afterwards.
+            </summary>
+        </member>
+        <member name="M:Au.MTBase._GetImage(Au.MTBase.MTItem)">
+            <summary>
+            Converts x.image (object containing string, Image, etc or null) to Image. Extracts icon path from code if need.
+            </summary>
+        </member>
+        <member name="T:Au.MTBase.MTItem">
+            <summary>
+            Base of <see cref="T:Au.AMenu.MenuItem"/> etc.
+            </summary>
+        </member>
+        <member name="P:Au.MTBase.MTItem.Text">
+            <summary>
+            Item text.
+            </summary>
+        </member>
+        <member name="P:Au.MTBase.MTItem.Tag">
+            <summary>
+            Any value. Not used by this library.
+            </summary>
+        </member>
+        <member name="M:Au.MTBase.MTItem.ToString">
+            
         </member>
         <member name="T:Au.AClipboard">
             <summary>
@@ -17291,7 +17218,7 @@
             <exception cref="T:System.ArgumentException">Bad image or string format.</exception>
             <exception cref="T:System.Exception">Depending on <i>image</i> string format, exceptions of <see cref="M:System.Drawing.Image.FromFile(System.String)"/>, <see cref="M:System.Drawing.Bitmap.#ctor(System.IO.Stream)"/>, etc.</exception>
             <remarks>
-            Calls <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String)"/>.
+            Calls <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/>.
             </remarks>
         </member>
         <member name="P:Au.AWinImage.Rect">
@@ -19896,7 +19823,7 @@
         </member>
         <member name="P:Au.Util.ADpi.OfThisProcess">
             <summary>
-            Gets DPI of the primary screen that was at the time this process started.
+            Gets DPI of the primary screen at the time this process started.
             </summary>
             <remarks>
             Used by API that aren't per-monitor DPI aware.
@@ -19952,11 +19879,6 @@
             Unscales <b>int</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
             </summary>
         </member>
-        <member name="M:Au.Util.ADpi.Scale(System.Int32)">
-            <summary>
-            If DPI <see cref="P:Au.Util.ADpi.OfThisProcess"/> isn't 96 (100%), returns scaled i. Else returns i.
-            </summary>
-        </member>
         <member name="M:Au.Util.ADpi.Scale(System.Int32,System.Int32,Au.Types.DpiOf)">
             <summary>
             Scales two int if <i>dpiOf.Dpi</i> isn't 96 (100%).
@@ -19986,22 +19908,6 @@
             <summary>
             Unscales <b>RECT</b> if <i>dpiOf.Dpi</i> isn't 96 (100%).
             </summary>
-        </member>
-        <member name="M:Au.Util.ADpi.ImageSize(System.Drawing.Image)">
-            <summary>
-            If <see cref="P:Au.Util.ADpi.OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled image.Size. Else returns image.Size.
-            </summary>
-            <param name="image"></param>
-        </member>
-        <member name="M:Au.Util.ADpi.ScaleImage(System.Drawing.Image,System.Boolean)">
-            <summary>
-            If <see cref="P:Au.Util.ADpi.OfThisProcess"/> &gt; 96 (100%) and image resolution is different, returns scaled copy of <i>image</i>. Else returns <i>image</i>.
-            </summary>
-            <param name="image"></param>
-            <param name="disposeOld">If performed scaling (it means created new image), dispose old image.</param>
-            <remarks>
-            Unlike <see cref="M:System.Windows.Forms.Control.ScaleBitmapLogicalToDevice(System.Drawing.Bitmap@)"/>, returns same object if don't need scaling.
-            </remarks>
         </member>
         <member name="M:Au.Util.ADpi.GetSystemMetrics(System.Int32,Au.Types.DpiOf)">
             <summary>
@@ -20303,17 +20209,20 @@
             Uses memory cache to avoid loading same image multiple times.
             </summary>
         </member>
-        <member name="M:Au.Util.AIconImageCache.Get(System.String,System.Int32,System.Boolean,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
+        <member name="M:Au.Util.AIconImageCache.Get(System.String,System.Int32,System.Nullable{System.Boolean},System.Action{System.Drawing.Bitmap,System.Object},System.Object,System.Action{System.String,System.Exception})">
             <summary>
             Gets image from memory cache or file.
             </summary>
             <param name="imageSource">File path, or resource path that starts with "resources/" or has prefix "resource:", etc.</param>
             <param name="dpi">DPI of window that will display the image.</param>
             <param name="isImage">
-            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String)"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
-            false - get file icon with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
+            true - load image from xaml/png/etc file, resource or string with <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})"/> or <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.
+            false - get file icon with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
+            null (default) - call <see cref="M:Au.Util.AImageUtil.HasImageOrResourcePrefix(System.String)"/> to determine whether it is image.
+            </param>
             <param name="asyncCompletion">If not null, if the image is still not in cache, <b>Get</b> returns null and loads it asynchronously in other thread. When loaded, calls <i>asyncCompletion</i> in this thread. Can be used to avoid slow startup when need to get many file icons.</param>
             <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
+            <param name="onException">Action to call when fails to load image. If null, calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>. Parameters are image source string and exception.</param>
             <remarks>
             When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk.
             </remarks>
@@ -20332,6 +20241,11 @@
         <member name="M:Au.Util.AImageUtil.HasImageStringPrefix(System.String)">
             <summary>
             Returns true if string starts with "image:" or "~:".
+            </summary>
+        </member>
+        <member name="M:Au.Util.AImageUtil.HasImageOrResourcePrefix(System.String)">
+            <summary>
+            Returns true if string starts with "resource:" or "resources/" or "imagefile:" or "image:" or "~:".
             </summary>
         </member>
         <member name="M:Au.Util.AImageUtil.LoadImageStreamFromString(System.String)">
@@ -20368,9 +20282,9 @@
             Calls <see cref="M:Au.Util.AImageUtil.LoadWpfImageFromString(System.String)"/> and handles exceptions. On exception returns null and optionally writes warning to the output.
             </summary>
         </member>
-        <member name="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String)">
+        <member name="M:Au.Util.AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(System.String,System.Nullable{System.ValueTuple{Au.Types.SIZE,System.Int32}})">
             <summary>
-            Loads GDI+ image or icon from file, resource or string.
+            Loads GDI+ image from file, resource or string.
             </summary>
             <param name="image">
             Can be:
@@ -20378,6 +20292,7 @@
             - resource path that starts with "resources/" or has prefix "resource:" (<see cref="M:Au.Util.AResources.GetGdipBitmap(System.String)"/>)
             - Base-64 image with prefix "image:" (<see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromString(System.String)"/>).
             </param>
+            <param name="xaml">If not null, supports XAML images. See <see cref="M:Au.Util.AImageUtil.LoadGdipBitmapFromXaml(System.String,Au.Types.SIZE,System.Int32)"/>.</param>
             <exception cref="T:System.Exception"></exception>
         </member>
         <member name="M:Au.Util.AImageUtil.LoadWpfImageFromFileOrResourceOrString(System.String)">
@@ -20406,6 +20321,17 @@
             <exception cref="T:System.Exception">Failed.</exception>
             <remarks>
             If <i>image</i> starts with "&lt;" or ends with ".xaml" (case-insensitive), returns object created from XAML root element. Else returns <see cref="T:System.Windows.Controls.Image"/> with <b>Source</b> = <b>BitmapFrame</b>.
+            </remarks>
+        </member>
+        <member name="M:Au.Util.AImageUtil.LoadGdipBitmapFromXaml(System.String,Au.Types.SIZE,System.Int32)">
+            <summary>
+            Loads GDI+ image from WPF XAML file or string.
+            </summary>
+            <param name="image">XAML file, resource or string. See <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>.</param>
+            <param name="size">Final image size. Use logical pixels, ie not DPI-scaled.</param>
+            <param name="dpi">DPI of window that will display the image.</param>
+            <remarks>
+            Calls <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/> and converts to GDI+ image.
             </remarks>
         </member>
         <member name="T:Au.Util.AJit">
@@ -21620,23 +21546,6 @@
             <param name="p"></param>
             <param name="len">Length of p to search in.</param>
             <param name="s">Substring to find. Must contain only ASCII characters.</param>
-        </member>
-        <member name="M:Au.Util.ClassicMenu_.ShowSimple(Au.Types.DStringList,Au.Types.AnyWnd,System.Boolean)">
-            <summary>
-            Creates and shows popup menu.
-            Returns selected item id, or 0 if cancelled.
-            </summary>
-            <param name="items">
-            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
-            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-            For separators use null or empty strings: "One|Two||Three|Four".
-            </param>
-            <param name="owner">Owner window.</param>
-            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
-            <remarks>
-            The menu is modal; the function returns when closed.
-            </remarks>
-            <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
         </member>
         <member name="T:Au.Util.EnsureWindowsFormsSynchronizationContext_">
             <summary>
@@ -24244,7 +24153,7 @@
         <member name="M:Au.Triggers.AutotextTriggerArgs.Confirm(System.String)">
             <summary>
             Shows a 1-item menu below the text cursor (caret) or mouse cursor.
-            Returns true if the user selected the item with the mouse or Enter or Tab. Other keys just close the menu.
+            Returns true if the user selected the item with the mouse or arrow keys + Enter or Tab. Other keys just close the menu.
             </summary>
             <param name="text">Item text. This function escapes it (replaces newlines with \r\n etc) and limits to 60 characters. If null, uses "Autotext".</param>
             <remarks>

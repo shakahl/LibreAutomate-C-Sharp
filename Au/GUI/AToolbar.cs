@@ -24,7 +24,7 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// Based on <see cref="ToolStrip"/>.
-	/// Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="MTBase.ActionThread"/>.
+	/// Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="MTBase_old.ActionThread"/>.
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -53,7 +53,7 @@ namespace Au
 	/// }
 	/// ]]></code>
 	/// </example>
-	public partial class AToolbar : MTBase
+	public partial class AToolbar : MTBase_old
 	{
 		readonly ToolStripWindow _c;
 		readonly _Settings _sett;
@@ -84,16 +84,15 @@ namespace Au
 		/// Creates <see cref="Control"/> object or uses <i>control</i>. Its window handle will be created in <see cref="Show"/>.
 		/// 
 		/// Sets properties:
-		/// - <see cref="MTBase.ActionThread"/> = <see cref="MTThread.StaThread"/>.
-		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
-		/// - <see cref="MTBase.DefaultIcon"/> = <see cref="MTBase.CommonIcon"/>.
-		/// - <see cref="MTBase.DefaultSubmenuIcon"/> = <see cref="MTBase.CommonSubmenuIcon"/>.
+		/// - <see cref="MTBase_old.ActionThread"/> = <see cref="MTThread.StaThread"/>.
+		/// - <see cref="MTBase_old.ExtractIconPathFromCode"/> = true.
+		/// - <see cref="MTBase_old.DefaultIcon"/> = <see cref="MTBase_old.CommonIcon"/>.
+		/// - <see cref="MTBase_old.DefaultSubmenuIcon"/> = <see cref="MTBase_old.CommonSubmenuIcon"/>.
 		/// </remarks>
 		public AToolbar(string name, TBCtor flags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
-			: base(f, l)
-		{
+			: base(f, l) {
 			_threadId = AThread.Id;
-			if(s_treadId == 0) s_treadId = _threadId; else if(_threadId != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
+			if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
 
 			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
 			_name = name;
@@ -157,10 +156,9 @@ namespace Au
 		/// <remarks>
 		/// Path: <c>AFolders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="AFolders.Workspace"/> is null, uses <see cref="AFolders.ThisAppDocuments"/>.
 		/// </remarks>
-		public static string GetSettingsFilePath(string toolbarName)
-		{
-			if(toolbarName.NE()) throw new ArgumentException("Empty name");
-			string s = AFolders.Workspace; if(s == null) s = AFolders.ThisAppDocuments;
+		public static string GetSettingsFilePath(string toolbarName) {
+			if (toolbarName.NE()) throw new ArgumentException("Empty name");
+			string s = AFolders.Workspace; if (s == null) s = AFolders.ThisAppDocuments;
 			return s + @"\.toolbars\" + toolbarName + ".json";
 		}
 
@@ -217,8 +215,7 @@ namespace Au
 		/// 
 		/// Code <c>t.Add("text", o => AOutput.Write(o));</c> is the same as <c>t["text"] = o => AOutput.Write(o);</c>. See <see cref="this[string, MTImage, string, int]"/>.
 		/// </remarks>
-		public ToolStripButton Add(string text, Action<MTClickArgs> onClick, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0)
-		{
+		public ToolStripButton Add(string text, Action<MTClickArgs> onClick, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0) {
 			var item = new ToolStripButton(text);
 			_Add(false, item, onClick, icon, tooltip, l);
 			return item;
@@ -232,43 +229,41 @@ namespace Au
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		public void Add(ToolStripItem item, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
-		{
+		public void Add(ToolStripItem item, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0) {
 			_Add(false, item, onClick, icon, tooltip, l, true);
 			//AOutput.Write(item.Padding, item.Margin);
 
 			//Activate window when a child control clicked, or something may not work, eg cannot enter text in Edit control.
-			if(item is ToolStripControlHost h && h.CanSelect) { //combo, edit, progress
+			if (item is ToolStripControlHost h && h.CanSelect) { //combo, edit, progress
 				h.GotFocus += (_, _) => { //info: before MouseDown, which does not work well with combo box
 					Api.SetForegroundWindow(_c.Hwnd()); //does not fail, probably after a mouse click this process is allowed to activate windows, even if the click did not activate because of the window style
 				};
 				h.KeyDown += (_, e) => {
-					if(e.KeyData == Keys.Escape && _c.Hwnd().IsActive) _c.Focus();
+					if (e.KeyData == Keys.Escape && _c.Hwnd().IsActive) _c.Focus();
 				};
 			}
 		}
 
-		void _Add(bool isSub, ToolStripItem item, Action<MTClickArgs> onClick, MTImage icon, string tooltip, int sourceLine, bool custom = false)
-		{
-			if(!custom) {
+		void _Add(bool isSub, ToolStripItem item, Action<MTClickArgs> onClick, MTImage icon, string tooltip, int sourceLine, bool custom = false) {
+			if (!custom) {
 				item.Margin = default; //default top 1, bottom 2
 
 				//rejected: make min button height like of native toolbars
 				//item.Padding = new Padding(1); //default 0
 				//because of this ToolStripSplitButton bug: ignores vertical padding. Then split buttons are smaller.
-				if(item is ToolStripSplitButton sb) {
+				if (item is ToolStripSplitButton sb) {
 					//sb.AutoSize = false;
 					sb.DropDownButtonWidth += 4;
 				}
 			}
-			if(tooltip != null) item.ToolTipText = tooltip;
+			if (tooltip != null) item.ToolTipText = tooltip;
 
 			_c.Items.Add(item);
 
 			_SetItemProp(true, isSub, item, onClick, icon, sourceLine);
 
 			bool onlyImage = NoText && (item.Image != null || item.ImageIndex >= 0 || !item.ImageKey.NE());
-			if(onlyImage) item.DisplayStyle = ToolStripItemDisplayStyle.Image; //default ImageAndText
+			if (onlyImage) item.DisplayStyle = ToolStripItemDisplayStyle.Image; //default ImageAndText
 			else item.AutoToolTip = false; //default true
 
 			_OnItemAdded(item);
@@ -277,10 +272,9 @@ namespace Au
 		/// <summary>
 		/// Adds new vertical separator. Horizontal if layout is vertical.
 		/// </summary>
-		public ToolStripSeparator Separator()
-		{
+		public ToolStripSeparator Separator() {
 			var sep = new _Separator();
-			if(Layout == TBLayout.Flow) sep.Margin = s_separatorMargin; //workaround for: auto-size height too big, because calculates too big preferred size.
+			if (Layout == TBLayout.Flow) sep.Margin = s_separatorMargin; //workaround for: auto-size height too big, because calculates too big preferred size.
 			_c.Items.Add(sep);
 			LastItem = sep;
 			return sep;
@@ -290,10 +284,9 @@ namespace Au
 
 		static Padding s_separatorMargin = new Padding(0, -2, 0, -1);
 
-		void _OnLayoutStyleChanged()
-		{
+		void _OnLayoutStyleChanged() {
 			var margin = Layout == TBLayout.Flow ? s_separatorMargin : default;
-			foreach(var v in _c.Items.OfType<_Separator>()) v.Margin = margin;
+			foreach (var v in _c.Items.OfType<_Separator>()) v.Margin = margin;
 		}
 
 		/// <summary>
@@ -306,8 +299,7 @@ namespace Au
 		/// t.Group("Group").ForeColor = Color.MediumPurple;
 		/// ]]></code>
 		/// </example>
-		public TBGroupSeparator Group(string name = null)
-		{
+		public TBGroupSeparator Group(string name = null) {
 			_hasGroups = true;
 			var item = new TBGroupSeparator(_c, name);
 			LastItem = item;
@@ -318,14 +310,14 @@ namespace Au
 		/// Adds new button as <see cref="ToolStripDropDownButton"/> with a drop-down menu.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="menu">Callback function that adds menu items. Called when opening the menu first time. If sets <see cref="AMenu.MultiShow"/> = false, called each time.</param>
+		/// <param name="menu">Callback function that adds menu items.</param>
 		/// <param name="icon"></param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <example><see cref="AToolbar"/></example>
-		public ToolStripDropDownButton MenuButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0)
-		{
-			var item = new _MenuButton(this, text, menu);
+		public ToolStripDropDownButton MenuButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0) {
+			var item = new ToolStripDropDownButton(text);
+			if (menu != null) item.DropDownOpening += (_, _) => { _CreateMenu(item, menu, show: true, false); };
 			_Add(true, item, null, icon, tooltip, l);
 			return item;
 		}
@@ -334,102 +326,51 @@ namespace Au
 		/// Adds new button as <see cref="ToolStripSplitButton"/> with a drop-down menu.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="menu">Callback function that adds menu items. Called when need the menu first time (when opening it, or when clicked the button if <i>onClick</i> null). If sets <see cref="AMenu.MultiShow"/> = false, called each time.</param>
+		/// <param name="menu">Callback function that adds menu items.</param>
 		/// <param name="icon"></param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <example><see cref="AToolbar"/></example>
-		public ToolStripSplitButton SplitButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0)
-		{
-			var item = new _SplitButton(this, text, menu, onClick);
+		public ToolStripSplitButton SplitButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0) {
+			var item = new ToolStripSplitButton(text);
+			if (menu != null) {
+				bool defaultItem = onClick == null;
+				item.DropDownOpening += (_, _) => {
+					_CreateMenu(item, menu, show: true, defaultItem);
+				};
+
+				onClick ??= o => {
+					var (_, mi) = _CreateMenu(item, menu, show: false, true);
+					mi?.Clicked(mi);
+				};
+			}
 			_Add(false, item, onClick, icon, tooltip, l);
 			return item;
 		}
 
-		AMenu _CreateMenu(ToolStripDropDownItem item, ref Action<AMenu> menu)
-		{
-			if(menu == null) return null;
+		(AMenu m, AMenu.MenuItem mi) _CreateMenu(ToolStripDropDownItem item, Action<AMenu> menu, bool show, bool defaultItem) {
 			var m = new AMenu(this.Name + " + " + item.Text, _sourceFile, GetItemSourceLine_(item)) {
-				MultiShow = true,
-				ActionThread = this.ActionThread,
+				//ActionThread = this.ActionThread,
+				//ActionException = this.ActionException,
+				ActionThread = this.ActionThread != MTThread.Current, //TODO: use the above when available
+				ActionException = this.ExceptionHandling == MTExcept.Exception, //TODO: use the above when available
 			};
-			item.DropDown = m.Control; //attaches
-			m.Control.OwnerItem = item; //the callback may ned it
+
 			menu(m);
-			if(m.MultiShow) menu = null; //default true, but callback may set false to call it each time
-			return m;
-		}
 
-		class _MenuButton : ToolStripDropDownButton
-		{
-			AToolbar _tb;
-			Action<AMenu> _action;
-
-			public _MenuButton(AToolbar tb, string text, Action<AMenu> menu) : base(text)
-			{
-				_tb = tb;
-				_action = menu;
+			AMenu.MenuItem mi = null;
+			if (defaultItem) {
+				mi = m.Items().Where(o => o.clicked != null).FirstOrDefault();
+				if (mi != null) mi.IsBold = true;
 			}
 
-			protected override void OnDropDownShow(EventArgs e)
-			{
-				_tb._CreateMenu(this, ref _action);
-				base.OnDropDownShow(e);
+			if (show) {
+				RECT r = _c.RectangleToScreen(item.Bounds);
+				m.Show(_c, MSFlags.AlignRectBottomTop, new(r.left, r.bottom), r);
 			}
 
-			protected override void OnDropDownClosed(EventArgs e)
-			{
-				base.OnDropDownClosed(e);
-				if(_action != null) DropDown = null; //GC
-			}
-		}
-
-		class _SplitButton : ToolStripSplitButton
-		{
-			AToolbar _tb;
-			Action<AMenu> _action;
-			AMenu _m;
-			ToolStripMenuItem _mi;
-			bool _autoButtonAction;
-
-			public _SplitButton(AToolbar tb, string text, Action<AMenu> menu, Action<MTClickArgs> onClick) : base(text)
-			{
-				_tb = tb;
-				_action = menu;
-				_autoButtonAction = onClick == null && menu != null;
-			}
-
-			protected override void OnDropDownShow(EventArgs e)
-			{
-				if(_action != null) {
-					if(_autoButtonAction) _CreateMenu2(); //need to find default item and make bold
-					else _tb._CreateMenu(this, ref _action);
-				}
-				base.OnDropDownShow(e);
-			}
-
-			protected override void OnDropDownClosed(EventArgs e)
-			{
-				base.OnDropDownClosed(e);
-				if(_action != null) DropDown = null; //GC
-			}
-
-			protected override void OnButtonClick(EventArgs e)
-			{
-				if(_autoButtonAction) {
-					if(_action != null) _CreateMenu2();
-					if(_mi != null && _mi.Enabled) _m.OnClick_(_mi);
-				}
-				base.OnButtonClick(e);
-			}
-
-			void _CreateMenu2()
-			{
-				_m = _tb._CreateMenu(this, ref _action);
-				_mi = _m.Control.Items.OfType<ToolStripMenuItem>().FirstOrDefault();
-				if(_mi != null) _mi.Font = new Font(_mi.Font, FontStyle.Bold);
-			}
+			return (m, mi);
 		}
 
 		//rejected
@@ -468,7 +409,7 @@ namespace Au
 		/// Returns null if it is not a <b>ToolStripButton</b>.
 		/// </summary>
 		/// <remarks>
-		/// You can instead use <see cref="MTBase.LastItem"/>, which gets <see cref="ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
+		/// You can instead use <see cref="MTBase_old.LastItem"/>, which gets <see cref="ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
 		/// </remarks>
 		public ToolStripButton LastButton => LastItem as ToolStripButton;
 
@@ -501,8 +442,7 @@ namespace Au
 		/// <remarks>
 		/// The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
 		/// </remarks>
-		public void Show(AWnd ownerWindow, bool clientArea = false)
-		{
+		public void Show(AWnd ownerWindow, bool clientArea = false) {
 			_followClientArea = clientArea;
 			_Show(true, ownerWindow, null, default);
 		}
@@ -524,9 +464,8 @@ namespace Au
 		/// If ta is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
 		/// Else if ta != null, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(AToolbar)"/>.
 		/// </summary>
-		public void Show(TriggerArgs ta)
-		{
-			if(ta is WindowTriggerArgs wta) {
+		public void Show(TriggerArgs ta) {
+			if (ta is WindowTriggerArgs wta) {
 				Show(wta.Window);
 			} else {
 				Show();
@@ -562,17 +501,16 @@ namespace Au
 		//}
 
 		//used for normal toolbars, not for satellite toolbars
-		void _Show(bool owned, AWnd owner, ITBOwnerObject oo, AScreen screen)
-		{
+		void _Show(bool owned, AWnd owner, ITBOwnerObject oo, AScreen screen) {
 			_CheckThread();
 			//if(_c.IsDisposed) throw new ObjectDisposedException("AToolbar");
-			if(_showed) throw new InvalidOperationException();
+			if (_showed) throw new InvalidOperationException();
 
 			AWnd c = default;
-			if(owned) {
-				if(owner.Is0) throw new ArgumentException();
-				var w = owner.Window; if(w.Is0) return;
-				if(w != owner) { c = owner; owner = w; }
+			if (owned) {
+				if (owner.Is0) throw new ArgumentException();
+				var w = owner.Window; if (w.Is0) return;
+				if (w != owner) { c = owner; owner = w; }
 			}
 
 			_CreateControl(owned, owner, screen);
@@ -580,10 +518,9 @@ namespace Au
 		}
 
 		//used for normal and satellite toolbars
-		void _CreateControl(bool owned, AWnd owner, AScreen screen = default)
-		{
+		void _CreateControl(bool owned, AWnd owner, AScreen screen = default) {
 			_topmost = !owned || owner.IsTopmost;
-			if(!owned || _anchor == TBAnchor.None) _os = new _OwnerScreen(this, screen);
+			if (!owned || _anchor == TBAnchor.None) _os = new _OwnerScreen(this, screen);
 
 			GetIconsAsync_(_c);
 			_c.ResumeLayout();
@@ -592,8 +529,7 @@ namespace Au
 			_showed = true;
 		}
 
-		void _Close(bool planetOrThis = false)
-		{
+		void _Close(bool planetOrThis = false) {
 			var tb = planetOrThis ? _SatPlanetOrThis : this;
 			tb._c.Dispose();
 		}
@@ -605,9 +541,8 @@ namespace Au
 		/// <remarks>
 		/// Can be called from any thread.
 		/// </remarks>
-		public void Close()
-		{
-			if(_IsOtherThread) _c.BeginInvoke(new Action(() => _Close(true)));
+		public void Close() {
+			if (_IsOtherThread) _c.BeginInvoke(new Action(() => _Close(true)));
 			else _Close(true);
 		}
 
@@ -615,7 +550,7 @@ namespace Au
 
 		void _CheckThread() //SHOULDDO: call everywhere
 		{
-			if(_IsOtherThread) throw new InvalidOperationException("Wrong thread.");
+			if (_IsOtherThread) throw new InvalidOperationException("Wrong thread.");
 		}
 
 		/// <summary>
@@ -626,17 +561,16 @@ namespace Au
 		/// <exception cref="InvalidOperationException">
 		/// - The toolbar was never shown (<see cref="Show"/> not called).
 		/// - It is a satellite toolbar.
-		/// - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="MTBase.ActionThread"/>.
+		/// - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="MTBase_old.ActionThread"/>.
 		/// </exception>
 		/// <exception cref="ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="TBHide.User"/>.</exception>
 		/// <remarks>
 		/// Toolbars are automatically hidden when the owner window is hidden, minimized, etc. This function can be used to hide toolbars for other reasons.
 		/// </remarks>
-		public void Hide(bool hide, TBHide reason)
-		{
+		public void Hide(bool hide, TBHide reason) {
 			_CheckThread();
-			if(!_showed || _IsSatellite) throw new InvalidOperationException();
-			if(0 != ((int)reason & 0xffff)) throw new ArgumentOutOfRangeException();
+			if (!_showed || _IsSatellite) throw new InvalidOperationException();
+			if (0 != ((int)reason & 0xffff)) throw new ArgumentOutOfRangeException();
 			_SetVisible(!hide, reason);
 		}
 
@@ -648,17 +582,16 @@ namespace Au
 		/// </remarks>
 		public TBHide Hidden => _hide;
 
-		void _SetVisible(bool show, TBHide reason)
-		{
+		void _SetVisible(bool show, TBHide reason) {
 			//AOutput.Write(show, reason);
-			if(show) {
-				if(_hide == 0) return;
+			if (show) {
+				if (_hide == 0) return;
 				_hide &= ~reason;
-				if(_hide != 0) return;
+				if (_hide != 0) return;
 			} else {
 				var h = _hide;
 				_hide |= reason;
-				if(h != 0) return;
+				if (h != 0) return;
 			}
 			_SetVisibleLL(show);
 		}
@@ -716,10 +649,10 @@ namespace Au
 		public TBBorder Border {
 			get => _border;
 			set {
-				if(value == _border) return;
+				if (value == _border) return;
 				_c.SetBorder(value);
 				_border = value;
-				if(_constructed) _sett.border = value;
+				if (_constructed) _sett.border = value;
 			}
 		}
 		TBBorder _border;
@@ -730,10 +663,10 @@ namespace Au
 		public ColorInt BorderColor {
 			get => _sett.borderColor;
 			set {
-				if(value.argb == _sett.borderColor) return;
+				if (value.argb == _sett.borderColor) return;
 				_sett.borderColor = value.argb;
 				var w = _c.Hwnd();
-				if(!w.Is0) unsafe { Api.RedrawWindow(w, flags: Api.RDW_FRAME | Api.RDW_INVALIDATE); }
+				if (!w.Is0) unsafe { Api.RedrawWindow(w, flags: Api.RDW_FRAME | Api.RDW_INVALIDATE); }
 			}
 		}
 
@@ -749,16 +682,16 @@ namespace Au
 			get => _anchor;
 			set {
 				value &= ~_GetInvalidAnchorFlags(value);
-				if(value == _anchor) return;
+				if (value == _anchor) return;
 				var prev = _anchor;
 				_sett.anchor = _anchor = value;
-				if(IsOwned) {
+				if (IsOwned) {
 					_os = _anchor == TBAnchor.None ? new _OwnerScreen(this, default) : null; //follow toolbar's screen
-					if(prev == TBAnchor.None && _followedOnce) {
-						if(_oc != null) _oc.UpdateRect(out _); else _ow.UpdateRect(out _);
+					if (prev == TBAnchor.None && _followedOnce) {
+						if (_oc != null) _oc.UpdateRect(out _); else _ow.UpdateRect(out _);
 					}
 				}
-				if(_followedOnce) {
+				if (_followedOnce) {
 					var b = _c.Bounds;
 					_UpdateOffsets(b.X, b.Y, b.Width, b.Height);
 				}
@@ -766,9 +699,8 @@ namespace Au
 		}
 		TBAnchor _anchor;
 
-		static TBAnchor _GetInvalidAnchorFlags(TBAnchor anchor)
-		{
-			switch(anchor.WithoutFlags()) {
+		static TBAnchor _GetInvalidAnchorFlags(TBAnchor anchor) {
+			switch (anchor.WithoutFlags()) {
 			case TBAnchor.TopLeft: case TBAnchor.TopRight: case TBAnchor.BottomLeft: case TBAnchor.BottomRight: return 0;
 			case TBAnchor.TopLR: case TBAnchor.BottomLR: return TBAnchor.OppositeEdgeX;
 			case TBAnchor.LeftTB: case TBAnchor.RightTB: return TBAnchor.OppositeEdgeY;
@@ -795,9 +727,9 @@ namespace Au
 			get => _offsets;
 			set {
 				_preferSize = false;
-				if(value.Equals(_offsets)) return;
+				if (value.Equals(_offsets)) return;
 				_sett.offsets = _offsets = value;
-				if(_followedOnce) _FollowRect();
+				if (_followedOnce) _FollowRect();
 				//CONSIDER: add ScreenIndex property or something. Now if screen is auto-selected, this sets xy in that screen, but caller may want in primary screen.
 			}
 		}
@@ -815,8 +747,8 @@ namespace Au
 		public TBLayout Layout {
 			get => (TBLayout)_c.LayoutStyle;
 			set {
-				if(value == _sett.layout) return;
-				if(value == TBLayout.Vertical || _sett.layout == TBLayout.Vertical) _sett.wrapWidth = 0;
+				if (value == _sett.layout) return;
+				if (value == TBLayout.Vertical || _sett.layout == TBLayout.Vertical) _sett.wrapWidth = 0;
 				_sett.layout = value;
 				_c.LayoutStyle = (ToolStripLayoutStyle)value;
 			}
@@ -847,11 +779,11 @@ namespace Au
 		public SIZE Size {
 			get => _c.Size;
 			set {
-				if((Size)value != _c.Size) {
+				if ((Size)value != _c.Size) {
 					_sett.size = value;
 					_c.Size = value;
 				}
-				if(!_followedOnce) _preferSize = true;
+				if (!_followedOnce) _preferSize = true;
 			}
 		}
 
@@ -870,7 +802,7 @@ namespace Au
 		public bool AutoSize {
 			get => _sett.autoSize;
 			set {
-				if(!value.Equals(_sett.autoSize)) {
+				if (!value.Equals(_sett.autoSize)) {
 					_sett.autoSize = value;
 					_AutoSize();
 				}
@@ -888,27 +820,26 @@ namespace Au
 			get => _sett.wrapWidth;
 			set {
 				value = Math.Max(1, value);
-				if(value != _sett.wrapWidth) {
+				if (value != _sett.wrapWidth) {
 					_sett.wrapWidth = value;
 					_AutoSize();
 				}
 			}
 		}
 
-		void _AutoSize(bool loading = false)
-		{
-			if(!_sett.autoSize) return;
-			if(!(loading || _showed)) return;
+		void _AutoSize(bool loading = false) {
+			if (!_sett.autoSize) return;
+			if (!(loading || _showed)) return;
 			Size size;
 			int wrap = _sett.wrapWidth;
 
-			if(Layout == TBLayout.Vertical) {
+			if (Layout == TBLayout.Vertical) {
 				//workaround for: if vertical layout, GetPreferredSize adds overflow height and ignores proposed height.
 				bool canOverflow = _c.CanOverflow;
-				if(canOverflow) _c.CanOverflow = false;
+				if (canOverflow) _c.CanOverflow = false;
 				size = _c.GetPreferredSize(new Size(0, wrap));
-				if(canOverflow) _c.CanOverflow = true;
-				if(wrap > 0) size.Height = Math.Min(size.Height, wrap);
+				if (canOverflow) _c.CanOverflow = true;
+				if (wrap > 0) size.Height = Math.Min(size.Height, wrap);
 			} else {
 				bool verticalWrap = _IsVerticalFlow;
 				size = _c.GetPreferredSize(new Size(verticalWrap ? 0 : wrap, verticalWrap ? wrap : 0));
@@ -917,12 +848,12 @@ namespace Au
 
 			var old = _c.ClientSize;
 			bool same = size == old;
-			if(!same) {
-				if(loading) {
+			if (!same) {
+				if (loading) {
 					_c.ClientSize = size;
 				} else {
 					bool invertX = false, invertY = false; //the resizing directions depend on anchor
-					switch(_anchor.WithoutFlags()) {
+					switch (_anchor.WithoutFlags()) {
 					case TBAnchor.TopRight: case TBAnchor.RightTB: invertX = true; break;
 					case TBAnchor.BottomLeft: case TBAnchor.BottomLR: invertY = true; break;
 					case TBAnchor.BottomRight: invertX = invertY = true; break;
@@ -931,14 +862,14 @@ namespace Au
 					var w = _c.Hwnd();
 					var r = w.Rect;
 					int diffX = size.Width - old.Width, diffY = size.Height - old.Height;
-					if(invertX) r.left -= diffX; else r.right += diffX;
-					if(invertY) r.top -= diffY; else r.bottom += diffY;
+					if (invertX) r.left -= diffX; else r.right += diffX;
+					if (invertY) r.top -= diffY; else r.bottom += diffY;
 					w.MoveLL(r);
 				}
 			}
-			if(!_followedOnce) {
+			if (!_followedOnce) {
 				_preferSize = true;
-				if(!same) _sett.size = _c.Size;
+				if (!same) _sett.size = _c.Size;
 			}
 		}
 
@@ -978,9 +909,9 @@ namespace Au
 		public (int? opacity, ColorInt? colorKey) Transparency {
 			get => _transparency;
 			set {
-				if(value != _transparency) {
+				if (value != _transparency) {
 					_transparency = value;
-					if(_showed) _c.Hwnd().SetTransparency(value != default, value.opacity, value.colorKey);
+					if (_showed) _c.Hwnd().SetTransparency(value != default, value.opacity, value.colorKey);
 				}
 			}
 		}
@@ -1009,14 +940,14 @@ namespace Au
 		public AToolbar Satellite {
 			get => _satellite;
 			set {
-				if(value != _satellite) {
-					if(value == null) {
+				if (value != _satellite) {
+					if (value == null) {
 						_SatHide();
 						_satellite = null;
 						//and don't clear _satPlanet etc
 					} else {
-						if((_c?.IsDisposed ?? false) || (value._c?.IsDisposed ?? false)) throw new ObjectDisposedException(nameof(AToolbar));
-						var p = value._satPlanet; if(p != this) { if(p != null || value._showed) throw new InvalidOperationException(); }
+						if ((_c?.IsDisposed ?? false) || (value._c?.IsDisposed ?? false)) throw new ObjectDisposedException(nameof(AToolbar));
+						var p = value._satPlanet; if (p != this) { if (p != null || value._showed) throw new InvalidOperationException(); }
 						_satellite = value;
 						_satellite._satPlanet = this;
 					}
@@ -1040,13 +971,12 @@ namespace Au
 		ATimer _satTimer;
 		ATimer _satAnimationTimer;
 
-		void _SatMouse()
-		{
-			if(_satellite == null || _satVisible) return;
+		void _SatMouse() {
+			if (_satellite == null || _satVisible) return;
 			_satVisible = true;
 
 			//AOutput.Write("show");
-			if(!_satellite._showed) {
+			if (!_satellite._showed) {
 				var owner = _c.Hwnd();
 				_satellite._CreateControl(true, owner);
 				_satellite._ow = new _OwnerWindow(owner);
@@ -1060,8 +990,7 @@ namespace Au
 			_satTimer.Every(100);
 		}
 
-		void _SatTimer(ATimer _)
-		{
+		void _SatTimer(ATimer _) {
 			Debug.Assert(!_c.IsDisposed);
 
 			POINT p = AMouse.XY;
@@ -1069,54 +998,50 @@ namespace Au
 			var wa = AWnd.Active;
 
 			RECT ru = default;
-			if(_MouseIsIn(_c) || _MouseIsIn(_satellite._c)) return;
-			if(ru.Contains(p.x, p.y)) return;
-			if((_c.ContextMenu_?.Visible ?? false) || (_satellite._c.ContextMenu_?.Visible ?? false)) return;
+			if (_MouseIsIn(_c) || _MouseIsIn(_satellite._c)) return;
+			if (ru.Contains(p.x, p.y)) return;
+			if (_c.ContextMenuVisible_ || _satellite._c.ContextMenuVisible_) return;
 
-			bool _MouseIsIn(ToolStrip ts)
-			{
+			bool _MouseIsIn(ToolStrip ts) {
 				var w = ts.Hwnd();
-				if(w == wa) return true;
+				if (w == wa) return true;
 				var r = w.Rect;
 				r.Inflate(dist, dist);
-				if(r.Contains(p.x, p.y)) return true;
+				if (r.Contains(p.x, p.y)) return true;
 				ru.Union(r);
-				if(ts.Items.OfType<ToolStripDropDownItem>().Any(o => o.Pressed)) return true;
-				if(ts.LayoutStyle != ToolStripLayoutStyle.Flow && ts.CanOverflow && ts.OverflowButton.Pressed) return true;
+				if (ts.Items.OfType<ToolStripDropDownItem>().Any(o => o.Pressed)) return true;
+				if (ts.LayoutStyle != ToolStripLayoutStyle.Flow && ts.CanOverflow && ts.OverflowButton.Pressed) return true;
 				return false;
 			}
 
 			_SatHide(animate: true);
 		}
 
-		void _SatDestroying()
-		{
-			if(_IsSatellite) _satPlanet.Satellite = null;
+		void _SatDestroying() {
+			if (_IsSatellite) _satPlanet.Satellite = null;
 			ADebug.PrintIf(_satellite != null, "_satellite");
 			//When destroying planet, OS at first destroys satellites (owned windows).
 		}
 
 		//Hides _satellite and stops _satTimer.
-		void _SatHide(bool animate = false/*, [CallerMemberName] string cmn=null*/)
-		{
-			if(_satellite == null) return;
+		void _SatHide(bool animate = false/*, [CallerMemberName] string cmn=null*/) {
+			if (_satellite == null) return;
 			//AOutput.Write("hide", cmn, _satVisible);
-			if(_satVisible) {
+			if (_satVisible) {
 				_satVisible = false;
 				_satTimer.Stop();
 				_SatShowHide(false, animate);
-			} else if(!animate && (_satAnimationTimer?.IsRunning ?? false)) {
+			} else if (!animate && (_satAnimationTimer?.IsRunning ?? false)) {
 				_SatShowHide(false, false);
 			}
 		}
 
 		//Shows or hides _satellite and manages animation.
-		void _SatShowHide(bool show, bool animate)
-		{
-			if(!animate || _satellite._transparency != default) {
+		void _SatShowHide(bool show, bool animate) {
+			if (!animate || _satellite._transparency != default) {
 				var w = _satellite._c.Hwnd();
-				if(show != w.IsVisible) _satellite._SetVisibleLL(show);
-				if(_satellite._transparency == default) w.SetTransparency(false);
+				if (show != w.IsVisible) _satellite._SetVisibleLL(show);
+				if (_satellite._transparency == default) w.SetTransparency(false);
 				_satAnimationTimer?.Stop();
 				_satAnimation = 0;
 				return;
@@ -1124,23 +1049,22 @@ namespace Au
 
 			_satAnimationTimer ??= new ATimer(_ => {
 				_satAnimation += _satVisible ? 64 : -32;
-				bool stop; if(_satVisible) { if(stop = _satAnimation >= 255) _satAnimation = 255; } else { if(stop = _satAnimation <= 0) _satAnimation = 0; }
-				if(stop) {
+				bool stop; if (_satVisible) { if (stop = _satAnimation >= 255) _satAnimation = 255; } else { if (stop = _satAnimation <= 0) _satAnimation = 0; }
+				if (stop) {
 					_satAnimationTimer.Stop();
-					if(_satAnimation == 0) _satellite._SetVisibleLL(false);
+					if (_satAnimation == 0) _satellite._SetVisibleLL(false);
 				}
-				if(_satellite._transparency == default) _satellite._c.Hwnd().SetTransparency(!stop, _satAnimation);
+				if (_satellite._transparency == default) _satellite._c.Hwnd().SetTransparency(!stop, _satAnimation);
 			});
 			_satAnimationTimer.Now();
 			_satAnimationTimer.Every(30);
 
-			if(show) _satellite._SetVisibleLL(true);
+			if (show) _satellite._SetVisibleLL(true);
 		}
 
-		void _SatFollow()
-		{
-			if(!_satVisible) return;
-			if(!_satellite._ow.UpdateRect(out bool changed) || !changed) return;
+		void _SatFollow() {
+			if (!_satVisible) return;
+			if (!_satellite._ow.UpdateRect(out bool changed) || !changed) return;
 			_satellite._FollowRect(onFollowOwner: true);
 		}
 
@@ -1161,8 +1085,7 @@ namespace Au
 		/// Sets toolbar name = <c>this.Name + "^"</c>.
 		/// If this already is a satellite toolbar, just returns its owner.
 		/// </remarks>
-		public AToolbar AutoHide(TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
-		{
+		public AToolbar AutoHide(TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
 			return _satPlanet ??= new AToolbar(this.Name + "^", ctorFlags, control, f, l) { Satellite = this };
 		}
 
@@ -1180,10 +1103,9 @@ namespace Au
 		/// <param name="control">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
 		/// <param name="f">[CallerFilePath]</param>
 		/// <param name="l">[CallerLineNumber]</param>
-		public AToolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
-		{
-			if(mta == null) throw new ArgumentNullException();
-			if(mta.Trigger.Kind != TMKind.Edge) throw new ArgumentException("Not an edge trigger.");
+		public AToolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+			if (mta == null) throw new ArgumentNullException();
+			if (mta.Trigger.Kind != TMKind.Edge) throw new ArgumentException("Not an edge trigger.");
 			return AutoHideScreenEdge(mta.Trigger.Edge, mta.Trigger.ScreenIndex, rangeStart, rangeEnd, thickness, ctorFlags, control, f, l);
 		}
 
@@ -1200,9 +1122,8 @@ namespace Au
 		/// <param name="control">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
 		/// <param name="f">[CallerFilePath]</param>
 		/// <param name="l">[CallerLineNumber]</param>
-		public AToolbar AutoHideScreenEdge(TMEdge edge, TMScreen screen = TMScreen.Primary, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
-		{
-			if(screen < 0) throw new NotSupportedException("screen");
+		public AToolbar AutoHideScreenEdge(TMEdge edge, TMScreen screen = TMScreen.Primary, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+			if (screen < 0) throw new NotSupportedException("screen");
 			var sh = AScreen.Index((int)screen);
 			var rs = sh.Rect;
 
@@ -1211,9 +1132,9 @@ namespace Au
 
 			TBAnchor anchor = TBAnchor.TopLeft;
 			TBOffsets k = default;
-			if(thickness <= 0) thickness = 1;
+			if (thickness <= 0) thickness = 1;
 			int offscreen = thickness == 1 ? 1 : 0;
-			switch(se0) {
+			switch (se0) {
 			case 'T': k.Top = -offscreen; break;
 			case 'R': k.Right = -offscreen; anchor = TBAnchor.TopRight; break;
 			case 'B': k.Bottom = -offscreen; anchor = TBAnchor.BottomLeft; break;
@@ -1221,7 +1142,7 @@ namespace Au
 			}
 			int x25 = rs.Width / 4, y25 = rs.Height / 4;
 			bool reverse = false;
-			switch(edge) {
+			switch (edge) {
 			case TMEdge.TopInCenter50: k.Left = x25; break;
 			case TMEdge.TopInRight25: anchor = TBAnchor.TopRight; reverse = true; break;
 			case TMEdge.RightInCenter50: k.Top = y25; break;
@@ -1232,17 +1153,17 @@ namespace Au
 			case TMEdge.LeftInBottom25: anchor = TBAnchor.BottomLeft; reverse = true; break;
 			}
 
-			int edgeLength = vertical ? rs.Height : rs.Width; if(se.Contains("25")) edgeLength /= 4; else if(se.Contains("50")) edgeLength /= 2;
+			int edgeLength = vertical ? rs.Height : rs.Width; if (se.Contains("25")) edgeLength /= 4; else if (se.Contains("50")) edgeLength /= 2;
 			int move = rangeStart.IsEmpty ? 0 : rangeStart.NormalizeInRange(0, edgeLength);
 			int length = rangeEnd.IsEmpty ? edgeLength : Math.Max(0, rangeEnd.NormalizeInRange(0, edgeLength) - move);
-			if(vertical) {
-				if(reverse) k.Bottom = edgeLength - length - move; else k.Top += move;
+			if (vertical) {
+				if (reverse) k.Bottom = edgeLength - length - move; else k.Top += move;
 			} else {
-				if(reverse) k.Right = edgeLength - length - move; else k.Left += move;
+				if (reverse) k.Right = edgeLength - length - move; else k.Left += move;
 			}
 
 			var planet = AutoHide(ctorFlags, control, f, l);
-			if(!planet.SettingsModified) {
+			if (!planet.SettingsModified) {
 				planet.MiscFlags = TBFlags.HideIfFullScreen;
 			}
 			planet.Anchor = anchor;
@@ -1254,7 +1175,7 @@ namespace Au
 			planet.NoMenu = TBNoMenu.Anchor | TBNoMenu.Border | TBNoMenu.Layout | TBNoMenu.Sizable | TBNoMenu.AutoSize;
 			planet._screen = AScreen.Index((int)screen);
 
-			if(!this.SettingsModified) {
+			if (!this.SettingsModified) {
 				this.AutoSize = true;
 			}
 			this.Anchor = anchor | (vertical ? TBAnchor.OppositeEdgeX : TBAnchor.OppositeEdgeY);

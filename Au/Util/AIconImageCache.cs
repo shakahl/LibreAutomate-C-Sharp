@@ -18,7 +18,7 @@ namespace Au.Util
 	public sealed class AIconImageCache : IDisposable
 	{
 		List<(int dpi, Dictionary<string, object> images)> _images; //object is Bitmap if loaded, or null if failed to load, or List<(Action<Bitmap, object>, object)> if loading async
-		const int _imageSize = 16;
+		const int c_imageSize = 16;
 
 		/// <summary>
 		/// Gets image from memory cache or file.
@@ -27,14 +27,18 @@ namespace Au.Util
 		/// <param name="dpi">DPI of window that will display the image.</param>
 		/// <param name="isImage">
 		/// true - load image from xaml/png/etc file, resource or string with <see cref="AImageUtil.LoadGdipBitmapFromFileOrResourceOrString"/> or <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>.
-		/// false - get file icon with <see cref="AIcon.OfFile"/>.</param>
+		/// false - get file icon with <see cref="AIcon.OfFile"/>.
+		/// null (default) - call <see cref="AImageUtil.HasImageOrResourcePrefix"/> to determine whether it is image.
+		/// </param>
 		/// <param name="asyncCompletion">If not null, if the image is still not in cache, <b>Get</b> returns null and loads it asynchronously in other thread. When loaded, calls <i>asyncCompletion</i> in this thread. Can be used to avoid slow startup when need to get many file icons.</param>
 		/// <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
+		/// <param name="onException">Action to call when fails to load image. If null, calls <see cref="AWarning.Write"/>. Parameters are image source string and exception.</param>
 		/// <remarks>
 		/// When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk.
 		/// </remarks>
-		public Bitmap Get(string imageSource, int dpi, bool isImage, Action<Bitmap, object> asyncCompletion = null, object acData = null) {
-			if (!isImage) {
+		public Bitmap Get(string imageSource, int dpi, bool? isImage = null, Action<Bitmap, object> asyncCompletion = null, object acData = null, Action<string, Exception> onException = null) {
+			bool isIm = isImage ?? AImageUtil.HasImageOrResourcePrefix(imageSource);
+			if (!isIm) {
 				switch (AFile.ExistsAs(imageSource)) {
 				case FileDir.Directory:
 					imageSource = ".";
@@ -47,7 +51,7 @@ namespace Au.Util
 			}
 
 			//get dictionary for dpi
-			bool isXaml = isImage && imageSource.Ends(".xaml", true);
+			bool isXaml = isIm && imageSource.Ends(".xaml", true);
 			if (!isXaml) dpi = 96;
 			_images ??= new List<(int dpi, Dictionary<string, object> images)>();
 			int i; for (i = 0; i < _images.Count; i++) if (_images[i].dpi == dpi) goto g1;
@@ -90,11 +94,11 @@ namespace Au.Util
 			Bitmap _Load() {
 				Bitmap b = null;
 				try {
-					if (!isImage) b = AIcon.OfFile(imageSource).ToGdipBitmap();
-					else if (isXaml) b = _LoadXamlBitmap(imageSource, _imageSize, dpi);
+					if (!isIm) b = AIcon.OfFile(imageSource).ToGdipBitmap();
+					else if (isXaml) b = AImageUtil.LoadGdipBitmapFromXaml(imageSource, (c_imageSize, c_imageSize), dpi);
 					else b = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(imageSource);
 				}
-				catch (Exception ex) { AWarning.Write(ex.ToStringWithoutStack()); }
+				catch (Exception ex) { if (onException != null) onException(imageSource, ex); else AWarning.Write(ex.ToStringWithoutStack()); }
 				return b;
 			}
 
@@ -123,31 +127,6 @@ namespace Au.Util
 			if (s.Ends(".ico", true) || s.Ends(".exe", true) || s.Ends(".scr", true) || s.Ends(".lnk", true)) return true;
 			if (!AIcon.ParsePathIndex(s, out string path, out _)) return false;
 			return path.Ends(".dll", true) || path.Ends(".exe", true);
-		}
-
-		[MethodImpl(MethodImplOptions.NoInlining)]
-		static Bitmap _LoadXamlBitmap(string imageSource, int size, int dpi) {
-			var e = AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(imageSource);
-			e.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
-			e.Arrange(new System.Windows.Rect(e.DesiredSize));
-			int wid = ADpi.Scale(size, dpi), hei = wid;
-			var bs = new System.Windows.Media.Imaging.RenderTargetBitmap(wid, hei, dpi, dpi, System.Windows.Media.PixelFormats.Pbgra32);
-			bs.Render(e);
-			int stride = wid * 4;
-			int msize = hei * stride;
-			var m = new _BitmapMemory(msize);
-			bs.CopyPixels(new System.Windows.Int32Rect(0, 0, wid, hei), m.pixels, msize, stride);
-			var b = new Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, m.pixels) { Tag = m }; //only this Bitmap creation method preserves alpha
-			b.SetResolution(dpi, dpi);
-			return b;
-		}
-
-		//Holds memory of System.Drawing.Bitmap created with the scan ctor. Such Bitmap does not own/free the memory. We attach _BitmapMemory to Bitmap.Tag, let GC dispose it.
-		unsafe class _BitmapMemory
-		{
-			public readonly IntPtr pixels;
-			public _BitmapMemory(int size) { pixels = (IntPtr)AMemory.Alloc(size); }
-			~_BitmapMemory() { AMemory.Free((void*)pixels); }
 		}
 	}
 }

@@ -327,7 +327,7 @@ namespace Au.Types
 		internal struct WINDOWPLACEMENT
 		{
 			public int length;
-			/// <summary> WPF_ </summary>//TODO: don't use prefix WPF
+			/// <summary> WPF_ </summary>
 			public uint flags;
 			public int showCmd;
 			public POINT ptMinPosition;
@@ -1295,18 +1295,29 @@ namespace Au.Types
 		}
 
 		internal const uint MIIM_STATE = 0x1;
-		internal const uint MIIM_TYPE = 0x10;
+		internal const uint MIIM_ID = 0x2;
+		internal const uint MIIM_SUBMENU = 0x4;
+		//internal const uint MIIM_CHECKMARKS = 0x8;
+		//internal const uint MIIM_TYPE = 0x10;
+		internal const uint MIIM_DATA = 0x20;
+		internal const uint MIIM_STRING = 0x40;
+		internal const uint MIIM_BITMAP = 0x80;
+		internal const uint MIIM_FTYPE = 0x100;
+		//internal const int HBMMENU_CALLBACK = -1;
 
 		internal const uint MFS_DISABLED = 0x3;
 		internal const uint MFS_CHECKED = 0x8;
-		//internal const uint MFS_HILITE = 0x80;
 		internal const uint MFS_DEFAULT = 0x1000;
+
+		internal const uint MFT_MENUBARBREAK = 0x20;
+		internal const uint MFT_RADIOCHECK = 0x200;
+		internal const uint MFT_SEPARATOR = 0x800;
 
 		[DllImport("user32.dll", EntryPoint = "GetMenuItemInfoW")]
 		internal static extern bool GetMenuItemInfo(IntPtr hmenu, int item, bool fByPosition, ref MENUITEMINFO lpmii);
 
 		[DllImport("user32.dll", EntryPoint = "SetMenuItemInfoW")]
-		internal static extern bool SetMenuItemInfo(IntPtr hmenu, int item, bool fByPositon, in MENUITEMINFO lpmii);
+		internal static extern bool SetMenuItemInfo(IntPtr hmenu, int item, bool fByPositon, in MENUITEMINFO lpmii); //TODO: remove
 
 		[DllImport("user32.dll")]
 		internal static extern IntPtr GetSystemMenu(AWnd hWnd, bool bRevert);
@@ -1319,7 +1330,7 @@ namespace Au.Types
 
 		internal const uint TPM_RETURNCMD = 0x100;
 
-		[DllImport("user32.dll")]
+		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int TrackPopupMenuEx(IntPtr hMenu, uint uFlags, int x, int y, AWnd hwnd, TPMPARAMS* lptpm = null);
 
 		internal struct TPMPARAMS
@@ -1328,11 +1339,11 @@ namespace Au.Types
 			public RECT rcExclude;
 		}
 
-		internal const uint MF_POPUP = 0x10;
-		internal const uint MF_SEPARATOR = 0x800;
+		[DllImport("user32.dll", EntryPoint = "AppendMenuW", SetLastError = true)]
+		internal static extern bool AppendMenu(IntPtr hMenu, uint uFlags = MFT_SEPARATOR, LPARAM uIDNewItem = default, string lpNewItem = null);
 
-		[DllImport("user32.dll", EntryPoint = "AppendMenuW")]
-		internal static extern bool AppendMenu(IntPtr hMenu, uint uFlags = MF_SEPARATOR, LPARAM uIDNewItem = default, string lpNewItem = null);
+		[DllImport("user32.dll", EntryPoint = "InsertMenuItemW", SetLastError = true)]
+		internal static extern bool InsertMenuItem(IntPtr hmenu, int item, bool fByPosition, in MENUITEMINFO lpmi);
 
 		internal const uint SIF_RANGE = 0x1;
 		internal const uint SIF_PAGE = 0x2;

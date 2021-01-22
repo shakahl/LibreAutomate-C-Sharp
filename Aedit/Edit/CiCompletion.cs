@@ -263,7 +263,7 @@ class CiCompletion
 
 			if (r == null) {
 				if (stringFormat == (PSFormat)100) {
-					int i = ClassicMenu_.ShowSimple("Regex|Keys", doc, byCaret: true);
+					int i = AMenu.ShowSimple("Regex|Keys", doc, MSFlags.ByCaret);
 					stringFormat = i switch { 1 => PSFormat.ARegex, 2 => PSFormat.AKeys, _ => default };
 				}
 				if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, stringSpan);
