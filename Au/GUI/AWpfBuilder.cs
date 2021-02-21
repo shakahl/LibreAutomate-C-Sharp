@@ -23,9 +23,8 @@ using System.Windows.Input;
 
 //Problem: Roslyn/VS on exception in a chained method gives line number of the chain start, not of the method.
 
-//SHOULDDO: sometimes a dialog window or part of window is white, until invalidating.
-//	It started recently, maybe when started using KDialogWindow (changes style).
-//	If 1 or 2 days noticed for 2 dialogs, once for each.
+//SHOULDDO: a workaround for WPF bug: sometimes window or part of window is white, until invalidating.
+//	Noticed with all kinds of WPF windows and popups, not only created with AWpfBuilder.
 //	Maybe set timer that invalidates window.
 
 namespace Au
@@ -208,7 +207,7 @@ namespace Au
 						var m = c.Margin;
 						m.Left += -width + 3;
 						c.Margin = m;
-					} else {
+					} else if(width > 0) {
 						c.Width = width;
 						c.HorizontalAlignment = HorizontalAlignment.Right;
 					}
@@ -230,9 +229,10 @@ namespace Au
 				if (width < 0) {
 					c.Width = -width;
 					c.HorizontalAlignment = HorizontalAlignment.Left;
-				} else {
+				} else if(width > 0) {
 					var m = c.Margin;
-					m.Right += width + 3; c.Margin = m;
+					m.Right += width + 3;
+					c.Margin = m;
 				}
 				_andWidth = width;
 				_col--;
@@ -752,7 +752,7 @@ namespace Au
 						if (_opt_modifyPadding) c.Padding = new Thickness(2, 1, 1, 2); //default padding 0, height 18
 						break;
 					case Button:
-						if (_opt_modifyPadding) c.Padding = new Thickness(5, 1, 5, 2); //default 1
+						if (_opt_modifyPadding && text is string) c.Padding = new Thickness(5, 1, 5, 2); //default 1
 						break;
 					case ToggleButton:
 						c.HorizontalAlignment = HorizontalAlignment.Left; //default stretch
@@ -853,7 +853,10 @@ namespace Au
 		public AWpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
 			Add(out var1, text1);
 			Add(out var2, text2); //note: no flags
-			System.Windows.Automation.AutomationProperties.SetLabeledBy(var2, var1); //eg first is Label and second is TextBox
+			if(var1 is Label k) {
+				k.Target = var2;
+				System.Windows.Automation.AutomationProperties.SetLabeledBy(var2, k);
+			}
 			return this;
 		}
 
@@ -1043,7 +1046,7 @@ namespace Au
 		/// <summary>
 		/// Sets to add next element in the same grid cell as previous element.
 		/// </summary>
-		/// <param name="width">Width of next element. If negative - width of previous element. Also it adds to the corresponding margin of other element.</param>
+		/// <param name="width">Width of next element. If negative - width of previous element. Also it adds to the corresponding margin of other element. If 0, simply adds in the same place as previous element.</param>
 		/// <exception cref="InvalidOperationException">In non-grid panel or in a wrong place.</exception>
 		/// <remarks>
 		/// Can be used to add 2 elements in 1 cell as a cheaper and more concise way than with a <b>StartX</b> function.

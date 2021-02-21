@@ -130,8 +130,8 @@ partial class MainWindow : Window
 	}
 
 	protected override void OnActivated(EventArgs e) {
-		//var w = this.Hwnd(); if (AWnd.Active != w) w.ActivateLL(); //activates window, but this is a bad place for it, eg does not set focus correctly
-		var w = this.Hwnd(); if (AWnd.Active != w) Dispatcher.InvokeAsync(() => w.ActivateLL());
+		//var w = this.Hwnd(); if (AWnd.Active != w) w.ActivateL(); //activates window, but this is a bad place for it, eg does not set focus correctly
+		var w = this.Hwnd(); if (AWnd.Active != w) Dispatcher.InvokeAsync(() => w.ActivateL());
 		base.OnActivated(e);
 	}
 
@@ -179,7 +179,7 @@ partial class MainWindow : Window
 		Show();
 		var w = this.Hwnd();
 		w.ShowNotMinimized(true);
-		w.ActivateLL();
+		w.ActivateL();
 	}
 }
 

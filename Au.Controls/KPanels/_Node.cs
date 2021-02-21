@@ -20,8 +20,6 @@ using System.Windows.Controls.Primitives;
 using System.Windows.Media;
 using System.Windows.Shapes;
 
-//TODO: document should be without caption bar while docked. Now user accidentally makes floating when trying to scroll.
-
 namespace Au.Controls
 {
 	public partial class KPanels
@@ -413,8 +411,8 @@ namespace Au.Controls
 							_leaf.caption = c;
 						} else { //document placeholder
 							var c = new Rectangle {
-								MinHeight = 5,
-								MinWidth = 5,
+								//MinHeight = 5, MinWidth = 5, //rejected. Let be 0 (no caption). User could accidentally undock when trying to scroll.
+								//	Not tested captionless with tabbed documents. Then probably this code not used because _CanHaveCaptionWithText true.
 								Fill = _pm.CaptionBrush,
 							};
 							_leaf.caption = c;

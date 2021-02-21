@@ -212,7 +212,7 @@ namespace Au.Triggers
 		/// Disables the trigger. Enables later when the toolbar is closed.
 		/// Use to implement single-instance toolbars.
 		/// </summary>
-		public void DisableTriggerUntilClosed(AToolbar t)
+		public void DisableTriggerUntilClosed(AToolbar_old t)
 		{
 			TriggerBase.Disabled = true;
 			t.Control.Disposed += (_, _) => TriggerBase.Disabled = false;

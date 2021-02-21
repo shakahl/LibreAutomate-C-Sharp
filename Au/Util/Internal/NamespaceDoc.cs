@@ -1,6 +1,7 @@
 using System.Runtime.CompilerServices;
 
 //These are not supported by DocFX, but used for code info.
+//TODO: remove. Now code info for namespaces does not work.
 
 namespace Au
 {

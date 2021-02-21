@@ -215,11 +215,21 @@ namespace Au
 		internal static List<AScreen> _All() {
 			t_a ??= new();
 			t_a.Clear();
-			t_a.Add(Primary); //2 mcs with cold CPU
-			Api.EnumDisplayMonitors(default, default, (hmon, _1, _2, param) => { //50-100 mcs with cold CPU
-				if (hmon != t_a[0]._h) t_a.Add(new AScreen(hmon));
+			t_a.Add(Primary); //fast
+
+			static bool _Enum(IntPtr hmon, IntPtr hdc, IntPtr r, GCHandle gch) { //70-1000 mcs with cold CPU
+				var a = gch.Target as List<AScreen>;
+				if (hmon != a[0].Handle) a.Add(new AScreen(hmon));
 				return true;
-			}, default);
+			};
+
+			var gch = GCHandle.Alloc(t_a);
+			if (!Api.EnumDisplayMonitors(default, default, _Enum, gch)) {
+				//AOutput.Write(ALastError.Message); //0
+				AThread.Start(() => { bool ok = Api.EnumDisplayMonitors(default, default, _Enum, gch); Debug.Assert(ok); }).Join();
+				ADebug.Print(t_a.Count);
+			}
+			gch.Free();
 			return t_a;
 		}
 		[ThreadStatic] static List<AScreen> t_a;

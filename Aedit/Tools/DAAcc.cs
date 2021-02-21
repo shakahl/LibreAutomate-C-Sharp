@@ -299,8 +299,7 @@ namespace Au.Tools
 						_uiaUserChecked = c.IsChecked;
 						_ClearTree();
 						_cCapture.IsChecked = true;
-						_ttRecapture ??= new ToolTip { PlacementTarget = c, Content = "Please capture the AO again." };
-						_ttRecapture.IsOpen = true;
+						TUtil.InfoTooltip(ref _ttRecapture, c, "Please capture the AO again.");
 					}
 				} else if (source is TextBox t && t.Tag is KCheckTextBox k) {
 					k.CheckIfTextNotEmpty();
@@ -311,7 +310,7 @@ namespace Au.Tools
 			}
 		}
 		bool _noeventValueChanged = true;
-		ToolTip _ttRecapture;
+		KPopup _ttRecapture;
 
 		(string code, string wndVar) _FormatCode(bool forTest = false) {
 			if (!_scroller.IsVisible) return default; //failed to get AO props
@@ -420,10 +419,7 @@ namespace Au.Tools
 		}
 
 		void _Capture() {
-			if (_ttRecapture != null) {
-				_ttRecapture.IsOpen = false;
-				_ttRecapture = null;
-			}
+			_ttRecapture?.Close();
 			_info.Text = c_dialogInfo; //clear error info
 
 			if (!_AccFromMouse(out var acc)) {
@@ -435,7 +431,7 @@ namespace Au.Tools
 			var w = this.Hwnd();
 			if (w.IsMinimized) {
 				w.ShowNotMinMax();
-				w.ActivateLL();
+				w.ActivateL();
 			}
 		}
 

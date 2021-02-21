@@ -384,7 +384,7 @@ namespace Au.Triggers
 					_windowTriggers.SimulateNew_(wParam, lParam);
 					return 0;
 				case Api.WM_USER + 30:
-					AToolbar.NewToolbarsForm().Show();
+					AToolbar_old.NewToolbarsForm().Show();
 					return 0;
 				}
 			}

@@ -25,15 +25,13 @@ namespace Au
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
-	/// var m = new AMenu(); //TODO
+	/// var m = new AMenu("example");
 	/// m["One"] = o => AOutput.Write(o);
-	/// m["Two", icon: AFolders.System + "shell32.dll,15"] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
-	/// m.LastItem.ToolTipText = "tooltip";
+	/// m["Two\0Tooltip", image: AIcon.Stock(StockIcon.DELETE)] = o => { AOutput.Write(o); ADialog.Show(o.ToString()); };
 	/// using(m.Submenu("Submenu")) {
 	/// 	m["Three"] = o => AOutput.Write(o);
 	/// 	m["Four"] = o => AOutput.Write(o);
 	/// }
-	/// m.ExtractIconPathFromCode = true;
 	/// m["notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
 	/// m.Show();
 	/// ]]></code>
@@ -45,10 +43,10 @@ namespace Au
 		/// </summary>
 		public class MenuItem : MTItem
 		{
-			/// <summary>Gets the menu item action.</summary>
+			/// <summary>Gets menu item action.</summary>
 			public Action<MenuItem> Clicked => base.clicked as Action<MenuItem>;
 
-			/// <summary>Gets the menu item id.</summary>
+			/// <summary>Gets menu item id.</summary>
 			public int Id { get; init; }
 
 			/// <summary>Gets or sets checked state.</summary>
@@ -65,6 +63,7 @@ namespace Au
 
 			internal int level; //0 or level of parent submenu
 			internal bool submenuFilled; //submenu is filled once and don't do it again until reopening
+			internal bool separator;
 			internal bool column; //add MFT_MENUBARBREAK
 			internal byte checkType; //1 checkbox, 2 radio
 			internal IntPtr hbitmap; //item bitmap; disposed when menu closed
@@ -80,13 +79,12 @@ namespace Au
 		/// Use this constructor for various context menus of your app.
 		/// </summary>
 		/// <remarks>
-		/// Item actions run in the menu's thread by default (see <see cref="MTBase.ActionThread"/>).
 		/// Users cannot right-click a menu item and open/select it in editor.
 		/// </remarks>
 		public AMenu() { }
 
 		/// <summary>
-		/// Use this constructor in automation scripts, for example if the menu is used for starting and/or automating other apps.
+		/// Use this constructor in scripts.
 		/// </summary>
 		/// <param name="name">Menu name. Must be a unique valid filename. Currently not used.</param>
 		/// <param name="f">Don't use.</param>
@@ -104,23 +102,17 @@ namespace Au
 		/// </summary>
 		public MenuItem Last { get; private set; }
 
-		MenuItem _Add(int id, string text, MTImage image, bool disable, int l, Action<MenuItem> clicked = null, byte checkType = 0, bool submenu = false) {
+		MenuItem _Add(int id, string text, MTImage image, bool disable, int l, Action<MenuItem> click = null, byte checkType = 0, bool submenu = false) {
 			MenuItem r = new() {
-				clicked = clicked,
-				Id = clicked == null && checkType == 0 ? id : -_a.Count - 1,
-				Text = text ?? "",
+				Id = click == null && checkType == 0 ? id : -_a.Count - 2, //note: don't use id -1. Eg GetMenuItemID returns -1 if id is 0 etc.
 				checkType = checkType,
 				IsDisabled = disable,
 				IsSubmenu = submenu,
 				level = _level,
 				column = _column,
-				extractIconPath = ExtractIconPathFromCode,
-				actionThread = ActionThread,
-				actionException = ActionException,
-				sourceLine = l
 			};
 			_column = false;
-			r.SetImage_(image);
+			r.Set_(this, text, click, image, l);
 			_a.Add(r);
 			Last = r;
 			return r;
@@ -130,7 +122,7 @@ namespace Au
 		/// Adds menu item with explicitly specified id.
 		/// </summary>
 		/// <param name="id">Item id that <see cref="Show"/> will return if clicked this item. Cannot be negative.</param>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="l">Don't use.</param>
@@ -143,7 +135,7 @@ namespace Au
 		/// <summary>
 		/// Adds menu item with auto-generated id.
 		/// </summary>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="l">Don't use.</param>
@@ -156,21 +148,21 @@ namespace Au
 		/// <summary>
 		/// Adds menu item with action (callback function) that is executed on click.
 		/// </summary>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
-		/// <param name="clicked">Callback function that is executed on click.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="click">Callback function that is executed on click.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="l">Don't use.</param>
 		/// <remarks>
 		/// This function is the same as the indexer. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 		/// </remarks>
-		public MenuItem Add(string text, Action<MenuItem> clicked, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
-			=> _Add(0, text, image, disable, l, clicked);
+		public MenuItem Add(string text, Action<MenuItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
+			=> _Add(0, text, image, disable, l, click);
 
 		/// <summary>
 		/// Adds menu item with action (callback function) that is executed on click.
 		/// </summary>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="l">Don't use.</param>
@@ -185,17 +177,17 @@ namespace Au
 		/// <summary>
 		/// Adds menu item to be used as a checkbox.
 		/// </summary>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
 		/// <param name="check">Checked state.</param>
+		/// <param name="click">Callback function that is executed on click.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="clicked">Callback function that is executed on click.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="l">Don't use.</param>
 		/// <remarks>
 		/// When clicked, <see cref="MenuItem.IsChecked"/> state is changed.
 		/// </remarks>
-		public MenuItem AddCheck(string text, bool check = false, bool disable = false, Action<MenuItem> clicked = null, MTImage image = default, [CallerLineNumber] int l = 0) {
-			var r = _Add(0, text, image, disable, l, clicked, 1);
+		public MenuItem AddCheck(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l = 0) {
+			var r = _Add(0, text, image, disable, l, click, 1);
 			r.IsChecked = check;
 			return r;
 		}
@@ -203,17 +195,17 @@ namespace Au
 		/// <summary>
 		/// Adds menu item to be used as a radio button in a group of such items.
 		/// </summary>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
 		/// <param name="check">Checked state.</param>
+		/// <param name="click">Callback function that is executed on click.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="clicked">Callback function that is executed on click.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="l">Don't use.</param>
 		/// <remarks>
 		/// When clicked an unchecked radio item, its <see cref="MenuItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
 		/// </remarks>
-		public MenuItem AddRadio(string text, bool check = false, bool disable = false, Action<MenuItem> clicked = null, MTImage image = default, [CallerLineNumber] int l = 0) {
-			var r = _Add(0, text, image, disable, l, clicked, 2);
+		public MenuItem AddRadio(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l = 0) {
+			var r = _Add(0, text, image, disable, l, click, 2);
 			r.IsChecked = check;
 			return r;
 		}
@@ -222,7 +214,7 @@ namespace Au
 		/// Adds menu item that opens a submenu.
 		/// Used like <c>using (m.Submenu("Example")) { /* add submenu items */ }</c>.
 		/// </summary>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="l">Don't use.</param>
@@ -234,9 +226,9 @@ namespace Au
 
 		/// <summary>
 		/// Adds menu item that opens a submenu that will be filled by a callback function when opening the submenu.
-		/// Used like <c>m.Submenu("Example", m=> { /* add submenu items */ });</c>.
+		/// Used like <c>m.Submenu("Example", m => { /* add submenu items */ });</c>.
 		/// </summary>
-		/// <param name="text">Item text. Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
+		/// <param name="text">Item text, or "Text\0 Tooltip". Character with prefix &amp; will be underlined (depends on Windows settings) and can be used to select the item with keyboard. Tab character separates left-aligned text and right-aligned text.</param>
 		/// <param name="opening">Callback function that is called when opening the submenu and should add items to it.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
@@ -251,10 +243,11 @@ namespace Au
 		/// 	foreach (var v in dir.EnumerateFileSystemInfos()) {
 		/// 		if(v.Attributes.Has(FileAttributes.System|FileAttributes.Hidden)) continue;
 		/// 		if(v.Attributes.Has(FileAttributes.Directory)) {
-		/// 			m.Submenu(v.Name, m=> _Dir(v as DirectoryInfo), v.FullName);
+		/// 			m.Submenu(v.Name, m=> _Dir(v as DirectoryInfo));
 		/// 		} else {
-		/// 			m[v.Name, v.FullName]=o=>AOutput.Write(v.FullName);
+		/// 			m[v.Name]=o=>AOutput.Write(v.FullName);
 		/// 		}
+		/// 		m.Last.File = v.FullName;
 		/// 	}
 		/// }
 		/// ]]></code>
@@ -291,7 +284,7 @@ namespace Au
 
 		/// <summary>
 		/// Shows the menu and waits until closed.
-		/// Returns id of the selected item when closed, or 0 if cancelled.
+		/// Returns id of the selected item when closed, or 0 if cancelled or failed.
 		/// </summary>
 		/// <param name="owner">Owner window. Optional. Receives menu messages (rarely useful). Also, closing it will close the menu too. Must belong to this thread.</param>
 		/// <param name="flags"></param>
@@ -357,15 +350,11 @@ namespace Au
 				_FillPopupMenu(hmenu, 0, 0);
 
 				if (!flags.Has(MSFlags_Raw_)) {
-					//SHOULDDO: (flag) if pressed a key not used for the menu, close the menu and don't eat the key.
-					//	Also let Tab work like Enter. Let Enter and Tab, if no item selected, execute first item.
-					//	Would be useful for autotext confirm.
-					//	But &underlined chars make it difficult.
-
 					if (!AWnd.Active.IsOfThisThread) {
 						//never mind: hooks don't work if active window has higher UAC IL. Then use timer and mouse/Esc toggle state.
 						if (!flags.Has(MSFlags_NoKeyHook_)) {
 							hKey = AHookWin.Keyboard(g => {
+								if (g.Mod != 0 || (g.Key >= KKey.F1 && g.Key <= KKey.F24) || g.Key == KKey.PrintScreen || g.Key == KKey.Pause || g.Key == KKey.CapsLock || g.Key == KKey.NumLock || g.Key == KKey.ScrollLock || AKeys.IsMod()) return;
 								g.BlockEvent();
 								Api.PostMessage(default, g.IsUp ? Api.WM_KEYUP : Api.WM_KEYDOWN, (int)g.Key, default);
 								if (!g.IsUp) Api.TranslateMessage(new() { hwnd = ow, message = Api.WM_KEYDOWN, wParam = (int)g.Key });
@@ -390,14 +379,23 @@ namespace Au
 							| ((AKeys.UI.GetKeyState(KKey.MouseRight) & 1) << 1)
 							| ((AKeys.UI.GetKeyState(KKey.MouseMiddle) & 1) << 2)
 							);
-						//} else {
-						//	rejected. Rare. May not work if a mouse button is pressed, for example on double click.
-						//	if (focusFirst) Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Down, 0);
 					}
 
-					if (timer != null || _sourceFile != null || _dSub.Count > 1)
-						Api.SetWindowSubclass(ow, subclassProc = _SubclassProc, 1);
+					Api.SetWindowSubclass(ow, subclassProc = _SubclassProc, 1);
+					//never mind: may not need to subclass. Need if inactive thread or _sourceFile != null or has submenus or has tooltips.
+				} else {
+					ADebug.PrintIf(_dSub.Count > 1, "raw");
 				}
+
+				if (flags.Has(MSFlags_SelectFirst_)) {
+					Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Down, 0);
+					//never mind: Does not work if a mouse button is pressed, for example on double click.
+					//Tried undocumented MN_SELECTFIRSTVALIDITEM = 0x1E7, but works only if thread active. Not tested when mouse button pressed.
+				}
+				//never mind: (flag) if pressed a key not used for the menu, close the menu and don't eat the key.
+				//	Would be useful for autotext confirm.
+				//	But &underlined chars make it difficult.
+
 
 				//never mind: by default does not draw underlines. Users can set it in Windows Settings -> Ease of Access -> Keyboard.
 				//	Tested: can underline with SendInput(Alt), but SetKeyboardState doesn't work.
@@ -406,7 +404,7 @@ namespace Au
 				//CONSIDER: if 0, throw exception if failed
 
 				if (resultId < 0) { //has action or/and is check/radio
-					int i = -resultId - 1;
+					int i = -resultId - 2;
 					var v = resultItem = _a[i];
 
 					if (v.checkType == 1) {
@@ -426,6 +424,7 @@ namespace Au
 				Api.DestroyMenu(hmenu);
 				if (subclassProc != null) Api.RemoveWindowSubclass(ow, subclassProc, 1);
 				if (noOwner) Api.DestroyWindow(ow);
+				if (!_tt.tt.Is0) { Api.DestroyWindow(_tt.tt); _tt = default; }
 
 				int lazyFrom = 0;
 				for (int i = 0; i < _a.Count; i++) {
@@ -489,7 +488,7 @@ namespace Au
 						//APerf.Next();
 						if (im != null) {
 							if (mb == null) {
-								mb = new Au.Util.AMemoryBitmap(imageSize, imageSize);
+								mb = new AMemoryBitmap(imageSize, imageSize);
 								gr = Graphics.FromHdc(mb.Hdc);
 								gr.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 							}
@@ -544,14 +543,18 @@ namespace Au
 				break;
 			case Api.WM_MENURBUTTONUP:
 				//AOutput.Write("WM_MENURBUTTONUP"); //missing for expanded submenu-item, but user can press Esc and then works
-				if (_sourceFile != null && _dSub.ContainsKey(lParam) && AScriptEditor.Available) {
-					var v = new Api.MENUITEMINFO(Api.MIIM_DATA);
-					if (Api.GetMenuItemInfo(lParam, (int)wParam, true, ref v)) {
-						int j = (int)v.dwItemData - 1;
-						if ((uint)j < _a.Count) { //not a separator
-							int k = AMenu.ShowSimple("&Edit menu item", w, MSFlags.Recurse | MSFlags_Raw_);
-							if (k == 1) {
-								AScriptEditor.GoToEdit(_sourceFile, _a[j].sourceLine);
+				if (_dSub.ContainsKey(lParam)) {
+					var item = _IndexToItem(lParam, (int)wParam);
+					if (item != null) {
+						bool canEdit = _sourceFile != null && AScriptEditor.Available, canFile = item.extractIconPath == 2;
+						if (canEdit || canFile) {
+							var m = new AMenu();
+							if (canEdit) m.Add(1, "Edit menu item");
+							if (canFile) m.Add(2, "Find file");
+							int k = m.Show(w, MSFlags.Recurse | MSFlags_Raw_);
+							if (k == 1 || k == 2) {
+								if (k == 1) AScriptEditor.GoToEdit(_sourceFile, item.sourceLine);
+								if (k == 2) AFile.SelectInExplorer(item.image as string);
 								msg = Api.WM_CANCELMODE; wParam = 0; lParam = 0;
 							}
 						}
@@ -559,13 +562,103 @@ namespace Au
 				}
 				break;
 			case Api.WM_ENTERIDLE when wParam == 2: //MSGF_MENU
+
+				//never mind: this message may be frequent, eg on wm_mousemove etc anywhere in this thread. This code is fast.
+				//	Alternatively use a hook.
+
 				var w1 = (AWnd)lParam; //popup menu window
-				if (!w1.HasExStyle(WS2.NOACTIVATE)) w1.SetExStyle(WS2.NOACTIVATE, WSFlags.Add); //prevent activating the menu window on click when current thread isn't the foreground thread
+				IntPtr hm = w1.Send(Api.MN_GETHMENU);
+				if (_dSub.ContainsKey(hm)) {
+					//prevent activating the menu window on click when current thread isn't the foreground thread
+					if (!w1.HasExStyle(WS2.NOACTIVATE)) w1.SetExStyle(WS2.NOACTIVATE, WSFlags.Add);
+
+					//tooltip
+					var xy = AMouse.XY;
+					int index = Api.MenuItemFromPoint(default, hm, xy);
+					var item = _IndexToItem(hm, index);
+					bool failed = false;
+					if (item != null && item != _tt.item && !item.Tooltip.NE()) {
+						failed = !_GetRect(w1, hm, index, out var r);
+						if (!failed) {
+							_tt.item = item;
+							_tt.hm = hm;
+							_tt.index = index;
+							_tt.rect = r;
+							if (_tt.tt.Is0) {
+								_tt.tt = Api.CreateWindowEx(WS2.TOPMOST | WS2.TRANSPARENT, "tooltips_class32", null, Api.TTS_ALWAYSTIP | Api.TTS_NOPREFIX | Api.TTS_BALLOON, 0, 0, 0, 0, w);
+								_tt.tt.Send(Api.TTM_ACTIVATE, true);
+								_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, AScreen.Of(w1).WorkArea.Width / 3);
+							}
+							fixed (char* ps = item.Tooltip) {
+								var g = new Api.TTTOOLINFO { cbSize = sizeof(Api.TTTOOLINFO), hwnd = w1, uId = 1, lpszText = ps, rect = r };
+								_tt.tt.Send(Api.TTM_DELTOOL, 0, &g);
+								_tt.tt.Send(Api.TTM_ADDTOOL, 0, &g);
+							}
+						}
+					} else if (_tt.item != null && hm == _tt.hm) { //update tooltip tool rect when scrolled
+						failed = !_GetRect(w1, hm, _tt.index, out var rr) || rr != _tt.rect;
+					}
+					if (failed && _tt.item != null) {
+						_tt.item = null;
+						var g = new Api.TTTOOLINFO { cbSize = sizeof(Api.TTTOOLINFO), hwnd = w1, uId = 1 };
+						_tt.tt.Send(Api.TTM_DELTOOL, 0, &g);
+					}
+
+					if (_tt.item != null) { //use TTM_RELAYEVENT on mouse move etc. Somehow TTF_SUBCLASS does not work.
+						w1.MapScreenToClient(ref xy);
+						var v = new Native.MSG { hwnd = w1, message = Api.WM_MOUSEMOVE, lParam = AMath.MakeUint(xy.x, xy.y) };
+						_tt.tt.Send(Api.TTM_RELAYEVENT, 0, &v);
+					}
+				}
 				break;
+			//case Api.WM_MENUSELECT when 0 != ((uint)wParam & 0x80000000): //MF_MOUSESELECT
+			//	if (_dSub.ContainsKey(lParam)) {
+			//		var item = _IndexToItem(lParam, Api.MenuItemFromPoint(default, lParam, AMouse.XY));
+			//		//AOutput.Write("WM_MENUSELECT", AMath.LoWord(wParam), AMath.HiWord(wParam), item);
+			//	}
+			//	break;
+			case Api.WM_MENUCHAR when AMath.LoWord(wParam) is '\t' or ' ':
+				if (_dSub.ContainsKey(lParam)) {
+					//return AMath.MakeUint(0, 2); //MNC_EXECUTE. But how to find which item is selected?
+					Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Enter, default);
+					return default;
+				}
+				break;
+			}
+
+			MenuItem _IndexToItem(IntPtr hmenu, int index) {
+				if (index >= 0) {
+					var v = new Api.MENUITEMINFO(Api.MIIM_DATA);
+					if (Api.GetMenuItemInfo(hmenu, index, true, ref v)) {
+						int j = (int)v.dwItemData - 1;
+						if ((uint)j < _a.Count) return _a[j]; //not a separator
+					}
+				}
+				return null;
+			}
+
+			static bool _GetRect(AWnd wm, IntPtr hm, int index, out RECT r) {
+				r = default;
+				if (!Api.GetMenuItemRect(default, hm, index, out r)) return false;
+
+				//workaround for GetMenuItemRect bug: when scrolled, get nonscrolled rect. MSAA and UIA too.
+				int i = Api.MenuItemFromPoint(default, hm, new(r.left, r.top));
+				if (i != index) {
+					var rc = wm.ClientRectInScreen;
+					i = Api.MenuItemFromPoint(default, hm, new(rc.left, rc.top));
+					if (!Api.GetMenuItemRect(default, hm, i, out var rr)) return false;
+					wm.MapScreenToClient(ref rr);
+					r.Offset(0, -rr.top);
+				}
+
+				wm.MapScreenToClient(ref r);
+				return true;
 			}
 
 			return Api.DefSubclassProc(w, msg, wParam, lParam);
 		}
+
+		(AWnd tt, MenuItem item, IntPtr hm, int index, RECT rect) _tt;
 
 		/// <summary>
 		/// Closes this popup menu, including submenus.
@@ -645,9 +738,11 @@ namespace Au
 
 		/// <summary>
 		/// No hook/timer/subclass.
+		/// Will not work submenus, context menu, tooltips, closing with Tab/Space, partially in inactive thread.
 		/// </summary>
-		internal const MSFlags MSFlags_Raw_ = (MSFlags)0x40000000;
+		const MSFlags MSFlags_Raw_ = (MSFlags)0x40000000;
 		internal const MSFlags MSFlags_NoKeyHook_ = (MSFlags)0x20000000;
+		internal const MSFlags MSFlags_SelectFirst_ = (MSFlags)0x10000000;
 	}
 }
 
@@ -667,8 +762,6 @@ namespace Au.Types
 
 		/// <summary>Show in center of screen containing mouse pointer.</summary>
 		ScreenCenter = 0x2000000,
-
-		//private: const MSFlags_Raw_ = 0x40000000 - no hook/subclass
 
 		//TPM_ flags
 

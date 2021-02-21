@@ -211,7 +211,7 @@ public class DOptions : KDialogWindow
 		b.R.StartGrid();
 		var pColor = b.Panel as Grid;
 		b.R.Add(out KColorPicker color);
-		b.R.Add(out CheckBox bold, "Bold");
+		b.R.Add(out KCheckBox bold, "Bold");
 		b.End();
 		b.Row(-1);
 		b.R.Add(out Button bInfo, "?").Align("r").Width(20);
@@ -339,9 +339,7 @@ Line number";
 				var s = fontName.Text; if (s == "" || s.Starts("[ ")) s = "Consolas";
 				return (s, fontSize.Text.ToInt());
 			}
-			RoutedEventHandler evChecked = (sender, _) => { if (!ignoreColorEvents) _UpdateSci(sender); };
-			bold.Checked += evChecked;
-			bold.Unchecked += evChecked;
+			bold.CheckChanged += (sender, _) => { if (!ignoreColorEvents) _UpdateSci(sender); };
 			color.ColorChanged += col => { if (!ignoreColorEvents) _UpdateSci(); };
 			void _UpdateSci(object control = null) {
 				var z = sciStyles.Z;

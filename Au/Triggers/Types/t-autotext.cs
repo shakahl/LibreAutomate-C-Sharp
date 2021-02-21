@@ -819,7 +819,7 @@ namespace Au.Triggers
 				m.Close();
 			});
 			return 1 == m.Show(flags: MSFlags.ByCaret | AMenu.MSFlags_NoKeyHook_) || ok;
-			//SHOULDDO: one QM2 user wanted, if cannot show at caret, option to show in screen center
+			//CONSIDER: one QM2 user wanted, if cannot show at caret, option to show in screen center
 		}
 
 		//FUTURE: Menu.

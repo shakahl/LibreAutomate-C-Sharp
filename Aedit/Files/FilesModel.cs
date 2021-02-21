@@ -402,16 +402,8 @@ partial class FilesModel
 	/// </summary>
 	void _UpdateOpenFiles(FileNode current) {
 		Panels.Open.ZUpdateList();
-
-		bool cmdPrevDisable = OpenFiles.Count < 2;
-		if (cmdPrevDisable != _cmdPrevDisabled) {
-			_cmdPrevDisabled = cmdPrevDisable;
-			App.Commands[nameof(Menus.File.OpenClose.Previous_document)].Enabled = !cmdPrevDisable;
-		}
-		//TODO: sometimes Previous_document command (Ctrl+Tab) stops working until restart. The menu item then is disabled.
-		//	Possibly after opening other workspace.
+		App.Commands[nameof(Menus.File.OpenClose.Previous_document)].Enabled = OpenFiles.Count > 1;
 	}
-	bool _cmdPrevDisabled;
 
 	/// <summary>
 	/// Called by <see cref="PanelFiles.ZLoadWorkspace"/> before opening another workspace and disposing this.
@@ -754,7 +746,7 @@ partial class FilesModel
 	/// <param name="template">See <see cref="NewItem"/>.</param>
 	/// <param name="where">If null, adds at the context menu position or top.</param>
 	/// <param name="name">If not null, creates with this name. Else gets name from template. In any case makes unique name.</param>
-	public FileNode NewItemLL(string template, (FileNode target, FNPosition pos)? where = null, string name = null) {
+	public FileNode NewItemL(string template, (FileNode target, FNPosition pos)? where = null, string name = null) {
 		XElement x = null;
 		if (template != null) {
 			x = FileNode.Templates.LoadXml(template); if (x == null) return null;

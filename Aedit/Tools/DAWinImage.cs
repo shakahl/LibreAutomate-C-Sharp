@@ -34,6 +34,7 @@ namespace Au.Tools
 		string _imageFile;
 
 		KSciInfoBox _info;
+		KPopup _ttInfo;
 		Button _bTest, _bOK;
 		Label _speed;
 		WindowsFormsHost _pictHost;
@@ -184,7 +185,7 @@ namespace Au.Tools
 						if (_useCon = on) _wnd.MapClientToClientOf(_con, ref _rect); else _con.MapClientToClientOf(_wnd, ref _rect);
 						rectC.c.IsChecked = false;
 					} else if (c == wiflagsC.c) {
-						if (_image != null) _InfoTooltip(c, "After changing 'Window pixels' may need to capture again.\nClick Test. If not found, click Capture.");
+						if (_image != null) TUtil.InfoTooltip(ref _ttInfo, c, "After changing 'Window pixels' may need to capture again.\nClick Test. If not found, click Capture.");
 					} else if (c == skipC.c) {
 						if (on) allC.IsChecked = false;
 					} else if (c == allC) {
@@ -367,7 +368,7 @@ namespace Au.Tools
 
 		void _OpenFile(bool embed, Button button) {
 			if (_wnd.Is0) {
-				_InfoTooltip(button, "At first please select a window with button 'Capture' or 'Window/control'.");
+				TUtil.InfoTooltip(ref _ttInfo, button, "At first please select a window with button 'Capture' or 'Window/control'.");
 				return;
 			}
 
@@ -490,17 +491,8 @@ If unchecked, returns null.");
 		const string c_infoWait = @"Wait timeout, seconds.
 If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits max this time interval; on timeout returns null or throws exception, depending on the 'Exception...' checkbox.";
 
-		void _InfoTooltip(UIElement below, string text) {
-			_tt ??= new ToolTip { StaysOpen = false, Placement = PlacementMode.Bottom, Background = SystemColors.InfoBrush, Foreground = SystemColors.InfoTextBrush };
-			_tt.PlacementTarget = below;
-			_tt.Content = text;
-			_tt.IsOpen = false;
-			_tt.IsOpen = true;
-		}
-		ToolTip _tt;
-
 		protected override void OnPreviewKeyDown(KeyEventArgs e) {
-			if (_tt?.IsOpen ?? false) _tt.IsOpen = false;
+			_ttInfo?.Close();
 			base.OnPreviewKeyDown(e);
 		}
 

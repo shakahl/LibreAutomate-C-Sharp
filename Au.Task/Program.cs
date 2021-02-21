@@ -227,7 +227,7 @@ static unsafe class Program
 						if(isActive || activate) { s_hook.Dispose(); s_hook = null; }
 						if(activate) {
 							Api.SetForegroundWindow(w);
-							//w.ActivateLL(); //no, it's against Windows rules, and works differently with meta outputPath
+							//w.ActivateL(); //no, it's against Windows rules, and works differently with meta outputPath
 							//Before starting task, editor calls AllowSetForegroundWindow. But if clicked etc a window after that:
 							//	SetForegroundWindow fails always or randomly;
 							//	Activate[LL] fails if that window is of higher UAC IL, unless the foreground lock timeout is 0.

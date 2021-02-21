@@ -134,7 +134,7 @@ namespace Au
 				_w.ZorderTopmost();
 			} else {
 				if (_w.Is0) _CreateWindow();
-				_w.ShowLL(true);
+				_w.ShowL(true);
 				_w.ZorderTopmost();
 				Api.UpdateWindow(_w);
 			}
@@ -146,7 +146,7 @@ namespace Au
 		/// </summary>
 		public virtual void Hide() {
 			if (!Visible) return;
-			_w.ShowLL(false);
+			_w.ShowL(false);
 		}
 
 		void _CreateWindow() {
@@ -177,11 +177,11 @@ namespace Au
 			case Api.WM_ERASEBKGND:
 				return 0;
 			case Api.WM_PAINT:
-				using (var bp = new BufferedPaint_(w, true)) {
+				using (var bp = new ABufferedPaint(w, true)) {
 					var dc = bp.DC;
 					using var g = Graphics.FromHdc(dc);
 					if (_opacity == 0) g.Clear((Color)TransparentColor);
-					OnPaint(dc, g, bp.Rect);
+					OnPaint(dc, g, bp.ClientRect);
 				}
 				return default;
 			case Api.WM_MOUSEACTIVATE:
@@ -660,7 +660,7 @@ namespace Au
 					int maxWidth = screen.WorkArea.Width - zi.Width - 10;
 					int ww = WrapWidth; if (ww > 0) { maxWidth = Math.Min(maxWidth, ww); tff |= Native.DT.WORDBREAK; }
 					using var dc = new FontDC_(_font);
-					z = dc.Measure(Text, maxWidth, tff);
+					z = dc.Measure(Text, tff, maxWidth);
 				}
 
 				z.Width += zi.Width;

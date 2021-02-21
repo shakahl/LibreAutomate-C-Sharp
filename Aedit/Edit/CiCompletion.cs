@@ -146,8 +146,8 @@ class CiCompletion
 			ch = default;
 		}
 
-		//CodeInfo.HideXamlPopupAndTempWindows(); //no
-		CodeInfo.HideXamlPopup();
+		//CodeInfo.HideTextPopupAndTempWindows(); //no
+		CodeInfo.HideTextPopup();
 
 		//using var nogcr = AKeys.IsScrollLock ? new NoGcRegion(50_000_000) : default;
 
@@ -671,18 +671,18 @@ class CiCompletion
 		_popupList.SelectedItem = ci;
 	}
 
-	public string GetDescriptionDoc(CiComplItem ci, int iSelect) {
+	public System.Windows.Documents.Section GetDescriptionDoc(CiComplItem ci, int iSelect) {
 		if (_data == null) return null;
 		switch (ci.kind) {
-		case CiItemKind.Keyword: return CiXaml.FromKeyword(ci.ci.DisplayText);
-		case CiItemKind.Label: return CiXaml.FromLabel(ci.ci.DisplayText);
-		case CiItemKind.Snippet: return CiSnippets.GetDescriptionXaml(ci);
+		case CiItemKind.Keyword: return CiText.FromKeyword(ci.ci.DisplayText);
+		case CiItemKind.Label: return CiText.FromLabel(ci.ci.DisplayText);
+		case CiItemKind.Snippet: return CiSnippets.GetDescription(ci);
 		}
 		var symbols = ci.ci.Symbols;
-		if (symbols != null) return CiXaml.FromSymbols(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
+		if (symbols != null) return CiText.FromSymbols(symbols, iSelect, _data.model, _data.tempRange.CurrentFrom);
 		ADebug.PrintIf(ci.kind != CiItemKind.None, ci.kind); //None if Regex
 		var r = _data.completionService.GetDescriptionAsync(_data.document, ci.ci).Result; //fast if Regex, else not tested
-		return r == null ? null : CiXaml.FromTaggedParts(r.TaggedParts);
+		return r == null ? null : CiText.FromTaggedParts(r.TaggedParts);
 	}
 
 	/// <summary>
@@ -998,7 +998,7 @@ class CiComplItem : ITreeViewItem
 		//AOutput.Write(s[i..]);
 		if (s.Eq(i, "Symbol")) return CiComplProvider.Symbol;
 		if (s.Eq(i, "Keyword")) return CiComplProvider.Keyword;
-		if (s.Eq(i, "Cref")) return CiComplProvider.Cref; //TODO: maybe replaced with "XmlDoc"
+		if (s.Eq(i, "Cref")) return CiComplProvider.Cref;
 		if (s.Eq(i, "XmlDoc")) return CiComplProvider.XmlDoc;
 		if (s.Eq(i, "EmbeddedLanguage")) return CiComplProvider.Regex;
 		if (s.Eq(i, "Override")) return CiComplProvider.Override;

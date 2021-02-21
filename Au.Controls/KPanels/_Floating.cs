@@ -36,7 +36,7 @@ namespace Au.Controls
 					_owner = _node._pm._ContainerWindow;
 					_isToolbar = _node._IsToolbarsNode;
 
-					var style = WS.THICKFRAME | WS.POPUP | WS.CLIPCHILDREN;
+					var style = WS.THICKFRAME | WS.POPUP | WS.CLIPCHILDREN; if (node._IsStack) style |= WS.CAPTION;
 					var estyle = WS2.TOOLWINDOW | WS2.WINDOWEDGE; if (_isToolbar) estyle |= WS2.NOACTIVATE;
 					RECT rect = default;
 					bool defaultRect = onDrag | (_node._floatSavedRect == null);
@@ -166,7 +166,7 @@ namespace Au.Controls
 						if (d.Msg.message != Api.WM_MOUSEMOVE) return;
 
 						p = AMouse.XY;
-						w.MoveLL(p.x - offs.x, p.y - offs.y);
+						w.MoveL(p.x - offs.x, p.y - offs.y);
 
 						//if (!canDock && AKeys.UI.IsAlt) {
 						//	canDock = true;

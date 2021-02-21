@@ -58,8 +58,7 @@ namespace Au.Util
 			get {
 				if (_heightOnScreen == 0) {
 					using var dc = new FontDC_(_h);
-					Api.GetTextExtentPoint32(dc, "A", 1, out var z);
-					_heightOnScreen = z.height;
+					_heightOnScreen = dc.Measure("A").height;
 				}
 				return _heightOnScreen;
 			}

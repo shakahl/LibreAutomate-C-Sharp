@@ -93,7 +93,7 @@ class PanelOutput : DockPanel
 			w.OwnerWindow = default;
 			w.ZorderTopmost();
 			//w.SetExStyle(WS2.APPWINDOW, SetAddRemove.Add);
-			//AWnd.GetWnd.Root.ActivateLL(); w.ActivateLL(); //let taskbar add button
+			//AWnd.GetWnd.Root.ActivateL(); w.ActivateL(); //let taskbar add button
 		} else {
 			w.ZorderNoTopmost();
 			w.OwnerWindow = App.Wmain.Hwnd();

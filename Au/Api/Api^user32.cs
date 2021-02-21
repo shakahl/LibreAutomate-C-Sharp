@@ -125,10 +125,14 @@ namespace Au.Types
 			public char* lpszClassName; //not string because CLR would call CoTaskMemFree
 			public IntPtr hIconSm;
 
-			public WNDCLASSEX(RWCEtc ex = null) : this() {
+			/// <summary>
+			/// If ex null, sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
+			/// </summary>
+			public WNDCLASSEX(RWCEtc ex) : this() {
 				cbSize = sizeof(WNDCLASSEX);
 				if (ex == null) {
 					hCursor = LoadCursor(default, MCursor.Arrow);
+					style = CS_VREDRAW | CS_HREDRAW;
 				} else {
 					style = ex.style;
 					cbClsExtra = ex.cbClsExtra;
@@ -155,7 +159,9 @@ namespace Au.Types
 		internal static extern bool UnregisterClass(uint classAtom, IntPtr hInstance);
 
 		[DllImport("user32.dll", EntryPoint = "CreateWindowExW", SetLastError = true)]
-		internal static extern AWnd CreateWindowEx(WS2 dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent, LPARAM hMenu, IntPtr hInstance, LPARAM lpParam);
+		internal static extern AWnd CreateWindowEx(WS2 dwExStyle, string lpClassName, string lpWindowName, WS dwStyle, int x, int y, int nWidth, int nHeight, AWnd hWndParent = default, LPARAM hMenu = default, IntPtr hInstance = default, LPARAM lpParam = default);
+
+		internal const int CW_USEDEFAULT = 1 << 31;
 
 		[DllImport("user32.dll", EntryPoint = "DefWindowProcW")]
 		internal static extern LPARAM DefWindowProc(AWnd hWnd, int msg, LPARAM wParam, LPARAM lParam);
@@ -445,10 +451,10 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "GetMonitorInfoW")]
 		internal static extern bool GetMonitorInfo(IntPtr hMonitor, ref MONITORINFO lpmi);
 
-		internal delegate bool MONITORENUMPROC(IntPtr hmon, IntPtr hdc, IntPtr r, LPARAM dwData);
+		internal delegate bool MONITORENUMPROC(IntPtr hmon, IntPtr hdc, IntPtr r, GCHandle dwData);
 
-		[DllImport("user32.dll")]
-		internal static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MONITORENUMPROC lpfnEnum, LPARAM dwData);
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool EnumDisplayMonitors(IntPtr hdc, IntPtr lprcClip, MONITORENUMPROC lpfnEnum, GCHandle dwData);
 
 		#region GetSystemMetrics, SystemParametersInfo
 
@@ -937,10 +943,14 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool InvalidateRect(AWnd hWnd, RECT* lpRect, bool bErase);
 		internal static bool InvalidateRect(AWnd hWnd, bool bErase = false) => InvalidateRect(hWnd, null, bErase);
+		internal static bool InvalidateRect(AWnd hWnd, RECT r, bool bErase = false) => InvalidateRect(hWnd, &r, bErase);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ValidateRect(AWnd hWnd, RECT* lpRect);
 		internal static bool ValidateRect(AWnd hWnd) => ValidateRect(hWnd, null);
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool GetUpdateRect(AWnd hWnd, out RECT lpRect, bool bErase);
 
 		internal const int ERROR = 0;
 		internal const int NULLREGION = 1;
@@ -1316,9 +1326,6 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "GetMenuItemInfoW")]
 		internal static extern bool GetMenuItemInfo(IntPtr hmenu, int item, bool fByPosition, ref MENUITEMINFO lpmii);
 
-		[DllImport("user32.dll", EntryPoint = "SetMenuItemInfoW")]
-		internal static extern bool SetMenuItemInfo(IntPtr hmenu, int item, bool fByPositon, in MENUITEMINFO lpmii); //TODO: remove
-
 		[DllImport("user32.dll")]
 		internal static extern IntPtr GetSystemMenu(AWnd hWnd, bool bRevert);
 
@@ -1344,6 +1351,9 @@ namespace Au.Types
 
 		[DllImport("user32.dll", EntryPoint = "InsertMenuItemW", SetLastError = true)]
 		internal static extern bool InsertMenuItem(IntPtr hmenu, int item, bool fByPosition, in MENUITEMINFO lpmi);
+
+		[DllImport("user32.dll")]
+		internal static extern bool GetMenuItemRect(AWnd hWnd, IntPtr hMenu, int uItem, out RECT lprcItem);
 
 		internal const uint SIF_RANGE = 0x1;
 		internal const uint SIF_PAGE = 0x2;
@@ -1392,17 +1402,31 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int GetWindowRgn(AWnd hWnd, IntPtr hRgn);
 
+#if DPI_WIN7
+		[DllImport("user32.dll")]
+		internal static extern bool LogicalToPhysicalPoint(AWnd hWnd, ref POINT lpPoint);
+#endif
+
 		//[DllImport("user32.dll")]
 		//internal static extern bool PhysicalToLogicalPoint(AWnd hWnd, ref POINT lpPoint);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int GetDpiForWindow(AWnd hWnd);
 
-		[DllImport("shcore.dll", PreserveSig = true)]
-		internal static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out int dpiX, out int dpiY);
+		[DllImport("user32.dll")]
+		internal static extern IntPtr GetWindowDpiAwarenessContext(AWnd hwnd);
+
+		[DllImport("user32.dll")]
+		internal static extern Util.ADpi.Awareness GetAwarenessFromDpiAwarenessContext(IntPtr value);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern LPARAM SetThreadDpiAwarenessContext(LPARAM dpiContext);
+
+		[DllImport("shcore.dll", PreserveSig = true)]
+		internal static extern int GetDpiForMonitor(IntPtr hmonitor, int dpiType, out int dpiX, out int dpiY);
+
+		[DllImport("shcore.dll", PreserveSig = true)]
+		internal static extern int GetProcessDpiAwareness(IntPtr hprocess, out Util.ADpi.Awareness value); //ADpi.Awareness == PROCESS_DPI_AWARENESS
 
 		[DllImport("user32.dll")]
 		internal static extern int GetSysColor(int nIndex);
@@ -1428,6 +1452,36 @@ namespace Au.Types
 
 			//DRAWTEXTPARAMS doc incorrect. Left nad right margin fields are in pixels, not average char widths. Not tested tab width.
 		}
+
+		internal const WS TTS_ALWAYSTIP = (WS)0x1;
+		internal const WS TTS_NOPREFIX = (WS)0x2;
+		internal const WS TTS_BALLOON = (WS)0x40;
+		internal const int TTM_ACTIVATE = 0x401;
+		internal const int TTM_SETMAXTIPWIDTH = 0x418;
+		internal const int TTM_ADDTOOL = 0x432;
+		internal const int TTM_DELTOOL = 0x433;
+		internal const int TTM_RELAYEVENT = 0x407;
+		//internal const uint TTF_SUBCLASS = 0x10;
+
+		internal struct TTTOOLINFO
+		{
+			public int cbSize;
+			public uint uFlags;
+			public AWnd hwnd;
+			public LPARAM uId;
+			public RECT rect;
+			public IntPtr hinst;
+			public char* lpszText;
+			public LPARAM lParam;
+			public void* lpReserved;
+		}
+
+		[DllImport("user32.dll")]
+		internal static extern bool DrawEdge(IntPtr hdc, ref RECT qrc, uint edge, uint grfFlags);
+
+		internal const uint EDGE_ETCHED = 0x6;
+		internal const uint BF_LEFT = 0x1;
+		internal const uint BF_TOP = 0x2;
 
 	}
 

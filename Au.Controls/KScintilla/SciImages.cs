@@ -341,10 +341,13 @@ namespace Au.Controls
 			if(i3 >= i) { i2 = i3; iFrom = i3 + 1; isMulti = true; } else isMulti = false;
 
 			//is it an image string?
-			var imType = ImageUtil.ImageTypeFromString(!_isEditor, s + i, i2 - i);
+			var imType = ImageUtil.ImageTypeFromString(!_isEditor, out int prefixLength, s + i, i2 - i);
 			if(imType == ImageUtil.ImageType.None) goto g1;
+			if (prefixLength == 10) { i += prefixLength; prefixLength = 0; } //"imagefile:"
 			//SHOULDDO: support XAML. But most XAML are not images.
-			//FUTURE: support SVG. Tested several best SVG libraries. None of C# libs support >50% tested .svg files. Librsvg (C) supports all.
+			//FUTURE: support SVG. Tested several best SVG libraries.
+			//	None of C# libs support >50% tested .svg files.
+			//	Librsvg (C) supports all. Too big for Au; would be useful for toolbar/menu images. Not too big for editor, if very need.
 
 			var d = t_data;
 
@@ -357,13 +360,8 @@ namespace Au.Controls
 			//var test = s.Substring(i, i2 - i);
 			//AOutput.Write(test, EImageUtil.ImageToString(test));
 
-			switch(imType) {
-			case ImageUtil.ImageType.Base64CompressedBmp: i += 2; break; //~:
-			case ImageUtil.ImageType.Base64PngGifJpg: i += 6; break; //image:
-			//case ImageUtil.ImageType.Resource: i += 9; break; //resource:
-			}
-
-			string path = new string((sbyte*)s, i, i2 - i, Encoding.UTF8);
+			i += prefixLength;
+			string path = new ((sbyte*)s, i, i2 - i, Encoding.UTF8);
 
 			//load
 			long t1 = ATime.WinMillisecondsWithoutSleep;

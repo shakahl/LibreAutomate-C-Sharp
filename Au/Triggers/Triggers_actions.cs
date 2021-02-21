@@ -89,7 +89,7 @@ namespace Au.Triggers
 		/// Run trigger actions in same thread as <c>Triggers.Run();</c>.
 		/// </summary>
 		/// <remarks>
-		/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="AToolbar"/>). Rarely used for other purposes.
+		/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="AToolbar_old"/>). Rarely used for other purposes.
 		/// </remarks>
 		public void ThreadMain()
 		{

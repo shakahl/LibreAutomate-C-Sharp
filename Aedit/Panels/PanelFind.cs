@@ -4,53 +4,81 @@ using Au.Controls;
 using Au.Tools;
 using System;
 using System.Collections.Generic;
-//using System.Linq;
+using System.Linq;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using Au.Util;
+using System.Media;
 
-public partial class PanelFind : UserControl
+//CONSIDER: right-click "Find" - search backward. The same for "Replace" (reject "find next"). Rarely used.
+//CONSIDER: option to replace and don't find next until next click. Eg Eclipse has buttons "Replace" and "Replace/Find". Or maybe delay to preview.
+
+class PanelFind : UserControl
 {
-	//private ErrorProvider _errorProvider;
+	TextBox _tFind, _tReplace;
+	KCheckBox _cFolder, _cName, _cCase, _cWord, _cRegex, _cWildex;
+	KPopup _ttRegex, _ttNext;
 
 	public PanelFind() {
-		InitializeComponent();
-		//this.AccessibleName = this.Name = "Find";
-		this.IsVisibleChanged += _IsVisibleChanged;
+		var cstyle = Application.Current.FindResource(ToolBar.CheckBoxStyleKey) as Style;
+		var bstyle = Application.Current.FindResource(ToolBar.ButtonStyleKey) as Style;
 
-		_tFind.TextChanged += _tFind_TextChanged;
-		var a1 = new TextBox[] { _tFind, _tReplace };
-		foreach (var v in a1) {
+		var b = new AWpfBuilder(this).Columns(-1).Brush(SystemColors.ControlBrush);
+		b.Options(modifyPadding: false, margin: new Thickness(2));
+		b.AlsoAll((b, _) => { if (b.Last is Button k) k.Padding = new(1, 0, 1, 1); });
+		b.Row((-1, 22..)).Add(out _tFind).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Tooltip("Text to find");
+		b.Row((-1, 22..)).Add(out _tReplace).Margin(-1, 0, -1, 2).Multiline(wrap: TextWrapping.Wrap).Tooltip("Replacement text");
+		b.R.StartGrid().Columns((-1, ..80), (-1, ..80), (-1, ..80), 0);
+		b.R.AddButton("Find", _bFind_Click).Tooltip("Find next match in editor");
+		b.AddButton("Replace", _bReplace_Click).Tooltip("Replace single match in editor.\nRight click - find next match.");
+		b.AddButton("Repl. all", _bReplaceAll_Click).Tooltip("Replace all matches in editor");
+
+		b.R.AddButton("In files", _bFindIF_Click).Tooltip("Find text in files");
+		b.StartStack();
+		b.Add(out _cFolder, AResources.GetWpfImageElement("resources/images/folderclosed_16x.xaml")).Padding(1, 0, 1, 1).Tooltip("Let 'In files' search only in current project or root folder");
+		_cFolder.Style = cstyle;
+		b.AddButton(AResources.GetWpfImageElement("resources/images/settingsgroup_16x.xaml"), _bOptions_Click).Tooltip("More options");
+		b.Last.Style = bstyle;
+		b.End();
+
+		b.Add(out _cName, "Name").Tooltip("Search in filenames");
+
+		b.R.Add(out _cCase, "Case").Tooltip("Match case")
+			.And(0).Add(out _cWildex, "Wildex").Hidden().Tooltip("Wildcard expression.\nExamples: start*.cs, *end.cs, *middle*.cs, **m green.cs||blue.cs.\nF1 - Wildex help.");
+		b.Add(out _cWord, "Word").Tooltip("Whole word");
+		b.Add(out _cRegex, "Regex").Tooltip("Regular expression.\nF1 - Regex tool and help.");
+		b.End().End();
+
+		//this.AccessibleName = this.Name = "Find";
+		this.IsVisibleChanged += (_, _) => {
+			if (!_cName.IsChecked) Panels.Editor.ZActiveDoc?.InicatorsFind_(IsVisible ? _aEditor : null);
+		};
+
+		_tFind.TextChanged += (_, _) => {
+			ZUpdateQuickResults(false);
+		};
+
+		foreach (var v in new TextBox[] { _tFind, _tReplace }) {
+			v.AcceptsTab = true;
+			v.IsInactiveSelectionHighlightEnabled = true;
 			v.GotKeyboardFocus += _tFindReplace_KeyboardFocus;
 			v.LostKeyboardFocus += _tFindReplace_KeyboardFocus;
 			v.ContextMenu = new AWpfMenu();
 			v.ContextMenuOpening += _tFindReplace_ContextMenuOpening;
-			v.KeyDown += _tFindReplace_KeyDown;
-			v.PreviewMouseUp += (o, e) => {
-				//use up, else up will close popup. Somehow on up ClickCount always 1.
-				if (e.ChangedButton == MouseButton.Middle) { var tb = o as TextBox; if (tb.Text.NE()) _Recent(tb); else tb.Clear(); }
+			v.PreviewMouseUp += (o, e) => { //use up, else up will close popup. Somehow on up ClickCount always 1.
+				if (e.ChangedButton == MouseButton.Middle) {
+					var tb = o as TextBox;
+					if (tb.Text.NE()) _Recent(tb); else tb.Clear();
+				}
 			};
 		}
 
-		var a2 = new CheckBox[] { _cCase, _cWord, _cRegex, _cName };
-		foreach (var v in a2) {
-			v.Checked += _CheckedChanged;
-			v.Unchecked += _CheckedChanged;
-		}
-
-		_bFind.Click += _bFind_Click;
-		_bFindIF.Click += _bFindIF_Click;
-		_bReplace.Click += _bReplace_Click;
-		_bReplaceAll.Click += _bReplaceAll_Click;
-		_bOptions.Click += _bOptions_Click;
+		foreach (var v in new KCheckBox[] { _cWildex, _cWord, _cRegex, _cName }) v.CheckChanged += _CheckedChanged;
 	}
 
 	#region control events
-
-	private void _tFind_TextChanged(object sender, TextChangedEventArgs e) {
-		ZUpdateQuickResults(false);
-	}
 
 	private void _tFindReplace_ContextMenuOpening(object sender, ContextMenuEventArgs e) {
 		var c = sender as TextBox;
@@ -66,11 +94,15 @@ public partial class PanelFind : UserControl
 		m["Rece_nt\0" + "M-click"] = o => _Recent(c);
 	}
 
-	private void _tFindReplace_KeyDown(object sender, KeyEventArgs e) {
-		//AOutput.Write(e.Key, Keyboard.Modifiers);
+	protected override void OnKeyDown(KeyEventArgs e) {
+		base.OnKeyDown(e);
 		switch ((e.Key, Keyboard.Modifiers)) {
 		case (Key.F1, 0):
-			_ShowRegexInfo(sender as TextBox, true);
+			//var os = e.OriginalSource;
+			//if (os == _tFind || os == _tReplace || os == _cRegex || os == _cWildex) {
+			if (_cRegex.IsChecked) _ShowRegexInfo((e.OriginalSource as TextBox) ?? _tFind, true);
+			else if (_cWildex.IsChecked && _cName.IsChecked) AHelp.AuHelp("articles/Wildcard expression");
+			//}
 			break;
 		default: return;
 		}
@@ -78,39 +110,50 @@ public partial class PanelFind : UserControl
 	}
 
 	private void _tFindReplace_KeyboardFocus(object sender, KeyboardFocusChangedEventArgs e) {
-		if (!_cRegex.True()) return;
+		if (!_cRegex.IsChecked) return;
 		var tb = sender as TextBox;
 		if (e.NewFocus == tb) {
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
 			ATimer.After(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, false); });
 		} else {
-			if (_regexWindow.IsVisible) {
+			if (_regexWindow?.IsVisible??false) {
 				var c = Keyboard.FocusedElement;
 				if (c == null || (c != _tFind && c != _tReplace && !AWnd.ThisThread.IsFocused(_regexWindow.Hwnd))) {
-					_regexWindow.Hwnd.ShowLL(false);
+					_regexWindow.Hwnd.ShowL(false);
 				}
 			}
 		}
 	}
 
 	private void _CheckedChanged(object sender, RoutedEventArgs e) {
-		if (sender == _cWord) {
-			if (_cWord.True()) _cRegex.IsChecked = false;
-		} else if (sender == _cRegex) {
-			if (_cRegex.True()) {
+		if (sender == _cWildex) {
+			if (_cWildex.IsChecked) {
+				_cRegex.IsChecked = false;
 				_cWord.IsChecked = false;
-				if (_regexWindow == null) {
-					_regexWindow = new RegexWindow();
-				}
+			}
+		} else if (sender == _cWord) {
+			if (_cWord.IsChecked) {
+				_cRegex.IsChecked = false;
+				_cWildex.IsChecked = false;
+			}
+		} else if (sender == _cRegex) {
+			if (_cRegex.IsChecked) {
+				_cWord.IsChecked = false;
+				_cWildex.IsChecked = false;
 			} else {
 				_regexWindow?.Close();
 				_regexWindow = null;
 			}
 		} else if (sender == _cName) {
 			Panels.Found.ZControl.Z.ClearText();
-			if (_cName.True()) {
+			if (_cName.IsChecked) {
 				_aEditor.Clear();
 				Panels.Editor.ZActiveDoc?.InicatorsFind_(null);
+				_cCase.Visibility = Visibility.Hidden;
+				_cWildex.Visibility = Visibility.Visible;
+			} else {
+				_cWildex.Visibility = Visibility.Hidden;
+				_cCase.Visibility = Visibility.Visible;
 			}
 		}
 		ZUpdateQuickResults(false);
@@ -120,14 +163,18 @@ public partial class PanelFind : UserControl
 	string _regexTopic;
 
 	void _ShowRegexInfo(TextBox tb, bool F1) {
-		if (_regexWindow == null || !_cRegex.True()) return;
-		if (_regexWindow.UserClosed) { if (!F1) return; _regexWindow.UserClosed = false; }
+		if (F1) {
+			_regexWindow ??= new RegexWindow();
+			_regexWindow.UserClosed = false;
+		} else {
+			if (_regexWindow == null || _regexWindow.UserClosed) return;
+		}
 
 		if (_regexWindow.Hwnd.Is0) {
 			var r = this.RectInScreen();
 			r.Offset(0, -20);
 			_regexWindow.ShowByRect(App.Wmain, Dock.Right, r, true);
-		} else _regexWindow.Hwnd.ShowLL(true);
+		} else _regexWindow.Hwnd.ShowL(true);
 
 		_regexWindow.InsertInControl = tb;
 
@@ -141,13 +188,13 @@ public partial class PanelFind : UserControl
 		}
 	}
 
-	private void _bFind_Click(object sender, RoutedEventArgs e) {
+	private void _bFind_Click(WBButtonClickArgs e) {
 		_cName.IsChecked = false;
-		if (!_GetTextToFind(out var f, false)) return;
+		if (!_GetTextToFind(out var f)) return;
 		_FindNextInEditor(f, false);
 	}
 
-	private void _bFindIF_Click(object sender, RoutedEventArgs e) {
+	private void _bFindIF_Click(WBButtonClickArgs e) {
 		_cName.IsChecked = false;
 		//using var _ = new _TempDisableControl(_bFindIF);
 		_FindAllInFiles(false);
@@ -155,13 +202,13 @@ public partial class PanelFind : UserControl
 		//SHOULDDO: disabled button view now not updated because UI is blocked. When in text, should search in other thread; at least get text.
 	}
 
-	private void _bReplace_Click(object sender, RoutedEventArgs e) {
+	private void _bReplace_Click(WBButtonClickArgs e) {
 		_cName.IsChecked = false;
 		if (!_GetTextToFind(out var f, true)) return;
 		_FindNextInEditor(f, true);
 	}
 
-	private void _bOptions_Click(object sender, RoutedEventArgs e) {
+	private void _bOptions_Click(WBButtonClickArgs e) {
 		var b = new AWpfBuilder("Find Options").WinSize(350)
 			.R.StartGrid<GroupBox>("Find in files")
 			.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|C# script files|C# class files|Other files").Select(_SearchIn)
@@ -185,11 +232,11 @@ public partial class PanelFind : UserControl
 	/// </summary>
 	public void ZUpdateQuickResults(bool onlyEditor) {
 		if (!IsVisible) return;
-		if (onlyEditor && _cName.True()) return;
+		if (onlyEditor && _cName.IsChecked) return;
 		//AOutput.Write("UpdateQuickResults", Visible);
 
 		_timerUE ??= new ATimer(_ => {
-			if (_cName.True()) {
+			if (_cName.IsChecked) {
 				_FindAllInFiles(true);
 			} else {
 				_FindAllInEditor();
@@ -206,27 +253,31 @@ public partial class PanelFind : UserControl
 		public string findText;
 		public string replaceText;
 		public ARegex rx;
+		public AWildex wildex;
 		public bool wholeWord;
 		public bool matchCase;
 	}
 
-	bool _GetTextToFind(out _TextToFind f, bool forReplace, bool noRecent = false) {
-		//_errorProvider.Clear();
-		f = default;
-		f.findText = _tFind.Text;
+	bool _GetTextToFind(out _TextToFind f, bool forReplace = false, bool noRecent = false, bool noTooltip = false, bool names = false) {
+		_ttRegex?.Close();
+		f = new() { findText = _tFind.Text };
 		if (f.findText.Length == 0) return false;
-		f.matchCase = _cCase.True();
-		if (_cRegex.True()) {
-			try {
+		f.matchCase = !names && _cCase.IsChecked;
+		try {
+			if (_cRegex.IsChecked) {
 				var fl = RXFlags.MULTILINE;
 				if (!f.matchCase) fl |= RXFlags.CASELESS;
 				f.rx = new ARegex(f.findText, flags: fl);
+			} else if (names && _cWildex.IsChecked) {
+				f.wildex = new AWildex(f.findText);
+			} else {
+				f.wholeWord = _cWord.IsChecked;
 			}
-			catch (ArgumentException e) {
-				_SetErrorProvider(_tFind, e.Message);
-				return false;
-			}
-		} else f.wholeWord = _cWord.True();
+		}
+		catch (ArgumentException e) { //ARegex and AWildex ctors throw if invalid
+			if (!noTooltip) TUtil.InfoTooltip(ref _ttRegex, _tFind, e.Message);
+			return false;
+		}
 		if (forReplace) f.replaceText = _tReplace.Text;
 
 		_AddToRecent(f, noRecent);
@@ -235,27 +286,31 @@ public partial class PanelFind : UserControl
 		return true;
 	}
 
-	void _FindAllInString(string text, in _TextToFind f, List<Range> a, bool one = false) {
+	void _FindAllInString(string text, in _TextToFind f, List<Range> a) {
 		a.Clear();
 		if (f.rx != null) {
-			foreach (var g in f.rx.FindAllG(text)) {
-				a.Add(g.Start..g.End);
-				if (one) break;
-			}
+			foreach (var g in f.rx.FindAllG(text)) a.Add(g.Start..g.End);
 		} else {
 			for (int i = 0; i < text.Length; i += f.findText.Length) {
 				i = f.wholeWord ? text.FindWord(f.findText, i.., !f.matchCase, "_") : text.Find(f.findText, i, !f.matchCase);
 				if (i < 0) break;
 				a.Add(i..(i + f.findText.Length));
-				if (one) break;
 			}
 		}
 	}
 
-	void _SetErrorProvider(Control c, string text) {
-		//_errorProvider.SetIconAlignment(c, ErrorIconAlignment.BottomRight);
-		//_errorProvider.SetIconPadding(c, -16);
-		//_errorProvider.SetError(c, text);
+	//Used to find text in filenames.
+	//If found, adds single element to a. In the future a may be used to highlight all matching parts of names in the found list.
+	void _FindFirstInString(string text, in _TextToFind f, List<Range> a) {
+		a.Clear();
+		if (f.rx != null) {
+			if (f.rx.MatchG(text, out var g)) a.Add(g.Start..g.End);
+		} else if (f.wildex != null) {
+			if (f.wildex.Match(text)) a.Add(..);
+		} else {
+			int i = f.wholeWord ? text.FindWord(f.findText, ignoreCase: true, otherWordChars: "_") : text.Find(f.findText, ignoreCase: true);
+			if (i >= 0) a.Add(i..(i + f.findText.Length));
+		}
 	}
 
 	#endregion
@@ -263,6 +318,7 @@ public partial class PanelFind : UserControl
 	#region in editor
 
 	void _FindNextInEditor(in _TextToFind f, bool replace) {
+		_ttNext?.Close();
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
 		var z = doc.Z;
 		var text = doc.Text; if (text.Length == 0) return;
@@ -289,9 +345,12 @@ public partial class PanelFind : UserControl
 		}
 		//AOutput.Write(from, i, len);
 		if (i < 0) {
+			SystemSounds.Asterisk.Play();
 			if (retryFromStart || from8 == 0) return;
-			from = 0; retryFromStart = true; replace = false; goto g1;
+			from = 0; retryFromStart = true; replace = false;
+			goto g1;
 		}
+		if (retryFromStart) TUtil.InfoTooltip(ref _ttNext, _tFind, "Info: this match is before last position");
 		int to = doc.Pos8(i + len);
 		i = doc.Pos8(i);
 		if (replace && i == from8 && to == z.SelectionEnd8) {
@@ -306,10 +365,10 @@ public partial class PanelFind : UserControl
 	}
 
 	private void _bReplace_MouseUp(object sender, MouseEventArgs e) {
-		if (e.RightButton == MouseButtonState.Pressed) _bFind_Click(sender, e);
+		if (e.RightButton == MouseButtonState.Pressed) _bFind_Click(null);
 	}
 
-	private void _bReplaceAll_Click(object sender, EventArgs e) {
+	private void _bReplaceAll_Click(WBButtonClickArgs e) {
 		_cName.IsChecked = false;
 		if (!_GetTextToFind(out var f, true)) return;
 		var doc = Panels.Editor.ZActiveDoc;
@@ -341,31 +400,30 @@ public partial class PanelFind : UserControl
 
 	void _FindAllInEditor() {
 		_aEditor.Clear();
-		if (!_GetTextToFind(out var f, false, noRecent: true)) return;
+		if (!_GetTextToFind(out var f, noRecent: true, noTooltip: true)) return;
 		var text = Panels.Editor.ZActiveDoc?.Text; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
-	}
-
-	void _IsVisibleChanged(object sender, DependencyPropertyChangedEventArgs e) {
-		if (!_cName.True()) Panels.Editor.ZActiveDoc?.InicatorsFind_(IsVisible ? _aEditor : null);
 	}
 
 	/// <summary>
 	/// Makes visible and sets find text = s (should be selected text of a control; can be null/"").
 	/// </summary>
-	public void ZCtrlF(string s) {
+	public void ZCtrlF(string s/*, bool findInFiles = false*/) {
 		Panels.PanelManager[this].Visible = true;
+		_tFind.ToolTip = null;
 		_tFind.Focus();
 		if (s.NE()) return;
+		_cName.IsChecked = false;
 		_tFind.Text = s;
-		_tFind.SelectAll();
+		//_tFind.SelectAll(); //no, somehow WPF makes selected text gray like disabled when non-focused
+		//if (findInFiles) _FindAllInFiles(false); //rejected. Not so useful.
 	}
 
 	/// <summary>
 	/// Makes visible and sets find text = selected text of e.
 	/// Supports KScintilla and TextBox. If other type or null or no selected text, just makes visible etc.
 	/// </summary>
-	public void ZCtrlF(FrameworkElement e) {
+	public void ZCtrlF(FrameworkElement e/*, bool findInFiles = false*/) {
 		string s = null;
 		switch (e) {
 		case KScintilla c:
@@ -375,7 +433,7 @@ public partial class PanelFind : UserControl
 			s = c.SelectedText;
 			break;
 		}
-		ZCtrlF(s);
+		ZCtrlF(s/*, findInFiles*/);
 	}
 
 	//rejected. Could be used for global keyboard shortcuts, but currently they work only if the main window is active.
@@ -398,7 +456,7 @@ public partial class PanelFind : UserControl
 	const int c_indic = 0;
 
 	void _FindAllInFiles(bool names/*, bool forReplace*/) {
-		if (!_GetTextToFind(out var f, false, noRecent: names)) {
+		if (!_GetTextToFind(out var f, noRecent: names, names: names)) {
 			Panels.Found.ZControl.Z.ClearText();
 			return;
 		}
@@ -415,7 +473,7 @@ public partial class PanelFind : UserControl
 			});
 			c.ZTags.AddLinkTag("+ra", s => {
 				if (!_OpenLinkClicked(s)) return;
-				ATimer.After(10, _ => _bReplaceAll_Click(null, null));
+				ATimer.After(10, _ => _bReplaceAll_Click(null));
 				//info: without timer sometimes does not set cursor pos correctly
 			});
 			c.ZTags.AddLinkTag("+f", s => {
@@ -449,7 +507,13 @@ public partial class PanelFind : UserControl
 		bool jited = false;
 		int searchIn = names ? 0 : _SearchIn;
 
-		foreach (var v in App.Model.Root.Descendants()) {
+		var folder = App.Model.Root;
+		if (!names && _cFolder.IsChecked && Panels.Editor.ZActiveDoc?.ZFile is FileNode fn) {
+			if (fn.FindProject(out var proj, out _, ofAnyScript: true)) folder = proj;
+			else folder = fn.AncestorsReverse(noRoot: true).FirstOrDefault() ?? folder;
+		}
+
+		foreach (var v in folder.Descendants()) {
 			//using var perf = new _Perf();
 			string text = null, path = null;
 			if (names) {
@@ -477,7 +541,8 @@ public partial class PanelFind : UserControl
 
 			long time = bSlow != null ? ATime.PerfMilliseconds : 0;
 
-			_FindAllInString(text, f, a, one: names);
+			if (names) _FindFirstInString(text, f, a);
+			else _FindAllInString(text, f, a);
 
 			if (a.Count != 0) {
 				if (!names) b.Append("<Z 0xC0E0C0>");
@@ -527,17 +592,20 @@ public partial class PanelFind : UserControl
 
 			if (bSlow != null) {
 				time = ATime.PerfMilliseconds - time;
-				if (!jited) jited = true;
-				else if (time >= 100) {
+				if (time >= (jited ? 100 : 500)) {
 					if (bSlow.Length == 0) bSlow.AppendLine("<Z orange>Slow in these files<>");
 					bSlow.Append(time).Append(" ms in <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
 				}
+				jited = true;
 			}
 		}
 
-		if (searchIn > 0) b.Append("<Z orange>Note: searched only in ")
-			 .Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
-			 .AppendLine(" files. It is set in Find options (the ... button).<>");
+		if (folder != App.Model.Root)
+			b.Append("<z orange>Note: searched only in folder ").Append(folder.Name).AppendLine(".<>");
+		if (searchIn > 0)
+			b.Append("<z orange>Note: searched only in ")
+			   .Append(searchIn switch { 1 => "C#", 2 => "C# script", 3 => "C# class", _ => "non-C#" })
+			   .AppendLine(" files. It is set in Find Options dialog.<>");
 		b.Append(bSlow);
 
 		Panels.Found.ZControl.Z.SetText(b.ToString());
@@ -592,6 +660,7 @@ public partial class PanelFind : UserControl
 	string _recentPrevFind, _recentPrevReplace;
 	int _recentPrevOptions;
 
+	//Not used when Name checked.
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
 	void _AddToRecent(in _TextToFind f, bool temp) {
 		if (temp) return; //not implemented. Was implemented, but was not perfect and probably not useful. Adds too many intermediate garbage, although filtered.

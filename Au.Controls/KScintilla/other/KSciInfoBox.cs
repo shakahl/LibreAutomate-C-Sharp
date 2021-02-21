@@ -42,10 +42,10 @@ namespace Au.Controls
 
 			Z.MarginWidth(1, 0);
 
-			var z = ZInitBlankMargins;
-			z = ADpi.Scale(z.left, z.right, this.Hwnd);
-			Call(Sci.SCI_SETMARGINLEFT, 0, z.left);
-			Call(Sci.SCI_SETMARGINRIGHT, 0, z.right);
+			SIZE z = ZInitBlankMargins;
+			z = ADpi.Scale(z, this.Hwnd);
+			Call(Sci.SCI_SETMARGINLEFT, 0, z.width);
+			Call(Sci.SCI_SETMARGINRIGHT, 0, z.height);
 		}
 
 		/// <summary>

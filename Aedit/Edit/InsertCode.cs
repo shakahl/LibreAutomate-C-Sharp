@@ -211,10 +211,10 @@ static class InsertCode
 		}
 
 		var b = new StringBuilder();
-		var format = CiXaml.s_symbolFullFormat;
+		var format = CiText.s_symbolFullFormat;
 		var formatExp = format.WithMemberOptions(SymbolDisplayMemberOptions.IncludeContainingType | SymbolDisplayMemberOptions.IncludeType | SymbolDisplayMemberOptions.IncludeParameters | SymbolDisplayMemberOptions.IncludeRef);
 
-		b.Append("\r\n#region ").Append(baseType.ToMinimalDisplayString(semo, position, CiXaml.s_symbolFullFormat));
+		b.Append("\r\n#region ").Append(baseType.ToMinimalDisplayString(semo, position, CiText.s_symbolFullFormat));
 
 		if (isInterface) {
 			_Base(baseType, explicitly);

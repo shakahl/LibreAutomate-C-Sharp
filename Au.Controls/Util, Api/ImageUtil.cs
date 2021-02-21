@@ -130,7 +130,7 @@ namespace Au.Controls
 		}
 
 		/// <summary>
-		/// Image type as detected by <see cref="ImageTypeFromString(bool, string)"/>.
+		/// Image type as detected by <see cref="ImageTypeFromString(bool, out int, string)"/>.
 		/// </summary>
 		public enum ImageType
 		{
@@ -170,17 +170,34 @@ namespace Au.Controls
 		/// Gets image type from string.
 		/// </summary>
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
+		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
 		/// <param name="length">If -1, calls CharPtr_.Length(s).</param>
-		internal static ImageType ImageTypeFromString(bool anyFile, byte* s, int length = -1) {
+		internal static ImageType ImageTypeFromString(bool anyFile, out int prefixLength, byte* s, int length = -1) {
+			prefixLength = 0;
 			if (length < 0) length = BytePtr_.Length(s);
-			if (length < (anyFile ? 2 : 8)) return ImageType.None; //C:\x.bmp or .h
+			if (length < (anyFile ? 2 : 8)) return default; //C:\x.bmp or .h
 			char c1 = (char)s[0], c2 = (char)s[1];
 
 			//special strings
 			switch (c1) {
-			case '~': return (c2 == ':') ? ImageType.Base64CompressedBmp : ImageType.None;
-			case 'i': if (BytePtr_.AsciiStarts(s, "image:")) return ImageType.Base64PngGifJpg; break;
+			case '~':
+				if (c2 != ':') return default;
+				prefixLength = 2;
+				return ImageType.Base64CompressedBmp;
+			case 'i':
+				if (BytePtr_.AsciiStarts(s, "image:")) {
+					if (length < 10) return default;
+					prefixLength = 6;
+					return ImageType.Base64PngGifJpg;
+				}
+				if (BytePtr_.AsciiStarts(s, "imagefile:")) {
+					s += 10; length -= 10;
+					if (length < 8) return default;
+					prefixLength = 10;
+					c1 = (char)s[0]; c2 = (char)s[1];
+				}
+				break;
 				//case 'r': if(BytePtr_.AsciiStarts(s, "resource:")) return ImageType.Resource; break;
 			}
 
@@ -204,17 +221,18 @@ namespace Au.Controls
 			}
 
 			if (anyFile) return ImageType.ShellIcon; //can be other file type, URL, .ext, :: ITEMIDLIST, ::{CLSID}
-			return ImageType.None;
+			return default;
 		}
 
 		/// <summary>
 		/// Gets image type from string.
 		/// </summary>
 		/// <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
+		/// <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
 		/// <param name="s">File path etc. See <see cref="ImageType"/>.</param>
-		public static ImageType ImageTypeFromString(bool anyFile, string s) {
+		public static ImageType ImageTypeFromString(bool anyFile, out int prefixLength, string s) {
 			var b = AConvert.ToUtf8(s);
-			fixed (byte* p = b) return ImageTypeFromString(true, p, b.Length - 1);
+			fixed (byte* p = b) return ImageTypeFromString(true, out prefixLength, p, b.Length - 1);
 		}
 
 		/// <summary>
@@ -370,7 +388,7 @@ namespace Au.Controls
 		/// </summary>
 		/// <remarks>Supports environment variables etc. If not full path, searches in <see cref="AFolders.ThisAppImages"/> and standard directories.</remarks>
 		public static string ImageToString(string path) {
-			var t = ImageTypeFromString(true, path);
+			var t = ImageTypeFromString(true, out _, path);
 			switch (t) {
 			case ImageType.None: return null;
 			case ImageType.Base64CompressedBmp:

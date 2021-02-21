@@ -26,7 +26,7 @@ using Microsoft.CodeAnalysis.CSharp;
 
 class CiSignature
 {
-	CiPopupXaml _xamlPopup;
+	CiPopupText _textPopup;
 	_Data _data; //not null while the popup window is visible
 	CancellationTokenSource _cancelTS;
 
@@ -72,7 +72,7 @@ class CiSignature
 		if (_data == null) return;
 		foreach (var r in _data.sciDoc.ZTempRanges_Enum(this)) r.Remove();
 		_data = null;
-		_xamlPopup?.Hide();
+		_textPopup?.Hide();
 	}
 
 	public void SciPositionChanged(SciCode doc) {
@@ -203,8 +203,6 @@ class CiSignature
 			}
 		}
 
-		string xaml = _FormatXaml(iSel, userSelected: false);
-
 		doc.ZTempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
 			if (doc.ZTempRanges_Enum(doc.Z.CurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();
@@ -215,17 +213,17 @@ class CiSignature
 		rect.Width += ADpi.Scale(200, doc.Hwnd);
 		rect.left -= 6;
 
-		_xamlPopup ??= new CiPopupXaml(CiPopupXaml.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
-			OnLinkClick = (ph, e) => ph.Xaml = _FormatXaml(e.ToInt(1), userSelected: true)
+		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Signature, onHiddenOrDestroyed: (_, _) => _data = null) {
+			OnLinkClick = (ph, e) => ph.Text = _FormatText(e.ToInt(1), userSelected: true)
 		};
-		_xamlPopup.Xaml = xaml;
+		_textPopup.Text = _FormatText(iSel, userSelected: false);
 
-		if (!_xamlPopup.IsVisible) {
-			CodeInfo.HideXamlPopupAndTempWindows();
+		if (!_textPopup.IsVisible) {
+			CodeInfo.HideTextPopupAndTempWindows();
 			CodeInfo._compl.Cancel();
 		}
 
-		_xamlPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
+		_textPopup.Show(Panels.Editor.ZActiveDoc, rect, System.Windows.Controls.Dock.Bottom);
 		//APerf.NW();
 
 		//also show Keys/Regex tool?
@@ -236,18 +234,18 @@ class CiSignature
 			node = root.FindToken(cd.pos16).Parent;
 			var stringFormat = CiUtil.GetParameterStringFormat(node, semo, false);
 			//AOutput.Write(stringFormat);
-			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, node.Span, _xamlPopup.PopupWindow.Hwnd);
+			if (stringFormat != default) CodeInfo._tools.ShowForStringParameter(stringFormat, cd, node.Span, _textPopup.PopupWindow.Hwnd);
 		}
 	}
 
-	string _FormatXaml(int iSel, bool userSelected) {
+	System.Windows.Documents.Section _FormatText(int iSel, bool userSelected) {
 		_data.iSelected = iSel;
 		if (userSelected) _data.iUserSelected = iSel;
 
 		var r = _data.r;
 		ISymbol currentItem = null;
 		SignatureHelpParameter currentParameter = null;
-		var x = new CiXaml();
+		var x = new CiText();
 
 		//AOutput.Clear();
 		for (int i = 0; i < r.Items.Count; i++) {
@@ -332,7 +330,7 @@ class CiSignature
 			x.EndParagraph();
 		}
 
-		return x.End();
+		return x.Result;
 	}
 
 	static List<ISignatureHelpProvider> _GetSignatureHelpProviders() {
@@ -370,7 +368,7 @@ class CiSignature
 				} else {
 					if (--i < 0) i = n - 1;
 				}
-				if (i != _data.iSelected) _xamlPopup.Xaml = _FormatXaml(i, userSelected: true);
+				if (i != _data.iSelected) _textPopup.Text = _FormatText(i, userSelected: true);
 				return true;
 			}
 		}

@@ -30,6 +30,8 @@ partial class SciCode : KScintilla
 
 	public FileNode ZFile => _fn;
 
+	public override string ToString() => _fn.ToString();
+
 	//margins. Initially 0-4. We can add more with SCI_SETMARGINS.
 	public const int c_marginFold = 0;
 	public const int c_marginLineNumbers = 1;

@@ -78,7 +78,7 @@ namespace Au
 			if(!ok && !relaxed) {
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				AWnd.Active.UacCheckAndThrow_(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
-																	 //rejected: AWnd.GetWnd.Root.ActivateLL()
+																	 //rejected: AWnd.GetWnd.Root.ActivateL()
 				throw new AuException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -494,7 +494,7 @@ namespace Au
 					//info: activating brings to the Z top and also uncloaks
 					if(!wTL.IsEnabled(false)) bad = true; //probably an owned modal dialog disabled the window
 					else if(wTL.ThreadId == AWnd.GetWnd.ShellWindow.ThreadId) bad = true; //desktop
-					else if(wTL.IsActive) wTL.ZorderTop(); //can be below another window in the same topmost/normal Z order, although it is rare
+					else if(wTL.IsActive) wTL.ZorderTop(ownerToo: true); //can be below another window in the same topmost/normal Z order, although it is rare
 					else bad = !wTL.Activate_(AWnd.Internal_.ActivateFlags.NoThrowIfInvalid | AWnd.Internal_.ActivateFlags.IgnoreIfNoActivateStyleEtc | AWnd.Internal_.ActivateFlags.NoGetWindow);
 
 					//rejected: if wTL is desktop, minimize windows. Scripts should not have a reason to click desktop. If need, they can minimize windows explicitly.

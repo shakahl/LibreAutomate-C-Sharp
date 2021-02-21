@@ -30,8 +30,7 @@ namespace Au
 		/// <param name="args">To pass to Main.</param>
 		/// <param name="flags"></param>
 		/// <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
-		public static void Run(string asmFile, string[] args, RAFlags flags = 0, string fullPathRefs = null)
-		{
+		public static void Run(string asmFile, string[] args, RAFlags flags = 0, string fullPathRefs = null) {
 			//ref var p1 = ref APerf.Shared;
 			//p1.Next('i');
 
@@ -39,22 +38,22 @@ namespace Au
 			bool findLoaded = inEditorThread;
 			_LoadedScriptAssembly lsa = default;
 			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
-			if(asm == null) {
+			if (asm == null) {
 				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
 				//SHOULDDO: try to unload editorExtension assemblies. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
 				//p1.Next();
 				asm = alc.LoadFromAssemblyPath(asmFile);
 				//p1.Next('L'); //1.5-3 ms, depending on AV. LoadFromStream 30-100 ms, depending on AV.
 
-				if(fullPathRefs != null) {
+				if (fullPathRefs != null) {
 					var fpr = fullPathRefs.Split('|');
 					alc.Resolving += (System.Runtime.Loader.AssemblyLoadContext alc, AssemblyName an) => {
 						//AOutput.Write(an, an.Name, an.FullName);
-						foreach(var v in fpr) {
+						foreach (var v in fpr) {
 							var s1 = an.Name;
 							int iName = v.Length - s1.Length - 4;
-							if(iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, s1, true)) continue;
-							if(!AFile.ExistsAsFile(v)) continue;
+							if (iName <= 0 || v[iName - 1] != '\\' || !v.Eq(iName, s1, true)) continue;
+							if (!AFile.ExistsAsFile(v)) continue;
 							//try {
 							return alc.LoadFromAssemblyPath(v);
 							//} catch(Exception ex) { ADebug.Print(ex.ToStringWithoutStack()); break; }
@@ -62,7 +61,7 @@ namespace Au
 						return null;
 					};
 				}
-				if(findLoaded) lsa.Add(asmFile, asm);
+				if (findLoaded) lsa.Add(asmFile, asm);
 
 				//never mind: it's possible that we load a newer compiled assembly version of script than intended.
 			}
@@ -71,29 +70,29 @@ namespace Au
 				var entryPoint = asm.EntryPoint ?? throw new InvalidOperationException("assembly without entry point (function Main)");
 
 				bool useArgs = entryPoint.GetParameters().Length != 0;
-				if(useArgs) {
-					if(args == null) args = Array.Empty<string>();
+				if (useArgs) {
+					if (args == null) args = Array.Empty<string>();
 				}
 
 				//p1.Next('m');
-				if(!inEditorThread) Log_.Run.Write("Task started.");
+				if (!inEditorThread) Log_.Run.Write("Task started.");
 				//p1.Next('n');
 
-				if(useArgs) {
+				if (useArgs) {
 					entryPoint.Invoke(null, new object[] { args });
 				} else {
 					entryPoint.Invoke(null, null);
 				}
 
 				//if(!inEditorThread) Log_.Run.Write("Task ended."); //no, wait for other foreground threads
-				if(!inEditorThread) AProcess.Exit += (_, _) => Log_.Run.Write("Task ended.");
+				if (!inEditorThread) AProcess.Exit += (_, _) => Log_.Run.Write("Task ended.");
 			}
-			catch(TargetInvocationException te) {
+			catch (TargetInvocationException te) {
 				var e = te.InnerException;
 
-				if(!inEditorThread) Log_.Run.Write($"Task failed. Exception: {e.ToStringWithoutStack()}");
+				if (!inEditorThread) Log_.Run.Write($"Task failed. Exception: {e.ToStringWithoutStack()}");
 
-				if(0 != (flags & RAFlags.DontHandleExceptions)) throw e;
+				if (0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//AOutput.Write(e);
 				AScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
 			}
@@ -125,22 +124,20 @@ namespace Au
 			DateTime _fileTime;
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
-			public Assembly Find(string asmFile)
-			{
+			public Assembly Find(string asmFile) {
 				_d ??= new Dictionary<string, _Asm>(StringComparer.OrdinalIgnoreCase);
-				if(!AFile.GetProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
+				if (!AFile.GetProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
 				_fileTime = p.LastWriteTimeUtc;
-				if(_d.TryGetValue(asmFile, out var x)) {
-					if(x.time == _fileTime) return x.asm;
+				if (_d.TryGetValue(asmFile, out var x)) {
+					if (x.time == _fileTime) return x.asm;
 					_d.Remove(asmFile);
 				}
 				return null;
 			}
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
-			public void Add(string asmFile, Assembly asm)
-			{
-				if(_fileTime == default) return; //AFile.GetProperties failed
+			public void Add(string asmFile, Assembly asm) {
+				if (_fileTime == default) return; //AFile.GetProperties failed
 				_d.Add(asmFile, new _Asm { time = _fileTime, asm = asm });
 
 				//foreach(var v in _d.Values) AOutput.Write(v.asm.FullName);
@@ -163,8 +160,7 @@ namespace Au
 	/// </remarks>
 	public abstract class AScript
 	{
-		static AScript()
-		{
+		static AScript() {
 			//AOutput.Write("static AScript"); //note: static ctor of inherited class is called BEFORE this. Never mind.
 			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
 				OnHostHandledException(e);
@@ -179,16 +175,15 @@ namespace Au
 				//Other exceptions are handled by the host program with try/catch.
 			};
 
-//#if !DEBUG
+			//#if !DEBUG
 			AProcess.CultureIsInvariant = true;
-//#endif
+			//#endif
 		}
 
 		static AScript s_instance;
 
 		///
-		protected AScript()
-		{
+		protected AScript() {
 			s_instance = this;
 		}
 
@@ -199,19 +194,18 @@ namespace Au
 		/// <param name="e"></param>
 		protected virtual void OnUnhandledException(UnhandledExceptionEventArgs e) => AOutput.Write(e.ExceptionObject);
 
-		internal static void OnHostHandledException(UnhandledExceptionEventArgs e)
-		{
+		internal static void OnHostHandledException(UnhandledExceptionEventArgs e) {
 			var k = s_instance;
-			if(k != null) k.OnUnhandledException(e);
+			if (k != null) k.OnUnhandledException(e);
 			else AOutput.Write(e.ExceptionObject);
 		}
 
 		/// <summary>
-		/// Gets or sets an <see cref="Au.Triggers.ActionTriggers"/> instance, as a field of this class.
+		/// Gets an auto-created <see cref="Au.Triggers.ActionTriggers"/> object that can be used in this script.
 		/// </summary>
 		/// <remarks>
-		/// This property can be used in automation scripts to avoid creating an <b>ActionTriggers</b> variable explicitly. The returned value is a field of this class. The <b>ActionTriggers</b> object is auto-created when callig this property first time or after setting it = null.
-		/// In automation scripts this property is available because this class is the base of the Script class. In other classes need to create an <b>ActionTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
+		/// This property can be used in scripts to avoid creating an <b>ActionTriggers</b> variable explicitly. The returned <b>ActionTriggers</b> object belongs to this class; it is auto-created.
+		/// In scripts this property is available because this class is the base of the <b>Script</b> class. In other classes need to create an <b>ActionTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -221,7 +215,7 @@ namespace Au
 		/// </example>
 		protected Au.Triggers.ActionTriggers Triggers {
 			get => _triggers ??= new Au.Triggers.ActionTriggers();
-			set => _triggers = value;
+			//set => _triggers = value;
 		}
 		Au.Triggers.ActionTriggers _triggers;
 	}

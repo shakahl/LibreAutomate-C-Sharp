@@ -17,7 +17,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 
-class CiPopupXaml
+class CiPopupText
 {
 	public enum UsedBy { PopupList, Signature, Info }
 
@@ -25,10 +25,10 @@ class CiPopupXaml
 	FlowDocumentControl _c;
 	EventHandler _onHiddenOrDestroyed;
 	UsedBy _usedBy;
-	string _xaml;
-	bool _updateXaml;
+	System.Windows.Documents.Section _section;
+	bool _updateText;
 
-	public CiPopupXaml(UsedBy usedy, EventHandler onHiddenOrDestroyed = null) {
+	public CiPopupText(UsedBy usedy, EventHandler onHiddenOrDestroyed = null) {
 		_usedBy = usedy;
 		_onHiddenOrDestroyed = onHiddenOrDestroyed;
 	}
@@ -41,17 +41,18 @@ class CiPopupXaml
 	/// <summary>
 	/// Called when clicked a link with href prefix "^".
 	/// </summary>
-	public Action<CiPopupXaml, string> OnLinkClick { get; set; }
+	public Action<CiPopupText, string> OnLinkClick { get; set; }
 
 	/// <summary>
-	/// XAML to show. Set before calling Show.
+	/// Text to show. Set before calling Show.
 	/// </summary>
-	public string Xaml {
-		get => _xaml;
+	public System.Windows.Documents.Section Text {
+		get => _section;
 		set {
-			if (value != _xaml) {
-				_xaml = value;
-				if (IsVisible) _SetXaml(); else _updateXaml = true;
+			if (value != _section) {
+				_section = value;
+				if (IsVisible) _SetText(); else _updateText = true;
+				//SHOULDDO: if visible, probably does not auto-size. But maybe now not used, because never noticed incorrect size.
 			}
 		}
 	}
@@ -68,7 +69,7 @@ class CiPopupXaml
 			_w.Size = (ubList ? 450 : 600, ubList ? 360 : 300);
 			//rejected: save size in app settings (if not info). Popup list too.
 
-			_c = CiXaml.CreateControl();
+			_c = CiText.CreateControl();
 			_w.Content = _c;
 
 			if (_onHiddenOrDestroyed != null) _w.Hidden += _onHiddenOrDestroyed;
@@ -83,7 +84,7 @@ class CiPopupXaml
 				}
 			};
 
-			//never mind: on mouse up: if(IsVisible && !c.SelectedText.NE()) _w.Hwnd.ActivateLL(); //the user may want Ctrl+C
+			//never mind: on mouse up: if(IsVisible && !c.SelectedText.NE()) _w.Hwnd.ActivateL(); //the user may want Ctrl+C
 			//	but no mouse up events, even PreviewX.
 			//	can use context menu instead.
 		}
@@ -94,12 +95,12 @@ class CiPopupXaml
 	/// Shows by anchorRect, owned by ownerControl.
 	/// </summary>
 	/// <param name="ownerControl"></param>
-	/// <param name="anchorRect">Rectangle in screen coord. The popup window will be by it but not in it.</param>
+	/// <param name="anchorRect">Rectangle in screen coord. The popup window will be by it but not in it (in it if side = null).</param>
 	/// <param name="align"></param>
 	/// <param name="hideIfOutside">Hide when mouse moved outside anchorRect unless is in the popup window.</param>
-	public void Show(SciCode ownerControl, RECT anchorRect, Dock side, bool hideIfOutside = false) {
+	public void Show(SciCode ownerControl, RECT anchorRect, Dock? side, bool hideIfOutside = false) {
 		_CreateOrGet();
-		if (_updateXaml) _SetXaml();
+		if (_updateText) _SetText();
 		_w.ShowByRect(ownerControl, side, anchorRect);
 
 		if (hideIfOutside) {
@@ -124,18 +125,16 @@ class CiPopupXaml
 		if (!IsVisible) return false;
 		//AOutput.Write(new StackTrace());
 		_w.Close();
-		_xaml = null;
-		_SetXaml();
+		_section = null;
+		_SetText();
 		return true;
 	}
 
 	public bool IsVisible => _w?.IsVisible ?? false;
 
-	void _SetXaml() {
-		_updateXaml = false;
-		var fd = _c?.Document;
-		fd?.Blocks.Clear();
-		if (_xaml.NE()) return;
-		fd.Blocks.Add(CiXaml.Parse(_xaml));
+	void _SetText() {
+		_updateText = false;
+		_c?.Clear();
+		if (_section != null) _c.Document.Blocks.Add(_section);
 	}
 }

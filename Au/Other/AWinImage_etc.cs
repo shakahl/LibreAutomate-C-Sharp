@@ -149,10 +149,10 @@ namespace Au
 			if (n == 1) return _Capture(new RECT(outline[0].x, outline[0].y, 1, 1));
 
 			using var path = _CreatePath(outline);
-			RECT r = (RECT)path.GetBounds();
-			if (r.IsEmpty) {
+			RECT r = RECT.From(path.GetBounds());
+			if (r.NoArea) {
 				path.Widen(Pens.Black); //will be transparent, but no exception. Difficult to make non-transparent line.
-				r = (RECT)path.GetBounds();
+				r = RECT.From(path.GetBounds());
 			}
 			return _Capture(r, w, usePrintWindow, path);
 		}
@@ -241,12 +241,12 @@ namespace Au
 				default: throw new ArgumentException();
 			}
 
-			AWnd[] aw = null; AWnd wTool = default;
+			List<AWnd> aw = null; AWnd wTool = default;
 			try {
 				if (!toolWindow.IsEmpty) {
 					wTool = toolWindow.Hwnd;
-					aw = wTool.Get.OwnersAndThis(true);
-					foreach (var w in aw) w.ShowLL(false);
+					aw = wTool.Get.Owners(andThis: true, onlyVisible: true);
+					foreach (var w in aw) w.ShowL(false);
 					using (new AInputBlocker(BIEvents.MouseClicks)) ATime.SleepDoEvents(300); //time for animations
 				}
 
@@ -285,10 +285,10 @@ namespace Au
 			}
 			finally {
 				if (aw != null) {
-					foreach (var w in aw) w.ShowLL(true);
+					foreach (var w in aw) w.ShowL(true);
 					if (wTool.IsAlive) {
 						wTool.ShowNotMinimized();
-						wTool.ActivateLL();
+						wTool.ActivateL();
 					}
 				}
 			}
@@ -494,7 +494,7 @@ namespace Au
 									//FUTURE: prevent flickering. Also don't draw under magnifier.
 								}
 								else notFirstMove = true;
-								r = new RECT(p0.x, p0.y, p.x, p.y, false);
+								r = RECT.FromLTRB(p0.x, p0.y, p.x, p.y);
 								r.Normalize(true);
 								g.DrawRectangle(pen, r);
 							}
@@ -508,12 +508,12 @@ namespace Au
 					GraphicsPath path = null;
 					if (isAnyShape && a.Count > 1) {
 						path = _CreatePath(a);
-						r = (RECT)path.GetBounds();
+						r = RECT.From(path.GetBounds());
 					}
 					else {
 						r.right++; r.bottom++;
 					}
-					if (r.IsEmpty) {
+					if (r.NoArea) {
 						this.Close();
 						return;
 					}

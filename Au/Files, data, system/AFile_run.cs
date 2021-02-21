@@ -322,7 +322,7 @@ namespace Au
 				ps.si.hStdError = hOutWrite;
 				ps.flags |= Api.CREATE_NEW_CONSOLE;
 
-				if(!ps.StartLL(out var pi, inheritHandles: true)) throw new AuException(0);
+				if(!ps.StartL(out var pi, inheritHandles: true)) throw new AuException(0);
 				hOutWrite.Dispose(); //important: must be here
 				pi.hThread.Dispose();
 				hProcess = pi.hProcess;

@@ -47,7 +47,7 @@ namespace Au.Controls
 
 				if (!_palSelecting) _pal.SelectColor(col);
 
-				var brush = new SolidColorBrush(System.Windows.Media.Color.FromArgb(255, (byte)col, (byte)(col >> 8), (byte)(col >> 16)));
+				var brush = new SolidColorBrush(System.Windows.Media.Color.FromRgb((byte)col, (byte)(col >> 8), (byte)(col >> 16)));
 				fColor.Foreground = brush;
 				bColor.Fill = brush;
 
@@ -139,11 +139,11 @@ namespace Au.Controls
 				switch (msg) {
 				case Api.WM_NCCREATE:
 					_w = w;
-					BufferedPaint_.Init();
+					ABufferedPaint.Init();
 					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
-					BufferedPaint_.Uninit();
+					ABufferedPaint.Uninit();
 					break;
 				//			case Api.WM_NCHITTEST: //SHOULDDO: test in Popup, probably click closes. Currently not using in popups.
 				//				return Api.HTTRANSPARENT;
@@ -151,7 +151,7 @@ namespace Au.Controls
 					_WmLbuttondown(lParam);
 					break;
 				case Api.WM_PAINT:
-					using (var bp = new BufferedPaint_(w, true)) _Paint(bp.DC);
+					using (var bp = new ABufferedPaint(w, true)) _Paint(bp.DC);
 					return default;
 				}
 

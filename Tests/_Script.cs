@@ -449,7 +449,7 @@ partial class TestScript : AScript
 
 			//t.Bounds = new Rectangle(i * 300 + 700, 200, 200, 200);
 			t.Show();
-			//t.Window.ActivateLL();
+			//t.Window.ActivateL();
 			ATime.SleepDoEvents(200);
 
 			//for(int j = 1; j <= (int)TBBorder.SizableWithCaptionX; j++) {

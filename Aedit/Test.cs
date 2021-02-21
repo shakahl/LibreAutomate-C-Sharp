@@ -18,6 +18,7 @@ using System.Windows.Media;
 using Au;
 using Au.Types;
 using System.Runtime;
+using System.Windows.Input;
 //using Au.Controls;
 //using static Au.Controls.Sci;
 //using Au.Compiler;
@@ -49,7 +50,12 @@ static class Test
 	//}
 
 	public static void FromMenubar() {
+		//int i = AMenu.ShowSimple("One\0Tooltip|Two");
+		//AOutput.Write(i);
 
+		//SIZE z=new SIZE()
+
+		//AOutput.Write(FocusManager.GetFocusedElement(App.Wmain), Keyboard.FocusedElement);
 
 		//var m = new Menu1();
 		////m["Test"] = null;
@@ -66,8 +72,8 @@ static class Test
 
 		//var h = Panels.Editor.ZActiveDoc.Hwnd;
 		//AOutput.Write(h);
-		////h.ShowLL(false);
-		////h.ResizeLL(0, 0);
+		////h.ShowL(false);
+		////h.ResizeL(0, 0);
 		////h.SetWindowPos(Native.SWP.HIDEWINDOW | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOSENDCHANGING);
 		////h.Enable(false);
 		//h.SetTransparency(true, 0);
@@ -270,65 +276,64 @@ static class Test
 	//	AOutput.Write(s);
 	//}
 
-//	void TestReplaceTextGently()
-//	{
-//		var doc = Panels.Editor.ZActiveDoc;
-//		var s1 = doc.Text;
-//		int i = s1.Find("//.");
-//		//var s2 = s1 + "added\r\n";
-//		var s2 = s1.Insert(i, "insert\r\n");
-//		doc.ZReplaceTextGently(s2);
-//	}
+	//	void TestReplaceTextGently()
+	//	{
+	//		var doc = Panels.Editor.ZActiveDoc;
+	//		var s1 = doc.Text;
+	//		int i = s1.Find("//.");
+	//		//var s2 = s1 + "added\r\n";
+	//		var s2 = s1.Insert(i, "insert\r\n");
+	//		doc.ZReplaceTextGently(s2);
+	//	}
 
-//	void TestDiffMatchPatch()
-//	{
-//		var s1 = @"//.
-//using Au; using Au.Types; using System; using System.Collections.Generic;
-//class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
-	
-//	var s=""one"";
-//";
-//		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //.
-//using Au; using Au.Types; using System; using System.Collections.Generic;
-//using My.NS1; //ąčę îôû
-//using My.NS2;
-//class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
-//	var i=2;
-//";
+	//	void TestDiffMatchPatch()
+	//	{
+	//		var s1 = @"//.
+	//using Au; using Au.Types; using System; using System.Collections.Generic;
+	//class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 
-//		var dmp = new diff_match_patch();
-//		List<Diff> diff = dmp.diff_main(s1, s2, true);
-//		dmp.diff_cleanupSemantic(diff);
-//		var delta = dmp.diff_toDelta(diff);
-//		AOutput.Write(delta);
-//		AOutput.Write("----");
-//		var d2 = dmp.diff_fromDelta(s1, delta);
-//		//AOutput.Write(d2);
-//		AOutput.Write(dmp.diff_text2(d2));
-//	}
+	//	var s=""one"";
+	//";
+	//		var s2 = @"/*/ role exeProgram;		outputPath %AFolders.Workspace%\bin; console true; /*/ //.
+	//using Au; using Au.Types; using System; using System.Collections.Generic;
+	//using My.NS1; //ąčę îôû
+	//using My.NS2;
+	//class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
+	//	var i=2;
+	//";
 
-//	void TestNoGcRegion()
-//	{
-//		for(int i = 0; i < 2; i++) {
-//			ADebug.MemorySetAnchor_();
-//			bool noGC = GC.TryStartNoGCRegion(10_000_000);
-//			var a = new byte[50_000_000];
-//			for(int j = 0; j < a.Length; j++) a[j] = 1;
-//			AOutput.Write(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
-//			if(noGC && GCSettings.LatencyMode == GCLatencyMode.NoGCRegion) try { GC.EndNoGCRegion(); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
-//			ADebug.MemoryPrint_();
-//			GC.Collect();
-//			if(!ADialog.ShowYesNo("Continue?")) break;
-//		}
+	//		var dmp = new diff_match_patch();
+	//		List<Diff> diff = dmp.diff_main(s1, s2, true);
+	//		dmp.diff_cleanupSemantic(diff);
+	//		var delta = dmp.diff_toDelta(diff);
+	//		AOutput.Write(delta);
+	//		AOutput.Write("----");
+	//		var d2 = dmp.diff_fromDelta(s1, delta);
+	//		//AOutput.Write(d2);
+	//		AOutput.Write(dmp.diff_text2(d2));
+	//	}
 
-//	}
+	//	void TestNoGcRegion()
+	//	{
+	//		for(int i = 0; i < 2; i++) {
+	//			ADebug.MemorySetAnchor_();
+	//			bool noGC = GC.TryStartNoGCRegion(10_000_000);
+	//			var a = new byte[50_000_000];
+	//			for(int j = 0; j < a.Length; j++) a[j] = 1;
+	//			AOutput.Write(noGC, GCSettings.LatencyMode == GCLatencyMode.NoGCRegion);
+	//			if(noGC && GCSettings.LatencyMode == GCLatencyMode.NoGCRegion) try { GC.EndNoGCRegion(); } catch(InvalidOperationException ex) { ADebug.Print(ex.Message); }
+	//			ADebug.MemoryPrint_();
+	//			GC.Collect();
+	//			if(!ADialog.ShowYesNo("Continue?")) break;
+	//		}
+
+	//	}
 
 	class TestGC
 	{
-		~TestGC()
-		{
-			if(Environment.HasShutdownStarted) return;
-			if(AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
+		~TestGC() {
+			if (Environment.HasShutdownStarted) return;
+			if (AppDomain.CurrentDomain.IsFinalizingForUnload()) return;
 			AOutput.Write("GC", GC.CollectionCount(0), GC.CollectionCount(1), GC.CollectionCount(2));
 			//ATimer.After(1, _ => new TestGC());
 			//var f = App.Wmain; if(!f.IsHandleCreated) return;
@@ -338,8 +343,7 @@ static class Test
 	}
 	static bool s_debug2;
 
-	public static void MonitorGC()
-	{
+	public static void MonitorGC() {
 		//if(!s_debug2) {
 		//	s_debug2 = true;
 		//	new TestGC();
@@ -394,8 +398,7 @@ static class Test
 	//}
 
 
-	public static unsafe void TestEditor()
-	{
+	public static unsafe void TestEditor() {
 		//var st = EdResources.GetObjectNoCache("Au");
 		//AOutput.Write(st.GetType());
 

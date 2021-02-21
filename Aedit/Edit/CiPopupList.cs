@@ -35,8 +35,8 @@ class CiPopupList
 	CheckBox _groupButton;
 	bool _groupsEnabled;
 	List<string> _groups;
-	CiPopupXaml _xamlPopup;
-	ATimer _xpTimer;
+	CiPopupText _textPopup;
+	ATimer _tpTimer;
 
 	public KPopup PopupWindow => _popup;
 
@@ -100,8 +100,8 @@ class CiPopupList
 			WindowName = "Au completion list"
 		};
 
-		_xamlPopup = new CiPopupXaml(CiPopupXaml.UsedBy.PopupList);
-		_xpTimer = new ATimer(_ShowXamlPopup);
+		_textPopup = new CiPopupText(CiPopupText.UsedBy.PopupList);
+		_tpTimer = new ATimer(_ShowTextPopup);
 	}
 
 	private void _KindButton_Click(object sender, RoutedEventArgs e) {
@@ -145,21 +145,21 @@ class CiPopupList
 			var ci = _av[index];
 			//AOutput.Write(ci.ci.ProviderName, ci.Provider);
 			if (ci.Provider == CiComplProvider.XmlDoc) return;
-			_xpTimer.After(300, ci);
-			_xamlPopup.Xaml = null;
+			_tpTimer.After(300, ci);
+			_textPopup.Text = null;
 		} else {
-			_xamlPopup.Hide();
-			_xpTimer.Stop();
+			_textPopup.Hide();
+			_tpTimer.Stop();
 		}
 	}
 
-	void _ShowXamlPopup(ATimer t) {
+	void _ShowTextPopup(ATimer t) {
 		var ci = t.Tag as CiComplItem;
-		var xaml = _compl.GetDescriptionDoc(ci, 0);
-		if (xaml == null) return;
-		_xamlPopup.Xaml = xaml;
-		_xamlPopup.OnLinkClick = (ph, e) => ph.Xaml = _compl.GetDescriptionDoc(ci, e.ToInt(1));
-		_xamlPopup.Show(Panels.Editor.ZActiveDoc, _popup.Hwnd.Rect, Dock.Right);
+		var text = _compl.GetDescriptionDoc(ci, 0);
+		if (text == null) return;
+		_textPopup.Text = text;
+		_textPopup.OnLinkClick = (ph, e) => ph.Text = _compl.GetDescriptionDoc(ci, e.ToInt(1));
+		_textPopup.Show(Panels.Editor.ZActiveDoc, _popup.Hwnd.Rect, Dock.Right);
 	}
 
 	void _SortAndSetControlItems() {
@@ -227,8 +227,8 @@ class CiPopupList
 		if (_a == null) return;
 		_tv.SetItems(null, false);
 		_popup.Close();
-		_xamlPopup.Hide();
-		_xpTimer.Stop();
+		_textPopup.Hide();
+		_tpTimer.Stop();
 		_a = null;
 		_av = null;
 		_groups = null;
@@ -271,6 +271,7 @@ class CiPopupList
 		CiPopupList _p;
 		TVDrawInfo _cd;
 		GdiTextRenderer _tr;
+		int _textColor;
 
 		public _CustomDraw(CiPopupList list) {
 			_p = list;
@@ -279,6 +280,7 @@ class CiPopupList
 		public void Begin(TVDrawInfo cd, GdiTextRenderer tr) {
 			_cd = cd;
 			_tr = tr;
+			_textColor = Api.GetSysColor(Api.COLOR_WINDOWTEXT);
 		}
 
 		//public bool DrawBackground() {
@@ -299,7 +301,7 @@ class CiPopupList
 
 			ADebug.PrintIf(!ci.ci.DisplayTextPrefix.NE(), s); //we don't support prefix; never seen.
 			int xEndOfText = 0;
-			int color = ci.moveDown.HasAny(CiItemMoveDownBy.Name | CiItemMoveDownBy.FilterText) ? 0x808080 : 0;
+			int color = ci.moveDown.HasAny(CiItemMoveDownBy.Name | CiItemMoveDownBy.FilterText) ? 0x808080 : _textColor;
 			_tr.MoveTo(_cd.xText, _cd.yText);
 			if (ci.hilite != 0) {
 				ulong h = ci.hilite;

@@ -541,7 +541,7 @@ namespace Au
 							//It also solves this problem: if we delete the directory now, need to ensure that it does not delete the source directory, which is quite difficult.
 						} else {
 							//deleted = 0 ==
-							_DeleteLL(path2, existsAs == FileDir2.SymLinkDirectory);
+							_DeleteL(path2, existsAs == FileDir2.SymLinkDirectory);
 						}
 						break;
 					}
@@ -619,7 +619,7 @@ namespace Au
 				if(f.IsDirectory) {
 					if(merge) switch(ExistsAs(s2, true)) {
 						case FileDir.Directory: continue; //never mind: check symbolic link mismatch
-						case FileDir.File: _DeleteLL(s2, false); break;
+						case FileDir.File: _DeleteL(s2, false); break;
 						}
 
 					ok = Api.CreateDirectoryEx(s1, s2, default);
@@ -883,12 +883,12 @@ namespace Au
 				var dirs = new List<string>();
 				foreach(var f in Enumerate(path, FEFlags.AndSubdirectories | FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
 					if(f.IsDirectory) dirs.Add(f.FullPath);
-					else _DeleteLL(f.FullPath, false); //delete as many as possible
+					else _DeleteL(f.FullPath, false); //delete as many as possible
 				}
 				for(int i = dirs.Count - 1; i >= 0; i--) {
-					_DeleteLL(dirs[i], true); //delete as many as possible
+					_DeleteL(dirs[i], true); //delete as many as possible
 				}
-				ec = _DeleteLL(path, true);
+				ec = _DeleteL(path, true);
 				if(ec == 0) {
 					//notify shell. Else, if it was open in Explorer, it shows an error message box.
 					//Info: .NET does not notify; SHFileOperation does.
@@ -899,7 +899,7 @@ namespace Au
 				//if(_DeleteShell(path, Recycle.No)) return type;
 				if(_DeleteShell(path, false)) return type;
 			} else {
-				ec = _DeleteLL(path, type == FileDir2.SymLinkDirectory);
+				ec = _DeleteL(path, type == FileDir2.SymLinkDirectory);
 				if(ec == 0) return type;
 			}
 			if(ExistsAsAny(path, true)) throw new AuException(ec, $"*delete '{path}'");
@@ -913,7 +913,7 @@ namespace Au
 			return type;
 		}
 
-		static int _DeleteLL(string path, bool dir)
+		static int _DeleteL(string path, bool dir)
 		{
 			//AOutput.Write(dir, path);
 			if(dir ? Api.RemoveDirectory(path) : Api.DeleteFile(path)) return 0;
@@ -935,7 +935,7 @@ namespace Au
 				ec = ALastError.Code;
 			}
 			if(ec == Api.ERROR_FILE_NOT_FOUND || ec == Api.ERROR_PATH_NOT_FOUND) return 0;
-			ADebug.Print("_DeleteLL failed. " + ALastError.MessageFor(ec) + "  " + path
+			ADebug.Print("_DeleteL failed. " + ALastError.MessageFor(ec) + "  " + path
 				+ (dir ? ("   Children: " + string.Join(" | ", Enumerate(path).Select(f => f.Name))) : null));
 			return ec;
 

@@ -126,7 +126,7 @@ AOutput.Write(""t"" + 'c' + 1);
 	}
 
 	public static void Cancel() {
-		HideXamlPopupAndTempWindows();
+		HideTextPopupAndTempWindows();
 		_compl.Cancel();
 		_signature.Cancel();
 	}
@@ -167,7 +167,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		case (KKey.Up, 0):
 		case (KKey.PageDown, 0):
 		case (KKey.PageUp, 0):
-			if ((HideXamlPopup() || _tools.HideTempWindows()) && key == KKey.Escape) return true;
+			if ((HideTextPopup() || _tools.HideTempWindows()) && key == KKey.Escape) return true;
 			//never mind: on Esc, if several popups, should hide the top popup.
 			//	We instead hide less-priority popups when showing a popup, so that Escape will hide the correct popup in most cases.
 			return _compl.OnCmdKey_SelectOrHide(key) || _signature.OnCmdKey(key);
@@ -229,8 +229,6 @@ AOutput.Write(""t"" + 'c' + 1);
 		if (!c.ignoreChar) {
 			_compl.SciCharAdded_ShowList(c); //async gets completions and shows popup list. If already showing, filters/selects items.
 			_signature.SciCharAdded(c.doc, c.ch); //async shows signature help. Faster than _compl.
-
-			//TODO: test more. Previously _signature.SciCharAdded was sync.
 		}
 
 		//Example: user types 'wri('.
@@ -278,10 +276,34 @@ AOutput.Write(""t"" + 'c' + 1);
 		_signature.ShowSignature(doc);
 	}
 
-	public static void SciMouseDwellStarted(SciCode doc, int pos8) {
-		if (!_CanWork(doc)) return;
-		bool isDiag = _diag.SciMouseDwellStarted(doc, pos8);
-		_quickInfo.SciMouseDwellStarted(doc, pos8, isDiag);
+	/// <summary>
+	/// Show or hides quick info or/and error info.
+	/// </summary>
+	public static async void SciMouseDwellStarted(SciCode doc, int pos8) {
+		if (!_CanWork(doc) || pos8 < 0) return;
+
+		var pi = Panels.Info; if (!pi.IsVisible) pi = null;
+
+		int pos16 = doc.Pos16(pos8);
+		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
+		var quick = await _quickInfo.GetTextAt(pos16);
+
+		if (quick == null) pi?.ZSetAboutInfo();
+		if (diag == null && quick == null) {
+			HideTextPopup();
+		} else {
+			if (quick != null && pi != null) {
+				pi.ZSetText(quick);
+				if (diag == null) return;
+				quick = null;
+			}
+			var text = diag ?? quick;
+			if (quick != null && diag != null) {
+				text.Blocks.Add(new System.Windows.Documents.BlockUIContainer(new System.Windows.Controls.Separator { Margin = new(4) }));
+				text.Blocks.Add(quick);
+			}
+			_ShowTextPopup(doc, pos16, text, onLinkClick);
+		}
 	}
 
 	public static void SciMouseDwellEnded(SciCode doc) {
@@ -420,7 +442,7 @@ AOutput.Write(""t"" + 'c' + 1);
 			var m = new MetaComments();
 			m.Parse(f, projFolder, EMPFlags.ForCodeInfo);
 			if (isMain) _meta = m;
-			if(m.TestInternal is string[] testInternal) Au.Compiler.InternalsVisible.Add(f.Name, testInternal);
+			if (m.TestInternal is string[] testInternal) Au.Compiler.InternalsVisible.Add(f.Name, testInternal);
 
 			var projectId = ProjectId.CreateNewId();
 			var adi = new List<DocumentInfo>();
@@ -452,7 +474,7 @@ AOutput.Write(""t"" + 'c' + 1);
 		if (doc == null || !doc.ZFile.IsCodeFile) return;
 
 		//cancel if changed the screen rectangle of the document window
-		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _xpVisible) {
+		if (_compl.IsVisibleUI || _signature.IsVisibleUI || _tpVisible) {
 			var r = Panels.Editor.ZActiveDoc.Hwnd().Rect;
 			if (!_isUI) {
 				_isUI = true;
@@ -468,24 +490,39 @@ AOutput.Write(""t"" + 'c' + 1);
 		_styling.Timer250msWhenVisibleAndWarm(doc);
 	}
 
-	static CiPopupXaml _xamlPopup;
-	static bool _xpVisible;
+	static CiPopupText _textPopup;
+	static bool _tpVisible;
 
-	internal static void ShowXamlPopup(SciCode doc, int pos16, string xaml, Action<CiPopupXaml, string> onLinkClick = null, bool above = false) {
-		_xamlPopup ??= new CiPopupXaml(CiPopupXaml.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _xpVisible = false);
-		_xamlPopup.Xaml = xaml;
-		_xamlPopup.OnLinkClick = onLinkClick;
-		_xamlPopup.Show(doc, pos16, hideIfOutside: true, above: above);
-		_xpVisible = true;
+	static void _ShowTextPopup(SciCode doc, int pos16, System.Windows.Documents.Section text, Action<CiPopupText, string> onLinkClick = null) {
+		_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _tpVisible = false);
+		_textPopup.Text = text;
+		_textPopup.OnLinkClick = onLinkClick;
+		_textPopup.Show(doc, pos16, hideIfOutside: true);
+		_tpVisible = true;
 	}
 
-	internal static bool HideXamlPopup() {
-		if (_xpVisible) { _xamlPopup.Hide(); return true; }
+	//CONSIDER: option to show tooltip: below mouse (like now), above mouse, top/bottom (which is farther), maybe above Output etc.
+	//	This test version shows above Output.
+	//static void _ShowTextPopup(SciCode doc, int pos16, System.Windows.Documents.Section text, Action<CiPopupText, string> onLinkClick = null) {
+	//	_textPopup ??= new CiPopupText(CiPopupText.UsedBy.Info, onHiddenOrDestroyed: (_, _) => _tpVisible = false);
+	//	_textPopup.Text = text;
+	//	_textPopup.OnLinkClick = onLinkClick;
+	//	if (AKeys.IsScrollLock && Panels.Output.IsVisible) {
+	//		var r = Panels.Output.RectInScreen();
+	//		_textPopup.Show(doc, r, null);
+	//	} else {
+	//		_textPopup.Show(doc, pos16, hideIfOutside: true);
+	//	}
+	//	_tpVisible = true;
+	//}
+
+	internal static bool HideTextPopup() {
+		if (_tpVisible) { _textPopup.Hide(); return true; }
 		return false;
 	}
 
-	internal static void HideXamlPopupAndTempWindows() {
-		HideXamlPopup();
+	internal static void HideTextPopupAndTempWindows() {
+		HideTextPopup();
 		_tools.HideTempWindows();
 	}
 

@@ -238,7 +238,7 @@ namespace Au.Types
 		/// <param name="widthHeight">Use only width and height of r. If false (default), the function adds r offset (left and top).</param>
 		/// <param name="centerIfEmpty">If x or y is default(Coord), use Coord.Center. Not used with widthHeight.</param>
 		public static POINT NormalizeInRect(Coord x, Coord y, RECT r, bool widthHeight = false, bool centerIfEmpty = false) {
-			if (widthHeight) r.Offset(-r.left, -r.top);
+			if (widthHeight) r.Move(0, 0);
 			else if (centerIfEmpty) {
 				if (x.IsEmpty) x = Center;
 				if (y.IsEmpty) y = Center;
@@ -294,7 +294,7 @@ namespace Au.Types
 				RECT r;
 				if (workArea || !screen.IsEmpty || _NeedRect(x, y)) {
 					r = screen.GetRect(workArea);
-					if (widthHeight) r.Offset(-r.left, -r.top);
+					if (widthHeight) r.Move(0, 0);
 				} else r = default;
 				p.x = x.NormalizeInRange(r.left, r.right);
 				p.y = y.NormalizeInRange(r.top, r.bottom);

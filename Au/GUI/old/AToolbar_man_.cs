@@ -17,11 +17,11 @@ using Au.Types;
 
 namespace Au
 {
-	public partial class AToolbar
+	public partial class AToolbar_old
 	{
 		class _OwnerWindow
 		{
-			public readonly List<AToolbar> a;
+			public readonly List<AToolbar_old> a;
 			public readonly AWnd w;
 			public bool visible;
 			bool _updatedOnce;
@@ -33,10 +33,10 @@ namespace Au
 			{
 				w = window;
 				//thread = w.ThreadId;
-				a = new List<AToolbar>();
+				a = new List<AToolbar_old>();
 			}
 
-			public void AddTB(AToolbar tb)
+			public void AddTB(AToolbar_old tb)
 			{
 				a.Add(tb);
 				tb._ow = this;
@@ -81,20 +81,20 @@ namespace Au
 				return true;
 			}
 
-			public RECT GetCachedRect(AToolbar tb) => tb._followClientArea ? _clientRect : _rect;
+			public RECT GetCachedRect(AToolbar_old tb) => tb._followClientArea ? _clientRect : _rect;
 
-			public SIZE GetPrevSize(AToolbar tb) => tb._followClientArea ? _prevClientSize : _prevSize;
+			public SIZE GetPrevSize(AToolbar_old tb) => tb._followClientArea ? _prevClientSize : _prevSize;
 		}
 
 		class _OwnerControl
 		{
 			public readonly AWnd c;
-			public readonly ITBOwnerObject oo;
+			public readonly ITBOwnerObject_old oo;
 			public RECT cachedRect;
 			public SIZE prevSize;
 			bool _updatedOnce;
 
-			public _OwnerControl(AWnd control, ITBOwnerObject ioo)
+			public _OwnerControl(AWnd control, ITBOwnerObject_old ioo)
 			{
 				c = control;
 				oo = ioo;
@@ -128,14 +128,14 @@ namespace Au
 
 		class _OwnerScreen
 		{
-			public _OwnerScreen(AToolbar tb, AScreen screen)
+			public _OwnerScreen(AToolbar_old tb, AScreen screen)
 			{
 				_tb = tb;
 				_screen = (_isAuto = screen.IsEmpty) ? AScreen.Index(_tb._sett.screen) : screen.Now;
 				UpdateRect(out _);
 			}
 
-			AToolbar _tb;
+			AToolbar_old _tb;
 			AScreen _screen;
 			bool _isAuto;
 			public RECT cachedRect;
@@ -176,7 +176,7 @@ namespace Au
 
 		class _TBManager
 		{
-			internal readonly List<AToolbar> _atb = new List<AToolbar>();
+			internal readonly List<AToolbar_old> _atb = new List<AToolbar_old>();
 			readonly List<_OwnerWindow> _aow = new List<_OwnerWindow>();
 			ATimer _timer;
 			int _timerPeriod;
@@ -184,7 +184,7 @@ namespace Au
 			int _tempHook;
 			bool _inHook;
 
-			public void Add(AToolbar tb, AWnd w, AWnd c, ITBOwnerObject ioo)
+			public void Add(AToolbar_old tb, AWnd w, AWnd c, ITBOwnerObject_old ioo)
 			{
 				bool isOwned = !w.Is0;
 				if(isOwned) {
@@ -208,14 +208,14 @@ namespace Au
 					_timer = new ATimer(_Timer);
 				}
 
-				tb._hide = TBHide.Owner;
+				tb._hide = TBHide_old.Owner;
 				if(isOwned) {
 					_SetTimer(250);
 				} else {
 					if(!_timer.IsRunning) _SetTimer(250);
 					tb._FollowRect();
 					//tb._Zorder();
-					tb._SetVisible(true, TBHide.Owner);
+					tb._SetVisible(true, TBHide_old.Owner);
 				}
 			}
 
@@ -352,10 +352,10 @@ namespace Au
 						}
 						if(visible) visible = oc.UpdateRect(out changedRect); else changedRect = false;
 					}
-					bool changedVisible = visible == tb._hide.Has(TBHide.Owner);
+					bool changedVisible = visible == tb._hide.Has(TBHide_old.Owner);
 					if(visible && (changedRect || changedVisible)) tb._FollowRect(true); // || changedVisible is for new toolbars, but it's ok to call for old too
 					if(changedVisible) {
-						tb._SetVisible(visible, TBHide.Owner);
+						tb._SetVisible(visible, TBHide_old.Owner);
 						if(visible) tb._Zorder();
 					}
 				}
@@ -363,13 +363,13 @@ namespace Au
 				return true;
 			}
 
-			void _ManageFullScreen(AToolbar tb = null)
+			void _ManageFullScreen(AToolbar_old tb = null)
 			{
-				if(tb?.MiscFlags.Has(TBFlags.HideIfFullScreen) ?? _atb.Any(o => o.MiscFlags.Has(TBFlags.HideIfFullScreen))) {
+				if(tb?.MiscFlags.Has(TBFlags_old.HideIfFullScreen) ?? _atb.Any(o => o.MiscFlags.Has(TBFlags_old.HideIfFullScreen))) {
 					var w = AWnd.Active;
 					w.IsFullScreen_(out var screen);
 					if(tb != null) tb._ManageFullScreen(w, screen);
-					else foreach(var v in _atb) if(v.MiscFlags.Has(TBFlags.HideIfFullScreen)) v._ManageFullScreen(w, screen);
+					else foreach(var v in _atb) if(v.MiscFlags.Has(TBFlags_old.HideIfFullScreen)) v._ManageFullScreen(w, screen);
 				}
 			}
 		}
@@ -382,7 +382,7 @@ namespace Au
 			else if(IsOwned) hide = OwnerWindow == wFore;
 			else hide = AScreen.Of(_c, SODefault.Zero) == screen;
 
-			_SetVisible(!hide, TBHide.FullScreen);
+			_SetVisible(!hide, TBHide_old.FullScreen);
 		}
 
 		void _Zorder()
@@ -408,7 +408,7 @@ namespace Au
 		void _FollowRect(bool onFollowOwner = false)
 		{
 			if(_inMoveSize) return;
-			if(_anchor == TBAnchor.None && onFollowOwner && _followedOnce) return;
+			if(_anchor == TBAnchor_old.None && onFollowOwner && _followedOnce) return;
 
 			var (r, prevSize) = _GetCachedOwnerRect();
 			//AOutput.Write(r, _anchor, _xy, Size);
@@ -474,7 +474,7 @@ namespace Au
 
 			SIZE _GetMinSize()
 			{
-				int k = _border < TBBorder.ThreeD ? 1 : AWnd.More.BorderWidth(_c.Hwnd());
+				int k = _border < TBBorder_old.ThreeD ? 1 : AWnd.More.BorderWidth(_c.Hwnd());
 				k *= 2;
 				var ms = _c.MinimumSize;
 				return (Math.Max(k, ms.Width), Math.Max(k, ms.Height));
@@ -502,7 +502,7 @@ namespace Au
 		{
 			//AOutput.Write(x, y, cx, cy, swp); //tested: if SWP_NOMOVE or SWP_NOSIZE, here we receive current values
 			var (r, _) = _GetCachedOwnerRect();
-			if(_anchor == TBAnchor.None) {
+			if(_anchor == TBAnchor_old.None) {
 				_offsets.Left = x - r.left;
 				_offsets.Top = y - r.top;
 			} else {

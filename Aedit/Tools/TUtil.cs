@@ -194,7 +194,7 @@ namespace Au.Tools
 			public string CodeBefore, VarWindow = "w", VarControl = "c";
 
 			public string Format() {
-				if(!(NeedWindow || NeedControl)) return CodeBefore;
+				if (!(NeedWindow || NeedControl)) return CodeBefore;
 				var b = new StringBuilder(CodeBefore);
 				if (CodeBefore != null && !CodeBefore.Ends('\n')) b.AppendLine();
 
@@ -514,7 +514,7 @@ namespace Au.Tools
 			//FUTURE: #line
 			var b = new StringBuilder();
 			b.AppendLine(@"static object[] __TestFunc__() {");
-			if (activateWindow) b.Append("((AWnd)").Append(wnd.Window.Handle).Append(").ActivateLL(); 200.ms(); ");
+			if (activateWindow) b.Append("((AWnd)").Append(wnd.Window.Handle).Append(").ActivateL(); 200.ms(); ");
 			b.AppendLine("var _p_ = APerf.Create();");
 			var lines = code.Lines(true);
 			int lastLine = lines.Length - 1;
@@ -571,9 +571,9 @@ namespace Au.Tools
 				TUtil.ShowOsdRect(re);
 
 				//if dialog or its visible owners cover the found object, temporarily activate object's window
-				foreach (var ow in dialog.Get.OwnersAndThis(true)) {
+				foreach (var ow in dialog.Get.Owners(andThis: true, onlyVisible: true)) {
 					if (re.IntersectsWith(ow.Rect)) {
-						r.wnd.Window.ActivateLL();
+						r.wnd.Window.ActivateL();
 						ATime.SleepDoEvents(1500);
 						break;
 					}
@@ -585,7 +585,7 @@ namespace Au.Tools
 				ATimer.After(700, _ => lSpeed.Content = sTime);
 			}
 
-			dialog.ActivateLL();
+			dialog.ActivateL();
 
 			if (r.wnd != wnd && !r.wnd.Is0) {
 				ADialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),
@@ -643,7 +643,7 @@ namespace Au.Tools
 				_regexWindow ??= new RegexWindow();
 				if (_regexWindow.Hwnd.Is0) {
 					_regexWindow.ShowByRect(_control.Hwnd().Window, Dock.Bottom);
-				} else _regexWindow.Hwnd.ShowLL(true);
+				} else _regexWindow.Hwnd.ShowL(true);
 			}
 
 			/// <summary>
@@ -670,6 +670,29 @@ time ??:??
 **m(^^^) this^^^or this^^^or this
 ";
 		}
+
+		/// <summary>
+		/// Auto-creates and shows click-closed system-colored tooltip below element e.
+		/// </summary>
+		public static void InfoTooltip(ref KPopup p, UIElement e, string text, Dock side = Dock.Bottom) {
+			if (p == null) {
+				p = new(WS.POPUP | WS.BORDER, shadow: true) { Content = new Label(), ClickClose = KPopup.CC.Anywhere };
+				p.Border.Background = SystemColors.InfoBrush;
+			}
+			(p.Content as Label).Content = text;
+			p.ShowByRect(e, side);
+		}
+
+		///// <summary>
+		///// Auto-creates and shows tooltip below element e. The tooltip has system colors, not WPF colors.
+		///// </summary>
+		//public static void InfoTooltip(ref ToolTip tt, UIElement e, string text) {
+		//	tt ??= new ToolTip { StaysOpen = false, Placement = PlacementMode.Bottom, Background = SystemColors.InfoBrush, Foreground = SystemColors.InfoTextBrush };
+		//	tt.PlacementTarget = e;
+		//	tt.Content = text;
+		//	tt.IsOpen = false;
+		//	tt.IsOpen = true;
+		//}
 
 		#endregion
 	}

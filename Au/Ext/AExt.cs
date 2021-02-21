@@ -35,19 +35,45 @@ namespace Au
 		/// Converts to int with rounding.
 		/// Calls <see cref="Convert.ToInt32(double)"/>.
 		/// </summary>
+		/// <exception cref="OverflowException"></exception>
 		public static int ToInt(this double t) => Convert.ToInt32(t);
 
 		/// <summary>
 		/// Converts to int with rounding.
 		/// Calls <see cref="Convert.ToInt32(float)"/>.
 		/// </summary>
+		/// <exception cref="OverflowException"></exception>
 		public static int ToInt(this float t) => Convert.ToInt32(t);
 
 		/// <summary>
 		/// Converts to int with rounding.
 		/// Calls <see cref="Convert.ToInt32(decimal)"/>.
 		/// </summary>
+		/// <exception cref="OverflowException"></exception>
 		public static int ToInt(this decimal t) => Convert.ToInt32(t);
+
+		//rejected. Too simple, and nobody would find and use.
+		///// <summary>
+		///// Converts to int.
+		///// Can be used like <c>0xff123456.ToInt()</c> instead of <c>unchecked((int)0xff123456)</c>.
+		///// </summary>
+		//public static int ToInt(this uint t) => unchecked((int)t);
+
+		///// <summary>
+		///// Converts to System.Drawing.Color.
+		///// Can be used like <c>0xff123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
+		///// </summary>
+		///// <param name="t"></param>
+		///// <param name="makeOpaque">Add 0xff000000.</param>
+		//internal static System.Drawing.Color ToColor_(this uint t, bool makeOpaque = true)
+		//	=> System.Drawing.Color.FromArgb(unchecked((int)(t | (makeOpaque ? 0xff000000 : 0))));
+
+		/// <summary>
+		/// Converts to System.Drawing.Color. Makes opaque (alpha 0xff).
+		/// Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
+		/// </summary>
+		internal static System.Drawing.Color ToColor_(this int t)
+			=> System.Drawing.Color.FromArgb(unchecked(0xff << 24 | t));
 
 		/// <summary>
 		/// Converts double to string.
@@ -104,14 +130,15 @@ namespace Au
 		}
 		//cref not nint.ToString because DocFX does not support it.
 
-		/// <summary>
-		/// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
-		/// Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
-		/// </summary>
-		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		public static bool IsEmptyRect(this System.Drawing.Rectangle t) {
-			return t.Width <= 0 || t.Height <= 0;
-		}
+		//rare
+		///// <summary>
+		///// Returns true if t.Width &lt;= 0 || t.Height &lt;= 0.
+		///// Note: <b>Rectangle.IsEmpty</b> returns true only when all fields are 0.
+		///// </summary>
+		//[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		//public static bool NoArea(this System.Drawing.Rectangle t) {
+		//	return t.Width <= 0 || t.Height <= 0;
+		//}
 
 		/// <summary>
 		/// Calls <see cref="Range.GetOffsetAndLength"/> and returns start and end instead of start and length.

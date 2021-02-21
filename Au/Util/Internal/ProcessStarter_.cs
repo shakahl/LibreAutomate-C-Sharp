@@ -76,7 +76,7 @@ namespace Au.Util
 		/// <param name="pi">Receives CreateProcessX results. Will need to close handles in pi, eg pi.Dispose.</param>
 		/// <param name="inheritUiaccess">If this process has UAC integrity level uiAccess, let the new process inherit it.</param>
 		/// <param name="inheritHandles">API parameter <i>bInheritHandles</i>.</param>
-		public bool StartLL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
+		public bool StartL(out Api.PROCESS_INFORMATION pi, bool inheritUiaccess = false, bool inheritHandles = false)
 		{
 			if(inheritUiaccess && Api.OpenProcessToken(AProcess.ProcessHandle, Api.TOKEN_QUERY | Api.TOKEN_DUPLICATE | Api.TOKEN_ASSIGN_PRIMARY, out Handle_ hToken)) {
 				using(hToken) return Api.CreateProcessAsUser(hToken, null, cl, null, null, inheritHandles, flags, envVar, curDir, si, out pi);
@@ -95,7 +95,7 @@ namespace Au.Util
 		{
 			bool suspended = need == Result.Need.NetProcess && !_NetProcessObject.IsFast, resetSuspendedFlag = false;
 			if(suspended && 0 == (flags & Api.CREATE_SUSPENDED)) { flags |= Api.CREATE_SUSPENDED; resetSuspendedFlag = true; }
-			bool ok = StartLL(out var pi, inheritUiaccess);
+			bool ok = StartL(out var pi, inheritUiaccess);
 			if(resetSuspendedFlag) flags &= ~Api.CREATE_SUSPENDED;
 			if(!ok) throw new AuException(0, $"*start process '{_exe}'");
 			return new Result(pi, need, suspended);

@@ -933,12 +933,9 @@ namespace Au.Controls
 				case Key.Escape: EndEditLabel(true); break;
 				}
 			};
-			_lePopup = new Popup { Child = _leTB, PlacementRectangle = r, Placement = PlacementMode.Absolute, StaysOpen = false, PlacementTarget = this };
-			//DPI info:
-			//	PlacementRectangle is physical, but the offset properties are logical.
-			//	Without PlacementTarget wrong DPI in non-primary screen. With PlacementTarget does not restore focus when closed.
-			_lePopup.Closed += (_, _) => EndEditLabel();
-			_lePopup.IsOpen = true;
+			_lePopup = new(WS.POPUP) { Content = _leTB, ClickClose = KPopup.CC.Outside, WpfSizeToContent = true };
+			_lePopup.Hidden += (_, _) => EndEditLabel();
+			_lePopup.ShowByRect(this, null, r);
 			_leTB.Focus();
 
 			//		ATimer.After(1000,_=>Visibility=Visibility.Collapsed);
@@ -949,7 +946,7 @@ namespace Au.Controls
 			//		ATimer.After(1000,_=>ItemsRoot=null);
 		}
 
-		Popup _lePopup;
+		KPopup _lePopup;
 		TextBox _leTB;
 		ITreeViewItem _leItem;
 		Action<bool> _leEnded;
@@ -967,7 +964,7 @@ namespace Au.Controls
 			var item = _leItem; _leItem = null;
 			var p = _lePopup; _lePopup = null;
 			var ended = _leEnded; _leEnded = null;
-			p.IsOpen = false;
+			p.Close();
 			if (focus) Focus();
 			if (!cancel && text != item.DisplayText) {
 				int meas = _avi[index].measured;

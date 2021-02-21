@@ -20,6 +20,7 @@ using Au.Types;
 using Au.Util;
 using Au.Controls;
 using static Au.Controls.Sci;
+using System.Windows.Input;
 
 class PanelEdit : Grid
 {
@@ -132,6 +133,8 @@ class PanelEdit : Grid
 			doc = ZGetOpenDocOf(f);
 			if (doc == null) return;
 		}
+		Children.Remove(doc);
+		if (doc.IsFocused) App.Wmain.Focus();
 		//CodeInfo.FileClosed(doc);
 		doc.Dispose();
 		_docs.Remove(doc);
@@ -145,7 +148,11 @@ class PanelEdit : Grid
 		if (saveTextIfNeed) App.Model.Save.TextNowIfNeed();
 		_activeDoc = null;
 		ZActiveDocChanged?.Invoke();
-		foreach (var doc in _docs) doc.Dispose();
+		foreach (var doc in _docs) {
+			Children.Remove(doc);
+			if (doc.IsFocused) App.Wmain.Focus();
+			doc.Dispose();
+		}
 		_docs.Clear();
 		_UpdateUI_IsOpen();
 	}

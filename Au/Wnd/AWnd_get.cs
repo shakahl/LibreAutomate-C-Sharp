@@ -128,11 +128,10 @@ namespace Au
 			/// </remarks>
 			public AWnd SiblingBelow(int distance, int xOffset = 5, bool topChild = false) => _w._SiblingXY(_SibXY.Below, distance, xOffset, topChild);
 
-			AWnd _GetWindow(int dir, int skip)
-			{
-				if(skip < 0) return default;
+			AWnd _GetWindow(int dir, int skip) {
+				if (skip < 0) return default;
 				AWnd w;
-				for(w = _w; skip >= 0 && !w.Is0; skip--) {
+				for (w = _w; skip >= 0 && !w.Is0; skip--) {
 					w = Api.GetWindow(w, dir);
 				}
 				return w;
@@ -213,11 +212,10 @@ namespace Au
 			/// Calls API <msdn>GetWindow</msdn>.
 			/// Supports <see cref="ALastError"/>.
 			/// </remarks>
-			public AWnd Child(int index)
-			{
-				if(index < 0) return default;
+			public AWnd Child(int index) {
+				if (index < 0) return default;
 				AWnd c = Api.GetWindow(_w, Api.GW_CHILD);
-				for(; index > 0 && !c.Is0; index--) c = Api.GetWindow(c, Api.GW_HWNDNEXT);
+				for (; index > 0 && !c.Is0; index--) c = Api.GetWindow(c, Api.GW_HWNDNEXT);
 				return c;
 			}
 
@@ -256,18 +254,18 @@ namespace Au
 				get {
 #if true
 					var p = _w.GetWindowLong(Native.GWL.HWNDPARENT);
-					if(p == default) {
-//#if DEBUG
-//						var p2 = Api.GetAncestor(_w, Api.GA_PARENT);
-//						Debug.Assert(p2.Is0 || p2 == Root);
-//#endif
+					if (p == default) {
+						//#if DEBUG
+						//						var p2 = Api.GetAncestor(_w, Api.GA_PARENT);
+						//						Debug.Assert(p2.Is0 || p2 == Root);
+						//#endif
 						return default;
 					}
 					ALastError.Clear();
 					var o = Api.GetWindow(_w, Api.GW_OWNER);
-					if(o.Is0) {
+					if (o.Is0) {
 						var ec = ALastError.Code;
-						if(ec == 0) return (AWnd)p;
+						if (ec == 0) return (AWnd)p;
 						Debug.Assert(ec == Api.ERROR_INVALID_WINDOW_HANDLE);
 					}
 					return default;
@@ -298,13 +296,12 @@ namespace Au
 			/// Calls API <msdn>GetWindow</msdn>(GW_ENABLEDPOPUP).
 			/// Supports <see cref="ALastError"/>.
 			/// </remarks>
-			public AWnd EnabledOwned(bool orThis)
-			{
+			public AWnd EnabledOwned(bool orThis) {
 				var r = Api.GetWindow(_w, Api.GW_ENABLEDPOPUP);
-				if(orThis) {
-					if(r.Is0) r = _w;
+				if (orThis) {
+					if (r.Is0) r = _w;
 				} else {
-					if(r == _w) r = default;
+					if (r == _w) r = default;
 				}
 				return r;
 				//MSDN documentation is incorrect. It says returns this window if there are no owned. But returns 0.
@@ -318,13 +315,12 @@ namespace Au
 			/// <remarks>
 			/// Supports <see cref="ALastError"/>.
 			/// </remarks>
-			public AWnd LastActiveOwnedOrThis(bool includeOwners = false)
-			{
+			public AWnd LastActiveOwnedOrThis(bool includeOwners = false) {
 				var wRoot = RootOwnerOrThis(); //always use the root owner because GetLastActivePopup always returns _w if _w is owned
 				var R = Api.GetLastActivePopup(wRoot);
-				if(!includeOwners) {
-					if(R != _w && wRoot != _w && !R.Is0) {
-						for(var t = _w; !t.Is0; t = t.OwnerWindow) if(t == R) return _w;
+				if (!includeOwners) {
+					if (R != _w && wRoot != _w && !R.Is0) {
+						for (var t = _w; !t.Is0; t = t.OwnerWindow) if (t == R) return _w;
 					}
 				}
 				return R;
@@ -337,37 +333,37 @@ namespace Au
 			/// </summary>
 			/// <param name="supportControls">If this is a child window, use its top-level parent window instead.</param>
 			/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-			public AWnd RootOwnerOrThis(bool supportControls = false)
-			{
+			public AWnd RootOwnerOrThis(bool supportControls = false) {
 				//return Api.GetAncestor(_w, Api.GA_ROOTOWNER); //slow, and can return Get.Root, eg for combolbox
 
-				if(supportControls) {
+				if (supportControls) {
 					var r = Api.GetAncestor(_w, Api.GA_ROOTOWNER);
 					return r == Root ? _w : r;
 					//never mind speed, better make it simple
 				} else { //fast
-					for(AWnd r = _w, t; ; r = t) {
+					for (AWnd r = _w, t; ; r = t) {
 						t = r.OwnerWindow;
-						if(t.Is0) return r.IsAlive ? r : default;
+						if (t.Is0) return r.IsAlive ? r : default;
 					}
 				}
 			}
 
 			/// <summary>
-			/// Gets all owner windows of this window, including this window or its top-level parent.
-			/// Returns array that starts with this window or its top-level parent (if control).
+			/// Gets all owner windows (owner, its owner and so on) of this window, optionally including this window or its top-level parent.
 			/// </summary>
+			/// <param name="andThis">Add this window (or its top-level parent if control) as the first list element.</param>
 			/// <param name="onlyVisible">Skip invisible windows.</param>
 			/// <remarks>
-			/// This window can be top-level window or control. If control, its top-level parent window will be the first in the array.
+			/// This window can be top-level window or control.
 			/// This function for example can be used to temporarily hide a tool window and its owners when capturing something from the screen.
 			/// </remarks>
-			public AWnd[] OwnersAndThis(bool onlyVisible = false)
-			{
+			public List<AWnd> Owners(bool andThis, bool onlyVisible = false) {
 				var a = new List<AWnd>();
-				for(var w = Window; !w.Is0 && w != Root; w = w.Get.Owner)
-					if(!onlyVisible || w.IsVisible) a.Add(w);
-				return a.ToArray();
+				for (var w = Window; !w.Is0 && w != Root; w = w.Get.Owner) {
+					if (!andThis) { andThis = true; continue; }
+					if (!onlyVisible || w.IsVisible) a.Add(w);
+				}
+				return a;
 			}
 
 			#endregion
@@ -429,11 +425,10 @@ namespace Au
 			/// This function is not very reliable. May stop working on a new Windows version or don't work with a custom shell.
 			/// Fails if there is no shell process, for example Explorer process killed/crashed and still not restarted, or if using a custom shell that does not register a shell window.
 			/// </remarks>
-			public static bool Desktop(out AWnd window, out AWnd control)
-			{
+			public static bool Desktop(out AWnd window, out AWnd control) {
 				AWnd w = ShellWindow;
 				var f = new ChildFinder(cn: "SysListView32");
-				if(!f.Find(w)) w = AWnd.Find(null, "WorkerW", WOwner.Thread(w.ThreadId), also: t => f.Find(t));
+				if (!f.Find(w)) w = AWnd.Find(null, "WorkerW", WOwner.Thread(w.ThreadId), also: t => f.Find(t));
 				window = w;
 				control = f.Result;
 				return !w.Is0;
@@ -463,32 +458,31 @@ namespace Au
 			/// <param name="w"></param>
 			/// <param name="allDesktops">On Windows 10 include (return true for) windows on all virtual desktops. On Windows 8 include Windows Store apps if possible; read more: <see cref="AllWindows(bool, bool)"/>.</param>
 			/// <param name="skipMinimized">Return false if w is minimized.</param>
-			public static bool IsMainWindow(AWnd w, bool allDesktops = false, bool skipMinimized = false)
-			{
-				if(!w.IsVisible) return false;
+			public static bool IsMainWindow(AWnd w, bool allDesktops = false, bool skipMinimized = false) {
+				if (!w.IsVisible) return false;
 
 				var exStyle = w.ExStyle;
-				if((exStyle & WS2.APPWINDOW) == 0) {
-					if((exStyle & (WS2.TOOLWINDOW | WS2.NOACTIVATE)) != 0) return false;
-					if(!w.OwnerWindow.Is0) return false;
+				if ((exStyle & WS2.APPWINDOW) == 0) {
+					if ((exStyle & (WS2.TOOLWINDOW | WS2.NOACTIVATE)) != 0) return false;
+					if (!w.OwnerWindow.Is0) return false;
 				}
 
-				if(skipMinimized && w.IsMinimized) return false;
+				if (skipMinimized && w.IsMinimized) return false;
 
-				if(AVersion.MinWin10) {
-					if(w.IsCloaked) {
-						if(!allDesktops) return false;
-						if((exStyle & WS2.NOREDIRECTIONBITMAP) != 0) { //probably a store app
-							switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
+				if (AVersion.MinWin10) {
+					if (w.IsCloaked) {
+						if (!allDesktops) return false;
+						if ((exStyle & WS2.NOREDIRECTIONBITMAP) != 0) { //probably a store app
+							switch (w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 							case 1: return false; //Windows search, experience host, etc. Also app windows that normally would sit on ApplicationFrameWindow windows.
-							case 2: if(_WindowsStoreAppFrameChild(w).Is0) return false; break; //skip hosts
+							case 2: if (_WindowsStoreAppFrameChild(w).Is0) return false; break; //skip hosts
 							}
 						}
 					}
-				} else if(AVersion.MinWin8) {
-					if((exStyle & WS2.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
-						if(!allDesktops && (exStyle & WS2.TOPMOST) != 0) return false; //skip store apps
-						if(ShellWindow.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
+				} else if (AVersion.MinWin8) {
+					if ((exStyle & WS2.NOREDIRECTIONBITMAP) != 0 && !w.HasStyle(WS.CAPTION)) {
+						if (!allDesktops && (exStyle & WS2.TOPMOST) != 0) return false; //skip store apps
+						if (ShellWindow.GetThreadProcessId(out var pidShell) != 0 && w.GetThreadProcessId(out var pid) != 0 && pid == pidShell) return false; //skip captionless shell windows
 					}
 					//On Win8 impossible to get next window like Alt+Tab.
 					//	All store apps are topmost, covering non-topmost desktop windows.
@@ -508,11 +502,10 @@ namespace Au
 			/// Uses <see cref="IsMainWindow"/>.
 			/// Does not match the order of buttons in the Windows taskbar.
 			/// </remarks>
-			public static AWnd[] MainWindows(bool allDesktops = false)
-			{
+			public static AWnd[] MainWindows(bool allDesktops = false) {
 				var a = new List<AWnd>();
-				foreach(var w in AllWindows(onlyVisible: true)) {
-					if(IsMainWindow(w, allDesktops: allDesktops)) a.Add(w);
+				foreach (var w in AllWindows(onlyVisible: true)) {
+					if (IsMainWindow(w, allDesktops: allDesktops)) a.Add(w);
 				}
 				return a.ToArray();
 
@@ -537,17 +530,16 @@ namespace Au
 			/// Uses <see cref="IsMainWindow"/>.
 			/// This function is quite slow. Does not match the order of buttons in the Windows taskbar.
 			/// </remarks>
-			public static AWnd NextMain(AWnd w = default, bool allDesktops = false, bool skipMinimized = false, bool retryFromTop = false)
-			{
-				if(w.Is0) retryFromTop = false;
+			public static AWnd NextMain(AWnd w = default, bool allDesktops = false, bool skipMinimized = false, bool retryFromTop = false) {
+				if (w.Is0) retryFromTop = false;
 
-				for(; ; ) {
+				for (; ; ) {
 					w = w.Is0 ? GetWnd.Top : w.Get.Next();
-					if(w.Is0) {
-						if(retryFromTop) { retryFromTop = false; continue; }
+					if (w.Is0) {
+						if (retryFromTop) { retryFromTop = false; continue; }
 						return default;
 					}
-					if(IsMainWindow(w, allDesktops: allDesktops, skipMinimized: skipMinimized)) return w;
+					if (IsMainWindow(w, allDesktops: allDesktops, skipMinimized: skipMinimized)) return w;
 				}
 			}
 		}
@@ -560,21 +552,20 @@ namespace Au
 		/// Uses <see cref="GetWnd.NextMain"/>, <see cref="GetWnd.LastActiveOwnedOrThis"/>, <see cref="Activate()"/>.
 		/// An alternative way - send Alt+Tab keys, but it works not everywhere.
 		/// </remarks>
-		public static bool SwitchActiveWindow()
-		{
+		public static bool SwitchActiveWindow() {
 			try {
 				AWnd wActive = Active, wRO = wActive.Get.RootOwnerOrThis();
 				AWnd wMain = GetWnd.NextMain(wRO, skipMinimized: true, retryFromTop: true);
-				if(!wMain.Is0 && wMain != wActive && wMain != wRO) {
+				if (!wMain.Is0 && wMain != wActive && wMain != wRO) {
 					var wMainOrOwned = wMain.Get.LastActiveOwnedOrThis();
-					if(!wMainOrOwned.Is0) {
+					if (!wMainOrOwned.Is0) {
 						//AOutput.Write(wMainOrOwned);
 						wMainOrOwned.Activate();
 						return true;
 					}
 				}
 			}
-			catch(AuWndException) { }
+			catch (AuWndException) { }
 			return false;
 
 			//notes:
@@ -607,7 +598,7 @@ namespace Au
 			get => Api.GetWindow(this, Api.GW_OWNER);
 			set {
 				SetWindowLong(Native.GWL.HWNDPARENT, (LPARAM)value);
-				if(!value.Is0) {
+				if (!value.Is0) {
 					bool tm = value.IsTopmost;
 					if (tm != IsTopmost) { if (tm) ZorderTopmost(); else ZorderNoTopmost(); }
 					if (!ZorderIsAbove(value)) ZorderAbove(value);
@@ -623,7 +614,7 @@ namespace Au
 		public AWnd Window {
 			get {
 				var w = Api.GetAncestor(this, Api.GA_ROOT);
-				if(w.Is0 && this == GetWnd.Root) w = this;
+				if (w.Is0 && this == GetWnd.Root) w = this;
 				return w;
 			}
 		}
@@ -672,7 +663,7 @@ namespace Au
 		/// </summary>
 		internal bool IsActiveOrNoActiveAndThisIsWndRoot_ {
 			get {
-				if(Is0) return false;
+				if (Is0) return false;
 				var f = Api.GetForegroundWindow();
 				return this == (f.Is0 ? GetWnd.Root : f);
 			}

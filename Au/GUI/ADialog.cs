@@ -18,6 +18,8 @@ using Au.Util;
 #pragma warning disable 649 //unused fields in API structs
 
 //FUTURE: ShowCheckList
+//TODO: by default should show dialog in screen of mouse.
+//	It's better, and many dialogs do it. Eg Explorer's Properties even is at mouse position (dialog's top-left corner).
 
 namespace Au
 {
@@ -952,7 +954,7 @@ namespace Au
 				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002);
 
 				//fix API bug: dialog window is hidden if process STARTUPINFO specifies hidden window
-				ATimer.After(1, _ => _dlg.ShowLL(true)); //use timer because at this time still invisible always
+				ATimer.After(1, _ => _dlg.ShowL(true)); //use timer because at this time still invisible always
 
 				e = Created;
 				break;
@@ -1196,8 +1198,8 @@ namespace Au
 			if (_editWnd.Is0) return;
 			if (!onlyZorder) {
 				_EditControlGetPlace(out RECT r);
-				_editParent.MoveLL(r);
-				_editWnd.MoveLL(0, 0, r.Width, r.Height);
+				_editParent.MoveL(r);
+				_editWnd.MoveL(0, 0, r.Width, r.Height);
 			}
 			_editParent.ZorderTop();
 		}
@@ -1233,7 +1235,7 @@ namespace Au
 				r.top = r.bottom - (_editFont.HeightOnScreen + 8);
 			}
 
-			prog.ShowLL(false);
+			prog.ShowL(false);
 			return parent;
 		}
 		int _editMultilineHeight;
@@ -1268,7 +1270,7 @@ namespace Au
 					foreach (var s in _controls.ComboboxValues) _editWnd.SendS(Api.CB_INSERTSTRING, -1, s);
 				}
 				RECT cbr = _editWnd.Rect;
-				_editParent.ResizeLL(cbr.Width, cbr.Height); //because ComboBox resizes itself
+				_editParent.ResizeL(cbr.Width, cbr.Height); //because ComboBox resizes itself
 			} else {
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}

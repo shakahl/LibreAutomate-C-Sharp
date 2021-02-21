@@ -137,12 +137,12 @@ namespace Au
 		{
 			if(_area.Type == WIArea.AreaType.Bitmap) throw new InvalidOperationException();
 
-			Debug.Assert(!Rect.IsEmpty);
-			if(Rect.IsEmpty) return;
+			Debug.Assert(!Rect.NoArea);
+			if(Rect.NoArea) return;
 
 			//rejected: Click will activate it. Don't activate if just Move.
 			//if(0 != (_f._flags & WIFlags.WindowDC)) {
-			//	if(_area.W.IsCloaked) _area.W.ActivateLL();
+			//	if(_area.W.IsCloaked) _area.W.ActivateL();
 			//}
 
 			var p = Coord.NormalizeInRect(x, y, Rect, centerIfEmpty: true);
@@ -556,7 +556,7 @@ namespace Au
 					x -= r.left; y -= r.top;
 					_resultOffset.x -= x; _resultOffset.y -= y;
 				}
-				if(r.IsEmpty) return false; //never mind: if WaitChanged and this is the first time, immediately returns 'changed'
+				if(r.NoArea) return false; //never mind: if WaitChanged and this is the first time, immediately returns 'changed'
 
 				//If WaitChanged, first time just get area pixels into _images[0].
 				if(_action == _Action.WaitChanged && _images.Count == 0) {

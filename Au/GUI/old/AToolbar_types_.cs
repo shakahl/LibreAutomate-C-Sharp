@@ -14,14 +14,59 @@ using System.Drawing;
 using System.Linq;
 
 using Au.Types;
+using Au.Util;
+
+namespace Au
+{
+	public partial class AToolbar_old
+	{
+		class _Settings : ASettings
+		{
+			public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
+
+			public TBBorder_old border { get => _border; set => Set(ref _border, value); }
+			TBBorder_old _border = TBBorder_old.Width2;
+
+			public int borderColor { get => _borderColor; set => Set(ref _borderColor, value); }
+			int _borderColor; //not ColorInt because in JSON it is saved as struct
+
+			public TBLayout_old layout { get => _layout; set => Set(ref _layout, value); }
+			TBLayout_old _layout = TBLayout_old.Flow;
+
+			public TBAnchor_old anchor { get => _anchor; set => Set(ref _anchor, value); }
+			TBAnchor_old _anchor = TBAnchor_old.TopLeft;
+
+			public TBOffsets_old offsets { get => _location; set => Set(ref _location, value); }
+			TBOffsets_old _location; // = new TBOffsets(150, 5, 7, 7);
+
+			public bool sizable { get => _sizable; set => Set(ref _sizable, value); }
+			bool _sizable = true;
+
+			public SIZE size { get => _size; set => Set(ref _size, value); }
+			SIZE _size = (150, 26);
+
+			public bool autoSize { get => _autoSize; set => Set(ref _autoSize, value); }
+			bool _autoSize;
+
+			public int wrapWidth { get => _wrapWidth; set => Set(ref _wrapWidth, value); }
+			int _wrapWidth;
+
+			public int screen { get => _screen; set => Set(ref _screen, value); }
+			int _screen;
+
+			public TBFlags_old miscFlags { get => _miscFlags; set => Set(ref _miscFlags, value); }
+			TBFlags_old _miscFlags;
+		}
+	}
+}
 
 namespace Au.Types
 {
 	/// <summary>
-	/// Used with <see cref="AToolbar.MiscFlags"/>.
+	/// Used with <see cref="AToolbar_old.MiscFlags"/>.
 	/// </summary>
 	[Flags]
-	public enum TBFlags
+	public enum TBFlags_old
 	{
 		/// <summary>
 		/// Don't activate the owner window when the toolbar clicked.
@@ -35,9 +80,9 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Border"/>.
+	/// Used with <see cref="AToolbar_old.Border"/>.
 	/// </summary>
-	public enum TBBorder
+	public enum TBBorder_old
 	{
 		//note: don't reorder.
 
@@ -70,9 +115,9 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Anchor"/>.
+	/// Used with <see cref="AToolbar_old.Anchor"/>.
 	/// </summary>
-	public enum TBAnchor
+	public enum TBAnchor_old
 	{
 		/// <summary>
 		/// Don't move the toolbar together with its owner.
@@ -129,64 +174,64 @@ namespace Au.Types
 		/// <summary>
 		/// Use owner's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
 		/// This flag is for toolbars that normally are outside of the owner rectangle (at the left or right).
-		/// This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
+		/// This flag cannot be used with <b>TopLR</b>, <b>BottomLR</b>, <b>All</b>.
 		/// </summary>
 		OppositeEdgeX = 32,
 
 		/// <summary>
 		/// Use owner's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
 		/// This flag is for toolbars that normally are outside of the owner rectangle (above or below).
-		/// This flag can be used with TopLeft, TopRight, BottomLeft or BottomRight.
+		/// This flag cannot be used with <b>LeftTB</b>, <b>RightTB</b>, <b>All</b>.
 		/// </summary>
 		OppositeEdgeY = 64,
 	}
 
-	static partial class TBExt_
+	static partial class TBExt_old_
 	{
-		internal static bool HasTop(this TBAnchor a) => 0 != ((int)a & 1);
-		internal static bool HasBottom(this TBAnchor a) => 0 != ((int)a & 2);
-		internal static bool HasLeft(this TBAnchor a) => 0 != ((int)a & 4);
-		internal static bool HasRight(this TBAnchor a) => 0 != ((int)a & 8);
-		internal static bool OppositeX(this TBAnchor a) => 0 != ((int)a & 32);
-		internal static bool OppositeY(this TBAnchor a) => 0 != ((int)a & 64);
-		internal static TBAnchor WithoutFlags(this TBAnchor a) => a & TBAnchor.All;
+		internal static bool HasTop(this TBAnchor_old a) => 0 != ((int)a & 1);
+		internal static bool HasBottom(this TBAnchor_old a) => 0 != ((int)a & 2);
+		internal static bool HasLeft(this TBAnchor_old a) => 0 != ((int)a & 4);
+		internal static bool HasRight(this TBAnchor_old a) => 0 != ((int)a & 8);
+		internal static bool OppositeX(this TBAnchor_old a) => 0 != ((int)a & 32);
+		internal static bool OppositeY(this TBAnchor_old a) => 0 != ((int)a & 64);
+		internal static TBAnchor_old WithoutFlags(this TBAnchor_old a) => a & TBAnchor_old.All;
 	}
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Offsets"/>.
+	/// Used with <see cref="AToolbar_old.Offsets"/>.
 	/// </summary>
-	public struct TBOffsets : IEquatable<TBOffsets>
+	public struct TBOffsets_old : IEquatable<TBOffsets_old>
 	{
 		/// <summary>
-		/// Horizontal distance from the owner's left edge (right if <see cref="TBAnchor.OppositeEdgeX"/>) to the toolbar's left edge.
+		/// Horizontal distance from the owner's left edge (right if <see cref="TBAnchor_old.OppositeEdgeX"/>) to the toolbar's left edge.
 		/// </summary>
 		public int Left { get; set; }
 
 		/// <summary>
-		/// Vertical distance from the owner's top edge (bottom if <see cref="TBAnchor.OppositeEdgeY"/>) to the toolbar's top edge.
+		/// Vertical distance from the owner's top edge (bottom if <see cref="TBAnchor_old.OppositeEdgeY"/>) to the toolbar's top edge.
 		/// </summary>
 		public int Top { get; set; }
 
 		/// <summary>
-		/// Horizontal distance from the toolbar's right edge to the owner's right edge (left if <see cref="TBAnchor.OppositeEdgeX"/>).
+		/// Horizontal distance from the toolbar's right edge to the owner's right edge (left if <see cref="TBAnchor_old.OppositeEdgeX"/>).
 		/// </summary>
 		public int Right { get; set; }
 
 		/// <summary>
-		/// Vertical distance from the toolbar's bottom edge to the owner's bottom edge (top if <see cref="TBAnchor.OppositeEdgeY"/>).
+		/// Vertical distance from the toolbar's bottom edge to the owner's bottom edge (top if <see cref="TBAnchor_old.OppositeEdgeY"/>).
 		/// </summary>
 		public int Bottom { get; set; }
 
 		/// <summary>
 		/// Sets all properties.
 		/// </summary>
-		public TBOffsets(int left, int top, int right, int bottom)
+		public TBOffsets_old(int left, int top, int right, int bottom)
 		{
 			Left = left; Top = top; Right = right; Bottom = bottom;
 		}
 
 		///
-		public bool Equals(TBOffsets other)
+		public bool Equals(TBOffsets_old other)
 			=> other.Left == this.Left && other.Top == this.Top && other.Right == this.Right && other.Bottom == this.Bottom;
 
 		///
@@ -194,9 +239,9 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// See <see cref="AToolbar.Layout"/>.
+	/// See <see cref="AToolbar_old.Layout"/>.
 	/// </summary>
-	public enum TBLayout
+	public enum TBLayout_old
 	{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		Flow = (int)ToolStripLayoutStyle.Flow,
@@ -210,15 +255,15 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Reasons to hide a toolbar. Used with <see cref="AToolbar.Hide"/>.
+	/// Reasons to hide a toolbar. Used with <see cref="AToolbar_old.Hide"/>.
 	/// </summary>
 	[Flags]
-	public enum TBHide
+	public enum TBHide_old
 	{
 		/// <summary>Owner window is hidden, minimized, etc.</summary>
 		Owner = 1,
 
-		/// <summary>A full-screen window is active, and there is flag <see cref="TBFlags.HideIfFullScreen"/>.</summary>
+		/// <summary>A full-screen window is active, and there is flag <see cref="TBFlags_old.HideIfFullScreen"/>.</summary>
 		FullScreen = 2,
 
 		//Satellite = 128, //no, _SetVisible and this enum aren't used with satellites
@@ -228,10 +273,10 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// See <see cref="AToolbar.NoMenu"/>.
+	/// See <see cref="AToolbar_old.NoMenu"/>.
 	/// </summary>
 	[Flags]
-	public enum TBNoMenu
+	public enum TBNoMenu_old
 	{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member
 		Menu = 1,
@@ -248,10 +293,10 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Flags for <see cref="AToolbar"/> constructor.
+	/// Flags for <see cref="AToolbar_old"/> constructor.
 	/// </summary>
 	[Flags]
-	public enum TBCtor
+	public enum TBCtor_old
 	{
 		/// <summary>
 		/// Don't load saved settings. Delete the settings file of the toolbar, if exists.
@@ -286,14 +331,14 @@ namespace Au.Types
 	//And remove all flags/ctorFlags parameters.
 
 	/// <summary>
-	/// Used with <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
+	/// Used with <see cref="AToolbar.Show(AWnd, ITBOwnerObject_old)"/>.
 	/// </summary>
 	/// <remarks>
 	/// Allows a toolbar to follow an object in the owner window, for example an accessible object or image. Or to hide in certain conditions.
-	/// Define a class that implements this interface. Create a variable of that class and pass it to <see cref="AToolbar.Show(AWnd, ITBOwnerObject)"/>.
+	/// Define a class that implements this interface. Create a variable of that class and pass it to <see cref="AToolbar.Show(AWnd, ITBOwnerObject_old)"/>.
 	/// The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
 	/// </remarks>
-	public interface ITBOwnerObject
+	public interface ITBOwnerObject_old
 	{
 		/// <summary>
 		/// Returns false to close the toolbar.
@@ -325,16 +370,16 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Horizontal separator for <b>ToolStrip</b> controls. With or without a text label. See <see cref="AToolbar.Group"/>.
+	/// Horizontal separator for <b>ToolStrip</b> controls. With or without a text label. See <see cref="AToolbar_old.Group"/>.
 	/// </summary>
-	public class TBGroupSeparator : ToolStripSeparator
+	public class TBGroupSeparator_old : ToolStripSeparator
 	{
 		/// <summary>
 		/// Adds horizontal separator to the toolstrip.
 		/// </summary>
 		/// <param name="ts">Parent control.</param>
 		/// <param name="name">Optional label.</param>
-		public TBGroupSeparator(ToolStrip ts, string name = null)
+		public TBGroupSeparator_old(ToolStrip ts, string name = null)
 		{
 			switch(ts.LayoutStyle) {
 			case ToolStripLayoutStyle.HorizontalStackWithOverflow:
@@ -394,17 +439,17 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Renderer used by <see cref="AToolbar"/>. Based on <see cref="ToolStripSystemRenderer"/>. Draws groups etc.
+	/// Renderer used by <see cref="AToolbar_old"/>. Based on <see cref="ToolStripSystemRenderer"/>. Draws groups etc.
 	/// If you want to replace a toolbar's renderer with a custom renderer, use this class as the base class of your renderer class.
 	/// </summary>
 #if SYSTEM_RENDERER
 	public class TBRenderer : ToolStripSystemRenderer
 	{
 #else
-	public class TBRenderer : ToolStripProfessionalRenderer
+	public class TBRenderer_old : ToolStripProfessionalRenderer
 	{
 		///
-		public TBRenderer() : base(new _ColorTable())
+		public TBRenderer_old() : base(new _ColorTable())
 		{
 			RoundedEdges = false;
 			//if(!Debugger.IsAttached) Debugger.Launch();
@@ -447,7 +492,7 @@ namespace Au.Types
 			var g = e.Graphics;
 			var crf = g.ClipBounds; //RectangleF
 			var clipRect = new Rectangle((int)crf.X, (int)crf.Y, (int)crf.Width, (int)crf.Height);
-			foreach(var k in ts.Items.OfType<TBGroupSeparator>()) {
+			foreach(var k in ts.Items.OfType<TBGroupSeparator_old>()) {
 				if(!k.Bounds.IntersectsWith(clipRect)) continue;
 				//draw line
 				Color foreColor = k.ForeColor, backColor = k.BackColor;
@@ -469,7 +514,7 @@ namespace Au.Types
 		///
 		protected override void OnRenderSeparator(ToolStripSeparatorRenderEventArgs e)
 		{
-			if(e.Item is TBGroupSeparator) return;
+			if(e.Item is TBGroupSeparator_old) return;
 			base.OnRenderSeparator(e);
 		}
 	}

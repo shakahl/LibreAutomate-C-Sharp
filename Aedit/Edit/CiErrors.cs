@@ -145,17 +145,16 @@ class CiErrors
 		_stringErrors.Clear();
 	}
 
-	public bool SciMouseDwellStarted(SciCode doc, int pos8) {
-		if (_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return false;
-		if (pos8 < 0) return false;
+	public System.Windows.Documents.Section GetPopupTextAt(SciCode doc, int pos8, int pos16, out Action<CiPopupText, string> onLinkClick) {
+		onLinkClick = null;
+		if (_codeDiag == null && _metaErrors.Count == 0 && _stringErrors.Count == 0) return null;
+		if (pos8 < 0) return null;
 		int all = doc.Call(Au.Controls.Sci.SCI_INDICATORALLONFOR, pos8);
 		//AOutput.Write(all);
-		if (0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return false;
-		int pos16 = doc.Pos16(pos8);
+		if (0 == (all & ((1 << SciCode.c_indicError) | (1 << SciCode.c_indicWarning) | (1 << SciCode.c_indicInfo) | (1 << SciCode.c_indicDiagHidden)))) return null;
 
-		var x = new CiXaml();
+		var x = new CiText();
 		x.StartParagraph();
-		x.LineBreakIfLonger = x.SB.Length;
 
 		ErrorCode ecPrev = 0;
 		int implPos = -1; bool implInterface = false;
@@ -164,7 +163,8 @@ class CiErrors
 			if (pos16 < v.start || pos16 > v.end) continue;
 			var d = v.d;
 			var s1 = d.Severity switch { DiagnosticSeverity.Error => "Error", DiagnosticSeverity.Warning => "Warning", _ => "Info" };
-			x.LineBreak(s1); x.Append(": "); x.Append(d.GetMessage(), escape: true);
+			x.LineBreak(s1, notIfFirstInParagraph: true);
+			x.Append(": " + d.GetMessage());
 
 			if (d.Severity == DiagnosticSeverity.Error) {
 				if (_semo == null) continue;
@@ -209,18 +209,17 @@ class CiErrors
 		void _Also(List<(int from, int to, string s)> a, string prefix) {
 			foreach (var v in a) {
 				if (pos16 < v.from || pos16 > v.to) continue;
-				x.LineBreak(prefix); x.Append(v.s, escape: true);
+				x.LineBreak(prefix, notIfFirstInParagraph: true);
+				x.Append(v.s);
 			}
 		}
 
 		x.EndParagraph();
-		var xaml = x.End();
-
-		CodeInfo.ShowXamlPopup(doc, pos16, xaml, onLinkClick: (ph, e) => _LinkClicked(e), above: true);
-		return true;
+		onLinkClick = (ph, e) => _LinkClicked(e);
+		return x.Result;
 	}
 
-	void _UsingsEtc(CiXaml x, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod) {
+	void _UsingsEtc(CiText x, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod) {
 		string code = doc.Text;
 		bool isGeneric = false;
 		int end2 = code.IndexOf('<', v.start, v.end - v.start);
@@ -266,7 +265,7 @@ class CiErrors
 						}
 						var its = nt as INamedTypeSymbol;
 						//found = its.IsGenericType == isGeneric;
-						found = !isGeneric || its.IsGenericType; //TODO: test more. Was above line instead, but then did not find when generic in editor is without <>.
+						found = !isGeneric || its.IsGenericType; //SHOULDDO: test more. Was above line instead, but then did not find when generic in editor is without <>.
 					}
 					if (found) found = sym.IsAccessibleWithin(comp.Assembly);
 					if (found) usings.Add(string.Join('.', stack));
@@ -297,7 +296,7 @@ class CiErrors
 	}
 
 	void _LinkClicked(string s) {
-		CodeInfo.HideXamlPopup();
+		CodeInfo.HideTextPopup();
 		char action = s[1];
 		if (action == 'u' || action == 'p') { //add 'using', prefix namespace
 			int pos8 = s.ToInt(2, out int i);
@@ -318,12 +317,12 @@ class CiErrors
 		}
 	}
 
-	static void _Implement(CiXaml x, int pos, bool isInterface) {
+	static void _Implement(CiText x, int pos, bool isInterface) {
 		x.Hyperlink("^ii" + pos, "\nImplement " + (isInterface ? "interface" : "abstract class"));
 		if (isInterface) x.Hyperlink("^ie" + pos, "\nImplement explicitly");
 	}
 
-	static void _XmlComment(CiXaml x/*, in (Diagnostic d, int start, int end) v*/) {
+	static void _XmlComment(CiText x/*, in (Diagnostic d, int start, int end) v*/) {
 		//x.Hyperlink("^xa+v.start, "\nAdd XML comment");
 		//x.Hyperlink("^xd+v.start, "\nDisable warning");
 

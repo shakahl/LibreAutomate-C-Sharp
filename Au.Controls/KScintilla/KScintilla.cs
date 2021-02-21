@@ -50,8 +50,8 @@ namespace Au.Controls
 		public AWnd Hwnd => _w;
 
 		static KScintilla() {
-			if (default == Api.GetModuleHandle("SciLexer.dll")) //TODO: remove this line when removed the winforms version
-				AFile.More.LoadDll64or32Bit("SciLexer.dll");
+			//if (default == Api.GetModuleHandle("SciLexer.dll"))
+			AFile.More.LoadDll64or32Bit("SciLexer.dll");
 		}
 
 		public KScintilla() {

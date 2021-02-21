@@ -328,7 +328,7 @@ static class App
 			m.Add(10, "Exit");
 
 			var wa = AWnd.Active; //probably taskbar
-			_wNotify.ActivateLL();
+			_wNotify.ActivateL();
 			int r = m.Show(_wNotify);
 			switch (r) {
 			case 1:
@@ -341,8 +341,8 @@ static class App
 				_Exit();
 				break;
 			}
-			if (r != 10) { //sometimes does not exit because of ActivateLL
-				wa.ActivateLL();
+			if (r != 10) { //sometimes does not exit because of ActivateL
+				wa.ActivateL();
 				//var d = new Api.NOTIFYICONDATA(_wNotify); Api.Shell_NotifyIcon(Api.NIM_SETFOCUS, d); //rejected: looks weird when none of tested tray icons do it; none even simply activate taskbar.
 			}
 		}

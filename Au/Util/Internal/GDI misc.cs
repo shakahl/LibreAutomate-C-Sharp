@@ -103,6 +103,11 @@ namespace Au.Util
 	{
 		IntPtr _oldFont;
 
+		/// <summary>
+		/// Selects specified font.
+		/// The <b>Dispose</b> method will select it out but will not destroy it.
+		/// </summary>
+		/// <param name="font"></param>
 		public FontDC_(IntPtr font) {
 			_oldFont = Api.SelectObject(_dc, font);
 		}
@@ -134,10 +139,18 @@ namespace Au.Util
 		/// Measures text with API <msdn>DrawText</msdn>.
 		/// Can be multiline. For drawing with API <msdn>DrawText</msdn>.
 		/// </summary>
-		public SIZE Measure(string s, int wrapWidth, Native.DT format) {
+		public SIZE Measure(string s, int length, Native.DT format, int wrapWidth = 0) {
+			if ((uint)length > s.Lenn()) throw new ArgumentException();
+			if (length == 0) return default;
 			RECT r = new(0, 0, wrapWidth, 0);
-			Api.DrawText(_dc, s, s.Length, ref r, format | Native.DT.CALCRECT);
+			Api.DrawText(_dc, s, length, ref r, format | Native.DT.CALCRECT);
 			return new(r.Width, r.Height);
 		}
+
+		/// <summary>
+		/// Measures text with API <msdn>DrawText</msdn>.
+		/// Can be multiline. For drawing with API <msdn>DrawText</msdn>.
+		/// </summary>
+		public SIZE Measure(string s, Native.DT format, int wrapWidth = 0) => Measure(s, s.Lenn(), format, wrapWidth);
 	}
 }

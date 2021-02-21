@@ -27,15 +27,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Compile Remove="excluded\CiPopupListWPF.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <Page Remove="Resources\Property_16x.xaml" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <None Include="excluded\CiPopupListWPF.cs" />
   </ItemGroup>
 
   <ItemGroup>
@@ -49,6 +41,10 @@
 
   <ItemGroup>
     <Resource Include="Resources\Property_16x.xaml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="excluded\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">

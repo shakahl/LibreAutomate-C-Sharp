@@ -53,7 +53,7 @@ namespace Au
 	/// }
 	/// ]]></code>
 	/// </example>
-	public partial class AToolbar : MTBase_old
+	public partial class AToolbar_old : MTBase_old
 	{
 		readonly ToolStripWindow _c;
 		readonly _Settings _sett;
@@ -89,15 +89,15 @@ namespace Au
 		/// - <see cref="MTBase_old.DefaultIcon"/> = <see cref="MTBase_old.CommonIcon"/>.
 		/// - <see cref="MTBase_old.DefaultSubmenuIcon"/> = <see cref="MTBase_old.CommonSubmenuIcon"/>.
 		/// </remarks>
-		public AToolbar(string name, TBCtor flags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
+		public AToolbar_old(string name, TBCtor_old flags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0)
 			: base(f, l) {
 			_threadId = AThread.Id;
 			if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
 
 			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
 			_name = name;
-			var path = flags.Has(TBCtor.DontSaveSettings) ? null : GetSettingsFilePath(name);
-			_sett = _Settings.Load(path, flags.Has(TBCtor.ResetSettings));
+			var path = flags.Has(TBCtor_old.DontSaveSettings) ? null : GetSettingsFilePath(name);
+			_sett = _Settings.Load(path, flags.Has(TBCtor_old.ResetSettings));
 
 			_c = control ?? new ToolStripWindow();
 			_c.Ctor2_(this);
@@ -121,7 +121,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// The toolbar window is a top-level <see cref="ToolStrip"/> control. You can use its properties, methods and events.
-		/// The object is created in <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/> constructor or passed to it as the <i>control</i> parameter.
+		/// The object is created in <see cref="AToolbar_old(string, TBCtor_old, ToolStripWindow, string, int)"/> constructor or passed to it as the <i>control</i> parameter.
 		/// </remarks>
 		public ToolStrip Control => _c;
 
@@ -144,7 +144,7 @@ namespace Au
 		/// True if properties of this toolbar were modified now or in the past (the settings file exists).
 		/// </summary>
 		/// <seealso cref="GetSettingsFilePath"/>
-		/// <seealso cref="TBCtor"/>
+		/// <seealso cref="TBCtor_old"/>
 		public bool SettingsModified => _sett.Modified;
 
 		#region static functions
@@ -183,7 +183,7 @@ namespace Au
 		/// 
 		/// Does not find satellite toolbars. Use this code: <c>AToolbar.Find("owner toolbar").Satellite</c>
 		/// </remarks>
-		public static AToolbar Find(string name) => _Manager._atb.Find(o => o.Name == name);
+		public static AToolbar_old Find(string name) => _Manager._atb.Find(o => o.Name == name);
 
 		#endregion
 
@@ -274,18 +274,32 @@ namespace Au
 		/// </summary>
 		public ToolStripSeparator Separator() {
 			var sep = new _Separator();
-			if (Layout == TBLayout.Flow) sep.Margin = s_separatorMargin; //workaround for: auto-size height too big, because calculates too big preferred size.
+			if (Layout == TBLayout_old.Flow) sep.Margin = s_separatorMargin; //workaround for: auto-size height too big
 			_c.Items.Add(sep);
 			LastItem = sep;
 			return sep;
 		}
 
-		class _Separator : ToolStripSeparator { }
+		//class _Separator : ToolStripSeparator { }
+		class _Separator : ToolStripSeparator {
+			public override Size GetPreferredSize(Size constrainingSize) {
+				//workaround for: small separator height when high DPI. Not perfect.
+				var r=base.GetPreferredSize(constrainingSize);
+				if (!constrainingSize.IsEmpty && constrainingSize.Height<1000_000_000 && GetCurrentParent() is ToolStrip ts && ts.LayoutStyle == ToolStripLayoutStyle.Flow) {
+					int i = ts.Items.IndexOf(this);
+					if (i > 0) {
+						var v = ts.Items[i - 1];
+						r.Height = Math.Max(r.Height, v.Height);
+					}
+				}
+				return r;
+			}
+		}
 
-		static Padding s_separatorMargin = new Padding(0, -2, 0, -1);
+		static Padding s_separatorMargin = new (0, -2, 0, -1);
 
 		void _OnLayoutStyleChanged() {
-			var margin = Layout == TBLayout.Flow ? s_separatorMargin : default;
+			var margin = Layout == TBLayout_old.Flow ? s_separatorMargin : default;
 			foreach (var v in _c.Items.OfType<_Separator>()) v.Margin = margin;
 		}
 
@@ -299,9 +313,9 @@ namespace Au
 		/// t.Group("Group").ForeColor = Color.MediumPurple;
 		/// ]]></code>
 		/// </example>
-		public TBGroupSeparator Group(string name = null) {
+		public TBGroupSeparator_old Group(string name = null) {
 			_hasGroups = true;
-			var item = new TBGroupSeparator(_c, name);
+			var item = new TBGroupSeparator_old(_c, name);
 			LastItem = item;
 			return item;
 		}
@@ -314,7 +328,7 @@ namespace Au
 		/// <param name="icon"></param>
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		/// <example><see cref="AToolbar"/></example>
+		/// <example><see cref="AToolbar_old"/></example>
 		public ToolStripDropDownButton MenuButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, [CallerLineNumber] int l = 0) {
 			var item = new ToolStripDropDownButton(text);
 			if (menu != null) item.DropDownOpening += (_, _) => { _CreateMenu(item, menu, show: true, false); };
@@ -331,7 +345,7 @@ namespace Au
 		/// <param name="tooltip">Tooltip text.</param>
 		/// <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
-		/// <example><see cref="AToolbar"/></example>
+		/// <example><see cref="AToolbar_old"/></example>
 		public ToolStripSplitButton SplitButton(string text, Action<AMenu> menu, MTImage icon = default, string tooltip = null, Action<MTClickArgs> onClick = null, [CallerLineNumber] int l = 0) {
 			var item = new ToolStripSplitButton(text);
 			if (menu != null) {
@@ -430,7 +444,7 @@ namespace Au
 		/// The toolbar will be moved when the screen moved or resized.
 		/// </remarks>
 		public void Show(AScreen screen = default)
-			=> _Show(false, default, null, screen.IsEmpty ? _screen : screen);
+			=> _Show(false, default, null, screen.IsEmpty ? _screenAHSE : screen);
 
 		/// <summary>
 		/// Shows the toolbar and attaches to a window.
@@ -451,18 +465,18 @@ namespace Au
 		/// Shows the toolbar and attaches to an object in a window.
 		/// </summary>
 		/// <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
-		/// <param name="oo">A variable of a user-defined class that implements <see cref="ITBOwnerObject"/> interface. It provides object location, visibility, etc.</param>
+		/// <param name="oo">A variable of a user-defined class that implements <see cref="ITBOwnerObject_old"/> interface. It provides object location, visibility, etc.</param>
 		/// <exception cref="InvalidOperationException"><b>Show</b> already called.</exception>
 		/// <exception cref="ArgumentException"><b>ownerWindow</b> is 0.</exception>
 		/// <remarks>
 		/// The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
 		/// </remarks>
-		public void Show(AWnd ownerWindow, ITBOwnerObject oo) => _Show(true, ownerWindow, oo, default);
+		public void Show(AWnd ownerWindow, ITBOwnerObject_old oo) => _Show(true, ownerWindow, oo, default);
 
 		/// <summary>
 		/// Shows the toolbar.
 		/// If ta is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
-		/// Else if ta != null, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(AToolbar)"/>.
+		/// Else if ta != null, calls <see cref="TriggerArgs.DisableTriggerUntilClosed(AToolbar_old)"/>.
 		/// </summary>
 		public void Show(TriggerArgs ta) {
 			if (ta is WindowTriggerArgs wta) {
@@ -501,7 +515,7 @@ namespace Au
 		//}
 
 		//used for normal toolbars, not for satellite toolbars
-		void _Show(bool owned, AWnd owner, ITBOwnerObject oo, AScreen screen) {
+		void _Show(bool owned, AWnd owner, ITBOwnerObject_old oo, AScreen screen) {
 			_CheckThread();
 			//if(_c.IsDisposed) throw new ObjectDisposedException("AToolbar");
 			if (_showed) throw new InvalidOperationException();
@@ -520,7 +534,7 @@ namespace Au
 		//used for normal and satellite toolbars
 		void _CreateControl(bool owned, AWnd owner, AScreen screen = default) {
 			_topmost = !owned || owner.IsTopmost;
-			if (!owned || _anchor == TBAnchor.None) _os = new _OwnerScreen(this, screen);
+			if (!owned || _anchor == TBAnchor_old.None) _os = new _OwnerScreen(this, screen);
 
 			GetIconsAsync_(_c);
 			_c.ResumeLayout();
@@ -557,17 +571,17 @@ namespace Au
 		/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <seealso cref="Close"/>.
 		/// </summary>
 		/// <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
-		/// <param name="reason">An user-defined reason to hide/unhide. Can be <see cref="TBHide.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>
+		/// <param name="reason">An user-defined reason to hide/unhide. Can be <see cref="TBHide_old.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>
 		/// <exception cref="InvalidOperationException">
 		/// - The toolbar was never shown (<see cref="Show"/> not called).
 		/// - It is a satellite toolbar.
 		/// - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="MTBase_old.ActionThread"/>.
 		/// </exception>
-		/// <exception cref="ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="TBHide.User"/>.</exception>
+		/// <exception cref="ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="TBHide_old.User"/>.</exception>
 		/// <remarks>
 		/// Toolbars are automatically hidden when the owner window is hidden, minimized, etc. This function can be used to hide toolbars for other reasons.
 		/// </remarks>
-		public void Hide(bool hide, TBHide reason) {
+		public void Hide(bool hide, TBHide_old reason) {
 			_CheckThread();
 			if (!_showed || _IsSatellite) throw new InvalidOperationException();
 			if (0 != ((int)reason & 0xffff)) throw new ArgumentOutOfRangeException();
@@ -580,9 +594,9 @@ namespace Au
 		/// <remarks>
 		/// Not used with satellite toolbars.
 		/// </remarks>
-		public TBHide Hidden => _hide;
+		public TBHide_old Hidden => _hide;
 
-		void _SetVisible(bool show, TBHide reason) {
+		void _SetVisible(bool show, TBHide_old reason) {
 			//AOutput.Write(show, reason);
 			if (show) {
 				if (_hide == 0) return;
@@ -593,11 +607,11 @@ namespace Au
 				_hide |= reason;
 				if (h != 0) return;
 			}
-			_SetVisibleLL(show);
+			_SetVisibleL(show);
 		}
-		TBHide _hide;
+		TBHide_old _hide;
 
-		void _SetVisibleLL(bool show) => _c.Hwnd().ShowLL(show); //info: _c.Visible would activate and zorder
+		void _SetVisibleL(bool show) => _c.Hwnd().ShowL(show); //info: _c.Visible would activate and zorder
 
 		/// <summary>
 		/// Returns true if the toolbar is attached to a window or an object in a window.
@@ -646,7 +660,7 @@ namespace Au
 		/// <remarks>
 		/// This property is in the context menu and is saved.
 		/// </remarks>
-		public TBBorder Border {
+		public TBBorder_old Border {
 			get => _border;
 			set {
 				if (value == _border) return;
@@ -655,7 +669,7 @@ namespace Au
 				if (_constructed) _sett.border = value;
 			}
 		}
-		TBBorder _border;
+		TBBorder_old _border;
 
 		/// <summary>
 		/// Border color.
@@ -678,7 +692,7 @@ namespace Au
 		/// This property is in the context menu and is saved.
 		/// </remarks>
 		/// <seealso cref="Offsets"/>
-		public TBAnchor Anchor {
+		public TBAnchor_old Anchor {
 			get => _anchor;
 			set {
 				value &= ~_GetInvalidAnchorFlags(value);
@@ -686,8 +700,8 @@ namespace Au
 				var prev = _anchor;
 				_sett.anchor = _anchor = value;
 				if (IsOwned) {
-					_os = _anchor == TBAnchor.None ? new _OwnerScreen(this, default) : null; //follow toolbar's screen
-					if (prev == TBAnchor.None && _followedOnce) {
+					_os = _anchor == TBAnchor_old.None ? new _OwnerScreen(this, default) : null; //follow toolbar's screen
+					if (prev == TBAnchor_old.None && _followedOnce) {
 						if (_oc != null) _oc.UpdateRect(out _); else _ow.UpdateRect(out _);
 					}
 				}
@@ -697,15 +711,15 @@ namespace Au
 				}
 			}
 		}
-		TBAnchor _anchor;
+		TBAnchor_old _anchor;
 
-		static TBAnchor _GetInvalidAnchorFlags(TBAnchor anchor) {
+		static TBAnchor_old _GetInvalidAnchorFlags(TBAnchor_old anchor) {
 			switch (anchor.WithoutFlags()) {
-			case TBAnchor.TopLeft: case TBAnchor.TopRight: case TBAnchor.BottomLeft: case TBAnchor.BottomRight: return 0;
-			case TBAnchor.TopLR: case TBAnchor.BottomLR: return TBAnchor.OppositeEdgeX;
-			case TBAnchor.LeftTB: case TBAnchor.RightTB: return TBAnchor.OppositeEdgeY;
+			case TBAnchor_old.TopLeft: case TBAnchor_old.TopRight: case TBAnchor_old.BottomLeft: case TBAnchor_old.BottomRight: return 0;
+			case TBAnchor_old.TopLR: case TBAnchor_old.BottomLR: return TBAnchor_old.OppositeEdgeX;
+			case TBAnchor_old.LeftTB: case TBAnchor_old.RightTB: return TBAnchor_old.OppositeEdgeY;
 			}
-			return TBAnchor.OppositeEdgeX | TBAnchor.OppositeEdgeY;
+			return TBAnchor_old.OppositeEdgeX | TBAnchor_old.OppositeEdgeY;
 		}
 
 		/// <summary>
@@ -714,7 +728,7 @@ namespace Au
 		/// <remarks>
 		/// Owner is specified when calling <see cref="Show"/>. It can be a window, screen, control or other object.
 		/// 
-		/// The <see cref="TBOffsets"/> type has 4 properties - <b>Top</b>, <b>Bottom</b>, <b>Left</b> and <b>Right</b>, but used are only those included in <see cref="Anchor"/>. For example, if <b>Anchor</b> is <b>TopLeft</b>, used are only <b>Top</b> and <b>Left</b>.
+		/// The <see cref="TBOffsets_old"/> type has 4 properties - <b>Top</b>, <b>Bottom</b>, <b>Left</b> and <b>Right</b>, but used are only those included in <see cref="Anchor"/>. For example, if <b>Anchor</b> is <b>TopLeft</b>, used are only <b>Top</b> and <b>Left</b>.
 		/// 
 		/// This property is updated when moving or resizing the toolbar. It is saved.
 		/// </remarks>
@@ -723,7 +737,7 @@ namespace Au
 		/// t.Offsets = new TBOffsets(150, 5, 0, 0);
 		/// ]]></code>
 		/// </example>
-		public TBOffsets Offsets {
+		public TBOffsets_old Offsets {
 			get => _offsets;
 			set {
 				_preferSize = false;
@@ -733,7 +747,7 @@ namespace Au
 				//CONSIDER: add ScreenIndex property or something. Now if screen is auto-selected, this sets xy in that screen, but caller may want in primary screen.
 			}
 		}
-		TBOffsets _offsets;
+		TBOffsets_old _offsets;
 
 		//rejected. Would be rarely used, unless default 0. Avoid default limitations like this. We have a dialog to find lost toolbars.
 		//public int MaxDistanceFromOwner { get; set; } = int.MaxValue;
@@ -744,11 +758,11 @@ namespace Au
 		/// <remarks>
 		/// This property is in the context menu and is saved.
 		/// </remarks>
-		public TBLayout Layout {
-			get => (TBLayout)_c.LayoutStyle;
+		public TBLayout_old Layout {
+			get => (TBLayout_old)_c.LayoutStyle;
 			set {
 				if (value == _sett.layout) return;
-				if (value == TBLayout.Vertical || _sett.layout == TBLayout.Vertical) _sett.wrapWidth = 0;
+				if (value == TBLayout_old.Vertical || _sett.layout == TBLayout_old.Vertical) _sett.wrapWidth = 0;
 				_sett.layout = value;
 				_c.LayoutStyle = (ToolStripLayoutStyle)value;
 			}
@@ -833,7 +847,7 @@ namespace Au
 			Size size;
 			int wrap = _sett.wrapWidth;
 
-			if (Layout == TBLayout.Vertical) {
+			if (Layout == TBLayout_old.Vertical) {
 				//workaround for: if vertical layout, GetPreferredSize adds overflow height and ignores proposed height.
 				bool canOverflow = _c.CanOverflow;
 				if (canOverflow) _c.CanOverflow = false;
@@ -854,9 +868,9 @@ namespace Au
 				} else {
 					bool invertX = false, invertY = false; //the resizing directions depend on anchor
 					switch (_anchor.WithoutFlags()) {
-					case TBAnchor.TopRight: case TBAnchor.RightTB: invertX = true; break;
-					case TBAnchor.BottomLeft: case TBAnchor.BottomLR: invertY = true; break;
-					case TBAnchor.BottomRight: invertX = invertY = true; break;
+					case TBAnchor_old.TopRight: case TBAnchor_old.RightTB: invertX = true; break;
+					case TBAnchor_old.BottomLeft: case TBAnchor_old.BottomLR: invertY = true; break;
+					case TBAnchor_old.BottomRight: invertX = invertY = true; break;
 					}
 
 					var w = _c.Hwnd();
@@ -864,7 +878,7 @@ namespace Au
 					int diffX = size.Width - old.Width, diffY = size.Height - old.Height;
 					if (invertX) r.left -= diffX; else r.right += diffX;
 					if (invertY) r.top -= diffY; else r.bottom += diffY;
-					w.MoveLL(r);
+					w.MoveL(r);
 				}
 			}
 			if (!_followedOnce) {
@@ -890,7 +904,7 @@ namespace Au
 		/// <remarks>
 		/// This property is in the context menu (submenu "More") and is saved.
 		/// </remarks>
-		public TBFlags MiscFlags {
+		public TBFlags_old MiscFlags {
 			get => _sett.miscFlags;
 			set {
 				_sett.miscFlags = value;
@@ -923,7 +937,7 @@ namespace Au
 		/// <remarks>
 		/// This property isn't saved.
 		/// </remarks>
-		public TBNoMenu NoMenu { get; set; }
+		public TBNoMenu_old NoMenu { get; set; }
 
 		#endregion
 
@@ -937,7 +951,7 @@ namespace Au
 		/// The satellite toolbar is shown when mouse enters its owner toolbar and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
 		/// A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
 		/// </remarks>
-		public AToolbar Satellite {
+		public AToolbar_old Satellite {
 			get => _satellite;
 			set {
 				if (value != _satellite) {
@@ -946,7 +960,7 @@ namespace Au
 						_satellite = null;
 						//and don't clear _satPlanet etc
 					} else {
-						if ((_c?.IsDisposed ?? false) || (value._c?.IsDisposed ?? false)) throw new ObjectDisposedException(nameof(AToolbar));
+						if ((_c?.IsDisposed ?? false) || (value._c?.IsDisposed ?? false)) throw new ObjectDisposedException(nameof(AToolbar_old));
 						var p = value._satPlanet; if (p != this) { if (p != null || value._showed) throw new InvalidOperationException(); }
 						_satellite = value;
 						_satellite._satPlanet = this;
@@ -958,14 +972,14 @@ namespace Au
 		/// <summary>
 		/// If this is a sattellite toolbar (<see cref="Satellite"/>), gets its owner toolbar. Else null.
 		/// </summary>
-		public AToolbar SatelliteOwner => _satPlanet;
+		public AToolbar_old SatelliteOwner => _satPlanet;
 
 		bool _IsSatellite => _satPlanet != null;
 
-		AToolbar _SatPlanetOrThis => _satPlanet ?? this;
+		AToolbar_old _SatPlanetOrThis => _satPlanet ?? this;
 
-		AToolbar _satellite;
-		AToolbar _satPlanet;
+		AToolbar_old _satellite;
+		AToolbar_old _satPlanet;
 		bool _satVisible;
 		int _satAnimation;
 		ATimer _satTimer;
@@ -1040,7 +1054,7 @@ namespace Au
 		void _SatShowHide(bool show, bool animate) {
 			if (!animate || _satellite._transparency != default) {
 				var w = _satellite._c.Hwnd();
-				if (show != w.IsVisible) _satellite._SetVisibleLL(show);
+				if (show != w.IsVisible) _satellite._SetVisibleL(show);
 				if (_satellite._transparency == default) w.SetTransparency(false);
 				_satAnimationTimer?.Stop();
 				_satAnimation = 0;
@@ -1052,14 +1066,14 @@ namespace Au
 				bool stop; if (_satVisible) { if (stop = _satAnimation >= 255) _satAnimation = 255; } else { if (stop = _satAnimation <= 0) _satAnimation = 0; }
 				if (stop) {
 					_satAnimationTimer.Stop();
-					if (_satAnimation == 0) _satellite._SetVisibleLL(false);
+					if (_satAnimation == 0) _satellite._SetVisibleL(false);
 				}
 				if (_satellite._transparency == default) _satellite._c.Hwnd().SetTransparency(!stop, _satAnimation);
 			});
 			_satAnimationTimer.Now();
 			_satAnimationTimer.Every(30);
 
-			if (show) _satellite._SetVisibleLL(true);
+			if (show) _satellite._SetVisibleL(true);
 		}
 
 		void _SatFollow() {
@@ -1076,8 +1090,8 @@ namespace Au
 		/// Creates new toolbar and sets its <see cref="Satellite"/> = this.
 		/// Returns the new toolbar.
 		/// </summary>
-		/// <param name="ctorFlags">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
-		/// <param name="control">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
+		/// <param name="ctorFlags">See <see cref="AToolbar_old(string, TBCtor_old, ToolStripWindow, string, int)"/>.</param>
+		/// <param name="control">See <see cref="AToolbar_old(string, TBCtor_old, ToolStripWindow, string, int)"/>.</param>
 		/// <param name="f">[CallerFilePath]</param>
 		/// <param name="l">[CallerLineNumber]</param>
 		/// <exception cref="InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
@@ -1085,11 +1099,11 @@ namespace Au
 		/// Sets toolbar name = <c>this.Name + "^"</c>.
 		/// If this already is a satellite toolbar, just returns its owner.
 		/// </remarks>
-		public AToolbar AutoHide(TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
-			return _satPlanet ??= new AToolbar(this.Name + "^", ctorFlags, control, f, l) { Satellite = this };
+		public AToolbar_old AutoHide(TBCtor_old ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+			return _satPlanet ??= new AToolbar_old(this.Name + "^", ctorFlags, control, f, l) { Satellite = this };
 		}
 
-		AScreen _screen;
+		AScreen _screenAHSE;
 
 		/// <summary>
 		/// Creates new toolbar and sets its <see cref="Satellite"/> = this. Sets properties for showing at a screen edge.
@@ -1099,11 +1113,11 @@ namespace Au
 		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness.</param>
-		/// <param name="ctorFlags">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
-		/// <param name="control">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
+		/// <param name="ctorFlags">See <see cref="AToolbar_old(string, TBCtor_old, ToolStripWindow, string, int)"/>.</param>
+		/// <param name="control">See <see cref="AToolbar_old(string, TBCtor_old, ToolStripWindow, string, int)"/>.</param>
 		/// <param name="f">[CallerFilePath]</param>
 		/// <param name="l">[CallerLineNumber]</param>
-		public AToolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+		public AToolbar_old AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor_old ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
 			if (mta == null) throw new ArgumentNullException();
 			if (mta.Trigger.Kind != TMKind.Edge) throw new ArgumentException("Not an edge trigger.");
 			return AutoHideScreenEdge(mta.Trigger.Edge, mta.Trigger.ScreenIndex, rangeStart, rangeEnd, thickness, ctorFlags, control, f, l);
@@ -1118,11 +1132,11 @@ namespace Au
 		/// <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness.</param>
-		/// <param name="ctorFlags">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
-		/// <param name="control">See <see cref="AToolbar(string, TBCtor, ToolStripWindow, string, int)"/>.</param>
+		/// <param name="ctorFlags">See <see cref="AToolbar_old(string, TBCtor_old, ToolStripWindow, string, int)"/>.</param>
+		/// <param name="control">See <see cref="AToolbar_old(string, TBCtor_old, ToolStripWindow, string, int)"/>.</param>
 		/// <param name="f">[CallerFilePath]</param>
 		/// <param name="l">[CallerLineNumber]</param>
-		public AToolbar AutoHideScreenEdge(TMEdge edge, TMScreen screen = TMScreen.Primary, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+		public AToolbar_old AutoHideScreenEdge(TMEdge edge, TMScreen screen = TMScreen.Primary, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor_old ctorFlags = 0, ToolStripWindow control = null, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
 			if (screen < 0) throw new NotSupportedException("screen");
 			var sh = AScreen.Index((int)screen);
 			var rs = sh.Rect;
@@ -1130,27 +1144,27 @@ namespace Au
 			var se = edge.ToString(); char se0 = se[0];
 			bool vertical = se0 == 'L' || se0 == 'R';
 
-			TBAnchor anchor = TBAnchor.TopLeft;
-			TBOffsets k = default;
+			TBAnchor_old anchor = TBAnchor_old.TopLeft;
+			TBOffsets_old k = default;
 			if (thickness <= 0) thickness = 1;
 			int offscreen = thickness == 1 ? 1 : 0;
 			switch (se0) {
 			case 'T': k.Top = -offscreen; break;
-			case 'R': k.Right = -offscreen; anchor = TBAnchor.TopRight; break;
-			case 'B': k.Bottom = -offscreen; anchor = TBAnchor.BottomLeft; break;
+			case 'R': k.Right = -offscreen; anchor = TBAnchor_old.TopRight; break;
+			case 'B': k.Bottom = -offscreen; anchor = TBAnchor_old.BottomLeft; break;
 			case 'L': k.Left = -offscreen; break;
 			}
 			int x25 = rs.Width / 4, y25 = rs.Height / 4;
 			bool reverse = false;
 			switch (edge) {
 			case TMEdge.TopInCenter50: k.Left = x25; break;
-			case TMEdge.TopInRight25: anchor = TBAnchor.TopRight; reverse = true; break;
+			case TMEdge.TopInRight25: anchor = TBAnchor_old.TopRight; reverse = true; break;
 			case TMEdge.RightInCenter50: k.Top = y25; break;
-			case TMEdge.RightInBottom25: anchor = TBAnchor.BottomRight; reverse = true; break;
+			case TMEdge.RightInBottom25: anchor = TBAnchor_old.BottomRight; reverse = true; break;
 			case TMEdge.BottomInCenter50: k.Left = x25; break;
-			case TMEdge.BottomInRight25: anchor = TBAnchor.BottomRight; reverse = true; break;
+			case TMEdge.BottomInRight25: anchor = TBAnchor_old.BottomRight; reverse = true; break;
 			case TMEdge.LeftInCenter50: k.Top = y25; break;
-			case TMEdge.LeftInBottom25: anchor = TBAnchor.BottomLeft; reverse = true; break;
+			case TMEdge.LeftInBottom25: anchor = TBAnchor_old.BottomLeft; reverse = true; break;
 			}
 
 			int edgeLength = vertical ? rs.Height : rs.Width; if (se.Contains("25")) edgeLength /= 4; else if (se.Contains("50")) edgeLength /= 2;
@@ -1164,22 +1178,22 @@ namespace Au
 
 			var planet = AutoHide(ctorFlags, control, f, l);
 			if (!planet.SettingsModified) {
-				planet.MiscFlags = TBFlags.HideIfFullScreen;
+				planet.MiscFlags = TBFlags_old.HideIfFullScreen;
 			}
 			planet.Anchor = anchor;
 			planet.Offsets = k;
 			planet.Size = vertical ? (thickness + offscreen, length) : (length, thickness + offscreen);
 			planet.Sizable = false;
 			planet.AutoSize = false;
-			planet.Border = TBBorder.Width1;
-			planet.NoMenu = TBNoMenu.Anchor | TBNoMenu.Border | TBNoMenu.Layout | TBNoMenu.Sizable | TBNoMenu.AutoSize;
-			planet._screen = AScreen.Index((int)screen);
+			planet.Border = TBBorder_old.Width1;
+			planet.NoMenu = TBNoMenu_old.Anchor | TBNoMenu_old.Border | TBNoMenu_old.Layout | TBNoMenu_old.Sizable | TBNoMenu_old.AutoSize;
+			planet._screenAHSE = AScreen.Index((int)screen);
 
 			if (!this.SettingsModified) {
 				this.AutoSize = true;
 			}
-			this.Anchor = anchor | (vertical ? TBAnchor.OppositeEdgeX : TBAnchor.OppositeEdgeY);
-			this.NoMenu = TBNoMenu.Anchor;
+			this.Anchor = anchor | (vertical ? TBAnchor_old.OppositeEdgeX : TBAnchor_old.OppositeEdgeY);
+			this.NoMenu = TBNoMenu_old.Anchor;
 
 			return planet;
 		}

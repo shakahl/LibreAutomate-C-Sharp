@@ -430,7 +430,7 @@ namespace Au.Tools
 			var w = this.Hwnd();
 			if (w.IsMinimized) {
 				w.ShowNotMinMax();
-				w.ActivateLL();
+				w.ActivateL();
 			}
 		}
 

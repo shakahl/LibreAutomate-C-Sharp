@@ -21,7 +21,7 @@ using System.Windows.Automation;
 
 class PanelInfo : Grid
 {
-	FlowDocumentControl _xaml;
+	FlowDocumentControl _flowDoc;
 	_Scintilla _sci;
 
 	public PanelInfo() {
@@ -29,10 +29,10 @@ class PanelInfo : Grid
 		_sci.ZHandleCreated += _sci_ZHandleCreated;
 		this.Children.Add(_sci);
 
-		_xaml = CiXaml.CreateControl();
-		AutomationProperties.SetName(_xaml.Document, "Info_code");
-		_xaml.LinkClicked += _Xaml_LinkClicked;
-		this.Children.Add(_xaml);
+		_flowDoc = CiText.CreateControl();
+		AutomationProperties.SetName(_flowDoc.Document, "Info_code");
+		_flowDoc.LinkClicked += _flowDoc_LinkClicked;
+		this.Children.Add(_flowDoc);
 	}
 
 	class _Scintilla : KScintilla
@@ -56,15 +56,15 @@ class PanelInfo : Grid
 
 	void _SetVisibleControl(UIElement e) {
 		if (e == _sci) {
-			_xaml.Visibility = Visibility.Hidden;
+			_flowDoc.Visibility = Visibility.Hidden;
 			_sci.Visibility = Visibility.Visible;
 		} else {
 			_sci.Visibility = Visibility.Hidden;
-			_xaml.Visibility = Visibility.Visible;
+			_flowDoc.Visibility = Visibility.Visible;
 		}
 	}
 
-	void _Xaml_LinkClicked(FlowDocumentControl sender, string s) {
+	void _flowDoc_LinkClicked(FlowDocumentControl sender, string s) {
 		if (s == "?") {
 			ZSetAboutInfo(About.Panel);
 		} else {
@@ -73,13 +73,11 @@ class PanelInfo : Grid
 	}
 
 	public void ZSetAboutInfo(About about = About.Minimal) {
-		var x = new CiXaml();
+		var x = new CiText();
 		x.StartParagraph();
 		switch (about) {
 		case About.Minimal:
-			x.StartHyperlink("?", false);
-			x.Append(" Foreground=\"#999\">?");
-			x.EndHyperlink();
+			x.Hyperlink("?", "?").Foreground = ColorInt.WpfBrush_(0x999999);
 			break;
 		case About.Panel:
 			x.Append(@"This panel displays quick info about object from mouse position.
@@ -91,7 +89,7 @@ In other windows - x, y, window, control.");
 		//	break;
 		}
 		x.EndParagraph();
-		ZSetXaml(x.End());
+		ZSetText(x.Result);
 	}
 
 	public enum About {
@@ -100,18 +98,18 @@ In other windows - x, y, window, control.");
 		//Metacomments
 	}
 
-	public void ZSetXaml(string xaml) {
-		if (xaml == _prevXaml && !_isSci) return;
-		_prevXaml = xaml;
-		_xaml.Document.Blocks.Clear();
-		if (!xaml.NE()) _xaml.Document.Blocks.Add(CiXaml.Parse(xaml));
+	public void ZSetText(System.Windows.Documents.Section text) {
+		if (!_isSci && text == _prevText) return;
+		_prevText = text;
+		_flowDoc.Clear();
+		if (text!=null) _flowDoc.Document.Blocks.Add(text);
 
 		if (_isSci) {
 			_isSci = false;
-			_SetVisibleControl(_xaml);
+			_SetVisibleControl(_flowDoc);
 		}
 	}
-	string _prevXaml;
+	System.Windows.Documents.Section _prevText;
 	bool _isSci;
 
 	//public void ZSetMouseInfoText(string text)

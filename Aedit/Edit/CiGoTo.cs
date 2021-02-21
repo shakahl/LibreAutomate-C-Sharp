@@ -21,6 +21,8 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.CSharp;
 using System.Windows;
 
+//TODO: often does not go if caret is at the end of the symbol name, eg a property.
+
 class CiGoTo
 {
 	struct _SourceLocation

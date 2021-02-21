@@ -56,18 +56,16 @@ namespace Au.Controls
 				switch (msg) {
 				case Api.WM_NCCREATE:
 					_w = w;
-					BufferedPaint_.Init();
+					ABufferedPaint.Init();
 					break;
 				case Api.WM_NCDESTROY:
 					_w = default;
-					BufferedPaint_.Uninit();
+					ABufferedPaint.Uninit();
 					break;
 				case Api.WM_NCHITTEST:
 					return Api.HTTRANSPARENT; //workaround for focus problems and closing parent Popup on click
 				case Api.WM_PAINT:
-					//never mind: should draw only the invalidated rect (ps.rcPaint). It saves ~1% CPU.
-					//without buffered flickers and slower. Tested .NET buffered paint, similar speed and memory.
-					using (var bp = new BufferedPaint_(w, true)) _tv._Render(bp.DC, bp.Rect);
+					using (var bp = new ABufferedPaint(w, true)) _tv._Render(bp.DC, bp.UpdateRect);
 					return default;
 				case Api.WM_SHOWWINDOW when wParam == 1:
 					if (_tv._ensureVisibleIndex > 0) _tv.EnsureVisible(_tv._ensureVisibleIndex);

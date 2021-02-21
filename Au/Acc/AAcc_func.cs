@@ -400,7 +400,7 @@ namespace Au
 		void _VirtualClick(bool right) {
 			var w = WndContainer;
 			if (!GetRect(out var r, w)) throw new AuException(0, "*get rectangle");
-			if (r.IsEmpty || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
+			if (r.NoArea || State.HasAny(AccSTATE.INVISIBLE | AccSTATE.OFFSCREEN)) throw new AuException(0, "Invisible or offscreen");
 			//FUTURE: Chrome bug: OFFSCREEN is not updated after scrolling.
 
 			var xy = AMath.MakeUint(r.CenterX, r.CenterY);

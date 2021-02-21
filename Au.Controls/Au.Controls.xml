@@ -1973,6 +1973,17 @@
         <member name="F:Au.Controls.TVDropInfo.intoFolder">
             <summary><b>xy</b> is on a folder image, therefore should move to the folder.</summary>
         </member>
+        <member name="M:Au.Controls.KCheckBox.OnCheckChanged(System.Windows.RoutedEventArgs)">
+            <summary>
+            Raises <see cref="E:Au.Controls.KCheckBox.CheckChanged"/> event.
+            </summary>
+        </member>
+        <member name="E:Au.Controls.KCheckBox.CheckChanged">
+            <summary>
+            When check state changed (checked/unchecked/indeterminate).
+            Can be used to avoid 2-3 event handlers (Checked/Unchecked/Indeterminate).
+            </summary>
+        </member>
         <member name="T:Au.Controls.KColorPicker">
             <summary>
             WPF control for selecting color.
@@ -2351,6 +2362,15 @@
             <param name="underlined">Character to underline.</param>
             <param name="l">Don't use.</param>
         </member>
+        <member name="T:Au.Controls.KPopup">
+            <summary>
+            HwndSource-based window to use for various temporary tool/info popup windows.
+            For example, in editor used for code info windows (completion list, parameters, "Regex" etc) and for some tooltips.
+            Unlike Window and Popup, you can set any window style, easily show at any position at any DPI, etc.
+            Like Popup, can show by rectangle. Unlike Popup, can be resizable.
+            Like Popup, can be click-closed, and does not eat mouse events like Popup.
+            </summary>
+        </member>
         <member name="M:Au.Controls.KPopup.#ctor(Au.Types.WS,Au.Types.WS2,System.Boolean,System.Windows.SizeToContent)">
             
         </member>
@@ -2385,19 +2405,25 @@
             Actual size can be smaller if would not fit in screen.
             </summary>
         </member>
-        <member name="M:Au.Controls.KPopup.ShowByRect(System.Object,System.Windows.Controls.Dock,System.Nullable{Au.Types.RECT},System.Boolean,System.Boolean)">
+        <member name="P:Au.Controls.KPopup.WpfSizeToContent">
+            <summary>
+            Set <see cref="P:System.Windows.Interop.HwndSource.SizeToContent"/>.
+            If false (default), this class calculates content size when showing, and does not update while showing. If true, may align incorrectly.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KPopup.ShowByRect(System.Object,System.Nullable{System.Windows.Controls.Dock},System.Nullable{Au.Types.RECT},System.Boolean,System.Boolean)">
             <summary>
             Shows the popup window by a window, WPF element or rectangle.
             </summary>
             <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>AWnd</b> or null.</param>
-            <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen.</param>
+            <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen. If null, shows in rectangle.</param>
             <param name="rScreen">Rectangle in screen (physical pixels). If null, uses owner's rectangle. Cannot be both null.</param>
             <param name="exactSize">If does not fit in screen, cover part of rectangle but don't make smaller.</param>
             <param name="exactSide">Never show at opposite side.</param>
             <exception cref="T:System.NotSupportedException">Unsupported <i>owner</i> type.</exception>
             <exception cref="T:System.ArgumentException">Both owner and rScreen are null. Or owner handle not created.</exception>
-            <exception cref="T:System.InvalidOperationException"><see cref="P:Au.Controls.KPopup.Size"/> not set.</exception>
             <remarks>
+            If <see cref="P:Au.Controls.KPopup.Size"/> not set, uses <see cref="F:System.Windows.SizeToContent.WidthAndHeight"/>.
             </remarks>
         </member>
         <member name="M:Au.Controls.KPopup.Close">
@@ -2429,6 +2455,11 @@
         <member name="E:Au.Controls.KPopup.Destroyed">
             <summary>
             When destroying the popup window (WM_NCDESTROY).
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KPopup.ClickClose">
+            <summary>
+            Close when mouse clicked.
             </summary>
         </member>
         <member name="T:Au.Controls.KPopupListBox">
@@ -2617,7 +2648,7 @@
         </member>
         <member name="T:Au.Controls.ImageUtil.ImageType">
             <summary>
-            Image type as detected by <see cref="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)"/>.
+            Image type as detected by <see cref="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)"/>.
             </summary>
         </member>
         <member name="F:Au.Controls.ImageUtil.ImageType.None">
@@ -2647,19 +2678,21 @@
         <member name="F:Au.Controls.ImageUtil.ImageType.ShellIcon">
             <summary>None of other image types, when <i>anyFile</i> is true.</summary>
         </member>
-        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Byte*,System.Int32)">
+        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.Byte*,System.Int32)">
             <summary>
             Gets image type from string.
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
+            <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
             <param name="s">File path etc. See <see cref="T:Au.Controls.ImageUtil.ImageType"/>.</param>
             <param name="length">If -1, calls CharPtr_.Length(s).</param>
         </member>
-        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.String)">
+        <member name="M:Au.Controls.ImageUtil.ImageTypeFromString(System.Boolean,System.Int32@,System.String)">
             <summary>
             Gets image type from string.
             </summary>
             <param name="anyFile">When the string is valid but not of any image type, return ShellIcon instead of None.</param>
+            <param name="prefixLength">Length of prefix "imagefile:" or "image:" or "~:".</param>
             <param name="s">File path etc. See <see cref="T:Au.Controls.ImageUtil.ImageType"/>.</param>
         </member>
         <member name="M:Au.Controls.ImageUtil.BmpFileDataFromString(System.String,Au.Controls.ImageUtil.ImageType,System.Boolean)">

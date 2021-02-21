@@ -194,6 +194,9 @@ static class Menus
 		[Command(separator = true, keys = "Ctrl+F", image = "resources/images/findinfile_16x.xaml")]
 		public static void Find() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc); }
 
+		//[Command(keys = "Ctrl+Shift+F")]
+		//public static void Find_in_files() { Panels.Find.ZCtrlF(Panels.Editor.ZActiveDoc, findInFiles: true); }
+
 		[Command(separator = true, keysText = "Ctrl+Space")]
 		public static void Autocompletion_list() { CodeInfo.ShowCompletionList(Panels.Editor.ZActiveDoc); }
 

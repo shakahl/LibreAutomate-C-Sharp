@@ -194,9 +194,9 @@ static class CiSnippets
 		});
 	}
 
-	public static string GetDescriptionXaml(CiComplItem item) {
+	public static System.Windows.Documents.Section GetDescription(CiComplItem item) {
 		var snippet = item as _CiComplItemSnippet;
-		var m = new CiXaml();
+		var m = new CiText();
 		m.StartParagraph();
 		m.Append("Snippet "); m.Bold(item.ci.DisplayText); m.Append(".");
 		_AppendInfo(snippet.x);
@@ -214,12 +214,12 @@ static class CiSnippets
 		}
 		if (snippet.x.Attr(out string more, "more")) {
 			if (isList) m.Separator();
-			m.StartParagraph(); m.Append(more, escape: true); m.EndParagraph();
+			m.StartParagraph(); m.Append(more); m.EndParagraph();
 		}
-		return m.End();
+		return m.Result;
 
 		void _AppendInfo(XElement x) {
-			if (x.Attr(out string info, "info")) { m.Append(" "); m.Append(info, escape: true); }
+			if (x.Attr(out string info, "info")) m.Append(" " + info);
 			m.EndParagraph();
 		}
 
@@ -259,11 +259,7 @@ static class CiSnippets
 			if (x.HasElements) {
 				x = null;
 				var a = snippet.x.Elements("list").ToArray();
-				//SHOULDDO: need a better way.
-				//	Now eg cannot select with Tab or Space, only with Enter.
-				//	Idea: add links in info popup. On Tab etc would insert the first.
-				Api.PostMessage(default, Api.WM_KEYDOWN, (int)KKey.Down, 0); //select first item. But does not work on d-click (mouse button pressed).
-				int g = AMenu.ShowSimple(a.Select(o => o.Attr("item")).ToArray(), doc, MSFlags.ByCaret);
+				int g = AMenu.ShowSimple(a.Select(o => o.Attr("item")).ToArray(), doc, MSFlags.ByCaret | AMenu.MSFlags_SelectFirst_);
 				if (g == 0) return;
 				x = a[g - 1];
 			}

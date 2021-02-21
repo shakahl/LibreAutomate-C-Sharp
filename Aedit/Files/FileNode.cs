@@ -570,7 +570,6 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		folder = main = null;
 		for (FileNode r = Root, f = IsFolder ? this : Parent; f != r && f != null; f = f.Parent) {
 			if (!f.IsProjectFolder(out main)) continue;
-			if (main == null) break;
 			if (this.IsScript && this != main && !ofAnyScript) { //non-main scripts are not part of project
 				main = null;
 				break;

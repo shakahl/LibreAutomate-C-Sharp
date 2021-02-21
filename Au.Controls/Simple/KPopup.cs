@@ -18,6 +18,13 @@ using System.Windows.Controls;
 
 namespace Au.Controls
 {
+	/// <summary>
+	/// HwndSource-based window to use for various temporary tool/info popup windows.
+	/// For example, in editor used for code info windows (completion list, parameters, "Regex" etc) and for some tooltips.
+	/// Unlike Window and Popup, you can set any window style, easily show at any position at any DPI, etc.
+	/// Like Popup, can show by rectangle. Unlike Popup, can be resizable.
+	/// Like Popup, can be click-closed, and does not eat mouse events like Popup.
+	/// </summary>
 	public class KPopup
 	{
 		WS _style;
@@ -48,8 +55,7 @@ namespace Au.Controls
 					//TreatAsInputRoot = false,
 					HwndSourceHook = _Hook
 				};
-				_border ??= new Border { Child = _content }; //workaround for: if content is eg FlowDocumentScrollViewer, it has focus problems if it is RootVisual. Eg context menu items disabled. Need a container, eg Border or Panel.
-				_hs = new _HwndSource(p) { kpopup = this, RootVisual = _border, SizeToContent = default };
+				_hs = new _HwndSource(p) { kpopup = this, RootVisual = Border, SizeToContent = default };
 				//AOutput.Write(_hs.AcquireHwndFocusInMenuMode, _hs.RestoreFocusMode, p.TreatAsInputRoot); //True, Auto, True
 
 				OnHandleCreated();
@@ -99,7 +105,7 @@ namespace Au.Controls
 		/// Gets or sets WPF content. It is child of <see cref="Border"/>.
 		/// </summary>
 		public UIElement Content {
-			get => _border?.Child ?? _content;
+			get => _content;
 			set {
 				_content = value;
 				if (_border != null) _border.Child = value;
@@ -110,8 +116,10 @@ namespace Au.Controls
 		/// <summary>
 		/// Gets the WPF root object (<see cref="HwndSource.RootVisual"/>) of the popup window. Its child is <see cref="Content"/>.
 		/// </summary>
-		public Border Border => _border;
+		public Border Border => _border ??= new Border { Child = _content, SnapsToDevicePixels = true };
 		Border _border;
+		//workaround for: if content is eg FlowDocumentScrollViewer, it has focus problems if it is RootVisual.
+		//	Eg context menu items disabled. Need a container, eg Border or Panel.
 
 		/// <summary>
 		/// Desired window size. WPF logical pixels.
@@ -121,28 +129,31 @@ namespace Au.Controls
 			get => _size;
 			set {
 				_size = value;
-				if (IsVisible) {
-					var z = ADpi.Scale(_size, _w);
-					_w.ResizeLL(z.width, z.height);
-				}
+				if (IsVisible) _w.ResizeL_(ADpi.Scale(_size, _w));
 			}
 		}
 		SIZE _size;
 
 		/// <summary>
+		/// Set <see cref="HwndSource.SizeToContent"/>.
+		/// If false (default), this class calculates content size when showing, and does not update while showing. If true, may align incorrectly.
+		/// </summary>
+		public bool WpfSizeToContent { get; set; }
+
+		/// <summary>
 		/// Shows the popup window by a window, WPF element or rectangle.
 		/// </summary>
 		/// <param name="owner">Provides owner window and optionally rectangle. Can be <b>FrameworkElement</b>, <b>KPopup</b>, <b>AWnd</b> or null.</param>
-		/// <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen.</param>
+		/// <param name="side">Show at this side of rectangle, or opposite side if does not fit in screen. If null, shows in rectangle.</param>
 		/// <param name="rScreen">Rectangle in screen (physical pixels). If null, uses owner's rectangle. Cannot be both null.</param>
 		/// <param name="exactSize">If does not fit in screen, cover part of rectangle but don't make smaller.</param>
 		/// <param name="exactSide">Never show at opposite side.</param>
 		/// <exception cref="NotSupportedException">Unsupported <i>owner</i> type.</exception>
 		/// <exception cref="ArgumentException">Both owner and rScreen are null. Or owner handle not created.</exception>
-		/// <exception cref="InvalidOperationException"><see cref="Size"/> not set.</exception>
 		/// <remarks>
+		/// If <see cref="Size"/> not set, uses <see cref="SizeToContent.WidthAndHeight"/>.
 		/// </remarks>
-		public void ShowByRect(object owner, Dock side, RECT? rScreen = null, bool exactSize = false, bool exactSide = false) {
+		public void ShowByRect(object owner, Dock? side, RECT? rScreen = null, bool exactSize = false, bool exactSide = false) {
 			//CloseHides = true; //AOutput.Write(_w); //18 -> 5 ms
 			//APerf.First(); if(owner is FrameworkElement test) test.Dispatcher.InvokeAsync(() => APerf.NW());
 
@@ -166,7 +177,7 @@ namespace Au.Controls
 			default: throw new NotSupportedException("owner type");
 			}
 			if (owner != null && ow.Is0) throw new ArgumentException("owner window not created");
-			if (_size == default && _sizeToContent != SizeToContent.WidthAndHeight) throw new InvalidOperationException("Size not set");
+			if (_size == default) _sizeToContent = SizeToContent.WidthAndHeight;
 
 			_Create();
 
@@ -184,63 +195,69 @@ namespace Au.Controls
 
 				if (_sizeToContent.Has(SizeToContent.Width)) size.width = rs.Width; else size.width = Math.Min(size.width, rs.Width);
 				if (_sizeToContent.Has(SizeToContent.Height)) size.height = rs.Height; else size.height = Math.Min(size.height, rs.Height);
-				var c = _border;
-				c.Measure(ADpi.Unscale(size, dpi));
-				//never mind: measures only height. It seems FlowDocument cannot measure width.
+				_border.Measure(ADpi.Unscale(size, dpi));
+				//never mind: it seems FlowDocument measures only height.
 				//	If need width, could instead use TextBlock. It does not support paragraph etc, but we can use multiple TextBlock etc in StackPanel.
 				//	But then no select/copy, not so easy scrolling, etc.
-				c.UpdateLayout();
-				size = ADpi.Scale(c.DesiredSize, dpi);
-				size.width += nc.Width + 1; size.height += nc.Height + 1;
+				_border.UpdateLayout();
+				var ds = _border.DesiredSize;
+				ds.Width = Math.Ceiling(ds.Width); ds.Height = Math.Ceiling(ds.Height); //avoid scrollbars
+				size = ADpi.Scale(ds, dpi);
+				size.width += nc.Width; size.height += nc.Height;
 			}
 			size.width = Math.Min(size.width, rs.Width);
 			size.height = Math.Min(size.height, rs.Height);
 
-			int spaceT = r.top - rs.top, spaceB = rs.bottom - r.bottom, spaceL = r.left - rs.left, spaceR = rs.right - r.right;
-			if (!exactSide) {
+			_hs.SizeToContent = WpfSizeToContent ? _sizeToContent : default;
+
+			if (side != null) {
+				int spaceT = r.top - rs.top, spaceB = rs.bottom - r.bottom, spaceL = r.left - rs.left, spaceR = rs.right - r.right;
+				if (!exactSide) {
+					switch (side) {
+					case Dock.Left:
+						if (size.width > spaceL && spaceR > spaceL) side = Dock.Right;
+						break;
+					case Dock.Right:
+						if (size.width > spaceR && spaceL > spaceR) side = Dock.Left;
+						break;
+					case Dock.Top:
+						if (size.height > spaceT && spaceB > spaceT) side = Dock.Bottom;
+						break;
+					case Dock.Bottom:
+						if (size.height > spaceB && spaceT > spaceB) side = Dock.Top;
+						break;
+					}
+				}
+				if (!exactSize) {
+					switch (side) {
+					case Dock.Left:
+						if (size.width > spaceL) size.width = Math.Max(spaceL, size.width / 2);
+						break;
+					case Dock.Right:
+						if (size.width > spaceR) size.width = Math.Max(spaceR, size.width / 2);
+						break;
+					case Dock.Top:
+						if (size.height > spaceT) size.height = Math.Max(spaceT, size.height / 2);
+						break;
+					case Dock.Bottom:
+						if (size.height > spaceB) size.height = Math.Max(spaceB, size.height / 2);
+						break;
+					}
+				}
 				switch (side) {
-				case Dock.Left:
-					if (size.width > spaceL && spaceR > spaceL) side = Dock.Right;
-					break;
-				case Dock.Right:
-					if (size.width > spaceR && spaceL > spaceR) side = Dock.Left;
-					break;
-				case Dock.Top:
-					if (size.height > spaceT && spaceB > spaceT) side = Dock.Bottom;
-					break;
-				default:
-					if (size.height > spaceB && spaceT > spaceB) side = Dock.Top;
-					break;
+				case Dock.Left: r.left -= size.width; break;
+				case Dock.Right: r.left = r.right; break;
+				case Dock.Top: r.top -= size.height; break;
+				case Dock.Bottom: r.top = r.bottom; break;
 				}
 			}
-			if (!exactSize) {
-				switch (side) {
-				case Dock.Left:
-					if (size.width > spaceL) size.width = Math.Max(spaceL, size.width / 2);
-					break;
-				case Dock.Right:
-					if (size.width > spaceR) size.width = Math.Max(spaceR, size.width / 2);
-					break;
-				case Dock.Top:
-					if (size.height > spaceT) size.height = Math.Max(spaceT, size.height / 2);
-					break;
-				default:
-					if (size.height > spaceB) size.height = Math.Max(spaceB, size.height / 2);
-					break;
-				}
-			}
-			switch (side) {
-			case Dock.Left: r.left -= size.width; break;
-			case Dock.Right: r.left = r.right; break;
-			case Dock.Top: r.top -= size.height; break;
-			default: r.top = r.bottom; break;
-			}
+
 			r.left = Math.Clamp(r.left, rs.left, rs.right - size.width);
 			r.top = Math.Clamp(r.top, rs.top, rs.bottom - size.height);
 			r.Width = size.width; r.Height = size.height;
 
 			_inSizeMove = false;
-			_w.MoveLL(r);
+			_w.MoveL(r);
 			if (_w.OwnerWindow != ow) _w.OwnerWindow = ow;
 			if (!IsVisible) _w.SetWindowPos(Native.SWP.SHOWWINDOW | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOOWNERZORDER);
 		}
@@ -250,7 +267,7 @@ namespace Au.Controls
 		/// </summary>
 		public void Close() {
 			if (_hs == null) return;
-			if (CloseHides) _w.ShowLL(false);
+			if (CloseHides) _w.ShowL(false);
 			else _hs.Dispose();
 		}
 
@@ -280,6 +297,47 @@ namespace Au.Controls
 		/// </summary>
 		public event EventHandler Destroyed;
 
+		/// <summary>
+		/// Close when mouse clicked.
+		/// </summary>
+		public CC ClickClose { get; set; }
+
+		void _ClickCloseTimer(bool? start) {
+			if (start == null) {
+				int state = _MouseState();
+				if (state == _ccState) return;
+				_ccState = state;
+				if (ClickClose != CC.Anywhere) {
+					var wm = AWnd.FromMouse(WXYFlags.NeedWindow);
+					if (ClickClose == CC.Inside) {
+						if (wm != _w) return;
+					} else {
+						if (wm == _w) return;
+						if (wm.IsOfThisThread && wm.ZorderIsAbove(_w)) return;
+					}
+				}
+				Close();
+			} else if (start == true) {
+				if (!ClickClose.HasAny(CC.Anywhere)) return;
+				_ccTimer = 0 != Api.SetTimer(_w, c_ccTimer, 100, null);
+				_ccState = _MouseState();
+			} else if (_ccTimer) {
+				_ccTimer = false;
+				Api.KillTimer(_w, c_ccTimer);
+			}
+
+			static int _MouseState() =>
+				(AKeys.UI.GetKeyState(KKey.MouseLeft) & 1)
+				| (AKeys.UI.GetKeyState(KKey.MouseRight) & 1) << 1
+				| (AKeys.UI.GetKeyState(KKey.MouseMiddle) & 1) << 2;
+		}
+		const int c_ccTimer = 10;
+		bool _ccTimer;
+		int _ccState;
+
+		[Flags]
+		public enum CC { Inside = 1, Outside = 2, Anywhere = 3 };
+
 		unsafe nint _Hook(nint hwnd, int msg, nint wParam, nint lParam, ref bool handled) {
 			var r = _Hook((AWnd)hwnd, msg, wParam, lParam);
 			handled = r != null;
@@ -303,9 +361,15 @@ namespace Au.Controls
 			case Api.WM_WINDOWPOSCHANGED:
 				var wp = (Api.WINDOWPOS*)lParam;
 				//AOutput.Write(wp->flags & Native.SWP._KNOWNFLAGS, IsVisible);
-				if (wp->flags.Has(Native.SWP.HIDEWINDOW)) Hidden?.Invoke(this, EventArgs.Empty);
-				if (!wp->flags.Has(Native.SWP.NOSIZE) && _inSizeMove) _size = (SIZE)ADpi.Unscale((wp->cx, wp->cy), w);
-				if (wp->flags.Has(Native.SWP.SHOWWINDOW)) UserClosed = false;
+				if (!wp->flags.Has(Native.SWP.NOSIZE) && _inSizeMove) _size = SIZE.From(ADpi.Unscale((wp->cx, wp->cy), w), true);
+				if (wp->flags.Has(Native.SWP.SHOWWINDOW)) {
+					UserClosed = false;
+					_ClickCloseTimer(true);
+				}
+				if (wp->flags.Has(Native.SWP.HIDEWINDOW)) {
+					_ClickCloseTimer(false);
+					Hidden?.Invoke(this, EventArgs.Empty);
+				}
 				break;
 			case Api.WM_ENTERSIZEMOVE:
 				_inSizeMove = true;
@@ -344,10 +408,13 @@ namespace Au.Controls
 				}
 				break;
 			case Api.WM_CLOSE:
-				if (CloseHides) { _w.ShowLL(false); return 0; }
+				if (CloseHides) { _w.ShowL(false); return 0; }
 				break;
 			case Api.WM_DPICHANGED:
 				_hs.DpiChangedWorkaround();
+				break;
+			case Api.WM_TIMER when wParam == c_ccTimer:
+				_ClickCloseTimer(null);
 				break;
 			}
 			return null;

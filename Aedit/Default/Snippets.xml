@@ -342,7 +342,7 @@ default: return;
 				<![CDATA[t["$end$"] = o => {  };]]>
 			</list>
 			<list item="Drop-down menu">
-				<![CDATA[t.MenuButton("$end$", m => {
+				<![CDATA[t.Menu("$end$", m => {
 	m[""] = o => {  };
 	m[""] = o => {  };
 });]]>
@@ -551,7 +551,7 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	
 	t["Button1"] = o => {  };
 	t[""] = o => {  };
-	t.MenuButton("Menu1", m => {
+	t.Menu("Menu1", m => {
 		m[""] = o => {  };
 		m[""] = o => {  };
 	});

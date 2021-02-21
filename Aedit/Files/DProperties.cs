@@ -521,21 +521,20 @@ class DProperties : KDialogWindow
 		return r;
 	}
 
-	static void _ShowInfo_ListEmpty(Button button, string sFind) {
+	void _ShowInfo_ListEmpty(Button button, string sFind) {
 		var s = "The list is empty";
 		if (sFind.Length > 0) s = "The list contains 0 items containing " + sFind;
 		_ShowInfoTooltip(button, s);
 	}
 
-	static void _ShowInfo_Added(Button button, List<string> metaList) {
+	void _ShowInfo_Added(Button button, List<string> metaList) {
 		_ShowInfoTooltip(button, string.Join("\r\n", metaList) + "\r\n\r\nFinally click OK to save.");
 	}
 
-	static void _ShowInfoTooltip(Button button, string s) {
-		var tt = new ToolTip { Content = s, PlacementTarget = button, Placement = PlacementMode.Right };
-		tt.IsOpen = true;
-		ATimer.After(1000, _ => tt.StaysOpen = false); //avoid closing on mouse button up after d-click eg in Open File dialog
+	void _ShowInfoTooltip(Button button, string s) {
+		Au.Tools.TUtil.InfoTooltip(ref _tt, button, s, Dock.Right);
 	}
+	KPopup _tt;
 
 	#endregion
 

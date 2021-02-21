@@ -33,7 +33,7 @@ namespace Au
 	/// - When a 'find' function does not find the window or control, it returns default(AWnd) (window handle 0). Then <see cref="Is0"/> will return true.
 	/// - If a function does not follow these rules, it is mentioned in function documentation.
 	/// 
-	/// Many functions fail if the window's process has a higher [](xref:uac) integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateLL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
+	/// Many functions fail if the window's process has a higher [](xref:uac) integrity level (aministrator, uiAccess) than this process, unless this process has uiAccess level. Especially the functions that change window properties. Some functions that still work: <b>Activate</b>, <b>ActivateL</b>, <b>ShowMinimized</b>, <b>ShowNotMinimized</b>, <b>ShowNotMinMax</b>, <b>Close</b>.
 	/// 
 	/// The AWnd type can be used with native Windows API functions without casting. Use AWnd for the parameter type in the declaration, like <c>[DllImport(...)] static extern bool NativeFunction(AWnd hWnd, ...)</c>.
 	/// 
@@ -458,11 +458,11 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// Does not activate/deactivate/zorder.
-		/// This window can be of any thread. If you know it is of this thread, use <see cref="ShowLL"/>. This function calls it.
+		/// This window can be of any thread. If you know it is of this thread, use <see cref="ShowL"/>. This function calls it.
 		/// </remarks>
 		/// <exception cref="AuWndException"/>
 		public void Show(bool show) {
-			if (!ShowLL(show)) ThrowUseNative(show ? "*show*" : "*hide*");
+			if (!ShowL(show)) ThrowUseNative(show ? "*show*" : "*hide*");
 			MinimalSleepIfOtherThread_();
 		}
 
@@ -474,10 +474,10 @@ namespace Au
 		/// Does not activate/deactivate/zorder.
 		/// 
 		/// There are two similar functions to show/hide a window: 
-		/// - <see cref="Show"/> is better to use in automation scripts, with windows of any process/thread. It calls <b>ShowLL</b>, and throws exception if it fails. Adds a small delay if the window is of another thread.
-		/// - <b>ShowLL</b> is better to use in programming, with windows of current thread. It is low-level. Does not throw exceptions. Does not add a delay. But both functions can be used with windows of any thread.
+		/// - <see cref="Show"/> is better to use in automation scripts, with windows of any process/thread. It calls <b>ShowL</b>, and throws exception if it fails. Adds a small delay if the window is of another thread.
+		/// - <b>ShowL</b> is better to use in programming, with windows of current thread. It is more lightweight. Does not throw exceptions. Does not add a delay. But both functions can be used with windows of any thread.
 		/// </remarks>
-		public bool ShowLL(bool show) {
+		public bool ShowL(bool show) {
 			if (show == HasStyle(WS.VISIBLE)) return true; //avoid messages and make much faster. Never mind: if show==false, returns true even if invalid hwnd.
 			Send(Api.WM_SHOWWINDOW, show); //not necessary for most windows, but eg winforms would not update the Visible property without it. ShowWindow sends it but SetWindowPos doesn't.
 			return SetWindowPos((show ? Native.SWP.SHOWWINDOW : Native.SWP.HIDEWINDOW)
@@ -667,7 +667,7 @@ namespace Au
 				}
 
 				if (!IsOfThisThread) {
-					if (wasMinimized) ActivateLL(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
+					if (wasMinimized) ActivateL(); //fix Windows bug: if window of another thread, deactivates currently active window and does not activate this window
 					else if (state == Api.SW_MINIMIZE) More.WaitForAnActiveWindow();
 				}
 			}
@@ -805,7 +805,7 @@ namespace Au
 				return Api.AllowSetForegroundWindow(Api.GetCurrentProcessId());
 			}
 
-			internal static bool ActivateLL(AWnd w) {
+			internal static bool ActivateL(AWnd w) {
 				if (w.IsActiveOrNoActiveAndThisIsWndRoot_) return true;
 
 				try {
@@ -898,7 +898,7 @@ namespace Au
 				}
 
 				for (int i = 0; i < 3; i++) {
-					bool ok = ActivateLL();
+					bool ok = ActivateL();
 
 					if (!ofThisThread) {
 						MinimalSleepNoCheckThread_();
@@ -913,10 +913,10 @@ namespace Au
 							int tid = ThreadId; if (tid == 0) break;
 							if (f.ThreadId == tid) {
 								//at first try to recognize such known windows, to avoid the hard way
-								if (isMinimized || (f.OwnerWindow == this && Rect.IsEmpty)) {
+								if (isMinimized || (f.OwnerWindow == this && Rect.NoArea)) {
 									R = true;
 								} else {
-									R = Api.SetForegroundWindow(GetWnd.Root) && ActivateLL() && Active.ThreadId == tid;
+									R = Api.SetForegroundWindow(GetWnd.Root) && ActivateL() && Active.ThreadId == tid;
 									if (R && !ofThisThread) {
 										MinimalSleepNoCheckThread_();
 										R = Active.ThreadId == tid;
@@ -950,7 +950,7 @@ namespace Au
 						if (forScreenCapture) Thread.Sleep(800); //need minimum 600 for 'find image' functions, because of animation while switching Win10 desktops.
 						MinimalSleepNoCheckThread_();
 						R = IsActive;
-						if (!R && ActivateLL()) {
+						if (!R && ActivateL()) {
 							MinimalSleepNoCheckThread_();
 							R = IsActive;
 						}
@@ -978,7 +978,7 @@ namespace Au
 		/// - When the target application instead activates another window of the same thread.
 		/// </remarks>
 		/// <exception cref="AuWndException"/>
-		/// <seealso cref="ActivateLL"/>
+		/// <seealso cref="ActivateL"/>
 		/// <seealso cref="IsActive"/>
 		/// <seealso cref="Active"/>
 		/// <seealso cref="SwitchActiveWindow"/>
@@ -986,16 +986,16 @@ namespace Au
 			Activate_(0);
 		}
 		//CONSIDER: if fails to activate:
-		//TaskDialogEx("Failed to activate window", w.ToString(), footer: The script will continue if you activate the window in {x} s.", timeout: 10);
+		//ADialog.Show("Failed to activate window", w.ToString(), footer: The script will continue if you activate the window in {x} s.", timeout: 10);
 
 		/// <summary>
-		/// Low-level version of <see cref="Activate()"/>.
+		/// Lightweight version of <see cref="Activate()"/>.
 		/// Just calls <see cref="More.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
 		/// No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
 		/// Returns false if fails.
 		/// </summary>
-		public bool ActivateLL() {
-			return Internal_.ActivateLL(this);
+		public bool ActivateL() {
+			return Internal_.ActivateL(this);
 		}
 
 		public static partial class More
@@ -1135,8 +1135,7 @@ namespace Au
 		/// <seealso cref="Focus"/>
 		public bool IsFocused => !this.Is0 && this == Focused;
 
-		//TODO: try to incorporate in AWnd. Now this is too obscure. Eg name FocusLL or FocusT.
-		//TODO: rename all XxxLL (low-level) to XxxL (lightweight).
+		//TODO: try to move ThisThread class functions to AWnd. Now this is too obscure. Eg name FocusT.
 
 		/// <summary>
 		/// Functions that can be used only with windows/controls of this thread.
@@ -1221,25 +1220,11 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets width and height.
-		/// </summary>
-		/// <param name="z">Receives width and height. Will be default(SIZE) if failed.</param>
-		/// <remarks>
-		/// The same as the <see cref="Size"/> property.
-		/// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
-		/// Supports <see cref="ALastError"/>.
-		/// </remarks>
-		public bool GetSize(out SIZE z) {
-			if (Api.GetWindowRect(this, out RECT r)) { z = new SIZE(r.Width, r.Height); return true; }
-			z = default;
-			return false;
-		}
-
-		/// <summary>
 		/// Gets rectangle (position and size) in screen coordinates.
 		/// </summary>
 		/// <remarks>
 		/// Calls <see cref="GetRect"/>. Returns default(RECT) if fails (eg window closed).
+		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
 		public RECT Rect {
 			get {
@@ -1248,51 +1233,77 @@ namespace Au
 			}
 		}
 
-		/// <summary>
-		/// Gets width and height.
-		/// </summary>
-		/// <remarks>
-		/// Calls <see cref="GetSize"/>. Returns default(SIZE) if fails (eg window closed).
-		/// Supports <see cref="ALastError"/>.
-		/// </remarks>
-		public SIZE Size {
-			get {
-				GetSize(out SIZE z);
-				return z;
-			}
-		}
+		///// <summary>
+		///// Gets width and height.
+		///// </summary>
+		///// <param name="z">Receives width and height. Will be default(SIZE) if failed.</param>
+		///// <remarks>
+		///// The same as the <see cref="Size"/> property.
+		///// Calls API <msdn>GetWindowRect</msdn> and returns its return value.
+		///// Supports <see cref="ALastError"/>.
+		///// </remarks>
+		//public bool GetSize(out SIZE z) {
+		//	if (Api.GetWindowRect(this, out RECT r)) { z = new SIZE(r.Width, r.Height); return true; }
+		//	z = default;
+		//	return false;
+		//}
 
-		/// <summary>
-		/// Gets horizontal position in screen coordinates.
-		/// </summary>
-		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int X {
-			get => Rect.left;
-		}
+		///// <summary>
+		///// Gets width and height.
+		///// </summary>
+		///// <remarks>
+		///// Calls <see cref="GetSize"/>. Returns default(SIZE) if fails (eg window closed).
+		///// Supports <see cref="ALastError"/>.
+		///// </remarks>
+		//public SIZE Size {
+		//	get {
+		//		GetSize(out SIZE z);
+		//		return z;
+		//	}
+		//}
 
-		/// <summary>
-		/// Gets vertical position in screen coordinates.
-		/// </summary>
-		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int Y {
-			get => Rect.top;
-		}
+		///// <summary>
+		///// Gets position in screen coordinates.
+		///// </summary>
+		///// <remarks>
+		///// Calls <see cref="GetRect"/>. Returns default(POINT) if fails (eg window closed).
+		///// Supports <see cref="ALastError"/>.
+		///// </remarks>
+		//public POINT XY {
+		//	get { var r = Rect; return new(r.left, r.top); }
+		//}
 
-		/// <summary>
-		/// Gets width.
-		/// </summary>
-		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int Width {
-			get => Rect.Width;
-		}
+		///// <summary>
+		///// Gets horizontal position in screen coordinates.
+		///// </summary>
+		///// <remarks>Calls <see cref="GetRect"/>.</remarks>
+		//public int X {
+		//	get => Rect.left;
+		//}
 
-		/// <summary>
-		/// Gets height.
-		/// </summary>
-		/// <remarks>Calls <see cref="GetRect"/>.</remarks>
-		public int Height {
-			get => Rect.Height;
-		}
+		///// <summary>
+		///// Gets vertical position in screen coordinates.
+		///// </summary>
+		///// <remarks>Calls <see cref="GetRect"/>.</remarks>
+		//public int Y {
+		//	get => Rect.top;
+		//}
+
+		///// <summary>
+		///// Gets width.
+		///// </summary>
+		///// <remarks>Calls <see cref="GetRect"/>.</remarks>
+		//public int Width {
+		//	get => Rect.Width;
+		//}
+
+		///// <summary>
+		///// Gets height.
+		///// </summary>
+		///// <remarks>Calls <see cref="GetRect"/>.</remarks>
+		//public int Height {
+		//	get => Rect.Height;
+		//}
 
 		/// <summary>
 		/// Gets client area rectangle.
@@ -1300,7 +1311,7 @@ namespace Au
 		/// <param name="r">Receives the rectangle. Will be default(RECT) if failed.</param>
 		/// <param name="inScreen">
 		/// Get rectangle in screen coordinates; like <see cref="GetWindowAndClientRectInScreen"/> but faster.
-		/// If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="ClientRect"/> or <see cref="GetClientSize"/>.</param>
+		/// If false (default), calls API <msdn>GetClientRect</msdn>; the same as <see cref="ClientRect"/>.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
@@ -1317,27 +1328,10 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets client area width and height.
-		/// </summary>
-		/// <param name="z">Receives width and height. Will be default(RECT) if failed.</param>
-		/// <remarks>
-		/// The same as the <see cref="ClientSize"/> property.
-		/// The same as <see cref="GetClientRect"/>, just the parameter type is different.
-		/// Calls API <msdn>GetClientRect</msdn> and returns its return value.
-		/// Supports <see cref="ALastError"/>.
-		/// </remarks>
-		public bool GetClientSize(out SIZE z) {
-			if (Api.GetClientRect(this, out RECT r)) { z = new SIZE(r.right, r.bottom); return true; }
-			z = default;
-			return false;
-		}
-
-		/// <summary>
 		/// Gets client area rectangle (width and height).
 		/// </summary>
 		/// <remarks>
-		/// The same as <see cref="ClientSize"/>, just the return type is different.
-		/// The left and top fields are always 0. The right and bottom fields are the width and height of the client area.
+		/// The left and top fields are always 0.
 		/// Calls <see cref="GetClientRect"/>. Returns default(RECT) if fails (eg window closed).
 		/// </remarks>
 		public RECT ClientRect {
@@ -1346,6 +1340,22 @@ namespace Au
 				return r;
 			}
 		}
+
+		///// <summary>
+		///// Gets client area width and height.
+		///// </summary>
+		///// <param name="z">Receives width and height. Will be default(RECT) if failed.</param>
+		///// <remarks>
+		///// The same as the <see cref="ClientSize"/> property.
+		///// The same as <see cref="GetClientRect"/>, just the parameter type is different.
+		///// Calls API <msdn>GetClientRect</msdn> and returns its return value.
+		///// Supports <see cref="ALastError"/>.
+		///// </remarks>
+		//public bool GetClientSize(out SIZE z) {
+		//	if (Api.GetClientRect(this, out RECT r)) { z = new SIZE(r.right, r.bottom); return true; }
+		//	z = default;
+		//	return false;
+		//}
 
 		/// <summary>
 		/// Gets client area rectangle (width and height) in screen.
@@ -1360,49 +1370,49 @@ namespace Au
 			}
 		}
 
-		/// <summary>
-		/// Gets client area width and height.
-		/// </summary>
-		/// <remarks>
-		/// The same as <see cref="ClientRect"/>, just the return type is different.
-		/// Calls <see cref="GetClientSize"/>. Returns default(SIZE) if fails (eg window closed).
-		/// </remarks>
-		public SIZE ClientSize {
-			get {
-				GetClientSize(out SIZE z);
-				return z;
-			}
-		}
+		///// <summary>
+		///// Gets client area width and height.
+		///// </summary>
+		///// <remarks>
+		///// The same as <see cref="ClientRect"/>, just the return type is different.
+		///// Calls <see cref="GetClientSize"/>. Returns default(SIZE) if fails (eg window closed).
+		///// </remarks>
+		//public SIZE ClientSize {
+		//	get {
+		//		GetClientSize(out SIZE z);
+		//		return z;
+		//	}
+		//}
+
+		///// <summary>
+		///// Gets client area width.
+		///// </summary>
+		///// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
+		//public int ClientWidth {
+		//	get => ClientSize.width;
+		//}
+
+		///// <summary>
+		///// Gets client area height.
+		///// </summary>
+		///// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
+		//public int ClientHeight {
+		//	get => ClientSize.height;
+		//}
 
 		/// <summary>
-		/// Gets client area width.
+		/// Resizes this window to match specifient client area size.
+		/// Calls <see cref="ResizeL"/>.
 		/// </summary>
-		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
-		public int ClientWidth {
-			get => ClientSize.width;
-		}
-
-		/// <summary>
-		/// Gets client area height.
-		/// </summary>
-		/// <remarks>Calls <see cref="GetClientSize"/>.</remarks>
-		public int ClientHeight {
-			get => ClientSize.height;
-		}
-
-		/// <summary>
-		/// Calculates and sets window rectangle from the specified client area rectangle.
-		/// Calls <see cref="ResizeLL"/>.
-		/// </summary>
-		/// <param name="width">Width. Use null to not change.</param>
-		/// <param name="height">Height. Use null to not change.</param>
+		/// <param name="width">Client area width. Use null to not change.</param>
+		/// <param name="height">Client area height. Use null to not change.</param>
 		/// <exception cref="AuWndException"/>
-		public void SetClientSize(int? width, int? height) {
+		public void ResizeClient(int? width, int? height) {
 			if (GetWindowInfo_(out var u)) {
-				int W = width != null ? width.GetValueOrDefault() : u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
-				int H = height != null ? height.GetValueOrDefault() : u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
+				int W = width ?? u.rcClient.Width; W += u.rcWindow.Width - u.rcClient.Width;
+				int H = height ?? u.rcClient.Height; H += u.rcWindow.Height - u.rcClient.Height;
 
-				if (ResizeLL(W, H)) return;
+				if (ResizeL(W, H)) return;
 			}
 
 			ThrowUseNative();
@@ -1652,12 +1662,12 @@ namespace Au
 		/// <param name="y"></param>
 		/// <param name="cx"></param>
 		/// <param name="cy"></param>
-		/// <param name="wndInsertAfter">A window or <see cref="Native.HWND"/>.<b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.</param>
+		/// <param name="zorderAfter">A window or <see cref="Native.HWND"/>.<b>TOP</b>, <b>BOTTOM</b>, <b>TOPMOST</b>, <b>NOTOPMOST</b>.</param>
 		/// <remarks>
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, AWnd wndInsertAfter = default) {
-			return Api.SetWindowPos(this, wndInsertAfter, x, y, cx, cy, swpFlags);
+		public bool SetWindowPos(Native.SWP swpFlags, int x = 0, int y = 0, int cx = 0, int cy = 0, AWnd zorderAfter = default) {
+			return Api.SetWindowPos(this, zorderAfter, x, y, cx, cy, swpFlags);
 		}
 
 		/// <summary>
@@ -1665,21 +1675,21 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// See also <see cref="Move(Coord, Coord, Coord, Coord, bool, AScreen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max, does not support SWP flags.
-		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
+		/// This function is more lightweight, it just calls API <msdn>SetWindowPos</msdn> with flags NOZORDER|NOOWNERZORDER|NOACTIVATE|swpFlagsToAdd. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="ALastError"/>.
 		/// 
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool MoveLL(int x, int y, int width, int height, Native.SWP swpFlagsToAdd = 0) {
+		public bool MoveL(int x, int y, int width, int height, Native.SWP swpFlagsToAdd = 0) {
 			return SetWindowPos(Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE | swpFlagsToAdd, x, y, width, height);
 		}
 
 		/// <summary>
-		/// Moves and resizes. Same as <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
+		/// Moves and resizes. Same as <see cref="MoveL(int, int, int, int, Native.SWP)"/>.
 		/// </summary>
-		public bool MoveLL(RECT r, Native.SWP swpFlagsToAdd = 0) {
-			return MoveLL(r.left, r.top, r.Width, r.Height, swpFlagsToAdd);
+		public bool MoveL(RECT r, Native.SWP swpFlagsToAdd = 0) {
+			return MoveL(r.left, r.top, r.Width, r.Height, swpFlagsToAdd);
 		}
 
 		/// <summary>
@@ -1687,28 +1697,32 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// See also <see cref="Move(Coord, Coord, bool, AScreen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
-		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
+		/// This function is more lightweight, it just calls API <msdn>SetWindowPos</msdn> with flags NOSIZE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="ALastError"/>.
 		/// 
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool MoveLL(int x, int y) {
-			return MoveLL(x, y, 0, 0, Native.SWP.NOSIZE);
+		public bool MoveL(int x, int y) {
+			return MoveL(x, y, 0, 0, Native.SWP.NOSIZE);
 		}
+
+		internal bool MoveL_(POINT p) => MoveL(p.x, p.y);
 
 		/// <summary>
 		/// Resizes.
 		/// </summary>
 		/// <remarks>
 		/// See also <see cref="Resize(Coord, Coord, bool, AScreen)"/>. It is better to use in automation scripts, with windows of any process/thread. It throws exceptions, supports optional/reverse/fractional/workarea coordinates, restores if min/max.
-		/// This function is low-level, it just calls API <msdn>SetWindowPos</msdn> with flags NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
+		/// This function is more lightweight, it just calls API <msdn>SetWindowPos</msdn> with flags NOMOVE|NOZORDER|NOOWNERZORDER|NOACTIVATE. It is better to use in programming, with windows of current thread.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
 		/// <seealso cref="SetWindowPos"/>
-		public bool ResizeLL(int width, int height) {
-			return MoveLL(0, 0, width, height, Native.SWP.NOMOVE);
+		public bool ResizeL(int width, int height) {
+			return MoveL(0, 0, width, height, Native.SWP.NOMOVE);
 		}
+
+		internal bool ResizeL_(SIZE z) => ResizeL(z.width, z.height);
 
 		/// <summary>
 		/// Moves and/or resizes.
@@ -1722,7 +1736,7 @@ namespace Au
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client area coordinates.
-		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int, int, int, Native.SWP)"/>.
+		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int, int, int, Native.SWP)"/>.
 		/// </remarks>
 		/// <exception cref="AuWndException"/>
 		public void Move(Coord x, Coord y, Coord width, Coord height, bool workArea = false, AScreen screen = default) {
@@ -1756,7 +1770,7 @@ namespace Au
 				//info: '&& IsVisible' because ShowNotMinMax unhides
 			}
 
-			if (!MoveLL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
+			if (!MoveL(xy.x, xy.y, wh.x, wh.y, f)) ThrowUseNative("*move/resize*");
 
 			MinimalSleepIfOtherThread_();
 		}
@@ -1772,7 +1786,7 @@ namespace Au
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
 		/// For top-level windows use screen coordinates. For controls - direct parent client coordinates.
-		/// With windows of current thread usually it's better to use <see cref="MoveLL(int, int)"/>.
+		/// With windows of current thread usually it's better to use <see cref="MoveL(int, int)"/>.
 		/// </remarks>
 		public void Move(Coord x, Coord y, bool workArea = false, AScreen screen = default) {
 			Move(x, y, default, default, workArea, screen);
@@ -1788,7 +1802,7 @@ namespace Au
 		/// <exception cref="AuWndException"/>
 		/// <remarks>
 		/// Also restores the visible top-level window if it is minimized or maximized.
-		/// With windows of current thread usually it's better to use <see cref="ResizeLL(int, int)"/>.
+		/// With windows of current thread usually it's better to use <see cref="ResizeL(int, int)"/>.
 		/// </remarks>
 		public void Resize(Coord width, Coord height, bool workArea = false, AScreen screen = default) {
 			Move(default, default, width, height, workArea, screen);
@@ -1846,7 +1860,7 @@ namespace Au
 					if (r.Height > rs.Height) r.Height = rs.Height;
 				}
 
-				r.Offset(x - r.left, y - r.top);
+				r.Move(x, y);
 
 				if (useWindow) { //move window
 					w.GetWindowPlacement_(out var wp, false, "*move*");
@@ -1872,7 +1886,7 @@ namespace Au
 							//Must call SetWindowPos twice, or it may refuse to move at all.
 							//Another way - use SetWindowPlacement to temporarily restore, move to other screen, then maximize. But it unhides hidden window.
 							rs = scr.WorkArea;
-							if (!w.MoveLL(rs.left, rs.top) || !w.ResizeLL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
+							if (!w.MoveL(rs.left, rs.top) || !w.ResizeL(rs.Width, rs.Height)) w.ThrowUseNative("*move*");
 						}
 					}
 					finally {
@@ -1939,12 +1953,22 @@ namespace Au
 		#endregion
 
 		#region Zorder
-		const Native.SWP _SWP_ZORDER = Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE;
-		//CONSIDER: option to | Native.SWP.NOOWNERZORDER.
+		const Native.SWP _SWP_ZORDER = Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOACTIVATE | Native.SWP.NOOWNERZORDER;
+		//note: without Native.SWP.NOOWNERZORDER sometimes fails, even when no owner.
+		//	Eg after moving or resizing a AToolbar starts to fail to zorder it above target window.
+		//	Also, when setting topmost, may set owner topmost and this below owner.
+
+		Native.SWP _SWP_ZorderFlags() {
+			var r = _SWP_ZORDER;
+			if (!OwnerWindow.Is0) r &= ~Native.SWP.NOOWNERZORDER;
+			return r;
+		}
 
 		/// <summary>
 		/// Places this window above window w in the Z order.
 		/// </summary>
+		/// <param name="w"></param>
+		/// <param name="ownerToo">Change Z order of owner window too.</param>
 		/// <remarks>
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
 		/// This window and w can be both top-level windows or both controls of same parent.
@@ -1952,11 +1976,13 @@ namespace Au
 		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; it depends on many documented and undocumented conditions; can even return true when failed.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool ZorderAbove(AWnd w) => _ZorderAfterBefore(w, true);
+		public bool ZorderAbove(AWnd w, bool ownerToo = false) => _ZorderAfterBefore(w, true, ownerToo);
 
 		/// <summary>
 		/// Places this window below window w in the Z order.
 		/// </summary>
+		/// <param name="w"></param>
+		/// <param name="ownerToo">Change Z order of owner window too.</param>
 		/// <remarks>
 		/// Also can make this window topmost or non-topmost, depending on where w is in the Z order.
 		/// This window and w can be both top-level windows or both controls of same parent.
@@ -1964,27 +1990,31 @@ namespace Au
 		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool ZorderBelow(AWnd w) => _ZorderAfterBefore(w, false);
+		public bool ZorderBelow(AWnd w, bool ownerToo = false) => _ZorderAfterBefore(w, false, ownerToo);
 
-		bool _ZorderAfterBefore(AWnd w, bool before) {
-			if (w.Is0) return before ? ZorderBottom() : ZorderTop();
+		bool _ZorderAfterBefore(AWnd w, bool before, bool ownerToo) {
+			if (w.Is0) return before ? ZorderBottom() : ZorderTop(ownerToo);
 			if (w == this) return true;
 			if (IsTopmost && !w.IsTopmost) ZorderNoTopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, before ? w.Get.Previous() : w);
+			var swp = ownerToo ? _SWP_ZorderFlags() : _SWP_ZORDER;
+			return SetWindowPos(swp, 0, 0, 0, 0, before ? w.Get.Previous() : w);
 		}
 
 		/// <summary>
 		/// Places this window or control at the top of the Z order. Does not activate.
 		/// If the window was topmost, it will be at the top of topmost windows, else at the top of non-topmost windows.
 		/// </summary>
+		/// <param name="ownerToo">Change Z order of owner window too.</param>
 		/// <remarks>
 		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool ZorderTop() {
-			if (IsChild || IsTopmost) return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOP);
+		public bool ZorderTop(bool ownerToo = false) {
+			if (IsChild) return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOP);
+			var swp = ownerToo ? _SWP_ZorderFlags() : _SWP_ZORDER;
+			if (IsTopmost) return SetWindowPos(swp, 0, 0, 0, 0, Native.HWND.TOP);
 			GetWnd.Top2(out var lastTopmost);
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, lastTopmost);
+			return SetWindowPos(swp, 0, 0, 0, 0, lastTopmost);
 		}
 
 		/// <summary>
@@ -1992,33 +2022,39 @@ namespace Au
 		/// If the window was topmost, makes it and its owner window non-topmost.
 		/// </summary>
 		/// <remarks>
+		/// Changes Z order of owner window too.
 		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
 		public bool ZorderBottom() {
-			ZorderNoTopmost(); //see comments below
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.BOTTOM);
+			ZorderNoTopmost();
+			return SetWindowPos(_SWP_ZorderFlags(), 0, 0, 0, 0, Native.HWND.BOTTOM);
 		}
 
 		/// <summary>
 		/// Makes this window topmost (always on top of non-topmost windows in the Z order). Does not activate.
 		/// </summary>
+		/// <param name="ownerToo">Change Z order of owner window too.</param>
 		/// <remarks>
 		/// This cannot be a control.
 		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
 		/// Supports <see cref="ALastError"/>.
 		/// </remarks>
-		public bool ZorderTopmost() {
-			return SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOPMOST);
-			//TODO: it seems fails (QM2 fails, here not tested) if has non-topmost owned windows (hidden when tested)
+		public bool ZorderTopmost(bool ownerToo = false) {
+			if (ownerToo) { //cannot use without SWP_NOOWNERZORDER because of SWP bug. See comments below _SWP_ZORDER.
+				var ow = OwnerWindow;
+				if (!ow.Is0) ow.ZorderTopmost(true);
+			}
+			if (!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.TOPMOST)) return false;
+			return true;
 		}
 
 		/// <summary>
 		/// Makes this window non-topmost.
 		/// </summary>
-		/// <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is its owner.</param>
+		/// <param name="afterActiveWindow">Also place this window below the active nontopmost window in the Z order, unless the active window is this or owner.</param>
 		/// <remarks>
-		/// If this window has an owner window, makes it non-topmost too.
+		/// Changes Z order of owner window too.
 		/// This cannot be a control.
 		/// Uses API <msdn>SetWindowPos</msdn>. It may refuse to change Z order of top-level windows; its behavior depends on many documented and undocumented conditions and changes with new OS versions; can even return true when failed.
 		/// Supports <see cref="ALastError"/>.
@@ -2026,18 +2062,18 @@ namespace Au
 		public bool ZorderNoTopmost(bool afterActiveWindow = false) {
 			if (!IsTopmost) return true;
 
-			for (int i = 0; i < 4; i++) {
-				if (!SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, Native.HWND.NOTOPMOST)) return false;
-				if (i == 0 && !IsTopmost) break;
-				//AOutput.Write("retry");
-			}
-
-			//place this after the active window
+			var swp = _SWP_ZorderFlags();
+			AWnd after = Native.HWND.NOTOPMOST;
 			if (afterActiveWindow) {
 				AWnd wa = Active;
-				if (wa != this && !wa.IsTopmost) SetWindowPos(_SWP_ZORDER, 0, 0, 0, 0, wa);
+				if (!wa.Is0 && !Get.Owners(andThis: true).Contains(wa)) after = wa;
 			}
 
+			for (int i = 0; i < 4; i++) {
+				if (!SetWindowPos(swp, 0, 0, 0, 0, after)) return false;
+				if (i == 0 && !IsTopmost) break;
+				ADebug.Print("retry");
+			}
 			return true;
 		}
 		// Windows 8/10 bug: cannot make a topmost uiAccess window non-topmost (with HWND_NOTOPMOST, HWND_BOTTOM or non-topmost hwndInsertAfter).
@@ -2152,7 +2188,7 @@ namespace Au
 			SetWindowLong(gwl, style);
 
 			if (flags.Has(WSFlags.UpdateNonclient)) SetWindowPos(Native.SWP.FRAMECHANGED | Native.SWP.NOMOVE | Native.SWP.NOSIZE | Native.SWP.NOZORDER | Native.SWP.NOOWNERZORDER | Native.SWP.NOACTIVATE);
-			if (flags.Has(WSFlags.UpdateClient)) Api.InvalidateRect(this, default, true);
+			if (flags.Has(WSFlags.UpdateClient)) Api.InvalidateRect(this, true);
 		}
 
 		/// <summary>

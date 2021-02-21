@@ -17,7 +17,7 @@ using Au.Types;
 
 namespace Au
 {
-	public partial class AToolbar
+	public partial class AToolbar_old
 	{
 		/// <summary>
 		/// Creates new form with a list of toolbars of this thread. Can be used to find lost toolbars.
@@ -67,7 +67,7 @@ namespace Au
 
 			private void _bClick(object sender, EventArgs e)
 			{
-				if(!(_lb.SelectedItem is AToolbar tb)) return;
+				if(!(_lb.SelectedItem is AToolbar_old tb)) return;
 				if(tb._c.IsDisposed) {
 					ADialog.Show("Closed", owner: this);
 					return;
@@ -85,8 +85,7 @@ namespace Au
 					}
 				} else if(sender == _bMove) {
 					if(!w.IsVisible && !ADialog.ShowOkCancel("Hidden", "Move this hidden toolbar?", owner: this)) return;
-					var xy = AMouse.XY;
-					w.MoveLL(xy.x, xy.y);
+					w.MoveL_(AMouse.XY);
 					var w2 = this.Hwnd();
 					if(!w.ZorderIsAbove(w2)) w.ZorderAbove(w2);
 				}

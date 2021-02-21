@@ -165,7 +165,7 @@ namespace Au.Tools
 		/// If checked and visible, gets selected item text and returns true. Else sets text=null and returns false.
 		/// </summary>
 		public bool GetText(out string text) {
-			if(!GetIndex(out int i)) { text = null; return false; }
+			if (!GetIndex(out int i)) { text = null; return false; }
 			text = t.Items[i] as string;
 			return true;
 		}

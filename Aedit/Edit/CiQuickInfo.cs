@@ -16,23 +16,14 @@ using Au.Types;
 
 using Microsoft.CodeAnalysis.QuickInfo;
 using Microsoft.CodeAnalysis.CSharp.QuickInfo;
+using System.Windows.Documents;
+using Microsoft.CodeAnalysis;
 
 class CiQuickInfo
 {
-	public async void SciMouseDwellStarted(SciCode doc, int pos8, bool isDiag) {
-		var pi = Panels.Info;
-		if (!pi.IsVisible) pi = null;
-		if (isDiag && pi == null) return;
-
-		if (pos8 <= 0) { pi?.ZSetAboutInfo(); return; }
-
+	public async Task<Section> GetTextAt(int pos16) {
 		//APerf.First();
-		int pos16 = doc.Pos16(pos8);
-		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) {
-			//pi?.ZSetAboutInfo(cd.metaEnd > 0 ? PanelInfo.About.Metacomments : PanelInfo.About.Minimal);
-			pi?.ZSetAboutInfo(PanelInfo.About.Minimal);
-			return;
-		}
+		if (!CodeInfo.GetContextAndDocument(out var cd, pos16)) return null;
 
 		//APerf.Next();
 		var context = new QuickInfoContext(cd.document, pos16, default);
@@ -43,54 +34,55 @@ class CiQuickInfo
 		//var r = await provider.GetQuickInfoAsync(context); //not async
 		var r = await Task.Run(async () => await provider.GetQuickInfoAsync(context));
 		//APerf.Next();
-		if (r == null) { pi?.ZSetAboutInfo(); return; }
+		if (r == null) return null;
 
 		//AOutput.Write(r.Span, r.RelatedSpans);
 		//AOutput.Write(r.Tags);
 
-		var x = new CiXaml();
-		x.StartParagraph();
-
-		//image
-		CiUtil.TagsToKindAndAccess(r.Tags, out var kind, out var access);
-		if (kind != CiItemKind.None) {
-			if (access != default) x.Image("@a" + (int)access);
-			x.Image("@k" + (int)kind);
-			x.Append(" ");
-		}
+		var x = new CiText();
 
 		//bool hasDocComm = false;
 		//QuickInfoSection descr = null;
-		POINT excRange = default, retRange = default;
 		var a = r.Sections;
 		for (int i = 0; i < a.Length; i++) {
 			var se = a[i];
 			//AOutput.Write(se.Kind, se.Text);
-			if (i > 0) x.StartParagraph();
-			int from = x.SB.Length;
-			x.AppendTaggedParts(se.TaggedParts);
-			int to = x.SB.Length;
-			switch (se.Kind) {
-			case QuickInfoSectionKinds.ReturnsDocumentationComments: retRange = (from, to); break;
-			case QuickInfoSectionKinds.Exception: excRange = (from, to); break;
+			x.StartParagraph();
+
+			if (i == 0) { //image
+				CiUtil.TagsToKindAndAccess(r.Tags, out var kind, out var access);
+				if (kind != CiItemKind.None) {
+					if (access != default) x.Image(access);
+					x.Image(kind);
+					x.Append(" ");
+				}
 			}
+
+			var tp = se.TaggedParts;
+			if (tp[0].Tag == TextTags.LineBreak) { //remove/replace some line breaks in returns and exceptions
+				int lessNewlines = se.Kind switch { QuickInfoSectionKinds.ReturnsDocumentationComments => 1, QuickInfoSectionKinds.Exception => 2, _ => 0 };
+				var k = new List<TaggedText>(tp.Length - 1);
+				for (int j = 1; j < tp.Length; j++) {
+					var v = tp[j];
+					if (lessNewlines > 0 && j > 1) {
+						if (v.Tag == TextTags.LineBreak) {
+							if (j == 2) continue; //remove line break after "Returns:" etc
+							if (lessNewlines == 2) { //in list of exceptions replace "\n  " with ", "
+								if (++j == tp.Length || tp[j].Tag != TextTags.Space) { j--; continue; }
+								v = new(TextTags.Text, ", ");
+							}
+						}
+					}
+					k.Add(v);
+				}
+				x.AppendTaggedParts(k);
+			} else {
+				x.AppendTaggedParts(tp);
+			}
+
 			x.EndParagraph();
 		}
 
-		var xaml = x.End();
-
-		//join lines
-		if (retRange.x > 0) xaml = xaml.RegexReplace(":\n", ": ", 1, 0, retRange.x..retRange.y);
-		if (excRange.x > 0) xaml = xaml.RegexReplace(":\n", ": ", 1, 0, excRange.x..excRange.y).RegexReplace(">\n *", ">, ", range: excRange.x..excRange.y);
-
-		xaml = xaml.Replace("<Paragraph>\n", "<Paragraph>");
-		//xaml = xaml.Replace(">\n", ">&#160;\n"); //workaround for HtmlRenderer bug: adds 2 lines.
-		//APerf.Next();
-		if (pi != null) {
-			pi.ZSetXaml(xaml);
-		} else {
-			CodeInfo.ShowXamlPopup(doc, pos16, xaml);
-		}
-		//APerf.NW();
+		return x.Result;
 	}
 }

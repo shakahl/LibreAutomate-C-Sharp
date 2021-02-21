@@ -161,7 +161,7 @@ namespace Au
 		public static RECT RectInScreen(this FrameworkElement t) {
 			if (t is Window w) return w.Hwnd().Rect; //else would be incorrect: x/y of client area, width/height of window
 			Point p1 = t.PointToScreen(default), p2 = t.PointToScreen(new Point(t.ActualWidth, t.ActualHeight));
-			return new RECT(p1.X.ToInt(), p1.Y.ToInt(), p2.X.ToInt(), p2.Y.ToInt(), false);
+			return RECT.FromLTRB(p1.X.ToInt(), p1.Y.ToInt(), p2.X.ToInt(), p2.Y.ToInt());
 		}
 
 		/// <summary>
@@ -177,7 +177,7 @@ namespace Au
 				var w = t.Hwnd();
 				if (w.Is0) throw new ObjectDisposedException("Window");
 				if (wstate != WindowState.Normal) t.WindowState = WindowState.Normal;
-				if (andSize) w.MoveLL(r); else w.MoveLL(x, y);
+				if (andSize) w.MoveL(r); else w.MoveL(x, y);
 			} else {
 				//tested: don't need this for Popup. Its PlacementRectangle uses physical pixels.
 
@@ -238,7 +238,7 @@ namespace Au
 			if(t.IsLoaded) {
 				var w=t.Hwnd();
 				if(w.Is0) throw new ObjectDisposedException("Window");
-				if(andSize) w.MoveLL(r); else w.MoveLL(x, y);
+				if(andSize) w.MoveL(r); else w.MoveL(x, y);
 			} else {
 				var screen=AScreen.Of(new POINT(x, y));
 				var si=screen.GetInfo();
@@ -261,7 +261,7 @@ namespace Au
 					var rw=w.Rect;
 					x=Math.Clamp(x, rs.left, Math.Max(rs.right-rw.Width, rs.left));
 					y=Math.Clamp(y, rs.top, Math.Max(rs.bottom-rw.Height, rs.top));
-					w.MoveLL(x, y);
+					w.MoveL(x, y);
 				
 					if(wstate!=WindowState.Normal) {
 						if(wstate==WindowState.Maximized) t.SizeToContent=SizeToContent.Manual;
@@ -298,7 +298,7 @@ namespace Au
 			if (t.IsLoaded) {
 				var w = t.Hwnd();
 				if (w.Is0) throw new ObjectDisposedException("Window");
-				if (andSize) w.MoveLL(r); else w.MoveLL(x, y);
+				if (andSize) w.MoveL(r); else w.MoveL(x, y);
 			} else {
 				//tested: don't need this for Popup. Its PlacementRectangle uses physical pixels.
 
@@ -322,12 +322,12 @@ namespace Au
 					var rs = v.workArea;
 					if (!v.isPrimary) {
 						using var h = AHookWin.ThreadCbt(k => k.code == HookData.CbtEvent.ACTIVATE); //workaround for WPF bug: activates window when DPI changes
-						w.MoveLL(rs.left, rs.top); //let DPI-scale
+						w.MoveL(rs.left, rs.top); //let DPI-scale
 					}
 					var rw = w.Rect;
 					x = Math.Clamp(x, rs.left, Math.Max(rs.right - rw.Width, rs.left));
 					y = Math.Clamp(y, rs.top, Math.Max(rs.bottom - rw.Height, rs.top));
-					w.MoveLL(x, y);
+					w.MoveL(x, y);
 					//speed: when moving to a screen with different DPI, total time is same.
 
 					if (wstate != WindowState.Normal) {
@@ -350,7 +350,7 @@ namespace Au
 		/// <remarks>
 		/// The unit is physical pixels. WPF provides <b>Left</b> and <b>Top</b> properties, but the unit is logical pixels, therefore cannot set exact location on high DPI screens, especially if there are mutiple screens with different DPI.
 		/// 
-		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveLL"/>.
+		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveL"/>.
 		/// 
 		/// Else sets window location for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 		/// </remarks>
@@ -364,7 +364,7 @@ namespace Au
 		/// <remarks>
 		/// The unit is physical pixels. WPF provides <b>Left</b>, <b>Top</b>, <b>Width</b> and <b>Height</b> properties, but the unit is logical pixels, therefore cannot set exact rectangle on high DPI screens, especially if there are mutiple screens with different DPI.
 		/// 
-		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveLL"/>.
+		/// If the window is already loaded, just ensures it is not maximized/minimized and calls <see cref="AWnd.MoveL"/>.
 		/// 
 		/// Else sets window rectangle for normal state (not minimized/maximized). Temporarily changes <b>Title</b>. Clears <b>WindowStartupLocation</b>, <b>Left</b>, <b>Top</b>, <b>Width</b>, <b>Height</b>. Clears <b>ShowActivated</b> if minimized. Does not change <b>SizeToContent</b>.
 		/// </remarks>

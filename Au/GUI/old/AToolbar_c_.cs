@@ -19,18 +19,18 @@ using System.Linq;
 
 namespace Au
 {
-	public partial class AToolbar
+	public partial class AToolbar_old
 	{
 		/// <summary>
 		/// The type of <see cref="Control"/>. Inherits from <see cref="ToolStrip"/>.
 		/// </summary>
 		public class ToolStripWindow : AToolStrip, _IAuToolStrip
 		{
-			[ThreadStatic] static TBRenderer t_renderer;
-			AToolbar _tb;
+			[ThreadStatic] static TBRenderer_old t_renderer;
+			AToolbar_old _tb;
 
 			///
-			protected AToolbar Toolbar => _tb;
+			protected AToolbar_old Toolbar => _tb;
 
 			_Settings _sett => _tb._sett;
 
@@ -47,11 +47,11 @@ namespace Au
 				this.GripStyle = ToolStripGripStyle.Hidden;
 				this.Padding = default;
 				//this.BackColor = SystemColors.ButtonFace; //default
-				this.Renderer = t_renderer ??= new TBRenderer();
+				this.Renderer = t_renderer ??= new TBRenderer_old();
 				this.Name = "AToolbar.Control";
 			}
 
-			internal void Ctor2_(AToolbar tb) {
+			internal void Ctor2_(AToolbar_old tb) {
 				_tb = tb;
 				this.Text = tb._name;
 			}
@@ -73,17 +73,17 @@ namespace Au
 				}
 			}
 
-			WS _BorderStyle(TBBorder b) => b switch {
-				TBBorder.None => 0,
-				TBBorder.ThreeD => WS.DLGFRAME,
-				TBBorder.Thick => WS.THICKFRAME,
-				TBBorder.Caption => WS.CAPTION | WS.THICKFRAME,
-				TBBorder.CaptionX => WS.CAPTION | WS.THICKFRAME | WS.SYSMENU,
+			WS _BorderStyle(TBBorder_old b) => b switch {
+				TBBorder_old.None => 0,
+				TBBorder_old.ThreeD => WS.DLGFRAME,
+				TBBorder_old.Thick => WS.THICKFRAME,
+				TBBorder_old.Caption => WS.CAPTION | WS.THICKFRAME,
+				TBBorder_old.CaptionX => WS.CAPTION | WS.THICKFRAME | WS.SYSMENU,
 				_ => WS.BORDER
 			};
 
-			internal void SetBorder(TBBorder value) {
-				static int _Pad(TBBorder b) => b >= TBBorder.Width2 && b <= TBBorder.Width4 ? (int)b - 1 : 0;
+			internal void SetBorder(TBBorder_old value) {
+				static int _Pad(TBBorder_old b) => b >= TBBorder_old.Width2 && b <= TBBorder_old.Width4 ? (int)b - 1 : 0;
 #if true
 				int pOld = _Pad(_tb._border), pNew = _Pad(value), pDif = pNew - pOld;
 				if (pDif != 0) this.Padding = new Padding(pNew);
@@ -95,7 +95,7 @@ namespace Au
 					if (s2 != (s1 & mask)) w.SetStyle((s1 & ~mask) | s2);
 					//preserve client size and position
 					ADpi.AdjustWindowRectEx(r, ref r, _BorderStyle(value), WS2.TOOLWINDOW);
-					w.MoveLL(r, Native.SWP.FRAMECHANGED);
+					w.MoveL(r, Native.SWP.FRAMECHANGED);
 				}
 #else //this simpler code does not preserve client size and position
 				int pOld = _Pad(_tb._border), pNew = _Pad(value);
@@ -150,8 +150,8 @@ namespace Au
 				case Api.WM_RBUTTONDOWN:
 				case Api.WM_MBUTTONDOWN:
 					var tb1 = _tb._SatPlanetOrThis;
-					if (tb1.IsOwned && !tb1.MiscFlags.Has(TBFlags.DontActivateOwner)) {
-						tb1.OwnerWindow.ActivateLL();
+					if (tb1.IsOwned && !tb1.MiscFlags.Has(TBFlags_old.DontActivateOwner)) {
+						tb1.OwnerWindow.ActivateL();
 						//never mind: sometimes flickers. Here tb1._Zorder() does not help. The OBJECT_REORDER hook zorders when need. This feature is rarely used.
 					}
 					break;
@@ -234,7 +234,7 @@ namespace Au
 			//			if(o.Msg.message != Api.WM_MOUSEMOVE) return;
 			//			var p = AMouse.XY; if(p == pp) return;
 			//			var r = w.Rect;
-			//			w.MoveLL(r.left + (p.x - pp.x), r.top + (p.y - pp.y));
+			//			w.MoveL(r.left + (p.x - pp.x), r.top + (p.y - pp.y));
 			//			pp = p;
 			//		});
 			//	}
@@ -246,13 +246,13 @@ namespace Au
 				if (ModifierKeys == Keys.Shift) { //move
 					h = Api.HTCAPTION;
 				} else { //resize?
-					if (_tb._border == TBBorder.None || (!_tb.Sizable && _tb._border < TBBorder.Thick)) return false;
+					if (_tb._border == TBBorder_old.None || (!_tb.Sizable && _tb._border < TBBorder_old.Thick)) return false;
 					var w = this.Hwnd();
 					LPARAM xy = m.LParam;
 					int x = AMath.LoShort(xy), y = AMath.HiShort(xy);
 					if (_tb.Sizable) {
 						RECT r; int b;
-						if (_tb._border < TBBorder.ThreeD) {
+						if (_tb._border < TBBorder_old.ThreeD) {
 							b = (int)_tb._border;
 							r = w.Rect;
 						} else {
@@ -272,7 +272,7 @@ namespace Au
 							h = Api.HTBOTTOM;
 						} else return false;
 					} else { //disable resizing if border is natively sizable
-						if (_tb._border < TBBorder.Thick) return false;
+						if (_tb._border < TBBorder_old.Thick) return false;
 						w.GetWindowInfo_(out var k);
 						k.rcWindow.Inflate(-k.cxWindowBorders, -k.cyWindowBorders);
 						if (k.rcWindow.Contains(x, y)) return false;
@@ -284,10 +284,10 @@ namespace Au
 			}
 
 			bool _WmNcpaint(AWnd w) {
-				if (_tb.BorderColor == 0 || _tb._border < TBBorder.Width1 || _tb._border > TBBorder.Width4) return false;
+				if (_tb.BorderColor == 0 || _tb._border < TBBorder_old.Width1 || _tb._border > TBBorder_old.Width4) return false;
 				using var dc = new WindowDC_(Api.GetWindowDC(w), w);
 				using var g = Graphics.FromHdc(dc);
-				var r = w.Rect; r.Offset(-r.left, -r.top);
+				var r = w.Rect; r.Move(0, 0);
 				ControlPaint.DrawBorder(g, r, (Color)_tb.BorderColor, ButtonBorderStyle.Solid);
 				return true;
 			}
@@ -301,36 +301,36 @@ namespace Au
 			/// <param name="ts">This control or the overflow dropdown.</param>
 			protected virtual void OnContextMenu(ToolStrip ts) {
 				var no = _tb.NoMenu;
-				if (no.Has(TBNoMenu.Menu)) return;
+				if (no.Has(TBNoMenu_old.Menu)) return;
 				var m = new AMenu();
 
-				if (!no.Has(TBNoMenu.Edit) && AScriptEditor.Available) {
+				if (!no.Has(TBNoMenu_old.Edit) && AScriptEditor.Available) {
 					m["Edit"] = o => _tb.GoToEdit_(_cmItem);
 					m.Separator();
 				}
-				if (!no.Has(TBNoMenu.Anchor)) {
+				if (!no.Has(TBNoMenu_old.Anchor)) {
 					using (m.Submenu("Anchor")) {
-						_AddAnchor(TBAnchor.None);
-						_AddAnchor(TBAnchor.TopLeft);
-						_AddAnchor(TBAnchor.TopRight);
-						_AddAnchor(TBAnchor.BottomLeft);
-						_AddAnchor(TBAnchor.BottomRight);
-						_AddAnchor(TBAnchor.TopLR);
-						_AddAnchor(TBAnchor.BottomLR);
-						_AddAnchor(TBAnchor.LeftTB);
-						_AddAnchor(TBAnchor.RightTB);
-						_AddAnchor(TBAnchor.All);
+						_AddAnchor(TBAnchor_old.None);
+						_AddAnchor(TBAnchor_old.TopLeft);
+						_AddAnchor(TBAnchor_old.TopRight);
+						_AddAnchor(TBAnchor_old.BottomLeft);
+						_AddAnchor(TBAnchor_old.BottomRight);
+						_AddAnchor(TBAnchor_old.TopLR);
+						_AddAnchor(TBAnchor_old.BottomLR);
+						_AddAnchor(TBAnchor_old.LeftTB);
+						_AddAnchor(TBAnchor_old.RightTB);
+						_AddAnchor(TBAnchor_old.All);
 						m.Separator();
-						_AddAnchor(TBAnchor.OppositeEdgeX);
-						_AddAnchor(TBAnchor.OppositeEdgeY);
+						_AddAnchor(TBAnchor_old.OppositeEdgeX);
+						_AddAnchor(TBAnchor_old.OppositeEdgeY);
 
-						void _AddAnchor(TBAnchor an) {
+						void _AddAnchor(TBAnchor_old an) {
 							var k = m.Add(an.ToString(), _ => {
 								var ta = _tb.Anchor;
-								if (an < TBAnchor.OppositeEdgeX) ta = (ta & ~TBAnchor.All) | an; else ta ^= an;
+								if (an < TBAnchor_old.OppositeEdgeX) ta = (ta & ~TBAnchor_old.All) | an; else ta ^= an;
 								_tb.Anchor = ta;
 							});
-							if (an < TBAnchor.OppositeEdgeX) {
+							if (an < TBAnchor_old.OppositeEdgeX) {
 								k.IsChecked = _tb._anchor.WithoutFlags() == an;
 							} else {
 								k.IsChecked = _tb._anchor.Has(an);
@@ -340,42 +340,42 @@ namespace Au
 						}
 					}
 				}
-				if (!no.Has(TBNoMenu.Layout) && _tb.Layout != TBLayout.Table) {
+				if (!no.Has(TBNoMenu_old.Layout) && _tb.Layout != TBLayout_old.Table) {
 					using (m.Submenu("Layout")) {
-						_AddLayout(TBLayout.Flow);
-						if (!_tb._hasGroups) _AddLayout(TBLayout.Horizontal);
-						_AddLayout(TBLayout.Vertical);
+						_AddLayout(TBLayout_old.Flow);
+						if (!_tb._hasGroups) _AddLayout(TBLayout_old.Horizontal);
+						_AddLayout(TBLayout_old.Vertical);
 
-						void _AddLayout(TBLayout tl) {
+						void _AddLayout(TBLayout_old tl) {
 							m.Add(tl.ToString(), _ => _tb.Layout = tl).IsChecked = tl == _tb.Layout;
 						}
 					}
 				}
-				if (!no.Has(TBNoMenu.Border)) {
+				if (!no.Has(TBNoMenu_old.Border)) {
 					using (m.Submenu("Border")) {
-						_AddBorder(TBBorder.None);
-						_AddBorder(TBBorder.Width1);
-						_AddBorder(TBBorder.Width2);
-						_AddBorder(TBBorder.Width3);
-						_AddBorder(TBBorder.Width4);
-						_AddBorder(TBBorder.ThreeD);
-						_AddBorder(TBBorder.Thick);
-						_AddBorder(TBBorder.Caption);
-						_AddBorder(TBBorder.CaptionX);
+						_AddBorder(TBBorder_old.None);
+						_AddBorder(TBBorder_old.Width1);
+						_AddBorder(TBBorder_old.Width2);
+						_AddBorder(TBBorder_old.Width3);
+						_AddBorder(TBBorder_old.Width4);
+						_AddBorder(TBBorder_old.ThreeD);
+						_AddBorder(TBBorder_old.Thick);
+						_AddBorder(TBBorder_old.Caption);
+						_AddBorder(TBBorder_old.CaptionX);
 
-						void _AddBorder(TBBorder b) {
+						void _AddBorder(TBBorder_old b) {
 							m.Add(b.ToString(), _ => _tb.Border = b).IsChecked = b == _tb._border;
 						}
 					}
 				}
-				if (!no.Has(TBNoMenu.Sizable)) m.Add("Sizable", _ => _tb.Sizable ^= true).IsChecked = _tb.Sizable;
-				if (!no.Has(TBNoMenu.AutoSize)) m.Add("AutoSize", _ => _tb.AutoSize ^= true).IsChecked = _tb.AutoSize;
-				if (!no.Has(TBNoMenu.More)) {
+				if (!no.Has(TBNoMenu_old.Sizable)) m.Add("Sizable", _ => _tb.Sizable ^= true).IsChecked = _tb.Sizable;
+				if (!no.Has(TBNoMenu_old.AutoSize)) m.Add("AutoSize", _ => _tb.AutoSize ^= true).IsChecked = _tb.AutoSize;
+				if (!no.Has(TBNoMenu_old.More)) {
 					using (m.Submenu("More")) {
-						if (_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags.DontActivateOwner);
-						_AddFlag(TBFlags.HideIfFullScreen);
+						if (_tb._SatPlanetOrThis.IsOwned) _AddFlag(TBFlags_old.DontActivateOwner);
+						_AddFlag(TBFlags_old.HideIfFullScreen);
 
-						void _AddFlag(TBFlags f) {
+						void _AddFlag(TBFlags_old f) {
 							var tb = _tb._SatPlanetOrThis;
 							m.Add(_EnumToString(f), _ => tb.MiscFlags ^= f).IsChecked = tb.MiscFlags.Has(f);
 						}
@@ -388,8 +388,8 @@ namespace Au
 					}
 				}
 
-				if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars...", o => new _Form().Show());
-				if (!no.Has(TBNoMenu.Close)) {
+				if (!no.Has(TBNoMenu_old.Toolbars)) m.Add("Toolbars...", o => new _Form().Show());
+				if (!no.Has(TBNoMenu_old.Close)) {
 					m.Separator();
 					m.Add("Close", o => _tb._Close(true));
 				}

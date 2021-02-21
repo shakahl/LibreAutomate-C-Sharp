@@ -98,7 +98,7 @@ namespace Au.Controls
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
 			if (_hh == null) throw new InvalidOperationException();
 			int y = _ItemTop(index);
-			var r = new RECT(0, y, _width, y + _itemH, false);
+			var r = new RECT(0, y, _width, _itemH);
 			if (parts != 0) {
 				_GetPartOffsets(index, out var k);
 				//left

@@ -12,6 +12,7 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Drawing;
 using System.Globalization;
+using System.Text.Json.Serialization;
 //using System.Linq;
 
 
@@ -22,12 +23,12 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	///	There is no struct WPARAM (unsigned). Use LPARAM instead, it is the same in most cases.
-	///	There is no cast operators for enum. When need, cast through int or uint.
+	///	There is no cast operators for enum. When need, cast through int.
 	/// </remarks>
 	[DebuggerStepThrough]
 	public unsafe struct LPARAM : IEquatable<LPARAM>, IComparable<LPARAM>
 	{
-		//In C# 9 could use nint instead. But then need too many explicit casts.
+		//Now could use nint instead. But then need too many explicit casts.
 		//	Eg to pass a pointer to SendMessage need (nint)(&v); for bool need v ? 1 : 0.
 
 #pragma warning disable 1591 //XML doc
@@ -36,19 +37,19 @@ namespace Au.Types
 		LPARAM(nint v) { _v = v; }
 
 		//LPARAM = int etc
-		public static implicit operator LPARAM(void* x) => new LPARAM((nint)x);
-		public static implicit operator LPARAM(nint x) => new LPARAM(x);
-		public static implicit operator LPARAM(nuint x) => new LPARAM((nint)x);
-		public static implicit operator LPARAM(int x) => new LPARAM(x);
-		public static implicit operator LPARAM(uint x) => new LPARAM((nint)x);
-		public static implicit operator LPARAM(sbyte x) => new LPARAM(x);
-		public static implicit operator LPARAM(byte x) => new LPARAM(x);
-		public static implicit operator LPARAM(short x) => new LPARAM(x);
-		public static implicit operator LPARAM(ushort x) => new LPARAM(x);
-		public static implicit operator LPARAM(char x) => new LPARAM(x);
-		public static implicit operator LPARAM(long x) => new LPARAM((nint)x);
-		public static implicit operator LPARAM(ulong x) => new LPARAM((nint)x);
-		public static implicit operator LPARAM(bool x) => new LPARAM(x ? 1 : 0);
+		public static implicit operator LPARAM(void* x) => new((nint)x);
+		public static implicit operator LPARAM(nint x) => new(x);
+		public static implicit operator LPARAM(nuint x) => new((nint)x);
+		public static implicit operator LPARAM(int x) => new(x);
+		public static implicit operator LPARAM(uint x) => new((nint)x);
+		public static implicit operator LPARAM(sbyte x) => new(x);
+		public static implicit operator LPARAM(byte x) => new(x);
+		public static implicit operator LPARAM(short x) => new(x);
+		public static implicit operator LPARAM(ushort x) => new(x);
+		public static implicit operator LPARAM(char x) => new(x);
+		public static implicit operator LPARAM(long x) => new((nint)x);
+		public static implicit operator LPARAM(ulong x) => new((nint)x);
+		public static implicit operator LPARAM(bool x) => new(x ? 1 : 0);
 		//also would be good to have LPARAM(Enum x), but C# does not allow generic operators.
 
 		//int etc = LPARAM
@@ -76,7 +77,7 @@ namespace Au.Types
 		public static LPARAM operator +(LPARAM a, int b) => a._v + b;
 		public static LPARAM operator -(LPARAM a, int b) => a._v - b;
 
-		public override string ToString() => _v.ToString(NumberFormatInfo.InvariantInfo);
+		public override string ToString() => _v.ToStringInvariant();
 
 		public override int GetHashCode() => (int)_v;
 
@@ -103,19 +104,32 @@ namespace Au.Types
 	public struct POINT : IEquatable<POINT>
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
+		[JsonInclude]
 		public int x, y;
 
 		public POINT(int x, int y) { this.x = x; this.y = y; }
 
-		public static implicit operator POINT((int x, int y) t) => new POINT(t.x, t.y);
+		public static implicit operator POINT((int x, int y) t) => new(t.x, t.y);
 
-		public static implicit operator POINT(Point p) => new POINT(p.X, p.Y);
-		public static explicit operator POINT(PointF p) => new POINT(checked((int)p.X), checked((int)p.Y));
-		public static explicit operator POINT(System.Windows.Point p) => new POINT(checked((int)p.X), checked((int)p.Y));
+		public static implicit operator POINT(Point p) => new(p.X, p.Y);
 
-		public static implicit operator Point(POINT p) => new Point(p.x, p.y);
-		public static implicit operator PointF(POINT p) => new PointF(p.x, p.y);
-		public static implicit operator System.Windows.Point(POINT p) => new System.Windows.Point(p.x, p.y);
+		public static implicit operator Point(POINT p) => new(p.x, p.y);
+
+		public static implicit operator PointF(POINT p) => new(p.x, p.y);
+
+		public static implicit operator System.Windows.Point(POINT p) => new(p.x, p.y);
+
+		/// <param name="p"></param>
+		/// <param name="round">Can round up, for example 1.7 to 2.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static POINT From(PointF p, bool round = false)
+			=> new(round ? p.X.ToInt() : checked((int)p.X), round ? p.Y.ToInt() : checked((int)p.Y));
+
+		/// <param name="p"></param>
+		/// <param name="round">Can round up, for example 1.7 to 2.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static POINT From(System.Windows.Point p, bool round = false)
+			=> new(round ? p.X.ToInt() : checked((int)p.X), round ? p.Y.ToInt() : checked((int)p.Y));
 
 		//rejected
 		///// <summary>Specifies position relative to the primary screen or its work area. Calls <see cref="Coord.Normalize"/> with <i>centerIfEmpty</i> true.</summary>
@@ -148,17 +162,11 @@ namespace Au.Types
 		public void Offset(int x, int y) { this.x += x; this.y += y; }
 
 		/// <summary>Returns <c>new POINT(p.x + d.x, p.y + d.y)</c>.</summary>
-		public static POINT operator +(POINT p, (int x, int y) d) => new POINT(p.x + d.x, p.y + d.y);
+		public static POINT operator +(POINT p, (int x, int y) d) => new(p.x + d.x, p.y + d.y);
 
 		public void Deconstruct(out int x, out int y) { x = this.x; y = this.y; }
 
-		public override string ToString() => $"{{x={x.ToStringInvariant()} y={y.ToStringInvariant()}}}";
-
-		//properties for JSON serialization
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _X { get => x; set { x = value; } }
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _Y { get => y; set { y = value; } }
+		public override string ToString() => $"{{{x.ToStringInvariant()}, {y.ToStringInvariant()}}}";
 #pragma warning restore 1591 //XML doc
 	}
 
@@ -170,19 +178,32 @@ namespace Au.Types
 	public struct SIZE : IEquatable<SIZE>
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
+		[JsonInclude]
 		public int width, height;
 
 		public SIZE(int width, int height) { this.width = width; this.height = height; }
 
-		public static implicit operator SIZE((int width, int height) t) => new SIZE(t.width, t.height);
+		public static implicit operator SIZE((int width, int height) t) => new(t.width, t.height);
 
-		public static implicit operator SIZE(Size z) => new SIZE(z.Width, z.Height);
-		public static explicit operator SIZE(SizeF z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
-		public static explicit operator SIZE(System.Windows.Size z) => new SIZE(checked((int)z.Width), checked((int)z.Height));
+		public static implicit operator SIZE(Size z) => new(z.Width, z.Height);
 
-		public static implicit operator Size(SIZE z) => new Size(z.width, z.height);
-		public static implicit operator SizeF(SIZE z) => new SizeF(z.width, z.height);
-		public static implicit operator System.Windows.Size(SIZE z) => new System.Windows.Size(z.width, z.height);
+		public static implicit operator Size(SIZE z) => new(z.width, z.height);
+
+		public static implicit operator SizeF(SIZE z) => new(z.width, z.height);
+
+		public static implicit operator System.Windows.Size(SIZE z) => new(z.width, z.height);
+
+		/// <param name="z"></param>
+		/// <param name="round">Can round up, for example 1.7 to 2.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static SIZE From(SizeF z, bool round = false)
+			=> new(round ? z.Width.ToInt() : checked((int)z.Width), round ? z.Height.ToInt() : checked((int)z.Height));
+
+		/// <param name="z"></param>
+		/// <param name="round">Can round up, for example 1.7 to 2.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static SIZE From(System.Windows.Size z, bool round = false)
+			=> new(round ? z.Width.ToInt() : checked((int)z.Width), round ? z.Height.ToInt() : checked((int)z.Height));
 
 		public static bool operator ==(SIZE s1, SIZE s2) => s1.width == s2.width && s1.height == s2.height;
 		public static bool operator !=(SIZE s1, SIZE s2) => !(s1 == s2);
@@ -192,17 +213,11 @@ namespace Au.Types
 		public bool Equals(SIZE other) => this == other; //IEquatable
 
 		/// <summary>Returns <c>new SIZE(z.width + d.x, z.height + d.y)</c>.</summary>
-		public static SIZE operator +(SIZE z, (int x, int y) d) => new SIZE(z.width + d.x, z.height + d.y);
+		public static SIZE operator +(SIZE z, (int x, int y) d) => new(z.width + d.x, z.height + d.y);
 
 		public void Deconstruct(out int width, out int height) { width = this.width; height = this.height; }
 
-		public override string ToString() => $"{{cx={width.ToStringInvariant()} cy={height.ToStringInvariant()}}}";
-
-		//properties for JSON serialization
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _W { get => width; set { width = value; } }
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _H { get => height; set { height = value; } }
+		public override string ToString() => $"{{{width.ToStringInvariant()}, {height.ToStringInvariant()}}}";
 #pragma warning restore 1591 //XML doc
 	}
 
@@ -213,42 +228,67 @@ namespace Au.Types
 	/// </summary>
 	/// <remarks>
 	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
-	/// Has implicit conversions from/to <b>Rectangle</b>.
+	/// Has conversions from/to <b>Rectangle</b>.
 	/// </remarks>
 	[DebuggerStepThrough]
 	[Serializable]
 	public struct RECT : IEquatable<RECT>
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
-		public int left, top, right, bottom;
+		[JsonInclude]
+		public int left, top;
+		public int right, bottom;
 
 		/// <summary>
-		/// Initializes this instance.
+		/// Sets all fields.
 		/// </summary>
 		/// <param name="left"></param>
 		/// <param name="top"></param>
-		/// <param name="rightOrWidth">right or width, depending on <i>useWidthHeight</i>.</param>
-		/// <param name="bottomOrHeight">bottom or height, depending on <i>useWidthHeight</i>.</param>
-		/// <param name="useWidthHeight">If true (default), <i>rightOrWidth</i>/<i>bottomOrHeight</i> are width/height. Else right/bottom.</param>
-		public RECT(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true) {
+		/// <param name="width">Width (not <i>right</i>).</param>
+		/// <param name="height">Height (not <i>bottom</i>).</param>
+		/// <remarks>
+		/// Sets <c>right = left + width; bottom = top + height;</c>. To specify right/bottom instead of width/height, use <see cref="FromLTRB"/> instead.
+		/// </remarks>
+		[JsonConstructor] //without it JSON deserializer sets incorrect Width/Height because does it before setting left/right
+		public RECT(int left, int top, int width, int height) {
 			this.left = left; this.top = top;
-			right = rightOrWidth; bottom = bottomOrHeight;
-			if (useWidthHeight) { right += left; bottom += top; }
+			right = left + width; bottom = top + height;
 		}
 
 		/// <summary>
-		/// Creates new <b>RECT</b> from tuple containing left, top, width and height.
+		/// Creates <b>RECT</b> with specified <b>left</b>, <b>top</b>, <b>right</b> and <b>bottom</b>.
 		/// </summary>
-		public static implicit operator RECT((int L, int T, int W, int H) t) => new RECT(t.L, t.T, t.W, t.H, true);
-		//public static implicit operator RECT((int L, int T, int RW, int BH, bool wh) t) => new RECT(t.L, t.T, t.RW, t.BH, t.wh);
+		public static RECT FromLTRB(int left, int top, int right, int bottom)
+			=> new() { left = left, top = top, right = right, bottom = bottom };
 
-		public static implicit operator RECT(Rectangle r) => new RECT(r.Left, r.Top, r.Width, r.Height, true);
-		public static explicit operator RECT(RectangleF r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
-		public static explicit operator RECT(System.Windows.Rect r) { checked { return new RECT((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height, true); } }
+		/// <summary>
+		/// Converts from tuple (left, top, width, height).
+		/// </summary>
+		public static implicit operator RECT((int L, int T, int W, int H) t) => new(t.L, t.T, t.W, t.H);
 
-		public static implicit operator Rectangle(RECT r) => new Rectangle(r.left, r.top, r.Width, r.Height);
-		public static implicit operator RectangleF(RECT r) => new RectangleF(r.left, r.top, r.Width, r.Height);
-		public static implicit operator System.Windows.Rect(RECT r) => new System.Windows.Rect(r.left, r.top, r.Width, r.Height);
+		public static implicit operator RECT(Rectangle r) => new(r.Left, r.Top, r.Width, r.Height);
+
+		public static implicit operator Rectangle(RECT r) => new(r.left, r.top, r.Width, r.Height);
+
+		public static implicit operator RectangleF(RECT r) => new(r.left, r.top, r.Width, r.Height);
+
+		public static implicit operator System.Windows.Rect(RECT r) => new(r.left, r.top, r.Width, r.Height);
+
+		/// <param name="r"></param>
+		/// <param name="round">Can round up, for example 1.7 to 2.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static RECT From(RectangleF r, bool round = false) {
+			if (round) return new(r.Left.ToInt(), r.Top.ToInt(), r.Width.ToInt(), r.Height.ToInt());
+			checked { return new((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height); }
+		}
+
+		/// <param name="r"></param>
+		/// <param name="round">Can round up, for example 1.7 to 2.</param>
+		/// <exception cref="OverflowException"></exception>
+		public static RECT From(System.Windows.Rect r, bool round = false) {
+			if (round) return new(r.Left.ToInt(), r.Top.ToInt(), r.Width.ToInt(), r.Height.ToInt());
+			checked { return new((int)r.Left, (int)r.Top, (int)r.Width, (int)r.Height); }
+		}
 
 		public static bool operator ==(RECT r1, RECT r2) => r1.left == r2.left && r1.right == r2.right && r1.top == r2.top && r1.bottom == r2.bottom;
 		public static bool operator !=(RECT r1, RECT r2) => !(r1 == r2);
@@ -257,14 +297,15 @@ namespace Au.Types
 
 		public bool Equals(RECT other) => this == other; //IEquatable
 
-		/// <summary>
-		/// Sets fields like the constructor <see cref="RECT(int,int,int,int,bool)"/>.
-		/// </summary>
-		public void Set(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true) {
-			this.left = left; this.top = top;
-			right = rightOrWidth; bottom = bottomOrHeight;
-			if (useWidthHeight) { right += left; bottom += top; }
-		}
+		//rejected. Rare.
+		///// <summary>
+		///// Sets fields like constructor <see cref="RECT(int,int,int,int)"/>.
+		///// </summary>
+		//public void Set(int left, int top, int rightOrWidth, int bottomOrHeight, bool useWidthHeight = true) {
+		//	this.left = left; this.top = top;
+		//	right = rightOrWidth; bottom = bottomOrHeight;
+		//	if (useWidthHeight) { right += left; bottom += top; }
+		//}
 
 		/// <summary>
 		/// Returns true if all fields == 0.
@@ -272,15 +313,9 @@ namespace Au.Types
 		public bool Is0 => left == 0 && top == 0 && right == 0 && bottom == 0;
 
 		/// <summary>
-		/// Returns true if the rectangle is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
+		/// Returns true if the rectangle area is empty or invalid: <c>right&lt;=left || bottom&lt;=top;</c>
 		/// </summary>
-		public bool IsEmpty => right <= left || bottom <= top;
-
-		//properties for JSON serialization. Must be before Width and Height, else would be set after them.
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _X { get => left; set { left = value; } }
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _Y { get => top; set { top = value; } }
+		public bool NoArea => right <= left || bottom <= top;
 
 		/// <summary>
 		/// Gets or sets width.
@@ -291,6 +326,16 @@ namespace Au.Types
 		/// Gets or sets height.
 		/// </summary>
 		public int Height { get => bottom - top; set { bottom = top + value; } }
+
+		/// <summary>
+		/// Returns <c>new POINT(left, top)</c>.
+		/// </summary>
+		public POINT XY => new(left, top);
+
+		/// <summary>
+		/// Returns <c>new SIZE(Width, Height)</c>.
+		/// </summary>
+		public SIZE Size => new(Width, Height);
 
 		/// <summary>
 		/// Gets horizontal center.
@@ -328,13 +373,13 @@ namespace Au.Types
 		/// <summary>
 		/// Replaces this rectangle with the intersection of itself and the specified rectangle.
 		/// Returns true if the rectangles intersect.
-		/// If they don't intersect, makes this RECT empty (IsEmpty would return true).
+		/// If they don't intersect, makes this RECT empty.
 		/// </summary>
 		public bool Intersect(RECT r2) => Api.IntersectRect(out this, this, r2);
 
 		/// <summary>
 		/// Returns the intersection rectangle of two rectangles.
-		/// If they don't intersect, returns empty rectangle (IsEmpty would return true).
+		/// If they don't intersect, returns empty rectangle.
 		/// </summary>
 		public static RECT Intersect(RECT r1, RECT r2) { Api.IntersectRect(out RECT r, r1, r2); return r; }
 
@@ -348,6 +393,11 @@ namespace Au.Types
 		/// Negative dx moves to the left. Negative dy moves up.
 		/// </summary>
 		public void Offset(int dx, int dy) { left += dx; right += dx; top += dy; bottom += dy; }
+
+		/// <summary>
+		/// Moves this rectangle so that <b>left</b>=<i>x</i> and <b>right</b>=<i>y</i>. Does not change <b>Width</b> and <b>Height</b>.
+		/// </summary>
+		public void Move(int x, int y) => Offset(x - left, y - top);
 
 		/// <summary>
 		/// Replaces this rectangle with the union of itself and the specified rectangle.
@@ -486,6 +536,7 @@ namespace Au.Types
 		/// <summary>
 		/// Color value in 0xAARRGGBB format.
 		/// </summary>
+		[JsonInclude]
 		public int argb;
 
 		/// <param name="colorARGB">Color value in 0xAARRGGBB or 0xRRGGBB format.</param>
@@ -583,6 +634,12 @@ namespace Au.Types
 			return System.Windows.Media.Color.FromArgb((byte)(k >> 24), (byte)(k >> 16), (byte)(k >> 8), (byte)k);
 		}
 
+		internal static System.Windows.Media.Color WpfColor_(int rgb)
+			=> System.Windows.Media.Color.FromRgb((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
+
+		internal static System.Windows.Media.SolidColorBrush WpfBrush_(int rgb)
+			=> new(WpfColor_(rgb));
+
 		///// <summary>
 		///// <c>FromBGR(GetSysColor)</c>.
 		///// </summary>
@@ -597,10 +654,6 @@ namespace Au.Types
 		public override bool Equals(object obj) => obj is ColorInt && this == (ColorInt)obj;
 		public override int GetHashCode() => argb;
 		public override string ToString() => "#" + argb.ToString("X8");
-
-		//property for JSON serialization
-		[EditorBrowsable(EditorBrowsableState.Never)]
-		public int _C { get => argb; set { argb = value; } }
 #pragma warning restore 1591 //XML doc
 
 		/// <summary>
@@ -667,8 +720,8 @@ namespace Au.Types
 		public VARIANT(int x) : this() { vt = Api.VARENUM.VT_I4; value = x; }
 		public VARIANT(string x) : this() { vt = Api.VARENUM.VT_BSTR; value = Marshal.StringToBSTR(x); }
 
-		public static implicit operator VARIANT(int x) => new VARIANT(x);
-		public static implicit operator VARIANT(string x) => new VARIANT(x);
+		public static implicit operator VARIANT(int x) => new(x);
+		public static implicit operator VARIANT(string x) => new(x);
 
 		public int ValueInt { get { Debug.Assert(vt == Api.VARENUM.VT_I4); return (int)value; } }
 		public BSTR ValueBstr { get { Debug.Assert(vt == Api.VARENUM.VT_BSTR); return BSTR.AttachBSTR((char*)value); } }
@@ -723,10 +776,10 @@ namespace Au.Types
 
 		BSTR(char* p) => _p = p;
 
-		public static explicit operator BSTR(string s) => new BSTR((char*)Marshal.StringToBSTR(s));
+		public static explicit operator BSTR(string s) => new((char*)Marshal.StringToBSTR(s));
 		public static explicit operator LPARAM(BSTR b) => b._p;
 
-		public static BSTR AttachBSTR(char* bstr) => new BSTR(bstr);
+		public static BSTR AttachBSTR(char* bstr) => new(bstr);
 
 		public static BSTR CopyFrom(char* anyString) => anyString == null ? default : Api.SysAllocString(anyString);
 

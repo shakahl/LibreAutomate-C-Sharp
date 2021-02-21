@@ -26,7 +26,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Base class of <see cref="AToolbar"/>.
+	/// Base class of <see cref="AToolbar_old"/>.
 	/// </summary>
 	public abstract class MTBase_old
 	{
@@ -184,7 +184,7 @@ namespace Au.Types
 		static Image _GetCommonIcon(bool submenu)
 		{
 			string name = submenu ? "mtHamburgerMenu" : "mtInvokeMethod";
-			int i = ADpi.Scale(16, ADpi.OfThisProcess);
+			int i = ADpi.Scale(16, ADpi.System);
 			if(i >= 20) name += i < 24 ? "_20" : (i < 32 ? "_24" : "_32");
 			return Resources.Resources.ResourceManager.GetObject(name, Resources.Resources.Culture) as Bitmap; //13 ms first time
 		}
@@ -432,7 +432,7 @@ namespace Au.Types
 	}
 
 	/// <summary>
-	/// Data passed to <b>Click</b> event handler functions of <see cref="AToolbar"/>.
+	/// Data passed to <b>Click</b> event handler functions of <see cref="AToolbar_old"/>.
 	/// </summary>
 	public class MTClickArgs
 	{

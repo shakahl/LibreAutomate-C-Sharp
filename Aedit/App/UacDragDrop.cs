@@ -114,10 +114,10 @@ class UacDragDrop
 		void _SetTransparentSizeZorder() {
 			if (_wWindow.IsOfThisProcess) {
 				var r = _wWindow.Rect;
-				_wTransparent.MoveLL(r.left, r.top, r.Width, r.Height);
+				_wTransparent.MoveL(r.left, r.top, r.Width, r.Height);
 				_wTransparent.ZorderAbove(_wWindow);
 			} else {
-				_wTransparent.MoveLL(0, 0, 0, 0);
+				_wTransparent.MoveL(0, 0, 0, 0);
 			}
 		}
 
@@ -226,7 +226,7 @@ class UacDragDrop
 			_msgWnd.Send(Api.WM_USER, 10, (LPARAM)_w);
 			Api.SetTimer(_w, 1, 1000, null);
 
-			_w.ShowLL(true);
+			_w.ShowL(true);
 			while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 			Api.OleUninitialize();
 		}

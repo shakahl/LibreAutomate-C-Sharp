@@ -168,11 +168,12 @@ namespace Au.Controls
 		//		_Invalidate();
 		//	}
 
-		void _Render(IntPtr dc, RECT rect) {
-			//		using var p1 = APerf.Create();
-			//		AOutput.Write("_Render");
-			//never mind: should draw only invalidated part. With async images redraws several times at startup. But then 2-3 ms, while first time 20-30 ms.
-			Api.FillRect(dc, rect, (IntPtr)(Api.COLOR_WINDOW + 1));
+		void _Render(IntPtr dc, RECT rUpdate) {
+			//if (BackgroundColor != null) {
+
+			//} else {
+				Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_WINDOW + 1));
+			//}
 			if (_avi.NE_()) return;
 
 			var range = _GetViewRange();
@@ -200,13 +201,14 @@ namespace Au.Controls
 					};
 					cd?.Begin(cdi, tr);
 
-					//		p1.Next();
 					for (int i = 0; i < nDraw; i++) {
 						int index = i + range.from;
 						var v = _avi[index];
 						var item = v.item;
 						int y = i * _itemH;
 						var r = new RECT(0, y, _width, _itemH);
+						if(!r.IntersectsWith(rUpdate)) continue;
+						//AOutput.Write(i);
 						int indent = _imageSize * v.level, xLeft = indent + xLefts;
 						int xImage = indent + xImages, yImage = y + yyImages;
 						int xText = xImage + _imageSize + _imageMarginX, yText = y + yyText;
@@ -312,7 +314,6 @@ namespace Au.Controls
 							}
 						}
 					}
-					//		p1.Next();
 
 					cd?.End();
 				}
@@ -383,6 +384,12 @@ namespace Au.Controls
 			}
 		}
 		ITVCustomDraw _customDraw_;
+
+		///// <summary>
+		///// If not null, fills background with this color instead of the system window background color.
+		///// Set this property at startup (does not update control when changed).
+		///// </summary>
+		//public ColorInt? BackgroundColor { get; set; }
 #pragma warning restore 1591
 	}
 }

@@ -9,7 +9,7 @@ namespace Au.Tools
 	class KeysWindow : InfoWindow //KPopup
 	{
 		public KeysWindow() : base(0) {
-			Size = (500, 280);
+			Size = (500, 240);
 			WindowName = "Keys";
 			Name = "Ci.Keys"; //prevent hiding when activated
 			CloseHides = true;
@@ -59,21 +59,26 @@ namespace Au.Tools
 			if (0 != s.Ends(false, "Alt", "Ctrl", "Shift", "Win")) suffix = "+";
 			else if (k2 > ' ' && k2 != '\"' && k2 != ')' && k2 != '+' && k2 != '*') suffix = " ";
 
-			if (s == "name") {
-				//var a = typeof(KKey).GetEnumNames().Where(o => !(o.Length==1 ||(o.Length==2&& o[0]=='D') || o.Starts("Mouse"))).ToArray();
-				//Array.Sort(a);
+			bool ok = true;
+			if (s.Starts("right")) ok = _Menu("RAlt", "RCtrl", "RShift", "RWin");
+			else if (s.Starts("lock")) ok = _Menu("CapsLock", "NumLock", "ScrollLock");
+			else if (s.Starts("other")) ok = _Menu(s_rare);
+			if (!ok) return;
 
-				int j = AMenu.ShowSimple(s_keys, Hwnd) - 1;
-				if (j < 0) return;
-				s = s_keys[j];
+			bool _Menu(params string[] a) {
+				int j = AMenu.ShowSimple(a, Hwnd) - 1;
+				if (j < 0) return false;
+				s = a[j];
 				j = s.IndexOf(' '); if (j > 0) s = s[..j];
+				return true;
 			}
+
 			s = prefix + s + suffix;
 			InsertCode.TextSimplyInControl(sci, s);
 			if (suffix == " ") sci.Call(Sci.SCI_CHARLEFT);
 		}
 
-		static string[] s_keys = {
+		static string[] s_rare = {
 "BrowserBack", "BrowserForward", "BrowserRefresh", "BrowserStop", "BrowserSearch", "BrowserFavorites", "BrowserHome",
 "LaunchMail", "LaunchMediaSelect", "LaunchApp1", "LaunchApp2",
 "MediaNextTrack", "MediaPrevTrack", "MediaStop", "MediaPlayPause",

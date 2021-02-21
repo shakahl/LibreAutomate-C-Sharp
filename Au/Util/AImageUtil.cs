@@ -60,7 +60,7 @@ namespace Au.Util
 		/// <exception cref="ArgumentException">String does not start with "image:"/"~:" or is invalid Base-64.</exception>
 		/// <exception cref="Exception"></exception>
 		public static System.Drawing.Bitmap LoadGdipBitmapFromString(string s)
-			=> new System.Drawing.Bitmap(LoadImageStreamFromString(s));
+			=> new (LoadImageStreamFromString(s));
 
 		/// <summary>
 		/// Loads WPF image from Base-64 string that starts with "image:" (png) or "~:" (zipped bmp).
@@ -172,16 +172,16 @@ namespace Au.Util
 		/// </remarks>
 		[MethodImpl(MethodImplOptions.NoInlining)]
 		public static System.Drawing.Bitmap LoadGdipBitmapFromXaml(string image, SIZE size, int dpi) {
-			var e = AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(image);
-			e.Measure(new System.Windows.Size(double.PositiveInfinity, double.PositiveInfinity));
-			e.Arrange(new System.Windows.Rect(e.DesiredSize));
+			var e = LoadWpfImageElementFromFileOrResourceOrString(image);
+			e.Measure(new Size(double.PositiveInfinity, double.PositiveInfinity));
+			e.Arrange(new Rect(e.DesiredSize));
 			var (wid, hei) = ADpi.Scale(size, dpi);
-			var rtb = new System.Windows.Media.Imaging.RenderTargetBitmap(wid, hei, dpi, dpi, System.Windows.Media.PixelFormats.Pbgra32);
+			var rtb = new RenderTargetBitmap(wid, hei, dpi, dpi, System.Windows.Media.PixelFormats.Pbgra32);
 			rtb.Render(e);
 			int stride = wid * 4;
 			int msize = hei * stride;
 			var m = new _BitmapMemory(msize);
-			rtb.CopyPixels(new System.Windows.Int32Rect(0, 0, wid, hei), m.pixels, msize, stride);
+			rtb.CopyPixels(new Int32Rect(0, 0, wid, hei), m.pixels, msize, stride);
 			var b = new System.Drawing.Bitmap(wid, hei, stride, System.Drawing.Imaging.PixelFormat.Format32bppPArgb, m.pixels) { Tag = m }; //only this Bitmap creation method preserves alpha
 			b.SetResolution(dpi, dpi);
 			return b;

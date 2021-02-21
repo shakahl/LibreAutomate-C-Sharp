@@ -378,7 +378,7 @@ namespace Au
 
 						//The COM object does not do exactly the same as the true Explorer commands.
 						//Eg MinimizeAll does not activete desktop. Then a minimized window is active.
-						if (what == 1 && Active.IsMinimized && GetWnd.Desktop(out var wd, out _)) wd.ActivateLL();
+						if (what == 1 && Active.IsMinimized && GetWnd.Desktop(out var wd, out _)) wd.ActivateL();
 					}
 					catch { }
 
