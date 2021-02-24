@@ -1,5 +1,5 @@
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
-using Au.Triggers; using System.Windows.Forms; using System.Drawing;
+using Au.Triggers;
 
 partial class Script {
 
@@ -28,22 +28,22 @@ void Toolbar_Startup1() {
 	var t = new AToolbar("Toolbar_Startup1");
 	
 	//settings
-	if (!t.SettingsModified) { //first time or after deleting the settings file. Later use saved values.
-		t.AutoSize = true;
+	if (t.IsFresh) {
+		
 	}
 	t.BorderColor = System.Drawing.Color.BlueViolet;
 	
 	//buttons
 	t["A"] = o => {  };
 	t["B"] = o => {  };
-	t.MenuButton("C", m => { //drop-down menu
+	t.Menu("C", m => { //drop-down menu
 		m["X"] = o => {  };
 		m["Y"] = o => {  };
 	});
 	t.Group("Examples"); //horizontal separator, optionally with text
-	t.NoText = true;
+	t.DisplayText = false;
 	t["Run program"] = o => AFile.Run(AFolders.System + @"notepad.exe");
-	t["Run script"] = o => ATask.Run("Script example1.cs");
+	t["Script\0 Run script"] = o => ATask.Run("Script example1.cs");
 	t["Copy-paste"] = o => {
 		string s = AClipboard.Copy(); //note: to test it, at first select some text somewhere, else it will fail
 		s = s.Upper();
@@ -63,7 +63,7 @@ void Toolbar_ScreenEdge_TopCenter(MouseTriggerArgs ta) {
 	t[""] = o => {  };
 	t[""] = o => {  };
 	t.Group();
-	t.MenuButton("", m => {
+	t.Menu("", m => {
 		m[""] = o => {  };
 		m[""] = o => {  };
 	});
@@ -72,7 +72,7 @@ void Toolbar_ScreenEdge_TopCenter(MouseTriggerArgs ta) {
 	
 	//auto-hide at the screen edge of the mouse trigger. Above is the auto-hide part. Below is the always-visible part.
 	t = t.AutoHideScreenEdge(ta, 5, Coord.Reverse(5), 2);
-	t.BorderColor = Color.Orange;
+	t.BorderColor = System.Drawing.Color.Orange;
 	
 	t.Show();
 	ta.DisableTriggerUntilClosed(t); //single instance

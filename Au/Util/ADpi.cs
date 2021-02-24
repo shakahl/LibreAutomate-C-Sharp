@@ -70,8 +70,13 @@ namespace Au.Util
 					case Awareness.Invalid: return System;
 					default: return _OfScreen(w);
 					}
+
 					//Good: when a non-pm-dpi-aware window is in 2 screens, MonitorFromWindow(w) gets screen that matches window's DPI scaling.
 					//	It can be different than MonitorFromRect(w.Rect). Tested on Win10; never mind Win8.1.
+
+					//Windows bug: if a non-pm-dpi-aware program is set pm-dpi-aware (in file Properties dialog), after changing screen DPI the API still returns old value.
+					//	Works correctly when window DPI changes when moving between screens.
+					//	Never mind. This is rare*rare.
 				}
 				if (AVersion.MinWin10_1607) R = Api.GetDpiForWindow(w);
 				else if (ofScreen || SupportPMOnWin8_1) return _OfScreen(w);

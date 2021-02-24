@@ -546,15 +546,15 @@ namespace Au
 				if (_dSub.ContainsKey(lParam)) {
 					var item = _IndexToItem(lParam, (int)wParam);
 					if (item != null) {
-						bool canEdit = _sourceFile != null && AScriptEditor.Available, canFile = item.extractIconPath == 2;
-						if (canEdit || canFile) {
+						var (canEdit, canGo, goText) = MTItem.CanEditOrGoToFile_(_sourceFile, item);
+						if (canEdit || canGo) {
 							var m = new AMenu();
 							if (canEdit) m.Add(1, "Edit menu item");
-							if (canFile) m.Add(2, "Find file");
+							if (canGo) m.Add(2, goText);
 							int k = m.Show(w, MSFlags.Recurse | MSFlags_Raw_);
 							if (k == 1 || k == 2) {
 								if (k == 1) AScriptEditor.GoToEdit(_sourceFile, item.sourceLine);
-								if (k == 2) AFile.SelectInExplorer(item.image as string);
+								if (k == 2) item.GoToFile_();
 								msg = Api.WM_CANCELMODE; wParam = 0; lParam = 0;
 							}
 						}

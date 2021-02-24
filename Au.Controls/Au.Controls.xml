@@ -2611,7 +2611,7 @@
             Not called for self.
             </summary>
         </member>
-        <member name="M:Au.Controls.HwndHostAccessibleBase_.Navigate(Au.Controls.AccNAVDIR,System.Int32)">
+        <member name="M:Au.Controls.HwndHostAccessibleBase_.Navigate(Au.Types.Api.AccNAVDIR,System.Int32)">
             <summary>
             Returns null.
             If self (childStart==-1), navDir is FIRSTCHILD or LASTCHILD, else navDir is any except these.

@@ -384,13 +384,18 @@ namespace Au.Triggers
 					_windowTriggers.SimulateNew_(wParam, lParam);
 					return 0;
 				case Api.WM_USER + 30:
-					AToolbar_old.NewToolbarsForm().Show();
+					_ShowToolbarsDialog();
 					return 0;
 				}
 			}
 			catch(Exception ex) { ADebug.Print(ex.Message); return default; }
 
 			return Api.DefWindowProc(w, message, wParam, lParam);
+		}
+
+		[MethodImpl(MethodImplOptions.NoInlining)]
+		void _ShowToolbarsDialog() {
+			AToolbar.ToolbarsDialog().Show();
 		}
 
 		unsafe void _KeyMouseEvent(int messageId, HooksThread.UsedEvents eventType)

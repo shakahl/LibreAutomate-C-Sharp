@@ -1,5 +1,5 @@
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
-using Au.Triggers; using System.Windows.Forms; using System.Drawing;
+using Au.Triggers;
 
 partial class Script {
 
@@ -26,13 +26,13 @@ void WindowToolbars() {
 
 void Toolbar_Notepad(WindowTriggerArgs ta = null) {
 	var t = new AToolbar("Toolbar_Notepad");
-	if (!t.SettingsModified) {
-		t.AutoSize = true;
+	if (t.IsFresh) {
+		
 	}
 	
 	t[""] = o => {  };
 	t[""] = o => {  };
-	t.MenuButton("", m => {
+	t.Menu("", m => {
 		m[""] = o => {  };
 		m[""] = o => {  };
 	});
@@ -42,7 +42,7 @@ void Toolbar_Notepad(WindowTriggerArgs ta = null) {
 	
 //	//auto-hide. Above is the auto-hide part. Below is the visible part.
 //	t = t.AutoHide();
-//	if(!t.SettingsModified) {
+//	if(t.IsFresh) {
 //		
 //	}
 	

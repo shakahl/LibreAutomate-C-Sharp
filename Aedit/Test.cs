@@ -50,6 +50,12 @@ static class Test
 	//}
 
 	public static void FromMenubar() {
+
+		//Action a=() => AFile.Run(@"C:\Program Files\Notepad++\notepad++.exe");
+		//Action a=() => ATask.Run(@"\Script387.cs");
+		//var s=AIcon.IconPathFromCode_(a.Method, out bool cs);
+		//AOutput.Write(s, cs);
+
 		//int i = AMenu.ShowSimple("One\0Tooltip|Two");
 		//AOutput.Write(i);
 

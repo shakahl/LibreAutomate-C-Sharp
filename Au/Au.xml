@@ -3805,6 +3805,266 @@
             Waits <see cref="P:Au.AOsd.SecondsTimeout"/> seconds. While waiting, dispatches messages etc; see <see cref="M:Au.ATime.SleepDoEvents(System.Int32)"/>.
             </summary>
         </member>
+        <member name="T:Au.Types.TBItemType">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.ToolbarItem.ItemType"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Types.TBFlags">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.MiscFlags"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBFlags.ActivateOwnerWindow">
+            <summary>
+            Activate the owner window when the toolbar clicked. Default.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBFlags.HideWhenFullScreen">
+            <summary>
+            Hide the toolbar when a full-screen window is active. Default.
+            </summary>
+        </member>
+        <member name="T:Au.Types.TBBorder">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Border"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.None">
+            <summary>No border.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Width1">
+            <summary>1 pixel border.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Width2">
+            <summary>1 pixel border + 1 pixel padding.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Width3">
+            <summary>1 pixel border + 2 pixels padding.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Width4">
+            <summary>1 pixel border + 3 pixels padding.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.ThreeD">
+            <summary>3D border.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Thick">
+            <summary>Standard window border.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.Caption">
+            <summary>Title bar and standard window border.</summary>
+        </member>
+        <member name="F:Au.Types.TBBorder.CaptionX">
+            <summary>Title bar, [x] button and standard window border.</summary>
+        </member>
+        <member name="T:Au.Types.TBAnchor">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Anchor"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.TopLeft">
+            <summary>
+            Anchors are top and left edges. Default.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.TopRight">
+            <summary>
+            Anchors are top and right edges.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.BottomLeft">
+            <summary>
+            Anchors are bottom and left edges.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.BottomRight">
+            <summary>
+            Anchors are bottom and right edges.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.TopLR">
+            <summary>
+            Anchors are top, left and right edges. The toolbar is resized horizontally when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.BottomLR">
+            <summary>
+            Anchors are bottom, left and right edges. The toolbar is resized horizontally when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.LeftTB">
+            <summary>
+            Anchors are left, top and bottom edges. The toolbar is resized vertically when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.RightTB">
+            <summary>
+            Anchors are right, top and bottom edges. The toolbar is resized vertically when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.All">
+            <summary>
+            Anchors are all edges. The toolbar is resized when resizing its owner.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.OppositeEdgeX">
+            <summary>
+            Use owner's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
+            This flag is for toolbars that normally are outside of the owner rectangle (at the left or right).
+            This flag cannot be used with <b>TopLR</b>, <b>BottomLR</b>, <b>All</b>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.OppositeEdgeY">
+            <summary>
+            Use owner's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
+            This flag is for toolbars that normally are outside of the owner rectangle (above or below).
+            This flag cannot be used with <b>LeftTB</b>, <b>RightTB</b>, <b>All</b>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBAnchor.Screen">
+            <summary>
+            Anchor is screen, not owner window. Don't move the toolbar together with its owner window.
+            </summary>
+        </member>
+        <member name="T:Au.Types.TBOffsets">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Offsets"/>.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Left">
+            <summary>
+            Horizontal distance from the owner's left edge (right if <see cref="F:Au.Types.TBAnchor.OppositeEdgeX"/>) to the toolbar's left edge.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Top">
+            <summary>
+            Vertical distance from the owner's top edge (bottom if <see cref="F:Au.Types.TBAnchor.OppositeEdgeY"/>) to the toolbar's top edge.
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Right">
+            <summary>
+            Horizontal distance from the toolbar's right edge to the owner's right edge (left if <see cref="F:Au.Types.TBAnchor.OppositeEdgeX"/>).
+            </summary>
+        </member>
+        <member name="P:Au.Types.TBOffsets.Bottom">
+            <summary>
+            Vertical distance from the toolbar's bottom edge to the owner's bottom edge (top if <see cref="F:Au.Types.TBAnchor.OppositeEdgeY"/>).
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBOffsets.#ctor(System.Double,System.Double,System.Double,System.Double)">
+            <summary>
+            Sets all properties.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBOffsets.Equals(Au.Types.TBOffsets)">
+            
+        </member>
+        <member name="M:Au.Types.TBOffsets.ToString">
+            
+        </member>
+        <member name="T:Au.Types.TBHide">
+            <summary>
+            Reasons to hide a toolbar. Used with <see cref="M:Au.AToolbar.Hide(System.Boolean,Au.Types.TBHide)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBHide.Owner">
+            <summary>Owner window is hidden, minimized, etc.</summary>
+        </member>
+        <member name="F:Au.Types.TBHide.FullScreen">
+            <summary>A full-screen window is active. See flag <see cref="F:Au.Types.TBFlags.HideWhenFullScreen"/>.</summary>
+        </member>
+        <member name="F:Au.Types.TBHide.User">
+            <summary>This and bigger flag values can be used by callers for any purpose. Value 0x10000.</summary>
+        </member>
+        <member name="T:Au.Types.TBLayout">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.Layout"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBLayout.HorizontalWrap">
+            <summary>Default layout. Buttons are in single row. Wrapped when exceeds maximal row width. More rows can be added with <see cref="M:Au.AToolbar.Group(System.String)"/>.</summary>
+        </member>
+        <member name="F:Au.Types.TBLayout.Vertical">
+            <summary>Buttons are in single column, like in a popup menu. Separators are horizontal.</summary>
+        </member>
+        <member name="T:Au.Types.TBNoMenu">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.NoContextMenu"/>.
+            </summary>
+        </member>
+        <member name="T:Au.Types.TBCtor">
+            <summary>
+            Flags for <see cref="T:Au.AToolbar"/> constructor.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBCtor.ResetSettings">
+            <summary>
+            Don't load saved settings. Delete the settings file of the toolbar, if exists.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBCtor.DontSaveSettings">
+            <summary>
+            Don't load and save settings. No file will be created or opened.
+            </summary>
+        </member>
+        <member name="T:Au.Types.TBScaling">
+            <summary>
+            Used with <see cref="P:Au.AToolbar.DpiScaling"/>.
+            </summary>
+        </member>
+        <member name="M:Au.Types.TBScaling.#ctor(System.Nullable{System.Boolean},System.Nullable{System.Boolean})">
+            
+        </member>
+        <member name="F:Au.Types.TBScaling.size">
+            <summary>
+            Scale toolbar size and related properties.
+            If default (null), scales size, except of empty toolbars created by <see cref="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,System.String,System.Int32)"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TBScaling.offsets">
+            <summary>
+            Scale toolbar offsets. See <see cref="P:Au.AToolbar.Offsets"/>.
+            If default (null), scales offsets, except when anchor is screen (not window etc).
+            </summary>
+        </member>
+        <member name="T:Au.Types.ITBOwnerObject">
+            <summary>
+            Used with <see cref="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)"/>.
+            </summary>
+            <remarks>
+            Allows a toolbar to follow an object in the owner window, for example an accessible object or image. Or to hide in certain conditions.
+            Define a class that implements this interface. Create a variable of that class and pass it to <see cref="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)"/>.
+            The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.ITBOwnerObject.IsAlive">
+            <summary>
+            Returns false to close the toolbar.
+            </summary>
+            <remarks>
+            Not called if the owner window is invisible or cloaked or minimized.
+            The default implementation returns true.
+            </remarks>
+        </member>
+        <member name="P:Au.Types.ITBOwnerObject.IsVisible">
+            <summary>
+            Returns false to hide the toolbar temporarily.
+            </summary>
+            <remarks>
+            Not called if the owner window is invisible or cloaked or minimized.
+            The default implementation returns true.
+            </remarks>
+        </member>
+        <member name="M:Au.Types.ITBOwnerObject.GetRect(Au.Types.RECT@)">
+            <summary>
+            Gets object rectangle.
+            Returns false if failed.
+            </summary>
+            <param name="r">Rectangle in screen coordinates.</param>
+            <remarks>
+            Not called if the owner window is invisible or cloaked or minimized or if <see cref="P:Au.Types.ITBOwnerObject.IsVisible"/> returned false.
+            </remarks>
+        </member>
         <member name="T:Au.Types.WBPanelType">
             <summary>
             Used with <see cref="T:Au.AWpfBuilder"/> constructor to specify the type of the root panel.
@@ -4003,458 +4263,13 @@
         <member name="M:Au.Types.WpfMenuActionArgs.ToString">
             
         </member>
-        <member name="T:Au.Types.TBFlags_old">
-            <summary>
-            Used with <see cref="P:Au.AToolbar_old.MiscFlags"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBFlags_old.DontActivateOwner">
-            <summary>
-            Don't activate the owner window when the toolbar clicked.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBFlags_old.HideIfFullScreen">
-            <summary>
-            Hide the toolbar if a full-screen window is active.
-            </summary>
-        </member>
-        <member name="T:Au.Types.TBBorder_old">
-            <summary>
-            Used with <see cref="P:Au.AToolbar_old.Border"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.None">
-            <summary>No border.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.Width1">
-            <summary>1 pixel border.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.Width2">
-            <summary>1 pixel border + 1 pixel padding.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.Width3">
-            <summary>1 pixel border + 2 pixels padding.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.Width4">
-            <summary>1 pixel border + 3 pixels padding.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.ThreeD">
-            <summary>3D border.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.Thick">
-            <summary>Standard window border.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.Caption">
-            <summary>Title bar and standard window border.</summary>
-        </member>
-        <member name="F:Au.Types.TBBorder_old.CaptionX">
-            <summary>Title bar, [x] button and standard window border.</summary>
-        </member>
-        <member name="T:Au.Types.TBAnchor_old">
-            <summary>
-            Used with <see cref="P:Au.AToolbar_old.Anchor"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.None">
-            <summary>
-            Don't move the toolbar together with its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.TopLeft">
-            <summary>
-            Anchors are top and left edges. Default.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.TopRight">
-            <summary>
-            Anchors are top and right edges.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.BottomLeft">
-            <summary>
-            Anchors are bottom and left edges.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.BottomRight">
-            <summary>
-            Anchors are bottom and right edges.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.TopLR">
-            <summary>
-            Anchors are top, left and right edges. The toolbar is resized horizontally when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.BottomLR">
-            <summary>
-            Anchors are bottom, left and right edges. The toolbar is resized horizontally when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.LeftTB">
-            <summary>
-            Anchors are left, top and bottom edges. The toolbar is resized vertically when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.RightTB">
-            <summary>
-            Anchors are right, top and bottom edges. The toolbar is resized vertically when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.All">
-            <summary>
-            Anchors are all edges. The toolbar is resized when resizing its owner.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.OppositeEdgeX">
-            <summary>
-            Use owner's opposite left/right edge than specified. In other words, attach toolbar's left edge to owner's right edge or vice versa.
-            This flag is for toolbars that normally are outside of the owner rectangle (at the left or right).
-            This flag cannot be used with <b>TopLR</b>, <b>BottomLR</b>, <b>All</b>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBAnchor_old.OppositeEdgeY">
-            <summary>
-            Use owner's opposite top/bottom edge than specified. In other words, attach toolbar's top edge to owner's bottom edge or vice versa.
-            This flag is for toolbars that normally are outside of the owner rectangle (above or below).
-            This flag cannot be used with <b>LeftTB</b>, <b>RightTB</b>, <b>All</b>.
-            </summary>
-        </member>
-        <member name="T:Au.Types.TBOffsets_old">
-            <summary>
-            Used with <see cref="P:Au.AToolbar_old.Offsets"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.TBOffsets_old.Left">
-            <summary>
-            Horizontal distance from the owner's left edge (right if <see cref="F:Au.Types.TBAnchor_old.OppositeEdgeX"/>) to the toolbar's left edge.
-            </summary>
-        </member>
-        <member name="P:Au.Types.TBOffsets_old.Top">
-            <summary>
-            Vertical distance from the owner's top edge (bottom if <see cref="F:Au.Types.TBAnchor_old.OppositeEdgeY"/>) to the toolbar's top edge.
-            </summary>
-        </member>
-        <member name="P:Au.Types.TBOffsets_old.Right">
-            <summary>
-            Horizontal distance from the toolbar's right edge to the owner's right edge (left if <see cref="F:Au.Types.TBAnchor_old.OppositeEdgeX"/>).
-            </summary>
-        </member>
-        <member name="P:Au.Types.TBOffsets_old.Bottom">
-            <summary>
-            Vertical distance from the toolbar's bottom edge to the owner's bottom edge (top if <see cref="F:Au.Types.TBAnchor_old.OppositeEdgeY"/>).
-            </summary>
-        </member>
-        <member name="M:Au.Types.TBOffsets_old.#ctor(System.Int32,System.Int32,System.Int32,System.Int32)">
-            <summary>
-            Sets all properties.
-            </summary>
-        </member>
-        <member name="M:Au.Types.TBOffsets_old.Equals(Au.Types.TBOffsets_old)">
-            
-        </member>
-        <member name="M:Au.Types.TBOffsets_old.ToString">
-            
-        </member>
-        <member name="T:Au.Types.TBLayout_old">
-            <summary>
-            See <see cref="P:Au.AToolbar_old.Layout"/>.
-            </summary>
-        </member>
-        <member name="T:Au.Types.TBHide_old">
-            <summary>
-            Reasons to hide a toolbar. Used with <see cref="M:Au.AToolbar_old.Hide(System.Boolean,Au.Types.TBHide_old)"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBHide_old.Owner">
-            <summary>Owner window is hidden, minimized, etc.</summary>
-        </member>
-        <member name="F:Au.Types.TBHide_old.FullScreen">
-            <summary>A full-screen window is active, and there is flag <see cref="F:Au.Types.TBFlags_old.HideIfFullScreen"/>.</summary>
-        </member>
-        <member name="F:Au.Types.TBHide_old.User">
-            <summary>This and bigger flag values can be used by callers for any purpose. Value 0x10000.</summary>
-        </member>
-        <member name="T:Au.Types.TBNoMenu_old">
-            <summary>
-            See <see cref="P:Au.AToolbar_old.NoMenu"/>.
-            </summary>
-        </member>
-        <member name="T:Au.Types.TBCtor_old">
-            <summary>
-            Flags for <see cref="T:Au.AToolbar_old"/> constructor.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBCtor_old.ResetSettings">
-            <summary>
-            Don't load saved settings. Delete the settings file of the toolbar, if exists.
-            </summary>
-        </member>
-        <member name="F:Au.Types.TBCtor_old.DontSaveSettings">
-            <summary>
-            Don't load and save settings. No file will be created or opened.
-            </summary>
-        </member>
-        <member name="T:Au.Types.ITBOwnerObject_old">
-            <summary>
-            Used with <see cref="!:AToolbar.Show(AWnd, ITBOwnerObject_old)"/>.
-            </summary>
-            <remarks>
-            Allows a toolbar to follow an object in the owner window, for example an accessible object or image. Or to hide in certain conditions.
-            Define a class that implements this interface. Create a variable of that class and pass it to <see cref="!:AToolbar.Show(AWnd, ITBOwnerObject_old)"/>.
-            The interface functions are called every 250 ms, sometimes more frequently. Not called when the owner window is invisible or cloaked or minimized.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.ITBOwnerObject_old.IsAlive">
-            <summary>
-            Returns false to close the toolbar.
-            </summary>
-            <remarks>
-            Not called if the owner window is invisible or cloaked or minimized.
-            The default implementation returns true.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.ITBOwnerObject_old.IsVisible">
-            <summary>
-            Returns false to hide the toolbar temporarily.
-            </summary>
-            <remarks>
-            Not called if the owner window is invisible or cloaked or minimized.
-            The default implementation returns true.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.ITBOwnerObject_old.GetRect(Au.Types.RECT@)">
-            <summary>
-            Gets object rectangle.
-            Returns false if failed.
-            </summary>
-            <param name="r">Rectangle in screen coordinates.</param>
-            <remarks>
-            Not called if the owner window is invisible or cloaked or minimized or if <see cref="P:Au.Types.ITBOwnerObject_old.IsVisible"/> returned false.
-            </remarks>
-        </member>
-        <member name="T:Au.Types.TBGroupSeparator_old">
-            <summary>
-            Horizontal separator for <b>ToolStrip</b> controls. With or without a text label. See <see cref="M:Au.AToolbar_old.Group(System.String)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.TBGroupSeparator_old.#ctor(System.Windows.Forms.ToolStrip,System.String)">
-            <summary>
-            Adds horizontal separator to the toolstrip.
-            </summary>
-            <param name="ts">Parent control.</param>
-            <param name="name">Optional label.</param>
-        </member>
-        <member name="T:Au.Types.TBRenderer_old">
-            <summary>
-            Renderer used by <see cref="T:Au.AToolbar_old"/>. Based on <see cref="T:System.Windows.Forms.ToolStripSystemRenderer"/>. Draws groups etc.
-            If you want to replace a toolbar's renderer with a custom renderer, use this class as the base class of your renderer class.
-            </summary>
-        </member>
-        <member name="M:Au.Types.TBRenderer_old.#ctor">
-            
-        </member>
-        <member name="M:Au.Types.TBRenderer_old.OnRenderToolStripBorder(System.Windows.Forms.ToolStripRenderEventArgs)">
-            
-        </member>
-        <member name="M:Au.Types.TBRenderer_old.OnRenderToolStripBackground(System.Windows.Forms.ToolStripRenderEventArgs)">
-            
-        </member>
-        <member name="M:Au.Types.TBRenderer_old.OnRenderSeparator(System.Windows.Forms.ToolStripSeparatorRenderEventArgs)">
-            
-        </member>
-        <member name="T:Au.Types.MTBase_old">
-            <summary>
-            Base class of <see cref="T:Au.AToolbar_old"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Types.MTBase_old.OnClick_(System.Object,System.EventArgs)">
-            <summary>
-            Common Click even handler of all items.
-            Calls the true item's onClick callback if need. Calls it in correct thread.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTBase_old.ActionThread">
-            <summary>
-            In what thread to execute item actions (callback functions).
-            Default: <see cref="F:Au.Types.MTThread.Current"/> for <b>AMenu</b> created with the parameterless constructor, else <see cref="F:Au.Types.MTThread.StaThread"/>.
-            </summary>
-            <remarks>
-            If current thread is a UI thread (has windows etc), and item callback functions execute some long automations in the same thread, current thread probably is hung during that time. Use this property to avoid it.
-            This property is applied to items added afterwards.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.MTBase_old.ExceptionHandling">
-            <summary>
-            Whether/how to handle unhandled exceptions in item action code.
-            Default: <see cref="F:Au.Types.MTExcept.Exception"/> (don't handle exceptions if <see cref="P:Au.Types.MTBase_old.ActionThread"/> is <see cref="F:Au.Types.MTThread.Current"/> (default), else show warning).
-            </summary>
-            <remarks>
-            This property is applied to items added afterwards.
-            </remarks>
-            <seealso cref="E:System.Windows.Forms.Application.ThreadException"/>
-        </member>
-        <member name="P:Au.Types.MTBase_old.MainToolStrip">
-            <summary>
-            Gets ToolStrip of AMenu and AToolbar, which override this.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTBase_old.LastItem">
-            <summary>
-            Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripItem"/>, which is the base type of <see cref="T:System.Windows.Forms.ToolStripMenuItem"/>, <see cref="T:System.Windows.Forms.ToolStripButton"/> and other supported types.
-            </summary>
-        </member>
-        <member name="E:Au.Types.MTBase_old.ItemAdded">
-            <summary>
-            Occurs when added a non-separator item.
-            </summary>
-            <remarks>
-            Allows to set item properties in single place instead of after each 'add item' code line.
-            For example, the event handler can set item properties common to all items.
-            </remarks>
-        </member>
-        <member name="P:Au.Types.MTBase_old.IconSize">
-            <summary>
-            Image width and height. Default 16.
-            </summary>
-            <exception cref="T:System.InvalidOperationException">The 'set' function is called after adding items.</exception>
-            <remarks>
-            This property is applied to all items, and can be set only before adding items (else exception).
-            To set different icon size for a submenu: <c>using(m.Submenu("sub")) { m.LastMenuItem.DropDown.ImageScalingSize = new Size(24, 24);</c>
-            </remarks>
-        </member>
-        <member name="P:Au.Types.MTBase_old.CommonIcon">
-            <summary>
-            Gets "invoke method" image from Au library resources. Can be used for <see cref="P:Au.Types.MTBase_old.DefaultIcon"/> of toolbars.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTBase_old.CommonSubmenuIcon">
-            <summary>
-            Gets "drop-down menu" image from Au library resources. Can be used for <see cref="P:Au.Types.MTBase_old.DefaultSubmenuIcon"/> of toolbars.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTBase_old.DefaultIcon">
-            <summary>
-            Image for items that don't have an icon specified or auto-extracted from code.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTBase_old.DefaultSubmenuIcon">
-            <summary>
-            Image for submenu-items that don't have an icon specified.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTBase_old.ExtractIconPathFromCode">
-            <summary>
-            When adding items without explicitly specified icon, extract icon from item action code.
-            </summary>
-            <remarks>
-            This property is applied to items added afterwards.
-            </remarks>
-        </member>
-        <member name="M:Au.Types.MTBase_old._SetItemProp(System.Boolean,System.Boolean,System.Windows.Forms.ToolStripItem,System.Action{Au.Types.MTClickArgs},Au.Types.MTImage,System.Int32)">
-            <summary>
-            Sets onClick delegate, image and some properties.
-            </summary>
-        </member>
-        <member name="M:Au.Types.MTBase_old._OnItemAdded(System.Windows.Forms.ToolStripItem)">
-            <summary>
-            Sets LastItem and calls ItemAdded event handlers.
-            </summary>
-        </member>
-        <member name="M:Au.Types.MTBase_old.Finalize">
-            
-        </member>
-        <member name="M:Au.Types.MTBase_old.GetItemSourceLine_(System.Windows.Forms.ToolStripItem)">
-            <summary>
-            If item not null, gets its 1-based source line. Else gets that of ctor.
-            </summary>
-        </member>
-        <member name="M:Au.Types.MTBase_old.GoToEdit_(System.Windows.Forms.ToolStripItem)">
-            <summary>
-            If item not null, goes to its source line in editor. Else goes to that of ctor.
-            Does nothing if editor process not found.
-            </summary>
-        </member>
-        <member name="T:Au.Types.MTClickArgs">
-            <summary>
-            Data passed to <b>Click</b> event handler functions of <see cref="T:Au.AToolbar_old"/>.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTClickArgs.Item">
-            <summary>
-            Gets the clicked item as ToolStripItem.
-            </summary>
-        </member>
-        <member name="P:Au.Types.MTClickArgs.MenuItem">
-            <summary>
-            Gets the clicked item as ToolStripMenuItem.
-            Returns null if it is not ToolStripMenuItem.
-            </summary>
-        </member>
-        <member name="M:Au.Types.MTClickArgs.ToString">
-            <summary>
-            Gets item text.
-            </summary>
-        </member>
-        <member name="T:Au.Types.MTThread">
-            <summary>
-            Used with <see cref="P:Au.Types.MTBase_old.ActionThread"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.MTThread.Current">
-            <summary>
-            Execute item callback functions in current thread. This is default.
-            </summary>
-        </member>
-        <member name="F:Au.Types.MTThread.ThreadPool">
-            <summary>
-            Execute item callback functions in thread pool threads (<see cref="M:System.Threading.Tasks.Task.Run(System.Action)"/>).
-            Note: current thread does not wait until the callback function finishes.
-            </summary>
-        </member>
-        <member name="F:Au.Types.MTThread.StaThread">
-            <summary>
-            Execute item callback functions in new STA threads (<see cref="M:System.Threading.Thread.SetApartmentState(System.Threading.ApartmentState)"/>).
-            Note: current thread does not wait until the callback function finishes.
-            </summary>
-        </member>
-        <member name="F:Au.Types.MTThread.StaBackgroundThread">
-            <summary>
-            Execute item callback functions in new STA background threads (<see cref="P:System.Threading.Thread.IsBackground"/>).
-            Note: current thread does not wait until the callback function finishes.
-            </summary>
-        </member>
-        <member name="T:Au.Types.MTExcept">
-            <summary>
-            Used with <see cref="P:Au.Types.MTBase_old.ExceptionHandling"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Types.MTExcept.Exception">
-            <summary>
-            Don't handle exceptions. This is default.
-            However if <see cref="P:Au.Types.MTBase_old.ActionThread"/> is not <see cref="F:Au.Types.MTThread.Current"/>, handles exceptions and shows warning.
-            On unhandled exception .NET probably will show an unhandled exception dialog with exception info and "Continue" button, unless your app uses <see cref="E:System.Windows.Forms.Application.ThreadException"/> event.
-            </summary>
-        </member>
-        <member name="F:Au.Types.MTExcept.Warning">
-            <summary>Handle exceptions. On exception call <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.</summary>
-        </member>
-        <member name="F:Au.Types.MTExcept.Silent">
-            <summary>Handle exceptions. On exception do nothing.</summary>
-        </member>
         <member name="T:Au.Types.MTImage">
             <summary>
-            Used for menu/toolbar function parameters to specify an image in different ways (file path, Image object, etc). More info in Remarks.
+            Used for menu/toolbar function parameters to specify an image in different ways (file path, Image object, etc).
             </summary>
             <remarks>
-            Has implicit conversions from:
-            - string - path of .ico or any other file or folder or non-file object. See <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.
-            - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
-            - Image - image object.
-            - <see cref="T:Au.AIcon"/> - native icon handle. The <b>AIcon</b> to <b>MTImage</b> impicit conversion operator calls <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/> and disposes the native icon.
-            - <see cref="T:Au.Types.StockIcon"/> - a shell icon.
-            - FolderPath - folder path.
-            - default - no icon. If <see cref="P:Au.Types.MTBase_old.ExtractIconPathFromCode"/> == true, extracts icon path from <i>onClick</i> code like <c>AFile.TryRun(@"c:\path\file.exe")</c> or <c>AFile.TryRun(AFolders.System + "file.exe")</c>.
-            - "" - no icon.
+            Has implicit conversions from string, <see cref="T:System.Drawing.Image"/>, <see cref="T:Au.AIcon"/>, <see cref="T:Au.Types.StockIcon"/>, <see cref="T:Au.Types.FolderPath"/>.
+            More info: <see cref="T:Au.MTBase"/>.
             </remarks>
         </member>
         <member name="M:Au.Types.MTImage.op_Implicit(System.String)~Au.Types.MTImage">
@@ -8571,7 +8386,7 @@
             <param name="path">Receives path without index and without "". Can be same variable as <i>s</i>.</param>
             <param name="index">Receives index/id or 0.</param>
         </member>
-        <member name="M:Au.AIcon.IconPathFromCode_(System.Reflection.MethodInfo)">
+        <member name="M:Au.AIcon.IconPathFromCode_(System.Reflection.MethodInfo,System.Boolean@)">
             <summary>
             Gets icon path from code that contains string like <c>@"c:\windows\system32\notepad.exe"</c> or <c>@"%AFolders.System%\notepad.exe"</c> or URL/shell.
             Also supports code patterns like <c>AFolders.System + "notepad.exe"</c> or <c>AFolders.Virtual.RecycleBin</c>.
@@ -11747,6 +11562,534 @@
             ]]></code>
             </example>
         </member>
+        <member name="T:Au.AToolbar">
+            <summary>
+            Floating toolbar.
+            Can be attached to windows of other programs.
+            </summary>
+            <remarks>
+            To create toolbar code can be used snippet toolbarSnippet. In code editor type "toolbar" and selext the snippet from the list.
+            
+            Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note: item actions by default run in other threads; see <see cref="P:Au.MTBase.ActionThread"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,System.String,System.Int32)">
+            <summary>
+            
+            </summary>
+            <param name="name">
+            Toolbar name. Must be valid filename.
+            Used for toolbar window name and for settings file name. Also used by <see cref="M:Au.AToolbar.Find(System.String)"/> and some other functions.
+            </param>
+            <param name="flags"></param>
+            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <exception cref="T:System.ArgumentException">Empty or invalid name.</exception>
+            <remarks>
+            Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="M:Au.AToolbar.GetSettingsFilePath(System.String)"/>. If fails, writes warning to the output and uses default settings.
+            
+            Sets properties:
+            - <see cref="P:Au.MTBase.ActionThread"/> = true.
+            - <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> = true.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Hwnd">
+            <summary>
+            Gets the toolbar window.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.IsAlive">
+            <summary>
+            Returns true if the toolbar is open. False if closed or <see cref="M:Au.AToolbar.Show(Au.AScreen)"/> still not called.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.Name">
+            <summary>
+            Gets the name of the toolbar.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar.ToString">
+            
+        </member>
+        <member name="P:Au.AToolbar.IsFresh">
+            <summary>
+            True if this toolbar started with default settings. False if loaded saved settings from file.
+            </summary>
+            <seealso cref="M:Au.AToolbar.GetSettingsFilePath(System.String)"/>
+            <seealso cref="T:Au.Types.TBCtor"/>
+        </member>
+        <member name="M:Au.AToolbar.GetSettingsFilePath(System.String)">
+            <summary>
+            Gets full path of toolbar's settings file. The file may exist or not.
+            </summary>
+            <param name="toolbarName">Toolbar name.</param>
+            <remarks>
+            Path: <c>AFolders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="P:Au.AFolders.Workspace"/> is null, uses <see cref="P:Au.AFolders.ThisAppDocuments"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Find(System.String)">
+            <summary>
+            Finds an open toolbar by <see cref="P:Au.AToolbar.Name"/>.
+            Returns null if not found or closed or never shown (<see cref="M:Au.AToolbar.Show(Au.AScreen)"/> not called).
+            </summary>
+            <remarks>
+            Finds only toolbars created in the same script and thread.
+            
+            Does not find satellite toolbars. Use this code: <c>AToolbar.Find("owner toolbar").Satellite</c>
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Add(System.String,System.Action{Au.AToolbar.ToolbarItem},Au.Types.MTImage,System.Int32)">
+            <summary>
+            Adds button.
+            Same as <see cref="P:Au.AToolbar.Item(System.String,Au.Types.MTImage,System.Int32)"/>.
+            </summary>
+            <param name="text">Text. Or "Text\0 Tooltip".</param>
+            <param name="click">Action called when the button clicked.</param>
+            <param name="image"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <remarks>
+            More properties can be specified later (set properties of the returned <see cref="T:Au.AToolbar.ToolbarItem"/>) or before (set <see cref="P:Au.MTBase.ActionThread"/>, <see cref="P:Au.MTBase.ActionException"/>, <see cref="P:Au.MTBase.ExtractIconPathFromCode"/>, <see cref="E:Au.AToolbar.ButtonAdded"/>).
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Item(System.String,Au.Types.MTImage,System.Int32)">
+            <summary>
+            Adds button.
+            Same as <see cref="M:Au.AToolbar.Add(System.String,System.Action{Au.AToolbar.ToolbarItem},Au.Types.MTImage,System.Int32)"/>.
+            </summary>
+            <param name="text">Text. Or "Text\0 Tooltip".</param>
+            <param name="image"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <value>Action called when the button clicked.</value>
+            <remarks>
+            More properties can be specified later (set properties of <see cref="P:Au.AToolbar.Last"/> <see cref="T:Au.AToolbar.ToolbarItem"/>) or before (set <see cref="P:Au.MTBase.ActionThread"/>, <see cref="P:Au.MTBase.ActionException"/>, <see cref="P:Au.MTBase.ExtractIconPathFromCode"/>, <see cref="E:Au.AToolbar.ButtonAdded"/>).
+            </remarks>
+            <example>
+            These two are the same.
+            <code><![CDATA[
+            tb.Add("Example", o => AOutput.Write(o));
+            tb["Example"] = o => AOutput.Write(o);
+            ]]></code>
+            These four are the same.
+            <code><![CDATA[
+            var b = tb.Add("Example", o => AOutput.Write(o)); b.Tooltip="tt";
+            tb.Add("Example", o => AOutput.Write(o)).Tooltip="tt";
+            tb["Example"] = o => AOutput.Write(o); var b=tb.Last; b.Tooltip="tt";
+            tb["Example"] = o => AOutput.Write(o); tb.Last.Tooltip="tt";
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AToolbar.Menu(System.String,System.Action{Au.AMenu},Au.Types.MTImage,System.Int32)">
+            <summary>
+            Adds button with drop-down menu.
+            </summary>
+            <param name="text">Text. Or "Text\0 Tooltip".</param>
+            <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
+            <param name="image"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <example>
+            <code><![CDATA[
+            tb.Menu("Menu", m => {
+            	m["M1"]=o=>AOutput.Write(o);
+            	m["M2"]=o=>AOutput.Write(o);
+            });
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AToolbar.Menu(System.String,System.Func{Au.AMenu},Au.Types.MTImage,System.Int32)">
+            <summary>
+            Adds button with drop-down menu.
+            </summary>
+            <param name="text">Text. Or "Text\0 Tooltip".</param>
+            <param name="menu">Action that returns the menu. Called whenever the button clicked.</param>
+            <param name="image"></param>
+            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <example>
+            <code><![CDATA[
+            var m = new AMenu(); m.AddCheck("C1"); m.AddCheck("C2");
+            t.Menu("", () => m);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AToolbar.Separator">
+            <summary>
+            Adds new vertical separator. Horizontal if vertical toolbar.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar.Group(System.String)">
+            <summary>
+            Adds new horizontal separator, optionally with text.
+            </summary>
+            <param name="text">Text. Or "Text\0 Tooltip".</param>
+        </member>
+        <member name="P:Au.AToolbar.Last">
+            <summary>
+            Gets the last added item.
+            </summary>
+        </member>
+        <member name="E:Au.AToolbar.ButtonAdded">
+            <summary>
+            When added a button.
+            </summary>
+            <remarks>
+            Allows to set item properties in single place instead of after each 'add button' code line.
+            For example, the event handler can set item properties common to all buttons.
+            Not used for separators and group separators.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Show(Au.AScreen)">
+            <summary>
+            Shows the toolbar.
+            </summary>
+            <param name="screen">
+            Attach to this screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). Example: <c>AScreen.Index(1)</c>.
+            If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.
+            Don't use this parameter if this toolbar was created by <see cref="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,System.String,System.Int32)"/>, because then screen is already known.
+            </param>
+            <exception cref="T:System.ArgumentException">The toolbar was created by <b>AutoHideScreenEdge</b>, and now screen specified again.</exception>
+            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
+            <remarks>
+            The toolbar will be moved when the screen moved or resized.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Show(Au.AWnd,System.Boolean)">
+            <summary>
+            Shows the toolbar and attaches to a window.
+            </summary>
+            <param name="ownerWindow">Window or control. Can belong to any process.</param>
+            <param name="clientArea">Let the toolbar position be relative to the client area of the window.</param>
+            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
+            <exception cref="T:System.ArgumentException"><b>ownerWindow</b> is 0.</exception>
+            <remarks>
+            The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Show(Au.AWnd,Au.Types.ITBOwnerObject)">
+            <summary>
+            Shows the toolbar and attaches to an object in a window.
+            </summary>
+            <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
+            <param name="oo">A variable of a user-defined class that implements <see cref="T:Au.Types.ITBOwnerObject"/> interface. It provides object location, visibility, etc.</param>
+            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
+            <exception cref="T:System.ArgumentException"><b>ownerWindow</b> is 0.</exception>
+            <remarks>
+            The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.Show(Au.Triggers.TriggerArgs)">
+            <summary>
+            Shows the toolbar.
+            If ta is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
+            Else if ta != null, calls <see cref="M:Au.Triggers.TriggerArgs.DisableTriggerUntilClosed(Au.AToolbar)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar.Close">
+            <summary>
+            Destroys the toolbar window.
+            </summary>
+        </member>
+        <member name="E:Au.AToolbar.Closed">
+            <summary>
+            When the toolbar window destroyed.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar.Hide(System.Boolean,Au.Types.TBHide)">
+            <summary>
+            Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <seealso cref="M:Au.AToolbar.Close"/>.
+            </summary>
+            <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
+            <param name="reason">An user-defined reason to hide/unhide. Can be <see cref="F:Au.Types.TBHide.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>
+            <exception cref="T:System.InvalidOperationException">
+            - The toolbar was never shown (<see cref="M:Au.AToolbar.Show(Au.AScreen)"/> not called).
+            - It is a satellite toolbar.
+            - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="P:Au.MTBase.ActionThread"/>.
+            </exception>
+            <exception cref="T:System.ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="F:Au.Types.TBHide.User"/>.</exception>
+            <remarks>
+            Toolbars are automatically hidden when the owner window is hidden, minimized, etc. This function can be used to hide toolbars for other reasons.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Hidden">
+            <summary>
+            Gets current reasons why the toolbar is hidden. Returns 0 if not hidden.
+            </summary>
+            <remarks>
+            Not used with satellite toolbars.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.IsOwned">
+            <summary>
+            Returns true if the toolbar is attached to a window or an object in a window.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.OwnerWindow">
+            <summary>
+            Returns the owner top-level window.
+            Returns default(AWnd) if the toolbar is not owned. See <see cref="P:Au.AToolbar.IsOwned"/>.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.DpiScaling">
+            <summary>
+            Whether to DPI-scale toolbar size and offsets.
+            Default: scale size; scale offsets if anchor is not screen.
+            </summary>
+            <remarks>
+            The unit of measurement of <see cref="P:Au.AToolbar.Size"/>, <see cref="P:Au.AToolbar.Offsets"/> and some other properties depends on whether scaling is used for that property. If scaling is used, the unit is logical pixels; it is 1/96 inch regardless of screen DPI. If scaling not used, the unit is physical pixels. Screen DPI can be changed in Windows Settings; when it is 100%, logical and physical pixels are equal.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Size">
+            <summary>
+            Toolbar width and height without non-client area when <see cref="P:Au.AToolbar.AutoSize"/> false.
+            </summary>
+            <remarks>
+            Non-client area is border and caption when <see cref="P:Au.AToolbar.Border"/> is <b>ThreeD</b>, <b>Thick</b>, <b>Caption</b> or <b>CaptionX</b>.
+            
+            The unit of measurement depends on <see cref="P:Au.AToolbar.DpiScaling"/>.
+            
+            This property is updated when resizing the toolbar. It is saved.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            t.Size = new(300, 40);
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.AToolbar.Sizable">
+            <summary>
+            Whether the border can be used to resize the toolbar.
+            Default true.
+            </summary>
+            <remarks>
+            This property is in the context menu and is saved.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.AutoSize">
+            <summary>
+            Automatically resize the toolbar to make all buttons visible.
+            Default true.
+            </summary>
+            <remarks>
+            This property is in the context menu and is saved.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.AutoSizeWrapWidth">
+            <summary>
+            When <see cref="P:Au.AToolbar.AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
+            </summary>
+            <remarks>
+            The unit of measurement depends on <see cref="P:Au.AToolbar.DpiScaling"/>.
+            
+            This property is updated when the user resizes the toolbar while <see cref="P:Au.AToolbar.AutoSize"/> is true. It is saved.
+            
+            If layout of this toolbar is vertical, just sets max width.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Anchor">
+            <summary>
+            Specifies to which owner's edges the toolbar keeps constant distance when moving or resizing the owner.
+            </summary>
+            <remarks>
+            The owner can be a window, screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>.
+            This property is in the context menu and is saved.
+            </remarks>
+            <seealso cref="P:Au.AToolbar.Offsets"/>
+        </member>
+        <member name="P:Au.AToolbar.Offsets">
+            <summary>
+            Specifies distances between edges of the toolbar and edges of its owner, depending on <see cref="P:Au.AToolbar.Anchor"/>.
+            </summary>
+            <remarks>
+            Owner is specified when calling <see cref="M:Au.AToolbar.Show(Au.AScreen)"/>. It can be a window, screen, control or other object.
+            
+            The <see cref="T:Au.Types.TBOffsets"/> type has 4 properties - <b>Top</b>, <b>Bottom</b>, <b>Left</b> and <b>Right</b>, but used are only those included in <see cref="P:Au.AToolbar.Anchor"/>. For example, if <b>Anchor</b> is <b>TopLeft</b>, used are only <b>Top</b> and <b>Left</b>.
+            
+            The unit of measurement depends on <see cref="P:Au.AToolbar.DpiScaling"/> and whether anchor is screen.
+            
+            This property is updated when moving or resizing the toolbar. It is saved.
+            </remarks>
+            <example>
+            <code><![CDATA[
+            t.Offsets = new(150, 5, 0, 0);
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.AToolbar.MiscFlags">
+            <summary>
+            Miscellaneous options.
+            </summary>
+            <remarks>
+            This property is in the context menu (submenu "More") and is saved.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Transparency">
+            <summary>
+            Opacity and transparent color.
+            </summary>
+            <seealso cref="M:Au.AWnd.SetTransparency(System.Boolean,System.Nullable{System.Int32},System.Nullable{Au.Types.ColorInt})"/>
+            <example>
+            <code><![CDATA[
+            t.Transparency = (64, null);
+            ]]></code>
+            </example>
+        </member>
+        <member name="P:Au.AToolbar.NoContextMenu">
+            <summary>
+            Hides some context menu items or menu itself.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar.ToolbarsDialog">
+            <summary>
+            Creates dialog with a list of toolbars of this thread. Just creates, does not show. Can be used to find lost toolbars.
+            </summary>
+            <example>
+            <code><![CDATA[
+            AToolbar.ToolbarsDialog().Show();
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AToolbar._GetCachedOwnerRect">
+            <summary>
+            Gets the cached rectangle of the owner window, screen, control, etc.
+            If is owned and anchor has flag Screen, the rectangle is of toolbar's screen.
+            Also gets previous size.
+            The values are cached by <b>UpdateRect</b> of <b>_OwnerWindow</b> etc.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.Border">
+            <summary>
+            Border style.
+            Default <see cref="F:Au.Types.TBBorder.Width2"/>.
+            </summary>
+            <remarks>
+            This property is in the context menu and is saved.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.Layout">
+            <summary>
+            Layout of buttons (horizontal, vertical).
+            </summary>
+            <remarks>
+            This property is in the context menu and is saved.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.DisplayText">
+            <summary>
+            Display button text. Default true. If false, displays text in tooltips, and only displays first 2 characters for buttons without image.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.Font">
+            <summary>
+            Font properties.
+            </summary>
+            <remarks>
+            Cannot be changed after showing toolbar window.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.TextColor">
+            <summary>
+            Text color.
+            If <c>default</c>, uses system color.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.Background">
+            <summary>
+            Background color or brush.
+            </summary>
+            <value>Can be <see cref="T:System.Drawing.Color"/>, <see cref="T:Au.Types.ColorInt"/>, int (color 0xRRGGBB) or <see cref="T:System.Drawing.Brush"/>. If null (default), uses system color.</value>
+        </member>
+        <member name="P:Au.AToolbar.BorderColor">
+            <summary>
+            Border color when <see cref="P:Au.AToolbar.Border"/> is Width1 ... Width4.
+            If <c>default</c>, uses system color.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar._Measure(System.Nullable{System.Int32})">
+            <summary>
+            Measures toolbar size and sets button rectangles.
+            Returns size of client area.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.Satellite">
+            <summary>
+            A toolbar attached to this toolbar. Can be null.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">The 'set' function throws if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
+            <remarks>
+            The satellite toolbar is shown when mouse enters its owner toolbar and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
+            A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
+            </remarks>
+        </member>
+        <member name="P:Au.AToolbar.SatelliteOwner">
+            <summary>
+            If this is a sattellite toolbar (<see cref="P:Au.AToolbar.Satellite"/>), gets its owner toolbar. Else null.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar.AutoHide(Au.Types.TBCtor,System.String,System.Int32)">
+            <summary>
+            Creates new toolbar and sets its <see cref="P:Au.AToolbar.Satellite"/> = this.
+            Returns the new toolbar.
+            </summary>
+            <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,System.String,System.Int32)"/>.</param>
+            <param name="f">[CallerFilePath]</param>
+            <param name="l">[CallerLineNumber]</param>
+            <exception cref="T:System.InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
+            <remarks>
+            Sets toolbar name = <c>this.Name + "^"</c>.
+            If this already is a satellite toolbar, just returns its owner.
+            </remarks>
+        </member>
+        <member name="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,System.String,System.Int32)">
+            <summary>
+            Creates new toolbar and sets its <see cref="P:Au.AToolbar.Satellite"/> = this. Sets properties for showing at a screen edge.
+            Returns the new toolbar.
+            </summary>
+            <param name="mta">Mouse edge trigger arguments.</param>
+            <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
+            <param name="rangeEnd"></param>
+            <param name="thickness">The visible thickness. Pixels.</param>
+            <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,System.String,System.Int32)"/>.</param>
+            <param name="f">[CallerFilePath]</param>
+            <param name="l">[CallerLineNumber]</param>
+        </member>
+        <member name="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.TMEdge,Au.Triggers.TMScreen,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,System.String,System.Int32)">
+            <summary>
+            Creates new toolbar and sets its <see cref="P:Au.AToolbar.Satellite"/> = this. Sets properties for showing at a screen edge.
+            Returns the new toolbar.
+            </summary>
+            <param name="edge">Screen edge/part.</param>
+            <param name="screen">Screen index. Default: primary.</param>
+            <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
+            <param name="rangeEnd"></param>
+            <param name="thickness">The visible thickness. Pixels.</param>
+            <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,System.String,System.Int32)"/>.</param>
+            <param name="f">[CallerFilePath]</param>
+            <param name="l">[CallerLineNumber]</param>
+        </member>
+        <member name="T:Au.AToolbar.ToolbarItem">
+            <summary>
+            Toolbar button or separator.
+            </summary>
+        </member>
+        <member name="P:Au.AToolbar.ToolbarItem.ItemType">
+            
+        </member>
+        <member name="P:Au.AToolbar.ToolbarItem.TextColor">
+            
+        </member>
+        <member name="M:Au.AToolbar._AutoSizeNow">
+            <summary>
+            Measures, resizes and invalidates the toolbar now if need.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar._BorderPadding(Au.Types.TBBorder,System.Int32)">
+            <summary>
+            Returns DPI-scaled border thickness in client area. Returns 0 if b is not TBBorder.Width1 ... TBBorder.Width4.
+            </summary>
+        </member>
+        <member name="M:Au.AToolbar._BorderPadding(System.Nullable{Au.Types.TBBorder})">
+            <summary>
+            Returns DPI-scaled border thickness in client area. Returns 0 if b is not TBBorder.Width1 ... TBBorder.Width4.
+            </summary>
+        </member>
         <member name="T:Au.AWpfBuilder">
             <summary>
             With this class you can create windows with controls, for example for data input.
@@ -13014,15 +13357,16 @@
         </member>
         <member name="T:Au.MTBase">
              <summary>
-             Base class of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar_old"/>.
+             Base class of <see cref="T:Au.AMenu"/> and <see cref="T:Au.AToolbar"/>.
              </summary>
              <remarks>
              <i>image</i> argument of "add item" functions can be:
              - file/folder path (string) - the "show" function calls <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/> to get its icon. It also supports file type icons like ".txt", etc.
              - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
+             - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
              - <see cref="T:Au.Types.FolderPath"/> - same as folder path string.
              - <see cref="T:System.Drawing.Image"/> - image object.
-             - <see cref="T:Au.AIcon"/> - variable containing native icon handle. The "add item" function disposes it.
+             - <see cref="T:Au.AIcon"/> - variable containing native icon handle. The "add item" function disposes it (actually the <see cref="T:Au.Types.MTImage"/> implicit conversion operator disposes it).
              - <see cref="T:Au.Types.StockIcon"/> - the "show" function calls <see cref="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)"/>.
              - null - if <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>. Else no image.
              - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
@@ -13046,6 +13390,8 @@
             Also supports code patterns like <c>AFolders.System + "notepad.exe"</c>, <c>AFolders.Virtual.RecycleBin</c>.
             
             If extracts file path, also in the context menu adds item "Find file" which selects the file in Explorer.
+            
+            Also can extract script file name or path in workspace, like @"\Folder\Script20.cs". It is used to open the script from the context menu.
             </remarks>
         </member>
         <member name="P:Au.MTBase.ImageCache">
@@ -13084,7 +13430,7 @@
             </summary>
         </member>
         <member name="F:Au.MTBase.MTItem.extractIconPath">
-            <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract</summary>
+            <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
         </member>
         <member name="P:Au.MTBase.MTItem.Text">
             <summary>
@@ -13105,7 +13451,6 @@
             <summary>
             Gets file path extracted from item action code or sets file path as it would be extracted from action code.
             </summary>
-            <exception cref="T:System.InvalidOperationException">The setter throws if called not first time or if item image already specified or extracted.</exception>
             <remarks>
             Can be used to set file path when it cannot be extracted from action code (the item does not have an action or action code does not contain the path string). See <see cref="P:Au.MTBase.ExtractIconPathFromCode"/>.
             When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains "Find file".
@@ -13120,551 +13465,6 @@
         </member>
         <member name="M:Au.MTBase.MTItem.ToString">
             
-        </member>
-        <member name="T:Au.AToolbar_old">
-            <summary>
-            Floating toolbar.
-            Can be attached to windows of other programs.
-            </summary>
-            <remarks>
-            Based on <see cref="T:System.Windows.Forms.ToolStrip"/>.
-            Not thread-safe. All functions must be called from the same thread that created the <b>AToolbar</b> object, except where documented otherwise. Note that item actions by default run in other threads; see <see cref="P:Au.Types.MTBase_old.ActionThread"/>.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            _Toolbar_Common(); //show toolbar. Don't attach to a window.
-            //_Toolbar_Common2(); //add function for each toolbar
-            Triggers.Options.ThreadMain(); //let all toolbars run in this thread
-            Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "*Notepad", "Notepad"] = o => _Toolbar_Notepad(o.Window); //show toolbar attached to this Notepad window
-            //Triggers.Window[Au.Triggers.TWEvent.ActiveOnce, "other window"] = o => _Toolbar_Other(o.Window); //add trigger and function for each toolbar
-            Triggers.Run();
-            
-            void _Toolbar_Common() {
-            	var t = new AToolbar("example");
-            	t["button 1", @"C:\example.ico"] = o => AOutput.Write(o);
-            	t.MenuButton("menu", m => {
-            		m["item 1"] = o => AOutput.Write(o);
-            		m["item 2"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
-            	}, StockIcon.FOLDER);
-            	t["Notepad"] = o => AFile.TryRun(AFolders.System + "notepad.exe");
-            	t.Show();
-            }
-            
-            void _Toolbar_Notepad(AWnd w) {
-            	var t = new AToolbar("tb notepad");
-            	t["button 1"] = o => AOutput.Write(o);
-            	t.Show(w);
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)">
-            <param name="name">
-            Toolbar name. Must be valid filename.
-            Used for the toolbar's settings file name. Also sets <see cref="P:Au.AToolbar_old.Control"/>'s <b>Text</b> property and is used by <see cref="M:Au.AToolbar_old.Find(System.String)"/> and some other functions.
-            </param>
-            <param name="flags"></param>
-            <param name="control">
-            If not null, sets the <see cref="P:Au.AToolbar_old.Control"/> property.
-            Can be used to extend the toolbar (add or change some features) by overriding control's functions etc. Define class that inherits from <see cref="T:Au.AToolbar_old.ToolStripWindow"/>. Then create toolbars like <c>var t = new AToolbar("name", control: new MyToolStripWindow());</c>.
-            </param>
-            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <exception cref="T:System.ArgumentException">Empty or invalid name.</exception>
-            <remarks>
-            Reads the settings file if exists, ie if settings changed in the past. See <see cref="M:Au.AToolbar_old.GetSettingsFilePath(System.String)"/>. If fails, writes warning to the output and uses default settings.
-            
-            Creates <see cref="P:Au.AToolbar_old.Control"/> object or uses <i>control</i>. Its window handle will be created in <see cref="M:Au.AToolbar_old.Show(Au.AScreen)"/>.
-            
-            Sets properties:
-            - <see cref="P:Au.Types.MTBase_old.ActionThread"/> = <see cref="F:Au.Types.MTThread.StaThread"/>.
-            - <see cref="P:Au.Types.MTBase_old.ExtractIconPathFromCode"/> = true.
-            - <see cref="P:Au.Types.MTBase_old.DefaultIcon"/> = <see cref="P:Au.Types.MTBase_old.CommonIcon"/>.
-            - <see cref="P:Au.Types.MTBase_old.DefaultSubmenuIcon"/> = <see cref="P:Au.Types.MTBase_old.CommonSubmenuIcon"/>.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.Control">
-            <summary>
-            Gets the toolbar window as <see cref="T:System.Windows.Forms.ToolStrip"/>.
-            </summary>
-            <remarks>
-            The toolbar window is a top-level <see cref="T:System.Windows.Forms.ToolStrip"/> control. You can use its properties, methods and events.
-            The object is created in <see cref="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/> constructor or passed to it as the <i>control</i> parameter.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.IsAlive">
-            <summary>
-            Returns true if the toolbar is open. False if closed or <see cref="M:Au.AToolbar_old.Show(Au.AScreen)"/> still not called.
-            </summary>
-        </member>
-        <member name="P:Au.AToolbar_old.Name">
-            <summary>
-            Gets the name of the toolbar.
-            </summary>
-        </member>
-        <member name="M:Au.AToolbar_old.ToString">
-            
-        </member>
-        <member name="P:Au.AToolbar_old.SettingsModified">
-            <summary>
-            True if properties of this toolbar were modified now or in the past (the settings file exists).
-            </summary>
-            <seealso cref="M:Au.AToolbar_old.GetSettingsFilePath(System.String)"/>
-            <seealso cref="T:Au.Types.TBCtor_old"/>
-        </member>
-        <member name="M:Au.AToolbar_old.GetSettingsFilePath(System.String)">
-            <summary>
-            Gets full path of toolbar's settings file. The file may exist or not.
-            </summary>
-            <param name="toolbarName">Toolbar name.</param>
-            <remarks>
-            Path: <c>AFolders.Workspace + $@"\.toolbars\{toolbarName}.json"</c>. If <see cref="P:Au.AFolders.Workspace"/> is null, uses <see cref="P:Au.AFolders.ThisAppDocuments"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.Find(System.String)">
-            <summary>
-            Finds an open toolbar by <see cref="P:Au.AToolbar_old.Name"/>.
-            Returns null if not found or closed or never shown (<see cref="M:Au.AToolbar_old.Show(Au.AScreen)"/> not called).
-            </summary>
-            <remarks>
-            Finds only toolbars created in the same script and thread.
-            
-            Does not find satellite toolbars. Use this code: <c>AToolbar.Find("owner toolbar").Satellite</c>
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.Item(System.String,Au.Types.MTImage,System.String,System.Int32)">
-            <summary>
-            Adds new button as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
-            The same as <see cref="M:Au.AToolbar_old.Add(System.String,System.Action{Au.Types.MTClickArgs},Au.Types.MTImage,System.String,System.Int32)"/>.
-            </summary>
-            <example>
-            <code><![CDATA[
-            tb["Example"] = o => AOutput.Write(o);
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AToolbar_old.Add(System.String,System.Action{Au.Types.MTClickArgs},Au.Types.MTImage,System.String,System.Int32)">
-            <summary>
-            Adds new button as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
-            </summary>
-            <param name="text">Text.</param>
-            <param name="onClick">Callback function. Called when the button clicked.</param>
-            <param name="icon"></param>
-            <param name="tooltip">Tooltip text.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <remarks>
-            Sets button text, icon and <b>Click</b> event handler. Other properties can be specified later.
-            
-            Code <c>t.Add("text", o => AOutput.Write(o));</c> is the same as <c>t["text"] = o => AOutput.Write(o);</c>. See <see cref="P:Au.AToolbar_old.Item(System.String,Au.Types.MTImage,System.String,System.Int32)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.Add(System.Windows.Forms.ToolStripItem,Au.Types.MTImage,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
-            <summary>
-            Adds item of any <b>ToolStripItem</b>-based type, for example <b>ToolStripLabel</b>, <b>ToolStripTextBox</b>, <b>ToolStripComboBox</b>.
-            </summary>
-            <param name="item"></param>
-            <param name="icon"></param>
-            <param name="tooltip">Tooltip text.</param>
-            <param name="onClick">Callback function. Called when the item clicked. Not useful with most item types.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-        </member>
-        <member name="M:Au.AToolbar_old.Separator">
-            <summary>
-            Adds new vertical separator. Horizontal if layout is vertical.
-            </summary>
-        </member>
-        <member name="M:Au.AToolbar_old.Group(System.String)">
-            <summary>
-            Adds new horizontal separator, optionally with text.
-            </summary>
-            <param name="name">If not null, this text will be displayed.</param>
-            <example>
-            Add separator and set color.
-            <code><![CDATA[
-            t.Group("Group").ForeColor = Color.MediumPurple;
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AToolbar_old.MenuButton(System.String,System.Action{Au.AMenu},Au.Types.MTImage,System.String,System.Int32)">
-            <summary>
-            Adds new button as <see cref="T:System.Windows.Forms.ToolStripDropDownButton"/> with a drop-down menu.
-            </summary>
-            <param name="text">Text.</param>
-            <param name="menu">Callback function that adds menu items.</param>
-            <param name="icon"></param>
-            <param name="tooltip">Tooltip text.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <example><see cref="T:Au.AToolbar_old"/></example>
-        </member>
-        <member name="M:Au.AToolbar_old.SplitButton(System.String,System.Action{Au.AMenu},Au.Types.MTImage,System.String,System.Action{Au.Types.MTClickArgs},System.Int32)">
-            <summary>
-            Adds new button as <see cref="T:System.Windows.Forms.ToolStripSplitButton"/> with a drop-down menu.
-            </summary>
-            <param name="text">Text.</param>
-            <param name="menu">Callback function that adds menu items.</param>
-            <param name="icon"></param>
-            <param name="tooltip">Tooltip text.</param>
-            <param name="onClick">Callback function. Called when the button clicked. If null, will execute the first menu item.</param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
-            <example><see cref="T:Au.AToolbar_old"/></example>
-        </member>
-        <member name="P:Au.AToolbar_old.LastButton">
-            <summary>
-            Gets the last added item as <see cref="T:System.Windows.Forms.ToolStripButton"/>.
-            Returns null if it is not a <b>ToolStripButton</b>.
-            </summary>
-            <remarks>
-            You can instead use <see cref="P:Au.Types.MTBase_old.LastItem"/>, which gets <see cref="T:System.Windows.Forms.ToolStripItem"/>, the base class of all supported item types; cast it to a derived type if need.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.Show(Au.AScreen)">
-            <summary>
-            Shows the toolbar.
-            </summary>
-            <param name="screen">
-            Can be used to define the screen. For example a screen index (0 the primary, 1 the first non-primary, and so on). Example: <c>AScreen.Index(1)</c>.
-            If not specified, the toolbar will be attached to the screen where it is now or where will be moved later.
-            If not specified and this toolbar is created by <see cref="M:Au.AToolbar_old.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/>, uses its screen parameter.
-            </param>
-            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
-            <remarks>
-            The toolbar will be moved when the screen moved or resized.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.Show(Au.AWnd,System.Boolean)">
-            <summary>
-            Shows the toolbar and attaches to a window.
-            </summary>
-            <param name="ownerWindow">Window or control. Can belong to any process.</param>
-            <param name="clientArea">Let the toolbar position be relative to the client area of the window.</param>
-            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
-            <exception cref="T:System.ArgumentException"><b>ownerWindow</b> is 0.</exception>
-            <remarks>
-            The toolbar will be above the window in the Z order; moved when the window moved or resized; hidden when the window hidden, cloaked or minimized; destroyed when the window destroyed.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.Show(Au.AWnd,Au.Types.ITBOwnerObject_old)">
-            <summary>
-            Shows the toolbar and attaches to an object in a window.
-            </summary>
-            <param name="ownerWindow">Window that contains the object. Can be control. Can belong to any process.</param>
-            <param name="oo">A variable of a user-defined class that implements <see cref="T:Au.Types.ITBOwnerObject_old"/> interface. It provides object location, visibility, etc.</param>
-            <exception cref="T:System.InvalidOperationException"><b>Show</b> already called.</exception>
-            <exception cref="T:System.ArgumentException"><b>ownerWindow</b> is 0.</exception>
-            <remarks>
-            The toolbar will be above the window in the Z order; moved when the object or window moved or resized; hidden when the object or window hidden, cloaked or minimized; destroyed when the object or window destroyed.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.Show(Au.Triggers.TriggerArgs)">
-            <summary>
-            Shows the toolbar.
-            If ta is <b>WindowTriggerArgs</b>, attaches the toolbar to the trigger window.
-            Else if ta != null, calls <see cref="M:Au.Triggers.TriggerArgs.DisableTriggerUntilClosed(Au.AToolbar_old)"/>.
-            </summary>
-        </member>
-        <member name="M:Au.AToolbar_old.Close">
-            <summary>
-            Hides and disposes the toolbar.
-            If it's a satellite toolbar, closes its owner too.
-            </summary>
-            <remarks>
-            Can be called from any thread.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.Hide(System.Boolean,Au.Types.TBHide_old)">
-            <summary>
-            Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <seealso cref="M:Au.AToolbar_old.Close"/>.
-            </summary>
-            <param name="hide">true to hide (add <i>reason</i>), false to show (remove <i>reason</i>).</param>
-            <param name="reason">An user-defined reason to hide/unhide. Can be <see cref="F:Au.Types.TBHide_old.User"/> or a bigger value, eg (TBHide)0x20000, (TBHide)0x40000.</param>
-            <exception cref="T:System.InvalidOperationException">
-            - The toolbar was never shown (<see cref="M:Au.AToolbar_old.Show(Au.AScreen)"/> not called).
-            - It is a satellite toolbar.
-            - Wrong thread. Must be called from the same thread that created the toolbar. See <see cref="P:Au.Types.MTBase_old.ActionThread"/>.
-            </exception>
-            <exception cref="T:System.ArgumentOutOfRangeException"><i>reason</i> is less than <see cref="F:Au.Types.TBHide_old.User"/>.</exception>
-            <remarks>
-            Toolbars are automatically hidden when the owner window is hidden, minimized, etc. This function can be used to hide toolbars for other reasons.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.Hidden">
-            <summary>
-            Gets current reasons why the toolbar is hidden. Returns 0 if not hidden.
-            </summary>
-            <remarks>
-            Not used with satellite toolbars.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.IsOwned">
-            <summary>
-            Returns true if the toolbar is attached to a window or an object in a window.
-            </summary>
-        </member>
-        <member name="P:Au.AToolbar_old.OwnerWindow">
-            <summary>
-            Returns the owner top-level window.
-            Returns default(AWnd) if the toolbar is not owned. See <see cref="P:Au.AToolbar_old.IsOwned"/>.
-            </summary>
-        </member>
-        <member name="P:Au.AToolbar_old.NoText">
-            <summary>
-            If true, buttons added afterwards will have image without text displayed (unless there is no image). Text will be displayed as tooltip, unless tooltip is specified.
-            </summary>
-            <remarks>
-            This property is applied to items added afterwards. If true and the item has an image, sets item <b>DisplayStyle</b> property = Image. Else sets item <b>AutoToolTip</b> property = false.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            var t = new AToolbar();
-            t.NoText = true;
-            t["Find", @"Q:\images\find.ico"] = o => AOutput.Write(o);
-            t["Copy", @"Q:\images\copy.ico"] = o => AOutput.Write(o);
-            t.NoText = false;
-            t["Delete", @"Q:\images\delete.ico"] = o => AOutput.Write(o);
-            t.NoText = true;
-            t["Run", @"Q:\images\run.ico"] = o => AOutput.Write(o);
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.AToolbar_old.Border">
-            <summary>
-            Border style.
-            </summary>
-            <remarks>
-            This property is in the context menu and is saved.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.BorderColor">
-            <summary>
-            Border color.
-            </summary>
-        </member>
-        <member name="P:Au.AToolbar_old.Anchor">
-            <summary>
-            Specifies to which owner window's edges the toolbar keeps constant distance when moving or resizing the owner.
-            </summary>
-            <remarks>
-            The owner also can be a screen, control or other object. It is specified when calling <see cref="M:Au.AToolbar_old.Show(Au.AScreen)"/>.
-            This property is in the context menu and is saved.
-            </remarks>
-            <seealso cref="P:Au.AToolbar_old.Offsets"/>
-        </member>
-        <member name="P:Au.AToolbar_old.Offsets">
-            <summary>
-            Specifies distances between edges of the toolbar and edges of its owner, depending on <see cref="P:Au.AToolbar_old.Anchor"/>.
-            </summary>
-            <remarks>
-            Owner is specified when calling <see cref="M:Au.AToolbar_old.Show(Au.AScreen)"/>. It can be a window, screen, control or other object.
-            
-            The <see cref="T:Au.Types.TBOffsets_old"/> type has 4 properties - <b>Top</b>, <b>Bottom</b>, <b>Left</b> and <b>Right</b>, but used are only those included in <see cref="P:Au.AToolbar_old.Anchor"/>. For example, if <b>Anchor</b> is <b>TopLeft</b>, used are only <b>Top</b> and <b>Left</b>.
-            
-            This property is updated when moving or resizing the toolbar. It is saved.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            t.Offsets = new TBOffsets(150, 5, 0, 0);
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.AToolbar_old.Layout">
-            <summary>
-            Gets or sets <b>Control</b>'s <see cref="P:System.Windows.Forms.ToolStrip.LayoutStyle"/>.
-            </summary>
-            <remarks>
-            This property is in the context menu and is saved.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.Sizable">
-            <summary>
-            Whether the border can be used to resize the toolbar.
-            </summary>
-            <remarks>
-            This property is in the context menu and is saved.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.Size">
-            <summary>
-            Toolbar width and height.
-            </summary>
-            <remarks>
-            This property is updated when resizing the toolbar. It is saved.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            t.Size = (300, 40);
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.AToolbar_old.AutoSize">
-            <summary>
-            Automatically resize the toolbar to make all buttons visible.
-            </summary>
-            <remarks>
-            Autosizing occurs when:
-            - When showing the toolbar.
-            - When the user resizes the toolbar. It also sets the wrap width.
-            - When setting this property = true (in code or in the context menu) or changing <see cref="P:Au.AToolbar_old.AutoSizeWrapWidth"/> or <see cref="P:Au.AToolbar_old.Layout"/> while it is true.
-            - <see cref="M:Au.AToolbar_old.AutoSizeNow"/>.
-            
-            This property is in the context menu and is saved.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.AutoSizeWrapWidth">
-            <summary>
-            When <see cref="P:Au.AToolbar_old.AutoSize"/> is true, this is the preferred width at which buttons are moved to the next row. Unlimited if 0.
-            </summary>
-            <remarks>
-            This property is updated when the user resizes the toolbar while <see cref="P:Au.AToolbar_old.AutoSize"/> is true. It is saved.
-            If flow direction is vertical, this is the preferred height at which buttons are moved to the next column.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.AutoSizeNow">
-            <summary>
-            If <see cref="P:Au.AToolbar_old.AutoSize"/> true, resizes the toolbar now if need.
-            Call after changing toolbar buttons etc at run time.
-            </summary>
-        </member>
-        <member name="P:Au.AToolbar_old.MiscFlags">
-            <summary>
-            Miscellaneous options.
-            </summary>
-            <remarks>
-            This property is in the context menu (submenu "More") and is saved.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.Transparency">
-            <summary>
-            Opacity and transparent color.
-            </summary>
-            <seealso cref="M:Au.AWnd.SetTransparency(System.Boolean,System.Nullable{System.Int32},System.Nullable{Au.Types.ColorInt})"/>
-            <example>
-            <code><![CDATA[
-            t.Transparency = (64, null);
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.AToolbar_old.NoMenu">
-            <summary>
-            Hides some context menu items or menu itself.
-            </summary>
-            <remarks>
-            This property isn't saved.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.Satellite">
-            <summary>
-            A toolbar attached to this toolbar. Can be null.
-            </summary>
-            <exception cref="T:System.InvalidOperationException">The 'set' function throws if the satellite toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
-            <remarks>
-            The satellite toolbar is shown when mouse enters its owner toolbar and hidden when mouse leaves it and its owner. Like an "auto hide" feature.
-            A toolbar can have multiple satellite toolbars at different times. A satellite toolbar can be attached/detached multiple times to the same toolbar.
-            </remarks>
-        </member>
-        <member name="P:Au.AToolbar_old.SatelliteOwner">
-            <summary>
-            If this is a sattellite toolbar (<see cref="P:Au.AToolbar_old.Satellite"/>), gets its owner toolbar. Else null.
-            </summary>
-        </member>
-        <member name="M:Au.AToolbar_old.AutoHide(Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)">
-            <summary>
-            Creates new toolbar and sets its <see cref="P:Au.AToolbar_old.Satellite"/> = this.
-            Returns the new toolbar.
-            </summary>
-            <param name="ctorFlags">See <see cref="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/>.</param>
-            <param name="control">See <see cref="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/>.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
-            <exception cref="T:System.InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
-            <remarks>
-            Sets toolbar name = <c>this.Name + "^"</c>.
-            If this already is a satellite toolbar, just returns its owner.
-            </remarks>
-        </member>
-        <member name="M:Au.AToolbar_old.AutoHideScreenEdge(Au.Triggers.MouseTriggerArgs,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)">
-            <summary>
-            Creates new toolbar and sets its <see cref="P:Au.AToolbar_old.Satellite"/> = this. Sets properties for showing at a screen edge.
-            Returns the new toolbar.
-            </summary>
-            <param name="mta">Mouse edge trigger arguments.</param>
-            <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
-            <param name="rangeEnd"></param>
-            <param name="thickness">The visible thickness.</param>
-            <param name="ctorFlags">See <see cref="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/>.</param>
-            <param name="control">See <see cref="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/>.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
-        </member>
-        <member name="M:Au.AToolbar_old.AutoHideScreenEdge(Au.Triggers.TMEdge,Au.Triggers.TMScreen,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)">
-            <summary>
-            Creates new toolbar and sets its <see cref="P:Au.AToolbar_old.Satellite"/> = this. Sets properties for showing at a screen edge.
-            Returns the new toolbar.
-            </summary>
-            <param name="edge">Screen edge/part.</param>
-            <param name="screen">Screen index. Default: primary.</param>
-            <param name="rangeStart"><i>rangeStart</i> and <i>rangeEnd</i> can be used to specify a smaller range of the edge part. For example, you can create 2 toolbars there: one with 0, 0.5f, other with 0.5f, 1f.</param>
-            <param name="rangeEnd"></param>
-            <param name="thickness">The visible thickness.</param>
-            <param name="ctorFlags">See <see cref="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/>.</param>
-            <param name="control">See <see cref="M:Au.AToolbar_old.#ctor(System.String,Au.Types.TBCtor_old,Au.AToolbar_old.ToolStripWindow,System.String,System.Int32)"/>.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
-        </member>
-        <member name="T:Au.AToolbar_old.ToolStripWindow">
-            <summary>
-            The type of <see cref="P:Au.AToolbar_old.Control"/>. Inherits from <see cref="T:System.Windows.Forms.ToolStrip"/>.
-            </summary>
-        </member>
-        <member name="P:Au.AToolbar_old.ToolStripWindow.Toolbar">
-            
-        </member>
-        <member name="M:Au.AToolbar_old.ToolStripWindow.#ctor">
-            
-        </member>
-        <member name="P:Au.AToolbar_old.ToolStripWindow.CreateParams">
-            
-        </member>
-        <member name="M:Au.AToolbar_old.ToolStripWindow.WndProc(System.Windows.Forms.Message@)">
-            
-        </member>
-        <member name="M:Au.AToolbar_old.ToolStripWindow.DestroyHandle">
-            
-        </member>
-        <member name="M:Au.AToolbar_old.ToolStripWindow.Dispose(System.Boolean)">
-            
-        </member>
-        <member name="M:Au.AToolbar_old.ToolStripWindow.OnContextMenu(System.Windows.Forms.ToolStrip)">
-            <summary>
-            Called on right-click. Shows context menu.
-            </summary>
-            <param name="ts">This control or the overflow dropdown.</param>
-        </member>
-        <member name="M:Au.AToolbar_old.ToolStripWindow.OnLayoutStyleChanged(System.EventArgs)">
-            
-        </member>
-        <member name="M:Au.AToolbar_old.NewToolbarsForm">
-            <summary>
-            Creates new form with a list of toolbars of this thread. Can be used to find lost toolbars.
-            </summary>
-            <example>
-            <code><![CDATA[
-            AToolbar.NewToolbarsForm().Show();
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AToolbar_old._Form.InitializeComponent">
-            <summary>
-            Required method for Designer support - do not modify
-            the contents of this method with the code editor.
-            </summary>
-        </member>
-        <member name="M:Au.AToolbar_old._GetCachedOwnerRect">
-            <summary>
-            Gets the cached rectangle of the owner window, screen, control, etc.
-            If is owned and anchor is None, the rectangle is of toolbar's screen.
-            Also gets previous size.
-            The values are cached by <b>UpdateRect</b> of <b>_OwnerWindow</b> etc.
-            </summary>
         </member>
         <member name="T:Au.AClipboard">
             <summary>
@@ -20947,7 +20747,7 @@
             Opens the specified source file and goes to the specified line.
             Does nothing if editor isn't running.
             </summary>
-            <param name="sourceFile">Full path of the source file.</param>
+            <param name="sourceFile">The source file. Can be full path, or relative path in workspace, or file name with ".cs".</param>
             <param name="line">1-based line index. If 0, just opens file.</param>
         </member>
         <member name="P:Au.Util.AScriptEditor.Available">
@@ -21006,9 +20806,17 @@
             Call this when changed an array element etc directly without assigning the array etc to a property. Else changes may be not saved.
             </summary>
         </member>
+        <member name="P:Au.Util.ASettings.LoadedFile">
+            <summary>
+            true if settings were loaded from file.
+            </summary>
+            <remarks>
+            Returns false if <b>Load</b> did not find the file (the settings were not saved) or failed to load/parse or parameter <i>useDefault</i> = true or parameter <i>file</i> = null.
+            </remarks>
+        </member>
         <member name="P:Au.Util.ASettings.Modified">
             <summary>
-            <c>_save || AFile.ExistsAsAny(_file)</c>
+            true if settings were loaded from file (see <see cref="P:Au.Util.ASettings.LoadedFile"/>) or modified later.
             </summary>
         </member>
         <member name="M:Au.Util.ASettings.Set``1(``0@,``0)">
@@ -23336,7 +23144,7 @@
             Gets the trigger as <see cref="T:Au.Triggers.ActionTrigger"/> (the base class of all trigger type classes).
             </summary>
         </member>
-        <member name="M:Au.Triggers.TriggerArgs.DisableTriggerUntilClosed(Au.AToolbar_old)">
+        <member name="M:Au.Triggers.TriggerArgs.DisableTriggerUntilClosed(Au.AToolbar)">
             <summary>
             Disables the trigger. Enables later when the toolbar is closed.
             Use to implement single-instance toolbars.
@@ -23920,7 +23728,7 @@
             Run trigger actions in same thread as <c>Triggers.Run();</c>.
             </summary>
             <remarks>
-            The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="T:Au.AToolbar_old"/>). Rarely used for other purposes.
+            The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="T:Au.AToolbar"/>). Rarely used for other purposes.
             </remarks>
         </member>
         <member name="M:Au.Triggers.TriggerOptions.ThreadNew(System.Boolean,System.Boolean)">

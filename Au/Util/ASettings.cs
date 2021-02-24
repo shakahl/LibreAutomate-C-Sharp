@@ -34,6 +34,7 @@ namespace Au.Util
 	{
 		string _file;
 		bool _loaded;
+		bool _loadedFile;
 		int _save;
 
 		static readonly List<ASettings> s_list = new List<ASettings>();
@@ -78,7 +79,7 @@ namespace Au.Util
 				}
 			}
 
-			R ??= Activator.CreateInstance(type) as ASettings;
+			if (R == null) R = Activator.CreateInstance(type) as ASettings; else R._loadedFile = true;
 			R._loaded = true;
 
 			if (file != null) {
@@ -147,10 +148,19 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// <c>_save || AFile.ExistsAsAny(_file)</c>
+		/// true if settings were loaded from file.
+		/// </summary>
+		/// <remarks>
+		/// Returns false if <b>Load</b> did not find the file (the settings were not saved) or failed to load/parse or parameter <i>useDefault</i> = true or parameter <i>file</i> = null.
+		/// </remarks>
+		[JsonIgnore]
+		public bool LoadedFile => _loadedFile;
+
+		/// <summary>
+		/// true if settings were loaded from file (see <see cref="LoadedFile"/>) or modified later.
 		/// </summary>
 		[JsonIgnore]
-		public bool Modified => _save != 0 || (_file != null && AFile.ExistsAsAny(_file));
+		public bool Modified => _loadedFile || _save != 0;
 
 		/// <summary>
 		/// Sets a property value and will save later if need.

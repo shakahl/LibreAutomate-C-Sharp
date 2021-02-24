@@ -222,7 +222,7 @@ partial class FilesModel
 	#region find, id
 
 	/// <summary>
-	/// Finds file or folder by name or @"\relative path" or id.
+	/// Finds file or folder by name or @"\relative path" or id or full path.
 	/// </summary>
 	/// <param name="name">
 	/// Can be:

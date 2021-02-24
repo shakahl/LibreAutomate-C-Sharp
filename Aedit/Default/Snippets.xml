@@ -545,8 +545,8 @@ string _field;
 //Triggers.Mouse[TMEdge.TopInLeft25] = Toolbar_RenameMe; //show when the mouse touches the screen edge first time
 void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	var t = new AToolbar("Toolbar_RenameMe $random$");
-	if (!t.SettingsModified) {
-		t.AutoSize = true;
+	if (t.IsFresh) {
+		
 	}
 	
 	t["Button1"] = o => {  };
@@ -561,7 +561,7 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	
 //	//auto-hide. Above is the auto-hide part. Below is the always-visible part.
 //	t = t.AutoHide();
-//	if (!t.SettingsModified) {
+//	if (t.IsFresh) {
 //		
 //	}
 	

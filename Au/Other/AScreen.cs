@@ -217,7 +217,7 @@ namespace Au
 			t_a.Clear();
 			t_a.Add(Primary); //fast
 
-			static bool _Enum(IntPtr hmon, IntPtr hdc, IntPtr r, GCHandle gch) { //70-1000 mcs with cold CPU
+			static bool _Enum(IntPtr hmon, IntPtr hdc, IntPtr r, GCHandle gch) { //70-1000 mcs cold
 				var a = gch.Target as List<AScreen>;
 				if (hmon != a[0].Handle) a.Add(new AScreen(hmon));
 				return true;
@@ -225,6 +225,9 @@ namespace Au
 
 			var gch = GCHandle.Alloc(t_a);
 			if (!Api.EnumDisplayMonitors(default, default, _Enum, gch)) {
+				//in certain conditions EDM fails.
+				//	Where failed, it was used in incorrect code, maybe near stack overflow.
+				//	Anyway, then call it in other thread, then works.
 				//AOutput.Write(ALastError.Message); //0
 				AThread.Start(() => { bool ok = Api.EnumDisplayMonitors(default, default, _Enum, gch); Debug.Assert(ok); }).Join();
 				ADebug.Print(t_a.Count);

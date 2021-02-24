@@ -14,7 +14,7 @@
 //the window to see how it works. You can right-click a toolbar and change its properties.
 
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
-using Au.Triggers; using System.Windows.Forms; using System.Drawing;
+using Au.Triggers;
 
 partial class Script {
 

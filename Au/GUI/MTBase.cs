@@ -8,15 +8,16 @@ using System.ComponentModel;
 namespace Au
 {
 	/// <summary>
-	/// Base class of <see cref="AMenu"/> and <see cref="AToolbar_old"/>.
+	/// Base class of <see cref="AMenu"/> and <see cref="AToolbar"/>.
 	/// </summary>
 	/// <remarks>
 	/// <i>image</i> argument of "add item" functions can be:
 	/// - file/folder path (string) - the "show" function calls <see cref="AIcon.OfFile"/> to get its icon. It also supports file type icons like ".txt", etc.
 	/// - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
+	/// - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
 	/// - <see cref="FolderPath"/> - same as folder path string.
 	/// - <see cref="Image"/> - image object.
-	/// - <see cref="AIcon"/> - variable containing native icon handle. The "add item" function disposes it.
+	/// - <see cref="AIcon"/> - variable containing native icon handle. The "add item" function disposes it (actually the <see cref="MTImage"/> implicit conversion operator disposes it).
 	/// - <see cref="StockIcon"/> - the "show" function calls <see cref="AIcon.Stock"/>.
 	/// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="AIcon.OfFile"/>. Else no image.
 	/// - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
@@ -52,6 +53,8 @@ namespace Au
 		/// Also supports code patterns like <c>AFolders.System + "notepad.exe"</c>, <c>AFolders.Virtual.RecycleBin</c>.
 		/// 
 		/// If extracts file path, also in the context menu adds item "Find file" which selects the file in Explorer.
+		/// 
+		/// Also can extract script file name or path in workspace, like @"\Folder\Script20.cs". It is used to open the script from the context menu.
 		/// </remarks>
 		public bool ExtractIconPathFromCode { get; set; }
 
@@ -110,8 +113,8 @@ namespace Au
 				break;
 			case null:
 				if (x.extractIconPath == 1 && x.clicked != null) {
-					x.image = AIcon.IconPathFromCode_(x.clicked.Method);
-					x.extractIconPath = x.image == null ? 3 : 2;
+					x.file = AIcon.IconPathFromCode_(x.clicked.Method, out bool cs);
+					if (x.file != null && !cs) { x.image = x.file; x.extractIconPath = 2; } else x.extractIconPath = cs ? 4 : 3;
 					//				APerf.Next('c');
 				}
 				//if(x.image==null && x.checkType==0) x.image = (x.submenu ? DefaultSubmenuImage : DefaultImage).Value;
@@ -129,11 +132,12 @@ namespace Au
 		{
 			internal Delegate clicked;
 			internal object image;
-			/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract</summary>
+			/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
 			internal byte extractIconPath; //from MTBase.ExtractIconPathFromCode
 			internal bool actionThread; //from MTBase.ActionThread
 			internal bool actionException; //from MTBase.ActionException
 			internal int sourceLine;
+			internal string file;
 
 			/// <summary>
 			/// Item text.
@@ -153,18 +157,40 @@ namespace Au
 			/// <summary>
 			/// Gets file path extracted from item action code or sets file path as it would be extracted from action code.
 			/// </summary>
-			/// <exception cref="InvalidOperationException">The setter throws if called not first time or if item image already specified or extracted.</exception>
 			/// <remarks>
 			/// Can be used to set file path when it cannot be extracted from action code (the item does not have an action or action code does not contain the path string). See <see cref="MTBase.ExtractIconPathFromCode"/>.
 			/// When you set this property, the menu/toolbar item uses icon of the specified file, and its context menu contains "Find file".
 			/// </remarks>
 			public string File {
-				get => extractIconPath == 2 ? (image as string) : null;
+				get => file;
 				set {
-					if (extractIconPath > 1 || image != null) throw new InvalidOperationException();
-					image = value ?? throw new ArgumentNullException();
-					extractIconPath = 2;
+					file = value;
+					if (file == null) {
+						image = null; extractIconPath = 3;
+					} else if (file.Ends(".cs") && !APath.IsFullPath(file)) {
+						image = null; extractIconPath = 4;
+					} else {
+						image = file; extractIconPath = 2;
+					}
 				}
+			}
+
+			internal void GoToFile_() {
+				if (file.NE()) return;
+				if (extractIconPath == 2) AFile.SelectInExplorer(file);
+				else AScriptEditor.GoToEdit(file, 0);
+			}
+
+			internal static (bool edit, bool go, string goText) CanEditOrGoToFile_(string _sourceFile, MTItem item) {
+				if (_sourceFile != null) {
+					if (AScriptEditor.Available) {
+						if (item?.file == null) return (true, false, null);
+						return (true, true, item.extractIconPath == 2 ? "Find file" : "Open script");
+					} else if (item != null && item.extractIconPath == 2) {
+						return (false, true, "Find file");
+					}
+				}
+				return default;
 			}
 
 			/// <summary>
@@ -200,4 +226,36 @@ namespace Au
 
 	}
 
+}
+
+namespace Au.Types
+{
+	/// <summary>
+	/// Used for menu/toolbar function parameters to specify an image in different ways (file path, Image object, etc).
+	/// </summary>
+	/// <remarks>
+	/// Has implicit conversions from string, <see cref="Image"/>, <see cref="AIcon"/>, <see cref="StockIcon"/>, <see cref="FolderPath"/>.
+	/// More info: <see cref="MTBase"/>.
+	/// </remarks>
+	public struct MTImage
+	{
+		readonly object _o;
+		MTImage(object o) { _o = o; }
+
+		///
+		public static implicit operator MTImage(string pathEtc) => new MTImage(pathEtc);
+		///
+		public static implicit operator MTImage(Image image) => new MTImage(image);
+		///
+		public static implicit operator MTImage(AIcon icon) => new MTImage(icon.ToGdipBitmap());
+		///
+		public static implicit operator MTImage(StockIcon icon) => new MTImage(icon);
+		///
+		public static implicit operator MTImage(FolderPath path) => new MTImage((string)path);
+
+		/// <summary>
+		/// Gets the raw value stored in this variable. Can be string, Image, StockIcon or null.
+		/// </summary>
+		public object Value => _o;
+	}
 }

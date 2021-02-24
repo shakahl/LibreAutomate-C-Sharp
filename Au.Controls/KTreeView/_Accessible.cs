@@ -19,6 +19,7 @@ using System.Runtime.CompilerServices;
 using System.ComponentModel;
 using System.Reflection;
 using System.Diagnostics;
+using AccNAVDIR = Au.Types.Api.AccNAVDIR;
 
 namespace Au.Controls
 {

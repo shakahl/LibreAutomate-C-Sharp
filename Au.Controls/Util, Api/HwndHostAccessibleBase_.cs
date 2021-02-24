@@ -8,6 +8,9 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Diagnostics;
 using System.Windows;
+using IAccessible = Au.Types.Api.IAccessible;
+using VarInt = Au.Types.Api.VarInt;
+using AccNAVDIR = Au.Types.Api.AccNAVDIR;
 
 namespace Au.Controls
 {
@@ -25,11 +28,8 @@ namespace Au.Controls
 		public HwndHostAccessibleBase_(FrameworkElement e, AWnd w) {
 			_e = e;
 			_w = w;
-			CreateStdAccessibleObject(_w, AccOBJID.CLIENT, typeof(IAccessible).GUID, out _sao);
+			Api.CreateStdAccessibleObject(_w, AccOBJID.CLIENT, typeof(IAccessible).GUID, out _sao);
 		}
-
-		[DllImport("oleacc.dll", PreserveSig = true)]
-		internal static extern int CreateStdAccessibleObject(AWnd hwnd, AccOBJID idObject, in Guid riid, out IAccessible ppvObject);
 
 		#region IAccessible
 
@@ -254,9 +254,6 @@ namespace Au.Controls
 
 		#endregion
 
-		[DllImport("oleacc.dll")]
-		internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, IntPtr punk);
-
 		/// <summary>
 		/// Call in hook wndproc on WM_GETOBJECT like this: <c>handled = true; return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);</c>.
 		/// If lParam is AccOBJID.CLIENT, calls API LresultFromObject(this), else calls API DefWindowProc.
@@ -267,55 +264,11 @@ namespace Au.Controls
 			if (oid != AccOBJID.CLIENT) return Api.DefWindowProc(_w, Api.WM_GETOBJECT, wParam, lParam);
 			var accIP = Marshal.GetIUnknownForObject(this);
 			//var accIP=Marshal.GetIDispatchForObject(this);
-			var r = LresultFromObject(typeof(IAccessible).GUID, wParam, accIP);
+			var r = Api.LresultFromObject(typeof(IAccessible).GUID, wParam, accIP);
 			//Marshal.AddRef(accIP); AOutput.Write(Marshal.Release(accIP));
 			Marshal.Release(accIP);
 			return r;
 		}
 
-	}
-
-#pragma warning disable 169
-	struct VarInt
-	{
-		ushort _vt, _1, _2, _3;
-		LPARAM _int, _4;
-		public static implicit operator VarInt(int i) => new VarInt { _vt = 3, _int = i + 1 };
-		public static implicit operator int(VarInt v) {
-			if (v._vt == 3) return (int)v._int - 1;
-			ADebug.Print($"VarInt vt={v._vt}, value={v._int}, stack={new StackTrace(true)}");
-			throw new ArgumentException();
-		}
-	}
-#pragma warning restore 169
-
-	enum AccNAVDIR { UP = 1, DOWN, LEFT, RIGHT, NEXT, PREVIOUS, FIRSTCHILD, LASTCHILD }
-
-	[ComImport, Guid("618736e0-3c3d-11cf-810c-00aa00389b71"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
-	interface IAccessible
-	{
-		IAccessible get_accParent();
-		int get_accChildCount();
-		[PreserveSig] int get_accChild(VarInt varChild, [MarshalAs(UnmanagedType.IDispatch)] out object ppdispChild);
-		string get_accName(VarInt varChild);
-		string get_accValue(VarInt varChild);
-		string get_accDescription(VarInt varChild);
-		VarInt get_accRole(VarInt varChild);
-		VarInt get_accState(VarInt varChild);
-		string get_accHelp(VarInt varChild);
-		int get_accHelpTopic(out string pszHelpFile, VarInt varChild);
-		string get_accKeyboardShortcut(VarInt varChild);
-		object get_accFocus();
-		object get_accSelection();
-		string get_accDefaultAction(VarInt varChild);
-		void accSelect(AccSELFLAG flagsSelect, VarInt varChild);
-		void accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild);
-		object accNavigate(AccNAVDIR navDir, VarInt varStart);
-		VarInt accHitTest(int xLeft, int yTop);
-		void accDoDefaultAction(VarInt varChild);
-		void put_accName(VarInt varChild, string szName);
-		void put_accValue(VarInt varChild, string szValue);
-
-		//NOTE: although some members are obsolete or useless, don't use default implementation, because then exception at run time.
 	}
 }

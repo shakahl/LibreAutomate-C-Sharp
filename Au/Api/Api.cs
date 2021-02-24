@@ -954,6 +954,56 @@ namespace Au.Types
 		[DllImport("oleacc.dll")]
 		internal static extern Handle_ GetProcessHandleFromHwnd(AWnd hwnd);
 
+		[DllImport("oleacc.dll")]
+		internal static extern LPARAM LresultFromObject(in Guid riid, LPARAM wParam, IntPtr punk);
+
+		[DllImport("oleacc.dll", PreserveSig = true)]
+		internal static extern int CreateStdAccessibleObject(AWnd hwnd, AccOBJID idObject, in Guid riid, out IAccessible ppvObject);
+
+		[ComImport, Guid("618736e0-3c3d-11cf-810c-00aa00389b71"), InterfaceType(ComInterfaceType.InterfaceIsDual)]
+		internal interface IAccessible
+		{
+			IAccessible get_accParent();
+			int get_accChildCount();
+			[PreserveSig] int get_accChild(VarInt varChild, [MarshalAs(UnmanagedType.IDispatch)] out object ppdispChild);
+			string get_accName(VarInt varChild);
+			string get_accValue(VarInt varChild);
+			string get_accDescription(VarInt varChild);
+			VarInt get_accRole(VarInt varChild);
+			VarInt get_accState(VarInt varChild);
+			string get_accHelp(VarInt varChild);
+			int get_accHelpTopic(out string pszHelpFile, VarInt varChild);
+			string get_accKeyboardShortcut(VarInt varChild);
+			object get_accFocus();
+			object get_accSelection();
+			string get_accDefaultAction(VarInt varChild);
+			void accSelect(AccSELFLAG flagsSelect, VarInt varChild);
+			void accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild);
+			object accNavigate(AccNAVDIR navDir, VarInt varStart);
+			VarInt accHitTest(int xLeft, int yTop);
+			void accDoDefaultAction(VarInt varChild);
+			void put_accName(VarInt varChild, string szName);
+			void put_accValue(VarInt varChild, string szValue);
+
+			//NOTE: although some members are obsolete or useless, don't use default implementation, because then exception at run time.
+		}
+
+#pragma warning disable 169
+		internal struct VarInt
+		{
+			ushort _vt, _1, _2, _3;
+			LPARAM _int, _4;
+			public static implicit operator VarInt(int i) => new VarInt { _vt = 3, _int = i + 1 };
+			public static implicit operator int(VarInt v) {
+				if (v._vt == 3) return (int)v._int - 1;
+				ADebug.Print($"VarInt vt={v._vt}, value={v._int}, stack={new StackTrace(true)}");
+				throw new ArgumentException();
+			}
+		}
+#pragma warning restore 169
+
+		internal enum AccNAVDIR { UP = 1, DOWN, LEFT, RIGHT, NEXT, PREVIOUS, FIRSTCHILD, LASTCHILD }
+
 
 		#endregion
 
@@ -1128,6 +1178,7 @@ namespace Au.Types
 		[DllImport("ntdll.dll")]
 		internal static extern void MD5Final(ref AHash.MD5 context);
 
+#pragma warning disable 169
 		internal struct SYSTEM_PROCESS_INFORMATION
 		{
 			internal uint NextEntryOffset;
@@ -1151,6 +1202,7 @@ namespace Au.Types
 
 			//unused members
 		}
+#pragma warning restore 169
 
 		internal const int STATUS_INFO_LENGTH_MISMATCH = unchecked((int)0xC0000004);
 

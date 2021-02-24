@@ -194,9 +194,9 @@ static class CommandLine
 			App.Model.ImportFiles(s.Split('\0'));
 			break;
 		case 4:
-			var f1 = App.Model.FindByFilePath(s);
+			var f1 = APath.IsFullPath(s) ? App.Model.FindByFilePath(s) : App.Model.Find(s, null);
 			if(f1 != null) App.Model.OpenAndGoTo(f1, (int)wParam - 1);
-			else AWarning.Write($"Script '{s}' not found. If renamed, please recompile it, then run again.", -1);
+			else AWarning.Write($"Script '{s}' not found.", -1);
 			break;
 		case 99: //run script from Au.CL.exe command line
 		case 100: //run script from script (ATask.Run/RunWait)

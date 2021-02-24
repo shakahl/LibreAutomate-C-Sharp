@@ -306,6 +306,9 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "GetPhysicalCursorPos", SetLastError = true)]
 		internal static extern bool GetCursorPos(out POINT lpPoint);
 
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern bool SetCursorPos(int X, int Y);
+
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]
 		internal static extern IntPtr LoadImage(IntPtr hInst, string name, int type, int cx, int cy, uint LR_X);
 		[DllImport("user32.dll", EntryPoint = "LoadImageW", SetLastError = true)]

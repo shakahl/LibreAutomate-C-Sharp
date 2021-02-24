@@ -24,7 +24,7 @@ namespace Au.Util
 		/// Opens the specified source file and goes to the specified line.
 		/// Does nothing if editor isn't running.
 		/// </summary>
-		/// <param name="sourceFile">Full path of the source file.</param>
+		/// <param name="sourceFile">The source file. Can be full path, or relative path in workspace, or file name with ".cs".</param>
 		/// <param name="line">1-based line index. If 0, just opens file.</param>
 		public static void GoToEdit(string sourceFile, int line) {
 			var wmsg = ATask.WndMsg_; if (wmsg.Is0) return;

@@ -592,13 +592,14 @@ namespace Au
 		/// Also supports code patterns like <c>AFolders.System + "notepad.exe"</c> or <c>AFolders.Virtual.RecycleBin</c>.
 		/// Returns null if no such string/pattern.
 		/// </summary>
-		internal static string IconPathFromCode_(MethodInfo mi) {
+		internal static string IconPathFromCode_(MethodInfo mi, out bool cs) {
 			//support code pattern like 'AFolders.System + "notepad.exe"'.
 			//	Opcodes: call(AFolders.System), ldstr("notepad.exe"), FolderPath.op_Addition.
 			//also code pattern like 'AFolders.System' or 'AFolders.Virtual.RecycleBin'.
 			//	Opcodes: call(AFolders.System), FolderPath.op_Implicit(FolderPath to string).
 			//also code pattern like 'AFile.TryRun("notepad.exe")'.
 			//AOutput.Write(mi.Name);
+			cs = false;
 			int i = 0, patternStart = -1; MethodInfo f1 = null; string filename = null, filename2 = null;
 			try {
 				var reader = new ILReader(mi);
@@ -640,7 +641,10 @@ namespace Au
 						}
 					}
 				}
-				if (filename2 != null && filename2.Ends(".exe", true)) return AFile.SearchPath(filename2);
+				if (filename2 != null) {
+					if (filename2.Ends(".exe", true)) return AFile.SearchPath(filename2);
+					if (cs = filename2.Ends(".cs", true)) return filename2;
+				}
 			}
 			catch (Exception ex) { ADebug.Print(ex); }
 			return null;
