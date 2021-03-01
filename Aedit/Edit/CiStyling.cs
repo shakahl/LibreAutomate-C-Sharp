@@ -527,8 +527,7 @@ partial class CiStyling
 
 		doc.Call(SCI_SETMARGINCURSORN, foldMrgin, SC_CURSORARROW);
 
-		int wid = doc.Call(SCI_TEXTHEIGHT) - 4;
-		doc.Z.MarginWidth(foldMrgin, Math.Max(wid, 12));
+		doc.Z.MarginWidth(foldMrgin, 14);
 	}
 
 	#endregion

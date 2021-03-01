@@ -992,14 +992,6 @@ namespace Au.Controls
 			}
 		}
 
-		public int MarginFromPoint(POINT p, bool screenCoord) {
-			if (screenCoord) _c.Hwnd.MapScreenToClient(ref p);
-			if (_c.Hwnd.ClientRect.Contains(p)) {
-				for (int i = 0, w = 0; i < 5; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if (w >= p.x) return i; }
-			}
-			return -1;
-		}
-
 		/// <summary>
 		/// Gets text and offsets of lines containing selection.
 		/// Returns true. If <i>ifFullLines</i> is true, may return false.

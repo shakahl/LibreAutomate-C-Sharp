@@ -67,13 +67,5 @@ namespace Au.Controls
 		protected int _ReadonlyStartUtf8 => _readonlyLenUtf8 < 0 ? 0 : _LenUtf8 - _readonlyLenUtf8;
 
 		protected int _LenUtf8 => Call(Sci.SCI_GETTEXTLENGTH);
-
-		//protected override bool IsInputKey(Keys keyData) {//TODO: test, remove
-		//	switch (keyData & Keys.KeyCode) {
-		//	case Keys.Tab: case Keys.Escape: return false;
-		//		//case Keys.Enter: return 0 == Z.Call(Sci.SCI_GETREADONLY);
-		//	}
-		//	return base.IsInputKey(keyData);
-		//}
 	}
 }

@@ -1,4 +1,5 @@
 using Au.Types;
+using Au.Util;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -160,17 +161,52 @@ namespace Au.Controls
 			Call(SCI_SETMARGINTYPEN, margin, SC_MARGIN_);
 		}
 
-		public void MarginWidth(int margin, int value) {
+		public void MarginWidth(int margin, int value, bool dpiScale = true, bool chars = false) {
+			if (dpiScale && value > 0) {
+				var a = _c._marginDpi ??= new int[Call(SCI_GETMARGINS)];
+				if (chars) {
+					value *= StyleMeasureStringWidth(STYLE_LINENUMBER, "8");
+					a[margin] = ADpi.Unscale(value, _c._dpi).ToInt();
+				} else {
+					a[margin] = value;
+					value = ADpi.Scale(value, _c._dpi);
+				}
+			} else {
+				var a = _c._marginDpi;
+				if (a != null) a[margin] = 0;
+			}
 			Call(SCI_SETMARGINWIDTHN, margin, value);
 		}
 
-		public void MarginWidth(int margin, string textToMeasureWidth) {
-			int n = StyleMeasureStringWidth(STYLE_LINENUMBER, textToMeasureWidth);
-			Call(SCI_SETMARGINWIDTHN, margin, n + 4);
+		//public void MarginWidth(int margin, string textToMeasureWidth) {
+		//	int n = StyleMeasureStringWidth(STYLE_LINENUMBER, textToMeasureWidth);
+		//	Call(SCI_SETMARGINWIDTHN, margin, n + 4);
+		//}
+
+		//not used
+		//public int MarginWidth(int margin, bool dpiUnscale) {
+		//	int R = Call(SCI_GETMARGINWIDTHN, margin);
+		//	if (dpiUnscale && R > 0) {
+		//		var a = _c._marginDpi;
+		//		var v = a?[margin] ?? 0;
+		//		if (v > 0) R = v;
+		//	}
+		//	return R;
+		//}
+
+		internal void MarginWidthsDpiChanged_() {
+			var a = _c._marginDpi; if (a == null) return;
+			for (int i = a.Length; --i >= 0;) {
+				if (a[i] > 0) Call(SCI_SETMARGINWIDTHN, i, ADpi.Scale(a[i], _c._dpi));
+			}
 		}
 
-		public int MarginWidth(int margin) {
-			return Call(SCI_GETMARGINWIDTHN, margin);
+		public int MarginFromPoint(POINT p, bool screenCoord) {
+			if (screenCoord) _c.Hwnd.MapScreenToClient(ref p);
+			if (_c.Hwnd.ClientRect.Contains(p)) {
+				for (int i = 0, n = Call(SCI_GETMARGINS), w = 0; i < n; i++) { w += Call(SCI_GETMARGINWIDTHN, i); if (w >= p.x) return i; }
+			}
+			return -1;
 		}
 
 		#endregion

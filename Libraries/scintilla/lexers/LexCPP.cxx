@@ -626,7 +626,7 @@ public:
 			return "";
 		if (style < sizeLexicalClasses)
 			return lexicalClasses[style].name;
-		// TODO: inactive and substyles
+		// SCI_TODO: inactive and substyles
 		return "";
 	}
 	const char * SCI_METHOD TagsOfStyle(int style) override {
@@ -666,7 +666,7 @@ public:
 			return "";
 		if (style < sizeLexicalClasses)
 			return lexicalClasses[style].description;
-		// TODO: inactive and substyles
+		// SCI_TODO: inactive and substyles
 		return "";
 	}
 
@@ -1620,7 +1620,7 @@ void LexerCPP::EvaluateTokens(std::vector<std::string> &tokens, const SymbolTabl
 							if (setWordStart.Contains(macroTokens[iMacro][0])) {
 								std::map<std::string, std::string>::const_iterator itFind = arguments.find(macroTokens[iMacro]);
 								if (itFind != arguments.end()) {
-									// TODO: Possible that value will be expression so should insert tokenized form
+									// SCI_TODO: Possible that value will be expression so should insert tokenized form
 									macroTokens[iMacro] = itFind->second;
 								}
 							}

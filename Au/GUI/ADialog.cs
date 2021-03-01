@@ -17,9 +17,10 @@ using Au.Util;
 
 #pragma warning disable 649 //unused fields in API structs
 
-//FUTURE: ShowCheckList
-//TODO: by default should show dialog in screen of mouse.
-//	It's better, and many dialogs do it. Eg Explorer's Properties even is at mouse position (dialog's top-left corner).
+//FUTURE: ShowCheckList.
+
+//rejected: by default show dialog in screen of mouse, like with <c>ADialog.Options.DefaultScreen = AScreen.OfMouse;</c>.
+//	Some Windows etc dialogs do it, and for me it's probably better. Eg Explorer's Properties even is at mouse position (top-left corner).
 
 namespace Au
 {
@@ -1275,7 +1276,7 @@ namespace Au
 				_editWnd.Send(Api.EM_SETSEL, 0, -1);
 			}
 			_editParent.ZorderTop();
-			AWnd.ThisThread.Focus(_editWnd);
+			Api.SetFocus(_editWnd);
 		}
 
 		void _EditControlOnMessage(Native.TDN message) {
@@ -1302,10 +1303,10 @@ namespace Au
 			//AOutput.Write(msg, wParam, lParam);
 			switch (msg) {
 			case Api.WM_SETFOCUS: //enables Tab when in single-line Edit control
-				AWnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
+				Api.SetFocus(_dlg.ChildFast(null, "DirectUIHWND"));
 				return 1;
 			case Api.WM_NEXTDLGCTL: //enables Tab when in multi-line Edit control
-				AWnd.ThisThread.Focus(_dlg.ChildFast(null, "DirectUIHWND"));
+				Api.SetFocus(_dlg.ChildFast(null, "DirectUIHWND"));
 				return 1;
 			case Api.WM_CLOSE: //enables Esc when in edit control
 				_dlg.Send(msg);

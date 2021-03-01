@@ -17,7 +17,8 @@ using Microsoft.Win32;
 using Au;
 using Au.Types;
 
-//#if DEBUG //no, then DocFX skips this. Better set build action "None"; then DocFX skips this file. TODO: find all #if, to ensure that DocFX does not skip something useful...
+//#if DEBUG //no, then DocFX skips this. Better set build action "None"; then DocFX skips this file.
+//done 2021-02-26: review all #if, to ensure that DocFX does not skip something useful.
 namespace Au
 {
 	/// <summary>

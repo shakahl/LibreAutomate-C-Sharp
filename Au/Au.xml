@@ -2077,12 +2077,6 @@
             <param name="errorCode">Windows API error code or HRESULT.</param>
             <param name="message">Main message. The message of the error code will be appended to it.</param>
         </member>
-        <member name="M:Au.Types.AuException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            
-        </member>
-        <member name="M:Au.Types.AuException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            
-        </member>
         <member name="T:Au.Types.AuWndException">
             <summary>
             Exception thrown mostly by <see cref="T:Au.AWnd"/> functions.
@@ -2112,12 +2106,6 @@
         <member name="P:Au.Types.AuWndException.Message">
             <summary> Gets error message. </summary>
         </member>
-        <member name="M:Au.Types.AuWndException.GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            
-        </member>
-        <member name="M:Au.Types.AuWndException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            
-        </member>
         <member name="T:Au.Types.NotFoundException">
             <summary>
             Functions that search for an object can throw this exception when not found.
@@ -2132,9 +2120,6 @@
             <summary>
             Sets Message = message.
             </summary>
-        </member>
-        <member name="M:Au.Types.NotFoundException.#ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)">
-            
         </member>
         <member name="T:Au.Types.Coord">
             <summary>
@@ -3072,7 +3057,7 @@
         <member name="F:Au.Types.RFlags.ShowErrorUI">
             <summary>
             Show error message box if fails, for example if file not found.
-            Note: this does not disable exceptions. Still need exception handling. Or call <see cref="M:Au.AFile.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
+            Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="M:Au.AFile.TryRun(System.String,System.String,Au.Types.RFlags,Au.Types.ROptions)"/>.
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.WaitForExit">
@@ -3082,13 +3067,31 @@
         </member>
         <member name="F:Au.Types.RFlags.NeedProcessHandle">
             <summary>
-            Get process handle (<see cref="P:Au.Types.RResult.ProcessHandle"/>), if possible.
+            If started new process, get process handle (<see cref="P:Au.Types.RResult.ProcessHandle"/>).
             </summary>
         </member>
         <member name="F:Au.Types.RFlags.Admin">
             <summary>
-            Run as administrator, probably with UAC consent dialog.
-            Uses verb "runas", therefore other verb cannot be specified.
+            Run new process as administrator.
+            If this process isn't admin:
+            - Shows UAC consent dialog.
+            - Uses verb "runas", therefore other verb cannot be specified.
+            - Cannot set current directory for the new process.
+            - The new process does not inherit environment variables of this process.
+            </summary>
+        </member>
+        <member name="F:Au.Types.RFlags.InheritAdmin">
+            <summary>
+            If this process runs as administrator, run new process as administrator too.
+            Without this flag, if this process runs as administrator:
+            - Starts new process as non-administrator from the shell process (explorer.exe).
+            - If it fails (for example if shell process isn't running), calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/> and starts new process as administrator.
+            - The new process does not inherit environment variables of this process.
+            </summary>
+        </member>
+        <member name="F:Au.Types.RFlags.MostUsed">
+            <summary>
+            Add the app to the "Most used" list in the Start menu if launched often.
             </summary>
         </member>
         <member name="T:Au.Types.ROptions">
@@ -3128,6 +3131,18 @@
             <summary>
             Preferred window state.
             Many programs ignore it.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ROptions.FlagsAdd">
+            <summary>
+            Flags to add to <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
+            Default flags: SEE_MASK_NOZONECHECKS, SEE_MASK_NOASYNC, SEE_MASK_NOCLOSEPROCESS, SEE_MASK_CONNECTNETDRV, SEE_MASK_UNICODE, SEE_MASK_FLAG_NO_UI (if no flag <b>ShowErrorUI</b>), SEE_MASK_NO_CONSOLE (if no flag <b>WaitForExit</b>), SEE_MASK_FLAG_LOG_USAGE (if flag <b>MostUsed</b>); also SEE_MASK_INVOKEIDLIST if need.
+            </summary>
+        </member>
+        <member name="F:Au.Types.ROptions.FlagsRemove">
+            <summary>
+            Flags to remove from <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
+            Default flags: see <see cref="F:Au.Types.ROptions.FlagsAdd"/>.
             </summary>
         </member>
         <member name="T:Au.Types.RResult">
@@ -5985,11 +6000,6 @@
             <param name="pid"></param>
             <param name="desiredAccess"></param>
         </member>
-        <member name="T:Au.Types.NamespaceDoc">
-            <summary>
-            Types of function parameters, exceptions, etc used in the automation library.
-            </summary>
-        </member>
         <member name="T:Au.Types.WProp">
             <summary>
             Sets, gets, removes and lists window properties using API <msdn>SetProp</msdn> and co.
@@ -7834,11 +7844,11 @@
             This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
             </param>
             <param name="flags"></param>
-            <param name="curDirEtc">
+            <param name="dirEtc">
             Allows to specify more parameters: current directory, verb, etc.
             If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
             </param>
-            <exception cref="T:System.ArgumentException">Used both ROptions.Verb and RFlags.Admin.</exception>
+            <exception cref="T:System.ArgumentException">Used both ROptions.Verb and RFlags.Admin and this process isn't admin.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
             <remarks>
             It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -7877,7 +7887,7 @@
             </summary>
             <remarks>
             This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
-            Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
+            Handles only exception of type <see cref="T:Au.Types.AuException"/>. It is thrown when fails, usually when the file does not exist.
             </remarks>
             <seealso cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>
             <seealso cref="M:Au.Types.AOptWarnings.Disable(System.String[])"/>
@@ -13267,11 +13277,10 @@
             <param name="icon">
             Can be:
             - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
-            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Supports environment variables. If not full path, looks in <see cref="P:Au.AFolders.ThisAppImages"/>.
+            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image.
+            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.AFolders.ThisAppImages"/>.
             - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.AFolders.ThisAppImages"/>.
             - <see cref="T:Au.AIcon"/> - icon handle. Example: <c>AIcon.Stock(StockIcon.DELETE)]</c>. This function disposes it.
-            - <b>IntPtr</b> - icon handle. This function does not dispose it. You can dispose at any time.
-            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image.
             
             If failed to find or load image file, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
             To create Base-64 string, use menu Code -> AWinImage.
@@ -14545,20 +14554,21 @@
         </member>
         <member name="T:Au.AKeys.UI">
             <summary>
-            Gets key states for using in UI code (forms, WPF).
+            Gets key states for using in UI code (winforms, WPF, etc).
             </summary>
             <remarks>
-            Use functions of this class when processing user input events in user interface code (forms, WPF). In other code (automation scrits, etc) usually it's better to use functions of <see cref="T:Au.AKeys"/> class. Functions of this class are similar to .NET's <b>Control.ModifierKeys</b>, <b>Keyboard.Modifiers</b> etc, but may be easier to use.
+            Use functions of this class in user interface code (winforms, WPF, etc). In other code (automation scrits, etc) usually it's better to use functions of <see cref="T:Au.AKeys"/> class.
             
-            In Windows there are two API to get key state (down or up) - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>. In most cases they return the same result, but not always.
+            In Windows there are two API to get key state - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>.
             
-            API <b>GetAsyncKeyState</b> is used by class <see cref="T:Au.AKeys"/> and not by this class (<b>AKeys.UI</b>). When the user (or some software) presses or releases a key, <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
+            API <b>GetAsyncKeyState</b> is used by class <see cref="T:Au.AKeys"/> and not by this class (<b>AKeys.UI</b>). When physical key state changes (pressed/released), <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
             
             This class (<b>AKeys.UI</b>) uses API <msdn>GetKeyState</msdn>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <msdn>AttachThreadInput</msdn> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
             
-            The key state returned by these API is not always the same as of the physical keyboard. There is no API to get physical state. The two most common cases when it is different:
-            1. When the key is pressed or released by software, such as the <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> function of this library.
-            2. When the key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
+            The key state returned by these API is not always the same as of the physical keyboard. There is no API to get real physical state. Some cases when it is different:
+            1. The key is pressed or released by software, such as the <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> function of this library.
+            2. The key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
+            3. The foreground window belongs to a process with higher UAC integrity level.
             
             Also there is API <msdn>GetKeyboardState</msdn>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
             </remarks>
@@ -14577,7 +14587,7 @@
             Returns true if the specified key or mouse button is down (pressed).
             </summary>
             <remarks>
-            Can be used for mouse buttons too, for example <c>AKeys.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+            Can be used for mouse buttons too. Example: <c>AKeys.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
             </remarks>
         </member>
         <member name="M:Au.AKeys.UI.IsToggled(Au.Types.KKey)">
@@ -14653,42 +14663,40 @@
         <member name="M:Au.AKeys.IsPressed(Au.Types.KKey)">
             <summary>
             Returns true if the specified key or mouse button is down (pressed).
-            Not for UI code (forms, WPF).
+            In UI code use <see cref="T:Au.AKeys.UI"/> instead.
             </summary>
             <remarks>
             Uses API <msdn>GetAsyncKeyState</msdn>.
-            When processing user input in UI code (forms, WPF), instead use class <see cref="T:Au.AKeys.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
-            Can be used for mouse buttons too, for example <c>AKeys.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
             </remarks>
         </member>
         <member name="P:Au.AKeys.IsAlt">
             <summary>
             Returns true if the Alt key is down (pressed). Calls <see cref="M:Au.AKeys.IsPressed(Au.Types.KKey)"/>.
-            Not for UI code (forms, WPF).
+            In UI code use <see cref="T:Au.AKeys.UI"/> instead.
             </summary>
         </member>
         <member name="P:Au.AKeys.IsCtrl">
             <summary>
             Returns true if the Ctrl key is down (pressed). Calls <see cref="M:Au.AKeys.IsPressed(Au.Types.KKey)"/>.
-            Not for UI code (forms, WPF).
+            In UI code use <see cref="T:Au.AKeys.UI"/> instead.
             </summary>
         </member>
         <member name="P:Au.AKeys.IsShift">
             <summary>
             Returns true if the Shift key is down (pressed). Calls <see cref="M:Au.AKeys.IsPressed(Au.Types.KKey)"/>.
-            Not for UI code (forms, WPF).
+            In UI code use <see cref="T:Au.AKeys.UI"/> instead.
             </summary>
         </member>
         <member name="P:Au.AKeys.IsWin">
             <summary>
             Returns true if the Win key is down (pressed). Calls <see cref="M:Au.AKeys.IsPressed(Au.Types.KKey)"/>.
-            Not for UI code (forms, WPF).
+            In UI code use <see cref="T:Au.AKeys.UI"/> instead.
             </summary>
         </member>
         <member name="M:Au.AKeys.IsMod(Au.Types.KMod)">
             <summary>
             Returns true if some modifier keys are down (pressed): Ctrl, Shift, Alt, Win. Calls <see cref="M:Au.AKeys.IsPressed(Au.Types.KKey)"/>.
-            Not for UI code (forms, WPF).
+            In UI code use <see cref="T:Au.AKeys.UI"/> instead.
             </summary>
             <param name="mod">Return true if some of these keys are pressed. Default - any (Ctrl, Shift, Alt or Win).</param>
             <seealso cref="M:Au.AKeys.WaitForNoModifierKeys(System.Double,Au.Types.KMod)"/>
@@ -14696,7 +14704,7 @@
         <member name="M:Au.AKeys.GetMod(Au.Types.KMod)">
             <summary>
             Gets flags indicating which modifier keys are down (pressed): Ctrl, Shift, Alt, Win. Calls <see cref="M:Au.AKeys.IsPressed(Au.Types.KKey)"/>.
-            Not for UI code (forms, WPF).
+            In UI code use <see cref="T:Au.AKeys.UI"/> instead.
             </summary>
             <param name="mod">Check only these keys. Default - all four.</param>
         </member>
@@ -21684,14 +21692,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -21753,11 +21753,6 @@
             </summary>
             <param name="operandType">Defines the type of operand.</param>
             <returns>The size in bytes of the operand type.</returns>
-        </member>
-        <member name="T:Au.Util.NamespaceDoc">
-            <summary>
-            Rarely used classes of the automation library.
-            </summary>
         </member>
         <member name="T:Au.Util.NativeFont_">
             <summary>
@@ -24792,11 +24787,6 @@
         <member name="M:Au.Triggers.WindowTriggerArgs.#ctor(Au.Triggers.WindowTrigger,Au.AWnd,Au.Triggers.TWLater)">
             
         </member>
-        <member name="T:Au.Triggers.NamespaceDoc">
-            <summary>
-            Triggers: hotkeys, autotext, mouse, window.
-            </summary>
-        </member>
         <member name="T:Au.AIconCache_">
             <summary>
             Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
@@ -24855,11 +24845,6 @@
             Else if it is in the file cache, gets it from there and adds to the memory cache.
             Else calls callback function, which should return image, and adds to the file cache and to the memory cache.
             </remarks>
-        </member>
-        <member name="T:Au.NamespaceDoc">
-            <summary>
-            Main classes of the automation library, except triggers.
-            </summary>
         </member>
         <member name="T:Au.AWnd">
             <summary>
@@ -25029,19 +25014,17 @@
             Don't need to call this after calling functions of this library.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.EnableActivate">
+        <member name="M:Au.AWnd.More.EnableActivate(System.Int32)">
             <summary>
             Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
-            Returns false if fails (unlikely).
-            In some cases you may need this function because Windows often disables SetForegroundWindow to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow just makes the window's taskbar button flash which indicates that the windows wants attention. More info: <msdn>SetForegroundWindow</msdn>.
-            Usually you don't call SetForegroundWindow directly. It is called by some other functions, for example Form.Show.
+            Returns false if fails.
+            </summary>
+            <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
+            <remarks>
+            In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
+            Usually you don't call <b>SetForegroundWindow</b> directly. It is called by some other functions.
             Don't need to call this function before calling <see cref="M:Au.AWnd.Activate"/> and other functions of this library that activate windows.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.More.BorderWidth(Au.AWnd)">
-            <summary>
-            Gets window border width.
-            </summary>
+            </remarks>
         </member>
         <member name="M:Au.AWnd.More.GetGUIThreadInfo(Au.Types.Native.GUITHREADINFO@,System.Int32)">
             <summary>
@@ -25834,7 +25817,7 @@
         <member name="M:Au.AWnd.ActivateL">
             <summary>
             Lightweight version of <see cref="M:Au.AWnd.Activate"/>.
-            Just calls <see cref="M:Au.AWnd.More.EnableActivate"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
+            Just calls <see cref="M:Au.AWnd.More.EnableActivate(System.Int32)"/>, API <msdn>SetForegroundWindow</msdn> and makes sure that it actually worked, but does not check whether it activated exactly this window.
             No exceptions, does not unhide, does not restore minimized, does not check is it a top-level window or control, etc.
             Returns false if fails.
             </summary>

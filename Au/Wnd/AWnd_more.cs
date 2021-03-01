@@ -25,14 +25,6 @@ namespace Au
 		public static partial class More
 		{
 			/// <summary>
-			/// Gets window border width.
-			/// </summary>
-			public static int BorderWidth(AWnd w) { //TODO: remove? And maybe make GetWindowInfo_ public.
-				w.GetWindowInfo_(out var x);
-				return x.cxWindowBorders;
-			}
-
-			/// <summary>
 			/// Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
 			/// </summary>
 			/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>

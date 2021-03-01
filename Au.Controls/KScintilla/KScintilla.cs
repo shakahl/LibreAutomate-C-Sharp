@@ -32,7 +32,8 @@ namespace Au.Controls
 		AWnd _w;
 		LPARAM _sciPtr;
 		Sci_NotifyCallback _notifyCallback;
-		int _dpi;
+		internal int _dpi;
+		internal int[] _marginDpi;
 
 		public LPARAM SciPtr => _sciPtr;
 
@@ -170,9 +171,10 @@ namespace Au.Controls
 		}
 
 		protected override void OnDpiChanged(DpiScale oldDpi, DpiScale newDpi) {
-			if (!_w.Is0) {
+			if (!_w.Is0 && newDpi.PixelsPerDip != oldDpi.PixelsPerDip) {
 				_dpi = newDpi.PixelsPerInchY.ToInt();
 				Call(SCI_SETCARETWIDTH, ADpi.Scale(2, _dpi));
+				Z.MarginWidthsDpiChanged_();
 			}
 			base.OnDpiChanged(oldDpi, newDpi);
 		}

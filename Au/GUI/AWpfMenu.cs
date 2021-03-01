@@ -1,6 +1,4 @@
-﻿//TODO: try System.Windows.Media.VisualTreeHelper.SetRootDpi(menu)
-
-using Au.Types;
+﻿using Au.Types;
 using Au.Util;
 using System;
 using System.Collections.Generic;
@@ -90,11 +88,10 @@ namespace Au
 		/// <param name="icon">
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
-		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Supports environment variables. If not full path, looks in <see cref="AFolders.ThisAppImages"/>.
+		/// - <see cref="ImageSource"/> - a WPF image.
+		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="AFolders.ThisAppImages"/>.
 		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="AFolders.ThisAppImages"/>.
 		/// - <see cref="AIcon"/> - icon handle. Example: <c>AIcon.Stock(StockIcon.DELETE)]</c>. This function disposes it.
-		/// - <b>IntPtr</b> - icon handle. This function does not dispose it. You can dispose at any time.
-		/// - <see cref="ImageSource"/> - a WPF image.
 		/// 
 		/// If failed to find or load image file, prints warning (<see cref="AWarning.Write"/>).
 		/// To create Base-64 string, use menu Code -> AWinImage.
@@ -177,9 +174,20 @@ namespace Au
 				Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
 			}
 			PlacementTarget = owner;
-			IsOpen = true;
 
-			//TODO: no keyboard if focused Scintilla. Maybe temporarily remove focus.
+			//tested: VisualTreeHelper.SetRootDpi does not work.
+
+			//workaround for: if focused is a native control in a HwndHost, it remains focused, and menu keyboard does not work normally.
+			//	Temporarily remove native focus from the control.
+			//	Also tried to redirect key messages with a hook, but it does not work for arrow keys.
+			//	Also tried to remove focus in OnOpened, but it closes the menu.
+			//	Never mind: hides caret. In notepad etc menus don't hide caret. But eg in VS hide too.
+			if (owner is HwndHost hh && hh.IsFocused && Api.GetFocus() == (AWnd)hh.Handle && FocusManager.GetFocusScope(hh) is UIElement fs) {
+				_hh = hh;
+				fs.Focus();
+			}
+
+			IsOpen = true;
 
 			if (modal) {
 				_dispFrame = new DispatcherFrame();
@@ -187,6 +195,7 @@ namespace Au
 			}
 		}
 		DispatcherFrame _dispFrame;
+		HwndHost _hh;
 
 		void _EndModal() {
 			if (_dispFrame != null) {
@@ -197,40 +206,40 @@ namespace Au
 
 		///
 		protected override void OnClosed(RoutedEventArgs e) {
+			if (_hh != null) {
+				Api.SetFocus((AWnd)_hh.Handle);
+				_hh = null;
+			}
+
 			_EndModal();
 			base.OnClosed(e);
 		}
 
 		internal static object MenuItemIcon_(object icon) {
-			if (icon == null) return null;
-			try {
-				ImageSource iso = null; bool other = false;
-				switch (icon) {
-				case string s:
-					iso = AImageUtil.LoadWpfImageFromFileOrResourceOrString(s);
-					break;
-				case Uri s:
-					iso = BitmapFrame.Create(s);
-					break;
-				case AIcon h:
-					iso = h.ToWpfImage();
-					break;
-				case IntPtr h:
-					iso = new AIcon(h).ToWpfImage(false);
-					break;
-				case ImageSource s:
-					iso = s;
-					break;
-				default:
-					other = true;
-					break;
+			if (icon != null) {
+				try {
+					ImageSource iso = null;
+					switch (icon) {
+					case string s:
+						return AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(s);
+					case Uri s:
+						iso = BitmapFrame.Create(s);
+						break;
+					case AIcon h:
+						iso = h.ToWpfImage();
+						break;
+					case ImageSource s:
+						iso = s;
+						break;
+					default:
+						return icon;
+					}
+					if (iso != null) return new Image { Source = iso };
 				}
-				if (iso != null) icon = new Image { Source = iso };
-				else if (!other) icon = null;
+				catch (Exception ex) { AWarning.Write(ex.ToStringWithoutStack()); }
 			}
-			catch (Exception ex) { AWarning.Write(ex.ToStringWithoutStack()); }
-			return icon;
-			//TODO: support xaml and cache. Like AMenu.
+			return null;
+			//rejected: cache, like AMenu.
 		}
 
 		/// <summary>

@@ -46,11 +46,11 @@ namespace Au
 		/// This function expands environment variables if starts with <c>"%"</c> or <c>"\"%"</c>.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <param name="curDirEtc">
+		/// <param name="dirEtc">
 		/// Allows to specify more parameters: current directory, verb, etc.
 		/// If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
 		/// </param>
-		/// <exception cref="ArgumentException">Used both ROptions.Verb and RFlags.Admin.</exception>
+		/// <exception cref="ArgumentException">Used both ROptions.Verb and RFlags.Admin and this process isn't admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -81,83 +81,114 @@ namespace Au
 		/// AWnd w = AWnd.FindOrRun("*- Notepad", run: () => AFile.Run("notepad.exe"));
 		/// ]]></code>
 		/// </example>
-		public static RResult Run(string file, string args = null, RFlags flags = 0, ROptions curDirEtc = null)
-		{
-			//SHOULDDO: from UAC IL admin run as user by default. Add flag UacInherit.
-
+		public static RResult Run(string file, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
 			Api.SHELLEXECUTEINFO x = default;
 			x.cbSize = Api.SizeOf(x);
-			x.fMask = Api.SEE_MASK_NOZONECHECKS | Api.SEE_MASK_NOASYNC | Api.SEE_MASK_NOCLOSEPROCESS | Api.SEE_MASK_CONNECTNETDRV | Api.SEE_MASK_UNICODE;
+			x.fMask = Api.SEE_MASK_NOZONECHECKS | Api.SEE_MASK_NOASYNC | Api.SEE_MASK_CONNECTNETDRV | Api.SEE_MASK_UNICODE;
 			x.nShow = Api.SW_SHOWNORMAL;
 
 			bool curDirFromFile = false;
-			var more = curDirEtc;
-			if(more != null) {
+			var more = dirEtc;
+			if (more != null) {
 				x.lpVerb = more.Verb;
-				var cd = more.CurrentDirectory; if(cd != null) { if(cd.Length == 0) curDirFromFile = true; else cd = APath.ExpandEnvVar(cd); }
-				x.lpDirectory = cd;
-				if(!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Hwnd.Window;
-				switch(more.WindowState) {
+				if (x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
+
+				if (more.CurrentDirectory is string cd) {
+					if (cd.Length == 0) curDirFromFile = true; else cd = APath.ExpandEnvVar(cd);
+					x.lpDirectory = cd;
+				}
+
+				if (!more.OwnerWindow.IsEmpty) x.hwnd = more.OwnerWindow.Hwnd.Window;
+
+				switch (more.WindowState) {
 				case ProcessWindowStyle.Hidden: x.nShow = Api.SW_HIDE; break;
 				case ProcessWindowStyle.Minimized: x.nShow = Api.SW_SHOWMINIMIZED; break;
 				case ProcessWindowStyle.Maximized: x.nShow = Api.SW_SHOWMAXIMIZED; break;
 				}
+
+				x.fMask &= ~more.FlagsRemove;
+				x.fMask |= more.FlagsAdd;
 			}
 
-			if(flags.Has(RFlags.Admin)) {
-				if(more?.Verb != null && !more.Verb.Eqi("runas")) throw new ArgumentException("Cannot use Verb with flag Admin");
-				x.lpVerb = "runas";
-			} else if(x.lpVerb != null) x.fMask |= Api.SEE_MASK_INVOKEIDLIST; //makes slower. But verbs are rarely used.
-
-			if(0 == (flags & RFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
-			if(0 == (flags & RFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
+			if (flags.Has(RFlags.Admin)) {
+				if (x.lpVerb == null || x.lpVerb.Eqi("runas")) x.lpVerb = "runas";
+				else if (!AUac.IsAdmin) throw new ArgumentException("Cannot use Verb with flag Admin, unless this process is admin");
+			}
 
 			file = _NormalizeFile(false, file, out bool isFullPath, out bool isShellPath);
 			APidl pidl = null;
-			if(isShellPath) { //":: Base64ITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
+			if (isShellPath) { //":: Base64ITEMIDLIST" or "::{CLSID}..." (we convert it too because the API does not support many)
 				pidl = APidl.FromString(file); //does not throw
-				if(pidl != null) {
+				if (pidl != null) {
 					x.lpIDList = pidl.UnsafePtr;
 					x.fMask |= Api.SEE_MASK_INVOKEIDLIST;
 				} else x.lpFile = file;
 			} else {
 				x.lpFile = file;
 
-				if(curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectory(file);
+				if (curDirFromFile && isFullPath) x.lpDirectory = APath.GetDirectory(file);
 			}
-			if(!args.NE()) x.lpParameters = APath.ExpandEnvVar(args);
+			x.lpDirectory ??= Directory.GetCurrentDirectory();
+			if (!args.NE()) x.lpParameters = APath.ExpandEnvVar(args);
 
-			AWnd.More.EnableActivate();
+			if (0 == (flags & RFlags.ShowErrorUI)) x.fMask |= Api.SEE_MASK_FLAG_NO_UI;
+			if (0 == (flags & RFlags.WaitForExit)) x.fMask |= Api.SEE_MASK_NO_CONSOLE;
+			if (0 != (flags & RFlags.MostUsed)) x.fMask |= Api.SEE_MASK_FLAG_LOG_USAGE;
+			x.fMask |= Api.SEE_MASK_NOCLOSEPROCESS;
 
-			if(!Api.ShellExecuteEx(ref x)) throw new AuException(0, $"*run '{file}'");
-			pidl?.Dispose();
+			AWnd.More.EnableActivate(-1);
 
-			var R = new RResult();
 			bool waitForExit = 0 != (flags & RFlags.WaitForExit);
 			bool needHandle = flags.Has(RFlags.NeedProcessHandle);
+
+			bool ok = false; int pid = 0, errorCode = 0;
+			bool asUser = !flags.HasAny(RFlags.Admin | RFlags.InheritAdmin) && AUac.IsAdmin; //info: new process does not inherit uiAccess
+			if (asUser) {
+				ok = Cpp.Cpp_ShellExec(x, out pid, out int injectError, out int execError);
+				if (!ok) {
+					if (injectError != 0) {
+						AWarning.Write("Failed to run as non-admin.");
+						asUser = false;
+					} else errorCode = execError;
+				}
+			}
+			if (!asUser) {
+				ok = Api.ShellExecuteEx(ref x);
+				if (!ok) errorCode = ALastError.Code;
+			}
+			pidl?.Dispose();
+			if (!ok) throw new AuException(errorCode, $"*run '{file}'");
+
+			var R = new RResult();
 			WaitHandle_ ph = null;
-			if(!x.hProcess.Is0) {
-				if(waitForExit || needHandle) ph = new WaitHandle_(x.hProcess, true);
-				if(!waitForExit) R.ProcessId = AProcess.ProcessIdFromHandle(x.hProcess);
+
+			if (needHandle || waitForExit) {
+				if (pid != 0) x.hProcess = Handle_.OpenProcess(pid, Api.PROCESS_ALL_ACCESS);
+				if (!x.hProcess.Is0) ph = new WaitHandle_(x.hProcess, true);
+			}
+
+			if (!waitForExit) {
+				if (pid != 0) R.ProcessId = pid;
+				else if (!x.hProcess.Is0) R.ProcessId = AProcess.ProcessIdFromHandle(x.hProcess);
 			}
 
 			try {
 				Api.AllowSetForegroundWindow(Api.ASFW_ANY);
 
-				if(x.lpVerb != null && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
+				if (x.lpVerb != null && Thread.CurrentThread.GetApartmentState() == ApartmentState.STA)
 					Thread.CurrentThread.Join(50); //need min 5-10 for file Properties. And not Sleep.
 
-				if(ph != null) {
-					if(waitForExit) {
+				if (ph != null) {
+					if (waitForExit) {
 						ph.WaitOne();
-						if(Api.GetExitCodeProcess(x.hProcess, out var ec)) R.ProcessExitCode = ec;
+						if (Api.GetExitCodeProcess(x.hProcess, out var exitCode)) R.ProcessExitCode = exitCode;
 					}
-					if(needHandle) R.ProcessHandle = ph;
+					if (needHandle) R.ProcessHandle = ph;
 				}
 			}
 			finally {
-				if(R.ProcessHandle == null) {
-					if(ph != null) ph.Dispose();
+				if (R.ProcessHandle == null) {
+					if (ph != null) ph.Dispose();
 					else x.hProcess.Dispose();
 				}
 			}
@@ -175,46 +206,44 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// This is useful when you don't care whether <b>Run</b> succeeded and don't want to use try/catch.
-		/// Handles only exception of type AuException. It is thrown when fails, usually when the file does not exist.
+		/// Handles only exception of type <see cref="AuException"/>. It is thrown when fails, usually when the file does not exist.
 		/// </remarks>
 		/// <seealso cref="AWarning.Write"/>
 		/// <seealso cref="AOptWarnings.Disable"/>
 		/// <seealso cref="AWnd.FindOrRun"/>
 		[MethodImpl(MethodImplOptions.NoInlining)] //uses stack
-		public static RResult TryRun(string s, string args = null, RFlags flags = 0, ROptions curDirEtc = null)
-		{
+		public static RResult TryRun(string s, string args = null, RFlags flags = 0, ROptions dirEtc = null) {
 			try {
-				return Run(s, args, flags, curDirEtc);
+				return Run(s, args, flags, dirEtc);
 			}
-			catch(AuException e) {
+			catch (AuException e) {
 				AWarning.Write(e.Message, 1);
 				return null;
 			}
 		}
 
 		//Used by Run and RunConsole.
-		static string _NormalizeFile(bool runConsole, string file, out bool isFullPath, out bool isShellPath)
-		{
+		static string _NormalizeFile(bool runConsole, string file, out bool isFullPath, out bool isShellPath) {
 			isShellPath = isFullPath = false;
 			file = APath.ExpandEnvVar(file);
-			if(file.NE()) throw new ArgumentException();
-			if(runConsole || !(isShellPath = APath.IsShellPath_(file))) {
-				if(isFullPath = APath.IsFullPath(file)) {
+			if (file.NE()) throw new ArgumentException();
+			if (runConsole || !(isShellPath = APath.IsShellPath_(file))) {
+				if (isFullPath = APath.IsFullPath(file)) {
 					var fl = runConsole ? PNFlags.DontExpandDosPath : PNFlags.DontExpandDosPath | PNFlags.DontPrefixLongPath;
 					file = APath.Normalize_(file, fl, true);
 
 					//ShellExecuteEx supports long path prefix for exe but not for documents.
 					//Process.Start supports long path prefix, except when the exe is .NET.
-					if(!runConsole) file = APath.UnprefixLongPath(file);
+					if (!runConsole) file = APath.UnprefixLongPath(file);
 
-					if(ADisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
+					if (ADisableFsRedirection.IsSystem64PathIn32BitProcess(file) && !AFile.ExistsAsAny(file)) {
 						file = ADisableFsRedirection.GetNonRedirectedSystemPath(file);
 					}
-				} else if(!APath.IsUrl(file)) {
+				} else if (!APath.IsUrl(file)) {
 					//ShellExecuteEx searches everywhere except in app folder.
 					//Process.Start prefers current directory.
 					var s2 = AFile.SearchPath(file);
-					if(s2 != null) {
+					if (s2 != null) {
 						file = s2;
 						isFullPath = true;
 					}
@@ -265,8 +294,7 @@ namespace Au
 		/// AOutput.Write(text);
 		/// ]]></code>
 		/// </example>
-		public static unsafe int RunConsole(string exe, string args = null, string curDir = null, Encoding encoding = null)
-		{
+		public static unsafe int RunConsole(string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			return _RunConsole(s => AOutput.Write(s), null, exe, args, curDir, encoding);
 		}
 
@@ -280,8 +308,7 @@ namespace Au
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int RunConsole(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null)
-		{
+		public static unsafe int RunConsole(Action<string> output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			return _RunConsole(output, null, exe, args, curDir, encoding);
 		}
 
@@ -294,16 +321,14 @@ namespace Au
 		/// <param name="curDir"></param>
 		/// <param name="encoding"></param>
 		/// <exception cref="AuException">Failed, for example file not found.</exception>
-		public static unsafe int RunConsole(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null)
-		{
+		public static unsafe int RunConsole(out string output, string exe, string args = null, string curDir = null, Encoding encoding = null) {
 			var b = new StringBuilder();
 			var r = _RunConsole(null, b, exe, args, curDir, encoding);
 			output = b.ToString();
 			return r;
 		}
 
-		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding)
-		{
+		static unsafe int _RunConsole(Action<string> outAction, StringBuilder outStr, string exe, string args, string curDir, Encoding encoding) {
 			exe = _NormalizeFile(true, exe, out _, out _);
 			//args = APath.ExpandEnvVar(args); //rejected
 
@@ -311,7 +336,7 @@ namespace Au
 
 			Handle_ hProcess = default;
 			var sa = new Api.SECURITY_ATTRIBUTES(null) { bInheritHandle = 1 };
-			if(!Api.CreatePipe(out Handle_ hOutRead, out Handle_ hOutWrite, sa, 0)) throw new AuException(0);
+			if (!Api.CreatePipe(out Handle_ hOutRead, out Handle_ hOutWrite, sa, 0)) throw new AuException(0);
 
 			byte* b = null; char* c = null;
 			try {
@@ -322,7 +347,7 @@ namespace Au
 				ps.si.hStdError = hOutWrite;
 				ps.flags |= Api.CREATE_NEW_CONSOLE;
 
-				if(!ps.StartL(out var pi, inheritHandles: true)) throw new AuException(0);
+				if (!ps.StartL(out var pi, inheritHandles: true)) throw new AuException(0);
 				hOutWrite.Dispose(); //important: must be here
 				pi.hThread.Dispose();
 				hProcess = pi.hProcess;
@@ -334,19 +359,19 @@ namespace Au
 				int bSize = 8000;
 				b = (byte*)AMemory.Alloc(bSize);
 
-				for(bool ended = false; !ended;) {
-					if(bSize - offs < 1000) { //part of 'prevent getting partial lines' code
+				for (bool ended = false; !ended;) {
+					if (bSize - offs < 1000) { //part of 'prevent getting partial lines' code
 						b = (byte*)AMemory.ReAlloc(b, bSize *= 2);
 						AMemory.Free(c); c = null;
 					}
 
-					if(Api.ReadFile(hOutRead, b + offs, bSize - offs, out int nr)) {
-						if(nr == 0) continue;
+					if (Api.ReadFile(hOutRead, b + offs, bSize - offs, out int nr)) {
+						if (nr == 0) continue;
 						nr += offs;
 					} else {
-						if(ALastError.Code != Api.ERROR_BROKEN_PIPE) throw new AuException(0);
+						if (ALastError.Code != Api.ERROR_BROKEN_PIPE) throw new AuException(0);
 						//process ended
-						if(offs == 0) break;
+						if (offs == 0) break;
 						nr = offs;
 						offs = 0;
 						ended = true;
@@ -354,32 +379,32 @@ namespace Au
 
 					//prevent getting partial lines. They can be created by the console program, or by the above code when buffer too small.
 					int moveFrom = 0;
-					if(needLines) {
-						if(skipN) { //if was split between \r and \n, remove \n now
+					if (needLines) {
+						if (skipN) { //if was split between \r and \n, remove \n now
 							skipN = false;
-							if(b[0] == '\n') Api.memmove(b, b + 1, --nr);
-							if(nr == 0) continue;
+							if (b[0] == '\n') Api.memmove(b, b + 1, --nr);
+							if (nr == 0) continue;
 						}
 						int i;
-						for(i = nr; i > 0; i--) { var k = b[i - 1]; if(k == '\n' || k == '\r') break; }
-						if(i == nr) { //ends with \n or \r
+						for (i = nr; i > 0; i--) { var k = b[i - 1]; if (k == '\n' || k == '\r') break; }
+						if (i == nr) { //ends with \n or \r
 							offs = 0;
-							if(b[--nr] == '\r') skipN = true;
-							else if(nr > 0 && b[nr - 1] == '\r') nr--;
-						} else if(i > 0) { //contains \n or \r
+							if (b[--nr] == '\r') skipN = true;
+							else if (nr > 0 && b[nr - 1] == '\r') nr--;
+						} else if (i > 0) { //contains \n or \r
 							moveFrom = i;
 							offs = nr - i;
-							if(b[--i] == '\n' && i > 0 && b[i - 1] == '\r') i--;
+							if (b[--i] == '\n' && i > 0 && b[i - 1] == '\r') i--;
 							nr = i;
-						} else if(!ended) {
+						} else if (!ended) {
 							offs = nr;
 							continue;
 						}
 					}
 
-					if(c == null) c = (char*)AMemory.Alloc(bSize * 2);
-					if(encoding == null) {
-						if((encoding = s_oemEncoding) == null) {
+					if (c == null) c = (char*)AMemory.Alloc(bSize * 2);
+					if (encoding == null) {
+						if ((encoding = s_oemEncoding) == null) {
 							Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
 							var oemCP = Api.GetOEMCP();
 							try { encoding = Encoding.GetEncoding(oemCP); }
@@ -389,19 +414,19 @@ namespace Au
 					}
 					int nc = encoding.GetChars(b, nr, c, bSize);
 
-					if(moveFrom > 0) Api.memmove(b, b + moveFrom, offs); //part of 'prevent getting partial lines' code
+					if (moveFrom > 0) Api.memmove(b, b + moveFrom, offs); //part of 'prevent getting partial lines' code
 
 					var s = new string(c, 0, nc);
-					if(needLines) {
-						if(s.FindAny("\r\n") < 0) outAction(s);
-						else foreach(var k in s.Segments(SegSep.Line)) outAction(s[k.Range]);
+					if (needLines) {
+						if (s.FindAny("\r\n") < 0) outAction(s);
+						else foreach (var k in s.Segments(SegSep.Line)) outAction(s[k.Range]);
 					} else {
 						outStr.Append(s);
 					}
 				}
 
-				if(!Api.GetExitCodeProcess(hProcess, out int ec)) ec = int.MinValue;
-				return ec;
+				if (!Api.GetExitCodeProcess(hProcess, out int exitCode)) exitCode = int.MinValue;
+				return exitCode;
 			}
 			finally {
 				hProcess.Dispose();
@@ -422,10 +447,9 @@ namespace Au
 		/// Full path of a file or directory or other shell object.
 		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="APidl.ToBase64String"/>).
 		/// </param>
-		public static bool SelectInExplorer(string path)
-		{
+		public static bool SelectInExplorer(string path) {
 			using var pidl = APidl.FromString(path);
-			if(pidl == null) return false;
+			if (pidl == null) return false;
 			return 0 == Api.SHOpenFolderAndSelectItems(pidl.HandleRef, 0, null, 0);
 		}
 	}
@@ -441,7 +465,7 @@ namespace Au.Types
 	{
 		/// <summary>
 		/// Show error message box if fails, for example if file not found.
-		/// Note: this does not disable exceptions. Still need exception handling. Or call <see cref="AFile.TryRun"/>.
+		/// Note: this does not disable exceptions. To avoid exceptions use try/catch or <see cref="AFile.TryRun"/>.
 		/// </summary>
 		ShowErrorUI = 1,
 
@@ -451,15 +475,33 @@ namespace Au.Types
 		WaitForExit = 2,
 
 		/// <summary>
-		/// Get process handle (<see cref="RResult.ProcessHandle"/>), if possible.
+		/// If started new process, get process handle (<see cref="RResult.ProcessHandle"/>).
 		/// </summary>
 		NeedProcessHandle = 4,
 
 		/// <summary>
-		/// Run as administrator, probably with UAC consent dialog.
-		/// Uses verb "runas", therefore other verb cannot be specified.
+		/// Run new process as administrator.
+		/// If this process isn't admin:
+		/// - Shows UAC consent dialog.
+		/// - Uses verb "runas", therefore other verb cannot be specified.
+		/// - Cannot set current directory for the new process.
+		/// - The new process does not inherit environment variables of this process.
 		/// </summary>
 		Admin = 8,
+
+		/// <summary>
+		/// If this process runs as administrator, run new process as administrator too.
+		/// Without this flag, if this process runs as administrator:
+		///	- Starts new process as non-administrator from the shell process (explorer.exe).
+		///	- If it fails (for example if shell process isn't running), calls <see cref="AWarning.Write"/> and starts new process as administrator.
+		///	- The new process does not inherit environment variables of this process.
+		/// </summary>
+		InheritAdmin = 16,
+
+		/// <summary>
+		/// Add the app to the "Most used" list in the Start menu if launched often.
+		/// </summary>
+		MostUsed = 32,
 	}
 
 	/// <summary>
@@ -500,6 +542,18 @@ namespace Au.Types
 		/// Many programs ignore it.
 		/// </summary>
 		public ProcessWindowStyle WindowState;
+
+		/// <summary>
+		/// Flags to add to <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
+		/// Default flags: SEE_MASK_NOZONECHECKS, SEE_MASK_NOASYNC, SEE_MASK_NOCLOSEPROCESS, SEE_MASK_CONNECTNETDRV, SEE_MASK_UNICODE, SEE_MASK_FLAG_NO_UI (if no flag <b>ShowErrorUI</b>), SEE_MASK_NO_CONSOLE (if no flag <b>WaitForExit</b>), SEE_MASK_FLAG_LOG_USAGE (if flag <b>MostUsed</b>); also SEE_MASK_INVOKEIDLIST if need.
+		/// </summary>
+		public uint FlagsAdd;
+
+		/// <summary>
+		/// Flags to remove from <msdn>SHELLEXECUTEINFO</msdn> field <b>fMask</b>.
+		/// Default flags: see <see cref="FlagsAdd"/>.
+		/// </summary>
+		public uint FlagsRemove;
 
 		//no. If need, caller can get window and call EnsureInScreen etc.
 		//public AScreen Screen;
@@ -543,8 +597,7 @@ namespace Au.Types
 		/// <summary>
 		/// Returns <see cref="ProcessId"/> as string.
 		/// </summary>
-		public override string ToString()
-		{
+		public override string ToString() {
 			return ProcessId.ToString();
 		}
 	}

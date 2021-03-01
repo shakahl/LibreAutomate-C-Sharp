@@ -61,12 +61,8 @@ partial class SciCode : KScintilla
 
 	void _ZHandleCreated() {
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/));
-
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
-
-		Call(SCI_SETMARGINTYPEN, c_marginLineNumbers, SC_MARGIN_NUMBER);
-		Z.MarginWidth(c_marginLineNumbers, ADpi.Scale(40, Hwnd));//TODO: measure font; also when line count changes; also when DPI changes; also for all KScintilla controls.
-
+		Z.MarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
 		_InicatorsInit();
 
 		if (_fn.IsCodeFile) {
@@ -111,6 +107,7 @@ partial class SciCode : KScintilla
 		Debug.Assert(!Hwnd.Is0);
 
 		bool editable = _fls.SetText(Z, text);
+		_SetLineNumberMarginWidth();
 		if (newFile) _openState = _EOpenState.NewFile; else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
 
@@ -185,6 +182,7 @@ partial class SciCode : KScintilla
 				//	//	Call(Sci.SCI_SETOVERTYPE, _testOvertype = true);
 
 				//	//}
+				if (n.linesAdded != 0) _SetLineNumberMarginWidth(onModified: true);
 			}
 			break;
 		case NOTIF.SCN_CHARADDED:
@@ -280,7 +278,6 @@ partial class SciCode : KScintilla
 					var m = new AWpfMenu();
 					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
 					m.Show(this, byCaret: kbd);
-					//TODO: in menu don't not work keys (Esc, arrows, etc). Try to change focused control temporarily.
 					break;
 				case c_marginLineNumbers:
 				case c_marginMarkers:
@@ -380,6 +377,14 @@ partial class SciCode : KScintilla
 		Call(SCI_SETSAVEPOINT);
 		if (this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
 	}
+
+	//never mind: not called when zoom changes.
+	internal void _SetLineNumberMarginWidth(bool onModified = false) {
+		int c = 4, lines = Z.LineCount;
+		while (lines > 999) { c++; lines /= 10; }
+		if (!onModified || c != _prevLineNumberMarginWidth) Z.MarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
+	}
+	int _prevLineNumberMarginWidth;
 
 	#region copy paste
 
@@ -720,7 +725,7 @@ partial class SciCode : KScintilla
 	public ITempRange ZTempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0) {
 		int fromUtf16 = from;
 		Z.NormalizeRange(true, ref from, ref to);
-		//AOutput.Write(fromUtf16, from, to, Z.CurrentPos8);//TODO
+		//AOutput.Write(fromUtf16, from, to, Z.CurrentPos8);
 		//Debug.Assert(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to));
 		ADebug.PrintIf(!(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to)), "bad");
 

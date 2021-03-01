@@ -13,7 +13,7 @@ namespace Scintilla {
 // A simple lexer with no state
 class LexerNoExceptions : public LexerBase {
 public:
-	// TODO Also need to prevent exceptions in constructor and destructor
+	// SCI_TODO Also need to prevent exceptions in constructor and destructor
 	Sci_Position SCI_METHOD PropertySet(const char *key, const char *val) override;
 	Sci_Position SCI_METHOD WordListSet(int n, const char *wl) override;
 	void SCI_METHOD Lex(Sci_PositionU startPos, Sci_Position lengthDoc, int initStyle, IDocument *pAccess) override;

@@ -520,7 +520,7 @@ class RunningTasks
 			Api.AllowSetForegroundWindow(pid);
 
 			if(pre != null) {
-				if(taskArgs.Length > SharedMemory_.TasksDataSize_) throw new ArgumentException("Too long task arguments data."); //TODO
+				if(taskArgs.Length > SharedMemory_.TasksDataSize_) throw new ArgumentException("Too long task arguments data."); //todo
 																																		 //AOutput.Write(taskArgs.Length);
 				var m = SharedMemory_.Ptr;
 				m->tasks.size = taskArgs.Length;

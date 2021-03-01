@@ -48,7 +48,6 @@ namespace Au
 	/// AOutput.Write(c.Name);
 	/// ]]></code>
 	/// </example>
-	[Serializable]
 	public unsafe partial struct AWnd : IEquatable<AWnd>, IComparable<AWnd>
 	{
 #if false
@@ -1021,13 +1020,17 @@ namespace Au
 
 			/// <summary>
 			/// Temporarily enables this process to activate windows with API <msdn>SetForegroundWindow</msdn>.
-			/// Returns false if fails (unlikely).
-			/// In some cases you may need this function because Windows often disables SetForegroundWindow to not allow applications to activate their windows while the user is working (using keyboard/mouse) with the currently active window. Then SetForegroundWindow just makes the window's taskbar button flash which indicates that the windows wants attention. More info: <msdn>SetForegroundWindow</msdn>.
-			/// Usually you don't call SetForegroundWindow directly. It is called by some other functions, for example Form.Show.
-			/// Don't need to call this function before calling <see cref="AWnd.Activate"/> and other functions of this library that activate windows.
+			/// Returns false if fails.
 			/// </summary>
-			public static bool EnableActivate() {
-				return Internal_.EnableActivate(false);
+			/// <param name="processId">Process id. If not 0, enables that process to activate windows too. If -1, all processes will be enabled.</param>
+			/// <remarks>
+			/// In some cases you may need this function because Windows often disables API <msdn>SetForegroundWindow</msdn> to not allow background applications to activate windows while the user is working (using keyboard/mouse) with the currently active window. Then <b>SetForegroundWindow</b> usually just makes the window's taskbar button flash.
+			/// Usually you don't call <b>SetForegroundWindow</b> directly. It is called by some other functions.
+			/// Don't need to call this function before calling <see cref="AWnd.Activate"/> and other functions of this library that activate windows.
+			/// </remarks>
+			public static bool EnableActivate(int processId = 0) {
+				if (!Internal_.EnableActivate(false)) return false;
+				return processId == 0 || Api.AllowSetForegroundWindow(processId);
 			}
 		}
 
@@ -1135,8 +1138,6 @@ namespace Au
 		/// <seealso cref="Focus"/>
 		public bool IsFocused => !this.Is0 && this == Focused;
 
-		//TODO: try to move ThisThread class functions to AWnd. Now this is too obscure. Eg name FocusT.
-
 		/// <summary>
 		/// Functions that can be used only with windows/controls of this thread.
 		/// </summary>
@@ -1187,7 +1188,7 @@ namespace Au
 			/// Gets the active window of this thread.
 			/// Calls API <msdn>GetActiveWindow</msdn>.
 			/// </summary>
-			public static AWnd Active => Api.GetActiveWindow(); //TODO: move to More and rename to ActiveOfThisThread
+			public static AWnd Active => Api.GetActiveWindow();
 		}
 
 		#endregion

@@ -43,25 +43,128 @@ EXPORT HRESULT Cpp_CallIDroptarget(IDropTarget* dt, int ddEvent, IDataObject* d,
 	default: return dt->DragLeave();
 	}
 }
+
 }
 
-namespace outproc
+namespace {
+//Used for marshaling Cpp_ShellExec (IPA_ShellExec) parameters when calling the get_accHelpTopic hook function.
+//A flat variable-size memory structure (strings follow the fixed-size part).
+struct MarshalParams_ShellExec
 {
+	MarshalParams_Header hdr;
+private:
+	int _file, _dir, _verb, _params, _class, _idlist; //offsets
+	int _nshow, _hwnd;
+	ULONG _mask;
 
-//EXPORT HRESULT Cpp_StartProcess(STR exeFile, STR args, STR workingDir, STR environment, out BSTR& sResult)
-//{
-//	HRESULT R;
-//	Cpp_Acc aAgent;
-//	if(R = InjectDllAndGetAgent(GetShellWindow(), out aAgent.acc)) {
-//		return R;
-//	}
-//
-//	InProcCall c;
-//	auto p = (MarshalParams_StartProcess*)c.AllocParams(&aAgent, InProcAction::IPA_StartProcess, sizeof(MarshalParams_StartProcess));
-//	p->...;
-//	if(R = c.Call()) return R;
-//	sResult = c.DetachResultBSTR();
-//	return 0;
-//}
+	LPWSTR _SetString(STR s, LPWSTR dest, out int& offset) {
+		if(!s) {
+			offset = 0;
+			return dest;
+		}
+		int len = (int)wcslen(s);
+		memcpy(dest, s, len * 2); dest[len] = 0;
+		offset = (int)(dest - (STR)this);
+		return dest + len + 1;
+	}
 
-} //namespace outproc
+	STR _GetString(int offset) {
+		if(!offset) return null;
+		return (STR)this + offset;
+	}
+
+	void _SetIL(void* il, LPWSTR dest, out int& offset) {
+		if(!il) {
+			offset = 0;
+			return;
+		}
+		int size = ILGetSize((LPCITEMIDLIST)il);
+		memcpy(dest, il, size);
+		offset = (int)(dest - (STR)this);
+	}
+
+	void* _GetIL(int offset) {
+		if(!offset) return null;
+		return (LPWSTR)this + offset;
+	}
+public:
+	static int _Size(STR s) {
+		return s == null ? 0 : ((int)wcslen(s) + 1) * 2;
+	}
+	static int _SizeIL(void* idlist) {
+		return idlist == null ? 0 : ILGetSize((LPCITEMIDLIST)idlist) + 1 & ~1;
+	}
+
+	static int CalcMemSize(const SHELLEXECUTEINFO& x) {
+		return sizeof(MarshalParams_ShellExec) + _SizeIL(x.lpIDList) + _Size(x.lpFile) + _Size(x.lpDirectory) + _Size(x.lpParameters) + _Size(x.lpVerb);
+	}
+
+#pragma warning(disable: 4302 4311 4312) //conversion HWND <-> int
+	void Marshal(const SHELLEXECUTEINFO& x) {
+		_mask = x.fMask;
+		_nshow = x.nShow;
+		_hwnd = (int)x.hwnd;
+		auto s = (LPWSTR)(this + 1);
+		s = _SetString(x.lpFile, s, out _file);
+		s = _SetString(x.lpDirectory, s, out _dir);
+		s = _SetString(x.lpVerb, s, out _verb);
+		s = _SetString(x.lpParameters, s, out _params);
+		s = _SetString(x.lpClass, s, out _class);
+		_SetIL(x.lpIDList, s, out _idlist);
+
+		//never mind: the new process does not inherit environment variables.
+		//	I don't know how to pass them when using shell prcess. Canot modify its environment variables, even temporarily.
+		//	It is documented.
+	}
+
+	SHELLEXECUTEINFO Unmarshal() {
+		SHELLEXECUTEINFO x = { sizeof(SHELLEXECUTEINFO), _mask };
+		x.nShow = _nshow;
+		x.hwnd = (HWND)_hwnd;
+		x.lpFile = _GetString(_file);
+		x.lpDirectory = _GetString(_dir);
+		x.lpVerb = _GetString(_verb);
+		x.lpParameters = _GetString(_params);
+		x.lpClass = _GetString(_class);
+		x.lpIDList = _GetIL(_idlist);
+		return x;
+	}
+};
+}
+
+namespace inproc {
+HRESULT ShellExec(MarshalParams_Header* h, out BSTR& sResult) {
+	sResult = null;
+	auto m = (MarshalParams_ShellExec*)h;
+	auto x = m->Unmarshal();
+	if(!ShellExecuteExW(&x)) return GetLastError();
+	if(x.hProcess) {
+		DWORD pid = GetProcessId(x.hProcess);
+		CloseHandle(x.hProcess);
+		if(pid != 0) sResult = SysAllocStringByteLen((LPCSTR)&pid, 4);
+	}
+	return 0;
+}
+}
+
+namespace other {
+EXPORT bool Cpp_ShellExec(const SHELLEXECUTEINFO& x, out DWORD& pid, out HRESULT& injectError, out HRESULT& execError)
+{
+	pid = 0; injectError = 0; execError = 0;
+	Cpp_Acc aAgent;
+	if(injectError = outproc::InjectDllAndGetAgent(GetShellWindow(), out aAgent.acc)) {
+		return false;
+	}
+
+	outproc::InProcCall c;
+	auto p = (MarshalParams_ShellExec*)c.AllocParams(&aAgent, InProcAction::IPA_ShellExec, MarshalParams_ShellExec::CalcMemSize(x));
+	p->Marshal(x);
+	if(execError = c.Call()) return false;
+
+	BSTR b = c.GetResultBSTR();
+	if(b) pid = *(DWORD*)b;
+
+	return true;
+}
+
+} //namespace other

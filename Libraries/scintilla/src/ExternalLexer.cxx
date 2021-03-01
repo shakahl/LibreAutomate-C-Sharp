@@ -144,7 +144,7 @@ LexerLibrary::LexerLibrary(const char *moduleName_) {
 				nextLanguage++;
 
 				// This is storing a second reference to lex in the Catalogue as well as in modules.
-				// TODO: Should use std::shared_ptr or similar to ensure allocation safety.
+				// SCI_TODO: Should use std::shared_ptr or similar to ensure allocation safety.
 				Catalogue::AddLexerModule(lex);
 
 				// Remember ExternalLexerModule so we don't leak it

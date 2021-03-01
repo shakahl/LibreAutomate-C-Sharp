@@ -2774,7 +2774,7 @@
             Util extension methods for dialogs.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddCheck(Au.AWpfBuilder,System.String,System.Boolean)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)">
             <summary>
             Adds KCheckBox that can be used with TextBox in a propertygrid row. Or alone in a grid or stack row.
             </summary>
@@ -2782,22 +2782,22 @@
             <param name="name">Checkbox text.</param>
             <param name="noNewRow"></param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddText(Au.AWpfBuilder,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddText(Au.AWpfBuilder,System.String)">
             <summary>
             Adds TextBox that can be used with KCheckBox in a propertygrid row. Or alone in a grid or stack row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddCheckText(Au.AWpfBuilder,System.String,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckText(Au.AWpfBuilder,System.String,System.String)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.AddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.AddText(Au.AWpfBuilder,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.xAddText(Au.AWpfBuilder,System.String)"/>) in a propertygrid row.
             </summary>
             <param name="b"></param>
             <param name="name">Checkbox text.</param>
             <param name="text">Textbox text.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddCheckTextDropdown(Au.AWpfBuilder,System.String,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckTextDropdown(Au.AWpfBuilder,System.String,System.String)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.AddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.AddText(Au.AWpfBuilder,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and multiline TextBox (<see cref="M:Au.Tools.KExtWpf.xAddText(Au.AWpfBuilder,System.String)"/>) in a propertygrid row.
             Also adds ▾ button that shows a drop-down list (see <see cref="M:Au.Tools.KCheckTextBox.Set(System.Boolean,System.String,System.Collections.Generic.List{System.String})"/>).
             Unlike ComboBox, text can be multiline and isn't selected when receives focus.
             </summary>
@@ -2805,40 +2805,40 @@
             <param name="name">Checkbox text.</param>
             <param name="text">Textbox text.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddCheckCombo(Au.AWpfBuilder,System.String,System.String,System.Int32)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckCombo(Au.AWpfBuilder,System.String,System.String,System.Int32)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.AddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and readonly ComboBox (<see cref="M:Au.Tools.KExtWpf.AddOther``1(Au.AWpfBuilder,``0@,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and readonly ComboBox (<see cref="M:Au.Tools.KExtWpf.xAddOther``1(Au.AWpfBuilder,``0@,System.String)"/>) in a propertygrid row.
             </summary>
             <param name="b"></param>
             <param name="name">Checkbox text.</param>
             <param name="items">Combobox items like "One|Two".</param>
             <param name="index">Combobox selected index.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddOther``1(Au.AWpfBuilder,``0@,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddOther``1(Au.AWpfBuilder,``0@,System.String)">
             <summary>
             Adds any control that can be used in a propertygrid row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.PropAddButton(Au.AWpfBuilder,System.Windows.Controls.Button@,System.String,System.Action{Au.Types.WBButtonClickArgs})">
+        <member name="M:Au.Tools.KExtWpf.xAddButton(Au.AWpfBuilder,System.Windows.Controls.Button@,System.String,System.Action{Au.Types.WBButtonClickArgs})">
             <summary>
             Adds button that can be used in a propertygrid row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.PropAddButton(Au.AWpfBuilder,System.String,System.Action{Au.Types.WBButtonClickArgs})">
+        <member name="M:Au.Tools.KExtWpf.xAddButton(Au.AWpfBuilder,System.String,System.Action{Au.Types.WBButtonClickArgs})">
             <summary>
             Adds button that can be used in a propertygrid row.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddCheckAnd``1(Au.AWpfBuilder,System.String,``0@,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddCheckAnd``1(Au.AWpfBuilder,System.String,``0@,System.String)">
             <summary>
-            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.AddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and other control (<see cref="M:Au.Tools.KExtWpf.AddOther``1(Au.AWpfBuilder,``0@,System.String)"/>) in a propertygrid row.
+            Adds KCheckBox (<see cref="M:Au.Tools.KExtWpf.xAddCheck(Au.AWpfBuilder,System.String,System.Boolean)"/>) and other control (<see cref="M:Au.Tools.KExtWpf.xAddOther``1(Au.AWpfBuilder,``0@,System.String)"/>) in a propertygrid row.
             </summary>
             <param name="b"></param>
             <param name="name">Checkbox text.</param>
             <param name="other"></param>
             <param name="text">Other control text.</param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddInBorder``1(Au.AWpfBuilder,``0@,System.String)">
+        <member name="M:Au.Tools.KExtWpf.xAddInBorder``1(Au.AWpfBuilder,``0@,System.String)">
             <summary>
             Adds Border with standard thickness/color and an element in it.
             </summary>
@@ -2846,29 +2846,29 @@
             <param name="var"></param>
             <param name="margin"></param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.StartPropertyGrid(Au.AWpfBuilder,System.String,System.Boolean)">
+        <member name="M:Au.Tools.KExtWpf.xStartPropertyGrid(Au.AWpfBuilder,System.String,System.Boolean)">
             <summary>
             Adds ScrollViewer, adds 2-column grid or vertical stack panel in it (StartGrid, StartStack), and calls <c>Options(modifyPadding: false, margin: new(1))</c>.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.EndPropertyGrid(Au.AWpfBuilder)">
+        <member name="M:Au.Tools.KExtWpf.xEndPropertyGrid(Au.AWpfBuilder)">
             <summary>
-            Ends grid/stack set by <see cref="M:Au.Tools.KExtWpf.StartPropertyGrid(Au.AWpfBuilder,System.String,System.Boolean)"/> and restores options.
+            Ends grid/stack set by <see cref="M:Au.Tools.KExtWpf.xStartPropertyGrid(Au.AWpfBuilder,System.String,System.Boolean)"/> and restores options.
             </summary>
             <param name="b"></param>
         </member>
-        <member name="M:Au.Tools.KExtWpf.SetHeaderProp(Au.AWpfBuilder)">
+        <member name="M:Au.Tools.KExtWpf.xSetHeaderProp(Au.AWpfBuilder)">
             <summary>
             Sets header control properties: center, bold, dark gray text.
             It can be Label, TextBlock or CheckBox. Not tested others.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddSplitterV(Au.AWpfBuilder,System.Int32,System.Double)">
+        <member name="M:Au.Tools.KExtWpf.xAddSplitterV(Au.AWpfBuilder,System.Int32,System.Double)">
             <summary>
             Adds vertical splitter.
             </summary>
         </member>
-        <member name="M:Au.Tools.KExtWpf.AddSplitterH(Au.AWpfBuilder,System.Int32,System.Double)">
+        <member name="M:Au.Tools.KExtWpf.xAddSplitterH(Au.AWpfBuilder,System.Int32,System.Double)">
             <summary>
             Adds horizontal splitter.
             </summary>

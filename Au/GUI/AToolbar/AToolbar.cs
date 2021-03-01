@@ -595,7 +595,7 @@ namespace Au
 						var item = _a[i];
 						var s = item.Tooltip;
 						if (!DisplayText) { if (s.NE()) s = item.Text; else if (!item.Text.NE() && !item.IsGroup_) s = item.Text + "\n" + s; }
-						var sf = item.File; if (!sf.NE()) s = s.NE() ? sf : s + "\n" + sf;
+						var sf = item.File; if (!(sf.NE() || sf.Starts("::") || sf.Starts("shell:"))) s = s.NE() ? sf : s + "\n" + sf;
 						bool setTT = !s.NE() && item != _tt.item;
 						if (!setTT && (setTT = _tt.item != null && _tt.item.rect != _tt.rect)) item = _tt.item; //update tooltip tool rect
 						if (setTT) {

@@ -24,11 +24,9 @@ partial class MainWindow : Window
 		//_StartProfileOptimization();
 
 		App.Wmain = this;
-		Title = App.AppName; //will not append document name etc
+		Title = App.AppName; //don't append document name etc
 
 		AWnd.More.SavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
-
-		System.Windows.Forms.Application.SetCompatibleTextRenderingDefault(false); //TODO: remove when forms not used. Or in assembly load event handler.
 
 		Panels.LoadAndCreateToolbars();
 
@@ -106,7 +104,7 @@ partial class MainWindow : Window
 		//Load?.Invoke(this, EventArgs.Empty);
 
 		CodeInfo.UiLoaded();
-		UacDragDrop.AdminProcess.Enable(true); //TODO: disable when hiding, like in old version. And CodeInfo too.
+		UacDragDrop.AdminProcess.Enable(true); //rejected: disable when hiding main window. Some other window may be visible.
 
 		hs.AddHook(_WndProc);
 	}

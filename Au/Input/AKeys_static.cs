@@ -19,28 +19,29 @@ namespace Au
 	{
 		#region get key state
 
-		//TODO: instead of class AKeys.UI add property AKeys.IsUIThread. If true, let its functions work like now AKeys.UI.
-
 		/// <summary>
-		/// Gets key states for using in UI code (forms, WPF).
+		/// Gets key states for using in UI code (winforms, WPF, etc).
 		/// </summary>
 		/// <remarks>
-		/// Use functions of this class when processing user input events in user interface code (forms, WPF). In other code (automation scrits, etc) usually it's better to use functions of <see cref="AKeys"/> class. Functions of this class are similar to .NET's <b>Control.ModifierKeys</b>, <b>Keyboard.Modifiers</b> etc, but may be easier to use.
+		/// Use functions of this class in user interface code (winforms, WPF, etc). In other code (automation scrits, etc) usually it's better to use functions of <see cref="AKeys"/> class.
 		/// 
-		/// In Windows there are two API to get key state (down or up) - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>. In most cases they return the same result, but not always.
+		/// In Windows there are two API to get key state - <msdn>GetKeyState</msdn> and <msdn>GetAsyncKeyState</msdn>.
 		/// 
-		/// API <b>GetAsyncKeyState</b> is used by class <see cref="AKeys"/> and not by this class (<b>AKeys.UI</b>). When the user (or some software) presses or releases a key, <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
+		/// API <b>GetAsyncKeyState</b> is used by class <see cref="AKeys"/> and not by this class (<b>AKeys.UI</b>). When physical key state changes (pressed/released), <b>GetAsyncKeyState</b> sees the change immediately. It is good in automation scripts, but not good in UI code because the state is not synchronized with the message queue.
 		/// 
 		/// This class (<b>AKeys.UI</b>) uses API <msdn>GetKeyState</msdn>. In the foreground thread (of the active window), it sees key state changes not immediately but after the thread reads key messages from its queue. It is good in UI threads. In background threads this API usually works like <b>GetAsyncKeyState</b>, but it depends on API <msdn>AttachThreadInput</msdn> and in some cases is less reliable, for example may be unaware of keys pressed before the thread started.
 		/// 
-		/// The key state returned by these API is not always the same as of the physical keyboard. There is no API to get physical state. The two most common cases when it is different:
-		/// 1. When the key is pressed or released by software, such as the <see cref="Key"/> function of this library.
-		/// 2. When the key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
+		/// The key state returned by these API is not always the same as of the physical keyboard. There is no API to get real physical state. Some cases when it is different:
+		/// 1. The key is pressed or released by software, such as the <see cref="Key"/> function of this library.
+		/// 2. The key is blocked by a low-level hook. For example, hotkey triggers of this library use hooks.
+		/// 3. The foreground window belongs to a process with higher UAC integrity level.
 		/// 
 		/// Also there is API <msdn>GetKeyboardState</msdn>. It gets states of all keys in single call. Works like <b>GetKeyState</b>.
 		/// </remarks>
 		public static class UI
 		{
+			//rejected: instead of class AKeys.UI add property AKeys.IsUIThread. If true, let its functions work like now AKeys.UI.
+
 			/// <summary>
 			/// Calls API <msdn>GetKeyState</msdn> and returns its return value.
 			/// </summary>
@@ -54,7 +55,7 @@ namespace Au
 			/// Returns true if the specified key or mouse button is down (pressed).
 			/// </summary>
 			/// <remarks>
-			/// Can be used for mouse buttons too, for example <c>AKeys.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
+			/// Can be used for mouse buttons too. Example: <c>AKeys.UI.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
 			/// </remarks>
 			public static bool IsPressed(KKey key) => GetKeyState(key) < 0;
 
@@ -144,45 +145,43 @@ namespace Au
 
 		/// <summary>
 		/// Returns true if the specified key or mouse button is down (pressed).
-		/// Not for UI code (forms, WPF).
+		/// In UI code use <see cref="AKeys.UI"/> instead.
 		/// </summary>
 		/// <remarks>
 		/// Uses API <msdn>GetAsyncKeyState</msdn>.
-		/// When processing user input in UI code (forms, WPF), instead use class <see cref="AKeys.UI"/> or .NET functions. They use API <msdn>GetKeyState</msdn>.
-		/// Can be used for mouse buttons too, for example <c>AKeys.IsPressed(KKey.MouseLeft)</c>. When mouse left and right buttons are swapped, gets logical state, not physical.
 		/// </remarks>
 		public static bool IsPressed(KKey key) {
-			if ((key == KKey.MouseLeft || key == KKey.MouseRight) && 0 != Api.GetSystemMetrics(Api.SM_SWAPBUTTON)) key = (KKey)((int)key ^ 3); //makes this func 3 times slower, eg 2 -> 6 mcs when cold CPU. But much faster when called next time without a delay; for example AMouse.IsPressed(Left|Right) is not slower than AMouse.IsPressed(Left) in reality, although calls this func 2 times.
+			if ((key == KKey.MouseLeft || key == KKey.MouseRight) && 0 != Api.GetSystemMetrics(Api.SM_SWAPBUTTON)) key = (KKey)((int)key ^ 3); //makes this func 3 times slower, eg 2 -> 6 mcs when cold CPU. But much faster when called next time without a delay; for example AMouse.IsPressed(Left|Right) is not slower than AMouse.IsPressed(Left), although calls this func 2 times.
 			return Api.GetAsyncKeyState((int)key) < 0;
 		}
 
 		/// <summary>
 		/// Returns true if the Alt key is down (pressed). Calls <see cref="IsPressed"/>.
-		/// Not for UI code (forms, WPF).
+		/// In UI code use <see cref="AKeys.UI"/> instead.
 		/// </summary>
 		public static bool IsAlt => IsPressed(KKey.Alt);
 
 		/// <summary>
 		/// Returns true if the Ctrl key is down (pressed). Calls <see cref="IsPressed"/>.
-		/// Not for UI code (forms, WPF).
+		/// In UI code use <see cref="AKeys.UI"/> instead.
 		/// </summary>
 		public static bool IsCtrl => IsPressed(KKey.Ctrl);
 
 		/// <summary>
 		/// Returns true if the Shift key is down (pressed). Calls <see cref="IsPressed"/>.
-		/// Not for UI code (forms, WPF).
+		/// In UI code use <see cref="AKeys.UI"/> instead.
 		/// </summary>
 		public static bool IsShift => IsPressed(KKey.Shift);
 
 		/// <summary>
 		/// Returns true if the Win key is down (pressed). Calls <see cref="IsPressed"/>.
-		/// Not for UI code (forms, WPF).
+		/// In UI code use <see cref="AKeys.UI"/> instead.
 		/// </summary>
 		public static bool IsWin => IsPressed(KKey.Win) || IsPressed(KKey.RWin);
 
 		/// <summary>
 		/// Returns true if some modifier keys are down (pressed): Ctrl, Shift, Alt, Win. Calls <see cref="IsPressed"/>.
-		/// Not for UI code (forms, WPF).
+		/// In UI code use <see cref="AKeys.UI"/> instead.
 		/// </summary>
 		/// <param name="mod">Return true if some of these keys are pressed. Default - any (Ctrl, Shift, Alt or Win).</param>
 		/// <seealso cref="WaitForNoModifierKeys"/>
@@ -196,7 +195,7 @@ namespace Au
 
 		/// <summary>
 		/// Gets flags indicating which modifier keys are down (pressed): Ctrl, Shift, Alt, Win. Calls <see cref="IsPressed"/>.
-		/// Not for UI code (forms, WPF).
+		/// In UI code use <see cref="AKeys.UI"/> instead.
 		/// </summary>
 		/// <param name="mod">Check only these keys. Default - all four.</param>
 		public static KMod GetMod(KMod mod = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win) {
@@ -550,7 +549,7 @@ namespace Au
 			/// </summary>
 			public static bool ParseHotkeyString(string s, out System.Windows.Input.ModifierKeys mod, out System.Windows.Input.Key key, out System.Windows.Input.MouseAction mouse) {
 				mod = 0; key = 0; mouse = 0;
-				if(s.Ends("lick") || s.Ends("heel")) {
+				if (s.Ends("lick") || s.Ends("heel")) {
 					int i = s.LastIndexOf('+') + 1;
 					var v = s.AsSpan(i); var co = StringComparison.OrdinalIgnoreCase;
 					if (v.Equals("Click", co)) mouse = System.Windows.Input.MouseAction.LeftClick;

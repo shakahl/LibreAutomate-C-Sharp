@@ -22,8 +22,8 @@ namespace Au.Types
 	/// Some constructors support Windows API error code. Then <see cref="Message"/> will contain its error description.
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If does not end with ".", appends ".".
 	/// </remarks>
-	[Serializable]
-	public class AuException :Exception, ISerializable
+	//[Serializable] //in .NET Framework would need for marshaling between appdomains. Probably don't need now.
+	public class AuException :Exception//, ISerializable
 	{
 		/// <summary>
 		/// Sets <b>Message</b> = <i>message</i> (default "Failed.").
@@ -103,22 +103,22 @@ namespace Au.Types
 			if(errorCode < 0) throw new AuException(errorCode, message);
 		}
 
-		#region ISerializable
+		//#region ISerializable
 
-		///
-		public override void GetObjectData(SerializationInfo info, StreamingContext context)
-		{
-			info.AddValue("NativeErrorCode", NativeErrorCode);
-			base.GetObjectData(info, context);
-		}
+		/////
+		//public override void GetObjectData(SerializationInfo info, StreamingContext context)
+		//{
+		//	info.AddValue("NativeErrorCode", NativeErrorCode);
+		//	base.GetObjectData(info, context);
+		//}
 
-		///
-		protected AuException(SerializationInfo info, StreamingContext context) : base(info, context)
-		{
-			NativeErrorCode = info.GetInt32("NativeErrorCode");
-		}
+		/////
+		//protected AuException(SerializationInfo info, StreamingContext context) : base(info, context)
+		//{
+		//	NativeErrorCode = info.GetInt32("NativeErrorCode");
+		//}
 
-		#endregion
+		//#endregion
 	}
 
 	/// <summary>
@@ -130,8 +130,8 @@ namespace Au.Types
 	/// If parameter <i>errorCode</i> is 0 or not used: if the window handle is invalid, uses ERROR_INVALID_WINDOW_HANDLE.
 	/// If the string passed to the constructor starts with "*", replaces the "*" with "Failed to ". If ends with "*", replaces the "*" with " window.". If does not end with ".", appends ".".
 	/// </remarks>
-	[Serializable]
-	public class AuWndException :AuException, ISerializable
+	//[Serializable]
+	public class AuWndException :AuException//, ISerializable
 	{
 		const string _errStr_0Handle = "The window handle is 0. Usually it means 'window not found'.";
 		const string _errStr_InvalidHandle = "Invalid window handle. Usually it means 'the window was closed'.";
@@ -175,28 +175,28 @@ namespace Au.Types
 			}
 		}
 
-		#region ISerializable
+		//#region ISerializable
 
-		///
-		public override void GetObjectData(SerializationInfo info, StreamingContext context)
-		{
-			info.AddValue("Window", (int)Window);
-			base.GetObjectData(info, context);
-		}
+		/////
+		//public override void GetObjectData(SerializationInfo info, StreamingContext context)
+		//{
+		//	info.AddValue("Window", (int)Window);
+		//	base.GetObjectData(info, context);
+		//}
 
-		///
-		protected AuWndException(SerializationInfo info, StreamingContext context) : base(info, context)
-		{
-			Window = (AWnd)info.GetInt32("Window");
-		}
+		/////
+		//protected AuWndException(SerializationInfo info, StreamingContext context) : base(info, context)
+		//{
+		//	Window = (AWnd)info.GetInt32("Window");
+		//}
 
-		#endregion
+		//#endregion
 	}
 
 	/// <summary>
 	/// Functions that search for an object can throw this exception when not found.
 	/// </summary>
-	[Serializable]
+	//[Serializable]
 	public class NotFoundException :Exception
 	{
 		/// <summary>
@@ -209,14 +209,14 @@ namespace Au.Types
 		/// </summary>
 		public NotFoundException(string message) : base(message) { }
 
-		#region ISerializable
+		//#region ISerializable
 
-		///
-		protected NotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
-		{
-		}
+		/////
+		//protected NotFoundException(SerializationInfo info, StreamingContext context) : base(info, context)
+		//{
+		//}
 
-		#endregion
+		//#endregion
 	}
 }
 

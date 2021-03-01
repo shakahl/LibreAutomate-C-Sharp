@@ -106,6 +106,8 @@ class PanelEdit : Grid
 		}
 
 		if (focus) _activeDoc.Focus();
+		//TODO: if opens on single click, focus later, when mouse is in doc.
+		//	Now eg user clicks and presses Del to delete file but instead deletes char in doc text. Or wants to rename but F2 does nothing.
 
 		_activeDoc.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap); //fast and does nothing if already is in that wrap state
 		_activeDoc.ZImages.Visible = App.Settings.edit_noImages ? AnnotationsVisible.ANNOTATION_HIDDEN : AnnotationsVisible.ANNOTATION_STANDARD;

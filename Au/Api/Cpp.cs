@@ -148,10 +148,8 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern int Cpp_CallIDroptarget(IntPtr dt, int ddEvent, [MarshalAs(UnmanagedType.IUnknown)] object d, int keyState, POINT pt, ref int pdwEffect);
 
-		// PROCESS
-
-		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		//internal static extern int Cpp_StartProcess(string exeFile, string args, string workingDir, string environment, out BSTR sResult);
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern bool Cpp_ShellExec(in Api.SHELLEXECUTEINFO x, out int pid, out int injectError, out int execError);
 
 		// TEST
 

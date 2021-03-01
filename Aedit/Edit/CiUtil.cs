@@ -26,11 +26,11 @@ using Microsoft.CodeAnalysis.Text;
 
 static class CiUtil
 {
-
-	public static bool GetSymbolFromPos(out ISymbol sym, out CodeInfo.Context cd) {
-		(sym, _, _, _) = GetSymbolEtcFromPos(out cd);
-		return sym != null;
-	}
+	//not used
+	//public static bool GetSymbolFromPos(out ISymbol sym, out CodeInfo.Context cd) {
+	//	(sym, _, _, _) = GetSymbolEtcFromPos(out cd);
+	//	return sym != null;
+	//}
 
 	public static (ISymbol symbol, string keyword, HelpKind kind, SyntaxToken token) GetSymbolEtcFromPos(out CodeInfo.Context cd) {
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) { cd = default; return default; }
@@ -41,6 +41,8 @@ static class CiUtil
 	public static (ISymbol symbol, string keyword, HelpKind helpKind, SyntaxToken token)
 		GetSymbolOrKeywordFromPos(Document document, int position, string code) {
 		//using var p1 = APerf.Create();
+
+		if (position > 0 && SyntaxFacts.IsIdentifierPartCharacter(code[position - 1])) position--;
 
 		var tree = document.GetSyntaxTreeAsync().Result;
 		var token = tree.GetTouchingTokenAsync(position, default, findInsideTrivia: true).Result;
@@ -124,9 +126,9 @@ static class CiUtil
 
 	public static void OpenSymbolOrKeywordFromPosHelp() {
 		string url = null;
-		var (symbol, keyword, helpKind, _) = GetSymbolEtcFromPos(out _);
-		if (symbol != null) {
-			url = GetSymbolHelpUrl(symbol);
+		var (sym, keyword, helpKind, _) = GetSymbolEtcFromPos(out _);
+		if (sym != null) {
+			url = GetSymbolHelpUrl(sym);
 		} else if (keyword != null) {
 			var s = helpKind switch
 			{
@@ -162,8 +164,9 @@ static class CiUtil
 			if ((metadata = loc.MetadataModule) != null) break;
 		}
 		if (metadata != null) {
-			query = sym.QualifiedName();
 			bool au = metadata.Name == "Au.dll";
+			if (au && sym.IsEnumMember()) sym = sym.ContainingType;
+			query = sym.QualifiedName();
 			query = query.Replace("..ctor", au ? ".-ctor" : null);
 			if (au) return AHelp.AuHelpUrl(query);
 			if (metadata.Name.Starts("Au.")) return null;

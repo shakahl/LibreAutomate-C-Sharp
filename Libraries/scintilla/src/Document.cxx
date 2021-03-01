@@ -2679,7 +2679,7 @@ static char BraceOpposite(char ch) noexcept {
 	}
 }
 
-// TODO: should be able to extend styled region to find matching brace
+// SCI_TODO: should be able to extend styled region to find matching brace
 Sci::Position Document::BraceMatch(Sci::Position position, Sci::Position /*maxReStyle*/) noexcept {
 	const char chBrace = CharAt(position);
 	const char chSeek = BraceOpposite(chBrace);

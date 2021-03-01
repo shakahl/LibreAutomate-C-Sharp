@@ -26,7 +26,6 @@ namespace Au
 	/// <summary>
 	/// Code speed measurement. Easier to use than <see cref="Stopwatch"/>.
 	/// </summary>
-	[DebuggerStepThrough]
 	public static unsafe class APerf
 	{
 		/// <summary>

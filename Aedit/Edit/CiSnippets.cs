@@ -25,8 +25,6 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 using Microsoft.CodeAnalysis.Tags;
 using Au.Util;
 
-//TODO: no snippets after label: Method() { ... g1: noSnippetsHere }
-
 static class CiSnippets
 {
 	class _CiComplItemSnippet : CiComplItem
@@ -91,6 +89,7 @@ static class CiSnippets
 		case BlockSyntax:
 		case SwitchSectionSyntax: //between case: and break;
 		case ElseClauseSyntax:
+		case LabeledStatementSyntax:
 		case IfStatementSyntax s1 when pos > s1.CloseParenToken.SpanStart:
 		case WhileStatementSyntax s2 when pos > s2.CloseParenToken.SpanStart:
 		case DoStatementSyntax s3 when pos < s3.WhileKeyword.SpanStart:

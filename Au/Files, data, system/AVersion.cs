@@ -21,7 +21,6 @@ namespace Au
 	/// <remarks>
 	/// The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, instead use <see cref="Environment.OSVersion"/>.
 	/// </remarks>
-	[DebuggerStepThrough]
 	public static unsafe class AVersion
 	{
 		static AVersion() {

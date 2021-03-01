@@ -20,7 +20,6 @@ namespace Au.Util
 	/// </summary>
 	public static class AHelp
 	{
-#if true //online
 		/// <summary>
 		/// Opens an Au library help topic onine.
 		/// </summary>
@@ -37,20 +36,8 @@ namespace Au.Util
 		public static string AuHelpUrl(string topic)
 		{
 			var url = "https://www.quickmacros.com/au/help/";
-			if(!topic.NE()) url = url + (topic.IndexOf('/') < 0 ? (topic.Starts("Au.") ? "api/" : "api/Au.") : null) + topic + (topic.Ends('/') ? null : ".html");
+			if(!topic.NE()) url = url + (topic.Contains('/') ? null : (topic.Starts("Au.") ? "api/" : "api/Au.")) + topic + (topic.Ends('/') || topic.Ends(".html") ? null : ".html");
 			return url;
 		}
-#else //.chm
-		/// <summary>
-		/// Opens file "Au Help.chm" and a help topic in it.
-		/// The file must be in <see cref="AFolders.ThisApp"/>.
-		/// </summary>
-		/// <param name="topic">Topic file name, like "M_Au_Acc_Find" or "0248143b-a0dd-4fa1-84f9-76831db6714a".</param>
-		public static void AuChm(string topic)
-		{
-			var s = AFolders.ThisAppBS + "Help/Au Help.chm::/html/" + topic + ".htm";
-			Api.HtmlHelp(Api.GetDesktopWindow(), s, 0, 0); //HH_DISPLAY_TOPIC
-		}
-#endif
 	}
 }

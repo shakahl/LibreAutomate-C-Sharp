@@ -17,6 +17,8 @@ using System.Windows.Media;
 
 using Au;
 using Au.Types;
+using Au.Util;
+using Au.Tools;
 using System.Runtime;
 using System.Windows.Input;
 //using Au.Controls;
@@ -50,6 +52,14 @@ static class Test
 	//}
 
 	public static void FromMenubar() {
+
+		//var m = new AWpfMenu();
+		//m["xaml file", icon: @"imagefile:Q:\app\Au\Aedit\Resources\ci\Class.xaml"]=o=>AOutput.Write(o);
+		//m["xaml resource", icon: @"resources/ci/enum.xaml"]=o=>AOutput.Write(o);
+		//m["png file", icon: @"imagefile:Q:\Downloads\VS2019 Image Library\vswin2019\AbstractCube\AbstractCube_16x.png"]=o=>AOutput.Write(o);
+		//m.Show(App.Wmain);
+
+		//AWpfBuilder b;b.
 
 		//Action a=() => AFile.Run(@"C:\Program Files\Notepad++\notepad++.exe");
 		//Action a=() => ATask.Run(@"\Script387.cs");

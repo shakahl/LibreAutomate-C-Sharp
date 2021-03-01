@@ -59,56 +59,56 @@ namespace Au.Tools
 
 			//AO properties, other parameters, search settings
 			b.Row(184);
-			_scroller = b.StartPropertyGrid("L2 T3 R2 B1"); _scroller.Visibility = Visibility.Hidden;
+			_scroller = b.xStartPropertyGrid("L2 T3 R2 B1"); _scroller.Visibility = Visibility.Hidden;
 			b.Columns(-2, 0, -1);
 			//AO properties
 			b.Row(0);
 			b.StartGrid(); //left side
-			roleA = b.AddCheckText("role");
-			nameA = b.AddCheckText("name");
-			uiaidA = b.AddCheckText("uiaid");
-			idA = b.AddCheckText("id");
-			classA = b.AddCheckText("class");
-			valueA = b.AddCheckText("value");
-			descriptionA = b.AddCheckText("description");
-			actionA = b.AddCheckText("action");
-			keyA = b.AddCheckText("key");
-			helpA = b.AddCheckText("help");
+			roleA = b.xAddCheckText("role");
+			nameA = b.xAddCheckText("name");
+			uiaidA = b.xAddCheckText("uiaid");
+			idA = b.xAddCheckText("id");
+			classA = b.xAddCheckText("class");
+			valueA = b.xAddCheckText("value");
+			descriptionA = b.xAddCheckText("description");
+			actionA = b.xAddCheckText("action");
+			keyA = b.xAddCheckText("key");
+			helpA = b.xAddCheckText("help");
 			b.R.Add(out _attr); //HTML attributes will be added with another builder
-			elemA = b.AddCheckText("elem");
-			stateA = b.AddCheckText("state");
-			rectA = b.AddCheckText("rect");
+			elemA = b.xAddCheckText("elem");
+			stateA = b.xAddCheckText("state");
+			rectA = b.xAddCheckText("rect");
 			b.End();
-			b.AddSplitterV(span: 4, thickness: 12);
+			b.xAddSplitterV(span: 4, thickness: 12);
 			//other parameters
 			b.StartGrid(); //right side
-			controlC = b.AddCheck("Control");
-			b.PropAddButton("Window/control...", _bWnd_Click);
-			alsoA = b.AddCheckText("also", "o => true");
-			skipA = b.AddCheckText("skip", "1");
-			navigA = b.AddCheckText("navig");
-			waitA = b.AddCheckText("wait", "5");
-			exceptionA = b.AddCheck("Exception if not found"); b.Checked();
+			controlC = b.xAddCheck("Control");
+			b.xAddButton("Window/control...", _bWnd_Click);
+			alsoA = b.xAddCheckText("also", "o => true");
+			skipA = b.xAddCheckText("skip", "1");
+			navigA = b.xAddCheckText("navig");
+			waitA = b.xAddCheckText("wait", "5");
+			exceptionA = b.xAddCheck("Exception if not found"); b.Checked();
 			//search settings
 			//b.R.Add<Label>("Search settings").SetHeaderProp();
-			hiddenTooA = b.AddCheck("Find hidden too");
-			reverseA = b.AddCheck("Reverse order");
-			uiaA = b.AddCheck("UI Automation");
-			notInprocA = b.AddCheck("Not in-process");
-			clientAreaA = b.AddCheck("Only client area");
-			menuTooA = b.AddCheck("Can be MENUITEM");
-			notinA = b.AddCheckText("Not in");
-			maxccA = b.AddCheckText("maxcc");
-			levelA = b.AddCheckText("level");
+			hiddenTooA = b.xAddCheck("Find hidden too");
+			reverseA = b.xAddCheck("Reverse order");
+			uiaA = b.xAddCheck("UI Automation");
+			notInprocA = b.xAddCheck("Not in-process");
+			clientAreaA = b.xAddCheck("Only client area");
+			menuTooA = b.xAddCheck("Can be MENUITEM");
+			notinA = b.xAddCheckText("Not in");
+			maxccA = b.xAddCheckText("maxcc");
+			levelA = b.xAddCheckText("level");
 			b.End();
 
-			b.EndPropertyGrid();
+			b.xEndPropertyGrid();
 
 			//code
-			b.Row(64).AddInBorder(out _code, "B");
+			b.Row(64).xAddInBorder(out _code, "B");
 
 			//tree
-			b.AddSplitterH(span: -1);
+			b.xAddSplitterH(span: -1);
 			b.Row(-1).StartGrid().Columns(-1, 0, -1);
 			b.Row(-1).Add(out _tree).Border().Margin("T");
 			b.End();
@@ -236,7 +236,7 @@ namespace Au.Tools
 				foreach (var attr in p.HtmlAttributes) {
 					string na = attr.Key, va = attr.Value;
 					bool check = noName && (na == "id" || na == "name") && va.Length > 0;
-					var k = b.AddCheckText("@" + na, TUtil.EscapeWildex(va));
+					var k = b.xAddCheckText("@" + na, TUtil.EscapeWildex(va));
 					if (check) { k.c.IsChecked = true; noName = false; }
 					var info = TUtil.CommonInfos.AppendWildexInfo(TUtil.CommonInfos.PrependName(na, "HTML attribute."));
 					_info.AddElem(k.c, info);

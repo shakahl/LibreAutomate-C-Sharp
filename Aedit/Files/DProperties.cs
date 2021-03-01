@@ -28,7 +28,7 @@ class DProperties : KDialogWindow
 	readonly TextBox testScript, outputPath, icon, manifest, sign, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
 	readonly KCheckBox runSingle, prefer32bit, xmlDoc, console, optimize;
 	readonly Expander gRun, gAssembly, gCompile;
-	readonly Button addAssembly, addComBrowse, addComRegistry, addProject, addClassFile, addResource, outputPathB;
+	readonly Button addAssembly, addComRegistry, addComBrowse, addProject, addClassFile, addResource, outputPathB;
 
 	public DProperties(FileNode f) {
 		_f = f;
@@ -82,7 +82,7 @@ class DProperties : KDialogWindow
 		b.StartStack(vertical: true).Margin("L20"); //right column
 		b.StartGrid<GroupBox>("Add reference");
 		b.R.AddButton(out addAssembly, "Assembly...", _ButtonClick_addNet);
-		b.R.AddButton(out addComBrowse, "COM ▾", _bAddComBrowse_Click).AddButton(out addComRegistry, "...", _bAddComRegistry_Click).Width(30);
+		b.R.AddButton(out addComRegistry, "COM ▾", _bAddComRegistry_Click).AddButton(out addComBrowse, "...", _bAddComBrowse_Click).Width(30);
 		b.AddButton(out addProject, "Project ▾", _ButtonClick_addProject);
 		b.End();
 		b.StartStack<GroupBox>("Add file", vertical: true);
@@ -721,8 +721,8 @@ An interop assembly is a .NET assembly without real code. Not used at run time. 
 
 To remove this meta comment, edit the code. Optionally delete unused interop assemblies.
 ";
-		info.AddElem(addComBrowse, @"<b>COM<> - convert a registered" + c_com);
-		info.AddElem(addComRegistry, @"<b>...<> - convert a" + c_com);
+		info.AddElem(addComRegistry, @"<b>COM<> - convert a registered" + c_com);
+		info.AddElem(addComBrowse, @"<b>...<> - convert a" + c_com);
 		info.AddElem(addProject,
 @"<b>Project<> - add a reference to a class library created in this workspace.
 Adds meta comment <c green>pr File.cs<>. The compiler will compile it if need and use the created dll file as a reference.

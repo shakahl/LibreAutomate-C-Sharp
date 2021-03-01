@@ -116,7 +116,6 @@ namespace Au.Types
 	/// To specify a normal coordinate, assign an <b>int</b> value (implicit conversion from <b>int</b> to <b>Coord</b>). Else use static functions such as <b>Reverse</b>, <b>Fraction</b> (or assign float), <b>Center</b>, <b>Max</b>, <b>MaxInside</b>.
 	/// Also there are functions to convert <b>Coord</b> to normal coodinates.
 	/// </remarks>
-	[DebuggerStepThrough]
 	public struct Coord : IEquatable<Coord>
 	{
 		//Use single long field that packs int and CoordType.
@@ -446,7 +445,6 @@ namespace Au.Types
 	/// Window handle.
 	/// Used for function parameters where the function needs a window handle as <see cref="AWnd"/> but also allows to pass a variable of any of these types: System.Windows.Forms.Control (Form or control), System.Windows.DependencyObject (WPF window or control), IntPtr (window handle).
 	/// </summary>
-	[DebuggerStepThrough]
 	public struct AnyWnd
 	{
 		readonly object _o;
@@ -477,7 +475,6 @@ namespace Au.Types
 	/// Used for function parameters to specify multiple strings.
 	/// Contains a string like "One|Two|Three" or string[] or List&lt;string&gt;. Has implicit conversions from these types.
 	/// </summary>
-	[DebuggerStepThrough]
 	public struct DStringList //with prefix D because this was created for ADialog
 	{
 		readonly object _o;

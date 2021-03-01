@@ -70,21 +70,21 @@ namespace Au.Tools
 			b.End();
 			b.OkApply += _bOK_Click;
 
-			b.StartPropertyGrid();
-			(controlC = b.AddCheck("Control")).IsEnabled = false;
-			b.PropAddButton("Window/control...", _bWnd_Click);
-			rectC = b.AddCheckText("Rectangle", "(left, top, width, height)"); b.And(20).PropAddButton("...", _bRect_Click);
-			wiflagsC = b.AddCheckCombo("Window pixels", "WIFlags.WindowDC|WIFlags.PrintWindow");
-			diffC = b.AddCheckText("Color deviation", "10");
-			skipC = b.AddCheckText("Skip", "1");
-			allC = b.AddCheck("Find all");
-			waitC = b.AddCheckText("Wait for image", "5");
-			waitnoC = b.AddCheckText("Wait for no image", "5");
-			(exceptionC = b.AddCheck("Exception if not found")).IsChecked = true;
-			(mouseC = b.AddCheckCombo("Mouse", "Move|Click|Right click")).c.IsChecked = true;
+			b.xStartPropertyGrid();
+			(controlC = b.xAddCheck("Control")).IsEnabled = false;
+			b.xAddButton("Window/control...", _bWnd_Click);
+			rectC = b.xAddCheckText("Rectangle", "(left, top, width, height)"); b.And(20).xAddButton("...", _bRect_Click);
+			wiflagsC = b.xAddCheckCombo("Window pixels", "WIFlags.WindowDC|WIFlags.PrintWindow");
+			diffC = b.xAddCheckText("Color deviation", "10");
+			skipC = b.xAddCheckText("Skip", "1");
+			allC = b.xAddCheck("Find all");
+			waitC = b.xAddCheckText("Wait for image", "5");
+			waitnoC = b.xAddCheckText("Wait for no image", "5");
+			(exceptionC = b.xAddCheck("Exception if not found")).IsChecked = true;
+			(mouseC = b.xAddCheckCombo("Mouse", "Move|Click|Right click")).c.IsChecked = true;
 
-			b.EndPropertyGrid();
-			b.Row(-1).AddInBorder(out _code);
+			b.xEndPropertyGrid();
+			b.Row(-1).xAddInBorder(out _code);
 			b.End();
 			_noeventValueChanged = false;
 

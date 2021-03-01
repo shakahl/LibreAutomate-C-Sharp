@@ -20,7 +20,6 @@ namespace Au
 	/// </summary>
 	/// <seealso cref="APerf"/>
 	/// <seealso cref="AWaitFor"/>
-	[DebuggerStepThrough]
 	public static class ATime
 	{
 		//info: we don't use Stopwatch because it loads System.dll, which is slow and can make speed measurement incorrect and confusing in some cases.

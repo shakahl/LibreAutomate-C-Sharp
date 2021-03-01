@@ -191,14 +191,14 @@ namespace Au
 		/// </summary>
 		public static AUac OfThisProcess {
 			get {
-				if(_thisProcess == null) {
-					_thisProcess = _Create(Api.GetCurrentProcess());
-					Debug.Assert(_thisProcess != null);
+				if(s_thisProcess == null) {
+					s_thisProcess = _Create(Api.GetCurrentProcess());
+					Debug.Assert(s_thisProcess != null);
 				}
-				return _thisProcess;
+				return s_thisProcess;
 			}
 		}
-		static AUac _thisProcess;
+		static AUac s_thisProcess;
 
 		/// <summary>
 		/// Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by [](xref:uac).
@@ -206,19 +206,19 @@ namespace Au
 		/// </summary>
 		public static bool IsAdmin {
 			get {
-				if(!_haveIsAdmin) {
+				if(!s_haveIsAdmin) {
 					try {
 						WindowsIdentity id = WindowsIdentity.GetCurrent();
 						WindowsPrincipal principal = new WindowsPrincipal(id);
-						_isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+						s_isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
 					}
 					catch { }
-					_haveIsAdmin = true;
+					s_haveIsAdmin = true;
 				}
-				return _isAdmin;
+				return s_isAdmin;
 			}
 		}
-		static bool _isAdmin, _haveIsAdmin;
+		static bool s_isAdmin, s_haveIsAdmin;
 
 		/*
 		public struct SID_IDENTIFIER_AUTHORITY

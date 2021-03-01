@@ -99,8 +99,6 @@ namespace Au.Types
 	/// <summary>
 	/// Point coordinates x y.
 	/// </summary>
-	[DebuggerStepThrough]
-	[Serializable]
 	public struct POINT : IEquatable<POINT>
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
@@ -173,8 +171,6 @@ namespace Au.Types
 	/// <summary>
 	/// Width and height.
 	/// </summary>
-	[DebuggerStepThrough]
-	[Serializable]
 	public struct SIZE : IEquatable<SIZE>
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
@@ -230,8 +226,6 @@ namespace Au.Types
 	/// This type can be used with Windows API functions. The .NET <b>Rectangle</b> etc can't, because their fields are different.
 	/// Has conversions from/to <b>Rectangle</b>.
 	/// </remarks>
-	[DebuggerStepThrough]
-	[Serializable]
 	public struct RECT : IEquatable<RECT>
 	{
 #pragma warning disable 1591, 3008 //XML doc, CLS-compliant
@@ -529,8 +523,6 @@ namespace Au.Types
 	/// Color, as int in 0xAARRGGBB format.
 	/// Can convert from/to <see cref="Color"/>, <see cref="System.Windows.Media.Color"/>, int (0xAARRGGBB), Windows COLORREF (0xBBGGRR), string.
 	/// </summary>
-	[DebuggerStepThrough]
-	[Serializable]
 	public struct ColorInt : IEquatable<ColorInt>
 	{
 		/// <summary>
@@ -707,7 +699,6 @@ namespace Au.Types
 		//	It seems incompatible with Color.GetBrightness etc.
 	}
 
-	[DebuggerStepThrough]
 	internal unsafe struct VARIANT : IDisposable
 	{
 		public Api.VARENUM vt; //ushort
@@ -769,7 +760,6 @@ namespace Au.Types
 		}
 	}
 
-	[DebuggerStepThrough]
 	internal unsafe struct BSTR : IDisposable
 	{
 		char* _p;

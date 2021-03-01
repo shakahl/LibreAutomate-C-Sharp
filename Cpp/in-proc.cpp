@@ -100,6 +100,7 @@ namespace inproc
 {
 HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResult);
 HRESULT AccEnableChrome2(MarshalParams_AccElem* p);
+HRESULT ShellExec(MarshalParams_Header* h, out BSTR& sResult);
 
 //Our hook of get_accHelpTopic.
 HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sResult, VARIANT vParams, long* pMagic)
@@ -138,9 +139,9 @@ HRESULT STDMETHODCALLTYPE Hook_get_accHelpTopic(IAccessible* iacc, out BSTR& sRe
 				case InProcAction::IPA_AccEnableChrome:
 					hr = AccEnableChrome2(p);
 					break;
-				//case InProcAction::IPA_StartProcess:
-				//	Print(L"IPA_StartProcess");
-				//	break;
+				case InProcAction::IPA_ShellExec:
+					hr = ShellExec(h, out sResult);
+					break;
 				}
 				return hr;
 			}

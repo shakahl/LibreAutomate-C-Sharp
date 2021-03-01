@@ -270,7 +270,6 @@ namespace Au.Util
 		/// It is 16 bytes stored in 2 long fields r1 and r2.
 		/// If need, can be converted to byte[] with <see cref="ToArray"/> or to hex string with <see cref="ToString"/>.
 		/// </summary>
-		[Serializable]
 		public struct MD5Result : IEquatable<MD5Result>
 		{
 #pragma warning disable CS1591 // Missing XML comment for publicly visible type or member

@@ -53,8 +53,6 @@ Source: "Q:\app\Au\_\Au.Task.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Task32.exe"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Setup32.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\SourceGrid.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\TreeList.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.Features.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Microsoft.CodeAnalysis.CSharp.Workspaces.dll"; DestDir: "{app}"; Flags: ignoreversion
@@ -70,8 +68,6 @@ Source: "Q:\app\Au\_\System.Composition.TypedParts.dll"; DestDir: "{app}"; Flags
 Source: "Q:\app\Au\_\Au.Controls.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.Net45.exe.config"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\Au.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\SourceGrid.xml"; DestDir: "{app}"; Flags: ignoreversion
-Source: "Q:\app\Au\_\TreeList.xml"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\default.exe.manifest"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\Au.AppHost.exe"; DestDir: "{app}\64"; Flags: ignoreversion
 Source: "Q:\app\Au\_\64\AuCpp.dll"; DestDir: "{app}\64"; Flags: ignoreversion
@@ -84,6 +80,7 @@ Source: "Q:\app\Au\_\32\sqlite3.dll"; DestDir: "{app}\32"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\doc.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\ref.db"; DestDir: "{app}"; Flags: ignoreversion
 Source: "Q:\app\Au\Other\Data\winapi.db"; DestDir: "{app}"; Flags: ignoreversion
+Source: "Q:\app\Au\_\xrefmap.yml"; DestDir: "{app}"; Flags: ignoreversion
 ; NOTE: Don't use "Flags: ignoreversion" on any shared system files
 
 ;TODO: remove this code after some time

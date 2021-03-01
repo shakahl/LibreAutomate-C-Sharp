@@ -38,7 +38,7 @@ static class Panels
 	public static void LoadAndCreateToolbars() {
 		var pm = PanelManager = new KPanels();
 
-		//TODO: later remove this code. Now need to delete old custom Layout.xml. It uses wrong document etc.
+		//FUTURE: later remove this code. Now need to delete old custom Layout.xml. It uses wrong document etc.
 		var s1 = AppSettings.DirBS + "Layout.xml";
 		if (AFile.ExistsAsFile(s1)) {
 			var s2 = AFile.LoadText(s1);

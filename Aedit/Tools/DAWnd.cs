@@ -21,6 +21,9 @@ using Au.Util;
 //FUTURE: init from code string.
 //SHOULDDO: try to find and select control in current tree when captured from same window. Like in acc tool.
 
+//TODO: tool "Get program path for AFile.Run". Eg for winstore app appid. Use AWnd.More.GetWindowsStoreAppId(w, true).
+//	Could be in this dialog. Add button "..." with menu. Or add in context menu like in QM2 Ctrl+Alt+Shift+W.
+
 namespace Au.Tools
 {
 	class DAWnd : KDialogWindow
@@ -60,51 +63,51 @@ namespace Au.Tools
 			//window and control properties and search settings
 			b.R.AddSeparator(false).Margin("T3 B0");
 			b.Row(0); //auto height, else adds v scrollbar when textbox height changes when a textbox text is multiline or too long (with h scrollbar)
-			_scroller = b.StartPropertyGrid("L2 T3 R2 B1"); //actually never shows scrollbar because of row auto height, but sets some options etc
+			_scroller = b.xStartPropertyGrid("L2 T3 R2 B1"); //actually never shows scrollbar because of row auto height, but sets some options etc
 			_scroller.Visibility = Visibility.Hidden;
 			b.Columns(-3, 0, -1);
 			//window
-			b.R.Add<TextBlock>("Window").Margin("T1 B3").SetHeaderProp(); //rejected: vertical headers. Tested, looks not good, too small for vertical Control checkbox.
+			b.R.Add<TextBlock>("Window").Margin("T1 B3").xSetHeaderProp(); //rejected: vertical headers. Tested, looks not good, too small for vertical Control checkbox.
 			b.Row(0).StartGrid().Columns(70, -1);
-			nameW = b.AddCheckText("name");
-			classW = b.AddCheckText("class");
-			programW = b.AddCheckTextDropdown("program");
-			containsW = b.AddCheckTextDropdown("contains");
+			nameW = b.xAddCheckText("name");
+			classW = b.xAddCheckText("class");
+			programW = b.xAddCheckTextDropdown("program");
+			containsW = b.xAddCheckTextDropdown("contains");
 			b.End();
-			b.AddSplitterV(span: 4, thickness: 12);
+			b.xAddSplitterV(span: 4, thickness: 12);
 			b.StartGrid().Columns(44, -1);
-			cHiddenTooW = b.AddCheck("Find hidden too");
-			cCloakedTooW = b.AddCheck("Find cloaked too");
-			alsoW = b.AddCheckText("also", "o => true");
-			waitW = b.AddCheckText("wait", "5");
+			cHiddenTooW = b.xAddCheck("Find hidden too");
+			cCloakedTooW = b.xAddCheck("Find cloaked too");
+			alsoW = b.xAddCheckText("also", "o => true");
+			waitW = b.xAddCheckText("wait", "5");
 			b.End();
 			//control
 			b.R.AddSeparator(false).Margin("T4 B0"); _sepControl = b.Last as Separator;
-			b.R.Add(out _cControl, "Control").Margin("T5 B3").SetHeaderProp();
+			b.R.Add(out _cControl, "Control").Margin("T5 B3").xSetHeaderProp();
 			b.Row(0).StartGrid().Columns(70, -1); _gCon1 = b.Panel as Grid;
-			idC = b.AddCheckText("id");
-			nameC = b.AddCheckTextDropdown("name");
-			classC = b.AddCheckText("class");
+			idC = b.xAddCheckText("id");
+			nameC = b.xAddCheckTextDropdown("name");
+			classC = b.xAddCheckText("class");
 			b.End().Skip();
 			b.StartGrid().Columns(44, -1); _gCon2 = b.Panel as Grid;
-			cHiddenTooC = b.AddCheck("Find hidden too");
-			alsoC = b.AddCheckText("also", "o => true");
-			skipC = b.AddCheckText("skip", "1");
+			cHiddenTooC = b.xAddCheck("Find hidden too");
+			alsoC = b.xAddCheckText("also", "o => true");
+			skipC = b.xAddCheckText("skip", "1");
 			b.End();
 
 			b.R.AddSeparator(false).Margin("T3 B3");
-			cException = b.AddCheck("Exception if not found"); b.Checked();
-			b.EndPropertyGrid();
+			cException = b.xAddCheck("Exception if not found"); b.Checked();
+			b.xEndPropertyGrid();
 
 			//code
-			b.Row(64).AddInBorder(out _code, "B");
+			b.Row(64).xAddInBorder(out _code, "B");
 
 			//tree and window info
-			b.AddSplitterH(span: -1);
+			b.xAddSplitterH(span: -1);
 			b.Row(-1).StartGrid().Columns(-1, 0, -1);
 			b.Row(-1).Add(out _tree).Border().Margin("TR");
-			b.AddSplitterV();
-			b.AddInBorder(out _winInfo, "TL"); _winInfo.ZWrapLines = false;
+			b.xAddSplitterV();
+			b.xAddInBorder(out _winInfo, "TL"); _winInfo.ZWrapLines = false;
 			b.End();
 
 			b.End();

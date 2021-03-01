@@ -21,7 +21,6 @@ namespace Au
 	/// <remarks>
 	/// Unlike <see cref="Char.IsDigit"/> etc, these functions never return true for non-ASCII characters. Also they are faster.
 	/// </remarks>
-	[DebuggerStepThrough]
 	public static class AChar
 	{
 		/// <summary>

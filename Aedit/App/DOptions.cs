@@ -370,7 +370,10 @@ Line number";
 				if (!styles.Equals(CiStyling.TStyles.Settings)) {
 					CiStyling.TStyles.Settings = styles;
 					App.Settings.SaveLater();
-					foreach (var v in Panels.Editor.ZOpenDocs) styles.ToScintilla(v);
+					foreach (var v in Panels.Editor.ZOpenDocs) {
+						styles.ToScintilla(v);
+						v._SetLineNumberMarginWidth();
+					}
 				}
 			};
 

@@ -23,7 +23,6 @@ namespace Au
 	/// Functions Print, PrintIf, PrintFunc and Dialog work only if DEBUG is defined, which normally is when the caller project is in Debug configuration. Else they are not called, and arguments not evaluated at run time. This is because they have [<see cref="ConditionalAttribute"/>("DEBUG")].
 	/// Note: when used in a library, the above functions depend on DEBUG of the library project and not on DEBUG of the consumer project of the library. For example, the library may be in Release configuration even if its consumer project is in Debug configuration. If your library wants to show some info only if its consumer project is in Debug config, instead you can use code like <c>if(AOpt.Warnings.Verbose) AWarning.Write("text");</c>; see <see cref="AWarning.Write"/>, AOpt.Warnings.<see cref="AOptWarnings.Verbose"/>.
 	/// </remarks>
-	[DebuggerStepThrough]
 	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
 	{
 		static void _Print(object text, string cp, int cln, string cmn)

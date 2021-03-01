@@ -1846,7 +1846,7 @@ void Editor::SetScrollBars() {
 		DwellEnd(true);
 	}
 
-	// TODO: ensure always showing as many lines as possible
+	// SCI_TODO: ensure always showing as many lines as possible
 	// May not be, if, for example, window made larger
 	if (topLine > MaxScrollPos()) {
 		SetTopLine(std::clamp<Sci::Line>(topLine, 0, MaxScrollPos()));

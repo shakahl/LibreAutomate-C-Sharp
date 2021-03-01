@@ -617,8 +617,9 @@ namespace Au.Types
 		internal const uint SEE_MASK_NOCLOSEPROCESS = 0x40;
 		internal const uint SEE_MASK_NOASYNC = 0x100;
 		internal const uint SEE_MASK_NO_CONSOLE = 0x8000;
-		internal const uint SEE_MASK_HMONITOR = 0x200000;
-		internal const uint SEE_MASK_WAITFORINPUTIDLE = 0x2000000;
+		//internal const uint SEE_MASK_HMONITOR = 0x200000;
+		//internal const uint SEE_MASK_WAITFORINPUTIDLE = 0x2000000;
+		internal const uint SEE_MASK_FLAG_LOG_USAGE = 0x4000000;
 
 		internal struct SHELLEXECUTEINFO
 		{

@@ -54,6 +54,7 @@ unsafe class Program
 		//ProcessYamlFile(apiDir + @"\Au.AaaDocFX.yml", true); return;
 		//ProcessHtmlFiles(siteDir, true); return;
 		//ProcessToc(siteDir); return;
+		//XrefMap(siteDir); return;
 
 		//Compress(docDir); return;
 		//Upload(docDir); return;
@@ -352,6 +353,22 @@ unsafe class Program
 		//Somehow adds anyway. Need to add empty footer.tmpl.partial. But this code line does not harm.
 
 		File.WriteAllText(file, s);
+	}
+
+	//From _site\xrefmap.yml extracts conceptual topics and writes to _\xrefmap.yml.
+	//Could simply copy the file, but it is ~2 MB, and we don't need api topics.
+	//Editor uses it to resolve links in code info.
+	static void XrefMap(string siteDir) {
+		var b = new StringBuilder();
+		var s = File.ReadAllText(siteDir + @"\xrefmap.yml");
+		foreach(var m in s.RegexFindAll(@"(?m)^- uid:.+\R.+\R  href: (?!api/).+\R", 0)) {
+			//AOutput.Write(m);
+			b.Append(m);
+		}
+
+		string f2 = APath.Normalize(siteDir + @"..\..\..\..\..\_\xrefmap.yml");
+		//AOutput.Write(f2);
+		File.WriteAllText(f2, b.ToString());
 	}
 
 	static void CompressAndUpload(string docDir) {

@@ -42,7 +42,7 @@ class UacDragDrop
 		}
 
 		AdminProcess() {
-			_timer = new ATimer(_ => _Timer());
+			_timer = new ATimer(_Timer);
 
 			//use hook to detect when drag-drop started
 			_hook = new AHookAcc(AccEVENT.SYSTEM_CAPTURESTART, 0, d => {
@@ -80,11 +80,11 @@ class UacDragDrop
 		}
 
 		//Every 30 ms while in drag mode.
-		void _Timer() {
+		void _Timer(ATimer t) {
 			if (!_isDragMode) return;
 
 			//when mouse released, end drag mode with ~100 ms delay
-			if (!AMouse.IsPressed(MButtons.Left | MButtons.Right)) { //calls GetKeyStateAsync. GetKeyState somehow unreliable when in drag mode.
+			if (!AMouse.IsPressed(MButtons.Left | MButtons.Right)) { //calls GetKeyStateAsync. GetKeyState unreliable when in drag mode.
 				if (++_endCounter == 4) _EndedDragMode();
 				return;
 			}

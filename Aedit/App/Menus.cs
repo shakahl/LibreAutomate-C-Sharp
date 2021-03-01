@@ -271,11 +271,11 @@ static class Menus
 				if (f.FindProject(out _, out var fMain)) f = fMain;
 				if (App.Tasks.EndTasksOf(f)) return;
 			}
-			var t = App.Tasks.GetRunsingleTask(); if (t == null) return;
-			//TODO: show all running, because runSingle now not default
-			switch (AMenu.ShowSimple("End task  " + t.f.DisplayName, App.Hwnd)) {
-			case 1: App.Tasks.EndTask(t); break;
-			}
+			//rejected. Or should show all running, because runSingle now not default.
+			//var t = App.Tasks.GetRunsingleTask(); if (t == null) return;
+			//switch (AMenu.ShowSimple("End task  " + t.f.DisplayName, App.Hwnd)) {
+			//case 1: App.Tasks.EndTask(t); break;
+			//}
 		}
 
 		//[Command(image = "resources/images/pause_16x.xaml")]

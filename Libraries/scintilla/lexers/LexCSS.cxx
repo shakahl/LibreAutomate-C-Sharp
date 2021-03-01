@@ -9,10 +9,10 @@
 // Copyright 1998-2002 by Neil Hodgson <neilh@scintilla.org>
 // The License.txt file describes the conditions under which this software may be distributed.
 
-// TODO: handle SCSS nested properties like font: { weight: bold; size: 1em; }
-// TODO: handle SCSS interpolation: #{}
-// TODO: add features for Less if somebody feels like contributing; http://lesscss.org/
-// TODO: refactor this monster so that the next poor slob can read it!
+// SCI_TODO: handle SCSS nested properties like font: { weight: bold; size: 1em; }
+// SCI_TODO: handle SCSS interpolation: #{}
+// SCI_TODO: add features for Less if somebody feels like contributing; http://lesscss.org/
+// SCI_TODO: refactor this monster so that the next poor slob can read it!
 
 #include <stdlib.h>
 #include <string.h>
