@@ -158,7 +158,7 @@ public class DOptions : KDialogWindow
 
 		template.SelectionChanged += _Combo_Changed;
 		use.SelectionChanged += _Combo_Changed;
-		sci.ZTextChanged += (_, _) => customText[template.SelectedIndex] = sci.Text;
+		sci.ZTextChanged += (_, _) => customText[template.SelectedIndex] = sci.zText;
 		b.Loaded += () => {
 			_Combo_Changed(template, null);
 		};
@@ -253,7 +253,7 @@ public class DOptions : KDialogWindow
 
 			//styles
 
-			sciStyles.Z.MarginWidth(1, 0);
+			sciStyles.zMarginWidth(1, 0);
 			styles.ToScintilla(sciStyles);
 			bool ignoreColorEvents = false;
 			int backColor = styles.BackgroundColor;
@@ -278,7 +278,7 @@ GotoLabel
 XML doc text
 /// <doc tag>
 Line number";
-			sciStyles.Text = s;
+			sciStyles.zText = s;
 			int i = -3;
 			foreach (var v in s.Segments(SegSep.Line)) {
 				i++;
@@ -296,7 +296,7 @@ Line number";
 			sciStyles.ZNotify += (KScintilla c, ref Sci.SCNotification n) => {
 				switch (n.nmhdr.code) {
 				case Sci.NOTIF.SCN_UPDATEUI:
-					int line = c.Z.LineFromPos(false, c.Z.CurrentPos8);
+					int line = c.zLineFromPos(false, c.zCurrentPos8);
 					if (line != currentLine) {
 						currentLine = line;
 						int tok = _SciStylesLineToTok(line);
@@ -328,11 +328,10 @@ Line number";
 			fontName.AddHandler(TextBoxBase.TextChangedEvent, textChanged);
 			fontSize.AddHandler(TextBoxBase.TextChangedEvent, textChanged);
 			void _ChangeFont(object control = null) {
-				var z = sciStyles.Z;
 				var (fname, fsize) = _GetFont();
 				for (int i = 0; i <= Sci.STYLE_LINENUMBER; i++) {
-					if (control == fontName) z.StyleFont(i, fname);
-					else z.StyleFontSize(i, fsize);
+					if (control == fontName) sciStyles.zStyleFont(i, fname);
+					else sciStyles.zStyleFontSize(i, fsize);
 				}
 			}
 			(string name, int size) _GetFont() {
@@ -342,15 +341,14 @@ Line number";
 			bold.CheckChanged += (sender, _) => { if (!ignoreColorEvents) _UpdateSci(sender); };
 			color.ColorChanged += col => { if (!ignoreColorEvents) _UpdateSci(); };
 			void _UpdateSci(object control = null) {
-				var z = sciStyles.Z;
-				int tok = _SciStylesLineToTok(z.LineFromPos(false, z.CurrentPos8));
+				int tok = _SciStylesLineToTok(sciStyles.zLineFromPos(false, sciStyles.zCurrentPos8));
 				int col = color.Color;
 				if (tok >= 0) {
-					if (control == bold) z.StyleBold(tok, bold.True());
-					else z.StyleForeColor(tok, col);
+					if (control == bold) sciStyles.zStyleBold(tok, bold.True());
+					else sciStyles.zStyleForeColor(tok, col);
 				} else if (tok == -1) {
 					backColor = col;
-					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.Z.StyleBackColor(i, col);
+					for (int i = 0; i <= Sci.STYLE_DEFAULT; i++) sciStyles.zStyleBackColor(i, col);
 				}
 			}
 

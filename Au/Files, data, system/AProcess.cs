@@ -387,6 +387,13 @@ namespace Au
 		public static string ExeName => s_exeName ??= APath.GetName(ExePath);
 
 		/// <summary>
+		/// Gets drive type (fixed, removable, network, etc) of the program file of this process.
+		/// </summary>
+		/// <seealso cref="AFolders.ThisAppDriveBS"/>
+		public static DriveType ExeDriveType => s_driveType ??= new DriveInfo(AFolders.ThisAppDriveBS).DriveType;
+		static DriveType? s_driveType;
+
+		/// <summary>
 		/// Gets process id from handle.
 		/// Returns 0 if failed. Supports <see cref="ALastError"/>.
 		/// Calls API <msdn>GetProcessId</msdn>.
@@ -485,6 +492,13 @@ namespace Au
 			if(e is UnhandledExceptionEventArgs u && !u.IsTerminating) return;
 			var k = _eventExit;
 			if(k != null) try { k(sender, e); } catch { }
+		}
+
+		/// <summary>
+		/// Calls API <msdn>ExitProcess</msdn>.
+		/// </summary>
+		public static void ExitProcess(int exitCode) {
+			Api.ExitProcess(exitCode);
 		}
 
 		/// <summary>

@@ -28,7 +28,7 @@ namespace Au.Tools
 
 		void _Insert(string s) {
 			var sci = InsertInControl as KScintilla;
-			var pos8 = sci.Z.CurrentPos8;
+			var pos8 = sci.zCurrentPos8;
 
 			switch (s) {
 			case "text": _AddArg(sci, pos8, ", \"!\b\""); return;
@@ -40,8 +40,8 @@ namespace Au.Tools
 			}
 
 			static void _AddArg(KScintilla sci, int pos8, string s) {
-				pos8 = sci.Z.FindText(false, "\"", pos8) + 1; if (pos8 == 0) return;
-				sci.Z.GoToPos(false, pos8);
+				pos8 = sci.zFindText(false, "\"", pos8) + 1; if (pos8 == 0) return;
+				sci.zGoToPos(false, pos8);
 				InsertCode.TextSimplyInControl(sci, s);
 			}
 
@@ -52,7 +52,7 @@ namespace Au.Tools
 			string prefix = null, suffix = null;
 			char k = _CharAt(pos8 - 1), k2 = _CharAt(pos8);
 			if (s[0] == '*' || s[0] == '+') {
-				if (k == '*' || k == '+') sci.Z.Select(false, pos8 - 1, pos8); //eg remove + from Alt+ if now selected *down
+				if (k == '*' || k == '+') sci.zSelect(false, pos8 - 1, pos8); //eg remove + from Alt+ if now selected *down
 			} else {
 				if (k > ' ' && k != '\"' && k != '(' && k != '$' && !(k == '+' && _CharAt(pos8 - 2) != '#')) prefix = " ";
 			}

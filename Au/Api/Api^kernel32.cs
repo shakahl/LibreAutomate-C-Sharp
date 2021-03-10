@@ -79,6 +79,9 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool TerminateProcess(IntPtr hProcess, int uExitCode);
 
+		[DllImport("kernel32.dll")]
+		internal static extern void ExitProcess(int uExitCode);
+
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern Handle_ CreateFileMapping(IntPtr hFile, SECURITY_ATTRIBUTES lpFileMappingAttributes, uint flProtect, uint dwMaximumSizeHigh, uint dwMaximumSizeLow, string lpName);
 
@@ -356,13 +359,11 @@ namespace Au.Types
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool ReadFile(IntPtr hFile, void* lpBuffer, int nBytesToRead, out int nBytesRead, void* lpOverlapped = null);
 
-		internal static bool ReadFileArr(IntPtr hFile, byte[] a, out int nBytesRead, void* lpOverlapped = null)
-		{
+		internal static bool ReadFileArr(IntPtr hFile, byte[] a, out int nBytesRead, void* lpOverlapped = null) {
 			fixed (byte* p = a) return ReadFile(hFile, p, a.Length, out nBytesRead, lpOverlapped);
 		}
 
-		internal static bool ReadFileArr(IntPtr hFile, out byte[] a, int size, out int nBytesRead, void* lpOverlapped = null)
-		{
+		internal static bool ReadFileArr(IntPtr hFile, out byte[] a, int size, out int nBytesRead, void* lpOverlapped = null) {
 			a = new byte[size];
 			return ReadFileArr(hFile, a, out nBytesRead, lpOverlapped);
 		}
@@ -372,8 +373,7 @@ namespace Au.Types
 		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.
 
 		//note: don't use overloads, because we AJit.Compile("WriteFile").
-		internal static bool WriteFile2(IntPtr hFile, ReadOnlySpan<byte> a, out int nBytesWritten)
-		{
+		internal static bool WriteFile2(IntPtr hFile, ReadOnlySpan<byte> a, out int nBytesWritten) {
 			fixed (byte* p = a) return WriteFile(hFile, p, a.Length, out nBytesWritten);
 		}
 
@@ -529,9 +529,9 @@ namespace Au.Types
 			internal unsafe string Name {
 				get {
 					fixed (char* p = cFileName) {
-						if(p[0] == '.') {
-							if(p[1] == '\0') return null;
-							if(p[1] == '.' && p[2] == '\0') return null;
+						if (p[0] == '.') {
+							if (p[1] == '\0') return null;
+							if (p[1] == '.' && p[2] == '\0') return null;
 						}
 						return new string(p);
 					}
@@ -725,8 +725,7 @@ namespace Au.Types
 			public int dwProcessId;
 			public int dwThreadId;
 
-			public void Dispose()
-			{
+			public void Dispose() {
 				hThread.Dispose();
 				hProcess.Dispose();
 			}
@@ -815,6 +814,9 @@ namespace Au.Types
 
 		[DllImport("kernel32.dll")]
 		internal static extern int GetTickCount();
+
+		[DllImport("kernel32.dll", EntryPoint="OutputDebugStringW")]
+		internal static extern void OutputDebugString(string lpOutputString);
 
 		//internal const uint THREAD_SET_CONTEXT = 0x10;
 

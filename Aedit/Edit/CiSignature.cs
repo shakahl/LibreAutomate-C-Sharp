@@ -143,7 +143,7 @@ class CiSignature
 			return;
 		}
 		Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-		if (cd.pos16 != doc.Z.CurrentPos16 || (object)cd.code != doc.Text) return; //we are async, so these changes are possible
+		if (cd.pos16 != doc.zCurrentPos16 || (object)cd.code != doc.zText) return; //we are async, so these changes are possible
 																				   //APerf.NW('s');
 
 		//AOutput.Write($"<><c orange>pos={cd.pos16}, span={r.ApplicableSpan},    nItems={r.Items.Count},  argCount={r.ArgumentCount}, argIndex={r.ArgumentIndex}, argName={r.ArgumentName}, sel={r.SelectedItemIndex},    provider={provider}<>");
@@ -204,7 +204,7 @@ class CiSignature
 		}
 
 		doc.ZTempRanges_Add(this, argSpan.Start, argSpan.End, onLeave: () => {
-			if (doc.ZTempRanges_Enum(doc.Z.CurrentPos8, this, utf8: true).Any()) return;
+			if (doc.ZTempRanges_Enum(doc.zCurrentPos8, this, utf8: true).Any()) return;
 			_CancelUI();
 		}, SciCode.ZTempRangeFlags.NoDuplicate);
 

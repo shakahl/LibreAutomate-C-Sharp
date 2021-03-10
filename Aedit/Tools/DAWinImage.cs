@@ -434,7 +434,7 @@ namespace Au.Tools
 		public string ZResultCode { get; private set; }
 
 		private void _bOK_Click(WBButtonClickArgs e) {
-			ZResultCode = _code.Text;
+			ZResultCode = _code.zText;
 			if (ZResultCode.NE()) { ZResultCode = null; e.Cancel = true; return; }
 
 			InsertCode.Statements(ZResultCode);
@@ -453,7 +453,7 @@ namespace Au.Tools
 		void _InitInfo() {
 			//_commonInfos = new TUtil.CommonInfos(_info);
 
-			_info.Text = c_dialogInfo;
+			_info.zText = c_dialogInfo;
 			_info.AddElem(this, c_dialogInfo);
 
 			_info.InfoC(controlC,

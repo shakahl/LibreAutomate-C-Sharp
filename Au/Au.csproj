@@ -30,19 +30,15 @@
   </Target>
 
   <ItemGroup>
-    <Compile Update="Resources\Resources.Designer.cs">
-      <DependentUpon>Resources.resx</DependentUpon>
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-    </Compile>
-    <Compile Update="Util\AToolStrip.cs" />
+    <None Remove="Resources\red_cross_cursor.cur" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Update="Resources\Resources.resx">
-      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
-      <Generator>ResXFileCodeGenerator</Generator>
-    </EmbeddedResource>
+    <Resource Include="Resources\red_cross_cursor.cur" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Update="Util\AToolStrip.cs" />
   </ItemGroup>
 
   <ItemGroup>

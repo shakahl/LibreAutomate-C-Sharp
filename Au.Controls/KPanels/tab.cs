@@ -22,6 +22,8 @@ using System.Windows.Shapes;
 using System.Windows.Input;
 using System.Globalization;
 
+//TODO: now starts to drag from border (1-pixel width). Only tabs have this problem.
+
 namespace Au.Controls
 {
 	public partial class KPanels

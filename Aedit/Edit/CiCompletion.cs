@@ -74,7 +74,7 @@ class CiCompletion
 
 	public void SciUpdateUI(SciCode doc) //modified, position changed, clicked
 	{
-		//int pos = doc.Z.CurrentPosChars;
+		//int pos = doc.CurrentPosChars;
 		//var node = CiTools.NodeAt(pos);
 		//AOutput.Write(CiTools.IsInString(ref node, pos));
 
@@ -113,7 +113,7 @@ class CiCompletion
 		if (_data != null) {
 			bool trValid = _data.tempRange.GetCurrentFromTo(out int from, out int to, utf8: true);
 			Debug.Assert(trValid); if (!trValid) { Cancel(); return; }
-			string s = doc.Z.RangeText(false, from, to);
+			string s = doc.zRangeText(false, from, to);
 			foreach (var v in s) if (!SyntaxFacts.IsIdentifierPartCharacter(v)) return; //mostly because now is before SciCharAddedCommit, which commits (or cancels) if added invalid char
 			_data.filterText = s;
 			_FilterItems(_data);
@@ -271,7 +271,7 @@ class CiCompletion
 			}
 
 			Debug.Assert(doc == Panels.Editor.ZActiveDoc); //when active doc changed, cancellation must be requested
-			if (position != doc.Z.CurrentPos16 || (object)code != doc.Text) return; //we are async, so these changes are possible
+			if (position != doc.zCurrentPos16 || (object)code != doc.zText) return; //we are async, so these changes are possible
 			p1.Next('T');
 
 			var provider = CiComplItem.GetProvider(r.Items[0]);
@@ -695,7 +695,7 @@ class CiCompletion
 			if (ch != default || !(key == default || key == KKey.Tab)) return CiComplResult.None;
 		}
 		bool isSpace; if (isSpace = ch == ' ') ch = default;
-		int codeLenDiff = doc.Len16 - _data.codeLength;
+		int codeLenDiff = doc.zLen16 - _data.codeLength;
 
 		if (item.kind == CiItemKind.Snippet) {
 			if (ch != default && ch != '(') return CiComplResult.None;
@@ -703,7 +703,6 @@ class CiCompletion
 			return CiComplResult.Complex;
 		}
 
-		var z = doc.Z;
 		var ci = item.ci;
 		var change = _data.completionService.GetChangeAsync(_data.document, ci).Result;
 		//note: don't use the commitCharacter parameter. Some providers, eg XML doc, always set IncludesCommitCharacter=true, even when commitCharacter==null, but may include or not, and may include inside text or at the end.
@@ -711,7 +710,7 @@ class CiCompletion
 		var s = change.TextChange.NewText;
 		var span = change.TextChange.Span;
 		int i = span.Start, len = span.Length + codeLenDiff;
-		//AOutput.Write($"{change.NewPosition.HasValue}, cp={z.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
+		//AOutput.Write($"{change.NewPosition.HasValue}, cp={doc.CurrentPosChars}, i={i}, len={len}, span={span}, repl='{s}'    filter='{_data.filterText}'");
 		//AOutput.Write($"'{s}'");
 		bool isComplex = change.NewPosition.HasValue;
 		if (isComplex) { //xml doc, override, regex
@@ -725,7 +724,7 @@ class CiCompletion
 				//Replace 4 spaces with tab. Make { in same line.
 				s = s.Replace("    ", "\t").RegexReplace(@"\R\t*\{", " {", 1);
 				//Correct indentation. 
-				int indent = 0, indent2 = z.LineIndentationFromPos(true, _data.tempRange.CurrentFrom);
+				int indent = 0, indent2 = doc.zLineIndentationFromPos(true, _data.tempRange.CurrentFrom);
 				for (int j = s.IndexOf('\t'); (uint)j < s.Length && s[j] == '\t'; j++) indent++;
 				if (indent > indent2) s = s.RegexReplace("(?m)^" + new string('\t', indent - indent2), "");
 				break;
@@ -734,8 +733,8 @@ class CiCompletion
 				s += "></" + tag + ">";
 				break;
 			}
-			z.ReplaceRange(true, i, i + len, s);
-			if (newPos >= 0) z.Select(true, newPos, newPos, makeVisible: true);
+			doc.zReplaceRange(true, i, i + len, s);
+			if (newPos >= 0) doc.zSelect(true, newPos, newPos, makeVisible: true);
 			return CiComplResult.Complex;
 		}
 		ADebug.PrintIf(i != _data.tempRange.CurrentFrom && !item.IsRegex, $"{_data.tempRange.CurrentFrom}, {i}");
@@ -814,7 +813,7 @@ class CiCompletion
 
 				bool _IsInFunction() => _IsInAncestorNodeOfType<BaseMethodDeclarationSyntax>(i);
 
-				bool _IsDirective() => doc.Text.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
+				bool _IsDirective() => doc.zText.Eq(i - 1, "#"); //info: CompletionItem of 'if' and '#if' are identical. Nevermind: this code does not detect '# if'.
 
 				//If 'new Type', adds '()'.
 				//If then the user types '[' for 'new Type[]' or '{' for 'new Type { initializers }', autocorrection will replace the '()' with '[]' or '{  }'.
@@ -830,7 +829,7 @@ class CiCompletion
 				if (isComplex = ch != default) {
 					if (ch == '{') {
 						if (isEnter) {
-							int indent = z.LineIndentationFromPos(true, i);
+							int indent = doc.zLineIndentationFromPos(true, i);
 							var b = new StringBuilder(" {\r\n");
 							b.Append('\t', indent + 1);
 							b.Append("\r\n").Append('\t', indent).Append('}');
@@ -842,7 +841,7 @@ class CiCompletion
 						}
 						bracesFrom = i + s.Length + 2;
 						bracesLen = s2.Length - 3;
-					} else if ((isSpace || !App.Settings.ci_complParenSpace) && !_data.noAutoSelect && !doc.Text.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
+					} else if ((isSpace || !App.Settings.ci_complParenSpace) && !_data.noAutoSelect && !doc.zText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
 						s2 ??= ch == '(' ? "()" : "<>";
 						positionBack = 1;
 						bracesFrom = i + s.Length + s2.Length - 1;
@@ -864,9 +863,9 @@ class CiCompletion
 
 		if (!isComplex && s == _data.filterText) return CiComplResult.None;
 
-		z.SetAndReplaceSel(true, i, i + len, s);
+		doc.zSetAndReplaceSel(true, i, i + len, s);
 		if (isComplex) {
-			if (positionBack > 0) z.CurrentPos16 = i + s.Length - positionBack;
+			if (positionBack > 0) doc.zCurrentPos16 = i + s.Length - positionBack;
 			if (bracesFrom > 0) CodeInfo._correct.BracesAdded(doc, bracesFrom, bracesFrom + bracesLen, bracesOperation);
 			if (ch == '(' || ch == '<') CodeInfo._signature.SciCharAdded(doc, ch);
 			return CiComplResult.Complex;

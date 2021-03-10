@@ -18,7 +18,7 @@ namespace Au
 	/// <summary>
 	/// Writes text to the output window, console or log file.
 	/// </summary>
-	//[DebuggerStepThrough]
+	[DebuggerStepThrough]
 	public static partial class AOutput
 	{
 		//note:
@@ -120,12 +120,7 @@ namespace Au
 			switch (value) {
 			case null: return "null";
 			case string t: return t;
-			case ulong:
-			case uint:
-			case ushort:
-			case byte:
-			case nuint:
-			case System.Collections.IEnumerable:
+			case ulong or uint or ushort or byte or nuint or System.Collections.IEnumerable or System.Collections.DictionaryEntry:
 				using (new StringBuilder_(out var b)) {
 					ObjectToString_(b, value, false);
 					return b.ToString();
@@ -146,26 +141,28 @@ namespace Au
 			case char[] a:
 				b.Append("{ ");
 				foreach (var c in a) {
-					if (c < ' ') b.Append("x").Append(((byte)c).ToString("X"));
+					if (c < ' ') b.Append('x').Append(((byte)c).ToString("X"));
 					else b.Append(c);
 					b.Append(' ');
 				}
 				b.Append('}');
 				break; //always compact
 			case System.Collections.IEnumerable e:
-				var eo = _Cast(e);
-				if (compact) b.Append("{ ").AppendJoin(", ", eo).Append(" }");
-				else b.AppendJoin("\r\n", eo);
+				if (compact) b.Append("{ ");
+				string sep = null;
+				foreach (var v in e) {
+					if (sep == null) sep = compact ? ", " : "\r\n"; else b.Append(sep);
+					ObjectToString_(b, v, compact);
+				}
+				if (compact) b.Append(" }");
+				break;
+			case System.Collections.DictionaryEntry de:
+				b.AppendFormat("[{0}, {1}]", de.Key, de.Value);
 				break;
 			default: b.Append(value); break;
 			}
 
 			static void _Unsigned(StringBuilder b, ulong u) => b.Append("0x").Append(u.ToString("X"));
-
-			//replaces System.Linq.Enumerable.Cast<object>(e) to avoid loading System.Linq.dll
-			static IEnumerable<object> _Cast(System.Collections.IEnumerable e) {
-				foreach (var v in e) yield return v; //bad: if array or generic of struct, boxes all elements
-			}
 		}
 
 		/// <summary>
@@ -239,6 +236,7 @@ namespace Au
 		/// <summary>
 		/// Our default writer class for the Writer property.
 		/// </summary>
+		[DebuggerStepThrough]
 		class _OutputWriter : TextWriter
 		{
 			StringBuilder _b;
@@ -273,7 +271,8 @@ namespace Au
 		/// </summary>
 		[MethodImpl(MethodImplOptions.NoInlining)] //for stack trace, used in _WriteToOutputServer
 		public static void WriteDirectly(string value) {
-			if (value == null) value = "";
+			value ??= "";
+			//QM2.Write($"'{value}'");
 
 			if (LogFile != null) _WriteToLogFile(value);
 			else if (IsWritingToConsole) Console.WriteLine(value);
@@ -282,7 +281,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="Write"/> etc.
+		/// Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="Write"/>.
 		/// </summary>
 		/// <remarks>
 		/// If <b>Console.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Console.WriteLine</b>.
@@ -294,7 +293,6 @@ namespace Au
 					if (_prevConsoleOut != null || IsConsoleProcess) return;
 					_prevConsoleOut = Console.Out;
 					Console.SetOut(Writer);
-					//speed: 870
 				} else if (_prevConsoleOut != null) {
 					Console.SetOut(_prevConsoleOut);
 					_prevConsoleOut = null;
@@ -305,9 +303,11 @@ namespace Au
 		static TextWriter _prevConsoleOut;
 
 		/// <summary>
-		/// Let <b>Debug.WriteX</b> and <b>Trace.WriteX</b> methods write to the same destination as <see cref="Write"/> etc.
+		/// Let <b>Debug.Write</b>, <b>Trace.Write</b> and similar methods also write to the same destination as <see cref="Write"/>.
 		/// </summary>
 		/// <remarks>
+		/// Does not replace existing <b>Debug.Write</b> etc destinations, just add new destination.
+		/// 
 		/// If <b>Debug/Trace.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Debug/Trace.WriteLine</b>.
 		/// 
 		/// Tip: To write to the output window even in console process, set <c>AOutput.IgnoreConsole=true;</c> before calling this method first time.
@@ -327,6 +327,8 @@ namespace Au
 			get => _traceListener != null;
 		}
 		static TextWriterTraceListener _traceListener;
+
+		//TODO: test Microsoft.VisualBasic.Logging.FileLogTraceListener.
 
 		/// <summary>
 		/// Sets log file path.
@@ -356,7 +358,7 @@ namespace Au
 		}
 		static string _logFile;
 		static _LogFile _hFile;
-		static readonly object _lockObj1 = new object();
+		static readonly object _lockObj1 = new();
 
 		/// <summary>
 		/// Let Write etc also add current time when using log file (see <see cref="LogFile"/>).

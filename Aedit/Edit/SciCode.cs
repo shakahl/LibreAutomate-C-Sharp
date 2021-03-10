@@ -25,7 +25,7 @@ using System.Windows.Controls;
 
 partial class SciCode : KScintilla
 {
-	readonly SciText.FileLoaderSaver _fls;
+	readonly FileLoaderSaver _fls;
 	readonly FileNode _fn;
 
 	public FileNode ZFile => _fn;
@@ -46,7 +46,7 @@ partial class SciCode : KScintilla
 
 	//static int _test;
 
-	internal SciCode(FileNode file, SciText.FileLoaderSaver fls) {
+	internal SciCode(FileNode file, FileLoaderSaver fls) {
 		//if(_test++==1) Tag = "test";
 
 		//_edit = edit;
@@ -62,7 +62,7 @@ partial class SciCode : KScintilla
 	void _ZHandleCreated() {
 		Call(SCI_SETMODEVENTMASK, (int)(MOD.SC_MOD_INSERTTEXT | MOD.SC_MOD_DELETETEXT /*| MOD.SC_MOD_INSERTCHECK*/));
 		Call(SCI_SETLEXER, (int)LexLanguage.SCLEX_NULL); //default SCLEX_CONTAINER
-		Z.MarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
+		zMarginType(c_marginLineNumbers, SC_MARGIN_NUMBER);
 		_InicatorsInit();
 
 		if (_fn.IsCodeFile) {
@@ -82,16 +82,16 @@ partial class SciCode : KScintilla
 
 			//Call(SCI_ASSIGNCMDKEY, 3 << 16 | 'C', SCI_COPY); //Ctrl+Shift+C = raw copy
 
-			//Z.StyleFont(STYLE_CALLTIP, "Calibri");
-			//Z.StyleBackColor(STYLE_CALLTIP, 0xf8fff0);
-			//Z.StyleForeColor(STYLE_CALLTIP, 0);
+			//zStyleFont(STYLE_CALLTIP, "Calibri");
+			//zStyleBackColor(STYLE_CALLTIP, 0xf8fff0);
+			//zStyleForeColor(STYLE_CALLTIP, 0);
 			//Call(SCI_CALLTIPUSESTYLE);
 		} else {
-			Z.StyleFont(STYLE_DEFAULT, "Consolas", 9);
-			Z.StyleClearAll();
+			zStyleFont(STYLE_DEFAULT, "Consolas", 9);
+			zStyleClearAll();
 		}
 
-		Z.StyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
+		zStyleForeColor(STYLE_INDENTGUIDE, 0xcccccc);
 		Call(SCI_SETINDENTATIONGUIDES, SC_IV_REAL);
 
 		//Call(SCI_SETXCARETPOLICY, CARET_SLOP | CARET_EVEN, 20); //does not work
@@ -106,7 +106,7 @@ partial class SciCode : KScintilla
 		//if(Hwnd.Is0) CreateHandle();
 		Debug.Assert(!Hwnd.Is0);
 
-		bool editable = _fls.SetText(Z, text);
+		bool editable = _fls.SetText(this, text);
 		_SetLineNumberMarginWidth();
 		if (newFile) _openState = _EOpenState.NewFile; else if (App.Model.OpenFiles.Contains(_fn)) _openState = _EOpenState.Reopen;
 		if (_fn.IsCodeFile) CiStyling.DocTextAdded(this, newFile);
@@ -163,7 +163,7 @@ partial class SciCode : KScintilla
 			//never mind: we should cancel the 'save text later'
 			break;
 		case NOTIF.SCN_MODIFIED:
-			//AOutput.Write("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, Z.CurrentPos8, n.Text);
+			//AOutput.Write("SCN_MODIFIED", n.modificationType, n.position, n.FinalPosition, zCurrentPos8, n.Text);
 			//AOutput.Write(n.modificationType);
 			//if(n.modificationType.Has(MOD.SC_PERFORMED_USER | MOD.SC_MOD_BEFOREINSERT)) {
 			//	AOutput.Write($"'{n.Text}'");
@@ -188,7 +188,7 @@ partial class SciCode : KScintilla
 		case NOTIF.SCN_CHARADDED:
 			//AOutput.Write($"SCN_CHARADDED  {n.ch}  '{(char)n.ch}'");
 			if (n.ch == '\n' /*|| n.ch == ';'*/) { //split scintilla Undo
-				Z.AddUndoPoint();
+				zAddUndoPoint();
 			}
 			if (n.ch != '\r' && n.ch <= 0xffff) { //on Enter we receive notifications for '\r' and '\n'
 				CodeInfo.SciCharAdded(this, (char)n.ch);
@@ -258,21 +258,21 @@ partial class SciCode : KScintilla
 		case Api.WM_RBUTTONDOWN: {
 				//workaround for Scintilla bug: when right-clicked a margin, if caret or selection start is at that line, goes to the start of line
 				POINT p = (AMath.LoShort(lParam), AMath.HiShort(lParam));
-				int margin = Z.MarginFromPoint(p, false);
+				int margin = zMarginFromPoint(p, false);
 				if (margin >= 0) {
-					var selStart = Z.SelectionStart8;
-					var (_, start, end) = Z.LineStartEndFromPos(false, Z.PosFromXY(false, p, false));
+					var selStart = zSelectionStart8;
+					var (_, start, end) = zLineStartEndFromPos(false, zPosFromXY(false, p, false));
 					if (selStart >= start && selStart <= end) return true;
 					//do vice versa if the end of non-empty selection is at the start of the right-clicked line, to avoid comment/uncomment wrong lines
 					if (margin == c_marginLineNumbers || margin == c_marginMarkers) {
-						if (Z.SelectionEnd8 == start) Z.GoToPos(false, start); //clear selection above start
+						if (zSelectionEnd8 == start) zGoToPos(false, start); //clear selection above start
 					}
 				}
 			}
 			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lParam == -1;
-				int margin = kbd ? -1 : Z.MarginFromPoint((AMath.LoShort(lParam), AMath.HiShort(lParam)), true);
+				int margin = kbd ? -1 : zMarginFromPoint((AMath.LoShort(lParam), AMath.HiShort(lParam)), true);
 				switch (margin) {
 				case -1:
 					var m = new AWpfMenu();
@@ -339,7 +339,7 @@ partial class SciCode : KScintilla
 				if (CodeInfo.SciCmdKey(this, key, mod)) return true;
 				switch ((key, mod)) {
 				case (KKey.Enter, 0):
-					Z.AddUndoPoint();
+					zAddUndoPoint();
 					break;
 				}
 				break;
@@ -361,7 +361,7 @@ partial class SciCode : KScintilla
 		if (_IsUnsaved) {
 			//AOutput.QM2.Write("saving");
 			_fn.UnCacheText();
-			if (!App.Model.TryFileOperation(() => _fls.Save(Z, _fn.FilePath, tempDirectory: _fn.IsLink ? null : _fn.Model.TempDirectory))) return false;
+			if (!App.Model.TryFileOperation(() => _fls.Save(this, _fn.FilePath, tempDirectory: _fn.IsLink ? null : _fn.Model.TempDirectory))) return false;
 			//info: with tempDirectory less noise for FileSystemWatcher
 			_isUnsaved = false;
 			Call(SCI_SETSAVEPOINT);
@@ -371,8 +371,8 @@ partial class SciCode : KScintilla
 
 	//Called by FileNode.UnCacheText.
 	internal void _FileModifiedExternally() {
-		if (Z.IsReadonly) return;
-		var text = _fn.GetText(saved: true); if (text == this.Text) return;
+		if (zIsReadonly) return;
+		var text = _fn.GetText(saved: true); if (text == this.zText) return;
 		ZReplaceTextGently(text);
 		Call(SCI_SETSAVEPOINT);
 		if (this == Panels.Editor.ZActiveDoc) AOutput.Write($"<>Info: file {_fn.Name} has been modified outside and therefore reloaded. You can Undo.");
@@ -380,16 +380,16 @@ partial class SciCode : KScintilla
 
 	//never mind: not called when zoom changes.
 	internal void _SetLineNumberMarginWidth(bool onModified = false) {
-		int c = 4, lines = Z.LineCount;
+		int c = 4, lines = zLineCount;
 		while (lines > 999) { c++; lines /= 10; }
-		if (!onModified || c != _prevLineNumberMarginWidth) Z.MarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
+		if (!onModified || c != _prevLineNumberMarginWidth) zMarginWidth(c_marginLineNumbers, _prevLineNumberMarginWidth = c, chars: true);
 	}
 	int _prevLineNumberMarginWidth;
 
 	#region copy paste
 
 	public void ZForumCopy(bool onlyInfo = false) {
-		int i1 = Z.SelectionStart8, i2 = Z.SelectionEnd8, textLen = Len8;
+		int i1 = zSelectionStart8, i2 = zSelectionEnd8, textLen = zLen8;
 		if (textLen == 0) return;
 		bool isCS = _fn.IsCodeFile;
 		bool isFragment = (i2 != i1 && !(i1 == 0 && i2 == textLen)) || !isCS;
@@ -403,7 +403,7 @@ partial class SciCode : KScintilla
 		var b = new StringBuilder(isCS ? "[cs]" : "[code]");
 		string s;
 		if (isFragment) {
-			b.Append(Z.RangeText(false, i1, i2));
+			b.Append(zRangeText(false, i1, i2));
 		} else {
 			s = CiUtil.GetTextWithoutUnusedUsingDirectives();
 			var name = _fn.Name; if (name.RegexIsMatch(@"(?i)^(Script|Class)\d*\.cs")) name = null;
@@ -433,10 +433,10 @@ partial class SciCode : KScintilla
 			App.Model.NewItem(isClass ? "Class.cs" : "Script.cs", null, name, text: new EdNewFileText(replaceTemplate: true, s));
 			break;
 		case 2: //Replace all text
-			Z.SetText(s);
+			zSetText(s);
 			break;
 		case 3: //Paste
-			Z.ReplaceSel(s);
+			zReplaceSel(s);
 			break;
 		} //rejected: option to rename this file
 
@@ -475,10 +475,10 @@ partial class SciCode : KScintilla
 		found = default;
 		if (!_fn.IsScript) return false;
 		const string s1 = "//.\r\nusing Au;", s2 = "//;;;\r\n";
-		int start = Z.FindText(false, s1); if (start < 0) return false;
-		int end = Z.FindText(false, s2, start); if (end < 0) return false;
+		int start = zFindText(false, s1); if (start < 0) return false;
+		int end = zFindText(false, s2, start); if (end < 0) return false;
 		end += s2.Length;
-		found = (start, end, Z.LineFromPos(false, start), Z.LineFromPos(false, end));
+		found = (start, end, zLineFromPos(false, start), zLineFromPos(false, end));
 		return true;
 	}
 
@@ -490,13 +490,13 @@ partial class SciCode : KScintilla
 	public unsafe void ZFoldScriptHeader(bool setCaret = false) {
 		if (!ZFindScriptHeader8(out var k)) return;
 		var a = stackalloc int[2] { k.start, (k.end - 2) | unchecked((int)0x80000000) };
-		Sci_SetFoldLevels(SciPtr, 0, k.endLine, 2, a);
+		Sci_SetFoldLevels(ZSciPtr, 0, k.endLine, 2, a);
 		Call(SCI_FOLDCHILDREN, k.startLine);
 
 		if (setCaret) {
 			int i = k.end;
 			if ((char)Call(SCI_GETCHARAT, i + 1) == '\n') i += 2;
-			Z.CurrentPos16 = i;
+			zCurrentPos16 = i;
 		}
 	}
 
@@ -505,7 +505,7 @@ partial class SciCode : KScintilla
 	//	if(!ZFile.IsScript) return false;
 	//	string s = Text;
 	//	if(!_RxScriptHeader.Match(s, out var m)) return false;
-	//	int line = Z.LineIndexFromPos(m.Start, utf16: true);
+	//	int line = LineIndexFromPos(m.Start, utf16: true);
 	//	return 0 == Call(SCI_GETFOLDEXPANDED, line);
 	//}
 
@@ -534,21 +534,21 @@ partial class SciCode : KScintilla
 	internal void InicatorsFind_(List<Range> a) {
 		if (_indicHaveFind) {
 			_indicHaveFind = false;
-			Z.IndicatorClear(c_indicFind);
+			zIndicatorClear(c_indicFind);
 		}
 		if (a == null || a.Count == 0) return;
 		_indicHaveFind = true;
 
-		foreach (var v in a) Z.IndicatorAdd(true, c_indicFind, v);
+		foreach (var v in a) zIndicatorAdd(true, c_indicFind, v);
 	}
 
 	internal void InicatorsDiag_(bool has) {
 		if (_indicHaveDiag) {
 			_indicHaveDiag = false;
-			Z.IndicatorClear(c_indicDiagHidden);
-			Z.IndicatorClear(c_indicInfo);
-			Z.IndicatorClear(c_indicWarning);
-			Z.IndicatorClear(c_indicError);
+			zIndicatorClear(c_indicDiagHidden);
+			zIndicatorClear(c_indicInfo);
+			zIndicatorClear(c_indicWarning);
+			zIndicatorClear(c_indicError);
 		}
 		if (!has) return;
 		_indicHaveDiag = true;
@@ -677,7 +677,7 @@ partial class SciCode : KScintilla
 
 		public int CurrentFrom => _doc != null ? _fromUtf16 : -1;
 
-		public int CurrentTo => _doc?.Pos16(to) ?? -1;
+		public int CurrentTo => _doc?.zPos16(to) ?? -1;
 
 		public object Owner => _owner;
 
@@ -724,10 +724,10 @@ partial class SciCode : KScintilla
 	/// <param name="flags"></param>
 	public ITempRange ZTempRanges_Add(object owner, int from, int to, Action onLeave = null, ZTempRangeFlags flags = 0) {
 		int fromUtf16 = from;
-		Z.NormalizeRange(true, ref from, ref to);
-		//AOutput.Write(fromUtf16, from, to, Z.CurrentPos8);
-		//Debug.Assert(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to));
-		ADebug.PrintIf(!(Z.CurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? Z.CurrentPos8 == to : Z.CurrentPos8 <= to)), "bad");
+		zNormalizeRange(true, ref from, ref to);
+		//AOutput.Write(fromUtf16, from, to, zCurrentPos8);
+		//Debug.Assert(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to));
+		ADebug.PrintIf(!(zCurrentPos8 >= from && (flags.Has(ZTempRangeFlags.LeaveIfPosNotAtEndOfRange) ? zCurrentPos8 == to : zCurrentPos8 <= to)), "bad");
 
 		if (flags.Has(ZTempRangeFlags.NoDuplicate)) {
 			for (int i = _tempRanges.Count - 1; i >= 0; i--) {
@@ -751,7 +751,7 @@ partial class SciCode : KScintilla
 	/// <param name="endPosition">position must be at the end of the range.</param>
 	/// <param name="utf8"></param>
 	public IEnumerable<ITempRange> ZTempRanges_Enum(int position, object owner = null, bool endPosition = false, bool utf8 = false) {
-		if (!utf8) position = Pos8(position);
+		if (!utf8) position = zPos8(position);
 		for (int i = _tempRanges.Count - 1; i >= 0; i--) {
 			var r = _tempRanges[i];
 			if (r.Contains(position, owner, endPosition)) yield return r;
@@ -772,7 +772,7 @@ partial class SciCode : KScintilla
 
 	void _TempRangeOnModifiedOrPosChanged(MOD mod, int pos, int len) {
 		if (_tempRanges.Count == 0) return;
-		if (mod == 0) pos = Z.CurrentPos8;
+		if (mod == 0) pos = zCurrentPos8;
 		int pos2 = pos;
 		if (mod.Has(MOD.SC_MOD_DELETETEXT)) { pos2 += len; len = -len; }
 		for (int i = _tempRanges.Count - 1; i >= 0; i--) {

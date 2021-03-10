@@ -107,7 +107,7 @@ class CiAutocorrect
 		default: return false;
 		}
 
-		int pos = doc.Z.CurrentPos8;
+		int pos = doc.zCurrentPos8;
 		var r = doc.ZTempRanges_Enum(pos, this, endPosition: (ch == '\"' || ch == '\''), utf8: true).FirstOrDefault();
 		if(r == null) return false;
 		if(isOpenBrac && !(r.OwnerData == (object)"ac" || r.OwnerData == (object)"new")) return false;
@@ -136,7 +136,7 @@ class CiAutocorrect
 		}
 
 		to++;
-		if(ch == (char)KKey.Tab) doc.Z.CurrentPos8 = to;
+		if(ch == (char)KKey.Tab) doc.zCurrentPos8 = to;
 		else c = new BeforeCharContext { oldPosUtf8 = pos, newPosUtf8 = to };
 		return true;
 	}
@@ -263,8 +263,8 @@ class CiAutocorrect
 			}
 		}
 
-		c.doc.Z.ReplaceRange(true, cd.pos16, cd.pos16 + replaceLength, replaceText, moveCurrentPos: ch == ';');
-		if(newPos > 0) c.doc.Z.CurrentPos16 = newPos;
+		c.doc.zReplaceRange(true, cd.pos16, cd.pos16 + replaceLength, replaceText, moveCurrentPos: ch == ';');
+		if(newPos > 0) c.doc.zCurrentPos16 = newPos;
 
 		if(tempRangeFrom > 0) c.doc.ZTempRanges_Add(this, tempRangeFrom, tempRangeTo);
 		else c.ignoreChar = true;
@@ -280,15 +280,15 @@ class CiAutocorrect
 		var code = cd.code;
 		int pos = cd.pos16;
 		if(pos < 1) return false;
-		if(!anywhere && doc.Z.IsSelection) return false;
+		if(!anywhere && doc.zIsSelection) return false;
 		if(pos == code.Length) {
 			return false;
 			//This code now not useful, because normally file ends with } or }\r\n.
 			//if(code[pos - 1] == '\n') return false;
 			////if text does not end with '\n' and we are at the end, add empty line at the end after pos.
 			////	Else difficult because FindToken then finds the end of text token and its parent is the compilation unit and not the node before.
-			//cd.sciDoc.Z.InsertText(true, pos, "\r\n");
-			//cd.sciDoc.Z.CurrentPos16 = pos; //don't need, but
+			//cd.sciDoc.zInsertText(true, pos, "\r\n");
+			//cd.sciDoc.zCurrentPos16 = pos; //don't need, but
 			//goto g1;
 		}
 
@@ -527,13 +527,13 @@ class CiAutocorrect
 
 			if(onSemicolon) {
 				if(anywhere) {
-					doc.Z.GoToPos(true, (needSemicolon || endOfSpan > pos) ? endOfSpan : endOfFullSpan);
-					if(needSemicolon) doc.Z.ReplaceSel(";");
+					doc.zGoToPos(true, (needSemicolon || endOfSpan > pos) ? endOfSpan : endOfFullSpan);
+					if(needSemicolon) doc.zReplaceSel(";");
 				} else {
-					bcc = new BeforeCharContext { oldPosUtf8 = doc.Pos8(pos), newPosUtf8 = doc.Pos8(endOfSpan), dontSuppress = needSemicolon };
+					bcc = new BeforeCharContext { oldPosUtf8 = doc.zPos8(pos), newPosUtf8 = doc.zPos8(endOfSpan), dontSuppress = needSemicolon };
 				}
 			} else {
-				int indent = doc.Z.LineIndentationFromPos(true, (indentNode ?? node).SpanStart);
+				int indent = doc.zLineIndentationFromPos(true, (indentNode ?? node).SpanStart);
 				if(needBlock || block != null) indent++;
 				bool indentNext = indent > 0 && code[endOfFullSpan - 1] != '\n' && endOfFullSpan < code.Length; //indent next statement (or whatever) that was in the same line
 
@@ -575,8 +575,8 @@ class CiAutocorrect
 
 				var s = b.ToString();
 				//AOutput.Write($"'{s}'");
-				doc.Z.ReplaceRange(true, endOfSpan, endOfSpan + replaceLen, s);
-				doc.Z.GoToPos(true, finalPos);
+				doc.zReplaceRange(true, endOfSpan, endOfSpan + replaceLen, s);
+				doc.zGoToPos(true, finalPos);
 			}
 		} else { //autoindent
 			int indent = 0;
@@ -697,7 +697,7 @@ class CiAutocorrect
 			//correct 'case' if indented too much. It happens when it is not the first 'case' in section.
 			if(!expandBraces && indent > 0 && node is SwitchSectionSyntax && nodeFromPos is SwitchLabelSyntax && from >= nodeFromPos.Span.End) {
 				int i = nodeFromPos.SpanStart, j = i;
-				if(cd.sciDoc.Z.LineIndentationFromPos(true, i) != indent - 1) {
+				if(cd.sciDoc.zLineIndentationFromPos(true, i) != indent - 1) {
 					while(_IsSpace(code[i - 1])) i--;
 					if(code[i - 1] == '\n') {
 						replaceFrom = i;
@@ -728,10 +728,10 @@ class CiAutocorrect
 			//replace text and set caret position
 			var s = b.ToString();
 			//AOutput.Write($"'{s}'");
-			doc.Z.ReplaceRange(true, replaceFrom, replaceTo, s);
+			doc.zReplaceRange(true, replaceFrom, replaceTo, s);
 			pos = replaceFrom + s.Length;
 			if(expandBraces) pos -= indent + 2; else if(isBraceLine && code.Eq(replaceFrom - 1, "\n")) pos -= indent;
-			doc.Z.GoToPos(true, pos);
+			doc.zGoToPos(true, pos);
 		}
 		return true;
 	}
@@ -799,12 +799,12 @@ class CiAutocorrect
 			prefix = App.Settings.ci_correctStringEnter == 0 ? @"\r\n"" +" : "\" +"; //"A\r\n" + "B" (default) or "A" + "B" (like in VS)
 			suffix = interpol ? "$\"" : "\"";
 			//indent more, unless line starts with "
-			int i = cd.sciDoc.Z.LineStartFromPos(true, pos);
+			int i = cd.sciDoc.zLineStartFromPos(true, pos);
 			if(!cd.code.RegexIsMatch(@"[ \t]+\$?""", RXFlags.ANCHORED, i..)) indent++;
 		}
 
 		var doc = cd.sciDoc;
-		indent += doc.Z.LineIndentationFromPos(true, pos);
+		indent += doc.zLineIndentationFromPos(true, pos);
 		if(indent < 1 && prefix == null && suffix == null) return true;
 
 		var b = new StringBuilder();
@@ -814,25 +814,24 @@ class CiAutocorrect
 		if(newlineLast) b.AppendLine();
 
 		var s = b.ToString();
-		doc.Z.ReplaceRange(true, pos, pos, s, moveCurrentPos: true);
+		doc.zReplaceRange(true, pos, pos, s, moveCurrentPos: true);
 
 		return suppress = true;
 	}
 
 	bool _OnBackspaceOrDelete(SciCode doc, bool back)
 	{
-		var z = doc.Z;
-		if(z.IsSelection) return false;
-		int i = z.CurrentPos8, j = back ? z.LineStartFromPos(false, i) : z.LineEndFromPos(false, i);
+		if(doc.zIsSelection) return false;
+		int i = doc.zCurrentPos8, j = back ? doc.zLineStartFromPos(false, i) : doc.zLineEndFromPos(false, i);
 		if(j != i) return false;
-		i = doc.Pos16(i);
-		var code = doc.Text;
+		i = doc.zPos16(i);
+		var code = doc.zText;
 		if(back) {
 			if(i > 0 && code[i - 1] == '\n') i--;
 			if(i > 0 && code[i - 1] == '\r') i--;
 		}
 		if(!code.RegexMatch(@"\R\t+", 0, out RXGroup g, RXFlags.ANCHORED, i..)) return false;
-		z.DeleteRange(true, g.Start, g.End);
+		doc.zDeleteRange(true, g.Start, g.End);
 		return true;
 	}
 

@@ -199,10 +199,10 @@ AOutput.Write(""t"" + 'c' + 1);
 			if (_compl.IsVisibleUI) {
 				int diff = b.newPosUtf8 - b.oldPosUtf8;
 				_compl.SciCharAdding_Commit(doc, ch);
-				b.newPosUtf8 = doc.Z.CurrentPos8 + diff;
+				b.newPosUtf8 = doc.zCurrentPos8 + diff;
 			}
 
-			doc.Z.CurrentPos8 = b.newPosUtf8;
+			doc.zCurrentPos8 = b.newPosUtf8;
 			if (!b.dontSuppress) return true;
 		} else if (_compl.IsVisibleUI) {
 			if (CiComplResult.Complex == _compl.SciCharAdding_Commit(doc, ch)) return true;
@@ -284,7 +284,7 @@ AOutput.Write(""t"" + 'c' + 1);
 
 		var pi = Panels.Info; if (!pi.IsVisible) pi = null;
 
-		int pos16 = doc.Pos16(pos8);
+		int pos16 = doc.zPos16(pos8);
 		var diag = _diag.GetPopupTextAt(doc, pos8, pos16, out var onLinkClick);
 		var quick = await _quickInfo.GetTextAt(pos16);
 
@@ -334,8 +334,8 @@ AOutput.Write(""t"" + 'c' + 1);
 
 			document = null;
 			sciDoc = Panels.Editor.ZActiveDoc;
-			code = sciDoc.Text;
-			if (pos == -1) pos = sciDoc.Z.CurrentPos16; else if (pos == -2) pos = sciDoc.Z.SelectionStar16;
+			code = sciDoc.zText;
+			if (pos == -1) pos = sciDoc.zCurrentPos16; else if (pos == -2) pos = sciDoc.zSelectionStar16;
 			pos16 = pos;
 			metaEnd = MetaComments.FindMetaComments(code);
 		}

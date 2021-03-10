@@ -40,6 +40,7 @@ namespace Au
 		/// - <c>":: ITEMIDLIST"</c>
 		/// - <c>@"::{CLSID}"</c>
 		/// - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
+		/// More info in Remarks.
 		/// </param>
 		/// <param name="args">
 		/// Command line arguments.
@@ -50,7 +51,7 @@ namespace Au
 		/// Allows to specify more parameters: current directory, verb, etc.
 		/// If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="ROptions.CurrentDirectory"/>.
 		/// </param>
-		/// <exception cref="ArgumentException">Used both ROptions.Verb and RFlags.Admin and this process isn't admin.</exception>
+		/// <exception cref="ArgumentException">Used both <b>ROptions.Verb</b> and <b>RFlags.Admin</b> and this process isn't admin.</exception>
 		/// <exception cref="AuException">Failed. For example, the file does not exist.</exception>
 		/// <remarks>
 		/// It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -63,7 +64,7 @@ namespace Au
 		/// - Path relative to <see cref="AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
 		/// - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
 		/// - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-		/// - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="APidl.ToBase64String"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+		/// - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="APidl.ToHexString"/>, <see cref="AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="APidl.ToShellString"/>, <see cref="AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
 		/// - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="AWnd.More.GetWindowsStoreAppId"/> or Google.
 		/// 
@@ -445,7 +446,7 @@ namespace Au
 		/// </summary>
 		/// <param name="path">
 		/// Full path of a file or directory or other shell object.
-		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="APidl.ToBase64String"/>).
+		/// Supports <c>@"%environmentVariable%\..."</c> (see <see cref="APath.ExpandEnvVar"/>) and <c>"::..."</c> (see <see cref="APidl.ToHexString"/>).
 		/// </param>
 		public static bool SelectInExplorer(string path) {
 			using var pidl = APidl.FromString(path);

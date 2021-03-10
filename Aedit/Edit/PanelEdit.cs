@@ -59,13 +59,14 @@ class PanelEdit : Grid
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
-	/// <param name="dontFocusEditor">Don't focus editor, unless was focused. Also does not focus if <i>newFile</i> true.</param>
-	public bool ZOpen(FileNode f, bool newFile, bool dontFocusEditor = false) {
+	/// <param name="focusEditor">If null, focus later, when mouse enters editor. Ignored if editor was focused (sets focus). Also depends on <i>newFile</i>.</param>
+	public bool ZOpen(FileNode f, bool newFile, bool? focusEditor) {
 		Debug.Assert(!App.Model.IsAlien(f));
 
 		if (f == _activeDoc?.ZFile) return true;
 
-		bool focus = !newFile && (!dontFocusEditor || (_activeDoc?.IsFocused ?? false));
+		//AOutput.Write(focusEditor, new StackTrace(true));
+		bool focusNow = !newFile && (focusEditor == true || (_activeDoc?.Hwnd.IsFocused ?? false));
 
 		void _ShowHideActiveDoc(bool show) {
 			if (show) {
@@ -88,7 +89,7 @@ class PanelEdit : Grid
 		} else {
 			var path = f.FilePath;
 			byte[] text = null;
-			SciText.FileLoaderSaver fls = default;
+			KScintilla.FileLoaderSaver fls = default;
 			try { text = fls.Load(path); }
 			catch (Exception ex) { AOutput.Write("Failed to open file. " + ex.Message); }
 			if (text == null) return false;
@@ -105,9 +106,24 @@ class PanelEdit : Grid
 			//CodeInfo.FileOpened(doc);
 		}
 
-		if (focus) _activeDoc.Focus();
-		//TODO: if opens on single click, focus later, when mouse is in doc.
-		//	Now eg user clicks and presses Del to delete file but instead deletes char in doc text. Or wants to rename but F2 does nothing.
+		if (focusNow) _activeDoc.Focus();
+		else if (focusEditor == null || (newFile && focusEditor == true)) {
+			//if opens on single click, focus later, when mouse is in doc.
+			//	Else eg user clicks and presses Del to delete file but instead deletes char in doc text. Or wants to rename but F2 does nothing.
+
+			int count = 60 * 4; //60 s timeout
+			App.Timer025sWhenVisible += _Timer;
+			void _Timer() {
+				//AOutput.Write("timer");
+				if (--count > 0 && f == _activeDoc?.ZFile && Panels.Files.TreeControl.IsFocused) {
+					if (AWnd.FromMouse() != doc.Hwnd
+						|| !Panels.Files.TreeControl.IsKeyboardFocused //editing item label
+						) return;
+					doc.Focus();
+				}
+				App.Timer025sWhenVisible -= _Timer;
+			}
+		}
 
 		_activeDoc.Call(SCI_SETWRAPMODE, App.Settings.edit_wrap); //fast and does nothing if already is in that wrap state
 		_activeDoc.ZImages.Visible = App.Settings.edit_noImages ? AnnotationsVisible.ANNOTATION_HIDDEN : AnnotationsVisible.ANNOTATION_STANDARD;
@@ -196,7 +212,7 @@ class PanelEdit : Grid
 		if (0 == d.Call(SCI_CANUNDO)) disable |= _EUpdateUI.Undo;
 		if (0 == d.Call(SCI_CANREDO)) disable |= _EUpdateUI.Redo;
 		if (0 != d.Call(SCI_GETSELECTIONEMPTY)) disable |= _EUpdateUI.Copy;
-		if (disable.Has(_EUpdateUI.Copy) || d.Z.IsReadonly) disable |= _EUpdateUI.Cut;
+		if (disable.Has(_EUpdateUI.Copy) || d.zIsReadonly) disable |= _EUpdateUI.Cut;
 		//if(0 == d.Call(SCI_CANPASTE)) disable |= EUpdateUI.Paste; //rejected. Often slow. Also need to see on focused etc.
 
 		var dif = disable ^ _editDisabled;

@@ -29,10 +29,10 @@ partial class SciCode
 	/// </summary>
 	public void ZReplaceTextGently(string s)
 	{
-		if(Z.IsReadonly) return;
+		if(zIsReadonly) return;
 
 		int len = s.Lenn(); if(len == 0) goto gRaw;
-		string old = Text;
+		string old = zText;
 		if(len > 1_000_000 || old.Length > 1_000_000 || old.Length == 0) goto gRaw;
 		var dmp = new DiffMatchPatch.diff_match_patch();
 		var a = dmp.diff_main(old, s, true); //the slowest part. Timeout 1 s; then a valid but smaller.
@@ -42,16 +42,16 @@ partial class SciCode
 		for(int i = a.Count - 1, j = old.Length; i >= 0; i--) {
 			var d = a[i];
 			if(d.operation == DiffMatchPatch.Operation.INSERT) {
-				Z.InsertText(true, j, d.text);
+				zInsertText(true, j, d.text);
 			} else {
 				j -= d.text.Length;
-				if(d.operation == DiffMatchPatch.Operation.DELETE) Z.DeleteRange(true, j, j + d.text.Length);
+				if(d.operation == DiffMatchPatch.Operation.DELETE) zDeleteRange(true, j, j + d.text.Length);
 			}
 		}
 		Call(SCI_ENDUNDOACTION);
 		return;
 		gRaw:
-		this.Text = s;
+		this.zText = s;
 	}
 
 	/// <summary>
@@ -60,10 +60,10 @@ partial class SciCode
 	/// <param name="comment">Comment (true), uncomment (false) or toggle (null).</param>
 	public void ZCommentLines(bool? comment)
 	{
-		if(Z.IsReadonly) return;
+		if(zIsReadonly) return;
 
 		//how to comment/uncomment: // or /**/
-		int selStart = Z.SelectionStar16, selEnd = Z.SelectionEnd16, replStart = selStart, replEnd = selEnd;
+		int selStart = zSelectionStar16, selEnd = zSelectionEnd16, replStart = selStart, replEnd = selEnd;
 		bool com, slashStar = false, notSlashStar = false, isSelection = selEnd > selStart;
 		if(!CodeInfo.GetContextAndDocument(out var cd, selStart)) return;
 		string code = cd.code, s = null;
@@ -100,11 +100,11 @@ partial class SciCode
 				s = com ? s.RegexReplace(@"(?m)^", "//") : s.RegexReplace(@"(?m)^([ \t]*)//", "$1");
 			}
 		}
-		bool caretAtEnd = isSelection && Z.CurrentPos16 == selEnd;
-		Z.ReplaceRange(true, replStart, replEnd, s);
+		bool caretAtEnd = isSelection && zCurrentPos16 == selEnd;
+		zReplaceRange(true, replStart, replEnd, s);
 		if(isSelection) {
 			int i = replStart, j = replStart + s.Length;
-			Z.Select(true, caretAtEnd ? i : j, caretAtEnd ? j : i);
+			zSelect(true, caretAtEnd ? i : j, caretAtEnd ? j : i);
 		}
 	}
 

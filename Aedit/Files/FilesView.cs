@@ -49,7 +49,10 @@ partial class FilesModel
 
 		private void _ItemActivated(object sender, TVItemEventArgs e) {
 			var f = e.Item as FileNode;
-			if (!f.IsFolder) App.Model._SetCurrentFile(f);
+			if (f.IsFolder) return;
+			var m = App.Model;
+			if (e.ClickCount == 0 && f == m.CurrentFile) Panels.Editor.ZActiveDoc?.Focus(); //let Enter set focus = active doc
+			else m._SetCurrentFile(f, focusEditor: e.ClickCount switch { 1 => null, 2 => true, _ => false });
 		}
 
 		private void _ItemClick(object sender, TVItemEventArgs e) {

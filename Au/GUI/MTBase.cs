@@ -4,6 +4,9 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.ComponentModel;
+using System.Threading.Tasks;
+using System.Threading;
+using System.Runtime.CompilerServices;
 
 namespace Au
 {
@@ -96,9 +99,14 @@ namespace Au
 			case Image g: im = g; dontDispose = true; break;
 			case string s when s.Length > 0:
 				try {
-					if (dontDispose = ImageCache != null) im = ImageCache.Get(s, _dpi, onException: _OnException);
-					else if (AImageUtil.HasImageOrResourcePrefix(s)) im = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (new(16, 16), _dpi));
-					else im = AIcon.OfFile(s).ToGdipBitmap();
+					bool isImage = AImageUtil.HasImageOrResourcePrefix(s);
+					if (dontDispose = ImageCache != null) {
+						im = ImageCache.Get(s, _dpi, isImage, isImage ? null : _imageAsyncCompletion ??= _ImageAsyncCompletion, x, _OnException);
+						x.imageAsync = im == null && !isImage;
+					} else if (isImage)
+						im = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (new(16, 16), _dpi));
+					else
+						im = AIcon.OfFile(s).ToGdipBitmap();
 
 					if (im == null) _OnException(s, null);
 				}
@@ -115,13 +123,25 @@ namespace Au
 				if (x.extractIconPath == 1 && x.clicked != null) {
 					x.file = AIcon.IconPathFromCode_(x.clicked.Method, out bool cs);
 					if (x.file != null && !cs) { x.image = x.file; x.extractIconPath = 2; } else x.extractIconPath = cs ? 4 : 3;
-					//				APerf.Next('c');
+					//APerf.Next('c');
 				}
 				//if(x.image==null && x.checkType==0) x.image = (x.submenu ? DefaultSubmenuImage : DefaultImage).Value;
 				if (x.image != null) goto g1;
 				break;
 			}
 			return (im, im != null && !dontDispose);
+		}
+
+		Action<Bitmap, object> _imageAsyncCompletion;
+		void _ImageAsyncCompletion(Bitmap b, object o) {
+			switch (this) {
+			case AToolbar tb:
+				tb.ChangeImage_(o as AToolbar.ToolbarItem, b);
+				break;
+			case AMenu m:
+				m.ChangeImage_(o as AMenu.MenuItem, b);
+				break;
+			}
 		}
 
 		/// <summary>
@@ -132,6 +152,7 @@ namespace Au
 		{
 			internal Delegate clicked;
 			internal object image;
+			internal bool imageAsync;
 			/// <summary>1 if need to extract, 2 if already extracted (the image field is the path), 3 if failed to extract, 4 if extracted "script.cs"</summary>
 			internal byte extractIconPath; //from MTBase.ExtractIconPathFromCode
 			internal bool actionThread; //from MTBase.ActionThread
@@ -215,7 +236,7 @@ namespace Au
 				clicked = click;
 				sourceLine = l;
 
-				extractIconPath = mt.ExtractIconPathFromCode ? 1 : 0;
+				extractIconPath = (mt.ExtractIconPathFromCode && click is not (null or Action<AMenu> or Func<AMenu>)) ? 1 : 0;
 				actionThread = mt.ActionThread;
 				actionException = mt.ActionException;
 			}

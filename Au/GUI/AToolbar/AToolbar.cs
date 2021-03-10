@@ -9,7 +9,6 @@ using System.Threading;
 
 namespace Au
 {
-
 	/// <summary>
 	/// Floating toolbar.
 	/// Can be attached to windows of other programs.
@@ -102,7 +101,7 @@ namespace Au
 		/// </remarks>
 		public static string GetSettingsFilePath(string toolbarName) {
 			if (toolbarName.NE()) throw new ArgumentException("Empty name");
-			string s = AFolders.Workspace; if (s == null) s = AFolders.ThisAppDocuments;
+			string s = AFolders.Workspace.ToString() ?? AFolders.ThisAppDocuments;
 			return s + @"\.toolbars\" + toolbarName + ".json";
 		}
 
@@ -662,7 +661,7 @@ namespace Au
 				if (i == _menuClosedIndex && ATime.PerfMilliseconds - _menuClosedTime < 100) return;
 				AMenu m = null;
 				if (b.clicked is Action<AMenu> menu) {
-					m = new AMenu(this.Name + " + " + b.Text, _sourceFile, b.sourceLine);
+					m = new AMenu(this.Name + " + " + b.Text, _sourceFile, b.sourceLine) { ImageCache = this.ImageCache };
 					menu(m);
 				} else if (b.clicked is Func<AMenu> func) {
 					m = func();

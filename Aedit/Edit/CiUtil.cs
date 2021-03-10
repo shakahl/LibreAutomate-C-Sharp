@@ -194,9 +194,9 @@ static class CiUtil
 	/// If <i>pos16</i> less than 0, uses current caret position.
 	/// </summary>
 	public static RECT GetCaretRectFromPos(SciCode doc, int pos16 = -1, bool inScreen = false) {
-		if (pos16 < 0) pos16 = doc.Z.CurrentPos8; else pos16 = doc.Pos8(pos16);
+		if (pos16 < 0) pos16 = doc.zCurrentPos8; else pos16 = doc.zPos8(pos16);
 		int x = doc.Call(Sci.SCI_POINTXFROMPOSITION, 0, pos16), y = doc.Call(Sci.SCI_POINTYFROMPOSITION, 0, pos16);
-		var r = new RECT(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.Z.LineFromPos(false, pos16)) + 2);
+		var r = new RECT(x, y, 1, doc.Call(Sci.SCI_TEXTHEIGHT, doc.zLineFromPos(false, pos16)) + 2);
 		if (inScreen) doc.Hwnd.MapClientToScreen(ref r);
 		return r;
 	}

@@ -32,7 +32,7 @@ class PanelOutput : DockPanel
 		App.Commands.BindKeysTarget(this, "Output");
 	}
 
-	public void ZClear() { _c.Z.ClearText(); }
+	public void ZClear() { _c.zClearText(); }
 
 	public void ZCopy() { _c.Call(SCI_COPY); }
 
@@ -60,8 +60,8 @@ class PanelOutput : DockPanel
 		set {
 			Debug.Assert(!_inInitSettings || value);
 			if (!_inInitSettings) App.Settings.output_wrap = value;
-			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in SciControl.OnHandleCreated
-			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in SciControl.OnHandleCreated
+			//_c.Call(SCI_SETWRAPVISUALFLAGS, SC_WRAPVISUALFLAG_START | SC_WRAPVISUALFLAG_END); //in KScintilla.ZOnHandleCreated
+			//_c.Call(SCI_SETWRAPINDENTMODE, SC_WRAPINDENT_INDENT); //in KScintilla.ZOnHandleCreated
 			_c.Call(SCI_SETWRAPMODE, value ? SC_WRAP_WORD : 0);
 			App.Commands[nameof(Menus.Tools.Output.Wrap_lines_in_output)].Checked = value;
 		}
@@ -115,13 +115,13 @@ class PanelOutput : DockPanel
 			//App.Commands[nameof(Menus.Tools.Output)].SetKeysTarget(this);
 		}
 
-		protected override void OnHandleCreated() {
+		protected override void ZOnHandleCreated() {
 			_p._c_HandleCreated();
-			Z.MarginWidth(1, 3);
-			Z.StyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
-			//Z.StyleFont(STYLE_DEFAULT, "Courier New", 8); //maybe better, except <b>
-			Z.StyleFont(STYLE_DEFAULT, "Consolas", 9);
-			Z.StyleClearAll();
+			zMarginWidth(1, 3);
+			zStyleBackColor(STYLE_DEFAULT, 0xF7F7F7);
+			//zStyleFont(STYLE_DEFAULT, "Courier New", 8); //maybe better, except <b>
+			zStyleFont(STYLE_DEFAULT, "Consolas", 9);
+			zStyleClearAll();
 
 			SciTags.AddCommonLinkTag("open", s => _OpenLink(s));
 			SciTags.AddCommonLinkTag("script", s => _RunScript(s));
@@ -133,7 +133,7 @@ class PanelOutput : DockPanel
 
 			App.OutputServer.SetNotifications(Hwnd, Api.WM_APP);
 
-			base.OnHandleCreated();
+			base.ZOnHandleCreated();
 		}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParam, IntPtr lParam, ref bool handled) {
@@ -143,7 +143,7 @@ class PanelOutput : DockPanel
 				ZTags.OutputServerProcessMessages(App.OutputServer, _onServerMessage ??= _OnServerMessage);
 				return default;
 			case Api.WM_MBUTTONDOWN:
-				Z.ClearText();
+				zClearText();
 				return default;
 			case Api.WM_CONTEXTMENU:
 				var m = new ContextMenu { PlacementTarget = this };

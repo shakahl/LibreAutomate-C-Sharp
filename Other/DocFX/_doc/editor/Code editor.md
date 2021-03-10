@@ -102,6 +102,4 @@ The Find pane finds and replaces text in editor. Marks all matches in editor wit
 There are several code creation tools in menu Code. Some tools create code to find the captured window, control, accessible object or image. Other tools help to insert parts of regular expression or keys string.
 
 #### Focus
-To focus the code editor control without changing selection: middle-click or press Esc.
-
-When the code editor is focused, Shift+Esc will focus the last focused other control. Then Tab and Shift+Tab will focus other controls.
+To focus the code editor control without changing selection: middle-click.

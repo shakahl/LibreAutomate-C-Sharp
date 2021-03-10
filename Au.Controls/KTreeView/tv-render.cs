@@ -15,7 +15,7 @@ using System.Runtime.InteropServices;
 
 namespace Au.Controls
 {
-	unsafe partial class KTreeView
+	public unsafe partial class KTreeView
 	{
 		//Called on resize, scroll, set visible items (replace, clear, expand/collapse, add/remove/move).
 		void _Measure(bool onScroll = false) {
@@ -277,9 +277,7 @@ namespace Au.Controls
 							var imageSource = item.ImageSource;
 							if (!imageSource.NE()) {
 								bool isImage = AImageUtil.HasImageOrResourcePrefix(imageSource);
-								bool mayNeedAsync = !isImage;
-								if (mayNeedAsync) _imageAsyncCompletion ??= _ImageAsyncCompletion;
-								b = ImageCache.Get(imageSource, _dpi, isImage, mayNeedAsync ? _imageAsyncCompletion : null, item);
+								b = ImageCache.Get(imageSource, _dpi, isImage, isImage ? null : _imageAsyncCompletion ??= _ImageAsyncCompletion, item);
 							}
 						}
 						if (b != null) {

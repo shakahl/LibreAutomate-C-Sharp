@@ -230,7 +230,7 @@ class RunningTasks
 	bool _updateUI;
 	volatile bool _disposed;
 
-	public IEnumerable<RunningTask> Items => _a;
+	public IReadOnlyList<RunningTask> Items => _a;
 
 	public RunningTasks() {
 		_a = new List<RunningTask>();

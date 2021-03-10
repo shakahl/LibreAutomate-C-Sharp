@@ -53,16 +53,16 @@ namespace Au.Tools
 		/// Text with output tags.
 		/// </summary>
 		public string Text {
-			get => _c?.Text;
-			set => Control1.Text = value;
+			get => _c?.zText;
+			set => Control1.zText = value;
 		}
 
 		/// <summary>
 		/// Text of second control with output tags.
 		/// </summary>
 		public string Text2 {
-			get => _c2?.Text;
-			set => Control2.Text = value;
+			get => _c2?.zText;
+			set => Control2.zText = value;
 		}
 
 		/// <summary>
@@ -82,8 +82,8 @@ namespace Au.Tools
 				this.ZInitBlankMargins = (4, 4);
 			}
 
-			//protected override void OnHandleCreated() {
-			//	base.OnHandleCreated();
+			//protected override void ZOnHandleCreated() {
+			//	base.ZOnHandleCreated();
 			//	//base.NoMouseLeftSetFocus = true; //no, then cannot scroll with wheel on Win7-8.1
 			//	//base.NoMouseRightSetFocus = true;
 			//}

@@ -373,7 +373,7 @@ namespace Au
 		/// </summary>
 		public static bool IsInAnyScreen(AWnd w) => Api.MonitorFromWindow(w, SODefault.Zero) != default;
 
-		internal AScreen ThrowIfWithHandle_ => _h == default ? this : throw new ArgumentException("AScreen with Handle. Must be lazy (with LazyFunc) or empty.");
+		internal AScreen ThrowIfWithHandle_ => _h == default ? this : throw new ArgumentException("AScreen with Handle. Must be lazy or empty.");
 	}
 }
 

@@ -338,7 +338,7 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 	public string GetText(bool saved = false, bool warningIfNotFound = false, bool cache = false) {
 		if (IsFolder) return "";
 		if (!saved && this == _model.CurrentFile) {
-			return Panels.Editor.ZActiveDoc.Text;
+			return Panels.Editor.ZActiveDoc.zText;
 		}
 		//if(cache) AOutput.Write("GetText", Name, _text != null);
 		if (_text != null) return _text;

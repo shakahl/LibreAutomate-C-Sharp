@@ -53,7 +53,7 @@ class CiErrors
 				}
 				if (!has) doc.InicatorsDiag_(has = true);
 				var indic = d.Severity switch { DiagnosticSeverity.Error => SciCode.c_indicError, DiagnosticSeverity.Warning => SciCode.c_indicWarning, DiagnosticSeverity.Info => SciCode.c_indicInfo, _ => SciCode.c_indicDiagHidden };
-				doc.Z.IndicatorAdd(true, indic, start..end);
+				doc.zIndicatorAdd(true, indic, start..end);
 				_codeDiag.Add((d, start, end));
 
 				if (d.Severity == DiagnosticSeverity.Error) {
@@ -74,14 +74,14 @@ class CiErrors
 			foreach (var v in _metaErrors) {
 				if (v.to <= start16 || v.from >= end16) continue;
 				if (!has) doc.InicatorsDiag_(has = true);
-				doc.Z.IndicatorAdd(true, SciCode.c_indicError, v.from..v.to);
+				doc.zIndicatorAdd(true, SciCode.c_indicError, v.from..v.to);
 			}
 		}
 		_Strings(semo, cd, start16, end16);
 		if (_stringErrors.Count > 0) {
 			if (!has) doc.InicatorsDiag_(has = true);
 			foreach (var v in _stringErrors) {
-				doc.Z.IndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
+				doc.zIndicatorAdd(true, SciCode.c_indicWarning, v.from..v.to);
 			}
 		}
 		if (!has) {
@@ -132,11 +132,11 @@ class CiErrors
 	public void AddMetaError(int from, int to, string s) => _metaErrors.Add((from, to > from ? to : from + 1, s));
 
 	public void EraseIndicatorsInLine(SciCode doc, int pos8) {
-		var (_, start, end) = doc.Z.LineStartEndFromPos(false, pos8, withRN: true);
-		doc.Z.IndicatorClear(false, SciCode.c_indicDiagHidden, start..end);
-		doc.Z.IndicatorClear(false, SciCode.c_indicInfo, start..end);
-		doc.Z.IndicatorClear(false, SciCode.c_indicWarning, start..end);
-		doc.Z.IndicatorClear(false, SciCode.c_indicError, start..end);
+		var (_, start, end) = doc.zLineStartEndFromPos(false, pos8, withRN: true);
+		doc.zIndicatorClear(false, SciCode.c_indicDiagHidden, start..end);
+		doc.zIndicatorClear(false, SciCode.c_indicInfo, start..end);
+		doc.zIndicatorClear(false, SciCode.c_indicWarning, start..end);
+		doc.zIndicatorClear(false, SciCode.c_indicError, start..end);
 	}
 
 	public void SciModified() {
@@ -220,7 +220,7 @@ class CiErrors
 	}
 
 	void _UsingsEtc(CiText x, in (Diagnostic d, int start, int end) v, SciCode doc, bool extMethod) {
-		string code = doc.Text;
+		string code = doc.zText;
 		bool isGeneric = false;
 		int end2 = code.IndexOf('<', v.start, v.end - v.start);
 		if (end2 < 0) end2 = v.end; else isGeneric = true;
@@ -274,7 +274,7 @@ class CiErrors
 		}
 
 		if (usings.Count > 0) {
-			var sstart = doc.Pos8(v.start).ToString();
+			var sstart = doc.zPos8(v.start).ToString();
 			x.Append("\nAdd using ");
 			for (int i = 0; i < usings.Count; i++) {
 				var u = usings[i];
@@ -304,7 +304,7 @@ class CiErrors
 			var doc = Panels.Editor.ZActiveDoc;
 			EraseIndicatorsInLine(doc, pos8);
 			if (action == 'p') {
-				doc.Z.InsertText(false, pos8, s + ".", addUndoPoint: true);
+				doc.zInsertText(false, pos8, s + ".", addUndoPoint: true);
 			} else {
 				InsertCode.UsingDirective(s);
 			}

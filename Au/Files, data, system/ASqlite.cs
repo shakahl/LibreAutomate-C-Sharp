@@ -79,9 +79,9 @@ namespace Au
 		/// - Full path. Supports environment variables etc, see <see cref="APath.ExpandEnvVar"/>
 		/// - ":memory:" - create a private, temporary in-memory database.
 		/// - "" - create a private, temporary on-disk database.
-		/// - Starts with "file:" - see sqlite3_open_v2 documentation in SQLite website.
+		/// - Starts with "file:" - see <google>sqlite3_open_v2</google>.
 		/// </param>
-		/// <param name="flags">sqlite3_open_v2 flags, documanted in SQLite website. Default: read-write, create file if does not exist (and parent directory).</param>
+		/// <param name="flags"><google>sqlite3_open_v2</google> flags. Default: read-write, create file if does not exist (and parent directory).</param>
 		/// <param name="sql">
 		/// SQL to execute. For example, one or more ;-separated PRAGMA statements to configure the database connection. Or even "CREATE TABLE IF NOT EXISTS ...".
 		/// This function also always executes "PRAGMA foreign_keys=ON;PRAGMA secure_delete=ON;".
@@ -89,7 +89,7 @@ namespace Au
 		/// <exception cref="ArgumentException">Not full path.</exception>
 		/// <exception cref="SLException">Failed to open database or execute sql.</exception>
 		/// <remarks>
-		/// Calls sqlite3_open_v2.
+		/// Calls <google>sqlite3_open_v2</google>.
 		/// <note>If a variable of this class is used by multiple threads, use <c>lock(variable) {  }</c> where need.</note>
 		/// </remarks>
 		public ASqlite(string file, SLFlags flags = SLFlags.ReadWriteCreate, string sql = null)
@@ -561,7 +561,7 @@ namespace Au
 		/// </summary>
 		internal void BindObject(int i, object v)
 		{
-			int k = 0;
+			int k;
 			switch(v) {
 			case null: BindNull(i); break;
 			case int x: k = x; goto gi;
@@ -584,13 +584,15 @@ namespace Au
 				default: k = Convert.ToInt32(v); goto gi;
 				}
 				break;
+			case byte[] x:
+				Bind(i, x);
+				break;
 			//case Array a:
 			//	break;
 			default:
 				//never mind: this func does not support other types supported by other BindX functions. Quite difficult.
 				//	To get address: GCHandle.AddrOfPinnedObject.
-				//	To get type size, probably need the Unsafe dll or DynamicMethod/ILGenerator.
-				//	Or try serialization. Probably slow and limited.
+				//	To get type size, probably need Unsafe dll.
 				var t = v.GetType();
 				throw new NotSupportedException(t.Name);
 				//case DateTime x: Bind(i, x); break;
@@ -614,6 +616,7 @@ namespace Au
 		/// - string - calls sqlite3_bind_text16.
 		/// - decimal - calls sqlite3_bind_blob64.
 		/// - Guid - calls sqlite3_bind_blob64.
+		/// - byte[] - calls sqlite3_bind_blob64.
 		/// - An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
 		/// </param>
 		/// <exception cref="NotSupportedException">A value is of an unsupported type.</exception>
@@ -723,10 +726,10 @@ namespace Au
 		/// </summary>
 		/// <param name="column"></param>
 		/// <param name="nBytes">Blob size.</param>
-		public void* GetBlob(SLIndexOrName column, out int nBytes)
+		public byte* GetBlob(SLIndexOrName column, out int nBytes)
 		{
 			int icol = _C(column);
-			void* r = SLApi.sqlite3_column_blob(_st, icol);
+			var r = (byte*)SLApi.sqlite3_column_blob(_st, icol);
 			if(r == null) { nBytes = 0; _WarnGet(); } else nBytes = SLApi.sqlite3_column_bytes(_st, icol);
 			return r;
 		}

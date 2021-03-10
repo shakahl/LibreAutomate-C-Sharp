@@ -30,8 +30,8 @@
 #include <OleAuto.h>
 #include <OleAcc.h>
 #include <UIAutomation.h>
-#include <shellapi.h>//TODO: remove if unused
-#include <shlobj.h>//TODO: remove if unused
+#include <shellapi.h>
+#include <shlobj.h>
 
 #define PCRE2_STATIC 1
 #define PCRE2_CODE_UNIT_WIDTH 16

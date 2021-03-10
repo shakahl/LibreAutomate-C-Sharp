@@ -16,6 +16,7 @@ using Au.Types;
 using Au.Util;
 using static Au.Controls.Sci;
 using System.Windows;
+using Au.Tools;
 
 partial class SciCode
 {
@@ -67,7 +68,7 @@ partial class SciCode
 
 		int _GetEffect(int effect, int grfKeyState) {
 			if (!_canDrop) return 0;
-			if (_sci.Z.IsReadonly) return 0;
+			if (_sci.zIsReadonly) return 0;
 			DragDropEffects r, ae = (DragDropEffects)effect;
 			var ks = (DragDropKeyStates)grfKeyState;
 			switch (ks & (DragDropKeyStates.ShiftKey | DragDropKeyStates.ControlKey | DragDropKeyStates.AltKey)) {
@@ -86,7 +87,7 @@ partial class SciCode
 			_sci.Hwnd.MapScreenToClient(ref p);
 			if (!_justText) { //if files etc, drop as lines, not anywhere
 				pos = _sci.Call(SCI_POSITIONFROMPOINT, p.x, p.y);
-				pos = _sci.Z.LineStartFromPos(false, pos);
+				pos = _sci.zLineStartFromPos(false, pos);
 				p.x = _sci.Call(SCI_POINTXFROMPOSITION, 0, pos);
 				p.y = _sci.Call(SCI_POINTYFROMPOSITION, 0, pos);
 			} else pos = 0;
@@ -102,13 +103,13 @@ partial class SciCode
 				s = _data.text;
 			} else {
 				if (_sci._fn.IsCodeFile) {
-					var text = _sci.Text;
+					var text = _sci.zText;
 					int endOfMeta = Au.Compiler.MetaComments.FindMetaComments(text);
-					if (endOfMeta > 0 && _sci.Pos16(pos8) < endOfMeta) return;
+					if (endOfMeta > 0 && _sci.zPos16(pos8) < endOfMeta) return;
 
 					string mi = _data.scripts
 						? "1 var s = name;|2 var s = path;|3 ATask.Run(path);|4 t[name] = o => ATask.Run(path);"
-						: "11 var s = path;|12 AFile.Run(path);|13 t[name] = o => AFile.Run(path);"; //FUTURE: also add same items with unexpanded path.
+						: "11 var s = path;|12 AFile.Run(path);|13 t[name] = o => AFile.Run(path);";
 					what = AMenu.ShowSimple(mi, _sci.Hwnd);
 					if (what == 0) return;
 				}
@@ -122,34 +123,29 @@ partial class SciCode
 						s = b.ToString();
 					}
 				} else if (_data.files != null) {
+					int format = 0;
 					foreach (var path in _data.files) {
-						bool isLnk = path.Ends(".lnk", true);
-						if (isLnk) b.Append("//");
-						var name = APath.GetNameNoExt(path);
-						_AppendFile(path, name);
-						if (isLnk) {
-							try {
-								var g = AShortcutFile.Open(path);
-								string target = g.TargetAnyType, args = null;
-								if (target.Starts("::")) {
-									using var pidl = APidl.FromString(target);
-									name = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
-								} else {
-									args = g.Arguments;
-									if (!target.Ends(".exe", true) || name.Find("Shortcut") >= 0)
-										name = APath.GetNameNoExt(target);
-								}
-								_AppendFile(target, name, args);
-							}
-							catch (AuException) { break; }
+						var g = new TUtil.PathInfo(path);
+						if (format == 0) { //show dialog once if need
+							format = g.SelectFormatUI();
+							if (format == 0) { b.Clear(); break; }
 						}
+						var r = g.GetResult(format);
+						_AppendFile(r.path, r.name, r.args);
 					}
 					s = b.ToString();
 				} else if (_data.shell != null) {
 					_GetShell(_data.shell, out var shells, out var names);
 					if (shells != null) {
+						int format = 0;
 						for (int i = 0; i < shells.Length; i++) {
-							_AppendFile(shells[i], names[i]);
+							var g = new TUtil.PathInfo(shells[i]);
+							if (format == 0) { //show dialog once if need
+								format = g.SelectFormatUI();
+								if (format == 0) { b.Clear(); break; }
+							}
+							var r = g.GetResult(format);
+							_AppendFile(r.path, names[i]);
 						}
 						s = b.ToString();
 					}
@@ -178,7 +174,7 @@ partial class SciCode
 			}
 
 			void _AppendFile(string path, string name, string args = null, FileNode fn = null) {
-				b.Append('\t', _sci.Z.LineIndentationFromPos(false, pos8));
+				b.Append('\t', _sci.zLineIndentationFromPos(false, pos8));
 				if (what == 0) {
 					b.Append(path);
 				} else {
@@ -188,7 +184,7 @@ partial class SciCode
 					case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
 					}
 					if (what == 12 || what == 13) b.Append("AFile.Run(");
-					if ((what == 11 || what == 12) && path.Starts(":: ")) b.AppendFormat("/* {0} */ ", name);
+					if ((what == 11 || what == 12) && (path.Starts(":: ") || path.Starts("%AFolders.Virtual."))) b.AppendFormat("/* {0} */ ", name);
 					switch (what) {
 					case 1: b.AppendFormat("\"{0}\";", name); break;
 					case 2: case 11: b.AppendFormat("@\"{0}\";", path); break;

@@ -68,7 +68,7 @@ static class App
 		//#if !DEBUG
 		AProcess.CultureIsInvariant = true;
 		//#endif
-		AssertListener_.Setup();
+		ADefaultTraceListener.Setup(useAOutput: true);
 		AFolders.ThisAppDocuments = (FolderPath)(AFolders.Documents + "Aedit");
 		Directory.SetCurrentDirectory(AFolders.ThisApp); //because it is c:\windows\system32 when restarted as admin
 
@@ -377,8 +377,6 @@ static class App
 	}
 }
 
-//enum TrayIcon
-
 enum EProgramState
 {
 	/// <summary>
@@ -409,6 +407,11 @@ enum EProgramState
 	/// Workspace unloaded; everything stopped.
 	/// </summary>
 	Unloaded,
+}
+
+enum ERegisteredHotkeyId
+{
+	QuickCapture = 1,
 }
 
 namespace Aedit

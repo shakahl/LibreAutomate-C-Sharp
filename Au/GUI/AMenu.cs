@@ -61,6 +61,8 @@ namespace Au
 			/// <summary>true if is a submenu-item.</summary>
 			internal bool IsSubmenu { get; init; }
 
+			internal IntPtr hmenuParent;
+			internal int index;
 			internal int level; //0 or level of parent submenu
 			internal bool submenuFilled; //submenu is filled once and don't do it again until reopening
 			internal bool separator;
@@ -455,65 +457,51 @@ namespace Au
 		/// <param name="level">0 or submenu level.</param>
 		/// <param name="i">First item index in _a.</param>
 		void _FillPopupMenu(IntPtr h, int level, int i) {
-			AMemoryBitmap mb = null;
-			Graphics gr = null;
-			int imageSize = ADpi.Scale(16, _dpi);
+			using var ih = new _ImageToHbitmap(ADpi.Scale(16, _dpi));
 			//bool hasColumns=false, hasCheck=false;
-			try {
-				for (; i < _a.Count; i++) {
-					var v = _a[i];
-					if (v.level < level) break;
-					if (v.level > level) continue;
-					if (v.separator) {
-						Api.AppendMenu(h);
-					} else {
-						uint state = 0;
-						if (v.IsDisabled) state |= Api.MFS_DISABLED;
-						if (v.IsChecked) state |= Api.MFS_CHECKED;
-						//if (v.IsHilited) state |= Api.MFS_HILITE; //hilites but does not make focused. Also tested HiliteMenuItem, but it works only with menubar.
-						if (v.IsBold) state |= Api.MFS_DEFAULT;
-						var x = new Api.MENUITEMINFO(Api.MIIM_ID | Api.MIIM_DATA | Api.MIIM_FTYPE | Api.MIIM_STRING | Api.MIIM_STATE) { wID = v.Id, dwItemData = i + 1, fState = state };
-						if (v.checkType == 2) x.fType |= Api.MFT_RADIOCHECK;
-						if (v.column) x.fType |= Api.MFT_MENUBARBREAK;
-						//if(v.column) hasColumns=true;
-						//if(v.checkType!=0) hasCheck=true;
-						if (v.IsSubmenu) {
-							x.fMask |= Api.MIIM_SUBMENU;
-							x.hSubMenu = Api.CreatePopupMenu();
-							_dSub.Add(x.hSubMenu, i);
-						}
-
-						//APerf.First();
-						var (im, dispose) = _GetImage(v);
-						//APerf.Next();
-						if (im != null) {
-							if (mb == null) {
-								mb = new AMemoryBitmap(imageSize, imageSize);
-								gr = Graphics.FromHdc(mb.Hdc);
-								gr.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-							}
-							gr.Clear(Color.Transparent);
-							gr.DrawImage(im, 0, 0, imageSize, imageSize);
-							if (dispose) im.Dispose();
-							//x.hbmpItem=(IntPtr)Api.HBMMENU_CALLBACK; //no theme
-							v.hbitmap = Api.CopyImage(mb.Hbitmap, 0, 0, 0, Api.LR_CREATEDIBSECTION); //LR_CREATEDIBSECTION with alpha
-							if (v.hbitmap != default) {
-								x.fMask |= Api.MIIM_BITMAP;
-								x.hbmpItem = v.hbitmap;
-							}
-						}
-
-						fixed (char* pt = v.Text) {
-							x.dwTypeData = pt;
-							Api.InsertMenuItem(h, -1, true, x);
-						}
-						//APerf.Next(); AOutput.Write(APerf.ToString(), v);
+			for (int index = 0; i < _a.Count; i++) {
+				var v = _a[i];
+				if (v.level < level) break;
+				if (v.level > level) continue;
+				v.hmenuParent = h;
+				v.index = index++;
+				if (v.separator) {
+					Api.AppendMenu(h);
+				} else {
+					uint state = 0;
+					if (v.IsDisabled) state |= Api.MFS_DISABLED;
+					if (v.IsChecked) state |= Api.MFS_CHECKED;
+					//if (v.IsHilited) state |= Api.MFS_HILITE; //hilites but does not make focused. Also tested HiliteMenuItem, but it works only with menubar.
+					if (v.IsBold) state |= Api.MFS_DEFAULT;
+					var x = new Api.MENUITEMINFO(Api.MIIM_ID | Api.MIIM_DATA | Api.MIIM_FTYPE | Api.MIIM_STRING | Api.MIIM_STATE) { wID = v.Id, dwItemData = i + 1, fState = state };
+					if (v.checkType == 2) x.fType |= Api.MFT_RADIOCHECK;
+					if (v.column) x.fType |= Api.MFT_MENUBARBREAK;
+					//if(v.column) hasColumns=true;
+					//if(v.checkType!=0) hasCheck=true;
+					if (v.IsSubmenu) {
+						x.fMask |= Api.MIIM_SUBMENU;
+						x.hSubMenu = Api.CreatePopupMenu();
+						_dSub.Add(x.hSubMenu, i);
 					}
+
+					//APerf.First();
+					var (im, dispose) = _GetImage(v);
+					//APerf.Next();
+					if (im != null) {
+						//x.hbmpItem=(IntPtr)Api.HBMMENU_CALLBACK; //no theme
+						if (ih.Convert(im, v)) {
+							x.fMask |= Api.MIIM_BITMAP;
+							x.hbmpItem = v.hbitmap;
+						}
+						if (dispose) im.Dispose();
+					}
+
+					fixed (char* pt = v.Text) {
+						x.dwTypeData = pt;
+						Api.InsertMenuItem(h, -1, true, x);
+					}
+					//APerf.Next(); AOutput.Write(APerf.ToString(), v);
 				}
-			}
-			finally {
-				gr?.Dispose();
-				mb?.Dispose();
 			}
 
 			//not good anyway:
@@ -695,6 +683,41 @@ namespace Au
 				if (v.level > level && skipSubmenus) continue;
 				if (v.separator) continue;
 				yield return v;
+			}
+		}
+
+		internal void ChangeImage_(MenuItem mi, Bitmap im) {
+			if (!this.IsVisible) return;
+			using var ih = new _ImageToHbitmap(ADpi.Scale(16, _dpi));
+			ih.Convert(im, mi);
+			var x = new Api.MENUITEMINFO(Api.MIIM_BITMAP) { hbmpItem = mi.hbitmap };
+			Api.SetMenuItemInfo(mi.hmenuParent, mi.index, true, x);
+		}
+
+		struct _ImageToHbitmap : IDisposable
+		{
+			AMemoryBitmap _mb;
+			Graphics _g;
+			int _imageSize;
+
+			public _ImageToHbitmap(int imageSize) : this() { _imageSize = imageSize; }
+
+			public bool Convert(Image im, MenuItem mi) {
+				if (mi.hbitmap != default) { Api.DeleteObject(mi.hbitmap); mi.hbitmap = default; }
+				if (_mb == null) {
+					_mb = new AMemoryBitmap(_imageSize, _imageSize);
+					_g = Graphics.FromHdc(_mb.Hdc);
+					_g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+				}
+				_g.Clear(Color.Transparent);
+				_g.DrawImage(im, 0, 0, _imageSize, _imageSize);
+				mi.hbitmap = Api.CopyImage(_mb.Hbitmap, 0, 0, 0, Api.LR_CREATEDIBSECTION); //LR_CREATEDIBSECTION with alpha
+				return mi.hbitmap != default;
+			}
+
+			public void Dispose() {
+				_mb?.Dispose();
+				_g?.Dispose();
 			}
 		}
 

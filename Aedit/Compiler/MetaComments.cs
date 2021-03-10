@@ -673,7 +673,11 @@ namespace Au.Compiler
 
 		FileNode _GetFile(string s, bool? folder = false) {
 			var f = _fn.FindRelative(s, folder);
-			if (f == null) { _ErrorV($"file '{s}' does not exist in this workspace"); return null; }
+			if (f == null) {
+				string s2 = APath.FindExtension(s) < 0 ? ". If it is a code file, append \".cs\"." : null;
+				_ErrorV($"file '{s}' does not exist in this workspace{s2}");
+				return null;
+			}
 			var v = AFile.ExistsAs(s = f.FilePath, true);
 			if (v != (f.IsFolder ? FileDir.Directory : FileDir.File)) { _ErrorV("file does not exist: " + s); return null; }
 			return f;

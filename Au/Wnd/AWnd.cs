@@ -2364,18 +2364,23 @@ namespace Au
 		public bool IsConsole => ClassNameIs("ConsoleWindowClass");
 
 		internal void UacCheckAndThrow_(string prefix = null) {
-			if (!Is0 && IsUacAccessDenied) {
+			if (!Is0 && UacAccessDenied) {
 				if (prefix == null) prefix = "Failed. The"; else if (prefix.Ends('.')) prefix += " The"; //this is to support prefix used by AMouse.Move: "The active"
 				throw new AuException(Api.ERROR_ACCESS_DENIED, prefix + " window's process has a higher UAC integrity level (admin or uiAccess) than this process.");
 			}
 		}
 
 		/// <summary>
+		/// Gets UAC info of the process.
+		/// </summary>
+		public AUac Uac => AUac.OfProcess(ProcessId);
+
+		/// <summary>
 		/// Returns true if [](xref:uac) would not allow to automate the window.
 		/// It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool IsUacAccessDenied {
+		public bool UacAccessDenied {
 			get {
 				if (AUac.IsAdmin) return false;
 				ALastError.Clear();

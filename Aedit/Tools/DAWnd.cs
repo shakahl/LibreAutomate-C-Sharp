@@ -162,7 +162,7 @@ namespace Au.Tools
 
 			bool _GetClassName(AWnd w, out string cn) {
 				cn = w.ClassName; if (cn != null) return true;
-				_winInfo.Text = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + ALastError.Message;
+				_winInfo.zText = "Failed to get " + (w == _wnd ? "window" : "control") + " properties: \r\n" + ALastError.Message;
 				_scroller.Visibility = Visibility.Hidden;
 				return false;
 			}
@@ -475,7 +475,7 @@ namespace Au.Tools
 		//public event Action OK;
 
 		private void _bOK_Click(WBButtonClickArgs e) {
-			ZResultCode = _code.Text;
+			ZResultCode = _code.zText;
 			if (ZResultCode.NE()) { ZResultCode = null; e.Cancel = true; return; }
 			ZResultUseControl = !_con.Is0 && _cControl.IsChecked;
 
@@ -732,7 +732,7 @@ namespace Au.Tools
 
 			void _SetText(in _WinInfo wi) {
 				var s1 = wi.Format(_wnd, _con, _wiWCP);
-				_winInfo.Text = s1.TrimEnd("\r\n");
+				_winInfo.zText = s1.TrimEnd("\r\n");
 			}
 		}
 		int _wiWCP; //0 not inited, 1 window, 2 control, 3 program
@@ -741,7 +741,7 @@ namespace Au.Tools
 		void _InitInfo() {
 			_commonInfos = new TUtil.CommonInfos(_info);
 
-			_info.Text = c_dialogInfo;
+			_info.zText = c_dialogInfo;
 			_info.AddElem(this, c_dialogInfo);
 
 			_info.InfoCT(nameW, "Window name.", true);

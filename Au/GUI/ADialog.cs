@@ -62,13 +62,13 @@ namespace Au
 	/// d.SetButtons("1 OK|2 Cancel|3 Custom|4 Custom2");
 	/// d.SetIcon(DIcon.Warning);
 	/// d.SetExpandedText("Expanded info\nand more info.", true);
-	/// d.FlagCanBeMinimized = true;
+	/// d.CanBeMinimized = true;
 	/// d.SetCheckbox("Check");
 	/// d.SetRadioButtons("1 r1|2 r2");
 	/// d.SetTimeout(30, "OK");
 	/// d.HyperlinkClicked += e => { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
 	/// d.ButtonClicked += e => { AOutput.Write(e.Button); if(e.Button == 4) e.DontCloseDialog = true; };
-	/// d.FlagShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
+	/// d.ShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
 	/// var r = d.ShowDialog();
 	/// AOutput.Write(r, d.Controls.IsChecked, d.Controls.RadioId);
 	/// switch(r) { case 1: AOutput.Write("OK"); break; case ADialog.Timeout: AOutput.Write("timeout"); break; }
@@ -187,21 +187,21 @@ namespace Au
 			/// <summary>
 			/// Right-to-left layout.
 			/// </summary>
-			/// <seealso cref="FlagRtlLayout"/>
+			/// <seealso cref="ADialog.RtlLayout"/>
 			public static bool RtlLayout { get; set; }
 
 			/// <summary>
 			/// If there is no owner window, let the dialog be always on top of most other windows.
 			/// Default true.
 			/// </summary>
-			/// <seealso cref="FlagTopmost"/>
+			/// <seealso cref="Topmost"/>
 			public static bool TopmostIfNoOwnerWindow { get; set; } = true;
 
 			/// <summary>
 			/// Show dialogs on this screen when screen is not explicitly specified (<see cref="Screen"/>) and there is no owner window.
 			/// The <b>AScreen</b> must be lazy or empty.
 			/// </summary>
-			/// <exception cref="ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
+			/// <exception cref="ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy or empty.</exception>
 			/// <example>
 			/// <code><![CDATA[
 			/// ADialog.Options.DefaultScreen = AScreen.Index(1, lazy: true);
@@ -228,11 +228,12 @@ namespace Au
 		#endregion static options
 
 		_Api.TASKDIALOGCONFIG _c;
+		DFlags _flags;
 
-		///
-		public ADialog() {
+		ADialog(DFlags flags) {
 			_c.cbSize = Api.SizeOf(_c);
-			FlagRtlLayout = Options.RtlLayout;
+			_flags = flags;
+			RtlLayout = Options.RtlLayout;
 		}
 
 		/// <summary>
@@ -243,11 +244,8 @@ namespace Au
 			string text1 = null, string text2 = null, string buttons = null, DFlags flags = 0, DIcon icon = 0, AnyWnd owner = default,
 			string expandedText = null, string footerText = null, string title = null, DControls controls = null,
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0, Action<DEventArgs> onLinkClick = null
-			) : this() {
-			if (0 != (flags & DFlags.Topmost)) FlagTopmost = true; //else use Options.TopmostIfNoOwnerWindow if no owner
-			FlagXCancel = 0 != (flags & DFlags.XCancel);
+			) : this(flags) {
 			if (0 != (flags & DFlags.Wider)) Width = 700;
-			//FlagKeyboardShortcutsVisible=0 != (flags&DFlags.KeyboardShortcutsVisible);
 
 			SetText(text1, text2);
 			SetIcon(icon);
@@ -258,7 +256,7 @@ namespace Au
 				if (controls.Checkbox != null) SetCheckbox(controls.Checkbox, controls.IsChecked);
 				if (controls.RadioButtons != null) SetRadioButtons(controls.RadioButtons, controls.RadioId);
 			}
-			SetOwnerWindow(owner, 0 != (flags & DFlags.OwnerCenter));
+			SetOwnerWindow(owner, 0 != (flags & DFlags.CenterOwner));
 			SetXY(x, y, 0 != (flags & DFlags.RawXY));
 			SetTimeout(secondsTimeout);
 			SetExpandedText(expandedText, 0 != (flags & DFlags.ExpandDown));
@@ -673,7 +671,7 @@ namespace Au
 		/// </summary>
 		/// <param name="x">X position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
 		/// <param name="y">Y position in <see cref="Screen"/>. If default(Coord) - screen center. You also can use <see cref="Coord.Reverse"/> etc.</param>
-		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc). Don't ensure that entire window is in screen.</param>
+		/// <param name="rawXY">x y are relative to the primary screen (ignore <see cref="Screen"/> etc).</param>
 		public void SetXY(Coord x, Coord y, bool rawXY = false) {
 			_x = x; _y = y;
 			_rawXY = rawXY;
@@ -686,7 +684,7 @@ namespace Au
 		/// If not set, will be used owner window's screen or <see cref="Options.DefaultScreen"/>.
 		/// More info: <see cref="AScreen"/>, <see cref="AWnd.MoveInScreen"/>.
 		/// </summary>
-		public AScreen Screen { set; private get; }
+		public AScreen Screen { set; get; }
 
 		/// <summary>
 		/// Let the dialog close itself after <i>closeAfterS</i> seconds. Then <see cref="ShowDialog"/> returns <see cref="Timeout"/>.
@@ -700,47 +698,32 @@ namespace Au
 		int _timeoutS; bool _timeoutActive, _timeoutNoInfo; string _timeoutActionText, _timeoutFooterText;
 
 		/// <summary>
-		/// Allow to cancel even if there is no Cancel button.
-		/// It adds X (Close) button to the title bar, and also allows to close the dialog with the Esc key.
-		/// When the dialog is closed with the X button or Esc, the returned result button id is 0 if there is no Cancel button; else the same as when clicked the Cancel button.
-		/// The same as <see cref="DFlags.XCancel"/>.
-		/// </summary>
-		public bool FlagXCancel { set; private get; }
-
-		/// <summary>
 		/// Right-to left layout.
-		/// Default is ADialog.Options.RtlLayout.
+		/// Default = <see cref="ADialog.Options.RtlLayout"/>.
 		/// </summary>
-		public bool FlagRtlLayout { set; private get; }
+		public bool RtlLayout { set; get; }
 
 		/// <summary>
 		/// Add 'Minimize' button to the title bar.
 		/// </summary>
-		public bool FlagCanBeMinimized { set; private get; }
+		public bool CanBeMinimized { set; get; }
 
 		/// <summary>
 		/// Show progress bar.
 		/// </summary>
-		public bool FlagShowProgressBar { set; private get; }
+		public bool ProgressBar { set; get; }
 
 		/// <summary>
-		/// Show progress bar that just plays an animation but does not indicate which part of the work is already done.
+		/// Show progress bar that does not indicate which part of the work is already done.
 		/// </summary>
-		public bool FlagShowMarqueeProgressBar { set; private get; }
+		public bool ProgressBarMarquee { set; get; }
 
 		/// <summary>
 		/// Makes the dialog window topmost or non-topmost.
 		/// If true, will set topmost style when creating the dialog. If false, will not set.
 		/// If null (default), the dialog will be topmost if both these are true: no owner window, <see cref="ADialog.Options.TopmostIfNoOwnerWindow"/> is true (default).
 		/// </summary>
-		public bool? FlagTopmost { set; private get; }
-
-		///// <summary>
-		///// Show keyboard shortcuts (underlined characters), like when you press the Alt key.
-		///// Tip: to create keyboard shortcuts for custom buttons, use &amp; character, like "&amp;One|&amp;Two|T&amp;hree".
-		///// </summary>
-		///// <seealso cref="DFlags.KeyboardShortcutsVisible"/>
-		//public bool FlagKeyboardShortcutsVisible { set; private get; }
+		public bool? Topmost { set; get; }
 
 		#endregion set properties
 
@@ -772,11 +755,11 @@ namespace Au
 			_SetPos(true); //get screen
 
 			_SetFlag(_TDF.SIZE_TO_CONTENT, true); //can make max 50% wider
-			_SetFlag(_TDF.ALLOW_DIALOG_CANCELLATION, FlagXCancel);
-			_SetFlag(_TDF.RTL_LAYOUT, FlagRtlLayout);
-			_SetFlag(_TDF.CAN_BE_MINIMIZED, FlagCanBeMinimized);
-			_SetFlag(_TDF.SHOW_PROGRESS_BAR, FlagShowProgressBar);
-			_SetFlag(_TDF.SHOW_MARQUEE_PROGRESS_BAR, FlagShowMarqueeProgressBar);
+			_SetFlag(_TDF.ALLOW_DIALOG_CANCELLATION, _flags.Has(DFlags.XCancel));
+			_SetFlag(_TDF.RTL_LAYOUT, RtlLayout);
+			_SetFlag(_TDF.CAN_BE_MINIMIZED, CanBeMinimized);
+			_SetFlag(_TDF.SHOW_PROGRESS_BAR, ProgressBar);
+			_SetFlag(_TDF.SHOW_MARQUEE_PROGRESS_BAR, ProgressBarMarquee);
 			_SetFlag(_TDF.ENABLE_HYPERLINKS, HyperlinkClicked != null);
 			_SetFlag(_TDF.CALLBACK_TIMER, (_timeoutS > 0 || Timer != null));
 
@@ -910,7 +893,17 @@ namespace Au
 			if (before) _screen = default;
 			if (_HasFlag(_TDF.POSITION_RELATIVE_TO_WINDOW)) return;
 			bool isXY = !_x.IsEmpty || !_y.IsEmpty;
-			if (!_rawXY) {
+			if (_flags.Has(DFlags.CenterMouse)) {
+				if (!before) {
+					var p = AMouse.XY;
+					var screen = AScreen.Of(p);
+					if (AScreen.Of(_dlg).Handle != screen.Handle) _dlg.MoveL_(screen.Rect.XY); //resize if different DPI
+					var r = _dlg.Rect;
+					r.Move(p.x - r.Width / 2, p.y - 20);
+					r.EnsureInScreen(screen);
+					_dlg.MoveL(r.left, r.top);
+				}
+			} else if (!_rawXY) {
 				if (before) {
 					_screen = Screen;
 					if (_screen.IsEmpty && _c.hwndParent.Is0) _screen = Options.DefaultScreen;
@@ -918,8 +911,9 @@ namespace Au
 				} else if (isXY || !_screen.IsEmpty) {
 					_dlg.MoveInScreen(_x, _y, _screen);
 				}
-			} else if (isXY && !before) {
+			} else if (!before && isXY) {
 				_dlg.Move(_x, _y);
+				_dlg.EnsureInScreen();
 			}
 		}
 		AScreen _screen;
@@ -943,16 +937,13 @@ namespace Au
 				if (_enableOwner) _c.hwndParent.Enable(true);
 				_SetPos(false);
 
-				bool topmost = false;
-				if (FlagTopmost != null) topmost = FlagTopmost.GetValueOrDefault();
-				else if (_c.hwndParent.Is0) topmost = Options.TopmostIfNoOwnerWindow;
-				if (topmost) w.ZorderTopmost();
+				if (Topmost ?? (_c.hwndParent.Is0 && Options.TopmostIfNoOwnerWindow)) w.ZorderTopmost();
 
 				//w.SetStyleAdd(WS.THICKFRAME); //does not work
 
 				if (_IsEdit) _EditControlCreate();
 
-				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002);
+				//if(FlagKeyboardShortcutsVisible) w.Post(Api.WM_UPDATEUISTATE, 0x30002); //rejected. Don't need too many rarely used features.
 
 				//fix API bug: dialog window is hidden if process STARTUPINFO specifies hidden window
 				ATimer.After(1, _ => _dlg.ShowL(true)); //use timer because at this time still invisible always
@@ -1173,7 +1164,7 @@ namespace Au
 			using (new StringBuilder_(out var b)) {
 				b.Append("This dialog will disappear if not clicked in ").Append(timeLeft).Append(" s.");
 				if (!_timeoutActionText.NE()) b.AppendFormat("\nTimeout action: {0}.", _timeoutActionText);
-				if (FlagRtlLayout) b.Replace(".", "");
+				if (RtlLayout) b.Replace(".", "");
 				if (!_timeoutFooterText.NE()) b.Append('\n').Append(_timeoutFooterText);
 				return b.ToString();
 			}
@@ -1189,8 +1180,8 @@ namespace Au
 
 		void _EditControlInitBeforeShowDialog() {
 			if (!_IsEdit) return;
-			FlagShowMarqueeProgressBar = true;
-			FlagShowProgressBar = false;
+			ProgressBarMarquee = true;
+			ProgressBar = false;
 			_c.pszContent ??= "";
 			if (_c.pszExpandedInformation != null && _controls.EditType == DEdit.Multiline) _SetFlag(_TDF.EXPAND_FOOTER_AREA, true);
 		}
@@ -1628,12 +1619,11 @@ namespace Au
 			int defaultButton = 0, Coord x = default, Coord y = default, int secondsTimeout = 0,
 			Action<DEventArgs> onLinkClick = null
 			) {
-			var d = new ADialog(text1, text2, null, flags, 0, owner,
+			var d = new ADialog(text1, text2, null, flags | DFlags.XCancel, 0, owner,
 				expandedText, footerText, title, controls,
 				defaultButton, x, y, secondsTimeout, onLinkClick);
 
 			d.SetButtons(null, true, list);
-			d.FlagXCancel = true;
 			d.SetExpandedText(expandedText, true);
 			return d.ShowDialog();
 		}
@@ -1676,7 +1666,7 @@ namespace Au
 				expandedText, footerText, title, controls,
 				0, x, y, secondsTimeout, onLinkClick);
 
-			if (marquee) d.FlagShowMarqueeProgressBar = true; else d.FlagShowProgressBar = true;
+			if (marquee) d.ProgressBarMarquee = true; else d.ProgressBar = true;
 
 			d.ShowDialogNoWait();
 
@@ -1773,44 +1763,42 @@ namespace Au.Types
 		/// <summary>
 		/// Show expanded text in footer.
 		/// </summary>
-		ExpandDown = 2,
-
-		/// <summary>
-		/// Show the dialog in the center of the owner window.
-		/// </summary>
-		OwnerCenter = 4,
-
-		/// <summary>
-		/// x y are relative to the primary screen (ignore <see cref="ADialog.Screen"/> etc). Don't ensure thet entire window is in screen.
-		/// More info: <see cref="ADialog.SetXY"/>. 
-		/// </summary>
-		RawXY = 8,
-
-		/// <summary>
-		/// Make the dialog a topmost window (always on top of other windows), regardless of ADialog.Options.TopmostIfNoOwnerWindow etc.
-		/// More info: <see cref="ADialog.FlagTopmost"/>. 
-		/// </summary>
-		Topmost = 16,
+		ExpandDown = 1 << 1,
 
 		/// <summary>
 		/// Set <see cref="ADialog.Width"/> = 700.
 		/// </summary>
-		Wider = 32,
+		Wider = 1 << 2,
 
 		/// <summary>
 		/// Allow to cancel even if there is no Cancel button.
 		/// It adds X (Close) button to the title bar, and also allows to close the dialog with the Esc key.
 		/// When the dialog is closed with the X button or Esc, the returned result button id is 0 if there is no Cancel button; else the same as when clicked the Cancel button.
-		/// The same as <see cref="ADialog.FlagXCancel"/>.
 		/// </summary>
-		XCancel = 64,
+		XCancel = 1 << 3,
 
-		//This was implemented, it's easy, but then I changed my mind, don't need too many features.
+		/// <summary>
+		/// Show the dialog in the center of the owner window.
+		/// </summary>
+		CenterOwner = 1 << 4,
+
+		/// <summary>
+		/// Show the dialog at the mouse position. 
+		/// </summary>
+		CenterMouse = 1 << 5,
+
+		/// <summary>
+		/// x y are relative to the primary screen (ignore <see cref="ADialog.Screen"/> etc).
+		/// More info: <see cref="ADialog.SetXY"/>. 
+		/// </summary>
+		RawXY = 1 << 6,
+
+		//rejected. Can use ADialog.Topmost, ADialog.Options.TopmostIfNoOwnerWindow.
 		///// <summary>
-		///// Show keyboard shortcuts (underlined characters), like when you press the Alt key.
-		///// More info: <see cref="ADialog.FlagKeyboardShortcutsVisible"/>.
+		///// Make the dialog a topmost window (always on top of other windows), regardless of <see cref="ADialog.Options.TopmostIfNoOwnerWindow"/> etc.
+		///// More info: <see cref=""/>. 
 		///// </summary>
-		//KeyboardShortcutsVisible = ,
+		//Topmost = ,
 
 		//NoTaskbarButton = , //not so useful
 		//NeverActivate = , //don't know how to implement. TDF_NO_SET_FOREGROUND does not work. LockSetForegroundWindow does not work if we can activate windows. HCBT_ACTIVATE can prevent activating but does not prevent deactivating.

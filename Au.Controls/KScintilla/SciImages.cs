@@ -26,7 +26,7 @@ namespace Au.Controls
 	/// <remarks>
 	/// Draws images in annotation areas.
 	/// Supports text annotations too, below images and in no-image lines. But it is limited:
-	/// 1. To set/get it use <see cref="SciText.AnnotationText(int, string)"/>, not direct Scintilla API.
+	/// 1. To set/get it use <see cref="KScintilla.zAnnotationText(int, string)"/>, not direct Scintilla API.
 	/// 2. You cannot hide all annotations (SCI_ANNOTATIONSETVISIBLE). This class sets it to show always.
 	/// 3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
 	/// 4. Setting annotation styles is currently not supported.
@@ -41,7 +41,6 @@ namespace Au.Controls
 		}
 
 		KScintilla _c;
-		SciText _t;
 		IntPtr _callbackPtr;
 		bool _isEditor;
 
@@ -103,7 +102,6 @@ namespace Au.Controls
 		{
 			if(t_data == null) t_data = new _ThreadSharedData();
 			_c = c;
-			_t = c.Z;
 			_isEditor = isEditor;
 			_sci_AnnotationDrawCallback = _AnnotationDrawCallback;
 			_callbackPtr = Marshal.GetFunctionPointerForDelegate(_sci_AnnotationDrawCallback);
@@ -177,7 +175,7 @@ namespace Au.Controls
 				int annotLen = _c.Call(SCI_ANNOTATIONGETTEXT, iLine); //we'll need old annotation text later, and we'll get it into the same buffer after the new image info
 
 				//calculate n annotation lines from image height
-				int lineHeight = _t.LineHeight(); if(lineHeight <= 0) continue;
+				int lineHeight = _c.zLineHeight(); if(lineHeight <= 0) continue;
 				int nAnnotLines = Math.Min((maxHeight + (lineHeight - 1)) / lineHeight, 255);
 				//AOutput.Write(lineHeight, maxHeight, nAnnotLines);
 
@@ -290,7 +288,7 @@ namespace Au.Controls
 					}
 				}
 			}
-			_t.AnnotationText_(line, s);
+			_c.zAnnotationText_(line, s);
 		}
 
 		/// <summary>
@@ -421,7 +419,7 @@ namespace Au.Controls
 			//Cannot store array indices in annotation, because they may change.
 			//Also cannot store image strings in annotation, because then boxed annotation would be too wide (depends on text length).
 			//Getting/parsing text takes less than 20% time. Other time - drawing image.
-			int from = _t.LineStart(false, c.line), to = _t.LineEnd(false, c.line), len = to - from;
+			int from = _c.zLineStart(false, c.line), to = _c.zLineEnd(false, c.line), len = to - from;
 			var text = _GetTextRange(from, to);
 
 			//find image strings and draw the images
@@ -498,8 +496,8 @@ namespace Au.Controls
 			//If there are no image strings (text edited), delete the annotation or just its part containing image info and '\n's.
 			if(!hasImages && c.annotLine == 0) {
 				int line = c.line; var annot = AnnotationText_(line);
-				//_t.AnnotationText_(line, annot); //dangerous
-				_c.Dispatcher.InvokeAsync(() => { _t.AnnotationText_(line, annot); });
+				//_c.zAnnotationText_(line, annot); //dangerous
+				_c.Dispatcher.InvokeAsync(() => { _c.zAnnotationText_(line, annot); });
 				return 1;
 			}
 
@@ -531,7 +529,7 @@ namespace Au.Controls
 			int from = n.position, to = from + (inserted ? n.length : 0), len = 0, firstLine = 0, textPos = 0;
 			bool allText = false;
 			if(from == 0) {
-				len = _c.Len8;
+				len = _c.zLen8;
 				if(len < 10) return; //eg 0 when deleted all text
 				if(inserted && len == n.length) { //added all text
 					allText = true;
@@ -539,10 +537,10 @@ namespace Au.Controls
 				}
 			}
 			if(s == null) {
-				firstLine = _t.LineFromPos(false, from);
-				int from2 = _t.LineStart(false, firstLine);
+				firstLine = _c.zLineFromPos(false, from);
+				int from2 = _c.zLineStart(false, firstLine);
 				if(!inserted && from2 == from) return; //deleted whole lines or characters at line start, which cannot create new image string in text
-				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _t.LineEndFromPos(false, to);
+				int to2 = (inserted && n.textUTF8[n.length - 1] == '\n') ? to : _c.zLineEndFromPos(false, to);
 				len = to2 - from2;
 				//AOutput.Write(inserted, from, to, from2, to2, len);
 				if(len < 10) return;

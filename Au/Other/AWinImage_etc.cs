@@ -341,7 +341,7 @@ namespace Au
 				TopLevel = true; //optional
 				StartPosition = FormStartPosition.Manual;
 				Text = "Au.AWinImage.CaptureUI";
-				Cursor = _cursor = ACursor.Load(Resources.Resources.red_cross_cursor, 32).ToGdipCursor();
+				Cursor = _cursor = ACursor.Load(AResources.GetBytes("<Au>resources/red_cross_cursor.cur"), 32).ToGdipCursor();
 			}
 
 			protected override CreateParams CreateParams {

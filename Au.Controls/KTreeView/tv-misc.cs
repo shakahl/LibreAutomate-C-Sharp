@@ -13,7 +13,7 @@ using System.Diagnostics;
 
 namespace Au.Controls
 {
-	unsafe partial class KTreeView
+	public unsafe partial class KTreeView
 	{
 		bool _IsValid(int index) => (uint)index < _avi.Lenn_();
 

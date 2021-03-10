@@ -308,14 +308,13 @@
             <summary>
             This .NET control wraps native Scintilla control.
             It is not a universal Scintilla wrapper class. Just for this library and related software.
-            Creates and initializes the control. Also used to set/change control properties.
-            The Z property returns a SciText object that can be used to work with text, code styling etc.
             </summary>
-        </member>
-        <member name="F:Au.Controls.KScintilla.Z">
-            <summary>
-            Gets the SciText object that contains most Scintilla-related functions.
-            </summary>
+            <remarks>
+            Most functions throw ArgumentOutOfRangeException when: 1. A position or line index argument is negative. 2. Scintilla returned a negative position or line index.
+            If a position or line index argument is greater than text length or the number of lines, some functions return the text length or the last line, and it is documented; for other functions the behaviour is undefined, eg ArgumentOutOfRangeException or Scintilla's return value or like of the documented methods.
+            
+            Almost all function/event names start with z or Z, because VS intellisense cannot group by inheritance and would mix with 300 WPF functions/events. Most public and internal Scintilla API wrapper functions have prefix z, others Z. Derived classes can use prefix for example zz and ZZ.
+            </remarks>
         </member>
         <member name="M:Au.Controls.KScintilla.ZOnSciNotify(Au.Controls.Sci.SCNotification@)">
             <summary>
@@ -343,39 +342,6 @@
             Sends a Scintilla message to the control and returns LPARAM.
             Don't call this function from another thread.
             </summary>
-        </member>
-        <member name="P:Au.Controls.KScintilla.Text">
-            <summary>
-            Gets or sets text.
-            Uses caching, therefore the 'get' function is fast and garbage-free when calling multiple times.
-            </summary>
-            <remarks>
-            The 'get' function gets cached text if called not the first time after setting or modifying control text.
-            The 'set' function calls <see cref="M:Au.Controls.SciText.SetText(System.String,Au.Controls.SciSetTextFlags,System.Boolean)"/> when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
-            Unlike the above methods, this property can be used before creating handle.
-            </remarks>
-        </member>
-        <member name="P:Au.Controls.KScintilla.Len8">
-            <summary>
-            UTF-8 text length.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.KScintilla.Len16">
-            <summary>
-            UTF-16 text length.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.KScintilla.Pos8(System.Int32)">
-            <summary>
-            Converts UTF-16 position to UTF-8 position. Fast.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative or greater than <see cref="P:Au.Controls.KScintilla.Len16"/>.</exception>
-        </member>
-        <member name="M:Au.Controls.KScintilla.Pos16(System.Int32)">
-            <summary>
-            Converts UTF-8 position to UTF-16 position. Fast.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative or greater than <see cref="P:Au.Controls.KScintilla.Len8"/>.</exception>
         </member>
         <member name="P:Au.Controls.KScintilla.ZInitBorder">
             <summary>
@@ -424,10 +390,10 @@
             <summary>Don't support tags. The <see cref="P:Au.Controls.KScintilla.ZTags"/> property is null.</summary>
         </member>
         <member name="F:Au.Controls.KScintilla.ZTagsStyle.AutoWithPrefix">
-            <summary>Let <see cref="P:Au.Controls.KScintilla.Text"/>, Z.SetText and Z.AppendText parse tags when the text has prefix "&lt;&gt;".</summary>
+            <summary>Let <see cref="P:Au.Controls.KScintilla.zText"/>, zSetText and zAppendText parse tags when the text has prefix "&lt;&gt;".</summary>
         </member>
         <member name="F:Au.Controls.KScintilla.ZTagsStyle.AutoAlways">
-            <summary>Let <see cref="P:Au.Controls.KScintilla.Text"/>, Z.SetText and Z.AppendText parse tags always.</summary>
+            <summary>Let <see cref="P:Au.Controls.KScintilla.zText"/>, zSetText and zAppendText parse tags always.</summary>
         </member>
         <member name="F:Au.Controls.KScintilla.ZTagsStyle.User">
             <summary>Tags are parsed only when calling Tags.AddText.</summary>
@@ -466,6 +432,594 @@
             Don't set focus on mouse left/right/middle button down.
             </summary>
         </member>
+        <member name="M:Au.Controls.KScintilla.zStyleFont(System.Int32,System.Windows.Controls.Control)">
+            <remarks>Uses only font name and size. Not style etc.</remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zStyleMeasureStringWidth(System.Int32,System.String)">
+            <summary>
+            Measures string width.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zStyleClearAll">
+            <summary>
+            Calls SCI_STYLECLEARALL, which sets all styles to be the same as STYLE_DEFAULT.
+            Then also sets some special styles, eg STYLE_HIDDEN and hotspot color.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zStyleClearRange(System.Int32,System.Int32)">
+            <summary>
+            Calls SCI_STYLECLEARALL(styleFrom, styleToNotIncluding), which sets range of styles to be the same as STYLE_DEFAULT.
+            If styleToNotIncluding is 0, clears all starting from styleFrom.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetStyleAt(System.Int32)">
+            <summary>
+            Gets style at position.
+            Uses SCI_GETSTYLEAT.
+            Returns 0 if pos is invalid.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSetString(System.Int32,Au.Types.LPARAM,System.String,System.Boolean)">
+            <summary>
+            Calls a Scintilla message that sets a string which is passed using lParam.
+            The string can be null if the Scintilla message allows it.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSetString(System.Int32,System.String,Au.Types.LPARAM)">
+            <summary>
+            Calls a Scintilla message that sets a string which is passed using wParam.
+            The string can be null if the Scintilla message allows it.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSetStringString(System.Int32,System.String)">
+            <summary>
+            Calls a Scintilla message and passes two strings using wParam and lParam.
+            wParam0lParam must be like "WPARAM\0LPARAM". Asserts if no '\0'.
+            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
+            Don't call this function from another thread.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetString(System.Int32,Au.Types.LPARAM,System.Int32)">
+            <summary>
+            Calls a Scintilla message that gets a string.
+            Don't call this function from another thread.
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+            <param name="bufferSize">
+            How much UTF-8 bytes to allocate for Scintilla to store the text.
+            If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
+            If 0, returns "" and does not call the message.
+            If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
+            The function allocates bufferSize+1 bytes and sets that last byte = 0. If Scintilla overwrites it, asserts and calls Environment.FailFast.
+            </param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetStringOfLength(System.Int32,Au.Types.LPARAM,System.Int32)">
+            <summary>
+            The same as <see cref="M:Au.Controls.KScintilla.zGetString(System.Int32,Au.Types.LPARAM,System.Int32)"/>, but always uses utf8Length bytes of the result (does not find length).
+            </summary>
+            <param name="sciMessage"></param>
+            <param name="wParam"></param>
+            <param name="utf8Length">
+            Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
+            If 0, returns "" and does not call the message.
+            </param>
+            <remarks>
+            This function can get binary string (with '\0' characters).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla._RangeText(System.Int32,System.Int32)">
+            <summary>
+            Optimized 'get text' function.
+            </summary>
+            <param name="start8">Start index, UTF-8.</param>
+            <param name="end8">End index, UTF-8.</param>
+            <remarks>
+            Does not create an intermediate byte[].
+            Gets big text 5 times faster than zGetStringOfLength. Tested with text 31K length, 1K lines.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zNormalizeRange(System.Boolean,System.Int32@,System.Int32@)">
+            <summary>
+            If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
+            </summary>
+            <param name="utf16">Input values are UTF-16.</param>
+            <param name="from"></param>
+            <param name="to">If -1, uses <see cref="P:Au.Controls.KScintilla.zLen8"/>.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg greater than text length or <i>to</i> less than <i>from</i>.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zNormalizeRange(System.Boolean,System.Range)">
+            <summary>
+            If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
+            </summary>
+            <param name="utf16">Input values are UTF-16.</param>
+            <param name="r">Range. Can be spacified from start or/and from end.</param>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg <i>to</i> less than <i>from</i>.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zNormalizeRangeCanBeReverse(System.Boolean,System.Int32@,System.Int32@,System.Boolean)">
+            <summary>
+            Same as <see cref="M:Au.Controls.KScintilla.zNormalizeRange(System.Boolean,System.Int32@,System.Int32@)"/>, but can be <i>to</i> less than <i>from</i>. If so, returns true.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg greater than text length.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla._ParamPos(System.Boolean,System.Int32)">
+            <summary>
+            => utf16 ? zPos8(pos) : pos;
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla._ReturnPos(System.Boolean,System.Int32)">
+            <summary>
+            => utf16 ? zPos16(pos) : pos;
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla._ReturnPosCanBeNegative(System.Boolean,System.Int32)">
+            <summary>
+            pos >= 0 ? (utf16 ? zPos16(pos) : pos) : pos;
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla._ParamLine(System.Int32)">
+            <summary>
+            => line;
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zClearText(Au.Controls.SciSetTextFlags)">
+            <summary>
+            Removes all text (SCI_CLEARALL).
+            </summary>
+            <param name="flags"></param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSetText(System.String,Au.Controls.SciSetTextFlags,System.Boolean)">
+            <summary>
+            Replaces all text.
+            Parses tags if need.
+            </summary>
+            <param name="s">Text.</param>
+            <param name="flags"></param>
+            <param name="ignoreTags">Don't parse tags, regardless of ZInitTagsStyle.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSetText_(System.Byte[],System.Int32)">
+            <summary>
+            Sets UTF-8 text.
+            </summary>
+            <remarks>
+            Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            s must end with 0. Asserts.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSetText_(System.Byte*)">
+            <summary>
+            Sets UTF-8 text.
+            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zAppendText(System.String,System.Boolean,System.Boolean,System.Boolean)">
+            <summary>
+            Appends text and optionally "\r\n".
+            Parses tags if need. Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
+            </summary>
+            <param name="s"></param>
+            <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
+            <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
+            <param name="ignoreTags">Don't parse tags, regardless of ZInitTagsStyle.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zAddText_(System.Boolean,System.Byte*,System.Int32)">
+            <summary>
+            Sets or appends UTF-8 text of specified length.
+            Does not parse tags. Moves current position and scrolls to the end.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetText_">
+            <summary>
+            Gets all text directly from Scintilla.
+            Does not use caching like zText.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zText">
+            <summary>
+            Gets or sets text.
+            Uses caching, therefore the 'get' function is fast and garbage-free when calling multiple times.
+            </summary>
+            <remarks>
+            The 'get' function gets cached text if called not the first time after setting or modifying control text.
+            The 'set' function calls <see cref="M:Au.Controls.KScintilla.zSetText(System.String,Au.Controls.SciSetTextFlags,System.Boolean)"/> when need. Uses default parameters (with undo and notifications, unless ZInitReadOnlyAlways).
+            Unlike the above methods, this property can be used before creating handle.
+            </remarks>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zLen8">
+            <summary>
+            UTF-8 text length.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zLen16">
+            <summary>
+            UTF-16 text length.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zPos8(System.Int32)">
+            <summary>
+            Converts UTF-16 position to UTF-8 position. Fast.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative or greater than <see cref="P:Au.Controls.KScintilla.zLen16"/>.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zPos16(System.Int32)">
+            <summary>
+            Converts UTF-8 position to UTF-16 position. Fast.
+            </summary>
+            <exception cref="T:System.ArgumentOutOfRangeException">Negative or greater than <see cref="P:Au.Controls.KScintilla.zLen8"/>.</exception>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zCurrentPos8">
+            <summary>
+            Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
+            The 'set' function makes empty selection; does not scroll and does not make visible like zGoToPos.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zCurrentPos16">
+            <summary>
+            Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-16 chars.
+            The 'set' function makes empty selection; does not scroll and does not make visible like zGoToPos.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zSelectionStart8">
+            <summary>
+            SCI_GETSELECTIONSTART UTF-8.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zSelectionStar16">
+            <summary>
+            SCI_GETSELECTIONSTART UTF-16.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zSelectionEnd8">
+            <summary>
+            SCI_GETSELECTIONEND UTF-8.
+            Always greater or equal than SelectionStart.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zSelectionEnd16">
+            <summary>
+            SCI_GETSELECTIONEND UTF-16.
+            Always greater or equal than SelectionStartChars.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zIsSelection">
+            <summary>
+            true if there is selected text.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineFromPos(System.Boolean,System.Int32)">
+            <summary>
+            Gets line index from character position.
+            </summary>
+            <param name="utf16"></param>
+            <param name="pos">A position in document text. Returns the last line if too big.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineStart(System.Boolean,System.Int32)">
+            <summary>
+            Gets line start position from line index.
+            </summary>
+            <param name="utf16">Return UTF-16.</param>
+            <param name="line">0-based line index. Returns text length if too big.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineEnd(System.Boolean,System.Int32,System.Boolean)">
+            <summary>
+            Gets line end position from line index.
+            </summary>
+            <param name="utf16">Return UTF-16.</param>
+            <param name="line">0-based line index. Returns text length if too big.</param>
+            <param name="withRN">Include \r\n.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineStartFromPos(System.Boolean,System.Int32)">
+            <summary>
+            Gets line start position from any position.
+            </summary>
+            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
+            <param name="pos">A position in document text. Returns text length if too big.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineStartFromPos(System.Boolean,System.Int32,System.Int32@)">
+            <summary>
+            Gets line start position from any position and gets line index.
+            Returns start position.
+            </summary>
+            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
+            <param name="pos">A position in document text. Returns text length if too big.</param>
+            <param name="line">Receives line index.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineEndFromPos(System.Boolean,System.Int32,System.Boolean,System.Boolean)">
+            <summary>
+            Gets line end position from any position.
+            </summary>
+            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
+            <param name="pos">A position in document text. Returns text length if too big.</param>
+            <param name="withRN">Include \r\n.</param>
+            <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineStartEndFromPos(System.Boolean,System.Int32,System.Boolean,System.Nullable{System.Boolean})">
+            <summary>
+            Gets line index, start and end positions from position.
+            </summary>
+            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
+            <param name="pos">A position in document text. Uses the last line if too big.</param>
+            <param name="withRN">Include \r\n.</param>
+            <param name="utf16Return">If not null, overrides <i>utf16</i> for return values.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineText(System.Int32,System.Boolean)">
+            <summary>
+            Gets line text.
+            </summary>
+            <param name="line">0-based line index. If invalid, returns "".</param>
+            <param name="withRN">Include \r\n.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineHeight">
+            <summary>
+            Gets line height.
+            Currently all lines are of the same height.
+            </summary>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zLineCount">
+            <summary>
+            Gets the number of lines.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineIndentationFromPos(System.Boolean,System.Int32,System.Int32@)">
+            <summary>
+            Gets the number of tabs + spaces/4 at the start of the line that contains the specified position.
+            </summary>
+            <param name="utf16"></param>
+            <param name="pos">A position in document text.</param>
+            <param name="extraSpaces">Receives the number of extra spaces, 0 to 3.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zLineIndentationFromPos(System.Boolean,System.Int32)">
+            <summary>
+            Gets the number of tabs + spaces/4 at the start of the line that contains the specified position.
+            </summary>
+            <param name="utf16"></param>
+            <param name="pos">A position in document text.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zPosFromXY(System.Boolean,Au.Types.POINT,System.Boolean)">
+            <summary>
+            Gets position from point.
+            </summary>
+            <param name="utf16">Return UTF-16.</param>
+            <param name="p">Point in client area.</param>
+            <param name="minusOneIfFar">Return -1 if p is not in text characters.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zAnnotationText(System.Int32)">
+            <summary>
+            Gets annotation text of line.
+            Returns "" if the line does not contain annotation or is invalid line index.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zAnnotationText_(System.Int32)">
+            <summary>
+            Gets raw annotation text which can contain image info.
+            zAnnotationText gets text without image info.
+            Returns "" if the line does not contain annotation or is invalid line index.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zAnnotationText(System.Int32,System.String)">
+            <summary>
+            Sets annotation text of line.
+            Does nothing if invalid line index.
+            If s is null or "", removes annotation.
+            Preserves existing image info.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zAnnotationText_(System.Int32,System.String)">
+            <summary>
+            Sets raw annotation text which can contain image info.
+            If s is null or "", removes annotation.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zRangeToFullLines(System.Boolean,System.Int32@,System.Int32@,System.Boolean)">
+            <summary>
+            Moves <i>from</i> to the start of its line, and <i>to</i> to the end of its line.
+            Does not change <i>to</i> if it is at a line start.
+            </summary>
+            <param name="utf16"></param>
+            <param name="from">Start index.</param>
+            <param name="to">End index.</param>
+            <param name="withRN">Include "\r\n".</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zInsertText(System.Boolean,System.Int32,System.String,System.Boolean)">
+            <summary>
+            SCI_INSERTTEXT.
+            </summary>
+            <param name="utf16"></param>
+            <param name="pos">Start index. Cannot be negative.</param>
+            <param name="s">Text to insert. Can be null.</param>
+            <param name="addUndoPoint">Call <see cref="M:Au.Controls.KScintilla.zAddUndoPoint"/>.</param>
+            <remarks>
+            Does not parse tags.
+            Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="M:Au.Controls.KScintilla.zReplaceSel(System.String)"/> or <see cref="M:Au.Controls.KScintilla.zReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zDeleteRange(System.Boolean,System.Int32,System.Int32)">
+            <summary>
+            SCI_DELETERANGE.
+            </summary>
+            <param name="utf16"></param>
+            <param name="from">Start index.</param>
+            <param name="to">End index. If -1, uses control text length.</param>
+            <remarks>
+            Does not parse tags.
+            Does not change current selection, unless it is in the range (including <i>to</i>); for it use <see cref="M:Au.Controls.KScintilla.zReplaceSel(System.String)"/> or <see cref="M:Au.Controls.KScintilla.zReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)">
+            <summary>
+            Replaces text range.
+            </summary>
+            <param name="utf16"></param>
+            <param name="from">Start index.</param>
+            <param name="to">End index. If -1, uses control text length. Can be less than <i>from</i>.</param>
+            <param name="s">Replacement text. Can be null.</param>
+            <param name="moveCurrentPos">
+            After replacing set curent position at the end of the replacement. If <i>from</i> less than to - at <i>from</i>.
+            Else if current position was in the range (including <i>to</i>), Scintilla sets at <i>from</i>.
+            Else does not change current position and selection.
+            </param>
+            <remarks>
+            Does not parse tags.
+            By default does not change current selection, unless it is in the range (including <i>to</i>).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zRangeText(System.Boolean,System.Int32,System.Int32)">
+            <summary>
+            Gets range text.
+            </summary>
+            <param name="utf16"></param>
+            <param name="from">Start index.</param>
+            <param name="to">End index. If -1, uses control text length.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zReplaceSel(System.String)">
+            <summary>
+            SCI_REPLACESEL.
+            </summary>
+            <param name="s">Replacement text. Can be null.</param>
+            <remarks>
+            Does not parse tags.
+            If read-only, asserts and fails (unlike most other functions that change text).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zReplaceSel(System.Boolean,System.Int32,System.String)">
+            <summary>
+            zGoToPos and SCI_REPLACESEL.
+            </summary>
+            <param name="utf16"></param>
+            <param name="s">Replacement text. Can be null.</param>
+            <param name="pos">Start index.</param>
+            <remarks>
+            Does not parse tags.
+            If read-only, asserts and fails (unlike most other functions that change text).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSetAndReplaceSel(System.Boolean,System.Int32,System.Int32,System.String)">
+            <summary>
+            Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
+            </summary>
+            <param name="utf16"></param>
+            <param name="from">Start index.</param>
+            <param name="to">End index. If -1, uses control text length. Can be less than from.</param>
+            <param name="s">Replacement text. Can be null.</param>
+            <remarks>
+            Does not parse tags.
+            If read-only, asserts and fails (unlike most other functions that change text).
+            </remarks>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGoToPos(System.Boolean,System.Int32)">
+            <summary>
+            SCI_GOTOPOS and ensures visible.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGoToLine(System.Int32)">
+            <summary>
+            SCI_GOTOLINE and ensures visible.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zSelect(System.Boolean,System.Int32,System.Int32,System.Boolean)">
+            <summary>
+            SCI_SETSEL and optionally ensures visible.
+            </summary>
+            <param name="utf16"></param>
+            <param name="from"></param>
+            <param name="to">If -1, uses text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.</param>
+            <param name="makeVisible">Ensure line visible and selection visible. Without it in some cases selection to the left of the caret may be invisible.</param>
+        </member>
+        <member name="P:Au.Controls.KScintilla.zIsReadonly">
+            <summary>
+            SCI_GETREADONLY, SCI_SETREADONLY.
+            </summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.FileLoaderSaver.Load(System.String)">
+            <summary>
+            Loads file as UTF-8.
+            Returns byte[] that must be passed to <see cref="M:Au.Controls.KScintilla.FileLoaderSaver.SetText(Au.Controls.KScintilla,System.Byte[])"/>.
+            </summary>
+            <param name="file">To pass to File.OpenRead.</param>
+            <exception cref="T:System.Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
+            <remarks>
+            Supports any encoding (UTF-8, UTF-16, etc), BOM. Remembers it for Save.
+            If UTF-8 with BOM, the returned array contains BOM (to avoid copying), and <b>SetText</b> knows it.
+            If file data is binary or file size is more than 100_000_000, the returned text shows error message or image. Then <b>SetText</b> makes the control read-only; <b>Save</b> throws exception.
+            </remarks>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Binary">
+            <summary>Not a text file, or loading failed, or not initialized.</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Utf8NoBOM">
+            <summary>ASCII or UTF-8 without BOM.</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Utf8BOM">
+            <summary>UTF-8 with BOM (3 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Ansi">
+            <summary>ANSI containing non-ASCII characters, unknown code page.</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Utf16NoBOM">
+            <summary>UTF-16 without BOM.</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Utf16BOM">
+            <summary>UTF-16 with BOM (2 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Utf16BE">
+            <summary>UTF-16 with big endian BOM (2 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Utf32BOM">
+            <summary>UTF-32 with BOM (4 bytes).</summary>
+        </member>
+        <member name="F:Au.Controls.KScintilla.FileLoaderSaver._Encoding.Utf32BE">
+            <summary>UTF-32 with big endian BOM (4 bytes).</summary>
+        </member>
+        <member name="M:Au.Controls.KScintilla.FileLoaderSaver.SetText(Au.Controls.KScintilla,System.Byte[])">
+            <summary>
+            Sets control text.
+            If the file is binary or too big, shows error message or image, makes the control read-only, and returns false. Else returns true.
+            Uses <see cref="T:Au.Controls.SciSetTextFlags"/> NoUndo and NoNotify.
+            </summary>
+            <param name="z"></param>
+            <param name="text">Returned by <b>Load</b>.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.FileLoaderSaver.Save(Au.Controls.KScintilla,System.String,System.String)">
+            <summary>
+            Saves control text with the same encoding/BOM as loaded. Uses <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.
+            </summary>
+            <param name="z"></param>
+            <param name="file">To pass to AFile.Save.</param>
+            <param name="tempDirectory">To pass to AFile.Save.</param>
+            <exception cref="T:System.Exception">Exceptions of AFile.Save.</exception>
+            <exception cref="T:System.InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zGetSelectionLines(System.Boolean,System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.String}@,System.Boolean,System.Boolean)">
+            <summary>
+            Gets text and offsets of lines containing selection.
+            Returns true. If <i>ifFullLines</i> is true, may return false.
+            </summary>
+            <param name="utf16">Return UTF-16.</param>
+            <param name="x">Results.</param>
+            <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
+            <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zFindText(System.Boolean,System.String,System.Int32,System.Int32)">
+            <summary>
+            SCI_FINDTEXT.
+            </summary>
+            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
+            <param name="s"></param>
+            <param name="start"></param>
+            <param name="end">If -1, text length.</param>
+        </member>
+        <member name="M:Au.Controls.KScintilla.zAddUndoPoint">
+            <summary>
+            SCI_BEGINUNDOACTION, SCI_ENDUNDOACTION.
+            </summary>
+        </member>
         <member name="T:Au.Controls.KSciCodeBox">
             <summary>
             Scintilla-based control that shows colored C# code.
@@ -482,7 +1036,7 @@
         <member name="T:Au.Controls.KSciInfoBox">
             <summary>
             Scintilla-based control to show formatted information text.
-            To set text use the <see cref="P:Au.Controls.KScintilla.Text"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTags"/>.
+            To set text use the <see cref="P:Au.Controls.KScintilla.zText"/> property. For formatting and links use tags: <see cref="T:Au.Controls.SciTags"/>.
             </summary>
         </member>
         <member name="P:Au.Controls.KSciInfoBox.ZInitUseControlFont">
@@ -518,6 +1072,27 @@
             Returns position, UTF-8. If SCN_MODIFIED(SC_MOD_INSERTTEXT|SC_MOD_BEFOREINSERT|SC_MOD_INSERTCHECK), adds length, because position then is old position.
             </summary>
         </member>
+        <member name="T:Au.Controls.SciSetTextFlags">
+            <summary>
+            Flags for 'set text', 'clear text' and similar functions. Eg you can disable Undo collection or 'changed' notifications.
+            Note: Ignores NoUndo and NoNotify if ZInitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.SciSetTextFlags.NoUndo">
+            <summary>
+            Cannot be undone. Clear Undo buffer.
+            </summary>
+        </member>
+        <member name="F:Au.Controls.SciSetTextFlags.NoNotify">
+            <summary>
+            Don't send 'modified' and 'text changed' notifications (don't call overrides and events).
+            </summary>
+        </member>
+        <member name="F:Au.Controls.SciSetTextFlags.NoUndoNoNotify">
+            <summary>
+            NoUndo | NoNotify.
+            </summary>
+        </member>
         <member name="T:Au.Controls.SciImages">
             <summary>
             Gets image file paths etc from <see cref="T:Au.Controls.KScintilla"/> control text and displays the images below that lines.
@@ -525,7 +1100,7 @@
             <remarks>
             Draws images in annotation areas.
             Supports text annotations too, below images and in no-image lines. But it is limited:
-            1. To set/get it use <see cref="M:Au.Controls.SciText.AnnotationText(System.Int32,System.String)"/>, not direct Scintilla API.
+            1. To set/get it use <see cref="M:Au.Controls.KScintilla.zAnnotationText(System.Int32,System.String)"/>, not direct Scintilla API.
             2. You cannot hide all annotations (SCI_ANNOTATIONSETVISIBLE). This class sets it to show always.
             3. You cannot clear all annotations (SCI_ANNOTATIONCLEARALL).
             4. Setting annotation styles is currently not supported.
@@ -606,590 +1181,6 @@
             Hides/shows all images, or changes the display style of annotation areas.
             Default is ANNOTATION_STANDARD (images visible).
             When hiding, it just removes images, does not hide text annotations (SCI_ANNOTATIONGETVISIBLE remains unchanged).
-            </summary>
-        </member>
-        <member name="T:Au.Controls.SciText">
-            <summary>
-            Functions to work with Scintilla control text, code, etc.
-            A SciText object is created by KScintilla which is the C property.
-            </summary>
-            <remarks>
-            Most functions throw ArgumentOutOfRangeException when: 1. A position or line index argument is negative. 2. Scintilla returned a negative position or line index.
-            If a position or line index argument is greater than text length or the number of lines, some functions return the text length or the last line, and it is documented; for other functions the behaviour is undefined, eg ArgumentOutOfRangeException or Scintilla's return value or like of the documented methods.
-            
-            Some frequently used functions are in <see cref="T:Au.Controls.KScintilla"/>, not here, eg to get/set all text or to get/convert UTF-8/16 text length/position.
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.StyleFont(System.Int32,System.Windows.Controls.Control)">
-            <remarks>Uses only font name and size. Not style etc.</remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.StyleMeasureStringWidth(System.Int32,System.String)">
-            <summary>
-            Measures string width.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.StyleClearAll">
-            <summary>
-            Calls SCI_STYLECLEARALL, which sets all styles to be the same as STYLE_DEFAULT.
-            Then also sets some special styles, eg STYLE_HIDDEN and hotspot color.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.StyleClearRange(System.Int32,System.Int32)">
-            <summary>
-            Calls SCI_STYLECLEARALL(styleFrom, styleToNotIncluding), which sets range of styles to be the same as STYLE_DEFAULT.
-            If styleToNotIncluding is 0, clears all starting from styleFrom.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.GetStyleAt(System.Int32)">
-            <summary>
-            Gets style at position.
-            Uses SCI_GETSTYLEAT.
-            Returns 0 if pos is invalid.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.C">
-            <summary>
-            The host KScintilla control.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.CallRetPtr(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>
-            Sends a Scintilla message to the control and returns LPARAM.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.Call(System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
-            <summary>
-            Sends a Scintilla message to the control and returns int.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.SetString(System.Int32,Au.Types.LPARAM,System.String,System.Boolean)">
-            <summary>
-            Calls a Scintilla message that sets a string which is passed using lParam.
-            The string can be null if the Scintilla message allows it.
-            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.SetString(System.Int32,System.String,Au.Types.LPARAM)">
-            <summary>
-            Calls a Scintilla message that sets a string which is passed using wParam.
-            The string can be null if the Scintilla message allows it.
-            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.SetStringString(System.Int32,System.String)">
-            <summary>
-            Calls a Scintilla message and passes two strings using wParam and lParam.
-            wParam0lParam must be like "WPARAM\0LPARAM". Asserts if no '\0'.
-            If the message changes control text, this function does not work if the control is read-only. At first make non-readonly temporarily.
-            Don't call this function from another thread.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.GetString(System.Int32,Au.Types.LPARAM,System.Int32)">
-            <summary>
-            Calls a Scintilla message that gets a string.
-            Don't call this function from another thread.
-            </summary>
-            <param name="sciMessage"></param>
-            <param name="wParam"></param>
-            <param name="bufferSize">
-            How much UTF-8 bytes to allocate for Scintilla to store the text.
-            If -1 (default), at first calls sciMessage with lParam=0 (null buffer), let it return required buffer size. Then it can get binary string (with '\0' characters).
-            If 0, returns "" and does not call the message.
-            If positive, it can be either known or max expected text length, without the terminating '\0' character. The function will find length of the retrieved string (finds '\0'). Then it cannot get binary string (with '\0' characters).
-            The function allocates bufferSize+1 bytes and sets that last byte = 0. If Scintilla overwrites it, asserts and calls Environment.FailFast.
-            </param>
-        </member>
-        <member name="M:Au.Controls.SciText.GetStringOfLength(System.Int32,Au.Types.LPARAM,System.Int32)">
-            <summary>
-            The same as <see cref="M:Au.Controls.SciText.GetString(System.Int32,Au.Types.LPARAM,System.Int32)"/>, but always uses utf8Length bytes of the result (does not find length).
-            </summary>
-            <param name="sciMessage"></param>
-            <param name="wParam"></param>
-            <param name="utf8Length">
-            Known length (bytes) of the result UTF-8 string, without the terminating '\0' character.
-            If 0, returns "" and does not call the message.
-            </param>
-            <remarks>
-            This function can get binary string (with '\0' characters).
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText._RangeText(System.Int32,System.Int32)">
-            <summary>
-            Optimized 'get text' function.
-            </summary>
-            <param name="start8">Start index, UTF-8.</param>
-            <param name="end8">End index, UTF-8.</param>
-            <remarks>
-            Does not create an intermediate byte[].
-            Gets big text 5 times faster than GetStringOfLength. Tested with text 31K length, 1K lines.
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Int32@,System.Int32@)">
-            <summary>
-            If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
-            </summary>
-            <param name="utf16">Input values are UTF-16.</param>
-            <param name="from"></param>
-            <param name="to">If -1, uses <see cref="P:Au.Controls.KScintilla.Len8"/>.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg greater than text length or <i>to</i> less than <i>from</i>.</exception>
-        </member>
-        <member name="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Range)">
-            <summary>
-            If <i>utf16</i>, converts <i>from</i> and <i>to</i> from characters to UTF-8 bytes.
-            </summary>
-            <param name="utf16">Input values are UTF-16.</param>
-            <param name="r">Range. Can be spacified from start or/and from end.</param>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg <i>to</i> less than <i>from</i>.</exception>
-        </member>
-        <member name="M:Au.Controls.SciText.NormalizeRangeCanBeReverse(System.Boolean,System.Int32@,System.Int32@,System.Boolean)">
-            <summary>
-            Same as <see cref="M:Au.Controls.SciText.NormalizeRange(System.Boolean,System.Int32@,System.Int32@)"/>, but can be <i>to</i> less than <i>from</i>. If so, returns true.
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">Invalid argument, eg greater than text length.</exception>
-        </member>
-        <member name="M:Au.Controls.SciText._ParamPos(System.Boolean,System.Int32)">
-            <summary>
-            => utf16 ? C.Pos8(pos) : pos;
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
-        </member>
-        <member name="M:Au.Controls.SciText._ReturnPos(System.Boolean,System.Int32)">
-            <summary>
-            => utf16 ? C.Pos16(pos) : pos;
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
-        </member>
-        <member name="M:Au.Controls.SciText._ReturnPosCanBeNegative(System.Boolean,System.Int32)">
-            <summary>
-            pos >= 0 ? (utf16 ? C.Pos16(pos) : pos) : pos;
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText._ParamLine(System.Int32)">
-            <summary>
-            => line;
-            </summary>
-            <exception cref="T:System.ArgumentOutOfRangeException">Negative.</exception>
-        </member>
-        <member name="M:Au.Controls.SciText.ClearText(Au.Controls.SciSetTextFlags)">
-            <summary>
-            Removes all text (SCI_CLEARALL).
-            </summary>
-            <param name="flags"></param>
-        </member>
-        <member name="M:Au.Controls.SciText.SetText(System.String,Au.Controls.SciSetTextFlags,System.Boolean)">
-            <summary>
-            Replaces all text.
-            Parses tags if need.
-            </summary>
-            <param name="s">Text.</param>
-            <param name="flags"></param>
-            <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.SetText_(System.Byte[],System.Int32)">
-            <summary>
-            Sets UTF-8 text.
-            </summary>
-            <remarks>
-            Does not parse tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
-            s must end with 0. Asserts.
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.SetText_(System.Byte*)">
-            <summary>
-            Sets UTF-8 text.
-            Does not pare tags etc, just calls SCI_SETTEXT and SCI_SETREADONLY if need.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.AppendText(System.String,System.Boolean,System.Boolean,System.Boolean)">
-            <summary>
-            Appends text and optionally "\r\n".
-            Parses tags if need. Optionally scrolls and moves current position to the end (SCI_GOTOPOS).
-            </summary>
-            <param name="s"></param>
-            <param name="andRN">Also append "\r\n". Ignored if parses tags; then appends.</param>
-            <param name="scroll">Move current position and scroll to the end. Ignored if parses tags; then moves/scrolls.</param>
-            <param name="ignoreTags">Don't parse tags, regardless of C.ZInitTagsStyle.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.AddText_(System.Boolean,System.Byte*,System.Int32)">
-            <summary>
-            Sets or appends UTF-8 text of specified length.
-            Does not parse tags. Moves current position and scrolls to the end.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.GetText_">
-            <summary>
-            Gets all text directly from Scintilla.
-            Does not use caching like KScintilla.Text.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.CurrentPos8">
-            <summary>
-            Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-8 bytes.
-            The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.CurrentPos16">
-            <summary>
-            Gets (SCI_GETCURRENTPOS) or sets (SCI_SETEMPTYSELECTION) current caret position in UTF-16 chars.
-            The 'set' function makes empty selection; does not scroll and does not make visible like GoToPos.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.SelectionStart8">
-            <summary>
-            SCI_GETSELECTIONSTART UTF-8.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.SelectionStar16">
-            <summary>
-            SCI_GETSELECTIONSTART UTF-16.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.SelectionEnd8">
-            <summary>
-            SCI_GETSELECTIONEND UTF-8.
-            Always greater or equal than SelectionStart.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.SelectionEnd16">
-            <summary>
-            SCI_GETSELECTIONEND UTF-16.
-            Always greater or equal than SelectionStartChars.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.IsSelection">
-            <summary>
-            true if there is selected text.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.LineFromPos(System.Boolean,System.Int32)">
-            <summary>
-            Gets line index from character position.
-            </summary>
-            <param name="utf16"></param>
-            <param name="pos">A position in document text. Returns the last line if too big.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineStart(System.Boolean,System.Int32)">
-            <summary>
-            Gets line start position from line index.
-            </summary>
-            <param name="utf16">Return UTF-16.</param>
-            <param name="line">0-based line index. Returns text length if too big.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineEnd(System.Boolean,System.Int32,System.Boolean)">
-            <summary>
-            Gets line end position from line index.
-            </summary>
-            <param name="utf16">Return UTF-16.</param>
-            <param name="line">0-based line index. Returns text length if too big.</param>
-            <param name="withRN">Include \r\n.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineStartFromPos(System.Boolean,System.Int32)">
-            <summary>
-            Gets line start position from any position.
-            </summary>
-            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text. Returns text length if too big.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineStartFromPos(System.Boolean,System.Int32,System.Int32@)">
-            <summary>
-            Gets line start position from any position and gets line index.
-            Returns start position.
-            </summary>
-            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text. Returns text length if too big.</param>
-            <param name="line">Receives line index.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineEndFromPos(System.Boolean,System.Int32,System.Boolean,System.Boolean)">
-            <summary>
-            Gets line end position from any position.
-            </summary>
-            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text. Returns text length if too big.</param>
-            <param name="withRN">Include \r\n.</param>
-            <param name="lineStartIsLineEnd">If pos is at a line start (0 or after '\n' character), return pos.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineStartEndFromPos(System.Boolean,System.Int32,System.Boolean,System.Nullable{System.Boolean})">
-            <summary>
-            Gets line index, start and end positions from position.
-            </summary>
-            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="pos">A position in document text. Uses the last line if too big.</param>
-            <param name="withRN">Include \r\n.</param>
-            <param name="utf16Return">If not null, overrides <i>utf16</i> for return values.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineText(System.Int32,System.Boolean)">
-            <summary>
-            Gets line text.
-            </summary>
-            <param name="line">0-based line index. If invalid, returns "".</param>
-            <param name="withRN">Include \r\n.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineHeight">
-            <summary>
-            Gets line height.
-            Currently all lines are of the same height.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.SciText.LineCount">
-            <summary>
-            Gets the number of lines.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.LineIndentationFromPos(System.Boolean,System.Int32,System.Int32@)">
-            <summary>
-            Gets the number of tabs + spaces/4 at the start of the line that contains the specified position.
-            </summary>
-            <param name="utf16"></param>
-            <param name="pos">A position in document text.</param>
-            <param name="extraSpaces">Receives the number of extra spaces, 0 to 3.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.LineIndentationFromPos(System.Boolean,System.Int32)">
-            <summary>
-            Gets the number of tabs + spaces/4 at the start of the line that contains the specified position.
-            </summary>
-            <param name="utf16"></param>
-            <param name="pos">A position in document text.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.PosFromXY(System.Boolean,Au.Types.POINT,System.Boolean)">
-            <summary>
-            Gets position from point.
-            </summary>
-            <param name="utf16">Return UTF-16.</param>
-            <param name="p">Point in client area.</param>
-            <param name="minusOneIfFar">Return -1 if p is not in text characters.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.AnnotationText(System.Int32)">
-            <summary>
-            Gets annotation text of line.
-            Returns "" if the line does not contain annotation or is invalid line index.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.AnnotationText_(System.Int32)">
-            <summary>
-            Gets raw annotation text which can contain image info.
-            AnnotationText gets text without image info.
-            Returns "" if the line does not contain annotation or is invalid line index.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.AnnotationText(System.Int32,System.String)">
-            <summary>
-            Sets annotation text of line.
-            Does nothing if invalid line index.
-            If s is null or "", removes annotation.
-            Preserves existing image info.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.AnnotationText_(System.Int32,System.String)">
-            <summary>
-            Sets raw annotation text which can contain image info.
-            If s is null or "", removes annotation.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.RangeToFullLines(System.Boolean,System.Int32@,System.Int32@,System.Boolean)">
-            <summary>
-            Moves <i>from</i> to the start of its line, and <i>to</i> to the end of its line.
-            Does not change <i>to</i> if it is at a line start.
-            </summary>
-            <param name="utf16"></param>
-            <param name="from">Start index.</param>
-            <param name="to">End index.</param>
-            <param name="withRN">Include "\r\n".</param>
-        </member>
-        <member name="M:Au.Controls.SciText.InsertText(System.Boolean,System.Int32,System.String,System.Boolean)">
-            <summary>
-            SCI_INSERTTEXT.
-            </summary>
-            <param name="utf16"></param>
-            <param name="pos">Start index. Cannot be negative.</param>
-            <param name="s">Text to insert. Can be null.</param>
-            <param name="addUndoPoint">Call <see cref="M:Au.Controls.SciText.AddUndoPoint"/>.</param>
-            <remarks>
-            Does not parse tags.
-            Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.DeleteRange(System.Boolean,System.Int32,System.Int32)">
-            <summary>
-            SCI_DELETERANGE.
-            </summary>
-            <param name="utf16"></param>
-            <param name="from">Start index.</param>
-            <param name="to">End index. If -1, uses control text length.</param>
-            <remarks>
-            Does not parse tags.
-            Does not change current selection, unless it is in the range (including <i>to</i>); for it use <see cref="M:Au.Controls.SciText.ReplaceSel(System.String)"/> or <see cref="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.ReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)">
-            <summary>
-            Replaces text range.
-            </summary>
-            <param name="utf16"></param>
-            <param name="from">Start index.</param>
-            <param name="to">End index. If -1, uses control text length. Can be less than <i>from</i>.</param>
-            <param name="s">Replacement text. Can be null.</param>
-            <param name="moveCurrentPos">
-            After replacing set curent position at the end of the replacement. If <i>from</i> less than to - at <i>from</i>.
-            Else if current position was in the range (including <i>to</i>), Scintilla sets at <i>from</i>.
-            Else does not change current position and selection.
-            </param>
-            <remarks>
-            Does not parse tags.
-            By default does not change current selection, unless it is in the range (including <i>to</i>).
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.RangeText(System.Boolean,System.Int32,System.Int32)">
-            <summary>
-            Gets range text.
-            </summary>
-            <param name="utf16"></param>
-            <param name="from">Start index.</param>
-            <param name="to">End index. If -1, uses control text length.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.ReplaceSel(System.String)">
-            <summary>
-            SCI_REPLACESEL.
-            </summary>
-            <param name="s">Replacement text. Can be null.</param>
-            <remarks>
-            Does not parse tags.
-            If read-only, asserts and fails (unlike most other functions that change text).
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.ReplaceSel(System.Boolean,System.Int32,System.String)">
-            <summary>
-            GoToPos and SCI_REPLACESEL.
-            </summary>
-            <param name="utf16"></param>
-            <param name="s">Replacement text. Can be null.</param>
-            <param name="pos">Start index.</param>
-            <remarks>
-            Does not parse tags.
-            If read-only, asserts and fails (unlike most other functions that change text).
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.SetAndReplaceSel(System.Boolean,System.Int32,System.Int32,System.String)">
-            <summary>
-            Sets selection (SCI_SETSEL) and replaces with new text (SCI_REPLACESEL).
-            </summary>
-            <param name="utf16"></param>
-            <param name="from">Start index.</param>
-            <param name="to">End index. If -1, uses control text length. Can be less than from.</param>
-            <param name="s">Replacement text. Can be null.</param>
-            <remarks>
-            Does not parse tags.
-            If read-only, asserts and fails (unlike most other functions that change text).
-            </remarks>
-        </member>
-        <member name="M:Au.Controls.SciText.GoToPos(System.Boolean,System.Int32)">
-            <summary>
-            SCI_GOTOPOS and ensures visible.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.GoToLine(System.Int32)">
-            <summary>
-            SCI_GOTOLINE and ensures visible.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.Select(System.Boolean,System.Int32,System.Int32,System.Boolean)">
-            <summary>
-            SCI_SETSEL and optionally ensures visible.
-            </summary>
-            <param name="utf16"></param>
-            <param name="from"></param>
-            <param name="to">If -1, uses text length. Else <i>to</i> can be less than <i>from</i>. Caret will be at <i>to</i>.</param>
-            <param name="makeVisible">Ensure line visible and selection visible. Without it in some cases selection to the left of the caret may be invisible.</param>
-        </member>
-        <member name="P:Au.Controls.SciText.IsReadonly">
-            <summary>
-            SCI_GETREADONLY, SCI_SETREADONLY.
-            </summary>
-        </member>
-        <member name="M:Au.Controls.SciText.FileLoaderSaver.Load(System.String)">
-            <summary>
-            Loads file as UTF-8.
-            Returns byte[] that must be passed to <see cref="M:Au.Controls.SciText.FileLoaderSaver.SetText(Au.Controls.SciText,System.Byte[])"/>.
-            </summary>
-            <param name="file">To pass to File.OpenRead.</param>
-            <exception cref="T:System.Exception">Exceptions of File.OpenRead, File.Read, Encoding.Convert.</exception>
-            <remarks>
-            Supports any encoding (UTF-8, UTF-16, etc), BOM. Remembers it for Save.
-            If UTF-8 with BOM, the returned array contains BOM (to avoid copying), and <b>SetText</b> knows it.
-            If file data is binary or file size is more than 100_000_000, the returned text shows error message or image. Then <b>SetText</b> makes the control read-only; <b>Save</b> throws exception.
-            </remarks>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Binary">
-            <summary>Not a text file, or loading failed, or not initialized.</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf8NoBOM">
-            <summary>ASCII or UTF-8 without BOM.</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf8BOM">
-            <summary>UTF-8 with BOM (3 bytes).</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Ansi">
-            <summary>ANSI containing non-ASCII characters, unknown code page.</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf16NoBOM">
-            <summary>UTF-16 without BOM.</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf16BOM">
-            <summary>UTF-16 with BOM (2 bytes).</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf16BE">
-            <summary>UTF-16 with big endian BOM (2 bytes).</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf32BOM">
-            <summary>UTF-32 with BOM (4 bytes).</summary>
-        </member>
-        <member name="F:Au.Controls.SciText.FileLoaderSaver._Encoding.Utf32BE">
-            <summary>UTF-32 with big endian BOM (4 bytes).</summary>
-        </member>
-        <member name="M:Au.Controls.SciText.FileLoaderSaver.SetText(Au.Controls.SciText,System.Byte[])">
-            <summary>
-            Sets control text.
-            If the file is binary or too big, shows error message or image, makes the control read-only, and returns false. Else returns true.
-            Uses <see cref="T:Au.Controls.SciSetTextFlags"/> NoUndo and NoNotify.
-            </summary>
-            <param name="z">Control's Z.</param>
-            <param name="text">Returned by <b>Load</b>.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.FileLoaderSaver.Save(Au.Controls.SciText,System.String,System.String)">
-            <summary>
-            Saves control text with the same encoding/BOM as loaded. Uses <see cref="M:Au.AFile.Save(System.String,System.Action{System.String},System.Boolean,System.String,System.Int32)"/>.
-            </summary>
-            <param name="z">Control's Z.</param>
-            <param name="file">To pass to AFile.Save.</param>
-            <param name="tempDirectory">To pass to AFile.Save.</param>
-            <exception cref="T:System.Exception">Exceptions of AFile.Save.</exception>
-            <exception cref="T:System.InvalidOperationException">The file is binary (then <b>SetText</b> made the control read-only), or <b>Load</b> not called.</exception>
-        </member>
-        <member name="M:Au.Controls.SciText.GetSelectionLines(System.Boolean,System.ValueTuple{System.Int32,System.Int32,System.Int32,System.Int32,System.String}@,System.Boolean,System.Boolean)">
-            <summary>
-            Gets text and offsets of lines containing selection.
-            Returns true. If <i>ifFullLines</i> is true, may return false.
-            </summary>
-            <param name="utf16">Return UTF-16.</param>
-            <param name="x">Results.</param>
-            <param name="ifFullLines">Fail (return false) if selection length is 0 or selection start is not at a line start.</param>
-            <param name="oneMore">Get +1 line if selection ends at a line start, except if selection length is 0.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.FindText(System.Boolean,System.String,System.Int32,System.Int32)">
-            <summary>
-            SCI_FINDTEXT.
-            </summary>
-            <param name="utf16">pos is UTF-16. Return UTF-16.</param>
-            <param name="s"></param>
-            <param name="start"></param>
-            <param name="end">If -1, text length.</param>
-        </member>
-        <member name="M:Au.Controls.SciText.AddUndoPoint">
-            <summary>
-            SCI_BEGINUNDOACTION, SCI_ENDUNDOACTION.
             </summary>
         </member>
         <member name="T:Au.Controls.SciTags">
@@ -1304,27 +1295,6 @@
             <remarks>
             Call this function when control handle is already created. Until that <see cref="P:Au.Controls.KScintilla.ZTags"/> returns null.
             </remarks>
-        </member>
-        <member name="T:Au.Controls.SciSetTextFlags">
-            <summary>
-            Flags for 'set text', 'clear text' and similar functions. Eg you can disable Undo collection or 'changed' notifications.
-            Note: Ignores NoUndo and NoNotify if ZInitReadOnlyAlways, because then Undo and notifications are disabled when creating control.
-            </summary>
-        </member>
-        <member name="F:Au.Controls.SciSetTextFlags.NoUndo">
-            <summary>
-            Cannot be undone. Clear Undo buffer.
-            </summary>
-        </member>
-        <member name="F:Au.Controls.SciSetTextFlags.NoNotify">
-            <summary>
-            Don't send 'modified' and 'text changed' notifications (don't call overrides and events).
-            </summary>
-        </member>
-        <member name="F:Au.Controls.SciSetTextFlags.NoUndoNoNotify">
-            <summary>
-            NoUndo | NoNotify.
-            </summary>
         </member>
         <member name="M:Au.Controls.KTreeView.#ctor">
             

@@ -75,16 +75,14 @@ namespace Au
 		/// <summary>
 		/// Frees the ITEMIDLIST with Marshal.FreeCoTaskMem and clears this variable.
 		/// </summary>
-		public void Dispose()
-		{
+		public void Dispose() {
 			Dispose(true);
 			GC.SuppressFinalize(this);
 		}
 
 		///
-		protected virtual void Dispose(bool disposing)
-		{
-			if(_pidl != default) {
+		protected virtual void Dispose(bool disposing) {
+			if (_pidl != default) {
 				Marshal.FreeCoTaskMem(_pidl);
 				_pidl = default;
 			}
@@ -96,8 +94,7 @@ namespace Au
 		/// <summary>
 		/// Gets the ITEMIDLIST and clears this variable so that it cannot be used and will not free the ITEMIDLIST memory. To free it use Marshal.FreeCoTaskMem.
 		/// </summary>
-		public IntPtr Detach()
-		{
+		public IntPtr Detach() {
 			var R = _pidl;
 			_pidl = default;
 			return R;
@@ -107,7 +104,7 @@ namespace Au
 		/// Converts string to ITEMIDLIST and creates new APidl variable that holds it.
 		/// Returns null if failed.
 		/// </summary>
-		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: ITEMIDLIST" (see <see cref="ToBase64String"/>). Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
+		/// <param name="s">A file-system path or URL or shell object parsing name (see <see cref="ToShellString"/>) or ":: ITEMIDLIST" (see <see cref="ToHexString"/>). Supports environment variables (see <see cref="APath.ExpandEnvVar"/>).</param>
 		/// <param name="throwIfFailed">Throw exception if failed.</param>
 		/// <exception cref="AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
 		/// <remarks>
@@ -115,8 +112,7 @@ namespace Au
 		/// When ":: ITEMIDLIST", does not check whether the shell object exists.
 		/// Note: APidl is disposable.
 		/// </remarks>
-		public static APidl FromString(string s, bool throwIfFailed = false)
-		{
+		public static APidl FromString(string s, bool throwIfFailed = false) {
 			IntPtr R = FromString_(s, throwIfFailed);
 			return (R == default) ? null : new APidl(R);
 		}
@@ -127,24 +123,20 @@ namespace Au
 		/// </summary>
 		/// <param name="s"></param>
 		/// <param name="throwIfFailed"></param>
-		internal static IntPtr FromString_(string s, bool throwIfFailed = false)
-		{
+		internal static IntPtr FromString_(string s, bool throwIfFailed = false) {
 			IntPtr R;
 			s = _Normalize(s);
-			if(s.Starts(":: ")) { //base64-encoded ITEMIDLIST
+			if (s.Starts(":: ")) {
 				var span = s.AsSpan(3);
-				int n = AConvert.Base64UrlDecodeLength(span);
+				int n = span.Length / 2;
 				R = Marshal.AllocCoTaskMem(n + 2);
 				byte* b = (byte*)R;
-				if(!AConvert.Base64UrlDecode(span, b, n, out n)) {
-					if(throwIfFailed) throw new AuException("Invalid Base64 data");
-					return default;
-				}
+				n = AConvert.HexDecode(span, b, n);
 				b[n] = b[n + 1] = 0;
 			} else { //file-system path or URL or shell object parsing name
 				var hr = Api.SHParseDisplayName(s, default, out R, 0, null);
-				if(hr != 0) {
-					if(throwIfFailed) throw new AuException(hr);
+				if (hr != 0) {
+					if (throwIfFailed) throw new AuException(hr);
 					return default;
 				}
 			}
@@ -155,10 +147,9 @@ namespace Au
 		/// The same as <see cref="APath.Normalize"/>(CanBeUrlOrShell|DontPrefixLongPath), but ignores non-full path (returns s).
 		/// </summary>
 		/// <param name="s">File-system path or URL or "::...".</param>
-		static string _Normalize(string s)
-		{
+		static string _Normalize(string s) {
 			s = APath.ExpandEnvVar(s);
-			if(!APath.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
+			if (!APath.IsFullPath(s)) return s; //note: not EEV. Need to expand to ":: " etc, and EEV would not do it.
 			return APath.Normalize_(s, PNFlags.DontPrefixLongPath, true);
 		}
 
@@ -180,8 +171,7 @@ namespace Au
 		/// <remarks>
 		/// Calls <msdn>SHGetNameFromIDList</msdn>.
 		/// </remarks>
-		public string ToShellString(Native.SIGDN stringType, bool throwIfFailed = false)
-		{
+		public string ToShellString(Native.SIGDN stringType, bool throwIfFailed = false) {
 			var R = ToShellString(_pidl, stringType, throwIfFailed);
 			GC.KeepAlive(this);
 			return R;
@@ -190,22 +180,20 @@ namespace Au
 		/// <summary>
 		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
 		/// </summary>
-		public static string ToShellString(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false)
-		{
-			if(pidl == default) return null;
+		public static string ToShellString(IntPtr pidl, Native.SIGDN stringType, bool throwIfFailed = false) {
+			if (pidl == default) return null;
 			var hr = Api.SHGetNameFromIDList(pidl, stringType, out string R);
-			if(hr == 0) return R;
-			if(throwIfFailed) throw new AuException(hr);
+			if (hr == 0) return R;
+			if (throwIfFailed) throw new AuException(hr);
 			return null;
 		}
 
 		/// <summary>
 		/// Converts the ITEMIDLIST to string.
-		/// If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="ToBase64String"/>).
+		/// If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="ToHexString"/>).
 		/// Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
 		/// </summary>
-		public override string ToString()
-		{
+		public override string ToString() {
 			var R = ToString(_pidl);
 			GC.KeepAlive(this);
 			return R;
@@ -215,25 +203,24 @@ namespace Au
 		/// <summary>
 		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
 		/// </summary>
-		public static string ToString(IntPtr pidl)
-		{
-			if(pidl == default) return null;
+		public static string ToString(IntPtr pidl) {
+			if (pidl == default) return null;
 			Api.IShellItem si = null;
 			try {
-				if(0 == Api.SHCreateShellItem(default, null, pidl, out si)) {
+				if (0 == Api.SHCreateShellItem(default, null, pidl, out si)) {
 					//if(0 == Api.SHCreateItemFromIDList(pidl, Api.IID_IShellItem, out si)) { //same speed
 					//if(si.GetAttributes(0xffffffff, out uint attr)>=0) AOutput.Write(attr);
-					if(si.GetAttributes(Api.SFGAO_BROWSABLE | Api.SFGAO_FILESYSTEM, out uint attr) >= 0 && attr != 0) {
+					if (si.GetAttributes(Api.SFGAO_BROWSABLE | Api.SFGAO_FILESYSTEM, out uint attr) >= 0 && attr != 0) {
 						var f = (0 != (attr & Api.SFGAO_FILESYSTEM)) ? Native.SIGDN.FILESYSPATH : Native.SIGDN.URL;
-						if(0 == si.GetDisplayName(f, out var R)) return R;
+						if (0 == si.GetDisplayName(f, out var R)) return R;
 					}
 				}
 			}
 			finally { Api.ReleaseComObject(si); }
-			return ToBase64String(pidl);
+			return ToHexString(pidl);
 		}
 		//this version is 40% slower with non-virtual objects (why?), but with virtual objects same speed as SIGDN_DESKTOPABSOLUTEPARSING.
-		//The fastest (update: actually not) version would be to call ToShellString_(SIGDN_DESKTOPABSOLUTEPARSING), and then call ToBase64String if it returns not a path or URL. But it is unreliable, because can return string in any format, eg "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
+		//The fastest (update: actually not) version would be to call ToShellString_(SIGDN_DESKTOPABSOLUTEPARSING), and then call ToHexString if it returns not a path or URL. But it is unreliable, because can return string in any format, eg "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
 #elif false
 			//this version works, but with virtual objects 2 times slower than SIGDN_DESKTOPABSOLUTEPARSING (which already is very slow with virtual).
 			public static string ToString(IntPtr pidl)
@@ -241,7 +228,7 @@ namespace Au
 				if(pidl == default) return null;
 				var R = ToShellString(pidl, Native.SIGDN.FILESYSPATH);
 				if(R == null) R = ToShellString(pidl, Native.SIGDN.URL);
-				if(R == null) R = ToBase64String(pidl);
+				if(R == null) R = ToHexString(pidl);
 				return R;
 			}
 #elif true
@@ -259,7 +246,7 @@ namespace Au
 					}
 				}
 				finally { Api.ReleaseComObject(si); }
-				return ToBase64String(pidl);
+				return ToHexString(pidl);
 			}
 #else
 			//SHGetPathFromIDList also slow.
@@ -273,9 +260,8 @@ namespace Au
 		/// <remarks>
 		/// The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
 		/// </remarks>
-		public string ToBase64String()
-		{
-			var R = ToBase64String(_pidl);
+		public string ToHexString() {
+			var R = ToHexString(_pidl);
 			GC.KeepAlive(this);
 			return R;
 		}
@@ -283,13 +269,14 @@ namespace Au
 		/// <summary>
 		/// This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
 		/// </summary>
-		public static string ToBase64String(IntPtr pidl)
-		{
-			if(pidl == default) return null;
+		public static string ToHexString(IntPtr pidl) {
+			if (pidl == default) return null;
 			int n = Api.ILGetSize(pidl) - 2; //API gets size with the terminating '\0' (2 bytes)
-			if(n < 0) return null;
-			if(n == 0) return ":: "; //shell root - Desktop
-			return ":: " + AConvert.Base64UrlEncode((void*)pidl, n);
+			if (n < 0) return null;
+			if (n == 0) return ":: "; //shell root - Desktop
+			return ":: " + AConvert.HexEncode((void*)pidl, n);
 		}
+		//rejected: use base64-encoded ITEMIDLIST.
+		//	Shorter, but cannot easily split such string, for example in AFolders.UnexpandPath.
 	}
 }

@@ -392,7 +392,7 @@ public partial class AToolbar
 				if(!ok) {
 					var ec=ALastError.Code;
 					if(!wt.ZorderIsAbove(_ow.w)) { //if owner is win store app and this process isn't admin, zorders but returns false
-						var es=ec==Api.ERROR_ACCESS_DENIED && _ow.w.IsUacAccessDenied ? "This process should run as admin, or owner's process not as admin." : ALastError.MessageFor(ec);
+						var es=ec==Api.ERROR_ACCESS_DENIED && _ow.w.UacAccessDenied ? "This process should run as admin, or owner's process not as admin." : ALastError.MessageFor(ec);
 						AWarning.Write($"Failed to Z-order toolbar '{_name}' above owner window. {es}");
 						AOutput.Write(wt.ZorderIsAbove(_ow.w));
 					}

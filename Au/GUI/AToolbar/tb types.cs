@@ -24,6 +24,8 @@ public partial class AToolbar
 		internal bool IsGroup_ => type == TBItemType.Group;
 		internal bool IsMenu_ => type == TBItemType.Menu;
 		internal bool IsSeparatorOrGroup_ => type is (TBItemType.Separator or TBItemType.Group);
+
+		internal bool HasImage_ => image2 != null || imageAsync;
 		
 		///
 		public TBItemType ItemType => type;

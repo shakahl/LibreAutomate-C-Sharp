@@ -148,14 +148,12 @@ namespace Au.Controls
 		}
 
 		KScintilla _c;
-		SciText _t;
 		List<_TagStyle> _styles = new List<_TagStyle>();
 		List<int> _stack = new List<int>();
 
 		internal SciTags(KScintilla c)
 		{
 			_c = c;
-			_t = c.Z;
 		}
 
 		void _SetUserStyles(int from)
@@ -164,17 +162,17 @@ namespace Au.Controls
 			for(i = from; i < _styles.Count; i++) {
 				_TagStyle st = _styles[i];
 				j = i + STYLE_FIRST_EX;
-				if(st.HasColor) _t.StyleForeColor(j, st.Color);
-				if(st.HasBackColor) { _t.StyleBackColor(j, st.BackColor); if(st.Eol) _t.StyleEolFilled(j, true); }
-				if(st.Bold) _t.StyleBold(j, true);
-				if(st.Italic) _t.StyleItalic(j, true);
-				if(st.Underline) _t.StyleUnderline(j, true);
-				if(st.Mono) _t.StyleFont(j, "Consolas");
-				if(st.Hotspot) _t.StyleHotspot(j, true);
+				if(st.HasColor) _c.zStyleForeColor(j, st.Color);
+				if(st.HasBackColor) { _c.zStyleBackColor(j, st.BackColor); if(st.Eol) _c.zStyleEolFilled(j, true); }
+				if(st.Bold) _c.zStyleBold(j, true);
+				if(st.Italic) _c.zStyleItalic(j, true);
+				if(st.Underline) _c.zStyleUnderline(j, true);
+				if(st.Mono) _c.zStyleFont(j, "Consolas");
+				if(st.Hotspot) _c.zStyleHotspot(j, true);
 				int size = st.Size;
 				if(size > 0) {
 					if(size < 6 && st.Hotspot) size = 6;
-					_t.StyleFontSize(j, size);
+					_c.zStyleFontSize(j, size);
 				}
 			}
 		}
@@ -187,7 +185,7 @@ namespace Au.Controls
 		void _ClearUserStyles()
 		{
 			if(_styles.Count > 0) {
-				_t.StyleClearRange(STYLE_FIRST_EX);
+				_c.zStyleClearRange(STYLE_FIRST_EX);
 				_styles.Clear();
 			}
 			//QM2 also cleared the image cache, but now it is shared by all controls of this thread.
@@ -196,7 +194,7 @@ namespace Au.Controls
 		internal void OnTextChanged_(bool inserted, in SCNotification n)
 		{
 			//if deleted or replaced all text, clear user styles
-			if(!inserted && n.position == 0 && _c.Len8 == 0) {
+			if(!inserted && n.position == 0 && _c.zLen8 == 0) {
 				_ClearUserStyles();
 				//_linkDelegates.Clear(); //no
 			}
@@ -227,7 +225,7 @@ namespace Au.Controls
 				onMessage?.Invoke(m);
 				switch(m.Type) {
 				case OutServMessageType.Clear:
-					_t.ClearText();
+					_c.zClearText();
 					s = null;
 					b?.Clear();
 					break;
@@ -263,17 +261,17 @@ namespace Au.Controls
 
 			//if(sb!=null) s += " >>>> " + sb.Capacity.ToString();
 
-			//_t.AppendText(s, true, true, true); return;
+			//_c.zAppendText(s, true, true, true); return;
 
 			//limit
-			int len = _c.Len8;
+			int len = _c.zLen8;
 			if(len > 4 * 1024 * 1024) {
-				len = _t.LineStartFromPos(false, len / 2);
-				if(len > 0) _t.ReplaceRange(false, 0, len, "...\r\n");
+				len = _c.zLineStartFromPos(false, len / 2);
+				if(len > 0) _c.zReplaceRange(false, 0, len, "...\r\n");
 			}
 
 			if(hasTags) AddText(s, true, true);
-			else _t.AppendText(s, true, true, true);
+			else _c.zAppendText(s, true, true, true);
 
 			//test slow client
 			//Thread.Sleep(500);
@@ -290,7 +288,7 @@ namespace Au.Controls
 		{
 			//APerf.First();
 			if(text.NE() || (skipLTGT && text == "<>")) {
-				if(appendLine) _t.AppendText("", true, true, true); else _t.ClearText();
+				if(appendLine) _c.zAppendText("", true, true, true); else _c.zClearText();
 				return;
 			}
 
@@ -568,10 +566,10 @@ namespace Au.Controls
 			if(_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
 
 			//APerf.Next();
-			_t.AddText_(append, s0, len);
+			_c.zAddText_(append, s0, len);
 			if(!hasTags) return;
 
-			int endStyled = 0, prevLen = append ? _c.Len8 - len : 0;
+			int endStyled = 0, prevLen = append ? _c.zLen8 - len : 0;
 
 			if(folds != null) {
 				for(int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds
@@ -683,17 +681,17 @@ namespace Au.Controls
 		{
 			if(lang == _currentLexer) return;
 			_currentLexer = lang;
-			if(lang != LexLanguage.SCLEX_NULL) _t.StyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
+			if(lang != LexLanguage.SCLEX_NULL) _c.zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
 			_c.Call(SCI_SETLEXER, (int)lang);
 
 			//for(int i=0; i< STYLE_DEFAULT; i++) { //creates problems
-			//	_t.StyleBackColor(i, 0xffffff);
-			//	_t.StyleEolFilled(i, true);
+			//	_c.zStyleBackColor(i, 0xffffff);
+			//	_c.zStyleEolFilled(i, true);
 			//}
 
 			switch(lang) {
 			case LexLanguage.SCLEX_CPP:
-				_t.SetLexerCpp(noClear: true);
+				_c.zSetLexerCpp(noClear: true);
 				break;
 			}
 		}
@@ -708,17 +706,17 @@ namespace Au.Controls
 
 			int iTag, iText, k;
 			//to find beginning of link text (after <tag>), search for STYLE_HIDDEN before
-			for(iText = pos; iText > 0; iText--) if(_t.GetStyleAt(iText - 1) == STYLE_HIDDEN) break;
+			for(iText = pos; iText > 0; iText--) if(_c.zGetStyleAt(iText - 1) == STYLE_HIDDEN) break;
 			if(iText == 0) return;
 			//to find beginning of <tag>, search for some other style before
-			for(iTag = iText - 1; iTag > 0; iTag--) if(_t.GetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
+			for(iTag = iText - 1; iTag > 0; iTag--) if(_c.zGetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
 			//to find end of link text, search for a non-hotspot style after
 			for(pos++; /*SCI_GETSTYLEAT returns 0 if index invalid, it is documented*/; pos++) {
-				k = _t.GetStyleAt(pos);
-				if(k < STYLE_FIRST_EX || !_t.StyleHotspot(k)) break;
+				k = _c.zGetStyleAt(pos);
+				if(k < STYLE_FIRST_EX || !_c.zStyleHotspot(k)) break;
 			}
 			//get text <tag>LinkText
-			var s = _t.RangeText(false, iTag, pos);
+			var s = _c.zRangeText(false, iTag, pos);
 			//AOutput.Write(iTag, iText, pos, s);
 
 			//is it <fold>?
@@ -855,7 +853,7 @@ namespace Au.Controls
 			if(setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(lParam), AMath.HiShort(lParam));
 				//AOutput.Write(pos);
-				if(pos >= 0 && _t.StyleHotspot(_t.GetStyleAt(pos))) setFocus = false;
+				if(pos >= 0 && _c.zStyleHotspot(_c.zGetStyleAt(pos))) setFocus = false;
 			}
 		}
 

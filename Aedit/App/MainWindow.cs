@@ -17,6 +17,7 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Input;
 
 partial class MainWindow : Window
 {
@@ -107,6 +108,8 @@ partial class MainWindow : Window
 		UacDragDrop.AdminProcess.Enable(true); //rejected: disable when hiding main window. Some other window may be visible.
 
 		hs.AddHook(_WndProc);
+
+		Au.Tools.QuickCapture.RegisterHotkey(App.Hwnd);
 	}
 
 	///// <summary>
@@ -121,6 +124,13 @@ partial class MainWindow : Window
 		switch (msg) {
 		case Api.WM_DPICHANGED:
 			this.DpiChangedWorkaround();
+			break;
+		case Api.WM_HOTKEY:
+			handled = true;
+			switch ((ERegisteredHotkeyId)(int)wParam) {
+			case ERegisteredHotkeyId.QuickCapture: Au.Tools.QuickCapture.WmHotkey(); break;
+			}
+			
 			break;
 		}
 

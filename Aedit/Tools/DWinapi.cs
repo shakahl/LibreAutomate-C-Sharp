@@ -32,7 +32,7 @@ namespace Au.Tools
 
 			var b = new AWpfBuilder(this).WinSize(700, 500);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
-			b.R.Add("Name", out tName, name ?? doc.Z.SelectedText()).Tooltip(
+			b.R.Add("Name", out tName, name ?? doc.zSelectedText()).Tooltip(
 @"Case-sensitive name of a function, struct, constant, interface, callback.
 Use wildcard to specify partial name. Examples: Start*, *End, *AnyPart*
 Or text containing multiple full names. Example: Name1 Name2 Name3."
@@ -42,7 +42,7 @@ Or text containing multiple full names. Example: Name1 Name2 Name3."
 			b.End();
 
 			b.OkApply += o => {
-				string s = code.Text;
+				string s = code.zText;
 				if (s.NE()) return;
 				Clipboard.SetText(s);
 				InsertCode.UsingDirective("System.Runtime.InteropServices");

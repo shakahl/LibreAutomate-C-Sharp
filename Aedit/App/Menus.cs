@@ -16,10 +16,7 @@ using Microsoft.Win32;
 using Au.Util;
 using Au.Tools;
 using System.Windows.Input;
-//using System.Linq;
-
-//TODO: now global keys (target="") work only when main window active, not when eg a floating panel active.
-//TODO: Esc = focus editor; Shift+Esc = focus last focused non-editor control. It is documented.
+using System.Linq;
 
 static class Menus
 {
@@ -27,11 +24,11 @@ static class Menus
 	public static class File
 	{
 		[Command(target = "", image = "resources/images/newfile_16x.xaml")]
-		public static class New //TODO: no tooltip of toolbar button
+		public static class New
 		{
 			static FileNode _New(string name) => App.Model.NewItem(name, beginRenaming: true);
 
-			[Command('s', keys = "Ctrl+N", image = "resources/images/csfile_16x.xaml")]
+			[Command('s', keys = "Ctrl+N", keysText = "Ctrl+N", image = "resources/images/csfile_16x.xaml")]
 			public static void New_script() { _New("Script.cs"); }
 
 			[Command('c', image = "resources/images/csclassfile_16x.xaml")]
@@ -256,6 +253,9 @@ static class Menus
 
 		[Command(separator = true)]
 		public static void Windows_API() { new DWinapi().Show(); }
+
+		[Command(keysText = "Ctrl+Shift+Win+W")]
+		public static void Quick_capture() { AOutput.Write("Info: To quickly capture a window and insert code to find it etc, move the mouse to the window and press Ctrl+Shift+Win+W."); }
 	}
 
 	[Command(target = "Edit")]
@@ -271,11 +271,14 @@ static class Menus
 				if (f.FindProject(out _, out var fMain)) f = fMain;
 				if (App.Tasks.EndTasksOf(f)) return;
 			}
-			//rejected. Or should show all running, because runSingle now not default.
-			//var t = App.Tasks.GetRunsingleTask(); if (t == null) return;
-			//switch (AMenu.ShowSimple("End task  " + t.f.DisplayName, App.Hwnd)) {
-			//case 1: App.Tasks.EndTask(t); break;
-			//}
+			var a = App.Tasks.Items;
+			if (a.Count > 0) {
+				var m = new AMenu();
+				using (m.Submenu("End task")) {
+					foreach(var t in a) m[t.f.DisplayName] = o => App.Tasks.EndTask(t);
+				}
+				m.Show(App.Hwnd);
+			}
 		}
 
 		//[Command(image = "resources/images/pause_16x.xaml")]
@@ -380,10 +383,15 @@ static class Menus
 
 		[Command(keys = "F1", image = "resources/images/statushelp_16x.xaml")]
 		public static void Context_help() {
-			var c = FocusManager.GetFocusedElement(App.Wmain);
-			if (c == null) return;
-			if (c == Panels.Editor.ZActiveDoc) {
-				CiUtil.OpenSymbolOrKeywordFromPosHelp();
+			var c = Keyboard.FocusedElement;
+			//AOutput.Write(c);
+			if (c == null) {
+				var w = Api.GetFocus();
+				if (w == Panels.Editor.ZActiveDoc.Hwnd) {
+					CiUtil.OpenSymbolOrKeywordFromPosHelp();
+				}
+			} else {
+
 			}
 		}
 

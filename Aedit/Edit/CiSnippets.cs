@@ -265,11 +265,11 @@ static class CiSnippets
 			s = x.Value;
 
 			//##directive -> #directive
-			if (s.Starts('#') && doc.Text.Eq(pos - 1, '#')) s = s[1..];
+			if (s.Starts('#') && doc.zText.Eq(pos - 1, '#')) s = s[1..];
 
 			//maybe need more code before
 			if (x.Attr(out string before, "before") || snippet.x.Attr(out before, "before")) {
-				if (doc.Text.Find(before, 0..pos) < 0) s = before + "\r\n" + s;
+				if (doc.zText.Find(before, 0..pos) < 0) s = before + "\r\n" + s;
 			}
 
 			//replace $guid$ and $random$. Note: can be in the 'before' code.
@@ -280,7 +280,7 @@ static class CiSnippets
 
 			//remove ';' if in =>
 			if (s.Ends(';') && s_context == _Context.Arrow) {
-				if (doc.Text.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
+				if (doc.zText.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
 			}
 
 			usingDir = x.Attr("using") ?? snippet.x.Attr("using");
@@ -288,7 +288,7 @@ static class CiSnippets
 
 		//if multiline, add indentation
 		if (s.Contains('\n')) {
-			int indent = doc.Z.LineIndentationFromPos(true, pos);
+			int indent = doc.zLineIndentationFromPos(true, pos);
 			if (indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
 		}
 
@@ -311,20 +311,19 @@ static class CiSnippets
 
 		//maybe need using directives
 		if (usingDir != null) {
-			int len1 = doc.Len16;
+			int len1 = doc.zLen16;
 			if (InsertCode.UsingDirective(usingDir)) {
-				int lenDiff = doc.Len16 - len1;
+				int lenDiff = doc.zLen16 - len1;
 				pos += lenDiff;
 				endPos += lenDiff;
 			}
 		}
 
-		var z = doc.Z;
-		z.ReplaceRange(true, pos, endPos, s);
+		doc.zReplaceRange(true, pos, endPos, s);
 
 		if (i >= 0) {
 			int newPos = pos + i;
-			z.Select(true, newPos, newPos + selectLength, makeVisible: true);
+			doc.zSelect(true, newPos, newPos + selectLength, makeVisible: true);
 			if (tempRange != default) CodeInfo._correct.BracesAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
 			if (showSignature) CodeInfo.ShowSignature();
 		}

@@ -41,11 +41,10 @@ class PanelInfo : Grid
 	}
 
 	private void _sci_ZHandleCreated() {
-		var z = _sci.Z;
-		z.StyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
-		z.StyleFont(Sci.STYLE_DEFAULT, App.Wmain);
-		z.MarginWidth(1, 4);
-		z.StyleClearAll();
+		_sci.zStyleBackColor(Sci.STYLE_DEFAULT, 0xF0F0F0);
+		_sci.zStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
+		_sci.zMarginWidth(1, 4);
+		_sci.zStyleClearAll();
 		_sci.Call(Sci.SCI_SETHSCROLLBAR);
 		_sci.Call(Sci.SCI_SETVSCROLLBAR);
 		_sci.Call(Sci.SCI_SETWRAPMODE, Sci.SC_WRAP_WORD);
@@ -120,7 +119,7 @@ In other windows - x, y, window, control.");
 
 	//void _SetMouseInfoText(string text)
 	//{
-	//	_sci.Z.SetText(text);
+	//	_sci.zSetText(text);
 	//}
 
 	void _MouseInfo(POINT p) {
@@ -175,7 +174,7 @@ In other windows - x, y, window, control.");
 #endif
 			}
 
-			_sci.Z.SetText(b.ToString());
+			_sci.zSetText(b.ToString());
 		}
 	}
 }

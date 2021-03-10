@@ -35,10 +35,9 @@ class PanelFound : DockPanel
 	}
 
 	private void _c_ZHandleCreated() {
-		var z = _c.Z;
-		z.MarginWidth(1, 0);
-		z.StyleFont(Sci.STYLE_DEFAULT, App.Wmain);
-		z.StyleClearAll();
+		_c.zMarginWidth(1, 0);
+		_c.zStyleFont(Sci.STYLE_DEFAULT, App.Wmain);
+		_c.zStyleClearAll();
 		_c.ZTags.SetLinkStyle(new SciTags.UserDefinedStyle(), (false, default), false);
 	}
 }

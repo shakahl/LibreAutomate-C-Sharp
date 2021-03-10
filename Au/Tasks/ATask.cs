@@ -22,9 +22,9 @@ namespace Au
 	{
 		/// <summary>
 		/// In an automation task process of a script with role miniProgram (defaut) returns script file name without extension.
-		/// In other processes returns <see cref="AppDomain.FriendlyName"/>, like "ProgramFile.exe".
+		/// In other processes returns <see cref="AppDomain.FriendlyName"/>, like "ProgramFile".
 		/// </summary>
-		public static string Name => s_name ??= AppDomain.CurrentDomain.FriendlyName;
+		public static string Name => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 this used to be with ".exe", now without
 		static string s_name;
 
 		/// <summary>

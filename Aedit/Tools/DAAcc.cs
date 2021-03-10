@@ -189,7 +189,7 @@ namespace Au.Tools
 			_FormatCode();
 
 			if (captured && p.Role == "CLIENT" && _wnd.ClassNameIs("SunAwt*") && !_acc.MiscFlags.Has(AccMiscFlags.Java) && !AVersion.Is32BitOS)
-				_info.Text = c_infoJava;
+				_info.zText = c_infoJava;
 
 			//APerf.NW();
 			return true;
@@ -199,7 +199,7 @@ namespace Au.Tools
 			_attr.Child = null;
 
 			if (!_acc.GetProperties("Rnuvdakh@srw", out p)) {
-				_info.Text = "Failed to get AO properties: \r\n" + ALastError.Message;
+				_info.zText = "Failed to get AO properties: \r\n" + ALastError.Message;
 				_scroller.Visibility = Visibility.Hidden;
 				return false;
 			}
@@ -420,10 +420,10 @@ namespace Au.Tools
 
 		void _Capture() {
 			_ttRecapture?.Close();
-			_info.Text = c_dialogInfo; //clear error info
+			_info.zText = c_dialogInfo; //clear error info
 
 			if (!_AccFromMouse(out var acc)) {
-				if (AWnd.FromMouse().IsUacAccessDenied) _info.Text = "<c red>Failed to get AO. The target process is admin and this process isn't.<>";
+				if (AWnd.FromMouse().UacAccessDenied) _info.zText = "<c red>Failed to get AO. The target process is admin and this process isn't.<>";
 				return;
 			}
 			_acc = acc;
@@ -478,7 +478,7 @@ namespace Au.Tools
 		public string ZResultCode { get; private set; }
 
 		private void _bOK_Click(WBButtonClickArgs e) {
-			ZResultCode = _code.Text;
+			ZResultCode = _code.zText;
 			if (ZResultCode.NE()) { ZResultCode = null; e.Cancel = true; return; }
 
 			InsertCode.Statements(ZResultCode);
@@ -493,7 +493,7 @@ namespace Au.Tools
 					//need full path. Run("firefox.exe") fails if firefox is not properly installed.
 					string ffInfo = c_infoFirefox, ffPath = _wnd.ProgramPath;
 					if (ffPath != null) ffInfo = ffInfo.Replace("firefox.exe", ffPath);
-					_info.Text = ffInfo;
+					_info.zText = ffInfo;
 				}
 			}
 		}
@@ -558,7 +558,7 @@ namespace Au.Tools
 				});
 			}
 			catch (Exception ex) {
-				_info.Text = "<c red>Failed to get AO tree.<>\r\n" + ex.Message;
+				_info.zText = "<c red>Failed to get AO tree.<>\r\n" + ex.Message;
 				return (null, null);
 			}
 			return (xRoot, xSelect);
@@ -697,7 +697,7 @@ namespace Au.Tools
 			/// <param name="owner"></param>
 			public static void EnableDisableJabUI(AnyWnd owner) {
 				var (ok, results) = EnableDisableJab(null);
-				if (results != null) ADialog.Show("Results", results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.OwnerCenter);
+				if (results != null) ADialog.Show("Results", results, icon: ok ? DIcon.Info : DIcon.Error, owner: owner, flags: DFlags.CenterOwner);
 			}
 
 			/// <summary>
@@ -766,7 +766,7 @@ namespace Au.Tools
 		void _InitInfo() {
 			_commonInfos = new TUtil.CommonInfos(_info);
 
-			_info.Text = c_dialogInfo;
+			_info.zText = c_dialogInfo;
 			_info.AddElem(this, c_dialogInfo);
 			_info.ZTags.AddLinkTag("+jab", _ => Java.EnableDisableJabUI(this));
 

@@ -102,11 +102,11 @@ partial class CiStyling
 			if(doc != _doc) _DocChanged(doc, false); else _update = false;
 			_StylingAndFoldingVisibleFrom0(doc);
 		} else {
-			Sci_GetStylingInfo(doc.SciPtr, 8 | 4, out var si); //fast
+			Sci_GetStylingInfo(doc.ZSciPtr, 8 | 4, out var si); //fast
 			if(si.visibleFromLine < _visibleLines.Start.Value || si.visibleToLine > _visibleLines.End.Value) {
 				_StylingAndFolding(doc); //all visible
 			} else if(_diagCounter > 0 && --_diagCounter == 0) {
-				CodeInfo._diag.Indicators(doc.Pos16(si.visibleFrom), doc.Pos16(si.visibleTo));
+				CodeInfo._diag.Indicators(doc.zPos16(si.visibleFrom), doc.zPos16(si.visibleTo));
 			}
 		}
 	}
@@ -118,7 +118,7 @@ partial class CiStyling
 	{
 		//Delay to avoid multiple styling/folding/canceling on multistep actions (replace text range, find/replace all, autocorrection) and fast automated text input.
 		_cancelTS?.Cancel(); _cancelTS = null;
-		_modFromEnd = Math.Min(_modFromEnd, doc.Len8 - n.FinalPosition);
+		_modFromEnd = Math.Min(_modFromEnd, doc.zLen8 - n.FinalPosition);
 		_modTimer ??= new ATimer(_Modified);
 		if(!_modTimer.IsRunning) _modTimer.After(25, doc);
 	}
@@ -129,7 +129,7 @@ partial class CiStyling
 		var doc = t.Tag as SciCode;
 		if(doc != Panels.Editor.ZActiveDoc) return;
 		if(_cancelTS != null) return;
-		_StylingAndFolding(doc, false, doc.Z.LineEndFromPos(false, doc.Len8 - _modFromEnd, withRN: true));
+		_StylingAndFolding(doc, false, doc.zLineEndFromPos(false, doc.zLen8 - _modFromEnd, withRN: true));
 		//p1.NW('a'); //we return without waiting for the async task to complete
 	}
 
@@ -145,7 +145,7 @@ partial class CiStyling
 #if PRINT
 		var p1 = APerf.Create();
 #endif
-		Sci_GetStylingInfo(doc.SciPtr, 2 | 4 | 8, out var si);
+		Sci_GetStylingInfo(doc.ZSciPtr, 2 | 4 | 8, out var si);
 
 		int start8;
 		bool minimal = end8 >= 0 && !fromStart;
@@ -156,16 +156,16 @@ partial class CiStyling
 			start8 = fromStart ? 0 : Math.Min(si.visibleFrom, si.endStyledLineStart);
 			end8 = si.visibleTo;
 		}
-		if(end8 == si.visibleTo) _modFromEnd = doc.Len8 - end8;
+		if(end8 == si.visibleTo) _modFromEnd = doc.zLen8 - end8;
 		if(end8 <= start8) return;
 
 		var cd = new CodeInfo.Context(0);
 		if(!cd.GetDocument()) return;
 #if PRINT
 		p1.Next('d');
-		AOutput.Write($"<><c green>style needed: {start8}-{end8}, lines {doc.Z.LineFromPos(false, start8) + 1}-{doc.Z.LineFromPos(false, end8)}<>");
+		AOutput.Write($"<><c green>style needed: {start8}-{end8}, lines {doc.LineFromPos(false, start8) + 1}-{doc.LineFromPos(false, end8)}<>");
 #endif
-		int start16 = doc.Pos16(start8), end16 = doc.Pos16(end8);
+		int start16 = doc.zPos16(start8), end16 = doc.zPos16(end8);
 
 		Debug.Assert(_cancelTS == null);
 		_cancelTS = new CancellationTokenSource();
@@ -219,8 +219,8 @@ partial class CiStyling
 		//	startMin = Math.Min(startMin, ss);
 		//	endMax = Math.Max(endMax, v.TextSpan.End);
 		//}
-		//if(startMin < start16) start16 = doc.Pos16(start8 = doc.Z.LineStartFromPos(false, doc.Pos8(startMin)));
-		//if(endMax > end16) end16 = doc.Pos16(end8 = doc.Z.LineEndFromPos(false, doc.Pos8(endMax), withRN: true));
+		//if(startMin < start16) start16 = doc.zPos16(start8 = doc.zLineStartFromPos(false, doc.zPos8(startMin)));
+		//if(endMax > end16) end16 = doc.zPos16(end8 = doc.zLineEndFromPos(false, doc.zPos8(endMax), withRN: true));
 		////AOutput.Write(start8, end8, start16, end16);
 
 		var b = new byte[end8 - start8];
@@ -304,7 +304,7 @@ partial class CiStyling
 
 			//int spanStart16 = v.TextSpan.Start, spanEnd16 = v.TextSpan.End;
 			int spanStart16 = Math.Max(v.TextSpan.Start, start16), spanEnd16 = Math.Min(v.TextSpan.End, end16);
-			int spanStart8 = doc.Pos8(spanStart16), spanEnd8 = doc.Pos8(spanEnd16);
+			int spanStart8 = doc.zPos8(spanStart16), spanEnd8 = doc.zPos8(spanEnd16);
 			for(int i = spanStart8; i < spanEnd8; i++) b[i - start8] = (byte)style;
 		}
 
@@ -325,7 +325,7 @@ partial class CiStyling
 		if(!minimal) {
 			_diagCounter = 6; //update diagnostics after 1.5 s
 		} else {
-			CodeInfo._diag.EraseIndicatorsInLine(doc, doc.Z.CurrentPos8);
+			CodeInfo._diag.EraseIndicatorsInLine(doc, doc.zCurrentPos8);
 		}
 #if TRACE
 		//if(!s_debugPerf) { s_debugPerf = true; APerf.NW('s'); }
@@ -346,15 +346,14 @@ partial class CiStyling
 
 		List<int> a = null;
 		var doc = cd.sciDoc;
-		var z = doc.Z;
 		var code = cd.code;
-		if(firstTime) { start8 = 0; end8 = doc.Len8; } //may need to restore saved folding
-		int start16 = doc.Pos16(start8), end16 = doc.Pos16(end8), commentEnd = -1;
+		if(firstTime) { start8 = 0; end8 = doc.zLen8; } //may need to restore saved folding
+		int start16 = doc.zPos16(start8), end16 = doc.zPos16(end8), commentEnd = -1;
 
 		//if start16 is in eg multiple //comments, need to start at the start of all the trivia block. Else may damage folding when editing.
 		if(start16 > 0) {
 			var span = root.FindToken(start16).LeadingTrivia.Span;
-			if(start16 > span.Start && start16 < span.End) start16 = doc.Pos16(start8 = z.LineStartFromPos(false, doc.Pos8(span.Start)));
+			if(start16 > span.Start && start16 < span.End) start16 = doc.zPos16(start8 = doc.zLineStartFromPos(false, doc.zPos8(span.Start)));
 			//p1.Next('j');
 		}
 
@@ -388,7 +387,7 @@ partial class CiStyling
 						_AddFoldPoint(g.Start, 1);
 						_AddFoldPoint(g.End, -1);
 					}
-					if(k.End > end16) end8 = doc.Pos8(end16 = k.End);
+					if(k.End > end16) end8 = doc.zPos8(end16 = k.End);
 				}
 				break;
 			case SyntaxKind.SingleLineDocumentationCommentTrivia:
@@ -413,11 +412,11 @@ partial class CiStyling
 
 		void _AddFoldPoint(int pos16, int level)
 		{
-			//AOutput.Write(z.LineFromPos(true, pos16)+1, level);
-			(a ??= new List<int>()).Add(doc.Pos8(pos16) | (level > 0 ? 0 : unchecked((int)0x80000000)));
+			//AOutput.Write(doc.zLineFromPos(true, pos16)+1, level);
+			(a ??= new List<int>()).Add(doc.zPos8(pos16) | (level > 0 ? 0 : unchecked((int)0x80000000)));
 		}
 
-		int line = z.LineFromPos(false, start8), underlinedLine = line;
+		int line = doc.zLineFromPos(false, start8), underlinedLine = line;
 
 		foreach(var v in root.DescendantNodes()) {
 			var span = v.Span;
@@ -459,7 +458,7 @@ partial class CiStyling
 			}
 			if(separator) {
 				//add separator below
-				int li = z.LineFromPos(true, span.End);
+				int li = doc.zLineFromPos(true, span.End);
 				_DeleteUnderlinedLineMarkers(li);
 				//if(underlinedLine != li) AOutput.Write("add", li + 1);
 				if(underlinedLine != li) doc.Call(SCI_MARKERADD, li, SciCode.c_markerUnderline);
@@ -468,7 +467,7 @@ partial class CiStyling
 		}
 		//p1.Next('n');
 
-		_DeleteUnderlinedLineMarkers(z.LineFromPos(false, end8));
+		_DeleteUnderlinedLineMarkers(doc.zLineFromPos(false, end8));
 
 		void _DeleteUnderlinedLineMarkers(int beforeLine)
 		{
@@ -487,10 +486,10 @@ partial class CiStyling
 		a?.Sort((p1, p2) => (p1 & 0x7fffffff) - (p2 & 0x7fffffff));
 		//p1.Next('s');
 
-		int lineTo = z.LineFromPos(false, end8); if(end8 > z.LineStart(false, lineTo)) lineTo++;
+		int lineTo = doc.zLineFromPos(false, end8); if(end8 > doc.zLineStart(false, lineTo)) lineTo++;
 		//AOutput.Write(line + 1, lineTo + 1);
 		unsafe { //we implement folding in Scintilla. Calling many SCI_SETFOLDLEVEL here would be slow.
-			fixed(int* ip = a?.ToArray()) Sci_SetFoldLevels(doc.SciPtr, line, lineTo, a?.Count ?? 0, ip);
+			fixed(int* ip = a?.ToArray()) Sci_SetFoldLevels(doc.ZSciPtr, line, lineTo, a?.Count ?? 0, ip);
 		}
 		//p1.Next('f');
 		doc._RestoreEditorData();
@@ -523,11 +522,11 @@ partial class CiStyling
 									| SC_AUTOMATICFOLD_CHANGE); //show hidden lines when header line modified like '#region' -> '//#region'
 		doc.Call(SCI_SETFOLDFLAGS, SC_FOLDFLAG_LINEAFTER_CONTRACTED);
 		doc.Call(SCI_FOLDDISPLAYTEXTSETSTYLE, SC_FOLDDISPLAYTEXT_STANDARD);
-		doc.Z.StyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
+		doc.zStyleForeColor(STYLE_FOLDDISPLAYTEXT, 0x808080);
 
 		doc.Call(SCI_SETMARGINCURSORN, foldMrgin, SC_CURSORARROW);
 
-		doc.Z.MarginWidth(foldMrgin, 14);
+		doc.zMarginWidth(foldMrgin, 14);
 	}
 
 	#endregion
@@ -544,10 +543,10 @@ partial class SciCode
 		if(isExpanded) {
 			_FoldLine(line);
 			//move caret out of contracted region
-			int pos = Z.CurrentPos8;
+			int pos = zCurrentPos8;
 			if(pos > startPos) {
-				int i = Z.LineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
-				if(pos <= i) Z.CurrentPos8 = startPos;
+				int i = zLineEnd(false, Call(SCI_GETLASTCHILD, line, -1));
+				if(pos <= i) zCurrentPos8 = startPos;
 			}
 		} else {
 			Call(SCI_FOLDLINE, line, 1);
@@ -560,7 +559,7 @@ partial class SciCode
 #if false
 		Call(SCI_FOLDLINE, line);
 #else
-		string s = Z.LineText(line), s2 = "";
+		string s = zLineText(line), s2 = "";
 		for(int i = 0; i < s.Length; i++) {
 			char c = s[i];
 			if(c == '{') { s2 = "... }"; break; }
@@ -572,7 +571,7 @@ partial class SciCode
 		}
 		//quite slow. At startup ~250 mcs. The above code is fast.
 		if(s2.Length == 0) Call(SCI_FOLDLINE, line); //slightly faster
-		else Z.SetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
+		else zSetString(SCI_TOGGLEFOLDSHOWTEXT, line, s2);
 #endif
 	}
 
@@ -589,7 +588,7 @@ partial class SciCode
 			try {
 				using var p = db.Statement("SELECT top,pos,lines FROM _editor WHERE id=?", _fn.Id);
 				if(p.Step()) {
-					int cp = Z.CurrentPos8;
+					int cp = zCurrentPos8;
 					int top = p.GetInt(0);
 					int pos = p.GetInt(1);
 					var a = p.GetList<int>(2);
@@ -601,14 +600,14 @@ partial class SciCode
 							if(marker == 31) _FoldLine(line);
 							else Call(SCI_MARKERADDSET, line, 1 << marker);
 						}
-						if(cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, Z.LineFromPos(false, cp));
+						if(cp > 0) Call(SCI_ENSUREVISIBLEENFORCEPOLICY, zLineFromPos(false, cp));
 					}
 					if(top + pos > 0) {
 						if(!reopened) {
 							db.Execute($"REPLACE INTO _editor (id,top,pos) VALUES ({_fn.Id},0,0)");
 						} else if(cp == 0) {
 							if(top > 0) Call(SCI_SETFIRSTVISIBLELINE, _savedTop = top);
-							if(pos > 0 && pos <= Len8) Z.CurrentPos8 = _savedPos = pos;
+							if(pos > 0 && pos <= zLen8) zCurrentPos8 = _savedPos = pos;
 						}
 					}
 				}
@@ -642,7 +641,7 @@ partial class SciCode
 		//p1.Next();
 		var hash = _Hash(a);
 		//p1.Next();
-		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = Z.CurrentPos8;
+		int top = Call(SCI_GETFIRSTVISIBLELINE), pos = zCurrentPos8;
 		if(top != _savedTop || pos != _savedPos || hash != _savedLinesMD5) {
 			//AOutput.Write("changed", a.Count);
 			try {
@@ -676,7 +675,7 @@ partial class SciCode
 
 	//unsafe void _TestSaveFolding()
 	//{
-	//	//int n = Z.LineCount;
+	//	//int n = zLineCount;
 	//	//for(int i = 0; i < n; i++) AOutput.Write(i+1, (uint)Call(SCI_GETFOLDLEVEL, i));
 
 	//	var a = new List<POINT>();
@@ -689,7 +688,7 @@ partial class SciCode
 	//	}
 
 	//	Call(SCI_FOLDALL, SC_FOLDACTION_EXPAND);
-	//	Sci_SetFoldLevels(SciPtr, 0, Z.LineCount - 1, 0, null);
+	//	Sci_SetFoldLevels(SciPtr, 0, zLineCount - 1, 0, null);
 	//	ATimer.After(1000, _ => _TestRestoreFolding(a));
 	//}
 
@@ -698,11 +697,11 @@ partial class SciCode
 	//	var a = new int[lines.Count * 2];
 	//	for(int i = 0; i < lines.Count; i++) {
 	//		var p = lines[i];
-	//		a[i * 2] = Z.LineStart(false, p.x);
-	//		a[i * 2 + 1] = Z.LineStart(false, p.y) | unchecked((int)0x80000000);
+	//		a[i * 2] = zLineStart(false, p.x);
+	//		a[i * 2 + 1] = zLineStart(false, p.y) | unchecked((int)0x80000000);
 	//	}
 	//	Array.Sort(a, (e1, e2) => (e1 & 0x7fffffff) - (e2 & 0x7fffffff));
-	//	fixed(int* ip = a) Sci_SetFoldLevels(SciPtr, 0, Z.LineCount - 1, a.Length, ip);
+	//	fixed(int* ip = a) Sci_SetFoldLevels(SciPtr, 0, zLineCount - 1, a.Length, ip);
 	//}
 
 	int _savedTop, _savedPos;

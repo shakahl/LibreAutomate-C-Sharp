@@ -295,7 +295,10 @@ unsafe class Program
 			}, out s);
 		}
 
-		//<msdn>...</msdn> -> <a href="google search">
+		//<google>...</google> -> <a href="google search">
+		nr += s.RegexReplace(@"<google>(.+?)</google>", @"<a href=""https://www.google.com/search?q=$1"">$1</a>", out s);
+
+		//<msdn>...</msdn> -> <a href="google search in docs.microsoft.com">
 		nr += s.RegexReplace(@"<msdn>(.+?)</msdn>", @"<a href=""https://www.google.com/search?q=site:docs.microsoft.com+$1"">$1</a>", out s);
 
 		//javascript renderTables() replacement, to avoid it at run time. Also remove class table-striped.

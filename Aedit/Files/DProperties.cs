@@ -237,8 +237,7 @@ class DProperties : KDialogWindow
 		_GetMeta();
 
 		var doc = Panels.Editor.ZActiveDoc;
-		var t = doc.Z;
-		var code = doc.Text;
+		var code = doc.zText;
 		int endOf = MetaComments.FindMetaComments(code);
 		string append = null; if (endOf == 0) append = (_f.IsScript && code.Starts("//.\r")) ? " " : "\r\n";
 		var s = _meta.Format(append);
@@ -247,10 +246,10 @@ class DProperties : KDialogWindow
 			if (endOf == 0) return;
 			while (endOf < code.Length && code[endOf] <= ' ') endOf++;
 		} else if (s.Length == endOf) {
-			if (s == t.RangeText(true, 0, endOf)) return; //did not change
+			if (s == doc.zRangeText(true, 0, endOf)) return; //did not change
 		}
 
-		t.ReplaceRange(true, 0, endOf, s);
+		doc.zReplaceRange(true, 0, endOf, s);
 	}
 
 	private void _ButtonClick_addNet(WBButtonClickArgs e) {
@@ -510,13 +509,10 @@ class DProperties : KDialogWindow
 	}
 
 	string _GetOutputPath(bool getDefault, bool expandEnvVar = false) {
-		string r;
-		if (!getDefault) getDefault = _meta.outputPath.NE();
-		if (getDefault) {
-			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
-		} else {
-			r = _meta.outputPath;
+		if(!getDefault && _Get(outputPath) is string r) {
 			if (expandEnvVar) r = APath.ExpandEnvVar(r);
+		} else {
+			r = MetaComments.GetDefaultOutputPath(_f, _role, withEnvVar: !expandEnvVar);
 		}
 		return r;
 	}
@@ -541,7 +537,7 @@ class DProperties : KDialogWindow
 	#region info
 
 	void _InitInfo() {
-		info.Text = "This file is a C# <help editor/" + (_isClass ? @"Class files, projects>class file" : "Scripts>script") + @"<>.
+		info.zText = "This file is a C# <help editor/" + (_isClass ? @"Class files, projects>class file" : "Scripts>script") + @"<>.
 
 C# file properties here are similar to C# project properties in Visual Studio.
 Saved in <c green>/*/ meta comments /*/<> at the very start of code, and can be edited there too.

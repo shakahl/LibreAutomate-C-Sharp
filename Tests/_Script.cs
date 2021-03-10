@@ -911,7 +911,6 @@ partial class TestScript : AScript
 	TestScript(string[] args) {
 		AOutput.QM2.UseQM2 = true;
 		//AOutput.Clear();
-		Au.Util.AssertListener_.Setup();
 
 		//APerf.First();
 		try {

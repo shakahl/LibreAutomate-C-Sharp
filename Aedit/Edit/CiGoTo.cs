@@ -237,7 +237,7 @@ class CiGoTo
 	//	if(itemText != null) { //go to item
 	//		var doc = Panels.Editor.ZActiveDoc;
 	//		string code = doc.Text;
-	//		int i = doc.Z.LineStart(true, line);
+	//		int i = doc.zLineStart(true, line);
 	//		string tn = isTB ? "AToolbar" : "AMenu";
 	//		if(!code.RegexMatch($@"\b([a-zA-Z_]\w*)\s*=\s*new\s+{tn}\s*\(", 1, out string v, RXFlags.FIRSTLINE, i..)) return; //get variable name
 	//		AOutput.Write(v);

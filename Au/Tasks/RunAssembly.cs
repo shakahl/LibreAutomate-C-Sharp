@@ -154,7 +154,8 @@ namespace Au
 	/// 1. The static constructor subscribes to the <see cref="AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
 	/// 2. Provides virtual function <see cref="OnUnhandledException"/>. The script can override it.
 	/// 3. Provides property <see cref="Triggers"/>.
-	/// 4. Sets default culture of all threads = invariant. See <see cref="AProcess.CultureIsInvariant"/>.
+	/// 4. The static constructor calls <see cref="ADefaultTraceListener.Setup"/>(useAOutput: true). Then <see cref="Debug.Assert"/> etc will show a dialog with buttons Exit|Debug|Ignore instead of "Unknown hard error" message box.
+	/// 5. The static constructor sets default culture of all threads = invariant. See <see cref="AProcess.CultureIsInvariant"/>.
 	/// 
 	/// More features may be added in the future.
 	/// </remarks>
@@ -174,6 +175,8 @@ namespace Au
 				//2. Exceptions thrown in non-hosted exe process.
 				//Other exceptions are handled by the host program with try/catch.
 			};
+
+			ADefaultTraceListener.Setup(useAOutput: true);
 
 			//#if !DEBUG
 			AProcess.CultureIsInvariant = true;

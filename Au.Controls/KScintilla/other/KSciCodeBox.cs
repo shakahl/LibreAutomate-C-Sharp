@@ -12,13 +12,13 @@ namespace Au.Controls
 			//ZInitBorder = true; //no, the native border is of different color and thickness (high DPI) than other WPF controls
 		}
 
-		protected override void OnHandleCreated() {
-			base.OnHandleCreated();
+		protected override void ZOnHandleCreated() {
+			base.ZOnHandleCreated();
 
-			Z.MarginWidth(1, 0);
-			//Z.StyleFont(Sci.STYLE_DEFAULT, );
-			Z.SetLexerCpp();
-			Z.IsReadonly = true;
+			zMarginWidth(1, 0);
+			//zStyleFont(Sci.STYLE_DEFAULT, );
+			zSetLexerCpp();
+			zIsReadonly = true;
 		}
 
 		protected override void ZOnSciNotify(ref Sci.SCNotification n) {
@@ -33,7 +33,7 @@ namespace Au.Controls
 				if (0 != (n.updated & Sci.SC_UPDATE_SELECTION)) { //selection changed
 					if (_readonlyLenUtf8 > 0) {
 						int i = Call(Sci.SCI_GETSELECTIONEND);
-						Z.IsReadonly = i > _ReadonlyStartUtf8 || _LenUtf8 == 0; //small bug: if caret is at the boundary, allows to delete readonly text, etc.
+						zIsReadonly = i > _ReadonlyStartUtf8 || _LenUtf8 == 0; //small bug: if caret is at the boundary, allows to delete readonly text, etc.
 					}
 				}
 				break;
@@ -48,19 +48,19 @@ namespace Au.Controls
 		/// <param name="s"></param>
 		/// <param name="readonlyFrom">If 0, makes all text readonly. If s.Length or -1, makes all text editable. If between 0 and s.Length, makes readonly from this position.</param>
 		public void ZSetText(string s, int readonlyFrom = 0) {
-			Z.IsReadonly = false;
-			Z.SetText(s, SciSetTextFlags.NoUndoNoNotify);
+			zIsReadonly = false;
+			zSetText(s, SciSetTextFlags.NoUndoNoNotify);
 			if (readonlyFrom > 0) {
-				_readonlyLenUtf8 = _LenUtf8 - Pos8(readonlyFrom);
+				_readonlyLenUtf8 = _LenUtf8 - zPos8(readonlyFrom);
 			} else if (readonlyFrom < 0) {
 				_readonlyLenUtf8 = 0;
 			} else {
-				Z.IsReadonly = true;
+				zIsReadonly = true;
 				_readonlyLenUtf8 = -1;
 			}
 		}
 
-		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : Pos16(_ReadonlyStartUtf8);
+		public int ZReadonlyStart => _readonlyLenUtf8 < 0 ? 0 : zPos16(_ReadonlyStartUtf8);
 
 		protected int _readonlyLenUtf8;
 

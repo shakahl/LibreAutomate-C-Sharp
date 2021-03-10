@@ -265,17 +265,15 @@ partial class CiStyling
 
 		public void ToScintilla(KScintilla sci)
 		{
-			var z = sci.Z;
-
-			z.StyleFont(STYLE_DEFAULT, FontName, FontSize);
-			z.StyleBackColor(STYLE_DEFAULT, BackgroundColor);
-			//if(None.color != 0) z.StyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
-			z.StyleClearAll();
+			sci.zStyleFont(STYLE_DEFAULT, FontName, FontSize);
+			sci.zStyleBackColor(STYLE_DEFAULT, BackgroundColor);
+			//if(None.color != 0) sci.zStyleForeColor(STYLE_DEFAULT, None.color); //also would need bold and in ctor above
+			sci.zStyleClearAll();
 
 			void _Set(EToken tok, TStyle sty)
 			{
-				z.StyleForeColor((int)tok, sty.color);
-				if(sty.bold) z.StyleBold((int)tok, true);
+				sci.zStyleForeColor((int)tok, sty.color);
+				if(sty.bold) sci.zStyleBold((int)tok, true);
 			}
 
 			_Set(EToken.None, None);

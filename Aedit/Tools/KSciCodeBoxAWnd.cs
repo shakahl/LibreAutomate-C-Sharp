@@ -34,7 +34,7 @@ namespace Au.Controls
 			if (wnd != _wnd) _userModified = false; else if (!_userModified) _userModified = 0 != Call(Sci.SCI_GETMODIFY);
 			if (!wnd.Is0) {
 				if (_userModified && wnd == _wnd) {
-					sCode = Z.RangeText(false, 0, _ReadonlyStartUtf8);
+					sCode = zRangeText(false, 0, _ReadonlyStartUtf8);
 					if (sCode.RegexMatch(@"(?s)^(?:var|AWnd) (\w+)", out var mw)) { //window
 						bool isConCode = sCode.RegexMatch(@"(?s)\R(?:var|AWnd) (\w+)", out var mc, 0, mw.End..); //control
 						//AOutput.Write(isConCode);
@@ -142,9 +142,9 @@ namespace Au.Controls
 			_wnd = d.ZResultWindow;
 			_con = d.ZResultUseControl ? d.ZResultControl : default;
 			int i = _ReadonlyStartUtf8;
-			var code2 = Z.RangeText(false, i, i + _readonlyLenUtf8);
-			Z.IsReadonly = false;
-			Z.SetText(code + code2);
+			var code2 = zRangeText(false, i, i + _readonlyLenUtf8);
+			zIsReadonly = false;
+			zSetText(code + code2);
 			return (true, d.ZResultWindow, d.ZResultControl, d.ZResultUseControl);
 		}
 	}

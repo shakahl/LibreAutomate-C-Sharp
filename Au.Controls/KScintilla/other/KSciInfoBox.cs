@@ -19,7 +19,7 @@ namespace Au.Controls
 {
 	/// <summary>
 	/// Scintilla-based control to show formatted information text.
-	/// To set text use the <see cref="KScintilla.Text"/> property. For formatting and links use tags: <see cref="SciTags"/>.
+	/// To set text use the <see cref="KScintilla.zText"/> property. For formatting and links use tags: <see cref="SciTags"/>.
 	/// </summary>
 	public class KSciInfoBox : KScintilla
 	{
@@ -33,14 +33,14 @@ namespace Au.Controls
 			//TabStop = false;
 		}
 
-		protected override void OnHandleCreated() {
-			base.OnHandleCreated();
+		protected override void ZOnHandleCreated() {
+			base.ZOnHandleCreated();
 
-			Z.StyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
-			if (ZInitUseControlFont != null) Z.StyleFont(Sci.STYLE_DEFAULT, ZInitUseControlFont); //Segoe UI 9 is narrower but taller than the default Verdana 8. Also tested Calibri 9 (used for HtmlRenderer), but Verdana looks better.
-			Z.StyleClearAll();
+			zStyleBackColor(Sci.STYLE_DEFAULT, 0xf8fff0);
+			if (ZInitUseControlFont != null) zStyleFont(Sci.STYLE_DEFAULT, ZInitUseControlFont); //Segoe UI 9 is narrower but taller than the default Verdana 8. Also tested Calibri 9 (used for HtmlRenderer), but Verdana looks better.
+			zStyleClearAll();
 
-			Z.MarginWidth(1, 0);
+			zMarginWidth(1, 0);
 
 			SIZE z = ZInitBlankMargins;
 			z = ADpi.Scale(z, this.Hwnd);
@@ -71,7 +71,7 @@ namespace Au.Controls
 			c.ToolTip = text;
 			c.ToolTipOpening += (o, e) => {
 				e.Handled = true;
-				this.Text = (o as FrameworkElement).ToolTip as string;
+				this.zText = (o as FrameworkElement).ToolTip as string;
 			};
 		}
 	}

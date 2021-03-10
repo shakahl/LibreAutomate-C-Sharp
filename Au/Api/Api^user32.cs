@@ -1329,6 +1329,9 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "GetMenuItemInfoW")]
 		internal static extern bool GetMenuItemInfo(IntPtr hmenu, int item, bool fByPosition, ref MENUITEMINFO lpmii);
 
+		[DllImport("user32.dll", EntryPoint = "SetMenuItemInfoW")]
+		internal static extern bool SetMenuItemInfo(IntPtr hmenu, int item, bool fByPositon, in MENUITEMINFO lpmii);
+
 		[DllImport("user32.dll")]
 		internal static extern IntPtr GetSystemMenu(AWnd hWnd, bool bRevert);
 

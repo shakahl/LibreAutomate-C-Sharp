@@ -371,7 +371,7 @@ partial class FilesModel
 			if (activateOther && of.Count > 0) {
 				var ff = of[0];
 				if (selectOther) ff.SelectSingle();
-				if (_SetCurrentFile(ff, dontFocusEditor: !focusEditor)) return true;
+				if (_SetCurrentFile(ff, focusEditor: focusEditor)) return true;
 			}
 			_currentFile = null;
 		}
@@ -427,10 +427,10 @@ partial class FilesModel
 	/// Selects the node and opens its file in the code editor.
 	/// Returns false if failed to select, for example if f is a folder.
 	/// </summary>
-	public bool SetCurrentFile(FileNode f, bool dontChangeSelection = false, bool newFile = false, bool dontFocusEditor = false) {
+	public bool SetCurrentFile(FileNode f, bool dontChangeSelection = false, bool newFile = false, bool? focusEditor = true) {
 		if (IsAlien(f)) return false;
 		if (!dontChangeSelection) f.SelectSingle();
-		if (_currentFile != f) _SetCurrentFile(f, newFile, dontFocusEditor);
+		if (_currentFile != f) _SetCurrentFile(f, newFile, focusEditor);
 		return _currentFile == f;
 	}
 
@@ -442,7 +442,8 @@ partial class FilesModel
 	/// </summary>
 	/// <param name="f"></param>
 	/// <param name="newFile">Should be true if opening the file first time after creating.</param>
-	bool _SetCurrentFile(FileNode f, bool newFile = false, bool dontFocusEditor = false) {
+	/// <param name="focusEditor">If null, focus later, when mouse enters editor. Ignored if editor was focused (sets focus). Also depends on <i>newFile</i>.</param>
+	bool _SetCurrentFile(FileNode f, bool newFile = false, bool? focusEditor = true) {
 		Debug.Assert(!IsAlien(f));
 		if (f == _currentFile) return true;
 		//AOutput.Write(f);
@@ -453,7 +454,7 @@ partial class FilesModel
 		var fPrev = _currentFile;
 		_currentFile = f;
 
-		if (!Panels.Editor.ZOpen(f, newFile, dontFocusEditor)) {
+		if (!Panels.Editor.ZOpen(f, newFile, focusEditor)) {
 			_currentFile = fPrev;
 			if (OpenFiles.Contains(f)) _UpdateOpenFiles(_currentFile); //?
 			return false;
@@ -507,14 +508,13 @@ partial class FilesModel
 		if (!SetCurrentFile(f)) return false;
 		if (line >= 0 || columnOrPos >= 0) {
 			var doc = Panels.Editor.ZActiveDoc;
-			var z = doc.Z;
 			if (line >= 0) {
-				int i = z.LineStart(false, line);
-				if (columnOrPos > 0) i = doc.Pos8(doc.Pos16(i) + columnOrPos); //not SCI_FINDCOLUMN, it calculates tabs
+				int i = doc.zLineStart(false, line);
+				if (columnOrPos > 0) i = doc.zPos8(doc.zPos16(i) + columnOrPos); //not SCI_FINDCOLUMN, it calculates tabs
 				columnOrPos = i;
 			}
-			if (wasOpen) z.GoToPos(false, columnOrPos);
-			else ATimer.After(10, _ => z.GoToPos(false, columnOrPos));
+			if (wasOpen) doc.zGoToPos(false, columnOrPos);
+			else ATimer.After(10, _ => doc.zGoToPos(false, columnOrPos));
 			//info: scrolling works better with async when now opened the file. Or with doevents; not with BeginInvoke.
 		}
 		return true;
@@ -786,7 +786,7 @@ partial class FilesModel
 				}
 				s = s.RegexReplace(@"(?m)\R\R\K", text.text, 1);
 			}
-			Panels.Editor.ZActiveDoc.Z.SetText(s);
+			Panels.Editor.ZActiveDoc.zSetText(s);
 		}
 
 		if (beginRenaming && f.IsSelected) RenameSelected(newFile: true);

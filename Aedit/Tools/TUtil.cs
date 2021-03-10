@@ -30,14 +30,14 @@ namespace Au.Tools
 		/// Appends ', ' and string argument to this StringBuilder.
 		/// </summary>
 		/// <param name="t"></param>
-		/// <param name="s">Argument value. If null, appends 'null'. If verbatim (like '@"text"'), appends 's'. Else appends '"escaped s"'.</param>
+		/// <param name="s">Argument value. If null, appends 'null'. If verbatim (like '@"text"'), appends 's'. Else appends '"escaped s"'; can make verbatim.</param>
 		/// <param name="param">If not null, appends 'param: s'. By default appends only 's'. If "null", appends 'null, s'.</param>
 		/// <param name="noComma">Don't append ', '. Use for the first parameter. If false, does not append only if b.Length is less than 2.</param>
 		public static StringBuilder AppendStringArg(this StringBuilder t, string s, string param = null, bool noComma = false) {
 			_AppendArgPrefix(t, param, noComma);
 			if (s == null) t.Append("null");
-			else if (IsVerbatim(s, out _)) t.Append(s);
-			else t.Append('\"').Append(s.Escape()).Append('\"'); //FUTURE: make verbatim if contains \ and no newlines/tabs/etc
+			else if (IsVerbatim(s, out _) || MakeVerbatim(ref s)) t.Append(s);
+			else t.Append(s.Escape(quote: true));
 			return t;
 		}
 
@@ -107,18 +107,23 @@ namespace Au.Tools
 		}
 
 		/// <summary>
-		/// Returns true if s is like '@"*"' or '$"*"' or '$@"*"'.
+		/// Returns true if s is like '@"*"' or '$"*"' or '$@"*"' or '@$"*"'.
 		/// s can be null.
 		/// </summary>
 		public static bool IsVerbatim(string s, out int prefixLength) {
-			prefixLength = 0;
-			if (s != null && s.Length >= 3 && s[^1] == '\"') {
-				if (s[0] == '$') prefixLength = 1;
-				if (s[prefixLength] == '@') prefixLength++;
-				if (s[prefixLength] == '\"' && prefixLength != s.Length - 1) return true;
-				prefixLength = 0;
-			}
-			return false;
+			prefixLength = (s.Like(false, "@\"*\"", "$\"*\"", "$@\"*\"", "@$\"*\"") + 1) / 2;
+			return prefixLength > 0;
+		}
+
+		/// <summary>
+		/// If s contains \ and no newlines/controlchars: replaces all " with "", prepends @", appends " and returns true.
+		/// </summary>
+		/// <param name="s"></param>
+		/// <returns></returns>
+		public static bool MakeVerbatim(ref string s) {
+			if (!s.Contains('\\') || s.RegexIsMatch(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) return false;
+			s = "@\"" + s.Replace("\"", "\"\"") + "\"";
+			return true;
 		}
 
 		/// <summary>
@@ -133,7 +138,7 @@ namespace Au.Tools
 		/// <summary>
 		/// If s has *? characters, prepends "**t ".
 		/// But if s has single * character, converts to "**r regex" that ignores it. Because single * often is used to indicate unsaved state.
-		/// If canMakeVerbatim and makes regex or s contains '\' and no newlines/controlchars, prepends @" and appends " and replaces all " with "".
+		/// If canMakeVerbatim, finally calls <see cref="MakeVerbatim"/>.
 		/// s can be null.
 		/// </summary>
 		public static string EscapeWindowName(string s, bool canMakeVerbatim) {
@@ -141,12 +146,10 @@ namespace Au.Tools
 			if (AWildex.HasWildcardChars(s)) {
 				int i = s.IndexOf('*');
 				if (i >= 0 && s.IndexOf('*', i + 1) < 0) {
-					s = "**r " + ARegex.EscapeQE(s.Remove(i)) + @"\*?" + ARegex.EscapeQE(s.Substring(i + 1));
+					s = "**r " + ARegex.EscapeQE(s[..i]) + @"\*?" + ARegex.EscapeQE(s[++i..]);
 				} else s = "**t " + s;
 			}
-			if (canMakeVerbatim && s.Contains('\\') && !s.RegexIsMatch(@"[\x00-\x1F\x85\x{2028}\x{2029}]")) {
-				s = "@\"" + s.Replace("\"", "\"\"") + "\"";
-			}
+			if (canMakeVerbatim) MakeVerbatim(ref s);
 			return s;
 		}
 
@@ -174,7 +177,7 @@ namespace Au.Tools
 		public static string StripWndClassName(string s, bool escapeWildex) {
 			if (!s.NE()) {
 				int n = s.RegexReplace(@"^WindowsForms\d+(\..+?\.).+", "*$1*", out s);
-				if (n == 0) n = s.RegexReplace(@"^(HwndWrapper\[.+?;).+", "$1*", out s);
+				if (n == 0) n = s.RegexReplace(@"^(HwndWrapper\[.+?;|Afx:).+", "$1*", out s);
 				if (escapeWildex && n == 0) s = EscapeWildex(s);
 			}
 			return s;
@@ -325,6 +328,72 @@ namespace Au.Tools
 			if (comboToo) EventManager.RegisterClassHandler(typeof(T), Selector.SelectionChangedEvent, h);
 		}
 
+		/// <summary>
+		/// From path gets name and various path formats (raw, unexpanded, shortcut) for inserting in code. If shortcut, also gets arguments. Supports ":: ITEMIDLIST".
+		/// </summary>
+		public class PathInfo
+		{
+			public string filePath, lnkPath, fileUnexpanded, lnkUnexpanded;
+			string _name, _name2, _args;
+
+			public PathInfo(string path) {
+				filePath = path;
+				_name = APath.GetNameNoExt(path);
+				if (path.Ends(".lnk", true)) {
+					try {
+						var g = AShortcutFile.Open(path);
+						string target = g.TargetAnyType;
+						if (target.Starts("::")) {
+							using var pidl = APidl.FromString(target);
+							_name2 = pidl.ToShellString(Native.SIGDN.NORMALDISPLAY);
+						} else {
+							_args = g.Arguments;
+							if (!target.Ends(".exe", true) || _name.Contains("Shortcut"))
+								_name2 = APath.GetNameNoExt(target);
+						}
+						lnkPath = path;
+						filePath = target;
+					}
+					catch { }
+				}
+
+				if (AFolders.UnexpandPath(filePath, out var s)) fileUnexpanded = s;
+				if (AFolders.UnexpandPath(lnkPath, out s)) lnkUnexpanded = s;
+			}
+
+			/// <summary>
+			/// If is shortcut or can unexpand path, shows dialog and returns: 0 cancel, 1 use filePath, 2 use fileUnexpanded, 2 use lnkPath, 4 use lnkUnexpanded.
+			/// Else returns 1 (use filePath).
+			/// </summary>
+			/// <param name="owner"></param>
+			public int SelectFormatUI(AnyWnd owner = default) {
+				if (lnkPath != null || fileUnexpanded != null) {
+					var b = new StringBuilder();
+					_Append("1 Path", filePath);
+					_Append("|2 Path with AFolders", fileUnexpanded);
+					_Append("|3 Shortcut path", lnkPath);
+					_Append("|4 Shortcut path with AFolders", lnkUnexpanded);
+					return ADialog.Show("Path format", buttons: b.ToString(), flags: DFlags.CommandLinks | DFlags.XCancel | DFlags.CenterMouse, owner: owner);
+
+					void _Append(string label, string path) {
+						if (path != null) b.Append(label).Append('\n').Append(path.Limit(50).Replace("&", "&&"));
+					}
+				}
+				return 1;
+			}
+
+			//static bool s_defUnexpanded, s_defLnk; //could be used to set default button depending on previous choice
+
+			/// <summary>
+			/// Gets path/name/args that match or are nearest to the return value of <see cref="SelectFormatUI"/>.
+			/// </summary>
+			public (string path, string name, string args) GetResult(int i) => (
+				i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null },
+				i <= 2 ? _name2 ?? _name : _name,
+				i <= 2 ? _args : null
+				);
+		}
+
 		#endregion
 
 		#region OnScreenRect
@@ -439,7 +508,7 @@ namespace Au.Tools
 									//Shift+F3 too. But Ctrl+F3 works.
 									//if (w!=_prevWnd && w.IsActive) {
 									//	w = _prevWnd;
-									//	if(w.IsUacAccessDenied)AOutput.Write("F3 ");
+									//	if(w.UacAccessDenied)AOutput.Write("F3 ");
 									//}
 								}
 								if (r.HasValue) {
@@ -531,7 +600,7 @@ namespace Au.Tools
 				bTest.IsEnabled = false;
 				if (!Au.Compiler.Scripting.Compile(code, out var c, wrap: true, load: true)) {
 					ADebug.Print("---- CODE ----\r\n" + code + "--------------");
-					ADialog.ShowError("Errors in code", c.errors, owner: dialog, flags: DFlags.OwnerCenter | DFlags.Wider/*, expandedText: code*/);
+					ADialog.ShowError("Errors in code", c.errors, owner: dialog, flags: DFlags.CenterOwner | DFlags.Wider/*, expandedText: code*/);
 				} else {
 					var rr = (object[])c.method.Invoke(null, null); //use array because fails to cast tuple, probably because in that assembly it is new type
 					r = ((long[])rr[0], rr[1], (AWnd)rr[2]);
@@ -547,7 +616,7 @@ namespace Au.Tools
 				string s1, s2;
 				if (e is NotFoundException) { s1 = "Window not found"; s2 = "Tip: If part of window name changes, replace it with *"; } //info: throws only when window not found. This is to show time anyway when acc etc not found.
 				else { s1 = e.GetType().Name; s2 = e.Message; }
-				ADialog.ShowError(s1, s2, owner: dialog, flags: DFlags.OwnerCenter);
+				ADialog.ShowError(s1, s2, owner: dialog, flags: DFlags.CenterOwner);
 			}
 			finally {
 				bTest.IsEnabled = true;
@@ -590,7 +659,7 @@ namespace Au.Tools
 			if (r.wnd != wnd && !r.wnd.Is0) {
 				ADialog.ShowWarning("The code finds another " + (r.wnd.IsChild ? "control" : "window"),
 				$"Need:  {wnd}\r\n\r\nFound:  {r.wnd}",
-				owner: dialog, flags: DFlags.OwnerCenter | DFlags.Wider);
+				owner: dialog, flags: DFlags.CenterOwner | DFlags.Wider);
 				TUtil.ShowOsdRect(r.wnd.Rect, true);
 				return default;
 			}

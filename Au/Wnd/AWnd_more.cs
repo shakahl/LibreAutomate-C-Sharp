@@ -244,7 +244,7 @@ namespace Au
 
 			/// <summary>
 			/// Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
-			/// Returns null if fails or if called on Windows 7.
+			/// Returns null if fails. Returns null if called on Windows 7 unless <i>getExePathIfNotWinStoreApp</i> true.
 			/// </summary>
 			/// <param name="w"></param>
 			/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>

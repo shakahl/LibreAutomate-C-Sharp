@@ -42,33 +42,39 @@ namespace Au
 		/// <seealso cref="Environment.ExpandEnvironmentVariables"/>
 		/// <seealso cref="Environment.GetEnvironmentVariable"/>
 		/// <seealso cref="Environment.SetEnvironmentVariable"/>
-		public static string ExpandEnvVar(string path)
-		{
+		public static string ExpandEnvVar(string path) {
 			var s = path;
-			if(s == null || s.Length < 3) return s;
-			if(s[0] != '%') {
-				if(s[0] == '\"' && s[1] == '%') return "\"" + ExpandEnvVar(s[1..]);
+			if (s.Lenn() < 3) return s;
+			if (s[0] != '%') {
+				if (s[0] == '\"' && s[1] == '%') return "\"" + ExpandEnvVar(s[1..]);
 				return s;
 			}
-			int i = s.IndexOf('%', 1); if(i < 2) return s;
+			int i = s.IndexOf('%', 2); if (i < 0) return s;
 			//return Environment.ExpandEnvironmentVariables(s); //5 times slower
 
-			//support known folders, like @"%AFolders.Documents%\..."
-			if(i > 12 && s.Starts("%AFolders.")) {
+			//support known folders, like @"%AFolders.Documents%\...".
+			//	rejected: without AFolders, like @"%%.Documents%\...". If need really short, can set and use environment variables.
+			//if ((i > 12 && s.Starts("%AFolders.")) || (i > 4 && s.Starts("%%"))) {
+			//	var prop = s[(s[1] == '%' ? 2 : 10)..i];
+			if (i > 12 && s.Starts("%AFolders.")) {
 				var prop = s[10..i];
 				var k = AFolders.GetFolder(prop);
-				if(k != null) return k + s.Substring(i + 1);
+				if (k != null) {
+					s = s[++i..];
+					string ks = k.ToString(); if (ks.Starts(":: ")) return ks + s; //don't need \
+					return k + s; //add \ if need
+				}
 				//throw new AuException("AFolders does not have property " + prop);
 				return s;
 			}
 
-			for(int na = s.Length + 100; ;) {
+			for (int na = s.Length + 100; ;) {
 				var b = AMemoryArray.Char_(ref na);
 				int nr = Api.ExpandEnvironmentStrings(s, b, na);
-				if(nr > na) na = nr;
-				else if(nr > 0) {
+				if (nr > na) na = nr;
+				else if (nr > 0) {
 					var R = b.ToString(nr - 1);
-					if(R == s) return R;
+					if (R == s) return R;
 					return ExpandEnvVar(R); //can be %envVar2% in envVar1 value
 				} else return s;
 			}
@@ -83,12 +89,11 @@ namespace Au
 		/// <remarks>
 		/// Environment variable values cannot be "" or null. Setting empty value removes the variable.
 		/// </remarks>
-		internal static string GetEnvVar_(string name)
-		{
-			for(int na = 300; ;) {
+		internal static string GetEnvVar_(string name) {
+			for (int na = 300; ;) {
 				var b = AMemoryArray.Char_(ref na);
 				int nr = Api.GetEnvironmentVariable(name, b, na);
-				if(nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
+				if (nr > na) na = nr; else return (nr == 0) ? "" : b.ToString(nr);
 			}
 		}
 
@@ -96,8 +101,7 @@ namespace Au
 		/// Returns true if environment variable exists.
 		/// </summary>
 		/// <param name="name">Case-insensitive name.</param>
-		internal static bool EnvVarExists_(string name)
-		{
+		internal static bool EnvVarExists_(string name) {
 			return 0 != Api.GetEnvironmentVariable(name, null, 0);
 		}
 
@@ -117,23 +121,22 @@ namespace Au
 		/// 
 		/// If path starts with <c>"%environmentVariable%"</c>, shows warning and returns false. You should at first expand environment variables with <see cref="ExpandEnvVar"/> or instead use <see cref="IsFullPathExpandEnvVar"/>.
 		/// </remarks>
-		public static bool IsFullPath(string path)
-		{
+		public static bool IsFullPath(string path) {
 			var s = path;
 			int len = s.Lenn();
 
-			if(len >= 2) {
-				if(s[1] == ':' && AChar.IsAsciiAlpha(s[0])) {
+			if (len >= 2) {
+				if (s[1] == ':' && AChar.IsAsciiAlpha(s[0])) {
 					return len == 2 || IsSepChar_(s[2]);
 					//info: returns false if eg "c:abc" which means "abc" in current directory of drive "c:"
 				}
-				switch(s[0]) {
+				switch (s[0]) {
 				case '\\':
 				case '/':
 					return IsSepChar_(s[1]);
 				case '%':
 #if true
-					if(!ExpandEnvVar(s).Starts('%'))
+					if (!ExpandEnvVar(s).Starts('%'))
 						AWarning.Write("Path starts with %environmentVariable%. Use APath.IsFullPathExpandEnvVar instead.");
 #else
 					s = ExpandEnvVar(s); //quite fast. 70% slower than just EnvVarExists_, but reliable.
@@ -162,14 +165,13 @@ namespace Au
 		/// Supports '/' characters too.
 		/// Supports only file-system paths. Returns false if path is URL (<see cref="IsUrl"/>) or starts with <c>"::"</c>.
 		/// </remarks>
-		public static bool IsFullPathExpandEnvVar(ref string path)
-		{
+		public static bool IsFullPathExpandEnvVar(ref string path) {
 			var s = path;
-			if(s == null || s.Length < 2) return false;
-			if(s[0] != '%') return IsFullPath(s);
+			if (s == null || s.Length < 2) return false;
+			if (s[0] != '%') return IsFullPath(s);
 			s = ExpandEnvVar(s);
-			if(s[0] == '%') return false;
-			if(!IsFullPath(s)) return false;
+			if (s[0] == '%') return false;
+			if (!IsFullPath(s)) return false;
 			path = s;
 			return true;
 		}
@@ -183,35 +185,34 @@ namespace Au
 		/// Supports prefixes <c>@"\\?\"</c> and <c>@"\\?\UNC\"</c>.
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// </remarks>
-		public static int GetRootLength(string path)
-		{
+		public static int GetRootLength(string path) {
 			var s = path;
 			int i = 0, len = (s == null) ? 0 : s.Length;
-			if(len >= 2) {
-				switch(s[1]) {
+			if (len >= 2) {
+				switch (s[1]) {
 				case ':':
-					if(AChar.IsAsciiAlpha(s[i])) {
+					if (AChar.IsAsciiAlpha(s[i])) {
 						int j = i + 2;
-						if(len == j) return j;
-						if(IsSepChar_(s[j])) return j + 1;
+						if (len == j) return j;
+						if (IsSepChar_(s[j])) return j + 1;
 						//else invalid
 					}
 					break;
 				case '\\':
 				case '/':
-					if(IsSepChar_(s[0])) {
+					if (IsSepChar_(s[0])) {
 						i = _GetPrefixLength(s);
-						if(i == 0) i = 2; //no prefix
-						else if(i == 4) {
-							if(len >= 6 && s[5] == ':') goto case ':'; //like @"\\?\C:\..."
+						if (i == 0) i = 2; //no prefix
+						else if (i == 4) {
+							if (len >= 6 && s[5] == ':') goto case ':'; //like @"\\?\C:\..."
 							break; //invalid, no UNC
 						} //else like @"\\?\UNC\server\share\..."
 						int i0 = i, nSep = 0;
-						for(; i < len && nSep < 2; i++) {
+						for (; i < len && nSep < 2; i++) {
 							char c = s[i];
-							if(IsSepChar_(c)) nSep++;
-							else if(c == ':') return i0;
-							else if(c == '0') break;
+							if (IsSepChar_(c)) nSep++;
+							else if (c == ':') return i0;
+							else if (c == '0') break;
 						}
 					}
 					break;
@@ -230,14 +231,13 @@ namespace Au
 		/// 
 		/// The protocol can be unknown. The function just checks string format, which is an ASCII alpha character followed by one or more ASCII alpha-numeric, '.', '-', '+' characters, followed by ':' character.
 		/// </remarks>
-		public static int GetUrlProtocolLength(string s)
-		{
+		public static int GetUrlProtocolLength(string s) {
 			int len = (s == null) ? 0 : s.Length;
-			if(len > 2 && AChar.IsAsciiAlpha(s[0]) && s[1] != ':') {
-				for(int i = 1; i < len; i++) {
+			if (len > 2 && AChar.IsAsciiAlpha(s[0]) && s[1] != ':') {
+				for (int i = 1; i < len; i++) {
 					var c = s[i];
-					if(c == ':') return i + 1;
-					if(!(AChar.IsAsciiAlphaDigit(c) || c == '.' || c == '-' || c == '+')) break;
+					if (c == ':') return i + 1;
+					if (!(AChar.IsAsciiAlphaDigit(c) || c == '.' || c == '-' || c == '+')) break;
 				}
 			}
 			return 0;
@@ -252,8 +252,7 @@ namespace Au
 		/// <remarks>
 		/// URL examples: <c>"http:"</c>, <c>"http://www.x.com"</c>, <c>"file:///path"</c>, <c>"shell:etc"</c>.
 		/// </remarks>
-		public static bool IsUrl(string s)
-		{
+		public static bool IsUrl(string s) {
 			return 0 != GetUrlProtocolLength(s);
 		}
 
@@ -270,23 +269,22 @@ namespace Au
 		/// Similar to <see cref="Path.Combine"/>. Main differences: has some options; supports null arguments.
 		/// </remarks>
 		/// <seealso cref="Normalize"/>
-		public static string Combine(string s1, string s2, bool s2CanBeFullPath = false, bool prefixLongPath = true)
-		{
+		public static string Combine(string s1, string s2, bool s2CanBeFullPath = false, bool prefixLongPath = true) {
 			string r;
-			if(s1.NE()) r = s2 ?? "";
-			else if(s2.NE()) r = s1 ?? "";
-			else if(s2CanBeFullPath && IsFullPath(s2)) r = s2;
+			if (s1.NE()) r = s2 ?? "";
+			else if (s2.NE()) r = s1 ?? "";
+			else if (s2CanBeFullPath && IsFullPath(s2)) r = s2;
 			else {
 				int k = 0;
-				if(IsSepChar_(s1[^1])) k |= 1;
-				if(IsSepChar_(s2[0])) k |= 2;
-				switch(k) {
+				if (IsSepChar_(s1[^1])) k |= 1;
+				if (IsSepChar_(s2[0])) k |= 2;
+				switch (k) {
 				case 0: r = s1 + @"\" + s2; break;
 				case 3: r = s1 + s2.Substring(1); break;
 				default: r = s1 + s2; break;
 				}
 			}
-			if(prefixLongPath) r = PrefixLongPathIfNeed(r);
+			if (prefixLongPath) r = PrefixLongPathIfNeed(r);
 			return r;
 		}
 
@@ -296,16 +294,15 @@ namespace Au
 		/// If fails, throws exception or returns null (if noException).
 		/// </summary>
 		/// <exception cref="ArgumentException"></exception>
-		internal static string Combine_(string s1, string s2, bool noException = false)
-		{
-			if(!s1.NE() && !s2.NE()) {
+		internal static string Combine_(string s1, string s2, bool noException = false) {
+			if (!s1.NE() && !s2.NE()) {
 				int k = 0;
-				if(IsSepChar_(s1[^1])) {
-					if(s1.Length == 1) goto ge;
+				if (IsSepChar_(s1[^1])) {
+					if (s1.Length == 1) goto ge;
 					k |= 1;
 				}
-				if(IsSepChar_(s2[0])) {
-					if(s2.Length == 1 || IsSepChar_(s2[1])) goto ge;
+				if (IsSepChar_(s2[0])) {
+					if (s2.Length == 1 || IsSepChar_(s2[1])) goto ge;
 					k |= 2;
 				}
 				var r = k switch {
@@ -316,7 +313,7 @@ namespace Au
 				return PrefixLongPathIfNeed(r);
 			}
 			ge:
-			if(noException) return null;
+			if (noException) return null;
 			throw new ArgumentException("Empty filename or path.");
 		}
 
@@ -330,13 +327,12 @@ namespace Au
 		/// </summary>
 		/// <param name="s">Can be null.</param>
 		/// <param name="length">Use when want to check drive at a middle, not at the end. Eg returns true if s is <c>@"C:\more"</c> and length is 2.</param>
-		static bool _EndsWithDriveWithoutSep(string s, int length = -1)
-		{
-			if(s == null) return false;
+		static bool _EndsWithDriveWithoutSep(string s, int length = -1) {
+			if (s == null) return false;
 			int i = ((length < 0) ? s.Length : length) - 1;
-			if(i < 1 || s[i] != ':') return false;
-			if(!AChar.IsAsciiAlpha(s[--i])) return false;
-			if(i > 0 && !IsSepChar_(s[i - 1])) return false;
+			if (i < 1 || s[i] != ':') return false;
+			if (!AChar.IsAsciiAlpha(s[--i])) return false;
+			if (i > 0 && !IsSepChar_(s[i - 1])) return false;
 			return true;
 		}
 
@@ -344,16 +340,15 @@ namespace Au
 		/// Ensures that s either ends with a valid drive path (eg <c>@"C:\"</c> but not "C:") or does not end with <c>'\\'</c> or <c>'/'</c> (unless would become empty if removed).
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		static string _AddRemoveSep(string s)
-		{
-			if(s != null) {
+		static string _AddRemoveSep(string s) {
+			if (s != null) {
 				int i = s.Length - 1;
-				if(i > 0) {
-					if(IsSepChar_(s[i]) && s[i - 1] != ':') {
+				if (i > 0) {
+					if (IsSepChar_(s[i]) && s[i - 1] != ':') {
 						var s2 = s.Trim(@"\/");
-						if(s2.Length != 0) s = s2;
+						if (s2.Length != 0) s = s2;
 					}
-					if(_EndsWithDriveWithoutSep(s)) s += "\\";
+					if (_EndsWithDriveWithoutSep(s)) s += "\\";
 				}
 			}
 			return s;
@@ -380,14 +375,13 @@ namespace Au
 		/// 
 		/// Similar to <see cref="Path.GetFullPath"/>. Main differences: this function expands environment variables, does not support relative paths, trims <c>'\\'</c> at the end if need.
 		/// </remarks>
-		public static string Normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0)
-		{
+		public static string Normalize(string path, string defaultParentDirectory = null, PNFlags flags = 0) {
 			path = ExpandEnvVar(path);
-			if(!IsFullPath(path)) { //note: not EEV
-				if(0 != (flags & PNFlags.CanBeUrlOrShell)) if(IsShellPath_(path) || IsUrl(path)) return path;
-				if(defaultParentDirectory.NE()) goto ge;
+			if (!IsFullPath(path)) { //note: not EEV
+				if (0 != (flags & PNFlags.CanBeUrlOrShell)) if (IsShellPathOrUrl_(path)) return path;
+				if (defaultParentDirectory.NE()) goto ge;
 				path = Combine_(ExpandEnvVar(defaultParentDirectory), path);
-				if(!IsFullPath(path)) goto ge;
+				if (!IsFullPath(path)) goto ge;
 			}
 
 			return Normalize_(path, flags, true);
@@ -399,29 +393,28 @@ namespace Au
 		/// Same as <see cref="Normalize"/>, but skips full-path checking.
 		/// s should be full path. If not full and not null/"", combines with current directory.
 		/// </summary>
-		internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false)
-		{
-			if(!s.NE()) {
-				if(!noExpandEV) s = ExpandEnvVar(s);
-				Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
+		internal static string Normalize_(string s, PNFlags flags = 0, bool noExpandEV = false) {
+			if (!s.NE()) {
+				if (!noExpandEV) s = ExpandEnvVar(s);
+				ADebug.PrintIf(IsShellPathOrUrl_(s), s);
 
-				if(_EndsWithDriveWithoutSep(s)) s += "\\"; //API would append current directory
+				if (_EndsWithDriveWithoutSep(s)) s += "\\"; //API would append current directory
 
 				//note: although slower, call GetFullPathName always, not just when contains @"..\" etc.
 				//	Because it does many things (see Normalize doc), not all documented.
 				//	We still ~2 times faster than Path.GetFullPath (tested before Core).
-				for(int na = 300; ;) {
+				for (int na = 300; ;) {
 					var b = AMemoryArray.Char_(ref na);
 					int nr = Api.GetFullPathName(s, na, b, null);
-					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
+					if (nr > na) na = nr; else { if (nr > 0) s = b.ToString(nr); break; }
 				}
 
-				if(0 == (flags & PNFlags.DontExpandDosPath) && IsPossiblyDos_(s)) s = ExpandDosPath_(s);
+				if (0 == (flags & PNFlags.DontExpandDosPath) && IsPossiblyDos_(s)) s = ExpandDosPath_(s);
 
-				if(0 == (flags & PNFlags.DontRemoveEndSeparator)) s = _AddRemoveSep(s);
-				else if(_EndsWithDriveWithoutSep(s)) s += "\\";
+				if (0 == (flags & PNFlags.DontRemoveEndSeparator)) s = _AddRemoveSep(s);
+				else if (_EndsWithDriveWithoutSep(s)) s += "\\";
 
-				if(0 == (flags & PNFlags.DontPrefixLongPath)) s = PrefixLongPathIfNeed(s);
+				if (0 == (flags & PNFlags.DontPrefixLongPath)) s = PrefixLongPathIfNeed(s);
 			}
 			return s;
 		}
@@ -431,11 +424,10 @@ namespace Au
 		/// Calls ExpandEnvVar, _AddRemoveSep, PrefixLongPathIfNeed. Optionally throws if !IsFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path (only if throwIfNotFullPath is true).</exception>
-		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath)
-		{
+		internal static string NormalizeMinimally_(string path, bool throwIfNotFullPath) {
 			var s = ExpandEnvVar(path);
-			Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
-			if(throwIfNotFullPath && !IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
+			ADebug.PrintIf(IsShellPathOrUrl_(s), s);
+			if (throwIfNotFullPath && !IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 			s = _AddRemoveSep(s);
 			s = PrefixLongPathIfNeed(s);
 			return s;
@@ -446,11 +438,10 @@ namespace Au
 		/// Calls ExpandEnvVar, _AddRemoveSep. Throws if !IsFullPath(path).
 		/// </summary>
 		/// <exception cref="ArgumentException">Not full path.</exception>
-		internal static string NormalizeForNET_(string path)
-		{
+		internal static string NormalizeForNET_(string path) {
 			var s = ExpandEnvVar(path);
-			Debug.Assert(!IsShellPath_(s) && !IsUrl(s));
-			if(!IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
+			ADebug.PrintIf(IsShellPathOrUrl_(s), s);
+			if (!IsFullPath(s)) throw new ArgumentException($"Not full path: '{path}'.");
 			return _AddRemoveSep(s);
 		}
 
@@ -459,13 +450,12 @@ namespace Au
 		/// Does not check whether s contains '~' character etc. Note: the API is slow.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static string ExpandDosPath_(string s)
-		{
-			if(!s.NE()) {
-				for(int na = 300; ;) {
+		internal static string ExpandDosPath_(string s) {
+			if (!s.NE()) {
+				for (int na = 300; ;) {
 					var b = AMemoryArray.Char_(ref na);
 					int nr = Api.GetLongPathName(s, b, na);
-					if(nr > na) na = nr; else { if(nr > 0) s = b.ToString(nr); break; }
+					if (nr > na) na = nr; else { if (nr > 0) s = b.ToString(nr); break; }
 				}
 			}
 			return s;
@@ -478,20 +468,19 @@ namespace Au
 		/// Examples: <c>"abcde~12"</c>, <c>"abcde~12.txt"</c>, <c>@"c:\path\abcde~12.txt"</c>, <c>"c:\abcde~12\path"</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsPossiblyDos_(string s)
-		{
+		internal static bool IsPossiblyDos_(string s) {
 			//AOutput.Write(s);
-			if(s != null && s.Length >= 8) {
-				for(int i = 0; (i = s.IndexOf('~', i + 1)) > 0;) {
+			if (s != null && s.Length >= 8) {
+				for (int i = 0; (i = s.IndexOf('~', i + 1)) > 0;) {
 					int j = i + 1, k = 0;
-					for(; k < 6 && j < s.Length; k++, j++) if(!AChar.IsAsciiDigit(s[j])) break;
-					if(k == 0) continue;
+					for (; k < 6 && j < s.Length; k++, j++) if (!AChar.IsAsciiDigit(s[j])) break;
+					if (k == 0) continue;
 					char c = j < s.Length ? s[j] : '\\';
-					if(c == '\\' || c == '/' || (c == '.' && j == s.Length - 4)) {
-						for(j = i; j > 0; j--) {
-							c = s[j - 1]; if(c == '\\' || c == '/') break;
+					if (c == '\\' || c == '/' || (c == '.' && j == s.Length - 4)) {
+						for (j = i; j > 0; j--) {
+							c = s[j - 1]; if (c == '\\' || c == '/') break;
 						}
-						if(j == i - (7 - k)) return true;
+						if (j == i - (7 - k)) return true;
 					}
 				}
 			}
@@ -502,10 +491,15 @@ namespace Au
 		/// Returns true if starts with "::".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsShellPath_(string s)
-		{
+		internal static bool IsShellPath_(string s) {
 			return s != null && s.Length >= 2 && s[0] == ':' && s[1] == ':';
 		}
+
+		/// <summary>
+		/// Returns true if <c>IsShellPath_(s) || IsUrl(s)</c>.
+		/// </summary>
+		/// <param name="s">Can be null.</param>
+		internal static bool IsShellPathOrUrl_(string s) => IsShellPath_(s) || IsUrl(s);
 
 		/// <summary>
 		/// If path is full path (see <see cref="IsFullPath"/>) and does not start with <c>@"\\?\"</c>, prepends <c>@"\\?\"</c>.
@@ -518,11 +512,10 @@ namespace Au
 		/// <remarks>
 		/// Windows API kernel functions support extended-length paths, ie longer than 259 characters. But the path must have this prefix. Windows API shell functions don't support it.
 		/// </remarks>
-		public static string PrefixLongPath(string path)
-		{
+		public static string PrefixLongPath(string path) {
 			var s = path;
-			if(IsFullPath(s) && 0 == _GetPrefixLength(s)) {
-				if(s.Length >= 2 && IsSepChar_(s[0]) && IsSepChar_(s[1])) s = s.ReplaceAt(0, 2, @"\\?\UNC\");
+			if (IsFullPath(s) && 0 == _GetPrefixLength(s)) {
+				if (s.Length >= 2 && IsSepChar_(s[0]) && IsSepChar_(s[1])) s = s.ReplaceAt(0, 2, @"\\?\UNC\");
 				else s = @"\\?\" + s;
 			}
 			return s;
@@ -535,9 +528,8 @@ namespace Au
 		/// Path. Can be null.
 		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="ExpandEnvVar"/>.
 		/// </param>
-		public static string PrefixLongPathIfNeed(string path)
-		{
-			if(path != null && path.Length > MaxDirectoryPathLength) path = PrefixLongPath(path);
+		public static string PrefixLongPathIfNeed(string path) {
+			if (path != null && path.Length > MaxDirectoryPathLength) path = PrefixLongPath(path);
 			return path;
 
 			//info: MaxDirectoryPathLength is max length supported by API CreateDirectory.
@@ -551,10 +543,9 @@ namespace Au
 		/// Path. Can be null.
 		/// Must not start with <c>"%environmentVariable%"</c>. This function does not expand it. See <see cref="ExpandEnvVar"/>.
 		/// </param>
-		public static string UnprefixLongPath(string path)
-		{
-			if(!path.NE()) {
-				switch(_GetPrefixLength(path)) {
+		public static string UnprefixLongPath(string path) {
+			if (!path.NE()) {
+				switch (_GetPrefixLength(path)) {
 				case 4: return path.Substring(4);
 				case 8: return path.Remove(2, 6);
 				}
@@ -568,12 +559,11 @@ namespace Au
 		/// Else returns 0.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		static int _GetPrefixLength(string s)
-		{
-			if(s == null) return 0;
+		static int _GetPrefixLength(string s) {
+			if (s == null) return 0;
 			int len = s.Length;
-			if(len >= 4 && s[2] == '?' && IsSepChar_(s[0]) && IsSepChar_(s[1]) && IsSepChar_(s[3])) {
-				if(len >= 8 && IsSepChar_(s[7]) && s.Eq(4, "UNC", true)) return 8;
+			if (len >= 4 && s[2] == '?' && IsSepChar_(s[0]) && IsSepChar_(s[1]) && IsSepChar_(s[3])) {
+				if (len >= 8 && IsSepChar_(s[7]) && s.Eq(4, "UNC", true)) return 8;
 				return 4;
 			}
 			return 0;
@@ -600,11 +590,10 @@ namespace Au
 		/// Also corrects other forms of invalid or problematic filename: trims spaces and other blank characters; replaces <c>"."</c> at the end; prepends <c>"@"</c> if a reserved name like <c>"CON"</c> or <c>"CON.txt"</c>; returns <c>"-"</c> if name is null/empty/whitespace.
 		/// Usually returns valid filename, however it can be too long (itself or when combined with a directory path).
 		/// </remarks>
-		public static string CorrectName(string name, string invalidCharReplacement = "-")
-		{
-			if(name == null || (name = name.Trim()).Length == 0) return "-";
+		public static string CorrectName(string name, string invalidCharReplacement = "-") {
+			if (name == null || (name = name.Trim()).Length == 0) return "-";
 			name = name.RegexReplace(_rxInvalidFN1, invalidCharReplacement).Trim();
-			if(name.RegexIsMatch(_rxInvalidFN2)) name = "@" + name;
+			if (name.RegexIsMatch(_rxInvalidFN2)) name = "@" + name;
 			return name;
 		}
 
@@ -616,9 +605,8 @@ namespace Au
 		/// More info: <see cref="CorrectName"/>.
 		/// </summary>
 		/// <param name="name">Any string. Example: "name.txt". Can be null.</param>
-		public static bool IsInvalidName(string name)
-		{
-			if(name == null || (name = name.Trim()).Length == 0) return true;
+		public static bool IsInvalidName(string name) {
+			if (name == null || (name = name.Trim()).Length == 0) return true;
 			return name.RegexIsMatch(_rxInvalidFN1) || name.RegexIsMatch(_rxInvalidFN2);
 		}
 
@@ -653,8 +641,7 @@ namespace Au
 		/// | <c>""</c> | <c>""</c>
 		/// | <c>null</c> | <c>null</c>
 		/// </remarks>
-		public static string GetName(string path)
-		{
+		public static string GetName(string path) {
 			return _GetPathPart(path, _PathPart.NameWithExt);
 		}
 
@@ -684,8 +671,7 @@ namespace Au
 		/// | <c>@"C:\aa\file.txt:alt.stream"</c> | <c>"file.txt:alt"</c>
 		/// | <c>"http://a.b.c"</c> | <c>"a.b"</c>
 		/// </remarks>
-		public static string GetNameNoExt(string path)
-		{
+		public static string GetNameNoExt(string path) {
 			return _GetPathPart(path, _PathPart.NameWithoutExt);
 		}
 
@@ -698,8 +684,7 @@ namespace Au
 		/// <remarks>
 		/// Supports separators <c>'\\'</c> and <c>'/'</c>.
 		/// </remarks>
-		public static string GetExtension(string path)
-		{
+		public static string GetExtension(string path) {
 			return _GetPathPart(path, _PathPart.Ext);
 		}
 
@@ -709,10 +694,9 @@ namespace Au
 		/// </summary>
 		/// <param name="path">Path or filename. Can be null.</param>
 		/// <param name="pathWithoutExtension">Receives path part without the extension. Can be the same variable as path.</param>
-		public static string GetExtension(string path, out string pathWithoutExtension)
-		{
+		public static string GetExtension(string path, out string pathWithoutExtension) {
 			var ext = GetExtension(path);
-			if(ext != null && ext.Length > 0) pathWithoutExtension = path[..^ext.Length];
+			if (ext != null && ext.Length > 0) pathWithoutExtension = path[..^ext.Length];
 			else pathWithoutExtension = path;
 			return ext;
 		}
@@ -725,12 +709,11 @@ namespace Au
 		/// <remarks>
 		/// Returns -1 if <c>'.'</c> is before <c>'\\'</c> or <c>'/'</c>.
 		/// </remarks>
-		public static int FindExtension(string path)
-		{
-			if(path == null) return -1;
+		public static int FindExtension(string path) {
+			if (path == null) return -1;
 			int i;
-			for(i = path.Length - 1; i >= 0; i--) {
-				switch(path[i]) {
+			for (i = path.Length - 1; i >= 0; i--) {
+				switch (path[i]) {
 				case '.': return i;
 				case '\\': case '/': /*case ':':*/ return -1;
 				}
@@ -778,65 +761,63 @@ namespace Au
 		/// | <c>@"C:\A\B"</c> | <c>@"C:\A\"</c> (not <c>@"C:\A"</c>)
 		/// | <c>"http://x.y"</c> | <c>"http://"</c> (not <c>"http:"</c>)
 		/// </remarks>
-		public static string GetDirectory(string path, bool withSeparator = false)
-		{
+		public static string GetDirectory(string path, bool withSeparator = false) {
 			return _GetPathPart(path, _PathPart.Dir, withSeparator);
 		}
 
 		enum _PathPart { Dir, NameWithExt, NameWithoutExt, Ext, };
 
-		static string _GetPathPart(string s, _PathPart what, bool withSeparator = false)
-		{
-			if(s == null) return null;
+		static string _GetPathPart(string s, _PathPart what, bool withSeparator = false) {
+			if (s == null) return null;
 			int len = s.Length, i, iExt = -1;
 
 			//rtrim '\\' and '/' etc
-			for(i = len; i > 0 && IsSepChar_(s[i - 1]); i--) {
-				if(what == _PathPart.Ext) return "";
-				if(what == _PathPart.NameWithoutExt) what = _PathPart.NameWithExt;
+			for (i = len; i > 0 && IsSepChar_(s[i - 1]); i--) {
+				if (what == _PathPart.Ext) return "";
+				if (what == _PathPart.NameWithoutExt) what = _PathPart.NameWithExt;
 			}
 			len = i;
 
 			//if ends with ":" or @":\", it is either drive or URL root or invalid
-			if(len > 0 && s[len - 1] == ':' && !IsShellPath_(s)) return (what == _PathPart.Dir) ? null : "";
+			if (len > 0 && s[len - 1] == ':' && !IsShellPath_(s)) return (what == _PathPart.Dir) ? null : "";
 
 			//find '\\' or '/'. Also '.' if need.
 			//Note: we don't split at ':', which could be used for alt stream or URL port or in shell parsing name as non-separator. This library does not support paths like "C:relative path".
-			while(--i >= 0) {
+			while (--i >= 0) {
 				char c = s[i];
-				if(c == '.') {
-					if(what < _PathPart.NameWithoutExt) continue;
-					if(iExt < 0) iExt = i;
-					if(what == _PathPart.Ext) break;
-				} else if(c == '\\' || c == '/') {
+				if (c == '.') {
+					if (what < _PathPart.NameWithoutExt) continue;
+					if (iExt < 0) iExt = i;
+					if (what == _PathPart.Ext) break;
+				} else if (c == '\\' || c == '/') {
 					break;
 				}
 			}
-			if(iExt >= 0 && iExt == len - 1) iExt = -1; //eg ends with ".."
-			if(what == _PathPart.NameWithoutExt && iExt < 0) what = _PathPart.NameWithExt;
+			if (iExt >= 0 && iExt == len - 1) iExt = -1; //eg ends with ".."
+			if (what == _PathPart.NameWithoutExt && iExt < 0) what = _PathPart.NameWithExt;
 
-			switch(what) {
+			switch (what) {
 			case _PathPart.Ext:
-				if(iExt >= 0) return s.Substring(iExt);
+				if (iExt >= 0) return s.Substring(iExt);
 				break;
 			case _PathPart.NameWithExt:
-				len -= ++i; if(len == 0) return "";
+				len -= ++i; if (len == 0) return "";
 				return s.Substring(i, len);
 			case _PathPart.NameWithoutExt:
 				i++;
 				return s.Substring(i, iExt - i);
 			case _PathPart.Dir:
 				//skip multiple separators
-				if(!withSeparator && i > 0) {
-					for(; i > 0; i--) { var c = s[i - 1]; if(!(c == '\\' || c == '/')) break; }
-					if(i == 0) return null;
+				if (!withSeparator && i > 0) {
+					for (; i > 0; i--) { var c = s[i - 1]; if (!(c == '\\' || c == '/')) break; }
+					if (i == 0) return null;
 				}
-				if(i > 0) {
+				if (i > 0) {
 					//returns null if i is in root
-					int j = GetRootLength(s); if(j > 0 && IsSepChar_(s[j - 1])) j--;
-					if(i < j) return null;
+					int j = GetRootLength(s); if (j > 0 && IsSepChar_(s[j - 1])) j--;
+					if (i < j) return null;
 
-					if(withSeparator || _EndsWithDriveWithoutSep(s, i)) i++;
+					if (withSeparator || _EndsWithDriveWithoutSep(s, i)) i++;
 					return s.Remove(i);
 				}
 				break;
@@ -848,11 +829,10 @@ namespace Au
 		/// Returns true if s is like <c>".ext"</c> and the ext part does not contain characters <c>.\\/:</c>.
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsExtension_(string s)
-		{
-			if(s == null || s.Length < 2 || s[0] != '.') return false;
-			for(int i = 1; i < s.Length; i++) {
-				switch(s[i]) { case '.': case '\\': case '/': case ':': return false; }
+		internal static bool IsExtension_(string s) {
+			if (s == null || s.Length < 2 || s[0] != '.') return false;
+			for (int i = 1; i < s.Length; i++) {
+				switch (s[i]) { case '.': case '\\': case '/': case ':': return false; }
 			}
 			return true;
 		}
@@ -861,8 +841,7 @@ namespace Au
 		/// Returns true if s is like "protocol:" and not like "c:" or "protocol:more".
 		/// </summary>
 		/// <param name="s">Can be null.</param>
-		internal static bool IsProtocol_(string s)
-		{
+		internal static bool IsProtocol_(string s) {
 			return s != null && s.Ends(':') && GetUrlProtocolLength(s) == s.Length;
 		}
 
@@ -872,13 +851,12 @@ namespace Au
 		/// </summary>
 		/// <param name="path">Suggested full path.</param>
 		/// <param name="isDirectory">The path is for a directory. The number is always appended at the very end, not before .extension.</param>
-		public static string MakeUnique(string path, bool isDirectory)
-		{
-			if(!AFile.ExistsAsAny(path)) return path;
+		public static string MakeUnique(string path, bool isDirectory) {
+			if (!AFile.ExistsAsAny(path)) return path;
 			string ext = isDirectory ? null : GetExtension(path, out path);
-			for(int i = 2; ; i++) {
+			for (int i = 2; ; i++) {
 				var s = path + " " + i + ext;
-				if(!AFile.ExistsAsAny(s)) return s;
+				if (!AFile.ExistsAsAny(s)) return s;
 			}
 		}
 	}

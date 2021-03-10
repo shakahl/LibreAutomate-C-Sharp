@@ -3561,23 +3561,6 @@
             Show expanded text in footer.
             </summary>
         </member>
-        <member name="F:Au.Types.DFlags.OwnerCenter">
-            <summary>
-            Show the dialog in the center of the owner window.
-            </summary>
-        </member>
-        <member name="F:Au.Types.DFlags.RawXY">
-            <summary>
-            x y are relative to the primary screen (ignore <see cref="P:Au.ADialog.Screen"/> etc). Don't ensure thet entire window is in screen.
-            More info: <see cref="M:Au.ADialog.SetXY(Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. 
-            </summary>
-        </member>
-        <member name="F:Au.Types.DFlags.Topmost">
-            <summary>
-            Make the dialog a topmost window (always on top of other windows), regardless of ADialog.Options.TopmostIfNoOwnerWindow etc.
-            More info: <see cref="P:Au.ADialog.FlagTopmost"/>. 
-            </summary>
-        </member>
         <member name="F:Au.Types.DFlags.Wider">
             <summary>
             Set <see cref="P:Au.ADialog.Width"/> = 700.
@@ -3588,7 +3571,22 @@
             Allow to cancel even if there is no Cancel button.
             It adds X (Close) button to the title bar, and also allows to close the dialog with the Esc key.
             When the dialog is closed with the X button or Esc, the returned result button id is 0 if there is no Cancel button; else the same as when clicked the Cancel button.
-            The same as <see cref="P:Au.ADialog.FlagXCancel"/>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.DFlags.CenterOwner">
+            <summary>
+            Show the dialog in the center of the owner window.
+            </summary>
+        </member>
+        <member name="F:Au.Types.DFlags.CenterMouse">
+            <summary>
+            Show the dialog at the mouse position. 
+            </summary>
+        </member>
+        <member name="F:Au.Types.DFlags.RawXY">
+            <summary>
+            x y are relative to the primary screen (ignore <see cref="P:Au.ADialog.Screen"/> etc).
+            More info: <see cref="M:Au.ADialog.SetXY(Au.Types.Coord,Au.Types.Coord,System.Boolean)"/>. 
             </summary>
         </member>
         <member name="T:Au.Types.DControls">
@@ -7838,6 +7836,7 @@
             - <c>":: ITEMIDLIST"</c>
             - <c>@"::{CLSID}"</c>
             - <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>.
+            More info in Remarks.
             </param>
             <param name="args">
             Command line arguments.
@@ -7848,7 +7847,7 @@
             Allows to specify more parameters: current directory, verb, etc.
             If string, it sets initial current directory for the new process. If "", gets it from <i>file</i>. More info: <see cref="F:Au.Types.ROptions.CurrentDirectory"/>.
             </param>
-            <exception cref="T:System.ArgumentException">Used both ROptions.Verb and RFlags.Admin and this process isn't admin.</exception>
+            <exception cref="T:System.ArgumentException">Used both <b>ROptions.Verb</b> and <b>RFlags.Admin</b> and this process isn't admin.</exception>
             <exception cref="T:Au.Types.AuException">Failed. For example, the file does not exist.</exception>
             <remarks>
             It works like when you double-click a file icon. It may start new process or not. For example it may just activate window if the program is already running.
@@ -7861,7 +7860,7 @@
             - Path relative to <see cref="P:Au.AFolders.ThisApp"/>. Examples: <c>"x.exe"</c>, <c>@"subfolder\x.exe"</c>, <c>@".\subfolder\x.exe"</c>, <c>@"..\another folder\x.exe"</c>.
             - URL. Examples: <c>"http://a.b.c/d"</c>, <c>"file:///path"</c>.
             - Email, like <c>"mailto:a@b.c"</c>. Subject, body etc also can be specified, and Google knows how.
-            - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.APidl.ToBase64String"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
+            - Shell object's ITEMIDLIST like <c>":: ITEMIDLIST"</c>. See <see cref="M:Au.APidl.ToHexString"/>, <see cref="T:Au.AFolders.Virtual"/>. Can be used to open virtual folders and items like Control Panel.
             - Shell object's parsing name, like <c>@"::{CLSID}"</c>. See <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>, <see cref="T:Au.AFolders.VirtualPidl"/>. Can be used to open virtual folders and items like Control Panel.
             - To run a Windows Store App, use <c>@"shell:AppsFolder\WinStoreAppId"</c> format. Examples: <c>@"shell:AppsFolder\Microsoft.WindowsCalculator_8wekyb3d8bbwe!App"</c>, <c>@"shell:AppsFolder\windows.immersivecontrolpanel_cw5n1h2txyewy!microsoft.windows.immersivecontrolpanel"</c>. To discover the string use <see cref="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)"/> or Google.
             
@@ -7967,7 +7966,7 @@
             </summary>
             <param name="path">
             Full path of a file or directory or other shell object.
-            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.APidl.ToBase64String"/>).
+            Supports <c>@"%environmentVariable%\..."</c> (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>) and <c>"::..."</c> (see <see cref="M:Au.APidl.ToHexString"/>).
             </param>
         </member>
         <member name="T:Au.AFolders">
@@ -8013,7 +8012,7 @@
              <td>
              System: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
              <br/>SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
-             <br/>SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path that you don't see in Explorer.
+             <br/>SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path, not in Explorer.
              <br/>ProgramFiles, ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
              <br/>ProgramFilesX64: <c>@"C:\Program Files"</c>
              <br/>ProgramFilesCommon, ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
@@ -8126,8 +8125,8 @@
             <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
             The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-            Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
             This function does not auto-create the folder; usually it is created when installing the application.
+            Note: the ProgramData folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
             </remarks>
         </member>
         <member name="P:Au.AFolders.ThisAppImages">
@@ -8140,6 +8139,12 @@
             Used by functions of these classes: AIcon, AMenu, AToolbar, AWinImage, possibly some other.
             This function does not auto-create the folder; usually it is created when installing the application.
             </remarks>
+        </member>
+        <member name="P:Au.AFolders.ThisAppDriveBS">
+            <summary>
+            Gets the root directory of this application, like @"C:\" or @"\\network\folder\".
+            </summary>
+            <seealso cref="P:Au.AProcess.ExeDriveType"/>
         </member>
         <member name="P:Au.AFolders.Workspace">
             <summary>
@@ -8229,6 +8234,9 @@
             Gets the value of an environment variable.
             Returns null if unavailable.
             </summary>
+            <seealso cref="M:System.Environment.GetEnvironmentVariable(System.String)"/>
+            <seealso cref="M:System.Environment.SetEnvironmentVariable(System.String,System.String)"/>
+            <seealso cref="M:Au.APath.ExpandEnvVar(System.String)"/>
         </member>
         <member name="M:Au.AFolders.GetKnownFolders">
             <summary>
@@ -8242,10 +8250,23 @@
             Returns null if unavailable.
             </summary>
             <param name="folderName">
-            A property name of this class. Examples: <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>.
-            Or a property name of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
+            Name of a property of this class. Examples: <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b>.
+            Or name of a property of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
             Or known folder canonical name. See <see cref="M:Au.AFolders.GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
             </param>
+            <seealso cref="M:Au.APath.ExpandEnvVar(System.String)"/>
+        </member>
+        <member name="M:Au.AFolders.UnexpandPath(System.String,System.String@)">
+            <summary>
+            If string starts with a known/special folder path, replaces it with folder name and returns true.
+            For example replaces <c>C:\Windows\sYstem32\notepad.exe</c> with <c>%AFolders.System%\notepad.exe</c>.
+            </summary>
+            <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>).</param>
+            <param name="unexpanded">Receives final path, unexpanded or not. Can be same variable as <i>path</i>.</param>
+            <remarks>
+            Quite slow first time in process, eg 50 ms, because gets all folder paths. Later uses cached paths.
+            </remarks>
+            <seealso cref="M:Au.APath.ExpandEnvVar(System.String)"/>
         </member>
         <member name="T:Au.AIcon">
             <summary>
@@ -8300,7 +8321,7 @@
             <remarks>
             If not full path, uses <see cref="P:Au.AFolders.ThisAppImages"/> and <see cref="M:Au.AFile.SearchPath(System.String,System.String[])"/>.
             
-            ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="M:Au.APidl.ToBase64String"/>.
+            ITEMIDLIST can be of any file, folder, URL or a non-filesystem shell object. See <see cref="M:Au.APidl.ToHexString"/>.
             </remarks>
         </member>
         <member name="M:Au.AIcon.OfPidl(Au.APidl,System.Int32)">
@@ -8395,6 +8416,14 @@
             </param>
             <param name="path">Receives path without index and without "". Can be same variable as <i>s</i>.</param>
             <param name="index">Receives index/id or 0.</param>
+        </member>
+        <member name="P:Au.AIcon.DebugSpeed">
+            <summary>
+            If not 0, "get icon" functions of this class will print (in editor's output) their execution time in milliseconds when it &gt;= this value.
+            </summary>
+            <remarks>
+            Icons are mostly used in toolbars and menus. Getting icons of some files can be slow. For example if antivirus program scans the file. Toolbars and menus that use slow icons may start with a noticeable delay. Use this property to find too slow icons. Then you can replace them with fast icons, for example .ico files.
+            </remarks>
         </member>
         <member name="M:Au.AIcon.IconPathFromCode_(System.Reflection.MethodInfo,System.Boolean@)">
             <summary>
@@ -8614,6 +8643,12 @@
         <member name="M:Au.APath.IsShellPath_(System.String)">
             <summary>
             Returns true if starts with "::".
+            </summary>
+            <param name="s">Can be null.</param>
+        </member>
+        <member name="M:Au.APath.IsShellPathOrUrl_(System.String)">
+            <summary>
+            Returns true if <c>IsShellPath_(s) || IsUrl(s)</c>.
             </summary>
             <param name="s">Can be null.</param>
         </member>
@@ -8914,7 +8949,7 @@
             Converts string to ITEMIDLIST and creates new APidl variable that holds it.
             Returns null if failed.
             </summary>
-            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>) or ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToBase64String"/>). Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
+            <param name="s">A file-system path or URL or shell object parsing name (see <see cref="M:Au.APidl.ToShellString(Au.Types.Native.SIGDN,System.Boolean)"/>) or ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>). Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
             <param name="throwIfFailed">Throw exception if failed.</param>
             <exception cref="T:Au.Types.AuException">Failed, and throwIfFailed is true. Probably invalid s.</exception>
             <remarks>
@@ -8965,7 +9000,7 @@
         <member name="M:Au.APidl.ToString">
             <summary>
             Converts the ITEMIDLIST to string.
-            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToBase64String"/>).
+            If it identifies an existing file-system object (file or directory), returns path. If URL, returns URL. Else returns ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>).
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
             </summary>
         </member>
@@ -8974,7 +9009,7 @@
             This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
             </summary>
         </member>
-        <member name="M:Au.APidl.ToBase64String">
+        <member name="M:Au.APidl.ToHexString">
             <summary>
             Returns string ":: ITEMIDLIST".
             Returns null if this variable does not have an ITEMIDLIST (eg disposed or detached).
@@ -8983,7 +9018,7 @@
             The string can be used with some functions of this library, mostly of classes <b>AFile</b>, <b>APidl</b> and <b>AIcon</b>. Cannot be used with native and .NET functions.
             </remarks>
         </member>
-        <member name="M:Au.APidl.ToBase64String(System.IntPtr)">
+        <member name="M:Au.APidl.ToHexString(System.IntPtr)">
             <summary>
             This overload uses an ITEMIDLIST* that is not stored in an APidl variable.
             </summary>
@@ -9085,6 +9120,12 @@
             Gets file name of the program file of this process, like "name.exe".
             </summary>
         </member>
+        <member name="P:Au.AProcess.ExeDriveType">
+            <summary>
+            Gets drive type (fixed, removable, network, etc) of the program file of this process.
+            </summary>
+            <seealso cref="P:Au.AFolders.ThisAppDriveBS"/>
+        </member>
         <member name="M:Au.AProcess.ProcessIdFromHandle(System.IntPtr)">
             <summary>
             Gets process id from handle.
@@ -9132,6 +9173,11 @@
             The event handler is called when one of these events occur, with their parameters: <see cref="E:System.AppDomain.ProcessExit"/>, <see cref="E:System.AppDomain.UnhandledException"/>.
             The event handler is called before static object finalizers.
             </remarks>
+        </member>
+        <member name="M:Au.AProcess.ExitProcess(System.Int32)">
+            <summary>
+            Calls API <msdn>ExitProcess</msdn>.
+            </summary>
         </member>
         <member name="P:Au.AProcess.CultureIsInvariant">
             <summary>
@@ -9506,9 +9552,9 @@
             - Full path. Supports environment variables etc, see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>
             - ":memory:" - create a private, temporary in-memory database.
             - "" - create a private, temporary on-disk database.
-            - Starts with "file:" - see sqlite3_open_v2 documentation in SQLite website.
+            - Starts with "file:" - see <google>sqlite3_open_v2</google>.
             </param>
-            <param name="flags">sqlite3_open_v2 flags, documanted in SQLite website. Default: read-write, create file if does not exist (and parent directory).</param>
+            <param name="flags"><google>sqlite3_open_v2</google> flags. Default: read-write, create file if does not exist (and parent directory).</param>
             <param name="sql">
             SQL to execute. For example, one or more ;-separated PRAGMA statements to configure the database connection. Or even "CREATE TABLE IF NOT EXISTS ...".
             This function also always executes "PRAGMA foreign_keys=ON;PRAGMA secure_delete=ON;".
@@ -9516,7 +9562,7 @@
             <exception cref="T:System.ArgumentException">Not full path.</exception>
             <exception cref="T:Au.Types.SLException">Failed to open database or execute sql.</exception>
             <remarks>
-            Calls sqlite3_open_v2.
+            Calls <google>sqlite3_open_v2</google>.
             <note>If a variable of this class is used by multiple threads, use <c>lock(variable) {  }</c> where need.</note>
             </remarks>
         </member>
@@ -9797,6 +9843,7 @@
             - string - calls sqlite3_bind_text16.
             - decimal - calls sqlite3_bind_blob64.
             - Guid - calls sqlite3_bind_blob64.
+            - byte[] - calls sqlite3_bind_blob64.
             - An enum type - calls sqlite3_bind_int or sqlite3_bind_int64.
             </param>
             <exception cref="T:System.NotSupportedException">A value is of an unsupported type.</exception>
@@ -10167,13 +10214,13 @@
             d.SetButtons("1 OK|2 Cancel|3 Custom|4 Custom2");
             d.SetIcon(DIcon.Warning);
             d.SetExpandedText("Expanded info\nand more info.", true);
-            d.FlagCanBeMinimized = true;
+            d.CanBeMinimized = true;
             d.SetCheckbox("Check");
             d.SetRadioButtons("1 r1|2 r2");
             d.SetTimeout(30, "OK");
             d.HyperlinkClicked += e => { ADialog.Show("link clicked", e.LinkHref, owner: e.hwnd); };
             d.ButtonClicked += e => { AOutput.Write(e.Button); if(e.Button == 4) e.DontCloseDialog = true; };
-            d.FlagShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
+            d.ShowProgressBar = true; d.Timer += e => { e.dialog.Send.Progress(e.TimerTimeMS / 100); };
             var r = d.ShowDialog();
             AOutput.Write(r, d.Controls.IsChecked, d.Controls.RadioId);
             switch(r) { case 1: AOutput.Write("OK"); break; case ADialog.Timeout: AOutput.Write("timeout"); break; }
@@ -10195,21 +10242,21 @@
             <summary>
             Right-to-left layout.
             </summary>
-            <seealso cref="P:Au.ADialog.FlagRtlLayout"/>
+            <seealso cref="P:Au.ADialog.RtlLayout"/>
         </member>
         <member name="P:Au.ADialog.Options.TopmostIfNoOwnerWindow">
             <summary>
             If there is no owner window, let the dialog be always on top of most other windows.
             Default true.
             </summary>
-            <seealso cref="P:Au.ADialog.FlagTopmost"/>
+            <seealso cref="P:Au.ADialog.Topmost"/>
         </member>
         <member name="P:Au.ADialog.Options.DefaultScreen">
             <summary>
             Show dialogs on this screen when screen is not explicitly specified (<see cref="P:Au.ADialog.Screen"/>) and there is no owner window.
             The <b>AScreen</b> must be lazy or empty.
             </summary>
-            <exception cref="T:System.ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy (with <b>LazyFunc</b>) or empty.</exception>
+            <exception cref="T:System.ArgumentException"><b>AScreen</b> with <b>Handle</b>. Must be lazy or empty.</exception>
             <example>
             <code><![CDATA[
             ADialog.Options.DefaultScreen = AScreen.Index(1, lazy: true);
@@ -10226,9 +10273,6 @@
             If owner window not specified, use the active window of current thread as owner window (disable it, etc).
             </summary>
             <seealso cref="M:Au.ADialog.SetOwnerWindow(Au.Types.AnyWnd,System.Boolean,System.Boolean)"/>
-        </member>
-        <member name="M:Au.ADialog.#ctor">
-            
         </member>
         <member name="M:Au.ADialog.#ctor(System.String,System.String,System.String,Au.Types.DFlags,Au.Types.DIcon,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})">
             <summary>
@@ -10393,7 +10437,7 @@
             </summary>
             <param name="x">X position in <see cref="P:Au.ADialog.Screen"/>. If default(Coord) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
             <param name="y">Y position in <see cref="P:Au.ADialog.Screen"/>. If default(Coord) - screen center. You also can use <see cref="M:Au.Types.Coord.Reverse(System.Int32)"/> etc.</param>
-            <param name="rawXY">x y are relative to the primary screen (ignore <see cref="P:Au.ADialog.Screen"/> etc). Don't ensure that entire window is in screen.</param>
+            <param name="rawXY">x y are relative to the primary screen (ignore <see cref="P:Au.ADialog.Screen"/> etc).</param>
         </member>
         <member name="P:Au.ADialog.Screen">
             <summary>
@@ -10408,36 +10452,28 @@
             Example: <c>d.SetTimeout(30, "OK");</c>
             </summary>
         </member>
-        <member name="P:Au.ADialog.FlagXCancel">
-            <summary>
-            Allow to cancel even if there is no Cancel button.
-            It adds X (Close) button to the title bar, and also allows to close the dialog with the Esc key.
-            When the dialog is closed with the X button or Esc, the returned result button id is 0 if there is no Cancel button; else the same as when clicked the Cancel button.
-            The same as <see cref="F:Au.Types.DFlags.XCancel"/>.
-            </summary>
-        </member>
-        <member name="P:Au.ADialog.FlagRtlLayout">
+        <member name="P:Au.ADialog.RtlLayout">
             <summary>
             Right-to left layout.
-            Default is ADialog.Options.RtlLayout.
+            Default = <see cref="P:Au.ADialog.Options.RtlLayout"/>.
             </summary>
         </member>
-        <member name="P:Au.ADialog.FlagCanBeMinimized">
+        <member name="P:Au.ADialog.CanBeMinimized">
             <summary>
             Add 'Minimize' button to the title bar.
             </summary>
         </member>
-        <member name="P:Au.ADialog.FlagShowProgressBar">
+        <member name="P:Au.ADialog.ProgressBar">
             <summary>
             Show progress bar.
             </summary>
         </member>
-        <member name="P:Au.ADialog.FlagShowMarqueeProgressBar">
+        <member name="P:Au.ADialog.ProgressBarMarquee">
             <summary>
-            Show progress bar that just plays an animation but does not indicate which part of the work is already done.
+            Show progress bar that does not indicate which part of the work is already done.
             </summary>
         </member>
-        <member name="P:Au.ADialog.FlagTopmost">
+        <member name="P:Au.ADialog.Topmost">
             <summary>
             Makes the dialog window topmost or non-topmost.
             If true, will set topmost style when creating the dialog. If false, will not set.
@@ -16564,7 +16600,7 @@
         </member>
         <member name="P:Au.AOutput.RedirectConsoleOutput">
             <summary>
-            Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="M:Au.AOutput.Write(System.String)"/> etc.
+            Let <b>Console.WriteX</b> methods in non-console process write to the same destination as <see cref="M:Au.AOutput.Write(System.String)"/>.
             </summary>
             <remarks>
             If <b>Console.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Console.WriteLine</b>.
@@ -16573,9 +16609,11 @@
         </member>
         <member name="P:Au.AOutput.RedirectDebugOutput">
             <summary>
-            Let <b>Debug.WriteX</b> and <b>Trace.WriteX</b> methods write to the same destination as <see cref="M:Au.AOutput.Write(System.String)"/> etc.
+            Let <b>Debug.Write</b>, <b>Trace.Write</b> and similar methods also write to the same destination as <see cref="M:Au.AOutput.Write(System.String)"/>.
             </summary>
             <remarks>
+            Does not replace existing <b>Debug.Write</b> etc destinations, just add new destination.
+            
             If <b>Debug/Trace.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Debug/Trace.WriteLine</b>.
             
             Tip: To write to the output window even in console process, set <c>AOutput.IgnoreConsole=true;</c> before calling this method first time.
@@ -17389,67 +17427,6 @@
             <remarks>
             Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
             </remarks>
-        </member>
-        <member name="T:Au.Resources.Resources">
-            <summary>
-              A strongly-typed resource class, for looking up localized strings, etc.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.ResourceManager">
-            <summary>
-              Returns the cached ResourceManager instance used by this class.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.Culture">
-            <summary>
-              Overrides the current thread's CurrentUICulture property for all
-              resource lookups using this strongly typed resource class.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtHamburgerMenu">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtHamburgerMenu_20">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtHamburgerMenu_24">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtHamburgerMenu_32">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtInvokeMethod">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtInvokeMethod_20">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtInvokeMethod_24">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.mtInvokeMethod_32">
-            <summary>
-              Looks up a localized resource of type System.Drawing.Bitmap.
-            </summary>
-        </member>
-        <member name="P:Au.Resources.Resources.red_cross_cursor">
-            <summary>
-              Looks up a localized resource of type System.Byte[].
-            </summary>
         </member>
         <member name="T:Au.ACsv">
             <summary>
@@ -19712,6 +19689,20 @@
             Call eg on WM_CREATE.
             </summary>
         </member>
+        <member name="T:Au.Util.ADefaultTraceListener">
+            <summary>
+            If defined DEBUG or TRACE, <see cref="M:Au.Util.ADefaultTraceListener.Setup(System.Boolean)"/> replaces default trace listener with listener that overrides its <see cref="M:System.Diagnostics.DefaultTraceListener.Fail(System.String,System.String)"/> method. On failed assertion (<see cref="M:System.Diagnostics.Debug.Assert(System.Boolean)"/>, <see cref="M:System.Diagnostics.Trace.Assert(System.Boolean)"/>, <see cref="M:System.Diagnostics.Debug.Fail(System.String)"/>, <see cref="M:System.Diagnostics.Trace.Fail(System.String)"/>) it shows message box with buttons Exit|Debug|Ignore, unless debugger is attached or !<b>AssertUiEnabled</b>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.ADefaultTraceListener.Setup(System.Boolean)">
+            <summary>
+            If defined DEBUG or TRACE, replaces default trace listener.
+            </summary>
+            <param name="useAOutput">Also set <see cref="P:Au.AOutput.RedirectDebugOutput"/> = true.</param>
+        </member>
+        <member name="M:Au.Util.ADefaultTraceListener.Fail(System.String,System.String)">
+            
+        </member>
         <member name="T:Au.Util.ADisableFsRedirection">
             <summary>
             Temporarily disables file system redirection, to allow this 32-bit process access the 64-bit System32 directory.
@@ -20191,7 +20182,7 @@
             <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
             <param name="onException">Action to call when fails to load image. If null, calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>. Parameters are image source string and exception.</param>
             <remarks>
-            When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk.
+            When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk or folder.
             </remarks>
         </member>
         <member name="M:Au.Util.AIconImageCache.Dispose">
@@ -21247,22 +21238,6 @@
             The manifest is embedded in this dll, resource id 2.
             </summary>
         </member>
-        <member name="T:Au.Util.AMessageLoop_">
-            <summary>
-            A message loop for non-WPF apps, alternative to <b>System.Windows.Forms.Application.Run</b> which does not support nested loops.
-            In WPF apps instead use <see cref="T:System.Windows.Threading.DispatcherFrame"/> in a similar way; instead of <b>Loop</b> and <b>Stop</b> use <see cref="M:System.Windows.Threading.Dispatcher.PushFrame(System.Windows.Threading.DispatcherFrame)"/> and <see cref="P:System.Windows.Threading.DispatcherFrame.Continue"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AMessageLoop_.Loop">
-            <summary>
-            Runs a message loop.
-            </summary>
-        </member>
-        <member name="M:Au.Util.AMessageLoop_.Stop">
-            <summary>
-            Ends the message loop, causing <see cref="M:Au.Util.AMessageLoop_.Loop"/> to return.
-            </summary>
-        </member>
         <member name="T:Au.Util.ArrayBuilder_`1">
             <summary>
             Like List or StringBuilder, used as a temporary variable-size array to create final fixed-size array.
@@ -21362,13 +21337,6 @@
         <member name="M:Au.Util.Assembly_.IsLoadedWinformsWpf">
             <summary>
             Returns flags for loaded assemblies: 1 System.Windows.Forms, 2 WindowsBase (WPF).
-            </summary>
-        </member>
-        <member name="T:Au.Util.AssertListener_">
-            <summary>
-            .NET Core does not show the classic Debug.Assert message box. This class shows it. Call <see cref="M:Au.Util.AssertListener_.Setup"/> once.
-            The Write[Line] and Fail methods write line to QM2.
-            If debugger attached, breaks and does not show message box.
             </summary>
         </member>
         <member name="T:Au.Util.AttachThreadInput_">
@@ -21482,27 +21450,6 @@
             <param name="len">Length of p to search in.</param>
             <param name="s">Substring to find. Must contain only ASCII characters.</param>
         </member>
-        <member name="T:Au.Util.EnsureWindowsFormsSynchronizationContext_">
-            <summary>
-            Constructor ensures that current SynchronizationContext of this thread is WindowsFormsSynchronizationContext.
-            Also sets WindowsFormsSynchronizationContext.AutoInstall=false to prevent Application.DoEvents etc setting wrong context.
-            Dispose() restores both if need. Does not restore context if was null.
-            Example: using(new EnsureWindowsFormsSynchronizationContext_()) { ... }
-            </summary>
-        </member>
-        <member name="M:Au.Util.EnsureWindowsFormsSynchronizationContext_.#ctor(System.Boolean)">
-            <summary>
-            See class help.
-            </summary>
-            <param name="onlyIfAutoInstall">Do nothing if WindowsFormsSynchronizationContext.AutoInstall==false. Normally WindowsFormsSynchronizationContext.AutoInstall is true (default).</param>
-        </member>
-        <member name="M:Au.Util.EnsureWindowsFormsSynchronizationContext_.EnsurePermanently">
-            <summary>
-            If synchronization context of this thread is null or not WindowsFormsSynchronizationContext, makes it WindowsFormsSynchronizationContext.
-            Use this instead of creating instance when will not need to restore previous synchronization context.
-            </summary>
-            <exception cref="T:System.InvalidOperationException">This thread has a synchronization context other than WindowsFormsSynchronizationContext or null. Or it is null and thread's GetApartmentState is not STA.</exception>
-        </member>
         <member name="T:Au.Util.ScreenDC_">
             <summary>
             Helps to get and release screen DC with the 'using(...){...}' pattern.
@@ -21562,100 +21509,6 @@
             Measures text with API <msdn>DrawText</msdn>.
             Can be multiline. For drawing with API <msdn>DrawText</msdn>.
             </summary>
-        </member>
-        <member name="T:Au.Util.IconsAsync_">
-            <summary>
-            Gets file icons asynchronously.
-            </summary>
-            <remarks>
-            Use to avoid waiting until all icons are extracted before displaying them in a UI (menu etc).
-            Instead you show the UI without icons, and then asynchronously receive icons when they are extracted.
-            At first call <see cref="M:Au.Util.IconsAsync_.Add(System.String,System.Object)"/> (for each file) or <see cref="M:Au.Util.IconsAsync_.AddRange(System.Collections.Generic.IEnumerable{Au.Util.IconsAsync_.Item})"/>. Then call <see cref="M:Au.Util.IconsAsync_.GetAllAsync(Au.Util.IconsAsync_.Callback,System.Int32,Au.Types.IconGetFlags,System.Object)"/>.
-            Create a callback function of type <see cref="T:Au.Util.IconsAsync_.Callback"/> and pass its delegate to <b>GetAllAsync</b>.
-            </remarks>
-            <seealso cref="T:Au.AIconCache_"/>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.Add(System.String,System.Object)">
-            <summary>
-            Adds a file path to an internal collection.
-            </summary>
-            <param name="file">File path etc. See <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
-            <param name="obj">Something to pass to your callback function together with icon handle for this file.</param>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.AddRange(System.Collections.Generic.IEnumerable{Au.Util.IconsAsync_.Item})">
-            <summary>
-            Adds multiple file paths to an internal collection.
-            The same as calling <see cref="M:Au.Util.IconsAsync_.Add(System.String,System.Object)"/> multiple times.
-            This function copies the list.
-            </summary>
-        </member>
-        <member name="P:Au.Util.IconsAsync_.Count">
-            <summary>
-            Gets the number of added items.
-            <see cref="M:Au.Util.IconsAsync_.GetAllAsync(Au.Util.IconsAsync_.Callback,System.Int32,Au.Types.IconGetFlags,System.Object)"/> sets it = 0.
-            </summary>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.GetAllAsync(Au.Util.IconsAsync_.Callback,System.Int32,Au.Types.IconGetFlags,System.Object)">
-            <summary>
-            Starts getting icons of added files.
-            </summary>
-            <param name="callback">A callback function delegate.</param>
-            <param name="iconSize">Icon width and height.</param>
-            <param name="flags"></param>
-            <param name="objCommon">Something to pass to callback functions.</param>
-            <remarks>
-            After this function returns, icons are asynchronously extracted with <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>, and callback called with icon handle (or default(IntPtr) if failed).
-            The callback is called in this thread. This thread must have a message loop (eg Application.Run).
-            If you'll need more icons, you can add more files and call this function again with the same <b>IconsAsync_</b> instance, even if getting old icons if still not finished.
-            </remarks>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.Clear">
-            <summary>
-            Clears the internal collection of file paths added with Add().
-            </summary>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.Cancel">
-            <summary>
-            Stops getting icons and calling callback functions.
-            </summary>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.Dispose">
-            <summary>
-            Calls <see cref="M:Au.Util.IconsAsync_.Cancel"/>.
-            </summary>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.Finalize">
-            
-        </member>
-        <member name="T:Au.Util.IconsAsync_.Item">
-            <summary>
-            For <see cref="M:Au.Util.IconsAsync_.AddRange(System.Collections.Generic.IEnumerable{Au.Util.IconsAsync_.Item})"/>. 
-            </summary>
-        </member>
-        <member name="T:Au.Util.IconsAsync_.Result">
-            <summary>
-            For <see cref="T:Au.Util.IconsAsync_.Callback"/>. 
-            </summary>
-        </member>
-        <member name="F:Au.Util.IconsAsync_.Result.file">
-            <summary>file passed to <see cref="M:Au.Util.IconsAsync_.Add(System.String,System.Object)"/>.</summary>
-        </member>
-        <member name="F:Au.Util.IconsAsync_.Result.obj">
-            <summary>obj passed to <see cref="M:Au.Util.IconsAsync_.Add(System.String,System.Object)"/>.</summary>
-        </member>
-        <member name="F:Au.Util.IconsAsync_.Result.icon">
-            <summary>Icon handle. Will need to dispose. Can be empty.</summary>
-        </member>
-        <member name="M:Au.Util.IconsAsync_.Result.#ctor(System.String,System.Object)">
-            <summary>Icon converted to Image object, if used IconGetFlags.NeedImage and the thread pool decided to convert handle to Image. You should call Dispose() when finished using it. Can be null.</summary>
-        </member>
-        <member name="T:Au.Util.IconsAsync_.Callback">
-            <summary>
-            For <see cref="M:Au.Util.IconsAsync_.GetAllAsync(Au.Util.IconsAsync_.Callback,System.Int32,Au.Types.IconGetFlags,System.Object)"/>. 
-            </summary>
-            <param name="result">Contains icon, as well as the input parameters.</param>
-            <param name="objCommon">objCommon passed to <see cref="M:Au.Util.IconsAsync_.GetAllAsync(Au.Util.IconsAsync_.Callback,System.Int32,Au.Types.IconGetFlags,System.Object)"/>.</param>
-            <param name="nLeft">How many icons is still to get. Eg 0 if this is the last icon.</param>
         </member>
         <member name="P:Au.Util.ILInstruction.RawData">
             <summary>
@@ -21990,98 +21843,6 @@
             Native-memory char[0x10000] containing lower-case versions of the first 0x10000 characters.
             </summary>
         </member>
-        <member name="T:Au.Util.ThreadPoolSTA_">
-            <summary>
-            Thread pool where COM can be used. Initializes thread COM as single-thread-apartment.
-            </summary>
-        </member>
-        <member name="T:Au.Util.ThreadPoolSTA_.WorkCallbackData">
-            <summary>
-            Work callback function parameter type.
-            More info: <see cref="T:Au.Util.ThreadPoolSTA_.WorkCallback"/>.
-            </summary>
-        </member>
-        <member name="F:Au.Util.ThreadPoolSTA_.WorkCallbackData.state">
-            
-        </member>
-        <member name="F:Au.Util.ThreadPoolSTA_.WorkCallbackData.completionCallback">
-            
-        </member>
-        <member name="T:Au.Util.ThreadPoolSTA_.WorkCallback">
-            <summary>
-            Work callback function type.
-            </summary>
-            <param name="d">
-            Contains state and completionCallback that were passed to the submit function.
-            Your work callback function can change completionCallback and/or state. For example it can set completionCallback = null to prevent calling it (the call is expensive); or change state, if want to pass another object to the completion function.
-            Note that the completion function is never called if initially it was null.
-            </param>
-        </member>
-        <member name="M:Au.Util.ThreadPoolSTA_.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)">
-            <summary>
-            Requests that a thread pool thread call the callback function.
-            </summary>
-            <param name="state">Something to pass to the callback functions.</param>
-            <param name="workCallback">Callback function to call in a thread pool thread.</param>
-            <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
-            <exception cref="T:System.ComponentModel.Win32Exception"/>
-            <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
-        </member>
-        <member name="M:Au.Util.ThreadPoolSTA_.CreateWork(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)">
-            <summary>
-            Creates a <see cref="T:Au.Util.ThreadPoolSTA_.Work"/> object that can be used when need more options than <see cref="M:Au.Util.ThreadPoolSTA_.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)"/> has.
-            </summary>
-            <param name="state">Something to pass to the callback functions.</param>
-            <param name="workCallback">Callback function to call in a thread pool thread.</param>
-            <param name="completionCallback">Optional callback function to call in this thread after workCallback.</param>
-            <remarks>
-            Call Dispose() to avoid memory leaks. If not called, the object and related OS object remain in memory until this process ends.
-            </remarks>
-            <exception cref="T:System.ComponentModel.Win32Exception"/>
-            <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
-        </member>
-        <member name="T:Au.Util.ThreadPoolSTA_.Work">
-            <summary>
-            Allows to submit a callback function (one or more times) to be called in thread pool threads, then optionally wait and cancel.
-            Can be used when need more options than <see cref="M:Au.Util.ThreadPoolSTA_.SubmitCallback(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback)"/> has.
-            </summary>
-            <example>
-            <code><![CDATA[
-            using(var work = ThreadPoolSTA_.CreateWork(null, o =&gt; { Thread.Sleep(100); })) {
-            	work.Submit();
-            	work.Wait();
-            }
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.Util.ThreadPoolSTA_.Work.#ctor(System.Object,Au.Util.ThreadPoolSTA_.WorkCallback,System.Threading.SendOrPostCallback,System.Boolean)">
-            <exception cref="T:System.ComponentModel.Win32Exception"/>
-            <exception cref="T:System.InvalidOperationException">(only when completionCallback is used) This thread has a synchronization context other than WindowsFormsSynchronizationContext or null; or it is null and thread's GetApartmentState is not STA.</exception>
-        </member>
-        <member name="M:Au.Util.ThreadPoolSTA_.Work.Submit">
-            <summary>
-            Requests that a thread pool thread call the callback function.
-            This function can be called multiple times.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ThreadPoolSTA_.Work.Wait">
-            <summary>
-            Waits until all submitted instances of the callback function finish their work.
-            While waiting, this thread cannot dispatch events and Windows messages.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ThreadPoolSTA_.Work.Cancel">
-            <summary>
-            Waits until all running instances of the callback function finish their work, and cancels pending (still not running) instances.
-            While waiting, this thread cannot dispatch events and Windows messages.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ThreadPoolSTA_.Work.Dispose">
-            <summary>
-            Calls <see cref="M:Au.Util.ThreadPoolSTA_.Work.Cancel"/>, releases all resources used by this object and allows this object to be garbage-collected.
-            Call this to avoid memory leaks. If not called, the object and related OS object remain in memory until this process ends.
-            </summary>
-        </member>
         <member name="T:Au.AWildex">
             <summary>
             Parses and compares [](xref:wildcard_expression).
@@ -22192,7 +21953,7 @@
         <member name="P:Au.ATask.Name">
             <summary>
             In an automation task process of a script with role miniProgram (defaut) returns script file name without extension.
-            In other processes returns <see cref="P:System.AppDomain.FriendlyName"/>, like "ProgramFile.exe".
+            In other processes returns <see cref="P:System.AppDomain.FriendlyName"/>, like "ProgramFile".
             </summary>
         </member>
         <member name="P:Au.ATask.Role">
@@ -22290,7 +22051,8 @@
             1. The static constructor subscribes to the <see cref="E:System.AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
             2. Provides virtual function <see cref="M:Au.AScript.OnUnhandledException(System.UnhandledExceptionEventArgs)"/>. The script can override it.
             3. Provides property <see cref="P:Au.AScript.Triggers"/>.
-            4. Sets default culture of all threads = invariant. See <see cref="P:Au.AProcess.CultureIsInvariant"/>.
+            4. The static constructor calls <see cref="M:Au.Util.ADefaultTraceListener.Setup(System.Boolean)"/>(useAOutput: true). Then <see cref="M:System.Diagnostics.Debug.Assert(System.Boolean)"/> etc will show a dialog with buttons Exit|Debug|Ignore instead of "Unknown hard error" message box.
+            5. The static constructor sets default culture of all threads = invariant. See <see cref="P:Au.AProcess.CultureIsInvariant"/>.
             
             More features may be added in the future.
             </remarks>
@@ -24787,65 +24549,6 @@
         <member name="M:Au.Triggers.WindowTriggerArgs.#ctor(Au.Triggers.WindowTrigger,Au.AWnd,Au.Triggers.TWLater)">
             
         </member>
-        <member name="T:Au.AIconCache_">
-            <summary>
-            Gets icons of files etc as Bitmap. Uses 2-level cache - memory and file.
-            </summary>
-            <threadsafety static="true" instance="true"/>
-        </member>
-        <member name="M:Au.AIconCache_.#ctor(System.String,System.Int32)">
-            
-        </member>
-        <member name="M:Au.AIconCache_.SaveCacheFileNow">
-            <summary>
-            Saves to the cache file now, if need.
-            Automatically called on process exit.
-            </summary>
-        </member>
-        <member name="M:Au.AIconCache_.ClearCache">
-            <summary>
-            Clears the memory cache and deletes the cache file.
-            </summary>
-        </member>
-        <member name="M:Au.AIconCache_.GetImage(System.String,System.Boolean,Au.Types.IconGetFlags,System.Action{System.Drawing.Bitmap,System.Object},System.Object)">
-            <summary>
-            Gets file icon as <b>Bitmap</b>.
-            Returns null if the icon is not cached and failed to get it, eg file does not exist.
-            </summary>
-            <param name="file">Any file or folder.</param>
-            <param name="useExt">
-            Get file type icon, depending on filename extension. Use this to avoid getting separate image object for each file of same type.
-            This is ignored if filename extension is ".ico" or ".exe" or starts with ".exe," or ".dll,".
-            </param>
-            <param name="giFlags">Flags for <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>.</param>
-            <param name="autoUpdate">
-            If not null, the cached image will be auto-updated when changed. Then will be called this function. It can update the image in UI.
-            How it works: If this function finds cached image, it sets timer that after ~50 ms loads that icon/image from file again and compares with the cached image. If different, updates the cache. Does it once, not periodically.
-            Use only in UI threads. Does not work if this thread does not retrieve/dispatch posted messages.
-            </param>
-            <param name="auParam">Something to pass to the <i>autoUpdate</i> callback function.</param>
-            <remarks>
-            If the icon is in the memory cache, gets it from there.
-            Else if it is in the file cache, gets it from there and adds to the memory cache.
-            Else gets from file (uses <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/> and adds to the file cache and to the memory cache.
-            </remarks>
-        </member>
-        <member name="M:Au.AIconCache_.GetImage(System.String,System.Func{System.Drawing.Bitmap},System.Action{System.Drawing.Bitmap,System.Object},System.Object,System.Boolean)">
-            <summary>
-            Gets any icon or image using callback function.
-            Returns null if the icon is not cached and the callback function returns null.
-            </summary>
-            <param name="name">Some unique name. It is used to identify this image in cache.</param>
-            <param name="callback">Called to get image. See <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/>.</param>
-            <param name="autoUpdate"></param>
-            <param name="auParam"></param>
-            <param name="auDispose">If true (default), auto-updating can dispose unused image returned by <i>callback</i>.</param>
-            <remarks>
-            If the icon is in the memory cache, gets it from there.
-            Else if it is in the file cache, gets it from there and adds to the memory cache.
-            Else calls callback function, which should return image, and adds to the file cache and to the memory cache.
-            </remarks>
-        </member>
         <member name="T:Au.AWnd">
             <summary>
             A variable of AWnd type represents a window or control. It is a window handle, also known as HWND.
@@ -25132,7 +24835,7 @@
         <member name="M:Au.AWnd.More.GetWindowsStoreAppId(Au.AWnd,System.Boolean,System.Boolean)">
             <summary>
             Gets window Windows Store app user model id, like "Microsoft.WindowsCalculator_8wekyb3d8bbwe!App".
-            Returns null if fails or if called on Windows 7.
+            Returns null if fails. Returns null if called on Windows 7 unless <i>getExePathIfNotWinStoreApp</i> true.
             </summary>
             <param name="w"></param>
             <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
@@ -26522,7 +26225,12 @@
             </summary>
             <remarks>Supports <see cref="T:Au.ALastError"/>.</remarks>
         </member>
-        <member name="P:Au.AWnd.IsUacAccessDenied">
+        <member name="P:Au.AWnd.Uac">
+            <summary>
+            Gets UAC info of the process.
+            </summary>
+        </member>
+        <member name="P:Au.AWnd.UacAccessDenied">
             <summary>
             Returns true if [](xref:uac) would not allow to automate the window.
             It happens when current process has lower UAC integrity level and is not uiAccess, unless UAC is turned off.

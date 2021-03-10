@@ -34,15 +34,15 @@ namespace Au.Util
 		/// <param name="acData">Something to pass to the <i>asyncCompletion</i> callback function. The function is called once for a unique asyncCompletion/acData.</param>
 		/// <param name="onException">Action to call when fails to load image. If null, calls <see cref="AWarning.Write"/>. Parameters are image source string and exception.</param>
 		/// <remarks>
-		/// When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk.
+		/// When <i>isImage</i> false, returns same <b>Bitmap</b> object for all files of that type, except if file type is ico, exe, scr, lnk or folder.
 		/// </remarks>
 		public Bitmap Get(string imageSource, int dpi, bool? isImage = null, Action<Bitmap, object> asyncCompletion = null, object acData = null, Action<string, Exception> onException = null) {
 			bool isIm = isImage ?? AImageUtil.HasImageOrResourcePrefix(imageSource);
-			if (!isIm) {
+			if (!isIm && !APath.IsShellPathOrUrl_(imageSource)) {
 				switch (AFile.ExistsAs(imageSource)) {
-				case FileDir.Directory:
-					imageSource = ".";
-					break;
+				//case FileDir.Directory: //rejected. Many has custom icons. Also can be drive.
+				//	imageSource = ".";
+				//	break;
 				case FileDir.File when !_IsIconSource(imageSource):
 					int j = APath.FindExtension(imageSource);
 					if (j >= 0) imageSource = imageSource[j..]; else imageSource = ".*";
@@ -62,6 +62,10 @@ namespace Au.Util
 			//find or load
 			if (!d.TryGetValue(imageSource, out var ba)) {
 				if (asyncCompletion != null) {
+					if (SynchronizationContext.Current == null) _SetSyncCtx();
+					[MethodImpl(MethodImplOptions.NoInlining)]
+					static void _SetSyncCtx() { SynchronizationContext.SetSynchronizationContext(new System.Windows.Forms.WindowsFormsSynchronizationContext()); }
+
 					d[imageSource] = new List<(Action<Bitmap, object>, object)> { (asyncCompletion, acData) }; //prevent async-load same image multiple times
 					Task.Factory
 						.StartNew(() => _Load(), default, 0, StaTaskScheduler_.Default)

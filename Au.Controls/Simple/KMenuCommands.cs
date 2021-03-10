@@ -239,6 +239,48 @@ namespace Au.Controls
 					mi.InputGestureText = s;
 				}
 			}
+
+			//let global key bindings work in any window of this thread, not only when target (main window) is active. Never mind mouse bindings.
+			if (name == "") {
+				var a = target.InputBindings.OfType<KeyBinding>().ToArray();
+				if (a.Length > 0) {
+					EventManager.RegisterClassHandler(typeof(Window), UIElement.KeyDownEvent, new KeyEventHandler(_KeyDown));
+					//InputManager.Current.PreProcessInput += _App_PreProcessInput; //works too, but more events
+
+					void _KeyDown(object source, KeyEventArgs e) {
+						//APerf.First();
+						if (e.Handled) return;
+						var k = e.Key; if (k == Key.System) k = e.SystemKey;
+						if (k is Key.LeftCtrl or Key.LeftShift or Key.LeftAlt or Key.RightCtrl or Key.RightShift or Key.RightAlt or Key.LWin or Key.RWin or Key.DeadCharProcessed or Key.ImeProcessed) return;
+						//AOutput.Write(k);
+						ModifierKeys mod = 0; bool haveMod = false;
+						foreach (var kb in a) {
+							//AOutput.Write(kb.Command);
+							if (kb.Key != k) continue;
+							if (!haveMod) { haveMod = true; mod = Keyboard.Modifiers; }
+							if (kb.Modifiers != mod) continue;
+							var c = kb.Command; var cp = kb.CommandParameter;
+							if(c.CanExecute(cp)) c.Execute(cp);
+							e.Handled = true;
+							break;
+							//note: execute even if main window disabled. Maybe the command works in current window. Or maybe user wants to save (Ctrl+S).
+						}
+						//APerf.NW(); //fast
+					}
+
+					//void _PreProcessInput(object sender, PreProcessInputEventArgs e) {
+					//	if (e.Canceled) return;
+					//	var re = e.StagingItem.Input.RoutedEvent;
+					//	if (re == Keyboard.KeyDownEvent && e.StagingItem.Input is KeyEventArgs ke) {
+					//		var k = ke.Key; if (k == Key.System) k = ke.SystemKey;
+					//		if (k is Key.LeftCtrl or Key.LeftShift or Key.LeftAlt or Key.RightCtrl or Key.RightShift or Key.RightAlt or Key.LWin or Key.RWin or Key.DeadCharProcessed or Key.ImeProcessed) return;
+					//		AOutput.Write(k);
+					//	//} else { //no mouse events in hwndhosted control. It's ok, don't need global mouse shortcuts. Normal WPF bindings don't work too.
+					//	//	AOutput.Write(re);
+					//	}
+					//}
+				}
+			}
 		}
 
 		/// <summary>
@@ -405,6 +447,7 @@ namespace Au.Controls
 				to.Icon = image ?? _CopyImage(from);
 				if (text != null) to.Header = text; else if (from.Header is string s) to.Header = s;
 				to.InputGestureText = from.InputGestureText;
+				//never mind: no gesture text from input bindings. Currently need it for 1 item (New_script) and we specify it explicitly (keysText in attribute).
 				to.ToolTip = from.ToolTip;
 				to.Foreground = from.Foreground;
 				to.Command = c;
@@ -592,9 +635,10 @@ namespace Au.Controls
 							var b = new MenuItem();
 							var image = _mi.Icon;
 							bool onlyImage = image != null && imageAt == null;
-							if (image == null || onlyImage) b.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind.
+							if (image == null || onlyImage) b.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. TODO: not good on WIn7
 							CopyToMenu(b, text: btext);
 							if (onlyImage) { b.Header = b.Icon; b.Icon = null; } //make narrower
+							if (ButtonTooltip != null) b.ToolTip = ButtonTooltip; else if (onlyImage) b.ToolTip = ButtonText;
 							var m = new Menu { UseLayoutRounding = true };
 							m.Items.Add(b); //parent must be Menu, else wrong Role (must be TopLevelHeader, we can't change) and does not work
 							o = new Border { Child = m }; //workaround for: descendant icon part black when checked, with or without icon

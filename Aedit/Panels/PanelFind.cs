@@ -145,7 +145,7 @@ class PanelFind : UserControl
 				_regexWindow = null;
 			}
 		} else if (sender == _cName) {
-			Panels.Found.ZControl.Z.ClearText();
+			Panels.Found.ZControl.zClearText();
 			if (_cName.IsChecked) {
 				_aEditor.Clear();
 				Panels.Editor.ZActiveDoc?.InicatorsFind_(null);
@@ -282,7 +282,7 @@ class PanelFind : UserControl
 
 		_AddToRecent(f, noRecent);
 
-		if (forReplace && (Panels.Editor.ZActiveDoc?.Z.IsReadonly ?? true)) return false;
+		if (forReplace && (Panels.Editor.ZActiveDoc?.zIsReadonly ?? true)) return false;
 		return true;
 	}
 
@@ -320,9 +320,8 @@ class PanelFind : UserControl
 	void _FindNextInEditor(in _TextToFind f, bool replace) {
 		_ttNext?.Close();
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
-		var z = doc.Z;
-		var text = doc.Text; if (text.Length == 0) return;
-		int i, len = 0, from8 = replace ? z.SelectionStart8 : z.SelectionEnd8, from = doc.Pos16(from8);
+		var text = doc.zText; if (text.Length == 0) return;
+		int i, len = 0, from8 = replace ? doc.zSelectionStart8 : doc.zSelectionEnd8, from = doc.zPos16(from8);
 		RXMatch rm = null;
 		bool retryFromStart = false, retryRx = false;
 		g1:
@@ -351,16 +350,16 @@ class PanelFind : UserControl
 			goto g1;
 		}
 		if (retryFromStart) TUtil.InfoTooltip(ref _ttNext, _tFind, "Info: this match is before last position");
-		int to = doc.Pos8(i + len);
-		i = doc.Pos8(i);
-		if (replace && i == from8 && to == z.SelectionEnd8) {
+		int to = doc.zPos8(i + len);
+		i = doc.zPos8(i);
+		if (replace && i == from8 && to == doc.zSelectionEnd8) {
 			var repl = f.replaceText;
 			if (rm != null) repl = rm.ExpandReplacement(repl);
-			//z.ReplaceRange(i, to, repl); //also would need to set caret pos = to
-			z.ReplaceSel(repl);
+			//doc.zReplaceRange(i, to, repl); //also would need to set caret pos = to
+			doc.zReplaceSel(repl);
 			_FindNextInEditor(f, false);
 		} else {
-			z.Select(false, i, to, true);
+			doc.zSelect(false, i, to, true);
 		}
 	}
 
@@ -372,14 +371,14 @@ class PanelFind : UserControl
 		_cName.IsChecked = false;
 		if (!_GetTextToFind(out var f, true)) return;
 		var doc = Panels.Editor.ZActiveDoc;
-		var text = doc.Text;
+		var text = doc.zText;
 		var repl = f.replaceText;
 		if (f.rx != null) {
 			if (!f.rx.FindAll(text, out var ma)) return;
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for (int i = ma.Length - 1; i >= 0; i--) {
 				var m = ma[i];
-				doc.Z.ReplaceRange(true, m.Start, m.End, m.ExpandReplacement(repl));
+				doc.zReplaceRange(true, m.Start, m.End, m.ExpandReplacement(repl));
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		} else {
@@ -389,11 +388,11 @@ class PanelFind : UserControl
 			doc.Call(Sci.SCI_BEGINUNDOACTION);
 			for (int i = a.Count - 1; i >= 0; i--) {
 				var v = a[i];
-				doc.Z.ReplaceRange(true, v.Start.Value, v.End.Value, repl);
+				doc.zReplaceRange(true, v.Start.Value, v.End.Value, repl);
 			}
 			doc.Call(Sci.SCI_ENDUNDOACTION);
 		}
-		//Easier/faster would be to create new text and call Z.SetText. But then all non-text data is lost: markers, folds, caret position...
+		//Easier/faster would be to create new text and call zSetText. But then all non-text data is lost: markers, folds, caret position...
 	}
 
 	List<Range> _aEditor = new(); //all found in editor text
@@ -401,7 +400,7 @@ class PanelFind : UserControl
 	void _FindAllInEditor() {
 		_aEditor.Clear();
 		if (!_GetTextToFind(out var f, noRecent: true, noTooltip: true)) return;
-		var text = Panels.Editor.ZActiveDoc?.Text; if (text.NE()) return;
+		var text = Panels.Editor.ZActiveDoc?.zText; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
 
@@ -427,7 +426,7 @@ class PanelFind : UserControl
 		string s = null;
 		switch (e) {
 		case KScintilla c:
-			s = c.Z.SelectedText();
+			s = c.zSelectedText();
 			break;
 		case TextBox c:
 			s = c.SelectedText;
@@ -457,7 +456,7 @@ class PanelFind : UserControl
 
 	void _FindAllInFiles(bool names/*, bool forReplace*/) {
 		if (!_GetTextToFind(out var f, noRecent: names, names: names)) {
-			Panels.Found.ZControl.Z.ClearText();
+			Panels.Found.ZControl.zClearText();
 			return;
 		}
 
@@ -466,7 +465,7 @@ class PanelFind : UserControl
 		if (!_init1) {
 			_init1 = true;
 			var c = Panels.Found.ZControl;
-			App.Model.WorkspaceLoadedAndDocumentsOpened += () => Panels.Found.ZControl.Z.ClearText();
+			App.Model.WorkspaceLoadedAndDocumentsOpened += () => Panels.Found.ZControl.zClearText();
 
 			c.ZTags.AddLinkTag("+open", s => {
 				_OpenLinkClicked(s);
@@ -482,7 +481,7 @@ class PanelFind : UserControl
 				var doc = Panels.Editor.ZActiveDoc;
 				//doc.Focus();
 				int from = a[1].ToInt(), to = a[2].ToInt();
-				ATimer.After(10, _ => doc.Z.Select(true, from, to, true));
+				ATimer.After(10, _ => doc.zSelect(true, from, to, true));
 				//info: scrolling works better with async when now opened the file
 			});
 			bool _OpenLinkClicked(string file) {
@@ -491,10 +490,10 @@ class PanelFind : UserControl
 				if (f.IsFolder) f.SelectSingle();
 				else if (!App.Model.SetCurrentFile(f)) return false;
 				//add indicator to make it easier to find later
-				var z = Panels.Found.ZControl.Z;
-				z.IndicatorClear(c_indic);
-				var v = z.LineStartEndFromPos(false, z.CurrentPos8);
-				z.IndicatorAdd(false, c_indic, v.start..v.end);
+				var z = Panels.Found.ZControl;
+				z.zIndicatorClear(c_indic);
+				var v = z.zLineStartEndFromPos(false, z.zCurrentPos8);
+				z.zIndicatorAdd(false, c_indic, v.start..v.end);
 				return true;
 			}
 			c.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
@@ -608,7 +607,7 @@ class PanelFind : UserControl
 			   .AppendLine(" files. It is set in Find Options dialog.<>");
 		b.Append(bSlow);
 
-		Panels.Found.ZControl.Z.SetText(b.ToString());
+		Panels.Found.ZControl.zSetText(b.ToString());
 	}
 
 	//struct _Perf : IDisposable

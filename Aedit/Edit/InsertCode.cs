@@ -37,13 +37,12 @@ static class InsertCode
 	/// <param name="goToPercent">If contains '%', removes it and moves caret there.</param>
 	public static void Statements(string s, bool goToPercent = false) {
 		var d = Panels.Editor.ZActiveDoc;
-		if (d == null || d.Z.IsReadonly) {
+		if (d == null || d.zIsReadonly) {
 			AOutput.Write(s);
 		} else {
-			var z = d.Z;
 			d.Focus();
-			int start = z.LineStartFromPos(false, z.CurrentPos8);
-			int indent = z.LineIndentationFromPos(false, start);
+			int start = d.zLineStartFromPos(false, d.zCurrentPos8);
+			int indent = d.zLineIndentationFromPos(false, start);
 			if (indent == 0) {
 				s += "\r\n";
 			} else {
@@ -58,8 +57,8 @@ static class InsertCode
 				if (i >= 0) s = s.Remove(i, 1);
 			}
 
-			z.ReplaceSel(false, start, s);
-			if (i >= 0) z.GoToPos(true, start + i);
+			d.zReplaceSel(false, start, s);
+			if (i >= 0) d.zGoToPos(true, start + i);
 		}
 	}
 
@@ -70,7 +69,7 @@ static class InsertCode
 	/// <param name="s">If contains '%', removes it and moves caret there.</param>
 	public static void TextSimply(string s) {
 		var d = Panels.Editor.ZActiveDoc;
-		if (d == null || d.Z.IsReadonly) return;
+		if (d == null || d.zIsReadonly) return;
 		TextSimplyInControl(d, s);
 	}
 
@@ -98,8 +97,8 @@ static class InsertCode
 		}
 
 		if (c is KScintilla sci) {
-			if (sci.Z.IsReadonly) return;
-			sci.Z.ReplaceSel(s);
+			if (sci.zIsReadonly) return;
+			sci.zReplaceSel(s);
 			while (i-- > 0) sci.Call(Sci.SCI_CHARLEFT);
 		} else if (c is TextBox tb) {
 			if (tb.IsReadOnly) return;
@@ -127,7 +126,7 @@ static class InsertCode
 		var (_, end) = _FindUsings(k, namespaces);
 		if (!namespaces.Any(o => o != null)) return false;
 		var doc = k.sciDoc;
-		//doc.Z.Select(true, start, end);
+		//doc.Select(true, start, end);
 
 		var b = new StringBuilder();
 		if (end > 0 && k.code[end - 1] != '\n') b.AppendLine();
@@ -135,9 +134,9 @@ static class InsertCode
 			if (v != null) b.Append("using ").Append(v).AppendLine(";");
 		}
 
-		int line = doc.Z.LineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
-		doc.Z.InsertText(true, end, b.ToString(), addUndoPoint: true);
-		if (foldLine >= 0) doc.Call(Sci.SCI_FOLDLINE, foldLine); //InsertText expands folding
+		int line = doc.zLineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
+		doc.zInsertText(true, end, b.ToString(), addUndoPoint: true);
+		if (foldLine >= 0) doc.Call(Sci.SCI_FOLDLINE, foldLine); //zInsertText expands folding
 
 		return true;
 	}
@@ -291,8 +290,8 @@ static class InsertCode
 		//AOutput.Write(text);
 		//AClipboard.Text = text;
 
-		cd.sciDoc.Z.InsertText(true, position, text, addUndoPoint: true);
-		cd.sciDoc.Z.GoToPos(true, position);
+		cd.sciDoc.zInsertText(true, position, text, addUndoPoint: true);
+		cd.sciDoc.zGoToPos(true, position);
 
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.
 	}

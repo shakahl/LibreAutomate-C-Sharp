@@ -59,7 +59,7 @@ namespace Au
 	/// <td>
 	/// System: <c>@"C:\WINDOWS\system32"</c>. However the OS in most cases redirects this path to <c>@"C:\WINDOWS\SysWOW64"</c>.
 	/// <br/>SystemX86: <c>@"C:\WINDOWS\SysWOW64"</c>
-	/// <br/>SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path that you don't see in Explorer.
+	/// <br/>SystemX64: <c>@"C:\WINDOWS\Sysnative"</c>. The OS redirects it to the true <c>@"C:\WINDOWS\system32"</c>. It is a special path, not in Explorer.
 	/// <br/>ProgramFiles, ProgramFilesX86: <c>@"C:\Program Files (x86)"</c>
 	/// <br/>ProgramFilesX64: <c>@"C:\Program Files"</c>
 	/// <br/>ProgramFilesCommon, ProgramFilesCommonX86: <c>@"C:\Program Files (x86)\Common Files"</c>
@@ -274,15 +274,24 @@ namespace Au
 		static string __thisAppBS;
 		//Can change: AppDomain.CurrentDomain.SetData("APP_CONTEXT_BASE_DIRECTORY", "C:\\");
 
+		//FUTURE: support portable apps.
+		//	Eg if ThisAppBS is like "*\PortableApps\*\App\*", let ThisAppX properties by default return "*\PortableApps\*\Data\...".
+		//	But maybe it does not make much sense, because many (most?) users also would have to install .NET5+.
+		//	The app can use dotnet dlls in app's folder without dotnet installed. Our AppHost supports it.
+		//	Or could install dotnet in the removable drive to be shared by portable .NET apps. And let our AppHost support it. Maybe it already supports the environment variable, don't remember.
+
 		const string c_defaultAppSubDir = "Au";
+		//static string c_defaultAppSubDir = @"Au\" + ATask.Name; //no. In a script app could create many folders. All these properties can be set.
 		//note: don't use Application.ProductName etc. It loads Forms, throws if dynamic assembly, etc.
 
 		#region set auto/once
 
+		[ThreadStatic] static bool _noGetAutoCreate;
+
 		static string _SetAuto(ref string propVar, string value, bool create) {
 			lock (_lock) {
 				if (propVar == null) {
-					if (create) AFile.CreateDirectory(value);
+					if (create && !_noGetAutoCreate) AFile.CreateDirectory(value);
 					propVar = value;
 				}
 			}
@@ -372,8 +381,8 @@ namespace Au
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
 		/// The 'set' function does not change system settings. It just remembers a string that will be later returned by the 'get' function in this process.
-		/// Note: the ProgramData folder has special permissions. Programs running not as administrator usually cannot write there.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
+		/// Note: the ProgramData folder has special security permissions. Programs running not as administrator usually cannot write there, unless your installer changed folder security permissions.
 		/// </remarks>
 		public static FolderPath ThisAppDataCommon {
 			get => new(__thisAppDataCommon ?? _SetAuto(ref __thisAppDataCommon, ProgramData + c_defaultAppSubDir, create: false));
@@ -395,6 +404,14 @@ namespace Au
 			set => _SetOnce(ref __thisAppImages, value, create: false);
 		}
 		static string __thisAppImages;
+
+		/// <summary>
+		/// Gets the root directory of this application, like @"C:\" or @"\\network\folder\".
+		/// </summary>
+		/// <seealso cref="AProcess.ExeDriveType"/>
+		public static string ThisAppDriveBS => __thisAppDrive ??= Path.GetPathRoot(ThisAppBS);
+		static string __thisAppDrive;
+		//public static FolderPath ThisAppDrive => new(__thisAppDrive ??= Path.GetPathRoot(ThisAppBS));
 
 		/// <summary>
 		/// Gets folder of current workspace.
@@ -513,6 +530,9 @@ namespace Au
 		/// Gets the value of an environment variable.
 		/// Returns null if unavailable.
 		/// </summary>
+		/// <seealso cref="Environment.GetEnvironmentVariable"/>
+		/// <seealso cref="Environment.SetEnvironmentVariable"/>
+		/// <seealso cref="APath.ExpandEnvVar"/>
 		public static FolderPath EnvVar(string envVar) {
 			return new(APath.GetEnvVar_(envVar));
 		}
@@ -542,7 +562,7 @@ namespace Au
 		//Returns string ":: ITEMIDLIST".
 		static FolderPath _GetV(uint a, uint b, uint c, uint d) {
 			using var pidl = _GetVI(a, b, c, d);
-			return new(pidl?.ToBase64String());
+			return new(pidl?.ToHexString());
 		}
 
 		#endregion
@@ -715,23 +735,19 @@ namespace Au
 		/// Returns null if unavailable.
 		/// </summary>
 		/// <param name="folderName">
-		/// A property name of this class. Examples: <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>.
-		/// Or a property name of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
+		/// Name of a property of this class. Examples: <c>"Documents"</c>, <c>"Temp"</c>, <c>"ThisApp"</c>. The property must return <b>FolderPath</b>.
+		/// Or name of a property of the nested class Virtual, like <c>"Virtual.ControlPanel"</c>. Gets <c>":: ITEMIDLIST"</c>.
 		/// Or known folder canonical name. See <see cref="GetKnownFolders"/>. If has prefix <c>"Virtual."</c>, gets <c>":: ITEMIDLIST"</c>. Much slower, but allows to get paths of folders registered by applications.
 		/// </param>
+		/// <seealso cref="APath.ExpandEnvVar"/>
 		public static FolderPath GetFolder(string folderName) {
 			if (folderName.NE()) return default;
 			bool isVirtual = folderName.Starts("Virtual.");
-			if (isVirtual) folderName = folderName.Substring(8);
+			if (isVirtual) folderName = folderName[8..];
 
 			//properties of this class
 			Type ty = isVirtual ? typeof(Virtual) : typeof(AFolders);
-			var pi = ty.GetProperty(folderName, BindingFlags.GetProperty | BindingFlags.DeclaredOnly | BindingFlags.Public | BindingFlags.Static);
-			if (pi != null) {
-				var o = pi.GetValue(null);
-				if (o is FolderPath fp) return fp;
-				return default;
-			}
+			if (ty.GetProperty(folderName)?.GetValue(null) is FolderPath fp) return fp;
 			//Using reflection is not the fastest way, but simplest, cannot make bugs, and don't need maitenance. Fast enough.
 
 			//default and custom registered known folders by canonical name
@@ -742,7 +758,7 @@ namespace Au
 				if (man.GetFolderByName(folderName, out kf) != 0) return default;
 				if (isVirtual) {
 					if (0 != kf.GetIDList(0, out IntPtr pidl)) return default;
-					R = APidl.ToBase64String(pidl);
+					R = APidl.ToHexString(pidl);
 					Marshal.FreeCoTaskMem(pidl);
 				} else {
 					if (0 != kf.GetPath(0, out R)) return default;
@@ -765,14 +781,72 @@ namespace Au
 
 		#endregion
 
-		//FUTURE:
-		//	Unexpand(). Would create string like @"Documents + ""...""" or like @"%AFolders.Documents%\...".
-
 		//DON'T: public static class VirtualNAME that returns parsing name, eg "::{CLSID}\...".
-		//	What is good: native/.NET shellexecute supports it.
-		//	What is bad: native/.NET shellexecute supports only some. Almost nothing works in a 32-bit process on 64-bit OS; then even cannot convert the string to ITEMIDLIST. Some parsing names have other formats and the API gets wrong parsing names.
+		//	Good: native/.NET shellexecute supports it.
+		//	Bad: native/.NET shellexecute supports only some. Almost nothing works in a 32-bit process on 64-bit OS; then even cannot convert the string to ITEMIDLIST. Some parsing names have other formats and the API gets wrong parsing names.
 
 		//DON'T: The + operator returns FolderPath. Then AFolders.Desktop + subfolder + file would return "desktop\subfolder\file". Probably not good.
+
+		/// <summary>
+		/// If string starts with a known/special folder path, replaces it with folder name and returns true.
+		/// For example replaces <c>C:\Windows\sYstem32\notepad.exe</c> with <c>%AFolders.System%\notepad.exe</c>.
+		/// </summary>
+		/// <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="APidl.ToHexString"/>).</param>
+		/// <param name="unexpanded">Receives final path, unexpanded or not. Can be same variable as <i>path</i>.</param>
+		/// <remarks>
+		/// Quite slow first time in process, eg 50 ms, because gets all folder paths. Later uses cached paths.
+		/// </remarks>
+		/// <seealso cref="APath.ExpandEnvVar"/>
+		public static bool UnexpandPath(string path, out string unexpanded) {
+			var p = unexpanded = path;
+			if (!p.NE()) {
+				p = p.Lower();
+				if (p.Starts(":: ")) {
+					foreach (var v in _upv.Value) {
+						int n = v.path.Length;
+						if (p.Starts(v.path)) {
+							unexpanded = $"%AFolders.Virtual.{v.name}%{path[n..]}";
+							return true;
+						}
+					}
+				} else {
+					p = p.Replace('/', '\\');
+					foreach (var v in _up.Value) {
+						int n = v.path.Length;
+						if (p.Starts(v.path) && (p.Length == n || p[n] == '\\')) {
+							unexpanded = $"%AFolders.{v.name}%{path[n..]}";
+							return true;
+						}
+					}
+				}
+			}
+			return false;
+		}
+
+		static readonly Lazy<List<(string path, string name)>> _up = new(() => {
+			var a = new List<(string path, string name)>(120); //105
+			_noGetAutoCreate = true;
+			foreach (var pi in typeof(AFolders).GetProperties()) {
+				if (pi.PropertyType == typeof(FolderPath) && pi.GetValue(null) is FolderPath fp) {
+					var s = fp.ToString();
+					if (!s.NE()) a.Add((s.Lower(), pi.Name));
+				}
+			}
+			_noGetAutoCreate = false;
+			return a;
+		});
+
+		static readonly Lazy<List<(string path, string name)>> _upv = new(() => {
+			var a = new List<(string path, string name)>(30); //22
+			foreach (var pi in typeof(AFolders.Virtual).GetProperties()) {
+				if (pi.PropertyType == typeof(FolderPath) && pi.GetValue(null) is FolderPath fp) {
+					var s = fp.ToString();
+					//AOutput.Write(pi.Name, s);
+					if (!s.NE()) a.Add((s, pi.Name));
+				}
+			}
+			return a;
+		});
 	}
 }
 
