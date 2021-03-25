@@ -21,7 +21,7 @@ namespace Au.Types
 
 	/// <summary>
 	/// Invokes specified action (calls callback function) at the end of <c>using(...) { ... }</c>.
-	/// Usually returned by functions. Examples: <see cref="AOpt.Scope.Mouse"/>, <see cref="AMenu.Submenu"/>.
+	/// Usually returned by functions. Example: <see cref="AOpt.Scope.Mouse"/>.
 	/// </summary>
 	public struct UsingEndAction : IDisposable
 	{

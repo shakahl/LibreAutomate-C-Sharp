@@ -20,14 +20,11 @@ namespace Au
 	/// </remarks>
 	public partial class AToolbar : MTBase
 	{
-		AWnd _w;
 		readonly _Settings _sett;
-		readonly string _name;
 		readonly List<ToolbarItem> _a = new();
 		bool _created;
 		bool _closed;
 		bool _topmost; //no owner, or owner is topmost
-		readonly int _threadId;
 		double _dpiF; //DPI scaling factor, eg 1.5 for 144 dpi
 
 		static int s_treadId;
@@ -51,11 +48,9 @@ namespace Au
 		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// </remarks>
 		public AToolbar(string name, TBCtor flags = 0, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(name, f, l) {
-			_threadId = AThread.Id;
 			if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
 
 			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
-			_name = name;
 			var path = flags.Has(TBCtor.DontSaveSettings) ? null : GetSettingsFilePath(name);
 			_sett = _Settings.Load(path, flags.Has(TBCtor.ResetSettings));
 
@@ -73,7 +68,7 @@ namespace Au
 		/// <summary>
 		/// Returns true if the toolbar is open. False if closed or <see cref="Show"/> still not called.
 		/// </summary>
-		public bool IsAlive => _created && !_closed;
+		public bool IsOpen => _created && !_closed;
 
 		/// <summary>
 		/// Gets the name of the toolbar.
@@ -88,7 +83,7 @@ namespace Au
 		/// </summary>
 		/// <seealso cref="GetSettingsFilePath"/>
 		/// <seealso cref="TBCtor"/>
-		public bool IsFresh => !_sett.LoadedFile;
+		public bool FirstTime => !_sett.LoadedFile;
 
 		#region static functions
 
@@ -121,10 +116,11 @@ namespace Au
 		#region add item
 
 		void _Add(ToolbarItem item, string text, Delegate click, MTImage image, int l) {
+			_ThreadTrap();
+			_CreatedTrap(_closed ? null : "cannot add items while the toolbar is open. To add to submenu, use the submenu variable.");
 			item.Set_(this, text, click, image, l);
 			_a.Add(item);
 			Last = item;
-			if (ButtonAdded != null && !item.IsSeparatorOrGroup_) ButtonAdded(item);
 		}
 
 		/// <summary>
@@ -136,7 +132,7 @@ namespace Au
 		/// <param name="image"></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <remarks>
-		/// More properties can be specified later (set properties of the returned <see cref="ToolbarItem"/>) or before (set <see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="ButtonAdded"/>).
+		/// More properties can be specified later (set properties of the returned <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 		/// </remarks>
 		public ToolbarItem Add(string text, Action<ToolbarItem> click, MTImage image = default, [CallerLineNumber] int l = 0) {
 			var item = new ToolbarItem();
@@ -153,7 +149,7 @@ namespace Au
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
 		/// <value>Action called when the button clicked.</value>
 		/// <remarks>
-		/// More properties can be specified later (set properties of <see cref="Last"/> <see cref="ToolbarItem"/>) or before (set <see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="ButtonAdded"/>).
+		/// More properties can be specified later (set properties of <see cref="Last"/> <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 		/// </remarks>
 		/// <example>
 		/// These two are the same.
@@ -182,6 +178,9 @@ namespace Au
 		/// <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <remarks>
+		/// The submenu is an <see cref="AMenu"/> object. It inherits these properties of this toolbar: <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ActionThread"/>, <see cref="MTBase.PathInTooltip"/>.
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// tb.Menu("Menu", m => {
@@ -200,13 +199,17 @@ namespace Au
 		/// Adds button with drop-down menu.
 		/// </summary>
 		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
-		/// <param name="menu">Action that returns the menu. Called whenever the button clicked.</param>
+		/// <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
 		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <remarks>
+		/// The caller creates the menu (creates the <see cref="AMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>AMenu</b> and reuse same object.
+		/// The submenu does not inherit properties of this toolbar.
+		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
 		/// var m = new AMenu(); m.AddCheck("C1"); m.AddCheck("C2");
-		/// t.Menu("", () => m);
+		/// t.Menu("Menu", () => m);
 		/// ]]></code>
 		/// </example>
 		public ToolbarItem Menu(string text, Func<AMenu> menu, MTImage image = default, [CallerLineNumber] int l = 0) {
@@ -242,14 +245,20 @@ namespace Au
 		public ToolbarItem Last { get; private set; }
 
 		/// <summary>
-		/// When added a button.
+		/// Gets added buttons.
 		/// </summary>
 		/// <remarks>
-		/// Allows to set item properties in single place instead of after each 'add button' code line.
-		/// For example, the event handler can set item properties common to all buttons.
-		/// Not used for separators and group separators.
+		/// Allows to set properties of multiple buttons in single place instead of after each 'add button' code line.
+		/// Skips separators and groups.
 		/// </remarks>
-		public event Action<ToolbarItem> ButtonAdded;
+		public IEnumerable<ToolbarItem> Items {
+			get {
+				_ThreadTrap();
+				foreach (var v in _a) {
+					if (!v.IsSeparatorOrGroup_) yield return v;
+				}
+			}
+		}
 
 		#endregion
 
@@ -316,8 +325,8 @@ namespace Au
 
 		//used for normal toolbars, not for satellite toolbars
 		void _Show(bool owned, AWnd owner, ITBOwnerObject oo, AScreen screen) {
-			_CheckThread();
-			if (_created) throw new InvalidOperationException();
+			_ThreadTrap();
+			_CreatedTrap("this toolbar is already open");
 
 			AWnd c = default;
 			if (owned) {
@@ -347,21 +356,35 @@ namespace Au
 			r = new(r.CenterX - size.width / 2, r.CenterY - size.height / 2, size.width, size.height);
 			ADpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
 			AWnd.More.CreateWindow(_WndProc, "AToolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height);
-			//		_w.ShowL(true);
 			_created = true;
 		}
 
 		/// <summary>
 		/// Destroys the toolbar window.
 		/// </summary>
+		/// <remarks>
+		/// Can be called from any thread.
+		/// Does nothing if not open.
+		/// </remarks>
 		public void Close() {
-			Api.DestroyWindow(_w);
+			if (_w.Is0) return;
+			if (_IsOtherThread) _w.Post(Api.WM_CLOSE);
+			else Api.DestroyWindow(_w);
 		}
 
 		/// <summary>
 		/// When the toolbar window destroyed.
 		/// </summary>
 		public event Action Closed;
+
+		private protected override void _WmNcdestroy() {
+			_closed = true;
+			_Manager.Remove(this);
+			_SatDestroying();
+			_sett.Dispose();
+			base._WmNcdestroy();
+			Closed?.Invoke();
+		}
 
 		/// <summary>
 		/// Adds or removes a reason to temporarily hide the toolbar. The toolbar is hidden if at least one reason exists. See also <seealso cref="Close"/>.
@@ -378,7 +401,7 @@ namespace Au
 		/// Toolbars are automatically hidden when the owner window is hidden, minimized, etc. This function can be used to hide toolbars for other reasons.
 		/// </remarks>
 		public void Hide(bool hide, TBHide reason) {
-			_CheckThread();
+			_ThreadTrap();
 			if (!_created || _IsSatellite) throw new InvalidOperationException();
 			if (0 != ((int)reason & 0xffff)) throw new ArgumentOutOfRangeException();
 			_SetVisible(!hide, reason);
@@ -432,7 +455,7 @@ namespace Au
 		static int s_winclassRegistered;
 
 		unsafe LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
-			//		AWnd.More.PrintMsg(w, msg, wParam, lParam);
+			//AWnd.More.PrintMsg(w, msg, wParam, lParam);
 
 			switch (msg) {
 			case Api.WM_LBUTTONDOWN:
@@ -452,19 +475,11 @@ namespace Au
 
 			switch (msg) {
 			case Api.WM_NCCREATE:
-				_w = w;
-				ACursor.SetArrowCursor_();
+				_WmNccreate(w);
 				if (_transparency != default) _w.SetTransparency(true, _transparency.opacity, _transparency.colorKey);
 				break;
 			case Api.WM_NCDESTROY:
-				_closed = true;
-				_Manager.Remove(this);
-				_SatDestroying();
-				if (!_tt.tt.Is0) { Api.DestroyWindow(_tt.tt); _tt = default; } //maybe auto-destroyed because owned by this, but anyway
-				_sett.Dispose();
-				_w = default;
-				Closed?.Invoke();
-
+				_WmNcdestroy();
 				//PROBLEM: not called if thread ends without closing the toolbar window.
 				//	Then saves settings only on process exit. Not if process terminated, eg by the 'end task' command.
 				//	In most cases it isn't a problem because saves settings every 2 s (IIRC).
@@ -477,6 +492,7 @@ namespace Au
 				using (ABufferedPaint bp = new(w, true)) {
 					var dc = bp.DC;
 					using var g = System.Drawing.Graphics.FromHdc(dc);
+					g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 					_WmPaint(dc, g, bp.ClientRect, bp.UpdateRect);
 				}
 				//			APerf.NW();
@@ -545,7 +561,6 @@ namespace Au
 					int i = (int)wParam;
 					if ((uint)i < _a.Count) _Click(i, false);
 				}
-
 				return default;
 			}
 
@@ -581,7 +596,6 @@ namespace Au
 		}
 
 		unsafe void _WmMousemove(LPARAM lParam) {
-			//		AOutput.Write("mm");
 			if (_iClick < 0) {
 				var p = _LparamToPoint(lParam);
 				int i = _HitTest(p);
@@ -589,33 +603,8 @@ namespace Au
 					if (_iHot >= 0) _Invalidate(_iHot);
 					if ((_iHot = i) >= 0) {
 						_Invalidate(_iHot);
-
-						//tooltip
-						var item = _a[i];
-						var s = item.Tooltip;
-						if (!DisplayText) { if (s.NE()) s = item.Text; else if (!item.Text.NE() && !item.IsGroup_) s = item.Text + "\n" + s; }
-						var sf = item.File; if (!(sf.NE() || sf.Starts("::") || sf.Starts("shell:"))) s = s.NE() ? sf : s + "\n" + sf;
-						bool setTT = !s.NE() && item != _tt.item;
-						if (!setTT && (setTT = _tt.item != null && _tt.item.rect != _tt.rect)) item = _tt.item; //update tooltip tool rect
-						if (setTT) {
-							_tt.item = item;
-							_tt.rect = item.rect;
-							if (!_tt.tt.IsAlive) {
-								_tt.tt = Api.CreateWindowEx(WS2.TOPMOST | WS2.TRANSPARENT, "tooltips_class32", null, Api.TTS_ALWAYSTIP | Api.TTS_NOPREFIX, 0, 0, 0, 0, _w);
-								_tt.tt.Send(Api.TTM_ACTIVATE, true);
-								_tt.tt.Send(Api.TTM_SETMAXTIPWIDTH, 0, AScreen.Of(_w).WorkArea.Width / 3);
-							}
-							fixed (char* ps = s) {
-								var g = new Api.TTTOOLINFO { cbSize = sizeof(Api.TTTOOLINFO), hwnd = _w, uId = 1, lpszText = ps, rect = item.rect };
-								_tt.tt.Send(Api.TTM_DELTOOL, 0, &g);
-								_tt.tt.Send(Api.TTM_ADDTOOL, 0, &g);
-							}
-						}
-
-						if (_tt.item != null) {
-							var v = new Native.MSG { hwnd = _w, message = Api.WM_MOUSEMOVE, lParam = lParam };
-							_tt.tt.Send(Api.TTM_RELAYEVENT, 0, &v);
-						}
+						var b = _a[i];
+						base._SetTooltip(b, b.rect, lParam);
 					}
 				}
 				if (_iHot >= 0 != _trackMouseEvent) {
@@ -626,8 +615,6 @@ namespace Au
 		}
 		int _iHot = -1, _iClick = -1;
 		bool _trackMouseEvent, _noHotClick;
-
-		(AWnd tt, ToolbarItem item, RECT rect) _tt;
 
 		void _WmMouseleave() {
 			_trackMouseEvent = false;
@@ -661,19 +648,18 @@ namespace Au
 				if (i == _menuClosedIndex && ATime.PerfMilliseconds - _menuClosedTime < 100) return;
 				AMenu m = null;
 				if (b.clicked is Action<AMenu> menu) {
-					m = new AMenu(this.Name + " + " + b.Text, _sourceFile, b.sourceLine) { ImageCache = this.ImageCache };
+					m = new AMenu(null, _sourceFile, b.sourceLine);
+					_CopyProps(m);
 					menu(m);
 				} else if (b.clicked is Func<AMenu> func) {
 					m = func();
 				}
 				if (m == null) return;
-				m.ActionThread = this.ActionThread;
-				m.ActionException = this.ActionException;
 
 				var r = b.rect; _w.MapClientToScreen(ref r);
-				m.Show(_w, MSFlags.AlignRectBottomTop, new(r.left, r.bottom), r);
+				m.Show(MSFlags.AlignRectBottomTop, new(r.left, r.bottom), r, owner: _w);
 				_menuClosedIndex = i; _menuClosedTime = ATime.PerfMilliseconds;
-				//info: OS before wm_lbuttondown closes menu automatically. Previous Show returns before new Show.
+				//info: before wm_lbuttondown the menu is already closed and its message loop ended. Previous Show returns before new Show.
 			} else {
 				if (real) {
 					bool ok = false;
@@ -694,8 +680,9 @@ namespace Au
 					}
 					if (!ok) return;
 				}
-				//			AOutput.Write("click", b);
-				if (b.actionThread) AThread.Start(() => _ExecItem(), background: false); else _ExecItem();
+				//AOutput.Write("click", b);
+				if (b.actionThread) AThread.Start(() => _ExecItem(), background: false); //thread start speed: 250 mcs
+				else _ExecItem();
 				void _ExecItem() {
 					var action = b.clicked as Action<ToolbarItem>;
 					try { action(b); }
@@ -724,7 +711,7 @@ namespace Au
 			if (m.Last != null) m.Separator();
 
 			if (!no.Has(TBNoMenu.Anchor)) {
-				using (m.Submenu("Anchor")) {
+				m.Submenu("Anchor", m => {
 					_AddAnchor(TBAnchor.TopLeft);
 					_AddAnchor(TBAnchor.TopRight);
 					_AddAnchor(TBAnchor.BottomLeft);
@@ -745,21 +732,21 @@ namespace Au
 							: m.AddCheck(an.ToString(), Anchor.Has(an), _ => Anchor ^= an, disable: _GetInvalidAnchorFlags(Anchor).Has(an));
 						if (_IsSatellite) k.Tooltip = "Note: You may want to set anchor of the owner toolbar instead. Anchor of this auto-hide toolbar is relative to the owner toolbar.";
 					}
-				}
+				});
 			}
 			if (!no.Has(TBNoMenu.Layout)) {
-				using (m.Submenu("Layout")) {
+				m.Submenu("Layout", m => {
 					_AddLayout(TBLayout.HorizontalWrap);
 					_AddLayout(TBLayout.Vertical);
-					//				_AddLayout(TBLayout.Horizontal);
+					//_AddLayout(TBLayout.Horizontal);
 
 					void _AddLayout(TBLayout tl) {
 						m.AddRadio(tl.ToString(), tl == Layout, _ => Layout = tl);
 					}
-				}
+				});
 			}
 			if (!no.Has(TBNoMenu.Border)) {
-				using (m.Submenu("Border")) {
+				m.Submenu("Border", m => {
 					_AddBorder(TBBorder.None);
 					_AddBorder(TBBorder.Width1);
 					_AddBorder(TBBorder.Width2);
@@ -773,10 +760,10 @@ namespace Au
 					void _AddBorder(TBBorder b) {
 						m.AddRadio(b.ToString(), b == Border, _ => Border = b);
 					}
-				}
+				});
 			}
 			if (!no.Has(TBNoMenu.Sizable | TBNoMenu.AutoSize | TBNoMenu.Text | TBNoMenu.MiscFlags)) {
-				using (m.Submenu("More")) {
+				m.Submenu("More", m => {
 					if (!no.Has(TBNoMenu.Sizable)) m.AddCheck("Sizable", Sizable, _ => Sizable ^= true);
 					if (!no.Has(TBNoMenu.AutoSize)) m.AddCheck("Auto-size", AutoSize, _ => AutoSize ^= true);
 					if (!no.Has(TBNoMenu.Text)) m.AddCheck("Display text", DisplayText, _ => DisplayText ^= true);
@@ -791,14 +778,14 @@ namespace Au
 
 						static string _EnumToString(Enum e) {
 							var s = e.ToString().RegexReplace(@"(?<=[^A-Z])[A-Z]", m => " " + m.Value.Lower());
-							//						s = s.Replace("Dont", "Don't");
+							//s = s.Replace("Dont", "Don't");
 							return s;
 						}
 					}
-				}
+				});
 			}
 
-			if (!no.Has(TBNoMenu.Toolbars | TBNoMenu.Help) && m.Last != null && !m.Last.separator) m.Separator();
+			if (!no.Has(TBNoMenu.Toolbars | TBNoMenu.Help) && m.Last != null && !m.Last.IsSeparator) m.Separator();
 			if (!no.Has(TBNoMenu.Toolbars)) m.Add("Toolbars", o => ToolbarsDialog().Show());
 			if (!no.Has(TBNoMenu.Help)) m["How to"] = _ => ADialog.ShowInfo("How to",
 	@"Move toolbar: Shift+drag.
@@ -806,7 +793,7 @@ Resize toolbar: drag border. Cannot resize if in context menu is unchecked or un
 Move or resize precisely: start to move or resize but don't move the mouse. Instead release Shift and press arrow keys. Finally release the mouse button.
 ");
 
-			if (m.Last != null) m.Show(_w);
+			if (m.Last != null) m.Show();
 		}
 
 		bool _WmNchittest(LPARAM xy, out int ht) {
@@ -821,7 +808,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 					RECT r = k.rcWindow;
 					int b = Border >= TBBorder.ThreeD ? k.cxWindowBorders : (_a.Count > 0 ? _BorderPadding() : ADpi.Scale(6, _dpi)); //make bigger if no buttons. Eg if auto-hide-at-screen-edge, border 1 is difficult to resize.
 					int bx = Math.Min(b, r.Width / 2), by = Math.Min(b, r.Height / 2);
-					//				AOutput.Write(bx, by);
+					//AOutput.Write(bx, by);
 					int x1 = r.left + bx, x2 = --r.right - bx, y1 = r.top + by, y2 = --r.bottom - by;
 					if (r.Width > bx * 8 && r.Height > by * 8) { //if toolbar isn't small, in corners allow to resize both width and height at the same time
 						if (x < x1) {
@@ -880,10 +867,11 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		public System.Windows.Size Size {
 			get => _sett.size;
 			set {
+				_ThreadTrap();
 				if (value != _sett.size) {
 					value = new(_Limit(value.Width), _Limit(value.Height));
 					_sett.size = value;
-					if (IsAlive && !AutoSize) _Resize(_Scale(value));
+					if (IsOpen && !AutoSize) _Resize(_Scale(value));
 				}
 				if (!_followedOnce) _preferSize = true;
 			}
@@ -911,6 +899,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		public bool AutoSize {
 			get => _sett.autoSize;
 			set {
+				_ThreadTrap();
 				if (value != _sett.autoSize) {
 					_sett.autoSize = value;
 					_AutoSizeNow();
@@ -931,6 +920,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		public double AutoSizeWrapWidth {
 			get => _sett.wrapWidth;
 			set {
+				_ThreadTrap();
 				value = value > 0 ? _Limit(value) : 0;
 				if (value != _sett.wrapWidth) {
 					_sett.wrapWidth = value;
@@ -950,6 +940,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		public TBAnchor Anchor {
 			get => _sett.anchor;
 			set {
+				_ThreadTrap();
 				value &= ~_GetInvalidAnchorFlags(value);
 				if (value.WithoutFlags() == 0) value |= TBAnchor.TopLeft;
 				if (value == _sett.anchor) return;
@@ -988,6 +979,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		public TBOffsets Offsets {
 			get => _offsets;
 			set {
+				_ThreadTrap();
 				_preferSize = false;
 				if (value.Equals(_offsets)) return;
 				_sett.offsets = _offsets = value;
@@ -1037,7 +1029,7 @@ Move or resize precisely: start to move or resize but don't move the mouse. Inst
 		(int? opacity, ColorInt? colorKey) _transparency;
 
 		/// <summary>
-		/// Hides some context menu items or menu itself.
+		/// Gets or sets flags to hide some context menu items or menu itself.
 		/// </summary>
 		public TBNoMenu NoContextMenu { get; set; }
 

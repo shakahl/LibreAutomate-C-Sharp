@@ -338,7 +338,7 @@ namespace Au.Triggers
 		{
 			struct _Action { public Action actionWrapper; public long time; }
 
-			Handle_ _event;
+			AutoResetEvent _event;
 			Queue<_Action> _q;
 			bool _running;
 			bool _disposed;
@@ -355,11 +355,11 @@ namespace Au.Triggers
 				if(_disposed) return false;
 				if(_q == null) {
 					_q = new Queue<_Action>();
-					_event = Api.CreateEvent(false);
+					_event = new(false);
 					try {
 						AThread.Start(() => {
 							try {
-								while(!_disposed && 0 == Api.WaitForSingleObject(_event, -1)) {
+								while(!_disposed && _event.WaitOne()) {
 									while(!_disposed) {
 										_Action x;
 										lock(_q) {
@@ -374,14 +374,14 @@ namespace Au.Triggers
 								}
 							}
 							finally {
-								_event.Dispose();
+								_event.Dispose(); _event = null;
 								_q = null; _running = false; //restart if aborted
 															 //AOutput.Write("thread ended");
 							}
 						});
 					}
 					catch(OutOfMemoryException) { //too many threads, probably 32-bit process
-						_event.Dispose();
+						_event.Dispose(); _event = null;
 						_OutOfMemory();
 					}
 				}
@@ -405,16 +405,99 @@ namespace Au.Triggers
 					}
 					_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : ATime.PerfMilliseconds + ifRunningWaitMS });
 				}
-				Api.SetEvent(_event);
+				_event.Set();
 				return R;
 			}
 
 			public void Dispose()
 			{
 				if(_disposed) return; _disposed = true;
-				Api.SetEvent(_event);
+				_event.Set();
 			}
 		}
+		//This old version uses WaitForSingleObject which blocks COM etc, which may cause problems.
+		//	In the above code, WaitOne dispatches COM etc. But still little tested.
+		//class _Thread
+		//{
+		//	struct _Action { public Action actionWrapper; public long time; }
+
+		//	Handle_ _event;
+		//	Queue<_Action> _q;
+		//	bool _running;
+		//	bool _disposed;
+		//	public readonly int id;
+
+		//	public _Thread(int id) { this.id = id; }
+
+		//	/// <summary>
+		//	/// Adds the action to the queue and notifies the thread to execute it.
+		//	/// If the thread is busy, returns false; if ifRunning!=0, the action possibly will run later.
+		//	/// </summary>
+		//	public bool RunAction(Action actionWrapper, ActionTrigger trigger)
+		//	{
+		//		if(_disposed) return false;
+		//		if(_q == null) {
+		//			_q = new Queue<_Action>();
+		//			_event = Api.CreateEvent(false);
+		//			try {
+		//				AThread.Start(() => {
+		//					try {
+		//						while(!_disposed && 0 == Api.WaitForSingleObject(_event, -1)) {
+		//							while(!_disposed) {
+		//								_Action x;
+		//								lock(_q) {
+		//									g1:
+		//									if(_q.Count == 0) { _running = false; break; }
+		//									x = _q.Dequeue();
+		//									if(x.time != 0 && ATime.PerfMilliseconds > x.time) goto g1;
+		//									_running = true;
+		//								}
+		//								x.actionWrapper();
+		//							}
+		//						}
+		//					}
+		//					finally {
+		//						_event.Dispose();
+		//						_q = null; _running = false; //restart if aborted
+		//													 //AOutput.Write("thread ended");
+		//					}
+		//				});
+		//			}
+		//			catch(OutOfMemoryException) { //too many threads, probably 32-bit process
+		//				_event.Dispose();
+		//				_OutOfMemory();
+		//			}
+		//		}
+
+		//		bool R = true;
+		//		lock(_q) {
+		//			int ifRunningWaitMS = trigger.options.ifRunningWaitMS;
+		//			if(_running) {
+		//				if(ifRunningWaitMS == 0) {
+		//					if(!trigger.options.flags.Has(TOFlags.NoWarning))
+		//						AOutput.Write("Warning: can't run the trigger action because an action is running in this thread." +
+		//							" To run simultaneously or wait, use one of Triggers.Options.ThreadX functions." +
+		//							" To disable this warning: Triggers.Options.Thread(noWarning: true);." +
+		//							" Trigger: " + trigger);
+		//					return false;
+		//				}
+		//				R = false;
+		//			} else {
+		//				_running = true;
+		//				//if(ifRunningWaitMS > 0 && ifRunningWaitMS < 1000000000) ifRunningWaitMS += 1000;
+		//			}
+		//			_q.Enqueue(new _Action { actionWrapper = actionWrapper, time = ifRunningWaitMS <= 0 ? 0 : ATime.PerfMilliseconds + ifRunningWaitMS });
+		//		}
+		//		Api.SetEvent(_event);
+		//		return R;
+		//	}
+
+		//	public void Dispose()
+		//	{
+		//		if(_disposed) return; _disposed = true;
+		//		Api.SetEvent(_event);
+		//	}
+		//}
 
 		void _MuteMod(ref int muteMod)
 		{

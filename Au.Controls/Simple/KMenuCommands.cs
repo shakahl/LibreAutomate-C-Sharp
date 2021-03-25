@@ -248,6 +248,7 @@ namespace Au.Controls
 					//InputManager.Current.PreProcessInput += _App_PreProcessInput; //works too, but more events
 
 					void _KeyDown(object source, KeyEventArgs e) {
+						if (Environment.CurrentManagedThreadId != 1) return;
 						//APerf.First();
 						if (e.Handled) return;
 						var k = e.Key; if (k == Key.System) k = e.SystemKey;
@@ -260,7 +261,7 @@ namespace Au.Controls
 							if (!haveMod) { haveMod = true; mod = Keyboard.Modifiers; }
 							if (kb.Modifiers != mod) continue;
 							var c = kb.Command; var cp = kb.CommandParameter;
-							if(c.CanExecute(cp)) c.Execute(cp);
+							if (c.CanExecute(cp)) c.Execute(cp);
 							e.Handled = true;
 							break;
 							//note: execute even if main window disabled. Maybe the command works in current window. Or maybe user wants to save (Ctrl+S).
@@ -635,7 +636,7 @@ namespace Au.Controls
 							var b = new MenuItem();
 							var image = _mi.Icon;
 							bool onlyImage = image != null && imageAt == null;
-							if (image == null || onlyImage) b.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. TODO: not good on WIn7
+							if (image == null || onlyImage) b.Padding = new Thickness(3, 1, 3, 2); //make taller. If image+text, button too tall, text too high, icon too low, never mind. SHOULDDO: not good on Win7
 							CopyToMenu(b, text: btext);
 							if (onlyImage) { b.Header = b.Icon; b.Icon = null; } //make narrower
 							if (ButtonTooltip != null) b.ToolTip = ButtonTooltip; else if (onlyImage) b.ToolTip = ButtonText;
@@ -732,7 +733,7 @@ namespace Au.Controls
 			if (_GetCommandFromMouseEventArgs(sender, e, out _, out _)) {
 				e.Handled = true;
 				if (sender is ToolBar tb) tb.IsOverflowOpen = false; //this was some workaround when using WPF menu, now don't know
-				switch (AMenu.ShowSimple("Edit commands file|Find default commands file", sender as UIElement)) {
+				switch (AMenu.ShowSimple("Edit commands file|Find default commands file")) {
 				case 1: _Customize(); break;
 				case 2: AFile.SelectInExplorer(_defaultFile); break;
 				}

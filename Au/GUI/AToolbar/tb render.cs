@@ -19,9 +19,9 @@ namespace Au
 		public TBBorder Border {
 			get => _sett.border;
 			set {
+				_ThreadTrap();
 				if (value == _sett.border) return;
-
-				if (IsAlive) {
+				if (IsOpen) {
 					RECT r = _w.ClientRectInScreen;
 					var bp1 = _BorderPadding();
 					_sett.border = value;
@@ -49,7 +49,13 @@ namespace Au
 		/// </remarks>
 		public TBLayout Layout {
 			get => _sett.layout;
-			set { if (value != _sett.layout) { _sett.layout = value; _AutoSizeNow(); } }
+			set {
+				_ThreadTrap();
+				if (value != _sett.layout) {
+					_sett.layout = value;
+					_AutoSizeNow();
+				}
+			}
 		}
 
 		/// <summary>
@@ -57,7 +63,14 @@ namespace Au
 		/// </summary>
 		public bool DisplayText {
 			get => _sett.dispText;
-			set { if (value != _sett.dispText) { _sett.dispText = value; _MeasureText(); _AutoSizeNow(); } }
+			set {
+				_ThreadTrap();
+				if (value != _sett.dispText) {
+					_sett.dispText = value;
+					_MeasureText();
+					_AutoSizeNow();
+				}
+			}
 		}
 
 		/// <summary>
@@ -118,11 +131,15 @@ namespace Au
 			}
 		}
 
+		private protected override void _ImageAsyncCompletion(Bitmap b, object o) {
+			ChangeImage_(o as ToolbarItem, b);
+		}
+
 		internal void ChangeImage_(ToolbarItem ti, Bitmap b) {
 			if (_closed) return;
 			ti.image2 = b;
 			ti.imageAsync = false;
-			Api.InvalidateRect(_w, ti.rect);
+			_Invalidate(ti);
 		}
 
 		const Native.DT c_tff = Native.DT.NOPREFIX | Native.DT.EXPANDTABS;
@@ -171,6 +188,9 @@ namespace Au
 				dot = ADpi.Scale(5, dpi);
 				triangle = ADpi.Scale(8, dpi);
 				imagePaddingX = ADpi.Scale(2, dpi);
+
+				//tbBorder += 1; //test border thickness
+				//bBorder += 1;
 			}
 
 			public int ImageEtc(ToolbarItem b, bool vert) => vert ? image : (b.HasImage_ ? image : (b.IsMenu_ ? triangle : dot));
@@ -240,8 +260,6 @@ namespace Au
 		}
 
 		void _WmPaint(IntPtr dc, Graphics g, RECT rClient, RECT rUpdate) {
-			//		AOutput.Write("paint");
-			//		AOutput.Write(rc);
 			switch (Background) {
 			case Brush bb: g.FillRectangle(bb, rUpdate); break;
 			case Color bc: g.Clear(bc); break;
@@ -262,7 +280,7 @@ namespace Au
 					var b = _a[i];
 					if (!b.rect.IntersectsWith(rUpdate)) continue;
 
-					//				g.DrawRectangle(Pens.BlueViolet, b.rect.left, b.rect.top, b.rect.Width-1, b.rect.Height-1);
+					//g.DrawRectangleInset(Pens.BlueViolet, b.rect);
 
 					int textColor = b.TextColor != default ? b.TextColor.ToBGR() : (TextColor != default ? TextColor.ToBGR() : sysTextColor);
 
@@ -286,11 +304,9 @@ namespace Au
 						}
 					} else {
 						if (i == _iHot || i == _iClick) {
-							using var brushHot = new SolidBrush((i == _iClick ? 0xC0DCF3 : 0xD8E6F2).ToColor_());
-							using var penHot = new Pen((i == _iClick ? 0x90C8F6 : 0xC0DCF3).ToColor_());
-							Rectangle r = b.rect; r.Width--; r.Height--;
-							if (!_noHotClick && (textColor == 0 || TextColor != default || b.TextColor != default)) g.FillRectangle(brushHot, r);
-							g.DrawRectangle(penHot, r);
+							if (!_noHotClick && (textColor == 0 || TextColor != default || b.TextColor != default))
+								g.FillRectangle((i == _iClick ? 0xC0DCF3 : 0xD8E6F2).ToColor_(), b.rect);
+							g.DrawRectangleInset((i == _iClick ? 0x90C8F6 : 0xC0DCF3).ToColor_(), m.bBorder, b.rect);
 						}
 
 						int x = b.rect.left + m.bBorder + m.imagePaddingX, y = b.rect.top;
@@ -345,12 +361,7 @@ namespace Au
 			}
 
 			if (m.tbBorder > 0) {
-				var col = BorderColor;
-				using var pen2 = new Pen(col != default ? (Color)col : SystemColors.ControlDark, m.tbBorder);
-				//			pen2.Alignment = PenAlignment.Inset; //no. Eg ignored if 1 pixel width. MSDN: "A Pen that has its alignment set to Inset will yield unreliable results, sometimes drawing in the inset position and sometimes in the centered position.".
-				int k = m.tbBorder / 2; rClient.left += k; rClient.top += k; rClient.right -= ++k; rClient.bottom -= k;
-				rClient.Width = Math.Max(rClient.Width, 1); rClient.Height = Math.Max(rClient.Height, 1);
-				g.DrawRectangle(pen2, rClient);
+				g.DrawRectangleInset(BorderColor != default ? (Color)BorderColor : SystemColors.ControlDark, m.tbBorder, rClient);
 			}
 		}
 	}

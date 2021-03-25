@@ -116,7 +116,7 @@ class PanelFind : UserControl
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
 			ATimer.After(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, false); });
 		} else {
-			if (_regexWindow?.IsVisible??false) {
+			if (_regexWindow?.IsVisible ?? false) {
 				var c = Keyboard.FocusedElement;
 				if (c == null || (c != _tFind && c != _tReplace && !AWnd.ThisThread.IsFocused(_regexWindow.Hwnd))) {
 					_regexWindow.Hwnd.ShowL(false);
@@ -199,7 +199,8 @@ class PanelFind : UserControl
 		//using var _ = new _TempDisableControl(_bFindIF);
 		_FindAllInFiles(false);
 
-		//SHOULDDO: disabled button view now not updated because UI is blocked. When in text, should search in other thread; at least get text.
+		//SHOULDDO: disabled button view now not updated because UI is blocked.
+		//	When in text, should search in other thread; at least get text.
 	}
 
 	private void _bReplace_Click(WBButtonClickArgs e) {
@@ -209,22 +210,70 @@ class PanelFind : UserControl
 	}
 
 	private void _bOptions_Click(WBButtonClickArgs e) {
-		var b = new AWpfBuilder("Find Options").WinSize(350)
-			.R.StartGrid<GroupBox>("Find in files")
-			.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|C# script files|C# class files|Other files").Select(_SearchIn)
-			.R.Add<Label>("Skip files where path matches wildcard")
-			.R.Add(out TextBox tSkip, string.Join("\r\n", _SkipWildcards)).Multiline(100, TextWrapping.NoWrap)
-			.End()
-			.R.AddOkCancel()
-			.End();
+		var b = new AWpfBuilder("Find Options").WinSize(350);
+		b.R.StartGrid<GroupBox>("Find in files");
+		b.R.Add("Search in", out ComboBox cbFileType, true).Items("All files|C# files (*.cs)|C# script files|C# class files|Other files").Select(_SearchIn);
+		b.R.Add("Skip files where path matches wildcard", out TextBox tSkip, string.Join("\r\n", _SkipWildcards), row2: 0).Multiline(100, TextWrapping.NoWrap);
+		int iSlow = App.Settings.find_printSlow; string sSlow = iSlow > 0 ? iSlow.ToStringInvariant() : null;
+		b.R.StartStack().Add("Print file open+search times >=", out TextBox tSlow, sSlow).Width(50).Add<Label>("ms").End();
+		b.End();
+		b.R.AddOkCancel();
+		b.End();
 		if (!b.ShowDialog()) return;
 		App.Settings.find_searchIn = _searchIn = cbFileType.SelectedIndex;
 		App.Settings.find_skip = tSkip.Text; _aSkipWildcards = null;
+		App.Settings.find_printSlow = tSlow.Text.ToInt();
+
+		//FUTURE: option to use cache to make faster.
+		//	Now, if many files, first time can be very slow because of AV eg Windows Defender.
+		//	To make faster, I added Windows Defender exclusion for cs file type. Remove when testing cache etc.
+		//	When testing WD impact, turn off/on its real-time protection and restart this app.
+		//	For cache use SQLite database in App.Model.CacheDirectory. Add text of files of size eg < 100 KB.
 	}
 
 	#endregion
 
 	#region common
+
+	/// <summary>
+	/// Makes visible and sets find text = s (should be selected text of a control; can be null/"").
+	/// </summary>
+	public void ZCtrlF(string s/*, bool findInFiles = false*/) {
+		Panels.PanelManager[this].Visible = true;
+		_tFind.ToolTip = null;
+		_tFind.Focus();
+		if (s.NE()) {
+			_tFind.SelectAll(); //often user wants to type new text
+			return;
+		}
+		_cName.IsChecked = false;
+		_tFind.Text = s;
+		//_tFind.SelectAll(); //no, somehow WPF makes selected text gray like disabled when non-focused
+		//if (findInFiles) _FindAllInFiles(false); //rejected. Not so useful.
+	}
+
+	/// <summary>
+	/// Makes visible and sets find text = selected text of e.
+	/// Supports KScintilla and TextBox. If other type or null or no selected text, just makes visible etc.
+	/// </summary>
+	public void ZCtrlF(FrameworkElement e/*, bool findInFiles = false*/) {
+		string s = null;
+		switch (e) {
+		case KScintilla c:
+			s = c.zSelectedText();
+			break;
+		case TextBox c:
+			s = c.SelectedText;
+			break;
+		}
+		ZCtrlF(s/*, findInFiles*/);
+	}
+
+	//rejected. Could be used for global keyboard shortcuts, but currently they work only if the main window is active.
+	///// <summary>
+	///// Makes visible and sets find text = selected text of focused control.
+	///// </summary>
+	//public void ZCtrlF() => ZCtrlF(FocusManager.GetFocusedElement(App.Wmain));
 
 	/// <summary>
 	/// Called when changed find text or options. Also when activated another document.
@@ -404,43 +453,6 @@ class PanelFind : UserControl
 		_FindAllInString(text, f, _aEditor);
 	}
 
-	/// <summary>
-	/// Makes visible and sets find text = s (should be selected text of a control; can be null/"").
-	/// </summary>
-	public void ZCtrlF(string s/*, bool findInFiles = false*/) {
-		Panels.PanelManager[this].Visible = true;
-		_tFind.ToolTip = null;
-		_tFind.Focus();
-		if (s.NE()) return;
-		_cName.IsChecked = false;
-		_tFind.Text = s;
-		//_tFind.SelectAll(); //no, somehow WPF makes selected text gray like disabled when non-focused
-		//if (findInFiles) _FindAllInFiles(false); //rejected. Not so useful.
-	}
-
-	/// <summary>
-	/// Makes visible and sets find text = selected text of e.
-	/// Supports KScintilla and TextBox. If other type or null or no selected text, just makes visible etc.
-	/// </summary>
-	public void ZCtrlF(FrameworkElement e/*, bool findInFiles = false*/) {
-		string s = null;
-		switch (e) {
-		case KScintilla c:
-			s = c.zSelectedText();
-			break;
-		case TextBox c:
-			s = c.SelectedText;
-			break;
-		}
-		ZCtrlF(s/*, findInFiles*/);
-	}
-
-	//rejected. Could be used for global keyboard shortcuts, but currently they work only if the main window is active.
-	///// <summary>
-	///// Makes visible and sets find text = selected text of focused control.
-	///// </summary>
-	//public void ZCtrlF() => ZCtrlF(FocusManager.GetFocusedElement(App.Wmain));
-
 	#endregion
 
 	#region in files
@@ -455,27 +467,25 @@ class PanelFind : UserControl
 	const int c_indic = 0;
 
 	void _FindAllInFiles(bool names/*, bool forReplace*/) {
-		if (!_GetTextToFind(out var f, noRecent: names, names: names)) {
-			Panels.Found.ZControl.zClearText();
-			return;
-		}
-
 		Panels.PanelManager["Found"].Visible = true;
+		var cFound = Panels.Found.ZControl;
+		cFound.zClearText();
+
+		if (!_GetTextToFind(out var f, noRecent: names, names: names)) return;
 
 		if (!_init1) {
 			_init1 = true;
-			var c = Panels.Found.ZControl;
-			App.Model.WorkspaceLoadedAndDocumentsOpened += () => Panels.Found.ZControl.zClearText();
+			App.Model.WorkspaceLoadedAndDocumentsOpened += () => cFound.zClearText();
 
-			c.ZTags.AddLinkTag("+open", s => {
+			cFound.ZTags.AddLinkTag("+open", s => {
 				_OpenLinkClicked(s);
 			});
-			c.ZTags.AddLinkTag("+ra", s => {
+			cFound.ZTags.AddLinkTag("+ra", s => {
 				if (!_OpenLinkClicked(s)) return;
 				ATimer.After(10, _ => _bReplaceAll_Click(null));
 				//info: without timer sometimes does not set cursor pos correctly
 			});
-			c.ZTags.AddLinkTag("+f", s => {
+			cFound.ZTags.AddLinkTag("+f", s => {
 				var a = s.Split(' ');
 				if (!_OpenLinkClicked(a[0])) return;
 				var doc = Panels.Editor.ZActiveDoc;
@@ -490,19 +500,25 @@ class PanelFind : UserControl
 				if (f.IsFolder) f.SelectSingle();
 				else if (!App.Model.SetCurrentFile(f)) return false;
 				//add indicator to make it easier to find later
-				var z = Panels.Found.ZControl;
-				z.zIndicatorClear(c_indic);
-				var v = z.zLineStartEndFromPos(false, z.zCurrentPos8);
-				z.zIndicatorAdd(false, c_indic, v.start..v.end);
+				cFound.zIndicatorClear(c_indic);
+				var v = cFound.zLineStartEndFromPos(false, cFound.zCurrentPos8);
+				cFound.zIndicatorAdd(false, c_indic, v.start..v.end);
 				return true;
 			}
-			c.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
-			c.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
+			cFound.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
+			cFound.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
+		}
+
+		if (!names) {
+			cFound.zText = "<c 0xA0A0A0>... searching ...<>";
+			//Api.UpdateWindow(cFound.Hwnd); //ok if was visible, but not if made visible now
+			ATime.DoEvents();
 		}
 
 		var b = new StringBuilder();
 		var a = new List<Range>();
-		var bSlow = !names && f.rx != null ? new StringBuilder() : null;
+		int timeSlow = App.Settings.find_printSlow;
+		var bSlow = !names && timeSlow > 0 ? new StringBuilder() : null;
 		bool jited = false;
 		int searchIn = names ? 0 : _SearchIn;
 
@@ -591,9 +607,9 @@ class PanelFind : UserControl
 
 			if (bSlow != null) {
 				time = ATime.PerfMilliseconds - time;
-				if (time >= (jited ? 100 : 500)) {
-					if (bSlow.Length == 0) bSlow.AppendLine("<Z orange>Slow in these files<>");
-					bSlow.Append(time).Append(" ms in <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
+				if (time >= timeSlow + (jited ? 0 : 100)) {
+					if (bSlow.Length == 0) bSlow.AppendLine("<Z orange>Slow files:<>");
+					bSlow.Append(time).Append(" ms <open>").Append(v.ItemPath).Append("<> , length ").Append(text.Length).AppendLine();
 				}
 				jited = true;
 			}
@@ -607,7 +623,7 @@ class PanelFind : UserControl
 			   .AppendLine(" files. It is set in Find Options dialog.<>");
 		b.Append(bSlow);
 
-		Panels.Found.ZControl.zSetText(b.ToString());
+		cFound.zSetText(b.ToString());
 	}
 
 	//struct _Perf : IDisposable

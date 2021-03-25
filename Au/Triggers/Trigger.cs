@@ -71,7 +71,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Makes simpler to implement <see cref="Run"/>.
 		/// </summary>
-		protected private void RunT<T>(T args) => (action as Action<T>)(args);
+		private protected void RunT<T>(T args) => (action as Action<T>)(args);
 
 		/// <summary>
 		/// Returns a trigger type string, like "Hotkey", "Mouse", "Window.ActiveNew".

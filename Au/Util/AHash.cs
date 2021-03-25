@@ -285,7 +285,7 @@ namespace Au.Util
 
 			public override int GetHashCode() => r1.GetHashCode() ^ r2.GetHashCode();
 
-			public override bool Equals(object obj) => obj is MD5Result && (MD5Result)obj == this;
+			public override bool Equals(object obj) => obj is MD5Result result && result == this;
 #pragma warning restore CS1591 // Missing XML comment for publicly visible type or member
 
 			/// <summary>

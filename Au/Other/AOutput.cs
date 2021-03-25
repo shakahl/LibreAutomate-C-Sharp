@@ -328,8 +328,6 @@ namespace Au
 		}
 		static TextWriterTraceListener _traceListener;
 
-		//TODO: test Microsoft.VisualBasic.Logging.FileLogTraceListener.
-
 		/// <summary>
 		/// Sets log file path.
 		/// When set (not null), text passed to <see cref="Write"/> will be written to the file.

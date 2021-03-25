@@ -640,7 +640,7 @@ namespace Au.Tools
 				TUtil.ShowOsdRect(re);
 
 				//if dialog or its visible owners cover the found object, temporarily activate object's window
-				foreach (var ow in dialog.Get.Owners(andThis: true, onlyVisible: true)) {
+				foreach (var ow in dialog.Get.Owners(andThisWindow: true, onlyVisible: true)) {
 					if (re.IntersectsWith(ow.Rect)) {
 						r.wnd.Window.ActivateL();
 						ATime.SleepDoEvents(1500);

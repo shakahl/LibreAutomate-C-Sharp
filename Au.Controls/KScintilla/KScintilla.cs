@@ -119,9 +119,14 @@ namespace Au.Controls
 		}
 
 		protected override void DestroyWindowCore(HandleRef hwnd) {
-			//AOutput.Write("DESTROY");
 			AWnd.More.DestroyWindow((AWnd)hwnd.Handle);
+			_w = default;
+			_acc?.Dispose(); _acc = null;
 		}
+
+		//protected override void Dispose(bool disposing) {
+		//	base.Dispose(disposing); //then follows DestroyWindowCore, probably base calls it
+		//}
 
 		protected override IntPtr WndProc(IntPtr hwnd, int msg, IntPtr wParamIP, IntPtr lParam, ref bool handled) {
 			nint wParam = wParamIP; //C# compiler bug: if using nint parameters instead of IntPtr, inherited classes cannot override this method.
@@ -132,9 +137,9 @@ namespace Au.Controls
 
 			bool call = false;
 			switch (msg) {
-			case Api.WM_DESTROY:
-				_w = default;
-				break;
+			//case Api.WM_DESTROY:
+			//	AOutput.Write("destroy"); //no. It seems WPF removes the hook before destroying. Cleanup in DestroyWindowCore.
+			//	break;
 			case Api.WM_LBUTTONDOWN:
 				if (Api.GetFocus() != _w) {
 					bool setFocus = true;

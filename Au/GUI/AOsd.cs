@@ -203,7 +203,7 @@ namespace Au
 		/// <remarks>
 		/// If <see cref="Opacity"/> is 0 (default), <i>g</i> is filled with <see cref="TransparentColor"/>. Pixels of this color will be transparent. The base class draws only non-transparent areas.
 		/// </remarks>
-		protected virtual void OnPaint(IntPtr dc, Graphics g, Rectangle r) {
+		protected virtual void OnPaint(IntPtr dc, Graphics g, RECT r) {
 		}
 
 		/// <summary>
@@ -303,13 +303,11 @@ namespace Au
 		/// <summary>
 		/// Called when the OSD window must be drawn or redrawn. Draws rectangle. More info: <see cref="AOsdWindow.OnPaint"/>.
 		/// </summary>
-		protected override void OnPaint(IntPtr dc, Graphics g, Rectangle r) {
+		protected override void OnPaint(IntPtr dc, Graphics g, RECT r) {
 			if (Opacity > 0) {
 				g.Clear((Color)_color);
 			} else {
-				using var pen = new Pen((Color)_color, _thickness);
-				pen.Alignment = System.Drawing.Drawing2D.PenAlignment.Inset;
-				g.DrawRectangle(pen, r);
+				g.DrawRectangleInset((Color)_color, _thickness, r);
 			}
 		}
 	}
@@ -489,6 +487,7 @@ namespace Au
 		/// This class does not copy and does not dispose the icon.
 		/// </remarks>
 		public Icon Icon { get; set; }
+		//rejected: support Image etc.
 
 		/// <summary>
 		/// If true, the OSD window will have shadow.
@@ -582,15 +581,13 @@ namespace Au
 		/// <summary>
 		/// Draws OSD text etc.
 		/// </summary>
-		protected override void OnPaint(IntPtr dc, Graphics g, Rectangle r) {
+		protected override void OnPaint(IntPtr dc, Graphics g, RECT r) {
 			//AOutput.Write(AThread.Id);
 			if (Opacity != 0) {
 				g.Clear((Color)BackColor); //else AOsdWindow cleared with TransparentColor
 
 				if (BorderColor != BackColor) { //border
-					using var pen = new Pen((Color)BorderColor);
-					Rectangle rr = r; rr.Width--; rr.Height--;
-					g.DrawRectangle(pen, rr);
+					g.DrawRectangleInset((Color)BorderColor, 1, r);
 					r.Inflate(-1, -1);
 				}
 			}
@@ -606,9 +603,8 @@ namespace Au
 			if (Font.Italic) r.Width += _margin / 2; //avoid clipping part of last char
 
 			if (Icon != null) {
-				var ri = new Rectangle(r.X + c_iconPadding, r.Y + c_iconPadding, Icon.Width, Icon.Height);
-				g.DrawIconUnstretched(Icon, ri);
-				int k = Icon.Width + c_iconPadding * 2; r.X += k; r.Width -= k;
+				g.DrawIconUnstretched(Icon, new(r.left + c_iconPadding, r.top + c_iconPadding, Icon.Width, Icon.Height));
+				int k = Icon.Width + c_iconPadding * 2; r.left += k;
 			}
 
 			if (!Text.NE()) {

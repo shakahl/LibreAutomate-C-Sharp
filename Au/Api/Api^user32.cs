@@ -195,6 +195,9 @@ namespace Au.Types
 		[DllImport("user32.dll", EntryPoint = "PeekMessageW", SetLastError = true)]
 		internal static extern bool PeekMessage(out Native.MSG lpMsg, AWnd hWnd, int wMsgFilterMin, int wMsgFilterMax, uint wRemoveMsg);
 
+		[DllImport("user32.dll")]
+		internal static extern bool WaitMessage();
+
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool ReplyMessage(LPARAM lResult);
 
@@ -737,8 +740,41 @@ namespace Au.Types
 		internal const uint SPIF_UPDATEINIFILE = 0x1;
 		internal const uint SPIF_SENDCHANGE = 0x2;
 
+		/// <summary>
+		/// Gets or sets any value. This is the direct API call.
+		/// </summary>
 		[DllImport("user32.dll", EntryPoint = "SystemParametersInfoW", SetLastError = true)]
-		internal static extern bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni);
+		internal static extern bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni = 0);
+
+		/// <summary>
+		/// Gets 32-bit integer value. Returns <i>def</i> if failed.
+		/// </summary>
+		internal static int SystemParametersInfo(uint uiAction, int def) {
+			int r = 0;
+			return SystemParametersInfo(uiAction, 0, &r) ? r : def;
+		}
+
+		/// <summary>
+		/// Gets BOOL value. Returns false if failed.
+		/// </summary>
+		internal static bool SystemParametersInfo(uint uiAction) {
+			int r = 0;
+			return SystemParametersInfo(uiAction, 0, &r) && r != 0;
+		}
+
+		//internal static bool SystemParametersInfo<T>(uint uiAction, ref T pvParam) where T : unmanaged {
+		//	fixed (T* p = &pvParam) return SystemParametersInfo(uiAction, sizeof(T), p, 0);
+		//}
+
+		/// <summary>
+		/// Sets value.
+		/// </summary>
+		internal static bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, bool save, bool notify) {
+			uint f = 0;
+			if (save) f |= 1; //SPIF_UPDATEINIFILE
+			if (notify) f |= 2; //SPIF_SENDCHANGE
+			return SystemParametersInfo(uiAction, uiParam, pvParam, f);
+		}
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool SystemParametersInfoForDpi(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni, int dpi);
@@ -939,9 +975,6 @@ namespace Au.Types
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern int MsgWaitForMultipleObjectsEx(int nCount, IntPtr* pHandles, int dwMilliseconds, uint dwWakeMask, uint MWMO_Flags);
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool EndMenu();
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool InvalidateRect(AWnd hWnd, RECT* lpRect, bool bErase);
@@ -1270,6 +1303,9 @@ namespace Au.Types
 		[DllImport("user32.dll")]
 		internal static extern int FillRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
 
+		[DllImport("user32.dll")]
+		internal static extern int FrameRect(IntPtr hDC, in RECT lprc, IntPtr hbr);
+
 		internal const uint RDW_FRAME = 0x400;
 		internal const uint RDW_INVALIDATE = 0x1;
 
@@ -1307,64 +1343,34 @@ namespace Au.Types
 			}
 		}
 
-		internal const uint MIIM_STATE = 0x1;
-		internal const uint MIIM_ID = 0x2;
-		internal const uint MIIM_SUBMENU = 0x4;
-		//internal const uint MIIM_CHECKMARKS = 0x8;
-		//internal const uint MIIM_TYPE = 0x10;
-		internal const uint MIIM_DATA = 0x20;
-		internal const uint MIIM_STRING = 0x40;
-		internal const uint MIIM_BITMAP = 0x80;
-		internal const uint MIIM_FTYPE = 0x100;
-		//internal const int HBMMENU_CALLBACK = -1;
-
-		internal const uint MFS_DISABLED = 0x3;
-		internal const uint MFS_CHECKED = 0x8;
-		internal const uint MFS_DEFAULT = 0x1000;
-
-		internal const uint MFT_MENUBARBREAK = 0x20;
-		internal const uint MFT_RADIOCHECK = 0x200;
-		internal const uint MFT_SEPARATOR = 0x800;
-
 		[DllImport("user32.dll", EntryPoint = "GetMenuItemInfoW")]
 		internal static extern bool GetMenuItemInfo(IntPtr hmenu, int item, bool fByPosition, ref MENUITEMINFO lpmii);
 
-		[DllImport("user32.dll", EntryPoint = "SetMenuItemInfoW")]
-		internal static extern bool SetMenuItemInfo(IntPtr hmenu, int item, bool fByPositon, in MENUITEMINFO lpmii);
-
-		[DllImport("user32.dll")]
-		internal static extern IntPtr GetSystemMenu(AWnd hWnd, bool bRevert);
-
-		[DllImport("user32.dll")]
-		internal static extern IntPtr CreatePopupMenu();
-
-		[DllImport("user32.dll")]
-		internal static extern bool DestroyMenu(IntPtr hMenu);
-
-		internal const uint TPM_RETURNCMD = 0x100;
-
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern int TrackPopupMenuEx(IntPtr hMenu, uint uFlags, int x, int y, AWnd hwnd, TPMPARAMS* lptpm = null);
-
-		internal struct TPMPARAMS
-		{
-			public int cbSize;
-			public RECT rcExclude;
-		}
-
-		[DllImport("user32.dll", EntryPoint = "AppendMenuW", SetLastError = true)]
-		internal static extern bool AppendMenu(IntPtr hMenu, uint uFlags = MFT_SEPARATOR, LPARAM uIDNewItem = default, string lpNewItem = null);
-
-		[DllImport("user32.dll", EntryPoint = "InsertMenuItemW", SetLastError = true)]
-		internal static extern bool InsertMenuItem(IntPtr hmenu, int item, bool fByPosition, in MENUITEMINFO lpmi);
-
-		[DllImport("user32.dll")]
-		internal static extern bool GetMenuItemRect(AWnd hWnd, IntPtr hMenu, int uItem, out RECT lprcItem);
+		internal const uint MIIM_STRING = 0x40;
 
 		internal const uint SIF_RANGE = 0x1;
 		internal const uint SIF_PAGE = 0x2;
 		internal const uint SIF_POS = 0x4;
 		internal const uint SIF_TRACKPOS = 0x10;
+		internal const int SB_LINEUP = 0;
+		//internal const int SB_LINELEFT = 0;
+		internal const int SB_LINEDOWN = 1;
+		//internal const int SB_LINERIGHT = 1;
+		internal const int SB_PAGEUP = 2;
+		//internal const int SB_PAGELEFT = 2;
+		internal const int SB_PAGEDOWN = 3;
+		//internal const int SB_PAGERIGHT = 3;
+		//internal const int SB_THUMBPOSITION = 4;
+		internal const int SB_THUMBTRACK = 5;
+		internal const int SB_TOP = 6;
+		//internal const int SB_LEFT = 6;
+		internal const int SB_BOTTOM = 7;
+		//internal const int SB_RIGHT = 7;
+		//internal const int SB_ENDSCROLL = 8;
+		internal const int SB_HORZ = 0;
+		internal const int SB_VERT = 1;
+		internal const int SB_CTL = 2;
+		//internal const int SB_BOTH = 3;
 
 		internal struct SCROLLINFO
 		{
@@ -1378,29 +1384,29 @@ namespace Au.Types
 		}
 
 		[DllImport("user32.dll")]
-		internal static extern int SetScrollInfo(AWnd hwnd, bool vert, in SCROLLINFO lpsi, bool redraw);
+		internal static extern int SetScrollInfo(AWnd hwnd, int nBar, in SCROLLINFO lpsi, bool redraw);
 
 		[DllImport("user32.dll")]
-		internal static extern bool GetScrollInfo(AWnd hwnd, bool vert, ref SCROLLINFO lpsi);
+		internal static extern bool GetScrollInfo(AWnd hwnd, int nBar, ref SCROLLINFO lpsi);
 
-		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool GetScrollBarInfo(AWnd hwnd, AccOBJID idObject, ref SCROLLBARINFO psbi);
+		//[DllImport("user32.dll", SetLastError = true)]
+		//internal static extern bool GetScrollBarInfo(AWnd hwnd, AccOBJID idObject, ref SCROLLBARINFO psbi);
 
-		internal struct SCROLLBARINFO
-		{
-			public int cbSize;
-			public RECT rcScrollBar;
-			public int dxyLineButton;
-			public int xyThumbTop;
-			public int xyThumbBottom;
-			public int reserved;
-			//public unsafe fixed uint rgstate[6];
-			public uint stateScrollbar, stateArrowTopRight, statePageUpRight, stateThumb, statePageDownLeft, stateArrowBottomLeft;
-		}
-		internal const uint STATE_SYSTEM_INVISIBLE = 0x8000;
-		internal const uint STATE_SYSTEM_OFFSCREEN = 0x10000;
-		internal const uint STATE_SYSTEM_PRESSED = 0x8;
-		internal const uint STATE_SYSTEM_UNAVAILABLE = 0x1;
+		//internal struct SCROLLBARINFO
+		//{
+		//	public int cbSize;
+		//	public RECT rcScrollBar;
+		//	public int dxyLineButton;
+		//	public int xyThumbTop;
+		//	public int xyThumbBottom;
+		//	public int reserved;
+		//	//public unsafe fixed uint rgstate[6];
+		//	public uint stateScrollbar, stateArrowTopRight, statePageUpRight, stateThumb, statePageDownLeft, stateArrowBottomLeft;
+		//}
+		//internal const uint STATE_SYSTEM_INVISIBLE = 0x8000;
+		//internal const uint STATE_SYSTEM_OFFSCREEN = 0x10000;
+		//internal const uint STATE_SYSTEM_PRESSED = 0x8;
+		//internal const uint STATE_SYSTEM_UNAVAILABLE = 0x1;
 
 		[DllImport("user32.dll", EntryPoint = "MessageBoxW")]
 		internal static extern int MessageBox(AWnd hWnd, string lpText, string lpCaption, uint uType);
@@ -1436,6 +1442,9 @@ namespace Au.Types
 
 		[DllImport("user32.dll")]
 		internal static extern int GetSysColor(int nIndex);
+
+		[DllImport("user32.dll")]
+		internal static extern IntPtr GetSysColorBrush(int nIndex);
 
 		//internal struct DRAWTEXTPARAMS
 		//{

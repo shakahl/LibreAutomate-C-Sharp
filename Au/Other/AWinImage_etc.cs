@@ -245,7 +245,7 @@ namespace Au
 			try {
 				if (!toolWindow.IsEmpty) {
 					wTool = toolWindow.Hwnd;
-					aw = wTool.Get.Owners(andThis: true, onlyVisible: true);
+					aw = wTool.Get.Owners(andThisWindow: true, onlyVisible: true);
 					foreach (var w in aw) w.ShowL(false);
 					using (new AInputBlocker(BIEvents.MouseClicks)) ATime.SleepDoEvents(300); //time for animations
 				}
@@ -541,7 +541,7 @@ namespace Au
 				var m = new AMenu();
 				m["Retry\tF3"] = o => { this.DialogResult = DialogResult.Retry; this.Close(); };
 				m["Cancel\tEsc"] = o => this.Close();
-				m.Show(this);
+				m.Show();
 			}
 
 			//note: the OSD window is not always activated. Then can use context menu.

@@ -349,18 +349,17 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Gets all owner windows (owner, its owner and so on) of this window, optionally including this window or its top-level parent.
+			/// Gets all owner windows (owner, its owner and so on) of this window, optionally including this window.
 			/// </summary>
-			/// <param name="andThis">Add this window (or its top-level parent if control) as the first list element.</param>
+			/// <param name="andThisWindow">Add this window (or its top-level parent if control) as the first list element.</param>
 			/// <param name="onlyVisible">Skip invisible windows.</param>
 			/// <remarks>
 			/// This window can be top-level window or control.
-			/// This function for example can be used to temporarily hide a tool window and its owners when capturing something from the screen.
 			/// </remarks>
-			public List<AWnd> Owners(bool andThis, bool onlyVisible = false) {
+			public List<AWnd> Owners(bool andThisWindow = false, bool onlyVisible = false) {
 				var a = new List<AWnd>();
 				for (var w = Window; !w.Is0 && w != Root; w = w.Get.Owner) {
-					if (!andThis) { andThis = true; continue; }
+					if (!andThisWindow) { andThisWindow = true; continue; }
 					if (!onlyVisible || w.IsVisible) a.Add(w);
 				}
 				return a;

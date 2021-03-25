@@ -115,17 +115,18 @@ static class TriggersAndToolbars
 		for(AWnd w = default; ; ) {
 			w = AWnd.FindFast(null, "Au.Triggers.Hooks", messageOnly: true, w);
 			if(w.Is0) break;
+			Api.AllowSetForegroundWindow(w.ProcessId);
 			w.Post(Api.WM_USER + 30);
 		}
 	}
 
-	public static void AddTrigger()
-	{
-		//TODO
-	}
+	//public static void AddTrigger()
+	//{
+		
+	//}
 
-	public static void AddToolbar()
-	{
+	//public static void AddToolbar()
+	//{
 
-	}
+	//}
 }

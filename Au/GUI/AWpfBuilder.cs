@@ -849,9 +849,11 @@ namespace Au
 		/// <param name="text1">Text, header or other content of first element. More info - see other overload.</param>
 		/// <param name="var2">Variable of second element. More info - see other overload.</param>
 		/// <param name="text2">Text, header or other content of second element. More info - see other overload.</param>
-		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> for an element type.</exception>
-		public AWpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
+		/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
+		/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for element type <i>T1</i> or <i>T2</i>.</exception>
+		public AWpfBuilder Add<T1, T2>(out T1 var1, object text1, out T2 var2, object text2 = null, WBGridLength? row2 = null) where T1 : FrameworkElement, new() where T2 : FrameworkElement, new() {
 			Add(out var1, text1);
+			if (row2 != null) Row(row2.Value);
 			Add(out var2, text2); //note: no flags
 			if(var1 is Label k) {
 				k.Target = var2;
@@ -866,9 +868,10 @@ namespace Au
 		/// <param name="label">Label text.</param>
 		/// <param name="variable">Variable of second element. More info - see other overload.</param>
 		/// <param name="text">Text, header or other content of second element. More info - see other overload.</param>
-		/// <exception cref="NotSupportedException">The function does not support non-null <i>text</i> for this element type.</exception>
-		public AWpfBuilder Add<T>(string label, out T variable, object text = null) where T : FrameworkElement, new()
-			=> Add(out Label _, label, out variable, text);
+		/// <param name="row2">If not null, after adding first element calls <see cref="Row"/> with this argument.</param>
+		/// <exception cref="NotSupportedException">If the function does not support non-null <i>text</i> for this element type.</exception>
+		public AWpfBuilder Add<T>(string label, out T variable, object text = null, WBGridLength? row2 = null) where T : FrameworkElement, new()
+			=> Add(out Label _, label, out variable, text, row2);
 
 		/// <summary>
 		/// Adds an existing element (control etc of any type).

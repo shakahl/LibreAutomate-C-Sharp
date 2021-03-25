@@ -18,6 +18,7 @@ using System.Reflection;
 using System.Linq;
 using System.Security; //for XML comments
 using System.Globalization;
+using Au.Types;
 
 
 //note: be careful when adding functions to this class. See comments in ExtensionMethods_Forms.cs.
@@ -72,8 +73,10 @@ namespace Au
 		/// Converts to System.Drawing.Color. Makes opaque (alpha 0xff).
 		/// Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
 		/// </summary>
-		internal static System.Drawing.Color ToColor_(this int t)
-			=> System.Drawing.Color.FromArgb(unchecked(0xff << 24 | t));
+		internal static System.Drawing.Color ToColor_(this int t, bool bgr = false) {
+			if (bgr) t = ColorInt.SwapRB(t);
+			return System.Drawing.Color.FromArgb(unchecked(0xff << 24 | t));
+		}
 
 		/// <summary>
 		/// Converts double to string.

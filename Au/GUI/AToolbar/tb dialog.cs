@@ -35,7 +35,7 @@ public partial class AToolbar
 			lb.Items.Clear();
 			foreach(var tb in _Manager._atb) {
 				lb.Items.Add(tb);
-				var sat = tb.Satellite; if(sat?.IsAlive ?? false) lb.Items.Add(sat);
+				var sat = tb.Satellite; if(sat?.IsOpen ?? false) lb.Items.Add(sat);
 			}
 			_EnableButtons(false);
 		}
@@ -48,7 +48,7 @@ public partial class AToolbar
 		void _Click(int action) {
 			if(lb.SelectedItem is not AToolbar tb) return;
 			var dlg=b.Window.Hwnd();
-			if(!tb.IsAlive) {
+			if(!tb.IsOpen) {
 				ADialog.Show("Closed", owner: dlg);
 				return;
 			}

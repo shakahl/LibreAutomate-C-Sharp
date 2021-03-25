@@ -127,6 +127,7 @@ namespace Au.Controls
 			}
 
 			protected override void DestroyWindowCore(HandleRef hwnd) {
+				//AOutput.Write("DestroyWindowCore");//TODO: never called. As well as WM_NCDESTROY.
 				Api.DestroyWindow(_w);
 			}
 
@@ -142,6 +143,7 @@ namespace Au.Controls
 					ABufferedPaint.Init();
 					break;
 				case Api.WM_NCDESTROY:
+					//AOutput.Write("WM_NCDESTROY");//TODO
 					_w = default;
 					ABufferedPaint.Uninit();
 					break;

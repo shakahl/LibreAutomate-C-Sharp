@@ -15,6 +15,7 @@ using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Controls.Primitives;
 
 namespace Au.Controls
 {
@@ -42,25 +43,25 @@ namespace Au.Controls
 				if (_state.Has(_DockState.Float)) _DockStateItem(0, "Dock\tD-click");
 				else _DockStateItem(_DockState.Float, "Float\tD-click, drag");
 
-				using (m.Submenu("Caption At")) {
+				m.Submenu("Caption at", m => {
 					_CaptionAtItem(Dock.Left);
 					_CaptionAtItem(Dock.Top);
 					_CaptionAtItem(Dock.Right);
 					_CaptionAtItem(Dock.Bottom);
-				}
+
+					void _CaptionAtItem(Dock ca) {
+						m.AddRadio(ca.ToString(), ca == thisOrParentTab._captionAt, o => thisOrParentTab._SetCaptionAt(ca));
+					}
+				});
 				_ContextMenu_Move(m);
 				_ShowSubmenus();
 
 				//ContextMenuOpening?.Invoke(this, m);
 
-				m.Show(thisOrParentTab._elem);
+				m.Show();
 
 				void _DockStateItem(_DockState state, string text) {
 					m[text] = o => _SetDockState(state);
-				}
-
-				void _CaptionAtItem(Dock ca) {
-					m.Add(ca.ToString(), o => thisOrParentTab._SetCaptionAt(ca)).IsChecked = ca == thisOrParentTab._captionAt;
 				}
 
 				void _ShowSubmenus() {
@@ -77,7 +78,7 @@ namespace Au.Controls
 						if (y._IsToolbar && !x._IsToolbar) return 1;
 						return string.Compare(x.ToString(), y.ToString(), true);
 					});
-					using (m.Submenu("Show")) {
+					m.Submenu("Show", m => {
 						int i = 0;
 						foreach (var v in a) {
 							if (i > 0 && a[i - 1]._IsToolbar != a[i]._IsToolbar) m.Separator();
@@ -87,18 +88,17 @@ namespace Au.Controls
 #if DEBUG
 						if (a.Count > 1) {
 							m.Separator();
-							m["Show All (debug)"] = _ => {
+							m["Show all (debug)"] = _ => {
 								foreach (var v in a) v._Unhide();
 							};
 						}
 #endif
-					}
+					});
 				}
 #if DEBUG
-				//SHOULDDO: floating windows used to start black/white sometimes. Now cannot reproduce. Maybe need to auto-redraw float after opening, eg use timer.
-				//Also sometimes used to draw a horz scrollbar in WPF area of main window. Probably of Scintilla. I guess it is now fixed: removed WS_VISIBLE and size in CreateWindow call in KScintilla.
+				//SHOULDDO: WPF windows start black or white sometimes. Maybe need to auto-redraw float after opening, eg use timer.
 				m.Separator();
-				using (m.Submenu("Debug")) {
+				m.Submenu("Debug", m => {
 					m["Invalidate window"] = _ => _Invalidate(_pm._ContainerWindow);
 					m["Invalidate floats"] = _ => {
 						foreach (var v in RootAncestor.Descendants()) {
@@ -106,7 +106,7 @@ namespace Au.Controls
 						}
 					};
 					m.Add(0, "info: toggle ScrollLock if does not work", disable: true);
-				}
+				});
 
 				void _Invalidate(Window w) {
 					//if (AKeys.IsScrollLock) Api.InvalidateRect(w.Hwnd(), IntPtr.Zero, true); //works
@@ -150,8 +150,10 @@ namespace Au.Controls
 
 			bool _IsGoodMouseEvent(object sender, RoutedEventArgs e, out _Node target) {
 				target = null;
-				if (e.Source == sender) target = sender == _splitter ? Parent : this;
-				else if (e.Source is TabItem ti && ti.Parent == sender) target = _NodeFromTabItem(ti);
+				if (e.Source == sender) {
+					if (_IsTab && e.OriginalSource is not TabPanel) return false; //tab control border
+					target = sender == _splitter ? Parent : this;
+				} else if (e.Source is TabItem ti && ti.Parent == sender) target = _NodeFromTabItem(ti);
 				else return false;
 				return true;
 			}
@@ -211,7 +213,8 @@ namespace Au.Controls
 			}
 
 			void _ContextMenu_Move(AMenu m) {
-				using (m.Submenu("Move To")) {
+				m.Submenu("Move to", m => {
+					m.RawText = true;
 					string sThis = ToString();
 					foreach (var target in RootAncestor.Descendants(andSelf: true)) {
 						bool targetInTab = target._ParentIsTab;
@@ -224,7 +227,8 @@ namespace Au.Controls
 						if (target.Ancestors(andSelf: true).Contains(this)) continue;
 
 						string sTarget = target.ToString();
-						using (m.Submenu(new string(' ', target.Level * 4) + sTarget + (target._state switch { 0 => null, _DockState.Float => " (floating)", _ => " (hidden)" }))) {
+						var s1 = new string(' ', target.Level * 4) + sTarget + (target._state switch { 0 => null, _DockState.Float => " (floating)", _ => " (hidden)" });
+						m.Submenu(s1, m => {
 							bool sep = false;
 							//this would be duplicate of before/after
 							//if (target._IsStack || (target._IsTab && _IsLeaf && (target.FirstChild?._IsDocument ?? false) == _IsDocument)) {
@@ -259,9 +263,9 @@ namespace Au.Controls
 								m.Separator();
 								m[$"- Into '{sTarget}'"] = o => _MoveTo(target, _HowToMove.Child);
 							}
-						}
+						});
 					}
-				}
+				});
 			}
 
 			enum _HowToMove //don't reorder

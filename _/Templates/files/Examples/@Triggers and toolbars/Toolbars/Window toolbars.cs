@@ -26,7 +26,7 @@ void WindowToolbars() {
 
 void Toolbar_Notepad(WindowTriggerArgs ta = null) {
 	var t = new AToolbar("Toolbar_Notepad");
-	if (t.IsFresh) {
+	if (t.FirstTime) {
 		
 	}
 	
@@ -42,7 +42,7 @@ void Toolbar_Notepad(WindowTriggerArgs ta = null) {
 	
 //	//auto-hide. Above is the auto-hide part. Below is the visible part.
 //	t = t.AutoHide();
-//	if(t.IsFresh) {
+//	if(t.FirstTime) {
 //		
 //	}
 	

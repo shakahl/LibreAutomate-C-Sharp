@@ -322,7 +322,7 @@ namespace Au
 			/// </remarks>
 			public static void LoadDll64or32Bit(string fileName)
 			{
-				Debug.Assert(default == Api.GetModuleHandle(fileName));
+				//Debug.Assert(default == Api.GetModuleHandle(fileName)); //no, asserts if cpp dll is injected by acc
 
 				string s = (AVersion.Is32BitProcess ? @"32\" : @"64\") + fileName;
 				if(default != Api.LoadLibrary(AFolders.ThisAppBS + s)) return; //normal

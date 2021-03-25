@@ -32,33 +32,37 @@ static class InsertCode
 	/// <summary>
 	/// Inserts one or more statements at current line.
 	/// If editor is null or readonly, prints in output.
+	/// Async if called from non-main thread.
 	/// </summary>
 	/// <param name="s">Text without "\r\n" at the end.</param>
 	/// <param name="goToPercent">If contains '%', removes it and moves caret there.</param>
 	public static void Statements(string s, bool goToPercent = false) {
-		var d = Panels.Editor.ZActiveDoc;
-		if (d == null || d.zIsReadonly) {
-			AOutput.Write(s);
-		} else {
-			d.Focus();
-			int start = d.zLineStartFromPos(false, d.zCurrentPos8);
-			int indent = d.zLineIndentationFromPos(false, start);
-			if (indent == 0) {
-				s += "\r\n";
+		if (Environment.CurrentManagedThreadId != 1) App.Wmain.Dispatcher.InvokeAsync(() => _Action(s, goToPercent)); else _Action(s, goToPercent);
+		static void _Action(string s, bool goToPercent) {
+			var d = Panels.Editor.ZActiveDoc;
+			if (d == null || d.zIsReadonly) {
+				AOutput.Write(s);
 			} else {
-				var b = new StringBuilder();
-				foreach (var v in s.Lines()) b.Append('\t', indent).AppendLine(v);
-				s = b.ToString();
-			}
+				d.Focus();
+				int start = d.zLineStartFromPos(false, d.zCurrentPos8);
+				int indent = d.zLineIndentationFromPos(false, start);
+				if (indent == 0) {
+					s += "\r\n";
+				} else {
+					var b = new StringBuilder();
+					foreach (var v in s.Lines()) b.Append('\t', indent).AppendLine(v);
+					s = b.ToString();
+				}
 
-			int i = -1;
-			if (goToPercent) {
-				i = s.IndexOf('%');
-				if (i >= 0) s = s.Remove(i, 1);
-			}
+				int i = -1;
+				if (goToPercent) {
+					i = s.IndexOf('%');
+					if (i >= 0) s = s.Remove(i, 1);
+				}
 
-			d.zReplaceSel(false, start, s);
-			if (i >= 0) d.zGoToPos(true, start + i);
+				d.zReplaceSel(false, start, s);
+				if (i >= 0) d.zGoToPos(true, start + i);
+			}
 		}
 	}
 
@@ -68,6 +72,7 @@ static class InsertCode
 	/// </summary>
 	/// <param name="s">If contains '%', removes it and moves caret there.</param>
 	public static void TextSimply(string s) {
+		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		var d = Panels.Editor.ZActiveDoc;
 		if (d == null || d.zIsReadonly) return;
 		TextSimplyInControl(d, s);
@@ -80,6 +85,7 @@ static class InsertCode
 	/// <param name="c">If null, uses the focused control, else sets focus.</param>
 	/// <param name="s">If contains '%', removes it and moves caret there. Alternatively use '\b', then does not touch '%'.</param>
 	public static void TextSimplyInControl(FrameworkElement c, string s) {
+		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		if (c == null) {
 			c = Keyboard.FocusedElement as FrameworkElement;
 			if (c == null) return;
@@ -121,6 +127,7 @@ static class InsertCode
 	/// </summary>
 	/// <param name="ns">Namespace, eg "System.Diagnostics". Can be multiple, separated with colon or semicolon.</param>
 	public static bool UsingDirective(string ns) {
+		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		if (!CodeInfo.GetContextAndDocument(out var k, 0, metaToo: true)) return false;
 		var namespaces = ns.Split(new char[] { ';', ',' }, StringSplitOptions.TrimEntries);
 		var (_, end) = _FindUsings(k, namespaces);

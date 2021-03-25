@@ -28,7 +28,7 @@ void Toolbar_Startup1() {
 	var t = new AToolbar("Toolbar_Startup1");
 	
 	//settings
-	if (t.IsFresh) {
+	if (t.FirstTime) {
 		
 	}
 	t.BorderColor = System.Drawing.Color.BlueViolet;

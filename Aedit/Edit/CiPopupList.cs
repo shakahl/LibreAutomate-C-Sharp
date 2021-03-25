@@ -195,6 +195,14 @@ class CiPopupList
 		foreach (var v in _a) if (v.hidden == 0) _av.Add(v);
 		_SortAndSetControlItems();
 
+		//Ocassionally app used to crash without an error UI when typing a word and should show completions.
+		//	Windows event log shows exception with call stack, which shows that _av.Select called with _av=null.
+		//	The reason (reproduced):
+		//		in _SortAndSetControlItems -> _tv.SetItems -> ... -> _Measure, probably when setting scrollbar properties,
+		//		WPF raises an UIA event and waits + dispatches messages. During that time is called Hide(). It sets _av=null.
+		//	Workaround: return now if _w is null. Workaround 2: replace the WPF scrollbar with native scrollbar.
+		if (_av == null) return;
+
 		_compl.SelectBestMatch(_av.Select(o => o.ci)); //pass items sorted like in the visible list
 
 		int kinds = 0;
@@ -224,6 +232,7 @@ class CiPopupList
 	}
 
 	public void Hide() {
+		//ADebug.PrintIf(_debug, "reenter, " + new StackTrace());
 		if (_a == null) return;
 		_tv.SetItems(null, false);
 		_popup.Close();

@@ -127,12 +127,12 @@ finally {  }]]>
 
 		<snippet name="dialogSnippet" info="Standard dialog window." more="See also: wpfSnippet.">
 			<list item="OK button">ADialog.Show("$end$");</list>
-			<list item="OK button and info icon">ADialog.ShowInfo("$end$");</list>
-			<list item="OK button and warning icon">ADialog.ShowWarning("$end$");</list>
-			<list item="OK button and error icon">ADialog.ShowError("$end$");</list>
-			<list item="OK and Cancel buttons">if (!ADialog.ShowOkCancel("$end$")) return;</list>
-			<list item="Yes and No buttons">if (!ADialog.ShowYesNo("$end$")) return;</list>
-			<list item="Custom buttons">
+			<list item="OK button and &amp;info icon">ADialog.ShowInfo("$end$");</list>
+			<list item="OK button and &amp;warning icon">ADialog.ShowWarning("$end$");</list>
+			<list item="OK button and &amp;error icon">ADialog.ShowError("$end$");</list>
+			<list item="OK and &amp;Cancel buttons">if (!ADialog.ShowOkCancel("$end$")) return;</list>
+			<list item="&amp;Yes and No buttons">if (!ADialog.ShowYesNo("$end$")) return;</list>
+			<list item="Custom &amp;buttons">
 				<![CDATA[int button = ADialog.Show("$end$", "", "1 OK|0 Cancel|2 Yes|3 No|4 Retry|5 Close|10 Button1|11 Button2", flags: DFlags.CommandLinks);
 switch (button) {
 case 1:  break;
@@ -145,7 +145,7 @@ case 11:  break;
 default: return;
 }]]>
 			</list>
-			<list item="List of buttons">
+			<list item="&amp;List of buttons">
 				<![CDATA[int button = ADialog.ShowList("$end$one|two|three$end$");
 switch (button) {
 case 1:  break;
@@ -154,8 +154,8 @@ case 3:  break;
 default: return;
 }]]>
 			</list>
-			<list item="Text input">if (!ADialog.ShowInput(out string s, "$end$")) return;</list>
-			<list item="Number input">if (!ADialog.ShowInputNumber(out int s, "$end$")) return;</list>
+			<list item="&amp;Text input">if (!ADialog.ShowInput(out string s, "$end$")) return;</list>
+			<list item="&amp;Number input">if (!ADialog.ShowInputNumber(out int s, "$end$")) return;</list>
 		</snippet>
 
 		<snippet name="winFindSnippet" info="Find window." more="The + operator throws exception if not found.">
@@ -175,34 +175,34 @@ default: return;
 				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
 AMouse.Click(w, );]]>
 			</list>
-			<list item="Right click">
+			<list item="&amp;Right click">
 				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
 AMouse.RightClick(w, );]]>
 			</list>
-			<list item="Double click">
+			<list item="&amp;Double click">
 				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
 AMouse.DoubleClick(w, );]]>
 			</list>
-			<list item="Move">
+			<list item="&amp;Move">
 				<![CDATA[var w = +AWnd.Find("$end$*Name$end$");
 AMouse.Move(w, );]]>
 			</list>
 		</snippet>
 
-		<snippet name="triggerSnippet" info="Add hotkey, autotext, mouse or window trigger." more="Add it in a file that contains triggers of this type. To open, use menu T&amp;amp;T.">
+		<snippet name="triggerSnippet" info="Add hotkey, autotext, mouse or window trigger." more="Add it in a file that contains triggers of this type. To open, use menu TT.">
 			<list item="Hotkey">
 				<![CDATA[hk["$end$"] = o => {  };]]>
 			</list>
-			<list item="Autotext">
+			<list item="&amp;Autotext">
 				<![CDATA[tt["$end$"] = o => {  };]]>
 			</list>
-			<list item="Autotext simple replace">
+			<list item="Autotext simple &amp;replace">
 				<![CDATA[tr["$end$"] = "";]]>
 			</list>
-			<list item="Mouse">
+			<list item="&amp;Mouse">
 				<![CDATA[Triggers.Mouse[TM$end$] = o => {  };]]>
 			</list>
-			<list item="Window">
+			<list item="&amp;Window">
 				<![CDATA[Triggers.Window[TWEvent.ActiveOnce, "$end$"] = o => {  };]]>
 			</list>
 		</snippet>
@@ -284,10 +284,10 @@ p1.Next();]]>
 
 m["Item1"] = o => {  };
 m[""] = o => {  };
-using(m.Submenu("")) {
+m.Submenu("", m => {
 	m[""] = o => {  };
 	m[""] = o => {  };
-}
+});
 m.Separator();
 m["Run program example"] = o => AFile.Run(AFolders.System + @"notepad.exe");
 m["Run script example"] = o => ATask.Run("Script123456789.cs");
@@ -304,19 +304,19 @@ m.Show();]]>
 
 m["Item1"] = o => {  };
 m[""] = o => {  };
-using(m.Submenu("")) {
+m.Submenu("", m => {
 	m[""] = o => {  };
 	m[""] = o => {  };
-}
+});
 m.Separator();
 m[""] = o => {  };
 m[""] = o => {  };
 
-m.Show(owner);]]>
+m.Show();]]>
 			</list>
 			<list item="Menu that returns item id">
-				<![CDATA[int mi = AMenu.ShowSimple("1 One|2 Two|3 Three||0 Cancel");
-switch (mi) {
+				<![CDATA[int i = AMenu.ShowSimple("1 One|2 Two|3 Three||0 Cancel");
+switch (i) {
 case 1:  break;
 case 2:  break;
 case 3:  break;
@@ -330,10 +330,10 @@ default: return;
 				<![CDATA[m["$end$"] = o => {  };]]>
 			</list>
 			<list item="Submenu">
-				<![CDATA[using (m.Submenu("$end$")) {
+				<![CDATA[m.Submenu("", m => {
 	m[""] = o => {  };
 	m[""] = o => {  };
-}]]>
+});]]>
 			</list>
 		</snippet>
 
@@ -545,7 +545,7 @@ string _field;
 //Triggers.Mouse[TMEdge.TopInLeft25] = Toolbar_RenameMe; //show when the mouse touches the screen edge first time
 void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	var t = new AToolbar("Toolbar_RenameMe $random$");
-	if (t.IsFresh) {
+	if (t.FirstTime) {
 		
 	}
 	
@@ -561,7 +561,7 @@ void Toolbar_$end$RenameMe$end$(Au.Triggers.TriggerArgs ta = null) {
 	
 //	//auto-hide. Above is the auto-hide part. Below is the always-visible part.
 //	t = t.AutoHide();
-//	if (t.IsFresh) {
+//	if (t.FirstTime) {
 //		
 //	}
 	

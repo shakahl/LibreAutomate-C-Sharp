@@ -46,8 +46,8 @@ namespace Au.Util
 		}
 
 		public unsafe NativeFont_(int dpi, bool bold, bool italic, int height = 0) {
-			Api.LOGFONT m = default; int siz = sizeof(Api.LOGFONT);
-			ADpi.SystemParametersInfo(Api.SPI_GETICONTITLELOGFONT, siz, &m, 0, dpi);
+			Api.LOGFONT m = default;
+			ADpi.SystemParametersInfo(Api.SPI_GETICONTITLELOGFONT, sizeof(Api.LOGFONT), &m, dpi);
 			if (bold) m.lfWeight = 700;
 			if (italic) m.lfItalic = 1;
 			if (height != 0) m.lfHeight = -AMath.MulDiv(height, dpi, 72);

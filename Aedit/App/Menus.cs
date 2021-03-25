@@ -240,7 +240,7 @@ static class Menus
 		public static void AWnd() { new DAWnd().Show(); }
 
 		[Command('A')]
-		public static void AAcc() { new DAAcc().Show(); }
+		public static void AAcc() { DAAcc.Dialog(); }
 
 		[Command('I')]
 		public static void AWinImage() { new DAWinImage().Show(); }
@@ -273,11 +273,11 @@ static class Menus
 			}
 			var a = App.Tasks.Items;
 			if (a.Count > 0) {
-				var m = new AMenu();
-				using (m.Submenu("End task")) {
-					foreach(var t in a) m[t.f.DisplayName] = o => App.Tasks.EndTask(t);
-				}
-				m.Show(App.Hwnd);
+				var m = new AMenu { RawText = true };
+				m.Submenu("End task", m => {
+					foreach (var t in a) m[t.f.DisplayName] = o => App.Tasks.EndTask(t);
+				});
+				m.Show();
 			}
 		}
 
@@ -297,16 +297,16 @@ static class Menus
 		}
 	}
 
-	[Command(target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items. Now implemented only for toolbar buttons.
+	[Command(target = ""/*, tooltip = "Triggers and toolbars"*/)] //FUTURE: support tooltip for menu items
 	public static class TT
 	{
-		[Command("...")]
-		public static void Add_trigger() { TriggersAndToolbars.AddTrigger(); }
+		//[Command("...")]
+		//public static void Add_trigger() { TriggersAndToolbars.AddTrigger(); }
 
-		[Command("...")]
-		public static void Add_toolbar() { TriggersAndToolbars.AddToolbar(); }
+		//[Command("...")]
+		//public static void Add_toolbar() { TriggersAndToolbars.AddToolbar(); }
 
-		[Command('k', separator = true)]
+		[Command('k'/*, separator = true*/)]
 		public static void Edit_hotkey_triggers() { TriggersAndToolbars.Edit(@"Triggers\Hotkey triggers.cs"); }
 
 		[Command('a')]
@@ -334,7 +334,7 @@ static class Menus
 		public static void Disable_triggers() { TriggersAndToolbars.DisableTriggers(null); }
 
 		[Command("...")]
-		public static void Active_triggers() { Log_.Run.Show(); }
+		public static void Active_triggers() { Log_.Run.Show(); } //TODO
 
 		[Command("...")]
 		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }

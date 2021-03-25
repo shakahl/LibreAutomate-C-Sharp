@@ -179,17 +179,18 @@ namespace Au
 				if (wstate != WindowState.Normal) t.WindowState = WindowState.Normal;
 				if (andSize) w.MoveL(r); else w.MoveL(x, y);
 			} else {
-				//tested: don't need this for Popup. Its PlacementRectangle uses physical pixels.
+				//tested: don't need this for Popup. Its PlacementRectangle can use physical pixels.
 
 				t.WindowStartupLocation = WindowStartupLocation.Manual;
 				if (wstate == WindowState.Minimized) t.ShowActivated = false;
 
-				t_cbt ??= AHookWin.ThreadCbt(k => {
+				AHookWin.ThreadCbt(k => {
 					if (k.code == HookData.CbtEvent.CREATEWND) {
 						var c = k.CreationInfo->lpcs;
 						if (!c->style.Has(WS.CHILD)) {
 							var name = c->Name;
 							if (name.Length > 25 && name.StartsWith("m8KFOuCJOUmjziONcXEi3A ")) {
+								k.hook.Dispose();
 								var s = name[23..].ToString();
 								if (name[^1] == ';') {
 									c->x = s.ToInt(0, out int e); c->y = s.ToInt(e);
@@ -198,6 +199,8 @@ namespace Au
 								}
 							}
 						}
+					} else {
+						ADebug.Print(k.code); //didn't detect the window? Because unhooks when detects.
 					}
 					return false;
 				});
@@ -230,7 +233,6 @@ namespace Au
 				HwndSource.AddSourceChangedHandler(t, eh);
 			}
 		}
-		[ThreadStatic] static AHookWin t_cbt;
 #elif true //does not change Title, but I don't like creating window handle before showing window
 		static void _Move(Window t, int x, int y, in RECT r, bool andSize) {
 			var wstate=t.WindowState;

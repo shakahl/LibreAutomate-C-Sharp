@@ -28,6 +28,7 @@ partial class MainWindow : Window
 		Title = App.AppName; //don't append document name etc
 
 		AWnd.More.SavedRect.Restore(this, App.Settings.wndPos, o => App.Settings.wndPos = o);
+		//SHOULDDO: now on Win8 first time very small if high DPI and small screen. Don't use default window size. Or test with small screen on all OS.
 
 		Panels.LoadAndCreateToolbars();
 

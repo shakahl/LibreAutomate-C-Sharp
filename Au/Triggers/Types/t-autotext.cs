@@ -11,7 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Linq;
+using System.Linq;
 using System.Globalization;
 using System.Collections;
 
@@ -789,9 +789,9 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// Shows a 1-item menu below the text cursor (caret) or mouse cursor.
-		/// Returns true if the user selected the item with the mouse or arrow keys + Enter or Tab. Other keys just close the menu.
+		/// Returns true if the user clicked the item or pressed Enter or Tab. Other keys close the menu.
 		/// </summary>
-		/// <param name="text">Item text. This function escapes it (replaces newlines with \r\n etc) and limits to 60 characters. If null, uses "Autotext".</param>
+		/// <param name="text">Menu item text. This function limits it to 300 characters. If null, uses "Autotext".</param>
 		/// <remarks>
 		/// This function is used by <see cref="Replace"/> when used flag <see cref="TAFlags.Confirm"/>.
 		/// </remarks>
@@ -805,20 +805,16 @@ namespace Au.Triggers
 		/// </example>
 		public bool Confirm(string text = "Autotext") {
 			text ??= "Autotext";
-			var m = new AMenu(); //FUTURE: need something better.
-			m.Add(1, text.Replace("&", "&&").Escape(limit: 60));
-			bool ok = false;
-			using var hook = AHookWin.Keyboard(x => {
-				if (x.IsUp) return;
-				switch (x.vkCode) {
-				case KKey.Escape: break;
-				case KKey.Enter: case KKey.Tab: ok = true; break;
-				default: m.Close(); return;
+			var m = new AMenu { RawText = true };
+			m.Add(1, text.Limit(300));
+			m.KeyboardHook = (m, g) => {
+				if (g.Key is KKey.Enter or KKey.Tab or KKey.Escape) {
+					if (g.Key != KKey.Escape) m.FocusedItem = m.Items.First();
+					return MKHook.Default;
 				}
-				x.BlockEvent();
-				m.Close();
-			});
-			return 1 == m.Show(flags: MSFlags.ByCaret | AMenu.MSFlags_NoKeyHook_) || ok;
+				return MKHook.Close;
+			};
+			return 1 == m.Show(MSFlags.ByCaret);
 			//CONSIDER: one QM2 user wanted, if cannot show at caret, option to show in screen center
 		}
 

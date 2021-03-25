@@ -458,6 +458,10 @@ public:
 		_tid = tid;
 		_hwnd = (int)(LPARAM)w;
 		if(_iaccAgent) _iaccAgent->Release();
+		//TODO: Release() hangs if agent's thread now is in a blocked wait function or busy.
+		//  Don't use cache.
+		//	Or don't use COM to communicate with the agent.
+		//	Or just don't Release, if possible.
 		_iaccAgent = iaccAgent;
 		_time = GetTickCount64();
 	}

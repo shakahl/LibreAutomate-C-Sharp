@@ -67,6 +67,23 @@ namespace Au.Util
 		}
 
 		/// <summary>
+		/// Finds character used to underline next character when the text is displayed in UI.
+		/// Returns its index, or -1 if not found.
+		/// </summary>
+		/// <param name="s">Can be null.</param>
+		/// <param name="underlineChar"></param>
+		public static int FindUnderlineChar(string s, char underlineChar = '&') {
+			if (s != null) {
+				for (int i = 0; i < s.Length; i++) {
+					if (s[i] == underlineChar) {
+						if (++i < s.Length && s[i] != underlineChar) return i;
+					}
+				}
+			}
+			return -1;
+		}
+
+		/// <summary>
 		/// Converts array of command line arguments to string that can be passed to a "start process" function, for example <see cref="AFile.Run"/>, <see cref="Process.Start"/>.
 		/// Returns null if a is null or has 0 elements.
 		/// </summary>

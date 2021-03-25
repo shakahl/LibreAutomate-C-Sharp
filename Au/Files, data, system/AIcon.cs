@@ -16,8 +16,6 @@ using System.Drawing;
 using Au.Types;
 using Au.Util;
 
-//TODO: static option to measure and print time. Need to debug some slow icons.
-
 namespace Au
 {
 	/// <summary>
@@ -563,7 +561,7 @@ namespace Au
 			if (!AChar.IsAsciiDigit(s[^1])) return false;
 			int i = s.LastIndexOf(','); if (i < 1) return false;
 			index = s.ToInt(i + 1, out int e); if (e != s.Length) return false;
-			path = s.Remove(i);
+			path = s[..i];
 			return true;
 
 			//note: API PathParseIconLocation has bugs. Eg splits "path,5moreText". Or from "path, 5" removes ", 5" and returns 0.

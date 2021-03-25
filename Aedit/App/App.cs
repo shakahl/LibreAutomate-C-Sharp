@@ -322,29 +322,11 @@ static class App
 
 		static void _ContextMenu() {
 			var m = new AMenu();
-			m.Add(1, "End runSingle task\tSleep", disable: Tasks.GetRunsingleTask() == null);
-			m.Add(2, "Disable triggers\tM-click").IsChecked = _disabled;
+			m.Add("End runSingle task\tSleep", _ => Tasks.EndTask(), disable: Tasks.GetRunsingleTask() == null); //TODO: not good
+			m.AddCheck("Disable triggers\tM-click", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
 			m.Separator();
-			m.Add(10, "Exit");
-
-			var wa = AWnd.Active; //probably taskbar
-			_wNotify.ActivateL();
-			int r = m.Show(_wNotify);
-			switch (r) {
-			case 1:
-				Tasks.EndTask();
-				break;
-			case 2:
-				TriggersAndToolbars.DisableTriggers(null);
-				break;
-			case 10:
-				_Exit();
-				break;
-			}
-			if (r != 10) { //sometimes does not exit because of ActivateL
-				wa.ActivateL();
-				//var d = new Api.NOTIFYICONDATA(_wNotify); Api.Shell_NotifyIcon(Api.NIM_SETFOCUS, d); //rejected: looks weird when none of tested tray icons do it; none even simply activate taskbar.
-			}
+			m.Add("Exit", _ => _Exit());
+			m.Show(MSFlags.AlignBottom | MSFlags.AlignCenterH);
 		}
 
 		static void _ShowWindow() {

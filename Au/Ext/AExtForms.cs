@@ -18,6 +18,7 @@ using System.Drawing;
 //using System.Linq;
 
 using Au.Types;
+using System.Drawing.Drawing2D;
 
 namespace Au
 {
@@ -78,16 +79,14 @@ namespace Au
 		/// Gets mouse cursor position in client area coordinates.
 		/// Returns default(POINT) if handle not created.
 		/// </summary>
-		public static POINT MouseClientXY(this Control t)
-		{
+		public static POINT MouseClientXY(this Control t) {
 			return t.Hwnd().MouseClientXY;
 		}
 
 		/// <summary>
 		/// Gets mouse cursor position in window coordinates.
 		/// </summary>
-		public static POINT MouseWindowXY(this Control t)
-		{
+		public static POINT MouseWindowXY(this Control t) {
 			POINT p = AMouse.XY;
 			POINT k = t.Location;
 			return (p.x - k.x, p.y - k.y);
@@ -98,8 +97,7 @@ namespace Au
 		/// Sends API <msdn>EM_SETCUEBANNER</msdn>.
 		/// Does nothing if Multiline.
 		/// </summary>
-		internal static void SetCueBanner(this TextBox t, string text, bool focusedToo = false)
-		{
+		internal static void SetCueBanner(this TextBox t, string text, bool focusedToo = false) {
 			Debug.Assert(!t.Multiline);
 			_SetCueBanner(t, Api.EM_SETCUEBANNER, focusedToo, text);
 		}
@@ -109,17 +107,15 @@ namespace Au
 		/// Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
 		/// Sends API <msdn>CB_SETCUEBANNER</msdn>.
 		/// </summary>
-		internal static void SetCueBanner(this ComboBox t, string text)
-		{
+		internal static void SetCueBanner(this ComboBox t, string text) {
 			_SetCueBanner(t, Api.CB_SETCUEBANNER, false, text);
 		}
 		//internal because Core added TextBox.PlaceholderText property and possibly will add it to other controls too in the future.
 
-		static void _SetCueBanner(Control c, int message, bool focusedToo, string text)
-		{
-			if(c.IsHandleCreated) {
+		static void _SetCueBanner(Control c, int message, bool focusedToo, string text) {
+			if (c.IsHandleCreated) {
 				c.Hwnd().SendS(message, focusedToo, text);
-			} else if(!text.NE()) {
+			} else if (!text.NE()) {
 				c.HandleCreated += (_, _) => _SetCueBanner(c, message, focusedToo, text);
 			}
 		}
@@ -158,6 +154,48 @@ namespace Au
 		//	t.Controls.Add(c);
 		//	return c;
 		//}
+
+		#endregion
+
+		#region drawing
+
+		/// <summary>
+		/// Draws inset rectangle.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="pen">Pen with integer width and default alignment.</param>
+		/// <param name="r"></param>
+		/// <remarks>
+		/// Calls <see cref="Graphics.DrawRectangle"/> with arguments corrected so that it draws inside r. Does not use <see cref="PenAlignment.Inset"/>, it is unreliable.
+		/// </remarks>
+		public static void DrawRectangleInset(this Graphics t, Pen pen, RECT r) {
+			if (r.NoArea) return;
+			//pen.Alignment = PenAlignment.Inset; //no. Eg ignored if 1 pixel width.
+			//	MSDN: "A Pen that has its alignment set to Inset will yield unreliable results, sometimes drawing in the inset position and sometimes in the centered position.".
+			int w = (int)pen.Width, d = w / 2;
+			r.left += d; r.top += d;
+			r.right -= d = w - d; r.bottom -= d;
+			t.DrawRectangle(pen, r);
+		}
+
+		/// <summary>
+		/// Draws inset rectangle of specified pen color and width.
+		/// </summary>
+		/// <remarks>
+		/// Creates pen and calls other overload.
+		/// </remarks>
+		public static void DrawRectangleInset(this Graphics t, Color penColor, int pedWidth, RECT r) {
+			using var pen = new Pen(penColor, pedWidth);
+			DrawRectangleInset(t, pen, r);
+		}
+
+		/// <summary>
+		/// Creates solid brush and calls <see cref="Graphics.FillRectangle"/>.
+		/// </summary>
+		public static void FillRectangle(this Graphics t, Color color, RECT r) {
+			using var brush = new SolidBrush(color);
+			t.FillRectangle(brush, r);
+		}
 
 		#endregion
 	}

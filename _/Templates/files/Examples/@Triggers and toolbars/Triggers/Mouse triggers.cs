@@ -18,10 +18,10 @@ void MouseTriggers() {
 			var m = new AMenu("example");
 			m["A (mouse trigger example)"] = o => {  };
 			m["B"] = o => {  };
-			using (m.Submenu("C")) {
+			m.Submenu("C", m => {
 				m["D"] = o => {  };
 				m["E"] = o => {  };
-			}
+			});
 			m.Show();
 			
 			//To create menus can be used snippets. Start typing "menu" and you will see snippets in the completion list.

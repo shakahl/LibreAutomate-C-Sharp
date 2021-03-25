@@ -376,7 +376,6 @@ namespace Au
 	/// <summary>
 	/// Creates and executes a SQLite prepared statement.
 	/// </summary>
-	/// <threadsafety static="true" instance="false"/>
 	/// <remarks>
 	/// This class wraps a SQLite API object sqlite3_stmt* and related sqlite3_x functions. They are documented perfectly in the SQLite website.
 	/// More info and example: <see cref="ASqlite"/>.

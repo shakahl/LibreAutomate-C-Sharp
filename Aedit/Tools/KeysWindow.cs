@@ -66,7 +66,7 @@ namespace Au.Tools
 			if (!ok) return;
 
 			bool _Menu(params string[] a) {
-				int j = AMenu.ShowSimple(a, Hwnd) - 1;
+				int j = AMenu.ShowSimple(a) - 1;
 				if (j < 0) return false;
 				s = a[j];
 				j = s.IndexOf(' '); if (j > 0) s = s[..j];

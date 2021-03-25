@@ -1,4 +1,6 @@
-﻿using System;
+﻿#define THREAD
+
+using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Diagnostics;
@@ -43,7 +45,9 @@ namespace Au.Tools
 		KCheckTextBox roleA, nameA, uiaidA, idA, classA, valueA, descriptionA, actionA, keyA, helpA, elemA, stateA, rectA, alsoA, skipA, navigA, waitA, notinA, maxccA, levelA;
 		KCheckBox controlC, exceptionA, hiddenTooA, reverseA, uiaA, notInprocA, clientAreaA, menuTooA;
 
-		public DAAcc(AAcc acc = null) {
+		public DAAcc(AAcc acc = null, POINT? p = null) {
+			if (p != null) acc = AAcc.FromXY(p.Value, AXYFlags.NoThrow | AXYFlags.PreferLink);
+
 			Title = "Find accessible object";
 
 			var b = new AWpfBuilder(this).WinSize((600, 440..), (600, 420..)).Columns(-1, 0);
@@ -126,6 +130,20 @@ namespace Au.Tools
 			TUtil.OnAnyCheckTextBoxValueChanged<DAAcc>((d, o) => d._AnyCheckTextBoxValueChanged(o));
 		}
 
+		public static void Dialog(AAcc acc = null, POINT? p = null) {
+#if THREAD
+			if (acc != null || Environment.CurrentManagedThreadId != 1) { //cannot simply pass an iaccessible to other thread
+				new DAAcc(acc, p).Show();
+			} else {
+				AThread.Start(() => { //don't allow main thread to hang when something is slow when working with acc
+					new DAAcc(acc, p).ShowDialog();
+				});
+			}
+#else
+			new DAAcc(acc).Show();
+#endif
+		}
+
 		protected override void OnSourceInitialized(EventArgs e) {
 			base.OnSourceInitialized(e);
 
@@ -156,7 +174,7 @@ namespace Au.Tools
 
 			bool useCon = _useCon && captured && sameWnd && c == _con;
 			//if control is in other thread, search in control by default, elso slow because cannot use inproc. Except for known windows.
-			if(!useCon) useCon = c != w && c.ThreadId != w.ThreadId && 0 == c.ClassNameIs(Api.string_IES, "Windows.UI.Core.CoreWindow");
+			if (!useCon) useCon = c != w && c.ThreadId != w.ThreadId && 0 == c.ClassNameIs(Api.string_IES, "Windows.UI.Core.CoreWindow");
 
 			_SetWndCon(w, c, useCon);
 
@@ -480,7 +498,6 @@ namespace Au.Tools
 		private void _bOK_Click(WBButtonClickArgs e) {
 			ZResultCode = _code.zText;
 			if (ZResultCode.NE()) { ZResultCode = null; e.Cancel = true; return; }
-
 			InsertCode.Statements(ZResultCode);
 		}
 

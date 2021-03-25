@@ -2,83 +2,82 @@ using Au.Types;
 using Au.Util;
 using System;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace Au
 {
-public partial class AToolbar
+	public partial class AToolbar
+	{
+		/// <summary>
+		/// Represents a button or separator in <see cref="AToolbar"/>.
+		/// </summary>
+		/// <remarks>
+		/// Most properties cannot be changed while the toolbar is open. Can be changed <b>Tag</b>, <b>Tooltip</b>.
+		/// </remarks>
+		public class ToolbarItem : MTItem
+		{
+			internal SIZE textSize;
+			internal TBItemType type;
+			internal AMenu menu;
+
+			internal bool IsSeparator_ => type == TBItemType.Separator;
+			internal bool IsGroup_ => type == TBItemType.Group;
+			internal bool IsMenu_ => type == TBItemType.Menu;
+			internal bool IsSeparatorOrGroup_ => type is (TBItemType.Separator or TBItemType.Group);
+
+			///
+			public TBItemType ItemType => type;
+
+			/// <summary>Gets button action.</summary>
+			public Action<ToolbarItem> Clicked => base.clicked as Action<ToolbarItem>;
+		}
+
+		class _Settings : ASettings
+		{
+			public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
+
+			public TBAnchor anchor { get => _anchor; set => Set(ref _anchor, value); }
+			TBAnchor _anchor = TBAnchor.TopLeft;
+
+			public TBLayout layout { get => _layout; set => Set(ref _layout, value); }
+			TBLayout _layout;
+
+			public TBBorder border { get => _border; set => Set(ref _border, value); }
+			TBBorder _border = TBBorder.Width2;
+
+			public bool dispText { get => _dispText; set => Set(ref _dispText, value); }
+			bool _dispText = true;
+
+			public bool sizable { get => _sizable; set => Set(ref _sizable, value); }
+			bool _sizable = true;
+
+			public bool autoSize { get => _autoSize; set => Set(ref _autoSize, value); }
+			bool _autoSize = true;
+
+			public TBFlags miscFlags { get => _miscFlags; set => Set(ref _miscFlags, value); }
+			TBFlags _miscFlags = TBFlags.HideWhenFullScreen | TBFlags.ActivateOwnerWindow;
+
+			public System.Windows.Size size { get => _size; set => Set(ref _size, value); }
+			System.Windows.Size _size = new(150, 24);
+
+			public double wrapWidth { get => _wrapWidth; set => Set(ref _wrapWidth, value); }
+			double _wrapWidth;
+
+			public TBOffsets offsets { get => _location; set => Set(ref _location, value); }
+			TBOffsets _location; // = new(150, 5, 7, 7);
+
+			public int screen { get => _screen; set => Set(ref _screen, value); }
+			int _screen;
+		}
+	}
+}
+
+namespace Au.Types
 {
-	/// <summary>
-	/// Toolbar button or separator.
-	/// </summary>
-	public class ToolbarItem : MTItem
-	{
-		internal RECT rect;
-		internal SIZE textSize;
-		internal System.Drawing.Image image2;
-		internal TBItemType type;
-		internal AMenu menu;
-		
-		internal bool IsSeparator_ => type == TBItemType.Separator;
-		internal bool IsGroup_ => type == TBItemType.Group;
-		internal bool IsMenu_ => type == TBItemType.Menu;
-		internal bool IsSeparatorOrGroup_ => type is (TBItemType.Separator or TBItemType.Group);
-
-		internal bool HasImage_ => image2 != null || imageAsync;
-		
-		///
-		public TBItemType ItemType => type;
-		
-		///
-		public ColorInt TextColor { get; set; }
-	}
-	
-	class _Settings : ASettings
-	{
-		public static _Settings Load(string file, bool useDefault) => Load<_Settings>(file, useDefault);
-
-		public TBAnchor anchor { get => _anchor; set => Set(ref _anchor, value); }
-		TBAnchor _anchor = TBAnchor.TopLeft;
-
-		public TBLayout layout { get => _layout; set => Set(ref _layout, value); }
-		TBLayout _layout;
-
-		public TBBorder border { get => _border; set => Set(ref _border, value); }
-		TBBorder _border = TBBorder.Width2;
-
-		public bool dispText { get => _dispText; set => Set(ref _dispText, value); }
-		bool _dispText = true;
-
-		public bool sizable { get => _sizable; set => Set(ref _sizable, value); }
-		bool _sizable = true;
-
-		public bool autoSize { get => _autoSize; set => Set(ref _autoSize, value); }
-		bool _autoSize = true;
-
-		public TBFlags miscFlags { get => _miscFlags; set => Set(ref _miscFlags, value); }
-		TBFlags _miscFlags = TBFlags.HideWhenFullScreen | TBFlags.ActivateOwnerWindow;
-
-		public System.Windows.Size size { get => _size; set => Set(ref _size, value); }
-		System.Windows.Size _size = new(150, 24);
-
-		public double wrapWidth { get => _wrapWidth; set => Set(ref _wrapWidth, value); }
-		double _wrapWidth;
-
-		public TBOffsets offsets { get => _location; set => Set(ref _location, value); }
-		TBOffsets _location; // = new(150, 5, 7, 7);
-
-		public int screen { get => _screen; set => Set(ref _screen, value); }
-		int _screen;
-	}
-}
-}
-
-namespace Au.Types {
 	/// <summary>
 	/// Used with <see cref="AToolbar.ToolbarItem.ItemType"/>.
 	/// </summary>
-	public enum TBItemType : byte {
+	public enum TBItemType : byte
+	{
 #pragma warning disable 1591 //doc
 		Button,
 		Menu,
@@ -86,7 +85,7 @@ namespace Au.Types {
 		Group,
 #pragma warning restore
 	}
-	
+
 	/// <summary>
 	/// Used with <see cref="AToolbar.MiscFlags"/>.
 	/// </summary>
@@ -204,7 +203,7 @@ namespace Au.Types {
 		/// This flag cannot be used with <b>LeftTB</b>, <b>RightTB</b>, <b>All</b>.
 		/// </summary>
 		OppositeEdgeY = 64,
-		
+
 		/// <summary>
 		/// Anchor is screen, not owner window. Don't move the toolbar together with its owner window.
 		/// </summary>
@@ -272,8 +271,7 @@ namespace Au.Types {
 		/// <summary>
 		/// Sets all properties.
 		/// </summary>
-		public TBOffsets(double left, double top, double right, double bottom)
-		{
+		public TBOffsets(double left, double top, double right, double bottom) {
 			Left = left; Top = top; Right = right; Bottom = bottom;
 		}
 
@@ -314,8 +312,8 @@ namespace Au.Types {
 		/// <summary>Buttons are in single column, like in a popup menu. Separators are horizontal.</summary>
 		Vertical, //SHOULDDO: if some buttons don't fit, add overflow drop-down menu. Or scrollbar; or add VerticalScroll.
 
-	//	/// <summary>Buttons are in single row. When it exceeds maximal row width, buttons are moved to a drop-down menu. More rows can be added with <see cref="AToolbar.Group"/>.</summary>
-	//	Horizontal,//SHOULDDO
+		//	/// <summary>Buttons are in single row. When it exceeds maximal row width, buttons are moved to a drop-down menu. More rows can be added with <see cref="AToolbar.Group"/>.</summary>
+		//	Horizontal,//SHOULDDO
 	}
 
 	/// <summary>
@@ -361,16 +359,17 @@ namespace Au.Types {
 	/// <summary>
 	/// Used with <see cref="AToolbar.DpiScaling"/>.
 	/// </summary>
-	public struct TBScaling {
+	public struct TBScaling
+	{
 		///
-		public TBScaling(bool? size, bool? offsets) { this.size=size; this.offsets=offsets; }
-	
+		public TBScaling(bool? size, bool? offsets) { this.size = size; this.offsets = offsets; }
+
 		/// <summary>
 		/// Scale toolbar size and related properties.
 		/// If default (null), scales size, except of empty toolbars created by <see cref="AToolbar.AutoHideScreenEdge"/>.
 		/// </summary>
 		public bool? size;
-	
+
 		/// <summary>
 		/// Scale toolbar offsets. See <see cref="AToolbar.Offsets"/>.
 		/// If default (null), scales offsets, except when anchor is screen (not window etc).

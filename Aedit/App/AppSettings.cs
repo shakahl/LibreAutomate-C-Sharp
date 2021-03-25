@@ -68,6 +68,9 @@ class AppSettings : ASettings
 	public int find_searchIn { get => _find_searchIn; set => Set(ref _find_searchIn, value); }
 	int _find_searchIn;
 
+	public int find_printSlow { get => _find_printSlow; set => Set(ref _find_printSlow, value); }
+	int _find_printSlow = 50;
+
 	public bool edit_wrap { get => _edit_wrap; set => Set(ref _edit_wrap, value); }
 	bool _edit_wrap;
 

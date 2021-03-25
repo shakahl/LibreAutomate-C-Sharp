@@ -21,6 +21,8 @@ namespace Au
 	/// <remarks>
 	/// Similar to <b>System.Windows.Forms.Timer</b>, but more lightweight, for example does not create a hidden window.
 	/// Use in UI threads. Does not work if this thread does not retrieve/dispatch posted messages (<msdn>WM_TIMER</msdn>).
+	/// 
+	/// Delegates of timer actions are protected from GC, even of unreferenced <b>ATimer</b> variables.
 	/// </remarks>
 	/// <example>
 	/// This example sets 3 timers.
@@ -44,10 +46,10 @@ namespace Au
 		[ThreadStatic] static Dictionary<LPARAM, ATimer> t_timers;
 
 		///
-		public ATimer(Action<ATimer> timerAction)
-		{
+		public ATimer(Action<ATimer> timerAction) {
 			_action = timerAction;
 		}
+		//SHOULDDO: add overload with hwnd. Or optional parameter.
 
 		/// <summary>
 		/// Something to attach to this variable.
@@ -88,18 +90,17 @@ namespace Au
 		/// </remarks>
 		public void Every(int milliseconds, object tag = null) => _Start(false, milliseconds, tag);
 
-		void _Start(bool singlePeriod, int milliseconds, object tag)
-		{
-			if(milliseconds < 0) throw new ArgumentOutOfRangeException();
+		void _Start(bool singlePeriod, int milliseconds, object tag) {
+			if (milliseconds < 0) throw new ArgumentOutOfRangeException();
 			bool isNew = _id == 0;
-			if(!isNew) _CheckThread();
+			if (!isNew) _ThreadTrap();
 			LPARAM r = Api.SetTimer(default, _id, milliseconds, _timerProc);
-			if(r == 0) throw new Win32Exception();
+			if (r == 0) throw new Win32Exception();
 			Debug.Assert(isNew || r == _id);
 			_id = r;
 			_singlePeriod = singlePeriod;
 			Tag = tag;
-			if(isNew) {
+			if (isNew) {
 				_threadId = Thread.CurrentThread.ManagedThreadId;
 				(t_timers ??= new Dictionary<LPARAM, ATimer>()).Add(_id, this);
 			}
@@ -107,10 +108,9 @@ namespace Au
 		}
 
 		static Api.TIMERPROC _timerProc = _TimerProc;
-		static void _TimerProc(AWnd w, int msg, LPARAM idEvent, uint time)
-		{
+		static void _TimerProc(AWnd w, int msg, LPARAM idEvent, uint time) {
 			//AOutput.Write(t_timers.Count, idEvent);
-			if(!t_timers.TryGetValue(idEvent, out var t)) {
+			if (!t_timers.TryGetValue(idEvent, out var t)) {
 				//ADebug.Print($"timer id {idEvent} not in t_timers");
 				return;
 				//It is possible after killing timer.
@@ -118,10 +118,10 @@ namespace Au
 				//	For example if multiple messages are retrieved from the OS queue without dispatching each, and then all are dispatched.
 				//	Usually we can safely ignore it. But not good if the same timer id is reused for another timer. Tested on Win10: OS does not reuse ids soon.
 			}
-			if(t._singlePeriod) t.Stop();
+			if (t._singlePeriod) t.Stop();
 
 			try { t._action(t); }
-			catch(Exception ex) { AWarning.Write(ex.ToString(), -1); }
+			catch (Exception ex) { AWarning.Write(ex.ToString(), -1); }
 			//info: OS handles exceptions in timer procedure.
 		}
 
@@ -135,11 +135,10 @@ namespace Au
 		/// Don't need to call this function for single-period timers. For periodic timers it is optional; the timer stops when the thread ends.
 		/// This function must be called in the same thread as <b>Start</b>.
 		/// </remarks>
-		public void Stop()
-		{
-			if(_id != 0) {
+		public void Stop() {
+			if (_id != 0) {
 				//AOutput.Write($"Stop: {_id}          _threadId={_threadId}");
-				_CheckThread();
+				_ThreadTrap();
 				Api.KillTimer(default, _id);
 				//tested: KillTimer removes pending WM_TIMER messages from queue. MSDN lies. Tested on Win 10 and 7.
 				t_timers.Remove(_id);
@@ -155,18 +154,16 @@ namespace Au
 		/// </remarks>
 		public void Now() => _action(this);
 
-		void _CheckThread()
-		{
+		void _ThreadTrap() {
 			bool isSameThread = _threadId == Thread.CurrentThread.ManagedThreadId;
 			Debug.Assert(isSameThread);
-			if(!isSameThread) throw new InvalidOperationException(nameof(ATimer) + " used in multiple threads.");
+			if (!isSameThread) throw new InvalidOperationException(nameof(ATimer) + " used in multiple threads.");
 			//FUTURE: somehow allow other thread. It is often useful.
 		}
 
 		//~ATimer() { AOutput.Write("dtor"); } //don't call Stop() here, we are in other thread
 
-		static ATimer _StartNew(bool singlePeriod, int milliseconds, Action<ATimer> timerAction, object tag = null)
-		{
+		static ATimer _StartNew(bool singlePeriod, int milliseconds, Action<ATimer> timerAction, object tag = null) {
 			var t = new ATimer(timerAction);
 			t._Start(singlePeriod, milliseconds, tag);
 			return t;

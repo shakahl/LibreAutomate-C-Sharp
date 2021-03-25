@@ -12,6 +12,8 @@ using System.Windows.Markup;
 using System.Windows.Input;
 using System.Windows.Media;
 
+//TODO: use native scrollbar. The WPF scrollbar not only looks bad but also creates bugs by raising UIA events and waiting + dispatching messages.
+
 namespace Au.Controls
 {
 	public unsafe partial class KTreeView : Control
@@ -294,7 +296,7 @@ namespace Au.Controls
 		protected override void OnMouseWheel(MouseWheelEventArgs e) {
 			e.Handled = true;
 			if (!_avi.NE_() && _vscroll.IsVisible) {
-				int i = 3; Api.SystemParametersInfo(Api.SPI_GETWHEELSCROLLLINES, 0, &i, 0);
+				int i = Api.SystemParametersInfo(Api.SPI_GETWHEELSCROLLLINES, 3);
 				if (e.Delta > 0) i = -i;
 				i = Math.Clamp(_scrollTopIndex + i, 0, (int)_vscroll.Maximum);
 				if (i != _scrollTopIndex) {

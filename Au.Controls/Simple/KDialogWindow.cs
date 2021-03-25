@@ -24,11 +24,11 @@ namespace Au.Controls
 		/// <param name="hideOwner">Temporarily hide owner.</param>
 		public void ShowAndWait(Window owner, bool hideOwner = false) {
 			Owner = owner;
-			if (hideOwner) owner.Hide();
+			AWnd ow = default;
+			if (hideOwner) (ow = owner.Hwnd()).ShowL(false); //not owner.Hide(), it closes owner if it is modal
 			Show();
-			_dispFrame = new DispatcherFrame();
-			Dispatcher.PushFrame(_dispFrame);
-			if (hideOwner) owner.Show();
+			Dispatcher.PushFrame(_dispFrame = new DispatcherFrame());
+			if (hideOwner) { ow.ShowL(true); ow.ActivateL(); }
 		}
 		DispatcherFrame _dispFrame;
 

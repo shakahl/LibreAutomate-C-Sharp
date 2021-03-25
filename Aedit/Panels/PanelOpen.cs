@@ -37,6 +37,7 @@ class PanelOpen : DockPanel
 			_updatedOnce = true;
 			FilesModel.NeedRedraw += v => { _tv.Redraw(v.remeasure); };
 			_tv.ItemClick += _tv_ItemClick;
+			//_tv.ContextMenuOpening += (_,_) => //never mind
 		}
 	}
 
@@ -49,7 +50,7 @@ class PanelOpen : DockPanel
 			break;
 		case MouseButton.Right:
 			_tv.Select(e.Item);
-			switch (AMenu.ShowSimple("Close\tM-click|Close all other|Close all", this)) {
+			switch (AMenu.ShowSimple("Close\tM-click|Close all other|Close all")) {
 			case 1:
 				_CloseFile();
 				break;

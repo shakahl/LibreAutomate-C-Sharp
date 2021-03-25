@@ -117,56 +117,62 @@ namespace Au
 				var wndProc = t_cwProc;
 				if (wndProc == null) return Api.DefWindowProc(w, msg, wParam, lParam); //creating not with our CreateWindow(wndProc, ...)
 				t_cwProc = null;
-				w.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+				Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
 				return wndProc(w, msg, wParam, lParam);
 			}
-			static Native.WNDPROC s_cwProc = _CWProc; //GC
+			static readonly Native.WNDPROC s_cwProc = _CWProc; //GC
 			static IntPtr s_cwProcFP;
 			[ThreadStatic] static Native.WNDPROC t_cwProc;
 #endif
 
 			/// <summary>
-			/// Creates native/unmanaged window of a class registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, and sets its window procedure.
+			/// Creates native/unmanaged window and sets its window procedure.
 			/// </summary>
-			/// <exception cref="ArgumentException">The class is not registered with <see cref="RegisterWindowClass"/>, or registered with non-null <i>wndProc</i>.</exception>
 			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 			/// <remarks>
-			/// Calls API <msdn>CreateWindowEx</msdn>.
+			/// Calls API <msdn>CreateWindowEx</msdn> and replaces window procedure with API <msdn>SetWindowLongPtr</msdn>.
+			/// If the class was registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (WM_CREATE etc).
 			/// Protects the <i>wndProc</i> delegate from GC.
-			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>.
 			/// </remarks>
 			public static AWnd CreateWindow(Native.WNDPROC wndProc, string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
+				if (wndProc is null || className is null) throw new ArgumentNullException();
+
 				var a = t_windows ??= new List<(AWnd w, Native.WNDPROC p)>();
 				for (int i = a.Count; --i >= 0;) if (!a[i].w.IsAlive) a.RemoveAt(i);
 
-				if (!IsClassRegistered_(className, out var wp) || wp != null) throw new ArgumentException("Window class must be registered with AWnd.More.RegisterWindowClass with null wndProc");
-
 				AWnd w;
-				//need to cubclass the new window. But not after CreateWindowEx, because wndProc must receive all messages.
+				if (IsClassRegistered_(className, out var wp) && wp == null) {
+					//need to cubclass the new window. But not after CreateWindowEx, because wndProc must receive all messages.
 #if CW_CBT //slightly slower and dirtier. Invented before Core, to support multiple appdomains.
-				using(AHookWin.ThreadCbt(c => { //let CBT hook subclass before any messages
-					if(c.code == HookData.CbtEvent.CREATEWND) {
-						//note: unhook as soon as possible. Else possible exception etc.
-						//	If eg hook proc uses 'lock' and that 'lock' must wait,
-						//		our hook proc is called again and again while waiting, until 'lock' throws exception.
-						//	In STA thread 'lock' dispatches messages, but I don't know why hook proc is called multiple times for same event.
-						c.hook.Unhook();
+					using(AHookWin.ThreadCbt(c => { //let CBT hook subclass before any messages
+						if(c.code == HookData.CbtEvent.CREATEWND) {
+							//note: unhook as soon as possible. Else possible exception etc.
+							//	If eg hook proc uses 'lock' and that 'lock' must wait,
+							//		our hook proc is called again and again while waiting, until 'lock' throws exception.
+							//	In STA thread 'lock' dispatches messages, but I don't know why hook proc is called multiple times for same event.
+							c.hook.Unhook();
 
-						var ww = (AWnd)c.wParam;
-						Debug.Assert(ww.ClassNameIs(className));
-						ww.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
-					} else Debug.Assert(false);
-					return false;
-				})) {
-					w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
-				}
+							var ww = (AWnd)c.wParam;
+							Debug.Assert(ww.ClassNameIs(className));
+							Api.SetWindowLongPtr(ww, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+						} else Debug.Assert(false);
+						return false;
+					})) {
+						w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
+					}
 #else
-				t_cwProc = wndProc; //let _DefWndProc subclass on first message
-				try { w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param); }
-				finally { t_cwProc = null; } //if CreateWindowEx failed and _CWProc not called
+					t_cwProc = wndProc; //let _DefWndProc subclass on first message
+					try { w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param); }
+					finally { t_cwProc = null; } //if CreateWindowEx failed and _CWProc not called
+					if (w.Is0) throw new AuException(0);
 #endif
+				} else {
+					w = Api.CreateWindowEx(exStyle, className, name, style, x, y, width, height, parent, controlId, hInstance, param);
+					if (w.Is0) throw new AuException(0);
+					Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+				}
 
-				if (w.Is0) throw new AuException(0);
 				a.Add((w, wndProc));
 				return w;
 			}
@@ -177,7 +183,7 @@ namespace Au
 			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 			/// <remarks>
 			/// Calls API <msdn>CreateWindowEx</msdn>.
-			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>.
 			/// </remarks>
 			/// <seealso cref="RegisterWindowClass"/>
 			public static AWnd CreateWindow(string className, string name = null, WS style = 0, WS2 exStyle = 0, int x = 0, int y = 0, int width = 0, int height = 0, AWnd parent = default, LPARAM controlId = default, IntPtr hInstance = default, LPARAM param = default) {
@@ -193,7 +199,7 @@ namespace Au
 			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 			/// <remarks>
 			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
-			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="DestroyWindow"/>, <see cref="Close"/>.
 			/// </remarks>
 			public static AWnd CreateMessageOnlyWindow(string className) {
 				return CreateWindow(className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
@@ -201,16 +207,14 @@ namespace Au
 			}
 
 			/// <summary>
-			/// Creates native/unmanaged <msdn>message-only window</msdn> of a class registered with <see cref="RegisterWindowClass"/> with null <i>wndProc</i>, and sets its window procedure.
+			/// Creates native/unmanaged <msdn>message-only window</msdn> and sets its window procedure.
 			/// </summary>
 			/// <param name="className">Window class name.</param>
 			/// <param name="wndProc"></param>
-			/// <exception cref="ArgumentException">The class is not registered with <see cref="RegisterWindowClass"/>, or registered with non-null <i>wndProc</i>.</exception>
 			/// <exception cref="AuException">Failed to create window. Unlikely.</exception>
 			/// <remarks>
 			/// Styles: WS_POPUP, WS_EX_NOACTIVATE.
-			/// Protects the <i>wndProc</i> delegate from GC.
-			/// Later call <see cref="DestroyWindow"/> or <see cref="Close"/>.
+			/// More info: <see cref="CreateWindow(Native.WNDPROC, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/>.
 			/// </remarks>
 			public static AWnd CreateMessageOnlyWindow(Native.WNDPROC wndProc, string className) {
 				return CreateWindow(wndProc, className, null, WS.POPUP, WS2.NOACTIVATE, parent: Native.HWND.MESSAGE);
@@ -353,9 +357,30 @@ namespace Au
 			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
 			public static bool PrintMsg(out string s, in System.Windows.Forms.Message m, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
-				if (options?.Skip?.Contains(m.Msg) ?? false) { s = null; return false; }
+				//TODO: instead of Message.ToString use own list of messages. The winforms list is too old and small, eg no dpichange messages.
+				//	https://referencesource.microsoft.com/#System.Windows.Forms/winforms/Managed/System/WinForms/MessageDecoder.cs,b19021e2f4480d57
+				//	Also in other places.
+				//	Also remove AndWindow and always append: "hwnd=123456 (class "textMax30..." {rect})"
+
+				if (options?.Skip is int[] a) {
+					s = null;
+					int msg = m.Msg, prev = 0;
+					foreach (var v in a) {
+						if (v < 0) {
+							if (msg >= prev && msg <= (v == int.MinValue ? int.MaxValue : -v)) return false;
+							prev = int.MaxValue;
+						} else {
+							if (v == msg) return false;
+							prev = v;
+						}
+					}
+				}
 
 				var sm = m.ToString();
+				sm = sm.RemoveSuffix(" result=0x0");
+
+				bool andWindow = options?.AndWindow ?? false;
+				if (andWindow) sm = sm.RegexReplace(@" hwnd=\w+", "", 1);
 
 				int i = 0;
 				if (options?.Indent ?? true) { //makes 5-10 times slower, but not too slow
@@ -374,6 +399,11 @@ namespace Au
 					s = si + counter.ToString() + ", " + sm;
 				} else {
 					s = si + sm;
+				}
+
+				if (andWindow) {
+					var w = (AWnd)m.HWnd;
+					s = s + ", window=" + w.ToString();
 				}
 				return true;
 			}
@@ -449,25 +479,31 @@ namespace Au.Types
 		public PrintMsgOptions() { }
 
 		/// <summary>
-		/// Sets the <see cref="Skip"/> PrintMsgSettings.
+		/// Sets <see cref="Skip"/>.
 		/// </summary>
 		public PrintMsgOptions(params int[] skip) { Skip = skip; }
 
 		/// <summary>
 		/// Prepend 1, 2, 3...
-		/// Default is true. As well as if <i>options</i> is null.
+		/// Default true. As well as if <i>options</i> parameter is null.
 		/// </summary>
 		public bool Number { get; set; } = true;
 
 		/// <summary>
 		/// Prepend one or more tabs if the caller function (usually WndProc) is called recursively.
-		/// Default is true. As well as if <i>options</i> is null.
+		/// Default true. As well as if <i>options</i> parameter is null.
 		/// </summary>
 		public bool Indent { get; set; } = true;
 
 		/// <summary>
 		/// Ignore these messages.
+		/// To specify a range of messages, use two array elements: first message and negative last message.
 		/// </summary>
 		public int[] Skip { get; set; }
+
+		/// <summary>
+		/// Append <see cref="AWnd.ToString"/>.
+		/// </summary>
+		public bool AndWindow { get; set; }
 	}
 }

@@ -25,12 +25,19 @@ namespace Au
 	/// </remarks>
 	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
 	{
-		static void _Print(object text, string cp, int cln, string cmn)
-		{
+		static void _Print(object text, string cp, int cln, string cmn) {
 			string s = AOutput.ObjectToString_(text);
-			string prefix = null; if(s.Starts("<>")) { prefix = "<>"; s = s.Substring(2); }
-			AOutput.Write($"{prefix}Debug: {cmn} ({APath.GetName(cp)}:{cln}):  {s}");
+			string prefix = null; if (s.Starts("<>")) { prefix = "<>"; s = s[2..]; }
+			s = $"{prefix}Debug: {cmn} ({APath.GetName(cp)}:{cln}):  {s}";
+			_Print2(s);
 		}
+
+		static void _Print2(object o) {
+			string s = o?.ToString();
+			if (UseQM2) AOutput.QM2.Write(s); else AOutput.Write(s);
+		}
+
+		internal static bool UseQM2;
 
 		/// <summary>
 		/// Calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
@@ -39,7 +46,7 @@ namespace Au
 		/// If text starts with "&lt;&gt;", it can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void Print(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		public static void Print(object text, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null)
 			=> _Print(text, cp, cln, cmn);
 
 		/// <summary>
@@ -49,9 +56,8 @@ namespace Au
 		/// If text starts with "&lt;&gt;", it can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void PrintIf(bool condition, object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
-		{
-			if(condition) _Print(text, cp, cln, cmn);
+		public static void PrintIf(bool condition, object text, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null) {
+			if (condition) _Print(text, cp, cln, cmn);
 		}
 
 		/// <summary>
@@ -61,20 +67,20 @@ namespace Au
 		/// </summary>
 		[Conditional("DEBUG")]
 		public static void PrintFunc([CallerMemberName] string name = null)
-			=> AOutput.Write(name);
+			=> _Print2(name);
 
 		/// <summary>
 		/// In DEBUG config prints ALastError.Message.
 		/// </summary>
 		[Conditional("DEBUG")]
-		internal static void PrintNativeError_([CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		internal static void PrintNativeError_([CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null)
 			=> _Print(ALastError.Message, cp, cln, cmn);
 
 		/// <summary>
 		/// In DEBUG config prints ALastError.MessageFor(code).
 		/// </summary>
 		[Conditional("DEBUG")]
-		internal static void PrintNativeError_(int code, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
+		internal static void PrintNativeError_(int code, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null)
 			=> _Print(ALastError.MessageFor(code), cp, cln, cmn);
 
 		/// <summary>
@@ -83,8 +89,7 @@ namespace Au
 		/// The 3 optional arguments are not used explicitly.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void Dialog(object text, [CallerFilePath]string cp = null, [CallerLineNumber]int cln = 0, [CallerMemberName]string cmn = null)
-		{
+		public static void Dialog(object text, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null) {
 			string s = AOutput.ObjectToString_(text);
 			ADialog.Show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetName(cp)}:{cln})");
 		}
@@ -109,7 +114,7 @@ namespace Au
 		///// </summary>
 		//public static void PrintOpt(string text)
 		//{
-		//	if(AOpt.Warnings.Verbose) AOutput.Write("Debug: " + text);
+		//	if(AOpt.Warnings.Verbose) _Print("Debug: " + text);
 		//}
 
 		//rejected: Don't need multiple warning functions. Now AWarning.Write does not show more than 1 warning/second if AOpt.Warnings.Verbose is false.
@@ -133,25 +138,23 @@ namespace Au
 		/// Does nothing if AOpt.Warnings.<see cref="AOptWarnings.Verbose"/> == false.
 		/// When flags are valid, this function is fast.
 		/// </remarks>
-		internal static unsafe void CheckFlagsOpt_<T>(T flags, T goodFlags) where T : unmanaged, Enum
-		{
+		internal static unsafe void CheckFlagsOpt_<T>(T flags, T goodFlags) where T : unmanaged, Enum {
 			//FUTURE: if this is really often useful, make it public. If not used - remove.
 
 			Debug.Assert(sizeof(T) == 4);
 			int a = *(int*)&flags;
 			int b = *(int*)&goodFlags;
-			if(a != (a & b)) _CheckFlagsOpt(typeof(T), b);
+			if (a != (a & b)) _CheckFlagsOpt(typeof(T), b);
 		}
 
 		[MethodImpl(MethodImplOptions.NoInlining)]
-		static void _CheckFlagsOpt(Type t, int goodFlags)
-		{
-			if(!AOpt.Warnings.Verbose) return;
-			if(!t.IsEnum) throw new ArgumentException("Bad type.");
+		static void _CheckFlagsOpt(Type t, int goodFlags) {
+			if (!AOpt.Warnings.Verbose) return;
+			if (!t.IsEnum) throw new ArgumentException("Bad type.");
 			var s = new StringBuilder("Invalid flags. Only these flags can be used: "); bool added = false;
-			for(int i = 1; i != 0; i <<= 1) {
-				if(0 == (i & goodFlags)) continue;
-				if(added) s.Append(", "); else added = true;
+			for (int i = 1; i != 0; i <<= 1) {
+				if (0 == (i & goodFlags)) continue;
+				if (added) s.Append(", "); else added = true;
 				s.Append(t.GetEnumName(i));
 			}
 			s.Append('.');
@@ -160,8 +163,7 @@ namespace Au
 		}
 
 #if DEBUG
-		internal static int GetComObjRefCount_(IntPtr obj)
-		{
+		internal static int GetComObjRefCount_(IntPtr obj) {
 			Marshal.AddRef(obj);
 			return Marshal.Release(obj);
 		}
@@ -185,11 +187,10 @@ namespace Au
 		/// Works in Release too.
 		/// </summary>
 		/// <param name="fromAnchor">Get the difference from previous call to <b>MemorySetAnchor_</b>.</param>
-		internal static string MemoryGet_(bool fromAnchor = true)
-		{
+		internal static string MemoryGet_(bool fromAnchor = true) {
 			var mem = GC.GetTotalMemory(false);
 			//if(s_mem0 == 0) s_mem0 = mem;
-			if(fromAnchor) mem -= s_mem0;
+			if (fromAnchor) mem -= s_mem0;
 			return (mem / 1024d / 1024d).ToStringInvariant("F3");
 		}
 		static long s_mem0;
@@ -209,27 +210,21 @@ namespace Au
 		/// <summary>
 		/// Prints assemblies already loaded or/and loaded in the future.
 		/// </summary>
-		internal static void PrintLoadedAssemblies(bool now, bool future, bool stackTrace = false)
-		{
-			if(now) {
+		internal static void PrintLoadedAssemblies(bool now, bool future, bool stackTrace = false) {
+			if (now) {
 				var a = AppDomain.CurrentDomain.GetAssemblies();
 				_Print2("-- now --");
-				foreach(var v in a) _Print2("# " + v.FullName);
+				foreach (var v in a) _Print2("# " + v.FullName);
 			}
-			if(future) {
-				if(stackTrace) new StackTrace(1, true); //load assemblies used by stack trace
+			if (future) {
+				if (stackTrace) new StackTrace(1, true); //load assemblies used by stack trace
 				_Print2("-- future --");
 				AppDomain.CurrentDomain.AssemblyLoad += (object sender, AssemblyLoadEventArgs e) => {
 					_Print2("# " + e.LoadedAssembly.FullName);
-					if(stackTrace) _Print2(new StackTrace(1, true));
+					if (stackTrace) _Print2(new StackTrace(1, true));
 				};
 				//var stack = new Stack<string>();
 			}
-		}
-
-		static void _Print2(object o)
-		{
-			AOutput.Write(o?.ToString());
 		}
 	}
 }

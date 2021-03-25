@@ -30,7 +30,8 @@ partial class FilesModel
 	public readonly string WorkspaceDirectory;
 	public readonly string WorkspaceName;
 	public readonly string FilesDirectory;
-	public readonly string TempDirectory;
+	public readonly string TempDirectory; //for any temporary files
+	public readonly string CacheDirectory; //for any cache files
 	public readonly AutoSave Save;
 	readonly Dictionary<uint, FileNode> _idMap;
 	public List<FileNode> OpenFiles;
@@ -56,6 +57,7 @@ partial class FilesModel
 		WorkspaceName = APath.GetName(WorkspaceDirectory);
 		FilesDirectory = WorkspaceDirectory + @"\files";
 		TempDirectory = WorkspaceDirectory + @"\.temp";
+		CacheDirectory = WorkspaceDirectory + @"\.cache";
 		if (!_importing) {
 			WorkspaceSN = ++s_workspaceSN;
 			AFile.CreateDirectory(FilesDirectory);
@@ -474,11 +476,16 @@ partial class FilesModel
 
 	void _ItemRightClicked(FileNode f) {
 		if (IsAlien(f)) return;
-
 		if (!f.IsSelected) f.SelectSingle();
-		//m.ItemsSource = App.Commands[nameof(Menus.File)].MenuItem.Items; //shows menu but then closes on mouse over
+		_ContextMenu();
+	}
+	static ContextMenu s_contextMenu;
+	bool s_inContextMenu;
+
+	void _ContextMenu() {
 		if (s_contextMenu == null) {
 			var m = new ContextMenu { PlacementTarget = TreeControl };
+			//m.ItemsSource = App.Commands[nameof(Menus.File)].MenuItem.Items; //shows menu but then closes on mouse over
 			App.Commands[nameof(Menus.File)].CopyToMenu(m);
 			m.Closed += (_, _) => s_inContextMenu = false;
 			s_contextMenu = m;
@@ -486,8 +493,6 @@ partial class FilesModel
 		s_contextMenu.IsOpen = true;
 		s_inContextMenu = true;
 	}
-	static ContextMenu s_contextMenu;
-	bool s_inContextMenu;
 
 	//Called when editor control focused, etc.
 	public void EnsureCurrentSelected() {
@@ -702,7 +707,7 @@ partial class FilesModel
 			int i;
 			bool isFolder = target.IsFolder && target.IsSelected && TreeControl.SelectedIndices.Count == 1;
 			if (isFolder && !target.HasChildren) pos = FNPosition.Inside;
-			else if (isFolder && (i = AMenu.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below", TreeControl)) > 0) {
+			else if (isFolder && (i = AMenu.ShowSimple("1 First in the folder|2 Last in the folder|3 Above|4 Below")) > 0) {
 				switch (i) {
 				case 1: target = target.FirstChild; break;
 				case 2: pos = FNPosition.Inside; break;

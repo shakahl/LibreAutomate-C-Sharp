@@ -258,7 +258,10 @@ static class CiSnippets
 			if (x.HasElements) {
 				x = null;
 				var a = snippet.x.Elements("list").ToArray();
-				int g = AMenu.ShowSimple(a.Select(o => o.Attr("item")).ToArray(), doc, MSFlags.ByCaret | AMenu.MSFlags_SelectFirst_);
+				var m = new AMenu();
+				foreach (var v in a) m.Add(v.Attr("item"));
+				m.FocusedItem = m.Items.First();
+				int g = m.Show(MSFlags.ByCaret | MSFlags.Underline);
 				if (g == 0) return;
 				x = a[g - 1];
 			}

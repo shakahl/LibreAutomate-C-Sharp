@@ -23,11 +23,13 @@ namespace Au
 	/// 
 	/// Threads that use hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="AOpt.WaitFor"/>).
 	/// 
-	/// <note type="important">The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in the same thread) or with the 'using' pattern. Else this process may crash.</note>
+	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with 'using' pattern. Can do it in hook procedure.</note>
 	/// 
 	/// <note type="warning">Avoid many hooks. Each low-level keyboard or mouse hook makes the computer slower, even if the hook procedure is fast. On each input event (key down, key up, mouse move, click, wheel) Windows sends a message to your thread.</note>
 	/// 
-	/// To handle hook events is used a callback functions, aka hook procedure. Hook procedures of some hook types can block some events. Blocked events are not sent to apps and older hooks.
+	/// To receive hook events is used a callback function, aka hook procedure. Hook procedures of some hook types can block some events (call <b>BlockEvent</b> or return true). Blocked events are not sent to apps and older hooks.
+	/// 
+	/// Delegates of hook procedures are protected from GC until called <b>Dispose</b> or until the thread ends, even of unreferenced <b>AHookWin</b> variables.
 	/// 
 	/// Accessible object functions may fail in hook procedures of low-level keyboard and mouse hooks. Workarounds exist.
 	/// 
@@ -41,6 +43,7 @@ namespace Au
 		readonly string _hookTypeString; //"Keyboard" etc
 		readonly int _hookType; //Api.WH_
 		readonly bool _ignoreAuInjected;
+		[ThreadStatic] static List<AHookWin> t_antiGC;
 
 		/// <summary>
 		/// Sets a low-level keyboard hook (WH_KEYBOARD_LL).
@@ -275,7 +278,7 @@ namespace Au
 			=> new AHookWin(Api.WH_CALLWNDPROCRET, hookProc, setNow, threadId);
 
 		AHookWin(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string hookTypeString = null) {
-			_proc2 = hookProc;
+			_proc2 = hookProc ?? throw new ArgumentNullException();
 			_hookType = hookType;
 			_hookTypeString = hookTypeString;
 			_ignoreAuInjected = ignoreAuInjected;
@@ -293,6 +296,7 @@ namespace Au
 				_proc1 = _HookProc;
 			}
 			if (setNow) Hook(tid);
+			(t_antiGC ??= new()).Add(this);
 		}
 		static bool s_jit1;
 
@@ -324,6 +328,7 @@ namespace Au
 		/// <remarks>
 		/// Does nothing if already removed or wasn't set.
 		/// Later you can call <see cref="Hook"/> to set hook again.
+		/// Note: call <see cref="Dispose"/> instead if will not need to hook again.
 		/// </remarks>
 		public void Unhook() {
 			if (_hh != default) {
@@ -349,6 +354,7 @@ namespace Au
 		public void Dispose() {
 			Unhook();
 			_proc2 = null;
+			t_antiGC.Remove(this);
 			GC.SuppressFinalize(this);
 		}
 
@@ -358,6 +364,7 @@ namespace Au
 		~AHookWin() {
 			//unhooking in finalizer thread makes no sense. Must unhook in same thread, else fails.
 			if (_hh != default) AWarning.Write($"Non-disposed AHookWin ({_hookTypeString}) variable.");
+			//ok if unhooked but not disposed. If we are here, the thread ended and therefore don't need to remove this from t_antiGC.
 		}
 
 		unsafe LPARAM _HookProc(int code, LPARAM wParam, LPARAM lParam) {

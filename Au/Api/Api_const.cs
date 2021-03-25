@@ -595,19 +595,6 @@ namespace Au.Types
 
 		#endregion
 
-		#region DLGC_
-
-		//internal const uint DLGC_WANTARROWS = 0x1;
-		//internal const uint DLGC_WANTALLKEYS = 0x4;
-
-		#endregion
-
-		#region SB_
-
-		internal const int SB_TOP = 6;
-
-		#endregion
-
 		#region misc
 
 		internal const int IDI_APPLICATION = 32512;

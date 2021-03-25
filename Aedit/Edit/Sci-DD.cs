@@ -110,7 +110,7 @@ partial class SciCode
 					string mi = _data.scripts
 						? "1 var s = name;|2 var s = path;|3 ATask.Run(path);|4 t[name] = o => ATask.Run(path);"
 						: "11 var s = path;|12 AFile.Run(path);|13 t[name] = o => AFile.Run(path);";
-					what = AMenu.ShowSimple(mi, _sci.Hwnd);
+					what = AMenu.ShowSimple(mi);
 					if (what == 0) return;
 				}
 

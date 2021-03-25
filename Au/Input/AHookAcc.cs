@@ -21,7 +21,8 @@ namespace Au
 	/// </summary>
 	/// <remarks>
 	/// The thread that uses hooks must process Windows messages. For example have a window/dialog/messagebox, or use a 'wait-for' function that dispatches messages or has such option (see <see cref="AOpt.WaitFor"/>).
-	/// The variable must be disposed, either explicitly (call <b>Dispose</b> or <b>Unhook</b>) or with the 'using' pattern.
+	/// 
+	/// <note type="important">The variable should be disposed when don't need, or at least unhooked, either explicitly (call <b>Dispose</b> or <b>Unhook</b> in same thread) or with 'using' pattern. Can do it in hook procedure.</note>
 	/// </remarks>
 	/// <example>
 	/// <code><![CDATA[
@@ -43,6 +44,7 @@ namespace Au
 		IntPtr[] _a;
 		Api.WINEVENTPROC _proc1; //our intermediate hook proc that calls _proc2
 		Action<HookData.AccHookData> _proc2; //caller's hook proc
+		[ThreadStatic] static List<AHookAcc> t_antiGC;
 
 		/// <summary>
 		/// Sets a hook for an event or a range of events.
@@ -55,28 +57,30 @@ namespace Au
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>See <see cref="AHookAcc"/>.</example>
-		public AHookAcc(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
+		public AHookAcc(AccEVENT eventMin, AccEVENT eventMax, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0) {
+			if (hookProc == null) throw new ArgumentNullException();
 			_proc1 = _HookProc;
 			Hook(eventMin, eventMax, idProcess, idThread, flags);
 			_proc2 = hookProc;
+			(t_antiGC ??= new()).Add(this);
 		}
 
 		/// <summary>
 		/// Sets multiple hooks.
 		/// </summary>
 		/// <param name="events">Events. Reference: API <msdn>SetWinEventHook</msdn>. Elements with value 0 are ignored.</param>
-		/// <param name="hookProc">The hook procedure (function that handles hook events).</param>
+		/// <param name="hookProc">The hook procedure (function that receives hook events).</param>
 		/// <param name="idProcess">The id of the process from which the hook function receives events. If 0 - all processes on the current desktop.</param>
 		/// <param name="idThread">The native id of the thread from which the hook function receives events. If 0 - all threads.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="AuException">Failed.</exception>
 		/// <example>See <see cref="AHookAcc"/>.</example>
-		public AHookAcc(AccEVENT[] events, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
+		public AHookAcc(AccEVENT[] events, Action<HookData.AccHookData> hookProc, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0) {
+			if (hookProc == null || events == null) throw new ArgumentNullException();
 			_proc1 = _HookProc;
 			Hook(events, idProcess, idThread, flags);
 			_proc2 = hookProc;
+			(t_antiGC ??= new()).Add(this);
 		}
 
 		/// <summary>
@@ -86,8 +90,7 @@ namespace Au
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
 		/// </remarks>
-		public void Hook(AccEVENT eventMin, AccEVENT eventMax = 0, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
+		public void Hook(AccEVENT eventMin, AccEVENT eventMax = 0, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0) {
 			_Throw1();
 			_a = new IntPtr[1];
 			_SetHook(0, eventMin, eventMax, idProcess, idThread, flags);
@@ -100,26 +103,27 @@ namespace Au
 		/// <remarks>
 		/// Parameters are the same as of the constructor, but values can be different.
 		/// </remarks>
-		public void Hook(AccEVENT[] events, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
+		public void Hook(AccEVENT[] events, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0) {
 			_Throw1();
 			_a = new IntPtr[events.Length];
-			for(int i = 0; i < events.Length; i++) _SetHook(i, events[i], 0, idProcess, idThread, flags);
+			for (int i = 0; i < events.Length; i++) _SetHook(i, events[i], 0, idProcess, idThread, flags);
 		}
 
-		void _SetHook(int i, AccEVENT eMin, AccEVENT eMax, int idProcess, int idThread, AccHookFlags flags)
-		{
-			if(eMin == 0) return;
-			if(eMax == 0) eMax = eMin;
+		void _SetHook(int i, AccEVENT eMin, AccEVENT eMax, int idProcess, int idThread, AccHookFlags flags) {
+			if (eMin == 0) return;
+			if (eMax == 0) eMax = eMin;
 			var hh = Api.SetWinEventHook(eMin, eMax, default, _proc1, idProcess, idThread, flags);
-			if(hh == default) { var ec = ALastError.Code; Unhook(); throw new AuException(ec, "*set hook for " + eMin.ToString()); }
+			if (hh == default) {
+				var ec = ALastError.Code;
+				Unhook();
+				throw new AuException(ec, "*set hook for " + eMin.ToString());
+			}
 			_a[i] = hh;
 		}
 
-		void _Throw1()
-		{
-			if(_a != null) throw new InvalidOperationException();
-			if(_proc1 == null) throw new ObjectDisposedException(nameof(AHookAcc));
+		void _Throw1() {
+			if (_a != null) throw new InvalidOperationException();
+			if (_proc1 == null) throw new ObjectDisposedException(nameof(AHookAcc));
 		}
 
 		/// <summary>
@@ -132,14 +136,13 @@ namespace Au
 		/// 
 		/// This function together with <see cref="Remove"/> can be used to temporarily add/remove one or more hooks while using the same <b>AHookAcc</b> variable and hook procedure. Don't need to call <b>Unhook</b> before.
 		/// </remarks>
-		public int Add(AccEVENT eventMin, AccEVENT eventMax = 0, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0)
-		{
-			if(_proc1 == null) throw new ObjectDisposedException(nameof(AHookAcc));
+		public int Add(AccEVENT eventMin, AccEVENT eventMax = 0, int idProcess = 0, int idThread = 0, AccHookFlags flags = 0) {
+			if (_proc1 == null) throw new ObjectDisposedException(nameof(AHookAcc));
 			int i = 0;
-			if(_a == null) {
+			if (_a == null) {
 				_a = new IntPtr[1];
 			} else {
-				for(; i < _a.Length; i++) if(_a[i] == default) goto g1;
+				for (; i < _a.Length; i++) if (_a[i] == default) goto g1;
 				Array.Resize(ref _a, i + 1);
 			}
 			g1:
@@ -152,11 +155,10 @@ namespace Au
 		/// </summary>
 		/// <param name="addedId">A return value of <see cref="Add"/>.</param>
 		/// <exception cref="ArgumentException"></exception>
-		public void Remove(int addedId)
-		{
+		public void Remove(int addedId) {
 			addedId--;
-			if(_a == null || (uint)addedId >= _a.Length || _a[addedId] == default) throw new ArgumentException();
-			if(!Api.UnhookWinEvent(_a[addedId])) AWarning.Write("Failed to unhook AHookAcc.");
+			if (_a == null || (uint)addedId >= _a.Length || _a[addedId] == default) throw new ArgumentException();
+			if (!Api.UnhookWinEvent(_a[addedId])) AWarning.Write("Failed to unhook AHookAcc.");
 			_a[addedId] = default;
 		}
 
@@ -172,12 +174,11 @@ namespace Au
 		/// Does nothing if already removed or wasn't set.
 		/// Must be called from the same thread that sets the hook.
 		/// </remarks>
-		public void Unhook()
-		{
-			if(_a != null) {
-				foreach(var hh in _a) {
-					if(hh == default) continue;
-					if(!Api.UnhookWinEvent(hh)) AWarning.Write("AHookAcc.Unhook failed.");
+		public void Unhook() {
+			if (_a != null) {
+				foreach (var hh in _a) {
+					if (hh == default) continue;
+					if (!Api.UnhookWinEvent(hh)) AWarning.Write("AHookAcc.Unhook failed.");
 				}
 				_a = null;
 			}
@@ -186,10 +187,10 @@ namespace Au
 		/// <summary>
 		/// Calls <see cref="Unhook"/>.
 		/// </summary>
-		public void Dispose()
-		{
+		public void Dispose() {
 			Unhook();
 			_proc1 = null;
+			t_antiGC.Remove(this);
 			GC.SuppressFinalize(this);
 		}
 
@@ -198,15 +199,14 @@ namespace Au
 		/// </summary>
 		~AHookAcc() {
 			//MSDN: UnhookWinEvent fails if called from a thread different from the call that corresponds to SetWinEventHook.
-			if(_a != null) AWarning.Write("Non-disposed AHookAcc variable.");
+			if (_a != null) AWarning.Write("Non-disposed AHookAcc variable.");
 		}
 
-		void _HookProc(IntPtr hHook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
-		{
+		void _HookProc(IntPtr hHook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime) {
 			try {
 				_proc2(new HookData.AccHookData(this, ev, wnd, idObject, idChild, idThread, eventTime));
 			}
-			catch(Exception ex) { AHookWin.OnException_(ex); }
+			catch (Exception ex) { AHookWin.OnException_(ex); }
 		}
 	}
 }
@@ -237,8 +237,7 @@ namespace Au.Types
 			/// <summary>API <msdn>WinEventProc</msdn></summary>
 			public readonly int eventTime;
 
-			internal AccHookData(AHookAcc hook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime)
-			{
+			internal AccHookData(AHookAcc hook, AccEVENT ev, AWnd wnd, AccOBJID idObject, int idChild, int idThread, int eventTime) {
 				this.hook = hook;
 				this.ev = ev;
 				this.wnd = wnd;
@@ -251,8 +250,7 @@ namespace Au.Types
 			/// <summary>
 			/// Calls <see cref="AAcc.FromEvent"/>.
 			/// </summary>
-			public AAcc GetAcc()
-			{
+			public AAcc GetAcc() {
 				return AAcc.FromEvent(wnd, idObject, idChild);
 			}
 		}

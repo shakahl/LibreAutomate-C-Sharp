@@ -15,6 +15,7 @@ using System.Reflection;
 using System.Linq;
 using System.Windows.Input;
 using System.Windows;
+using System.Windows.Controls;
 
 partial class FilesModel
 {
@@ -81,6 +82,10 @@ partial class FilesModel
 			default: return;
 			}
 			e.Handled = true;
+		}
+
+		protected override void OnContextMenuOpening(ContextMenuEventArgs e) {
+			App.Model._ContextMenu();
 		}
 
 		public new FileNode[] SelectedItems => base.SelectedItems.Cast<FileNode>().ToArray();

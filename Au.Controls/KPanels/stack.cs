@@ -231,30 +231,30 @@ namespace Au.Controls
 				e.Handled = true;
 				var parentStack = Parent._stack;
 				var m = new AMenu();
-				using (m.Submenu("Splitter Size")) {
+				m.Submenu("Splitter size", m => {
 					int z = _SplitterSize;
 					for (int i = 1; i <= 10; i++) {
-						m.Add(i.ToString(), o => _SplitterSize = o.Text.ToInt()).IsChecked = i == z;
+						m.AddRadio(i.ToString(), i == z, o => _SplitterSize = o.Text.ToInt());
 					}
-				}
+				});
 				m.Separator();
 				bool vert = parentStack.isVertical;
 				_PreviousDockedInStack._SplitterContextMenu_Unit(m, vert ? "Top" : "Left");
 				_SplitterContextMenu_Unit(m, vert ? "Bottom" : "Right");
 				if ((parentStack.isVertical ? parentStack.grid.RowDefinitions.Where(o => !o.Height.IsAuto).Count() : parentStack.grid.ColumnDefinitions.Where(o => !o.Width.IsAuto).Count()) > 2) {
 					//m.Separator();
-					m.Add("Resize Nearest\tCtrl", _ => _splitter.ResizeNearest ^= true).IsChecked = _splitter.ResizeNearest;
+					m.AddCheck("Resize Nearest\tCtrl", _splitter.ResizeNearest, _ => _splitter.ResizeNearest ^= true);
 				}
 				if (Parent.Parent != null) {
 					m.Separator();
-					using (m.Submenu("Stack")) {
+					m.Submenu("Stack", m => {
 						bool isFloating = Parent._state.Has(_DockState.Float);
 						m[isFloating ? "Dock" : "Float\tAlt+drag"] = o => Parent._SetDockState(isFloating ? 0 : _DockState.Float);
 						Parent._ContextMenu_Move(m);
-					}
+					});
 				}
 				ATimer.After(100, _ => Mouse.SetCursor(Cursors.Arrow)); //workaround. 30 too small, 50 ok
-				m.Show(_elem);
+				m.Show();
 			}
 
 			void _SplitterContextMenu_Unit(AMenu m, string s1) {
@@ -264,11 +264,11 @@ namespace Au.Controls
 				bool allToolbars = _IsToolbarsNode;
 				bool disableFixed = !allToolbars && unitNow != GridUnitType.Pixel
 					&& Parent.Children().Count(o => o._SizeDef.GridUnitType == GridUnitType.Star) < (unitNow == GridUnitType.Star ? 2 : 1);
-				_UnitItem(s1 + " Fixed", GridUnitType.Pixel);
-				if (allToolbars) _UnitItem(s1 + " Auto", GridUnitType.Auto);
+				_UnitItem(s1 + " fixed", GridUnitType.Pixel);
+				if (allToolbars) _UnitItem(s1 + " auto", GridUnitType.Auto);
 
 				void _UnitItem(string text, GridUnitType unit) {
-					m.Add(text, o => _SetUnit(unit), disable: disableFixed && unit == GridUnitType.Pixel).IsChecked = unit == unitNow;
+					m.AddCheck(text, unit == unitNow, o => _SetUnit(unit), disable: disableFixed && unit == GridUnitType.Pixel);
 					//CONSIDER: don't disable. Maybe user wants to set row A fixed and then row B star, not vice versa. But if forgets and makes window smaller, some panels and splitters may become invisible.
 				}
 

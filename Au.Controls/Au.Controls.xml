@@ -1639,6 +1639,11 @@
             <param name="d"></param>
             <seealso cref="M:Au.Controls.KTreeView.OnDragOver2(System.Boolean)"/>
         </member>
+        <member name="P:Au.Controls.KTreeView.Hwnd">
+            <summary>
+            Gets native control handle.
+            </summary>
+        </member>
         <member name="M:Au.Controls.KTreeView._ItemFromY(System.Int32)">
             <summary>
             Returns item index, or -1 if not on item.
@@ -1720,11 +1725,6 @@
         <member name="P:Au.Controls.KTreeView.CustomDraw">
             <summary>
             Custom-draw interface.
-            </summary>
-        </member>
-        <member name="P:Au.Controls.KTreeView.Hwnd">
-            <summary>
-            Gets native control handle.
             </summary>
         </member>
         <member name="T:Au.Controls.ITreeViewItem">

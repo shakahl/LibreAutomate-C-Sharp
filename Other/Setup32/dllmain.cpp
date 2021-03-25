@@ -174,7 +174,7 @@ EXPORT void Cpp_Unload(DWORD flags = 0)
 	//unload from processes where loaded by the clipboard hook
 	SendMessageTimeout(HWND_BROADCAST, 0, 0, 0, SMTO_ABORTIFHUNG, 1000 / less, &res);
 	for(HWND w = 0; w = FindWindowExW(HWND_MESSAGE, w, nullptr, nullptr); ) a.push_back(w);
-	for(int i = 0; i < a.size(); i++) SendMessageTimeout(a[i], 0, 0, 0, SMTO_ABORTIFHUNG, 1000 / less, &res);
+	for(int i = 0; i < (int)a.size(); i++) SendMessageTimeout(a[i], 0, 0, 0, SMTO_ABORTIFHUNG, 1000 / less, &res);
 	Sleep(500 / less);
 }
 

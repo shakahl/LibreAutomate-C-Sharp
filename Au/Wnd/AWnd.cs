@@ -1480,7 +1480,7 @@ namespace Au
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
 		/// </summary>
 		/// <remarks>Supports <see cref="ALastError"/>.</remarks>
-		public bool MapClientToScreen(ref RECT r) => MapClientToClientOf(default, ref r);
+		public bool MapClientToScreen(ref RECT r) => Api.MapWindowPoints(this, default, ref r, out _);
 
 		/// <summary>
 		/// Converts coordinates relative to the client area of this window to coordinates relative to the screen.
@@ -2067,7 +2067,7 @@ namespace Au
 			AWnd after = Native.HWND.NOTOPMOST;
 			if (afterActiveWindow) {
 				AWnd wa = Active;
-				if (!wa.Is0 && !Get.Owners(andThis: true).Contains(wa)) after = wa;
+				if (!wa.Is0 && !Get.Owners(andThisWindow: true).Contains(wa)) after = wa;
 			}
 
 			for (int i = 0; i < 4; i++) {
@@ -2425,17 +2425,11 @@ namespace Au
 				var v = t.ParentGWL_;
 				if (v != default) {
 					if (!s_messageOnlyParent.IsAlive) {
-						if (AKeys.IsScrollLock) {
-							var w = More.CreateMessageOnlyWindow("Static");
-							s_messageOnlyParent = w.ParentGWL_;
-							Api.DestroyWindow(w);
-						} else {
-							for (int i = 0; i < 5; i++) {
-								var w = FindFast(null, null, true); //find a message-only window
-								if (w.Is0) return false; //if there are no message-only windows, this window isn't message only
-								w = w.ParentGWL_;
-								if (!w.Is0) { s_messageOnlyParent = w; break; } //if 0, either w destroyed/reparented or GetWindowLong(GWL_HWNDPARENT) always returns 0 on this OS version
-							}
+						for (int i = 0; i < 5; i++) {
+							var w = FindFast(null, null, true); //find a message-only window
+							if (w.Is0) return false; //if there are no message-only windows, this window isn't message only
+							w = w.ParentGWL_;
+							if (!w.Is0) { s_messageOnlyParent = w; break; } //if 0, either w destroyed/reparented or GetWindowLong(GWL_HWNDPARENT) always returns 0 on this OS version
 						}
 						Debug.Assert(!s_messageOnlyParent.Is0);
 					}

@@ -21,9 +21,6 @@ using Au.Util;
 //FUTURE: init from code string.
 //SHOULDDO: try to find and select control in current tree when captured from same window. Like in acc tool.
 
-//TODO: tool "Get program path for AFile.Run". Eg for winstore app appid. Use AWnd.More.GetWindowsStoreAppId(w, true).
-//	Could be in this dialog. Add button "..." with menu. Or add in context menu like in QM2 Ctrl+Alt+Shift+W.
-
 namespace Au.Tools
 {
 	class DAWnd : KDialogWindow
@@ -123,6 +120,10 @@ namespace Au.Tools
 		static DAWnd() {
 			TUtil.OnAnyCheckTextBoxValueChanged<DAWnd>((d, o) => d._AnyCheckTextBoxValueChanged(o));
 		}
+
+		//public static void Dialog(AWnd wnd = default, bool uncheckControl = false) {
+		//	new DAWnd(wnd, uncheckControl).Show();
+		//}
 
 		protected override void OnSourceInitialized(EventArgs e) {
 			base.OnSourceInitialized(e);

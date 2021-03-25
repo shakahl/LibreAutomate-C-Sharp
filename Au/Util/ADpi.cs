@@ -206,19 +206,33 @@ namespace Au.Util
 
 		/// <summary>
 		/// Calls API <msdn>SystemParametersInfoForDpi</msdn> if available, else <msdn>SystemParametersInfo</msdn>.
+		/// Use only with <i>uiAction</i> = SPI_GETICONTITLELOGFONT, SPI_GETICONMETRICS, SPI_GETNONCLIENTMETRICS.
 		/// </summary>
-		public static bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, uint fWinIni, DpiOf dpiOf)
+		public static bool SystemParametersInfo(uint uiAction, int uiParam, LPARAM pvParam, DpiOf dpiOf)
 			=> AVersion.MinWin10_1607
-			? Api.SystemParametersInfoForDpi(uiAction, uiParam, pvParam, fWinIni, dpiOf)
-			: Api.SystemParametersInfo(uiAction, uiParam, pvParam, fWinIni);
+			? Api.SystemParametersInfoForDpi(uiAction, uiParam, pvParam, 0, dpiOf)
+			: Api.SystemParametersInfo(uiAction, uiParam, pvParam);
 
 		/// <summary>
 		/// Calls API <msdn>AdjustWindowRectExForDpi</msdn> if available, else <msdn>AdjustWindowRectEx</msdn>.
 		/// </summary>
-		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WS2 exStyle, bool hasMenu = false)
-			=> AVersion.MinWin10_1607
-			? Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpiOf)
-			: Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
+		/// <remarks>
+		/// Also adds scrollbar width or/and height if need.
+		/// </remarks>
+		public static bool AdjustWindowRectEx(DpiOf dpiOf, ref RECT r, WS style, WS2 exStyle, bool hasMenu = false) {
+			int dpi = dpiOf;
+			bool ok=AVersion.MinWin10_1607
+				? Api.AdjustWindowRectExForDpi(ref r, style, hasMenu, exStyle, dpi)
+				: Api.AdjustWindowRectEx(ref r, style, hasMenu, exStyle);
+			if (ok) {
+				if (style.Has(WS.VSCROLL)) r.Width += ScrollbarV_(dpi);
+				if (style.Has(WS.HSCROLL)) r.Width += ScrollbarH_(dpi);
+			}
+			return ok;
+		}
+
+		internal static int ScrollbarV_(int dpi) => GetSystemMetrics(Api.SM_CXVSCROLL, dpi);
+		internal static int ScrollbarH_(int dpi) => GetSystemMetrics(Api.SM_CYHSCROLL, dpi);
 
 		/// <summary>
 		/// DPI awareness of a window or process.

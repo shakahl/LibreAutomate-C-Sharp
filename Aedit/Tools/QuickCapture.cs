@@ -29,7 +29,7 @@ namespace Au.Tools
 			m.Last.IsDisabled = c.Is0;
 			m["Wait for window"] = o => _Insert(_AWnd_Find(w, c, true));
 			m["Activate window"] = o => _Insert(_AWnd_Find(w, default, false) + "\r\nw.Activate();");
-			using (m.Submenu("Click")) {
+			m.Submenu("Click", m => {
 				m["Window"] = o => _Insert(_AWnd_Find(w, default, false) + _Click(w, "w"));
 				m["Control"] = o => _Insert(_AWnd_Find(w, c, false) + _Click(c, "c"));
 				m.Last.IsDisabled = c.Is0;
@@ -38,8 +38,8 @@ namespace Au.Tools
 					w.MapScreenToClient(ref p);
 					return $"\r\nAMouse.Click({v}, {p.x}, {p.y});";
 				}
-			}
-			//	using(m.Submenu("Get color")) {
+			});
+			//	m.Submenu("Get color", m => {
 			//		m["Window"] = o=> {
 			//			
 			//		};
@@ -50,9 +50,9 @@ namespace Au.Tools
 			//		m["Screen"] = o=> {
 			//			
 			//		};
-			//	}
+			//	});
 			if (path != null)
-				using (m.Submenu("Program path")) {
+				m.Submenu("Program path", m => {
 					m["var s = path;"] = o => _Path(0);
 					m["AFile.Run(path);"] = o => _Path(1);
 					m["t[name] = o => AFile.Run(path);"] = o => _Path(2);
@@ -68,10 +68,10 @@ namespace Au.Tools
 						if (what == 2 && path.Starts("shell:")) r.name = w.Name;
 						_Insert(what switch { 1 => $"AFile.Run({s});", 2 => $"t[{_Str(r.name)}] = o => AFile.Run({s});", _ => $"var s = {s};" });
 					}
-				}
+				});
 			m.Separator();
 			m["AWnd dialog"] = o => new DAWnd(w0).Show();
-			m["AAcc dialog"] = o => new DAAcc(AAcc.FromXY(p, AXYFlags.NoThrow | AXYFlags.PreferLink)).Show();
+			m["AAcc dialog"] = o => DAAcc.Dialog(p: p);
 			m.Separator();
 			m.Add("Cancel");
 
