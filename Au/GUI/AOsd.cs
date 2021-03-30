@@ -162,7 +162,7 @@ namespace Au
 
 			var es = WS2.TOOLWINDOW | WS2.TOPMOST | WS2.LAYERED | WS2.TRANSPARENT | WS2.NOACTIVATE;
 			if (ClickToClose) es &= ~WS2.TRANSPARENT;
-			_w = AWnd.More.CreateWindow(WndProc, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
+			_w = AWnd.More.CreateWindow(WndProc, true, cn, Name, WS.POPUP, es); //note: don't set rect here: can be painting problems when resizing
 			_SetOpacity();
 			if (!_r.Is0) _w.SetWindowPos(Native.SWP.NOACTIVATE, _r.left, _r.top, _r.Width, _r.Height, Native.HWND.TOPMOST);
 		}

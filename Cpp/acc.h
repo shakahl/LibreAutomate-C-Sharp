@@ -61,7 +61,7 @@ static HRESULT get_accRole(IAccessible* acc, long elem, out int& intRole, out _v
 	} else {
 		switch(varRole.vt) {
 		case VT_I4: intRole = varRole.lVal; break;
-		case VT_BSTR: if(varRole.bstrVal) break;
+		case VT_BSTR: if(varRole.bstrVal) break; [[fallthrough]];
 		default: hr = 1;
 		}
 	}
@@ -104,6 +104,7 @@ g1:
 		i = role.lVal;
 		if(i < _countof(s_roles)) return s_roles[i];
 		if(0 == VariantChangeType(&role, &role, 0, VT_BSTR)) goto g1;
+		[[fallthrough]];
 	case 0: break; //failed to get role
 	default: PRINTF(L"role.vt=%i", role.vt);
 	}
@@ -216,7 +217,7 @@ static HRESULT AccFromWindow(HWND w, DWORD objid, out IAccessible** a, bool scre
 
 //IAccessible* and child element id.
 //Has only ctors. Does not have a dtor (does not Release etc), operator=, etc.
-//The same as Cpp_Acc, but has methods and is internal.
+//Like Cpp_Acc, but has methods and is internal.
 struct AccRaw : public Cpp_Acc
 {
 	AccRaw() noexcept : Cpp_Acc() {}

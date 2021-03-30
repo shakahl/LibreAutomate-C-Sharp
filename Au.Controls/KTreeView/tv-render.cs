@@ -1,38 +1,31 @@
-using Au;
 using Au.Types;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Au.Util;
-using System.Windows.Media.Imaging;
-using System.Windows;
-using System.Windows.Media;
-using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Windows.Threading;
-using System.Runtime.InteropServices;
 
 namespace Au.Controls
 {
 	public unsafe partial class KTreeView
 	{
+		bool _dontMeasure;
+
 		//Called on resize, scroll, set visible items (replace, clear, expand/collapse, add/remove/move).
 		void _Measure(bool onScroll = false) {
+			if (_dontMeasure) return; //this func is adding/removing scrollbars
 			EndEditLabel();
 			_labeltip?.Hide();
 
-			double width = _grid.ActualWidth * _dpi / 96, height = _grid.ActualHeight * _dpi / 96;
-			if (width < 1 || height < 1 || _avi.NE_()) {
-				_scrollTopIndex = 0;
-				_HideSB(_hscroll);
-				_HideSB(_vscroll);
+			int sbV = ADpi.ScrollbarV_(_dpi), sbH = ADpi.ScrollbarH_(_dpi);
+			var rw = _w.Rect; //never mind: minus border. Currently we don't use border. OK even if used, if just 1-pixel border and no caption.
+			int width = rw.Width, height = rw.Height;
+			if (width <= sbV || height <= sbH || _avi.NE_()) {
+				NativeScrollbar_.ShowVH(_vscroll, false, _hscroll, false);
 				return;
 			}
-			var range = _GetViewRange(onScroll ? _height : (int)Math.Ceiling(height));
+			var range = _GetViewRange(onScroll ? _height : height);
 
-			//AOutput.Write("_Measure", range.from, range.to, _scrollTopIndex);
-			int maxWidth = _itemsW;
+			//AOutput.Write("_Measure", range.from, range.to);
+			int maxWidth = _itemsWidth;
 			GdiTextRenderer tr = null;
 			for (int i = range.from; i < range.to; i++) {
 				if (_avi[i].measured > 0) continue;
@@ -40,48 +33,46 @@ namespace Au.Controls
 				bool bold = _avi[i].item.IsBold; if (bold) tr.FontBold();
 				var z = tr.MeasureText(_avi[i].item.DisplayText);
 				if (bold) tr.FontNormal();
-				int wid = ++z.width + _imageSize * (_avi[i].level + 1) + _imageMarginX * 2 + _marginLeft + _marginRight; if (HasCheckboxes) wid += _itemH;
+				int wid = ++z.width + _imageSize * (_avi[i].level + 1) + _imageMarginX * 2 + _marginLeft + _marginRight; if (HasCheckboxes) wid += _itemHeight;
 				if (wid > maxWidth) maxWidth = wid;
 				_avi[i].measured = (ushort)Math.Clamp(z.width, 1, ushort.MaxValue);
 			}
 			tr?.Dispose();
-			if (maxWidth > _itemsW) _itemsW = maxWidth; else if (onScroll) return;
+			if (maxWidth > _itemsWidth) _itemsWidth = maxWidth; else if (onScroll) return;
 
 			//set scrollbars
-			double sb = _vscroll.Width * _dpi / 96;
-			double itemsH = _avi.Length * _itemH;
-			bool needH = _itemsW > width && height >= _imageSize + sb; if (needH) height -= sb;
-			bool needV = itemsH > height && _avi.Length > 1 && width > sb; if (needV) { width -= sb; if (!needH) if (needH = _itemsW > width && height >= _imageSize + sb) height -= sb; }
+			int itemsHeight = _avi.Length * _itemHeight;
+			bool needH = _itemsWidth > width && height >= _imageSize + sbH; if (needH) height -= sbH;
+			bool needV = itemsHeight > height && _avi.Length > 1;
+			if (needV) { width -= sbV; if (!needH) needH = _itemsWidth > width && height >= _imageSize + sbH; }
 			//AOutput.Write(needH, needV);
-			if (needH) {
-				_hscroll.Visibility = Visibility.Visible;
-				_hscroll.ViewportSize = width;
-				_hscroll.LargeChange = width;
-				_hscroll.SmallChange = _imageSize;
-				_hscroll.Maximum = _itemsW - width;
-			} else _HideSB(_hscroll);
-			if (needV) {
-				_vscroll.Visibility = Visibility.Visible;
-				int u = (int)height / _itemH;
-				_vscroll.ViewportSize = u;
-				_vscroll.LargeChange = u;
-				_vscroll.Maximum = _avi.Length - u;
-			} else {
-				_scrollTopIndex = 0;
-				_HideSB(_vscroll);
-			}
+			if (_scrollCorrection = (needH && onScroll && _inScrollbarScroll && !_hscroll.Visible)) needH = false;
+			_dontMeasure = true;
+			NativeScrollbar_.ShowVH(_vscroll, needV, _hscroll, needH);
+			_dontMeasure = false;
+			if (needV) _vscroll.SetRange(_avi.Length);
+			if (needH) _hscroll.SetRange(_itemsWidth / _imageSize);
+		}
+		bool _inScrollbarScroll;
+		bool _scrollCorrection;
 
-			static void _HideSB(ScrollBar sb) {
-				if (!sb.IsVisible) return;
-				sb.Visibility = Visibility.Collapsed;
-				sb.Value = 0;
+		void _ScrollEnded() {
+			//workaround for: if we add other scrollbar while SB_THUMBTRACK-scrolling, does not scroll to the very bottom. Would need to scroll 2 times.
+			//	Also, if while SB_LINEDOWN-scrolling, the scroll box arrow remains not erased at the bottom-right corner.
+			//	Alas scintilla has these problems too.
+			if (_scrollCorrection) {
+				_scrollCorrection = false;
+				int max = _vscroll.Max, pos = _vscroll.Pos;
+				_hscroll.Visible = true;
+				_hscroll.SetRange(_itemsWidth / _imageSize);
+				if (_vscroll.Max > max && pos == max) EnsureVisible(_avi.Length - 1);
 			}
 		}
 
 		void _MeasureClear(bool updateNow) {
-			if (_grid == null) return;
+			if (!_hasHwnd) return;
 			if (_avi != null) for (int i = 0; i < _avi.Length; i++) _avi[i].measured = 0;
-			_itemsW = 0;
+			_itemsWidth = 0;
 			if (updateNow) {
 				_Measure();
 				_Invalidate();
@@ -90,21 +81,20 @@ namespace Au.Controls
 
 		(int from, int to) _GetViewRange(int height) {
 			int len = _avi.Lenn_(); if (len == 0) return default;
-			int max = (height + _itemH - 1) / _itemH, to = Math.Min(_scrollTopIndex + max, len + 1), from = Math.Max(0, to - max);
-			if (_scrollTopIndex > from) _scrollTopIndex = from;
-			return (_scrollTopIndex, Math.Min(to, len));
+			int i = _vscroll.Pos + (height + _itemHeight - 1) / _itemHeight;
+			return (_vscroll.Pos, Math.Min(i, len));
 		}
 
 		(int from, int to) _GetViewRange() => _GetViewRange(_height);
 
 		void _Invalidate(RECT* r = null) {
-			if (_hh != null) Api.InvalidateRect(_hh.Hwnd, r, false);
+			if (_hasHwnd) Api.InvalidateRect(_w, r, false);
 		}
 
 		void _Invalidate(int index) {
-			if (_hh == null) return;
+			if (!_hasHwnd) return;
 			var r = GetRectPhysical(index, clampX: true);
-			if (r.bottom > 0 && r.top < _height) Api.InvalidateRect(_hh.Hwnd, &r, false);
+			if (r.bottom > 0 && r.top < _height) Api.InvalidateRect(_w, &r, false);
 		}
 
 		/// <summary>
@@ -115,7 +105,7 @@ namespace Au.Controls
 		/// <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
 		/// <exception cref="IndexOutOfRangeException"></exception>
 		public void Redraw(int index, bool remeasure = false) {
-			if (_grid == null) return;
+			if (!_hasHwnd) return;
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
 			if (remeasure) {
 				//if this was the widest measured item, need to remeasure all, else would not update horz scrollbar if this item become narrower
@@ -137,7 +127,7 @@ namespace Au.Controls
 		/// <param name="item"></param>
 		/// <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
 		public void Redraw(ITreeViewItem item, bool remeasure = false) {
-			if (_grid == null) return;
+			if (!_hasHwnd) return;
 			int i = IndexOf(item);
 			if (i >= 0) Redraw(i, remeasure);
 		}
@@ -148,12 +138,11 @@ namespace Au.Controls
 		/// </summary>
 		/// <param name="remeasure">Remeasure item width. My need this when changed text or text style.</param>
 		public void Redraw(bool remeasure = false) {
-			if (_grid == null) return;
+			if (!_hasHwnd) return;
 			if (remeasure) _MeasureClear(updateNow: true);
 			else _Invalidate();
 		}
 
-		//	
 		//	/// <summary>
 		//	/// Remeasure item widths and redraws. My need this when changed text or text style.
 		//	/// Does nothing if the control is not created.
@@ -161,7 +150,7 @@ namespace Au.Controls
 		//	/// <param name="indices"></param>
 		//	/// <exception cref="ArgumentOutOfRangeException"></exception>
 		//	public void Remeasure(Range indices) {
-		//		if(_grid==null) return;
+		//		if(_border==null) return;
 		//		var (i, to)=indices.GetStartEnd(_avi.Lenn_());
 		//		while(i<to) _avi[i++].measured=0;
 		//		_Measure();
@@ -181,13 +170,13 @@ namespace Au.Controls
 			if (nDraw > 0) {
 				int backColor = Api.GetSysColor(Api.COLOR_WINDOW), textColor = Api.GetSysColor(Api.COLOR_WINDOWTEXT);
 				bool isFocusedControl = this.IsKeyboardFocused;
-				int xLefts = -_scrollX; if (HasCheckboxes) xLefts += _itemH;
+				int xLefts = -_hscroll.Offset; if (HasCheckboxes) xLefts += _itemHeight;
 				int xImages = xLefts + _imageMarginX + _marginLeft;
-				int yyImages = (_itemH + 1 - _imageSize) / 2, yyText = _dpi == 96 ? 1 : (_dpi >= 144 ? -1 : 0);
+				int yyImages = (_itemHeight + 1 - _imageSize) / 2, yyText = _dpi == 96 ? 1 : (_dpi >= 144 ? -1 : 0);
 
 				var graphics = System.Drawing.Graphics.FromHdc(dc);
 				var tr = new GdiTextRenderer(dc, _dpi);
-				IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_hh.Hwnd, "Button") : default;
+				IntPtr checkTheme = HasCheckboxes ? Api.OpenThemeData(_w, "Button") : default;
 				try {
 					graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
 					SIZE cSize = default; if (HasCheckboxes) if (checkTheme == default || 0 != Api.GetThemePartSize(checkTheme, dc, 3, 1, null, Api.THEMESIZE.TS_TRUE, out cSize)) cSize.width = cSize.height = ADpi.Scale(13, _dpi);
@@ -205,8 +194,8 @@ namespace Au.Controls
 						int index = i + range.from;
 						var v = _avi[index];
 						var item = v.item;
-						int y = i * _itemH;
-						var r = new RECT(0, y, _width, _itemH);
+						int y = i * _itemHeight;
+						var r = new RECT(0, y, _width, _itemHeight);
 						if(!r.IntersectsWith(rUpdate)) continue;
 						//AOutput.Write(i);
 						int indent = _imageSize * v.level, xLeft = indent + xLefts;
@@ -254,8 +243,8 @@ namespace Au.Controls
 						if (HasCheckboxes && item.CheckState != TVCheck.None) {
 							if (cd == null || !cd.DrawCheckbox()) {
 								//							if(1==(i&3)) item.CheckState=TVCheck.Checked; if(2==(i&3)) item.CheckState=TVCheck.Mixed; if(3==(i&3)) item.CheckState=TVCheck.Excluded; if(0!=(i&4)) v.IsDisabled=true;
-								int k = (_itemH - cSize.height) / 2;
-								var rr = new RECT(xLeft - _itemH + k, y + k, cSize.width, cSize.height);
+								int k = (_itemHeight - cSize.height) / 2;
+								var rr = new RECT(xLeft - _itemHeight + k, y + k, cSize.width, cSize.height);
 								var ch = item.CheckState;
 								if (checkTheme != default) {
 									int state = ch switch { TVCheck.Checked => 5, TVCheck.RadioChecked => 5, TVCheck.Mixed => 9, TVCheck.Excluded => 17, _ => 1 }; //CBS_x,RBS_x
@@ -302,7 +291,7 @@ namespace Au.Controls
 						if (_dd != null && _dd.insertIndex == index) {
 							int thick = ADpi.Scale(3, _dpi);
 							using var pen = new System.Drawing.Pen(System.Drawing.SystemColors.WindowText, thick);
-							y += thick / 2; int h1 = _itemH - thick;
+							y += thick / 2; int h1 = _itemHeight - thick;
 							if (_dd.insertFolder) {
 								graphics.DrawRectangle(pen, xImage, y, _imageSize, h1);
 							} else {
@@ -376,7 +365,7 @@ namespace Au.Controls
 			set {
 				if (value != _customDraw_) {
 					_customDraw_ = value;
-					if (_grid != null) _Invalidate();
+					_Invalidate();
 				}
 			}
 		}

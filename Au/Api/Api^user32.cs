@@ -1369,8 +1369,8 @@ namespace Au.Types
 		//internal const int SB_ENDSCROLL = 8;
 		internal const int SB_HORZ = 0;
 		internal const int SB_VERT = 1;
-		internal const int SB_CTL = 2;
-		//internal const int SB_BOTH = 3;
+		//internal const int SB_CTL = 2;
+		internal const int SB_BOTH = 3;
 
 		internal struct SCROLLINFO
 		{
@@ -1381,6 +1381,33 @@ namespace Au.Types
 			public int nPage;
 			public int nPos;
 			public int nTrackPos;
+
+			public SCROLLINFO(uint mask) : this() {
+				cbSize = sizeof(SCROLLINFO);
+				fMask = mask;
+			}
+
+			public int Set(AWnd w, bool vertical, bool redraw = true)
+				=> SetScrollInfo(w, vertical ? SB_VERT : SB_HORZ, this, redraw);
+
+			public bool Get(AWnd w, bool vertical)
+				=> GetScrollInfo(w, vertical ? SB_VERT : SB_HORZ, ref this);
+
+			public static SCROLLINFO Get(AWnd w, bool vertical, uint mask) {
+				SCROLLINFO v = new(mask);
+				v.Get(w, vertical);
+				return v;
+			}
+
+			public static int GetTrackPos(AWnd w, bool vertical) => Get(w, vertical, SIF_TRACKPOS).nTrackPos;
+
+			public static void SetPos(AWnd w, bool vertical, int pos, bool redraw = true) {
+				new SCROLLINFO(SIF_POS) { nPos = pos }.Set(w, vertical, redraw);
+			}
+
+			public static void SetRange(AWnd w, bool vertical, int max, int page, bool redraw = true) {
+				new SCROLLINFO(SIF_RANGE | SIF_PAGE) { nMax = max, nPage = page }.Set(w, vertical, redraw);
+			}
 		}
 
 		[DllImport("user32.dll")]
@@ -1388,6 +1415,9 @@ namespace Au.Types
 
 		[DllImport("user32.dll")]
 		internal static extern bool GetScrollInfo(AWnd hwnd, int nBar, ref SCROLLINFO lpsi);
+
+		[DllImport("user32.dll")]
+		internal static extern bool ShowScrollBar(AWnd hWnd, int wBar, bool bShow);
 
 		//[DllImport("user32.dll", SetLastError = true)]
 		//internal static extern bool GetScrollBarInfo(AWnd hwnd, AccOBJID idObject, ref SCROLLBARINFO psbi);

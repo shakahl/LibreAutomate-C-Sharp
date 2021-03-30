@@ -108,7 +108,13 @@ namespace Au.Types
 			public int time;
 			public POINT pt;
 
-			public override string ToString() => System.Windows.Forms.Message.Create(hwnd.Handle, message, wParam, lParam).ToString();
+			public override string ToString() {
+				AWnd.More.PrintMsg(out string s, this, new() { Indent = false, Number = false });
+				return s;
+			}
+
+			public static implicit operator MSG(in System.Windows.Forms.Message m)
+				=> new MSG { hwnd = (AWnd)m.HWnd, message = m.Msg, wParam = m.WParam, lParam = m.LParam };
 
 			public static implicit operator MSG(in System.Windows.Interop.MSG m)
 				=> new MSG { hwnd = (AWnd)m.hwnd, message = m.message, wParam = m.wParam, lParam = m.lParam, time = m.time, pt = (m.pt_x, m.pt_y) };

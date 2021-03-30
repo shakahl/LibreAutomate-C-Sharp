@@ -1299,19 +1299,10 @@
         <member name="M:Au.Controls.KTreeView.#ctor">
             
         </member>
-        <member name="M:Au.Controls.KTreeView.OnApplyTemplate">
-            
-        </member>
         <member name="M:Au.Controls.KTreeView.OnDpiChanged(System.Windows.DpiScale,System.Windows.DpiScale)">
             
         </member>
         <member name="P:Au.Controls.KTreeView.Dpi">
-            
-        </member>
-        <member name="M:Au.Controls.KTreeView.OnRenderSizeChanged(System.Windows.SizeChangedInfo)">
-            
-        </member>
-        <member name="M:Au.Controls.KTreeView.OnPropertyChanged(System.Windows.DependencyPropertyChangedEventArgs)">
             
         </member>
         <member name="M:Au.Controls.KTreeView.SetItems(System.Collections.Generic.IEnumerable{Au.Controls.ITreeViewItem},System.Boolean)">
@@ -1345,10 +1336,9 @@
         </member>
         <member name="P:Au.Controls.KTreeView.TopIndex">
             <summary>
-            Gets index of the first item in the scroll view; it is the value of the vertical scrollbar.
-            The 'set' function scrolls if need to make the item first in the scroll view.
+            Gets or sets index of the first item in the scroll view; it is the value of the vertical scrollbar.
+            The 'set' function scrolls if need. Clamps if invalid index.
             </summary>
-            <exception cref="T:System.IndexOutOfRangeException"></exception>
         </member>
         <member name="M:Au.Controls.KTreeView.Expand(System.Int32,System.Nullable{System.Boolean})">
             <summary>
@@ -1422,6 +1412,7 @@
             Processes keys such as arrow, page, Enter, Ctrl+A.
             Returns true if handled.
             </summary>
+            <seealso cref="M:Au.AKeys.More.KKeyToWpf(Au.Types.KKey)"/>
         </member>
         <member name="E:Au.Controls.KTreeView.ItemActivated">
             <summary>
@@ -1638,11 +1629,6 @@
             <param name="xy">A point relative to the top-left of the control without border. Physical pixels.</param>
             <param name="d"></param>
             <seealso cref="M:Au.Controls.KTreeView.OnDragOver2(System.Boolean)"/>
-        </member>
-        <member name="P:Au.Controls.KTreeView.Hwnd">
-            <summary>
-            Gets native control handle.
-            </summary>
         </member>
         <member name="M:Au.Controls.KTreeView._ItemFromY(System.Int32)">
             <summary>

@@ -114,7 +114,7 @@ namespace Au.Tools
 			//tree
 			b.xAddSplitterH(span: -1);
 			b.Row(-1).StartGrid().Columns(-1, 0, -1);
-			b.Row(-1).Add(out _tree).Border().Margin("T");
+			b.Row(-1).xAddInBorder(out _tree, "T");
 			b.End();
 
 			b.End();

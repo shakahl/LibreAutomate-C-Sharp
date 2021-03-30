@@ -1,5 +1,4 @@
-﻿using Au;
-using Au.Types;
+﻿using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Windows;

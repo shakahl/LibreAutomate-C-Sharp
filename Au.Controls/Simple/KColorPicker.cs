@@ -121,18 +121,18 @@ namespace Au.Controls
 
 			protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 				var wParent = (AWnd)hwndParent.Handle;
-				AWnd.More.CreateWindow(_WndProc, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+				AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 
 				return new HandleRef(this, _w.Handle);
 			}
 
 			protected override void DestroyWindowCore(HandleRef hwnd) {
-				//AOutput.Write("DestroyWindowCore");//TODO: never called. As well as WM_NCDESTROY.
 				Api.DestroyWindow(_w);
 			}
 
 			protected override Size MeasureOverride(Size constraint) => _Measure();
 
+			Native.WNDPROC _wndProc;
 			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 				//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
@@ -143,12 +143,11 @@ namespace Au.Controls
 					ABufferedPaint.Init();
 					break;
 				case Api.WM_NCDESTROY:
-					//AOutput.Write("WM_NCDESTROY");//TODO
 					_w = default;
 					ABufferedPaint.Uninit();
 					break;
-				//			case Api.WM_NCHITTEST: //SHOULDDO: test in Popup, probably click closes. Currently not using in popups.
-				//				return Api.HTTRANSPARENT;
+				//case Api.WM_NCHITTEST: //never mind: if in Popup, probably click closes. Currently not using in popups.
+				//	return Api.HTTRANSPARENT;
 				case Api.WM_LBUTTONDOWN:
 					_WmLbuttondown(lParam);
 					break;

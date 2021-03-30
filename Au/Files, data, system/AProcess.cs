@@ -363,11 +363,12 @@ namespace Au
 		/// <summary>
 		/// Gets full path of the program file of this process.
 		/// </summary>
+		[SkipLocalsInit]
 		public static unsafe string ExePath {
 			get {
 				if(s_exePath == null) {
-					var a = stackalloc char[300];
-					int n = Api.GetModuleFileName(default, a, 300);
+					var a = stackalloc char[500];
+					int n = Api.GetModuleFileName(default, a, 500);
 					s_exePath = new string(a, 0, n);
 					//documented and tested: can be C:\SHORT~1\NAME~1.exe or \\?\C:\long path\name.exe.
 					//tested: AppContext.BaseDirectory gets raw path, like above examples. Used by AFolders.ThisApp.

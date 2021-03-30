@@ -151,15 +151,15 @@ namespace other {
 EXPORT bool Cpp_ShellExec(const SHELLEXECUTEINFO& x, out DWORD& pid, out HRESULT& injectError, out HRESULT& execError)
 {
 	pid = 0; injectError = 0; execError = 0;
-	Cpp_Acc aAgent;
-	if(injectError = outproc::InjectDllAndGetAgent(GetShellWindow(), out aAgent.acc)) {
+	Cpp_Acc_Agent aAgent;
+	if(0 != (injectError = outproc::InjectDllAndGetAgent(GetShellWindow(), out aAgent.acc))) {
 		return false;
 	}
 
 	outproc::InProcCall c;
 	auto p = (MarshalParams_ShellExec*)c.AllocParams(&aAgent, InProcAction::IPA_ShellExec, MarshalParams_ShellExec::CalcMemSize(x));
 	p->Marshal(x);
-	if(execError = c.Call()) return false;
+	if(0 != (execError = c.Call())) return false;
 
 	BSTR b = c.GetResultBSTR();
 	if(b) pid = *(DWORD*)b;

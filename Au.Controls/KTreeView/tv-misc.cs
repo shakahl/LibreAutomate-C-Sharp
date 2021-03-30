@@ -1,15 +1,10 @@
-using Au;
 using Au.Types;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using Au.Util;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Controls.Primitives;
-using System.Windows.Input;
-using System.Diagnostics;
 
 namespace Au.Controls
 {
@@ -17,11 +12,12 @@ namespace Au.Controls
 	{
 		bool _IsValid(int index) => (uint)index < _avi.Lenn_();
 
-		bool _IndexToItemStruct(int i, out _VisibleItem item) {
-			bool r = _IsValid(i);
-			item = r ? _avi[i] : default;
-			return r;
-		}
+		//unused
+		//bool _IndexToItemStruct(int i, out _VisibleItem item) {
+		//	bool r = _IsValid(i);
+		//	item = r ? _avi[i] : default;
+		//	return r;
+		//}
 
 		bool _IndexToItem(int i, out ITreeViewItem item) {
 			bool r = _IsValid(i);
@@ -53,21 +49,22 @@ namespace Au.Controls
 			return false;
 		}
 
-		bool _IsInside(ITreeViewItem parent, int iChild) {
-			int i = IndexOf(parent);
-			return i >= 0 ? _IsInside(i, iChild) : false;
-		}
+		//unused
+		//bool _IsInside(ITreeViewItem parent, int iChild) {
+		//	int i = IndexOf(parent);
+		//	return i >= 0 && _IsInside(i, iChild);
+		//}
 
 		int _DpiScale(int value) => ADpi.Scale(value, _dpi);
 
-		int _ItemTop(int index) => (index - _scrollTopIndex) * _itemH;
+		int _ItemTop(int index) => (index - _vscroll.Pos) * _itemHeight;
 
 		/// <summary>
 		/// Returns item index, or -1 if not on item.
 		/// </summary>
 		/// <param name="y">In control coord, physical.</param>
 		int _ItemFromY(int y) {
-			int i = y / _itemH + _scrollTopIndex;
+			int i = y / _itemHeight + _vscroll.Pos;
 			if (!_IsValid(i)) i = -1;
 			return i;
 		}
@@ -78,14 +75,14 @@ namespace Au.Controls
 		}
 
 		void _GetPartOffsets(int i, out _PartOffsets p) {
-			p.left = -_scrollX;
+			p.left = -_hscroll.Offset;
 			p.checkbox = p.left + _avi[i].level * _imageSize;
-			p.marginLeft = p.checkbox; if (HasCheckboxes) p.marginLeft += _itemH;
+			p.marginLeft = p.checkbox; if (HasCheckboxes) p.marginLeft += _itemHeight;
 			p.image = p.marginLeft + _marginLeft;
 			p.text = p.image + _imageSize + _imageMarginX * 2;
 			p.marginRight = p.text + _avi[i].measured;
 			p.right = p.marginRight + _marginRight;
-			//		AOutput.Write(p.checkbox, p.marginLeft, p.image, p.text, p.marginRight, p.right);
+			//AOutput.Write(p.checkbox, p.marginLeft, p.image, p.text, p.marginRight, p.right);
 		}
 
 		/// <summary>
@@ -96,9 +93,9 @@ namespace Au.Controls
 		/// <exception cref="InvalidOperationException">Control not created.</exception>
 		public RECT GetRectPhysical(int index, TVParts parts = 0, bool inScreen = false, bool clampX = false) {
 			if (!_IsValid(index)) throw new IndexOutOfRangeException();
-			if (_hh == null) throw new InvalidOperationException();
+			if (!_hasHwnd) throw new InvalidOperationException();
 			int y = _ItemTop(index);
-			var r = new RECT(0, y, _width, _itemH);
+			var r = new RECT(0, y, _width, _itemHeight);
 			if (parts != 0) {
 				_GetPartOffsets(index, out var k);
 				//left
@@ -123,10 +120,10 @@ namespace Au.Controls
 					r.right = Math.Clamp(r.right, 0, _width);
 				}
 			} else if (!clampX) {
-				r.left = -_scrollX;
-				r.right = Math.Max(_width, _itemsW - _scrollX);
+				r.left = -_hscroll.Offset;
+				r.right = Math.Max(_width, _itemsWidth - r.left);
 			}
-			if (inScreen) _hh.Hwnd.MapClientToScreen(ref r);
+			if (inScreen) _w.MapClientToScreen(ref r);
 			return r;
 		}
 
@@ -174,7 +171,7 @@ namespace Au.Controls
 		/// Returns false if not on an item.
 		/// </summary>
 		/// <param name="h">Results.</param>
-		public bool HitTest(out TVHitTest h) => HitTest(_hh.Hwnd.MouseClientXY, out h);
+		public bool HitTest(out TVHitTest h) => HitTest(_w.MouseClientXY, out h);
 
 		_LabelTip _labeltip;
 

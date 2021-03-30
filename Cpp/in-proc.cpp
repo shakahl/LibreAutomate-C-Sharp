@@ -2,12 +2,12 @@
 
 //Dll injection is used for finding accessible objects (AO). Much faster when runs in the target thread.
 //For example, can find an AO in Chrome web page about 60 times faster.
-//note: with Firefox by default slow anyway, only maybe 30% faster than out-process.
-//	To make fast, need to disable the Firefox multiprocess feature:
-//	In about:config set this to false: browser.tabs.remote.force-enable
+//note: with Firefox by default slow anyway, maybe just 30% faster.
+//	To make fast, need to disable the Firefox multiprocess feature (if still possible):
+//	In about:config set browser.tabs.remote.force-enable = false.
 //	Firefox sets this to true when upgrading, eg from version 57 to 58. Even if both installed, if you run 57 and then 58.
 //It seems UI Automation also searches inproc, but somehow it manages to find the same object only 2-3 times faster (instead of 60) than outproc MSAA, and in some cases slower. Also its loading is very slow.
-//	Tested: UI Automation is not much faster when we call it inproc. Depends on window. Can be eg 2 times faster, or same speed.
+//	Tested: UI Automation is slightly faster when we call it inproc. Depends on window. Can be eg 2 times faster, or same speed.
 
 //The main entry functions to find/get AO are Cpp_AccFind and Cpp_AccFromWindow (in "acc bridge.cpp").
 //They call InjectDllAndGetAgent, which injects this dll into the target process (if not already done). Then they call the real 'find AO' etc function in the target thread.
@@ -16,7 +16,7 @@
 //When injected, creates a message-only window ("agent"), in each target thread. It is used for several purposes:
 //	To detect whether the dll is injected into the target process and is ready to call functions in the target thread.
 //	To get a proxy COM object that is used to call functions in that process/thread.
-//	To unload this dll from processes when need (dll development, reinstallation).
+//	To unload this dll from processes when need (dll development, setup).
 
 //To call functions in the target process/thread, we hook and call IAccessible::get_accHelpTopic.
 //It is probably the easiest way.
@@ -66,7 +66,9 @@ thread_local HWND t_agentWnd;
 }
 namespace outproc
 {
+#ifdef AGENTCACHE
 void HwndTidCache_OnThreadDetach();
+#endif
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
@@ -86,7 +88,9 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 		//Printf(L"T-  %i %i", GetCurrentProcessId(), GetCurrentThreadId());
 		HWND wAgent = inproc::t_agentWnd;
 		if(wAgent) DestroyWindow(wAgent);
+#ifdef AGENTCACHE
 		outproc::HwndTidCache_OnThreadDetach();
+#endif
 		break;
 	}
 	return TRUE;
@@ -400,13 +404,16 @@ bool RunDll(HWND w)
 //Use thread_local.
 class HwndTidCache {
 	DWORD _tid, _hwnd;
-	IAccessible* _iaccAgent;
 	ULONGLONG _time;
+#ifdef AGENTCACHE
+	IAccessible* _iaccAgent; //rejected. Too many problems. The speed improvement in many cases is very small.
+#endif
 public:
 	HwndTidCache() noexcept {
 		ZEROTHIS;
 	}
 
+#ifdef AGENTCACHE
 	//~HwndTidCache() {
 	//	if(_iaccAgent) _iaccAgent->Release();
 	//	//if(_iaccAgent) {
@@ -415,7 +422,7 @@ public:
 	//	//	Print(2);
 	//	//}
 	//}
-	//SHOULDDO: release _iaccAgent always. Now dtor is disabled because of this problem:
+	//shoulddo: release _iaccAgent always. Now dtor is disabled because of this problem:
 	//	Release hangs.
 	//	Conditions:
 	//		Win7 (tested only on the virtual PC).
@@ -444,7 +451,7 @@ public:
 	bool Get(DWORD tid, out HWND& w, out IAccessible** iaccAgent = null)
 	{
 		if(tid != _tid) return false;
-		ULONGLONG time = GetTickCount64(); if(time - _time > 10000) return false;
+		ULONGLONG time = GetTickCount64(); if(time - _time > 5000) return false;
 		HWND wCached = (HWND)(LPARAM)_hwnd;
 		if(tid != GetWindowThreadProcessId(wCached, null)) return false;
 		_time = time;
@@ -457,22 +464,42 @@ public:
 	{
 		_tid = tid;
 		_hwnd = (int)(LPARAM)w;
-		if(_iaccAgent) _iaccAgent->Release();
-		//TODO: Release() hangs if agent's thread now is in a blocked wait function or busy.
-		//  Don't use cache.
-		//	Or don't use COM to communicate with the agent.
-		//	Or just don't Release, if possible.
+		if(_iaccAgent) _iaccAgent->Release(); //problem: hangs if agent's thread now is in a blocked wait function or busy.
 		_iaccAgent = iaccAgent;
 		_time = GetTickCount64();
 	}
+#else
+
+	bool Get(DWORD tid, out HWND& w)
+	{
+		if(tid != _tid) return false;
+		ULONGLONG time = GetTickCount64(); if(time - _time > 5000) return false;
+		HWND wCached = (HWND)(LPARAM)_hwnd;
+		if(tid != GetWindowThreadProcessId(wCached, null)) return false;
+		_time = time;
+		w = wCached;
+		return true;
+	}
+
+	void Set(DWORD tid, HWND w)
+	{
+		_tid = tid;
+		_hwnd = (int)(LPARAM)w;
+		_time = GetTickCount64();
+	}
+#endif
 };
 
+#ifdef AGENTCACHE
 thread_local HwndTidCache t_agentCache, t_failedCache;
 
 void HwndTidCache_OnThreadDetach()
 {
 	t_agentCache.OnThreadDetach();
 }
+#else
+thread_local HwndTidCache t_failedCache;
+#endif
 
 //Finds agent window and gets its AO.
 //If dll still not injected, injects and creates agent window.
@@ -486,10 +513,12 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 	DWORD pid, tid = GetWindowThreadProcessId(w, &pid); if(tid == 0) return (HRESULT)eError::WindowClosed;
 
 	//use a simple cache to make faster, for example when waiting for AO in w
+#ifdef AGENTCACHE
 	if(t_agentCache.Get(tid, out wa, out & iaccAgent)) {
 		if(wAgent) *wAgent = wa;
 		return 0;
 	}
+#endif
 	HWND wFailed; if(t_failedCache.Get(tid, out wFailed)) return (HRESULT)eError::Inject;
 
 	if(tid == GetCurrentThreadId()) return (HRESULT)eError::WindowOfThisThread;
@@ -550,7 +579,9 @@ HRESULT InjectDllAndGetAgent(HWND w, out IAccessible*& iaccAgent, out HWND* wAge
 		return (HRESULT)eError::Inject;
 	}
 
+#ifdef AGENTCACHE
 	t_agentCache.Set(tid, wa, iaccAgent);
+#endif
 
 	if(wAgent) *wAgent = wa;
 	return 0;

@@ -13,6 +13,9 @@ using System.Linq;
 
 using Au.Types;
 
+//SHOULDDO: where possible, instead use stackalloc and [SkipLocalsInit]. Maybe make this internal.
+//SHOULDDO: Now GC class has functions to allocate without zeromemory.
+
 namespace Au.Util
 {
 	/// <summary>
@@ -71,17 +74,16 @@ namespace Au.Util
 		/// The WeakReference variable allows the array to be garbage-collected if it is not used when GC runs. It is automatic and safe. Next time this function will create new array.
 		/// Actually this function is a wrapper for WeakReference&lt;T[]&gt; functions TryGetTarget/SetTarget. Makes it easier to use.
 		/// </remarks>
-		public static unsafe T[] Get<T>(int n, ref WeakReference<T[]> weakReference) where T : unmanaged
-		{
+		public static unsafe T[] Get<T>(int n, ref WeakReference<T[]> weakReference) where T : unmanaged {
 			//if(threadStaticWeakReference != null && !threadStaticWeakReference.TryGetTarget(out var test)) AOutput.Write("collected"); test = null;
 
-			if(sizeof(T) <= 2) { //info: don't concern about speed. In Release this is removed completely by the compiler.
-				if(n < 300) n = 300;
+			if (sizeof(T) <= 2) { //info: don't concern about speed. In Release this is removed completely by the compiler.
+				if (n < 300) n = 300;
 				n++; //for safety add 1 for terminating '\0'. See also code 'r.Length - 1' in Char_ etc.
 			}
 
 			weakReference ??= new WeakReference<T[]>(null);
-			if(!weakReference.TryGetTarget(out var a)
+			if (!weakReference.TryGetTarget(out var a)
 				|| a.Length < n
 				) weakReference.SetTarget(a = new T[n]);
 			return a;
@@ -110,7 +112,7 @@ namespace Au.Util
 			//public int N => A.Length;
 
 			///
-			public static implicit operator char[] (CharBuffer v) => v.A;
+			public static implicit operator char[](CharBuffer v) => v.A;
 			///
 			public static implicit operator CharBuffer(char[] v) => new CharBuffer() { A = v };
 
@@ -118,9 +120,8 @@ namespace Au.Util
 			/// Converts the array, which contains native '\0'-terminated UTF-16 string, to String.
 			/// Unlike code <c>new string(charArray)</c>, gets array part until '\0' character, not whole array.
 			/// </summary>
-			public override string ToString()
-			{
-				if(A == null) return null;
+			public override string ToString() {
+				if (A == null) return null;
 				fixed (char* p = A) {
 					int n = CharPtr_.Length(p, A.Length);
 					return new string(p, 0, n);
@@ -132,8 +133,7 @@ namespace Au.Util
 			/// Uses <c>new string(A, 0, n)</c>, which throws exception if the array is null or n is invalid.
 			/// </summary>
 			/// <param name="n">String length.</param>
-			public string ToString(int n)
-			{
+			public string ToString(int n) {
 				return new string(A, 0, n);
 			}
 
@@ -156,9 +156,8 @@ namespace Au.Util
 			/// </summary>
 			/// <param name="n">String length.</param>
 			/// <param name="enc">If null, uses system's default ANSI encoding.</param>
-			internal string ToStringFromAnsi_(int n, Encoding enc = null)
-			{
-				if(A == null) return null;
+			internal string ToStringFromAnsi_(int n, Encoding enc = null) {
+				if (A == null) return null;
 				fixed (char* p = A) {
 					Debug.Assert(n <= A.Length * 2);
 					n = Math.Min(n, A.Length * 2);
@@ -201,12 +200,11 @@ namespace Au.Util
 		//}
 	}
 
-	//FUTURE: SkipLocalsInitAttribute probably will be added in C# 9 and .NET 5.
-	//	I guess .NET 5 also will add a "MemoryBufferOnStackOrHeap" class that uses the attribute.
+	//FUTURE: because now .NET has SkipLocalsInitAttribute, maybe also it has a fast "MemoryBufferOnStackOrHeap" class too.
 
 	//Tried to create a fast memory buffer class, eg for calling API.
 	//Failed, because compiler memsets the buffer. If buffer size is > 1000, it is slower than HeapAlloc/HeapFree.
-	//stackalloc also memsets, in most cases.
+	//stackalloc also memsets by default, but now we can use [SkipLocalsInit].
 	///// <summary>
 	///// Allocates a memory buffer on the stack (fast but fixed-size) or heap (slower but can be any size), depending on the size required.
 	///// The variable must be a local variable (not a class member etc). Else it is not on stack, which is dangerous because can be moved by GC.

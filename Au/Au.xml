@@ -6375,14 +6375,9 @@
             If the point is not in client area, don't look for descendants; if with flag <b>OrThis</b> and the point is in this (non-client area), return this, else return default(AWnd).
             </summary>
         </member>
-        <member name="T:Au.Types.RWCEtc">
-            <summary>
-            Used with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/>.
-            </summary>
-        </member>
         <member name="T:Au.Types.PrintMsgOptions">
             <summary>
-            Options for <see cref="M:Au.AWnd.More.PrintMsg(System.String@,System.Windows.Forms.Message@,Au.Types.PrintMsgOptions,System.String)"/>.
+            Options for <see cref="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)"/>.
             </summary>
         </member>
         <member name="M:Au.Types.PrintMsgOptions.#ctor">
@@ -6395,14 +6390,14 @@
         </member>
         <member name="P:Au.Types.PrintMsgOptions.Number">
             <summary>
-            Prepend 1, 2, 3...
-            Default true. As well as if <i>options</i> parameter is null.
+            Prepend counter 1, 2, 3...
+            Default true.
             </summary>
         </member>
         <member name="P:Au.Types.PrintMsgOptions.Indent">
             <summary>
             Prepend one or more tabs if the caller function (usually WndProc) is called recursively.
-            Default true. As well as if <i>options</i> parameter is null.
+            Default true.
             </summary>
         </member>
         <member name="P:Au.Types.PrintMsgOptions.Skip">
@@ -6411,9 +6406,14 @@
             To specify a range of messages, use two array elements: first message and negative last message.
             </summary>
         </member>
-        <member name="P:Au.Types.PrintMsgOptions.AndWindow">
+        <member name="P:Au.Types.PrintMsgOptions.WindowProperties">
             <summary>
-            Append <see cref="M:Au.AWnd.ToString"/>.
+            Append window classname, name and rectangle.
+            </summary>
+        </member>
+        <member name="T:Au.Types.RWCEtc">
+            <summary>
+            Used with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/>.
             </summary>
         </member>
         <member name="T:Au.Types.WTBProgressState">
@@ -21792,6 +21792,35 @@
             Cached standard bold font used by most windows and controls.
             </summary>
         </member>
+        <member name="T:Au.Util.NativeScrollbar_">
+            <summary>
+            Manages native vertical or horizontal scrollbar of a window.
+            </summary>
+        </member>
+        <member name="M:Au.Util.NativeScrollbar_.ShowVH(Au.Util.NativeScrollbar_,System.Boolean,Au.Util.NativeScrollbar_,System.Boolean)">
+            <summary>
+            If need, shows or hides vertical and/or horizontal scrollbar of same window.
+            When need to show or hide both, this function is 2 times faster than calling <see cref="P:Au.Util.NativeScrollbar_.Visible"/> separately.
+            </summary>
+        </member>
+        <member name="E:Au.Util.NativeScrollbar_.PosChanged">
+            <summary>
+            When scrollbar position changed.
+            The int parameter is event source: if scrollbar, it is one of Api.SB_ constants; if <see cref="P:Au.Util.NativeScrollbar_.Pos"/>, it is -1; if wheel, it is -2 if down, -3 if up.
+            </summary>
+        </member>
+        <member name="M:Au.Util.NativeScrollbar_.KeyNavigate(System.Int32,Au.Types.KKey)">
+            <summary>
+            Calculates new focused item index when pressed key Dow, Up, PageDown, PageUp, End or Home.
+            </summary>
+            <param name="i">Current focused item index. Can be -1.</param>
+            <param name="k"></param>
+            <remarks>
+            This scrollbar must be vertical. Asserts.
+            Returns unchanged <i>i</i> (even if -1) if <i>k</i> isn't a navigation key or if cannot change focused item.
+            Works like standard list controls.
+            </remarks>
+        </member>
         <member name="T:Au.Util.PostToThisThread_">
             <summary>
             Executes actions in same UI thread as ctor.
@@ -24921,7 +24950,7 @@
             <param name="wndProc">
             Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
             
-            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
+            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="!:CreateWindow(Native.WNDPROC, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
             If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
             </param>
             <param name="etc">
@@ -24929,7 +24958,7 @@
             To set cursor use field <b>mCursor</b> (standard cursor) or <b>hCursor</b> (native handle of a custom cursor).
             If null, this function sets arrow cursor and style CS_VREDRAW | CS_HREDRAW.
             </param>
-            <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/>.</exception>
+            <exception cref="T:System.ArgumentException"><i>wndProc</i> is an instance method. Must be static method or null. If need instance method, use null here and pass <i>wndProc</i> to <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/>.</exception>
             <exception cref="T:System.InvalidOperationException">The class already registered with this function and different <i>wndProc</i> (another method or another target object).</exception>
             <exception cref="T:System.ComponentModel.Win32Exception">Failed, for example if the class already exists and was registered not with this function.</exception>
             <remarks>
@@ -24940,16 +24969,20 @@
             Protects the <i>wndProc</i> delegate from GC.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
+        <member name="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
             <summary>
-            Creates native/unmanaged window and sets its window procedure.
+            Creates native/unmanaged window (API <msdn>CreateWindowEx</msdn>) and sets its window procedure.
             </summary>
+            <param name="wndProc">Window procedure.</param>
+            <param name="keepAlive">
+            Protect <i>wndProc</i> from GC (garbage collector) until the window is destroyed (message <msdn>WM_NCDESTROY</msdn> recived or thread ended).
+            <note type="important">In some cases it may prevent destroying the window until thread ends, and it can be a big memory leak. For example WPF then does not destroy HwndHost-ed controls. Then let <i>keepAlive</i>=false and manually manage <i>wndProc</i> lifetime, for example keep it as a field of the wrapper class.</note>
+            </param>
             <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
             <remarks>
-            Calls API <msdn>CreateWindowEx</msdn> and replaces window procedure with API <msdn>SetWindowLongPtr</msdn>.
             If the class was registered with <see cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/> with null <i>wndProc</i>, the <i>wndProc</i> function will receive all messages. Else will not receive messages sent before <b>CreateWindowEx</b> returns (WM_CREATE etc).
-            Protects the <i>wndProc</i> delegate from GC.
-            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/>, <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>.
+            
+            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/>, <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
             </remarks>
         </member>
         <member name="M:Au.AWnd.More.CreateWindow(System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)">
@@ -24959,7 +24992,7 @@
             <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
             <remarks>
             Calls API <msdn>CreateWindowEx</msdn>.
-            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/>, <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>.
+            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/>, <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
             </remarks>
             <seealso cref="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)"/>
         </member>
@@ -24971,7 +25004,7 @@
             <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
             <remarks>
             Styles: WS_POPUP, WS_EX_NOACTIVATE.
-            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/>, <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>.
+            To destroy the window can be used any function, including API <msdn>DestroyWindow</msdn>, <see cref="M:Au.AWnd.More.DestroyWindow(Au.AWnd)"/>, <see cref="M:Au.AWnd.Close(System.Boolean,System.Boolean)"/>, API <msdn>WM_CLOSE</msdn>.
             </remarks>
         </member>
         <member name="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)">
@@ -24983,7 +25016,7 @@
             <exception cref="T:Au.Types.AuException">Failed to create window. Unlikely.</exception>
             <remarks>
             Styles: WS_POPUP, WS_EX_NOACTIVATE.
-            More info: <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/>.
+            Calls <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> with <i>keepAlive</i>=true.
             </remarks>
         </member>
         <member name="M:Au.AWnd.More.DestroyWindow(Au.AWnd)">
@@ -25042,16 +25075,15 @@
             It allows processes of lower [](xref:uac) integrity level to send these messages to this process.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.String@,System.Windows.Forms.Message@,Au.Types.PrintMsgOptions,System.String)">
+        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
             <summary>
             Writes a Windows message to a string.
             If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
             </summary>
         </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
+        <member name="M:Au.AWnd.More.PrintMsg(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
             <summary>
-            Writes a Windows message to a string.
-            If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
+            Writes a Windows message to the output, unless it is specified in <i>options</i>.
             </summary>
         </member>
         <member name="M:Au.AWnd.More.PrintMsg(System.String@,Au.Types.Native.MSG@,Au.Types.PrintMsgOptions,System.String)">
@@ -25059,21 +25091,17 @@
             Writes a Windows message to a string.
             If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
             </summary>
-        </member>
-        <member name="M:Au.AWnd.More.PrintMsg(System.Windows.Forms.Message@,Au.Types.PrintMsgOptions,System.String)">
-            <summary>
-            Writes a Windows message to the output.
-            </summary>
-        </member>
-        <member name="M:Au.AWnd.More.PrintMsg(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM,Au.Types.PrintMsgOptions,System.String)">
-            <summary>
-            Writes a Windows message to the output.
-            </summary>
+            <remarks>
+            The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
+            </remarks>
         </member>
         <member name="M:Au.AWnd.More.PrintMsg(Au.Types.Native.MSG@,Au.Types.PrintMsgOptions,System.String)">
             <summary>
-            Writes a Windows message as API <msdn>MSG</msdn> to the output.
+            Writes a Windows message to the output, unless it is specified in <i>options</i>.
             </summary>
+            <remarks>
+            The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
+            </remarks>
         </member>
         <member name="T:Au.AWnd.More.SavedRect">
             <summary>

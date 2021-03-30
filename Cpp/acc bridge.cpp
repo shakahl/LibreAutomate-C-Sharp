@@ -121,7 +121,7 @@ public:
 #endif
 	}
 
-	virtual STDMETHODIMP QueryInterface(REFIID riid, void ** ppvObject) override
+	virtual STDMETHODIMP QueryInterface(REFIID riid, void** ppvObject) override
 	{
 		if(riid == IID_IAccessible || riid == IID_IUnknown || riid == IID_IDispatch) {
 			_a->AddRef();
@@ -149,75 +149,75 @@ public:
 		return r;
 	}
 #pragma region IAccessible
-	virtual STDMETHODIMP GetTypeInfoCount(UINT * pctinfo) override
+	virtual STDMETHODIMP GetTypeInfoCount(UINT* pctinfo) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo) override
+	virtual STDMETHODIMP GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo** ppTInfo) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId) override
+	virtual STDMETHODIMP GetIDsOfNames(REFIID riid, LPOLESTR* rgszNames, UINT cNames, LCID lcid, DISPID* rgDispId) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr) override
+	virtual STDMETHODIMP Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS* pDispParams, VARIANT* pVarResult, EXCEPINFO* pExcepInfo, UINT* puArgErr) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual STDMETHODIMP get_accParent(IDispatch ** ppdispParent) override
+	virtual STDMETHODIMP get_accParent(IDispatch** ppdispParent) override
 	{
 		return _a->get_accParent(ppdispParent);
 	}
-	virtual STDMETHODIMP get_accChildCount(long * pcountChildren) override
+	virtual STDMETHODIMP get_accChildCount(long* pcountChildren) override
 	{
 		return _a->get_accChildCount(pcountChildren);
 	}
-	virtual STDMETHODIMP get_accChild(VARIANT varChild, IDispatch ** ppdispChild) override
+	virtual STDMETHODIMP get_accChild(VARIANT varChild, IDispatch** ppdispChild) override
 	{
 		return _a->get_accChild(varChild, ppdispChild);
 	}
-	virtual STDMETHODIMP get_accName(VARIANT varChild, BSTR * pszName) override
+	virtual STDMETHODIMP get_accName(VARIANT varChild, BSTR* pszName) override
 	{
 		return _a->get_accName(varChild, pszName);
 	}
-	virtual STDMETHODIMP get_accValue(VARIANT varChild, BSTR * pszValue) override
+	virtual STDMETHODIMP get_accValue(VARIANT varChild, BSTR* pszValue) override
 	{
 		return _a->get_accValue(varChild, pszValue);
 	}
-	virtual STDMETHODIMP get_accDescription(VARIANT varChild, BSTR * pszDescription) override
+	virtual STDMETHODIMP get_accDescription(VARIANT varChild, BSTR* pszDescription) override
 	{
 		return _a->get_accDescription(varChild, pszDescription);
 	}
-	virtual STDMETHODIMP get_accRole(VARIANT varChild, VARIANT * pvarRole) override
+	virtual STDMETHODIMP get_accRole(VARIANT varChild, VARIANT* pvarRole) override
 	{
 		return _a->get_accRole(varChild, pvarRole);
 	}
-	virtual STDMETHODIMP get_accState(VARIANT varChild, VARIANT * pvarState) override
+	virtual STDMETHODIMP get_accState(VARIANT varChild, VARIANT* pvarState) override
 	{
 		return _a->get_accState(varChild, pvarState);
 	}
-	virtual STDMETHODIMP get_accHelp(VARIANT varChild, BSTR * pszHelp) override
+	virtual STDMETHODIMP get_accHelp(VARIANT varChild, BSTR* pszHelp) override
 	{
 		return _a->get_accHelp(varChild, pszHelp);
 	}
-	virtual STDMETHODIMP get_accHelpTopic(BSTR * pszHelpFile, VARIANT varChild, long * pidTopic) override
+	virtual STDMETHODIMP get_accHelpTopic(BSTR* pszHelpFile, VARIANT varChild, long* pidTopic) override
 	{
 		return E_NOTIMPL;
 	}
-	virtual STDMETHODIMP get_accKeyboardShortcut(VARIANT varChild, BSTR * pszKeyboardShortcut) override
+	virtual STDMETHODIMP get_accKeyboardShortcut(VARIANT varChild, BSTR* pszKeyboardShortcut) override
 	{
 		return _a->get_accKeyboardShortcut(varChild, pszKeyboardShortcut);
 	}
-	virtual STDMETHODIMP get_accFocus(VARIANT * pvarChild) override
+	virtual STDMETHODIMP get_accFocus(VARIANT* pvarChild) override
 	{
 		return _a->get_accFocus(pvarChild);
 	}
-	virtual STDMETHODIMP get_accSelection(VARIANT * pvarChildren) override
+	virtual STDMETHODIMP get_accSelection(VARIANT* pvarChildren) override
 	{
 		return _a->get_accSelection(pvarChildren);
 	}
-	virtual STDMETHODIMP get_accDefaultAction(VARIANT varChild, BSTR * pszDefaultAction) override
+	virtual STDMETHODIMP get_accDefaultAction(VARIANT varChild, BSTR* pszDefaultAction) override
 	{
 		return _a->get_accDefaultAction(varChild, pszDefaultAction);
 	}
@@ -225,15 +225,15 @@ public:
 	{
 		return _a->accSelect(flagsSelect, varChild);
 	}
-	virtual STDMETHODIMP accLocation(long * pxLeft, long * pyTop, long * pcxWidth, long * pcyHeight, VARIANT varChild) override
+	virtual STDMETHODIMP accLocation(long* pxLeft, long* pyTop, long* pcxWidth, long* pcyHeight, VARIANT varChild) override
 	{
 		return _a->accLocation(pxLeft, pyTop, pcxWidth, pcyHeight, varChild);
 	}
-	virtual STDMETHODIMP accNavigate(long navDir, VARIANT varStart, VARIANT * pvarEndUpAt) override
+	virtual STDMETHODIMP accNavigate(long navDir, VARIANT varStart, VARIANT* pvarEndUpAt) override
 	{
 		return _a->accNavigate(navDir, varStart, pvarEndUpAt);
 	}
-	virtual STDMETHODIMP accHitTest(long xLeft, long yTop, VARIANT * pvarChild) override
+	virtual STDMETHODIMP accHitTest(long xLeft, long yTop, VARIANT* pvarChild) override
 	{
 		return _a->accHitTest(xLeft, yTop, pvarChild);
 	}
@@ -436,7 +436,7 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		if(hr) return hr;
 
 		if(p->flags & 2) { //get name
-			return a->get_accName(ao::VE(), out &sResult);
+			return a->get_accName(ao::VE(), out & sResult);
 		}
 
 		Cpp_Acc aResult(a, 0);
@@ -454,7 +454,7 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		auto p = (MarshalParams_AccFind*)h; p->Unmarshal(out ap);
 		HWND w = (HWND)(LPARAM)p->hwnd;
 		eAF2 flags2 = p->flags2;
-		bool findAll = !!(flags2&eAF2::FindAll);
+		bool findAll = !!(flags2 & eAF2::FindAll);
 		auto resultProp = ap.resultProp;
 		HRESULT hr = (HRESULT)eError::NotFound;
 		Cpp_Acc aParent(iacc, 0, h->miscFlags), aPrev;
@@ -520,10 +520,10 @@ HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
 
 	DWORD pos; if(istream::GetPos(_stream, out pos) && pos == _resultSize) return (HRESULT)eError::NotFound; //no more results when FindAll. Fast.
 
-	eAccResult has=(eAccResult)0;
+	eAccResult has = (eAccResult)0;
 	if(0 != _stream->Read(&has, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
-	if(!(has&eAccResult::UsePrevAcc)) {
+	if(!(has & eAccResult::UsePrevAcc)) {
 		HRESULT hr;
 		if(dontNeedAO) {
 			//Perf.First();
@@ -535,20 +535,20 @@ HRESULT InProcCall::ReadResultAcc(ref Cpp_Acc& a, bool dontNeedAO/* = false*/) {
 		}
 		if(hr) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 	} else if(!dontNeedAO) {
-		assert(!!(has&eAccResult::Elem));
+		assert(!!(has & eAccResult::Elem));
 		a.acc->AddRef();
 	}
 
-	if(!(has&eAccResult::Elem)) a.elem = 0;
+	if(!(has & eAccResult::Elem)) a.elem = 0;
 	else if(_stream->Read(&a.elem, 4, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
 	if(_stream->Read(&a.misc.flags, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
-	if(!(has&eAccResult::Role)) a.misc.role = 0;
+	if(!(has & eAccResult::Role)) a.misc.role = 0;
 	else if(_stream->Read(&a.misc.role, 1, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 
-	if(!(has&eAccResult::UsePrevLevel)) {
-		if(!(has&eAccResult::Level)) a.misc.level = 0;
+	if(!(has & eAccResult::UsePrevLevel)) {
+		if(!(has & eAccResult::Level)) a.misc.level = 0;
 		else if(_stream->Read(&a.misc.level, 2, null)) return RPC_E_CLIENT_CANTUNMARSHAL_DATA;
 	}
 
@@ -581,15 +581,15 @@ g1:
 	if(flags & 1) { //not inproc
 		R = ao::AccFromWindowSR(w, objid, &aResult.acc);
 		if(R == 0 && flags & 2) {
-			R = aResult.acc->get_accName(ao::VE(), out &sResult);
+			R = aResult.acc->get_accName(ao::VE(), out & sResult);
 			aResult.acc->Release(); aResult.acc = null;
 		}
 		return R;
 	}
 
 	//Perf.First();
-	Cpp_Acc aAgent;
-	if(R = InjectDllAndGetAgent(w, out aAgent.acc)) {
+	Cpp_Acc_Agent aAgent;
+	if(0 != (R = InjectDllAndGetAgent(w, out aAgent.acc))) {
 		switch((eError)R) {
 		case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
 		default: return R;
@@ -603,7 +603,7 @@ g1:
 	p->hwnd = (int)(LPARAM)w;
 	p->objid = objid;
 	p->flags = flags;
-	if(R = c.Call()) return R;
+	if(0 != (R = c.Call())) return R;
 	//Perf.Next();
 	if(flags & 2) sResult = c.DetachResultBSTR();
 	else R = c.ReadResultAcc(ref aResult);
@@ -632,7 +632,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 {
 	//Perf.First();
 	aResult.Zero(); sResult = null;
-	bool inProc = !(ap.flags&eAF::NotInProc), findAll = (also != null), useWnd = (aParent == null);
+	bool inProc = !(ap.flags & eAF::NotInProc), findAll = (also != null), useWnd = (aParent == null);
 	eAF2 flags2 = findAll ? eAF2::FindAll : (eAF2)0;
 	HRESULT R;
 
@@ -650,10 +650,10 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 		}
 	}
 
-	Cpp_Acc aAgent;
+	Cpp_Acc_Agent aAgent;
 	if(inProc && useWnd) {
 		IAccessible* iagent = null;
-		if(R = InjectDllAndGetAgent(w, out iagent)) {
+		if(0 != (R = InjectDllAndGetAgent(w, out iagent))) {
 			switch((eError)R) {
 			case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
 			default: return R;
@@ -672,7 +672,7 @@ EXPORT HRESULT Cpp_AccFind(HWND w, Cpp_Acc* aParent, const Cpp_AccParams& ap, Cp
 		auto p = (MarshalParams_AccFind*)c.AllocParams(aParent, InProcAction::IPA_AccFind, sizeofParams);
 		p->Marshal(useWnd ? w : 0, ref ap, flags2);
 
-		if(R = c.Call()) {
+		if(0 != (R = c.Call())) {
 			if(R == (HRESULT)eError::InvalidParameter) sResult = c.DetachResultBSTR();
 		} else if(!findAll) {
 			if(!ap.resultProp) R = c.ReadResultAcc(ref aResult);

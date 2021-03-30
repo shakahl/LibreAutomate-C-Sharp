@@ -2448,11 +2448,11 @@ namespace Au
 		/// Gets window class name.
 		/// Returns null if fails, eg if the window is closed. Supports <see cref="ALastError"/>.
 		/// </summary>
+		[SkipLocalsInit]
 		public string ClassName {
 			get {
-				const int stackSize = 260;
-				var b = stackalloc char[stackSize]; //tested: same speed with AMemoryArray
-				int n = Api.GetClassName(this, b, stackSize);
+				var b = stackalloc char[260];
+				int n = Api.GetClassName(this, b, 260);
 				if (n == 0) return null;
 				return new string(b, 0, n);
 			}

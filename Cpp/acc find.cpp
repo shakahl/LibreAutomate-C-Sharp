@@ -137,7 +137,7 @@ class AccFinder
 			if(*s == ',' || s == eos) {
 				bool nott = false; if(*start == '!') { start++; nott = true; }
 				int state;
-				if(s > start&&* start >= '0' && *start <= '9') {
+				if(s > start && *start >= '0' && *start <= '9') {
 					LPWSTR se;
 					state = strtoi(start, &se);
 					if(se != s) return false;
@@ -335,7 +335,7 @@ public:
 				if(!!(_flags2 & eAF2::IsId) && GetDlgCtrlID(c) != _controlId) return true;
 				if(_controlClass.Is() && !wnd::ClassNameIs(c, _controlClass)) return true;
 				if(_controlWF != null && !wnd::WinformsNameIs(c, _controlWF)) return true;
-				return (bool)_FindInWnd(c, true);
+				return 0 != _FindInWnd(c, true);
 			});
 		} else {
 			_wTL = (wnd::Style(w) & WS_CHILD) ? 0 : w;
@@ -489,6 +489,7 @@ private:
 				switch(state.IsInvisible()) {
 				case 2: //INVISISBLE and OFFSCREEN
 					if(!_IsRoleToSkipIfInvisible(role)) break; //eg prevents finding a background DOCUMENT in Firefox
+					[[fallthrough]];
 				case 1: //only INVISIBLE
 					if(_IsRoleTopLevelClient(role, level)) break; //rare
 					skipChildren = true; goto gr;
@@ -802,12 +803,12 @@ int AccEnableChrome(HWND w, bool checkClassName)
 	if(!!(wf & eWinFlags::AccEnableMask)) return 0; //No or Started
 
 	//Perf.First();
-	IAccessible* iAgent;
-	if(0 != InjectDllAndGetAgent(w, out iAgent)) return 0;
+	Cpp_Acc_Agent aAgent;
+	if(0 != InjectDllAndGetAgent(w, out aAgent.acc)) return 0;
 	//Perf.NW();
 
 	InProcCall c;
-	auto p = (MarshalParams_AccElem*)c.AllocParams(iAgent, InProcAction::IPA_AccEnableChrome, sizeof(MarshalParams_AccElem));
+	auto p = (MarshalParams_AccElem*)c.AllocParams(&aAgent, InProcAction::IPA_AccEnableChrome, sizeof(MarshalParams_AccElem));
 	p->elem = (int)(LPARAM)w;
 
 	int R = 0;

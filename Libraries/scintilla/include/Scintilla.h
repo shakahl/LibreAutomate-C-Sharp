@@ -1163,7 +1163,6 @@ typedef sptr_t (*SciFnDirect)(sptr_t ptr, unsigned int iMessage, uptr_t wParam, 
 #endif
 
 //Au -------------------
-//#define SCI_UPDATESCROLLBARS 9501 //don't need anymore
 #define SCI_MARGINSTYLENEXT 9502
 
 typedef void(__stdcall* Sci_NotifyCallback)(void* cbParam, struct SCNotification& n);

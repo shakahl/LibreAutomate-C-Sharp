@@ -126,7 +126,7 @@ namespace Au
 		int _lastId; //to auto-generate item ids
 		bool _addedNewItems;
 		(SIZE window, SIZE client, int border) _size;
-		(bool yes, int max, int pos, int dy, int line) _scroll;
+		NativeScrollbar_ _scroll;
 		(AMenu child, AMenu parent, MenuItem item, ATimer timer) _sub;
 		(POINT p, bool track, bool left, bool right, bool middle) _mouse;
 		int _iHot = -1;
@@ -456,16 +456,14 @@ namespace Au
 				void _MessageLoop() {
 					do {
 						for (; ; ) {
-							bool handled = false;
 							if (_w.Is0) return;
-							static bool _Peek(out Native.MSG m, int msg) => Api.PeekMessage(out m, default, msg, msg, Api.PM_NOREMOVE) && m.message == msg;
-
-							if (_Peek(out var m, Api.WM_QUIT)) return; //let outer loop get the message (tested)
-							if (_Peek(out m, Api.WM_LBUTTONDOWN) || _Peek(out m, Api.WM_RBUTTONDOWN) || _Peek(out m, Api.WM_MBUTTONDOWN)
-								|| _Peek(out m, Api.WM_NCLBUTTONDOWN) || _Peek(out m, Api.WM_NCRBUTTONDOWN) || _Peek(out m, Api.WM_NCMBUTTONDOWN)) {
+							if (!Api.PeekMessage(out var m, default, 0, 0, Api.PM_NOREMOVE)) break;
+							if (m.message == Api.WM_QUIT) return; //let outer loop get the message (tested)
+							bool handled = false;
+							if (m.message is Api.WM_LBUTTONDOWN or Api.WM_RBUTTONDOWN or Api.WM_MBUTTONDOWN or Api.WM_NCLBUTTONDOWN or Api.WM_NCRBUTTONDOWN or Api.WM_NCMBUTTONDOWN) {
 								_CloseIfClickedNotMenu(m.hwnd);
 								if (_w.Is0) return; //let outer loop get the message
-							} else if (_Peek(out m, Api.WM_KEYDOWN) || _Peek(out m, Api.WM_SYSKEYDOWN)) {
+							} else if (m.message is Api.WM_KEYDOWN or Api.WM_SYSKEYDOWN) {
 								handled = _WmKeydown(m);
 								if (!handled && _w.Is0) return; //let outer loop get the message. Used for keys that close the menu but must be passed to the app, eg Alt. If Esc, handled is true.
 							}
@@ -582,11 +580,14 @@ namespace Au
 				_Images();
 			}
 
+			_scroll = new(true, i => _a[i].rect.top, i => _a[i].rect.bottom);
+
 			WS style = WS.POPUP | WS.DLGFRAME; //3-pixel frame
 			WS2 estyle = WS2.TOOLWINDOW | WS2.NOACTIVATE | WS2.TOPMOST;
 			SIZE z = _Measure(rs.Width * 9 / 10);
 
-			if (_scroll.yes = z.height > rs.Height) {
+			bool needScroll = z.height > rs.Height;
+			if (needScroll) {
 				z.height = rs.Height;
 				style |= WS.VSCROLL;
 			}
@@ -598,8 +599,8 @@ namespace Au
 			_size.window = r.Size; _size.client = z; _size.border = -r.top;
 			Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.GetValueOrDefault(), out r);
 
-			_w = AWnd.More.CreateWindow(_WndProc, "AMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
-			_SetScrollbar(z.height);
+			_w = AWnd.More.CreateWindow(_WndProc, true, "AMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
+			if (needScroll) _SetScrollbar(z.height);
 
 			_w.ShowL(true);
 
@@ -678,7 +679,7 @@ namespace Au
 				_w.Post(0);
 			}
 			_z?.Dispose(); _z = null;
-			_scroll = default;
+			_scroll = null;
 			_sub = default;
 			_size = default;
 			_mouse = default;
@@ -691,6 +692,8 @@ namespace Au
 		LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
 			//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
+
+			if (_scroll.WndProc(w, msg, wParam, lParam)) return default;
 
 			switch (msg) {
 			case Api.WM_NCCREATE:
@@ -712,17 +715,8 @@ namespace Au
 			case Api.WM_PAINT:
 				using (var bp = new ABufferedPaint(w, true)) _Render(bp.DC, bp.UpdateRect);
 				return default;
-			//case Api.WM_SIZE:
-			//	_SetScrollbar();
-			//	break;
 			case Api.WM_MOUSEACTIVATE:
 				return Api.MA_NOACTIVATE;
-			case Api.WM_VSCROLL:
-				_WmVscroll(AMath.LoWord(wParam));
-				break;
-			case Api.WM_MOUSEWHEEL:
-				_WmVscroll(AMath.HiShort(wParam) < 0 ? -1 : -3);
-				break;
 			case Api.WM_MOUSEMOVE:
 				_WmMousemove(lParam, fake: false);
 				return default;
@@ -754,71 +748,25 @@ namespace Au
 			return R;
 		}
 
-		#region scroll
-
 		void _SetScrollbar(int height) {
-			if (!_scroll.yes) return;
-			int page = height / _scroll.line;
-			for (int i = _a.Count; --i >= 0;) { height -= _a[i].rect.Height; if (height < 0) { _scroll.max = i + 1; break; } }
-			Api.SetScrollInfo(_w, Api.SB_VERT, new() { cbSize = sizeof(Api.SCROLLINFO), fMask = Api.SIF_RANGE | Api.SIF_PAGE, nMax = _scroll.max + page - 1, nPage = page }, false);
+			_scroll.SetRange(_a.Count);
+
+			_scroll.PosChanged += (sb, part) => {
+				_sub.child?.Close();
+
+				int pos = _scroll.Pos;
+				Api.InvalidateRect(_w);
+
+				if (part <= -2) { //if mouse wheel, update hot item, submenu, tooltip
+					var p = _w.MouseClientXY;
+					if (_w.ClientRect.Contains(p)) _WmMousemove(AMath.MakeUint(p.x, p.y), fake: true);
+				}
+			};
+			_scroll.Visible = true;
 		}
-
-		void _WmVscroll(int part) {
-			if (!_scroll.yes) return;
-
-			_sub.child?.Close();
-
-			int pos;
-			switch (part) {
-			case Api.SB_THUMBTRACK:
-				_GetScrollInfo(out var si);
-				pos = si.nTrackPos;
-				break;
-			case Api.SB_LINEDOWN: pos = _scroll.pos + 1; break;
-			case Api.SB_LINEUP: pos = _scroll.pos - 1; break;
-			case Api.SB_PAGEDOWN:
-				int to1 = _scroll.dy + _size.client.height;
-				for (pos = _scroll.pos; pos < _a.Count && _a[pos].rect.bottom <= to1;) pos++;
-				break;
-			case Api.SB_PAGEUP:
-				int to2 = _scroll.dy - _size.client.height;
-				for (pos = _scroll.pos; pos >= 0 && _a[pos].rect.top >= to2;) pos--;
-				pos++;
-				break;
-			case Api.SB_TOP: pos = 0; break;
-			case Api.SB_BOTTOM: pos = _scroll.max; break;
-			case -1 or -3:
-				int wl = Api.SystemParametersInfo(Api.SPI_GETWHEELSCROLLLINES, 3);
-				pos = _scroll.pos + (part + 2) * wl;
-				break;
-			default: return;
-			}
-			_Scroll(pos);
-
-			if (part != Api.SB_THUMBTRACK) { //update hot item, submenu, tooltip. Normally need only when mouse wheel.
-				var p = _w.MouseClientXY;
-				if (_w.ClientRect.Contains(p)) _WmMousemove(AMath.MakeUint(p.x, p.y), fake: true);
-			}
-		}
-
-		void _Scroll(int pos) {
-			pos = Math.Clamp(pos, 0, _scroll.max);
-			if (pos == _scroll.pos) return;
-			_scroll.pos = pos;
-			_scroll.dy = _a[pos].rect.top;
-			Api.SetScrollInfo(_w, 1, new() { cbSize = sizeof(Api.SCROLLINFO), fMask = Api.SIF_POS, nPos = pos }, true);
-			Api.InvalidateRect(_w);
-		}
-
-		bool _GetScrollInfo(out Api.SCROLLINFO si) {
-			si = new() { cbSize = sizeof(Api.SCROLLINFO), fMask = Api.SIF_RANGE | Api.SIF_PAGE | Api.SIF_POS | Api.SIF_TRACKPOS };
-			return Api.GetScrollInfo(_w, Api.SB_VERT, ref si);
-		}
-
-		#endregion
 
 		int _HitTest(POINT p, bool failIfDisabled = false) {
-			p.y += _scroll.dy;
+			p.y += _scroll.Offset;
 			for (int i = 0; i < _a.Count; i++) {
 				if (_a[i].rect.Contains(p)) return (failIfDisabled && _a[i].IsDisabled) ? -1 : i;
 			}
@@ -827,7 +775,7 @@ namespace Au
 
 		RECT _ItemRect(MenuItem k, bool inScreen = false) {
 			var r = k.rect;
-			r.Offset(0, -_scroll.dy);
+			r.Offset(0, -_scroll.Offset);
 			if (inScreen) _w.MapClientToScreen(ref r);
 			return r;
 		}
@@ -996,15 +944,14 @@ namespace Au
 				if ((_iHot = i) >= 0) _Invalidate(_iHot);
 			}
 			if (ensureVisible && i >= 0) {
-				int pos = _scroll.pos, y = _scroll.dy, hei = _size.client.height;
+				int pos = _scroll.Pos, y = _scroll.Offset, hei = _size.client.height;
 				var r = _a[i].rect;
 				if (r.top < y) {
 					while (pos > 0 && r.top < y) y -= _a[--pos].rect.Height;
 				} else if (r.bottom > y + hei) {
-					while (pos < _scroll.max && r.bottom > y + hei) y += _a[++pos].rect.Height;
+					while (pos < _scroll.Max && r.bottom > y + hei) y += _a[++pos].rect.Height;
 				} else return;
-				//AOutput.Write(_scroll.pos, pos, _a.Count, _scroll.max);
-				_Scroll(pos);
+				_scroll.Pos = pos;
 			}
 		}
 
@@ -1033,30 +980,9 @@ namespace Au
 		}
 
 		void _KeyNavigate(KKey k) { //called for top menu
-			int i = _iHot, dir = -1;
-			switch (k) {
-			case KKey.Home: i = 0; dir = 1; break;
-			case KKey.End: i = int.MaxValue; break;
-			case KKey.Down: i++; dir = 1; break;
-			case KKey.Up: if (i < 0) i = _a.Count; i--; break;
-			case KKey.PageDown when i < _a.Count - 1:
-				int to1 = _scroll.dy + _size.client.height;
-				if (_a[i + 1].rect.bottom > to1) to1 = _a[i + 1].rect.top + _size.client.height;
-				while (i + 1 < _a.Count && _a[i + 1].rect.bottom <= to1) i++;
-				dir = 1;
-				break;
-			case KKey.PageUp when i > 0:
-				int to2 = _scroll.dy;
-				if (i == _scroll.pos) to2 -= _size.client.height;
-				while (i - 1 >= 0 && _a[i - 1].rect.top >= to2) i--;
-				break;
-			default: return;
-			}
-
-			while ((uint)i < _a.Count && _a[i].IsSeparator) i += dir;
-
-			i = Math.Clamp(i, 0, _a.Count - 1);
-			_SetHotItem(i, ensureVisible: true);
+			int i = _scroll.KeyNavigate(_iHot, k); if (i == _iHot) return;
+			while ((uint)i < _a.Count && _a[i].IsSeparator) i += k is KKey.Home or KKey.Down or KKey.PageDown ? 1 : -1;
+			_SetHotItem(Math.Clamp(i, 0, _a.Count - 1), ensureVisible: true);
 		}
 
 		void _WmChar(char c) { //called for top menu

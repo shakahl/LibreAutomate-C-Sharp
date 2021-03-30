@@ -78,10 +78,5 @@ static class Test
 		//	//});
 		//}
 	}
-
-
-	public static unsafe void TestEditor() {
-
-	}
 }
 #endif

@@ -67,6 +67,8 @@ namespace Au.Controls
 			_w = AWnd.More.CreateWindow("Scintilla", null, style, 0, 0, 0, 0, 0, wParent);
 			//size 0 0 is not the best, but it is a workaround for WPF bugs
 
+			//CONSIDER: register window class "KScintilla"
+
 			_sciPtr = _w.Send(SCI_GETDIRECTPOINTER);
 			Call(SCI_SETNOTIFYCALLBACK, 0, Marshal.GetFunctionPointerForDelegate(_notifyCallback = _NotifyCallback));
 
@@ -187,11 +189,12 @@ namespace Au.Controls
 		//	Workaround: set focus on WM_LBUTTONDOWN etc. Also on WM_SETFOCUS, but temporarily set Focusable=false to avoid kill focus.
 		//3. Steals arrow keys, Tab and Enter from native control and sets focus to other controls or closes dialog.
 		//	Workaround: override TranslateAcceleratorCore, pass the keys to the control and return true.
-		//4. When closing parent window, moves the control to a hidden parking window.
-		//	If ShowDialog, does not call DestroyWindowCore and never destroys, even on GC.
-		//	Workaround: let app dispose the HwndHost in OnClosing. I did not find an automatic reliable workaround. Can't know when can destroy.
+		//4. When closing parent window, does not destroy hwnhosted controls. Instead moves to a hidden parking window, and destroys later on GC if you are careful.
+		//	Need to always test whether hwnhosted controls are destroyed on GC, to avoid leaked windows + many managed objects.
+		//	Eg to protect wndproc delegate from GC don't add it to a thread-static array until destroyed; let it be a field of the wrapper class.
+		//	Or let app dispose the HwndHost in OnClosing. But control itself cannot reliably know when to self-destroy.
 		//5. When closing parent window, briefly tries to show native control, and focus if was focused.
-		//	Workaround: same as 4.
+		//	Workaround: let app dispose the HwndHost in OnClosing.
 		//Never mind: after SetFocus, Keyboard.FocusedElement is null.
 
 		void _OnWmSetFocus() {
@@ -360,21 +363,18 @@ namespace Au.Controls
 		/// Border style.
 		/// Must be set before creating control handle.
 		/// </summary>
-		[DefaultValue(false)]
 		public virtual bool ZInitBorder { get; set; }
 
 		/// <summary>
 		/// Use the default Scintilla's context menu.
 		/// Must be set before creating control handle.
 		/// </summary>
-		[DefaultValue(false)]
 		public virtual bool ZInitUseDefaultContextMenu { get; set; }
 
 		/// <summary>
 		/// This control is used just to display text, not to edit.
 		/// Must be set before creating control handle.
 		/// </summary>
-		[DefaultValue(false)]
 		public virtual bool ZInitReadOnlyAlways { get; set; }
 
 		/// <summary>
@@ -396,7 +396,6 @@ namespace Au.Controls
 		/// Whether and how to show images.
 		/// Must be set before creating control handle.
 		/// </summary>
-		[DefaultValue(ZImagesStyle.NoImages)]
 		public virtual ZImagesStyle ZInitImagesStyle { get; set; }
 
 		/// <summary>
@@ -421,20 +420,17 @@ namespace Au.Controls
 		/// Whether and when supports tags.
 		/// Must be set before creating control handle.
 		/// </summary>
-		[DefaultValue(ZTagsStyle.NoTags)]
 		public virtual ZTagsStyle ZInitTagsStyle { get; set; }
 
 		/// <summary>
 		/// Whether to show arrows etc to make wrapped lines more visible.
 		/// Must be set before creating control handle.
 		/// </summary>
-		[DefaultValue(true)]
 		public virtual bool ZInitWrapVisuals { get; set; } = true;
 
 		/// <summary>
 		/// Word-wrap.
 		/// </summary>
-		[DefaultValue(false)]
 		public virtual bool ZWrapLines {
 			get => _wrapLines;
 			set {
@@ -450,20 +446,17 @@ namespace Au.Controls
 		/// Whether uses Enter key.
 		/// If null (default), false if <see cref="ZInitReadOnlyAlways"/> is true.
 		/// </summary>
-		[DefaultValue(null)]
 		public bool? ZAcceptsEnter { get; set; }
 
 		/// <summary>
 		/// On SCN_MODIFIED notifications suppress <see cref="ZOnSciNotify"/>, <see cref="ZNotify"/> and <see cref="ZTextChanged"/>.
 		/// Use to temporarily disable 'modified' notifications. Never use SCI_SETMODEVENTMASK, because then the control would stop working correctly.
 		/// </summary>
-		[DefaultValue(false)]
 		public bool ZDisableModifiedNotifications { get; set; }
 
 		/// <summary>
 		/// Don't set focus on mouse left/right/middle button down.
 		/// </summary>
-		[DefaultValue(default(MButtons))]
 		public MButtons ZNoMouseSetFocus { get; set; }
 
 		#endregion

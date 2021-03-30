@@ -102,7 +102,7 @@ namespace Au.Tools
 			//tree and window info
 			b.xAddSplitterH(span: -1);
 			b.Row(-1).StartGrid().Columns(-1, 0, -1);
-			b.Row(-1).Add(out _tree).Border().Margin("TR");
+			b.Row(-1).xAddInBorder(out _tree, "TR");
 			b.xAddSplitterV();
 			b.xAddInBorder(out _winInfo, "TL"); _winInfo.ZWrapLines = false;
 			b.End();

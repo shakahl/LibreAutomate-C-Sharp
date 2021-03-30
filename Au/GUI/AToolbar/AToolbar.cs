@@ -355,7 +355,7 @@ namespace Au
 			var r = owned ? owner.Rect : screen.Rect; //create in center of owner window or screen, to minimize possibility of DPI change when setting final position
 			r = new(r.CenterX - size.width / 2, r.CenterY - size.height / 2, size.width, size.height);
 			ADpi.AdjustWindowRectEx(_dpi, ref r, style, estyle);
-			AWnd.More.CreateWindow(_WndProc, "AToolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height);
+			AWnd.More.CreateWindow(_WndProc, true, "AToolbar", _name, style, estyle, r.left, r.top, r.Width, r.Height);
 			_created = true;
 		}
 

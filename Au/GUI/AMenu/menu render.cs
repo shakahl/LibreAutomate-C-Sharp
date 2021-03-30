@@ -83,7 +83,6 @@ namespace Au
 			var font = NativeFont_.RegularCached(_dpi);
 			using var dc = new FontDC_(font);
 			int lineHeight = dc.Measure(" ").height + buttonPlusY;
-			_scroll.line = lineHeight;
 
 			int maxHotkey = 0;
 			if (_z.hasHotkeys) {
@@ -96,7 +95,10 @@ namespace Au
 			if (maxHotkey > 0) maxTextWidth -= maxHotkey += hotkeyPlus;
 
 			int y = 0;
-			foreach (var b in _a) {
+			for (int i = 0; i < _a.Count; i++) {
+				//note: to support multiline, wrap, underlines and tabs we have to use DrawText, not TextOut.
+				//	DrawText(DT_CALCRECT) is slow. Very slow compared with GetTextExtentPoint32. Eg 100-300 ms for 1000 items. Depends on text length.
+				var b = _a[i];
 				SIZE z;
 				if (b.IsSeparator) {
 					z = new(0, _z.separator);
@@ -144,8 +146,8 @@ namespace Au
 				Api.SetBkMode(dc, 1);
 				int textColor = Api.GetSysColor(Api.COLOR_BTNTEXT), textColorDisabled = Api.GetSysColor(Api.COLOR_GRAYTEXT);
 
-				rUpdate.Offset(0, _scroll.dy);
-				for (int i = _scroll.pos; i < _a.Count; i++) {
+				rUpdate.Offset(0, _scroll.Offset);
+				for (int i = _scroll.Pos; i < _a.Count; i++) {
 					var b = _a[i];
 
 					if (b.rect.bottom <= rUpdate.top) continue;

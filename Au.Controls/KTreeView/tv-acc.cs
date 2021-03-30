@@ -13,12 +13,6 @@
 using Au.Types;
 using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Runtime.InteropServices;
-using System.Runtime.CompilerServices;
-using System.ComponentModel;
-using System.Reflection;
-using System.Diagnostics;
 using AccNAVDIR = Au.Types.Api.AccNAVDIR;
 
 namespace Au.Controls
@@ -29,7 +23,7 @@ namespace Au.Controls
 		{
 			KTreeView _tv;
 
-			internal _Accessible(KTreeView tv) : base(tv, tv._hh.Hwnd) {
+			internal _Accessible(KTreeView tv) : base(tv, tv.Hwnd) {
 				_tv = tv;
 			}
 

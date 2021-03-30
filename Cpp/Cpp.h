@@ -52,6 +52,22 @@ struct Cpp_Acc
 #endif
 };
 
+#ifdef Cpp_EXPORTS
+//Same as Cpp_Acc, but has dtor that calls Release.
+#ifdef AGENTCACHE
+typedef struct Cpp_Acc Cpp_Acc_Agent;
+#else
+struct Cpp_Acc_Agent : Cpp_Acc {
+	~Cpp_Acc_Agent() {
+		if(acc != null) {
+			acc->Release();
+			acc = null;
+		}
+	}
+};
+#endif
+#endif
+
 //Flags for Cpp_AccFind.
 //The same as C# AFFlags. Documented there.
 //[Flags]

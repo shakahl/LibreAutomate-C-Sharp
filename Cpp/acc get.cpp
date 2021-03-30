@@ -20,22 +20,22 @@ void _FromPoint_GetLink(ref IAccessible*& a, ref long& elem, ref int& role)
 {
 	//note: the child AO of LINK/BUTTON can be anything except LINK/BUTTON, although usually TEXT, STATICTEXT, IMAGE.
 	switch(role) { case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON: return; }
-	IAccessible* parent = null;
-	if(elem != 0) parent = a; else if(0 != ao::get_accParent(a, out parent)) return;
-	int role2 = ao::get_accRole(parent);
-	switch(role2) {
-	case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON:
-		//bug in old Chrome and new Firefox in some cases: AO retrieved with get_accParent is invalid, eg cannot get its window.
-		HWND wp; if(elem == 0 && WindowFromAccessibleObject(parent, &wp)) { PRINTF(L"Cannot get parent LINK because WindowFromAccessibleObject would fail."); break; }
+										IAccessible* parent = null;
+										if(elem != 0) parent = a; else if(0 != ao::get_accParent(a, out parent)) return;
+										int role2 = ao::get_accRole(parent);
+										switch(role2) {
+										case ROLE_SYSTEM_LINK: case ROLE_SYSTEM_PUSHBUTTON:
+											//bug in old Chrome and new Firefox in some cases: AO retrieved with get_accParent is invalid, eg cannot get its window.
+											HWND wp; if(elem == 0 && WindowFromAccessibleObject(parent, &wp)) { PRINTF(L"Cannot get parent LINK because WindowFromAccessibleObject would fail."); break; }
 
-		if(elem != 0) elem = 0; else util::Swap(ref a, ref parent);
-		role = role2;
-	}
-	if(parent != a) parent->Release();
-	//rejected: support 2 levels, eg youtube right-side list.
-	//	Can be even more levels, and multiple children of LINK, some of them may be useful for automation.
-	//	Often they have default action "jump" and value=URL.
-	//	Then also usually have state LINKED. But many objects don't have this state.
+											if(elem != 0) elem = 0; else util::Swap(ref a, ref parent);
+											role = role2;
+										}
+										if(parent != a) parent->Release();
+										//rejected: support 2 levels, eg youtube right-side list.
+										//	Can be even more levels, and multiple children of LINK, some of them may be useful for automation.
+										//	Often they have default action "jump" and value=URL.
+										//	Then also usually have state LINKED. But many objects don't have this state.
 }
 } //namespace
 
@@ -69,7 +69,7 @@ HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult)
 				//if auia is smaller than iacc, use auia. Dirty, but in most cases works well.
 				ao::VE ve;
 				if(0 == iacc->accLocation(&x, &y, &wid1, &hei1, ve) && 0 == auia->accLocation(&x, &y, &wid2, &hei2, ve)) {
-					__int64 sq1 = (__int64)wid1*hei1, sq2 = (__int64)wid2*hei2;
+					__int64 sq1 = (__int64)wid1 * hei1, sq2 = (__int64)wid2 * hei2;
 					if(sq2 < sq1 && sq2>0) {
 						iacc.Swap(ref auia);
 						miscFlags |= eAccMiscFlags::UIA;
@@ -80,7 +80,7 @@ HRESULT AccFromPoint(POINT p, int flags, int specWnd, out Cpp_Acc& aResult)
 		}
 	}
 
-	if(!!(miscFlags&eAccMiscFlags::UIA)) role = ao::get_accRole(iacc);
+	if(!!(miscFlags & eAccMiscFlags::UIA)) role = ao::get_accRole(iacc);
 	if(flags & 2) _FromPoint_GetLink(ref iacc.p, ref elem, ref role);
 
 	aResult.acc = iacc.Detach(); aResult.elem = elem; aResult.misc.flags = miscFlags;
@@ -113,7 +113,7 @@ EXPORT HRESULT Cpp_AccFromPoint(POINT p, int flags, out Cpp_Acc& aResult)
 					return 0;
 				}
 			}
-		} else if(!(WinFlags::Get(wTL)&eWinFlags::AccEnableMask)) {
+		} else if(!(WinFlags::Get(wTL) & eWinFlags::AccEnableMask)) {
 			if(specWnd == 1) { //Chrome
 				outproc::AccEnableChrome(wTL, false);
 				//note: now can get wrong AO, although the above func waits for new good DOCUMENT (max 1.5 s).
@@ -141,9 +141,8 @@ g1:
 		return R;
 	}
 
-	Cpp_Acc aAgent;
-	R = InjectDllAndGetAgent(wFP, out aAgent.acc);
-	if(R) {
+	Cpp_Acc_Agent aAgent;
+	if(0 != (R = InjectDllAndGetAgent(wFP, out aAgent.acc))) {
 		switch((eError)R) {
 		case eError::WindowOfThisThread: case eError::UseNotInProc: case eError::Inject: break;
 		default: return R;
@@ -156,7 +155,7 @@ g1:
 	x->p = p;
 	x->flags = flags;
 	x->specWnd = specWnd;
-	if(R = c.Call()) return R;
+	if(0 != (R = c.Call())) return R;
 	//Perf.Next();
 	R = c.ReadResultAcc(ref aResult);
 	//Perf.NW();
@@ -184,7 +183,7 @@ EXPORT HRESULT Cpp_AccGetFocused(HWND w, int flags, out Cpp_Acc& aResult)
 				aResult.misc.flags = eAccMiscFlags::Java;
 				return 0;
 			}
-		} else if(!(WinFlags::Get(w)&eWinFlags::AccEnableMask)) {
+		} else if(!(WinFlags::Get(w) & eWinFlags::AccEnableMask)) {
 			if(specWnd == 1) { //Chrome
 				outproc::AccEnableChrome(w, false);
 			} else { //OpenOffice

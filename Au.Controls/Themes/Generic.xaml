@@ -302,30 +302,4 @@
         </Setter>
         <Setter Property='Padding' Value='2,6,2,6' />
     </Style>
-
-    <Style x:Key='KTreeView' TargetType='{x:Type Control}'>
-        <Setter Property='Template'>
-            <Setter.Value>
-                <ControlTemplate TargetType='{x:Type Control}'>
-                    <Border Background='{TemplateBinding Background}'
-                            BorderBrush='{TemplateBinding BorderBrush}'
-                            BorderThickness='{TemplateBinding BorderThickness}'>
-                        <Grid x:Name='_grid'>
-                            <Grid.RowDefinitions>
-                                <RowDefinition Height='*' />
-                                <RowDefinition Height='Auto' />
-                            </Grid.RowDefinitions>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width='*' />
-                                <ColumnDefinition Width='Auto' />
-                            </Grid.ColumnDefinitions>
-
-                            <ScrollBar x:Name='_vscroll' Orientation='Vertical' Grid.Column='1' Grid.Row='0' SmallChange='1' Visibility='Collapsed' />
-                            <ScrollBar x:Name='_hscroll' Orientation='Horizontal' Grid.Column='0' Grid.Row='1' Visibility='Collapsed' />
-                        </Grid>
-                    </Border>
-                </ControlTemplate>
-            </Setter.Value>
-        </Setter>
-    </Style>
 </ResourceDictionary>
