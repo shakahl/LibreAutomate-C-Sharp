@@ -101,6 +101,13 @@ namespace Au.Types
 		/// Hide the toolbar when a full-screen window is active. Default.
 		/// </summary>
 		HideWhenFullScreen = 2,
+		//TODO: use SHQueryUserNotificationState to detect also presentation mode etc.
+		//	HideWhenFullScreenActive
+		//	HideWhenFullScreenRunning (QUNS_BUSY) (in primary screen only)
+		//	HideWhenPresentation (QUNS_PRESENTATION_MODE)
+		//	HideWhenD3DFullScreen (QUNS_RUNNING_D3D_FULL_SCREEN). I guess it is for games. Not tested.
+		//	But problem: no QUNS_BUSY if fullscreen in non-primary screen.
+		//	Also found this comment (not tested): "It also only works when the Explorer shell is running."
 	}
 
 	/// <summary>

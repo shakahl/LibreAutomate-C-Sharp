@@ -35,7 +35,7 @@ namespace Au.Tools
 			_panel.Children.Add(_c = new());
 			if (split > 0) {
 				_c.Width = split;
-				_panel.Children.Add(_c2 = new());
+				_panel.Children.Add(_c2 = new() { Name = "info_2" });
 			}
 		}
 

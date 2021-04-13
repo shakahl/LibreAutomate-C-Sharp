@@ -30,9 +30,16 @@ namespace Au.Tools
 			var doc = Panels.Editor.ZActiveDoc;
 			Owner = GetWindow(doc);
 
+			if (name == null) {
+				name = doc.zSelectedText();
+				if (!name.NE()) {
+					name = name.RegexReplace(@"\W+", " ");
+				}
+			}
+
 			var b = new AWpfBuilder(this).WinSize(700, 500);
 			b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
-			b.R.Add("Name", out tName, name ?? doc.zSelectedText()).Tooltip(
+			b.R.Add("Name", out tName, name).Tooltip(
 @"Case-sensitive name of a function, struct, constant, interface, callback.
 Use wildcard to specify partial name. Examples: Start*, *End, *AnyPart*
 Or text containing multiple full names. Example: Name1 Name2 Name3."

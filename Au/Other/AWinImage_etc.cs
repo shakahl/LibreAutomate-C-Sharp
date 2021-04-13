@@ -309,11 +309,11 @@ namespace Au
 		}
 
 		static bool _WaitForHotkey(string info) {
-			using (AOsd.ShowText(info, Timeout.Infinite, icon: SystemIcons.Information)) {
+			using (AOsd.ShowText(info, Timeout.Infinite)) {
 				//try { AKeys.WaitForHotkey(0, KKey.F3); }
 				//catch(AuException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
 
-				AKeys.WaitForKey(0, KKey.F3, up: true, block: true); //SHOULDDO: exit on Esc. Now closes dialog but not tooltip.
+				AKeys.WaitForKey(0, KKey.F3, up: true, block: true); //TODO: exit on Esc. Now closes dialog but not tooltip. Even does not exit when closed editor window.
 			}
 			return true;
 		}
@@ -538,7 +538,7 @@ namespace Au
 
 			protected override void OnMouseUp(MouseEventArgs e) {
 				if (e.Button != MouseButtons.Right) return;
-				var m = new AMenu();
+				var m = new AMenu();//TODO: does not respond to click. Instead cancels capturing.
 				m["Retry\tF3"] = o => { this.DialogResult = DialogResult.Retry; this.Close(); };
 				m["Cancel\tEsc"] = o => this.Close();
 				m.Show();

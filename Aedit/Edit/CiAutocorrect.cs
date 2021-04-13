@@ -24,6 +24,11 @@ using Microsoft.CodeAnalysis.Shared.Extensions;
 
 //never mind: should decrease indent when typing }. Rarely need to type it because we auto-add it.
 
+//TODO: don't eat '(' after function autocompletion with space.
+//	Eg if autocompletes FuncName(), the user may want to type FuncName(()=>...) or FuncName((cast)...).
+//	Because user will not type "FuncName (". But eat '(' after keyword autocompletion, because user may type "keyword (".
+//	Also remove Options -> Code -> Only spacebar... or/and make it default.
+
 class CiAutocorrect
 {
 	public class BeforeCharContext

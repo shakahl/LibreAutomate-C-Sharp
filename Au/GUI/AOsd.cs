@@ -479,15 +479,14 @@ namespace Au
 		public Native.DT TextFormatFlags { get; set; } = Native.DT.NOPREFIX | Native.DT.WORDBREAK | Native.DT.EXPANDTABS;
 
 		/// <summary>
-		/// Icon at the left of text.
-		/// For example <i>System.Drawing.SystemIcons.Information</i> or <c>AIcon.Stock(StockIcon.INFO, 32).ToGdipIcon()</c>.
+		/// Icon or image at the left. Can be <see cref="AIcon"/>, <b>Icon</b> or <b>System.Drawing.Image</b>. Any size.
+		/// For example <i>System.Drawing.SystemIcons.Information</i> or <c>AIcon.Stock(StockIcon.INFO)</c>.
 		/// </summary>
 		/// <remarks>
 		/// This property cannot be changed after creating OSD window.
-		/// This class does not copy and does not dispose the icon.
 		/// </remarks>
-		public Icon Icon { get; set; }
-		//rejected: support Image etc.
+		public object Icon { get; set; }
+		SIZE _iconSize;
 
 		/// <summary>
 		/// If true, the OSD window will have shadow.
@@ -602,9 +601,15 @@ namespace Au
 			r.Inflate(-_margin, -_margin);
 			if (Font.Italic) r.Width += _margin / 2; //avoid clipping part of last char
 
-			if (Icon != null) {
-				g.DrawIconUnstretched(Icon, new(r.left + c_iconPadding, r.top + c_iconPadding, Icon.Width, Icon.Height));
-				int k = Icon.Width + c_iconPadding * 2; r.left += k;
+			if (_iconSize != default) {
+				int x = r.left + c_iconPadding, y = r.top + c_iconPadding;
+				if(Icon is Image im) {
+					g.DrawImageUnscaled(im, x, y);
+				} else {
+					var hi = Icon switch { AIcon k => k.Handle, Icon k => k.Handle, _ => default };
+					Api.DrawIconEx(dc, x, y, hi, 0, 0);
+				}
+				r.left += _iconSize.width + c_iconPadding * 2;
 			}
 
 			if (!Text.NE()) {
@@ -642,8 +647,13 @@ namespace Au
 			} else {
 				Size zi = default;
 				if (Icon != null) {
-					zi = Icon.Size;
-					zi.Width += c_iconPadding * 2; zi.Height += c_iconPadding * 2;
+					switch (Icon) {
+					case AIcon k: zi = k.Size; break;
+					case Icon k: zi = k.Size; break;
+					case Image k: zi = k.Size; break;
+					}
+					_iconSize = zi;
+					if (zi != default) { zi.Width += c_iconPadding * 2; zi.Height += c_iconPadding * 2; }
 				}
 
 				var screen = XY?.GetScreen() ?? DefaultScreen.Now;
@@ -702,7 +712,7 @@ namespace Au
 		/// </remarks>
 		public static AOsd ShowText(string text,
 			int secondsTimeout = 0, PopupXY xy = null,
-			Icon icon = null, ColorInt? textColor = null, ColorInt? backColor = null, FontSizeEtc font = null,
+			object icon = null, ColorInt? textColor = null, ColorInt? backColor = null, FontSizeEtc font = null,
 			string name = null, OsdMode showMode = default, bool dontShow = false) {
 			var o = new AOsd {
 				_text = text,

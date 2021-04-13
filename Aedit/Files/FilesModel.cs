@@ -21,6 +21,8 @@ using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 
+//TODO: now in recent list some paths with \\
+
 partial class FilesModel
 {
 	public readonly FileNode Root;
@@ -1334,7 +1336,7 @@ partial class FilesModel
 					item.Click += (_, e) => App.Model.NewItemX(x, beginRenaming: true);
 					var ft = FileNode.XmlTagToFileType(tag, canThrow: false);
 					item.Icon = ft == EFileType.NotCodeFile
-						? new Image { Source = AIcon.OfFile(templDir + relPath).ToWpfImage() }
+						? new Image { Source = AIcon.OfFile(templDir + relPath)?.ToWpfImage() }
 						: AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(FileNode.GetFileTypeImageSource(ft));
 				}
 				mParent.Items.Add(item);

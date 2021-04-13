@@ -244,7 +244,8 @@ static class CiSnippets
 					var doc2 = cd.document.WithText(SourceText.From(code2));
 					var node = doc2.GetSyntaxRootAsync().Result.FindToken(pos).Parent;
 					for (; node != null && node.Span.Start >= pos; node = node.Parent) {
-						if (node is MethodDeclarationSyntax md) {
+						//CiUtil.PrintNode(node); //TODO: now no completion list above an enum member. Instead of snippet use ///.
+						if (node is BaseMethodDeclarationSyntax md) { //method, ctor
 							sig = CiUtil.FormatSignatureXmlDoc(md, code2);
 							break;
 						}
@@ -322,7 +323,7 @@ static class CiSnippets
 			}
 		}
 
-		doc.zReplaceRange(true, pos, endPos, s);
+		doc.zReplaceRange(true, pos, endPos, s, moveCurrentPos: i < 0);
 
 		if (i >= 0) {
 			int newPos = pos + i;

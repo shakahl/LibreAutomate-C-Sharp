@@ -87,6 +87,7 @@ namespace Au
 				var es = $"*mouse-move to this x y in screen. " + p.ToString();
 				AWnd.Active.UacCheckAndThrow_(es + ". The active"); //it's a mystery for users. API SendInput fails even if the point is not in the window.
 																	//rejected: AWnd.GetWnd.Root.ActivateL()
+				if (!AMiscInfo.IsInputDesktop()) es += ". Other desktop is active";
 				throw new AuException(es);
 				//known reasons:
 				//	Active window of higher UAC IL.
@@ -1030,7 +1031,10 @@ namespace Au
 
 			return R;
 		}
-		//CONSIDER: WaitForMouseMove, WaitForMouseStop. In QM2 these functions were created because somebody asked, but I don't use.
+		//FUTURE:
+		//	WaitForWheel(double secondsTimeout, bool? forward, bool block = false)
+		//	WaitForMouseMove, WaitForMouseStop.
+		//	In QM2 these functions were created because somebody asked, but I don't use.
 
 		/// <summary>
 		/// Waits for a standard mouse cursor (pointer) visible.
@@ -1057,7 +1061,7 @@ namespace Au
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		public static bool WaitForCursor(double secondsTimeout, long cursorHash, bool not = false) {
 			if (cursorHash == 0) throw new ArgumentException();
-			return AWaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentVisibleCursor(out var c) && c.Hash() == cursorHash) ^ not);
+			return AWaitFor.Condition(secondsTimeout, () => (ACursor.GetCurrentVisibleCursor(out var c) && ACursor.Hash(c) == cursorHash) ^ not);
 		}
 	}
 

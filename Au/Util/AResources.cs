@@ -114,16 +114,17 @@ namespace Au.Util
 			return new System.Drawing.Bitmap(GetStream(name));
 		}
 
-		/// <summary>
-		/// Gets GDI+ icon.
-		/// </summary>
-		/// <param name="name">Can be resource name like "file.ico" or "sub/file.ico" or "&lt;LoadedAssemblyName&gt;file.ico". Can have prefix "resource:".</param>
-		/// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
-		/// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
-		/// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
-		public static System.Drawing.Icon GetGdipIcon(string name) {
-			return new System.Drawing.Icon(GetStream(name));
-		}
+		//rejected. Too simple and rare.
+		///// <summary>
+		///// Gets GDI+ icon.
+		///// </summary>
+		///// <param name="name">Can be resource name like "file.ico" or "sub/file.ico" or "&lt;LoadedAssemblyName&gt;file.ico". Can have prefix "resource:".</param>
+		///// <exception cref="FileNotFoundException">Cannot find assembly or resource.</exception>
+		///// <exception cref="InvalidOperationException">The resource type is not stream.</exception>
+		///// <exception cref="Exception">Other exceptions that may be thrown by used .NET functions.</exception>
+		//public static System.Drawing.Icon GetGdipIcon(string name) {
+		//	return new System.Drawing.Icon(GetStream(name));
+		//}
 
 		/// <summary>
 		/// Gets WPF image or icon that can be used as <b>ImageSource</b>.

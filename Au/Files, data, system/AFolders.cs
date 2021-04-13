@@ -396,7 +396,7 @@ namespace Au
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
 		/// <remarks>
-		/// Used by functions of these classes: AIcon, AMenu, AToolbar, AWinImage, possibly some other.
+		/// Used by functions of these classes: <b>AIcon</b>, <b>AMenu</b>, <b>AToolbar</b>, <b>AWinImage</b>, possibly some other.
 		/// This function does not auto-create the folder; usually it is created when installing the application.
 		/// </remarks>
 		public static FolderPath ThisAppImages {

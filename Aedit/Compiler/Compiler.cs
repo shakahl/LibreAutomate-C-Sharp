@@ -48,7 +48,7 @@ namespace Au.Compiler
 		public static bool Compile(ECompReason reason, out CompResults r, FileNode f, FileNode projFolder = null) {
 			Debug.Assert(Thread.CurrentThread.ManagedThreadId == 1);
 			r = null;
-			var cache = XCompiled.OfCollection(f.Model);
+			var cache = XCompiled.OfWorkspace(f.Model);
 			bool isCompiled = reason != ECompReason.CompileAlways && cache.IsCompiled(f, out r, projFolder);
 
 			//AOutput.Write("isCompiled=" + isCompiled);
@@ -90,7 +90,7 @@ namespace Au.Compiler
 			public EIfRunning ifRunning;
 			public EIfRunning2 ifRunning2;
 			public EUac uac;
-			public bool prefer32bit;
+			public bool bit32;
 			public bool console;
 
 			///// <summary>Has config file this.file + ".config".</summary>
@@ -145,7 +145,7 @@ namespace Au.Compiler
 				return false;
 			}
 
-			XCompiled cache = XCompiled.OfCollection(f.Model);
+			XCompiled cache = XCompiled.OfWorkspace(f.Model);
 			string outPath = null, outFile = null, fileName = null;
 			bool notInCache = false;
 			if (needOutputFiles) {
@@ -154,7 +154,7 @@ namespace Au.Compiler
 					fileName = m.Name + ".dll";
 				} else {
 					outPath = cache.CacheDirectory;
-					fileName = f.IdString;
+					fileName = f.IdString + ".dll"; //note: should have ".dll" extension, else somehow don't work GetModuleHandle, Process.GetCurrentProcess().Modules etc
 				}
 				outFile = outPath + "\\" + fileName;
 				AFile.CreateDirectory(outPath);
@@ -202,7 +202,7 @@ namespace Au.Compiler
 				resMan = _CreateManagedResources(m);
 				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 
-				if (m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) resNat = _CreateNativeResources(m, compilation);
+				resNat = _CreateNativeResources(m, compilation);
 				if (err.ErrorCount != 0) { err.PrintAll(); return false; }
 
 				//EmbeddedText.FromX //it seems we can embed source code in PDB. Not tested.
@@ -270,7 +270,7 @@ namespace Au.Compiler
 				r.file = outFile;
 
 				if (m.Role == ERole.exeProgram) {
-					bool need32 = m.Prefer32Bit || AVersion.Is32BitOS;
+					bool need32 = m.Bit32 || AVersion.Is32BitOS;
 					bool need64 = !need32 || m.Optimize;
 					need32 |= m.Optimize;
 
@@ -308,7 +308,7 @@ namespace Au.Compiler
 			r.ifRunning = m.IfRunning;
 			r.ifRunning2 = m.IfRunning2;
 			r.uac = m.Uac;
-			r.prefer32bit = m.Prefer32Bit;
+			r.bit32 = m.Bit32;
 			r.console = m.Console;
 			r.notInCache = notInCache;
 			if (m.Role == ERole.miniProgram) {
@@ -487,7 +487,24 @@ namespace Au.Compiler
 
 		static Stream _CreateNativeResources(MetaComments m, CSharpCompilation compilation) {
 #if true
-			return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
+			if (m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) //add only version. If exe, will add icon and manifest to apphost exe. //rejected: support adding icons to dll; VS allows it.
+				return compilation.CreateDefaultWin32Resources(versionResource: true, noManifest: true, null, null);
+
+			if (m.IconFile != null) { //add only icon. No version, no manifest.
+				Stream icoStream = null;
+				FileNode curFile = null;
+				try {
+					//if(m.ResFile != null) return File.OpenRead((curFile = m.ResFile).FilePath);
+					icoStream = File.OpenRead((curFile = m.IconFile).FilePath);
+					curFile = null;
+					return compilation.CreateDefaultWin32Resources(versionResource: false, noManifest: true, null, icoStream);
+				}
+				catch (Exception e) {
+					icoStream?.Dispose();
+					_ResourceException(e, m, curFile);
+				}
+			}
+			return null;
 #else
 			var manifest = m.ManifestFile;
 
@@ -540,7 +557,14 @@ namespace Au.Compiler
 
 #if true
 				var res = new _Resources();
-				if (m.IconFile != null) res.AddIcon(m.IconFile.FilePath);
+				if (m.IconFile != null) {
+					_Resources.ICONCONTEXT ic = default;
+					if (m.IconFile.IsFolder) {
+						foreach (var des in m.IconFile.Descendants()) if (!des.IsFolder) res.AddIcon(des.FilePath, ref ic);
+					} else {
+						res.AddIcon(m.IconFile.FilePath, ref ic);
+					}
+				}
 				res.AddVersion(outFile);
 
 				string manifest = null;
@@ -659,14 +683,14 @@ namespace Au.Compiler
 					case "source": return f.ItemPath;
 					case "role": return m.Role.ToString();
 					case "optimize": return m.Optimize ? "true" : "false";
-					case "prefer32bit": return m.Prefer32Bit ? "true" : "false";
+					case "bit32": return m.Bit32 ? "true" : "false";
 					default: throw new ArgumentException("error in meta: unknown variable " + k.Value);
 					}
 				}
 				for (int i = 0; i < args.Length; i++) args[i] = s_rx1.Replace(args[i], _ReplFunc);
 			}
 
-			string _OutputFile() => m.Role == ERole.exeProgram ? DllNameToAppHostExeName(outFile, m.Prefer32Bit || AVersion.Is32BitOS) : outFile;
+			string _OutputFile() => m.Role == ERole.exeProgram ? DllNameToAppHostExeName(outFile, m.Bit32 || AVersion.Is32BitOS) : outFile;
 
 			bool ok = Compile(ECompReason.Run, out var r, x.f);
 			if (r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");

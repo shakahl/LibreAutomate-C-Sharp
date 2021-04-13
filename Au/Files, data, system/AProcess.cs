@@ -22,6 +22,7 @@ namespace Au
 	/// <summary>
 	/// Process functions. Extends <see cref="Process"/>.
 	/// </summary>
+	/// <seealso cref="ATask"/>
 	public static unsafe class AProcess
 	{
 		/// <summary>
@@ -355,10 +356,11 @@ namespace Au
 		/// </summary>
 		public static IntPtr ProcessHandle => Api.GetCurrentProcess();
 
-		/// <summary>
-		/// Gets native module handle of the program file of this process.
-		/// </summary>
-		public static IntPtr ExeModuleHandle => Api.GetModuleHandle(null);
+		//rejected. Too simple and rare.
+		///// <summary>
+		///// Gets native module handle of the program file of this process.
+		///// </summary>
+		//public static IntPtr ExeModuleHandle => Api.GetModuleHandle(null);
 
 		/// <summary>
 		/// Gets full path of the program file of this process.
@@ -495,12 +497,13 @@ namespace Au
 			if(k != null) try { k(sender, e); } catch { }
 		}
 
-		/// <summary>
-		/// Calls API <msdn>ExitProcess</msdn>.
-		/// </summary>
-		public static void ExitProcess(int exitCode) {
-			Api.ExitProcess(exitCode);
-		}
+		//is it useful? It seems the difference from Environment.Exit is no Exit event.
+		///// <summary>
+		///// Calls API <msdn>ExitProcess</msdn>.
+		///// </summary>
+		//public static void ExitProcess(int exitCode) {
+		//	Api.ExitProcess(exitCode);
+		//}
 
 		/// <summary>
 		/// Gets or sets whether <see cref="CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="CultureInfo.InvariantCulture"/>.
@@ -537,6 +540,94 @@ namespace Au
 				GC.WaitForPendingFinalizers();
 				Api.SetProcessWorkingSetSize(Api.GetCurrentProcess(), -1, -1);
 			});
+		}
+
+		/// <summary>
+		/// Terminates (ends) the specified process.
+		/// Returns false if failed. Supports <see cref="ALastError"/>.
+		/// </summary>
+		/// <param name="processId">Process id.</param>
+		/// <param name="exitCode">Process exit code.</param>
+		/// <remarks>
+		/// This function does not try to end process "softly" (close main window). Unsaved data will be lost.
+		/// Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="AFile.RunConsole"/>. More info on the internet.
+		/// </remarks>
+		public static bool Terminate(int processId, int exitCode = 0) {
+			if (Api.WTSTerminateProcess(default, processId, exitCode)) return true;
+			bool invalidParam = ALastError.Code == Api.ERROR_INVALID_PARAMETER;
+			if (!invalidParam) {
+				using var hp = Handle_.OpenProcess(processId, Api.PROCESS_TERMINATE);
+				if (!hp.Is0) {
+					return Api.TerminateProcess(hp, exitCode);
+				}
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Terminates (ends) all processes of the specified program or programs.
+		/// Returns the number of successfully terminated processes.
+		/// </summary>
+		/// <param name="processName">
+		/// Process executable file name, like "notepad.exe".
+		/// String format: [](xref:wildcard_expression).
+		/// </param>
+		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
+		/// <param name="exitCode">Process exit code.</param>
+		/// <exception cref="ArgumentException">
+		/// - <i>processName</i> is "" or null.
+		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// </exception>
+		public static int Terminate(string processName, bool allSessions = false, int exitCode = 0) {
+			int n = 0;
+			foreach(int pid in GetProcessIds(processName, ofThisSession: !allSessions)) {
+				if (Terminate(pid, exitCode)) n++;
+			}
+			return n;
+		}
+
+		/// <summary>
+		/// Suspends or resumes the specified process.
+		/// Returns false if failed. Supports <see cref="ALastError"/>.
+		/// </summary>
+		/// <param name="suspend">true suspend, false resume.</param>
+		/// <param name="processId">Process id.</param>
+		/// <remarks>
+		/// If suspended multiple times, must be resumed the same number of times.
+		/// </remarks>
+		public static bool Suspend(bool suspend, int processId) {
+			using var hp = Handle_.OpenProcess(processId, Api.PROCESS_SUSPEND_RESUME);
+			if (!hp.Is0) {
+				int status = suspend ? Api.NtSuspendProcess(hp) : Api.NtResumeProcess(hp);
+				ALastError.Code = status;
+				return status == 0;
+			}
+			return false;
+		}
+
+		/// <summary>
+		/// Suspends or resumes all processes of the specified program or programs.
+		/// Returns the number of successfully suspended/resumed processes.
+		/// </summary>
+		/// <param name="suspend">true suspend, false resume.</param>
+		/// <param name="processName">
+		/// Process executable file name, like "notepad.exe".
+		/// String format: [](xref:wildcard_expression).
+		/// </param>
+		/// <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
+		/// <exception cref="ArgumentException">
+		/// - <i>processName</i> is "" or null.
+		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+		/// </exception>
+		/// <remarks>
+		/// If suspended multiple times, must be resumed the same number of times.
+		/// </remarks>
+		public static int Suspend(bool suspend, string processName, bool allSessions = false) {
+			int n = 0;
+			foreach(int pid in GetProcessIds(processName, ofThisSession: !allSessions)) {
+				if (Suspend(suspend, pid)) n++;
+			}
+			return n;
 		}
 	}
 }

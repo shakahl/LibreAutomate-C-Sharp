@@ -201,7 +201,7 @@ public class DOptions : KDialogWindow
 
 	void _Font() {
 		var b = _Page("Font", WBPanelType.Dock);
-		b.Add(out KScintilla sciStyles).Width(150); sciStyles.ZInitBorder = true;
+		b.Add(out KScintilla sciStyles).Width(150); sciStyles.ZInitBorder = true; sciStyles.Name = "styles";
 		b.StartGrid().Columns(-1).Margin(20);
 		b.R.StartGrid();
 		var pFont = b.Panel as Grid;

@@ -10,6 +10,7 @@ namespace Au.Controls
 		public KSciCodeBox() {
 			ZInitUseDefaultContextMenu = true;
 			//ZInitBorder = true; //no, the native border is of different color and thickness (high DPI) than other WPF controls
+			Name = "code";
 		}
 
 		protected override void ZOnHandleCreated() {

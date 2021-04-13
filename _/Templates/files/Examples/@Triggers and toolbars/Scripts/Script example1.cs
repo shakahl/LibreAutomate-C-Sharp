@@ -1,6 +1,6 @@
-/*/ c ..\Functions\Class1.cs; /*/ //.
+/*/ ifRunning warn_restart; c ..\Functions\Class1.cs; /*/ //.
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
-partial class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
+class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
 
 //This is an example script used by ATask.Run examples in files "Hotkey triggers" (Ctrl+Shift+3) and "Common toolbars".
 //It runs in separate process. You can edit and run it without restarting the main script process (triggers and toolbars).

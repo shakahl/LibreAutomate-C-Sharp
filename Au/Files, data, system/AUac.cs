@@ -201,24 +201,26 @@ namespace Au
 		static AUac s_thisProcess;
 
 		/// <summary>
-		/// Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by [](xref:uac).
-		/// This function for example can be used to check whether you can write to protected locations in the file system and registry.
+		/// Returns true if this process is running as administrator.
 		/// </summary>
+#if true
+		public static bool IsAdmin => s_isAdmin ??= Api.IsUserAnAdmin();
+#else //too slow, eg 15 ms vs 1 ms
 		public static bool IsAdmin {
 			get {
-				if(!s_haveIsAdmin) {
+				if(!s_isAdmin.HasValue) {
 					try {
 						WindowsIdentity id = WindowsIdentity.GetCurrent();
 						WindowsPrincipal principal = new WindowsPrincipal(id);
 						s_isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
 					}
 					catch { }
-					s_haveIsAdmin = true;
 				}
-				return s_isAdmin;
+				return s_isAdmin.GetValueOrDefault();
 			}
 		}
-		static bool s_isAdmin, s_haveIsAdmin;
+#endif
+		static bool? s_isAdmin;
 
 		/*
 		public struct SID_IDENTIFIER_AUTHORITY

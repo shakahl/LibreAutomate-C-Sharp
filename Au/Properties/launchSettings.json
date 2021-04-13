@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Au": {
+      "commandName": "Project",
+      "nativeDebugging": false
+    }
+  }
+}

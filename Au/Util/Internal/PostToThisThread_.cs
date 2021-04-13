@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using Au.Types;
 
 namespace Au.Util
@@ -15,11 +14,12 @@ namespace Au.Util
 		readonly Queue<Action> _q = new();
 
 		PostToThisThread_() {
-			_w = AWnd.More.CreateMessageOnlyWindow(_WndProc, "#32770");
+			_w = AWnd.Internal_.CreateWindowDWP(messageOnly: true, t_wp = _WndProc);
 		}
 
-		public static PostToThisThread_ OfThisThread => _default ??= new();
-		[ThreadStatic] static PostToThisThread_ _default;
+		public static PostToThisThread_ OfThisThread => t_default ??= new();
+		[ThreadStatic] static PostToThisThread_ t_default;
+		[ThreadStatic] static Native.WNDPROC t_wp;
 
 		public void Post(Action a) {
 			bool post;

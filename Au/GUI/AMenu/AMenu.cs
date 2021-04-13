@@ -449,7 +449,7 @@ namespace Au
 					});
 				}
 
-				//var pmo = new PrintMsgOptions(Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, Api.WM_PAINT, 0x138a /*SC_WORK_IDLE*/, Api.WM_USER, int.MinValue) { AndWindow = true };
+				//var pmo = new PrintMsgOptions(Api.WM_TIMER, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, Api.WM_PAINT, 0x138a /*SC_WORK_IDLE*/, Api.WM_USER, int.MinValue) { WindowProperties = true };
 				//AOutput.Write("in");
 				_MessageLoop();
 				//AOutput.Write("out");
@@ -556,7 +556,7 @@ namespace Au
 			_flags = flags;
 
 			RECT cr = default;
-			bool byCaret = flags.Has(MSFlags.ByCaret) && AKeys.More.GetTextCursorRect(out cr, out _);
+			bool byCaret = flags.Has(MSFlags.ByCaret) && AMiscInfo.GetTextCursorRect(out cr, out _);
 			POINT p = byCaret ? new(cr.left, cr.bottom) : xy ?? AMouse.XY;
 
 			var screen = AScreen.Of(p);
@@ -600,7 +600,7 @@ namespace Au
 			Api.CalculatePopupWindowPosition(p, r.Size, (uint)flags & 0xffffff, excludeRect.GetValueOrDefault(), out r);
 
 			_w = AWnd.More.CreateWindow(_WndProc, true, "AMenu", null, style, estyle, r.left, r.top, r.Width, r.Height, owner);
-			if (needScroll) _SetScrollbar(z.height);
+			_SetScrollbar(needScroll);
 
 			_w.ShowL(true);
 
@@ -748,21 +748,25 @@ namespace Au
 			return R;
 		}
 
-		void _SetScrollbar(int height) {
-			_scroll.SetRange(_a.Count);
+		void _SetScrollbar(bool needScroll) {
+			if (needScroll) {
+				_scroll.SetRange(_a.Count);
 
-			_scroll.PosChanged += (sb, part) => {
-				_sub.child?.Close();
+				_scroll.PosChanged += (sb, part) => {
+					_sub.child?.Close();
 
-				int pos = _scroll.Pos;
-				Api.InvalidateRect(_w);
+					int pos = _scroll.Pos;
+					Api.InvalidateRect(_w);
 
-				if (part <= -2) { //if mouse wheel, update hot item, submenu, tooltip
-					var p = _w.MouseClientXY;
-					if (_w.ClientRect.Contains(p)) _WmMousemove(AMath.MakeUint(p.x, p.y), fake: true);
-				}
-			};
-			_scroll.Visible = true;
+					if (part <= -2) { //if mouse wheel, update hot item, submenu, tooltip
+						var p = _w.MouseClientXY;
+						if (_w.ClientRect.Contains(p)) _WmMousemove(AMath.MakeUint(p.x, p.y), fake: true);
+					}
+				};
+				_scroll.Visible = true;
+			} else {
+				_scroll.NItems = _a.Count;
+			}
 		}
 
 		int _HitTest(POINT p, bool failIfDisabled = false) {

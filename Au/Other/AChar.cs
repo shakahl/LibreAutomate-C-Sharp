@@ -16,7 +16,7 @@ using Au.Types;
 namespace Au
 {
 	/// <summary>
-	/// Provides function to get ASCII character type (is digit etc) etc.
+	/// Provides functions to get ASCII character type (is digit etc) etc.
 	/// </summary>
 	/// <remarks>
 	/// Unlike <see cref="Char.IsDigit"/> etc, these functions never return true for non-ASCII characters. Also they are faster.

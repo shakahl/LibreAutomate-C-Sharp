@@ -197,6 +197,7 @@ class CiText
 		}
 	}
 
+	//TODO: many newlines in KKey.Keys param keysEtc.
 	public void AppendTaggedParts(IEnumerable<TaggedText> tags) {
 		if (tags == null) return;
 		foreach (var v in tags) {

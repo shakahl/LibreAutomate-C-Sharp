@@ -20,8 +20,8 @@ namespace Au
 	/// - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
 	/// - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
 	/// - <see cref="FolderPath"/> - same as folder path string.
-	/// - <see cref="Image"/> - image object.
-	/// - <see cref="AIcon"/> - variable containing native icon handle. The "add item" function disposes it (actually the <see cref="MTImage"/> implicit conversion operator disposes it).
+	/// - <see cref="Image"/> - image.
+	/// - <see cref="AIcon"/> - icon. The "add item" function disposes it.
 	/// - <see cref="StockIcon"/> - the "show" function calls <see cref="AIcon.Stock"/>.
 	/// - null - if <see cref="ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="AIcon.OfFile"/>. Else no image.
 	/// - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
@@ -150,7 +150,7 @@ namespace Au
 					//} else if (isImage)
 					//	im = AImageUtil.LoadGdipBitmapFromFileOrResourceOrString(s, (new(16, 16), _dpi));
 					//else
-					//	im = AIcon.OfFile(s).ToGdipBitmap();
+					//	im = AIcon.OfFile(s)?.ToGdipBitmap();
 
 					if (im == null) _OnException(s, null);
 				}
@@ -161,7 +161,7 @@ namespace Au
 				}
 				break;
 			case StockIcon si:
-				im = AIcon.Stock(si).ToGdipBitmap();
+				im = AIcon.Stock(si)?.ToGdipBitmap();
 				break;
 			case null:
 				if (x.extractIconPath == 1 && x.clicked != null) {
@@ -368,14 +368,14 @@ namespace Au.Types
 		///
 		public static implicit operator MTImage(Image image) => new(image);
 		///
-		public static implicit operator MTImage(AIcon icon) => new(icon.ToGdipBitmap());
+		public static implicit operator MTImage(AIcon icon) => new(icon);
 		///
 		public static implicit operator MTImage(StockIcon icon) => new(icon);
 		///
 		public static implicit operator MTImage(FolderPath path) => new((string)path);
 
 		/// <summary>
-		/// Gets the raw value stored in this variable. Can be string, Image, StockIcon or null.
+		/// Gets the raw value stored in this variable. Can be string, Image, AIcon, StockIcon or null.
 		/// </summary>
 		public object Value => _o;
 	}

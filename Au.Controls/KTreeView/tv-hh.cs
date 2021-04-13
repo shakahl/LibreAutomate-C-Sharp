@@ -24,7 +24,7 @@ namespace Au.Controls
 		protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
 			var wParent = (AWnd)hwndParent.Handle;
 #if true
-			AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+			AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, Name, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
 #else //the below code works, but not on Win7. The above code works if WS.DISABLED or WM_NCHITTEST returns HTTRANSPARENT. WPF can remove WS.DISABLED.
 			_w=AWnd.More.CreateWindow(_wndProc = _WndProc, false, c_winClassName, null, WS.CHILD|WS.CLIPCHILDREN, WS2.TRANSPARENT|WS2.LAYERED, 0, 0, 10, 10, wParent);
 	//		_w.SetTransparency(true, 255);

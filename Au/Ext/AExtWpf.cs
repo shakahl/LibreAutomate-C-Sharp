@@ -68,7 +68,8 @@ namespace Au
 		/// Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
 		/// When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
 		/// </summary>
-		public static DependencyObject FindVisualDescendant(this DependencyObject t, Func<DependencyObject, bool> f) {
+		public static DependencyObject FindVisualDescendant(this DependencyObject t, Func<DependencyObject, bool> f, bool orSelf = false) {
+			if (orSelf && f(t)) return t;
 			for (int i = 0, n = VisualTreeHelper.GetChildrenCount(t); i < n; i++) {
 				var v = VisualTreeHelper.GetChild(t, i);
 				if (f(v)) return v;

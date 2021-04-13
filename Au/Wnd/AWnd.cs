@@ -77,18 +77,18 @@ namespace Au
 
 		//note: don't need implicit conversions. It creates more problems than is useful.
 
-		public static explicit operator AWnd(nint hwnd) => new AWnd(hwnd);
+		public static explicit operator AWnd(nint hwnd) => new(hwnd);
 		public static explicit operator nint(AWnd w) => w.Handle;
-		public static explicit operator AWnd(LPARAM hwnd) => new AWnd(hwnd);
+		public static explicit operator AWnd(LPARAM hwnd) => new(hwnd);
 		public static explicit operator LPARAM(AWnd w) => w._h;
-		public static explicit operator AWnd(int hwnd) => new AWnd(hwnd);
+		public static explicit operator AWnd(int hwnd) => new(hwnd);
 		public static explicit operator int(AWnd w) => (int)w._h;
 
 		/// <summary>
 		/// Converts from a special handle value.
 		/// </summary>
 		/// <param name="hwnd">See API <msdn>SetWindowPos</msdn>.</param>
-		public static implicit operator AWnd(Native.HWND hwnd) => new AWnd((int)hwnd);
+		public static implicit operator AWnd(Native.HWND hwnd) => new((int)hwnd);
 
 		/// <summary>Compares window handles.</summary>
 		public static bool operator ==(AWnd w1, AWnd w2) => w1._h == w2._h;
@@ -779,7 +779,7 @@ namespace Au
 			static void _EnableActivate_MinRes() {
 				ADebug.Print("EnableActivate: need min/res");
 
-				AWnd t = More.CreateWindow("#32770", null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS2.TOOLWINDOW);
+				AWnd t = More.CreateWindow(WindowClassDWP, null, WS.POPUP | WS.MINIMIZE | WS.VISIBLE, WS2.TOOLWINDOW);
 				//info: When restoring, the window must be visible, or may not work.
 				try {
 					var wp = new Api.WINDOWPLACEMENT { showCmd = Api.SW_RESTORE };
@@ -793,7 +793,8 @@ namespace Au
 				//Another way:
 				//	t.Send(Api.WM_SETHOTKEY, ...);
 				//	Api.SendInputKey(...)
-				//Works but need more testing.
+				//Works if UAC allows SendInput.
+				//WM_SETHOTKEY works only if visible. No wm_syscommand if inactive, but activates. Unlike registerhotkey, not blocked by UAC even without modifiers. Need more testing.
 				//This does not work: t.Send(WM_SYSCOMMAND, SC_HOTKEY);
 			}
 
@@ -874,7 +875,7 @@ namespace Au
 				}
 			}
 
-			bool R = false, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
+			bool R, noAct = false, isMinimized = false, ofThisThread = IsOfThisThread;
 			bool forScreenCapture = 0 != (flags & Internal_.ActivateFlags.ForScreenCapture);
 
 			if (IsMinimized) {
@@ -957,7 +958,10 @@ namespace Au
 				}
 			}
 
-			if (!R) ThrowNoNative("*activate*");
+			if (!R) {
+				if (!AMiscInfo.IsInputDesktop(detectLocked: true)) ThrowNoNative("*activate window. Other desktop is active");
+				ThrowNoNative("*activate*");
+			}
 			if (forScreenCapture) MinimalSleepIfOtherThread_();
 
 			return true;
@@ -1119,7 +1123,7 @@ namespace Au
 		/// <seealso cref="IsFocused"/>
 		public static AWnd Focused {
 			get {
-				More.GetGUIThreadInfo(out var g);
+				AMiscInfo.GetGUIThreadInfo(out var g);
 				return g.hwndFocus;
 			}
 		}
@@ -2467,11 +2471,13 @@ namespace Au
 		public bool ClassNameIs(string cn) => ClassName.Like(cn, true);
 
 		/// <summary>
-		/// If the class name of this window matches one of strings in <i>classNames</i>, returns 1-based index of the string. Else returns 0.
+		/// If window class name matches one of strings in <i>classNames</i>, returns 1-based string index. Else returns 0.
 		/// Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ClassNameIs(params string[] classNames) {
+			//I expect this func will be often used instead of slow code like 'if (w.ClassName == "a" || w.ClassName == "b" || ...)'.
+
 			string s = ClassName; if (s == null) return 0;
 			return s.Like(true, classNames);
 		}
@@ -2481,7 +2487,6 @@ namespace Au
 		/// Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <remarks>
-		/// <note>It is not the .NET Control.Name property. To get it you can use <see cref="NameWinforms"/>.</note>
 		/// Top-level window name usually its title bar text.
 		/// Control name usually is its text that does not change, for example button or static (label) control text.
 		/// Unlike <see cref="ControlText"/>, this function usually does not get variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
@@ -2492,6 +2497,18 @@ namespace Au
 		/// <seealso cref="NameAcc"/>
 		/// <seealso cref="NameWinforms"/>
 		public string Name => GetText(false, true);
+
+		/// <summary>
+		/// If window name matches one of strings in <i>names</i>, returns 1-based string index. Else returns 0.
+		/// Also returns 0 if fails to get name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
+		/// </summary>
+		/// <param name="names">Window names. Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
+		public int NameIs(params string[] names) {
+			//I expect this func will be often used instead of slow code like 'if (w.Name == "a" || w.Name == "b" || ...)'.
+
+			string s = Name; if (s == null) return 0;
+			return s.Like(true, names);
+		}
 
 		/// <summary>
 		/// Gets window name using API InternalGetWindowText. The same as GetText(false, false).
@@ -2534,7 +2551,7 @@ namespace Au
 		/// <seealso cref="NameAcc"/>
 		/// <seealso cref="NameWinforms"/>
 		public string GetText(bool? getText = null, bool removeUnderlineAmpersand = true) {
-			string R = null;
+			string R;
 
 			if (getText == null) R = _GetTextFast(true);
 			else if (getText.GetValueOrDefault()) R = _GetTextSlow();
@@ -2672,11 +2689,13 @@ namespace Au
 		public string ProgramName => AProcess.GetNameCached_(this, ProcessId);
 
 		/// <summary>
-		/// If the program name of this window matches one of strings in <i>programNames</i>, returns 1-based index of the string. Else returns 0.
+		/// If window program name matches one of strings in <i>programNames</i>, returns 1-based string index. Else returns 0.
 		/// Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="ALastError"/>.
 		/// </summary>
 		/// <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="AExtString.Like(string, string, bool)"/>. The array and strings cannot be null.</param>
 		public int ProgramNameIs(params string[] programNames) {
+			//I expect this func will be often used instead of slow code like 'if (w.ProgramName == "a" || w.ProgramName == "b" || ...)'.
+
 			string s = ProgramName; if (s == null) return 0;
 			return s.Like(true, programNames);
 		}

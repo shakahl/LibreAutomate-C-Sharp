@@ -164,7 +164,7 @@ namespace Au
 	/// ]]></code>
 	/// </example>
 	[StructLayout(LayoutKind.Sequential)]
-	public unsafe sealed partial class AAcc :IDisposable
+	public unsafe sealed partial class AAcc : IDisposable
 	{
 		//FUTURE: AAcc.More.EnableAccInChromeWebPagesWhenItStarts
 		//FUTURE: AAcc.More.EnableAccInJavaWindows (see JavaEnableJAB in QM2)
@@ -191,8 +191,7 @@ namespace Au
 		/// By default does not AddRef.
 		/// iacc must not be Is0.
 		/// </summary>
-		internal AAcc(IntPtr iacc, int elem = 0, bool addRef = false)
-		{
+		internal AAcc(IntPtr iacc, int elem = 0, bool addRef = false) {
 			_Set(iacc, elem, default, addRef);
 		}
 
@@ -201,8 +200,7 @@ namespace Au
 		/// By default does not AddRef.
 		/// x.acc must not be Is0.
 		/// </summary>
-		internal AAcc(Cpp.Cpp_Acc x, bool addRef = false)
-		{
+		internal AAcc(Cpp.Cpp_Acc x, bool addRef = false) {
 			_Set(x.acc, x.elem, x.misc, addRef);
 		}
 
@@ -210,11 +208,10 @@ namespace Au
 		/// Sets fields.
 		/// _iacc must be 0, iacc not 0.
 		/// </summary>
-		void _Set(IntPtr iacc, int elem = 0, Misc_ misc = default, bool addRef = false)
-		{
+		void _Set(IntPtr iacc, int elem = 0, Misc_ misc = default, bool addRef = false) {
 			Debug.Assert(_iacc == default);
 			Debug.Assert(iacc != default);
-			if(addRef) Marshal.AddRef(iacc);
+			if (addRef) Marshal.AddRef(iacc);
 			_iacc = iacc;
 			_elem = elem;
 			_misc = misc;
@@ -226,27 +223,24 @@ namespace Au
 		}
 
 		int _MemoryPressure => _elem == 0 ? c_memoryPressure : c_memoryPressure / 4;
-		const int c_memoryPressure = 128;
-		//Ideally this should be the average AO memory size.
-		//Actually much more, maybe 500, if counting both processes, but:
+		const int c_memoryPressure = 500;
+		//Ideally this should be the average AO memory size, if counting both processes.
 		//	Release() does not delete the object if refcount!=0. Usually refcount==0, unless we have an AO and its simple elements (_elem!=0).
-		//	It seems GC is too frequent when using AddMemoryPressure/RemoveMemoryPressure. In this case it is frequent enough.
 
 		//internal static int DebugMaxMemoryPressure;
 		//static int s_dmp;
 		//internal static int DebugMemorySum;
 
-		///
-		void _Dispose()
-		{
-			if(_iacc != default) {
+		/// <summary>
+		/// Releases IAccessible COM object and clears this variable.
+		/// </summary>
+		public void Dispose() {
+			if (_iacc != default) {
 				var t = _iacc; _iacc = default;
 				//APerf.First();
-				//int rc =
 				Marshal.Release(t);
 				//APerf.NW();
 				//AOutput.Write($"rel: {Marshal.Release(t)}");
-				//AOutput.Write(t, _elem, rc);
 
 				int mp = _MemoryPressure;
 				GC.RemoveMemoryPressure(mp);
@@ -254,21 +248,12 @@ namespace Au
 			}
 			_elem = 0;
 			_misc = default;
-		}
-
-		/// <summary>
-		/// Releases IAccessible COM object and clears this variable.
-		/// </summary>
-		public void Dispose()
-		{
-			_Dispose();
 			GC.SuppressFinalize(this);
 		}
 
 		///
-		~AAcc()
-		{
-			_Dispose();
+		~AAcc() {
+			Dispose();
 		}
 
 		/// <summary>
@@ -301,9 +286,8 @@ namespace Au
 		/// </summary>
 		bool _Disposed => _iacc == default;
 
-		internal void ThrowIfDisposed_()
-		{
-			if(_Disposed) throw new ObjectDisposedException(nameof(AAcc));
+		internal void ThrowIfDisposed_() {
+			if (_Disposed) throw new ObjectDisposedException(nameof(AAcc));
 		}
 
 		/// <summary>
@@ -318,10 +302,9 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromWindow</msdn>.
 		/// </remarks>
-		public static AAcc FromWindow(AWnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0)
-		{
+		public static AAcc FromWindow(AWnd w, AccOBJID objid = AccOBJID.WINDOW, AWFlags flags = 0) {
 			bool spec = false;
-			switch(objid) {
+			switch (objid) {
 			case AccOBJID.QUERYCLASSNAMEIDX: //use WM_GETOBJECT
 			case AccOBJID.NATIVEOM: //use API AccessibleObjectFromWindow
 				throw new ArgumentException();
@@ -334,17 +317,16 @@ namespace Au
 			}
 
 			var hr = Cpp.Cpp_AccFromWindow(flags.Has(AWFlags.NotInProc) ? 1 : 0, w, objid, out var a, out _);
-			if(hr != 0) {
-				if(flags.Has(AWFlags.NoThrow)) return null;
-				if(spec && w.Is0) throw new AuException();
+			if (hr != 0) {
+				if (flags.Has(AWFlags.NoThrow)) return null;
+				if (spec && w.Is0) throw new AuException();
 				w.ThrowIfInvalid();
 				_WndThrow(hr, w, "*get accessible object from window.");
 			}
 			return new AAcc(a);
 		}
 
-		static void _WndThrow(int hr, AWnd w, string es)
-		{
+		static void _WndThrow(int hr, AWnd w, string es) {
 			w.UacCheckAndThrow_(es);
 			throw new AuException(hr, es);
 		}
@@ -374,13 +356,12 @@ namespace Au
 		/// AOutput.Write(a);
 		/// ]]></code>
 		/// </example>
-		public static AAcc FromXY(POINT p, AXYFlags flags = 0)
-		{
-			for(int i = 0; ; i++) {
+		public static AAcc FromXY(POINT p, AXYFlags flags = 0) {
+			for (int i = 0; ; i++) {
 				var hr = Cpp.Cpp_AccFromPoint(p, flags, out var a);
-				if(hr == 0) return new AAcc(a);
-				if(i < 2) continue;
-				if(flags.Has(AXYFlags.NoThrow)) return null;
+				if (hr == 0) return new AAcc(a);
+				if (i < 2) continue;
+				if (flags.Has(AXYFlags.NoThrow)) return null;
 				_WndThrow(hr, AWnd.FromXY(p, WXYFlags.Raw), "*get accessible object from point.");
 			}
 		}
@@ -394,8 +375,7 @@ namespace Au
 		/// <remarks>
 		/// Uses API <msdn>AccessibleObjectFromPoint</msdn>.
 		/// </remarks>
-		public static AAcc FromMouse(AXYFlags flags = 0)
-		{
+		public static AAcc FromMouse(AXYFlags flags = 0) {
 			return FromXY(AMouse.XY, flags);
 		}
 
@@ -408,15 +388,14 @@ namespace Au
 		/// Need this with windows that don't support accessible objects but support UI Automation elements. Can be used with most other windows too.
 		/// More info: <see cref="AFFlags.UIA"/>.
 		/// </param>
-		public static AAcc Focused(bool useUIAutomation = false)
-		{
+		public static AAcc Focused(bool useUIAutomation = false) {
 			var w = AWnd.Focused;
 			g1:
-			if(w.Is0) return null;
+			if (w.Is0) return null;
 			int hr = Cpp.Cpp_AccGetFocused(w, useUIAutomation ? 1 : 0, out var a);
-			if(hr != 0) {
+			if (hr != 0) {
 				var w2 = AWnd.Focused;
-				if(w2 != w) { w = w2; goto g1; }
+				if (w2 != w) { w = w2; goto g1; }
 				return null;
 			}
 			return new AAcc(a);
@@ -436,11 +415,10 @@ namespace Au
 		/// Often fails because the object already does not exist, because the callback function is called asynchronously, especially when the event is OBJECT_DESTROY, OBJECT_HIDE, SYSTEM_*END.
 		/// Returns null if failed. Always check the return value, to avoid NullReferenceException. An exception in the callback function kills this process.
 		/// </remarks>
-		public static AAcc FromEvent(AWnd w, AccOBJID idObject, int idChild)
-		{
+		public static AAcc FromEvent(AWnd w, AccOBJID idObject, int idChild) {
 			int hr = Api.AccessibleObjectFromEvent(w, idObject, idChild, out var iacc, out var v);
-			if(hr == 0 && iacc == default) hr = Api.E_FAIL;
-			if(hr != 0) { ALastError.Code = hr; return null; }
+			if (hr == 0 && iacc == default) hr = Api.E_FAIL;
+			if (hr != 0) { ALastError.Code = hr; return null; }
 			int elem = v.vt == Api.VARENUM.VT_I4 ? v.ValueInt : 0;
 			return new AAcc(iacc, elem);
 		}
@@ -502,16 +480,15 @@ namespace Au
 		/// If hr looks like not an error but just the property or action is unavailable, changes it to S_FALSE and does not show error. These are: S_FALSE, DISP_E_MEMBERNOTFOUND, E_NOTIMPL.
 		/// _FuncId also can be char, like (_FuncId)'n' for name.
 		/// </summary>
-		int _Hresult(_FuncId funcId, int hr)
-		{
-			if(hr != 0) {
-				switch(hr) {
+		int _Hresult(_FuncId funcId, int hr) {
+			if (hr != 0) {
+				switch (hr) {
 				case Api.DISP_E_MEMBERNOTFOUND: case Api.E_NOTIMPL: hr = Api.S_FALSE; break;
 				case (int)Cpp.EError.InvalidParameter: throw new ArgumentException("Invalid argument value.");
 				default: Debug.Assert(!Cpp.IsCppError(hr)); break;
 				}
 #if DEBUG
-				if(hr != Api.S_FALSE) {
+				if (hr != Api.S_FALSE) {
 					_DebugPropGet(funcId, hr);
 				}
 #endif
@@ -521,12 +498,11 @@ namespace Au
 		}
 
 #if DEBUG
-		void _DebugPropGet(_FuncId funcId, int hr)
-		{
-			if(t_debugNoRecurse || _Disposed) return;
+		void _DebugPropGet(_FuncId funcId, int hr) {
+			if (t_debugNoRecurse || _Disposed) return;
 
-			if(funcId >= (_FuncId)'A') {
-				switch((char)funcId) {
+			if (funcId >= (_FuncId)'A') {
+				switch ((char)funcId) {
 				case 'R': funcId = _FuncId.role; break;
 				case 'n': funcId = _FuncId.name; break;
 				case 'v': funcId = _FuncId.value; break;
@@ -540,7 +516,7 @@ namespace Au
 				}
 			}
 
-			if(hr == Api.E_FAIL && funcId == _FuncId.default_action) return; //many in old VS etc
+			if (hr == Api.E_FAIL && funcId == _FuncId.default_action) return; //many in old VS etc
 			t_debugNoRecurse = true;
 			try {
 				var s = ToString();
@@ -559,35 +535,33 @@ namespace Au
 		/// Indentation depends on <see cref="Level"/>.
 		/// </remarks>
 		/// <seealso cref="PrintAll"/>
-		public override string ToString()
-		{
-			if(_Disposed) return "<disposed>";
-			if(!GetProperties("Rnsvdarw@", out var k)) return "<failed>";
+		public override string ToString() {
+			if (_Disposed) return "<disposed>";
+			if (!GetProperties("Rnsvdarw@", out var k)) return "<failed>";
 
-			using(new StringBuilder_(out var b)) {
-				if(Level > 0) b.Append(' ', Level);
+			using (new StringBuilder_(out var b)) {
+				if (Level > 0) b.Append(' ', Level);
 				b.Append(k.Role);
 				_Add('n', k.Name);
-				if(k.State != 0) _Add('s', k.State.ToString(), '(', ')');
+				if (k.State != 0) _Add('s', k.State.ToString(), '(', ')');
 				_Add('v', k.Value);
 				_Add('d', k.Description);
 				_Add('a', k.DefaultAction);
-				if(!k.Rect.Is0) _Add('r', k.Rect.ToString(), '\0', '\0');
-				if(SimpleElementId != 0) b.Append(",  e=").Append(SimpleElementId);
-				foreach(var kv in k.HtmlAttributes) {
+				if (!k.Rect.Is0) _Add('r', k.Rect.ToString(), '\0', '\0');
+				if (SimpleElementId != 0) b.Append(",  e=").Append(SimpleElementId);
+				foreach (var kv in k.HtmlAttributes) {
 					b.Append(",  @").Append(kv.Key).Append('=').Append('\"');
 					b.Append(kv.Value.Escape(limit: 250)).Append('\"');
 				}
 				_Add('w', k.WndContainer.ClassName ?? "");
 
-				void _Add(char name, string value, char q1 = '\"', char q2 = '\"')
-				{
-					if(value.Length == 0) return;
-					var t = value; if(q1 == '\"') t = t.Escape(limit: 250);
+				void _Add(char name, string value, char q1 = '\"', char q2 = '\"') {
+					if (value.Length == 0) return;
+					var t = value; if (q1 == '\"') t = t.Escape(limit: 250);
 					b.Append(",  ").Append(name).Append('=');
-					if(q1 != '\0') b.Append(q1);
+					if (q1 != '\0') b.Append(q1);
 					b.Append(t);
-					if(q1 != '\0') b.Append(q2);
+					if (q1 != '\0') b.Append(q2);
 				}
 
 				return b.ToString();
@@ -615,12 +589,11 @@ namespace Au
 		/// AAcc.PrintAll(w, "web:LINK");
 		/// ]]></code>
 		/// </example>
-		public static void PrintAll(AWnd w, string role = null, AFFlags flags = 0, string prop = null)
-		{
+		public static void PrintAll(AWnd w, string role = null, AFFlags flags = 0, string prop = null) {
 			try {
 				Find(w, role, null, prop, flags, also: o => { AOutput.Write(o); return false; });
 			}
-			catch(Exception ex) { AOutput.Write($"!exception! {ex.ToStringWithoutStack()}"); }
+			catch (Exception ex) { AOutput.Write($"!exception! {ex.ToStringWithoutStack()}"); }
 		}
 	}
 }

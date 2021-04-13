@@ -17,19 +17,27 @@ namespace Au.Controls
 	//public //if non-public, GetIDispatchForObject throws, and with GetIUnknownForObject does not work too.
 	//	See https://docs.microsoft.com/en-us/dotnet/standard/native-interop/qualify-net-types-for-interoperation.
 	//	But somehow works if implements IReflect, even if all functions just return default. Winforms use it.
-	abstract class HwndHostAccessibleBase_ : IAccessible, IReflect, IDisposable
+	//	Now with Cpp_AccWorkaround works without all that.
+	abstract class HwndHostAccessibleBase_ : IAccessible, IDisposable/*, IReflect*/
 	{
 		FrameworkElement _e;
 		AWnd _w;
-		IAccessible _stdAO;
 
 		/// <param name="e">HwndHost or its container control (if the HwndHost is part of the control).</param>
 		/// <param name="w">Native control hosted by the HwndHost.</param>
 		public HwndHostAccessibleBase_(FrameworkElement e, AWnd w) {
 			_e = e;
 			_w = w;
-			Api.CreateStdAccessibleObject(_w, AccOBJID.CLIENT, typeof(IAccessible).GUID, out _stdAO);
 		}
+
+		IAccessible _StdAO {
+			get {
+				if (_stdAO == null) Api.CreateStdAccessibleObject(_w, AccOBJID.CLIENT, typeof(IAccessible).GUID, out _stdAO);
+				return _stdAO;
+				//note: not in ctor. It is called om WM_GETOBJECT, and CreateStdAccessibleObject sends WM_GETOBJECT too when called there (but not when called later).
+			}
+		}
+		IAccessible _stdAO;
 
 		public void Dispose() {
 			if (_stdAO != null) {
@@ -40,7 +48,7 @@ namespace Au.Controls
 
 		#region IAccessible
 
-		IAccessible IAccessible.get_accParent() => _stdAO.get_accParent();
+		IAccessible IAccessible.get_accParent() => _StdAO.get_accParent();
 
 		/// <summary>
 		/// Returns 0.
@@ -194,7 +202,7 @@ namespace Au.Controls
 		void IAccessible.accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild) {
 			int child = varChild;
 			if (child == -1) {
-				_stdAO.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
+				_StdAO.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
 			} else {
 				var r = ChildRect(child);
 				_w.MapClientToScreen(ref r);
@@ -212,7 +220,7 @@ namespace Au.Controls
 			if (navDir == AccNAVDIR.FIRSTCHILD || navDir == AccNAVDIR.LASTCHILD) {
 				if (i != -1) return null;
 			} else {
-				if (i == -1) return _stdAO.accNavigate(navDir, varStart);//never mind: gets some not adjacent AO
+				if (i == -1) return _StdAO.accNavigate(navDir, varStart);//never mind: gets some not adjacent AO
 			}
 			var v = Navigate(navDir, i);
 			if (v == null) return null;
@@ -227,7 +235,7 @@ namespace Au.Controls
 		public virtual int HitTest(int x, int y) => -1;
 		VarInt IAccessible.accHitTest(int xLeft, int yTop) {
 			POINT p = (xLeft, yTop); _w.MapScreenToClient(ref p);
-			if (!_w.ClientRect.Contains(p)) return _stdAO.accHitTest(xLeft, yTop);
+			if (!_w.ClientRect.Contains(p)) return _StdAO.accHitTest(xLeft, yTop);
 			return HitTest(p.x, p.y);
 		}
 
@@ -237,29 +245,29 @@ namespace Au.Controls
 		public virtual void DoDefaultAction(int child) { }
 		void IAccessible.accDoDefaultAction(VarInt varChild) => DoDefaultAction(varChild);
 
-		void IAccessible.put_accName(VarInt varChild, string szName) => throw new NotImplementedException();
+		void IAccessible.put_accName(VarInt varChild, string szName) { }
 
-		void IAccessible.put_accValue(VarInt varChild, string szValue) => throw new NotImplementedException();
-
-		#endregion
-
-
-		#region IReflect
-
-		FieldInfo IReflect.GetField(string name, BindingFlags bindingAttr) => null;
-		FieldInfo[] IReflect.GetFields(BindingFlags bindingAttr) => null;
-		MemberInfo[] IReflect.GetMember(string name, BindingFlags bindingAttr) => null;
-		MemberInfo[] IReflect.GetMembers(BindingFlags bindingAttr) => null;
-		MethodInfo IReflect.GetMethod(string name, BindingFlags bindingAttr) => null;
-		MethodInfo IReflect.GetMethod(string name, BindingFlags bindingAttr, Binder binder, Type[] types, ParameterModifier[] modifiers) => null;
-		MethodInfo[] IReflect.GetMethods(BindingFlags bindingAttr) => null;
-		PropertyInfo[] IReflect.GetProperties(BindingFlags bindingAttr) => null;
-		PropertyInfo IReflect.GetProperty(string name, BindingFlags bindingAttr) => null;
-		PropertyInfo IReflect.GetProperty(string name, BindingFlags bindingAttr, Binder binder, Type returnType, Type[] types, ParameterModifier[] modifiers) => null;
-		object IReflect.InvokeMember(string name, BindingFlags invokeAttr, Binder binder, object target, object[] args, ParameterModifier[] modifiers, System.Globalization.CultureInfo culture, string[] namedParameters) => null;
-		Type IReflect.UnderlyingSystemType => null;
+		void IAccessible.put_accValue(VarInt varChild, string szValue) { }
 
 		#endregion
+
+
+		//#region IReflect
+
+		//FieldInfo IReflect.GetField(string name, BindingFlags bindingAttr) => null;
+		//FieldInfo[] IReflect.GetFields(BindingFlags bindingAttr) => null;
+		//MemberInfo[] IReflect.GetMember(string name, BindingFlags bindingAttr) => null;
+		//MemberInfo[] IReflect.GetMembers(BindingFlags bindingAttr) => null;
+		//MethodInfo IReflect.GetMethod(string name, BindingFlags bindingAttr) => null;
+		//MethodInfo IReflect.GetMethod(string name, BindingFlags bindingAttr, Binder binder, Type[] types, ParameterModifier[] modifiers) => null;
+		//MethodInfo[] IReflect.GetMethods(BindingFlags bindingAttr) => null;
+		//PropertyInfo[] IReflect.GetProperties(BindingFlags bindingAttr) => null;
+		//PropertyInfo IReflect.GetProperty(string name, BindingFlags bindingAttr) => null;
+		//PropertyInfo IReflect.GetProperty(string name, BindingFlags bindingAttr, Binder binder, Type returnType, Type[] types, ParameterModifier[] modifiers) => null;
+		//object IReflect.InvokeMember(string name, BindingFlags invokeAttr, Binder binder, object target, object[] args, ParameterModifier[] modifiers, System.Globalization.CultureInfo culture, string[] namedParameters) => null;
+		//Type IReflect.UnderlyingSystemType => null;
+
+		//#endregion
 
 		/// <summary>
 		/// Call in hook wndproc on WM_GETOBJECT like this: <c>handled = true; return (_acc ??= new _Accessible(this)).WmGetobject(wParam, lParam);</c>.
@@ -269,13 +277,20 @@ namespace Au.Controls
 			var oid = (AccOBJID)(uint)lParam;
 			//AOutput.Write(oid);
 			if (oid != AccOBJID.CLIENT) return Api.DefWindowProc(_w, Api.WM_GETOBJECT, wParam, lParam);
-			var accIP = Marshal.GetIUnknownForObject(this);
-			//var accIP=Marshal.GetIDispatchForObject(this);
-			var r = Api.LresultFromObject(typeof(IAccessible).GUID, wParam, accIP);
-			//Marshal.AddRef(accIP); AOutput.Write(Marshal.Release(accIP));
-			Marshal.Release(accIP);
-			return r;
+
+			return Cpp.Cpp_AccWorkaround(this, wParam, ref _accWorkaround);
+
+			//cannot use this because of .NET bug: then calls our IAccessible implementation methods in other thread.
+			//var accIP = Marshal.GetIUnknownForObject(this);
+			////var accIP=Marshal.GetIDispatchForObject(this);
+			//var r = Api.LresultFromObject(typeof(IAccessible).GUID, wParam, accIP);
+			////Marshal.AddRef(accIP); AOutput.Write(Marshal.Release(accIP));
+			//Marshal.Release(accIP);
+			//return r;
 		}
+		nint _accWorkaround;
+
+		~HwndHostAccessibleBase_() { if (_accWorkaround != 0) Cpp.Cpp_AccWorkaround(null, 0, ref _accWorkaround); }
 
 	}
 }

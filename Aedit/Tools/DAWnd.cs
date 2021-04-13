@@ -104,7 +104,7 @@ namespace Au.Tools
 			b.Row(-1).StartGrid().Columns(-1, 0, -1);
 			b.Row(-1).xAddInBorder(out _tree, "TR");
 			b.xAddSplitterV();
-			b.xAddInBorder(out _winInfo, "TL"); _winInfo.ZWrapLines = false;
+			b.xAddInBorder(out _winInfo, "TL"); _winInfo.ZWrapLines = false; _winInfo.Name = "window_info";
 			b.End();
 
 			b.End();

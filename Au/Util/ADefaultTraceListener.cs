@@ -56,7 +56,7 @@ namespace Au.Util
 				switch (ADialog.ShowWarning("Debug assertion failed", st1 ?? s, "Exit|Debug|Ignore", expandedText: st1 == null ? null : st)) {
 				case 3: return;
 				case 2: break;
-				default: AProcess.ExitProcess(-1); break;
+				default: Api.ExitProcess(-1); break;
 				}
 				Debugger.Launch();
 			}

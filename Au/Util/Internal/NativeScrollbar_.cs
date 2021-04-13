@@ -74,12 +74,14 @@ namespace Au.Util
 		//protected abstract int ItemEnd(int i);
 
 		public void SetRange(int nItems) {
-			_nItems = nItems;
 			_max = 0;
-			var rc = _w.ClientRect;
-			int to = _itemEnd(_nItems - 1) - (_vertical ? rc.Height : rc.Width);
-			for (int i = _nItems; --i >= 0;) { //how many items in the last page?
-				if (_itemStart(i) < to) { _max = i + 1; break; }
+			_nItems = nItems;
+			if (nItems > 1) {
+				var rc = _w.ClientRect;
+				int to = _itemEnd(_nItems - 1) - (_vertical ? rc.Height : rc.Width);
+				for (int i = _nItems; --i >= 0;) { //how many items in the last page?
+					if (_itemStart(i) < to) { _max = i + 1; break; }
+				}
 			}
 			_SetPos(_pos);
 			Api.SCROLLINFO.SetRange(_w, _vertical, _nItems - 1, _nItems - _max, true);
@@ -99,6 +101,10 @@ namespace Au.Util
 			PosChanged?.Invoke(this, part);
 		}
 
+		/// <summary>
+		/// Gets current scroll position (index of top visible item).
+		/// Setter sets scroll position, clamped 0-Max. Does not invalidate the control.
+		/// </summary>
 		public int Pos {
 			get => _pos;
 			set => _Scroll(value, -1);
@@ -106,9 +112,22 @@ namespace Au.Util
 
 		public int Offset => _offset;
 
+		/// <summary>
+		/// Gets max scroll position. Returns 0 if no scrollbar.
+		/// </summary>
 		public int Max => _max;
 
-		public int NItems => _nItems;
+		/// <summary>
+		/// Gets or sets item count.
+		/// Use setter to set item count when there is no scrollbar; it is used by <see cref="KeyNavigate"/>; asserts !Visible.
+		/// </summary>
+		public int NItems {
+			get => _nItems;
+			set {
+				Debug.Assert(!_visible);
+				_nItems = value;
+			}
+		}
 
 		/// <summary>
 		/// When scrollbar position changed.
@@ -164,7 +183,7 @@ namespace Au.Util
 		}
 
 		/// <summary>
-		/// Calculates new focused item index when pressed key Dow, Up, PageDown, PageUp, End or Home.
+		/// Calculates new focused item index when pressed key Down, Up, PageDown, PageUp, End or Home.
 		/// </summary>
 		/// <param name="i">Current focused item index. Can be -1.</param>
 		/// <param name="k"></param>

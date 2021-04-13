@@ -64,7 +64,7 @@ namespace Au.Controls
 			_dpi = ADpi.OfWindow(wParent);
 			WS style = WS.CHILD; if (ZInitBorder) style |= WS.BORDER;
 			//note: no WS_VISIBLE. WPF will manage it. It can cause visual artefacts occasionally, eg scrollbar in WPF area.
-			_w = AWnd.More.CreateWindow("Scintilla", null, style, 0, 0, 0, 0, 0, wParent);
+			_w = AWnd.More.CreateWindow("Scintilla", Name, style, 0, 0, 0, 0, 0, wParent);
 			//size 0 0 is not the best, but it is a workaround for WPF bugs
 
 			//CONSIDER: register window class "KScintilla"

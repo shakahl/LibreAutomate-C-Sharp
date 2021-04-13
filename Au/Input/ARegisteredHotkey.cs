@@ -68,29 +68,33 @@ namespace Au
 		/// Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
 		/// Returns false if fails. Supports <see cref="ALastError"/>.
 		/// </summary>
-		/// <param name="id">Hotkey id. Must be 0 to 0xBFFF. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
+		/// <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <msdn>GlobalAddAtom</msdn>. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
 		/// <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple (KMod, KKey), enum KKey, enum Keys, struct KHotkey.</param>
 		/// <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
 		/// <exception cref="ArgumentException">Error in hotkey string.</exception>
 		///	<exception cref="InvalidOperationException">This variable already registered a hotkey.</exception>
 		/// <remarks>
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
+		/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
 		/// A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
 		/// </remarks>
 		/// <seealso cref="AKeys.WaitForHotkey"/>
 		/// <example>See <see cref="ARegisteredHotkey"/>.</example>
-		public bool Register(int id, KHotkey hotkey, AnyWnd window = default)
-		{
-			var (mod, key) = hotkey;
-			if(_id != 0) throw new InvalidOperationException("This variable already registered a hotkey. Use multiple variables or call Unregister.");
-			var m = mod & ~(KMod.Alt | KMod.Shift);
-			if(mod.Has(KMod.Alt)) m |= KMod.Shift;
-			if(mod.Has(KMod.Shift)) m |= KMod.Alt;
+		public bool Register(int id, KHotkey hotkey, AnyWnd window = default) {
+			if (_id != 0) throw new InvalidOperationException("This variable already registered a hotkey. Use multiple variables or call Unregister.");
 			var w = window.Hwnd;
-			if(!Api.RegisterHotKey(w, id, (uint)m, key)) return false;
+			var (mod, key) = Normalize_(hotkey);
+			if (!Api.RegisterHotKey(w, id, mod, key)) return false;
 			_w = w; _id = id;
 			//Hotkey = hotkey;
 			return true;
+		}
+
+		internal static (int mod, KKey key) Normalize_(KHotkey hotkey) {
+			var (mod, key) = hotkey;
+			if (key == KKey.Pause && mod.Has(KMod.Ctrl)) key = KKey.Break;
+			//if(key == KKey.NumPad5 && mod.Has(KMod.Shift)) key = KKey.Clear; //Shift+numpad don't work
+			return (AMath.SwapBits((int)mod, 0, 2, 1), key);
 		}
 
 		/// <summary>
@@ -101,12 +105,11 @@ namespace Au
 		/// Must be called from the same thread as when registering, and the window must be still alive.
 		/// If fails, calls <see cref="AWarning.Write"/>.
 		/// </remarks>
-		public void Unregister()
-		{
-			if(_id != 0) {
-				if(!Api.UnregisterHotKey(_w, _id)) {
+		public void Unregister() {
+			if (_id != 0) {
+				if (!Api.UnregisterHotKey(_w, _id)) {
 					var es = ALastError.Message;
-					AWarning.Write($"Failed to unregister hotkey, id={_id.ToString()}. {es}");
+					AWarning.Write($"Failed to unregister hotkey, id={_id}. {es}");
 					return;
 				}
 				_id = 0; _w = default;
@@ -125,6 +128,6 @@ namespace Au
 		/// This message is posted to the window or to the thread's message loop.
 		/// More info: <msdn>WM_HOTKEY</msdn>.
 		/// </summary>
-		public const int WM_HOTKEY = (int)Api.WM_HOTKEY;
+		public const int WM_HOTKEY = Api.WM_HOTKEY;
 	}
 }

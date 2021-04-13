@@ -85,7 +85,7 @@ namespace Au
 			RECT ru = default;
 			if (_MouseIsIn(this) || _MouseIsIn(_satellite)) return;
 			if (ru.Contains(p)) return;
-			if (AWnd.More.GetGUIThreadInfo(out var g, AThread.Id) && g.flags.Has(Native.GUI.INMENUMODE)) return;
+			if (AMiscInfo.GetGUIThreadInfo(out var g, AThread.Id) && g.flags.Has(Native.GUI.INMENUMODE)) return;
 
 			bool _MouseIsIn(AToolbar tb) {
 				var w = tb._w;

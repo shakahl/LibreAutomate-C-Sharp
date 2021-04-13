@@ -100,7 +100,7 @@ namespace Au.Compiler
 	/// ifRunning warn|warn_restart|cancel|cancel_restart|wait|wait_restart|run|run_restart|restart //what to do if this script is already running. Default: warn. More info below.
 	/// ifRunning2 same|warn|cancel|wait //what to do if another "runSingle" script is running. Default: same. More info below.
 	/// uac inherit|user|admin //UAC integrity level (IL) of the task process. Default: inherit. More info below.
-	/// prefer32bit false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
+	/// bit32 false|true //if true, the task process is 32-bit even on 64-bit OS. It can use 32-bit and AnyCPU dlls, but not 64-bit dlls. Default: false.
 	/// ]]></code>
 	/// Here word "task" is used for "script that is running or should start".
 	/// Options 'runSingle', 'ifRunning', 'ifRunning2' and 'uac' are applied only when the task is started from editor process, not when it runs as independent exe program.
@@ -290,10 +290,10 @@ namespace Au.Compiler
 		public EUac Uac { get; private set; }
 
 		/// <summary>
-		/// Meta option 'prefer32bit'.
+		/// Meta option 'bit32'.
 		/// Default: false.
 		/// </summary>
-		public bool Prefer32Bit { get; private set; }
+		public bool Bit32 { get; private set; }
 
 		/// <summary>
 		/// Meta option 'console'.
@@ -571,9 +571,9 @@ namespace Au.Compiler
 				_Specified(EMSpecified.uac);
 				if (_Enum(out EUac uac, value)) Uac = uac;
 				break;
-			case "prefer32bit":
-				_Specified(EMSpecified.prefer32bit);
-				if (_TrueFalse(out bool is32, value)) Prefer32Bit = is32;
+			case "bit32":
+				_Specified(EMSpecified.bit32);
+				if (_TrueFalse(out bool is32, value)) Bit32 = is32;
 				break;
 			case "console":
 				_Specified(EMSpecified.console);
@@ -589,7 +589,7 @@ namespace Au.Compiler
 				break;
 			case "icon":
 				_Specified(EMSpecified.icon);
-				IconFile = _GetFile(value);
+				IconFile = _GetFile(value, folder: null);
 				break;
 			//case "resFile":
 			//	_Specified(EMSpecified.resFile);
@@ -718,8 +718,8 @@ namespace Au.Compiler
 
 		bool _FinalCheckOptions(FileNode f) {
 			const EMSpecified c_spec1 = EMSpecified.runSingle | EMSpecified.ifRunning | EMSpecified.ifRunning2
-				| EMSpecified.uac | EMSpecified.prefer32bit | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
-			const string c_spec1S = "cannot use runSingle, ifRunning, ifRunning2, uac, prefer32bit, manifest, icon, console";
+				| EMSpecified.uac | EMSpecified.bit32 | EMSpecified.manifest | EMSpecified.icon | EMSpecified.console;
+			const string c_spec1S = "cannot use runSingle, ifRunning, ifRunning2, uac, bit32, manifest, icon, console";
 
 			bool needOP = false;
 			switch (Role) {
@@ -744,6 +744,7 @@ namespace Au.Compiler
 
 			if ((IfRunning & ~EIfRunning._restartFlag) == EIfRunning.run && RunSingle) return _ErrorM("ifRunning run with runSingle true");
 			if (Specified.Has(EMSpecified.ifRunning2) && !RunSingle) return _ErrorM("ifRunning2 without runSingle true");
+			if (IconFile?.IsFolder ?? false) if( Role != ERole.exeProgram) return _ErrorM("icon folder can be used only with role exeProgram"); //difficult to add multiple icons if miniProgram
 
 			//if(ResFile != null) {
 			//	if(IconFile != null) return _ErrorM("cannot add both res file and icon");
@@ -770,7 +771,7 @@ namespace Au.Compiler
 			   oKind,
 			   optimizationLevel: Optimize ? OptimizationLevel.Release : OptimizationLevel.Debug, //speed: compile the same, load Release slightly slower. Default Debug.
 			   allowUnsafe: true,
-			   platform: Prefer32Bit ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
+			   platform: Bit32 ? Platform.AnyCpu32BitPreferred : Platform.AnyCpu,
 			   warningLevel: WarningLevel,
 			   specificDiagnosticOptions: NoWarnings?.Select(wa => new KeyValuePair<string, ReportDiagnostic>(AChar.IsAsciiDigit(wa[0]) ? ("CS" + wa.PadLeft(4, '0')) : wa, ReportDiagnostic.Suppress)),
 			   cryptoKeyFile: SignFile?.FilePath, //also need strongNameProvider
@@ -898,7 +899,7 @@ namespace Au.Compiler
 		ifRunning = 1 << 1,
 		ifRunning2 = 1 << 2,
 		uac = 1 << 3,
-		prefer32bit = 1 << 4,
+		bit32 = 1 << 4,
 		optimize = 1 << 5,
 		define = 1 << 6,
 		warningLevel = 1 << 7,

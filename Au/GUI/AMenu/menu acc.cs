@@ -12,24 +12,31 @@ namespace Au
 	[ComVisible(true)]
 	partial class MTBase
 	{
-		private protected IAccessible _stdAO;
-
 		private protected bool _WmGetobject(LPARAM wParam, LPARAM lParam, out LPARAM result) {
 			result = default;
 			var oid = (AccOBJID)(uint)lParam;
 			if (oid != AccOBJID.CLIENT) return false;
-			if (_stdAO == null) Api.CreateStdAccessibleObject(_w, AccOBJID.CLIENT, typeof(IAccessible).GUID, out _stdAO);
-			var accIP = Marshal.GetIUnknownForObject(this);
-			result = Api.LresultFromObject(typeof(IAccessible).GUID, wParam, accIP);
-			Marshal.Release(accIP);
+			result = Cpp.Cpp_AccWorkaround((IAccessible)this, wParam, ref _accWorkaround);
 			return true;
 		}
+		nint _accWorkaround;
+
+		///
+		~MTBase() { if (_accWorkaround != 0) Cpp.Cpp_AccWorkaround(null, 0, ref _accWorkaround); }
+
+		private protected IAccessible _StdAO {
+			get {
+				if (_stdAO == null) Api.CreateStdAccessibleObject(_w, AccOBJID.CLIENT, typeof(IAccessible).GUID, out _stdAO);
+				return _stdAO;
+			}
+		}
+		IAccessible _stdAO;
 	}
 
 	[ComVisible(true)]
 	partial class AMenu : IAccessible
 	{
-		IAccessible IAccessible.get_accParent() => _stdAO.get_accParent();
+		IAccessible IAccessible.get_accParent() => _StdAO.get_accParent();
 
 		int IAccessible.get_accChildCount() => _a.Count;
 
@@ -85,7 +92,7 @@ namespace Au
 
 		void IAccessible.accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild) {
 			if (!_B(varChild, out var b)) {
-				_stdAO.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
+				_StdAO.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
 			} else {
 				var r = _ItemRect(b, inScreen: true);
 				pxLeft = r.left; pyTop = r.top; pcxWidth = r.Width; pcyHeight = r.Height;
@@ -97,7 +104,7 @@ namespace Au
 			if (navDir == AccNAVDIR.FIRSTCHILD || navDir == AccNAVDIR.LASTCHILD) {
 				if (i == -1) return navDir == AccNAVDIR.FIRSTCHILD ? 1 : _a.Count;
 			} else {
-				if (i == -1) return _stdAO.accNavigate(navDir, varStart);
+				if (i == -1) return _StdAO.accNavigate(navDir, varStart);
 				switch (navDir) {
 				case AccNAVDIR.PREVIOUS:
 					if (i > 0) return i;
@@ -112,7 +119,7 @@ namespace Au
 
 		VarInt IAccessible.accHitTest(int xLeft, int yTop) {
 			POINT p = new(xLeft, yTop); _w.MapScreenToClient(ref p);
-			if (!_w.ClientRect.Contains(p)) return _stdAO.accHitTest(xLeft, yTop);
+			if (!_w.ClientRect.Contains(p)) return _StdAO.accHitTest(xLeft, yTop);
 			return _HitTest(p);
 		}
 

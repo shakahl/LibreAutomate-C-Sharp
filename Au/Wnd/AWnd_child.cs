@@ -582,7 +582,7 @@ namespace Au
 			if((uint)(itemId - 1) >= 0xffff) throw new ArgumentOutOfRangeException();
 			ThrowIfInvalid();
 			var w = this;
-			if(ClassNameIs("#32768") && More.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
+			if(ClassNameIs("#32768") && AMiscInfo.GetGUIThreadInfo(out var g, ThreadId) && !g.hwndMenuOwner.Is0) w = g.hwndMenuOwner;
 			w.Post(systemMenu ? Api.WM_SYSCOMMAND : Api.WM_COMMAND, itemId);
 			w.MinimalSleepIfOtherThread_();
 		}

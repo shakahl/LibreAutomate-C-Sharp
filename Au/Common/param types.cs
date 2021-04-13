@@ -402,7 +402,7 @@ namespace Au.Types
 				int cy = ADpi.GetSystemMetrics(Api.SM_CYCURSOR, p);
 				if (ACursor.GetCurrentVisibleCursor(out var c) && Api.GetIconInfo(c, out var u)) {
 					if (u.hbmColor != default) Api.DeleteObject(u.hbmColor);
-					if (u.hbmMask != default) Api.DeleteObject(u.hbmMask);
+					Api.DeleteObject(u.hbmMask);
 
 					//AOutput.Write(u.xHotspot, u.yHotspot);
 					p.y += cy - u.yHotspot - 1; //not perfect, but better than just to add SM_CYCURSOR or some constant value.

@@ -116,11 +116,9 @@ class PanelFind : UserControl
 			//use timer to avoid temporary focus problems, for example when tabbing quickly or closing active Regex window (this was for forms, now not tested without)
 			ATimer.After(70, _ => { if (tb.IsFocused) _ShowRegexInfo(tb, false); });
 		} else {
-			if (_regexWindow?.IsVisible ?? false) {
+			if ((_regexWindow?.IsVisible ?? false) && !_regexWindow.Hwnd.IsActive) {
 				var c = Keyboard.FocusedElement;
-				if (c == null || (c != _tFind && c != _tReplace && !AWnd.ThisThread.IsFocused(_regexWindow.Hwnd))) {
-					_regexWindow.Hwnd.ShowL(false);
-				}
+				if (c != _tFind && c != _tReplace) _regexWindow.Hwnd.ShowL(false);
 			}
 		}
 	}

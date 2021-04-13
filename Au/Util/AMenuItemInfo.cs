@@ -77,7 +77,7 @@ namespace Au.Util
 
 		(AWnd ow, bool sys) _OwnerSystem()
 		{
-			if(_ow.Is0 && AWnd.More.GetGUIThreadInfo(out var g)) {
+			if(_ow.Is0 && AMiscInfo.GetGUIThreadInfo(out var g)) {
 				_ow = g.hwndMenuOwner;
 				_isSystem = g.flags.Has(Native.GUI.SYSTEMMENUMODE);
 			}

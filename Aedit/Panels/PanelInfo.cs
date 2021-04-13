@@ -22,10 +22,10 @@ using System.Windows.Automation;
 class PanelInfo : Grid
 {
 	FlowDocumentControl _flowDoc;
-	_Scintilla _sci;
+	KScintilla _sci;
 
 	public PanelInfo() {
-		_sci = new _Scintilla { ZInitReadOnlyAlways = true, ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways, Visibility = Visibility.Hidden };
+		_sci = new KScintilla { ZInitReadOnlyAlways = true, ZInitTagsStyle = KScintilla.ZTagsStyle.AutoAlways, Visibility = Visibility.Hidden, Name = "Info_mouse" };
 		_sci.ZHandleCreated += _sci_ZHandleCreated;
 		this.Children.Add(_sci);
 
@@ -33,11 +33,6 @@ class PanelInfo : Grid
 		AutomationProperties.SetName(_flowDoc.Document, "Info_code");
 		_flowDoc.LinkClicked += _flowDoc_LinkClicked;
 		this.Children.Add(_flowDoc);
-	}
-
-	class _Scintilla : KScintilla
-	{
-		protected override string ZAccessibleName => "Info_mouse";
 	}
 
 	private void _sci_ZHandleCreated() {

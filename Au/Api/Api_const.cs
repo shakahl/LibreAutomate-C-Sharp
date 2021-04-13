@@ -598,6 +598,7 @@ namespace Au.Types
 		#region misc
 
 		internal const int IDI_APPLICATION = 32512;
+		internal const uint PBT_APMSUSPEND = 0x4;
 
 		#endregion
 

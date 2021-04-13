@@ -352,7 +352,7 @@ namespace Au.Triggers
 		}
 
 		static AWnd _GetFocusedWindow() {
-			if (!AWnd.More.GetGUIThreadInfo(out var gt)) return AWnd.Active;
+			if (!AMiscInfo.GetGUIThreadInfo(out var gt)) return AWnd.Active;
 			if (0 != (gt.flags & (Native.GUI.INMENUMODE | Native.GUI.INMOVESIZE))) return default; //the character will not be typed when showing menu (or just Alt or F10 pressed) or moving/resizing window. Of course this will not work with nonstandard menus, eg in Word, as well as with other controls that don't accept text.
 			return gt.hwndFocus; //if no focus, the thread will not receive wm-keydown etc
 		}

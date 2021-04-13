@@ -50,8 +50,8 @@ namespace Au.Controls
 			_dontMeasure = true;
 			NativeScrollbar_.ShowVH(_vscroll, needV, _hscroll, needH);
 			_dontMeasure = false;
-			if (needV) _vscroll.SetRange(_avi.Length);
-			if (needH) _hscroll.SetRange(_itemsWidth / _imageSize);
+			if (needV) _vscroll.SetRange(_avi.Length); else _vscroll.NItems = _avi.Length;
+			if (needH) _hscroll.SetRange(_itemsWidth / _imageSize); else _hscroll.NItems = 0;
 		}
 		bool _inScrollbarScroll;
 		bool _scrollCorrection;

@@ -345,7 +345,7 @@ static class CiUtil
 		return b.ToString();
 	}
 
-	public static string FormatSignatureXmlDoc(MethodDeclarationSyntax md, string code) {
+	public static string FormatSignatureXmlDoc(BaseMethodDeclarationSyntax md, string code) {
 		var b = new StringBuilder();
 		foreach (var p in md.ParameterList.Parameters) {
 			b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");

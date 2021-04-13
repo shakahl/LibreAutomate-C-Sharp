@@ -476,6 +476,7 @@ namespace Au
 		/// </summary>
 		/// <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
 		/// <exception cref="ArgumentException"><i>canSendAgain</i> is true and keys end with + or (.</exception>
+		/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
 		public void Send(bool canSendAgain = false) {
 			_ThrowIfSending();
 			if (_a.Count == 0) return;
@@ -619,7 +620,7 @@ namespace Au
 		}
 
 		unsafe void _SendText(_KEvent ke) {
-			var opt = GetOptionsAndWndFocused_(out var wFocus, true);
+			var opt = GetOptionsAndWndFocused_(out var wFocus, true, requireFocus: true);
 			object data = _GetData(ke.data); //string or AClipboardData
 			string s = data as string;
 

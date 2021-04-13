@@ -488,7 +488,7 @@ class RunningTasks
 
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskArgs = null;
-		bool bit32 = r.prefer32bit || AVersion.Is32BitOS;
+		bool bit32 = r.bit32 || AVersion.Is32BitOS;
 		if(r.notInCache) { //meta role exeProgram
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
 			argsString = args == null ? null : AStringUtil.CommandLineFromArray(args);
@@ -643,7 +643,7 @@ class RunningTasks
 
 		string exeFile, argsString;
 		_Preloaded pre = null; byte[] taskParams = null;
-		bool bit32 = r.prefer32bit || AVersion.Is32BitOS;
+		bool bit32 = r.bit32 || AVersion.Is32BitOS;
 		if (r.notInCache) { //meta role exeProgram
 			exeFile = Compiler.DllNameToAppHostExeName(r.file, bit32);
 			argsString = args == null ? null : AStringUtil.CommandLineFromArray(args);

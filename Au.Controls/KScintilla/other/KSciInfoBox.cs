@@ -31,6 +31,7 @@ namespace Au.Controls
 			ZInitWrapVisuals = false;
 			ZWrapLines = true;
 			//TabStop = false;
+			Name = "info";
 		}
 
 		protected override void ZOnHandleCreated() {

@@ -174,9 +174,6 @@
             _iacc must be 0, iacc not 0.
             </summary>
         </member>
-        <member name="M:Au.AAcc._Dispose">
-            
-        </member>
         <member name="M:Au.AAcc.Dispose">
             <summary>
             Releases IAccessible COM object and clears this variable.
@@ -1362,6 +1359,13 @@
             Creates SECURITY_ATTRIBUTES that allows UAC medium IL processes to open the pipe.
             Like of PipeSecurity that allows ReadWrite for AuthenticatedUserSid.
             </summary>
+        </member>
+        <member name="M:Au.Types.Api.NOTIFYICONDATA.#ctor(Au.AWnd,System.UInt32)">
+            <summary>
+            Sets cbSize, hWnd and uFlags.
+            </summary>
+            <param name="wNotify"></param>
+            <param name="nifFlags"></param>
         </member>
         <member name="M:Au.Types.Api.SetWindowSubclass(Au.AWnd,Au.Types.Api.SUBCLASSPROC,Au.Types.LPARAM,System.IntPtr)">
             <summary>API <msdn>SetWindowSubclass</msdn></summary>
@@ -3555,8 +3559,10 @@
         </member>
         <member name="F:Au.Types.DIcon.App">
             <summary>
-            Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
-            If there are no icons - the default program icon.
+            Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or <see cref="P:Au.ATask.MainAssembly"/>.
+            If there are no icons - default program icon.
+            C# compilers add app icon with this id. The <b>DIcon.App</b> value is = <b>IDI_APPLICATION</b> (32512).
+            If this program file contains multiple native icons in range DIcon.App to 0xf000, you can specify them like <c>DIcon.App+1</c>.
             </summary>
         </member>
         <member name="T:Au.Types.DEdit">
@@ -3843,7 +3849,7 @@
         </member>
         <member name="P:Au.Types.MTImage.Value">
             <summary>
-            Gets the raw value stored in this variable. Can be string, Image, StockIcon or null.
+            Gets the raw value stored in this variable. Can be string, Image, AIcon, StockIcon or null.
             </summary>
         </member>
         <member name="T:Au.Types.OsdMode">
@@ -6985,7 +6991,7 @@
             </summary>
             <param name="t"></param>
         </member>
-        <member name="M:Au.AExtWpf.FindVisualDescendant(System.Windows.DependencyObject,System.Func{System.Windows.DependencyObject,System.Boolean})">
+        <member name="M:Au.AExtWpf.FindVisualDescendant(System.Windows.DependencyObject,System.Func{System.Windows.DependencyObject,System.Boolean},System.Boolean)">
             <summary>
             Enumerates visual descendant objects, including parts of composite controls, and calls callback function <i>f</i> for each.
             When <i>f</i> returns true, stops and returns that object. Returns null if <i>f</i> does not return true.
@@ -8194,7 +8200,7 @@
             </summary>
             <exception cref="T:System.InvalidOperationException">Thrown by the 'set' function if this property is already set.</exception>
             <remarks>
-            Used by functions of these classes: AIcon, AMenu, AToolbar, AWinImage, possibly some other.
+            Used by functions of these classes: <b>AIcon</b>, <b>AMenu</b>, <b>AToolbar</b>, <b>AWinImage</b>, possibly some other.
             This function does not auto-create the folder; usually it is created when installing the application.
             </remarks>
         </member>
@@ -8328,10 +8334,10 @@
         </member>
         <member name="T:Au.AIcon">
             <summary>
-            Gets icons for files etc. Contains native icon handle.
+            Gets icons from/of files etc. Contains native icon handle.
             </summary>
             <remarks>
-            Native icons must be destroyed, it is very important. An <b>AIcon</b> variable destroys its native icon when disposing it. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Note: it's not a reference type and does not have a finalizer that could be called by GC. But usually you need not native handle but <b>Icon</b>, <b>Bitmap</b> or <b>ImageSource</b>. Then use <see cref="M:Au.AIcon.ToGdipIcon(System.Boolean)"/>, <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/> or <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>. By default they dispose the native icon and clear the <b>AIcon</b> variable; then don't need to dispose it.
+            Native icons must be destroyed. An <b>AIcon</b> variable destroys its native icon when disposing. To dispose, call <b>Dispose</b> or use <b>using</b> statement. Or use functions like <see cref="M:Au.AIcon.ToGdipBitmap(System.Boolean)"/>, <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>; by default they dispose the <b>AIcon</b> variable. It's OK to not dispose if you use few icons; GC will do it.
             </remarks>
         </member>
         <member name="M:Au.AIcon.#ctor(System.IntPtr)">
@@ -8345,9 +8351,12 @@
             Destroys native icon handle.
             </summary>
         </member>
-        <member name="P:Au.AIcon.Is0">
+        <member name="M:Au.AIcon.Finalize">
+            
+        </member>
+        <member name="M:Au.AIcon.Detach">
             <summary>
-            Returns true if <b>Handle</b>==default(IntPtr).
+            Clears this variable and returns its native icon handle.
             </summary>
         </member>
         <member name="P:Au.AIcon.Handle">
@@ -8365,7 +8374,7 @@
             Gets file icon.
             Extracts icon directly from the file, or gets shell icon, depending on file type, icon index, etc.
             </summary>
-            <returns>Returns default(AIcon) if failed.</returns>
+            <returns>Returns null if failed.</returns>
             <param name="file">
             Can be:
             - Path of any file or folder. Supports environment variables.
@@ -8386,7 +8395,7 @@
             <summary>
             Gets icon of a file or other shell object specified as ITEMIDLIST.
             </summary>
-            <returns>Returns default(AIcon) if failed.</returns>
+            <returns>Returns null if failed.</returns>
             <param name="pidl">ITEMIDLIST pointer (PIDL).</param>
             <param name="size">Icon width and height. Default 16.</param>
         </member>
@@ -8394,34 +8403,58 @@
             <summary>
             Extracts icon directly from file that contains it.
             </summary>
-            <returns>Returns default(AIcon) if failed.</returns>
+            <returns>Returns null if failed.</returns>
             <param name="file">.ico, .exe, .dll or other file that contains one or more icons. Also supports cursor files - .cur, .ani. Must be full path, without icon index. Supports environment variables (see <see cref="M:Au.APath.ExpandEnvVar(System.String)"/>).</param>
-            <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
             <param name="size">Icon width and height. Default 16.</param>
+            <param name="index">Icon index or negative icon resource id in the .exe/.dll file.</param>
         </member>
         <member name="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)">
             <summary>
             Gets a shell stock icon.
             </summary>
-            <returns>Returns default(AIcon) if failed.</returns>
+            <returns>Returns null if failed.</returns>
             <param name="icon">Shell stock icon id.</param>
             <param name="size">Icon width and height. Default 16.</param>
         </member>
-        <member name="M:Au.AIcon.OfThisApp(System.Int32)">
+        <member name="M:Au.AIcon.OfThisApp(System.Int32,System.Int32)">
             <summary>
-            Gets <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
+            Gets icon from unmanaged resources of this program file or <see cref="P:Au.ATask.MainAssembly"/>.
             </summary>
-            <returns>Returns default(AIcon) if there are no icons.</returns>
+            <returns>Returns null if not found.</returns>
             <param name="size">Icon width and height. Default 16.</param>
+            <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
+        </member>
+        <member name="M:Au.AIcon.TrayIcon(System.Int32)">
+            <summary>
+            Gets icon of tray icon size from unmanaged resources of this program or system.
+            </summary>
+            <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
             <remarks>
-            The icon is cached and protected from destroying, therefore don't need to destroy it, and not error to do it.
+            Calls API <msdn>LoadIconMetric</msdn>.
+            
+            The icon can be in <see cref="P:Au.ATask.MainAssembly"/> (if this script has role miniProgram) or in the program file (.exe). If not found, loads standard icon, see API <msdn>LoadIconMetric</msdn>.
             </remarks>
+        </member>
+        <member name="M:Au.AIcon.TrayIcon(System.String)">
+            <summary>
+            Loads icon of tray icon size from .ico file.
+            </summary>
+            <returns>Returns null if not found.</returns>
+            <remarks>
+            Calls API <msdn>LoadIconMetric</msdn>.
+            </remarks>
+        </member>
+        <member name="M:Au.AIcon.GetAppIconModuleHandle_(System.Int32)">
+            <summary>
+            Gets native module handle of exe or dll that contains specified icon. Returns default if no icon.
+            If role miniProgram, at first looks in <see cref="P:Au.ATask.MainAssembly"/>.
+            </summary>
         </member>
         <member name="M:Au.AIcon.OfWindow(Au.AWnd,System.Int32)">
             <summary>
             Gets icon that is displayed in window title bar and in taskbar button.
             </summary>
-            <returns>Returns default(AIcon) if failed.</returns>
+            <returns>Returns null if failed.</returns>
             <param name="w">Window of any process.</param>
             <param name="size">Icon width and height. Default 16.</param>
         </member>
@@ -8433,22 +8466,18 @@
             <param name="height"></param>
             <param name="drawCallback">Called to draw icon. If null, the icon will be completely transparent.</param>
         </member>
-        <member name="M:Au.AIcon.ToGdipIcon(System.Boolean)">
+        <member name="M:Au.AIcon.ToGdipIcon">
             <summary>
-            Converts native icon to GDI+ icon object.
+            Creates <see cref="T:System.Drawing.Icon"/> object that shares native icon handle with this object.
             Returns null if <i>Handle</i> is default(IntPtr).
             </summary>
-            <param name="destroyNative">
-            If true (default), the returned variable owns the native icon and destroys it when disposing; also clears this variable and don't need to dispose it.
-            If false, the returned variable just uses the native icon handle of this variable and will not destroy; later will need to dispose this variable.
-            </param>
         </member>
         <member name="M:Au.AIcon.ToGdipBitmap(System.Boolean)">
             <summary>
             Converts native icon to GDI+ bitmap object.
             Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
             </summary>
-            <param name="destroyNative">
+            <param name="destroyIcon">
             If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
             If false, later will need to dispose this variable.
             </param>
@@ -8458,10 +8487,16 @@
             Converts native icon to WPF image object.
             Returns null if <i>Handle</i> is default(IntPtr) or if fails to convert.
             </summary>
-            <param name="destroyNative">
+            <param name="destroyIcon">
             If true (default), destroys the native icon object; also clears this variable and don't need to dispose it.
             If false, later will need to dispose this variable.
             </param>
+        </member>
+        <member name="P:Au.AIcon.Size">
+            <summary>
+            Gets icon size.
+            Returns default if fails.
+            </summary>
         </member>
         <member name="M:Au.AIcon.ParsePathIndex(System.String,System.String@,System.Int32@)">
             <summary>
@@ -9085,6 +9120,7 @@
             <summary>
             Process functions. Extends <see cref="T:System.Diagnostics.Process"/>.
             </summary>
+            <seealso cref="T:Au.ATask"/>
         </member>
         <member name="M:Au.AProcess.GetName(System.Int32,System.Boolean,System.Boolean)">
             <summary>
@@ -9163,11 +9199,6 @@
             Don't need to close the handle.
             </summary>
         </member>
-        <member name="P:Au.AProcess.ExeModuleHandle">
-            <summary>
-            Gets native module handle of the program file of this process.
-            </summary>
-        </member>
         <member name="P:Au.AProcess.ExePath">
             <summary>
             Gets full path of the program file of this process.
@@ -9232,11 +9263,6 @@
             The event handler is called before static object finalizers.
             </remarks>
         </member>
-        <member name="M:Au.AProcess.ExitProcess(System.Int32)">
-            <summary>
-            Calls API <msdn>ExitProcess</msdn>.
-            </summary>
-        </member>
         <member name="P:Au.AProcess.CultureIsInvariant">
             <summary>
             Gets or sets whether <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/>.
@@ -9252,6 +9278,64 @@
             <summary>
             After afterMS milliseconds invokes GC and calls API SetProcessWorkingSetSize.
             </summary>
+        </member>
+        <member name="M:Au.AProcess.Terminate(System.Int32,System.Int32)">
+            <summary>
+            Terminates (ends) the specified process.
+            Returns false if failed. Supports <see cref="T:Au.ALastError"/>.
+            </summary>
+            <param name="processId">Process id.</param>
+            <param name="exitCode">Process exit code.</param>
+            <remarks>
+            This function does not try to end process "softly" (close main window). Unsaved data will be lost.
+            Alternatives: run taskkill.exe or pskill.exe (download). See <see cref="M:Au.AFile.RunConsole(System.String,System.String,System.String,System.Text.Encoding)"/>. More info on the internet.
+            </remarks>
+        </member>
+        <member name="M:Au.AProcess.Terminate(System.String,System.Boolean,System.Int32)">
+            <summary>
+            Terminates (ends) all processes of the specified program or programs.
+            Returns the number of successfully terminated processes.
+            </summary>
+            <param name="processName">
+            Process executable file name, like "notepad.exe".
+            String format: [](xref:wildcard_expression).
+            </param>
+            <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
+            <param name="exitCode">Process exit code.</param>
+            <exception cref="T:System.ArgumentException">
+            - <i>processName</i> is "" or null.
+            - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+            </exception>
+        </member>
+        <member name="M:Au.AProcess.Suspend(System.Boolean,System.Int32)">
+            <summary>
+            Suspends or resumes the specified process.
+            Returns false if failed. Supports <see cref="T:Au.ALastError"/>.
+            </summary>
+            <param name="suspend">true suspend, false resume.</param>
+            <param name="processId">Process id.</param>
+            <remarks>
+            If suspended multiple times, must be resumed the same number of times.
+            </remarks>
+        </member>
+        <member name="M:Au.AProcess.Suspend(System.Boolean,System.String,System.Boolean)">
+            <summary>
+            Suspends or resumes all processes of the specified program or programs.
+            Returns the number of successfully suspended/resumed processes.
+            </summary>
+            <param name="suspend">true suspend, false resume.</param>
+            <param name="processName">
+            Process executable file name, like "notepad.exe".
+            String format: [](xref:wildcard_expression).
+            </param>
+            <param name="allSessions">Processes of any user session. If false (default), only processes of this user session.</param>
+            <exception cref="T:System.ArgumentException">
+            - <i>processName</i> is "" or null.
+            - Invalid wildcard expression (<c>"**options "</c> or regular expression).
+            </exception>
+            <remarks>
+            If suspended multiple times, must be resumed the same number of times.
+            </remarks>
         </member>
         <member name="T:Au.AProcessMemory">
             <summary>
@@ -10107,8 +10191,7 @@
         </member>
         <member name="P:Au.AUac.IsAdmin">
             <summary>
-            Returns true if this process is running as administrator, ie if the user belongs to the local Administrators group and the process is not limited by [](xref:uac).
-            This function for example can be used to check whether you can write to protected locations in the file system and registry.
+            Returns true if this process is running as administrator.
             </summary>
         </member>
         <member name="P:Au.AUac.IsUacDisabled">
@@ -10123,6 +10206,7 @@
             <remarks>
             The Windows version properties return true Windows version. If you need version that depends on manifest and debugger, instead use <see cref="P:System.Environment.OSVersion"/>.
             </remarks>
+            <seealso cref="T:System.OperatingSystem"/>
         </member>
         <member name="P:Au.AVersion.WinVer">
             <summary>
@@ -10352,17 +10436,14 @@
         </member>
         <member name="M:Au.ADialog.SetIcon(Au.Types.DIcon)">
             <summary>
-            Sets common icon.
+            Sets common icon. Or custom icom from app resources.
             </summary>
         </member>
-        <member name="M:Au.ADialog.SetIcon(System.Drawing.Icon)">
+        <member name="M:Au.ADialog.SetIcon(System.Object)">
             <summary>
             Sets custom icon.
             </summary>
-            <param name="icon">
-            Icon of size 32 or 16.
-            Don't dispose it until the dialog is closed.
-            </param>
+            <param name="icon">Icon of size 32 or 16 (or more if high DPI). Can be <see cref="T:Au.AIcon"/>, <b>Icon</b>, <b>IntPtr</b> (native icon handle), <b>Bitmap</b>.</param>
         </member>
         <member name="F:Au.ADialog.Timeout">
             <summary>
@@ -10449,12 +10530,12 @@
             <param name="text">Text.</param>
             <param name="icon"></param>
         </member>
-        <member name="M:Au.ADialog.SetFooterText(System.String,System.Drawing.Icon)">
+        <member name="M:Au.ADialog.SetFooterText(System.String,System.Object)">
             <summary>
             Adds text and custom icon at the bottom of the dialog.
             </summary>
             <param name="text">Text.</param>
-            <param name="icon">Icon of size 16. Read more: <see cref="M:Au.ADialog.SetIcon(System.Drawing.Icon)"/>.</param>
+            <param name="icon">Icon of size 16 (or more if high DPI). Can be <see cref="T:Au.AIcon"/>, <b>Icon</b>, <b>IntPtr</b> (native icon handle), <b>Bitmap</b>.</param>
         </member>
         <member name="M:Au.ADialog.SetEditControl(Au.Types.DEdit,System.String,System.Collections.Generic.IEnumerable{System.String})">
             <summary>
@@ -11280,8 +11361,8 @@
              - file path with prefix "imagefile:" or resource path that starts with "resources/" or has prefix "resource:" - the "show" function loads .png or .xaml image file or resource.
              - string with prefix "image:" - Base-64 encoded png file. Can be created with the "Find image..." dialog.
              - <see cref="T:Au.Types.FolderPath"/> - same as folder path string.
-             - <see cref="T:System.Drawing.Image"/> - image object.
-             - <see cref="T:Au.AIcon"/> - variable containing native icon handle. The "add item" function disposes it (actually the <see cref="T:Au.Types.MTImage"/> implicit conversion operator disposes it).
+             - <see cref="T:System.Drawing.Image"/> - image.
+             - <see cref="T:Au.AIcon"/> - icon. The "add item" function disposes it.
              - <see cref="T:Au.Types.StockIcon"/> - the "show" function calls <see cref="M:Au.AIcon.Stock(Au.Types.StockIcon,System.Int32)"/>.
              - null - if <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> true, the "show" function tries to extract a file path from action code; then calls <see cref="M:Au.AIcon.OfFile(System.String,System.Int32,Au.Types.IconGetFlags)"/>. Else no image.
              - string "" - no image, even if <b>ExtractIconPathFromCode</b> true.
@@ -11294,6 +11375,9 @@
              
              To add an image resource in Visual Studio, use build action "Resource" for the image file.
              </remarks>
+        </member>
+        <member name="M:Au.MTBase.Finalize">
+            
         </member>
         <member name="P:Au.MTBase.ExtractIconPathFromCode">
             <summary>
@@ -11697,12 +11781,11 @@
         </member>
         <member name="P:Au.AOsd.Icon">
             <summary>
-            Icon at the left of text.
-            For example <i>System.Drawing.SystemIcons.Information</i> or <c>AIcon.Stock(StockIcon.INFO, 32).ToGdipIcon()</c>.
+            Icon or image at the left. Can be <see cref="T:Au.AIcon"/>, <b>Icon</b> or <b>System.Drawing.Image</b>. Any size.
+            For example <i>System.Drawing.SystemIcons.Information</i> or <c>AIcon.Stock(StockIcon.INFO)</c>.
             </summary>
             <remarks>
             This property cannot be changed after creating OSD window.
-            This class does not copy and does not dispose the icon.
             </remarks>
         </member>
         <member name="P:Au.AOsd.Shadow">
@@ -11763,7 +11846,7 @@
             Can be called before showing OSD.
             </summary>
         </member>
-        <member name="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
+        <member name="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)">
             <summary>
             Shows a tooltip-like OSD window with text and optionally icon.
             </summary>
@@ -11793,7 +11876,7 @@
             <param name="font">Font. If null, uses <see cref="P:Au.AOsd.DefaultBigFont"/>.</param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
             <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
+            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
             <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
             Also sets these properties: <see cref="P:Au.AOsdWindow.Opacity"/>=0.
@@ -11808,14 +11891,14 @@
             <param name="xy"><see cref="P:Au.AOsd.XY"/></param>
             <param name="name"><see cref="P:Au.AOsdWindow.Name"/></param>
             <param name="showMode"><see cref="P:Au.AOsd.ShowMode"/></param>
-            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
+            <param name="dontShow">See <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>.</param>
             <returns>Returns an <see cref="T:Au.AOsd"/> object that can be used to change properties or close the OSD window.</returns>
             <remarks>
             Also sets these properties: <see cref="P:Au.AOsd.IsOfImageSize"/>=true, <see cref="P:Au.AOsdWindow.Opacity"/>=0, <see cref="P:Au.AOsd.ClickToClose"/>=true.
             </remarks>
         </member>
         <member name="P:Au.AOsd.DefaultSmallFont">
-            <summary>Default font for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
+            <summary>Default font for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: standard GUI font (usually Segoe UI), size 12.</summary>
             <exception cref="T:System.ArgumentNullException"></exception>
         </member>
         <member name="P:Au.AOsd.DefaultBigFont">
@@ -11823,13 +11906,13 @@
             <exception cref="T:System.ArgumentNullException"></exception>
         </member>
         <member name="P:Au.AOsd.DefaultTextColor">
-            <summary>Default text color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x(dark gray).</summary>
+            <summary>Default text color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x(dark gray).</summary>
         </member>
         <member name="P:Au.AOsd.DefaultBorderColor">
-            <summary>Default border color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x404040 (dark gray).</summary>
+            <summary>Default border color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0x404040 (dark gray).</summary>
         </member>
         <member name="P:Au.AOsd.DefaultBackColor">
-            <summary>Default background color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Drawing.Icon,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFFFFF0 (light yellow).</summary>
+            <summary>Default background color for <see cref="M:Au.AOsd.ShowText(System.String,System.Int32,Au.Types.PopupXY,System.Object,System.Nullable{Au.Types.ColorInt},System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/> and <b>AOsd</b>. Default: 0xFFFFF0 (light yellow).</summary>
         </member>
         <member name="P:Au.AOsd.DefaultTransparentTextColor">
             <summary>Default text color for <see cref="M:Au.AOsd.ShowTransparentText(System.String,System.Int32,Au.Types.PopupXY,System.Nullable{Au.Types.ColorInt},Au.Types.FontSizeEtc,System.String,Au.Types.OsdMode,System.Boolean)"/>. Default: 0x8A2BE2 (Color.BlueViolet).</summary>
@@ -13342,6 +13425,7 @@
             <param name="stretch"><see cref="P:System.Windows.Controls.Image.Stretch"/>.</param>
             <param name="stretchDirection"><see cref="P:System.Windows.Controls.Image.StretchDirection"/>.</param>
             <exception cref="T:System.NotSupportedException">The last added element is not <b>Image</b>.</exception>
+            <seealso cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>
         </member>
         <member name="M:Au.AWpfBuilder.Image(System.String,System.Windows.Media.Stretch,System.Windows.Controls.StretchDirection)">
             <summary>
@@ -13353,19 +13437,6 @@
             <exception cref="T:System.NotSupportedException">The last added element is not <b>Image</b>.</exception>
             <remarks>
             If fails to load, prints warning. See <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
-            </remarks>
-        </member>
-        <member name="M:Au.AWpfBuilder.Image(Au.AIcon,System.Boolean,System.Windows.Media.Stretch,System.Windows.Controls.StretchDirection)">
-            <summary>
-            Creates image from native icon handle and loads into the last added <see cref="T:System.Windows.Controls.Image"/>.
-            </summary>
-            <param name="icon">Native icon handle. Does nothing if empty.</param>
-            <param name="dispose">Destroy the native icon object. Default true. If false, caller can dispose it at any time.</param>
-            <param name="stretch"><see cref="P:System.Windows.Controls.Image.Stretch"/>.</param>
-            <param name="stretchDirection"><see cref="P:System.Windows.Controls.Image.StretchDirection"/>.</param>
-            <exception cref="T:System.NotSupportedException">The last added element is not <b>Image</b>.</exception>
-            <remarks>
-            If fails to convert icon to image, prints warning. See <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
             </remarks>
         </member>
         <member name="M:Au.AWpfBuilder.Splitter(System.Boolean,System.Int32,System.Double)">
@@ -13566,10 +13637,9 @@
             <param name="icon">
             Can be:
             - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
-            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image.
+            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>.
             - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.AFolders.ThisAppImages"/>.
             - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.AFolders.ThisAppImages"/>.
-            - <see cref="T:Au.AIcon"/> - icon handle. Example: <c>AIcon.Stock(StockIcon.DELETE)]</c>. This function disposes it.
             
             If failed to find or load image file, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
             To create Base-64 string, use menu Code -> AWinImage.
@@ -13699,7 +13769,7 @@
             Options. If null (default), uses <see cref="P:Au.AOpt.Key"/>.
             Uses <see cref="P:Au.Types.AOptKey.RestoreClipboard"/>, <see cref="P:Au.Types.AOptKey.NoBlockInput"/>, <see cref="P:Au.Types.AOptKey.KeySpeedClipboard"/>. Does not use <see cref="P:Au.Types.AOptKey.Hook"/>.
             </param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
             <remarks>
             Also can get file paths, as multiline text.
             Sends keys Ctrl+C, waits until the focused app sets clipboard data, gets it, finally restores clipboard data.
@@ -13714,7 +13784,7 @@
             <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="T:Au.AClipboardData"/> class or the .NET <see cref="T:System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
             <param name="cut">Use Ctrl+X.</param>
             <param name="options">See <see cref="M:Au.AClipboard.Copy(System.Boolean,Au.Types.AOptKey)"/>.</param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
             <exception cref="T:System.Exception">Exceptions thrown by the callback function.</exception>
             <remarks>
             Sends keys Ctrl+C, waits until the focused app sets clipboard data, calls callback function that gets it, finally restores clipboard data.
@@ -13744,9 +13814,9 @@
             Options. If null (default), uses <see cref="P:Au.AOpt.Key"/>.
             Uses <see cref="P:Au.Types.AOptKey.RestoreClipboard"/>, <see cref="P:Au.Types.AOptKey.PasteWorkaround"/>, <see cref="P:Au.Types.AOptKey.NoBlockInput"/>, <see cref="P:Au.Types.AOptKey.SleepFinally"/>, <see cref="P:Au.Types.AOptKey.Hook"/>, <see cref="P:Au.Types.AOptKey.KeySpeedClipboard"/>.
             </param>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
             <remarks>
-            Adds to the clipboard, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
+            Sets clipboard data, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
             Fails (exception) if nothing gets clipboard data in several seconds.
             Works with console windows too, even if they don't support Ctrl+V.
             A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="P:Au.Types.ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a delay.
@@ -13764,7 +13834,7 @@
             Pastes data added to an <see cref="T:Au.AClipboardData"/> variable into the focused app using the clipboard.
             More info: <see cref="M:Au.AClipboard.Paste(System.String,System.String,Au.Types.AOptKey)"/>.
             </summary>
-            <exception cref="T:Au.Types.AuException">Failed.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
             <example>
             Paste data of two formats: HTML and text.
             <code><![CDATA[
@@ -14728,6 +14798,7 @@
             </summary>
             <param name="canSendAgain">Don't clear the internal collection. If true, this function then can be called again (eg in loop) to send/execute the same keys etc. If false (default), clears the added keys etc; then you can call <b>AddX</b> functions and <b>Send</b> again.</param>
             <exception cref="T:System.ArgumentException"><i>canSendAgain</i> is true and keys end with + or (.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
         </member>
         <member name="E:Au.AKeys.Pasting">
             <summary>
@@ -14960,6 +15031,7 @@
             <remarks>
             Uses <see cref="T:Au.ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
             Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
+            <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
             </remarks>
             <example>
             <code><![CDATA[
@@ -15037,19 +15109,6 @@
             <summary>
             Miscellaneous rarely used keyboard-related functions.
             </summary>
-        </member>
-        <member name="M:Au.AKeys.More.GetTextCursorRect(Au.Types.RECT@,Au.AWnd@,System.Boolean)">
-            <summary>
-            Gets text cursor (caret) position and size.
-            Returns false if fails.
-            </summary>
-            <param name="r">Receives the rectangle, in screen coordinates.</param>
-            <param name="w">Receives the control that contains the text cursor.</param>
-            <param name="orMouse">If fails, get mouse pointer coodinates.</param>
-            <remarks>
-            Can get only standard text cursor. Many apps use non-standard cursor; then fails.
-            Also fails if the text cursor currently is not displayed.
-            </remarks>
         </member>
         <member name="M:Au.AKeys.More.ParseKeyName(System.String)">
             <summary>
@@ -15185,6 +15244,7 @@
             </list>
             </param>
             <exception cref="T:System.ArgumentException">An invalid value, for example an unknown key name.</exception>
+            <exception cref="T:Au.Types.AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
             <remarks>
             Usually keys are specified in string, like in this example:
             <code><![CDATA[AKeys.Key("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
@@ -15487,6 +15547,7 @@
             HTML. Can be full HTML or fragment. See <see cref="M:Au.AClipboardData.AddHtml(System.String)"/>.
             Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
             </param>
+            <exception cref="T:Au.Types.AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). Also fails if there is no focused window.</exception>
             <remarks>
             To send text can use keys, characters or clipboard, depending on <see cref="P:Au.AOpt.Key"/> and text. If <i>html</i> not null, uses clipboard.
             </remarks>
@@ -15599,12 +15660,21 @@
             Not used for keys whose scancode can depend on keyboard layout. To get scancode, uses keyboard layout of current thread.
             </summary>
         </member>
-        <member name="M:Au.AKeys.GetOptionsAndWndFocused_(Au.AWnd@,System.Boolean)">
+        <member name="M:Au.AKeys.Internal_.GetWndFocusedOrActive(System.Boolean)">
+            <summary>
+            Gets focused or active window. Waits for it max 20-40 ms (820 ms if <i>requireFocus</i>). On timeout returns default (throws if <i>requireFocus</i>).
+            </summary>
+            <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
+            <exception cref="T:Au.Types.AuException">No focused window when <i>requireFocus</i>.</exception>
+        </member>
+        <member name="M:Au.AKeys.GetOptionsAndWndFocused_(Au.AWnd@,System.Boolean,System.Boolean)">
             <summary>
             Returns AOptKey of this variable or OptKey cloned from this variable and possibly modified by Hook.
             </summary>
             <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
             <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(AWnd) if Hook is null.</param>
+            <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
+            <exception cref="T:Au.Types.AuException">No focused window when <i>requireFocus</i>.</exception>
         </member>
         <member name="M:Au.AKeys.GetOptions_(Au.AWnd)">
             <summary>
@@ -16152,7 +16222,7 @@
             Waits for a nonstandard mouse cursor (pointer) visible.
             </summary>
             <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
-            <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Util.ACursor.Hash"/>.</param>
+            <param name="cursorHash">Cursor hash, as returned by <see cref="M:Au.Util.ACursor.Hash(System.IntPtr)"/>.</param>
             <param name="not">Wait until this cursor disappears.</param>
             <returns>Returns true. On timeout returns false if <i>secondsTimeout</i> is negative; else exception.</returns>
             <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
@@ -16276,13 +16346,14 @@
             Registers a hotkey using API <msdn>RegisterHotKey</msdn>.
             Returns false if fails. Supports <see cref="T:Au.ALastError"/>.
             </summary>
-            <param name="id">Hotkey id. Must be 0 to 0xBFFF. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
+            <param name="id">Hotkey id. Must be 0 to 0xBFFF or value returned by API <msdn>GlobalAddAtom</msdn>. It will be <i>wParam</i> of the <msdn>WM_HOTKEY</msdn> message.</param>
             <param name="hotkey">Hotkey. Can be: string like "Ctrl+Shift+Alt+Win+K", tuple (KMod, KKey), enum KKey, enum Keys, struct KHotkey.</param>
             <param name="window">Window/form that will receive the <msdn>WM_HOTKEY</msdn> message. Must be of this thread. If default, the message must be retrieved in the message loop of this thread.</param>
             <exception cref="T:System.ArgumentException">Error in hotkey string.</exception>
             <exception cref="T:System.InvalidOperationException">This variable already registered a hotkey.</exception>
             <remarks>
             Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
+            <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
             A single variable cannot register multiple hotkeys simultaneously. Use multiple variables, for example array.
             </remarks>
             <seealso cref="M:Au.AKeys.WaitForHotkey(System.Double,Au.Types.KHotkey,System.Boolean)"/>
@@ -16311,7 +16382,7 @@
         </member>
         <member name="T:Au.AChar">
             <summary>
-            Provides function to get ASCII character type (is digit etc) etc.
+            Provides functions to get ASCII character type (is digit etc) etc.
             </summary>
             <remarks>
             Unlike <see cref="M:System.Char.IsDigit(System.Char)"/> etc, these functions never return true for non-ASCII characters. Also they are faster.
@@ -16614,6 +16685,52 @@
             Calculates distance between rectangle and point.
             Returns 0 if point is in rectangle.
             </summary>
+        </member>
+        <member name="T:Au.AMiscInfo">
+            <summary>
+            Provides functions to get miscellaneous system information or current state. Text cursor rectangle, input desktop, etc.
+            </summary>
+            <seealso cref="T:Au.AVersion"/>
+            <seealso cref="T:Au.AFolders"/>
+            <seealso cref="T:Au.AProcess"/>
+            <seealso cref="T:Au.AThread"/>
+            <seealso cref="T:Au.AScreen"/>
+            <seealso cref="T:Au.ATask"/>
+            <seealso cref="T:Au.ATime"/>
+            <seealso cref="T:Au.AUac"/>
+            <seealso cref="T:Au.Util.ADpi"/>
+            <seealso cref="T:System.Environment"/>
+            <seealso cref="T:System.Windows.Forms.SystemInformation"/>
+            <seealso cref="T:System.Windows.SystemParameters"/>
+        </member>
+        <member name="M:Au.AMiscInfo.GetGUIThreadInfo(Au.Types.Native.GUITHREADINFO@,System.Int32)">
+            <summary>
+            Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
+            </summary>
+            <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
+            <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AThread.Id"/>, <see cref="P:Au.AWnd.ThreadId"/>.</param>
+        </member>
+        <member name="M:Au.AMiscInfo.GetTextCursorRect(Au.Types.RECT@,Au.AWnd@,System.Boolean)">
+            <summary>
+            Gets text cursor (caret) position and size.
+            Returns false if fails.
+            </summary>
+            <param name="r">Receives the rectangle, in screen coordinates.</param>
+            <param name="w">Receives the control that contains the text cursor.</param>
+            <param name="orMouse">If fails, get mouse pointer coodinates.</param>
+            <remarks>
+            Can get only standard text cursor. Many apps use non-standard cursor; then fails.
+            Also fails if the text cursor currently is not displayed.
+            </remarks>
+        </member>
+        <member name="M:Au.AMiscInfo.IsInputDesktop(System.Boolean)">
+            <summary>
+            Returns true if current thread is on the input desktop and therefore can use mouse, keyboard, clipboard and window functions.
+            </summary>
+            <param name="detectLocked">Return false if the active window is a full-screen window of LockApp.exe on Windows 10. It is when computer has been locked but still not displaying the password field. Slower.</param>
+            <remarks>
+            Usually this app is running on default desktop. Examples of other desktops: the Ctrl+Alt+Delete screen, the PC locked screen, screen saver, UAC consent, custom desktops. If one of these is active, this app cannot use many mouse, keyboard, clipboard and window functions. They either throw exception or do nothing.
+            </remarks>
         </member>
         <member name="T:Au.AOutput">
             <summary>
@@ -19780,17 +19897,10 @@
             Destroys native cursor handle.
             </summary>
         </member>
-        <member name="P:Au.Util.ACursor.Is0">
-            <summary>
-            Returns true if <b>Handle</b>==default(IntPtr).
-            </summary>
+        <member name="M:Au.Util.ACursor.Finalize">
+            
         </member>
         <member name="P:Au.Util.ACursor.Handle">
-            <summary>
-            Gets native cursor handle.
-            </summary>
-        </member>
-        <member name="M:Au.Util.ACursor.op_Implicit(Au.Util.ACursor)~System.IntPtr">
             <summary>
             Gets native cursor handle.
             </summary>
@@ -19814,27 +19924,24 @@
             This function creates/deletes a temporary file, because there is no good API to load cursor from memory.
             </remarks>
         </member>
-        <member name="M:Au.Util.ACursor.ToGdipCursor(System.Boolean)">
+        <member name="M:Au.Util.ACursor.ToGdipCursor">
             <summary>
-            Converts native cursor to GDI+ cursor object.
+            Creates <see cref="T:System.Windows.Forms.Cursor"/> object that shares native cursor handle with this object.
             Returns null if <i>Handle</i> is default(IntPtr).
             </summary>
-            <param name="destroyCursor">If true (default), the returned variable owns the unmanaged cursor and destroys it when disposing. If false, the returned variable just uses the cursor handle and will not destroy; later will need to dispose this variable.</param>
         </member>
-        <member name="M:Au.Util.ACursor.Hash">
+        <member name="M:Au.Util.ACursor.Hash(System.IntPtr)">
             <summary>
             Calculates 64-bit FNV1 hash of cursor's mask bitmap.
             Returns 0 if fails.
             </summary>
         </member>
-        <member name="M:Au.Util.ACursor.GetCurrentVisibleCursor(Au.Util.ACursor@)">
+        <member name="M:Au.Util.ACursor.GetCurrentVisibleCursor(System.IntPtr@)">
             <summary>
-            Gets the native handle of the current global mouse cursor.
+            Gets current global mouse cursor.
             Returns false if cursor is hidden.
             </summary>
-            <remarks>
-            Don't destroy the cursor.
-            </remarks>
+            <param name="cursor">Receives native handle. Don't destroy.</param>
         </member>
         <member name="M:Au.Util.ACursor.SetArrowCursor_">
             <summary>
@@ -20120,7 +20227,7 @@
             <see cref="T:System.GC"/> extensions.
             </summary>
         </member>
-        <member name="M:Au.Util.AGC.AddObjectMemoryPressure(System.Object,System.Int32)">
+        <member name="M:Au.Util.AGC.AddObjectMemoryPressure(System.Object,System.Int64)">
             <summary>
             Calls <see cref="M:System.GC.AddMemoryPressure(System.Int64)"/>. Later, when object <i>obj</i> is garbage-collected, will call <see cref="M:System.GC.RemoveMemoryPressure(System.Int64)"/>.
             </summary>
@@ -20848,15 +20955,6 @@
             Gets GDI+ image.
             </summary>
             <param name="name">Can be resource name like "file.png" or "sub/file.png" or "&lt;LoadedAssemblyName&gt;file.png". Can have prefix "resource:".</param>
-            <exception cref="T:System.IO.FileNotFoundException">Cannot find assembly or resource.</exception>
-            <exception cref="T:System.InvalidOperationException">The resource type is not stream.</exception>
-            <exception cref="T:System.Exception">Other exceptions that may be thrown by used .NET functions.</exception>
-        </member>
-        <member name="M:Au.Util.AResources.GetGdipIcon(System.String)">
-            <summary>
-            Gets GDI+ icon.
-            </summary>
-            <param name="name">Can be resource name like "file.ico" or "sub/file.ico" or "&lt;LoadedAssemblyName&gt;file.ico". Can have prefix "resource:".</param>
             <exception cref="T:System.IO.FileNotFoundException">Cannot find assembly or resource.</exception>
             <exception cref="T:System.InvalidOperationException">The resource type is not stream.</exception>
             <exception cref="T:System.Exception">Other exceptions that may be thrown by used .NET functions.</exception>
@@ -21803,6 +21901,23 @@
             When need to show or hide both, this function is 2 times faster than calling <see cref="P:Au.Util.NativeScrollbar_.Visible"/> separately.
             </summary>
         </member>
+        <member name="P:Au.Util.NativeScrollbar_.Pos">
+            <summary>
+            Gets current scroll position (index of top visible item).
+            Setter sets scroll position, clamped 0-Max. Does not invalidate the control.
+            </summary>
+        </member>
+        <member name="P:Au.Util.NativeScrollbar_.Max">
+            <summary>
+            Gets max scroll position. Returns 0 if no scrollbar.
+            </summary>
+        </member>
+        <member name="P:Au.Util.NativeScrollbar_.NItems">
+            <summary>
+            Gets or sets item count.
+            Use setter to set item count when there is no scrollbar; it is used by <see cref="M:Au.Util.NativeScrollbar_.KeyNavigate(System.Int32,Au.Types.KKey)"/>; asserts !Visible.
+            </summary>
+        </member>
         <member name="E:Au.Util.NativeScrollbar_.PosChanged">
             <summary>
             When scrollbar position changed.
@@ -21811,7 +21926,7 @@
         </member>
         <member name="M:Au.Util.NativeScrollbar_.KeyNavigate(System.Int32,Au.Types.KKey)">
             <summary>
-            Calculates new focused item index when pressed key Dow, Up, PageDown, PageUp, End or Home.
+            Calculates new focused item index when pressed key Down, Up, PageDown, PageUp, End or Home.
             </summary>
             <param name="i">Current focused item index. Can be -1.</param>
             <param name="k"></param>
@@ -22153,6 +22268,7 @@
             <summary>
             Automation task - a running script.
             </summary>
+            <seealso cref="T:Au.AProcess"/>
         </member>
         <member name="P:Au.ATask.Name">
             <summary>
@@ -22165,6 +22281,14 @@
             In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
             In other processes always returns <b>ExeProgram</b>.
             </summary>
+        </member>
+        <member name="P:Au.ATask.MainAssembly">
+            <summary>
+            Gets task's assembly containing Main function.
+            </summary>
+            <remarks>
+            In an automation task process of a script with role miniProgram (defaut) it is not the same as <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/> which then gets the host assembly.
+            </remarks>
         </member>
         <member name="M:Au.ATask.Run(System.String,System.String[])">
             <summary>
@@ -22224,6 +22348,41 @@
             The <b>RunWait</b>(Action) overload can read the string in real time.
             The <b>RunWait</b>(out string) overload gets all strings joined when the task ends.
             The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
+            </remarks>
+        </member>
+        <member name="M:Au.ATask.EndOnDesktopSwitch(System.Int32)">
+            <summary>
+            Sets to end this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
+            </summary>
+            <remarks>
+            It allows to end this process with hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
+            
+            Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
+            </remarks>
+            <param name="exitCode">Process exit code. See <see cref="M:System.Environment.Exit(System.Int32)"/>.</param>
+        </member>
+        <member name="M:Au.ATask.EndOnSleep(System.Int32)">
+            <summary>
+            Sets to end this process when computer is going to sleep or hibernate.
+            </summary>
+            <param name="exitCode">Process exit code. See <see cref="M:System.Environment.Exit(System.Int32)"/>.</param>
+        </member>
+        <member name="M:Au.ATask.EndHotkey(Au.Types.KHotkey,System.Int32)">
+            <summary>
+            Sets a hotkey that ends this process.
+            </summary>
+            <param name="hotkey">
+            See <see cref="M:Au.ARegisteredHotkey.Register(System.Int32,Au.Types.KHotkey,Au.Types.AnyWnd)"/>.
+            Good hotkeys are Pause, madia/browser/launch keys, Insert, Up, PageUp. Don't use F12, Shift+numpad, hotkeys with Esc, Space, Tab, Sleep. Don't use keys and modifiers used in script (<b>AKeys.Key</b> etc).
+            </param>
+            <param name="exitCode">Process exit code. See <see cref="M:System.Environment.Exit(System.Int32)"/>.</param>
+            <exception cref="T:System.InvalidOperationException">Calling second time.</exception>
+            <remarks>
+            This isn't a reliable way to end script. Consider <see cref="M:Au.ATask.EndOnDesktopSwitch(System.Int32)"/>, <see cref="M:Au.ATask.EndOnSleep(System.Int32)"/>.
+            - Does not work if the hotkey is registered by any process or used by Windows.
+            - Does not work or is delayed if user input is blocked by an <see cref="T:Au.AInputBlocker"/> or keyboard hook. For example <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions block input by default.
+            - Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.
+            - If several processes call this function with same hotkey, the hotkey ends one process at a time.
             </remarks>
         </member>
         <member name="T:Au.RunAssembly">
@@ -24935,13 +25094,6 @@
             Don't need to call this function before calling <see cref="M:Au.AWnd.Activate"/> and other functions of this library that activate windows.
             </remarks>
         </member>
-        <member name="M:Au.AWnd.More.GetGUIThreadInfo(Au.Types.Native.GUITHREADINFO@,System.Int32)">
-            <summary>
-            Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
-            </summary>
-            <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
-            <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="P:Au.AWnd.ThreadId"/>, <see cref="P:Au.AThread.Id"/>.</param>
-        </member>
         <member name="M:Au.AWnd.More.RegisterWindowClass(System.String,Au.Types.Native.WNDPROC,Au.Types.RWCEtc)">
             <summary>
             Registers new window class in this process.
@@ -24950,7 +25102,7 @@
             <param name="wndProc">
             Delegate of a window procedure. See <msdn>Window Procedures</msdn>.
             
-            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="!:CreateWindow(Native.WNDPROC, string, string, WS, WS2, int, int, int, int, AWnd, LPARAM, IntPtr, LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
+            Use null when you need a different delegate (method or target object) for each window instance; create windows with <see cref="M:Au.AWnd.More.CreateWindow(Au.Types.Native.WNDPROC,System.Boolean,System.String,System.String,Au.Types.WS,Au.Types.WS2,System.Int32,System.Int32,System.Int32,System.Int32,Au.AWnd,Au.Types.LPARAM,System.IntPtr,Au.Types.LPARAM)"/> or <see cref="M:Au.AWnd.More.CreateMessageOnlyWindow(Au.Types.Native.WNDPROC,System.String)"/>.
             If not null, it must be a static method; create windows with any other function, including API <msdn>CreateWindowEx</msdn>.
             </param>
             <param name="etc">
@@ -25681,6 +25833,24 @@
             Calls API SetProp/GetProp to set/get window flags <see cref="T:Au.AWnd.Internal_.WFlags"/>.
             </summary>
         </member>
+        <member name="M:Au.AWnd.Internal_.CreateWindowDWP(System.Boolean,Au.Types.Native.WNDPROC)">
+            <summary>
+            Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and creates hidden window.
+            </summary>
+            <param name="messageOnly"></param>
+            <param name="wndProcUnsafe">If not null, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
+        </member>
+        <member name="P:Au.AWnd.Internal_.WindowClassDWP">
+            <summary>
+            Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and returns "Au.DWP".
+            </summary>
+        </member>
+        <member name="M:Au.AWnd.Internal_.SubclassUnsafe(Au.AWnd,Au.Types.Native.WNDPROC)">
+            <summary>
+            Replaces window procedure (SetWindowLongPtr). Returns previous window procedure.
+            The caller must protect the delegate from GC.
+            </summary>
+        </member>
         <member name="M:Au.AWnd.Internal_.IsSpecHwnd(Au.AWnd)">
             <summary>
             Returns true if w contains a non-zero special handle value (<see cref="T:Au.Types.Native.HWND"/>).
@@ -25692,6 +25862,13 @@
             Converts object to AWnd.
             Object can contain null, AWnd, Control, or System.Windows.DependencyObject (must be in element 0 of object[]).
             Avoids loading Forms and WPF dlls when not used.
+            </summary>
+        </member>
+        <member name="M:Au.AWnd.Internal_.ToWpfElement(Au.AWnd)">
+            <summary>
+            If w is handle of a WPF element (Window, Popup, HwndHost-ed control, HwndSource.RootVisual), returns that element, else null.
+            Slow if HwndHost-ed control.
+            w can be default.
             </summary>
         </member>
         <member name="M:Au.AWnd.Activate_(Au.AWnd.Internal_.ActivateFlags)">
@@ -26464,7 +26641,7 @@
         </member>
         <member name="M:Au.AWnd.ClassNameIs(System.String[])">
             <summary>
-            If the class name of this window matches one of strings in <i>classNames</i>, returns 1-based index of the string. Else returns 0.
+            If window class name matches one of strings in <i>classNames</i>, returns 1-based string index. Else returns 0.
             Also returns 0 if fails to get class name (probably window closed or 0 handle). Supports <see cref="T:Au.ALastError"/>.
             </summary>
             <param name="classNames">Class names. Case-insensitive wildcard. See <see cref="M:Au.AExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
@@ -26475,7 +26652,6 @@
             Returns "" if no name. Returns null if fails, eg if the window is closed. Supports <see cref="T:Au.ALastError"/>.
             </summary>
             <remarks>
-            <note>It is not the .NET Control.Name property. To get it you can use <see cref="P:Au.AWnd.NameWinforms"/>.</note>
             Top-level window name usually its title bar text.
             Control name usually is its text that does not change, for example button or static (label) control text.
             Unlike <see cref="P:Au.AWnd.ControlText"/>, this function usually does not get variable text, for example Edit control editable text, ComboBox control selected item text, status bar text.
@@ -26485,6 +26661,13 @@
             <seealso cref="P:Au.AWnd.ControlText"/>
             <seealso cref="P:Au.AWnd.NameAcc"/>
             <seealso cref="P:Au.AWnd.NameWinforms"/>
+        </member>
+        <member name="M:Au.AWnd.NameIs(System.String[])">
+            <summary>
+            If window name matches one of strings in <i>names</i>, returns 1-based string index. Else returns 0.
+            Also returns 0 if fails to get name (probably window closed or 0 handle). Supports <see cref="T:Au.ALastError"/>.
+            </summary>
+            <param name="names">Window names. Case-insensitive wildcard. See <see cref="M:Au.AExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>
         </member>
         <member name="P:Au.AWnd.NameTL_">
             <summary>
@@ -26590,7 +26773,7 @@
         </member>
         <member name="M:Au.AWnd.ProgramNameIs(System.String[])">
             <summary>
-            If the program name of this window matches one of strings in <i>programNames</i>, returns 1-based index of the string. Else returns 0.
+            If window program name matches one of strings in <i>programNames</i>, returns 1-based string index. Else returns 0.
             Also returns 0 if fails to get program name (probably window closed or 0 handle). Supports <see cref="T:Au.ALastError"/>.
             </summary>
             <param name="programNames">Program names, like "notepad.exe". Case-insensitive wildcard. See <see cref="M:Au.AExtString.Like(System.String,System.String,System.Boolean)"/>. The array and strings cannot be null.</param>

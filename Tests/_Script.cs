@@ -892,15 +892,40 @@ partial class TestScript : AScript
 		w.ShowDialog();
 	}
 
+	//System.PlatformNotSupportedException: System.Management currently is only supported for Windows desktop applications.
+//	void TestWMI() {
+//AOutput.Clear();
+
+//var interval = new TimeSpan( 0, 0, 1 );
+//const string isWin32Process = "TargetInstance isa \"Win32_Process\"";
+
+//// Listen for started processes.
+//WqlEventQuery startQuery
+//    = new WqlEventQuery( "__InstanceCreationEvent", interval, isWin32Process );
+//var _startWatcher = new ManagementEventWatcher( startQuery );
+//_startWatcher.Start();
+//_startWatcher.EventArrived += (_,e)=> { AOutput.Write("start", e.Context, e.NewEvent); };
+
+//// Listen for closed processes.
+//WqlEventQuery stopQuery
+//    = new WqlEventQuery( "__InstanceDeletionEvent", interval, isWin32Process );
+//var _stopWatcher = new ManagementEventWatcher( stopQuery );
+//_stopWatcher.Start();
+//_stopWatcher.EventArrived += (_,e)=> { AOutput.Write("end", e.Context, e.NewEvent); };
+
+
+//ADialog.Show("");
+//	}
+
 	unsafe void _Main() {
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
 
-
+		//TestWMI();
 		//new Script().Test();
 		//TestSvg();
-		TestWpfWindow();
+		//TestWpfWindow();
 		//TestNint();
 		//TestMinusSign();
 		//TestStringInterpolationBoxing();

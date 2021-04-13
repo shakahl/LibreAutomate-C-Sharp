@@ -8,8 +8,6 @@
 //#if 1
 
 
-
-
 __interface __declspec(uuid("3AB5235E-2768-47A2-909A-B5852A9D1868"))
 	IInterface : IUnknown
 {
@@ -660,7 +658,7 @@ EXPORT void Cpp_Test()
 
 
 
-	//_TestIAccessibleImpl();
+	_TestIAccessibleImpl();
 		//CHandle hRead, hWrite;
 		//if(!CreatePipe(&hRead.m_h, &hWrite.m_h, null, 0)) return;
 		//Printf(L"%p %p", hRead.m_h, hWrite.m_h);
@@ -881,182 +879,201 @@ EXPORT void Cpp_Test()
 //	//Print(n);
 //}
 
-//class MyAcc :IAccessible
-//{
-//	HWND _w;
-//
-//public:
-//	MyAcc(HWND w) {
-//		_w = w;
-//	}
-//#pragma region
-//	// Inherited via IAccessible
-//	virtual HRESULT __stdcall QueryInterface(REFIID riid, void ** ppvObject) override
-//	{
-//		if(riid == IID_IUnknown || riid == IID_IDispatch || riid == IID_IAccessible) {
-//			*ppvObject = this;
-//			return 0;
-//		}
-//		*ppvObject = 0;
-//		return E_NOINTERFACE;
-//	}
-//	virtual ULONG __stdcall AddRef(void) override
-//	{
-//		return 1;
-//	}
-//	virtual ULONG __stdcall Release(void) override
-//	{
-//		return 1;
-//	}
-//	virtual HRESULT __stdcall GetTypeInfoCount(UINT * pctinfo) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//#pragma endregion
-//	virtual HRESULT __stdcall get_accParent(IDispatch ** ppdispParent) override
-//	{
-//		Print(__FUNCTION__);
-//		return AccessibleObjectFromWindow(_w, 0, IID_IAccessible, (void**)ppdispParent);
-//	}
-//	virtual HRESULT __stdcall get_accChildCount(long * pcountChildren) override
-//	{
-//		Print(__FUNCTION__);
-//		*pcountChildren = 2;
-//		return 0;
-//	}
-//	virtual HRESULT __stdcall get_accChild(VARIANT varChild, IDispatch ** ppdispChild) override
-//	{
-//		Print(__FUNCTION__);
-//		*ppdispChild = 0;
-//		if(varChild.vt != VT_I4)return E_INVALIDARG;
-//		return S_FALSE;
-//	}
-//	virtual HRESULT __stdcall get_accName(VARIANT varChild, BSTR * pszName) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accValue(VARIANT varChild, BSTR * pszValue) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accDescription(VARIANT varChild, BSTR * pszDescription) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accRole(VARIANT varChild, VARIANT * pvarRole) override
-//	{
-//		Print(__FUNCTION__);
-//		pvarRole->vt = VT_I4; pvarRole->lVal = varChild.lVal == 0 ? ROLE_SYSTEM_LIST : ROLE_SYSTEM_LISTITEM;
-//		return 0;
-//	}
-//	virtual HRESULT __stdcall get_accState(VARIANT varChild, VARIANT * pvarState) override
-//	{
-//		Print(__FUNCTION__);
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accHelp(VARIANT varChild, BSTR * pszHelp) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accHelpTopic(BSTR * pszHelpFile, VARIANT varChild, long * pidTopic) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accKeyboardShortcut(VARIANT varChild, BSTR * pszKeyboardShortcut) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accFocus(VARIANT * pvarChild) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accSelection(VARIANT * pvarChildren) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall get_accDefaultAction(VARIANT varChild, BSTR * pszDefaultAction) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall accSelect(long flagsSelect, VARIANT varChild) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall accLocation(long * pxLeft, long * pyTop, long * pcxWidth, long * pcyHeight, VARIANT varChild) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall accNavigate(long navDir, VARIANT varStart, VARIANT * pvarEndUpAt) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall accHitTest(long xLeft, long yTop, VARIANT * pvarChild) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall accDoDefaultAction(VARIANT varChild) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall put_accName(VARIANT varChild, BSTR szName) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//	virtual HRESULT __stdcall put_accValue(VARIANT varChild, BSTR szValue) override
-//	{
-//		return E_NOTIMPL;
-//	}
-//};
-//
-//MyAcc* m;
-//
-//LRESULT __stdcall _WndProc(HWND w, UINT msg, WPARAM wParam, LPARAM lParam) {
-//
-//	//Print(msg);
-//	switch(msg) {
-//	case WM_DESTROY:
-//		PostQuitMessage(0);
-//		break;
-//	case WM_GETOBJECT:
-//		Print((int)lParam);
-//		if((int)lParam == OBJID_CLIENT) {
-//			if(m == null) m = new MyAcc(w);
-//			return LresultFromObject(IID_IAccessible, wParam, (LPUNKNOWN)m);
-//		}
-//		break;
-//	}
-//
-//	return DefWindowProcW(w, msg, wParam, lParam);
-//}
-//
-//void _TestIAccessibleImpl() {
-//
-//	WNDCLASSEXW x = {};
-//	x.cbSize = sizeof(x);
-//	x.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-//	x.hCursor = LoadCursor(0, (STR)IDC_ARROW);
-//	x.lpszClassName = L"Montejo";
-//	x.lpfnWndProc = _WndProc;
-//	auto atom = RegisterClassExW(&x);
-//	auto w = CreateWindowExW(0, (STR)atom, L"Gooo", WS_VISIBLE | WS_POPUPWINDOW | WS_CAPTION, 500, 300, 300, 300, 0, 0, 0, 0);
-//	MSG m;
-//	while(GetMessageW(&m, 0, 0, 0) > 0) {
-//		TranslateMessage(&m);
-//		DispatchMessageW(&m);
-//	}
-//}
+class MyAcc :IAccessible
+{
+	HWND _w;
+	int _ref;
+
+public:
+	MyAcc(HWND w) {
+		_w = w;
+		_ref = 1;
+	}
+#pragma region
+	// Inherited via IAccessible
+	virtual HRESULT __stdcall QueryInterface(REFIID riid, void ** ppvObject) override
+	{
+		if(riid == IID_IUnknown || riid == IID_IDispatch || riid == IID_IAccessible) {
+			*ppvObject = this;
+			_ref++;
+			return 0;
+		}
+		*ppvObject = 0;
+		return E_NOINTERFACE;
+	}
+	virtual ULONG __stdcall AddRef(void) override
+	{
+		_ref++;
+		return 1;
+	}
+	virtual ULONG __stdcall Release(void) override
+	{
+		_ref--;
+		Printf(L"Release: %i", _ref);
+		return 1;
+	}
+	virtual HRESULT __stdcall GetTypeInfoCount(UINT * pctinfo) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall GetTypeInfo(UINT iTInfo, LCID lcid, ITypeInfo ** ppTInfo) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall GetIDsOfNames(REFIID riid, LPOLESTR * rgszNames, UINT cNames, LCID lcid, DISPID * rgDispId) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall Invoke(DISPID dispIdMember, REFIID riid, LCID lcid, WORD wFlags, DISPPARAMS * pDispParams, VARIANT * pVarResult, EXCEPINFO * pExcepInfo, UINT * puArgErr) override
+	{
+		return E_NOTIMPL;
+	}
+#pragma endregion
+	virtual HRESULT __stdcall get_accParent(IDispatch ** ppdispParent) override
+	{
+		//Print(__FUNCTION__);
+		return AccessibleObjectFromWindow(_w, 0, IID_IAccessible, (void**)ppdispParent);
+	}
+	virtual HRESULT __stdcall get_accChildCount(long * pcountChildren) override
+	{
+		//Print(__FUNCTION__);
+		*pcountChildren = 0;
+		return 0;
+	}
+	virtual HRESULT __stdcall get_accChild(VARIANT varChild, IDispatch ** ppdispChild) override
+	{
+		//Print(__FUNCTION__);
+		*ppdispChild = 0;
+		if(varChild.vt != VT_I4)return E_INVALIDARG;
+		return S_FALSE;
+	}
+	virtual HRESULT __stdcall get_accName(VARIANT varChild, BSTR * pszName) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accValue(VARIANT varChild, BSTR * pszValue) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accDescription(VARIANT varChild, BSTR * pszDescription) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accRole(VARIANT varChild, VARIANT * pvarRole) override
+	{
+		//Print(__FUNCTION__);
+		pvarRole->vt = VT_I4; pvarRole->lVal = varChild.lVal == 0 ? ROLE_SYSTEM_LIST : ROLE_SYSTEM_LISTITEM;
+		return 0;
+	}
+	virtual HRESULT __stdcall get_accState(VARIANT varChild, VARIANT * pvarState) override
+	{
+		//Print(__FUNCTION__);
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accHelp(VARIANT varChild, BSTR * pszHelp) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accHelpTopic(BSTR * pszHelpFile, VARIANT varChild, long * pidTopic) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accKeyboardShortcut(VARIANT varChild, BSTR * pszKeyboardShortcut) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accFocus(VARIANT * pvarChild) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accSelection(VARIANT * pvarChildren) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall get_accDefaultAction(VARIANT varChild, BSTR * pszDefaultAction) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall accSelect(long flagsSelect, VARIANT varChild) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall accLocation(long * pxLeft, long * pyTop, long * pcxWidth, long * pcyHeight, VARIANT varChild) override
+	{
+		//Print(__FUNCTION__);
+		WINDOWINFO wi = { sizeof(WINDOWINFO) }; GetWindowInfo(_w, &wi);
+		*pxLeft = wi.rcClient.left;
+		*pyTop = wi.rcClient.top;
+		*pcxWidth = wi.rcClient.right - wi.rcClient.left;
+		*pcyHeight = wi.rcClient.bottom - wi.rcClient.top;
+		return 0;
+	}
+	virtual HRESULT __stdcall accNavigate(long navDir, VARIANT varStart, VARIANT * pvarEndUpAt) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall accHitTest(long xLeft, long yTop, VARIANT * pvarChild) override
+	{
+		//Print(__FUNCTION__);
+		pvarChild->vt = VT_I4;
+		pvarChild->lVal = 0;
+		return 0;
+	}
+	virtual HRESULT __stdcall accDoDefaultAction(VARIANT varChild) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall put_accName(VARIANT varChild, BSTR szName) override
+	{
+		return E_NOTIMPL;
+	}
+	virtual HRESULT __stdcall put_accValue(VARIANT varChild, BSTR szValue) override
+	{
+		return E_NOTIMPL;
+	}
+};
+
+MyAcc* m;
+
+LRESULT __stdcall _WndProc(HWND w, UINT msg, WPARAM wParam, LPARAM lParam) {
+
+	//Print(msg);
+	switch(msg) {
+	case WM_DESTROY:
+		m = null;
+		//PostQuitMessage(0);
+		PostMessage(w, WM_APP + 127, 0, 0);
+		break;
+	case WM_GETOBJECT:
+		//Print((int)lParam);
+		if((int)lParam == OBJID_CLIENT) {
+			Print("WM_GETOBJECT");
+			if(m == null) m = new MyAcc(w);
+			return LresultFromObject(IID_IAccessible, wParam, (LPUNKNOWN)m);
+		}
+		break;
+	}
+
+	return DefWindowProcW(w, msg, wParam, lParam);
+}
+
+void _TestIAccessibleImpl() {
+
+	WNDCLASSEXW x = {};
+	x.cbSize = sizeof(x);
+	x.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+	x.hCursor = LoadCursor(0, (STR)IDC_ARROW);
+	x.lpszClassName = L"Montejo";
+	x.lpfnWndProc = _WndProc;
+	auto atom = RegisterClassExW(&x);
+	auto w = CreateWindowExW(WS_EX_TOPMOST, (STR)atom, L"Gooo", WS_VISIBLE | WS_POPUPWINDOW | WS_CAPTION, 500, 300, 300, 300, 0, 0, 0, 0);
+	MSG m;
+	while(GetMessageW(&m, 0, 0, 0) > 0) {
+		if(m.message == WM_APP + 127) break;
+		TranslateMessage(&m);
+		DispatchMessageW(&m);
+	}
+}
 
 #endif //#if _DEBUG
 

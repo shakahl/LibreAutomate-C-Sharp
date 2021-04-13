@@ -26,7 +26,7 @@ class DProperties : KDialogWindow
 	readonly KSciInfoBox info;
 	readonly ComboBox role, ifRunning, ifRunning2, uac, warningLevel;
 	readonly TextBox testScript, outputPath, icon, manifest, sign, define, noWarnings, testInternal, preBuild, postBuild, findInLists;
-	readonly KCheckBox runSingle, prefer32bit, xmlDoc, console, optimize;
+	readonly KCheckBox runSingle, bit32, xmlDoc, console, optimize;
 	readonly Expander gRun, gAssembly, gCompile;
 	readonly Button addAssembly, addComRegistry, addComBrowse, addProject, addClassFile, addResource, outputPathB;
 
@@ -50,8 +50,7 @@ class DProperties : KDialogWindow
 			.Add("ifRunning", out ifRunning).Skip()
 			.Add(out runSingle, "runSingle").Align(y: "C").Margin("R20")
 			.Add("ifRunning2", out ifRunning2);
-		b.R.Add("uac", out uac).Skip()
-			.Add(out prefer32bit, "prefer32bit").Align(y: "C").Span(1);
+		b.R.Add("uac", out uac).Span(1);
 		b.End();
 		b.End().Brush(Brushes.OldLace);
 		b.StartStack(out gAssembly, "Assembly", vertical: true);
@@ -60,11 +59,14 @@ class DProperties : KDialogWindow
 			.AddButton(out outputPathB, "...", _ButtonClick_outputPath)
 			.End();
 		b.StartGrid().Columns(0, -1, 20, 0, -1);
-		b.R.Add("icon", out icon).Skip().Validation(o => _ValidateFile(o, "icon"))
+		b.R.Add("icon", out icon).Skip().Validation(o => _ValidateFile(o, "icon", folder: null))
 			.Add("manifest", out manifest).Validation(o => _ValidateFile(o, "manifest"));
-		b.R.Add("sign", out sign).Skip().Validation(o => _ValidateFile(o, "sign"))
-			.Add(out xmlDoc, "xmlDoc").Align(y: "C")
-			.Add(out console, "console").Align("R", "C");
+		b.R.Add("sign", out sign).Skip().Validation(o => _ValidateFile(o, "sign"));
+		b.StartStack()
+			.Add(out bit32, "bit32").Align(y: "C")
+			.Add(out console, "console").Align(y: "C").Margin(15)
+			.Add(out xmlDoc, "xmlDoc").Align(y: "C").Margin(15)
+			.End();
 		b.End();
 		b.End().Brush(Brushes.OldLace);
 		b.StartGrid(out gCompile, "Compile").Columns(0, 50, 20, 0, -1);
@@ -114,7 +116,7 @@ class DProperties : KDialogWindow
 		if (_meta.runSingle == "true") runSingle.IsChecked = true;
 		_InitCombo(ifRunning2, "same|warn|cancel|wait", _meta.ifRunning2);
 		_InitCombo(uac, "inherit|user|admin", _meta.uac);
-		if (_meta.prefer32bit == "true") prefer32bit.IsChecked = true;
+		if (_meta.bit32 == "true") bit32.IsChecked = true;
 		//Assembly
 		outputPath.Text = _meta.outputPath;
 		void _ButtonClick_outputPath(WBButtonClickArgs e) {
@@ -151,11 +153,11 @@ class DProperties : KDialogWindow
 		}
 
 		gRun.IsExpanded = true;
-#if DEBUG
+#if DEBUG_
 		gAssembly.IsExpanded = true;
 		gCompile.IsExpanded = true;
 #else
-		gAssembly.IsExpanded = _role == ERole.exeProgram || _role == ERole.classLibrary;
+		gAssembly.IsExpanded = _role is ERole.exeProgram or ERole.classLibrary;
 #endif
 
 		_ChangedRole();
@@ -164,11 +166,11 @@ class DProperties : KDialogWindow
 			_ChangedRole();
 		};
 		void _ChangedRole() {
-			_ShowHide(testScript, _role == ERole.classLibrary || _role == ERole.classFile);
-			_ShowCollapse(_role == ERole.miniProgram || _role == ERole.exeProgram, gRun, console);
+			_ShowHide(testScript, _role is ERole.classLibrary or ERole.classFile);
+			_ShowCollapse(_role is ERole.miniProgram or ERole.exeProgram, gRun, console, icon, bit32);
 			_ChangedRunSingle();
-			_ShowCollapse(_role == ERole.exeProgram || _role == ERole.classLibrary, outputPath, outputPathB, xmlDoc);
-			_ShowCollapse(_role == ERole.exeProgram, icon, manifest);
+			_ShowCollapse(_role is ERole.exeProgram or ERole.classLibrary, outputPath, outputPathB, xmlDoc);
+			_ShowCollapse(_role == ERole.exeProgram, manifest);
 			_ShowCollapse(_role != ERole.classFile, gAssembly, gCompile);
 			addProject.IsEnabled = _role != ERole.classFile;
 		}
@@ -184,8 +186,8 @@ class DProperties : KDialogWindow
 		};
 		bool _IsIfRunningRunAndRunSingle() => _IsChecked(runSingle) && (_Get(ifRunning)?.Starts("run") ?? false);
 
-		string _ValidateFile(FrameworkElement e, string name) {
-			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, false)) ? name + " file not found" : null;
+		string _ValidateFile(FrameworkElement e, string name, bool? folder = false) {
+			return (_Get(e as TextBox) is string s && null == _f.FindRelative(s, folder)) ? name + " file not found" : null;
 		}
 
 		b.OkApply += _OkApply;
@@ -201,7 +203,7 @@ class DProperties : KDialogWindow
 		_meta.runSingle = _Get(runSingle);
 		_meta.ifRunning2 = _Get(ifRunning2, nullIfDefault: true);
 		_meta.uac = _Get(uac, nullIfDefault: true);
-		_meta.prefer32bit = _Get(prefer32bit);
+		_meta.bit32 = _Get(bit32);
 
 		_meta.console = _Get(console);
 		_meta.icon = _Get(icon);
@@ -597,8 +599,8 @@ This option is ignored when the task runs as .exe program started not from edito
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");
-		info.AddElem(prefer32bit,
-@"<b>prefer32bit</b> - whether the task process must be 32-bit everywhere.
+		info.AddElem(bit32,
+@"<b>bit32</b> - whether the task process must be 32-bit everywhere.
  • <i>false</i> (default) - the process is 64-bit or 32-bit, the same as Windows on that computer.
  • <i>true</i> (checked in Properties) - the process is 32-bit on all computers.
 ");
@@ -606,14 +608,14 @@ This option is ignored when the task runs as .exe program started not from edito
 @"<b>outputPath</b> - directory for the output assembly file and related files (used dlls, etc).
 Full path. Can start with %environmentVariable% or %AFolders.SomeFolder%. Can be path relative to this file or workspace, like with other options. Default if role exeProgram: <link>%AFolders.Workspace%\bin\filename<>. Default if role classLibrary: <link>%AFolders.ThisApp%\Libraries<>. The compiler creates the folder if does not exist.
 
-If role exeProgram, the exe file is named like the script. The 32-bit version has suffix ""-32"". If optimize true (checked in Properties), creates both 64-bit and 32-bit versions. Else creates only 32-bit if prefer32bit true (checked in Properties) or 32-bit OS, else only 64-bit.
+If role exeProgram, the exe file is named like the script. The 32-bit version has suffix ""-32"". If optimize true (checked in Properties), creates both 64-bit and 32-bit versions. Else creates only 32-bit if bit32 true (checked in Properties) or 32-bit OS, else only 64-bit.
 If role classLibrary, the dll file is named like the class file. It can be used by 64-bit and 32-bit processes.
 ");
 		info.AddElem(icon,
 @"<b>icon</b> - icon of the output exe file.
 The .ico file must be in this workspace. Can be path relative to this file (examples: App.ico, Folder\App.ico, ..\Folder\App.ico) or path in the workspace (examples: \App.ico, \Folder\App.ico).
 
-The icon will be added as a native resource and displayed in File Explorer etc.
+The icon will be added as a native resource and displayed in File Explorer etc. If role exeProgram, can add multiple icons from folder. Resource ids start from IDI_APPLICATION (32512). Native resources can be used with AIcon.OfThisApp etc and ADialog functions.
 ");
 		info.AddElem(manifest,
 @"<b>manifest</b> - <google manifest file site:microsoft.com>manifest<> of the output exe or dll file.
@@ -694,7 +696,7 @@ By default it receives full path of the output exe or dll file in args[0]. If ne
  • $(source) - path of this C# code file in the workspace.
  • $(role) - meta comment 'role'.
  • $(optimize) - meta comment 'optimize'.
- • $(prefer32bit) - meta comment 'prefer32bit'.
+ • $(bit32) - meta comment 'bit32'.
 ");
 		info.AddElem(postBuild,
 @"<b>postBuild</b> - a script to run after compiling this code file successfully.
@@ -713,7 +715,7 @@ If the file is in <link>%AFolders.ThisApp%<> or its subfolders, use file name or
 		const string c_com = @" COM component's type library to an <i>interop assembly<>.
 Adds meta comment <c green>com FileName.dll<>. Saves the assembly file in <link>%AFolders.Workspace%\.interop<>.
 
-An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered native dll or exe file). Check prefer32bit if 64-bit dll unavailable.
+An interop assembly is a .NET assembly without real code. Not used at run time. At run time is used the COM component (registered native dll or exe file). Check bit32 if 64-bit dll unavailable.
 
 To remove this meta comment, edit the code. Optionally delete unused interop assemblies.
 ";

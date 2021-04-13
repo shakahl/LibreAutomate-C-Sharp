@@ -815,7 +815,7 @@ namespace Au.Types
 		[DllImport("kernel32.dll")]
 		internal static extern int GetTickCount();
 
-		[DllImport("kernel32.dll", EntryPoint="OutputDebugStringW")]
+		[DllImport("kernel32.dll", EntryPoint = "OutputDebugStringW")]
 		internal static extern void OutputDebugString(string lpOutputString);
 
 		//internal const uint THREAD_SET_CONTEXT = 0x10;
@@ -848,6 +848,10 @@ namespace Au.Types
 		//[DllImport("kernel32.dll", EntryPoint = "K32GetProcessMemoryInfo")]
 		//internal static extern bool GetProcessMemoryInfo(IntPtr Process, ref PROCESS_MEMORY_COUNTERS ppsmemCounters, int cb);
 
+		[DllImport("kernel32.dll", EntryPoint = "FindResourceW", SetLastError = true)]
+		public static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
+
+		internal const int RT_GROUP_ICON = 14;
 
 
 

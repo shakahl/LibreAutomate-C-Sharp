@@ -17,6 +17,7 @@ using Au.Util;
 using Au.Tools;
 using System.Windows.Input;
 using System.Linq;
+using System.Windows;
 
 static class Menus
 {
@@ -383,15 +384,12 @@ static class Menus
 
 		[Command(keys = "F1", image = "resources/images/statushelp_16x.xaml")]
 		public static void Context_help() {
-			var c = Keyboard.FocusedElement;
-			//AOutput.Write(c);
-			if (c == null) {
-				var w = Api.GetFocus();
-				if (w == Panels.Editor.ZActiveDoc.Hwnd) {
-					CiUtil.OpenSymbolOrKeywordFromPosHelp();
-				}
-			} else {
+			var w = Api.GetFocus();
+			if (w.ClassNameIs("HwndWrapper*")) {
+				//var e = Keyboard.FocusedElement as FrameworkElement;
 
+			} else if (w == Panels.Editor.ZActiveDoc.Hwnd) {
+				CiUtil.OpenSymbolOrKeywordFromPosHelp();
 			}
 		}
 

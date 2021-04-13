@@ -87,7 +87,7 @@ static class InsertCode
 	public static void TextSimplyInControl(FrameworkElement c, string s) {
 		Debug.Assert(Environment.CurrentManagedThreadId == 1);
 		if (c == null) {
-			c = Keyboard.FocusedElement as FrameworkElement;
+			c = App.FocusedElement;
 			if (c == null) return;
 		} else {
 			if (!c.IsFocused) //be careful with HwndHost

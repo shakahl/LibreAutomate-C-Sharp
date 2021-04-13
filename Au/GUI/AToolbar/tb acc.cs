@@ -12,7 +12,7 @@ namespace Au
 	[ComVisible(true)]
 	partial class AToolbar : IAccessible
 	{
-		IAccessible IAccessible.get_accParent() => _stdAO.get_accParent();
+		IAccessible IAccessible.get_accParent() => _StdAO.get_accParent();
 
 		int IAccessible.get_accChildCount() => _a.Count;
 
@@ -25,6 +25,7 @@ namespace Au
 		string IAccessible.get_accDescription(VarInt varChild) => _B(varChild, out _) ? null : "Floating toolbar";
 
 		VarInt IAccessible.get_accRole(VarInt varChild) {
+			ADebug.PrintIf(AThread.Id != _w.ThreadId, "thread");
 			var r = !_B(varChild, out var b)
 				? AccROLE.TOOLBAR
 				: b.ItemType switch {
@@ -67,7 +68,7 @@ namespace Au
 
 		void IAccessible.accLocation(out int pxLeft, out int pyTop, out int pcxWidth, out int pcyHeight, VarInt varChild) {
 			if (!_B(varChild, out var b)) {
-				_stdAO.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
+				_StdAO.accLocation(out pxLeft, out pyTop, out pcxWidth, out pcyHeight, varChild);
 			} else {
 				var r = b.rect; _w.MapClientToScreen(ref r);
 				pxLeft = r.left; pyTop = r.top; pcxWidth = r.Width; pcyHeight = r.Height;
@@ -80,7 +81,7 @@ namespace Au
 			if (navDir == AccNAVDIR.FIRSTCHILD || navDir == AccNAVDIR.LASTCHILD) {
 				if (i == -1) return navDir == AccNAVDIR.FIRSTCHILD ? 1 : a.Count;
 			} else {
-				if (i == -1) return _stdAO.accNavigate(navDir, varStart);
+				if (i == -1) return _StdAO.accNavigate(navDir, varStart);
 				switch (navDir) {
 				case AccNAVDIR.PREVIOUS:
 					if (i > 0) return i;
@@ -95,7 +96,7 @@ namespace Au
 
 		VarInt IAccessible.accHitTest(int xLeft, int yTop) {
 			POINT p = new(xLeft, yTop); _w.MapScreenToClient(ref p);
-			if (!_w.ClientRect.Contains(p)) return _stdAO.accHitTest(xLeft, yTop);
+			if (!_w.ClientRect.Contains(p)) return _StdAO.accHitTest(xLeft, yTop);
 			return _HitTest(p);
 		}
 
@@ -104,9 +105,9 @@ namespace Au
 			_w.Post(Api.WM_USER + 50, (int)varChild);
 		}
 
-		void IAccessible.put_accName(VarInt varChild, string szName) => throw new NotImplementedException();
+		void IAccessible.put_accName(VarInt varChild, string szName) { }
 
-		void IAccessible.put_accValue(VarInt varChild, string szValue) => throw new NotImplementedException();
+		void IAccessible.put_accValue(VarInt varChild, string szValue) { }
 
 		bool _B(VarInt varChild, out ToolbarItem b) {
 			int i = varChild;

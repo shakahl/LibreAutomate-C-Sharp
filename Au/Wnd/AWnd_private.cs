@@ -20,16 +20,14 @@ namespace Au
 		/// <summary>
 		/// if(!IsOfThisThread) { Thread.Sleep(15); SendTimeout(1000, 0); }
 		/// </summary>
-		internal void MinimalSleepIfOtherThread_()
-		{
-			if(!IsOfThisThread) MinimalSleepNoCheckThread_();
+		internal void MinimalSleepIfOtherThread_() {
+			if (!IsOfThisThread) MinimalSleepNoCheckThread_();
 		}
 
 		/// <summary>
 		/// Thread.Sleep(15); SendTimeout(1000, 0);
 		/// </summary>
-		internal void MinimalSleepNoCheckThread_()
-		{
+		internal void MinimalSleepNoCheckThread_() {
 			Debug.Assert(!IsOfThisThread);
 			//APerf.First();
 			Thread.Sleep(15);
@@ -42,22 +40,21 @@ namespace Au
 		/// If w is minimized, cloaked (eg on other desktop) or the app is starting, the "Windows.UI.Core.CoreWindow" is not its child. Then searches for a top-level window named like w. It is unreliable, but MS does not provide API for this.
 		/// Info: "Windows.UI.Core.CoreWindow" windows hosted by "ApplicationFrameWindow" belong to separate processes. All "ApplicationFrameWindow" windows belong to a single process.
 		/// </summary>
-		static AWnd _WindowsStoreAppFrameChild(AWnd w)
-		{
+		static AWnd _WindowsStoreAppFrameChild(AWnd w) {
 			bool retry = false;
 			string name = null;
 			g1:
-			if(!AVersion.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default;
+			if (!AVersion.MinWin10 || !w.ClassNameIs("ApplicationFrameWindow")) return default;
 			AWnd c = Api.FindWindowEx(w, default, "Windows.UI.Core.CoreWindow", null);
-			if(!c.Is0) return c;
-			if(retry) return default;
+			if (!c.Is0) return c;
+			if (retry) return default;
 
-			name = w.NameTL_; if(name.NE()) return default;
+			name = w.NameTL_; if (name.NE()) return default;
 
-			for(; ; ) {
+			for (; ; ) {
 				c = Api.FindWindowEx(default, c, "Windows.UI.Core.CoreWindow", name); //I could not find API for it
-				if(c.Is0) break;
-				if(c.IsCloaked) return c; //else probably it is an unrelated window
+				if (c.Is0) break;
+				if (c.IsCloaked) return c; //else probably it is an unrelated window
 			}
 
 			retry = true;
@@ -86,25 +83,24 @@ namespace Au
 			/// <param name="appId">Receives app ID.</param>
 			/// <param name="prependShellAppsFolder">Prepend <c>@"shell:AppsFolder\"</c> (to run or get icon).</param>
 			/// <param name="getExePathIfNotWinStoreApp">Get program path if it is not a Windows Store app.</param>
-			internal static int GetWindowsStoreAppId(AWnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false)
-			{
+			internal static int GetWindowsStoreAppId(AWnd w, out string appId, bool prependShellAppsFolder = false, bool getExePathIfNotWinStoreApp = false) {
 				appId = null;
 
-				if(AVersion.MinWin8) {
-					switch(w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
+				if (AVersion.MinWin8) {
+					switch (w.ClassNameIs("Windows.UI.Core.CoreWindow", "ApplicationFrameWindow")) {
 					case 1:
-						using(var p = Handle_.OpenProcess(w)) {
-							if(!p.Is0) {
+						using (var p = Handle_.OpenProcess(w)) {
+							if (!p.Is0) {
 								var b = AMemoryArray.Char_(1000, out int na);
-								if(0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
+								if (0 == Api.GetApplicationUserModelId(p, ref na, b)) appId = b.ToString(na);
 							}
 						}
 						break;
 					case 2:
-						if(AVersion.MinWin10) {
-							if(0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
-								if(0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
-									if(v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
+						if (AVersion.MinWin10) {
+							if (0 == Api.SHGetPropertyStoreForWindow(w, Api.IID_IPropertyStore, out Api.IPropertyStore ps)) {
+								if (0 == ps.GetValue(Api.PKEY_AppUserModel_ID, out var v)) {
+									if (v.vt == Api.VARENUM.VT_LPWSTR) appId = Marshal.PtrToStringUni(v.value);
 									v.Dispose();
 								}
 								Marshal.ReleaseComObject(ps);
@@ -113,15 +109,15 @@ namespace Au
 						break;
 					}
 
-					if(appId != null) {
-						if(prependShellAppsFolder) appId = @"shell:AppsFolder\" + appId;
+					if (appId != null) {
+						if (prependShellAppsFolder) appId = @"shell:AppsFolder\" + appId;
 						return 1;
 					}
 				}
 
-				if(getExePathIfNotWinStoreApp) {
+				if (getExePathIfNotWinStoreApp) {
 					appId = w.ProgramPath;
-					if(appId != null) return 2;
+					if (appId != null) return 2;
 				}
 
 				return 0;
@@ -143,22 +139,19 @@ namespace Au
 				static readonly ushort s_atom = Api.GlobalAddAtom("Au.WFlags"); //atom is much faster than string
 																				//note: cannot delete atom, eg in static dtor. Deletes even if currently used by a window prop, making the prop useless.
 
-				internal static bool Set(AWnd w, WFlags flags, bool? setAddRem = null)
-				{
-					switch(setAddRem) {
+				internal static bool Set(AWnd w, WFlags flags, bool? setAddRem = null) {
+					switch (setAddRem) {
 					case true: flags = Get(w) | flags; break;
 					case false: flags = Get(w) & ~flags; break;
 					}
 					return w.Prop.Set(s_atom, (int)flags);
 				}
 
-				internal static WFlags Get(AWnd w)
-				{
+				internal static WFlags Get(AWnd w) {
 					return (WFlags)(int)w.Prop[s_atom];
 				}
 
-				internal static WFlags Remove(AWnd w)
-				{
+				internal static WFlags Remove(AWnd w) {
 					return (WFlags)(int)w.Prop.Remove(s_atom);
 				}
 			}
@@ -197,23 +190,50 @@ namespace Au
 			//	internal static LastWndProps OfThread => _ofThread ??= new LastWndProps();
 			//}
 
-			internal static AWnd CreateMessageWindowDefWndProc()
-			{
-				if(!s_registeredDWP) {
-					More.RegisterWindowClass(c_wndClassDWP);
-					s_registeredDWP = true;
-				}
-				return More.CreateMessageOnlyWindow(c_wndClassDWP);
+			/// <summary>
+			/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and creates hidden window.
+			/// </summary>
+			/// <param name="messageOnly"></param>
+			/// <param name="wndProcUnsafe">If not null, replaces window procedure (SetWindowLongPtr). The caller must protect the delegate from GC.</param>
+			public static AWnd CreateWindowDWP(bool messageOnly, Native.WNDPROC wndProcUnsafe = null) {
+				var cn = WindowClassDWP;
+				var w = messageOnly ? More.CreateMessageOnlyWindow(cn) : More.CreateWindow(cn);
+				if (wndProcUnsafe != null) Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProcUnsafe));
+				return w;
 			}
-			static bool s_registeredDWP;
+			static int s_registeredDWP;
 			const string c_wndClassDWP = "Au.DWP";
+
+			/// <summary>
+			/// Auto-registers window class "Au.DWP" with wndproc = DefWindowProc and returns "Au.DWP".
+			/// </summary>
+			public static string WindowClassDWP {
+				get {
+					if (0 == Interlocked.CompareExchange(ref s_registeredDWP, 1, 0)) {
+						var x = new Api.WNDCLASSEX { cbSize = sizeof(Api.WNDCLASSEX), style = Api.CS_GLOBALCLASS };
+						fixed (char* pCN = c_wndClassDWP) {
+							x.lpszClassName = pCN;
+							x.lpfnWndProc = Api.GetProcAddress("user32.dll", "DefWindowProcW");
+							if (0 == Api.RegisterClassEx(x)) throw new Win32Exception();
+						}
+					}
+					return c_wndClassDWP;
+				}
+			}
+
+			/// <summary>
+			/// Replaces window procedure (SetWindowLongPtr). Returns previous window procedure.
+			/// The caller must protect the delegate from GC.
+			/// </summary>
+			public static IntPtr SubclassUnsafe(AWnd w, Native.WNDPROC wndProc) {
+				return Api.SetWindowLongPtr(w, Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(wndProc));
+			}
 
 			/// <summary>
 			/// Returns true if w contains a non-zero special handle value (<see cref="Native.HWND"/>).
 			/// Note: <b>Native.HWND.TOP</b> is 0.
 			/// </summary>
-			public static bool IsSpecHwnd(AWnd w)
-			{
+			public static bool IsSpecHwnd(AWnd w) {
 				int i = (int)w;
 				return (i <= 1 && i >= -3) || i == 0xffff;
 			}
@@ -223,8 +243,7 @@ namespace Au
 			/// Object can contain null, AWnd, Control, or System.Windows.DependencyObject (must be in element 0 of object[]).
 			/// Avoids loading Forms and WPF dlls when not used.
 			/// </summary>
-			public static AWnd FromObject(object o) => o switch
-			{
+			public static AWnd FromObject(object o) => o switch {
 				null => default,
 				AWnd w => w,
 				object[] a => _Wpf(a[0]),
@@ -236,6 +255,24 @@ namespace Au
 
 			[MethodImpl(MethodImplOptions.NoInlining)] //prevents loading WPF dlls when don't need
 			static AWnd _Wpf(object o) => (o as System.Windows.DependencyObject).Hwnd();
+
+			/// <summary>
+			/// If w is handle of a WPF element (Window, Popup, HwndHost-ed control, HwndSource.RootVisual), returns that element, else null.
+			/// Slow if HwndHost-ed control.
+			/// w can be default.
+			/// </summary>
+			public static System.Windows.FrameworkElement ToWpfElement(AWnd w) {
+				if (!w.Is0) {
+					if (System.Windows.Interop.HwndSource.FromHwnd(w.Handle) is System.Windows.Interop.HwndSource hs) return hs.RootVisual as System.Windows.FrameworkElement;
+					for (var p = w; !(p = p.Get.DirectParent).Is0; w = p) {
+						if (System.Windows.Interop.HwndSource.FromHwnd(p.Handle)?.RootVisual is System.Windows.Media.Visual v) {
+							return v.FindVisualDescendant(d => d is System.Windows.Interop.HwndHost hh && hh.Handle == w.Handle, orSelf: true) as System.Windows.FrameworkElement; //speed: 200 mcs
+						}
+					}
+				}
+				return null;
+			}
+
 		}
 	}
 }

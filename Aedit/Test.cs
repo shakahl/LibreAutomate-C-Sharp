@@ -47,8 +47,24 @@ static class Test
 {
 
 	public static void FromMenubar() {
+
+		AThread.Start(() => {
+			Cpp.Cpp_Test();
+
+		//	POINT p = (936, 392);
+		//	p = (1468, 1653);
+		//	var a = AAcc.FromXY(p);
+		//	//var a=AAcc.FromXY(p, AXYFlags.NotInProc);
+		//	//AOutput.Write(a.Role);
+		//	a.Dispose();
+		});
+
+
 		//KScintilla k; k.
 
+		//AWnd.More.CreateWindow("Edit", null, WS.CHILD | WS.VISIBLE, 0, 0, 0, 50, 20, Api.GetFocus()).Focus();
+		//var v = App.FocusedElement;
+		//AOutput.Write(v);
 	}
 
 	class TestGC

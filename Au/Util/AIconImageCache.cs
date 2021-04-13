@@ -95,7 +95,7 @@ namespace Au.Util
 					Bitmap b = null;
 					try {
 						if (!isIm) {
-							b = AIcon.OfFile(imageSource).ToGdipBitmap();
+							b = AIcon.OfFile(imageSource)?.ToGdipBitmap();
 							if (b != null) {
 								lock (this) {
 									var hash = _Hash(b);

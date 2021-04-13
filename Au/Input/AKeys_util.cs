@@ -457,14 +457,21 @@ namespace Au
 				}
 			}
 
-			internal static AWnd GetWndFocusedOrActive() {
-				for (int i = 0; i < 20; i++) {
-					AWnd.More.GetGUIThreadInfo(out var g);
+			/// <summary>
+			/// Gets focused or active window. Waits for it max 20-40 ms (820 ms if <i>requireFocus</i>). On timeout returns default (throws if <i>requireFocus</i>).
+			/// </summary>
+			/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
+			/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
+			internal static AWnd GetWndFocusedOrActive(bool requireFocus) {
+				for (int i = 0; i < (requireFocus ? 100 : 20); i++) {
+					AMiscInfo.GetGUIThreadInfo(out var g);
 					//AOutput.Write(i, g.hwndFocus, g.hwndActive);
 					if (!g.hwndFocus.Is0) return g.hwndFocus;
-					if (!g.hwndActive.Is0) return g.hwndActive;
-					ATime.Sleep(1);
+					if (!requireFocus && !g.hwndActive.Is0) return g.hwndActive;
+					ATime.Sleep(i < 20 ? 1 : 10);
 				}
+				if (!AMiscInfo.IsInputDesktop()) throw new AuException("Other desktop is active");
+				if (requireFocus) throw new AuException("There is no focused window"); //SHOULDDO: test various windows and data types, maybe somewhere could work without focus
 				return default;
 
 				//note: the purpose of this wait is not synchronization. It just makes getting the focused/active window more reliable.
@@ -473,7 +480,7 @@ namespace Au
 				//	Also, focus is optional.
 				//	Anyway, waiting for focus would not make more reliable, because keys are processed asynchronously.
 				//	Usually the active window is OK. We use it to get keyboard layout and/or to avoid calling Hook too frequently.
-				//	We wait for active window max 20-40 ms. When switching apps, usually there is no active window for 1-5 ms.
+				//	This func waits for active window max 20-40 ms. When switching apps, usually there is no active window for 1-5 ms.
 			}
 		}
 
@@ -482,12 +489,14 @@ namespace Au
 		/// </summary>
 		/// <param name="wFocus">receives the focused or active window. Also the function uses it to avoid frequent calling of Hook.</param>
 		/// <param name="getWndAlways">if false, the caller does not need wFocus. Then wFocus will be default(AWnd) if Hook is null.</param>
-		internal AOptKey GetOptionsAndWndFocused_(out AWnd wFocus, bool getWndAlways) {
+		/// <param name="requireFocus">Wait for focused (and not just active) window longer, and throw exception on timeout. Used for clipboard copy/paste and send text.</param>
+		/// <exception cref="AuException">No focused window when <i>requireFocus</i>.</exception>
+		internal AOptKey GetOptionsAndWndFocused_(out AWnd wFocus, bool getWndAlways, bool requireFocus = false) {
 			if (Options.Hook == null && !getWndAlways) {
 				wFocus = default;
 				return Options;
 			}
-			return GetOptions_(wFocus = Internal_.GetWndFocusedOrActive());
+			return GetOptions_(wFocus = Internal_.GetWndFocusedOrActive(requireFocus));
 		}
 
 		/// <summary>

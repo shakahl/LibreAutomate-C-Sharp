@@ -443,12 +443,22 @@ HRESULT AccFindOrGet(MarshalParams_Header* h, IAccessible* iacc, out BSTR& sResu
 		aResult.SetRole();
 
 		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
+
 	} else if(action == InProcAction::IPA_AccFromPoint) {
 		auto x = (MarshalParams_AccFromPoint*)h;
 		Cpp_Acc aResult;
 		HRESULT hr = AccFromPoint(x->p, x->flags, x->specWnd, out aResult);
 		if(hr) return hr;
 		if(!WriteAccToStream(ref stream, aResult)) return RPC_E_SERVER_CANTMARSHAL_DATA;
+
+		//Workaround for AO leak: the final Release called in the client process somehow does not release the true AO. Releases only the proxy.
+		//	But FromWindow() and Find() work well without this Release, although use the same marshaling code etc.
+		//	Tested raw AccessibleObjectFromPoint, the same.
+		//	Actually there are 2 proxies: one is created on WM_GETOBJECT, other by marshaling to the client process. Probably the first proxy would leak too.
+		//aResult.acc->Release(); aResult.acc->Release(); //somehow works even with this. But FromWindow() still works with 1 less Release.
+		//Printf(L"----- %i", aResult.acc->Release());//3
+		aResult.acc->Release();
+
 	} else { //IPA_AccFind
 		Cpp_AccParams ap;
 		auto p = (MarshalParams_AccFind*)h; p->Unmarshal(out ap);

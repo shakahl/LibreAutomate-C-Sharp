@@ -14,6 +14,7 @@ using System.Reflection;
 using System.Windows.Interop;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 //using System.Linq;
 
 namespace Au.Controls
@@ -368,6 +369,7 @@ namespace Au.Controls
 				}
 				if (wp->flags.Has(Native.SWP.HIDEWINDOW)) {
 					_ClickCloseTimer(false);
+					if(Border.IsKeyboardFocusWithin) Keyboard.ClearFocus();
 					Hidden?.Invoke(this, EventArgs.Empty);
 				}
 				break;

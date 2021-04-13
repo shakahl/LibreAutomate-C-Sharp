@@ -1933,6 +1933,7 @@ namespace Au
 		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
 		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
 		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
+		/// <seealso cref="AIcon.ToWpfImage"/>
 		public AWpfBuilder Image(ImageSource source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 			 => _Image(source, null, stretch, stretchDirection);
 
@@ -1957,24 +1958,6 @@ namespace Au
 		/// </remarks>
 		public AWpfBuilder Image(string source, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly)
 			=> _Image(null, source, stretch, stretchDirection);
-
-		/// <summary>
-		/// Creates image from native icon handle and loads into the last added <see cref="System.Windows.Controls.Image"/>.
-		/// </summary>
-		/// <param name="icon">Native icon handle. Does nothing if empty.</param>
-		/// <param name="dispose">Destroy the native icon object. Default true. If false, caller can dispose it at any time.</param>
-		/// <param name="stretch"><see cref="Image.Stretch"/>.</param>
-		/// <param name="stretchDirection"><see cref="Image.StretchDirection"/>.</param>
-		/// <exception cref="NotSupportedException">The last added element is not <b>Image</b>.</exception>
-		/// <remarks>
-		/// If fails to convert icon to image, prints warning. See <see cref="AWarning.Write"/>.
-		/// </remarks>
-		public AWpfBuilder Image(AIcon icon, bool dispose = true, Stretch stretch = Stretch.None, StretchDirection stretchDirection = StretchDirection.DownOnly) {
-			var source = icon.ToWpfImage(dispose);
-			if (source == null) return this;
-			return _Image(source, null, stretch, stretchDirection);
-			//FUTURE: option to not DPI-scale. This could work: source.CopyPixels(pixels), Bitmap.Image.Create(pixels, dpiX, dpiY).
-		}
 
 		/// <summary>
 		/// Sets vertical or horizontal splitter properties of the last added <see cref="GridSplitter"/>.

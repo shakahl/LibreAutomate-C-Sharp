@@ -35,7 +35,7 @@ namespace Au.Compiler
 				}
 			}
 
-			List<_Res> _a = new List<_Res>();
+			List<_Res> _a = new();
 
 			public void AddVersion(string asmFile)
 			{
@@ -50,7 +50,7 @@ namespace Au.Compiler
 				_a.Add(new _Res(24, 1, File.ReadAllBytes(manifestFile))); //RT_MANIFEST
 			}
 
-			public void AddIcon(string iconFile)
+			public void AddIcon(string iconFile, ref ICONCONTEXT ic)
 			{
 				//info:
 				//An icon file begins with NEWHEADER followed by multiple ICONDIRENTRY for each icon.
@@ -59,6 +59,8 @@ namespace Au.Compiler
 				//In icon file then follow multiple ICONIMAGE (or png). Their file offsets are ICONDIRENTRY.dwImageOffset.
 				//In resources instead there are multiple RT_ICON resources that are referenced
 				//	by RESDIR.wIconCursorId. An RT_ICON resource contains ICONIMAGE or png.
+
+				if (ic.groupId == 0) ic.groupId = Api.IDI_APPLICATION;
 
 				var m = new MemoryStream();
 				var ico = File.ReadAllBytes(iconFile);
@@ -74,7 +76,7 @@ namespace Au.Compiler
 						ICONDIRENTRY* ide = pi + i;
 						uint offset = ide->dwImageOffset, size = ide->dwBytesInRes;
 						if(offset + size > ico.Length) _Throw();
-						ushort id = (ushort)(i + 1);
+						ushort id = (ushort)(++ic.iconId);
 						ide->dwImageOffset = id; //RESDIR.wIconCursorId
 						m.Write(new ReadOnlySpan<byte>(ide, sizeof(ICONDIRENTRY) - 2)); //ICONDIRENTRY to RESDIR
 
@@ -82,8 +84,10 @@ namespace Au.Compiler
 					}
 				}
 
-				_a.Add(new _Res(14, Api.IDI_APPLICATION, m.ToArray())); //RT_GROUP_ICON
+				_a.Add(new _Res(14, (ushort)ic.groupId++, m.ToArray())); //RT_GROUP_ICON
 			}
+
+			public struct ICONCONTEXT { public int groupId, iconId; }
 
 			//rejected. Rarely used. If need, users can add later, with tools like ResourceHacker. Here makes more difficult because need to support string type/name, language, etc.
 			//public void AddRes(string resFile)
@@ -105,7 +109,7 @@ namespace Au.Compiler
 			static bool _LoadNativeResource(IntPtr hModule, ushort resType, ushort resId, out byte* ptr, out int size)
 			{
 				ptr = null; size = 0;
-				var hRes = FindResource(hModule, resId, resType); if(hRes == default) return false;
+				var hRes = Api.FindResource(hModule, resId, resType); if(hRes == default) return false;
 				var hGlob = LoadResource(hModule, hRes); if(hGlob == default) return false;
 				ptr = LockResource(hGlob);
 				size = SizeofResource(hModule, hRes);
@@ -183,7 +187,14 @@ namespace Au.Compiler
 			bool _WriteResources(Stream m, uint resRva)
 			{
 				//calc number of resource types and ids (sum of unique ids of all types)
-				//simplified: don't need to sort resources by type, id/name and lang. We can have max 1 version, 1 manifest and 1 icon (+ its multiple RT_ICON).
+				//We can have max 1 version, 1 manifest and multiple RT_ICONGROUP (each + its multiple RT_ICON).
+
+				_a.Sort((v1, v2) => {
+					int r = v1.resType - v2.resType;
+					if (r == 0) r = v1.resId - v2.resId;
+					return r;
+				});
+
 				int nTypes = 0, nIds = 0, prevType = -1, prevId = -1;
 				foreach(var r in _a) {
 					if(r.resType != prevType) { prevType = r.resType; nTypes++; prevId = -1; }
@@ -265,9 +276,6 @@ namespace Au.Compiler
 
 				return true;
 			}
-
-			[DllImport("kernel32.dll", EntryPoint = "FindResourceW")]
-			public static extern IntPtr FindResource(IntPtr hModule, LPARAM lpName, LPARAM lpType);
 
 			[DllImport("kernel32.dll")]
 			internal static extern IntPtr LoadResource(IntPtr hModule, IntPtr hResInfo);

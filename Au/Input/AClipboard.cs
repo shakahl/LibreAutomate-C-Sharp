@@ -91,7 +91,7 @@ namespace Au
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
 		/// Uses <see cref="AOptKey.RestoreClipboard"/>, <see cref="AOptKey.NoBlockInput"/>, <see cref="AOptKey.KeySpeedClipboard"/>. Does not use <see cref="AOptKey.Hook"/>.
 		/// </param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 		/// <remarks>
 		/// Also can get file paths, as multiline text.
 		/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, gets it, finally restores clipboard data.
@@ -109,7 +109,7 @@ namespace Au
 		/// <param name="callback">Callback function. It can get clipboard data of any formats. It can use any clipboard functions, for example the <see cref="AClipboardData"/> class or the .NET <see cref="System.Windows.Forms.Clipboard"/> class. Don't call copy/paste functions.</param>
 		/// <param name="cut">Use Ctrl+X.</param>
 		/// <param name="options">See <see cref="Copy"/>.</param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not set clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 		/// <exception cref="Exception">Exceptions thrown by the callback function.</exception>
 		/// <remarks>
 		/// Sends keys Ctrl+C, waits until the focused app sets clipboard data, calls callback function that gets it, finally restores clipboard data.
@@ -150,7 +150,7 @@ namespace Au
 					oc.Close(false); //close clipboard; don't destroy our clipboard owner window
 				}
 
-				AWnd wFocus = AKeys.Internal_.GetWndFocusedOrActive();
+				AWnd wFocus = AKeys.Internal_.GetWndFocusedOrActive(requireFocus: true);
 				listener = new _ClipboardListener(false, null, oc.WndClipOwner, wFocus);
 
 				if (!Api.AddClipboardFormatListener(oc.WndClipOwner)) throw new AuException();
@@ -205,9 +205,9 @@ namespace Au
 		/// Options. If null (default), uses <see cref="AOpt.Key"/>.
 		/// Uses <see cref="AOptKey.RestoreClipboard"/>, <see cref="AOptKey.PasteWorkaround"/>, <see cref="AOptKey.NoBlockInput"/>, <see cref="AOptKey.SleepFinally"/>, <see cref="AOptKey.Hook"/>, <see cref="AOptKey.KeySpeedClipboard"/>.
 		/// </param>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 		/// <remarks>
-		/// Adds to the clipboard, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
+		/// Sets clipboard data, sends keys Ctrl+V, waits until the focused app gets clipboard data, finally restores clipboard data.
 		/// Fails (exception) if nothing gets clipboard data in several seconds.
 		/// Works with console windows too, even if they don't support Ctrl+V.
 		/// A clipboard viewer/manager program can make this function slower and less reliable, unless it supports <see cref="ClipFormats.ClipboardViewerIgnore"/> or gets clipboard data with a delay.
@@ -231,7 +231,7 @@ namespace Au
 		/// Pastes data added to an <see cref="AClipboardData"/> variable into the focused app using the clipboard.
 		/// More info: <see cref="Paste"/>.
 		/// </summary>
-		/// <exception cref="AuException">Failed.</exception>
+		/// <exception cref="AuException">Failed. Fails if there is no focused window or if it does not get clipboard data. Fails if other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc).</exception>
 		/// <example>
 		/// Paste data of two formats: HTML and text.
 		/// <code><![CDATA[
@@ -255,7 +255,7 @@ namespace Au
 		//}
 
 		static void _Paste(object data, AOptKey options = null) {
-			var wFocus = AKeys.Internal_.GetWndFocusedOrActive();
+			var wFocus = AKeys.Internal_.GetWndFocusedOrActive(requireFocus: true);
 			var opt = options ?? AOpt.Key;
 			using (var bi = new AInputBlocker { ResendBlockedKeys = true }) {
 				if (!opt.NoBlockInput) bi.Start(BIEvents.Keys);
@@ -404,7 +404,7 @@ namespace Au
 				_data = data;
 				_wndProc = _WndProc;
 				_wFocus = wFocus;
-				clipOwner.SetWindowLong(Native.GWL.WNDPROC, Marshal.GetFunctionPointerForDelegate(_wndProc));
+				AWnd.Internal_.SubclassUnsafe(clipOwner, _wndProc);
 
 				//rejected: use SetClipboardViewer to block clipboard managers/viewers/etc. This was used in QM2.
 				//	Nowadays most such programs don't use SetClipboardViewer. They use AddClipboardFormatListener+WM_CLIPBOARDUPDATE.
@@ -514,10 +514,8 @@ namespace Au
 				_isOpen = false;
 				_w = default;
 				if (createOwner) {
-					_w = AWnd.Internal_.CreateMessageWindowDefWndProc();
+					_w = AWnd.Internal_.CreateWindowDWP(messageOnly: true);
 					//MSDN says, SetClipboardData fails if OpenClipboard called with 0 hwnd. It doesn't, but better use hwnd.
-					//Creating/destroying window is the slowest part of SetText().
-					//SHOULDDO: try to cache the window. Now setting clipboard text is ~4 ms. Without creating window < 1 ms.
 				}
 				if (!noOpenNow) Reopen();
 			}

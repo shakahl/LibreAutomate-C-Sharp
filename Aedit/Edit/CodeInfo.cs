@@ -167,6 +167,8 @@ AOutput.Write(""t"" + 'c' + 1);
 		case (KKey.Up, 0):
 		case (KKey.PageDown, 0):
 		case (KKey.PageUp, 0):
+		case (KKey.Home, 0):
+		case (KKey.End, 0):
 			if ((HideTextPopup() || _tools.HideTempWindows()) && key == KKey.Escape) return true;
 			//never mind: on Esc, if several popups, should hide the top popup.
 			//	We instead hide less-priority popups when showing a popup, so that Escape will hide the correct popup in most cases.

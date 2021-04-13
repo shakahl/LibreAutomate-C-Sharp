@@ -1,3 +1,4 @@
+using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -10,8 +11,6 @@ using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
-
-using Au.Types;
 
 namespace Au
 {
@@ -301,6 +300,7 @@ namespace Au
 		/// <remarks>
 		/// Uses <see cref="ARegisteredHotkey"/>; it uses API <msdn>RegisterHotKey</msdn>.
 		/// Fails if the hotkey is currently registered by this or another application or used by Windows. Also if F12.
+		/// <note>Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.</note>
 		/// </remarks>
 		/// <example>
 		/// <code><![CDATA[
@@ -314,7 +314,7 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		public static bool WaitForHotkey(double secondsTimeout, KHotkey hotkey, bool waitModReleased = false) {
-			if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("WaitForHotkey");
+			if (s_atomWFH == 0) s_atomWFH = Api.GlobalAddAtom("Au.WaitForHotkey");
 			using (ARegisteredHotkey rhk = default) {
 				if (!rhk.Register(s_atomWFH, hotkey)) throw new AuException(0, "*register hotkey");
 				if (!AWaitFor.PostedMessage(secondsTimeout, (ref Native.MSG m) => m.message == Api.WM_HOTKEY && m.wParam == s_atomWFH)) return false;
@@ -391,6 +391,8 @@ namespace Au
 			return _WaitForKey(secondsTimeout, 0, up, block);
 		}
 
+		//TODO: overload with lambda. Same for mouse.
+
 		static KKey _WaitForKey(double secondsTimeout, KKey key, bool up, bool block) {
 			//SHOULDDO: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
 
@@ -418,36 +420,6 @@ namespace Au
 		/// </summary>
 		public static class More
 		{
-			/// <summary>
-			/// Gets text cursor (caret) position and size.
-			/// Returns false if fails.
-			/// </summary>
-			/// <param name="r">Receives the rectangle, in screen coordinates.</param>
-			/// <param name="w">Receives the control that contains the text cursor.</param>
-			/// <param name="orMouse">If fails, get mouse pointer coodinates.</param>
-			/// <remarks>
-			/// Can get only standard text cursor. Many apps use non-standard cursor; then fails.
-			/// Also fails if the text cursor currently is not displayed.
-			/// </remarks>
-			public static bool GetTextCursorRect(out RECT r, out AWnd w, bool orMouse = false) {
-				if (AWnd.More.GetGUIThreadInfo(out var g) && !g.hwndCaret.Is0) {
-					if (g.rcCaret.bottom <= g.rcCaret.top) g.rcCaret.bottom = g.rcCaret.top + 16;
-					r = g.rcCaret;
-					g.hwndCaret.MapClientToScreen(ref r);
-					w = g.hwndCaret;
-					return true;
-				}
-				if (orMouse) {
-					Api.GetCursorPos(out var p);
-					r = new RECT(p.x, p.y, 0, 16);
-				} else r = default;
-				w = default;
-				return false;
-
-				//note: in Word, after changing caret pos, gets pos 0 0. After 0.5 s gets correct. After typing always correct.
-				//tested: accessibleobjectfromwindow(objid_caret) is the same, but much slower.
-			}
-
 			/// <summary>
 			/// Converts key name to <see cref="KKey"/>.
 			/// Returns 0 if unknown key name.
@@ -635,6 +607,8 @@ namespace Au
 			/// Converts key from WPF <b>Key</b> to <b>KKey</b>.
 			/// </summary>
 			public static KKey KKeyFromWpf(System.Windows.Input.Key k) => (KKey)System.Windows.Input.KeyInterop.VirtualKeyFromKey(k);
+
+			//FUTURE: RemapKeyboardKeys. See QM2.
 		}
 
 		/// <summary>
@@ -669,6 +643,7 @@ namespace Au
 		/// </list>
 		/// </param>
 		/// <exception cref="ArgumentException">An invalid value, for example an unknown key name.</exception>
+		/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). When sending text, fails if there is no focused window.</exception>
 		/// <remarks>
 		/// Usually keys are specified in string, like in this example:
 		/// <code><![CDATA[AKeys.Key("A F2 Ctrl+Shift+A Enter*2"); //keys A, F2, Ctrl+Shift+A, Enter Enter
@@ -973,6 +948,7 @@ namespace Au
 		/// HTML. Can be full HTML or fragment. See <see cref="AClipboardData.AddHtml"/>.
 		/// Can be specified only <i>text</i> or only <i>html</i> or both. If both, will paste <i>html</i> in apps that support it, elsewhere <i>text</i>. If only <i>html</i>, in apps that don't support HTML will paste <i>html</i> as text.
 		/// </param>
+		/// <exception cref="AuException">Failed. For example other desktop is active (PC locked, screen saver, UAC consent, Ctrl+Alt+Delete, etc). Also fails if there is no focused window.</exception>
 		/// <remarks>
 		/// To send text can use keys, characters or clipboard, depending on <see cref="AOpt.Key"/> and text. If <i>html</i> not null, uses clipboard.
 		/// </remarks>

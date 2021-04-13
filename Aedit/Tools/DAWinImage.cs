@@ -16,10 +16,11 @@ using System.Windows.Controls;
 using Au.Types;
 using Au.Controls;
 using Au.Util;
-using System.Windows.Forms.Integration;
 using Microsoft.Win32;
 using System.Windows.Controls.Primitives;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Drawing;
 
 namespace Au.Tools
 {
@@ -37,8 +38,7 @@ namespace Au.Tools
 		KPopup _ttInfo;
 		Button _bTest, _bOK;
 		Label _speed;
-		WindowsFormsHost _pictHost;
-		System.Windows.Forms.PictureBox _pict;
+		_PictureBox _pict;
 		KSciCodeBoxAWnd _code;
 
 		KCheckBox controlC, allC, exceptionC;
@@ -56,17 +56,7 @@ namespace Au.Tools
 				.R.AddButton(out _bTest, "_Test", _bTest_Click).Width(70..).Disabled().Tooltip("Executes the code now.\nShows rectangle of the found image.\nIgnores options: Find all, wait, Exception, Mouse.")
 				.Add(out _speed).Tooltip("Search time (window + image). Red if not found.")
 				.R.AddOkCancel(out _bOK, out _, out _).Align("L"); _bOK.IsEnabled = false;
-
-			//display image in winforms PictureBox.
-			//	Tried WPF Image, but blurry when high DPI, even if bitmap's DPI is set to match window's DPI.
-			//	UseLayoutRounding does not help in this case.
-			//	RenderOptions.SetBitmapScalingMode(NearestNeighbor) helps it seems. But why it tries to scale the image, and how many times?
-			b.Row(120).Add(out _pictHost);
-			var p1 = new System.Windows.Forms.Panel { AutoScroll = true, BackColor = System.Drawing.SystemColors.ControlDark, BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle }; //for scrollbars
-			p1.Controls.Add(_pict = new() { SizeMode = System.Windows.Forms.PictureBoxSizeMode.AutoSize });
-			_pictHost.Child = p1;
-			//SHOULDDO: remove forms and draw bitmap in HwndHost. Now sometimes slowly loads dialog first time, maybe because of forms.
-
+			b.Row(120).xAddInBorder(out _pict);
 			b.End();
 			b.OkApply += _bOK_Click;
 
@@ -102,11 +92,7 @@ namespace Au.Tools
 		}
 
 		protected override void OnClosed(EventArgs e) {
-			if (_image != null) {
-				_pict.Image = null;
-				_image.Dispose();
-				_image = null;
-			}
+			if (_image != null) _pict.Image = _image = null;
 
 			base.OnClosed(e);
 		}
@@ -132,13 +118,13 @@ namespace Au.Tools
 		}
 
 		//Use r on Capture. Use image on Open.
-		void _SetImage(WICResult r = null, System.Drawing.Bitmap image = null) {
+		void _SetImage(WICResult r = null, Bitmap image = null) {
 			if (r != null) { //on Capture
 				var wnd = r.wnd.Window; if (wnd.Is0) return;
 				_SetWndCon(wnd, r.wnd, true, false);
 				if (_isColor = (r.image == null)) {
-					using var g = System.Drawing.Graphics.FromImage(r.image = new System.Drawing.Bitmap(16, 16));
-					g.Clear((System.Drawing.Color)r.color);
+					using var g = Graphics.FromImage(r.image = new Bitmap(16, 16));
+					g.Clear((Color)r.color);
 				}
 				_color = r.color.argb & 0xffffff;
 				_image = r.image;
@@ -150,9 +136,7 @@ namespace Au.Tools
 			}
 
 			//set _pict
-			var oldImage = _pict.Image;
 			_pict.Image = _image;
-			oldImage?.Dispose();
 
 			//set _code
 			_FormatCode();
@@ -498,5 +482,61 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 
 		#endregion
 
+		//display image in HwndHost.
+		//	Tried WPF Image, but blurry when high DPI, even if bitmap's DPI is set to match window's DPI.
+		//	UseLayoutRounding does not help in this case.
+		//	RenderOptions.SetBitmapScalingMode(NearestNeighbor) helps it seems. But why it tries to scale the image, and how many times?
+		//	Tried winforms PictureBox, bust sometimes very slowly starts.
+		class _PictureBox : HwndHost
+		{
+			AWnd _w;
+
+			protected override HandleRef BuildWindowCore(HandleRef hwndParent) {
+				var wParent = (AWnd)hwndParent.Handle;
+				_w = AWnd.More.CreateWindow(_wndProc = _WndProc, false, "Static", null, WS.CHILD | WS.CLIPCHILDREN, 0, 0, 0, 10, 10, wParent);
+
+				return new HandleRef(this, _w.Handle);
+			}
+
+			protected override void DestroyWindowCore(HandleRef hwnd) {
+				Api.DestroyWindow(_w);
+			}
+
+			public Bitmap Image {
+				get => _b;
+				set {
+					_b?.Dispose();
+					_b = value;
+					Api.InvalidateRect(_w);
+				}
+			}
+			Bitmap _b;
+
+			Native.WNDPROC _wndProc;
+			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+				//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
+				//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
+
+				switch (msg) {
+				case Api.WM_NCHITTEST:
+					return Api.HTTRANSPARENT;
+				case Api.WM_PAINT:
+					var dc = Api.BeginPaint(w, out var ps);
+					_Paint(dc);
+					Api.ReleaseDC(w, dc);
+					return default;
+				}
+
+				return Api.DefWindowProc(w, msg, wParam, lParam);
+			}
+
+			void _Paint(nint dc) {
+				using var g = Graphics.FromHdc(dc);
+				g.Clear(System.Drawing.SystemColors.AppWorkspace);
+				if (_b == null) return;
+
+				g.DrawImage(_b, 0, 0);
+			}
+		}
 	}
 }

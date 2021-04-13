@@ -200,7 +200,7 @@ class CiPopupList
 		//	The reason (reproduced):
 		//		in _SortAndSetControlItems -> _tv.SetItems -> ... -> _Measure, probably when setting scrollbar properties,
 		//		WPF raises an UIA event and waits + dispatches messages. During that time is called Hide(). It sets _av=null.
-		//	Workaround: return now if _w is null. Workaround 2: replace the WPF scrollbar with native scrollbar.
+		//	Workaround: return now if _w is null. Workaround 2: replace the WPF scrollbar with native scrollbar. Both done.
 		if (_av == null) return;
 
 		_compl.SelectBestMatch(_av.Select(o => o.ci)); //pass items sorted like in the visible list
@@ -266,8 +266,8 @@ class CiPopupList
 			case KKey.Up:
 			case KKey.PageDown:
 			case KKey.PageUp:
-				//case KKey.Home:
-				//case KKey.End:
+			case KKey.Home:
+			case KKey.End:
 				_tv.ProcessKey(AKeys.More.KKeyToWpf(key));
 				return true;
 			}

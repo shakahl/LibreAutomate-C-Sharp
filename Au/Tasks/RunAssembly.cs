@@ -32,6 +32,7 @@ namespace Au
 		/// <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
 		public static void Run(string asmFile, string[] args, RAFlags flags = 0, string fullPathRefs = null) {
 			//ref var p1 = ref APerf.Shared;
+			//p1.First();
 			//p1.Next('i');
 
 			bool inEditorThread = 0 != (flags & RAFlags.InEditorThread);
@@ -43,7 +44,7 @@ namespace Au
 				//SHOULDDO: try to unload editorExtension assemblies. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
 				//p1.Next();
 				asm = alc.LoadFromAssemblyPath(asmFile);
-				//p1.Next('L'); //1.5-3 ms, depending on AV. LoadFromStream 30-100 ms, depending on AV.
+				//p1.Next('L'); //0.5-3 ms, depending on AV. LoadFromStream 30-100 ms, depending on AV.
 
 				if (fullPathRefs != null) {
 					var fpr = fullPathRefs.Split('|');
@@ -75,7 +76,10 @@ namespace Au
 				}
 
 				//p1.Next('m');
-				if (!inEditorThread) Log_.Run.Write("Task started.");
+				if (!inEditorThread) {
+					ATask.s_mainAssembly = asm;
+					Log_.Run.Write("Task started.");
+				}
 				//p1.Next('n');
 
 				if (useArgs) {

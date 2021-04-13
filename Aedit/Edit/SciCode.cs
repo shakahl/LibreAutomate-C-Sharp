@@ -57,6 +57,8 @@ partial class SciCode : KScintilla
 		if (fls.IsBinary) ZInitReadOnlyAlways = true;
 
 		ZHandleCreated += _ZHandleCreated;
+
+		Name = "document";
 	}
 
 	void _ZHandleCreated() {
@@ -447,7 +449,7 @@ partial class SciCode : KScintilla
 
 	#region script header
 
-	//const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic;";
+	//const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;";
 	//const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
 
 	//static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
@@ -798,7 +800,7 @@ partial class SciCode : KScintilla
 
 	protected override AccROLE ZAccessibleRole => AccROLE.DOCUMENT;
 
-	protected override string ZAccessibleName => _fn.DisplayName;
+	protected override string ZAccessibleName => "document - " + _fn.DisplayName;
 
 	protected override string ZAccessibleDescription => _fn.FilePath;
 

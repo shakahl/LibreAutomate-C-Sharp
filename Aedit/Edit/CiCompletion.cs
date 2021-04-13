@@ -912,9 +912,9 @@ class CiCompletion
 	}
 
 	/// <summary>
-	/// Esc, Arrow, Page.
+	/// Esc, Arrow, Page, Hoe, End.
 	/// </summary>
-	public bool OnCmdKey_SelectOrHide(KKey key) => _data == null ? false : _popupList.OnCmdKey(key);
+	public bool OnCmdKey_SelectOrHide(KKey key) => _data != null && _popupList.OnCmdKey(key);
 }
 
 [Flags]

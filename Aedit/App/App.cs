@@ -200,6 +200,18 @@ static class App
 
 	public static EProgramState Loaded;
 
+	/// <summary>
+	/// Gets Keyboard.FocusedElement. If null, and a HwndHost-ed control is focused, returns the HwndHost.
+	/// Slow if HwndHost-ed control.
+	/// </summary>
+	public static FrameworkElement FocusedElement {
+		get {
+			var v = System.Windows.Input.Keyboard.FocusedElement;
+			if (v != null) return v as FrameworkElement;
+			return AWnd.Internal_.ToWpfElement(Api.GetFocus());
+		}
+	}
+
 	static bool _RestartAsAdmin(string[] args) {
 		if (Debugger.IsAttached) return false; //very fast
 		try {
@@ -217,9 +229,9 @@ static class App
 		return true;
 	}
 
-	public static class TrayIcon
+	internal static class TrayIcon
 	{
-		static AIcon[] _icons;
+		static IntPtr[] _icons;
 		static bool _disabled, _running;
 		static AWnd _wNotify;
 
@@ -229,7 +241,7 @@ static class App
 
 		internal static void Update_() {
 			if (_icons == null) {
-				_icons = new AIcon[3];
+				_icons = new IntPtr[3];
 
 				s_msgTaskbarCreated = AWnd.More.RegisterMessage("TaskbarCreated", uacEnable: true);
 
@@ -242,7 +254,7 @@ static class App
 					Api.Shell_NotifyIcon(Api.NIM_DELETE, d);
 				};
 
-				_Add();
+				_Add(false);
 			} else {
 				var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_ICON) { hIcon = _GetIcon() };
 				bool ok = Api.Shell_NotifyIcon(Api.NIM_MODIFY, d);
@@ -250,13 +262,12 @@ static class App
 			}
 		}
 
-		static void _Add() {
+		static void _Add(bool restore) {
 			var d = new Api.NOTIFYICONDATA(_wNotify, Api.NIF_MESSAGE | Api.NIF_ICON | Api.NIF_TIP /*| Api.NIF_SHOWTIP*/) { //need NIF_SHOWTIP if called NIM_SETVERSION(NOTIFYICON_VERSION_4)
 				uCallbackMessage = c_msgNotify,
 				hIcon = _GetIcon(),
 				szTip = App.AppName
 			};
-			ALastError.Clear();
 			if (Api.Shell_NotifyIcon(Api.NIM_ADD, d)) {
 				//d.uFlags = 0;
 				//d.uVersion = Api.NOTIFYICON_VERSION_4;
@@ -265,17 +276,15 @@ static class App
 				//ATimer.After(2000, _ => Update(TrayIconState.Disabled));
 				//ATimer.After(3000, _ => Update(TrayIconState.Running));
 				//ATimer.After(4000, _ => Update(TrayIconState.Normal));
-			} else {
-				var ec = ALastError.Code;
-				if (ec == 0) return; //probably when "TaskbarCreated" message received when taskbar DPI changed. How to know? wParam and lParam 0.
+			} else if(!restore) { //restore when "TaskbarCreated" message received. It is also received when taskbar DPI changed.
 				ADebug.Print(ALastError.Message);
 			}
 		}
 
-		static AIcon _GetIcon() {
+		static IntPtr _GetIcon() {
 			int i = _running ? 2 : (_disabled ? 1 : 0);
-			ref AIcon icon = ref _icons[i];
-			if (icon.Is0) Api.LoadIconMetric(AProcess.ExeModuleHandle, Api.IDI_APPLICATION + i, 0, out icon);
+			ref IntPtr icon = ref _icons[i];
+			if (icon == default) Api.LoadIconMetric(Api.GetModuleHandle(null), Api.IDI_APPLICATION + i, 0, out icon);
 			return icon;
 			//Windows 10 on DPI change automatically displays correct non-scaled icon if it is from native icon group resource.
 			//	I guess then it calls GetIconInfoEx to get module/resource and extracts new icon from same resource.
@@ -300,10 +309,10 @@ static class App
 		static LPARAM _WndProc(AWnd w, int m, LPARAM wParam, LPARAM lParam) {
 			//AWnd.More.PrintMsg(w, m, wParam, lParam);
 			if (m == c_msgNotify) _Notified(wParam, lParam);
-			else if (m == s_msgTaskbarCreated) _Add(); //when explorer restarted or taskbar DPI changed
+			else if (m == s_msgTaskbarCreated) _Add(true); //when explorer restarted or taskbar DPI changed
 			else if (m == Api.WM_DESTROY) _Exit();
 			else if (m == Api.WM_POWERBROADCAST) {
-				if (wParam == 4) Tasks.EndTask(); //PBT_APMSUSPEND
+				if (wParam == Api.PBT_APMSUSPEND) Tasks.EndTask();//TODO
 			} else if (m == Api.WM_DISPLAYCHANGE) {
 				Tasks.OnWM_DISPLAYCHANGE();
 			}
@@ -322,11 +331,14 @@ static class App
 
 		static void _ContextMenu() {
 			var m = new AMenu();
-			m.Add("End runSingle task\tSleep", _ => Tasks.EndTask(), disable: Tasks.GetRunsingleTask() == null); //TODO: not good
+			m.Add("End runSingle task\tSleep", _ => Tasks.EndTask(), disable: Tasks.GetRunsingleTask() == null);
 			m.AddCheck("Disable triggers\tM-click", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
 			m.Separator();
 			m.Add("Exit", _ => _Exit());
 			m.Show(MSFlags.AlignBottom | MSFlags.AlignCenterH);
+
+			//TODO: need a better way to end task. Let Sleep be just an alternative.
+			//	Eg meta endKey (could be in default template). Then let the task create a thread that waits for the key.
 		}
 
 		static void _ShowWindow() {

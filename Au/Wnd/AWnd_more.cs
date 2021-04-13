@@ -22,16 +22,6 @@ namespace Au
 		/// </summary>
 		public static partial class More
 		{
-			/// <summary>
-			/// Calls API <msdn>GetGUIThreadInfo</msdn>. It gets info about mouse capturing, menu mode, move/size mode, focus, caret, etc.
-			/// </summary>
-			/// <param name="g">API <msdn>GUITHREADINFO</msdn>.</param>
-			/// <param name="idThread">Thread id. If 0 - the foreground (active window) thread. See <see cref="ThreadId"/>, <see cref="AThread.Id"/>.</param>
-			public static bool GetGUIThreadInfo(out Native.GUITHREADINFO g, int idThread = 0) {
-				g = new Native.GUITHREADINFO(); g.cbSize = Api.SizeOf(g);
-				return Api.GetGUIThreadInfo(idThread, ref g);
-			}
-
 			//public void ShowAnimate(bool show)
 			//{
 			//	//Don't add AWnd function, because:
@@ -80,7 +70,6 @@ namespace Au
 						if (wndProc != null) {
 							x.lpfnWndProc = Marshal.GetFunctionPointerForDelegate(wndProc);
 						} else {
-							if (s_cwProc == null) s_cwProcFP = Marshal.GetFunctionPointerForDelegate(s_cwProc = _CWProc);
 							x.lpfnWndProc = s_cwProcFP;
 						}
 						x.style |= Api.CS_GLOBALCLASS;
@@ -112,29 +101,30 @@ namespace Au
 					//AOutput.Write("subclassed", w);
 					return wndProc(w, msg, wParam, lParam);
 				} else {
-					if (!t_windows.TryGetValue(w, out var wndProc)) {
+					var a = t_windows;
+					if (a == null || !a.TryGetValue(w, out var wndProc)) {
 						wndProc = t_cwProc;
 						if (wndProc == null) {
 							//AOutput.Write("DefWindowProc", w);
 							return Api.DefWindowProc(w, msg, wParam, lParam); //creating not with our CreateWindow(wndProc, ...)
 						}
-						t_windows[w] = wndProc;
-						//AOutput.Write("added", t_windows.Count, w);
+						a[w] = wndProc;
+						//AOutput.Write("added", a.Count, w);
 						t_cwProc = null;
 					}
 
 					var R = wndProc(w, msg, wParam, lParam);
 
 					if (msg == Api.WM_NCDESTROY) {
-						t_windows.Remove(w);
-						//AOutput.Write("removed", t_windows.Count, w);
+						a.Remove(w);
+						//AOutput.Write("removed", a.Count, w);
 					}
 
 					return R;
 				}
 			}
 			static Native.WNDPROC s_cwProc; //GC
-			static IntPtr s_cwProcFP;
+			static IntPtr s_cwProcFP = Marshal.GetFunctionPointerForDelegate(s_cwProc = _CWProc);
 			[ThreadStatic] static Native.WNDPROC t_cwProc;
 			[ThreadStatic] static bool t_cwUnsafe;
 

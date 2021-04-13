@@ -324,9 +324,6 @@ namespace Au.Types
 		internal static extern bool DestroyIcon(IntPtr hIcon);
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool DestroyCursor(IntPtr hCursor);
-
-		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetWindowRect(AWnd hWnd, out RECT lpRect);
 
 		[DllImport("user32.dll", SetLastError = true)]
@@ -964,7 +961,7 @@ namespace Au.Types
 		internal const uint MOD_NOREPEAT = 0x4000;
 
 		[DllImport("user32.dll", SetLastError = true)]
-		internal static extern bool RegisterHotKey(AWnd hWnd, int id, uint fsModifiers, KKey vk);
+		internal static extern bool RegisterHotKey(AWnd hWnd, int id, int fsModifiers, KKey vk);
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool UnregisterHotKey(AWnd hWnd, int id);
@@ -1134,17 +1131,30 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetCursorInfo(ref CURSORINFO pci);
 
-		internal struct ICONINFO
+		//TODO: try to d the same for some others.
+		//TODO: use ref struct for some other IDisposable struct.
+		internal ref struct ICONINFO
 		{
 			public bool fIcon;
 			public int xHotspot;
 			public int yHotspot;
 			public IntPtr hbmMask;
 			public IntPtr hbmColor;
+
+			public ICONINFO(IntPtr hIcon) {
+				GetIconInfo(hIcon, out this);
+				//never mind if fails. Then hbm members are default, and caller can either check it or simply let other API fail.
+			}
+
+			public void Dispose() {
+				if (hbmMask != default) DeleteObject(hbmMask);
+				if (hbmColor != default) DeleteObject(hbmColor);
+			}
 		}
 
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetIconInfo(IntPtr hIcon, out ICONINFO piconinfo);
+		//tested: GetIconInfoEx gets resource info only for icons loaded from a module loaded in this process.
 
 		internal struct BITMAP
 		{
@@ -1527,6 +1537,22 @@ namespace Au.Types
 		internal const uint EDGE_ETCHED = 0x6;
 		internal const uint BF_LEFT = 0x1;
 		internal const uint BF_TOP = 0x2;
+
+		[DllImport("user32.dll", SetLastError = true)]
+		internal static extern IntPtr GetThreadDesktop(int dwThreadId);
+
+		[DllImport("user32.dll", EntryPoint = "GetUserObjectInformationW", SetLastError = true)]
+		internal static extern bool GetUserObjectInformation(IntPtr hObj, int nIndex, void* pvInfo, int nLength, out int lpnLengthNeeded);
+
+		internal const int UOI_IO = 6;
+		//internal const int UOI_NAME = 2;
+
+		//[DllImport("user32.dll", SetLastError = true)]
+		//internal static extern IntPtr OpenInputDesktop(uint dwFlags, bool fInherit, uint dwDesiredAccess);
+
+		//[DllImport("user32.dll")]
+		//internal static extern bool CloseDesktop(IntPtr hDesktop);
+
 
 	}
 

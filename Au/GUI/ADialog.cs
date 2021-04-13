@@ -295,7 +295,7 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Sets common icon.
+		/// Sets common icon. Or custom icom from app resources.
 		/// </summary>
 		public void SetIcon(DIcon icon) {
 			_c.hMainIcon = (IntPtr)(int)icon;
@@ -305,18 +305,25 @@ namespace Au
 		/// <summary>
 		/// Sets custom icon.
 		/// </summary>
-		/// <param name="icon">
-		/// Icon of size 32 or 16.
-		/// Don't dispose it until the dialog is closed.
-		/// </param>
-		public void SetIcon(Icon icon) {
+		/// <param name="icon">Icon of size 32 or 16 (or more if high DPI). Can be <see cref="AIcon"/>, <b>Icon</b>, <b>IntPtr</b> (native icon handle), <b>Bitmap</b>.</param>
+		public void SetIcon(object icon) {
 			_iconGC = icon; //GC
-			_c.hMainIcon = (icon == null) ? default : icon.Handle;
+			_c.hMainIcon = _IconHandle(icon);
 			_SetFlag(_TDF.USE_HICON_MAIN, _c.hMainIcon != default);
 			//tested: displays original-size 32 and 16 icons, but shrinks bigger icons to 32.
 			//note: for App icon ShowDialog will execute more code. The same for footer icon.
 		}
-		Icon _iconGC; //GC
+		object _iconGC; //GC
+
+		static IntPtr _IconHandle(object icon)
+			=> icon switch {
+				AIcon a => a.Handle,
+				Icon a => a.Handle,
+				IntPtr a => a,
+				Bitmap a => new AIcon(a.GetHicon()),
+				null => default,
+				_ => throw new ArgumentException()
+			};
 
 		#region buttons
 
@@ -594,7 +601,7 @@ namespace Au
 				case 'v': icon = DIcon.Shield; break;
 				case 'a': icon = DIcon.App; break;
 				}
-				text = text.Substring(2);
+				text = text[2..];
 			}
 			SetFooterText(text, icon);
 		}
@@ -614,14 +621,14 @@ namespace Au
 		/// Adds text and custom icon at the bottom of the dialog.
 		/// </summary>
 		/// <param name="text">Text.</param>
-		/// <param name="icon">Icon of size 16. Read more: <see cref="SetIcon(Icon)"/>.</param>
-		public void SetFooterText(string text, Icon icon) {
+		/// <param name="icon">Icon of size 16 (or more if high DPI). Can be <see cref="AIcon"/>, <b>Icon</b>, <b>IntPtr</b> (native icon handle), <b>Bitmap</b>.</param>
+		public void SetFooterText(string text, object icon) {
 			_c.pszFooter = text;
 			_iconFooterGC = icon; //GC
-			_c.hFooterIcon = (icon == null) ? default : icon.Handle;
+			_c.hFooterIcon = _IconHandle(icon);
 			_SetFlag(_TDF.USE_HICON_FOOTER, _c.hFooterIcon != default);
 		}
-		Icon _iconFooterGC; //GC
+		object _iconFooterGC; //GC
 
 		/// <summary>
 		/// Adds Edit or Combo control.
@@ -774,10 +781,11 @@ namespace Au
 			}
 
 			if (_c.hMainIcon == default && Options.UseAppIcon) SetIcon(DIcon.App);
-			if (_c.hMainIcon == (IntPtr)DIcon.App || _c.hFooterIcon == (IntPtr)DIcon.App) _c.hInstance = AProcess.ExeModuleHandle;
+			if ((long)_c.hMainIcon is >= 1 and < 0xf000) _c.hInstance = AIcon.GetAppIconModuleHandle_((int)_c.hMainIcon);
+			else if ((long)_c.hFooterIcon is >= 1 and < 0xf000) _c.hInstance = AIcon.GetAppIconModuleHandle_((int)_c.hFooterIcon);
 			//info: DIcon.App is IDI_APPLICATION (32512).
 			//Although MSDN does not mention that IDI_APPLICATION can be used when hInstance is NULL, it works. Even works for many other undocumented system resource ids, eg 100.
-			//Non-NULL hInstance is ignored for the icons specified as TD_x. It is documented and logical.
+			//Non-NULL hInstance is ignored for icons specified as TD_x. It is documented and logical.
 			//For App icon we could instead use icon handle, but then the small icon for the title bar and taskbar button can be distorted because shrinked from the big icon. Now extracts small icon from resources.
 
 			_c.pfCallback = _CallbackProc;
@@ -1240,7 +1248,7 @@ namespace Au
 			var pStyle = WS.CHILD | WS.VISIBLE | WS.CLIPCHILDREN | WS.CLIPSIBLINGS; //don't need WS_TABSTOP
 			var pExStyle = WS2.NOPARENTNOTIFY; //not WS2.CONTROLPARENT
 			_editParent = AWnd.More.CreateWindow("#32770", null, pStyle, pExStyle, r.left, r.top, r.Width, r.Height, parent);
-			_editParent.SetWindowLong(Native.GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
+			Api.SetWindowLongPtr(_editParent, Native.GWL.DWL.DLGPROC, Marshal.GetFunctionPointerForDelegate(_editControlParentProcHolder = _EditControlParentProc));
 
 			//Create Edit or ComboBox control.
 			string cn = "Edit";
@@ -1731,9 +1739,18 @@ namespace Au.Types
 		Info = 0xfffd,
 		Shield = 0xfffc,
 
+		//these are undocumented but used in .NET TaskDialogStandardIcon. But why need?
+		//ShieldBlueBar = ushort.MaxValue - 4,
+		//ShieldGrayBar = ushort.MaxValue - 8,
+		//ShieldWarningYellowBar = ushort.MaxValue - 5,
+		//ShieldErrorRedBar = ushort.MaxValue - 6,
+		//ShieldSuccessGreenBar = ushort.MaxValue - 7,
+
 		/// <summary>
-		/// Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file.
-		/// If there are no icons - the default program icon.
+		/// Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or <see cref="ATask.MainAssembly"/>.
+		/// If there are no icons - default program icon.
+		/// C# compilers add app icon with this id. The <b>DIcon.App</b> value is = <b>IDI_APPLICATION</b> (32512).
+		/// If this program file contains multiple native icons in range DIcon.App to 0xf000, you can specify them like <c>DIcon.App+1</c>.
 		/// </summary>
 		App = Api.IDI_APPLICATION
 	}

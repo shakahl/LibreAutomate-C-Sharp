@@ -326,7 +326,7 @@ class CiErrors
 		//x.Hyperlink("^xa+v.start, "\nAdd XML comment");
 		//x.Hyperlink("^xd+v.start, "\nDisable warning");
 
-		x.Append("\nTo add XML comment, use docSnippet. Type <Bold>doc</Bold> above, and select docSnippet from the completion list.");
-		x.Append("\nTo disable warning, add <Bold>///</Bold> above or disable warning 1591 (warningDisableSnippet) or make non-public.");
+		x.Append("\nTo add XML comment, use docSnippet: type 'docSnippet' above and press Enter.");
+		x.Append("\nTo disable warning, add '///' above or disable warning 1591 (use warningDisableSnippet).");
 	}
 }

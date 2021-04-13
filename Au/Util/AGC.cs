@@ -20,30 +20,27 @@ namespace Au.Util
 	/// </summary>
 	public static class AGC
 	{
-		static ConditionalWeakTable<object, _Remover> s_table = new ConditionalWeakTable<object, _Remover>();
+		static readonly ConditionalWeakTable<object, _Remover> s_table = new();
 
 		/// <summary>
 		/// Calls <see cref="GC.AddMemoryPressure"/>. Later, when object <i>obj</i> is garbage-collected, will call <see cref="GC.RemoveMemoryPressure"/>.
 		/// </summary>
 		/// <param name="obj">An object of any type.</param>
 		/// <param name="size">Unmanaged memory size. It is passed to <b>GC.AddMemoryPressure</b> and <b>GC.RemoveMemoryPressure</b>.</param>
-		public static void AddObjectMemoryPressure(object obj, int size)
-		{
+		public static void AddObjectMemoryPressure(object obj, long size) {
 			GC.AddMemoryPressure(size);
 			s_table.Add(obj, new _Remover(size));
 		}
 
 		class _Remover
 		{
-			int _size;
+			readonly long _size;
 
-			public _Remover(int size)
-			{
+			public _Remover(long size) {
 				_size = size;
 			}
 
-			~_Remover()
-			{
+			~_Remover() {
 				//AOutput.Write("removed " + _size);
 				GC.RemoveMemoryPressure(_size);
 			}

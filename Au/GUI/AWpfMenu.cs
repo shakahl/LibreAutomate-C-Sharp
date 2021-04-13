@@ -16,6 +16,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Media.Imaging;
 
+//TODO: in editor etc try to replace with AMenu. Maybe make internal. Now 'using(m.Submenu...), while other similar classes use lambda for submenus; if changed, update example.
 namespace Au
 {
 	/// <summary>
@@ -88,10 +89,9 @@ namespace Au
 		/// <param name="icon">
 		/// Can be:
 		/// - <see cref="Image"/> or other WPF control to assign directly to <see cref="MenuItem.Icon"/>.
-		/// - <see cref="ImageSource"/> - a WPF image.
+		/// - <see cref="ImageSource"/> - a WPF image. To create image from icon, use <see cref="AIcon.ToWpfImage"/>.
 		/// - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="AImageUtil.LoadWpfImageElementFromFileOrResourceOrString"/>. Supports environment variables. If not full path, looks in <see cref="AFolders.ThisAppImages"/>.
 		/// - <see cref="Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="AFolders.ThisAppImages"/>.
-		/// - <see cref="AIcon"/> - icon handle. Example: <c>AIcon.Stock(StockIcon.DELETE)]</c>. This function disposes it.
 		/// 
 		/// If failed to find or load image file, prints warning (<see cref="AWarning.Write"/>).
 		/// To create Base-64 string, use menu Code -> AWinImage.
@@ -167,7 +167,7 @@ namespace Au
 		/// <param name="byCaret">Show by caret (text cursor) position if possible.</param>
 		/// <param name="modal">Wait until closed.</param>
 		public void Show(UIElement owner, bool byCaret = false, bool modal = false) {
-			if (byCaret && AKeys.More.GetTextCursorRect(out RECT cr, out _)) {
+			if (byCaret && AMiscInfo.GetTextCursorRect(out RECT cr, out _)) {
 				var r = owner == null ? cr : new Rect(owner.PointFromScreen(new Point(cr.left, cr.top)), owner.PointFromScreen(new Point(cr.right, cr.bottom)));
 				r.Inflate(30, 2);
 				PlacementRectangle = r;
@@ -224,9 +224,6 @@ namespace Au
 						return AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(s);
 					case Uri s:
 						iso = BitmapFrame.Create(s);
-						break;
-					case AIcon h:
-						iso = h.ToWpfImage();
 						break;
 					case ImageSource s:
 						iso = s;
