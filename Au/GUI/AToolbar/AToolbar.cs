@@ -597,7 +597,7 @@ namespace Au
 
 		unsafe void _WmMousemove(LPARAM lParam) {
 			if (_iClick < 0) {
-				var p = _LparamToPoint(lParam);
+				var p = AMath.LparamToPOINT(lParam);
 				int i = _HitTest(p);
 				if (i != _iHot) {
 					if (_iHot >= 0) _Invalidate(_iHot);
@@ -624,7 +624,7 @@ namespace Au
 		void _WmMouselbuttondown(LPARAM lParam) {
 			var mod = AKeys.UI.GetMod(); if (mod != 0 && mod != KMod.Shift) return;
 			if (mod == 0) { //click button
-				var p = _LparamToPoint(lParam);
+				var p = AMath.LparamToPOINT(lParam);
 				int i = _HitTest(p);
 				if (i >= 0) _Click(i, true);
 				//		} else if(mod==KMod.Shift) { //move toolbar
@@ -667,7 +667,7 @@ namespace Au
 						_Invalidate(_iClick = i);
 						ok = ADragDrop.SimpleDragDrop(_w, MButtons.Left, d => {
 							if (d.Msg.message != Api.WM_MOUSEMOVE) return;
-							int j = _HitTest(_LparamToPoint(d.Msg.lParam));
+							int j = _HitTest(AMath.LparamToPOINT(d.Msg.lParam));
 							if ((j == i) == _noHotClick) {
 								_noHotClick ^= true;
 								_Invalidate(i);

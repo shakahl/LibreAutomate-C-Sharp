@@ -522,15 +522,15 @@ If unchecked, does not wait. Else if 0 or empty, waits infinitely. Else waits ma
 					return Api.HTTRANSPARENT;
 				case Api.WM_PAINT:
 					var dc = Api.BeginPaint(w, out var ps);
-					_Paint(dc);
-					Api.ReleaseDC(w, dc);
+					_WmPaint(dc);
+					Api.EndPaint(w, ps);
 					return default;
 				}
 
 				return Api.DefWindowProc(w, msg, wParam, lParam);
 			}
 
-			void _Paint(nint dc) {
+			void _WmPaint(IntPtr dc) {
 				using var g = Graphics.FromHdc(dc);
 				g.Clear(System.Drawing.SystemColors.AppWorkspace);
 				if (_b == null) return;

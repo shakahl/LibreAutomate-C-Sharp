@@ -15057,7 +15057,7 @@
             <exception cref="T:System.ArgumentException"><i>key</i> is 0.</exception>
             <exception cref="T:System.TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
             <remarks>
-            Unlike <see cref="M:Au.AKeys.WaitForReleased(System.Double,Au.Types.KKey[])"/>, waits for key event, not for key state.
+            Waits for key event, not for key state.
             Uses low-level keyboard hook. Can wait for any single key. See also <see cref="M:Au.AKeys.WaitForHotkey(System.Double,Au.Types.KHotkey,System.Boolean)"/>.
             Ignores key events injected by functions of this library.
             </remarks>
@@ -15102,6 +15102,30 @@
             <code><![CDATA[
             var key = AKeys.WaitForKey(0, up: true, block: true);
             AOutput.Write(key);
+            ]]></code>
+            </example>
+        </member>
+        <member name="M:Au.AKeys.WaitForKeys(System.Double,System.Func{Au.Types.HookData.Keyboard,System.Boolean},System.Boolean)">
+            <summary>
+            Waits for keyboard events using callback function.
+            </summary>
+            <returns>
+            Returns the key code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
+            For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
+            </returns>
+            <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+            <param name="f">Callback function that receives key down and up events. Let it return true to stop waiting.</param>
+            <param name="block">Make the key down event invisible for other apps (when the callback function returns true).</param>
+            <remarks>
+            Waits for key event, not for key state.
+            Uses low-level keyboard hook.
+            Ignores key events injected by functions of this library.
+            </remarks>
+            <example>
+            Wait for F3 or Esc.
+            <code><![CDATA[
+            var k = AKeys.WaitForKeys(0, k => !k.IsUp && k.Key is KKey.F3 or KKey.Escape, block: true);
+            AOutput.Write(k);
             ]]></code>
             </example>
         </member>
@@ -16586,6 +16610,11 @@
             Like C macro HIBYTE.
             </summary>
         </member>
+        <member name="M:Au.AMath.LparamToPOINT(Au.Types.LPARAM)">
+            <summary>
+            Converts <b>LPARAM</b> containing x and y coordinates to <b>POINT</b>.
+            </summary>
+        </member>
         <member name="M:Au.AMath.MulDiv(System.Int32,System.Int32,System.Int32)">
             <summary>
             Returns <c>number * multiply / divide</c>.
@@ -17365,6 +17394,11 @@
             Returns true if rectangle r intersects with some screen.
             </summary>
         </member>
+        <member name="P:Au.AScreen.VirtualScreen">
+            <summary>
+            Gets bounding rectangle of all screens.
+            </summary>
+        </member>
         <member name="M:Au.AScreen.IsInAnyScreen(Au.AWnd)">
             <summary>
             Returns true if rectangle of window w intersects with some screen.
@@ -17686,10 +17720,13 @@
             </summary>
             <param name="result">Receives results.</param>
             <param name="flags"></param>
-            <param name="toolWindow">Owner window. Temporarily hides it and its owner windows.</param>
+            <param name="owner">Owner window. Temporarily hides it and its owner windows.</param>
             <remarks>
             Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
             </remarks>
+        </member>
+        <member name="M:Au.AWinImage._CapturingWindow.Show(System.Drawing.Bitmap,Au.Types.WICFlags,Au.Types.RECT)">
+            <returns>0 Cancel, 1 OK, 2 Retry.</returns>
         </member>
         <member name="T:Au.ACsv">
             <summary>
@@ -21767,6 +21804,12 @@
             <summary>
             Measures text with API <msdn>DrawText</msdn>.
             Can be multiline. For drawing with API <msdn>DrawText</msdn>.
+            </summary>
+        </member>
+        <member name="M:Au.Util.Pen_.DrawLine(System.IntPtr,Au.Types.POINT,Au.Types.POINT)">
+            <summary>
+            Draws line and returns previous "current position".
+            Don't need to select pen into DC.
             </summary>
         </member>
         <member name="P:Au.Util.ILInstruction.RawData">

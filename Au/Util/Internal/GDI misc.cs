@@ -153,4 +153,46 @@ namespace Au.Util
 		/// </summary>
 		public SIZE Measure(string s, Native.DT format, int wrapWidth = 0) => Measure(s, s.Lenn(), format, wrapWidth);
 	}
+
+	ref struct Pen_
+	{
+		IntPtr _pen;
+
+		public IntPtr Handle => _pen;
+
+		public Pen_(int color, int width = 1, int style = 0) {
+			_pen = Api.CreatePen(style, width, color);
+		}
+
+		public void Dispose() {
+			Api.DeleteObject(_pen);
+			_pen = default;
+		}
+
+		/// <summary>
+		/// Draws line and returns previous "current position".
+		/// Don't need to select pen into DC.
+		/// </summary>
+		public POINT DrawLine(IntPtr dc, POINT start, POINT end) {
+			var old=Api.SelectObject(dc, _pen); //fast
+			Api.MoveToEx(dc, start.x, start.y, out var p); //fast
+			Api.LineTo(dc, end.x, end.y);
+			Api.SelectObject(dc, old); //fast
+			return p;
+		}
+	}
+
+	ref struct GdiSelectObject_
+	{
+		IntPtr _dc, _old;
+
+		public GdiSelectObject_(IntPtr dc, IntPtr obj) {
+			_old = Api.SelectObject(_dc = dc, obj);
+		}
+
+		public void Dispose() {
+			Api.SelectObject(_dc, _old);
+			_dc = default;
+		}
+	}
 }

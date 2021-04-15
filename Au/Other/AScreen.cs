@@ -369,6 +369,15 @@ namespace Au
 		public static bool IsInAnyScreen(RECT r) => Api.MonitorFromRect(r, SODefault.Zero) != default;
 
 		/// <summary>
+		/// Gets bounding rectangle of all screens.
+		/// </summary>
+		public static RECT VirtualScreen
+			=> new(Api.GetSystemMetrics(Api.SM_XVIRTUALSCREEN), Api.GetSystemMetrics(Api.SM_YVIRTUALSCREEN), Api.GetSystemMetrics(Api.SM_CXVIRTUALSCREEN), Api.GetSystemMetrics(Api.SM_CYVIRTUALSCREEN));
+
+		//20 times faster, but maybe less reliable
+		//public static RECT VirtualScreen2 => AWnd.GetWnd.ShellWindow.Rect;
+
+		/// <summary>
 		/// Returns true if rectangle of window w intersects with some screen.
 		/// </summary>
 		public static bool IsInAnyScreen(AWnd w) => Api.MonitorFromWindow(w, SODefault.Zero) != default;

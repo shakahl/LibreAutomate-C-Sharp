@@ -274,6 +274,7 @@ namespace Au
 				return true;
 			}, new AOptWaitFor(period: 2));
 		}
+		//TODO: doc all waitfor functions whether they process messages etc and whether use AOpt.WaitFor.DoEvents.
 
 		/// <summary>
 		/// Waits while the specified keys are down (pressed).
@@ -335,7 +336,7 @@ namespace Au
 		/// <exception cref="ArgumentException"><i>key</i> is 0.</exception>
 		/// <exception cref="TimeoutException"><i>secondsTimeout</i> time has expired (if &gt; 0).</exception>
 		/// <remarks>
-		/// Unlike <see cref="WaitForReleased"/>, waits for key event, not for key state.
+		/// Waits for key event, not for key state.
 		/// Uses low-level keyboard hook. Can wait for any single key. See also <see cref="WaitForHotkey"/>.
 		/// Ignores key events injected by functions of this library.
 		/// </remarks>
@@ -391,8 +392,6 @@ namespace Au
 			return _WaitForKey(secondsTimeout, 0, up, block);
 		}
 
-		//TODO: overload with lambda. Same for mouse.
-
 		static KKey _WaitForKey(double secondsTimeout, KKey key, bool up, bool block) {
 			//SHOULDDO: if up and block: don't block if was down when starting to wait. Also in the Mouse func.
 
@@ -400,7 +399,7 @@ namespace Au
 			using (AHookWin.Keyboard(x => {
 				if (key != 0 && !x.IsKey(key)) return;
 				if (x.IsUp != up) {
-					if (up && block) { //key down when we are waiting for up. If block, now block down too.
+					if (up && block) { //key down when waiting for up. If block, now block down too.
 						if (key == 0) key = x.vkCode;
 						x.BlockEvent();
 					}
@@ -412,6 +411,40 @@ namespace Au
 
 			return R;
 		}
+
+		/// <summary>
+		/// Waits for keyboard events using callback function.
+		/// </summary>
+		/// <returns>
+		/// Returns the key code. On timeout returns 0 if <i>secondsTimeout</i> is negative; else exception.
+		/// For modifier keys returns the left or right key code, for example LCtrl/RCtrl, not Ctrl.
+		/// </returns>
+		/// <param name="secondsTimeout">Timeout, seconds. Can be 0 (infinite), &gt;0 (exception) or &lt;0 (no exception). More info: [](xref:wait_timeout).</param>
+		/// <param name="f">Callback function that receives key down and up events. Let it return true to stop waiting.</param>
+		/// <param name="block">Make the key down event invisible for other apps (when the callback function returns true).</param>
+		/// <remarks>
+		/// Waits for key event, not for key state.
+		/// Uses low-level keyboard hook.
+		/// Ignores key events injected by functions of this library.
+		/// </remarks>
+		/// <example>
+		/// Wait for F3 or Esc.
+		/// <code><![CDATA[
+		/// var k = AKeys.WaitForKeys(0, k => !k.IsUp && k.Key is KKey.F3 or KKey.Escape, block: true);
+		/// AOutput.Write(k);
+		/// ]]></code>
+		/// </example>
+		public static KKey WaitForKeys(double secondsTimeout, Func<HookData.Keyboard, bool> f, bool block = false) {
+			KKey R = 0;
+			using (AHookWin.Keyboard(x => {
+				if (!f(x)) return;
+				R = x.vkCode; //info: for mod keys returns left/right
+				if (block && !x.IsUp) x.BlockEvent();
+			})) AWaitFor.MessagesAndCondition(secondsTimeout, () => R != 0);
+
+			return R;
+		}
+		//CONSIDER: Same for mouse.
 
 		#endregion
 

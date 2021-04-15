@@ -94,6 +94,11 @@ namespace Au
 		public static byte HiByte(ushort x) => (byte)((uint)x >> 8);
 
 		/// <summary>
+		/// Converts <b>LPARAM</b> containing x and y coordinates to <b>POINT</b>.
+		/// </summary>
+		public static POINT LparamToPOINT(LPARAM xy) => new(LoShort(xy), HiShort(xy));
+
+		/// <summary>
 		/// Returns <c>number * multiply / divide</c>.
 		/// Multiplies without overflow and rounds up or down to the nearest integer.
 		/// </summary>

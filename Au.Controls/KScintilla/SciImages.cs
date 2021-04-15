@@ -476,15 +476,15 @@ namespace Au.Controls
 					}
 
 					//draw frame
-					if(pen == default) oldPen = Api.SelectObject(hdc, pen = CreatePen(0, 1, 0x60C060)); //quite fast. Caching in a static or ThreadStatic var is difficult.
+					if(pen == default) oldPen = Api.SelectObject(hdc, pen = Api.CreatePen(0, 1, 0x60C060)); //quite fast. Caching in a static or ThreadStatic var is difficult.
 					int xx = x + q.width;
 					if(isFirstLine != 0) y--;
 					if(yy > y) {
-						Api.MoveToEx(hdc, x - 1, y, out _); LineTo(hdc, x - 1, yy); //left |
-						Api.MoveToEx(hdc, xx, y, out _); LineTo(hdc, xx, yy); //right |
-						if(isFirstLine != 0) { Api.MoveToEx(hdc, x, y, out _); LineTo(hdc, xx, y); } //top _
+						Api.MoveToEx(hdc, x - 1, y, out _); Api.LineTo(hdc, x - 1, yy); //left |
+						Api.MoveToEx(hdc, xx, y, out _); Api.LineTo(hdc, xx, yy); //right |
+						if(isFirstLine != 0) { Api.MoveToEx(hdc, x, y, out _); Api.LineTo(hdc, xx, y); } //top _
 					}
-					if(yy >= y && yy < hLine) { Api.MoveToEx(hdc, x - 1, yy, out _); LineTo(hdc, xx + 1, yy); } //bottom _
+					if(yy >= y && yy < hLine) { Api.MoveToEx(hdc, x - 1, yy, out _); Api.LineTo(hdc, xx + 1, yy); } //bottom _
 
 					x += u.width + 30;
 				}
@@ -510,12 +510,6 @@ namespace Au.Controls
 			//tested: in QM2 was used LZO compression, now ZIP (DeflateStream). ZIP compresses better, but not so much. LZO is faster, but ZIP is fast enough. GIF and JPG in most cases compress less than ZIP and sometimes less than LZO.
 			//tested: saving in 8-bit format in most cases does not make much smaller when compressed. For screenshots we reduce colors to 4-bit.
 		}
-
-		[DllImport("gdi32.dll")]
-		internal static extern IntPtr CreatePen(int iStyle, int cWidth, uint color);
-
-		[DllImport("gdi32.dll")]
-		internal static extern bool LineTo(IntPtr hdc, int x, int y);
 
 		internal void OnTextChanged_(bool inserted, in SCNotification n)
 		{

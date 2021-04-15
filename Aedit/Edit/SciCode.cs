@@ -274,7 +274,7 @@ partial class SciCode : KScintilla
 			break;
 		case Api.WM_CONTEXTMENU: {
 				bool kbd = (int)lParam == -1;
-				int margin = kbd ? -1 : zMarginFromPoint((AMath.LoShort(lParam), AMath.HiShort(lParam)), true);
+				int margin = kbd ? -1 : zMarginFromPoint(AMath.LparamToPOINT(lParam), true);
 				switch (margin) {
 				case -1:
 					var m = new AWpfMenu();

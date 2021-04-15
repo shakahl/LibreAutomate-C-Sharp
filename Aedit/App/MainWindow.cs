@@ -51,24 +51,24 @@ partial class MainWindow : Window
 		//ATimer.After(100, _ => App.Model.Properties());
 		//ATimer.After(100, _ => Menus.File.Workspace.New_workspace());
 
-		//		ATimer.After(100, _ => {
-		//#if !true
-		//			//var w = +AWnd.Find("Quick Macros -*");
-		//			//w = +w.ChildById(2212);
-		//			var w = +AWnd.Find("Character Map");
-		//			w = +w.ChildById(103);
-		//			//AOutput.Write(w);
-		//			//new Au.Tools.DAWnd(w).Show();
-		//			//new Au.Tools.DAWnd(w, uncheckControl: true).Show();
-		//			new Au.Tools.DAAcc(AAcc.FromWindow(w, AccOBJID.CLIENT)).Show();
-		//#elif true
-		//			new Au.Tools.DAWinImage().Show();
-		//#else
-		//			var w = +AWnd.Find("Untitled Document - Google Chrome", "Chrome_WidgetWin_1");
-		//			var a = +AAcc.Find(w, "web:BUTTON", "PayPal - The safer, easier way to pay online!");
-		//			new Au.Tools.DAAcc(a).Show();
-		//#endif
-		//		});
+//		ATimer.After(100, _ => {
+//#if !true
+//					//var w = +AWnd.Find("Quick Macros -*");
+//					//w = +w.ChildById(2212);
+//					var w = +AWnd.Find("Character Map");
+//					w = +w.ChildById(103);
+//					//AOutput.Write(w);
+//					//new Au.Tools.DAWnd(w).Show();
+//					//new Au.Tools.DAWnd(w, uncheckControl: true).Show();
+//					new Au.Tools.DAAcc(AAcc.FromWindow(w, AccOBJID.CLIENT)).Show();
+//#elif true
+//			new Au.Tools.DAWinImage().Show();
+//#else
+//					var w = +AWnd.Find("Untitled Document - Google Chrome", "Chrome_WidgetWin_1");
+//					var a = +AAcc.Find(w, "web:BUTTON", "PayPal - The safer, easier way to pay online!");
+//					new Au.Tools.DAAcc(a).Show();
+//#endif
+//		});
 
 #if DEBUG
 		App.Timer1s += () => {

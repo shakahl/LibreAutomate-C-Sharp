@@ -11,7 +11,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-using System.Windows.Forms;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.Drawing.Drawing2D;
@@ -78,8 +77,7 @@ namespace Au
 			using var mb = new AMemoryBitmap(r.Width, r.Height);
 			if (usePrintWindow && Api.PrintWindow(w, mb.Hdc, Api.PW_CLIENTONLY | (AVersion.MinWin8_1 ? Api.PW_RENDERFULLCONTENT : 0))) {
 				//AOutput.Write("PrintWindow OK");
-			}
-			else {
+			} else {
 				using (var dc = new WindowDC_(w)) {
 					if (dc.Is0) w.ThrowNoNative("Failed");
 					uint rop = !w.Is0 ? Api.SRCCOPY : Api.SRCCOPY | Api.CAPTUREBLT;
@@ -215,7 +213,7 @@ namespace Au
 				if (!ok) { R.Dispose(); goto ge; }
 				return R;
 			}
-		ge:
+			ge:
 			throw new AuException();
 		}
 
@@ -229,57 +227,56 @@ namespace Au
 		/// </summary>
 		/// <param name="result">Receives results.</param>
 		/// <param name="flags"></param>
-		/// <param name="toolWindow">Owner window. Temporarily hides it and its owner windows.</param>
+		/// <param name="owner">Owner window. Temporarily hides it and its owner windows.</param>
 		/// <remarks>
 		/// Gets all screen pixels and shows in a full-screen topmost window, where the user can select an area.
 		/// </remarks>
-		public static bool CaptureUI(out WICResult result, WICFlags flags = 0, AnyWnd toolWindow = default) {
+		public static bool CaptureUI(out WICResult result, WICFlags flags = 0, AnyWnd owner = default) {
 			result = default;
 
 			switch (flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle)) {
-				case 0: case WICFlags.Image: case WICFlags.Color: case WICFlags.Rectangle: break;
-				default: throw new ArgumentException();
+			case 0: case WICFlags.Image: case WICFlags.Color: case WICFlags.Rectangle: break;
+			default: throw new ArgumentException();
 			}
 
 			List<AWnd> aw = null; AWnd wTool = default;
 			try {
-				if (!toolWindow.IsEmpty) {
-					wTool = toolWindow.Hwnd;
+				if (!owner.IsEmpty) {
+					wTool = owner.Hwnd;
 					aw = wTool.Get.Owners(andThisWindow: true, onlyVisible: true);
 					foreach (var w in aw) w.ShowL(false);
 					using (new AInputBlocker(BIEvents.MouseClicks)) ATime.SleepDoEvents(300); //time for animations
 				}
 
-			g1:
-				RECT rs = SystemInformation.VirtualScreen;
-				//RECT rs = AScreen.Primary.Bounds; //for testing, to see Write output in other screen
+				g1:
+				RECT rs = AScreen.VirtualScreen;
+				//RECT rs = AScreen.Primary.Rect; //for testing, to see Write output in other screen
 				Bitmap bs;
 				bool windowPixels = flags.HasAny(WICFlags.WindowDC | WICFlags.PrintWindow);
 				if (windowPixels) {
-					if (!_WaitForHotkey("Press F3 to select window from mouse pointer.")) return false;
+					if (!_WaitForHotkey("Press F3 to select window from mouse pointer. Or Esc.")) return false;
 					var w = AWnd.FromMouse(WXYFlags.NeedWindow);
-					w.GetClientRect(out var rc, inScreen: true);
-					using var bw = Capture(w, w.ClientRect, flags.Has(WICFlags.PrintWindow));
+					var rc = w.ClientRect;
+					using var bw = Capture(w, rc, flags.Has(WICFlags.PrintWindow));
 					bs = new Bitmap(rs.Width, rs.Height);
 					using var g = Graphics.FromImage(bs);
 					g.Clear(Color.Black);
-					g.DrawImage(bw, rc.left, rc.top);
-				}
-				else {
+					w.MapClientToScreen(ref rc);
+					g.DrawImage(bw, rc.left - rs.left, rc.top - rs.top);
+				} else {
 					bs = Capture(rs);
 				}
 
-				var f = new _Form(bs, flags);
-				f.Bounds = rs;
-				switch (f.ShowDialog()) {
-					case DialogResult.OK: break;
-					case DialogResult.Retry:
-						if (!windowPixels && !_WaitForHotkey("Press F3 when ready for new screenshot.")) return false;
-						goto g1;
-					default: return false;
+				var cw = new _CapturingWindow();
+				switch (cw.Show(bs, flags, rs)) {
+				case 1: break;
+				case 2:
+					if (!windowPixels && !_WaitForHotkey("Press F3 when ready for new screenshot. Or Esc.")) return false;
+					goto g1;
+				default: return false;
 				}
 
-				var r = f.Result;
+				var r = cw.Result;
 				r.wnd = _WindowFromRect(r);
 				result = r;
 			}
@@ -293,86 +290,121 @@ namespace Au
 				}
 			}
 			return true;
-		}
 
-		static AWnd _WindowFromRect(WICResult r) {
-			Thread.Sleep(25); //after the form is closed, sometimes need several ms until OS sets correct Z order. Until that may get different w1 and w2.
-			AWnd w1 = AWnd.FromXY((r.rect.left, r.rect.top));
-			AWnd w2 = (r.image == null) ? w1 : AWnd.FromXY((r.rect.right - 1, r.rect.bottom - 1));
-			if (w2 != w1 || !_IsInClientArea(w1)) {
-				AWnd w3 = w1.Window, w4 = w2.Window;
-				w1 = (w4 == w3 && _IsInClientArea(w3)) ? w3 : default;
+			static bool _WaitForHotkey(string info) {
+				using (AOsd.ShowText(info, Timeout.Infinite)) {
+					//try { AKeys.WaitForHotkey(0, KKey.F3); }
+					//catch(AuException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
+
+					return KKey.F3 == AKeys.WaitForKeys(0, k => !k.IsUp && k.Key is KKey.F3 or KKey.Escape, block: true);
+				}
 			}
-			return w1;
 
-			bool _IsInClientArea(AWnd w) => w.GetClientRect(out var rc, true) && rc.Contains(r.rect);
-		}
+			static AWnd _WindowFromRect(WICResult r) {
+				Thread.Sleep(25); //after the window is closed, sometimes need several ms until OS sets correct Z order. Until that may get different w1 and w2.
+				AWnd w1 = AWnd.FromXY((r.rect.left, r.rect.top));
+				AWnd w2 = (r.image == null) ? w1 : AWnd.FromXY((r.rect.right - 1, r.rect.bottom - 1));
+				if (w2 != w1 || !_IsInClientArea(w1)) {
+					AWnd w3 = w1.Window, w4 = w2.Window;
+					w1 = (w4 == w3 && _IsInClientArea(w3)) ? w3 : default;
+				}
+				return w1;
 
-		static bool _WaitForHotkey(string info) {
-			using (AOsd.ShowText(info, Timeout.Infinite)) {
-				//try { AKeys.WaitForHotkey(0, KKey.F3); }
-				//catch(AuException) { ADialog.ShowError("Failed to register hotkey F3"); return false; }
-
-				AKeys.WaitForKey(0, KKey.F3, up: true, block: true); //TODO: exit on Esc. Now closes dialog but not tooltip. Even does not exit when closed editor window.
+				bool _IsInClientArea(AWnd w) => w.GetClientRect(out var rc, true) && rc.Contains(r.rect);
 			}
-			return true;
 		}
 
-		class _Form : Form
+		class _CapturingWindow
 		{
+			AWnd _w;
 			Bitmap _img;
-			Graphics _gMagn;
-			Bitmap _bMagn;
 			bool _paintedOnce;
 			bool _magnMoved;
 			bool _capturing;
 			WICFlags _flags;
-			Cursor _cursor;
+			ACursor _cursor;
+			SIZE _textSize;
+			int _dpi;
+			int _res;
 
 			public WICResult Result;
 
-			public _Form(Bitmap img, WICFlags flags) {
+			/// <returns>0 Cancel, 1 OK, 2 Retry.</returns>
+			public int Show(Bitmap img, WICFlags flags, RECT r) {
 				_img = img;
 				_flags = flags;
-				SetStyle(ControlStyles.AllPaintingInWmPaint | ControlStyles.Opaque, true);
-				AutoScaleMode = AutoScaleMode.None;
-				FormBorderStyle = FormBorderStyle.None; //important
-				ShowInTaskbar = false; //optional
-				TopLevel = true; //optional
-				StartPosition = FormStartPosition.Manual;
-				Text = "Au.AWinImage.CaptureUI";
-				Cursor = _cursor = ACursor.Load(AResources.GetBytes("<Au>resources/red_cross_cursor.cur"), 32).ToGdipCursor();
-			}
+				_cursor = ACursor.Load(AResources.GetBytes("<Au>resources/red_cross_cursor.cur"), 32);
+				_dpi = AScreen.Primary.Dpi;
+				_w = AWnd.More.CreateWindow(_WndProc, true, "#32770", "Au.AWinImage.CaptureUI", WS.POPUP | WS.VISIBLE, WS2.TOOLWINDOW | WS2.TOPMOST, r.left, r.top, r.Width, r.Height);
+				_w.ActivateL();
 
-			protected override CreateParams CreateParams {
-				get {
-					var p = base.CreateParams;
-					p.Style = unchecked((int)(WS.POPUP));
-					p.ExStyle = (int)(WS2.TOOLWINDOW | WS2.TOPMOST);
-					return p;
+				try {
+					while (Api.GetMessage(out var m) > 0 && m.message != Api.WM_APP) {
+						switch (m.message) {
+						case Api.WM_KEYDOWN when !_capturing:
+							switch ((KKey)(int)m.wParam) {
+							case KKey.Escape: return 0;
+							case KKey.F3: return 2;
+							}
+							break;
+						case Api.WM_RBUTTONUP when m.hwnd == _w:
+							switch (AMenu.ShowSimple("1 Retry\tF3|2 Cancel\tEsc", owner: _w)) {
+							case 1: return 2;
+							case 2: return 0;
+							}
+							break;
+						}
+						Api.DispatchMessage(m);
+					}
 				}
+				finally {
+					var w = _w; _w = default;
+					Api.DestroyWindow(w);
+				}
+				return _res;
 			}
 
-			protected override void OnFormClosed(FormClosedEventArgs e) {
-				_img.Dispose();
-				_bMagn?.Dispose();
-				_gMagn?.Dispose();
-				_clip?.Dispose();
-				_cursor?.Dispose();
+			LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
+				//AWnd.More.PrintMsg(w, msg, wParam, lParam);
+
+				switch (msg) {
+				case Api.WM_NCDESTROY:
+					_img.Dispose();
+					_cursor?.Dispose();
+					if (_w != default) {
+						_w = default;
+						_w.Post(Api.WM_APP);
+					}
+					break;
+				case Api.WM_SETCURSOR:
+					Api.SetCursor(_cursor.Handle);
+					return 1;
+				case Api.WM_ERASEBKGND:
+					return default;
+				case Api.WM_PAINT:
+					var dc = Api.BeginPaint(w, out var ps);
+					_WmPaint(dc);
+					Api.EndPaint(w, ps);
+					return default;
+				case Api.WM_MOUSEMOVE:
+					_WmMousemove(AMath.LparamToPOINT(lParam));
+					break;
+				case Api.WM_LBUTTONDOWN:
+					_WmLbuttondown(AMath.LparamToPOINT(lParam));
+					break;
+				}
+
+				return Api.DefWindowProc(w, msg, wParam, lParam);
 			}
 
-			protected override void OnPaint(PaintEventArgs e) {
-				e.Graphics.DrawImageUnscaled(_img, 0, 0);
+			void _WmPaint(IntPtr dc) {
+				using var g = Graphics.FromHdc(dc);
+				g.DrawImageUnscaled(_img, 0, 0);
 				_paintedOnce = true;
 			}
 
-			Size _textSize;
-			Region _clip;
-
-			protected override void OnMouseMove(MouseEventArgs e) {
+			void _WmMousemove(POINT pc) {
 				if (!_paintedOnce) return;
-				using var gr = this.CreateGraphics();
-				var pc = e.Location; //cursor position
 
 				//format text to draw below magnifier
 				string text;
@@ -381,16 +413,14 @@ namespace Au
 					if (ic == 0) ic = WICFlags.Image | WICFlags.Color;
 					bool canColor = ic.Has(WICFlags.Color);
 					if (canColor) {
-						var color = _img.GetPixel(pc.X, pc.Y).ToArgb() & 0xffffff;
+						var color = _img.GetPixel(pc.x, pc.y).ToArgb() & 0xffffff;
 						s.Append("Color  0x").Append(color.ToString("X6")).Append('\n');
 					}
 					if (ic == WICFlags.Color) {
 						s.Append("Click to capture color.\n");
-					}
-					else if (ic == WICFlags.Rectangle) {
+					} else if (ic == WICFlags.Rectangle) {
 						s.Append("Mouse-drag to capture rectangle.\n");
-					}
-					else {
+					} else {
 						s.Append("How to capture\n");
 						s.Append("  rectangle:  mouse-drag\n  any shape:  Shift+drag\n");
 						if (canColor) s.Append("  color:  Ctrl+click\n");
@@ -399,107 +429,97 @@ namespace Au
 					text = s.ToString();
 				}
 
-				int magnWH = ADpi.Scale(200, this) / 10 * 10; //width and height of the magnified image without borders etc
-
-				var m = _gMagn;
-				if (m == null) {
-					_textSize = TextRenderer.MeasureText(gr, text, Font);
-					_bMagn = new Bitmap(Math.Max(magnWH, _textSize.Width) + 2, magnWH + 4 + _textSize.Height);
-					_gMagn = m = Graphics.FromImage(_bMagn);
-					m.InterpolationMode = InterpolationMode.NearestNeighbor; //no interpolation
-					m.PixelOffsetMode = PixelOffsetMode.Half; //no half-pixel offset
-				}
+				var font = NativeFont_.RegularCached(_dpi);
+				int magnWH = ADpi.Scale(200, _dpi) / 10 * 10; //width and height of the magnified image without borders etc
+				if (_textSize == default) using (var tr = new FontDC_(font)) _textSize = tr.Measure(text, Native.DT.NOPREFIX);
+				int width = Math.Max(magnWH, _textSize.width) + 2, height = magnWH + 4 + _textSize.height;
+				using var mb = new AMemoryBitmap(width, height);
+				var dc = mb.Hdc;
+				using var wdc = new WindowDC_(_w);
 
 				//draw frames and color background. Also erase magnifier, need when near screen edges.
-				m.Clear(Color.Black);
+				Api.FillRect(dc, (0, 0, width, height), Api.GetStockObject(4)); //BLACK_BRUSH
 
 				//copy from captured screen image to magnifier image. Magnify 5 times.
 				int k = magnWH / 10;
-				var rFrom = new Rectangle(pc.X - k, pc.Y - k, k * 2, k * 2);
-				var rTo = new Rectangle(1, 1, magnWH, magnWH);
-				m.DrawImage(_img, rTo, rFrom, GraphicsUnit.Pixel);
-				//draw red crosshair
-				var redPen = Pens.Red;
-				k = magnWH / 2 + 4;
-				m.SetClip(_clip ??= new Region(new Rectangle(k - 4, k - 4, 7, 7)), CombineMode.Exclude);
-				m.DrawLine(redPen, k, 1, k, magnWH + 1);
-				m.DrawLine(redPen, 1, k, magnWH + 1, k);
-				m.ResetClip();
-				//draw text below magnifier
-				var rc = new Rectangle(1, magnWH + 2, _textSize.Width, _textSize.Height);
-				TextRenderer.DrawText(m, text, Font, rc, Color.YellowGreen, Color.Transparent, TextFormatFlags.Left);
+				Api.StretchBlt(dc, 1, 1, magnWH, magnWH, wdc, pc.x - k, pc.y - k, k * 2, k * 2, Api.SRCCOPY);
 
-				//set maginifier position far from cursor
-				var pm = new Point(-Left + 4, -Top + 4);
+				//draw red crosshair
+				k = magnWH / 2;
+				using (var pen = new Pen_(0xff)) {
+					pen.DrawLine(dc, (k, 1), (k, magnWH + 1));
+					pen.DrawLine(dc, (1, k), (magnWH + 1, k));
+				}
+
+				//draw text below magnifier
+				var rc = new RECT(1, magnWH + 2, _textSize.width, _textSize.height);
+				Api.SetTextColor(dc, 0x32CD9A); //Color.YellowGreen
+				Api.SetBkMode(dc, 1);
+				var oldFont = Api.SelectObject(dc, font);
+				Api.DrawText(dc, text, text.Length, ref rc, Native.DT.NOPREFIX);
+				Api.SelectObject(dc, oldFont);
+
+				//set magninifier position far from cursor
+				var pm = new POINT(4, 4); _w.MapScreenToClient(ref pm);
 				int xMove = magnWH * 3;
 				if (_magnMoved) pm.Offset(xMove, 0);
-				var rm = new Rectangle(pm.X, pm.Y, _bMagn.Width, _bMagn.Height); rm.Inflate(100, 100);
+				var rm = new RECT(pm.x, pm.y, width, height); rm.Inflate(magnWH / 2, magnWH / 2);
 				if (rm.Contains(pc)) {
-					rm = new Rectangle(pm.X, pm.Y, _bMagn.Width, _bMagn.Height);
-					gr.DrawImage(_img, rm, rm, GraphicsUnit.Pixel);
+					Api.InvalidateRect(_w, (pm.x, pm.y, width, height));
 					_magnMoved ^= true;
 					pm.Offset(_magnMoved ? xMove : -xMove, 0);
 				}
 
-				//m -> gr
-				gr.DrawImageUnscaled(_bMagn, pm);
+				Api.BitBlt(wdc, pm.x, pm.y, width, height, dc, 0, 0, Api.SRCCOPY);
 			}
 
-			protected override void OnMouseDown(MouseEventArgs e) {
-				if (e.Button != MouseButtons.Left) return;
-
+			void _WmLbuttondown(POINT p0) {
 				bool isColor = false, isAnyShape = false;
 				var ic = _flags & (WICFlags.Image | WICFlags.Color | WICFlags.Rectangle);
 				if (ic == WICFlags.Color) {
 					isColor = true;
-				}
-				else {
-					var mod = ModifierKeys;
+				} else {
+					var mod = AKeys.UI.GetMod();
 					if (mod != 0 && ic == WICFlags.Rectangle) return;
 					switch (mod) {
-						case Keys.None: break;
-						case Keys.Shift: isAnyShape = true; break;
-						case Keys.Control when ic != WICFlags.Image: isColor = true; break;
-						default: return;
+					case 0: break;
+					case KMod.Shift: isAnyShape = true; break;
+					case KMod.Ctrl when ic != WICFlags.Image: isColor = true; break;
+					default: return;
 					}
 				}
 
 				Result = new WICResult();
-				POINT p0 = e.Location;
+				var r = new RECT(p0.x, p0.y, 0, 0);
 				if (isColor) {
 					Result.color = _img.GetPixel(p0.x, p0.y).ToArgb();
-					Result.rect = new RECT(p0.x, p0.y, 1, 1);
-				}
-				else {
-					var r = new RECT(p0.x, p0.y, 0, 0);
+					r.right++; r.bottom++;
+				} else {
 					var a = isAnyShape ? new List<POINT>() { p0 } : null;
 					var pen = Pens.Red;
 					bool notFirstMove = false;
 					_capturing = true;
 					try {
-						if (!ADragDrop.SimpleDragDrop(this, MButtons.Left, m => {
+						if (!ADragDrop.SimpleDragDrop(_w, MButtons.Left, m => {
 							if (m.Msg.message != Api.WM_MOUSEMOVE) return;
-							POINT p = m.Msg.pt;
-							p.x -= Left; p.y -= Top; //screen to client
-							using var g = this.CreateGraphics();
+							POINT p = m.Msg.pt; _w.MapScreenToClient(ref p);
+							using var g = Graphics.FromHwnd(_w.Handle);
 							if (isAnyShape) {
 								a.Add(p);
 								g.DrawLine(pen, p0, p);
 								p0 = p;
-							}
-							else {
+							} else {
 								if (notFirstMove) { //erase prev rect
 									r.right++; r.bottom++;
 									g.DrawImage(_img, r, r, GraphicsUnit.Pixel);
 									//FUTURE: prevent flickering. Also don't draw under magnifier.
-								}
-								else notFirstMove = true;
+								} else notFirstMove = true;
 								r = RECT.FromLTRB(p0.x, p0.y, p.x, p.y);
 								r.Normalize(true);
 								g.DrawRectangle(pen, r);
 							}
 						})) { //Esc key etc
-							this.Invalidate();
+							Api.InvalidateRect(_w);
 							return;
 						}
 					}
@@ -509,12 +529,11 @@ namespace Au
 					if (isAnyShape && a.Count > 1) {
 						path = _CreatePath(a);
 						r = RECT.From(path.GetBounds());
-					}
-					else {
+					} else {
 						r.right++; r.bottom++;
 					}
 					if (r.NoArea) {
-						this.Close();
+						Api.DestroyWindow(_w);
 						return;
 					}
 
@@ -528,35 +547,12 @@ namespace Au
 						Result.image = b;
 					}
 
-					r.Offset(Left, Top); //client to screen
-					Result.rect = r;
 				}
+				_w.MapClientToScreen(ref r);
+				Result.rect = r;
 
-				this.DialogResult = DialogResult.OK;
-				this.Close();
-			}
-
-			protected override void OnMouseUp(MouseEventArgs e) {
-				if (e.Button != MouseButtons.Right) return;
-				var m = new AMenu();//TODO: does not respond to click. Instead cancels capturing.
-				m["Retry\tF3"] = o => { this.DialogResult = DialogResult.Retry; this.Close(); };
-				m["Cancel\tEsc"] = o => this.Close();
-				m.Show();
-			}
-
-			//note: the OSD window is not always activated. Then can use context menu.
-			protected override void OnKeyUp(KeyEventArgs e) //note: not Down, because on F3 will wait for F3 up
-			{
-				if (_capturing) return;
-				switch (e.KeyCode) {
-					case Keys.Escape:
-						this.Close();
-						break;
-					case Keys.F3:
-						this.DialogResult = DialogResult.Retry;
-						this.Close();
-						break;
-				}
+				_res = 1;
+				Api.DestroyWindow(_w);
 			}
 		}
 

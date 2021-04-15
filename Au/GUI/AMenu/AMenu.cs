@@ -3,7 +3,7 @@ using Au.Types;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
+//using System.Linq;
 using Au.Util;
 using System.Runtime.CompilerServices;
 
@@ -381,6 +381,8 @@ namespace Au
 			if (_sub.parent != null) throw new InvalidOperationException("this is a submenu");
 			if (_a.Count == 0) return 0;
 
+			Api.ReleaseCapture(); //winforms still capturing on MouseClick etc, and menu would be like disabled
+
 			if (!flags.Has(MSFlags.Underline)) if (0 != Api.SystemParametersInfo(Api.SPI_GETKEYBOARDCUES, 0)) flags |= MSFlags.Underline;
 
 			_Show(flags, xy, excludeRect, owner.Hwnd);
@@ -691,7 +693,8 @@ namespace Au
 
 		LPARAM _WndProc(AWnd w, int msg, LPARAM wParam, LPARAM lParam) {
 			//var pmo = new PrintMsgOptions(Api.WM_NCHITTEST, Api.WM_SETCURSOR, Api.WM_MOUSEMOVE, Api.WM_NCMOUSEMOVE, 0x10c1);
-			//if (AWnd.More.PrintMsg(out string s, _w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
+			//if (AWnd.More.PrintMsg(out string s, w, msg, wParam, lParam, pmo)) AOutput.Write("<><c green>" + s + "<>");
+			//AWnd.More.PrintMsg(w, msg, wParam, lParam);
 
 			if (_scroll.WndProc(w, msg, wParam, lParam)) return default;
 
@@ -785,7 +788,7 @@ namespace Au
 		}
 
 		void _WmMousemove(LPARAM lParam, bool fake) {
-			var p = _LparamToPoint(lParam);
+			var p = AMath.LparamToPOINT(lParam);
 
 			//prevent selecting item when mouse position does not change. It would interfere with keyboard navigation.
 			if (!fake && p == _mouse.p) return; _mouse.p = p;
@@ -851,7 +854,7 @@ namespace Au
 			case Api.WM_MBUTTONUP: if (_mouse.middle) Close(ancestorsToo: true); return;
 			default: return;
 			}
-			var p = _LparamToPoint(lParam);
+			var p = AMath.LparamToPOINT(lParam);
 			int i = _HitTest(p);
 			if (i < 0) return;
 			if (msg == Api.WM_LBUTTONUP) _Click(i);

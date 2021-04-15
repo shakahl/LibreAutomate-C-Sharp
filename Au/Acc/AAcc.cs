@@ -222,10 +222,8 @@ namespace Au
 			//DebugMemorySum += mp;
 		}
 
-		int _MemoryPressure => _elem == 0 ? c_memoryPressure : c_memoryPressure / 4;
-		const int c_memoryPressure = 500;
-		//Ideally this should be the average AO memory size, if counting both processes.
-		//	Release() does not delete the object if refcount!=0. Usually refcount==0, unless we have an AO and its simple elements (_elem!=0).
+		int _MemoryPressure => _elem == 0 ? c_memoryPressure : c_memoryPressure / 10;
+		const int c_memoryPressure = 500; //Ideally this should be the average AO memory size, if counting both processes.
 
 		//internal static int DebugMaxMemoryPressure;
 		//static int s_dmp;

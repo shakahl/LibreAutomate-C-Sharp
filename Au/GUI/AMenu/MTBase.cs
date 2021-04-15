@@ -124,8 +124,6 @@ namespace Au
 		//private protected int _SourceLine(MTItem x) => x?.sourceLine ?? _sourceLine;
 		private protected string _SourceLink(MTItem x, string text) => _sourceFile == null ? null : $"<open {_sourceFile}|{x.sourceLine}>{text}<>";
 
-		private protected static POINT _LparamToPoint(LPARAM p) => new(AMath.LoShort(p), AMath.HiShort(p));
-
 		private protected bool _IsOtherThread => _threadId != AThread.Id;
 
 		private protected void _ThreadTrap() {

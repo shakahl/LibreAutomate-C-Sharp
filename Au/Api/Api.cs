@@ -132,6 +132,12 @@ namespace Au.Types
 		[DllImport("gdi32.dll")]
 		internal static extern int SetTextColor(IntPtr hdc, int color);
 
+		[DllImport("gdi32.dll")]
+		internal static extern IntPtr CreatePen(int iStyle, int cWidth, int color);
+
+		[DllImport("gdi32.dll")]
+		internal static extern bool LineTo(IntPtr hdc, int x, int y);
+
 		[DllImport("gdi32.dll")] //tested: does not set last error
 		internal static extern IntPtr CreateCompatibleBitmap(IntPtr hdc, int cx, int cy);
 
@@ -155,6 +161,9 @@ namespace Au.Types
 
 		[DllImport("gdi32.dll")] //tested: in some cases does not set last error even if returns false
 		internal static extern bool BitBlt(IntPtr hdc, int x, int y, int cx, int cy, IntPtr hdcSrc, int x1, int y1, uint rop);
+
+		[DllImport("gdi32.dll")]
+		internal static extern bool StretchBlt(IntPtr hdcDest, int xDest, int yDest, int wDest, int hDest, IntPtr hdcSrc, int xSrc, int ySrc, int wSrc, int hSrc, uint rop);
 
 		internal struct BITMAPINFOHEADER
 		{
