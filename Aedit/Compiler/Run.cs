@@ -174,6 +174,16 @@ class RunningTask : ITreeViewItem
 		var p = _process;
 		if (p != null) {
 			var h = p.SafeWaitHandle.DangerousGetHandle();
+
+			//let it remove tray icon and call Environment.Exit
+			int pid = AProcess.ProcessIdFromHandle(h);
+			if (pid != 0) {
+				var wti = AWnd.Find(null, "ATrayIcon", WOwner.Process(pid), WFlags.HiddenToo | WFlags.CloakedToo);
+				if (!wti.Is0 && wti.Post(Api.WM_CLOSE, 1)) {
+					if (0 == Api.WaitForSingleObject(h, onProgramExit ? 100 : 1000)) return true;
+				}
+			}
+
 			bool ok = Api.TerminateProcess(h, -1);
 			if (onProgramExit) return true;
 			if (ok) {

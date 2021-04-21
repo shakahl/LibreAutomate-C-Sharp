@@ -357,8 +357,18 @@ namespace Au.Tools
 					catch { }
 				}
 
-				if (AFolders.UnexpandPath(filePath, out var s)) fileUnexpanded = s;
-				if (AFolders.UnexpandPath(lnkPath, out s)) lnkUnexpanded = s;
+				_Format(ref filePath, out fileUnexpanded);
+				if (lnkPath != null) _Format(ref lnkPath, out lnkUnexpanded);
+
+				static void _Format(ref string s, out string unexpanded) {
+					if (AFolders.UnexpandPath(s, out unexpanded, out var sn) && !sn.NE()) unexpanded = unexpanded + " + " + _Str(sn);
+					s = _Str(s);
+				}
+
+				static string _Str(string s) {
+					if (!MakeVerbatim(ref s)) s = s.Escape(quote: true);
+					return s;
+				}
 			}
 
 			/// <summary>
@@ -376,7 +386,7 @@ namespace Au.Tools
 					return ADialog.Show("Path format", buttons: b.ToString(), flags: DFlags.CommandLinks | DFlags.XCancel | DFlags.CenterMouse, owner: owner);
 
 					void _Append(string label, string path) {
-						if (path != null) b.Append(label).Append('\n').Append(path.Limit(50).Replace("&", "&&"));
+						if (path != null) b.Append(label).Append('\n').Append(path.Limit(50));
 					}
 				}
 				return 1;
@@ -386,6 +396,7 @@ namespace Au.Tools
 
 			/// <summary>
 			/// Gets path/name/args that match or are nearest to the return value of <see cref="SelectFormatUI"/>.
+			/// Paths are unexpanded/escaped/enclosed, like <c>@"x:\a\b.c"</c> or <c>AFolders.Example + @"a\b.c"</c>.
 			/// </summary>
 			public (string path, string name, string args) GetResult(int i) => (
 				i switch { 1 => filePath, 2 => fileUnexpanded ?? filePath, 3 => lnkPath ?? filePath, 4 => lnkUnexpanded ?? lnkPath ?? filePath, _ => null },

@@ -21,15 +21,19 @@ namespace Au.Util
 	public class ADefaultTraceListener : DefaultTraceListener
 	{
 		/// <summary>
-		/// If defined DEBUG or TRACE, replaces default trace listener.
+		/// Replaces default trace listener.
 		/// </summary>
 		/// <param name="useAOutput">Also set <see cref="AOutput.RedirectDebugOutput"/> = true.</param>
-		[Conditional("DEBUG"), Conditional("TRACE")]
-		public static void Setup(bool useAOutput = false) {
-			Trace.Listeners.Remove("Default"); //remove DefaultTraceListener. It calls Environment.FailFast which shows message box "Unknown hard error".
-			Trace.Listeners.Add(new ADefaultTraceListener());
-			if (useAOutput) AOutput.RedirectDebugOutput = true;
+		//[Conditional("DEBUG"), Conditional("TRACE")] //no, in most cases this is called by this library, not directly by the app
+		public static void Setup(bool useAOutput) {
+			if (!s_setup) {
+				s_setup = true;
+				Trace.Listeners.Remove("Default"); //remove DefaultTraceListener. It calls Environment.FailFast which shows message box "Unknown hard error".
+				Trace.Listeners.Add(new ADefaultTraceListener());
+			}
+			AOutput.RedirectDebugOutput = useAOutput;
 		}
+		static bool s_setup;
 
 		///
 		public override void Fail(string message, string detailMessage) {
@@ -42,9 +46,8 @@ namespace Au.Util
 				st = st[g.Start..];
 				st1 = st.Lines(true)[0];
 			}
-			s += st;
 
-			var s2 = "---- Debug assertion failed ----\r\n" + s;
+			var s2 = "---- Debug assertion failed ----\r\n" + s + st;
 			Trace.WriteLine(s2);
 			if (!(AOutput.RedirectDebugOutput && AOutput.QM2.UseQM2)) AOutput.QM2.Write(s2);
 
@@ -53,7 +56,7 @@ namespace Au.Util
 			} else {
 				if (!AssertUiEnabled) return; //like default listener
 
-				switch (ADialog.ShowWarning("Debug assertion failed", st1 ?? s, "Exit|Debug|Ignore", expandedText: st1 == null ? null : st)) {
+				switch (ADialog.ShowWarning("Debug assertion failed", s + st1, "Exit|Debug|Ignore", expandedText: st)) {
 				case 3: return;
 				case 2: break;
 				default: Api.ExitProcess(-1); break;

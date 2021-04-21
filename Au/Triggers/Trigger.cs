@@ -188,7 +188,7 @@ namespace Au.Triggers
 		/// <param name="args"></param>
 		/// <exception cref="InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
 		/// <remarks>
-		/// Call while <c>Triggers.Run();</c> is running, from the same thread.
+		/// Call while <see cref="ActionTriggers.Run"/> is running, from the same thread.
 		/// </remarks>
 		public void RunAction(TriggerArgs args)
 		{
@@ -223,6 +223,7 @@ namespace Au.Triggers
 	/// Allows to specify working windows for multiple triggers of these types: hotkey, autotext, mouse.
 	/// </summary>
 	/// <example>
+	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write("this trigger works with all windows");
 	/// Triggers.Of.Window("* Notepad"); //specifies a working window for triggers added afterwards
@@ -431,6 +432,7 @@ namespace Au.Triggers
 	/// In CF never use functions that generate keyboard or mouse events or activate windows.
 	/// </remarks>
 	/// <example>
+	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// //examples of assigning a callback function (CF) to a single trigger
 	/// Triggers.FuncOf.NextTrigger = o => AKeys.IsCapsLock; //o => AKeys.IsCapsLock is the callback function (lambda)

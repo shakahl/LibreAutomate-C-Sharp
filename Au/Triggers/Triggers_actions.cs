@@ -86,7 +86,7 @@ namespace Au.Triggers
 		//CONSIDER: make default ifRunningWaitMS = 1000 if it is another action.
 
 		/// <summary>
-		/// Run trigger actions in same thread as <c>Triggers.Run();</c>.
+		/// Run trigger actions in same thread as <see cref="ActionTriggers.Run"/>.
 		/// </summary>
 		/// <remarks>
 		/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="AToolbar"/>). Rarely used for other purposes.

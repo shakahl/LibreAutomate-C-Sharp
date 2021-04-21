@@ -572,9 +572,11 @@ namespace Au
 					excludeRect = cr;
 					flags |= MSFlags.AlignRectBottomTop;
 				}
-			} else if (flags.Has(MSFlags.ScreenCenter)) {
-				p = new(rs.CenterX, rs.CenterY);
-				flags |= MSFlags.AlignCenterH | MSFlags.AlignCenterV;
+			} else {
+				if (flags.Has(MSFlags.ScreenCenter)) {
+					p = new(rs.CenterX, rs.CenterY);
+					flags |= MSFlags.AlignCenterH | MSFlags.AlignCenterV;
+				} else if (excludeRect == null && !flags.Has(MSFlags.AlignCenterH | MSFlags.AlignCenterV)) excludeRect = new(p.x, p.y, 1, 1);
 			}
 
 			if (_addedNewItems) {

@@ -154,7 +154,7 @@ namespace Au.Compiler
 					fileName = m.Name + ".dll";
 				} else {
 					outPath = cache.CacheDirectory;
-					fileName = f.IdString + ".dll"; //note: should have ".dll" extension, else somehow don't work GetModuleHandle, Process.GetCurrentProcess().Modules etc
+					fileName = f.IdString + ".dll"; //note: must have ".dll" extension, else somehow don't work GetModuleHandle, Process.GetCurrentProcess().Modules etc
 				}
 				outFile = outPath + "\\" + fileName;
 				AFile.CreateDirectory(outPath);
@@ -173,7 +173,8 @@ namespace Au.Compiler
 			//p1.Next('t');
 
 			string asmName = m.Name;
-			if (m.Role == ERole.editorExtension) asmName = asmName + "|" + (++c_versionCounter).ToString(); //AssemblyLoadContext.Default cannot load multiple assemblies with same name
+			if (m.Role == ERole.editorExtension) //cannot load multiple assemblies with same name
+				asmName = asmName + "|" + Guid.NewGuid().ToString(); //use GUID, not counter, because may be loaded old assembly from cache with same counter value
 
 			if (m.TestInternal is string[] testInternal) {
 				InternalsVisible.Add(asmName, testInternal);
@@ -253,6 +254,10 @@ namespace Au.Compiler
 					throw new AuException(ec, outFile);
 				}
 				var b = asmStream.GetBuffer();
+
+				//prevent AV full dll scan when loading. Will load bytes, unxor and load assembly from stream. Will fully scan once, when loading assembly.
+				if (m.Role == ERole.editorExtension) for (int i = 0, n = (int)asmStream.Length; i < n; i++) b[i] ^= 1;
+
 				using (hf) if (!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
 #else //same speed, but I like code without exceptions
 				try {
@@ -266,7 +271,10 @@ namespace Au.Compiler
 					}
 				}
 #endif
-				p1.Next('s'); //saving would be fast, but with AV can take half of time. Tested only with WD.
+				//saving would be fast, but with AV can take half of time.
+				//	With WD now fast, but used to be slow. Now on save WD scans async, and on load scans only if still not scanned, eg if loading soon after saving.
+				//	With Avast now the same as with WD.
+				p1.Next('s');
 				r.file = outFile;
 
 				if (m.Role == ERole.exeProgram) {
@@ -277,7 +285,7 @@ namespace Au.Compiler
 					//copy app host template exe, add native resources, set assembly name, set console flag if need
 					if (need64) _AppHost(outFile, fileName, m, bit32: false);
 					if (need32) _AppHost(outFile, fileName, m, bit32: true);
-					p1.Next('h');
+					p1.Next('h'); //very slow with AV. Eg with WD this part makes whole compilation several times slower.
 
 					//copy dlls to the output directory
 					_CopyDlls(m, asmStream, need64: need64, need32: need32);
@@ -316,15 +324,13 @@ namespace Au.Compiler
 				for (int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
 			}
 
-#if TRACE
+			//#if TRACE
 			//p1.NW('C');
-#endif
+			//#endif
 			return true;
 
 			//SHOULDDO: rebuild if missing apphost. Now rebuilds only if missing dll.
 		}
-
-		static int c_versionCounter;
 
 		//public static void Warmup(Document document)
 		//{
@@ -375,33 +381,37 @@ namespace Au.Compiler
 			//	}
 			//}
 
-			if (needAttr != 0) {
-				using (new Util.StringBuilder_(out var sb)) {
-					//sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
-					if (0 != (needAttr & 0x100)) sb.AppendLine("[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]");
-					if (0 != (needAttr & 0x200)) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
-					//if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\" \")]");
-					//if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
-					//if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
-					if (0 != (needAttr & 0x400)) {
-						//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
-						//IgnoresAccessChecksToAttribute is defined in Au assembly.
-						//	Could define here, but then warning "already defined in assembly X" when compiling 2 projects (meta pr) with that attribute.
-						//	never mind: Au.dll must exist by the compiled assembly, even if not used for other purposes.
-						foreach (var v in m.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
-						//						sb.Append(@"
-						//namespace System.Runtime.CompilerServices {
-						//[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
-						//public class IgnoresAccessChecksToAttribute : Attribute {
-						//	public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
-						//	public string AssemblyName { get; }
-						//}}");
-					}
-
-					var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
-					compilation = compilation.AddSyntaxTrees(tree);
+			//if (needAttr != 0) {
+			using (new Util.StringBuilder_(out var sb)) {
+				//sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
+				if (0 != (needAttr & 0x100)) sb.AppendLine("[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]");
+				if (0 != (needAttr & 0x200)) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
+				//if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\" \")]");
+				//if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
+				//if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
+				if (0 != (needAttr & 0x400)) {
+					//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
+					//IgnoresAccessChecksToAttribute is defined in Au assembly.
+					//	Could define here, but then warning "already defined in assembly X" when compiling 2 projects (meta pr) with that attribute.
+					//	never mind: Au.dll must exist by the compiled assembly, even if not used for other purposes.
+					foreach (var v in m.TestInternal) sb.AppendLine($"[assembly: System.Runtime.CompilerServices.IgnoresAccessChecksTo(\"{v}\")]");
+					//						sb.Append(@"
+					//namespace System.Runtime.CompilerServices {
+					//[AttributeUsage(AttributeTargets.Assembly, AllowMultiple = true)]
+					//public class IgnoresAccessChecksToAttribute : Attribute {
+					//	public IgnoresAccessChecksToAttribute(string assemblyName) { AssemblyName = assemblyName; }
+					//	public string AssemblyName { get; }
+					//}}");
 				}
+
+				if (m.Role is ERole.miniProgram or ERole.exeProgram) {
+					sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.ATask.AppModuleInit_(); }}");
+				}
+
+				var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
+				compilation = compilation.AddSyntaxTrees(tree);
 			}
+			//}
 		}
 
 		static List<ResourceDescription> _CreateManagedResources(MetaComments m) {

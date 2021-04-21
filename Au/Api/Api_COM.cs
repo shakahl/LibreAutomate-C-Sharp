@@ -56,7 +56,7 @@ namespace Au.Types
 		[ComImport, Guid("000214F2-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IEnumIDList
 		{
-			[PreserveSig] int Next(int celt, [MarshalAs(UnmanagedType.LPArray)] [Out] IntPtr[] rgelt, out int pceltFetched);
+			[PreserveSig] int Next(int celt, [MarshalAs(UnmanagedType.LPArray)][Out] IntPtr[] rgelt, out int pceltFetched);
 			[PreserveSig] int Skip(int celt);
 			[PreserveSig] int Reset();
 			[PreserveSig] int Clone(out IEnumIDList ppenum);
@@ -88,20 +88,20 @@ namespace Au.Types
 		[ComImport, Guid("000214F9-0000-0000-C000-000000000046"), InterfaceType(ComInterfaceType.InterfaceIsIUnknown)]
 		internal interface IShellLink
 		{
-			[PreserveSig] int GetPath([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszFile, int cch, IntPtr pfd = default, uint fFlags = 0);
+			[PreserveSig] int GetPath([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszFile, int cch, IntPtr pfd = default, uint fFlags = 0);
 			[PreserveSig] int GetIDList(out IntPtr ppidl);
 			[PreserveSig] int SetIDList(IntPtr pidl);
-			[PreserveSig] int GetDescription([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszName, int cch);
+			[PreserveSig] int GetDescription([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszName, int cch);
 			[PreserveSig] int SetDescription([MarshalAs(UnmanagedType.LPWStr)] string pszName);
-			[PreserveSig] int GetWorkingDirectory([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszDir, int cch);
+			[PreserveSig] int GetWorkingDirectory([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszDir, int cch);
 			[PreserveSig] int SetWorkingDirectory([MarshalAs(UnmanagedType.LPWStr)] string pszDir);
-			[PreserveSig] int GetArguments([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszArgs, int cch);
+			[PreserveSig] int GetArguments([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszArgs, int cch);
 			[PreserveSig] int SetArguments([MarshalAs(UnmanagedType.LPWStr)] string pszArgs);
 			[PreserveSig] int GetHotkey(out ushort pwHotkey);
 			[PreserveSig] int SetHotkey(ushort wHotkey);
 			[PreserveSig] int GetShowCmd(out int piShowCmd);
 			[PreserveSig] int SetShowCmd(int iShowCmd);
-			[PreserveSig] int GetIconLocation([MarshalAs(UnmanagedType.LPArray)] [Out] char[] pszIconPath, int cch, out int piIcon);
+			[PreserveSig] int GetIconLocation([MarshalAs(UnmanagedType.LPArray)][Out] char[] pszIconPath, int cch, out int piIcon);
 			[PreserveSig] int SetIconLocation([MarshalAs(UnmanagedType.LPWStr)] string pszIconPath, int iIcon);
 			[PreserveSig] int SetRelativePath([MarshalAs(UnmanagedType.LPWStr)] string pszPathRel, uint dwReserved = 0);
 			[PreserveSig] int Resolve(AWnd hwnd, uint fFlags);
@@ -128,7 +128,7 @@ namespace Au.Types
 		}
 
 		//see also VARIANT in Struct.cs
-		internal struct PROPVARIANT :IDisposable
+		internal struct PROPVARIANT : IDisposable
 		{
 			public VARENUM vt; //ushort
 			public ushort _u1;
@@ -139,8 +139,7 @@ namespace Au.Types
 			/// <summary>
 			/// Calls PropVariantClear.
 			/// </summary>
-			public void Dispose()
-			{
+			public void Dispose() {
 				PropVariantClear(ref this);
 			}
 		}
@@ -271,7 +270,7 @@ namespace Au.Types
 			[PreserveSig] int _2();
 			[PreserveSig] int _3();
 			[PreserveSig] int _4();
-			IRunningTask Run(object @params=null);
+			IRunningTask Run(object @params = null);
 			//[PreserveSig] int RunEx(object @params, int flags, int sessionID, string user, out IRunningTask ppRunningTask);
 			//[PreserveSig] int GetInstances(int flags, out IRunningTaskCollection ppRunningTasks);
 			//[PreserveSig] int get_LastRunTime(out DateTime pLastRunTime);
@@ -307,7 +306,7 @@ namespace Au.Types
 		}
 
 		[Flags]
-		internal enum TASK_CREATION :uint
+		internal enum TASK_CREATION : uint
 		{
 			TASK_VALIDATE_ONLY = 0x1,
 			TASK_CREATE,

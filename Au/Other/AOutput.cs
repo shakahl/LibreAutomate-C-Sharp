@@ -318,7 +318,7 @@ namespace Au
 					if (_traceListener != null) return;
 					//Trace.Listeners.Add(IsWritingToConsole ? (new ConsoleTraceListener()) : (new TextWriterTraceListener(Writer)));
 					Trace.Listeners.Add(_traceListener = new TextWriterTraceListener(Writer));
-					//speed: 6100
+					//speed: 5000
 				} else if (_traceListener != null) {
 					Trace.Listeners.Remove(_traceListener);
 					_traceListener = null;

@@ -890,8 +890,8 @@ partial class FileNode : ATreeBase<FileNode>, ITreeViewItem
 		var type = EFileType.NotCodeFile;
 		if (path.Ends(".cs", true)) {
 			type = EFileType.Class;
-			//rejected. Unreliable and rarely useful. Does not detect scripts with top-level statements.
-			//try { if (AFile.LoadText(path).RegexIsMatch(@"\bclass Script\s*:\s*AScript\b")) type = EFileType.Script; }
+			//rejected. Unreliable and rarely useful. Does not detect scripts with top-level statements etc.
+			//try { if (AFile.LoadText(path).RegexIsMatch(@"\bclass Script\b")) type = EFileType.Script; }
 			//catch (Exception ex) { ADebug.Print(ex); }
 
 			//FUTURE: later allow to change file type script from/to class. Eg in Properties.

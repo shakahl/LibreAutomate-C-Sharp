@@ -1,7 +1,7 @@
 /*/ ifRunning warn_restart; /*/ //.
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
 using System.Windows.Forms;
-class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
+class Script { [STAThread] static void Main(string[] a) { ATask.Setup(); new Script(a); } Script(string[] args) { //;;;
 
 /*
 The programming language is C#.
@@ -10,9 +10,6 @@ In scripts you can use classes/functions of the automation library provided by
 this program, as well as of .NET and everything that can be used in C#.
 Also you can create and use new functions, classes, libraries and .exe programs.
 
-Script properties are saved in /*/ /*/ comments at the very start of script.
-You can change them in the Properties dialog.
-
 Like all C# programs, a script starts with standard code: using directives,
 class and function Main where the program starts. Click the small [+] box at
 the top-left to see and edit that code when need. The //. and //; are used to
@@ -20,6 +17,12 @@ fold (hide) code.
 
 To avoid 'static' everywhere, function Main creates a class instance. Your script
 code is in the constructor function. The function and the class end with } and }.
+
+Script properties are saved in /*/ /*/ comments at the very start of script.
+You can change them in the Properties dialog or edit in script.
+More properties can be set in code with various functions. For example, to
+remove tray icon, replace ATask.Setup(); with ATask.Setup(trayIcon: false);.
+To change default properties and code for new scripts: Options -> Templates.
 
 To run a script, you can click the ► Run button on the toolbar, or use command line,
 or call ATask.Run from another scrit, or in Options set to run at startup.

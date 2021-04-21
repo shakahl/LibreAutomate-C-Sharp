@@ -360,7 +360,6 @@ class CiCompletion
 							case "GetLifetimeService": //MarshalByRefObject
 							case "InitializeLifetimeService": //MarshalByRefObject
 							case "Clone" when sym.ContainingType.Name == "String": //this useless method would be the first in the list
-							case "OnUnhandledException" when sym.ContainingType.Name == "AScript":
 								v.moveDown = CiItemMoveDownBy.Name;
 								break;
 							}
@@ -393,7 +392,7 @@ class CiCompletion
 					break;
 				}
 
-				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script" && t.BaseType?.Name == "AScript";
+				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script"; //TODO: test top-level statements
 
 				if (sym != null && v.kind != CiItemKind.LocalVariable && v.kind != CiItemKind.Namespace && v.kind != CiItemKind.TypeParameter) {
 					bool isObsolete = ci.Symbols.All(sy => sy.GetAttributes().Any(o => o.AttributeClass.Name == "ObsoleteAttribute")); //can be several overloads, some obsolete but others not

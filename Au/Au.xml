@@ -4141,6 +4141,16 @@
             Not called if the owner window is invisible or cloaked or minimized or if <see cref="P:Au.Types.ITBOwnerObject.IsVisible"/> returned false.
             </remarks>
         </member>
+        <member name="T:Au.Types.TINFlags">
+            <summary>
+            Flags for <see cref="M:Au.ATrayIcon.ShowNotification(System.String,System.String,Au.Types.TINFlags,Au.AIcon)"/>. See NIIF_ flags of API <msdn>NOTIFYICONDATAW</msdn>.
+            </summary>
+        </member>
+        <member name="F:Au.Types.TINFlags.Realtime">
+            <summary>
+            Flag <b>NIF_REALTIME</b>.
+            </summary>
+        </member>
         <member name="T:Au.Types.WBPanelType">
             <summary>
             Used with <see cref="T:Au.AWpfBuilder"/> constructor to specify the type of the root panel.
@@ -4322,22 +4332,6 @@
             Always resize only the nearest resizable row/column at each side.
             If false (default), may resize multiple star-sized rows/columns, unless with Ctrl key.
             </summary>
-        </member>
-        <member name="T:Au.Types.WpfMenuActionArgs">
-            <summary>
-            Arguments for <see cref="T:Au.AWpfMenu"/> item actions.
-            </summary>
-        </member>
-        <member name="M:Au.Types.WpfMenuActionArgs.#ctor(System.Windows.Controls.MenuItem)">
-            
-        </member>
-        <member name="P:Au.Types.WpfMenuActionArgs.Item">
-            <summary>
-            The menu item object.
-            </summary>
-        </member>
-        <member name="M:Au.Types.WpfMenuActionArgs.ToString">
-            
         </member>
         <member name="T:Au.Types.ClipFormats">
             <summary>
@@ -8320,13 +8314,14 @@
             </param>
             <seealso cref="M:Au.APath.ExpandEnvVar(System.String)"/>
         </member>
-        <member name="M:Au.AFolders.UnexpandPath(System.String,System.String@)">
+        <member name="M:Au.AFolders.UnexpandPath(System.String,System.String@,System.String@)">
             <summary>
-            If string starts with a known/special folder path, replaces it with folder name and returns true.
-            For example replaces <c>C:\Windows\sYstem32\notepad.exe</c> with <c>%AFolders.System%\notepad.exe</c>.
+            If string starts with a known/special folder path, gets folder name + relative path and returns true.
+            For example if string is <c>C:\Windows\System32\notepad.exe</c>, gets <c>AFolders.System</c> and <c>notepad.exe</c>.
             </summary>
             <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="M:Au.APidl.ToHexString"/>).</param>
-            <param name="unexpanded">Receives final path, unexpanded or not. Can be same variable as <i>path</i>.</param>
+            <param name="folder">Receives special folder string like <c>"AFolders.System"</c>.</param>
+            <param name="name">Receives filename or relative path in the folder.</param>
             <remarks>
             Quite slow first time in process, eg 50 ms, because gets all folder paths. Later uses cached paths.
             </remarks>
@@ -9271,7 +9266,7 @@
             If your app don't want to use current culture (default in .NET apps), it can set these properties = <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> or set this property = true.
             It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
             Also, bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-            In automation scripts this property is implicitly set = true, unless script's role is exeProgram and it does not use <see cref="T:Au.AScript"/> as base class.
+            In automation scripts this property is implicitly set = true, unless script with role exeProgram does not call <see cref="M:Au.ATask.Setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Action{System.UnhandledExceptionEventArgs},System.String)"/>.//TODO
             </remarks>
         </member>
         <member name="M:Au.AProcess.MinimizePhysicalMemory_(System.Int32)">
@@ -12470,6 +12465,159 @@
             Returns DPI-scaled border thickness in client area. Returns 0 if b is not TBBorder.Width1 ... TBBorder.Width4.
             </summary>
         </member>
+        <member name="T:Au.ATrayIcon">
+            <summary>
+            Shows tray icon.
+            </summary>
+            <remarks>
+            Wraps API <msdn>Shell_NotifyIconW</msdn>, <msdn>NOTIFYICONDATAW</msdn>. More info there.
+            
+            This thread must dispatch messages.
+            
+            Can be used by multiple threads (eg one thread adds tray icon and other thread later changes its tooltip).
+            
+            Creates a hidden window that receives tray icon events (click etc). Also, message WM_CLOSE with non-0 <i>wParam</i> removes the tray icon and calls <see cref="M:System.Environment.Exit(System.Int32)"/> with <i>exitCode</i> = <i>wParam</i>. Example:
+            <c>var w = AWnd.FindFast("task name", "ATrayIcon"); if(!w.Is0) w.Post(0x10, 1); //WM_CLOSE</c>
+            </remarks>
+        </member>
+        <member name="F:Au.ATrayIcon.MsgNotify">
+            <summary>
+            Tray icon notification message.
+            </summary>
+        </member>
+        <member name="M:Au.ATrayIcon.#ctor(System.Int32,System.Boolean)">
+            <param name="id">An id that helps Windows to distinguish multiple tray icons added by same program. Use 0, 1, 2, ... or all 0.</param>
+            <param name="disposeOnExit">
+            Remove tray icon when process exits (<see cref="E:Au.AProcess.Exit"/>).
+            Note: can't remove if process killed from outside or with <see cref="M:System.Environment.FailFast(System.String)"/> or API <msdn>ExitProcess</msdn> etc. Removes only if process exits naturally or with <see cref="M:System.Environment.Exit(System.Int32)"/> or because of an unhandled exception.
+            </param>
+        </member>
+        <member name="M:Au.ATrayIcon.Dispose">
+            <summary>
+            Removes tray icon and disposes other resources.
+            </summary>
+        </member>
+        <member name="P:Au.ATrayIcon.Visible">
+            <summary>
+            Gets or sets whether the tray icon is visible.
+            </summary>
+            <exception cref="T:System.InvalidOperationException">Icon not set.</exception>
+        </member>
+        <member name="P:Au.ATrayIcon.Icon">
+            <summary>
+            Gets or sets icon.
+            </summary>
+            <remarks>
+            To display nice icon at any DPI, the icon should be loaded with <see cref="M:Au.AIcon.TrayIcon(System.Int32)"/> or API <msdn>LoadIconMetric</msdn>, either from a native resource in your app or from an .ico file, which should contain icons of sizes 16, 32 and also recommended 20, 24.
+            </remarks>
+        </member>
+        <member name="P:Au.ATrayIcon.Tooltip">
+            <summary>
+            Gets or sets tooltip text.
+            </summary>
+            <remarks>
+            Max length of displayed tooltip text is 127.
+            </remarks>
+        </member>
+        <member name="M:Au.ATrayIcon.ShowNotification(System.String,System.String,Au.Types.TINFlags,Au.AIcon)">
+            <summary>
+            Shows temporary notification window by the tray icon.
+            </summary>
+            <param name="title">Title, max 63 characters.</param>
+            <param name="text">Text, max 255 characters.</param>
+            <param name="flags">Standard icon and other flags.</param>
+            <param name="icon">Custom icon. Important: use icon of size returned by <see cref="P:Au.ATrayIcon.NotificationIconSize"/>.</param>
+            <remarks>
+            If the tray icon isn't visible, makes it visible.
+            
+            No more than one notification at a time can be displayed. If an application attempts to display a notification when one is already being displayed, the new notification is queued and displayed when the older notification goes away.
+            
+            Users may choose to not show notifications, depending on various conditions. Look in Windows Settings app, Notifications &amp; actions.
+            </remarks>
+        </member>
+        <member name="M:Au.ATrayIcon.HideNotification">
+            <summary>
+            Hides notification.
+            </summary>
+        </member>
+        <member name="P:Au.ATrayIcon.NotificationIconSize">
+            <summary>
+            Gets icon size for <see cref="M:Au.ATrayIcon.ShowNotification(System.String,System.String,Au.Types.TINFlags,Au.AIcon)"/>.
+            </summary>
+        </member>
+        <member name="M:Au.ATrayIcon.Focus">
+            <summary>
+            Activates taskbar and makes the tray icon focused for keyboard.
+            </summary>
+            <remarks>
+            If the tray icon is in hidden overflow area, makes the area button focused.
+            </remarks>
+        </member>
+        <member name="P:Au.ATrayIcon.Id">
+            <summary>
+            Together with <see cref="P:Au.ATrayIcon.Hwnd"/> identifies this tray icon.
+            </summary>
+        </member>
+        <member name="P:Au.ATrayIcon.Hwnd">
+            <summary>
+            A hidden window automatically created for this tray icon to receive its notifications.
+            </summary>
+        </member>
+        <member name="M:Au.ATrayIcon.WndProc(Au.AWnd,System.Int32,Au.Types.LPARAM,Au.Types.LPARAM)">
+            <summary>
+            Window procedure of the hidden window that receives tray icon notifications (<see cref="F:Au.ATrayIcon.MsgNotify"/>) in version 4 format.
+            If you override it, call the base function.
+            </summary>
+        </member>
+        <member name="E:Au.ATrayIcon.Message">
+            <summary>
+            When received any message from the tray icon.
+            </summary>
+            <remarks>
+            Receives mouse messages, NIN_ messages and some other. See <msdn>Shell_NotifyIconW</msdn>.
+            </remarks>
+        </member>
+        <member name="E:Au.ATrayIcon.Click">
+            <summary>
+            When default action should be invoked (on click, Space/Enter, automation/accessibility API).
+            </summary>
+            <remarks>
+            If clicked, the parameter contains message NIN_SELECT (1024) and mouse coordinates. Else NIN_KEYSELECT (1025) and top-left of the tray icon.
+            On double click there are two <b>Click</b> events. To distinguish click and double click events, use <see cref="E:Au.ATrayIcon.Message"/> instead.
+            </remarks>
+        </member>
+        <member name="E:Au.ATrayIcon.RightClick">
+            <summary>
+            When context menu should be shown (on right click or Apps key).
+            </summary>
+        </member>
+        <member name="E:Au.ATrayIcon.MiddleClick">
+            <summary>
+            When the tray icon clicked with middle button.
+            </summary>
+        </member>
+        <member name="E:Au.ATrayIcon.NotificationClick">
+            <summary>
+            When clicked the notification window.
+            </summary>
+        </member>
+        <member name="E:Au.ATrayIcon.PopupClose">
+            <summary>
+            When it's time to close custom tooltip etc shown on <see cref="E:Au.ATrayIcon.PopupOpen"/>.
+            </summary>
+        </member>
+        <member name="E:Au.ATrayIcon.PopupOpen">
+            <summary>
+            When it's time to open custom tooltip or some temporary popup window.
+            If this event is used, does not show standard tooltip.
+            </summary>
+        </member>
+        <member name="M:Au.ATrayIcon.GetRect(Au.Types.RECT@)">
+            <summary>
+            Gets tray icon rectangle in screen.
+            Returns false if fails, for example if the icon is in hidden overflow area. Supports <see cref="T:Au.ALastError"/>.
+            </summary>
+        </member>
         <member name="T:Au.AWpfBuilder">
             <summary>
             With this class you can create windows with controls, for example for data input.
@@ -13583,145 +13731,6 @@
             .StartOkCancel().AddOkCancel().AddButton("Apply", null).Width(70).End()
             ]]></code>
             </example>
-        </member>
-        <member name="T:Au.AWpfMenu">
-            <summary>
-            Based on WPF <see cref="T:System.Windows.Controls.ContextMenu"/>, makes simpler to use it.
-            </summary>
-            <example>
-            <code><![CDATA[
-            var m = new AWpfMenu();
-            m["One"] = o => AOutput.Write(o);
-            using(m.Submenu("Sub")) {
-            	m["Three"] = o => AOutput.Write(o);
-            	m["Four"] = o => AOutput.Write(o);
-            }
-            m.Separator();
-            m["Two"] = o => { AOutput.Write(o); };
-            m.Show(); //or m.IsOpen=true;
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AWpfMenu.#ctor">
-            
-        </member>
-        <member name="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.WpfMenuActionArgs},System.Object)">
-            <summary>
-            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu. Returns it.
-            </summary>
-            <param name="text">
-            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
-            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
-            </param>
-            <param name="click">Action called on click.</param>
-            <param name="icon">See <see cref="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object)"/>.</param>
-            <remarks>
-            Usually it's easier to use the indexer instead. It just calls this function. See example.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            m["Example"] = o => AOutput.Write(o);
-            m.Last.IsChecked = true;
-            ]]></code>
-            </example>
-        </member>
-        <member name="P:Au.AWpfMenu.Item(System.String,System.Boolean,System.Object)">
-            <summary>
-            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> and adds to the menu.
-            </summary>
-            <param name="text">
-            Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.
-            If contains '\0' character, uses text before it for label and text after it for <see cref="P:System.Windows.Controls.MenuItem.InputGestureText"/>; example: "Text\0" + "Ctrl+E".
-            </param>
-            <param name="enabled">Disabled if false. Default true.</param>
-            <param name="icon">
-            Can be:
-            - <see cref="T:System.Windows.Controls.Image"/> or other WPF control to assign directly to <see cref="P:System.Windows.Controls.MenuItem.Icon"/>.
-            - <see cref="T:System.Windows.Media.ImageSource"/> - a WPF image. To create image from icon, use <see cref="M:Au.AIcon.ToWpfImage(System.Boolean)"/>.
-            - string - image file path, or resource path that starts with "resources/" or has prefix "resource:", or png image as Base-64 string with prefix "image:". Can be png or XAML file or resource. See <see cref="M:Au.Util.AImageUtil.LoadWpfImageElementFromFileOrResourceOrString(System.String)"/>. Supports environment variables. If not full path, looks in <see cref="P:Au.AFolders.ThisAppImages"/>.
-            - <see cref="T:System.Uri"/> - image file path, or resource pack URI, or URL. Does not support environment variables and <see cref="P:Au.AFolders.ThisAppImages"/>.
-            
-            If failed to find or load image file, prints warning (<see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>).
-            To create Base-64 string, use menu Code -> AWinImage.
-            To add an image resource in Visual Studio, use build action "Resource" for the image file.
-            </param>
-            <value>Action called on click.</value>
-            <remarks>
-            Calls <see cref="M:Au.AWpfMenu.Add(System.Object,System.Action{Au.Types.WpfMenuActionArgs},System.Object)"/>.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            m["Example"] = o => AOutput.Write(o);
-            m.Last.IsChecked = true;
-            ]]></code>
-            </example>
-        </member>
-        <member name="M:Au.AWpfMenu.Separator">
-            <summary>
-            Adds separator.
-            </summary>
-        </member>
-        <member name="M:Au.AWpfMenu.Submenu(System.Object,System.Object,System.Action{Au.Types.WpfMenuActionArgs})">
-            <summary>
-            Creates new <see cref="T:System.Windows.Controls.MenuItem"/> for a submenu and adds to the menu.
-            </summary>
-            <param name="text">Label. See <see cref="P:System.Windows.Controls.HeaderedItemsControl.Header"/>.</param>
-            <param name="icon"><see cref="P:System.Windows.Controls.MenuItem.Icon"/>.</param>
-            <param name="click">Action called on click. Rarely used.</param>
-            <remarks>
-            Then the add-item functions will add items to the submenu, until the returned variable is disposed.
-            </remarks>
-            <example><see cref="T:Au.AWpfMenu"/></example>
-        </member>
-        <member name="P:Au.AWpfMenu.CurrentAddMenu">
-            <summary>
-            Gets <see cref="T:System.Windows.Controls.ItemsControl"/> of the menu or submenu where new items currently would be added.
-            </summary>
-        </member>
-        <member name="P:Au.AWpfMenu.Last">
-            <summary>
-            Gets the last added <see cref="T:System.Windows.Controls.MenuItem"/>.
-            </summary>
-        </member>
-        <member name="P:Au.AWpfMenu.ItemAdded">
-            <summary>
-            Called when added a non-separator item.
-            </summary>
-        </member>
-        <member name="P:Au.AWpfMenu.ActionException">
-            <summary>
-            Whether to handle exceptions in item action code. If false (default), handles exceptions and on exception calls <see cref="M:Au.AWarning.Write(System.String,System.Int32,System.String)"/>.
-            Applied to menu items added afterwards.
-            </summary>
-        </member>
-        <member name="M:Au.AWpfMenu.Show(System.Windows.UIElement,System.Boolean,System.Boolean)">
-            <summary>
-            Sets <see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/> = <i>owner</i> and <see cref="P:System.Windows.Controls.ContextMenu.IsOpen"/> = true.
-            </summary>
-            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
-            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
-            <param name="modal">Wait until closed.</param>
-        </member>
-        <member name="M:Au.AWpfMenu.OnClosed(System.Windows.RoutedEventArgs)">
-            
-        </member>
-        <member name="M:Au.AWpfMenu.ShowSimple(Au.Types.DStringList,System.Windows.UIElement,System.Boolean,System.Action{Au.AWpfMenu})">
-            <summary>
-            Creates and shows popup menu where items use ids instead of actions.
-            Returns selected item id, or 0 if cancelled.
-            </summary>
-            <param name="items">
-            Menu items. Can be string[], List&lt;string&gt; or string like "One|Two|Three".
-            Item id can be optionally specified like "1 One|2 Two|3 Three". If missing, uses id of previous non-separator item + 1. Example: "One|Two|100 Three Four" //1|2|100|101.
-            For separators use null or empty strings: "One|Two||Three|Four".
-            </param>
-            <param name="owner"><see cref="P:System.Windows.Controls.ContextMenu.PlacementTarget"/>. The menu uses its DPI. If null, uses DPI of primary screen (WPF bug).</param>
-            <param name="byCaret">Show by caret (text cursor) position if possible.</param>
-            <param name="beforeShow">Called after adding menu items, before showing the menu. For example can set placement properties.</param>
-            <remarks>
-            The menu is modal; the function returns when closed.
-            </remarks>
-            <seealso cref="M:Au.ADialog.ShowList(Au.Types.DStringList,System.String,System.String,Au.Types.DFlags,Au.Types.AnyWnd,System.String,System.String,System.String,Au.Types.DControls,System.Int32,Au.Types.Coord,Au.Types.Coord,System.Int32,System.Action{Au.Types.DEventArgs})"/>
         </member>
         <member name="T:Au.AClipboard">
             <summary>
@@ -19994,7 +20003,7 @@
         </member>
         <member name="M:Au.Util.ADefaultTraceListener.Setup(System.Boolean)">
             <summary>
-            If defined DEBUG or TRACE, replaces default trace listener.
+            Replaces default trace listener.
             </summary>
             <param name="useAOutput">Also set <see cref="P:Au.AOutput.RedirectDebugOutput"/> = true.</param>
         </member>
@@ -22393,40 +22402,66 @@
             The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
             </remarks>
         </member>
-        <member name="M:Au.ATask.EndOnDesktopSwitch(System.Int32)">
+        <member name="M:Au.ATask.Setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Action{System.UnhandledExceptionEventArgs},System.String)">
             <summary>
-            Sets to end this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
+            Adds various useful features to this task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
             </summary>
-            <remarks>
-            It allows to end this process with hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
-            
+            <param name="trayIcon">Add standard tray icon. Default true. Or you can set this = false and call <see cref="M:Au.ATask.TrayIcon(System.Int32,System.Action{Au.ATrayIcon},System.Action{Au.ATrayIcon,Au.AMenu},System.String)"/>.</param>
+            <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
+            <param name="desktopExit">
+            End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
+            Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
             Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
-            </remarks>
-            <param name="exitCode">Process exit code. See <see cref="M:System.Environment.Exit(System.Int32)"/>.</param>
-        </member>
-        <member name="M:Au.ATask.EndOnSleep(System.Int32)">
-            <summary>
-            Sets to end this process when computer is going to sleep or hibernate.
-            </summary>
-            <param name="exitCode">Process exit code. See <see cref="M:System.Environment.Exit(System.Int32)"/>.</param>
-        </member>
-        <member name="M:Au.ATask.EndHotkey(Au.Types.KHotkey,System.Int32)">
-            <summary>
-            Sets a hotkey that ends this process.
-            </summary>
-            <param name="hotkey">
-            See <see cref="M:Au.ARegisteredHotkey.Register(System.Int32,Au.Types.KHotkey,Au.Types.AnyWnd)"/>.
-            Good hotkeys are Pause, madia/browser/launch keys, Insert, Up, PageUp. Don't use F12, Shift+numpad, hotkeys with Esc, Space, Tab, Sleep. Don't use keys and modifiers used in script (<b>AKeys.Key</b> etc).
             </param>
-            <param name="exitCode">Process exit code. See <see cref="M:System.Environment.Exit(System.Int32)"/>.</param>
-            <exception cref="T:System.InvalidOperationException">Calling second time.</exception>
+            <param name="debug">Call <see cref="M:Au.Util.ADefaultTraceListener.Setup(System.Boolean)"/>(useAOutput: true).</param>
+            <param name="exception">On unhandled exception call this action instead of displaying the exception in the output.</param>
+            <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+            <exception cref="T:System.InvalidOperationException">Already called.</exception>
             <remarks>
-            This isn't a reliable way to end script. Consider <see cref="M:Au.ATask.EndOnDesktopSwitch(System.Int32)"/>, <see cref="M:Au.ATask.EndOnSleep(System.Int32)"/>.
-            - Does not work if the hotkey is registered by any process or used by Windows.
-            - Does not work or is delayed if user input is blocked by an <see cref="T:Au.AInputBlocker"/> or keyboard hook. For example <see cref="M:Au.AKeys.Key(Au.Types.KKeysEtc[])"/> and similar functions block input by default.
-            - Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.
-            - If several processes call this function with same hotkey, the hotkey ends one process at a time.
+            Also this function:
+            - Ensures that unhandled exceptions are always displayed in the output (or called <i>exception</i>).
+            - Sets invariant culture if need. See <see cref="P:Au.AProcess.CultureIsInvariant"/>.
+            
+            Does nothing if role editorExtension.
             </remarks>
+        </member>
+        <member name="M:Au.ATask.AppModuleInit_">
+            <summary>
+            If role miniProgram or exeProgram, Compiler._AddAttributes adds module initializer that calls this.
+            </summary>
+        </member>
+        <member name="M:Au.ATask.TrayIcon(System.Int32,System.Action{Au.ATrayIcon},System.Action{Au.ATrayIcon,Au.AMenu},System.String)">
+            <summary>
+            Adds standard tray icon.
+            </summary>
+            <param name="delay">Delay, milliseconds.</param>
+            <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
+            <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="M:Au.ATask.Run(System.String,System.String[])"/>).</param>
+            <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+            <remarks>
+            Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="T:Au.ATimer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
+            
+            Does nothing if role editorExtension.
+            </remarks>
+            <example>
+            Shows how to change icon and tooltip.
+            <code><![CDATA[
+            ATask.TrayIcon(init: t => { t.Icon = AIcon.Stock(StockIcon.HELP); t.Tooltip = "Example"; });
+            ]]></code>
+            Shows how to add menu items.
+            <code><![CDATA[
+            ATask.TrayIcon(menu: (t, m) => {
+            	m["Example"] = o => { ADialog.Show("Example"); };
+            	m["Run other script"] = o => { ATask.Run("Example"); };
+            });
+            ]]></code>
+            </example>
+            <seealso cref="T:Au.ATrayIcon"/>
+        </member>
+        <member name="T:Au.AScript">
+            <summary>
+            This class is obsolete. Instead call <see cref="M:Au.ATask.Setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Action{System.UnhandledExceptionEventArgs},System.String)"/>. See Options -> Templates -> Default.
+            </summary>
         </member>
         <member name="T:Au.RunAssembly">
             <summary>
@@ -22447,46 +22482,6 @@
             <summary>
             Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.
             </summary>
-        </member>
-        <member name="T:Au.AScript">
-            <summary>
-            This class is used in automation script files as base of their main class. Adds some features.
-            </summary>
-            <remarks>
-            This class adds these features:
-            1. The static constructor subscribes to the <see cref="E:System.AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
-            2. Provides virtual function <see cref="M:Au.AScript.OnUnhandledException(System.UnhandledExceptionEventArgs)"/>. The script can override it.
-            3. Provides property <see cref="P:Au.AScript.Triggers"/>.
-            4. The static constructor calls <see cref="M:Au.Util.ADefaultTraceListener.Setup(System.Boolean)"/>(useAOutput: true). Then <see cref="M:System.Diagnostics.Debug.Assert(System.Boolean)"/> etc will show a dialog with buttons Exit|Debug|Ignore instead of "Unknown hard error" message box.
-            5. The static constructor sets default culture of all threads = invariant. See <see cref="P:Au.AProcess.CultureIsInvariant"/>.
-            
-            More features may be added in the future.
-            </remarks>
-        </member>
-        <member name="M:Au.AScript.#ctor">
-            
-        </member>
-        <member name="M:Au.AScript.OnUnhandledException(System.UnhandledExceptionEventArgs)">
-            <summary>
-            Writes exception info to the output.
-            Override this function to intercept unhandled exceptions. Call the base function if want to see exception info as usually.
-            </summary>
-            <param name="e"></param>
-        </member>
-        <member name="P:Au.AScript.Triggers">
-            <summary>
-            Gets an auto-created <see cref="T:Au.Triggers.ActionTriggers"/> object that can be used in this script.
-            </summary>
-            <remarks>
-            This property can be used in scripts to avoid creating an <b>ActionTriggers</b> variable explicitly. The returned <b>ActionTriggers</b> object belongs to this class; it is auto-created.
-            In scripts this property is available because this class is the base of the <b>Script</b> class. In other classes need to create an <b>ActionTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
-            </remarks>
-            <example>
-            <code><![CDATA[
-            Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(o.Trigger);
-            Triggers.Run();
-            ]]></code>
-            </example>
         </member>
         <member name="T:Au.APerf">
             <summary>
@@ -23296,7 +23291,7 @@
             <param name="args"></param>
             <exception cref="T:System.InvalidOperationException">Called in a wrong place or from a wrong thread. More info in Ramarks.</exception>
             <remarks>
-            Call while <c>Triggers.Run();</c> is running, from the same thread.
+            Call while <see cref="M:Au.Triggers.ActionTriggers.Run"/> is running, from the same thread.
             </remarks>
         </member>
         <member name="T:Au.Triggers.TriggerArgs">
@@ -23320,6 +23315,7 @@
             Allows to specify working windows for multiple triggers of these types: hotkey, autotext, mouse.
             </summary>
             <example>
+            Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
             <code><![CDATA[
             Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write("this trigger works with all windows");
             Triggers.Of.Window("* Notepad"); //specifies a working window for triggers added afterwards
@@ -23444,6 +23440,7 @@
              In CF never use functions that generate keyboard or mouse events or activate windows.
              </remarks>
              <example>
+             Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
              <code><![CDATA[
              //examples of assigning a callback function (CF) to a single trigger
              Triggers.FuncOf.NextTrigger = o => AKeys.IsCapsLock; //o => AKeys.IsCapsLock is the callback function (lambda)
@@ -23512,9 +23509,9 @@
             The main class of action triggers.
             </summary>
             <remarks>
-            Action triggers are used to call functions (aka <i>trigger actions</i>) in a running script in response to events such as hotkey, typed text, mouse action, activated window. To launch scripts are used other ways: manually, at startup, command line, <see cref="M:Au.ATask.Run(System.String,System.String[])"/>, output link.
+            This class manages action triggers. Action triggers are used to call functions (aka <i>trigger actions</i>) in a running script in response to events such as hotkey, typed text, mouse action, activated window. To launch scripts are used other ways: manually, at startup, command line, <see cref="M:Au.ATask.Run(System.String,System.String[])"/>, output link.
             
-            This class manages action triggers. The <see cref="P:Au.AScript.Triggers"/> property gets its instance. Through it you access all trigger types (hotkey, window, etc) and add triggers to them.
+            If your script class has a field or property like <c>readonly ActionTriggers Triggers = new();</c>, through it you can access all trigger types (hotkey, window, etc) and add triggers to them.
             
             Code syntax to add an action trigger:
             <code>Triggers.TriggerType[parameters] = action;</code>
@@ -23533,8 +23530,7 @@
             Finally call <see cref="M:Au.Triggers.ActionTriggers.Run"/>. It runs all the time (like <b>Application.Run</b>) and launches trigger actions (functions) when need. Actions run in other thread(s) by default.
             
             Recommended properties for scripts containing triggers:
-            - <c>runSingle false</c> (default) - allows other scripts to start while this script is running.
-            - <c>ifRunning warn_restart</c> - to quickly restart the script when editing: just click the Run button.
+            - <c>ifRunning warn_restart</c> - to quickly restart the script when editing. Just click the Run button.
             
             Avoid multiple scripts with triggers. Each running instance uses some CPU. All triggers should be in single script, if possible. It's OK to run additional scripts temporarily, for example to test new triggers without restarting the main script. From trigger actions you can call <see cref="M:Au.ATask.Run(System.String,System.String[])"/> to run other scripts in new process; see example.
             
@@ -23544,6 +23540,8 @@
             This is a single script with many action triggers.
             <code><![CDATA[
             using Au.Triggers; //add this above or below other 'using' directives
+            
+            readonly ActionTriggers Triggers = new(); //add this field in your script class
             
             //you can set options for triggers added afterwards
             Triggers.Options.Thread(0, 500);
@@ -23657,9 +23655,6 @@
             <summary>
             Initializes a new instance of this class.
             </summary>
-            <remarks>
-            In automation scripts don't need to create new instances of this class. Instead use the <see cref="P:Au.AScript.Triggers"/> property to get an instance.
-            </remarks>
         </member>
         <member name="P:Au.Triggers.ActionTriggers.Of">
             <summary>
@@ -23728,6 +23723,7 @@
             Does not abort threads of trigger actions that are still running.
             </remarks>
             <example>
+            Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
             <code><![CDATA[
             Triggers.Hotkey["Ctrl+T"] = o => AOutput.Write("Ctrl+T");
             Triggers.Hotkey["Ctrl+Q"] = o => { AOutput.Write("Ctrl+Q (stop)"); Triggers.Stop(); };
@@ -23773,6 +23769,7 @@
             <seealso cref="P:Au.Triggers.ActionTrigger.EnabledAlways"/>
             <seealso cref="P:Au.Triggers.TriggerOptions.EnabledAlways"/>
             <example>
+            Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
             <code><![CDATA[
             Triggers.Hotkey["Ctrl+T"] = o => AOutput.Write("Ctrl+T");
             Triggers.Hotkey["Ctrl+D"] = o => { AOutput.Write("Ctrl+D (disable/enable)"); Triggers.Disabled ^= true; }; //toggle
@@ -23890,7 +23887,7 @@
         </member>
         <member name="M:Au.Triggers.TriggerOptions.ThreadMain">
             <summary>
-            Run trigger actions in same thread as <c>Triggers.Run();</c>.
+            Run trigger actions in same thread as <see cref="M:Au.Triggers.ActionTriggers.Run"/>.
             </summary>
             <remarks>
             The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="T:Au.AToolbar"/>). Rarely used for other purposes.
@@ -24109,7 +24106,7 @@
             - Text is empty or too long. Can be 1 - 100 characters.
             - Postfix characters contains letters or digits.
             </exception>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example>See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
         <member name="P:Au.Triggers.AutotextTriggers.SimpleReplace">
@@ -24265,6 +24262,7 @@
             This function is used by <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/> when used flag <see cref="F:Au.Triggers.TAFlags.Confirm"/>.
             </remarks>
             <example>
+            Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
             <code><![CDATA[
             var tt = Triggers.Autotext;
             tt["con1", TAFlags.Confirm] = o => o.Replace("Flag Confirm");
@@ -24355,7 +24353,7 @@
             </param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Invalid hotkey string or flags.</exception>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example>See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
         <member name="P:Au.Triggers.HotkeyTriggers.Item(Au.Types.KKey,System.String,Au.Triggers.TKFlags)">
@@ -24371,7 +24369,7 @@
             </param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
         </member>
         <member name="P:Au.Triggers.HotkeyTriggers.Last">
             <summary>
@@ -24497,7 +24495,7 @@
             </param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
         <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMWheel,System.String,Au.Triggers.TMFlags)">
@@ -24508,7 +24506,7 @@
             <param name="modKeys">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags)"/>.</param>
             <param name="flags"></param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
         <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMEdge,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen)">
@@ -24524,7 +24522,7 @@
             Uses <see cref="P:Au.AScreen.All"/> to get screen indices. They are different than in Windows Settings.
             </param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
         <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMMove,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen)">
@@ -24536,7 +24534,7 @@
             <param name="flags"></param>
             <param name="screen">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMEdge,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen)"/>.</param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
         <member name="P:Au.Triggers.MouseTriggers.Last">
@@ -24641,7 +24639,7 @@
             <summary>
             When using the <i>later</i> parameter, call the currently active <b>Triggers.FuncOf</b> functions on "later" events too.
             If the function returns false, the action will not run.
-            The function runs synchronously in the same thread that called <c>Triggers.Run</c>. The action runs asynchronously in another thread, which is slower to start.
+            The function runs synchronously in the same thread that called <see cref="M:Au.Triggers.ActionTriggers.Run"/>. The action runs asynchronously in another thread, which is slower to start.
             As always, <b>Triggers.FuncOf</b> functions must not contain slow code; should take less than 10 ms.
             </summary>
         </member>
@@ -24772,6 +24770,7 @@
             Window triggers.
             </summary>
             <example>
+            Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
             <code><![CDATA[
             var wt = Triggers.Window; //wt is a WindowTriggers instance
             wt[TWEvent.ActiveNew, "Window name"] = o => AOutput.Write(o.Window);
@@ -24799,7 +24798,7 @@
             When a "later" event occurs, the trigger action is executed. The <see cref="P:Au.Triggers.WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
             The "later" trigers are not disabled when primary triggers are disabled.
             </param>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <exception cref="T:System.ArgumentException">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</exception>
             <seealso cref="P:Au.Triggers.WindowTriggers.Last"/>
         </member>
@@ -24807,7 +24806,7 @@
             <summary>
             Adds a window trigger and its action.
             </summary>
-            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
         </member>
         <member name="P:Au.Triggers.WindowTriggers.Last">
             <summary>
@@ -24852,13 +24851,14 @@
             <summary>
             Simulates event "activated new window" as if the the specified window is that window.
             </summary>
-            <exception cref="T:System.InvalidOperationException">Cannot be before or after <c>Triggers.Run</c>.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot be before or after <see cref="M:Au.Triggers.ActionTriggers.Run"/>.</exception>
             <remarks>
             This function usually is used to run <b>ActiveNew</b> triggers for a window created before calling <see cref="M:Au.Triggers.ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like <b>ActiveNew</b> and <b>ActiveOnce</b> will run once, as usually.
-            This function must be called while the main triggers thread is in <c>Triggers.Run</c>, for example from another trigger action. It is asynchronous (does not wait).
+            This function must be called while the main triggers thread is in <see cref="M:Au.Triggers.ActionTriggers.Run"/>, for example from another trigger action. It is asynchronous (does not wait).
             If you call this function from another trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queed. Else both actions cannot run simultaneously. See example.
             </remarks>
             <example>
+            Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
             <code><![CDATA[
             Triggers.Options.ThreadNew(true);
             Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
@@ -24874,7 +24874,7 @@
             Similar to <see cref="M:Au.Triggers.WindowTriggers.SimulateActiveNew(Au.AWnd)"/>.
             </summary>
             <param name="w"></param>
-            <exception cref="T:System.InvalidOperationException">Cannot be before or after <c>Triggers.Run</c>.</exception>
+            <exception cref="T:System.InvalidOperationException">Cannot be before or after <see cref="M:Au.Triggers.ActionTriggers.Run"/>.</exception>
         </member>
         <member name="M:Au.Triggers.WindowTriggers.LogEvents(System.Boolean,System.Func{Au.AWnd,System.Boolean})">
             <summary>
@@ -24892,7 +24892,7 @@
             <li>A - the window is active.</li>
             <li>H - the window is invisible (!<see cref="P:Au.AWnd.IsVisible"/>).</li>
             <li>C - the window is cloaked (<see cref="P:Au.AWnd.IsCloaked"/>).</li>
-            <li>O - the window is considered old, ie created before calling <c>Triggers.Run</c>.</li>
+            <li>O - the window is considered old, ie created before calling <see cref="M:Au.Triggers.ActionTriggers.Run"/>.</li>
             <li>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</li>
             </ul>
             </li>
@@ -24948,6 +24948,7 @@
             The "later" event, or 0 if it is the primary trigger (ActiveNew etc). See example.
             </summary>
             <example>
+            Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
             <code><![CDATA[
             Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => AOutput.Write(o.Later, o.Window);
             Triggers.Run();

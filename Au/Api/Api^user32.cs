@@ -1131,9 +1131,7 @@ namespace Au.Types
 		[DllImport("user32.dll", SetLastError = true)]
 		internal static extern bool GetCursorInfo(ref CURSORINFO pci);
 
-		//TODO: try to d the same for some others.
-		//TODO: use ref struct for some other IDisposable struct.
-		internal ref struct ICONINFO
+		internal struct ICONINFO : IDisposable
 		{
 			public bool fIcon;
 			public int xHotspot;

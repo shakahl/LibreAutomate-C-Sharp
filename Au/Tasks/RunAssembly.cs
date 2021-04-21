@@ -1,4 +1,5 @@
 //#define TEST_STARTUP_SPEED
+//#define TEST_UNLOAD
 
 using Au.Types;
 using Au.Util;
@@ -13,7 +14,8 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.ComponentModel;
 using System.Reflection;
-//using System.Linq;
+using System.Linq;
+using System.Runtime.Loader;
 
 namespace Au
 {
@@ -32,23 +34,43 @@ namespace Au
 		/// <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
 		public static void Run(string asmFile, string[] args, RAFlags flags = 0, string fullPathRefs = null) {
 			//ref var p1 = ref APerf.Shared;
-			//p1.First();
 			//p1.Next('i');
+			//p1.First();
+			//using var p1 = APerf.Create();
 
 			bool inEditorThread = 0 != (flags & RAFlags.InEditorThread);
-			bool findLoaded = inEditorThread;
+			bool findLoaded = inEditorThread/*, notLoaded = false*/;
 			_LoadedScriptAssembly lsa = default;
-			Assembly asm = findLoaded ? lsa.Find(asmFile) : null;
+			Assembly asm = findLoaded ? lsa.Find(asmFile/*, out notLoaded*/) : null;
 			if (asm == null) {
-				var alc = System.Runtime.Loader.AssemblyLoadContext.Default;
-				//SHOULDDO: try to unload editorExtension assemblies. It seems AssemblyLoadContext supports it. Not tested. I guess it would create more problems than is useful.
+				var alc = inEditorThread
+					? new AssemblyLoadContext(null, isCollectible: true)
+					: AssemblyLoadContext.Default;
 				//p1.Next();
-				asm = alc.LoadFromAssemblyPath(asmFile);
-				//p1.Next('L'); //0.5-3 ms, depending on AV. LoadFromStream 30-100 ms, depending on AV.
+
+				if (inEditorThread/* && !notLoaded*/) {
+					//Use LoadFromStream. It is slower with some AV (eg WD), but LoadFromAssemblyPath has this problem: does not reload modified assembly from same file.
+					//	Or would need a dll file with unique name for each version of same script.
+					//		Would need to manage all these files. Also, they aren't unloaded, although their Assembly objects are unloaded.
+					//		And not always it makes faster even with WD. With Avast never faster.
+					//Note: the notLoaded was intended to make faster in some cases. However cannot use it because of the xor.
+					var b = File.ReadAllBytes(asmFile); //with WD ~7 ms, but ~25 ms without xor. With Avast ~7 ms regardless of xor. Both fast if already scanned.
+					for (int i = 0; i < b.Length; i++) b[i] ^= 1; //prevented AV full dll scan twice. Now fully scans once (WD always scans when loading assembly from stream; Avast when loading from stream or earlier).
+					using var stream = new MemoryStream(b, false);
+					//p1.Next();
+					asm = alc.LoadFromStream(stream); //with WD always 15-25 ms. With Avast it seems always fast.
+#if TEST_UNLOAD
+					new _DebugAsmDtor().AttachTo(asm);
+#endif
+					//tested: debugging works. Don't need the overload with pdb parameter.
+				} else {
+					asm = alc.LoadFromAssemblyPath(asmFile); //0.5-4 ms (depends on AV) if already AV-scanned. Else usually 15-30, but with Avast sometimes eg 70.
+				}
+				//p1.Next('L');
 
 				if (fullPathRefs != null) {
 					var fpr = fullPathRefs.Split('|');
-					alc.Resolving += (System.Runtime.Loader.AssemblyLoadContext alc, AssemblyName an) => {
+					alc.Resolving += (AssemblyLoadContext alc, AssemblyName an) => {
 						//AOutput.Write(an, an.Name, an.FullName);
 						foreach (var v in fpr) {
 							var s1 = an.Name;
@@ -72,7 +94,7 @@ namespace Au
 
 				bool useArgs = entryPoint.GetParameters().Length != 0;
 				if (useArgs) {
-					if (args == null) args = Array.Empty<string>();
+					args ??= Array.Empty<string>();
 				}
 
 				//p1.Next('m');
@@ -98,7 +120,7 @@ namespace Au
 
 				if (0 != (flags & RAFlags.DontHandleExceptions)) throw e;
 				//AOutput.Write(e);
-				AScript.OnHostHandledException(new UnhandledExceptionEventArgs(e, false));
+				ATask.OnHostHandledException_(new UnhandledExceptionEventArgs(e, false));
 			}
 
 			//never mind: although Script.Main starts fast, but the process ends slowly, because of .NET.
@@ -128,14 +150,15 @@ namespace Au
 			DateTime _fileTime;
 
 			[MethodImpl(MethodImplOptions.NoInlining)]
-			public Assembly Find(string asmFile) {
+			public Assembly Find(string asmFile/*, out bool notLoaded*/) {
+				//notLoaded = false;
 				_d ??= new Dictionary<string, _Asm>(StringComparer.OrdinalIgnoreCase);
 				if (!AFile.GetProperties(asmFile, out var p, FAFlags.UseRawPath)) return null;
 				_fileTime = p.LastWriteTimeUtc;
 				if (_d.TryGetValue(asmFile, out var x)) {
 					if (x.time == _fileTime) return x.asm;
 					_d.Remove(asmFile);
-				}
+				} //else notLoaded = true;
 				return null;
 			}
 
@@ -150,82 +173,32 @@ namespace Au
 		}
 	}
 
-	/// <summary>
-	/// This class is used in automation script files as base of their main class. Adds some features.
-	/// </summary>
-	/// <remarks>
-	/// This class adds these features:
-	/// 1. The static constructor subscribes to the <see cref="AppDomain.UnhandledException"/> event. On unhandled exception shows exception info in output. Without this class not all unhandled exceptions would be shown.
-	/// 2. Provides virtual function <see cref="OnUnhandledException"/>. The script can override it.
-	/// 3. Provides property <see cref="Triggers"/>.
-	/// 4. The static constructor calls <see cref="ADefaultTraceListener.Setup"/>(useAOutput: true). Then <see cref="Debug.Assert"/> etc will show a dialog with buttons Exit|Debug|Ignore instead of "Unknown hard error" message box.
-	/// 5. The static constructor sets default culture of all threads = invariant. See <see cref="AProcess.CultureIsInvariant"/>.
-	/// 
-	/// More features may be added in the future.
-	/// </remarks>
-	public abstract class AScript
+#if TEST_UNLOAD
+	//This shows that AssemblyLoadContext are unloaded on GC.
+	class _AssemblyLoadContext : AssemblyLoadContext
 	{
-		static AScript() {
-			//AOutput.Write("static AScript"); //note: static ctor of inherited class is called BEFORE this. Never mind.
-			AppDomain.CurrentDomain.UnhandledException += (ad, e) => {
-				OnHostHandledException(e);
+		public _AssemblyLoadContext(string name, bool isCollectible) : base(name, isCollectible) { }
 
-				//Does not see exceptions:
-				//1. thrown in Task.Run etc threads. It's OK. .NET handles exceptions silently, unless something waits for the task.
-				//3. corrupted state exceptions. Tried [HandleProcessCorruptedStateExceptions] etc, unsuccessfully. Never mind.
+		~_AssemblyLoadContext() { AOutput.Write("AssemblyLoadContext unloaded", Name); }
 
-				//This is used for:
-				//1. Exceptions thrown in non-primary threads.
-				//2. Exceptions thrown in non-hosted exe process.
-				//Other exceptions are handled by the host program with try/catch.
-			};
-
-			ADefaultTraceListener.Setup(useAOutput: true);
-
-			//#if !DEBUG
-			AProcess.CultureIsInvariant = true;
-			//#endif
+		protected override Assembly Load(AssemblyName assemblyName) {
+			//AOutput.Write("Load", assemblyName);
+			return null;
 		}
-
-		static AScript s_instance;
-
-		///
-		protected AScript() {
-			s_instance = this;
-		}
-
-		/// <summary>
-		/// Writes exception info to the output.
-		/// Override this function to intercept unhandled exceptions. Call the base function if want to see exception info as usually.
-		/// </summary>
-		/// <param name="e"></param>
-		protected virtual void OnUnhandledException(UnhandledExceptionEventArgs e) => AOutput.Write(e.ExceptionObject);
-
-		internal static void OnHostHandledException(UnhandledExceptionEventArgs e) {
-			var k = s_instance;
-			if (k != null) k.OnUnhandledException(e);
-			else AOutput.Write(e.ExceptionObject);
-		}
-
-		/// <summary>
-		/// Gets an auto-created <see cref="Au.Triggers.ActionTriggers"/> object that can be used in this script.
-		/// </summary>
-		/// <remarks>
-		/// This property can be used in scripts to avoid creating an <b>ActionTriggers</b> variable explicitly. The returned <b>ActionTriggers</b> object belongs to this class; it is auto-created.
-		/// In scripts this property is available because this class is the base of the <b>Script</b> class. In other classes need to create an <b>ActionTriggers</b> variable explicitly. In scripts you also can create explicitly if you like, for example to have more than one instance.
-		/// </remarks>
-		/// <example>
-		/// <code><![CDATA[
-		/// Triggers.Hotkey["Ctrl+K"] = o => AOutput.Write(o.Trigger);
-		/// Triggers.Run();
-		/// ]]></code>
-		/// </example>
-		protected Au.Triggers.ActionTriggers Triggers {
-			get => _triggers ??= new Au.Triggers.ActionTriggers();
-			//set => _triggers = value;
-		}
-		Au.Triggers.ActionTriggers _triggers;
 	}
+
+	//This shows that Assembly are unloaded on GC, although later than AssemblyLoadContext.
+	//However, if using LoadFromAssemblyPath, the dll file remains loaded/locked. That is why we don't use it. For same script would load hundreds of dlls with unique name while developing it.
+	class _DebugAsmDtor
+	{
+		static ConditionalWeakTable<Assembly, _DebugAsmDtor> s_cwt;
+
+		public void AttachTo(Assembly a) { (s_cwt ??= new()).Add(a, this); }
+
+		~_DebugAsmDtor() { AOutput.Write("Assembly unloaded"); }
+	}
+#endif
+
 }
 
 namespace Au.Types

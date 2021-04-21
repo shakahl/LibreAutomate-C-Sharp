@@ -65,7 +65,7 @@ class PanelFind : UserControl
 			v.IsInactiveSelectionHighlightEnabled = true;
 			v.GotKeyboardFocus += _tFindReplace_KeyboardFocus;
 			v.LostKeyboardFocus += _tFindReplace_KeyboardFocus;
-			v.ContextMenu = new AWpfMenu();
+			v.ContextMenu = new KWpfMenu();
 			v.ContextMenuOpening += _tFindReplace_ContextMenuOpening;
 			v.PreviewMouseUp += (o, e) => { //use up, else up will close popup. Somehow on up ClickCount always 1.
 				if (e.ChangedButton == MouseButton.Middle) {
@@ -82,7 +82,7 @@ class PanelFind : UserControl
 
 	private void _tFindReplace_ContextMenuOpening(object sender, ContextMenuEventArgs e) {
 		var c = sender as TextBox;
-		var m = c.ContextMenu as AWpfMenu;
+		var m = c.ContextMenu as KWpfMenu;
 		m.Items.Clear();
 		m["_Undo\0" + "Ctrl+Z", c.CanUndo] = o => c.Undo();
 		m["_Redo\0" + "Ctrl+Y", c.CanRedo] = o => c.Redo();

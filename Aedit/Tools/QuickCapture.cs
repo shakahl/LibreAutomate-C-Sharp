@@ -64,7 +64,7 @@ namespace Au.Tools
 						var g = new TUtil.PathInfo(path);
 						int f = g.SelectFormatUI(); if (f == 0) return;
 						var r = g.GetResult(f);
-						var s = _Str(r.path);
+						var s = r.path;
 						if (what == 2 && path.Starts("shell:")) r.name = w.Name;
 						_Insert(what switch { 1 => $"AFile.Run({s});", 2 => $"t[{_Str(r.name)}] = o => AFile.Run({s});", _ => $"var s = {s};" });
 					}

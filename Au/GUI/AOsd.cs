@@ -616,10 +616,9 @@ namespace Au
 				Api.SetTextColor(dc, TextColor.ToBGR());
 				Api.SetBkMode(dc, 1);
 				var tff = TextFormatFlags; if (WrapWidth > 0) tff |= Native.DT.WORDBREAK;
-				var oldFont = Api.SelectObject(dc, _font);
+				using var soFont = new GdiSelectObject_(dc, _font);
 				RECT rt = r;
 				Api.DrawText(dc, Text, Text.Length, ref rt, tff);
-				Api.SelectObject(dc, oldFont);
 			}
 		}
 

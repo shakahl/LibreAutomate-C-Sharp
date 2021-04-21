@@ -368,6 +368,12 @@ namespace Au.Types
 			return ReadFileArr(hFile, a, out nBytesRead, lpOverlapped);
 		}
 
+		//internal static byte[] ReadFileArr(string file) {
+		//	using var h = Api.CreateFile(file, Api.GENERIC_READ, Api.FILE_SHARE_READ | Api.FILE_SHARE_WRITE, default, Api.OPEN_EXISTING);
+		//	if (h.Is0 || !Api.GetFileSizeEx(h, out long size) || !Api.ReadFileArr(h, out var a, (int)size, out _)) throw new AuException(0);
+		//	return a;
+		//}
+
 		[DllImport("kernel32.dll", SetLastError = true)]
 		internal static extern bool WriteFile(IntPtr hFile, void* lpBuffer, int nBytesToWrite, out int nBytesWritten, void* lpOverlapped = null);
 		//note: lpNumberOfBytesWritten can be null only if lpOverlapped is not null.

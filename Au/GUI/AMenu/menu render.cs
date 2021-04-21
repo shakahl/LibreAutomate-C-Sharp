@@ -138,90 +138,84 @@ namespace Au
 		void _Render(IntPtr dc, RECT rUpdate) {
 			Api.FillRect(dc, rUpdate, (IntPtr)(Api.COLOR_BTNFACE + 1));
 
-			var g = Graphics.FromHdc(dc);
+			using var g = Graphics.FromHdc(dc);
+			g.InterpolationMode = InterpolationMode.HighQualityBicubic;
 			var font = NativeFont_.RegularCached(_dpi);
-			var oldFont = Api.SelectObject(dc, font);
-			try {
-				g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-				Api.SetBkMode(dc, 1);
-				int textColor = Api.GetSysColor(Api.COLOR_BTNTEXT), textColorDisabled = Api.GetSysColor(Api.COLOR_GRAYTEXT);
+			using var soFont = new GdiSelectObject_(dc, font);
+			Api.SetBkMode(dc, 1);
+			int textColor = Api.GetSysColor(Api.COLOR_BTNTEXT), textColorDisabled = Api.GetSysColor(Api.COLOR_GRAYTEXT);
 
-				rUpdate.Offset(0, _scroll.Offset);
-				for (int i = _scroll.Pos; i < _a.Count; i++) {
-					var b = _a[i];
+			rUpdate.Offset(0, _scroll.Offset);
+			for (int i = _scroll.Pos; i < _a.Count; i++) {
+				var b = _a[i];
 
-					if (b.rect.bottom <= rUpdate.top) continue;
-					if (b.rect.top >= rUpdate.bottom) break;
+				if (b.rect.bottom <= rUpdate.top) continue;
+				if (b.rect.top >= rUpdate.bottom) break;
 
-					var r = _ItemRect(b);
+				var r = _ItemRect(b);
 
-					//g.DrawRectangleInset(Pens.BlueViolet, r);
+				//g.DrawRectangleInset(Pens.BlueViolet, r);
 
-					if (b.IsSeparator) {
-						r.Inflate(-_z.textPaddingX / 4, 0);
-						//r.left+=_z.check+_z.image;
-						r.top += (r.Height - _z.sepLine) / 2;
-						r.Height = _z.sepLine;
-						if (_z.theme != default) Api.DrawThemeBackground(_z.theme, dc, 15, 0, r);
-						else Api.DrawEdge(dc, ref r, Api.EDGE_ETCHED, Api.BF_TOP);
-					} else {
-						if (b.BackgroundColor != default) using (var brush = new SolidBrush((Color)b.BackgroundColor)) g.FillRectangle(brush, r);
-						if (i == _iHot) {
-							if ((textColor == 0 || b.TextColor != default) && b.BackgroundColor == default)
-								using (var brush = new SolidBrush(0xC0DCF3.ToColor_())) g.FillRectangle(brush, r);
-							using (var pen = new Pen(0x90C8F6.ToColor_(), _z.bBorder)) g.DrawRectangleInset(pen, r);
-						}
+				if (b.IsSeparator) {
+					r.Inflate(-_z.textPaddingX / 4, 0);
+					//r.left+=_z.check+_z.image;
+					r.top += (r.Height - _z.sepLine) / 2;
+					r.Height = _z.sepLine;
+					if (_z.theme != default) Api.DrawThemeBackground(_z.theme, dc, 15, 0, r);
+					else Api.DrawEdge(dc, ref r, Api.EDGE_ETCHED, Api.BF_TOP);
+				} else {
+					if (b.BackgroundColor != default) using (var brush = new SolidBrush((Color)b.BackgroundColor)) g.FillRectangle(brush, r);
+					if (i == _iHot) {
+						if ((textColor == 0 || b.TextColor != default) && b.BackgroundColor == default)
+							using (var brush = new SolidBrush(0xC0DCF3.ToColor_())) g.FillRectangle(brush, r);
+						using (var pen = new Pen(0x90C8F6.ToColor_(), _z.bBorder)) g.DrawRectangleInset(pen, r);
+					}
 
-						r.Inflate(-_z.bBorder, -_z.bBorder);
-						var r2 = r;
+					r.Inflate(-_z.bBorder, -_z.bBorder);
+					var r2 = r;
 
-						r.left += _z.check;
+					r.left += _z.check;
 
-						if (b.image2 != null) {
-							g.DrawImage(b.image2, r.left + _z.textPaddingY, r.top + (r.Height - _z.image) / 2, _z.image, _z.image);
-						}
+					if (b.image2 != null) {
+						g.DrawImage(b.image2, r.left + _z.textPaddingY, r.top + (r.Height - _z.image) / 2, _z.image, _z.image);
+					}
 
-						r.left += _z.image + _z.textPaddingX; r.right -= _z.textPaddingX + _z.submenu + _z.submenuMargin;
-						r.top += _z.textPaddingY; r.bottom -= _z.textPaddingY;
+					r.left += _z.image + _z.textPaddingX; r.right -= _z.textPaddingX + _z.submenu + _z.submenuMargin;
+					r.top += _z.textPaddingY; r.bottom -= _z.textPaddingY;
 
-						if (b.hotkey != null) {
-							Api.SetTextColor(dc, textColorDisabled);
-							var rh = r; rh.left += _z.xHotkeyStart;
-							Api.DrawText(dc, b.hotkey, b.hotkey.Length, ref rh, c_tffHotkey);
-						}
+					if (b.hotkey != null) {
+						Api.SetTextColor(dc, textColorDisabled);
+						var rh = r; rh.left += _z.xHotkeyStart;
+						Api.DrawText(dc, b.hotkey, b.hotkey.Length, ref rh, c_tffHotkey);
+					}
 
-						Api.SetTextColor(dc, b.TextColor != default ? b.TextColor.ToBGR() : (b.IsDisabled ? textColorDisabled : textColor));
-						int len = b.Text.Lenn();
-						if (len > 0) {
-							if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
-							r.Width = _z.xTextEnd;
-							Api.DrawText(dc, b.Text, len, ref r, _DtFlags(b));
-							if (b.FontBold) Api.SelectObject(dc, font);
-						}
+					Api.SetTextColor(dc, b.TextColor != default ? b.TextColor.ToBGR() : (b.IsDisabled ? textColorDisabled : textColor));
+					int len = b.Text.Lenn();
+					if (len > 0) {
+						if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
+						r.Width = _z.xTextEnd;
+						Api.DrawText(dc, b.Text, len, ref r, _DtFlags(b));
+						if (b.FontBold) Api.SelectObject(dc, font);
+					}
 
-						if (b.IsSubmenu) {
-							_DrawControl(_z.zSubmenu, 16, b.IsDisabled ? 2 : 1, "➜", r2.right - _z.submenu, r.top, _z.submenu, r.Height);
-						}
-						if (b.IsChecked) {
-							_DrawControl(_z.zCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, _z.check, r.Height);
-						}
+					if (b.IsSubmenu) {
+						_DrawControl(_z.zSubmenu, 16, b.IsDisabled ? 2 : 1, "➜", r2.right - _z.submenu, r.top, _z.submenu, r.Height);
+					}
+					if (b.IsChecked) {
+						_DrawControl(_z.zCheck, 11, b.checkType == 1 ? (b.IsDisabled ? 2 : 1) : (b.IsDisabled ? 4 : 3), b.checkType == 1 ? "✔" : "●", r2.left, r.top, _z.check, r.Height);
+					}
 
-						void _DrawControl(SIZE z, int part, int state, string c, int x, int y, int width, int height) {
-							if (_z.theme != default && z != default) {
-								RECT r = new(x, r2.top + (r2.Height - z.height) / 2, z.width, z.height);
-								Api.DrawThemeBackground(_z.theme, dc, part, state, r);
-							} else {
-								RECT r = new(x, y, width, height);
-								Api.DrawText(dc, c, 1, ref r, Native.DT.CENTER);
-								//cannot use DrawFrameControl(DFC_MENU, DFCS_MENUARROW etc), it draws with white background and too small when high DPI
-							}
+					void _DrawControl(SIZE z, int part, int state, string c, int x, int y, int width, int height) {
+						if (_z.theme != default && z != default) {
+							RECT r = new(x, r2.top + (r2.Height - z.height) / 2, z.width, z.height);
+							Api.DrawThemeBackground(_z.theme, dc, part, state, r);
+						} else {
+							RECT r = new(x, y, width, height);
+							Api.DrawText(dc, c, 1, ref r, Native.DT.CENTER);
+							//cannot use DrawFrameControl(DFC_MENU, DFCS_MENUARROW etc), it draws with white background and too small when high DPI
 						}
 					}
 				}
-			}
-			finally {
-				g.Dispose();
-				Api.SelectObject(dc, oldFont);
 			}
 		}
 

@@ -37,5 +37,15 @@ namespace Au
 		public static void Logoff() {
 
 		}
+
+		//FUTURE: events DesktopSwitchEvent, SleepEvent. Like SystemEvents.
+		//public static event Action DesktopSwitchEvent {
+		//	add {
+
+		//	}
+		//	remove {
+
+		//	}
+		//}
 	}
 }

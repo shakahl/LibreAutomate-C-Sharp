@@ -172,7 +172,6 @@ namespace Au
 						while (((readOK = Api.ReadFile(_hPipe, b, bLen, out int n, null)) || (ALastError.Code == Api.ERROR_MORE_DATA)) && n > 0) {
 							n /= 2;
 							if (!readOK) useSB = true;
-							//AOutput.Write(useSB, n);
 							if (useSB) { //rare
 								_sb ??= new StringBuilder(bLen);
 								if (results == null && _s != null) _sb.Append(_s);
@@ -239,72 +238,149 @@ namespace Au
 			return false;
 		}
 
-		//public static void EndEvent(bool desktopSwitch = false, bool pcSleep = false, KHotkey hotkey = default, int exitCode = 0) {
-		//	AThread.Start(() => {
-		//		//Thread.Sleep(100);
-		//		using var hook = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => {
-		//			k.hook.Dispose();
-		//			Environment.Exit(exitCode);
-		//		});
-
-		//		while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
-		//	}, background: true, sta: false);
-		//}
-
 		/// <summary>
-		/// Sets to end this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
+		/// Adds various useful features to this task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
 		/// </summary>
-		/// <remarks>
-		/// It allows to end this process with hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
-		/// 
+		/// <param name="trayIcon">Add standard tray icon. Default true. Or you can set this = false and call <see cref="TrayIcon"/>.</param>
+		/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
+		/// <param name="desktopExit">
+		/// End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
+		/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
 		/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
+		/// </param>
+		/// <param name="debug">Call <see cref="ADefaultTraceListener.Setup"/>(useAOutput: true).</param>
+		/// <param name="exception">On unhandled exception call this action instead of displaying the exception in the output.</param>
+		/// <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+		/// <exception cref="InvalidOperationException">Already called.</exception>
+		/// <remarks>
+		/// Also this function:
+		/// - Ensures that unhandled exceptions are always displayed in the output (or called <i>exception</i>).
+		/// - Sets invariant culture if need. See <see cref="AProcess.CultureIsInvariant"/>.
+		/// 
+		/// Does nothing if role editorExtension.
 		/// </remarks>
-		/// <param name="exitCode">Process exit code. See <see cref="Environment.Exit"/>.</param>
-		public static void EndOnDesktopSwitch(int exitCode = 0) {
-			if (s_endOnDesktopSwitch) return; s_endOnDesktopSwitch = true;
-			AThread.Start(() => {
-				//Thread.Sleep(100);
-				using var hook = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => {
-					k.hook.Dispose();
-					Environment.Exit(exitCode);
-				});
+		public static void Setup(bool trayIcon = true, bool sleepExit = false, bool desktopExit = false, bool debug = false, Action<UnhandledExceptionEventArgs> exception = null, [CallerFilePath] string f = null) {
+			if (Role == ATRole.EditorExtension) return;
+			if (s_setup) throw new InvalidOperationException("ATask.Setup already called");
+			s_setup = true;
 
-				while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
-			}, background: true, sta: false);
+			s_setupException = exception;
+			if (!s_appModuleInit) AppModuleInit_();
 
-			//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
-		}
+			//info: default false, because slow and rarely used.
+			if (debug) ADefaultTraceListener.Setup(useAOutput: true);
 
-		//TODO: maybe these should be events.
-
-		/// <summary>
-		/// Sets to end this process when computer is going to sleep or hibernate.
-		/// </summary>
-		/// <param name="exitCode">Process exit code. See <see cref="Environment.Exit"/>.</param>
-		public static void EndOnSleep(int exitCode = 0) {
-			if (s_endOnSleep) return; s_endOnSleep = true;
-			AThread.Start(() => {
-				//Thread.Sleep(100);
-				var w = AWnd.Internal_.CreateWindowDWP(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
-					if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) {
-						Environment.Exit(exitCode);
+			if (trayIcon) {
+				TrayIcon_(sleepExit, desktopExit, f: f);
+			} else if (sleepExit || desktopExit) {
+				AThread.Start(() => {
+					if (sleepExit) {
+						var w = AWnd.Internal_.CreateWindowDWP(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
+							if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) Environment.Exit(2);
+							return Api.DefWindowProc(w, m, wp, lp);
+						}); //message-only windows don't receive WM_POWERBROADCAST
 					}
-					return Api.DefWindowProc(w, m, wp, lp);
-				}); //message-only windows don't receive WM_POWERBROADCAST
-
-				//instead of above could use SystemEvents.PowerModeChanged, but I don't trust it. Anyway need thread and message loop.
-
-				while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
-			}, background: true, sta: false);
+					if (desktopExit) {
+						new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => {
+							k.hook.Dispose();
+							Environment.Exit(2);
+						});
+						//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
+					}
+					while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
+				});
+			}
 		}
 
-		static bool s_endOnSleep, s_endOnDesktopSwitch;
+		static bool s_setup;
+		static Action<UnhandledExceptionEventArgs> s_setupException;
 		[ThreadStatic] static Native.WNDPROC t_eocWP;
 
-		//TODO: remove "end runSingle task on sleep" from editor.
-		//CONSIDER: add meta runSingle in default template.
-		//SHOULDDO: in meta bool properties allow to omit "true".
+		/// <summary>
+		/// If role miniProgram or exeProgram, Compiler._AddAttributes adds module initializer that calls this.
+		/// </summary>
+		[EditorBrowsable(EditorBrowsableState.Never), NoDoc]
+		public static void AppModuleInit_() {
+			s_appModuleInit = true;
 
+			AppDomain.CurrentDomain.UnhandledException += (_, e) => OnHostHandledException_(e);
+			//Need this for:
+			//1. Exceptions thrown in non-primary threads.
+			//2. Exceptions thrown in non-hosted exe process.
+			//Other exceptions are handled by the host program with try/catch.
+
+			//#if !DEBUG
+			//info: miniProgram scripts always start with true. That is why there is no parameter cultureInvariant.
+			if (Role == ATRole.ExeProgram) AProcess.CultureIsInvariant = true;
+			//#endif
+		}
+		static bool s_appModuleInit;
+
+		internal static void OnHostHandledException_(UnhandledExceptionEventArgs e) {
+			var k = s_setupException;
+			if (k != null) k(e);
+			else AOutput.Write(e.ExceptionObject);
+		}
+
+		/// <summary>
+		/// Adds standard tray icon.
+		/// </summary>
+		/// <param name="delay">Delay, milliseconds.</param>
+		/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
+		/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="ATask.Run"/>).</param>
+		/// <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+		/// <remarks>
+		/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="ATimer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
+		/// 
+		/// Does nothing if role editorExtension.
+		/// </remarks>
+		/// <example>
+		/// Shows how to change icon and tooltip.
+		/// <code><![CDATA[
+		/// ATask.TrayIcon(init: t => { t.Icon = AIcon.Stock(StockIcon.HELP); t.Tooltip = "Example"; });
+		/// ]]></code>
+		/// Shows how to add menu items.
+		/// <code><![CDATA[
+		/// ATask.TrayIcon(menu: (t, m) => {
+		/// 	m["Example"] = o => { ADialog.Show("Example"); };
+		/// 	m["Run other script"] = o => { ATask.Run("Example"); };
+		/// });
+		/// ]]></code>
+		/// </example>
+		/// <seealso cref="ATrayIcon"/>
+		public static void TrayIcon(int delay = 500, Action<ATrayIcon> init = null, Action<ATrayIcon, AMenu> menu = null, [CallerFilePath] string f = null) {
+			if (Role == ATRole.EditorExtension) return;
+			TrayIcon_(false, false, delay, init, menu, f);
+		}
+
+		internal static void TrayIcon_(bool sleepExit, bool desktopExit, int delay = 500, Action<ATrayIcon> init = null, Action<ATrayIcon, AMenu> menu = null, [CallerFilePath] string f = null) {
+			AThread.Start(() => {
+				Thread.Sleep(delay);
+				var ti = new ATrayIcon { Tooltip = ATask.Name, sleepExit_ = sleepExit, desktopExit_ = desktopExit };
+				init?.Invoke(ti);
+				ti.Icon ??= AIcon.TrayIcon();
+				bool canEdit = f != null && AScriptEditor.Available;
+				if (canEdit) ti.Click += _ => AScriptEditor.GoToEdit(f, 0);
+				ti.MiddleClick += _ => Environment.Exit(2);
+				ti.RightClick += e => {
+					var m = new AMenu();
+					if (menu != null) {
+						menu(ti, m);
+						if (m.Last != null && !m.Last.IsSeparator) m.Separator();
+					}
+					if (canEdit) m["Edit script\tClick"] = _ => AScriptEditor.GoToEdit(f, 0);
+					m["End task\tM-click"] = _ => Environment.Exit(2);
+					m.Show(MSFlags.AlignCenterH | MSFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
+				};
+				ti.Visible = true;
+				while (Api.GetMessage(out var m) > 0) {
+					Api.TranslateMessage(m);
+					Api.DispatchMessage(m);
+				}
+			});
+		}
+
+#if false //not sure is it useful. Unreliable. Can instead use ATask.Setup(exitSleep: true, exitDesktop: true). If useful, can instead add Setup parameter keyExit.
 		/// <summary>
 		/// Sets a hotkey that ends this process.
 		/// </summary>
@@ -315,13 +391,14 @@ namespace Au
 		/// <param name="exitCode">Process exit code. See <see cref="Environment.Exit"/>.</param>
 		/// <exception cref="InvalidOperationException">Calling second time.</exception>
 		/// <remarks>
-		/// This isn't a reliable way to end script. Consider <see cref="EndOnDesktopSwitch"/>, <see cref="EndOnSleep"/>.
+		/// This isn't a reliable way to end script. Consider <see cref="Setup"/> parameters <i>sleepExit</i>, <i>desktopExit</i>.
 		/// - Does not work if the hotkey is registered by any process or used by Windows.
 		/// - Does not work or is delayed if user input is blocked by an <see cref="AInputBlocker"/> or keyboard hook. For example <see cref="AKeys.Key"/> and similar functions block input by default.
 		/// - Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.
 		/// - If several processes call this function with same hotkey, the hotkey ends one process at a time.
 		/// </remarks>
-		public static void EndHotkey(KHotkey hotkey, int exitCode = 0) {
+		public static void ExitHotkey(KHotkey hotkey, int exitCode = 0) {
+			if (Role == ATRole.EditorExtension) return;
 			AThread.Start(() => {
 				var (mod, key) = ARegisteredHotkey.Normalize_(hotkey);
 				var atom = Api.GlobalAddAtom("Au.EndHotkey");
@@ -370,7 +447,20 @@ namespace Au
 				//don't delete hotkey/atom/window, because in most cases the process ends not because of the hotkey
 			}, background: true, sta: false);
 		}
+#endif
+
+		//TODO: remove "end runSingle task on sleep" from editor.
+		//TODO: don't change editor tray icon when a runSingle task runs.
+		//CONSIDER: add meta runSingle in default template.
+		//SHOULDDO: in meta bool properties allow to omit "true".
 	}
+
+	/// <summary>
+	/// This class is obsolete. Instead call <see cref="ATask.Setup"/>. See Options -> Templates -> Default.
+	/// </summary>
+	[Obsolete("Replaced with ATask.Setup. See Options -> Templates -> Default.", error: true)] //TODO: editor should help to replace
+	public abstract class AScript { }
+	//FUTURE: remove
 }
 
 namespace Au.Types

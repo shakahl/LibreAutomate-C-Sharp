@@ -87,9 +87,6 @@ namespace Au
 				return i != 0;
 				//also tested several default screensavers on Win10 and 7. Goes through this branch. When closed, works like when locked (goes through other branch until next input).
 			} else {
-				//TODO: in lock screen SHQueryUserNotificationState returns QUNS_NOT_PRESENT.
-				//	Also documented but not tested: screen saver.
-				//	tested: QUNS_ACCEPTS_NOTIFICATIONS (normal) when Ctrl+Alt+Delete.
 				if (detectLocked && AVersion.MinWin10) {
 					var rw = w.Rect;
 					if (rw.left == 0 && rw.top == 0) {
@@ -101,6 +98,10 @@ namespace Au
 					}
 				}
 				return true;
+				//info: in lock screen SHQueryUserNotificationState returns QUNS_NOT_PRESENT.
+				//	Also documented but not tested: screen saver.
+				//	tested: QUNS_ACCEPTS_NOTIFICATIONS (normal) when Ctrl+Alt+Delete.
+				//	However it is too slow, eg 1300 mcs.
 			}
 		}
 

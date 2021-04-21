@@ -12,8 +12,6 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
-//TODO: use class?
-
 namespace Au.Util
 {
 	/// <summary>

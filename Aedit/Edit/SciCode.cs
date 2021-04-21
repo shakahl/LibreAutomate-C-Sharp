@@ -277,7 +277,7 @@ partial class SciCode : KScintilla
 				int margin = kbd ? -1 : zMarginFromPoint(AMath.LparamToPOINT(lParam), true);
 				switch (margin) {
 				case -1:
-					var m = new AWpfMenu();
+					var m = new KWpfMenu();
 					App.Commands[nameof(Menus.Edit)].CopyToMenu(m);
 					m.Show(this, byCaret: kbd);
 					break;
@@ -450,7 +450,7 @@ partial class SciCode : KScintilla
 	#region script header
 
 	//const string c_usings = "using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;";
-	//const string c_scriptMain = "class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;";
+	//const string c_scriptMain = "class Script { [STAThread] static void Main(string[] a) { ATask.Setup(); new Script(a); } Script(string[] args) { //;;;";
 
 	//static ARegex _RxScriptHeader => s_rxScript ??= new ARegex(@"(?sm)//\.(.*?)\R\Q" + c_usings + @"\E$(.*?)\R\Q[\w ]*" + c_scriptMain + @"\E$");
 	//static ARegex s_rxScript;

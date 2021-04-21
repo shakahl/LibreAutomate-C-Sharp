@@ -120,7 +120,7 @@ class DProperties : KDialogWindow
 		//Assembly
 		outputPath.Text = _meta.outputPath;
 		void _ButtonClick_outputPath(WBButtonClickArgs e) {
-			var m = new AWpfMenu();
+			var m = new AMenu();
 			m[_GetOutputPath(getDefault: true)] = o => outputPath.Text = o.ToString();
 			m["Browse..."] = o => {
 				using var fd = new System.Windows.Forms.FolderBrowserDialog {
@@ -129,7 +129,7 @@ class DProperties : KDialogWindow
 				};
 				if (fd.ShowDialog() == System.Windows.Forms.DialogResult.OK) outputPath.Text = fd.SelectedPath;
 			};
-			m.Show(e.Button);
+			m.Show();
 		}
 		icon.Text = _meta.icon;
 		manifest.Text = _meta.manifest;
@@ -485,8 +485,11 @@ class DProperties : KDialogWindow
 		foreach (var v in a) _ShowCollapse(v, show);
 	}
 
-	static bool _IsHidden(FrameworkElement t)
-		=> t.Visibility != Visibility.Visible || (t.Parent is Expander e && e.Visibility != Visibility.Visible);
+	static bool _IsHidden(FrameworkElement t) {
+		if (t.IsVisible) return false; //else hidden or in non-expanded Expander
+		while ((t = t.Parent as FrameworkElement) != null) if (t is Expander e) return !e.IsVisible;
+		return true;
+	}
 
 	static string _Get(TextBox t, bool nullIfHidden = true) {
 		if (nullIfHidden && _IsHidden(t)) return null;

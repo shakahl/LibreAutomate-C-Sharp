@@ -101,7 +101,8 @@ namespace Au.Types
 		/// Hide the toolbar when a full-screen window is active. Default.
 		/// </summary>
 		HideWhenFullScreen = 2,
-		//TODO: use SHQueryUserNotificationState to detect also presentation mode etc.
+
+		//rejected: use SHQueryUserNotificationState to detect also presentation mode etc. Too slow, eg 1300 mcs, which is 100-500 times slower than AWnd.IsFullScreen.
 		//	HideWhenFullScreenActive
 		//	HideWhenFullScreenRunning (QUNS_BUSY) (in primary screen only)
 		//	HideWhenPresentation (QUNS_PRESENTATION_MODE)

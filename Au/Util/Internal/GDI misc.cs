@@ -154,7 +154,7 @@ namespace Au.Util
 		public SIZE Measure(string s, Native.DT format, int wrapWidth = 0) => Measure(s, s.Lenn(), format, wrapWidth);
 	}
 
-	ref struct Pen_
+	struct Pen_ : IDisposable
 	{
 		IntPtr _pen;
 
@@ -182,7 +182,7 @@ namespace Au.Util
 		}
 	}
 
-	ref struct GdiSelectObject_
+	struct GdiSelectObject_ : IDisposable
 	{
 		IntPtr _dc, _old;
 

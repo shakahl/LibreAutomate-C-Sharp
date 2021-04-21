@@ -136,7 +136,7 @@ namespace Au.Triggers
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMClick button, string modKeys = null, TMFlags flags = 0] {
 			set {
@@ -151,7 +151,7 @@ namespace Au.Triggers
 		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags]"/>.</param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMWheel direction, string modKeys = null, TMFlags flags = 0] {
 			set {
@@ -171,7 +171,7 @@ namespace Au.Triggers
 		/// Uses <see cref="AScreen.All"/> to get screen indices. They are different than in Windows Settings.
 		/// </param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {
@@ -187,7 +187,7 @@ namespace Au.Triggers
 		/// <param name="flags"></param>
 		/// <param name="screen">See <see cref="this[TMEdge, string, TMFlags, TMScreen]"/>.</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
 		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
 			set {

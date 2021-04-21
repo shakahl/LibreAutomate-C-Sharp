@@ -110,10 +110,10 @@ namespace Au.Tools
 
 		private void _bRect_Click(WBButtonClickArgs e) {
 			if (_wnd.Is0) return;
-			var m = new AWpfMenu();
+			var m = new AMenu();
 			m["Rectangle of the captured image"] = o => _SetRect(_rect);
 			m["Select rectangle..."] = o => { if (_CaptureImageOrRect(true, out var r)) _SetRect(r.rect); };
-			m.Show(this);
+			m.Show();
 			void _SetRect(RECT k) => rectC.Set(true, k.ToStringFormat("({0}, {1}, {4}, {5})"));
 		}
 
@@ -331,23 +331,14 @@ namespace Au.Tools
 		void _bEtc_Click(WBButtonClickArgs e) {
 			bool isImage = _image != null && !_isColor;
 
-			var m = new AWpfMenu();
+			var m = new AMenu();
 			m["Use file..."] = o => _OpenFile(false, e.Button);
 			m["Embed file..."] = o => _OpenFile(true, e.Button);
-			m["Save as file...", enabled: isImage] = o => _SaveFile();
+			m["Save as file...", disable: !isImage] = o => _SaveFile();
 			m.Separator();
-			m["Add to array", enabled: _image != null] = o => _MultiMenuAdd();
-			m["Remove from array", enabled: _MultiIsActive] = o => _MultiRemove();
-
-			//if(isImage) {
-			//	m.Separator();
-			//	using(m.Submenu("Make transparent")) {
-			//		m["Pixels of top-left color"] = o => _MakeTransparent(0);
-			//		//m["Pixels of bottom-left color"] = o => _MakeTransparent(1);
-			//	}
-			//}
-
-			m.Show(this);
+			m["Add to array", disable: _image == null] = o => _MultiMenuAdd();
+			m["Remove from array", disable: !_MultiIsActive] = o => _MultiRemove();
+			m.Show();
 		}
 
 		void _OpenFile(bool embed, Button button) {

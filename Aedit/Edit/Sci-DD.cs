@@ -125,6 +125,7 @@ partial class SciCode
 				} else if (_data.files != null) {
 					int format = 0;
 					foreach (var path in _data.files) {
+						if (what == 0) { _AppendFile(path, null); continue; }
 						var g = new TUtil.PathInfo(path);
 						if (format == 0) { //show dialog once if need
 							format = g.SelectFormatUI();
@@ -139,6 +140,7 @@ partial class SciCode
 					if (shells != null) {
 						int format = 0;
 						for (int i = 0; i < shells.Length; i++) {
+							if (what == 0) { _AppendFile(shells[i], null); continue; }
 							var g = new TUtil.PathInfo(shells[i]);
 							if (format == 0) { //show dialog once if need
 								format = g.SelectFormatUI();
@@ -184,18 +186,19 @@ partial class SciCode
 					case 4: case 13: b.AppendFormat("t[\"{0}\"] = o => ", what == 4 ? name.RemoveSuffix(".cs") : name); break;
 					}
 					if (what == 12 || what == 13) b.Append("AFile.Run(");
-					if ((what == 11 || what == 12) && (path.Starts(":: ") || path.Starts("%AFolders.Virtual."))) b.AppendFormat("/* {0} */ ", name);
+					if ((what == 11 || what == 12) && (path.Starts("\":: ") || path.Starts("AFolders.Virtual."))) b.AppendFormat("/* {0} */ ", name);
+					if (!path.Ends('\"')) path = "@\"" + path + "\"";
 					switch (what) {
-					case 1: b.AppendFormat("\"{0}\";", name); break;
-					case 2: case 11: b.AppendFormat("@\"{0}\";", path); break;
-					case 3: case 4: b.AppendFormat("ATask.Run(@\"{0}\");", path); break;
-					case 12:
-					case 13:
-						b.AppendFormat("@\"{0}", path);
-						if (!args.NE()) b.Append("\", \"").Append(args.Escape());
-						b.Append("\");");
+					case 1: b.AppendFormat("\"{0}\"", name); break;
+					case 2 or 11: b.Append(path); break;
+					case 3 or 4: b.AppendFormat("ATask.Run({0})", path); break;
+					case 12 or 13:
+						b.Append(path);
+						if (!args.NE()) b.AppendFormat(", \"{0}\"", args.Escape());
+						b.Append(')');
 						break;
 					}
+					b.Append(';');
 				}
 				b.AppendLine();
 			}

@@ -512,7 +512,7 @@ namespace Au
 		/// If your app don't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = true.
 		/// It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
 		/// Also, bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-		/// In automation scripts this property is implicitly set = true, unless script's role is exeProgram and it does not use <see cref="AScript"/> as base class.
+		/// In automation scripts this property is implicitly set = true, unless script with role exeProgram does not call <see cref="ATask.Setup"/>.//TODO
 		/// </remarks>
 		public static bool CultureIsInvariant {
 			get {

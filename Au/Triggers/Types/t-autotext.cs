@@ -152,7 +152,7 @@ namespace Au.Triggers
 		/// - Text is empty or too long. Can be 1 - 100 characters.
 		/// - Postfix characters contains letters or digits.
 		/// </exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public Action<AutotextTriggerArgs> this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
 			set {
@@ -706,7 +706,7 @@ namespace Au.Triggers
 				string confirmText;
 				if (!ke.NE_()) {
 					confirmText = null;
-					if(ke[0].Value is string s2 && s2.Starts("!!")) {
+					if (ke[0].Value is string s2 && s2.Starts("!!")) {
 						confirmText = s2[2..];
 						ke = ke.RemoveAt(0);
 					} else {
@@ -796,6 +796,7 @@ namespace Au.Triggers
 		/// This function is used by <see cref="Replace"/> when used flag <see cref="TAFlags.Confirm"/>.
 		/// </remarks>
 		/// <example>
+		/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 		/// <code><![CDATA[
 		/// var tt = Triggers.Autotext;
 		/// tt["con1", TAFlags.Confirm] = o => o.Replace("Flag Confirm");

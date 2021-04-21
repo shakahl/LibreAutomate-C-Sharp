@@ -30,7 +30,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// When using the <i>later</i> parameter, call the currently active <b>Triggers.FuncOf</b> functions on "later" events too.
 		/// If the function returns false, the action will not run.
-		/// The function runs synchronously in the same thread that called <c>Triggers.Run</c>. The action runs asynchronously in another thread, which is slower to start.
+		/// The function runs synchronously in the same thread that called <see cref="ActionTriggers.Run"/>. The action runs asynchronously in another thread, which is slower to start.
 		/// As always, <b>Triggers.FuncOf</b> functions must not contain slow code; should take less than 10 ms.
 		/// </summary>
 		LaterCallFunc = 2,
@@ -210,6 +210,7 @@ namespace Au.Triggers
 	/// Window triggers.
 	/// </summary>
 	/// <example>
+	/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 	/// <code><![CDATA[
 	/// var wt = Triggers.Window; //wt is a WindowTriggers instance
 	/// wt[TWEvent.ActiveNew, "Window name"] = o => AOutput.Write(o.Window);
@@ -247,7 +248,7 @@ namespace Au.Triggers
 		/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
 		/// The "later" trigers are not disabled when primary triggers are disabled.
 		/// </param>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <exception cref="ArgumentException">See <see cref="AWnd.Find"/>.</exception>
 		/// <seealso cref="Last"/>
 		public Action<WindowTriggerArgs> this[TWEvent winEvent,
@@ -266,7 +267,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Adds a window trigger and its action.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		public Action<WindowTriggerArgs> this[TWEvent winEvent, AWnd.Finder f, TWFlags flags = 0, TWLater later = 0] {
 			set {
 				_triggers.ThrowIfRunning_();
@@ -801,13 +802,14 @@ namespace Au.Triggers
 		/// <summary>
 		/// Simulates event "activated new window" as if the the specified window is that window.
 		/// </summary>
-		/// <exception cref="InvalidOperationException">Cannot be before or after <c>Triggers.Run</c>.</exception>
+		/// <exception cref="InvalidOperationException">Cannot be before or after <see cref="ActionTriggers.Run"/>.</exception>
 		/// <remarks>
 		/// This function usually is used to run <b>ActiveNew</b> triggers for a window created before calling <see cref="ActionTriggers.Run"/>. Here "run triggers" means "compare window properties etc with those specified in triggers and run actions of triggers that match". Normally such triggers don't run because the window is considered old. This function runs triggers as it was a new window. Triggers like <b>ActiveNew</b> and <b>ActiveOnce</b> will run once, as usually.
-		/// This function must be called while the main triggers thread is in <c>Triggers.Run</c>, for example from another trigger action. It is asynchronous (does not wait).
+		/// This function must be called while the main triggers thread is in <see cref="ActionTriggers.Run"/>, for example from another trigger action. It is asynchronous (does not wait).
 		/// If you call this function from another trigger action (hotkey etc), make sure the window trigger action runs in another thread or can be queed. Else both actions cannot run simultaneously. See example.
 		/// </remarks>
 		/// <example>
+		/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 		/// <code><![CDATA[
 		/// Triggers.Options.ThreadNew(true);
 		/// Triggers.Window[TWEvent.ActiveNew, "* Notepad"] = o => o.Window.Resize(500, 200);
@@ -823,7 +825,7 @@ namespace Au.Triggers
 		/// Similar to <see cref="SimulateActiveNew"/>.
 		/// </summary>
 		/// <param name="w"></param>
-		/// <exception cref="InvalidOperationException">Cannot be before or after <c>Triggers.Run</c>.</exception>
+		/// <exception cref="InvalidOperationException">Cannot be before or after <see cref="ActionTriggers.Run"/>.</exception>
 		public void SimulateVisibleNew(AWnd w) => _SimulateNew(TWLater.Visible, w);
 
 		void _SimulateNew(TWLater e, AWnd w)
@@ -857,7 +859,7 @@ namespace Au.Triggers
 		/// <li>A - the window is active.</li>
 		/// <li>H - the window is invisible (!<see cref="AWnd.IsVisible"/>).</li>
 		/// <li>C - the window is cloaked (<see cref="AWnd.IsCloaked"/>).</li>
-		/// <li>O - the window is considered old, ie created before calling <c>Triggers.Run</c>.</li>
+		/// <li>O - the window is considered old, ie created before calling <see cref="ActionTriggers.Run"/>.</li>
 		/// <li>T - the even has been detected using a timer, which means slower response time. Else detected using a hook.</li>
 		/// </ul>
 		/// </li>
@@ -971,6 +973,7 @@ namespace Au.Triggers
 		/// The "later" event, or 0 if it is the primary trigger (ActiveNew etc). See example.
 		/// </summary>
 		/// <example>
+		/// Note: the Triggers in examples is a field or property like <c>readonly ActionTriggers Triggers = new();</c>.
 		/// <code><![CDATA[
 		/// Triggers.Window[TWEvent.ActiveOnce, "*- Notepad", later: TWLater.Active | TWLater.Inactive] = o => AOutput.Write(o.Later, o.Window);
 		/// Triggers.Run();

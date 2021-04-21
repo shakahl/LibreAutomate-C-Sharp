@@ -35,6 +35,7 @@ using Au.Controls;
 using Au;
 using Au.Types;
 using System.Resources;
+using Au.Util;
 
 [module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]
 
@@ -135,7 +136,7 @@ using System.Resources;
 
 #else
 
-partial class TestScript : AScript
+partial class TestScript
 {
 
 	class TestGC
@@ -921,6 +922,7 @@ partial class TestScript : AScript
 		//Application.SetCompatibleTextRenderingDefault(false);
 		//AOutput.Write("before");
 		//ADebug.AOutput.WriteLoadedAssemblies(true, true, true);
+
 
 		//TestWMI();
 		//new Script().Test();

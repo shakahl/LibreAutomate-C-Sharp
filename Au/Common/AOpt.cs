@@ -104,7 +104,6 @@ namespace Au
 		//	t_warnings?.Reset();
 		//}
 
-		//TODO: why valid values are smaller than nonstatic?
 		/// <summary>
 		/// Default <see cref="AOpt"/> properties of a thread.
 		/// </summary>

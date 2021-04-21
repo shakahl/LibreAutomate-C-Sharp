@@ -113,7 +113,7 @@ namespace Au.Triggers
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid hotkey string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
 		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0] {
 			set {
@@ -134,7 +134,7 @@ namespace Au.Triggers
 		/// </param>
 		/// <param name="flags"></param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
-		/// <exception cref="InvalidOperationException">Cannot add triggers after <c>Triggers.Run</c> was called, until it returns.</exception>
+		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0] {
 			set {
 				var ps = key.ToString(); if(AChar.IsAsciiDigit(ps[0])) ps = "VK" + ps;

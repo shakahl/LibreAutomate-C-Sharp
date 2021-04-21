@@ -16,7 +16,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Windows.Media.Imaging;
 
-//TODO: in editor etc try to replace with AMenu. Maybe make internal. Now 'using(m.Submenu...), while other similar classes use lambda for submenus; if changed, update example.
 namespace Au
 {
 	/// <summary>
@@ -24,7 +23,7 @@ namespace Au
 	/// </summary>
 	/// <example>
 	/// <code><![CDATA[
-	/// var m = new AWpfMenu();
+	/// var m = new KWpfMenu();
 	/// m["One"] = o => AOutput.Write(o);
 	/// using(m.Submenu("Sub")) {
 	/// 	m["Three"] = o => AOutput.Write(o);
@@ -32,13 +31,13 @@ namespace Au
 	/// }
 	/// m.Separator();
 	/// m["Two"] = o => { AOutput.Write(o); };
-	/// m.Show(); //or m.IsOpen=true;
+	/// m.Show(this); //or m.IsOpen=true;
 	/// ]]></code>
 	/// </example>
-	public class AWpfMenu : ContextMenu
+	public class KWpfMenu : ContextMenu
 	{
 		///
-		public AWpfMenu() {
+		public KWpfMenu() {
 		}
 
 		/// <summary>
@@ -128,7 +127,7 @@ namespace Au
 		/// <remarks>
 		/// Then the add-item functions will add items to the submenu, until the returned variable is disposed.
 		/// </remarks>
-		/// <example><see cref="AWpfMenu"/></example>
+		/// <example><see cref="KWpfMenu"/></example>
 		public UsingEndAction Submenu(object text, object icon = null, Action<WpfMenuActionArgs> click = null) {
 			var mi = Add(text, click, icon);
 			_submenuStack.Push(mi);
@@ -255,9 +254,9 @@ namespace Au
 		/// The menu is modal; the function returns when closed.
 		/// </remarks>
 		/// <seealso cref="ADialog.ShowList"/>
-		public static int ShowSimple(DStringList items, UIElement owner, bool byCaret = false, Action<AWpfMenu> beforeShow = null) {
+		public static int ShowSimple(DStringList items, UIElement owner, bool byCaret = false, Action<KWpfMenu> beforeShow = null) {
 			var a = items.ToArray();
-			var m = new AWpfMenu();
+			var m = new KWpfMenu();
 			//	var dispFrame = new DispatcherFrame();
 			//	m.Closed+=(_,_)=>dispFrame.Continue=false;
 			int result = 0, autoId = 0;
@@ -289,11 +288,11 @@ namespace Au
 
 		class _MenuItem : MenuItem
 		{
-			AWpfMenu _m;
+			KWpfMenu _m;
 			public Action<WpfMenuActionArgs> action;
 			public bool actionException;
 
-			public _MenuItem(AWpfMenu m) { _m = m; }
+			public _MenuItem(KWpfMenu m) { _m = m; }
 
 			protected override void OnClick() {
 				base.OnClick(); //must be first, because changes IsChecked (if IsCheckable)
@@ -324,7 +323,7 @@ namespace Au
 namespace Au.Types
 {
 	/// <summary>
-	/// Arguments for <see cref="AWpfMenu"/> item actions.
+	/// Arguments for <see cref="KWpfMenu"/> item actions.
 	/// </summary>
 	public class WpfMenuActionArgs
 	{

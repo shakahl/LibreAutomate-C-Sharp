@@ -162,6 +162,7 @@ static unsafe class Program
 		//JIT slowest-to-JIT methods. Makes faster even with profile optimization.
 		AJit.Compile(typeof(RunAssembly), nameof(RunAssembly.Run));
 		AJit.Compile(typeof(Serializer_), "Deserialize");
+		AJit.Compile(typeof(ATask), nameof(ATask.Setup), nameof(ATask.TrayIcon_));
 
 		//_ = Assembly.GetExecutingAssembly().EntryPoint.GetParameters().Length;
 		var ep = Assembly.GetExecutingAssembly().EntryPoint;
@@ -181,7 +182,7 @@ static unsafe class Program
 
 		_Hook();
 
-		"Au".ToLowerInvariant(); //in .NET 5 preview would be first time 15-40 ms
+		"Au".ToLowerInvariant(); //first time 15-40 ms
 
 		//APerf.Shared.Next();
 	}

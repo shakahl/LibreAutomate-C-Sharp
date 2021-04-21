@@ -788,24 +788,26 @@ namespace Au
 		//DON'T: The + operator returns FolderPath. Then AFolders.Desktop + subfolder + file would return "desktop\subfolder\file". Probably not good.
 
 		/// <summary>
-		/// If string starts with a known/special folder path, replaces it with folder name and returns true.
-		/// For example replaces <c>C:\Windows\sYstem32\notepad.exe</c> with <c>%AFolders.System%\notepad.exe</c>.
+		/// If string starts with a known/special folder path, gets folder name + relative path and returns true.
+		/// For example if string is <c>C:\Windows\System32\notepad.exe</c>, gets <c>AFolders.System</c> and <c>notepad.exe</c>.
 		/// </summary>
 		/// <param name="path">Any string. Can be null. Case-insensitive. Supports ":: ITEMIDLIST" (see <see cref="APidl.ToHexString"/>).</param>
-		/// <param name="unexpanded">Receives final path, unexpanded or not. Can be same variable as <i>path</i>.</param>
+		/// <param name="folder">Receives special folder string like <c>"AFolders.System"</c>.</param>
+		/// <param name="name">Receives filename or relative path in the folder.</param>
 		/// <remarks>
 		/// Quite slow first time in process, eg 50 ms, because gets all folder paths. Later uses cached paths.
 		/// </remarks>
 		/// <seealso cref="APath.ExpandEnvVar"/>
-		public static bool UnexpandPath(string path, out string unexpanded) {
-			var p = unexpanded = path;
+		public static bool UnexpandPath(string path, out string folder, out string name) {
+			var p = path; folder = name = null;
 			if (!p.NE()) {
 				p = p.Lower();
 				if (p.Starts(":: ")) {
 					foreach (var v in _upv.Value) {
 						int n = v.path.Length;
 						if (p.Starts(v.path)) {
-							unexpanded = $"%AFolders.Virtual.{v.name}%{path[n..]}";
+							folder = "AFolders.Virtual." + v.name;
+							name = path[n..];
 							return true;
 						}
 					}
@@ -814,7 +816,9 @@ namespace Au
 					foreach (var v in _up.Value) {
 						int n = v.path.Length;
 						if (p.Starts(v.path) && (p.Length == n || p[n] == '\\')) {
-							unexpanded = $"%AFolders.{v.name}%{path[n..]}";
+							folder = "AFolders." + v.name;
+							if (p.Length > n) n++;
+							name = path[n..];
 							return true;
 						}
 					}

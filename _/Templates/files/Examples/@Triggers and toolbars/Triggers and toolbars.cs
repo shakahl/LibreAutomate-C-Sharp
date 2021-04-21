@@ -2,7 +2,7 @@
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
 using Au.Triggers;
 using System.Reflection;
-partial class Script : AScript { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { //;;;
+partial class Script { [STAThread] static void Main(string[] a) { ATask.Setup(trayIcon: false); new Script(a); } Script(string[] args) { //;;;
 
 //Here you can add code that runs at startup. Set variables, etc.
 //Add triggers and toolbars in other files of this project. More info in "Readme.txt".
@@ -23,14 +23,18 @@ bool _enableToolbarExamples = true;
 
 //. RunTriggersAndToolbars
 
-//This code manages of your triggers and toolbars. Don't delete, it is not an example code.
+//This code manages your triggers and toolbars. Don't delete, it is not an example code.
 
 partial class Script {
+
 /// <summary>
-/// Calls your functions that have attribute [Triggers] or [Toolbars].
-/// Let [Triggers] functions add triggers.
-/// Let [Toolbars] functions create some toolbars and/or add triggers for other toolbars.
-/// Finally calls Triggers.Run; it waits for trigger events etc.
+/// Use this to add triggers, set trigger options, etc. Example:<br/> <c>Triggers.Hotkey["Ctrl+E"] = o => AOutput.Write(o.Trigger);</c>.
+/// </summary>
+ActionTriggers Triggers { get; } = new();
+
+/// <summary>
+/// Calls your functions that have attribute [Triggers] or [Toolbars]. Finally calls <c>Triggers.Run();</c>.
+/// Let [Triggers] functions add triggers. Let [Toolbars] functions create some toolbars and/or add triggers for other toolbars.
 /// </summary>
 /// <remarks>
 /// Before calling each function, resets all trigger options (Options, Of, FuncOf, etc), to avoid inheriting options changed in other functions.

@@ -129,10 +129,8 @@ class CiPopupList
 	}
 
 	//private void _Options_Click(object sender, RoutedEventArgs e) {
-	//	var m = new AWpfMenu();
+	//	var m = new AMenu();
 	//	//m[""] = o => ;
-	//	m.PlacementTarget = sender as Button;
-	//	m.IsOpen = true;
 	//}
 
 	private void _tv_ItemActivated(object sender, TVItemEventArgs e) {
