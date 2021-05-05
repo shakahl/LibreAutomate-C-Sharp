@@ -22,12 +22,7 @@ using Microsoft.CodeAnalysis.Text;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Shared.Extensions;
 
-//never mind: should decrease indent when typing }. Rarely need to type it because we auto-add it.
-
-//TODO: don't eat '(' after function autocompletion with space.
-//	Eg if autocompletes FuncName(), the user may want to type FuncName(()=>...) or FuncName((cast)...).
-//	Because user will not type "FuncName (". But eat '(' after keyword autocompletion, because user may type "keyword (".
-//	Also remove Options -> Code -> Only spacebar... or/and make it default.
+//SHOULDDO: decrease indent when typing }.
 
 class CiAutocorrect
 {
@@ -126,11 +121,11 @@ class CiAutocorrect
 		}
 		for(int i = pos; i < to; i++) switch((char)doc.Call(Sci.SCI_GETCHARAT, i)) { case ' ': case '\r': case '\n': case '\t': break; default: return false; } //eg space before '}'
 
-		//ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion
-		if(isOpenBrac && (ch == '(' || ch == '<') && ch == (char)doc.Call(Sci.SCI_GETCHARAT, pos - 1)) {
-			r.OwnerData = null;
-			return true;
-		}
+		//rejected: ignore user-typed '(' or '<' after auto-added '()' or '<>' by autocompletion. Probably more annoying than useful, because than may want to type (cast) or ()=>lambda or (tup, le).
+		//if(isOpenBrac && (ch == '(' || ch == '<') && ch == (char)doc.Call(Sci.SCI_GETCHARAT, pos - 1)) {
+		//	r.OwnerData = null;
+		//	return true;
+		//}
 		if(isOpenBrac && r.OwnerData != (object)"new") return false;
 
 		r.Remove();
@@ -657,6 +652,7 @@ class CiAutocorrect
 					case CompilationUnitSyntax:
 					case ClassDeclarationSyntax k1 when k1.Identifier.Text == "Script": //don't indent script class content
 					case ConstructorDeclarationSyntax k2 when k2.Identifier.Text == "Script": //don't indent script constructor content
+					case GlobalStatementSyntax: //don't indent top-level statements
 						goto endLoop1;
 					}
 				}

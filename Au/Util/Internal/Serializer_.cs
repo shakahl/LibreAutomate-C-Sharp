@@ -160,6 +160,7 @@ namespace Au.Util
 				}
 				return a;
 
+				[MethodImpl(MethodImplOptions.AggressiveInlining)]
 				string _GetString()
 				{
 					int len = *(int*)b; b += 4;

@@ -1147,6 +1147,7 @@ namespace Au
 	/// <summary>
 	/// Extension methods for types of this library.
 	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static partial class AExtAu
 	{
 		#region AWnd

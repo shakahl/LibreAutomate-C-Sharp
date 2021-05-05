@@ -1,7 +1,7 @@
-/*/ ifRunning warn_restart; /*/ //.
+/*/ ifRunning warn_restart; runSingle true; /*/ //.
 using Au; using Au.Types; using System; using System.Collections.Generic; using System.IO; using System.Linq;
 using System.Windows.Forms;
-class Script { [STAThread] static void Main(string[] a) { ATask.Setup(); new Script(a); } Script(string[] args) { //;;;
+class Script { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { ATask.Setup(); //;;;
 
 /*
 The programming language is C#.

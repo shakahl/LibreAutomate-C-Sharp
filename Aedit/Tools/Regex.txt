@@ -36,14 +36,14 @@
 
 This program uses PCRE2 version 10.33.
 
-If Regex is checked in the Find pane, this window is visible when a text field has focus. You can close it. To show again, press F1 or uncheck/check Regex.
+If Regex is checked in the Find panel, this window is visible when a text field has focus. You can close it. To show again, press F1 or uncheck/check Regex.
 
 -- options --
 
 <.h>Options<>
 
-<+a>(?i)<>  -  case-insensitive. In the Find pane this is default when 'Case' unchecked.
-<+a>(?m)<>  -  <.r>^<> and <.r>$<> are start/end of a line. Default in the Find pane. Known as "multiline".
+<+a>(?i)<>  -  case-insensitive. In the Find panel this is default when 'Case' unchecked.
+<+a>(?m)<>  -  <.r>^<> and <.r>$<> are start/end of a line. Default in the Find panel. Known as "multiline".
 <+a>(?s)<>  -  <.r>.<> matches newlines (<.r>\r<>, <.r>\n<>) too. Known as "single-line" or "dotall".
 <+a>(?n)<>  -  unnamed <.r>(...)<> groups are non-capturing, like <.r>(?:...)<>. Named still capturing: <.r>(?'name'...)<>.
 <+a>(?x)<>  -  extended. Support <.r>#comments<> and ignore spaces/newlines, except in <.r>[...]<> and after <.r>\<>.
@@ -254,7 +254,7 @@ Quantifiers can be greedy (default), lazy (with <.r>?<> or option <.r>(?U)<>) or
 
 <+a>\b<>  -  word boundary.
 <+a>\B<>  -  not a word boundary.
-<+a>^<>  -  start of string; also start of a line in multiline mode (<+p options>option<> <.r>(?m)<>; default in Find pane).
+<+a>^<>  -  start of string; also start of a line in multiline mode (<+p options>option<> <.r>(?m)<>; default in Find panel).
 <+a>$<>  -  end of string; also before newline at end of string; also end of a line in multiline mode.
 <+a>\A<>  -  start of string. This and others below don't depend on multiline mode.
 <+a>\Z<>  -  end of string; also before newline at end of string.

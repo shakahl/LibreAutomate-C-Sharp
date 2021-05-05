@@ -499,6 +499,9 @@ namespace Au.Types
 		[DllImport("kernel32.dll", EntryPoint = "GetEnvironmentVariableW", SetLastError = true)]
 		internal static extern int GetEnvironmentVariable(string lpName, [Out] char[] lpBuffer, int nSize);
 
+		[DllImport("kernel32.dll", EntryPoint = "SetEnvironmentVariableW", SetLastError = true)]
+		internal static extern bool SetEnvironmentVariable(string lpName, string lpValue);
+
 		[DllImport("kernel32.dll", EntryPoint = "ExpandEnvironmentStringsW")]
 		internal static extern int ExpandEnvironmentStrings(string lpSrc, [Out] char[] lpDst, int nSize);
 

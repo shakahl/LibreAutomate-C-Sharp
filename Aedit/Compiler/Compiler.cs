@@ -12,6 +12,7 @@ using System.Reflection;
 using System.Linq;
 
 using Au.Types;
+using Au.Util;
 
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
@@ -77,7 +78,7 @@ namespace Au.Compiler
 		}
 
 		/// <summary>_Compile() output assembly info.</summary>
-		public class CompResults
+		public record CompResults
 		{
 			/// <summary>C# file name without ".cs".</summary>
 			public string name;
@@ -90,41 +91,11 @@ namespace Au.Compiler
 			public EIfRunning ifRunning;
 			public EIfRunning2 ifRunning2;
 			public EUac uac;
+			public MiniProgram_.EFlags flags;
 			public bool bit32;
-			public bool console;
-
-			///// <summary>Has config file this.file + ".config".</summary>
-			//public bool hasConfig;
-
-			/// <summary>Main() does not have [STAThread].</summary>
-			public bool mtaThread;
 
 			/// <summary>The assembly is normal .exe or .dll file, not in cache. If exe, its dependencies were copied to its directory.</summary>
 			public bool notInCache;
-
-			/// <summary>
-			/// |-separated list of full paths of references that are not directly in <see cref="AFolders.ThisApp"/> or its subfolder "Libraries".
-			/// </summary>
-			public string fullPathRefs;
-
-			/// <summary>
-			/// Adds path to <see cref="fullPathRefs"/> if it is not directly in <see cref="AFolders.ThisApp"/> or its subfolder "Libraries".
-			/// Does not add if role is not miniProgram (it must be set before) or if path does not end with ".dll".
-			/// </summary>
-			/// <param name="path">Full path.</param>
-			public void AddToFullPathRefsIfNeed(string path) {
-				//AOutput.Write(path);
-				if (role != ERole.miniProgram) return;
-				var ta = AFolders.ThisAppBS;
-				if (path.Starts(ta, true)) {
-					int i = ta.Length, j = path.IndexOf('\\', i);
-					if (j < 0) return;
-					if (j - i == 9 && path.Eq(i, "Libraries", true) && path.IndexOf('\\', j + 1) < 0) return;
-				}
-				if (!path.Ends(".dll", true)) return;
-				//AOutput.Write("AddToFullPathRefsIfNeed", path);
-				fullPathRefs = fullPathRefs == null ? path : fullPathRefs + "|" + path;
-			}
 		}
 
 		static bool _Compile(bool forRun, FileNode f, out CompResults r, FileNode projFolder, out Action aFinally) {
@@ -191,7 +162,8 @@ namespace Au.Compiler
 			EmitOptions eOpt = null;
 
 			if (needOutputFiles) {
-				_AddAttributes(ref compilation, m);
+				_AddAttributesEtc(ref compilation, m, out bool refPaths);
+				if (refPaths) r.flags |= MiniProgram_.EFlags.RefPaths;
 
 				//Create debug info always. It is used for run-time error links.
 				//Embed it in assembly. It adds < 1 KB. Almost the same compiling speed. Same loading speed.
@@ -237,10 +209,17 @@ namespace Au.Compiler
 			}
 
 			if (needOutputFiles) {
-				//If there is no [STAThread], will need MTA thread.
 				if (m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
-					bool hasSTAThread = compilation.GetEntryPoint(default)?.GetAttributes().Any(o => o.ToString() == "System.STAThreadAttribute") ?? false;
-					if (!hasSTAThread) r.mtaThread = true;
+					//if there is no [STAThread], will need MTA thread, unless top-level statements
+					bool hasSTAThread = false;
+					var ep = compilation.GetEntryPoint(default);
+					if (ep != null) {
+						bool isTopLevelStatements = ep.Name == WellKnownMemberNames.TopLevelStatementsEntryPointMethodName; //"<Main>$"
+						hasSTAThread = isTopLevelStatements || ep.GetAttributes().Any(o => o.ToString() == "System.STAThreadAttribute");
+					}
+					if (!hasSTAThread) r.flags |= MiniProgram_.EFlags.MTA;
+
+					if (m.Console) r.flags |= MiniProgram_.EFlags.Console;
 				}
 
 				//create assembly file
@@ -255,8 +234,8 @@ namespace Au.Compiler
 				}
 				var b = asmStream.GetBuffer();
 
-				//prevent AV full dll scan when loading. Will load bytes, unxor and load assembly from stream. Will fully scan once, when loading assembly.
-				if (m.Role == ERole.editorExtension) for (int i = 0, n = (int)asmStream.Length; i < n; i++) b[i] ^= 1;
+				//prevent AV full dll scan when loading using LoadFromStream (now not used). Will load bytes, unxor and load assembly from stream. Will fully scan once, when loading assembly.
+				//if (m.Role == ERole.editorExtension) for (int i = 0, n = (int)asmStream.Length; i < n; i++) b[i] ^= 1;
 
 				using (hf) if (!Api.WriteFile2(hf, b.AsSpan(0, (int)asmStream.Length), out _)) throw new AuException(0);
 #else //same speed, but I like code without exceptions
@@ -305,7 +284,7 @@ namespace Au.Compiler
 			if (m.PostBuild.f != null && !_RunPrePostBuildScript(true, m, outFile)) return false;
 
 			if (needOutputFiles) {
-				cache.AddCompiled(f, outFile, m, r.mtaThread);
+				cache.AddCompiled(f, outFile, m, r.flags);
 
 				if (notInCache) AOutput.Write($"<>Output folder: <link>{m.OutputPath}<>");
 			}
@@ -317,16 +296,12 @@ namespace Au.Compiler
 			r.ifRunning2 = m.IfRunning2;
 			r.uac = m.Uac;
 			r.bit32 = m.Bit32;
-			r.console = m.Console;
 			r.notInCache = notInCache;
-			if (m.Role == ERole.miniProgram) {
-				var refs = m.References.Refs;
-				for (int i = MetaReferences.DefaultReferences.Count; i < refs.Count; i++) r.AddToFullPathRefsIfNeed(refs[i].FilePath);
-			}
 
 			//#if TRACE
 			//p1.NW('C');
 			//#endif
+			//AOutput.Write("<><c red>compiling<>");
 			return true;
 
 			//SHOULDDO: rebuild if missing apphost. Now rebuilds only if missing dll.
@@ -343,53 +318,47 @@ namespace Au.Compiler
 		//}
 
 		/// <summary>
-		/// Adds some attributes if not specified in code.
-		/// Adds: [module: DefaultCharSet(CharSet.Unicode)], [assembly: TargetFramework("...")], [assembly: IgnoresAccessChecksTo("...")]
+		/// Adds some attributes. Also adds module initializer for role exeProgram.
 		/// </summary>
-		static void _AddAttributes(ref CSharpCompilation compilation, MetaComments m) {
-			int needAttr = 0x100;
-
+		static void _AddAttributesEtc(ref CSharpCompilation compilation, MetaComments m, out bool refPaths) {
+			refPaths = false;
+			bool needDefaultCharset = true;
 			foreach (var v in compilation.SourceModule.GetAttributes()) {
 				//AOutput.Write(v.AttributeClass.Name);
-				switch (v.AttributeClass.Name) {
-				case "DefaultCharSetAttribute": needAttr &= ~0x100; break;
-				}
+				if (v.AttributeClass.Name == "DefaultCharSetAttribute") { needDefaultCharset = false; break; }
 			}
-			if (m.Role == ERole.exeProgram || m.Role == ERole.classLibrary) {
-				needAttr |= 0x200; //need [TargetFramework] for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
+			bool needTargetFramework = false;
+			if (m.Role is ERole.exeProgram or ERole.classLibrary) {
+				needTargetFramework = true; //need [TargetFramework] for exeProgram, else AppContext.TargetFrameworkName will return null: => Assembly.GetEntryAssembly()?.GetCustomAttribute<TargetFrameworkAttribute>()?.FrameworkName;
 				foreach (var v in compilation.Assembly.GetAttributes()) {
 					//AOutput.Write(v.AttributeClass.Name);
-					switch (v.AttributeClass.Name) {
-					case "TargetFrameworkAttribute": needAttr &= ~0x200; break;
-					}
+					if (v.AttributeClass.Name == "TargetFrameworkAttribute") { needTargetFramework = false; break; }
 				}
 			}
 
-			if (m.TestInternal != null) needAttr |= 0x400;
-
-			//rejected. Now we don't load from byte[], it is very slow because of AV.
-			///// If miniProgram or exeProgram, also adds: AssemblyCompany, AssemblyProduct, AssemblyInformationalVersion. It is to avoid exception in Application.ProductName etc when the entry assembly is loaded from byte[].
-			//if(m.Role == ERole.miniProgram || m.Role == ERole.exeProgram) {
-			//	needAttr |= 7;
-			//	foreach(var v in compilation.Assembly.GetAttributes()) {
-			//		//AOutput.Write(v.AttributeClass.Name);
-			//		switch(v.AttributeClass.Name) {
-			//		case "AssemblyCompanyAttribute": needAttr &= ~1; break;
-			//		case "AssemblyProductAttribute": needAttr &= ~2; break;
-			//		case "AssemblyInformationalVersionAttribute": needAttr &= ~4; break;
-			//		}
-			//	}
-			//}
-
-			//if (needAttr != 0) {
-			using (new Util.StringBuilder_(out var sb)) {
+			using (new StringBuilder_(out var sb)) {
 				//sb.AppendLine("using System.Reflection;using System.Runtime.InteropServices;");
-				if (0 != (needAttr & 0x100)) sb.AppendLine("[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]");
-				if (0 != (needAttr & 0x200)) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
-				//if(0 != (needAttr & 1)) sb.AppendLine("[assembly: AssemblyCompany(\" \")]");
-				//if(0 != (needAttr & 2)) sb.AppendLine("[assembly: AssemblyProduct(\"Script\")]");
-				//if(0 != (needAttr & 4)) sb.AppendLine("[assembly: AssemblyInformationalVersion(\"0\")]");
-				if (0 != (needAttr & 0x400)) {
+				if (needDefaultCharset) sb.AppendLine("[module: System.Runtime.InteropServices.DefaultCharSet(System.Runtime.InteropServices.CharSet.Unicode)]");
+				if (needTargetFramework) sb.AppendLine($"[assembly: System.Runtime.Versioning.TargetFramework(\"{AppContext.TargetFrameworkName}\")]");
+
+				if (m.Role is ERole.miniProgram) {
+					var ta = AFolders.ThisAppBS;
+					var refs = m.References.Refs;
+					for (int k = MetaReferences.DefaultReferences.Count; k < refs.Count; k++) {
+						var path = refs[k].FilePath;
+						if (path.Starts(ta, true)) {
+							int i = ta.Length, j = path.IndexOf('\\', i);
+							if (j < 0) continue;
+							if (j - i == 9 && path.Eq(i, "Libraries", true) && path.IndexOf('\\', j + 1) < 0) continue;
+						}
+						if (!path.Ends(".dll", true)) continue;
+						sb.Append(refPaths ? "|" : $"[assembly: Au.Types.RefPaths(@\"").Append(path);
+						refPaths = true;
+					}
+					if (refPaths) sb.AppendLine("\")]");
+				}
+
+				if (m.TestInternal != null) {
 					//https://www.strathweb.com/2018/10/no-internalvisibleto-no-problem-bypassing-c-visibility-rules-with-roslyn/
 					//IgnoresAccessChecksToAttribute is defined in Au assembly.
 					//	Could define here, but then warning "already defined in assembly X" when compiling 2 projects (meta pr) with that attribute.
@@ -405,13 +374,16 @@ namespace Au.Compiler
 				}
 
 				if (m.Role is ERole.miniProgram or ERole.exeProgram) {
-					sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.ATask.AppModuleInit_(); }}");
+					if (m.RunSingle) sb.AppendLine($"[assembly: Au.Types.RunSingle]");
+					if (m.Role == ERole.exeProgram) {
+						sb.AppendLine(@"class ModuleInit__ { [System.Runtime.CompilerServices.ModuleInitializer] internal static void Init() { Au.ATask.AppModuleInit_(); }}");
+					}
 				}
 
-				var tree = CSharpSyntaxTree.ParseText(sb.ToString(), new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
+				string code = sb.ToString(); //AOutput.Write(code);
+				var tree = CSharpSyntaxTree.ParseText(code, new CSharpParseOptions(LanguageVersion.Preview)) as CSharpSyntaxTree;
 				compilation = compilation.AddSyntaxTrees(tree);
 			}
-			//}
 		}
 
 		static List<ResourceDescription> _CreateManagedResources(MetaComments m) {
@@ -560,7 +532,7 @@ namespace Au.Compiler
 				//p1.Next();
 				//write assembly name in placeholder memory. In AppHost.cpp: char s_asmName[800] = "\0hi7yl8kJNk+gqwTDFi7ekQ";
 				fixed (byte* p = b) {
-					int i = Util.BytePtr_.AsciiFindString(p, b.Length, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
+					int i = BytePtr_.AsciiFindString(p, b.Length, "hi7yl8kJNk+gqwTDFi7ekQ") - 1;
 					i += Encoding.UTF8.GetBytes(fileName, 0, fileName.Length, b, i);
 					b[i] = 0;
 				}
@@ -681,7 +653,7 @@ namespace Au.Compiler
 			if (x.s == null) {
 				args = new string[] { _OutputFile() };
 			} else {
-				args = Util.AStringUtil.CommandLineToArray(x.s);
+				args = AStringUtil.CommandLineToArray(x.s);
 
 				//replace variables like $(variable)
 				var f = m.CodeFiles[0].f;
@@ -706,7 +678,7 @@ namespace Au.Compiler
 			if (r.role != ERole.editorExtension) throw new ArgumentException($"meta of '{x.f.Name}' must contain role editorExtension");
 			if (!ok) return false;
 
-			RunAssembly.Run(r.file, args, RAFlags.InEditorThread | RAFlags.DontHandleExceptions);
+			RunAssembly.Run(r.file, args, handleExceptions: false);
 			return true;
 		}
 		static ARegex s_rx1;
@@ -732,7 +704,7 @@ namespace Au.Compiler
 			if (notInCache) {
 				if (s_renamedFiles == null) {
 					s_renamedFiles = new List<string>();
-					AProcess.Exit += (_, _) => _DeleteRenamedLockedFiles(null);
+					AProcess.Exit += _ => _DeleteRenamedLockedFiles(null);
 					s_rfTimer = new ATimer(_DeleteRenamedLockedFiles);
 				}
 				if (!s_rfTimer.IsRunning) s_rfTimer.Every(60_000);
@@ -743,6 +715,7 @@ namespace Au.Compiler
 		static List<string> s_renamedFiles;
 		static ATimer s_rfTimer;
 
+		//TODO: remove this? Probably fails anyway. Will delete when this app starts next time.
 		static void _DeleteRenamedLockedFiles(ATimer timer) {
 			var a = s_renamedFiles;
 			for (int i = a.Count; --i >= 0;) {

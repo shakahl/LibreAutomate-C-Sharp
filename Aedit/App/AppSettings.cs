@@ -92,8 +92,8 @@ class AppSettings : ASettings
 	public bool ci_complGroup { get => _ci_complGroup; set => Set(ref _ci_complGroup, value); }
 	bool _ci_complGroup = true;
 
-	public bool ci_complParenSpace { get => _ci_complParenSpace; set => Set(ref _ci_complParenSpace, value); }
-	bool _ci_complParenSpace;
+	public int ci_complParen { get => _ci_complParen; set => Set(ref _ci_complParen, value); }
+	int _ci_complParen; //0 spacebar, 1 always, 2 never
 
 	public byte ci_correctStringEnter { get => _ci_correctStringEnter; set => Set(ref _ci_correctStringEnter, value); }
 	byte _ci_correctStringEnter;

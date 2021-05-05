@@ -21,14 +21,15 @@ using System.Globalization;
 using Au.Types;
 
 
-//note: be careful when adding functions to this class. See comments in ExtensionMethods_Forms.cs.
+//note: be careful when adding functions to this class. Eg something may load winforms dlls although it seems not used.
 
 namespace Au
 {
 	/// <summary>
 	/// Adds extension methods for some .NET classes.
 	/// </summary>
-	public static unsafe partial class AExtensions
+	[EditorBrowsable(EditorBrowsableState.Never)]
+	public static unsafe partial class AExt
 	{
 		#region value types
 
@@ -664,6 +665,66 @@ namespace Au
 				}
 			}
 			return t;
+		}
+
+		#endregion
+
+		#region winforms
+
+		/// <summary>
+		/// Gets window handle as <see cref="AWnd"/>.
+		/// </summary>
+		/// <param name="t">A <b>Control</b> or <b>Form</b> etc. Cannot be null.</param>
+		/// <param name="create">
+		/// Create handle if still not created. Default false (return default(AWnd)).
+		/// Unlike <see cref="System.Windows.Forms.Control.CreateControl"/>, creates handle even if invisible. Does not create child control handles.
+		/// </param>
+		/// <remarks>
+		/// Should be called in control's thread. Calls <see cref="System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="System.Windows.Forms.Control.Handle"/>.
+		/// </remarks>
+		public static AWnd Hwnd(this System.Windows.Forms.Control t, bool create = false)
+			=> create || t.IsHandleCreated ? new AWnd(t.Handle) : default;
+
+		#endregion
+
+		#region System.Drawing
+
+		/// <summary>
+		/// Draws inset rectangle.
+		/// </summary>
+		/// <param name="t"></param>
+		/// <param name="pen">Pen with integer width and default alignment.</param>
+		/// <param name="r"></param>
+		/// <remarks>
+		/// Calls <see cref="System.Drawing.Graphics.DrawRectangle"/> with arguments corrected so that it draws inside r. Does not use <see cref="System.Drawing.Drawing2D.PenAlignment.Inset"/>, it is unreliable.
+		/// </remarks>
+		public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Pen pen, RECT r) {
+			if (r.NoArea) return;
+			//pen.Alignment = PenAlignment.Inset; //no. Eg ignored if 1 pixel width.
+			//	MSDN: "A Pen that has its alignment set to Inset will yield unreliable results, sometimes drawing in the inset position and sometimes in the centered position.".
+			int w = (int)pen.Width, d = w / 2;
+			r.left += d; r.top += d;
+			r.right -= d = w - d; r.bottom -= d;
+			t.DrawRectangle(pen, r);
+		}
+
+		/// <summary>
+		/// Draws inset rectangle of specified pen color and width.
+		/// </summary>
+		/// <remarks>
+		/// Creates pen and calls other overload.
+		/// </remarks>
+		public static void DrawRectangleInset(this System.Drawing.Graphics t, System.Drawing.Color penColor, int pedWidth, RECT r) {
+			using var pen = new System.Drawing.Pen(penColor, pedWidth);
+			DrawRectangleInset(t, pen, r);
+		}
+
+		/// <summary>
+		/// Creates solid brush and calls <see cref="System.Drawing.Graphics.FillRectangle"/>.
+		/// </summary>
+		public static void FillRectangle(this System.Drawing.Graphics t, System.Drawing.Color color, RECT r) {
+			using var brush = new System.Drawing.SolidBrush(color);
+			t.FillRectangle(brush, r);
 		}
 
 		#endregion

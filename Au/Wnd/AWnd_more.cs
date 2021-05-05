@@ -353,7 +353,7 @@ namespace Au
 			/// Writes a Windows message to a string.
 			/// If the message is specified in <i>options</i>, sets <c>s=null</c> and returns false.
 			/// </summary>
-			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
+			public static bool PrintMsg(out string s, AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
 				//Could instead use System.Windows.Forms.Message.ToString, but its list is incomplete, eg no dpichange messages.
 				//	https://referencesource.microsoft.com/#System.Windows.Forms/winforms/Managed/System/WinForms/MessageDecoder.cs,b19021e2f4480d57
 
@@ -385,7 +385,7 @@ namespace Au
 						MethodBase m0 = null;
 						foreach (var f in new StackTrace(1).GetFrames()) {
 							var m1 = f.GetMethod();
-							if (m1.Name != caller) continue;
+							if (m1.Name != m_) continue;
 							if (m0 == null) m0 = m1; else if ((object)m1 == m0) i += 4;
 						}
 						if (i > 0) b.Append(' ', i);
@@ -691,8 +691,8 @@ void _WmDeclTextToCode() {
 			/// <summary>
 			/// Writes a Windows message to the output, unless it is specified in <i>options</i>.
 			/// </summary>
-			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
-				if (PrintMsg(out string s, w, msg, wParam, lParam, options, caller)) AOutput.Write(s);
+			public static void PrintMsg(AWnd w, int msg, LPARAM wParam, LPARAM lParam, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
+				if (PrintMsg(out string s, w, msg, wParam, lParam, options, m_)) AOutput.Write(s);
 			}
 
 			/// <summary>
@@ -702,8 +702,8 @@ void _WmDeclTextToCode() {
 			/// <remarks>
 			/// The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
 			/// </remarks>
-			public static bool PrintMsg(out string s, in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
-				return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, options, caller);
+			public static bool PrintMsg(out string s, in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
+				return PrintMsg(out s, m.hwnd, m.message, m.wParam, m.lParam, options, m_);
 			}
 
 			/// <summary>
@@ -712,8 +712,8 @@ void _WmDeclTextToCode() {
 			/// <remarks>
 			/// The <i>m</i> parameter also accepts <b>System.Windows.Interop.MSG</b> (WPF) and <b>System.Windows.Forms.Message</b>.
 			/// </remarks>
-			public static void PrintMsg(in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string caller = null) {
-				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, options, caller);
+			public static void PrintMsg(in Native.MSG m, PrintMsgOptions options = null, [CallerMemberName] string m_ = null) {
+				PrintMsg(m.hwnd, m.message, m.wParam, m.lParam, options, m_);
 			}
 
 			#endregion

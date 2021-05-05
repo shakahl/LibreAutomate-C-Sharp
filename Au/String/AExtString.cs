@@ -29,6 +29,7 @@ namespace Au
 	/// This class also adds more methods.
 	/// You also can find string functions in other classes of this library, including <see cref="AStringUtil"/>, <see cref="ARegex"/>, <see cref="AChar"/>, <see cref="APath"/>, <see cref="ACsv"/>, <see cref="AKeys.More"/>, <see cref="AConvert"/>, <see cref="AHash"/>.
 	/// </remarks>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static unsafe partial class AExtString
 	{
 		/// <summary>

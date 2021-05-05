@@ -1,4 +1,4 @@
-﻿#define PREPAREMETHOD
+﻿//#define PREPAREMETHOD //now slow anyway. Does not JIT everything.
 
 using Au.Types;
 using Au.Util;
@@ -38,16 +38,14 @@ namespace Au
 		/// </remarks>
 		public unsafe struct Local : IDisposable
 		{
-			static Local()
-			{
-				//Prevent JIT delay when calling Next etc if not ngened.
-				//if(!Assembly_.IsAuNgened) { //unnecessary and makes slower
+			static Local() {
+				//Prevent JIT delay when calling Next etc
 #if PREPAREMETHOD
 				AJit.Compile(typeof(Local), "Next", "NW", "Dispose");
 #if DEBUG //else these methods are inlined
 				AJit.Compile(typeof(APerf), "Next", "NW");
 #endif
-#else //similar speed
+#else
 				APerf.Next(); APerf.NW(); APerf.First(); //JIT-compiles everything we need. s_enabled prevents calling AOutput.Write etc.
 				s_enabled = true;
 #endif
@@ -87,20 +85,18 @@ namespace Au
 			public bool Incremental {
 				get => _incremental;
 				set {
-					if(_incremental = value) {
-						fixed(long* p = _a) { for(int i = 0; i < _nElem; i++) p[i] = 0; }
+					if (_incremental = value) {
+						fixed (long* p = _a) { for (int i = 0; i < _nElem; i++) p[i] = 0; }
 						_nMeasurements = 0;
 					}
 				}
 			}
 
 			/// <summary><see cref="APerf.First()"/></summary>
-			public void First()
-			{
+			public void First() {
 #if !PREPAREMETHOD
-				if(!s_enabled) return; //called by the static ctor
+				if (!s_enabled) return; //called by the static ctor
 #endif
-				//info: we don't use Stopwatch because it loads System.dll, which can take 15 ms and make speed measurement incorrect and confusing in some cases.
 				Api.QueryPerformanceCounter(out _time0);
 				_counter = 0;
 				_nMeasurements++;
@@ -117,16 +113,15 @@ namespace Au
 			//}
 
 			/// <summary><see cref="APerf.Next"/></summary>
-			public void Next(char cMark = '\0')
-			{
+			public void Next(char cMark = '\0') {
 #if !PREPAREMETHOD
-				if(!s_enabled) return; //called by the static ctor
+				if (!s_enabled) return; //called by the static ctor
 #endif
-				int n = _counter; if(n >= _nElem) return;
+				int n = _counter; if (n >= _nElem) return;
 				_counter++;
-				fixed(long* p = _a) {
+				fixed (long* p = _a) {
 					Api.QueryPerformanceCounter(out long pc); long t = pc - _time0;
-					if(_incremental) p[n] += t; else p[n] = t;
+					if (_incremental) p[n] += t; else p[n] = t;
 					//fixed (char* c = _aMark) c[n] = cMark;
 					char* c = (char*)(p + _nElem); c[n] = cMark;
 				}
@@ -160,10 +155,9 @@ namespace Au
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>, and shows it in the output.
 			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 			/// </summary>
-			public void Write()
-			{
+			public void Write() {
 #if !PREPAREMETHOD
-				if(!s_enabled) return; //called by the static ctor
+				if (!s_enabled) return; //called by the static ctor
 #endif
 				AOutput.Write(ToString());
 			}
@@ -172,9 +166,8 @@ namespace Au
 			/// Formats a string from time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 			/// The string contains the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 			/// </summary>
-			public override string ToString()
-			{
-				using(new StringBuilder_(out var b)) {
+			public override string ToString() {
+				using (new StringBuilder_(out var b)) {
 					b.Append("speed:");
 					_Results(Math.Min(_counter, _nElem), b, null);
 					return b.ToString();
@@ -185,43 +178,41 @@ namespace Au
 			/// Return array of time values collected by calling <see cref="First"/> and <see cref="Next"/>.
 			/// Each element is the number of microseconds of each code execution between calling <b>First</b> and each <b>Next</b>.
 			/// </summary>
-			public long[] ToArray()
-			{
+			public long[] ToArray() {
 				int n = Math.Min(_counter, _nElem);
 				var a = new long[n];
 				_Results(n, null, a);
 				return a;
 			}
 
-			void _Results(int n, StringBuilder b, long[] a)
-			{
-				if(n == 0) return;
+			void _Results(int n, StringBuilder b, long[] a) {
+				if (n == 0) return;
 				bool average = false; int nMeasurements = 1;
 
-				fixed(long* p = _a) fixed(char* c = _aMark) {
+				fixed (long* p = _a) fixed (char* c = _aMark) {
 					g1:
 					double t = 0d, tPrev = 0d;
-					for(int i = 0; i < n; i++) {
+					for (int i = 0; i < n; i++) {
 						t = ATime.s_freqMCS * p[i];
 						double d = t - tPrev; tPrev = t; //could add 0.5 to round up, but assume that QueryPerformanceCounter call time is 0 - 0.5.
-						if(average) d /= nMeasurements;
+						if (average) d /= nMeasurements;
 						long dLong = (long)d;
-						if(b != null) {
+						if (b != null) {
 							b.Append("  ");
-							if(c[i] != '\0') b.Append(c[i]).Append('=');
+							if (c[i] != '\0') b.Append(c[i]).Append('=');
 							b.Append(dLong.ToString());
 						} else {
 							a[i] = dLong;
 						}
 					}
-					if(b == null) return;
+					if (b == null) return;
 
-					if(n > 1) {
-						if(average) t /= nMeasurements;
+					if (n > 1) {
+						if (average) t /= nMeasurements;
 						b.Append("  (").Append((long)t).Append(")");
 					}
 
-					if(!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
+					if (!average && _incremental && (nMeasurements = _nMeasurements) > 1) {
 						average = true;
 						b.Append(";  measured ").Append(nMeasurements).Append(" times, average");
 						goto g1;
@@ -235,9 +226,9 @@ namespace Au
 			public long TimeTotal {
 				get {
 					int n = _counter;
-					if(n == 0) return 0;
-					if(n > _nElem) n = _nElem;
-					fixed(long* p = _a) { return (long)(ATime.s_freqMCS * p[n - 1]); }
+					if (n == 0) return 0;
+					if (n > _nElem) n = _nElem;
+					fixed (long* p = _a) { return (long)(ATime.s_freqMCS * p[n - 1]); }
 				}
 			}
 
@@ -295,8 +286,7 @@ namespace Au
 		/// <summary>
 		/// Creates and returns new <see cref="Local"/> variable and calls its <see cref="Local.First"/>.
 		/// </summary>
-		public static Local Create()
-		{
+		public static Local Create() {
 			var R = new Local();
 			R.First();
 			return R;
@@ -397,10 +387,9 @@ namespace Au
 		/// You can make CPU speed constant in Control Panel -> Power Options -> ... Advanced -> Processor power management -> Minimum or maximum power state.
 		/// There are programs that show current CPU speed. For example HWMonitor.
 		/// </remarks>
-		public static void SpeedUpCpu(int timeMilliseconds = 200)
-		{
+		public static void Cpu(int timeMilliseconds = 200) {
 			int n = 0;
-			for(long t0 = ATime.PerfMicroseconds; ATime.PerfMicroseconds - t0 < timeMilliseconds * 1000L; n++) { }
+			for (long t0 = ATime.PerfMicroseconds; ATime.PerfMicroseconds - t0 < timeMilliseconds * 1000L; n++) { }
 			//AOutput.Write(n);
 		}
 

@@ -84,6 +84,7 @@ static class CiSnippets
 		//for(var v = node; v != null; v = v.Parent) AOutput.Write(v.GetType().Name, v is ExpressionSyntax, v is ExpressionStatementSyntax);
 
 		//AOutput.Write(SyntaxFacts.IsTopLevelStatement);
+		//AOutput.Write(SyntaxFacts.IsInNamespaceOrTypeContext); //not tested
 
 		switch (node) {
 		case BlockSyntax:
@@ -169,9 +170,7 @@ static class CiSnippets
 			//FUTURE: snippet editor, maybe like in Eclipse.
 		}
 
-		bool isLineStart = false;
-		int i = pos; while (--i >= 0 && (code[i] == ' ' || code[i] == '\t')) { }
-		isLineStart = i < 0 || code[i] == '\n';
+		bool isLineStart = _IsLineStart(code, pos);
 
 		foreach (var v in s_items) {
 			if (!v.context.HasAny(context)) continue;
@@ -233,68 +232,43 @@ static class CiSnippets
 		var ci = item.ci;
 		int pos = ci.Span.Start, endPos = pos + ci.Span.Length + codeLenDiff;
 
-		//if docSnippet above method, add parameters
-		if (snippet.ci.DisplayText == "docSnippet") {
-			s = snippet.x.Value;
-			int j = s.Find("$param$");
-			if (j >= 0) {
-				string sig = null;
-				if (CodeInfo.GetContextAndDocument(out var cd, pos)) {
-					var code2 = cd.code.RegexReplace(@"\w+\s+", "", 1, RXFlags.ANCHORED, pos..);
-					var doc2 = cd.document.WithText(SourceText.From(code2));
-					var node = doc2.GetSyntaxRootAsync().Result.FindToken(pos).Parent;
-					for (; node != null && node.Span.Start >= pos; node = node.Parent) {
-						//CiUtil.PrintNode(node); //TODO: now no completion list above an enum member. Instead of snippet use ///.
-						if (node is BaseMethodDeclarationSyntax md) { //method, ctor
-							sig = CiUtil.FormatSignatureXmlDoc(md, code2);
-							break;
-						}
-					}
-				}
-				s = s.ReplaceAt(j, 7, sig);
-			}
-		} else {
-			//list of snippets?
-			var x = snippet.x;
-			if (x.HasElements) {
-				x = null;
-				var a = snippet.x.Elements("list").ToArray();
-				var m = new AMenu();
-				foreach (var v in a) m.Add(v.Attr("item"));
-				m.FocusedItem = m.Items.First();
-				int g = m.Show(MSFlags.ByCaret | MSFlags.Underline);
-				if (g == 0) return;
-				x = a[g - 1];
-			}
-			s = x.Value;
-
-			//##directive -> #directive
-			if (s.Starts('#') && doc.zText.Eq(pos - 1, '#')) s = s[1..];
-
-			//maybe need more code before
-			if (x.Attr(out string before, "before") || snippet.x.Attr(out before, "before")) {
-				if (doc.zText.Find(before, 0..pos) < 0) s = before + "\r\n" + s;
-			}
-
-			//replace $guid$ and $random$. Note: can be in the 'before' code.
-			int j = s.Find("$guid$");
-			if (j >= 0) s = s.ReplaceAt(j, 6, Guid.NewGuid().ToString());
-			j = s.Find("$random$");
-			if (j >= 0) s = s.ReplaceAt(j, 8, new Random().Next().ToString());
-
-			//remove ';' if in =>
-			if (s.Ends(';') && s_context == _Context.Arrow) {
-				if (doc.zText.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
-			}
-
-			usingDir = x.Attr("using") ?? snippet.x.Attr("using");
+		//list of snippets?
+		var x = snippet.x;
+		if (x.HasElements) {
+			x = null;
+			var a = snippet.x.Elements("list").ToArray();
+			var m = new AMenu();
+			foreach (var v in a) m.Add(v.Attr("item"));
+			m.FocusedItem = m.Items.First();
+			int g = m.Show(MSFlags.ByCaret | MSFlags.Underline);
+			if (g == 0) return;
+			x = a[g - 1];
 		}
+		s = x.Value;
+
+		//##directive -> #directive
+		if (s.Starts('#') && doc.zText.Eq(pos - 1, '#')) s = s[1..];
+
+		//maybe need more code before
+		if (x.Attr(out string before, "before") || snippet.x.Attr(out before, "before")) {
+			if (doc.zText.Find(before, 0..pos) < 0) s = before + "\r\n" + s;
+		}
+
+		//replace $guid$ and $random$. Note: can be in the 'before' code.
+		int j = s.Find("$guid$");
+		if (j >= 0) s = s.ReplaceAt(j, 6, Guid.NewGuid().ToString());
+		j = s.Find("$random$");
+		if (j >= 0) s = s.ReplaceAt(j, 8, new Random().Next().ToString());
+
+		//remove ';' if in =>
+		if (s.Ends(';') && s_context == _Context.Arrow) {
+			if (doc.zText.RegexIsMatch(@"\s*[;,)\]]", RXFlags.ANCHORED, endPos..)) s = s[..^1];
+		}
+
+		usingDir = x.Attr("using") ?? snippet.x.Attr("using");
 
 		//if multiline, add indentation
-		if (s.Contains('\n')) {
-			int indent = doc.zLineIndentationFromPos(true, pos);
-			if (indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
-		}
+		if (s.Contains('\n')) s = _Indent(s, doc, pos);
 
 		//$end$ sets final position. Or $end$select_text$end$. Show signature if like Method($end$.
 		int selectLength = 0;
@@ -303,7 +277,7 @@ static class CiSnippets
 		int i = s.Find("$end$");
 		if (i >= 0) {
 			s = s.Remove(i, 5);
-			int j = s.Find("$end$", i);
+			j = s.Find("$end$", i);
 			if (j >= i) { s = s.Remove(j, 5); selectLength = j - i; }
 
 			showSignature = s.RegexIsMatch(@"\w[([][^)\]]*""?$", range: 0..i);
@@ -331,6 +305,60 @@ static class CiSnippets
 			if (tempRange != default) CodeInfo._correct.BracesAdded(doc, pos + tempRange.from, pos + tempRange.to, default);
 			if (showSignature) CodeInfo.ShowSignature();
 		}
+	}
+
+	/// <summary>
+	/// Called from CiCompletion._ShowList on char '/'. If need, inserts XML doc comment with empty summary, param and returns tags.
+	/// </summary>
+	public static void DocComment(in CodeInfo.Context cd) {
+		int pos = cd.pos16;
+		string code = cd.code;
+		SciCode doc = cd.sciDoc;
+
+		if (0 == code.Eq(pos - 3, false, "///\r", "///\n") || !_IsLineStart(code, pos - 3)) return;
+
+		var root = cd.document.GetSyntaxRootAsync().Result;
+		var node = root.FindToken(pos).Parent;
+		var start = node.SpanStart;
+		if (start < pos) return;
+
+		if (node is not MemberDeclarationSyntax) { //can be eg func return type (if no public etc) or attribute
+			node = node.Parent;
+			if (node is not MemberDeclarationSyntax || node.SpanStart != start) return;
+		}
+
+		//already has doc comment?
+		foreach (var v in node.GetLeadingTrivia()) {
+			if (v.IsDocumentationCommentTrivia) { //singleline (preceded by ///) or multiline (preceded by /**)
+				var span = v.Span;
+				if (span.Start != pos || span.Length > 2) return; //when single ///, span includes only newline after ///
+			}
+		}
+		//AOutput.Write(pos);
+		//CiUtil.PrintNode(node);
+
+		string s = @" <summary>
+/// 
+/// </summary>";
+
+		if (node is BaseMethodDeclarationSyntax md) //method, ctor
+			s += CiUtil.FormatSignatureXmlDoc(md, code);
+
+		s = _Indent(s, doc, pos);
+
+		doc.zInsertText(true, pos, s, true, true);
+		doc.zGoToPos(true, pos + s.Find("/ ") + 2);
+	}
+
+	static bool _IsLineStart(string s, int pos) {
+		int i = pos; while (--i >= 0 && (s[i] == ' ' || s[i] == '\t')) { }
+		return i < 0 || s[i] == '\n';
+	}
+
+	static string _Indent(string s, SciCode doc, int pos) {
+		int indent = doc.zLineIndentationFromPos(true, pos);
+		if (indent > 0) s = s.RegexReplace(@"(?<=\n)", new string('\t', indent));
+		return s;
 	}
 
 	public static readonly string DefaultFile = AFolders.ThisApp + @"Default\Snippets.xml";

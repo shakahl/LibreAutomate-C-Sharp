@@ -14,7 +14,7 @@ using Microsoft.Win32;
 using System.Runtime.InteropServices;
 using System.Windows.Controls.Primitives;
 
-public class DOptions : KDialogWindow
+class DOptions : KDialogWindow
 {
 	public static void ZShow() {
 		if (s_dialog == null) {
@@ -37,8 +37,10 @@ public class DOptions : KDialogWindow
 	public DOptions() {
 		Title = "Options";
 		Owner = App.Wmain;
+		WindowStartupLocation = WindowStartupLocation.CenterOwner;
+		ShowInTaskbar = false;
+
 		_b = new AWpfBuilder(this).WinSize(540);
-		_b.WinProperties(WindowStartupLocation.CenterOwner, showInTaskbar: false);
 		_b.Row(-1).Add(out _tc).Height(300..);
 		_b.R.AddOkCancel(apply: "_Apply");
 
@@ -402,22 +404,20 @@ To apply changes after deleting etc, restart this application.
 
 	void _Code() {
 		var b = _Page("Code", WBPanelType.VerticalStack);
-		b.StartGrid<GroupBox>("Completion lists");
-		b.R.Add(out CheckBox complParenSpace, "Only spacebar adds () and <>");
+		b.StartGrid<GroupBox>("Completion list");
+		b.R.Add(out ComboBox complParen).Items("Spacebar|Always|Never").Select(App.Settings.ci_complParen).Add<Label>("adds ()");
 		b.End();
 		b.StartGrid<GroupBox>("Auto correction");
-		b.R.Add(out CheckBox correctStringEnter, @"Enter in string adds \r\n");
+		b.R.Add(out CheckBox correctStringEnter, @"Enter in string adds \r\n").Checked(0 == App.Settings.ci_correctStringEnter);
 		b.End();
 		b.End();
 
 		//b.Loaded += () => {
 
 		//};
-		complParenSpace.IsChecked = App.Settings.ci_complParenSpace;
-		correctStringEnter.IsChecked = 0 == App.Settings.ci_correctStringEnter;
 
 		_b.OkApply += e => {
-			App.Settings.ci_complParenSpace = complParenSpace.True();
+			App.Settings.ci_complParen = complParen.SelectedIndex;
 			App.Settings.ci_correctStringEnter = (byte)(correctStringEnter.True() ? 0 : 1);
 		};
 	}

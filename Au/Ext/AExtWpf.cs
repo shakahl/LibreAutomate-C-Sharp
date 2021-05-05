@@ -24,6 +24,7 @@ namespace Au
 	/// <summary>
 	/// Adds extension methods for some WPF classes.
 	/// </summary>
+	[EditorBrowsable(EditorBrowsableState.Never)]
 	public static class AExtWpf
 	{
 		/// <summary>

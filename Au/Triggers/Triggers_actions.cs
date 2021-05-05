@@ -75,10 +75,9 @@ namespace Au.Triggers
 		/// The thread has <see cref="ApartmentState.STA"/>.
 		/// There are several <b>ThreadX</b> functions. Only the last called function is active. If none called, it is the same as called this function without arguments.
 		/// </remarks>
-		public void Thread(int thread = 0, int ifRunningWaitMS = 0, bool noWarning = false)
-		{
+		public void Thread(int thread = 0, int ifRunningWaitMS = 0, bool noWarning = false) {
 			_New();
-			if((uint)thread > 127) throw new ArgumentOutOfRangeException();
+			if ((uint)thread > 127) throw new ArgumentOutOfRangeException();
 			_new.thread = (sbyte)thread;
 			_new.ifRunningWaitMS = ifRunningWaitMS >= -1 ? ifRunningWaitMS : throw new ArgumentOutOfRangeException();
 			_new.flags = noWarning ? TOFlags.NoWarning : 0;
@@ -91,8 +90,7 @@ namespace Au.Triggers
 		/// <remarks>
 		/// The action must be as fast as possible, else it will block triggers etc. Use to create and show toolbars (<see cref="AToolbar"/>). Rarely used for other purposes.
 		/// </remarks>
-		public void ThreadMain()
-		{
+		public void ThreadMain() {
 			_New();
 			_new.thread = TOThread.Main;
 			_new.ifRunningWaitMS = 0;
@@ -107,14 +105,13 @@ namespace Au.Triggers
 		/// <remarks>
 		/// The action can run simultaneously with other actions.
 		/// </remarks>
-		public void ThreadNew(bool single = false, bool mta = false)
-		{
+		public void ThreadNew(bool single = false, bool mta = false) {
 			_New();
 			_new.thread = TOThread.New;
 			_new.ifRunningWaitMS = 0;
 			TOFlags f = 0;
-			if(single) f |= TOFlags.Single;
-			if(mta) f |= TOFlags.MtaThread;
+			if (single) f |= TOFlags.Single;
+			if (mta) f |= TOFlags.MtaThread;
 			_new.flags = f;
 		}
 
@@ -126,8 +123,7 @@ namespace Au.Triggers
 		/// The action can run simultaneously with other actions. May start later if the pool is busy.
 		/// You should know how to use thread pool correctly. The action runs in the .NET thread pool through <see cref="Task.Run"/>.
 		/// </remarks>
-		public void ThreadPool(bool single = false)
-		{
+		public void ThreadPool(bool single = false) {
 			_New();
 			_new.thread = TOThread.Pool;
 			_new.ifRunningWaitMS = 0;
@@ -163,7 +159,7 @@ namespace Au.Triggers
 
 		internal TOptions Current {
 			get {
-				if(_new != null) { _prev = _new; _new = null; }
+				if (_new != null) { _prev = _new; _new = null; }
 				return _prev ?? (s_empty ??= new TOptions());
 			}
 		}
@@ -178,8 +174,7 @@ namespace Au.Triggers
 		/// <summary>
 		/// Clears all options.
 		/// </summary>
-		public void Reset()
-		{
+		public void Reset() {
 			_new = null;
 			_prev = null;
 		}
@@ -190,8 +185,7 @@ namespace Au.Triggers
 	/// </summary>
 	public struct TOBAArgs
 	{
-		internal TOBAArgs(TriggerArgs args)
-		{
+		internal TOBAArgs(TriggerArgs args) {
 			ActionArgs = args;
 			Exception = null;
 		}
@@ -210,8 +204,7 @@ namespace Au.Triggers
 
 	class TriggerActionThreads
 	{
-		public void Run(ActionTrigger trigger, TriggerArgs args, int muteMod)
-		{
+		public void Run(ActionTrigger trigger, TriggerArgs args, int muteMod) {
 			//APerf.First();
 			Action actionWrapper = () => {
 				var opt = trigger.options;
@@ -219,11 +212,12 @@ namespace Au.Triggers
 				try {
 					_MuteMod(ref muteMod);
 
-					string sTrigger = null;
+					string sTrigger = null; long startTime = 0;
 					//APerf.Next();
-					if(ATask.Role == ATRole.MiniProgram) {
+					if (ATask.Role == ATRole.MiniProgram) {
 						sTrigger = trigger.ToString();
-						Log_.Run.Write("Action started. Trigger: " + sTrigger);
+						Api.QueryPerformanceCounter(out startTime);
+						AOutput.TaskEvent_("AS " + sTrigger, startTime, trigger.sourceFile, trigger.sourceLine);
 						//APerf.Next();
 					}
 
@@ -243,49 +237,49 @@ namespace Au.Triggers
 						//APerf.NW();
 						trigger.Run(args);
 
-						if(sTrigger != null) Log_.Run.Write("Action ended. Trigger: " + sTrigger);
+						if (sTrigger != null) AOutput.TaskEvent_("AE", startTime, trigger.sourceFile, trigger.sourceLine);
 					}
-					catch(Exception e1) {
-						if(sTrigger != null) Log_.Run.Write($"Action failed. Trigger: {sTrigger}. Exception: {e1.ToStringWithoutStack()}");
+					catch (Exception e1) {
+						if (sTrigger != null) AOutput.TaskEvent_("AF", startTime, trigger.sourceFile, trigger.sourceLine);
 
 						baArgs.Exception = e1;
 						AOutput.Write(e1);
 					}
 					opt.after?.Invoke(baArgs);
 				}
-				catch(Exception e2) {
+				catch (Exception e2) {
 					AOutput.Write(e2);
 				}
 				finally {
 					oldAOpt.Dispose();
-					if(opt.flags.Has(TOFlags.Single)) _d.TryRemove(trigger, out _);
+					if (opt.flags.Has(TOFlags.Single)) _d.TryRemove(trigger, out _);
 				}
 			};
 			//never mind: we should not create actionWrapper if cannot run. But such cases are rare. Fast and small, about 64 bytes.
 
 			var opt1 = trigger.options;
 			int threadId = opt1.thread;
-			if(threadId >= 0) { //dedicated thread
-				_Thread h = null; foreach(var v in _a) if(v.id == threadId) { h = v; break; }
-				if(h == null) _a.Add(h = new _Thread(threadId));
-				if(h.RunAction(actionWrapper, trigger)) return;
-			} else if(threadId == TOThread.Main) {
+			if (threadId >= 0) { //dedicated thread
+				_Thread h = null; foreach (var v in _a) if (v.id == threadId) { h = v; break; }
+				if (h == null) _a.Add(h = new _Thread(threadId));
+				if (h.RunAction(actionWrapper, trigger)) return;
+			} else if (threadId == TOThread.Main) {
 				actionWrapper();
 				return;
 				//note: can reenter. Probably it is better than to cancel if already running.
 			} else {
 				bool canRun = true;
 				bool single = opt1.flags.Has(TOFlags.Single);
-				if(single) {
+				if (single) {
 					_d ??= new System.Collections.Concurrent.ConcurrentDictionary<ActionTrigger, object>();
-					if(_d.TryGetValue(trigger, out var tt)) {
-						switch(tt) {
+					if (_d.TryGetValue(trigger, out var tt)) {
+						switch (tt) {
 						case Thread thread:
-							if(thread.IsAlive) canRun = false;
+							if (thread.IsAlive) canRun = false;
 							break;
 						case Task task:
 							//AOutput.Write(task.Status);
-							switch(task.Status) {
+							switch (task.Status) {
 							case TaskStatus.RanToCompletion: case TaskStatus.Faulted: case TaskStatus.Canceled: break;
 							default: canRun = false; break;
 							}
@@ -294,14 +288,14 @@ namespace Au.Triggers
 					}
 				}
 
-				if(canRun) {
-					if(threadId == TOThread.New) {
+				if (canRun) {
+					if (threadId == TOThread.New) {
 						var thread = new Thread(actionWrapper.Invoke) { IsBackground = true };
-						if(!opt1.flags.Has(TOFlags.MtaThread)) thread.SetApartmentState(ApartmentState.STA);
-						if(single) _d[trigger] = thread;
+						if (!opt1.flags.Has(TOFlags.MtaThread)) thread.SetApartmentState(ApartmentState.STA);
+						if (single) _d[trigger] = thread;
 						try { thread.Start(); }
-						catch(OutOfMemoryException) { //too many threads, probably 32-bit process
-							if(single) _d.TryRemove(trigger, out _);
+						catch (OutOfMemoryException) { //too many threads, probably 32-bit process
+							if (single) _d.TryRemove(trigger, out _);
 							_OutOfMemory();
 							//SHOULDDO: before starting thread, warn if there are too many action threads.
 							//	In 32-bit process normally fails at ~3000 threads.
@@ -309,25 +303,23 @@ namespace Au.Triggers
 						}
 					} else { //thread pool
 						var task = new Task(actionWrapper);
-						if(single) _d[trigger] = task;
+						if (single) _d[trigger] = task;
 						task.Start();
 					}
 					return;
 				}
 			}
 
-			if(muteMod != 0) ThreadPool.QueueUserWorkItem(_ => _MuteMod(ref muteMod));
+			if (muteMod != 0) ThreadPool.QueueUserWorkItem(_ => _MuteMod(ref muteMod));
 		}
 		//[ThreadStatic] List<Action<bool>> t_beforeCalled;
 
-		public void Dispose()
-		{
-			foreach(var v in _a) v.Dispose();
+		public void Dispose() {
+			foreach (var v in _a) v.Dispose();
 		}
 
 		[MethodImpl(MethodImplOptions.AggressiveInlining)]
-		static void _OutOfMemory()
-		{
+		static void _OutOfMemory() {
 			AWarning.Write("There is not enough memory available to start the trigger action thread.", -1); //info: -1 because would need much memory for stack trace
 		}
 
@@ -350,23 +342,22 @@ namespace Au.Triggers
 			/// Adds the action to the queue and notifies the thread to execute it.
 			/// If the thread is busy, returns false; if ifRunning!=0, the action possibly will run later.
 			/// </summary>
-			public bool RunAction(Action actionWrapper, ActionTrigger trigger)
-			{
-				if(_disposed) return false;
-				if(_q == null) {
+			public bool RunAction(Action actionWrapper, ActionTrigger trigger) {
+				if (_disposed) return false;
+				if (_q == null) {
 					_q = new Queue<_Action>();
 					_event = new(false);
 					try {
 						AThread.Start(() => {
 							try {
-								while(!_disposed && _event.WaitOne()) {
-									while(!_disposed) {
+								while (!_disposed && _event.WaitOne()) {
+									while (!_disposed) {
 										_Action x;
-										lock(_q) {
+										lock (_q) {
 											g1:
-											if(_q.Count == 0) { _running = false; break; }
+											if (_q.Count == 0) { _running = false; break; }
 											x = _q.Dequeue();
-											if(x.time != 0 && ATime.PerfMilliseconds > x.time) goto g1;
+											if (x.time != 0 && ATime.PerfMilliseconds > x.time) goto g1;
 											_running = true;
 										}
 										x.actionWrapper();
@@ -380,18 +371,18 @@ namespace Au.Triggers
 							}
 						});
 					}
-					catch(OutOfMemoryException) { //too many threads, probably 32-bit process
+					catch (OutOfMemoryException) { //too many threads, probably 32-bit process
 						_event.Dispose(); _event = null;
 						_OutOfMemory();
 					}
 				}
 
 				bool R = true;
-				lock(_q) {
+				lock (_q) {
 					int ifRunningWaitMS = trigger.options.ifRunningWaitMS;
-					if(_running) {
-						if(ifRunningWaitMS == 0) {
-							if(!trigger.options.flags.Has(TOFlags.NoWarning))
+					if (_running) {
+						if (ifRunningWaitMS == 0) {
+							if (!trigger.options.flags.Has(TOFlags.NoWarning))
 								AOutput.Write("Warning: can't run the trigger action because an action is running in this thread." +
 									" To run simultaneously or wait, use one of Triggers.Options.ThreadX functions." +
 									" To disable this warning: Triggers.Options.Thread(noWarning: true);." +
@@ -409,9 +400,8 @@ namespace Au.Triggers
 				return R;
 			}
 
-			public void Dispose()
-			{
-				if(_disposed) return; _disposed = true;
+			public void Dispose() {
+				if (_disposed) return; _disposed = true;
 				_event.Set();
 			}
 		}
@@ -499,9 +489,8 @@ namespace Au.Triggers
 		//	}
 		//}
 
-		void _MuteMod(ref int muteMod)
-		{
-			switch(Interlocked.Exchange(ref muteMod, 0)) {
+		void _MuteMod(ref int muteMod) {
+			switch (Interlocked.Exchange(ref muteMod, 0)) {
 			case c_modRelease:
 				AKeys.Internal_.ReleaseModAndDisableModMenu();
 				break;

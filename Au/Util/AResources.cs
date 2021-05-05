@@ -206,11 +206,11 @@ namespace Au.Util
 			if (name.Starts('<') && (i = name.IndexOf('>')) > 1) {
 				asmName = name[1..i];
 				name = name[++i..];
-			} else if (ATask.Role == ATRole.MiniProgram) asmName = ATask.Name;
+			}
 			name = name.Lower(); //first time 15-40 ms, the slowest part. Just calls ToLowerInvariant.
 
 			return s_dict.GetOrAdd(asmName, k => {
-				var asm = k == "" ? Assembly.GetEntryAssembly() : _FindAssembly(k);
+				var asm = k.Length == 0 ? Assembly.GetEntryAssembly() : _FindAssembly(k);
 				if (asm == null) throw new FileNotFoundException($"Cannot find loaded resource assembly '{asmName}'.");
 				var rm = new ResourceManager(asm.GetName().Name + ".g", asm);
 				return rm.GetResourceSet(CultureInfo.InvariantCulture, true, false) ?? throw new FileNotFoundException($"Cannot find resources in assembly '{asmName}'.");

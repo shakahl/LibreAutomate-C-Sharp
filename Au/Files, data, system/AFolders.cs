@@ -299,13 +299,13 @@ namespace Au
 		}
 		static readonly object _lock = new object();
 
-		static void _SetOnce(ref string propVar, string value, bool create, [CallerMemberName] string propName = null) {
+		static void _SetOnce(ref string propVar, string value, bool create, [CallerMemberName] string m_ = null) {
 			lock (_lock) {
 				if (propVar != null) {
 #if DEBUG
 					if (!Debugger.IsAttached) //debugger may get the property. Then _SetAuto sets default value.
 #endif
-						throw new InvalidOperationException("AFolders." + propName + " is already set.");
+						throw new InvalidOperationException("AFolders." + m_ + " is already set.");
 				}
 				if (create) AFile.CreateDirectory(value);
 				propVar = value;
@@ -425,10 +425,9 @@ namespace Au
 
 		/// <summary>
 		/// Gets folder path of caller's source code file.
-		/// It is set by compiler (<see cref="CallerFilePathAttribute"/>).
 		/// </summary>
-		/// <param name="f">Don't use.</param>
-		public static FolderPath SourceCode([CallerFilePath] string f = null) => new(APath.GetDirectory(f));
+		/// <param name="f_">[](xref:caller_info)</param>
+		public static FolderPath SourceCode([CallerFilePath] string f_ = null) => new(APath.GetDirectory(f_));
 
 		/// <summary>
 		/// Gets non-redirected path of the System32 folder.

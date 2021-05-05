@@ -17,6 +17,7 @@ using Au;
 using Au.Types;
 using Au.Controls;
 using static Au.Controls.Sci;
+using Au.Util;
 
 class PanelOutput : DockPanel
 {
@@ -156,7 +157,10 @@ class PanelOutput : DockPanel
 
 		Action<OutServMessage> _onServerMessage;
 		void _OnServerMessage(OutServMessage m) {
-			if (m.Type != OutServMessageType.Write) return;
+			if (m.Type != OutServMessageType.Write) {
+				if (m.Type == OutServMessageType.TaskEvent) RecentTT.TriggerEvent(m);
+				return;
+			}
 
 			//create links in compilation errors/warnings or run-time stack trace
 			var s = m.Text; int i;

@@ -857,6 +857,8 @@ namespace Au.Controls
 			_dd = null;
 		}
 
+		//TODO: don't use folder icon to drop into. Drop into if in horizontal center 50%.
+
 		/// <summary>
 		/// Can be called from "drag over" override or event handler to show/hide insertion mark, expand/collapse folder and scroll if need.
 		/// </summary>

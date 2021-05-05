@@ -96,7 +96,7 @@ Press Tab or Shift+Tab to indent or unindent all selected lines. It adds or remo
 You can drag and drop files from File Explorer etc to the code editor. It inserts code to run the file.
 
 #### Find and replace
-The Find pane finds and replaces text in editor. Marks all matches in editor with yellow. Also can find files by name and files containing text.
+Use the Find panel to find and replace text in editor. It marks all matches in editor with yellow. Also can find files by name and files containing text.
 
 #### Code creation tools
 There are several code creation tools in menu Code. Some tools create code to find the captured window, control, accessible object or image. Other tools help to insert parts of regular expression or keys string.

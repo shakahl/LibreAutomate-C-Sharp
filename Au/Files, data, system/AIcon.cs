@@ -441,11 +441,14 @@ namespace Au
 		}
 
 		/// <summary>
-		/// Gets icon from unmanaged resources of this program file or <see cref="ATask.MainAssembly"/>.
+		/// Gets icon from unmanaged resources of this program.
 		/// </summary>
 		/// <returns>Returns null if not found.</returns>
 		/// <param name="size">Icon width and height. Default 16.</param>
 		/// <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
+		/// <remarks>
+		/// If role miniProgram (default), at first looks in main assembly (.dll); if not found there, looks in .exe file. Else only in .exe file.
+		/// </remarks>
 		public static AIcon OfThisApp(int size = 16, int resourceId = Api.IDI_APPLICATION) {
 			var h = GetAppIconModuleHandle_(resourceId);
 			if (h == default) return null;
@@ -471,12 +474,12 @@ namespace Au
 		/// <remarks>
 		/// Calls API <msdn>LoadIconMetric</msdn>.
 		/// 
-		/// The icon can be in <see cref="ATask.MainAssembly"/> (if this script has role miniProgram) or in the program file (.exe). If not found, loads standard icon, see API <msdn>LoadIconMetric</msdn>.
+		/// The icon can be in main assembly (if role miniProgram) or in the program file (.exe). If not found, loads standard icon, see API <b>LoadIconMetric</b>.
 		/// </remarks>
 		public static AIcon TrayIcon(int resourceId = Api.IDI_APPLICATION/*, bool large = false*/) {
 #if true
 			IntPtr hi = default; int hr = 1;
-			if (ATask.Role == ATRole.MiniProgram) hr = Api.LoadIconMetric(Api.GetModuleHandle(ATask.MainAssembly.Location), resourceId, 0, out hi);
+			if (ATask.Role == ATRole.MiniProgram) hr = Api.LoadIconMetric(Api.GetModuleHandle(Assembly.GetEntryAssembly().Location), resourceId, 0, out hi);
 			if (hr != 0) hr = Api.LoadIconMetric(Api.GetModuleHandle(null), resourceId, 0, out hi);
 			if (hr != 0) hr = Api.LoadIconMetric(default, resourceId, 0, out hi);
 			return hr == 0 ? _New(hi) : null;
@@ -501,11 +504,11 @@ namespace Au
 
 		/// <summary>
 		/// Gets native module handle of exe or dll that contains specified icon. Returns default if no icon.
-		/// If role miniProgram, at first looks in <see cref="ATask.MainAssembly"/>.
+		/// If role miniProgram, at first looks in main assembly (.dll).
 		/// </summary>
 		internal static IntPtr GetAppIconModuleHandle_(int resourceId) { //used by ADialog
 			if (ATask.Role == ATRole.MiniProgram) {
-				var h1 = Api.GetModuleHandle(ATask.MainAssembly.Location);
+				var h1 = Api.GetModuleHandle(Assembly.GetEntryAssembly().Location);
 				if (default != Api.FindResource(h1, resourceId, Api.RT_GROUP_ICON)) return h1;
 			}
 			var h2 = Api.GetModuleHandle(null);

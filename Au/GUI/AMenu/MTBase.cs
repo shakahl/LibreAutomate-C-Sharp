@@ -48,10 +48,10 @@ namespace Au
 			_threadId = AThread.Id;
 		}
 
-		private protected MTBase(string name, string f, int l) : this() {
+		private protected MTBase(string name, string f_, int l_) : this() {
 			_name = name;
-			_sourceFile = f;
-			_sourceLine = l;
+			_sourceFile = f_;
+			_sourceLine = l_;
 		}
 
 		private protected virtual void _WmNccreate(AWnd w) {
@@ -316,7 +316,7 @@ namespace Au
 			/// Sets text and tooltip (from text). Sets clicked, image and sourceLine fields.
 			/// Sets extractIconPath, actionThread and actionException fields from mt properties.
 			/// </summary>
-			internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l) {
+			internal void Set_(MTBase mt, string text, Delegate click, MTImage im, int l_) {
 				if (!text.NE()) {
 					int i = text.IndexOf('\0');
 					if (i >= 0) {
@@ -331,7 +331,7 @@ namespace Au
 				if (image is AIcon ic) { image = ic.ToGdipBitmap(); image ??= ""; } //DestroyIcon now; don't extract from code.
 
 				clicked = click;
-				sourceLine = l;
+				sourceLine = l_;
 
 				extractIconPath = (byte)((mt.ExtractIconPathFromCode && click is not (null or Action<AMenu> or Func<AMenu>)) ? 1 : 0);
 				actionThread = mt.ActionThread;

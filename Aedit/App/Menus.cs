@@ -92,7 +92,10 @@ static class Menus
 			public static void Close_all() { App.Model.CloseEtc(FilesModel.ECloseCmd.CloseAll); }
 
 			[Command(target = "")]
-			public static void Collapse_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseFolders); }
+			public static void Collapse_all_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseAllFolders); }
+
+			[Command(target = "")]
+			public static void Collapse_inactive_folders() { App.Model.CloseEtc(FilesModel.ECloseCmd.CollapseInactiveFolders); }
 
 			[Command(separator = true, target = "", keys = "Ctrl+Tab")]
 			public static void Previous_document() { var a = App.Model.OpenFiles; if (a.Count > 1) App.Model.SetCurrentFile(a[1]); }
@@ -289,7 +292,7 @@ static class Menus
 		public static void Compile() { CompileRun.CompileAndRun(false, App.Model.CurrentFile); }
 
 		[Command("...")]
-		public static void Recent() { Log_.Run.Show(); }
+		public static void Recent() { RecentTT.Show(); }
 
 		[Command(separator = true)]
 		public static void Debug_break() {
@@ -334,8 +337,8 @@ static class Menus
 		[Command(separator = true)]
 		public static void Disable_triggers() { TriggersAndToolbars.DisableTriggers(null); }
 
-		[Command("...")]
-		public static void Active_triggers() { Log_.Run.Show(); } //TODO
+		//[Command("...")]
+		//public static void Active_triggers() {  }
 
 		[Command("...")]
 		public static void Active_toolbars() { TriggersAndToolbars.ShowActiveTriggers(); }

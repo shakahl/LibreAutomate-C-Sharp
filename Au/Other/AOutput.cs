@@ -242,9 +242,15 @@ namespace Au
 			StringBuilder _b;
 
 			public override Encoding Encoding => Encoding.Unicode;
-			public override void WriteLine(string value) { WriteDirectly(_PrependBuilder(value)); }
+
+			public override void WriteLine(string value) {
+				//QM2.Write("WriteLine", $"'{value}'", value.ToCharArray());
+				WriteDirectly(_PrependBuilder(value));
+			}
+
 			public override void Write(string value) {
 				//QM2.Write($"'{value}'");
+				//QM2.Write("Write", $"'{value}'", value.ToCharArray());
 				if (value.NE()) return;
 				if (value.Ends('\n')) {
 					WriteLine(value[..^(value.Ends("\r\n") ? 2 : 1)]);
@@ -285,6 +291,7 @@ namespace Au
 		/// </summary>
 		/// <remarks>
 		/// If <b>Console.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Console.WriteLine</b>.
+		/// 
 		/// <b>Console.Clear</b> will not clear output; it will throw exception.
 		/// </remarks>
 		public static bool RedirectConsoleOutput {
@@ -493,7 +500,7 @@ namespace Au
 			public static bool UseQM2 { get; set; }
 
 			/// <summary>
-			/// Clears QM2 output pane.
+			/// Clears QM2 output panel.
 			/// </summary>
 			public static void Clear() => _WriteToQM2(null);
 

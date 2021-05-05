@@ -27,4 +27,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
+  <ItemGroup>
+    <Text Include="hacker.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+    <Text Include="hacker32.txt">
+      <Filter>Resource Files</Filter>
+    </Text>
+  </ItemGroup>
 </Project>

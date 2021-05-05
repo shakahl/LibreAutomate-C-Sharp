@@ -149,20 +149,20 @@ namespace Au
 		/// Use this constructor in scripts.
 		/// </summary>
 		/// <param name="name">Menu name. Must be a unique valid filename. Currently not used. Can be null.</param>
-		/// <param name="f">Don't use.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// This overload sets <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// 
 		/// Users can right-click an item to open/select it in editor, unless <i>f</i> = null.
 		/// </remarks>
-		public AMenu(string name, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(name, f, l) {
+		public AMenu(string name, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) : base(name, f_, l_) {
 			ExtractIconPathFromCode = true;
 		}
 
 		#region add
 
-		MenuItem _Add(MenuItem mi, string text, MTImage image, int l, Delegate click = null) {
+		MenuItem _Add(MenuItem mi, string text, MTImage image, int l_, Delegate click = null) {
 			_ThreadTrap();
 			_OpenTrap("cannot add items while the menu is open. To add to submenu, use the submenu variable.");
 			if (!mi.IsSeparator) {
@@ -175,7 +175,7 @@ namespace Au
 						mi.hotkey = s[i..];
 					}
 				}
-				mi.Set_(this, text, click, image, l);
+				mi.Set_(this, text, click, image, l_);
 			}
 			_a.Add(mi);
 			_addedNewItems = true;
@@ -190,9 +190,9 @@ namespace Au
 		/// <param name="text">Item text. Can include hotkey, tooltip and underlined character, like <c>"Te&amp;xt\t Hotkey\0 Tooltip"</c>; more info: <see cref="AMenu"/>.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="l">Don't use.</param>
-		public MenuItem Add(int id, string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
-			=> _Add(new(this, disable) { Id = _lastId = id }, text, image, l);
+		/// <param name="l_">[](xref:caller_info)</param>
+		public MenuItem Add(int id, string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
+			=> _Add(new(this, disable) { Id = _lastId = id }, text, image, l_);
 
 		/// <summary>
 		/// Adds menu item with auto-generated id.
@@ -200,12 +200,12 @@ namespace Au
 		/// <param name="text">Item text. Can include hotkey, tooltip and underlined character, like <c>"Te&amp;xt\t Hotkey\0 Tooltip"</c>; more info: <see cref="AMenu"/>.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// Assigns id = the last specified or auto-generated id + 1. If not using explicitly specified ids, auto-generated ids are 1, 2, 3... Submenu-items, separators and items with action don't auto-generate ids.
 		/// </remarks>
-		public MenuItem Add(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
-			=> _Add(new(this, disable) { Id = ++_lastId }, text, image, l);
+		public MenuItem Add(string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
+			=> _Add(new(this, disable) { Id = ++_lastId }, text, image, l_);
 
 		/// <summary>
 		/// Adds menu item with action (callback function) that is executed on click.
@@ -214,12 +214,12 @@ namespace Au
 		/// <param name="click">Action executed on click.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// This function is the same as the indexer. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 		/// </remarks>
-		public MenuItem Add(string text, Action<MenuItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
-			=> _Add(new(this, disable), text, image, l, click);
+		public MenuItem Add(string text, Action<MenuItem> click, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
+			=> _Add(new(this, disable), text, image, l_, click);
 
 		/// <summary>
 		/// Adds menu item with action (callback function) that is executed on click.
@@ -227,13 +227,13 @@ namespace Au
 		/// <param name="text">Item text. Can include hotkey, tooltip and underlined character, like <c>"Te&amp;xt\t Hotkey\0 Tooltip"</c>; more info: <see cref="AMenu"/>.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <value>Action executed on click. Can be null.</value>
 		/// <remarks>
 		/// This function is the same as <see cref="Add(string, Action{MenuItem}, MTImage, bool, int)"/>. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
 		/// </remarks>
-		public Action<MenuItem> this[string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0] {
-			set { Add(text, value, image, disable, l); }
+		public Action<MenuItem> this[string text, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0] {
+			set { Add(text, value, image, disable, l_); }
 		}
 
 		/// <summary>
@@ -244,12 +244,12 @@ namespace Au
 		/// <param name="click">Action executed on click.</param>
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// When clicked, <see cref="MenuItem.IsChecked"/> state is changed.
 		/// </remarks>
-		public MenuItem AddCheck(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l = 0)
-			=> _Add(new(this, disable, check) { checkType = 1 }, text, image, l, click);
+		public MenuItem AddCheck(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0)
+			=> _Add(new(this, disable, check) { checkType = 1 }, text, image, l_, click);
 
 		/// <summary>
 		/// Adds menu item to be used as a radio button in a group of such items.
@@ -259,12 +259,12 @@ namespace Au
 		/// <param name="click">Action executed on click.</param>
 		/// <param name="disable">Disabled state.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// When clicked an unchecked radio item, its <see cref="MenuItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
 		/// </remarks>
-		public MenuItem AddRadio(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l = 0)
-			=> _Add(new(this, disable, check) { checkType = 2 }, text, image, l, click);
+		public MenuItem AddRadio(string text, bool check = false, Action<MenuItem> click = null, bool disable = false, MTImage image = default, [CallerLineNumber] int l_ = 0)
+			=> _Add(new(this, disable, check) { checkType = 2 }, text, image, l_, click);
 
 		/// <summary>
 		/// Adds menu item that opens a submenu.
@@ -274,7 +274,7 @@ namespace Au
 		/// <param name="opening">Action called whenever opening the submenu and should add items to it.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// The submenu is other <b>AMenu</b> object. It inherits many properties of this menu; see property documentation.
 		/// </remarks>
@@ -304,8 +304,8 @@ namespace Au
 		/// }
 		/// ]]></code>
 		/// </example>
-		public MenuItem Submenu(string text, Action<AMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
-			=> _Add(new(this, disable) { IsSubmenu = true }, text, image, l, opening);
+		public MenuItem Submenu(string text, Action<AMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
+			=> _Add(new(this, disable) { IsSubmenu = true }, text, image, l_, opening);
 
 		/// <summary>
 		/// Adds menu item that opens a reusable submenu.
@@ -314,7 +314,7 @@ namespace Au
 		/// <param name="opening">Func called whenever opening the submenu and should return the submenu object. Can return null.</param>
 		/// <param name="image">Item image. Read here: <see cref="MTBase"/>.</param>
 		/// <param name="disable">Disabled state.</param>
-		/// <param name="l">Don't use.</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// The caller creates the submenu (creates the <see cref="AMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>AMenu</b> and reuse same object.
 		/// The submenu does not inherit properties of this menu.
@@ -325,8 +325,8 @@ namespace Au
 		/// m.Submenu("Submenu", () => m2);
 		/// ]]></code>
 		/// </example>
-		public MenuItem Submenu(string text, Func<AMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l = 0)
-			=> _Add(new(this, disable) { IsSubmenu = true }, text, image, l, opening);
+		public MenuItem Submenu(string text, Func<AMenu> opening, MTImage image = default, bool disable = false, [CallerLineNumber] int l_ = 0)
+			=> _Add(new(this, disable) { IsSubmenu = true }, text, image, l_, opening);
 
 		/// <summary>
 		/// Adds separator.
@@ -513,6 +513,11 @@ namespace Au
 		/// </summary>
 		public bool IsOpen => !_w.Is0;
 
+		/// <summary>
+		/// After closing the menu gets the selected item, or null if cancelled.
+		/// </summary>
+		public MenuItem Result => _result;
+
 		void _OpenTrap(string error = null) {
 			if (IsOpen) throw new InvalidOperationException(error);
 		}
@@ -588,7 +593,7 @@ namespace Au
 
 			WS style = WS.POPUP | WS.DLGFRAME; //3-pixel frame
 			WS2 estyle = WS2.TOOLWINDOW | WS2.NOACTIVATE | WS2.TOPMOST;
-			SIZE z = _Measure(rs.Width * 9 / 10);
+			SIZE z = _Measure(rs.Width * 19 / 20);
 
 			bool needScroll = z.height > rs.Height;
 			if (needScroll) {

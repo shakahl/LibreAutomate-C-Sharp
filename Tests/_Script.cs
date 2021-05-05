@@ -558,7 +558,7 @@ partial class TestScript
 		var a = new object[100];
 		for (int i = 0; i < a.Length; i++) a[i] = new object();
 
-		APerf.SpeedUpCpu();
+		APerf.Cpu();
 		for (int i1 = 0; i1 < 7; i1++) {
 			int n2 = a.Length;
 			APerf.First();
@@ -595,7 +595,7 @@ partial class TestScript
 	//		//n = 100_000_000;
 	//		n = 0x10000;
 
-	//		APerf.SpeedUpCpu();
+	//		APerf.Cpu();
 	//		for(int i1 = 0; i1 < 10; i1++) {
 	//			APerf.First();
 
@@ -816,7 +816,7 @@ partial class TestScript
 		//AOutput.Write(f);
 
 		int k1 = 0, k2 = 0, k3 = 0, k4 = 0, k5 = 0;
-		APerf.SpeedUpCpu();
+		APerf.Cpu();
 		//if(f.HasAny(AFFlags.HiddenToo)) k3++;
 		for (int i1 = 0; i1 < 7; i1++) {
 			int n2 = 10000;

@@ -222,7 +222,7 @@ namespace Au.Types
 
 namespace Au
 {
-	static partial class AExtensions
+	static partial class AExt
 	{
 		/// <summary>
 		/// Returns string containing exception type name and message.

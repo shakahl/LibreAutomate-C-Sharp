@@ -277,10 +277,10 @@ namespace Au
 		public static AHookWin ThreadCallWndProcRet(Action<HookData.ThreadCallWndProcRet> hookProc, int threadId = 0, bool setNow = true)
 			=> new AHookWin(Api.WH_CALLWNDPROCRET, hookProc, setNow, threadId);
 
-		AHookWin(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string hookTypeString = null) {
+		AHookWin(int hookType, Delegate hookProc, bool setNow, int tid, bool ignoreAuInjected = false, [CallerMemberName] string m_ = null) {
 			_proc2 = hookProc ?? throw new ArgumentNullException();
 			_hookType = hookType;
-			_hookTypeString = hookTypeString;
+			_hookTypeString = m_;
 			_ignoreAuInjected = ignoreAuInjected;
 			if (hookType == Api.WH_KEYBOARD_LL || hookType == Api.WH_MOUSE_LL) {
 				_proc1 = _HookProcLL;

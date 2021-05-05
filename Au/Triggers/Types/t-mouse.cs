@@ -66,7 +66,7 @@ namespace Au.Triggers
 
 		internal MouseTrigger(ActionTriggers triggers, Action<MouseTriggerArgs> action,
 			TMKind kind, byte data, KMod mod, KMod modAny, TMFlags flags, TMScreen screenIndex,
-			string paramsString) : base(triggers, action, true) {
+			string paramsString, (string, int) source) : base(triggers, action, true, source) {
 			const KMod csaw = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win;
 			modMask = ~modAny & csaw;
 			modMasked = mod & modMask;
@@ -135,12 +135,14 @@ namespace Au.Triggers
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
 		/// </param>
 		/// <param name="flags"></param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMClick button, string modKeys = null, TMFlags flags = 0] {
+		public Action<MouseTriggerArgs> this[TMClick button, string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
-				_Add(value, TMKind.Click, (byte)button, modKeys, flags, default, button.ToString());
+				_Add(value, TMKind.Click, (byte)button, modKeys, flags, default, button.ToString(), (f_, l_));
 			}
 		}
 
@@ -148,14 +150,16 @@ namespace Au.Triggers
 		/// Adds a mouse wheel trigger.
 		/// </summary>
 		/// <param name="direction"></param>
-		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags]"/>.</param>
+		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags, string, int]"/>.</param>
 		/// <param name="flags"></param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMWheel direction, string modKeys = null, TMFlags flags = 0] {
+		public Action<MouseTriggerArgs> this[TMWheel direction, string modKeys = null, TMFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
-				_Add(value, TMKind.Wheel, (byte)direction, modKeys, flags, default, direction.ToString());
+				_Add(value, TMKind.Wheel, (byte)direction, modKeys, flags, default, direction.ToString(), (f_, l_));
 			}
 		}
 
@@ -163,19 +167,21 @@ namespace Au.Triggers
 		/// Adds a mouse screen edge trigger.
 		/// </summary>
 		/// <param name="edge"></param>
-		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags]"/>.</param>
+		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags, string, int]"/>.</param>
 		/// <param name="flags"></param>
 		/// <param name="screen">
 		/// Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
 		/// Default: <b>Primary</b>.
 		/// Uses <see cref="AScreen.All"/> to get screen indices. They are different than in Windows Settings.
 		/// </param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
+		public Action<MouseTriggerArgs> this[TMEdge edge, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
-				_Add(value, TMKind.Edge, (byte)edge, modKeys, flags, screen, edge.ToString());
+				_Add(value, TMKind.Edge, (byte)edge, modKeys, flags, screen, edge.ToString(), (f_, l_));
 			}
 		}
 
@@ -183,19 +189,21 @@ namespace Au.Triggers
 		/// Adds a mouse move trigger.
 		/// </summary>
 		/// <param name="move"></param>
-		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags]"/>.</param>
+		/// <param name="modKeys">See <see cref="this[TMClick, string, TMFlags, string, int]"/>.</param>
 		/// <param name="flags"></param>
-		/// <param name="screen">See <see cref="this[TMEdge, string, TMFlags, TMScreen]"/>.</param>
+		/// <param name="screen">See <see cref="this[TMEdge, string, TMFlags, TMScreen, string, int]"/>.</param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example> See <see cref="ActionTriggers"/>.</example>
-		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0] {
+		public Action<MouseTriggerArgs> this[TMMove move, string modKeys = null, TMFlags flags = 0, TMScreen screen = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
-				_Add(value, TMKind.Move, (byte)move, modKeys, flags, screen, move.ToString());
+				_Add(value, TMKind.Move, (byte)move, modKeys, flags, screen, move.ToString(), (f_, l_));
 			}
 		}
 
-		MouseTrigger _Add(Action<MouseTriggerArgs> f, TMKind kind, byte data, string modKeys, TMFlags flags, TMScreen screen, string sData) {
+		MouseTrigger _Add(Action<MouseTriggerArgs> f, TMKind kind, byte data, string modKeys, TMFlags flags, TMScreen screen, string sData, (string, int) source) {
 			_triggers.ThrowIfRunning_();
 			bool noMod = modKeys.NE();
 
@@ -220,7 +228,7 @@ namespace Au.Triggers
 			} else {
 				if (!AKeys.More.ParseHotkeyTriggerString_(modKeys, out mod, out modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
 			}
-			var t = new MouseTrigger(_triggers, f, kind, data, mod, modAny, flags, screen, ps);
+			var t = new MouseTrigger(_triggers, f, kind, data, mod, modAny, flags, screen, ps, source);
 			t.DictAdd(_d, _DictKey(kind, data));
 			_lastAdded = t;
 			UsedHookEvents_ |= HooksThread.UsedEvents.Mouse; //just sets the hook

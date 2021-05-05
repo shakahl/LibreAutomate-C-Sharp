@@ -13,6 +13,8 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
+//TODO: move methods to AComputer?
+
 namespace Au
 {
 	/// <summary>

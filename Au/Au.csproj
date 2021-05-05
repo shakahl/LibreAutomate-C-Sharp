@@ -38,10 +38,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Update="Util\AToolStrip.cs" />
-  </ItemGroup>
-
-  <ItemGroup>
     <None Update="32\sqlite3.dll">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

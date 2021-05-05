@@ -20,7 +20,6 @@ namespace Au
 	public static class AComputer
 	{
 		//TODO
-		//TODO: move methods from AMiscInfo.
 
 		public static void Shutdown() {
 			

@@ -1593,7 +1593,7 @@
         <member name="P:Au.Types.AOptWarnings.Verbose">
             <summary>
             If true, some library functions may display more warnings and other info.
-            If not explicitly set, the default value depends on the build configuration of the entry assymbly: true if Debug, false if Release.
+            If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="P:Au.ATask.IsDebug"/>.
             </summary>
         </member>
         <member name="M:Au.Types.AOptWarnings.Disable(System.String[])">
@@ -3559,7 +3559,7 @@
         </member>
         <member name="F:Au.Types.DIcon.App">
             <summary>
-            Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or <see cref="P:Au.ATask.MainAssembly"/>.
+            Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or main assembly.
             If there are no icons - default program icon.
             C# compilers add app icon with this id. The <b>DIcon.App</b> value is = <b>IDI_APPLICATION</b> (32512).
             If this program file contains multiple native icons in range DIcon.App to 0xf000, you can specify them like <c>DIcon.App+1</c>.
@@ -5131,6 +5131,11 @@
             Only <see cref="P:Au.Types.OutServMessage.Type"/> is used.
             </summary>
         </member>
+        <member name="F:Au.Types.OutServMessageType.TaskEvent">
+            <summary>
+            Used internally to log events such as start/end of tasks and trigger actions.
+            </summary>
+        </member>
         <member name="T:Au.Types.OutServMessage">
             <summary>
             Contains message text and/or related info.
@@ -5872,8 +5877,7 @@
         </member>
         <member name="F:Au.Types.ATRole.MiniProgram">
             <summary>
-            The task runs in Au.Task.exe process.
-            It can be started only from editor.
+            The task runs in Au.Task.exe process, started from editor.
             </summary>
         </member>
         <member name="F:Au.Types.ATRole.EditorExtension">
@@ -5881,10 +5885,44 @@
             The task runs in editor process.
             </summary>
         </member>
-        <member name="T:Au.Types.RAFlags">
+        <member name="T:Au.Types.UExcept">
             <summary>
-            Flags for <see cref="M:Au.RunAssembly.Run(System.String,System.String[],Au.Types.RAFlags,System.String)"/>.
+            Flags for <see cref="M:Au.ATask.Setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
+            Default flags is <b>Print</b> and <b>Exit</b>, even if <b>Setup</b> not called (with default compiler only).
             </summary>
+        </member>
+        <member name="F:Au.Types.UExcept.Print">
+            <summary>
+            Display exception info in output.
+            </summary>
+        </member>
+        <member name="F:Au.Types.UExcept.Dialog">
+            <summary>
+            Show dialog with exception info.
+            </summary>
+        </member>
+        <member name="F:Au.Types.UExcept.Exit">
+            <summary>
+            Call <see cref="M:System.Environment.Exit(System.Int32)"/>. It prevents slow exit (Windows error reporting, writing events to the Windows event log, etc).
+            Note: then instead of <see cref="E:System.AppDomain.UnhandledException"/> event is <see cref="E:System.AppDomain.ProcessExit"/> event. But <see cref="E:Au.AProcess.Exit"/> indicates exception as usually.
+            Info: the editor setup program disables Windows error reporting for tasks with role miniProgram (default). See <msdn>WerAddExcludedApplication</msdn>.
+            </summary>
+        </member>
+        <member name="T:Au.Types.RunSingleAttribute">
+            <summary>
+            The default compiler adds this attribute to the main assembly if runSingle true.
+            </summary>
+        </member>
+        <member name="T:Au.Types.RefPathsAttribute">
+            <summary>
+            The default compiler adds this attribute to the main assembly if using non-default references (meta r) that aren't in editor's folder or its subfolder "Libraries". Allows to find them at run time. Only if role miniProgram (default).
+            </summary>
+        </member>
+        <member name="F:Au.Types.RefPathsAttribute.Paths">
+            <summary>Dll paths separated with |.</summary>
+        </member>
+        <member name="M:Au.Types.RefPathsAttribute.#ctor(System.String)">
+            <param name="paths">Dll paths separated with |.</param>
         </member>
         <member name="T:Au.Types.WHFlags">
             <summary>
@@ -6688,86 +6726,86 @@
             ]]></code>
             </example>
         </member>
-        <member name="T:Au.AExtensions">
+        <member name="T:Au.AExt">
             <summary>
             Adds extension methods for some .NET classes.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToStringWithoutStack(System.Exception)">
+        <member name="M:Au.AExt.ToStringWithoutStack(System.Exception)">
             <summary>
             Returns string containing exception type name and message.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToInt(System.Double)">
+        <member name="M:Au.AExt.ToInt(System.Double)">
             <summary>
             Converts to int with rounding.
             Calls <see cref="M:System.Convert.ToInt32(System.Double)"/>.
             </summary>
             <exception cref="T:System.OverflowException"></exception>
         </member>
-        <member name="M:Au.AExtensions.ToInt(System.Single)">
+        <member name="M:Au.AExt.ToInt(System.Single)">
             <summary>
             Converts to int with rounding.
             Calls <see cref="M:System.Convert.ToInt32(System.Single)"/>.
             </summary>
             <exception cref="T:System.OverflowException"></exception>
         </member>
-        <member name="M:Au.AExtensions.ToInt(System.Decimal)">
+        <member name="M:Au.AExt.ToInt(System.Decimal)">
             <summary>
             Converts to int with rounding.
             Calls <see cref="M:System.Convert.ToInt32(System.Decimal)"/>.
             </summary>
             <exception cref="T:System.OverflowException"></exception>
         </member>
-        <member name="M:Au.AExtensions.ToColor_(System.Int32,System.Boolean)">
+        <member name="M:Au.AExt.ToColor_(System.Int32,System.Boolean)">
             <summary>
             Converts to System.Drawing.Color. Makes opaque (alpha 0xff).
             Can be used like <c>0x123456.ToColor_()</c> instead of <c>Color.FromArgb(unchecked((int)0xff123456))</c>.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToStringInvariant(System.Double,System.String)">
+        <member name="M:Au.AExt.ToStringInvariant(System.Double,System.String)">
             <summary>
             Converts double to string.
             Uses invariant culture, therefore decimal point is always '.', not ',' etc.
             Calls <see cref="M:System.Double.ToString(System.String,System.IFormatProvider)"/>.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToStringInvariant(System.Single,System.String)">
+        <member name="M:Au.AExt.ToStringInvariant(System.Single,System.String)">
             <summary>
             Converts double to string.
             Uses invariant culture, therefore decimal point is always '.', not ',' etc.
             Calls <see cref="M:System.Single.ToString(System.String,System.IFormatProvider)"/>.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToStringInvariant(System.Decimal,System.String)">
+        <member name="M:Au.AExt.ToStringInvariant(System.Decimal,System.String)">
             <summary>
             Converts double to string.
             Uses invariant culture, therefore decimal point is always '.', not ',' etc.
             Calls <see cref="M:System.Decimal.ToString(System.String,System.IFormatProvider)"/>.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToStringInvariant(System.Int32,System.String)">
+        <member name="M:Au.AExt.ToStringInvariant(System.Int32,System.String)">
             <summary>
             Converts int to string.
             Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
             Calls <see cref="M:System.Int32.ToString(System.String,System.IFormatProvider)"/>.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToStringInvariant(System.Int64,System.String)">
+        <member name="M:Au.AExt.ToStringInvariant(System.Int64,System.String)">
             <summary>
             Converts long to string.
             Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
             Calls <see cref="M:System.Double.ToString(System.String,System.IFormatProvider)"/>.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.ToStringInvariant(System.IntPtr,System.String)">
+        <member name="M:Au.AExt.ToStringInvariant(System.IntPtr,System.String)">
             <summary>
             Converts nint to string.
             Uses invariant culture, therefore minus sign is always ASCII '-', not '−' etc.
             Calls <see cref="M:System.IntPtr.ToString(System.String,System.IFormatProvider)"/>.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.GetStartEnd(System.Range,System.Int32)">
+        <member name="M:Au.AExt.GetStartEnd(System.Range,System.Int32)">
             <summary>
             Calls <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> and returns start and end instead of start and length.
             </summary>
@@ -6775,7 +6813,7 @@
             <param name="length"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.AExtensions.GetStartEnd(System.Nullable{System.Range},System.Int32)">
+        <member name="M:Au.AExt.GetStartEnd(System.Nullable{System.Range},System.Int32)">
             <summary>
             If this is null, returns <c>(0, length)</c>. Else calls <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/> and returns start and end instead of start and length.
             </summary>
@@ -6783,7 +6821,7 @@
             <param name="length"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.AExtensions.GetOffsetAndLength(System.Nullable{System.Range},System.Int32)">
+        <member name="M:Au.AExt.GetOffsetAndLength(System.Nullable{System.Range},System.Int32)">
             <summary>
             If this is null, returns <c>(0, length)</c>. Else calls <see cref="M:System.Range.GetOffsetAndLength(System.Int32)"/>.
             </summary>
@@ -6791,7 +6829,7 @@
             <param name="length"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.AExtensions.Has``1(``0,``0)">
+        <member name="M:Au.AExt.Has``1(``0,``0)">
             <summary>
             Returns true if this enum variable has all flag bits specified in <i>flag</i>.
             </summary>
@@ -6801,14 +6839,14 @@
             The same as code <c>(t &amp; flag) == flag</c> or <b>Enum.HasFlag</b>.
             </remarks>
         </member>
-        <member name="M:Au.AExtensions.HasAny``1(``0,``0)">
+        <member name="M:Au.AExt.HasAny``1(``0,``0)">
             <summary>
             Returns true if this enum variable has one or more flag bits specified in <i>flags</i>.
             </summary>
             <param name="t"></param>
             <param name="flags">One or more flags.</param>
         </member>
-        <member name="M:Au.AExtensions.SetFlag``1(``0@,``0,System.Boolean)">
+        <member name="M:Au.AExt.SetFlag``1(``0@,``0,System.Boolean)">
             <summary>
             Adds or removes a flag.
             </summary>
@@ -6816,7 +6854,7 @@
             <param name="flag">One or more flags to add or remove.</param>
             <param name="add">If true, adds flag, else removes flag.</param>
         </member>
-        <member name="M:Au.AExtensions.RemoveAt``1(``0[],System.Int32,System.Int32)">
+        <member name="M:Au.AExt.RemoveAt``1(``0[],System.Int32,System.Int32)">
             <summary>
             Creates a copy of this array with one or more removed elements.
             </summary>
@@ -6826,7 +6864,7 @@
             <param name="count"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.AExtensions.InsertAt``1(``0[],System.Int32,``0)">
+        <member name="M:Au.AExt.InsertAt``1(``0[],System.Int32,``0)">
             <summary>
             Creates a copy of this array with one inserted element.
             </summary>
@@ -6836,7 +6874,7 @@
             <param name="value"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.AExtensions.InsertAt``1(``0[],System.Int32,``0[])">
+        <member name="M:Au.AExt.InsertAt``1(``0[],System.Int32,``0[])">
             <summary>
             Creates a copy of this array with several inserted elements.
             </summary>
@@ -6846,7 +6884,7 @@
             <param name="values"></param>
             <exception cref="T:System.ArgumentOutOfRangeException"></exception>
         </member>
-        <member name="M:Au.AExtensions.RemoveWhere``2(System.Collections.Generic.Dictionary{``0,``1},System.Func{System.Collections.Generic.KeyValuePair{``0,``1},System.Boolean})">
+        <member name="M:Au.AExt.RemoveWhere``2(System.Collections.Generic.Dictionary{``0,``1},System.Func{System.Collections.Generic.KeyValuePair{``0,``1},System.Boolean})">
             <summary>
             Removes items based on a predicate. For example, all items that have certain value.
             </summary>
@@ -6855,27 +6893,27 @@
             <param name="t"></param>
             <param name="predicate"></param>
         </member>
-        <member name="M:Au.AExtensions.Lenn_``1(``0[])">
+        <member name="M:Au.AExt.Lenn_``1(``0[])">
             <summary>
             Returns <b>Length</b>, or 0 if null.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.Lenn_``1(System.Collections.Generic.List{``0})">
+        <member name="M:Au.AExt.Lenn_``1(System.Collections.Generic.List{``0})">
             <summary>
             Returns <b>Count</b>, or 0 if null.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.NE_``1(``0[])">
+        <member name="M:Au.AExt.NE_``1(``0[])">
             <summary>
             Returns true if null or <b>Length</b> == 0.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.NE_``1(System.Collections.Generic.List{``0})">
+        <member name="M:Au.AExt.NE_``1(System.Collections.Generic.List{``0})">
             <summary>
             Returns true if null or <b>Count</b> == 0.
             </summary>
         </member>
-        <member name="M:Au.AExtensions.Descendants_``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.Collections.Generic.IEnumerable{``0}})">
+        <member name="M:Au.AExt.Descendants_``1(System.Collections.Generic.IEnumerable{``0},System.Func{``0,System.Collections.Generic.IEnumerable{``0}})">
             <summary>
             Efficiently recursively gets descendants of this tree.
             <see href="https://stackoverflow.com/a/30441479/2547338"/>
@@ -6884,7 +6922,7 @@
             <param name="t"></param>
             <param name="childSelector"></param>
         </member>
-        <member name="M:Au.AExtensions.Descendants_(System.Collections.IEnumerable,System.Func{System.Object,System.Collections.IEnumerable})">
+        <member name="M:Au.AExt.Descendants_(System.Collections.IEnumerable,System.Func{System.Object,System.Collections.IEnumerable})">
             <summary>
             Efficiently recursively gets descendants of this tree.
             <see href="https://stackoverflow.com/a/30441479/2547338"/>
@@ -6892,7 +6930,7 @@
             <param name="t"></param>
             <param name="childSelector"></param>
         </member>
-        <member name="M:Au.AExtensions.AppendSentence(System.Text.StringBuilder,System.String,System.Boolean)">
+        <member name="M:Au.AExt.AppendSentence(System.Text.StringBuilder,System.String,System.Boolean)">
             <summary>
             Appends string as new correctly formatted sentence.
             Returns this.
@@ -6907,12 +6945,7 @@
             Appends '.' if s does not end with '.', ';', ':', ',', '!' or '?'.
             </remarks>
         </member>
-        <member name="T:Au.AExtForms">
-            <summary>
-            Adds extension methods for some System.Windows.Forms classes.
-            </summary>
-        </member>
-        <member name="M:Au.AExtForms.Hwnd(System.Windows.Forms.Control,System.Boolean)">
+        <member name="M:Au.AExt.Hwnd(System.Windows.Forms.Control,System.Boolean)">
             <summary>
             Gets window handle as <see cref="T:Au.AWnd"/>.
             </summary>
@@ -6925,31 +6958,7 @@
             Should be called in control's thread. Calls <see cref="P:System.Windows.Forms.Control.IsHandleCreated"/> and <see cref="P:System.Windows.Forms.Control.Handle"/>.
             </remarks>
         </member>
-        <member name="M:Au.AExtForms.MouseClientXY(System.Windows.Forms.Control)">
-            <summary>
-            Gets mouse cursor position in client area coordinates.
-            Returns default(POINT) if handle not created.
-            </summary>
-        </member>
-        <member name="M:Au.AExtForms.MouseWindowXY(System.Windows.Forms.Control)">
-            <summary>
-            Gets mouse cursor position in window coordinates.
-            </summary>
-        </member>
-        <member name="M:Au.AExtForms.SetCueBanner(System.Windows.Forms.TextBox,System.String,System.Boolean)">
-            <summary>
-            Sets the textual cue, or tip, that is displayed by the control when it does not have text.
-            Sends API <msdn>EM_SETCUEBANNER</msdn>.
-            Does nothing if Multiline.
-            </summary>
-        </member>
-        <member name="M:Au.AExtForms.SetCueBanner(System.Windows.Forms.ComboBox,System.String)">
-            <summary>
-            Sets the textual cue, or tip, that is displayed by the edit control when it does not have text.
-            Sends API <msdn>CB_SETCUEBANNER</msdn>.
-            </summary>
-        </member>
-        <member name="M:Au.AExtForms.DrawRectangleInset(System.Drawing.Graphics,System.Drawing.Pen,Au.Types.RECT)">
+        <member name="M:Au.AExt.DrawRectangleInset(System.Drawing.Graphics,System.Drawing.Pen,Au.Types.RECT)">
             <summary>
             Draws inset rectangle.
             </summary>
@@ -6960,7 +6969,7 @@
             Calls <see cref="M:System.Drawing.Graphics.DrawRectangle(System.Drawing.Pen,System.Drawing.Rectangle)"/> with arguments corrected so that it draws inside r. Does not use <see cref="F:System.Drawing.Drawing2D.PenAlignment.Inset"/>, it is unreliable.
             </remarks>
         </member>
-        <member name="M:Au.AExtForms.DrawRectangleInset(System.Drawing.Graphics,System.Drawing.Color,System.Int32,Au.Types.RECT)">
+        <member name="M:Au.AExt.DrawRectangleInset(System.Drawing.Graphics,System.Drawing.Color,System.Int32,Au.Types.RECT)">
             <summary>
             Draws inset rectangle of specified pen color and width.
             </summary>
@@ -6968,7 +6977,7 @@
             Creates pen and calls other overload.
             </remarks>
         </member>
-        <member name="M:Au.AExtForms.FillRectangle(System.Drawing.Graphics,System.Drawing.Color,Au.Types.RECT)">
+        <member name="M:Au.AExt.FillRectangle(System.Drawing.Graphics,System.Drawing.Color,Au.Types.RECT)">
             <summary>
             Creates solid brush and calls <see cref="M:System.Drawing.Graphics.FillRectangle(System.Drawing.Brush,System.Drawing.Rectangle)"/>.
             </summary>
@@ -8213,9 +8222,8 @@
         <member name="M:Au.AFolders.SourceCode(System.String)">
             <summary>
             Gets folder path of caller's source code file.
-            It is set by compiler (<see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/>).
             </summary>
-            <param name="f">Don't use.</param>
+            <param name="f_">[](xref:caller_info)</param>
         </member>
         <member name="P:Au.AFolders.SystemX64">
             <summary>
@@ -8413,11 +8421,14 @@
         </member>
         <member name="M:Au.AIcon.OfThisApp(System.Int32,System.Int32)">
             <summary>
-            Gets icon from unmanaged resources of this program file or <see cref="P:Au.ATask.MainAssembly"/>.
+            Gets icon from unmanaged resources of this program.
             </summary>
             <returns>Returns null if not found.</returns>
             <param name="size">Icon width and height. Default 16.</param>
             <param name="resourceId">Native resource id. Default <msdn>IDI_APPLICATION</msdn> (C# compilers add app icon with this id).</param>
+            <remarks>
+            If role miniProgram (default), at first looks in main assembly (.dll); if not found there, looks in .exe file. Else only in .exe file.
+            </remarks>
         </member>
         <member name="M:Au.AIcon.TrayIcon(System.Int32)">
             <summary>
@@ -8427,7 +8438,7 @@
             <remarks>
             Calls API <msdn>LoadIconMetric</msdn>.
             
-            The icon can be in <see cref="P:Au.ATask.MainAssembly"/> (if this script has role miniProgram) or in the program file (.exe). If not found, loads standard icon, see API <msdn>LoadIconMetric</msdn>.
+            The icon can be in main assembly (if role miniProgram) or in the program file (.exe). If not found, loads standard icon, see API <b>LoadIconMetric</b>.
             </remarks>
         </member>
         <member name="M:Au.AIcon.TrayIcon(System.String)">
@@ -8442,7 +8453,7 @@
         <member name="M:Au.AIcon.GetAppIconModuleHandle_(System.Int32)">
             <summary>
             Gets native module handle of exe or dll that contains specified icon. Returns default if no icon.
-            If role miniProgram, at first looks in <see cref="P:Au.ATask.MainAssembly"/>.
+            If role miniProgram, at first looks in main assembly (.dll).
             </summary>
         </member>
         <member name="M:Au.AIcon.OfWindow(Au.AWnd,System.Int32)">
@@ -9254,8 +9265,7 @@
             Before this process exits, either normally or on unhandled exception.
             </summary>
             <remarks>
-            The event handler is called when one of these events occur, with their parameters: <see cref="E:System.AppDomain.ProcessExit"/>, <see cref="E:System.AppDomain.UnhandledException"/>.
-            The event handler is called before static object finalizers.
+            The event handler is called on <see cref="E:System.AppDomain.ProcessExit"/> (then the parameter is null) and <see cref="E:System.AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
             </remarks>
         </member>
         <member name="P:Au.AProcess.CultureIsInvariant">
@@ -9263,10 +9273,10 @@
             Gets or sets whether <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="P:System.Globalization.CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/>.
             </summary>
             <remarks>
-            If your app don't want to use current culture (default in .NET apps), it can set these properties = <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> or set this property = true.
+            If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="P:System.Globalization.CultureInfo.InvariantCulture"/> or set this property = true.
             It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
-            Also, bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-            In automation scripts this property is implicitly set = true, unless script with role exeProgram does not call <see cref="M:Au.ATask.Setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Action{System.UnhandledExceptionEventArgs},System.String)"/>.//TODO
+            Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
+            The default compiler sets this property = true; as well as <see cref="M:Au.ATask.Setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/>.
             </remarks>
         </member>
         <member name="M:Au.AProcess.MinimizePhysicalMemory_(System.Int32)">
@@ -10066,7 +10076,6 @@
             Shows warning if sqlite3_errcode is not 0 or Row.
             Does not throw exception because it is not thread-safe.
             </summary>
-            <param name="func"></param>
         </member>
         <member name="T:Au.AThread">
             <summary>
@@ -10094,12 +10103,9 @@
         </member>
         <member name="M:Au.AThread.HasMessageLoop(System.Boolean@)">
             <summary>
-            Returns true if this thread has a .NET message loop (Forms or WPF).
+            Returns true if this thread has a .NET message loop (winforms or WPF).
             </summary>
-            <param name="isWPF">Has WPF message loop and no Forms message loop.</param>
-            <remarks>
-            Unlike calling <b>Application.MessageLoop</b> etc directly, this function does not cause to load Forms and WPF dlls.
-            </remarks>
+            <param name="isWPF">Has WPF message loop and no winforms message loop.</param>
             <seealso cref="M:Au.AWnd.GetWnd.ThreadWindows(System.Int32,System.Boolean,System.Boolean)"/>
         </member>
         <member name="M:Au.AThread.HasMessageLoop">
@@ -11106,8 +11112,8 @@
             Use this constructor in scripts.
             </summary>
             <param name="name">Menu name. Must be a unique valid filename. Currently not used. Can be null.</param>
-            <param name="f">Don't use.</param>
-            <param name="l">Don't use.</param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             This overload sets <see cref="P:Au.MTBase.ExtractIconPathFromCode"/> = true.
             
@@ -11122,7 +11128,7 @@
             <param name="text">Item text. Can include hotkey, tooltip and underlined character, like <c>"Te&amp;xt\t Hotkey\0 Tooltip"</c>; more info: <see cref="T:Au.AMenu"/>.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
             <param name="disable">Disabled state.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
         </member>
         <member name="M:Au.AMenu.Add(System.String,Au.Types.MTImage,System.Boolean,System.Int32)">
             <summary>
@@ -11131,7 +11137,7 @@
             <param name="text">Item text. Can include hotkey, tooltip and underlined character, like <c>"Te&amp;xt\t Hotkey\0 Tooltip"</c>; more info: <see cref="T:Au.AMenu"/>.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
             <param name="disable">Disabled state.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             Assigns id = the last specified or auto-generated id + 1. If not using explicitly specified ids, auto-generated ids are 1, 2, 3... Submenu-items, separators and items with action don't auto-generate ids.
             </remarks>
@@ -11144,7 +11150,7 @@
             <param name="click">Action executed on click.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
             <param name="disable">Disabled state.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             This function is the same as the indexer. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="P:Au.AMenu.Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
             </remarks>
@@ -11156,7 +11162,7 @@
             <param name="text">Item text. Can include hotkey, tooltip and underlined character, like <c>"Te&amp;xt\t Hotkey\0 Tooltip"</c>; more info: <see cref="T:Au.AMenu"/>.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
             <param name="disable">Disabled state.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
             <value>Action executed on click. Can be null.</value>
             <remarks>
             This function is the same as <see cref="M:Au.AMenu.Add(System.String,System.Action{Au.AMenu.MenuItem},Au.Types.MTImage,System.Boolean,System.Int32)"/>. The difference is, <b>Add</b> returns <b>MenuItem</b> object of the added item. When using the indexer, to access the item use <see cref="P:Au.AMenu.Last"/>. These codes are the same: <c>var v=m.Add("text", o=>{});"</c> and <c>m["text"]=o=>{}; var v=m.Last;</c>.
@@ -11171,7 +11177,7 @@
             <param name="click">Action executed on click.</param>
             <param name="disable">Disabled state.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             When clicked, <see cref="P:Au.AMenu.MenuItem.IsChecked"/> state is changed.
             </remarks>
@@ -11185,7 +11191,7 @@
             <param name="click">Action executed on click.</param>
             <param name="disable">Disabled state.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             When clicked an unchecked radio item, its <see cref="P:Au.AMenu.MenuItem.IsChecked"/> state becomes true; <b>IsChecked</b> of other group items become false.
             </remarks>
@@ -11199,7 +11205,7 @@
             <param name="opening">Action called whenever opening the submenu and should add items to it.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
             <param name="disable">Disabled state.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             The submenu is other <b>AMenu</b> object. It inherits many properties of this menu; see property documentation.
             </remarks>
@@ -11238,7 +11244,7 @@
             <param name="opening">Func called whenever opening the submenu and should return the submenu object. Can return null.</param>
             <param name="image">Item image. Read here: <see cref="T:Au.MTBase"/>.</param>
             <param name="disable">Disabled state.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             The caller creates the submenu (creates the <see cref="T:Au.AMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>AMenu</b> and reuse same object.
             The submenu does not inherit properties of this menu.
@@ -11290,6 +11296,11 @@
         <member name="P:Au.AMenu.IsOpen">
             <summary>
             Returns true if the menu window is open.
+            </summary>
+        </member>
+        <member name="P:Au.AMenu.Result">
+            <summary>
+            After closing the menu gets the selected item, or null if cancelled.
             </summary>
         </member>
         <member name="M:Au.AMenu.ShowSimple(Au.Types.DStringList,Au.Types.MSFlags,System.Nullable{Au.Types.POINT},System.Nullable{Au.Types.RECT},Au.Types.AnyWnd)">
@@ -11944,8 +11955,8 @@
             Used for toolbar window name and for settings file name. Also used by <see cref="M:Au.AToolbar.Find(System.String)"/> and some other functions.
             </param>
             <param name="flags"></param>
-            <param name="f"><see cref="T:System.Runtime.CompilerServices.CallerFilePathAttribute"/></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">Empty or invalid name.</exception>
             <remarks>
             Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="M:Au.AToolbar.GetSettingsFilePath(System.String)"/>. If fails, writes warning to the output and uses default settings.
@@ -12008,7 +12019,7 @@
             <param name="text">Text. Or "Text\0 Tooltip".</param>
             <param name="click">Action called when the button clicked.</param>
             <param name="image"></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             More properties can be specified later (set properties of the returned <see cref="T:Au.AToolbar.ToolbarItem"/> or use <see cref="P:Au.AToolbar.Items"/>) or before (<see cref="P:Au.MTBase.ActionThread"/>, <see cref="P:Au.MTBase.ActionException"/>, <see cref="P:Au.MTBase.ExtractIconPathFromCode"/>, <see cref="P:Au.MTBase.PathInTooltip"/>).
             </remarks>
@@ -12020,7 +12031,7 @@
             </summary>
             <param name="text">Text. Or "Text\0 Tooltip".</param>
             <param name="image"></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <param name="l_">[](xref:caller_info)</param>
             <value>Action called when the button clicked.</value>
             <remarks>
             More properties can be specified later (set properties of <see cref="P:Au.AToolbar.Last"/> <see cref="T:Au.AToolbar.ToolbarItem"/> or use <see cref="P:Au.AToolbar.Items"/>) or before (<see cref="P:Au.MTBase.ActionThread"/>, <see cref="P:Au.MTBase.ActionException"/>, <see cref="P:Au.MTBase.ExtractIconPathFromCode"/>, <see cref="P:Au.MTBase.PathInTooltip"/>).
@@ -12047,7 +12058,7 @@
             <param name="text">Text. Or "Text\0 Tooltip".</param>
             <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
             <param name="image"></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             The submenu is an <see cref="T:Au.AMenu"/> object. It inherits these properties of this toolbar: <see cref="P:Au.MTBase.ExtractIconPathFromCode"/>, <see cref="P:Au.MTBase.ActionException"/>, <see cref="P:Au.MTBase.ActionThread"/>, <see cref="P:Au.MTBase.PathInTooltip"/>.
             </remarks>
@@ -12067,7 +12078,7 @@
             <param name="text">Text. Or "Text\0 Tooltip".</param>
             <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
             <param name="image"></param>
-            <param name="l"><see cref="T:System.Runtime.CompilerServices.CallerLineNumberAttribute"/></param>
+            <param name="l_">[](xref:caller_info)</param>
             <remarks>
             The caller creates the menu (creates the <see cref="T:Au.AMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>AMenu</b> and reuse same object.
             The submenu does not inherit properties of this toolbar.
@@ -12401,8 +12412,8 @@
             Returns the new toolbar.
             </summary>
             <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,System.String,System.Int32)"/>.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
             <remarks>
             Sets toolbar name = <c>this.Name + "^"</c>.
@@ -12419,8 +12430,8 @@
             <param name="rangeEnd"></param>
             <param name="thickness">The visible thickness. Pixels.</param>
             <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,System.String,System.Int32)"/>.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
         </member>
         <member name="M:Au.AToolbar.AutoHideScreenEdge(Au.Triggers.TMEdge,Au.Triggers.TMScreen,Au.Types.Coord,Au.Types.Coord,System.Int32,Au.Types.TBCtor,System.String,System.Int32)">
             <summary>
@@ -12433,8 +12444,8 @@
             <param name="rangeEnd"></param>
             <param name="thickness">The visible thickness. Pixels.</param>
             <param name="ctorFlags">See <see cref="M:Au.AToolbar.#ctor(System.String,Au.Types.TBCtor,System.String,System.Int32)"/>.</param>
-            <param name="f">[CallerFilePath]</param>
-            <param name="l">[CallerLineNumber]</param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
         </member>
         <member name="T:Au.AToolbar.ToolbarItem">
             <summary>
@@ -16905,6 +16916,7 @@
             </summary>
             <remarks>
             If <b>Console.Write</b> text does not end with '\n' character, it is buffered and not displayed until called again with text ending with '\n' character or until called <b>Console.WriteLine</b>.
+            
             <b>Console.Clear</b> will not clear output; it will throw exception.
             </remarks>
         </member>
@@ -16980,7 +16992,7 @@
         </member>
         <member name="M:Au.AOutput.QM2.Clear">
             <summary>
-            Clears QM2 output pane.
+            Clears QM2 output panel.
             </summary>
         </member>
         <member name="M:Au.AOutput.QM2.Write(System.Object)">
@@ -16999,6 +17011,13 @@
         </member>
         <member name="M:Au.AOutput.QM2._WriteToQM2(System.String)">
             <param name="s">If null, clears output.</param>
+        </member>
+        <member name="M:Au.AOutput.TaskEvent_(System.String,System.Int64,System.String,System.Int32)">
+            <summary>
+            Logs start/end/fail events of miniProgram trigger actions.
+            Editor displays it in the "Recent tasks" window, not in the output panel.
+            Could also log other events. For example at first used for task start/end/fail events, but now it is implemented in editor.
+            </summary>
         </member>
         <member name="T:Au.AOutputServer">
             <summary>
@@ -19518,7 +19537,7 @@
             </remarks>
             <example>
             Create new script in the Au editor and add this code. In Properties set role editorExtension. Run.
-            Then in the Find pane in the replacement field you can use <c>${+Upper}</c> and <c>${+Lower}</c>.
+            Then in the Find panel in the replacement field you can use <c>${+Upper}</c> and <c>${+Lower}</c>.
             <code><![CDATA[
             ARegex.AddReplaceFunc("Upper", m => m.Value.Upper()); //make uppercase
             ARegex.AddReplaceFunc("Lower", m => m.Value.Lower()); //make lowercase
@@ -19687,6 +19706,20 @@
             <summary>
             Returns the number of characters common to the end of each string.
             </summary>
+        </member>
+        <member name="T:Au.Util.MiniProgram_">
+            <summary>
+            Prepares to quickly start and execute a script with role miniProgram in this preloaded task process.
+            </summary>
+        </member>
+        <member name="F:Au.Util.MiniProgram_.EFlags.RefPaths">
+            <summary>Has [RefPaths] attribute. It is when some meta r paths cannot be automatically resolved.</summary>
+        </member>
+        <member name="F:Au.Util.MiniProgram_.EFlags.MTA">
+            <summary>Main() does not have [STAThread].</summary>
+        </member>
+        <member name="F:Au.Util.MiniProgram_.EFlags.Console">
+            <summary>Has meta console.</summary>
         </member>
         <member name="T:Au.Util.ABufferedPaint">
             <summary>
@@ -21149,22 +21182,6 @@
             <param name="prop">Property.</param>
             <param name="value">New value.</param>
         </member>
-        <member name="T:Au.Util.AToolStrip">
-            <summary>
-            Adds to ToolStrip:
-            1. A click works when the window is not the active window.
-            2. A click does not activate the window if it has WS_EX_NOACTIVATE style.
-            3. Show tooltips when the window is not the active window if it has WS_EX_NOACTIVATE style.
-            </summary>
-        </member>
-        <member name="T:Au.Util.AMenuStrip">
-            <summary>
-            Adds to MenuStrip:
-            1. User can click an item when the parent form is not the active window.
-            2. A click does not activate the parent form if it has WS_EX_NOACTIVATE style.
-            3. Fixes some MenuStrip bugs.
-            </summary>
-        </member>
         <member name="T:Au.Util.ATreeBase`1">
             <summary>
             Base class for tree classes.
@@ -21856,14 +21873,6 @@
             </summary>
             <value>The length.</value>
         </member>
-        <member name="M:Au.Util.ILInstruction.ToString">
-            <summary>
-            Returns a <see cref="T:System.String"/> that represents this instance.
-            </summary>
-            <returns>
-            A <see cref="T:System.String"/> that represents this instance.
-            </returns>
-        </member>
         <member name="T:Au.Util.ILReader">
             <summary>
             Reads IL instructions from a byte stream.
@@ -22324,23 +22333,14 @@
         </member>
         <member name="P:Au.ATask.Name">
             <summary>
-            In an automation task process of a script with role miniProgram (defaut) returns script file name without extension.
-            In other processes returns <see cref="P:System.AppDomain.FriendlyName"/>, like "ProgramFile".
+            In a process of a script with role miniProgram (defaut) returns script file name without extension.
+            In other processes returns <see cref="P:System.AppDomain.FriendlyName"/>, like "MainAssemblyName".
             </summary>
         </member>
         <member name="P:Au.ATask.Role">
             <summary>
-            In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
-            In other processes always returns <b>ExeProgram</b>.
+            If this script task has been started from editor, returns script's role property. Else returns <b>ExeProgram</b>.
             </summary>
-        </member>
-        <member name="P:Au.ATask.MainAssembly">
-            <summary>
-            Gets task's assembly containing Main function.
-            </summary>
-            <remarks>
-            In an automation task process of a script with role miniProgram (defaut) it is not the same as <see cref="M:System.Reflection.Assembly.GetEntryAssembly"/> which then gets the host assembly.
-            </remarks>
         </member>
         <member name="M:Au.ATask.Run(System.String,System.String[])">
             <summary>
@@ -22402,33 +22402,51 @@
             The program that executed "Au.CL.exe" to run this task with command line like "Au.CL.exe **Script5.cs" can read the string from the redirected standard output in real time, or the string is written to its console in real time. The string encoding is UTF8; if you use a bat file or cmd.exe and want to get correct Unicode text, execute this before, to change console code page to UTF-8: <c>chcp 65001</c>.
             </remarks>
         </member>
-        <member name="M:Au.ATask.Setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Action{System.UnhandledExceptionEventArgs},System.String)">
+        <member name="M:Au.ATask.Setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)">
             <summary>
             Adds various useful features to this task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
             </summary>
             <param name="trayIcon">Add standard tray icon. Default true. Or you can set this = false and call <see cref="M:Au.ATask.TrayIcon(System.Int32,System.Action{Au.ATrayIcon},System.Action{Au.ATrayIcon,Au.AMenu},System.String)"/>.</param>
-            <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
-            <param name="desktopExit">
+            <param name="sleepExit">
+            End this process when computer is going to sleep or hibernate.
+            If null (default), same as runSingle property of the script.
+            </param>
+            <param name="lockExit">
             End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
             Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
             Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
+            If null (default), same as runSingle property of the script.
             </param>
             <param name="debug">Call <see cref="M:Au.Util.ADefaultTraceListener.Setup(System.Boolean)"/>(useAOutput: true).</param>
-            <param name="exception">On unhandled exception call this action instead of displaying the exception in the output.</param>
-            <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+            <param name="exception">What to do on unhandled exception (event <see cref="E:System.AppDomain.UnhandledException"/>).</param>
+            <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
             <exception cref="T:System.InvalidOperationException">Already called.</exception>
             <remarks>
-            Also this function:
-            - Ensures that unhandled exceptions are always displayed in the output (or called <i>exception</i>).
-            - Sets invariant culture if need. See <see cref="P:Au.AProcess.CultureIsInvariant"/>.
+            Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, STAThread for top-level statements, unhandled exception action).
             
             Does nothing if role editorExtension.
             </remarks>
         </member>
         <member name="M:Au.ATask.AppModuleInit_">
             <summary>
-            If role miniProgram or exeProgram, Compiler._AddAttributes adds module initializer that calls this.
+            If role miniProgram or exeProgram, default compiler adds module initializer that calls this. If using other compiler, called from <b>Setup</b>.
             </summary>
+        </member>
+        <member name="P:Au.ATask.IsRunSingle">
+            <summary>
+            Returns true if runSingle true.
+            </summary>
+            <remarks>
+            If script properties contain runSingle true, the default compiler adds <see cref="T:Au.Types.RunSingleAttribute"/> to the main assembly. Then at run time this property returns true.
+            </remarks>
+        </member>
+        <member name="P:Au.ATask.IsDebug">
+            <summary>
+            Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+            </summary>
+            <remarks>
+            Returns true if the assembly has <see cref="T:System.Diagnostics.DebuggableAttribute"/> and its <b>IsJITTrackingEnabled</b> is true.
+            </remarks>
         </member>
         <member name="M:Au.ATask.TrayIcon(System.Int32,System.Action{Au.ATrayIcon},System.Action{Au.ATrayIcon,Au.AMenu},System.String)">
             <summary>
@@ -22437,7 +22455,7 @@
             <param name="delay">Delay, milliseconds.</param>
             <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
             <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="M:Au.ATask.Run(System.String,System.String[])"/>).</param>
-            <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+            <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
             <remarks>
             Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="T:Au.ATimer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
             
@@ -22460,27 +22478,7 @@
         </member>
         <member name="T:Au.AScript">
             <summary>
-            This class is obsolete. Instead call <see cref="M:Au.ATask.Setup(System.Boolean,System.Boolean,System.Boolean,System.Boolean,System.Action{System.UnhandledExceptionEventArgs},System.String)"/>. See Options -> Templates -> Default.
-            </summary>
-        </member>
-        <member name="T:Au.RunAssembly">
-            <summary>
-            Used by other Au projects to execute a script assembly.
-            </summary>
-        </member>
-        <member name="M:Au.RunAssembly.Run(System.String,System.String[],Au.Types.RAFlags,System.String)">
-            <summary>
-            Executes assembly in this thread.
-            Handles exceptions.
-            </summary>
-            <param name="asmFile">Full path of assembly file.</param>
-            <param name="args">To pass to Main.</param>
-            <param name="flags"></param>
-            <param name="fullPathRefs">Paths of assemblies specified using full path.</param>
-        </member>
-        <member name="T:Au.RunAssembly._LoadedScriptAssembly">
-            <summary>
-            Remembers and finds script assemblies loaded in this process, to avoid loading the same unchanged assembly multiple times.
+            Obsolete. Use <see cref="M:Au.ATask.Setup(System.Boolean,System.Nullable{System.Boolean},System.Nullable{System.Boolean},System.Boolean,Au.Types.UExcept,System.String)"/>. See Options -> Templates -> Default.
             </summary>
         </member>
         <member name="T:Au.APerf">
@@ -22655,7 +22653,7 @@
             Gets the number of microseconds between <see cref="M:Au.APerf.First"/> and the last <see cref="M:Au.APerf.Next(System.Char)"/>.
             </summary>
         </member>
-        <member name="M:Au.APerf.SpeedUpCpu(System.Int32)">
+        <member name="M:Au.APerf.Cpu(System.Int32)">
             <summary>
             Executes some code in loop for the specified amount of time. It should make CPU to run at full speed.
             </summary>
@@ -24094,7 +24092,7 @@
             </summary>
             <example>See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
-        <member name="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)">
+        <member name="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String,System.String,System.Int32)">
             <summary>
             Adds an autotext trigger.
             </summary>
@@ -24102,6 +24100,8 @@
             <param name="flags">Options. If omitted or null, uses <see cref="P:Au.Triggers.AutotextTriggers.DefaultFlags"/>. Some flags are used by <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/>.</param>
             <param name="postfixType">Postfix type (character, key, any or none). If omitted or null, uses <see cref="P:Au.Triggers.AutotextTriggers.DefaultPostfixType"/>; default - a non-word character or the Ctrl key.</param>
             <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or null, uses <see cref="P:Au.Triggers.AutotextTriggers.DefaultPostfixChars"/>; default - non-word characters.</param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">
             - Text is empty or too long. Can be 1 - 100 characters.
             - Postfix characters contains letters or digits.
@@ -24274,12 +24274,12 @@
         <member name="T:Au.Triggers.TASimpleReplace">
             <remarks>Infrastructure.</remarks>
         </member>
-        <member name="P:Au.Triggers.TASimpleReplace.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)">
+        <member name="P:Au.Triggers.TASimpleReplace.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String,System.String,System.Int32)">
             <summary>
             Adds an autotext trigger. Its action calls <see cref="M:Au.Triggers.AutotextTriggerArgs.Replace(System.String,System.String)"/>.
-            More info: <see cref="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)"/>.
+            More info: <see cref="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String,System.String,System.Int32)"/>.
             </summary>
-            <exception cref="T:System.Exception">Exceptions of <see cref="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String)"/>.</exception>
+            <exception cref="T:System.Exception">Exceptions of <see cref="P:Au.Triggers.AutotextTriggers.Item(System.String,System.Nullable{Au.Triggers.TAFlags},System.Nullable{Au.Triggers.TAPostfix},System.String,System.String,System.Int32)"/>.</exception>
         </member>
         <member name="T:Au.Triggers.TKFlags">
             <summary>
@@ -24340,7 +24340,7 @@
             </summary>
             <example>See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
-        <member name="P:Au.Triggers.HotkeyTriggers.Item(System.String,Au.Triggers.TKFlags)">
+        <member name="P:Au.Triggers.HotkeyTriggers.Item(System.String,Au.Triggers.TKFlags,System.String,System.Int32)">
             <summary>
             Adds a hotkey trigger.
             </summary>
@@ -24352,11 +24352,13 @@
             To ignore a modifier: "Ctrl?+K". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?+K", "Ctrl+Shift?+K".
             </param>
             <param name="flags"></param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">Invalid hotkey string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example>See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
-        <member name="P:Au.Triggers.HotkeyTriggers.Item(Au.Types.KKey,System.String,Au.Triggers.TKFlags)">
+        <member name="P:Au.Triggers.HotkeyTriggers.Item(Au.Types.KKey,System.String,Au.Triggers.TKFlags,System.String,System.Int32)">
             <summary>
             Adds a hotkey trigger.
             </summary>
@@ -24368,6 +24370,8 @@
             To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
             </param>
             <param name="flags"></param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
         </member>
@@ -24482,7 +24486,7 @@
             </summary>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
-        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags)">
+        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags,System.String,System.Int32)">
             <summary>
             Adds a mouse click trigger.
             </summary>
@@ -24494,45 +24498,53 @@
             To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
             </param>
             <param name="flags"></param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
-        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMWheel,System.String,Au.Triggers.TMFlags)">
+        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMWheel,System.String,Au.Triggers.TMFlags,System.String,System.Int32)">
             <summary>
             Adds a mouse wheel trigger.
             </summary>
             <param name="direction"></param>
-            <param name="modKeys">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags)"/>.</param>
+            <param name="modKeys">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags,System.String,System.Int32)"/>.</param>
             <param name="flags"></param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
-        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMEdge,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen)">
+        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMEdge,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen,System.String,System.Int32)">
             <summary>
             Adds a mouse screen edge trigger.
             </summary>
             <param name="edge"></param>
-            <param name="modKeys">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags)"/>.</param>
+            <param name="modKeys">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags,System.String,System.Int32)"/>.</param>
             <param name="flags"></param>
             <param name="screen">
             Let the trigger work only in this screen (display monitor). Also you can specify <b>All</b>.
             Default: <b>Primary</b>.
             Uses <see cref="P:Au.AScreen.All"/> to get screen indices. They are different than in Windows Settings.
             </param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
         </member>
-        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMMove,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen)">
+        <member name="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMMove,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen,System.String,System.Int32)">
             <summary>
             Adds a mouse move trigger.
             </summary>
             <param name="move"></param>
-            <param name="modKeys">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags)"/>.</param>
+            <param name="modKeys">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMClick,System.String,Au.Triggers.TMFlags,System.String,System.Int32)"/>.</param>
             <param name="flags"></param>
-            <param name="screen">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMEdge,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen)"/>.</param>
+            <param name="screen">See <see cref="P:Au.Triggers.MouseTriggers.Item(Au.Triggers.TMEdge,System.String,Au.Triggers.TMFlags,Au.Triggers.TMScreen,System.String,System.Int32)"/>.</param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.ArgumentException">Invalid modKeys string or flags.</exception>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <example> See <see cref="T:Au.Triggers.ActionTriggers"/>.</example>
@@ -24780,7 +24792,7 @@
             More examples: <see cref="T:Au.Triggers.ActionTriggers"/>.
             </example>
         </member>
-        <member name="P:Au.Triggers.WindowTriggers.Item(Au.Triggers.TWEvent,System.String,System.String,Au.Types.WOwner,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,Au.Triggers.TWFlags,Au.Triggers.TWLater)">
+        <member name="P:Au.Triggers.WindowTriggers.Item(Au.Triggers.TWEvent,System.String,System.String,Au.Types.WOwner,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains,Au.Triggers.TWFlags,Au.Triggers.TWLater,System.String,System.Int32)">
             <summary>
             Adds a window trigger and its action.
             </summary>
@@ -24798,11 +24810,13 @@
             When a "later" event occurs, the trigger action is executed. The <see cref="P:Au.Triggers.WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
             The "later" trigers are not disabled when primary triggers are disabled.
             </param>
+            <param name="f_">[](xref:caller_info)</param>
+            <param name="l_">[](xref:caller_info)</param>
             <exception cref="T:System.InvalidOperationException">Cannot add triggers after <see cref="M:Au.Triggers.ActionTriggers.Run"/> was called, until it returns.</exception>
             <exception cref="T:System.ArgumentException">See <see cref="M:Au.AWnd.Find(System.String,System.String,Au.Types.WOwner,Au.Types.WFlags,System.Func{Au.AWnd,System.Boolean},Au.Types.WContains)"/>.</exception>
             <seealso cref="P:Au.Triggers.WindowTriggers.Last"/>
         </member>
-        <member name="P:Au.Triggers.WindowTriggers.Item(Au.Triggers.TWEvent,Au.AWnd.Finder,Au.Triggers.TWFlags,Au.Triggers.TWLater)">
+        <member name="P:Au.Triggers.WindowTriggers.Item(Au.Triggers.TWEvent,Au.AWnd.Finder,Au.Triggers.TWFlags,Au.Triggers.TWLater,System.String,System.Int32)">
             <summary>
             Adds a window trigger and its action.
             </summary>

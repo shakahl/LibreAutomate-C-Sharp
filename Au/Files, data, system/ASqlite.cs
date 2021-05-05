@@ -830,11 +830,10 @@ namespace Au
 		/// Shows warning if sqlite3_errcode is not 0 or Row.
 		/// Does not throw exception because it is not thread-safe.
 		/// </summary>
-		/// <param name="func"></param>
-		void _WarnGet([CallerMemberName] string func = null)
+		void _WarnGet([CallerMemberName] string m_ = null)
 		{
 			var r = SLApi.sqlite3_errcode(_db);
-			if(r != 0 && r != SLError.Row) SLUtil.Warn(r, func, "Note: it may be a false positive if this database connection is used by multiple threads simultaneously without locking.");
+			if(r != 0 && r != SLError.Row) SLUtil.Warn(r, m_, "Note: it may be a false positive if this database connection is used by multiple threads simultaneously without locking.");
 		}
 
 		#endregion

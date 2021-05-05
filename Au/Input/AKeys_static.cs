@@ -274,7 +274,7 @@ namespace Au
 				return true;
 			}, new AOptWaitFor(period: 2));
 		}
-		//TODO: doc all waitfor functions whether they process messages etc and whether use AOpt.WaitFor.DoEvents.
+		//SHOULDDO: doc all waitfor functions whether they process messages etc and whether use AOpt.WaitFor.DoEvents.
 
 		/// <summary>
 		/// Waits while the specified keys are down (pressed).

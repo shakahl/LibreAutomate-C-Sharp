@@ -207,7 +207,7 @@ namespace Au
 						var m = c.Margin;
 						m.Left += -width + 3;
 						c.Margin = m;
-					} else if(width > 0) {
+					} else if (width > 0) {
 						c.Width = width;
 						c.HorizontalAlignment = HorizontalAlignment.Right;
 					}
@@ -229,7 +229,7 @@ namespace Au
 				if (width < 0) {
 					c.Width = -width;
 					c.HorizontalAlignment = HorizontalAlignment.Left;
-				} else if(width > 0) {
+				} else if (width > 0) {
 					var m = c.Margin;
 					m.Right += width + 3;
 					c.Margin = m;
@@ -405,7 +405,7 @@ namespace Au
 			switch (container) {
 			case ContentControl c: c.Content = _p.panel; break;
 			case Popup c: c.Child = _p.panel; break;
-			case Decorator c: c.Child=_p.panel; break;
+			case Decorator c: c.Child = _p.panel; break;
 				//rejected. Rare. Let users add explicitly, like .Also(b => container.Child = b.Panel).
 				//		case Panel c: c.Children.Add(_p.panel); break;
 				//		case ItemsControl c: c.Items.Add(_p.panel); break;
@@ -423,7 +423,7 @@ namespace Au
 					}
 					_window.SnapsToDevicePixels = true; //workaround for black line at bottom, for example when there is single CheckBox in Grid.
 														//				_window.UseLayoutRounding=true; //not here. Makes many controls bigger by 1 pixel when resizing window with grid, etc. Maybe OK if in _Add (for each non-panel element).
-					_window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
+					if (_window.WindowStartupLocation == default) _window.WindowStartupLocation = WindowStartupLocation.CenterScreen;
 					if (WinTopmost) _window.Topmost = true;
 					if (!WinWhite) _window.Background = SystemColors.ControlBrush;
 				}
@@ -477,11 +477,11 @@ namespace Au
 			return this;
 		}
 
-		void _ThrowIfWasWinRectXY([CallerMemberName] string c = null) {
-			if (_wasWinXY != 0) throw new InvalidOperationException(c + " cannot be after WinXY, WinRect or WinSaved.");
+		void _ThrowIfWasWinRectXY([CallerMemberName] string m_ = null) {
+			if (_wasWinXY != 0) throw new InvalidOperationException(m_ + " cannot be after WinXY, WinRect or WinSaved.");
 		}
-		void _ThrowIfWasWinRect([CallerMemberName] string c = null) {
-			if (_wasWinXY == 2) throw new InvalidOperationException(c + " cannot be after WinRect or WinSaved.");
+		void _ThrowIfWasWinRect([CallerMemberName] string m_ = null) {
+			if (_wasWinXY == 2) throw new InvalidOperationException(m_ + " cannot be after WinRect or WinSaved.");
 		}
 		byte _wasWinXY; //1 xy, 2 rect
 
@@ -855,7 +855,7 @@ namespace Au
 			Add(out var1, text1);
 			if (row2 != null) Row(row2.Value);
 			Add(out var2, text2); //note: no flags
-			if(var1 is Label k) {
+			if (var1 is Label k) {
 				k.Target = var2;
 				System.Windows.Automation.AutomationProperties.SetLabeledBy(var2, k);
 			}
@@ -1231,11 +1231,11 @@ namespace Au
 		/// <exception cref="ArgumentException">Invalid alignment string.</exception>
 		public AWpfBuilder Align(string x = null, string y = null) => Align(_AlignmentFromStringX(x), _AlignmentFromStringY(y));
 
-		HorizontalAlignment? _AlignmentFromStringX(string s, [CallerMemberName] string caller = null)
-			=> s.NE() ? default(HorizontalAlignment?) : (char.ToUpperInvariant(s[0]) switch { 'L' => HorizontalAlignment.Left, 'C' => HorizontalAlignment.Center, 'R' => HorizontalAlignment.Right, 'S' => HorizontalAlignment.Stretch, _ => throw new ArgumentException(caller + "(x)") });
+		HorizontalAlignment? _AlignmentFromStringX(string s, [CallerMemberName] string m_ = null)
+			=> s.NE() ? default(HorizontalAlignment?) : (char.ToUpperInvariant(s[0]) switch { 'L' => HorizontalAlignment.Left, 'C' => HorizontalAlignment.Center, 'R' => HorizontalAlignment.Right, 'S' => HorizontalAlignment.Stretch, _ => throw new ArgumentException(m_ + "(x)") });
 
-		VerticalAlignment? _AlignmentFromStringY(string s, [CallerMemberName] string caller = null)
-			=> s.NE() ? default(VerticalAlignment?) : (char.ToUpperInvariant(s[0]) switch { 'T' => VerticalAlignment.Top, 'C' => VerticalAlignment.Center, 'B' => VerticalAlignment.Bottom, 'S' => VerticalAlignment.Stretch, _ => throw new ArgumentException(caller + "(y)") });
+		VerticalAlignment? _AlignmentFromStringY(string s, [CallerMemberName] string m_ = null)
+			=> s.NE() ? default(VerticalAlignment?) : (char.ToUpperInvariant(s[0]) switch { 'T' => VerticalAlignment.Top, 'C' => VerticalAlignment.Center, 'B' => VerticalAlignment.Bottom, 'S' => VerticalAlignment.Stretch, _ => throw new ArgumentException(m_ + "(y)") });
 
 		/// <summary>
 		/// Sets content alignment of the last added element.
@@ -1297,7 +1297,7 @@ namespace Au
 			return this;
 		}
 
-		static void _ThicknessFromString(ref Thickness t, string s, [CallerMemberName] string caller = null) {
+		static void _ThicknessFromString(ref Thickness t, string s, [CallerMemberName] string m_ = null) {
 			if (s.NE()) return;
 			if (s.ToInt(out int v1, 0, out int e1) && e1 == s.Length) {
 				t = new Thickness(v1);
@@ -1312,7 +1312,7 @@ namespace Au
 				case 'b': case 'B': t.Bottom = v; break;
 				case 'l': case 'L': t.Left = v; break;
 				case 'r': case 'R': t.Right = v; break;
-				default: throw new ArgumentException(caller + "()");
+				default: throw new ArgumentException(m_ + "()");
 				}
 			}
 		}
@@ -2173,16 +2173,16 @@ namespace Au
 
 		Window _FindWindow(DependencyObject c) => _window ?? Window.GetWindow(c); //CONSIDER: support top-level HwndSource window
 
-		void _ThrowIfNotWindow([CallerMemberName] string func = null) {
-			if (_window == null) throw new InvalidOperationException(func + "(): Container is not Window");
+		void _ThrowIfNotWindow([CallerMemberName] string m_ = null) {
+			if (_window == null) throw new InvalidOperationException(m_ + "(): Container is not Window");
 		}
 
-		Control _LastAsControlOrThrow([CallerMemberName] string caller = null) => (Last as Control) ?? throw new InvalidOperationException(caller + "(): Last added element is not Control");
+		Control _LastAsControlOrThrow([CallerMemberName] string m_ = null) => (Last as Control) ?? throw new InvalidOperationException(m_ + "(): Last added element is not Control");
 
 		_PanelBase _ParentOfLast => ReferenceEquals(Last, _p.panel) ? _p.parent : _p;
 
-		T _ParentOfLastAsOrThrow<T>([CallerMemberName] string caller = null) where T : _PanelBase {
-			return _ParentOfLast is T t ? t : throw new InvalidOperationException($"{caller}() not in {typeof(T).Name[1..]} panel.");
+		T _ParentOfLastAsOrThrow<T>([CallerMemberName] string m_ = null) where T : _PanelBase {
+			return _ParentOfLast is T t ? t : throw new InvalidOperationException($"{m_}() not in {typeof(T).Name[1..]} panel.");
 		}
 
 		//	void _ThrowIfParentOfLastIs<TControl>([CallerMemberName] string caller = null) where TControl : Panel {

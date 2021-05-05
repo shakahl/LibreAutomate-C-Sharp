@@ -107,7 +107,7 @@ bool GetRuntimeDir(LPWSTR dotnetDir, size_t len, std::wstring& rtDir, VERSTRUCT&
 //#define TESTVERSIONS
 #ifdef TESTVERSIONS
 	LPCWSTR atest[] = { L"3.2.1", L"3.1.1", L"3.1.2-preview2", L"3.1.2-preview10", L"3.1.2"/*, L"3.1.9"*/, };
-	for(int itest=0; itest< lenof(atest); itest++) {
+	for(int itest = 0; itest < lenof(atest); itest++) {
 		LPWSTR s = (LPWSTR)atest[itest], s0 = s;
 #else
 	WIN32_FIND_DATAW fd;
@@ -283,6 +283,13 @@ const char** ArgsUtf8(int& nArgs) {
 	return r;
 }
 
+struct _TaskInit
+{
+	const char* asmFile;
+	const char** args;
+	int nArgs;
+};
+
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdLine, int nCmdShow)
 {
 #if 0
@@ -293,8 +300,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 
 	return 0;
 #else
-	//LARGE_INTEGER t1, t2;
-	//QueryPerformanceCounter(&t1);
+	//LARGE_INTEGER t1, t2, t3, t4; QueryPerformanceCounter(&t1);
 
 	PATHS p;
 	bool pathsOK = GetPaths(p);
@@ -310,7 +316,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 		wsprintfW(w, L"To run this application, need .NET Runtime.\r\nPlease install .NET Desktop Runtime %i.%i x%s.\r\n\r\nDownload from\r\nhttps://dotnet.microsoft.com/download\r\n\r\nOpen the web page?", NETVERMAJOR, NETVERMINOR, is32bit ? L"86" : L"64");
 		if(IDYES == MessageBoxW(0, w, p.exeName.c_str(), MB_ICONERROR | MB_YESNO)) {
 			AllowSetForegroundWindow(ASFW_ANY);
-			int (__stdcall* ShellExecuteA)(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd);
+			int(__stdcall * ShellExecuteA)(HWND hwnd, LPCSTR lpOperation, LPCSTR lpFile, LPCSTR lpParameters, LPCSTR lpDirectory, INT nShowCmd);
 			(*(FARPROC*)(&ShellExecuteA)) = GetProcAddress(LoadLibraryW(L"shell32"), "ShellExecuteA");
 			ShellExecuteA(NULL, nullptr, "https://dotnet.microsoft.com/download", nullptr, nullptr, SW_SHOWNORMAL);
 		}
@@ -319,10 +325,9 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 
 	HMODULE hm = LoadLibraryW(p.coreclrDll.c_str()); //3 ms
 	if(hm == NULL) return -2;
-	coreclr_initialize_ptr coreclr_initialize = (coreclr_initialize_ptr)GetProcAddress(hm, "coreclr_initialize");
-	coreclr_execute_assembly_ptr coreclr_execute_assembly = (coreclr_execute_assembly_ptr)GetProcAddress(hm, "coreclr_execute_assembly");
-	//coreclr_create_delegate_ptr coreclr_create_delegate = (coreclr_create_delegate_ptr)GetProcAddress(hm, "coreclr_create_delegate");
-	coreclr_shutdown_ptr coreclr_shutdown = (coreclr_shutdown_ptr)GetProcAddress(hm, "coreclr_shutdown");
+	auto coreclr_initialize = (coreclr_initialize_ptr)GetProcAddress(hm, "coreclr_initialize");
+	auto coreclr_execute_assembly = (coreclr_execute_assembly_ptr)GetProcAddress(hm, "coreclr_execute_assembly");
+	auto coreclr_shutdown = (coreclr_shutdown_ptr)GetProcAddress(hm, "coreclr_shutdown");
 
 	void* hostHandle;
 	unsigned int domainId;
@@ -352,21 +357,38 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR pCmdL
 
 		SetEnvironmentVariableW(L"COMPlus_legacyCorruptedStateExceptionsPolicy", L"1");
 
-		//QueryPerformanceCounter(&t2);
-		//Print("%i", (t2.LowPart - t1.LowPart) / 10); //all above code 6 ms
+		//QueryPerformanceCounter(&t2); //all above code 6 ms cold, 3.6 hot
 
-		hr = coreclr_initialize(p.exePath.c_str(), "main", lenof(propertyKeys), propertyKeys, propertyValues, &hostHandle, &domainId); //20 ms
+		hr = coreclr_initialize(p.exePath.c_str(), "main", lenof(propertyKeys), propertyKeys, propertyValues, &hostHandle, &domainId);
 		if(hr < 0) {
 			return -3;
 		}
+
+		//QueryPerformanceCounter(&t3); //22 ms cold, 16 hot
 	} //free temp strings eg tpaList 30000
 
-	int nArgs = 0;
-	const char* args0[1] = {};
-	const char** args = (pCmdLine != nullptr && *pCmdLine != 0) ? ArgsUtf8(nArgs) : args0;
-
 	unsigned int ec = 0;
-	hr = coreclr_execute_assembly(hostHandle, domainId, nArgs, args, p.asmDll.c_str(), &ec); //6 ms
+	if(0 == wcsncmp(pCmdLine, LR"(\\.\pipe\Au.Task-)", 17)) { //preloaded task process for a script with role miniProgram
+		auto coreclr_create_delegate = (coreclr_create_delegate_ptr)GetProcAddress(hm, "coreclr_create_delegate");
+		void (STDMETHODCALLTYPE * Init)(LPWSTR, _TaskInit&) = nullptr;
+		coreclr_create_delegate(hostHandle, domainId, "Au", "Au.Util.MiniProgram_", "Init", (void**)&Init); //waits until editor asks to execute a task; it sends task info through pipe
+		//QueryPerformanceCounter(&t4); //1 ms
+		_TaskInit t = { };
+		Init(pCmdLine, t);
+		if(t.asmFile != nullptr) { //null when editor exits
+			hr = coreclr_execute_assembly(hostHandle, domainId, t.nArgs, t.args, t.asmFile, &ec);
+		}
+	} else {
+		int nArgs = 0;
+		const char* args0[1] = {};
+		const char** args = *pCmdLine != 0 ? ArgsUtf8(nArgs) : args0;
+
+		hr = coreclr_execute_assembly(hostHandle, domainId, nArgs, args, p.asmDll.c_str(), &ec); //6 ms
+	}
+	//Print("%i %i %i", (t2.LowPart - t1.LowPart) / 10, (t3.LowPart - t2.LowPart) / 10, (t4.LowPart - t3.LowPart) / 10);
+
+	//tested: AppDomain.ProcessExit event is in coreclr_shutdown.
+	//	AppDomain.UnhandledException event is in coreclr_execute_assembly, and it does not return.
 
 	coreclr_shutdown(hostHandle, domainId);
 

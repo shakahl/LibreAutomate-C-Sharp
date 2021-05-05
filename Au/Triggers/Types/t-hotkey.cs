@@ -62,7 +62,8 @@ namespace Au.Triggers
 		internal readonly TKFlags flags;
 		string _paramsString;
 
-		internal HotkeyTrigger(ActionTriggers triggers, Action<HotkeyTriggerArgs> action, KMod mod, KMod modAny, TKFlags flags, string paramsString) : base(triggers, action, true)
+		internal HotkeyTrigger(ActionTriggers triggers, Action<HotkeyTriggerArgs> action, KMod mod, KMod modAny, TKFlags flags, string paramsString, (string, int) source)
+			: base(triggers, action, true, source)
 		{
 			const KMod csaw = KMod.Ctrl | KMod.Shift | KMod.Alt | KMod.Win;
 			modMask = ~modAny & csaw;
@@ -112,13 +113,28 @@ namespace Au.Triggers
 		/// To ignore a modifier: "Ctrl?+K". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?+K", "Ctrl+Shift?+K".
 		/// </param>
 		/// <param name="flags"></param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Invalid hotkey string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
-		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0] {
+		public Action<HotkeyTriggerArgs> this[string hotkey, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
+				//This could be used instead of [CallerX] parameters, but can be too slow if many triggers. Definitely too slow for menus and toolbars.
+				//APerf.First();
+				//var uu = new StackFrame(1, true); //first time 30 ms, then 30 mcs
+				//APerf.Next();
+				//var us = uu.GetFileName(); //0
+				//APerf.Next();
+				//var ui = uu.GetFileLineNumber(); //0
+				//APerf.Next();
+				//uu = new StackFrame(2, true); //slow too
+				//APerf.NW();
+				////AOutput.Write(us, ui);
+				////AOutput.Write(uu);
+
 				if(!AKeys.More.ParseHotkeyTriggerString_(hotkey, out var mod, out var modAny, out var key, false)) throw new ArgumentException("Invalid hotkey string.");
-				_Add(value, key, mod, modAny, flags, hotkey);
+				_Add(value, key, mod, modAny, flags, hotkey, (f_, l_));
 			}
 		}
 
@@ -133,19 +149,21 @@ namespace Au.Triggers
 		/// To ignore a modifier: "Ctrl?". Then the trigger works with or without the modifier. More examples: "Ctrl?+Shift?", "Ctrl+Shift?".
 		/// </param>
 		/// <param name="flags"></param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Invalid modKeys string or flags.</exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
-		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0] {
+		public Action<HotkeyTriggerArgs> this[KKey key, string modKeys, TKFlags flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				var ps = key.ToString(); if(AChar.IsAsciiDigit(ps[0])) ps = "VK" + ps;
 				if(!modKeys.NE()) ps = modKeys + "+" + ps;
 
 				if(!AKeys.More.ParseHotkeyTriggerString_(modKeys, out var mod, out var modAny, out _, true)) throw new ArgumentException("Invalid modKeys string.");
-				_Add(value, key, mod, modAny, flags, ps);
+				_Add(value, key, mod, modAny, flags, ps, (f_, l_));
 			}
 		}
 
-		void _Add(Action<HotkeyTriggerArgs> action, KKey key, KMod mod, KMod modAny, TKFlags flags, string paramsString)
+		void _Add(Action<HotkeyTriggerArgs> action, KKey key, KMod mod, KMod modAny, TKFlags flags, string paramsString, (string, int) source)
 		{
 			if(mod == 0 && flags.HasAny((TKFlags.LeftMod | TKFlags.RightMod))) throw new ArgumentException("Invalid flags.");
 			_triggers.ThrowIfRunning_();
@@ -154,7 +172,7 @@ namespace Au.Triggers
 			//	But probably not so useful. Makes programming more difficult. If need, can Stop, add triggers, then Run again.
 
 			//AOutput.Write($"key={key}, mod={mod}, modAny={modAny}");
-			var t = new HotkeyTrigger(_triggers, action, mod, modAny, flags, paramsString);
+			var t = new HotkeyTrigger(_triggers, action, mod, modAny, flags, paramsString, source);
 			t.DictAdd(_d, (int)key);
 			_lastAdded = t;
 		}

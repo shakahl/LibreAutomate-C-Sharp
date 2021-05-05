@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Reflection;
 
 using Au.Types;
+using Au.Util;
 
 namespace Au.Compiler
 {
@@ -21,8 +22,8 @@ namespace Au.Compiler
 		/// </summary>
 		unsafe class XCompiled
 		{
-			FilesModel _model;
-			string _file;
+			readonly FilesModel _model;
+			readonly string _file;
 			Dictionary<uint, string> _data;
 
 			public string CacheDirectory { get; }
@@ -94,17 +95,14 @@ namespace Au.Compiler
 						case 'b':
 							r.bit32 = true;
 							break;
-						case 'q':
-							r.console = true;
-							break;
-						case 'z':
-							r.mtaThread = true;
+						case 'f':
+							r.flags = (MiniProgram_.EFlags)value.ToInt(offs);
 							break;
 						case 'p':
 							isMultiFileProject = true;
 							if (projFolder != null) {
-								if (!Util.AHash.MD5Result.FromString(value.AsSpan(offs, v.end - offs), out var md5)) return false;
-								Util.AHash.MD5 md = default;
+								if (!AHash.MD5Result.FromString(value.AsSpan(offs, v.end - offs), out var md5)) return false;
+								AHash.MD5 md = default;
 								foreach (var f1 in projFolder.EnumProjectClassFiles(f)) {
 									if (_IsFileModified(f1)) return false;
 									md.Add(f1.Id);
@@ -116,7 +114,6 @@ namespace Au.Compiler
 							var dll = value[offs..v.end];
 							if (!APath.IsFullPath(dll)) dll = AFolders.ThisApp + dll;
 							if (_IsFileModified2(dll)) return false;
-							r.AddToFullPathRefsIfNeed(dll);
 							break;
 						case 'l':
 						case 'c':
@@ -176,22 +173,19 @@ namespace Au.Compiler
 			/// <param name="outFile">The output assembly.</param>
 			/// <param name="m"></param>
 			/// <param name="mtaThread">No [STAThread].</param>
-			public void AddCompiled(FileNode f, string outFile, MetaComments m, bool mtaThread) {
-				if (_data == null) {
-					_data = new Dictionary<uint, string>();
-				}
+			public void AddCompiled(FileNode f, string outFile, MetaComments m, MiniProgram_.EFlags miniFlags) {
+				if (_data == null && !_Open()) _data = new();
 
 				/*
-	IDmain|=path.exe|tN|aN|nN|NN|uN|b|q|z|dN|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
+	IDmain|=path.exe|tN|aN|nN|NN|uN|fN|b|pMD5project|cIDcode|lIDlibrary|xIDresource|kIDicon|mIDmanifest|yIDres|sIDsign|oIDconfig|*ref
 	= - outFile
 	t - role
 	a - runSingle
 	n - ifRunning
 	N - ifRunning2
 	u - uac
+	f - miniFlags
 	b - bit32
-	q - console
-	z - mtaThread
 	p - MD5 of Id of all project files except main
 	c - c
 	l - pr
@@ -207,20 +201,19 @@ namespace Au.Compiler
 				*/
 
 				string value = null;
-				using (new Util.StringBuilder_(out var b)) {
+				using (new StringBuilder_(out var b)) {
 					if (m.OutputPath != null) b.Append("|=").Append(outFile); //else f.Id in cache
 					if (m.Role != MetaComments.DefaultRole(m.IsScript)) b.Append("|t").Append((int)m.Role);
 					if (m.RunSingle) b.Append("|a");
 					if (m.IfRunning != default) b.Append("|n").Append((int)m.IfRunning);
 					if (m.IfRunning2 != default) b.Append("|N").Append((int)m.IfRunning2);
 					if (m.Uac != default) b.Append("|u").Append((int)m.Uac);
+					if (miniFlags != default) b.Append("|f").Append((int)miniFlags);
 					if (m.Bit32) b.Append("|b");
-					if (m.Console) b.Append("|q");
-					if (mtaThread) b.Append("|z");
 
 					int nAll = m.CodeFiles.Count, nNoC = nAll - m.CountC;
 					if (nNoC > 1) { //add MD5 hash of project files, except main
-						Util.AHash.MD5 md = default;
+						AHash.MD5 md = default;
 						for (int i = 1; i < nNoC; i++) md.Add(m.CodeFiles[i].f.Id);
 						b.Append("|p").Append(md.Hash.ToString());
 					}
@@ -251,7 +244,7 @@ namespace Au.Compiler
 						if (f_ == null) return;
 						if (f_.IsFolder) {
 							Debug.Assert(opt is "|x" or "|k");
-							foreach(var des in f_.Descendants()) if (!des.IsFolder) b.Append(opt).Append(des.IdString);
+							foreach (var des in f_.Descendants()) if (!des.IsFolder) b.Append(opt).Append(des.IdString);
 						} else {
 							b.Append(opt).Append(f_.IdString);
 						}
@@ -285,9 +278,9 @@ namespace Au.Compiler
 				string sData = AFile.LoadText(_file);
 				foreach (var v in sData.Segments(SegSep.Line, SegFlags.NoEmpty)) {
 					if (_data == null) {
-						//first line contains .NET version and Au.dll version, like 3.1.0|1.2.3.4
-						if (sData[v.Range] != s_coreAuVersions) goto g1;
-						_data = new Dictionary<uint, string>(sData.LineCount());
+						//first line contains .NET version and Au.dll version, like 5.0.4|1.2.3.4
+						if (sData[v.Range] != s_versions) goto g1;
+						_data = new(sData.LineCount());
 						continue;
 					}
 					sData.ToInt(out uint id, v.start, out int idEnd);
@@ -296,7 +289,7 @@ namespace Au.Compiler
 				}
 				if (_data == null) return false; //empty file
 
-				//delete renamed locked files
+				//delete temp files
 				foreach (var f in AFile.Enumerate(CacheDirectory, FEFlags.UseRawPath | FEFlags.IgnoreInaccessible)) {
 					if (f.Name.Like("*'*")) Api.DeleteFile(f.FullPath);
 				}
@@ -307,12 +300,12 @@ namespace Au.Compiler
 				return false;
 			}
 
-			static string s_coreAuVersions = Environment.Version.ToString() + "|" + typeof(AWnd).Assembly.GetName().Version.ToString();
+			static readonly string s_versions = Environment.Version.ToString() + "|" + typeof(AWnd).Assembly.GetName().Version.ToString();
 
 			void _Save() {
 				AFile.CreateDirectory(CacheDirectory);
 				using var b = AFile.WaitIfLocked(() => File.CreateText(_file));
-				b.WriteLine(s_coreAuVersions);
+				b.WriteLine(s_versions);
 				foreach (var v in _data) {
 					if (v.Value == null) b.WriteLine(v.Key); else { b.Write(v.Key); b.WriteLine(v.Value); }
 				}

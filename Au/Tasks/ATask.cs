@@ -13,6 +13,12 @@ using System.ComponentModel;
 using System.Reflection;
 //using System.Linq;
 
+//CONSIDER: ATask.CanPause. Let user explicitly insert this at all points where the script can be safely paused. Also option to allow to pause at every key/mouse/etc function.
+
+//TODO: remove runSingle. Maybe need something similar, but not to limit to single running task. As an alternative could use ATask.Setup(runSingle: true) or ATask.Mutex().
+//	Then maybe let ATask.Setup sleepExit default true, and on first run print info about it.
+//	IDEA: ATask.Setup(bool? trayIcon=null). If null, changes editor's icon; maybe only if role miniProgram.
+
 namespace Au
 {
 	/// <summary>
@@ -22,31 +28,17 @@ namespace Au
 	public static class ATask
 	{
 		/// <summary>
-		/// In an automation task process of a script with role miniProgram (defaut) returns script file name without extension.
-		/// In other processes returns <see cref="AppDomain.FriendlyName"/>, like "ProgramFile".
+		/// In a process of a script with role miniProgram (defaut) returns script file name without extension.
+		/// In other processes returns <see cref="AppDomain.FriendlyName"/>, like "MainAssemblyName".
 		/// </summary>
-		public static string Name => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without
-		static string s_name;
+		public static string Name => s_name ??= AppDomain.CurrentDomain.FriendlyName; //info: in framework 4 with ".exe", now without (now it is entry assembly name)
+		internal static string s_name;
 
 		/// <summary>
-		/// In an automation task process tells whether the task runs in host process (default), editor process or own .exe process. It matches meta role.
-		/// In other processes always returns <b>ExeProgram</b>.
+		/// If this script task has been started from editor, returns script's role property. Else returns <b>ExeProgram</b>.
 		/// </summary>
-		public static ATRole Role { get; private set; }
-
-		internal static void Init_(ATRole role, string name = null) {
-			Role = role;
-			if (name != null) s_name = name;
-		}
-
-		/// <summary>
-		/// Gets task's assembly containing Main function.
-		/// </summary>
-		/// <remarks>
-		/// In an automation task process of a script with role miniProgram (defaut) it is not the same as <see cref="Assembly.GetEntryAssembly"/> which then gets the host assembly.
-		/// </remarks>
-		public static Assembly MainAssembly => s_mainAssembly ??= Assembly.GetEntryAssembly();
-		internal static Assembly s_mainAssembly;
+		public static ATRole Role => s_role;
+		internal static ATRole s_role;
 
 		/// <summary>
 		/// Starts an automation task. Does not wait.
@@ -242,85 +234,129 @@ namespace Au
 		/// Adds various useful features to this task (running script): tray icon, exit on Ctrl+Alt+Delete, etc.
 		/// </summary>
 		/// <param name="trayIcon">Add standard tray icon. Default true. Or you can set this = false and call <see cref="TrayIcon"/>.</param>
-		/// <param name="sleepExit">End this process when computer is going to sleep or hibernate.</param>
-		/// <param name="desktopExit">
+		/// <param name="sleepExit">
+		/// End this process when computer is going to sleep or hibernate.
+		/// If null (default), same as runSingle property of the script.
+		/// </param>
+		/// <param name="lockExit">
 		/// End this process when the active desktop has been switched (PC locked, Ctrl+Alt+Delete, screen saver, UAC consent, etc).
 		/// Then to end this process you can use hotkeys Win+L (lock computer) and Ctrl+Alt+Delete.
 		/// Most mouse, keyboard, clipboard and window functions don't work when other desktop is active. Many of them then throw exception, and the script would end anyway.
+		/// If null (default), same as runSingle property of the script.
 		/// </param>
 		/// <param name="debug">Call <see cref="ADefaultTraceListener.Setup"/>(useAOutput: true).</param>
-		/// <param name="exception">On unhandled exception call this action instead of displaying the exception in the output.</param>
-		/// <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+		/// <param name="exception">What to do on unhandled exception (event <see cref="AppDomain.UnhandledException"/>).</param>
+		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
 		/// <exception cref="InvalidOperationException">Already called.</exception>
 		/// <remarks>
-		/// Also this function:
-		/// - Ensures that unhandled exceptions are always displayed in the output (or called <i>exception</i>).
-		/// - Sets invariant culture if need. See <see cref="AProcess.CultureIsInvariant"/>.
+		/// Calling this function is optional. However it should be called if compiling the script with a non-default compiler (eg Visual Studio) if you want the task behave the same (invariant culture, STAThread for top-level statements, unhandled exception action).
 		/// 
 		/// Does nothing if role editorExtension.
 		/// </remarks>
-		public static void Setup(bool trayIcon = true, bool sleepExit = false, bool desktopExit = false, bool debug = false, Action<UnhandledExceptionEventArgs> exception = null, [CallerFilePath] string f = null) {
+		public static void Setup(bool trayIcon = true, bool? sleepExit = null, bool? lockExit = null, bool debug = false, UExcept exception = UExcept.Print | UExcept.Exit, [CallerFilePath] string f_ = null) {
 			if (Role == ATRole.EditorExtension) return;
 			if (s_setup) throw new InvalidOperationException("ATask.Setup already called");
 			s_setup = true;
 
 			s_setupException = exception;
-			if (!s_appModuleInit) AppModuleInit_();
+			if (!s_appModuleInit) AppModuleInit_(); //if role miniProgram, called by MiniProgram_.Init; else if default compiler, the call is compiled into code; else called now.
 
 			//info: default false, because slow and rarely used.
 			if (debug) ADefaultTraceListener.Setup(useAOutput: true);
 
+			if ((sleepExit == null || lockExit == null) && IsRunSingle) { //fast
+				sleepExit ??= true;
+				lockExit ??= true;
+			}
+
 			if (trayIcon) {
-				TrayIcon_(sleepExit, desktopExit, f: f);
-			} else if (sleepExit || desktopExit) {
+				TrayIcon_(sleepExit == true, lockExit == true, f_: f_);
+			} else if (sleepExit == true || lockExit == true) {
 				AThread.Start(() => {
-					if (sleepExit) {
+					if (sleepExit == true) {
 						var w = AWnd.Internal_.CreateWindowDWP(messageOnly: false, t_eocWP = (w, m, wp, lp) => {
-							if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) Environment.Exit(2);
+							if (m == Api.WM_POWERBROADCAST && wp == Api.PBT_APMSUSPEND) ExitOnSleepOrDesktopSwitch(sleep: true);
 							return Api.DefWindowProc(w, m, wp, lp);
 						}); //message-only windows don't receive WM_POWERBROADCAST
 					}
-					if (desktopExit) {
-						new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => {
-							k.hook.Dispose();
-							Environment.Exit(2);
-						});
+					if (lockExit == true) {
+						new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => { k.hook.Dispose(); ExitOnSleepOrDesktopSwitch(sleep: false); });
 						//tested: on Win+L works immediately. OS switches desktop 2 times. At first briefly, then makes defaul again, then on key etc switches again to show password field.
 					}
 					while (Api.GetMessage(out var m) > 0) Api.DispatchMessage(m);
 				});
 			}
 		}
-
 		static bool s_setup;
-		static Action<UnhandledExceptionEventArgs> s_setupException;
 		[ThreadStatic] static Native.WNDPROC t_eocWP;
 
+		//SHOULDDO: on desktop switch prevent the task accidentally killing self.
+		//	Case 1: if this nonadmin process runs an admin program with UAC consent. Let AFile.Run set a static bool while it's running (and not waiting after process started).
+		//	Case 2: if this process eg locks PC. Could just document it.
+
 		/// <summary>
-		/// If role miniProgram or exeProgram, Compiler._AddAttributes adds module initializer that calls this.
+		/// If role miniProgram or exeProgram, default compiler adds module initializer that calls this. If using other compiler, called from <b>Setup</b>.
 		/// </summary>
 		[EditorBrowsable(EditorBrowsableState.Never), NoDoc]
 		public static void AppModuleInit_() {
 			s_appModuleInit = true;
 
-			AppDomain.CurrentDomain.UnhandledException += (_, e) => OnHostHandledException_(e);
-			//Need this for:
-			//1. Exceptions thrown in non-primary threads.
-			//2. Exceptions thrown in non-hosted exe process.
-			//Other exceptions are handled by the host program with try/catch.
-
 			//#if !DEBUG
-			//info: miniProgram scripts always start with true. That is why there is no parameter cultureInvariant.
-			if (Role == ATRole.ExeProgram) AProcess.CultureIsInvariant = true;
+			AProcess.CultureIsInvariant = true;
 			//#endif
+
+			AppDomain.CurrentDomain.UnhandledException += (_, u) => {
+				if (!u.IsTerminating) return; //never seen, but anyway
+				var e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
+				s_unhandledException = e;
+				if (s_setupException.Has(UExcept.Print)) AOutput.Write(e);
+				if (s_setupException.Has(UExcept.Dialog)) ADialog.ShowError("Task failed", e.ToStringWithoutStack(), flags: DFlags.Wider, expandedText: e.ToString());
+				if (s_setupException.Has(UExcept.Exit)) Environment.Exit(-1);
+				//if (s_setupException.Has(UExcept.DisableWER)) Api.WerAddExcludedApplication(AProcess.ExePath, false);
+				//info: setup32.dll disables WER for Au.Task.exe and Au.Task32.exe.
+			};
+
+			if (Role == ATRole.ExeProgram) {
+				//set STA thread for top-level statements program
+				if (Thread.CurrentThread.GetApartmentState() != ApartmentState.STA) { //speed: 180 mcs
+					var ep = Assembly.GetEntryAssembly()?.EntryPoint.Name; //speed: 300 mcs
+					if (ep == "<Main>$") { //defined in public class Microsoft.CodeAnalysis.WellKnownMemberNames
+						AThread.SetComApartment_(ApartmentState.STA); //1.7 ms
+					} //info: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+				}
+			}
 		}
 		static bool s_appModuleInit;
+		static UExcept s_setupException = UExcept.Print | UExcept.Exit;
+		internal static Exception s_unhandledException; //for AProcess.Exit
 
-		internal static void OnHostHandledException_(UnhandledExceptionEventArgs e) {
-			var k = s_setupException;
-			if (k != null) k(e);
-			else AOutput.Write(e.ExceptionObject);
+		internal static void ExitOnSleepOrDesktopSwitch(bool sleep) {
+			string runSingle = IsRunSingle ? " (depends on runSingle)" : null;
+			AOutput.Write($"Info: task '{Name}' ended on {(sleep ? "PC sleep" : "desktop switch")} at {DateTime.Now.ToShortTimeString()}. See ATask.Setup in script{runSingle}. See also Options -> Templates.");
+			Environment.Exit(2);
 		}
+
+		/// <summary>
+		/// Returns true if runSingle true.
+		/// </summary>
+		/// <remarks>
+		/// If script properties contain runSingle true, the default compiler adds <see cref="RunSingleAttribute"/> to the main assembly. Then at run time this property returns true.
+		/// </remarks>
+		public static bool IsRunSingle => s_runSingle ??= null != Assembly.GetEntryAssembly()?.GetCustomAttribute<RunSingleAttribute>();
+		static bool? s_runSingle;
+		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
+
+		/// <summary>
+		/// Returns true if the build configuration of the main assembly is Debug. Returns false if Release (optimize true).
+		/// </summary>
+		/// <remarks>
+		/// Returns true if the assembly has <see cref="DebuggableAttribute"/> and its <b>IsJITTrackingEnabled</b> is true.
+		/// </remarks>
+		public static bool IsDebug => s_debug ??= (Assembly.GetEntryAssembly()?.GetCustomAttribute<DebuggableAttribute>()?.IsJITTrackingEnabled ?? false);
+		static bool? s_debug;
+		//IsJITTrackingEnabled depends on config, but not 100% reliable, eg may be changed explicitly in source code (maybe IsJITOptimizerDisabled too).
+		//IsJITOptimizerDisabled depends on 'Optimize code' checkbox in project Properties, regardless of config.
+		//note: GetEntryAssembly returns null in func called by host through coreclr_create_delegate.
 
 		/// <summary>
 		/// Adds standard tray icon.
@@ -328,7 +364,7 @@ namespace Au
 		/// <param name="delay">Delay, milliseconds.</param>
 		/// <param name="init">Called before showing the tray icon. Can set its properties and event handlers.</param>
 		/// <param name="menu">Called before showing context menu. Can add menu items. Menu item actions must not block messages etc for long time; if need, run in other thread or process (<see cref="ATask.Run"/>).</param>
-		/// <param name="f">Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
+		/// <param name="f_">[](xref:caller_info). Don't use. Or set = null to disable script editing when the tray icon clicked.</param>
 		/// <remarks>
 		/// Uses other thread. The <i>init</i> and <i>menu</i> actions run in that thread too. It dispatches messages, therefore they also can set timers (<see cref="ATimer"/>), create hidden windows, etc. Current thread does not have to dispatch messages.
 		/// 
@@ -348,19 +384,19 @@ namespace Au
 		/// ]]></code>
 		/// </example>
 		/// <seealso cref="ATrayIcon"/>
-		public static void TrayIcon(int delay = 500, Action<ATrayIcon> init = null, Action<ATrayIcon, AMenu> menu = null, [CallerFilePath] string f = null) {
+		public static void TrayIcon(int delay = 500, Action<ATrayIcon> init = null, Action<ATrayIcon, AMenu> menu = null, [CallerFilePath] string f_ = null) {
 			if (Role == ATRole.EditorExtension) return;
-			TrayIcon_(false, false, delay, init, menu, f);
+			TrayIcon_(false, false, delay, init, menu, f_);
 		}
 
-		internal static void TrayIcon_(bool sleepExit, bool desktopExit, int delay = 500, Action<ATrayIcon> init = null, Action<ATrayIcon, AMenu> menu = null, [CallerFilePath] string f = null) {
+		internal static void TrayIcon_(bool sleepExit, bool lockExit, int delay = 500, Action<ATrayIcon> init = null, Action<ATrayIcon, AMenu> menu = null, [CallerFilePath] string f_ = null) {
 			AThread.Start(() => {
 				Thread.Sleep(delay);
-				var ti = new ATrayIcon { Tooltip = ATask.Name, sleepExit_ = sleepExit, desktopExit_ = desktopExit };
+				var ti = new ATrayIcon { Tooltip = ATask.Name, sleepExit_ = sleepExit, lockExit_ = lockExit };
 				init?.Invoke(ti);
 				ti.Icon ??= AIcon.TrayIcon();
-				bool canEdit = f != null && AScriptEditor.Available;
-				if (canEdit) ti.Click += _ => AScriptEditor.GoToEdit(f, 0);
+				bool canEdit = f_ != null && AScriptEditor.Available;
+				if (canEdit) ti.Click += _ => AScriptEditor.GoToEdit(f_, 0);
 				ti.MiddleClick += _ => Environment.Exit(2);
 				ti.RightClick += e => {
 					var m = new AMenu();
@@ -368,8 +404,9 @@ namespace Au
 						menu(ti, m);
 						if (m.Last != null && !m.Last.IsSeparator) m.Separator();
 					}
-					if (canEdit) m["Edit script\tClick"] = _ => AScriptEditor.GoToEdit(f, 0);
-					m["End task\tM-click"] = _ => Environment.Exit(2);
+					if (canEdit) m["Edit script\tClick"] = _ => AScriptEditor.GoToEdit(f_, 0);
+					m["End task\tM-click" + (sleepExit ? ", Sleep" : null) + (lockExit ? ", Win+L, Ctrl+Alt+Delete" : null)] = _ => Environment.Exit(2);
+					if (canEdit) m["End and edit"] = _ => { AScriptEditor.GoToEdit(f_, 0); Environment.Exit(2); };
 					m.Show(MSFlags.AlignCenterH | MSFlags.AlignRectBottomTop, /*excludeRect: ti.GetRect(out var r1) ? r1 : null,*/ owner: ti.Hwnd);
 				};
 				ti.Visible = true;
@@ -380,7 +417,11 @@ namespace Au
 			});
 		}
 
-#if false //not sure is it useful. Unreliable. Can instead use ATask.Setup(exitSleep: true, exitDesktop: true). If useful, can instead add Setup parameter keyExit.
+		//TODO: change Task.exe icon.
+		//	Maybe also use different tray icon for runSingle. Maybe then don't change editor's tray icon when runSingle running.
+		//	Maybe also add default icon to exeProgram.
+
+#if false //not sure is it useful. Unreliable. Should use hook to detect user-pressed, but then UAC makes less reliable. Can instead use ATask.Setup (Win+L, Ctrl+Alt+Delete and sleep-exit are reliable). If useful, can instead add ATask.Setup parameter keyExit.
 		/// <summary>
 		/// Sets a hotkey that ends this process.
 		/// </summary>
@@ -391,7 +432,7 @@ namespace Au
 		/// <param name="exitCode">Process exit code. See <see cref="Environment.Exit"/>.</param>
 		/// <exception cref="InvalidOperationException">Calling second time.</exception>
 		/// <remarks>
-		/// This isn't a reliable way to end script. Consider <see cref="Setup"/> parameters <i>sleepExit</i>, <i>desktopExit</i>.
+		/// This isn't a reliable way to end script. Consider <see cref="Setup"/> parameters <i>sleepExit</i>, <i>lockExit</i>.
 		/// - Does not work if the hotkey is registered by any process or used by Windows.
 		/// - Does not work or is delayed if user input is blocked by an <see cref="AInputBlocker"/> or keyboard hook. For example <see cref="AKeys.Key"/> and similar functions block input by default.
 		/// - Most single-key and Shift+key hotkeys don't work when the active window has higher UAC integrity level (eg admin) than this process. Media keys may work.
@@ -448,19 +489,13 @@ namespace Au
 			}, background: true, sta: false);
 		}
 #endif
-
-		//TODO: remove "end runSingle task on sleep" from editor.
-		//TODO: don't change editor tray icon when a runSingle task runs.
-		//CONSIDER: add meta runSingle in default template.
-		//SHOULDDO: in meta bool properties allow to omit "true".
 	}
 
 	/// <summary>
-	/// This class is obsolete. Instead call <see cref="ATask.Setup"/>. See Options -> Templates -> Default.
+	/// Obsolete. Use <see cref="ATask.Setup"/>. See Options -> Templates -> Default.
 	/// </summary>
-	[Obsolete("Replaced with ATask.Setup. See Options -> Templates -> Default.", error: true)] //TODO: editor should help to replace
-	public abstract class AScript { }
-	//FUTURE: remove
+	[Obsolete("Delete code « : AScript». See Options -> Templates.", error: !true), NoDoc]
+	public abstract class AScript { } //FUTURE: remove this class.
 }
 
 namespace Au.Types
@@ -477,8 +512,7 @@ namespace Au.Types
 		ExeProgram,
 
 		/// <summary>
-		/// The task runs in Au.Task.exe process.
-		/// It can be started only from editor.
+		/// The task runs in Au.Task.exe process, started from editor.
 		/// </summary>
 		MiniProgram,
 
@@ -486,5 +520,57 @@ namespace Au.Types
 		/// The task runs in editor process.
 		/// </summary>
 		EditorExtension,
+	}
+
+	/// <summary>
+	/// Flags for <see cref="ATask.Setup"/> parameter <i>exception</i>. Defines what to do on unhandled exception.
+	/// Default flags is <b>Print</b> and <b>Exit</b>, even if <b>Setup</b> not called (with default compiler only).
+	/// </summary>
+	[Flags]
+	public enum UExcept
+	{
+		/// <summary>
+		/// Display exception info in output.
+		/// </summary>
+		Print = 1,
+
+		/// <summary>
+		/// Show dialog with exception info.
+		/// </summary>
+		Dialog = 2,
+
+		/// <summary>
+		/// Call <see cref="Environment.Exit"/>. It prevents slow exit (Windows error reporting, writing events to the Windows event log, etc).
+		/// Note: then instead of <see cref="AppDomain.UnhandledException"/> event is <see cref="AppDomain.ProcessExit"/> event. But <see cref="AProcess.Exit"/> indicates exception as usually.
+		/// Info: the editor setup program disables Windows error reporting for tasks with role miniProgram (default). See <msdn>WerAddExcludedApplication</msdn>.
+		/// </summary>
+		Exit = 4,
+
+		//rejected. Setup disables for miniProgram tasks.
+		///// <summary>
+		///// Disable Windows error reporting for this program.
+		///// Note: calls <msdn>WerAddExcludedApplication</msdn>, which saves this setting for this program in the registry. To undo it, call <msdn>WerRemoveExcludedApplication</msdn>.
+		///// Not used with flag <b>Exit</b>.
+		///// </summary>
+		//DisableWER = 8,
+	}
+
+	/// <summary>
+	/// The default compiler adds this attribute to the main assembly if runSingle true.
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	public sealed class RunSingleAttribute : Attribute { }
+
+	/// <summary>
+	/// The default compiler adds this attribute to the main assembly if using non-default references (meta r) that aren't in editor's folder or its subfolder "Libraries". Allows to find them at run time. Only if role miniProgram (default).
+	/// </summary>
+	[AttributeUsage(AttributeTargets.Assembly)]
+	public sealed class RefPathsAttribute : Attribute
+	{
+		/// <summary>Dll paths separated with |.</summary>
+		public readonly string Paths;
+
+		/// <param name="paths">Dll paths separated with |.</param>
+		public RefPathsAttribute(string paths) { Paths = paths; }
 	}
 }

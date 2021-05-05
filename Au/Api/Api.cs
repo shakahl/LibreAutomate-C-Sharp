@@ -1330,13 +1330,6 @@ namespace Au.Types
 
 		#region other
 
-		[DllImport("msi.dll", EntryPoint = "#217")]
-		internal static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
-
-		[DllImport("msi.dll", EntryPoint = "#173")]
-		internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, [Out] char[] lpPathBuf, ref int pcchBuf);
-
-
 		[DllImport("winmm.dll")]
 		internal static extern uint timeBeginPeriod(uint uPeriod);
 
@@ -1346,6 +1339,17 @@ namespace Au.Types
 
 		[DllImport("hhctrl.ocx", EntryPoint = "HtmlHelpW")]
 		internal static extern AWnd HtmlHelp(AWnd hwndCaller, string pszFile, int uCommand, LPARAM dwData);
+
+
+		//[DllImport("wer.dll")]
+		//internal static extern int WerAddExcludedApplication(string pwzExeName, bool bAllUsers);
+
+
+		[DllImport("msi.dll", EntryPoint = "#217")]
+		internal static extern int MsiGetShortcutTarget(string szShortcutPath, char* szProductCode, char* szFeatureId, char* szComponentCode);
+
+		[DllImport("msi.dll", EntryPoint = "#173")]
+		internal static extern int MsiGetComponentPath(char* szProduct, char* szComponent, [Out] char[] lpPathBuf, ref int pcchBuf);
 
 
 		//[DllImport("urlmon.dll", PreserveSig = true)]

@@ -304,7 +304,7 @@ class CiErrors
 			var doc = Panels.Editor.ZActiveDoc;
 			EraseIndicatorsInLine(doc, pos8);
 			if (action == 'p') {
-				doc.zInsertText(false, pos8, s + ".", addUndoPoint: true);
+				doc.zInsertText(false, pos8, s + ".", addUndoPointAfter: true);
 			} else {
 				InsertCode.UsingDirective(s);
 			}
@@ -326,7 +326,7 @@ class CiErrors
 		//x.Hyperlink("^xa+v.start, "\nAdd XML comment");
 		//x.Hyperlink("^xd+v.start, "\nDisable warning");
 
-		x.Append("\nTo add XML comment, use docSnippet: type 'docSnippet' above and press Enter.");
-		x.Append("\nTo disable warning, add '///' above or disable warning 1591 (use warningDisableSnippet).");
+		x.Append("\nTo add XML comment, type /// above.");
+		x.Append("\nTo disable warning, add just /// or disable warning 1591 (use warningDisableSnippet).");
 	}
 }

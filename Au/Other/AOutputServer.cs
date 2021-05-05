@@ -258,7 +258,7 @@ namespace Au
 										long time = 0; string s = null, caller = null;
 										var mtype = (OutServMessageType)(*b++);
 										switch (mtype) {
-										case OutServMessageType.Write:
+										case OutServMessageType.Write or OutServMessageType.TaskEvent:
 											if (nextSize < 10) { ok = false; break; } //type, time(8), lenCaller
 											time = *(long*)b; b += 8;
 											int lenCaller = *b++;
@@ -268,7 +268,7 @@ namespace Au
 												b += lenCaller * 2;
 											}
 											int len = (nextSize - (int)(b - b0)) / 2;
-											if (!NoNewline) {
+											if (!NoNewline && mtype == OutServMessageType.Write) {
 												char* p = (char*)(b0 + nextSize);
 												p[0] = '\r'; p[1] = '\n';
 												len += 2;
@@ -448,7 +448,7 @@ namespace Au
 
 			var loc = s_localServer;
 			if (loc != null) loc.LocalWrite_(s, time, caller);
-			else s_client.WriteLine(s, time, caller);
+			else s_client.WriteLine(s, OutServMessageType.Write, caller, time);
 		}
 
 		static void _ClearToOutputServer() {
@@ -457,8 +457,24 @@ namespace Au
 			else s_client.Clear();
 		}
 
-		static readonly _ClientOfGlobalServer s_client = new _ClientOfGlobalServer();
+		static readonly _ClientOfGlobalServer s_client = new();
 		internal static AOutputServer s_localServer; //null if we don't have a local server
+
+		/// <summary>
+		/// Logs start/end/fail events of miniProgram trigger actions.
+		/// Editor displays it in the "Recent tasks" window, not in the output panel.
+		/// Could also log other events. For example at first used for task start/end/fail events, but now it is implemented in editor.
+		/// </summary>
+		internal static void TaskEvent_(string s, long id, string sourceFile = null, int sourceLine = 0) {
+			Debug.Assert(ATask.Role == ATRole.MiniProgram);
+			//if (s == null) s = "\0DNl08ISh30Kbt6ekJV3VvA"; //JIT //now not used
+			//else {
+				if (sourceFile == null) sourceFile = MiniProgram_.s_scriptId; //task started/ended/failed
+				else sourceFile = sourceFile + "\0" + sourceLine.ToStringInvariant(); //trigger action started/ended/failed
+				sourceFile = id.ToStringInvariant() + "\0" + sourceFile;
+			//}
+			s_client.WriteLine(s, OutServMessageType.TaskEvent, sourceFile);
+		}
 
 		unsafe class _ClientOfGlobalServer
 		{
@@ -468,7 +484,9 @@ namespace Au
 			AWaitableTimer _timer;
 			long _sizeWritten;
 
-			public void WriteLine(string s, long time, string caller) {
+			public void WriteLine(string s, OutServMessageType mtype, string caller = null, long time = 0) {
+				if (time == 0) Api.GetSystemTimeAsFileTime(out time);
+
 				lock (_lockObj1) {
 					if (!_Connect()) return;
 
@@ -476,10 +494,17 @@ namespace Au
 					int lenAll = 1 + 8 + 1 + lenCaller * 2 + lenS * 2; //type, time, lenCaller, caller, s
 					bool ok;
 					fixed (byte* b = AMemoryArray.Byte_(lenAll)) {
-						b[0] = (byte)OutServMessageType.Write; //type
+						b[0] = (byte)mtype;
 						*(long*)(b + 1) = time; //time
 						b[9] = (byte)lenCaller; if (lenCaller != 0) fixed (char* p = caller) Api.memcpy(b + 10, p, lenCaller * 2); //caller
 						if (lenS != 0) fixed (char* p = s) Api.memcpy(b + 10 + lenCaller * 2, p, lenS * 2); //s
+
+						//if (s == "\0DNl08ISh30Kbt6ekJV3VvA") { //JIT //now not used
+						//									   //_SetTimer();
+						//	AJit.Compile(typeof(AWaitableTimer), nameof(AWaitableTimer.Set));
+						//	AJit.Compile(typeof(Api), nameof(Api.WriteFile), nameof(Api.SetWaitableTimer)); //slow JIT SetWaitableTimer
+						//	return;
+						//}
 
 						g1:
 						ok = Api.WriteFile(_mailslot, b, lenAll, out _);
@@ -524,6 +549,7 @@ namespace Au
 				return false;
 			}
 
+			[MethodImpl(MethodImplOptions.AggressiveInlining)]
 			void _SetTimer() {
 				if (AOutputServer._SM->IsTimer == 0) {
 					if (_timer.Set(10)) AOutputServer._SM->IsTimer = 1;
@@ -596,6 +622,11 @@ namespace Au.Types
 		/// Only <see cref="OutServMessage.Type"/> is used.
 		/// </summary>
 		Clear,
+
+		/// <summary>
+		/// Used internally to log events such as start/end of tasks and trigger actions.
+		/// </summary>
+		TaskEvent,
 	}
 
 	/// <summary>

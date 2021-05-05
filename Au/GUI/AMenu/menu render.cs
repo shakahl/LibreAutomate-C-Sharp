@@ -88,7 +88,8 @@ namespace Au
 			if (_z.hasHotkeys) {
 				foreach (var b in _a) {
 					if (b.hotkey == null) continue;
-					maxHotkey = Math.Max(maxHotkey, Math.Min(dc.Measure(b.hotkey, c_tffHotkey).width, maxTextWidth / 2));
+					int wid = dc.Measure(b.hotkey, c_tffHotkey).width;
+					maxHotkey = Math.Max(maxHotkey, Math.Min(wid, maxTextWidth / 2));
 				}
 			}
 			int hotkeyPlus = lineHeight * 3 / 2; //space between text and hotkey
@@ -108,6 +109,7 @@ namespace Au
 					if (len > 0) {
 						if (b.FontBold) Api.SelectObject(dc, NativeFont_.BoldCached(_dpi));
 						z = dc.Measure(s, len, _DtFlags(b), maxTextWidth);
+						z.width = Math.Min(z.width, maxTextWidth);
 						if (b.FontBold) Api.SelectObject(dc, font);
 						_z.xTextEnd = Math.Max(_z.xTextEnd, z.width);
 						z.width += buttonPlusX; z.height += buttonPlusY;

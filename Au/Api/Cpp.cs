@@ -151,14 +151,14 @@ namespace Au.Types
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern bool Cpp_ShellExec(in Api.SHELLEXECUTEINFO x, out int pid, out int injectError, out int execError);
 
+		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
+		internal static extern LPARAM Cpp_AccWorkaround(Api.IAccessible a, LPARAM wParam, ref nint obj);
+
 		// TEST
 
 		//FUTURE: remove tests
 		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		internal static extern void Cpp_Test();
-
-		[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
-		internal static extern LPARAM Cpp_AccWorkaround(Api.IAccessible a, LPARAM wParam, ref nint obj);
 
 		//[DllImport("AuCpp.dll", CallingConvention = CallingConvention.Cdecl)]
 		//internal static extern int* EnumWindowsEx(out int len, bool onlyVisible, int api);

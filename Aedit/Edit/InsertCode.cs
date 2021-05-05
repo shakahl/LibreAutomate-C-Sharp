@@ -142,7 +142,7 @@ static class InsertCode
 		}
 
 		int line = doc.zLineFromPos(true, end), foldLine = (0 == doc.Call(Sci.SCI_GETLINEVISIBLE, line)) ? doc.Call(Sci.SCI_GETFOLDPARENT, line) : -1;
-		doc.zInsertText(true, end, b.ToString(), addUndoPoint: true);
+		doc.zInsertText(true, end, b.ToString(), addUndoPointAfter: true);
 		if (foldLine >= 0) doc.Call(Sci.SCI_FOLDLINE, foldLine); //zInsertText expands folding
 
 		return true;
@@ -297,7 +297,7 @@ static class InsertCode
 		//AOutput.Write(text);
 		//AClipboard.Text = text;
 
-		cd.sciDoc.zInsertText(true, position, text, addUndoPoint: true);
+		cd.sciDoc.zInsertText(true, position, text, addUndoPointAfter: true);
 		cd.sciDoc.zGoToPos(true, position);
 
 		//tested: Microsoft.CodeAnalysis.CSharp.ImplementInterface.CSharpImplementInterfaceService works but the result is badly formatted (without spaces, etc). Internal, undocumented.

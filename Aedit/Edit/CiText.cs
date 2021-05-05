@@ -197,7 +197,6 @@ class CiText
 		}
 	}
 
-	//TODO: many newlines in KKey.Keys param keysEtc.
 	public void AppendTaggedParts(IEnumerable<TaggedText> tags) {
 		if (tags == null) return;
 		foreach (var v in tags) {
@@ -229,7 +228,7 @@ class CiText
 				break;
 			case TextTags.LineBreak:
 				LineBreak();
-				break;
+				continue;
 			case TextTags.Punctuation:
 			case TextTags.Method: //eg operator <
 			case TextTags.Operator:

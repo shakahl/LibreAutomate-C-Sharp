@@ -68,7 +68,7 @@ namespace Au.Controls
 	/// </summary>
 	/// <remarks>
 	/// Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
-	/// Reference: [](output_tags).
+	/// Reference: [](xref:output_tags).
 	/// Tags are supported by <see cref="AOutput.Write"/> when it writes to the Au script editor.
 	/// 
 	/// This control does not implement some predefined tags: open, script.
@@ -100,22 +100,21 @@ namespace Au.Controls
 			//u2
 			public int BackColor { get => (int)(u2 & 0xffffff); set => u2 = (u2 & 0xff000000) | ((uint)value & 0xffffff) | 0x1000000; }
 			public bool HasBackColor => 0 != (u2 & 0x1000000);
-			public bool Bold { get => 0 != (u2 & 0x2000000); set { if(value) u2 |= 0x2000000; else u2 &= unchecked((uint)~0x2000000); } }
-			public bool Italic { get => 0 != (u2 & 0x4000000); set { if(value) u2 |= 0x4000000; else u2 &= unchecked((uint)~0x4000000); } }
-			public bool Underline { get => 0 != (u2 & 0x8000000); set { if(value) u2 |= 0x8000000; else u2 &= unchecked((uint)~0x8000000); } }
-			public bool Eol { get => 0 != (u2 & 0x10000000); set { if(value) u2 |= 0x10000000; else u2 &= unchecked((uint)~0x10000000); } }
-			public bool Hotspot { get => 0 != (u2 & 0x40000000); set { if(value) u2 |= 0x40000000; else u2 &= unchecked((uint)~0x40000000); } }
-			public bool Mono { get => 0 != (u2 & 0x80000000); set { if(value) u2 |= 0x80000000; else u2 &= unchecked((uint)~0x80000000); } }
+			public bool Bold { get => 0 != (u2 & 0x2000000); set { if (value) u2 |= 0x2000000; else u2 &= unchecked((uint)~0x2000000); } }
+			public bool Italic { get => 0 != (u2 & 0x4000000); set { if (value) u2 |= 0x4000000; else u2 &= unchecked((uint)~0x4000000); } }
+			public bool Underline { get => 0 != (u2 & 0x8000000); set { if (value) u2 |= 0x8000000; else u2 &= unchecked((uint)~0x8000000); } }
+			public bool Eol { get => 0 != (u2 & 0x10000000); set { if (value) u2 |= 0x10000000; else u2 &= unchecked((uint)~0x10000000); } }
+			public bool Hotspot { get => 0 != (u2 & 0x40000000); set { if (value) u2 |= 0x40000000; else u2 &= unchecked((uint)~0x40000000); } }
+			public bool Mono { get => 0 != (u2 & 0x80000000); set { if (value) u2 |= 0x80000000; else u2 &= unchecked((uint)~0x80000000); } }
 
 			public bool Equals(_TagStyle x) { return x.u1 == u1 && x.u2 == u2; }
-			public void Merge(_TagStyle x)
-			{
+			public void Merge(_TagStyle x) {
 				var t1 = x.u1;
-				if(HasColor) t1 &= 0xff000000;
-				if(Size > 0) t1 &= 0x1ffffff;
+				if (HasColor) t1 &= 0xff000000;
+				if (Size > 0) t1 &= 0x1ffffff;
 				u1 |= t1;
 				var t2 = x.u2;
-				if(HasBackColor) {
+				if (HasBackColor) {
 					t2 &= 0xff000000;
 					t2 &= unchecked((uint)~0x10000000); //don't inherit Eol
 				}
@@ -123,11 +122,10 @@ namespace Au.Controls
 			}
 			public bool IsEmpty => u1 == 0 & u2 == 0;
 
-			public _TagStyle(UserDefinedStyle k)
-			{
+			public _TagStyle(UserDefinedStyle k) {
 				u1 = u2 = 0;
-				if(k.textColor != null) Color = k.textColor.GetValueOrDefault().argb;
-				if(k.backColor != null) BackColor = k.backColor.GetValueOrDefault().argb;
+				if (k.textColor != null) Color = k.textColor.GetValueOrDefault().argb;
+				if (k.backColor != null) BackColor = k.backColor.GetValueOrDefault().argb;
 				Size = k.size;
 				Bold = k.bold;
 				Italic = k.italic;
@@ -151,27 +149,25 @@ namespace Au.Controls
 		List<_TagStyle> _styles = new List<_TagStyle>();
 		List<int> _stack = new List<int>();
 
-		internal SciTags(KScintilla c)
-		{
+		internal SciTags(KScintilla c) {
 			_c = c;
 		}
 
-		void _SetUserStyles(int from)
-		{
+		void _SetUserStyles(int from) {
 			int i, j;
-			for(i = from; i < _styles.Count; i++) {
+			for (i = from; i < _styles.Count; i++) {
 				_TagStyle st = _styles[i];
 				j = i + STYLE_FIRST_EX;
-				if(st.HasColor) _c.zStyleForeColor(j, st.Color);
-				if(st.HasBackColor) { _c.zStyleBackColor(j, st.BackColor); if(st.Eol) _c.zStyleEolFilled(j, true); }
-				if(st.Bold) _c.zStyleBold(j, true);
-				if(st.Italic) _c.zStyleItalic(j, true);
-				if(st.Underline) _c.zStyleUnderline(j, true);
-				if(st.Mono) _c.zStyleFont(j, "Consolas");
-				if(st.Hotspot) _c.zStyleHotspot(j, true);
+				if (st.HasColor) _c.zStyleForeColor(j, st.Color);
+				if (st.HasBackColor) { _c.zStyleBackColor(j, st.BackColor); if (st.Eol) _c.zStyleEolFilled(j, true); }
+				if (st.Bold) _c.zStyleBold(j, true);
+				if (st.Italic) _c.zStyleItalic(j, true);
+				if (st.Underline) _c.zStyleUnderline(j, true);
+				if (st.Mono) _c.zStyleFont(j, "Consolas");
+				if (st.Hotspot) _c.zStyleHotspot(j, true);
 				int size = st.Size;
-				if(size > 0) {
-					if(size < 6 && st.Hotspot) size = 6;
+				if (size > 0) {
+					if (size < 6 && st.Hotspot) size = 6;
 					_c.zStyleFontSize(j, size);
 				}
 			}
@@ -182,19 +178,17 @@ namespace Au.Controls
 		/// Max number of user styles is NUM_STYLES_EX (216). Need to clear old styles before new styles can be defined.
 		/// This func is usually called after clearing control text.
 		/// </summary>
-		void _ClearUserStyles()
-		{
-			if(_styles.Count > 0) {
+		void _ClearUserStyles() {
+			if (_styles.Count > 0) {
 				_c.zStyleClearRange(STYLE_FIRST_EX);
 				_styles.Clear();
 			}
 			//QM2 also cleared the image cache, but now it is shared by all controls of this thread.
 		}
 
-		internal void OnTextChanged_(bool inserted, in SCNotification n)
-		{
+		internal void OnTextChanged_(bool inserted, in SCNotification n) {
 			//if deleted or replaced all text, clear user styles
-			if(!inserted && n.position == 0 && _c.zLen8 == 0) {
+			if (!inserted && n.position == 0 && _c.zLen8 == 0) {
 				_ClearUserStyles();
 				//_linkDelegates.Clear(); //no
 			}
@@ -204,7 +198,11 @@ namespace Au.Controls
 		/// Displays <see cref="AOutputServer"/> messages that are currently in its queue.
 		/// </summary>
 		/// <param name="os">The AOutputServer instance.</param>
-		/// <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.</param>
+		/// <param name="onMessage">
+		/// A callback function that can be called when this function gets/removes a message from os.
+		/// When message type is Write, it can change message text; if null, this function ignores the message.
+		/// It also processes messages of type TaskEvent; this function ignores them.
+		/// </param>
 		/// <remarks>
 		/// Removes messages from the queue.
 		/// Appends text messages + "\r\n" to the control's text, or clears etc (depends on message).
@@ -212,8 +210,7 @@ namespace Au.Controls
 		/// Limits text length to about 4 MB (removes oldest text when exceeded).
 		/// </remarks>
 		/// <seealso cref="AOutputServer.SetNotifications"/>
-		public void OutputServerProcessMessages(AOutputServer os, Action<OutServMessage> onMessage = null)
-		{
+		public void OutputServerProcessMessages(AOutputServer os, Action<OutServMessage> onMessage = null) {
 			//info: Cannot call _c.Write for each message, it's too slow. Need to join all messages.
 			//	If multiple messages, use StringBuilder.
 			//	If some messages have tags, use string "<\x15\x0\x4" to separate messages. Never mind: don't escape etc.
@@ -221,30 +218,30 @@ namespace Au.Controls
 			string s = null;
 			StringBuilder b = null;
 			bool hasTags = false, hasTagsPrev = false;
-			while(os.GetMessage(out var m)) {
+			while (os.GetMessage(out var m)) {
 				onMessage?.Invoke(m);
-				switch(m.Type) {
+				switch (m.Type) {
 				case OutServMessageType.Clear:
 					_c.zClearText();
 					s = null;
 					b?.Clear();
 					break;
-				case OutServMessageType.Write:
-					if(s == null) {
+				case OutServMessageType.Write when m.Text != null:
+					if (s == null) {
 						s = m.Text;
 						hasTags = hasTagsPrev = s.Starts("<>");
 					} else {
-						if(b == null) b = new StringBuilder();
-						if(b.Length == 0) b.Append(s);
+						if (b == null) b = new StringBuilder();
+						if (b.Length == 0) b.Append(s);
 
 						s = m.Text;
 
 						bool hasTagsThis = m.Text.Starts("<>");
-						if(hasTagsThis && !hasTags) { hasTags = true; b.Insert(0, "<\x15\x0\x4"); }
+						if (hasTagsThis && !hasTags) { hasTags = true; b.Insert(0, "<\x15\x0\x4"); }
 
-						if(!hasTags) {
+						if (!hasTags) {
 							b.Append("\r\n");
-						} else if(hasTagsThis) {
+						} else if (hasTagsThis) {
 							b.Append("\r\n<\x15\x0\x4");
 							//info: add "\r\n" here, not later, because later it would make more difficult <Z> tag
 						} else {
@@ -256,8 +253,8 @@ namespace Au.Controls
 					break;
 				}
 			}
-			if(s == null) return; //0 messages, or the last message is Clear
-			if(b != null && b.Length > 0) s = b.ToString();
+			if (s == null) return; //0 messages, or the last message is Clear
+			if (b != null && b.Length > 0) s = b.ToString();
 
 			//if(sb!=null) s += " >>>> " + sb.Capacity.ToString();
 
@@ -265,12 +262,12 @@ namespace Au.Controls
 
 			//limit
 			int len = _c.zLen8;
-			if(len > 4 * 1024 * 1024) {
+			if (len > 4 * 1024 * 1024) {
 				len = _c.zLineStartFromPos(false, len / 2);
-				if(len > 0) _c.zReplaceRange(false, 0, len, "...\r\n");
+				if (len > 0) _c.zReplaceRange(false, 0, len, "...\r\n");
 			}
 
-			if(hasTags) AddText(s, true, true);
+			if (hasTags) AddText(s, true, true);
 			else _c.zAppendText(s, true, true, true);
 
 			//test slow client
@@ -284,11 +281,10 @@ namespace Au.Controls
 		/// <param name="text">Text with tags (optionally).</param>
 		/// <param name="appendLine">Append. Also appends "\r\n". Sets caret and scrolls to the end. If false, replaces control text.</param>
 		/// <param name="skipLTGT">If text starts with "&lt;&gt;", skip it.</param>
-		public void AddText(string text, bool appendLine, bool skipLTGT)
-		{
+		public void AddText(string text, bool appendLine, bool skipLTGT) {
 			//APerf.First();
-			if(text.NE() || (skipLTGT && text == "<>")) {
-				if(appendLine) _c.zAppendText("", true, true, true); else _c.zClearText();
+			if (text.NE() || (skipLTGT && text == "<>")) {
+				if (appendLine) _c.zAppendText("", true, true, true); else _c.zClearText();
 				return;
 			}
 
@@ -309,8 +305,8 @@ namespace Au.Controls
 			byte* buffer = (byte*)AMemory.Alloc(len * 2 + 4), s = buffer;
 			try {
 				Encoding.UTF8.GetBytes(text, new Span<byte>(buffer, len));
-				if(appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
-				if(skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
+				if (appendLine) { s[len++] = (byte)'\r'; s[len++] = (byte)'\n'; }
+				if (skipLTGT && s[0] == '<' && s[1] == '>') { s += 2; len -= 2; }
 				s[len] = s[len + 1] = 0;
 				_AddText(s, len, appendLine);
 			}
@@ -319,8 +315,7 @@ namespace Au.Controls
 			}
 		}
 
-		void _AddText(byte* s, int len, bool append)
-		{
+		void _AddText(byte* s, int len, bool append) {
 			//APerf.Next();
 			byte* s0 = s, sEnd = s + len; //source text
 			byte* t = s0; //destination text, ie without some tags
@@ -333,10 +328,10 @@ namespace Au.Controls
 			List<POINT> codes = null;
 			List<POINT> folds = null;
 
-			while(s < sEnd) {
+			while (s < sEnd) {
 				//find '<'
 				var ch = *s++;
-				if(ch != '<') {
+				if (ch != '<') {
 					_Write(ch, currentStyle);
 					continue;
 				}
@@ -344,26 +339,26 @@ namespace Au.Controls
 				var tag = s;
 
 				//end tag. Support <> and </tag>, but don't care what tag it is. The </tag> form can be used just to make the code more readable.
-				if(s[0] == '/') {
+				if (s[0] == '/') {
 					s++;
-					ch = *s; if(ch == '+' || ch == '.') s++;
-					while(AChar.IsAsciiAlpha(*s)) s++;
-					if(s[0] != '>') goto ge;
+					ch = *s; if (ch == '+' || ch == '.') s++;
+					while (AChar.IsAsciiAlpha(*s)) s++;
+					if (s[0] != '>') goto ge;
 				}
-				if(s[0] == '>') {
+				if (s[0] == '>') {
 					int n = _stack.Count - 1;
-					if(n < 0) goto ge; //<> without tag
+					if (n < 0) goto ge; //<> without tag
 					s++;
 					int i = _stack[n];
-					if(i >= 0) { //the tag is a style tag or some other styled tag (eg link)
-						if(currentStyle >= STYLE_FIRST_EX && _styles[currentStyle - STYLE_FIRST_EX].Eol) {
-							if(*s == '\r') _Write(*s++, currentStyle);
-							if(*s == '\n') _Write(*s++, currentStyle);
+					if (i >= 0) { //the tag is a style tag or some other styled tag (eg link)
+						if (currentStyle >= STYLE_FIRST_EX && _styles[currentStyle - STYLE_FIRST_EX].Eol) {
+							if (*s == '\r') _Write(*s++, currentStyle);
+							if (*s == '\n') _Write(*s++, currentStyle);
 						}
 						currentStyle = (byte)i;
 					} else { //currently can be only <fold>
 						i &= 0x7fffffff;
-						if(!(s - tag == 6 && BytePtr_.AsciiStarts(tag + 1, "fold"))) goto ge;
+						if (!(s - tag == 6 && BytePtr_.AsciiStarts(tag + 1, "fold"))) goto ge;
 						(folds ??= new List<POINT>()).Add((i, (int)(t - s0)));
 						//if(s < sEnd && *s != '\r' && *s != '\n') _WriteString("\r\n", STYLE_DEFAULT); //no, can be an end of tag there
 					}
@@ -372,11 +367,11 @@ namespace Au.Controls
 				}
 
 				//multi-message separator
-				if(s[0] == 0x15 && s[1] == 0 && s[2] == 4 && (s - s0 == 1 || s[-2] == 10)) {
+				if (s[0] == 0x15 && s[1] == 0 && s[2] == 4 && (s - s0 == 1 || s[-2] == 10)) {
 					s += 3;
-					if(s[0] == '<' && s[1] == '>') s += 2; //message with tags
+					if (s[0] == '<' && s[1] == '>') s += 2; //message with tags
 					else { //one or more messages without tags
-						while(s < sEnd && !(s[0] == '<' && s[1] == 0x15 && s[2] == 0 && s[3] == 4 && s[-1] == 10)) _Write(*s++, STYLE_DEFAULT);
+						while (s < sEnd && !(s[0] == '<' && s[1] == 0x15 && s[2] == 0 && s[3] == 4 && s[-1] == 10)) _Write(*s++, STYLE_DEFAULT);
 					}
 					currentStyle = STYLE_DEFAULT;
 					_stack.Clear();
@@ -384,25 +379,25 @@ namespace Au.Controls
 				}
 
 				//read tag name
-				ch = *s; if(ch == '_' || ch == '\a' || ch == '+' || ch == '.') s++;
-				while(AChar.IsAsciiAlpha(*s)) s++;
+				ch = *s; if (ch == '_' || ch == '\a' || ch == '+' || ch == '.') s++;
+				while (AChar.IsAsciiAlpha(*s)) s++;
 				int tagLen = (int)(s - tag);
-				if(tagLen == 0) goto ge;
+				if (tagLen == 0) goto ge;
 
 				//read attribute
 				byte* attr = null; int attrLen = 0;
-				if(*s == 32) {
+				if (*s == 32) {
 					s++;
 					var quot = *s;
-					if(quot == '\'' || quot == '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
+					if (quot == '\'' || quot == '\"') s++; else quot = (byte)'>'; //never mind: escape sequences \\, \', \"
 					int n = (int)(sEnd - s);
 					int i = (quot == '>') ? BytePtr_.AsciiFindChar(s, n, quot) : BytePtr_.AsciiFindString(s, n, (quot == '\'') ? "'>" : "\">");
-					if(i < 0) goto ge;
+					if (i < 0) goto ge;
 					attr = s; s += i + 1; attrLen = i;
-					if(quot != '>') s++;
-					else if(s[-2] == '<') goto ge; //<tag attr TEXT<>
+					if (quot != '>') s++;
+					else if (s[-2] == '<') goto ge; //<tag attr TEXT<>
 				} else {
-					if(*s != '>') goto ge;
+					if (*s != '>') goto ge;
 					s++;
 				}
 
@@ -413,7 +408,7 @@ namespace Au.Controls
 				int stackInt = 0;
 				int i2;
 				ch = *tag;
-				switch(tagLen << 16 | ch) {
+				switch (tagLen << 16 | ch) {
 				case 1 << 16 | 'b':
 					style.Bold = true;
 					break;
@@ -421,7 +416,7 @@ namespace Au.Controls
 					style.Italic = true;
 					break;
 				case 2 << 16 | 'b':
-					if(tag[1] == 'i') style.Bold = style.Italic = true;
+					if (tag[1] == 'i') style.Bold = style.Italic = true;
 					else goto ge;
 					break;
 				case 1 << 16 | 'u':
@@ -430,25 +425,25 @@ namespace Au.Controls
 				case 1 << 16 | 'c':
 				case 1 << 16 | 'z':
 				case 1 << 16 | 'Z':
-					if(attr == null) goto ge;
+					if (attr == null) goto ge;
 					int color;
-					if(AChar.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
-					else if(*attr == '#') color = Api.strtoi(attr + 1, radix: 16);
+					if (AChar.IsAsciiDigit(*attr)) color = Api.strtoi(attr);
+					else if (*attr == '#') color = Api.strtoi(attr + 1, radix: 16);
 					else {
 						var c = System.Drawing.Color.FromName(new string((sbyte*)attr, 0, attrLen));
-						if(c.A == 0) break; //invalid color name
+						if (c.A == 0) break; //invalid color name
 						color = c.ToArgb() & 0xffffff;
 					}
-					if(ch == 'c') style.Color = color; else style.BackColor = color;
-					if(ch == 'Z') style.Eol = true;
+					if (ch == 'c') style.Color = color; else style.BackColor = color;
+					if (ch == 'Z') style.Eol = true;
 					break;
 				case 4 << 16 | 's':
-					if(attr == null) goto ge;
-					if(BytePtr_.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
+					if (attr == null) goto ge;
+					if (BytePtr_.AsciiStarts(tag + 1, "ize")) style.Size = Api.strtoi(attr);
 					else goto ge;
 					break;
 				case 4 << 16 | 'm':
-					if(BytePtr_.AsciiStarts(tag + 1, "ono")) style.Mono = true;
+					if (BytePtr_.AsciiStarts(tag + 1, "ono")) style.Mono = true;
 					else goto ge;
 					break;
 				//case 6 << 16 | 'h': //rejected. Not useful; does not hide newlines.
@@ -456,36 +451,36 @@ namespace Au.Controls
 				//	else goto ge;
 				//	break;
 				case 5 << 16 | 'i':
-					if(attr == null) goto ge;
-					if(!BytePtr_.AsciiStarts(tag + 1, "mage")) goto ge;
+					if (attr == null) goto ge;
+					if (!BytePtr_.AsciiStarts(tag + 1, "mage")) goto ge;
 					hideTag = noEndTag = true;
 					break;
 				case 1 << 16 | '_': //<_>text where tags are ignored</_>
 				case 1 << 16 | '\a': //<\a>text where tags are ignored</\a>
-					i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if(i2 < 0) goto ge;
-					while(i2-- > 0) _Write(*s++, currentStyle);
+					i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), ch == '_' ? "</_>" : "</\a>"); if (i2 < 0) goto ge;
+					while (i2-- > 0) _Write(*s++, currentStyle);
 					s += 4;
 					//hasTags = true;
 					continue;
 				case 4 << 16 | 'c': //<code>code</code>
-					if(!BytePtr_.AsciiStarts(tag + 1, "ode")) goto ge;
-					i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), "</code>"); if(i2 < 0) goto ge;
-					if(codes == null) codes = new List<POINT>();
+					if (!BytePtr_.AsciiStarts(tag + 1, "ode")) goto ge;
+					i2 = BytePtr_.AsciiFindString(s, (int)(sEnd - s), "</code>"); if (i2 < 0) goto ge;
+					if (codes == null) codes = new List<POINT>();
 					int iStartCode = (int)(t - s0);
 					codes.Add((iStartCode, iStartCode + i2));
-					while(i2-- > 0) _Write(*s++, STYLE_DEFAULT);
+					while (i2-- > 0) _Write(*s++, STYLE_DEFAULT);
 					s += 7;
 					hasTags = true;
 					continue;
 				case 4 << 16 | 'f': //<fold>text</fold>
-					if(!BytePtr_.AsciiStarts(tag + 1, "old")) goto ge;
+					if (!BytePtr_.AsciiStarts(tag + 1, "old")) goto ge;
 					stackInt = (int)(t - s0);
 					//add 'expand/collapse' link in this line. Max 6 characters, because overwriting "<fold>".
 					_WriteString(" ", STYLE_HIDDEN); //it is how we later detect links
 					_WriteString(">>", _GetStyleIndex(new _TagStyle { Hotspot = true, Underline = true, Color = 0x80FF }, currentStyle));
 					//let the folded text start from next line
-					var s1 = s; if(s1[0] == '<' && (s1[1] == '_' || s1[1] == '\a') && s1[2] == '>') s1 += 3;
-					switch(*s1) { case 10: case 13: break; default: _WriteString("\r\n", currentStyle); break; }
+					var s1 = s; if (s1[0] == '<' && (s1[1] == '_' || s1[1] == '\a') && s1[2] == '>') s1 += 3;
+					switch (*s1) { case 10: case 13: break; default: _WriteString("\r\n", currentStyle); break; }
 					break;
 				case 4 << 16 | 'l':
 					linkTag = "link";
@@ -509,21 +504,21 @@ namespace Au.Controls
 					//user-defined tag or unknown.
 					//user-defined tags must start with '+' (links) or '.' (styles).
 					//don't hide unknown tags, unless start with '+' etc. Can be either misspelled (hiding would make harder to debug) or not intended for us (forgot <_>).
-					if(ch == '+') {
+					if (ch == '+') {
 						//if(!_userLinkTags.ContainsKey(linkTag = new string((sbyte*)tag, 0, tagLen))) goto ge; //no, it makes slower and creates garbage. Also would need to look in the static dictionary too. It's not so important to check now because we use '+' prefix.
 						//info: initially was used '_', not '+'. But it creates more problems. Eg C# stack trace can contain "... at Script.<>c.<_Main>b__1_0() ...".
 						linkTag = "";
 						userLinkTag = true;
-					} else if(ch == '.' && _userStyles != null && _userStyles.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style)) {
+					} else if (ch == '.' && _userStyles != null && _userStyles.TryGetValue(new string((sbyte*)tag, 0, tagLen), out style)) {
 						//userStyleTag = true;
 					} else goto ge;
 					break;
 				}
 
-				if(linkTag != null) {
-					if(!userLinkTag && !BytePtr_.AsciiStarts(tag, linkTag)) goto ge;
+				if (linkTag != null) {
+					if (!userLinkTag && !BytePtr_.AsciiStarts(tag, linkTag)) goto ge;
 					//if(attr == null) goto ge; //no, use text as attribute
-					if(_linkStyle != null) style = new _TagStyle(_linkStyle);
+					if (_linkStyle != null) style = new _TagStyle(_linkStyle);
 					else {
 						style.Color = 0x0080FF;
 						style.Underline = true;
@@ -532,17 +527,17 @@ namespace Au.Controls
 					hideTag = true;
 				}
 
-				if(hideTag) {
+				if (hideTag) {
 					bool isSingleQuote = attr != null && attr[-1] == '\'';
-					if(isSingleQuote) attr[-1] = attr[attrLen] = (byte)'\"';
-					for(var h = tag - 1; h < s; h++) _Write(*h, STYLE_HIDDEN);
-					if(isSingleQuote) attr[-1] = attr[attrLen] = (byte)'\'';
+					if (isSingleQuote) attr[-1] = attr[attrLen] = (byte)'\"';
+					for (var h = tag - 1; h < s; h++) _Write(*h, STYLE_HIDDEN);
+					if (isSingleQuote) attr[-1] = attr[attrLen] = (byte)'\'';
 				}
 
 				hasTags = true;
-				if(noEndTag) continue;
+				if (noEndTag) continue;
 
-				if(!style.IsEmpty) {
+				if (!style.IsEmpty) {
 					byte si = _GetStyleIndex(style, currentStyle);
 					_stack.Add(currentStyle);
 					currentStyle = si;
@@ -563,27 +558,27 @@ namespace Au.Controls
 			Debug.Assert(t - s0 == r - r0);
 			*t = 0; len = (int)(t - s0);
 
-			if(_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
+			if (_styles.Count > prevStylesCount) _SetUserStyles(prevStylesCount);
 
 			//APerf.Next();
 			_c.zAddText_(append, s0, len);
-			if(!hasTags) return;
+			if (!hasTags) return;
 
 			int endStyled = 0, prevLen = append ? _c.zLen8 - len : 0;
 
-			if(folds != null) {
-				for(int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds
+			if (folds != null) {
+				for (int i = folds.Count - 1; i >= 0; i--) { //need reverse for nested folds
 					var v = folds[i];
 					int lineStart = _c.Call(SCI_LINEFROMPOSITION, v.x + prevLen), lineEnd = _c.Call(SCI_LINEFROMPOSITION, v.y + prevLen);
 					int level = _c.Call(SCI_GETFOLDLEVEL, lineStart) & SC_FOLDLEVELNUMBERMASK;
 					_c.Call(SCI_SETFOLDLEVEL, lineStart, level | SC_FOLDLEVELHEADERFLAG);
-					for(int j = lineStart + 1; j <= lineEnd; j++) _c.Call(SCI_SETFOLDLEVEL, j, level + 1);
+					for (int j = lineStart + 1; j <= lineEnd; j++) _c.Call(SCI_SETFOLDLEVEL, j, level + 1);
 					_c.Call(SCI_FOLDLINE, lineStart);
 				}
 
 			}
 
-			if(codes != null) {
+			if (codes != null) {
 				//info: tested various ways to add code coloured by a lexer, and only this way works. And it is good. Fast etc.
 				//	At first need to add non-styled text (SCI_COLOURISE does not work if the text is already styled).
 				//	Then set lexer and call SCI_COLOURISE for each code range.
@@ -604,18 +599,18 @@ namespace Au.Controls
 				//Workaround: temporarily set previous char style = 0. Fast.
 				//SHOULDDO: try to set lexer once. It's quite slow. Previously I did not know this workaround.
 				int prevStyle = prevLen > 0 ? _c.Call(SCI_GETSTYLEAT, prevLen - 1) : 0;
-				if(prevStyle != 0) _StyleChar(prevLen - 1, 0);
+				if (prevStyle != 0) _StyleChar(prevLen - 1, 0);
 
-				for(int i = 0; i < codes.Count; i++) {
+				for (int i = 0; i < codes.Count; i++) {
 					_c.Call(SCI_COLOURISE, codes[i].x + prevLen, codes[i].y + prevLen);
 				}
 				//APerf.Next();
 				_SetLexer(LexLanguage.SCLEX_NULL);
 				//APerf.Next();
 
-				if(prevStyle != 0) _StyleChar(prevLen - 1, prevStyle); //part 2 of the workaround
+				if (prevStyle != 0) _StyleChar(prevLen - 1, prevStyle); //part 2 of the workaround
 
-				for(int i = 0; i < codes.Count; i++) {
+				for (int i = 0; i < codes.Count; i++) {
 					_StyleRange(codes[i].x);
 					endStyled = codes[i].y;
 				}
@@ -626,62 +621,56 @@ namespace Au.Controls
 			//AOutput.QM2.Write(APerf.ToString());
 
 
-			void _StyleRange(int to)
-			{
-				if(endStyled < to) {
+			void _StyleRange(int to) {
+				if (endStyled < to) {
 					_c.Call(SCI_STARTSTYLING, endStyled + prevLen);
 					_c.Call(SCI_SETSTYLINGEX, to - endStyled, r0 + endStyled);
 				}
 			}
 
-			void _StyleChar(int pos, int style)
-			{
+			void _StyleChar(int pos, int style) {
 				_c.Call(SCI_STARTSTYLING, pos);
 				_c.Call(SCI_SETSTYLING, 1, style);
 			}
 
-			void _Write(byte ch, byte style)
-			{
+			void _Write(byte ch, byte style) {
 				//AOutput.QM2.Write($"{ch} {style}");
 				*t++ = ch; *r++ = style;
 			}
 
-			void _WriteString(string ss, byte style)
-			{
-				for(int i_ = 0; i_ < ss.Length; i_++) _Write((byte)ss[i_], style);
+			void _WriteString(string ss, byte style) {
+				for (int i_ = 0; i_ < ss.Length; i_++) _Write((byte)ss[i_], style);
 			}
 		}
 
-		byte _GetStyleIndex(_TagStyle style, byte currentStyle)
-		{
+		byte _GetStyleIndex(_TagStyle style, byte currentStyle) {
 			//merge nested style with ancestors
 			int k = currentStyle;
-			if(k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
-			for(int j = _stack.Count - 1; j > 0; j--) {
+			if (k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
+			for (int j = _stack.Count - 1; j > 0; j--) {
 				k = _stack[j];
-				if(k < 0) continue; //a non-styled tag
+				if (k < 0) continue; //a non-styled tag
 				k &= 0xff; //remove other possible flags
-				if(k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
+				if (k >= STYLE_FIRST_EX) style.Merge(_styles[k - STYLE_FIRST_EX]);
 			}
 
 			//find or add style
 			int i, n = _styles.Count;
-			for(i = 0; i < n; i++) if(_styles[i].Equals(style)) break;
-			if(i == NUM_STYLES_EX) {
+			for (i = 0; i < n; i++) if (_styles[i].Equals(style)) break;
+			if (i == NUM_STYLES_EX) {
 				i = currentStyle;
 				//CONSIDER: overwrite old styles added in previous calls. Now we just clear styles when control text cleared.
 			} else {
-				if(i == n) _styles.Add(style);
+				if (i == n) _styles.Add(style);
 				i += STYLE_FIRST_EX;
 			}
 			return (byte)i;
 		}
 
-		void _SetLexer(LexLanguage lang)
-		{
-			if(lang == _currentLexer) return;
+		void _SetLexer(LexLanguage lang) {
+			if (lang == _currentLexer) return;
 			_currentLexer = lang;
-			if(lang != LexLanguage.SCLEX_NULL) _c.zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
+			if (lang != LexLanguage.SCLEX_NULL) _c.zStyleClearRange(0, STYLE_HIDDEN); //STYLE_DEFAULT - 1
 			_c.Call(SCI_SETLEXER, (int)lang);
 
 			//for(int i=0; i< STYLE_DEFAULT; i++) { //creates problems
@@ -689,7 +678,7 @@ namespace Au.Controls
 			//	_c.zStyleEolFilled(i, true);
 			//}
 
-			switch(lang) {
+			switch (lang) {
 			case LexLanguage.SCLEX_CPP:
 				_c.zSetLexerCpp(noClear: true);
 				break;
@@ -700,33 +689,32 @@ namespace Au.Controls
 		/// <summary>
 		/// Called on SCN_HOTSPOTRELEASECLICK.
 		/// </summary>
-		internal void OnLinkClick_(int pos, bool ctrl)
-		{
-			if(AKeys.UI.IsAlt) return;
+		internal void OnLinkClick_(int pos, bool ctrl) {
+			if (AKeys.UI.IsAlt) return;
 
 			int iTag, iText, k;
 			//to find beginning of link text (after <tag>), search for STYLE_HIDDEN before
-			for(iText = pos; iText > 0; iText--) if(_c.zGetStyleAt(iText - 1) == STYLE_HIDDEN) break;
-			if(iText == 0) return;
+			for (iText = pos; iText > 0; iText--) if (_c.zGetStyleAt(iText - 1) == STYLE_HIDDEN) break;
+			if (iText == 0) return;
 			//to find beginning of <tag>, search for some other style before
-			for(iTag = iText - 1; iTag > 0; iTag--) if(_c.zGetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
+			for (iTag = iText - 1; iTag > 0; iTag--) if (_c.zGetStyleAt(iTag - 1) != STYLE_HIDDEN) break;
 			//to find end of link text, search for a non-hotspot style after
-			for(pos++; /*SCI_GETSTYLEAT returns 0 if index invalid, it is documented*/; pos++) {
+			for (pos++; /*SCI_GETSTYLEAT returns 0 if index invalid, it is documented*/; pos++) {
 				k = _c.zGetStyleAt(pos);
-				if(k < STYLE_FIRST_EX || !_c.zStyleHotspot(k)) break;
+				if (k < STYLE_FIRST_EX || !_c.zStyleHotspot(k)) break;
 			}
 			//get text <tag>LinkText
 			var s = _c.zRangeText(false, iTag, pos);
 			//AOutput.Write(iTag, iText, pos, s);
 
 			//is it <fold>?
-			if(s == " >>") {
+			if (s == " >>") {
 				int line = _c.Call(SCI_LINEFROMPOSITION, iTag);
 				_c.Call(SCI_TOGGLEFOLD, line);
 				return;
 			}
 			//get tag, attribute and text
-			if(!s.RegexMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
+			if (!s.RegexMatch(@"(?s)^<(\+?\w+)(?: ""([^""]*)""| ([^>]*))?>(.+)", out var m)) return;
 			string tag = m[1].Value, attr = m[2].Value ?? m[3].Value ?? m[4].Value;
 			//AOutput.Write($"'{tag}'  '{attr}'  '{m[4].Value}'");
 
@@ -735,11 +723,10 @@ namespace Au.Controls
 		}
 
 		//note: attr can be ""
-		void _OnLinkClick(string tag, string attr)
-		{
+		void _OnLinkClick(string tag, string attr) {
 			//AOutput.Write($"'{tag}'  '{attr}'");
 
-			if(_userLinkTags.TryGetValue(tag, out var d) || s_userLinkTags.TryGetValue(tag, out d)) {
+			if (_userLinkTags.TryGetValue(tag, out var d) || s_userLinkTags.TryGetValue(tag, out d)) {
 				d.Invoke(attr);
 				return;
 			}
@@ -748,7 +735,7 @@ namespace Au.Controls
 			bool one = a.Length == 1;
 			string s1 = a[0], s2 = one ? null : a[1];
 
-			switch(tag) {
+			switch (tag) {
 			case "link":
 				AFile.TryRun(s1, s2);
 				break;
@@ -764,19 +751,18 @@ namespace Au.Controls
 			default:
 				//case "open": case "script": //the control recognizes but cannot implement these. The lib user can implement.
 				//others are unregistered tags. Only if start with '+' (others are displayed as text).
-				if(AOpt.Warnings.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.");
+				if (AOpt.Warnings.Verbose) ADialog.ShowWarning("Debug", "Tag '" + tag + "' is not implemented.\nUse SciTags2.AddCommonLinkTag or SciTags2.AddLinkTag.");
 				break;
 			}
 		}
 
-		public void SetLinkStyle(UserDefinedStyle style, (bool use, ColorInt color)? activeColor = null, bool? activeUnderline = null)
-		{
+		public void SetLinkStyle(UserDefinedStyle style, (bool use, ColorInt color)? activeColor = null, bool? activeUnderline = null) {
 			_linkStyle = style;
-			if(activeColor != null) {
+			if (activeColor != null) {
 				var v = activeColor.GetValueOrDefault();
 				_c.Call(SCI_SETHOTSPOTACTIVEFORE, v.use, v.color.ToBGR());
 			}
-			if(activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.GetValueOrDefault());
+			if (activeUnderline != null) _c.Call(SCI_SETHOTSPOTACTIVEUNDERLINE, activeUnderline.GetValueOrDefault());
 		}
 		UserDefinedStyle _linkStyle;
 
@@ -801,8 +787,7 @@ namespace Au.Controls
 		/// Call this function when control handle is already created. Until that <see cref="KScintilla.ZTags"/> returns null.
 		/// </remarks>
 		/// <seealso cref="AddCommonLinkTag"/>
-		public void AddLinkTag(string name, Action<string> a)
-		{
+		public void AddLinkTag(string name, Action<string> a) {
 			_userLinkTags[name] = a;
 		}
 
@@ -821,8 +806,7 @@ namespace Au.Controls
 		/// The function is called in control's thread. The mouse button is already released. It is safe to do anything with the control, eg replace text.
 		/// </param>
 		/// <seealso cref="AddLinkTag"/>
-		public static void AddCommonLinkTag(string name, Action<string> a)
-		{
+		public static void AddCommonLinkTag(string name, Action<string> a) {
 			s_userLinkTags[name] = a;
 		}
 
@@ -839,21 +823,19 @@ namespace Au.Controls
 		/// <remarks>
 		/// Call this function when control handle is already created. Until that <see cref="KScintilla.ZTags"/> returns null.
 		/// </remarks>
-		public void AddStyleTag(string name, UserDefinedStyle style)
-		{
-			if(_userStyles == null) _userStyles = new Dictionary<string, _TagStyle>();
-			if(_userStyles.Count >= 100) throw new InvalidOperationException();
-			if(!name.Starts('.')) throw new ArgumentException();
+		public void AddStyleTag(string name, UserDefinedStyle style) {
+			if (_userStyles == null) _userStyles = new Dictionary<string, _TagStyle>();
+			if (_userStyles.Count >= 100) throw new InvalidOperationException();
+			if (!name.Starts('.')) throw new ArgumentException();
 			_userStyles.Add(name, new _TagStyle(style));
 		}
 		Dictionary<string, _TagStyle> _userStyles;
 
-		internal void OnLButtonDownWhenNotFocused_(nint wParam, nint lParam, ref bool setFocus)
-		{
-			if(setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
+		internal void OnLButtonDownWhenNotFocused_(nint wParam, nint lParam, ref bool setFocus) {
+			if (setFocus && _c.ZInitReadOnlyAlways && !AKeys.UI.IsAlt) {
 				int pos = _c.Call(SCI_CHARPOSITIONFROMPOINTCLOSE, AMath.LoShort(lParam), AMath.HiShort(lParam));
 				//AOutput.Write(pos);
-				if(pos >= 0 && _c.zStyleHotspot(_c.zGetStyleAt(pos))) setFocus = false;
+				if (pos >= 0 && _c.zStyleHotspot(_c.zGetStyleAt(pos))) setFocus = false;
 			}
 		}
 

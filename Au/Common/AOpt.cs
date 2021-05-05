@@ -344,19 +344,11 @@ namespace Au.Types
 
 		/// <summary>
 		/// If true, some library functions may display more warnings and other info.
-		/// If not explicitly set, the default value depends on the build configuration of the entry assymbly: true if Debug, false if Release.
+		/// If not explicitly set, the default value depends on the build configuration of the main assembly: true if Debug, false if Release (optimize true). See <see cref="ATask.IsDebug"/>.
 		/// </summary>
 		public bool Verbose {
-			get => (_verbose ??= _IsAppDebugConfig()) == true;
+			get => (_verbose ??= ATask.IsDebug) == true;
 			set => _verbose = value;
-		}
-
-		static bool _IsAppDebugConfig()
-		{
-			var a = Assembly.GetEntryAssembly().GetCustomAttribute<DebuggableAttribute>();
-			if(a == null) return false;
-			//return a.IsJITOptimizerDisabled; //depends on 'Optimize code' checkbox in project Properties, regardless of config
-			return a.IsJITTrackingEnabled; //depends on config, but not 100% reliable, eg may be changed explicitly in source code (maybe the above too)
 		}
 
 		/// <summary>

@@ -41,12 +41,9 @@ namespace Au
 		public static IntPtr Handle => Api.GetCurrentThread();
 
 		/// <summary>
-		/// Returns true if this thread has a .NET message loop (Forms or WPF).
+		/// Returns true if this thread has a .NET message loop (winforms or WPF).
 		/// </summary>
-		/// <param name="isWPF">Has WPF message loop and no Forms message loop.</param>
-		/// <remarks>
-		/// Unlike calling <b>Application.MessageLoop</b> etc directly, this function does not cause to load Forms and WPF dlls.
-		/// </remarks>
+		/// <param name="isWPF">Has WPF message loop and no winforms message loop.</param>
 		/// <seealso cref="AWnd.GetWnd.ThreadWindows"/>
 		public static bool HasMessageLoop(out bool isWPF)
 		{
@@ -119,5 +116,17 @@ namespace Au
 		//	t.Start(parameter);
 		//	return t;
 		//}
+
+		[MethodImpl(MethodImplOptions.AggressiveInlining)]
+		internal static void SetComApartment_(ApartmentState state) {
+			var t = Thread.CurrentThread;
+			t.TrySetApartmentState(ApartmentState.Unknown);
+			t.TrySetApartmentState(state);
+
+			//This is undocumented, but works if we set ApartmentState.Unknown at first.
+			//With [STAThread] slower, and the process initially used to have +2 threads.
+			//Speed when called to set STA at startup: 1.7 ms. If apphost calls OleInitialize, 1.5 ms.
+			//tested: OleUninitialize in apphost does not make GetApartmentState return MTA.
+		}
 	}
 }

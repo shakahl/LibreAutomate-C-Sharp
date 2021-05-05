@@ -49,7 +49,7 @@ namespace Au
 		/// </summary>
 		protected const int MsgNotify = Api.WM_USER + 145;
 
-		internal bool sleepExit_, desktopExit_;
+		internal bool sleepExit_, lockExit_;
 
 		/// <param name="id">An id that helps Windows to distinguish multiple tray icons added by same program. Use 0, 1, 2, ... or all 0.</param>
 		/// <param name="disposeOnExit">
@@ -153,8 +153,8 @@ namespace Au
 		bool _Update(bool icon = false, bool tooltip = false, _Notification n = null, bool taskbarCreated = false) {
 			lock (this) {
 				if (_w.Is0) {
-					if (_disposeOnExit) AProcess.Exit += (_, _) => _Delete();
-					if (desktopExit_) _hookDesktopSwitch = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => { k.hook.Dispose(); Environment.Exit(2); });
+					if (_disposeOnExit) AProcess.Exit += _ => _Delete();
+					if (lockExit_) _hookDesktopSwitch = new AHookAcc(AccEVENT.SYSTEM_DESKTOPSWITCH, 0, k => { k.hook.Dispose(); ATask.ExitOnSleepOrDesktopSwitch(sleep: false); });
 					_w = AWnd.More.CreateWindow(WndProc, true, "ATrayIcon", ATask.Name, WS.POPUP, WS2.NOACTIVATE);
 				}
 
@@ -292,7 +292,7 @@ namespace Au
 				} else if (msg == s_msgTaskbarCreated) { //explorer restarted or taskbar DPI changed
 					_Update(taskbarCreated: true);
 				} else if (msg == Api.WM_POWERBROADCAST) {
-					if (sleepExit_ && wParam == Api.PBT_APMSUSPEND) Environment.Exit(2);
+					if (sleepExit_ && wParam == Api.PBT_APMSUSPEND) ATask.ExitOnSleepOrDesktopSwitch(sleep: true);
 				}
 			}
 

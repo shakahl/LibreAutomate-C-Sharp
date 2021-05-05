@@ -158,17 +158,17 @@ namespace Au
 		/// Returns the new toolbar.
 		/// </summary>
 		/// <param name="ctorFlags">See <see cref="AToolbar(string, TBCtor, string, int)"/>.</param>
-		/// <param name="f">[CallerFilePath]</param>
-		/// <param name="l">[CallerLineNumber]</param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="InvalidOperationException">This toolbar was attached to another toolbar or was shown as non-satellite toolbar.</exception>
 		/// <remarks>
 		/// Sets toolbar name = <c>this.Name + "^"</c>.
 		/// If this already is a satellite toolbar, just returns its owner.
 		/// </remarks>
-		public AToolbar AutoHide(TBCtor ctorFlags = 0, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+		public AToolbar AutoHide(TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
 			_ThreadTrap();
 			if (_satPlanet == null) {
-				_satPlanet = new AToolbar(this.Name + "^", ctorFlags, f, l) { Satellite = this };
+				_satPlanet = new AToolbar(this.Name + "^", ctorFlags, f_, l_) { Satellite = this };
 				if (_satPlanet.FirstTime) {
 					_satPlanet.Size = new(20, 20);
 				}
@@ -186,12 +186,12 @@ namespace Au
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness. Pixels.</param>
 		/// <param name="ctorFlags">See <see cref="AToolbar(string, TBCtor, string, int)"/>.</param>
-		/// <param name="f">[CallerFilePath]</param>
-		/// <param name="l">[CallerLineNumber]</param>
-		public AToolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
+		public AToolbar AutoHideScreenEdge(MouseTriggerArgs mta, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
 			if (mta == null) throw new ArgumentNullException();
 			if (mta.Trigger.Kind != TMKind.Edge) throw new ArgumentException("Not an edge trigger.");
-			return AutoHideScreenEdge(mta.Trigger.Edge, mta.Trigger.ScreenIndex, rangeStart, rangeEnd, thickness, ctorFlags, f, l);
+			return AutoHideScreenEdge(mta.Trigger.Edge, mta.Trigger.ScreenIndex, rangeStart, rangeEnd, thickness, ctorFlags, f_, l_);
 		}
 
 		/// <summary>
@@ -204,9 +204,9 @@ namespace Au
 		/// <param name="rangeEnd"></param>
 		/// <param name="thickness">The visible thickness. Pixels.</param>
 		/// <param name="ctorFlags">See <see cref="AToolbar(string, TBCtor, string, int)"/>.</param>
-		/// <param name="f">[CallerFilePath]</param>
-		/// <param name="l">[CallerLineNumber]</param>
-		public AToolbar AutoHideScreenEdge(TMEdge edge, TMScreen screen = TMScreen.Primary, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) {
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
+		public AToolbar AutoHideScreenEdge(TMEdge edge, TMScreen screen = TMScreen.Primary, Coord rangeStart = default, Coord rangeEnd = default, int thickness = 1, TBCtor ctorFlags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) {
 			_ThreadTrap();
 			if (screen < 0) throw new NotSupportedException("screen");
 			var sh = AScreen.Index((int)screen);
@@ -247,7 +247,7 @@ namespace Au
 				if (reverse) k.right = edgeLength - length - move; else k.left += move;
 			}
 
-			var planet = AutoHide(ctorFlags, f, l);
+			var planet = AutoHide(ctorFlags, f_, l_);
 			planet._screenAHSE = sh;
 			if (planet.FirstTime) {
 				planet.Size = ADpi.Unscale(vertical ? new SIZE(thickness + offscreen, length) : new SIZE(length, thickness + offscreen), sh.Handle);

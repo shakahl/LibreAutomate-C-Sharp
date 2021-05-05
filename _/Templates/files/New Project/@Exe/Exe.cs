@@ -14,7 +14,7 @@ using System.Reflection;
 //[assembly: AssemblyCopyright("Copyright © 2020")]
 //[assembly: AssemblyTrademark("Legal trademarks")]
 
-class Script { [STAThread] static void Main(string[] a) { ATask.Setup(); new Script(a); } Script(string[] args) { //;;;
+class Script { [STAThread] static void Main(string[] a) => new Script(a); Script(string[] args) { ATask.Setup(); //;;;
 
 /*
 To create .exe program from a script: in Properties select role exeProgram. This script is an example.

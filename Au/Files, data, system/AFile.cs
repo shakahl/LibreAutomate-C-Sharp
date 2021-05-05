@@ -346,6 +346,8 @@ namespace Au
 		/// </remarks>
 		public static IEnumerable<FEFile> Enumerate(string directoryPath, FEFlags flags = 0, Func<FEFile, bool> filter = null, Action<string> errorHandler = null)
 		{
+			//tested 2021-04-30: much faster than Directory.GetFiles in .NET 5. Faster JIT, and then > 2 times faster.
+
 			string path = directoryPath;
 			if(0 == (flags & FEFlags.UseRawPath)) path = APath.Normalize(path);
 			path = path.RemoveSuffix('\\');

@@ -203,7 +203,7 @@ class PanelFind : UserControl
 
 	private void _bReplace_Click(WBButtonClickArgs e) {
 		_cName.IsChecked = false;
-		if (!_GetTextToFind(out var f, true)) return;
+		if (!_GetTextToFind(out var f, forReplace: true)) return;
 		_FindNextInEditor(f, true);
 	}
 
@@ -295,7 +295,7 @@ class PanelFind : UserControl
 	}
 	ATimer _timerUE;
 
-	struct _TextToFind
+	record _TextToFind
 	{
 		public string findText;
 		public string replaceText;
@@ -305,11 +305,10 @@ class PanelFind : UserControl
 		public bool matchCase;
 	}
 
-	bool _GetTextToFind(out _TextToFind f, bool forReplace = false, bool noRecent = false, bool noTooltip = false, bool names = false) {
+	bool _GetTextToFind(out _TextToFind f, bool forReplace = false, bool noRecent = false, bool noErrorTooltip = false, bool names = false) {
 		_ttRegex?.Close();
-		f = new() { findText = _tFind.Text };
-		if (f.findText.Length == 0) return false;
-		f.matchCase = !names && _cCase.IsChecked;
+		string text = _tFind.Text; if (text.NE()) { f = null; return false; }
+		f = new() { findText = text, matchCase = !names && _cCase.IsChecked };
 		try {
 			if (_cRegex.IsChecked) {
 				var fl = RXFlags.MULTILINE;
@@ -322,7 +321,7 @@ class PanelFind : UserControl
 			}
 		}
 		catch (ArgumentException e) { //ARegex and AWildex ctors throw if invalid
-			if (!noTooltip) TUtil.InfoTooltip(ref _ttRegex, _tFind, e.Message);
+			if (!noErrorTooltip) TUtil.InfoTooltip(ref _ttRegex, _tFind, e.Message);
 			return false;
 		}
 		if (forReplace) f.replaceText = _tReplace.Text;
@@ -333,7 +332,7 @@ class PanelFind : UserControl
 		return true;
 	}
 
-	void _FindAllInString(string text, in _TextToFind f, List<Range> a) {
+	void _FindAllInString(string text, _TextToFind f, List<Range> a) {
 		a.Clear();
 		if (f.rx != null) {
 			foreach (var g in f.rx.FindAllG(text)) a.Add(g.Start..g.End);
@@ -348,7 +347,7 @@ class PanelFind : UserControl
 
 	//Used to find text in filenames.
 	//If found, adds single element to a. In the future a may be used to highlight all matching parts of names in the found list.
-	void _FindFirstInString(string text, in _TextToFind f, List<Range> a) {
+	void _FindFirstInString(string text, _TextToFind f, List<Range> a) {
 		a.Clear();
 		if (f.rx != null) {
 			if (f.rx.MatchG(text, out var g)) a.Add(g.Start..g.End);
@@ -364,7 +363,7 @@ class PanelFind : UserControl
 
 	#region in editor
 
-	void _FindNextInEditor(in _TextToFind f, bool replace) {
+	void _FindNextInEditor(_TextToFind f, bool replace) {
 		_ttNext?.Close();
 		var doc = Panels.Editor.ZActiveDoc; if (doc == null) return;
 		var text = doc.zText; if (text.Length == 0) return;
@@ -416,7 +415,11 @@ class PanelFind : UserControl
 
 	private void _bReplaceAll_Click(WBButtonClickArgs e) {
 		_cName.IsChecked = false;
-		if (!_GetTextToFind(out var f, true)) return;
+		if (!_GetTextToFind(out var f, forReplace: true)) return;
+		_ReplaceAllInEditor(f);
+	}
+
+	void _ReplaceAllInEditor(_TextToFind f) {
 		var doc = Panels.Editor.ZActiveDoc;
 		var text = doc.zText;
 		var repl = f.replaceText;
@@ -446,7 +449,7 @@ class PanelFind : UserControl
 
 	void _FindAllInEditor() {
 		_aEditor.Clear();
-		if (!_GetTextToFind(out var f, noRecent: true, noTooltip: true)) return;
+		if (!_GetTextToFind(out var f, noRecent: true, noErrorTooltip: true)) return;
 		var text = Panels.Editor.ZActiveDoc?.zText; if (text.NE()) return;
 		_FindAllInString(text, f, _aEditor);
 	}
@@ -503,6 +506,11 @@ class PanelFind : UserControl
 				cFound.zIndicatorAdd(false, c_indic, v.start..v.end);
 				return true;
 			}
+			cFound.ZTags.AddLinkTag("+raif", s => _ReplaceAllInFiles(s));
+			cFound.ZTags.AddLinkTag("+caf", s => {
+				App.Model.CloseFiles(_lastFindAll.files);
+				App.Model.CollapseAll(exceptWithOpenFiles: true);
+			});
 			cFound.Call(Sci.SCI_INDICSETSTYLE, c_indic, Sci.INDIC_BOX);
 			cFound.Call(Sci.SCI_INDICSETFORE, c_indic, 0x0080e0);
 		}
@@ -516,9 +524,11 @@ class PanelFind : UserControl
 		var b = new StringBuilder();
 		var a = new List<Range>();
 		int timeSlow = App.Settings.find_printSlow;
-		var bSlow = !names && timeSlow > 0 ? new StringBuilder() : null;
+		StringBuilder bSlow = !names && timeSlow > 0 ? new() : null;
 		bool jited = false;
 		int searchIn = names ? 0 : _SearchIn;
+		int nFound = 0;
+		List<FileNode> aFiles = names ? null : new();
 
 		var folder = App.Model.Root;
 		if (!names && _cFolder.IsChecked && Panels.Editor.ZActiveDoc?.ZFile is FileNode fn) {
@@ -565,10 +575,11 @@ class PanelFind : UserControl
 					b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<><>    <c 0x008000>//folder<>", link, path);
 				} else {
 					int i1 = path.LastIndexOf('\\') + 1;
-					string s1 = path.Remove(i1), s2 = path.Substring(i1);
+					string s1 = path[..i1], s2 = path[i1..];
 					if (names) {
 						b.AppendFormat("<+open \"{0}\"><c 0x808080>{1}<>{2}<>", link, s1, s2);
 					} else {
+						aFiles.Add(v); nFound += a.Count;
 						int ns = 120 - path.Length * 7 / 4;
 #if true //open and select the first found text
 						b.AppendFormat("<+f \"{0} {1} {2}\"><c 0x808080>{3}<><b>{4}{5}      <><>    <+ra \"{0}\"><c 0x80ff>Replace all<><>",
@@ -613,6 +624,12 @@ class PanelFind : UserControl
 			}
 		}
 
+		if (nFound > 1) {
+			var guid = Guid.NewGuid().ToString(); ; //probably don't need, but safer
+			b.AppendFormat("<z orange>Found {0} in {1} files.    <+raif \"{2}\"><c 0x80ff>Replace all...<><>    <+caf><c 0x80ff>Close all<><>", nFound, aFiles.Count, guid).AppendLine("<>");
+			_lastFindAll = (f, aFiles, guid);
+		}
+
 		if (folder != App.Model.Root)
 			b.Append("<z orange>Note: searched only in folder ").Append(folder.Name).AppendLine(".<>");
 		if (searchIn > 0)
@@ -622,6 +639,41 @@ class PanelFind : UserControl
 		b.Append(bSlow);
 
 		cFound.zSetText(b.ToString());
+	}
+
+	(_TextToFind f, List<FileNode> files, string guid) _lastFindAll;
+
+	void _ReplaceAllInFiles(string sGuid) {
+		var (f, files, guid) = _lastFindAll;
+		if (guid != sGuid) return;
+		f.replaceText = _tReplace.Text;
+		_AddToRecent(f, false);
+
+		if (1 != ADialog.Show("Replace text in files",
+			"Before replacing you may want to backup the workspace <a href=\"backup\">folder</a>.",
+			"Replace|Cancel",
+			owner: App.Hwnd,
+			expandedText: @"Replaces text in all files displayed in find results.
+Uses the same options and 'find' text. Uses current 'replace' text.
+Opens files to enable Undo.",
+			onLinkClick: e => AFile.SelectInExplorer(App.Model.WorkspaceDirectory))) return;
+
+		var d = ADialog.ShowProgress(marquee: false, "Replacing", owner: App.Hwnd);
+		try {
+			App.Wmain.IsEnabled = false;
+			for (int i = 0; i < files.Count; i++) {
+				var v = files[i];
+				if (!App.Model.SetCurrentFile(v)) { AOutput.Write("Failed to open " + v.Name); continue; }
+				if ((i & 15) == 15) ATime.DoEvents(); //makes slower, but visually better. Without it the progress dialog almost does not respond, although other thread; maybe clicking it tries to change wmain Z order etc.
+				_ReplaceAllInEditor(f);
+				if (!d.IsOpen) break;
+				d.Send.Progress(AMath.PercentFromValue(files.Count, i + 1));
+			}
+		}
+		finally {
+			d.Send.Close();
+			App.Wmain.IsEnabled = true;
+		}
 	}
 
 	//struct _Perf : IDisposable
@@ -640,13 +692,6 @@ class PanelFind : UserControl
 	//		if (t < 20000) return;
 	//		AOutput.Write(t, _file);
 	//	}
-	//}
-
-	//rejected: replace in files.
-	//	Rarely used, dangerous, need much work to make more useful. It's easy to click each file in results and click 'Replace' or 'all'.
-	//	FUTURE: in found results, at bottom add link "Replace in all files". But also need checkboxes.
-	//private void _bReplaceIF_Click(object sender, EventArgs e)
-	//{
 	//}
 
 	//struct _TempDisableControl : IDisposable
@@ -675,8 +720,8 @@ class PanelFind : UserControl
 
 	//Not used when Name checked.
 	//temp is false when clicked a button, true when changed the find text or a checkbox.
-	void _AddToRecent(in _TextToFind f, bool temp) {
-		if (temp) return; //not implemented. Was implemented, but was not perfect and probably not useful. Adds too many intermediate garbage, although filtered.
+	void _AddToRecent(_TextToFind f, bool temp) {
+		if (temp) return; //not implemented. Was implemented but not perfect and probably not useful. Adds too many intermediate garbage, although filtered.
 
 		int k = f.matchCase ? 1 : 0; if (f.wholeWord) k |= 2; else if (f.rx != null) k |= 4;
 

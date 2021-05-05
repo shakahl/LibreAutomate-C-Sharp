@@ -26,9 +26,13 @@ namespace Au.Triggers
 		internal readonly TOptions options; //Triggers.Options
 		internal readonly TriggerScope scope; //Triggers.Of.WindowX. Used by hotkey, autotext and mouse triggers.
 		readonly TriggerFunc[] _funcAfter, _funcBefore; //Triggers.FuncOf. _funcAfter used by all triggers; _funcBefore - like scope.
+		internal readonly string sourceFile;
+		internal readonly int sourceLine;
 
-		internal ActionTrigger(ActionTriggers triggers, Delegate action, bool usesWindowScope)
+		internal ActionTrigger(ActionTriggers triggers, Delegate action, bool usesWindowScope, (string, int) source)
 		{
+			this.sourceFile = source.Item1 ?? throw new ArgumentNullException();
+			this.sourceLine = source.Item2;
 			this.action = action;
 			this.triggers = triggers;
 			var to = triggers.options_;

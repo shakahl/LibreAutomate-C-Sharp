@@ -345,15 +345,17 @@ static class CiUtil
 		return b.ToString();
 	}
 
-	public static string FormatSignatureXmlDoc(BaseMethodDeclarationSyntax md, string code) {
+	public static string FormatSignatureXmlDoc(BaseMethodDeclarationSyntax m, string code) {
 		var b = new StringBuilder();
-		foreach (var p in md.ParameterList.Parameters) {
+		foreach (var p in m.ParameterList.Parameters) {
 			b.Append("\r\n/// <param name=\"").Append(p.Identifier.Text).Append("\"></param>");
 		}
-		//rejected. Rarely used. VS intellisense ignores it.
-		//var rt = md.ReturnType;
-		//if(!code.Eq(rt.Span.Start..rt.Span.End, "void")) b.Append("\r\n/// <returns></returns>");
+		if(m is MethodDeclarationSyntax mm) {
+			var rt = mm.ReturnType;
+			if (!code.Eq(rt.Span.Start..rt.Span.End, "void")) b.Append("\r\n/// <returns></returns>");
+		}
 		return b.ToString();
+		//rejected: <typeparam name="TT"></typeparam>. Rarely used.
 	}
 
 #if DEBUG

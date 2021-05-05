@@ -19,6 +19,7 @@ namespace Au
 	/// <summary>
 	/// Adds extension methods and some static functions for <see cref="XElement"/> and <see cref="XDocument"/>.
 	/// </summary>
+	//[EditorBrowsable(EditorBrowsableState.Never)] //no, some static methods are not extension methods, eg LoadElem
 	public static class AExtXml
 	{
 		/// <summary>

@@ -21,8 +21,6 @@ using Microsoft.Win32;
 using System.Windows;
 using System.Windows.Controls;
 
-//TODO: now in recent list some paths with \\
-
 partial class FilesModel
 {
 	public readonly FileNode Root;
@@ -93,6 +91,7 @@ partial class FilesModel
 		if (_importing) return;
 		if (_initedFully) {
 			App.Tasks.OnWorkspaceClosed();
+			RecentTT.Clear();
 			//Save.AllNowIfNeed(); //owner FilesPanel calls this before calling this func. Because may need more code in between.
 		}
 		Save?.Dispose();
@@ -649,19 +648,26 @@ partial class FilesModel
 			break;
 		case ECloseCmd.CloseAll:
 			CloseFiles(OpenFiles, dontClose);
-			_CollapseAll();
+			CollapseAll();
 			if (dontClose != null) TreeControl.EnsureVisible(dontClose);
 			break;
-		case ECloseCmd.CollapseFolders:
-			_CollapseAll();
+		case ECloseCmd.CollapseAllFolders:
+			CollapseAll();
+			break;
+		case ECloseCmd.CollapseInactiveFolders:
+			CollapseAll(exceptWithOpenFiles: true);
 			break;
 		}
 	}
 
-	void _CollapseAll() {
+	public void CollapseAll(bool exceptWithOpenFiles = false) {
 		bool update = false;
 		foreach (var v in Root.Descendants()) {
-			if (v.IsExpanded) { update = true; v.SetIsExpanded(false); }
+			if (v.IsExpanded) {
+				if (exceptWithOpenFiles && v.Descendants().Any(o => OpenFiles.Contains(o))) continue;
+				update = true;
+				v.SetIsExpanded(false);
+			}
 		}
 		if (update) UpdateControlItems();
 	}
@@ -673,7 +679,8 @@ partial class FilesModel
 		/// </summary>
 		CloseSelectedOrCurrent,
 		CloseAll,
-		CollapseFolders,
+		CollapseAllFolders,
+		CollapseInactiveFolders,
 	}
 
 	public void Properties() {
@@ -845,6 +852,7 @@ partial class FilesModel
 				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
 			} else if (FileNode.Templates.IsStandardTemplateName(relPath, out var tt)) {
 				text = FileNode.Templates.Load(tt);
+				//if (tt == FileNode.ETempl.Script) text = text.RegexReplace(@"\bScript\s*:\s*AScript\s*\{", "Script {", 1); //no. The user will see warning when compiling, and let update custom template.
 			} else {
 				text = AFile.LoadText(FileNode.Templates.DefaultDirBS + relPath);
 				if (text.Length < 20 && text.Starts("//#")) { //load default or custom template?
@@ -1280,7 +1288,7 @@ partial class FilesModel
 	/// </summary>
 	public static void FillMenuRecentWorkspaces(MenuItem sub) {
 		void _Add(string path, bool bold) {
-			var mi = new MenuItem { Header = path };
+			var mi = new MenuItem { Header = path.Replace("_", "__") };
 			if (bold) mi.FontWeight = FontWeights.Bold;
 			mi.Click += (_, _) => LoadWorkspace(path);
 			sub.Items.Add(mi);
@@ -1329,7 +1337,7 @@ partial class FilesModel
 				}
 				string relPath = dir + name;
 				if (isFolder == 3) name = name[1..];
-				var item = new MenuItem { Header = name };
+				var item = new MenuItem { Header = name.Replace("_", "__") };
 				if (isFolder == 1) {
 					_CreateMenu(item, x, relPath + "\\", level + 1);
 				} else {

@@ -553,17 +553,17 @@ namespace SdkConverter
 		/// <summary>
 		/// Throws exception indicating error at token iTok position.
 		/// </summary>
-		void _Err(int iTok, string errorText, [CallerMemberName] string callerName = null, [CallerFilePath] string callerFile = null, [CallerLineNumber] int callerLine = 0)
+		void _Err(int iTok, string errorText, [CallerMemberName] string m_ = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0)
 		{
-			__ThrowConverterException(_Pos(iTok), errorText, callerName, callerFile, callerLine);
+			__ThrowConverterException(_Pos(iTok), errorText, m_, f_, l_);
 		}
 
 		/// <summary>
 		/// Throws exception indicating error at s position (s must be in _src).
 		/// </summary>
-		void _Err(char* s, string errorText, [CallerMemberName] string callerName = null, [CallerFilePath] string callerFile = null, [CallerLineNumber] int callerLine = 0)
+		void _Err(char* s, string errorText, [CallerMemberName] string m_ = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0)
 		{
-			__ThrowConverterException((int)(s - _s0), errorText, callerName, callerFile, callerLine);
+			__ThrowConverterException((int)(s - _s0), errorText, m_, f_, l_);
 		}
 
 		void __ThrowConverterException(int pos, string errorText, string callerName, string callerFile, int callerLine)

@@ -1,5 +1,6 @@
 using Au;
 using Au.Types;
+using Au.Util;
 using Au.Controls;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,6 @@ using System.Reflection;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
-using Au.Util;
 //using System.Linq;
 
 class PanelTasks : DockPanel
@@ -49,10 +49,12 @@ class PanelTasks : DockPanel
 			_tv.Select(t);
 			var name = f.DisplayName;
 			var m = new AMenu { RawText = true };
-			m["End task  " + name] = _ => App.Tasks.EndTask(t);
-			m["End all  " + name] = _ => App.Tasks.EndTasksOf(f);
+			m["End task  '" + name + "'"] = _ => App.Tasks.EndTask(t);
+			m["End all  '" + name + "'"] = _ => App.Tasks.EndTasksOf(f);
 			m.Separator();
 			m["Close\tM-click", disable: null == Panels.Editor.ZGetOpenDocOf(f)] = _ => App.Model.CloseFile(f, selectOther: true);
+			//m.Separator();
+			//m["Recent tasks and triggers..."] = _ => RecentTT.Show(); //rejected. It is in menu Run. Or would also need to show context menu when rclicked in empty space.
 			m.Show();
 			break;
 		case MouseButton.Middle:

@@ -107,7 +107,7 @@ namespace Au.Compiler
 	/// 
 	/// About runSingle:
 	/// Multiple "runSingle" tasks cannot run simultaneously. Other tasks can run simultaneously. See also option 'ifRunning'.
-	/// The task also is green (if true) or blue (if false) in the "Tasks" pane. "runSingle" tasks change the tray icon and use the "End task" hotkey; other tasks don't.
+	/// The task also is green (if true) or blue (if false) in the "Tasks" panel. "runSingle" tasks change the tray icon and exit on PC sleep; other tasks don't.
 	/// 
 	/// About ifRunning:
 	/// When trying to start this script, what to do if it is already running. Values:

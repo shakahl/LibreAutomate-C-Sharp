@@ -153,7 +153,7 @@ partial class MainWindow : Window
 		base.OnActivated(e);
 	}
 
-	//this was for testing document tabs. Now we don't use document tabs. All documents now are in single pane.
+	//this was for testing document tabs. Now we don't use document tabs. All documents now are in single panel.
 	//void _OpenDocuments() {
 	//	var docLeaf = _AddDoc("Document 1");
 	//	_AddDoc("Document 2");

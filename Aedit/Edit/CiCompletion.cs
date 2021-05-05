@@ -156,6 +156,11 @@ class CiCompletion
 		Debug.Assert(code == document.GetTextAsync().Result.ToString());
 		p1.Next('d');
 
+		if (ch == '/') {
+			CiSnippets.DocComment(cd);
+			return;
+		}
+
 		bool isDot = false, canGroup = false;
 		PSFormat stringFormat = PSFormat.None; TextSpan stringSpan = default;
 		CompletionService completionService = null;
@@ -392,7 +397,7 @@ class CiCompletion
 					break;
 				}
 
-				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script"; //TODO: test top-level statements
+				static bool _IsOurScriptClass(INamedTypeSymbol t) => t.Name == "Script";
 
 				if (sym != null && v.kind != CiItemKind.LocalVariable && v.kind != CiItemKind.Namespace && v.kind != CiItemKind.TypeParameter) {
 					bool isObsolete = ci.Symbols.All(sy => sy.GetAttributes().Any(o => o.AttributeClass.Name == "ObsoleteAttribute")); //can be several overloads, some obsolete but others not
@@ -840,7 +845,7 @@ class CiCompletion
 						}
 						bracesFrom = i + s.Length + 2;
 						bracesLen = s2.Length - 3;
-					} else if ((isSpace || !App.Settings.ci_complParenSpace) && !_data.noAutoSelect && !doc.zText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
+					} else if (App.Settings.ci_complParen switch { 0 => isSpace, 1 => true, _ => false } && !_data.noAutoSelect && !doc.zText.Eq(i + len, ch)) { //info: noAutoSelect when lambda argument
 						s2 ??= ch == '(' ? "()" : "<>";
 						positionBack = 1;
 						bracesFrom = i + s.Length + s2.Length - 1;

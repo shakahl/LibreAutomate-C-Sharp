@@ -94,7 +94,8 @@ namespace Au.Triggers
 		internal string postfixChars;
 		string _paramsString;
 
-		internal AutotextTrigger(ActionTriggers triggers, Action<AutotextTriggerArgs> action, string text, TAFlags flags, TAPostfix postfixType, string postfixChars) : base(triggers, action, true) {
+		internal AutotextTrigger(ActionTriggers triggers, Action<AutotextTriggerArgs> action, string text, TAFlags flags, TAPostfix postfixType, string postfixChars, (string, int) source)
+			: base(triggers, action, true, source) {
 			this.text = text;
 			this.flags = flags;
 			this.postfixType = postfixType;
@@ -134,7 +135,7 @@ namespace Au.Triggers
 	public class AutotextTriggers : ITriggers, IEnumerable<AutotextTrigger>
 	{
 		ActionTriggers _triggers;
-		Dictionary<int, ActionTrigger> _d = new Dictionary<int, ActionTrigger>();
+		Dictionary<int, ActionTrigger> _d = new();
 
 		internal AutotextTriggers(ActionTriggers triggers) {
 			_triggers = triggers;
@@ -148,21 +149,23 @@ namespace Au.Triggers
 		/// <param name="flags">Options. If omitted or null, uses <see cref="DefaultFlags"/>. Some flags are used by <see cref="AutotextTriggerArgs.Replace"/>.</param>
 		/// <param name="postfixType">Postfix type (character, key, any or none). If omitted or null, uses <see cref="DefaultPostfixType"/>; default - a non-word character or the Ctrl key.</param>
 		/// <param name="postfixChars">Postfix characters used when postfix type is <b>Char</b> or <b>CharOrKey</b> (default). If omitted or null, uses <see cref="DefaultPostfixChars"/>; default - non-word characters.</param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">
 		/// - Text is empty or too long. Can be 1 - 100 characters.
 		/// - Postfix characters contains letters or digits.
 		/// </exception>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <example>See <see cref="ActionTriggers"/>.</example>
-		public Action<AutotextTriggerArgs> this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
+		public Action<AutotextTriggerArgs> this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				_triggers.ThrowIfRunning_();
 				int len = text.Lenn(); if (len < 1 || len > 100) throw new ArgumentException("Text length must be 1 - 100.");
-				if (text.IndexOf('\n') >= 0) { text = text.RegexReplace(@"\r?\n", "\r"); len = text.Length; }
+				if (text.Contains('\n')) { text = text.RegexReplace(@"\r?\n", "\r"); len = text.Length; }
 				TAFlags fl = flags ?? DefaultFlags;
 				bool matchCase = 0 != (fl & TAFlags.MatchCase);
 				if (!matchCase) text = text.Lower();
-				var t = new AutotextTrigger(_triggers, value, text, fl, postfixType ?? DefaultPostfixType, _CheckPostfixChars(postfixChars) ?? DefaultPostfixChars);
+				var t = new AutotextTrigger(_triggers, value, text, fl, postfixType ?? DefaultPostfixType, _CheckPostfixChars(postfixChars) ?? DefaultPostfixChars, (f_, l_));
 				//create dictionary key from 1-4 last characters lowercase
 				int k = 0;
 				for (int i = len - 1, j = 0; i >= 0 && j <= 24; i--, j += 8) {
@@ -833,12 +836,12 @@ namespace Au.Triggers
 
 		/// <summary>
 		/// Adds an autotext trigger. Its action calls <see cref="AutotextTriggerArgs.Replace"/>.
-		/// More info: <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string]"/>.
+		/// More info: <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string, string, int]"/>.
 		/// </summary>
-		/// <exception cref="Exception">Exceptions of <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string]"/>.</exception>
-		public string this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null] {
+		/// <exception cref="Exception">Exceptions of <see cref="AutotextTriggers.this[string, TAFlags?, TAPostfix?, string, string, int]"/>.</exception>
+		public string this[string text, TAFlags? flags = null, TAPostfix? postfixType = null, string postfixChars = null, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
-				_host[text, flags, postfixType, postfixChars] = o => o.Replace(value);
+				_host[text, flags, postfixType, postfixChars, f_, l_] = o => o.Replace(value);
 			}
 		}
 	}

@@ -41,9 +41,8 @@ namespace Au
 		/// <seealso cref="AWnd.ProgramName"/>
 		/// <seealso cref="AWnd.ProgramPath"/>
 		/// <seealso cref="AWnd.ProcessId"/>
-		public static string GetName(int processId, bool fullPath = false, bool noSlowAPI = false)
-		{
-			if(processId == 0) return null;
+		public static string GetName(int processId, bool fullPath = false, bool noSlowAPI = false) {
+			if (processId == 0) return null;
 			string R = null;
 
 			//var t = ATime.PerfMicroseconds;
@@ -51,24 +50,24 @@ namespace Au
 			//s_time = t;
 
 			using var ph = Handle_.OpenProcess(processId);
-			if(!ph.Is0) {
+			if (!ph.Is0) {
 				//In non-admin process fails if the process is of another user session.
 				//Also fails for some system processes: nvvsvc, nvxdsync, dwm. For dwm fails even in admin process.
 
 				//getting native path is faster, but it gets like "\Device\HarddiskVolume5\Windows\System32\notepad.exe" and I don't know API to convert to normal
-				if(_QueryFullProcessImageName(ph, !fullPath, out var s)) {
+				if (_QueryFullProcessImageName(ph, !fullPath, out var s)) {
 					R = s;
-					if(APath.IsPossiblyDos_(R)) {
-						if(fullPath || _QueryFullProcessImageName(ph, false, out s)) {
+					if (APath.IsPossiblyDos_(R)) {
+						if (fullPath || _QueryFullProcessImageName(ph, false, out s)) {
 							R = APath.ExpandDosPath_(s);
-							if(!fullPath) R = _GetFileName(R);
+							if (!fullPath) R = _GetFileName(R);
 						}
 					}
 				}
-			} else if(!noSlowAPI && !fullPath) { //the slow way. Can get only names, not paths.
-				using(new _AllProcesses(out var p, out int n)) {
-					for(int i = 0; i < n; i++)
-						if(p[i].processID == processId) {
+			} else if (!noSlowAPI && !fullPath) { //the slow way. Can get only names, not paths.
+				using (new _AllProcesses(out var p, out int n)) {
+					for (int i = 0; i < n; i++)
+						if (p[i].processID == processId) {
 							R = p[i].GetName(cannotOpen: true);
 							break;
 						}
@@ -85,15 +84,14 @@ namespace Au
 		/// <summary>
 		/// Same as GetName, but faster when called several times for same window, like <c>if(w.ProgramName=="A" || w.ProgramName=="B")</c>.
 		/// </summary>
-		internal static string GetNameCached_(AWnd w, int processId, bool fullPath = false)
-		{
-			if(processId == 0) return null;
+		internal static string GetNameCached_(AWnd w, int processId, bool fullPath = false) {
+			if (processId == 0) return null;
 			var cache = _LastWndProps.OfThread;
 			cache.Begin(w);
 			var R = fullPath ? cache.ProgramPath : cache.ProgramName;
-			if(R == null) {
+			if (R == null) {
 				R = GetName(processId, fullPath);
-				if(fullPath) cache.ProgramPath = R; else cache.ProgramName = R;
+				if (fullPath) cache.ProgramPath = R; else cache.ProgramName = R;
 			}
 			return R;
 		}
@@ -104,10 +102,9 @@ namespace Au
 			long _time;
 			internal string ProgramName, ProgramPath;
 
-			internal void Begin(AWnd w)
-			{
+			internal void Begin(AWnd w) {
 				var t = Api.GetTickCount64();
-				if(w != _w || t - _time > 300) { _w = w; ProgramName = ProgramPath = null; }
+				if (w != _w || t - _time > 300) { _w = w; ProgramName = ProgramPath = null; }
 				_time = t;
 			}
 
@@ -115,17 +112,16 @@ namespace Au
 			internal static _LastWndProps OfThread => _ofThread ??= new _LastWndProps();
 		}
 
-		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s)
-		{
+		static bool _QueryFullProcessImageName(IntPtr hProcess, bool getFilename, out string s) {
 			s = null;
-			for(int na = 300; ; na *= 2) {
+			for (int na = 300; ; na *= 2) {
 				var b = AMemoryArray.Char_(ref na);
-				if(Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
-					if(getFilename) s = _GetFileName(b, na);
+				if (Api.QueryFullProcessImageName(hProcess, getFilename, b, ref na)) {
+					if (getFilename) s = _GetFileName(b, na);
 					else s = new string(b, 0, na);
 					return true;
 				}
-				if(ALastError.Code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
+				if (ALastError.Code != Api.ERROR_INSUFFICIENT_BUFFER) return false;
 			}
 		}
 
@@ -155,25 +151,24 @@ namespace Au
 		{
 			ProcessInfo_* _p;
 
-			public _AllProcesses(out ProcessInfo_* pi, out int count)
-			{
+			public _AllProcesses(out ProcessInfo_* pi, out int count) {
 				_p = null;
 				Api.SYSTEM_PROCESS_INFORMATION* b = null;
 				try {
-					for(int na = 300_000; ;) {
+					for (int na = 300_000; ;) {
 						b = (Api.SYSTEM_PROCESS_INFORMATION*)AMemory.Alloc(na);
 
 						int status = Api.NtQuerySystemInformation(5, b, na, out na);
 						//AOutput.Write(na); //eg 224000
 
-						if(status == 0) break;
-						if(status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
+						if (status == 0) break;
+						if (status != Api.STATUS_INFO_LENGTH_MISMATCH) throw new AuException(status);
 						var t = b; b = null; AMemory.Free(t);
 					}
 
 					Api.SYSTEM_PROCESS_INFORMATION* p;
 					int nProcesses = 0, nbNames = 0;
-					for(p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
+					for (p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset)) {
 						nProcesses++;
 						nbNames += p->NameLength; //bytes, not chars
 					}
@@ -181,12 +176,12 @@ namespace Au
 					_p = (ProcessInfo_*)AMemory.Alloc(nProcesses * sizeof(ProcessInfo_) + nbNames);
 					ProcessInfo_* r = _p;
 					char* names = (char*)(_p + nProcesses);
-					for(p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
+					for (p = b; p->NextEntryOffset != 0; p = (Api.SYSTEM_PROCESS_INFORMATION*)((byte*)p + p->NextEntryOffset), r++) {
 						r->processID = (int)p->UniqueProcessId;
 						r->sessionID = (int)p->SessionId;
 						int len = p->NameLength / 2;
 						r->nameLen = len;
-						if(len > 0) {
+						if (len > 0) {
 							//copy name to _p memory because it's in the huge buffer that will be released in this func
 							r->namePtr = names;
 							Api.memcpy(names, (char*)p->NamePtr, len * 2);
@@ -198,8 +193,7 @@ namespace Au
 				finally { AMemory.Free(b); }
 			}
 
-			public void Dispose()
-			{
+			public void Dispose() {
 				AMemory.Free(_p);
 			}
 		}
@@ -224,16 +218,15 @@ namespace Au
 			/// If contains looks like a DOS path and !cannotOpen, tries to unexpand DOS path.
 			/// Don't call multiple times, because always converts from raw char*.
 			/// </summary>
-			public string GetName(bool cannotOpen = false)
-			{
-				if(namePtr == null) {
-					if(processID == 0) return "Idle";
+			public string GetName(bool cannotOpen = false) {
+				if (namePtr == null) {
+					if (processID == 0) return "Idle";
 					return null;
 				}
 				string R = new string(namePtr, 0, nameLen);
-				if(!cannotOpen && APath.IsPossiblyDos_(R)) {
+				if (!cannotOpen && APath.IsPossiblyDos_(R)) {
 					using var ph = Handle_.OpenProcess(processID);
-					if(!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
+					if (!ph.Is0 && _QueryFullProcessImageName(ph, false, out var s)) {
 						R = _GetFileName(APath.ExpandDosPath_(s));
 					}
 				}
@@ -246,18 +239,17 @@ namespace Au
 		/// </summary>
 		/// <param name="ofThisSession">Get processes only of this user session (skip services etc).</param>
 		/// <exception cref="AuException">Failed. Unlikely.</exception>
-		public static ProcessInfo[] AllProcesses(bool ofThisSession = false)
-		{
-			using(new _AllProcesses(out var p, out int n)) {
-				if(n == 0) throw new AuException();
+		public static ProcessInfo[] AllProcesses(bool ofThisSession = false) {
+			using (new _AllProcesses(out var p, out int n)) {
+				if (n == 0) throw new AuException();
 				int sessionId = 0, ns = n;
-				if(ofThisSession) {
+				if (ofThisSession) {
 					sessionId = ProcessSessionId;
-					for(int i = 0; i < n; i++) if(p[i].sessionID != sessionId) ns--;
+					for (int i = 0; i < n; i++) if (p[i].sessionID != sessionId) ns--;
 				}
 				var a = new ProcessInfo[ns];
-				for(int i = 0, j = 0; i < n; i++) {
-					if(ofThisSession && p[i].sessionID != sessionId) continue;
+				for (int i = 0, j = 0; i < n; i++) {
+					if (ofThisSession && p[i].sessionID != sessionId) continue;
 					a[j++] = new ProcessInfo(p[i].sessionID, p[i].processID, p[i].GetName());
 				}
 				return a;
@@ -281,9 +273,8 @@ namespace Au
 		/// - <i>processName</i> is "" or null.
 		/// - Invalid wildcard expression (<c>"**options "</c> or regular expression).
 		/// </exception>
-		public static int[] GetProcessIds([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
-		{
-			if(processName.NE()) throw new ArgumentException();
+		public static int[] GetProcessIds([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
+			if (processName.NE()) throw new ArgumentException();
 			List<int> a = null;
 			GetProcessesByName_(ref a, processName, fullPath, ofThisSession);
 			return a?.ToArray() ?? Array.Empty<int>();
@@ -295,27 +286,25 @@ namespace Au
 		/// More info: <see cref="GetProcessIds"/>.
 		/// </summary>
 		/// <exception cref="ArgumentException"/>
-		public static int GetProcessId([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false)
-		{
-			if(processName.NE()) throw new ArgumentException();
+		public static int GetProcessId([ParamString(PSFormat.AWildex)] string processName, bool fullPath = false, bool ofThisSession = false) {
+			if (processName.NE()) throw new ArgumentException();
 			List<int> a = null;
 			return GetProcessesByName_(ref a, processName, fullPath, ofThisSession, true);
 		}
 
-		internal static int GetProcessesByName_(ref List<int> a, AWildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false)
-		{
+		internal static int GetProcessesByName_(ref List<int> a, AWildex processName, bool fullPath = false, bool ofThisSession = false, bool first = false) {
 			a?.Clear();
 
 			int sessionId = ofThisSession ? ProcessSessionId : 0;
 
-			using(new _AllProcesses(out var p, out int n)) {
-				for(int i = 0; i < n; i++) {
-					if(ofThisSession && p[i].sessionID != sessionId) continue;
+			using (new _AllProcesses(out var p, out int n)) {
+				for (int i = 0; i < n; i++) {
+					if (ofThisSession && p[i].sessionID != sessionId) continue;
 					string s = fullPath ? GetName(p[i].processID, true) : p[i].GetName();
-					if(s == null) continue;
+					if (s == null) continue;
 
-					if(processName.Match(s)) {
-						if(first) return p[i].processID;
+					if (processName.Match(s)) {
+						if (first) return p[i].processID;
 						a ??= new List<int>();
 						a.Add(p[i].processID);
 					}
@@ -325,21 +314,18 @@ namespace Au
 			return 0;
 		}
 
-		static string _GetFileName(char* s, int len)
-		{
-			if(s == null) return null;
+		static string _GetFileName(char* s, int len) {
+			if (s == null) return null;
 			char* ss = s + len;
-			for(; ss > s; ss--) if(ss[-1] == '\\' || ss[-1] == '/') break;
+			for (; ss > s; ss--) if (ss[-1] == '\\' || ss[-1] == '/') break;
 			return new string(ss, 0, len - (int)(ss - s));
 		}
 
-		static string _GetFileName(string s)
-		{
+		static string _GetFileName(string s) {
 			fixed (char* p = s) return _GetFileName(p, s.Length);
 		}
 
-		static string _GetFileName(char[] s, int len)
-		{
+		static string _GetFileName(char[] s, int len) {
 			fixed (char* p = s) return _GetFileName(p, len);
 		}
 
@@ -368,7 +354,7 @@ namespace Au
 		[SkipLocalsInit]
 		public static unsafe string ExePath {
 			get {
-				if(s_exePath == null) {
+				if (s_exePath == null) {
 					var a = stackalloc char[500];
 					int n = Api.GetModuleFileName(default, a, 500);
 					s_exePath = new string(a, 0, n);
@@ -417,9 +403,8 @@ namespace Au
 		/// Calls API <msdn>ProcessIdToSessionId</msdn>.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
-		public static int GetSessionId(int processId)
-		{
-			if(!Api.ProcessIdToSessionId(processId, out var R)) return -1;
+		public static int GetSessionId(int processId) {
+			if (!Api.ProcessIdToSessionId(processId, out var R)) return -1;
 			return R;
 		}
 
@@ -434,10 +419,9 @@ namespace Au
 		/// Return null if fails.
 		/// </summary>
 		/// <param name="processId">Process id.</param>
-		public static FileVersionInfo GetVersionInfo(int processId)
-		{
+		public static FileVersionInfo GetVersionInfo(int processId) {
 			var s = GetName(processId, true);
-			if(s != null) {
+			if (s != null) {
 				try { return FileVersionInfo.GetVersionInfo(s); } catch { }
 			}
 			return null;
@@ -465,18 +449,17 @@ namespace Au
 		/// Before this process exits, either normally or on unhandled exception.
 		/// </summary>
 		/// <remarks>
-		/// The event handler is called when one of these events occur, with their parameters: <see cref="AppDomain.ProcessExit"/>, <see cref="AppDomain.UnhandledException"/>.
-		/// The event handler is called before static object finalizers.
+		/// The event handler is called on <see cref="AppDomain.ProcessExit"/> (then the parameter is null) and <see cref="AppDomain.UnhandledException"/> (then the parameter is <b>Exception</b>).
 		/// </remarks>
-		public static event EventHandler Exit {
+		public static event Action<Exception> Exit {
 			add {
-				if(!_subscribedEventExit) {
-					lock("AVCyoRcQCkSl+3W8ZTi5oA") {
-						if(!_subscribedEventExit) {
+				if (!_haveEventExit) {
+					lock ("AVCyoRcQCkSl+3W8ZTi5oA") {
+						if (!_haveEventExit) {
 							var d = AppDomain.CurrentDomain;
 							d.ProcessExit += _ProcessExit;
 							d.UnhandledException += _ProcessExit; //because ProcessExit is missing on exception
-							_subscribedEventExit = true;
+							_haveEventExit = true;
 						}
 					}
 				}
@@ -486,33 +469,30 @@ namespace Au
 				_eventExit -= value;
 			}
 		}
-		static EventHandler _eventExit;
-		static bool _subscribedEventExit;
+		static Action<Exception> _eventExit;
+		static bool _haveEventExit;
 
-		//[HandleProcessCorruptedStateExceptions, System.Security.SecurityCritical] ;;tried to enable this event for corrupted state exceptions, but does not work
-		static void _ProcessExit(object sender, EventArgs e)
+		static void _ProcessExit(object sender, EventArgs ea) //sender: AppDomain on process exit, null on unhandled exception
 		{
-			if(e is UnhandledExceptionEventArgs u && !u.IsTerminating) return;
+			Exception e;
+			if (ea is UnhandledExceptionEventArgs u) {
+				if (!u.IsTerminating) return; //never seen, but anyway
+				e = (Exception)u.ExceptionObject; //probably non-Exception object is impossible in C#
+			} else {
+				e = ATask.s_unhandledException;
+			}
 			var k = _eventExit;
-			if(k != null) try { k(sender, e); } catch { }
+			if (k != null) try { k(e); } catch { }
 		}
-
-		//is it useful? It seems the difference from Environment.Exit is no Exit event.
-		///// <summary>
-		///// Calls API <msdn>ExitProcess</msdn>.
-		///// </summary>
-		//public static void ExitProcess(int exitCode) {
-		//	Api.ExitProcess(exitCode);
-		//}
 
 		/// <summary>
 		/// Gets or sets whether <see cref="CultureInfo.DefaultThreadCurrentCulture"/> and <see cref="CultureInfo.DefaultThreadCurrentUICulture"/> are <see cref="CultureInfo.InvariantCulture"/>.
 		/// </summary>
 		/// <remarks>
-		/// If your app don't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = true.
+		/// If your app doesn't want to use current culture (default in .NET apps), it can set these properties = <see cref="CultureInfo.InvariantCulture"/> or set this property = true.
 		/// It prevents potential bugs when app/script/components don't specify invariant culture in string functions and 'number to/from string' functions.
-		/// Also, bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
-		/// In automation scripts this property is implicitly set = true, unless script with role exeProgram does not call <see cref="ATask.Setup"/>.//TODO
+		/// Also, there is a bug in 'number to/from string' functions in some .NET versions with some cultures: they use wrong minus sign, not ASII '-' which is specified in Control Panel.
+		/// The default compiler sets this property = true; as well as <see cref="ATask.Setup"/>.
 		/// </remarks>
 		public static bool CultureIsInvariant {
 			get {
@@ -580,7 +560,7 @@ namespace Au
 		/// </exception>
 		public static int Terminate(string processName, bool allSessions = false, int exitCode = 0) {
 			int n = 0;
-			foreach(int pid in GetProcessIds(processName, ofThisSession: !allSessions)) {
+			foreach (int pid in GetProcessIds(processName, ofThisSession: !allSessions)) {
 				if (Terminate(pid, exitCode)) n++;
 			}
 			return n;
@@ -624,7 +604,7 @@ namespace Au
 		/// </remarks>
 		public static int Suspend(bool suspend, string processName, bool allSessions = false) {
 			int n = 0;
-			foreach(int pid in GetProcessIds(processName, ofThisSession: !allSessions)) {
+			foreach (int pid in GetProcessIds(processName, ofThisSession: !allSessions)) {
 				if (Suspend(suspend, pid)) n++;
 			}
 			return n;
@@ -651,8 +631,7 @@ namespace Au.Types
 		//public IntPtr UserSid; //where is its memory?
 
 		///
-		public ProcessInfo(int session, int pid, string name)
-		{
+		public ProcessInfo(int session, int pid, string name) {
 			SessionId = session; ProcessId = pid; Name = name;
 		}
 

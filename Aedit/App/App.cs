@@ -14,12 +14,18 @@ using System.Windows;
 
 static class App
 {
+	//public const string AppName = "Automate C#ly";//TODO: also change in eg Au postbuild, now "$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
 	public const string AppName = "Aedit";
 	public static string UserGuid;
 	internal static AOutputServer OutputServer;
 	public static AppSettings Settings;
+
+	/// <summary>Main window</summary>
 	public static MainWindow Wmain;
-	public static AWnd Hwnd; //of Wmain
+
+	/// <summary>Handle of main window (<b>Wmain</b>).</summary>
+	public static AWnd Hwnd;
+
 	public static KMenuCommands Commands;
 	public static FilesModel Model;
 	public static RunningTasks Tasks;
@@ -249,7 +255,7 @@ static class App
 				_wNotify = AWnd.More.CreateWindow("Aedit.TrayNotify", null, WS.POPUP, WS2.NOACTIVATE);
 				//not message-only, because must receive s_msgTaskbarCreated and also used for context menu
 
-				AProcess.Exit += (_, _) => {
+				AProcess.Exit += _ => {
 					var d = new Api.NOTIFYICONDATA(_wNotify);
 					Api.Shell_NotifyIcon(Api.NIM_DELETE, d);
 				};
@@ -311,9 +317,7 @@ static class App
 			if (m == c_msgNotify) _Notified(wParam, lParam);
 			else if (m == s_msgTaskbarCreated) _Add(true); //when explorer restarted or taskbar DPI changed
 			else if (m == Api.WM_DESTROY) _Exit();
-			else if (m == Api.WM_POWERBROADCAST) {
-				if (wParam == Api.PBT_APMSUSPEND) Tasks.EndTask();//TODO
-			} else if (m == Api.WM_DISPLAYCHANGE) {
+			else if (m == Api.WM_DISPLAYCHANGE) {
 				Tasks.OnWM_DISPLAYCHANGE();
 			}
 
@@ -331,14 +335,10 @@ static class App
 
 		static void _ContextMenu() {
 			var m = new AMenu();
-			m.Add("End runSingle task\tSleep", _ => Tasks.EndTask(), disable: Tasks.GetRunsingleTask() == null);
 			m.AddCheck("Disable triggers\tM-click", check: _disabled, _ => TriggersAndToolbars.DisableTriggers(null));
 			m.Separator();
 			m.Add("Exit", _ => _Exit());
 			m.Show(MSFlags.AlignBottom | MSFlags.AlignCenterH);
-
-			//TODO: need a better way to end task. Let Sleep be just an alternative.
-			//	Eg meta endKey (could be in default template). Then let the task create a thread that waits for the key.
 		}
 
 		static void _ShowWindow() {

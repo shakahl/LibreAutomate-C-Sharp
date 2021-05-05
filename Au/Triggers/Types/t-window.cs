@@ -177,7 +177,8 @@ namespace Au.Triggers
 		internal readonly TWEvent ev;
 		string _typeString, _paramsString;
 
-		internal WindowTrigger(ActionTriggers triggers, Action<WindowTriggerArgs> action, TWEvent ev, AWnd.Finder finder, TWFlags flags, TWLater later) : base(triggers, action, false)
+		internal WindowTrigger(ActionTriggers triggers, Action<WindowTriggerArgs> action, TWEvent ev, AWnd.Finder finder, TWFlags flags, TWLater later, (string, int) source)
+			: base(triggers, action, false, source)
 		{
 			this.ev = ev;
 			this.finder = finder;
@@ -248,6 +249,8 @@ namespace Au.Triggers
 		/// When a "later" event occurs, the trigger action is executed. The <see cref="WindowTriggerArgs.Later"/> property then is that event; it is 0 when it is the primary trigger.
 		/// The "later" trigers are not disabled when primary triggers are disabled.
 		/// </param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
 		/// <exception cref="ArgumentException">See <see cref="AWnd.Find"/>.</exception>
 		/// <seealso cref="Last"/>
@@ -256,11 +259,12 @@ namespace Au.Triggers
 				[ParamString(PSFormat.AWildex)] string cn = null,
 				[ParamString(PSFormat.AWildex)] WOwner of = default,
 				Func<AWnd, bool> also = null, WContains contains = default,
-				TWFlags flags = 0, TWLater later = 0
+				TWFlags flags = 0, TWLater later = 0,
+				[CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0
 				] {
 			set {
 				var f = new AWnd.Finder(name, cn, of, 0, also, contains);
-				this[winEvent, f, flags, later] = value;
+				this[winEvent, f, flags, later, f_, l_] = value;
 			}
 		}
 
@@ -268,12 +272,12 @@ namespace Au.Triggers
 		/// Adds a window trigger and its action.
 		/// </summary>
 		/// <exception cref="InvalidOperationException">Cannot add triggers after <see cref="ActionTriggers.Run"/> was called, until it returns.</exception>
-		public Action<WindowTriggerArgs> this[TWEvent winEvent, AWnd.Finder f, TWFlags flags = 0, TWLater later = 0] {
+		public Action<WindowTriggerArgs> this[TWEvent winEvent, AWnd.Finder f, TWFlags flags = 0, TWLater later = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0] {
 			set {
 				_triggers.ThrowIfRunning_();
 				if(f.Props.contains.Value is AWinImage.Finder) AWarning.Write("Window triggers with 'contains image' are unreliable.");
 
-				var t = new WindowTrigger(_triggers, value, winEvent, f, flags, later);
+				var t = new WindowTrigger(_triggers, value, winEvent, f, flags, later, (f_, l_));
 				ref var last = ref _tActive; if(t.IsVisible) last = ref _tVisible;
 				if(last == null) {
 					last = t;
@@ -574,7 +578,7 @@ namespace Au.Triggers
 			_inProc = true;
 			try {
 				//ATime.SleepDoEvents(300); //test queue
-				//APerf.SpeedUpCpu();
+				//APerf.Cpu();
 				for(; ; ) {
 					TWLater e = 0;
 					switch(accEvent) {

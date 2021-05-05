@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <werapi.h>
 
 HMODULE s_hModule;
 
@@ -152,6 +153,16 @@ HRESULT DeleteSchedulerTask()
 	return hr == 0x80070002 ? 0 : hr; //0x80070002 if file or folder does not exists
 }
 
+#pragma comment(lib, "wer.lib")
+
+void InstallMisc(LPCWSTR dir) {
+	std::wstring s = dir;
+	s += L"Au.Task.exe";
+	WerAddExcludedApplication(s.c_str(), true);
+	s.insert(s.length() - 4, L"32");
+	WerAddExcludedApplication(s.c_str(), true);
+}
+
 ////////////
 
 //Unloads AuCpp.dll from all processes except.
@@ -187,6 +198,7 @@ EXPORT HRESULT Cpp_Install(int step, LPCWSTR dir)
 		Cpp_Unload();
 		return 0;
 	case 2:
+		InstallMisc(dir);
 		return CreateSchedulerTask(dir);
 	}
 

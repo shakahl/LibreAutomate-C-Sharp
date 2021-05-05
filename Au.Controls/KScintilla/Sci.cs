@@ -928,15 +928,17 @@ namespace Au.Controls
 		/// <param name="utf16"></param>
 		/// <param name="pos">Start index. Cannot be negative.</param>
 		/// <param name="s">Text to insert. Can be null.</param>
-		/// <param name="addUndoPoint">Call <see cref="zAddUndoPoint"/>.</param>
+		/// <param name="addUndoPointBefore">Call <see cref="zAddUndoPoint"/> before.</param>
+		/// <param name="addUndoPointAfter">Call <see cref="zAddUndoPoint"/> after.</param>
 		/// <remarks>
 		/// Does not parse tags.
 		/// Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="zReplaceSel"/> or <see cref="zReplaceRange"/>.
 		/// </remarks>
-		public void zInsertText(bool utf16, int pos, string s, bool addUndoPoint = false) {
+		public void zInsertText(bool utf16, int pos, string s, bool addUndoPointBefore = false, bool addUndoPointAfter = false) {
+			if (addUndoPointBefore) zAddUndoPoint();
 			using (new _NoReadonly(this))
 				zSetString(SCI_INSERTTEXT, _ParamPos(utf16, pos), s ?? "");
-			if (addUndoPoint) zAddUndoPoint();
+			if (addUndoPointAfter) zAddUndoPoint();
 		}
 
 		///// <summary>

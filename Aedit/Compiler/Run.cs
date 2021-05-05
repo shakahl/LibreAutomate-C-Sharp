@@ -18,6 +18,9 @@ using Au.Util;
 using Au.Compiler;
 using Au.Controls;
 
+//CONSIDER: for ifRunning use mutex. Release mutex as soon as script ends, ie before the process ends (need some time to unload .NET).
+//	Maybe then could repeatedly start short tasks more frequently.
+
 static class CompileRun
 {
 	/// <summary>
@@ -71,7 +74,7 @@ static class CompileRun
 		if (!run) return 1;
 
 		if (r.role == ERole.editorExtension) {
-			RunAssembly.Run(r.file, args, RAFlags.InEditorThread);
+			RunAssembly.Run(r.file, args, handleExceptions: true);
 			return (int)ATask.RunResult_.editorThread;
 		}
 
@@ -144,12 +147,15 @@ class RunningTask : ITreeViewItem
 		//processId = Api.GetProcessId(hProcess.SafeWaitHandle.DangerousGetHandle());
 		this.isRunSingle = isRunSingle;
 
+		RecentTT.TaskEvent(true, this);
+
 		RegisteredWaitHandle rwh = null;
 		rwh = ThreadPool.RegisterWaitForSingleObject(_process, (context, wasSignaled) => {
 			rwh.Unregister(_process);
 			var p = _process; _process = null;
+			Api.GetExitCodeProcess(p.SafeWaitHandle.DangerousGetHandle(), out int ec);
 			p.Dispose();
-			App.Tasks.TaskEnded1(taskId);
+			App.Tasks.TaskEnded1(taskId, ec);
 		}, null, -1, true);
 	}
 
@@ -246,8 +252,7 @@ class RunningTasks
 		_a = new List<RunningTask>();
 		_q = new List<_WaitingTask>();
 		App.Timer1sOr025s += _TimerUpdateUI;
-		ATask.Init_(ATRole.EditorExtension);
-		Log_.Run.Start();
+		ATask.s_role = ATRole.EditorExtension;
 	}
 
 	public void OnWorkspaceClosed() {
@@ -283,9 +288,9 @@ class RunningTasks
 	/// Called in a threadpool thread when a task process exited.
 	/// </summary>
 	/// <param name="taskId"></param>
-	internal void TaskEnded1(int taskId) {
+	internal void TaskEnded1(int taskId, int exitCode) {
 		if (_disposed) return;
-		CommandLine.MsgWnd.Post(WM_TASK_ENDED, taskId);
+		CommandLine.MsgWnd.Post(WM_TASK_ENDED, taskId, exitCode);
 	}
 
 	/// <summary>
@@ -297,13 +302,14 @@ class RunningTasks
 	/// Removes an ended task from the 'running' list. If a task is queued and can run, starts it.
 	/// When task ended, TaskEnded1 posts message WM_TASK_ENDED with task id in wParam to the message window, which calls this function.
 	/// </summary>
-	internal void TaskEnded2(IntPtr wParam) {
+	internal void TaskEnded2(LPARAM wParam, LPARAM lParam) {
 		if (_disposed) return;
 
 		int taskId = (int)wParam;
 		int i = _Find(taskId);
 		if (i < 0) { ADebug.Print("not found. It's OK, but should be very rare, mostly with 1-core CPU."); return; }
 
+		RecentTT.TaskEvent(false, _a[i], (int)lParam);
 		_a.RemoveAt(i);
 
 		for (int j = _q.Count - 1; j >= 0; j--) {
@@ -660,11 +666,7 @@ class RunningTasks
 		} else {
 			exeFile = AFolders.ThisAppBS + (bit32 ? "Au.Task32.exe" : "Au.Task.exe");
 
-			//int iFlags = r.hasConfig ? 1 : 0;
-			int iFlags = 0;
-			if (r.mtaThread) iFlags |= 2;
-			if (r.console) iFlags |= 4;
-			taskParams = Serializer_.SerializeWithSize(r.name, r.file, iFlags, args, r.fullPathRefs, wrPipeName, (string)AFolders.Workspace);
+			taskParams = Serializer_.SerializeWithSize(r.name, r.file, (int)r.flags, args, wrPipeName, (string)AFolders.Workspace, f.IdString);
 			wrPipeName = null;
 
 			if (bit32 && !AVersion.Is32BitOS) preIndex += 3;

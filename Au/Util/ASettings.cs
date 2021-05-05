@@ -94,7 +94,7 @@ namespace Au.Util
 						}
 					}, sta: false);
 
-					AProcess.Exit += (_, _) => _SaveAllIfNeed(); //info: Core does not call finalizers when process exits
+					AProcess.Exit += _ => _SaveAllIfNeed(); //info: now .NET does not call finalizers when process exits
 				}
 				lock (s_list) s_list.Add(R);
 			}

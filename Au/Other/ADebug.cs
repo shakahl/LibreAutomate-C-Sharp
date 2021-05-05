@@ -25,10 +25,10 @@ namespace Au
 	/// </remarks>
 	internal static class ADebug //FUTURE: make public, when will be more tested and if really need.
 	{
-		static void _Print(object text, string cp, int cln, string cmn) {
+		static void _Print(object text, string f_, int l_, string m_) {
 			string s = AOutput.ObjectToString_(text);
 			string prefix = null; if (s.Starts("<>")) { prefix = "<>"; s = s[2..]; }
-			s = $"{prefix}Debug: {cmn} ({APath.GetName(cp)}:{cln}):  {s}";
+			s = $"{prefix}Debug: {m_} ({APath.GetName(f_)}:{l_}):  {s}";
 			_Print2(s);
 		}
 
@@ -46,8 +46,8 @@ namespace Au
 		/// If text starts with "&lt;&gt;", it can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void Print(object text, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null)
-			=> _Print(text, cp, cln, cmn);
+		public static void Print(object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
+			=> _Print(text, f_, l_, m_);
 
 		/// <summary>
 		/// If condition is true, calls <see cref="AOutput.Write"/> to show some debug info. Also shows current function name/file/line.
@@ -56,8 +56,8 @@ namespace Au
 		/// If text starts with "&lt;&gt;", it can contain output tags.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void PrintIf(bool condition, object text, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null) {
-			if (condition) _Print(text, cp, cln, cmn);
+		public static void PrintIf(bool condition, object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
+			if (condition) _Print(text, f_, l_, m_);
 		}
 
 		/// <summary>
@@ -66,22 +66,22 @@ namespace Au
 		/// The optional argument is not used explicitly.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void PrintFunc([CallerMemberName] string name = null)
-			=> _Print2(name);
+		public static void PrintFunc([CallerMemberName] string m_ = null)
+			=> _Print2(m_);
 
 		/// <summary>
 		/// In DEBUG config prints ALastError.Message.
 		/// </summary>
 		[Conditional("DEBUG")]
-		internal static void PrintNativeError_([CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null)
-			=> _Print(ALastError.Message, cp, cln, cmn);
+		internal static void PrintNativeError_([CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
+			=> _Print(ALastError.Message, f_, l_, m_);
 
 		/// <summary>
 		/// In DEBUG config prints ALastError.MessageFor(code).
 		/// </summary>
 		[Conditional("DEBUG")]
-		internal static void PrintNativeError_(int code, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null)
-			=> _Print(ALastError.MessageFor(code), cp, cln, cmn);
+		internal static void PrintNativeError_(int code, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null)
+			=> _Print(ALastError.MessageFor(code), f_, l_, m_);
 
 		/// <summary>
 		/// Calls <see cref="ADialog.Show"/> to show some debug info.
@@ -89,9 +89,9 @@ namespace Au
 		/// The 3 optional arguments are not used explicitly.
 		/// </summary>
 		[Conditional("DEBUG")]
-		public static void Dialog(object text, [CallerFilePath] string cp = null, [CallerLineNumber] int cln = 0, [CallerMemberName] string cmn = null) {
+		public static void Dialog(object text, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0, [CallerMemberName] string m_ = null) {
 			string s = AOutput.ObjectToString_(text);
-			ADialog.Show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{cmn} ({APath.GetName(cp)}:{cln})");
+			ADialog.Show("Debug", s, flags: DFlags.ExpandDown, expandedText: $"{m_} ({APath.GetName(f_)}:{l_})");
 		}
 
 		//rejected: use if(AOpt.Warnings.Verbose) ADialog.ShowWarning(...). It adds stack trace.

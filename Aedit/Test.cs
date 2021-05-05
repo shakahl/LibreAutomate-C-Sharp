@@ -43,10 +43,18 @@ using System.Windows.Interop;
 
 #pragma warning disable 169
 
-static class Test
+static unsafe class Test
 {
 
 	public static void FromMenubar() {
+		//for (int i = 0; i < 30; i++) {
+		//	Menus.Run.Compile();
+		//	Menus.Run.Start();
+		//}
+		//AOutput.Write("done");
+
+		//AOutput.W
+		//AKeys.Key("");
 
 		//AThread.Start(() => {
 		//	Cpp.Cpp_Test();

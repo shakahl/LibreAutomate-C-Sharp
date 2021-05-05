@@ -168,7 +168,7 @@ static class CommandLine
 			}
 			return 0;
 		case RunningTasks.WM_TASK_ENDED: //WM_USER+900
-			App.Tasks.TaskEnded2(wParam);
+			App.Tasks.TaskEnded2(wParam, lParam);
 			return 0;
 		}
 

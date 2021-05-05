@@ -80,7 +80,11 @@
       </DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y</Command>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\32\ /Y
+"$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
+cd $(SolutionDir)_
+"$(SolutionDir)Other\Programs\ResourceHacker.exe" -script "$(ProjectDir)hacker32.txt"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -109,7 +113,13 @@
       </DelayLoadDLLs>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y</Command>
+      <Command>xcopy $(TargetPath) $(SolutionDir)_\64\ /Y
+"$(SolutionDir)Other\Programs\nircmd.exe" win close etitle Aedit
+cd $(SolutionDir)_
+if EXIST Aedit.dll ( del Aedit.dll )
+if EXIST Aedit.exe ( del Aedit.exe )
+"$(SolutionDir)Other\Programs\ResourceHacker.exe" -script "$(ProjectDir)hacker.txt"
+</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -118,6 +128,10 @@
   <ItemGroup>
     <ClInclude Include="coreclrhost.h" />
     <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="hacker.txt" />
+    <Text Include="hacker32.txt" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

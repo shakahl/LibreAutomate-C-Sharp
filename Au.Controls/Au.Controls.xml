@@ -827,14 +827,15 @@
             <param name="to">End index.</param>
             <param name="withRN">Include "\r\n".</param>
         </member>
-        <member name="M:Au.Controls.KScintilla.zInsertText(System.Boolean,System.Int32,System.String,System.Boolean)">
+        <member name="M:Au.Controls.KScintilla.zInsertText(System.Boolean,System.Int32,System.String,System.Boolean,System.Boolean)">
             <summary>
             SCI_INSERTTEXT.
             </summary>
             <param name="utf16"></param>
             <param name="pos">Start index. Cannot be negative.</param>
             <param name="s">Text to insert. Can be null.</param>
-            <param name="addUndoPoint">Call <see cref="M:Au.Controls.KScintilla.zAddUndoPoint"/>.</param>
+            <param name="addUndoPointBefore">Call <see cref="M:Au.Controls.KScintilla.zAddUndoPoint"/> before.</param>
+            <param name="addUndoPointAfter">Call <see cref="M:Au.Controls.KScintilla.zAddUndoPoint"/> after.</param>
             <remarks>
             Does not parse tags.
             Does not change current selection, unless <i>pos</i> is in it; for it use <see cref="M:Au.Controls.KScintilla.zReplaceSel(System.String)"/> or <see cref="M:Au.Controls.KScintilla.zReplaceRange(System.Boolean,System.Int32,System.Int32,System.String,System.Boolean)"/>.
@@ -1189,7 +1190,7 @@
             </summary>
             <remarks>
             Links and formatting is specified in text, using tags like in HTML. Depending on control style, may need prefix <c><![CDATA[<>]]></c>.
-            Reference: [](output_tags).
+            Reference: [](xref:output_tags).
             Tags are supported by <see cref="M:Au.AOutput.Write(System.String)"/> when it writes to the Au script editor.
             
             This control does not implement some predefined tags: open, script.
@@ -1222,7 +1223,11 @@
             Displays <see cref="T:Au.AOutputServer"/> messages that are currently in its queue.
             </summary>
             <param name="os">The AOutputServer instance.</param>
-            <param name="onMessage">A callback function that can be called when this function gets/removes a message from os.</param>
+            <param name="onMessage">
+            A callback function that can be called when this function gets/removes a message from os.
+            When message type is Write, it can change message text; if null, this function ignores the message.
+            It also processes messages of type TaskEvent; this function ignores them.
+            </param>
             <remarks>
             Removes messages from the queue.
             Appends text messages + "\r\n" to the control's text, or clears etc (depends on message).
@@ -2302,21 +2307,21 @@
             <summary>
             Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
             </summary>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
         </member>
         <member name="M:Au.Controls.CommandAttribute.#ctor(System.String,System.Int32)">
             <summary>
             Specifies menu item text.
             </summary>
             <param name="text">Menu item text. Use _ to Alt-underline a character, like "_Copy".</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
         </member>
         <member name="M:Au.Controls.CommandAttribute.#ctor(System.Char,System.Int32)">
             <summary>
             Specifies Alt-underlined character. Sets menu item text = method/type name with spaces instead of _ , like Select_all -> "Select all".
             </summary>
             <param name="underlined">Character to underline.</param>
-            <param name="l">Don't use.</param>
+            <param name="l_">[](xref:caller_info)</param>
         </member>
         <member name="T:Au.Controls.KPopup">
             <summary>

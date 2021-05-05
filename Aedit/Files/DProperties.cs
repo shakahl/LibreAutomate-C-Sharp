@@ -581,7 +581,7 @@ This option is ignored when the task runs as .exe program started not from edito
 		info.AddElem(runSingle,
 @"<b>runSingle</b> - whether tasks can run simultaneously, etc.
  • <i>false</i> (default) - multiple tasks can run simultaneously (see ifRunning).
- • <i>true</i> (checked in Properties) - multiple such tasks cannot run simultaneously. When a task is running, the tray icon is green; also green in the ""Tasks"" pane. Can be ended with the ""End task"" hotkey.
+ • <i>true</i> (checked in Properties) - multiple such tasks cannot run simultaneously. The editor's tray icon is green when running; also green text in the ""Tasks"" panel. By default ATask.Setup ends the task on PC sleep and desktop switch (Ctrl+Alt+Delete, Win+L, etc).
 
 This option is ignored when the task runs as .exe program started not from editor.
 ");

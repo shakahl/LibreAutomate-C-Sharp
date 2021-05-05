@@ -942,7 +942,7 @@ namespace Au
 		/// </remarks>
 		/// <example>
 		/// Create new script in the Au editor and add this code. In Properties set role editorExtension. Run.
-		/// Then in the Find pane in the replacement field you can use <c>${+Upper}</c> and <c>${+Lower}</c>.
+		/// Then in the Find panel in the replacement field you can use <c>${+Upper}</c> and <c>${+Lower}</c>.
 		/// <code><![CDATA[
 		/// ARegex.AddReplaceFunc("Upper", m => m.Value.Upper()); //make uppercase
 		/// ARegex.AddReplaceFunc("Lower", m => m.Value.Lower()); //make lowercase

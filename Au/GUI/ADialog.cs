@@ -1747,7 +1747,7 @@ namespace Au.Types
 		//ShieldSuccessGreenBar = ushort.MaxValue - 7,
 
 		/// <summary>
-		/// Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or <see cref="ATask.MainAssembly"/>.
+		/// Use <msdn>IDI_APPLICATION</msdn> icon from unmanaged resources of this program file or main assembly.
 		/// If there are no icons - default program icon.
 		/// C# compilers add app icon with this id. The <b>DIcon.App</b> value is = <b>IDI_APPLICATION</b> (32512).
 		/// If this program file contains multiple native icons in range DIcon.App to 0xf000, you can specify them like <c>DIcon.App+1</c>.

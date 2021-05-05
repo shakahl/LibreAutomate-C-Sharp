@@ -23,7 +23,7 @@ namespace Au.Tools
 	/// You can set text, resize and show/hide/dispose it many times.
 	/// User can middle-click to hide.
 	/// </summary>
-	public class InfoWindow : KPopup
+	class InfoWindow : KPopup
 	{
 		DockPanel _panel;
 		_InfoBox _c, _c2;

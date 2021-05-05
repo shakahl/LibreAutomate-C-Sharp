@@ -37,8 +37,8 @@ namespace Au
 		/// Used for toolbar window name and for settings file name. Also used by <see cref="Find"/> and some other functions.
 		/// </param>
 		/// <param name="flags"></param>
-		/// <param name="f"><see cref="CallerFilePathAttribute"/></param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <param name="f_">[](xref:caller_info)</param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <exception cref="ArgumentException">Empty or invalid name.</exception>
 		/// <remarks>
 		/// Each toolbar has a settings file, where are saved its position, size and context menu settings. This function reads the file if exists, ie if settings changed in the past. See <see cref="GetSettingsFilePath"/>. If fails, writes warning to the output and uses default settings.
@@ -47,7 +47,7 @@ namespace Au
 		/// - <see cref="MTBase.ActionThread"/> = true.
 		/// - <see cref="MTBase.ExtractIconPathFromCode"/> = true.
 		/// </remarks>
-		public AToolbar(string name, TBCtor flags = 0, [CallerFilePath] string f = null, [CallerLineNumber] int l = 0) : base(name, f, l) {
+		public AToolbar(string name, TBCtor flags = 0, [CallerFilePath] string f_ = null, [CallerLineNumber] int l_ = 0) : base(name, f_, l_) {
 			if (s_treadId == 0) s_treadId = _threadId; else if (_threadId != s_treadId) AWarning.Write("All toolbars should be in single thread. Multiple threads use more CPU. If using triggers, insert this code before adding toolbar triggers: <code>Triggers.Options.ThreadMain();</code>");
 
 			//rejected: [CallerMemberName] string name = null. Problem: if local func or lambda, it is parent method's name. And can be eg ".ctor" if directly in script.
@@ -130,13 +130,13 @@ namespace Au
 		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
 		/// <param name="click">Action called when the button clicked.</param>
 		/// <param name="image"></param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// More properties can be specified later (set properties of the returned <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
 		/// </remarks>
-		public ToolbarItem Add(string text, Action<ToolbarItem> click, MTImage image = default, [CallerLineNumber] int l = 0) {
+		public ToolbarItem Add(string text, Action<ToolbarItem> click, MTImage image = default, [CallerLineNumber] int l_ = 0) {
 			var item = new ToolbarItem();
-			_Add(item, text, click, image, l);
+			_Add(item, text, click, image, l_);
 			return item;
 		}
 
@@ -146,7 +146,7 @@ namespace Au
 		/// </summary>
 		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
 		/// <param name="image"></param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <value>Action called when the button clicked.</value>
 		/// <remarks>
 		/// More properties can be specified later (set properties of <see cref="Last"/> <see cref="ToolbarItem"/> or use <see cref="Items"/>) or before (<see cref="MTBase.ActionThread"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.PathInTooltip"/>).
@@ -165,8 +165,8 @@ namespace Au
 		/// tb["Example"] = o => AOutput.Write(o); tb.Last.Tooltip="tt";
 		/// ]]></code>
 		/// </example>
-		public Action<ToolbarItem> this[string text, MTImage image = default, [CallerLineNumber] int l = 0] {
-			set { Add(text, value, image, l); }
+		public Action<ToolbarItem> this[string text, MTImage image = default, [CallerLineNumber] int l_ = 0] {
+			set { Add(text, value, image, l_); }
 		}
 
 		//CONSIDER: AddCheck, AddRadio.
@@ -177,7 +177,7 @@ namespace Au
 		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
 		/// <param name="menu">Action that adds menu items. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// The submenu is an <see cref="AMenu"/> object. It inherits these properties of this toolbar: <see cref="MTBase.ExtractIconPathFromCode"/>, <see cref="MTBase.ActionException"/>, <see cref="MTBase.ActionThread"/>, <see cref="MTBase.PathInTooltip"/>.
 		/// </remarks>
@@ -189,9 +189,9 @@ namespace Au
 		/// });
 		/// ]]></code>
 		/// </example>
-		public ToolbarItem Menu(string text, Action<AMenu> menu, MTImage image = default, [CallerLineNumber] int l = 0) {
+		public ToolbarItem Menu(string text, Action<AMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
 			var item = new ToolbarItem { type = TBItemType.Menu };
-			_Add(item, text, menu, image, l);
+			_Add(item, text, menu, image, l_);
 			return item;
 		}
 
@@ -201,7 +201,7 @@ namespace Au
 		/// <param name="text">Text. Or "Text\0 Tooltip".</param>
 		/// <param name="menu">Func that returns the menu. Called whenever the button clicked.</param>
 		/// <param name="image"></param>
-		/// <param name="l"><see cref="CallerLineNumberAttribute"/></param>
+		/// <param name="l_">[](xref:caller_info)</param>
 		/// <remarks>
 		/// The caller creates the menu (creates the <see cref="AMenu"/> object and adds items) and can reuse it many times. Other overload does not allow to create <b>AMenu</b> and reuse same object.
 		/// The submenu does not inherit properties of this toolbar.
@@ -212,9 +212,9 @@ namespace Au
 		/// t.Menu("Menu", () => m);
 		/// ]]></code>
 		/// </example>
-		public ToolbarItem Menu(string text, Func<AMenu> menu, MTImage image = default, [CallerLineNumber] int l = 0) {
+		public ToolbarItem Menu(string text, Func<AMenu> menu, MTImage image = default, [CallerLineNumber] int l_ = 0) {
 			var item = new ToolbarItem { type = TBItemType.Menu };
-			_Add(item, text, menu, image, l);
+			_Add(item, text, menu, image, l_);
 			return item;
 		}
 
